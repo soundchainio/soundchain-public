@@ -1,0 +1,15 @@
+{
+  "name": "soundchain",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "bootstrap": "lerna bootstrap && yarn prepare",
+    "prepare": "husky install",
+    "dev": "lerna run --parallel dev",
+    "lint-staged": "lerna run --parallel lint-staged"
+  },
+  "devDependencies": {
+    "husky": "^7.0.1",
+    "lerna": "^3.22.1"
+  }
+}
