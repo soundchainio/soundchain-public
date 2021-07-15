@@ -6,6 +6,13 @@
   "scripts": {
     "start": "nodemon -w 'src/**' -e 'ts,json' -x 'ts-node src/index.ts'"
   },
+  "dependencies": {
+    "apollo-server": "^3.0.0",
+    "class-validator": "^0.13.1",
+    "graphql": "^15.5.1",
+    "reflect-metadata": "^0.1.13",
+    "type-graphql": "^1.1.1"
+  },
   "devDependencies": {
     "nodemon": "^2.0.12",
     "ts-node": "^10.1.0",
