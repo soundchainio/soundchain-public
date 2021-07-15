@@ -1,21 +1,11 @@
-import { gql } from '@apollo/client';
 import Head from 'next/head';
 import Image from 'next/image';
 import apolloClient from '../lib/apolloClient';
-import styles from '../styles/Home.module.css';
+import { HomePageDocument, HomePageQuery } from '../lib/graphql';
+import styles from '../styles/HomePage.module.css';
 
 export async function getServerSideProps() {
-  const { data } = await apolloClient.query({
-    query: gql`
-      query Books {
-        books {
-          id
-          title
-          createdAt
-        }
-      }
-    `,
-  });
+  const { data } = await apolloClient.query<HomePageQuery>({ query: HomePageDocument });
 
   return {
     props: {
@@ -24,17 +14,11 @@ export async function getServerSideProps() {
   };
 }
 
-interface Book {
-  id: string;
-  title: string;
-  createdAt: Date;
+export interface HomePageProps {
+  books: HomePageQuery['books'];
 }
 
-export interface HomeProps {
-  books: Book[];
-}
-
-export default function Home({ books }: HomeProps) {
+export default function HomePage({ books }: HomePageProps) {
   return (
     <div className={styles.container}>
       <Head>
