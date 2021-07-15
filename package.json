@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
-    "bootstrap": "lerna bootstrap && yarn prepare",
-    "prepare": "husky install",
+    "bootstrap": "lerna bootstrap && husky install",
     "dev": "lerna run --parallel dev",
     "codegen": "lerna run --parallel codegen",
     "lint-staged": "lerna run --parallel lint-staged"
