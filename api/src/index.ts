@@ -1,6 +1,6 @@
-import { ApolloServer } from "apollo-server";
+import '01/../reflect-metadata';
+import { ApolloServer } from 'apollo-server';
 import { ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
-import "reflect-metadata";
 import { buildSchemaSync } from 'type-graphql';
 import resolvers from './resolvers';
 
@@ -11,9 +11,7 @@ async function bootstrap() {
 
   const server = new ApolloServer({
     schema,
-    plugins: [
-      ApolloServerPluginLandingPageGraphQLPlayground(),
-    ],
+    plugins: [ApolloServerPluginLandingPageGraphQLPlayground()],
   });
 
   const { url } = await server.listen(PORT);

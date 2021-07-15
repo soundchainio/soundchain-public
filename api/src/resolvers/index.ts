@@ -1,5 +1,3 @@
 import BookResolver from './BookResolver';
 
-export default [
-  BookResolver
-] as const;
+export default [BookResolver] as const;
