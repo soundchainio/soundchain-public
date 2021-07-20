@@ -1,8 +1,8 @@
 import { Arg, Mutation, Query, Resolver } from 'type-graphql';
 import User from '../models/User';
 import { UserService } from '../services/UserService';
-import CreateUserInput from './types/CreateUserInput';
 import CreateUserPayload from './types/CreateUserPayload';
+import RegisterInput from './types/RegisterInput';
 
 @Resolver(User)
 export default class UserResolver {
@@ -11,14 +11,9 @@ export default class UserResolver {
     return UserService.getUser(id);
   }
 
-  @Query(() => [User])
-  users(): Promise<User[]> {
-    return UserService.getUsers();
-  }
-
   @Mutation(() => CreateUserPayload)
-  async createUser(@Arg('input') input: CreateUserInput): Promise<CreateUserPayload> {
-    const user = await UserService.createUser(input as User);
+  async register(@Arg('input') { email, handle, password, displayName }: RegisterInput): Promise<CreateUserPayload> {
+    const user = await UserService.createUser(email, handle, displayName, password);
     return { user };
   }
 }

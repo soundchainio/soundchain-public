@@ -11,13 +11,13 @@ export class UserService {
     return UserModel.find().exec();
   }
 
-  static async createUser(user: User): Promise<User> {
-    const existingUser = await UserModel.findOne({ $or: [{ email: user.email }, { handle: user.handle }] });
+  static async createUser(email: string, handle: string, displayName: string, password: string): Promise<User> {
+    const existingUser = await UserModel.findOne({ $or: [{ email }, { handle }] });
     if (existingUser) {
-      if (existingUser.email === user.email) throw new UserInputError(`${user.email} is in use`);
-      throw new UserInputError(`${user.handle} is in use`);
+      if (existingUser.email === email) throw new UserInputError(`${email} is in use`);
+      throw new UserInputError(`${handle} is in use`);
     }
-    const newUser = new UserModel({ ...user, password: hashSync(user.password, 10) });
+    const newUser = new UserModel({ email, handle, password: hashSync(password, 10), displayName });
     await newUser.save();
     return newUser;
   }

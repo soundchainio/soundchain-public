@@ -3,7 +3,7 @@ import { Field, InputType } from 'type-graphql';
 import SocialMediaLinkInputType from './SocialMediaLinkInputType';
 
 @InputType()
-export default class CreateUserInput {
+export default class RegisterInput {
   @Field()
   @IsEmail()
   email: string;
@@ -20,10 +20,10 @@ export default class CreateUserInput {
   @Length(8, 30)
   password: string;
 
-  @Field({ defaultValue: '', nullable: true })
-  profilePhoto: string;
+  @Field({ nullable: true })
+  profilePicture: string;
 
-  @Field({ defaultValue: '', nullable: true })
+  @Field({ nullable: true })
   coverPhoto: string;
 
   @Field(() => [String], { defaultValue: [], nullable: true })

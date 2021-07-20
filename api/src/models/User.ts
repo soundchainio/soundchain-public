@@ -1,7 +1,6 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import Model from './Model';
-import SocialMediaLink from './SocialMediaLink';
 
 @ObjectType()
 export default class User extends Model {
@@ -22,26 +21,6 @@ export default class User extends Model {
 
   @prop({ required: true })
   password: string;
-
-  @Field()
-  @prop({ default: '' })
-  profilePhoto: string;
-
-  @Field()
-  @prop({ default: '' })
-  coverPhoto: string;
-
-  @Field(() => [String])
-  @prop({ required: true, default: [] })
-  favoriteGenres: string[];
-
-  @Field(() => [String])
-  @prop({ required: true, default: [] })
-  favoriteArtists: string[];
-
-  @Field(() => [SocialMediaLink])
-  @prop({ required: true, default: [] })
-  socialMediaLinks: SocialMediaLink[];
 
   @Field(() => Date)
   createdAt: Date;
