@@ -16,7 +16,7 @@ export class UserService {
     const existingUser = await UserModel.findOne({ email: user.email, handle: user.handle });
     if (existingUser) {
       if (existingUser.email === user.email) throw new UserEmailExists(user.email);
-      throw new UserHandleExists(user.email);
+      throw new UserHandleExists(user.handle);
     }
     const newUser = new UserModel({ ...user, password: hashSync(user.password, 10) });
     await newUser.save();
