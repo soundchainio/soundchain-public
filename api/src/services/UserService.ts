@@ -1,3 +1,4 @@
+import { hashSync } from 'bcrypt';
 import UserEmailExists from '../errors/UserEmailExists';
 import UserHandleExists from '../errors/UserHandleExists';
 import User, { UserModel } from '../models/User';
@@ -17,7 +18,7 @@ export class UserService {
       if (existingUser.email === user.email) throw new UserEmailExists(user.email);
       throw new UserHandleExists(user.email);
     }
-    const newUser = new UserModel(user);
+    const newUser = new UserModel({ ...user, password: hashSync(user.password, 10) });
     await newUser.save();
     return newUser;
   }
