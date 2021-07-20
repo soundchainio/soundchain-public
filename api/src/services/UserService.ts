@@ -13,7 +13,7 @@ export class UserService {
   }
 
   static async createUser(user: User): Promise<User> {
-    const existingUser = await UserModel.findOne({ email: user.email, handle: user.handle });
+    const existingUser = await UserModel.findOne({ $or: [{ email: user.email }, { handle: user.handle }] });
     if (existingUser) {
       if (existingUser.email === user.email) throw new UserEmailExists(user.email);
       throw new UserHandleExists(user.handle);
