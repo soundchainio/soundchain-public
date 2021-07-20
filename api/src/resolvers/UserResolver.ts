@@ -1,5 +1,5 @@
 import { Arg, Mutation, Query, Resolver } from 'type-graphql';
-import User, { UserModel } from '../models/User';
+import User from '../models/User';
 import { UserService } from '../services/UserService';
 import CreateUserInput from './types/CreateUserInput';
 import CreateUserPayload from './types/CreateUserPayload';
@@ -8,12 +8,12 @@ import CreateUserPayload from './types/CreateUserPayload';
 export default class UserResolver {
   @Query(() => User)
   user(@Arg('id') id: string): Promise<User> {
-    return UserModel.findByIdOrFail(id);
+    return UserService.getUser(id);
   }
 
   @Query(() => [User])
   users(): Promise<User[]> {
-    return UserModel.find().exec();
+    return UserService.getUsers();
   }
 
   @Mutation(() => CreateUserPayload)

@@ -3,6 +3,14 @@ import UserHandleExists from '../errors/UserHandleExists';
 import User, { UserModel } from '../models/User';
 
 export class UserService {
+  static getUser(id: string): Promise<User> {
+    return UserModel.findByIdOrFail(id);
+  }
+
+  static getUsers(): Promise<User[]> {
+    return UserModel.find().exec();
+  }
+
   static async createUser(user: User): Promise<User> {
     const existingUser = await UserModel.findOne({ email: user.email, handle: user.handle });
     if (existingUser) {
