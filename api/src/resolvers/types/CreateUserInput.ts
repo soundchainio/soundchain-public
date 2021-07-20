@@ -1,4 +1,4 @@
-import { IsEmail, Length } from 'class-validator';
+import { ArrayMaxSize, IsEmail, Length } from 'class-validator';
 import { Field, InputType } from 'type-graphql';
 import SocialMediaLinkInputType from './SocialMediaLinkInputType';
 
@@ -27,9 +27,11 @@ export default class CreateUserInput {
   coverPhoto: string;
 
   @Field(() => [String], { defaultValue: [], nullable: true })
+  @ArrayMaxSize(5)
   favoriteGenres: string[];
 
   @Field(() => [String], { defaultValue: [], nullable: true })
+  @ArrayMaxSize(10)
   favoriteArtists: string[];
 
   @Field(() => [SocialMediaLinkInputType], { defaultValue: [], nullable: true })
