@@ -7,7 +7,6 @@ export default class User extends Model {
   @Field(() => ID, { name: 'id' })
   readonly _id: string;
 
-  @Field()
   @prop({ required: true })
   profileId: string;
 
