@@ -15,10 +15,6 @@ export default class User extends Model {
   @prop({ required: true })
   handle: string;
 
-  @Field()
-  @prop({ required: true })
-  displayName: string;
-
   @prop({ required: true })
   password: string;
 

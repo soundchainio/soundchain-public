@@ -12,6 +12,10 @@ export default class Profile extends Model {
   @prop({ required: true })
   userId: string;
 
+  @Field()
+  @prop({ required: true })
+  displayName: string;
+
   @Field({ nullable: true })
   @prop({ required: false })
   profilePicture: string;
