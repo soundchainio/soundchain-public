@@ -18,10 +18,4 @@ export default class RegisterInput {
   @Field()
   @Length(8, 30)
   password: string;
-
-  @Field({ nullable: true })
-  profilePicture: string;
-
-  @Field({ nullable: true })
-  coverPicture: string;
 }
