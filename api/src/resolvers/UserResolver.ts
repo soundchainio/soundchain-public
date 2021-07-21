@@ -1,19 +1,19 @@
-import { Arg, Mutation, Query, Resolver } from 'type-graphql';
+import { Arg, Mutation, Resolver } from 'type-graphql';
 import User from '../models/User';
+import { ProfileService } from '../services/ProfileService';
 import { UserService } from '../services/UserService';
-import CreateUserPayload from './types/CreateUserPayload';
 import RegisterInput from './types/RegisterInput';
+import RegisterPayload from './types/RegisterPayload';
 
 @Resolver(User)
 export default class UserResolver {
-  @Query(() => User)
-  user(@Arg('id') id: string): Promise<User> {
-    return UserService.getUser(id);
-  }
-
-  @Mutation(() => CreateUserPayload)
-  async register(@Arg('input') { email, handle, password, displayName }: RegisterInput): Promise<CreateUserPayload> {
-    const user = await UserService.createUser(email, handle, displayName, password);
+  @Mutation(() => RegisterPayload)
+  async register(
+    @Arg('input')
+    { email, handle, password, displayName, profilePicture, coverPicture, socialMediaLinks }: RegisterInput,
+  ): Promise<RegisterPayload> {
+    const profile = await ProfileService.createProfile(displayName, profilePicture, coverPicture, socialMediaLinks);
+    const user = await UserService.createUser(email, handle, password, profile._id);
     return { user };
   }
 }
