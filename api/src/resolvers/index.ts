@@ -1,3 +1,4 @@
 import BookResolver from './BookResolver';
+import UserResolver from './UserResolver';
 
-export default [BookResolver] as const;
+export default [BookResolver, UserResolver] as const;
