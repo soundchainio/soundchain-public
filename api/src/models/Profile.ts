@@ -18,7 +18,7 @@ export default class Profile extends Model {
 
   @Field({ nullable: true })
   @prop({ required: false })
-  coverPhoto: string;
+  coverPicture: string;
 
   @Field(() => [String])
   @prop({ required: true, default: [] })

@@ -24,7 +24,7 @@ export default class RegisterInput {
   profilePicture: string;
 
   @Field({ nullable: true })
-  coverPhoto: string;
+  coverPicture: string;
 
   @Field(() => [String], { defaultValue: [], nullable: true })
   @ArrayMaxSize(5)
