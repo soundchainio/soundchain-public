@@ -10,10 +10,6 @@ export default class Profile extends Model {
 
   @Field()
   @prop({ required: true })
-  userId: string;
-
-  @Field()
-  @prop({ required: true })
   displayName: string;
 
   @Field({ nullable: true })
@@ -23,14 +19,6 @@ export default class Profile extends Model {
   @Field({ nullable: true })
   @prop({ required: false })
   coverPicture: string;
-
-  @Field(() => [String])
-  @prop({ required: true, default: [] })
-  favoriteGenres: string[];
-
-  @Field(() => [String])
-  @prop({ required: true, default: [] })
-  favoriteArtists: string[];
 
   @Field(() => [SocialMediaLink])
   @prop({ required: true, default: [] })
