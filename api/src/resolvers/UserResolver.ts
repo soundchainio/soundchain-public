@@ -1,7 +1,6 @@
 import { Arg, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
-import NotFoundError from '../errors/NotFoundError';
-import Profile, { ProfileModel } from '../models/Profile';
-import User, { UserModel } from '../models/User';
+import Profile from '../models/Profile';
+import User from '../models/User';
 import { ProfileService } from '../services/ProfileService';
 import { UserService } from '../services/UserService';
 import RegisterInput from './types/RegisterInput';
@@ -11,16 +10,13 @@ import RegisterPayload from './types/RegisterPayload';
 export default class UserResolver {
   @FieldResolver(() => Profile)
   async profile(@Root() user: User): Promise<Profile> {
-    const profile = await ProfileModel.findByIdOrFail(user.profileId);
-    if (!profile) throw new NotFoundError('profile', user.profileId);
-    return profile;
+    return ProfileService.getProfile(user.profileId);
   }
 
+  // TODO Remove after authentication
   @Query(() => User)
   async user(@Arg('id') id: string): Promise<User> {
-    const user = await UserModel.findById(id);
-    if (!user) throw new NotFoundError('user', id);
-    return user;
+    return UserService.getUser(id);
   }
 
   @Mutation(() => RegisterPayload)

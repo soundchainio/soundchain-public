@@ -1,4 +1,4 @@
-import { IsEmail, Length } from 'class-validator';
+import { IsEmail, Length, MinLength } from 'class-validator';
 import { Field, InputType } from 'type-graphql';
 
 @InputType()
@@ -16,6 +16,6 @@ export default class RegisterInput {
   handle: string;
 
   @Field()
-  @Length(8, 30)
+  @MinLength(8)
   password: string;
 }
