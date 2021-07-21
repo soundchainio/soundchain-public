@@ -1,7 +1,7 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import Model from './Model';
-import SocialMediaLink from './SocialMediaLink';
+import SocialMedia from './SocialMedia';
 
 @ObjectType()
 export default class Profile extends Model {
@@ -14,15 +14,15 @@ export default class Profile extends Model {
 
   @Field({ nullable: true })
   @prop({ required: false })
-  profilePicture: string;
+  profilePicture?: string;
 
   @Field({ nullable: true })
   @prop({ required: false })
-  coverPicture: string;
+  coverPicture?: string;
 
-  @Field(() => [SocialMediaLink])
+  @Field(() => [SocialMedia])
   @prop({ required: true, default: [] })
-  socialMediaLinks: SocialMediaLink[];
+  socialMediaLinks: SocialMedia[];
 
   @Field(() => Date)
   createdAt: Date;
