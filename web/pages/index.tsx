@@ -1,24 +1,27 @@
 import Head from 'next/head';
 import Image from 'next/image';
 import apolloClient from '../lib/apolloClient';
-import { HomePageDocument, HomePageQuery } from '../lib/graphql';
+import { HomePageDocument, HomePageQuery, PostDocument, PostQuery } from '../lib/graphql';
 import styles from '../styles/HomePage.module.css';
-
+import { YoutubeIframe } from '../components/iframes';
 export async function getServerSideProps() {
-  const { data } = await apolloClient.query<HomePageQuery>({ query: HomePageDocument });
+  const bookObject = await apolloClient.query<HomePageQuery>({ query: HomePageDocument });
+  const postObject = await apolloClient.query<PostQuery>({ query: PostDocument });
 
   return {
     props: {
-      books: data.books,
+      books: bookObject.data.books,
+      posts: postObject.data.posts,
     },
   };
 }
 
 export interface HomePageProps {
   books: HomePageQuery['books'];
+  posts: PostQuery['posts'];
 }
 
-export default function HomePage({ books }: HomePageProps) {
+export default function HomePage({ books, posts }: HomePageProps) {
   return (
     <div className={styles.container}>
       <Head>
@@ -41,6 +44,16 @@ export default function HomePage({ books }: HomePageProps) {
             <div key={book.id} className={styles.card}>
               <h2>{book.title}</h2>
               <p>Created at {book.createdAt}</p>
+            </div>
+          ))}
+        </div>
+        <div className={styles.grid}>
+          {posts.map(post => (
+            <div key={post.id} className={styles.card}>
+              <h2>{post.owner}</h2>
+              <h2>{post.textContent}</h2>
+              {post.videoUrl && <YoutubeIframe videoUrl={post.videoUrl} />}
+              <p>Created at {post.createdAt}</p>
             </div>
           ))}
         </div>

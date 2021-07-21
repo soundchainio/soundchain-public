@@ -16,6 +16,27 @@ export type Scalars = {
   DateTime: any;
 };
 
+export type AddPostInput = {
+  owner: Scalars['String'];
+  textContent: Scalars['String'];
+
+}
+
+export type Post = {
+  __typename?: 'Post';
+  id: Scalars['ID'];
+  owner: Scalars['String'];
+  textContent: Scalars['String'];
+  videoUrl: Scalars['String'];
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+};
+
+export type AddPostPayload = {
+  __typename?: 'AddPostPayload';
+  post: Post;
+};
+
 export type AddBookInput = {
   title: Scalars['String'];
 };
@@ -67,7 +88,21 @@ export const HomePageDocument = gql`
     }
   }
 `;
+export type PostQuery = { __typename?: 'Query' } & {
+  posts: Array<{ __typename?: 'Post' } & Pick<Post, 'id' | 'owner' | 'textContent' | 'videoUrl' | 'createdAt'>>;
+};
 
+export const PostDocument = gql`
+  query {
+    posts{
+      owner
+      textContent
+      id
+      videoUrl
+      createdAt
+    }
+} 
+`
 /**
  * __useHomePageQuery__
  *
