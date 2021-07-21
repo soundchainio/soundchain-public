@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "docker-compose up -d && nodemon -w 'src/**' -e 'ts,json' -x 'ts-node src/index.ts'",
+    "dev": "docker-compose up -d && nodemon -w 'src/**' -e 'ts,json' -x ts-node src/index.ts",
     "lint-staged": "lint-staged"
   },
   "lint-staged": {
