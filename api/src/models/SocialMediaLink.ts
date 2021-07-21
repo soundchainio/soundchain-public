@@ -8,8 +8,8 @@ export enum SocialMediaName {
 }
 
 registerEnumType(SocialMediaName, {
-  name: 'SocialMediaName', // this one is mandatory
-  description: 'Social media options', // this one is optional
+  name: 'SocialMediaName',
+  description: 'Social media options',
 });
 
 @ObjectType()
