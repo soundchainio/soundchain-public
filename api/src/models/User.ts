@@ -9,6 +9,10 @@ export default class User extends Model {
 
   @Field()
   @prop({ required: true })
+  profileId: string;
+
+  @Field()
+  @prop({ required: true })
   email: string;
 
   @Field()
