@@ -16,7 +16,7 @@ registerEnumType(SocialMediaName, {
 export default class SocialMediaLink {
   @Field(() => SocialMediaName)
   @prop({ required: true, enum: SocialMediaName })
-  name: string;
+  name: SocialMediaName;
 
   @Field()
   @prop({ required: true })
