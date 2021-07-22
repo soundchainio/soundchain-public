@@ -6,12 +6,13 @@ interface FormValues {
   password: string;
 }
 
-export default function LoginForm() {
+const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
+  username: yup.string().required(),
+  password: yup.string().required(),
+});
+
+export const LoginForm = () => {
   const initialValues: FormValues = { username: '', password: '' };
-  const validationSchema = yup.object().shape({
-    username: yup.string().required(),
-    password: yup.string().required(),
-  });
 
   return (
     <Formik
@@ -42,4 +43,4 @@ export default function LoginForm() {
       )}
     </Formik>
   );
-}
+};
