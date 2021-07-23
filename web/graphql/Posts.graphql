@@ -1,7 +1,21 @@
-query {
-  posts{
-    owner
-    textContent
-    id
+query Post{
+    posts {
+       id
+       body
+       author
+       embedUrl
+       createdAt
+    }
   }
-}
+
+mutation CreatePost($input: AddPostInput!) {
+    addPost(input: $input) {
+      post {
+        id
+        body
+        author
+        embedUrl
+        createdAt
+      }
+    }
+  }

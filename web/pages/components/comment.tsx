@@ -5,13 +5,12 @@ import apolloClient from '../../lib/apolloClient';
 import * as Apollo from '@apollo/client';
 import styles from '../../styles/HomePage.module.css';
 import { CommentInput, CommentBox } from '../../components/inputs/postComponent';
-import { Mutation, PostMutationDocument, PostQuery, PostQueryDocument } from '../../lib/postGraphql';
+import { Mutation, PostQuery, PostDocument, CreatePostDocument } from '../../lib/graphql';
 export async function getServerSideProps() {
-  const postObject = await apolloClient.query<PostQuery>({ query: PostQueryDocument });
-  const reversedPost = [...postObject.data.posts].reverse();
+  const postObject = await apolloClient.query<PostQuery>({ query: PostDocument });
   return {
     props: {
-      posts: reversedPost,
+      posts: [...postObject.data.posts].reverse(),
     },
   };
 }
@@ -22,7 +21,7 @@ export interface CommentPageProps {
 
 export default function CommentsPage({ posts }: CommentPageProps) {
   const [postListStat, setPosts] = useState(posts);
-  const [addPost] = Apollo.useMutation<Mutation>(PostMutationDocument);
+  const [addPost] = Apollo.useMutation<Mutation>(CreatePostDocument);
 
   return (
     <div className={styles.container}>
@@ -37,25 +36,22 @@ export default function CommentsPage({ posts }: CommentPageProps) {
           onShare={async text => {
             await addPost({
               variables: {
-                input: { textContent: text, owner: 'placeholder-owner' },
+                input: { body: text, author: 'placeholder-author' },
               },
-            }).then(onfulfilled => {
-              setPosts([...postListStat, onfulfilled.data?.addPost.post].reverse());
+            }).then(async () => {
+             const postObject = await apolloClient.query<PostQuery>({ query: PostDocument });
+             setPosts( [...postObject.data.posts].reverse())
             });
           }}
         />
 
-        <div className={styles.grid}>
           {postListStat.map(post => (
             <CommentBox
               key={post.id}
-              textContent={post.textContent}
-              replies={[]}
-              owner={post.owner}
-              videoUrl={post.videoUrl}
+              body={post.body}
+              author={post.author}
             />
           ))}
-        </div>
       </main>
 
       <footer className={styles.footer}>

@@ -3,12 +3,12 @@ import { Field, InputType } from 'type-graphql';
 @InputType()
 export default class AddPostInput {
   @Field()
-  owner: string;
+  author: string;
 
   @Field()
-  textContent: string;
+  body: string;
 
   @Field({ nullable: true })
-  videoUrl: string;
+  embedUrl: string;
 
 }

@@ -9,15 +9,15 @@ export default class Post extends Model {
 
   @Field()
   @prop({ required: true })
-  owner: string;
+  author: string;
 
   @Field()
   @prop({ required: true, maxlength:160 })
-  textContent: string;
+  body: string;
 
   @Field({nullable: true})
   @prop()
-  videoUrl: string;
+  embedUrl: string;
 
   @Field(() => Date)
   createdAt: Date;

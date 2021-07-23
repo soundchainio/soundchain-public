@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import 'emoji-mart/css/emoji-mart.css';
-import { YoutubeIframe } from '../../iframes';
-
+import Image from 'next/image';
 import { Picker } from 'emoji-mart';
+import profilePic from '../../../public/profile.jpg';
 
 type CommentInputProps = {
   onShare: (text: string) => void;
@@ -47,7 +47,7 @@ export function CommentInput({ onShare }: CommentInputProps) {
         <div className="h-1 z-30 w-8/12">
           <Picker
             onSelect={emojiData => {
-              setText(text + emojiData.native);
+              setText(text + emojiData.native); // Fake error
             }}
           />
         </div>
@@ -58,27 +58,24 @@ export function CommentInput({ onShare }: CommentInputProps) {
 
 type CommentProps = {
   key: string;
-  owner: string;
-  textContent: string;
-  replies: Array<CommentProps>;
-  videoUrl: string;
+  author: string;
+  body:string;
 };
 
-export function CommentBox({ textContent,  owner, key, videoUrl }: CommentProps) {
+export function CommentBox({ body,  author, key }: CommentProps) {
   return (
     <>
       <div key={key} className="border-2  w-8/12 mt-2">
-        <p className="p-1 font-semibold text-xl text-blue-700">{owner}</p>
-        <div className="w-full rounded-lg border-2 border-gray-50 h-16 resize-none p-1 ">{textContent}</div>
-        {videoUrl && (
-          <div className="flex justify-center mb-6">
-            <YoutubeIframe videoUrl={videoUrl} width={'90%'} height={'300px'} />
+        <div className="flex justify-start">
+          <div className="rounded-full w-8 h-8 border mt-2 ml-2 border-gray-400">
+            <Image className="rounded-full" alt="profile" src={profilePic} />
           </div>
-        )}
-        <div></div>
-        <div className="ml-5">
-          
+          <p className="p-1 font-semibold text-xl mt-1 ml-1 text-blue-700">{author}</p>
         </div>
+        <div className="w-full rounded-lg border-2 border-gray-50 h-16 resize-none p-1 ml-2 ">{body}</div>
+
+        <div></div>
+        <div className="ml-5"></div>
       </div>
     </>
   );
