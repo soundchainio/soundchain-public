@@ -21,7 +21,15 @@ export interface CommentPageProps {
 
 export default function CommentsPage({ posts }: CommentPageProps) {
   const [postListStat, setPosts] = useState(posts);
-  const [addPost] = Apollo.useMutation<Mutation>(CreatePostDocument);
+  const onPost = async (text: string) => {
+    const input: CreatePostMutationVariables = { input: { body: text, author: 'placeholder-author' } };
+    await apolloClient.mutate<CreatePostMutation, CreatePostMutationVariables>({
+      mutation: CreatePostDocument,
+      variables: input,
+    });
+    const postObject = await apolloClient.query<PostQuery>({ query: PostDocument });
+    setPosts([...postObject.data.posts]);
+  };
 
   return (
     <div className={styles.container}>
