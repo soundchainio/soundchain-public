@@ -1,5 +1,6 @@
 import Head from 'next/head';
 import Image from 'next/image';
+import Link from 'next/link';
 import apolloClient from '../lib/apolloClient';
 import { HomePageDocument, HomePageQuery } from '../lib/graphql';
 import styles from '../styles/HomePage.module.css';
@@ -27,6 +28,9 @@ export default function HomePage({ books }: HomePageProps) {
       </Head>
 
       <main className={styles.main}>
+        <Link href="/login">
+          <a className="text-2xl text-blue-500 font-semibold hover:underline">Login</a>
+        </Link>
         <h1 className={styles.title}>
           Welcome to <a href="https://nextjs.org">Next.js!</a>
         </h1>
