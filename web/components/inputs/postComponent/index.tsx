@@ -4,10 +4,10 @@ import Image from 'next/image';
 import { Picker } from 'emoji-mart';
 import profilePic from '../../../public/profile.jpg';
 
-type CommentInputProps = {
-  onShare: (text: string) => void;
+type PostInputProps = {
+  onShareClick: (text: string) => void;
 };
-export function CommentInput({ onShare }: CommentInputProps) {
+export function PostInput({ onShareClick }: PostInputProps) {
   const [text, setText] = useState('');
   const [enableEmoji, setEnableEmoji] = useState(false);
   return (
@@ -26,8 +26,8 @@ export function CommentInput({ onShare }: CommentInputProps) {
         <div>
           <button
             onClick={() => {
-              onShare(text);
-              setText("");
+              onShareClick(text);
+              setText('');
             }}
             className="bg-blue-600 text-white font-semibold w-24 h-10 rounded mt-2 mb-2 float-right mr-2"
           >
@@ -57,13 +57,13 @@ export function CommentInput({ onShare }: CommentInputProps) {
   );
 }
 
-type CommentProps = {
+type PostProps = {
   key: string;
   author: string;
   body:string;
 };
 
-export function CommentBox({ body,  author, key }: CommentProps) {
+export function PostBox({ body,  author, key }: PostProps) {
   return (
     <>
       <div key={key} className="border-2  w-8/12 mt-2">
@@ -73,7 +73,7 @@ export function CommentBox({ body,  author, key }: CommentProps) {
           </div>
           <p className="p-1 font-semibold text-xl mt-1 ml-1 text-blue-700">{author}</p>
         </div>
-        <div className="w-full rounded-lg border-2 border-gray-50 h-16 resize-none p-1 ml-2 ">{body}</div>
+        <div className="w-full rounded-lg  border-gray-50 h-16 resize-none p-1 ml-2 ">{body}</div>
 
         <div></div>
         <div className="ml-5"></div>

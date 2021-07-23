@@ -5,11 +5,11 @@ import apolloClient from '../lib/apolloClient';
 import { HomePageDocument, HomePageQuery } from '../lib/graphql';
 import styles from '../styles/HomePage.module.css';
 export async function getServerSideProps() {
-  const bookObject = await apolloClient.query<HomePageQuery>({ query: HomePageDocument });
+  const {data} = await apolloClient.query<HomePageQuery>({ query: HomePageDocument });
 
   return {
     props: {
-      books: bookObject.data.books,
+      books: data.books,
     },
   };
 }

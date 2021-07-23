@@ -1,34 +1,42 @@
 import { useState } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
-import apolloClient from '../../lib/apolloClient';
-import * as Apollo from '@apollo/client';
-import styles from '../../styles/HomePage.module.css';
-import { CommentInput, CommentBox } from '../../components/inputs/postComponent';
-import { Mutation, PostQuery, PostDocument, CreatePostDocument } from '../../lib/graphql';
+import apolloClient from '../lib/apolloClient';
+import styles from '../styles/HomePage.module.css';
+import { PostInput, PostBox } from '../components/inputs/postComponent';
+import {
+  PostQuery,
+  PostDocument,
+  CreatePostDocument,
+  CreatePostMutation,
+  CreatePostMutationVariables,
+} from '../lib/graphql';
 export async function getServerSideProps() {
-  const postObject = await apolloClient.query<PostQuery>({ query: PostDocument });
+  const { data } = await apolloClient.query<PostQuery>({ query: PostDocument, fetchPolicy: 'no-cache' });
   return {
     props: {
-      posts: [...postObject.data.posts].reverse(),
+      posts: [...data.posts],
     },
   };
 }
 
-export interface CommentPageProps {
+export interface PostPageProps {
   posts: PostQuery['posts'];
 }
 
-export default function CommentsPage({ posts }: CommentPageProps) {
+export default function PostsPage({ posts }: PostPageProps) {
   const [postListStat, setPosts] = useState(posts);
-  const onPost = async (text: string) => {
+  const fetchNewPosts = async () => {
+    const { data } = await apolloClient.query<PostQuery>({ query: PostDocument, fetchPolicy: 'no-cache' });
+    setPosts(data.posts);
+  };
+
+  const onCreatePost = async (text: string) => {
     const input: CreatePostMutationVariables = { input: { body: text, author: 'placeholder-author' } };
     await apolloClient.mutate<CreatePostMutation, CreatePostMutationVariables>({
       mutation: CreatePostDocument,
       variables: input,
     });
-    const postObject = await apolloClient.query<PostQuery>({ query: PostDocument });
-    setPosts([...postObject.data.posts]);
   };
 
   return (
@@ -40,26 +48,17 @@ export default function CommentsPage({ posts }: CommentPageProps) {
       </Head>
 
       <main className={styles.main}>
-        <CommentInput
-          onShare={async text => {
-            await addPost({
-              variables: {
-                input: { body: text, author: 'placeholder-author' },
-              },
-            }).then(async () => {
-             const postObject = await apolloClient.query<PostQuery>({ query: PostDocument });
-             setPosts( [...postObject.data.posts].reverse())
-            });
+        <PostInput
+          onShareClick={async text => {
+            onCreatePost(text);
+            fetchNewPosts();
+            console.log('cool');
           }}
         />
 
-          {postListStat.map(post => (
-            <CommentBox
-              key={post.id}
-              body={post.body}
-              author={post.author}
-            />
-          ))}
+        {postListStat.map(post => (
+          <PostBox key={post.id} body={post.body} author={post.author} />
+        ))}
       </main>
 
       <footer className={styles.footer}>

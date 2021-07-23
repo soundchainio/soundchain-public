@@ -12,7 +12,7 @@ export default class PostResolver {
 
   @Query(() => [Post])
   posts(): Promise<Post[]> {
-    return PostModel.find().exec();
+    return PostModel.find().sort({createdAt:"desc"}).exec();
   }
 
   @Mutation(() => AddPostPayload)
