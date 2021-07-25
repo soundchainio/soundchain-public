@@ -1,4 +1,4 @@
-import { UserInputError } from 'apollo-server';
+import { UserInputError } from 'apollo-server-express';
 import { hashSync } from 'bcrypt';
 import User, { UserModel } from '../models/User';
 

@@ -1,6 +1,7 @@
 import '01/../reflect-metadata';
-import { ApolloServer } from 'apollo-server';
 import { ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
+import { ApolloServer } from 'apollo-server-express';
+import express from 'express';
 import mongoose from 'mongoose';
 import { buildSchemaSync } from 'type-graphql';
 import { TypegooseMiddleware } from './middlewares/typegoose-middleware';
@@ -18,8 +19,13 @@ async function bootstrap() {
     plugins: [ApolloServerPluginLandingPageGraphQLPlayground()],
   });
 
-  const { url } = await server.listen(PORT);
-  console.log(`Server is running, GraphQL Playground available at ${url}`);
+  await server.start();
+
+  const app = express();
+  server.applyMiddleware({ app });
+
+  await new Promise<void>(resolve => app.listen({ port: PORT }, resolve));
+  console.log(`🚀 Server ready at http://localhost:${PORT}${server.graphqlPath}`);
 }
 
 bootstrap();
