@@ -26,9 +26,9 @@ export type AddBookPayload = {
 };
 
 export type AddPostInput = {
+  id: Scalars['String'];
   author: Scalars['String'];
   body: Scalars['String'];
-  embedUrl?: Maybe<Scalars['String']>;
 };
 
 export type AddPostPayload = {
@@ -48,7 +48,8 @@ export type Book = {
 export type Mutation = {
   __typename?: 'Mutation';
   addBook: AddBookPayload;
-  addPost: AddPostPayload;
+  createPost: AddPostPayload;
+  register: RegisterPayload;
 };
 
 
@@ -57,8 +58,13 @@ export type MutationAddBookArgs = {
 };
 
 
-export type MutationAddPostArgs = {
+export type MutationCreatePostArgs = {
   input: AddPostInput;
+};
+
+
+export type MutationRegisterArgs = {
+  input: RegisterInput;
 };
 
 export type Post = {
@@ -66,7 +72,17 @@ export type Post = {
   id: Scalars['ID'];
   author: Scalars['String'];
   body: Scalars['String'];
-  embedUrl?: Maybe<Scalars['String']>;
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+};
+
+export type Profile = {
+  __typename?: 'Profile';
+  id: Scalars['ID'];
+  displayName: Scalars['String'];
+  profilePicture?: Maybe<Scalars['String']>;
+  coverPicture?: Maybe<Scalars['String']>;
+  socialMediaLinks: Array<SocialMedia>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
 };
@@ -77,6 +93,7 @@ export type Query = {
   books: Array<Book>;
   post: Post;
   posts: Array<Post>;
+  user: User;
 };
 
 
@@ -87,6 +104,46 @@ export type QueryBookArgs = {
 
 export type QueryPostArgs = {
   id: Scalars['String'];
+};
+
+
+export type QueryUserArgs = {
+  id: Scalars['String'];
+};
+
+export type RegisterInput = {
+  email: Scalars['String'];
+  displayName: Scalars['String'];
+  handle: Scalars['String'];
+  password: Scalars['String'];
+};
+
+export type RegisterPayload = {
+  __typename?: 'RegisterPayload';
+  user: User;
+};
+
+export type SocialMedia = {
+  __typename?: 'SocialMedia';
+  name: SocialMediaName;
+  link: Scalars['String'];
+};
+
+/** Social media options */
+export enum SocialMediaName {
+  Twitter = 'TWITTER',
+  Instagram = 'INSTAGRAM',
+  Facebook = 'FACEBOOK'
+}
+
+export type User = {
+  __typename?: 'User';
+  id: Scalars['ID'];
+  email: Scalars['String'];
+  handle: Scalars['String'];
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  profile: Profile;
 };
 
 export type HomePageQueryVariables = Exact<{ [key: string]: never; }>;
@@ -107,7 +164,7 @@ export type PostQuery = (
   { __typename?: 'Query' }
   & { posts: Array<(
     { __typename?: 'Post' }
-    & Pick<Post, 'id' | 'body' | 'author' | 'embedUrl' | 'createdAt'>
+    & Pick<Post, 'id' | 'body' | 'author' | 'createdAt'>
   )> }
 );
 
@@ -118,11 +175,11 @@ export type CreatePostMutationVariables = Exact<{
 
 export type CreatePostMutation = (
   { __typename?: 'Mutation' }
-  & { addPost: (
+  & { createPost: (
     { __typename?: 'AddPostPayload' }
     & { post: (
       { __typename?: 'Post' }
-      & Pick<Post, 'id' | 'body' | 'author' | 'embedUrl' | 'createdAt'>
+      & Pick<Post, 'id' | 'body' | 'author' | 'createdAt'>
     ) }
   ) }
 );
@@ -170,7 +227,6 @@ export const PostDocument = gql`
     id
     body
     author
-    embedUrl
     createdAt
   }
 }
@@ -204,12 +260,11 @@ export type PostLazyQueryHookResult = ReturnType<typeof usePostLazyQuery>;
 export type PostQueryResult = Apollo.QueryResult<PostQuery, PostQueryVariables>;
 export const CreatePostDocument = gql`
     mutation CreatePost($input: AddPostInput!) {
-  addPost(input: $input) {
+  createPost(input: $input) {
     post {
       id
       body
       author
-      embedUrl
       createdAt
     }
   }

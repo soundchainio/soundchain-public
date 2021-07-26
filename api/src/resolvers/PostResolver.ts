@@ -1,7 +1,8 @@
 import { Arg, Mutation, Query, Resolver } from 'type-graphql';
 import Post, { PostModel } from '../models/Post';
-import AddPostInput from './types/AddPostInput';
-import AddPostPayload from './types/AddPostPayload';
+import {createPost} from "../services/PostService"
+import AddPostInput from '../resolvers/types/AddPostInput';
+import AddPostPayload from '../resolvers/types/AddPostPayload';
 
 @Resolver(Post)
 export default class PostResolver {
@@ -12,13 +13,12 @@ export default class PostResolver {
 
   @Query(() => [Post])
   posts(): Promise<Post[]> {
-    return PostModel.find().sort({createdAt:"desc"}).exec();
+    return PostModel.find().sort({ createdAt: 'desc' }).exec();
   }
 
   @Mutation(() => AddPostPayload)
-  async addPost(@Arg('input') input: AddPostInput): Promise<AddPostPayload> {
-    const post = new PostModel(input as Post);
-    await post.save();
+  async createPost(@Arg('input') { author, body }: AddPostInput): Promise<AddPostPayload> {
+    const post = await createPost(author, body);
     return { post };
   }
 }

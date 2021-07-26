@@ -3,18 +3,16 @@ query Post{
        id
        body
        author
-       embedUrl
        createdAt
     }
   }
 
 mutation CreatePost($input: AddPostInput!) {
-    addPost(input: $input) {
+    createPost(input: $input) {
       post {
         id
         body
         author
-        embedUrl
         createdAt
       }
     }

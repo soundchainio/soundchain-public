@@ -8,7 +8,4 @@ export default class AddPostInput {
   @Field()
   body: string;
 
-  @Field({ nullable: true })
-  embedUrl: string;
-
 }
