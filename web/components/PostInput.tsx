@@ -15,7 +15,7 @@ export function PostInput({ onShareClick }: PostInputProps) {
         <div className="w-full">
           <textarea
             value={text}
-            onChange={e => {
+            onChange={e => setText(e.target.value)}
               setText(e.target.value);
             }}
             className="w-full rounded-lg border-2 border-gray-50 h-24 resize-none p-1"
