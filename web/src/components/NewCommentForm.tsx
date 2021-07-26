@@ -1,7 +1,6 @@
-import { gql, useMutation } from '@apollo/client';
 import { ErrorMessage, Field, Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import * as yup from 'yup';
-import apolloClient from '../lib/apolloClient';
+import { useAddCommentMutation } from '../lib/graphql';
 
 export interface NewCommentFormProps {
   postId: string;
@@ -13,27 +12,17 @@ interface FormValues {
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
-  body: yup.string().required().max(255),
+  body: yup.string().required().max(160),
 });
 
 const initialValues: FormValues = { body: '' };
 
-const ADD_COMMENT = gql`
-  mutation AddComment($input: AddCommentInput!) {
-    addComment(input: $input) {
-      comment {
-        id
-      }
-    }
-  }
-`;
-
 export const NewCommentForm = ({ postId, authorId }: NewCommentFormProps) => {
-  const [addComment, { error, data }] = useMutation(ADD_COMMENT, { client: apolloClient });
+  const [addComment] = useAddCommentMutation();
 
-  const handleSubmit = async ({ body }: FormValues, { setSubmitting }: FormikHelpers<FormValues>) => {
+  const handleSubmit = async ({ body }: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
     await addComment({ variables: { input: { postId: 'asdfasdgasdg', authorId, body } } });
-    setSubmitting(false);
+    resetForm();
   };
 
   return (
@@ -41,10 +30,10 @@ export const NewCommentForm = ({ postId, authorId }: NewCommentFormProps) => {
       {({ isSubmitting }: FormikProps<FormValues>) => (
         <Form>
           <div>
-            <Field type="textarea" name="body" />
+            <Field as="textarea" name="body" />
             <ErrorMessage name="body" component="div" />
           </div>
-          <button type="submit" disabled={isSubmitting}>
+          <button type="submit" disabled={isSubmitting} className="p-2 border-2">
             Post comment
           </button>
         </Form>

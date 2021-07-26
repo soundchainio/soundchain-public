@@ -1,5 +1,5 @@
-import * as Apollo from '@apollo/client';
 import { gql } from '@apollo/client';
+import * as Apollo from '@apollo/client';
 export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
@@ -25,6 +25,17 @@ export type AddBookPayload = {
   book: Book;
 };
 
+export type AddCommentInput = {
+  postId: Scalars['String'];
+  authorId: Scalars['String'];
+  body: Scalars['String'];
+};
+
+export type AddCommentPayload = {
+  __typename?: 'AddCommentPayload';
+  comment: Comment;
+};
+
 export type AuthPayload = {
   __typename?: 'AuthPayload';
   jwt: Scalars['String'];
@@ -34,6 +45,15 @@ export type Book = {
   __typename?: 'Book';
   id: Scalars['ID'];
   title: Scalars['String'];
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+};
+
+export type Comment = {
+  __typename?: 'Comment';
+  id: Scalars['ID'];
+  body: Scalars['String'];
+  author: Profile;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
 };
@@ -48,6 +68,7 @@ export type LoginInput = {
 export type Mutation = {
   __typename?: 'Mutation';
   addBook: AddBookPayload;
+  addComment: AddCommentPayload;
   register: AuthPayload;
   login: AuthPayload;
 };
@@ -55,6 +76,11 @@ export type Mutation = {
 
 export type MutationAddBookArgs = {
   input: AddBookInput;
+};
+
+
+export type MutationAddCommentArgs = {
+  input: AddCommentInput;
 };
 
 
@@ -82,11 +108,18 @@ export type Query = {
   __typename?: 'Query';
   book: Book;
   books: Array<Book>;
+  comment: Comment;
+  comments: Array<Comment>;
   me?: Maybe<User>;
 };
 
 
 export type QueryBookArgs = {
+  id: Scalars['String'];
+};
+
+
+export type QueryCommentArgs = {
   id: Scalars['String'];
 };
 
@@ -119,6 +152,22 @@ export type User = {
   updatedAt: Scalars['DateTime'];
   profile: Profile;
 };
+
+export type AddCommentMutationVariables = Exact<{
+  input: AddCommentInput;
+}>;
+
+
+export type AddCommentMutation = (
+  { __typename?: 'Mutation' }
+  & { addComment: (
+    { __typename?: 'AddCommentPayload' }
+    & { comment: (
+      { __typename?: 'Comment' }
+      & Pick<Comment, 'id'>
+    ) }
+  ) }
+);
 
 export type HomePageQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -173,6 +222,41 @@ export type RegisterMutation = (
 );
 
 
+export const AddCommentDocument = gql`
+    mutation AddComment($input: AddCommentInput!) {
+  addComment(input: $input) {
+    comment {
+      id
+    }
+  }
+}
+    `;
+export type AddCommentMutationFn = Apollo.MutationFunction<AddCommentMutation, AddCommentMutationVariables>;
+
+/**
+ * __useAddCommentMutation__
+ *
+ * To run a mutation, you first call `useAddCommentMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddCommentMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addCommentMutation, { data, loading, error }] = useAddCommentMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useAddCommentMutation(baseOptions?: Apollo.MutationHookOptions<AddCommentMutation, AddCommentMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddCommentMutation, AddCommentMutationVariables>(AddCommentDocument, options);
+      }
+export type AddCommentMutationHookResult = ReturnType<typeof useAddCommentMutation>;
+export type AddCommentMutationResult = Apollo.MutationResult<AddCommentMutation>;
+export type AddCommentMutationOptions = Apollo.BaseMutationOptions<AddCommentMutation, AddCommentMutationVariables>;
 export const HomePageDocument = gql`
     query HomePage {
   books {
