@@ -28,6 +28,7 @@ export const RegisterForm = ({ onRegister }: RegisterFormProps) => {
   const [register, { loading, error }] = useRegisterMutation();
 
   async function handleSubmit(values: FormValues) {
+    delete values.confirm;
     try {
       const result = await register({ variables: { input: values } });
       setJwt(result.data?.register.jwt);
