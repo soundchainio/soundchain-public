@@ -1,8 +1,8 @@
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
-import { NewCommentForm } from '../components/NewCommentForm';
-import apolloClient from '../lib/apolloClient';
+import useMe from '../hooks/useMe';
+import { apolloClient, setJwt } from '../lib/apollo';
 import { HomePageDocument, HomePageQuery } from '../lib/graphql';
 import styles from '../styles/HomePage.module.css';
 
@@ -21,6 +21,8 @@ export interface HomePageProps {
 }
 
 export default function HomePage({ books }: HomePageProps) {
+  const me = useMe();
+
   return (
     <div className={styles.container}>
       <Head>
@@ -30,16 +32,30 @@ export default function HomePage({ books }: HomePageProps) {
       </Head>
 
       <main className={styles.main}>
-        <NewCommentForm postId="asdfsd" authorId="60fb0dd8e50376be228186da" />
-        <Link href="/login">
-          <a className="text-2xl text-blue-500 font-semibold hover:underline">Login</a>
-        </Link>
         <h1 className={styles.title}>
           Welcome to <a href="https://nextjs.org">Next.js!</a>
         </h1>
 
         <p className={styles.description}>
-          Get started by editing <code className={styles.code}>pages/index.js</code>
+          {me ? (
+            <>
+              {me.profile.displayName}
+              <br />
+              <button type="button" onClick={() => setJwt()}>
+                Sign out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link href="/login">
+                <a>Login</a>
+              </Link>
+              <br />
+              <Link href="/register">
+                <a>Register</a>
+              </Link>
+            </>
+          )}
         </p>
 
         <div className={styles.grid}>

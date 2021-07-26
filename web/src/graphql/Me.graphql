@@ -1,0 +1,10 @@
+query Me {
+  me {
+    id
+    handle
+    profile {
+      id
+      displayName
+    }
+  }
+}
