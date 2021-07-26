@@ -25,7 +25,7 @@ export interface PostPageProps {
 }
 
 export default function PostsPage({ posts }: PostPageProps) {
-  const [postListStat, setPosts] = useState(posts);
+  const [postList, setPosts] = useState(posts);
   const fetchNewPosts = async () => {
     const { data } = await apolloClient.query<PostQuery>({ query: PostDocument, fetchPolicy: 'no-cache' });
     setPosts(data.posts);
