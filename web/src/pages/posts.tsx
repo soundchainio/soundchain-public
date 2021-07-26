@@ -56,7 +56,7 @@ export default function PostsPage({ posts }: PostPageProps) {
 
       <main className={styles.main}>
         <PostInput
-          onShareClick={async text => {
+          <PostInput onShareClick={onCreatePost} />
             onCreatePost(text);
           }}
         />
