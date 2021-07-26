@@ -13,7 +13,7 @@ const jwtKey = 'token';
 
 let jwt = (isBrowser && localStorage.getItem(jwtKey)) || undefined;
 
-const httpLink = createHttpLink({ uri: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000' });
+const httpLink = createHttpLink({ uri: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/graphql' });
 
 const authLink = setContext(() => {
   return jwt ? { headers: { authorization: `Bearer ${jwt}` } } : {};
