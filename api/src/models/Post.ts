@@ -12,12 +12,8 @@ export default class Post extends Model {
   author: string;
 
   @Field()
-  @prop({ required: true, maxlength:160 })
+  @prop({ required: true })
   body: string;
-
-  @Field({nullable: true})
-  @prop()
-  embedUrl: string;
 
   @Field(() => Date)
   createdAt: Date;
