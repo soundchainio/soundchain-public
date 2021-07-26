@@ -31,7 +31,13 @@ export default function PostsPage({ posts }: PostPageProps) {
     setPosts(data.posts);
   };
 
+  const [createPost] = useCreatePostMutation();
+
   const onCreatePost = async (text: string) => {
+    const input = { body: text, author: 'placeholder-author' };
+    const { data } = await createPost({ variables: { input } });
+    setPosts([...postListStat, data?.createPost.post as Post]);
+  };
     const input: CreatePostMutationVariables = { input: { body: text, author: 'placeholder-author' } };
     await apolloClient.mutate<CreatePostMutation, CreatePostMutationVariables>({
       mutation: CreatePostDocument,
