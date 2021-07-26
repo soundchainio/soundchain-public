@@ -26,7 +26,6 @@ export type AddBookPayload = {
 };
 
 export type AddPostInput = {
-  id: Scalars['String'];
   author: Scalars['String'];
   body: Scalars['String'];
 };

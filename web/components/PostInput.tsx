@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import { Picker } from 'emoji-mart';
 import 'emoji-mart/css/emoji-mart.css';
 import Image from 'next/image';
-import { Picker } from 'emoji-mart';
-import ProfilePic from "../public/profile.jpg"
+import React, { useState } from 'react';
+import ProfilePic from "../public/profile.jpg";
 type PostInputProps = {
   onShareClick: (text: string) => void;
 };
