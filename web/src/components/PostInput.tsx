@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 type PostInputProps = {
   onCreatePost: (text: string) => void;
 };
-export function PostInput({ onCreatePost }: PostInputProps) {
+export const PostInput = ({ onCreatePost }: PostInputProps) => {
   const [text, setText] = useState('');
   const [enableEmoji, setEnableEmoji] = useState(false);
   function onShareClick() {
@@ -53,4 +53,4 @@ export function PostInput({ onCreatePost }: PostInputProps) {
       )}
     </>
   );
-}
+};

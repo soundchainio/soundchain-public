@@ -7,7 +7,7 @@ type PostProps = {
   body: string;
 };
 
-export function PostBox({ body, author }: PostProps) {
+export const PostBox = ({ body, author }: PostProps) => {
   return (
     <>
       <div className="border-2  w-8/12 mt-2">
@@ -19,9 +19,8 @@ export function PostBox({ body, author }: PostProps) {
         </div>
         <div className="w-full rounded-lg  border-gray-50 h-16 resize-none p-1 ml-2 ">{body}</div>
 
-        <div></div>
-        <div className="ml-5"></div>
+        <div className="ml-5" />
       </div>
     </>
   );
-}
+};

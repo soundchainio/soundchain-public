@@ -1,7 +1,4 @@
 {
-    "[javascript]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode"
-    },
     "[typescript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "editor.formatOnSave": true,
@@ -23,5 +20,4 @@
         "**/.settings": true,
         "**/.factorypath": true
     },
-    "javascript.updateImportsOnFileMove.enabled": "always",   
 }

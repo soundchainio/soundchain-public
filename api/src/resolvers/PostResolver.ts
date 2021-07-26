@@ -13,8 +13,7 @@ export default class PostResolver {
 
   @Query(() => [Post])
   async posts(): Promise<Post[]> {
-    const posts = await listPosts();
-    return posts;
+    return await listPosts();
   }
 
   @Mutation(() => AddPostPayload)
