@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "docker-compose up -d && nodemon -w 'src/**' -e 'ts,json' -x 'ts-node src/index.ts'",
     "lint-staged": "lint-staged",
-    "seed": "ts-node src/seeds.ts"
+    "seed": "ts-node src/db/seeds.ts"
   },
   "lint-staged": {
     "*.{ts,json,md}": "prettier --write"

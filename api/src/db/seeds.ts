@@ -1,7 +1,7 @@
 import Faker from 'faker';
 import mongoose from 'mongoose';
-import { ProfileModel } from './models/Profile';
-import { UserModel } from './models/User';
+import { ProfileModel } from '../models/Profile';
+import { UserModel } from '../models/User';
 
 const { DATABASE_URL = 'mongodb://localhost:27017' } = process.env;
 const dbOpts = {
