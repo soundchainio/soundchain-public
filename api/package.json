@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "docker-compose up -d && nodemon -w 'src/**' -e 'ts,json' -x 'ts-node src/index.ts'",
-    "lint-staged": "lint-staged"
+    "lint-staged": "lint-staged",
+    "seed": "ts-node src/seeds.ts"
   },
   "lint-staged": {
     "*.{ts,json,md}": "prettier --write"
@@ -32,12 +33,14 @@
   "devDependencies": {
     "@types/bcrypt": "^5.0.0",
     "@types/express-jwt": "^6.0.2",
+    "@types/faker": "^5.5.7",
     "@types/jsonwebtoken": "^8.5.4",
     "@types/mongoose": "5.10.5",
     "@typescript-eslint/eslint-plugin": "^4.28.3",
     "@typescript-eslint/parser": "^4.28.3",
     "eslint": "^7.30.0",
     "eslint-config-prettier": "^8.3.0",
+    "faker": "^5.5.3",
     "lint-staged": "^11.0.1",
     "nodemon": "^2.0.12",
     "prettier": "^2.3.2",
