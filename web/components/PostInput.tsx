@@ -16,8 +16,6 @@ export function PostInput({ onShareClick }: PostInputProps) {
           <textarea
             value={text}
             onChange={e => setText(e.target.value)}
-              setText(e.target.value);
-            }}
             className="w-full rounded-lg border-2 border-gray-50 h-24 resize-none p-1"
             placeholder="Share your opinion"
           ></textarea>
