@@ -25,7 +25,7 @@ export function PostInput({ onCreatePost }: PostInputProps) {
         <div>
           <button
             onClick={() => {
-              onShareClick;
+              onShareClick();
             }}
             className="bg-blue-600 text-white font-semibold w-24 h-10 rounded mt-2 mb-2 float-right mr-2"
           >
