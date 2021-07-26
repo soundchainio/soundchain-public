@@ -7,10 +7,10 @@ type PostInputProps = {
 export const PostInput = ({ onCreatePost }: PostInputProps) => {
   const [text, setText] = useState('');
   const [enableEmoji, setEnableEmoji] = useState(false);
-  function onShareClick() {
+  const onShareClick = () => {
     onCreatePost(text);
     setText('');
-  }
+  };
   return (
     <>
       <div className="border-2 rounded w-8/12 mt-24">

@@ -1,6 +1,6 @@
 import Post, { PostModel } from '../models/Post';
 
-export class PostProfile {
+export class PostService {
   static async createPost(author: string, body: string): Promise<Post> {
     const post = new PostModel({ author, body });
     await post.save();
