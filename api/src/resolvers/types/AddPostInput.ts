@@ -7,5 +7,4 @@ export default class AddPostInput {
 
   @Field()
   body: string;
-
 }

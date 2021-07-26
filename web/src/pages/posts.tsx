@@ -45,7 +45,7 @@ export default function PostsPage({ posts }: PostPageProps) {
         <PostInput onCreatePost={onCreatePost} />
 
         {postList.map((post, index) => (
-          <PostBox key={index} index={index ?? 0} body={post.body} author={post.author} />
+          <PostBox key={index} body={post.body} author={post.author} />
         ))}
       </main>
 
