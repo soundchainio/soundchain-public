@@ -2,7 +2,7 @@ import { Picker } from 'emoji-mart';
 import 'emoji-mart/css/emoji-mart.css';
 import Image from 'next/image';
 import React, { useState } from 'react';
-import ProfilePic from "../public/profile.jpg";
+import ProfilePic from "../../public/profile.jpg";
 type PostInputProps = {
   onShareClick: (text: string) => void;
 };

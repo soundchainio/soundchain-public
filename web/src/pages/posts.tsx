@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Image from 'next/image';
 import { useState } from 'react';
 import { PostBox, PostInput } from '../components/PostInput';
-import apolloClient from '../lib/apolloClient';
+import { apolloClient } from '../lib/apollo';
 import {
   CreatePostDocument,
   CreatePostMutation,

@@ -1,10 +1,14 @@
-import { Arg, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
+import { UserInputError } from 'apollo-server-express';
+import { Arg, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
 import Profile from '../models/Profile';
 import User from '../models/User';
+import AuthService from '../services/AuthService';
+import JwtService from '../services/JwtService';
 import { ProfileService } from '../services/ProfileService';
-import { UserService } from '../services/UserService';
+import Context from '../types/Context';
+import AuthPayload from './types/AuthPayload';
+import LoginInput from './types/LoginInput';
 import RegisterInput from './types/RegisterInput';
-import RegisterPayload from './types/RegisterPayload';
 
 @Resolver(User)
 export default class UserResolver {
@@ -13,19 +17,31 @@ export default class UserResolver {
     return ProfileService.getProfile(user.profileId);
   }
 
-  // TODO Remove after authentication
-  @Query(() => User)
-  async user(@Arg('id') id: string): Promise<User> {
-    return UserService.getUser(id);
+  @Query(() => User, { nullable: true })
+  async me(@Ctx() context: Context): Promise<User | undefined> {
+    return context.user;
   }
 
-  @Mutation(() => RegisterPayload)
+  @Mutation(() => AuthPayload)
   async register(
     @Arg('input')
     { email, handle, password, displayName }: RegisterInput,
-  ): Promise<RegisterPayload> {
-    const profile = await ProfileService.createProfile(displayName);
-    const user = await UserService.createUser(email, handle, password, profile._id);
-    return { user };
+  ): Promise<AuthPayload> {
+    const user = await AuthService.register(email, handle, password, displayName);
+    return { jwt: JwtService.create(user) };
+  }
+
+  @Mutation(() => AuthPayload)
+  async login(
+    @Arg('input')
+    { username, password }: LoginInput,
+  ): Promise<AuthPayload> {
+    const user = await AuthService.getUserFromCredentials(username, password);
+
+    if (!user) {
+      throw new UserInputError('Invalid credentials');
+    }
+
+    return { jwt: JwtService.create(user) };
   }
 }
