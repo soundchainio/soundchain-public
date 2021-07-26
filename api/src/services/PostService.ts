@@ -9,3 +9,6 @@ export async function createPost(author: string, body: string): Promise<Post> {
 export async function listPosts(): Promise<Post[]> {
   return await PostModel.find().sort({ createdAt: 'desc' }).exec();
 }
+export async function findPost(id: string): Promise<Post> {
+  return await PostModel.findByIdOrFail(id);
+}
