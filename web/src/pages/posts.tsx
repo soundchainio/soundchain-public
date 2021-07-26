@@ -3,13 +3,7 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { PostBox, PostInput } from '../components/PostInput';
 import { apolloClient } from '../lib/apollo';
-import {
-  CreatePostDocument,
-  CreatePostMutation,
-  CreatePostMutationVariables,
-  PostDocument,
-  PostQuery,
-} from '../lib/graphql';
+import { PostDocument, PostQuery, useCreatePostMutation } from '../lib/graphql';
 import styles from '../styles/HomePage.module.css';
 export async function getServerSideProps() {
   const { data } = await apolloClient.query<PostQuery>({ query: PostDocument, fetchPolicy: 'no-cache' });
@@ -26,23 +20,16 @@ export interface PostPageProps {
 
 export default function PostsPage({ posts }: PostPageProps) {
   const [postList, setPosts] = useState(posts);
+
+  const [createPost] = useCreatePostMutation();
   const fetchNewPosts = async () => {
     const { data } = await apolloClient.query<PostQuery>({ query: PostDocument, fetchPolicy: 'no-cache' });
     setPosts(data.posts);
   };
 
-  const [createPost] = useCreatePostMutation();
-
   const onCreatePost = async (text: string) => {
     const input = { body: text, author: 'placeholder-author' };
-    const { data } = await createPost({ variables: { input } });
-    setPosts([...postListStat, data?.createPost.post as Post]);
-  };
-    const input: CreatePostMutationVariables = { input: { body: text, author: 'placeholder-author' } };
-    await apolloClient.mutate<CreatePostMutation, CreatePostMutationVariables>({
-      mutation: CreatePostDocument,
-      variables: input,
-    });
+    await createPost({ variables: { input } });
     fetchNewPosts();
   };
 
@@ -55,14 +42,10 @@ export default function PostsPage({ posts }: PostPageProps) {
       </Head>
 
       <main className={styles.main}>
-        <PostInput
-          <PostInput onShareClick={onCreatePost} />
-            onCreatePost(text);
-          }}
-        />
+        <PostInput onCreatePost={onCreatePost} />
 
-        {postListStat.map(post => (
-          <PostBox key={post.id} body={post.body} author={post.author} />
+        {postList.map((post, index) => (
+          <PostBox key={index} index={index ?? 0} body={post.body} author={post.author} />
         ))}
       </main>
 

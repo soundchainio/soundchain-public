@@ -4,9 +4,9 @@ import Image from 'next/image';
 import React, { useState } from 'react';
 import ProfilePic from '../../public/profile.jpg';
 type PostInputProps = {
-  onShareClick: (text: string) => void;
+  onCreatePost: (text: string) => void;
 };
-export function PostInput({ onShareClick }: PostInputProps) {
+export function PostInput({ onCreatePost }: PostInputProps) {
   const [text, setText] = useState('');
   const [enableEmoji, setEnableEmoji] = useState(false);
   return (
@@ -23,7 +23,7 @@ export function PostInput({ onShareClick }: PostInputProps) {
         <div>
           <button
             onClick={() => {
-              onShareClick(text);
+              onCreatePost(text);
               setText('');
             }}
             className="bg-blue-600 text-white font-semibold w-24 h-10 rounded mt-2 mb-2 float-right mr-2"
@@ -55,7 +55,6 @@ export function PostInput({ onShareClick }: PostInputProps) {
 }
 
 type PostProps = {
-  key: string;
   author: string;
   body: string;
 };
