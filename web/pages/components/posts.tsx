@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
-import apolloClient from '../lib/apolloClient';
-import styles from '../styles/HomePage.module.css';
-import { PostInput, PostBox } from '../components/inputs/postComponent';
+import apolloClient from '../../lib/apolloClient';
+import styles from '../../styles/HomePage.module.css';
 import {
   PostQuery,
   PostDocument,
   CreatePostDocument,
   CreatePostMutation,
   CreatePostMutationVariables,
-} from '../lib/graphql';
+} from '../../lib/graphql';
+import { PostBox,PostInput } from '../../components/PostInput';
 export async function getServerSideProps() {
   const { data } = await apolloClient.query<PostQuery>({ query: PostDocument, fetchPolicy: 'no-cache' });
   return {
@@ -37,6 +37,8 @@ export default function PostsPage({ posts }: PostPageProps) {
       mutation: CreatePostDocument,
       variables: input,
     });
+     fetchNewPosts();
+
   };
 
   return (
@@ -51,8 +53,6 @@ export default function PostsPage({ posts }: PostPageProps) {
         <PostInput
           onShareClick={async text => {
             onCreatePost(text);
-            fetchNewPosts();
-            console.log('cool');
           }}
         />
 

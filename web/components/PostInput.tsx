@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import 'emoji-mart/css/emoji-mart.css';
 import Image from 'next/image';
 import { Picker } from 'emoji-mart';
-import profilePic from '../../../public/profile.jpg';
-
+import ProfilePic from "../public/profile.jpg"
 type PostInputProps = {
   onShareClick: (text: string) => void;
 };
@@ -69,7 +68,7 @@ export function PostBox({ body,  author, key }: PostProps) {
       <div key={key} className="border-2  w-8/12 mt-2">
         <div className="flex justify-start">
           <div className="rounded-full w-8 h-8 border mt-2 ml-2 border-gray-400">
-            <Image className="rounded-full" alt="profile" src={profilePic} />
+            <Image className="rounded-full" alt="profile" src={ProfilePic} />
           </div>
           <p className="p-1 font-semibold text-xl mt-1 ml-1 text-blue-700">{author}</p>
         </div>
