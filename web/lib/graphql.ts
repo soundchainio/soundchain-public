@@ -25,6 +25,17 @@ export type AddBookPayload = {
   book: Book;
 };
 
+export type AddCommentInput = {
+  postId: Scalars['String'];
+  authorId: Scalars['String'];
+  body: Scalars['String'];
+};
+
+export type AddCommentPayload = {
+  __typename?: 'AddCommentPayload';
+  comment: Comment;
+};
+
 export type Book = {
   __typename?: 'Book';
   id: Scalars['ID'];
@@ -33,23 +44,99 @@ export type Book = {
   updatedAt: Scalars['DateTime'];
 };
 
+export type Comment = {
+  __typename?: 'Comment';
+  id: Scalars['ID'];
+  body: Scalars['String'];
+  author: Profile;
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   addBook: AddBookPayload;
+  addComment: AddCommentPayload;
+  register: RegisterPayload;
 };
 
 export type MutationAddBookArgs = {
   input: AddBookInput;
 };
 
+export type MutationAddCommentArgs = {
+  input: AddCommentInput;
+};
+
+export type MutationRegisterArgs = {
+  input: RegisterInput;
+};
+
+export type Profile = {
+  __typename?: 'Profile';
+  id: Scalars['ID'];
+  displayName: Scalars['String'];
+  profilePicture?: Maybe<Scalars['String']>;
+  coverPicture?: Maybe<Scalars['String']>;
+  socialMediaLinks: Array<SocialMedia>;
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+};
+
 export type Query = {
   __typename?: 'Query';
   book: Book;
   books: Array<Book>;
+  comment: Comment;
+  comments: Array<Comment>;
+  user: User;
 };
 
 export type QueryBookArgs = {
   id: Scalars['String'];
+};
+
+export type QueryCommentArgs = {
+  id: Scalars['String'];
+};
+
+export type QueryUserArgs = {
+  id: Scalars['String'];
+};
+
+export type RegisterInput = {
+  email: Scalars['String'];
+  displayName: Scalars['String'];
+  handle: Scalars['String'];
+  password: Scalars['String'];
+};
+
+export type RegisterPayload = {
+  __typename?: 'RegisterPayload';
+  user: User;
+};
+
+export type SocialMedia = {
+  __typename?: 'SocialMedia';
+  name: SocialMediaName;
+  link: Scalars['String'];
+};
+
+/** Social media options */
+export enum SocialMediaName {
+  Twitter = 'TWITTER',
+  Instagram = 'INSTAGRAM',
+  Facebook = 'FACEBOOK',
+}
+
+export type User = {
+  __typename?: 'User';
+  id: Scalars['ID'];
+  email: Scalars['String'];
+  handle: Scalars['String'];
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  profile: Profile;
 };
 
 export type HomePageQueryVariables = Exact<{ [key: string]: never }>;

@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
+import { NewCommentForm } from '../components/NewCommentForm';
 import apolloClient from '../lib/apolloClient';
 import { HomePageDocument, HomePageQuery } from '../lib/graphql';
 import styles from '../styles/HomePage.module.css';
@@ -29,6 +30,7 @@ export default function HomePage({ books }: HomePageProps) {
       </Head>
 
       <main className={styles.main}>
+        <NewCommentForm postId="asdfsd" authorId="60fb0dd8e50376be228186da" />
         <Link href="/login">
           <a className="text-2xl text-blue-500 font-semibold hover:underline">Login</a>
         </Link>
