@@ -1,4 +1,4 @@
-import { Picker } from 'emoji-mart';
+import { BaseEmoji, Picker } from 'emoji-mart';
 import 'emoji-mart/css/emoji-mart.css';
 import React, { useState } from 'react';
 type PostInputProps = {
@@ -7,6 +7,10 @@ type PostInputProps = {
 export function PostInput({ onCreatePost }: PostInputProps) {
   const [text, setText] = useState('');
   const [enableEmoji, setEnableEmoji] = useState(false);
+  function onShareClick() {
+    onCreatePost(text);
+    setText('');
+  }
   return (
     <>
       <div className="border-2 rounded w-8/12 mt-24">
@@ -21,8 +25,7 @@ export function PostInput({ onCreatePost }: PostInputProps) {
         <div>
           <button
             onClick={() => {
-              onCreatePost(text);
-              setText('');
+              onShareClick;
             }}
             className="bg-blue-600 text-white font-semibold w-24 h-10 rounded mt-2 mb-2 float-right mr-2"
           >
@@ -42,8 +45,8 @@ export function PostInput({ onCreatePost }: PostInputProps) {
       {enableEmoji && (
         <div className="h-1 z-30 w-8/12">
           <Picker
-            onSelect={emojiData => {
-              setText(text + emojiData.native); // Fake error
+            onSelect={(emojiData: BaseEmoji) => {
+              setText(`${text}${emojiData.native}`);
             }}
           />
         </div>
