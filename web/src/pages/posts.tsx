@@ -1,7 +1,8 @@
 import Head from 'next/head';
 import Image from 'next/image';
 import { useState } from 'react';
-import { PostBox, PostInput } from '../components/PostInput';
+import { PostInput } from '../components/PostInput';
+import { PostBox } from '../components/PostBox';
 import { apolloClient } from '../lib/apollo';
 import { PostDocument, PostQuery, useCreatePostMutation } from '../lib/graphql';
 import styles from '../styles/HomePage.module.css';
