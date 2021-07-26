@@ -8,7 +8,7 @@ import {
   CreatePostMutation,
   CreatePostMutationVariables,
   PostDocument,
-  PostQuery
+  PostQuery,
 } from '../lib/graphql';
 import styles from '../styles/HomePage.module.css';
 export async function getServerSideProps() {

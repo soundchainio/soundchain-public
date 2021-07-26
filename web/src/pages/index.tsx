@@ -6,7 +6,7 @@ import { apolloClient, setJwt } from '../lib/apollo';
 import { HomePageDocument, HomePageQuery } from '../lib/graphql';
 import styles from '../styles/HomePage.module.css';
 export async function getServerSideProps() {
-  const {data} = await apolloClient.query<HomePageQuery>({ query: HomePageDocument });
+  const { data } = await apolloClient.query<HomePageQuery>({ query: HomePageDocument });
 
   return {
     props: {

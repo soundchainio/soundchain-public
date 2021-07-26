@@ -1,19 +1,19 @@
-query Post{
-    posts {
-       id
-       body
-       author
-       createdAt
-    }
+query Post {
+  posts {
+    id
+    body
+    author
+    createdAt
   }
+}
 
 mutation CreatePost($input: AddPostInput!) {
-    createPost(input: $input) {
-      post {
-        id
-        body
-        author
-        createdAt
-      }
+  createPost(input: $input) {
+    post {
+      id
+      body
+      author
+      createdAt
     }
   }
+}
