@@ -27,7 +27,6 @@ export type AddBookPayload = {
 
 export type AddCommentInput = {
   postId: Scalars['String'];
-  authorId: Scalars['String'];
   body: Scalars['String'];
 };
 
@@ -53,7 +52,7 @@ export type Comment = {
   __typename?: 'Comment';
   id: Scalars['ID'];
   body: Scalars['String'];
-  author: Profile;
+  profile: Profile;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
 };
@@ -109,7 +108,6 @@ export type Query = {
   book: Book;
   books: Array<Book>;
   comment: Comment;
-  comments: Array<Comment>;
   me?: Maybe<User>;
 };
 

@@ -1,12 +1,17 @@
 import Comment, { CommentModel } from '../models/Comment';
 
+interface NewCommentParams {
+  profile?: string;
+  body: string;
+}
+
 export class CommentService {
   static getComment(id: string): Promise<Comment> {
     return CommentModel.findByIdOrFail(id);
   }
 
-  static async createComment(comment: Comment): Promise<Comment> {
-    const newComment = new CommentModel(comment);
+  static async createComment(params: NewCommentParams): Promise<Comment> {
+    const newComment = new CommentModel(params);
     await newComment.save();
     return newComment;
   }

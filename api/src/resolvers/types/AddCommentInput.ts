@@ -6,8 +6,5 @@ export default class AddCommentInput {
   postId: string;
 
   @Field()
-  authorId: string;
-
-  @Field()
   body: string;
 }

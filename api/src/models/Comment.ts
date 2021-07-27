@@ -12,9 +12,9 @@ export default class Comment extends Model {
   @prop({ required: true })
   body: string;
 
-  @Field(() => Profile, { name: 'author' })
-  @prop({ ref: () => Profile })
-  authorId: Ref<Profile>;
+  @Field(() => Profile)
+  @prop({ required: true, ref: () => Profile })
+  profile: Ref<Profile>;
 
   @Field(() => Date)
   createdAt: Date;
