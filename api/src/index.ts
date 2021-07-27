@@ -19,7 +19,11 @@ interface ExpressContext {
 async function bootstrap() {
   await mongoose.connect(DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true });
 
-  const schema = buildSchemaSync({ resolvers, globalMiddlewares: [TypegooseMiddleware] });
+  const schema = buildSchemaSync({
+    resolvers,
+    globalMiddlewares: [TypegooseMiddleware],
+    authChecker: ({ context }) => !!context.jwtUser,
+  });
 
   const server = new ApolloServer({
     schema,
