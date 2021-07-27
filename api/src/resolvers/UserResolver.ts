@@ -9,6 +9,8 @@ import Context from '../types/Context';
 import AuthPayload from './types/AuthPayload';
 import LoginInput from './types/LoginInput';
 import RegisterInput from './types/RegisterInput';
+import { VerifyInput } from './types/VerifyInput';
+import { VerifyPayload } from './types/VerifyPayload';
 
 @Resolver(User)
 export default class UserResolver {
@@ -43,5 +45,14 @@ export default class UserResolver {
     }
 
     return { jwt: JwtService.create(user) };
+  }
+
+  @Mutation(() => VerifyPayload)
+  async verify(
+    @Arg('input')
+    { token }: VerifyInput,
+  ): Promise<VerifyPayload> {
+    const success = await AuthService.verifyUserEmail(token);
+    return { success };
   }
 }

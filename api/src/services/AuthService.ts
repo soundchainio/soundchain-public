@@ -47,4 +47,19 @@ export default class AuthService {
       return user;
     }
   }
+
+  static async verifyUserEmail(token: string): Promise<boolean> {
+    const userEmailVerification = await UserEmailVerificationModel.findOne({ token });
+    if (userEmailVerification) {
+      const { _id: verificationId, userId } = userEmailVerification;
+      const user = await UserModel.findByIdOrFail(userId);
+      if (!user.verified) {
+        await UserModel.updateOne({ _id: userId }, { verified: true });
+        await UserEmailVerificationModel.deleteOne({ _id: verificationId });
+      }
+      return true;
+    }
+
+    return false;
+  }
 }

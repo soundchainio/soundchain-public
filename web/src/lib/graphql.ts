@@ -13,7 +13,7 @@ export type Scalars = {
   Int: number;
   Float: number;
   /** The javascript `Date` as string. Type represents date and time as the ISO Date string. */
-  DateTime: any;
+  DateTime: unknown;
 };
 
 export type AddBookInput = {
@@ -50,6 +50,7 @@ export type Mutation = {
   addBook: AddBookPayload;
   register: AuthPayload;
   login: AuthPayload;
+  verify: VerifyPayload;
 };
 
 
@@ -65,6 +66,11 @@ export type MutationRegisterArgs = {
 
 export type MutationLoginArgs = {
   input: LoginInput;
+};
+
+
+export type MutationVerifyArgs = {
+  input: VerifyInput;
 };
 
 export type Profile = {
@@ -120,6 +126,15 @@ export type User = {
   profile: Profile;
 };
 
+export type VerifyInput = {
+  token: Scalars['String'];
+};
+
+export type VerifyPayload = {
+  __typename?: 'VerifyPayload';
+  success: Scalars['Boolean'];
+};
+
 export type HomePageQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -169,6 +184,19 @@ export type RegisterMutation = (
   & { register: (
     { __typename?: 'AuthPayload' }
     & Pick<AuthPayload, 'jwt'>
+  ) }
+);
+
+export type VerifyMutationVariables = Exact<{
+  input: VerifyInput;
+}>;
+
+
+export type VerifyMutation = (
+  { __typename?: 'Mutation' }
+  & { verify: (
+    { __typename?: 'VerifyPayload' }
+    & Pick<VerifyPayload, 'success'>
   ) }
 );
 
@@ -314,3 +342,36 @@ export function useRegisterMutation(baseOptions?: Apollo.MutationHookOptions<Reg
 export type RegisterMutationHookResult = ReturnType<typeof useRegisterMutation>;
 export type RegisterMutationResult = Apollo.MutationResult<RegisterMutation>;
 export type RegisterMutationOptions = Apollo.BaseMutationOptions<RegisterMutation, RegisterMutationVariables>;
+export const VerifyDocument = gql`
+    mutation Verify($input: VerifyInput!) {
+  verify(input: $input) {
+    success
+  }
+}
+    `;
+export type VerifyMutationFn = Apollo.MutationFunction<VerifyMutation, VerifyMutationVariables>;
+
+/**
+ * __useVerifyMutation__
+ *
+ * To run a mutation, you first call `useVerifyMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useVerifyMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [verifyMutation, { data, loading, error }] = useVerifyMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useVerifyMutation(baseOptions?: Apollo.MutationHookOptions<VerifyMutation, VerifyMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<VerifyMutation, VerifyMutationVariables>(VerifyDocument, options);
+      }
+export type VerifyMutationHookResult = ReturnType<typeof useVerifyMutation>;
+export type VerifyMutationResult = Apollo.MutationResult<VerifyMutation>;
+export type VerifyMutationOptions = Apollo.BaseMutationOptions<VerifyMutation, VerifyMutationVariables>;
