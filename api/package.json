@@ -18,6 +18,7 @@
     "semi": true
   },
   "dependencies": {
+    "@sendgrid/mail": "^7.4.5",
     "@typegoose/typegoose": "^7.6.3",
     "apollo-server-express": "^3.0.2",
     "bcrypt": "^5.0.1",
@@ -28,7 +29,8 @@
     "jsonwebtoken": "^8.5.1",
     "mongoose": "5.10.18",
     "reflect-metadata": "^0.1.13",
-    "type-graphql": "^1.1.1"
+    "type-graphql": "^1.1.1",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.0",
@@ -36,6 +38,7 @@
     "@types/faker": "^5.5.7",
     "@types/jsonwebtoken": "^8.5.4",
     "@types/mongoose": "5.10.5",
+    "@types/uuid": "^8.3.1",
     "@typescript-eslint/eslint-plugin": "^4.28.3",
     "@typescript-eslint/parser": "^4.28.3",
     "eslint": "^7.30.0",

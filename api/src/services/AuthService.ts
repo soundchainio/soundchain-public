@@ -1,7 +1,10 @@
 import { UserInputError } from 'apollo-server-express';
 import { compare } from 'bcrypt';
+import { v4 as uuidv4 } from 'uuid';
 import { ProfileModel } from '../models/Profile';
 import User, { UserModel } from '../models/User';
+import { UserEmailVerificationModel } from '../models/UserEmailVerification';
+import { EmailService } from './EmailService';
 
 export default class AuthService {
   static async register(email: string, handle: string, password: string, displayName: string): Promise<User> {
@@ -11,14 +14,28 @@ export default class AuthService {
       throw new UserInputError(`${existingUser.email === email ? email : handle} is in use`);
     }
 
-    // TODO: handle user creation failure (need to delete profile)
-    // or use some kind of db transaction
-
     const profile = new ProfileModel({ displayName });
     await profile.save();
 
     const user = new UserModel({ email, handle, password, profileId: profile._id });
-    await user.save();
+
+    try {
+      await user.save();
+    } catch (err) {
+      ProfileModel.deleteOne({ _id: profile.id });
+      throw new UserInputError(`error while creating user`);
+    }
+
+    try {
+      const verificationToken = uuidv4();
+      const userVerification = new UserEmailVerificationModel({ userId: user.id, token: verificationToken });
+      await userVerification.save();
+      EmailService.sendEmailVerification(email, displayName, verificationToken);
+    } catch (err) {
+      ProfileModel.deleteOne({ _id: profile.id });
+      UserModel.deleteOne({ _id: user.id });
+      throw new UserInputError(`error while sending verification email`);
+    }
 
     return user;
   }
