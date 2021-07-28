@@ -22,7 +22,7 @@ async function bootstrap() {
   const schema = buildSchemaSync({
     resolvers,
     globalMiddlewares: [TypegooseMiddleware],
-    authChecker: ({ context }) => !!context.jwtUser,
+    authChecker: ({ context }) => Boolean(context.jwtUser),
   });
 
   const server = new ApolloServer({
