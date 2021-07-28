@@ -13,15 +13,15 @@ interface FormValues {
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
-  email: yup.string().email().required(),
+  email: yup.string().email().required().label('Email'),
   handle: yup
     .string()
     .min(1)
     .max(32)
     .matches(/^[A-z0-9_]*$/, 'Invalid characters. Only letters and nubers accepted')
     .required(),
-  displayName: yup.string().min(3).max(255).required(),
-  password: yup.string().min(8).required(),
+  displayName: yup.string().min(3).max(255).required().label('Display Name'),
+  password: yup.string().min(8).required().label('Password'),
   passwordConfirmation: yup.string().oneOf([yup.ref('password'), null], 'Passwords must match'),
 });
 
@@ -41,7 +41,7 @@ export const RegisterForm = () => {
 
   return (
     <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
-      <Form className="flex flex-col items-left space-y-6">
+      <Form className="flex flex-col items-left space-y-6 w-full px-6">
         <div className="flex flex-col">
           <span className="mr-1">Email*</span>
           <Field type="text" name="email" />
