@@ -1,11 +1,9 @@
 import Head from 'next/head';
-import Image from 'next/image';
 import { useState } from 'react';
 import { PostInput } from '../components/PostInput';
 import { PostBox } from '../components/PostBox';
 import { apolloClient } from '../lib/apollo';
 import { PostsDocument, PostsQuery, useAddPostMutation } from '../lib/graphql';
-import styles from '../styles/HomePage.module.css';
 export async function getServerSideProps() {
   const { data } = await apolloClient.query<PostsQuery>({ query: PostsDocument, fetchPolicy: 'no-cache' });
   return {
