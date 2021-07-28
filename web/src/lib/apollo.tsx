@@ -1,5 +1,6 @@
 import {
   ApolloClient,
+  ApolloContextValue,
   ApolloLink,
   ApolloProvider as Provider,
   createHttpLink,
@@ -7,16 +8,19 @@ import {
   Observable,
 } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
+import Cookies from 'js-cookie';
+import { GetServerSidePropsContext } from 'next';
 import isBrowser from './isBrowser';
 
 const jwtKey = 'token';
 
-let jwt = (isBrowser && localStorage.getItem(jwtKey)) || undefined;
+let jwt = (isBrowser && Cookies.get(jwtKey)) || undefined;
 
 const httpLink = createHttpLink({ uri: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/graphql' });
 
-const authLink = setContext(() => {
-  return jwt ? { headers: { authorization: `Bearer ${jwt}` } } : {};
+const authLink = setContext((_, context: ApolloContextValue | GetServerSidePropsContext) => {
+  const currentJwt = ('req' in context && context.req.cookies[jwtKey]) || jwt;
+  return currentJwt ? { headers: { authorization: `Bearer ${currentJwt}` } } : {};
 });
 
 export const apolloClient = new ApolloClient({
@@ -32,13 +36,13 @@ export const apolloClient = new ApolloClient({
 export function setJwt(newJwt?: string) {
   jwt = newJwt;
 
-  if (jwt) {
-    localStorage.setItem(jwtKey, jwt);
-  } else {
-    localStorage.removeItem(jwtKey);
-  }
-
   if (isBrowser) {
+    if (jwt) {
+      Cookies.set(jwtKey, jwt, { secure: true });
+    } else {
+      Cookies.remove(jwtKey);
+    }
+
     apolloClient.resetStore();
   }
 }

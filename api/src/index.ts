@@ -4,22 +4,26 @@ import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
 import mongoose from 'mongoose';
 import { buildSchemaSync } from 'type-graphql';
+import { DATABASE_URL, PORT } from './env';
 import { TypegooseMiddleware } from './middlewares/typegoose-middleware';
 import resolvers from './resolvers';
+import { EmailService } from './services/EmailService';
 import JwtService, { JwtUser } from './services/JwtService';
 import { UserService } from './services/UserService';
 import Context from './types/Context';
-
-const { PORT = 4000, DATABASE_URL = 'mongodb://localhost:27017' } = process.env;
 
 interface ExpressContext {
   req: { user?: JwtUser };
 }
 
 async function bootstrap() {
-  await mongoose.connect(DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true });
+  await mongoose.connect(DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false });
 
-  const schema = buildSchemaSync({ resolvers, globalMiddlewares: [TypegooseMiddleware] });
+  const schema = buildSchemaSync({
+    resolvers,
+    globalMiddlewares: [TypegooseMiddleware],
+    authChecker: ({ context }) => Boolean(context.jwtUser),
+  });
 
   const server = new ApolloServer({
     schema,
@@ -31,6 +35,8 @@ async function bootstrap() {
   });
 
   await server.start();
+
+  EmailService.initialize();
 
   const app = express();
   app.use(JwtService.middleware);

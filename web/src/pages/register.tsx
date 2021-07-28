@@ -1,20 +1,10 @@
 import { useRouter } from 'next/dist/client/router';
-import Link from 'next/link';
-import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { RegisterForm } from '../components/RegisterForm';
 import useMe from '../hooks/useMe';
-import { setJwt } from '../lib/apollo';
-import { useRegisterMutation } from '../lib/graphql';
+import Link from 'next/link';
 
 export default function SignUpPage() {
-  const [email, setEmail] = useState('');
-  const handleEmailChange = useCallback(event => setEmail(event.target.value), []);
-  const [handle, setHandle] = useState('');
-  const handleHandleChange = useCallback(event => setHandle(event.target.value), []);
-  const [displayName, setDisplayName] = useState('');
-  const handleDisplayNameChange = useCallback(event => setDisplayName(event.target.value), []);
-  const [password, setPassword] = useState('');
-  const handlePasswordChange = useCallback(event => setPassword(event.target.value), []);
-  const [register, { loading, error }] = useRegisterMutation();
   const me = useMe();
   const router = useRouter();
 
@@ -24,44 +14,18 @@ export default function SignUpPage() {
     }
   }, [me, router]);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    try {
-      const result = await register({ variables: { input: { email, handle, displayName, password } } });
-      setJwt(result.data?.register.jwt);
-    } catch (error) {
-      // handled by error state
-    }
-  }
-
   return (
-    <div>
-      <form onSubmit={handleSubmit}>
-        <label>
-          Email
-          <input name="email" type="email" value={email} onChange={handleEmailChange} />
-        </label>
-        <label>
-          Handle
-          <input name="username" value={handle} onChange={handleHandleChange} />
-        </label>
-        <label>
-          Display name
-          <input name="name" value={displayName} onChange={handleDisplayNameChange} />
-        </label>
-        <label>
-          Password
-          <input name="password" type="password" value={password} onChange={handlePasswordChange} />
-        </label>
-        <button type="submit" disabled={loading}>
-          Sign up
-        </button>
-        <Link href="/signin">
-          <a>Sign in</a>
-        </Link>
-        {error && <p>{error.message}</p>}
-      </form>
+    <div className="container mx-auto">
+      <div className="md:mt-12 flex flex-col items-center space-y-6 mb-6">
+        <div className="grid grid-cols-2 gap-6">
+          <Link href="/login" passHref>
+            <button className="border-2 p-3">Login</button>
+          </Link>
+          <button className="p-3 bg-black text-white">Create Account</button>
+        </div>
+        <h1 className="text-2xl">Create your account</h1>
+        <RegisterForm />
+      </div>
     </div>
   );
 }
