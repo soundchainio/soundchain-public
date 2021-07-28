@@ -10,7 +10,7 @@ export const getServerSideProps: GetServerSideProps<VerifyEmailProps> = async co
     try {
       const { data } = await apolloClient.mutate<VerifyUserEmailMutation, VerifyUserEmailMutationVariables>({
         mutation: VerifyUserEmailDocument,
-        variables: { input: { token: token as string } },
+        variables: { input: { token: token.toString() } },
       });
       if (data) {
         verified = data.verifyUserEmail.user.verified;
