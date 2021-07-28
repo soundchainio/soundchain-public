@@ -13,7 +13,7 @@ export type Scalars = {
   Int: number;
   Float: number;
   /** The javascript `Date` as string. Type represents date and time as the ISO Date string. */
-  DateTime: unknown;
+  DateTime: string;
 };
 
 export type AddBookInput = {
