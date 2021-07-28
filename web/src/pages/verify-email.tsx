@@ -5,7 +5,7 @@ import { VerifyUserEmailDocument, VerifyUserEmailMutation, VerifyUserEmailMutati
 
 export const getServerSideProps: GetServerSideProps<VerifyEmailProps> = async context => {
   const { token } = context.query;
-  let success = false;
+  let verified = false;
   if (token) {
     try {
       const { data } = await apolloClient.mutate<VerifyUserEmailMutation, VerifyUserEmailMutationVariables>({
@@ -13,30 +13,30 @@ export const getServerSideProps: GetServerSideProps<VerifyEmailProps> = async co
         variables: { input: { token: token as string } },
       });
       if (data) {
-        success = data.verifyUserEmail.user.verified;
+        verified = data.verifyUserEmail.user.verified;
       }
     } catch (err) {}
   }
 
   return {
     props: {
-      success,
+      verified,
     },
   };
 };
 
 export interface VerifyEmailProps {
-  success: boolean;
+  verified: boolean;
 }
 
-export default function VerifyEmailPage({ success }: VerifyEmailProps) {
+export default function VerifyEmailPage({ verified }: VerifyEmailProps) {
   return (
     <div className="container mx-auto">
       <div className="mt-12 flex flex-col items-center space-y-6">
         <h1 className="text-2xl text-center">SoundChain</h1>
         <main className="text-center flex">
           <p>
-            {success ? (
+            {verified ? (
               <>
                 <h1>Welcome to Soundchain!</h1>
                 Verification complete! You can now proceed to login.
