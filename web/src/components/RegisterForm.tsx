@@ -18,11 +18,11 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
     .string()
     .min(1)
     .max(32)
-    .matches(/^[A-z0-9_]*$/, 'Invalid characters. Only letters and nubers accepted')
+    .matches(/^[A-z0-9_]*$/, 'Invalid characters. Only letters and numbers are accepted.')
     .required(),
   displayName: yup.string().min(3).max(255).required().label('Display Name'),
   password: yup.string().min(8).required().label('Password'),
-  passwordConfirmation: yup.string().oneOf([yup.ref('password'), null], 'Passwords must match'),
+  passwordConfirmation: yup.string().oneOf([yup.ref('password'), null], 'Passwords must match.'),
 });
 
 export const RegisterForm = () => {
