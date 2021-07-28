@@ -3,7 +3,6 @@ import { compare } from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import { ProfileModel } from '../models/Profile';
 import User, { UserModel } from '../models/User';
-import { UserEmailVerificationModel } from '../models/UserEmailVerification';
 import { EmailService } from './EmailService';
 
 export default class AuthService {
@@ -15,40 +14,24 @@ export default class AuthService {
     }
 
     const profile = new ProfileModel({ displayName });
+    await profile.save();
 
-    try {
-      await profile.save();
-    } catch (err) {
-      throw new UserInputError(`error while creating profile`);
-    }
-
-    const user = new UserModel({ email, handle, password, profileId: profile._id });
+    const emailVerificationToken = uuidv4();
+    const user = new UserModel({ email, handle, password, profileId: profile._id, emailVerificationToken });
 
     try {
       await user.save();
     } catch (err) {
       ProfileModel.deleteOne({ _id: profile.id });
-      throw new UserInputError(`error while creating user`);
-    }
-
-    const verificationToken = uuidv4();
-    const userVerification = new UserEmailVerificationModel({ userId: user.id, token: verificationToken });
-
-    try {
-      await userVerification.save();
-    } catch (err) {
-      ProfileModel.deleteOne({ _id: profile.id });
-      UserModel.deleteOne({ _id: user.id });
-      throw new UserInputError(`error while creating verification email`);
+      throw new Error(`Error while creating user: ${err.message}`);
     }
 
     try {
-      await EmailService.sendEmailVerification(email, displayName, verificationToken);
+      await EmailService.sendEmailVerification(email, displayName, emailVerificationToken);
     } catch (err) {
       ProfileModel.deleteOne({ _id: profile.id });
       UserModel.deleteOne({ _id: user.id });
-      UserEmailVerificationModel.deleteOne({ _id: userVerification.id });
-      throw new UserInputError(`error while sending verification email`);
+      throw new Error(`Error while sending email verification: ${err.message}`);
     }
 
     return user;
@@ -62,18 +45,13 @@ export default class AuthService {
     }
   }
 
-  static async verifyUserEmail(token: string): Promise<boolean> {
-    const userEmailVerification = await UserEmailVerificationModel.findOne({ token });
-    if (userEmailVerification) {
-      const { _id: verificationId, userId } = userEmailVerification;
-      const user = await UserModel.findByIdOrFail(userId);
-      if (!user.verified) {
-        await UserModel.updateOne({ _id: userId }, { verified: true });
-        await UserEmailVerificationModel.deleteOne({ _id: verificationId });
-      }
-      return true;
-    }
+  static async verifyUserEmail(emailVerificationToken: string): Promise<User> {
+    const user = await UserModel.findOne({ emailVerificationToken });
 
-    return false;
+    if (!user) {
+      throw new UserInputError('Cannot verify user email token');
+    }
+    await UserModel.updateOne({ _id: user.id }, { verified: true, $unset: { emailVerificationToken: 1 } });
+    return user;
   }
 }

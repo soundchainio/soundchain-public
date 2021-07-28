@@ -50,7 +50,7 @@ export type Mutation = {
   addBook: AddBookPayload;
   register: AuthPayload;
   login: AuthPayload;
-  verify: VerifyPayload;
+  verifyUserEmail: VerifyUserEmailPayload;
 };
 
 
@@ -69,8 +69,8 @@ export type MutationLoginArgs = {
 };
 
 
-export type MutationVerifyArgs = {
-  input: VerifyInput;
+export type MutationVerifyUserEmailArgs = {
+  input: VerifyUserEmailInput;
 };
 
 export type Profile = {
@@ -121,18 +121,19 @@ export type User = {
   id: Scalars['ID'];
   email: Scalars['String'];
   handle: Scalars['String'];
+  verified: Scalars['Boolean'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   profile: Profile;
 };
 
-export type VerifyInput = {
+export type VerifyUserEmailInput = {
   token: Scalars['String'];
 };
 
-export type VerifyPayload = {
-  __typename?: 'VerifyPayload';
-  success: Scalars['Boolean'];
+export type VerifyUserEmailPayload = {
+  __typename?: 'VerifyUserEmailPayload';
+  user: User;
 };
 
 export type HomePageQueryVariables = Exact<{ [key: string]: never; }>;
@@ -187,16 +188,19 @@ export type RegisterMutation = (
   ) }
 );
 
-export type VerifyMutationVariables = Exact<{
-  input: VerifyInput;
+export type VerifyUserEmailMutationVariables = Exact<{
+  input: VerifyUserEmailInput;
 }>;
 
 
-export type VerifyMutation = (
+export type VerifyUserEmailMutation = (
   { __typename?: 'Mutation' }
-  & { verify: (
-    { __typename?: 'VerifyPayload' }
-    & Pick<VerifyPayload, 'success'>
+  & { verifyUserEmail: (
+    { __typename?: 'VerifyUserEmailPayload' }
+    & { user: (
+      { __typename?: 'User' }
+      & Pick<User, 'verified'>
+    ) }
   ) }
 );
 
@@ -342,36 +346,38 @@ export function useRegisterMutation(baseOptions?: Apollo.MutationHookOptions<Reg
 export type RegisterMutationHookResult = ReturnType<typeof useRegisterMutation>;
 export type RegisterMutationResult = Apollo.MutationResult<RegisterMutation>;
 export type RegisterMutationOptions = Apollo.BaseMutationOptions<RegisterMutation, RegisterMutationVariables>;
-export const VerifyDocument = gql`
-    mutation Verify($input: VerifyInput!) {
-  verify(input: $input) {
-    success
+export const VerifyUserEmailDocument = gql`
+    mutation VerifyUserEmail($input: VerifyUserEmailInput!) {
+  verifyUserEmail(input: $input) {
+    user {
+      verified
+    }
   }
 }
     `;
-export type VerifyMutationFn = Apollo.MutationFunction<VerifyMutation, VerifyMutationVariables>;
+export type VerifyUserEmailMutationFn = Apollo.MutationFunction<VerifyUserEmailMutation, VerifyUserEmailMutationVariables>;
 
 /**
- * __useVerifyMutation__
+ * __useVerifyUserEmailMutation__
  *
- * To run a mutation, you first call `useVerifyMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useVerifyMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useVerifyUserEmailMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useVerifyUserEmailMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [verifyMutation, { data, loading, error }] = useVerifyMutation({
+ * const [verifyUserEmailMutation, { data, loading, error }] = useVerifyUserEmailMutation({
  *   variables: {
  *      input: // value for 'input'
  *   },
  * });
  */
-export function useVerifyMutation(baseOptions?: Apollo.MutationHookOptions<VerifyMutation, VerifyMutationVariables>) {
+export function useVerifyUserEmailMutation(baseOptions?: Apollo.MutationHookOptions<VerifyUserEmailMutation, VerifyUserEmailMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<VerifyMutation, VerifyMutationVariables>(VerifyDocument, options);
+        return Apollo.useMutation<VerifyUserEmailMutation, VerifyUserEmailMutationVariables>(VerifyUserEmailDocument, options);
       }
-export type VerifyMutationHookResult = ReturnType<typeof useVerifyMutation>;
-export type VerifyMutationResult = Apollo.MutationResult<VerifyMutation>;
-export type VerifyMutationOptions = Apollo.BaseMutationOptions<VerifyMutation, VerifyMutationVariables>;
+export type VerifyUserEmailMutationHookResult = ReturnType<typeof useVerifyUserEmailMutation>;
+export type VerifyUserEmailMutationResult = Apollo.MutationResult<VerifyUserEmailMutation>;
+export type VerifyUserEmailMutationOptions = Apollo.BaseMutationOptions<VerifyUserEmailMutation, VerifyUserEmailMutationVariables>;

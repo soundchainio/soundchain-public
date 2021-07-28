@@ -1,5 +1,7 @@
-mutation Verify($input: VerifyInput!) {
-  verify(input: $input) {
-    success
+mutation VerifyUserEmail($input: VerifyUserEmailInput!) {
+  verifyUserEmail(input: $input) {
+    user {
+      verified
+    }
   }
 }

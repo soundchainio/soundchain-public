@@ -1,19 +1,21 @@
 import { GetServerSideProps } from 'next';
 import Link from 'next/link';
 import { apolloClient } from '../lib/apollo';
-import { VerifyDocument, VerifyMutation, VerifyMutationVariables } from '../lib/graphql';
+import { VerifyUserEmailDocument, VerifyUserEmailMutation, VerifyUserEmailMutationVariables } from '../lib/graphql';
 
-export const getServerSideProps: GetServerSideProps<VerificationProps> = async context => {
+export const getServerSideProps: GetServerSideProps<VerifyEmailProps> = async context => {
   const { token } = context.query;
   let success = false;
   if (token) {
-    const { data } = await apolloClient.mutate<VerifyMutation, VerifyMutationVariables>({
-      mutation: VerifyDocument,
-      variables: { input: { token: token as string } },
-    });
-    if (data) {
-      success = data.verify.success;
-    }
+    try {
+      const { data } = await apolloClient.mutate<VerifyUserEmailMutation, VerifyUserEmailMutationVariables>({
+        mutation: VerifyUserEmailDocument,
+        variables: { input: { token: token as string } },
+      });
+      if (data) {
+        success = data.verifyUserEmail.user.verified;
+      }
+    } catch (err) {}
   }
 
   return {
@@ -23,20 +25,20 @@ export const getServerSideProps: GetServerSideProps<VerificationProps> = async c
   };
 };
 
-export interface VerificationProps {
+export interface VerifyEmailProps {
   success: boolean;
 }
 
-export default function VerificationPage({ success }: VerificationProps) {
+export default function VerifyEmailPage({ success }: VerifyEmailProps) {
   return (
     <div className="container mx-auto">
       <div className="mt-12 flex flex-col items-center space-y-6">
         <h1 className="text-2xl text-center">SoundChain</h1>
         <main className="text-center flex">
-          <h1>Welcome to Soundchain!</h1>
           <p>
             {success ? (
               <>
+                <h1>Welcome to Soundchain!</h1>
                 Verification complete! You can now proceed to login.
                 <br />
                 <Link href="/login">

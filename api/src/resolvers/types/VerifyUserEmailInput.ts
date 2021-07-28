@@ -1,7 +1,7 @@
 import { Field, InputType } from 'type-graphql';
 
 @InputType()
-export class VerifyInput {
+export class VerifyUserEmailInput {
   @Field()
   token: string;
 }
