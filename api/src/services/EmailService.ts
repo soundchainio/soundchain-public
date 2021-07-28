@@ -1,4 +1,4 @@
-import SendGrid, { ClientResponse } from '@sendgrid/mail';
+import SendGrid from '@sendgrid/mail';
 import { SENDGRID_API_KEY, SENDGRID_SENDER_EMAIL, SENDGRID_VERIFICATION_TEMPLATE, WEB_APP_URL } from '../env';
 
 export class EmailService {
@@ -6,8 +6,8 @@ export class EmailService {
     SendGrid.setApiKey(SENDGRID_API_KEY);
   }
 
-  static sendEmailVerification(email: string, displayName: string, token: string): Promise<[ClientResponse, unknown]> {
-    return SendGrid.send({
+  static async sendEmailVerification(email: string, displayName: string, token: string): Promise<void> {
+    await SendGrid.send({
       to: email,
       from: SENDGRID_SENDER_EMAIL,
       templateId: SENDGRID_VERIFICATION_TEMPLATE,
