@@ -1,11 +1,5 @@
 import SendGrid, { ClientResponse } from '@sendgrid/mail';
-
-const {
-  WEB_APP_URL = 'http://localhost:3000',
-  SENDGRID_SENDER_EMAIL = 'caaina@ae.studio',
-  SENDGRID_VERIFICATION_TEMPLATE = 'd-30c856476a8e4dcfa97d93ca08fc680d',
-  SENDGRID_API_KEY = 'SG.example',
-} = process.env;
+import { SENDGRID_API_KEY, SENDGRID_SENDER_EMAIL, SENDGRID_VERIFICATION_TEMPLATE, WEB_APP_URL } from '../env';
 
 export class EmailService {
   static initialize(): void {
@@ -19,7 +13,7 @@ export class EmailService {
       templateId: SENDGRID_VERIFICATION_TEMPLATE,
       dynamicTemplateData: {
         displayName,
-        verificationLink: `${WEB_APP_URL}/verification?token=${token}`,
+        verificationLink: `${WEB_APP_URL}/verify-email?token=${token}`,
       },
     });
   }
