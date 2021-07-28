@@ -1,5 +1,7 @@
-import { Arg, Mutation, Query, Resolver } from 'type-graphql';
+import { Arg, Authorized, Mutation, Query, Resolver } from 'type-graphql';
+import { CurrentUser } from '../middlewares/decorators/current-user';
 import Post from '../models/Post';
+import User from '../models/User';
 import AddPostInput from '../resolvers/types/AddPostInput';
 import AddPostPayload from '../resolvers/types/AddPostPayload';
 import { PostService } from '../services/PostService';
@@ -17,8 +19,9 @@ export default class PostResolver {
   }
 
   @Mutation(() => AddPostPayload)
-  async addPost(@Arg('input') { profileId, body }: AddPostInput): Promise<AddPostPayload> {
-    const post = await PostService.createPost(profileId, body);
+  @Authorized()
+  async addPost(@Arg('input') { body }: AddPostInput, @CurrentUser() user: User): Promise<AddPostPayload> {
+    const post = await PostService.createPost(user.profileId, body);
     return { post };
   }
 }

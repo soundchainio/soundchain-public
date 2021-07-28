@@ -1,38 +1,10 @@
-import { GetServerSideProps } from 'next';
 import Head from 'next/head';
-import { useState } from 'react';
 import { PostBox } from '../components/PostBox';
 import { PostInput } from '../components/PostInput';
-import { apolloClient } from '../lib/apollo';
-import { PostsDocument, PostsQuery, useAddPostMutation } from '../lib/graphql';
+import { usePostsQuery } from '../lib/graphql';
 
-export const getServerSideProps: GetServerSideProps<PostPageProps> = async context => {
-  const { data } = await apolloClient.query<PostsQuery>({ query: PostsDocument, context, fetchPolicy: 'no-cache' });
-  return {
-    props: {
-      posts: [...data.posts],
-    },
-  };
-};
-
-export interface PostPageProps {
-  posts: PostsQuery['posts'];
-}
-
-export default function PostsPage({ posts }: PostPageProps) {
-  const [postList, setPosts] = useState(posts);
-
-  const [createPost] = useAddPostMutation();
-  const fetchNewPosts = async () => {
-    const { data } = await apolloClient.query<PostsQuery>({ query: PostsDocument, fetchPolicy: 'no-cache' });
-    setPosts(data.posts);
-  };
-
-  const onCreatePost = async (text: string) => {
-    const input = { body: text, profileId: 'placeholder-author' };
-    await createPost({ variables: { input } });
-    fetchNewPosts();
-  };
+export default function PostsPage() {
+  const { loading, error, data } = usePostsQuery();
 
   return (
     <div>
@@ -42,10 +14,12 @@ export default function PostsPage({ posts }: PostPageProps) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div className="mb-14">
-        <PostInput onCreatePost={onCreatePost} />
+        <PostInput />
       </div>
 
-      {postList.map((post, index) => (
+      {loading && <p>Loading...</p>}
+      {error && <p>{error.message}</p>}
+      {data?.posts.map((post, index) => (
         <PostBox key={index} body={post.body} profileId={post.profileId} />
       ))}
     </div>

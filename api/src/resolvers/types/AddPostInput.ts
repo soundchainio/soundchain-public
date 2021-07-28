@@ -4,9 +4,6 @@ import { Field, InputType } from 'type-graphql';
 @InputType()
 export default class AddPostInput {
   @Field()
-  profileId: string;
-
-  @Field()
   @MaxLength(160)
   body: string;
 }
