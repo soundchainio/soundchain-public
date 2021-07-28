@@ -1,19 +1,9 @@
-query Post {
+query Posts {
   posts {
     id
     body
-    author
+    profileId
     createdAt
   }
 }
 
-mutation CreatePost($input: AddPostInput!) {
-  createPost(input: $input) {
-    post {
-      id
-      body
-      author
-      createdAt
-    }
-  }
-}

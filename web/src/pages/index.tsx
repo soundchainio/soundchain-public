@@ -1,3 +1,4 @@
+import { GetServerSideProps } from 'next';
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -5,15 +6,16 @@ import useMe from '../hooks/useMe';
 import { apolloClient, setJwt } from '../lib/apollo';
 import { HomePageDocument, HomePageQuery } from '../lib/graphql';
 import styles from '../styles/HomePage.module.css';
-export async function getServerSideProps() {
-  const { data } = await apolloClient.query<HomePageQuery>({ query: HomePageDocument });
+
+export const getServerSideProps: GetServerSideProps<HomePageProps> = async context => {
+  const { data } = await apolloClient.query<HomePageQuery>({ query: HomePageDocument, context });
 
   return {
     props: {
       books: data.books,
     },
   };
-}
+};
 
 export interface HomePageProps {
   books: HomePageQuery['books'];

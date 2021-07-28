@@ -9,7 +9,7 @@ export default class Post extends Model {
 
   @Field()
   @prop({ required: true })
-  author: string;
+  profileId: string;
 
   @Field()
   @prop({ required: true })

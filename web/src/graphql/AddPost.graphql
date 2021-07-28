@@ -1,0 +1,10 @@
+mutation AddPost($input: AddPostInput!) {
+  addPost(input: $input) {
+    post {
+      id
+      body
+      profileId
+      createdAt
+    }
+  }
+}

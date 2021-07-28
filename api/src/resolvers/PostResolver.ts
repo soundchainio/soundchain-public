@@ -7,18 +7,18 @@ import { PostService } from '../services/PostService';
 @Resolver(Post)
 export default class PostResolver {
   @Query(() => Post)
-  async post(@Arg('id') id: string): Promise<Post> {
-    return await PostService.findPost(id);
+  post(@Arg('id') id: string): Promise<Post> {
+    return PostService.getPost(id);
   }
 
   @Query(() => [Post])
-  async posts(): Promise<Post[]> {
-    return await PostService.listPosts();
+  posts(): Promise<Post[]> {
+    return PostService.getPosts();
   }
 
   @Mutation(() => AddPostPayload)
-  async createPost(@Arg('input') { author, body }: AddPostInput): Promise<AddPostPayload> {
-    const post = await PostService.createPost(author, body);
+  async addPost(@Arg('input') { profileId, body }: AddPostInput): Promise<AddPostPayload> {
+    const post = await PostService.createPost(profileId, body);
     return { post };
   }
 }
