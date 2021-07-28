@@ -46,12 +46,15 @@ export default class AuthService {
   }
 
   static async verifyUserEmail(emailVerificationToken: string): Promise<User> {
-    const user = await UserModel.findOne({ emailVerificationToken });
+    const user = await UserModel.findOneAndUpdate(
+      { emailVerificationToken },
+      { verified: true, $unset: { emailVerificationToken: 1 } },
+      { new: true },
+    );
 
     if (!user) {
       throw new UserInputError('Cannot verify user email token');
     }
-    await UserModel.updateOne({ _id: user.id }, { verified: true, $unset: { emailVerificationToken: 1 } });
     return user;
   }
 }

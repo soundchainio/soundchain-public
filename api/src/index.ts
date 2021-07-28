@@ -17,7 +17,7 @@ interface ExpressContext {
 }
 
 async function bootstrap() {
-  await mongoose.connect(DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true });
+  await mongoose.connect(DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false });
 
   const schema = buildSchemaSync({ resolvers, globalMiddlewares: [TypegooseMiddleware] });
 
