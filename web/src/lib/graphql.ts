@@ -199,7 +199,7 @@ export type VerifyUserEmailMutation = (
     { __typename?: 'VerifyUserEmailPayload' }
     & { user: (
       { __typename?: 'User' }
-      & Pick<User, 'verified'>
+      & Pick<User, 'id' | 'verified'>
     ) }
   ) }
 );
@@ -350,6 +350,7 @@ export const VerifyUserEmailDocument = gql`
     mutation VerifyUserEmail($input: VerifyUserEmailInput!) {
   verifyUserEmail(input: $input) {
     user {
+      id
       verified
     }
   }
