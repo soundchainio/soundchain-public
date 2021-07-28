@@ -69,7 +69,7 @@ export const RegisterForm = () => {
         </div>
         {error && <p>{error.message}</p>}
         <button type="submit" disabled={loading} className="p-3 border-2 w-full">
-          Register
+          Create Account
         </button>
       </Form>
     </Formik>
