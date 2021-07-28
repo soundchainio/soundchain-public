@@ -1,17 +1,19 @@
+import { GetServerSideProps } from 'next';
 import Head from 'next/head';
 import { useState } from 'react';
-import { PostInput } from '../components/PostInput';
 import { PostBox } from '../components/PostBox';
+import { PostInput } from '../components/PostInput';
 import { apolloClient } from '../lib/apollo';
 import { PostsDocument, PostsQuery, useAddPostMutation } from '../lib/graphql';
-export async function getServerSideProps() {
-  const { data } = await apolloClient.query<PostsQuery>({ query: PostsDocument, fetchPolicy: 'no-cache' });
+
+export const getServerSideProps: GetServerSideProps<PostPageProps> = async context => {
+  const { data } = await apolloClient.query<PostsQuery>({ query: PostsDocument, context, fetchPolicy: 'no-cache' });
   return {
     props: {
       posts: [...data.posts],
     },
   };
-}
+};
 
 export interface PostPageProps {
   posts: PostsQuery['posts'];
