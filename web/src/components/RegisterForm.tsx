@@ -9,41 +9,38 @@ interface FormValues {
   handle: string;
   displayName: string;
   password: string;
-  confirm: string | undefined;
-}
-
-interface RegisterFormProps {
-  onRegister: () => void;
+  passwordConfirmation: string | undefined;
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
-  email: yup.string().required(),
-  handle: yup.string().required(),
-  displayName: yup.string().required(),
-  password: yup.string().required(),
-  confirm: yup.string().oneOf([yup.ref('password'), null], 'Passwords must match'),
+  email: yup.string().email().required(),
+  handle: yup
+    .string()
+    .min(1)
+    .max(32)
+    .matches(/^[A-z0-9_]*$/, 'Invalid characters. Only letters and nubers accepted')
+    .required(),
+  displayName: yup.string().min(3).max(255).required(),
+  password: yup.string().min(8).required(),
+  passwordConfirmation: yup.string().oneOf([yup.ref('password'), null], 'Passwords must match'),
 });
 
-export const RegisterForm = ({ onRegister }: RegisterFormProps) => {
+export const RegisterForm = () => {
   const [register, { loading, error }] = useRegisterMutation();
+  const initialFormValues = { email: '', handle: '', displayName: '', password: '', passwordConfirmation: '' };
 
-  async function handleSubmit(values: FormValues) {
-    delete values.confirm;
+  const handleSubmit = async (values: FormValues) => {
+    delete values.passwordConfirmation;
     try {
       const result = await register({ variables: { input: values } });
       setJwt(result.data?.register.jwt);
-      onRegister();
     } catch (error) {
       // handled by error state
     }
-  }
+  };
 
   return (
-    <Formik
-      initialValues={{ email: '', handle: '', displayName: '', password: '', confirm: '' }}
-      validationSchema={validationSchema}
-      onSubmit={handleSubmit}
-    >
+    <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
       <Form className="flex flex-col items-left space-y-6">
         <div className="flex flex-col">
           <span className="mr-1">Email*</span>
@@ -67,8 +64,8 @@ export const RegisterForm = ({ onRegister }: RegisterFormProps) => {
         </div>
         <div className="flex flex-col">
           <span className="mr-1">Confirm password*</span>
-          <Field type="password" name="confirm" />
-          <ErrorMessage name="confirm" component="div" />
+          <Field type="password" name="passwordConfirmation" />
+          <ErrorMessage name="passwordConfirmation" component="div" />
         </div>
         {error && <p>{error.message}</p>}
         <button type="submit" disabled={loading} className="p-3 border-2 w-full">
