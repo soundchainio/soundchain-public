@@ -6,7 +6,7 @@ type PostInputProps = {
 };
 export const PostInput = ({ onCreatePost }: PostInputProps) => {
   const [text, setText] = useState('');
-  const [enableEmoji, setEnableEmoji] = useState(false);
+  const [isEmojiPickerVisible, setEmojiPickerVisible] = useState(false);
   const onShareClick = () => {
     onCreatePost(text);
     setText('');
@@ -34,15 +34,15 @@ export const PostInput = ({ onCreatePost }: PostInputProps) => {
 
           <button
             onClick={() => {
-              setEnableEmoji(!enableEmoji);
+              setEmojiPickerVisible(!isEmojiPickerVisible);
             }}
             className="bg-blue-600 text-white font-semibold w-24 h-10 rounded mt-2 mb-2 float-right mr-2"
           >
-            {enableEmoji ? 'Close' : 'Emoji'}
+            {isEmojiPickerVisible ? 'Close' : 'Emoji'}
           </button>
         </div>
       </div>
-      {enableEmoji && (
+      {isEmojiPickerVisible && (
         <div className="h-1 z-30 w-8/12">
           <Picker
             onSelect={(emojiData: BaseEmoji) => {
