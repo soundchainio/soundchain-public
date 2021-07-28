@@ -8,12 +8,12 @@ import { ProfileService } from '../services/ProfileService';
 import Context from '../types/Context';
 import AuthPayload from './types/AuthPayload';
 import LoginInput from './types/LoginInput';
-import RegisterInput from './types/RegisterInput';
+import { RegisterInput } from './types/RegisterInput';
 import { VerifyUserEmailInput } from './types/VerifyUserEmailInput';
 import { VerifyUserEmailPayload } from './types/VerifyUserEmailPayload';
 
 @Resolver(User)
-export default class UserResolver {
+export class UserResolver {
   @FieldResolver(() => Profile)
   async profile(@Root() user: User): Promise<Profile> {
     return ProfileService.getProfile(user.profileId);
