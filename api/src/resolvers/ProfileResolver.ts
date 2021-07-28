@@ -3,13 +3,12 @@ import { CurrentUser } from '../middlewares/decorators/current-user';
 import Profile from '../models/Profile';
 import User from '../models/User';
 import { ProfileService } from '../services/ProfileService';
-import AuthPayload from './types/AuthPayload';
 import { UpdateProfileInput } from './types/UpadeteProfileInput';
 import { UpdateProfilePayload } from './types/UpdateProfilePayload';
 
 @Resolver(Profile)
 export class ProfileResolver {
-  @Mutation(() => AuthPayload)
+  @Mutation(() => UpdateProfilePayload)
   @Authorized()
   async updateProfile(
     @Arg('input')
