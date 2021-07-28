@@ -4,7 +4,7 @@ import Link from 'next/link';
 export default function LoginPage() {
   return (
     <div className="container mx-auto">
-      <div className="md:mt-12 flex flex-col items-center space-y-6">
+      <div className="mt-6 md:mt-12 flex flex-col items-center space-y-6">
         <div className="grid grid-cols-2 gap-6">
           <button className="p-3 bg-black text-white ">Login</button>
           <Link href="/register" passHref>
