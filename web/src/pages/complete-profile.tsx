@@ -8,7 +8,7 @@ export const getServerSideProps: GetServerSideProps<CompleteProfileProps> = asyn
   const {
     data: { myProfile },
   } = await apolloClient.query<MyProfileQuery>({ query: MyProfileDocument, context });
-  let profileFormValues: ProfileFormProps = { twitter: '', facebook: '', instagram: '' };
+  let profileFormValues: ProfileFormProps = { twitter: '', facebook: '', instagram: '', soundcloud: '' };
   if (myProfile) {
     myProfile.socialMediaLinks.forEach(socialMedia => {
       profileFormValues = { ...profileFormValues, [socialMedia.name.toLowerCase()]: socialMedia.link };

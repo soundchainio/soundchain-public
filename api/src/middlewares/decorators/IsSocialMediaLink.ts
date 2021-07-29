@@ -8,6 +8,8 @@ const socialMediaRegex = {
     /(?:https?:)?\/\/(?:www\.)?(?:facebook|fb)\.com\/((?![A-z]+\.php)(?!marketplace|gaming|watch|me|messages|help|search|groups)[A-z0-9_\-.]+)\/?/,
   [SocialMediaName.INSTAGRAM]:
     /(?:https?:)?\/\/(?:www\.)?(?:instagram\.com|instagr\.am)\/([A-Za-z0-9_](?:(?:[A-Za-z0-9_]|(?:\.(?!\.))){0,28}(?:[A-Za-z0-9_]))?)/,
+  [SocialMediaName.SOUNDCLOUD]:
+    /(?:https?:)?\/\/(?:www\.)?soundcloud\.com\/@?(?!home|share|privacy|tos)([A-z0-9_]+)\/?/,
 };
 
 export const IsSocialMediaLink = (validationOptions?: ValidationOptions) => {

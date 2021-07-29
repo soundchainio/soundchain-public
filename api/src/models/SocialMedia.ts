@@ -5,6 +5,7 @@ export enum SocialMediaName {
   TWITTER = 'twitter',
   INSTAGRAM = 'instagram',
   FACEBOOK = 'facebook',
+  SOUNDCLOUD = 'soundcloud',
 }
 
 registerEnumType(SocialMediaName, {

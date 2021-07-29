@@ -125,7 +125,8 @@ export type SocialMediaInputType = {
 export enum SocialMediaName {
   Twitter = 'TWITTER',
   Instagram = 'INSTAGRAM',
-  Facebook = 'FACEBOOK'
+  Facebook = 'FACEBOOK',
+  Soundcloud = 'SOUNDCLOUD'
 }
 
 export type UpdateProfileInput = {

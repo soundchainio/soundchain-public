@@ -8,6 +8,7 @@ export interface ProfileFormProps {
   twitter: string | undefined;
   facebook: string | undefined;
   instagram: string | undefined;
+  soundcloud: string | undefined;
 }
 
 const validationSchema: yup.SchemaOf<ProfileFormProps> = yup.object().shape({
@@ -27,25 +28,33 @@ const validationSchema: yup.SchemaOf<ProfileFormProps> = yup.object().shape({
     .string()
     .matches(
       /(?:https?:)?\/\/(?:www\.)?(?:instagram\.com|instagr\.am)\/([A-Za-z0-9_](?:(?:[A-Za-z0-9_]|(?:\.(?!\.))){0,28}(?:[A-Za-z0-9_]))?)/,
-      'Invalid Instagram link',
+      'Invalid Instagram profile link',
+    ),
+  soundcloud: yup
+    .string()
+    .matches(
+      /(?:https?:)?\/\/(?:www\.)?soundcloud\.com\/@?(?!home|share|privacy|tos)([A-z0-9_]+)\/?/,
+      'Invalid Soundcloud profile link',
     ),
 });
 
-export const ProfileForm = ({ twitter, facebook, instagram }: ProfileFormProps) => {
+export const ProfileForm = ({ twitter, facebook, instagram, soundcloud }: ProfileFormProps) => {
   const router = useRouter();
   const [updateProfile, { loading, error }] = useUpdateProfileMutation({ refetchQueries: ['MyProfile'] });
   const initialFormValues = {
     twitter,
     facebook,
     instagram,
+    soundcloud,
   };
 
   const getSocialMediaLiks = (values: ProfileFormProps): SocialMedia[] => {
-    const { twitter, facebook, instagram } = values;
+    const { twitter, facebook, instagram, soundcloud } = values;
     const socialMediaLinks: SocialMedia[] = [];
     if (twitter) socialMediaLinks.push({ name: SocialMediaName.Twitter, link: twitter });
     if (facebook) socialMediaLinks.push({ name: SocialMediaName.Facebook, link: facebook });
     if (instagram) socialMediaLinks.push({ name: SocialMediaName.Instagram, link: instagram });
+    if (soundcloud) socialMediaLinks.push({ name: SocialMediaName.Soundcloud, link: soundcloud });
     return socialMediaLinks;
   };
 
@@ -79,6 +88,11 @@ export const ProfileForm = ({ twitter, facebook, instagram }: ProfileFormProps) 
           <span className="mr-1">Instagram</span>
           <Field type="text" name="instagram" />
           <ErrorMessage name="instagram" component="div" />
+        </div>
+        <div className="flex flex-col">
+          <span className="mr-1">Soundcloud</span>
+          <Field type="text" name="soundcloud" />
+          <ErrorMessage name="soundcloud" component="div" />
         </div>
         {error && <p>{error.message}</p>}
         <button type="submit" disabled={loading} className="p-3 border-2 w-full">
