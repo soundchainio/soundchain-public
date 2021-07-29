@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ProfileForm, ProfileFormProps } from '../components/ProfileForm';
-import { protectPage } from '../hooks/protectPage';
+import { protectPage } from '../lib/protectPage';
 import { apolloClient } from '../lib/apollo';
 import { MyProfileDocument, MyProfileQuery } from '../lib/graphql';
 
