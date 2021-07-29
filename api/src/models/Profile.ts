@@ -1,8 +1,9 @@
-import { getModelForClass, prop } from '@typegoose/typegoose';
+import { getModelForClass, modelOptions, prop, Severity } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import Model from './Model';
 import SocialMedia from './SocialMedia';
 
+@modelOptions({ options: { allowMixed: Severity.ALLOW } })
 @ObjectType()
 export default class Profile extends Model {
   @Field(() => ID, { name: 'id' })
