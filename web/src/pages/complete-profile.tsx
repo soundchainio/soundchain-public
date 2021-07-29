@@ -1,14 +1,15 @@
-import { GetServerSideProps } from 'next';
 import Link from 'next/link';
 import { ProfileForm, ProfileFormProps } from '../components/ProfileForm';
+import { protectPage } from '../hooks/protectPage';
 import { apolloClient } from '../lib/apollo';
 import { MyProfileDocument, MyProfileQuery } from '../lib/graphql';
 
-export const getServerSideProps: GetServerSideProps<CompleteProfileProps> = async context => {
+export const getServerSideProps = protectPage<CompleteProfileProps>(async context => {
+  let profileFormValues: ProfileFormProps = { twitter: '', facebook: '', instagram: '', soundcloud: '' };
   const {
     data: { myProfile },
   } = await apolloClient.query<MyProfileQuery>({ query: MyProfileDocument, context });
-  let profileFormValues: ProfileFormProps = { twitter: '', facebook: '', instagram: '', soundcloud: '' };
+
   if (myProfile) {
     myProfile.socialMediaLinks.forEach(socialMedia => {
       profileFormValues = { ...profileFormValues, [socialMedia.name.toLowerCase()]: socialMedia.link };
@@ -18,7 +19,7 @@ export const getServerSideProps: GetServerSideProps<CompleteProfileProps> = asyn
   return {
     props: { profileFormValues },
   };
-};
+});
 
 export interface CompleteProfileProps {
   profileFormValues: ProfileFormProps;
