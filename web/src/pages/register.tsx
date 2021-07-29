@@ -1,7 +1,7 @@
 import { useRouter } from 'next/dist/client/router';
 import { useEffect } from 'react';
 import { RegisterForm } from '../components/RegisterForm';
-import useMe from '../hooks/useMe';
+import { useMe } from '../hooks/useMe';
 import Link from 'next/link';
 
 export default function SignUpPage() {
