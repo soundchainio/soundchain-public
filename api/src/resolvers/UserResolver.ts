@@ -67,7 +67,7 @@ export class UserResolver {
 
   @Mutation(() => ForgotPasswordPayload)
   forgotPassword(@Arg('email') email: string): ForgotPasswordPayload {
-    AuthService.passwordResetTokenForEmail(email);
+    AuthService.generatePasswordResetToken(email);
     return { email };
   }
 
