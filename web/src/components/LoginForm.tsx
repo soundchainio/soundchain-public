@@ -1,5 +1,6 @@
 import { ErrorMessage, Field, Form, Formik } from 'formik';
 import { useRouter } from 'next/dist/client/router';
+import Link from 'next/link';
 import { useEffect } from 'react';
 import * as yup from 'yup';
 import useMe from '../hooks/useMe';
@@ -48,7 +49,9 @@ export const LoginForm = () => {
           <ErrorMessage name="password" component="div" />
         </div>
         {error && <p>{error.message}</p>}
-        <a href="#">Forgot password?</a>
+        <Link href="/forgot-password">
+          <a>Forgot password?</a>
+        </Link>
         <button type="submit" disabled={loading} className="p-3 border-2 w-full">
           Login
         </button>

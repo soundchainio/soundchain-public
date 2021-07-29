@@ -5,10 +5,14 @@ import User from '../models/User';
 import AuthService from '../services/AuthService';
 import JwtService from '../services/JwtService';
 import { ProfileService } from '../services/ProfileService';
+import { UserService } from '../services/UserService';
 import Context from '../types/Context';
 import AuthPayload from './types/AuthPayload';
+import { ForgotPasswordPayload } from './types/ForgotPasswordPayload';
 import LoginInput from './types/LoginInput';
 import { RegisterInput } from './types/RegisterInput';
+import { ResetPasswordInput } from './types/ResetPasswordInput';
+import { ResetPasswordPayload } from './types/ResetPasswordPayload';
 import { VerifyUserEmailInput } from './types/VerifyUserEmailInput';
 import { VerifyUserEmailPayload } from './types/VerifyUserEmailPayload';
 
@@ -22,6 +26,11 @@ export class UserResolver {
   @Query(() => User, { nullable: true })
   async me(@Ctx() context: Context): Promise<User | undefined> {
     return context.user;
+  }
+
+  @Query(() => Boolean, { nullable: true })
+  validPasswordResetToken(@Arg('token') token: string): Promise<boolean> {
+    return UserService.userExists({ passwordResetToken: token });
   }
 
   @Mutation(() => AuthPayload)
@@ -54,5 +63,26 @@ export class UserResolver {
   ): Promise<VerifyUserEmailPayload> {
     const user = await AuthService.verifyUserEmail(token);
     return { user };
+  }
+
+  @Mutation(() => ForgotPasswordPayload)
+  forgotPassword(@Arg('email') email: string): ForgotPasswordPayload {
+    AuthService.setupPasswordReset(email);
+    return { email };
+  }
+
+  @Mutation(() => ResetPasswordPayload)
+  async resetPassword(@Arg('input') { token, password }: ResetPasswordInput): Promise<ResetPasswordPayload> {
+    const user = await UserService.findUser({ passwordResetToken: token });
+
+    if (!user) {
+      throw new UserInputError('Invalid token');
+    }
+
+    await AuthService.resetUserPassword(user, password);
+
+    return {
+      passwordReset: true,
+    };
   }
 }

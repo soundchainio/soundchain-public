@@ -43,6 +43,9 @@ export default class User extends Model {
   @prop({ required: true, default: false })
   verified: boolean;
 
+  @prop({ required: false })
+  passwordResetToken?: string;
+
   @Field(() => Date)
   createdAt: Date;
 
