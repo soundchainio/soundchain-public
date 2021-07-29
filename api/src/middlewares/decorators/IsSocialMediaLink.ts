@@ -3,7 +3,7 @@ import { SocialMediaName } from '../../models/SocialMedia';
 import { SocialMediaInputType } from '../../resolvers/types/SocialMediaInputType';
 
 const socialMediaRegex = {
-  [SocialMediaName.TWITTER]: /(?:https?:)?\/\/(?:[A-z]+\.)?twitter\.com\/@?(?!home|share|privacy|tos)([A-z0-9_]+)\/?/,
+  [SocialMediaName.TWITTER]: /(?:https?:)?\/\/(?:www\.)?twitter\.com\/@?(?!home|share|privacy|tos)([A-z0-9_]+)\/?/,
   [SocialMediaName.FACEBOOK]:
     /(?:https?:)?\/\/(?:www\.)?(?:facebook|fb)\.com\/((?![A-z]+\.php)(?!marketplace|gaming|watch|me|messages|help|search|groups)[A-z0-9_\-.]+)\/?/,
   [SocialMediaName.INSTAGRAM]:

@@ -1,7 +1,30 @@
+import { GetServerSideProps } from 'next';
 import Link from 'next/link';
-import { ProfileForm } from '../components/ProfileForm';
+import { ProfileForm, ProfileFormProps } from '../components/ProfileForm';
+import { apolloClient } from '../lib/apollo';
+import { MyProfileDocument, MyProfileQuery } from '../lib/graphql';
 
-export default function CompleteProfilePage() {
+export const getServerSideProps: GetServerSideProps<CompleteProfileProps> = async context => {
+  const {
+    data: { myProfile },
+  } = await apolloClient.query<MyProfileQuery>({ query: MyProfileDocument, context });
+  let profileFormValues: ProfileFormProps = { twitter: '', facebook: '', instagram: '' };
+  if (myProfile) {
+    myProfile.socialMediaLinks.forEach(socialMedia => {
+      profileFormValues = { ...profileFormValues, [socialMedia.name.toLowerCase()]: socialMedia.link };
+    });
+  }
+
+  return {
+    props: { profileFormValues },
+  };
+};
+
+export interface CompleteProfileProps {
+  profileFormValues: ProfileFormProps;
+}
+
+export default function CompleteProfilePage({ profileFormValues }: CompleteProfileProps) {
   return (
     <div className="container mx-auto">
       <div className="mt-6 md:mt-12 flex flex-col items-center space-y-6 mb-6">
@@ -11,7 +34,7 @@ export default function CompleteProfilePage() {
           </Link>
         </div>
         <h1 className="text-2xl">Profile information</h1>
-        <ProfileForm />
+        <ProfileForm {...profileFormValues} />
       </div>
     </div>
   );

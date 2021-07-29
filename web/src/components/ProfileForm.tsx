@@ -4,38 +4,43 @@ import React from 'react';
 import * as yup from 'yup';
 import { SocialMedia, SocialMediaName, useUpdateProfileMutation } from '../lib/graphql';
 
-interface FormValues {
+export interface ProfileFormProps {
   twitter: string | undefined;
   facebook: string | undefined;
   instagram: string | undefined;
 }
-const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
+
+const validationSchema: yup.SchemaOf<ProfileFormProps> = yup.object().shape({
   twitter: yup
     .string()
     .matches(
-      /(?:https?:)?\/\/(?:[A-z]+\.)?twitter\.com\/@?(?!home|share|privacy|tos)([A-z0-9_]+)\/?/,
-      'Invalid twitter profile link',
+      /(?:https?:)?\/\/(?:www\.)?twitter\.com\/@?(?!home|share|privacy|tos)([A-z0-9_]+)\/?/,
+      'Invalid Twitter profile link',
     ),
   facebook: yup
     .string()
     .matches(
       /(?:https?:)?\/\/(?:www\.)?(?:facebook|fb)\.com\/((?![A-z]+\.php)(?!marketplace|gaming|watch|me|messages|help|search|groups)[A-z0-9_\-\.]+)\/?/,
-      'Invalid facebook profile link',
+      'Invalid Facebook profile link',
     ),
   instagram: yup
     .string()
     .matches(
       /(?:https?:)?\/\/(?:www\.)?(?:instagram\.com|instagr\.am)\/([A-Za-z0-9_](?:(?:[A-Za-z0-9_]|(?:\.(?!\.))){0,28}(?:[A-Za-z0-9_]))?)/,
-      'Invalid instagram link',
+      'Invalid Instagram link',
     ),
 });
 
-export const ProfileForm = () => {
+export const ProfileForm = ({ twitter, facebook, instagram }: ProfileFormProps) => {
   const router = useRouter();
-  const [updateProfile, { loading, error }] = useUpdateProfileMutation();
-  const initialFormValues = { twitter: '', facebook: '', instagram: '' };
+  const [updateProfile, { loading, error }] = useUpdateProfileMutation({ refetchQueries: ['MyProfile'] });
+  const initialFormValues = {
+    twitter,
+    facebook,
+    instagram,
+  };
 
-  const getSocialMediaLiks = (values: FormValues): SocialMedia[] => {
+  const getSocialMediaLiks = (values: ProfileFormProps): SocialMedia[] => {
     const { twitter, facebook, instagram } = values;
     const socialMediaLinks: SocialMedia[] = [];
     if (twitter) socialMediaLinks.push({ name: SocialMediaName.Twitter, link: twitter });
@@ -44,7 +49,7 @@ export const ProfileForm = () => {
     return socialMediaLinks;
   };
 
-  const handleSubmit = async (values: FormValues) => {
+  const handleSubmit = async (values: ProfileFormProps) => {
     const socialMediaLinks = getSocialMediaLiks(values);
     try {
       await updateProfile({ variables: { input: { socialMediaLinks } } });
@@ -53,7 +58,12 @@ export const ProfileForm = () => {
   };
 
   return (
-    <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
+    <Formik
+      initialValues={initialFormValues}
+      validationSchema={validationSchema}
+      onSubmit={handleSubmit}
+      enableReinitialize
+    >
       <Form className="flex flex-col items-left space-y-6 w-full px-6">
         <div className="flex flex-col">
           <span className="mr-1">Twitter</span>
