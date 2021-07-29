@@ -3,6 +3,7 @@ import { useRouter } from 'next/dist/client/router';
 import React from 'react';
 import * as yup from 'yup';
 import { SocialMedia, SocialMediaName, useUpdateProfileMutation } from '../lib/graphql';
+import { profileHandleRegex } from '../utils/validation';
 
 export interface ProfileFormProps {
   twitter: string | undefined;
@@ -12,30 +13,10 @@ export interface ProfileFormProps {
 }
 
 const validationSchema: yup.SchemaOf<ProfileFormProps> = yup.object().shape({
-  twitter: yup
-    .string()
-    .matches(
-      /(?:https?:)?\/\/(?:www\.)?twitter\.com\/@?(?!home|share|privacy|tos)([A-z0-9_]+)\/?/,
-      'Invalid Twitter profile link',
-    ),
-  facebook: yup
-    .string()
-    .matches(
-      /(?:https?:)?\/\/(?:www\.)?(?:facebook|fb)\.com\/((?![A-z]+\.php)(?!marketplace|gaming|watch|me|messages|help|search|groups)[A-z0-9_\-\.]+)\/?/,
-      'Invalid Facebook profile link',
-    ),
-  instagram: yup
-    .string()
-    .matches(
-      /(?:https?:)?\/\/(?:www\.)?(?:instagram\.com|instagr\.am)\/([A-Za-z0-9_](?:(?:[A-Za-z0-9_]|(?:\.(?!\.))){0,28}(?:[A-Za-z0-9_]))?)/,
-      'Invalid Instagram profile link',
-    ),
-  soundcloud: yup
-    .string()
-    .matches(
-      /(?:https?:)?\/\/(?:www\.)?soundcloud\.com\/@?(?!home|share|privacy|tos)([A-z0-9_]+)\/?/,
-      'Invalid Soundcloud profile link',
-    ),
+  twitter: yup.string().matches(profileHandleRegex, 'Invalid Twitter profile'),
+  facebook: yup.string().matches(profileHandleRegex, 'Invalid Facebook profile'),
+  instagram: yup.string().matches(profileHandleRegex, 'Invalid Instagram profile'),
+  soundcloud: yup.string().matches(profileHandleRegex, 'Invalid Soundcloud profile'),
 });
 
 export const ProfileForm = ({ twitter, facebook, instagram, soundcloud }: ProfileFormProps) => {
@@ -75,22 +56,22 @@ export const ProfileForm = ({ twitter, facebook, instagram, soundcloud }: Profil
     >
       <Form className="flex flex-col items-left space-y-6 w-full px-6">
         <div className="flex flex-col">
-          <span className="mr-1">Twitter</span>
+          <span className="mr-1">Twitter profile name</span>
           <Field type="text" name="twitter" />
           <ErrorMessage name="twitter" component="div" />
         </div>
         <div className="flex flex-col">
-          <span className="mr-1">Facebook</span>
+          <span className="mr-1">Facebook profile name</span>
           <Field type="text" name="facebook" />
           <ErrorMessage name="facebook" component="div" />
         </div>
         <div className="flex flex-col">
-          <span className="mr-1">Instagram</span>
+          <span className="mr-1">Instagram profile name</span>
           <Field type="text" name="instagram" />
           <ErrorMessage name="instagram" component="div" />
         </div>
         <div className="flex flex-col">
-          <span className="mr-1">Soundcloud</span>
+          <span className="mr-1">Soundcloud profile name</span>
           <Field type="text" name="soundcloud" />
           <ErrorMessage name="soundcloud" component="div" />
         </div>

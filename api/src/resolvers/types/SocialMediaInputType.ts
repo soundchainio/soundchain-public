@@ -1,5 +1,5 @@
+import { Matches } from 'class-validator';
 import { Field, InputType } from 'type-graphql';
-import { IsSocialMediaLink } from '../../middlewares/decorators/IsSocialMediaLink';
 import { SocialMediaName } from '../../models/SocialMedia';
 
 @InputType()
@@ -8,6 +8,6 @@ export class SocialMediaInputType {
   name: SocialMediaName;
 
   @Field()
-  @IsSocialMediaLink({ message: 'Invalid social media link' })
+  @Matches(/^[A-z0-9_]*$/, { message: 'Invalid characters' })
   link: string;
 }

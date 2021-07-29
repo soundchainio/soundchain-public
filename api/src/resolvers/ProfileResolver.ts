@@ -10,8 +10,8 @@ import { UpdateProfilePayload } from './types/UpdateProfilePayload';
 export class ProfileResolver {
   @Query(() => Profile, { nullable: true })
   @Authorized()
-  async myProfile(@CurrentUser() user: User): Promise<Profile | undefined> {
-    return await ProfileService.getProfile(user.profileId);
+  async myProfile(@CurrentUser() { profileId }: User): Promise<Profile> {
+    return await ProfileService.getProfile(profileId);
   }
 
   @Mutation(() => UpdateProfilePayload)
@@ -19,10 +19,10 @@ export class ProfileResolver {
   async updateProfile(
     @Arg('input')
     { socialMediaLinks }: UpdateProfileInput,
-    @CurrentUser() user: User,
+    @CurrentUser() { profileId }: User,
   ): Promise<UpdateProfilePayload> {
     try {
-      const profile = await ProfileService.updateProfile(user.profileId, socialMediaLinks);
+      const profile = await ProfileService.updateProfile(profileId, socialMediaLinks);
       return { profile };
     } catch (err) {
       throw new Error(`Error while updating profile: ${err.message}`);

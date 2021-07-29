@@ -2,7 +2,7 @@ import { ErrorMessage, Field, Form, Formik } from 'formik';
 import { useRouter } from 'next/dist/client/router';
 import { useEffect } from 'react';
 import * as yup from 'yup';
-import useMe from '../hooks/useMe';
+import { useMe } from '../hooks/useMe';
 import { setJwt } from '../lib/apollo';
 import { useLoginMutation } from '../lib/graphql';
 
