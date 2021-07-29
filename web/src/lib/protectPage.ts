@@ -1,6 +1,6 @@
 import { GetServerSideProps } from 'next';
-import { apolloClient } from '../lib/apollo';
-import { MeDocument, MeQuery } from '../lib/graphql';
+import { apolloClient } from './apollo';
+import { MeDocument, MeQuery } from './graphql';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const protectPage = <T extends { [key: string]: any }>(
