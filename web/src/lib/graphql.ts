@@ -48,6 +48,7 @@ export type LoginInput = {
 export type Mutation = {
   __typename?: 'Mutation';
   addBook: AddBookPayload;
+  updateProfile: UpdateProfilePayload;
   register: AuthPayload;
   login: AuthPayload;
   verifyUserEmail: VerifyUserEmailPayload;
@@ -56,6 +57,11 @@ export type Mutation = {
 
 export type MutationAddBookArgs = {
   input: AddBookInput;
+};
+
+
+export type MutationUpdateProfileArgs = {
+  input: UpdateProfileInput;
 };
 
 
@@ -109,12 +115,26 @@ export type SocialMedia = {
   link: Scalars['String'];
 };
 
+export type SocialMediaInputType = {
+  name: SocialMediaName;
+  link: Scalars['String'];
+};
+
 /** Social media options */
 export enum SocialMediaName {
   Twitter = 'TWITTER',
   Instagram = 'INSTAGRAM',
   Facebook = 'FACEBOOK'
 }
+
+export type UpdateProfileInput = {
+  socialMediaLinks?: Maybe<Array<SocialMediaInputType>>;
+};
+
+export type UpdateProfilePayload = {
+  __typename?: 'UpdateProfilePayload';
+  profile: Profile;
+};
 
 export type User = {
   __typename?: 'User';
@@ -185,6 +205,22 @@ export type RegisterMutation = (
   & { register: (
     { __typename?: 'AuthPayload' }
     & Pick<AuthPayload, 'jwt'>
+  ) }
+);
+
+export type UpdateProfileMutationVariables = Exact<{
+  input: UpdateProfileInput;
+}>;
+
+
+export type UpdateProfileMutation = (
+  { __typename?: 'Mutation' }
+  & { updateProfile: (
+    { __typename?: 'UpdateProfilePayload' }
+    & { profile: (
+      { __typename?: 'Profile' }
+      & Pick<Profile, 'id'>
+    ) }
   ) }
 );
 
@@ -346,6 +382,41 @@ export function useRegisterMutation(baseOptions?: Apollo.MutationHookOptions<Reg
 export type RegisterMutationHookResult = ReturnType<typeof useRegisterMutation>;
 export type RegisterMutationResult = Apollo.MutationResult<RegisterMutation>;
 export type RegisterMutationOptions = Apollo.BaseMutationOptions<RegisterMutation, RegisterMutationVariables>;
+export const UpdateProfileDocument = gql`
+    mutation UpdateProfile($input: UpdateProfileInput!) {
+  updateProfile(input: $input) {
+    profile {
+      id
+    }
+  }
+}
+    `;
+export type UpdateProfileMutationFn = Apollo.MutationFunction<UpdateProfileMutation, UpdateProfileMutationVariables>;
+
+/**
+ * __useUpdateProfileMutation__
+ *
+ * To run a mutation, you first call `useUpdateProfileMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateProfileMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateProfileMutation, { data, loading, error }] = useUpdateProfileMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateProfileMutation(baseOptions?: Apollo.MutationHookOptions<UpdateProfileMutation, UpdateProfileMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateProfileMutation, UpdateProfileMutationVariables>(UpdateProfileDocument, options);
+      }
+export type UpdateProfileMutationHookResult = ReturnType<typeof useUpdateProfileMutation>;
+export type UpdateProfileMutationResult = Apollo.MutationResult<UpdateProfileMutation>;
+export type UpdateProfileMutationOptions = Apollo.BaseMutationOptions<UpdateProfileMutation, UpdateProfileMutationVariables>;
 export const VerifyUserEmailDocument = gql`
     mutation VerifyUserEmail($input: VerifyUserEmailInput!) {
   verifyUserEmail(input: $input) {

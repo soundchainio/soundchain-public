@@ -10,7 +10,7 @@ export default function SignUpPage() {
 
   useEffect(() => {
     if (me) {
-      router.push(router.query.callbackUrl?.toString() ?? '/');
+      router.push(router.query.callbackUrl?.toString() ?? '/complete-profile');
     }
   }, [me, router]);
 
