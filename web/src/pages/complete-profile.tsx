@@ -11,7 +11,7 @@ export const getServerSideProps = protectPage<CompleteProfileProps>(async contex
   } = await apolloClient.query<MyProfileQuery>({ query: MyProfileDocument, context });
 
   if (myProfile) {
-    myProfile.socialMediaLinks.forEach(socialMedia => {
+    myProfile.socialMediaHandles.forEach(socialMedia => {
       profileFormValues = { ...profileFormValues, [socialMedia.name.toLowerCase()]: socialMedia.handle };
     });
   }

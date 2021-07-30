@@ -7,5 +7,5 @@ export class UpdateProfileInput {
   @Field(() => [SocialMediaInputType], { defaultValue: [], nullable: true })
   @ValidateNested()
   @ArrayMaxSize(4)
-  socialMediaLinks: SocialMediaInputType[];
+  socialMediaHandles: SocialMediaInputType[];
 }

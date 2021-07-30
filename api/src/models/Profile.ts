@@ -23,7 +23,7 @@ export default class Profile extends Model {
 
   @Field(() => [SocialMedia])
   @prop({ required: true, default: [] })
-  socialMediaLinks: SocialMedia[];
+  socialMediaHandles: SocialMedia[];
 
   @Field(() => Date)
   createdAt: Date;

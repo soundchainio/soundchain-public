@@ -30,20 +30,20 @@ export const ProfileForm = ({ twitter, facebook, instagram, soundcloud }: Profil
     soundcloud,
   };
 
-  const getSocialMediaLiks = (values: ProfileFormProps): SocialMedia[] => {
+  const getSocialMediaHandles = (values: ProfileFormProps): SocialMedia[] => {
     const { twitter, facebook, instagram, soundcloud } = values;
-    const socialMediaLinks: SocialMedia[] = [];
-    if (twitter) socialMediaLinks.push({ name: SocialMediaName.Twitter, handle: twitter });
-    if (facebook) socialMediaLinks.push({ name: SocialMediaName.Facebook, handle: facebook });
-    if (instagram) socialMediaLinks.push({ name: SocialMediaName.Instagram, handle: instagram });
-    if (soundcloud) socialMediaLinks.push({ name: SocialMediaName.Soundcloud, handle: soundcloud });
-    return socialMediaLinks;
+    const socialMediaHandles: SocialMedia[] = [];
+    if (twitter) socialMediaHandles.push({ name: SocialMediaName.Twitter, handle: twitter });
+    if (facebook) socialMediaHandles.push({ name: SocialMediaName.Facebook, handle: facebook });
+    if (instagram) socialMediaHandles.push({ name: SocialMediaName.Instagram, handle: instagram });
+    if (soundcloud) socialMediaHandles.push({ name: SocialMediaName.Soundcloud, handle: soundcloud });
+    return socialMediaHandles;
   };
 
   const handleSubmit = async (values: ProfileFormProps) => {
-    const socialMediaLinks = getSocialMediaLiks(values);
+    const socialMediaHandles = getSocialMediaHandles(values);
     try {
-      await updateProfile({ variables: { input: { socialMediaLinks } } });
+      await updateProfile({ variables: { input: { socialMediaHandles } } });
       router.push('/');
     } catch (error) {}
   };

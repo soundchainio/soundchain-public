@@ -7,8 +7,8 @@ export class ProfileService {
     return ProfileModel.findByIdOrFail(id);
   }
 
-  static async updateProfile(id: string, socialMediaLinks: SocialMedia[]): Promise<Profile> {
-    const updatedProfile = await ProfileModel.findByIdAndUpdate(id, { socialMediaLinks }, { new: true });
+  static async updateProfile(id: string, socialMediaHandles: SocialMedia[]): Promise<Profile> {
+    const updatedProfile = await ProfileModel.findByIdAndUpdate(id, { socialMediaHandles }, { new: true });
     if (!updatedProfile) {
       throw new UserInputError(`Could not find the profile with id: ${id}`);
     }

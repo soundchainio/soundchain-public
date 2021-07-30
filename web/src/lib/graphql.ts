@@ -85,7 +85,7 @@ export type Profile = {
   displayName: Scalars['String'];
   profilePicture?: Maybe<Scalars['String']>;
   coverPicture?: Maybe<Scalars['String']>;
-  socialMediaLinks: Array<SocialMedia>;
+  socialMediaHandles: Array<SocialMedia>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
 };
@@ -130,7 +130,7 @@ export enum SocialMediaName {
 }
 
 export type UpdateProfileInput = {
-  socialMediaLinks?: Maybe<Array<SocialMediaInputType>>;
+  socialMediaHandles?: Maybe<Array<SocialMediaInputType>>;
 };
 
 export type UpdateProfilePayload = {
@@ -205,7 +205,7 @@ export type MyProfileQuery = (
   & { myProfile?: Maybe<(
     { __typename?: 'Profile' }
     & Pick<Profile, 'id' | 'displayName'>
-    & { socialMediaLinks: Array<(
+    & { socialMediaHandles: Array<(
       { __typename?: 'SocialMedia' }
       & Pick<SocialMedia, 'name' | 'handle'>
     )> }
@@ -371,7 +371,7 @@ export const MyProfileDocument = gql`
   myProfile {
     id
     displayName
-    socialMediaLinks {
+    socialMediaHandles {
       name
       handle
     }

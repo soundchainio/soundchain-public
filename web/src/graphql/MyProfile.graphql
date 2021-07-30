@@ -2,7 +2,7 @@ query MyProfile {
   myProfile {
     id
     displayName
-    socialMediaLinks {
+    socialMediaHandles {
       name
       handle
     }

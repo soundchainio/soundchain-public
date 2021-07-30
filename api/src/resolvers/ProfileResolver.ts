@@ -18,11 +18,11 @@ export class ProfileResolver {
   @Authorized()
   async updateProfile(
     @Arg('input')
-    { socialMediaLinks }: UpdateProfileInput,
+    { socialMediaHandles }: UpdateProfileInput,
     @CurrentUser() { profileId }: User,
   ): Promise<UpdateProfilePayload> {
     try {
-      const profile = await ProfileService.updateProfile(profileId, socialMediaLinks);
+      const profile = await ProfileService.updateProfile(profileId, socialMediaHandles);
       return { profile };
     } catch (err) {
       throw new Error(`Error while updating profile: ${err.message}`);
