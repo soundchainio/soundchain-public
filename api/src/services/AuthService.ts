@@ -60,13 +60,11 @@ export default class AuthService {
     return user;
   }
 
-  static async generatePasswordResetToken(email: string): Promise<void> {
+  static async generatePasswordResetToken(user: DocumentType<User>): Promise<void> {
     const passwordResetToken = uuidv4();
-    const user = await UserModel.findOneAndUpdate({ email }, { passwordResetToken });
-
-    if (user) {
-      EmailService.sendPasswordResetEmail(email, passwordResetToken);
-    }
+    user.passwordResetToken = passwordResetToken;
+    await user.save();
+    await EmailService.sendPasswordResetEmail(user.email, passwordResetToken);
   }
 
   static resetUserPassword(user: DocumentType<User>, password: string): Promise<Document> {

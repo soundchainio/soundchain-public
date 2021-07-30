@@ -49,16 +49,13 @@ export default function ResetPasswordPage({ token }: ResetPasswordPageProps) {
   const [resetPassword, { data, loading, error }] = useResetPasswordMutation();
   const handleSubmit = async ({ password }: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
     await resetPassword({ variables: { input: { password, token } } });
-
-    if (!error) {
-      resetForm();
-    }
+    resetForm();
   };
 
   return (
     <div>
       {data && 'Your password has been reset'}
-      {error && 'An error occurred'}
+      {error && error.message}
       <Formik
         initialValues={{ password: '', passwordConfirmation: '' }}
         validationSchema={validationSchema}

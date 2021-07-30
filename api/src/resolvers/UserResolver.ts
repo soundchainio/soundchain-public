@@ -67,8 +67,15 @@ export class UserResolver {
   }
 
   @Mutation(() => ForgotPasswordPayload)
-  forgotPassword(@Arg('input') { email }: ForgotPasswordInput): ForgotPasswordPayload {
-    AuthService.generatePasswordResetToken(email);
+  async forgotPassword(@Arg('input') { email }: ForgotPasswordInput): Promise<ForgotPasswordPayload> {
+    const user = await UserService.findUser({ email });
+
+    if (!user) {
+      throw new UserInputError('User not found');
+    }
+
+    await AuthService.generatePasswordResetToken(user);
+
     return { ok: true };
   }
 

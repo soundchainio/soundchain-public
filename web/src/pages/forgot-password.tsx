@@ -14,16 +14,13 @@ export default function ForgotPasswordPage() {
   const [forgotPassword, { data, loading, error }] = useForgotPasswordMutation();
   const handleSubmit = async ({ email }: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
     await forgotPassword({ variables: { input: { email } } });
-
-    if (!error) {
-      resetForm();
-    }
+    resetForm();
   };
 
   return (
     <div>
       {data && 'Check your inbox for an email with a link to reset your password'}
-      {error && 'An error occurred'}
+      {error && error.message}
       <Formik initialValues={{ email: '' }} validationSchema={validationSchema} onSubmit={handleSubmit}>
         <Form>
           <Field type="email" name="email" />

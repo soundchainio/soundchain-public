@@ -10,7 +10,7 @@ export class UserService {
     return UserModel.exists(filter);
   }
 
-  static findUser(filter: { passwordResetToken?: string }): Promise<DocumentType<User> | null> {
+  static findUser(filter: { passwordResetToken?: string; email?: string }): Promise<DocumentType<User> | null> {
     return UserModel.findOne(filter).exec();
   }
 }
