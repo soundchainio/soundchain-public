@@ -1,6 +1,6 @@
 import { DocumentType } from '@typegoose/typegoose';
 import { UserInputError } from 'apollo-server-express';
-import { compare } from 'bcrypt';
+import { compare } from 'bcryptjs';
 import { Document } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
 import { ProfileModel } from '../models/Profile';

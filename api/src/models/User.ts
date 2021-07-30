@@ -1,5 +1,5 @@
 import { getModelForClass, pre, prop } from '@typegoose/typegoose';
-import { hash } from 'bcrypt';
+import { hash } from 'bcryptjs';
 import { Field, ID, ObjectType } from 'type-graphql';
 import Model from './Model';
 

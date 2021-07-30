@@ -1,0 +1,320 @@
+service: soundchain-api
+variablesResolutionMode: 20210326
+useDotenv: true
+
+plugins:
+  - serverless-plugin-typescript
+
+package:
+  include:
+    - src/db/rds-combined-ca-bundle.pem
+
+functions:
+  graphql:
+    handler: src/lambda.handler
+    events:
+      - http:
+          path: /
+          method: post
+          cors: true
+      - http:
+          path: /
+          method: get
+          cors: true
+
+custom:
+  db:
+    id: !GetAtt DBCluster.ClusterResourceId
+    host: !GetAtt DBCluster.Endpoint
+    port: !GetAtt DBCluster.Port
+    arn: !Join
+      - ':'
+      - - 'arn:aws:rds'
+        - Ref: 'AWS::Region'
+        - Ref: 'AWS::AccountId'
+        - 'cluster'
+        - ${self:custom.db.id}
+    url: !Join
+      - ''
+      - - 'mongodb://'
+        - ${env:DATABASE_USERNAME}
+        - ':'
+        - ${env:DATABASE_PASSWORD}
+        - '@'
+        - ${self:custom.db.host}
+        - ':'
+        - ${self:custom.db.port}
+
+provider:
+  name: aws
+  region: us-east-1
+  runtime: nodejs14.x
+  profile: soundchain
+  lambdaHashingVersion: 20201221
+  vpc:
+    securityGroupIds:
+      - Ref: VPCEndpointSecurityGroup
+      - Ref: DocumentDBSecurityGroup
+    subnetIds:
+      - Ref: PublicSubnetOne
+      - Ref: PublicSubnetTwo
+      - Ref: PrivateSubnetOne
+      - Ref: PrivateSubnetTwo
+  environment:
+    NODE_ENV: ${env:NODE_ENV}
+    DATABASE_URL: ${self:custom.db.url}
+    DATABASE_SSL_PATH: db/rds-combined-ca-bundle.pem
+    DATABASE_USERNAME: ${env:DATABASE_USERNAME}
+    DATABASE_PASSWORD: ${env:DATABASE_PASSWORD}
+    JWT_NAMESPACE: ${env:JWT_NAMESPACE}
+    JWT_SECRET: ${env:JWT_SECRET}
+    WEB_APP_URL: ${env:WEB_APP_URL}
+    SENDGRID_API_KEY: ${env:SENDGRID_API_KEY}
+    SENDGRID_SENDER_EMAIL: ${env:SENDGRID_SENDER_EMAIL}
+    SENDGRID_VERIFICATION_TEMPLATE: ${env:SENDGRID_VERIFICATION_TEMPLATE}
+
+resources:
+  Mappings:
+    SubnetConfig:
+      VPC:
+        CIDR: 10.0.0.0/16
+      PublicOne:
+        CIDR: 10.0.0.0/24
+      PublicTwo:
+        CIDR: 10.0.1.0/24
+      PrivateOne:
+        CIDR: 10.0.2.0/24
+      PrivateTwo:
+        CIDR: 10.0.3.0/24
+  Resources:
+    VPC:
+      Type: AWS::EC2::VPC
+      Properties:
+        EnableDnsSupport: true
+        EnableDnsHostnames: true
+        CidrBlock:
+          Fn::FindInMap:
+            - SubnetConfig
+            - VPC
+            - CIDR
+    PublicSubnetOne:
+      Type: AWS::EC2::Subnet
+      Properties:
+        AvailabilityZone:
+          Fn::Select:
+            - 0
+            - Fn::GetAZs:
+                Ref: AWS::Region
+        VpcId:
+          Ref: VPC
+        CidrBlock:
+          Fn::FindInMap:
+            - SubnetConfig
+            - PublicOne
+            - CIDR
+        MapPublicIpOnLaunch: true
+    PublicSubnetTwo:
+      Type: AWS::EC2::Subnet
+      Properties:
+        AvailabilityZone:
+          Fn::Select:
+            - 1
+            - Fn::GetAZs:
+                Ref: AWS::Region
+        VpcId:
+          Ref: VPC
+        CidrBlock:
+          Fn::FindInMap:
+            - SubnetConfig
+            - PublicTwo
+            - CIDR
+        MapPublicIpOnLaunch: true
+    PrivateSubnetOne:
+      Type: AWS::EC2::Subnet
+      Properties:
+        AvailabilityZone:
+          Fn::Select:
+            - 0
+            - Fn::GetAZs:
+                Ref: AWS::Region
+        VpcId:
+          Ref: VPC
+        CidrBlock:
+          Fn::FindInMap:
+            - SubnetConfig
+            - PrivateOne
+            - CIDR
+    PrivateSubnetTwo:
+      Type: AWS::EC2::Subnet
+      Properties:
+        AvailabilityZone:
+          Fn::Select:
+            - 1
+            - Fn::GetAZs:
+                Ref: AWS::Region
+        VpcId:
+          Ref: VPC
+        CidrBlock:
+          Fn::FindInMap:
+            - SubnetConfig
+            - PrivateTwo
+            - CIDR
+    InternetGateway:
+      Type: AWS::EC2::InternetGateway
+    GatewayAttachement:
+      Type: AWS::EC2::VPCGatewayAttachment
+      Properties:
+        VpcId:
+          Ref: VPC
+        InternetGatewayId:
+          Ref: InternetGateway
+    PublicRouteTable:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId:
+          Ref: VPC
+    PublicRoute:
+      Type: AWS::EC2::Route
+      DependsOn: GatewayAttachement
+      Properties:
+        RouteTableId:
+          Ref: PublicRouteTable
+        DestinationCidrBlock: 0.0.0.0/0
+        GatewayId:
+          Ref: InternetGateway
+    PublicSubnetOneRouteTableAssociation:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId:
+          Ref: PublicSubnetOne
+        RouteTableId:
+          Ref: PublicRouteTable
+    PublicSubnetTwoRouteTableAssociation:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId:
+          Ref: PublicSubnetTwo
+        RouteTableId:
+          Ref: PublicRouteTable
+    NatGatewayOneAttachment:
+      Type: AWS::EC2::EIP
+      DependsOn: GatewayAttachement
+      Properties:
+        Domain: vpc
+    NatGatewayTwoAttachment:
+      Type: AWS::EC2::EIP
+      DependsOn: GatewayAttachement
+      Properties:
+        Domain: vpc
+    NatGatewayOne:
+      Type: AWS::EC2::NatGateway
+      Properties:
+        AllocationId:
+          Fn::GetAtt:
+            - NatGatewayOneAttachment
+            - AllocationId
+        SubnetId:
+          Ref: PublicSubnetOne
+    NatGatewayTwo:
+      Type: AWS::EC2::NatGateway
+      Properties:
+        AllocationId:
+          Fn::GetAtt:
+            - NatGatewayTwoAttachment
+            - AllocationId
+        SubnetId:
+          Ref: PublicSubnetTwo
+    PrivateRouteTableOne:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId:
+          Ref: VPC
+    PrivateRouteOne:
+      Type: AWS::EC2::Route
+      Properties:
+        RouteTableId:
+          Ref: PrivateRouteTableOne
+        DestinationCidrBlock: 0.0.0.0/0
+        NatGatewayId:
+          Ref: NatGatewayOne
+    PrivateRouteTableOneAssociation:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        RouteTableId:
+          Ref: PrivateRouteTableOne
+        SubnetId:
+          Ref: PrivateSubnetOne
+    PrivateRouteTableTwo:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId:
+          Ref: VPC
+    PrivateRouteTwo:
+      Type: AWS::EC2::Route
+      Properties:
+        RouteTableId:
+          Ref: PrivateRouteTableTwo
+        DestinationCidrBlock: 0.0.0.0/0
+        NatGatewayId:
+          Ref: NatGatewayTwo
+    PrivateRouteTableTwoAssociation:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        RouteTableId:
+          Ref: PrivateRouteTableTwo
+        SubnetId:
+          Ref: PrivateSubnetTwo
+    VPCEndpointSecurityGroup:
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupName:
+          Fn::Sub: SecurityGroup-VPC-${AWS::StackName}
+        GroupDescription: Allow HTTPS access from VPC to VPC Endpoint
+        VpcId:
+          Ref: VPC
+        SecurityGroupIngress:
+          - IpProtocol: tcp
+            FromPort: '443'
+            ToPort: '443'
+            CidrIp: 10.0.0.0/16
+    DocumentDBSecurityGroup:
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupName:
+          Fn::Sub: SecurityGroup-DB-${AWS::StackName}
+        GroupDescription: Allow access from VPC
+        VpcId:
+          Ref: VPC
+        SecurityGroupIngress:
+          - IpProtocol: tcp
+            FromPort: '27017'
+            ToPort: '27017'
+            CidrIp: 10.0.0.0/16
+    DocDBSubnetGroup:
+      Type: AWS::DocDB::DBSubnetGroup
+      Properties:
+        DBSubnetGroupDescription: Subnet group for DocumentDB
+        SubnetIds:
+          - Ref: PrivateSubnetOne
+          - Ref: PrivateSubnetTwo
+    DBCluster:
+      Type: AWS::DocDB::DBCluster
+      DeletionPolicy: Delete
+      Properties:
+        DBClusterIdentifier:
+          Fn::Sub: DB-${AWS::StackName}
+        DBSubnetGroupName:
+          Ref: DocDBSubnetGroup
+        VpcSecurityGroupIds:
+          - Fn::GetAtt:
+              - DocumentDBSecurityGroup
+              - GroupId
+        MasterUsername: ${env:DATABASE_USERNAME}
+        MasterUserPassword: ${env:DATABASE_PASSWORD}
+    DBInstance:
+      Type: AWS::DocDB::DBInstance
+      Properties:
+        DBClusterIdentifier:
+          Ref: DBCluster
+        DBInstanceClass: db.t3.medium
+      DependsOn: DBCluster
