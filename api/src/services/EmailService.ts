@@ -1,19 +1,19 @@
-import SendGrid from '@sendgrid/mail';
-import { SENDGRID_API_KEY, SENDGRID_SENDER_EMAIL, SENDGRID_VERIFICATION_TEMPLATE, WEB_APP_URL } from '../env';
+import Sendgrid from '@sendgrid/mail';
+import { config } from '../config';
 
 export class EmailService {
   static initialize(): void {
-    SendGrid.setApiKey(SENDGRID_API_KEY);
+    Sendgrid.setApiKey(config.sendgrid.apiKey);
   }
 
   static async sendEmailVerification(email: string, displayName: string, token: string): Promise<void> {
-    await SendGrid.send({
+    await Sendgrid.send({
       to: email,
-      from: SENDGRID_SENDER_EMAIL,
-      templateId: SENDGRID_VERIFICATION_TEMPLATE,
+      from: config.sendgrid.sender,
+      templateId: config.sendgrid.templates.userEmailVerification,
       dynamicTemplateData: {
         displayName,
-        verificationLink: `${WEB_APP_URL}/verify-email?token=${token}`,
+        verificationLink: `${config.web.url}/verify-email?token=${token}`,
       },
     });
   }
