@@ -1,11 +1,12 @@
+import Link from 'components/Link';
 import { ErrorMessage, Field, Form, Formik } from 'formik';
+import useMe from 'hooks/useMe';
+import { setJwt } from 'lib/apollo';
+import { useLoginMutation } from 'lib/graphql';
 import { useRouter } from 'next/dist/client/router';
-import Link from 'next/link';
 import { useEffect } from 'react';
 import * as yup from 'yup';
-import useMe from '../hooks/useMe';
-import { setJwt } from '../lib/apollo';
-import { useLoginMutation } from '../lib/graphql';
+import Button from './Button';
 
 interface FormValues {
   username: string;
@@ -52,9 +53,9 @@ export const LoginForm = () => {
         <Link href="/forgot-password">
           <a>Forgot password?</a>
         </Link>
-        <button type="submit" disabled={loading} className="p-3 border-2 w-full">
+        <Button variant="outlined" type="submit" disabled={loading} className="w-full">
           Login
-        </button>
+        </Button>
       </Form>
     </Formik>
   );
