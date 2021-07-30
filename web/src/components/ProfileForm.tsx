@@ -3,7 +3,13 @@ import { useRouter } from 'next/dist/client/router';
 import React from 'react';
 import * as yup from 'yup';
 import { SocialMedia, SocialMediaName, useUpdateProfileMutation } from '../lib/graphql';
-import { profileHandleRegex } from '../utils/validation';
+
+const handleRegex = {
+  facebook: /[A-z0-9_\-\.]/,
+  instagram: /[A-z0-9_]/,
+  twitter: /[A-z0-9_]/,
+  soundcloud: /[A-z0-9_]/,
+};
 
 export interface ProfileFormProps {
   twitter: string | undefined;
@@ -13,10 +19,10 @@ export interface ProfileFormProps {
 }
 
 const validationSchema: yup.SchemaOf<ProfileFormProps> = yup.object().shape({
-  twitter: yup.string().matches(profileHandleRegex, 'Invalid Twitter profile'),
-  facebook: yup.string().matches(profileHandleRegex, 'Invalid Facebook profile'),
-  instagram: yup.string().matches(profileHandleRegex, 'Invalid Instagram profile'),
-  soundcloud: yup.string().matches(profileHandleRegex, 'Invalid Soundcloud profile'),
+  twitter: yup.string().matches(handleRegex.twitter, 'Invalid Twitter user profile name'),
+  facebook: yup.string().matches(handleRegex.facebook, 'Invalid Facebook user profile name'),
+  instagram: yup.string().matches(handleRegex.instagram, 'Invalid Instagram user profile name'),
+  soundcloud: yup.string().matches(handleRegex.soundcloud, 'Invalid Soundcloud user profile name'),
 });
 
 export const ProfileForm = ({ twitter, facebook, instagram, soundcloud }: ProfileFormProps) => {
