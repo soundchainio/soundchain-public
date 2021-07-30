@@ -1,4 +1,4 @@
-import { ErrorMessage, Field, Form, Formik } from 'formik';
+import { ErrorMessage, Field, Form, Formik, FormikHelpers } from 'formik';
 import * as yup from 'yup';
 import { useForgotPasswordMutation } from '../lib/graphql';
 
@@ -12,8 +12,12 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
 
 export default function ForgotPasswordPage() {
   const [forgotPassword, { data, loading, error }] = useForgotPasswordMutation();
-  const handleSubmit = async ({ email }: FormValues) => {
+  const handleSubmit = async ({ email }: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
     await forgotPassword({ variables: { input: { email } } });
+
+    if (!error) {
+      resetForm();
+    }
   };
 
   return (

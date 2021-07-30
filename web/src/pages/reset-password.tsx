@@ -1,4 +1,4 @@
-import { ErrorMessage, Field, Form, Formik } from 'formik';
+import { ErrorMessage, Field, Form, Formik, FormikHelpers } from 'formik';
 import { GetServerSideProps } from 'next';
 import * as yup from 'yup';
 import { apolloClient } from '../lib/apollo';
@@ -47,8 +47,12 @@ export const getServerSideProps: GetServerSideProps<ResetPasswordPageProps> = as
 
 export default function ResetPasswordPage({ token }: ResetPasswordPageProps) {
   const [resetPassword, { data, loading, error }] = useResetPasswordMutation();
-  const handleSubmit = async ({ password }: FormValues) => {
+  const handleSubmit = async ({ password }: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
     await resetPassword({ variables: { input: { password, token } } });
+
+    if (!error) {
+      resetForm();
+    }
   };
 
   return (
