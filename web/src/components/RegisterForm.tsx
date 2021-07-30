@@ -22,12 +22,7 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
     .required(),
   displayName: yup.string().min(3).max(255).required().label('Display Name'),
   password: yup.string().min(8).required().label('Password'),
-  passwordConfirmation: yup
-    .string()
-    .required()
-    .test('passwords-match', 'Passwords must match', function (value) {
-      return this.parent.password === value;
-    }),
+  passwordConfirmation: yup.string().oneOf([yup.ref('password'), null], 'Passwords must match.'),
 });
 
 export const RegisterForm = () => {
