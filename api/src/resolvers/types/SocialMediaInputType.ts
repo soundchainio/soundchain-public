@@ -8,6 +8,6 @@ export class SocialMediaInputType {
   name: SocialMediaName;
 
   @Field()
-  @Matches(/^[A-z0-9_]*$/, { message: 'Invalid characters' })
-  link: string;
+  @Matches(/[A-z0-9_\-.]/, { message: 'Invalid characters' })
+  handle: string;
 }

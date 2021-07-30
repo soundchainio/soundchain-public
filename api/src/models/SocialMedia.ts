@@ -21,5 +21,5 @@ export default class SocialMedia {
 
   @Field()
   @prop({ required: true })
-  link: string;
+  handle: string;
 }

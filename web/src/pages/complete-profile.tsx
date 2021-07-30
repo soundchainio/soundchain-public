@@ -12,7 +12,7 @@ export const getServerSideProps = protectPage<CompleteProfileProps>(async contex
 
   if (myProfile) {
     myProfile.socialMediaLinks.forEach(socialMedia => {
-      profileFormValues = { ...profileFormValues, [socialMedia.name.toLowerCase()]: socialMedia.link };
+      profileFormValues = { ...profileFormValues, [socialMedia.name.toLowerCase()]: socialMedia.handle };
     });
   }
 

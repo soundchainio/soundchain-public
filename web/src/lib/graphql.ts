@@ -113,12 +113,12 @@ export type RegisterInput = {
 export type SocialMedia = {
   __typename?: 'SocialMedia';
   name: SocialMediaName;
-  link: Scalars['String'];
+  handle: Scalars['String'];
 };
 
 export type SocialMediaInputType = {
   name: SocialMediaName;
-  link: Scalars['String'];
+  handle: Scalars['String'];
 };
 
 /** Social media options */
@@ -207,7 +207,7 @@ export type MyProfileQuery = (
     & Pick<Profile, 'id' | 'displayName'>
     & { socialMediaLinks: Array<(
       { __typename?: 'SocialMedia' }
-      & Pick<SocialMedia, 'name' | 'link'>
+      & Pick<SocialMedia, 'name' | 'handle'>
     )> }
   )> }
 );
@@ -373,7 +373,7 @@ export const MyProfileDocument = gql`
     displayName
     socialMediaLinks {
       name
-      link
+      handle
     }
   }
 }

@@ -4,12 +4,7 @@ import React from 'react';
 import * as yup from 'yup';
 import { SocialMedia, SocialMediaName, useUpdateProfileMutation } from '../lib/graphql';
 
-const handleRegex = {
-  facebook: /[A-z0-9_\-\.]/,
-  instagram: /[A-z0-9_]/,
-  twitter: /[A-z0-9_]/,
-  soundcloud: /[A-z0-9_]/,
-};
+const handleRegex = /[A-z0-9_\-\.]/;
 
 export interface ProfileFormProps {
   twitter: string | undefined;
@@ -19,10 +14,10 @@ export interface ProfileFormProps {
 }
 
 const validationSchema: yup.SchemaOf<ProfileFormProps> = yup.object().shape({
-  twitter: yup.string().matches(handleRegex.twitter, 'Invalid Twitter user profile name'),
-  facebook: yup.string().matches(handleRegex.facebook, 'Invalid Facebook user profile name'),
-  instagram: yup.string().matches(handleRegex.instagram, 'Invalid Instagram user profile name'),
-  soundcloud: yup.string().matches(handleRegex.soundcloud, 'Invalid Soundcloud user profile name'),
+  twitter: yup.string().matches(handleRegex, 'Invalid Twitter username'),
+  facebook: yup.string().matches(handleRegex, 'Invalid Facebook username'),
+  instagram: yup.string().matches(handleRegex, 'Invalid Instagram username'),
+  soundcloud: yup.string().matches(handleRegex, 'Invalid Soundcloud username'),
 });
 
 export const ProfileForm = ({ twitter, facebook, instagram, soundcloud }: ProfileFormProps) => {
@@ -38,10 +33,10 @@ export const ProfileForm = ({ twitter, facebook, instagram, soundcloud }: Profil
   const getSocialMediaLiks = (values: ProfileFormProps): SocialMedia[] => {
     const { twitter, facebook, instagram, soundcloud } = values;
     const socialMediaLinks: SocialMedia[] = [];
-    if (twitter) socialMediaLinks.push({ name: SocialMediaName.Twitter, link: twitter });
-    if (facebook) socialMediaLinks.push({ name: SocialMediaName.Facebook, link: facebook });
-    if (instagram) socialMediaLinks.push({ name: SocialMediaName.Instagram, link: instagram });
-    if (soundcloud) socialMediaLinks.push({ name: SocialMediaName.Soundcloud, link: soundcloud });
+    if (twitter) socialMediaLinks.push({ name: SocialMediaName.Twitter, handle: twitter });
+    if (facebook) socialMediaLinks.push({ name: SocialMediaName.Facebook, handle: facebook });
+    if (instagram) socialMediaLinks.push({ name: SocialMediaName.Instagram, handle: instagram });
+    if (soundcloud) socialMediaLinks.push({ name: SocialMediaName.Soundcloud, handle: soundcloud });
     return socialMediaLinks;
   };
 
