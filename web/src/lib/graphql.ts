@@ -4,7 +4,7 @@ export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
-const defaultOptions = {};
+const defaultOptions =  {}
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: string;
@@ -38,9 +38,14 @@ export type Book = {
   updatedAt: Scalars['DateTime'];
 };
 
+
+export type ForgotPasswordInput = {
+  email: Scalars['String'];
+};
+
 export type ForgotPasswordPayload = {
   __typename?: 'ForgotPasswordPayload';
-  email: Scalars['String'];
+  ok: Scalars['Boolean'];
 };
 
 export type LoginInput = {
@@ -59,25 +64,31 @@ export type Mutation = {
   resetPassword: ResetPasswordPayload;
 };
 
+
 export type MutationAddBookArgs = {
   input: AddBookInput;
 };
+
 
 export type MutationRegisterArgs = {
   input: RegisterInput;
 };
 
+
 export type MutationLoginArgs = {
   input: LoginInput;
 };
+
 
 export type MutationVerifyUserEmailArgs = {
   input: VerifyUserEmailInput;
 };
 
+
 export type MutationForgotPasswordArgs = {
-  email: Scalars['String'];
+  input: ForgotPasswordInput;
 };
+
 
 export type MutationResetPasswordArgs = {
   input: ResetPasswordInput;
@@ -99,12 +110,14 @@ export type Query = {
   book: Book;
   books: Array<Book>;
   me?: Maybe<User>;
-  validPasswordResetToken?: Maybe<Scalars['Boolean']>;
+  validPasswordResetToken: Scalars['Boolean'];
 };
+
 
 export type QueryBookArgs = {
   id: Scalars['String'];
 };
+
 
 export type QueryValidPasswordResetTokenArgs = {
   token: Scalars['String'];
@@ -124,7 +137,7 @@ export type ResetPasswordInput = {
 
 export type ResetPasswordPayload = {
   __typename?: 'ResetPasswordPayload';
-  passwordReset: Scalars['Boolean'];
+  ok: Scalars['Boolean'];
 };
 
 export type SocialMedia = {
@@ -137,7 +150,7 @@ export type SocialMedia = {
 export enum SocialMediaName {
   Twitter = 'TWITTER',
   Instagram = 'INSTAGRAM',
-  Facebook = 'FACEBOOK',
+  Facebook = 'FACEBOOK'
 }
 
 export type User = {
@@ -161,76 +174,117 @@ export type VerifyUserEmailPayload = {
 };
 
 export type ForgotPasswordMutationVariables = Exact<{
-  email: Scalars['String'];
+  input: ForgotPasswordInput;
 }>;
 
-export type ForgotPasswordMutation = { __typename?: 'Mutation' } & {
-  forgotPassword: { __typename?: 'ForgotPasswordPayload' } & Pick<ForgotPasswordPayload, 'email'>;
-};
 
-export type HomePageQueryVariables = Exact<{ [key: string]: never }>;
+export type ForgotPasswordMutation = (
+  { __typename?: 'Mutation' }
+  & { forgotPassword: (
+    { __typename?: 'ForgotPasswordPayload' }
+    & Pick<ForgotPasswordPayload, 'ok'>
+  ) }
+);
 
-export type HomePageQuery = { __typename?: 'Query' } & {
-  books: Array<{ __typename?: 'Book' } & Pick<Book, 'id' | 'title' | 'createdAt'>>;
-};
+export type HomePageQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type HomePageQuery = (
+  { __typename?: 'Query' }
+  & { books: Array<(
+    { __typename?: 'Book' }
+    & Pick<Book, 'id' | 'title' | 'createdAt'>
+  )> }
+);
 
 export type LoginMutationVariables = Exact<{
   input: LoginInput;
 }>;
 
-export type LoginMutation = { __typename?: 'Mutation' } & {
-  login: { __typename?: 'AuthPayload' } & Pick<AuthPayload, 'jwt'>;
-};
 
-export type MeQueryVariables = Exact<{ [key: string]: never }>;
+export type LoginMutation = (
+  { __typename?: 'Mutation' }
+  & { login: (
+    { __typename?: 'AuthPayload' }
+    & Pick<AuthPayload, 'jwt'>
+  ) }
+);
 
-export type MeQuery = { __typename?: 'Query' } & {
-  me?: Maybe<
-    { __typename?: 'User' } & Pick<User, 'id' | 'handle'> & {
-        profile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'displayName'>;
-      }
-  >;
-};
+export type MeQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type MeQuery = (
+  { __typename?: 'Query' }
+  & { me?: Maybe<(
+    { __typename?: 'User' }
+    & Pick<User, 'id' | 'handle'>
+    & { profile: (
+      { __typename?: 'Profile' }
+      & Pick<Profile, 'id' | 'displayName'>
+    ) }
+  )> }
+);
 
 export type RegisterMutationVariables = Exact<{
   input: RegisterInput;
 }>;
 
-export type RegisterMutation = { __typename?: 'Mutation' } & {
-  register: { __typename?: 'AuthPayload' } & Pick<AuthPayload, 'jwt'>;
-};
+
+export type RegisterMutation = (
+  { __typename?: 'Mutation' }
+  & { register: (
+    { __typename?: 'AuthPayload' }
+    & Pick<AuthPayload, 'jwt'>
+  ) }
+);
 
 export type ResetPasswordMutationVariables = Exact<{
   input: ResetPasswordInput;
 }>;
 
-export type ResetPasswordMutation = { __typename?: 'Mutation' } & {
-  resetPassword: { __typename?: 'ResetPasswordPayload' } & Pick<ResetPasswordPayload, 'passwordReset'>;
-};
+
+export type ResetPasswordMutation = (
+  { __typename?: 'Mutation' }
+  & { resetPassword: (
+    { __typename?: 'ResetPasswordPayload' }
+    & Pick<ResetPasswordPayload, 'ok'>
+  ) }
+);
 
 export type ValidPasswordResetTokenQueryVariables = Exact<{
   token: Scalars['String'];
 }>;
 
-export type ValidPasswordResetTokenQuery = { __typename?: 'Query' } & Pick<Query, 'validPasswordResetToken'>;
+
+export type ValidPasswordResetTokenQuery = (
+  { __typename?: 'Query' }
+  & Pick<Query, 'validPasswordResetToken'>
+);
 
 export type VerifyUserEmailMutationVariables = Exact<{
   input: VerifyUserEmailInput;
 }>;
 
-export type VerifyUserEmailMutation = { __typename?: 'Mutation' } & {
-  verifyUserEmail: { __typename?: 'VerifyUserEmailPayload' } & {
-    user: { __typename?: 'User' } & Pick<User, 'id' | 'verified'>;
-  };
-};
+
+export type VerifyUserEmailMutation = (
+  { __typename?: 'Mutation' }
+  & { verifyUserEmail: (
+    { __typename?: 'VerifyUserEmailPayload' }
+    & { user: (
+      { __typename?: 'User' }
+      & Pick<User, 'id' | 'verified'>
+    ) }
+  ) }
+);
+
 
 export const ForgotPasswordDocument = gql`
-  mutation ForgotPassword($email: String!) {
-    forgotPassword(email: $email) {
-      email
-    }
+    mutation ForgotPassword($input: ForgotPasswordInput!) {
+  forgotPassword(input: $input) {
+    ok
   }
-`;
+}
+    `;
 export type ForgotPasswordMutationFn = Apollo.MutationFunction<ForgotPasswordMutation, ForgotPasswordMutationVariables>;
 
 /**
@@ -246,31 +300,26 @@ export type ForgotPasswordMutationFn = Apollo.MutationFunction<ForgotPasswordMut
  * @example
  * const [forgotPasswordMutation, { data, loading, error }] = useForgotPasswordMutation({
  *   variables: {
- *      email: // value for 'email'
+ *      input: // value for 'input'
  *   },
  * });
  */
-export function useForgotPasswordMutation(
-  baseOptions?: Apollo.MutationHookOptions<ForgotPasswordMutation, ForgotPasswordMutationVariables>,
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return Apollo.useMutation<ForgotPasswordMutation, ForgotPasswordMutationVariables>(ForgotPasswordDocument, options);
-}
+export function useForgotPasswordMutation(baseOptions?: Apollo.MutationHookOptions<ForgotPasswordMutation, ForgotPasswordMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ForgotPasswordMutation, ForgotPasswordMutationVariables>(ForgotPasswordDocument, options);
+      }
 export type ForgotPasswordMutationHookResult = ReturnType<typeof useForgotPasswordMutation>;
 export type ForgotPasswordMutationResult = Apollo.MutationResult<ForgotPasswordMutation>;
-export type ForgotPasswordMutationOptions = Apollo.BaseMutationOptions<
-  ForgotPasswordMutation,
-  ForgotPasswordMutationVariables
->;
+export type ForgotPasswordMutationOptions = Apollo.BaseMutationOptions<ForgotPasswordMutation, ForgotPasswordMutationVariables>;
 export const HomePageDocument = gql`
-  query HomePage {
-    books {
-      id
-      title
-      createdAt
-    }
+    query HomePage {
+  books {
+    id
+    title
+    createdAt
   }
-`;
+}
+    `;
 
 /**
  * __useHomePageQuery__
@@ -288,23 +337,23 @@ export const HomePageDocument = gql`
  * });
  */
 export function useHomePageQuery(baseOptions?: Apollo.QueryHookOptions<HomePageQuery, HomePageQueryVariables>) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return Apollo.useQuery<HomePageQuery, HomePageQueryVariables>(HomePageDocument, options);
-}
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<HomePageQuery, HomePageQueryVariables>(HomePageDocument, options);
+      }
 export function useHomePageLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<HomePageQuery, HomePageQueryVariables>) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return Apollo.useLazyQuery<HomePageQuery, HomePageQueryVariables>(HomePageDocument, options);
-}
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<HomePageQuery, HomePageQueryVariables>(HomePageDocument, options);
+        }
 export type HomePageQueryHookResult = ReturnType<typeof useHomePageQuery>;
 export type HomePageLazyQueryHookResult = ReturnType<typeof useHomePageLazyQuery>;
 export type HomePageQueryResult = Apollo.QueryResult<HomePageQuery, HomePageQueryVariables>;
 export const LoginDocument = gql`
-  mutation Login($input: LoginInput!) {
-    login(input: $input) {
-      jwt
-    }
+    mutation Login($input: LoginInput!) {
+  login(input: $input) {
+    jwt
   }
-`;
+}
+    `;
 export type LoginMutationFn = Apollo.MutationFunction<LoginMutation, LoginMutationVariables>;
 
 /**
@@ -325,24 +374,24 @@ export type LoginMutationFn = Apollo.MutationFunction<LoginMutation, LoginMutati
  * });
  */
 export function useLoginMutation(baseOptions?: Apollo.MutationHookOptions<LoginMutation, LoginMutationVariables>) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return Apollo.useMutation<LoginMutation, LoginMutationVariables>(LoginDocument, options);
-}
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<LoginMutation, LoginMutationVariables>(LoginDocument, options);
+      }
 export type LoginMutationHookResult = ReturnType<typeof useLoginMutation>;
 export type LoginMutationResult = Apollo.MutationResult<LoginMutation>;
 export type LoginMutationOptions = Apollo.BaseMutationOptions<LoginMutation, LoginMutationVariables>;
 export const MeDocument = gql`
-  query Me {
-    me {
+    query Me {
+  me {
+    id
+    handle
+    profile {
       id
-      handle
-      profile {
-        id
-        displayName
-      }
+      displayName
     }
   }
-`;
+}
+    `;
 
 /**
  * __useMeQuery__
@@ -360,23 +409,23 @@ export const MeDocument = gql`
  * });
  */
 export function useMeQuery(baseOptions?: Apollo.QueryHookOptions<MeQuery, MeQueryVariables>) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return Apollo.useQuery<MeQuery, MeQueryVariables>(MeDocument, options);
-}
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<MeQuery, MeQueryVariables>(MeDocument, options);
+      }
 export function useMeLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<MeQuery, MeQueryVariables>) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return Apollo.useLazyQuery<MeQuery, MeQueryVariables>(MeDocument, options);
-}
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<MeQuery, MeQueryVariables>(MeDocument, options);
+        }
 export type MeQueryHookResult = ReturnType<typeof useMeQuery>;
 export type MeLazyQueryHookResult = ReturnType<typeof useMeLazyQuery>;
 export type MeQueryResult = Apollo.QueryResult<MeQuery, MeQueryVariables>;
 export const RegisterDocument = gql`
-  mutation Register($input: RegisterInput!) {
-    register(input: $input) {
-      jwt
-    }
+    mutation Register($input: RegisterInput!) {
+  register(input: $input) {
+    jwt
   }
-`;
+}
+    `;
 export type RegisterMutationFn = Apollo.MutationFunction<RegisterMutation, RegisterMutationVariables>;
 
 /**
@@ -396,22 +445,20 @@ export type RegisterMutationFn = Apollo.MutationFunction<RegisterMutation, Regis
  *   },
  * });
  */
-export function useRegisterMutation(
-  baseOptions?: Apollo.MutationHookOptions<RegisterMutation, RegisterMutationVariables>,
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return Apollo.useMutation<RegisterMutation, RegisterMutationVariables>(RegisterDocument, options);
-}
+export function useRegisterMutation(baseOptions?: Apollo.MutationHookOptions<RegisterMutation, RegisterMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<RegisterMutation, RegisterMutationVariables>(RegisterDocument, options);
+      }
 export type RegisterMutationHookResult = ReturnType<typeof useRegisterMutation>;
 export type RegisterMutationResult = Apollo.MutationResult<RegisterMutation>;
 export type RegisterMutationOptions = Apollo.BaseMutationOptions<RegisterMutation, RegisterMutationVariables>;
 export const ResetPasswordDocument = gql`
-  mutation ResetPassword($input: ResetPasswordInput!) {
-    resetPassword(input: $input) {
-      passwordReset
-    }
+    mutation ResetPassword($input: ResetPasswordInput!) {
+  resetPassword(input: $input) {
+    ok
   }
-`;
+}
+    `;
 export type ResetPasswordMutationFn = Apollo.MutationFunction<ResetPasswordMutation, ResetPasswordMutationVariables>;
 
 /**
@@ -431,23 +478,18 @@ export type ResetPasswordMutationFn = Apollo.MutationFunction<ResetPasswordMutat
  *   },
  * });
  */
-export function useResetPasswordMutation(
-  baseOptions?: Apollo.MutationHookOptions<ResetPasswordMutation, ResetPasswordMutationVariables>,
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return Apollo.useMutation<ResetPasswordMutation, ResetPasswordMutationVariables>(ResetPasswordDocument, options);
-}
+export function useResetPasswordMutation(baseOptions?: Apollo.MutationHookOptions<ResetPasswordMutation, ResetPasswordMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ResetPasswordMutation, ResetPasswordMutationVariables>(ResetPasswordDocument, options);
+      }
 export type ResetPasswordMutationHookResult = ReturnType<typeof useResetPasswordMutation>;
 export type ResetPasswordMutationResult = Apollo.MutationResult<ResetPasswordMutation>;
-export type ResetPasswordMutationOptions = Apollo.BaseMutationOptions<
-  ResetPasswordMutation,
-  ResetPasswordMutationVariables
->;
+export type ResetPasswordMutationOptions = Apollo.BaseMutationOptions<ResetPasswordMutation, ResetPasswordMutationVariables>;
 export const ValidPasswordResetTokenDocument = gql`
-  query ValidPasswordResetToken($token: String!) {
-    validPasswordResetToken(token: $token)
-  }
-`;
+    query ValidPasswordResetToken($token: String!) {
+  validPasswordResetToken(token: $token)
+}
+    `;
 
 /**
  * __useValidPasswordResetTokenQuery__
@@ -465,44 +507,28 @@ export const ValidPasswordResetTokenDocument = gql`
  *   },
  * });
  */
-export function useValidPasswordResetTokenQuery(
-  baseOptions: Apollo.QueryHookOptions<ValidPasswordResetTokenQuery, ValidPasswordResetTokenQueryVariables>,
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return Apollo.useQuery<ValidPasswordResetTokenQuery, ValidPasswordResetTokenQueryVariables>(
-    ValidPasswordResetTokenDocument,
-    options,
-  );
-}
-export function useValidPasswordResetTokenLazyQuery(
-  baseOptions?: Apollo.LazyQueryHookOptions<ValidPasswordResetTokenQuery, ValidPasswordResetTokenQueryVariables>,
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return Apollo.useLazyQuery<ValidPasswordResetTokenQuery, ValidPasswordResetTokenQueryVariables>(
-    ValidPasswordResetTokenDocument,
-    options,
-  );
-}
+export function useValidPasswordResetTokenQuery(baseOptions: Apollo.QueryHookOptions<ValidPasswordResetTokenQuery, ValidPasswordResetTokenQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ValidPasswordResetTokenQuery, ValidPasswordResetTokenQueryVariables>(ValidPasswordResetTokenDocument, options);
+      }
+export function useValidPasswordResetTokenLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ValidPasswordResetTokenQuery, ValidPasswordResetTokenQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ValidPasswordResetTokenQuery, ValidPasswordResetTokenQueryVariables>(ValidPasswordResetTokenDocument, options);
+        }
 export type ValidPasswordResetTokenQueryHookResult = ReturnType<typeof useValidPasswordResetTokenQuery>;
 export type ValidPasswordResetTokenLazyQueryHookResult = ReturnType<typeof useValidPasswordResetTokenLazyQuery>;
-export type ValidPasswordResetTokenQueryResult = Apollo.QueryResult<
-  ValidPasswordResetTokenQuery,
-  ValidPasswordResetTokenQueryVariables
->;
+export type ValidPasswordResetTokenQueryResult = Apollo.QueryResult<ValidPasswordResetTokenQuery, ValidPasswordResetTokenQueryVariables>;
 export const VerifyUserEmailDocument = gql`
-  mutation VerifyUserEmail($input: VerifyUserEmailInput!) {
-    verifyUserEmail(input: $input) {
-      user {
-        id
-        verified
-      }
+    mutation VerifyUserEmail($input: VerifyUserEmailInput!) {
+  verifyUserEmail(input: $input) {
+    user {
+      id
+      verified
     }
   }
-`;
-export type VerifyUserEmailMutationFn = Apollo.MutationFunction<
-  VerifyUserEmailMutation,
-  VerifyUserEmailMutationVariables
->;
+}
+    `;
+export type VerifyUserEmailMutationFn = Apollo.MutationFunction<VerifyUserEmailMutation, VerifyUserEmailMutationVariables>;
 
 /**
  * __useVerifyUserEmailMutation__
@@ -521,18 +547,10 @@ export type VerifyUserEmailMutationFn = Apollo.MutationFunction<
  *   },
  * });
  */
-export function useVerifyUserEmailMutation(
-  baseOptions?: Apollo.MutationHookOptions<VerifyUserEmailMutation, VerifyUserEmailMutationVariables>,
-) {
-  const options = { ...defaultOptions, ...baseOptions };
-  return Apollo.useMutation<VerifyUserEmailMutation, VerifyUserEmailMutationVariables>(
-    VerifyUserEmailDocument,
-    options,
-  );
-}
+export function useVerifyUserEmailMutation(baseOptions?: Apollo.MutationHookOptions<VerifyUserEmailMutation, VerifyUserEmailMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<VerifyUserEmailMutation, VerifyUserEmailMutationVariables>(VerifyUserEmailDocument, options);
+      }
 export type VerifyUserEmailMutationHookResult = ReturnType<typeof useVerifyUserEmailMutation>;
 export type VerifyUserEmailMutationResult = Apollo.MutationResult<VerifyUserEmailMutation>;
-export type VerifyUserEmailMutationOptions = Apollo.BaseMutationOptions<
-  VerifyUserEmailMutation,
-  VerifyUserEmailMutationVariables
->;
+export type VerifyUserEmailMutationOptions = Apollo.BaseMutationOptions<VerifyUserEmailMutation, VerifyUserEmailMutationVariables>;

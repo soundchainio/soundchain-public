@@ -1,4 +1,4 @@
-import { ErrorMessage, Field, Form, Formik, FormikHelpers } from 'formik';
+import { ErrorMessage, Field, Form, Formik } from 'formik';
 import { GetServerSideProps } from 'next';
 import * as yup from 'yup';
 import { apolloClient } from '../lib/apollo';
@@ -15,12 +15,12 @@ interface ResetPasswordPageProps {
 
 interface FormValues {
   password: string;
-  confirmPassword: string;
+  passwordConfirmation: string;
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   password: yup.string().required().min(8),
-  confirmPassword: yup
+  passwordConfirmation: yup
     .string()
     .required()
     .test('passwords-match', 'Passwords must match', function (value) {
@@ -46,32 +46,29 @@ export const getServerSideProps: GetServerSideProps<ResetPasswordPageProps> = as
 };
 
 export default function ResetPasswordPage({ token }: ResetPasswordPageProps) {
-  const [resetPassword, { data }] = useResetPasswordMutation();
-  const handleSubmit = async ({ password }: FormValues, { setSubmitting, resetForm }: FormikHelpers<FormValues>) => {
+  const [resetPassword, { data, loading, error }] = useResetPasswordMutation();
+  const handleSubmit = async ({ password }: FormValues) => {
     await resetPassword({ variables: { input: { password, token } } });
-    resetForm();
-    setSubmitting(false);
   };
 
   return (
     <div>
       {data && 'Your password has been reset'}
+      {error && 'An error occurred'}
       <Formik
-        initialValues={{ password: '', confirmPassword: '' }}
+        initialValues={{ password: '', passwordConfirmation: '' }}
         validationSchema={validationSchema}
         onSubmit={handleSubmit}
       >
-        {({ isSubmitting }) => (
-          <Form>
-            <Field type="password" name="password" />
-            <ErrorMessage name="password" />
-            <Field type="password" name="confirmPassword" />
-            <ErrorMessage name="confirmPassword" />
-            <button type="submit" disabled={isSubmitting}>
-              Change password
-            </button>
-          </Form>
-        )}
+        <Form>
+          <Field type="password" name="password" />
+          <ErrorMessage name="password" />
+          <Field type="password" name="passwordConfirmation" />
+          <ErrorMessage name="passwordConfirmation" />
+          <button type="submit" disabled={loading}>
+            Change password
+          </button>
+        </Form>
       </Formik>
     </div>
   );

@@ -8,6 +8,7 @@ import { ProfileService } from '../services/ProfileService';
 import { UserService } from '../services/UserService';
 import Context from '../types/Context';
 import AuthPayload from './types/AuthPayload';
+import ForgotPasswordInput from './types/ForgotPasswordInput';
 import { ForgotPasswordPayload } from './types/ForgotPasswordPayload';
 import LoginInput from './types/LoginInput';
 import { RegisterInput } from './types/RegisterInput';
@@ -28,7 +29,7 @@ export class UserResolver {
     return context.user;
   }
 
-  @Query(() => Boolean, { nullable: true })
+  @Query(() => Boolean)
   validPasswordResetToken(@Arg('token') token: string): Promise<boolean> {
     return UserService.userExists({ passwordResetToken: token });
   }
@@ -66,9 +67,9 @@ export class UserResolver {
   }
 
   @Mutation(() => ForgotPasswordPayload)
-  forgotPassword(@Arg('email') email: string): ForgotPasswordPayload {
+  forgotPassword(@Arg('input') { email }: ForgotPasswordInput): ForgotPasswordPayload {
     AuthService.generatePasswordResetToken(email);
-    return { email };
+    return { ok: true };
   }
 
   @Mutation(() => ResetPasswordPayload)
@@ -82,7 +83,7 @@ export class UserResolver {
     await AuthService.resetUserPassword(user, password);
 
     return {
-      passwordReset: true,
+      ok: true,
     };
   }
 }

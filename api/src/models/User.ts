@@ -37,7 +37,7 @@ export default class User extends Model {
   password: string;
 
   @prop({ required: false })
-  emailVerificationToken: string;
+  emailVerificationToken?: string;
 
   @Field()
   @prop({ required: true, default: false })
