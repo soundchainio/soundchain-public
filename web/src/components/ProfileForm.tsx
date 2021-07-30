@@ -57,22 +57,22 @@ export const ProfileForm = ({ twitter, facebook, instagram, soundcloud }: Profil
     >
       <Form className="flex flex-col items-left space-y-6 w-full px-6">
         <div className="flex flex-col">
-          <span className="mr-1">Twitter profile name</span>
+          <span className="mr-1">Twitter @username</span>
           <Field type="text" name="twitter" />
           <ErrorMessage name="twitter" component="div" />
         </div>
         <div className="flex flex-col">
-          <span className="mr-1">Facebook profile name</span>
+          <span className="mr-1">Facebook @username</span>
           <Field type="text" name="facebook" />
           <ErrorMessage name="facebook" component="div" />
         </div>
         <div className="flex flex-col">
-          <span className="mr-1">Instagram profile name</span>
+          <span className="mr-1">Instagram @username</span>
           <Field type="text" name="instagram" />
           <ErrorMessage name="instagram" component="div" />
         </div>
         <div className="flex flex-col">
-          <span className="mr-1">Soundcloud profile name</span>
+          <span className="mr-1">Soundcloud @username</span>
           <Field type="text" name="soundcloud" />
           <ErrorMessage name="soundcloud" component="div" />
         </div>
