@@ -1,26 +1,19 @@
 import SendGrid from '@sendgrid/mail';
-
-const {
-  SENDGRID_SENDER_EMAIL,
-  SENDGRID_API_KEY,
-  SENDGRID_VERIFICATION_TEMPLATE,
-  SENDGRID_RESET_PASSWORD_TEMPLATE,
-  WEB_APP_URL,
-} = process.env;
+import { config } from '../config';
 
 export class EmailService {
   static initialize(): void {
-    SendGrid.setApiKey(SENDGRID_API_KEY as string);
+    SendGrid.setApiKey(config.sendgrid.apiKey);
   }
 
   static async sendEmailVerification(email: string, displayName: string, token: string): Promise<void> {
     await SendGrid.send({
       to: email,
-      from: SENDGRID_SENDER_EMAIL as string,
-      templateId: SENDGRID_VERIFICATION_TEMPLATE as string,
+      from: config.sendgrid.sender,
+      templateId: config.sendgrid.templates.userEmailVerification,
       dynamicTemplateData: {
         displayName,
-        verificationLink: `${WEB_APP_URL}/verify-email?token=${token}`,
+        verificationLink: `${config.web.url}/verify-email?token=${token}`,
       },
     });
   }
@@ -28,10 +21,10 @@ export class EmailService {
   static async sendPasswordResetEmail(email: string, token: string): Promise<void> {
     await SendGrid.send({
       to: email,
-      from: SENDGRID_SENDER_EMAIL as string,
-      templateId: SENDGRID_RESET_PASSWORD_TEMPLATE as string,
+      from: config.sendgrid.sender,
+      templateId: config.sendgrid.templates.passwordReset,
       dynamicTemplateData: {
-        resetPasswordLink: `${WEB_APP_URL}/reset-password?token=${token}`,
+        resetPasswordLink: `${config.web.url}/reset-password?token=${token}`,
       },
     });
   }
