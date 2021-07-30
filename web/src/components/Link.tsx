@@ -3,6 +3,7 @@ import NextLink from 'next/link';
 import { buttonClassesByVariant, ButtonVariant } from './Button';
 
 export interface LinkProps extends React.ComponentPropsWithoutRef<'a'> {
+  href: string;
   buttonVariant?: ButtonVariant;
 }
 
@@ -15,11 +16,9 @@ export default function Link({ className, buttonVariant, href, ...rest }: LinkPr
     ...rest,
   };
 
-  if (href?.startsWith('/')) {
+  return (
     <NextLink href={href}>
       <a {...anchorProps} />
-    </NextLink>;
-  }
-
-  return <a href={href} {...anchorProps} />;
+    </NextLink>
+  );
 }
