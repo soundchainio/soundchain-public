@@ -85,7 +85,7 @@ export type Profile = {
   displayName: Scalars['String'];
   profilePicture?: Maybe<Scalars['String']>;
   coverPicture?: Maybe<Scalars['String']>;
-  socialMedias: SocialMedias;
+  socialMedias?: Maybe<SocialMedias>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
 };
@@ -197,10 +197,10 @@ export type MyProfileQuery = (
   & { myProfile: (
     { __typename?: 'Profile' }
     & Pick<Profile, 'id' | 'displayName'>
-    & { socialMedias: (
+    & { socialMedias?: Maybe<(
       { __typename?: 'SocialMedias' }
       & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
-    ) }
+    )> }
   ) }
 );
 
@@ -229,10 +229,10 @@ export type UpdateSocialMediasMutation = (
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id'>
-      & { socialMedias: (
+      & { socialMedias?: Maybe<(
         { __typename?: 'SocialMedias' }
         & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
-      ) }
+      )> }
     ) }
   ) }
 );
