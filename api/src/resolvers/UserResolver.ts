@@ -68,29 +68,13 @@ export class UserResolver {
 
   @Mutation(() => ForgotPasswordPayload)
   async forgotPassword(@Arg('input') { email }: ForgotPasswordInput): Promise<ForgotPasswordPayload> {
-    const user = await UserService.findUser({ email });
-
-    if (!user) {
-      throw new UserInputError('User not found');
-    }
-
-    await AuthService.generatePasswordResetToken(user);
-
+    await AuthService.initPasswordReset(email);
     return { ok: true };
   }
 
   @Mutation(() => ResetPasswordPayload)
   async resetPassword(@Arg('input') { token, password }: ResetPasswordInput): Promise<ResetPasswordPayload> {
-    const user = await UserService.findUser({ passwordResetToken: token });
-
-    if (!user) {
-      throw new UserInputError('Invalid token');
-    }
-
-    await AuthService.resetUserPassword(user, password);
-
-    return {
-      ok: true,
-    };
+    await AuthService.resetUserPassword(token, password);
+    return { ok: true };
   }
 }

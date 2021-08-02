@@ -1,7 +1,7 @@
 import '01/../reflect-metadata';
 import {
   ApolloServerPluginLandingPageGraphQLPlayground,
-  ApolloServerPluginLandingPageProductionDefault
+  ApolloServerPluginLandingPageProductionDefault,
 } from 'apollo-server-core';
 import * as dotenv from 'dotenv-flow';
 import fs from 'fs';

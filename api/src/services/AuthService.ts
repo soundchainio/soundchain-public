@@ -1,7 +1,5 @@
-import { DocumentType } from '@typegoose/typegoose';
 import { UserInputError } from 'apollo-server-express';
 import { compare } from 'bcryptjs';
-import { Document } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
 import { ProfileModel } from '../models/Profile';
 import User, { UserModel } from '../models/User';
@@ -60,16 +58,26 @@ export default class AuthService {
     return user;
   }
 
-  static async generatePasswordResetToken(user: DocumentType<User>): Promise<void> {
+  static async initPasswordReset(email: string): Promise<void> {
     const passwordResetToken = uuidv4();
-    user.passwordResetToken = passwordResetToken;
-    await user.save();
+    const user = await UserModel.findOneAndUpdate({ email }, { passwordResetToken });
+
+    if (!user) {
+      throw new UserInputError('No user with email');
+    }
+
     await EmailService.sendPasswordResetEmail(user.email, passwordResetToken);
   }
 
-  static resetUserPassword(user: DocumentType<User>, password: string): Promise<Document> {
+  static async resetUserPassword(passwordResetToken: string, password: string): Promise<void> {
+    const user = await UserModel.findOne({ passwordResetToken });
+
+    if (!user) {
+      throw new UserInputError('Invalid token');
+    }
+
     user.password = password;
     user.passwordResetToken = undefined;
-    return user.save();
+    await user.save();
   }
 }

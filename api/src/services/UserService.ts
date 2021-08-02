@@ -1,4 +1,3 @@
-import { DocumentType } from '@typegoose/typegoose';
 import User, { UserModel } from '../models/User';
 
 export class UserService {
@@ -6,11 +5,7 @@ export class UserService {
     return UserModel.findByIdOrFail(id);
   }
 
-  static userExists(filter: { passwordResetToken?: string }): Promise<boolean> {
+  static userExists(filter: Partial<User>): Promise<boolean> {
     return UserModel.exists(filter);
-  }
-
-  static findUser(filter: { passwordResetToken?: string; email?: string }): Promise<DocumentType<User> | null> {
-    return UserModel.findOne(filter).exec();
   }
 }
