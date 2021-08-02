@@ -1,5 +1,5 @@
 import { UserInputError } from 'apollo-server-express';
-import Profile, { ProfileModel } from '../models/Profile';
+import { Profile, ProfileModel } from '../models/Profile';
 import { SocialMedias } from '../models/SocialMedias';
 
 export class ProfileService {

@@ -1,6 +1,6 @@
 import { Arg, Authorized, Mutation, Query, Resolver } from 'type-graphql';
 import { CurrentUser } from '../middlewares/decorators/current-user';
-import Profile from '../models/Profile';
+import { Profile } from '../models/Profile';
 import User from '../models/User';
 import { ProfileService } from '../services/ProfileService';
 import { SocialMediasInput } from './types/SocialMediasInput';

@@ -5,7 +5,7 @@ import { SocialMedias } from './SocialMedias';
 
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
 @ObjectType()
-export default class Profile extends Model {
+export class Profile extends Model {
   @Field(() => ID, { name: 'id' })
   readonly _id: string;
 
