@@ -30,6 +30,7 @@ const {
   WEB_APP_URL = 'http://localhost:3000',
   SENDGRID_SENDER_EMAIL,
   SENDGRID_VERIFICATION_TEMPLATE,
+  SENDGRID_RESET_PASSWORD_TEMPLATE,
   SENDGRID_API_KEY,
 } = process.env;
 
@@ -42,6 +43,7 @@ function assertEnvVar(name: string, value: string | undefined): asserts value {
 assertEnvVar('SENDGRID_SENDER_EMAIL', SENDGRID_SENDER_EMAIL);
 assertEnvVar('SENDGRID_VERIFICATION_TEMPLATE', SENDGRID_VERIFICATION_TEMPLATE);
 assertEnvVar('SENDGRID_API_KEY', SENDGRID_API_KEY);
+assertEnvVar('SENDGRID_RESET_PASSWORD_TEMPLATE', SENDGRID_RESET_PASSWORD_TEMPLATE);
 
 export const config = {
   apollo: {
@@ -79,6 +81,7 @@ export const config = {
     sender: SENDGRID_SENDER_EMAIL,
     templates: {
       userEmailVerification: SENDGRID_VERIFICATION_TEMPLATE,
+      passwordReset: SENDGRID_RESET_PASSWORD_TEMPLATE,
     },
   },
   web: {

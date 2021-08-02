@@ -1,3 +1,4 @@
+import Link from 'components/Link';
 import { ErrorMessage, Field, Form, Formik } from 'formik';
 import useMe from 'hooks/useMe';
 import { setJwt } from 'lib/apollo';
@@ -49,7 +50,9 @@ export const LoginForm = () => {
           <ErrorMessage name="password" component="div" />
         </div>
         {error && <p>{error.message}</p>}
-        <a href="#">Forgot password?</a>
+        <Link href="/forgot-password">
+          <a>Forgot password?</a>
+        </Link>
         <Button variant="outlined" type="submit" disabled={loading} className="w-full">
           Login
         </Button>
