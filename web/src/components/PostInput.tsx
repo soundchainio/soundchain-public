@@ -20,6 +20,7 @@ export const PostInput = () => {
   const handleSubmit = () => {
     addPost({ variables: { input: { body: text } } }).then(() => {
       setText('');
+      setEmojiPickerVisible(false);
     });
   };
   const handleEmojiInText = (emoji: BaseEmoji) => {
@@ -70,8 +71,9 @@ export const PostInput = () => {
 
       {error && <p>{error.message}</p>}
       {isEmojiPickerVisible && (
-        <div className="h-1 z-30 w-8/12 bg-white">
+        <div className="h-1 z-30 w-8/12  absolute mt-10">
           <Picker
+            style={{}}
             onSelect={(emojiData: BaseEmoji) => {
               handleEmojiInText(emojiData);
             }}
