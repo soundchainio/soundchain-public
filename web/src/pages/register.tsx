@@ -1,7 +1,7 @@
 import Button from 'components/Button';
 import Link from 'components/Link';
 import { RegisterForm } from 'components/RegisterForm';
-import useMe from 'hooks/useMe';
+import { useMe } from 'hooks/useMe';
 import { useRouter } from 'next/dist/client/router';
 import { useEffect } from 'react';
 
