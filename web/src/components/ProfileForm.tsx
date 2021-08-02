@@ -2,27 +2,27 @@ import { ErrorMessage, Field, Form, Formik } from 'formik';
 import { useRouter } from 'next/dist/client/router';
 import React from 'react';
 import * as yup from 'yup';
-import { SocialMedia, SocialMediaName, useUpdateProfileMutation } from '../lib/graphql';
+import { useUpdateSocialMediasMutation } from '../lib/graphql';
 
-const handleRegex = /[A-z0-9_\-\.]/;
+const handleRegex = /[A-z0-9_\-\.]?/;
 
 export interface ProfileFormProps {
-  twitter: string | undefined;
-  facebook: string | undefined;
-  instagram: string | undefined;
-  soundcloud: string | undefined;
+  twitter: string;
+  facebook: string;
+  instagram: string;
+  soundcloud: string;
 }
 
 const validationSchema: yup.SchemaOf<ProfileFormProps> = yup.object().shape({
-  twitter: yup.string().matches(handleRegex, 'Invalid Twitter username'),
-  facebook: yup.string().matches(handleRegex, 'Invalid Facebook username'),
-  instagram: yup.string().matches(handleRegex, 'Invalid Instagram username'),
-  soundcloud: yup.string().matches(handleRegex, 'Invalid Soundcloud username'),
+  twitter: yup.string().default('').matches(handleRegex, 'Invalid Twitter username'),
+  facebook: yup.string().default('').matches(handleRegex, 'Invalid Facebook username'),
+  instagram: yup.string().default('').matches(handleRegex, 'Invalid Instagram username'),
+  soundcloud: yup.string().default('').matches(handleRegex, 'Invalid Soundcloud username'),
 });
 
 export const ProfileForm = ({ twitter, facebook, instagram, soundcloud }: ProfileFormProps) => {
   const router = useRouter();
-  const [updateProfile, { loading, error }] = useUpdateProfileMutation({ refetchQueries: ['MyProfile'] });
+  const [updateSocialMedias, { loading, error }] = useUpdateSocialMediasMutation({ refetchQueries: ['MyProfile'] });
   const initialFormValues = {
     twitter,
     facebook,
@@ -30,20 +30,10 @@ export const ProfileForm = ({ twitter, facebook, instagram, soundcloud }: Profil
     soundcloud,
   };
 
-  const getSocialMediaHandles = (values: ProfileFormProps): SocialMedia[] => {
-    const { twitter, facebook, instagram, soundcloud } = values;
-    const socialMediaHandles: SocialMedia[] = [];
-    if (twitter) socialMediaHandles.push({ name: SocialMediaName.Twitter, handle: twitter });
-    if (facebook) socialMediaHandles.push({ name: SocialMediaName.Facebook, handle: facebook });
-    if (instagram) socialMediaHandles.push({ name: SocialMediaName.Instagram, handle: instagram });
-    if (soundcloud) socialMediaHandles.push({ name: SocialMediaName.Soundcloud, handle: soundcloud });
-    return socialMediaHandles;
-  };
-
   const handleSubmit = async (values: ProfileFormProps) => {
-    const socialMediaHandles = getSocialMediaHandles(values);
+    const { twitter, facebook, instagram, soundcloud } = values;
     try {
-      await updateProfile({ variables: { input: { socialMediaHandles } } });
+      await updateSocialMedias({ variables: { input: { twitter, facebook, instagram, soundcloud } } });
       router.push('/');
     } catch (error) {}
   };

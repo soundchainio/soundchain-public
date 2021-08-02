@@ -3,26 +3,26 @@ import { CurrentUser } from '../middlewares/decorators/current-user';
 import Profile from '../models/Profile';
 import User from '../models/User';
 import { ProfileService } from '../services/ProfileService';
-import { UpdateProfileInput } from './types/UpadeteProfileInput';
+import { SocialMediasInput } from './types/SocialMediasInput';
 import { UpdateProfilePayload } from './types/UpdateProfilePayload';
 
 @Resolver(Profile)
 export class ProfileResolver {
   @Query(() => Profile)
   @Authorized()
-  async myProfile(@CurrentUser() { profileId }: User): Promise<Profile> {
-    return await ProfileService.getProfile(profileId);
+  myProfile(@CurrentUser() { profileId }: User): Promise<Profile> {
+    return ProfileService.getProfile(profileId);
   }
 
   @Mutation(() => UpdateProfilePayload)
   @Authorized()
-  async updateProfile(
+  async updateSocialMedias(
     @Arg('input')
-    { socialMediaHandles }: UpdateProfileInput,
+    socialMedias: SocialMediasInput,
     @CurrentUser() { profileId }: User,
   ): Promise<UpdateProfilePayload> {
     try {
-      const profile = await ProfileService.updateProfile(profileId, socialMediaHandles);
+      const profile = await ProfileService.updateSocialMedias(profileId, socialMedias);
       return { profile };
     } catch (err) {
       throw new Error(`Error while updating profile: ${err.message}`);

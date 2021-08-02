@@ -13,7 +13,7 @@ export class RegisterInput {
 
   @Field()
   @Length(1, 32)
-  @Matches(/^[A-z0-9_]*$/, { message: 'Invalid characters' })
+  @Matches(/^[A-z0-9_\-.]*$/, { message: 'Invalid characters' })
   handle: string;
 
   @Field()

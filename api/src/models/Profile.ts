@@ -1,7 +1,7 @@
 import { getModelForClass, modelOptions, prop, Severity } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import Model from './Model';
-import SocialMedia from './SocialMedia';
+import { SocialMedias } from './SocialMedias';
 
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
 @ObjectType()
@@ -21,9 +21,9 @@ export default class Profile extends Model {
   @prop({ required: false })
   coverPicture?: string;
 
-  @Field(() => [SocialMedia])
-  @prop({ required: true, default: [] })
-  socialMediaHandles: SocialMedia[];
+  @Field(() => SocialMedias, { nullable: true })
+  @prop({ required: false })
+  socialMedias?: SocialMedias;
 
   @Field(() => Date)
   createdAt: Date;

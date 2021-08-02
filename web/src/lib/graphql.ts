@@ -48,7 +48,7 @@ export type LoginInput = {
 export type Mutation = {
   __typename?: 'Mutation';
   addBook: AddBookPayload;
-  updateProfile: UpdateProfilePayload;
+  updateSocialMedias: UpdateProfilePayload;
   register: AuthPayload;
   login: AuthPayload;
   verifyUserEmail: VerifyUserEmailPayload;
@@ -60,8 +60,8 @@ export type MutationAddBookArgs = {
 };
 
 
-export type MutationUpdateProfileArgs = {
-  input: UpdateProfileInput;
+export type MutationUpdateSocialMediasArgs = {
+  input: SocialMediasInput;
 };
 
 
@@ -85,7 +85,7 @@ export type Profile = {
   displayName: Scalars['String'];
   profilePicture?: Maybe<Scalars['String']>;
   coverPicture?: Maybe<Scalars['String']>;
-  socialMediaHandles: Array<SocialMedia>;
+  socialMedias: SocialMedias;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
 };
@@ -94,7 +94,7 @@ export type Query = {
   __typename?: 'Query';
   book: Book;
   books: Array<Book>;
-  myProfile?: Maybe<Profile>;
+  myProfile: Profile;
   me?: Maybe<User>;
 };
 
@@ -110,27 +110,19 @@ export type RegisterInput = {
   password: Scalars['String'];
 };
 
-export type SocialMedia = {
-  __typename?: 'SocialMedia';
-  name: SocialMediaName;
-  handle: Scalars['String'];
+export type SocialMedias = {
+  __typename?: 'SocialMedias';
+  facebook: Scalars['String'];
+  instagram: Scalars['String'];
+  soundcloud: Scalars['String'];
+  twitter: Scalars['String'];
 };
 
-export type SocialMediaInputType = {
-  name: SocialMediaName;
-  handle: Scalars['String'];
-};
-
-/** Social media options */
-export enum SocialMediaName {
-  Twitter = 'TWITTER',
-  Instagram = 'INSTAGRAM',
-  Facebook = 'FACEBOOK',
-  Soundcloud = 'SOUNDCLOUD'
-}
-
-export type UpdateProfileInput = {
-  socialMediaHandles?: Maybe<Array<SocialMediaInputType>>;
+export type SocialMediasInput = {
+  facebook: Scalars['String'];
+  instagram: Scalars['String'];
+  soundcloud: Scalars['String'];
+  twitter: Scalars['String'];
 };
 
 export type UpdateProfilePayload = {
@@ -202,14 +194,14 @@ export type MyProfileQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type MyProfileQuery = (
   { __typename?: 'Query' }
-  & { myProfile?: Maybe<(
+  & { myProfile: (
     { __typename?: 'Profile' }
     & Pick<Profile, 'id' | 'displayName'>
-    & { socialMediaHandles: Array<(
-      { __typename?: 'SocialMedia' }
-      & Pick<SocialMedia, 'name' | 'handle'>
-    )> }
-  )> }
+    & { socialMedias: (
+      { __typename?: 'SocialMedias' }
+      & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
+    ) }
+  ) }
 );
 
 export type RegisterMutationVariables = Exact<{
@@ -225,18 +217,22 @@ export type RegisterMutation = (
   ) }
 );
 
-export type UpdateProfileMutationVariables = Exact<{
-  input: UpdateProfileInput;
+export type UpdateSocialMediasMutationVariables = Exact<{
+  input: SocialMediasInput;
 }>;
 
 
-export type UpdateProfileMutation = (
+export type UpdateSocialMediasMutation = (
   { __typename?: 'Mutation' }
-  & { updateProfile: (
+  & { updateSocialMedias: (
     { __typename?: 'UpdateProfilePayload' }
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id'>
+      & { socialMedias: (
+        { __typename?: 'SocialMedias' }
+        & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
+      ) }
     ) }
   ) }
 );
@@ -371,9 +367,11 @@ export const MyProfileDocument = gql`
   myProfile {
     id
     displayName
-    socialMediaHandles {
-      name
-      handle
+    socialMedias {
+      facebook
+      instagram
+      soundcloud
+      twitter
     }
   }
 }
@@ -438,41 +436,47 @@ export function useRegisterMutation(baseOptions?: Apollo.MutationHookOptions<Reg
 export type RegisterMutationHookResult = ReturnType<typeof useRegisterMutation>;
 export type RegisterMutationResult = Apollo.MutationResult<RegisterMutation>;
 export type RegisterMutationOptions = Apollo.BaseMutationOptions<RegisterMutation, RegisterMutationVariables>;
-export const UpdateProfileDocument = gql`
-    mutation UpdateProfile($input: UpdateProfileInput!) {
-  updateProfile(input: $input) {
+export const UpdateSocialMediasDocument = gql`
+    mutation updateSocialMedias($input: SocialMediasInput!) {
+  updateSocialMedias(input: $input) {
     profile {
       id
+      socialMedias {
+        facebook
+        instagram
+        soundcloud
+        twitter
+      }
     }
   }
 }
     `;
-export type UpdateProfileMutationFn = Apollo.MutationFunction<UpdateProfileMutation, UpdateProfileMutationVariables>;
+export type UpdateSocialMediasMutationFn = Apollo.MutationFunction<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>;
 
 /**
- * __useUpdateProfileMutation__
+ * __useUpdateSocialMediasMutation__
  *
- * To run a mutation, you first call `useUpdateProfileMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useUpdateProfileMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useUpdateSocialMediasMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateSocialMediasMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [updateProfileMutation, { data, loading, error }] = useUpdateProfileMutation({
+ * const [updateSocialMediasMutation, { data, loading, error }] = useUpdateSocialMediasMutation({
  *   variables: {
  *      input: // value for 'input'
  *   },
  * });
  */
-export function useUpdateProfileMutation(baseOptions?: Apollo.MutationHookOptions<UpdateProfileMutation, UpdateProfileMutationVariables>) {
+export function useUpdateSocialMediasMutation(baseOptions?: Apollo.MutationHookOptions<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateProfileMutation, UpdateProfileMutationVariables>(UpdateProfileDocument, options);
+        return Apollo.useMutation<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>(UpdateSocialMediasDocument, options);
       }
-export type UpdateProfileMutationHookResult = ReturnType<typeof useUpdateProfileMutation>;
-export type UpdateProfileMutationResult = Apollo.MutationResult<UpdateProfileMutation>;
-export type UpdateProfileMutationOptions = Apollo.BaseMutationOptions<UpdateProfileMutation, UpdateProfileMutationVariables>;
+export type UpdateSocialMediasMutationHookResult = ReturnType<typeof useUpdateSocialMediasMutation>;
+export type UpdateSocialMediasMutationResult = Apollo.MutationResult<UpdateSocialMediasMutation>;
+export type UpdateSocialMediasMutationOptions = Apollo.BaseMutationOptions<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>;
 export const VerifyUserEmailDocument = gql`
     mutation VerifyUserEmail($input: VerifyUserEmailInput!) {
   verifyUserEmail(input: $input) {

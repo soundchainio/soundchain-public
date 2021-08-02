@@ -2,9 +2,11 @@ query MyProfile {
   myProfile {
     id
     displayName
-    socialMediaHandles {
-      name
-      handle
+    socialMedias {
+      facebook
+      instagram
+      soundcloud
+      twitter
     }
   }
 }
