@@ -1,4 +1,4 @@
-import { ErrorMessage, Field, Form, Formik } from 'formik';
+import { ErrorMessage, Field, useField, Form, Formik } from 'formik';
 import { BaseEmoji, Picker } from 'emoji-mart';
 import 'emoji-mart/css/emoji-mart.css';
 import React, { useState } from 'react';
@@ -17,20 +17,26 @@ export const PostInput = () => {
   const [isEmojiPickerVisible, setEmojiPickerVisible] = useState(false);
   const [addPost, { loading, error }] = useAddPostMutation({ refetchQueries: ['Posts'] });
 
-  const handleSubmit = ({ body }: PostFormValues) => {
-    addPost({ variables: { input: { body } } }).then(() => {
+  const handleSubmit = () => {
+    addPost({ variables: { input: { body: text } } }).then(() => {
       setText('');
     });
   };
-
+  const handleEmojiInText = (emoji: BaseEmoji) => {
+    setText(`${text}${emoji.native}`);
+  };
   return (
     <>
       <div className="border-2 rounded w-8/12 mt-24">
-        <Formik initialValues={{ body: '' }} validationSchema={postSchema} onSubmit={handleSubmit}>
+        <Formik initialValues={{ body: text }} enableReinitialize validationSchema={postSchema} onSubmit={handleSubmit}>
           <Form className="w-full">
             <div className="w-full">
               <Field
                 component="textarea"
+                value={text}
+                onChange={(e: { target: { value: React.SetStateAction<string> } }) => {
+                  setText(e.target.value);
+                }}
                 id="body"
                 name="body"
                 className="w-full rounded-lg border-2 border-gray-50 h-24 resize-none p-1"
@@ -49,6 +55,7 @@ export const PostInput = () => {
               </button>
 
               <button
+                type="button"
                 onClick={() => {
                   setEmojiPickerVisible(!isEmojiPickerVisible);
                 }}
@@ -63,10 +70,10 @@ export const PostInput = () => {
 
       {error && <p>{error.message}</p>}
       {isEmojiPickerVisible && (
-        <div className="h-1 z-30 w-8/12">
+        <div className="h-1 z-30 w-8/12 bg-white">
           <Picker
             onSelect={(emojiData: BaseEmoji) => {
-              setText(`${text}${emojiData.native}`);
+              handleEmojiInText(emojiData);
             }}
           />
         </div>
