@@ -8,7 +8,7 @@ import { UpdateProfilePayload } from './types/UpdateProfilePayload';
 
 @Resolver(Profile)
 export class ProfileResolver {
-  @Query(() => Profile, { nullable: true })
+  @Query(() => Profile)
   @Authorized()
   async myProfile(@CurrentUser() { profileId }: User): Promise<Profile> {
     return await ProfileService.getProfile(profileId);
