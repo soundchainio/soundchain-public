@@ -2,10 +2,10 @@ import Image from 'next/image';
 import React from 'react';
 import ProfilePic from '../../public/profile.jpg';
 
-type PostProps = {
+interface PostProps {
   profileId: string;
   body: string;
-};
+}
 
 export const PostBox = ({ body, profileId }: PostProps) => {
   return (
