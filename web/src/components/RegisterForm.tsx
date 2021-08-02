@@ -1,8 +1,9 @@
 import { ErrorMessage, Field, Form, Formik } from 'formik';
+import { setJwt } from 'lib/apollo';
+import { useRegisterMutation } from 'lib/graphql';
 import React from 'react';
 import * as yup from 'yup';
-import { setJwt } from '../lib/apollo';
-import { useRegisterMutation } from '../lib/graphql';
+import Button from './Button';
 
 interface FormValues {
   email: string;
@@ -22,7 +23,12 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
     .required(),
   displayName: yup.string().min(3).max(255).required().label('Display Name'),
   password: yup.string().min(8).required().label('Password'),
-  passwordConfirmation: yup.string().oneOf([yup.ref('password'), null], 'Passwords must match.'),
+  passwordConfirmation: yup
+    .string()
+    .required()
+    .test('passwords-match', 'Passwords must match', function (value) {
+      return this.parent.password === value;
+    }),
 });
 
 export const RegisterForm = () => {
@@ -68,9 +74,9 @@ export const RegisterForm = () => {
           <ErrorMessage name="passwordConfirmation" component="div" />
         </div>
         {error && <p>{error.message}</p>}
-        <button type="submit" disabled={loading} className="p-3 border-2 w-full">
+        <Button variant="outlined" type="submit" disabled={loading}>
           Create Account
-        </button>
+        </Button>
       </Form>
     </Formik>
   );
