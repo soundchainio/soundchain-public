@@ -57,4 +57,27 @@ export default class AuthService {
     }
     return user;
   }
+
+  static async initPasswordReset(email: string): Promise<void> {
+    const passwordResetToken = uuidv4();
+    const user = await UserModel.findOneAndUpdate({ email }, { passwordResetToken });
+
+    if (!user) {
+      throw new UserInputError('No user with email');
+    }
+
+    await EmailService.sendPasswordResetEmail(user.email, passwordResetToken);
+  }
+
+  static async resetUserPassword(passwordResetToken: string, password: string): Promise<void> {
+    const user = await UserModel.findOne({ passwordResetToken });
+
+    if (!user) {
+      throw new UserInputError('Invalid token');
+    }
+
+    user.password = password;
+    user.passwordResetToken = undefined;
+    await user.save();
+  }
 }
