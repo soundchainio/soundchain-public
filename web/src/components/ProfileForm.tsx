@@ -13,10 +13,10 @@ export interface ProfileFormProps {
 }
 
 const validationSchema: yup.SchemaOf<ProfileFormProps> = yup.object().shape({
-  twitter: yup.string().default('').matches(handleRegex, 'Invalid Twitter username'),
-  facebook: yup.string().default('').matches(handleRegex, 'Invalid Facebook username'),
-  instagram: yup.string().default('').matches(handleRegex, 'Invalid Instagram username'),
-  soundcloud: yup.string().default('').matches(handleRegex, 'Invalid Soundcloud username'),
+  twitter: yup.string().default('').max(100).matches(handleRegex, 'Invalid Twitter username'),
+  facebook: yup.string().default('').max(100).matches(handleRegex, 'Invalid Facebook username'),
+  instagram: yup.string().default('').max(100).matches(handleRegex, 'Invalid Instagram username'),
+  soundcloud: yup.string().default('').max(100).matches(handleRegex, 'Invalid Soundcloud username'),
 });
 
 export const ProfileForm = ({ twitter, facebook, instagram, soundcloud }: ProfileFormProps) => {
@@ -31,8 +31,13 @@ export const ProfileForm = ({ twitter, facebook, instagram, soundcloud }: Profil
 
   const handleSubmit = async (values: ProfileFormProps) => {
     const { twitter, facebook, instagram, soundcloud } = values;
+    let input = {};
+    if (twitter) input = { ...input, twitter };
+    if (facebook) input = { ...input, facebook };
+    if (instagram) input = { ...input, instagram };
+    if (soundcloud) input = { ...input, soundcloud };
     try {
-      await updateSocialMedias({ variables: { input: { twitter, facebook, instagram, soundcloud } } });
+      await updateSocialMedias({ variables: { input } });
       router.push('/');
     } catch (error) {}
   };

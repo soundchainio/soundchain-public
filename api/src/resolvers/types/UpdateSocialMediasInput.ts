@@ -1,22 +1,26 @@
-import { Matches } from 'class-validator';
+import { Matches, MaxLength } from 'class-validator';
 import { Field, InputType } from 'type-graphql';
 import { handleRegex } from '../../utils/validation';
 
 @InputType()
 export class UpdateSocialMediasInput {
-  @Field()
+  @Field({ nullable: true })
   @Matches(handleRegex, { message: 'Invalid characters' })
-  facebook: string;
+  @MaxLength(100)
+  facebook?: string;
 
-  @Field()
+  @Field({ nullable: true })
   @Matches(handleRegex, { message: 'Invalid characters' })
-  instagram: string;
+  @MaxLength(100)
+  instagram?: string;
 
-  @Field()
+  @Field({ nullable: true })
   @Matches(handleRegex, { message: 'Invalid characters' })
-  soundcloud: string;
+  @MaxLength(100)
+  soundcloud?: string;
 
-  @Field()
+  @Field({ nullable: true })
   @Matches(handleRegex, { message: 'Invalid characters' })
-  twitter: string;
+  @MaxLength(100)
+  twitter?: string;
 }

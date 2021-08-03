@@ -21,8 +21,8 @@ export class Profile extends Model {
   @prop({ required: false })
   coverPicture?: string;
 
-  @Field(() => SocialMedias, { nullable: true })
-  @prop({ required: false })
+  @Field(() => SocialMedias)
+  @prop({ required: false, default: {} })
   socialMedias?: SocialMedias;
 
   @Field(() => Date)

@@ -5,15 +5,16 @@ import { apolloClient } from '../lib/apollo';
 import { MyProfileDocument, MyProfileQuery } from '../lib/graphql';
 
 export const getServerSideProps = protectPage<CompleteProfileProps>(async context => {
-  let profileFormValues: ProfileFormProps = { twitter: '', facebook: '', instagram: '', soundcloud: '' };
   const {
     data: { myProfile },
   } = await apolloClient.query<MyProfileQuery>({ query: MyProfileDocument, context });
-
-  if (myProfile.socialMedias) {
-    const { facebook, instagram, soundcloud, twitter } = myProfile.socialMedias;
-    profileFormValues = { facebook, instagram, soundcloud, twitter };
-  }
+  const { facebook, instagram, soundcloud, twitter } = myProfile.socialMedias;
+  const profileFormValues = {
+    facebook: facebook || '',
+    instagram: instagram || '',
+    soundcloud: soundcloud || '',
+    twitter: twitter || '',
+  };
 
   return {
     props: { profileFormValues },

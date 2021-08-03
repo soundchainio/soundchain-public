@@ -106,7 +106,7 @@ export type Profile = {
   displayName: Scalars['String'];
   profilePicture?: Maybe<Scalars['String']>;
   coverPicture?: Maybe<Scalars['String']>;
-  socialMedias?: Maybe<SocialMedias>;
+  socialMedias: SocialMedias;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
 };
@@ -149,17 +149,17 @@ export type ResetPasswordPayload = {
 
 export type SocialMedias = {
   __typename?: 'SocialMedias';
-  facebook: Scalars['String'];
-  instagram: Scalars['String'];
-  soundcloud: Scalars['String'];
-  twitter: Scalars['String'];
+  facebook?: Maybe<Scalars['String']>;
+  instagram?: Maybe<Scalars['String']>;
+  soundcloud?: Maybe<Scalars['String']>;
+  twitter?: Maybe<Scalars['String']>;
 };
 
 export type UpdateSocialMediasInput = {
-  facebook: Scalars['String'];
-  instagram: Scalars['String'];
-  soundcloud: Scalars['String'];
-  twitter: Scalars['String'];
+  facebook?: Maybe<Scalars['String']>;
+  instagram?: Maybe<Scalars['String']>;
+  soundcloud?: Maybe<Scalars['String']>;
+  twitter?: Maybe<Scalars['String']>;
 };
 
 export type UpdateSocialMediasPayload = {
@@ -247,10 +247,10 @@ export type MyProfileQuery = (
   & { myProfile: (
     { __typename?: 'Profile' }
     & Pick<Profile, 'id' | 'displayName'>
-    & { socialMedias?: Maybe<(
+    & { socialMedias: (
       { __typename?: 'SocialMedias' }
       & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
-    )> }
+    ) }
   ) }
 );
 
@@ -292,10 +292,10 @@ export type UpdateSocialMediasMutation = (
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id'>
-      & { socialMedias?: Maybe<(
+      & { socialMedias: (
         { __typename?: 'SocialMedias' }
         & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
-      )> }
+      ) }
     ) }
   ) }
 );
