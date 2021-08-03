@@ -1,0 +1,8 @@
+query Posts {
+  posts {
+    id
+    body
+    profileId
+    createdAt
+  }
+}

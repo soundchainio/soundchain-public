@@ -50,9 +50,7 @@ export const LoginForm = () => {
           <ErrorMessage name="password" component="div" />
         </div>
         {error && <p>{error.message}</p>}
-        <Link href="/forgot-password">
-          <a>Forgot password?</a>
-        </Link>
+        <Link href="/forgot-password">Forgot password?</Link>
         <Button variant="outlined" type="submit" disabled={loading} className="w-full">
           Login
         </Button>

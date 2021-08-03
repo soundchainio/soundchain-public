@@ -13,6 +13,6 @@ export const buttonClassesByVariant: Record<ButtonVariant, string> = {
   outlined: `${commonClasses} border-2 text-black`,
 };
 
-export default function Button({ className, variant = 'default', ...rest }: ButtonProps) {
-  return <button className={classNames(className, buttonClassesByVariant[variant])} {...rest} />;
+export default function Button({ className, variant = 'default', type = 'button', ...rest }: ButtonProps) {
+  return <button className={classNames(className, buttonClassesByVariant[variant])} type={type} {...rest} />;
 }
