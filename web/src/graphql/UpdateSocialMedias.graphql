@@ -1,4 +1,4 @@
-mutation updateSocialMedias($input: SocialMediasInput!) {
+mutation updateSocialMedias($input: UpdateSocialMediasInput!) {
   updateSocialMedias(input: $input) {
     profile {
       id

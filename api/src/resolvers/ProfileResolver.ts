@@ -3,8 +3,8 @@ import { CurrentUser } from '../middlewares/decorators/current-user';
 import { Profile } from '../models/Profile';
 import User from '../models/User';
 import { ProfileService } from '../services/ProfileService';
-import { SocialMediasInput } from './types/SocialMediasInput';
-import { UpdateProfilePayload } from './types/UpdateProfilePayload';
+import { UpdateSocialMediasInput } from './types/UpdateSocialMediasInput';
+import { UpdateSocialMediasPayload } from './types/UpdateSocialMediasPayload';
 
 @Resolver(Profile)
 export class ProfileResolver {
@@ -14,13 +14,13 @@ export class ProfileResolver {
     return ProfileService.getProfile(profileId);
   }
 
-  @Mutation(() => UpdateProfilePayload)
+  @Mutation(() => UpdateSocialMediasPayload)
   @Authorized()
   async updateSocialMedias(
     @Arg('input')
-    socialMedias: SocialMediasInput,
+    socialMedias: UpdateSocialMediasInput,
     @CurrentUser() { profileId }: User,
-  ): Promise<UpdateProfilePayload> {
+  ): Promise<UpdateSocialMediasPayload> {
     try {
       const profile = await ProfileService.updateSocialMedias(profileId, socialMedias);
       return { profile };
