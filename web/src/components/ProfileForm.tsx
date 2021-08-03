@@ -1,10 +1,9 @@
 import { ErrorMessage, Field, Form, Formik } from 'formik';
 import { useRouter } from 'next/dist/client/router';
 import React from 'react';
+import { handleRegex } from 'utils/Validation';
 import * as yup from 'yup';
 import { useUpdateSocialMediasMutation } from '../lib/graphql';
-
-const handleRegex = /[A-z0-9_\-\.]?/;
 
 export interface ProfileFormProps {
   twitter: string;
@@ -22,7 +21,7 @@ const validationSchema: yup.SchemaOf<ProfileFormProps> = yup.object().shape({
 
 export const ProfileForm = ({ twitter, facebook, instagram, soundcloud }: ProfileFormProps) => {
   const router = useRouter();
-  const [updateSocialMedias, { loading, error }] = useUpdateSocialMediasMutation({ refetchQueries: ['MyProfile'] });
+  const [updateSocialMedias, { loading, error }] = useUpdateSocialMediasMutation();
   const initialFormValues = {
     twitter,
     facebook,

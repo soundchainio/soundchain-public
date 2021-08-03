@@ -57,7 +57,7 @@ export type LoginInput = {
 export type Mutation = {
   __typename?: 'Mutation';
   addBook: AddBookPayload;
-  updateSocialMedias: UpdateProfilePayload;
+  updateSocialMedias: UpdateSocialMediasPayload;
   register: AuthPayload;
   login: AuthPayload;
   verifyUserEmail: VerifyUserEmailPayload;
@@ -72,7 +72,7 @@ export type MutationAddBookArgs = {
 
 
 export type MutationUpdateSocialMediasArgs = {
-  input: SocialMediasInput;
+  input: UpdateSocialMediasInput;
 };
 
 
@@ -155,15 +155,15 @@ export type SocialMedias = {
   twitter: Scalars['String'];
 };
 
-export type SocialMediasInput = {
+export type UpdateSocialMediasInput = {
   facebook: Scalars['String'];
   instagram: Scalars['String'];
   soundcloud: Scalars['String'];
   twitter: Scalars['String'];
 };
 
-export type UpdateProfilePayload = {
-  __typename?: 'UpdateProfilePayload';
+export type UpdateSocialMediasPayload = {
+  __typename?: 'UpdateSocialMediasPayload';
   profile: Profile;
 };
 
@@ -281,14 +281,14 @@ export type ResetPasswordMutation = (
 );
 
 export type UpdateSocialMediasMutationVariables = Exact<{
-  input: SocialMediasInput;
+  input: UpdateSocialMediasInput;
 }>;
 
 
 export type UpdateSocialMediasMutation = (
   { __typename?: 'Mutation' }
   & { updateSocialMedias: (
-    { __typename?: 'UpdateProfilePayload' }
+    { __typename?: 'UpdateSocialMediasPayload' }
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id'>
@@ -576,7 +576,7 @@ export type ResetPasswordMutationHookResult = ReturnType<typeof useResetPassword
 export type ResetPasswordMutationResult = Apollo.MutationResult<ResetPasswordMutation>;
 export type ResetPasswordMutationOptions = Apollo.BaseMutationOptions<ResetPasswordMutation, ResetPasswordMutationVariables>;
 export const UpdateSocialMediasDocument = gql`
-    mutation updateSocialMedias($input: SocialMediasInput!) {
+    mutation updateSocialMedias($input: UpdateSocialMediasInput!) {
   updateSocialMedias(input: $input) {
     profile {
       id
