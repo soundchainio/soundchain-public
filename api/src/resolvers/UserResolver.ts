@@ -1,6 +1,6 @@
 import { UserInputError } from 'apollo-server-express';
 import { Arg, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
-import Profile from '../models/Profile';
+import { Profile } from '../models/Profile';
 import User from '../models/User';
 import AuthService from '../services/AuthService';
 import JwtService from '../services/JwtService';

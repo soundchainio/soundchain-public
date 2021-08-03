@@ -4,7 +4,7 @@ import AddBookInput from './types/AddBookInput';
 import AddBookPayload from './types/AddBookPayload';
 
 @Resolver(Book)
-export default class BookResolver {
+export class BookResolver {
   @Query(() => Book)
   book(@Arg('id') id: string): Promise<Book> {
     return BookModel.findByIdOrFail(id);

@@ -7,7 +7,7 @@ import AddPostPayload from '../resolvers/types/AddPostPayload';
 import { PostService } from '../services/PostService';
 
 @Resolver(Post)
-export default class PostResolver {
+export class PostResolver {
   @Query(() => Post)
   post(@Arg('id') id: string): Promise<Post> {
     return PostService.getPost(id);

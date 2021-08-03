@@ -41,11 +41,12 @@ function FakeProfile(attrs = {}) {
     displayName: Faker.name.findName(),
     profilePicture: Faker.internet.avatar(),
     coverPicture: Faker.image.abstract(),
-    socialMediaLinks: [
-      { name: 'twitter', link: `https://twitter.com/${Faker.internet.userName()}` },
-      { name: 'instagram', link: `https://instagram.com/${Faker.internet.userName()}` },
-      { name: 'facebook', link: `https://facebook.com/${Faker.internet.userName()}` },
-    ],
+    socialMedias: {
+      twitter: Faker.internet.userName(),
+      facebook: Faker.internet.userName(),
+      instagram: Faker.internet.userName(),
+      soundcloud: Faker.internet.userName(),
+    },
     ...attrs,
   });
 }

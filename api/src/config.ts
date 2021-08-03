@@ -70,6 +70,7 @@ export const config = {
       useFindAndModify: false,
       ssl: Boolean(DATABASE_SSL_PATH),
       sslCA: DATABASE_SSL_PATH && fs.readFileSync(`${__dirname}/${DATABASE_SSL_PATH}`),
+      retryWrites: false,
     },
   },
   express: {
