@@ -5,9 +5,7 @@
   "scripts": {
     "dev": "docker-compose up -d && nodemon -w 'src/**' -e 'ts,json' -x 'ts-node src/local.ts'",
     "lint-staged": "lint-staged",
-    "seed": "ts-node src/db/seeds.ts",
-    "deploy:staging": "serverless deploy -s staging",
-    "deploy:production": "serverless deploy -s production"
+    "seed": "ts-node src/db/seeds.ts"
   },
   "lint-staged": {
     "*.{ts,json,md}": "prettier --write"
