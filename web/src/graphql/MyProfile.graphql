@@ -1,0 +1,12 @@
+query MyProfile {
+  myProfile {
+    id
+    displayName
+    socialMedias {
+      facebook
+      instagram
+      soundcloud
+      twitter
+    }
+  }
+}

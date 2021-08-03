@@ -1,6 +1,6 @@
 import Link from 'components/Link';
 import { ErrorMessage, Field, Form, Formik } from 'formik';
-import useMe from 'hooks/useMe';
+import { useMe } from 'hooks/useMe';
 import { setJwt } from 'lib/apollo';
 import { useLoginMutation } from 'lib/graphql';
 import { useRouter } from 'next/dist/client/router';
