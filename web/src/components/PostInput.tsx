@@ -1,85 +1,61 @@
-import { ErrorMessage, Field, Form, Formik } from 'formik';
 import { BaseEmoji, Picker } from 'emoji-mart';
 import 'emoji-mart/css/emoji-mart.css';
+import { ErrorMessage, Field, Form, Formik, FormikHelpers } from 'formik';
 import React, { useState } from 'react';
-import { useAddPostMutation } from '../lib/graphql';
 import * as yup from 'yup';
-interface PostFormValues {
+import { useCreatePostMutation } from '../lib/graphql';
+import Button from './Button';
+
+interface FormValues {
   body: string;
 }
 
-const postSchema: yup.SchemaOf<PostFormValues> = yup.object().shape({
+const postSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   body: yup.string().required().max(160),
 });
 
 export const PostInput = () => {
-  const [text, setText] = useState('');
   const [isEmojiPickerVisible, setEmojiPickerVisible] = useState(false);
-  const [addPost, { loading, error }] = useAddPostMutation({ refetchQueries: ['Posts'] });
+  const [createPost, { loading, error }] = useCreatePostMutation({ refetchQueries: ['Posts'] });
 
-  const handleSubmit = () => {
-    addPost({ variables: { input: { body: text } } }).then(() => {
-      setText('');
-      setEmojiPickerVisible(false);
-    });
+  const handleSubmit = (values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
+    setEmojiPickerVisible(false);
+    createPost({ variables: { input: values } }).then(() => resetForm());
   };
-  const handleEmojiInText = (emoji: BaseEmoji) => {
-    setText(`${text}${emoji.native}`);
-  };
+
   return (
     <>
-      <div className="border-2 rounded w-8/12 mt-24">
-        <Formik initialValues={{ body: text }} enableReinitialize validationSchema={postSchema} onSubmit={handleSubmit}>
-          <Form className="w-full">
-            <div className="w-full">
-              <Field
-                component="textarea"
-                value={text}
-                onChange={(e: { target: { value: React.SetStateAction<string> } }) => {
-                  setText(e.target.value);
-                }}
-                id="body"
-                name="body"
-                className="w-full rounded-lg border-2 border-gray-50 h-24 resize-none p-1"
-                placeholder="Share your opinion"
-              />
-              <ErrorMessage name="body" component="div" />
-            </div>
+      <Formik initialValues={{ body: '' }} validationSchema={postSchema} onSubmit={handleSubmit}>
+        {({ values, setFieldValue }) => (
+          <Form className="flex flex-col">
+            <Field
+              component="textarea"
+              name="body"
+              className="w-full h-24 resize-none"
+              placeholder="Share your opinion"
+            />
 
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="bg-blue-600 text-white font-semibold w-24 h-10 rounded mt-2 mb-2 float-right mr-2"
-              >
-                Share
-              </button>
+            <div className="relative mt-4 flex justify-end">
+              <ErrorMessage name="body" className="flex-1" />
+              {error && <p className="flex-1">{error.message}</p>}
 
-              <button
-                type="button"
-                onClick={() => {
-                  setEmojiPickerVisible(!isEmojiPickerVisible);
-                }}
-                className="bg-blue-600 text-white font-semibold w-24 h-10 rounded mt-2 mb-2 float-right mr-2"
-              >
+              <Button onClick={() => setEmojiPickerVisible(!isEmojiPickerVisible)}>
                 {isEmojiPickerVisible ? 'Close' : 'Emoji'}
-              </button>
+              </Button>
+
+              <Button type="submit" disabled={loading} className="ml-4">
+                Share
+              </Button>
+
+              {isEmojiPickerVisible && (
+                <div className="absolute right-0 top-14">
+                  <Picker onSelect={(emoji: BaseEmoji) => setFieldValue('body', `${values.body}${emoji.native}`)} />
+                </div>
+              )}
             </div>
           </Form>
-        </Formik>
-      </div>
-
-      {error && <p>{error.message}</p>}
-      {isEmojiPickerVisible && (
-        <div className="h-1 z-30 w-8/12  absolute mt-10">
-          <Picker
-            style={{}}
-            onSelect={(emojiData: BaseEmoji) => {
-              handleEmojiInText(emojiData);
-            }}
-          />
-        </div>
-      )}
+        )}
+      </Formik>
     </>
   );
 };

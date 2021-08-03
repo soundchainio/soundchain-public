@@ -25,10 +25,13 @@ export default function HomePage() {
           {me ? (
             <>
               <p className="mb-4">{me.profile.displayName}</p>
-              <Link className="mr-2" buttonVariant="default" href="/complete-profile">
+              <Link buttonVariant="default" href="/complete-profile">
                 Profile
               </Link>
-              <Button type="button" onClick={() => setJwt()}>
+              <Link className="ml-4" buttonVariant="default" href="/posts">
+                Posts
+              </Link>
+              <Button className="ml-4" variant="outlined" onClick={() => setJwt()}>
                 Sign out
               </Button>
             </>

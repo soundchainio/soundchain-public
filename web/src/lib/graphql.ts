@@ -16,35 +16,18 @@ export type Scalars = {
   DateTime: string;
 };
 
-export type AddBookInput = {
-  title: Scalars['String'];
-};
-
-export type AddBookPayload = {
-  __typename?: 'AddBookPayload';
-  book: Book;
-};
-
-export type AddPostInput = {
-  body: Scalars['String'];
-};
-
-export type AddPostPayload = {
-  __typename?: 'AddPostPayload';
-  post: Post;
-};
-
 export type AuthPayload = {
   __typename?: 'AuthPayload';
   jwt: Scalars['String'];
 };
 
-export type Book = {
-  __typename?: 'Book';
-  id: Scalars['ID'];
-  title: Scalars['String'];
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
+export type CreatePostInput = {
+  body: Scalars['String'];
+};
+
+export type CreatePostPayload = {
+  __typename?: 'CreatePostPayload';
+  post: Post;
 };
 
 
@@ -65,8 +48,7 @@ export type LoginInput = {
 
 export type Mutation = {
   __typename?: 'Mutation';
-  addBook: AddBookPayload;
-  addPost: AddPostPayload;
+  createPost: CreatePostPayload;
   updateSocialMedias: UpdateSocialMediasPayload;
   register: AuthPayload;
   login: AuthPayload;
@@ -76,13 +58,8 @@ export type Mutation = {
 };
 
 
-export type MutationAddBookArgs = {
-  input: AddBookInput;
-};
-
-
-export type MutationAddPostArgs = {
-  input: AddPostInput;
+export type MutationCreatePostArgs = {
+  input: CreatePostInput;
 };
 
 
@@ -137,18 +114,11 @@ export type Profile = {
 
 export type Query = {
   __typename?: 'Query';
-  book: Book;
-  books: Array<Book>;
   post: Post;
   posts: Array<Post>;
   myProfile: Profile;
   me?: Maybe<User>;
   validPasswordResetToken: Scalars['Boolean'];
-};
-
-
-export type QueryBookArgs = {
-  id: Scalars['String'];
 };
 
 
@@ -218,15 +188,15 @@ export type VerifyUserEmailPayload = {
   user: User;
 };
 
-export type AddPostMutationVariables = Exact<{
-  input: AddPostInput;
+export type CreatePostMutationVariables = Exact<{
+  input: CreatePostInput;
 }>;
 
 
-export type AddPostMutation = (
+export type CreatePostMutation = (
   { __typename?: 'Mutation' }
-  & { addPost: (
-    { __typename?: 'AddPostPayload' }
+  & { createPost: (
+    { __typename?: 'CreatePostPayload' }
     & { post: (
       { __typename?: 'Post' }
       & Pick<Post, 'id' | 'body' | 'profileId' | 'createdAt'>
@@ -245,17 +215,6 @@ export type ForgotPasswordMutation = (
     { __typename?: 'ForgotPasswordPayload' }
     & Pick<ForgotPasswordPayload, 'ok'>
   ) }
-);
-
-export type HomePageQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type HomePageQuery = (
-  { __typename?: 'Query' }
-  & { books: Array<(
-    { __typename?: 'Book' }
-    & Pick<Book, 'id' | 'title' | 'createdAt'>
-  )> }
 );
 
 export type LoginMutationVariables = Exact<{
@@ -385,9 +344,9 @@ export type VerifyUserEmailMutation = (
 );
 
 
-export const AddPostDocument = gql`
-    mutation AddPost($input: AddPostInput!) {
-  addPost(input: $input) {
+export const CreatePostDocument = gql`
+    mutation CreatePost($input: CreatePostInput!) {
+  createPost(input: $input) {
     post {
       id
       body
@@ -397,32 +356,32 @@ export const AddPostDocument = gql`
   }
 }
     `;
-export type AddPostMutationFn = Apollo.MutationFunction<AddPostMutation, AddPostMutationVariables>;
+export type CreatePostMutationFn = Apollo.MutationFunction<CreatePostMutation, CreatePostMutationVariables>;
 
 /**
- * __useAddPostMutation__
+ * __useCreatePostMutation__
  *
- * To run a mutation, you first call `useAddPostMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useAddPostMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useCreatePostMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreatePostMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [addPostMutation, { data, loading, error }] = useAddPostMutation({
+ * const [createPostMutation, { data, loading, error }] = useCreatePostMutation({
  *   variables: {
  *      input: // value for 'input'
  *   },
  * });
  */
-export function useAddPostMutation(baseOptions?: Apollo.MutationHookOptions<AddPostMutation, AddPostMutationVariables>) {
+export function useCreatePostMutation(baseOptions?: Apollo.MutationHookOptions<CreatePostMutation, CreatePostMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<AddPostMutation, AddPostMutationVariables>(AddPostDocument, options);
+        return Apollo.useMutation<CreatePostMutation, CreatePostMutationVariables>(CreatePostDocument, options);
       }
-export type AddPostMutationHookResult = ReturnType<typeof useAddPostMutation>;
-export type AddPostMutationResult = Apollo.MutationResult<AddPostMutation>;
-export type AddPostMutationOptions = Apollo.BaseMutationOptions<AddPostMutation, AddPostMutationVariables>;
+export type CreatePostMutationHookResult = ReturnType<typeof useCreatePostMutation>;
+export type CreatePostMutationResult = Apollo.MutationResult<CreatePostMutation>;
+export type CreatePostMutationOptions = Apollo.BaseMutationOptions<CreatePostMutation, CreatePostMutationVariables>;
 export const ForgotPasswordDocument = gql`
     mutation ForgotPassword($input: ForgotPasswordInput!) {
   forgotPassword(input: $input) {
@@ -456,42 +415,6 @@ export function useForgotPasswordMutation(baseOptions?: Apollo.MutationHookOptio
 export type ForgotPasswordMutationHookResult = ReturnType<typeof useForgotPasswordMutation>;
 export type ForgotPasswordMutationResult = Apollo.MutationResult<ForgotPasswordMutation>;
 export type ForgotPasswordMutationOptions = Apollo.BaseMutationOptions<ForgotPasswordMutation, ForgotPasswordMutationVariables>;
-export const HomePageDocument = gql`
-    query HomePage {
-  books {
-    id
-    title
-    createdAt
-  }
-}
-    `;
-
-/**
- * __useHomePageQuery__
- *
- * To run a query within a React component, call `useHomePageQuery` and pass it any options that fit your needs.
- * When your component renders, `useHomePageQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useHomePageQuery({
- *   variables: {
- *   },
- * });
- */
-export function useHomePageQuery(baseOptions?: Apollo.QueryHookOptions<HomePageQuery, HomePageQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<HomePageQuery, HomePageQueryVariables>(HomePageDocument, options);
-      }
-export function useHomePageLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<HomePageQuery, HomePageQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<HomePageQuery, HomePageQueryVariables>(HomePageDocument, options);
-        }
-export type HomePageQueryHookResult = ReturnType<typeof useHomePageQuery>;
-export type HomePageLazyQueryHookResult = ReturnType<typeof useHomePageLazyQuery>;
-export type HomePageQueryResult = Apollo.QueryResult<HomePageQuery, HomePageQueryVariables>;
 export const LoginDocument = gql`
     mutation Login($input: LoginInput!) {
   login(input: $input) {

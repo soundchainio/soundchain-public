@@ -7,11 +7,11 @@ export class PostService {
     return post;
   }
 
-  static async getPosts(): Promise<Post[]> {
-    return await PostModel.find().sort({ createdAt: 'desc' }).exec();
+  static getPosts(): Promise<Post[]> {
+    return PostModel.find().sort({ createdAt: 'desc' }).exec();
   }
 
-  static async getPost(id: string): Promise<Post> {
-    return await PostModel.findByIdOrFail(id);
+  static getPost(id: string): Promise<Post> {
+    return PostModel.findByIdOrFail(id);
   }
 }
