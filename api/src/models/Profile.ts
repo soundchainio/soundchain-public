@@ -22,8 +22,8 @@ export class Profile extends Model {
   coverPicture?: string;
 
   @Field(() => SocialMedias)
-  @prop({ required: false, default: {} })
-  socialMedias?: SocialMedias;
+  @prop({ required: true, default: {} })
+  socialMedias: SocialMedias;
 
   @Field(() => Date)
   createdAt: Date;
