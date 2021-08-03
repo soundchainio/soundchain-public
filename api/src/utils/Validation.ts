@@ -1,1 +1,1 @@
-export const handleRegex = /^[A-z0-9_\-\\.]*$/;
+export const handleRegex = /^[a-zA-Z0-9_\-.]*$/;

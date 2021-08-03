@@ -49,7 +49,6 @@ provider:
   name: aws
   region: us-east-1
   runtime: nodejs14.x
-  profile: soundchain
   lambdaHashingVersion: 20201221
   vpc:
     securityGroupIds:
