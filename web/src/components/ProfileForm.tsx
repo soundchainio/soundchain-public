@@ -3,7 +3,7 @@ import { useRouter } from 'next/dist/client/router';
 import React from 'react';
 import { handleRegex } from 'utils/Validation';
 import * as yup from 'yup';
-import { useUpdateSocialMediasMutation } from '../lib/graphql';
+import { UpdateSocialMediasInput, useUpdateSocialMediasMutation } from '../lib/graphql';
 
 export interface ProfileFormProps {
   twitter: string;
@@ -31,11 +31,11 @@ export const ProfileForm = ({ twitter, facebook, instagram, soundcloud }: Profil
 
   const handleSubmit = async (values: ProfileFormProps) => {
     const { twitter, facebook, instagram, soundcloud } = values;
-    let input = {};
-    if (twitter) input = { ...input, twitter };
-    if (facebook) input = { ...input, facebook };
-    if (instagram) input = { ...input, instagram };
-    if (soundcloud) input = { ...input, soundcloud };
+    const input: UpdateSocialMediasInput = {};
+    if (twitter) input.twitter = twitter;
+    if (facebook) input.facebook = facebook;
+    if (instagram) input.instagram = instagram;
+    if (soundcloud) input.soundcloud = soundcloud;
     try {
       await updateSocialMedias({ variables: { input } });
       router.push('/');
