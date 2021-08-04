@@ -55,7 +55,7 @@ export const ProfileForm = ({ twitter, facebook, instagram, soundcloud }: Profil
         <InputField type="text" name="twitter" placeholder="Twitter @username" />
         <InputField type="text" name="facebook" placeholder="Facebook @username" />
         <InputField type="text" name="instagram" placeholder="Instagram @username" />
-        <InputField type="text" name="soundcloud" placeholder="Soundcloud @username" />
+        <InputField type="text" name="soundcloud" placeholder="SoundCloud @username" />
         {error && <p>{error.message}</p>}
         <Button variant="outlined" type="submit" disabled={loading}>
           UPDATE PROFILE
