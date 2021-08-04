@@ -42,16 +42,16 @@ export const LoginForm = () => {
 
   return (
     <Formik initialValues={{ username: '', password: '' }} validationSchema={validationSchema} onSubmit={handleSubmit}>
-      <Form className="space-y-6">
-        <InputField label="Username" type="text" name="username" placeholder="username" icon={UserIcon} />
-        <InputField label="Password" type="password" name="password" placeholder="password" icon={LockClosedIcon} />
-        {error && <p>{error.message}</p>}
-        <div className="flex items-center justify-end text-sm">
-          <Link href="/forgot-password" className="font-medium text-green-500">
-            Forgot password?
-          </Link>
+      <Form>
+        <div className="space-y-6">
+          <InputField type="text" name="username" placeholder="Username or Email" icon={UserIcon} />
+          <InputField type="password" name="password" placeholder="Password" icon={LockClosedIcon} />
+          {error && <p>{error.message}</p>}
+          <div className="flex items-center justify-center">
+            <Link href="/forgot-password">Forgot Password?</Link>
+          </div>
         </div>
-        <Button variant="outlined" type="submit" disabled={loading} className="w-full">
+        <Button type="submit" disabled={loading} className="w-full mt-12">
           Login
         </Button>
       </Form>

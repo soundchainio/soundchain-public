@@ -59,7 +59,7 @@ export const RegisterForm = () => {
         <InputField type="password" name="password" placeholder="Password" icon={LockClosedIcon} />
         <InputField type="password" name="passwordConfirmation" placeholder="Confirm Password" icon={LockClosedIcon} />
         {error && <p>{error.message}</p>}
-        <Button variant="outlined" type="submit" disabled={loading}>
+        <Button type="submit" disabled={loading}>
           Create Account
         </Button>
       </Form>

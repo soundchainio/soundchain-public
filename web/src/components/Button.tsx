@@ -1,18 +1,29 @@
 import classNames from 'classnames';
 
-export type ButtonVariant = 'default' | 'outlined';
+export type ButtonVariant = 'rainbow';
 
 export interface ButtonProps extends React.ComponentPropsWithoutRef<'button'> {
   variant?: ButtonVariant;
+  icon?: (props: React.ComponentProps<'svg'>) => JSX.Element;
 }
 
-const commonClasses = 'inline-block px-4 py-3 text-center';
+const commonClasses = 'flex items-center justify-center px-4 py-3 uppercase';
 
-export const buttonClassesByVariant: Record<ButtonVariant, string> = {
-  default: `${commonClasses} bg-black text-white`,
-  outlined: `${commonClasses} border-2 border-green-500 text-green-500 bg-gray-800`,
+export const buttonByVariant: Record<ButtonVariant, (props: ButtonProps) => JSX.Element> = {
+  rainbow: RainbowButton,
 };
 
-export default function Button({ className, variant = 'default', type = 'button', ...rest }: ButtonProps) {
-  return <button className={classNames(className, buttonClassesByVariant[variant])} type={type} {...rest} />;
+export default function Button({ variant = 'rainbow', ...props }: ButtonProps) {
+  return buttonByVariant[variant](props);
+}
+
+function RainbowButton({ className, type = 'button', icon: Icon, children, ...rest }: ButtonProps) {
+  return (
+    <div className={classNames(className, 'p-0.5 bg-rainbow-gradient')}>
+      <button className={`${commonClasses} text-white bg-opacity-60 bg-black w-full`} type={type} {...rest}>
+        {Icon && <Icon className="mr-2 h-5 w-5" />}
+        <span>{children}</span>
+      </button>
+    </div>
+  );
 }
