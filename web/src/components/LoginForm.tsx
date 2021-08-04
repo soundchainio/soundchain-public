@@ -1,4 +1,4 @@
-import { LockClosedIcon, MailIcon, UserIcon } from '@heroicons/react/solid';
+import { LockClosedIcon, MailIcon } from '@heroicons/react/solid';
 import Button from 'components/Button';
 import { InputField } from 'components/InputField';
 import Link from 'components/Link';
