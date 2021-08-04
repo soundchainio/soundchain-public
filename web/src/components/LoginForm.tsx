@@ -43,7 +43,7 @@ export const LoginForm = () => {
   return (
     <Formik initialValues={{ username: '', password: '' }} validationSchema={validationSchema} onSubmit={handleSubmit}>
       <Form className="space-y-6">
-        <InputField label="Email" type="text" name="username" placeholder="username" icon={UserIcon} />
+        <InputField label="Username" type="text" name="username" placeholder="username" icon={UserIcon} />
         <InputField label="Password" type="password" name="password" placeholder="password" icon={LockClosedIcon} />
         {error && <p>{error.message}</p>}
         <div className="flex items-center justify-end text-sm">
