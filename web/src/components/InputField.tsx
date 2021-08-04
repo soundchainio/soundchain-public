@@ -1,4 +1,5 @@
 import { useField } from 'formik';
+import { Label } from './Label';
 
 interface InputFieldProps {
   name: string;
@@ -17,10 +18,8 @@ export const InputField = ({ label, icon: Icon, ...props }: InputFieldProps) => 
   return (
     <div>
       {label && (
-        <div className="mb-1 pl-1 text-sm">
-          <label className="text-gray-300" htmlFor={props.name}>
-            {label}
-          </label>
+        <div className="mb-1 pl-1">
+          <Label htmlFor={props.name}>{label}</Label>
         </div>
       )}
       <div className="relative">
