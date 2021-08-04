@@ -23,7 +23,7 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
     .string()
     .min(1)
     .max(32)
-    .matches(handleRegex, 'Invalid characters. Only letters and numbers are accepted.')
+    .matches(handleRegex, 'Invalid characters. Only letters and numbers are accepted')
     .required(),
   displayName: yup.string().min(3).max(255).required().label('Display Name'),
   password: yup.string().min(8).required().label('Password'),
@@ -32,7 +32,8 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
     .required()
     .test('passwords-match', 'Passwords must match', function (value) {
       return this.parent.password === value;
-    }),
+    })
+    .label('Password confirmation'),
 });
 
 export const RegisterForm = () => {
@@ -51,10 +52,10 @@ export const RegisterForm = () => {
 
   return (
     <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
-      <Form className="flex flex-col items-left space-y-6 w-full px-6">
+      <Form className="flex flex-col items-left space-y-6 w-full">
         <InputField type="text" name="handle" placeholder="Username" icon={UserIconOutline} />
         <InputField type="text" name="email" placeholder="Email" icon={MailIcon} />
-        <InputField type="text" name="displaName" placeholder="Display Name" icon={UserIcon} />
+        <InputField type="text" name="displayName" placeholder="Display Name" icon={UserIcon} />
         <InputField type="password" name="password" placeholder="Password" icon={LockClosedIcon} />
         <InputField type="password" name="passwordConfirmation" placeholder="Confirm Password" icon={LockClosedIcon} />
         {error && <p>{error.message}</p>}

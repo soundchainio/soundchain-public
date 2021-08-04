@@ -1,9 +1,11 @@
-import { ErrorMessage, Field, Form, Formik } from 'formik';
+import { Form, Formik } from 'formik';
 import { useRouter } from 'next/dist/client/router';
 import React from 'react';
 import { handleRegex } from 'utils/Validation';
 import * as yup from 'yup';
 import { UpdateSocialMediasInput, useUpdateSocialMediasMutation } from '../lib/graphql';
+import Button from './Button';
+import { InputField } from './InputField';
 
 export interface ProfileFormProps {
   twitter: string;
@@ -49,31 +51,15 @@ export const ProfileForm = ({ twitter, facebook, instagram, soundcloud }: Profil
       onSubmit={handleSubmit}
       enableReinitialize
     >
-      <Form className="flex flex-col items-left space-y-6 w-full px-6">
-        <div className="flex flex-col">
-          <span className="mr-1">Twitter @username</span>
-          <Field type="text" name="twitter" />
-          <ErrorMessage name="twitter" component="div" />
-        </div>
-        <div className="flex flex-col">
-          <span className="mr-1">Facebook @username</span>
-          <Field type="text" name="facebook" />
-          <ErrorMessage name="facebook" component="div" />
-        </div>
-        <div className="flex flex-col">
-          <span className="mr-1">Instagram @username</span>
-          <Field type="text" name="instagram" />
-          <ErrorMessage name="instagram" component="div" />
-        </div>
-        <div className="flex flex-col">
-          <span className="mr-1">Soundcloud @username</span>
-          <Field type="text" name="soundcloud" />
-          <ErrorMessage name="soundcloud" component="div" />
-        </div>
+      <Form className="flex flex-col items-left space-y-6 w-full">
+        <InputField type="text" name="twitter" placeholder="Twitter @username" />
+        <InputField type="text" name="facebook" placeholder="Facebook @username" />
+        <InputField type="text" name="instagram" placeholder="Instagram @username" />
+        <InputField type="text" name="soundcloud" placeholder="Soundcloud @username" />
         {error && <p>{error.message}</p>}
-        <button type="submit" disabled={loading} className="p-3 border-2 w-full">
-          Update profile
-        </button>
+        <Button variant="outlined" type="submit" disabled={loading}>
+          UPDATE PROFILE
+        </Button>
       </Form>
     </Formik>
   );
