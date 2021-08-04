@@ -1,4 +1,4 @@
-import { LoginIcon, UserAddIcon } from '@heroicons/react/solid';
+import { LoginIcon, UserAddIcon } from '@heroicons/react/outline';
 import { LockedLayout } from 'components/LockedLayout';
 import { RegisterForm } from 'components/RegisterForm';
 import { TabNav } from 'components/TabNav';
