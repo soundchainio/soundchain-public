@@ -1,5 +1,4 @@
 import { ApolloServer } from 'apollo-server-express';
-import cors from 'cors';
 import express from 'express';
 import mongoose from 'mongoose';
 import { config } from './config';
@@ -11,7 +10,6 @@ async function bootstrap() {
   EmailService.initialize();
 
   const app = express();
-  app.use(cors({ credentials: true }));
   app.use(config.express.middlewares);
 
   const server = new ApolloServer(config.apollo);
