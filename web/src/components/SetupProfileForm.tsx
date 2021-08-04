@@ -19,13 +19,14 @@ interface FormProps {
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
-  displayName: yup.string().min(3).max(255).required().label('Display Name'),
+  displayName: yup.string().min(3).max(255).required().label('Name'),
   handle: yup
     .string()
     .min(1)
     .max(32)
     .matches(handleRegex, 'Invalid characters. Only letters and numbers are accepted.')
-    .required(),
+    .required()
+    .label('Username'),
 });
 
 const initialFormValues = { displayName: '', handle: '' };
@@ -36,7 +37,7 @@ export const SetupProfileForm = ({ onSubmit }: FormProps) => {
   };
 
   return (
-    <div className="flex flex-col flex-1 mt-6">
+    <div className="flex flex-col flex-1 mt-6 h-full">
       <Title>Let’s setup your profile.</Title>
       <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
         <Form className="flex flex-1 flex-col items-left w-full my-6 ">
