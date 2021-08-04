@@ -1,10 +1,13 @@
-import { ErrorMessage, Field, Form, Formik } from 'formik';
+import { UserIcon as UserIconOutline } from '@heroicons/react/outline';
+import { LockClosedIcon, MailIcon, UserIcon } from '@heroicons/react/solid';
+import { Form, Formik } from 'formik';
 import { setJwt } from 'lib/apollo';
 import { useRegisterMutation } from 'lib/graphql';
 import React from 'react';
 import { handleRegex } from 'utils/Validation';
 import * as yup from 'yup';
 import Button from './Button';
+import { InputField } from './InputField';
 
 interface FormValues {
   email: string;
@@ -49,31 +52,11 @@ export const RegisterForm = () => {
   return (
     <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
       <Form className="flex flex-col items-left space-y-6 w-full px-6">
-        <div className="flex flex-col">
-          <span className="mr-1">Email*</span>
-          <Field type="text" name="email" />
-          <ErrorMessage name="email" component="div" />
-        </div>
-        <div className="flex flex-col">
-          <span className="mr-1">Handle*</span>
-          <Field type="text" name="handle" />
-          <ErrorMessage name="handle" component="div" />
-        </div>
-        <div className="flex flex-col">
-          <span className="mr-1">Display Name*</span>
-          <Field type="text" name="displayName" />
-          <ErrorMessage name="displayName" component="div" />
-        </div>
-        <div className="flex flex-col">
-          <span className="mr-1">Password*</span>
-          <Field type="password" name="password" />
-          <ErrorMessage name="password" component="div" />
-        </div>
-        <div className="flex flex-col">
-          <span className="mr-1">Confirm password*</span>
-          <Field type="password" name="passwordConfirmation" />
-          <ErrorMessage name="passwordConfirmation" component="div" />
-        </div>
+        <InputField type="text" name="handle" placeholder="Username" icon={UserIconOutline} />
+        <InputField type="text" name="email" placeholder="Email" icon={MailIcon} />
+        <InputField type="text" name="displaName" placeholder="Display Name" icon={UserIcon} />
+        <InputField type="password" name="password" placeholder="Password" icon={LockClosedIcon} />
+        <InputField type="password" name="passwordConfirmation" placeholder="Confirm Password" icon={LockClosedIcon} />
         {error && <p>{error.message}</p>}
         <Button variant="outlined" type="submit" disabled={loading}>
           Create Account
