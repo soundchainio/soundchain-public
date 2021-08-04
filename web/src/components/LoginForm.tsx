@@ -1,4 +1,4 @@
-import { LockClosedIcon, UserIcon } from '@heroicons/react/solid';
+import { LockClosedIcon, MailIcon, UserIcon } from '@heroicons/react/solid';
 import Button from 'components/Button';
 import { InputField } from 'components/InputField';
 import Link from 'components/Link';
@@ -43,7 +43,7 @@ export const LoginForm = () => {
   return (
     <Formik initialValues={{ username: '', password: '' }} validationSchema={validationSchema} onSubmit={handleSubmit}>
       <Form className="space-y-6">
-        <InputField label="Username" type="text" name="username" placeholder="username" icon={UserIcon} />
+        <InputField label="Email" type="text" name="username" placeholder="Email" icon={MailIcon} />
         <InputField label="Password" type="password" name="password" placeholder="password" icon={LockClosedIcon} />
         {error && <p>{error.message}</p>}
         <div className="flex items-center justify-end text-sm">
