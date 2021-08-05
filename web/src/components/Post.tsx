@@ -5,13 +5,12 @@ import { PostActions } from './PostActions';
 import { PostStats } from './PostStats';
 
 interface PostProps {
-  profileId: string;
   body: string;
   name: string;
   date: string;
 }
 
-export const Post = ({ body, profileId, name, date }: PostProps) => {
+export const Post = ({ body, name, date }: PostProps) => {
   return (
     <>
       <div className="mt-2 p-4 bg-gray-700">
@@ -19,19 +18,11 @@ export const Post = ({ body, profileId, name, date }: PostProps) => {
           <div className="rounded-full w-8 h-8 border overflow-hidden">
             <Image alt="Profile picture" src={ProfilePic} />
           </div>
-          <p className="ml-4 text-lg font-bold text-gray-100">
-            {name}
-          </p>
-          <p className="text-base text-gray-400 flex-1 text-right">
-            {date}
-          </p>
+          <p className="ml-4 text-lg font-bold text-gray-100">{name}</p>
+          <p className="text-base text-gray-400 flex-1 text-right">{date}</p>
         </div>
         <div className="mt-4 text-gray-100">{body}</div>
-        <PostStats
-          likes={503}
-          comments={150}
-          reposts={12}
-        />
+        <PostStats likes={503} comments={150} reposts={12} />
       </div>
       <PostActions />
     </>

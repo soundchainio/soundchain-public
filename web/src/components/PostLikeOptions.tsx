@@ -1,8 +1,8 @@
 import React from 'react';
 
 interface PostLikeOptionsProps {
-  setLikeOptionsOpened: Function;
-  likeOptionsOpened: Boolean;
+  setLikeOptionsOpened: (val: boolean) => void;
+  likeOptionsOpened: boolean;
 }
 
 export const PostLikeOptions = ({ setLikeOptionsOpened, likeOptionsOpened }: PostLikeOptionsProps) => {

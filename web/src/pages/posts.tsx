@@ -21,9 +21,8 @@ export default function PostsPage() {
           <Post
             key={index}
             body={post.body}
-            profileId={post.profileId}
-            name={'Jean Mayer'}
-            date={'2h'}
+            name="Jean Mayer"
+            date="2h"
           />
         ))}
       </div>
