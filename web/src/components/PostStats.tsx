@@ -20,7 +20,7 @@ export const PostStats = ({ likes, comments, reposts }: PostStatsProps) => {
     <div className="px-0 mt-2 py-2">
       <div className="flex items-center">
           <div className="text-sm text-gray-100 flex items-center">
-            ❤️😃
+            😃
             <div className="text-white font-bold">
               { likes }
             </div>
