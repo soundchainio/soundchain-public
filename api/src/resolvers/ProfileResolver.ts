@@ -3,6 +3,8 @@ import { CurrentUser } from '../middlewares/decorators/current-user';
 import { Profile } from '../models/Profile';
 import User from '../models/User';
 import { ProfileService } from '../services/ProfileService';
+import { UpdateFavoriteGenresInput } from './types/UpdateFavoriteGenresInput';
+import { UpdateFavoriteGenresPayload } from './types/UpdateFavoriteGenresPayload';
 import { UpdateSocialMediasInput } from './types/UpdateSocialMediasInput';
 import { UpdateSocialMediasPayload } from './types/UpdateSocialMediasPayload';
 
@@ -21,11 +23,18 @@ export class ProfileResolver {
     socialMedias: UpdateSocialMediasInput,
     @CurrentUser() { profileId }: User,
   ): Promise<UpdateSocialMediasPayload> {
-    try {
-      const profile = await ProfileService.updateSocialMedias(profileId, socialMedias);
-      return { profile };
-    } catch (err) {
-      throw new Error(`Error while updating profile: ${err.message}`);
-    }
+    const profile = await ProfileService.updateSocialMedias(profileId, socialMedias);
+    return { profile };
+  }
+
+  @Mutation(() => UpdateFavoriteGenresPayload)
+  @Authorized()
+  async updateFavoriteGenres(
+    @Arg('input')
+    { favoriteGenres }: UpdateFavoriteGenresInput,
+    @CurrentUser() { profileId }: User,
+  ): Promise<UpdateFavoriteGenresPayload> {
+    const profile = await ProfileService.updateFavoriteGenres(profileId, favoriteGenres);
+    return { profile };
   }
 }

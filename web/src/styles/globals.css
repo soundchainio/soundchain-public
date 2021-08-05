@@ -52,8 +52,8 @@ body {
   background: linear-gradient(90deg, #26d1a8 0%, #ac4efd 25%, #fed503 75%, #fe5540 100%);
 }
 
-@layer components {
-  .pinned-bottom-mobile {
-    @apply sm:relative sm:bottom-0 sm:right-0 sm:left-0 absolute bottom-8 right-4 left-4;
+@layer utilities {
+  .placeholder-semibold::placeholder {
+    @apply font-semibold;
   }
 }
