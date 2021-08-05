@@ -7,8 +7,8 @@ export class PostService {
     return post;
   }
 
-  static getPosts(): Promise<Post[]> {
-    return PostModel.find().sort({ createdAt: 'desc' }).exec();
+  static getPosts(limit: number, skip: number): Promise<Post[]> {
+    return PostModel.find().sort({ createdAt: 'desc' }).limit(limit).skip(skip).exec();
   }
 
   static getPost(id: string): Promise<Post> {

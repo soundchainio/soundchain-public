@@ -2,7 +2,9 @@ query Posts {
   posts {
     id
     body
-    profileId
+    profile {
+      displayName
+    }
     createdAt
   }
 }

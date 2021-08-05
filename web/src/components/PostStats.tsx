@@ -16,7 +16,7 @@ export const PostStats = ({ likes, comments, reposts }: PostStatsProps) => {
       <div className="flex items-center">
         <div className="text-sm text-gray-100 flex items-center">
           😃
-          <div className="text-white font-bold">{likes}</div>
+          <div className="text-white font-bold pl-2">{likes}</div>
           {validatePlural('like', likes)}
         </div>
         <div className="text-sm text-gray-100 flex items-center">

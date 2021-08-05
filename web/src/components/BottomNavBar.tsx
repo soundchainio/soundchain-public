@@ -3,16 +3,17 @@ import { NewPost } from 'icons/NewPost';
 import { Notification } from 'icons/Notification';
 import { Profile } from 'icons/Profile';
 import { Search } from 'icons/Search';
+import { setJwt } from 'lib/apollo';
 
 export const BottomNavBar = () => {
   return (
-    <nav className="bg-gray-20 h-16 flex items-center">
+    <nav className="bg-gray-20 h-16 flex items-center fixed bottom-0 inset-x-0 shadow-2xl">
       <div className="w-full flex justify-around">
         <Home activated />
         <Search />
         <NewPost />
         <Notification />
-        <Profile />
+        <Profile onClick={() => setJwt()} />
       </div>
     </nav>
   );

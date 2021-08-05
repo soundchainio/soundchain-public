@@ -70,8 +70,8 @@ export default function ResetPasswordPage({ token }: ResetPasswordPageProps) {
             {error && error.message}
           </div>
           <div className="space-y-6 mb-auto mt-6">
-            <InputField type="password" name="password" />
-            <InputField type="password" name="passwordConfirmation" />
+            <InputField type="password" name="password" placeholder="New Password" />
+            <InputField type="password" name="passwordConfirmation" placeholder="Confirm your New Password" />
           </div>
           <Button type="submit" disabled={loading}>
             Reset Password
