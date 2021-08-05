@@ -1,4 +1,6 @@
 import { CompleteProfileForm } from 'components/CompleteProfileForm';
+import { LockedLayoutPage } from 'components/LockedLayoutPage';
+import { LoginNavBar } from 'components/LoginNavBar';
 import { RegisterEmailForm } from 'components/RegisterEmailForm';
 import { RegisterErrorStep } from 'components/RegisterErrorStep';
 import { SetupProfileForm } from 'components/SetupProfileForm';
@@ -24,12 +26,11 @@ export default function CreateAccountPage() {
 
   const onSubmit = async (input: RegistrationValues) => {
     const newValues = { ...registrationValues, ...input };
-    console.log(newValues);
     setRegistrationValues(newValues);
     if (step < 2) setStep(step + 1);
     else {
-      const { email, handle, displayName, password, favoriteGenres } = newValues;
       try {
+        const { email, handle, displayName, password, favoriteGenres } = newValues;
         const result = await register({
           variables: { input: { email, displayName, handle, password } as RegisterInput },
         });
@@ -47,15 +48,16 @@ export default function CreateAccountPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col px-6 lg:px-8 bg-gray-20">
-      <div className="flex flex-1 flex-col sm:mx-auto sm:w-full sm:max-w-lg bg-gray-20">
-        {step === 0 && <RegisterEmailForm onSubmit={onSubmit} />}
-        {step === 1 && <SetupProfileForm onSubmit={onSubmit} />}
-        {step === 2 && <CompleteProfileForm onSubmit={onSubmit} loading={loading || loadingProfile} />}
-        {step === -1 && (error || errorProfile) && (
-          <RegisterErrorStep error={error || errorProfile} onNext={onNextError} />
-        )}
+    <LockedLayoutPage>
+      <div className="my-6">
+        <LoginNavBar />
       </div>
-    </div>
+      {step === 0 && <RegisterEmailForm onSubmit={onSubmit} />}
+      {step === 1 && <SetupProfileForm onSubmit={onSubmit} />}
+      {step === 2 && <CompleteProfileForm onSubmit={onSubmit} loading={loading || loadingProfile} />}
+      {step === -1 && (error || errorProfile) && (
+        <RegisterErrorStep error={error || errorProfile} onNext={onNextError} />
+      )}
+    </LockedLayoutPage>
   );
 }
