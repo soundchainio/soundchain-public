@@ -1,6 +1,5 @@
 interface BadgeProps extends React.ComponentPropsWithoutRef<'span'> {
   label: string;
-  value: string;
   selected: boolean;
   onClick: () => void;
 }
