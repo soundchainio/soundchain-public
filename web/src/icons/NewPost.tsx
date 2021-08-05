@@ -3,7 +3,7 @@ import { NavIconProps } from './interfaces/NavIconProps';
 export const NewPost = (props: NavIconProps) => {
   return (
     <>
-      {props.activated && (
+      {props.activated ? (
         <svg width={25} height={25} viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
           <path
             fillRule="evenodd"
@@ -12,8 +12,7 @@ export const NewPost = (props: NavIconProps) => {
             fill="#505050"
           />
         </svg>
-      )}
-      {!props.activated && (
+      ) : (
         <svg width={25} height={25} viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
           <path
             fillRule="evenodd"

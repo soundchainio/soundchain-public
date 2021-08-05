@@ -3,7 +3,7 @@ import { NavIconProps } from './interfaces/NavIconProps';
 export const Profile = (props: NavIconProps) => {
   return (
     <>
-      {props.activated && (
+      {props.activated ? (
         <svg width={25} height={25} viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
           <path
             d="M10 4.286a3.571 3.571 0 100 7.143 3.571 3.571 0 000-7.143zM10 10a2.143 2.143 0 110-4.286A2.143 2.143 0 0110 10z"
@@ -14,8 +14,7 @@ export const Profile = (props: NavIconProps) => {
             fill="#505050"
           />
         </svg>
-      )}
-      {!props.activated && (
+      ) : (
         <svg width={25} height={25} viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
           <path
             d="M10 4.286a3.571 3.571 0 100 7.143 3.571 3.571 0 000-7.143zM10 10a2.143 2.143 0 110-4.286A2.143 2.143 0 0110 10z"

@@ -3,7 +3,7 @@ import { NavIconProps } from './interfaces/NavIconProps';
 export const Notification = (props: NavIconProps) => {
   return (
     <>
-      {props.activated && (
+      {props.activated ? (
         <svg width={25} height={25} viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
           <path
             d="M7.253 4h0l1.466.003s0 0 0 0c2.84.007 5.26 2.305 5.296 5.004v3.782c0 .856.104 1.865.695 2.767h0l.287.438h0L15 16s0 0 0 0V16H1s0 0 0 0l.003-.004v-.002l.287-.438s0 0 0 0c.593-.902.695-1.911.695-2.766V9.004c.021-2.7 2.436-5.01 5.268-5.004z"
@@ -28,8 +28,7 @@ export const Notification = (props: NavIconProps) => {
             strokeLinejoin="round"
           />
         </svg>
-      )}
-      {!props.activated && (
+      ) : (
         <svg width={25} height={25} viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
           <path
             d="M7.253 4h0l1.466.003s0 0 0 0c2.84.007 5.26 2.305 5.296 5.004v3.782c0 .856.104 1.865.695 2.767h0l.287.438h0L15 16s0 0 0 0V16H1s0 0 0 0l.003-.004v-.002l.287-.438s0 0 0 0c.593-.902.695-1.911.695-2.766V9.004c.021-2.7 2.436-5.01 5.268-5.004z"
