@@ -46,7 +46,7 @@ export const CompleteProfileForm = ({ onSubmit, loading }: FormProps) => {
     <div className="flex flex-col flex-1 mt-6 h-full">
       <Title>Complete your profile.</Title>
       <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
-        <Form className="flex flex-1 flex-col items-left w-full my-6">
+        <Form className="flex flex-1 flex-col items-left w-full">
           <div className="mb-auto space-y-6">
             <InputField
               label="Please enter and cofirm the password for your account:"

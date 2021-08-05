@@ -77,7 +77,7 @@ export const GenreSelector = ({ onSelect }: GenreSelectorProps) => {
     <div className="flex flex-col">
       <Label>What are your favorite genres?</Label>
       {limitReached && <Label className="text-red-500">You can choose only five genres at most</Label>}
-      <div className="pb-4 space-y-2">
+      <div className="pb-6 space-y-2">
         {genres.map(({ label, key }) => (
           <Badge
             key={key}

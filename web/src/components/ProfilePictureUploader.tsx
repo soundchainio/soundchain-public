@@ -4,7 +4,7 @@ import { Label } from './Label';
 
 export const ProfilePictureUploader = () => {
   return (
-    <div className="flex h-36 items-center justify-center">
+    <div className="flex h-32 items-center justify-center">
       <div className="flex flex-col w-28 h-full items-center justify-center">
         <span className="inline-flex items-center justify-center h-24 w-24 rounded-full bg-gray-30">
           <Label className="absolute text-center">

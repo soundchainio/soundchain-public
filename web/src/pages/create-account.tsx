@@ -49,9 +49,7 @@ export default function CreateAccountPage() {
 
   return (
     <LockedLayoutPage>
-      <div className="my-6">
-        <LoginNavBar />
-      </div>
+      <LoginNavBar />
       {step === 0 && <RegisterEmailForm onSubmit={onSubmit} />}
       {step === 1 && <SetupProfileForm onSubmit={onSubmit} />}
       {step === 2 && <CompleteProfileForm onSubmit={onSubmit} loading={loading || loadingProfile} />}

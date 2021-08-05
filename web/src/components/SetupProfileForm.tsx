@@ -36,10 +36,10 @@ export const SetupProfileForm = ({ onSubmit }: FormProps) => {
   };
 
   return (
-    <div className="flex flex-col flex-1 mt-6 h-full">
+    <div className="flex flex-col flex-1 h-full mt-6">
       <Title>Let’s setup your profile.</Title>
       <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
-        <Form className="flex flex-1 flex-col items-left w-full my-6 ">
+        <Form className="flex flex-1 flex-col items-left w-full">
           <div className="mb-auto space-y-6">
             <ProfilePictureUploader />
             <div>
