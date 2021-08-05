@@ -43,7 +43,7 @@ export default function CreateAccountPage() {
     }
   };
 
-  const onNextError = () => {
+  const onBackError = () => {
     setStep(0);
   };
 
@@ -54,7 +54,7 @@ export default function CreateAccountPage() {
       {step === 1 && <SetupProfileForm onSubmit={onSubmit} />}
       {step === 2 && <CompleteProfileForm onSubmit={onSubmit} loading={loading || loadingProfile} />}
       {step === -1 && (error || errorProfile) && (
-        <RegisterErrorStep error={error || errorProfile} onNext={onNextError} />
+        <RegisterErrorStep error={error || errorProfile} onBack={onBackError} />
       )}
     </LockedLayoutPage>
   );

@@ -5,19 +5,16 @@ import { Subtitle } from './Subtitle';
 import { Title } from './Title';
 
 interface FormProps {
-  onNext: () => void;
+  onBack: () => void;
   error: ApolloError | undefined;
 }
 
-export const RegisterErrorStep = ({ onNext, error }: FormProps) => {
+export const RegisterErrorStep = ({ onBack, error }: FormProps) => {
   return (
-    <div className="flex flex-col flex-1">
-      <div className="h-60 flex items-center justify-center">
-        <Title className="text-center">Soundchain</Title>
-      </div>
+    <div className="flex flex-col flex-1 mt-6">
       <Title>Create Account Error</Title>
       {error && <Subtitle className="mt-1 mb-auto text-red-500">{error.message}</Subtitle>}
-      <Button className="border-2 border-white border-solid w-full my-6" variant="default" onClick={onNext}>
+      <Button className="w-full mt-6" onClick={onBack}>
         BACK
       </Button>
     </div>
