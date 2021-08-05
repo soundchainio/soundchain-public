@@ -12,8 +12,8 @@ interface PostProps {
 
 export const Post = ({ body, name, date }: PostProps) => {
   return (
-    <>
-      <div className="mt-2 p-4 bg-gray-700">
+    <div>
+      <div className="p-4 bg-gray-20">
         <div className="flex items-center">
           <div className="rounded-full w-8 h-8 border overflow-hidden">
             <Image alt="Profile picture" src={ProfilePic} />
@@ -25,6 +25,6 @@ export const Post = ({ body, name, date }: PostProps) => {
         <PostStats likes={503} comments={150} reposts={12} />
       </div>
       <PostActions />
-    </>
+    </div>
   );
 };

@@ -4,7 +4,7 @@ import { ErrorMessage, Field, Form, Formik, FormikHelpers } from 'formik';
 import React, { useState } from 'react';
 import * as yup from 'yup';
 import { useCreatePostMutation } from '../lib/graphql';
-import Button from './Button';
+import { Button } from './Button';
 
 interface FormValues {
   body: string;

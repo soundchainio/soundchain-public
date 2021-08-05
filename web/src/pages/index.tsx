@@ -1,4 +1,4 @@
-import Button from 'components/Button';
+import { Button } from 'components/Button';
 import Link from 'components/Link';
 import { useMe } from 'hooks/useMe';
 import { setJwt } from 'lib/apollo';

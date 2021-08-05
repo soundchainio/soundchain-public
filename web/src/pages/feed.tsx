@@ -1,0 +1,23 @@
+import { BottomNavBar } from 'components/BottomNavBar';
+import { TopNavBar } from 'components/TopNavBar';
+import { usePostsQuery } from 'lib/graphql';
+import { Post } from 'components/Post';
+
+export default function Feed() {
+  const { loading, error, data } = usePostsQuery();
+  return (
+    <div className="flex flex-col min-h-screen">
+      <TopNavBar />
+      <div className="bg-custom-black-10 flex flex-1 flex-grow flex-col">
+        {loading && <p>Loading...</p>}
+        {error && <p>{error.message}</p>}
+        <div className="space-y-3">
+          {data?.posts.map((post, index) => (
+            <Post key={index} body={post.body} name="Jean Mayer" date="2h" />
+          ))}
+        </div>
+      </div>
+      <BottomNavBar />
+    </div>
+  );
+}
