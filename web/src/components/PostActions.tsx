@@ -12,7 +12,7 @@ export const PostActions = () => {
   };
 
   return (
-    <div className="bg-gray-600 px-0 py-2 flex items-center relative overflow-hidden">
+    <div className="bg-gray-25 px-0 py-2 flex items-center relative overflow-hidden">
       <div className={commonClasses}>
         <div className="flex items-center" onClick={handleLikeButton}>
           <ThumbUpIcon className="h-4 w-4 mr-1" />
