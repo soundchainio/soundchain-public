@@ -79,13 +79,7 @@ export const GenreSelector = ({ onSelect }: GenreSelectorProps) => {
       {limitReached && <Label className="text-red-500">You can choose only five genres at most</Label>}
       <div className="pb-6 space-y-2">
         {genres.map(({ label, key }) => (
-          <Badge
-            key={key}
-            label={label}
-            value={key}
-            selected={isGenreSelected(key)}
-            onClick={() => onGenreClick(key)}
-          />
+          <Badge key={key} label={label} selected={isGenreSelected(key)} onClick={() => onGenreClick(key)} />
         ))}
       </div>
     </div>
