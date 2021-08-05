@@ -3,6 +3,7 @@ import {
   ApolloServerPluginLandingPageGraphQLPlayground,
   ApolloServerPluginLandingPageProductionDefault,
 } from 'apollo-server-core';
+import cors from 'cors';
 import * as dotenv from 'dotenv-flow';
 import fs from 'fs';
 import { buildSchemaSync } from 'type-graphql';
@@ -75,7 +76,7 @@ export const config = {
   },
   express: {
     port: PORT,
-    middlewares: [JwtService.middleware],
+    middlewares: [cors({ credentials: true }), JwtService.middleware],
   },
   sendgrid: {
     apiKey: SENDGRID_API_KEY,

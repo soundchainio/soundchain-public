@@ -11,7 +11,7 @@ export default function Link({ className, buttonVariant, href, ...rest }: LinkPr
   const anchorProps = {
     className: classNames(
       className,
-      buttonVariant ? buttonClassesByVariant[buttonVariant] : 'text-blue-500 hover:underline',
+      buttonVariant ? buttonClassesByVariant[buttonVariant] : 'text-green-500 hover:underline',
     ),
     ...rest,
   };

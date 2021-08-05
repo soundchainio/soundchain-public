@@ -11,6 +11,7 @@ export const PostLikeOptions = ({ setLikeOptionsOpened, likeOptionsOpened }: Pos
     const ListOptions = likeOptions.map(option => {
         return (
             <li
+                key={option}
                 className="flex-1 text-center"
                 onClick={() => setLikeOptionsOpened(false)}
             >

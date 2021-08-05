@@ -199,7 +199,7 @@ export type CreatePostMutation = (
     { __typename?: 'CreatePostPayload' }
     & { post: (
       { __typename?: 'Post' }
-      & Pick<Post, 'id' | 'body' | 'profileId' | 'createdAt'>
+      & Pick<Post, 'id'>
     ) }
   ) }
 );
@@ -349,9 +349,6 @@ export const CreatePostDocument = gql`
   createPost(input: $input) {
     post {
       id
-      body
-      profileId
-      createdAt
     }
   }
 }
