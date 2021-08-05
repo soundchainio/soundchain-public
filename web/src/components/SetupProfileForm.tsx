@@ -1,11 +1,9 @@
-import { ErrorMessage, Field, Form, Formik } from 'formik';
-import { Camera } from 'icons/Camera';
+import { Form, Formik } from 'formik';
 import React from 'react';
 import { handleRegex } from 'utils/Validation';
 import * as yup from 'yup';
 import Button from './Button';
 import { InputField } from './InputField';
-import { Label } from './Label';
 import { ProfilePictureUploader } from './ProfilePictureUploader';
 import { Title } from './Title';
 
@@ -44,7 +42,7 @@ export const SetupProfileForm = ({ onSubmit }: FormProps) => {
           <div className="mb-auto space-y-6">
             <ProfilePictureUploader />
             <InputField
-              label="First or full name. (This will be displayed publically to other users."
+              label="First or full name. (This will be displayed publically to other users.)"
               type="text"
               name="displayName"
               placeholder="Name"

@@ -1,7 +1,9 @@
-import { ErrorMessage, Field, Form, Formik } from 'formik';
+import { MailIcon } from '@heroicons/react/solid';
+import { Form, Formik } from 'formik';
 import React from 'react';
 import * as yup from 'yup';
 import Button from './Button';
+import { InputField } from './InputField';
 import { Label } from './Label';
 import { Subtitle } from './Subtitle';
 import { Title } from './Title';
@@ -35,8 +37,7 @@ export const RegisterEmailForm = ({ onSubmit }: FormProps) => {
       <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
         <Form className="flex flex-1 flex-col items-left w-full mt-6">
           <div className="flex flex-col mb-auto">
-            <Field type="text" name="email" />
-            <ErrorMessage className="text-white" name="email" component="div" />
+            <InputField type="text" name="email" placeholder="Email Address" icon={MailIcon} />
           </div>
           <div className="flex flex-col">
             <Label className="text-center">
