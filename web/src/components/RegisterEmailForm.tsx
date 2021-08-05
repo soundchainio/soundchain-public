@@ -1,4 +1,3 @@
-import { MailIcon } from '@heroicons/react/solid';
 import { Form, Formik } from 'formik';
 import React from 'react';
 import * as yup from 'yup';
@@ -27,24 +26,19 @@ export const RegisterEmailForm = ({ onSubmit }: FormProps) => {
   };
 
   return (
-    <div className="flex flex-col flex-1">
-      <div className="h-60 flex items-center justify-center">
-        <Title className="text-center">Soundchain</Title>
-      </div>
+    <div className="flex flex-col flex-1 h-full">
       <Title>Create Account</Title>
       <Label className="mt-3">Please enter your email below</Label>
       <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
-        <Form className="flex flex-1 flex-col items-left w-full mt-6">
+        <Form className="flex flex-1 flex-col items-left w-full my-6">
           <div className="flex flex-col mb-auto">
-            <InputField type="text" name="email" placeholder="Email Address" icon={MailIcon} />
+            <InputField type="text" name="email" placeholder="Email Address" />
           </div>
           <div className="flex flex-col">
-            <Label className="text-center">
+            <Label className="text-center mb-6">
               By creating an account, I agree to the Terms & Conditions, Privacy Policy, and Distribution Agreement.
             </Label>
-            <Button className="border-2 border-white border-solid w-full my-6" variant="default" type="submit">
-              CREATE ACCOUNT
-            </Button>
+            <Button type="submit">CREATE ACCOUNT</Button>
           </div>
         </Form>
       </Formik>

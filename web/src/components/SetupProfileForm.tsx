@@ -57,9 +57,7 @@ export const SetupProfileForm = ({ onSubmit }: FormProps) => {
             </div>
           </div>
           <div className="flex flex-col">
-            <Button className="border-2 border-white border-solid w-full " variant="default" type="submit">
-              NEXT
-            </Button>
+            <Button type="submit">NEXT</Button>
           </div>
         </Form>
       </Formik>
