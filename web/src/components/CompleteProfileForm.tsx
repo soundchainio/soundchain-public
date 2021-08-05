@@ -6,7 +6,6 @@ import * as yup from 'yup';
 import Button from './Button';
 import { GenreSelector } from './GenreSelector';
 import { InputField } from './InputField';
-import { Label } from './Label';
 import { Title } from './Title';
 
 interface FormValidationValues {
@@ -22,7 +21,6 @@ interface FormValues {
 interface FormProps {
   onSubmit: (values: FormValues) => void;
   loading: boolean;
-  error: string | undefined;
 }
 
 const validationSchema: yup.SchemaOf<FormValidationValues> = yup.object().shape({
@@ -38,7 +36,7 @@ const validationSchema: yup.SchemaOf<FormValidationValues> = yup.object().shape(
 
 const initialFormValues = { password: '', passwordConfirmation: '' };
 
-export const CompleteProfileForm = ({ onSubmit, loading, error }: FormProps) => {
+export const CompleteProfileForm = ({ onSubmit, loading }: FormProps) => {
   const [favoriteGenres, setFavoriteGenres] = useState<Genre[]>([]);
   const handleSubmit = async (values: FormValidationValues) => {
     onSubmit({ ...values, favoriteGenres });
@@ -66,7 +64,6 @@ export const CompleteProfileForm = ({ onSubmit, loading, error }: FormProps) => 
             <GenreSelector onSelect={setFavoriteGenres} />
           </div>
           <div className="flex flex-col">
-            {error && <Label className="text-red-500 mb-2">{error}</Label>}
             <Button
               className="border-2 border-white border-solid w-full "
               variant="default"

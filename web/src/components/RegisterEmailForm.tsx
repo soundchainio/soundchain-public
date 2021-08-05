@@ -5,7 +5,6 @@ import * as yup from 'yup';
 import Button from './Button';
 import { InputField } from './InputField';
 import { Label } from './Label';
-import { Subtitle } from './Subtitle';
 import { Title } from './Title';
 
 interface FormValues {
@@ -33,7 +32,7 @@ export const RegisterEmailForm = ({ onSubmit }: FormProps) => {
         <Title className="text-center">Soundchain</Title>
       </div>
       <Title>Create Account</Title>
-      <Subtitle className="mt-1">Please enter your email below</Subtitle>
+      <Label className="mt-3">Please enter your email below</Label>
       <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
         <Form className="flex flex-1 flex-col items-left w-full mt-6">
           <div className="flex flex-col mb-auto">
