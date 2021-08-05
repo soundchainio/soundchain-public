@@ -7,7 +7,7 @@ export interface ButtonProps extends React.ComponentPropsWithoutRef<'button'> {
   icon?: (props: React.ComponentProps<'svg'>) => JSX.Element;
 }
 
-const commonClasses = 'flex items-center justify-center sm:px-4 py-3 uppercase';
+const commonClasses = 'flex items-center justify-center sm:px-4 py-3 uppercase font-extrabold';
 
 export const buttonByVariant: Record<ButtonVariant, (props: ButtonProps) => JSX.Element> = {
   rainbow: RainbowButton,

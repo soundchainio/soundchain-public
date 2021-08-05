@@ -29,7 +29,7 @@ function Tab(tab: TabConfig) {
           {tab.name}
         </Button>
       ) : (
-        <div className="flex flex-row uppercase items-center justify-center sm:px-3 py-3 font-medium text-gray-400 bg-gray-800 cursor-pointer w-full">
+        <div className="flex flex-row uppercase items-center justify-center sm:px-3 py-3 font-medium text-gray-400 bg-gray-30 cursor-pointer w-full">
           {tab.icon && <tab.icon className="hidden sm:block mr-1 h-5 w-5" aria-hidden="true" />}
           <span>{tab.name}</span>
         </div>

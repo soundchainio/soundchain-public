@@ -7,6 +7,17 @@ module.exports = {
       container: {
         center: true,
       },
+      colors: {
+        gray: {
+          20: '#202020',
+          30: '#303030',
+          60: '#606060',
+          80: '#808080',
+        },
+        'custom-black': {
+          '1A': '#1A1A1A',
+        },
+      },
     },
   },
   variants: {

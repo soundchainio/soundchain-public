@@ -9,8 +9,8 @@ interface InputFieldProps {
   icon?: (props: React.ComponentProps<'svg'>) => JSX.Element;
 }
 
-const commonInputClasses = `appearance-none block w-full px-3 py-2 border-2 bg-black text-gray-200 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500`;
-const validInputClasses = `${commonInputClasses} border-gray-600`;
+const commonInputClasses = `appearance-none block w-full px-3 py-2 border-1 bg-custom-black-1A text-gray-200 shadow-sm placeholder-gray-60 placeholder-semibold focus:outline-none focus:ring-green-500 focus:border-green-500`;
+const validInputClasses = `${commonInputClasses} border-gray-30`;
 const errorInputClasses = `${commonInputClasses} border-green-500`;
 
 export const InputField = ({ label, icon: Icon, ...props }: InputFieldProps) => {

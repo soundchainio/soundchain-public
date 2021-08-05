@@ -40,6 +40,44 @@ export type ForgotPasswordPayload = {
   ok: Scalars['Boolean'];
 };
 
+export enum Genre {
+  Acoustic = 'ACOUSTIC',
+  Alternative = 'ALTERNATIVE',
+  Ambient = 'AMBIENT',
+  Americana = 'AMERICANA',
+  CPop = 'C_POP',
+  Christian = 'CHRISTIAN',
+  ClassicRock = 'CLASSIC_ROCK',
+  Classical = 'CLASSICAL',
+  Country = 'COUNTRY',
+  Dance = 'DANCE',
+  Devotional = 'DEVOTIONAL',
+  Eletronic = 'ELETRONIC',
+  Experimental = 'EXPERIMENTAL',
+  Gospel = 'GOSPEL',
+  HardRock = 'HARD_ROCK',
+  Indie = 'INDIE',
+  Jazz = 'JAZZ',
+  KPop = 'K_POP',
+  KidsAndFamily = 'KIDS_AND_FAMILY',
+  Latin = 'LATIN',
+  Metal = 'METAL',
+  MusicaMexicana = 'MUSICA_MEXICANA',
+  MusicaTropical = 'MUSICA_TROPICAL',
+  Podcasts = 'PODCASTS',
+  Pop = 'POP',
+  PopLatino = 'POP_LATINO',
+  Punk = 'PUNK',
+  RAndB = 'R_AND_B',
+  Reggae = 'REGGAE',
+  Salsa = 'SALSA',
+  SoulFunk = 'SOUL_FUNK',
+  Soundtrack = 'SOUNDTRACK',
+  Spoken = 'SPOKEN',
+  UrbanLatino = 'URBAN_LATINO',
+  World = 'WORLD'
+}
+
 export type LoginInput = {
   /** Username can be email or handle */
   username: Scalars['String'];
@@ -50,6 +88,7 @@ export type Mutation = {
   __typename?: 'Mutation';
   createPost: CreatePostPayload;
   updateSocialMedias: UpdateSocialMediasPayload;
+  updateFavoriteGenres: UpdateFavoriteGenresPayload;
   register: AuthPayload;
   login: AuthPayload;
   verifyUserEmail: VerifyUserEmailPayload;
@@ -65,6 +104,11 @@ export type MutationCreatePostArgs = {
 
 export type MutationUpdateSocialMediasArgs = {
   input: UpdateSocialMediasInput;
+};
+
+
+export type MutationUpdateFavoriteGenresArgs = {
+  input: UpdateFavoriteGenresInput;
 };
 
 
@@ -108,6 +152,7 @@ export type Profile = {
   profilePicture?: Maybe<Scalars['String']>;
   coverPicture?: Maybe<Scalars['String']>;
   socialMedias: SocialMedias;
+  favoriteGenres: Array<Genre>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
 };
@@ -154,6 +199,15 @@ export type SocialMedias = {
   instagram?: Maybe<Scalars['String']>;
   soundcloud?: Maybe<Scalars['String']>;
   twitter?: Maybe<Scalars['String']>;
+};
+
+export type UpdateFavoriteGenresInput = {
+  favoriteGenres: Array<Genre>;
+};
+
+export type UpdateFavoriteGenresPayload = {
+  __typename?: 'UpdateFavoriteGenresPayload';
+  profile: Profile;
 };
 
 export type UpdateSocialMediasInput = {
@@ -294,6 +348,22 @@ export type ResetPasswordMutation = (
   & { resetPassword: (
     { __typename?: 'ResetPasswordPayload' }
     & Pick<ResetPasswordPayload, 'ok'>
+  ) }
+);
+
+export type UpdateFavoriteGenresMutationVariables = Exact<{
+  input: UpdateFavoriteGenresInput;
+}>;
+
+
+export type UpdateFavoriteGenresMutation = (
+  { __typename?: 'Mutation' }
+  & { updateFavoriteGenres: (
+    { __typename?: 'UpdateFavoriteGenresPayload' }
+    & { profile: (
+      { __typename?: 'Profile' }
+      & Pick<Profile, 'id' | 'favoriteGenres'>
+    ) }
   ) }
 );
 
@@ -628,6 +698,42 @@ export function useResetPasswordMutation(baseOptions?: Apollo.MutationHookOption
 export type ResetPasswordMutationHookResult = ReturnType<typeof useResetPasswordMutation>;
 export type ResetPasswordMutationResult = Apollo.MutationResult<ResetPasswordMutation>;
 export type ResetPasswordMutationOptions = Apollo.BaseMutationOptions<ResetPasswordMutation, ResetPasswordMutationVariables>;
+export const UpdateFavoriteGenresDocument = gql`
+    mutation UpdateFavoriteGenres($input: UpdateFavoriteGenresInput!) {
+  updateFavoriteGenres(input: $input) {
+    profile {
+      id
+      favoriteGenres
+    }
+  }
+}
+    `;
+export type UpdateFavoriteGenresMutationFn = Apollo.MutationFunction<UpdateFavoriteGenresMutation, UpdateFavoriteGenresMutationVariables>;
+
+/**
+ * __useUpdateFavoriteGenresMutation__
+ *
+ * To run a mutation, you first call `useUpdateFavoriteGenresMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateFavoriteGenresMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateFavoriteGenresMutation, { data, loading, error }] = useUpdateFavoriteGenresMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateFavoriteGenresMutation(baseOptions?: Apollo.MutationHookOptions<UpdateFavoriteGenresMutation, UpdateFavoriteGenresMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateFavoriteGenresMutation, UpdateFavoriteGenresMutationVariables>(UpdateFavoriteGenresDocument, options);
+      }
+export type UpdateFavoriteGenresMutationHookResult = ReturnType<typeof useUpdateFavoriteGenresMutation>;
+export type UpdateFavoriteGenresMutationResult = Apollo.MutationResult<UpdateFavoriteGenresMutation>;
+export type UpdateFavoriteGenresMutationOptions = Apollo.BaseMutationOptions<UpdateFavoriteGenresMutation, UpdateFavoriteGenresMutationVariables>;
 export const UpdateSocialMediasDocument = gql`
     mutation updateSocialMedias($input: UpdateSocialMediasInput!) {
   updateSocialMedias(input: $input) {
