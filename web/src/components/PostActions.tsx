@@ -4,17 +4,7 @@ import { PostLikeOptions } from './PostLikeOptions';
 
 export const PostActions = () => {
     const [likeOptionsOpened, setLikeOptionsOpened] = useState(false);
-    const sharedClasses = `
-        text-white
-        text-sm
-        text-gray-400
-        text-center
-        font-bold
-        flex-1
-        flex
-        justify-center
-        px-1
-    `;
+    const sharedClasses = "text-white text-sm text-gray-400 text-center font-bold flex-1 flex justify-center px-1";
 
     const handleLikeButton = () => {
         setLikeOptionsOpened(!likeOptionsOpened);
