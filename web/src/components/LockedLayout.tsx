@@ -15,8 +15,8 @@ export const LockedLayout: React.FC = ({ children }) => {
     },
     {
       name: 'Create Account',
-      href: '/register',
-      current: ['/register', '/complete-profile'].includes(router.asPath),
+      href: '/create-account',
+      current: ['/create-account'].includes(router.asPath),
       icon: UserAddIcon,
     },
   ];
