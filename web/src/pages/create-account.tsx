@@ -1,5 +1,5 @@
 import { CompleteProfileForm } from 'components/CompleteProfileForm';
-import { LockedLayoutPage } from 'components/LockedLayoutPage';
+import { LockedLayout } from 'components/LockedLayout';
 import { LoginNavBar } from 'components/LoginNavBar';
 import { RegisterEmailForm } from 'components/RegisterEmailForm';
 import { RegisterErrorStep } from 'components/RegisterErrorStep';
@@ -48,7 +48,7 @@ export default function CreateAccountPage() {
   };
 
   return (
-    <LockedLayoutPage>
+    <LockedLayout>
       <LoginNavBar />
       {step === 0 && <RegisterEmailForm onSubmit={onSubmit} />}
       {step === 1 && <SetupProfileForm onSubmit={onSubmit} />}
@@ -56,6 +56,6 @@ export default function CreateAccountPage() {
       {step === -1 && (error || errorProfile) && (
         <RegisterErrorStep error={error || errorProfile} onBack={onBackError} />
       )}
-    </LockedLayoutPage>
+    </LockedLayout>
   );
 }

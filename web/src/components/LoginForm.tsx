@@ -41,20 +41,26 @@ export const LoginForm = () => {
   }
 
   return (
-    <Formik initialValues={{ username: '', password: '' }} validationSchema={validationSchema} onSubmit={handleSubmit}>
-      <Form>
-        <div className="space-y-6">
-          <InputField type="text" name="username" placeholder="Username or Email" icon={UserIcon} />
-          <InputField type="password" name="password" placeholder="Password" icon={LockClosedIcon} />
-          {error && <p>{error.message}</p>}
-          <div className="flex items-center justify-center">
-            <Link href="/forgot-password">Forgot Password?</Link>
+    <div className="flex flex-col flex-1 mt-6">
+      <Formik
+        initialValues={{ username: '', password: '' }}
+        validationSchema={validationSchema}
+        onSubmit={handleSubmit}
+      >
+        <Form className="flex flex-1 flex-col">
+          <div className="space-y-6 mb-auto">
+            <InputField type="text" name="username" placeholder="Username or Email" icon={UserIcon} />
+            <InputField type="password" name="password" placeholder="Password" icon={LockClosedIcon} />
+            {error && <p>{error.message}</p>}
+            <div>
+              <Link href="/forgot-password">Forgot Password?</Link>
+            </div>
           </div>
-        </div>
-        <Button type="submit" disabled={loading} className="w-full mt-12">
-          Login
-        </Button>
-      </Form>
-    </Formik>
+          <Button type="submit" disabled={loading} className="mt-12 pinned-bottom-mobile">
+            Login
+          </Button>
+        </Form>
+      </Formik>
+    </div>
   );
 };
