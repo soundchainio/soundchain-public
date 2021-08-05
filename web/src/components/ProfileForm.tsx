@@ -57,7 +57,7 @@ export const ProfileForm = ({ twitter, facebook, instagram, soundcloud }: Profil
         <InputField type="text" name="instagram" placeholder="Instagram @username" />
         <InputField type="text" name="soundcloud" placeholder="SoundCloud @username" />
         {error && <p>{error.message}</p>}
-        <Button variant="outlined" type="submit" disabled={loading}>
+        <Button type="submit" disabled={loading}>
           UPDATE PROFILE
         </Button>
       </Form>
