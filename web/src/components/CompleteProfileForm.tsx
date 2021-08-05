@@ -43,10 +43,10 @@ export const CompleteProfileForm = ({ onSubmit, loading }: FormProps) => {
   };
 
   return (
-    <div className="flex flex-col flex-1 mt-6 h-full">
+    <div className="flex flex-col flex-1 mt-6">
       <Title>Complete your profile.</Title>
       <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
-        <Form className="flex flex-1 flex-col items-left w-full">
+        <Form className="flex flex-1 flex-col">
           <div className="mb-auto space-y-6">
             <InputField
               label="Please enter and cofirm the password for your account:"
@@ -63,11 +63,9 @@ export const CompleteProfileForm = ({ onSubmit, loading }: FormProps) => {
             />
             <GenreSelector onSelect={setFavoriteGenres} />
           </div>
-          <div className="flex flex-col">
-            <Button type="submit" disabled={loading}>
-              NEXT
-            </Button>
-          </div>
+          <Button type="submit" disabled={loading}>
+            NEXT
+          </Button>
         </Form>
       </Formik>
     </div>

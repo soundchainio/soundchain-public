@@ -26,11 +26,11 @@ export const RegisterEmailForm = ({ onSubmit }: FormProps) => {
   };
 
   return (
-    <div className="flex flex-col flex-1 mt-6 h-full">
+    <div className="flex flex-col flex-1 mt-6">
       <Title>Create Account</Title>
       <Label className="mt-3">Please enter your email below</Label>
       <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
-        <Form className="flex flex-1 flex-col items-left w-full">
+        <Form className="flex flex-1 flex-col">
           <div className="flex flex-col mb-auto">
             <InputField type="text" name="email" placeholder="Email Address" />
           </div>
