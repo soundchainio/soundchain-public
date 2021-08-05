@@ -14,26 +14,26 @@ export const PostActions = () => {
   return (
     <div className="bg-gray-25 px-0 py-2 flex items-center relative overflow-hidden">
       <div className={commonClasses}>
-        <div className="flex items-center" onClick={handleLikeButton}>
+        <div className="flex items-center cursor-pointer" onClick={handleLikeButton}>
           <ThumbUpIcon className="h-4 w-4 mr-1" />
           Like
         </div>
       </div>
       <PostLikeOptions setLikeOptionsOpened={setLikeOptionsOpened} likeOptionsOpened={likeOptionsOpened} />
       <div className={commonClasses}>
-        <div className="flex items-center">
+        <div className="flex items-center cursor-pointer">
           <ChatAltIcon className="h-4 w-4 mr-1" />
           Comment
         </div>
       </div>
       <div className={commonClasses}>
-        <div className="flex items-center">
+        <div className="flex items-center cursor-pointer">
           <RefreshIcon className="h-4 w-4 mr-1" />
           Repost
         </div>
       </div>
       <div className={commonClasses}>
-        <div className="flex items-center">
+        <div className="flex items-center cursor-pointer">
           <ShareIcon className="h-4 w-4 mr-1" />
           Share
         </div>

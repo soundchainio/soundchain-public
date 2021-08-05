@@ -143,6 +143,7 @@ export type Post = {
   body: Scalars['String'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
+  profile: Profile;
 };
 
 export type Profile = {
@@ -321,7 +322,11 @@ export type PostsQuery = (
   { __typename?: 'Query' }
   & { posts: Array<(
     { __typename?: 'Post' }
-    & Pick<Post, 'id' | 'body' | 'profileId' | 'createdAt'>
+    & Pick<Post, 'id' | 'body' | 'createdAt'>
+    & { profile: (
+      { __typename?: 'Profile' }
+      & Pick<Profile, 'displayName'>
+    ) }
   )> }
 );
 
@@ -600,7 +605,9 @@ export const PostsDocument = gql`
   posts {
     id
     body
-    profileId
+    profile {
+      displayName
+    }
     createdAt
   }
 }
