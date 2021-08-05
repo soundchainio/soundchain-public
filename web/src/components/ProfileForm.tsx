@@ -4,7 +4,7 @@ import React from 'react';
 import { handleRegex } from 'utils/Validation';
 import * as yup from 'yup';
 import { UpdateSocialMediasInput, useUpdateSocialMediasMutation } from '../lib/graphql';
-import Button from './Button';
+import { Button } from './Button';
 import { InputField } from './InputField';
 
 export interface ProfileFormProps {

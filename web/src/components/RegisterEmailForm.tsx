@@ -1,7 +1,7 @@
 import { Form, Formik } from 'formik';
 import React from 'react';
 import * as yup from 'yup';
-import Button from './Button';
+import { Button } from './Button';
 import { InputField } from './InputField';
 import { Label } from './Label';
 import { Title } from './Title';

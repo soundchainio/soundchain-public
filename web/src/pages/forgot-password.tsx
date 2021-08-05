@@ -1,4 +1,4 @@
-import Button from 'components/Button';
+import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
 import { LockedLayout } from 'components/LockedLayout';
 import { Title } from 'components/Title';

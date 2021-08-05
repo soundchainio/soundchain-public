@@ -1,4 +1,4 @@
-import Button from 'components/Button';
+import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
 import Link from 'components/Link';
 import { Form, Formik } from 'formik';
@@ -42,7 +42,7 @@ export const LoginForm = () => {
 
   return (
     <>
-      <div className="h-36 flex items-center justify-center">
+      <div className="h-36 mt-6 mb-2 flex items-center justify-center">
         <LogoAndText />
       </div>
       <Formik

@@ -3,7 +3,7 @@ import { Form, Formik } from 'formik';
 import { Genre } from 'lib/graphql';
 import React, { useState } from 'react';
 import * as yup from 'yup';
-import Button from './Button';
+import { Button } from './Button';
 import { GenreSelector } from './GenreSelector';
 import { InputField } from './InputField';
 import { Title } from './Title';

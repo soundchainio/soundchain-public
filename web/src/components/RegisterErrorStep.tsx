@@ -1,6 +1,6 @@
 import { ApolloError } from '@apollo/client';
 import React from 'react';
-import Button from './Button';
+import { Button } from './Button';
 import { Subtitle } from './Subtitle';
 import { Title } from './Title';
 

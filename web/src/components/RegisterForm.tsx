@@ -6,7 +6,7 @@ import { useRegisterMutation } from 'lib/graphql';
 import React from 'react';
 import { handleRegex } from 'utils/Validation';
 import * as yup from 'yup';
-import Button from './Button';
+import { Button } from './Button';
 import { InputField } from './InputField';
 
 interface FormValues {
