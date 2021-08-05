@@ -3,6 +3,7 @@ import { NewPost } from 'icons/NewPost';
 import { Notification } from 'icons/Notification';
 import { Profile } from 'icons/Profile';
 import { Search } from 'icons/Search';
+import { setJwt } from 'lib/apollo';
 
 export const BottomNavBar = () => {
   return (
@@ -12,7 +13,7 @@ export const BottomNavBar = () => {
         <Search />
         <NewPost />
         <Notification />
-        <Profile />
+        <Profile onClick={() => setJwt()} />
       </div>
     </nav>
   );
