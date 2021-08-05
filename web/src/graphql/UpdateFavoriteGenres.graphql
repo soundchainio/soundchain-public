@@ -1,0 +1,8 @@
+mutation UpdateFavoriteGenres($input: UpdateFavoriteGenresInput!) {
+  updateFavoriteGenres(input: $input) {
+    profile {
+      id
+      favoriteGenres
+    }
+  }
+}
