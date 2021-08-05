@@ -1,30 +1,7 @@
-import { LoginIcon, UserAddIcon } from '@heroicons/react/outline';
-import { TabNav } from 'components/TabNav';
-import { useRouter } from 'next/router';
-
 export const LockedLayout: React.FC = ({ children }) => {
-  const router = useRouter();
-  const navTabs = [
-    {
-      name: 'Login',
-      href: '/login',
-      current: ['/login'].includes(router.asPath),
-      icon: LoginIcon,
-    },
-    {
-      name: 'Create Account',
-      href: '/create-account',
-      current: ['/create-account'].includes(router.asPath),
-      icon: UserAddIcon,
-    },
-  ];
-
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col sm:justify-center sm:py-12 sm:px-6 lg:px-8">
-      <div className="sm:block sm:mx-auto sm:w-full sm:max-w-lg py-4 sm:py-8 px-4 sm:px-10 space-y-12">
-        {navTabs.some(tab => tab.current) && <TabNav tabs={navTabs} className="text-xs" />}
-        {children}
-      </div>
+    <div className="min-h-screen flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
+      <div className="flex flex-1 flex-col sm:mx-auto sm:w-full sm:max-w-lg bg-gray-20">{children}</div>
     </div>
   );
 };

@@ -25,13 +25,14 @@ export default function ForgotPasswordPage() {
     <LockedLayout>
       <Title>Forgot Password</Title>
       <Formik initialValues={{ email: '' }} validationSchema={validationSchema} onSubmit={handleSubmit}>
-        <Form className="space-y-6">
-          <div className={error ? 'text-green-500' : 'text-gray-400'}>
-            {data && 'An email with a link to reset your password has been sent to you'}
-            {error && error.message}
+        <Form className="flex flex-1 flex-col">
+          <div className="space-y-6 mb-auto mt-6">
+            <div className={error ? 'text-green-500' : 'text-gray-400'}>
+              {data && 'An email with a link to reset your password has been sent to you'}
+              {error && error.message}
+            </div>
+            <InputField type="email" name="email" placeholder="Enter your email" />
           </div>
-          <InputField type="email" name="email" placeholder="Enter your email" />
-
           <Button type="submit" disabled={loading}>
             Reset Password
           </Button>
