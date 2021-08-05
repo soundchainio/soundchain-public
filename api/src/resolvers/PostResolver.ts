@@ -21,8 +21,11 @@ export class PostResolver {
   }
 
   @Query(() => [Post])
-  posts(): Promise<Post[]> {
-    return PostService.getPosts();
+  posts(
+    @Arg('limit', { nullable: true, defaultValue: 50 }) limit: number,
+    @Arg('skip', { nullable: true, defaultValue: 0 }) skip: number,
+  ): Promise<Post[]> {
+    return PostService.getPosts(limit, skip);
   }
 
   @Mutation(() => CreatePostPayload)
