@@ -1,8 +1,10 @@
 import { CompleteProfileForm } from 'components/CompleteProfileForm';
 import { RegisterEmailForm } from 'components/RegisterEmailForm';
+import { RegisterErrorStep } from 'components/RegisterErrorStep';
 import { SetupProfileForm } from 'components/SetupProfileForm';
 import { setJwt } from 'lib/apollo';
 import { Genre, RegisterInput, useRegisterMutation, useUpdateFavoriteGenresMutation } from 'lib/graphql';
+import { useRouter } from 'next/dist/client/router';
 import { useState } from 'react';
 
 interface RegistrationValues {
@@ -14,6 +16,7 @@ interface RegistrationValues {
 }
 
 export default function CreateAccountPage() {
+  const router = useRouter();
   const [step, setStep] = useState(0);
   const [registrationValues, setRegistrationValues] = useState<RegistrationValues>({});
   const [register, { loading, error }] = useRegisterMutation();
@@ -32,23 +35,25 @@ export default function CreateAccountPage() {
         });
         setJwt(result.data?.register.jwt);
         await updateGenres({ variables: { input: { favoriteGenres: favoriteGenres as Genre[] } } });
+        router.push('/');
       } catch (error) {
-        // handled by error state
+        setStep(-1);
       }
     }
   };
 
+  const onNextError = () => {
+    setStep(0);
+  };
+
   return (
-    <div className="min-h-screen flex flex-col px-6 lg:px-8 bg-black">
-      <div className="flex flex-1 flex-col sm:mx-auto sm:w-full sm:max-w-lg bg-black">
+    <div className="min-h-screen flex flex-col px-6 lg:px-8 bg-gray-20">
+      <div className="flex flex-1 flex-col sm:mx-auto sm:w-full sm:max-w-lg bg-gray-20">
         {step === 0 && <RegisterEmailForm onSubmit={onSubmit} />}
         {step === 1 && <SetupProfileForm onSubmit={onSubmit} />}
-        {step === 2 && (
-          <CompleteProfileForm
-            onSubmit={onSubmit}
-            loading={loading || loadingProfile}
-            error={error?.message || errorProfile?.message}
-          />
+        {step === 2 && <CompleteProfileForm onSubmit={onSubmit} loading={loading || loadingProfile} />}
+        {step === -1 && (error || errorProfile) && (
+          <RegisterErrorStep error={error || errorProfile} onNext={onNextError} />
         )}
       </div>
     </div>
