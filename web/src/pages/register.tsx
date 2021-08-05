@@ -1,9 +1,25 @@
-import Button from 'components/Button';
-import Link from 'components/Link';
+import { LoginIcon, UserAddIcon } from '@heroicons/react/outline';
+import { LockedLayout } from 'components/LockedLayout';
 import { RegisterForm } from 'components/RegisterForm';
+import { TabNav } from 'components/TabNav';
 import { useMe } from 'hooks/useMe';
 import { useRouter } from 'next/dist/client/router';
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
+
+const navTabs = [
+  {
+    name: 'Login',
+    href: '/login',
+    current: false,
+    icon: LoginIcon,
+  },
+  {
+    name: 'Create Account',
+    href: '/register',
+    current: true,
+    icon: UserAddIcon,
+  },
+];
 
 export default function SignUpPage() {
   const me = useMe();
@@ -16,17 +32,9 @@ export default function SignUpPage() {
   }, [me, router]);
 
   return (
-    <div className="container mx-auto">
-      <div className="mt-6 md:mt-12 flex flex-col items-center space-y-6 mb-6">
-        <div className="grid grid-cols-2 gap-6">
-          <Link buttonVariant="outlined" href="/login">
-            Login
-          </Link>
-          <Button>Create Account</Button>
-        </div>
-        <h1 className="text-2xl">Create your account</h1>
-        <RegisterForm />
-      </div>
-    </div>
+    <LockedLayout>
+      <TabNav tabs={navTabs} />
+      <RegisterForm />
+    </LockedLayout>
   );
 }
