@@ -7,7 +7,7 @@ export default function LoginPage() {
     <div className="container mx-auto">
       <div className="mt-6 md:mt-12 flex flex-col items-center space-y-6">
         <div className="grid grid-cols-2 gap-6">
-          <Button>Login</Button>
+          <Button>Soundchain - Login</Button>
           <Link buttonVariant="outlined" href="/register">
             Create Account
           </Link>
