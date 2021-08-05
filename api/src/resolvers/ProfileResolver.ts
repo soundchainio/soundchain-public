@@ -23,12 +23,8 @@ export class ProfileResolver {
     socialMedias: UpdateSocialMediasInput,
     @CurrentUser() { profileId }: User,
   ): Promise<UpdateSocialMediasPayload> {
-    try {
-      const profile = await ProfileService.updateSocialMedias(profileId, socialMedias);
-      return { profile };
-    } catch (err) {
-      throw new Error(`Error while updating profile: ${err.message}`);
-    }
+    const profile = await ProfileService.updateSocialMedias(profileId, socialMedias);
+    return { profile };
   }
 
   @Mutation(() => UpdateFavoriteGenresPayload)
@@ -38,11 +34,7 @@ export class ProfileResolver {
     { favoriteGenres }: UpdateFavoriteGenresInput,
     @CurrentUser() { profileId }: User,
   ): Promise<UpdateFavoriteGenresPayload> {
-    try {
-      const profile = await ProfileService.updateFavoriteGenres(profileId, favoriteGenres);
-      return { profile };
-    } catch (err) {
-      throw new Error(`Error while updating profile: ${err.message}`);
-    }
+    const profile = await ProfileService.updateFavoriteGenres(profileId, favoriteGenres);
+    return { profile };
   }
 }
