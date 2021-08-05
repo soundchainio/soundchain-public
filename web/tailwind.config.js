@@ -7,6 +7,13 @@ module.exports = {
       container: {
         center: true,
       },
+      colors: {
+        gray: {
+          20: '#202020',
+          30: '#303030',
+          80: '#808080',
+        },
+      },
     },
   },
   variants: {
