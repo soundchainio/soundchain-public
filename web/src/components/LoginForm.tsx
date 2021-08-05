@@ -47,11 +47,11 @@ export const LoginForm = () => {
           <InputField type="text" name="username" placeholder="Username or Email" icon={UserIcon} />
           <InputField type="password" name="password" placeholder="Password" icon={LockClosedIcon} />
           {error && <p>{error.message}</p>}
-          <div className="flex items-center justify-center">
+          <div>
             <Link href="/forgot-password">Forgot Password?</Link>
           </div>
         </div>
-        <Button type="submit" disabled={loading} className="w-full mt-12">
+        <Button type="submit" disabled={loading} className="mt-12 pinned-bottom-mobile">
           Login
         </Button>
       </Form>

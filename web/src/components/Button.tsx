@@ -21,7 +21,7 @@ function RainbowButton({ className, type = 'button', icon: Icon, children, ...re
   return (
     <div className={classNames(className, 'p-0.5 bg-rainbow-gradient')}>
       <button className={`${commonClasses} text-white bg-opacity-60 bg-black w-full h-full`} type={type} {...rest}>
-        {Icon && <Icon className="hidden sm:block mr-1 h-5 w-5" />}
+        {Icon && <Icon className="mr-1 h-5 w-5" />}
         <span>{children}</span>
       </button>
     </div>
