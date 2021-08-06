@@ -4,6 +4,7 @@ import { LockedLayout } from 'components/LockedLayout';
 import { Title } from 'components/Title';
 import { Form, Formik, FormikHelpers } from 'formik';
 import { GetServerSideProps } from 'next';
+import Head from 'next/head';
 import * as yup from 'yup';
 import { apolloClient } from '../lib/apollo';
 import {
@@ -58,6 +59,11 @@ export default function ResetPasswordPage({ token }: ResetPasswordPageProps) {
 
   return (
     <LockedLayout>
+      <Head>
+        <title>Soundchain - Reset Password</title>
+        <meta name="description" content="Soundchain" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
       <Title>Reset Password</Title>
       <Formik
         initialValues={{ password: '', passwordConfirmation: '' }}

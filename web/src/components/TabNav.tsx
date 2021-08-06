@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import NextLink from 'next/link';
+import { useRouter } from 'next/router';
 import { Button } from './Button';
 
 type TabConfig = {
@@ -21,9 +21,10 @@ export const TabNav: React.FC<TabNavProps> = ({ tabs, className }) => {
   );
 };
 
-function Tab(tab: TabConfig) {
+const Tab = (tab: TabConfig) => {
+  const router = useRouter();
   return (
-    <NextLink key={tab.name} href={tab.href}>
+    <div key={tab.name} onClick={() => router.push(tab.href)} className="w-full">
       {tab.current ? (
         <Button icon={tab.icon} variant="raibow-xs" className="w-full">
           {tab.name}
@@ -34,6 +35,6 @@ function Tab(tab: TabConfig) {
           <span>{tab.name}</span>
         </div>
       )}
-    </NextLink>
+    </div>
   );
-}
+};

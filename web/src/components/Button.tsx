@@ -8,6 +8,7 @@ export type ButtonVariant = 'rainbow' | 'outline' | 'raibow-xs' | 'raibow-rounde
 export interface ButtonProps extends React.ComponentPropsWithoutRef<'button'> {
   variant?: ButtonVariant;
   icon?: (props: React.ComponentProps<'svg'>) => JSX.Element;
+  loading?: boolean;
 }
 
 export const commonClasses = 'flex items-center justify-center uppercase w-full h-full';
