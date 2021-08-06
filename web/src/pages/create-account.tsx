@@ -4,11 +4,12 @@ import { LoginNavBar } from 'components/LoginNavBar';
 import { RegisterEmailForm } from 'components/RegisterEmailForm';
 import { RegisterErrorStep } from 'components/RegisterErrorStep';
 import { SetupProfileForm } from 'components/SetupProfileForm';
+import { useMe } from 'hooks/useMe';
 import { setJwt } from 'lib/apollo';
 import { Genre, RegisterInput, useRegisterMutation, useUpdateFavoriteGenresMutation } from 'lib/graphql';
 import { useRouter } from 'next/dist/client/router';
 import Head from 'next/head';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface RegistrationValues {
   handle?: string;
@@ -23,7 +24,17 @@ export default function CreateAccountPage() {
   const [step, setStep] = useState(0);
   const [registrationValues, setRegistrationValues] = useState<RegistrationValues>({});
   const [register, { loading, error }] = useRegisterMutation();
-  const [updateGenres, { loading: loadingProfile, error: errorProfile }] = useUpdateFavoriteGenresMutation();
+  const [updateGenres] = useUpdateFavoriteGenresMutation();
+  const [genres, setGenres] = useState<Genre[]>([]);
+
+  const me = useMe();
+
+  useEffect(() => {
+    if (me) {
+      updateGenres({ variables: { input: { favoriteGenres: genres } } });
+      router.push(router.query.callbackUrl?.toString() ?? '/');
+    }
+  }, [genres, me, router, updateGenres]);
 
   const onSubmit = async (input: RegistrationValues) => {
     const newValues = { ...registrationValues, ...input };
@@ -32,12 +43,11 @@ export default function CreateAccountPage() {
     else {
       try {
         const { email, handle, displayName, password, favoriteGenres } = newValues;
+        setGenres(favoriteGenres as Genre[]);
         const result = await register({
           variables: { input: { email, displayName, handle, password } as RegisterInput },
         });
         setJwt(result.data?.register.jwt);
-        await updateGenres({ variables: { input: { favoriteGenres: favoriteGenres as Genre[] } } });
-        router.push('/');
       } catch (error) {
         setStep(-1);
       }
@@ -58,10 +68,8 @@ export default function CreateAccountPage() {
       <LoginNavBar />
       {step === 0 && <RegisterEmailForm onSubmit={onSubmit} />}
       {step === 1 && <SetupProfileForm onSubmit={onSubmit} />}
-      {step === 2 && <CompleteProfileForm onSubmit={onSubmit} loading={loading || loadingProfile} />}
-      {step === -1 && (error || errorProfile) && (
-        <RegisterErrorStep error={error || errorProfile} onBack={onBackError} />
-      )}
+      {step === 2 && <CompleteProfileForm onSubmit={onSubmit} loading={loading} />}
+      {step === -1 && error && <RegisterErrorStep error={error} onBack={onBackError} />}
     </LockedLayout>
   );
 }
