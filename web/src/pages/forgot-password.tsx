@@ -3,6 +3,7 @@ import { InputField } from 'components/InputField';
 import { LockedLayout } from 'components/LockedLayout';
 import { Title } from 'components/Title';
 import { Form, Formik, FormikHelpers } from 'formik';
+import Head from 'next/head';
 import * as yup from 'yup';
 import { useForgotPasswordMutation } from '../lib/graphql';
 
@@ -23,6 +24,11 @@ export default function ForgotPasswordPage() {
 
   return (
     <LockedLayout>
+      <Head>
+        <title>Soundchain - Forgot Password</title>
+        <meta name="description" content="Soundchain" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
       <Title>Forgot Password</Title>
       <Formik initialValues={{ email: '' }} validationSchema={validationSchema} onSubmit={handleSubmit}>
         <Form className="flex flex-1 flex-col">
