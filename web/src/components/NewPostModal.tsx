@@ -2,7 +2,7 @@ import { Button } from 'components/Button';
 import { BaseEmoji, Picker } from 'emoji-mart';
 import 'emoji-mart/css/emoji-mart.css';
 import { Field, Form, Formik, FormikHelpers } from 'formik';
-import { default as React, useEffect, useState } from 'react';
+import { default as React, useState } from 'react';
 import * as yup from 'yup';
 import { useCreatePostMutation } from '../lib/graphql';
 
@@ -16,22 +16,17 @@ interface FormValues {
 }
 
 const postSchema: yup.SchemaOf<FormValues> = yup.object().shape({
-  body: yup.string().required().max(160),
+  body: yup.string().required(),
 });
 
 const baseClasses =
   'absolute w-screen h-screen bottom-0 duration-500 bg-opacity-75 ease-in-out bg-gray-25 transform-gpu transform';
 
+const maxLength = 160;
+
 export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps) => {
   const [isEmojiPickerVisible, setEmojiPickerVisible] = useState(false);
-  const [createPost, { loading, error }] = useCreatePostMutation({ refetchQueries: ['Posts'] });
-
-  useEffect(() => {
-    if (!showNewPost) {
-      setEmojiPickerVisible(false);
-      setShowNewPost(false);
-    }
-  }, [showNewPost]);
+  const [createPost] = useCreatePostMutation({ refetchQueries: ['Posts'] });
 
   const cancel = () => {
     setShowNewPost(false);
@@ -63,7 +58,7 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
             <Field
               component="textarea"
               name="body"
-              className="w-full h-24 resize-none bg-gray-20 border-none focus:outline-none outline-none text-white flex-auto"
+              className="w-full h-24 resize-none focus:ring-0 bg-gray-20 border-none focus:outline-none outline-none text-white flex-auto"
               placeholder="What's happening?"
               maxLength="160"
             />
@@ -74,14 +69,20 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
                   {isEmojiPickerVisible ? '❌' : '😃'}
                 </span>
               </div>
-              <div className="justify-self-end flex-1 text-right text-gray-400">{values.body.length} / 160</div>
+              <div className="justify-self-end flex-1 text-right text-gray-400">
+                {values.body.match(/./gu)?.length || 0} / {maxLength}
+              </div>
 
               {isEmojiPickerVisible && (
                 <div className="fixed left-12 bottom-0">
                   <Picker
                     theme="dark"
                     perLine={8}
-                    onSelect={(emoji: BaseEmoji) => setFieldValue('body', `${values.body}${emoji.native}`)}
+                    onSelect={(emoji: BaseEmoji) => {
+                      if ((values.body.match(/./gu)?.length || 0) < maxLength) {
+                        setFieldValue('body', `${values.body}${emoji.native}`);
+                      }
+                    }}
                   />
                 </div>
               )}

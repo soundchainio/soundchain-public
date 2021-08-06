@@ -8,7 +8,7 @@ export default function Feed() {
   return (
     <div className="flex flex-col min-h-screen">
       <TopNavBar />
-      <div className="bg-custom-black-10 flex flex-1 flex-col pt-3 pb-20 overflow-scroll">
+      <div className="bg-custom-black-10 flex flex-1 flex-col pt-3 pb-20">
         {loading && <p>Loading...</p>}
         {error && <p>{error.message}</p>}
         <div className="space-y-3">
