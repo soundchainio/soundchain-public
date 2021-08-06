@@ -1,6 +1,7 @@
 import { BaseEmoji, Picker } from 'emoji-mart';
 import 'emoji-mart/css/emoji-mart.css';
-import { ErrorMessage, Field, Form, Formik, FormikHelpers } from 'formik';
+import { ErrorMessage, Field, Form, Formik } from 'formik';
+import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import * as yup from 'yup';
 import { useCreatePostMutation } from '../lib/graphql';
@@ -15,12 +16,14 @@ const postSchema: yup.SchemaOf<FormValues> = yup.object().shape({
 });
 
 export const PostInput = () => {
+  const router = useRouter();
   const [isEmojiPickerVisible, setEmojiPickerVisible] = useState(false);
   const [createPost, { loading, error }] = useCreatePostMutation({ refetchQueries: ['Posts'] });
 
-  const handleSubmit = (values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
+  const handleSubmit = async (values: FormValues) => {
     setEmojiPickerVisible(false);
-    createPost({ variables: { input: values } }).then(() => resetForm());
+    await createPost({ variables: { input: values } });
+    router.push('/');
   };
 
   return (
@@ -30,7 +33,7 @@ export const PostInput = () => {
           <Field
             component="textarea"
             name="body"
-            className="w-full h-24 resize-none border-0 bg-custom-black-10"
+            className="w-full h-24 resize-none border-0 bg-custom-black-10 text-white"
             placeholder="What's happening?"
           />
           <div className="relative mt-4 flex justify-end mb-auto">

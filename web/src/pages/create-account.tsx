@@ -7,6 +7,7 @@ import { SetupProfileForm } from 'components/SetupProfileForm';
 import { setJwt } from 'lib/apollo';
 import { Genre, RegisterInput, useRegisterMutation, useUpdateFavoriteGenresMutation } from 'lib/graphql';
 import { useRouter } from 'next/dist/client/router';
+import Head from 'next/head';
 import { useState } from 'react';
 
 interface RegistrationValues {
@@ -49,6 +50,11 @@ export default function CreateAccountPage() {
 
   return (
     <LockedLayout>
+      <Head>
+        <title>Soundchain - Create Account</title>
+        <meta name="description" content="Soundchain" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
       <LoginNavBar />
       {step === 0 && <RegisterEmailForm onSubmit={onSubmit} />}
       {step === 1 && <SetupProfileForm onSubmit={onSubmit} />}
