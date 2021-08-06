@@ -61,7 +61,7 @@ export const LoginForm = () => {
               </Link>
             </div>
           </div>
-          <Button type="submit" disabled={loading} className="w-full mt-12">
+          <Button type="submit" disabled={loading} loading={loading} className="w-full mt-12">
             Login
           </Button>
         </Form>
