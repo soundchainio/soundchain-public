@@ -5,7 +5,7 @@ interface PostLikeOptionsProps {
   likeOptionsOpened: boolean;
 }
 
-const baseClasses = 'list-none flex absolute duration-300 ease-in-out bg-gray-25 transform-gpu transform w-3/4 right-0';
+const baseClasses = 'list-none flex absolute duration-500 ease-in-out bg-gray-25 transform-gpu transform w-3/4 right-0';
 const likeOptions = ['❤️', '🤘', '😃', '😢', '😎'];
 
 export const PostLikeOptions = ({ setLikeOptionsOpened, likeOptionsOpened }: PostLikeOptionsProps) => {

@@ -13,15 +13,15 @@ export const BottomNavBar = () => {
   return (
     <>
       <nav className="bg-gray-20 h-16 flex items-center fixed bottom-0 inset-x-0 shadow-2xl">
-        <div className="w-full flex justify-around">
+        <div className="w-full flex justify-around relative">
           <Home activated />
           <Search />
           <NewPost onClick={() => setShowNewPost(!showNewPost)} />
           <Notification />
           <Profile onClick={() => setJwt()} />
+          <NewPostModal setShowNewPost={setShowNewPost} showNewPost={showNewPost} />
         </div>
       </nav>
-      <NewPostModal setShowNewPost={setShowNewPost} showNewPost={showNewPost} />
     </>
   );
 };

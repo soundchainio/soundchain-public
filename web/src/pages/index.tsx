@@ -1,7 +1,7 @@
 import { BottomNavBar } from 'components/BottomNavBar';
+import { Post } from 'components/Post';
 import { TopNavBar } from 'components/TopNavBar';
 import { usePostsQuery } from 'lib/graphql';
-import { Post } from 'components/Post';
 
 export default function Feed() {
   const { loading, error, data } = usePostsQuery();
