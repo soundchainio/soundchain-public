@@ -7,6 +7,7 @@ import { Button } from './Button';
 export const TopNavBar = () => {
   const router = useRouter();
   const me = useMe();
+
   return (
     <nav className="bg-gray-20">
       <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
