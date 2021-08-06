@@ -47,3 +47,13 @@
 body {
   font-family: 'Metropolis';
 }
+
+.bg-rainbow-gradient {
+  background: linear-gradient(90deg, #26d1a8 0%, #ac4efd 25%, #fed503 75%, #fe5540 100%);
+}
+
+@layer utilities {
+  .placeholder-semibold::placeholder {
+    @apply font-semibold;
+  }
+}

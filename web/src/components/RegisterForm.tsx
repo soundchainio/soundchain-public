@@ -6,7 +6,7 @@ import { useRegisterMutation } from 'lib/graphql';
 import React from 'react';
 import { handleRegex } from 'utils/Validation';
 import * as yup from 'yup';
-import Button from './Button';
+import { Button } from './Button';
 import { InputField } from './InputField';
 
 interface FormValues {
@@ -59,7 +59,7 @@ export const RegisterForm = () => {
         <InputField type="password" name="password" placeholder="Password" icon={LockClosedIcon} />
         <InputField type="password" name="passwordConfirmation" placeholder="Confirm Password" icon={LockClosedIcon} />
         {error && <p>{error.message}</p>}
-        <Button variant="outlined" type="submit" disabled={loading}>
+        <Button type="submit" disabled={loading}>
           Create Account
         </Button>
       </Form>

@@ -1,9 +1,9 @@
-import { LockClosedIcon, UserIcon } from '@heroicons/react/solid';
-import Button from 'components/Button';
+import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
 import Link from 'components/Link';
 import { Form, Formik } from 'formik';
 import { useMe } from 'hooks/useMe';
+import { LogoAndText } from 'icons/LogoAndText';
 import { setJwt } from 'lib/apollo';
 import { useLoginMutation } from 'lib/graphql';
 import { useRouter } from 'next/dist/client/router';
@@ -41,20 +41,31 @@ export const LoginForm = () => {
   }
 
   return (
-    <Formik initialValues={{ username: '', password: '' }} validationSchema={validationSchema} onSubmit={handleSubmit}>
-      <Form className="space-y-6">
-        <InputField label="Username" type="text" name="username" placeholder="username" icon={UserIcon} />
-        <InputField label="Password" type="password" name="password" placeholder="password" icon={LockClosedIcon} />
-        {error && <p>{error.message}</p>}
-        <div className="flex items-center justify-end text-sm">
-          <Link href="/forgot-password" className="font-medium text-green-500">
-            Forgot password?
-          </Link>
-        </div>
-        <Button variant="outlined" type="submit" disabled={loading} className="w-full">
-          Login
-        </Button>
-      </Form>
-    </Formik>
+    <>
+      <div className="h-36 mt-6 mb-2 flex items-center justify-center">
+        <LogoAndText />
+      </div>
+      <Formik
+        initialValues={{ username: '', password: '' }}
+        validationSchema={validationSchema}
+        onSubmit={handleSubmit}
+      >
+        <Form className="flex flex-1 flex-col">
+          <div className="space-y-6 mb-auto">
+            <InputField type="text" name="username" placeholder="Username or Email Address" />
+            <InputField type="password" name="password" placeholder="Password" />
+            {error && <p>{error.message}</p>}
+            <div>
+              <Link href="/forgot-password" className="text-left">
+                Forgot Password?
+              </Link>
+            </div>
+          </div>
+          <Button type="submit" disabled={loading} className="w-full mt-12">
+            Login
+          </Button>
+        </Form>
+      </Formik>
+    </>
   );
 };

@@ -1,18 +1,23 @@
-import classNames from 'classnames';
+import { OutlineButton } from './Buttons/Outline';
+import { RainbowButton } from './Buttons/Raibow';
+import { RainbowXSButton } from './Buttons/RaibowXS';
 
-export type ButtonVariant = 'default' | 'outlined';
+export type ButtonVariant = 'rainbow' | 'outline' | 'raibow-xs';
 
 export interface ButtonProps extends React.ComponentPropsWithoutRef<'button'> {
   variant?: ButtonVariant;
+  icon?: (props: React.ComponentProps<'svg'>) => JSX.Element;
+  loading?: boolean;
 }
 
-const commonClasses = 'inline-block px-4 py-3 text-center';
+export const commonClasses = 'flex items-center justify-center uppercase w-full h-full';
 
-export const buttonClassesByVariant: Record<ButtonVariant, string> = {
-  default: `${commonClasses} bg-black text-white`,
-  outlined: `${commonClasses} border-2 border-green-500 text-green-500 bg-gray-800`,
+export const buttonByVariant: Record<ButtonVariant, (props: ButtonProps) => JSX.Element> = {
+  rainbow: RainbowButton,
+  outline: OutlineButton,
+  'raibow-xs': RainbowXSButton,
 };
 
-export default function Button({ className, variant = 'default', type = 'button', ...rest }: ButtonProps) {
-  return <button className={classNames(className, buttonClassesByVariant[variant])} type={type} {...rest} />;
-}
+export const Button = ({ variant = 'rainbow', ...props }: ButtonProps) => {
+  return buttonByVariant[variant](props);
+};

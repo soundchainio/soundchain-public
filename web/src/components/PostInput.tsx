@@ -4,7 +4,7 @@ import { ErrorMessage, Field, Form, Formik, FormikHelpers } from 'formik';
 import React, { useState } from 'react';
 import * as yup from 'yup';
 import { useCreatePostMutation } from '../lib/graphql';
-import Button from './Button';
+import { Button } from './Button';
 
 interface FormValues {
   body: string;
@@ -24,38 +24,36 @@ export const PostInput = () => {
   };
 
   return (
-    <>
-      <Formik initialValues={{ body: '' }} validationSchema={postSchema} onSubmit={handleSubmit}>
-        {({ values, setFieldValue }) => (
-          <Form className="flex flex-col">
-            <Field
-              component="textarea"
-              name="body"
-              className="w-full h-24 resize-none"
-              placeholder="Share your opinion"
-            />
+    <Formik initialValues={{ body: '' }} validationSchema={postSchema} onSubmit={handleSubmit}>
+      {({ values, setFieldValue }) => (
+        <Form className="flex flex-col flex-1">
+          <Field
+            component="textarea"
+            name="body"
+            className="w-full h-24 resize-none border-0 bg-custom-black-10"
+            placeholder="What's happening?"
+          />
+          <div className="relative mt-4 flex justify-end mb-auto">
+            <ErrorMessage name="body" className="flex-1" />
+            {error && <p className="flex-1">{error.message}</p>}
 
-            <div className="relative mt-4 flex justify-end">
-              <ErrorMessage name="body" className="flex-1" />
-              {error && <p className="flex-1">{error.message}</p>}
-
-              <Button onClick={() => setEmojiPickerVisible(!isEmojiPickerVisible)}>
-                {isEmojiPickerVisible ? 'Close' : 'Emoji'}
-              </Button>
-
-              <Button type="submit" disabled={loading} className="ml-4">
-                Share
-              </Button>
-
-              {isEmojiPickerVisible && (
-                <div className="absolute right-0 top-14">
-                  <Picker onSelect={(emoji: BaseEmoji) => setFieldValue('body', `${values.body}${emoji.native}`)} />
-                </div>
-              )}
-            </div>
-          </Form>
-        )}
-      </Formik>
-    </>
+            <Button onClick={() => setEmojiPickerVisible(!isEmojiPickerVisible)} className="w-24" variant="raibow-xs">
+              {isEmojiPickerVisible ? 'Close' : 'Emoji'}
+            </Button>
+            {isEmojiPickerVisible && (
+              <div className="absolute right-0 top-14">
+                <Picker
+                  onSelect={(emoji: BaseEmoji) => setFieldValue('body', `${values.body}${emoji.native}`)}
+                  theme="dark"
+                />
+              </div>
+            )}
+          </div>
+          <Button type="submit" disabled={loading}>
+            Share
+          </Button>
+        </Form>
+      )}
+    </Formik>
   );
 };

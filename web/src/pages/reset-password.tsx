@@ -1,4 +1,8 @@
-import { ErrorMessage, Field, Form, Formik, FormikHelpers } from 'formik';
+import { Button } from 'components/Button';
+import { InputField } from 'components/InputField';
+import { LockedLayout } from 'components/LockedLayout';
+import { Title } from 'components/Title';
+import { Form, Formik, FormikHelpers } from 'formik';
 import { GetServerSideProps } from 'next';
 import * as yup from 'yup';
 import { apolloClient } from '../lib/apollo';
@@ -53,24 +57,27 @@ export default function ResetPasswordPage({ token }: ResetPasswordPageProps) {
   };
 
   return (
-    <div>
-      {data && 'Your password has been reset'}
-      {error && error.message}
+    <LockedLayout>
+      <Title>Reset Password</Title>
       <Formik
         initialValues={{ password: '', passwordConfirmation: '' }}
         validationSchema={validationSchema}
         onSubmit={handleSubmit}
       >
-        <Form>
-          <Field type="password" name="password" />
-          <ErrorMessage name="password" />
-          <Field type="password" name="passwordConfirmation" />
-          <ErrorMessage name="passwordConfirmation" />
-          <button type="submit" disabled={loading}>
-            Change password
-          </button>
+        <Form className="flex flex-1 flex-col">
+          <div className={error ? 'text-green-500' : 'text-gray-400'}>
+            {data && 'Your password has been reset'}
+            {error && error.message}
+          </div>
+          <div className="space-y-6 mb-auto mt-6">
+            <InputField type="password" name="password" placeholder="New Password" />
+            <InputField type="password" name="passwordConfirmation" placeholder="Confirm your New Password" />
+          </div>
+          <Button type="submit" disabled={loading}>
+            Reset Password
+          </Button>
         </Form>
       </Formik>
-    </div>
+    </LockedLayout>
   );
 }
