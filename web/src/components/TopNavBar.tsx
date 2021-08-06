@@ -1,11 +1,13 @@
 import { MenuIcon } from '@heroicons/react/outline';
 import { useMe } from 'hooks/useMe';
 import { Logo } from 'icons/Logo';
+import { useRouter } from 'next/router';
 import { Button } from './Button';
-import NextLink from 'next/link';
 
 export const TopNavBar = () => {
+  const router = useRouter();
   const me = useMe();
+
   return (
     <nav className="bg-gray-20">
       <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
@@ -25,12 +27,12 @@ export const TopNavBar = () => {
           ) : (
             <div className="flex-1 flex items-start sm:items-stretch justify-start">
               <div className="flex-shrink-0 flex items-center">
-                <NextLink href="/login">
-                  <Button variant="outline">Login</Button>
-                </NextLink>
-                <NextLink href="/create-account">
-                  <Button variant="outline">Create Account</Button>
-                </NextLink>
+                <Button variant="outline" onClick={() => router.push('/login')}>
+                  Login
+                </Button>
+                <Button variant="outline" onClick={() => router.push('/create-account')}>
+                  Create Account
+                </Button>
               </div>
             </div>
           )}

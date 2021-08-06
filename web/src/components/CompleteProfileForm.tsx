@@ -63,7 +63,7 @@ export const CompleteProfileForm = ({ onSubmit, loading }: FormProps) => {
             />
             <GenreSelector onSelect={setFavoriteGenres} />
           </div>
-          <Button type="submit" disabled={loading}>
+          <Button type="submit" disabled={loading} loading={loading}>
             NEXT
           </Button>
         </Form>
