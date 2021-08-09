@@ -68,9 +68,7 @@ export const GenreSelector = ({ onSelect }: GenreSelectorProps) => {
 
   const getNumberOfSelectedGenres = () => {
     const numberOfSelectedGenres = selectedGenres.length;
-    if (numberOfSelectedGenres) {
-      return `(${numberOfSelectedGenres} Selected)`;
-    }
+    if (numberOfSelectedGenres) return `(${numberOfSelectedGenres} Selected)`;
   };
 
   return (
