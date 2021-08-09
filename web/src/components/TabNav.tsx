@@ -26,7 +26,7 @@ const Tab = (tab: TabConfig) => {
   return (
     <div key={tab.name} onClick={() => router.push(tab.href)} className="w-full">
       {tab.current ? (
-        <Button icon={tab.icon} variant="raibow-xs" className="w-full">
+        <Button icon={tab.icon} variant="rainbow-xs" className="w-full">
           {tab.name}
         </Button>
       ) : (

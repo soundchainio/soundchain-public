@@ -14,7 +14,7 @@ export default function Feed() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <TopNavBar />
-      <div className="bg-custom-black-10 flex flex-1 flex-col pt-3 pb-20 overflow-scroll">
+      <div className="bg-custom-black-10 flex flex-1 flex-col pt-3 pb-20">
         {loading && <p>Loading...</p>}
         {error && <p>{error.message}</p>}
         <div className="space-y-3">
