@@ -48,7 +48,7 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
     setShowNewPost(false);
   };
 
-  const handleSelectEmoji = (emoji: BaseEmoji, values: any, setFieldValue: Function) => {
+  const handleSelectEmoji = (emoji: BaseEmoji, values: any, setFieldValue: (val: string, newVal: string) => void) => {
     if ((values.body.match(/./gu)?.length || 0) < maxLength) {
       setFieldValue('body', `${values.body}${emoji.native}`);
     }
