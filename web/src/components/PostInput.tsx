@@ -40,7 +40,7 @@ export const PostInput = () => {
             <ErrorMessage name="body" className="flex-1" />
             {error && <p className="flex-1">{error.message}</p>}
 
-            <Button onClick={() => setEmojiPickerVisible(!isEmojiPickerVisible)} className="w-24" variant="raibow-xs">
+            <Button onClick={() => setEmojiPickerVisible(!isEmojiPickerVisible)} className="w-24" variant="rainbow-xs">
               {isEmojiPickerVisible ? 'Close' : 'Emoji'}
             </Button>
             {isEmojiPickerVisible && (

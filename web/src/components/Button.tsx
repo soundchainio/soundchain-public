@@ -1,9 +1,9 @@
 import { OutlineButton } from './Buttons/Outline';
-import { RainbowButton } from './Buttons/Raibow';
-import { RainbowRounded } from './Buttons/RaibowRounded';
-import { RainbowXSButton } from './Buttons/RaibowXS';
+import { RainbowButton } from './Buttons/Rainbow';
+import { RainbowRounded } from './Buttons/RainbowRounded';
+import { RainbowXSButton } from './Buttons/RainbowXS';
 
-export type ButtonVariant = 'rainbow' | 'outline' | 'raibow-xs' | 'raibow-rounded';
+export type ButtonVariant = 'rainbow' | 'outline' | 'rainbow-xs' | 'rainbow-rounded';
 
 export interface ButtonProps extends React.ComponentPropsWithoutRef<'button'> {
   variant?: ButtonVariant;
@@ -16,8 +16,8 @@ export const commonClasses = 'flex items-center justify-center uppercase w-full 
 export const buttonByVariant: Record<ButtonVariant, (props: ButtonProps) => JSX.Element> = {
   rainbow: RainbowButton,
   outline: OutlineButton,
-  'raibow-rounded': RainbowRounded,
-  'raibow-xs': RainbowXSButton,
+  'rainbow-rounded': RainbowRounded,
+  'rainbow-xs': RainbowXSButton,
 };
 
 export const Button = ({ variant = 'rainbow', ...props }: ButtonProps) => {
