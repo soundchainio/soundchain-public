@@ -3,7 +3,9 @@ query Posts {
     id
     body
     profile {
+      id
       displayName
+      profilePicture
     }
     createdAt
   }

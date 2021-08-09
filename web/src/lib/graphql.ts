@@ -165,11 +165,10 @@ export type MutationResetPasswordArgs = {
 export type Post = {
   __typename?: 'Post';
   id: Scalars['ID'];
-  profileId: Scalars['String'];
+  profile: Profile;
   body: Scalars['String'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
-  profile: Profile;
   comments: Array<Comment>;
 };
 
@@ -382,15 +381,8 @@ export type PostQuery = (
     & Pick<Post, 'id' | 'body' | 'createdAt'>
     & { profile: (
       { __typename?: 'Profile' }
-      & Pick<Profile, 'displayName' | 'profilePicture'>
-    ), comments: Array<(
-      { __typename?: 'Comment' }
-      & Pick<Comment, 'id' | 'body' | 'createdAt'>
-      & { profile: (
-        { __typename?: 'Profile' }
-        & Pick<Profile, 'displayName' | 'profilePicture'>
-      ) }
-    )> }
+      & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
+    ) }
   ) }
 );
 
@@ -404,7 +396,7 @@ export type PostsQuery = (
     & Pick<Post, 'id' | 'body' | 'createdAt'>
     & { profile: (
       { __typename?: 'Profile' }
-      & Pick<Profile, 'displayName'>
+      & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
     ) }
   )> }
 );
@@ -721,17 +713,9 @@ export const PostDocument = gql`
     body
     createdAt
     profile {
+      id
       displayName
       profilePicture
-    }
-    comments {
-      id
-      body
-      createdAt
-      profile {
-        displayName
-        profilePicture
-      }
     }
   }
 }
@@ -770,7 +754,9 @@ export const PostsDocument = gql`
     id
     body
     profile {
+      id
       displayName
+      profilePicture
     }
     createdAt
   }

@@ -4,17 +4,9 @@ query Post($id: String!) {
     body
     createdAt
     profile {
+      id
       displayName
       profilePicture
-    }
-    comments {
-      id
-      body
-      createdAt
-      profile {
-        displayName
-        profilePicture
-      }
     }
   }
 }

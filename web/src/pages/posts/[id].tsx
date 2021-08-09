@@ -1,19 +1,22 @@
 import { Layout } from 'components/Layout';
-import { NewCommentForm } from 'components/NewCommentForm';
-import { apolloClient } from 'lib/apollo';
-import { PostDocument, PostQuery } from 'lib/graphql';
-import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
+import { Post } from 'components/Post';
+import { useRouter } from 'next/router';
 
-export const getServerSideProps: GetServerSideProps = async ({ params }) => {
-  const { data: post } = await apolloClient.query<PostQuery>({ query: PostDocument, variables: { id: params?.id } });
-  return { props: { post } };
-};
+// export const getServerSideProps: GetServerSideProps = async context => {
+//   const { data: post } = await apolloClient.query<PostQuery>({
+//     query: PostDocument,
+//     variables: { id: context.params?.id },
+//     context,
+//   });
+//   return { props: { post } };
+// };
 
-export default function PostPage({ post }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+export default function PostPage() {
+  const router = useRouter();
+
   return (
     <Layout>
-      <div>{post.body}</div>
-      <NewCommentForm post={post.id} />
+      <Post id={router.query.id as string} />
     </Layout>
   );
 }

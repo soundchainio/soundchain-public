@@ -14,7 +14,7 @@ import { ProfileService } from '../services/ProfileService';
 export class PostResolver {
   @FieldResolver(() => Profile)
   profile(@Root() post: Post): Promise<Profile> {
-    return ProfileService.getProfile(post.profileId);
+    return ProfileService.getProfile(post.profile);
   }
 
   @FieldResolver(() => [Comment])
