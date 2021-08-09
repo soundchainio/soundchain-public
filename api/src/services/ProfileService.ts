@@ -1,11 +1,12 @@
+import { Ref } from '@typegoose/typegoose';
 import { UserInputError } from 'apollo-server-express';
 import { Genre } from '../enums/Genres';
 import { Profile, ProfileModel } from '../models/Profile';
 import { SocialMedias } from '../models/SocialMedias';
 
 export class ProfileService {
-  static getProfile(id: string): Promise<Profile> {
-    return ProfileModel.findByIdOrFail(id);
+  static getProfile(id: string | Ref<Profile>): Promise<Profile> {
+    return ProfileModel.findByIdOrFail(id as string);
   }
 
   static async updateSocialMedias(id: string, socialMedias: SocialMedias): Promise<Profile> {

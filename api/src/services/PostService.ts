@@ -1,3 +1,4 @@
+import { Ref } from '@typegoose/typegoose';
 import Post, { PostModel } from '../models/Post';
 
 export class PostService {
@@ -11,7 +12,7 @@ export class PostService {
     return PostModel.find().sort({ createdAt: 'desc' }).limit(limit).skip(skip).exec();
   }
 
-  static getPost(id: string): Promise<Post> {
-    return PostModel.findByIdOrFail(id);
+  static getPost(id: string | Ref<Post>): Promise<Post> {
+    return PostModel.findByIdOrFail(id as string);
   }
 }

@@ -1,6 +1,7 @@
 import { getModelForClass, prop, Ref } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import Model from './Model';
+import Post from './Post';
 import { Profile } from './Profile';
 
 @ObjectType()
@@ -11,6 +12,10 @@ export class Comment extends Model {
   @Field()
   @prop({ required: true })
   body: string;
+
+  @Field(() => Post)
+  @prop({ required: true, ref: () => Post })
+  post: Ref<Post>;
 
   @Field(() => Profile)
   @prop({ required: true, ref: () => Profile })

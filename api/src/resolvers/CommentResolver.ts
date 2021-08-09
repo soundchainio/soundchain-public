@@ -1,28 +1,40 @@
-import { Arg, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
+import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
+import { CurrentUser } from '../middlewares/decorators/current-user';
 import { Comment } from '../models/Comment';
+import Post from '../models/Post';
 import { Profile } from '../models/Profile';
+import User from '../models/User';
 import { CommentService } from '../services/CommentService';
+import { PostService } from '../services/PostService';
 import { ProfileService } from '../services/ProfileService';
-import Context from '../types/Context';
-import AddCommentInput from './types/AddCommentInput';
-import AddCommentPayload from './types/AddCommentPayload';
+import { AddCommentInput } from './types/AddCommentInput';
+import { AddCommentPayload } from './types/AddCommentPayload';
 
 @Resolver(Comment)
 export class CommentResolver {
-  @FieldResolver(() => Profile)
-  async profile(@Root() comment: Comment): Promise<Profile> {
-    return ProfileService.getProfile(comment.profile as string);
+  @FieldResolver(() => Post)
+  post(@Root() comment: Comment): Promise<Post> {
+    return PostService.getPost(comment.post);
   }
 
+  @FieldResolver(() => Profile)
+  profile(@Root() comment: Comment): Promise<Profile> {
+    return ProfileService.getProfile(comment.profile);
+  }
+
+  @Authorized()
   @Query(() => Comment)
   comment(@Arg('id') id: string): Promise<Comment> {
     return CommentService.getComment(id);
   }
 
+  @Authorized()
   @Mutation(() => AddCommentPayload)
-  async addComment(@Arg('input') input: AddCommentInput, @Ctx() context: Context): Promise<AddCommentPayload> {
-    const user = await context.user;
-    const comment = await CommentService.createComment({ profile: user?.profileId, ...input });
+  async addComment(
+    @Arg('input') input: AddCommentInput,
+    @Ctx() @CurrentUser() { profileId }: User,
+  ): Promise<AddCommentPayload> {
+    const comment = await CommentService.createComment({ profile: profileId, ...input });
     return { comment };
   }
 }

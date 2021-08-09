@@ -1,9 +1,9 @@
 import { Field, InputType } from 'type-graphql';
 
 @InputType()
-export default class AddCommentInput {
+export class AddCommentInput {
   @Field()
-  postId: string;
+  post: string;
 
   @Field()
   body: string;
