@@ -1,9 +1,9 @@
+import { formatDistance } from 'date-fns';
 import Image from 'next/image';
 import React from 'react';
 import ProfilePic from '../../public/profile.jpg';
 import { PostActions } from './PostActions';
 import { PostStats } from './PostStats';
-import { formatDistance } from 'date-fns';
 
 interface PostProps {
   body: string;
