@@ -22,14 +22,14 @@ export class CommentResolver {
     return ProfileService.getProfile(comment.profile);
   }
 
-  @Authorized()
   @Query(() => Comment)
+  @Authorized()
   comment(@Arg('id') id: string): Promise<Comment> {
     return CommentService.getComment(id);
   }
 
-  @Authorized()
   @Mutation(() => AddCommentPayload)
+  @Authorized()
   async addComment(
     @Arg('input') input: AddCommentInput,
     @Ctx() @CurrentUser() { profileId }: User,

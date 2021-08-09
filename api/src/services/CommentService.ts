@@ -15,4 +15,8 @@ export class CommentService {
     await newComment.save();
     return newComment;
   }
+
+  static getComments(post: string): Promise<Comment[]> {
+    return CommentModel.find({ post }).sort({ createdAt: 'desc' }).exec();
+  }
 }

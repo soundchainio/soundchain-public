@@ -3,7 +3,7 @@ import * as yup from 'yup';
 import { useAddCommentMutation } from '../lib/graphql';
 
 export interface NewCommentFormProps {
-  postId: string;
+  post: string;
 }
 
 interface FormValues {
@@ -16,11 +16,11 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
 
 const initialValues: FormValues = { body: '' };
 
-export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
+export const NewCommentForm = ({ post }: NewCommentFormProps) => {
   const [addComment] = useAddCommentMutation();
 
   const handleSubmit = async ({ body }: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
-    await addComment({ variables: { input: { postId: 'asdfasdgasdg', body } } });
+    await addComment({ variables: { input: { post, body } } });
     resetForm();
   };
 

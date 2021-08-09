@@ -170,6 +170,7 @@ export type Post = {
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   profile: Profile;
+  comments: Array<Comment>;
 };
 
 export type Profile = {
@@ -366,6 +367,30 @@ export type MyProfileQuery = (
       { __typename?: 'SocialMedias' }
       & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
     ) }
+  ) }
+);
+
+export type PostQueryVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+export type PostQuery = (
+  { __typename?: 'Query' }
+  & { post: (
+    { __typename?: 'Post' }
+    & Pick<Post, 'id' | 'body' | 'createdAt'>
+    & { profile: (
+      { __typename?: 'Profile' }
+      & Pick<Profile, 'displayName' | 'profilePicture'>
+    ), comments: Array<(
+      { __typename?: 'Comment' }
+      & Pick<Comment, 'id' | 'body' | 'createdAt'>
+      & { profile: (
+        { __typename?: 'Profile' }
+        & Pick<Profile, 'displayName' | 'profilePicture'>
+      ) }
+    )> }
   ) }
 );
 
@@ -689,6 +714,56 @@ export function useMyProfileLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
 export type MyProfileQueryHookResult = ReturnType<typeof useMyProfileQuery>;
 export type MyProfileLazyQueryHookResult = ReturnType<typeof useMyProfileLazyQuery>;
 export type MyProfileQueryResult = Apollo.QueryResult<MyProfileQuery, MyProfileQueryVariables>;
+export const PostDocument = gql`
+    query Post($id: String!) {
+  post(id: $id) {
+    id
+    body
+    createdAt
+    profile {
+      displayName
+      profilePicture
+    }
+    comments {
+      id
+      body
+      createdAt
+      profile {
+        displayName
+        profilePicture
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __usePostQuery__
+ *
+ * To run a query within a React component, call `usePostQuery` and pass it any options that fit your needs.
+ * When your component renders, `usePostQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = usePostQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function usePostQuery(baseOptions: Apollo.QueryHookOptions<PostQuery, PostQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<PostQuery, PostQueryVariables>(PostDocument, options);
+      }
+export function usePostLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<PostQuery, PostQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<PostQuery, PostQueryVariables>(PostDocument, options);
+        }
+export type PostQueryHookResult = ReturnType<typeof usePostQuery>;
+export type PostLazyQueryHookResult = ReturnType<typeof usePostLazyQuery>;
+export type PostQueryResult = Apollo.QueryResult<PostQuery, PostQueryVariables>;
 export const PostsDocument = gql`
     query Posts {
   posts {

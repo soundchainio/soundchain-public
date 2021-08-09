@@ -1,0 +1,20 @@
+query Post($id: String!) {
+  post(id: $id) {
+    id
+    body
+    createdAt
+    profile {
+      displayName
+      profilePicture
+    }
+    comments {
+      id
+      body
+      createdAt
+      profile {
+        displayName
+        profilePicture
+      }
+    }
+  }
+}
