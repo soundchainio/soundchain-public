@@ -1,6 +1,6 @@
 import { Arg, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
-import Comment from '../models/Comment';
-import Profile from '../models/Profile';
+import { Comment } from '../models/Comment';
+import { Profile } from '../models/Profile';
 import { CommentService } from '../services/CommentService';
 import { ProfileService } from '../services/ProfileService';
 import Context from '../types/Context';
@@ -8,7 +8,7 @@ import AddCommentInput from './types/AddCommentInput';
 import AddCommentPayload from './types/AddCommentPayload';
 
 @Resolver(Comment)
-export default class CommentResolver {
+export class CommentResolver {
   @FieldResolver(() => Profile)
   async profile(@Root() comment: Comment): Promise<Profile> {
     return ProfileService.getProfile(comment.profile as string);

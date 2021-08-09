@@ -1,5 +1,6 @@
-import BookResolver from './BookResolver';
-import CommentResolver from './CommentResolver';
-import UserResolver from './UserResolver';
+import { CommentResolver } from './CommentResolver';
+import { PostResolver } from './PostResolver';
+import { ProfileResolver } from './ProfileResolver';
+import { UserResolver } from './UserResolver';
 
-export default [BookResolver, UserResolver, CommentResolver] as const;
+export default [CommentResolver, PostResolver, ProfileResolver, UserResolver] as const;

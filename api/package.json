@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "docker-compose up -d && nodemon -w 'src/**' -e 'ts,json' -x 'ts-node src/index.ts'",
+    "dev": "docker-compose up -d && nodemon -w 'src/**' -e 'ts,json' -x 'ts-node src/local.ts'",
     "lint-staged": "lint-staged",
     "seed": "ts-node src/db/seeds.ts"
   },
@@ -18,24 +18,31 @@
     "semi": true
   },
   "dependencies": {
+    "@sendgrid/mail": "^7.4.5",
     "@typegoose/typegoose": "^7.6.3",
     "apollo-server-express": "^3.0.2",
-    "bcrypt": "^5.0.1",
+    "apollo-server-lambda": "^3.0.2",
+    "bcryptjs": "^2.4.3",
     "class-validator": "^0.13.1",
+    "cors": "^2.8.5",
+    "dotenv-flow": "^3.2.0",
     "express": "^4.17.1",
     "express-jwt": "^6.0.0",
     "graphql": "^15.5.1",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "5.10.18",
     "reflect-metadata": "^0.1.13",
-    "type-graphql": "^1.1.1"
+    "type-graphql": "^1.1.1",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
-    "@types/bcrypt": "^5.0.0",
+    "@types/bcryptjs": "^2.4.2",
+    "@types/dotenv-flow": "^3.1.1",
     "@types/express-jwt": "^6.0.2",
     "@types/faker": "^5.5.7",
     "@types/jsonwebtoken": "^8.5.4",
     "@types/mongoose": "5.10.5",
+    "@types/uuid": "^8.3.1",
     "@typescript-eslint/eslint-plugin": "^4.28.3",
     "@typescript-eslint/parser": "^4.28.3",
     "eslint": "^7.30.0",
@@ -44,6 +51,7 @@
     "lint-staged": "^11.0.1",
     "nodemon": "^2.0.12",
     "prettier": "^2.3.2",
+    "serverless-plugin-typescript": "^1.1.9",
     "ts-node": "^10.1.0",
     "typescript": "^4.3.5"
   }

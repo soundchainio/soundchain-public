@@ -1,7 +1,7 @@
 import { Field, InputType } from 'type-graphql';
 
 @InputType()
-export default class AddBookInput {
+export default class ForgotPasswordInput {
   @Field()
-  title: string;
+  email: string;
 }

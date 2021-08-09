@@ -1,10 +1,14 @@
-import { ErrorMessage, Field, Form, Formik } from 'formik';
+import { Button } from 'components/Button';
+import { InputField } from 'components/InputField';
+import Link from 'components/Link';
+import { Form, Formik } from 'formik';
+import { useMe } from 'hooks/useMe';
+import { LogoAndText } from 'icons/LogoAndText';
+import { setJwt } from 'lib/apollo';
+import { useLoginMutation } from 'lib/graphql';
 import { useRouter } from 'next/dist/client/router';
 import { useEffect } from 'react';
 import * as yup from 'yup';
-import useMe from '../hooks/useMe';
-import { setJwt } from '../lib/apollo';
-import { useLoginMutation } from '../lib/graphql';
 
 interface FormValues {
   username: string;
@@ -37,22 +41,31 @@ export const LoginForm = () => {
   }
 
   return (
-    <Formik initialValues={{ username: '', password: '' }} validationSchema={validationSchema} onSubmit={handleSubmit}>
-      <Form className="flex flex-col items-center space-y-6">
-        <div>
-          <Field type="text" name="username" />
-          <ErrorMessage name="username" component="div" />
-        </div>
-        <div>
-          <Field type="password" name="password" />
-          <ErrorMessage name="password" component="div" />
-        </div>
-        {error && <p>{error.message}</p>}
-        <a href="#">Forgot password?</a>
-        <button type="submit" disabled={loading} className="p-3 border-2 w-full">
-          Login
-        </button>
-      </Form>
-    </Formik>
+    <>
+      <div className="h-36 mt-6 mb-2 flex items-center justify-center">
+        <LogoAndText />
+      </div>
+      <Formik
+        initialValues={{ username: '', password: '' }}
+        validationSchema={validationSchema}
+        onSubmit={handleSubmit}
+      >
+        <Form className="flex flex-1 flex-col">
+          <div className="space-y-6 mb-auto">
+            <InputField type="text" name="username" placeholder="Username or Email Address" />
+            <InputField type="password" name="password" placeholder="Password" />
+            {error && <p>{error.message}</p>}
+            <div>
+              <Link href="/forgot-password" className="text-left">
+                Forgot Password?
+              </Link>
+            </div>
+          </div>
+          <Button type="submit" disabled={loading} loading={loading} className="w-full mt-12">
+            Login
+          </Button>
+        </Form>
+      </Formik>
+    </>
   );
 };

@@ -13,26 +13,7 @@ export type Scalars = {
   Int: number;
   Float: number;
   /** The javascript `Date` as string. Type represents date and time as the ISO Date string. */
-  DateTime: any;
-};
-
-export type AddBookInput = {
-  title: Scalars['String'];
-};
-
-export type AddBookPayload = {
-  __typename?: 'AddBookPayload';
-  book: Book;
-};
-
-export type AddCommentInput = {
-  postId: Scalars['String'];
-  body: Scalars['String'];
-};
-
-export type AddCommentPayload = {
-  __typename?: 'AddCommentPayload';
-  comment: Comment;
+  DateTime: string;
 };
 
 export type AuthPayload = {
@@ -40,23 +21,62 @@ export type AuthPayload = {
   jwt: Scalars['String'];
 };
 
-export type Book = {
-  __typename?: 'Book';
-  id: Scalars['ID'];
-  title: Scalars['String'];
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-};
-
-export type Comment = {
-  __typename?: 'Comment';
-  id: Scalars['ID'];
+export type CreatePostInput = {
   body: Scalars['String'];
-  profile: Profile;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
 };
 
+export type CreatePostPayload = {
+  __typename?: 'CreatePostPayload';
+  post: Post;
+};
+
+
+export type ForgotPasswordInput = {
+  email: Scalars['String'];
+};
+
+export type ForgotPasswordPayload = {
+  __typename?: 'ForgotPasswordPayload';
+  ok: Scalars['Boolean'];
+};
+
+export enum Genre {
+  Acoustic = 'ACOUSTIC',
+  Alternative = 'ALTERNATIVE',
+  Ambient = 'AMBIENT',
+  Americana = 'AMERICANA',
+  CPop = 'C_POP',
+  Christian = 'CHRISTIAN',
+  ClassicRock = 'CLASSIC_ROCK',
+  Classical = 'CLASSICAL',
+  Country = 'COUNTRY',
+  Dance = 'DANCE',
+  Devotional = 'DEVOTIONAL',
+  Eletronic = 'ELETRONIC',
+  Experimental = 'EXPERIMENTAL',
+  Gospel = 'GOSPEL',
+  HardRock = 'HARD_ROCK',
+  Indie = 'INDIE',
+  Jazz = 'JAZZ',
+  KPop = 'K_POP',
+  KidsAndFamily = 'KIDS_AND_FAMILY',
+  Latin = 'LATIN',
+  Metal = 'METAL',
+  MusicaMexicana = 'MUSICA_MEXICANA',
+  MusicaTropical = 'MUSICA_TROPICAL',
+  Podcasts = 'PODCASTS',
+  Pop = 'POP',
+  PopLatino = 'POP_LATINO',
+  Punk = 'PUNK',
+  RAndB = 'R_AND_B',
+  Reggae = 'REGGAE',
+  Salsa = 'SALSA',
+  SoulFunk = 'SOUL_FUNK',
+  Soundtrack = 'SOUNDTRACK',
+  Spoken = 'SPOKEN',
+  UrbanLatino = 'URBAN_LATINO',
+  World = 'WORLD'
+}
 
 export type LoginInput = {
   /** Username can be email or handle */
@@ -66,20 +86,29 @@ export type LoginInput = {
 
 export type Mutation = {
   __typename?: 'Mutation';
-  addBook: AddBookPayload;
-  addComment: AddCommentPayload;
+  createPost: CreatePostPayload;
+  updateSocialMedias: UpdateSocialMediasPayload;
+  updateFavoriteGenres: UpdateFavoriteGenresPayload;
   register: AuthPayload;
   login: AuthPayload;
+  verifyUserEmail: VerifyUserEmailPayload;
+  forgotPassword: ForgotPasswordPayload;
+  resetPassword: ResetPasswordPayload;
 };
 
 
-export type MutationAddBookArgs = {
-  input: AddBookInput;
+export type MutationCreatePostArgs = {
+  input: CreatePostInput;
 };
 
 
-export type MutationAddCommentArgs = {
-  input: AddCommentInput;
+export type MutationUpdateSocialMediasArgs = {
+  input: UpdateSocialMediasInput;
+};
+
+
+export type MutationUpdateFavoriteGenresArgs = {
+  input: UpdateFavoriteGenresInput;
 };
 
 
@@ -92,33 +121,60 @@ export type MutationLoginArgs = {
   input: LoginInput;
 };
 
+
+export type MutationVerifyUserEmailArgs = {
+  input: VerifyUserEmailInput;
+};
+
+
+export type MutationForgotPasswordArgs = {
+  input: ForgotPasswordInput;
+};
+
+
+export type MutationResetPasswordArgs = {
+  input: ResetPasswordInput;
+};
+
+export type Post = {
+  __typename?: 'Post';
+  id: Scalars['ID'];
+  profileId: Scalars['String'];
+  body: Scalars['String'];
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  profile: Profile;
+};
+
 export type Profile = {
   __typename?: 'Profile';
   id: Scalars['ID'];
   displayName: Scalars['String'];
   profilePicture?: Maybe<Scalars['String']>;
   coverPicture?: Maybe<Scalars['String']>;
-  socialMediaLinks: Array<SocialMedia>;
+  socialMedias: SocialMedias;
+  favoriteGenres: Array<Genre>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
 };
 
 export type Query = {
   __typename?: 'Query';
-  book: Book;
-  books: Array<Book>;
-  comment: Comment;
+  post: Post;
+  posts: Array<Post>;
+  myProfile: Profile;
   me?: Maybe<User>;
+  validPasswordResetToken: Scalars['Boolean'];
 };
 
 
-export type QueryBookArgs = {
+export type QueryPostArgs = {
   id: Scalars['String'];
 };
 
 
-export type QueryCommentArgs = {
-  id: Scalars['String'];
+export type QueryValidPasswordResetTokenArgs = {
+  token: Scalars['String'];
 };
 
 export type RegisterInput = {
@@ -128,54 +184,92 @@ export type RegisterInput = {
   password: Scalars['String'];
 };
 
-export type SocialMedia = {
-  __typename?: 'SocialMedia';
-  name: SocialMediaName;
-  link: Scalars['String'];
+export type ResetPasswordInput = {
+  token: Scalars['String'];
+  password: Scalars['String'];
 };
 
-/** Social media options */
-export enum SocialMediaName {
-  Twitter = 'TWITTER',
-  Instagram = 'INSTAGRAM',
-  Facebook = 'FACEBOOK'
-}
+export type ResetPasswordPayload = {
+  __typename?: 'ResetPasswordPayload';
+  ok: Scalars['Boolean'];
+};
+
+export type SocialMedias = {
+  __typename?: 'SocialMedias';
+  facebook?: Maybe<Scalars['String']>;
+  instagram?: Maybe<Scalars['String']>;
+  soundcloud?: Maybe<Scalars['String']>;
+  twitter?: Maybe<Scalars['String']>;
+};
+
+export type UpdateFavoriteGenresInput = {
+  favoriteGenres: Array<Genre>;
+};
+
+export type UpdateFavoriteGenresPayload = {
+  __typename?: 'UpdateFavoriteGenresPayload';
+  profile: Profile;
+};
+
+export type UpdateSocialMediasInput = {
+  facebook?: Maybe<Scalars['String']>;
+  instagram?: Maybe<Scalars['String']>;
+  soundcloud?: Maybe<Scalars['String']>;
+  twitter?: Maybe<Scalars['String']>;
+};
+
+export type UpdateSocialMediasPayload = {
+  __typename?: 'UpdateSocialMediasPayload';
+  profile: Profile;
+};
 
 export type User = {
   __typename?: 'User';
   id: Scalars['ID'];
   email: Scalars['String'];
   handle: Scalars['String'];
+  verified: Scalars['Boolean'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   profile: Profile;
 };
 
-export type AddCommentMutationVariables = Exact<{
-  input: AddCommentInput;
+export type VerifyUserEmailInput = {
+  token: Scalars['String'];
+};
+
+export type VerifyUserEmailPayload = {
+  __typename?: 'VerifyUserEmailPayload';
+  user: User;
+};
+
+export type CreatePostMutationVariables = Exact<{
+  input: CreatePostInput;
 }>;
 
 
-export type AddCommentMutation = (
+export type CreatePostMutation = (
   { __typename?: 'Mutation' }
-  & { addComment: (
-    { __typename?: 'AddCommentPayload' }
-    & { comment: (
-      { __typename?: 'Comment' }
-      & Pick<Comment, 'id'>
+  & { createPost: (
+    { __typename?: 'CreatePostPayload' }
+    & { post: (
+      { __typename?: 'Post' }
+      & Pick<Post, 'id'>
     ) }
   ) }
 );
 
-export type HomePageQueryVariables = Exact<{ [key: string]: never; }>;
+export type ForgotPasswordMutationVariables = Exact<{
+  input: ForgotPasswordInput;
+}>;
 
 
-export type HomePageQuery = (
-  { __typename?: 'Query' }
-  & { books: Array<(
-    { __typename?: 'Book' }
-    & Pick<Book, 'id' | 'title' | 'createdAt'>
-  )> }
+export type ForgotPasswordMutation = (
+  { __typename?: 'Mutation' }
+  & { forgotPassword: (
+    { __typename?: 'ForgotPasswordPayload' }
+    & Pick<ForgotPasswordPayload, 'ok'>
+  ) }
 );
 
 export type LoginMutationVariables = Exact<{
@@ -206,6 +300,36 @@ export type MeQuery = (
   )> }
 );
 
+export type MyProfileQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type MyProfileQuery = (
+  { __typename?: 'Query' }
+  & { myProfile: (
+    { __typename?: 'Profile' }
+    & Pick<Profile, 'id' | 'displayName'>
+    & { socialMedias: (
+      { __typename?: 'SocialMedias' }
+      & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
+    ) }
+  ) }
+);
+
+export type PostsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type PostsQuery = (
+  { __typename?: 'Query' }
+  & { posts: Array<(
+    { __typename?: 'Post' }
+    & Pick<Post, 'id' | 'body' | 'createdAt'>
+    & { profile: (
+      { __typename?: 'Profile' }
+      & Pick<Profile, 'displayName'>
+    ) }
+  )> }
+);
+
 export type RegisterMutationVariables = Exact<{
   input: RegisterInput;
 }>;
@@ -219,78 +343,150 @@ export type RegisterMutation = (
   ) }
 );
 
+export type ResetPasswordMutationVariables = Exact<{
+  input: ResetPasswordInput;
+}>;
 
-export const AddCommentDocument = gql`
-    mutation AddComment($input: AddCommentInput!) {
-  addComment(input: $input) {
-    comment {
+
+export type ResetPasswordMutation = (
+  { __typename?: 'Mutation' }
+  & { resetPassword: (
+    { __typename?: 'ResetPasswordPayload' }
+    & Pick<ResetPasswordPayload, 'ok'>
+  ) }
+);
+
+export type UpdateFavoriteGenresMutationVariables = Exact<{
+  input: UpdateFavoriteGenresInput;
+}>;
+
+
+export type UpdateFavoriteGenresMutation = (
+  { __typename?: 'Mutation' }
+  & { updateFavoriteGenres: (
+    { __typename?: 'UpdateFavoriteGenresPayload' }
+    & { profile: (
+      { __typename?: 'Profile' }
+      & Pick<Profile, 'id' | 'favoriteGenres'>
+    ) }
+  ) }
+);
+
+export type UpdateSocialMediasMutationVariables = Exact<{
+  input: UpdateSocialMediasInput;
+}>;
+
+
+export type UpdateSocialMediasMutation = (
+  { __typename?: 'Mutation' }
+  & { updateSocialMedias: (
+    { __typename?: 'UpdateSocialMediasPayload' }
+    & { profile: (
+      { __typename?: 'Profile' }
+      & Pick<Profile, 'id'>
+      & { socialMedias: (
+        { __typename?: 'SocialMedias' }
+        & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
+      ) }
+    ) }
+  ) }
+);
+
+export type ValidPasswordResetTokenQueryVariables = Exact<{
+  token: Scalars['String'];
+}>;
+
+
+export type ValidPasswordResetTokenQuery = (
+  { __typename?: 'Query' }
+  & Pick<Query, 'validPasswordResetToken'>
+);
+
+export type VerifyUserEmailMutationVariables = Exact<{
+  input: VerifyUserEmailInput;
+}>;
+
+
+export type VerifyUserEmailMutation = (
+  { __typename?: 'Mutation' }
+  & { verifyUserEmail: (
+    { __typename?: 'VerifyUserEmailPayload' }
+    & { user: (
+      { __typename?: 'User' }
+      & Pick<User, 'id' | 'verified'>
+    ) }
+  ) }
+);
+
+
+export const CreatePostDocument = gql`
+    mutation CreatePost($input: CreatePostInput!) {
+  createPost(input: $input) {
+    post {
       id
     }
   }
 }
     `;
-export type AddCommentMutationFn = Apollo.MutationFunction<AddCommentMutation, AddCommentMutationVariables>;
+export type CreatePostMutationFn = Apollo.MutationFunction<CreatePostMutation, CreatePostMutationVariables>;
 
 /**
- * __useAddCommentMutation__
+ * __useCreatePostMutation__
  *
- * To run a mutation, you first call `useAddCommentMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useAddCommentMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useCreatePostMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreatePostMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [addCommentMutation, { data, loading, error }] = useAddCommentMutation({
+ * const [createPostMutation, { data, loading, error }] = useCreatePostMutation({
  *   variables: {
  *      input: // value for 'input'
  *   },
  * });
  */
-export function useAddCommentMutation(baseOptions?: Apollo.MutationHookOptions<AddCommentMutation, AddCommentMutationVariables>) {
+export function useCreatePostMutation(baseOptions?: Apollo.MutationHookOptions<CreatePostMutation, CreatePostMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<AddCommentMutation, AddCommentMutationVariables>(AddCommentDocument, options);
+        return Apollo.useMutation<CreatePostMutation, CreatePostMutationVariables>(CreatePostDocument, options);
       }
-export type AddCommentMutationHookResult = ReturnType<typeof useAddCommentMutation>;
-export type AddCommentMutationResult = Apollo.MutationResult<AddCommentMutation>;
-export type AddCommentMutationOptions = Apollo.BaseMutationOptions<AddCommentMutation, AddCommentMutationVariables>;
-export const HomePageDocument = gql`
-    query HomePage {
-  books {
-    id
-    title
-    createdAt
+export type CreatePostMutationHookResult = ReturnType<typeof useCreatePostMutation>;
+export type CreatePostMutationResult = Apollo.MutationResult<CreatePostMutation>;
+export type CreatePostMutationOptions = Apollo.BaseMutationOptions<CreatePostMutation, CreatePostMutationVariables>;
+export const ForgotPasswordDocument = gql`
+    mutation ForgotPassword($input: ForgotPasswordInput!) {
+  forgotPassword(input: $input) {
+    ok
   }
 }
     `;
+export type ForgotPasswordMutationFn = Apollo.MutationFunction<ForgotPasswordMutation, ForgotPasswordMutationVariables>;
 
 /**
- * __useHomePageQuery__
+ * __useForgotPasswordMutation__
  *
- * To run a query within a React component, call `useHomePageQuery` and pass it any options that fit your needs.
- * When your component renders, `useHomePageQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
+ * To run a mutation, you first call `useForgotPasswordMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useForgotPasswordMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
  *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const { data, loading, error } = useHomePageQuery({
+ * const [forgotPasswordMutation, { data, loading, error }] = useForgotPasswordMutation({
  *   variables: {
+ *      input: // value for 'input'
  *   },
  * });
  */
-export function useHomePageQuery(baseOptions?: Apollo.QueryHookOptions<HomePageQuery, HomePageQueryVariables>) {
+export function useForgotPasswordMutation(baseOptions?: Apollo.MutationHookOptions<ForgotPasswordMutation, ForgotPasswordMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<HomePageQuery, HomePageQueryVariables>(HomePageDocument, options);
+        return Apollo.useMutation<ForgotPasswordMutation, ForgotPasswordMutationVariables>(ForgotPasswordDocument, options);
       }
-export function useHomePageLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<HomePageQuery, HomePageQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<HomePageQuery, HomePageQueryVariables>(HomePageDocument, options);
-        }
-export type HomePageQueryHookResult = ReturnType<typeof useHomePageQuery>;
-export type HomePageLazyQueryHookResult = ReturnType<typeof useHomePageLazyQuery>;
-export type HomePageQueryResult = Apollo.QueryResult<HomePageQuery, HomePageQueryVariables>;
+export type ForgotPasswordMutationHookResult = ReturnType<typeof useForgotPasswordMutation>;
+export type ForgotPasswordMutationResult = Apollo.MutationResult<ForgotPasswordMutation>;
+export type ForgotPasswordMutationOptions = Apollo.BaseMutationOptions<ForgotPasswordMutation, ForgotPasswordMutationVariables>;
 export const LoginDocument = gql`
     mutation Login($input: LoginInput!) {
   login(input: $input) {
@@ -363,6 +559,86 @@ export function useMeLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<MeQuery
 export type MeQueryHookResult = ReturnType<typeof useMeQuery>;
 export type MeLazyQueryHookResult = ReturnType<typeof useMeLazyQuery>;
 export type MeQueryResult = Apollo.QueryResult<MeQuery, MeQueryVariables>;
+export const MyProfileDocument = gql`
+    query MyProfile {
+  myProfile {
+    id
+    displayName
+    socialMedias {
+      facebook
+      instagram
+      soundcloud
+      twitter
+    }
+  }
+}
+    `;
+
+/**
+ * __useMyProfileQuery__
+ *
+ * To run a query within a React component, call `useMyProfileQuery` and pass it any options that fit your needs.
+ * When your component renders, `useMyProfileQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useMyProfileQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useMyProfileQuery(baseOptions?: Apollo.QueryHookOptions<MyProfileQuery, MyProfileQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<MyProfileQuery, MyProfileQueryVariables>(MyProfileDocument, options);
+      }
+export function useMyProfileLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<MyProfileQuery, MyProfileQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<MyProfileQuery, MyProfileQueryVariables>(MyProfileDocument, options);
+        }
+export type MyProfileQueryHookResult = ReturnType<typeof useMyProfileQuery>;
+export type MyProfileLazyQueryHookResult = ReturnType<typeof useMyProfileLazyQuery>;
+export type MyProfileQueryResult = Apollo.QueryResult<MyProfileQuery, MyProfileQueryVariables>;
+export const PostsDocument = gql`
+    query Posts {
+  posts {
+    id
+    body
+    profile {
+      displayName
+    }
+    createdAt
+  }
+}
+    `;
+
+/**
+ * __usePostsQuery__
+ *
+ * To run a query within a React component, call `usePostsQuery` and pass it any options that fit your needs.
+ * When your component renders, `usePostsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = usePostsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function usePostsQuery(baseOptions?: Apollo.QueryHookOptions<PostsQuery, PostsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<PostsQuery, PostsQueryVariables>(PostsDocument, options);
+      }
+export function usePostsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<PostsQuery, PostsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<PostsQuery, PostsQueryVariables>(PostsDocument, options);
+        }
+export type PostsQueryHookResult = ReturnType<typeof usePostsQuery>;
+export type PostsLazyQueryHookResult = ReturnType<typeof usePostsLazyQuery>;
+export type PostsQueryResult = Apollo.QueryResult<PostsQuery, PostsQueryVariables>;
 export const RegisterDocument = gql`
     mutation Register($input: RegisterInput!) {
   register(input: $input) {
@@ -396,3 +672,182 @@ export function useRegisterMutation(baseOptions?: Apollo.MutationHookOptions<Reg
 export type RegisterMutationHookResult = ReturnType<typeof useRegisterMutation>;
 export type RegisterMutationResult = Apollo.MutationResult<RegisterMutation>;
 export type RegisterMutationOptions = Apollo.BaseMutationOptions<RegisterMutation, RegisterMutationVariables>;
+export const ResetPasswordDocument = gql`
+    mutation ResetPassword($input: ResetPasswordInput!) {
+  resetPassword(input: $input) {
+    ok
+  }
+}
+    `;
+export type ResetPasswordMutationFn = Apollo.MutationFunction<ResetPasswordMutation, ResetPasswordMutationVariables>;
+
+/**
+ * __useResetPasswordMutation__
+ *
+ * To run a mutation, you first call `useResetPasswordMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useResetPasswordMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [resetPasswordMutation, { data, loading, error }] = useResetPasswordMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useResetPasswordMutation(baseOptions?: Apollo.MutationHookOptions<ResetPasswordMutation, ResetPasswordMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ResetPasswordMutation, ResetPasswordMutationVariables>(ResetPasswordDocument, options);
+      }
+export type ResetPasswordMutationHookResult = ReturnType<typeof useResetPasswordMutation>;
+export type ResetPasswordMutationResult = Apollo.MutationResult<ResetPasswordMutation>;
+export type ResetPasswordMutationOptions = Apollo.BaseMutationOptions<ResetPasswordMutation, ResetPasswordMutationVariables>;
+export const UpdateFavoriteGenresDocument = gql`
+    mutation UpdateFavoriteGenres($input: UpdateFavoriteGenresInput!) {
+  updateFavoriteGenres(input: $input) {
+    profile {
+      id
+      favoriteGenres
+    }
+  }
+}
+    `;
+export type UpdateFavoriteGenresMutationFn = Apollo.MutationFunction<UpdateFavoriteGenresMutation, UpdateFavoriteGenresMutationVariables>;
+
+/**
+ * __useUpdateFavoriteGenresMutation__
+ *
+ * To run a mutation, you first call `useUpdateFavoriteGenresMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateFavoriteGenresMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateFavoriteGenresMutation, { data, loading, error }] = useUpdateFavoriteGenresMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateFavoriteGenresMutation(baseOptions?: Apollo.MutationHookOptions<UpdateFavoriteGenresMutation, UpdateFavoriteGenresMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateFavoriteGenresMutation, UpdateFavoriteGenresMutationVariables>(UpdateFavoriteGenresDocument, options);
+      }
+export type UpdateFavoriteGenresMutationHookResult = ReturnType<typeof useUpdateFavoriteGenresMutation>;
+export type UpdateFavoriteGenresMutationResult = Apollo.MutationResult<UpdateFavoriteGenresMutation>;
+export type UpdateFavoriteGenresMutationOptions = Apollo.BaseMutationOptions<UpdateFavoriteGenresMutation, UpdateFavoriteGenresMutationVariables>;
+export const UpdateSocialMediasDocument = gql`
+    mutation updateSocialMedias($input: UpdateSocialMediasInput!) {
+  updateSocialMedias(input: $input) {
+    profile {
+      id
+      socialMedias {
+        facebook
+        instagram
+        soundcloud
+        twitter
+      }
+    }
+  }
+}
+    `;
+export type UpdateSocialMediasMutationFn = Apollo.MutationFunction<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>;
+
+/**
+ * __useUpdateSocialMediasMutation__
+ *
+ * To run a mutation, you first call `useUpdateSocialMediasMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateSocialMediasMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateSocialMediasMutation, { data, loading, error }] = useUpdateSocialMediasMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateSocialMediasMutation(baseOptions?: Apollo.MutationHookOptions<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>(UpdateSocialMediasDocument, options);
+      }
+export type UpdateSocialMediasMutationHookResult = ReturnType<typeof useUpdateSocialMediasMutation>;
+export type UpdateSocialMediasMutationResult = Apollo.MutationResult<UpdateSocialMediasMutation>;
+export type UpdateSocialMediasMutationOptions = Apollo.BaseMutationOptions<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>;
+export const ValidPasswordResetTokenDocument = gql`
+    query ValidPasswordResetToken($token: String!) {
+  validPasswordResetToken(token: $token)
+}
+    `;
+
+/**
+ * __useValidPasswordResetTokenQuery__
+ *
+ * To run a query within a React component, call `useValidPasswordResetTokenQuery` and pass it any options that fit your needs.
+ * When your component renders, `useValidPasswordResetTokenQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useValidPasswordResetTokenQuery({
+ *   variables: {
+ *      token: // value for 'token'
+ *   },
+ * });
+ */
+export function useValidPasswordResetTokenQuery(baseOptions: Apollo.QueryHookOptions<ValidPasswordResetTokenQuery, ValidPasswordResetTokenQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ValidPasswordResetTokenQuery, ValidPasswordResetTokenQueryVariables>(ValidPasswordResetTokenDocument, options);
+      }
+export function useValidPasswordResetTokenLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ValidPasswordResetTokenQuery, ValidPasswordResetTokenQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ValidPasswordResetTokenQuery, ValidPasswordResetTokenQueryVariables>(ValidPasswordResetTokenDocument, options);
+        }
+export type ValidPasswordResetTokenQueryHookResult = ReturnType<typeof useValidPasswordResetTokenQuery>;
+export type ValidPasswordResetTokenLazyQueryHookResult = ReturnType<typeof useValidPasswordResetTokenLazyQuery>;
+export type ValidPasswordResetTokenQueryResult = Apollo.QueryResult<ValidPasswordResetTokenQuery, ValidPasswordResetTokenQueryVariables>;
+export const VerifyUserEmailDocument = gql`
+    mutation VerifyUserEmail($input: VerifyUserEmailInput!) {
+  verifyUserEmail(input: $input) {
+    user {
+      id
+      verified
+    }
+  }
+}
+    `;
+export type VerifyUserEmailMutationFn = Apollo.MutationFunction<VerifyUserEmailMutation, VerifyUserEmailMutationVariables>;
+
+/**
+ * __useVerifyUserEmailMutation__
+ *
+ * To run a mutation, you first call `useVerifyUserEmailMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useVerifyUserEmailMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [verifyUserEmailMutation, { data, loading, error }] = useVerifyUserEmailMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useVerifyUserEmailMutation(baseOptions?: Apollo.MutationHookOptions<VerifyUserEmailMutation, VerifyUserEmailMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<VerifyUserEmailMutation, VerifyUserEmailMutationVariables>(VerifyUserEmailDocument, options);
+      }
+export type VerifyUserEmailMutationHookResult = ReturnType<typeof useVerifyUserEmailMutation>;
+export type VerifyUserEmailMutationResult = Apollo.MutationResult<VerifyUserEmailMutation>;
+export type VerifyUserEmailMutationOptions = Apollo.BaseMutationOptions<VerifyUserEmailMutation, VerifyUserEmailMutationVariables>;

@@ -1,6 +1,6 @@
-import { useMeQuery } from '../lib/graphql';
+import { useMeQuery } from 'lib/graphql';
 
-export default function useMe() {
+export const useMe = () => {
   const result = useMeQuery();
   return result.data?.me;
-}
+};

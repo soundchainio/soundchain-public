@@ -1,10 +1,12 @@
-import { getModelForClass, prop } from '@typegoose/typegoose';
+import { getModelForClass, modelOptions, prop, Severity } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
+import { Genre } from '../enums/Genres';
 import Model from './Model';
-import SocialMedia from './SocialMedia';
+import { SocialMedias } from './SocialMedias';
 
+@modelOptions({ options: { allowMixed: Severity.ALLOW } })
 @ObjectType()
-export default class Profile extends Model {
+export class Profile extends Model {
   @Field(() => ID, { name: 'id' })
   readonly _id: string;
 
@@ -20,9 +22,13 @@ export default class Profile extends Model {
   @prop({ required: false })
   coverPicture?: string;
 
-  @Field(() => [SocialMedia])
-  @prop({ required: true, default: [] })
-  socialMediaLinks: SocialMedia[];
+  @Field(() => SocialMedias)
+  @prop({ required: true, default: {} })
+  socialMedias: SocialMedias;
+
+  @Field(() => [Genre])
+  @prop({ required: true, type: [String], enum: Genre })
+  favoriteGenres: Genre[];
 
   @Field(() => Date)
   createdAt: Date;

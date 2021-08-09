@@ -1,5 +1,5 @@
 import { getModelForClass, pre, prop } from '@typegoose/typegoose';
-import { hash } from 'bcrypt';
+import { hash } from 'bcryptjs';
 import { Field, ID, ObjectType } from 'type-graphql';
 import Model from './Model';
 
@@ -35,6 +35,16 @@ export default class User extends Model {
 
   @prop({ required: true })
   password: string;
+
+  @prop({ required: false })
+  emailVerificationToken?: string;
+
+  @Field()
+  @prop({ required: true, default: false })
+  verified: boolean;
+
+  @prop({ required: false })
+  passwordResetToken?: string;
 
   @Field(() => Date)
   createdAt: Date;

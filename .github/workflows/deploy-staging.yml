@@ -1,0 +1,40 @@
+name: Deploy Staging API
+
+on:
+  push:
+    branches:
+      - staging
+    paths:
+      - 'api/**'
+
+jobs:
+  deploy-api:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [14.x]
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm i -g serverless
+      - run: yarn
+      - run: serverless deploy -s ${GITHUB_REF#refs/heads/}
+        env:
+          NODE_ENV: staging
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD_STAGING }}
+          DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME_STAGING }}
+          JWT_NAMESPACE: ${{ secrets.JWT_NAMESPACE_STAGING }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET_STAGING }}
+          SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY_STAGING }}
+          SENDGRID_SENDER_EMAIL: ${{ secrets.SENDGRID_SENDER_EMAIL_STAGING }}
+          SENDGRID_VERIFICATION_TEMPLATE: ${{ secrets.SENDGRID_VERIFICATION_TEMPLATE_STAGING }}
+          SENDGRID_RESET_PASSWORD_TEMPLATE: ${{ secrets.SENDGRID_RESET_PASSWORD_TEMPLATE_STAGING }}
+          WEB_APP_URL: ${{ secrets.WEB_APP_URL_STAGING }}
