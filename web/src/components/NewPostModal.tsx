@@ -24,13 +24,18 @@ const baseClasses =
 
 const maxLength = 160;
 
+const initialValues = { body: '' };
+
+const getBodyCharacterCount = (body: string) => {
+  return body.match(/./gu)?.length || 0;
+};
+
 // When we get string.length, emojis are counted as 2 characters
 // This functions fixes the input maxLength and adjust to count an emoji as 1 char
 const setMaxInputLength = (input: string) => {
   const rawValue = input.length;
-  const treatedValue = input.match(/./gu)?.length || 0;
 
-  return maxLength + (rawValue - treatedValue);
+  return maxLength + (rawValue - getBodyCharacterCount(input));
 };
 
 export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps) => {
@@ -48,12 +53,16 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
     setShowNewPost(false);
   };
 
+  const onEmojiClick = () => {
+    setEmojiPickerVisible(!isEmojiPickerVisible);
+  };
+
   const handleSelectEmoji = (
     emoji: BaseEmoji,
     values: FormValues,
     setFieldValue: (val: string, newVal: string) => void,
   ) => {
-    if ((values.body.match(/./gu)?.length || 0) < maxLength) {
+    if (getBodyCharacterCount(values.body) < maxLength) {
       setFieldValue('body', `${values.body}${emoji.native}`);
     }
   };
@@ -61,7 +70,7 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
   return (
     <div className={`${baseClasses} ${showNewPost ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
       <div className="w-screen h-20" onClick={() => setShowNewPost(false)} />
-      <Formik initialValues={{ body: '' }} validationSchema={postSchema} onSubmit={handleSubmit}>
+      <Formik initialValues={initialValues} validationSchema={postSchema} onSubmit={handleSubmit}>
         {({ values, setFieldValue }) => (
           <Form className="flex flex-col max-height-from-menu">
             <div className="flex items-center rounded-tl-3xl rounded-tr-3xl bg-gray-30">
@@ -84,12 +93,10 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
             />
             <div className="p-4 flex items-center bg-gray-25">
               <div className="justify-self-start flex-1">
-                <span onClick={() => setEmojiPickerVisible(!isEmojiPickerVisible)}>
-                  {isEmojiPickerVisible ? '❌' : '😃'}
-                </span>
+                <span onClick={onEmojiClick}>{isEmojiPickerVisible ? '❌' : '😃'}</span>
               </div>
               <div className="justify-self-end flex-1 text-right text-gray-400">
-                {values.body.match(/./gu)?.length || 0} / {maxLength}
+                {getBodyCharacterCount(values.body)} / {maxLength}
               </div>
               {isEmojiPickerVisible && (
                 <div className="fixed left-12 bottom-0">
