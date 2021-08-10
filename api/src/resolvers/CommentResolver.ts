@@ -24,7 +24,6 @@ export class CommentResolver {
 
   @Query(() => Comment)
   comment(@Arg('id') id: string): Promise<Comment> {
-    console.log(id);
     return CommentService.getComment(id);
   }
 
