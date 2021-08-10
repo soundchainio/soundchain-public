@@ -45,9 +45,12 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
   const [createPost] = useCreatePostMutation({ refetchQueries: ['Posts'] });
 
   const cancel = (setFieldValue: (val: string, newVal: string) => void) => {
-    setShowNewPost(false);
-    setPostLink('');
-    setFieldValue('body', '');
+    return (event: React.MouseEvent) => {
+      setShowNewPost(false);
+      setPostLink('');
+      setFieldValue('body', '');
+      event.preventDefault();
+    };
   };
 
   const handleSubmit = async (values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
@@ -85,7 +88,7 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
         {({ values, setFieldValue }) => (
           <Form className="flex flex-col max-height-from-menu">
             <div className="flex items-center rounded-tl-3xl rounded-tr-3xl bg-gray-30">
-              <div className="p-2 text-gray-400 font-bold flex-1 text-center" onClick={() => cancel(setFieldValue)}>
+              <div className="p-2 text-gray-400 font-bold flex-1 text-center" onClick={cancel(setFieldValue)}>
                 Cancel
               </div>
               <div className="flex-1 text-center text-white font-bold">New Post</div>
