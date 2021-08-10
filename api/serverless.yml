@@ -77,7 +77,8 @@ provider:
     SENDGRID_SENDER_EMAIL: ${env:SENDGRID_SENDER_EMAIL}
     SENDGRID_VERIFICATION_TEMPLATE: ${env:SENDGRID_VERIFICATION_TEMPLATE}
     SENDGRID_RESET_PASSWORD_TEMPLATE: ${env:SENDGRID_RESET_PASSWORD_TEMPLATE}
-    UPLOADS_BUCKET: ${self:custom.uploadsBucket.name}
+    UPLOADS_BUCKET_REGION: ${self:provider.region}
+    UPLOADS_BUCKET_NAME: ${self:custom.uploadsBucket.name}
   iam:
     role:
       statements:
