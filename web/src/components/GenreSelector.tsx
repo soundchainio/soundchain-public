@@ -66,14 +66,9 @@ export const GenreSelector = ({ onSelect }: GenreSelectorProps) => {
     else setSelectedGenres([...selectedGenres, key]);
   };
 
-  const getNumberOfSelectedGenres = () => {
-    const numberOfSelectedGenres = selectedGenres.length;
-    if (numberOfSelectedGenres) return `(${numberOfSelectedGenres} Selected)`;
-  };
-
   return (
     <div className="flex flex-col">
-      <Label>What are your favorite genres? {getNumberOfSelectedGenres()}</Label>
+      <Label>What are your favorite genres? {selectedGenres.length ? `(${selectedGenres.length} Selected)` : ''}</Label>
       <div className="pb-6 space-y-2">
         {genres.map(({ label, key }) => (
           <Badge key={key} label={label} selected={isGenreSelected(key)} onClick={() => onGenreClick(key)} />
