@@ -20,7 +20,7 @@ const genres: GenreLabels[] = [
   { key: Genre.Country, label: 'Country' },
   { key: Genre.Dance, label: 'Dance' },
   { key: Genre.Devotional, label: 'Devotional' },
-  { key: Genre.Eletronic, label: 'Eletronic' },
+  { key: Genre.Electronic, label: 'Electronic' },
   { key: Genre.Experimental, label: 'Experimental' },
   { key: Genre.Gospel, label: 'Gospel' },
   { key: Genre.HardRock, label: 'Hard Rock' },

@@ -52,7 +52,7 @@ export enum Genre {
   Country = 'COUNTRY',
   Dance = 'DANCE',
   Devotional = 'DEVOTIONAL',
-  Eletronic = 'ELETRONIC',
+  Electronic = 'ELECTRONIC',
   Experimental = 'EXPERIMENTAL',
   Gospel = 'GOSPEL',
   HardRock = 'HARD_ROCK',
@@ -170,6 +170,12 @@ export type Query = {
 
 export type QueryPostArgs = {
   id: Scalars['String'];
+};
+
+
+export type QueryPostsArgs = {
+  skip?: Maybe<Scalars['Float']>;
+  limit?: Maybe<Scalars['Float']>;
 };
 
 
