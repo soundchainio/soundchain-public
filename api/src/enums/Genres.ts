@@ -12,7 +12,7 @@ enum Genre {
   COUNTRY = 'country',
   DANCE = 'dance',
   DEVOTIONAL = 'devotional',
-  ELETRONIC = 'eletronic',
+  ELECTRONIC = 'electronic',
   EXPERIMENTAL = 'experimental',
   GOSPEL = 'gospel',
   HARD_ROCK = 'hard_rock',
