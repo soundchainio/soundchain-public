@@ -4,12 +4,12 @@ const normalizeYoutube = (str: string) => {
   if (str) return str.replace('/watch?v=', '/embed/');
 };
 
-const normalizeAll = async (str: string) => {
-  let text = normalizeYoutube(str);
+const normalizeAll = (str: string) => {
+  const text = normalizeYoutube(str);
   return text;
 };
 
-export const getNormalizedLink = async (str: string) => {
+export const getNormalizedLink = (str: string) => {
   const links = str.match(linksRegex) || [];
-  return await normalizeAll(links[0]);
+  return normalizeAll(links[0]);
 };

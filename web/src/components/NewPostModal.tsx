@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import { Button } from 'components/Button';
 import { BaseEmoji, Picker } from 'emoji-mart';
 import 'emoji-mart/css/emoji-mart.css';
@@ -58,6 +59,7 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
     resetForm();
     setEmojiPickerVisible(false);
     setShowNewPost(false);
+    setPostLink('');
   };
 
   const onEmojiClick = () => {
@@ -74,15 +76,20 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
     }
   };
 
-  const onTextareaChange = async (body: string) => {
+  const onTextareaChange = (body: string) => {
     if (body.length) {
-      const link = await getNormalizedLink(body);
+      const link = getNormalizedLink(body);
       setPostLink(link || '');
     }
   };
 
   return (
-    <div className={`${baseClasses} ${showNewPost ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
+    <div
+      className={classNames(baseClasses, {
+        'translate-y-0 opacity-100': showNewPost,
+        'translate-y-full opacity-0': !showNewPost,
+      })}
+    >
       <div className="w-screen h-20" onClick={() => setShowNewPost(false)} />
       <Formik initialValues={initialValues} validationSchema={postSchema} onSubmit={handleSubmit}>
         {({ values, setFieldValue }) => (
