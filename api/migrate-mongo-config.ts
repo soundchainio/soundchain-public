@@ -1,12 +1,10 @@
 // In this file you can configure migrate-mongo
-import * as dotenv from 'dotenv-flow';
+import { config } from './src/config';
 
-dotenv.config();
-
-const config = {
+const migrationConfig = {
   mongodb: {
     // TODO Change (or review) the url to your MongoDB:
-    url: process.env.DATABASE_URL,
+    url: config.db.url,
 
     // TODO Change this to your database name:
     databaseName: 'test',
@@ -34,4 +32,4 @@ const config = {
 };
 
 // Return the config as a promise
-module.exports = config;
+module.exports = migrationConfig;
