@@ -6,7 +6,7 @@ import { config } from './config';
 import { EmailService } from './services/EmailService';
 
 export const handler: Handler = async (...args) => {
-  await mongoose.connect(config.db.url, config.db.options);
+  await mongoose.connect(config.db.url, config.db.options as mongoose.ConnectionOptions);
 
   EmailService.initialize();
 

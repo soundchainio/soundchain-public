@@ -5,7 +5,7 @@ import { config } from './config';
 import { EmailService } from './services/EmailService';
 
 async function bootstrap() {
-  await mongoose.connect(config.db.url, config.db.options);
+  await mongoose.connect(config.db.url, config.db.options as mongoose.ConnectionOptions);
 
   EmailService.initialize();
 
