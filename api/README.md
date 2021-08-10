@@ -9,5 +9,5 @@
 # Migrations
 
 - To create a migration: `yarn migrate:create [description]`
-- Migrate UP: `yarn migrate`
+- Migrate Up: `yarn migrate`
 - Migrate Down: `yarn migrate:down`
