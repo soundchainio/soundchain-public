@@ -23,9 +23,15 @@ export class CommentResolver {
   }
 
   @Query(() => Comment)
-  @Authorized()
   comment(@Arg('id') id: string): Promise<Comment> {
+    console.log(id);
     return CommentService.getComment(id);
+  }
+
+  @Query(() => [Comment])
+  comments(@Arg('postId') postId: string): Promise<Comment[]> {
+    console.log(postId);
+    return CommentService.getComments(postId);
   }
 
   @Mutation(() => AddCommentPayload)

@@ -1,22 +1,19 @@
+import { Comments } from 'components/Comments';
 import { Layout } from 'components/Layout';
 import { Post } from 'components/Post';
-import { useRouter } from 'next/router';
+import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 
-// export const getServerSideProps: GetServerSideProps = async context => {
-//   const { data: post } = await apolloClient.query<PostQuery>({
-//     query: PostDocument,
-//     variables: { id: context.params?.id },
-//     context,
-//   });
-//   return { props: { post } };
-// };
+export const getServerSideProps: GetServerSideProps = async ({ params }) => {
+  return {
+    props: { postId: params?.id },
+  };
+};
 
-export default function PostPage() {
-  const router = useRouter();
-
+export default function PostPage({ postId }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   return (
     <Layout>
-      <Post id={router.query.id as string} />
+      <Post postId={postId} />
+      <Comments postId={postId} />
     </Layout>
   );
 }

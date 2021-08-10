@@ -1,12 +1,5 @@
 query Posts {
   posts {
-    id
-    body
-    profile {
-      id
-      displayName
-      profilePicture
-    }
-    createdAt
+    ...PostComponentFields
   }
 }

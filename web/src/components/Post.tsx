@@ -8,15 +8,16 @@ import { PostActions } from './PostActions';
 import { PostStats } from './PostStats';
 
 interface PostProps {
-  id: string;
+  postId: string;
 }
 
 const generateRandomNumber = () => {
   return Math.round(Math.random() * 100);
 };
 
-export const Post = ({ id }: PostProps) => {
-  const { loading, error, data } = usePostQuery({ variables: { id }, fetchPolicy: 'cache-first' });
+export const Post = ({ postId }: PostProps) => {
+  const { loading, error, data } = usePostQuery({ variables: { id: postId }, fetchPolicy: 'cache-first' });
+  const { post } = data;
 
   return (
     <>

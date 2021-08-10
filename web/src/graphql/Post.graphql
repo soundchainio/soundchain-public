@@ -1,12 +1,5 @@
 query Post($id: String!) {
   post(id: $id) {
-    id
-    body
-    createdAt
-    profile {
-      id
-      displayName
-      profilePicture
-    }
+    ...PostComponentFields
   }
 }

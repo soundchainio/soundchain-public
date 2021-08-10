@@ -19,7 +19,7 @@ export default function Feed() {
         {error && <p>{error.message}</p>}
         <div className="space-y-3">
           {data?.posts.map((post, index) => (
-            <Post key={index} id={post.id} />
+            <Post key={index} postId={post.id} />
           ))}
         </div>
       </div>

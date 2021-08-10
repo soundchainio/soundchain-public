@@ -1,0 +1,10 @@
+fragment PostComponentFields on Post {
+  id
+  body
+  createdAt
+  profile {
+    id
+    displayName
+    profilePicture
+  }
+}
