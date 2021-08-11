@@ -1,5 +1,6 @@
 import { useCommentQuery } from 'lib/graphql';
 import { Avatar } from './Avatar';
+import { CommentSkeleton } from './CommentSkeleton';
 import { Timestamp } from './Timestamp';
 
 interface CommentProps {
@@ -7,10 +8,10 @@ interface CommentProps {
 }
 
 export const Comment = ({ commentId }: CommentProps) => {
-  const { data, loading, error } = useCommentQuery({ variables: { id: commentId } });
+  const { data } = useCommentQuery({ variables: { id: commentId } });
   const comment = data?.comment;
 
-  if (!comment) return <div>Loading</div>;
+  if (!comment) return <CommentSkeleton />;
 
   return (
     <div className="flex flex-row space-x-3">

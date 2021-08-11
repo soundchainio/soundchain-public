@@ -1,9 +1,10 @@
-import { ErrorMessage, Field, Form, Formik, FormikHelpers, FormikProps } from 'formik';
+import { Field, FieldProps, Form, Formik, FormikHelpers, FormikProps } from 'formik';
+import TextareaAutosize from 'react-textarea-autosize';
 import * as yup from 'yup';
-import { useAddCommentMutation } from '../lib/graphql';
+import { CommentsDocument, CommentsQuery, useAddCommentMutation } from '../lib/graphql';
 
 export interface NewCommentFormProps {
-  post: string;
+  postId: string;
 }
 
 interface FormValues {
@@ -16,11 +17,23 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
 
 const initialValues: FormValues = { body: '' };
 
-export const NewCommentForm = ({ post }: NewCommentFormProps) => {
-  const [addComment] = useAddCommentMutation();
+export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
+  const [addComment] = useAddCommentMutation({
+    update(cache, { data }) {
+      const newComment = data?.addComment.comment;
+      const existingComments = cache.readQuery<CommentsQuery>({ query: CommentsDocument, variables: { postId } });
+      cache.writeQuery({
+        query: CommentsDocument,
+        variables: { postId },
+        data: {
+          comments: [newComment, ...(existingComments?.comments || [])],
+        },
+      });
+    },
+  });
 
   const handleSubmit = async ({ body }: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
-    await addComment({ variables: { input: { post, body } } });
+    await addComment({ variables: { input: { post: postId, body } } });
     resetForm();
   };
 
@@ -28,13 +41,12 @@ export const NewCommentForm = ({ post }: NewCommentFormProps) => {
     <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
       {({ isSubmitting }: FormikProps<FormValues>) => (
         <Form>
-          <div>
-            <Field as="textarea" name="body" />
-            <ErrorMessage name="body" component="div" />
+          <div className="flex flex-row">
+            <Field name="body">{({ field }: FieldProps) => <TextareaAutosize {...field} />}</Field>
+            <button type="submit" disabled={isSubmitting} className="p-2 border-2">
+              Post comment
+            </button>
           </div>
-          <button type="submit" disabled={isSubmitting} className="p-2 border-2">
-            Post comment
-          </button>
         </Form>
       )}
     </Formik>

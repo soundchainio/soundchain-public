@@ -1,12 +1,16 @@
 import { useCommentsQuery } from 'lib/graphql';
 import { Comment } from './Comment';
+import { CommentSkeleton } from './CommentSkeleton';
 
 interface CommentsProps {
   postId: string;
 }
 
 export const Comments = ({ postId }: CommentsProps) => {
-  const { data, loading, error } = useCommentsQuery({ variables: { postId } });
+  const { data } = useCommentsQuery({ variables: { postId } });
+  const comments = data?.comments;
+
+  if (!comments) return <CommentSkeleton />;
 
   return (
     <div className="flex flex-col m-6 space-y-6">

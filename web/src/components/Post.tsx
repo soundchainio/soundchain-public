@@ -15,7 +15,7 @@ const generateRandomNumber = () => {
 };
 
 export const Post = ({ postId }: PostProps) => {
-  const { loading, error, data } = usePostQuery({ variables: { id: postId }, fetchPolicy: 'cache-first' });
+  const { data } = usePostQuery({ variables: { id: postId }, fetchPolicy: 'cache-first' });
   const post = data?.post;
 
   return (
