@@ -10,11 +10,13 @@ const normalizeSoundcloud = async (str: string) => {
   if (str && str.includes('soundcloud.com/')) {
     const soundcloudUrl = 'http://soundcloud.com/oembed?format=js&url=' + str + '&iframe=false';
     const songInfo = await axios(soundcloudUrl);
-    // it returns a string '({a: test1, b: test2});'
-    // we have to remove the first and last 2 characters from the response to parse as JSON
-    const iframeString = JSON.parse(songInfo.data.substring(1).slice(0, -2)).html;
-    const src = iframeString.match(/(?<=src=\").*(?=\">)/g) || [];
-    return src[0];
+    if (songInfo.data) {
+      // it returns a string '({a: test1, b: test2});'
+      // we have to remove the first and last 2 characters from the response to parse as JSON
+      const iframeString = JSON.parse(songInfo.data.substring(1).slice(0, -2)).html;
+      const src = iframeString.match(/(?<=src=\").*(?=\">)/g) || [];
+      return src[0];
+    }
   }
 
   return str;
