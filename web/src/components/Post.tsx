@@ -21,12 +21,12 @@ export const Post = ({ body, name, date }: PostProps) => {
 
   useEffect(() => {
     if (body.length) {
-      treatPostLink();
+      extractEmbedLink();
     }
   }, [body]);
 
-  const treatPostLink = async () => {
-    const link = await getNormalizedLink(body);
+  const extractEmbedLink = () => {
+    const link = getNormalizedLink(body);
     setPostLink(link || '');
   };
 
