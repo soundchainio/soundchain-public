@@ -1,5 +1,5 @@
 import { Form, Formik } from 'formik';
-import React from 'react';
+import React, { useState } from 'react';
 import { handleRegex } from 'utils/Validation';
 import * as yup from 'yup';
 import { Button } from './Button';
@@ -31,8 +31,20 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
 const initialFormValues = { displayName: '', handle: '' };
 
 export const SetupProfileForm = ({ onSubmit }: FormProps) => {
+  const [profilePicture, setProfilePicture] = useState<File>();
+  const [coverPicture, setCoverPicture] = useState<File>();
   const handleSubmit = async (values: FormValues) => {
     onSubmit(values);
+  };
+
+  const onProfilePictureSelected = <T extends File>(picture: T) => {
+    console.log(picture);
+    setProfilePicture(picture);
+  };
+
+  const onCoverPictureSelected = <T extends File>(picture: T) => {
+    console.log(picture);
+    setCoverPicture(picture);
   };
 
   return (
@@ -41,7 +53,10 @@ export const SetupProfileForm = ({ onSubmit }: FormProps) => {
       <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
         <Form className="flex flex-1 flex-col">
           <div className="mb-auto space-y-6">
-            <ProfilePictureUploader />
+            <ProfilePictureUploader
+              onProfilePictureSelected={onProfilePictureSelected}
+              onCoverPictureSelected={onCoverPictureSelected}
+            />
             <div>
               <Label className="pl-1">First or full name.</Label>
               <InputField
