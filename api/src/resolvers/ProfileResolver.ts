@@ -7,9 +7,9 @@ import { ProfileService } from '../services/ProfileService';
 import { GenerateUploadUrlInput } from './types/GenerateUploadUrlInput';
 import { GenerateUploadUrlPayload } from './types/GenerateUploadUrlPayload';
 import { UpdateFavoriteGenresInput } from './types/UpdateFavoriteGenresInput';
-import { UpdateFavoriteGenresPayload } from './types/UpdateFavoriteGenresPayload';
+import { UpdateProfilePayload } from './types/UpdateProfilePayload';
+import { UpdateProfilePictureInput } from './types/UpdateProfilePictureInput';
 import { UpdateSocialMediasInput } from './types/UpdateSocialMediasInput';
-import { UpdateSocialMediasPayload } from './types/UpdateSocialMediasPayload';
 
 @Resolver(Profile)
 export class ProfileResolver {
@@ -19,33 +19,44 @@ export class ProfileResolver {
     return ProfileService.getProfile(profileId);
   }
 
-  @Mutation(() => UpdateSocialMediasPayload)
+  @Mutation(() => UpdateProfilePayload)
   @Authorized()
   async updateSocialMedias(
     @Arg('input')
     socialMedias: UpdateSocialMediasInput,
     @CurrentUser() { profileId }: User,
-  ): Promise<UpdateSocialMediasPayload> {
+  ): Promise<UpdateProfilePayload> {
     const profile = await ProfileService.updateSocialMedias(profileId, socialMedias);
     return { profile };
   }
 
-  @Mutation(() => UpdateFavoriteGenresPayload)
+  @Mutation(() => UpdateProfilePayload)
   @Authorized()
   async updateFavoriteGenres(
     @Arg('input')
     { favoriteGenres }: UpdateFavoriteGenresInput,
     @CurrentUser() { profileId }: User,
-  ): Promise<UpdateFavoriteGenresPayload> {
+  ): Promise<UpdateProfilePayload> {
     const profile = await ProfileService.updateFavoriteGenres(profileId, favoriteGenres);
+    return { profile };
+  }
+
+  @Mutation(() => UpdateProfilePayload)
+  @Authorized()
+  async updateProfilePicture(
+    @Arg('input')
+    { profilePicture }: UpdateProfilePictureInput,
+    @CurrentUser() { profileId }: User,
+  ): Promise<UpdateProfilePayload> {
+    const profile = await ProfileService.updateProfilePicture(profileId, profilePicture);
     return { profile };
   }
 
   @Mutation(() => GenerateUploadUrlPayload)
   async generateUploadUrl(
     @Arg('input')
-    { extension }: GenerateUploadUrlInput,
+    { fileType }: GenerateUploadUrlInput,
   ): Promise<GenerateUploadUrlPayload> {
-    return AWSService.generateUploadUrl(extension);
+    return AWSService.generateUploadUrl(fileType);
   }
 }

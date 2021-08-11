@@ -1,7 +1,7 @@
 import { Field, InputType } from 'type-graphql';
 
 @InputType()
-export class GenerateUploadUrlInput {
+export class UpdateProfilePictureInput {
   @Field()
-  fileType: string;
+  profilePicture: string;
 }

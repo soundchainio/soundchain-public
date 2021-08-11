@@ -23,4 +23,12 @@ export class ProfileService {
     }
     return updatedProfile;
   }
+
+  static async updateProfilePicture(id: string, profilePicture: string): Promise<Profile> {
+    const updatedProfile = await ProfileModel.findByIdAndUpdate(id, { profilePicture }, { new: true });
+    if (!updatedProfile) {
+      throw new UserInputError(`Could not find the profile with id: ${id}`);
+    }
+    return updatedProfile;
+  }
 }

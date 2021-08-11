@@ -2,7 +2,7 @@ import { Field, ObjectType } from 'type-graphql';
 import { Profile } from '../../models/Profile';
 
 @ObjectType()
-export class UpdateFavoriteGenresPayload {
+export class UpdateProfilePayload {
   @Field()
   profile: Profile;
 }

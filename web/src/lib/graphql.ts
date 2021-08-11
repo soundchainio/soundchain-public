@@ -40,6 +40,17 @@ export type ForgotPasswordPayload = {
   ok: Scalars['Boolean'];
 };
 
+export type GenerateUploadUrlInput = {
+  fileType: Scalars['String'];
+};
+
+export type GenerateUploadUrlPayload = {
+  __typename?: 'GenerateUploadUrlPayload';
+  uploadUrl: Scalars['String'];
+  fileName: Scalars['String'];
+  readUrl: Scalars['String'];
+};
+
 export enum Genre {
   Acoustic = 'ACOUSTIC',
   Alternative = 'ALTERNATIVE',
@@ -87,8 +98,10 @@ export type LoginInput = {
 export type Mutation = {
   __typename?: 'Mutation';
   createPost: CreatePostPayload;
-  updateSocialMedias: UpdateSocialMediasPayload;
-  updateFavoriteGenres: UpdateFavoriteGenresPayload;
+  updateSocialMedias: UpdateProfilePayload;
+  updateFavoriteGenres: UpdateProfilePayload;
+  updateProfilePicture: UpdateProfilePayload;
+  generateUploadUrl: GenerateUploadUrlPayload;
   register: AuthPayload;
   login: AuthPayload;
   verifyUserEmail: VerifyUserEmailPayload;
@@ -109,6 +122,16 @@ export type MutationUpdateSocialMediasArgs = {
 
 export type MutationUpdateFavoriteGenresArgs = {
   input: UpdateFavoriteGenresInput;
+};
+
+
+export type MutationUpdateProfilePictureArgs = {
+  input: UpdateProfilePictureInput;
+};
+
+
+export type MutationGenerateUploadUrlArgs = {
+  input: GenerateUploadUrlInput;
 };
 
 
@@ -212,9 +235,13 @@ export type UpdateFavoriteGenresInput = {
   favoriteGenres: Array<Genre>;
 };
 
-export type UpdateFavoriteGenresPayload = {
-  __typename?: 'UpdateFavoriteGenresPayload';
+export type UpdateProfilePayload = {
+  __typename?: 'UpdateProfilePayload';
   profile: Profile;
+};
+
+export type UpdateProfilePictureInput = {
+  profilePicture: Scalars['String'];
 };
 
 export type UpdateSocialMediasInput = {
@@ -222,11 +249,6 @@ export type UpdateSocialMediasInput = {
   instagram?: Maybe<Scalars['String']>;
   soundcloud?: Maybe<Scalars['String']>;
   twitter?: Maybe<Scalars['String']>;
-};
-
-export type UpdateSocialMediasPayload = {
-  __typename?: 'UpdateSocialMediasPayload';
-  profile: Profile;
 };
 
 export type User = {
@@ -275,6 +297,19 @@ export type ForgotPasswordMutation = (
   & { forgotPassword: (
     { __typename?: 'ForgotPasswordPayload' }
     & Pick<ForgotPasswordPayload, 'ok'>
+  ) }
+);
+
+export type GenerateUploadUrlMutationVariables = Exact<{
+  input: GenerateUploadUrlInput;
+}>;
+
+
+export type GenerateUploadUrlMutation = (
+  { __typename?: 'Mutation' }
+  & { generateUploadUrl: (
+    { __typename?: 'GenerateUploadUrlPayload' }
+    & Pick<GenerateUploadUrlPayload, 'uploadUrl' | 'fileName' | 'readUrl'>
   ) }
 );
 
@@ -370,10 +405,26 @@ export type UpdateFavoriteGenresMutationVariables = Exact<{
 export type UpdateFavoriteGenresMutation = (
   { __typename?: 'Mutation' }
   & { updateFavoriteGenres: (
-    { __typename?: 'UpdateFavoriteGenresPayload' }
+    { __typename?: 'UpdateProfilePayload' }
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'favoriteGenres'>
+    ) }
+  ) }
+);
+
+export type UpdateProfilePictureMutationVariables = Exact<{
+  input: UpdateProfilePictureInput;
+}>;
+
+
+export type UpdateProfilePictureMutation = (
+  { __typename?: 'Mutation' }
+  & { updateProfilePicture: (
+    { __typename?: 'UpdateProfilePayload' }
+    & { profile: (
+      { __typename?: 'Profile' }
+      & Pick<Profile, 'id' | 'profilePicture'>
     ) }
   ) }
 );
@@ -386,7 +437,7 @@ export type UpdateSocialMediasMutationVariables = Exact<{
 export type UpdateSocialMediasMutation = (
   { __typename?: 'Mutation' }
   & { updateSocialMedias: (
-    { __typename?: 'UpdateSocialMediasPayload' }
+    { __typename?: 'UpdateProfilePayload' }
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id'>
@@ -493,6 +544,41 @@ export function useForgotPasswordMutation(baseOptions?: Apollo.MutationHookOptio
 export type ForgotPasswordMutationHookResult = ReturnType<typeof useForgotPasswordMutation>;
 export type ForgotPasswordMutationResult = Apollo.MutationResult<ForgotPasswordMutation>;
 export type ForgotPasswordMutationOptions = Apollo.BaseMutationOptions<ForgotPasswordMutation, ForgotPasswordMutationVariables>;
+export const GenerateUploadUrlDocument = gql`
+    mutation GenerateUploadUrl($input: GenerateUploadUrlInput!) {
+  generateUploadUrl(input: $input) {
+    uploadUrl
+    fileName
+    readUrl
+  }
+}
+    `;
+export type GenerateUploadUrlMutationFn = Apollo.MutationFunction<GenerateUploadUrlMutation, GenerateUploadUrlMutationVariables>;
+
+/**
+ * __useGenerateUploadUrlMutation__
+ *
+ * To run a mutation, you first call `useGenerateUploadUrlMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useGenerateUploadUrlMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [generateUploadUrlMutation, { data, loading, error }] = useGenerateUploadUrlMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGenerateUploadUrlMutation(baseOptions?: Apollo.MutationHookOptions<GenerateUploadUrlMutation, GenerateUploadUrlMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<GenerateUploadUrlMutation, GenerateUploadUrlMutationVariables>(GenerateUploadUrlDocument, options);
+      }
+export type GenerateUploadUrlMutationHookResult = ReturnType<typeof useGenerateUploadUrlMutation>;
+export type GenerateUploadUrlMutationResult = Apollo.MutationResult<GenerateUploadUrlMutation>;
+export type GenerateUploadUrlMutationOptions = Apollo.BaseMutationOptions<GenerateUploadUrlMutation, GenerateUploadUrlMutationVariables>;
 export const LoginDocument = gql`
     mutation Login($input: LoginInput!) {
   login(input: $input) {
@@ -747,6 +833,42 @@ export function useUpdateFavoriteGenresMutation(baseOptions?: Apollo.MutationHoo
 export type UpdateFavoriteGenresMutationHookResult = ReturnType<typeof useUpdateFavoriteGenresMutation>;
 export type UpdateFavoriteGenresMutationResult = Apollo.MutationResult<UpdateFavoriteGenresMutation>;
 export type UpdateFavoriteGenresMutationOptions = Apollo.BaseMutationOptions<UpdateFavoriteGenresMutation, UpdateFavoriteGenresMutationVariables>;
+export const UpdateProfilePictureDocument = gql`
+    mutation UpdateProfilePicture($input: UpdateProfilePictureInput!) {
+  updateProfilePicture(input: $input) {
+    profile {
+      id
+      profilePicture
+    }
+  }
+}
+    `;
+export type UpdateProfilePictureMutationFn = Apollo.MutationFunction<UpdateProfilePictureMutation, UpdateProfilePictureMutationVariables>;
+
+/**
+ * __useUpdateProfilePictureMutation__
+ *
+ * To run a mutation, you first call `useUpdateProfilePictureMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateProfilePictureMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateProfilePictureMutation, { data, loading, error }] = useUpdateProfilePictureMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateProfilePictureMutation(baseOptions?: Apollo.MutationHookOptions<UpdateProfilePictureMutation, UpdateProfilePictureMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateProfilePictureMutation, UpdateProfilePictureMutationVariables>(UpdateProfilePictureDocument, options);
+      }
+export type UpdateProfilePictureMutationHookResult = ReturnType<typeof useUpdateProfilePictureMutation>;
+export type UpdateProfilePictureMutationResult = Apollo.MutationResult<UpdateProfilePictureMutation>;
+export type UpdateProfilePictureMutationOptions = Apollo.BaseMutationOptions<UpdateProfilePictureMutation, UpdateProfilePictureMutationVariables>;
 export const UpdateSocialMediasDocument = gql`
     mutation updateSocialMedias($input: UpdateSocialMediasInput!) {
   updateSocialMedias(input: $input) {

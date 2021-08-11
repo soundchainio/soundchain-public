@@ -13,8 +13,13 @@ interface FormValues {
   handle: string;
 }
 
+interface SetupProfileFormValues extends FormValues {
+  profilePicture?: File;
+  coverPicture?: File;
+}
+
 interface FormProps {
-  onSubmit: (values: FormValues) => void;
+  onSubmit: (values: SetupProfileFormValues) => void;
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
@@ -34,7 +39,7 @@ export const SetupProfileForm = ({ onSubmit }: FormProps) => {
   const [profilePicture, setProfilePicture] = useState<File>();
   const [coverPicture, setCoverPicture] = useState<File>();
   const handleSubmit = async (values: FormValues) => {
-    onSubmit(values);
+    onSubmit({ ...values, profilePicture, coverPicture });
   };
 
   const onProfilePictureSelected = <T extends File>(picture: T) => {

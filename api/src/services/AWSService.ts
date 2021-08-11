@@ -11,15 +11,16 @@ export class AWSService {
     this.s3Client = new S3Client({ region: config.aws.region });
   }
 
-  static async generateUploadUrl(extension: string): Promise<GenerateUploadUrlPayload> {
+  static async generateUploadUrl(fileType: string): Promise<GenerateUploadUrlPayload> {
     const imageId = uuidv4();
+    const extension = fileType.split('/')[1];
     const fileName = `${imageId}.${extension}`;
     const bucketParams: PutObjectCommandInput = {
       Bucket: config.aws.bucket,
       Key: fileName,
-      ContentType: `image/${extension}`,
+      ContentType: fileType,
+      ACL: 'public-read',
     };
-
     const command = new PutObjectCommand(bucketParams);
     const uploadUrl = await getSignedUrl(this.s3Client, command, {
       expiresIn: 1000 * 60 * 5,
@@ -27,7 +28,7 @@ export class AWSService {
     return {
       uploadUrl,
       fileName,
-      readUrl: `https://${config.aws.bucket}.s3.amazonaws.com/${fileName}`,
+      readUrl: `https://${config.aws.bucket}.s3.${config.aws.region}.amazonaws.com/${fileName}`,
     };
   }
 }

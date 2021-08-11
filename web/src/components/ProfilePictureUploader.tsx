@@ -13,6 +13,9 @@ interface CustomImageLoader {
   src: string;
 }
 
+const MAX_NUMBER_OF_FILES = 1;
+const MAX_FILE_SIZE = 1000 * 1024 * 3;
+
 export const ProfilePictureUploader = ({
   onProfilePictureSelected,
   onCoverPictureSelected,
@@ -42,7 +45,7 @@ export const ProfilePictureUploader = ({
 
   return (
     <div className="flex h-32 items-center justify-center">
-      <Dropzone maxFiles={1} onDrop={onProfile}>
+      <Dropzone maxFiles={MAX_NUMBER_OF_FILES} maxSize={MAX_FILE_SIZE} accept="image/*" onDrop={onProfile}>
         {({ getRootProps, getInputProps }) => (
           <div {...getRootProps()} className="flex flex-col w-28 h-full items-center justify-center">
             <span className="inline-flex items-center justify-center h-24 w-24 rounded-full bg-gray-30 relative">
@@ -72,7 +75,7 @@ export const ProfilePictureUploader = ({
           </div>
         )}
       </Dropzone>
-      <Dropzone maxFiles={1} onDrop={onCover}>
+      <Dropzone maxFiles={MAX_NUMBER_OF_FILES} maxSize={MAX_FILE_SIZE} accept="image/*" onDrop={onCover}>
         {({ getRootProps, getInputProps }) => (
           <div className="w-full h-full max-w-sm flex flex-col items-center justify-center ml-6">
             <span

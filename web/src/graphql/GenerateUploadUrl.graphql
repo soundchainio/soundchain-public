@@ -1,0 +1,7 @@
+mutation GenerateUploadUrl($input: GenerateUploadUrlInput!) {
+  generateUploadUrl(input: $input) {
+    uploadUrl
+    fileName
+    readUrl
+  }
+}
