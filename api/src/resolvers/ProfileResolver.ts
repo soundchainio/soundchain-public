@@ -2,7 +2,10 @@ import { Arg, Authorized, Mutation, Query, Resolver } from 'type-graphql';
 import { CurrentUser } from '../middlewares/decorators/current-user';
 import { Profile } from '../models/Profile';
 import User from '../models/User';
+import { AWSService } from '../services/AWSService';
 import { ProfileService } from '../services/ProfileService';
+import { GenerateUploadUrlInput } from './types/GenerateUploadUrlInput';
+import { GenerateUploadUrlPayload } from './types/GenerateUploadUrlPayload';
 import { UpdateFavoriteGenresInput } from './types/UpdateFavoriteGenresInput';
 import { UpdateFavoriteGenresPayload } from './types/UpdateFavoriteGenresPayload';
 import { UpdateSocialMediasInput } from './types/UpdateSocialMediasInput';
@@ -36,5 +39,13 @@ export class ProfileResolver {
   ): Promise<UpdateFavoriteGenresPayload> {
     const profile = await ProfileService.updateFavoriteGenres(profileId, favoriteGenres);
     return { profile };
+  }
+
+  @Mutation(() => GenerateUploadUrlPayload)
+  async generateUploadUrl(
+    @Arg('input')
+    { extension }: GenerateUploadUrlInput,
+  ): Promise<GenerateUploadUrlPayload> {
+    return AWSService.generateUploadUrl(extension);
   }
 }

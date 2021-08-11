@@ -33,6 +33,8 @@ const {
   SENDGRID_VERIFICATION_TEMPLATE,
   SENDGRID_RESET_PASSWORD_TEMPLATE,
   SENDGRID_API_KEY,
+  UPLOADS_BUCKET_REGION,
+  UPLOADS_BUCKET_NAME,
 } = process.env;
 
 function assertEnvVar(name: string, value: string | undefined): asserts value {
@@ -62,6 +64,10 @@ export const config = {
       globalMiddlewares: [TypegooseMiddleware],
       authChecker: ({ context }) => Boolean(context.jwtUser),
     }),
+  },
+  aws: {
+    region: UPLOADS_BUCKET_REGION,
+    bucket: UPLOADS_BUCKET_NAME,
   },
   db: {
     url: DATABASE_URL,

@@ -1,0 +1,33 @@
+import { PutObjectCommand, PutObjectCommandInput, S3Client } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { v4 as uuidv4 } from 'uuid';
+import { config } from '../config';
+import { GenerateUploadUrlPayload } from '../resolvers/types/GenerateUploadUrlPayload';
+
+export class AWSService {
+  static s3Client: S3Client;
+
+  static initialize(): void {
+    this.s3Client = new S3Client({ region: config.aws.region });
+  }
+
+  static async generateUploadUrl(extension: string): Promise<GenerateUploadUrlPayload> {
+    const imageId = uuidv4();
+    const fileName = `${imageId}.${extension}`;
+    const bucketParams: PutObjectCommandInput = {
+      Bucket: config.aws.bucket,
+      Key: fileName,
+      ContentType: `image/${extension}`,
+    };
+
+    const command = new PutObjectCommand(bucketParams);
+    const uploadUrl = await getSignedUrl(this.s3Client, command, {
+      expiresIn: 1000 * 60 * 5,
+    });
+    return {
+      uploadUrl,
+      fileName,
+      readUrl: `https://${config.aws.bucket}.s3.amazonaws.com/${fileName}`,
+    };
+  }
+}
