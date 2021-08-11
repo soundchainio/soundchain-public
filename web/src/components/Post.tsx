@@ -41,7 +41,7 @@ export const Post = ({ body, name, date }: PostProps) => {
           <p className="text-base text-gray-400 flex-1 text-right">{formatDistance(new Date(date), new Date())}</p>
         </div>
         <div className="mt-4 text-gray-100">{body}</div>
-        {postLink && <iframe frameBorder="0" className="mt-4 w-full" allowFullScreen src={postLink} />}
+        {postLink && <iframe frameBorder="0" className="mt-4 w-full bg-gray-20" allowFullScreen src={postLink} />}
         <PostStats likes={generateRandomNumber()} comments={generateRandomNumber()} reposts={generateRandomNumber()} />
       </div>
       <PostActions />

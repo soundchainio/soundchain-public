@@ -3,6 +3,7 @@ import axios from 'axios';
 const linksRegex = /\bhttps?:\/\/\S+/gi;
 const spotifyRegex = /(?<=track).*(?=si)/g;
 const soundcloudRegex = /(?<=src=\").*(?=\">)/g;
+const vimeoRegex = /(?<=vimeo.com\/).*$/g;
 
 const normalizeYoutube = (str: string) => {
   if (str) return str.replace('/watch?v=', '/embed/');
@@ -31,10 +32,20 @@ const normalizeSpotify = async (str: string) => {
   return str;
 };
 
+const normalizeVimeo = async (str: string) => {
+  if (str && str.includes('vimeo.com/')) {
+    const videoId = str.match(vimeoRegex) || [];
+    const vimeoUrl = 'https://player.vimeo.com/video/' + videoId[0];
+    return vimeoUrl;
+  }
+  return str;
+};
+
 const normalizeAll = async (str: string) => {
   let text = normalizeYoutube(str);
   text = await normalizeSoundcloud(text || '');
   text = await normalizeSpotify(text || '');
+  text = await normalizeVimeo(text || '');
   return text;
 };
 

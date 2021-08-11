@@ -113,7 +113,7 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
               maxLength={setMaxInputLength(values.body)}
               validate={onTextareaChange(values.body)}
             />
-            {postLink && <iframe className="w-full" frameBorder="0" allowFullScreen src={postLink} />}
+            {postLink && <iframe className="w-full bg-gray-20" frameBorder="0" allowFullScreen src={postLink} />}
             <div className="p-4 flex items-center bg-gray-25">
               <div className="justify-self-start flex-1">
                 <span onClick={onEmojiClick}>{isEmojiPickerVisible ? '❌' : '😃'}</span>
