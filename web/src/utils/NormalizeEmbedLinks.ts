@@ -57,3 +57,7 @@ export const getNormalizedLink = async (str: string) => {
   const links = str.match(linksRegex) || [];
   return await normalizeAll(links[0]);
 };
+
+export const hasLink = (str: string) => {
+  return str.match(linksRegex) ? true : false;
+};
