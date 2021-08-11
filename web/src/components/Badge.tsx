@@ -7,7 +7,7 @@ interface BadgeProps extends React.ComponentPropsWithoutRef<'span'> {
 export const Badge = ({ label, selected, onClick, ...rest }: BadgeProps) => (
   <span
     className={`inline-flex items-center px-4 mr-2 py-1 rounded-full text-xs font-medium cursor-pointer ${
-      selected ? 'bg-white text-gray-light' : 'bg-gray-30 text-white'
+      selected ? 'bg-white text-gray-light font-black' : 'bg-gray-30 text-white'
     }`}
     onClick={onClick}
     {...rest}
