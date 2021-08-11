@@ -76,9 +76,9 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
     }
   };
 
-  const onTextareaChange = (body: string) => {
+  const onTextareaChange = async (body: string) => {
     if (body.length) {
-      const link = getNormalizedLink(body);
+      const link = await getNormalizedLink(body);
       setPostLink(link || '');
     }
   };

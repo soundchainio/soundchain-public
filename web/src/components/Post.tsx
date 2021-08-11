@@ -25,8 +25,8 @@ export const Post = ({ body, name, date }: PostProps) => {
     }
   }, [body]);
 
-  const extractEmbedLink = () => {
-    const link = getNormalizedLink(body);
+  const extractEmbedLink = async () => {
+    const link = await getNormalizedLink(body);
     setPostLink(link || '');
   };
 

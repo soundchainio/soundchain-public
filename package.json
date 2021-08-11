@@ -12,5 +12,8 @@
     "@types/yup": "^0.29.13",
     "husky": "^7.0.1",
     "lerna": "^3.22.1"
+  },
+  "dependencies": {
+    "axios": "^0.21.1"
   }
 }
