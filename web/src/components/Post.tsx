@@ -1,4 +1,5 @@
 import { formatDistance } from 'date-fns';
+import { Maybe } from 'lib/graphql';
 import Image from 'next/image';
 import React from 'react';
 import ProfilePic from '../../public/profile.jpg';
@@ -9,19 +10,24 @@ interface PostProps {
   body: string;
   name: string;
   date: string;
+  profilePicture: Maybe<string> | undefined;
 }
 
 const generateRandomNumber = () => {
   return Math.round(Math.random() * 100);
 };
 
-export const Post = ({ body, name, date }: PostProps) => {
+export const Post = ({ body, name, date, profilePicture }: PostProps) => {
   return (
     <div>
       <div className="p-4 bg-gray-20">
         <div className="flex items-center">
-          <div className="rounded-full w-8 h-8 border overflow-hidden">
-            <Image alt="Profile picture" src={ProfilePic} />
+          <div className="rounded-full w-8 h-8 overflow-hidden relative">
+            {profilePicture ? (
+              <Image alt="Profile picture" src={profilePicture} layout="fill" objectFit="cover" />
+            ) : (
+              <Image alt="Profile picture" src={ProfilePic} />
+            )}
           </div>
           <p className="ml-4 text-lg font-bold text-gray-100">{name}</p>
           <p className="text-base text-gray-400 flex-1 text-right">{formatDistance(new Date(date), new Date())}</p>

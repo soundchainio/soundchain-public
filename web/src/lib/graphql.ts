@@ -366,7 +366,7 @@ export type PostsQuery = (
     & Pick<Post, 'id' | 'body' | 'createdAt'>
     & { profile: (
       { __typename?: 'Profile' }
-      & Pick<Profile, 'displayName'>
+      & Pick<Profile, 'displayName' | 'profilePicture'>
     ) }
   )> }
 );
@@ -699,6 +699,7 @@ export const PostsDocument = gql`
     body
     profile {
       displayName
+      profilePicture
     }
     createdAt
   }

@@ -19,7 +19,13 @@ export default function Feed() {
         {error && <p>{error.message}</p>}
         <div className="space-y-3">
           {data?.posts.map((post, index) => (
-            <Post key={index} body={post.body} name={post.profile.displayName} date={post.createdAt} />
+            <Post
+              key={index}
+              body={post.body}
+              name={post.profile.displayName}
+              date={post.createdAt}
+              profilePicture={post.profile.profilePicture}
+            />
           ))}
         </div>
       </div>
