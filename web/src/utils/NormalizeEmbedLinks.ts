@@ -1,6 +1,8 @@
 import axios from 'axios';
 
 const linksRegex = /\bhttps?:\/\/\S+/gi;
+const ytRegex = /(?:https?:\/\/)?(?:www\.)?youtu\.?be(?:\.com)?\/?.*(?:watch|embed)?(?:.*v=|v\/|\/)([\w\-_]+)\&?/;
+const scRegex = /^https?:\/\/(soundcloud\.com|snd\.sc)\/(.*)$/;
 
 const normalizeYoutube = (str: string) => {
   if (str) return str.replace('/watch?v=', '/embed/');
@@ -8,7 +10,7 @@ const normalizeYoutube = (str: string) => {
 
 const normalizeSoundcloud = async (str: string) => {
   if (str && str.includes('soundcloud.com/')) {
-    const soundcloudUrl = 'http://soundcloud.com/oembed?format=js&url=' + str + '&iframe=false';
+    const soundcloudUrl = `http://soundcloud.com/oembed?format=js&url=${str}&iframe=false`;
     const songInfo = await axios(soundcloudUrl);
     if (songInfo.data) {
       // it returns a string '({a: test1, b: test2});'
@@ -22,15 +24,11 @@ const normalizeSoundcloud = async (str: string) => {
   return str;
 };
 
-const normalizeAll = async (str: string) => {
-  let text = normalizeYoutube(str);
-  text = await normalizeSoundcloud(text || '');
-  return text;
-};
-
 export const getNormalizedLink = async (str: string) => {
-  const links = str.match(linksRegex) || [];
-  return await normalizeAll(links[0]);
+  const link = (str.match(linksRegex) || [])[0];
+
+  if (ytRegex.test(link)) return normalizeYoutube(link);
+  if (scRegex.test(link)) return await normalizeSoundcloud(link);
 };
 
 export const hasLink = (str: string) => {
