@@ -2,7 +2,7 @@ import { formatDistance } from 'date-fns';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import ProfilePic from '../../public/profile.jpg';
-import { getNormalizedLink } from '../utils/NormalizeEmbedLinks';
+import { getNormalizedLink, hasLink } from '../utils/NormalizeEmbedLinks';
 import { PostActions } from './PostActions';
 import { PostStats } from './PostStats';
 
@@ -20,13 +20,13 @@ export const Post = ({ body, name, date }: PostProps) => {
   const [postLink, setPostLink] = useState('');
 
   useEffect(() => {
-    if (body.length) {
+    if (body.length && hasLink(body)) {
       extractEmbedLink();
     }
   }, [body]);
 
-  const extractEmbedLink = () => {
-    const link = getNormalizedLink(body);
+  const extractEmbedLink = async () => {
+    const link = await getNormalizedLink(body);
     setPostLink(link || '');
   };
 
