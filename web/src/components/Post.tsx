@@ -1,6 +1,7 @@
 import { usePostQuery } from 'lib/graphql';
 import NextLink from 'next/link';
-import React from 'react';
+import { useEffect, useState } from 'react';
+import { getNormalizedLink } from '../utils/NormalizeEmbedLinks';
 import { Avatar } from './Avatar';
 import { PostActions } from './PostActions';
 import { PostStats } from './PostStats';
@@ -15,31 +16,38 @@ const generateRandomNumber = () => {
 };
 
 export const Post = ({ postId }: PostProps) => {
-  const { data } = usePostQuery({ variables: { id: postId }, fetchPolicy: 'cache-first' });
+  const { data } = usePostQuery({ variables: { id: postId } });
   const post = data?.post;
+  const [postLink, setPostLink] = useState('');
+
+  useEffect(() => {
+    if (post?.body.length) {
+      const link = getNormalizedLink(post?.body || '');
+      setPostLink(link || '');
+    }
+  }, [post?.body]);
+
+  if (!post) return <div>Loading</div>;
 
   return (
-    <>
-      {post && (
-        <div>
-          <NextLink href={`/posts/${post.id}`}>
-            <div className="p-4 bg-gray-20">
-              <div className="flex items-center">
-                <Avatar />
-                <p className="ml-4 text-lg font-bold text-gray-100">{post.profile.displayName}</p>
-                <Timestamp datetime={post.createdAt} className="flex-1 text-right" />
-              </div>
-              <div className="mt-4 text-gray-100">{post.body}</div>
-              <PostStats
-                likes={generateRandomNumber()}
-                comments={generateRandomNumber()}
-                reposts={generateRandomNumber()}
-              />
-            </div>
-          </NextLink>
-          <PostActions />
+    <div>
+      <NextLink href={`/posts/${post.id}`}>
+        <div className="p-4 bg-gray-20">
+          <div className="flex items-center">
+            <Avatar />
+            <p className="ml-4 text-lg font-bold text-gray-100">{post.profile.displayName}</p>
+            <Timestamp datetime={post.createdAt} className="flex-1 text-right" />
+          </div>
+          <div className="mt-4 text-gray-100">{post.body}</div>
+          {postLink && <iframe frameBorder="0" className="mt-4 w-full" allowFullScreen src={postLink} />}
+          <PostStats
+            likes={generateRandomNumber()}
+            comments={generateRandomNumber()}
+            reposts={generateRandomNumber()}
+          />
         </div>
-      )}
-    </>
+      </NextLink>
+      <PostActions />
+    </div>
   );
 };

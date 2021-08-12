@@ -29,7 +29,6 @@ export class CommentResolver {
 
   @Query(() => [Comment])
   comments(@Arg('postId') postId: string): Promise<Comment[]> {
-    console.log(postId);
     return CommentService.getComments(postId);
   }
 
