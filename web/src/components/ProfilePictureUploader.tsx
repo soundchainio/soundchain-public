@@ -30,11 +30,9 @@ export const ProfilePictureUploader = ({
   };
 
   const onCover = <T extends File>(pictures: T[]) => {
-    const newFile = Object.assign(pictures[0], {
-      preview: URL.createObjectURL(pictures[0]),
-    });
-    setCoverPreview(newFile.preview);
-    onCoverPictureSelected(newFile);
+    const file = pictures[0];
+    setCoverPreview(URL.createObjectURL(file));
+    onCoverPictureSelected(file);
   };
 
   const customImgLoader = ({ src }: CustomImageLoader) => {
