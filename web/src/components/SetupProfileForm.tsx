@@ -38,18 +38,9 @@ const initialFormValues = { displayName: '', handle: '' };
 export const SetupProfileForm = ({ onSubmit }: FormProps) => {
   const [profilePicture, setProfilePicture] = useState<File>();
   const [coverPicture, setCoverPicture] = useState<File>();
+
   const handleSubmit = async (values: FormValues) => {
     onSubmit({ ...values, profilePicture, coverPicture });
-  };
-
-  const onProfilePictureSelected = <T extends File>(picture: T) => {
-    console.log(picture);
-    setProfilePicture(picture);
-  };
-
-  const onCoverPictureSelected = <T extends File>(picture: T) => {
-    console.log(picture);
-    setCoverPicture(picture);
   };
 
   return (
@@ -59,8 +50,8 @@ export const SetupProfileForm = ({ onSubmit }: FormProps) => {
         <Form className="flex flex-1 flex-col">
           <div className="mb-auto space-y-6">
             <ProfilePictureUploader
-              onProfilePictureSelected={onProfilePictureSelected}
-              onCoverPictureSelected={onCoverPictureSelected}
+              onProfilePictureSelected={setProfilePicture}
+              onCoverPictureSelected={setCoverPicture}
             />
             <div>
               <Label className="pl-1">First or full name.</Label>

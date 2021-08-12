@@ -74,12 +74,19 @@ export default function CreateAccountPage() {
       if (completeProfileValues && completeProfileValues.favoriteGenres.length) {
         await updateGenres({ variables: { input: { favoriteGenres: completeProfileValues.favoriteGenres } } });
       }
-      if (setupProfileValues && setupProfileValues.profilePicture) {
-        await uploadProfilePicture(setupProfileValues.profilePicture);
+
+      if (setupProfileValues) {
+        const { profilePicture, coverPicture } = setupProfileValues;
+
+        if (profilePicture) {
+          await uploadProfilePicture(profilePicture);
+        }
+
+        if (coverPicture) {
+          await uploadCoverPicture(coverPicture);
+        }
       }
-      if (setupProfileValues && setupProfileValues.coverPicture) {
-        await uploadCoverPicture(setupProfileValues.coverPicture);
-      }
+
       router.push(router.query.callbackUrl?.toString() ?? '/');
     } catch (err) {
       setError(err);
