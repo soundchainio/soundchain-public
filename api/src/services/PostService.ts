@@ -1,5 +1,5 @@
 import { Ref } from '@typegoose/typegoose';
-import Post, { PostModel } from '../models/Post';
+import Post, { PostModel } from 'models/Post';
 
 export class PostService {
   static async createPost(profileId: string, body: string): Promise<Post> {
