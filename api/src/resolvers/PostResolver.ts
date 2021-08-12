@@ -1,12 +1,12 @@
+import { CurrentUser } from 'decorators/current-user';
+import Post from 'models/Post';
+import { Profile } from 'models/Profile';
+import User from 'models/User';
+import { CreatePostInput } from 'resolvers/types/CreatePostInput';
+import { CreatePostPayload } from 'resolvers/types/CreatePostPayload';
+import { PostService } from 'services/PostService';
+import { ProfileService } from 'services/ProfileService';
 import { Arg, Authorized, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
-import { CurrentUser } from '../middlewares/decorators/current-user';
-import Post from '../models/Post';
-import { Profile } from '../models/Profile';
-import User from '../models/User';
-import { CreatePostInput } from '../resolvers/types/CreatePostInput';
-import { CreatePostPayload } from '../resolvers/types/CreatePostPayload';
-import { PostService } from '../services/PostService';
-import { ProfileService } from '../services/ProfileService';
 
 @Resolver(Post)
 export class PostResolver {
