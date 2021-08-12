@@ -1,7 +1,8 @@
 import { formatDistance } from 'date-fns';
 import Image from 'next/image';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import ProfilePic from '../../public/profile.jpg';
+import { getNormalizedLink, hasLink } from '../utils/NormalizeEmbedLinks';
 import { PostActions } from './PostActions';
 import { PostStats } from './PostStats';
 
@@ -16,6 +17,19 @@ const generateRandomNumber = () => {
 };
 
 export const Post = ({ body, name, date }: PostProps) => {
+  const [postLink, setPostLink] = useState('');
+
+  useEffect(() => {
+    if (body.length && hasLink(body)) {
+      extractEmbedLink();
+    }
+  }, [body]);
+
+  const extractEmbedLink = async () => {
+    const link = await getNormalizedLink(body);
+    setPostLink(link || '');
+  };
+
   return (
     <div>
       <div className="p-4 bg-gray-20">
@@ -27,6 +41,7 @@ export const Post = ({ body, name, date }: PostProps) => {
           <p className="text-base text-gray-400 flex-1 text-right">{formatDistance(new Date(date), new Date())}</p>
         </div>
         <div className="mt-4 text-gray-100">{body}</div>
+        {postLink && <iframe frameBorder="0" className="mt-4 w-full" allowFullScreen src={postLink} />}
         <PostStats likes={generateRandomNumber()} comments={generateRandomNumber()} reposts={generateRandomNumber()} />
       </div>
       <PostActions />

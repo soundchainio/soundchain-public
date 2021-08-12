@@ -20,7 +20,7 @@ const genres: GenreLabels[] = [
   { key: Genre.Country, label: 'Country' },
   { key: Genre.Dance, label: 'Dance' },
   { key: Genre.Devotional, label: 'Devotional' },
-  { key: Genre.Eletronic, label: 'Eletronic' },
+  { key: Genre.Electronic, label: 'Electronic' },
   { key: Genre.Experimental, label: 'Experimental' },
   { key: Genre.Gospel, label: 'Gospel' },
   { key: Genre.HardRock, label: 'Hard Rock' },
@@ -46,15 +46,12 @@ const genres: GenreLabels[] = [
   { key: Genre.World, label: 'World' },
 ];
 
-const SELECTED_GENRE_LIMIT = 5;
-
 interface GenreSelectorProps {
   onSelect: (selectedGenres: Genre[]) => void;
 }
 
 export const GenreSelector = ({ onSelect }: GenreSelectorProps) => {
   const [selectedGenres, setSelectedGenres] = useState<Genre[]>([]);
-  const [limitReached, setLimitReached] = useState(false);
 
   useEffect(() => {
     onSelect(selectedGenres);
@@ -65,18 +62,13 @@ export const GenreSelector = ({ onSelect }: GenreSelectorProps) => {
   };
 
   const onGenreClick = (key: Genre) => {
-    const isSelected = isGenreSelected(key);
-    if (isSelected) {
-      setSelectedGenres(selectedGenres.filter(selectedGenre => selectedGenre !== key));
-      setLimitReached(false);
-    } else if (selectedGenres.length === SELECTED_GENRE_LIMIT) setLimitReached(true);
+    if (isGenreSelected(key)) setSelectedGenres(selectedGenres.filter(selectedGenre => selectedGenre !== key));
     else setSelectedGenres([...selectedGenres, key]);
   };
 
   return (
     <div className="flex flex-col">
-      <Label>What are your favorite genres?</Label>
-      {limitReached && <Label className="text-red-500">You can choose only five genres at most</Label>}
+      <Label>What are your favorite genres? {selectedGenres.length ? `(${selectedGenres.length} Selected)` : ''}</Label>
       <div className="pb-6 space-y-2">
         {genres.map(({ label, key }) => (
           <Badge key={key} label={label} selected={isGenreSelected(key)} onClick={() => onGenreClick(key)} />

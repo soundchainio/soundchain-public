@@ -1,6 +1,6 @@
 import { modelOptions, ReturnModelType } from '@typegoose/typegoose';
 import { Base } from '@typegoose/typegoose/lib/defaultClasses';
-import NotFoundError from '../errors/NotFoundError';
+import NotFoundError from 'errors/NotFoundError';
 
 @modelOptions({
   schemaOptions: {
