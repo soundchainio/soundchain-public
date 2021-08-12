@@ -1,5 +1,5 @@
 import SendGrid from '@sendgrid/mail';
-import { config } from '../config';
+import { config } from 'config';
 
 export class EmailService {
   static initialize(): void {
