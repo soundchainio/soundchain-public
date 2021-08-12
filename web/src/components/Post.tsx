@@ -1,7 +1,7 @@
 import { usePostQuery } from 'lib/graphql';
 import NextLink from 'next/link';
-import { useEffect, useState } from 'react';
-import { getNormalizedLink } from '../utils/NormalizeEmbedLinks';
+import React, { useEffect, useState } from 'react';
+import { getNormalizedLink, hasLink } from '../utils/NormalizeEmbedLinks';
 import { Avatar } from './Avatar';
 import { PostActions } from './PostActions';
 import { PostStats } from './PostStats';
@@ -21,11 +21,17 @@ export const Post = ({ postId }: PostProps) => {
   const [postLink, setPostLink] = useState('');
 
   useEffect(() => {
-    if (post?.body.length) {
-      const link = getNormalizedLink(post?.body || '');
+    if (!post) return;
+
+    const extractEmbedLink = async () => {
+      const link = await getNormalizedLink(post?.body);
       setPostLink(link || '');
+    };
+
+    if (post.body.length && hasLink(post.body)) {
+      extractEmbedLink();
     }
-  }, [post?.body]);
+  }, [post]);
 
   if (!post) return <div>Loading</div>;
 

@@ -6,7 +6,7 @@ import { Field, Form, Formik, FormikHelpers } from 'formik';
 import { default as React, useState } from 'react';
 import * as yup from 'yup';
 import { useCreatePostMutation } from '../lib/graphql';
-import { getNormalizedLink } from '../utils/NormalizeEmbedLinks';
+import { getNormalizedLink, hasLink } from '../utils/NormalizeEmbedLinks';
 
 interface NewPostModalProps {
   setShowNewPost: (val: boolean) => void;
@@ -76,10 +76,12 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
     }
   };
 
-  const onTextareaChange = (body: string) => {
-    if (body.length) {
-      const link = getNormalizedLink(body);
-      setPostLink(link || '');
+  const onTextareaChange = async (body: string) => {
+    if (body.length && hasLink(body)) {
+      const link = await getNormalizedLink(body);
+      setPostLink(link);
+    } else {
+      setPostLink('');
     }
   };
 
