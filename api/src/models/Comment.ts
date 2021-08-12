@@ -1,7 +1,7 @@
 import { getModelForClass, prop, Ref } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import Model from './Model';
-import Post from './Post';
+import { Post } from './Post';
 import { Profile } from './Profile';
 
 @ObjectType()

@@ -1,6 +1,6 @@
 import { CurrentUser } from 'decorators/current-user';
 import { Comment } from 'models/Comment';
-import Post from 'models/Post';
+import { Post } from 'models/Post';
 import { Profile } from 'models/Profile';
 import User from 'models/User';
 import { CreatePostInput } from 'resolvers/types/CreatePostInput';
@@ -37,8 +37,11 @@ export class PostResolver {
 
   @Mutation(() => CreatePostPayload)
   @Authorized()
-  async createPost(@Arg('input') { body }: CreatePostInput, @CurrentUser() user: User): Promise<CreatePostPayload> {
-    const post = await PostService.createPost(user.profileId, body);
+  async createPost(
+    @Arg('input') { body }: CreatePostInput,
+    @CurrentUser() { profileId }: User,
+  ): Promise<CreatePostPayload> {
+    const post = await PostService.createPost({ profileId, body });
     return { post };
   }
 }

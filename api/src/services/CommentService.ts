@@ -1,7 +1,7 @@
-import { Comment, CommentModel } from '../models/Comment';
+import { Comment, CommentModel } from 'models/Comment';
 
 interface NewCommentParams {
-  profile?: string;
+  profile: string;
   body: string;
 }
 

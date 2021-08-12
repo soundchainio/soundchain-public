@@ -4,7 +4,7 @@ import Model from './Model';
 import { Profile } from './Profile';
 
 @ObjectType()
-export default class Post extends Model {
+export class Post extends Model {
   @Field(() => ID, { name: 'id' })
   readonly _id: string;
 

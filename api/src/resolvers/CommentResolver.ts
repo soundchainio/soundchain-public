@@ -1,14 +1,14 @@
-import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
-import { CurrentUser } from '../middlewares/decorators/current-user';
-import { Comment } from '../models/Comment';
-import Post from '../models/Post';
-import { Profile } from '../models/Profile';
-import User from '../models/User';
-import { CommentService } from '../services/CommentService';
-import { PostService } from '../services/PostService';
-import { ProfileService } from '../services/ProfileService';
-import { AddCommentInput } from './types/AddCommentInput';
-import { AddCommentPayload } from './types/AddCommentPayload';
+import { CurrentUser } from 'decorators/current-user';
+import { Comment } from 'models/Comment';
+import { Post } from 'models/Post';
+import { Profile } from 'models/Profile';
+import User from 'models/User';
+import { AddCommentInput } from 'resolvers/types/AddCommentInput';
+import { AddCommentPayload } from 'resolvers/types/AddCommentPayload';
+import { CommentService } from 'services/CommentService';
+import { PostService } from 'services/PostService';
+import { ProfileService } from 'services/ProfileService';
+import { Arg, Authorized, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
 
 @Resolver(Comment)
 export class CommentResolver {
@@ -36,7 +36,7 @@ export class CommentResolver {
   @Authorized()
   async addComment(
     @Arg('input') input: AddCommentInput,
-    @Ctx() @CurrentUser() { profileId }: User,
+    @CurrentUser() { profileId }: User,
   ): Promise<AddCommentPayload> {
     const comment = await CommentService.createComment({ profile: profileId, ...input });
     return { comment };
