@@ -1,52 +1,46 @@
-import { CompleteProfileForm } from 'components/CompleteProfileForm';
+import { ApolloError } from '@apollo/client';
+import axios from 'axios';
+import { CompleteProfileForm, CompleteProfileFormValues } from 'components/CompleteProfileForm';
 import { LockedLayout } from 'components/LockedLayout';
 import { LoginNavBar } from 'components/LoginNavBar';
-import { RegisterEmailForm } from 'components/RegisterEmailForm';
+import { RegisterEmailForm, RegisterEmailFormValues } from 'components/RegisterEmailForm';
 import { RegisterErrorStep } from 'components/RegisterErrorStep';
-import { SetupProfileForm } from 'components/SetupProfileForm';
+import { SetupProfileForm, SetupProfileFormValues } from 'components/SetupProfileForm';
 import { useMe } from 'hooks/useMe';
 import { setJwt } from 'lib/apollo';
 import {
-  Genre,
   RegisterInput,
   useGenerateUploadUrlMutation,
   useRegisterMutation,
+  useUpdateCoverPictureMutation,
   useUpdateFavoriteGenresMutation,
   useUpdateProfilePictureMutation,
 } from 'lib/graphql';
 import { useRouter } from 'next/dist/client/router';
 import Head from 'next/head';
 import { useCallback, useEffect, useState } from 'react';
-import axios from 'axios';
-
-interface RegistrationValues {
-  handle?: string;
-  email?: string;
-  displayName?: string;
-  password?: string;
-  favoriteGenres?: Genre[];
-  profilePicture?: File;
-  coverPicture?: File;
-}
 
 export default function CreateAccountPage() {
   const router = useRouter();
-  const [step, setStep] = useState(0);
-  const [registrationValues, setRegistrationValues] = useState<RegistrationValues>();
-  const [register, { loading, error }] = useRegisterMutation();
+
+  const [register] = useRegisterMutation();
   const [updateGenres] = useUpdateFavoriteGenresMutation();
-  const [updateProfilePicture] = useUpdateProfilePictureMutation();
   const [generateUploadUrl] = useGenerateUploadUrlMutation();
-  const [genres, setGenres] = useState<Genre[]>([]);
-  const [profilePicture, setProfilePicture] = useState<File>();
+  const [updateProfilePicture] = useUpdateProfilePictureMutation();
+  const [updateCoverPicture] = useUpdateCoverPictureMutation();
+
+  const [registerEmailValues, setRegisterEmailValues] = useState<RegisterEmailFormValues>();
+  const [setupProfileValues, setSetupProfileValues] = useState<SetupProfileFormValues>();
+  const [completeProfileValues, setCompleteProfileValues] = useState<CompleteProfileFormValues>();
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<ApolloError>();
+  const [showError, setShowError] = useState(false);
 
   const me = useMe();
 
-  const updateProfile = useCallback(async () => {
-    if (genres) {
-      await updateGenres({ variables: { input: { favoriteGenres: genres } } });
-    }
-    if (profilePicture) {
+  const uploadProfilePicture = useCallback(
+    async (profilePicture: File) => {
       const response = await generateUploadUrl({
         variables: { input: { fileType: profilePicture.type } },
       });
@@ -54,41 +48,87 @@ export default function CreateAccountPage() {
         headers: { 'Content-Type': profilePicture.type },
       });
       await updateProfilePicture({
-        variables: { input: { profilePicture: response.data?.generateUploadUrl.readUrl as string } },
+        variables: { input: { picture: response.data?.generateUploadUrl.readUrl as string } },
       });
-      router.push(router.query.callbackUrl?.toString() ?? '/');
-    }
-  }, [generateUploadUrl, genres, profilePicture, router, updateGenres, updateProfilePicture]);
+    },
+    [generateUploadUrl, updateProfilePicture],
+  );
 
-  useEffect(() => {
-    if (me && registrationValues) {
-      updateProfile();
-    } else if (me && !registrationValues) {
-      router.push(router.query.callbackUrl?.toString() ?? '/');
-    }
-  }, [me, registrationValues, router, updateProfile]);
+  const uploadCoverPicture = useCallback(
+    async (coverPicture: File) => {
+      const response = await generateUploadUrl({
+        variables: { input: { fileType: coverPicture.type } },
+      });
+      await axios.put(response.data?.generateUploadUrl.uploadUrl as string, coverPicture, {
+        headers: { 'Content-Type': coverPicture.type },
+      });
+      await updateCoverPicture({
+        variables: { input: { picture: response.data?.generateUploadUrl.readUrl as string } },
+      });
+    },
+    [generateUploadUrl, updateCoverPicture],
+  );
 
-  const onSubmit = async (input: RegistrationValues) => {
-    const newValues = { ...registrationValues, ...input };
-    setRegistrationValues(newValues);
-    if (step < 2) setStep(step + 1);
-    else {
+  const updateProfile = useCallback(async () => {
+    setLoading(true);
+    try {
+      if (completeProfileValues && completeProfileValues.favoriteGenres.length) {
+        await updateGenres({ variables: { input: { favoriteGenres: completeProfileValues.favoriteGenres } } });
+      }
+      if (setupProfileValues && setupProfileValues.profilePicture) {
+        await uploadProfilePicture(setupProfileValues.profilePicture);
+      }
+      if (setupProfileValues && setupProfileValues.coverPicture) {
+        await uploadCoverPicture(setupProfileValues.coverPicture);
+      }
+      router.push(router.query.callbackUrl?.toString() ?? '/');
+    } catch (err) {
+      setError(err);
+      setShowError(true);
+      setLoading(false);
+    }
+  }, [completeProfileValues, router, setupProfileValues, updateGenres, uploadCoverPicture, uploadProfilePicture]);
+
+  const registerUser = useCallback(async () => {
+    if (registerEmailValues && setupProfileValues && completeProfileValues) {
+      setLoading(true);
       try {
-        const { email, handle, displayName, password, favoriteGenres, profilePicture } = newValues;
-        setGenres(favoriteGenres as Genre[]);
-        setProfilePicture(profilePicture);
         const result = await register({
-          variables: { input: { email, displayName, handle, password } as RegisterInput },
+          variables: {
+            input: {
+              email: registerEmailValues.email,
+              displayName: setupProfileValues.displayName,
+              handle: setupProfileValues.handle,
+              password: completeProfileValues.password,
+            } as RegisterInput,
+          },
         });
         setJwt(result.data?.register.jwt);
-      } catch (error) {
-        setStep(-1);
+      } catch (err) {
+        setError(err);
+        setShowError(true);
+        setLoading(false);
       }
     }
-  };
+  }, [completeProfileValues, register, registerEmailValues, setupProfileValues]);
+
+  useEffect(() => {
+    registerUser();
+  }, [completeProfileValues, registerUser]);
+
+  useEffect(() => {
+    if (me && completeProfileValues) {
+      updateProfile();
+    } else if (me && !completeProfileValues) {
+      router.push(router.query.callbackUrl?.toString() ?? '/');
+    }
+  }, [completeProfileValues, me, router, updateProfile]);
 
   const onBackError = () => {
-    setStep(0);
+    setRegisterEmailValues(undefined);
+    setSetupProfileValues(undefined);
+    setCompleteProfileValues(undefined);
+    setShowError(false);
   };
 
   return (
@@ -99,10 +139,16 @@ export default function CreateAccountPage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <LoginNavBar />
-      {step === 0 && <RegisterEmailForm onSubmit={onSubmit} />}
-      {step === 1 && <SetupProfileForm onSubmit={onSubmit} />}
-      {step === 2 && <CompleteProfileForm onSubmit={onSubmit} loading={loading} />}
-      {step === -1 && error && <RegisterErrorStep error={error} onBack={onBackError} />}
+      {!showError && (
+        <>
+          {!registerEmailValues && <RegisterEmailForm onSubmit={setRegisterEmailValues} />}
+          {registerEmailValues && !setupProfileValues && <SetupProfileForm onSubmit={setSetupProfileValues} />}
+          {registerEmailValues && setupProfileValues && (
+            <CompleteProfileForm onSubmit={setCompleteProfileValues} loading={loading} />
+          )}
+        </>
+      )}
+      {showError && <RegisterErrorStep error={error} onBack={onBackError} />}
     </LockedLayout>
   );
 }

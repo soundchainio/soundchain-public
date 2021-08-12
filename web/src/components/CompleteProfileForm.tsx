@@ -13,13 +13,13 @@ interface FormValidationValues {
   passwordConfirmation: string | undefined;
 }
 
-interface FormValues {
+export interface CompleteProfileFormValues {
   password: string;
   favoriteGenres: Genre[];
 }
 
 interface FormProps {
-  onSubmit: (values: FormValues) => void;
+  onSubmit: (values: CompleteProfileFormValues) => void;
   loading: boolean;
 }
 

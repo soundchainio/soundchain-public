@@ -7,8 +7,8 @@ import { ProfileService } from '../services/ProfileService';
 import { GenerateUploadUrlInput } from './types/GenerateUploadUrlInput';
 import { GenerateUploadUrlPayload } from './types/GenerateUploadUrlPayload';
 import { UpdateFavoriteGenresInput } from './types/UpdateFavoriteGenresInput';
+import { UpdatePictureInput } from './types/UpdatePictureInput';
 import { UpdateProfilePayload } from './types/UpdateProfilePayload';
-import { UpdateProfilePictureInput } from './types/UpdateProfilePictureInput';
 import { UpdateSocialMediasInput } from './types/UpdateSocialMediasInput';
 
 @Resolver(Profile)
@@ -45,10 +45,21 @@ export class ProfileResolver {
   @Authorized()
   async updateProfilePicture(
     @Arg('input')
-    { profilePicture }: UpdateProfilePictureInput,
+    { picture }: UpdatePictureInput,
     @CurrentUser() { profileId }: User,
   ): Promise<UpdateProfilePayload> {
-    const profile = await ProfileService.updateProfilePicture(profileId, profilePicture);
+    const profile = await ProfileService.updateProfilePicture(profileId, picture);
+    return { profile };
+  }
+
+  @Mutation(() => UpdateProfilePayload)
+  @Authorized()
+  async updateCoverPicture(
+    @Arg('input')
+    { picture }: UpdatePictureInput,
+    @CurrentUser() { profileId }: User,
+  ): Promise<UpdateProfilePayload> {
+    const profile = await ProfileService.updateCoverPicture(profileId, picture);
     return { profile };
   }
 

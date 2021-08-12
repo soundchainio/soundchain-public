@@ -6,22 +6,22 @@ import { InputField } from './InputField';
 import { Label } from './Label';
 import { Title } from './Title';
 
-interface FormValues {
+export interface RegisterEmailFormValues {
   email: string;
 }
 
 interface FormProps {
-  onSubmit: (values: FormValues) => void;
+  onSubmit: (values: RegisterEmailFormValues) => void;
 }
 
-const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
+const validationSchema: yup.SchemaOf<RegisterEmailFormValues> = yup.object().shape({
   email: yup.string().email().required().label('Email'),
 });
 
 const initialFormValues = { email: '' };
 
 export const RegisterEmailForm = ({ onSubmit }: FormProps) => {
-  const handleSubmit = async (values: FormValues) => {
+  const handleSubmit = async (values: RegisterEmailFormValues) => {
     onSubmit(values);
   };
 

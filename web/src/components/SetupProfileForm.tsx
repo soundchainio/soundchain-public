@@ -13,7 +13,7 @@ interface FormValues {
   handle: string;
 }
 
-interface SetupProfileFormValues extends FormValues {
+export interface SetupProfileFormValues extends FormValues {
   profilePicture?: File;
   coverPicture?: File;
 }
