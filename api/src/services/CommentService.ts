@@ -1,7 +1,7 @@
 import { Comment, CommentModel } from 'models/Comment';
 
 interface NewCommentParams {
-  profile: string;
+  profileId: string;
   body: string;
 }
 
@@ -16,7 +16,7 @@ export class CommentService {
     return newComment;
   }
 
-  static getComments(post: string): Promise<Comment[]> {
-    return CommentModel.find({ post }).sort({ createdAt: 'desc' }).exec();
+  static getComments(postId: string): Promise<Comment[]> {
+    return CommentModel.find({ postId }).sort({ createdAt: 'desc' }).exec();
   }
 }

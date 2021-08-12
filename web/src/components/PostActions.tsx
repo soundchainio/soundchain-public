@@ -1,10 +1,15 @@
 import { ChatAltIcon, RefreshIcon, ShareIcon, ThumbUpIcon } from '@heroicons/react/solid';
+import NextLink from 'next/link';
 import React, { useState } from 'react';
 import { PostLikeOptions } from './PostLikeOptions';
 
+interface PostActionsProps {
+  postId: string;
+}
+
 const commonClasses = 'text-white text-sm text-gray-400 text-center font-bold flex-1 flex justify-center px-1';
 
-export const PostActions = () => {
+export const PostActions = ({ postId }: PostActionsProps) => {
   const [likeOptionsOpened, setLikeOptionsOpened] = useState(false);
 
   const handleLikeButton = () => {
@@ -21,10 +26,12 @@ export const PostActions = () => {
       </div>
       <PostLikeOptions setLikeOptionsOpened={setLikeOptionsOpened} likeOptionsOpened={likeOptionsOpened} />
       <div className={commonClasses}>
-        <div className="flex items-center cursor-pointer">
-          <ChatAltIcon className="h-4 w-4 mr-1" />
-          Comment
-        </div>
+        <NextLink href={`/posts/${postId}`}>
+          <div className="flex items-center cursor-pointer">
+            <ChatAltIcon className="h-4 w-4 mr-1" />
+            Comment
+          </div>
+        </NextLink>
       </div>
       <div className={commonClasses}>
         <div className="flex items-center cursor-pointer">

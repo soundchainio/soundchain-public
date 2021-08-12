@@ -47,7 +47,7 @@ export const Post = ({ postId }: PostProps) => {
           />
         </div>
       </NextLink>
-      <PostActions />
+      <PostActions postId={postId} />
     </div>
   );
 };

@@ -38,11 +38,11 @@ async function seedDb() {
 
   for (let i = 0; i < 100; i++) {
     const profile = sample(profiles);
-    const post = FakePost({ profile: profile?._id });
+    const post = FakePost({ profileId: profile?._id });
     posts.push(post);
     range(0, random(0, 5)).forEach(() => {
       const profile = sample(profiles);
-      comments.push(FakeComment({ post: post.id, profile: profile?._id }));
+      comments.push(FakeComment({ postId: post.id, profileId: profile?._id }));
     });
   }
 

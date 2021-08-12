@@ -17,7 +17,7 @@ export type Scalars = {
 };
 
 export type AddCommentInput = {
-  post: Scalars['String'];
+  postId: Scalars['String'];
   body: Scalars['String'];
 };
 
@@ -35,10 +35,12 @@ export type Comment = {
   __typename?: 'Comment';
   id: Scalars['ID'];
   body: Scalars['String'];
-  post: Post;
-  profile: Profile;
+  postId: Scalars['String'];
+  profileId: Scalars['String'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
+  post: Post;
+  profile: Profile;
 };
 
 export type CreatePostInput = {
@@ -155,10 +157,10 @@ export type MutationResetPasswordArgs = {
 export type Post = {
   __typename?: 'Post';
   id: Scalars['ID'];
-  profile: Profile;
   body: Scalars['String'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
+  profile: Profile;
   comments: Array<Comment>;
 };
 

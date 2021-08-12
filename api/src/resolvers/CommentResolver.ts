@@ -14,12 +14,12 @@ import { Arg, Authorized, FieldResolver, Mutation, Query, Resolver, Root } from 
 export class CommentResolver {
   @FieldResolver(() => Post)
   post(@Root() comment: Comment): Promise<Post> {
-    return PostService.getPost(comment.post);
+    return PostService.getPost(comment.postId);
   }
 
   @FieldResolver(() => Profile)
   profile(@Root() comment: Comment): Promise<Profile> {
-    return ProfileService.getProfile(comment.profile);
+    return ProfileService.getProfile(comment.profileId);
   }
 
   @Query(() => Comment)
@@ -38,7 +38,7 @@ export class CommentResolver {
     @Arg('input') input: AddCommentInput,
     @CurrentUser() { profileId }: User,
   ): Promise<AddCommentPayload> {
-    const comment = await CommentService.createComment({ profile: profileId, ...input });
+    const comment = await CommentService.createComment({ profileId, ...input });
     return { comment };
   }
 }

@@ -35,7 +35,7 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
   });
 
   const handleSubmit = async ({ body }: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
-    await addComment({ variables: { input: { post: postId, body } } });
+    await addComment({ variables: { input: { postId, body } } });
     resetForm();
   };
 

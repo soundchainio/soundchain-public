@@ -14,7 +14,7 @@ import { Arg, Authorized, FieldResolver, Mutation, Query, Resolver, Root } from 
 export class PostResolver {
   @FieldResolver(() => Profile)
   profile(@Root() post: Post): Promise<Profile> {
-    return ProfileService.getProfile(post.profile);
+    return ProfileService.getProfile(post.profileId);
   }
 
   @FieldResolver(() => [Comment])
