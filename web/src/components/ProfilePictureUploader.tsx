@@ -24,11 +24,9 @@ export const ProfilePictureUploader = ({
   const [coverPreview, setCoverPreview] = useState<string>();
 
   const onProfile = <T extends File>(pictures: T[]) => {
-    const newFile = Object.assign(pictures[0], {
-      preview: URL.createObjectURL(pictures[0]),
-    });
-    setProfilePreview(newFile.preview);
-    onProfilePictureSelected(newFile);
+    const file = pictures[0];
+    setProfilePreview(URL.createObjectURL(file));
+    onProfilePictureSelected(file);
   };
 
   const onCover = <T extends File>(pictures: T[]) => {
