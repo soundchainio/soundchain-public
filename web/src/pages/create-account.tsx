@@ -35,7 +35,6 @@ export default function CreateAccountPage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ApolloError>();
-  const [showError, setShowError] = useState(false);
 
   const me = useMe();
 
@@ -84,7 +83,6 @@ export default function CreateAccountPage() {
       router.push(router.query.callbackUrl?.toString() ?? '/');
     } catch (err) {
       setError(err);
-      setShowError(true);
       setLoading(false);
     }
   }, [completeProfileValues, router, setupProfileValues, updateGenres, uploadCoverPicture, uploadProfilePicture]);
@@ -106,7 +104,6 @@ export default function CreateAccountPage() {
         setJwt(result.data?.register.jwt);
       } catch (err) {
         setError(err);
-        setShowError(true);
         setLoading(false);
       }
     }
@@ -128,7 +125,7 @@ export default function CreateAccountPage() {
     setRegisterEmailValues(undefined);
     setSetupProfileValues(undefined);
     setCompleteProfileValues(undefined);
-    setShowError(false);
+    setError(undefined);
   };
 
   return (
@@ -139,7 +136,7 @@ export default function CreateAccountPage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <LoginNavBar />
-      {!showError && (
+      {!error && (
         <>
           {!registerEmailValues && <RegisterEmailForm onSubmit={setRegisterEmailValues} />}
           {registerEmailValues && !setupProfileValues && <SetupProfileForm onSubmit={setSetupProfileValues} />}
@@ -148,7 +145,7 @@ export default function CreateAccountPage() {
           )}
         </>
       )}
-      {showError && <RegisterErrorStep error={error} onBack={onBackError} />}
+      {error && <RegisterErrorStep error={error} onBack={onBackError} />}
     </LockedLayout>
   );
 }
