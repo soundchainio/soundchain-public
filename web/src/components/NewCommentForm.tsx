@@ -1,7 +1,9 @@
-import { Field, FieldProps, Form, Formik, FormikHelpers, FormikProps } from 'formik';
-import TextareaAutosize from 'react-textarea-autosize';
+import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
+import { Send } from 'icons/Send';
 import * as yup from 'yup';
 import { CommentsDocument, CommentsQuery, useAddCommentMutation } from '../lib/graphql';
+import { Avatar } from './Avatar';
+import { FlexareaField } from './FlexareaField';
 
 export interface NewCommentFormProps {
   postId: string;
@@ -39,12 +41,13 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
 
   return (
     <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
-      {({ isSubmitting }: FormikProps<FormValues>) => (
+      {({ isSubmitting, isValid, dirty }: FormikProps<FormValues>) => (
         <Form>
-          <div className="flex flex-row">
-            <Field name="body">{({ field }: FieldProps) => <TextareaAutosize {...field} />}</Field>
-            <button type="submit" disabled={isSubmitting} className="p-2 border-2">
-              Post comment
+          <div className="flex flex-row items-start space-x-3 p-3 bg-gray-25">
+            <Avatar />
+            <FlexareaField name="body" placeholder="Write a comment..." />
+            <button type="submit" disabled={isSubmitting} className="pt-1">
+              <Send activated={dirty && isValid} />
             </button>
           </div>
         </Form>

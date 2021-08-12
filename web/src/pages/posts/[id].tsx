@@ -1,3 +1,4 @@
+import { ClientOnlyPortal } from 'components/ClientOnlyPortal';
 import { Comments } from 'components/Comments';
 import { Layout } from 'components/Layout';
 import { NewCommentForm } from 'components/NewCommentForm';
@@ -15,9 +16,9 @@ export default function PostPage({ postId }: InferGetServerSidePropsType<typeof 
     <Layout>
       <Post postId={postId} />
       <Comments postId={postId} />
-      <div className="flex">
+      <ClientOnlyPortal selector="#fixed-bottom-stack">
         <NewCommentForm postId={postId} />
-      </div>
+      </ClientOnlyPortal>
     </Layout>
   );
 }

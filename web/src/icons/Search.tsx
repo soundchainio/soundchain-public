@@ -1,6 +1,6 @@
-import { NavIconProps } from './interfaces/NavIconProps';
+import { IconProps } from './types/IconProps';
 
-export const Search = (props: NavIconProps) => {
+export const Search = (props: IconProps) => {
   return (
     <>
       {props.activated ? (
