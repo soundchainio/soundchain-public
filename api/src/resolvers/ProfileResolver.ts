@@ -64,6 +64,7 @@ export class ProfileResolver {
   }
 
   @Mutation(() => GenerateUploadUrlPayload)
+  @Authorized()
   async generateUploadUrl(
     @Arg('input')
     { fileType }: GenerateUploadUrlInput,
