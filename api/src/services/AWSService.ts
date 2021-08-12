@@ -1,9 +1,9 @@
 import { PutObjectCommand, PutObjectCommandInput, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { UserInputError } from 'apollo-server-express';
+import { config } from 'config';
+import { GenerateUploadUrlPayload } from 'resolvers/types/GenerateUploadUrlPayload';
 import { v4 as uuidv4 } from 'uuid';
-import { config } from '../config';
-import { GenerateUploadUrlPayload } from '../resolvers/types/GenerateUploadUrlPayload';
 
 export class AWSService {
   static s3Client: S3Client;

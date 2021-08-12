@@ -1,9 +1,9 @@
 import { CurrentUser } from 'decorators/current-user';
 import { Profile } from 'models/Profile';
 import User from 'models/User';
+import { AWSService } from 'services/AWSService';
 import { ProfileService } from 'services/ProfileService';
 import { Arg, Authorized, Mutation, Query, Resolver } from 'type-graphql';
-import { AWSService } from '../services/AWSService';
 import { GenerateUploadUrlInput } from './types/GenerateUploadUrlInput';
 import { GenerateUploadUrlPayload } from './types/GenerateUploadUrlPayload';
 import { UpdateFavoriteGenresInput } from './types/UpdateFavoriteGenresInput';
