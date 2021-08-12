@@ -1,4 +1,7 @@
 {
+  "ts-node": {
+    "require": ["tsconfig-paths/register"]
+  },
   "compilerOptions": {
     "target": "es2018",
     "module": "commonjs",
@@ -14,6 +17,9 @@
     "sourceMap": true,
     "moduleResolution": "node",
     "outDir": ".build",
-    "rootDir": "./"
-  }
+    "rootDir": "./",
+    "baseUrl": "./src"
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules"]
 }

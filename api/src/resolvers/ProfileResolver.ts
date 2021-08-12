@@ -1,8 +1,8 @@
+import { CurrentUser } from 'decorators/current-user';
+import { Profile } from 'models/Profile';
+import User from 'models/User';
+import { ProfileService } from 'services/ProfileService';
 import { Arg, Authorized, Mutation, Query, Resolver } from 'type-graphql';
-import { CurrentUser } from '../middlewares/decorators/current-user';
-import { Profile } from '../models/Profile';
-import User from '../models/User';
-import { ProfileService } from '../services/ProfileService';
 import { UpdateFavoriteGenresInput } from './types/UpdateFavoriteGenresInput';
 import { UpdateFavoriteGenresPayload } from './types/UpdateFavoriteGenresPayload';
 import { UpdateSocialMediasInput } from './types/UpdateSocialMediasInput';

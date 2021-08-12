@@ -1,6 +1,6 @@
 import expressJwt from 'express-jwt';
 import jwt from 'jsonwebtoken';
-import User from '../models/User';
+import User from 'models/User';
 
 const { JWT_NAMESPACE = 'http://localhost:4000/graphql', JWT_SECRET = 'not so secret' } = process.env;
 
