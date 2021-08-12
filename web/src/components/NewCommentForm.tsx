@@ -1,7 +1,15 @@
+import { ApolloCache, FetchResult } from '@apollo/client';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import { Send } from 'icons/Send';
 import * as yup from 'yup';
-import { CommentsDocument, CommentsQuery, useAddCommentMutation } from '../lib/graphql';
+import {
+  AddCommentMutation,
+  CommentsDocument,
+  CommentsQuery,
+  PostDocument,
+  PostQuery,
+  useAddCommentMutation,
+} from '../lib/graphql';
 import { Avatar } from './Avatar';
 import { FlexareaField } from './FlexareaField';
 
@@ -21,17 +29,7 @@ const initialValues: FormValues = { body: '' };
 
 export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
   const [addComment] = useAddCommentMutation({
-    update(cache, { data }) {
-      const newComment = data?.addComment.comment;
-      const existingComments = cache.readQuery<CommentsQuery>({ query: CommentsDocument, variables: { postId } });
-      cache.writeQuery({
-        query: CommentsDocument,
-        variables: { postId },
-        data: {
-          comments: [newComment, ...(existingComments?.comments || [])],
-        },
-      });
-    },
+    update: (cache, result) => updateCache(cache, result, postId),
   });
 
   const handleSubmit = async ({ body }: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
@@ -55,3 +53,25 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
     </Formik>
   );
 };
+
+function updateCache(cache: ApolloCache<AddCommentMutation>, { data }: FetchResult, postId: string) {
+  const newComment = data?.addComment.comment;
+  const existingComments = cache.readQuery<CommentsQuery>({ query: CommentsDocument, variables: { postId } });
+  cache.writeQuery({
+    query: CommentsDocument,
+    variables: { postId },
+    data: {
+      comments: [newComment, ...(existingComments?.comments || [])],
+    },
+  });
+
+  const commentPost = cache.readQuery<PostQuery>({ query: PostDocument, variables: { id: postId } });
+  if (!commentPost) return;
+
+  cache.modify({
+    id: cache.identify(commentPost.post),
+    fields: {
+      commentCount: cachedCount => cachedCount + 1,
+    },
+  });
+}

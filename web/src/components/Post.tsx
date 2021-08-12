@@ -40,11 +40,7 @@ export const Post = ({ postId }: PostProps) => {
           </div>
           <div className="mt-4 text-gray-100">{post.body}</div>
           {postLink && <iframe frameBorder="0" className="mt-4 w-full" allowFullScreen src={postLink} />}
-          <PostStats
-            likes={generateRandomNumber()}
-            comments={generateRandomNumber()}
-            reposts={generateRandomNumber()}
-          />
+          <PostStats likes={generateRandomNumber()} comments={post.commentCount} reposts={generateRandomNumber()} />
         </div>
       </NextLink>
       <PostActions postId={postId} />

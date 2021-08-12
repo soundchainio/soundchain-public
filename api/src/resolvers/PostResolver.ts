@@ -22,6 +22,11 @@ export class PostResolver {
     return CommentService.getComments(post._id);
   }
 
+  @FieldResolver(() => Number)
+  commentCount(@Root() post: Post): Promise<number> {
+    return CommentService.getCommentCount(post._id);
+  }
+
   @Query(() => Post)
   post(@Arg('id') id: string): Promise<Post> {
     return PostService.getPost(id);
