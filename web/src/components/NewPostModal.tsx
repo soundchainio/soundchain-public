@@ -80,8 +80,6 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
     if (body.length && hasLink(body)) {
       const link = await getNormalizedLink(body);
       setPostLink(link);
-    } else {
-      setPostLink('');
     }
   };
 
