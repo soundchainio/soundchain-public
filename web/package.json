@@ -21,7 +21,7 @@
     "semi": true
   },
   "dependencies": {
-    "@apollo/client": "^3.3.21",
+    "@apollo/client": "^3.4.7",
     "@heroicons/react": "^1.0.3",
     "@tailwindcss/forms": "^0.3.3",
     "axios": "^0.21.1",
