@@ -27,10 +27,10 @@ export const PostActions = ({ postId }: PostActionsProps) => {
       <PostLikeOptions setLikeOptionsOpened={setLikeOptionsOpened} likeOptionsOpened={likeOptionsOpened} />
       <div className={commonClasses}>
         <NextLink href={`/posts/${postId}`}>
-          <div className="flex items-center cursor-pointer">
+          <a className="flex items-center cursor-pointer">
             <ChatAltIcon className="h-4 w-4 mr-1" />
             Comment
-          </div>
+          </a>
         </NextLink>
       </div>
       <div className={commonClasses}>
