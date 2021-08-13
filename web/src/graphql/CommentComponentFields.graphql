@@ -1,0 +1,10 @@
+fragment CommentComponentFields on Comment {
+  id
+  body
+  createdAt
+  profile {
+    id
+    displayName
+    profilePicture
+  }
+}

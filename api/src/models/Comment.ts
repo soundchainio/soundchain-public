@@ -3,16 +3,21 @@ import { Field, ID, ObjectType } from 'type-graphql';
 import Model from './Model';
 
 @ObjectType()
-export class Post extends Model {
+export class Comment extends Model {
   @Field(() => ID, { name: 'id' })
   readonly _id: string;
-
-  @prop({ required: true })
-  profileId: string;
 
   @Field()
   @prop({ required: true })
   body: string;
+
+  @Field()
+  @prop({ required: true })
+  postId: string;
+
+  @Field()
+  @prop({ required: true })
+  profileId: string;
 
   @Field(() => Date)
   createdAt: Date;
@@ -21,4 +26,4 @@ export class Post extends Model {
   updatedAt: Date;
 }
 
-export const PostModel = getModelForClass(Post);
+export const CommentModel = getModelForClass(Comment);
