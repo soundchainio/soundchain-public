@@ -1,15 +1,9 @@
 import { ApolloCache, FetchResult } from '@apollo/client';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import { Send } from 'icons/Send';
+import { animateScroll } from 'react-scroll';
 import * as yup from 'yup';
-import {
-  AddCommentMutation,
-  CommentsDocument,
-  CommentsQuery,
-  PostDocument,
-  PostQuery,
-  useAddCommentMutation,
-} from '../lib/graphql';
+import { AddCommentMutation, CommentsDocument, CommentsQuery, useAddCommentMutation } from '../lib/graphql';
 import { Avatar } from './Avatar';
 import { FlexareaField } from './FlexareaField';
 
@@ -35,6 +29,7 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
   const handleSubmit = async ({ body }: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
     await addComment({ variables: { input: { postId, body } } });
     resetForm();
+    animateScroll.scrollToBottom({ duration: 200 });
   };
 
   return (
@@ -61,17 +56,7 @@ function updateCache(cache: ApolloCache<AddCommentMutation>, { data }: FetchResu
     query: CommentsDocument,
     variables: { postId },
     data: {
-      comments: [newComment, ...(existingComments?.comments || [])],
-    },
-  });
-
-  const commentPost = cache.readQuery<PostQuery>({ query: PostDocument, variables: { id: postId } });
-  if (!commentPost) return;
-
-  cache.modify({
-    id: cache.identify(commentPost.post),
-    fields: {
-      commentCount: cachedCount => cachedCount + 1,
+      comments: [...(existingComments?.comments || []), newComment],
     },
   });
 }

@@ -12,7 +12,7 @@ export default function Feed() {
         <meta name="description" content="Soundchain" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className="bg-custom-black-10 flex flex-1 flex-col pt-3 pb-20">
+      <div className="bg-gray-10 flex flex-1 flex-col pt-3">
         {loading && <p>Loading...</p>}
         {error && <p>{error.message}</p>}
         <div className="space-y-3">

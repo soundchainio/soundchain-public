@@ -22,7 +22,7 @@ export const FlexareaField = ({ ...props }: FlexareaFieldProps) => {
     <TextareaAutosize
       {...field}
       onHeightChange={handleHeightChange}
-      className={classNames(commonClasses, { 'rounded-full': roundedFull, 'rounded-xl': !roundedFull })}
+      className={classNames(commonClasses, roundedFull ? 'rounded-full' : 'rounded-xl')}
     />
   );
 };

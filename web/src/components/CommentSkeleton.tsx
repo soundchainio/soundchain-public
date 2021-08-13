@@ -6,8 +6,8 @@ export const CommentSkeleton = () => (
         <div className="w-20 h-3 bg-gray-40"></div>
         <div className="w-12 h-3 bg-gray-40"></div>
       </div>
-      <div className="w-full h-2 bg-gray-40 mb-2"></div>
-      <div className="w-full h-2 bg-gray-40"></div>
+      <div className="h-2 bg-gray-40 mb-2"></div>
+      <div className="h-2 bg-gray-40"></div>
     </div>
   </div>
 );

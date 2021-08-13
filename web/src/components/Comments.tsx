@@ -13,7 +13,7 @@ export const Comments = ({ postId }: CommentsProps) => {
   if (!comments) return <CommentSkeleton />;
 
   return (
-    <div className="flex flex-col m-6 space-y-6">
+    <div className="flex flex-col m-4 space-y-4">
       <h3 className="font-thin text-white">Comments</h3>
       {data?.comments.map(({ id }) => (
         <Comment key={id} commentId={id} />

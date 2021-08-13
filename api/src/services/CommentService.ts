@@ -17,7 +17,7 @@ export class CommentService {
   }
 
   static getComments(postId: string): Promise<Comment[]> {
-    return CommentModel.find({ postId }).sort({ createdAt: 'desc' }).exec();
+    return CommentModel.find({ postId }).sort({ createdAt: 'asc' }).exec();
   }
 
   static getCommentCount(postId: string): Promise<number> {

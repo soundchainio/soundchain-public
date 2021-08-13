@@ -2,6 +2,10 @@ mutation AddComment($input: AddCommentInput!) {
   addComment(input: $input) {
     comment {
       ...CommentComponentFields
+      post {
+        id
+        commentCount
+      }
     }
   }
 }

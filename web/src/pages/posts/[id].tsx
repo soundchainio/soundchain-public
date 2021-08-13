@@ -1,4 +1,4 @@
-import { ClientOnlyPortal } from 'components/ClientOnlyPortal';
+import { BottomSheet } from 'components/BottomSheet';
 import { Comments } from 'components/Comments';
 import { Layout } from 'components/Layout';
 import { NewCommentForm } from 'components/NewCommentForm';
@@ -15,10 +15,12 @@ export default function PostPage({ postId }: InferGetServerSidePropsType<typeof 
   return (
     <Layout>
       <Post postId={postId} />
-      <Comments postId={postId} />
-      <ClientOnlyPortal selector="#fixed-bottom-stack">
+      <div className="pb-12">
+        <Comments postId={postId} />
+      </div>
+      <BottomSheet>
         <NewCommentForm postId={postId} />
-      </ClientOnlyPortal>
+      </BottomSheet>
     </Layout>
   );
 }
