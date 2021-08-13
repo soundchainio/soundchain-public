@@ -1,3 +1,4 @@
+import { MusicNoteIcon, VideoCameraIcon } from '@heroicons/react/outline';
 import classNames from 'classnames';
 import { Button } from 'components/Button';
 import { BaseEmoji, Picker } from 'emoji-mart';
@@ -62,7 +63,7 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
     setPostLink('');
   };
 
-  const onEmojiClick = () => {
+  const onEmojiPickerClick = () => {
     setEmojiPickerVisible(!isEmojiPickerVisible);
   };
 
@@ -117,8 +118,14 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
             />
             {postLink && <iframe className="w-full" frameBorder="0" allowFullScreen src={postLink} />}
             <div className="p-4 flex items-center bg-gray-25">
-              <div className="justify-self-start flex-1">
-                <span onClick={onEmojiClick}>{isEmojiPickerVisible ? '❌' : '😃'}</span>
+              <div className="text-center w-16" onClick={onEmojiPickerClick}>
+                {isEmojiPickerVisible ? '❌' : '😃'}
+              </div>
+              <div className="text-center w-16" onClick={onEmojiPickerClick}>
+                <MusicNoteIcon className="text-gray-400 w-5 m-auto" />
+              </div>
+              <div className="text-center w-16" onClick={onEmojiPickerClick}>
+                <VideoCameraIcon className="text-gray-400 w-5 m-auto" />
               </div>
               <div className="justify-self-end flex-1 text-right text-gray-400">
                 {getBodyCharacterCount(values.body)} / {maxLength}
