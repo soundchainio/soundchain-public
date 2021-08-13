@@ -44,7 +44,7 @@ const normalizeSpotify = async (str: string) => {
 const normalizeVimeo = async (str: string) => {
   const videoId = (str.match(vimeoLinkRegex) || [])[0];
   if (videoId) {
-    return 'https://player.vimeo.com/video/' + videoId;
+    return `https://player.vimeo.com/video/${videoId}`;
   }
   return str;
 };
