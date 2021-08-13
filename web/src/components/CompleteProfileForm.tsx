@@ -18,7 +18,7 @@ export interface CompleteProfileFormValues {
   favoriteGenres: Genre[];
 }
 
-interface FormProps {
+interface CompleteProfileFormProps {
   onSubmit: (values: CompleteProfileFormValues) => void;
   loading: boolean;
 }
@@ -36,7 +36,7 @@ const validationSchema: yup.SchemaOf<FormValidationValues> = yup.object().shape(
 
 const initialFormValues = { password: '', passwordConfirmation: '' };
 
-export const CompleteProfileForm = ({ onSubmit, loading }: FormProps) => {
+export const CompleteProfileForm = ({ onSubmit, loading }: CompleteProfileFormProps) => {
   const [favoriteGenres, setFavoriteGenres] = useState<Genre[]>([]);
   const handleSubmit = async (values: FormValidationValues) => {
     onSubmit({ ...values, favoriteGenres });
