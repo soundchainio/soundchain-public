@@ -19,6 +19,11 @@ const generateRandomNumber = () => {
 export const Post = ({ body, name, date }: PostProps) => {
   const [postLink, setPostLink] = useState('');
 
+  const extractEmbedLink = async () => {
+    const link = await getNormalizedLink(body);
+    setPostLink(link || '');
+  };
+
   useEffect(() => {
     if (body.length && hasLink(body)) {
       extractEmbedLink();
@@ -26,11 +31,6 @@ export const Post = ({ body, name, date }: PostProps) => {
       setPostLink('');
     }
   }, [body]);
-
-  const extractEmbedLink = async () => {
-    const link = await getNormalizedLink(body);
-    setPostLink(link || '');
-  };
 
   return (
     <div>
