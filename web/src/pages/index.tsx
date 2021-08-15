@@ -1,29 +1,26 @@
-import { BottomNavBar } from 'components/BottomNavBar';
+import { Layout } from 'components/Layout';
 import { Post } from 'components/Post';
-import { TopNavBar } from 'components/TopNavBar';
 import { usePostsQuery } from 'lib/graphql';
 import Head from 'next/head';
 
 export default function Feed() {
   const { loading, error, data } = usePostsQuery();
   return (
-    <div className="flex flex-col min-h-screen">
+    <Layout>
       <Head>
         <title>Soundchain</title>
         <meta name="description" content="Soundchain" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <TopNavBar />
-      <div className="bg-custom-black-10 flex flex-1 flex-col pt-3 pb-20">
+      <div className="bg-gray-10 flex flex-1 flex-col pt-3">
         {loading && <p>Loading...</p>}
         {error && <p>{error.message}</p>}
         <div className="space-y-3">
           {data?.posts.map((post, index) => (
-            <Post key={index} body={post.body} name={post.profile.displayName} date={post.createdAt} />
+            <Post key={index} postId={post.id} />
           ))}
         </div>
       </div>
-      <BottomNavBar />
-    </div>
+    </Layout>
   );
 }
