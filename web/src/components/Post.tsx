@@ -30,7 +30,9 @@ export const Post = ({ postId }: PostProps) => {
             <Timestamp datetime={post.createdAt} className="flex-1 text-right" />
           </div>
           <div className="mt-4 text-gray-100 break-words">{post.body}</div>
-          {post.mediaLink && <iframe frameBorder="0" className="mt-4 w-full" allowFullScreen src={post.mediaLink} />}
+          {post.mediaLink && (
+            <iframe frameBorder="0" className="mt-4 w-full bg-gray-20" allowFullScreen src={post.mediaLink} />
+          )}
           <PostStats likes={generateRandomNumber()} comments={post.commentCount} reposts={generateRandomNumber()} />
         </div>
       </NextLink>
