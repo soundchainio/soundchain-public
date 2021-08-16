@@ -30,6 +30,8 @@ export const Post = ({ postId }: PostProps) => {
 
     if (post.body.length && hasLink(post.body)) {
       extractEmbedLink();
+    } else {
+      setPostLink('');
     }
   }, [post]);
 
@@ -38,14 +40,14 @@ export const Post = ({ postId }: PostProps) => {
   return (
     <div>
       <NextLink href={`/posts/${post.id}`}>
-        <div className="p-4 bg-gray-20">
+        <div className="p-4 bg-gray-20 break-words">
           <div className="flex items-center">
             <Avatar />
             <p className="ml-4 text-lg font-bold text-gray-100">{post.profile.displayName}</p>
             <Timestamp datetime={post.createdAt} className="flex-1 text-right" />
           </div>
-          <div className="mt-4 text-gray-100">{post.body}</div>
-          {postLink && <iframe frameBorder="0" className="mt-4 w-full" allowFullScreen src={postLink} />}
+          <div className="mt-4 text-gray-100 break-words">{post.body}</div>
+          {postLink && <iframe frameBorder="0" className="mt-4 w-full bg-gray-20" allowFullScreen src={postLink} />}
           <PostStats likes={generateRandomNumber()} comments={post.commentCount} reposts={generateRandomNumber()} />
         </div>
       </NextLink>
