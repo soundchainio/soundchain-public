@@ -1,8 +1,13 @@
 import axios from 'axios';
 
 const linksRegex = /\bhttps?:\/\/\S+/gi;
-const ytRegex = /(?:https?:\/\/)?(?:www\.)?youtu\.?be(?:\.com)?\/?.*(?:watch|embed)?(?:.*v=|v\/|\/)([\w\-_]+)\&?/;
-const scRegex = /^https?:\/\/(soundcloud\.com|snd\.sc)\/(.*)$/;
+const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?youtu\.?be(?:\.com)?\/?.*(?:watch|embed)?(?:.*v=|v\/|\/)([\w\-_]+)\&?/;
+
+const soundcloudRegex = /^https?:\/\/(soundcloud\.com|snd\.sc)\/(.*)$/;
+const soundcloudLinkRegex = /(?<=src=\").*(?=\">)/g;
+
+const spotifyRegex = /(open\.spotify\.com\/track\/)/;
+const spotifyLinkRegex = /(?<=track\/).*(?=\?)/g;
 
 const normalizeYoutube = (str: string) => {
   return str.replace('/watch?v=', '/embed/');
@@ -15,8 +20,18 @@ const normalizeSoundcloud = async (str: string) => {
     // it returns a string '({a: test1, b: test2});'
     // we have to remove the first and last 2 characters from the response to parse as JSON
     const iframeString = JSON.parse(songInfo.data.substring(1).slice(0, -2)).html;
-    const src = iframeString.match(/(?<=src=\").*(?=\">)/g) || [];
+    const src = iframeString.match(soundcloudLinkRegex) || [];
     return src[0];
+  }
+
+  return str;
+};
+
+const normalizeSpotify = async (str: string) => {
+  const songId = str.match(spotifyLinkRegex) || [];
+  if (songId[0]) {
+    const spotifyUrl = 'https://open.spotify.com/embed/track/' + songId[0];
+    return spotifyUrl;
   }
 
   return str;
@@ -25,8 +40,9 @@ const normalizeSoundcloud = async (str: string) => {
 export const getNormalizedLink = async (str: string) => {
   const link = (str.match(linksRegex) || [])[0];
 
-  if (ytRegex.test(link)) return normalizeYoutube(link);
-  if (scRegex.test(link)) return await normalizeSoundcloud(link);
+  if (youtubeRegex.test(link)) return normalizeYoutube(link);
+  if (soundcloudRegex.test(link)) return await normalizeSoundcloud(link);
+  if (spotifyRegex.test(link)) return normalizeSpotify(link);
 };
 
 export const hasLink = (str: string) => {

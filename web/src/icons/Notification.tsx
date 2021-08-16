@@ -1,6 +1,6 @@
-import { NavIconProps } from './interfaces/NavIconProps';
+import { IconProps } from './types/IconProps';
 
-export const Notification = (props: NavIconProps) => {
+export const Notification = (props: IconProps) => {
   return (
     <>
       {props.activated ? (

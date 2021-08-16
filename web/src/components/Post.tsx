@@ -1,55 +1,56 @@
-import { formatDistance } from 'date-fns';
-import Image from 'next/image';
-import React, { useCallback, useEffect, useState } from 'react';
-import ProfilePic from '../../public/profile.jpg';
+import { usePostQuery } from 'lib/graphql';
+import NextLink from 'next/link';
+import React, { useEffect, useState } from 'react';
 import { getNormalizedLink, hasLink } from '../utils/NormalizeEmbedLinks';
+import { Avatar } from './Avatar';
+import { Label } from './Label';
 import { PostActions } from './PostActions';
 import { PostStats } from './PostStats';
+import { Timestamp } from './Timestamp';
 
 interface PostProps {
-  body: string;
-  name: string;
-  date: string;
-  profilePicture: string | null | undefined;
+  postId: string;
 }
 
 const generateRandomNumber = () => {
   return Math.round(Math.random() * 100);
 };
 
-export const Post = ({ body, name, date, profilePicture }: PostProps) => {
+export const Post = ({ postId }: PostProps) => {
+  const { data } = usePostQuery({ variables: { id: postId } });
+  const post = data?.post;
   const [postLink, setPostLink] = useState('');
 
-  const extractEmbedLink = useCallback(async () => {
-    const link = await getNormalizedLink(body);
-    setPostLink(link || '');
-  }, [body]);
-
   useEffect(() => {
-    if (body.length && hasLink(body)) {
+    if (!post) return;
+
+    const extractEmbedLink = async () => {
+      const link = await getNormalizedLink(post?.body);
+      setPostLink(link || '');
+    };
+
+    if (post.body.length && hasLink(post.body)) {
       extractEmbedLink();
     }
-  }, [body, extractEmbedLink]);
+  }, [post]);
+
+  if (!post) return <Label>Loading</Label>;
 
   return (
     <div>
-      <div className="p-4 bg-gray-20">
-        <div className="flex items-center">
-          <div className="rounded-full w-8 h-8 overflow-hidden relative">
-            {profilePicture ? (
-              <Image alt="Profile picture" src={profilePicture} layout="fill" objectFit="cover" />
-            ) : (
-              <Image alt="Profile picture" src={ProfilePic} />
-            )}
+      <NextLink href={`/posts/${post.id}`}>
+        <div className="p-4 bg-gray-20">
+          <div className="flex items-center">
+            <Avatar src={post.profile.profilePicture} />
+            <p className="ml-4 text-lg font-bold text-gray-100">{post.profile.displayName}</p>
+            <Timestamp datetime={post.createdAt} className="flex-1 text-right" />
           </div>
-          <p className="ml-4 text-lg font-bold text-gray-100">{name}</p>
-          <p className="text-base text-gray-400 flex-1 text-right">{formatDistance(new Date(date), new Date())}</p>
+          <div className="mt-4 text-gray-100">{post.body}</div>
+          {postLink && <iframe frameBorder="0" className="mt-4 w-full" allowFullScreen src={postLink} />}
+          <PostStats likes={generateRandomNumber()} comments={post.commentCount} reposts={generateRandomNumber()} />
         </div>
-        <div className="mt-4 text-gray-100">{body}</div>
-        {postLink && <iframe frameBorder="0" className="mt-4 w-full" allowFullScreen src={postLink} />}
-        <PostStats likes={generateRandomNumber()} comments={generateRandomNumber()} reposts={generateRandomNumber()} />
-      </div>
-      <PostActions />
+      </NextLink>
+      <PostActions postId={postId} />
     </div>
   );
 };
