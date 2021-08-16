@@ -65,7 +65,7 @@ export const config = {
       authChecker: ({ context }) => Boolean(context.jwtUser),
     }),
   },
-  aws: {
+  uploads: {
     region: UPLOADS_BUCKET_REGION,
     bucket: UPLOADS_BUCKET_NAME,
   },

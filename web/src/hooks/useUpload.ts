@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { useGenerateUploadUrlMutation } from 'lib/graphql';
 import { useCallback } from 'react';
+import { parseProfileImageFileType } from 'utils/ParsePrfofileImageFileType';
 import { useMountedState } from './useMountedState';
 
 export const useUpload = (value: string | undefined, onChange: (value: string) => void) => {
@@ -14,7 +15,7 @@ export const useUpload = (value: string | undefined, onChange: (value: string) =
       setUploading(true);
       setPreview(objectUrl);
 
-      const { data } = await getUploadUrl({ variables: { input: { fileType: file.type } } });
+      const { data } = await getUploadUrl({ variables: { input: { fileType: parseProfileImageFileType(file.type) } } });
 
       if (!data) {
         throw Error('Could not get upload URL');

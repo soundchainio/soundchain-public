@@ -1,15 +1,18 @@
 import { CurrentUser } from 'decorators/current-user';
 import { Profile } from 'models/Profile';
 import User from 'models/User';
-import { AWSService } from 'services/AWSService';
 import { ProfileService } from 'services/ProfileService';
+import { UploadService } from 'services/UploadService';
 import { Arg, Authorized, Mutation, Query, Resolver } from 'type-graphql';
 import { GenerateUploadUrlInput } from './types/GenerateUploadUrlInput';
 import { GenerateUploadUrlPayload } from './types/GenerateUploadUrlPayload';
+import { UpdateCoverPicturePayload } from './types/UpdateCoverPicturePayload';
 import { UpdateFavoriteGenresInput } from './types/UpdateFavoriteGenresInput';
+import { UpdateFavoriteGenresPayload } from './types/UpdateFavoriteGenresPayload';
 import { UpdatePictureInput } from './types/UpdatePictureInput';
-import { UpdateProfilePayload } from './types/UpdateProfilePayload';
+import { UpdateProfilePicturePayload } from './types/UpdateProfilePicturePayload';
 import { UpdateSocialMediasInput } from './types/UpdateSocialMediasInput';
+import { UpdateSocialMediasPayload } from './types/UpdateSocialMediasPayload';
 
 @Resolver(Profile)
 export class ProfileResolver {
@@ -19,46 +22,46 @@ export class ProfileResolver {
     return ProfileService.getProfile(profileId);
   }
 
-  @Mutation(() => UpdateProfilePayload)
+  @Mutation(() => UpdateSocialMediasPayload)
   @Authorized()
   async updateSocialMedias(
     @Arg('input')
     socialMedias: UpdateSocialMediasInput,
     @CurrentUser() { profileId }: User,
-  ): Promise<UpdateProfilePayload> {
+  ): Promise<UpdateSocialMediasPayload> {
     const profile = await ProfileService.updateSocialMedias(profileId, socialMedias);
     return { profile };
   }
 
-  @Mutation(() => UpdateProfilePayload)
+  @Mutation(() => UpdateFavoriteGenresPayload)
   @Authorized()
   async updateFavoriteGenres(
     @Arg('input')
     { favoriteGenres }: UpdateFavoriteGenresInput,
     @CurrentUser() { profileId }: User,
-  ): Promise<UpdateProfilePayload> {
+  ): Promise<UpdateFavoriteGenresPayload> {
     const profile = await ProfileService.updateFavoriteGenres(profileId, favoriteGenres);
     return { profile };
   }
 
-  @Mutation(() => UpdateProfilePayload)
+  @Mutation(() => UpdateProfilePicturePayload)
   @Authorized()
   async updateProfilePicture(
     @Arg('input')
     { picture }: UpdatePictureInput,
     @CurrentUser() { profileId }: User,
-  ): Promise<UpdateProfilePayload> {
+  ): Promise<UpdateProfilePicturePayload> {
     const profile = await ProfileService.updateProfilePicture(profileId, picture);
     return { profile };
   }
 
-  @Mutation(() => UpdateProfilePayload)
+  @Mutation(() => UpdateCoverPicturePayload)
   @Authorized()
   async updateCoverPicture(
     @Arg('input')
     { picture }: UpdatePictureInput,
     @CurrentUser() { profileId }: User,
-  ): Promise<UpdateProfilePayload> {
+  ): Promise<UpdateCoverPicturePayload> {
     const profile = await ProfileService.updateCoverPicture(profileId, picture);
     return { profile };
   }
@@ -68,6 +71,6 @@ export class ProfileResolver {
     @Arg('input')
     { fileType }: GenerateUploadUrlInput,
   ): Promise<GenerateUploadUrlPayload> {
-    return AWSService.generateUploadUrl(fileType);
+    return UploadService.generateUploadUrl(fileType);
   }
 }
