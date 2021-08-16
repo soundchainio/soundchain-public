@@ -1,7 +1,8 @@
+import { AcceptedImageFileTypes } from 'enums/AcceptedImageFileTypes';
 import { Field, InputType } from 'type-graphql';
 
 @InputType()
 export class GenerateUploadUrlInput {
-  @Field()
-  fileType: string;
+  @Field(() => AcceptedImageFileTypes)
+  fileType: AcceptedImageFileTypes;
 }

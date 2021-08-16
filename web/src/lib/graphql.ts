@@ -16,6 +16,11 @@ export type Scalars = {
   DateTime: string;
 };
 
+export enum AcceptedImageFileTypes {
+  Jpeg = 'JPEG',
+  Png = 'PNG'
+}
+
 export type AuthPayload = {
   __typename?: 'AuthPayload';
   jwt: Scalars['String'];
@@ -41,7 +46,7 @@ export type ForgotPasswordPayload = {
 };
 
 export type GenerateUploadUrlInput = {
-  fileType: Scalars['String'];
+  fileType: AcceptedImageFileTypes;
 };
 
 export type GenerateUploadUrlPayload = {
@@ -98,10 +103,10 @@ export type LoginInput = {
 export type Mutation = {
   __typename?: 'Mutation';
   createPost: CreatePostPayload;
-  updateSocialMedias: UpdateProfilePayload;
-  updateFavoriteGenres: UpdateProfilePayload;
-  updateProfilePicture: UpdateProfilePayload;
-  updateCoverPicture: UpdateProfilePayload;
+  updateSocialMedias: UpdateSocialMediasPayload;
+  updateFavoriteGenres: UpdateFavoriteGenresPayload;
+  updateProfilePicture: UpdateProfilePicturePayload;
+  updateCoverPicture: UpdateCoverPicturePayload;
   generateUploadUrl: GenerateUploadUrlPayload;
   register: AuthPayload;
   login: AuthPayload;
@@ -237,16 +242,26 @@ export type SocialMedias = {
   twitter?: Maybe<Scalars['String']>;
 };
 
+export type UpdateCoverPicturePayload = {
+  __typename?: 'UpdateCoverPicturePayload';
+  profile: Profile;
+};
+
 export type UpdateFavoriteGenresInput = {
   favoriteGenres: Array<Genre>;
+};
+
+export type UpdateFavoriteGenresPayload = {
+  __typename?: 'UpdateFavoriteGenresPayload';
+  profile: Profile;
 };
 
 export type UpdatePictureInput = {
   picture: Scalars['String'];
 };
 
-export type UpdateProfilePayload = {
-  __typename?: 'UpdateProfilePayload';
+export type UpdateProfilePicturePayload = {
+  __typename?: 'UpdateProfilePicturePayload';
   profile: Profile;
 };
 
@@ -255,6 +270,11 @@ export type UpdateSocialMediasInput = {
   instagram?: Maybe<Scalars['String']>;
   soundcloud?: Maybe<Scalars['String']>;
   twitter?: Maybe<Scalars['String']>;
+};
+
+export type UpdateSocialMediasPayload = {
+  __typename?: 'UpdateSocialMediasPayload';
+  profile: Profile;
 };
 
 export type User = {
@@ -411,7 +431,7 @@ export type UpdateCoverPictureMutationVariables = Exact<{
 export type UpdateCoverPictureMutation = (
   { __typename?: 'Mutation' }
   & { updateCoverPicture: (
-    { __typename?: 'UpdateProfilePayload' }
+    { __typename?: 'UpdateCoverPicturePayload' }
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'coverPicture'>
@@ -427,7 +447,7 @@ export type UpdateFavoriteGenresMutationVariables = Exact<{
 export type UpdateFavoriteGenresMutation = (
   { __typename?: 'Mutation' }
   & { updateFavoriteGenres: (
-    { __typename?: 'UpdateProfilePayload' }
+    { __typename?: 'UpdateFavoriteGenresPayload' }
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'favoriteGenres'>
@@ -443,7 +463,7 @@ export type UpdateProfilePictureMutationVariables = Exact<{
 export type UpdateProfilePictureMutation = (
   { __typename?: 'Mutation' }
   & { updateProfilePicture: (
-    { __typename?: 'UpdateProfilePayload' }
+    { __typename?: 'UpdateProfilePicturePayload' }
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'profilePicture'>
@@ -459,7 +479,7 @@ export type UpdateSocialMediasMutationVariables = Exact<{
 export type UpdateSocialMediasMutation = (
   { __typename?: 'Mutation' }
   & { updateSocialMedias: (
-    { __typename?: 'UpdateProfilePayload' }
+    { __typename?: 'UpdateSocialMediasPayload' }
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id'>
