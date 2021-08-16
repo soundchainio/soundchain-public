@@ -5,7 +5,7 @@ import { AcceptedImageFileTypes } from 'enums/AcceptedImageFileTypes';
 import { GenerateUploadUrlPayload } from 'resolvers/types/GenerateUploadUrlPayload';
 import { v4 as uuidv4 } from 'uuid';
 
-const SIGNED_URL_EXPIRES_IN = 1000 * 60 * 5; // five minutes
+const FIVE_MINUTES = 1000 * 60 * 5;
 
 export class AWSService {
   static s3Client: S3Client;
@@ -26,7 +26,7 @@ export class AWSService {
     };
     const command = new PutObjectCommand(bucketParams);
     const uploadUrl = await getSignedUrl(this.s3Client, command, {
-      expiresIn: SIGNED_URL_EXPIRES_IN,
+      expiresIn: FIVE_MINUTES,
     });
     return {
       uploadUrl,
