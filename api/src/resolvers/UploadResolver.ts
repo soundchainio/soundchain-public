@@ -1,4 +1,4 @@
-import { AWSService } from 'services/AWSService';
+import { UploadService } from 'services/UploadService';
 import { Arg, Query, Resolver } from 'type-graphql';
 import { GenerateUploadUrlInput } from './types/GenerateUploadUrlInput';
 import { GenerateUploadUrlPayload } from './types/GenerateUploadUrlPayload';
@@ -10,6 +10,6 @@ export class UploadResolver {
     @Arg('input')
     { fileType }: GenerateUploadUrlInput,
   ): Promise<GenerateUploadUrlPayload> {
-    return AWSService.generateUploadUrl(fileType);
+    return UploadService.generateUploadUrl(fileType);
   }
 }

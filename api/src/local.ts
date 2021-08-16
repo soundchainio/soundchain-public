@@ -2,14 +2,14 @@ import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
 import mongoose from 'mongoose';
 import { config } from './config';
-import { AWSService } from './services/AWSService';
 import { EmailService } from './services/EmailService';
+import { UploadService } from './services/UploadService';
 
 async function bootstrap() {
   await mongoose.connect(config.db.url, config.db.options);
 
   EmailService.initialize();
-  AWSService.initialize();
+  UploadService.initialize();
 
   const app = express();
   app.use(config.express.middlewares);

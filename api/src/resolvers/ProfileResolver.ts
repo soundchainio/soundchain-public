@@ -1,8 +1,8 @@
 import { CurrentUser } from 'decorators/current-user';
 import { Profile } from 'models/Profile';
 import User from 'models/User';
-import { AWSService } from 'services/AWSService';
 import { ProfileService } from 'services/ProfileService';
+import { UploadService } from 'services/UploadService';
 import { Arg, Authorized, Mutation, Query, Resolver } from 'type-graphql';
 import { GenerateUploadUrlInput } from './types/GenerateUploadUrlInput';
 import { GenerateUploadUrlPayload } from './types/GenerateUploadUrlPayload';
@@ -72,6 +72,6 @@ export class ProfileResolver {
     @Arg('input')
     { fileType }: GenerateUploadUrlInput,
   ): Promise<GenerateUploadUrlPayload> {
-    return AWSService.generateUploadUrl(fileType);
+    return UploadService.generateUploadUrl(fileType);
   }
 }
