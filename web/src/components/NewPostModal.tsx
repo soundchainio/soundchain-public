@@ -4,10 +4,11 @@ import { Button } from 'components/Button';
 import { BaseEmoji, Picker } from 'emoji-mart';
 import 'emoji-mart/css/emoji-mart.css';
 import { Field, Form, Formik, FormikHelpers } from 'formik';
-import { default as React, useState } from 'react';
+import { default as React, useEffect, useState } from 'react';
 import * as yup from 'yup';
 import { useCreatePostMutation } from '../lib/graphql';
 import { getNormalizedLink, hasLink } from '../utils/NormalizeEmbedLinks';
+import { LinksModal } from './LinksModal';
 
 interface NewPostModalProps {
   setShowNewPost: (val: boolean) => void;
@@ -16,10 +17,12 @@ interface NewPostModalProps {
 
 interface FormValues {
   body: string;
+  mediaLink?: string;
 }
 
 const postSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   body: yup.string().required(),
+  mediaLink: yup.string(),
 });
 
 const baseClasses =
@@ -42,7 +45,10 @@ const setMaxInputLength = (input: string) => {
 };
 
 export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps) => {
+  const [showAddMusicLink, setShowAddMusicLink] = useState(false);
+  const [showAddVideoLink, setShowAddVideoLink] = useState(false);
   const [isEmojiPickerVisible, setEmojiPickerVisible] = useState(false);
+  const [originalLink, setOriginalLink] = useState('');
   const [postLink, setPostLink] = useState('');
   const [createPost] = useCreatePostMutation({ refetchQueries: ['Posts'] });
 
@@ -56,11 +62,13 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
   };
 
   const handleSubmit = async (values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
-    await createPost({ variables: { input: values } });
-    resetForm();
+    const params = { body: values.body, mediaLink: postLink };
+
+    await createPost({ variables: { input: params } });
     setEmojiPickerVisible(false);
     setShowNewPost(false);
     setPostLink('');
+    resetForm();
   };
 
   const onEmojiPickerClick = () => {
@@ -77,14 +85,36 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
     }
   };
 
-  const onTextareaChange = async (body: string) => {
-    if (body.length && hasLink(body)) {
-      const link = await getNormalizedLink(body);
+  const normalizeOriginalLink = async () => {
+    if (originalLink.length && hasLink(originalLink)) {
+      const link = await getNormalizedLink(originalLink);
       setPostLink(link);
     } else {
       setPostLink('');
     }
   };
+
+  const onOpenMusicLink = () => {
+    setShowAddMusicLink(true);
+  };
+
+  const onOpenVideoLink = () => {
+    setShowAddVideoLink(true);
+  };
+
+  const onCloseLinks = () => {
+    setShowAddVideoLink(false);
+    setShowAddMusicLink(false);
+  };
+
+  useEffect(() => {
+    if (originalLink) {
+      normalizeOriginalLink();
+      onCloseLinks();
+    } else {
+      setPostLink('');
+    }
+  }, [originalLink]);
 
   return (
     <div
@@ -114,24 +144,37 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
               className="w-full h-24 resize-none focus:ring-0 bg-gray-20 border-none focus:outline-none outline-none text-white flex-auto"
               placeholder="What's happening?"
               maxLength={setMaxInputLength(values.body)}
-              validate={onTextareaChange(values.body)}
             />
             {postLink && <iframe className="w-full" frameBorder="0" allowFullScreen src={postLink} />}
             <div className="p-4 flex items-center bg-gray-25">
               <div className="text-center w-16" onClick={onEmojiPickerClick}>
                 {isEmojiPickerVisible ? '❌' : '😃'}
               </div>
-              <div className="text-center w-16" onClick={onEmojiPickerClick}>
+              <div className="text-center w-16" onClick={onOpenMusicLink}>
                 <MusicNoteIcon className="text-gray-400 w-5 m-auto" />
               </div>
-              <div className="text-center w-16" onClick={onEmojiPickerClick}>
+              <LinksModal
+                show={showAddMusicLink}
+                setShow={setShowAddMusicLink}
+                setOriginalLink={setOriginalLink}
+                onClose={onCloseLinks}
+                type="music"
+              />
+              <div className="text-center w-16" onClick={onOpenVideoLink}>
                 <VideoCameraIcon className="text-gray-400 w-5 m-auto" />
               </div>
+              <LinksModal
+                show={showAddVideoLink}
+                setShow={setShowAddVideoLink}
+                setOriginalLink={setOriginalLink}
+                onClose={onCloseLinks}
+                type="video"
+              />
               <div className="justify-self-end flex-1 text-right text-gray-400">
                 {getBodyCharacterCount(values.body)} / {maxLength}
               </div>
               {isEmojiPickerVisible && (
-                <div className="fixed left-12 bottom-0">
+                <div className="fixed left-16 bottom-0">
                   <Picker
                     theme="dark"
                     perLine={8}

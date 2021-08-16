@@ -6,4 +6,7 @@ export class CreatePostInput {
   @Field()
   @MaxLength(160)
   body: string;
+
+  @Field()
+  mediaLink?: string;
 }
