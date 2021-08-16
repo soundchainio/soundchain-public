@@ -3,7 +3,7 @@ import Image from 'next/image';
 import ProfilePic from '../../public/profile.jpg';
 
 interface AvatarProps extends React.ComponentPropsWithoutRef<'div'> {
-  src: string | null | undefined;
+  src?: string | null;
 }
 
 export const Avatar = ({ className, src }: AvatarProps) => {

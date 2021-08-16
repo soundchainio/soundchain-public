@@ -1,5 +1,4 @@
 import { ApolloError } from '@apollo/client';
-import axios from 'axios';
 import { CompleteProfileForm, CompleteProfileFormValues } from 'components/CompleteProfileForm';
 import { LockedLayout } from 'components/LockedLayout';
 import { LoginNavBar } from 'components/LoginNavBar';
@@ -10,7 +9,6 @@ import { useMe } from 'hooks/useMe';
 import { setJwt } from 'lib/apollo';
 import {
   RegisterInput,
-  useGenerateUploadUrlMutation,
   useRegisterMutation,
   useUpdateCoverPictureMutation,
   useUpdateFavoriteGenresMutation,
@@ -19,14 +17,12 @@ import {
 import { useRouter } from 'next/dist/client/router';
 import Head from 'next/head';
 import { useCallback, useEffect, useState } from 'react';
-import { parseProfileImageFileType } from 'utils/ParsePrfofileImageFileType';
 
 export default function CreateAccountPage() {
   const router = useRouter();
 
   const [register] = useRegisterMutation();
   const [updateGenres] = useUpdateFavoriteGenresMutation();
-  const [generateUploadUrl] = useGenerateUploadUrlMutation();
   const [updateProfilePicture] = useUpdateProfilePictureMutation();
   const [updateCoverPicture] = useUpdateCoverPictureMutation();
 
@@ -39,36 +35,6 @@ export default function CreateAccountPage() {
 
   const me = useMe();
 
-  const uploadProfilePicture = useCallback(
-    async (profilePicture: File) => {
-      const response = await generateUploadUrl({
-        variables: { input: { fileType: parseProfileImageFileType(profilePicture.type) } },
-      });
-      await axios.put(response.data?.generateUploadUrl.uploadUrl as string, profilePicture, {
-        headers: { 'Content-Type': profilePicture.type },
-      });
-      await updateProfilePicture({
-        variables: { input: { picture: response.data?.generateUploadUrl.readUrl as string } },
-      });
-    },
-    [generateUploadUrl, updateProfilePicture],
-  );
-
-  const uploadCoverPicture = useCallback(
-    async (coverPicture: File) => {
-      const response = await generateUploadUrl({
-        variables: { input: { fileType: parseProfileImageFileType(coverPicture.type) } },
-      });
-      await axios.put(response.data?.generateUploadUrl.uploadUrl as string, coverPicture, {
-        headers: { 'Content-Type': coverPicture.type },
-      });
-      await updateCoverPicture({
-        variables: { input: { picture: response.data?.generateUploadUrl.readUrl as string } },
-      });
-    },
-    [generateUploadUrl, updateCoverPicture],
-  );
-
   const updateProfile = useCallback(async () => {
     setLoading(true);
     try {
@@ -80,11 +46,11 @@ export default function CreateAccountPage() {
         const { profilePicture, coverPicture } = setupProfileValues;
 
         if (profilePicture) {
-          await uploadProfilePicture(profilePicture);
+          await updateProfilePicture({ variables: { input: { picture: profilePicture } } });
         }
 
         if (coverPicture) {
-          await uploadCoverPicture(coverPicture);
+          await updateCoverPicture({ variables: { input: { picture: coverPicture } } });
         }
       }
 
@@ -93,7 +59,7 @@ export default function CreateAccountPage() {
       setError(err);
       setLoading(false);
     }
-  }, [completeProfileValues, router, setupProfileValues, updateGenres, uploadCoverPicture, uploadProfilePicture]);
+  }, [completeProfileValues, router, setupProfileValues, updateGenres, updateCoverPicture, updateProfilePicture]);
 
   const registerUser = useCallback(async () => {
     if (registerEmailValues && setupProfileValues && completeProfileValues) {
