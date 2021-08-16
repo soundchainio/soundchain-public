@@ -197,6 +197,7 @@ export type Query = {
   post: Post;
   posts: Array<Post>;
   myProfile: Profile;
+  generateUploadUrl: GenerateUploadUrlPayload;
   me?: Maybe<User>;
   validPasswordResetToken: Scalars['Boolean'];
 };
@@ -210,6 +211,11 @@ export type QueryPostArgs = {
 export type QueryPostsArgs = {
   skip?: Maybe<Scalars['Float']>;
   limit?: Maybe<Scalars['Float']>;
+};
+
+
+export type QueryGenerateUploadUrlArgs = {
+  input: GenerateUploadUrlInput;
 };
 
 
