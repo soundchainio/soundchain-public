@@ -1,5 +1,4 @@
 import { formatDistance } from 'date-fns';
-import { Maybe } from 'lib/graphql';
 import Image from 'next/image';
 import React, { useCallback, useEffect, useState } from 'react';
 import ProfilePic from '../../public/profile.jpg';
@@ -11,7 +10,7 @@ interface PostProps {
   body: string;
   name: string;
   date: string;
-  profilePicture: Maybe<string> | undefined;
+  profilePicture: string | null | undefined;
 }
 
 const generateRandomNumber = () => {
