@@ -19,7 +19,7 @@ import {
 import { useRouter } from 'next/dist/client/router';
 import Head from 'next/head';
 import { useCallback, useEffect, useState } from 'react';
-import { parseImageFileType } from 'utils/ParseImageFileType';
+import { parseProfileImageFileType } from 'utils/ParsePrfofileImageFileType';
 
 export default function CreateAccountPage() {
   const router = useRouter();
@@ -42,7 +42,7 @@ export default function CreateAccountPage() {
   const uploadProfilePicture = useCallback(
     async (profilePicture: File) => {
       const response = await generateUploadUrl({
-        variables: { input: { fileType: parseImageFileType(profilePicture.type) } },
+        variables: { input: { fileType: parseProfileImageFileType(profilePicture.type) } },
       });
       await axios.put(response.data?.generateUploadUrl.uploadUrl as string, profilePicture, {
         headers: { 'Content-Type': profilePicture.type },
@@ -57,7 +57,7 @@ export default function CreateAccountPage() {
   const uploadCoverPicture = useCallback(
     async (coverPicture: File) => {
       const response = await generateUploadUrl({
-        variables: { input: { fileType: parseImageFileType(coverPicture.type) } },
+        variables: { input: { fileType: parseProfileImageFileType(coverPicture.type) } },
       });
       await axios.put(response.data?.generateUploadUrl.uploadUrl as string, coverPicture, {
         headers: { 'Content-Type': coverPicture.type },

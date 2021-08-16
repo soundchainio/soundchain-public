@@ -16,7 +16,7 @@ export type Scalars = {
   DateTime: string;
 };
 
-export enum AcceptedImageFileTypes {
+export enum AcceptedProfileImageFileTypes {
   Jpeg = 'JPEG',
   Png = 'PNG'
 }
@@ -68,7 +68,7 @@ export type ForgotPasswordPayload = {
 };
 
 export type GenerateUploadUrlInput = {
-  fileType: AcceptedImageFileTypes;
+  fileType: AcceptedProfileImageFileTypes;
 };
 
 export type GenerateUploadUrlPayload = {
