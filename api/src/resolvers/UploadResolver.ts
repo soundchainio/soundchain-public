@@ -1,15 +1,15 @@
 import { UploadService } from 'services/UploadService';
 import { Arg, Query, Resolver } from 'type-graphql';
-import { GenerateUploadUrlInput } from './types/GenerateUploadUrlInput';
-import { GenerateUploadUrlPayload } from './types/GenerateUploadUrlPayload';
+import { UploadUrlInput } from './types/UploadUrlInput';
+import { UploadUrlPayload } from './types/UploadUrlPayload';
 
 @Resolver()
 export class UploadResolver {
-  @Query(() => GenerateUploadUrlPayload)
-  async generateUploadUrl(
+  @Query(() => UploadUrlPayload)
+  async uploadUrl(
     @Arg('input')
-    { fileType }: GenerateUploadUrlInput,
-  ): Promise<GenerateUploadUrlPayload> {
+    { fileType }: UploadUrlInput,
+  ): Promise<UploadUrlPayload> {
     return UploadService.generateUploadUrl(fileType);
   }
 }

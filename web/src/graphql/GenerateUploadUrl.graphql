@@ -1,5 +1,5 @@
-mutation GenerateUploadUrl($input: GenerateUploadUrlInput!) {
-  generateUploadUrl(input: $input) {
+query UploadUrl($input: UploadUrlInput!) {
+  uploadUrl(input: $input) {
     uploadUrl
     fileName
     readUrl

@@ -2,7 +2,7 @@ import { PutObjectCommand, PutObjectCommandInput, S3Client } from '@aws-sdk/clie
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { config } from 'config';
 import { AcceptedProfileImageFileTypes } from 'enums/AcceptedImageFileTypes';
-import { GenerateUploadUrlPayload } from 'resolvers/types/GenerateUploadUrlPayload';
+import { UploadUrlPayload } from 'resolvers/types/UploadUrlPayload';
 import { v4 as uuidv4 } from 'uuid';
 
 const FIVE_MINUTES = 1000 * 60 * 5;
@@ -14,7 +14,7 @@ export class UploadService {
     this.s3Client = new S3Client({ region: config.uploads.region });
   }
 
-  static async generateUploadUrl(fileType: AcceptedProfileImageFileTypes): Promise<GenerateUploadUrlPayload> {
+  static async generateUploadUrl(fileType: AcceptedProfileImageFileTypes): Promise<UploadUrlPayload> {
     const imageId = uuidv4();
     const extension = fileType.split('/')[1];
     const fileName = `${imageId}.${extension}`;
