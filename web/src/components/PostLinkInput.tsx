@@ -56,7 +56,7 @@ export const PostLinkInput = ({ type, handleSetLink, link }: PostLinkInputProps)
   };
 
   useEffect(() => {
-    let timer = setTimeout(() => handleSetLink(fieldValue, type), 500);
+    const timer = setTimeout(() => handleSetLink(fieldValue, type), 500);
 
     return () => {
       clearTimeout(timer);
