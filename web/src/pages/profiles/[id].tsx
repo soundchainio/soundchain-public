@@ -1,6 +1,7 @@
 import { Avatar } from 'components/Avatar';
 import { Button } from 'components/Button';
 import { Layout } from 'components/Layout';
+import { Posts } from 'components/Posts';
 import { ProfileTabs } from 'components/ProfileTabs';
 import { SocialMediaLink } from 'components/SocialMediaLink';
 import { Subtitle } from 'components/Subtitle';
@@ -29,7 +30,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
 };
 
 export default function ProfilePage({ profile }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const { coverPicture, profilePicture, displayName, user, socialMedias, posts } = profile;
+  const { coverPicture, profilePicture, displayName, user, socialMedias } = profile;
 
   return (
     <Layout>
@@ -41,7 +42,7 @@ export default function ProfilePage({ profile }: InferGetServerSidePropsType<typ
           className="absolute left-4 bottom-0 transform translate-y-2/3 border-gray-10 border-4 rounded-full"
         />
       </div>
-      <div className="px-4 pt-4 pb-2">
+      <div className="p-4">
         <div className="flex items-center justify-end space-x-8">
           <div className="flex space-x-2">
             <div className="text-center text-sm">
@@ -65,6 +66,7 @@ export default function ProfilePage({ profile }: InferGetServerSidePropsType<typ
         </div>
       </div>
       <ProfileTabs />
+      <Posts variables={{ profileId: profile.id }} />
     </Layout>
   );
 }

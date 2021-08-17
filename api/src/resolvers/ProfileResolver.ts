@@ -1,8 +1,6 @@
 import { CurrentUser } from 'decorators/current-user';
-import { Post } from 'models/Post';
 import { Profile } from 'models/Profile';
 import User from 'models/User';
-import { PostService } from 'services/PostService';
 import { ProfileService } from 'services/ProfileService';
 import { Arg, Authorized, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
 import { UpdateFavoriteGenresInput } from './types/UpdateFavoriteGenresInput';
@@ -15,11 +13,6 @@ export class ProfileResolver {
   @FieldResolver(() => User)
   user(@Root() profile: Profile): Promise<User> {
     return ProfileService.getProfileUser(profile._id);
-  }
-
-  @FieldResolver(() => [Post])
-  posts(@Root() profile: Profile): Promise<Post[]> {
-    return PostService.getPostsByProfileId(profile._id);
   }
 
   @Query(() => Profile)

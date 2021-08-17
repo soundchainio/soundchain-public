@@ -13,8 +13,5 @@ query Profile($id: String!) {
     user {
       handle
     }
-    posts {
-      ...PostComponentFields
-    }
   }
 }

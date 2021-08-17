@@ -1,8 +1,13 @@
+import { isUndefined, omitBy } from 'lodash';
 import { Post, PostModel } from 'models/Post';
 
 interface NewPostParams {
   profileId: string;
   body: string;
+}
+
+interface GetPostsFilters {
+  profileId?: string;
 }
 
 export class PostService {
@@ -12,15 +17,11 @@ export class PostService {
     return post;
   }
 
-  static getPosts(limit: number, skip: number): Promise<Post[]> {
-    return PostModel.find().sort({ createdAt: 'desc' }).limit(limit).skip(skip).exec();
+  static getPosts(filters: GetPostsFilters): Promise<Post[]> {
+    return PostModel.find(omitBy(filters, isUndefined)).sort({ createdAt: 'desc' }).exec();
   }
 
   static getPost(id: string): Promise<Post> {
     return PostModel.findByIdOrFail(id);
-  }
-
-  static getPostsByProfileId(profileId: string): Promise<Post[]> {
-    return PostModel.find({ profileId }).sort({ createdAt: 'desc' }).exec();
   }
 }
