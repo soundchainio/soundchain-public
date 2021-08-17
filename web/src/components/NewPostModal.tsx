@@ -5,6 +5,7 @@ import { BaseEmoji, Picker } from 'emoji-mart';
 import 'emoji-mart/css/emoji-mart.css';
 import { PostLinkType } from 'enums/PostLinkType';
 import { Field, Form, Formik, FormikHelpers } from 'formik';
+import { CreatePostInput } from 'lib/graphql';
 import { default as React, useEffect, useState } from 'react';
 import * as yup from 'yup';
 import { useCreatePostMutation } from '../lib/graphql';
@@ -63,7 +64,7 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
   };
 
   const handleSubmit = async (values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
-    const params: any = { body: values.body };
+    const params: CreatePostInput = { body: values.body };
 
     if (postLink.length) {
       params.mediaLink = postLink;

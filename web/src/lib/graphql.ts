@@ -45,7 +45,7 @@ export type Comment = {
 
 export type CreatePostInput = {
   body: Scalars['String'];
-  mediaLink: Scalars['String'];
+  mediaLink?: Maybe<Scalars['String']>;
 };
 
 export type CreatePostPayload = {

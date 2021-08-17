@@ -1,4 +1,4 @@
-import { MaxLength } from 'class-validator';
+import { IsOptional, MaxLength } from 'class-validator';
 import { Field, InputType } from 'type-graphql';
 
 @InputType()
@@ -8,5 +8,6 @@ export class CreatePostInput {
   body: string;
 
   @Field({ nullable: true })
+  @IsOptional()
   mediaLink?: string;
 }
