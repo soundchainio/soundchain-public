@@ -2,7 +2,7 @@ import { UserInputError } from 'apollo-server-express';
 import { Genre } from 'enums/Genres';
 import { Profile, ProfileModel } from 'models/Profile';
 import { SocialMedias } from 'models/SocialMedias';
-import User, { UserModel } from 'models/User';
+import { UserModel } from 'models/User';
 
 export class ProfileService {
   static getProfile(id: string): Promise<Profile> {
@@ -25,13 +25,11 @@ export class ProfileService {
     return updatedProfile;
   }
 
-  static async getProfileUser(profileId: string): Promise<User> {
+  static async getUserHandle(profileId: string): Promise<string> {
     const user = await UserModel.findOne({ profileId });
-
     if (!user) {
       throw new Error(`Profile ${profileId} is missing a user account!`);
     }
-
-    return user;
+    return user.handle;
   }
 }

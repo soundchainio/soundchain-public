@@ -10,9 +10,9 @@ import { UpdateSocialMediasPayload } from './types/UpdateSocialMediasPayload';
 
 @Resolver(Profile)
 export class ProfileResolver {
-  @FieldResolver(() => User)
-  user(@Root() profile: Profile): Promise<User> {
-    return ProfileService.getProfileUser(profile._id);
+  @FieldResolver(() => String)
+  userHandle(@Root() profile: Profile): Promise<string> {
+    return ProfileService.getUserHandle(profile._id);
   }
 
   @Query(() => Profile)

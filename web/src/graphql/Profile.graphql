@@ -10,8 +10,6 @@ query Profile($id: String!) {
       soundcloud
       twitter
     }
-    user {
-      handle
-    }
+    userHandle
   }
 }

@@ -30,7 +30,7 @@ export const getServerSideProps: GetServerSideProps = async context => {
 };
 
 export default function ProfilePage({ profile }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const { coverPicture, profilePicture, displayName, user, socialMedias } = profile;
+  const { coverPicture, profilePicture, displayName, userHandle, socialMedias } = profile;
 
   return (
     <Layout>
@@ -59,7 +59,7 @@ export default function ProfilePage({ profile }: InferGetServerSidePropsType<typ
           </Button>
         </div>
         <Subtitle className="mt-4">{displayName}</Subtitle>
-        <p className="text-gray-80 text-sm">@{user.handle}</p>
+        <p className="text-gray-80 text-sm">@{userHandle}</p>
         <div className="flex space-x-4 mt-2">
           {socialMedias.instagram && <SocialMediaLink company="instagram" handle={socialMedias.instagram} />}
           {socialMedias.twitter && <SocialMediaLink company="twitter" handle={socialMedias.twitter} />}

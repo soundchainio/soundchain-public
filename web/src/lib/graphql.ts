@@ -175,7 +175,7 @@ export type Profile = {
   favoriteGenres: Array<Genre>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
-  user: User;
+  userHandle: Scalars['String'];
 };
 
 export type Query = {
@@ -381,12 +381,14 @@ export type ProfileQueryVariables = Exact<{
 }>;
 
 export type ProfileQuery = { __typename?: 'Query' } & {
-  profile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture'> & {
+  profile: { __typename?: 'Profile' } & Pick<
+    Profile,
+    'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'userHandle'
+  > & {
       socialMedias: { __typename?: 'SocialMedias' } & Pick<
         SocialMedias,
         'facebook' | 'instagram' | 'soundcloud' | 'twitter'
       >;
-      user: { __typename?: 'User' } & Pick<User, 'handle'>;
     };
 };
 
@@ -862,9 +864,7 @@ export const ProfileDocument = gql`
         soundcloud
         twitter
       }
-      user {
-        handle
-      }
+      userHandle
     }
   }
 `;
