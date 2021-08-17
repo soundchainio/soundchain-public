@@ -2,6 +2,7 @@ import classNames from 'classnames';
 import { Button } from 'components/Button';
 import 'emoji-mart/css/emoji-mart.css';
 import { MediaProvider } from 'enums/MediaProvider';
+import { PostLinkType } from 'enums/PostLinkType';
 import { default as React, useState } from 'react';
 import { MediaLink, PostLinkInput } from './PostLinkInput';
 
@@ -50,7 +51,7 @@ export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type }: Ad
             </Button>
           </div>
         </div>
-        {type == 'music' && (
+        {type === PostLinkType.MUSIC && (
           <>
             <div className="text-gray-400 mt-4 mb-4 w-9/12 ml-auto mr-auto text-sm">
               Paste a video link from Soundcloud or Spotify to embed the video to your post.
@@ -61,7 +62,7 @@ export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type }: Ad
             </div>
           </>
         )}
-        {type == 'video' && (
+        {type === PostLinkType.VIDEO && (
           <>
             <div className="text-gray-400 mt-4 mb-4 w-9/12 ml-auto mr-auto text-sm">
               Paste a video link from Youtube or Vimeo to embed the video to your post.
