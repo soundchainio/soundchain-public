@@ -3,17 +3,23 @@ import { Soundcloud } from 'icons/Soundcloud';
 import { Spotify } from 'icons/Spotify';
 import { Vimeo } from 'icons/Vimeo';
 import { Youtube } from 'icons/Youtube';
-import React, { useState } from 'react';
-
-interface PostLinkInputProps {
-  type: string;
-  handleSetLink: (value: string, type: string) => void;
-}
+import React, { useEffect, useState } from 'react';
 
 interface MediaType {
   name: string;
   example: string;
   logo?: JSX.Element;
+}
+
+interface Link {
+  value: string;
+  type: string;
+}
+
+interface PostLinkInputProps {
+  type: string;
+  handleSetLink: (value: string, type: string) => void;
+  link: Link;
 }
 
 const options = [
@@ -23,7 +29,7 @@ const options = [
   { name: 'Vimeo', example: 'https://vimeo.com/12345', logo: <Vimeo /> },
 ];
 
-export const PostLinkInput = ({ type, handleSetLink }: PostLinkInputProps) => {
+export const PostLinkInput = ({ type, handleSetLink, link }: PostLinkInputProps) => {
   const [fieldValue, setFieldValue] = useState('');
   let selectedType: MediaType = {
     name: '',
@@ -38,12 +44,24 @@ export const PostLinkInput = ({ type, handleSetLink }: PostLinkInputProps) => {
 
   const onChange = (value: string) => {
     setFieldValue(value);
-    handleSetLink(value, type);
   };
 
   const onClear = () => {
     setFieldValue('');
+    handleSetLink('', '');
   };
+
+  const isDisabled = () => {
+    return link.type != type && link.value != '';
+  };
+
+  useEffect(() => {
+    let timer = setTimeout(() => handleSetLink(fieldValue, type), 500);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [fieldValue]);
 
   return (
     <div className="text-gray-400 flex items-center mt-4 mb-10">
@@ -52,9 +70,10 @@ export const PostLinkInput = ({ type, handleSetLink }: PostLinkInputProps) => {
         <input
           type="text"
           placeholder={`Enter ${selectedType.name} link`}
-          className="bg-gray-30 border-gray-700 p-2 text-sm focus:outline-none focus:ring-0"
+          className="bg-gray-30 border-gray-700 p-2 text-sm focus:outline-none focus:ring-0 disabled:opacity-50"
           onChange={e => onChange(e.target.value)}
           value={fieldValue}
+          disabled={isDisabled()}
         />
         <div className="relative">
           <span className="absolute top-2 left-0 text-xs">({selectedType.example})</span>

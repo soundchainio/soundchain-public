@@ -153,23 +153,27 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
               <div className="text-center w-16" onClick={onOpenMusicLink}>
                 <MusicNoteIcon className="text-gray-400 w-5 m-auto" />
               </div>
-              <LinksModal
-                show={showAddMusicLink}
-                setShow={setShowAddMusicLink}
-                setOriginalLink={setOriginalLink}
-                onClose={onCloseLinks}
-                type="music"
-              />
               <div className="text-center w-16" onClick={onOpenVideoLink}>
                 <VideoCameraIcon className="text-gray-400 w-5 m-auto" />
               </div>
-              <LinksModal
-                show={showAddVideoLink}
-                setShow={setShowAddVideoLink}
-                setOriginalLink={setOriginalLink}
-                onClose={onCloseLinks}
-                type="video"
-              />
+              {showNewPost && (
+                <>
+                  <LinksModal
+                    show={showAddMusicLink}
+                    setShow={setShowAddMusicLink}
+                    setOriginalLink={setOriginalLink}
+                    onClose={onCloseLinks}
+                    type="music"
+                  />
+                  <LinksModal
+                    show={showAddVideoLink}
+                    setShow={setShowAddVideoLink}
+                    setOriginalLink={setOriginalLink}
+                    onClose={onCloseLinks}
+                    type="video"
+                  />
+                </>
+              )}
               <div className="justify-self-end flex-1 text-right text-gray-400">
                 {getBodyCharacterCount(values.body)} / {maxLength}
               </div>
