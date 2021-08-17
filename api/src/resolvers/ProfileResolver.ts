@@ -2,10 +2,7 @@ import { CurrentUser } from 'decorators/current-user';
 import { Profile } from 'models/Profile';
 import User from 'models/User';
 import { ProfileService } from 'services/ProfileService';
-import { UploadService } from 'services/UploadService';
 import { Arg, Authorized, Mutation, Query, Resolver } from 'type-graphql';
-import { GenerateUploadUrlInput } from './types/GenerateUploadUrlInput';
-import { GenerateUploadUrlPayload } from './types/GenerateUploadUrlPayload';
 import { UpdateCoverPicturePayload } from './types/UpdateCoverPicturePayload';
 import { UpdateFavoriteGenresInput } from './types/UpdateFavoriteGenresInput';
 import { UpdateFavoriteGenresPayload } from './types/UpdateFavoriteGenresPayload';
@@ -64,13 +61,5 @@ export class ProfileResolver {
   ): Promise<UpdateCoverPicturePayload> {
     const profile = await ProfileService.updateCoverPicture(profileId, picture);
     return { profile };
-  }
-
-  @Mutation(() => GenerateUploadUrlPayload)
-  async generateUploadUrl(
-    @Arg('input')
-    { fileType }: GenerateUploadUrlInput,
-  ): Promise<GenerateUploadUrlPayload> {
-    return UploadService.generateUploadUrl(fileType);
   }
 }
