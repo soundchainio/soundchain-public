@@ -4,4 +4,4 @@ import { ProfileResolver } from './ProfileResolver';
 import { UploadResolver } from './UploadResolver';
 import { UserResolver } from './UserResolver';
 
-export default [PostResolver, CommentResolver, ProfileResolver, UserResolver, UploadResolver] as const;
+export default [CommentResolver, PostResolver, ProfileResolver, UserResolver, UploadResolver] as const;
