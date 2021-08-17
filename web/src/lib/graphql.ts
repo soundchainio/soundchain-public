@@ -341,7 +341,7 @@ export type MeQueryVariables = Exact<{ [key: string]: never }>;
 export type MeQuery = { __typename?: 'Query' } & {
   me?: Maybe<
     { __typename?: 'User' } & Pick<User, 'id' | 'handle'> & {
-        profile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'displayName'>;
+        profile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>;
       }
   >;
 };
@@ -702,6 +702,7 @@ export const MeDocument = gql`
       profile {
         id
         displayName
+        profilePicture
       }
     }
   }

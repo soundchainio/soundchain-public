@@ -37,7 +37,7 @@ export default function ProfilePage({ profile }: InferGetServerSidePropsType<typ
       <div className="h-[125px] relative">
         {coverPicture && <Image src={coverPicture} alt="Cover pic" layout="fill" objectFit="cover" />}
         <Avatar
-          pic={profilePicture}
+          src={profilePicture}
           pixels={80}
           className="absolute left-4 bottom-0 transform translate-y-2/3 border-gray-10 border-4 rounded-full"
         />

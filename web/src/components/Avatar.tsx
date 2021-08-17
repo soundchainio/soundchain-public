@@ -3,16 +3,16 @@ import React from 'react';
 import ProfilePic from '../../public/profile.jpg';
 
 interface AvatarProps {
-  pic: string | null | undefined;
+  src: string | null | undefined;
   pixels?: number;
   className?: string;
 }
 
-export const Avatar = ({ pic, pixels = 30, className }: AvatarProps) => {
+export const Avatar = ({ src, pixels = 30, className }: AvatarProps) => {
   return (
     <div className={className}>
-      {pic ? (
-        <Image alt="Profile picture" src={pic} width={pixels} height={pixels} className="rounded-full" />
+      {src ? (
+        <Image alt="Profile picture" src={src} width={pixels} height={pixels} className="rounded-full" />
       ) : (
         <Image alt="Profile picture" src={ProfilePic} width={pixels} height={pixels} className="rounded-full" />
       )}

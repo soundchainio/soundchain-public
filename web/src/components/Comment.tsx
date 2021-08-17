@@ -16,7 +16,7 @@ export const Comment = ({ commentId }: CommentProps) => {
 
   return (
     <div className="flex flex-row space-x-3">
-      <Avatar pic={comment.profile.profilePicture} className="mt-4" />
+      <Avatar src={comment.profile.profilePicture} className="mt-4" />
       <div className="flex-1 py-4 px-4 bg-gray-20 rounded-xl">
         <div className="flex justify-between items-center mb-1">
           <NextLink href={`/profiles/${comment.profile.id}`}>
