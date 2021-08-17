@@ -9,11 +9,13 @@ interface AvatarProps {
 }
 
 export const Avatar = ({ pic, pixels = 30, className }: AvatarProps) => {
-  const src: string | StaticImport = pic ?? ProfilePic;
-
   return (
     <div className={className}>
-      <Image alt="Profile picture" src={src} width={pixels} height={pixels} className="rounded-full" />
+      {pic ? (
+        <Image alt="Profile picture" src={pic} width={pixels} height={pixels} className="rounded-full" />
+      ) : (
+        <Image alt="Profile picture" src={ProfilePic} width={pixels} height={pixels} className="rounded-full" />
+      )}
     </div>
   );
 };
