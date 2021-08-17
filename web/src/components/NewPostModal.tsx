@@ -63,7 +63,7 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
   };
 
   const handleSubmit = async (values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
-    let params: any = { body: values.body };
+    const params: any = { body: values.body };
 
     if (postLink.length) {
       params.mediaLink = postLink;
