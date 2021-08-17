@@ -1,9 +1,15 @@
 import { XCircleIcon } from '@heroicons/react/outline';
+import { MediaProvider } from 'enums/MediaProvider';
 import { Soundcloud } from 'icons/Soundcloud';
 import { Spotify } from 'icons/Spotify';
 import { Vimeo } from 'icons/Vimeo';
 import { Youtube } from 'icons/Youtube';
 import React, { useEffect, useState } from 'react';
+
+export interface MediaLink {
+  value: string;
+  type: MediaProvider;
+}
 
 interface MediaType {
   name: string;
@@ -11,15 +17,10 @@ interface MediaType {
   logo?: JSX.Element;
 }
 
-interface Link {
-  value: string;
-  type: string;
-}
-
 interface PostLinkInputProps {
-  type: string;
-  handleSetLink: (value: string, type: string) => void;
-  link: Link;
+  type: MediaProvider;
+  handleSetLink: (value: string, type: MediaProvider) => void;
+  link: MediaLink;
 }
 
 const options = [
@@ -48,7 +49,7 @@ export const PostLinkInput = ({ type, handleSetLink, link }: PostLinkInputProps)
 
   const onClear = () => {
     setFieldValue('');
-    handleSetLink('', '');
+    handleSetLink('', MediaProvider.INITIAL);
   };
 
   const isDisabled = () => {

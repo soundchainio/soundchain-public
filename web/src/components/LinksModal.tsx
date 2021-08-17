@@ -1,8 +1,9 @@
 import classNames from 'classnames';
 import { Button } from 'components/Button';
 import 'emoji-mart/css/emoji-mart.css';
+import { MediaProvider } from 'enums/MediaProvider';
 import { default as React, useState } from 'react';
-import { PostLinkInput } from './PostLinkInput';
+import { MediaLink, PostLinkInput } from './PostLinkInput';
 
 interface AddLinkProps {
   onClose: () => void;
@@ -16,8 +17,8 @@ const baseClasses =
   'absolute left-0 w-screen h-screen bottom-0 duration-500 bg-opacity-75 ease-in-out bg-gray-25 transform-gpu transform';
 
 export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type }: AddLinkProps) => {
-  const [link, setLink] = useState({
-    type: '',
+  const [link, setLink] = useState<MediaLink>({
+    type: MediaProvider.INITIAL,
     value: '',
   });
 
@@ -30,7 +31,7 @@ export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type }: Ad
     setShow(false);
   };
 
-  const handleSetLink = (value: string, type: string) => {
+  const handleSetLink = (value: string, type: MediaProvider) => {
     setLink({ type, value });
   };
 
@@ -55,8 +56,8 @@ export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type }: Ad
               Paste a video link from Soundcloud or Spotify to embed the video to your post.
             </div>
             <div>
-              <PostLinkInput type="SoundCloud" handleSetLink={handleSetLink} link={link} />
-              <PostLinkInput type="Spotify" handleSetLink={handleSetLink} link={link} />
+              <PostLinkInput type={MediaProvider.SOUNDCLOUD} handleSetLink={handleSetLink} link={link} />
+              <PostLinkInput type={MediaProvider.SPOTIFY} handleSetLink={handleSetLink} link={link} />
             </div>
           </>
         )}
@@ -66,8 +67,8 @@ export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type }: Ad
               Paste a video link from Youtube or Vimeo to embed the video to your post.
             </div>
             <div>
-              <PostLinkInput type="Youtube" handleSetLink={handleSetLink} link={link} />
-              <PostLinkInput type="Vimeo" handleSetLink={handleSetLink} link={link} />
+              <PostLinkInput type={MediaProvider.YOUTUBE} handleSetLink={handleSetLink} link={link} />
+              <PostLinkInput type={MediaProvider.VIMEO} handleSetLink={handleSetLink} link={link} />
             </div>
           </>
         )}

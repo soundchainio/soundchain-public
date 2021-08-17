@@ -3,6 +3,7 @@ import classNames from 'classnames';
 import { Button } from 'components/Button';
 import { BaseEmoji, Picker } from 'emoji-mart';
 import 'emoji-mart/css/emoji-mart.css';
+import { PostLinkType } from 'enums/PostLinkType';
 import { Field, Form, Formik, FormikHelpers } from 'formik';
 import { default as React, useEffect, useState } from 'react';
 import * as yup from 'yup';
@@ -167,14 +168,14 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
                     setShow={setShowAddMusicLink}
                     setOriginalLink={setOriginalLink}
                     onClose={onCloseLinks}
-                    type="music"
+                    type={PostLinkType.MUSIC}
                   />
                   <LinksModal
                     show={showAddVideoLink}
                     setShow={setShowAddVideoLink}
                     setOriginalLink={setOriginalLink}
                     onClose={onCloseLinks}
-                    type="video"
+                    type={PostLinkType.VIDEO}
                   />
                 </>
               )}
