@@ -11,7 +11,7 @@ interface AddLinkProps {
   setOriginalLink: (val: string) => void;
   setShow: (val: boolean) => void;
   show: boolean;
-  type: string;
+  type: PostLinkType;
 }
 
 const baseClasses =
