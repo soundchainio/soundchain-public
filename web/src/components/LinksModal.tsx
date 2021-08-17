@@ -35,12 +35,7 @@ export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type }: Ad
   };
 
   return (
-    <div
-      className={classNames(baseClasses, {
-        'translate-y-0 opacity-100': show,
-        'translate-y-full opacity-0': !show,
-      })}
-    >
+    <div className={classNames(baseClasses, show ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0')}>
       <div className="w-screen h-20" onClick={cancel} />
       <div className="flex flex-col max-height-from-menu bg-gray-20">
         <div className="flex items-center rounded-tl-3xl rounded-tr-3xl bg-gray-30">

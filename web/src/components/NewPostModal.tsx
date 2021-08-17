@@ -62,7 +62,11 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
   };
 
   const handleSubmit = async (values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
-    const params = { body: values.body, mediaLink: postLink };
+    let params: any = { body: values.body };
+
+    if (postLink.length) {
+      params.mediaLink = postLink;
+    }
 
     await createPost({ variables: { input: params } });
     setEmojiPickerVisible(false);
