@@ -1,0 +1,20 @@
+query Profile($id: String!) {
+  profile(id: $id) {
+    id
+    displayName
+    profilePicture
+    coverPicture
+    socialMedias {
+      facebook
+      instagram
+      soundcloud
+      twitter
+    }
+    user {
+      handle
+    }
+    posts {
+      ...PostComponentFields
+    }
+  }
+}

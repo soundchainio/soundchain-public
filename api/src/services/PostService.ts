@@ -19,4 +19,8 @@ export class PostService {
   static getPost(id: string): Promise<Post> {
     return PostModel.findByIdOrFail(id);
   }
+
+  static getPostsByProfileId(profileId: string): Promise<Post[]> {
+    return PostModel.find({ profileId }).sort({ createdAt: 'desc' }).exec();
+  }
 }
