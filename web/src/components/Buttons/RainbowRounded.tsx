@@ -5,7 +5,7 @@ export const RainbowRounded = ({ className, type = 'button', icon: Icon, childre
   return (
     <div className={'p-0.5 rounded-3xl bg-rainbow-gradient'}>
       <button
-        className={classNames(`${commonClasses} sm:px-4 py-1 font-bold rounded-3xl`, className)}
+        className={classNames(commonClasses, 'sm:px-4 py-1 font-bold rounded-3xl', className)}
         type={type}
         {...rest}
       >
