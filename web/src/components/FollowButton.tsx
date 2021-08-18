@@ -1,5 +1,5 @@
 import { Button } from 'components/Button';
-import { useFollowProfileMutation } from 'lib/graphql';
+import { useFollowProfileMutation, useUnfollowProfileMutation } from 'lib/graphql';
 import React from 'react';
 
 interface FollowButtonProps {
@@ -8,12 +8,18 @@ interface FollowButtonProps {
 }
 
 export const FollowButton = ({ followedId, isFollowed }: FollowButtonProps) => {
-  const [followProfile] = useFollowProfileMutation();
+  const [followProfile, { loading: followLoading }] = useFollowProfileMutation();
+  const [unfollowProfile, { loading: unfollowLoading }] = useUnfollowProfileMutation();
 
   const handleClick = async () => {
-    // if (!isFollowed) {
-    await followProfile({ variables: { input: { followedId } } });
-    // }
+    if (followLoading || unfollowLoading) return;
+    const opts = { variables: { input: { followedId } } };
+
+    if (!isFollowed) {
+      await followProfile(opts);
+    } else {
+      await unfollowProfile(opts);
+    }
   };
 
   return (

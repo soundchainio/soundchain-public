@@ -1,3 +1,4 @@
+import { UserInputError } from 'apollo-server-express';
 import { Follow, FollowModel } from 'models/Follow';
 
 interface FollowRelationship {
@@ -16,8 +17,10 @@ export class FollowService {
     return newFollow;
   }
 
-  static async deleteFollow(conditions: DeleteFollowConditions): Promise<void> {
-    await FollowModel.deleteOne(conditions);
+  static async deleteFollow(conditions: DeleteFollowConditions): Promise<Follow> {
+    const follow = await FollowModel.findOneAndDelete(conditions);
+    if (!follow) throw new UserInputError('Follow could not be deleted because it does not exist.');
+    return follow;
   }
 
   static followExists(filter: FollowExistsFilter): Promise<boolean> {

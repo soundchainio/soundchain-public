@@ -7,15 +7,16 @@ import { ProfileTabs } from 'components/ProfileTabs';
 import { SocialMediaLink } from 'components/SocialMediaLink';
 import { Subtitle } from 'components/Subtitle';
 import { apolloClient } from 'lib/apollo';
-import { ProfileDocument, ProfileQuery, useProfileQuery } from 'lib/graphql';
+import { ProfileDocument, useProfileQuery } from 'lib/graphql';
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import Image from 'next/image';
+import { useEffect } from 'react';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   const {
     data: { profile },
     error,
-  } = await apolloClient.query<ProfileQuery>({
+  } = await apolloClient.query({
     query: ProfileDocument,
     variables: { id: context.params?.id },
     context,
@@ -25,8 +26,6 @@ export const getServerSideProps: GetServerSideProps = async context => {
     return { notFound: true };
   }
 
-  console.log(profile);
-
   return {
     props: { profile },
   };
@@ -34,15 +33,17 @@ export const getServerSideProps: GetServerSideProps = async context => {
 
 export default function ProfilePage({ profile }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const apollo = useApolloClient();
-  apollo.writeQuery({
-    query: ProfileDocument,
-    variables: { id: profile.id },
-    data: {
-      profile,
-    },
-  });
+  const { data } = useProfileQuery({ variables: { id: profile.id }, fetchPolicy: 'cache-only' });
 
-  const { data } = useProfileQuery({ variables: { id: profile.id } });
+  useEffect(() => {
+    apollo.writeQuery({
+      query: ProfileDocument,
+      variables: { id: profile.id },
+      data: {
+        profile,
+      },
+    });
+  }, []);
 
   const {
     coverPicture,
@@ -53,7 +54,7 @@ export default function ProfilePage({ profile }: InferGetServerSidePropsType<typ
     followerCount,
     followingCount,
     isFollowed,
-  } = (data as ProfileQuery).profile;
+  } = data?.profile ?? profile;
 
   return (
     <Layout>
