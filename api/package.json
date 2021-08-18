@@ -3,9 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "docker-compose up -d && nodemon -w 'src/**' -e 'ts,json' -x 'ts-node src/local.ts'",
+    "dev": "docker-compose up -d && yarn migrate && nodemon -w 'src/**' -e 'ts,json' -x 'ts-node src/local.ts'",
     "lint-staged": "lint-staged",
-    "seed": "ts-node src/db/seeds.ts"
+    "seed": "ts-node src/db/seeds.ts",
+    "migrate:create": "sh -c 'ts-node node_modules/.bin/migrate-mongo create $0 -f migrate-mongo-config.ts' ",
+    "migrate:status": "ts-node node_modules/.bin/migrate-mongo status -f migrate-mongo-config.ts",
+    "migrate:down": "ts-node node_modules/.bin/migrate-mongo down -f migrate-mongo-config.ts && npm run migrate:status",
+    "migrate": "ts-node node_modules/.bin/migrate-mongo up -f migrate-mongo-config.ts"
   },
   "lint-staged": {
     "*.{ts,json,md}": "prettier --write"
@@ -30,6 +34,7 @@
     "express-jwt": "^6.0.0",
     "graphql": "^15.5.1",
     "jsonwebtoken": "^8.5.1",
+    "migrate-mongo": "^8.2.3",
     "mongoose": "5.10.18",
     "reflect-metadata": "^0.1.13",
     "type-graphql": "^1.1.1",
@@ -42,6 +47,8 @@
     "@types/faker": "^5.5.7",
     "@types/jsonwebtoken": "^8.5.4",
     "@types/lodash": "^4.14.172",
+    "@types/migrate-mongo": "^8.1.2",
+    "@types/mongodb": "^4.0.7",
     "@types/mongoose": "5.10.5",
     "@types/uuid": "^8.3.1",
     "@typescript-eslint/eslint-plugin": "^4.28.3",

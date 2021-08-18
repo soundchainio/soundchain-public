@@ -21,6 +21,8 @@ functions:
           path: /
           method: get
           cors: true
+  migrate:
+    handler: src/db/migrate.handler
 
 custom:
   db:
