@@ -1,5 +1,6 @@
 import { ApolloCache, FetchResult } from '@apollo/client';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
+import { useMe } from 'hooks/useMe';
 import { Send } from 'icons/Send';
 import { animateScroll } from 'react-scroll';
 import * as yup from 'yup';
@@ -25,6 +26,7 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
   const [addComment] = useAddCommentMutation({
     update: (cache, result) => updateCache(cache, result, postId),
   });
+  const me = useMe();
 
   const handleSubmit = async ({ body }: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
     await addComment({ variables: { input: { postId, body } } });
@@ -37,7 +39,7 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
       {({ isSubmitting, isValid, dirty }: FormikProps<FormValues>) => (
         <Form>
           <div className="flex flex-row items-start space-x-3 p-3 bg-gray-25">
-            <Avatar />
+            <Avatar src={me?.profile.profilePicture} />
             <FlexareaField name="body" placeholder="Write a comment..." />
             <button type="submit" disabled={isSubmitting} className="pt-1">
               <Send activated={dirty && isValid} />

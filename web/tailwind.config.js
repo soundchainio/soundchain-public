@@ -1,4 +1,5 @@
 module.exports = {
+  mode: 'jit',
   purge: ['./src/**/*.{ts,tsx}'],
   darkMode: false, // or 'media' or 'class'
   plugins: [require('@tailwindcss/forms')],

@@ -187,6 +187,7 @@ export type Profile = {
   favoriteGenres: Array<Genre>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
+  userHandle: Scalars['String'];
 };
 
 export type Query = {
@@ -196,6 +197,7 @@ export type Query = {
   post: Post;
   posts: Array<Post>;
   myProfile: Profile;
+  profile: Profile;
   me?: Maybe<User>;
   validPasswordResetToken: Scalars['Boolean'];
 };
@@ -217,8 +219,12 @@ export type QueryPostArgs = {
 
 
 export type QueryPostsArgs = {
-  skip?: Maybe<Scalars['Float']>;
-  limit?: Maybe<Scalars['Float']>;
+  profileId?: Maybe<Scalars['String']>;
+};
+
+
+export type QueryProfileArgs = {
+  id: Scalars['String'];
 };
 
 
@@ -399,7 +405,7 @@ export type MeQuery = (
     & Pick<User, 'id' | 'handle'>
     & { profile: (
       { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'displayName'>
+      & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
     ) }
   )> }
 );
@@ -441,7 +447,9 @@ export type PostComponentFieldsFragment = (
   ) }
 );
 
-export type PostsQueryVariables = Exact<{ [key: string]: never; }>;
+export type PostsQueryVariables = Exact<{
+  profileId?: Maybe<Scalars['String']>;
+}>;
 
 
 export type PostsQuery = (
@@ -450,6 +458,23 @@ export type PostsQuery = (
     { __typename?: 'Post' }
     & PostComponentFieldsFragment
   )> }
+);
+
+export type ProfileQueryVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+export type ProfileQuery = (
+  { __typename?: 'Query' }
+  & { profile: (
+    { __typename?: 'Profile' }
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'userHandle'>
+    & { socialMedias: (
+      { __typename?: 'SocialMedias' }
+      & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
+    ) }
+  ) }
 );
 
 export type RegisterMutationVariables = Exact<{
@@ -784,6 +809,7 @@ export const MeDocument = gql`
     profile {
       id
       displayName
+      profilePicture
     }
   }
 }
@@ -892,8 +918,8 @@ export type PostQueryHookResult = ReturnType<typeof usePostQuery>;
 export type PostLazyQueryHookResult = ReturnType<typeof usePostLazyQuery>;
 export type PostQueryResult = Apollo.QueryResult<PostQuery, PostQueryVariables>;
 export const PostsDocument = gql`
-    query Posts {
-  posts {
+    query Posts($profileId: String) {
+  posts(profileId: $profileId) {
     ...PostComponentFields
   }
 }
@@ -911,6 +937,7 @@ export const PostsDocument = gql`
  * @example
  * const { data, loading, error } = usePostsQuery({
  *   variables: {
+ *      profileId: // value for 'profileId'
  *   },
  * });
  */
@@ -925,6 +952,51 @@ export function usePostsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Post
 export type PostsQueryHookResult = ReturnType<typeof usePostsQuery>;
 export type PostsLazyQueryHookResult = ReturnType<typeof usePostsLazyQuery>;
 export type PostsQueryResult = Apollo.QueryResult<PostsQuery, PostsQueryVariables>;
+export const ProfileDocument = gql`
+    query Profile($id: String!) {
+  profile(id: $id) {
+    id
+    displayName
+    profilePicture
+    coverPicture
+    socialMedias {
+      facebook
+      instagram
+      soundcloud
+      twitter
+    }
+    userHandle
+  }
+}
+    `;
+
+/**
+ * __useProfileQuery__
+ *
+ * To run a query within a React component, call `useProfileQuery` and pass it any options that fit your needs.
+ * When your component renders, `useProfileQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useProfileQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useProfileQuery(baseOptions: Apollo.QueryHookOptions<ProfileQuery, ProfileQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ProfileQuery, ProfileQueryVariables>(ProfileDocument, options);
+      }
+export function useProfileLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ProfileQuery, ProfileQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ProfileQuery, ProfileQueryVariables>(ProfileDocument, options);
+        }
+export type ProfileQueryHookResult = ReturnType<typeof useProfileQuery>;
+export type ProfileLazyQueryHookResult = ReturnType<typeof useProfileLazyQuery>;
+export type ProfileQueryResult = Apollo.QueryResult<ProfileQuery, ProfileQueryVariables>;
 export const RegisterDocument = gql`
     mutation Register($input: RegisterInput!) {
   register(input: $input) {
