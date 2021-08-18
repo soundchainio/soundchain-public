@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const linksRegex = /\bhttps?:\/\/\S+/gi;
+
 const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?youtu\.?be(?:\.com)?\/?.*(?:watch|embed)?(?:.*v=|v\/|\/)([\w\-_]+)\&?/;
 
 const soundcloudRegex = /^https?:\/\/(soundcloud\.com|snd\.sc)\/(.*)$/;
@@ -8,6 +9,9 @@ const soundcloudLinkRegex = /(?<=src=\").*(?=\">)/g;
 
 const spotifyRegex = /(open\.spotify\.com\/track\/)/;
 const spotifyLinkRegex = /(?<=track\/).*(?=\?)/g;
+
+const vimeoRegex = /(vimeo.com\/)/;
+const vimeoLinkRegex = /(?<=vimeo.com\/).*$/g;
 
 const normalizeYoutube = (str: string) => {
   return str.replace('/watch?v=', '/embed/');
@@ -28,12 +32,20 @@ const normalizeSoundcloud = async (str: string) => {
 };
 
 const normalizeSpotify = async (str: string) => {
-  const songId = str.match(spotifyLinkRegex) || [];
+  const songId = (str.match(spotifyLinkRegex) || [])[0];
   if (songId[0]) {
-    const spotifyUrl = 'https://open.spotify.com/embed/track/' + songId[0];
+    const spotifyUrl = `https://open.spotify.com/embed/track/${songId}`;
     return spotifyUrl;
   }
 
+  return str;
+};
+
+const normalizeVimeo = async (str: string) => {
+  const videoId = (str.match(vimeoLinkRegex) || [])[0];
+  if (videoId) {
+    return `https://player.vimeo.com/video/${videoId}`;
+  }
   return str;
 };
 
@@ -43,6 +55,7 @@ export const getNormalizedLink = async (str: string) => {
   if (youtubeRegex.test(link)) return normalizeYoutube(link);
   if (soundcloudRegex.test(link)) return await normalizeSoundcloud(link);
   if (spotifyRegex.test(link)) return normalizeSpotify(link);
+  if (vimeoRegex.test(link)) return normalizeVimeo(link);
 };
 
 export const hasLink = (str: string) => {

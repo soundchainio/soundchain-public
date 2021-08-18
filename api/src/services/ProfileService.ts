@@ -1,6 +1,7 @@
 import { Genre } from 'enums/Genres';
 import { Profile, ProfileModel } from 'models/Profile';
 import { SocialMedias } from 'models/SocialMedias';
+import { UserModel } from 'models/User';
 
 export class ProfileService {
   static getProfile(id: string): Promise<Profile> {
@@ -37,5 +38,13 @@ export class ProfileService {
       throw new Error(`Could not update the profile with id: ${id}`);
     }
     return updatedProfile;
+  }
+
+  static async getUserHandle(profileId: string): Promise<string> {
+    const user = await UserModel.findOne({ profileId });
+    if (!user) {
+      throw new Error(`Profile ${profileId} is missing a user account!`);
+    }
+    return user.handle;
   }
 }

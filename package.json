@@ -9,7 +9,6 @@
     "lint-staged": "lerna run --parallel lint-staged"
   },
   "devDependencies": {
-    "@types/yup": "^0.29.13",
     "husky": "^7.0.1",
     "lerna": "^3.22.1"
   }

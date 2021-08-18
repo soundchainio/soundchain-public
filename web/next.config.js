@@ -1,6 +1,6 @@
 module.exports = {
   reactStrictMode: true,
   images: {
-    domains: [process.env.UPLOADS_DOMAIN],
+    domains: ['placeimg.com', 'cdn.fakercloud.com', process.env.UPLOADS_DOMAIN],
   },
 };

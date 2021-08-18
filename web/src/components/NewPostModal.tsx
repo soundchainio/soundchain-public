@@ -78,8 +78,7 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
 
   const onTextareaChange = async (body: string) => {
     if (body.length && hasLink(body)) {
-      const link = await getNormalizedLink(body);
-      setPostLink(link);
+      setPostLink(await getNormalizedLink(body));
     } else {
       setPostLink('');
     }
@@ -101,8 +100,8 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
                 Cancel
               </div>
               <div className="flex-1 text-center text-white font-bold">New Post</div>
-              <div className="flex-1 text-center">
-                <Button className="text-sm m-2 rounded-lg" type="submit" variant="rainbow-rounded">
+              <div className="flex-1 text-center m-2">
+                <Button className="bg-gray-30 text-sm" type="submit" variant="rainbow-rounded">
                   Post
                 </Button>
               </div>
@@ -115,7 +114,7 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
               maxLength={setMaxInputLength(values.body)}
               validate={onTextareaChange(values.body)}
             />
-            {postLink && <iframe className="w-full" frameBorder="0" allowFullScreen src={postLink} />}
+            {postLink && <iframe className="w-full bg-gray-20" frameBorder="0" allowFullScreen src={postLink} />}
             <div className="p-4 flex items-center bg-gray-25">
               <div className="justify-self-start flex-1">
                 <span onClick={onEmojiClick}>{isEmojiPickerVisible ? '❌' : '😃'}</span>
