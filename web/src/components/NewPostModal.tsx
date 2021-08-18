@@ -139,9 +139,11 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
               </div>
               <div className="flex-1 text-center text-white font-bold">New Post</div>
               <div className="flex-1 text-center m-2">
-                <Button className="bg-gray-30 text-sm" type="submit" variant="rainbow-rounded">
-                  Post
-                </Button>
+                <div className="ml-6">
+                  <Button className="bg-gray-30 text-sm " type="submit" variant="rainbow-rounded">
+                    Post
+                  </Button>
+                </div>
               </div>
             </div>
             <Field

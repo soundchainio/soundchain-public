@@ -3,5 +3,4 @@ export enum MediaProvider {
   SOUNDCLOUD = 'SoundCloud',
   VIMEO = 'Vimeo',
   YOUTUBE = 'Youtube',
-  INITIAL = '',
 }

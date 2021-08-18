@@ -18,22 +18,17 @@ const baseClasses =
   'absolute left-0 w-screen h-screen bottom-0 duration-500 bg-opacity-75 ease-in-out bg-gray-25 transform-gpu transform';
 
 export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type }: AddLinkProps) => {
-  const [link, setLink] = useState<MediaLink>({
-    type: MediaProvider.INITIAL,
-    value: '',
-  });
+  const [link, setLink] = useState<MediaLink>();
 
   const cancel = () => {
     onClose();
   };
 
   const handleSubmit = () => {
-    setOriginalLink(link.value);
-    setShow(false);
-  };
-
-  const handleSetLink = (value: string, type: MediaProvider) => {
-    setLink({ type, value });
+    if (link) {
+      setOriginalLink(link.value);
+      setShow(false);
+    }
   };
 
   return (
@@ -45,8 +40,8 @@ export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type }: Ad
             Cancel
           </div>
           <div className="flex-1 text-center text-white font-bold">Embed</div>
-          <div className="flex-1 text-center">
-            <Button className="text-sm m-2 rounded-lg" variant="rainbow-rounded" onClick={handleSubmit}>
+          <div className="flex-1 text-center m-2">
+            <Button className="bg-gray-30 text-sm" type="submit" variant="green-gradient" onClick={handleSubmit}>
               Save
             </Button>
           </div>
@@ -57,8 +52,8 @@ export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type }: Ad
               Paste a video link from Soundcloud or Spotify to embed the video to your post.
             </div>
             <div>
-              <PostLinkInput type={MediaProvider.SOUNDCLOUD} handleSetLink={handleSetLink} link={link} />
-              <PostLinkInput type={MediaProvider.SPOTIFY} handleSetLink={handleSetLink} link={link} />
+              <PostLinkInput type={MediaProvider.SOUNDCLOUD} setLink={setLink} link={link} />
+              <PostLinkInput type={MediaProvider.SPOTIFY} setLink={setLink} link={link} />
             </div>
           </>
         )}
@@ -68,8 +63,8 @@ export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type }: Ad
               Paste a video link from Youtube or Vimeo to embed the video to your post.
             </div>
             <div>
-              <PostLinkInput type={MediaProvider.YOUTUBE} handleSetLink={handleSetLink} link={link} />
-              <PostLinkInput type={MediaProvider.VIMEO} handleSetLink={handleSetLink} link={link} />
+              <PostLinkInput type={MediaProvider.YOUTUBE} setLink={setLink} link={link} />
+              <PostLinkInput type={MediaProvider.VIMEO} setLink={setLink} link={link} />
             </div>
           </>
         )}
