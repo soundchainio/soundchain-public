@@ -46,6 +46,7 @@
     "@types/express-jwt": "^6.0.2",
     "@types/faker": "^5.5.7",
     "@types/jsonwebtoken": "^8.5.4",
+    "@types/lodash": "^4.14.172",
     "@types/migrate-mongo": "^8.1.2",
     "@types/mongodb": "^4.0.7",
     "@types/mongoose": "5.10.5",

@@ -1,50 +1,44 @@
-import { formatDistance } from 'date-fns';
-import Image from 'next/image';
-import React, { useEffect, useState } from 'react';
-import ProfilePic from '../../public/profile.jpg';
-import { getNormalizedLink, hasLink } from '../utils/NormalizeEmbedLinks';
+import { usePostQuery } from 'lib/graphql';
+import NextLink from 'next/link';
+import React from 'react';
+import { Avatar } from './Avatar';
 import { PostActions } from './PostActions';
 import { PostStats } from './PostStats';
+import { Timestamp } from './Timestamp';
 
 interface PostProps {
-  body: string;
-  name: string;
-  date: string;
+  postId: string;
 }
 
 const generateRandomNumber = () => {
   return Math.round(Math.random() * 100);
 };
 
-export const Post = ({ body, name, date }: PostProps) => {
-  const [postLink, setPostLink] = useState('');
+export const Post = ({ postId }: PostProps) => {
+  const { data } = usePostQuery({ variables: { id: postId } });
+  const post = data?.post;
 
-  useEffect(() => {
-    if (body.length && hasLink(body)) {
-      extractEmbedLink();
-    }
-  }, [body]);
-
-  const extractEmbedLink = async () => {
-    const link = await getNormalizedLink(body);
-    setPostLink(link || '');
-  };
+  if (!post) return <div>Loading</div>;
 
   return (
     <div>
-      <div className="p-4 bg-gray-20">
-        <div className="flex items-center">
-          <div className="rounded-full w-8 h-8 border overflow-hidden">
-            <Image alt="Profile picture" src={ProfilePic} />
+      <NextLink href={`/posts/${post.id}`}>
+        <div className="p-4 bg-gray-20 break-words">
+          <div className="flex items-center">
+            <Avatar src={post.profile.profilePicture} />
+            <NextLink href={`/profiles/${post.profile.id}`}>
+              <a className="ml-4 text-lg font-bold text-gray-100">{post.profile.displayName}</a>
+            </NextLink>
+            <Timestamp datetime={post.createdAt} className="flex-1 text-right" />
           </div>
-          <p className="ml-4 text-lg font-bold text-gray-100">{name}</p>
-          <p className="text-base text-gray-400 flex-1 text-right">{formatDistance(new Date(date), new Date())}</p>
+          <div className="mt-4 text-gray-100 break-words">{post.body}</div>
+          {post.mediaLink && (
+            <iframe frameBorder="0" className="mt-4 w-full bg-gray-20" allowFullScreen src={post.mediaLink} />
+          )}
+          <PostStats likes={generateRandomNumber()} comments={post.commentCount} reposts={generateRandomNumber()} />
         </div>
-        <div className="mt-4 text-gray-100">{body}</div>
-        {postLink && <iframe frameBorder="0" className="mt-4 w-full" allowFullScreen src={postLink} />}
-        <PostStats likes={generateRandomNumber()} comments={generateRandomNumber()} reposts={generateRandomNumber()} />
-      </div>
-      <PostActions />
+      </NextLink>
+      <PostActions postId={postId} />
     </div>
   );
 };

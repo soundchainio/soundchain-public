@@ -3,17 +3,20 @@ import { Field, ID, ObjectType } from 'type-graphql';
 import Model from './Model';
 
 @ObjectType()
-export default class Post extends Model {
+export class Post extends Model {
   @Field(() => ID, { name: 'id' })
   readonly _id: string;
 
-  @Field()
   @prop({ required: true })
   profileId: string;
 
   @Field()
   @prop({ required: true })
   body: string;
+
+  @Field({ nullable: true })
+  @prop({ required: false })
+  mediaLink?: string;
 
   @Field(() => Date)
   createdAt: Date;

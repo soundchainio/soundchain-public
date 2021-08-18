@@ -5,6 +5,7 @@ query Me {
     profile {
       id
       displayName
+      profilePicture
     }
   }
 }

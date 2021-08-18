@@ -16,13 +16,36 @@ export type Scalars = {
   DateTime: string;
 };
 
+export type AddCommentInput = {
+  postId: Scalars['String'];
+  body: Scalars['String'];
+};
+
+export type AddCommentPayload = {
+  __typename?: 'AddCommentPayload';
+  comment: Comment;
+};
+
 export type AuthPayload = {
   __typename?: 'AuthPayload';
   jwt: Scalars['String'];
 };
 
+export type Comment = {
+  __typename?: 'Comment';
+  id: Scalars['ID'];
+  body: Scalars['String'];
+  postId: Scalars['String'];
+  profileId: Scalars['String'];
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  post: Post;
+  profile: Profile;
+};
+
 export type CreatePostInput = {
   body: Scalars['String'];
+  mediaLink?: Maybe<Scalars['String']>;
 };
 
 export type CreatePostPayload = {
@@ -86,6 +109,7 @@ export type LoginInput = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  addComment: AddCommentPayload;
   createPost: CreatePostPayload;
   updateSocialMedias: UpdateSocialMediasPayload;
   updateFavoriteGenres: UpdateFavoriteGenresPayload;
@@ -94,6 +118,11 @@ export type Mutation = {
   verifyUserEmail: VerifyUserEmailPayload;
   forgotPassword: ForgotPasswordPayload;
   resetPassword: ResetPasswordPayload;
+};
+
+
+export type MutationAddCommentArgs = {
+  input: AddCommentInput;
 };
 
 
@@ -139,11 +168,13 @@ export type MutationResetPasswordArgs = {
 export type Post = {
   __typename?: 'Post';
   id: Scalars['ID'];
-  profileId: Scalars['String'];
   body: Scalars['String'];
+  mediaLink?: Maybe<Scalars['String']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   profile: Profile;
+  comments: Array<Comment>;
+  commentCount: Scalars['Float'];
 };
 
 export type Profile = {
@@ -156,15 +187,29 @@ export type Profile = {
   favoriteGenres: Array<Genre>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
+  userHandle: Scalars['String'];
 };
 
 export type Query = {
   __typename?: 'Query';
+  comment: Comment;
+  comments: Array<Comment>;
   post: Post;
   posts: Array<Post>;
   myProfile: Profile;
+  profile: Profile;
   me?: Maybe<User>;
   validPasswordResetToken: Scalars['Boolean'];
+};
+
+
+export type QueryCommentArgs = {
+  id: Scalars['String'];
+};
+
+
+export type QueryCommentsArgs = {
+  postId: Scalars['String'];
 };
 
 
@@ -174,8 +219,12 @@ export type QueryPostArgs = {
 
 
 export type QueryPostsArgs = {
-  skip?: Maybe<Scalars['Float']>;
-  limit?: Maybe<Scalars['Float']>;
+  profileId?: Maybe<Scalars['String']>;
+};
+
+
+export type QueryProfileArgs = {
+  id: Scalars['String'];
 };
 
 
@@ -249,6 +298,61 @@ export type VerifyUserEmailPayload = {
   user: User;
 };
 
+export type AddCommentMutationVariables = Exact<{
+  input: AddCommentInput;
+}>;
+
+
+export type AddCommentMutation = (
+  { __typename?: 'Mutation' }
+  & { addComment: (
+    { __typename?: 'AddCommentPayload' }
+    & { comment: (
+      { __typename?: 'Comment' }
+      & { post: (
+        { __typename?: 'Post' }
+        & Pick<Post, 'id' | 'commentCount'>
+      ) }
+      & CommentComponentFieldsFragment
+    ) }
+  ) }
+);
+
+export type CommentQueryVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+export type CommentQuery = (
+  { __typename?: 'Query' }
+  & { comment: (
+    { __typename?: 'Comment' }
+    & CommentComponentFieldsFragment
+  ) }
+);
+
+export type CommentComponentFieldsFragment = (
+  { __typename?: 'Comment' }
+  & Pick<Comment, 'id' | 'body' | 'createdAt'>
+  & { profile: (
+    { __typename?: 'Profile' }
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
+  ) }
+);
+
+export type CommentsQueryVariables = Exact<{
+  postId: Scalars['String'];
+}>;
+
+
+export type CommentsQuery = (
+  { __typename?: 'Query' }
+  & { comments: Array<(
+    { __typename?: 'Comment' }
+    & CommentComponentFieldsFragment
+  )> }
+);
+
 export type CreatePostMutationVariables = Exact<{
   input: CreatePostInput;
 }>;
@@ -301,7 +405,7 @@ export type MeQuery = (
     & Pick<User, 'id' | 'handle'>
     & { profile: (
       { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'displayName'>
+      & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
     ) }
   )> }
 );
@@ -321,19 +425,56 @@ export type MyProfileQuery = (
   ) }
 );
 
-export type PostsQueryVariables = Exact<{ [key: string]: never; }>;
+export type PostQueryVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+export type PostQuery = (
+  { __typename?: 'Query' }
+  & { post: (
+    { __typename?: 'Post' }
+    & PostComponentFieldsFragment
+  ) }
+);
+
+export type PostComponentFieldsFragment = (
+  { __typename?: 'Post' }
+  & Pick<Post, 'id' | 'body' | 'mediaLink' | 'createdAt' | 'commentCount'>
+  & { profile: (
+    { __typename?: 'Profile' }
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
+  ) }
+);
+
+export type PostsQueryVariables = Exact<{
+  profileId?: Maybe<Scalars['String']>;
+}>;
 
 
 export type PostsQuery = (
   { __typename?: 'Query' }
   & { posts: Array<(
     { __typename?: 'Post' }
-    & Pick<Post, 'id' | 'body' | 'createdAt'>
-    & { profile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'displayName'>
-    ) }
+    & PostComponentFieldsFragment
   )> }
+);
+
+export type ProfileQueryVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+export type ProfileQuery = (
+  { __typename?: 'Query' }
+  & { profile: (
+    { __typename?: 'Profile' }
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'userHandle'>
+    & { socialMedias: (
+      { __typename?: 'SocialMedias' }
+      & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
+    ) }
+  ) }
 );
 
 export type RegisterMutationVariables = Exact<{
@@ -424,7 +565,141 @@ export type VerifyUserEmailMutation = (
   ) }
 );
 
+export const CommentComponentFieldsFragmentDoc = gql`
+    fragment CommentComponentFields on Comment {
+  id
+  body
+  createdAt
+  profile {
+    id
+    displayName
+    profilePicture
+  }
+}
+    `;
+export const PostComponentFieldsFragmentDoc = gql`
+    fragment PostComponentFields on Post {
+  id
+  body
+  mediaLink
+  createdAt
+  commentCount
+  profile {
+    id
+    displayName
+    profilePicture
+  }
+}
+    `;
+export const AddCommentDocument = gql`
+    mutation AddComment($input: AddCommentInput!) {
+  addComment(input: $input) {
+    comment {
+      ...CommentComponentFields
+      post {
+        id
+        commentCount
+      }
+    }
+  }
+}
+    ${CommentComponentFieldsFragmentDoc}`;
+export type AddCommentMutationFn = Apollo.MutationFunction<AddCommentMutation, AddCommentMutationVariables>;
 
+/**
+ * __useAddCommentMutation__
+ *
+ * To run a mutation, you first call `useAddCommentMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddCommentMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addCommentMutation, { data, loading, error }] = useAddCommentMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useAddCommentMutation(baseOptions?: Apollo.MutationHookOptions<AddCommentMutation, AddCommentMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddCommentMutation, AddCommentMutationVariables>(AddCommentDocument, options);
+      }
+export type AddCommentMutationHookResult = ReturnType<typeof useAddCommentMutation>;
+export type AddCommentMutationResult = Apollo.MutationResult<AddCommentMutation>;
+export type AddCommentMutationOptions = Apollo.BaseMutationOptions<AddCommentMutation, AddCommentMutationVariables>;
+export const CommentDocument = gql`
+    query Comment($id: String!) {
+  comment(id: $id) {
+    ...CommentComponentFields
+  }
+}
+    ${CommentComponentFieldsFragmentDoc}`;
+
+/**
+ * __useCommentQuery__
+ *
+ * To run a query within a React component, call `useCommentQuery` and pass it any options that fit your needs.
+ * When your component renders, `useCommentQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useCommentQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useCommentQuery(baseOptions: Apollo.QueryHookOptions<CommentQuery, CommentQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<CommentQuery, CommentQueryVariables>(CommentDocument, options);
+      }
+export function useCommentLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<CommentQuery, CommentQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<CommentQuery, CommentQueryVariables>(CommentDocument, options);
+        }
+export type CommentQueryHookResult = ReturnType<typeof useCommentQuery>;
+export type CommentLazyQueryHookResult = ReturnType<typeof useCommentLazyQuery>;
+export type CommentQueryResult = Apollo.QueryResult<CommentQuery, CommentQueryVariables>;
+export const CommentsDocument = gql`
+    query Comments($postId: String!) {
+  comments(postId: $postId) {
+    ...CommentComponentFields
+  }
+}
+    ${CommentComponentFieldsFragmentDoc}`;
+
+/**
+ * __useCommentsQuery__
+ *
+ * To run a query within a React component, call `useCommentsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useCommentsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useCommentsQuery({
+ *   variables: {
+ *      postId: // value for 'postId'
+ *   },
+ * });
+ */
+export function useCommentsQuery(baseOptions: Apollo.QueryHookOptions<CommentsQuery, CommentsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<CommentsQuery, CommentsQueryVariables>(CommentsDocument, options);
+      }
+export function useCommentsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<CommentsQuery, CommentsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<CommentsQuery, CommentsQueryVariables>(CommentsDocument, options);
+        }
+export type CommentsQueryHookResult = ReturnType<typeof useCommentsQuery>;
+export type CommentsLazyQueryHookResult = ReturnType<typeof useCommentsLazyQuery>;
+export type CommentsQueryResult = Apollo.QueryResult<CommentsQuery, CommentsQueryVariables>;
 export const CreatePostDocument = gql`
     mutation CreatePost($input: CreatePostInput!) {
   createPost(input: $input) {
@@ -534,6 +809,7 @@ export const MeDocument = gql`
     profile {
       id
       displayName
+      profilePicture
     }
   }
 }
@@ -606,18 +882,48 @@ export function useMyProfileLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
 export type MyProfileQueryHookResult = ReturnType<typeof useMyProfileQuery>;
 export type MyProfileLazyQueryHookResult = ReturnType<typeof useMyProfileLazyQuery>;
 export type MyProfileQueryResult = Apollo.QueryResult<MyProfileQuery, MyProfileQueryVariables>;
-export const PostsDocument = gql`
-    query Posts {
-  posts {
-    id
-    body
-    profile {
-      displayName
-    }
-    createdAt
+export const PostDocument = gql`
+    query Post($id: String!) {
+  post(id: $id) {
+    ...PostComponentFields
   }
 }
-    `;
+    ${PostComponentFieldsFragmentDoc}`;
+
+/**
+ * __usePostQuery__
+ *
+ * To run a query within a React component, call `usePostQuery` and pass it any options that fit your needs.
+ * When your component renders, `usePostQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = usePostQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function usePostQuery(baseOptions: Apollo.QueryHookOptions<PostQuery, PostQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<PostQuery, PostQueryVariables>(PostDocument, options);
+      }
+export function usePostLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<PostQuery, PostQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<PostQuery, PostQueryVariables>(PostDocument, options);
+        }
+export type PostQueryHookResult = ReturnType<typeof usePostQuery>;
+export type PostLazyQueryHookResult = ReturnType<typeof usePostLazyQuery>;
+export type PostQueryResult = Apollo.QueryResult<PostQuery, PostQueryVariables>;
+export const PostsDocument = gql`
+    query Posts($profileId: String) {
+  posts(profileId: $profileId) {
+    ...PostComponentFields
+  }
+}
+    ${PostComponentFieldsFragmentDoc}`;
 
 /**
  * __usePostsQuery__
@@ -631,6 +937,7 @@ export const PostsDocument = gql`
  * @example
  * const { data, loading, error } = usePostsQuery({
  *   variables: {
+ *      profileId: // value for 'profileId'
  *   },
  * });
  */
@@ -645,6 +952,51 @@ export function usePostsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Post
 export type PostsQueryHookResult = ReturnType<typeof usePostsQuery>;
 export type PostsLazyQueryHookResult = ReturnType<typeof usePostsLazyQuery>;
 export type PostsQueryResult = Apollo.QueryResult<PostsQuery, PostsQueryVariables>;
+export const ProfileDocument = gql`
+    query Profile($id: String!) {
+  profile(id: $id) {
+    id
+    displayName
+    profilePicture
+    coverPicture
+    socialMedias {
+      facebook
+      instagram
+      soundcloud
+      twitter
+    }
+    userHandle
+  }
+}
+    `;
+
+/**
+ * __useProfileQuery__
+ *
+ * To run a query within a React component, call `useProfileQuery` and pass it any options that fit your needs.
+ * When your component renders, `useProfileQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useProfileQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useProfileQuery(baseOptions: Apollo.QueryHookOptions<ProfileQuery, ProfileQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ProfileQuery, ProfileQueryVariables>(ProfileDocument, options);
+      }
+export function useProfileLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ProfileQuery, ProfileQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ProfileQuery, ProfileQueryVariables>(ProfileDocument, options);
+        }
+export type ProfileQueryHookResult = ReturnType<typeof useProfileQuery>;
+export type ProfileLazyQueryHookResult = ReturnType<typeof useProfileLazyQuery>;
+export type ProfileQueryResult = Apollo.QueryResult<ProfileQuery, ProfileQueryVariables>;
 export const RegisterDocument = gql`
     mutation Register($input: RegisterInput!) {
   register(input: $input) {

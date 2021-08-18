@@ -10,7 +10,8 @@ import {
 import { setContext } from '@apollo/client/link/context';
 import Cookies from 'js-cookie';
 import { GetServerSidePropsContext } from 'next';
-import isBrowser from './isBrowser';
+import isBrowser from '../isBrowser';
+import { cacheConfig } from './cache-config';
 
 const jwtKey = 'token';
 
@@ -25,7 +26,7 @@ const authLink = setContext((_, context: ApolloContextValue | GetServerSideProps
 
 export const apolloClient = new ApolloClient({
   link: authLink.concat(httpLink),
-  cache: new InMemoryCache(),
+  cache: new InMemoryCache(cacheConfig),
   defaultOptions: {
     query: {
       fetchPolicy: isBrowser ? 'cache-first' : 'no-cache',
