@@ -2,7 +2,7 @@ import axios from 'axios';
 import { apolloClient } from 'lib/apollo';
 import { UploadUrlDocument, UploadUrlQuery } from 'lib/graphql';
 import { useCallback } from 'react';
-import { parseProfileImageFileType } from 'utils/ParseProfileImageFileType';
+import { parseUploadFileType } from 'utils/ParseUploadFileType';
 import { useMountedState } from './useMountedState';
 
 export const useUpload = (value: string | undefined, onChange: (value: string) => void) => {
@@ -17,7 +17,7 @@ export const useUpload = (value: string | undefined, onChange: (value: string) =
 
       const { data } = await apolloClient.query<UploadUrlQuery>({
         query: UploadUrlDocument,
-        variables: { fileType: parseProfileImageFileType(file.type) },
+        variables: { fileType: parseUploadFileType(file.type) },
         fetchPolicy: 'no-cache',
       });
 

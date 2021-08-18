@@ -1,6 +1,6 @@
 import { UploadFileType } from 'lib/graphql';
 
-export const parseProfileImageFileType = (type: string): UploadFileType => {
+export const parseUploadFileType = (type: string): UploadFileType => {
   switch (type) {
     case 'image/jpeg':
       return UploadFileType.Jpeg;
