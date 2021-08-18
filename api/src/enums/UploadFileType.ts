@@ -6,7 +6,7 @@ enum UploadFileType {
 }
 
 registerEnumType(UploadFileType, {
-  name: 'AcceptedProfileImageFileTypes',
+  name: 'UploadFileType',
 });
 
 export { UploadFileType };
