@@ -1,12 +1,13 @@
+import { useApolloClient } from '@apollo/client';
 import { Avatar } from 'components/Avatar';
-import { Button } from 'components/Button';
+import { FollowButton } from 'components/FollowButton';
 import { Layout } from 'components/Layout';
 import { Posts } from 'components/Posts';
 import { ProfileTabs } from 'components/ProfileTabs';
 import { SocialMediaLink } from 'components/SocialMediaLink';
 import { Subtitle } from 'components/Subtitle';
 import { apolloClient } from 'lib/apollo';
-import { ProfileDocument, ProfileQuery } from 'lib/graphql';
+import { ProfileDocument, ProfileQuery, useProfileQuery } from 'lib/graphql';
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import Image from 'next/image';
 
@@ -24,13 +25,35 @@ export const getServerSideProps: GetServerSideProps = async context => {
     return { notFound: true };
   }
 
+  console.log(profile);
+
   return {
     props: { profile },
   };
 };
 
 export default function ProfilePage({ profile }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const { coverPicture, profilePicture, displayName, userHandle, socialMedias } = profile;
+  const apollo = useApolloClient();
+  apollo.writeQuery({
+    query: ProfileDocument,
+    variables: { id: profile.id },
+    data: {
+      profile,
+    },
+  });
+
+  const { data } = useProfileQuery({ variables: { id: profile.id } });
+
+  const {
+    coverPicture,
+    profilePicture,
+    displayName,
+    userHandle,
+    socialMedias,
+    followerCount,
+    followingCount,
+    isFollowed,
+  } = (data as ProfileQuery).profile;
 
   return (
     <Layout>
@@ -46,17 +69,15 @@ export default function ProfilePage({ profile }: InferGetServerSidePropsType<typ
         <div className="flex items-center justify-end space-x-8">
           <div className="flex space-x-2">
             <div className="text-center text-sm">
-              <p className="font-semibold text-white">3,537</p>
+              <p className="font-semibold text-white">{followerCount}</p>
               <p className="text-gray-80 text-xs">Followers</p>
             </div>
             <div className="text-center text-sm">
-              <p className="font-semibold text-white">325</p>
+              <p className="font-semibold text-white">{followingCount}</p>
               <p className="text-gray-80 text-xs">Following</p>
             </div>
           </div>
-          <Button variant="rainbow-rounded" className="w-20 bg-gray-10 text-sm">
-            Follow
-          </Button>
+          <FollowButton followedId={profile.id} isFollowed={isFollowed} />
         </div>
         <Subtitle className="mt-4">{displayName}</Subtitle>
         <p className="text-gray-80 text-sm">@{userHandle}</p>

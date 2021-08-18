@@ -1,6 +1,7 @@
 import { CurrentUser } from 'decorators/current-user';
 import { Profile } from 'models/Profile';
 import User from 'models/User';
+import { FollowService } from 'services/FollowService';
 import { ProfileService } from 'services/ProfileService';
 import { Arg, Authorized, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
 import { UpdateFavoriteGenresInput } from './types/UpdateFavoriteGenresInput';
@@ -13,6 +14,21 @@ export class ProfileResolver {
   @FieldResolver(() => String)
   userHandle(@Root() profile: Profile): Promise<string> {
     return ProfileService.getUserHandle(profile._id);
+  }
+
+  @FieldResolver(() => Boolean)
+  isFollowed(@Root() profile: Profile, @CurrentUser() { profileId }: User): Promise<boolean> {
+    return FollowService.followExists({ followerId: profileId, followedId: profile._id });
+  }
+
+  @FieldResolver(() => Number)
+  followerCount(@Root() profile: Profile): Promise<number> {
+    return FollowService.countFollowers(profile._id);
+  }
+
+  @FieldResolver(() => Number)
+  followingCount(@Root() profile: Profile): Promise<number> {
+    return FollowService.countFollowing(profile._id);
   }
 
   @Query(() => Profile)
