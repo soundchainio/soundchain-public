@@ -1,9 +1,10 @@
+import { GreenGradient } from './Buttons/GreenGradient';
 import { OutlineButton } from './Buttons/Outline';
 import { RainbowButton } from './Buttons/Rainbow';
 import { RainbowRounded } from './Buttons/RainbowRounded';
 import { RainbowXSButton } from './Buttons/RainbowXS';
 
-export type ButtonVariant = 'rainbow' | 'outline' | 'rainbow-xs' | 'rainbow-rounded';
+export type ButtonVariant = 'rainbow' | 'outline' | 'rainbow-xs' | 'rainbow-rounded' | 'green-gradient';
 
 export interface ButtonProps extends React.ComponentPropsWithoutRef<'button'> {
   variant?: ButtonVariant;
@@ -19,6 +20,7 @@ export const buttonByVariant: Record<ButtonVariant, (props: ButtonProps) => JSX.
   outline: OutlineButton,
   'rainbow-rounded': RainbowRounded,
   'rainbow-xs': RainbowXSButton,
+  'green-gradient': GreenGradient,
 };
 
 export const Button = ({ variant = 'rainbow', ...props }: ButtonProps) => {
