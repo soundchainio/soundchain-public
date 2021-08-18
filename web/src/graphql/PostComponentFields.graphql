@@ -1,6 +1,7 @@
 fragment PostComponentFields on Post {
   id
   body
+  mediaLink
   createdAt
   commentCount
   profile {

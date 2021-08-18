@@ -1,7 +1,6 @@
 import { usePostQuery } from 'lib/graphql';
 import NextLink from 'next/link';
-import React, { useEffect, useState } from 'react';
-import { getNormalizedLink, hasLink } from '../utils/NormalizeEmbedLinks';
+import React from 'react';
 import { Avatar } from './Avatar';
 import { PostActions } from './PostActions';
 import { PostStats } from './PostStats';
@@ -18,22 +17,6 @@ const generateRandomNumber = () => {
 export const Post = ({ postId }: PostProps) => {
   const { data } = usePostQuery({ variables: { id: postId } });
   const post = data?.post;
-  const [postLink, setPostLink] = useState('');
-
-  useEffect(() => {
-    if (!post) return;
-
-    const extractEmbedLink = async () => {
-      const link = await getNormalizedLink(post?.body);
-      setPostLink(link || '');
-    };
-
-    if (post.body.length && hasLink(post.body)) {
-      extractEmbedLink();
-    } else {
-      setPostLink('');
-    }
-  }, [post]);
 
   if (!post) return <div>Loading</div>;
 
@@ -49,7 +32,9 @@ export const Post = ({ postId }: PostProps) => {
             <Timestamp datetime={post.createdAt} className="flex-1 text-right" />
           </div>
           <div className="mt-4 text-gray-100 break-words">{post.body}</div>
-          {postLink && <iframe frameBorder="0" className="mt-4 w-full bg-gray-20" allowFullScreen src={postLink} />}
+          {post.mediaLink && (
+            <iframe frameBorder="0" className="mt-4 w-full bg-gray-20" allowFullScreen src={post.mediaLink} />
+          )}
           <PostStats likes={generateRandomNumber()} comments={post.commentCount} reposts={generateRandomNumber()} />
         </div>
       </NextLink>
