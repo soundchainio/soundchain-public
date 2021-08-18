@@ -1,7 +1,7 @@
 import { Field, InputType } from 'type-graphql';
 
 @InputType()
-export class UpdatePictureInput {
+export class UpdateCoverPictureInput {
   @Field()
   picture: string;
 }

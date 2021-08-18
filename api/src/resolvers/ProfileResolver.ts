@@ -3,13 +3,14 @@ import { Profile } from 'models/Profile';
 import User from 'models/User';
 import { ProfileService } from 'services/ProfileService';
 import { Arg, Authorized, Mutation, Query, Resolver } from 'type-graphql';
+import { UpdateCoverPictureInput } from './types/UpdateCoverPictureInput';
 import { UpdateCoverPicturePayload } from './types/UpdateCoverPicturePayload';
 import { UpdateFavoriteGenresInput } from './types/UpdateFavoriteGenresInput';
 import { UpdateFavoriteGenresPayload } from './types/UpdateFavoriteGenresPayload';
-import { UpdatePictureInput } from './types/UpdatePictureInput';
 import { UpdateProfilePicturePayload } from './types/UpdateProfilePicturePayload';
 import { UpdateSocialMediasInput } from './types/UpdateSocialMediasInput';
 import { UpdateSocialMediasPayload } from './types/UpdateSocialMediasPayload';
+import { UpdateProfilePictureInput } from './types/UploadProfilePictureInput';
 
 @Resolver(Profile)
 export class ProfileResolver {
@@ -45,7 +46,7 @@ export class ProfileResolver {
   @Authorized()
   async updateProfilePicture(
     @Arg('input')
-    { picture }: UpdatePictureInput,
+    { picture }: UpdateProfilePictureInput,
     @CurrentUser() { profileId }: User,
   ): Promise<UpdateProfilePicturePayload> {
     const profile = await ProfileService.updateProfilePicture(profileId, picture);
@@ -56,7 +57,7 @@ export class ProfileResolver {
   @Authorized()
   async updateCoverPicture(
     @Arg('input')
-    { picture }: UpdatePictureInput,
+    { picture }: UpdateCoverPictureInput,
     @CurrentUser() { profileId }: User,
   ): Promise<UpdateCoverPicturePayload> {
     const profile = await ProfileService.updateCoverPicture(profileId, picture);
