@@ -40,7 +40,7 @@ jobs:
           WEB_APP_URL: ${{ secrets.WEB_APP_URL_STAGING }}
       - name: Trigger migrate lambda function
         run: |
-          aws lambda invoke --function-name migrate response.json
+          aws lambda invoke --function-name soundchain-api-staging-migrate response.json
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
