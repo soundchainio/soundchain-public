@@ -16,11 +16,6 @@ export type Scalars = {
   DateTime: string;
 };
 
-export enum AcceptedProfileImageFileTypes {
-  Jpeg = 'JPEG',
-  Png = 'PNG'
-}
-
 export type AddCommentInput = {
   postId: Scalars['String'];
   body: Scalars['String'];
@@ -245,7 +240,7 @@ export type QueryProfileArgs = {
 
 
 export type QueryUploadUrlArgs = {
-  fileType: AcceptedProfileImageFileTypes;
+  fileType: UploadFileType;
 };
 
 
@@ -316,6 +311,11 @@ export type UpdateSocialMediasPayload = {
   __typename?: 'UpdateSocialMediasPayload';
   profile: Profile;
 };
+
+export enum UploadFileType {
+  Jpeg = 'JPEG',
+  Png = 'PNG'
+}
 
 export type UploadUrl = {
   __typename?: 'UploadUrl';
@@ -429,7 +429,7 @@ export type ForgotPasswordMutation = (
 );
 
 export type UploadUrlQueryVariables = Exact<{
-  fileType: AcceptedProfileImageFileTypes;
+  fileType: UploadFileType;
 }>;
 
 
@@ -859,7 +859,7 @@ export type ForgotPasswordMutationHookResult = ReturnType<typeof useForgotPasswo
 export type ForgotPasswordMutationResult = Apollo.MutationResult<ForgotPasswordMutation>;
 export type ForgotPasswordMutationOptions = Apollo.BaseMutationOptions<ForgotPasswordMutation, ForgotPasswordMutationVariables>;
 export const UploadUrlDocument = gql`
-    query UploadUrl($fileType: AcceptedProfileImageFileTypes!) {
+    query UploadUrl($fileType: UploadFileType!) {
   uploadUrl(fileType: $fileType) {
     uploadUrl
     fileName
