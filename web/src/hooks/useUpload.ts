@@ -17,7 +17,7 @@ export const useUpload = (value: string | undefined, onChange: (value: string) =
 
       const { data } = await apolloClient.query<UploadUrlQuery>({
         query: UploadUrlDocument,
-        variables: { input: { fileType: parseProfileImageFileType(file.type) } },
+        variables: { fileType: parseProfileImageFileType(file.type) },
         fetchPolicy: 'no-cache',
       });
 

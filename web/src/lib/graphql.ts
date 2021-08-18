@@ -148,12 +148,12 @@ export type MutationUpdateFavoriteGenresArgs = {
 
 
 export type MutationUpdateProfilePictureArgs = {
-  input: UpdatePictureInput;
+  input: UpdateProfilePictureInput;
 };
 
 
 export type MutationUpdateCoverPictureArgs = {
-  input: UpdatePictureInput;
+  input: UpdateCoverPictureInput;
 };
 
 
@@ -239,7 +239,7 @@ export type QueryPostsArgs = {
 
 
 export type QueryUploadUrlArgs = {
-  input: UploadUrlInput;
+  fileType: AcceptedProfileImageFileTypes;
 };
 
 
@@ -272,6 +272,10 @@ export type SocialMedias = {
   twitter?: Maybe<Scalars['String']>;
 };
 
+export type UpdateCoverPictureInput = {
+  picture: Scalars['String'];
+};
+
 export type UpdateCoverPicturePayload = {
   __typename?: 'UpdateCoverPicturePayload';
   profile: Profile;
@@ -286,7 +290,7 @@ export type UpdateFavoriteGenresPayload = {
   profile: Profile;
 };
 
-export type UpdatePictureInput = {
+export type UpdateProfilePictureInput = {
   picture: Scalars['String'];
 };
 
@@ -305,10 +309,6 @@ export type UpdateSocialMediasInput = {
 export type UpdateSocialMediasPayload = {
   __typename?: 'UpdateSocialMediasPayload';
   profile: Profile;
-};
-
-export type UploadUrlInput = {
-  fileType: AcceptedProfileImageFileTypes;
 };
 
 export type UploadUrlPayload = {
@@ -423,7 +423,7 @@ export type ForgotPasswordMutation = (
 );
 
 export type UploadUrlQueryVariables = Exact<{
-  input: UploadUrlInput;
+  fileType: AcceptedProfileImageFileTypes;
 }>;
 
 
@@ -538,7 +538,7 @@ export type ResetPasswordMutation = (
 );
 
 export type UpdateCoverPictureMutationVariables = Exact<{
-  input: UpdatePictureInput;
+  input: UpdateCoverPictureInput;
 }>;
 
 
@@ -570,7 +570,7 @@ export type UpdateFavoriteGenresMutation = (
 );
 
 export type UpdateProfilePictureMutationVariables = Exact<{
-  input: UpdatePictureInput;
+  input: UpdateProfilePictureInput;
 }>;
 
 
@@ -834,8 +834,8 @@ export type ForgotPasswordMutationHookResult = ReturnType<typeof useForgotPasswo
 export type ForgotPasswordMutationResult = Apollo.MutationResult<ForgotPasswordMutation>;
 export type ForgotPasswordMutationOptions = Apollo.BaseMutationOptions<ForgotPasswordMutation, ForgotPasswordMutationVariables>;
 export const UploadUrlDocument = gql`
-    query UploadUrl($input: UploadUrlInput!) {
-  uploadUrl(input: $input) {
+    query UploadUrl($fileType: AcceptedProfileImageFileTypes!) {
+  uploadUrl(fileType: $fileType) {
     uploadUrl
     fileName
     readUrl
@@ -855,7 +855,7 @@ export const UploadUrlDocument = gql`
  * @example
  * const { data, loading, error } = useUploadUrlQuery({
  *   variables: {
- *      input: // value for 'input'
+ *      fileType: // value for 'fileType'
  *   },
  * });
  */
@@ -1119,7 +1119,7 @@ export type ResetPasswordMutationHookResult = ReturnType<typeof useResetPassword
 export type ResetPasswordMutationResult = Apollo.MutationResult<ResetPasswordMutation>;
 export type ResetPasswordMutationOptions = Apollo.BaseMutationOptions<ResetPasswordMutation, ResetPasswordMutationVariables>;
 export const UpdateCoverPictureDocument = gql`
-    mutation UpdateCoverPicture($input: UpdatePictureInput!) {
+    mutation UpdateCoverPicture($input: UpdateCoverPictureInput!) {
   updateCoverPicture(input: $input) {
     profile {
       id
@@ -1191,7 +1191,7 @@ export type UpdateFavoriteGenresMutationHookResult = ReturnType<typeof useUpdate
 export type UpdateFavoriteGenresMutationResult = Apollo.MutationResult<UpdateFavoriteGenresMutation>;
 export type UpdateFavoriteGenresMutationOptions = Apollo.BaseMutationOptions<UpdateFavoriteGenresMutation, UpdateFavoriteGenresMutationVariables>;
 export const UpdateProfilePictureDocument = gql`
-    mutation UpdateProfilePicture($input: UpdatePictureInput!) {
+    mutation UpdateProfilePicture($input: UpdateProfilePictureInput!) {
   updateProfilePicture(input: $input) {
     profile {
       id

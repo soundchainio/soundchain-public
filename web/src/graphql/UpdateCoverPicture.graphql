@@ -1,4 +1,4 @@
-mutation UpdateCoverPicture($input: UpdatePictureInput!) {
+mutation UpdateCoverPicture($input: UpdateCoverPictureInput!) {
   updateCoverPicture(input: $input) {
     profile {
       id

@@ -1,5 +1,5 @@
-query UploadUrl($input: UploadUrlInput!) {
-  uploadUrl(input: $input) {
+query UploadUrl($fileType: AcceptedProfileImageFileTypes!) {
+  uploadUrl(fileType: $fileType) {
     uploadUrl
     fileName
     readUrl
