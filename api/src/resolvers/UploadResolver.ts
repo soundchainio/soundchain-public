@@ -1,14 +1,14 @@
 import { AcceptedProfileImageFileTypes } from 'enums/AcceptedImageFileTypes';
 import { UploadService } from 'services/UploadService';
 import { Arg, Query, Resolver } from 'type-graphql';
-import { UploadUrlPayload } from './types/UploadUrlPayload';
+import { UploadUrl } from './types/UploadUrl';
 
 @Resolver()
 export class UploadResolver {
-  @Query(() => UploadUrlPayload)
+  @Query(() => UploadUrl)
   async uploadUrl(
     @Arg('fileType', () => AcceptedProfileImageFileTypes) fileType: AcceptedProfileImageFileTypes,
-  ): Promise<UploadUrlPayload> {
+  ): Promise<UploadUrl> {
     return UploadService.generateUploadUrl(fileType);
   }
 }
