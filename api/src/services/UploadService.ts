@@ -1,7 +1,7 @@
 import { PutObjectCommand, PutObjectCommandInput, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { config } from 'config';
-import { AcceptedProfileImageFileTypes } from 'enums/AcceptedImageFileTypes';
+import { UploadFileType } from 'enums/UploadFileType';
 import { UploadUrl } from 'resolvers/types/UploadUrl';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -14,7 +14,7 @@ export class UploadService {
     this.s3Client = new S3Client({ region: config.uploads.region });
   }
 
-  static async generateUploadUrl(fileType: AcceptedProfileImageFileTypes): Promise<UploadUrl> {
+  static async generateUploadUrl(fileType: UploadFileType): Promise<UploadUrl> {
     const imageId = uuidv4();
     const extension = fileType.split('/')[1];
     const fileName = `${imageId}.${extension}`;

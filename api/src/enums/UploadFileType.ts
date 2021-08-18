@@ -1,12 +1,12 @@
 import { registerEnumType } from 'type-graphql';
 
-enum AcceptedProfileImageFileTypes {
+enum UploadFileType {
   JPEG = 'image/jpeg',
   PNG = 'image/png',
 }
 
-registerEnumType(AcceptedProfileImageFileTypes, {
+registerEnumType(UploadFileType, {
   name: 'AcceptedProfileImageFileTypes',
 });
 
-export { AcceptedProfileImageFileTypes };
+export { UploadFileType };
