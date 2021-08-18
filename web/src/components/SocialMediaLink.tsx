@@ -1,0 +1,50 @@
+import { Instagram, Twitter } from 'icons/social';
+
+const companies = {
+  instagram: {
+    label: 'Instagram',
+    icon: Instagram,
+    getLink(handle: string) {
+      return `https://www.instagram.com/${handle}`;
+    },
+  },
+  twitter: {
+    label: 'Twitter',
+    icon: Twitter,
+    getLink(handle: string) {
+      return `https://twitter.com/${handle}`;
+    },
+  },
+  facebook: {
+    label: 'Facebook',
+    icon: null,
+    getLink(handle: string) {
+      return `https://www.facebook.com/${handle}`;
+    },
+  },
+  soundcloud: {
+    label: 'SoundCloud',
+    icon: null,
+    getLink(handle: string) {
+      return `https://soundcloud.com/${handle}/`;
+    },
+  },
+};
+
+type SocialMediaCompany = 'instagram' | 'twitter';
+
+interface Props {
+  company: SocialMediaCompany;
+  handle: string;
+}
+
+export const SocialMediaLink = ({ company, handle }: Props) => {
+  const { getLink, icon: Icon, label } = companies[company];
+
+  return (
+    <a href={getLink(handle)} className="text-gray-50 flex space-x-1 items-center" target="_blank" rel="noreferrer">
+      <Icon />
+      <span className="text-xs font-semibold">{label}</span>
+    </a>
+  );
+};
