@@ -14,6 +14,10 @@ export class Post extends Model {
   @prop({ required: true })
   body: string;
 
+  @Field({ nullable: true })
+  @prop({ required: false })
+  mediaLink?: string;
+
   @Field(() => Date)
   createdAt: Date;
 

@@ -4,6 +4,7 @@ import { Post, PostModel } from 'models/Post';
 interface NewPostParams {
   profileId: string;
   body: string;
+  mediaLink?: string;
 }
 
 interface GetPostsFilters {

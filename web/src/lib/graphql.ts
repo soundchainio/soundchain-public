@@ -45,6 +45,7 @@ export type Comment = {
 
 export type CreatePostInput = {
   body: Scalars['String'];
+  mediaLink?: Maybe<Scalars['String']>;
 };
 
 export type CreatePostPayload = {
@@ -180,6 +181,7 @@ export type Post = {
   __typename?: 'Post';
   id: Scalars['ID'];
   body: Scalars['String'];
+  mediaLink?: Maybe<Scalars['String']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   profile: Profile;
@@ -499,7 +501,7 @@ export type PostQuery = (
 
 export type PostComponentFieldsFragment = (
   { __typename?: 'Post' }
-  & Pick<Post, 'id' | 'body' | 'createdAt' | 'commentCount'>
+  & Pick<Post, 'id' | 'body' | 'mediaLink' | 'createdAt' | 'commentCount'>
   & { profile: (
     { __typename?: 'Profile' }
     & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
@@ -672,6 +674,7 @@ export const PostComponentFieldsFragmentDoc = gql`
     fragment PostComponentFields on Post {
   id
   body
+  mediaLink
   createdAt
   commentCount
   profile {
