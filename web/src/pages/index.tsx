@@ -1,11 +1,8 @@
-import { Label } from 'components/Label';
 import { Layout } from 'components/Layout';
-import { Post } from 'components/Post';
-import { usePostsQuery } from 'lib/graphql';
+import { Posts } from 'components/Posts';
 import Head from 'next/head';
 
 export default function Feed() {
-  const { loading, error, data } = usePostsQuery();
   return (
     <Layout>
       <Head>
@@ -13,14 +10,8 @@ export default function Feed() {
         <meta name="description" content="Soundchain" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className="bg-gray-10 flex flex-1 flex-col pt-3">
-        {loading && <Label>Loading...</Label>}
-        {error && <Label>{error.message}</Label>}
-        <div className="space-y-3">
-          {data?.posts.map((post, index) => (
-            <Post key={index} postId={post.id} />
-          ))}
-        </div>
+      <div className="pt-3">
+        <Posts />
       </div>
     </Layout>
   );

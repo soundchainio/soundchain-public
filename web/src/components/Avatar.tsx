@@ -1,11 +1,21 @@
-import classNames from 'classnames';
 import Image from 'next/image';
+import React from 'react';
 import ProfilePic from '../../public/profile.jpg';
 
-export const Avatar = ({ className }: React.ComponentPropsWithoutRef<'div'>) => {
+interface AvatarProps {
+  src: string | null | undefined;
+  pixels?: number;
+  className?: string;
+}
+
+export const Avatar = ({ src, pixels = 30, className }: AvatarProps) => {
   return (
-    <div className={classNames('rounded-full w-8 h-8 border overflow-hidden', className)}>
-      <Image alt="Profile picture" src={ProfilePic} />
+    <div className={className}>
+      {src ? (
+        <Image alt="Profile picture" src={src} width={pixels} height={pixels} className="rounded-full" />
+      ) : (
+        <Image alt="Profile picture" src={ProfilePic} width={pixels} height={pixels} className="rounded-full" />
+      )}
     </div>
   );
 };
