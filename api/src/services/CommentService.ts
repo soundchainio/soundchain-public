@@ -1,8 +1,10 @@
 import { Comment, CommentModel } from 'models/Comment';
+import { NotificationService } from './NotificationService';
 
 interface NewCommentParams {
   profileId: string;
   body: string;
+  postId: string;
 }
 
 export class CommentService {
@@ -13,6 +15,7 @@ export class CommentService {
   static async createComment(params: NewCommentParams): Promise<Comment> {
     const newComment = new CommentModel(params);
     await newComment.save();
+    NotificationService.notifyNewCommentOnPost({ commentId: newComment.id, postId: newComment.postId });
     return newComment;
   }
 
