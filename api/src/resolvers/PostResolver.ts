@@ -40,10 +40,10 @@ export class PostResolver {
   @Mutation(() => CreatePostPayload)
   @Authorized()
   async createPost(
-    @Arg('input') { body, mediaLink }: CreatePostInput,
+    @Arg('input') { body, mediaLink, repostId }: CreatePostInput,
     @CurrentUser() { profileId }: User,
   ): Promise<CreatePostPayload> {
-    const post = await PostService.createPost({ profileId, body, mediaLink });
+    const post = await PostService.createPost({ profileId, body, mediaLink, repostId });
     return { post };
   }
 }

@@ -18,6 +18,10 @@ export class Post extends Model {
   @prop({ required: false })
   mediaLink?: string;
 
+  @Field({ nullable: true })
+  @prop({ required: false })
+  repostId?: string;
+
   @Field(() => Date)
   createdAt: Date;
 

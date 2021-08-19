@@ -5,6 +5,7 @@ interface NewPostParams {
   profileId: string;
   body: string;
   mediaLink?: string;
+  repostId?: string;
 }
 
 interface GetPostsFilters {
