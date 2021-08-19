@@ -9,6 +9,10 @@ import { CommentService } from 'services/CommentService';
 import { PostService } from 'services/PostService';
 import { ProfileService } from 'services/ProfileService';
 import { Arg, Authorized, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
+import { FilterPostInput } from './types/FilterPostInput';
+import { PageInput } from './types/PageInput';
+import { PostConnection } from './types/PostConnection';
+import { SortPostInput } from './types/SortPostInput';
 
 @Resolver(Post)
 export class PostResolver {
@@ -32,9 +36,13 @@ export class PostResolver {
     return PostService.getPost(id);
   }
 
-  @Query(() => [Post])
-  posts(@Arg('profileId', { nullable: true }) profileId: string): Promise<Post[]> {
-    return PostService.getPosts({ profileId });
+  @Query(() => PostConnection)
+  posts(
+    @Arg('filter', { nullable: true }) filter?: FilterPostInput,
+    @Arg('sort', { nullable: true }) sort?: SortPostInput,
+    @Arg('page', { nullable: true }) page?: PageInput,
+  ): Promise<PostConnection> {
+    return PostService.getPosts(filter, sort, page);
   }
 
   @Mutation(() => CreatePostPayload)

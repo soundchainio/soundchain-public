@@ -17,8 +17,8 @@ export const Posts = ({ className, variables }: PostsProps) => {
 
   return (
     <div className={classNames('space-y-3', className)}>
-      {data.posts.map((post, index) => (
-        <Post key={index} postId={post.id} />
+      {data.posts.nodes.map(({ id }) => (
+        <Post key={id} postId={id} />
       ))}
     </div>
   );
