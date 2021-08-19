@@ -1,6 +1,7 @@
 import Faker from 'faker';
-import { random, range, sample } from 'lodash';
+import { random, range, sample, sampleSize } from 'lodash';
 import { Comment, CommentModel } from 'models/Comment';
+import { Follow, FollowModel } from 'models/Follow';
 import { Post, PostModel } from 'models/Post';
 import { Profile, ProfileModel } from 'models/Profile';
 import User, { UserModel } from 'models/User';
@@ -24,6 +25,7 @@ async function seedDb() {
   const users: User[] = [];
   const posts: Post[] = [];
   const comments: Comment[] = [];
+  const follows: Follow[] = [];
 
   for (let i = 0; i < 100; i++) {
     const profile = FakeProfile();
@@ -33,6 +35,18 @@ async function seedDb() {
 
   await ProfileModel.insertMany(profiles);
   await UserModel.insertMany(users);
+
+  for (const profile of profiles) {
+    const followedId = profile._id;
+    const numFollowers = random(0, 100);
+    sampleSize(profiles, numFollowers).forEach(profile => {
+      follows.push(new FollowModel({ followedId, followerId: profile._id }));
+    });
+  }
+
+  console.log('Profile follows seeded');
+
+  await FollowModel.insertMany(follows);
 
   console.log('User profiles seeded!');
 
