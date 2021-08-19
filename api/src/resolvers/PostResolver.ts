@@ -8,7 +8,9 @@ import { CreatePostPayload } from 'resolvers/types/CreatePostPayload';
 import { CommentService } from 'services/CommentService';
 import { PostService } from 'services/PostService';
 import { ProfileService } from 'services/ProfileService';
+import { ReactionService } from 'services/ReactionService';
 import { Arg, Authorized, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
+import { ReactionCount } from './types/ReactionCount';
 
 @Resolver(Post)
 export class PostResolver {
@@ -25,6 +27,11 @@ export class PostResolver {
   @FieldResolver(() => Number)
   commentCount(@Root() post: Post): Promise<number> {
     return CommentService.getCommentCount(post._id);
+  }
+
+  @FieldResolver(() => [ReactionCount])
+  reactionCounts(@Root() post: Post): Promise<ReactionCount[]> {
+    return ReactionService.getReactionCounts(post._id);
   }
 
   @Query(() => Post)
