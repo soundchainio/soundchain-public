@@ -1,7 +1,6 @@
 import { CurrentUser } from 'decorators/current-user';
 import { NotificationType } from 'enums/NotificationType';
 import { CommentNotification } from 'models/CommentNotification';
-import { NewPostNotification } from 'models/NewPostNotification';
 import { Notification } from 'models/Notification';
 import User from 'models/User';
 import { NotificationService } from 'services/NotificationService';
@@ -9,13 +8,10 @@ import { Arg, Authorized, createUnionType, Query, Resolver } from 'type-graphql'
 
 const NotificationUnion = createUnionType({
   name: 'NotificationUnion',
-  types: () => [Notification, CommentNotification, NewPostNotification] as const,
+  types: () => [Notification, CommentNotification] as const,
   resolveType: value => {
     if (value.type === NotificationType.Comment) {
       return CommentNotification;
-    }
-    if (value.type === NotificationType.NewPost) {
-      return NewPostNotification;
     }
     return undefined;
   },

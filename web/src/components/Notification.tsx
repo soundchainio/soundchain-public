@@ -26,7 +26,7 @@ export const Notification = ({ notificationId }: NotificationProps) => {
         <NextLink href={link}>
           <div className="p-4 bg-gray-20 break-words">
             <div className="flex items-center">
-              <Avatar />
+              <Avatar src={''} />
               <Timestamp datetime={createdAt} className="flex-1 text-right" />
             </div>
             <div className="mt-4 text-gray-100 break-words">{body}</div>
