@@ -1,7 +1,7 @@
 import { useMe } from 'hooks/useMe';
 import { Home } from 'icons/Home';
 import { NewPost } from 'icons/NewPost';
-import { Notification } from 'icons/Notification';
+import { Bell } from 'icons/Bell';
 import { Profile } from 'icons/Profile';
 import { Search } from 'icons/Search';
 import { setJwt } from 'lib/apollo';
@@ -24,7 +24,7 @@ export const BottomNavBar = () => {
         <Home activated />
         <Search />
         <NewPost onClick={handleNewPostClick} />
-        <Notification />
+        <Bell onClick={() => router.push('/notifications')} />
         <Profile onClick={() => setJwt()} />
         <NewPostModal setShowNewPost={setShowNewPost} showNewPost={showNewPost} />
       </div>

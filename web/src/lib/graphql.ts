@@ -43,6 +43,17 @@ export type Comment = {
   profile: Profile;
 };
 
+export type CommentNotification = {
+  __typename?: 'CommentNotification';
+  type: NotificationType;
+  body: Scalars['String'];
+  previewBody: Scalars['String'];
+  link: Scalars['String'];
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  id: Scalars['String'];
+};
+
 export type CreatePostInput = {
   body: Scalars['String'];
   mediaLink?: Maybe<Scalars['String']>;
@@ -177,6 +188,33 @@ export type MutationResetPasswordArgs = {
   input: ResetPasswordInput;
 };
 
+export type NewPostNotification = {
+  __typename?: 'NewPostNotification';
+  type: NotificationType;
+  body: Scalars['String'];
+  previewBody: Scalars['String'];
+  link: Scalars['String'];
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  id: Scalars['String'];
+};
+
+export type Notification = {
+  __typename?: 'Notification';
+  id: Scalars['ID'];
+  type: NotificationType;
+  profileId: Scalars['String'];
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+};
+
+export enum NotificationType {
+  Comment = 'Comment',
+  NewPost = 'NewPost'
+}
+
+export type NotificationUnion = Notification | CommentNotification | NewPostNotification;
+
 export type Post = {
   __typename?: 'Post';
   id: Scalars['ID'];
@@ -206,6 +244,8 @@ export type Query = {
   __typename?: 'Query';
   comment: Comment;
   comments: Array<Comment>;
+  notifications: Array<NotificationUnion>;
+  notification: NotificationUnion;
   post: Post;
   posts: Array<Post>;
   myProfile: Profile;
@@ -223,6 +263,11 @@ export type QueryCommentArgs = {
 
 export type QueryCommentsArgs = {
   postId: Scalars['String'];
+};
+
+
+export type QueryNotificationArgs = {
+  id: Scalars['String'];
 };
 
 
@@ -484,6 +529,30 @@ export type MyProfileQuery = (
       & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
     ) }
   ) }
+);
+
+export type NotificationQueryVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+export type NotificationQuery = (
+  { __typename?: 'Query' }
+  & { notification: { __typename?: 'Notification' } | (
+    { __typename?: 'CommentNotification' }
+    & Pick<CommentNotification, 'id' | 'type' | 'body' | 'previewBody' | 'link' | 'createdAt'>
+  ) | { __typename?: 'NewPostNotification' } }
+);
+
+export type NotificationsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type NotificationsQuery = (
+  { __typename?: 'Query' }
+  & { notifications: Array<{ __typename?: 'Notification' } | (
+    { __typename?: 'CommentNotification' }
+    & Pick<CommentNotification, 'id' | 'type' | 'body' | 'previewBody' | 'link' | 'createdAt'>
+  ) | { __typename?: 'NewPostNotification' }> }
 );
 
 export type PostQueryVariables = Exact<{
@@ -1012,6 +1081,89 @@ export function useMyProfileLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
 export type MyProfileQueryHookResult = ReturnType<typeof useMyProfileQuery>;
 export type MyProfileLazyQueryHookResult = ReturnType<typeof useMyProfileLazyQuery>;
 export type MyProfileQueryResult = Apollo.QueryResult<MyProfileQuery, MyProfileQueryVariables>;
+export const NotificationDocument = gql`
+    query Notification($id: String!) {
+  notification(id: $id) {
+    ... on CommentNotification {
+      id
+      type
+      body
+      previewBody
+      link
+      createdAt
+    }
+  }
+}
+    `;
+
+/**
+ * __useNotificationQuery__
+ *
+ * To run a query within a React component, call `useNotificationQuery` and pass it any options that fit your needs.
+ * When your component renders, `useNotificationQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useNotificationQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useNotificationQuery(baseOptions: Apollo.QueryHookOptions<NotificationQuery, NotificationQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<NotificationQuery, NotificationQueryVariables>(NotificationDocument, options);
+      }
+export function useNotificationLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<NotificationQuery, NotificationQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<NotificationQuery, NotificationQueryVariables>(NotificationDocument, options);
+        }
+export type NotificationQueryHookResult = ReturnType<typeof useNotificationQuery>;
+export type NotificationLazyQueryHookResult = ReturnType<typeof useNotificationLazyQuery>;
+export type NotificationQueryResult = Apollo.QueryResult<NotificationQuery, NotificationQueryVariables>;
+export const NotificationsDocument = gql`
+    query Notifications {
+  notifications {
+    ... on CommentNotification {
+      id
+      type
+      body
+      previewBody
+      link
+      createdAt
+    }
+  }
+}
+    `;
+
+/**
+ * __useNotificationsQuery__
+ *
+ * To run a query within a React component, call `useNotificationsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useNotificationsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useNotificationsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useNotificationsQuery(baseOptions?: Apollo.QueryHookOptions<NotificationsQuery, NotificationsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<NotificationsQuery, NotificationsQueryVariables>(NotificationsDocument, options);
+      }
+export function useNotificationsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<NotificationsQuery, NotificationsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<NotificationsQuery, NotificationsQueryVariables>(NotificationsDocument, options);
+        }
+export type NotificationsQueryHookResult = ReturnType<typeof useNotificationsQuery>;
+export type NotificationsLazyQueryHookResult = ReturnType<typeof useNotificationsLazyQuery>;
+export type NotificationsQueryResult = Apollo.QueryResult<NotificationsQuery, NotificationsQueryVariables>;
 export const PostDocument = gql`
     query Post($id: String!) {
   post(id: $id) {

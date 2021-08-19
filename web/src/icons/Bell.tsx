@@ -1,6 +1,6 @@
 import { IconProps } from './types/IconProps';
 
-export const Notification = (props: IconProps) => {
+export const Bell = (props: IconProps) => {
   return (
     <>
       {props.activated ? (

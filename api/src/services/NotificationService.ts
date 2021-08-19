@@ -36,4 +36,10 @@ export class NotificationService {
   static async getNotifications(profileId: string): Promise<Notification[]> {
     return NotificationModel.find({ profileId }).sort({ createdAt: 'desc' }).exec();
   }
+
+  static async getNotification(notificationId: string, profileId: string): Promise<Notification> {
+    const notification = await NotificationModel.findOne({ _id: notificationId, profileId });
+    if (!notification) throw Error(`Notification with ${notificationId} not found.`);
+    return notification;
+  }
 }

@@ -1,15 +1,21 @@
+import { CurrentUser } from 'decorators/current-user';
 import { NotificationType } from 'enums/NotificationType';
 import { CommentNotification } from 'models/CommentNotification';
+import { NewPostNotification } from 'models/NewPostNotification';
 import { Notification } from 'models/Notification';
+import User from 'models/User';
 import { NotificationService } from 'services/NotificationService';
-import { createUnionType, Query, Resolver } from 'type-graphql';
+import { Arg, Authorized, createUnionType, Query, Resolver } from 'type-graphql';
 
 const NotificationUnion = createUnionType({
   name: 'NotificationUnion',
-  types: () => [Notification, CommentNotification] as const,
+  types: () => [Notification, CommentNotification, NewPostNotification] as const,
   resolveType: value => {
     if (value.type === NotificationType.Comment) {
       return CommentNotification;
+    }
+    if (value.type === NotificationType.NewPost) {
+      return NewPostNotification;
     }
     return undefined;
   },
@@ -18,8 +24,14 @@ const NotificationUnion = createUnionType({
 @Resolver()
 export class NotificationResolver {
   @Query(() => [NotificationUnion])
-  // TO-DO: Add authorization and use current user. FIXED ID FOR TESTING PURPOSES.
-  notifications(): Promise<Array<typeof NotificationUnion>> {
-    return NotificationService.getNotifications('6109580bcd5728ff7f115c55');
+  @Authorized()
+  notifications(@CurrentUser() { profileId }: User): Promise<Array<typeof NotificationUnion>> {
+    return NotificationService.getNotifications(profileId);
+  }
+
+  @Query(() => NotificationUnion)
+  @Authorized()
+  notification(@Arg('id') id: string, @CurrentUser() { profileId }: User): Promise<typeof NotificationUnion> {
+    return NotificationService.getNotification(id, profileId);
   }
 }
