@@ -45,7 +45,7 @@ const setMaxInputLength = (input: string) => {
 export const RepostModal = ({ setShowRepostModal, showRepostModal, post }: RepostModalProps) => {
   const [isEmojiPickerVisible, setEmojiPickerVisible] = useState(false);
 
-  const [createPost] = useCreatePostMutation({ refetchQueries: ['Posts'] });
+  const [createPost] = useCreatePostMutation();
 
   const cancel = (setFieldValue: (val: string, newVal: string) => void) => {
     return (event: React.MouseEvent) => {
@@ -72,9 +72,10 @@ export const RepostModal = ({ setShowRepostModal, showRepostModal, post }: Repos
   const handleSubmit = async (values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
     const params: CreatePostInput = { body: values.body };
 
+    params.repostId = post.id;
+
     await createPost({ variables: { input: params } });
     setEmojiPickerVisible(false);
-
     setShowRepostModal(false);
     resetForm();
   };

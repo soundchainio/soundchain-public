@@ -46,6 +46,7 @@ export type Comment = {
 export type CreatePostInput = {
   body: Scalars['String'];
   mediaLink?: Maybe<Scalars['String']>;
+  repostId?: Maybe<Scalars['String']>;
 };
 
 export type CreatePostPayload = {
@@ -182,6 +183,7 @@ export type Post = {
   id: Scalars['ID'];
   body: Scalars['String'];
   mediaLink?: Maybe<Scalars['String']>;
+  repostId?: Maybe<Scalars['String']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   profile: Profile;
