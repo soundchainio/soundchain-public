@@ -1,28 +1,19 @@
-import classNames from 'classnames';
-import { Notification, PostsQueryVariables, useNotificationsQuery } from 'lib/graphql';
-import React, { useEffect } from 'react';
-import { PostSkeleton } from './PostSkeleton';
+import { Notification, useNotificationsQuery } from 'lib/graphql';
+import React from 'react';
 import { Notification as NotificationItem } from './Notification';
+import { PostSkeleton } from './PostSkeleton';
 
-interface NotificationsProps extends React.ComponentPropsWithoutRef<'div'> {
-  variables?: PostsQueryVariables;
-}
-
-export const Notifications = ({ className }: NotificationsProps) => {
+export const Notifications = () => {
   const { data } = useNotificationsQuery();
-
-  useEffect(() => {
-    console.log(data);
-  }, [data]);
 
   if (!data) {
     return <PostSkeleton />;
   }
 
   return (
-    <div className={classNames('space-y-3', className)}>
+    <div>
       {data.notifications.map((notification, index) => (
-        <NotificationItem key={index} notificationId={(notification as Notification).id} />
+        <NotificationItem key={index} index={index} notificationId={(notification as Notification).id} />
       ))}
     </div>
   );

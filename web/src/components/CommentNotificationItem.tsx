@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import { Comment } from 'icons/Comment';
 import { CommentNotification } from 'lib/graphql';
 import NextLink from 'next/link';
@@ -7,14 +8,16 @@ import { Timestamp } from './Timestamp';
 
 interface CommentNotificationProps {
   notification: CommentNotification;
+  index: number;
 }
 
 export const CommentNotificationItem = ({
   notification: { link, body, createdAt, previewBody, author, authorPicture },
+  index,
 }: CommentNotificationProps) => {
   return (
     <NextLink href={link}>
-      <div className="flex flex-col bg-gray-20 p-4">
+      <div className={classNames('flex flex-col p-4', index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20')}>
         <div className="break-words flex">
           <div className="flex items-center pr-4">
             <Avatar src={authorPicture} pixels={40} />

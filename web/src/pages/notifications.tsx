@@ -10,9 +10,7 @@ export default function UserNotifications() {
         <meta name="description" content="Notifications" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className="pt-3">
-        <Notifications />
-      </div>
+      <Notifications />
     </Layout>
   );
 }
