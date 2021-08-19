@@ -3,7 +3,7 @@ import { Field, ObjectType } from 'type-graphql';
 
 export interface CommentNotificationMetadata {
   commentBody: string;
-  commentatorDisplayName: string;
+  author: string;
   commentId: string;
   postId: string;
 }

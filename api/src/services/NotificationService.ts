@@ -7,20 +7,16 @@ import { Post } from 'models/Post';
 interface CommentNotificationParams {
   comment: Comment;
   post: Post;
-  commentatorDisplayName: string;
+  authorDisplayName: string;
 }
 
 export class NotificationService {
-  static async notifyNewCommentOnPost({
-    comment,
-    post,
-    commentatorDisplayName,
-  }: CommentNotificationParams): Promise<void> {
+  static async notifyNewCommentOnPost({ comment, post, authorDisplayName }: CommentNotificationParams): Promise<void> {
     if (comment.profileId === post.profileId) return;
     const { body: commentBody, _id: commentId } = comment;
     const { _id: postId, profileId: postOwnerProfileId } = post;
     const metadata: CommentNotificationMetadata = {
-      commentatorDisplayName,
+      author: authorDisplayName,
       commentBody,
       postId,
       commentId,

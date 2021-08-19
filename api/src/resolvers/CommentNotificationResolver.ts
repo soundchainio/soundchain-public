@@ -10,8 +10,13 @@ export class CommentNotificationResolver {
   }
 
   @FieldResolver(() => String)
-  body(@Root() { metadata }: Notification): string {
-    return `${(metadata as CommentNotificationMetadata).commentatorDisplayName} commented your post.`;
+  author(@Root() { metadata }: Notification): string {
+    return metadata.author;
+  }
+
+  @FieldResolver(() => String)
+  body(): string {
+    return `commented your post:`;
   }
 
   @FieldResolver(() => String)
