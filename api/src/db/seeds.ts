@@ -33,19 +33,18 @@ async function seedDb() {
     users.push(FakeUser({ profileId: profile._id }));
   }
 
-  await ProfileModel.insertMany(profiles);
-  await UserModel.insertMany(users);
-
   for (const profile of profiles) {
     const followedId = profile._id;
     const numFollowers = random(0, 100);
     sampleSize(profiles, numFollowers).forEach(profile => {
+      profile.followingCount++;
       follows.push(new FollowModel({ followedId, followerId: profile._id }));
     });
+    profile.followerCount = numFollowers;
   }
 
-  console.log('Profile follows seeded');
-
+  await ProfileModel.insertMany(profiles);
+  await UserModel.insertMany(users);
   await FollowModel.insertMany(follows);
 
   console.log('User profiles seeded!');

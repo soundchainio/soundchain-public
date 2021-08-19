@@ -53,23 +53,13 @@ export type CreatePostPayload = {
   post: Post;
 };
 
-export type Follow = {
-  __typename?: 'Follow';
-  id: Scalars['ID'];
-  followerId: Scalars['String'];
-  followedId: Scalars['String'];
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  followedProfile: Profile;
-};
-
 export type FollowProfileInput = {
   followedId: Scalars['String'];
 };
 
 export type FollowProfilePayload = {
   __typename?: 'FollowProfilePayload';
-  follow: Follow;
+  followedProfile: Profile;
 };
 
 export type ForgotPasswordInput = {
@@ -128,13 +118,13 @@ export type LoginInput = {
 export type Mutation = {
   __typename?: 'Mutation';
   addComment: AddCommentPayload;
-  followProfile: FollowProfilePayload;
-  unfollowProfile: UnfollowProfilePayload;
   createPost: CreatePostPayload;
   updateSocialMedias: UpdateSocialMediasPayload;
   updateFavoriteGenres: UpdateFavoriteGenresPayload;
   updateProfilePicture: UpdateProfilePicturePayload;
   updateCoverPicture: UpdateCoverPicturePayload;
+  followProfile: FollowProfilePayload;
+  unfollowProfile: UnfollowProfilePayload;
   register: AuthPayload;
   login: AuthPayload;
   verifyUserEmail: VerifyUserEmailPayload;
@@ -144,14 +134,6 @@ export type Mutation = {
 
 export type MutationAddCommentArgs = {
   input: AddCommentInput;
-};
-
-export type MutationFollowProfileArgs = {
-  input: FollowProfileInput;
-};
-
-export type MutationUnfollowProfileArgs = {
-  input: UnfollowProfileInput;
 };
 
 export type MutationCreatePostArgs = {
@@ -172,6 +154,14 @@ export type MutationUpdateProfilePictureArgs = {
 
 export type MutationUpdateCoverPictureArgs = {
   input: UpdateCoverPictureInput;
+};
+
+export type MutationFollowProfileArgs = {
+  input: FollowProfileInput;
+};
+
+export type MutationUnfollowProfileArgs = {
+  input: UnfollowProfileInput;
 };
 
 export type MutationRegisterArgs = {
@@ -214,12 +204,12 @@ export type Profile = {
   coverPicture?: Maybe<Scalars['String']>;
   socialMedias: SocialMedias;
   favoriteGenres: Array<Genre>;
+  followerCount: Scalars['Float'];
+  followingCount: Scalars['Float'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   userHandle: Scalars['String'];
   isFollowed: Scalars['Boolean'];
-  followerCount: Scalars['Float'];
-  followingCount: Scalars['Float'];
 };
 
 export type Query = {
@@ -294,7 +284,7 @@ export type UnfollowProfileInput = {
 
 export type UnfollowProfilePayload = {
   __typename?: 'UnfollowProfilePayload';
-  follow: Follow;
+  followedProfile: Profile;
 };
 
 export type UpdateCoverPictureInput = {
@@ -414,9 +404,7 @@ export type FollowProfileMutationVariables = Exact<{
 
 export type FollowProfileMutation = { __typename?: 'Mutation' } & {
   followProfile: { __typename?: 'FollowProfilePayload' } & {
-    follow: { __typename?: 'Follow' } & {
-      followedProfile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'followerCount' | 'isFollowed'>;
-    };
+    followedProfile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'followerCount' | 'isFollowed'>;
   };
 };
 
@@ -529,9 +517,7 @@ export type UnfollowProfileMutationVariables = Exact<{
 
 export type UnfollowProfileMutation = { __typename?: 'Mutation' } & {
   unfollowProfile: { __typename?: 'UnfollowProfilePayload' } & {
-    follow: { __typename?: 'Follow' } & {
-      followedProfile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'followerCount' | 'isFollowed'>;
-    };
+    followedProfile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'followerCount' | 'isFollowed'>;
   };
 };
 
@@ -776,12 +762,10 @@ export type CreatePostMutationOptions = Apollo.BaseMutationOptions<CreatePostMut
 export const FollowProfileDocument = gql`
   mutation FollowProfile($input: FollowProfileInput!) {
     followProfile(input: $input) {
-      follow {
-        followedProfile {
-          id
-          followerCount
-          isFollowed
-        }
+      followedProfile {
+        id
+        followerCount
+        isFollowed
       }
     }
   }
@@ -1206,12 +1190,10 @@ export type ResetPasswordMutationOptions = Apollo.BaseMutationOptions<
 export const UnfollowProfileDocument = gql`
   mutation UnfollowProfile($input: UnfollowProfileInput!) {
     unfollowProfile(input: $input) {
-      follow {
-        followedProfile {
-          id
-          followerCount
-          isFollowed
-        }
+      followedProfile {
+        id
+        followerCount
+        isFollowed
       }
     }
   }

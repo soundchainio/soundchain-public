@@ -1,11 +1,9 @@
 mutation FollowProfile($input: FollowProfileInput!) {
   followProfile(input: $input) {
-    follow {
-      followedProfile {
-        id
-        followerCount
-        isFollowed
-      }
+    followedProfile {
+      id
+      followerCount
+      isFollowed
     }
   }
 }

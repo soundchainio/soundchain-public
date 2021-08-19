@@ -1,9 +1,13 @@
 import { CurrentUser } from 'decorators/current-user';
+import { FollowModel } from 'models/Follow';
 import { Profile } from 'models/Profile';
 import User from 'models/User';
-import { FollowService } from 'services/FollowService';
 import { ProfileService } from 'services/ProfileService';
 import { Arg, Authorized, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
+import { FollowProfileInput } from './types/FollowProfileInput';
+import { FollowProfilePayload } from './types/FollowProfilePayload';
+import { UnfollowProfileInput } from './types/UnfollowProfileInput';
+import { UnfollowProfilePayload } from './types/UnfollowProfilePayload';
 import { UpdateCoverPictureInput } from './types/UpdateCoverPictureInput';
 import { UpdateCoverPicturePayload } from './types/UpdateCoverPicturePayload';
 import { UpdateFavoriteGenresInput } from './types/UpdateFavoriteGenresInput';
@@ -22,17 +26,7 @@ export class ProfileResolver {
 
   @FieldResolver(() => Boolean)
   isFollowed(@Root() profile: Profile, @CurrentUser() { profileId }: User): Promise<boolean> {
-    return FollowService.followExists({ followerId: profileId, followedId: profile._id });
-  }
-
-  @FieldResolver(() => Number)
-  followerCount(@Root() profile: Profile): Promise<number> {
-    return FollowService.countFollowers(profile._id);
-  }
-
-  @FieldResolver(() => Number)
-  followingCount(@Root() profile: Profile): Promise<number> {
-    return FollowService.countFollowing(profile._id);
+    return FollowModel.exists({ followerId: profileId, followedId: profile._id });
   }
 
   @Query(() => Profile)
@@ -88,5 +82,25 @@ export class ProfileResolver {
   ): Promise<UpdateCoverPicturePayload> {
     const profile = await ProfileService.updateCoverPicture(profileId, picture);
     return { profile };
+  }
+
+  @Mutation(() => FollowProfilePayload)
+  @Authorized()
+  async followProfile(
+    @Arg('input') { followedId }: FollowProfileInput,
+    @CurrentUser() { profileId: followerId }: User,
+  ): Promise<FollowProfilePayload> {
+    const followedProfile = await ProfileService.followProfile(followerId, followedId);
+    return { followedProfile };
+  }
+
+  @Mutation(() => UnfollowProfilePayload)
+  @Authorized()
+  async unfollowProfile(
+    @Arg('input') { followedId }: UnfollowProfileInput,
+    @CurrentUser() { profileId: followerId }: User,
+  ): Promise<UnfollowProfilePayload> {
+    const followedProfile = await ProfileService.unfollowProfile(followerId, followedId);
+    return { followedProfile };
   }
 }

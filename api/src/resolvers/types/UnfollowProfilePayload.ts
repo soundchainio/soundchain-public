@@ -1,8 +1,8 @@
-import { Follow } from 'models/Follow';
+import { Profile } from 'models/Profile';
 import { Field, ObjectType } from 'type-graphql';
 
 @ObjectType()
 export class UnfollowProfilePayload {
   @Field()
-  follow: Follow;
+  followedProfile: Profile;
 }

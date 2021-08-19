@@ -2,6 +2,7 @@ import { useApolloClient } from '@apollo/client';
 import { Avatar } from 'components/Avatar';
 import { FollowButton } from 'components/FollowButton';
 import { Layout } from 'components/Layout';
+import { Number } from 'components/Number';
 import { Posts } from 'components/Posts';
 import { ProfileTabs } from 'components/ProfileTabs';
 import { SocialMediaLink } from 'components/SocialMediaLink';
@@ -70,11 +71,15 @@ export default function ProfilePage({ profile }: InferGetServerSidePropsType<typ
         <div className="flex items-center justify-end space-x-8">
           <div className="flex space-x-2">
             <div className="text-center text-sm">
-              <p className="font-semibold text-white">{followerCount}</p>
+              <p className="font-semibold text-white">
+                <Number value={followerCount} />
+              </p>
               <p className="text-gray-80 text-xs">Followers</p>
             </div>
             <div className="text-center text-sm">
-              <p className="font-semibold text-white">{followingCount}</p>
+              <p className="font-semibold text-white">
+                <Number value={followingCount} />
+              </p>
               <p className="text-gray-80 text-xs">Following</p>
             </div>
           </div>

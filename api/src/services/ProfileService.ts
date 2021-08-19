@@ -1,4 +1,6 @@
 import { Genre } from 'enums/Genres';
+import NotFoundError from 'errors/NotFoundError';
+import { FollowModel } from 'models/Follow';
 import { Profile, ProfileModel } from 'models/Profile';
 import { SocialMedias } from 'models/SocialMedias';
 import { UserModel } from 'models/User';
@@ -46,5 +48,28 @@ export class ProfileService {
       throw new Error(`Profile ${profileId} is missing a user account!`);
     }
     return user.handle;
+  }
+
+  static async followProfile(followerId: string, followedId: string): Promise<Profile> {
+    const followedProfile = await ProfileModel.findById(followedId);
+    if (!followedProfile) throw new NotFoundError('Profile', followedId);
+
+    const follow = new FollowModel({ followerId, followedId });
+    await follow.save();
+    await ProfileModel.updateOne({ _id: followerId }, { $inc: { followingCount: 1 } });
+    followedProfile.followerCount++;
+    await followedProfile.save();
+    return followedProfile;
+  }
+
+  static async unfollowProfile(followerId: string, followedId: string): Promise<Profile> {
+    const followedProfile = await ProfileModel.findById(followedId);
+    if (!followedProfile) throw new NotFoundError('Profile', followedId);
+
+    await FollowModel.deleteOne({ followerId, followedId });
+    await ProfileModel.updateOne({ _id: followerId }, { $inc: { followingCount: -1 } });
+    followedProfile.followerCount--;
+    await followedProfile.save();
+    return followedProfile;
   }
 }
