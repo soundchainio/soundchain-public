@@ -21,6 +21,8 @@ functions:
           path: /
           method: get
           cors: true
+  migrate:
+    handler: src/db/migrate.handler
 
 custom:
   db:
@@ -44,6 +46,11 @@ custom:
         - ${self:custom.db.host}
         - ':'
         - ${self:custom.db.port}
+  uploadsBucket:
+    name: !Join
+      - '-'
+      - - Ref: 'AWS::StackName'
+        - 'uploads'
 
 provider:
   name: aws
@@ -72,6 +79,22 @@ provider:
     SENDGRID_SENDER_EMAIL: ${env:SENDGRID_SENDER_EMAIL}
     SENDGRID_VERIFICATION_TEMPLATE: ${env:SENDGRID_VERIFICATION_TEMPLATE}
     SENDGRID_RESET_PASSWORD_TEMPLATE: ${env:SENDGRID_RESET_PASSWORD_TEMPLATE}
+    UPLOADS_BUCKET_REGION: ${self:provider.region}
+    UPLOADS_BUCKET_NAME: ${self:custom.uploadsBucket.name}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:GetObject
+            - s3:PutObjectAcl
+          Resource:
+            - !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - ${self:custom.uploadsBucket.name}
+                - /*
 
 resources:
   Mappings:
@@ -318,3 +341,12 @@ resources:
           Ref: DBCluster
         DBInstanceClass: db.t3.medium
       DependsOn: DBCluster
+    UploadBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.uploadsBucket.name}
+        CorsConfiguration:
+          CorsRules:
+            - AllowedHeaders: ['*']
+              AllowedMethods: [GET, PUT]
+              AllowedOrigins: ['*']

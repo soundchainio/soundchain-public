@@ -9,6 +9,7 @@ import { useLoginMutation } from 'lib/graphql';
 import { useRouter } from 'next/dist/client/router';
 import { useEffect } from 'react';
 import * as yup from 'yup';
+import { Label } from 'components/Label';
 
 interface FormValues {
   username: string;
@@ -54,7 +55,7 @@ export const LoginForm = () => {
           <div className="space-y-6 mb-auto">
             <InputField type="text" name="username" placeholder="Username or Email Address" />
             <InputField type="password" name="password" placeholder="Password" />
-            {error && <p>{error.message}</p>}
+            {error && <Label>{error.message}</Label>}
             <div>
               <Link href="/forgot-password" className="text-left">
                 Forgot Password?

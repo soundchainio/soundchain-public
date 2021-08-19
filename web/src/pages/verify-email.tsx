@@ -1,3 +1,4 @@
+import { Button } from 'components/Button';
 import { LockedLayout } from 'components/LockedLayout';
 import { Subtitle } from 'components/Subtitle';
 import { Title } from 'components/Title';
@@ -5,7 +6,6 @@ import { apolloClient } from 'lib/apollo';
 import { VerifyUserEmailDocument, VerifyUserEmailMutation, VerifyUserEmailMutationVariables } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
 import Head from 'next/head';
-import { Button } from 'components/Button';
 import { useRouter } from 'next/router';
 
 export const getServerSideProps: GetServerSideProps<VerifyEmailProps> = async context => {

@@ -16,13 +16,36 @@ export type Scalars = {
   DateTime: string;
 };
 
+export type AddCommentInput = {
+  postId: Scalars['String'];
+  body: Scalars['String'];
+};
+
+export type AddCommentPayload = {
+  __typename?: 'AddCommentPayload';
+  comment: Comment;
+};
+
 export type AuthPayload = {
   __typename?: 'AuthPayload';
   jwt: Scalars['String'];
 };
 
+export type Comment = {
+  __typename?: 'Comment';
+  id: Scalars['ID'];
+  body: Scalars['String'];
+  postId: Scalars['String'];
+  profileId: Scalars['String'];
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  post: Post;
+  profile: Profile;
+};
+
 export type CreatePostInput = {
   body: Scalars['String'];
+  mediaLink?: Maybe<Scalars['String']>;
 };
 
 export type CreatePostPayload = {
@@ -52,7 +75,7 @@ export enum Genre {
   Country = 'COUNTRY',
   Dance = 'DANCE',
   Devotional = 'DEVOTIONAL',
-  Eletronic = 'ELETRONIC',
+  Electronic = 'ELECTRONIC',
   Experimental = 'EXPERIMENTAL',
   Gospel = 'GOSPEL',
   HardRock = 'HARD_ROCK',
@@ -86,14 +109,22 @@ export type LoginInput = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  addComment: AddCommentPayload;
   createPost: CreatePostPayload;
   updateSocialMedias: UpdateSocialMediasPayload;
   updateFavoriteGenres: UpdateFavoriteGenresPayload;
+  updateProfilePicture: UpdateProfilePicturePayload;
+  updateCoverPicture: UpdateCoverPicturePayload;
   register: AuthPayload;
   login: AuthPayload;
   verifyUserEmail: VerifyUserEmailPayload;
   forgotPassword: ForgotPasswordPayload;
   resetPassword: ResetPasswordPayload;
+};
+
+
+export type MutationAddCommentArgs = {
+  input: AddCommentInput;
 };
 
 
@@ -109,6 +140,16 @@ export type MutationUpdateSocialMediasArgs = {
 
 export type MutationUpdateFavoriteGenresArgs = {
   input: UpdateFavoriteGenresInput;
+};
+
+
+export type MutationUpdateProfilePictureArgs = {
+  input: UpdateProfilePictureInput;
+};
+
+
+export type MutationUpdateCoverPictureArgs = {
+  input: UpdateCoverPictureInput;
 };
 
 
@@ -139,11 +180,13 @@ export type MutationResetPasswordArgs = {
 export type Post = {
   __typename?: 'Post';
   id: Scalars['ID'];
-  profileId: Scalars['String'];
   body: Scalars['String'];
+  mediaLink?: Maybe<Scalars['String']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   profile: Profile;
+  comments: Array<Comment>;
+  commentCount: Scalars['Float'];
 };
 
 export type Profile = {
@@ -156,20 +199,50 @@ export type Profile = {
   favoriteGenres: Array<Genre>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
+  userHandle: Scalars['String'];
 };
 
 export type Query = {
   __typename?: 'Query';
+  comment: Comment;
+  comments: Array<Comment>;
   post: Post;
   posts: Array<Post>;
   myProfile: Profile;
+  profile: Profile;
+  uploadUrl: UploadUrl;
   me?: Maybe<User>;
   validPasswordResetToken: Scalars['Boolean'];
 };
 
 
+export type QueryCommentArgs = {
+  id: Scalars['String'];
+};
+
+
+export type QueryCommentsArgs = {
+  postId: Scalars['String'];
+};
+
+
 export type QueryPostArgs = {
   id: Scalars['String'];
+};
+
+
+export type QueryPostsArgs = {
+  profileId?: Maybe<Scalars['String']>;
+};
+
+
+export type QueryProfileArgs = {
+  id: Scalars['String'];
+};
+
+
+export type QueryUploadUrlArgs = {
+  fileType: UploadFileType;
 };
 
 
@@ -202,12 +275,30 @@ export type SocialMedias = {
   twitter?: Maybe<Scalars['String']>;
 };
 
+export type UpdateCoverPictureInput = {
+  picture: Scalars['String'];
+};
+
+export type UpdateCoverPicturePayload = {
+  __typename?: 'UpdateCoverPicturePayload';
+  profile: Profile;
+};
+
 export type UpdateFavoriteGenresInput = {
   favoriteGenres: Array<Genre>;
 };
 
 export type UpdateFavoriteGenresPayload = {
   __typename?: 'UpdateFavoriteGenresPayload';
+  profile: Profile;
+};
+
+export type UpdateProfilePictureInput = {
+  picture: Scalars['String'];
+};
+
+export type UpdateProfilePicturePayload = {
+  __typename?: 'UpdateProfilePicturePayload';
   profile: Profile;
 };
 
@@ -221,6 +312,18 @@ export type UpdateSocialMediasInput = {
 export type UpdateSocialMediasPayload = {
   __typename?: 'UpdateSocialMediasPayload';
   profile: Profile;
+};
+
+export enum UploadFileType {
+  Jpeg = 'JPEG',
+  Png = 'PNG'
+}
+
+export type UploadUrl = {
+  __typename?: 'UploadUrl';
+  uploadUrl: Scalars['String'];
+  fileName: Scalars['String'];
+  readUrl: Scalars['String'];
 };
 
 export type User = {
@@ -242,6 +345,61 @@ export type VerifyUserEmailPayload = {
   __typename?: 'VerifyUserEmailPayload';
   user: User;
 };
+
+export type AddCommentMutationVariables = Exact<{
+  input: AddCommentInput;
+}>;
+
+
+export type AddCommentMutation = (
+  { __typename?: 'Mutation' }
+  & { addComment: (
+    { __typename?: 'AddCommentPayload' }
+    & { comment: (
+      { __typename?: 'Comment' }
+      & { post: (
+        { __typename?: 'Post' }
+        & Pick<Post, 'id' | 'commentCount'>
+      ) }
+      & CommentComponentFieldsFragment
+    ) }
+  ) }
+);
+
+export type CommentQueryVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+export type CommentQuery = (
+  { __typename?: 'Query' }
+  & { comment: (
+    { __typename?: 'Comment' }
+    & CommentComponentFieldsFragment
+  ) }
+);
+
+export type CommentComponentFieldsFragment = (
+  { __typename?: 'Comment' }
+  & Pick<Comment, 'id' | 'body' | 'createdAt'>
+  & { profile: (
+    { __typename?: 'Profile' }
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
+  ) }
+);
+
+export type CommentsQueryVariables = Exact<{
+  postId: Scalars['String'];
+}>;
+
+
+export type CommentsQuery = (
+  { __typename?: 'Query' }
+  & { comments: Array<(
+    { __typename?: 'Comment' }
+    & CommentComponentFieldsFragment
+  )> }
+);
 
 export type CreatePostMutationVariables = Exact<{
   input: CreatePostInput;
@@ -272,6 +430,19 @@ export type ForgotPasswordMutation = (
   ) }
 );
 
+export type UploadUrlQueryVariables = Exact<{
+  fileType: UploadFileType;
+}>;
+
+
+export type UploadUrlQuery = (
+  { __typename?: 'Query' }
+  & { uploadUrl: (
+    { __typename?: 'UploadUrl' }
+    & Pick<UploadUrl, 'uploadUrl' | 'fileName' | 'readUrl'>
+  ) }
+);
+
 export type LoginMutationVariables = Exact<{
   input: LoginInput;
 }>;
@@ -295,7 +466,7 @@ export type MeQuery = (
     & Pick<User, 'id' | 'handle'>
     & { profile: (
       { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'displayName'>
+      & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
     ) }
   )> }
 );
@@ -315,19 +486,56 @@ export type MyProfileQuery = (
   ) }
 );
 
-export type PostsQueryVariables = Exact<{ [key: string]: never; }>;
+export type PostQueryVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+export type PostQuery = (
+  { __typename?: 'Query' }
+  & { post: (
+    { __typename?: 'Post' }
+    & PostComponentFieldsFragment
+  ) }
+);
+
+export type PostComponentFieldsFragment = (
+  { __typename?: 'Post' }
+  & Pick<Post, 'id' | 'body' | 'mediaLink' | 'createdAt' | 'commentCount'>
+  & { profile: (
+    { __typename?: 'Profile' }
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
+  ) }
+);
+
+export type PostsQueryVariables = Exact<{
+  profileId?: Maybe<Scalars['String']>;
+}>;
 
 
 export type PostsQuery = (
   { __typename?: 'Query' }
   & { posts: Array<(
     { __typename?: 'Post' }
-    & Pick<Post, 'id' | 'body' | 'createdAt'>
-    & { profile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'displayName'>
-    ) }
+    & PostComponentFieldsFragment
   )> }
+);
+
+export type ProfileQueryVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+export type ProfileQuery = (
+  { __typename?: 'Query' }
+  & { profile: (
+    { __typename?: 'Profile' }
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'userHandle'>
+    & { socialMedias: (
+      { __typename?: 'SocialMedias' }
+      & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
+    ) }
+  ) }
 );
 
 export type RegisterMutationVariables = Exact<{
@@ -356,6 +564,22 @@ export type ResetPasswordMutation = (
   ) }
 );
 
+export type UpdateCoverPictureMutationVariables = Exact<{
+  input: UpdateCoverPictureInput;
+}>;
+
+
+export type UpdateCoverPictureMutation = (
+  { __typename?: 'Mutation' }
+  & { updateCoverPicture: (
+    { __typename?: 'UpdateCoverPicturePayload' }
+    & { profile: (
+      { __typename?: 'Profile' }
+      & Pick<Profile, 'id' | 'coverPicture'>
+    ) }
+  ) }
+);
+
 export type UpdateFavoriteGenresMutationVariables = Exact<{
   input: UpdateFavoriteGenresInput;
 }>;
@@ -368,6 +592,22 @@ export type UpdateFavoriteGenresMutation = (
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'favoriteGenres'>
+    ) }
+  ) }
+);
+
+export type UpdateProfilePictureMutationVariables = Exact<{
+  input: UpdateProfilePictureInput;
+}>;
+
+
+export type UpdateProfilePictureMutation = (
+  { __typename?: 'Mutation' }
+  & { updateProfilePicture: (
+    { __typename?: 'UpdateProfilePicturePayload' }
+    & { profile: (
+      { __typename?: 'Profile' }
+      & Pick<Profile, 'id' | 'profilePicture'>
     ) }
   ) }
 );
@@ -418,7 +658,141 @@ export type VerifyUserEmailMutation = (
   ) }
 );
 
+export const CommentComponentFieldsFragmentDoc = gql`
+    fragment CommentComponentFields on Comment {
+  id
+  body
+  createdAt
+  profile {
+    id
+    displayName
+    profilePicture
+  }
+}
+    `;
+export const PostComponentFieldsFragmentDoc = gql`
+    fragment PostComponentFields on Post {
+  id
+  body
+  mediaLink
+  createdAt
+  commentCount
+  profile {
+    id
+    displayName
+    profilePicture
+  }
+}
+    `;
+export const AddCommentDocument = gql`
+    mutation AddComment($input: AddCommentInput!) {
+  addComment(input: $input) {
+    comment {
+      ...CommentComponentFields
+      post {
+        id
+        commentCount
+      }
+    }
+  }
+}
+    ${CommentComponentFieldsFragmentDoc}`;
+export type AddCommentMutationFn = Apollo.MutationFunction<AddCommentMutation, AddCommentMutationVariables>;
 
+/**
+ * __useAddCommentMutation__
+ *
+ * To run a mutation, you first call `useAddCommentMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddCommentMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addCommentMutation, { data, loading, error }] = useAddCommentMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useAddCommentMutation(baseOptions?: Apollo.MutationHookOptions<AddCommentMutation, AddCommentMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddCommentMutation, AddCommentMutationVariables>(AddCommentDocument, options);
+      }
+export type AddCommentMutationHookResult = ReturnType<typeof useAddCommentMutation>;
+export type AddCommentMutationResult = Apollo.MutationResult<AddCommentMutation>;
+export type AddCommentMutationOptions = Apollo.BaseMutationOptions<AddCommentMutation, AddCommentMutationVariables>;
+export const CommentDocument = gql`
+    query Comment($id: String!) {
+  comment(id: $id) {
+    ...CommentComponentFields
+  }
+}
+    ${CommentComponentFieldsFragmentDoc}`;
+
+/**
+ * __useCommentQuery__
+ *
+ * To run a query within a React component, call `useCommentQuery` and pass it any options that fit your needs.
+ * When your component renders, `useCommentQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useCommentQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useCommentQuery(baseOptions: Apollo.QueryHookOptions<CommentQuery, CommentQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<CommentQuery, CommentQueryVariables>(CommentDocument, options);
+      }
+export function useCommentLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<CommentQuery, CommentQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<CommentQuery, CommentQueryVariables>(CommentDocument, options);
+        }
+export type CommentQueryHookResult = ReturnType<typeof useCommentQuery>;
+export type CommentLazyQueryHookResult = ReturnType<typeof useCommentLazyQuery>;
+export type CommentQueryResult = Apollo.QueryResult<CommentQuery, CommentQueryVariables>;
+export const CommentsDocument = gql`
+    query Comments($postId: String!) {
+  comments(postId: $postId) {
+    ...CommentComponentFields
+  }
+}
+    ${CommentComponentFieldsFragmentDoc}`;
+
+/**
+ * __useCommentsQuery__
+ *
+ * To run a query within a React component, call `useCommentsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useCommentsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useCommentsQuery({
+ *   variables: {
+ *      postId: // value for 'postId'
+ *   },
+ * });
+ */
+export function useCommentsQuery(baseOptions: Apollo.QueryHookOptions<CommentsQuery, CommentsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<CommentsQuery, CommentsQueryVariables>(CommentsDocument, options);
+      }
+export function useCommentsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<CommentsQuery, CommentsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<CommentsQuery, CommentsQueryVariables>(CommentsDocument, options);
+        }
+export type CommentsQueryHookResult = ReturnType<typeof useCommentsQuery>;
+export type CommentsLazyQueryHookResult = ReturnType<typeof useCommentsLazyQuery>;
+export type CommentsQueryResult = Apollo.QueryResult<CommentsQuery, CommentsQueryVariables>;
 export const CreatePostDocument = gql`
     mutation CreatePost($input: CreatePostInput!) {
   createPost(input: $input) {
@@ -487,6 +861,43 @@ export function useForgotPasswordMutation(baseOptions?: Apollo.MutationHookOptio
 export type ForgotPasswordMutationHookResult = ReturnType<typeof useForgotPasswordMutation>;
 export type ForgotPasswordMutationResult = Apollo.MutationResult<ForgotPasswordMutation>;
 export type ForgotPasswordMutationOptions = Apollo.BaseMutationOptions<ForgotPasswordMutation, ForgotPasswordMutationVariables>;
+export const UploadUrlDocument = gql`
+    query UploadUrl($fileType: UploadFileType!) {
+  uploadUrl(fileType: $fileType) {
+    uploadUrl
+    fileName
+    readUrl
+  }
+}
+    `;
+
+/**
+ * __useUploadUrlQuery__
+ *
+ * To run a query within a React component, call `useUploadUrlQuery` and pass it any options that fit your needs.
+ * When your component renders, `useUploadUrlQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useUploadUrlQuery({
+ *   variables: {
+ *      fileType: // value for 'fileType'
+ *   },
+ * });
+ */
+export function useUploadUrlQuery(baseOptions: Apollo.QueryHookOptions<UploadUrlQuery, UploadUrlQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<UploadUrlQuery, UploadUrlQueryVariables>(UploadUrlDocument, options);
+      }
+export function useUploadUrlLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UploadUrlQuery, UploadUrlQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<UploadUrlQuery, UploadUrlQueryVariables>(UploadUrlDocument, options);
+        }
+export type UploadUrlQueryHookResult = ReturnType<typeof useUploadUrlQuery>;
+export type UploadUrlLazyQueryHookResult = ReturnType<typeof useUploadUrlLazyQuery>;
+export type UploadUrlQueryResult = Apollo.QueryResult<UploadUrlQuery, UploadUrlQueryVariables>;
 export const LoginDocument = gql`
     mutation Login($input: LoginInput!) {
   login(input: $input) {
@@ -528,6 +939,7 @@ export const MeDocument = gql`
     profile {
       id
       displayName
+      profilePicture
     }
   }
 }
@@ -600,18 +1012,48 @@ export function useMyProfileLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
 export type MyProfileQueryHookResult = ReturnType<typeof useMyProfileQuery>;
 export type MyProfileLazyQueryHookResult = ReturnType<typeof useMyProfileLazyQuery>;
 export type MyProfileQueryResult = Apollo.QueryResult<MyProfileQuery, MyProfileQueryVariables>;
-export const PostsDocument = gql`
-    query Posts {
-  posts {
-    id
-    body
-    profile {
-      displayName
-    }
-    createdAt
+export const PostDocument = gql`
+    query Post($id: String!) {
+  post(id: $id) {
+    ...PostComponentFields
   }
 }
-    `;
+    ${PostComponentFieldsFragmentDoc}`;
+
+/**
+ * __usePostQuery__
+ *
+ * To run a query within a React component, call `usePostQuery` and pass it any options that fit your needs.
+ * When your component renders, `usePostQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = usePostQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function usePostQuery(baseOptions: Apollo.QueryHookOptions<PostQuery, PostQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<PostQuery, PostQueryVariables>(PostDocument, options);
+      }
+export function usePostLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<PostQuery, PostQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<PostQuery, PostQueryVariables>(PostDocument, options);
+        }
+export type PostQueryHookResult = ReturnType<typeof usePostQuery>;
+export type PostLazyQueryHookResult = ReturnType<typeof usePostLazyQuery>;
+export type PostQueryResult = Apollo.QueryResult<PostQuery, PostQueryVariables>;
+export const PostsDocument = gql`
+    query Posts($profileId: String) {
+  posts(profileId: $profileId) {
+    ...PostComponentFields
+  }
+}
+    ${PostComponentFieldsFragmentDoc}`;
 
 /**
  * __usePostsQuery__
@@ -625,6 +1067,7 @@ export const PostsDocument = gql`
  * @example
  * const { data, loading, error } = usePostsQuery({
  *   variables: {
+ *      profileId: // value for 'profileId'
  *   },
  * });
  */
@@ -639,6 +1082,51 @@ export function usePostsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Post
 export type PostsQueryHookResult = ReturnType<typeof usePostsQuery>;
 export type PostsLazyQueryHookResult = ReturnType<typeof usePostsLazyQuery>;
 export type PostsQueryResult = Apollo.QueryResult<PostsQuery, PostsQueryVariables>;
+export const ProfileDocument = gql`
+    query Profile($id: String!) {
+  profile(id: $id) {
+    id
+    displayName
+    profilePicture
+    coverPicture
+    socialMedias {
+      facebook
+      instagram
+      soundcloud
+      twitter
+    }
+    userHandle
+  }
+}
+    `;
+
+/**
+ * __useProfileQuery__
+ *
+ * To run a query within a React component, call `useProfileQuery` and pass it any options that fit your needs.
+ * When your component renders, `useProfileQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useProfileQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useProfileQuery(baseOptions: Apollo.QueryHookOptions<ProfileQuery, ProfileQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ProfileQuery, ProfileQueryVariables>(ProfileDocument, options);
+      }
+export function useProfileLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ProfileQuery, ProfileQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ProfileQuery, ProfileQueryVariables>(ProfileDocument, options);
+        }
+export type ProfileQueryHookResult = ReturnType<typeof useProfileQuery>;
+export type ProfileLazyQueryHookResult = ReturnType<typeof useProfileLazyQuery>;
+export type ProfileQueryResult = Apollo.QueryResult<ProfileQuery, ProfileQueryVariables>;
 export const RegisterDocument = gql`
     mutation Register($input: RegisterInput!) {
   register(input: $input) {
@@ -705,6 +1193,42 @@ export function useResetPasswordMutation(baseOptions?: Apollo.MutationHookOption
 export type ResetPasswordMutationHookResult = ReturnType<typeof useResetPasswordMutation>;
 export type ResetPasswordMutationResult = Apollo.MutationResult<ResetPasswordMutation>;
 export type ResetPasswordMutationOptions = Apollo.BaseMutationOptions<ResetPasswordMutation, ResetPasswordMutationVariables>;
+export const UpdateCoverPictureDocument = gql`
+    mutation UpdateCoverPicture($input: UpdateCoverPictureInput!) {
+  updateCoverPicture(input: $input) {
+    profile {
+      id
+      coverPicture
+    }
+  }
+}
+    `;
+export type UpdateCoverPictureMutationFn = Apollo.MutationFunction<UpdateCoverPictureMutation, UpdateCoverPictureMutationVariables>;
+
+/**
+ * __useUpdateCoverPictureMutation__
+ *
+ * To run a mutation, you first call `useUpdateCoverPictureMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateCoverPictureMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateCoverPictureMutation, { data, loading, error }] = useUpdateCoverPictureMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateCoverPictureMutation(baseOptions?: Apollo.MutationHookOptions<UpdateCoverPictureMutation, UpdateCoverPictureMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateCoverPictureMutation, UpdateCoverPictureMutationVariables>(UpdateCoverPictureDocument, options);
+      }
+export type UpdateCoverPictureMutationHookResult = ReturnType<typeof useUpdateCoverPictureMutation>;
+export type UpdateCoverPictureMutationResult = Apollo.MutationResult<UpdateCoverPictureMutation>;
+export type UpdateCoverPictureMutationOptions = Apollo.BaseMutationOptions<UpdateCoverPictureMutation, UpdateCoverPictureMutationVariables>;
 export const UpdateFavoriteGenresDocument = gql`
     mutation UpdateFavoriteGenres($input: UpdateFavoriteGenresInput!) {
   updateFavoriteGenres(input: $input) {
@@ -741,6 +1265,42 @@ export function useUpdateFavoriteGenresMutation(baseOptions?: Apollo.MutationHoo
 export type UpdateFavoriteGenresMutationHookResult = ReturnType<typeof useUpdateFavoriteGenresMutation>;
 export type UpdateFavoriteGenresMutationResult = Apollo.MutationResult<UpdateFavoriteGenresMutation>;
 export type UpdateFavoriteGenresMutationOptions = Apollo.BaseMutationOptions<UpdateFavoriteGenresMutation, UpdateFavoriteGenresMutationVariables>;
+export const UpdateProfilePictureDocument = gql`
+    mutation UpdateProfilePicture($input: UpdateProfilePictureInput!) {
+  updateProfilePicture(input: $input) {
+    profile {
+      id
+      profilePicture
+    }
+  }
+}
+    `;
+export type UpdateProfilePictureMutationFn = Apollo.MutationFunction<UpdateProfilePictureMutation, UpdateProfilePictureMutationVariables>;
+
+/**
+ * __useUpdateProfilePictureMutation__
+ *
+ * To run a mutation, you first call `useUpdateProfilePictureMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateProfilePictureMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateProfilePictureMutation, { data, loading, error }] = useUpdateProfilePictureMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateProfilePictureMutation(baseOptions?: Apollo.MutationHookOptions<UpdateProfilePictureMutation, UpdateProfilePictureMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateProfilePictureMutation, UpdateProfilePictureMutationVariables>(UpdateProfilePictureDocument, options);
+      }
+export type UpdateProfilePictureMutationHookResult = ReturnType<typeof useUpdateProfilePictureMutation>;
+export type UpdateProfilePictureMutationResult = Apollo.MutationResult<UpdateProfilePictureMutation>;
+export type UpdateProfilePictureMutationOptions = Apollo.BaseMutationOptions<UpdateProfilePictureMutation, UpdateProfilePictureMutationVariables>;
 export const UpdateSocialMediasDocument = gql`
     mutation updateSocialMedias($input: UpdateSocialMediasInput!) {
   updateSocialMedias(input: $input) {
