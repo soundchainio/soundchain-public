@@ -33,20 +33,17 @@ export class PostResolver {
   }
 
   @Query(() => [Post])
-  posts(
-    @Arg('limit', { nullable: true, defaultValue: 50 }) limit: number,
-    @Arg('skip', { nullable: true, defaultValue: 0 }) skip: number,
-  ): Promise<Post[]> {
-    return PostService.getPosts(limit, skip);
+  posts(@Arg('profileId', { nullable: true }) profileId: string): Promise<Post[]> {
+    return PostService.getPosts({ profileId });
   }
 
   @Mutation(() => CreatePostPayload)
   @Authorized()
   async createPost(
-    @Arg('input') { body }: CreatePostInput,
+    @Arg('input') { body, mediaLink }: CreatePostInput,
     @CurrentUser() { profileId }: User,
   ): Promise<CreatePostPayload> {
-    const post = await PostService.createPost({ profileId, body });
+    const post = await PostService.createPost({ profileId, body, mediaLink });
     return { post };
   }
 }

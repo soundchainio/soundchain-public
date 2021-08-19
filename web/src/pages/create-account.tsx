@@ -1,61 +1,105 @@
-import { CompleteProfileForm } from 'components/CompleteProfileForm';
+import { ApolloError } from '@apollo/client';
+import { CompleteProfileForm, CompleteProfileFormValues } from 'components/CompleteProfileForm';
 import { LockedLayout } from 'components/LockedLayout';
 import { LoginNavBar } from 'components/LoginNavBar';
-import { RegisterEmailForm } from 'components/RegisterEmailForm';
+import { RegisterEmailForm, RegisterEmailFormValues } from 'components/RegisterEmailForm';
 import { RegisterErrorStep } from 'components/RegisterErrorStep';
-import { SetupProfileForm } from 'components/SetupProfileForm';
+import { SetupProfileForm, SetupProfileFormValues } from 'components/SetupProfileForm';
 import { useMe } from 'hooks/useMe';
 import { setJwt } from 'lib/apollo';
-import { Genre, RegisterInput, useRegisterMutation, useUpdateFavoriteGenresMutation } from 'lib/graphql';
+import {
+  RegisterInput,
+  useRegisterMutation,
+  useUpdateCoverPictureMutation,
+  useUpdateFavoriteGenresMutation,
+  useUpdateProfilePictureMutation,
+} from 'lib/graphql';
 import { useRouter } from 'next/dist/client/router';
 import Head from 'next/head';
-import { useEffect, useState } from 'react';
-
-interface RegistrationValues {
-  handle?: string;
-  email?: string;
-  displayName?: string;
-  password?: string;
-  favoriteGenres?: Genre[];
-}
+import { useCallback, useEffect, useState } from 'react';
 
 export default function CreateAccountPage() {
   const router = useRouter();
-  const [step, setStep] = useState(0);
-  const [registrationValues, setRegistrationValues] = useState<RegistrationValues>({});
-  const [register, { loading, error }] = useRegisterMutation();
+
+  const [register] = useRegisterMutation();
   const [updateGenres] = useUpdateFavoriteGenresMutation();
-  const [genres, setGenres] = useState<Genre[]>([]);
+  const [updateProfilePicture] = useUpdateProfilePictureMutation();
+  const [updateCoverPicture] = useUpdateCoverPictureMutation();
+
+  const [registerEmailValues, setRegisterEmailValues] = useState<RegisterEmailFormValues>();
+  const [setupProfileValues, setSetupProfileValues] = useState<SetupProfileFormValues>();
+  const [completeProfileValues, setCompleteProfileValues] = useState<CompleteProfileFormValues>();
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<ApolloError>();
 
   const me = useMe();
 
-  useEffect(() => {
-    if (me) {
-      updateGenres({ variables: { input: { favoriteGenres: genres } } });
-      router.push(router.query.callbackUrl?.toString() ?? '/');
-    }
-  }, [genres, me, router, updateGenres]);
+  const updateProfile = useCallback(async () => {
+    setLoading(true);
+    try {
+      if (completeProfileValues && completeProfileValues.favoriteGenres.length) {
+        await updateGenres({ variables: { input: { favoriteGenres: completeProfileValues.favoriteGenres } } });
+      }
 
-  const onSubmit = async (input: RegistrationValues) => {
-    const newValues = { ...registrationValues, ...input };
-    setRegistrationValues(newValues);
-    if (step < 2) setStep(step + 1);
-    else {
+      if (setupProfileValues) {
+        const { profilePicture, coverPicture } = setupProfileValues;
+
+        if (profilePicture) {
+          await updateProfilePicture({ variables: { input: { picture: profilePicture } } });
+        }
+
+        if (coverPicture) {
+          await updateCoverPicture({ variables: { input: { picture: coverPicture } } });
+        }
+      }
+
+      router.push(router.query.callbackUrl?.toString() ?? '/');
+    } catch (err) {
+      setError(err);
+      setLoading(false);
+    }
+  }, [completeProfileValues, router, setupProfileValues, updateGenres, updateCoverPicture, updateProfilePicture]);
+
+  const registerUser = useCallback(async () => {
+    if (registerEmailValues && setupProfileValues && completeProfileValues) {
+      setLoading(true);
       try {
-        const { email, handle, displayName, password, favoriteGenres } = newValues;
-        setGenres(favoriteGenres as Genre[]);
         const result = await register({
-          variables: { input: { email, displayName, handle, password } as RegisterInput },
+          variables: {
+            input: {
+              email: registerEmailValues.email,
+              displayName: setupProfileValues.displayName,
+              handle: setupProfileValues.handle,
+              password: completeProfileValues.password,
+            } as RegisterInput,
+          },
         });
         setJwt(result.data?.register.jwt);
-      } catch (error) {
-        setStep(-1);
+      } catch (err) {
+        setError(err);
+        setLoading(false);
       }
     }
-  };
+  }, [completeProfileValues, register, registerEmailValues, setupProfileValues]);
+
+  useEffect(() => {
+    registerUser();
+  }, [completeProfileValues, registerUser]);
+
+  useEffect(() => {
+    if (me && completeProfileValues) {
+      updateProfile();
+    } else if (me && !completeProfileValues) {
+      router.push(router.query.callbackUrl?.toString() ?? '/');
+    }
+  }, [completeProfileValues, me, router, updateProfile]);
 
   const onBackError = () => {
-    setStep(0);
+    setRegisterEmailValues(undefined);
+    setSetupProfileValues(undefined);
+    setCompleteProfileValues(undefined);
+    setError(undefined);
   };
 
   return (
@@ -66,10 +110,16 @@ export default function CreateAccountPage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <LoginNavBar />
-      {step === 0 && <RegisterEmailForm onSubmit={onSubmit} />}
-      {step === 1 && <SetupProfileForm onSubmit={onSubmit} />}
-      {step === 2 && <CompleteProfileForm onSubmit={onSubmit} loading={loading} />}
-      {step === -1 && error && <RegisterErrorStep error={error} onBack={onBackError} />}
+      {!error && (
+        <>
+          {!registerEmailValues && <RegisterEmailForm onSubmit={setRegisterEmailValues} />}
+          {registerEmailValues && !setupProfileValues && <SetupProfileForm onSubmit={setSetupProfileValues} />}
+          {registerEmailValues && setupProfileValues && (
+            <CompleteProfileForm onSubmit={setCompleteProfileValues} loading={loading} />
+          )}
+        </>
+      )}
+      {error && <RegisterErrorStep error={error} onBack={onBackError} />}
     </LockedLayout>
   );
 }

@@ -1,5 +1,5 @@
-query Posts {
-  posts {
+query Posts($profileId: String) {
+  posts(profileId: $profileId) {
     ...PostComponentFields
   }
 }
