@@ -8,6 +8,7 @@ query Notifications {
       link
       createdAt
       author
+      authorPicture
     }
   }
 }

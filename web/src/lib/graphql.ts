@@ -53,6 +53,7 @@ export type CommentNotification = {
   updatedAt: Scalars['DateTime'];
   id: Scalars['String'];
   author: Scalars['String'];
+  authorPicture?: Maybe<Scalars['String']>;
 };
 
 export type CreatePostInput = {
@@ -529,7 +530,7 @@ export type NotificationQuery = (
   { __typename?: 'Query' }
   & { notification: { __typename?: 'Notification' } | (
     { __typename?: 'CommentNotification' }
-    & Pick<CommentNotification, 'id' | 'type' | 'body' | 'previewBody' | 'link' | 'createdAt' | 'author'>
+    & Pick<CommentNotification, 'id' | 'type' | 'body' | 'previewBody' | 'link' | 'createdAt' | 'author' | 'authorPicture'>
   ) }
 );
 
@@ -540,7 +541,7 @@ export type NotificationsQuery = (
   { __typename?: 'Query' }
   & { notifications: Array<{ __typename?: 'Notification' } | (
     { __typename?: 'CommentNotification' }
-    & Pick<CommentNotification, 'id' | 'type' | 'body' | 'previewBody' | 'link' | 'createdAt' | 'author'>
+    & Pick<CommentNotification, 'id' | 'type' | 'body' | 'previewBody' | 'link' | 'createdAt' | 'author' | 'authorPicture'>
   )> }
 );
 
@@ -1081,6 +1082,7 @@ export const NotificationDocument = gql`
       link
       createdAt
       author
+      authorPicture
     }
   }
 }
@@ -1124,6 +1126,7 @@ export const NotificationsDocument = gql`
       link
       createdAt
       author
+      authorPicture
     }
   }
 }

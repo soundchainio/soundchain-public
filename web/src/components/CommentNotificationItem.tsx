@@ -10,14 +10,14 @@ interface CommentNotificationProps {
 }
 
 export const CommentNotificationItem = ({
-  notification: { link, body, createdAt, previewBody, author },
+  notification: { link, body, createdAt, previewBody, author, authorPicture },
 }: CommentNotificationProps) => {
   return (
     <NextLink href={link}>
       <div className="flex flex-col bg-gray-20 p-4">
         <div className="break-words flex">
           <div className="flex items-center pr-4">
-            <Avatar src={''} pixels={40} />
+            <Avatar src={authorPicture} pixels={40} />
             <div className="relative">
               <Comment className="absolute -right-1" />
             </div>

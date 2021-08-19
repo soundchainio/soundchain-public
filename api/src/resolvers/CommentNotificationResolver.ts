@@ -14,6 +14,12 @@ export class CommentNotificationResolver {
     return metadata.author;
   }
 
+  @FieldResolver(() => String, { nullable: true })
+  authorPicture(@Root() { metadata }: Notification): string | null {
+    if (!metadata.authorPicture) return null;
+    return metadata.authorPicture;
+  }
+
   @FieldResolver(() => String)
   body(): string {
     return `commented your post:`;

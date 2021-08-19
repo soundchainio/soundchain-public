@@ -3,23 +3,26 @@ import { Comment } from 'models/Comment';
 import { CommentNotificationMetadata } from 'models/CommentNotification';
 import { Notification, NotificationModel } from 'models/Notification';
 import { Post } from 'models/Post';
+import { Profile } from 'models/Profile';
 
 interface CommentNotificationParams {
   comment: Comment;
   post: Post;
-  authorDisplayName: string;
+  authorProfile: Profile;
 }
 
 export class NotificationService {
-  static async notifyNewCommentOnPost({ comment, post, authorDisplayName }: CommentNotificationParams): Promise<void> {
+  static async notifyNewCommentOnPost({ comment, post, authorProfile }: CommentNotificationParams): Promise<void> {
     if (comment.profileId === post.profileId) return;
     const { body: commentBody, _id: commentId } = comment;
     const { _id: postId, profileId: postOwnerProfileId } = post;
+    const { displayName, profilePicture: authorPicture } = authorProfile;
     const metadata: CommentNotificationMetadata = {
-      author: authorDisplayName,
+      author: displayName,
       commentBody,
       postId,
       commentId,
+      authorPicture,
     };
     const notification = new NotificationModel({
       type: NotificationType.Comment,

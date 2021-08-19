@@ -4,6 +4,7 @@ import { Field, ObjectType } from 'type-graphql';
 export interface CommentNotificationMetadata {
   commentBody: string;
   author: string;
+  authorPicture: string | undefined;
   commentId: string;
   postId: string;
 }

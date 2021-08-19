@@ -22,7 +22,7 @@ export class CommentService {
     NotificationService.notifyNewCommentOnPost({
       comment: newComment,
       post,
-      commentatorDisplayName: profile.displayName,
+      authorProfile: profile,
     });
     return newComment;
   }

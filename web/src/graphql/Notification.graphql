@@ -8,6 +8,7 @@ query Notification($id: String!) {
       link
       createdAt
       author
+      authorPicture
     }
   }
 }
