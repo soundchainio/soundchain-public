@@ -1,34 +1,30 @@
-import { MusicNoteIcon, VideoCameraIcon } from '@heroicons/react/outline';
 import classNames from 'classnames';
 import { Button } from 'components/Button';
 import { BaseEmoji, Picker } from 'emoji-mart';
 import 'emoji-mart/css/emoji-mart.css';
-import { PostLinkType } from 'enums/PostLinkType';
 import { Field, Form, Formik, FormikHelpers } from 'formik';
-import { CreatePostInput } from 'lib/graphql';
-import { default as React, useEffect, useState } from 'react';
+import { CreatePostInput, PostComponentFieldsFragment } from 'lib/graphql';
+import React, { useState } from 'react';
 import * as yup from 'yup';
 import { useCreatePostMutation } from '../lib/graphql';
-import { getNormalizedLink, hasLink } from '../utils/NormalizeEmbedLinks';
-import { LinksModal } from './LinksModal';
+import { RepostPreview } from './RepostPreview';
 
-interface NewPostModalProps {
-  setShowNewPost: (val: boolean) => void;
-  showNewPost: boolean;
+interface RepostModalProps {
+  setShowRepostModal: (val: boolean) => void;
+  showRepostModal: boolean;
+  post: PostComponentFieldsFragment;
 }
 
 interface FormValues {
   body: string;
-  mediaLink?: string;
 }
 
 const postSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   body: yup.string().required(),
-  mediaLink: yup.string(),
 });
 
 const baseClasses =
-  'fixed w-screen h-screen bottom-0 duration-500 bg-opacity-75 ease-in-out bg-gray-25 transform-gpu transform';
+  'fixed w-screen h-screen left-0 z-10 bottom-0 duration-500 bg-opacity-75 ease-in-out bg-gray-25 transform-gpu transform';
 
 const maxLength = 160;
 
@@ -46,35 +42,17 @@ const setMaxInputLength = (input: string) => {
   return maxLength + (rawValue - getBodyCharacterCount(input));
 };
 
-export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps) => {
-  const [showAddMusicLink, setShowAddMusicLink] = useState(false);
-  const [showAddVideoLink, setShowAddVideoLink] = useState(false);
+export const RepostModal = ({ setShowRepostModal, showRepostModal, post }: RepostModalProps) => {
   const [isEmojiPickerVisible, setEmojiPickerVisible] = useState(false);
-  const [originalLink, setOriginalLink] = useState('');
-  const [postLink, setPostLink] = useState('');
+
   const [createPost] = useCreatePostMutation({ refetchQueries: ['Posts'] });
 
   const cancel = (setFieldValue: (val: string, newVal: string) => void) => {
     return (event: React.MouseEvent) => {
-      setShowNewPost(false);
-      setPostLink('');
+      setShowRepostModal(false);
       setFieldValue('body', '');
       event.preventDefault();
     };
-  };
-
-  const handleSubmit = async (values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
-    const params: CreatePostInput = { body: values.body };
-
-    if (postLink.length) {
-      params.mediaLink = postLink;
-    }
-
-    await createPost({ variables: { input: params } });
-    setEmojiPickerVisible(false);
-    setShowNewPost(false);
-    setPostLink('');
-    resetForm();
   };
 
   const onEmojiPickerClick = () => {
@@ -91,45 +69,24 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
     }
   };
 
-  const normalizeOriginalLink = async () => {
-    if (originalLink.length && hasLink(originalLink)) {
-      const link = await getNormalizedLink(originalLink);
-      setPostLink(link);
-    } else {
-      setPostLink('');
-    }
-  };
+  const handleSubmit = async (values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
+    const params: CreatePostInput = { body: values.body };
 
-  const onOpenMusicLink = () => {
-    setShowAddMusicLink(true);
-  };
+    await createPost({ variables: { input: params } });
+    setEmojiPickerVisible(false);
 
-  const onOpenVideoLink = () => {
-    setShowAddVideoLink(true);
+    setShowRepostModal(false);
+    resetForm();
   };
-
-  const onCloseLinks = () => {
-    setShowAddVideoLink(false);
-    setShowAddMusicLink(false);
-  };
-
-  useEffect(() => {
-    if (originalLink) {
-      normalizeOriginalLink();
-      onCloseLinks();
-    } else {
-      setPostLink('');
-    }
-  }, [originalLink]);
 
   return (
     <div
       className={classNames(baseClasses, {
-        'translate-y-0 opacity-100': showNewPost,
-        'translate-y-full opacity-0': !showNewPost,
+        'translate-y-0 opacity-100': showRepostModal,
+        'translate-y-full opacity-0': !showRepostModal,
       })}
     >
-      <div className="w-screen h-20" onClick={() => setShowNewPost(false)} />
+      <div className="w-screen h-20" onClick={() => setShowRepostModal(false)} />
       <Formik initialValues={initialValues} validationSchema={postSchema} onSubmit={handleSubmit}>
         {({ values, setFieldValue }) => (
           <Form className="flex flex-col max-height-from-menu">
@@ -137,7 +94,7 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
               <div className="p-2 text-gray-400 font-bold flex-1 text-center" onClick={cancel(setFieldValue)}>
                 Cancel
               </div>
-              <div className="flex-1 text-center text-white font-bold">New Post</div>
+              <div className="flex-1 text-center text-white font-bold">Repost</div>
               <div className="flex-1 text-center m-2">
                 <div className="ml-6">
                   <Button className="bg-gray-30 text-sm " type="submit" variant="rainbow-rounded">
@@ -153,35 +110,11 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
               placeholder="What's happening?"
               maxLength={setMaxInputLength(values.body)}
             />
-            {postLink && <iframe className="w-full bg-gray-20" frameBorder="0" allowFullScreen src={postLink} />}
+            <RepostPreview post={post} />
             <div className="p-4 flex items-center bg-gray-25">
               <div className="text-center w-16" onClick={onEmojiPickerClick}>
                 {isEmojiPickerVisible ? '❌' : '😃'}
               </div>
-              <div className="text-center w-16" onClick={onOpenMusicLink}>
-                <MusicNoteIcon className="text-gray-400 w-5 m-auto" />
-              </div>
-              <div className="text-center w-16" onClick={onOpenVideoLink}>
-                <VideoCameraIcon className="text-gray-400 w-5 m-auto" />
-              </div>
-              {showNewPost && (
-                <>
-                  <LinksModal
-                    show={showAddMusicLink}
-                    setShow={setShowAddMusicLink}
-                    setOriginalLink={setOriginalLink}
-                    onClose={onCloseLinks}
-                    type={PostLinkType.MUSIC}
-                  />
-                  <LinksModal
-                    show={showAddVideoLink}
-                    setShow={setShowAddVideoLink}
-                    setOriginalLink={setOriginalLink}
-                    onClose={onCloseLinks}
-                    type={PostLinkType.VIDEO}
-                  />
-                </>
-              )}
               <div className="justify-self-end flex-1 text-right text-gray-400">
                 {getBodyCharacterCount(values.body)} / {maxLength}
               </div>

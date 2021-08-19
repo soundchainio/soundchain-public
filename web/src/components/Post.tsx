@@ -1,10 +1,11 @@
 import { usePostQuery } from 'lib/graphql';
 import NextLink from 'next/link';
-import React from 'react';
+import React, { useState } from 'react';
 import { Avatar } from './Avatar';
 import { Label } from './Label';
 import { PostActions } from './PostActions';
 import { PostStats } from './PostStats';
+import { RepostModal } from './RepostModal';
 import { Timestamp } from './Timestamp';
 
 interface PostProps {
@@ -16,6 +17,7 @@ const generateRandomNumber = () => {
 };
 
 export const Post = ({ postId }: PostProps) => {
+  const [showRepostModal, setShowRepostModal] = useState(false);
   const { data } = usePostQuery({ variables: { id: postId } });
   const post = data?.post;
 
@@ -39,7 +41,8 @@ export const Post = ({ postId }: PostProps) => {
           <PostStats likes={generateRandomNumber()} comments={post.commentCount} reposts={generateRandomNumber()} />
         </div>
       </NextLink>
-      <PostActions postId={postId} />
+      <RepostModal showRepostModal={showRepostModal} setShowRepostModal={setShowRepostModal} post={post} />
+      <PostActions postId={postId} setShowRepostModal={setShowRepostModal} />
     </div>
   );
 };
