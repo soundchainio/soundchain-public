@@ -1,6 +1,7 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
 import { NotificationType } from 'enums/NotificationType';
 import { Field, ID, ObjectType } from 'type-graphql';
+import { CommentNotificationMetadata } from './CommentNotification';
 import Model from './Model';
 
 @ObjectType()
@@ -12,17 +13,12 @@ export class Notification extends Model {
   @prop({ required: true })
   type: NotificationType;
 
-  @Field({ nullable: true })
-  @prop({ required: false })
-  contentId: string;
-
-  @Field({ nullable: true })
-  @prop({ required: false })
-  senderProfileId: string;
-
   @Field()
   @prop({ required: true })
-  receiverProfileId: string;
+  profileId: string;
+
+  @prop({ required: true })
+  metadata: CommentNotificationMetadata;
 
   @Field(() => Date)
   createdAt: Date;

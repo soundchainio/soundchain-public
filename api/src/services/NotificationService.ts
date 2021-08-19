@@ -1,25 +1,39 @@
 import { NotificationType } from 'enums/NotificationType';
-import { NotificationModel } from 'models/Notification';
-import { CommentService } from './CommentService';
-import { PostService } from './PostService';
+import { Comment } from 'models/Comment';
+import { CommentNotificationMetadata } from 'models/CommentNotification';
+import { Notification, NotificationModel } from 'models/Notification';
+import { Post } from 'models/Post';
 
 interface CommentNotificationParams {
-  commentId: string;
-  postId: string;
+  comment: Comment;
+  post: Post;
+  commentatorDisplayName: string;
 }
 
 export class NotificationService {
-  static async notifyNewCommentOnPost({ commentId, postId }: CommentNotificationParams): Promise<void> {
-    const { profileId: senderProfileId } = await CommentService.getComment(commentId);
-    const { profileId: receiverProfileId } = await PostService.getPost(postId);
-    if (senderProfileId !== receiverProfileId) {
-      const notification = new NotificationModel({
-        type: NotificationType.Comment,
-        senderProfileId,
-        receiverProfileId,
-        contentId: commentId,
-      });
-      notification.save();
-    }
+  static async notifyNewCommentOnPost({
+    comment,
+    post,
+    commentatorDisplayName,
+  }: CommentNotificationParams): Promise<void> {
+    if (comment.profileId === post.profileId) return;
+    const { body: commentBody, _id: commentId } = comment;
+    const { _id: postId, profileId: postOwnerProfileId } = post;
+    const metadata: CommentNotificationMetadata = {
+      commentatorDisplayName,
+      commentBody,
+      postId,
+      commentId,
+    };
+    const notification = new NotificationModel({
+      type: NotificationType.Comment,
+      profileId: postOwnerProfileId,
+      metadata,
+    });
+    notification.save();
+  }
+
+  static async getNotifications(profileId: string): Promise<Notification[]> {
+    return NotificationModel.find({ profileId }).sort({ createdAt: 'desc' }).exec();
   }
 }
