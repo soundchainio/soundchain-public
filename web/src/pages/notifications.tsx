@@ -4,7 +4,7 @@ import Head from 'next/head';
 
 export default function UserNotifications() {
   return (
-    <Layout>
+    <Layout title="Notifications">
       <Head>
         <title>Soundchain / Notifications</title>
         <meta name="description" content="Notifications" />

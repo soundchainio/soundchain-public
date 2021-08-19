@@ -3,8 +3,13 @@ import { useMe } from 'hooks/useMe';
 import { Logo } from 'icons/Logo';
 import { useRouter } from 'next/router';
 import { Button } from './Button';
+import { Title } from './Title';
 
-export const TopNavBar = () => {
+interface TopNavBarProps {
+  title?: string;
+}
+
+export const TopNavBar = ({ title }: TopNavBarProps) => {
   const router = useRouter();
   const me = useMe();
 
@@ -21,7 +26,13 @@ export const TopNavBar = () => {
           {me ? (
             <div className="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
               <div className="flex-shrink-0 flex items-center">
-                <Logo className="block h-8 w-auto" />
+                {title ? (
+                  <Title navTitle className="text-sm">
+                    {title}
+                  </Title>
+                ) : (
+                  <Logo className="block h-8 w-auto" />
+                )}
               </div>
             </div>
           ) : (
