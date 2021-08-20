@@ -38,6 +38,10 @@ export class Profile extends Model {
   @prop({ required: true, default: 0 })
   followingCount: number;
 
+  @Field(() => Number)
+  @prop({ required: true, default: 0 })
+  notificationCount: number;
+
   @Field(() => Date)
   createdAt: Date;
 

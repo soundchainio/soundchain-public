@@ -2,7 +2,7 @@ import { getModelForClass, prop } from '@typegoose/typegoose';
 import { NotificationType } from 'enums/NotificationType';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { CommentNotificationMetadata } from './CommentNotification';
-import Model from './Model';
+import { Model } from './Model';
 
 @ObjectType()
 export class Notification extends Model {

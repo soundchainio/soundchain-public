@@ -1,0 +1,6 @@
+mutation ResetNotificationCount {
+  resetNotificationCount {
+    id
+    notificationCount
+  }
+}

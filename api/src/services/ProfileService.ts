@@ -82,4 +82,16 @@ export class ProfileService {
     followedProfile.followerCount--;
     return followedProfile;
   }
+
+  static async incrementNotificationCount(profileId: string): Promise<void> {
+    await ProfileModel.updateOne({ _id: profileId }, { $inc: { notificationCount: 1 } });
+  }
+
+  static async resetNotificationCount(profileId: string): Promise<Profile> {
+    const updatedProfile = await ProfileModel.findByIdAndUpdate(profileId, { notificationCount: 0 }, { new: true });
+    if (!updatedProfile) {
+      throw new Error(`Could not update the profile with id: ${profileId}`);
+    }
+    return updatedProfile;
+  }
 }

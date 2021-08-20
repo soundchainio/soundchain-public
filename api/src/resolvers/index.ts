@@ -6,7 +6,7 @@ import { ProfileResolver } from './ProfileResolver';
 import { UploadResolver } from './UploadResolver';
 import { UserResolver } from './UserResolver';
 
-export const resolver = [
+export const resolvers = [
   CommentResolver,
   CommentNotificationResolver,
   NotificationResolver,

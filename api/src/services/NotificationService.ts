@@ -4,6 +4,7 @@ import { CommentNotificationMetadata } from 'models/CommentNotification';
 import { Notification, NotificationModel } from 'models/Notification';
 import { Post } from 'models/Post';
 import { Profile } from 'models/Profile';
+import { ProfileService } from './ProfileService';
 
 interface CommentNotificationParams {
   comment: Comment;
@@ -29,7 +30,8 @@ export class NotificationService {
       profileId: postOwnerProfileId,
       metadata,
     });
-    notification.save();
+    await notification.save();
+    await ProfileService.incrementNotificationCount(postOwnerProfileId);
   }
 
   static async getNotifications(profileId: string): Promise<Notification[]> {

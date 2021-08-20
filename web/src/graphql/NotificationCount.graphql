@@ -1,0 +1,6 @@
+query NotificationCount {
+  myProfile {
+    id
+    notificationCount
+  }
+}

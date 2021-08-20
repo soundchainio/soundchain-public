@@ -2,9 +2,11 @@ import { CurrentUser } from 'decorators/current-user';
 import { NotificationType } from 'enums/NotificationType';
 import { CommentNotification } from 'models/CommentNotification';
 import { Notification } from 'models/Notification';
-import User from 'models/User';
+import { Profile } from 'models/Profile';
+import { User } from 'models/User';
 import { NotificationService } from 'services/NotificationService';
-import { Arg, Authorized, createUnionType, Query, Resolver } from 'type-graphql';
+import { ProfileService } from 'services/ProfileService';
+import { Arg, Authorized, createUnionType, Mutation, Query, Resolver } from 'type-graphql';
 
 const NotificationUnion = createUnionType({
   name: 'NotificationUnion',
@@ -29,5 +31,11 @@ export class NotificationResolver {
   @Authorized()
   notification(@Arg('id') id: string, @CurrentUser() { profileId }: User): Promise<typeof NotificationUnion> {
     return NotificationService.getNotification(id, profileId);
+  }
+
+  @Mutation(() => Profile)
+  @Authorized()
+  resetNotificationCount(@CurrentUser() { profileId }: User): Promise<Profile> {
+    return ProfileService.resetNotificationCount(profileId);
   }
 }

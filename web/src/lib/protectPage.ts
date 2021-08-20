@@ -7,7 +7,9 @@ export const protectPage = <T extends { [key: string]: any }>(
   getServerSideProps: GetServerSideProps<T>,
 ): GetServerSideProps<T> => {
   return async context => {
-    const me = await apolloClient.query<MeQuery>({ query: MeDocument, context });
+    const {
+      data: { me },
+    } = await apolloClient.query<MeQuery>({ query: MeDocument, context });
     if (me) return getServerSideProps(context);
     return {
       redirect: {
