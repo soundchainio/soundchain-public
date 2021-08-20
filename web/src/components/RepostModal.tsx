@@ -1,10 +1,11 @@
 import classNames from 'classnames';
 import { Button } from 'components/Button';
+import { useModalsContext } from 'contexts/Modals';
 import { BaseEmoji, Picker } from 'emoji-mart';
 import 'emoji-mart/css/emoji-mart.css';
 import { Field, Form, Formik, FormikHelpers } from 'formik';
 import { CreatePostInput, PostComponentFieldsFragment } from 'lib/graphql';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import * as yup from 'yup';
 import { useCreatePostMutation } from '../lib/graphql';
 import { RepostPreview } from './RepostPreview';
@@ -44,7 +45,7 @@ const setMaxInputLength = (input: string) => {
 
 export const RepostModal = ({ setShowRepostModal, showRepostModal, post }: RepostModalProps) => {
   const [isEmojiPickerVisible, setEmojiPickerVisible] = useState(false);
-
+  const { setAnyModalOpened } = useModalsContext();
   const [createPost] = useCreatePostMutation({ refetchQueries: ['Posts'] });
 
   const cancel = (setFieldValue: (val: string, newVal: string) => void) => {
@@ -79,6 +80,10 @@ export const RepostModal = ({ setShowRepostModal, showRepostModal, post }: Repos
     setShowRepostModal(false);
     resetForm();
   };
+
+  useEffect(() => {
+    setAnyModalOpened(showRepostModal);
+  }, [showRepostModal]);
 
   return (
     <div
