@@ -1,5 +1,5 @@
 import { DocumentType } from '@typegoose/typegoose';
-import Model from 'models/Model';
+import { Model } from '../../models/Model';
 import { encodeCursor } from './cursor';
 import { PaginateResult } from './paginate';
 

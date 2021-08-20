@@ -1,7 +1,7 @@
 import { modelOptions, ReturnModelType } from '@typegoose/typegoose';
 import { Base } from '@typegoose/typegoose/lib/defaultClasses';
-import { paginate, PaginateParams, PaginateResult } from 'db/pagination/paginate';
-import { NotFoundError } from 'errors/NotFoundError';
+import { paginate, PaginateParams, PaginateResult } from '../db/pagination/paginate';
+import { NotFoundError } from '../errors/NotFoundError';
 
 @modelOptions({
   schemaOptions: {

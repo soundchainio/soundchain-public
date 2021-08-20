@@ -1,5 +1,5 @@
 import { DocumentType } from '@typegoose/typegoose';
-import Model from 'models/Model';
+import { Model } from '../../models/Model';
 
 export function buildQuerySort<T extends typeof Model>(
   field: keyof DocumentType<InstanceType<T>>,

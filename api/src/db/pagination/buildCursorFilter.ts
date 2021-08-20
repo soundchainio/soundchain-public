@@ -1,6 +1,6 @@
 import { DocumentType } from '@typegoose/typegoose';
-import Model from 'models/Model';
 import { FilterQuery } from 'mongoose';
+import { Model } from '../../models/Model';
 import { decodeCursor } from './cursor';
 
 export function buildCursorFilter<T extends typeof Model>(

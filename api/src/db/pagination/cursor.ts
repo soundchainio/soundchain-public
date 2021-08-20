@@ -2,7 +2,7 @@ import { DocumentType } from '@typegoose/typegoose';
 import { UserInputError } from 'apollo-server-express';
 import base64url from 'base64-url';
 import { EJSON } from 'bson';
-import Model from 'models/Model';
+import { Model } from '../../models/Model';
 
 function assertStringOrArray(value: EJSON.SerializableTypes): asserts value is string | unknown[] {
   const isString = typeof value === 'string';
