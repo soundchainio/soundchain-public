@@ -1,10 +1,10 @@
 import { UserInputError } from 'apollo-server-express';
-import { Genre } from '../enums/Genres';
 import { NotFoundError } from '../errors/NotFoundError';
 import { FollowModel } from '../models/Follow';
 import { Profile, ProfileModel } from '../models/Profile';
 import { SocialMedias } from '../models/SocialMedias';
 import { UserModel } from '../models/User';
+import { Genre } from '../types/Genres';
 
 export class ProfileService {
   static getProfile(id: string): Promise<Profile> {

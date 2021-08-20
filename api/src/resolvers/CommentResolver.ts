@@ -4,11 +4,11 @@ import { Comment } from '../models/Comment';
 import { Post } from '../models/Post';
 import { Profile } from '../models/Profile';
 import { User } from '../models/User';
-import { AddCommentInput } from '../resolvers/types/AddCommentInput';
-import { AddCommentPayload } from '../resolvers/types/AddCommentPayload';
 import { CommentService } from '../services/CommentService';
 import { PostService } from '../services/PostService';
 import { ProfileService } from '../services/ProfileService';
+import { AddCommentInput } from '../types/AddCommentInput';
+import { AddCommentPayload } from '../types/AddCommentPayload';
 
 @Resolver(Comment)
 export class CommentResolver {

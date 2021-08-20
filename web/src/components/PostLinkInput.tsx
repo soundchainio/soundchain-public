@@ -1,10 +1,10 @@
 import { XCircleIcon } from '@heroicons/react/outline';
-import { MediaProvider } from 'enums/MediaProvider';
 import { Soundcloud } from 'icons/Soundcloud';
 import { Spotify } from 'icons/Spotify';
 import { Vimeo } from 'icons/Vimeo';
 import { Youtube } from 'icons/Youtube';
 import React, { useState } from 'react';
+import { MediaProvider } from 'types/MediaProvider';
 
 export interface MediaLink {
   value: string;

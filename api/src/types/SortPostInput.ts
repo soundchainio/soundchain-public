@@ -1,6 +1,6 @@
 import { Field, InputType } from 'type-graphql';
-import { SortOrder } from '../../enums/SortOrder';
-import { SortPostField } from '../../enums/SortPostField';
+import { SortOrder } from './SortOrder';
+import { SortPostField } from './SortPostField';
 
 @InputType()
 export class SortPostInput {

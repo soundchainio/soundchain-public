@@ -1,9 +1,9 @@
 import classNames from 'classnames';
 import { Button } from 'components/Button';
 import 'emoji-mart/css/emoji-mart.css';
-import { MediaProvider } from 'enums/MediaProvider';
-import { PostLinkType } from 'enums/PostLinkType';
 import { default as React, useState } from 'react';
+import { MediaProvider } from 'types/MediaProvider';
+import { PostLinkType } from 'types/PostLinkType';
 import { MediaLink, PostLinkInput } from './PostLinkInput';
 
 interface AddLinkProps {
