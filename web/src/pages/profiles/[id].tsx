@@ -44,6 +44,7 @@ export default function ProfilePage({ profile }: InferGetServerSidePropsType<typ
         profile,
       },
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const {
