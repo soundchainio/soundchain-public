@@ -58,6 +58,15 @@ export type FilterPostInput = {
   profileId?: Maybe<Scalars['String']>;
 };
 
+export type FollowProfileInput = {
+  followedId: Scalars['String'];
+};
+
+export type FollowProfilePayload = {
+  __typename?: 'FollowProfilePayload';
+  followedProfile: Profile;
+};
+
 export type ForgotPasswordInput = {
   email: Scalars['String'];
 };
@@ -119,6 +128,8 @@ export type Mutation = {
   updateFavoriteGenres: UpdateFavoriteGenresPayload;
   updateProfilePicture: UpdateProfilePicturePayload;
   updateCoverPicture: UpdateCoverPicturePayload;
+  followProfile: FollowProfilePayload;
+  unfollowProfile: UnfollowProfilePayload;
   register: AuthPayload;
   login: AuthPayload;
   verifyUserEmail: VerifyUserEmailPayload;
@@ -154,6 +165,16 @@ export type MutationUpdateProfilePictureArgs = {
 
 export type MutationUpdateCoverPictureArgs = {
   input: UpdateCoverPictureInput;
+};
+
+
+export type MutationFollowProfileArgs = {
+  input: FollowProfileInput;
+};
+
+
+export type MutationUnfollowProfileArgs = {
+  input: UnfollowProfileInput;
 };
 
 
@@ -223,9 +244,12 @@ export type Profile = {
   coverPicture?: Maybe<Scalars['String']>;
   socialMedias: SocialMedias;
   favoriteGenres: Array<Genre>;
+  followerCount: Scalars['Float'];
+  followingCount: Scalars['Float'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   userHandle: Scalars['String'];
+  isFollowed: Scalars['Boolean'];
 };
 
 export type Query = {
@@ -315,6 +339,15 @@ export enum SortPostField {
 export type SortPostInput = {
   field: SortPostField;
   order?: Maybe<SortOrder>;
+};
+
+export type UnfollowProfileInput = {
+  followedId: Scalars['String'];
+};
+
+export type UnfollowProfilePayload = {
+  __typename?: 'UnfollowProfilePayload';
+  unfollowedProfile: Profile;
 };
 
 export type UpdateCoverPictureInput = {
@@ -459,6 +492,22 @@ export type CreatePostMutation = (
   ) }
 );
 
+export type FollowProfileMutationVariables = Exact<{
+  input: FollowProfileInput;
+}>;
+
+
+export type FollowProfileMutation = (
+  { __typename?: 'Mutation' }
+  & { followProfile: (
+    { __typename?: 'FollowProfilePayload' }
+    & { followedProfile: (
+      { __typename?: 'Profile' }
+      & Pick<Profile, 'id' | 'followerCount' | 'isFollowed'>
+    ) }
+  ) }
+);
+
 export type ForgotPasswordMutationVariables = Exact<{
   input: ForgotPasswordInput;
 }>;
@@ -575,7 +624,7 @@ export type ProfileQuery = (
   { __typename?: 'Query' }
   & { profile: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'userHandle'>
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'userHandle' | 'isFollowed' | 'followerCount' | 'followingCount'>
     & { socialMedias: (
       { __typename?: 'SocialMedias' }
       & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
@@ -606,6 +655,22 @@ export type ResetPasswordMutation = (
   & { resetPassword: (
     { __typename?: 'ResetPasswordPayload' }
     & Pick<ResetPasswordPayload, 'ok'>
+  ) }
+);
+
+export type UnfollowProfileMutationVariables = Exact<{
+  input: UnfollowProfileInput;
+}>;
+
+
+export type UnfollowProfileMutation = (
+  { __typename?: 'Mutation' }
+  & { unfollowProfile: (
+    { __typename?: 'UnfollowProfilePayload' }
+    & { unfollowedProfile: (
+      { __typename?: 'Profile' }
+      & Pick<Profile, 'id' | 'followerCount' | 'isFollowed'>
+    ) }
   ) }
 );
 
@@ -873,6 +938,43 @@ export function useCreatePostMutation(baseOptions?: Apollo.MutationHookOptions<C
 export type CreatePostMutationHookResult = ReturnType<typeof useCreatePostMutation>;
 export type CreatePostMutationResult = Apollo.MutationResult<CreatePostMutation>;
 export type CreatePostMutationOptions = Apollo.BaseMutationOptions<CreatePostMutation, CreatePostMutationVariables>;
+export const FollowProfileDocument = gql`
+    mutation FollowProfile($input: FollowProfileInput!) {
+  followProfile(input: $input) {
+    followedProfile {
+      id
+      followerCount
+      isFollowed
+    }
+  }
+}
+    `;
+export type FollowProfileMutationFn = Apollo.MutationFunction<FollowProfileMutation, FollowProfileMutationVariables>;
+
+/**
+ * __useFollowProfileMutation__
+ *
+ * To run a mutation, you first call `useFollowProfileMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useFollowProfileMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [followProfileMutation, { data, loading, error }] = useFollowProfileMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useFollowProfileMutation(baseOptions?: Apollo.MutationHookOptions<FollowProfileMutation, FollowProfileMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<FollowProfileMutation, FollowProfileMutationVariables>(FollowProfileDocument, options);
+      }
+export type FollowProfileMutationHookResult = ReturnType<typeof useFollowProfileMutation>;
+export type FollowProfileMutationResult = Apollo.MutationResult<FollowProfileMutation>;
+export type FollowProfileMutationOptions = Apollo.BaseMutationOptions<FollowProfileMutation, FollowProfileMutationVariables>;
 export const ForgotPasswordDocument = gql`
     mutation ForgotPassword($input: ForgotPasswordInput!) {
   forgotPassword(input: $input) {
@@ -1143,6 +1245,9 @@ export const ProfileDocument = gql`
       twitter
     }
     userHandle
+    isFollowed
+    followerCount
+    followingCount
   }
 }
     `;
@@ -1240,6 +1345,43 @@ export function useResetPasswordMutation(baseOptions?: Apollo.MutationHookOption
 export type ResetPasswordMutationHookResult = ReturnType<typeof useResetPasswordMutation>;
 export type ResetPasswordMutationResult = Apollo.MutationResult<ResetPasswordMutation>;
 export type ResetPasswordMutationOptions = Apollo.BaseMutationOptions<ResetPasswordMutation, ResetPasswordMutationVariables>;
+export const UnfollowProfileDocument = gql`
+    mutation UnfollowProfile($input: UnfollowProfileInput!) {
+  unfollowProfile(input: $input) {
+    unfollowedProfile {
+      id
+      followerCount
+      isFollowed
+    }
+  }
+}
+    `;
+export type UnfollowProfileMutationFn = Apollo.MutationFunction<UnfollowProfileMutation, UnfollowProfileMutationVariables>;
+
+/**
+ * __useUnfollowProfileMutation__
+ *
+ * To run a mutation, you first call `useUnfollowProfileMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUnfollowProfileMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [unfollowProfileMutation, { data, loading, error }] = useUnfollowProfileMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUnfollowProfileMutation(baseOptions?: Apollo.MutationHookOptions<UnfollowProfileMutation, UnfollowProfileMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UnfollowProfileMutation, UnfollowProfileMutationVariables>(UnfollowProfileDocument, options);
+      }
+export type UnfollowProfileMutationHookResult = ReturnType<typeof useUnfollowProfileMutation>;
+export type UnfollowProfileMutationResult = Apollo.MutationResult<UnfollowProfileMutation>;
+export type UnfollowProfileMutationOptions = Apollo.BaseMutationOptions<UnfollowProfileMutation, UnfollowProfileMutationVariables>;
 export const UpdateCoverPictureDocument = gql`
     mutation UpdateCoverPicture($input: UpdateCoverPictureInput!) {
   updateCoverPicture(input: $input) {
