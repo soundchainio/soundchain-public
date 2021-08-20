@@ -5,7 +5,7 @@ on:
     branches:
       - staging
     paths:
-      - "api/**"
+      - 'api/**'
 
 jobs:
   deploy-api:
@@ -37,6 +37,8 @@ jobs:
           SENDGRID_SENDER_EMAIL: ${{ secrets.SENDGRID_SENDER_EMAIL_STAGING }}
           SENDGRID_VERIFICATION_TEMPLATE: ${{ secrets.SENDGRID_VERIFICATION_TEMPLATE_STAGING }}
           SENDGRID_RESET_PASSWORD_TEMPLATE: ${{ secrets.SENDGRID_RESET_PASSWORD_TEMPLATE_STAGING }}
+          UPLOADS_BUCKET_REGION: ${{ secrets.UPLOADS_BUCKET_REGION_STAGING }}
+          UPLOADS_BUCKET_NAME: ${{ secrets.UPLOADS_BUCKET_NAME_STAGING }}
           WEB_APP_URL: ${{ secrets.WEB_APP_URL_STAGING }}
       - name: Trigger migrate lambda function
         run: |
