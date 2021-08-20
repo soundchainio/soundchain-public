@@ -8,10 +8,10 @@ import * as dotenv from 'dotenv-flow';
 import fs from 'fs';
 import { buildSchemaSync } from 'type-graphql';
 import { TypegooseMiddleware } from './middlewares/typegoose-middleware';
-import resolvers from './resolvers';
-import JwtService, { JwtUser } from './services/JwtService';
+import { resolvers } from './resolvers';
+import { JwtService, JwtUser } from './services/JwtService';
 import { UserService } from './services/UserService';
-import Context from './types/Context';
+import { Context } from './types/Context';
 
 dotenv.config();
 
@@ -23,7 +23,7 @@ interface LambdaContext {
   express: ExpressContext;
 }
 
-const {
+export const {
   NODE_ENV,
   PORT = 4000,
   DATABASE_URL = 'mongodb://localhost:27017',
@@ -62,7 +62,7 @@ export const config = {
     schema: buildSchemaSync({
       resolvers,
       globalMiddlewares: [TypegooseMiddleware],
-      authChecker: ({ context }) => Boolean(context.jwtUser),
+      authChecker: ({ context }) => Boolean(context.user),
     }),
   },
   uploads: {

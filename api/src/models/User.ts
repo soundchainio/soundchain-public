@@ -1,7 +1,7 @@
 import { getModelForClass, pre, prop } from '@typegoose/typegoose';
 import { hash } from 'bcryptjs';
 import { Field, ID, ObjectType } from 'type-graphql';
-import Model from './Model';
+import { Model } from './Model';
 
 const saltWorkFactor = 10;
 
@@ -18,7 +18,7 @@ const saltWorkFactor = 10;
   }
 })
 @ObjectType()
-export default class User extends Model {
+export class User extends Model {
   @Field(() => ID, { name: 'id' })
   readonly _id: string;
 

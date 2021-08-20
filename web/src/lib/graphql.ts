@@ -54,6 +54,10 @@ export type CreatePostPayload = {
   post: Post;
 };
 
+export type FilterPostInput = {
+  profileId?: Maybe<Scalars['String']>;
+};
+
 export type FollowProfileInput = {
   followedId: Scalars['String'];
 };
@@ -185,6 +189,22 @@ export type MutationResetPasswordArgs = {
   input: ResetPasswordInput;
 };
 
+export type PageInfo = {
+  __typename?: 'PageInfo';
+  totalCount: Scalars['Float'];
+  hasPreviousPage: Scalars['Boolean'];
+  hasNextPage: Scalars['Boolean'];
+  startCursor?: Maybe<Scalars['String']>;
+  endCursor?: Maybe<Scalars['String']>;
+};
+
+export type PageInput = {
+  first?: Maybe<Scalars['Int']>;
+  after?: Maybe<Scalars['String']>;
+  last?: Maybe<Scalars['Int']>;
+  before?: Maybe<Scalars['String']>;
+};
+
 export type Post = {
   __typename?: 'Post';
   id: Scalars['ID'];
@@ -196,6 +216,12 @@ export type Post = {
   profile: Profile;
   comments: Array<Comment>;
   commentCount: Scalars['Float'];
+};
+
+export type PostConnection = {
+  __typename?: 'PostConnection';
+  pageInfo: PageInfo;
+  nodes: Array<Post>;
 };
 
 export type Profile = {
@@ -219,7 +245,7 @@ export type Query = {
   comment: Comment;
   comments: Array<Comment>;
   post: Post;
-  posts: Array<Post>;
+  posts: PostConnection;
   myProfile: Profile;
   profile: Profile;
   uploadUrl: UploadUrl;
@@ -240,7 +266,9 @@ export type QueryPostArgs = {
 };
 
 export type QueryPostsArgs = {
-  profileId?: Maybe<Scalars['String']>;
+  page?: Maybe<PageInput>;
+  sort?: Maybe<SortPostInput>;
+  filter?: Maybe<FilterPostInput>;
 };
 
 export type QueryProfileArgs = {
@@ -278,6 +306,20 @@ export type SocialMedias = {
   instagram?: Maybe<Scalars['String']>;
   soundcloud?: Maybe<Scalars['String']>;
   twitter?: Maybe<Scalars['String']>;
+};
+
+export enum SortOrder {
+  Asc = 'ASC',
+  Desc = 'DESC',
+}
+
+export enum SortPostField {
+  CreatedAt = 'CREATED_AT',
+}
+
+export type SortPostInput = {
+  field: SortPostField;
+  order?: Maybe<SortOrder>;
 };
 
 export type UnfollowProfileInput = {
@@ -459,19 +501,17 @@ export type PostQueryVariables = Exact<{
   id: Scalars['String'];
 }>;
 
-export type PostQuery = { __typename?: 'Query' } & { post: { __typename?: 'Post' } & PostComponentFieldsFragment };
-
 export type PostComponentFieldsFragment = { __typename?: 'Post' } & Pick<
   Post,
   'id' | 'body' | 'mediaLink' | 'repostId' | 'createdAt' | 'commentCount'
 > & { profile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'displayName' | 'profilePicture'> };
 
 export type PostsQueryVariables = Exact<{
-  profileId?: Maybe<Scalars['String']>;
+  filter?: Maybe<FilterPostInput>;
 }>;
 
 export type PostsQuery = { __typename?: 'Query' } & {
-  posts: Array<{ __typename?: 'Post' } & PostComponentFieldsFragment>;
+  posts: { __typename?: 'PostConnection' } & { nodes: Array<{ __typename?: 'Post' } & PostComponentFieldsFragment> };
 };
 
 export type ProfileQueryVariables = Exact<{
@@ -1034,9 +1074,11 @@ export type PostQueryHookResult = ReturnType<typeof usePostQuery>;
 export type PostLazyQueryHookResult = ReturnType<typeof usePostLazyQuery>;
 export type PostQueryResult = Apollo.QueryResult<PostQuery, PostQueryVariables>;
 export const PostsDocument = gql`
-  query Posts($profileId: String) {
-    posts(profileId: $profileId) {
-      ...PostComponentFields
+  query Posts($filter: FilterPostInput) {
+    posts(filter: $filter) {
+      nodes {
+        ...PostComponentFields
+      }
     }
   }
   ${PostComponentFieldsFragmentDoc}
@@ -1054,7 +1096,7 @@ export const PostsDocument = gql`
  * @example
  * const { data, loading, error } = usePostsQuery({
  *   variables: {
- *      profileId: // value for 'profileId'
+ *      filter: // value for 'filter'
  *   },
  * });
  */

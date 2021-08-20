@@ -8,6 +8,7 @@ plugins:
 package:
   include:
     - src/db/rds-combined-ca-bundle.pem
+    - migrations
 
 functions:
   graphql:

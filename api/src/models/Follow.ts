@@ -1,5 +1,5 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
-import Model from './Model';
+import { Model } from './Model';
 
 export class Follow extends Model {
   readonly _id: string;
