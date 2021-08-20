@@ -69,8 +69,8 @@ export default function ProfilePage({ profile }: InferGetServerSidePropsType<typ
         />
       </div>
       <div className="p-4">
-        <div className="flex items-center justify-end space-x-8">
-          <div className="flex space-x-2">
+        <div className="flex items-center space-x-8">
+          <div className="flex-1 pl-24 flex space-x-4">
             <div className="text-center text-sm">
               <p className="font-semibold text-white">
                 <Number value={followerCount} />

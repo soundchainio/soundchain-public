@@ -52,8 +52,14 @@ export class ProfileService {
   }
 
   static async followProfile(followerId: string, followedId: string): Promise<Profile> {
+    if (followerId === followedId) {
+      throw new UserInputError('You cannot follow yourself.');
+    }
+
     const followedProfile = await ProfileModel.findById(followedId);
-    if (!followedProfile) throw new NotFoundError('Profile', followedId);
+    if (!followedProfile) {
+      throw new NotFoundError('Profile', followedId);
+    }
 
     const alreadyFollowed = await FollowModel.exists({ followerId, followedId });
     if (alreadyFollowed) {
@@ -69,8 +75,14 @@ export class ProfileService {
   }
 
   static async unfollowProfile(followerId: string, followedId: string): Promise<Profile> {
+    if (followerId === followedId) {
+      throw new UserInputError('You cannot unfollow yourself.');
+    }
+
     const followedProfile = await ProfileModel.findById(followedId);
-    if (!followedProfile) throw new NotFoundError('Profile', followedId);
+    if (!followedProfile) {
+      throw new NotFoundError('Profile', followedId);
+    }
 
     const { deletedCount } = await FollowModel.deleteOne({ followerId, followedId });
     if (deletedCount === 0) {

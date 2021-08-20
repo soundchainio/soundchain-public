@@ -25,8 +25,12 @@ export class ProfileResolver {
   }
 
   @FieldResolver(() => Boolean)
-  isFollowed(@Root() profile: Profile, @CurrentUser() { profileId }: User): Promise<boolean> {
-    return FollowModel.exists({ followerId: profileId, followedId: profile._id });
+  isFollowed(@Root() profile: Profile, @CurrentUser() user?: User): Promise<boolean> {
+    if (!user) {
+      return Promise.resolve(false);
+    }
+
+    return FollowModel.exists({ followerId: user.profileId, followedId: profile._id });
   }
 
   @Query(() => Profile)
