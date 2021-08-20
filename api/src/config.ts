@@ -62,7 +62,7 @@ export const config = {
     schema: buildSchemaSync({
       resolvers,
       globalMiddlewares: [TypegooseMiddleware],
-      authChecker: ({ context }) => Boolean(context.jwtUser),
+      authChecker: ({ context }) => Boolean(context.user),
     }),
   },
   uploads: {

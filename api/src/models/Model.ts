@@ -1,6 +1,7 @@
 import { modelOptions, ReturnModelType } from '@typegoose/typegoose';
 import { Base } from '@typegoose/typegoose/lib/defaultClasses';
-import { NotFoundError } from '../errors/NotFoundError';
+import { paginate, PaginateParams, PaginateResult } from 'db/pagination/paginate';
+import { NotFoundError } from 'errors/NotFoundError';
 
 @modelOptions({
   schemaOptions: {
@@ -16,5 +17,12 @@ export class Model extends Base<string> {
     }
 
     return entity;
+  }
+
+  static async paginate<T extends typeof Model>(
+    this: ReturnModelType<T>,
+    params: PaginateParams<T> = {},
+  ): Promise<PaginateResult<InstanceType<T>>> {
+    return paginate(this, params);
   }
 }
