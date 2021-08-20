@@ -1,6 +1,7 @@
 import { MusicNoteIcon, VideoCameraIcon } from '@heroicons/react/outline';
 import classNames from 'classnames';
 import { Button } from 'components/Button';
+import { useModalsContext } from 'contexts/Modals';
 import { BaseEmoji, Picker } from 'emoji-mart';
 import 'emoji-mart/css/emoji-mart.css';
 import { PostLinkType } from 'enums/PostLinkType';
@@ -52,6 +53,7 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
   const [isEmojiPickerVisible, setEmojiPickerVisible] = useState(false);
   const [originalLink, setOriginalLink] = useState('');
   const [postLink, setPostLink] = useState('');
+  const { setAnyModalOpened } = useModalsContext();
   const [createPost] = useCreatePostMutation({ refetchQueries: ['Posts'] });
 
   const cancel = (setFieldValue: (val: string, newVal: string) => void) => {
@@ -121,6 +123,10 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
       setPostLink('');
     }
   }, [originalLink]);
+
+  useEffect(() => {
+    setAnyModalOpened(showNewPost);
+  }, [showNewPost]);
 
   return (
     <div
