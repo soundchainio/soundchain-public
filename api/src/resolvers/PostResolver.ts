@@ -4,15 +4,15 @@ import { Comment } from '../models/Comment';
 import { Post } from '../models/Post';
 import { Profile } from '../models/Profile';
 import { User } from '../models/User';
-import { CreatePostInput } from '../resolvers/types/CreatePostInput';
-import { CreatePostPayload } from '../resolvers/types/CreatePostPayload';
 import { CommentService } from '../services/CommentService';
 import { PostService } from '../services/PostService';
 import { ProfileService } from '../services/ProfileService';
-import { FilterPostInput } from './types/FilterPostInput';
-import { PageInput } from './types/PageInput';
-import { PostConnection } from './types/PostConnection';
-import { SortPostInput } from './types/SortPostInput';
+import { CreatePostInput } from '../types/CreatePostInput';
+import { CreatePostPayload } from '../types/CreatePostPayload';
+import { FilterPostInput } from '../types/FilterPostInput';
+import { PageInput } from '../types/PageInput';
+import { PostConnection } from '../types/PostConnection';
+import { SortPostInput } from '../types/SortPostInput';
 
 @Resolver(Post)
 export class PostResolver {
