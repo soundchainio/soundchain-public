@@ -8,10 +8,10 @@ import * as dotenv from 'dotenv-flow';
 import fs from 'fs';
 import { buildSchemaSync } from 'type-graphql';
 import { TypegooseMiddleware } from './middlewares/typegoose-middleware';
-import resolvers from './resolvers';
-import JwtService, { JwtUser } from './services/JwtService';
+import { resolvers } from './resolvers';
+import { JwtService, JwtUser } from './services/JwtService';
 import { UserService } from './services/UserService';
-import Context from './types/Context';
+import { Context } from './types/Context';
 
 dotenv.config();
 

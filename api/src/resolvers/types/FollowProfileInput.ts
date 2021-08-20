@@ -1,7 +1,7 @@
 import { Field, InputType } from 'type-graphql';
 
 @InputType()
-export class ForgotPasswordInput {
+export class FollowProfileInput {
   @Field()
-  email: string;
+  followedId: string;
 }

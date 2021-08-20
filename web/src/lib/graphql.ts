@@ -4,7 +4,7 @@ export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
-const defaultOptions =  {}
+const defaultOptions = {};
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: string;
@@ -66,6 +66,14 @@ export type CreatePostPayload = {
   post: Post;
 };
 
+export type FollowProfileInput = {
+  followedId: Scalars['String'];
+};
+
+export type FollowProfilePayload = {
+  __typename?: 'FollowProfilePayload';
+  followedProfile: Profile;
+};
 
 export type ForgotPasswordInput = {
   email: Scalars['String'];
@@ -111,7 +119,7 @@ export enum Genre {
   Soundtrack = 'SOUNDTRACK',
   Spoken = 'SPOKEN',
   UrbanLatino = 'URBAN_LATINO',
-  World = 'WORLD'
+  World = 'WORLD',
 }
 
 export type LoginInput = {
@@ -128,6 +136,8 @@ export type Mutation = {
   updateFavoriteGenres: UpdateFavoriteGenresPayload;
   updateProfilePicture: UpdateProfilePicturePayload;
   updateCoverPicture: UpdateCoverPicturePayload;
+  followProfile: FollowProfilePayload;
+  unfollowProfile: UnfollowProfilePayload;
   register: AuthPayload;
   login: AuthPayload;
   verifyUserEmail: VerifyUserEmailPayload;
@@ -135,56 +145,53 @@ export type Mutation = {
   resetPassword: ResetPasswordPayload;
 };
 
-
 export type MutationAddCommentArgs = {
   input: AddCommentInput;
 };
-
 
 export type MutationCreatePostArgs = {
   input: CreatePostInput;
 };
 
-
 export type MutationUpdateSocialMediasArgs = {
   input: UpdateSocialMediasInput;
 };
-
 
 export type MutationUpdateFavoriteGenresArgs = {
   input: UpdateFavoriteGenresInput;
 };
 
-
 export type MutationUpdateProfilePictureArgs = {
   input: UpdateProfilePictureInput;
 };
-
 
 export type MutationUpdateCoverPictureArgs = {
   input: UpdateCoverPictureInput;
 };
 
+export type MutationFollowProfileArgs = {
+  input: FollowProfileInput;
+};
+
+export type MutationUnfollowProfileArgs = {
+  input: UnfollowProfileInput;
+};
 
 export type MutationRegisterArgs = {
   input: RegisterInput;
 };
 
-
 export type MutationLoginArgs = {
   input: LoginInput;
 };
-
 
 export type MutationVerifyUserEmailArgs = {
   input: VerifyUserEmailInput;
 };
 
-
 export type MutationForgotPasswordArgs = {
   input: ForgotPasswordInput;
 };
-
 
 export type MutationResetPasswordArgs = {
   input: ResetPasswordInput;
@@ -225,9 +232,12 @@ export type Profile = {
   coverPicture?: Maybe<Scalars['String']>;
   socialMedias: SocialMedias;
   favoriteGenres: Array<Genre>;
+  followerCount: Scalars['Float'];
+  followingCount: Scalars['Float'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   userHandle: Scalars['String'];
+  isFollowed: Scalars['Boolean'];
 };
 
 export type Query = {
@@ -245,41 +255,29 @@ export type Query = {
   validPasswordResetToken: Scalars['Boolean'];
 };
 
-
 export type QueryCommentArgs = {
   id: Scalars['String'];
 };
-
 
 export type QueryCommentsArgs = {
   postId: Scalars['String'];
 };
 
-
-export type QueryNotificationArgs = {
-  id: Scalars['String'];
-};
-
-
 export type QueryPostArgs = {
   id: Scalars['String'];
 };
-
 
 export type QueryPostsArgs = {
   profileId?: Maybe<Scalars['String']>;
 };
 
-
 export type QueryProfileArgs = {
   id: Scalars['String'];
 };
 
-
 export type QueryUploadUrlArgs = {
   fileType: UploadFileType;
 };
-
 
 export type QueryValidPasswordResetTokenArgs = {
   token: Scalars['String'];
@@ -308,6 +306,15 @@ export type SocialMedias = {
   instagram?: Maybe<Scalars['String']>;
   soundcloud?: Maybe<Scalars['String']>;
   twitter?: Maybe<Scalars['String']>;
+};
+
+export type UnfollowProfileInput = {
+  followedId: Scalars['String'];
+};
+
+export type UnfollowProfilePayload = {
+  __typename?: 'UnfollowProfilePayload';
+  unfollowedProfile: Profile;
 };
 
 export type UpdateCoverPictureInput = {
@@ -351,7 +358,7 @@ export type UpdateSocialMediasPayload = {
 
 export enum UploadFileType {
   Jpeg = 'JPEG',
-  Png = 'PNG'
+  Png = 'PNG',
 }
 
 export type UploadUrl = {
@@ -385,377 +392,266 @@ export type AddCommentMutationVariables = Exact<{
   input: AddCommentInput;
 }>;
 
-
-export type AddCommentMutation = (
-  { __typename?: 'Mutation' }
-  & { addComment: (
-    { __typename?: 'AddCommentPayload' }
-    & { comment: (
-      { __typename?: 'Comment' }
-      & { post: (
-        { __typename?: 'Post' }
-        & Pick<Post, 'id' | 'commentCount'>
-      ) }
-      & CommentComponentFieldsFragment
-    ) }
-  ) }
-);
+export type AddCommentMutation = { __typename?: 'Mutation' } & {
+  addComment: { __typename?: 'AddCommentPayload' } & {
+    comment: { __typename?: 'Comment' } & {
+      post: { __typename?: 'Post' } & Pick<Post, 'id' | 'commentCount'>;
+    } & CommentComponentFieldsFragment;
+  };
+};
 
 export type CommentQueryVariables = Exact<{
   id: Scalars['String'];
 }>;
 
+export type CommentQuery = { __typename?: 'Query' } & {
+  comment: { __typename?: 'Comment' } & CommentComponentFieldsFragment;
+};
 
-export type CommentQuery = (
-  { __typename?: 'Query' }
-  & { comment: (
-    { __typename?: 'Comment' }
-    & CommentComponentFieldsFragment
-  ) }
-);
-
-export type CommentComponentFieldsFragment = (
-  { __typename?: 'Comment' }
-  & Pick<Comment, 'id' | 'body' | 'createdAt'>
-  & { profile: (
-    { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
-  ) }
-);
+export type CommentComponentFieldsFragment = { __typename?: 'Comment' } & Pick<Comment, 'id' | 'body' | 'createdAt'> & {
+    profile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>;
+  };
 
 export type CommentsQueryVariables = Exact<{
   postId: Scalars['String'];
 }>;
 
-
-export type CommentsQuery = (
-  { __typename?: 'Query' }
-  & { comments: Array<(
-    { __typename?: 'Comment' }
-    & CommentComponentFieldsFragment
-  )> }
-);
+export type CommentsQuery = { __typename?: 'Query' } & {
+  comments: Array<{ __typename?: 'Comment' } & CommentComponentFieldsFragment>;
+};
 
 export type CreatePostMutationVariables = Exact<{
   input: CreatePostInput;
 }>;
 
+export type CreatePostMutation = { __typename?: 'Mutation' } & {
+  createPost: { __typename?: 'CreatePostPayload' } & { post: { __typename?: 'Post' } & Pick<Post, 'id'> };
+};
 
-export type CreatePostMutation = (
-  { __typename?: 'Mutation' }
-  & { createPost: (
-    { __typename?: 'CreatePostPayload' }
-    & { post: (
-      { __typename?: 'Post' }
-      & Pick<Post, 'id'>
-    ) }
-  ) }
-);
+export type FollowProfileMutationVariables = Exact<{
+  input: FollowProfileInput;
+}>;
+
+export type FollowProfileMutation = { __typename?: 'Mutation' } & {
+  followProfile: { __typename?: 'FollowProfilePayload' } & {
+    followedProfile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'followerCount' | 'isFollowed'>;
+  };
+};
 
 export type ForgotPasswordMutationVariables = Exact<{
   input: ForgotPasswordInput;
 }>;
 
-
-export type ForgotPasswordMutation = (
-  { __typename?: 'Mutation' }
-  & { forgotPassword: (
-    { __typename?: 'ForgotPasswordPayload' }
-    & Pick<ForgotPasswordPayload, 'ok'>
-  ) }
-);
+export type ForgotPasswordMutation = { __typename?: 'Mutation' } & {
+  forgotPassword: { __typename?: 'ForgotPasswordPayload' } & Pick<ForgotPasswordPayload, 'ok'>;
+};
 
 export type UploadUrlQueryVariables = Exact<{
   fileType: UploadFileType;
 }>;
 
-
-export type UploadUrlQuery = (
-  { __typename?: 'Query' }
-  & { uploadUrl: (
-    { __typename?: 'UploadUrl' }
-    & Pick<UploadUrl, 'uploadUrl' | 'fileName' | 'readUrl'>
-  ) }
-);
+export type UploadUrlQuery = { __typename?: 'Query' } & {
+  uploadUrl: { __typename?: 'UploadUrl' } & Pick<UploadUrl, 'uploadUrl' | 'fileName' | 'readUrl'>;
+};
 
 export type LoginMutationVariables = Exact<{
   input: LoginInput;
 }>;
 
+export type LoginMutation = { __typename?: 'Mutation' } & {
+  login: { __typename?: 'AuthPayload' } & Pick<AuthPayload, 'jwt'>;
+};
 
-export type LoginMutation = (
-  { __typename?: 'Mutation' }
-  & { login: (
-    { __typename?: 'AuthPayload' }
-    & Pick<AuthPayload, 'jwt'>
-  ) }
-);
+export type MeQueryVariables = Exact<{ [key: string]: never }>;
 
-export type MeQueryVariables = Exact<{ [key: string]: never; }>;
+export type MeQuery = { __typename?: 'Query' } & {
+  me?: Maybe<
+    { __typename?: 'User' } & Pick<User, 'id' | 'handle'> & {
+        profile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>;
+      }
+  >;
+};
 
+export type MyProfileQueryVariables = Exact<{ [key: string]: never }>;
 
-export type MeQuery = (
-  { __typename?: 'Query' }
-  & { me?: Maybe<(
-    { __typename?: 'User' }
-    & Pick<User, 'id' | 'handle'>
-    & { profile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
-    ) }
-  )> }
-);
-
-export type MyProfileQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type MyProfileQuery = (
-  { __typename?: 'Query' }
-  & { myProfile: (
-    { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName'>
-    & { socialMedias: (
-      { __typename?: 'SocialMedias' }
-      & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
-    ) }
-  ) }
-);
-
-export type NotificationQueryVariables = Exact<{
-  id: Scalars['String'];
-}>;
-
-
-export type NotificationQuery = (
-  { __typename?: 'Query' }
-  & { notification: { __typename?: 'Notification' } | (
-    { __typename?: 'CommentNotification' }
-    & Pick<CommentNotification, 'id' | 'type' | 'body' | 'previewBody' | 'link' | 'createdAt' | 'author' | 'authorPicture'>
-  ) }
-);
-
-export type NotificationsQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type NotificationsQuery = (
-  { __typename?: 'Query' }
-  & { notifications: Array<{ __typename?: 'Notification' } | (
-    { __typename?: 'CommentNotification' }
-    & Pick<CommentNotification, 'id' | 'type' | 'body' | 'previewBody' | 'link' | 'createdAt' | 'author' | 'authorPicture'>
-  )> }
-);
+export type MyProfileQuery = { __typename?: 'Query' } & {
+  myProfile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'displayName'> & {
+      socialMedias: { __typename?: 'SocialMedias' } & Pick<
+        SocialMedias,
+        'facebook' | 'instagram' | 'soundcloud' | 'twitter'
+      >;
+    };
+};
 
 export type PostQueryVariables = Exact<{
   id: Scalars['String'];
 }>;
 
+export type PostQuery = { __typename?: 'Query' } & { post: { __typename?: 'Post' } & PostComponentFieldsFragment };
 
-export type PostQuery = (
-  { __typename?: 'Query' }
-  & { post: (
-    { __typename?: 'Post' }
-    & PostComponentFieldsFragment
-  ) }
-);
-
-export type PostComponentFieldsFragment = (
-  { __typename?: 'Post' }
-  & Pick<Post, 'id' | 'body' | 'mediaLink' | 'createdAt' | 'commentCount'>
-  & { profile: (
-    { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
-  ) }
-);
+export type PostComponentFieldsFragment = { __typename?: 'Post' } & Pick<
+  Post,
+  'id' | 'body' | 'mediaLink' | 'createdAt' | 'commentCount'
+> & { profile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'displayName' | 'profilePicture'> };
 
 export type PostsQueryVariables = Exact<{
   profileId?: Maybe<Scalars['String']>;
 }>;
 
-
-export type PostsQuery = (
-  { __typename?: 'Query' }
-  & { posts: Array<(
-    { __typename?: 'Post' }
-    & PostComponentFieldsFragment
-  )> }
-);
+export type PostsQuery = { __typename?: 'Query' } & {
+  posts: Array<{ __typename?: 'Post' } & PostComponentFieldsFragment>;
+};
 
 export type ProfileQueryVariables = Exact<{
   id: Scalars['String'];
 }>;
 
-
-export type ProfileQuery = (
-  { __typename?: 'Query' }
-  & { profile: (
-    { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'userHandle'>
-    & { socialMedias: (
-      { __typename?: 'SocialMedias' }
-      & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
-    ) }
-  ) }
-);
+export type ProfileQuery = { __typename?: 'Query' } & {
+  profile: { __typename?: 'Profile' } & Pick<
+    Profile,
+    | 'id'
+    | 'displayName'
+    | 'profilePicture'
+    | 'coverPicture'
+    | 'userHandle'
+    | 'isFollowed'
+    | 'followerCount'
+    | 'followingCount'
+  > & {
+      socialMedias: { __typename?: 'SocialMedias' } & Pick<
+        SocialMedias,
+        'facebook' | 'instagram' | 'soundcloud' | 'twitter'
+      >;
+    };
+};
 
 export type RegisterMutationVariables = Exact<{
   input: RegisterInput;
 }>;
 
-
-export type RegisterMutation = (
-  { __typename?: 'Mutation' }
-  & { register: (
-    { __typename?: 'AuthPayload' }
-    & Pick<AuthPayload, 'jwt'>
-  ) }
-);
+export type RegisterMutation = { __typename?: 'Mutation' } & {
+  register: { __typename?: 'AuthPayload' } & Pick<AuthPayload, 'jwt'>;
+};
 
 export type ResetPasswordMutationVariables = Exact<{
   input: ResetPasswordInput;
 }>;
 
+export type ResetPasswordMutation = { __typename?: 'Mutation' } & {
+  resetPassword: { __typename?: 'ResetPasswordPayload' } & Pick<ResetPasswordPayload, 'ok'>;
+};
 
-export type ResetPasswordMutation = (
-  { __typename?: 'Mutation' }
-  & { resetPassword: (
-    { __typename?: 'ResetPasswordPayload' }
-    & Pick<ResetPasswordPayload, 'ok'>
-  ) }
-);
+export type UnfollowProfileMutationVariables = Exact<{
+  input: UnfollowProfileInput;
+}>;
+
+export type UnfollowProfileMutation = { __typename?: 'Mutation' } & {
+  unfollowProfile: { __typename?: 'UnfollowProfilePayload' } & {
+    unfollowedProfile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'followerCount' | 'isFollowed'>;
+  };
+};
 
 export type UpdateCoverPictureMutationVariables = Exact<{
   input: UpdateCoverPictureInput;
 }>;
 
-
-export type UpdateCoverPictureMutation = (
-  { __typename?: 'Mutation' }
-  & { updateCoverPicture: (
-    { __typename?: 'UpdateCoverPicturePayload' }
-    & { profile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'coverPicture'>
-    ) }
-  ) }
-);
+export type UpdateCoverPictureMutation = { __typename?: 'Mutation' } & {
+  updateCoverPicture: { __typename?: 'UpdateCoverPicturePayload' } & {
+    profile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'coverPicture'>;
+  };
+};
 
 export type UpdateFavoriteGenresMutationVariables = Exact<{
   input: UpdateFavoriteGenresInput;
 }>;
 
-
-export type UpdateFavoriteGenresMutation = (
-  { __typename?: 'Mutation' }
-  & { updateFavoriteGenres: (
-    { __typename?: 'UpdateFavoriteGenresPayload' }
-    & { profile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'favoriteGenres'>
-    ) }
-  ) }
-);
+export type UpdateFavoriteGenresMutation = { __typename?: 'Mutation' } & {
+  updateFavoriteGenres: { __typename?: 'UpdateFavoriteGenresPayload' } & {
+    profile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'favoriteGenres'>;
+  };
+};
 
 export type UpdateProfilePictureMutationVariables = Exact<{
   input: UpdateProfilePictureInput;
 }>;
 
-
-export type UpdateProfilePictureMutation = (
-  { __typename?: 'Mutation' }
-  & { updateProfilePicture: (
-    { __typename?: 'UpdateProfilePicturePayload' }
-    & { profile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'profilePicture'>
-    ) }
-  ) }
-);
+export type UpdateProfilePictureMutation = { __typename?: 'Mutation' } & {
+  updateProfilePicture: { __typename?: 'UpdateProfilePicturePayload' } & {
+    profile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'profilePicture'>;
+  };
+};
 
 export type UpdateSocialMediasMutationVariables = Exact<{
   input: UpdateSocialMediasInput;
 }>;
 
-
-export type UpdateSocialMediasMutation = (
-  { __typename?: 'Mutation' }
-  & { updateSocialMedias: (
-    { __typename?: 'UpdateSocialMediasPayload' }
-    & { profile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'id'>
-      & { socialMedias: (
-        { __typename?: 'SocialMedias' }
-        & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
-      ) }
-    ) }
-  ) }
-);
+export type UpdateSocialMediasMutation = { __typename?: 'Mutation' } & {
+  updateSocialMedias: { __typename?: 'UpdateSocialMediasPayload' } & {
+    profile: { __typename?: 'Profile' } & Pick<Profile, 'id'> & {
+        socialMedias: { __typename?: 'SocialMedias' } & Pick<
+          SocialMedias,
+          'facebook' | 'instagram' | 'soundcloud' | 'twitter'
+        >;
+      };
+  };
+};
 
 export type ValidPasswordResetTokenQueryVariables = Exact<{
   token: Scalars['String'];
 }>;
 
-
-export type ValidPasswordResetTokenQuery = (
-  { __typename?: 'Query' }
-  & Pick<Query, 'validPasswordResetToken'>
-);
+export type ValidPasswordResetTokenQuery = { __typename?: 'Query' } & Pick<Query, 'validPasswordResetToken'>;
 
 export type VerifyUserEmailMutationVariables = Exact<{
   input: VerifyUserEmailInput;
 }>;
 
-
-export type VerifyUserEmailMutation = (
-  { __typename?: 'Mutation' }
-  & { verifyUserEmail: (
-    { __typename?: 'VerifyUserEmailPayload' }
-    & { user: (
-      { __typename?: 'User' }
-      & Pick<User, 'id' | 'verified'>
-    ) }
-  ) }
-);
+export type VerifyUserEmailMutation = { __typename?: 'Mutation' } & {
+  verifyUserEmail: { __typename?: 'VerifyUserEmailPayload' } & {
+    user: { __typename?: 'User' } & Pick<User, 'id' | 'verified'>;
+  };
+};
 
 export const CommentComponentFieldsFragmentDoc = gql`
-    fragment CommentComponentFields on Comment {
-  id
-  body
-  createdAt
-  profile {
+  fragment CommentComponentFields on Comment {
     id
-    displayName
-    profilePicture
+    body
+    createdAt
+    profile {
+      id
+      displayName
+      profilePicture
+    }
   }
-}
-    `;
+`;
 export const PostComponentFieldsFragmentDoc = gql`
-    fragment PostComponentFields on Post {
-  id
-  body
-  mediaLink
-  createdAt
-  commentCount
-  profile {
+  fragment PostComponentFields on Post {
     id
-    displayName
-    profilePicture
+    body
+    mediaLink
+    createdAt
+    commentCount
+    profile {
+      id
+      displayName
+      profilePicture
+    }
   }
-}
-    `;
+`;
 export const AddCommentDocument = gql`
-    mutation AddComment($input: AddCommentInput!) {
-  addComment(input: $input) {
-    comment {
-      ...CommentComponentFields
-      post {
-        id
-        commentCount
+  mutation AddComment($input: AddCommentInput!) {
+    addComment(input: $input) {
+      comment {
+        ...CommentComponentFields
+        post {
+          id
+          commentCount
+        }
       }
     }
   }
-}
-    ${CommentComponentFieldsFragmentDoc}`;
+  ${CommentComponentFieldsFragmentDoc}
+`;
 export type AddCommentMutationFn = Apollo.MutationFunction<AddCommentMutation, AddCommentMutationVariables>;
 
 /**
@@ -775,20 +671,23 @@ export type AddCommentMutationFn = Apollo.MutationFunction<AddCommentMutation, A
  *   },
  * });
  */
-export function useAddCommentMutation(baseOptions?: Apollo.MutationHookOptions<AddCommentMutation, AddCommentMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<AddCommentMutation, AddCommentMutationVariables>(AddCommentDocument, options);
-      }
+export function useAddCommentMutation(
+  baseOptions?: Apollo.MutationHookOptions<AddCommentMutation, AddCommentMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<AddCommentMutation, AddCommentMutationVariables>(AddCommentDocument, options);
+}
 export type AddCommentMutationHookResult = ReturnType<typeof useAddCommentMutation>;
 export type AddCommentMutationResult = Apollo.MutationResult<AddCommentMutation>;
 export type AddCommentMutationOptions = Apollo.BaseMutationOptions<AddCommentMutation, AddCommentMutationVariables>;
 export const CommentDocument = gql`
-    query Comment($id: String!) {
-  comment(id: $id) {
-    ...CommentComponentFields
+  query Comment($id: String!) {
+    comment(id: $id) {
+      ...CommentComponentFields
+    }
   }
-}
-    ${CommentComponentFieldsFragmentDoc}`;
+  ${CommentComponentFieldsFragmentDoc}
+`;
 
 /**
  * __useCommentQuery__
@@ -807,23 +706,24 @@ export const CommentDocument = gql`
  * });
  */
 export function useCommentQuery(baseOptions: Apollo.QueryHookOptions<CommentQuery, CommentQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<CommentQuery, CommentQueryVariables>(CommentDocument, options);
-      }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<CommentQuery, CommentQueryVariables>(CommentDocument, options);
+}
 export function useCommentLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<CommentQuery, CommentQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<CommentQuery, CommentQueryVariables>(CommentDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<CommentQuery, CommentQueryVariables>(CommentDocument, options);
+}
 export type CommentQueryHookResult = ReturnType<typeof useCommentQuery>;
 export type CommentLazyQueryHookResult = ReturnType<typeof useCommentLazyQuery>;
 export type CommentQueryResult = Apollo.QueryResult<CommentQuery, CommentQueryVariables>;
 export const CommentsDocument = gql`
-    query Comments($postId: String!) {
-  comments(postId: $postId) {
-    ...CommentComponentFields
+  query Comments($postId: String!) {
+    comments(postId: $postId) {
+      ...CommentComponentFields
+    }
   }
-}
-    ${CommentComponentFieldsFragmentDoc}`;
+  ${CommentComponentFieldsFragmentDoc}
+`;
 
 /**
  * __useCommentsQuery__
@@ -842,25 +742,25 @@ export const CommentsDocument = gql`
  * });
  */
 export function useCommentsQuery(baseOptions: Apollo.QueryHookOptions<CommentsQuery, CommentsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<CommentsQuery, CommentsQueryVariables>(CommentsDocument, options);
-      }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<CommentsQuery, CommentsQueryVariables>(CommentsDocument, options);
+}
 export function useCommentsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<CommentsQuery, CommentsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<CommentsQuery, CommentsQueryVariables>(CommentsDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<CommentsQuery, CommentsQueryVariables>(CommentsDocument, options);
+}
 export type CommentsQueryHookResult = ReturnType<typeof useCommentsQuery>;
 export type CommentsLazyQueryHookResult = ReturnType<typeof useCommentsLazyQuery>;
 export type CommentsQueryResult = Apollo.QueryResult<CommentsQuery, CommentsQueryVariables>;
 export const CreatePostDocument = gql`
-    mutation CreatePost($input: CreatePostInput!) {
-  createPost(input: $input) {
-    post {
-      id
+  mutation CreatePost($input: CreatePostInput!) {
+    createPost(input: $input) {
+      post {
+        id
+      }
     }
   }
-}
-    `;
+`;
 export type CreatePostMutationFn = Apollo.MutationFunction<CreatePostMutation, CreatePostMutationVariables>;
 
 /**
@@ -880,20 +780,64 @@ export type CreatePostMutationFn = Apollo.MutationFunction<CreatePostMutation, C
  *   },
  * });
  */
-export function useCreatePostMutation(baseOptions?: Apollo.MutationHookOptions<CreatePostMutation, CreatePostMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreatePostMutation, CreatePostMutationVariables>(CreatePostDocument, options);
-      }
+export function useCreatePostMutation(
+  baseOptions?: Apollo.MutationHookOptions<CreatePostMutation, CreatePostMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<CreatePostMutation, CreatePostMutationVariables>(CreatePostDocument, options);
+}
 export type CreatePostMutationHookResult = ReturnType<typeof useCreatePostMutation>;
 export type CreatePostMutationResult = Apollo.MutationResult<CreatePostMutation>;
 export type CreatePostMutationOptions = Apollo.BaseMutationOptions<CreatePostMutation, CreatePostMutationVariables>;
-export const ForgotPasswordDocument = gql`
-    mutation ForgotPassword($input: ForgotPasswordInput!) {
-  forgotPassword(input: $input) {
-    ok
+export const FollowProfileDocument = gql`
+  mutation FollowProfile($input: FollowProfileInput!) {
+    followProfile(input: $input) {
+      followedProfile {
+        id
+        followerCount
+        isFollowed
+      }
+    }
   }
+`;
+export type FollowProfileMutationFn = Apollo.MutationFunction<FollowProfileMutation, FollowProfileMutationVariables>;
+
+/**
+ * __useFollowProfileMutation__
+ *
+ * To run a mutation, you first call `useFollowProfileMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useFollowProfileMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [followProfileMutation, { data, loading, error }] = useFollowProfileMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useFollowProfileMutation(
+  baseOptions?: Apollo.MutationHookOptions<FollowProfileMutation, FollowProfileMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<FollowProfileMutation, FollowProfileMutationVariables>(FollowProfileDocument, options);
 }
-    `;
+export type FollowProfileMutationHookResult = ReturnType<typeof useFollowProfileMutation>;
+export type FollowProfileMutationResult = Apollo.MutationResult<FollowProfileMutation>;
+export type FollowProfileMutationOptions = Apollo.BaseMutationOptions<
+  FollowProfileMutation,
+  FollowProfileMutationVariables
+>;
+export const ForgotPasswordDocument = gql`
+  mutation ForgotPassword($input: ForgotPasswordInput!) {
+    forgotPassword(input: $input) {
+      ok
+    }
+  }
+`;
 export type ForgotPasswordMutationFn = Apollo.MutationFunction<ForgotPasswordMutation, ForgotPasswordMutationVariables>;
 
 /**
@@ -913,22 +857,27 @@ export type ForgotPasswordMutationFn = Apollo.MutationFunction<ForgotPasswordMut
  *   },
  * });
  */
-export function useForgotPasswordMutation(baseOptions?: Apollo.MutationHookOptions<ForgotPasswordMutation, ForgotPasswordMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<ForgotPasswordMutation, ForgotPasswordMutationVariables>(ForgotPasswordDocument, options);
-      }
+export function useForgotPasswordMutation(
+  baseOptions?: Apollo.MutationHookOptions<ForgotPasswordMutation, ForgotPasswordMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<ForgotPasswordMutation, ForgotPasswordMutationVariables>(ForgotPasswordDocument, options);
+}
 export type ForgotPasswordMutationHookResult = ReturnType<typeof useForgotPasswordMutation>;
 export type ForgotPasswordMutationResult = Apollo.MutationResult<ForgotPasswordMutation>;
-export type ForgotPasswordMutationOptions = Apollo.BaseMutationOptions<ForgotPasswordMutation, ForgotPasswordMutationVariables>;
+export type ForgotPasswordMutationOptions = Apollo.BaseMutationOptions<
+  ForgotPasswordMutation,
+  ForgotPasswordMutationVariables
+>;
 export const UploadUrlDocument = gql`
-    query UploadUrl($fileType: UploadFileType!) {
-  uploadUrl(fileType: $fileType) {
-    uploadUrl
-    fileName
-    readUrl
+  query UploadUrl($fileType: UploadFileType!) {
+    uploadUrl(fileType: $fileType) {
+      uploadUrl
+      fileName
+      readUrl
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useUploadUrlQuery__
@@ -947,23 +896,25 @@ export const UploadUrlDocument = gql`
  * });
  */
 export function useUploadUrlQuery(baseOptions: Apollo.QueryHookOptions<UploadUrlQuery, UploadUrlQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<UploadUrlQuery, UploadUrlQueryVariables>(UploadUrlDocument, options);
-      }
-export function useUploadUrlLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UploadUrlQuery, UploadUrlQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<UploadUrlQuery, UploadUrlQueryVariables>(UploadUrlDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<UploadUrlQuery, UploadUrlQueryVariables>(UploadUrlDocument, options);
+}
+export function useUploadUrlLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<UploadUrlQuery, UploadUrlQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<UploadUrlQuery, UploadUrlQueryVariables>(UploadUrlDocument, options);
+}
 export type UploadUrlQueryHookResult = ReturnType<typeof useUploadUrlQuery>;
 export type UploadUrlLazyQueryHookResult = ReturnType<typeof useUploadUrlLazyQuery>;
 export type UploadUrlQueryResult = Apollo.QueryResult<UploadUrlQuery, UploadUrlQueryVariables>;
 export const LoginDocument = gql`
-    mutation Login($input: LoginInput!) {
-  login(input: $input) {
-    jwt
+  mutation Login($input: LoginInput!) {
+    login(input: $input) {
+      jwt
+    }
   }
-}
-    `;
+`;
 export type LoginMutationFn = Apollo.MutationFunction<LoginMutation, LoginMutationVariables>;
 
 /**
@@ -984,25 +935,25 @@ export type LoginMutationFn = Apollo.MutationFunction<LoginMutation, LoginMutati
  * });
  */
 export function useLoginMutation(baseOptions?: Apollo.MutationHookOptions<LoginMutation, LoginMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<LoginMutation, LoginMutationVariables>(LoginDocument, options);
-      }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<LoginMutation, LoginMutationVariables>(LoginDocument, options);
+}
 export type LoginMutationHookResult = ReturnType<typeof useLoginMutation>;
 export type LoginMutationResult = Apollo.MutationResult<LoginMutation>;
 export type LoginMutationOptions = Apollo.BaseMutationOptions<LoginMutation, LoginMutationVariables>;
 export const MeDocument = gql`
-    query Me {
-  me {
-    id
-    handle
-    profile {
+  query Me {
+    me {
       id
-      displayName
-      profilePicture
+      handle
+      profile {
+        id
+        displayName
+        profilePicture
+      }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useMeQuery__
@@ -1020,30 +971,30 @@ export const MeDocument = gql`
  * });
  */
 export function useMeQuery(baseOptions?: Apollo.QueryHookOptions<MeQuery, MeQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<MeQuery, MeQueryVariables>(MeDocument, options);
-      }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<MeQuery, MeQueryVariables>(MeDocument, options);
+}
 export function useMeLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<MeQuery, MeQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<MeQuery, MeQueryVariables>(MeDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<MeQuery, MeQueryVariables>(MeDocument, options);
+}
 export type MeQueryHookResult = ReturnType<typeof useMeQuery>;
 export type MeLazyQueryHookResult = ReturnType<typeof useMeLazyQuery>;
 export type MeQueryResult = Apollo.QueryResult<MeQuery, MeQueryVariables>;
 export const MyProfileDocument = gql`
-    query MyProfile {
-  myProfile {
-    id
-    displayName
-    socialMedias {
-      facebook
-      instagram
-      soundcloud
-      twitter
+  query MyProfile {
+    myProfile {
+      id
+      displayName
+      socialMedias {
+        facebook
+        instagram
+        soundcloud
+        twitter
+      }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useMyProfileQuery__
@@ -1061,13 +1012,15 @@ export const MyProfileDocument = gql`
  * });
  */
 export function useMyProfileQuery(baseOptions?: Apollo.QueryHookOptions<MyProfileQuery, MyProfileQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<MyProfileQuery, MyProfileQueryVariables>(MyProfileDocument, options);
-      }
-export function useMyProfileLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<MyProfileQuery, MyProfileQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<MyProfileQuery, MyProfileQueryVariables>(MyProfileDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<MyProfileQuery, MyProfileQueryVariables>(MyProfileDocument, options);
+}
+export function useMyProfileLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<MyProfileQuery, MyProfileQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<MyProfileQuery, MyProfileQueryVariables>(MyProfileDocument, options);
+}
 export type MyProfileQueryHookResult = ReturnType<typeof useMyProfileQuery>;
 export type MyProfileLazyQueryHookResult = ReturnType<typeof useMyProfileLazyQuery>;
 export type MyProfileQueryResult = Apollo.QueryResult<MyProfileQuery, MyProfileQueryVariables>;
@@ -1159,12 +1112,13 @@ export type NotificationsQueryHookResult = ReturnType<typeof useNotificationsQue
 export type NotificationsLazyQueryHookResult = ReturnType<typeof useNotificationsLazyQuery>;
 export type NotificationsQueryResult = Apollo.QueryResult<NotificationsQuery, NotificationsQueryVariables>;
 export const PostDocument = gql`
-    query Post($id: String!) {
-  post(id: $id) {
-    ...PostComponentFields
+  query Post($id: String!) {
+    post(id: $id) {
+      ...PostComponentFields
+    }
   }
-}
-    ${PostComponentFieldsFragmentDoc}`;
+  ${PostComponentFieldsFragmentDoc}
+`;
 
 /**
  * __usePostQuery__
@@ -1183,23 +1137,24 @@ export const PostDocument = gql`
  * });
  */
 export function usePostQuery(baseOptions: Apollo.QueryHookOptions<PostQuery, PostQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<PostQuery, PostQueryVariables>(PostDocument, options);
-      }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<PostQuery, PostQueryVariables>(PostDocument, options);
+}
 export function usePostLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<PostQuery, PostQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<PostQuery, PostQueryVariables>(PostDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<PostQuery, PostQueryVariables>(PostDocument, options);
+}
 export type PostQueryHookResult = ReturnType<typeof usePostQuery>;
 export type PostLazyQueryHookResult = ReturnType<typeof usePostLazyQuery>;
 export type PostQueryResult = Apollo.QueryResult<PostQuery, PostQueryVariables>;
 export const PostsDocument = gql`
-    query Posts($profileId: String) {
-  posts(profileId: $profileId) {
-    ...PostComponentFields
+  query Posts($profileId: String) {
+    posts(profileId: $profileId) {
+      ...PostComponentFields
+    }
   }
-}
-    ${PostComponentFieldsFragmentDoc}`;
+  ${PostComponentFieldsFragmentDoc}
+`;
 
 /**
  * __usePostsQuery__
@@ -1218,33 +1173,36 @@ export const PostsDocument = gql`
  * });
  */
 export function usePostsQuery(baseOptions?: Apollo.QueryHookOptions<PostsQuery, PostsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<PostsQuery, PostsQueryVariables>(PostsDocument, options);
-      }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<PostsQuery, PostsQueryVariables>(PostsDocument, options);
+}
 export function usePostsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<PostsQuery, PostsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<PostsQuery, PostsQueryVariables>(PostsDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<PostsQuery, PostsQueryVariables>(PostsDocument, options);
+}
 export type PostsQueryHookResult = ReturnType<typeof usePostsQuery>;
 export type PostsLazyQueryHookResult = ReturnType<typeof usePostsLazyQuery>;
 export type PostsQueryResult = Apollo.QueryResult<PostsQuery, PostsQueryVariables>;
 export const ProfileDocument = gql`
-    query Profile($id: String!) {
-  profile(id: $id) {
-    id
-    displayName
-    profilePicture
-    coverPicture
-    socialMedias {
-      facebook
-      instagram
-      soundcloud
-      twitter
+  query Profile($id: String!) {
+    profile(id: $id) {
+      id
+      displayName
+      profilePicture
+      coverPicture
+      socialMedias {
+        facebook
+        instagram
+        soundcloud
+        twitter
+      }
+      userHandle
+      isFollowed
+      followerCount
+      followingCount
     }
-    userHandle
   }
-}
-    `;
+`;
 
 /**
  * __useProfileQuery__
@@ -1263,23 +1221,23 @@ export const ProfileDocument = gql`
  * });
  */
 export function useProfileQuery(baseOptions: Apollo.QueryHookOptions<ProfileQuery, ProfileQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<ProfileQuery, ProfileQueryVariables>(ProfileDocument, options);
-      }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<ProfileQuery, ProfileQueryVariables>(ProfileDocument, options);
+}
 export function useProfileLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ProfileQuery, ProfileQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<ProfileQuery, ProfileQueryVariables>(ProfileDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<ProfileQuery, ProfileQueryVariables>(ProfileDocument, options);
+}
 export type ProfileQueryHookResult = ReturnType<typeof useProfileQuery>;
 export type ProfileLazyQueryHookResult = ReturnType<typeof useProfileLazyQuery>;
 export type ProfileQueryResult = Apollo.QueryResult<ProfileQuery, ProfileQueryVariables>;
 export const RegisterDocument = gql`
-    mutation Register($input: RegisterInput!) {
-  register(input: $input) {
-    jwt
+  mutation Register($input: RegisterInput!) {
+    register(input: $input) {
+      jwt
+    }
   }
-}
-    `;
+`;
 export type RegisterMutationFn = Apollo.MutationFunction<RegisterMutation, RegisterMutationVariables>;
 
 /**
@@ -1299,20 +1257,22 @@ export type RegisterMutationFn = Apollo.MutationFunction<RegisterMutation, Regis
  *   },
  * });
  */
-export function useRegisterMutation(baseOptions?: Apollo.MutationHookOptions<RegisterMutation, RegisterMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<RegisterMutation, RegisterMutationVariables>(RegisterDocument, options);
-      }
+export function useRegisterMutation(
+  baseOptions?: Apollo.MutationHookOptions<RegisterMutation, RegisterMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<RegisterMutation, RegisterMutationVariables>(RegisterDocument, options);
+}
 export type RegisterMutationHookResult = ReturnType<typeof useRegisterMutation>;
 export type RegisterMutationResult = Apollo.MutationResult<RegisterMutation>;
 export type RegisterMutationOptions = Apollo.BaseMutationOptions<RegisterMutation, RegisterMutationVariables>;
 export const ResetPasswordDocument = gql`
-    mutation ResetPassword($input: ResetPasswordInput!) {
-  resetPassword(input: $input) {
-    ok
+  mutation ResetPassword($input: ResetPasswordInput!) {
+    resetPassword(input: $input) {
+      ok
+    }
   }
-}
-    `;
+`;
 export type ResetPasswordMutationFn = Apollo.MutationFunction<ResetPasswordMutation, ResetPasswordMutationVariables>;
 
 /**
@@ -1332,24 +1292,80 @@ export type ResetPasswordMutationFn = Apollo.MutationFunction<ResetPasswordMutat
  *   },
  * });
  */
-export function useResetPasswordMutation(baseOptions?: Apollo.MutationHookOptions<ResetPasswordMutation, ResetPasswordMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<ResetPasswordMutation, ResetPasswordMutationVariables>(ResetPasswordDocument, options);
-      }
+export function useResetPasswordMutation(
+  baseOptions?: Apollo.MutationHookOptions<ResetPasswordMutation, ResetPasswordMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<ResetPasswordMutation, ResetPasswordMutationVariables>(ResetPasswordDocument, options);
+}
 export type ResetPasswordMutationHookResult = ReturnType<typeof useResetPasswordMutation>;
 export type ResetPasswordMutationResult = Apollo.MutationResult<ResetPasswordMutation>;
-export type ResetPasswordMutationOptions = Apollo.BaseMutationOptions<ResetPasswordMutation, ResetPasswordMutationVariables>;
-export const UpdateCoverPictureDocument = gql`
-    mutation UpdateCoverPicture($input: UpdateCoverPictureInput!) {
-  updateCoverPicture(input: $input) {
-    profile {
-      id
-      coverPicture
+export type ResetPasswordMutationOptions = Apollo.BaseMutationOptions<
+  ResetPasswordMutation,
+  ResetPasswordMutationVariables
+>;
+export const UnfollowProfileDocument = gql`
+  mutation UnfollowProfile($input: UnfollowProfileInput!) {
+    unfollowProfile(input: $input) {
+      unfollowedProfile {
+        id
+        followerCount
+        isFollowed
+      }
     }
   }
+`;
+export type UnfollowProfileMutationFn = Apollo.MutationFunction<
+  UnfollowProfileMutation,
+  UnfollowProfileMutationVariables
+>;
+
+/**
+ * __useUnfollowProfileMutation__
+ *
+ * To run a mutation, you first call `useUnfollowProfileMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUnfollowProfileMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [unfollowProfileMutation, { data, loading, error }] = useUnfollowProfileMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUnfollowProfileMutation(
+  baseOptions?: Apollo.MutationHookOptions<UnfollowProfileMutation, UnfollowProfileMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<UnfollowProfileMutation, UnfollowProfileMutationVariables>(
+    UnfollowProfileDocument,
+    options,
+  );
 }
-    `;
-export type UpdateCoverPictureMutationFn = Apollo.MutationFunction<UpdateCoverPictureMutation, UpdateCoverPictureMutationVariables>;
+export type UnfollowProfileMutationHookResult = ReturnType<typeof useUnfollowProfileMutation>;
+export type UnfollowProfileMutationResult = Apollo.MutationResult<UnfollowProfileMutation>;
+export type UnfollowProfileMutationOptions = Apollo.BaseMutationOptions<
+  UnfollowProfileMutation,
+  UnfollowProfileMutationVariables
+>;
+export const UpdateCoverPictureDocument = gql`
+  mutation UpdateCoverPicture($input: UpdateCoverPictureInput!) {
+    updateCoverPicture(input: $input) {
+      profile {
+        id
+        coverPicture
+      }
+    }
+  }
+`;
+export type UpdateCoverPictureMutationFn = Apollo.MutationFunction<
+  UpdateCoverPictureMutation,
+  UpdateCoverPictureMutationVariables
+>;
 
 /**
  * __useUpdateCoverPictureMutation__
@@ -1368,24 +1384,35 @@ export type UpdateCoverPictureMutationFn = Apollo.MutationFunction<UpdateCoverPi
  *   },
  * });
  */
-export function useUpdateCoverPictureMutation(baseOptions?: Apollo.MutationHookOptions<UpdateCoverPictureMutation, UpdateCoverPictureMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateCoverPictureMutation, UpdateCoverPictureMutationVariables>(UpdateCoverPictureDocument, options);
-      }
+export function useUpdateCoverPictureMutation(
+  baseOptions?: Apollo.MutationHookOptions<UpdateCoverPictureMutation, UpdateCoverPictureMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<UpdateCoverPictureMutation, UpdateCoverPictureMutationVariables>(
+    UpdateCoverPictureDocument,
+    options,
+  );
+}
 export type UpdateCoverPictureMutationHookResult = ReturnType<typeof useUpdateCoverPictureMutation>;
 export type UpdateCoverPictureMutationResult = Apollo.MutationResult<UpdateCoverPictureMutation>;
-export type UpdateCoverPictureMutationOptions = Apollo.BaseMutationOptions<UpdateCoverPictureMutation, UpdateCoverPictureMutationVariables>;
+export type UpdateCoverPictureMutationOptions = Apollo.BaseMutationOptions<
+  UpdateCoverPictureMutation,
+  UpdateCoverPictureMutationVariables
+>;
 export const UpdateFavoriteGenresDocument = gql`
-    mutation UpdateFavoriteGenres($input: UpdateFavoriteGenresInput!) {
-  updateFavoriteGenres(input: $input) {
-    profile {
-      id
-      favoriteGenres
+  mutation UpdateFavoriteGenres($input: UpdateFavoriteGenresInput!) {
+    updateFavoriteGenres(input: $input) {
+      profile {
+        id
+        favoriteGenres
+      }
     }
   }
-}
-    `;
-export type UpdateFavoriteGenresMutationFn = Apollo.MutationFunction<UpdateFavoriteGenresMutation, UpdateFavoriteGenresMutationVariables>;
+`;
+export type UpdateFavoriteGenresMutationFn = Apollo.MutationFunction<
+  UpdateFavoriteGenresMutation,
+  UpdateFavoriteGenresMutationVariables
+>;
 
 /**
  * __useUpdateFavoriteGenresMutation__
@@ -1404,24 +1431,35 @@ export type UpdateFavoriteGenresMutationFn = Apollo.MutationFunction<UpdateFavor
  *   },
  * });
  */
-export function useUpdateFavoriteGenresMutation(baseOptions?: Apollo.MutationHookOptions<UpdateFavoriteGenresMutation, UpdateFavoriteGenresMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateFavoriteGenresMutation, UpdateFavoriteGenresMutationVariables>(UpdateFavoriteGenresDocument, options);
-      }
+export function useUpdateFavoriteGenresMutation(
+  baseOptions?: Apollo.MutationHookOptions<UpdateFavoriteGenresMutation, UpdateFavoriteGenresMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<UpdateFavoriteGenresMutation, UpdateFavoriteGenresMutationVariables>(
+    UpdateFavoriteGenresDocument,
+    options,
+  );
+}
 export type UpdateFavoriteGenresMutationHookResult = ReturnType<typeof useUpdateFavoriteGenresMutation>;
 export type UpdateFavoriteGenresMutationResult = Apollo.MutationResult<UpdateFavoriteGenresMutation>;
-export type UpdateFavoriteGenresMutationOptions = Apollo.BaseMutationOptions<UpdateFavoriteGenresMutation, UpdateFavoriteGenresMutationVariables>;
+export type UpdateFavoriteGenresMutationOptions = Apollo.BaseMutationOptions<
+  UpdateFavoriteGenresMutation,
+  UpdateFavoriteGenresMutationVariables
+>;
 export const UpdateProfilePictureDocument = gql`
-    mutation UpdateProfilePicture($input: UpdateProfilePictureInput!) {
-  updateProfilePicture(input: $input) {
-    profile {
-      id
-      profilePicture
+  mutation UpdateProfilePicture($input: UpdateProfilePictureInput!) {
+    updateProfilePicture(input: $input) {
+      profile {
+        id
+        profilePicture
+      }
     }
   }
-}
-    `;
-export type UpdateProfilePictureMutationFn = Apollo.MutationFunction<UpdateProfilePictureMutation, UpdateProfilePictureMutationVariables>;
+`;
+export type UpdateProfilePictureMutationFn = Apollo.MutationFunction<
+  UpdateProfilePictureMutation,
+  UpdateProfilePictureMutationVariables
+>;
 
 /**
  * __useUpdateProfilePictureMutation__
@@ -1440,29 +1478,40 @@ export type UpdateProfilePictureMutationFn = Apollo.MutationFunction<UpdateProfi
  *   },
  * });
  */
-export function useUpdateProfilePictureMutation(baseOptions?: Apollo.MutationHookOptions<UpdateProfilePictureMutation, UpdateProfilePictureMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateProfilePictureMutation, UpdateProfilePictureMutationVariables>(UpdateProfilePictureDocument, options);
-      }
+export function useUpdateProfilePictureMutation(
+  baseOptions?: Apollo.MutationHookOptions<UpdateProfilePictureMutation, UpdateProfilePictureMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<UpdateProfilePictureMutation, UpdateProfilePictureMutationVariables>(
+    UpdateProfilePictureDocument,
+    options,
+  );
+}
 export type UpdateProfilePictureMutationHookResult = ReturnType<typeof useUpdateProfilePictureMutation>;
 export type UpdateProfilePictureMutationResult = Apollo.MutationResult<UpdateProfilePictureMutation>;
-export type UpdateProfilePictureMutationOptions = Apollo.BaseMutationOptions<UpdateProfilePictureMutation, UpdateProfilePictureMutationVariables>;
+export type UpdateProfilePictureMutationOptions = Apollo.BaseMutationOptions<
+  UpdateProfilePictureMutation,
+  UpdateProfilePictureMutationVariables
+>;
 export const UpdateSocialMediasDocument = gql`
-    mutation updateSocialMedias($input: UpdateSocialMediasInput!) {
-  updateSocialMedias(input: $input) {
-    profile {
-      id
-      socialMedias {
-        facebook
-        instagram
-        soundcloud
-        twitter
+  mutation updateSocialMedias($input: UpdateSocialMediasInput!) {
+    updateSocialMedias(input: $input) {
+      profile {
+        id
+        socialMedias {
+          facebook
+          instagram
+          soundcloud
+          twitter
+        }
       }
     }
   }
-}
-    `;
-export type UpdateSocialMediasMutationFn = Apollo.MutationFunction<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>;
+`;
+export type UpdateSocialMediasMutationFn = Apollo.MutationFunction<
+  UpdateSocialMediasMutation,
+  UpdateSocialMediasMutationVariables
+>;
 
 /**
  * __useUpdateSocialMediasMutation__
@@ -1481,18 +1530,26 @@ export type UpdateSocialMediasMutationFn = Apollo.MutationFunction<UpdateSocialM
  *   },
  * });
  */
-export function useUpdateSocialMediasMutation(baseOptions?: Apollo.MutationHookOptions<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>(UpdateSocialMediasDocument, options);
-      }
+export function useUpdateSocialMediasMutation(
+  baseOptions?: Apollo.MutationHookOptions<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>(
+    UpdateSocialMediasDocument,
+    options,
+  );
+}
 export type UpdateSocialMediasMutationHookResult = ReturnType<typeof useUpdateSocialMediasMutation>;
 export type UpdateSocialMediasMutationResult = Apollo.MutationResult<UpdateSocialMediasMutation>;
-export type UpdateSocialMediasMutationOptions = Apollo.BaseMutationOptions<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>;
+export type UpdateSocialMediasMutationOptions = Apollo.BaseMutationOptions<
+  UpdateSocialMediasMutation,
+  UpdateSocialMediasMutationVariables
+>;
 export const ValidPasswordResetTokenDocument = gql`
-    query ValidPasswordResetToken($token: String!) {
-  validPasswordResetToken(token: $token)
-}
-    `;
+  query ValidPasswordResetToken($token: String!) {
+    validPasswordResetToken(token: $token)
+  }
+`;
 
 /**
  * __useValidPasswordResetTokenQuery__
@@ -1510,28 +1567,44 @@ export const ValidPasswordResetTokenDocument = gql`
  *   },
  * });
  */
-export function useValidPasswordResetTokenQuery(baseOptions: Apollo.QueryHookOptions<ValidPasswordResetTokenQuery, ValidPasswordResetTokenQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<ValidPasswordResetTokenQuery, ValidPasswordResetTokenQueryVariables>(ValidPasswordResetTokenDocument, options);
-      }
-export function useValidPasswordResetTokenLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ValidPasswordResetTokenQuery, ValidPasswordResetTokenQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<ValidPasswordResetTokenQuery, ValidPasswordResetTokenQueryVariables>(ValidPasswordResetTokenDocument, options);
-        }
+export function useValidPasswordResetTokenQuery(
+  baseOptions: Apollo.QueryHookOptions<ValidPasswordResetTokenQuery, ValidPasswordResetTokenQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<ValidPasswordResetTokenQuery, ValidPasswordResetTokenQueryVariables>(
+    ValidPasswordResetTokenDocument,
+    options,
+  );
+}
+export function useValidPasswordResetTokenLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<ValidPasswordResetTokenQuery, ValidPasswordResetTokenQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<ValidPasswordResetTokenQuery, ValidPasswordResetTokenQueryVariables>(
+    ValidPasswordResetTokenDocument,
+    options,
+  );
+}
 export type ValidPasswordResetTokenQueryHookResult = ReturnType<typeof useValidPasswordResetTokenQuery>;
 export type ValidPasswordResetTokenLazyQueryHookResult = ReturnType<typeof useValidPasswordResetTokenLazyQuery>;
-export type ValidPasswordResetTokenQueryResult = Apollo.QueryResult<ValidPasswordResetTokenQuery, ValidPasswordResetTokenQueryVariables>;
+export type ValidPasswordResetTokenQueryResult = Apollo.QueryResult<
+  ValidPasswordResetTokenQuery,
+  ValidPasswordResetTokenQueryVariables
+>;
 export const VerifyUserEmailDocument = gql`
-    mutation VerifyUserEmail($input: VerifyUserEmailInput!) {
-  verifyUserEmail(input: $input) {
-    user {
-      id
-      verified
+  mutation VerifyUserEmail($input: VerifyUserEmailInput!) {
+    verifyUserEmail(input: $input) {
+      user {
+        id
+        verified
+      }
     }
   }
-}
-    `;
-export type VerifyUserEmailMutationFn = Apollo.MutationFunction<VerifyUserEmailMutation, VerifyUserEmailMutationVariables>;
+`;
+export type VerifyUserEmailMutationFn = Apollo.MutationFunction<
+  VerifyUserEmailMutation,
+  VerifyUserEmailMutationVariables
+>;
 
 /**
  * __useVerifyUserEmailMutation__
@@ -1550,10 +1623,18 @@ export type VerifyUserEmailMutationFn = Apollo.MutationFunction<VerifyUserEmailM
  *   },
  * });
  */
-export function useVerifyUserEmailMutation(baseOptions?: Apollo.MutationHookOptions<VerifyUserEmailMutation, VerifyUserEmailMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<VerifyUserEmailMutation, VerifyUserEmailMutationVariables>(VerifyUserEmailDocument, options);
-      }
+export function useVerifyUserEmailMutation(
+  baseOptions?: Apollo.MutationHookOptions<VerifyUserEmailMutation, VerifyUserEmailMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<VerifyUserEmailMutation, VerifyUserEmailMutationVariables>(
+    VerifyUserEmailDocument,
+    options,
+  );
+}
 export type VerifyUserEmailMutationHookResult = ReturnType<typeof useVerifyUserEmailMutation>;
 export type VerifyUserEmailMutationResult = Apollo.MutationResult<VerifyUserEmailMutation>;
-export type VerifyUserEmailMutationOptions = Apollo.BaseMutationOptions<VerifyUserEmailMutation, VerifyUserEmailMutationVariables>;
+export type VerifyUserEmailMutationOptions = Apollo.BaseMutationOptions<
+  VerifyUserEmailMutation,
+  VerifyUserEmailMutationVariables
+>;

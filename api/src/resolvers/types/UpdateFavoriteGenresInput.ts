@@ -1,6 +1,6 @@
 import { ArrayUnique } from 'class-validator';
-import { Genre } from 'enums/Genres';
 import { Field, InputType } from 'type-graphql';
+import { Genre } from '../../enums/Genres';
 
 @InputType()
 export class UpdateFavoriteGenresInput {

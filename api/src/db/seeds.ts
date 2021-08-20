@@ -1,10 +1,11 @@
 import Faker from 'faker';
-import { random, range, sample } from 'lodash';
-import { Comment, CommentModel } from 'models/Comment';
-import { Post, PostModel } from 'models/Post';
-import { Profile, ProfileModel } from 'models/Profile';
-import User, { UserModel } from 'models/User';
+import { random, range, sample, sampleSize } from 'lodash';
 import mongoose from 'mongoose';
+import { Comment, CommentModel } from '../models/Comment';
+import { Follow, FollowModel } from '../models/Follow';
+import { Post, PostModel } from '../models/Post';
+import { Profile, ProfileModel } from '../models/Profile';
+import { User, UserModel } from '../models/User';
 
 const { DATABASE_URL = 'mongodb://localhost:27017' } = process.env;
 const dbOpts = {
@@ -24,6 +25,7 @@ async function seedDb() {
   const users: User[] = [];
   const posts: Post[] = [];
   const comments: Comment[] = [];
+  const follows: Follow[] = [];
 
   for (let i = 0; i < 100; i++) {
     const profile = FakeProfile();
@@ -31,8 +33,19 @@ async function seedDb() {
     users.push(FakeUser({ profileId: profile._id }));
   }
 
+  for (const profile of profiles) {
+    const followedId = profile._id;
+    const numFollowers = random(0, 100);
+    sampleSize(profiles, numFollowers).forEach(profile => {
+      profile.followingCount++;
+      follows.push(new FollowModel({ followedId, followerId: profile._id }));
+    });
+    profile.followerCount = numFollowers;
+  }
+
   await ProfileModel.insertMany(profiles);
   await UserModel.insertMany(users);
+  await FollowModel.insertMany(follows);
 
   console.log('User profiles seeded!');
 

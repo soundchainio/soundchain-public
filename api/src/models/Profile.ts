@@ -1,7 +1,7 @@
 import { getModelForClass, modelOptions, prop, Severity } from '@typegoose/typegoose';
-import { Genre } from 'enums/Genres';
 import { Field, ID, ObjectType } from 'type-graphql';
-import Model from './Model';
+import { Genre } from '../enums/Genres';
+import { Model } from './Model';
 import { SocialMedias } from './SocialMedias';
 
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
@@ -29,6 +29,14 @@ export class Profile extends Model {
   @Field(() => [Genre])
   @prop({ required: true, type: [String], enum: Genre })
   favoriteGenres: Genre[];
+
+  @Field(() => Number)
+  @prop({ required: true, default: 0 })
+  followerCount: number;
+
+  @Field(() => Number)
+  @prop({ required: true, default: 0 })
+  followingCount: number;
 
   @Field(() => Date)
   createdAt: Date;

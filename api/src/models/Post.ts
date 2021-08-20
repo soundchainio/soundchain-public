@@ -1,6 +1,6 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
-import Model from './Model';
+import { Model } from './Model';
 
 @ObjectType()
 export class Post extends Model {

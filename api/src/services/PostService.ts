@@ -1,5 +1,5 @@
 import { isUndefined, omitBy } from 'lodash';
-import { Post, PostModel } from 'models/Post';
+import { Post, PostModel } from '../models/Post';
 
 interface NewPostParams {
   profileId: string;

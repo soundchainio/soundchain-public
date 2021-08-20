@@ -31,7 +31,7 @@ export class CommentService {
     return CommentModel.find({ postId }).sort({ createdAt: 'asc' }).exec();
   }
 
-  static getCommentCount(postId: string): Promise<number> {
+  static countComments(postId: string): Promise<number> {
     return CommentModel.countDocuments({ postId }).exec();
   }
 }

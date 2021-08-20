@@ -1,7 +1,10 @@
-import { Genre } from 'enums/Genres';
-import { Profile, ProfileModel } from 'models/Profile';
-import { SocialMedias } from 'models/SocialMedias';
-import { UserModel } from 'models/User';
+import { UserInputError } from 'apollo-server-express';
+import { Genre } from '../enums/Genres';
+import { NotFoundError } from '../errors/NotFoundError';
+import { FollowModel } from '../models/Follow';
+import { Profile, ProfileModel } from '../models/Profile';
+import { SocialMedias } from '../models/SocialMedias';
+import { UserModel } from '../models/User';
 
 export class ProfileService {
   static getProfile(id: string): Promise<Profile> {
@@ -46,5 +49,37 @@ export class ProfileService {
       throw new Error(`Profile ${profileId} is missing a user account!`);
     }
     return user.handle;
+  }
+
+  static async followProfile(followerId: string, followedId: string): Promise<Profile> {
+    const followedProfile = await ProfileModel.findById(followedId);
+    if (!followedProfile) throw new NotFoundError('Profile', followedId);
+
+    const alreadyFollowed = await FollowModel.exists({ followerId, followedId });
+    if (alreadyFollowed) {
+      throw new UserInputError(`User profile ${followerId} is already following profile ${followerId}.`);
+    }
+
+    const follow = new FollowModel({ followerId, followedId });
+    await follow.save();
+    await ProfileModel.updateOne({ _id: followerId }, { $inc: { followingCount: 1 } });
+    await ProfileModel.updateOne({ _id: followedId }, { $inc: { followerCount: 1 } });
+    followedProfile.followerCount++;
+    return followedProfile;
+  }
+
+  static async unfollowProfile(followerId: string, followedId: string): Promise<Profile> {
+    const followedProfile = await ProfileModel.findById(followedId);
+    if (!followedProfile) throw new NotFoundError('Profile', followedId);
+
+    const { deletedCount } = await FollowModel.deleteOne({ followerId, followedId });
+    if (deletedCount === 0) {
+      throw new UserInputError(`User profile ${followerId} isn't following profile ${followerId}.`);
+    }
+
+    await ProfileModel.updateOne({ _id: followerId }, { $inc: { followingCount: -1 } });
+    await ProfileModel.updateOne({ _id: followedId }, { $inc: { followerCount: -1 } });
+    followedProfile.followerCount--;
+    return followedProfile;
   }
 }

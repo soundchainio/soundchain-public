@@ -1,6 +1,6 @@
 import expressJwt from 'express-jwt';
 import jwt from 'jsonwebtoken';
-import User from 'models/User';
+import { User } from '../models/User';
 
 const { JWT_NAMESPACE = 'http://localhost:4000/graphql', JWT_SECRET = 'not so secret' } = process.env;
 
@@ -8,7 +8,7 @@ export interface JwtUser {
   sub: string;
 }
 
-export default class JwtService {
+export class JwtService {
   static middleware = expressJwt({ secret: JWT_SECRET, algorithms: ['HS256'], credentialsRequired: false });
 
   static create(user: User): string {

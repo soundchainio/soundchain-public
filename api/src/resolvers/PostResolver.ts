@@ -1,14 +1,14 @@
-import { CurrentUser } from 'decorators/current-user';
-import { Comment } from 'models/Comment';
-import { Post } from 'models/Post';
-import { Profile } from 'models/Profile';
-import User from 'models/User';
-import { CreatePostInput } from 'resolvers/types/CreatePostInput';
-import { CreatePostPayload } from 'resolvers/types/CreatePostPayload';
-import { CommentService } from 'services/CommentService';
-import { PostService } from 'services/PostService';
-import { ProfileService } from 'services/ProfileService';
 import { Arg, Authorized, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
+import { CurrentUser } from '../decorators/current-user';
+import { Comment } from '../models/Comment';
+import { Post } from '../models/Post';
+import { Profile } from '../models/Profile';
+import { User } from '../models/User';
+import { CreatePostInput } from '../resolvers/types/CreatePostInput';
+import { CreatePostPayload } from '../resolvers/types/CreatePostPayload';
+import { CommentService } from '../services/CommentService';
+import { PostService } from '../services/PostService';
+import { ProfileService } from '../services/ProfileService';
 
 @Resolver(Post)
 export class PostResolver {
@@ -24,7 +24,7 @@ export class PostResolver {
 
   @FieldResolver(() => Number)
   commentCount(@Root() post: Post): Promise<number> {
-    return CommentService.getCommentCount(post._id);
+    return CommentService.countComments(post._id);
   }
 
   @Query(() => Post)
