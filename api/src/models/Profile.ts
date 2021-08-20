@@ -30,6 +30,14 @@ export class Profile extends Model {
   @prop({ required: true, type: [String], enum: Genre })
   favoriteGenres: Genre[];
 
+  @Field(() => Number)
+  @prop({ required: true, default: 0 })
+  followerCount: number;
+
+  @Field(() => Number)
+  @prop({ required: true, default: 0 })
+  followingCount: number;
+
   @Field(() => Date)
   createdAt: Date;
 

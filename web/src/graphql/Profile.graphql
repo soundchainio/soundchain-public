@@ -11,5 +11,8 @@ query Profile($id: String!) {
       twitter
     }
     userHandle
+    isFollowed
+    followerCount
+    followingCount
   }
 }
