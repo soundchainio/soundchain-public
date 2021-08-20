@@ -1,7 +1,7 @@
 import { getModelForClass, modelOptions, prop, Severity } from '@typegoose/typegoose';
-import { Genre } from 'enums/Genres';
 import { Field, ID, ObjectType } from 'type-graphql';
-import Model from './Model';
+import { Genre } from '../enums/Genres';
+import { Model } from './Model';
 import { SocialMedias } from './SocialMedias';
 
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
