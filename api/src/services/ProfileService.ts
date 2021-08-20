@@ -1,3 +1,4 @@
+import { UserInputError } from 'apollo-server-express';
 import { Genre } from 'enums/Genres';
 import NotFoundError from 'errors/NotFoundError';
 import { FollowModel } from 'models/Follow';
@@ -54,11 +55,16 @@ export class ProfileService {
     const followedProfile = await ProfileModel.findById(followedId);
     if (!followedProfile) throw new NotFoundError('Profile', followedId);
 
+    const alreadyFollowed = await FollowModel.exists({ followerId, followedId });
+    if (alreadyFollowed) {
+      throw new UserInputError(`User profile ${followerId} is already following profile ${followerId}.`);
+    }
+
     const follow = new FollowModel({ followerId, followedId });
     await follow.save();
     await ProfileModel.updateOne({ _id: followerId }, { $inc: { followingCount: 1 } });
+    await ProfileModel.updateOne({ _id: followedId }, { $inc: { followerCount: 1 } });
     followedProfile.followerCount++;
-    await followedProfile.save();
     return followedProfile;
   }
 
@@ -66,10 +72,14 @@ export class ProfileService {
     const followedProfile = await ProfileModel.findById(followedId);
     if (!followedProfile) throw new NotFoundError('Profile', followedId);
 
-    await FollowModel.deleteOne({ followerId, followedId });
+    const { deletedCount } = await FollowModel.deleteOne({ followerId, followedId });
+    if (deletedCount === 0) {
+      throw new UserInputError(`User profile ${followerId} isn't following profile ${followerId}.`);
+    }
+
     await ProfileModel.updateOne({ _id: followerId }, { $inc: { followingCount: -1 } });
+    await ProfileModel.updateOne({ _id: followedId }, { $inc: { followerCount: -1 } });
     followedProfile.followerCount--;
-    await followedProfile.save();
     return followedProfile;
   }
 }

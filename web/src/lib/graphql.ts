@@ -284,7 +284,7 @@ export type UnfollowProfileInput = {
 
 export type UnfollowProfilePayload = {
   __typename?: 'UnfollowProfilePayload';
-  followedProfile: Profile;
+  unfollowedProfile: Profile;
 };
 
 export type UpdateCoverPictureInput = {
@@ -517,7 +517,7 @@ export type UnfollowProfileMutationVariables = Exact<{
 
 export type UnfollowProfileMutation = { __typename?: 'Mutation' } & {
   unfollowProfile: { __typename?: 'UnfollowProfilePayload' } & {
-    followedProfile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'followerCount' | 'isFollowed'>;
+    unfollowedProfile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'followerCount' | 'isFollowed'>;
   };
 };
 
@@ -1190,7 +1190,7 @@ export type ResetPasswordMutationOptions = Apollo.BaseMutationOptions<
 export const UnfollowProfileDocument = gql`
   mutation UnfollowProfile($input: UnfollowProfileInput!) {
     unfollowProfile(input: $input) {
-      followedProfile {
+      unfollowedProfile {
         id
         followerCount
         isFollowed

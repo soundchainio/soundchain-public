@@ -1,6 +1,6 @@
 mutation UnfollowProfile($input: UnfollowProfileInput!) {
   unfollowProfile(input: $input) {
-    followedProfile {
+    unfollowedProfile {
       id
       followerCount
       isFollowed

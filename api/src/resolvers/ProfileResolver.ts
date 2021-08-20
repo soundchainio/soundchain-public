@@ -100,7 +100,7 @@ export class ProfileResolver {
     @Arg('input') { followedId }: UnfollowProfileInput,
     @CurrentUser() { profileId: followerId }: User,
   ): Promise<UnfollowProfilePayload> {
-    const followedProfile = await ProfileService.unfollowProfile(followerId, followedId);
-    return { followedProfile };
+    const unfollowedProfile = await ProfileService.unfollowProfile(followerId, followedId);
+    return { unfollowedProfile };
   }
 }
