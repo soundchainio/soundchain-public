@@ -1,4 +1,5 @@
-import { config } from './src/config';
+import path from 'path';
+import { config, DATABASE_SSL_PATH } from './src/config';
 
 const migrationConfig = {
   mongodb: {
@@ -6,11 +7,13 @@ const migrationConfig = {
     options: {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      ssl: Boolean(DATABASE_SSL_PATH),
+      sslCA: DATABASE_SSL_PATH && path.join(__dirname, 'src', DATABASE_SSL_PATH),
+      retryWrites: false,
     },
   },
   migrationsDir: 'migrations',
   changelogCollectionName: 'changelog',
-  migrationFileExtension: '.ts',
   useFileHash: false,
 };
 

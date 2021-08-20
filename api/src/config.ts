@@ -23,7 +23,7 @@ interface LambdaContext {
   express: ExpressContext;
 }
 
-const {
+export const {
   NODE_ENV,
   PORT = 4000,
   DATABASE_URL = 'mongodb://localhost:27017',

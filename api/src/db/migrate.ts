@@ -8,8 +8,11 @@ export const handler: Handler = async () => {
   config.set(migrationConfig as unknown as config.Config);
   const { db, client } = await database.connect();
   const migrated = await up(db);
-  if (migrated.length) migrated.forEach(fileName => console.log('Migrated:', fileName));
-  else console.log('No pending migrations');
+  if (migrated.length) {
+    migrated.forEach(fileName => console.log('Migrated:', fileName));
+  } else {
+    console.log('No pending migrations');
+  }
   await client.close();
   console.log('Migrations finish');
 };
