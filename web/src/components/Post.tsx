@@ -6,6 +6,7 @@ import { Label } from './Label';
 import { PostActions } from './PostActions';
 import { PostStats } from './PostStats';
 import { RepostModal } from './RepostModal';
+import { RepostPreview } from './RepostPreview';
 import { Timestamp } from './Timestamp';
 
 interface PostProps {
@@ -38,6 +39,7 @@ export const Post = ({ postId }: PostProps) => {
           {post.mediaLink && (
             <iframe frameBorder="0" className="mt-4 w-full bg-gray-20" allowFullScreen src={post.mediaLink} />
           )}
+          {post.repostId && <RepostPreview postId={post.repostId} />}
           <PostStats likes={generateRandomNumber()} comments={post.commentCount} reposts={generateRandomNumber()} />
         </div>
       </NextLink>

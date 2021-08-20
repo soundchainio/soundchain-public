@@ -45,7 +45,7 @@ const setMaxInputLength = (input: string) => {
 export const RepostModal = ({ setShowRepostModal, showRepostModal, post }: RepostModalProps) => {
   const [isEmojiPickerVisible, setEmojiPickerVisible] = useState(false);
 
-  const [createPost] = useCreatePostMutation();
+  const [createPost] = useCreatePostMutation({ refetchQueries: ['Posts'] });
 
   const cancel = (setFieldValue: (val: string, newVal: string) => void) => {
     return (event: React.MouseEvent) => {
@@ -111,7 +111,9 @@ export const RepostModal = ({ setShowRepostModal, showRepostModal, post }: Repos
               placeholder="What's happening?"
               maxLength={setMaxInputLength(values.body)}
             />
-            <RepostPreview post={post} />
+            <div className="p-4 bg-gray-20">
+              <RepostPreview postId={post.id} />
+            </div>
             <div className="p-4 flex items-center bg-gray-25">
               <div className="text-center w-16" onClick={onEmojiPickerClick}>
                 {isEmojiPickerVisible ? '❌' : '😃'}
