@@ -1,11 +1,11 @@
 import { UserInputError } from 'apollo-server-express';
 import { compare } from 'bcryptjs';
-import { ProfileModel } from 'models/Profile';
-import User, { UserModel } from 'models/User';
 import { v4 as uuidv4 } from 'uuid';
+import { ProfileModel } from '../models/Profile';
+import { User, UserModel } from '../models/User';
 import { EmailService } from './EmailService';
 
-export default class AuthService {
+export class AuthService {
   static async register(email: string, handle: string, password: string, displayName: string): Promise<User> {
     const existingUser = await UserModel.findOne({ $or: [{ email }, { handle }] });
 

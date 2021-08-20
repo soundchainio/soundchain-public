@@ -1,12 +1,9 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { Db } from 'mongodb';
-
 export = {
-  async up(db: Db): Promise<void> {
+  async up(db) {
     //await db.collection('profiles').updateMany({}, { $set: { favoriteArtists: [] } });
   },
 
-  async down(db: Db): Promise<void> {
+  async down(db) {
     //await db.collection('profiles').updateMany({}, { $unset: { favoriteArtists: '' } });
   },
 };

@@ -1,9 +1,9 @@
-import { CurrentUser } from 'decorators/current-user';
-import { FollowModel } from 'models/Follow';
-import { Profile } from 'models/Profile';
-import User from 'models/User';
-import { ProfileService } from 'services/ProfileService';
 import { Arg, Authorized, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
+import { CurrentUser } from '../decorators/current-user';
+import { FollowModel } from '../models/Follow';
+import { Profile } from '../models/Profile';
+import { User } from '../models/User';
+import { ProfileService } from '../services/ProfileService';
 import { FollowProfileInput } from './types/FollowProfileInput';
 import { FollowProfilePayload } from './types/FollowProfilePayload';
 import { UnfollowProfileInput } from './types/UnfollowProfileInput';
