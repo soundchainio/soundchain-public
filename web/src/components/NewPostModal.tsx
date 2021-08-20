@@ -6,7 +6,7 @@ import 'emoji-mart/css/emoji-mart.css';
 import { PostLinkType } from 'enums/PostLinkType';
 import { Field, Form, Formik, FormikHelpers } from 'formik';
 import { CreatePostInput } from 'lib/graphql';
-import { default as React, useEffect, useState } from 'react';
+import { default as React, useCallback, useEffect, useState } from 'react';
 import * as yup from 'yup';
 import { useCreatePostMutation } from '../lib/graphql';
 import { getNormalizedLink, hasLink } from '../utils/NormalizeEmbedLinks';
@@ -91,14 +91,14 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
     }
   };
 
-  const normalizeOriginalLink = async () => {
+  const normalizeOriginalLink = useCallback(async () => {
     if (originalLink.length && hasLink(originalLink)) {
       const link = await getNormalizedLink(originalLink);
       setPostLink(link);
     } else {
       setPostLink('');
     }
-  };
+  }, [originalLink]);
 
   const onOpenMusicLink = () => {
     setShowAddMusicLink(true);
@@ -120,7 +120,7 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
     } else {
       setPostLink('');
     }
-  }, [originalLink]);
+  }, [normalizeOriginalLink, originalLink]);
 
   return (
     <div
