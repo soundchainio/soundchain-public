@@ -1,7 +1,7 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
-import { ReactionEmoji } from 'enums/ReactionEmoji';
 import { Field, ID, ObjectType } from 'type-graphql';
-import Model from './Model';
+import { ReactionEmoji } from '../enums/ReactionEmoji';
+import { Model } from './Model';
 
 @ObjectType()
 export class Reaction extends Model {

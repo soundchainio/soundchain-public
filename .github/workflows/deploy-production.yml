@@ -5,7 +5,7 @@ on:
     branches:
       - production
     paths:
-      - "api/**"
+      - 'api/**'
 
 jobs:
   deploy-api:

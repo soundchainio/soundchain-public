@@ -2,7 +2,7 @@ import { MinLength } from 'class-validator';
 import { Field, InputType } from 'type-graphql';
 
 @InputType()
-export default class LoginInput {
+export class LoginInput {
   @Field({ description: 'Username can be email or handle' })
   username: string;
 

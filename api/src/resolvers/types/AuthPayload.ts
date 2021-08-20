@@ -1,7 +1,7 @@
 import { Field, ObjectType } from 'type-graphql';
 
 @ObjectType()
-export default class AuthPayload {
+export class AuthPayload {
   @Field()
   jwt: string;
 }

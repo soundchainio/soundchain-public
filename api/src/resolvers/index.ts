@@ -5,7 +5,7 @@ import { ReactionResolver } from './ReactionResolver';
 import { UploadResolver } from './UploadResolver';
 import { UserResolver } from './UserResolver';
 
-export default [
+export const resolvers = [
   CommentResolver,
   PostResolver,
   ProfileResolver,
