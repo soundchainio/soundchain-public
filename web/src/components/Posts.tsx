@@ -1,15 +1,15 @@
 import classNames from 'classnames';
 import { Post } from 'components/Post';
-import { PostsQueryVariables, usePostsQuery } from 'lib/graphql';
+import { usePostsQuery } from 'lib/graphql';
 import React from 'react';
 import { PostSkeleton } from './PostSkeleton';
 
 interface PostsProps extends React.ComponentPropsWithoutRef<'div'> {
-  variables?: PostsQueryVariables;
+  profileId?: string;
 }
 
-export const Posts = ({ className, variables }: PostsProps) => {
-  const { data } = usePostsQuery({ variables });
+export const Posts = ({ className, profileId }: PostsProps) => {
+  const { data } = usePostsQuery({ variables: { filter: profileId ? { profileId } : undefined } });
 
   if (!data) {
     return <PostSkeleton />;

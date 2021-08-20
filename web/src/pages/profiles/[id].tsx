@@ -44,6 +44,7 @@ export default function ProfilePage({ profile }: InferGetServerSidePropsType<typ
         profile,
       },
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const {
@@ -93,7 +94,7 @@ export default function ProfilePage({ profile }: InferGetServerSidePropsType<typ
         </div>
       </div>
       <ProfileTabs />
-      <Posts variables={{ profileId: profile.id }} />
+      <Posts profileId={profile.id} />
     </Layout>
   );
 }
