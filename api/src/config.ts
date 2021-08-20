@@ -33,6 +33,8 @@ const {
   SENDGRID_VERIFICATION_TEMPLATE,
   SENDGRID_RESET_PASSWORD_TEMPLATE,
   SENDGRID_API_KEY,
+  UPLOADS_BUCKET_REGION,
+  UPLOADS_BUCKET_NAME,
 } = process.env;
 
 function assertEnvVar(name: string, value: string | undefined): asserts value {
@@ -63,6 +65,10 @@ export const config = {
       authChecker: ({ context }) => Boolean(context.jwtUser),
     }),
   },
+  uploads: {
+    region: UPLOADS_BUCKET_REGION,
+    bucket: UPLOADS_BUCKET_NAME,
+  },
   db: {
     url: DATABASE_URL,
     options: {
@@ -70,7 +76,7 @@ export const config = {
       useUnifiedTopology: true,
       useFindAndModify: false,
       ssl: Boolean(DATABASE_SSL_PATH),
-      sslCA: DATABASE_SSL_PATH && fs.readFileSync(`${__dirname}/${DATABASE_SSL_PATH}`),
+      sslCA: DATABASE_SSL_PATH && fs.readFileSync(`${__dirname}/${DATABASE_SSL_PATH}`).toString(),
       retryWrites: false,
     },
   },

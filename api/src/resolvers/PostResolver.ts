@@ -26,7 +26,7 @@ export class PostResolver {
 
   @FieldResolver(() => Number)
   commentCount(@Root() post: Post): Promise<number> {
-    return CommentService.getCommentCount(post._id);
+    return CommentService.countComments(post._id);
   }
 
   @FieldResolver(() => [ReactionCount])

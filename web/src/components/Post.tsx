@@ -2,6 +2,7 @@ import { usePostQuery } from 'lib/graphql';
 import NextLink from 'next/link';
 import React from 'react';
 import { Avatar } from './Avatar';
+import { Label } from './Label';
 import { PostActions } from './PostActions';
 import { PostStats } from './PostStats';
 import { Timestamp } from './Timestamp';
@@ -18,7 +19,7 @@ export const Post = ({ postId }: PostProps) => {
   const { data } = usePostQuery({ variables: { id: postId } });
   const post = data?.post;
 
-  if (!post) return <div>Loading</div>;
+  if (!post) return <Label>Loading</Label>;
 
   return (
     <div>

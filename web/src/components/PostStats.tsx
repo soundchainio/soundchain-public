@@ -1,4 +1,5 @@
 import React from 'react';
+import { Number } from './Number';
 
 interface PostStatsProps {
   likes: number;
@@ -16,15 +17,21 @@ export const PostStats = ({ likes, comments, reposts }: PostStatsProps) => {
       <div className="flex items-center">
         <div className="text-sm text-gray-100 flex items-center">
           😃
-          <div className="text-white font-bold pl-2">{likes}</div>
+          <div className="text-white font-bold pl-2">
+            <Number value={likes} />
+          </div>
           {validatePlural('like', likes)}
         </div>
         <div className="text-sm text-gray-100 flex items-center">
-          <div className="text-white font-bold">{comments}</div>
+          <div className="text-white font-bold">
+            <Number value={comments} />
+          </div>
           {validatePlural('comment', comments)}
         </div>
         <div className="text-sm text-gray-100 flex items-center">
-          <div className="text-white font-bold">{reposts}</div>
+          <div className="text-white font-bold">
+            <Number value={reposts} />
+          </div>
           {validatePlural('repost', reposts)}
         </div>
       </div>
