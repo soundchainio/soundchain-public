@@ -43,4 +43,9 @@ export class NotificationService {
     if (!notification) throw Error(`Notification with ${notificationId} not found.`);
     return notification;
   }
+
+  static async clearNotifications(profileId: string): Promise<boolean> {
+    await NotificationModel.deleteMany({ profileId });
+    return true;
+  }
 }

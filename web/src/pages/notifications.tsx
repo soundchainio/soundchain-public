@@ -1,3 +1,4 @@
+import { ClearAllNotificationsButton } from 'components/ClearAllNotificationsButton';
 import { Layout } from 'components/Layout';
 import { Notifications } from 'components/Notifications';
 import { apolloClient } from 'lib/apollo';
@@ -14,7 +15,7 @@ export const getServerSideProps = protectPage(async context => {
 
 export default function UserNotifications() {
   return (
-    <Layout title="Notifications">
+    <Layout title="Notifications" topRightButton={<ClearAllNotificationsButton />}>
       <Head>
         <title>Soundchain / Notifications</title>
         <meta name="description" content="Notifications" />

@@ -31,6 +31,11 @@ export type AuthPayload = {
   jwt: Scalars['String'];
 };
 
+export type ClearNotificationsPayload = {
+  __typename?: 'ClearNotificationsPayload';
+  success: Scalars['Boolean'];
+};
+
 export type Comment = {
   __typename?: 'Comment';
   id: Scalars['ID'];
@@ -133,6 +138,7 @@ export type Mutation = {
   __typename?: 'Mutation';
   addComment: AddCommentPayload;
   resetNotificationCount: Profile;
+  clearNotifications: ClearNotificationsPayload;
   createPost: CreatePostPayload;
   updateSocialMedias: UpdateSocialMediasPayload;
   updateFavoriteGenres: UpdateFavoriteGenresPayload;
@@ -433,6 +439,17 @@ export type AddCommentMutation = (
       ) }
       & CommentComponentFieldsFragment
     ) }
+  ) }
+);
+
+export type ClearNotificationsMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type ClearNotificationsMutation = (
+  { __typename?: 'Mutation' }
+  & { clearNotifications: (
+    { __typename?: 'ClearNotificationsPayload' }
+    & Pick<ClearNotificationsPayload, 'success'>
   ) }
 );
 
@@ -871,6 +888,38 @@ export function useAddCommentMutation(baseOptions?: Apollo.MutationHookOptions<A
 export type AddCommentMutationHookResult = ReturnType<typeof useAddCommentMutation>;
 export type AddCommentMutationResult = Apollo.MutationResult<AddCommentMutation>;
 export type AddCommentMutationOptions = Apollo.BaseMutationOptions<AddCommentMutation, AddCommentMutationVariables>;
+export const ClearNotificationsDocument = gql`
+    mutation ClearNotifications {
+  clearNotifications {
+    success
+  }
+}
+    `;
+export type ClearNotificationsMutationFn = Apollo.MutationFunction<ClearNotificationsMutation, ClearNotificationsMutationVariables>;
+
+/**
+ * __useClearNotificationsMutation__
+ *
+ * To run a mutation, you first call `useClearNotificationsMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useClearNotificationsMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [clearNotificationsMutation, { data, loading, error }] = useClearNotificationsMutation({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useClearNotificationsMutation(baseOptions?: Apollo.MutationHookOptions<ClearNotificationsMutation, ClearNotificationsMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ClearNotificationsMutation, ClearNotificationsMutationVariables>(ClearNotificationsDocument, options);
+      }
+export type ClearNotificationsMutationHookResult = ReturnType<typeof useClearNotificationsMutation>;
+export type ClearNotificationsMutationResult = Apollo.MutationResult<ClearNotificationsMutation>;
+export type ClearNotificationsMutationOptions = Apollo.BaseMutationOptions<ClearNotificationsMutation, ClearNotificationsMutationVariables>;
 export const CommentDocument = gql`
     query Comment($id: String!) {
   comment(id: $id) {

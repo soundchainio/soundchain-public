@@ -7,6 +7,7 @@ import { User } from 'models/User';
 import { NotificationService } from 'services/NotificationService';
 import { ProfileService } from 'services/ProfileService';
 import { Arg, Authorized, createUnionType, Mutation, Query, Resolver } from 'type-graphql';
+import { ClearNotificationsPayload } from './types/ClearNotificationsPayload';
 
 const NotificationUnion = createUnionType({
   name: 'NotificationUnion',
@@ -37,5 +38,12 @@ export class NotificationResolver {
   @Authorized()
   resetNotificationCount(@CurrentUser() { profileId }: User): Promise<Profile> {
     return ProfileService.resetNotificationCount(profileId);
+  }
+
+  @Mutation(() => ClearNotificationsPayload)
+  @Authorized()
+  async clearNotifications(@CurrentUser() { profileId }: User): Promise<ClearNotificationsPayload> {
+    const success = await NotificationService.clearNotifications(profileId);
+    return { success };
   }
 }
