@@ -1,8 +1,7 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
+import { ReactionEmoji } from 'enums/ReactionEmoji';
 import { Field, ID, ObjectType } from 'type-graphql';
 import Model from './Model';
-
-export type ReactionEmoji = '❤️' | '🤘' | '😃' | '😢' | '😎';
 
 @ObjectType()
 export class Reaction extends Model {

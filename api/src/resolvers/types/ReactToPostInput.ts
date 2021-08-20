@@ -1,4 +1,4 @@
-import { ReactionEmoji } from 'models/Reaction';
+import { ReactionEmoji } from 'enums/ReactionEmoji';
 import { Field, InputType } from 'type-graphql';
 
 @InputType()

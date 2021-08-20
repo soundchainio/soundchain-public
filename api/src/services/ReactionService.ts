@@ -1,5 +1,6 @@
 import { UserInputError } from 'apollo-server-express';
-import { Reaction, ReactionEmoji, ReactionModel } from 'models/Reaction';
+import { ReactionEmoji } from 'enums/ReactionEmoji';
+import { Reaction, ReactionModel } from 'models/Reaction';
 import { ReactionCount } from 'resolvers/types/ReactionCount';
 
 interface NewReactionParams {
