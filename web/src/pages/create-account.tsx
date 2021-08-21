@@ -6,7 +6,7 @@ import { RegisterEmailForm, RegisterEmailFormValues } from 'components/RegisterE
 import { RegisterErrorStep } from 'components/RegisterErrorStep';
 import { SetupProfileForm, SetupProfileFormValues } from 'components/SetupProfileForm';
 import { useMe } from 'hooks/useMe';
-import { setJwt } from 'lib/apollo';
+import { cacheFor, setJwt } from 'lib/apollo';
 import {
   RegisterInput,
   useRegisterMutation,
@@ -14,9 +14,14 @@ import {
   useUpdateFavoriteGenresMutation,
   useUpdateProfilePictureMutation,
 } from 'lib/graphql';
+import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/dist/client/router';
 import Head from 'next/head';
 import { useCallback, useEffect, useState } from 'react';
+
+export const getServerSideProps: GetServerSideProps = context => {
+  return cacheFor(CreateAccountPage, {}, context);
+};
 
 export default function CreateAccountPage() {
   const router = useRouter();

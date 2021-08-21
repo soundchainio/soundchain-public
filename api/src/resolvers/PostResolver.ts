@@ -27,8 +27,18 @@ export class PostResolver {
   }
 
   @FieldResolver(() => Number)
+  likeCount(): Promise<number> {
+    return Promise.resolve(Math.floor(Math.random() * 100));
+  }
+
+  @FieldResolver(() => Number)
   commentCount(@Root() post: Post): Promise<number> {
     return CommentService.countComments(post._id);
+  }
+
+  @FieldResolver(() => Number)
+  repostCount(): Promise<number> {
+    return Promise.resolve(Math.floor(Math.random() * 100));
   }
 
   @Query(() => Post)
