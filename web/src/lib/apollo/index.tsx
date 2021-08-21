@@ -10,9 +10,11 @@ import { getDataFromTree } from '@apollo/client/react/ssr';
 import { mergeDeep } from '@apollo/client/utilities';
 import Cookies from 'js-cookie';
 import { GetServerSidePropsContext } from 'next';
+import { RouterContext } from 'next/dist/shared/lib/router-context';
 import { useMemo } from 'react';
 import isBrowser from '../isBrowser';
 import { cacheConfig } from './cache-config';
+import { FakeRouter } from './fake-router';
 
 const jwtKey = 'token';
 
@@ -59,9 +61,11 @@ export async function cacheFor<T>(
   client = client ?? createApolloClient(context);
 
   await getDataFromTree(
-    <Provider client={client}>
-      <Page {...props} />
-    </Provider>,
+    <RouterContext.Provider value={new FakeRouter(context)}>
+      <Provider client={client}>
+        <Page {...props} />
+      </Provider>
+    </RouterContext.Provider>,
   );
 
   return { props: { ...props, cache: client.extract() } };
