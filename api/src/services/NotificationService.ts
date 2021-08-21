@@ -1,9 +1,11 @@
 import { NotificationType } from 'enums/NotificationType';
+import { NotFoundError } from 'errors/NotFoundError';
 import { Comment } from 'models/Comment';
 import { CommentNotificationMetadata } from 'models/CommentNotification';
-import { Notification, NotificationModel } from 'models/Notification';
+import { NotificationModel } from 'models/Notification';
 import { Post } from 'models/Post';
 import { Profile } from 'models/Profile';
+import { NotificationUnion } from 'resolvers/NotificationResolver';
 import { ProfileService } from './ProfileService';
 
 interface CommentNotificationParams {
@@ -17,9 +19,9 @@ export class NotificationService {
     if (comment.profileId === post.profileId) return;
     const { body: commentBody, _id: commentId } = comment;
     const { _id: postId, profileId: postOwnerProfileId } = post;
-    const { displayName, profilePicture: authorPicture } = authorProfile;
+    const { displayName: authorName, profilePicture: authorPicture } = authorProfile;
     const metadata: CommentNotificationMetadata = {
-      author: displayName,
+      authorName,
       commentBody,
       postId,
       commentId,
@@ -34,14 +36,15 @@ export class NotificationService {
     await ProfileService.incrementNotificationCount(postOwnerProfileId);
   }
 
-  static async getNotifications(profileId: string): Promise<Notification[]> {
-    return NotificationModel.find({ profileId }).sort({ createdAt: 'desc' }).exec();
+  static async getNotifications(profileId: string): Promise<Array<typeof NotificationUnion>> {
+    const notifications = NotificationModel.find({ profileId }).sort({ createdAt: 'desc' }).exec();
+    return notifications as unknown as Array<typeof NotificationUnion>;
   }
 
-  static async getNotification(notificationId: string, profileId: string): Promise<Notification> {
+  static async getNotification(notificationId: string, profileId: string): Promise<typeof NotificationUnion> {
     const notification = await NotificationModel.findOne({ _id: notificationId, profileId });
-    if (!notification) throw Error(`Notification with ${notificationId} not found.`);
-    return notification;
+    if (!notification) throw new NotFoundError('Notification', notificationId);
+    return notification as unknown as typeof NotificationUnion;
   }
 
   static async clearNotifications(profileId: string): Promise<boolean> {

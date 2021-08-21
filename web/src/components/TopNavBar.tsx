@@ -56,7 +56,7 @@ export const TopNavBar = ({ title, rightButton }: TopNavBarProps) => {
               </div>
             </div>
           )}
-          {rightButton && <div className="flex flex-1 items-center justify-center md:justify-end">{rightButton}</div>}
+          {rightButton && <div className="flex flex-1 justify-end pr-2">{rightButton}</div>}
         </div>
       </div>
     </nav>

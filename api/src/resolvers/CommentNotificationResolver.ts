@@ -11,13 +11,13 @@ export class CommentNotificationResolver {
 
   @FieldResolver(() => String)
   author(@Root() { metadata }: Notification): string {
-    return metadata.author;
+    return (metadata as CommentNotificationMetadata).authorName;
   }
 
   @FieldResolver(() => String, { nullable: true })
-  authorPicture(@Root() { metadata }: Notification): string | null {
-    if (!metadata.authorPicture) return null;
-    return metadata.authorPicture;
+  authorPicture(@Root() { metadata }: Notification): string | undefined {
+    if (!metadata.authorPicture) return;
+    return (metadata as CommentNotificationMetadata).authorPicture;
   }
 
   @FieldResolver(() => String)

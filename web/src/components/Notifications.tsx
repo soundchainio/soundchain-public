@@ -1,4 +1,4 @@
-import { Notification, useNotificationsQuery } from 'lib/graphql';
+import { useNotificationsQuery } from 'lib/graphql';
 import React from 'react';
 import { Notification as NotificationItem } from './Notification';
 import { PostSkeleton } from './PostSkeleton';
@@ -13,7 +13,7 @@ export const Notifications = () => {
   return (
     <div>
       {data.notifications.map((notification, index) => (
-        <NotificationItem key={index} index={index} notificationId={(notification as Notification).id} />
+        <NotificationItem key={index} index={index} notificationId={notification.id} />
       ))}
     </div>
   );

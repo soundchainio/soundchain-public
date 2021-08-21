@@ -218,20 +218,11 @@ export type MutationResetPasswordArgs = {
   input: ResetPasswordInput;
 };
 
-export type Notification = {
-  __typename?: 'Notification';
-  id: Scalars['ID'];
-  type: NotificationType;
-  profileId: Scalars['String'];
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-};
-
 export enum NotificationType {
   Comment = 'Comment'
 }
 
-export type NotificationUnion = Notification | CommentNotification;
+export type NotificationUnion = CommentNotification;
 
 export type Post = {
   __typename?: 'Post';
@@ -596,7 +587,7 @@ export type NotificationQueryVariables = Exact<{
 
 export type NotificationQuery = (
   { __typename?: 'Query' }
-  & { notification: { __typename?: 'Notification' } | (
+  & { notification: (
     { __typename?: 'CommentNotification' }
     & Pick<CommentNotification, 'id' | 'type' | 'body' | 'previewBody' | 'link' | 'createdAt' | 'author' | 'authorPicture'>
   ) }
@@ -618,7 +609,7 @@ export type NotificationsQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type NotificationsQuery = (
   { __typename?: 'Query' }
-  & { notifications: Array<{ __typename?: 'Notification' } | (
+  & { notifications: Array<(
     { __typename?: 'CommentNotification' }
     & Pick<CommentNotification, 'id' | 'type' | 'body' | 'previewBody' | 'link' | 'createdAt' | 'author' | 'authorPicture'>
   )> }

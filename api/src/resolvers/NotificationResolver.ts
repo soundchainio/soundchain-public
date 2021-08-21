@@ -1,7 +1,6 @@
 import { CurrentUser } from 'decorators/current-user';
 import { NotificationType } from 'enums/NotificationType';
 import { CommentNotification } from 'models/CommentNotification';
-import { Notification } from 'models/Notification';
 import { Profile } from 'models/Profile';
 import { User } from 'models/User';
 import { NotificationService } from 'services/NotificationService';
@@ -9,9 +8,9 @@ import { ProfileService } from 'services/ProfileService';
 import { Arg, Authorized, createUnionType, Mutation, Query, Resolver } from 'type-graphql';
 import { ClearNotificationsPayload } from './types/ClearNotificationsPayload';
 
-const NotificationUnion = createUnionType({
+export const NotificationUnion = createUnionType({
   name: 'NotificationUnion',
-  types: () => [Notification, CommentNotification] as const,
+  types: () => [CommentNotification] as const,
   resolveType: value => {
     if (value.type === NotificationType.Comment) {
       return CommentNotification;
