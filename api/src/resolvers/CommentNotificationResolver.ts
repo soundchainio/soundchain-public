@@ -16,8 +16,8 @@ export class CommentNotificationResolver {
 
   @FieldResolver(() => String, { nullable: true })
   authorPicture(@Root() { metadata }: Notification): string | undefined {
-    if (!metadata.authorPicture) return;
-    return (metadata as CommentNotificationMetadata).authorPicture;
+    const { authorPicture } = metadata as CommentNotificationMetadata;
+    return authorPicture;
   }
 
   @FieldResolver(() => String)
