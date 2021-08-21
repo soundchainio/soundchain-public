@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client';
 import { GetServerSideProps, GetServerSidePropsContext, GetServerSidePropsResult } from 'next';
 import { ParsedUrlQuery } from 'querystring';
@@ -6,20 +5,24 @@ import { createApolloClient } from './apollo';
 import { MeDocument, MeQuery } from './graphql';
 
 export type GetServerSidePropsWithContext<
-  P extends { [key: string]: any } = { [key: string]: any },
+  P extends { [key: string]: unknown } = { [key: string]: unknown },
   Q extends ParsedUrlQuery = ParsedUrlQuery,
 > = (
   context: GetServerSidePropsContext<Q>,
   apolloClient: ApolloClient<NormalizedCacheObject>,
 ) => Promise<GetServerSidePropsResult<P>>;
 
-export const protectPage = <T extends { [key: string]: any }>(
+export const protectPage = <T extends { [key: string]: unknown }>(
   getServerSideProps: GetServerSidePropsWithContext<T>,
 ): GetServerSideProps<T> => {
   return async context => {
     const apolloClient = createApolloClient(context);
     const me = await apolloClient.query<MeQuery>({ query: MeDocument });
-    if (me) return getServerSideProps(context, apolloClient);
+
+    if (!me) {
+      return getServerSideProps(context, apolloClient);
+    }
+
     return {
       redirect: {
         permanent: false,
