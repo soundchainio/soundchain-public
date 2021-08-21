@@ -28,16 +28,20 @@ export class FakeRouter implements NextRouter {
   isPreview: boolean;
 
   constructor(context: GetServerSidePropsContext) {
-    this.route = context.resolvedUrl;
-    this.pathname = context.resolvedUrl;
+    const pathname = context.resolvedUrl.replace(/\?.*/, '');
+    this.route = pathname.replace(/\/$/, '');
+    this.pathname = pathname;
     this.query = context.query;
-    this.asPath = context.resolvedUrl;
-    this.basePath = context.resolvedUrl;
+    this.asPath = context.req.url ?? pathname;
+    this.basePath = '';
+    this.locale = context.locale;
+    this.locales = context.locales;
+    this.defaultLocale = context.defaultLocale;
     this.isLocaleDomain = true;
     this.events = mitt();
     this.isFallback = false;
     this.isReady = true;
-    this.isPreview = false;
+    this.isPreview = context.preview ?? false;
   }
 
   push(): Promise<boolean> {
