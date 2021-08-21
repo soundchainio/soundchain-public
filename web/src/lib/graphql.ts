@@ -227,7 +227,9 @@ export type Post = {
   updatedAt: Scalars['DateTime'];
   profile: Profile;
   comments: Array<Comment>;
+  likeCount: Scalars['Float'];
   commentCount: Scalars['Float'];
+  repostCount: Scalars['Float'];
 };
 
 export type PostConnection = {
@@ -592,7 +594,7 @@ export type PostQuery = (
 
 export type PostComponentFieldsFragment = (
   { __typename?: 'Post' }
-  & Pick<Post, 'id' | 'body' | 'mediaLink' | 'createdAt' | 'commentCount'>
+  & Pick<Post, 'id' | 'body' | 'mediaLink' | 'createdAt' | 'likeCount' | 'commentCount' | 'repostCount'>
   & { profile: (
     { __typename?: 'Profile' }
     & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
@@ -786,7 +788,9 @@ export const PostComponentFieldsFragmentDoc = gql`
   body
   mediaLink
   createdAt
+  likeCount
   commentCount
+  repostCount
   profile {
     id
     displayName

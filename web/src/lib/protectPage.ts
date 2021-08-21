@@ -1,14 +1,25 @@
-import { GetServerSideProps } from 'next';
-import { apolloClient } from './apollo';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { ApolloClient, NormalizedCacheObject } from '@apollo/client';
+import { GetServerSideProps, GetServerSidePropsContext, GetServerSidePropsResult } from 'next';
+import { ParsedUrlQuery } from 'querystring';
+import { createApolloClient } from './apollo';
 import { MeDocument, MeQuery } from './graphql';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type GetServerSidePropsWithContext<
+  P extends { [key: string]: any } = { [key: string]: any },
+  Q extends ParsedUrlQuery = ParsedUrlQuery,
+> = (
+  context: GetServerSidePropsContext<Q>,
+  apolloClient: ApolloClient<NormalizedCacheObject>,
+) => Promise<GetServerSidePropsResult<P>>;
+
 export const protectPage = <T extends { [key: string]: any }>(
-  getServerSideProps: GetServerSideProps<T>,
+  getServerSideProps: GetServerSidePropsWithContext<T>,
 ): GetServerSideProps<T> => {
   return async context => {
-    const me = await apolloClient.query<MeQuery>({ query: MeDocument, context });
-    if (me) return getServerSideProps(context);
+    const apolloClient = createApolloClient(context);
+    const me = await apolloClient.query<MeQuery>({ query: MeDocument });
+    if (me) return getServerSideProps(context, apolloClient);
     return {
       redirect: {
         permanent: false,
