@@ -17,7 +17,7 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   email: yup.string().email().required(),
 });
 
-export const getServerSideProps: GetServerSideProps = async context => {
+export const getServerSideProps: GetServerSideProps = context => {
   return cacheFor(ForgotPasswordPage, {}, context);
 };
 

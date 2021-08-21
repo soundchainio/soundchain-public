@@ -4,7 +4,7 @@ import { cacheFor } from 'lib/apollo';
 import { GetServerSideProps } from 'next';
 import Head from 'next/head';
 
-export const getServerSideProps: GetServerSideProps = async context => {
+export const getServerSideProps: GetServerSideProps = context => {
   return cacheFor(HomePage, {}, context);
 };
 

@@ -19,7 +19,7 @@ import { useRouter } from 'next/dist/client/router';
 import Head from 'next/head';
 import { useCallback, useEffect, useState } from 'react';
 
-export const getServerSideProps: GetServerSideProps = async context => {
+export const getServerSideProps: GetServerSideProps = context => {
   return cacheFor(CreateAccountPage, {}, context);
 };
 

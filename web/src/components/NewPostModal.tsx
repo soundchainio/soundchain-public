@@ -91,15 +91,6 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
     }
   };
 
-  const normalizeOriginalLink = async () => {
-    if (originalLink.length && hasLink(originalLink)) {
-      const link = await getNormalizedLink(originalLink);
-      setPostLink(link);
-    } else {
-      setPostLink('');
-    }
-  };
-
   const onOpenMusicLink = () => {
     setShowAddMusicLink(true);
   };
@@ -115,6 +106,15 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
 
   useEffect(() => {
     if (originalLink) {
+      const normalizeOriginalLink = async () => {
+        if (originalLink.length && hasLink(originalLink)) {
+          const link = await getNormalizedLink(originalLink);
+          setPostLink(link);
+        } else {
+          setPostLink('');
+        }
+      };
+
       normalizeOriginalLink();
       onCloseLinks();
     } else {
