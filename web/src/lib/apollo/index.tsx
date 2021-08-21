@@ -5,11 +5,14 @@ import {
   ApolloProvider as Provider,
   createHttpLink,
   InMemoryCache,
+  NormalizedCacheObject,
   Observable,
 } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
+import { mergeDeep } from '@apollo/client/utilities';
 import Cookies from 'js-cookie';
 import { GetServerSidePropsContext } from 'next';
+import { useMemo } from 'react';
 import isBrowser from '../isBrowser';
 import { cacheConfig } from './cache-config';
 
@@ -27,9 +30,10 @@ const authLink = setContext((_, context: ApolloContextValue | GetServerSideProps
 export const apolloClient = new ApolloClient({
   link: authLink.concat(httpLink),
   cache: new InMemoryCache(cacheConfig),
+  ssrMode: !isBrowser,
   defaultOptions: {
     query: {
-      fetchPolicy: isBrowser ? 'cache-first' : 'no-cache',
+      fetchPolicy: isBrowser ? 'cache-first' : 'network-only',
     },
   },
 });
@@ -60,10 +64,30 @@ const fakeClient = new ApolloClient({
   cache: new InMemoryCache(),
 });
 
-export interface ApolloProviderProps {
-  children: JSX.Element;
+export type CacheProps<T> = T & { cache: NormalizedCacheObject };
+
+export function propsWithCache<T>(props: T): CacheProps<T> {
+  return { ...props, cache: apolloClient.extract() };
 }
 
-export function ApolloProvider({ children }: ApolloProviderProps) {
-  return <Provider client={isBrowser ? apolloClient : fakeClient}>{children}</Provider>;
+export interface ApolloProviderProps {
+  children: JSX.Element;
+  pageProps: { cache?: NormalizedCacheObject };
+}
+
+export function ApolloProvider({ children, pageProps }: ApolloProviderProps) {
+  const { cache } = pageProps;
+
+  const client = useMemo(() => {
+    const client = isBrowser ? apolloClient : fakeClient;
+
+    if (cache) {
+      const existingCache = client.extract();
+      client.restore(mergeDeep(existingCache, cache));
+    }
+
+    return client;
+  }, [cache]);
+
+  return <Provider client={client}>{children}</Provider>;
 }

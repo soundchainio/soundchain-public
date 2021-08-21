@@ -3,11 +3,12 @@ import { Comments } from 'components/Comments';
 import { Layout } from 'components/Layout';
 import { NewCommentForm } from 'components/NewCommentForm';
 import { Post } from 'components/Post';
+import { propsWithCache } from 'lib/apollo';
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 
 export const getServerSideProps: GetServerSideProps = async ({ params }) => {
   return {
-    props: { postId: params?.id },
+    props: propsWithCache({ postId: params?.id }),
   };
 };
 

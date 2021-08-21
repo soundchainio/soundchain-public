@@ -1,4 +1,3 @@
-import { useApolloClient } from '@apollo/client';
 import { Avatar } from 'components/Avatar';
 import { FollowButton } from 'components/FollowButton';
 import { Layout } from 'components/Layout';
@@ -7,11 +6,10 @@ import { Posts } from 'components/Posts';
 import { ProfileTabs } from 'components/ProfileTabs';
 import { SocialMediaLink } from 'components/SocialMediaLink';
 import { Subtitle } from 'components/Subtitle';
-import { apolloClient } from 'lib/apollo';
+import { apolloClient, propsWithCache } from 'lib/apollo';
 import { ProfileDocument, useProfileQuery } from 'lib/graphql';
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import Image from 'next/image';
-import { useEffect } from 'react';
 
 export const getServerSideProps: GetServerSideProps = async context => {
   const {
@@ -28,24 +26,12 @@ export const getServerSideProps: GetServerSideProps = async context => {
   }
 
   return {
-    props: { profile },
+    props: propsWithCache({ profile }),
   };
 };
 
 export default function ProfilePage({ profile }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const apollo = useApolloClient();
-  const { data } = useProfileQuery({ variables: { id: profile.id }, fetchPolicy: 'cache-only' });
-
-  useEffect(() => {
-    apollo.writeQuery({
-      query: ProfileDocument,
-      variables: { id: profile.id },
-      data: {
-        profile,
-      },
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { data } = useProfileQuery({ variables: { id: profile.id } });
 
   const {
     coverPicture,

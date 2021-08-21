@@ -6,7 +6,7 @@ import { Form, Formik, FormikHelpers } from 'formik';
 import { GetServerSideProps } from 'next';
 import Head from 'next/head';
 import * as yup from 'yup';
-import { apolloClient } from '../lib/apollo';
+import { apolloClient, propsWithCache } from '../lib/apollo';
 import {
   useResetPasswordMutation,
   ValidPasswordResetTokenDocument,
@@ -47,7 +47,7 @@ export const getServerSideProps: GetServerSideProps<ResetPasswordPageProps> = as
     return { notFound: true };
   }
 
-  return { props: { token } };
+  return { props: propsWithCache({ token }) };
 };
 
 export default function ResetPasswordPage({ token }: ResetPasswordPageProps) {

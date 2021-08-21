@@ -1,7 +1,7 @@
 import { LockedLayout } from 'components/LockedLayout';
 import { Title } from 'components/Title';
 import { ProfileForm, ProfileFormProps } from '../components/ProfileForm';
-import { apolloClient } from '../lib/apollo';
+import { apolloClient, propsWithCache } from '../lib/apollo';
 import { MyProfileDocument, MyProfileQuery } from '../lib/graphql';
 import { protectPage } from '../lib/protectPage';
 
@@ -18,7 +18,7 @@ export const getServerSideProps = protectPage<CompleteProfileProps>(async contex
   };
 
   return {
-    props: { profileFormValues },
+    props: propsWithCache({ profileFormValues }),
   };
 });
 
