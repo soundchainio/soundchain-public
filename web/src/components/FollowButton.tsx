@@ -21,7 +21,7 @@ export const FollowButton = ({ followedId, isFollowed }: FollowButtonProps) => {
     }
 
     if (!me) {
-      router.push('/login', { query: { callbackUrl: window.location.href } });
+      router.push({ pathname: '/login', query: { callbackUrl: window.location.href } });
       return;
     }
 
