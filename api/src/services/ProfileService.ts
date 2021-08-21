@@ -5,13 +5,14 @@ import { Profile, ProfileModel } from '../models/Profile';
 import { SocialMedias } from '../models/SocialMedias';
 import { UserModel } from '../models/User';
 import { Genre } from '../types/Genres';
+import { Service } from './Service';
 
-export class ProfileService {
-  static getProfile(id: string): Promise<Profile> {
+export class ProfileService extends Service {
+  getProfile(id: string): Promise<Profile> {
     return ProfileModel.findByIdOrFail(id);
   }
 
-  static async updateSocialMedias(id: string, socialMedias: SocialMedias): Promise<Profile> {
+  async updateSocialMedias(id: string, socialMedias: SocialMedias): Promise<Profile> {
     const updatedProfile = await ProfileModel.findByIdAndUpdate(id, { socialMedias }, { new: true });
     if (!updatedProfile) {
       throw new Error(`Could not update the profile with id: ${id}`);
@@ -19,7 +20,7 @@ export class ProfileService {
     return updatedProfile;
   }
 
-  static async updateFavoriteGenres(id: string, favoriteGenres: Genre[]): Promise<Profile> {
+  async updateFavoriteGenres(id: string, favoriteGenres: Genre[]): Promise<Profile> {
     const updatedProfile = await ProfileModel.findByIdAndUpdate(id, { favoriteGenres }, { new: true });
     if (!updatedProfile) {
       throw new Error(`Could not update the profile with id: ${id}`);
@@ -27,7 +28,7 @@ export class ProfileService {
     return updatedProfile;
   }
 
-  static async updateProfilePicture(id: string, profilePicture: string): Promise<Profile> {
+  async updateProfilePicture(id: string, profilePicture: string): Promise<Profile> {
     const updatedProfile = await ProfileModel.findByIdAndUpdate(id, { profilePicture }, { new: true });
     if (!updatedProfile) {
       throw new Error(`Could not update the profile with id: ${id}`);
@@ -35,7 +36,7 @@ export class ProfileService {
     return updatedProfile;
   }
 
-  static async updateCoverPicture(id: string, coverPicture: string): Promise<Profile> {
+  async updateCoverPicture(id: string, coverPicture: string): Promise<Profile> {
     const updatedProfile = await ProfileModel.findByIdAndUpdate(id, { coverPicture }, { new: true });
     if (!updatedProfile) {
       throw new Error(`Could not update the profile with id: ${id}`);
@@ -43,7 +44,7 @@ export class ProfileService {
     return updatedProfile;
   }
 
-  static async getUserHandle(profileId: string): Promise<string> {
+  async getUserHandle(profileId: string): Promise<string> {
     const user = await UserModel.findOne({ profileId });
     if (!user) {
       throw new Error(`Profile ${profileId} is missing a user account!`);
@@ -51,7 +52,7 @@ export class ProfileService {
     return user.handle;
   }
 
-  static async followProfile(followerId: string, followedId: string): Promise<Profile> {
+  async followProfile(followerId: string, followedId: string): Promise<Profile> {
     if (followerId === followedId) {
       throw new UserInputError('You cannot follow yourself.');
     }
@@ -74,7 +75,7 @@ export class ProfileService {
     return followedProfile;
   }
 
-  static async unfollowProfile(followerId: string, followedId: string): Promise<Profile> {
+  async unfollowProfile(followerId: string, followedId: string): Promise<Profile> {
     if (followerId === followedId) {
       throw new UserInputError('You cannot unfollow yourself.');
     }
@@ -93,5 +94,9 @@ export class ProfileService {
     await ProfileModel.updateOne({ _id: followedId }, { $inc: { followerCount: -1 } });
     followedProfile.followerCount--;
     return followedProfile;
+  }
+
+  followExists(followerId: string, followedId: string): Promise<boolean> {
+    return FollowModel.exists({ followerId, followedId });
   }
 }

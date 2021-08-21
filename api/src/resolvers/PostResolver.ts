@@ -1,12 +1,10 @@
-import { Arg, Authorized, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
+import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
 import { CurrentUser } from '../decorators/current-user';
 import { Comment } from '../models/Comment';
 import { Post } from '../models/Post';
 import { Profile } from '../models/Profile';
 import { User } from '../models/User';
-import { CommentService } from '../services/CommentService';
-import { PostService } from '../services/PostService';
-import { ProfileService } from '../services/ProfileService';
+import { Context } from '../types/Context';
 import { CreatePostInput } from '../types/CreatePostInput';
 import { CreatePostPayload } from '../types/CreatePostPayload';
 import { FilterPostInput } from '../types/FilterPostInput';
@@ -17,13 +15,13 @@ import { SortPostInput } from '../types/SortPostInput';
 @Resolver(Post)
 export class PostResolver {
   @FieldResolver(() => Profile)
-  profile(@Root() post: Post): Promise<Profile> {
-    return ProfileService.getProfile(post.profileId);
+  profile(@Ctx() { profileService }: Context, @Root() post: Post): Promise<Profile> {
+    return profileService.getProfile(post.profileId);
   }
 
   @FieldResolver(() => [Comment])
-  comments(@Root() post: Post): Promise<Comment[]> {
-    return CommentService.getComments(post._id);
+  comments(@Ctx() { commentService }: Context, @Root() post: Post): Promise<Comment[]> {
+    return commentService.getComments(post._id);
   }
 
   @FieldResolver(() => Number)
@@ -32,8 +30,8 @@ export class PostResolver {
   }
 
   @FieldResolver(() => Number)
-  commentCount(@Root() post: Post): Promise<number> {
-    return CommentService.countComments(post._id);
+  commentCount(@Ctx() { commentService }: Context, @Root() post: Post): Promise<number> {
+    return commentService.countComments(post._id);
   }
 
   @FieldResolver(() => Number)
@@ -42,26 +40,28 @@ export class PostResolver {
   }
 
   @Query(() => Post)
-  post(@Arg('id') id: string): Promise<Post> {
-    return PostService.getPost(id);
+  post(@Ctx() { postService }: Context, @Arg('id') id: string): Promise<Post> {
+    return postService.getPost(id);
   }
 
   @Query(() => PostConnection)
   posts(
+    @Ctx() { postService }: Context,
     @Arg('filter', { nullable: true }) filter?: FilterPostInput,
     @Arg('sort', { nullable: true }) sort?: SortPostInput,
     @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<PostConnection> {
-    return PostService.getPosts(filter, sort, page);
+    return postService.getPosts(filter, sort, page);
   }
 
   @Mutation(() => CreatePostPayload)
   @Authorized()
   async createPost(
+    @Ctx() { postService }: Context,
     @Arg('input') { body, mediaLink }: CreatePostInput,
     @CurrentUser() { profileId }: User,
   ): Promise<CreatePostPayload> {
-    const post = await PostService.createPost({ profileId, body, mediaLink });
+    const post = await postService.createPost({ profileId, body, mediaLink });
     return { post };
   }
 }

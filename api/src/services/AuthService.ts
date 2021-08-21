@@ -3,10 +3,10 @@ import { compare } from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { ProfileModel } from '../models/Profile';
 import { User, UserModel } from '../models/User';
-import { EmailService } from './EmailService';
+import { Service } from './Service';
 
-export class AuthService {
-  static async register(email: string, handle: string, password: string, displayName: string): Promise<User> {
+export class AuthService extends Service {
+  async register(email: string, handle: string, password: string, displayName: string): Promise<User> {
     const existingUser = await UserModel.findOne({ $or: [{ email }, { handle }] });
 
     if (existingUser) {
@@ -27,7 +27,7 @@ export class AuthService {
     }
 
     try {
-      await EmailService.sendEmailVerification(email, displayName, emailVerificationToken);
+      await this.context.emailService.sendEmailVerification(email, displayName, emailVerificationToken);
     } catch (err) {
       ProfileModel.deleteOne({ _id: profile.id });
       UserModel.deleteOne({ _id: user.id });
@@ -37,7 +37,7 @@ export class AuthService {
     return user;
   }
 
-  static async getUserFromCredentials(username: string, password: string): Promise<User | undefined> {
+  async getUserFromCredentials(username: string, password: string): Promise<User | undefined> {
     const user = await UserModel.findOne({ $or: [{ email: username }, { handle: username }] });
 
     if (user && (await compare(password, user.password))) {
@@ -45,7 +45,7 @@ export class AuthService {
     }
   }
 
-  static async verifyUserEmail(emailVerificationToken: string): Promise<User> {
+  async verifyUserEmail(emailVerificationToken: string): Promise<User> {
     const user = await UserModel.findOneAndUpdate(
       { emailVerificationToken },
       { verified: true, $unset: { emailVerificationToken: 1 } },
@@ -58,7 +58,7 @@ export class AuthService {
     return user;
   }
 
-  static async initPasswordReset(email: string): Promise<void> {
+  async initPasswordReset(email: string): Promise<void> {
     const passwordResetToken = uuidv4();
     const user = await UserModel.findOneAndUpdate({ email }, { passwordResetToken });
 
@@ -66,10 +66,10 @@ export class AuthService {
       throw new UserInputError('No user with email');
     }
 
-    await EmailService.sendPasswordResetEmail(user.email, passwordResetToken);
+    await this.context.emailService.sendPasswordResetEmail(user.email, passwordResetToken);
   }
 
-  static async resetUserPassword(passwordResetToken: string, password: string): Promise<void> {
+  async resetUserPassword(passwordResetToken: string, password: string): Promise<void> {
     const user = await UserModel.findOne({ passwordResetToken });
 
     if (!user) {
