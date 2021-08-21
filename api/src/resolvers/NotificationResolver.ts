@@ -4,7 +4,6 @@ import { CommentNotification } from 'models/CommentNotification';
 import { Profile } from 'models/Profile';
 import { User } from 'models/User';
 import { NotificationService } from 'services/NotificationService';
-import { ProfileService } from 'services/ProfileService';
 import { Arg, Authorized, createUnionType, Mutation, Query, Resolver } from 'type-graphql';
 import { ClearNotificationsPayload } from './types/ClearNotificationsPayload';
 
@@ -36,7 +35,7 @@ export class NotificationResolver {
   @Mutation(() => Profile)
   @Authorized()
   resetNotificationCount(@CurrentUser() { profileId }: User): Promise<Profile> {
-    return ProfileService.resetNotificationCount(profileId);
+    return NotificationService.resetNotificationCount(profileId);
   }
 
   @Mutation(() => ClearNotificationsPayload)

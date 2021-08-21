@@ -4,9 +4,8 @@ import { Comment } from 'models/Comment';
 import { CommentNotificationMetadata } from 'models/CommentNotification';
 import { NotificationModel } from 'models/Notification';
 import { Post } from 'models/Post';
-import { Profile } from 'models/Profile';
+import { Profile, ProfileModel } from 'models/Profile';
 import { NotificationUnion } from 'resolvers/NotificationResolver';
-import { ProfileService } from './ProfileService';
 
 interface CommentNotificationParams {
   comment: Comment;
@@ -33,7 +32,7 @@ export class NotificationService {
       metadata,
     });
     await notification.save();
-    await ProfileService.incrementNotificationCount(postOwnerProfileId);
+    await this.incrementNotificationCount(postOwnerProfileId);
   }
 
   static async getNotifications(profileId: string): Promise<Array<typeof NotificationUnion>> {
@@ -50,5 +49,17 @@ export class NotificationService {
   static async clearNotifications(profileId: string): Promise<boolean> {
     await NotificationModel.deleteMany({ profileId });
     return true;
+  }
+
+  static async incrementNotificationCount(profileId: string): Promise<void> {
+    await ProfileModel.updateOne({ _id: profileId }, { $inc: { notificationCount: 1 } });
+  }
+
+  static async resetNotificationCount(profileId: string): Promise<Profile> {
+    const updatedProfile = await ProfileModel.findByIdAndUpdate(profileId, { notificationCount: 0 }, { new: true });
+    if (!updatedProfile) {
+      throw new Error(`Could not update the profile with id: ${profileId}`);
+    }
+    return updatedProfile;
   }
 }

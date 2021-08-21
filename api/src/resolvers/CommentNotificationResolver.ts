@@ -11,7 +11,8 @@ export class CommentNotificationResolver {
 
   @FieldResolver(() => String)
   author(@Root() { metadata }: Notification): string {
-    return (metadata as CommentNotificationMetadata).authorName;
+    const { authorName } = metadata as CommentNotificationMetadata;
+    return authorName;
   }
 
   @FieldResolver(() => String, { nullable: true })
@@ -27,7 +28,8 @@ export class CommentNotificationResolver {
 
   @FieldResolver(() => String)
   previewBody(@Root() { metadata }: Notification): string {
-    return (metadata as CommentNotificationMetadata).commentBody;
+    const { commentBody } = metadata as CommentNotificationMetadata;
+    return commentBody;
   }
 
   @FieldResolver(() => String)
