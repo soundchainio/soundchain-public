@@ -16,9 +16,9 @@ export class Reaction extends Model {
   @prop({ required: true })
   postId: string;
 
-  @Field()
+  @Field(() => ReactionEmoji)
   @prop({ required: true })
-  emoji: ReactionEmoji;
+  type: ReactionEmoji;
 
   @Field(() => Date)
   createdAt: Date;

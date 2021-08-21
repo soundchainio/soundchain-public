@@ -1,8 +1,8 @@
 import { Field, ObjectType } from 'type-graphql';
-import { Reaction } from '../../models/Reaction';
+import { Post } from '../../models/Post';
 
 @ObjectType()
 export class ReactToPostPayload {
   @Field()
-  reaction: Reaction;
+  post: Post;
 }

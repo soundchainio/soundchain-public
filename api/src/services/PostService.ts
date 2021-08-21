@@ -1,5 +1,9 @@
+import { UserInputError } from 'apollo-server-express';
 import { PaginateResult } from '../db/pagination/paginate';
+import { ReactionEmoji } from '../enums/ReactionEmoji';
 import { Post, PostModel } from '../models/Post';
+import { ProfileModel } from '../models/Profile';
+import { ReactionModel } from '../models/Reaction';
 import { FilterPostInput } from '../resolvers/types/FilterPostInput';
 import { PageInput } from '../resolvers/types/PageInput';
 import { SortPostInput } from '../resolvers/types/SortPostInput';
@@ -24,4 +28,22 @@ export class PostService {
   static getPost(id: string): Promise<Post> {
     return PostModel.findByIdOrFail(id);
   }
+
+  static async reactToPost(postId: string, profileId: string, emoji: ReactionEmoji): Promise<Profile> {
+    const post = await PostModel.findByIdOrFail(postId);
+
+    const alreadyReacted = await ReactionModel.exists({ postId, profileId });
+    if (alreadyReacted) throw new UserInputError('You already reacted to the post.');
+
+    await new ReactionModel({ postId, profileId, emoji }).save();
+    await ProfileModel.up;
+
+    return post;
+  }
+
+  // static async undoReaction(conditions: DeleteReactionConditions): Promise<Profile> {
+  //   const reaction = await ReactionModel.findOneAndDelete(conditions);
+  //   if (!reaction) throw new UserInputError('Failed to delete because reaction does not exist.');
+  //   return reaction;
+  // }
 }

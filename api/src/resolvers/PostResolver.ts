@@ -14,7 +14,11 @@ import { FilterPostInput } from './types/FilterPostInput';
 import { PageInput } from './types/PageInput';
 import { PostConnection } from './types/PostConnection';
 import { ReactionCount } from './types/ReactionCount';
+import { ReactToPostInput } from './types/ReactToPostInput';
+import { ReactToPostPayload } from './types/ReactToPostPayload';
 import { SortPostInput } from './types/SortPostInput';
+import { UndoPostReactionInput } from './types/UndoPostReactionInput';
+import { UndoPostReactionPayload } from './types/UndoPostReactionPayload';
 
 @Resolver(Post)
 export class PostResolver {
@@ -60,5 +64,25 @@ export class PostResolver {
   ): Promise<CreatePostPayload> {
     const post = await PostService.createPost({ profileId, body, mediaLink });
     return { post };
+  }
+
+  @Mutation(() => ReactToPostPayload)
+  @Authorized()
+  async reactToPost(
+    @Arg('input') input: ReactToPostInput,
+    @CurrentUser() { profileId }: User,
+  ): Promise<ReactToPostPayload> {
+    const reaction = await ReactionService.createReaction({ profileId, ...input });
+    return { reaction };
+  }
+
+  @Mutation(() => UndoPostReactionPayload)
+  @Authorized()
+  async undoPostReaction(
+    @Arg('input') input: UndoPostReactionInput,
+    @CurrentUser() { profileId }: User,
+  ): Promise<UndoPostReactionPayload> {
+    const reaction = await ReactionService.deleteReaction({ profileId, ...input });
+    return { reaction };
   }
 }
