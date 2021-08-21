@@ -54,7 +54,7 @@ export function setJwt(newJwt?: string) {
 
 export async function cacheFor<T>(
   Page: React.ComponentType<T>,
-  props: T,
+  pageProps: T,
   context: GetServerSidePropsContext,
   client?: ApolloClient<NormalizedCacheObject>,
 ) {
@@ -63,12 +63,12 @@ export async function cacheFor<T>(
   await getDataFromTree(
     <RouterContext.Provider value={new FakeRouter(context)}>
       <Provider client={client}>
-        <Page {...props} />
+        <Page {...pageProps} />
       </Provider>
     </RouterContext.Provider>,
   );
 
-  return { props: { ...props, cache: client.extract() } };
+  return { props: { ...pageProps, cache: client.extract() } };
 }
 
 export interface ApolloProviderProps {
