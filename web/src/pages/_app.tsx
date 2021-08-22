@@ -1,4 +1,6 @@
+import { RepostModal } from 'components/RepostModal';
 import { ModalsContext } from 'contexts/Modals';
+import { RepostModalContext } from 'contexts/RepostModal';
 import { ApolloProvider } from 'lib/apollo';
 import type { AppProps } from 'next/app';
 import { useState } from 'react';
@@ -6,8 +8,16 @@ import 'styles/globals.css';
 
 function MyApp({ Component, pageProps }: AppProps) {
   const [anyModalOpened, setAnyModalOpened] = useState(false);
+  const [showRepostModal, setShowRepostModal] = useState(false);
+  const [repostId, setRepostId] = useState('');
 
   const modalsContextProps = { anyModalOpened, setAnyModalOpened };
+  const repostModalContextProps = {
+    showRepostModal,
+    setShowRepostModal,
+    repostId,
+    setRepostId,
+  };
 
   const CheckBodyScroll = () => {
     return anyModalOpened ? (
@@ -22,8 +32,11 @@ function MyApp({ Component, pageProps }: AppProps) {
   return (
     <ApolloProvider>
       <ModalsContext.Provider value={modalsContextProps}>
-        <CheckBodyScroll />
-        <Component {...pageProps} />
+        <RepostModalContext.Provider value={repostModalContextProps}>
+          <CheckBodyScroll />
+          <Component {...pageProps} />
+          <RepostModal />
+        </RepostModalContext.Provider>
       </ModalsContext.Provider>
     </ApolloProvider>
   );

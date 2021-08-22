@@ -1,17 +1,23 @@
 import { ChatAltIcon, RefreshIcon, ShareIcon, ThumbUpIcon } from '@heroicons/react/solid';
+import { useRepostModalContext } from 'contexts/RepostModal';
 import NextLink from 'next/link';
 import React, { useState } from 'react';
 import { PostLikeOptions } from './PostLikeOptions';
 
 interface PostActionsProps {
   postId: string;
-  setShowRepostModal: (val: boolean) => void;
 }
 
 const commonClasses = 'text-white text-sm text-gray-400 text-center font-bold flex-1 flex justify-center px-1';
 
-export const PostActions = ({ postId, setShowRepostModal }: PostActionsProps) => {
+export const PostActions = ({ postId }: PostActionsProps) => {
   const [showLikeOptions, setShowLikeOptions] = useState(false);
+  const { setShowRepostModal, setRepostId } = useRepostModalContext();
+
+  const onRepostClick = () => {
+    setRepostId(postId);
+    setShowRepostModal(true);
+  };
 
   return (
     <div className="bg-gray-25 px-0 py-2 flex items-center relative overflow-hidden">
@@ -31,7 +37,7 @@ export const PostActions = ({ postId, setShowRepostModal }: PostActionsProps) =>
         </NextLink>
       </div>
       <div className={commonClasses}>
-        <div className="flex items-center cursor-pointer" onClick={() => setShowRepostModal(true)}>
+        <div className="flex items-center cursor-pointer" onClick={onRepostClick}>
           <RefreshIcon className="h-4 w-4 mr-1" />
           Repost
         </div>

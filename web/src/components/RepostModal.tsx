@@ -1,20 +1,15 @@
 import classNames from 'classnames';
 import { Button } from 'components/Button';
 import { useModalsContext } from 'contexts/Modals';
+import { useRepostModalContext } from 'contexts/RepostModal';
 import { BaseEmoji, Picker } from 'emoji-mart';
 import 'emoji-mart/css/emoji-mart.css';
 import { Field, Form, Formik, FormikHelpers } from 'formik';
-import { CreatePostInput, PostComponentFieldsFragment } from 'lib/graphql';
+import { CreatePostInput } from 'lib/graphql';
 import React, { useEffect, useState } from 'react';
 import * as yup from 'yup';
 import { useCreatePostMutation } from '../lib/graphql';
 import { RepostPreview } from './RepostPreview';
-
-interface RepostModalProps {
-  setShowRepostModal: (val: boolean) => void;
-  showRepostModal: boolean;
-  post: PostComponentFieldsFragment;
-}
 
 interface FormValues {
   body: string;
@@ -43,9 +38,10 @@ const setMaxInputLength = (input: string) => {
   return maxLength + (rawValue - getBodyCharacterCount(input));
 };
 
-export const RepostModal = ({ setShowRepostModal, showRepostModal, post }: RepostModalProps) => {
+export const RepostModal = () => {
   const [isEmojiPickerVisible, setEmojiPickerVisible] = useState(false);
   const { setAnyModalOpened } = useModalsContext();
+  const { repostId, setShowRepostModal, showRepostModal } = useRepostModalContext();
   const [createPost] = useCreatePostMutation({ refetchQueries: ['Posts'] });
 
   const cancel = (setFieldValue: (val: string, newVal: string) => void) => {
@@ -73,7 +69,7 @@ export const RepostModal = ({ setShowRepostModal, showRepostModal, post }: Repos
   const handleSubmit = async (values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
     const params: CreatePostInput = { body: values.body };
 
-    params.repostId = post.id;
+    params.repostId = repostId;
 
     await createPost({ variables: { input: params } });
     setEmojiPickerVisible(false);
@@ -117,7 +113,7 @@ export const RepostModal = ({ setShowRepostModal, showRepostModal, post }: Repos
               maxLength={setMaxInputLength(values.body)}
             />
             <div className="p-4 bg-gray-20">
-              <RepostPreview postId={post.id} />
+              <RepostPreview postId={repostId} />
             </div>
             <div className="p-4 flex items-center bg-gray-25">
               <div className="text-center w-16" onClick={onEmojiPickerClick}>
