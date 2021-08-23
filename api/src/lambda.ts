@@ -3,14 +3,9 @@ import { ApolloServer } from 'apollo-server-lambda';
 import type { Handler } from 'aws-lambda';
 import express from 'express';
 import { config } from './config';
-import { EmailService } from './services/EmailService';
-import { UploadService } from './services/UploadService';
 
 export const handler: Handler = async (...args) => {
   await mongoose.connect(config.db.url, config.db.options);
-
-  EmailService.initialize();
-  UploadService.initialize();
 
   const server = new ApolloServer(config.apollo);
   const apolloHandler = server.createHandler({
