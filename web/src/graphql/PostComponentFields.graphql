@@ -4,7 +4,9 @@ fragment PostComponentFields on Post {
   mediaLink
   repostId
   createdAt
+  likeCount
   commentCount
+  repostCount
   profile {
     id
     displayName

@@ -1,8 +1,14 @@
 import { Layout } from 'components/Layout';
 import { Posts } from 'components/Posts';
+import { cacheFor } from 'lib/apollo';
+import { GetServerSideProps } from 'next';
 import Head from 'next/head';
 
-export default function Feed() {
+export const getServerSideProps: GetServerSideProps = context => {
+  return cacheFor(HomePage, {}, context);
+};
+
+export default function HomePage() {
   return (
     <Layout>
       <Head>

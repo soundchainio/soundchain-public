@@ -1,8 +1,8 @@
 import { PaginateResult } from '../db/pagination/paginate';
 import { Post, PostModel } from '../models/Post';
-import { FilterPostInput } from '../resolvers/types/FilterPostInput';
-import { PageInput } from '../resolvers/types/PageInput';
-import { SortPostInput } from '../resolvers/types/SortPostInput';
+import { FilterPostInput } from '../types/FilterPostInput';
+import { PageInput } from '../types/PageInput';
+import { SortPostInput } from '../types/SortPostInput';
 
 interface NewPostParams {
   profileId: string;

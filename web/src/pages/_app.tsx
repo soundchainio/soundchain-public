@@ -30,7 +30,7 @@ function MyApp({ Component, pageProps }: AppProps) {
   };
 
   return (
-    <ApolloProvider>
+    <ApolloProvider pageProps={pageProps}>
       <ModalsContext.Provider value={modalsContextProps}>
         <RepostModalContext.Provider value={repostModalContextProps}>
           <CheckBodyScroll />

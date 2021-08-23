@@ -1,15 +1,18 @@
 import { LockedLayout } from 'components/LockedLayout';
 import { Title } from 'components/Title';
-import { ProfileForm, ProfileFormProps } from '../components/ProfileForm';
-import { apolloClient } from '../lib/apollo';
-import { MyProfileDocument, MyProfileQuery } from '../lib/graphql';
+import { ProfileForm } from '../components/ProfileForm';
+import { cacheFor } from '../lib/apollo';
+import { useMyProfileQuery } from '../lib/graphql';
 import { protectPage } from '../lib/protectPage';
 
-export const getServerSideProps = protectPage<CompleteProfileProps>(async context => {
-  const {
-    data: { myProfile },
-  } = await apolloClient.query<MyProfileQuery>({ query: MyProfileDocument, context });
-  const { facebook, instagram, soundcloud, twitter } = myProfile.socialMedias;
+export const getServerSideProps = protectPage((context, apolloClient) => {
+  return cacheFor(CompleteProfilePage, {}, context, apolloClient);
+});
+
+export default function CompleteProfilePage() {
+  const { data } = useMyProfileQuery();
+  const { facebook, instagram, soundcloud, twitter } = data?.myProfile.socialMedias ?? {};
+
   const profileFormValues = {
     facebook: facebook || '',
     instagram: instagram || '',
@@ -17,16 +20,6 @@ export const getServerSideProps = protectPage<CompleteProfileProps>(async contex
     twitter: twitter || '',
   };
 
-  return {
-    props: { profileFormValues },
-  };
-});
-
-export interface CompleteProfileProps {
-  profileFormValues: ProfileFormProps;
-}
-
-export default function CompleteProfilePage({ profileFormValues }: CompleteProfileProps) {
   return (
     <LockedLayout>
       <Title className="text-center">Profile Information</Title>
