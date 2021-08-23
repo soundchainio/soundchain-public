@@ -1,13 +1,13 @@
 import { useNotificationsQuery } from 'lib/graphql';
 import React from 'react';
 import { Notification as NotificationItem } from './Notification';
-import { PostSkeleton } from './PostSkeleton';
+import { NotificationSkeleton } from './NotificationSkeleton';
 
 export const Notifications = () => {
   const { data } = useNotificationsQuery();
 
   if (!data) {
-    return <PostSkeleton />;
+    return <NotificationSkeleton />;
   }
 
   return (
