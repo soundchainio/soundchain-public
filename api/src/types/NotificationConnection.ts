@@ -1,5 +1,5 @@
 import { Field, ObjectType } from 'type-graphql';
-import { NotificationUnion } from '../resolvers/NotificationResolver';
+import { NotificationUnion } from './NotificationUnion';
 import { PageInfo } from './PageInfo';
 
 @ObjectType()

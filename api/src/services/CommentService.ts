@@ -1,7 +1,6 @@
 import { Comment, CommentModel } from '../models/Comment';
-import { NotificationService } from './NotificationService';
-import { PostService } from './PostService';
-import { ProfileService } from './ProfileService';
+import { Context } from '../types/Context';
+import { ModelService } from './ModelService';
 
 interface NewCommentParams {
   profileId: string;
@@ -9,17 +8,21 @@ interface NewCommentParams {
   postId: string;
 }
 
-export class CommentService {
-  static getComment(id: string): Promise<Comment> {
-    return CommentModel.findByIdOrFail(id);
+export class CommentService extends ModelService<typeof Comment> {
+  constructor(context: Context) {
+    super(context, CommentModel);
   }
 
-  static async createComment(params: NewCommentParams): Promise<Comment> {
+  getComment(id: string): Promise<Comment> {
+    return this.findOrFail(id);
+  }
+
+  async createComment(params: NewCommentParams): Promise<Comment> {
     const newComment = new CommentModel(params);
     await newComment.save();
-    const post = await PostService.getPost(params.postId);
-    const profile = await ProfileService.getProfile(params.profileId);
-    NotificationService.notifyNewCommentOnPost({
+    const post = await this.context.postService.getPost(params.postId);
+    const profile = await this.context.profileService.getProfile(params.profileId);
+    this.context.notificationService.notifyNewCommentOnPost({
       comment: newComment,
       post,
       authorProfile: profile,
@@ -27,11 +30,11 @@ export class CommentService {
     return newComment;
   }
 
-  static getComments(postId: string): Promise<Comment[]> {
+  getComments(postId: string): Promise<Comment[]> {
     return CommentModel.find({ postId }).sort({ createdAt: 'asc' }).exec();
   }
 
-  static countComments(postId: string): Promise<number> {
+  countComments(postId: string): Promise<number> {
     return CommentModel.countDocuments({ postId }).exec();
   }
 }
