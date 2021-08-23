@@ -1,7 +1,9 @@
-query Notifications {
-  notifications {
-    ... on CommentNotification {
-      ...CommentNotificationFields
+query Notifications($sort: SortNotificationInput) {
+  notifications(sort: $sort) {
+    nodes {
+      ... on CommentNotification {
+        ...CommentNotificationFields
+      }
     }
   }
 }

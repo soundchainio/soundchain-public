@@ -222,6 +222,18 @@ export type MutationResetPasswordArgs = {
   input: ResetPasswordInput;
 };
 
+export type NotificationConnection = {
+  __typename?: 'NotificationConnection';
+  pageInfo: PageInfo;
+  nodes: Array<NotificationUnion>;
+};
+
+export enum NotificationType {
+  Comment = 'Comment'
+}
+
+export type NotificationUnion = CommentNotification;
+
 export type PageInfo = {
   __typename?: 'PageInfo';
   totalCount: Scalars['Float'];
@@ -279,7 +291,7 @@ export type Query = {
   __typename?: 'Query';
   comment: Comment;
   comments: Array<Comment>;
-  notifications: Array<NotificationUnion>;
+  notifications: NotificationConnection;
   notification: NotificationUnion;
   post: Post;
   posts: PostConnection;
@@ -298,6 +310,17 @@ export type QueryCommentArgs = {
 
 export type QueryCommentsArgs = {
   postId: Scalars['String'];
+};
+
+
+export type QueryNotificationsArgs = {
+  page?: Maybe<PageInput>;
+  sort?: Maybe<SortNotificationInput>;
+};
+
+
+export type QueryNotificationArgs = {
+  id: Scalars['String'];
 };
 
 
@@ -350,6 +373,15 @@ export type SocialMedias = {
   instagram?: Maybe<Scalars['String']>;
   soundcloud?: Maybe<Scalars['String']>;
   twitter?: Maybe<Scalars['String']>;
+};
+
+export enum SortNotificationField {
+  CreatedAt = 'CREATED_AT'
+}
+
+export type SortNotificationInput = {
+  field: SortNotificationField;
+  order?: Maybe<SortOrder>;
 };
 
 export enum SortOrder {
@@ -466,6 +498,17 @@ export type AddCommentMutation = (
   ) }
 );
 
+export type ClearNotificationsMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type ClearNotificationsMutation = (
+  { __typename?: 'Mutation' }
+  & { clearNotifications: (
+    { __typename?: 'ClearNotificationsPayload' }
+    & Pick<ClearNotificationsPayload, 'success'>
+  ) }
+);
+
 export type CommentQueryVariables = Exact<{
   id: Scalars['String'];
 }>;
@@ -486,6 +529,11 @@ export type CommentComponentFieldsFragment = (
     { __typename?: 'Profile' }
     & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
   ) }
+);
+
+export type CommentNotificationFieldsFragment = (
+  { __typename?: 'CommentNotification' }
+  & Pick<CommentNotification, 'id' | 'type' | 'body' | 'previewBody' | 'link' | 'createdAt' | 'author' | 'authorPicture'>
 );
 
 export type CommentsQueryVariables = Exact<{
@@ -602,6 +650,46 @@ export type MyProfileQuery = (
   ) }
 );
 
+export type NotificationQueryVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+export type NotificationQuery = (
+  { __typename?: 'Query' }
+  & { notification: (
+    { __typename?: 'CommentNotification' }
+    & CommentNotificationFieldsFragment
+  ) }
+);
+
+export type NotificationCountQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type NotificationCountQuery = (
+  { __typename?: 'Query' }
+  & { myProfile: (
+    { __typename?: 'Profile' }
+    & Pick<Profile, 'id' | 'notificationCount'>
+  ) }
+);
+
+export type NotificationsQueryVariables = Exact<{
+  sort?: Maybe<SortNotificationInput>;
+}>;
+
+
+export type NotificationsQuery = (
+  { __typename?: 'Query' }
+  & { notifications: (
+    { __typename?: 'NotificationConnection' }
+    & { nodes: Array<(
+      { __typename?: 'CommentNotification' }
+      & CommentNotificationFieldsFragment
+    )> }
+  ) }
+);
+
 export type PostQueryVariables = Exact<{
   id: Scalars['String'];
 }>;
@@ -626,6 +714,7 @@ export type PostComponentFieldsFragment = (
 
 export type PostsQueryVariables = Exact<{
   filter?: Maybe<FilterPostInput>;
+  sort?: Maybe<SortPostInput>;
 }>;
 
 
@@ -667,6 +756,17 @@ export type RegisterMutation = (
   & { register: (
     { __typename?: 'AuthPayload' }
     & Pick<AuthPayload, 'jwt'>
+  ) }
+);
+
+export type ResetNotificationCountMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type ResetNotificationCountMutation = (
+  { __typename?: 'Mutation' }
+  & { resetNotificationCount: (
+    { __typename?: 'Profile' }
+    & Pick<Profile, 'id' | 'notificationCount'>
   ) }
 );
 
@@ -803,6 +903,18 @@ export const CommentComponentFieldsFragmentDoc = gql`
     displayName
     profilePicture
   }
+}
+    `;
+export const CommentNotificationFieldsFragmentDoc = gql`
+    fragment CommentNotificationFields on CommentNotification {
+  id
+  type
+  body
+  previewBody
+  link
+  createdAt
+  author
+  authorPicture
 }
     `;
 export const PostComponentFieldsFragmentDoc = gql`
@@ -1218,13 +1330,15 @@ export function useMyProfileLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
 export type MyProfileQueryHookResult = ReturnType<typeof useMyProfileQuery>;
 export type MyProfileLazyQueryHookResult = ReturnType<typeof useMyProfileLazyQuery>;
 export type MyProfileQueryResult = Apollo.QueryResult<MyProfileQuery, MyProfileQueryVariables>;
-export const PostDocument = gql`
-    query Post($id: String!) {
-  post(id: $id) {
-    ...PostComponentFields
+export const NotificationDocument = gql`
+    query Notification($id: String!) {
+  notification(id: $id) {
+    ... on CommentNotification {
+      ...CommentNotificationFields
+    }
   }
 }
-    ${PostComponentFieldsFragmentDoc}`;
+    ${CommentNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationQuery__
@@ -1289,10 +1403,12 @@ export type NotificationCountQueryHookResult = ReturnType<typeof useNotification
 export type NotificationCountLazyQueryHookResult = ReturnType<typeof useNotificationCountLazyQuery>;
 export type NotificationCountQueryResult = Apollo.QueryResult<NotificationCountQuery, NotificationCountQueryVariables>;
 export const NotificationsDocument = gql`
-    query Notifications {
-  notifications {
-    ... on CommentNotification {
-      ...CommentNotificationFields
+    query Notifications($sort: SortNotificationInput) {
+  notifications(sort: $sort) {
+    nodes {
+      ... on CommentNotification {
+        ...CommentNotificationFields
+      }
     }
   }
 }
@@ -1310,6 +1426,7 @@ export const NotificationsDocument = gql`
  * @example
  * const { data, loading, error } = useNotificationsQuery({
  *   variables: {
+ *      sort: // value for 'sort'
  *   },
  * });
  */
@@ -1360,8 +1477,8 @@ export type PostQueryHookResult = ReturnType<typeof usePostQuery>;
 export type PostLazyQueryHookResult = ReturnType<typeof usePostLazyQuery>;
 export type PostQueryResult = Apollo.QueryResult<PostQuery, PostQueryVariables>;
 export const PostsDocument = gql`
-    query Posts($filter: FilterPostInput) {
-  posts(filter: $filter) {
+    query Posts($filter: FilterPostInput, $sort: SortPostInput) {
+  posts(filter: $filter, sort: $sort) {
     nodes {
       ...PostComponentFields
     }
@@ -1382,6 +1499,7 @@ export const PostsDocument = gql`
  * const { data, loading, error } = usePostsQuery({
  *   variables: {
  *      filter: // value for 'filter'
+ *      sort: // value for 'sort'
  *   },
  * });
  */

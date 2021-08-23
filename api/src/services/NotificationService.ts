@@ -1,3 +1,4 @@
+import { PaginateResult } from '../db/pagination/paginate';
 import { NotFoundError } from '../errors/NotFoundError';
 import { Comment } from '../models/Comment';
 import { CommentNotificationMetadata } from '../models/CommentNotification';
@@ -6,6 +7,8 @@ import { Post } from '../models/Post';
 import { Profile, ProfileModel } from '../models/Profile';
 import { NotificationUnion } from '../resolvers/NotificationResolver';
 import { NotificationType } from '../types/NotificationType';
+import { PageInput } from '../types/PageInput';
+import { SortNotificationInput } from '../types/SortNotificationInput';
 
 interface CommentNotificationParams {
   comment: Comment;
@@ -35,9 +38,13 @@ export class NotificationService {
     await this.incrementNotificationCount(postOwnerProfileId);
   }
 
-  static async getNotifications(profileId: string): Promise<Array<typeof NotificationUnion>> {
-    const notifications = NotificationModel.find({ profileId }).sort({ createdAt: 'desc' }).exec();
-    return notifications as unknown as Array<typeof NotificationUnion>;
+  static async getNotifications(
+    profileId: string,
+    sort?: SortNotificationInput,
+    page?: PageInput,
+  ): Promise<PaginateResult<typeof NotificationUnion>> {
+    const { pageInfo, nodes } = await NotificationModel.paginate({ filter: { profileId }, sort, page });
+    return { pageInfo, nodes: nodes as unknown as Array<typeof NotificationUnion> };
   }
 
   static async getNotification(notificationId: string, profileId: string): Promise<typeof NotificationUnion> {

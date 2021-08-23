@@ -16,10 +16,11 @@ export const protectPage = <T extends { [key: string]: unknown }>(
   getServerSideProps: GetServerSidePropsWithContext<T>,
 ): GetServerSideProps<T> => {
   return async context => {
+    const apolloClient = createApolloClient(context);
     const {
       data: { me },
     } = await apolloClient.query<MeQuery>({ query: MeDocument, context });
-    if (me) return getServerSideProps(context);
+    if (me) return getServerSideProps(context, apolloClient);
     return {
       redirect: {
         permanent: false,
