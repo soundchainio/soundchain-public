@@ -1,6 +1,6 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
-import { ReactionEmoji } from '../enums/ReactionEmoji';
+import { ReactionEmoji } from '../types/ReactionEmoji';
 import { Model } from './Model';
 
 @ObjectType()
@@ -24,7 +24,7 @@ export class Post extends Model {
   reactionCount: number;
 
   @Field(() => [ReactionEmoji])
-  @prop({ required: true, default: [], enum: ReactionEmoji })
+  @prop({ required: true, type: [String], enum: ReactionEmoji })
   topReactions: ReactionEmoji[];
 
   @Field(() => Date)

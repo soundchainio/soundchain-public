@@ -1,8 +1,8 @@
 import { Field, ObjectType } from 'type-graphql';
-import { Post } from '../../models/Post';
+import { Post } from '../models/Post';
 
 @ObjectType()
-export class UndoPostReactionPayload {
+export class RetractReactionPayload {
   @Field()
   post: Post;
 }

@@ -15,8 +15,6 @@ import { PostConnection } from '../types/PostConnection';
 import { ReactToPostInput } from '../types/ReactToPostInput';
 import { ReactToPostPayload } from '../types/ReactToPostPayload';
 import { SortPostInput } from '../types/SortPostInput';
-import { UndoPostReactionInput } from '../types/UndoPostReactionInput';
-import { UndoPostReactionPayload } from '../types/UndoPostReactionPayload';
 
 @Resolver(Post)
 export class PostResolver {
@@ -72,20 +70,20 @@ export class PostResolver {
   @Mutation(() => ReactToPostPayload)
   @Authorized()
   async reactToPost(
-    @Arg('input') input: ReactToPostInput,
+    @Arg('input') { postId, emoji }: ReactToPostInput,
     @CurrentUser() { profileId }: User,
   ): Promise<ReactToPostPayload> {
-    const reaction = await PostService.reactToPost({ profileId, ...input });
-    return { reaction };
+    const post = await PostService.reactToPost(profileId, postId, emoji);
+    return { post };
   }
 
-  @Mutation(() => UndoPostReactionPayload)
-  @Authorized()
-  async undoPostReaction(
-    @Arg('input') input: UndoPostReactionInput,
-    @CurrentUser() { profileId }: User,
-  ): Promise<UndoPostReactionPayload> {
-    const reaction = await PostService.deleteReaction({ profileId, ...input });
-    return { reaction };
-  }
+  // @Mutation(() => UndoPostReactionPayload)
+  // @Authorized()
+  // async undoPostReaction(
+  //   @Arg('input') input: UndoPostReactionInput,
+  //   @CurrentUser() { profileId }: User,
+  // ): Promise<UndoPostReactionPayload> {
+  //   const reaction = await PostService.retractReaction({ profileId, ...input });
+  //   return { reaction };
+  // }
 }

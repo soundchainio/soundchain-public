@@ -39,7 +39,7 @@ export class PostService {
     return post;
   }
 
-  // static async undoReaction(conditions: DeleteReactionConditions): Promise<Profile> {
+  // static async retractReaction(conditions: DeleteReactionConditions): Promise<Profile> {
   //   const reaction = await ReactionModel.findOneAndDelete(conditions);
   //   if (!reaction) throw new UserInputError('Failed to delete because reaction does not exist.');
   //   return reaction;
