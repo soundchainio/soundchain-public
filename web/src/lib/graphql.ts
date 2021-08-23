@@ -51,14 +51,14 @@ export type Comment = {
 export type CommentNotification = {
   __typename?: 'CommentNotification';
   type: NotificationType;
-  body: Scalars['String'];
-  previewBody: Scalars['String'];
-  link: Scalars['String'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   id: Scalars['String'];
   author: Scalars['String'];
   authorPicture?: Maybe<Scalars['String']>;
+  body: Scalars['String'];
+  previewBody: Scalars['String'];
+  link: Scalars['String'];
 };
 
 export type CreatePostInput = {
@@ -466,6 +466,11 @@ export type CommentComponentFieldsFragment = (
   ) }
 );
 
+export type CommentNotificationFieldsFragment = (
+  { __typename?: 'CommentNotification' }
+  & Pick<CommentNotification, 'id' | 'type' | 'body' | 'previewBody' | 'link' | 'createdAt' | 'author' | 'authorPicture'>
+);
+
 export type CommentsQueryVariables = Exact<{
   postId: Scalars['String'];
 }>;
@@ -589,7 +594,7 @@ export type NotificationQuery = (
   { __typename?: 'Query' }
   & { notification: (
     { __typename?: 'CommentNotification' }
-    & Pick<CommentNotification, 'id' | 'type' | 'body' | 'previewBody' | 'link' | 'createdAt' | 'author' | 'authorPicture'>
+    & CommentNotificationFieldsFragment
   ) }
 );
 
@@ -611,7 +616,7 @@ export type NotificationsQuery = (
   { __typename?: 'Query' }
   & { notifications: Array<(
     { __typename?: 'CommentNotification' }
-    & Pick<CommentNotification, 'id' | 'type' | 'body' | 'previewBody' | 'link' | 'createdAt' | 'author' | 'authorPicture'>
+    & CommentNotificationFieldsFragment
   )> }
 );
 
@@ -824,6 +829,18 @@ export const CommentComponentFieldsFragmentDoc = gql`
     displayName
     profilePicture
   }
+}
+    `;
+export const CommentNotificationFieldsFragmentDoc = gql`
+    fragment CommentNotificationFields on CommentNotification {
+  id
+  type
+  body
+  previewBody
+  link
+  createdAt
+  author
+  authorPicture
 }
     `;
 export const PostComponentFieldsFragmentDoc = gql`
@@ -1241,18 +1258,11 @@ export const NotificationDocument = gql`
     query Notification($id: String!) {
   notification(id: $id) {
     ... on CommentNotification {
-      id
-      type
-      body
-      previewBody
-      link
-      createdAt
-      author
-      authorPicture
+      ...CommentNotificationFields
     }
   }
 }
-    `;
+    ${CommentNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationQuery__
@@ -1320,18 +1330,11 @@ export const NotificationsDocument = gql`
     query Notifications {
   notifications {
     ... on CommentNotification {
-      id
-      type
-      body
-      previewBody
-      link
-      createdAt
-      author
-      authorPicture
+      ...CommentNotificationFields
     }
   }
 }
-    `;
+    ${CommentNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationsQuery__

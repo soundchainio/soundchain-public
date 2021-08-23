@@ -1,14 +1,7 @@
 query Notification($id: String!) {
   notification(id: $id) {
     ... on CommentNotification {
-      id
-      type
-      body
-      previewBody
-      link
-      createdAt
-      author
-      authorPicture
+      ...CommentNotificationFields
     }
   }
 }
