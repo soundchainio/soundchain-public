@@ -14,15 +14,6 @@ export class CommentNotification {
   @Field(() => NotificationType)
   type: NotificationType;
 
-  @Field()
-  body: string;
-
-  @Field()
-  previewBody: string;
-
-  @Field()
-  link: string;
-
   @Field(() => Date)
   createdAt: Date;
 
