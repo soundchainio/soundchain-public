@@ -8,7 +8,7 @@ plugins:
 package:
   include:
     - src/db/rds-combined-ca-bundle.pem
-    - migrate-mongo-config.ts
+    - migrations
 
 functions:
   graphql:

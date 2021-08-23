@@ -1,17 +1,20 @@
 import {
   ApolloClient,
-  ApolloContextValue,
-  ApolloLink,
   ApolloProvider as Provider,
   createHttpLink,
   InMemoryCache,
-  Observable,
+  NormalizedCacheObject,
 } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
+import { getDataFromTree } from '@apollo/client/react/ssr';
+import { mergeDeep } from '@apollo/client/utilities';
 import Cookies from 'js-cookie';
 import { GetServerSidePropsContext } from 'next';
+import { RouterContext } from 'next/dist/shared/lib/router-context';
+import { useMemo } from 'react';
 import isBrowser from '../isBrowser';
 import { cacheConfig } from './cache-config';
+import { FakeRouter } from './fake-router';
 
 const jwtKey = 'token';
 
@@ -19,20 +22,21 @@ let jwt = (isBrowser && Cookies.get(jwtKey)) || undefined;
 
 const httpLink = createHttpLink({ uri: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/graphql' });
 
-const authLink = setContext((_, context: ApolloContextValue | GetServerSidePropsContext) => {
-  const currentJwt = ('req' in context && context.req.cookies[jwtKey]) || jwt;
-  return currentJwt ? { headers: { authorization: `Bearer ${currentJwt}` } } : {};
-});
+export function createApolloClient(context?: GetServerSidePropsContext) {
+  const authLink = setContext(() => {
+    const currentJwt = context?.req.cookies[jwtKey] || jwt;
+    return currentJwt ? { headers: { authorization: `Bearer ${currentJwt}` } } : {};
+  });
 
-export const apolloClient = new ApolloClient({
-  link: authLink.concat(httpLink),
-  cache: new InMemoryCache(cacheConfig),
-  defaultOptions: {
-    query: {
-      fetchPolicy: isBrowser ? 'cache-first' : 'no-cache',
-    },
-  },
-});
+  return new ApolloClient({
+    link: authLink.concat(httpLink),
+    cache: new InMemoryCache(cacheConfig),
+    ssrMode: !isBrowser,
+    defaultOptions: {},
+  });
+}
+
+export const apolloClient = createApolloClient();
 
 export function setJwt(newJwt?: string) {
   jwt = newJwt;
@@ -48,22 +52,39 @@ export function setJwt(newJwt?: string) {
   }
 }
 
-// Apollo hooks get called during SSR but Next.js doesn't wait for response
-// We use a fake client to prevent unecessary calls to the backend
-const fakeClient = new ApolloClient({
-  link: new ApolloLink(
-    () =>
-      new Observable(observer => {
-        observer.complete();
-      }),
-  ),
-  cache: new InMemoryCache(),
-});
+export async function cacheFor<T>(
+  Page: React.ComponentType<T>,
+  pageProps: T,
+  context: GetServerSidePropsContext,
+  client?: ApolloClient<NormalizedCacheObject>,
+) {
+  client = client ?? createApolloClient(context);
+
+  await getDataFromTree(
+    <RouterContext.Provider value={new FakeRouter(context)}>
+      <Provider client={client}>
+        <Page {...pageProps} />
+      </Provider>
+    </RouterContext.Provider>,
+  );
+
+  return { props: { ...pageProps, cache: client.extract() } };
+}
 
 export interface ApolloProviderProps {
+  pageProps: { cache?: NormalizedCacheObject };
   children: JSX.Element;
 }
 
-export function ApolloProvider({ children }: ApolloProviderProps) {
-  return <Provider client={isBrowser ? apolloClient : fakeClient}>{children}</Provider>;
+export function ApolloProvider({ pageProps, children }: ApolloProviderProps) {
+  const { cache } = pageProps;
+
+  useMemo(() => {
+    if (cache) {
+      const existingCache = apolloClient.extract();
+      apolloClient.restore(mergeDeep(existingCache, cache));
+    }
+  }, [cache]);
+
+  return <Provider client={apolloClient}>{children}</Provider>;
 }

@@ -4,11 +4,15 @@ import { Comment } from '../models/Comment';
 import { Post } from '../models/Post';
 import { Profile } from '../models/Profile';
 import { User } from '../models/User';
-import { CreatePostInput } from '../resolvers/types/CreatePostInput';
-import { CreatePostPayload } from '../resolvers/types/CreatePostPayload';
 import { CommentService } from '../services/CommentService';
 import { PostService } from '../services/PostService';
 import { ProfileService } from '../services/ProfileService';
+import { CreatePostInput } from '../types/CreatePostInput';
+import { CreatePostPayload } from '../types/CreatePostPayload';
+import { FilterPostInput } from '../types/FilterPostInput';
+import { PageInput } from '../types/PageInput';
+import { PostConnection } from '../types/PostConnection';
+import { SortPostInput } from '../types/SortPostInput';
 
 @Resolver(Post)
 export class PostResolver {
@@ -23,8 +27,18 @@ export class PostResolver {
   }
 
   @FieldResolver(() => Number)
+  likeCount(): Promise<number> {
+    return Promise.resolve(Math.floor(Math.random() * 100));
+  }
+
+  @FieldResolver(() => Number)
   commentCount(@Root() post: Post): Promise<number> {
     return CommentService.countComments(post._id);
+  }
+
+  @FieldResolver(() => Number)
+  repostCount(): Promise<number> {
+    return Promise.resolve(Math.floor(Math.random() * 100));
   }
 
   @Query(() => Post)
@@ -32,9 +46,13 @@ export class PostResolver {
     return PostService.getPost(id);
   }
 
-  @Query(() => [Post])
-  posts(@Arg('profileId', { nullable: true }) profileId: string): Promise<Post[]> {
-    return PostService.getPosts({ profileId });
+  @Query(() => PostConnection)
+  posts(
+    @Arg('filter', { nullable: true }) filter?: FilterPostInput,
+    @Arg('sort', { nullable: true }) sort?: SortPostInput,
+    @Arg('page', { nullable: true }) page?: PageInput,
+  ): Promise<PostConnection> {
+    return PostService.getPosts(filter, sort, page);
   }
 
   @Mutation(() => CreatePostPayload)

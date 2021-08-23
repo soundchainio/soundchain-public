@@ -23,7 +23,7 @@ interface LambdaContext {
   express: ExpressContext;
 }
 
-const {
+export const {
   NODE_ENV,
   PORT = 4000,
   DATABASE_URL = 'mongodb://localhost:27017',
@@ -62,7 +62,7 @@ export const config = {
     schema: buildSchemaSync({
       resolvers,
       globalMiddlewares: [TypegooseMiddleware],
-      authChecker: ({ context }) => Boolean(context.jwtUser),
+      authChecker: ({ context }) => Boolean(context.user),
     }),
   },
   uploads: {

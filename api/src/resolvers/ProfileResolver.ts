@@ -4,18 +4,18 @@ import { FollowModel } from '../models/Follow';
 import { Profile } from '../models/Profile';
 import { User } from '../models/User';
 import { ProfileService } from '../services/ProfileService';
-import { FollowProfileInput } from './types/FollowProfileInput';
-import { FollowProfilePayload } from './types/FollowProfilePayload';
-import { UnfollowProfileInput } from './types/UnfollowProfileInput';
-import { UnfollowProfilePayload } from './types/UnfollowProfilePayload';
-import { UpdateCoverPictureInput } from './types/UpdateCoverPictureInput';
-import { UpdateCoverPicturePayload } from './types/UpdateCoverPicturePayload';
-import { UpdateFavoriteGenresInput } from './types/UpdateFavoriteGenresInput';
-import { UpdateFavoriteGenresPayload } from './types/UpdateFavoriteGenresPayload';
-import { UpdateProfilePicturePayload } from './types/UpdateProfilePicturePayload';
-import { UpdateSocialMediasInput } from './types/UpdateSocialMediasInput';
-import { UpdateSocialMediasPayload } from './types/UpdateSocialMediasPayload';
-import { UpdateProfilePictureInput } from './types/UploadProfilePictureInput';
+import { FollowProfileInput } from '../types/FollowProfileInput';
+import { FollowProfilePayload } from '../types/FollowProfilePayload';
+import { UnfollowProfileInput } from '../types/UnfollowProfileInput';
+import { UnfollowProfilePayload } from '../types/UnfollowProfilePayload';
+import { UpdateCoverPictureInput } from '../types/UpdateCoverPictureInput';
+import { UpdateCoverPicturePayload } from '../types/UpdateCoverPicturePayload';
+import { UpdateFavoriteGenresInput } from '../types/UpdateFavoriteGenresInput';
+import { UpdateFavoriteGenresPayload } from '../types/UpdateFavoriteGenresPayload';
+import { UpdateProfilePicturePayload } from '../types/UpdateProfilePicturePayload';
+import { UpdateSocialMediasInput } from '../types/UpdateSocialMediasInput';
+import { UpdateSocialMediasPayload } from '../types/UpdateSocialMediasPayload';
+import { UpdateProfilePictureInput } from '../types/UploadProfilePictureInput';
 
 @Resolver(Profile)
 export class ProfileResolver {
@@ -25,8 +25,12 @@ export class ProfileResolver {
   }
 
   @FieldResolver(() => Boolean)
-  isFollowed(@Root() profile: Profile, @CurrentUser() { profileId }: User): Promise<boolean> {
-    return FollowModel.exists({ followerId: profileId, followedId: profile._id });
+  isFollowed(@Root() profile: Profile, @CurrentUser() user?: User): Promise<boolean> {
+    if (!user) {
+      return Promise.resolve(false);
+    }
+
+    return FollowModel.exists({ followerId: user.profileId, followedId: profile._id });
   }
 
   @Query(() => Profile)

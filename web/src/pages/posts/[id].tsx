@@ -3,15 +3,42 @@ import { Comments } from 'components/Comments';
 import { Layout } from 'components/Layout';
 import { NewCommentForm } from 'components/NewCommentForm';
 import { Post } from 'components/Post';
-import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
+import { cacheFor, createApolloClient } from 'lib/apollo';
+import { PostDocument } from 'lib/graphql';
+import { GetServerSideProps } from 'next';
+import { ParsedUrlQuery } from 'querystring';
 
-export const getServerSideProps: GetServerSideProps = async ({ params }) => {
-  return {
-    props: { postId: params?.id },
-  };
+export interface PostPageProps {
+  postId: string;
+}
+
+interface PostPageParams extends ParsedUrlQuery {
+  id: string;
+}
+
+export const getServerSideProps: GetServerSideProps<PostPageProps, PostPageParams> = async context => {
+  const postId = context.params?.id;
+
+  if (!postId) {
+    return { notFound: true };
+  }
+
+  const apolloClient = createApolloClient(context);
+
+  const { error } = await apolloClient.query({
+    query: PostDocument,
+    variables: { id: postId },
+    context,
+  });
+
+  if (error) {
+    return { notFound: true };
+  }
+
+  return cacheFor(PostPage, { postId }, context, apolloClient);
 };
 
-export default function PostPage({ postId }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+export default function PostPage({ postId }: PostPageProps) {
   return (
     <Layout>
       <Post postId={postId} />
