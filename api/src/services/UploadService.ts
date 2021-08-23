@@ -2,8 +2,8 @@ import { PutObjectCommand, PutObjectCommandInput, S3Client } from '@aws-sdk/clie
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuidv4 } from 'uuid';
 import { config } from '../config';
-import { UploadFileType } from '../enums/UploadFileType';
-import { UploadUrl } from '../resolvers/types/UploadUrl';
+import { UploadFileType } from '../types/UploadFileType';
+import { UploadUrl } from '../types/UploadUrl';
 
 const FIVE_MINUTES = 1000 * 60 * 5;
 

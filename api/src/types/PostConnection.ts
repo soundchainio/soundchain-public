@@ -1,5 +1,5 @@
 import { Field, ObjectType } from 'type-graphql';
-import { Post } from '../../models/Post';
+import { Post } from '../models/Post';
 import { PageInfo } from './PageInfo';
 
 @ObjectType()

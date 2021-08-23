@@ -21,7 +21,7 @@ const validationSchema: yup.SchemaOf<RegisterEmailFormValues> = yup.object().sha
 const initialFormValues = { email: '' };
 
 export const RegisterEmailForm = ({ onSubmit }: FormProps) => {
-  const handleSubmit = async (values: RegisterEmailFormValues) => {
+  const handleSubmit = (values: RegisterEmailFormValues) => {
     onSubmit(values);
   };
 

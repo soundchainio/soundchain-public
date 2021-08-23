@@ -12,7 +12,14 @@ export const Avatar = ({ src, pixels = 30, className }: AvatarProps) => {
   return (
     <div className={className}>
       {src ? (
-        <Image alt="Profile picture" src={src} width={pixels} height={pixels} className="rounded-full" />
+        <Image
+          alt="Profile picture"
+          src={src}
+          width={pixels}
+          height={pixels}
+          className="rounded-full"
+          objectFit="cover"
+        />
       ) : (
         <Image alt="Profile picture" src={ProfilePic} width={pixels} height={pixels} className="rounded-full" />
       )}

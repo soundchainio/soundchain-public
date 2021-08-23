@@ -1,5 +1,6 @@
 import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
+import { Label } from 'components/Label';
 import Link from 'components/Link';
 import { Form, Formik } from 'formik';
 import { useMe } from 'hooks/useMe';
@@ -9,7 +10,6 @@ import { useLoginMutation } from 'lib/graphql';
 import { useRouter } from 'next/dist/client/router';
 import { useEffect } from 'react';
 import * as yup from 'yup';
-import { Label } from 'components/Label';
 
 interface FormValues {
   username: string;

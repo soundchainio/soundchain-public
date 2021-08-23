@@ -1,5 +1,5 @@
 import { Field, ObjectType } from 'type-graphql';
-import { ReactionEmoji } from '../../enums/ReactionEmoji';
+import { ReactionEmoji } from './ReactionEmoji';
 
 @ObjectType()
 export class ReactionCount {

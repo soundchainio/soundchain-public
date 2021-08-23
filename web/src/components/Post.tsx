@@ -11,10 +11,6 @@ interface PostProps {
   postId: string;
 }
 
-const generateRandomNumber = () => {
-  return Math.round(Math.random() * 100);
-};
-
 export const Post = ({ postId }: PostProps) => {
   const { data } = usePostQuery({ variables: { id: postId } });
   const post = data?.post;
@@ -36,7 +32,7 @@ export const Post = ({ postId }: PostProps) => {
           {post.mediaLink && (
             <iframe frameBorder="0" className="mt-4 w-full bg-gray-20" allowFullScreen src={post.mediaLink} />
           )}
-          <PostStats likes={generateRandomNumber()} comments={post.commentCount} reposts={generateRandomNumber()} />
+          <PostStats likes={post.likeCount} comments={post.commentCount} reposts={post.repostCount} />
         </div>
       </NextLink>
       <PostActions postId={postId} />

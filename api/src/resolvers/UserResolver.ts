@@ -6,16 +6,16 @@ import { AuthService } from '../services/AuthService';
 import { JwtService } from '../services/JwtService';
 import { ProfileService } from '../services/ProfileService';
 import { UserService } from '../services/UserService';
+import { AuthPayload } from '../types/AuthPayload';
 import { Context } from '../types/Context';
-import { AuthPayload } from './types/AuthPayload';
-import { ForgotPasswordInput } from './types/ForgotPasswordInput';
-import { ForgotPasswordPayload } from './types/ForgotPasswordPayload';
-import { LoginInput } from './types/LoginInput';
-import { RegisterInput } from './types/RegisterInput';
-import { ResetPasswordInput } from './types/ResetPasswordInput';
-import { ResetPasswordPayload } from './types/ResetPasswordPayload';
-import { VerifyUserEmailInput } from './types/VerifyUserEmailInput';
-import { VerifyUserEmailPayload } from './types/VerifyUserEmailPayload';
+import { ForgotPasswordInput } from '../types/ForgotPasswordInput';
+import { ForgotPasswordPayload } from '../types/ForgotPasswordPayload';
+import { LoginInput } from '../types/LoginInput';
+import { RegisterInput } from '../types/RegisterInput';
+import { ResetPasswordInput } from '../types/ResetPasswordInput';
+import { ResetPasswordPayload } from '../types/ResetPasswordPayload';
+import { VerifyUserEmailInput } from '../types/VerifyUserEmailInput';
+import { VerifyUserEmailPayload } from '../types/VerifyUserEmailPayload';
 
 @Resolver(User)
 export class UserResolver {

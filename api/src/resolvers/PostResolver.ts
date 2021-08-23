@@ -4,21 +4,19 @@ import { Comment } from '../models/Comment';
 import { Post } from '../models/Post';
 import { Profile } from '../models/Profile';
 import { User } from '../models/User';
-import { CreatePostInput } from '../resolvers/types/CreatePostInput';
-import { CreatePostPayload } from '../resolvers/types/CreatePostPayload';
 import { CommentService } from '../services/CommentService';
 import { PostService } from '../services/PostService';
 import { ProfileService } from '../services/ProfileService';
-import { ReactionService } from '../services/ReactionService';
-import { FilterPostInput } from './types/FilterPostInput';
-import { PageInput } from './types/PageInput';
-import { PostConnection } from './types/PostConnection';
-import { ReactionCount } from './types/ReactionCount';
-import { ReactToPostInput } from './types/ReactToPostInput';
-import { ReactToPostPayload } from './types/ReactToPostPayload';
-import { SortPostInput } from './types/SortPostInput';
-import { UndoPostReactionInput } from './types/UndoPostReactionInput';
-import { UndoPostReactionPayload } from './types/UndoPostReactionPayload';
+import { CreatePostInput } from '../types/CreatePostInput';
+import { CreatePostPayload } from '../types/CreatePostPayload';
+import { FilterPostInput } from '../types/FilterPostInput';
+import { PageInput } from '../types/PageInput';
+import { PostConnection } from '../types/PostConnection';
+import { ReactToPostInput } from '../types/ReactToPostInput';
+import { ReactToPostPayload } from '../types/ReactToPostPayload';
+import { SortPostInput } from '../types/SortPostInput';
+import { UndoPostReactionInput } from '../types/UndoPostReactionInput';
+import { UndoPostReactionPayload } from '../types/UndoPostReactionPayload';
 
 @Resolver(Post)
 export class PostResolver {
@@ -33,13 +31,18 @@ export class PostResolver {
   }
 
   @FieldResolver(() => Number)
+  likeCount(): Promise<number> {
+    return Promise.resolve(Math.floor(Math.random() * 100));
+  }
+
+  @FieldResolver(() => Number)
   commentCount(@Root() post: Post): Promise<number> {
     return CommentService.countComments(post._id);
   }
 
-  @FieldResolver(() => [ReactionCount])
-  reactionCounts(@Root() post: Post): Promise<ReactionCount[]> {
-    return ReactionService.getReactionCounts(post._id);
+  @FieldResolver(() => Number)
+  repostCount(): Promise<number> {
+    return Promise.resolve(Math.floor(Math.random() * 100));
   }
 
   @Query(() => Post)
@@ -72,7 +75,7 @@ export class PostResolver {
     @Arg('input') input: ReactToPostInput,
     @CurrentUser() { profileId }: User,
   ): Promise<ReactToPostPayload> {
-    const reaction = await ReactionService.createReaction({ profileId, ...input });
+    const reaction = await PostService.reactToPost({ profileId, ...input });
     return { reaction };
   }
 
@@ -82,7 +85,7 @@ export class PostResolver {
     @Arg('input') input: UndoPostReactionInput,
     @CurrentUser() { profileId }: User,
   ): Promise<UndoPostReactionPayload> {
-    const reaction = await ReactionService.deleteReaction({ profileId, ...input });
+    const reaction = await PostService.deleteReaction({ profileId, ...input });
     return { reaction };
   }
 }

@@ -3,6 +3,8 @@ import { InputField } from 'components/InputField';
 import { LockedLayout } from 'components/LockedLayout';
 import { Title } from 'components/Title';
 import { Form, Formik, FormikHelpers } from 'formik';
+import { cacheFor } from 'lib/apollo';
+import { GetServerSideProps } from 'next';
 import Head from 'next/head';
 import * as yup from 'yup';
 import { useForgotPasswordMutation } from '../lib/graphql';
@@ -14,6 +16,10 @@ interface FormValues {
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   email: yup.string().email().required(),
 });
+
+export const getServerSideProps: GetServerSideProps = context => {
+  return cacheFor(ForgotPasswordPage, {}, context);
+};
 
 export default function ForgotPasswordPage() {
   const [forgotPassword, { data, loading, error }] = useForgotPasswordMutation();

@@ -3,10 +3,10 @@ import classNames from 'classnames';
 import { Button } from 'components/Button';
 import { BaseEmoji, Picker } from 'emoji-mart';
 import 'emoji-mart/css/emoji-mart.css';
-import { PostLinkType } from 'enums/PostLinkType';
 import { Field, Form, Formik, FormikHelpers } from 'formik';
 import { CreatePostInput } from 'lib/graphql';
 import { default as React, useEffect, useState } from 'react';
+import { PostLinkType } from 'types/PostLinkType';
 import * as yup from 'yup';
 import { useCreatePostMutation } from '../lib/graphql';
 import { getNormalizedLink, hasLink } from '../utils/NormalizeEmbedLinks';
@@ -91,15 +91,6 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
     }
   };
 
-  const normalizeOriginalLink = async () => {
-    if (originalLink.length && hasLink(originalLink)) {
-      const link = await getNormalizedLink(originalLink);
-      setPostLink(link);
-    } else {
-      setPostLink('');
-    }
-  };
-
   const onOpenMusicLink = () => {
     setShowAddMusicLink(true);
   };
@@ -115,6 +106,15 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
 
   useEffect(() => {
     if (originalLink) {
+      const normalizeOriginalLink = async () => {
+        if (originalLink.length && hasLink(originalLink)) {
+          const link = await getNormalizedLink(originalLink);
+          setPostLink(link);
+        } else {
+          setPostLink('');
+        }
+      };
+
       normalizeOriginalLink();
       onCloseLinks();
     } else {

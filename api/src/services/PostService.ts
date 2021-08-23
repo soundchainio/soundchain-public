@@ -1,12 +1,11 @@
 import { UserInputError } from 'apollo-server-express';
 import { PaginateResult } from '../db/pagination/paginate';
-import { ReactionEmoji } from '../enums/ReactionEmoji';
 import { Post, PostModel } from '../models/Post';
-import { ProfileModel } from '../models/Profile';
 import { ReactionModel } from '../models/Reaction';
-import { FilterPostInput } from '../resolvers/types/FilterPostInput';
-import { PageInput } from '../resolvers/types/PageInput';
-import { SortPostInput } from '../resolvers/types/SortPostInput';
+import { FilterPostInput } from '../types/FilterPostInput';
+import { PageInput } from '../types/PageInput';
+import { ReactionEmoji } from '../types/ReactionEmoji';
+import { SortPostInput } from '../types/SortPostInput';
 
 interface NewPostParams {
   profileId: string;
@@ -36,7 +35,6 @@ export class PostService {
     if (alreadyReacted) throw new UserInputError('You already reacted to the post.');
 
     await new ReactionModel({ postId, profileId, emoji }).save();
-    await ProfileModel.up;
 
     return post;
   }

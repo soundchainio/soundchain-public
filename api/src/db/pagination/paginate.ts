@@ -1,8 +1,8 @@
 import { DocumentType, ReturnModelType } from '@typegoose/typegoose';
 import { FilterQuery } from 'mongoose';
-import { SortOrder } from '../../enums/SortOrder';
 import { Model } from '../../models/Model';
-import { PageInfo } from '../../resolvers/types/PageInfo';
+import { PageInfo } from '../../types/PageInfo';
+import { SortOrder } from '../../types/SortOrder';
 import { buildCursorFilter } from './buildCursorFilter';
 import { buildQuerySort } from './buildQuerySort';
 import { prepareResult } from './prepareResult';

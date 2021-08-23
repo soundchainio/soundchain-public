@@ -38,7 +38,7 @@ const initialFormValues = { password: '', passwordConfirmation: '' };
 
 export const CompleteProfileForm = ({ onSubmit, loading }: CompleteProfileFormProps) => {
   const [favoriteGenres, setFavoriteGenres] = useState<Genre[]>([]);
-  const handleSubmit = async (values: FormValidationValues) => {
+  const handleSubmit = (values: FormValidationValues) => {
     onSubmit({ ...values, favoriteGenres });
   };
 
