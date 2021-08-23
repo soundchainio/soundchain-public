@@ -24,12 +24,8 @@ export class NotificationResolver {
 
   @Query(() => NotificationUnion)
   @Authorized()
-  notification(
-    @CurrentUser() { profileId }: User,
-    @Ctx() { notificationService }: Context,
-    @Arg('id') id: string,
-  ): Promise<typeof NotificationUnion> {
-    return notificationService.getNotification(id, profileId);
+  notification(@Ctx() { notificationService }: Context, @Arg('id') id: string): Promise<typeof NotificationUnion> {
+    return notificationService.getNotification(id);
   }
 
   @Mutation(() => Profile)

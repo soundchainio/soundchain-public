@@ -53,8 +53,8 @@ export class NotificationService extends ModelService<typeof Notification> {
     return { pageInfo, nodes: nodes as unknown as Array<typeof NotificationUnion> };
   }
 
-  async getNotification(notificationId: string, profileId: string): Promise<typeof NotificationUnion> {
-    const notification = await NotificationModel.findOne({ _id: notificationId, profileId });
+  async getNotification(notificationId: string): Promise<typeof NotificationUnion> {
+    const notification = await this.findOrFail(notificationId);
     if (!notification) throw new NotFoundError('Notification', notificationId);
     return notification as unknown as typeof NotificationUnion;
   }
