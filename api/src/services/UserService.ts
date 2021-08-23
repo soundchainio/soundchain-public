@@ -1,11 +1,17 @@
 import { User, UserModel } from '../models/User';
+import { Context } from '../types/Context';
+import { ModelService } from './ModelService';
 
-export class UserService {
-  static getUser(id: string): Promise<User> {
-    return UserModel.findByIdOrFail(id);
+export class UserService extends ModelService<typeof User> {
+  constructor(context: Context) {
+    super(context, UserModel);
   }
 
-  static userExists(filter: Partial<User>): Promise<boolean> {
+  getUser(id: string): Promise<User> {
+    return this.findOrFail(id);
+  }
+
+  userExists(filter: Partial<User>): Promise<boolean> {
     return UserModel.exists(filter);
   }
 }

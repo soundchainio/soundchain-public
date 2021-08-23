@@ -10,7 +10,6 @@ import { buildSchemaSync } from 'type-graphql';
 import { TypegooseMiddleware } from './middlewares/typegoose-middleware';
 import { resolvers } from './resolvers';
 import { JwtService, JwtUser } from './services/JwtService';
-import { UserService } from './services/UserService';
 import { Context } from './types/Context';
 
 dotenv.config();
@@ -56,8 +55,7 @@ export const config = {
         : ApolloServerPluginLandingPageGraphQLPlayground(),
     ],
     context(context: ExpressContext | LambdaContext): Context {
-      const jwtUser = 'req' in context ? context.req.user : context.express.req.user;
-      return { jwtUser, user: jwtUser && UserService.getUser(jwtUser.sub) };
+      return new Context('req' in context ? context.req.user : context.express.req.user);
     },
     schema: buildSchemaSync({
       resolvers,
