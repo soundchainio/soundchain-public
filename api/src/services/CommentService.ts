@@ -1,4 +1,4 @@
-import { Comment, CommentModel } from 'models/Comment';
+import { Comment, CommentModel } from '../models/Comment';
 import { NotificationService } from './NotificationService';
 import { PostService } from './PostService';
 import { ProfileService } from './ProfileService';

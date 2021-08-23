@@ -1,5 +1,5 @@
-import { NotificationType } from 'enums/NotificationType';
 import { Field, ObjectType } from 'type-graphql';
+import { NotificationType } from '../types/NotificationType';
 
 export interface CommentNotificationMetadata {
   commentBody: string;

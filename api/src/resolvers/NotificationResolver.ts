@@ -1,10 +1,10 @@
-import { CurrentUser } from 'decorators/current-user';
-import { NotificationType } from 'enums/NotificationType';
-import { CommentNotification } from 'models/CommentNotification';
-import { Profile } from 'models/Profile';
-import { User } from 'models/User';
-import { NotificationService } from 'services/NotificationService';
 import { Arg, Authorized, createUnionType, Mutation, Query, Resolver } from 'type-graphql';
+import { CurrentUser } from '../decorators/current-user';
+import { CommentNotification } from '../models/CommentNotification';
+import { Profile } from '../models/Profile';
+import { User } from '../models/User';
+import { NotificationService } from '../services/NotificationService';
+import { NotificationType } from '../types/NotificationType';
 import { ClearNotificationsPayload } from './types/ClearNotificationsPayload';
 
 export const NotificationUnion = createUnionType({

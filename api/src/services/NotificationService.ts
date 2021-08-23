@@ -1,11 +1,11 @@
-import { NotificationType } from 'enums/NotificationType';
-import { NotFoundError } from 'errors/NotFoundError';
-import { Comment } from 'models/Comment';
-import { CommentNotificationMetadata } from 'models/CommentNotification';
-import { NotificationModel } from 'models/Notification';
-import { Post } from 'models/Post';
-import { Profile, ProfileModel } from 'models/Profile';
-import { NotificationUnion } from 'resolvers/NotificationResolver';
+import { NotFoundError } from '../errors/NotFoundError';
+import { Comment } from '../models/Comment';
+import { CommentNotificationMetadata } from '../models/CommentNotification';
+import { NotificationModel } from '../models/Notification';
+import { Post } from '../models/Post';
+import { Profile, ProfileModel } from '../models/Profile';
+import { NotificationUnion } from '../resolvers/NotificationResolver';
+import { NotificationType } from '../types/NotificationType';
 
 interface CommentNotificationParams {
   comment: Comment;
