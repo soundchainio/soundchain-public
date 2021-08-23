@@ -1,9 +1,10 @@
 import { PaginateResult } from '../db/pagination/paginate';
 import { Post, PostModel } from '../models/Post';
+import { Context } from '../types/Context';
 import { FilterPostInput } from '../types/FilterPostInput';
 import { PageInput } from '../types/PageInput';
 import { SortPostInput } from '../types/SortPostInput';
-import { Service } from './Service';
+import { ModelService } from './ModelService';
 
 interface NewPostParams {
   profileId: string;
@@ -11,7 +12,11 @@ interface NewPostParams {
   mediaLink?: string;
 }
 
-export class PostService extends Service {
+export class PostService extends ModelService<typeof Post> {
+  constructor(context: Context) {
+    super(context, PostModel);
+  }
+
   async createPost(params: NewPostParams): Promise<Post> {
     const post = new PostModel(params);
     await post.save();
@@ -19,10 +24,10 @@ export class PostService extends Service {
   }
 
   getPosts(filter?: FilterPostInput, sort?: SortPostInput, page?: PageInput): Promise<PaginateResult<Post>> {
-    return PostModel.paginate({ filter, sort, page });
+    return this.paginate({ filter, sort, page });
   }
 
   getPost(id: string): Promise<Post> {
-    return PostModel.findByIdOrFail(id);
+    return this.findOrFail(id);
   }
 }

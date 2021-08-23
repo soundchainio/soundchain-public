@@ -1,14 +1,19 @@
 import { Comment, CommentModel } from '../models/Comment';
-import { Service } from './Service';
+import { Context } from '../types/Context';
+import { ModelService } from './ModelService';
 
 interface NewCommentParams {
   profileId: string;
   body: string;
 }
 
-export class CommentService extends Service {
+export class CommentService extends ModelService<typeof Comment> {
+  constructor(context: Context) {
+    super(context, CommentModel);
+  }
+
   getComment(id: string): Promise<Comment> {
-    return CommentModel.findByIdOrFail(id);
+    return this.findOrFail(id);
   }
 
   async createComment(params: NewCommentParams): Promise<Comment> {

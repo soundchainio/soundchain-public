@@ -25,7 +25,7 @@ export class ProfileResolver {
 
   @FieldResolver(() => Boolean)
   isFollowed(
-    @Ctx() { profileService }: Context,
+    @Ctx() { followService }: Context,
     @Root() profile: Profile,
     @CurrentUser() user?: User,
   ): Promise<boolean> {
@@ -33,7 +33,7 @@ export class ProfileResolver {
       return Promise.resolve(false);
     }
 
-    return profileService.followExists(user.profileId, profile._id);
+    return followService.exists({ followerId: user.profileId, followedId: profile._id });
   }
 
   @Query(() => Profile)

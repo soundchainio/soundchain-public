@@ -1,15 +1,18 @@
 import { UserInputError } from 'apollo-server-express';
-import { NotFoundError } from '../errors/NotFoundError';
-import { FollowModel } from '../models/Follow';
 import { Profile, ProfileModel } from '../models/Profile';
 import { SocialMedias } from '../models/SocialMedias';
 import { UserModel } from '../models/User';
+import { Context } from '../types/Context';
 import { Genre } from '../types/Genres';
-import { Service } from './Service';
+import { ModelService } from './ModelService';
 
-export class ProfileService extends Service {
+export class ProfileService extends ModelService<typeof Profile> {
+  constructor(context: Context) {
+    super(context, ProfileModel);
+  }
+
   getProfile(id: string): Promise<Profile> {
-    return ProfileModel.findByIdOrFail(id);
+    return this.findOrFail(id);
   }
 
   async updateSocialMedias(id: string, socialMedias: SocialMedias): Promise<Profile> {
@@ -57,20 +60,22 @@ export class ProfileService extends Service {
       throw new UserInputError('You cannot follow yourself.');
     }
 
-    const followedProfile = await ProfileModel.findById(followedId);
-    if (!followedProfile) {
-      throw new NotFoundError('Profile', followedId);
-    }
+    const [followedProfile, alreadyFollowed] = await Promise.all([
+      this.findOrFail(followedId),
+      this.context.followService.exists({ followerId, followedId }),
+    ]);
 
-    const alreadyFollowed = await FollowModel.exists({ followerId, followedId });
     if (alreadyFollowed) {
       throw new UserInputError(`User profile ${followerId} is already following profile ${followerId}.`);
     }
 
-    const follow = new FollowModel({ followerId, followedId });
-    await follow.save();
-    await ProfileModel.updateOne({ _id: followerId }, { $inc: { followingCount: 1 } });
-    await ProfileModel.updateOne({ _id: followedId }, { $inc: { followerCount: 1 } });
+    await this.context.followService.createFollow(followerId, followedId);
+
+    await Promise.all([
+      ProfileModel.updateOne({ _id: followerId }, { $inc: { followingCount: 1 } }),
+      ProfileModel.updateOne({ _id: followedId }, { $inc: { followerCount: 1 } }),
+    ]);
+
     followedProfile.followerCount++;
     return followedProfile;
   }
@@ -80,23 +85,15 @@ export class ProfileService extends Service {
       throw new UserInputError('You cannot unfollow yourself.');
     }
 
-    const followedProfile = await ProfileModel.findById(followedId);
-    if (!followedProfile) {
-      throw new NotFoundError('Profile', followedId);
-    }
+    const followedProfile = await this.findOrFail(followedId);
+    await this.context.followService.deleteFollow(followerId, followedId);
 
-    const { deletedCount } = await FollowModel.deleteOne({ followerId, followedId });
-    if (deletedCount === 0) {
-      throw new UserInputError(`User profile ${followerId} isn't following profile ${followerId}.`);
-    }
+    await Promise.all([
+      ProfileModel.updateOne({ _id: followerId }, { $inc: { followingCount: -1 } }),
+      ProfileModel.updateOne({ _id: followedId }, { $inc: { followerCount: -1 } }),
+    ]);
 
-    await ProfileModel.updateOne({ _id: followerId }, { $inc: { followingCount: -1 } });
-    await ProfileModel.updateOne({ _id: followedId }, { $inc: { followerCount: -1 } });
     followedProfile.followerCount--;
     return followedProfile;
-  }
-
-  followExists(followerId: string, followedId: string): Promise<boolean> {
-    return FollowModel.exists({ followerId, followedId });
   }
 }
