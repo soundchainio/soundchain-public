@@ -39,7 +39,7 @@ export const BottomNavBarButton = ({
       {Icon && (
         <div className="relative">
           {counter && <NotificationCounter />}
-          <Icon activated={router.pathname === path} />
+          <Icon activated={isActivated()} />
         </div>
       )}
       <span

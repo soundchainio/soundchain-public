@@ -1,9 +1,9 @@
 import { IconProps } from './types/IconProps';
 
-export const Search = (props: IconProps) => {
+export const Search = ({ activated, ...props }: IconProps) => {
   return (
     <>
-      {props.activated ? (
+      {activated ? (
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 20 20" {...props}>
           <path
             fill="url(#explore_linear)"
