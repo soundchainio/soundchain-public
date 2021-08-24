@@ -45,6 +45,7 @@ const setMaxInputLength = (input: string) => {
 export const NewPostModal = () => {
   const [isEmojiPickerVisible, setEmojiPickerVisible] = useState(false);
   const [isRepost, setIsRepost] = useState(false);
+  const [bodyValue, setBodyValue] = useState('');
   const [originalLink, setOriginalLink] = useState('');
   const [postLink, setPostLink] = useState('');
   const { setAnyModalOpened } = useModalsContext();
@@ -103,6 +104,27 @@ export const NewPostModal = () => {
     setShowNewPost(false);
   };
 
+  const onTextareaChange = async (body: string) => {
+    setBodyValue(body);
+  };
+
+  useEffect(() => {
+    const delayDebounce = setTimeout(async () => {
+      if (bodyValue.length) {
+        const link = await getNormalizedLink(bodyValue);
+        if (link) {
+          setPostLink(link);
+        } else if (!originalLink) {
+          setPostLink('');
+        }
+      } else if (!originalLink) {
+        setPostLink('');
+      }
+    }, 1000);
+
+    return () => clearTimeout(delayDebounce);
+  }, [bodyValue]);
+
   useEffect(() => {
     if (originalLink) {
       const normalizeOriginalLink = async () => {
@@ -113,7 +135,6 @@ export const NewPostModal = () => {
           setPostLink('');
         }
       };
-
       normalizeOriginalLink();
     } else {
       setPostLink('');
@@ -162,6 +183,7 @@ export const NewPostModal = () => {
                 className="w-full h-24 resize-none focus:ring-0 bg-gray-20 border-none focus:outline-none outline-none text-white flex-auto"
                 placeholder="What's happening?"
                 maxLength={setMaxInputLength(values.body)}
+                validate={onTextareaChange(values.body)}
               />
               {isRepost && (
                 <div className="p-4 bg-gray-20">
