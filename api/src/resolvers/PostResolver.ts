@@ -70,10 +70,11 @@ export class PostResolver {
   @Mutation(() => CreateRepostPayload)
   @Authorized()
   async createRepost(
+    @Ctx() { postService }: Context,
     @Arg('input') { body, repostId }: CreateRepostInput,
     @CurrentUser() { profileId }: User,
   ): Promise<CreatePostPayload> {
-    const post = await PostService.createRepost({ profileId, body, repostId });
+    const post = await postService.createRepost({ profileId, body, repostId });
     return { post };
   }
 }
