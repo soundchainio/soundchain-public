@@ -1,3 +1,4 @@
+import { useNewPostModalContext } from 'contexts/NewPostModal';
 import { useMe } from 'hooks/useMe';
 import { Home } from 'icons/Home';
 import { NewPost } from 'icons/NewPost';
@@ -6,15 +7,15 @@ import { Profile } from 'icons/Profile';
 import { Search } from 'icons/Search';
 import { setJwt } from 'lib/apollo';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
 import { NewPostModal } from './NewPostModal';
 
 export const BottomNavBar = () => {
-  const [showNewPost, setShowNewPost] = useState(false);
+  const { showNewPost, setShowNewPost, setRepostId } = useNewPostModalContext();
   const router = useRouter();
   const me = useMe();
 
   const handleNewPostClick = () => {
+    setRepostId('');
     me ? setShowNewPost(!showNewPost) : router.push('/login');
   };
 
@@ -26,7 +27,7 @@ export const BottomNavBar = () => {
         <NewPost onClick={handleNewPostClick} />
         <Notification />
         <Profile onClick={() => setJwt()} />
-        <NewPostModal setShowNewPost={setShowNewPost} showNewPost={showNewPost} />
+        <NewPostModal />
       </div>
     </nav>
   );

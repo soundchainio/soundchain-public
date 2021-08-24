@@ -1,6 +1,5 @@
-import { RepostModal } from 'components/RepostModal';
 import { ModalsContext } from 'contexts/Modals';
-import { RepostModalContext } from 'contexts/RepostModal';
+import { NewPostModalContext } from 'contexts/NewPostModal';
 import { ApolloProvider } from 'lib/apollo';
 import type { AppProps } from 'next/app';
 import { useState } from 'react';
@@ -8,13 +7,13 @@ import 'styles/globals.css';
 
 function MyApp({ Component, pageProps }: AppProps) {
   const [anyModalOpened, setAnyModalOpened] = useState(false);
-  const [showRepostModal, setShowRepostModal] = useState(false);
+  const [showNewPost, setShowNewPost] = useState(false);
   const [repostId, setRepostId] = useState('');
 
   const modalsContextProps = { anyModalOpened, setAnyModalOpened };
-  const repostModalContextProps = {
-    showRepostModal,
-    setShowRepostModal,
+  const newPostModalContextProps = {
+    showNewPost,
+    setShowNewPost,
     repostId,
     setRepostId,
   };
@@ -32,11 +31,10 @@ function MyApp({ Component, pageProps }: AppProps) {
   return (
     <ApolloProvider pageProps={pageProps}>
       <ModalsContext.Provider value={modalsContextProps}>
-        <RepostModalContext.Provider value={repostModalContextProps}>
+        <NewPostModalContext.Provider value={newPostModalContextProps}>
           <CheckBodyScroll />
           <Component {...pageProps} />
-          <RepostModal />
-        </RepostModalContext.Provider>
+        </NewPostModalContext.Provider>
       </ModalsContext.Provider>
     </ApolloProvider>
   );

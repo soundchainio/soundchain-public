@@ -2,7 +2,7 @@ import { RefreshIcon } from '@heroicons/react/solid';
 import { usePostQuery } from 'lib/graphql';
 import React from 'react';
 import { Avatar } from './Avatar';
-import { Label } from './Label';
+import { RepostPreviewSkeleton } from './RepostPreviewSkeleton';
 import { Timestamp } from './Timestamp';
 
 interface RepostPreviewProps {
@@ -13,7 +13,7 @@ export const RepostPreview = ({ postId }: RepostPreviewProps) => {
   const { data } = usePostQuery({ variables: { id: postId } });
   const post = data?.post;
 
-  if (!post) return <Label>Loading</Label>;
+  if (!post) return <RepostPreviewSkeleton />;
 
   return (
     <div className=" bg-gray-20 my-4">
