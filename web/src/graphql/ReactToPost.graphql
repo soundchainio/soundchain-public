@@ -4,6 +4,7 @@ mutation ReactToPost($input: ReactToPostInput!) {
       id
       totalReactions
       topReactions(top: 2)
+      myReaction
     }
   }
 }

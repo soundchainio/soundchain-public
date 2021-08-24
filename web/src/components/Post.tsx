@@ -40,7 +40,7 @@ export const Post = ({ postId }: PostProps) => {
           />
         </div>
       </NextLink>
-      <PostActions postId={postId} />
+      <PostActions postId={postId} myReaction={post.myReaction} />
     </div>
   );
 };

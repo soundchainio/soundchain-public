@@ -1,15 +1,17 @@
 import { ChatAltIcon, RefreshIcon, ShareIcon, ThumbUpIcon } from '@heroicons/react/solid';
+import classNames from 'classnames';
 import NextLink from 'next/link';
 import React, { useState } from 'react';
 import { ReactionSelector } from './ReactionSelector';
 
 interface PostActionsProps {
   postId: string;
+  myReaction: string | null;
 }
 
 const commonClasses = 'text-white text-sm text-gray-400 text-center font-bold flex-1 flex justify-center px-1';
 
-export const PostActions = ({ postId }: PostActionsProps) => {
+export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
   const [reactionSelectorOpened, setReactionSelectorOpened] = useState(false);
 
   const handleLikeButton = () => {
@@ -19,7 +21,10 @@ export const PostActions = ({ postId }: PostActionsProps) => {
   return (
     <div className="bg-gray-25 px-0 py-2 flex items-center relative overflow-hidden">
       <div className={commonClasses}>
-        <div className="flex items-center cursor-pointer" onClick={handleLikeButton}>
+        <div
+          className={classNames('flex items-center cursor-pointer', { 'text-[#75E6FF]': Boolean(myReaction) })}
+          onClick={handleLikeButton}
+        >
           <ThumbUpIcon className="h-4 w-4 mr-1" />
           Like
         </div>

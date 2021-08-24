@@ -75,7 +75,7 @@ async function seedDb() {
         post.reactionStats = [...post.reactionStats, { emoji: reaction.emoji, count: 1 }];
       }
     });
-
+    console.log(post.reactionStats[0]);
     posts.push(post);
   }
 

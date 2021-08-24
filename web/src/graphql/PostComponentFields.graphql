@@ -7,6 +7,7 @@ fragment PostComponentFields on Post {
   repostCount
   totalReactions
   topReactions(top: 2)
+  myReaction
   profile {
     id
     displayName

@@ -50,6 +50,16 @@ export class PostResolver {
       .map(({ emoji }) => emoji);
   }
 
+  @FieldResolver(() => String, { nullable: true })
+  async myReaction(
+    @Ctx() { reactionService }: Context,
+    @Root() { _id: postId }: Post,
+    @CurrentUser() { profileId }: User,
+  ): Promise<string | null> {
+    const reaction = await reactionService.findReaction({ postId, profileId });
+    return reaction ? reaction.emoji : null;
+  }
+
   @Query(() => Post)
   post(@Ctx() { postService }: Context, @Arg('id') id: string): Promise<Post> {
     return postService.getPost(id);

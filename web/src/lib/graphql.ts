@@ -222,6 +222,7 @@ export type Post = {
   repostCount: Scalars['Float'];
   totalReactions: Scalars['Float'];
   topReactions: Array<Scalars['String']>;
+  myReaction: Scalars['String'];
 };
 
 export type PostTopReactionsArgs = {
@@ -525,7 +526,15 @@ export type PostQuery = { __typename?: 'Query' } & { post: { __typename?: 'Post'
 
 export type PostComponentFieldsFragment = { __typename?: 'Post' } & Pick<
   Post,
-  'id' | 'body' | 'mediaLink' | 'createdAt' | 'commentCount' | 'repostCount' | 'totalReactions' | 'topReactions'
+  | 'id'
+  | 'body'
+  | 'mediaLink'
+  | 'createdAt'
+  | 'commentCount'
+  | 'repostCount'
+  | 'totalReactions'
+  | 'topReactions'
+  | 'myReaction'
 > & { profile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'displayName' | 'profilePicture'> };
 
 export type PostsQueryVariables = Exact<{
@@ -565,7 +574,7 @@ export type ReactToPostMutationVariables = Exact<{
 
 export type ReactToPostMutation = { __typename?: 'Mutation' } & {
   reactToPost: { __typename?: 'ReactToPostPayload' } & {
-    post: { __typename?: 'Post' } & Pick<Post, 'id' | 'totalReactions' | 'topReactions'>;
+    post: { __typename?: 'Post' } & Pick<Post, 'id' | 'totalReactions' | 'topReactions' | 'myReaction'>;
   };
 };
 
@@ -678,6 +687,7 @@ export const PostComponentFieldsFragmentDoc = gql`
     repostCount
     totalReactions
     topReactions(top: 2)
+    myReaction
     profile {
       id
       displayName
@@ -1200,6 +1210,7 @@ export const ReactToPostDocument = gql`
         id
         totalReactions
         topReactions(top: 2)
+        myReaction
       }
     }
   }
