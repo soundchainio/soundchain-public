@@ -1,12 +1,13 @@
 import SendGrid from '@sendgrid/mail';
 import { config } from '../config';
+import { Context } from '../types/Context';
 
 export class EmailService {
-  static initialize(): void {
+  constructor(private context: Context) {
     SendGrid.setApiKey(config.sendgrid.apiKey);
   }
 
-  static async sendEmailVerification(email: string, displayName: string, token: string): Promise<void> {
+  async sendEmailVerification(email: string, displayName: string, token: string): Promise<void> {
     await SendGrid.send({
       to: email,
       from: config.sendgrid.sender,
@@ -18,7 +19,7 @@ export class EmailService {
     });
   }
 
-  static async sendPasswordResetEmail(email: string, token: string): Promise<void> {
+  async sendPasswordResetEmail(email: string, token: string): Promise<void> {
     await SendGrid.send({
       to: email,
       from: config.sendgrid.sender,
