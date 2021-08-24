@@ -8,11 +8,22 @@ interface NewPostParams {
   profileId: string;
   body: string;
   mediaLink?: string;
-  repostId?: string;
+}
+
+interface RepostParams {
+  profileId: string;
+  body: string;
+  repostId: string;
 }
 
 export class PostService {
   static async createPost(params: NewPostParams): Promise<Post> {
+    const post = new PostModel(params);
+    await post.save();
+    return post;
+  }
+
+  static async createRepost(params: RepostParams): Promise<Post> {
     const post = new PostModel(params);
     await post.save();
     return post;

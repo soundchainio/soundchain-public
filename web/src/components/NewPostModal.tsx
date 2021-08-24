@@ -4,11 +4,12 @@ import { useModalsContext } from 'contexts/Modals';
 import { useNewPostModalContext } from 'contexts/NewPostModal';
 import 'emoji-mart/css/emoji-mart.css';
 import { Field, Form, Formik, FormikHelpers } from 'formik';
-import { CreatePostInput } from 'lib/graphql';
+import { CreatePostInput, CreateRepostInput } from 'lib/graphql';
 import { default as React, useCallback, useEffect, useState } from 'react';
 import * as yup from 'yup';
-import { useCreatePostMutation } from '../lib/graphql';
+import { useCreatePostMutation, useCreateRepostMutation } from '../lib/graphql';
 import { getNormalizedLink, hasLink } from '../utils/NormalizeEmbedLinks';
+import { ModalsPortal } from './ModalsPortal';
 import { NewPostBar } from './NewPostBar';
 import { RepostPreview } from './RepostPreview';
 
@@ -49,6 +50,7 @@ export const NewPostModal = () => {
   const { setAnyModalOpened } = useModalsContext();
   const { showNewPost, setShowNewPost, repostId, setRepostId } = useNewPostModalContext();
   const [createPost] = useCreatePostMutation({ refetchQueries: ['Posts'] });
+  const [createRepost] = useCreateRepostMutation({ refetchQueries: ['Posts'] });
 
   const clearState = () => {
     setShowNewPost(false);
@@ -65,17 +67,20 @@ export const NewPostModal = () => {
   };
 
   const handleSubmit = async (values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
-    const params: CreatePostInput = { body: values.body };
-
-    if (postLink.length) {
-      params.mediaLink = postLink;
-    }
-
     if (repostId) {
-      params.repostId = repostId;
+      const params: CreateRepostInput = { body: values.body, repostId };
+
+      await createRepost({ variables: { input: params } });
+    } else {
+      const params: CreatePostInput = { body: values.body };
+
+      if (postLink.length) {
+        params.mediaLink = postLink;
+      }
+
+      await createPost({ variables: { input: params } });
     }
 
-    await createPost({ variables: { input: params } });
     setEmojiPickerVisible(false);
     clearState();
     resetForm();
@@ -124,56 +129,58 @@ export const NewPostModal = () => {
   }, [repostId]);
 
   return (
-    <div
-      className={classNames(baseClasses, {
-        'translate-y-0 opacity-100': showNewPost,
-        'translate-y-full opacity-0': !showNewPost,
-      })}
-    >
-      <div className="w-screen h-20" onClick={onOutsideClick} />
-      <Formik initialValues={initialValues} validationSchema={postSchema} onSubmit={handleSubmit}>
-        {({ values, setFieldValue }) => (
-          <Form className="flex flex-col max-height-from-menu">
-            <div className="flex items-center rounded-tl-3xl rounded-tr-3xl bg-gray-30">
-              <div className="p-2 text-gray-400 font-bold flex-1 text-center" onClick={cancel(setFieldValue)}>
-                Cancel
-              </div>
-              <div className="flex-1 text-center text-white font-bold">{isRepost ? 'Repost' : 'New Post'}</div>
-              <div className="flex-1 text-center m-2">
-                <div className="ml-6">
-                  <Button className="bg-gray-30 text-sm " type="submit" variant="rainbow-rounded">
-                    Post
-                  </Button>
+    <ModalsPortal>
+      <div
+        className={classNames(baseClasses, {
+          'translate-y-0 opacity-100': showNewPost,
+          'translate-y-full opacity-0': !showNewPost,
+        })}
+      >
+        <div className="w-screen h-20" onClick={onOutsideClick} />
+        <Formik initialValues={initialValues} validationSchema={postSchema} onSubmit={handleSubmit}>
+          {({ values, setFieldValue }) => (
+            <Form className="flex flex-col max-height-from-menu">
+              <div className="flex items-center rounded-tl-3xl rounded-tr-3xl bg-gray-30">
+                <div className="p-2 text-gray-400 font-bold flex-1 text-center" onClick={cancel(setFieldValue)}>
+                  Cancel
+                </div>
+                <div className="flex-1 text-center text-white font-bold">{isRepost ? 'Repost' : 'New Post'}</div>
+                <div className="flex-1 text-center m-2">
+                  <div className="ml-6">
+                    <Button className="bg-gray-30 text-sm " type="submit" variant="rainbow-rounded">
+                      Post
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-            <Field
-              component="textarea"
-              name="body"
-              className="w-full h-24 resize-none focus:ring-0 bg-gray-20 border-none focus:outline-none outline-none text-white flex-auto"
-              placeholder="What's happening?"
-              maxLength={setMaxInputLength(values.body)}
-            />
-            {isRepost && (
-              <div className="p-4 bg-gray-20">
-                <RepostPreview postId={repostId} />
-              </div>
-            )}
-            {postLink && !isRepost && (
-              <iframe className="w-full bg-gray-20" frameBorder="0" allowFullScreen src={postLink} />
-            )}
-            <NewPostBar
-              onEmojiPickerClick={onEmojiPickerClick}
-              isEmojiPickerVisible={isEmojiPickerVisible}
-              isRepost={isRepost}
-              showNewPost={showNewPost}
-              setOriginalLink={setOriginalLink}
-              setFieldValue={setFieldValue}
-              values={values}
-            />
-          </Form>
-        )}
-      </Formik>
-    </div>
+              <Field
+                component="textarea"
+                name="body"
+                className="w-full h-24 resize-none focus:ring-0 bg-gray-20 border-none focus:outline-none outline-none text-white flex-auto"
+                placeholder="What's happening?"
+                maxLength={setMaxInputLength(values.body)}
+              />
+              {isRepost && (
+                <div className="p-4 bg-gray-20">
+                  <RepostPreview postId={repostId} />
+                </div>
+              )}
+              {postLink && !isRepost && (
+                <iframe className="w-full bg-gray-20" frameBorder="0" allowFullScreen src={postLink} />
+              )}
+              <NewPostBar
+                onEmojiPickerClick={onEmojiPickerClick}
+                isEmojiPickerVisible={isEmojiPickerVisible}
+                isRepost={isRepost}
+                showNewPost={showNewPost}
+                setOriginalLink={setOriginalLink}
+                setFieldValue={setFieldValue}
+                values={values}
+              />
+            </Form>
+          )}
+        </Formik>
+      </div>
+    </ModalsPortal>
   );
 };

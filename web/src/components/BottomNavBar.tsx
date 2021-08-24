@@ -1,3 +1,4 @@
+import { NewPostModal } from 'components/NewPostModal';
 import { useNewPostModalContext } from 'contexts/NewPostModal';
 import { useMe } from 'hooks/useMe';
 import { Home } from 'icons/Home';
@@ -7,7 +8,6 @@ import { Profile } from 'icons/Profile';
 import { Search } from 'icons/Search';
 import { setJwt } from 'lib/apollo';
 import { useRouter } from 'next/router';
-import { NewPostModal } from './NewPostModal';
 
 export const BottomNavBar = () => {
   const { showNewPost, setShowNewPost, setRepostId } = useNewPostModalContext();

@@ -1,17 +1,12 @@
-import { IsOptional, MaxLength } from 'class-validator';
+import { IsOptional } from 'class-validator';
 import { Field, InputType } from 'type-graphql';
 
 @InputType()
 export class CreatePostInput {
   @Field()
-  @MaxLength(160)
   body: string;
 
   @Field({ nullable: true })
   @IsOptional()
   mediaLink?: string;
-
-  @Field({ nullable: true })
-  @IsOptional()
-  repostId?: string;
 }
