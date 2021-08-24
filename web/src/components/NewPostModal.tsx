@@ -122,6 +122,9 @@ export const NewPostModal = () => {
 
   useEffect(() => {
     setAnyModalOpened(showNewPost);
+    if (showNewPost) {
+      setOriginalLink('');
+    }
   }, [showNewPost]);
 
   useEffect(() => {

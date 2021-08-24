@@ -25,6 +25,9 @@ export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type }: Ad
     if (link) {
       setOriginalLink(link.value);
       setShow(false);
+    } else {
+      setOriginalLink('');
+      setShow(false);
     }
   };
 
