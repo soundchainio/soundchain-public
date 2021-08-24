@@ -1,6 +1,6 @@
 import { useNotificationCountQuery } from 'lib/graphql';
 
-export const NotificationCounter = () => {
+export const NotificationBadge = () => {
   const { data } = useNotificationCountQuery({ fetchPolicy: 'no-cache' });
 
   return (
