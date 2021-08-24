@@ -1,10 +1,9 @@
 import classNames from 'classnames';
 import { IconProps } from 'icons/types/IconProps';
 import { useRouter } from 'next/router';
-import { NotificationCounter } from './NotificationCounter';
 
 interface BottomNavBarButtonProps {
-  counter?: boolean;
+  badge?: () => JSX.Element;
   label: string;
   path?: string;
   onClick?: () => void;
@@ -17,7 +16,7 @@ export const BottomNavBarButton = ({
   path,
   icon: Icon,
   onClick,
-  counter,
+  badge: Badge,
   activatedTextClass,
 }: BottomNavBarButtonProps) => {
   const router = useRouter();
@@ -38,7 +37,7 @@ export const BottomNavBarButton = ({
     <div onClick={onButtonClick} className="flex flex-col flex-1 items-center justify-center align-middle ">
       {Icon && (
         <div className="relative">
-          {counter && <NotificationCounter />}
+          {Badge && <Badge />}
           <Icon activated={isActivated()} />
         </div>
       )}

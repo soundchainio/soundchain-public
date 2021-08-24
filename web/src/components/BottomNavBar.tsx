@@ -9,6 +9,7 @@ import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { BottomNavBarButton } from './BottomNavBarButton';
 import { NewPostModal } from './NewPostModal';
+import { NotificationCounter } from './NotificationCounter';
 
 export const BottomNavBar = () => {
   const [showNewPost, setShowNewPost] = useState(false);
@@ -29,7 +30,7 @@ export const BottomNavBar = () => {
           label="Notifications"
           path="/notifications"
           icon={Bell}
-          counter
+          badge={NotificationCounter}
           activatedTextClass="purple"
         />
         <BottomNavBarButton label="Profile" icon={Profile} onClick={setJwt} activatedTextClass="green-purple" />
