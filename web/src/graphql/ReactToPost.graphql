@@ -1,0 +1,9 @@
+mutation ReactToPost($input: ReactToPostInput!) {
+  reactToPost(input: $input) {
+    post {
+      id
+      totalReactions
+      topReactions(top: 2)
+    }
+  }
+}

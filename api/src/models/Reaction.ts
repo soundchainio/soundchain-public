@@ -1,6 +1,5 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
-import { ReactionEmoji } from '../types/ReactionEmoji';
 import { Model } from './Model';
 
 @ObjectType()
@@ -16,9 +15,9 @@ export class Reaction extends Model {
   @prop({ required: true })
   postId: string;
 
-  @Field(() => ReactionEmoji)
-  @prop({ required: true, type: String, enum: ReactionEmoji })
-  type: ReactionEmoji;
+  @Field()
+  @prop({ required: true })
+  emoji: string;
 
   @Field(() => Date)
   createdAt: Date;

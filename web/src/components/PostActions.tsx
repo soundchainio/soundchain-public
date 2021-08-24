@@ -1,7 +1,7 @@
 import { ChatAltIcon, RefreshIcon, ShareIcon, ThumbUpIcon } from '@heroicons/react/solid';
 import NextLink from 'next/link';
 import React, { useState } from 'react';
-import { PostLikeOptions } from './PostLikeOptions';
+import { ReactionSelector } from './ReactionSelector';
 
 interface PostActionsProps {
   postId: string;
@@ -10,10 +10,10 @@ interface PostActionsProps {
 const commonClasses = 'text-white text-sm text-gray-400 text-center font-bold flex-1 flex justify-center px-1';
 
 export const PostActions = ({ postId }: PostActionsProps) => {
-  const [likeOptionsOpened, setLikeOptionsOpened] = useState(false);
+  const [reactionSelectorOpened, setReactionSelectorOpened] = useState(false);
 
   const handleLikeButton = () => {
-    setLikeOptionsOpened(!likeOptionsOpened);
+    setReactionSelectorOpened(!reactionSelectorOpened);
   };
 
   return (
@@ -24,7 +24,7 @@ export const PostActions = ({ postId }: PostActionsProps) => {
           Like
         </div>
       </div>
-      <PostLikeOptions setLikeOptionsOpened={setLikeOptionsOpened} likeOptionsOpened={likeOptionsOpened} />
+      <ReactionSelector postId={postId} opened={reactionSelectorOpened} setOpened={setReactionSelectorOpened} />
       <div className={commonClasses}>
         <NextLink href={`/posts/${postId}`}>
           <a className="flex items-center cursor-pointer">

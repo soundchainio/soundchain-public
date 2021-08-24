@@ -1,5 +1,4 @@
 import { Field, InputType } from 'type-graphql';
-import { ReactionEmoji } from './ReactionEmoji';
 
 @InputType()
 export class ReactToPostInput {
@@ -7,5 +6,5 @@ export class ReactToPostInput {
   postId: string;
 
   @Field()
-  emoji: ReactionEmoji;
+  emoji: string;
 }

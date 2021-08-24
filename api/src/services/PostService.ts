@@ -1,13 +1,12 @@
 import { UserInputError } from 'apollo-server-express';
 import { PaginateResult } from '../db/pagination/paginate';
 import { Post, PostModel } from '../models/Post';
-import { ReactionModel } from '../models/Reaction';
 import { Context } from '../types/Context';
 import { FilterPostInput } from '../types/FilterPostInput';
 import { PageInput } from '../types/PageInput';
-import { ReactionEmoji } from '../types/ReactionEmoji';
 import { SortPostInput } from '../types/SortPostInput';
 import { ModelService } from './ModelService';
+import { NewReactionParams } from './ReactionService';
 
 interface NewPostParams {
   profileId: string;
@@ -21,7 +20,7 @@ export class PostService extends ModelService<typeof Post> {
   }
 
   async createPost(params: NewPostParams): Promise<Post> {
-    const post = new PostModel(params);
+    const post = new this.model(params);
     await post.save();
     return post;
   }
@@ -34,20 +33,31 @@ export class PostService extends ModelService<typeof Post> {
     return this.findOrFail(id);
   }
 
-  async reactToPost(postId: string, profileId: string, emoji: ReactionEmoji): Promise<Post> {
-    const post = await this.findOrFail(postId);
+  async reactToPost({ profileId, postId, emoji }: NewReactionParams): Promise<Post> {
+    const [post, alreadyReacted] = await Promise.all([
+      this.findOrFail(postId),
+      this.context.reactionService.exists({ postId, profileId }),
+    ]);
 
-    const alreadyReacted = await ReactionModel.exists({ postId, profileId });
     if (alreadyReacted) throw new UserInputError('You already reacted to the post.');
 
-    await new ReactionModel({ postId, profileId, emoji }).save();
-
+    await this.context.reactionService.createReaction({ postId, profileId, emoji });
+    post.reactionStats = this.incrementReactionStats(post, emoji, 1);
+    await this.model.updateOne({ _id: postId }, { reactionStats: post.reactionStats });
     return post;
   }
 
-  // static async retractReaction(conditions: DeleteReactionConditions): Promise<Profile> {
-  //   const reaction = await ReactionModel.findOneAndDelete(conditions);
-  //   if (!reaction) throw new UserInputError('Failed to delete because reaction does not exist.');
-  //   return reaction;
-  // }
+  private incrementReactionStats({ reactionStats }: Post, emoji: string, inc: 1 | -1) {
+    const emojiStats = reactionStats.find(stats => stats.emoji === emoji);
+    if (!emojiStats) {
+      if (inc === -1) throw new Error('No reaction to decrement.');
+      return [...reactionStats, { emoji, count: 1 }];
+    }
+
+    if (emojiStats.count + inc < 1) {
+      return reactionStats.filter(stats => stats.emoji !== emoji);
+    }
+
+    return reactionStats.map(stats => (stats.emoji === emoji ? { ...stats, count: stats.count + inc } : stats));
+  }
 }

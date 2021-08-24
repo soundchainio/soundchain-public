@@ -1,3 +1,4 @@
+import { sortBy } from 'lodash';
 import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
 import { CurrentUser } from '../decorators/current-user';
 import { Comment } from '../models/Comment';
@@ -27,11 +28,6 @@ export class PostResolver {
   }
 
   @FieldResolver(() => Number)
-  likeCount(): Promise<number> {
-    return Promise.resolve(Math.floor(Math.random() * 100));
-  }
-
-  @FieldResolver(() => Number)
   commentCount(@Ctx() { commentService }: Context, @Root() post: Post): Promise<number> {
     return commentService.countComments(post._id);
   }
@@ -39,6 +35,19 @@ export class PostResolver {
   @FieldResolver(() => Number)
   repostCount(): Promise<number> {
     return Promise.resolve(Math.floor(Math.random() * 100));
+  }
+
+  @FieldResolver(() => Number)
+  totalReactions(@Root() { reactionStats }: Post): number {
+    return reactionStats.reduce((total, stats) => total + stats.count, 0);
+  }
+
+  @FieldResolver(() => [String])
+  topReactions(@Root() { reactionStats }: Post, @Arg('top') top: number): string[] {
+    return sortBy(reactionStats, ['count'])
+      .reverse()
+      .slice(0, top)
+      .map(({ emoji }) => emoji);
   }
 
   @Query(() => Post)
@@ -70,20 +79,11 @@ export class PostResolver {
   @Mutation(() => ReactToPostPayload)
   @Authorized()
   async reactToPost(
+    @Ctx() { postService }: Context,
     @Arg('input') { postId, emoji }: ReactToPostInput,
     @CurrentUser() { profileId }: User,
   ): Promise<ReactToPostPayload> {
-    const post = await PostService.reactToPost(profileId, postId, emoji);
+    const post = await postService.reactToPost({ profileId, postId, emoji });
     return { post };
   }
-
-  // @Mutation(() => UndoPostReactionPayload)
-  // @Authorized()
-  // async undoPostReaction(
-  //   @Arg('input') input: UndoPostReactionInput,
-  //   @CurrentUser() { profileId }: User,
-  // ): Promise<UndoPostReactionPayload> {
-  //   const reaction = await PostService.retractReaction({ profileId, ...input });
-  //   return { reaction };
-  // }
 }

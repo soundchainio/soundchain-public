@@ -2,37 +2,38 @@ import React from 'react';
 import { Number } from './Number';
 
 interface PostStatsProps {
-  likes: number;
-  comments: number;
-  reposts: number;
+  totalReactions: number;
+  topReactions: string[];
+  commentCount: number;
+  repostCount: number;
 }
 
 const validatePlural = (word: string, qty: number) => {
-  return <div className="ml-1 mr-4 text-gray-400">{word + (qty > 1 ? 's' : '')}</div>;
+  return <div className="ml-1 mr-4 text-gray-400">{word + (qty !== 1 ? 's' : '')}</div>;
 };
 
-export const PostStats = ({ likes, comments, reposts }: PostStatsProps) => {
+export const PostStats = ({ totalReactions, topReactions, commentCount, repostCount }: PostStatsProps) => {
   return (
     <div className="px-0 mt-2 py-2">
       <div className="flex items-center">
         <div className="text-sm text-gray-100 flex items-center">
-          😃
+          {topReactions}
           <div className="text-white font-bold pl-2">
-            <Number value={likes} />
+            <Number value={totalReactions} />
           </div>
-          {validatePlural('like', likes)}
+          {validatePlural('like', totalReactions)}
         </div>
         <div className="text-sm text-gray-100 flex items-center">
           <div className="text-white font-bold">
-            <Number value={comments} />
+            <Number value={commentCount} />
           </div>
-          {validatePlural('comment', comments)}
+          {validatePlural('comment', commentCount)}
         </div>
         <div className="text-sm text-gray-100 flex items-center">
           <div className="text-white font-bold">
-            <Number value={reposts} />
+            <Number value={repostCount} />
           </div>
-          {validatePlural('repost', reposts)}
+          {validatePlural('repost', repostCount)}
         </div>
       </div>
     </div>

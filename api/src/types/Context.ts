@@ -6,6 +6,7 @@ import { FollowService } from '../services/FollowService';
 import { JwtService, JwtUser } from '../services/JwtService';
 import { PostService } from '../services/PostService';
 import { ProfileService } from '../services/ProfileService';
+import { ReactionService } from '../services/ReactionService';
 import { UploadService } from '../services/UploadService';
 import { UserService } from '../services/UserService';
 
@@ -17,6 +18,7 @@ export class Context {
   jwtService = new JwtService(this);
   postService = new PostService(this);
   profileService = new ProfileService(this);
+  reactionService = new ReactionService(this);
   uploadService = new UploadService(this);
   userService = new UserService(this);
   user?: Promise<User>;

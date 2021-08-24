@@ -1,6 +1,6 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
-import { ReactionEmoji } from '../types/ReactionEmoji';
+import { ReactionStats } from '../types/ReactionStats';
 import { Model } from './Model';
 
 @ObjectType()
@@ -19,13 +19,8 @@ export class Post extends Model {
   @prop({ required: false })
   mediaLink?: string;
 
-  @Field()
-  @prop({ required: true, default: 0 })
-  reactionCount: number;
-
-  @Field(() => [ReactionEmoji])
-  @prop({ required: true, type: [String], enum: ReactionEmoji })
-  topReactions: ReactionEmoji[];
+  @prop({ required: true, default: [] })
+  reactionStats: ReactionStats[];
 
   @Field(() => Date)
   createdAt: Date;
