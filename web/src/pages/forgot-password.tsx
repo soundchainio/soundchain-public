@@ -44,7 +44,7 @@ export default function ForgotPasswordPage() {
           <div className="space-y-6 mb-auto mt-6">
             <InputField type="email" name="email" placeholder="Email Address" />
             <p className="text-gray-80 leading-none">
-              {data && 'An email with a link to reset your password has been sent to you'}
+              {data && 'An email with a link to reset your password has been sent to you.'}
               {error && error.message}
             </p>
           </div>
