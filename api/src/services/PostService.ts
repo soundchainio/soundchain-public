@@ -15,6 +15,11 @@ interface NewPostParams {
   mediaLink?: string;
 }
 
+interface RepostParams {
+  profileId: string;
+  body: string;
+  repostId: string;
+}
 export class PostService extends ModelService<typeof Post> {
   constructor(context: Context) {
     super(context, PostModel);
@@ -22,6 +27,12 @@ export class PostService extends ModelService<typeof Post> {
 
   async createPost(params: NewPostParams): Promise<Post> {
     const post = new this.model(params);
+    await post.save();
+    return post;
+  }
+
+  async createRepost(params: RepostParams): Promise<Post> {
+    const post = new PostModel(params);
     await post.save();
     return post;
   }

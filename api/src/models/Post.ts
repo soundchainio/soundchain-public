@@ -22,6 +22,10 @@ export class Post extends Model {
   @prop({ required: true, default: [] })
   reactionStats: ReactionStats[];
 
+  @Field({ nullable: true })
+  @prop({ required: false })
+  repostId?: string;
+
   @Field(() => Date)
   createdAt: Date;
 

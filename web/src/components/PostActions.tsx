@@ -1,4 +1,5 @@
 import { ChatAltIcon, RefreshIcon, ShareIcon, ThumbUpIcon } from '@heroicons/react/solid';
+import { useModalDispatch } from 'contexts/providers/modal';
 import { ReactionEmoji } from 'icons/ReactionEmoji';
 import { ReactionType } from 'lib/graphql';
 import NextLink from 'next/link';
@@ -10,10 +11,16 @@ interface PostActionsProps {
   myReaction: ReactionType | null;
 }
 
-const commonClasses = 'text-white text-sm text-gray-400 text-center font-bold flex-1 flex justify-center px-1';
+const commonClasses = 'text-white text-sm text-gray-80 text-center font-bold flex-1 flex justify-center px-1';
 
 export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
   const [reactionSelectorOpened, setReactionSelectorOpened] = useState(false);
+  const { dispatchSetRepostId, dispatchShowNewPostModal } = useModalDispatch();
+
+  const onRepostClick = () => {
+    dispatchSetRepostId(postId);
+    dispatchShowNewPostModal(true);
+  };
 
   const handleLikeButton = () => {
     setReactionSelectorOpened(!reactionSelectorOpened);
@@ -37,7 +44,7 @@ export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
         </NextLink>
       </div>
       <div className={commonClasses}>
-        <div className="flex items-center cursor-pointer">
+        <div className="flex items-center cursor-pointer" onClick={onRepostClick}>
           <RefreshIcon className="h-4 w-4 mr-1" />
           Repost
         </div>

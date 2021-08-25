@@ -43,7 +43,7 @@ export const CompleteProfileForm = ({ onSubmit, loading }: CompleteProfileFormPr
   };
 
   return (
-    <div className="flex flex-col flex-1 mt-6">
+    <div className="flex flex-col flex-1">
       <Title>Complete your profile.</Title>
       <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
         <Form className="flex flex-1 flex-col">
