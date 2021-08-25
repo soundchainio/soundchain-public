@@ -1,6 +1,5 @@
-import { LockedLayout } from 'components/LockedLayout';
+import { AuthLayout } from 'components/AuthLayout';
 import { LoginForm } from 'components/LoginForm';
-import { LoginNavBar } from 'components/LoginNavBar';
 import { cacheFor } from 'lib/apollo';
 import { GetServerSideProps } from 'next';
 import Head from 'next/head';
@@ -11,14 +10,13 @@ export const getServerSideProps: GetServerSideProps = context => {
 
 export default function LoginPage() {
   return (
-    <LockedLayout>
+    <AuthLayout>
       <Head>
         <title>Soundchain - Login</title>
         <meta name="description" content="Soundchain" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <LoginNavBar />
       <LoginForm />
-    </LockedLayout>
+    </AuthLayout>
   );
 }

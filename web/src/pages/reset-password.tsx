@@ -1,6 +1,6 @@
+import { AuthLayout } from 'components/AuthLayout';
 import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
-import { LockedLayout } from 'components/LockedLayout';
 import { Title } from 'components/Title';
 import { Form, Formik, FormikHelpers } from 'formik';
 import { GetServerSideProps } from 'next';
@@ -61,7 +61,7 @@ export default function ResetPasswordPage({ token }: ResetPasswordPageProps) {
   };
 
   return (
-    <LockedLayout>
+    <AuthLayout>
       <Head>
         <title>Soundchain - Reset Password</title>
         <meta name="description" content="Soundchain" />
@@ -87,6 +87,6 @@ export default function ResetPasswordPage({ token }: ResetPasswordPageProps) {
           </Button>
         </Form>
       </Formik>
-    </LockedLayout>
+    </AuthLayout>
   );
 }
