@@ -1,11 +1,16 @@
 import React, { createContext, ReactNode, useReducer } from 'react';
 import combineReducers from 'react-combine-reducers';
-import { Action } from './actions';
-import { ModalActionTypes } from './actions/modal';
-import { initialModalState, ModalPayload, modalReducer, ModalState } from './reducers/modal';
+import { Action, ActionTypes } from './actions';
+import { Payloads } from './payloads';
+import { initialModalState, modalReducer, ModalState } from './reducers/modal';
 
-export type Payloads = ModalPayload;
-export type ActionTypes = ModalActionTypes;
+interface GlobalState {
+  modal: ModalState;
+}
+
+const [globalReducer, initialState] = combineReducers<GlobalReducer>({
+  modal: [modalReducer, initialModalState],
+});
 
 interface ContextProps {
   state: GlobalState;
@@ -18,16 +23,8 @@ interface StateProviderProps {
 
 type GlobalReducer = (state: GlobalState, action: Action) => GlobalState;
 
-interface GlobalState {
-  modal: ModalState;
-}
-
 const store = createContext({} as ContextProps);
 const { Provider } = store;
-
-const [globalReducer, initialState] = combineReducers<GlobalReducer>({
-  modal: [modalReducer, initialModalState],
-});
 
 const StateProvider = ({ children }: StateProviderProps) => {
   const [state, dispatch] = useReducer<GlobalReducer>(globalReducer, initialState);

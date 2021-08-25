@@ -1,5 +1,6 @@
 import { Action } from 'contexts/actions';
 import { ModalActionTypes } from 'contexts/actions/modal';
+import { SetRepostIdPayload, ShowNewPostPayload } from 'contexts/payloads/modal';
 
 export interface ModalState {
   showNewPost: boolean;
@@ -12,16 +13,6 @@ export const initialModalState = {
   anyModalOpened: false,
   repostId: undefined,
 };
-
-interface ShowNewPostPayload {
-  show: boolean;
-}
-
-interface SetRepostIdPayload {
-  repostId?: string;
-}
-
-export type ModalPayload = ShowNewPostPayload | SetRepostIdPayload;
 
 export const modalReducer = (state: ModalState, action: Action) => {
   switch (action.type) {
