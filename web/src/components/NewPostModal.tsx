@@ -104,7 +104,7 @@ export const NewPostModal = () => {
     setShowNewPost(false);
   };
 
-  const onTextareaChange = async (body: string) => {
+  const onTextareaChange = (body: string) => {
     setBodyValue(body);
   };
 
@@ -149,7 +149,7 @@ export const NewPostModal = () => {
   }, [showNewPost]);
 
   useEffect(() => {
-    repostId.length ? setIsRepost(true) : setIsRepost(false);
+    repostId ? setIsRepost(true) : setIsRepost(false);
   }, [repostId]);
 
   return (

@@ -1,3 +1,4 @@
+import { CheckBodyScroll } from 'components/CheckBodyScroll';
 import { ModalsContext } from 'contexts/Modals';
 import { NewPostModalContext } from 'contexts/NewPostModal';
 import { ApolloProvider } from 'lib/apollo';
@@ -18,21 +19,11 @@ function MyApp({ Component, pageProps }: AppProps) {
     setRepostId,
   };
 
-  const CheckBodyScroll = () => {
-    return anyModalOpened ? (
-      <style jsx global>{`
-        body {
-          overflow: hidden;
-        }
-      `}</style>
-    ) : null;
-  };
-
   return (
     <ApolloProvider pageProps={pageProps}>
       <ModalsContext.Provider value={modalsContextProps}>
         <NewPostModalContext.Provider value={newPostModalContextProps}>
-          <CheckBodyScroll />
+          <CheckBodyScroll anyModalOpened={anyModalOpened} />
           <Component {...pageProps} />
         </NewPostModalContext.Provider>
       </ModalsContext.Provider>
