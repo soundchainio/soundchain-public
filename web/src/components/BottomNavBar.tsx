@@ -23,17 +23,17 @@ export const BottomNavBar = () => {
   return (
     <nav className="bg-gray-20 h-16 flex items-center inset-x-0 shadow-2xl">
       <div className="w-full flex">
-        <BottomNavBarButton label="Home" path="/" icon={Home} activatedTextClass="yellow" />
-        <BottomNavBarButton label="Explore" path="/search" icon={Search} activatedTextClass="green" />
+        <BottomNavBarButton label="Home" path="/" icon={Home} activatedColor="yellow" />
+        <BottomNavBarButton label="Explore" path="/search" icon={Search} activatedColor="green" />
         <BottomNavBarButton label="Post" icon={NewPost} onClick={handleNewPostClick} />
         <BottomNavBarButton
           label="Notifications"
           path="/notifications"
           icon={Bell}
           badge={NotificationBadge}
-          activatedTextClass="purple"
+          activatedColor="purple"
         />
-        <BottomNavBarButton label="Profile" icon={Profile} onClick={setJwt} activatedTextClass="green-purple" />
+        <BottomNavBarButton label="Profile" icon={Profile} onClick={setJwt} activatedColor="green-purple" />
         <NewPostModal setShowNewPost={setShowNewPost} showNewPost={showNewPost} />
       </div>
     </nav>

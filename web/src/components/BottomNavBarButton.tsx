@@ -8,7 +8,7 @@ interface BottomNavBarButtonProps {
   path?: string;
   onClick?: () => void;
   icon?: (props: IconProps) => JSX.Element;
-  activatedTextClass?: 'yellow' | 'green' | 'purple' | 'green-purple';
+  activatedColor?: 'yellow' | 'green' | 'purple' | 'green-purple';
 }
 
 export const BottomNavBarButton = ({
@@ -17,7 +17,7 @@ export const BottomNavBarButton = ({
   icon: Icon,
   onClick,
   badge: Badge,
-  activatedTextClass,
+  activatedColor,
 }: BottomNavBarButtonProps) => {
   const router = useRouter();
   const onButtonClick = () => {
@@ -44,7 +44,7 @@ export const BottomNavBarButton = ({
       <span
         className={classNames(
           'text-gray-50 text-xs mt-2 font-semibold',
-          isActivated() && `${activatedTextClass}-gradient-text`,
+          isActivated() && `${activatedColor}-gradient-text`,
         )}
       >
         {label}
