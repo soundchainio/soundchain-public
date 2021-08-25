@@ -1,5 +1,5 @@
 import { createUnionType } from 'type-graphql';
-import { CommentNotification } from '../models/CommentNotification';
+import { CommentNotification } from './CommentNotification';
 import { NotificationType } from './NotificationType';
 
 export const NotificationUnion = createUnionType({

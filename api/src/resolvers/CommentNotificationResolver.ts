@@ -1,6 +1,6 @@
 import { FieldResolver, Resolver, Root } from 'type-graphql';
-import { CommentNotification } from '../models/CommentNotification';
 import { Notification } from '../models/Notification';
+import { CommentNotification } from '../types/CommentNotification';
 import { CommentNotificationMetadata } from '../types/CommentNotificationMetadata';
 
 @Resolver(CommentNotification)

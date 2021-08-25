@@ -1,5 +1,5 @@
 import { Field, ObjectType } from 'type-graphql';
-import { NotificationType } from '../types/NotificationType';
+import { NotificationType } from './NotificationType';
 
 @ObjectType()
 export class CommentNotification {
