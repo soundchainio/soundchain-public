@@ -1,4 +1,5 @@
 import { PaginateResult } from '../db/pagination/paginate';
+import { NotFoundError } from '../errors/NotFoundError';
 import { Comment } from '../models/Comment';
 import { Notification, NotificationModel } from '../models/Notification';
 import { Post } from '../models/Post';
@@ -73,7 +74,7 @@ export class NotificationService extends ModelService<typeof Notification> {
       { new: true },
     );
     if (!updatedProfile) {
-      throw new Error(`Could not update the profile with id: ${profileId}`);
+      throw new NotFoundError('Profile', profileId);
     }
     return updatedProfile;
   }
