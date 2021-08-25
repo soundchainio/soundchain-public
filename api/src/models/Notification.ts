@@ -1,7 +1,7 @@
 import { getModelForClass, modelOptions, prop, Severity } from '@typegoose/typegoose';
 import { Field } from 'type-graphql';
+import { CommentNotificationMetadata } from '../types/CommentNotificationMetadata';
 import { NotificationType } from '../types/NotificationType';
-import { CommentNotificationMetadata } from './CommentNotification';
 import { Model } from './Model';
 
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })

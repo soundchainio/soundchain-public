@@ -1,10 +1,10 @@
 import { PaginateResult } from '../db/pagination/paginate';
 import { NotFoundError } from '../errors/NotFoundError';
 import { Comment } from '../models/Comment';
-import { CommentNotificationMetadata } from '../models/CommentNotification';
 import { Notification, NotificationModel } from '../models/Notification';
 import { Post } from '../models/Post';
 import { Profile, ProfileModel } from '../models/Profile';
+import { CommentNotificationMetadata } from '../types/CommentNotificationMetadata';
 import { Context } from '../types/Context';
 import { NotificationType } from '../types/NotificationType';
 import { NotificationUnion } from '../types/NotificationUnion';
