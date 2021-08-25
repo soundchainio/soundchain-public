@@ -2,6 +2,7 @@ import { DocumentType } from '@typegoose/typegoose';
 import { FilterQuery } from 'mongoose';
 import { Reaction, ReactionModel } from '../models/Reaction';
 import { Context } from '../types/Context';
+import { ReactionType } from '../types/ReactionType';
 import { ModelService } from './ModelService';
 
 interface ReactionKeyComponents {
@@ -12,7 +13,7 @@ interface ReactionKeyComponents {
 export interface NewReactionParams {
   profileId: string;
   postId: string;
-  emoji: string;
+  type: ReactionType;
 }
 
 export class ReactionService extends ModelService<typeof Reaction, ReactionKeyComponents> {

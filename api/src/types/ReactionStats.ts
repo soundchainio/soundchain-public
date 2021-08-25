@@ -1,4 +1,6 @@
+import { ReactionType } from './ReactionType';
+
 export class ReactionStats {
-  emoji: string;
+  type: ReactionType;
   count: number;
 }

@@ -1,9 +1,11 @@
+import { ReactionEmoji } from 'icons/ReactionEmoji';
+import { ReactionType } from 'lib/graphql';
 import React from 'react';
 import { Number } from './Number';
 
 interface PostStatsProps {
   totalReactions: number;
-  topReactions: string[];
+  topReactions: ReactionType[];
   commentCount: number;
   repostCount: number;
 }
@@ -17,7 +19,11 @@ export const PostStats = ({ totalReactions, topReactions, commentCount, repostCo
     <div className="px-0 mt-2 py-2">
       <div className="flex items-center">
         <div className="text-sm text-gray-100 flex items-center">
-          {topReactions}
+          <div className="flex space-x-1">
+            {topReactions.map(reaction => (
+              <ReactionEmoji key={reaction} name={reaction} className="w-4" />
+            ))}
+          </div>
           <div className="text-white font-bold pl-2">
             <Number value={totalReactions} />
           </div>

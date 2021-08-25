@@ -1,3 +1,4 @@
+import { IconComponent } from 'icons/types/IconComponent';
 import { GreenGradient } from './Buttons/GreenGradient';
 import { OutlineButton } from './Buttons/Outline';
 import { RainbowButton } from './Buttons/Rainbow';
@@ -8,7 +9,7 @@ export type ButtonVariant = 'rainbow' | 'outline' | 'rainbow-xs' | 'rainbow-roun
 
 export interface ButtonProps extends React.ComponentPropsWithoutRef<'button'> {
   variant?: ButtonVariant;
-  icon?: (props: React.ComponentProps<'svg'>) => JSX.Element;
+  icon?: IconComponent;
   loading?: boolean;
   bgColor?: string;
 }

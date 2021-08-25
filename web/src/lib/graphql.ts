@@ -221,8 +221,8 @@ export type Post = {
   commentCount: Scalars['Float'];
   repostCount: Scalars['Float'];
   totalReactions: Scalars['Float'];
-  topReactions: Array<Scalars['String']>;
-  myReaction: Scalars['String'];
+  topReactions: Array<ReactionType>;
+  myReaction?: Maybe<ReactionType>;
 };
 
 export type PostTopReactionsArgs = {
@@ -296,13 +296,21 @@ export type QueryValidPasswordResetTokenArgs = {
 
 export type ReactToPostInput = {
   postId: Scalars['String'];
-  emoji: Scalars['String'];
+  type: ReactionType;
 };
 
 export type ReactToPostPayload = {
   __typename?: 'ReactToPostPayload';
   post: Post;
 };
+
+export enum ReactionType {
+  Happy = 'HAPPY',
+  Heart = 'HEART',
+  Horns = 'HORNS',
+  Sad = 'SAD',
+  Sunglasses = 'SUNGLASSES',
+}
 
 export type RegisterInput = {
   email: Scalars['String'];

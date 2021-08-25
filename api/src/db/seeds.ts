@@ -7,6 +7,7 @@ import { Post, PostModel } from '../models/Post';
 import { Profile, ProfileModel } from '../models/Profile';
 import { Reaction, ReactionModel } from '../models/Reaction';
 import { User, UserModel } from '../models/User';
+import { ReactionType } from '../types/ReactionType';
 
 const { DATABASE_URL = 'mongodb://localhost:27017' } = process.env;
 const dbOpts = {
@@ -66,16 +67,16 @@ async function seedDb() {
 
       reactions.push(reaction);
 
-      const stats = post.reactionStats.find(stats => stats.emoji === reaction.emoji);
+      const stats = post.reactionStats.find(stats => stats.type === reaction.type);
       if (stats) {
         post.reactionStats = post.reactionStats.map(stats =>
-          stats.emoji === reaction.emoji ? { emoji: reaction.emoji, count: stats.count + 1 } : stats,
+          stats.type === reaction.type ? { type: reaction.type, count: stats.count + 1 } : stats,
         );
       } else {
-        post.reactionStats = [...post.reactionStats, { emoji: reaction.emoji, count: 1 }];
+        post.reactionStats = [...post.reactionStats, { type: reaction.type, count: 1 }];
       }
     });
-    console.log(post.reactionStats[0]);
+
     posts.push(post);
   }
 
@@ -129,10 +130,16 @@ function FakeComment(attrs = {}) {
 }
 
 function FakeReaction(attrs = {}) {
-  const emojiOptions = ['❤️', '🤘', '😃', '😢', '😎'];
+  const typeOptions = [
+    ReactionType.HEART,
+    ReactionType.HORNS,
+    ReactionType.HAPPY,
+    ReactionType.SAD,
+    ReactionType.SUNGLASSES,
+  ];
 
   return new ReactionModel({
-    emoji: sample(emojiOptions),
+    type: sample(typeOptions),
     ...attrs,
   });
 }

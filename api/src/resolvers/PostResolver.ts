@@ -11,6 +11,7 @@ import { CreatePostPayload } from '../types/CreatePostPayload';
 import { FilterPostInput } from '../types/FilterPostInput';
 import { PageInput } from '../types/PageInput';
 import { PostConnection } from '../types/PostConnection';
+import { ReactionType } from '../types/ReactionType';
 import { ReactToPostInput } from '../types/ReactToPostInput';
 import { ReactToPostPayload } from '../types/ReactToPostPayload';
 import { SortPostInput } from '../types/SortPostInput';
@@ -42,22 +43,23 @@ export class PostResolver {
     return reactionStats.reduce((total, stats) => total + stats.count, 0);
   }
 
-  @FieldResolver(() => [String])
-  topReactions(@Root() { reactionStats }: Post, @Arg('top') top: number): string[] {
+  @FieldResolver(() => [ReactionType])
+  topReactions(@Root() { reactionStats }: Post, @Arg('top') top: number): ReactionType[] {
     return sortBy(reactionStats, ['count'])
       .reverse()
       .slice(0, top)
-      .map(({ emoji }) => emoji);
+      .map(({ type }) => type);
   }
 
-  @FieldResolver(() => String, { nullable: true })
+  @FieldResolver(() => ReactionType, { nullable: true })
   async myReaction(
     @Ctx() { reactionService }: Context,
     @Root() { _id: postId }: Post,
-    @CurrentUser() { profileId }: User,
-  ): Promise<string | null> {
-    const reaction = await reactionService.findReaction({ postId, profileId });
-    return reaction ? reaction.emoji : null;
+    @CurrentUser() user: User,
+  ): Promise<ReactionType | null> {
+    if (!user) return null;
+    const reaction = await reactionService.findReaction({ postId, profileId: user.profileId });
+    return reaction ? reaction.type : null;
   }
 
   @Query(() => Post)
@@ -90,10 +92,10 @@ export class PostResolver {
   @Authorized()
   async reactToPost(
     @Ctx() { postService }: Context,
-    @Arg('input') { postId, emoji }: ReactToPostInput,
+    @Arg('input') input: ReactToPostInput,
     @CurrentUser() { profileId }: User,
   ): Promise<ReactToPostPayload> {
-    const post = await postService.reactToPost({ profileId, postId, emoji });
+    const post = await postService.reactToPost({ ...input, profileId });
     return { post };
   }
 }
