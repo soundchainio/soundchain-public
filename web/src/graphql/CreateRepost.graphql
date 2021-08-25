@@ -1,0 +1,7 @@
+mutation CreateRepost($input: CreateRepostInput!) {
+  createRepost(input: $input) {
+    post {
+      id
+    }
+  }
+}
