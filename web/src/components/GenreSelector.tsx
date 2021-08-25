@@ -24,6 +24,7 @@ const genres: GenreLabels[] = [
   { key: Genre.Experimental, label: 'Experimental' },
   { key: Genre.Gospel, label: 'Gospel' },
   { key: Genre.HardRock, label: 'Hard Rock' },
+  { key: Genre.HipHop, label: 'Hip Hop' },
   { key: Genre.Indie, label: 'Indie' },
   { key: Genre.Jazz, label: 'Jazz' },
   { key: Genre.KPop, label: 'K-Pop' },

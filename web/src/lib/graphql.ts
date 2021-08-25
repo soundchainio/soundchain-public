@@ -102,6 +102,7 @@ export enum Genre {
   Experimental = 'EXPERIMENTAL',
   Gospel = 'GOSPEL',
   HardRock = 'HARD_ROCK',
+  HipHop = 'HIP_HOP',
   Indie = 'INDIE',
   Jazz = 'JAZZ',
   KPop = 'K_POP',

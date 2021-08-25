@@ -1,7 +1,7 @@
 import { CheckBodyScroll } from 'components/CheckBodyScroll';
+import { StateProvider } from 'contexts';
 import { ApolloProvider } from 'lib/apollo';
 import type { AppProps } from 'next/app';
-import { StateProvider } from 'contexts';
 import 'styles/globals.css';
 
 function MyApp({ Component, pageProps }: AppProps) {

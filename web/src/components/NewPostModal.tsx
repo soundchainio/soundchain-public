@@ -1,12 +1,11 @@
 import classNames from 'classnames';
 import { Button } from 'components/Button';
+import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import 'emoji-mart/css/emoji-mart.css';
 import { Field, Form, Formik, FormikHelpers } from 'formik';
 import GraphemeSplitter from 'grapheme-splitter';
 import { CreatePostInput, CreateRepostInput } from 'lib/graphql';
 import { default as React, useCallback, useEffect, useState } from 'react';
-import { useModalState } from 'contexts/providers/modal';
-import { useModalDispatch } from 'contexts/providers/modal';
 import * as yup from 'yup';
 import { useCreatePostMutation, useCreateRepostMutation } from '../lib/graphql';
 import { getNormalizedLink, hasLink } from '../utils/NormalizeEmbedLinks';
@@ -48,9 +47,9 @@ const setMaxInputLength = (input: string) => {
 export const NewPostModal = () => {
   const [isEmojiPickerVisible, setEmojiPickerVisible] = useState(false);
   const [isRepost, setIsRepost] = useState(false);
-  const [bodyValue, setBodyValue] = useState('');
   const [originalLink, setOriginalLink] = useState('');
   const [postLink, setPostLink] = useState('');
+  const [bodyValue, setBodyValue] = useState('');
   const [createPost] = useCreatePostMutation({ refetchQueries: ['Posts'] });
   const [createRepost] = useCreateRepostMutation({ refetchQueries: ['Posts'] });
   const { showNewPost, repostId } = useModalState();
@@ -126,7 +125,7 @@ export const NewPostModal = () => {
     }, 1000);
 
     return () => clearTimeout(delayDebounce);
-  }, [bodyValue, originalLink]);
+  }, [bodyValue]);
 
   useEffect(() => {
     if (originalLink) {
