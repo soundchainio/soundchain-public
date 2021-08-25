@@ -13,6 +13,12 @@ const dbOpts = {
   useUnifiedTopology: true,
 };
 
+const profiles: Profile[] = [];
+const users: User[] = [];
+const posts: Post[] = [];
+const comments: Comment[] = [];
+const follows: Follow[] = [];
+
 async function seedDb() {
   await dropDb();
   await mongoose.connect(DATABASE_URL, dbOpts);
@@ -20,12 +26,6 @@ async function seedDb() {
   console.log('Seeding db...');
 
   console.log('Seeding user profiles...');
-
-  const profiles: Profile[] = [];
-  const users: User[] = [];
-  const posts: Post[] = [];
-  const comments: Comment[] = [];
-  const follows: Follow[] = [];
 
   for (let i = 0; i < 100; i++) {
     const profile = FakeProfile();
@@ -64,9 +64,18 @@ async function seedDb() {
 
   console.log('Posts + comments seeded!');
 
+  await seedMason();
+
+  console.log('Developers seeded!');
+
   console.log('Success!');
 
   process.exit(0);
+}
+
+async function dropDb() {
+  const conn = await mongoose.createConnection(DATABASE_URL, dbOpts);
+  return conn.dropDatabase();
 }
 
 function FakeProfile(attrs = {}) {
@@ -107,9 +116,22 @@ function FakeComment(attrs = {}) {
   });
 }
 
-async function dropDb() {
-  const conn = await mongoose.createConnection(DATABASE_URL, dbOpts);
-  return conn.dropDatabase();
+async function seedMason() {
+  const mason = FakeProfile({ displayName: 'Mason Seale' });
+  await mason.save();
+  const user = FakeUser({
+    email: 'mason.seale@ae.studio',
+    handle: 'masonseale',
+    password: 'SEED_PASSWORD_REDACTED',
+    profileId: mason.id,
+  });
+  await user.save();
+
+  const follows = sampleSize(profiles, 50).map(
+    profile => new FollowModel({ followerId: mason.id, followedId: profile._id }),
+  );
+
+  FollowModel.insertMany(follows);
 }
 
 seedDb();
