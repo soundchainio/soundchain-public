@@ -4,6 +4,7 @@ import { useModalsContext } from 'contexts/Modals';
 import { useNewPostModalContext } from 'contexts/NewPostModal';
 import 'emoji-mart/css/emoji-mart.css';
 import { Field, Form, Formik, FormikHelpers } from 'formik';
+import GraphemeSplitter from 'grapheme-splitter';
 import { CreatePostInput, CreateRepostInput } from 'lib/graphql';
 import { default as React, useCallback, useEffect, useState } from 'react';
 import * as yup from 'yup';
@@ -30,8 +31,10 @@ export const maxLength = 160;
 
 const initialValues = { body: '' };
 
+const splitter = new GraphemeSplitter();
+
 export const getBodyCharacterCount = (body: string) => {
-  return body.match(/./gu)?.length || 0;
+  return splitter.splitGraphemes(body).length;
 };
 
 // When we get string.length, emojis are counted as 2 characters
