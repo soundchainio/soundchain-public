@@ -21,12 +21,13 @@ export class CommentService extends ModelService<typeof Comment> {
     const newComment = new CommentModel(params);
     await newComment.save();
     const post = await this.context.postService.getPost(params.postId);
-    const profile = await this.context.profileService.getProfile(params.profileId);
-    this.context.notificationService.notifyNewCommentOnPost({
-      comment: newComment,
-      post,
-      authorProfile: profile,
-    });
+    if (newComment.profileId !== post.profileId) {
+      this.context.notificationService.notifyNewCommentOnPost({
+        comment: newComment,
+        post,
+        authorProfileId: params.profileId,
+      });
+    }
     return newComment;
   }
 

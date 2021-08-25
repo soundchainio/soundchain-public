@@ -15,7 +15,7 @@ import { ModelService } from './ModelService';
 interface CommentNotificationParams {
   comment: Comment;
   post: Post;
-  authorProfile: Profile;
+  authorProfileId: string;
 }
 
 export class NotificationService extends ModelService<typeof Notification> {
@@ -23,8 +23,8 @@ export class NotificationService extends ModelService<typeof Notification> {
     super(context, NotificationModel);
   }
 
-  async notifyNewCommentOnPost({ comment, post, authorProfile }: CommentNotificationParams): Promise<void> {
-    if (comment.profileId === post.profileId) return;
+  async notifyNewCommentOnPost({ comment, post, authorProfileId }: CommentNotificationParams): Promise<void> {
+    const authorProfile = await this.context.profileService.getProfile(authorProfileId);
     const { body: commentBody, _id: commentId } = comment;
     const { _id: postId, profileId: postOwnerProfileId } = post;
     const { displayName: authorName, profilePicture: authorPicture } = authorProfile;
