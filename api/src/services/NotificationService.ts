@@ -1,5 +1,4 @@
 import { PaginateResult } from '../db/pagination/paginate';
-import { NotFoundError } from '../errors/NotFoundError';
 import { Comment } from '../models/Comment';
 import { Notification, NotificationModel } from '../models/Notification';
 import { Post } from '../models/Post';
@@ -50,13 +49,12 @@ export class NotificationService extends ModelService<typeof Notification> {
     page?: PageInput,
   ): Promise<PaginateResult<typeof NotificationUnion>> {
     const { pageInfo, nodes } = await this.paginate({ filter: { profileId }, sort, page });
-    return { pageInfo, nodes: nodes as unknown as Array<typeof NotificationUnion> };
+    return { pageInfo, nodes: nodes as Array<typeof NotificationUnion> };
   }
 
   async getNotification(notificationId: string): Promise<typeof NotificationUnion> {
     const notification = await this.findOrFail(notificationId);
-    if (!notification) throw new NotFoundError('Notification', notificationId);
-    return notification as unknown as typeof NotificationUnion;
+    return notification as typeof NotificationUnion;
   }
 
   async clearNotifications(profileId: string): Promise<boolean> {
