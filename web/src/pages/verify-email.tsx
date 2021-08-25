@@ -1,5 +1,5 @@
+import { AuthLayout } from 'components/AuthLayout';
 import { Button } from 'components/Button';
-import { LockedLayout } from 'components/LockedLayout';
 import { Subtitle } from 'components/Subtitle';
 import { Title } from 'components/Title';
 import { apolloClient, cacheFor, createApolloClient } from 'lib/apollo';
@@ -44,7 +44,7 @@ export default function VerifyEmailPage({ verified }: VerifyEmailProps) {
         <meta name="description" content="Soundchain" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <LockedLayout>
+      <AuthLayout>
         {verified ? (
           <>
             <Title className="my-6">Welcome to Soundchain!</Title>
@@ -57,7 +57,7 @@ export default function VerifyEmailPage({ verified }: VerifyEmailProps) {
             <Subtitle>Verification failed! Please try again.</Subtitle>
           </>
         )}
-      </LockedLayout>
+      </AuthLayout>
     </div>
   );
 }

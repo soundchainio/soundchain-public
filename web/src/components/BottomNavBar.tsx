@@ -1,3 +1,5 @@
+import { NewPostModal } from 'components/NewPostModal';
+import { useModalDispatch } from 'contexts/providers/modal';
 import { useMe } from 'hooks/useMe';
 import { Bell } from 'icons/Bell';
 import { Home } from 'icons/Home';
@@ -6,18 +8,17 @@ import { Profile } from 'icons/Profile';
 import { Search } from 'icons/Search';
 import { setJwt } from 'lib/apollo';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
 import { BottomNavBarButton } from './BottomNavBarButton';
-import { NewPostModal } from './NewPostModal';
 import { NotificationBadge } from './NotificationBadge';
 
 export const BottomNavBar = () => {
-  const [showNewPost, setShowNewPost] = useState(false);
+  const { dispatchSetRepostId, dispatchShowNewPostModal } = useModalDispatch();
   const router = useRouter();
   const me = useMe();
 
   const handleNewPostClick = () => {
-    me ? setShowNewPost(!showNewPost) : router.push('/login');
+    dispatchSetRepostId(undefined);
+    me ? dispatchShowNewPostModal(true) : router.push('/login');
   };
 
   return (
@@ -34,7 +35,7 @@ export const BottomNavBar = () => {
           activatedColor="purple"
         />
         <BottomNavBarButton label="Profile" icon={Profile} onClick={setJwt} activatedColor="green-purple" />
-        <NewPostModal setShowNewPost={setShowNewPost} showNewPost={showNewPost} />
+        <NewPostModal />
       </div>
     </nav>
   );

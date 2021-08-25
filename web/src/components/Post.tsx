@@ -5,6 +5,7 @@ import { Avatar } from './Avatar';
 import { Label } from './Label';
 import { PostActions } from './PostActions';
 import { PostStats } from './PostStats';
+import { RepostPreview } from './RepostPreview';
 import { Timestamp } from './Timestamp';
 
 interface PostProps {
@@ -28,10 +29,11 @@ export const Post = ({ postId }: PostProps) => {
             </NextLink>
             <Timestamp datetime={post.createdAt} className="flex-1 text-right" />
           </div>
-          <div className="mt-4 text-gray-100 break-words">{post.body}</div>
+          <pre className="mt-4 text-gray-100 break-words whitespace-pre-wrap">{post.body}</pre>
           {post.mediaLink && (
             <iframe frameBorder="0" className="mt-4 w-full bg-gray-20" allowFullScreen src={post.mediaLink} />
           )}
+          {post.repostId && <RepostPreview postId={post.repostId} />}
           <PostStats likes={post.likeCount} comments={post.commentCount} reposts={post.repostCount} />
         </div>
       </NextLink>

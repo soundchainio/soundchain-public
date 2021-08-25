@@ -35,7 +35,7 @@ const validationSchema: yup.SchemaOf<SetupProfileFormValues> = yup.object().shap
 const initialFormValues = { displayName: '', handle: '' };
 
 export const SetupProfileForm = ({ onSubmit }: FormProps) => (
-  <div className="flex flex-col flex-1 mt-6">
+  <div className="flex flex-col flex-1">
     <Title>Let’s setup your profile.</Title>
     <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={onSubmit}>
       <Form className="flex flex-1 flex-col">

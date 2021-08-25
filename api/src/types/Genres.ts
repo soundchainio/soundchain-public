@@ -16,6 +16,7 @@ enum Genre {
   EXPERIMENTAL = 'experimental',
   GOSPEL = 'gospel',
   HARD_ROCK = 'hard_rock',
+  HIP_HOP = 'hip_hop',
   INDIE = 'indie',
   JAZZ = 'jazz',
   K_POP = 'k_pop',

@@ -44,7 +44,8 @@
   src: url('/fonts/Metropolis-Black.otf') format('opentype');
 }
 
-body {
+body,
+pre {
   font-family: 'Metropolis';
 }
 

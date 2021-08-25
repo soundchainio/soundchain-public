@@ -17,6 +17,7 @@ export const Layout = ({ children, topNavBarProps }: LayoutProps) => {
       <div className="pb-20 pt-16">{children}</div>
       <div className="fixed bottom-0 w-full">
         <div id="bottom-sheet"></div>
+        <div id="modals"></div>
         <BottomNavBar />
       </div>
     </div>

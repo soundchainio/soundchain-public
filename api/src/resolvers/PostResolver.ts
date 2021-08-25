@@ -7,6 +7,8 @@ import { User } from '../models/User';
 import { Context } from '../types/Context';
 import { CreatePostInput } from '../types/CreatePostInput';
 import { CreatePostPayload } from '../types/CreatePostPayload';
+import { CreateRepostInput } from '../types/CreateRepostInput';
+import { CreateRepostPayload } from '../types/CreateRepostPayload';
 import { FilterPostInput } from '../types/FilterPostInput';
 import { PageInput } from '../types/PageInput';
 import { PostConnection } from '../types/PostConnection';
@@ -62,6 +64,17 @@ export class PostResolver {
     @CurrentUser() { profileId }: User,
   ): Promise<CreatePostPayload> {
     const post = await postService.createPost({ profileId, body, mediaLink });
+    return { post };
+  }
+
+  @Mutation(() => CreateRepostPayload)
+  @Authorized()
+  async createRepost(
+    @Ctx() { postService }: Context,
+    @Arg('input') { body, repostId }: CreateRepostInput,
+    @CurrentUser() { profileId }: User,
+  ): Promise<CreatePostPayload> {
+    const post = await postService.createRepost({ profileId, body, repostId });
     return { post };
   }
 }
