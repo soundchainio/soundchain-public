@@ -3,18 +3,25 @@ import classNames from 'classnames';
 import { useMe } from 'hooks/useMe';
 import { Logo } from 'icons/Logo';
 import { useRouter } from 'next/router';
-import { ReactNode } from 'react';
 import { Button } from './Button';
 import { Title } from './Title';
 
-interface TopNavBarProps {
-  rightButton?: ReactNode;
+export interface TopNavBarProps {
+  rightButton?: () => JSX.Element;
   title?: string;
 }
 
-export const TopNavBar = ({ title, rightButton }: TopNavBarProps) => {
+export const TopNavBar = ({ title, rightButton: RightButton }: TopNavBarProps) => {
   const router = useRouter();
   const me = useMe();
+
+  const onLogin = () => {
+    router.push('/login');
+  };
+
+  const onCreateAccount = () => {
+    router.push('/create-account');
+  };
 
   return (
     <nav className="bg-gray-20">
@@ -22,9 +29,9 @@ export const TopNavBar = ({ title, rightButton }: TopNavBarProps) => {
         <div className="relative flex flex-row items-center h-16">
           <div
             className={classNames(
-              me && !rightButton && 'absolute inset-y-0 left-0',
               'flex items-center sm:hidden',
-              rightButton && 'flex-1',
+              me && !RightButton && 'absolute left-0',
+              RightButton && 'flex-1',
             )}
           >
             <button className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
@@ -47,16 +54,20 @@ export const TopNavBar = ({ title, rightButton }: TopNavBarProps) => {
           ) : (
             <div className="flex-2 flex items-start sm:items-stretch justify-start">
               <div className="flex-shrink-0 flex items-center">
-                <Button variant="outline" onClick={() => router.push('/login')}>
+                <Button variant="outline" onClick={onLogin}>
                   Login
                 </Button>
-                <Button variant="outline" onClick={() => router.push('/create-account')}>
+                <Button variant="outline" onClick={onCreateAccount}>
                   Create Account
                 </Button>
               </div>
             </div>
           )}
-          {rightButton && <div className="flex flex-1 justify-end pr-2">{rightButton}</div>}
+          {RightButton && (
+            <div className="flex flex-1 justify-end pr-2">
+              <RightButton />
+            </div>
+          )}
         </div>
       </div>
     </nav>

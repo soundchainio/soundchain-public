@@ -30,7 +30,7 @@ export const BottomNavBar = () => {
           label="Notifications"
           path="/notifications"
           icon={Bell}
-          badge={NotificationBadge}
+          badge={me ? NotificationBadge : undefined}
           activatedColor="purple"
         />
         <BottomNavBarButton label="Profile" icon={Profile} onClick={setJwt} activatedColor="green-purple" />

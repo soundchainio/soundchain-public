@@ -1,7 +1,14 @@
-import { useNotificationCountQuery } from 'lib/graphql';
+import { useNotificationCountLazyQuery } from 'lib/graphql';
+import { useRouter } from 'next/router';
+import { useEffect } from 'react';
 
 export const NotificationBadge = () => {
-  const { data } = useNotificationCountQuery({ fetchPolicy: 'no-cache' });
+  const [fetchNotificationCount, { data }] = useNotificationCountLazyQuery({ fetchPolicy: 'no-cache' });
+  const router = useRouter();
+
+  useEffect(() => {
+    fetchNotificationCount();
+  }, [router.pathname]);
 
   return (
     <>
