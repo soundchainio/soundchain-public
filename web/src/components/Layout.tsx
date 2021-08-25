@@ -4,7 +4,7 @@ import { ReactNode } from 'react';
 
 interface LayoutProps {
   title?: string;
-  children?: ReactNode;
+  children: ReactNode;
   topRightButton?: ReactNode;
 }
 
