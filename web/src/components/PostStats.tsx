@@ -21,7 +21,7 @@ export const PostStats = ({ totalReactions, topReactions, commentCount, repostCo
         <div className="text-sm text-gray-100 flex items-center">
           <div className="flex space-x-1">
             {topReactions.map(reaction => (
-              <ReactionEmoji key={reaction} name={reaction} className="w-4" />
+              <ReactionEmoji key={reaction} name={reaction} className="w-4 h-4" />
             ))}
           </div>
           <div className="text-white font-bold pl-2">
