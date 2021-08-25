@@ -105,7 +105,7 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
     setShowAddMusicLink(false);
   };
 
-  const onTextareaChange = async (body: string) => {
+  const onTextareaChange = (body: string) => {
     setBodyValue(body);
   };
 
