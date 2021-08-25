@@ -1,12 +1,12 @@
 import classNames from 'classnames';
 import { Button } from 'components/Button';
-import { useModalsContext } from 'contexts/Modals';
-import { useNewPostModalContext } from 'contexts/NewPostModal';
 import 'emoji-mart/css/emoji-mart.css';
 import { Field, Form, Formik, FormikHelpers } from 'formik';
 import GraphemeSplitter from 'grapheme-splitter';
 import { CreatePostInput, CreateRepostInput } from 'lib/graphql';
 import { default as React, useCallback, useEffect, useState } from 'react';
+import { useModalState } from 'contexts/providers/modal';
+import { useModalDispatch } from 'contexts/providers/modal';
 import * as yup from 'yup';
 import { useCreatePostMutation, useCreateRepostMutation } from '../lib/graphql';
 import { getNormalizedLink, hasLink } from '../utils/NormalizeEmbedLinks';
@@ -51,15 +51,15 @@ export const NewPostModal = () => {
   const [bodyValue, setBodyValue] = useState('');
   const [originalLink, setOriginalLink] = useState('');
   const [postLink, setPostLink] = useState('');
-  const { setAnyModalOpened } = useModalsContext();
-  const { showNewPost, setShowNewPost, repostId, setRepostId } = useNewPostModalContext();
   const [createPost] = useCreatePostMutation({ refetchQueries: ['Posts'] });
   const [createRepost] = useCreateRepostMutation({ refetchQueries: ['Posts'] });
+  const { showNewPost, repostId } = useModalState();
+  const { dispatchShowNewPostModal, dispatchSetRepostId } = useModalDispatch();
 
   const clearState = () => {
-    setShowNewPost(false);
+    dispatchShowNewPostModal(false);
     setPostLink('');
-    setRepostId('');
+    dispatchSetRepostId(undefined);
   };
 
   const cancel = (setFieldValue: (val: string, newVal: string) => void) => {
@@ -104,7 +104,7 @@ export const NewPostModal = () => {
   }, [originalLink]);
 
   const onOutsideClick = () => {
-    setShowNewPost(false);
+    dispatchShowNewPostModal(false);
   };
 
   const onTextareaChange = (body: string) => {
@@ -126,7 +126,7 @@ export const NewPostModal = () => {
     }, 1000);
 
     return () => clearTimeout(delayDebounce);
-  }, [bodyValue]);
+  }, [bodyValue, originalLink]);
 
   useEffect(() => {
     if (originalLink) {
@@ -145,7 +145,6 @@ export const NewPostModal = () => {
   }, [normalizeOriginalLink, originalLink]);
 
   useEffect(() => {
-    setAnyModalOpened(showNewPost);
     if (showNewPost) {
       setOriginalLink('');
     }
@@ -190,7 +189,7 @@ export const NewPostModal = () => {
               />
               {isRepost && (
                 <div className="p-4 bg-gray-20">
-                  <RepostPreview postId={repostId} />
+                  <RepostPreview postId={repostId as string} />
                 </div>
               )}
               {postLink && !isRepost && (

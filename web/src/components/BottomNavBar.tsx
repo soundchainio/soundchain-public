@@ -1,5 +1,4 @@
 import { NewPostModal } from 'components/NewPostModal';
-import { useNewPostModalContext } from 'contexts/NewPostModal';
 import { useMe } from 'hooks/useMe';
 import { Home } from 'icons/Home';
 import { NewPost } from 'icons/NewPost';
@@ -8,15 +7,16 @@ import { Profile } from 'icons/Profile';
 import { Search } from 'icons/Search';
 import { setJwt } from 'lib/apollo';
 import { useRouter } from 'next/router';
+import { useModalDispatch } from 'contexts/providers/modal';
 
 export const BottomNavBar = () => {
-  const { showNewPost, setShowNewPost, setRepostId } = useNewPostModalContext();
+  const { dispatchSetRepostId, dispatchShowNewPostModal } = useModalDispatch();
   const router = useRouter();
   const me = useMe();
 
   const handleNewPostClick = () => {
-    setRepostId('');
-    me ? setShowNewPost(!showNewPost) : router.push('/login');
+    dispatchSetRepostId(undefined);
+    me ? dispatchShowNewPostModal(true) : router.push('/login');
   };
 
   return (

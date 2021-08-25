@@ -1,7 +1,7 @@
 import { ChatAltIcon, RefreshIcon, ShareIcon, ThumbUpIcon } from '@heroicons/react/solid';
-import { useNewPostModalContext } from 'contexts/NewPostModal';
 import NextLink from 'next/link';
 import React, { useState } from 'react';
+import { useModalDispatch } from 'contexts/providers/modal';
 import { PostLikeOptions } from './PostLikeOptions';
 
 interface PostActionsProps {
@@ -12,11 +12,11 @@ const commonClasses = 'text-white text-sm text-gray-400 text-center font-bold fl
 
 export const PostActions = ({ postId }: PostActionsProps) => {
   const [showLikeOptions, setShowLikeOptions] = useState(false);
-  const { setShowNewPost, setRepostId } = useNewPostModalContext();
+  const { dispatchSetRepostId, dispatchShowNewPostModal } = useModalDispatch();
 
   const onRepostClick = () => {
-    setRepostId(postId);
-    setShowNewPost(true);
+    dispatchSetRepostId(postId);
+    dispatchShowNewPostModal(true);
   };
 
   const onLikeButton = () => {

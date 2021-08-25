@@ -1,8 +1,8 @@
-interface CheckBodyScrollProps {
-  anyModalOpened: boolean;
-}
+import { useModalState } from 'contexts/providers/modal';
 
-export const CheckBodyScroll = ({ anyModalOpened }: CheckBodyScrollProps) => {
+export const CheckBodyScroll = () => {
+  const { anyModalOpened } = useModalState();
+
   return anyModalOpened ? (
     <style jsx global>{`
       body {
