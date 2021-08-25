@@ -53,6 +53,16 @@ export type CreatePostPayload = {
   post: Post;
 };
 
+export type CreateRepostInput = {
+  body: Scalars['String'];
+  repostId: Scalars['String'];
+};
+
+export type CreateRepostPayload = {
+  __typename?: 'CreateRepostPayload';
+  post: Post;
+};
+
 
 export type FilterPostInput = {
   profileId?: Maybe<Scalars['String']>;
@@ -125,6 +135,7 @@ export type Mutation = {
   __typename?: 'Mutation';
   addComment: AddCommentPayload;
   createPost: CreatePostPayload;
+  createRepost: CreateRepostPayload;
   updateSocialMedias: UpdateSocialMediasPayload;
   updateFavoriteGenres: UpdateFavoriteGenresPayload;
   updateProfilePicture: UpdateProfilePicturePayload;
@@ -146,6 +157,11 @@ export type MutationAddCommentArgs = {
 
 export type MutationCreatePostArgs = {
   input: CreatePostInput;
+};
+
+
+export type MutationCreateRepostArgs = {
+  input: CreateRepostInput;
 };
 
 
@@ -224,6 +240,7 @@ export type Post = {
   id: Scalars['ID'];
   body: Scalars['String'];
   mediaLink?: Maybe<Scalars['String']>;
+  repostId?: Maybe<Scalars['String']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   profile: Profile;
@@ -495,6 +512,22 @@ export type CreatePostMutation = (
   ) }
 );
 
+export type CreateRepostMutationVariables = Exact<{
+  input: CreateRepostInput;
+}>;
+
+
+export type CreateRepostMutation = (
+  { __typename?: 'Mutation' }
+  & { createRepost: (
+    { __typename?: 'CreateRepostPayload' }
+    & { post: (
+      { __typename?: 'Post' }
+      & Pick<Post, 'id'>
+    ) }
+  ) }
+);
+
 export type FollowProfileMutationVariables = Exact<{
   input: FollowProfileInput;
 }>;
@@ -595,7 +628,7 @@ export type PostQuery = (
 
 export type PostComponentFieldsFragment = (
   { __typename?: 'Post' }
-  & Pick<Post, 'id' | 'body' | 'mediaLink' | 'createdAt' | 'likeCount' | 'commentCount' | 'repostCount'>
+  & Pick<Post, 'id' | 'body' | 'mediaLink' | 'repostId' | 'createdAt' | 'likeCount' | 'commentCount' | 'repostCount'>
   & { profile: (
     { __typename?: 'Profile' }
     & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
@@ -788,6 +821,7 @@ export const PostComponentFieldsFragmentDoc = gql`
   id
   body
   mediaLink
+  repostId
   createdAt
   likeCount
   commentCount
@@ -943,6 +977,41 @@ export function useCreatePostMutation(baseOptions?: Apollo.MutationHookOptions<C
 export type CreatePostMutationHookResult = ReturnType<typeof useCreatePostMutation>;
 export type CreatePostMutationResult = Apollo.MutationResult<CreatePostMutation>;
 export type CreatePostMutationOptions = Apollo.BaseMutationOptions<CreatePostMutation, CreatePostMutationVariables>;
+export const CreateRepostDocument = gql`
+    mutation CreateRepost($input: CreateRepostInput!) {
+  createRepost(input: $input) {
+    post {
+      id
+    }
+  }
+}
+    `;
+export type CreateRepostMutationFn = Apollo.MutationFunction<CreateRepostMutation, CreateRepostMutationVariables>;
+
+/**
+ * __useCreateRepostMutation__
+ *
+ * To run a mutation, you first call `useCreateRepostMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateRepostMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createRepostMutation, { data, loading, error }] = useCreateRepostMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateRepostMutation(baseOptions?: Apollo.MutationHookOptions<CreateRepostMutation, CreateRepostMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateRepostMutation, CreateRepostMutationVariables>(CreateRepostDocument, options);
+      }
+export type CreateRepostMutationHookResult = ReturnType<typeof useCreateRepostMutation>;
+export type CreateRepostMutationResult = Apollo.MutationResult<CreateRepostMutation>;
+export type CreateRepostMutationOptions = Apollo.BaseMutationOptions<CreateRepostMutation, CreateRepostMutationVariables>;
 export const FollowProfileDocument = gql`
     mutation FollowProfile($input: FollowProfileInput!) {
   followProfile(input: $input) {
