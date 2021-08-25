@@ -1,7 +1,6 @@
 import { ApolloError } from '@apollo/client';
+import { AuthLayout } from 'components/AuthLayout';
 import { CompleteProfileForm, CompleteProfileFormValues } from 'components/CompleteProfileForm';
-import { LockedLayout } from 'components/LockedLayout';
-import { LoginNavBar } from 'components/LoginNavBar';
 import { RegisterEmailForm, RegisterEmailFormValues } from 'components/RegisterEmailForm';
 import { RegisterErrorStep } from 'components/RegisterErrorStep';
 import { SetupProfileForm, SetupProfileFormValues } from 'components/SetupProfileForm';
@@ -108,13 +107,12 @@ export default function CreateAccountPage() {
   };
 
   return (
-    <LockedLayout>
+    <AuthLayout>
       <Head>
         <title>Soundchain - Create Account</title>
         <meta name="description" content="Soundchain" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <LoginNavBar />
       {!error && (
         <>
           {!registerEmailValues && <RegisterEmailForm onSubmit={setRegisterEmailValues} />}
@@ -125,6 +123,6 @@ export default function CreateAccountPage() {
         </>
       )}
       {error && <RegisterErrorStep error={error} onBack={onBackError} />}
-    </LockedLayout>
+    </AuthLayout>
   );
 }
