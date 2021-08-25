@@ -26,7 +26,7 @@ export class NotificationService extends ModelService<typeof Notification> {
   async notifyNewCommentOnPost({ comment, post, authorProfileId }: CommentNotificationParams): Promise<void> {
     const authorProfile = await this.context.profileService.getProfile(authorProfileId);
     const { body: commentBody, _id: commentId } = comment;
-    const { _id: postId, profileId: postOwnerProfileId } = post;
+    const { _id: postId, profileId } = post;
     const { displayName: authorName, profilePicture: authorPicture } = authorProfile;
     const metadata: CommentNotificationMetadata = {
       authorName,
@@ -37,11 +37,11 @@ export class NotificationService extends ModelService<typeof Notification> {
     };
     const notification = new NotificationModel({
       type: NotificationType.Comment,
-      profileId: postOwnerProfileId,
+      profileId,
       metadata,
     });
     await notification.save();
-    await this.incrementNotificationCount(postOwnerProfileId);
+    await this.incrementNotificationCount(profileId);
   }
 
   async getNotifications(
