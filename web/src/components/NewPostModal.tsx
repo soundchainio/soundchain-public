@@ -52,6 +52,7 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
   const [isEmojiPickerVisible, setEmojiPickerVisible] = useState(false);
   const [originalLink, setOriginalLink] = useState('');
   const [postLink, setPostLink] = useState('');
+  const [bodyValue, setBodyValue] = useState('');
   const [createPost] = useCreatePostMutation({ refetchQueries: ['Posts'] });
 
   const cancel = (setFieldValue: (val: string, newVal: string) => void) => {
@@ -104,6 +105,27 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
     setShowAddMusicLink(false);
   };
 
+  const onTextareaChange = async (body: string) => {
+    setBodyValue(body);
+  };
+
+  useEffect(() => {
+    const delayDebounce = setTimeout(async () => {
+      if (bodyValue.length) {
+        const link = await getNormalizedLink(bodyValue);
+        if (link) {
+          setPostLink(link);
+        } else if (!originalLink) {
+          setPostLink('');
+        }
+      } else if (!originalLink) {
+        setPostLink('');
+      }
+    }, 1000);
+
+    return () => clearTimeout(delayDebounce);
+  }, [bodyValue]);
+
   useEffect(() => {
     if (originalLink) {
       const normalizeOriginalLink = async () => {
@@ -152,6 +174,7 @@ export const NewPostModal = ({ setShowNewPost, showNewPost }: NewPostModalProps)
               className="w-full h-24 resize-none focus:ring-0 bg-gray-20 border-none focus:outline-none outline-none text-white flex-auto"
               placeholder="What's happening?"
               maxLength={setMaxInputLength(values.body)}
+              validate={onTextareaChange(values.body)}
             />
             {postLink && <iframe className="w-full bg-gray-20" frameBorder="0" allowFullScreen src={postLink} />}
             <div className="p-4 flex items-center bg-gray-25">
