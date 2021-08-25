@@ -280,7 +280,7 @@ export type Profile = {
   favoriteGenres: Array<Genre>;
   followerCount: Scalars['Float'];
   followingCount: Scalars['Float'];
-  notificationCount: Scalars['Float'];
+  unreadNotificationCount: Scalars['Float'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   userHandle: Scalars['String'];
@@ -670,7 +670,7 @@ export type NotificationCountQuery = (
   { __typename?: 'Query' }
   & { myProfile: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'notificationCount'>
+    & Pick<Profile, 'id' | 'unreadNotificationCount'>
   ) }
 );
 
@@ -766,7 +766,7 @@ export type ResetNotificationCountMutation = (
   { __typename?: 'Mutation' }
   & { resetNotificationCount: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'notificationCount'>
+    & Pick<Profile, 'id' | 'unreadNotificationCount'>
   ) }
 );
 
@@ -1371,7 +1371,7 @@ export const NotificationCountDocument = gql`
     query NotificationCount {
   myProfile {
     id
-    notificationCount
+    unreadNotificationCount
   }
 }
     `;
@@ -1599,7 +1599,7 @@ export const ResetNotificationCountDocument = gql`
     mutation ResetNotificationCount {
   resetNotificationCount {
     id
-    notificationCount
+    unreadNotificationCount
   }
 }
     `;

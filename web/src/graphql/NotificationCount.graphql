@@ -1,6 +1,6 @@
 query NotificationCount {
   myProfile {
     id
-    notificationCount
+    unreadNotificationCount
   }
 }

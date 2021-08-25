@@ -40,7 +40,7 @@ export class Profile extends Model {
 
   @Field(() => Number)
   @prop({ required: true, default: 0 })
-  notificationCount: number;
+  unreadNotificationCount: number;
 
   @Field(() => Date)
   createdAt: Date;
