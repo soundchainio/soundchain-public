@@ -7,8 +7,8 @@ import { ResetNotificationCountDocument, ResetNotificationCountMutation } from '
 import { protectPage } from 'lib/protectPage';
 import Head from 'next/head';
 
-export const getServerSideProps = protectPage((context, apolloClient) => {
-  apolloClient.mutate<ResetNotificationCountMutation>({ mutation: ResetNotificationCountDocument, context });
+export const getServerSideProps = protectPage(async (context, apolloClient) => {
+  await apolloClient.mutate<ResetNotificationCountMutation>({ mutation: ResetNotificationCountDocument, context });
   return cacheFor(UserNotifications, {}, context, apolloClient);
 });
 
