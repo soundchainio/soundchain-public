@@ -55,7 +55,7 @@ export type CommentNotification = {
   updatedAt: Scalars['DateTime'];
   id: Scalars['String'];
   authorName: Scalars['String'];
-  authorPicture?: Maybe<Scalars['String']>;
+  authorPicture: Maybe<Scalars['String']>;
   body: Scalars['String'];
   previewBody: Scalars['String'];
   link: Scalars['String'];
@@ -262,8 +262,8 @@ export type PageInfo = {
   totalCount: Scalars['Float'];
   hasPreviousPage: Scalars['Boolean'];
   hasNextPage: Scalars['Boolean'];
-  startCursor?: Maybe<Scalars['String']>;
-  endCursor?: Maybe<Scalars['String']>;
+  startCursor: Maybe<Scalars['String']>;
+  endCursor: Maybe<Scalars['String']>;
 };
 
 export type PageInput = {
@@ -277,8 +277,8 @@ export type Post = {
   __typename?: 'Post';
   id: Scalars['ID'];
   body: Scalars['String'];
-  mediaLink?: Maybe<Scalars['String']>;
-  repostId?: Maybe<Scalars['String']>;
+  mediaLink: Maybe<Scalars['String']>;
+  repostId: Maybe<Scalars['String']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   profile: Profile;
@@ -287,7 +287,7 @@ export type Post = {
   repostCount: Scalars['Float'];
   totalReactions: Scalars['Float'];
   topReactions: Array<ReactionType>;
-  myReaction?: Maybe<ReactionType>;
+  myReaction: Maybe<ReactionType>;
 };
 
 
@@ -305,8 +305,8 @@ export type Profile = {
   __typename?: 'Profile';
   id: Scalars['ID'];
   displayName: Scalars['String'];
-  profilePicture?: Maybe<Scalars['String']>;
-  coverPicture?: Maybe<Scalars['String']>;
+  profilePicture: Maybe<Scalars['String']>;
+  coverPicture: Maybe<Scalars['String']>;
   socialMedias: SocialMedias;
   favoriteGenres: Array<Genre>;
   followerCount: Scalars['Float'];
@@ -329,7 +329,7 @@ export type Query = {
   myProfile: Profile;
   profile: Profile;
   uploadUrl: UploadUrl;
-  me?: Maybe<User>;
+  me: Maybe<User>;
   validPasswordResetToken: Scalars['Boolean'];
 };
 
@@ -418,10 +418,10 @@ export type ResetPasswordPayload = {
 
 export type SocialMedias = {
   __typename?: 'SocialMedias';
-  facebook?: Maybe<Scalars['String']>;
-  instagram?: Maybe<Scalars['String']>;
-  soundcloud?: Maybe<Scalars['String']>;
-  twitter?: Maybe<Scalars['String']>;
+  facebook: Maybe<Scalars['String']>;
+  instagram: Maybe<Scalars['String']>;
+  soundcloud: Maybe<Scalars['String']>;
+  twitter: Maybe<Scalars['String']>;
 };
 
 export enum SortNotificationField {
@@ -690,7 +690,7 @@ export type MeQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type MeQuery = (
   { __typename?: 'Query' }
-  & { me?: Maybe<(
+  & { me: Maybe<(
     { __typename?: 'User' }
     & Pick<User, 'id' | 'handle'>
     & { profile: (
