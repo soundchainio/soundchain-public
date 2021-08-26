@@ -63,7 +63,7 @@ export type CommentNotification = {
 
 export type CreatePostInput = {
   body: Scalars['String'];
-  mediaLink: Maybe<Scalars['String']>;
+  mediaLink?: Maybe<Scalars['String']>;
 };
 
 export type CreatePostPayload = {
@@ -83,7 +83,7 @@ export type CreateRepostPayload = {
 
 
 export type FilterPostInput = {
-  profileId: Maybe<Scalars['String']>;
+  profileId?: Maybe<Scalars['String']>;
 };
 
 export type FollowProfileInput = {
@@ -267,10 +267,10 @@ export type PageInfo = {
 };
 
 export type PageInput = {
-  first: Maybe<Scalars['Int']>;
-  after: Maybe<Scalars['String']>;
-  last: Maybe<Scalars['Int']>;
-  before: Maybe<Scalars['String']>;
+  first?: Maybe<Scalars['Int']>;
+  after?: Maybe<Scalars['String']>;
+  last?: Maybe<Scalars['Int']>;
+  before?: Maybe<Scalars['String']>;
 };
 
 export type Post = {
@@ -345,8 +345,8 @@ export type QueryCommentsArgs = {
 
 
 export type QueryNotificationsArgs = {
-  page: Maybe<PageInput>;
-  sort: Maybe<SortNotificationInput>;
+  page?: Maybe<PageInput>;
+  sort?: Maybe<SortNotificationInput>;
 };
 
 
@@ -361,9 +361,9 @@ export type QueryPostArgs = {
 
 
 export type QueryPostsArgs = {
-  page: Maybe<PageInput>;
-  sort: Maybe<SortPostInput>;
-  filter: Maybe<FilterPostInput>;
+  page?: Maybe<PageInput>;
+  sort?: Maybe<SortPostInput>;
+  filter?: Maybe<FilterPostInput>;
 };
 
 
@@ -430,7 +430,7 @@ export enum SortNotificationField {
 
 export type SortNotificationInput = {
   field: SortNotificationField;
-  order: Maybe<SortOrder>;
+  order?: Maybe<SortOrder>;
 };
 
 export enum SortOrder {
@@ -444,7 +444,7 @@ export enum SortPostField {
 
 export type SortPostInput = {
   field: SortPostField;
-  order: Maybe<SortOrder>;
+  order?: Maybe<SortOrder>;
 };
 
 export type UnfollowProfileInput = {
@@ -484,10 +484,10 @@ export type UpdateProfilePicturePayload = {
 };
 
 export type UpdateSocialMediasInput = {
-  facebook: Maybe<Scalars['String']>;
-  instagram: Maybe<Scalars['String']>;
-  soundcloud: Maybe<Scalars['String']>;
-  twitter: Maybe<Scalars['String']>;
+  facebook?: Maybe<Scalars['String']>;
+  instagram?: Maybe<Scalars['String']>;
+  soundcloud?: Maybe<Scalars['String']>;
+  twitter?: Maybe<Scalars['String']>;
 };
 
 export type UpdateSocialMediasPayload = {
@@ -740,7 +740,7 @@ export type NotificationCountQuery = (
 );
 
 export type NotificationsQueryVariables = Exact<{
-  sort: Maybe<SortNotificationInput>;
+  sort?: Maybe<SortNotificationInput>;
 }>;
 
 
@@ -778,8 +778,8 @@ export type PostComponentFieldsFragment = (
 );
 
 export type PostsQueryVariables = Exact<{
-  filter: Maybe<FilterPostInput>;
-  sort: Maybe<SortPostInput>;
+  filter?: Maybe<FilterPostInput>;
+  sort?: Maybe<SortPostInput>;
 }>;
 
 
