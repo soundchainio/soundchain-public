@@ -1,16 +1,12 @@
-import { Ellipsis } from 'icons/Ellipsis';
-import { useCommentQuery } from 'lib/graphql';
-import NextLink from 'next/link';
-import { Avatar } from './Avatar';
 import { CommentSkeleton } from './CommentSkeleton';
-import { Timestamp } from './Timestamp';
 
-interface CommentProps {
-  commentId: string;
+interface DeleteModalProps {
+  id: string;
+  type: string;
 }
 
-export const Comment = ({ commentId }: CommentProps) => {
-  const { data } = useCommentQuery({ variables: { id: commentId } });
+export const DeleteModal = ({ id, type }: DeleteModalProps) => {
+  // const { data } = useDeleteCommentMutation({ variables: { id } });
   const comment = data?.comment;
 
   const onEllipsisClick = () => {
@@ -21,7 +17,7 @@ export const Comment = ({ commentId }: CommentProps) => {
 
   return (
     <div className="flex flex-row space-x-3">
-      <Avatar src={comment.profile.profilePicture} className="mt-4" />
+      {/* <Avatar src={comment.profile.profilePicture} className="mt-4" />
       <div className="flex-1 py-4 px-4 bg-gray-20 rounded-xl">
         <div className="flex items-center">
           <NextLink href={`/profiles/${comment.profile.id}`}>
@@ -31,7 +27,7 @@ export const Comment = ({ commentId }: CommentProps) => {
           <Ellipsis className="pr-2 pl-2 w-10 h-3" onClick={onEllipsisClick} />
         </div>
         <pre className="text-white font-thin tracking-wide text-sm whitespace-pre-wrap mt-4">{comment.body}</pre>
-      </div>
+      </div> */}
     </div>
   );
 };
