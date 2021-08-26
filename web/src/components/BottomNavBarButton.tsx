@@ -1,4 +1,5 @@
 import classNames from 'classnames';
+import { SVGGradientColor } from 'icons/gradients';
 import { IconProps } from 'icons/types/IconProps';
 import { useRouter } from 'next/router';
 
@@ -8,7 +9,7 @@ interface BottomNavBarButtonProps {
   path?: string;
   onClick?: () => void;
   icon?: (props: IconProps) => JSX.Element;
-  activatedColor?: 'yellow' | 'green' | 'purple' | 'green-purple';
+  activatedColor?: SVGGradientColor;
 }
 
 export const BottomNavBarButton = ({
@@ -38,7 +39,7 @@ export const BottomNavBarButton = ({
       {Icon && (
         <div className="relative">
           {Badge && <Badge />}
-          <Icon activated={isActivated()} />
+          <Icon activatedColor={isActivated() ? activatedColor : undefined} />
         </div>
       )}
       <span
