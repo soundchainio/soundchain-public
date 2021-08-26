@@ -40,6 +40,8 @@ export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type, post
       if (identifiedSource.type && identifiedSource != link) {
         setLink(identifiedSource);
       }
+    } else {
+      setLink(undefined);
     }
   }, [postLink]);
 
