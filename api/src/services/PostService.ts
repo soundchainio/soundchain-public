@@ -53,11 +53,8 @@ export class PostService extends ModelService<typeof Post> {
     if (alreadyReacted) throw new UserInputError('You already reacted to the post.');
 
     await this.context.reactionService.createReaction({ postId, profileId, type });
-    await this.model.updateOne({ _id: postId }, { reactionStats: { $inc: { [type]: 1 } } });
-
-    const typeCount = post.reactionStats[type];
-    post.reactionStats[type] = typeCount ? typeCount + 1 : 1;
-
+    await this.model.updateOne({ _id: postId }, { $inc: { [`reactionStats.${type}`]: 1 } });
+    post.reactionStats[type]++;
     return post;
   }
 }

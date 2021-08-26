@@ -66,10 +66,7 @@ async function seedDb() {
       const reaction = FakeReaction({ postId: post.id, profileId: profile?._id });
 
       reactions.push(reaction);
-      const type = reaction.type;
-      const typeCount = post.reactionStats[type];
-
-      post.reactionStats[type] = typeCount ? typeCount + 1 : 1;
+      post.reactionStats[reaction.type]++;
     });
 
     posts.push(post);

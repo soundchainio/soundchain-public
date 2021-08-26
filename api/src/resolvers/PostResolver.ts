@@ -48,6 +48,7 @@ export class PostResolver {
   @FieldResolver(() => [ReactionType])
   topReactions(@Root() { reactionStats }: Post, @Arg('top') top: number): ReactionType[] {
     return toPairs(reactionStats)
+      .filter(pair => pair[1] !== 0)
       .sort((a, b) => b[1] - a[1])
       .slice(0, top)
       .map(pair => pair[0] as ReactionType);
