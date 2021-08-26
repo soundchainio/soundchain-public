@@ -1,30 +1,24 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
-import { ReactionStats } from '../types/ReactionStats';
+import { ReactionType } from '../types/ReactionType';
 import { Model } from './Model';
 
 @ObjectType()
-export class Post extends Model {
+export class Reaction extends Model {
   @Field(() => ID, { name: 'id' })
   readonly _id: string;
 
+  @Field()
   @prop({ required: true })
   profileId: string;
 
   @Field()
   @prop({ required: true })
-  body: string;
+  postId: string;
 
-  @Field({ nullable: true })
-  @prop({ required: false })
-  mediaLink?: string;
-
-  @prop({ required: true, default: [] })
-  reactionStats: ReactionStats[];
-
-  @Field({ nullable: true })
-  @prop({ required: false })
-  repostId?: string;
+  @Field()
+  @prop({ required: true, type: String, enum: ReactionType })
+  type: ReactionType;
 
   @Field(() => Date)
   createdAt: Date;
@@ -33,4 +27,4 @@ export class Post extends Model {
   updatedAt: Date;
 }
 
-export const PostModel = getModelForClass(Post);
+export const ReactionModel = getModelForClass(Reaction);
