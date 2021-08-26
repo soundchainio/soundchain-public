@@ -24,7 +24,7 @@ export class CommentNotificationResolver {
 
   @FieldResolver(() => String)
   body(): string {
-    return `commented your post:`;
+    return 'commented your post:';
   }
 
   @FieldResolver(() => String)
