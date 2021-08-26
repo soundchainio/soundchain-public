@@ -19,8 +19,7 @@ export class CommentService extends ModelService<typeof Comment> {
 
   async createComment(params: NewCommentParams): Promise<Comment> {
     const newComment = new CommentModel(params);
-    await newComment.save();
-    const post = await this.context.postService.getPost(params.postId);
+    const [post] = await Promise.all([this.context.postService.getPost(params.postId), newComment.save()]);
     if (newComment.profileId !== post.profileId) {
       this.context.notificationService.notifyNewCommentOnPost({
         comment: newComment,
