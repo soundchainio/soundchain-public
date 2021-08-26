@@ -16,6 +16,27 @@ export const cacheConfig: InMemoryCacheConfig = {
             id: args?.id,
           });
         },
+        feed: {
+          merge(existing, incoming, { readField }) {
+            const posts = existing ? { ...existing.posts } : {};
+            incoming.posts.forEach(post => {
+              posts[readField('id', post)] = post;
+            });
+            return {
+              cursor: incoming.pageInfo.endCursor,
+              posts,
+            };
+          },
+
+          read(existing) {
+            if (existing) {
+              return {
+                cursor: existing.pageInfo.endCursor,
+                posts: Object.values(existing.posts),
+              };
+            }
+          },
+        },
       },
     },
   },

@@ -644,7 +644,10 @@ export type PostsQuery = (
   { __typename?: 'Query' }
   & { posts: (
     { __typename?: 'PostConnection' }
-    & { nodes: Array<(
+    & { pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'startCursor' | 'endCursor'>
+    ), nodes: Array<(
       { __typename?: 'Post' }
       & PostComponentFieldsFragment
     )> }
@@ -1271,6 +1274,10 @@ export type PostQueryResult = Apollo.QueryResult<PostQuery, PostQueryVariables>;
 export const PostsDocument = gql`
     query Posts($filter: FilterPostInput) {
   posts(filter: $filter) {
+    pageInfo {
+      startCursor
+      endCursor
+    }
     nodes {
       ...PostComponentFields
     }
