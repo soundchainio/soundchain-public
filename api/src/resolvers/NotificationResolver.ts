@@ -43,7 +43,7 @@ export class NotificationResolver {
     @CurrentUser() { profileId }: User,
     @Ctx() { notificationService }: Context,
   ): Promise<ClearNotificationsPayload> {
-    const success = await notificationService.clearNotifications(profileId);
-    return { success };
+    const ok = await notificationService.clearNotifications(profileId);
+    return { ok };
   }
 }

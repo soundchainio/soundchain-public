@@ -33,7 +33,7 @@ export type AuthPayload = {
 
 export type ClearNotificationsPayload = {
   __typename?: 'ClearNotificationsPayload';
-  success: Scalars['Boolean'];
+  ok: Scalars['Boolean'];
 };
 
 export type Comment = {
@@ -554,7 +554,7 @@ export type ClearNotificationsMutation = (
   { __typename?: 'Mutation' }
   & { clearNotifications: (
     { __typename?: 'ClearNotificationsPayload' }
-    & Pick<ClearNotificationsPayload, 'success'>
+    & Pick<ClearNotificationsPayload, 'ok'>
   ) }
 );
 
@@ -1059,7 +1059,7 @@ export type AddCommentMutationOptions = Apollo.BaseMutationOptions<AddCommentMut
 export const ClearNotificationsDocument = gql`
     mutation ClearNotifications {
   clearNotifications {
-    success
+    ok
   }
 }
     `;
