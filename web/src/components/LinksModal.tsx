@@ -1,9 +1,10 @@
 import classNames from 'classnames';
 import { Button } from 'components/Button';
 import 'emoji-mart/css/emoji-mart.css';
-import { default as React, useState } from 'react';
+import { default as React, useEffect, useState } from 'react';
 import { MediaProvider } from 'types/MediaProvider';
 import { PostLinkType } from 'types/PostLinkType';
+import { IdentifySource } from 'utils/NormalizeEmbedLinks';
 import { ModalsPortal } from './ModalsPortal';
 import { MediaLink, PostLinkInput } from './PostLinkInput';
 
@@ -13,12 +14,13 @@ interface AddLinkProps {
   setShow: (val: boolean) => void;
   show: boolean;
   type: PostLinkType;
+  postLink: string;
 }
 
 const baseClasses =
   'absolute left-0 w-screen h-screen bottom-0 duration-500 bg-opacity-75 ease-in-out bg-gray-25 transform-gpu transform';
 
-export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type }: AddLinkProps) => {
+export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type, postLink }: AddLinkProps) => {
   const [link, setLink] = useState<MediaLink>();
 
   const handleSubmit = () => {
@@ -30,6 +32,16 @@ export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type }: Ad
       setShow(false);
     }
   };
+
+  useEffect(() => {
+    if (postLink) {
+      const identifiedSource = IdentifySource(postLink);
+
+      if (identifiedSource.type && identifiedSource != link) {
+        setLink(identifiedSource);
+      }
+    }
+  }, [postLink]);
 
   return (
     <ModalsPortal>

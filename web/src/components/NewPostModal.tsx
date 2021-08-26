@@ -202,6 +202,7 @@ export const NewPostModal = () => {
                 setOriginalLink={setOriginalLink}
                 setFieldValue={setFieldValue}
                 values={values}
+                postLink={postLink}
               />
             </Form>
           )}

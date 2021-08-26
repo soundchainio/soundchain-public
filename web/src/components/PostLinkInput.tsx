@@ -3,12 +3,12 @@ import { Soundcloud } from 'icons/Soundcloud';
 import { Spotify } from 'icons/Spotify';
 import { Vimeo } from 'icons/Vimeo';
 import { Youtube } from 'icons/Youtube';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { MediaProvider } from 'types/MediaProvider';
 
 export interface MediaLink {
   value: string;
-  type: MediaProvider;
+  type?: MediaProvider;
 }
 
 interface PostLinkInputProps {
@@ -51,6 +51,10 @@ export const PostLinkInput = ({ type, setLink, link }: PostLinkInputProps) => {
   const onBlur = () => {
     setLink({ type, value: fieldValue });
   };
+
+  useEffect(() => {
+    link && link.type == type ? setFieldValue(link.value) : setFieldValue('');
+  }, [link]);
 
   return (
     <div className="text-gray-400 flex items-center mt-4 mb-10">
