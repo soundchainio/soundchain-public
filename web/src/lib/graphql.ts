@@ -33,7 +33,7 @@ export type AuthPayload = {
 
 export type ClearNotificationsPayload = {
   __typename?: 'ClearNotificationsPayload';
-  success: Scalars['Boolean'];
+  ok: Scalars['Boolean'];
 };
 
 export type Comment = {
@@ -54,8 +54,8 @@ export type CommentNotification = {
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   id: Scalars['String'];
-  author: Scalars['String'];
-  authorPicture?: Maybe<Scalars['String']>;
+  authorName: Scalars['String'];
+  authorPicture: Maybe<Scalars['String']>;
   body: Scalars['String'];
   previewBody: Scalars['String'];
   link: Scalars['String'];
@@ -245,25 +245,25 @@ export type MutationResetPasswordArgs = {
   input: ResetPasswordInput;
 };
 
+export type Notification = CommentNotification;
+
 export type NotificationConnection = {
   __typename?: 'NotificationConnection';
   pageInfo: PageInfo;
-  nodes: Array<NotificationUnion>;
+  nodes: Array<Notification>;
 };
 
 export enum NotificationType {
   Comment = 'Comment'
 }
 
-export type NotificationUnion = CommentNotification;
-
 export type PageInfo = {
   __typename?: 'PageInfo';
   totalCount: Scalars['Float'];
   hasPreviousPage: Scalars['Boolean'];
   hasNextPage: Scalars['Boolean'];
-  startCursor?: Maybe<Scalars['String']>;
-  endCursor?: Maybe<Scalars['String']>;
+  startCursor: Maybe<Scalars['String']>;
+  endCursor: Maybe<Scalars['String']>;
 };
 
 export type PageInput = {
@@ -277,8 +277,8 @@ export type Post = {
   __typename?: 'Post';
   id: Scalars['ID'];
   body: Scalars['String'];
-  mediaLink?: Maybe<Scalars['String']>;
-  repostId?: Maybe<Scalars['String']>;
+  mediaLink: Maybe<Scalars['String']>;
+  repostId: Maybe<Scalars['String']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   profile: Profile;
@@ -287,7 +287,7 @@ export type Post = {
   repostCount: Scalars['Float'];
   totalReactions: Scalars['Float'];
   topReactions: Array<ReactionType>;
-  myReaction?: Maybe<ReactionType>;
+  myReaction: Maybe<ReactionType>;
 };
 
 
@@ -305,8 +305,8 @@ export type Profile = {
   __typename?: 'Profile';
   id: Scalars['ID'];
   displayName: Scalars['String'];
-  profilePicture?: Maybe<Scalars['String']>;
-  coverPicture?: Maybe<Scalars['String']>;
+  profilePicture: Maybe<Scalars['String']>;
+  coverPicture: Maybe<Scalars['String']>;
   socialMedias: SocialMedias;
   favoriteGenres: Array<Genre>;
   followerCount: Scalars['Float'];
@@ -323,13 +323,13 @@ export type Query = {
   comment: Comment;
   comments: Array<Comment>;
   notifications: NotificationConnection;
-  notification: NotificationUnion;
+  notification: Notification;
   post: Post;
   posts: PostConnection;
   myProfile: Profile;
   profile: Profile;
   uploadUrl: UploadUrl;
-  me?: Maybe<User>;
+  me: Maybe<User>;
   validPasswordResetToken: Scalars['Boolean'];
 };
 
@@ -418,10 +418,10 @@ export type ResetPasswordPayload = {
 
 export type SocialMedias = {
   __typename?: 'SocialMedias';
-  facebook?: Maybe<Scalars['String']>;
-  instagram?: Maybe<Scalars['String']>;
-  soundcloud?: Maybe<Scalars['String']>;
-  twitter?: Maybe<Scalars['String']>;
+  facebook: Maybe<Scalars['String']>;
+  instagram: Maybe<Scalars['String']>;
+  soundcloud: Maybe<Scalars['String']>;
+  twitter: Maybe<Scalars['String']>;
 };
 
 export enum SortNotificationField {
@@ -554,7 +554,7 @@ export type ClearNotificationsMutation = (
   { __typename?: 'Mutation' }
   & { clearNotifications: (
     { __typename?: 'ClearNotificationsPayload' }
-    & Pick<ClearNotificationsPayload, 'success'>
+    & Pick<ClearNotificationsPayload, 'ok'>
   ) }
 );
 
@@ -582,7 +582,7 @@ export type CommentComponentFieldsFragment = (
 
 export type CommentNotificationFieldsFragment = (
   { __typename?: 'CommentNotification' }
-  & Pick<CommentNotification, 'id' | 'type' | 'body' | 'previewBody' | 'link' | 'createdAt' | 'author' | 'authorPicture'>
+  & Pick<CommentNotification, 'id' | 'type' | 'body' | 'previewBody' | 'link' | 'createdAt' | 'authorName' | 'authorPicture'>
 );
 
 export type CommentsQueryVariables = Exact<{
@@ -690,7 +690,7 @@ export type MeQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type MeQuery = (
   { __typename?: 'Query' }
-  & { me?: Maybe<(
+  & { me: Maybe<(
     { __typename?: 'User' }
     & Pick<User, 'id' | 'handle'>
     & { profile: (
@@ -994,7 +994,7 @@ export const CommentNotificationFieldsFragmentDoc = gql`
   previewBody
   link
   createdAt
-  author
+  authorName
   authorPicture
 }
     `;
@@ -1059,7 +1059,7 @@ export type AddCommentMutationOptions = Apollo.BaseMutationOptions<AddCommentMut
 export const ClearNotificationsDocument = gql`
     mutation ClearNotifications {
   clearNotifications {
-    success
+    ok
   }
 }
     `;

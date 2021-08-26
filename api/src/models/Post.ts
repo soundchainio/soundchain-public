@@ -19,8 +19,8 @@ export class Post extends Model {
   @prop({ required: false })
   mediaLink?: string;
 
-  @prop({ required: true, default: [] })
-  reactionStats: ReactionStats[];
+  @prop({ required: true, default: {}, _id: false })
+  reactionStats: ReactionStats;
 
   @Field({ nullable: true })
   @prop({ required: false })
