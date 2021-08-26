@@ -14,6 +14,7 @@ interface NewPostBarProps {
   setFieldValue: (field: string, value: string) => void;
   values: FormValues;
   postLink: string;
+  setPostLink: (val: string) => void;
 }
 
 export const NewPostBar = ({
@@ -25,6 +26,7 @@ export const NewPostBar = ({
   setFieldValue,
   values,
   postLink,
+  setPostLink,
 }: NewPostBarProps) => {
   const [showAddMusicLink, setShowAddMusicLink] = useState(false);
   const [showAddVideoLink, setShowAddVideoLink] = useState(false);
@@ -72,6 +74,7 @@ export const NewPostBar = ({
             onClose={onAddMusicClick}
             type={PostLinkType.MUSIC}
             postLink={postLink}
+            setPostLink={setPostLink}
           />
           <LinksModal
             show={showAddVideoLink}
@@ -80,6 +83,7 @@ export const NewPostBar = ({
             onClose={onAddVideoClick}
             type={PostLinkType.VIDEO}
             postLink={postLink}
+            setPostLink={setPostLink}
           />
         </>
       )}

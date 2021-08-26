@@ -15,6 +15,7 @@ interface PostLinkInputProps {
   type: MediaProvider;
   setLink: (value: MediaLink | undefined) => void;
   link?: MediaLink;
+  setPostLink: (value: string) => void;
 }
 
 const mediaProviderOptions = {
@@ -28,7 +29,7 @@ const mediaProviderOptions = {
   [MediaProvider.VIMEO]: { name: 'Vimeo', example: 'https://vimeo.com/12345', logo: <Vimeo /> },
 };
 
-export const PostLinkInput = ({ type, setLink, link }: PostLinkInputProps) => {
+export const PostLinkInput = ({ type, setLink, link, setPostLink }: PostLinkInputProps) => {
   const [fieldValue, setFieldValue] = useState('');
 
   const onChange = (value: string) => {
@@ -38,6 +39,7 @@ export const PostLinkInput = ({ type, setLink, link }: PostLinkInputProps) => {
   const onClear = () => {
     setFieldValue('');
     setLink(undefined);
+    setPostLink('');
   };
 
   const isDisabled = () => {
