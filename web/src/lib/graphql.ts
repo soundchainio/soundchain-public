@@ -245,17 +245,17 @@ export type MutationResetPasswordArgs = {
   input: ResetPasswordInput;
 };
 
+export type Notification = CommentNotification;
+
 export type NotificationConnection = {
   __typename?: 'NotificationConnection';
   pageInfo: PageInfo;
-  nodes: Array<NotificationUnion>;
+  nodes: Array<Notification>;
 };
 
 export enum NotificationType {
   Comment = 'Comment'
 }
-
-export type NotificationUnion = CommentNotification;
 
 export type PageInfo = {
   __typename?: 'PageInfo';
@@ -323,7 +323,7 @@ export type Query = {
   comment: Comment;
   comments: Array<Comment>;
   notifications: NotificationConnection;
-  notification: NotificationUnion;
+  notification: Notification;
   post: Post;
   posts: PostConnection;
   myProfile: Profile;
