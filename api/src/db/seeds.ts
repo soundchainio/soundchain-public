@@ -66,15 +66,10 @@ async function seedDb() {
       const reaction = FakeReaction({ postId: post.id, profileId: profile?._id });
 
       reactions.push(reaction);
+      const type = reaction.type;
+      const typeCount = post.reactionStats[type];
 
-      const stats = post.reactionStats.find(stats => stats.type === reaction.type);
-      if (stats) {
-        post.reactionStats = post.reactionStats.map(stats =>
-          stats.type === reaction.type ? { type: reaction.type, count: stats.count + 1 } : stats,
-        );
-      } else {
-        post.reactionStats = [...post.reactionStats, { type: reaction.type, count: 1 }];
-      }
+      post.reactionStats[type] = typeCount ? typeCount + 1 : 1;
     });
 
     posts.push(post);

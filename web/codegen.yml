@@ -8,6 +8,7 @@ generates:
       - 'typescript-operations'
       - 'typescript-react-apollo'
     config:
+      avoidOptionals: true
       strictScalars: true
       scalars:
         DateTime: string
