@@ -1,11 +1,12 @@
 import { IconComponent } from 'icons/types/IconComponent';
+import { ClearButton } from './Buttons/Clear';
 import { GreenGradient } from './Buttons/GreenGradient';
 import { OutlineButton } from './Buttons/Outline';
 import { RainbowButton } from './Buttons/Rainbow';
 import { RainbowRounded } from './Buttons/RainbowRounded';
 import { RainbowXSButton } from './Buttons/RainbowXS';
 
-export type ButtonVariant = 'rainbow' | 'outline' | 'rainbow-xs' | 'rainbow-rounded' | 'green-gradient';
+export type ButtonVariant = 'rainbow' | 'outline' | 'rainbow-xs' | 'rainbow-rounded' | 'green-gradient' | 'clear';
 
 export interface ButtonProps extends React.ComponentPropsWithoutRef<'button'> {
   variant?: ButtonVariant;
@@ -22,6 +23,7 @@ export const buttonByVariant: Record<ButtonVariant, (props: ButtonProps) => JSX.
   'rainbow-rounded': RainbowRounded,
   'rainbow-xs': RainbowXSButton,
   'green-gradient': GreenGradient,
+  clear: ClearButton,
 };
 
 export const Button = ({ variant = 'rainbow', ...props }: ButtonProps) => {

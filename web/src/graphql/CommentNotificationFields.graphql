@@ -1,0 +1,10 @@
+fragment CommentNotificationFields on CommentNotification {
+  id
+  type
+  body
+  previewBody
+  link
+  createdAt
+  author
+  authorPicture
+}
