@@ -155,6 +155,7 @@ export type Mutation = {
   resetNotificationCount: Profile;
   clearNotifications: ClearNotificationsPayload;
   createPost: CreatePostPayload;
+  reactToPost: ReactToPostPayload;
   createRepost: CreateRepostPayload;
   updateSocialMedias: UpdateSocialMediasPayload;
   updateFavoriteGenres: UpdateFavoriteGenresPayload;
@@ -177,6 +178,11 @@ export type MutationAddCommentArgs = {
 
 export type MutationCreatePostArgs = {
   input: CreatePostInput;
+};
+
+
+export type MutationReactToPostArgs = {
+  input: ReactToPostInput;
 };
 
 
@@ -277,9 +283,16 @@ export type Post = {
   updatedAt: Scalars['DateTime'];
   profile: Profile;
   comments: Array<Comment>;
-  likeCount: Scalars['Float'];
   commentCount: Scalars['Float'];
   repostCount: Scalars['Float'];
+  totalReactions: Scalars['Float'];
+  topReactions: Array<ReactionType>;
+  myReaction?: Maybe<ReactionType>;
+};
+
+
+export type PostTopReactionsArgs = {
+  top: Scalars['Float'];
 };
 
 export type PostConnection = {
@@ -367,6 +380,24 @@ export type QueryUploadUrlArgs = {
 export type QueryValidPasswordResetTokenArgs = {
   token: Scalars['String'];
 };
+
+export type ReactToPostInput = {
+  postId: Scalars['String'];
+  type: ReactionType;
+};
+
+export type ReactToPostPayload = {
+  __typename?: 'ReactToPostPayload';
+  post: Post;
+};
+
+export enum ReactionType {
+  Happy = 'HAPPY',
+  Heart = 'HEART',
+  Horns = 'HORNS',
+  Sad = 'SAD',
+  Sunglasses = 'SUNGLASSES'
+}
 
 export type RegisterInput = {
   email: Scalars['String'];
@@ -739,7 +770,7 @@ export type PostQuery = (
 
 export type PostComponentFieldsFragment = (
   { __typename?: 'Post' }
-  & Pick<Post, 'id' | 'body' | 'mediaLink' | 'repostId' | 'createdAt' | 'likeCount' | 'commentCount' | 'repostCount'>
+  & Pick<Post, 'id' | 'body' | 'mediaLink' | 'repostId' | 'createdAt' | 'commentCount' | 'repostCount' | 'totalReactions' | 'topReactions' | 'myReaction'>
   & { profile: (
     { __typename?: 'Profile' }
     & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
@@ -776,6 +807,22 @@ export type ProfileQuery = (
     & { socialMedias: (
       { __typename?: 'SocialMedias' }
       & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
+    ) }
+  ) }
+);
+
+export type ReactToPostMutationVariables = Exact<{
+  input: ReactToPostInput;
+}>;
+
+
+export type ReactToPostMutation = (
+  { __typename?: 'Mutation' }
+  & { reactToPost: (
+    { __typename?: 'ReactToPostPayload' }
+    & { post: (
+      { __typename?: 'Post' }
+      & Pick<Post, 'id' | 'totalReactions' | 'topReactions' | 'myReaction'>
     ) }
   ) }
 );
@@ -958,9 +1005,11 @@ export const PostComponentFieldsFragmentDoc = gql`
   mediaLink
   repostId
   createdAt
-  likeCount
   commentCount
   repostCount
+  totalReactions
+  topReactions(top: 2)
+  myReaction
   profile {
     id
     displayName
@@ -1632,6 +1681,44 @@ export function useProfileLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Pr
 export type ProfileQueryHookResult = ReturnType<typeof useProfileQuery>;
 export type ProfileLazyQueryHookResult = ReturnType<typeof useProfileLazyQuery>;
 export type ProfileQueryResult = Apollo.QueryResult<ProfileQuery, ProfileQueryVariables>;
+export const ReactToPostDocument = gql`
+    mutation ReactToPost($input: ReactToPostInput!) {
+  reactToPost(input: $input) {
+    post {
+      id
+      totalReactions
+      topReactions(top: 2)
+      myReaction
+    }
+  }
+}
+    `;
+export type ReactToPostMutationFn = Apollo.MutationFunction<ReactToPostMutation, ReactToPostMutationVariables>;
+
+/**
+ * __useReactToPostMutation__
+ *
+ * To run a mutation, you first call `useReactToPostMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useReactToPostMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [reactToPostMutation, { data, loading, error }] = useReactToPostMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useReactToPostMutation(baseOptions?: Apollo.MutationHookOptions<ReactToPostMutation, ReactToPostMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ReactToPostMutation, ReactToPostMutationVariables>(ReactToPostDocument, options);
+      }
+export type ReactToPostMutationHookResult = ReturnType<typeof useReactToPostMutation>;
+export type ReactToPostMutationResult = Apollo.MutationResult<ReactToPostMutation>;
+export type ReactToPostMutationOptions = Apollo.BaseMutationOptions<ReactToPostMutation, ReactToPostMutationVariables>;
 export const RegisterDocument = gql`
     mutation Register($input: RegisterInput!) {
   register(input: $input) {
