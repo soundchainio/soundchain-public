@@ -38,12 +38,12 @@ const initialFormValues = { password: '', passwordConfirmation: '' };
 
 export const CompleteProfileForm = ({ onSubmit, loading }: CompleteProfileFormProps) => {
   const [favoriteGenres, setFavoriteGenres] = useState<Genre[]>([]);
-  const handleSubmit = async (values: FormValidationValues) => {
+  const handleSubmit = (values: FormValidationValues) => {
     onSubmit({ ...values, favoriteGenres });
   };
 
   return (
-    <div className="flex flex-col flex-1 mt-6">
+    <div className="flex flex-col flex-1">
       <Title>Complete your profile.</Title>
       <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
         <Form className="flex flex-1 flex-col">

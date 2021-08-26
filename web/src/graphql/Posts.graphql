@@ -1,5 +1,5 @@
-query Posts($filter: FilterPostInput) {
-  posts(filter: $filter) {
+query Posts($filter: FilterPostInput, $sort: SortPostInput) {
+  posts(filter: $filter, sort: $sort) {
     nodes {
       ...PostComponentFields
     }

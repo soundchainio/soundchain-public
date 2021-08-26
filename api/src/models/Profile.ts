@@ -1,6 +1,6 @@
 import { getModelForClass, modelOptions, prop, Severity } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
-import { Genre } from '../enums/Genres';
+import { Genre } from '../types/Genres';
 import { Model } from './Model';
 import { SocialMedias } from './SocialMedias';
 
@@ -37,6 +37,10 @@ export class Profile extends Model {
   @Field(() => Number)
   @prop({ required: true, default: 0 })
   followingCount: number;
+
+  @Field(() => Number)
+  @prop({ required: true, default: 0 })
+  unreadNotificationCount: number;
 
   @Field(() => Date)
   createdAt: Date;

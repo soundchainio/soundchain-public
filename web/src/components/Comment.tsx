@@ -24,7 +24,7 @@ export const Comment = ({ commentId }: CommentProps) => {
           </NextLink>
           <Timestamp datetime={comment.createdAt} />
         </div>
-        <p className="text-white font-thin tracking-wide text-sm">{comment.body}</p>
+        <pre className="text-white font-thin tracking-wide text-sm whitespace-pre-wrap">{comment.body}</pre>
       </div>
     </div>
   );

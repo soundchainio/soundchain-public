@@ -2,24 +2,21 @@ import { usePostQuery } from 'lib/graphql';
 import NextLink from 'next/link';
 import React from 'react';
 import { Avatar } from './Avatar';
-import { Label } from './Label';
 import { PostActions } from './PostActions';
+import { PostSkeleton } from './PostSkeleton';
 import { PostStats } from './PostStats';
+import { RepostPreview } from './RepostPreview';
 import { Timestamp } from './Timestamp';
 
 interface PostProps {
   postId: string;
 }
 
-const generateRandomNumber = () => {
-  return Math.round(Math.random() * 100);
-};
-
 export const Post = ({ postId }: PostProps) => {
   const { data } = usePostQuery({ variables: { id: postId } });
   const post = data?.post;
 
-  if (!post) return <Label>Loading</Label>;
+  if (!post) return <PostSkeleton />;
 
   return (
     <div>
@@ -32,14 +29,20 @@ export const Post = ({ postId }: PostProps) => {
             </NextLink>
             <Timestamp datetime={post.createdAt} className="flex-1 text-right" />
           </div>
-          <div className="mt-4 text-gray-100 break-words">{post.body}</div>
+          <pre className="mt-4 text-gray-100 break-words whitespace-pre-wrap">{post.body}</pre>
           {post.mediaLink && (
             <iframe frameBorder="0" className="mt-4 w-full bg-gray-20" allowFullScreen src={post.mediaLink} />
           )}
-          <PostStats likes={generateRandomNumber()} comments={post.commentCount} reposts={generateRandomNumber()} />
+          {post.repostId && <RepostPreview postId={post.repostId} />}
+          <PostStats
+            totalReactions={post.totalReactions}
+            topReactions={post.topReactions}
+            commentCount={post.commentCount}
+            repostCount={post.repostCount}
+          />
         </div>
       </NextLink>
-      <PostActions postId={postId} />
+      <PostActions postId={postId} myReaction={post.myReaction ?? null} />
     </div>
   );
 };

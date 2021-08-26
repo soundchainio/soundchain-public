@@ -44,7 +44,8 @@
   src: url('/fonts/Metropolis-Black.otf') format('opentype');
 }
 
-body {
+body,
+pre {
   font-family: 'Metropolis';
 }
 
@@ -60,6 +61,24 @@ body {
 
 .green-gradient-text {
   background: linear-gradient(90deg, #68d18d 0%, #42f07f 25%, #9eee1d 75%, #ffd604 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.yellow-gradient-text {
+  background: linear-gradient(90deg, #fe5540 0%, #fcae1b 69%, #fed603 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.purple-gradient-text {
+  background: linear-gradient(90deg, #ab4eff 0%, #f1419e 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.green-purple-gradient-text {
+  background: linear-gradient(90deg, #3fdd8a 0%, #a252fe 100%);
   background-clip: text;
   color: transparent;
 }

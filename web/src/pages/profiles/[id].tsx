@@ -1,4 +1,3 @@
-import { useApolloClient } from '@apollo/client';
 import { Avatar } from 'components/Avatar';
 import { FollowButton } from 'components/FollowButton';
 import { Layout } from 'components/Layout';
@@ -7,19 +6,32 @@ import { Posts } from 'components/Posts';
 import { ProfileTabs } from 'components/ProfileTabs';
 import { SocialMediaLink } from 'components/SocialMediaLink';
 import { Subtitle } from 'components/Subtitle';
-import { apolloClient } from 'lib/apollo';
+import { cacheFor, createApolloClient } from 'lib/apollo';
 import { ProfileDocument, useProfileQuery } from 'lib/graphql';
-import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
+import { GetServerSideProps } from 'next';
 import Image from 'next/image';
-import { useEffect } from 'react';
+import { ParsedUrlQuery } from 'querystring';
 
-export const getServerSideProps: GetServerSideProps = async context => {
-  const {
-    data: { profile },
-    error,
-  } = await apolloClient.query({
+export interface ProfilePageProps {
+  profileId: string;
+}
+
+interface ProfilePageParams extends ParsedUrlQuery {
+  id: string;
+}
+
+export const getServerSideProps: GetServerSideProps<ProfilePageProps, ProfilePageParams> = async context => {
+  const profileId = context.params?.id;
+
+  if (typeof profileId !== 'string') {
+    return { notFound: true };
+  }
+
+  const apolloClient = createApolloClient(context);
+
+  const { error } = await apolloClient.query({
     query: ProfileDocument,
-    variables: { id: context.params?.id },
+    variables: { id: profileId },
     context,
   });
 
@@ -27,25 +39,15 @@ export const getServerSideProps: GetServerSideProps = async context => {
     return { notFound: true };
   }
 
-  return {
-    props: { profile },
-  };
+  return cacheFor(ProfilePage, { profileId }, context, apolloClient);
 };
 
-export default function ProfilePage({ profile }: InferGetServerSidePropsType<typeof getServerSideProps>) {
-  const apollo = useApolloClient();
-  const { data } = useProfileQuery({ variables: { id: profile.id }, fetchPolicy: 'cache-only' });
+export default function ProfilePage({ profileId }: ProfilePageProps) {
+  const { data } = useProfileQuery({ variables: { id: profileId } });
 
-  useEffect(() => {
-    apollo.writeQuery({
-      query: ProfileDocument,
-      variables: { id: profile.id },
-      data: {
-        profile,
-      },
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  if (!data) {
+    return null;
+  }
 
   const {
     coverPicture,
@@ -56,7 +58,7 @@ export default function ProfilePage({ profile }: InferGetServerSidePropsType<typ
     followerCount,
     followingCount,
     isFollowed,
-  } = data?.profile ?? profile;
+  } = data.profile;
 
   return (
     <Layout>
@@ -84,7 +86,7 @@ export default function ProfilePage({ profile }: InferGetServerSidePropsType<typ
               <p className="text-gray-80 text-xs">Following</p>
             </div>
           </div>
-          <FollowButton followedId={profile.id} isFollowed={isFollowed} />
+          <FollowButton followedId={profileId} isFollowed={isFollowed} />
         </div>
         <Subtitle className="mt-4">{displayName}</Subtitle>
         <p className="text-gray-80 text-sm">@{userHandle}</p>
@@ -94,7 +96,7 @@ export default function ProfilePage({ profile }: InferGetServerSidePropsType<typ
         </div>
       </div>
       <ProfileTabs />
-      <Posts profileId={profile.id} />
+      <Posts profileId={profileId} />
     </Layout>
   );
 }

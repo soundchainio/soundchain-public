@@ -31,6 +31,11 @@ export type AuthPayload = {
   jwt: Scalars['String'];
 };
 
+export type ClearNotificationsPayload = {
+  __typename?: 'ClearNotificationsPayload';
+  success: Scalars['Boolean'];
+};
+
 export type Comment = {
   __typename?: 'Comment';
   id: Scalars['ID'];
@@ -43,6 +48,19 @@ export type Comment = {
   profile: Profile;
 };
 
+export type CommentNotification = {
+  __typename?: 'CommentNotification';
+  type: NotificationType;
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  id: Scalars['String'];
+  author: Scalars['String'];
+  authorPicture?: Maybe<Scalars['String']>;
+  body: Scalars['String'];
+  previewBody: Scalars['String'];
+  link: Scalars['String'];
+};
+
 export type CreatePostInput = {
   body: Scalars['String'];
   mediaLink?: Maybe<Scalars['String']>;
@@ -50,6 +68,16 @@ export type CreatePostInput = {
 
 export type CreatePostPayload = {
   __typename?: 'CreatePostPayload';
+  post: Post;
+};
+
+export type CreateRepostInput = {
+  body: Scalars['String'];
+  repostId: Scalars['String'];
+};
+
+export type CreateRepostPayload = {
+  __typename?: 'CreateRepostPayload';
   post: Post;
 };
 
@@ -92,6 +120,7 @@ export enum Genre {
   Experimental = 'EXPERIMENTAL',
   Gospel = 'GOSPEL',
   HardRock = 'HARD_ROCK',
+  HipHop = 'HIP_HOP',
   Indie = 'INDIE',
   Jazz = 'JAZZ',
   KPop = 'K_POP',
@@ -123,7 +152,11 @@ export type LoginInput = {
 export type Mutation = {
   __typename?: 'Mutation';
   addComment: AddCommentPayload;
+  resetNotificationCount: Profile;
+  clearNotifications: ClearNotificationsPayload;
   createPost: CreatePostPayload;
+  reactToPost: ReactToPostPayload;
+  createRepost: CreateRepostPayload;
   updateSocialMedias: UpdateSocialMediasPayload;
   updateFavoriteGenres: UpdateFavoriteGenresPayload;
   updateProfilePicture: UpdateProfilePicturePayload;
@@ -145,6 +178,16 @@ export type MutationAddCommentArgs = {
 
 export type MutationCreatePostArgs = {
   input: CreatePostInput;
+};
+
+
+export type MutationReactToPostArgs = {
+  input: ReactToPostInput;
+};
+
+
+export type MutationCreateRepostArgs = {
+  input: CreateRepostInput;
 };
 
 
@@ -202,6 +245,18 @@ export type MutationResetPasswordArgs = {
   input: ResetPasswordInput;
 };
 
+export type NotificationConnection = {
+  __typename?: 'NotificationConnection';
+  pageInfo: PageInfo;
+  nodes: Array<NotificationUnion>;
+};
+
+export enum NotificationType {
+  Comment = 'Comment'
+}
+
+export type NotificationUnion = CommentNotification;
+
 export type PageInfo = {
   __typename?: 'PageInfo';
   totalCount: Scalars['Float'];
@@ -223,11 +278,21 @@ export type Post = {
   id: Scalars['ID'];
   body: Scalars['String'];
   mediaLink?: Maybe<Scalars['String']>;
+  repostId?: Maybe<Scalars['String']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   profile: Profile;
   comments: Array<Comment>;
   commentCount: Scalars['Float'];
+  repostCount: Scalars['Float'];
+  totalReactions: Scalars['Float'];
+  topReactions: Array<ReactionType>;
+  myReaction?: Maybe<ReactionType>;
+};
+
+
+export type PostTopReactionsArgs = {
+  top: Scalars['Float'];
 };
 
 export type PostConnection = {
@@ -246,6 +311,7 @@ export type Profile = {
   favoriteGenres: Array<Genre>;
   followerCount: Scalars['Float'];
   followingCount: Scalars['Float'];
+  unreadNotificationCount: Scalars['Float'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   userHandle: Scalars['String'];
@@ -256,6 +322,8 @@ export type Query = {
   __typename?: 'Query';
   comment: Comment;
   comments: Array<Comment>;
+  notifications: NotificationConnection;
+  notification: NotificationUnion;
   post: Post;
   posts: PostConnection;
   myProfile: Profile;
@@ -273,6 +341,17 @@ export type QueryCommentArgs = {
 
 export type QueryCommentsArgs = {
   postId: Scalars['String'];
+};
+
+
+export type QueryNotificationsArgs = {
+  page?: Maybe<PageInput>;
+  sort?: Maybe<SortNotificationInput>;
+};
+
+
+export type QueryNotificationArgs = {
+  id: Scalars['String'];
 };
 
 
@@ -302,6 +381,24 @@ export type QueryValidPasswordResetTokenArgs = {
   token: Scalars['String'];
 };
 
+export type ReactToPostInput = {
+  postId: Scalars['String'];
+  type: ReactionType;
+};
+
+export type ReactToPostPayload = {
+  __typename?: 'ReactToPostPayload';
+  post: Post;
+};
+
+export enum ReactionType {
+  Happy = 'HAPPY',
+  Heart = 'HEART',
+  Horns = 'HORNS',
+  Sad = 'SAD',
+  Sunglasses = 'SUNGLASSES'
+}
+
 export type RegisterInput = {
   email: Scalars['String'];
   displayName: Scalars['String'];
@@ -325,6 +422,15 @@ export type SocialMedias = {
   instagram?: Maybe<Scalars['String']>;
   soundcloud?: Maybe<Scalars['String']>;
   twitter?: Maybe<Scalars['String']>;
+};
+
+export enum SortNotificationField {
+  CreatedAt = 'CREATED_AT'
+}
+
+export type SortNotificationInput = {
+  field: SortNotificationField;
+  order?: Maybe<SortOrder>;
 };
 
 export enum SortOrder {
@@ -441,6 +547,17 @@ export type AddCommentMutation = (
   ) }
 );
 
+export type ClearNotificationsMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type ClearNotificationsMutation = (
+  { __typename?: 'Mutation' }
+  & { clearNotifications: (
+    { __typename?: 'ClearNotificationsPayload' }
+    & Pick<ClearNotificationsPayload, 'success'>
+  ) }
+);
+
 export type CommentQueryVariables = Exact<{
   id: Scalars['String'];
 }>;
@@ -461,6 +578,11 @@ export type CommentComponentFieldsFragment = (
     { __typename?: 'Profile' }
     & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
   ) }
+);
+
+export type CommentNotificationFieldsFragment = (
+  { __typename?: 'CommentNotification' }
+  & Pick<CommentNotification, 'id' | 'type' | 'body' | 'previewBody' | 'link' | 'createdAt' | 'author' | 'authorPicture'>
 );
 
 export type CommentsQueryVariables = Exact<{
@@ -485,6 +607,22 @@ export type CreatePostMutation = (
   { __typename?: 'Mutation' }
   & { createPost: (
     { __typename?: 'CreatePostPayload' }
+    & { post: (
+      { __typename?: 'Post' }
+      & Pick<Post, 'id'>
+    ) }
+  ) }
+);
+
+export type CreateRepostMutationVariables = Exact<{
+  input: CreateRepostInput;
+}>;
+
+
+export type CreateRepostMutation = (
+  { __typename?: 'Mutation' }
+  & { createRepost: (
+    { __typename?: 'CreateRepostPayload' }
     & { post: (
       { __typename?: 'Post' }
       & Pick<Post, 'id'>
@@ -577,6 +715,46 @@ export type MyProfileQuery = (
   ) }
 );
 
+export type NotificationQueryVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+export type NotificationQuery = (
+  { __typename?: 'Query' }
+  & { notification: (
+    { __typename?: 'CommentNotification' }
+    & CommentNotificationFieldsFragment
+  ) }
+);
+
+export type NotificationCountQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type NotificationCountQuery = (
+  { __typename?: 'Query' }
+  & { myProfile: (
+    { __typename?: 'Profile' }
+    & Pick<Profile, 'id' | 'unreadNotificationCount'>
+  ) }
+);
+
+export type NotificationsQueryVariables = Exact<{
+  sort?: Maybe<SortNotificationInput>;
+}>;
+
+
+export type NotificationsQuery = (
+  { __typename?: 'Query' }
+  & { notifications: (
+    { __typename?: 'NotificationConnection' }
+    & { nodes: Array<(
+      { __typename?: 'CommentNotification' }
+      & CommentNotificationFieldsFragment
+    )> }
+  ) }
+);
+
 export type PostQueryVariables = Exact<{
   id: Scalars['String'];
 }>;
@@ -592,7 +770,7 @@ export type PostQuery = (
 
 export type PostComponentFieldsFragment = (
   { __typename?: 'Post' }
-  & Pick<Post, 'id' | 'body' | 'mediaLink' | 'createdAt' | 'commentCount'>
+  & Pick<Post, 'id' | 'body' | 'mediaLink' | 'repostId' | 'createdAt' | 'commentCount' | 'repostCount' | 'totalReactions' | 'topReactions' | 'myReaction'>
   & { profile: (
     { __typename?: 'Profile' }
     & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
@@ -601,6 +779,7 @@ export type PostComponentFieldsFragment = (
 
 export type PostsQueryVariables = Exact<{
   filter?: Maybe<FilterPostInput>;
+  sort?: Maybe<SortPostInput>;
 }>;
 
 
@@ -632,6 +811,22 @@ export type ProfileQuery = (
   ) }
 );
 
+export type ReactToPostMutationVariables = Exact<{
+  input: ReactToPostInput;
+}>;
+
+
+export type ReactToPostMutation = (
+  { __typename?: 'Mutation' }
+  & { reactToPost: (
+    { __typename?: 'ReactToPostPayload' }
+    & { post: (
+      { __typename?: 'Post' }
+      & Pick<Post, 'id' | 'totalReactions' | 'topReactions' | 'myReaction'>
+    ) }
+  ) }
+);
+
 export type RegisterMutationVariables = Exact<{
   input: RegisterInput;
 }>;
@@ -642,6 +837,17 @@ export type RegisterMutation = (
   & { register: (
     { __typename?: 'AuthPayload' }
     & Pick<AuthPayload, 'jwt'>
+  ) }
+);
+
+export type ResetNotificationCountMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type ResetNotificationCountMutation = (
+  { __typename?: 'Mutation' }
+  & { resetNotificationCount: (
+    { __typename?: 'Profile' }
+    & Pick<Profile, 'id' | 'unreadNotificationCount'>
   ) }
 );
 
@@ -780,13 +986,30 @@ export const CommentComponentFieldsFragmentDoc = gql`
   }
 }
     `;
+export const CommentNotificationFieldsFragmentDoc = gql`
+    fragment CommentNotificationFields on CommentNotification {
+  id
+  type
+  body
+  previewBody
+  link
+  createdAt
+  author
+  authorPicture
+}
+    `;
 export const PostComponentFieldsFragmentDoc = gql`
     fragment PostComponentFields on Post {
   id
   body
   mediaLink
+  repostId
   createdAt
   commentCount
+  repostCount
+  totalReactions
+  topReactions(top: 2)
+  myReaction
   profile {
     id
     displayName
@@ -833,6 +1056,38 @@ export function useAddCommentMutation(baseOptions?: Apollo.MutationHookOptions<A
 export type AddCommentMutationHookResult = ReturnType<typeof useAddCommentMutation>;
 export type AddCommentMutationResult = Apollo.MutationResult<AddCommentMutation>;
 export type AddCommentMutationOptions = Apollo.BaseMutationOptions<AddCommentMutation, AddCommentMutationVariables>;
+export const ClearNotificationsDocument = gql`
+    mutation ClearNotifications {
+  clearNotifications {
+    success
+  }
+}
+    `;
+export type ClearNotificationsMutationFn = Apollo.MutationFunction<ClearNotificationsMutation, ClearNotificationsMutationVariables>;
+
+/**
+ * __useClearNotificationsMutation__
+ *
+ * To run a mutation, you first call `useClearNotificationsMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useClearNotificationsMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [clearNotificationsMutation, { data, loading, error }] = useClearNotificationsMutation({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useClearNotificationsMutation(baseOptions?: Apollo.MutationHookOptions<ClearNotificationsMutation, ClearNotificationsMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ClearNotificationsMutation, ClearNotificationsMutationVariables>(ClearNotificationsDocument, options);
+      }
+export type ClearNotificationsMutationHookResult = ReturnType<typeof useClearNotificationsMutation>;
+export type ClearNotificationsMutationResult = Apollo.MutationResult<ClearNotificationsMutation>;
+export type ClearNotificationsMutationOptions = Apollo.BaseMutationOptions<ClearNotificationsMutation, ClearNotificationsMutationVariables>;
 export const CommentDocument = gql`
     query Comment($id: String!) {
   comment(id: $id) {
@@ -938,6 +1193,41 @@ export function useCreatePostMutation(baseOptions?: Apollo.MutationHookOptions<C
 export type CreatePostMutationHookResult = ReturnType<typeof useCreatePostMutation>;
 export type CreatePostMutationResult = Apollo.MutationResult<CreatePostMutation>;
 export type CreatePostMutationOptions = Apollo.BaseMutationOptions<CreatePostMutation, CreatePostMutationVariables>;
+export const CreateRepostDocument = gql`
+    mutation CreateRepost($input: CreateRepostInput!) {
+  createRepost(input: $input) {
+    post {
+      id
+    }
+  }
+}
+    `;
+export type CreateRepostMutationFn = Apollo.MutationFunction<CreateRepostMutation, CreateRepostMutationVariables>;
+
+/**
+ * __useCreateRepostMutation__
+ *
+ * To run a mutation, you first call `useCreateRepostMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateRepostMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createRepostMutation, { data, loading, error }] = useCreateRepostMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateRepostMutation(baseOptions?: Apollo.MutationHookOptions<CreateRepostMutation, CreateRepostMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateRepostMutation, CreateRepostMutationVariables>(CreateRepostDocument, options);
+      }
+export type CreateRepostMutationHookResult = ReturnType<typeof useCreateRepostMutation>;
+export type CreateRepostMutationResult = Apollo.MutationResult<CreateRepostMutation>;
+export type CreateRepostMutationOptions = Apollo.BaseMutationOptions<CreateRepostMutation, CreateRepostMutationVariables>;
 export const FollowProfileDocument = gql`
     mutation FollowProfile($input: FollowProfileInput!) {
   followProfile(input: $input) {
@@ -1159,6 +1449,117 @@ export function useMyProfileLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
 export type MyProfileQueryHookResult = ReturnType<typeof useMyProfileQuery>;
 export type MyProfileLazyQueryHookResult = ReturnType<typeof useMyProfileLazyQuery>;
 export type MyProfileQueryResult = Apollo.QueryResult<MyProfileQuery, MyProfileQueryVariables>;
+export const NotificationDocument = gql`
+    query Notification($id: String!) {
+  notification(id: $id) {
+    ... on CommentNotification {
+      ...CommentNotificationFields
+    }
+  }
+}
+    ${CommentNotificationFieldsFragmentDoc}`;
+
+/**
+ * __useNotificationQuery__
+ *
+ * To run a query within a React component, call `useNotificationQuery` and pass it any options that fit your needs.
+ * When your component renders, `useNotificationQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useNotificationQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useNotificationQuery(baseOptions: Apollo.QueryHookOptions<NotificationQuery, NotificationQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<NotificationQuery, NotificationQueryVariables>(NotificationDocument, options);
+      }
+export function useNotificationLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<NotificationQuery, NotificationQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<NotificationQuery, NotificationQueryVariables>(NotificationDocument, options);
+        }
+export type NotificationQueryHookResult = ReturnType<typeof useNotificationQuery>;
+export type NotificationLazyQueryHookResult = ReturnType<typeof useNotificationLazyQuery>;
+export type NotificationQueryResult = Apollo.QueryResult<NotificationQuery, NotificationQueryVariables>;
+export const NotificationCountDocument = gql`
+    query NotificationCount {
+  myProfile {
+    id
+    unreadNotificationCount
+  }
+}
+    `;
+
+/**
+ * __useNotificationCountQuery__
+ *
+ * To run a query within a React component, call `useNotificationCountQuery` and pass it any options that fit your needs.
+ * When your component renders, `useNotificationCountQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useNotificationCountQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useNotificationCountQuery(baseOptions?: Apollo.QueryHookOptions<NotificationCountQuery, NotificationCountQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<NotificationCountQuery, NotificationCountQueryVariables>(NotificationCountDocument, options);
+      }
+export function useNotificationCountLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<NotificationCountQuery, NotificationCountQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<NotificationCountQuery, NotificationCountQueryVariables>(NotificationCountDocument, options);
+        }
+export type NotificationCountQueryHookResult = ReturnType<typeof useNotificationCountQuery>;
+export type NotificationCountLazyQueryHookResult = ReturnType<typeof useNotificationCountLazyQuery>;
+export type NotificationCountQueryResult = Apollo.QueryResult<NotificationCountQuery, NotificationCountQueryVariables>;
+export const NotificationsDocument = gql`
+    query Notifications($sort: SortNotificationInput) {
+  notifications(sort: $sort) {
+    nodes {
+      ... on CommentNotification {
+        ...CommentNotificationFields
+      }
+    }
+  }
+}
+    ${CommentNotificationFieldsFragmentDoc}`;
+
+/**
+ * __useNotificationsQuery__
+ *
+ * To run a query within a React component, call `useNotificationsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useNotificationsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useNotificationsQuery({
+ *   variables: {
+ *      sort: // value for 'sort'
+ *   },
+ * });
+ */
+export function useNotificationsQuery(baseOptions?: Apollo.QueryHookOptions<NotificationsQuery, NotificationsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<NotificationsQuery, NotificationsQueryVariables>(NotificationsDocument, options);
+      }
+export function useNotificationsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<NotificationsQuery, NotificationsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<NotificationsQuery, NotificationsQueryVariables>(NotificationsDocument, options);
+        }
+export type NotificationsQueryHookResult = ReturnType<typeof useNotificationsQuery>;
+export type NotificationsLazyQueryHookResult = ReturnType<typeof useNotificationsLazyQuery>;
+export type NotificationsQueryResult = Apollo.QueryResult<NotificationsQuery, NotificationsQueryVariables>;
 export const PostDocument = gql`
     query Post($id: String!) {
   post(id: $id) {
@@ -1195,8 +1596,8 @@ export type PostQueryHookResult = ReturnType<typeof usePostQuery>;
 export type PostLazyQueryHookResult = ReturnType<typeof usePostLazyQuery>;
 export type PostQueryResult = Apollo.QueryResult<PostQuery, PostQueryVariables>;
 export const PostsDocument = gql`
-    query Posts($filter: FilterPostInput) {
-  posts(filter: $filter) {
+    query Posts($filter: FilterPostInput, $sort: SortPostInput) {
+  posts(filter: $filter, sort: $sort) {
     nodes {
       ...PostComponentFields
     }
@@ -1217,6 +1618,7 @@ export const PostsDocument = gql`
  * const { data, loading, error } = usePostsQuery({
  *   variables: {
  *      filter: // value for 'filter'
+ *      sort: // value for 'sort'
  *   },
  * });
  */
@@ -1279,6 +1681,44 @@ export function useProfileLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Pr
 export type ProfileQueryHookResult = ReturnType<typeof useProfileQuery>;
 export type ProfileLazyQueryHookResult = ReturnType<typeof useProfileLazyQuery>;
 export type ProfileQueryResult = Apollo.QueryResult<ProfileQuery, ProfileQueryVariables>;
+export const ReactToPostDocument = gql`
+    mutation ReactToPost($input: ReactToPostInput!) {
+  reactToPost(input: $input) {
+    post {
+      id
+      totalReactions
+      topReactions(top: 2)
+      myReaction
+    }
+  }
+}
+    `;
+export type ReactToPostMutationFn = Apollo.MutationFunction<ReactToPostMutation, ReactToPostMutationVariables>;
+
+/**
+ * __useReactToPostMutation__
+ *
+ * To run a mutation, you first call `useReactToPostMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useReactToPostMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [reactToPostMutation, { data, loading, error }] = useReactToPostMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useReactToPostMutation(baseOptions?: Apollo.MutationHookOptions<ReactToPostMutation, ReactToPostMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ReactToPostMutation, ReactToPostMutationVariables>(ReactToPostDocument, options);
+      }
+export type ReactToPostMutationHookResult = ReturnType<typeof useReactToPostMutation>;
+export type ReactToPostMutationResult = Apollo.MutationResult<ReactToPostMutation>;
+export type ReactToPostMutationOptions = Apollo.BaseMutationOptions<ReactToPostMutation, ReactToPostMutationVariables>;
 export const RegisterDocument = gql`
     mutation Register($input: RegisterInput!) {
   register(input: $input) {
@@ -1312,6 +1752,39 @@ export function useRegisterMutation(baseOptions?: Apollo.MutationHookOptions<Reg
 export type RegisterMutationHookResult = ReturnType<typeof useRegisterMutation>;
 export type RegisterMutationResult = Apollo.MutationResult<RegisterMutation>;
 export type RegisterMutationOptions = Apollo.BaseMutationOptions<RegisterMutation, RegisterMutationVariables>;
+export const ResetNotificationCountDocument = gql`
+    mutation ResetNotificationCount {
+  resetNotificationCount {
+    id
+    unreadNotificationCount
+  }
+}
+    `;
+export type ResetNotificationCountMutationFn = Apollo.MutationFunction<ResetNotificationCountMutation, ResetNotificationCountMutationVariables>;
+
+/**
+ * __useResetNotificationCountMutation__
+ *
+ * To run a mutation, you first call `useResetNotificationCountMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useResetNotificationCountMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [resetNotificationCountMutation, { data, loading, error }] = useResetNotificationCountMutation({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useResetNotificationCountMutation(baseOptions?: Apollo.MutationHookOptions<ResetNotificationCountMutation, ResetNotificationCountMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ResetNotificationCountMutation, ResetNotificationCountMutationVariables>(ResetNotificationCountDocument, options);
+      }
+export type ResetNotificationCountMutationHookResult = ReturnType<typeof useResetNotificationCountMutation>;
+export type ResetNotificationCountMutationResult = Apollo.MutationResult<ResetNotificationCountMutation>;
+export type ResetNotificationCountMutationOptions = Apollo.BaseMutationOptions<ResetNotificationCountMutation, ResetNotificationCountMutationVariables>;
 export const ResetPasswordDocument = gql`
     mutation ResetPassword($input: ResetPasswordInput!) {
   resetPassword(input: $input) {

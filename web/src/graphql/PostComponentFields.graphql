@@ -2,8 +2,13 @@ fragment PostComponentFields on Post {
   id
   body
   mediaLink
+  repostId
   createdAt
   commentCount
+  repostCount
+  totalReactions
+  topReactions(top: 2)
+  myReaction
   profile {
     id
     displayName

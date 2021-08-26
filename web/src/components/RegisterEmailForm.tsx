@@ -21,12 +21,12 @@ const validationSchema: yup.SchemaOf<RegisterEmailFormValues> = yup.object().sha
 const initialFormValues = { email: '' };
 
 export const RegisterEmailForm = ({ onSubmit }: FormProps) => {
-  const handleSubmit = async (values: RegisterEmailFormValues) => {
+  const handleSubmit = (values: RegisterEmailFormValues) => {
     onSubmit(values);
   };
 
   return (
-    <div className="flex flex-col flex-1 mt-6">
+    <div className="flex flex-col flex-1">
       <Title>Create Account</Title>
       <Label className="my-3">Please enter your email below.</Label>
       <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={handleSubmit}>

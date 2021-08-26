@@ -1,12 +1,12 @@
+import { AuthLayout } from 'components/AuthLayout';
 import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
-import { LockedLayout } from 'components/LockedLayout';
 import { Title } from 'components/Title';
 import { Form, Formik, FormikHelpers } from 'formik';
 import { GetServerSideProps } from 'next';
 import Head from 'next/head';
 import * as yup from 'yup';
-import { apolloClient } from '../lib/apollo';
+import { cacheFor, createApolloClient } from '../lib/apollo';
 import {
   useResetPasswordMutation,
   ValidPasswordResetTokenDocument,
@@ -33,11 +33,14 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
     }),
 });
 
-export const getServerSideProps: GetServerSideProps<ResetPasswordPageProps> = async ({ query: { token } }) => {
+export const getServerSideProps: GetServerSideProps<ResetPasswordPageProps> = async context => {
+  const { token } = context.query;
+
   if (typeof token !== 'string') {
     return { notFound: true };
   }
 
+  const apolloClient = createApolloClient(context);
   const { data } = await apolloClient.query<ValidPasswordResetTokenQuery, ValidPasswordResetTokenQueryVariables>({
     query: ValidPasswordResetTokenDocument,
     variables: { token },
@@ -47,7 +50,7 @@ export const getServerSideProps: GetServerSideProps<ResetPasswordPageProps> = as
     return { notFound: true };
   }
 
-  return { props: { token } };
+  return cacheFor(ResetPasswordPage, { token }, context, apolloClient);
 };
 
 export default function ResetPasswordPage({ token }: ResetPasswordPageProps) {
@@ -58,32 +61,33 @@ export default function ResetPasswordPage({ token }: ResetPasswordPageProps) {
   };
 
   return (
-    <LockedLayout>
+    <AuthLayout>
       <Head>
         <title>Soundchain - Reset Password</title>
         <meta name="description" content="Soundchain" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Title>Reset Password</Title>
+      <p className="text-gray-80 leading-none mt-4">Please enter and confirm the new password for your account.</p>
       <Formik
         initialValues={{ password: '', passwordConfirmation: '' }}
         validationSchema={validationSchema}
         onSubmit={handleSubmit}
       >
         <Form className="flex flex-1 flex-col">
-          <div className={error ? 'text-green-500' : 'text-gray-400'}>
-            {data && 'Your password has been reset'}
-            {error && error.message}
-          </div>
           <div className="space-y-6 mb-auto mt-6">
-            <InputField type="password" name="password" placeholder="New Password" />
-            <InputField type="password" name="passwordConfirmation" placeholder="Confirm your New Password" />
+            <InputField type="password" name="password" placeholder="Password" />
+            <InputField type="password" name="passwordConfirmation" placeholder="Password" />
+            <p className="text-gray-80 leading-none">
+              {data && 'Your password has been reset.'}
+              {error && error.message}
+            </p>
           </div>
           <Button type="submit" disabled={loading}>
-            Reset Password
+            Change Password
           </Button>
         </Form>
       </Formik>
-    </LockedLayout>
+    </AuthLayout>
   );
 }

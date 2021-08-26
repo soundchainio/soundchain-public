@@ -1,32 +1,41 @@
+import { NewPostModal } from 'components/NewPostModal';
+import { useModalDispatch } from 'contexts/providers/modal';
 import { useMe } from 'hooks/useMe';
+import { Bell } from 'icons/Bell';
 import { Home } from 'icons/Home';
 import { NewPost } from 'icons/NewPost';
-import { Notification } from 'icons/Notification';
 import { Profile } from 'icons/Profile';
 import { Search } from 'icons/Search';
 import { setJwt } from 'lib/apollo';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
-import { NewPostModal } from './NewPostModal';
+import { BottomNavBarButton } from './BottomNavBarButton';
+import { NotificationBadge } from './NotificationBadge';
 
 export const BottomNavBar = () => {
-  const [showNewPost, setShowNewPost] = useState(false);
+  const { dispatchSetRepostId, dispatchShowNewPostModal } = useModalDispatch();
   const router = useRouter();
   const me = useMe();
 
   const handleNewPostClick = () => {
-    me ? setShowNewPost(!showNewPost) : router.push('/login');
+    dispatchSetRepostId(undefined);
+    me ? dispatchShowNewPostModal(true) : router.push('/login');
   };
 
   return (
     <nav className="bg-gray-20 h-16 flex items-center inset-x-0 shadow-2xl">
-      <div className="w-full flex justify-around">
-        <Home activated />
-        <Search />
-        <NewPost onClick={handleNewPostClick} />
-        <Notification />
-        <Profile onClick={() => setJwt()} />
-        <NewPostModal setShowNewPost={setShowNewPost} showNewPost={showNewPost} />
+      <div className="w-full flex">
+        <BottomNavBarButton label="Home" path="/" icon={Home} activatedColor="yellow" />
+        <BottomNavBarButton label="Explore" path="/search" icon={Search} activatedColor="green" />
+        <BottomNavBarButton label="Post" icon={NewPost} onClick={handleNewPostClick} />
+        <BottomNavBarButton
+          label="Notifications"
+          path="/notifications"
+          icon={Bell}
+          badge={me ? NotificationBadge : undefined}
+          activatedColor="purple"
+        />
+        <BottomNavBarButton label="Profile" icon={Profile} onClick={setJwt} activatedColor="green-purple" />
+        <NewPostModal />
       </div>
     </nav>
   );
