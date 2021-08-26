@@ -33,7 +33,7 @@ export type AuthPayload = {
 
 export type ClearNotificationsPayload = {
   __typename?: 'ClearNotificationsPayload';
-  success: Scalars['Boolean'];
+  ok: Scalars['Boolean'];
 };
 
 export type Comment = {
@@ -54,7 +54,7 @@ export type CommentNotification = {
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   id: Scalars['String'];
-  author: Scalars['String'];
+  authorName: Scalars['String'];
   authorPicture?: Maybe<Scalars['String']>;
   body: Scalars['String'];
   previewBody: Scalars['String'];
@@ -245,17 +245,17 @@ export type MutationResetPasswordArgs = {
   input: ResetPasswordInput;
 };
 
+export type Notification = CommentNotification;
+
 export type NotificationConnection = {
   __typename?: 'NotificationConnection';
   pageInfo: PageInfo;
-  nodes: Array<NotificationUnion>;
+  nodes: Array<Notification>;
 };
 
 export enum NotificationType {
   Comment = 'Comment'
 }
-
-export type NotificationUnion = CommentNotification;
 
 export type PageInfo = {
   __typename?: 'PageInfo';
@@ -323,7 +323,7 @@ export type Query = {
   comment: Comment;
   comments: Array<Comment>;
   notifications: NotificationConnection;
-  notification: NotificationUnion;
+  notification: Notification;
   post: Post;
   posts: PostConnection;
   myProfile: Profile;
@@ -554,7 +554,7 @@ export type ClearNotificationsMutation = (
   { __typename?: 'Mutation' }
   & { clearNotifications: (
     { __typename?: 'ClearNotificationsPayload' }
-    & Pick<ClearNotificationsPayload, 'success'>
+    & Pick<ClearNotificationsPayload, 'ok'>
   ) }
 );
 
@@ -582,7 +582,7 @@ export type CommentComponentFieldsFragment = (
 
 export type CommentNotificationFieldsFragment = (
   { __typename?: 'CommentNotification' }
-  & Pick<CommentNotification, 'id' | 'type' | 'body' | 'previewBody' | 'link' | 'createdAt' | 'author' | 'authorPicture'>
+  & Pick<CommentNotification, 'id' | 'type' | 'body' | 'previewBody' | 'link' | 'createdAt' | 'authorName' | 'authorPicture'>
 );
 
 export type CommentsQueryVariables = Exact<{
@@ -994,7 +994,7 @@ export const CommentNotificationFieldsFragmentDoc = gql`
   previewBody
   link
   createdAt
-  author
+  authorName
   authorPicture
 }
     `;
@@ -1059,7 +1059,7 @@ export type AddCommentMutationOptions = Apollo.BaseMutationOptions<AddCommentMut
 export const ClearNotificationsDocument = gql`
     mutation ClearNotifications {
   clearNotifications {
-    success
+    ok
   }
 }
     `;
