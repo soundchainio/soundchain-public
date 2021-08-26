@@ -5,7 +5,9 @@ import { Comment, CommentModel } from '../models/Comment';
 import { Follow, FollowModel } from '../models/Follow';
 import { Post, PostModel } from '../models/Post';
 import { Profile, ProfileModel } from '../models/Profile';
+import { Reaction, ReactionModel } from '../models/Reaction';
 import { User, UserModel } from '../models/User';
+import { ReactionType } from '../types/ReactionType';
 
 const { DATABASE_URL = 'mongodb://localhost:27017' } = process.env;
 const dbOpts = {
@@ -18,6 +20,7 @@ const users: User[] = [];
 const posts: Post[] = [];
 const comments: Comment[] = [];
 const follows: Follow[] = [];
+const reactions: Reaction[] = [];
 
 async function seedDb() {
   await dropDb();
@@ -52,15 +55,34 @@ async function seedDb() {
   for (let i = 0; i < 100; i++) {
     const profile = sample(profiles);
     const post = FakePost({ profileId: profile?._id });
-    posts.push(post);
+
     range(0, random(0, 5)).forEach(() => {
       const profile = sample(profiles);
       comments.push(FakeComment({ postId: post.id, profileId: profile?._id }));
     });
+
+    range(0, random(0, 20)).forEach(() => {
+      const profile = sample(profiles);
+      const reaction = FakeReaction({ postId: post.id, profileId: profile?._id });
+
+      reactions.push(reaction);
+
+      const stats = post.reactionStats.find(stats => stats.type === reaction.type);
+      if (stats) {
+        post.reactionStats = post.reactionStats.map(stats =>
+          stats.type === reaction.type ? { type: reaction.type, count: stats.count + 1 } : stats,
+        );
+      } else {
+        post.reactionStats = [...post.reactionStats, { type: reaction.type, count: 1 }];
+      }
+    });
+
+    posts.push(post);
   }
 
   await PostModel.insertMany(posts);
   await CommentModel.insertMany(comments);
+  await ReactionModel.insertMany(reactions);
 
   console.log('Posts + comments seeded!');
 
@@ -132,6 +154,21 @@ async function seedMason() {
   );
 
   FollowModel.insertMany(follows);
+}
+
+function FakeReaction(attrs = {}) {
+  const typeOptions = [
+    ReactionType.HEART,
+    ReactionType.HORNS,
+    ReactionType.HAPPY,
+    ReactionType.SAD,
+    ReactionType.SUNGLASSES,
+  ];
+
+  return new ReactionModel({
+    type: sample(typeOptions),
+    ...attrs,
+  });
 }
 
 seedDb();

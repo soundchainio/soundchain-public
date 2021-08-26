@@ -42,7 +42,7 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
             <Avatar src={me?.profile.profilePicture} />
             <FlexareaField name="body" placeholder="Write a comment..." />
             <button type="submit" disabled={isSubmitting} className="pt-1">
-              <Send activated={dirty && isValid} />
+              <Send activatedColor={dirty && isValid ? 'green-blue' : undefined} />
             </button>
           </div>
         </Form>

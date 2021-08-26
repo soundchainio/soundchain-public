@@ -1,5 +1,6 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
+import { ReactionStats } from '../types/ReactionStats';
 import { Model } from './Model';
 
 @ObjectType()
@@ -17,6 +18,9 @@ export class Post extends Model {
   @Field({ nullable: true })
   @prop({ required: false })
   mediaLink?: string;
+
+  @prop({ required: true, default: [] })
+  reactionStats: ReactionStats[];
 
   @Field({ nullable: true })
   @prop({ required: false })

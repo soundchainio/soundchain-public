@@ -1,0 +1,7 @@
+query Notification($id: String!) {
+  notification(id: $id) {
+    ... on CommentNotification {
+      ...CommentNotificationFields
+    }
+  }
+}

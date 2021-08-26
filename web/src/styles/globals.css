@@ -65,6 +65,24 @@ pre {
   color: transparent;
 }
 
+.yellow-gradient-text {
+  background: linear-gradient(90deg, #fe5540 0%, #fcae1b 69%, #fed603 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.purple-gradient-text {
+  background: linear-gradient(90deg, #ab4eff 0%, #f1419e 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.green-purple-gradient-text {
+  background: linear-gradient(90deg, #3fdd8a 0%, #a252fe 100%);
+  background-clip: text;
+  color: transparent;
+}
+
 .max-height-from-menu {
   height: calc(100vh - 80px);
 }
