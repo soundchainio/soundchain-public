@@ -54,7 +54,7 @@ export type CommentNotification = {
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   id: Scalars['String'];
-  author: Scalars['String'];
+  authorName: Scalars['String'];
   authorPicture?: Maybe<Scalars['String']>;
   body: Scalars['String'];
   previewBody: Scalars['String'];
@@ -582,7 +582,7 @@ export type CommentComponentFieldsFragment = (
 
 export type CommentNotificationFieldsFragment = (
   { __typename?: 'CommentNotification' }
-  & Pick<CommentNotification, 'id' | 'type' | 'body' | 'previewBody' | 'link' | 'createdAt' | 'author' | 'authorPicture'>
+  & Pick<CommentNotification, 'id' | 'type' | 'body' | 'previewBody' | 'link' | 'createdAt' | 'authorName' | 'authorPicture'>
 );
 
 export type CommentsQueryVariables = Exact<{
@@ -994,7 +994,7 @@ export const CommentNotificationFieldsFragmentDoc = gql`
   previewBody
   link
   createdAt
-  author
+  authorName
   authorPicture
 }
     `;
