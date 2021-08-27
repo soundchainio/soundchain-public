@@ -1,4 +1,5 @@
 import { InMemoryCacheConfig } from '@apollo/client';
+import { FeedConnection, FeedItem } from 'lib/graphql';
 
 export const cacheConfig: InMemoryCacheConfig = {
   typePolicies: {
@@ -17,22 +18,27 @@ export const cacheConfig: InMemoryCacheConfig = {
           });
         },
         feed: {
-          merge(existing, incoming, { readField }) {
-            const posts = existing ? { ...existing.posts } : {};
-            incoming.posts.forEach(post => {
-              posts[readField('id', post)] = post;
+          keyArgs: false,
+          merge(existing, incoming, { readField }): FeedConnection {
+            const nodes = existing ? { ...existing.nodes } : {};
+
+            incoming.nodes.forEach((node: FeedItem) => {
+              const key = readField('id', node);
+              nodes[key as string] = node;
             });
+
             return {
-              cursor: incoming.pageInfo.endCursor,
-              posts,
+              pageInfo: {
+                ...incoming.pageInfo,
+              },
+              nodes,
             };
           },
-
-          read(existing) {
+          read(existing): FeedConnection | void {
             if (existing) {
               return {
-                cursor: existing.pageInfo.endCursor,
-                posts: Object.values(existing.posts),
+                pageInfo: { ...existing.pageInfo },
+                nodes: Object.values(existing.nodes),
               };
             }
           },

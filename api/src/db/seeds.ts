@@ -2,6 +2,7 @@ import Faker from 'faker';
 import { random, range, sample, sampleSize } from 'lodash';
 import mongoose from 'mongoose';
 import { Comment, CommentModel } from '../models/Comment';
+import { FeedItemModel } from '../models/FeedItem';
 import { Follow, FollowModel } from '../models/Follow';
 import { Post, PostModel } from '../models/Post';
 import { Profile, ProfileModel } from '../models/Profile';
@@ -78,7 +79,7 @@ async function seedDb() {
 
   console.log('Posts + comments seeded!');
 
-  await seedMason();
+  await seedDeveloper({ displayName: 'Mason Seale', email: 'mason.seale@ae.studio', password: 'SEED_PASSWORD_REDACTED' });
 
   console.log('Developers seeded!');
 
@@ -130,13 +131,21 @@ function FakeComment(attrs = {}) {
   });
 }
 
-async function seedMason() {
-  const mason = FakeProfile({ displayName: 'Mason Seale' });
+async function seedDeveloper({
+  displayName,
+  email,
+  password,
+}: {
+  displayName: string;
+  email: string;
+  password: string;
+}) {
+  const mason = FakeProfile({ displayName });
   await mason.save();
   const user = FakeUser({
-    email: 'mason.seale@ae.studio',
-    handle: 'masonseale',
-    password: 'SEED_PASSWORD_REDACTED',
+    email,
+    handle: Faker.internet.userName(),
+    password,
     profileId: mason.id,
   });
   await user.save();
@@ -145,7 +154,13 @@ async function seedMason() {
     profile => new FollowModel({ followerId: mason.id, followedId: profile._id }),
   );
 
-  FollowModel.insertMany(follows);
+  await FollowModel.insertMany(follows);
+
+  const followedIds = follows.map(({ followedId }) => followedId);
+  const feedPosts = posts.filter(({ profileId }) => followedIds.includes(profileId));
+  const feedItems = feedPosts.map(post => new FeedItemModel({ profileId: mason._id, postId: post._id }));
+
+  await FeedItemModel.insertMany(feedItems);
 }
 
 function FakeReaction(attrs = {}) {

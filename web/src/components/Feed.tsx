@@ -1,24 +1,40 @@
 import { Post } from 'components/Post';
-import { usePostsQuery } from 'lib/graphql';
-import React from 'react';
+import { useFeedQuery } from 'lib/graphql';
+import { Button } from './Button';
 import { PostSkeleton } from './PostSkeleton';
 
-interface FeedProps extends React.ComponentPropsWithoutRef<'div'> {
-  profileId: string;
-}
-
-export const Feed = ({ profileId }: FeedProps) => {
-  const { data } = usePostsQuery({ variables: { filter: profileId ? { profileId } : undefined } });
+export const Feed = () => {
+  const { data, fetchMore } = useFeedQuery({ variables: { page: { first: 5 } } });
 
   if (!data) {
     return <PostSkeleton />;
   }
+  console.log(data.feed.pageInfo.endCursor);
 
   return (
     <div className="space-y-3">
-      {data.posts.nodes.map(({ id }) => (
-        <Post key={id} postId={id} />
-      ))}
+      {data.feed.nodes
+        .map(node => node.post)
+        .map(({ id }) => (
+          <Post key={id} postId={id} />
+        ))}
+      {data.feed.pageInfo.hasNextPage && (
+        <Button
+          variant="green-gradient"
+          onClick={() =>
+            fetchMore({
+              variables: {
+                page: {
+                  first: 5,
+                  after: data.feed.pageInfo.endCursor,
+                },
+              },
+            })
+          }
+        >
+          load more
+        </Button>
+      )}
     </div>
   );
 };
