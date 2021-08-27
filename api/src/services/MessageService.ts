@@ -32,7 +32,7 @@ export class MessageService extends ModelService<typeof Message> {
           { from: otherRecipient, to: recipient },
         ],
       },
-      sort: { field: 'createdAt', order: SortOrder.DESC },
+      sort: { field: 'createdAt', order: SortOrder.ASC },
       page,
     });
   }

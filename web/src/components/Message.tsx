@@ -1,30 +1,79 @@
-import { useMessageQuery } from 'lib/graphql';
-import NextLink from 'next/link';
+import classNames from 'classnames';
+import { format } from 'date-fns';
+import { useMe } from 'hooks/useMe';
+import { Message as MessageItem, useMessageQuery } from 'lib/graphql';
 import { Avatar } from './Avatar';
 import { CommentSkeleton } from './CommentSkeleton';
 import { Timestamp } from './Timestamp';
 
-interface CommentProps {
+interface MessageProps {
   messageId: string;
+  nextMessage?: MessageItem;
 }
 
-export const Message = ({ messageId }: CommentProps) => {
+const TIMESTAMP_FORMAT = 'MM/dd/yyy, hh:mm';
+
+export const Message = ({ messageId, nextMessage }: MessageProps) => {
+  const me = useMe();
   const { data } = useMessageQuery({ variables: { id: messageId } });
   const message = data?.message;
 
   if (!message) return <CommentSkeleton />;
 
+  const {
+    message: messageBody,
+    profile: { profilePicture },
+  } = message;
+
+  const isLastMessage = () => {
+    if (!nextMessage) {
+      return true;
+    }
+    return (
+      message.profile.id !== nextMessage.profile.id ||
+      getTimestamp(message.createdAt) !== getTimestamp(nextMessage.createdAt)
+    );
+  };
+
+  const isMyMessage = () => {
+    return me?.profile.id === message.profile.id;
+  };
+
+  const getTimestamp = (timestamp: string) => {
+    format(new Date(timestamp), TIMESTAMP_FORMAT);
+  };
+
   return (
-    <div className="flex flex-row space-x-3">
-      <Avatar src={message.profile.profilePicture} className="mt-4" />
-      <div className="flex-1 py-4 px-4 bg-gray-20 rounded-xl">
-        <div className="flex justify-between items-center mb-1">
-          <NextLink href={`/profiles/${message.profile.id}`}>
-            <a className="text-white font-semibold">{message.profile.displayName}</a>
-          </NextLink>
-          <Timestamp datetime={message.createdAt} />
+    <div className={classNames('flex flex-col w-full', isMyMessage() && 'items-end')}>
+      <div className={classNames('flex flex-row w-3/4')}>
+        {!isMyMessage() && (
+          <div className="w-12">{isLastMessage() && <Avatar src={profilePicture} className="mr-2" />}</div>
+        )}
+        <div className="flex flex-col w-full">
+          <div
+            className={classNames(
+              'flex py-1 px-4 w-full rounded-t-xl',
+              isMyMessage() ? 'rounded-bl-xl' : 'rounded-br-xl bg-gray-20',
+            )}
+          >
+            <pre
+              className={classNames(
+                'text-white font-thin tracking-wide text-sm whitespace-pre-wrap w-full',
+                isMyMessage() && 'text-right',
+              )}
+            >
+              {messageBody}
+            </pre>
+          </div>
+          {isLastMessage() && (
+            <Timestamp
+              datetime={message.createdAt}
+              format={TIMESTAMP_FORMAT}
+              small
+              className={classNames('pt-1', isMyMessage() && 'text-right')}
+            />
+          )}
         </div>
-        <pre className="text-white font-thin tracking-wide text-sm whitespace-pre-wrap">{message.message}</pre>
       </div>
     </div>
   );
