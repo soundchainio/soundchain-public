@@ -45,7 +45,7 @@ const normalizeSpotify = (str: string) => {
 
 const normalizeVimeo = (str: string) => {
   const videoLinkSplit = str.split(vimeoLinkRegex) || [];
-  const videoId = videoLinkSplit[videoLinkSplit.length - 2];
+  const videoId = videoLinkSplit[2];
   if (videoId) {
     return `https://player.vimeo.com/video/${videoId}`;
   }
