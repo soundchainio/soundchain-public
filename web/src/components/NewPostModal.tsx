@@ -184,7 +184,7 @@ export const NewPostModal = () => {
                 className="w-full h-24 resize-none focus:ring-0 bg-gray-20 border-none focus:outline-none outline-none text-white flex-auto"
                 placeholder="What's happening?"
                 maxLength={setMaxInputLength(values.body)}
-                validate={onTextareaChange(values.body)}
+                inputprops={{ onChange: onTextareaChange(values.body) }}
               />
               {isRepost && (
                 <div className="p-4 bg-gray-20">
@@ -202,6 +202,8 @@ export const NewPostModal = () => {
                 setOriginalLink={setOriginalLink}
                 setFieldValue={setFieldValue}
                 values={values}
+                postLink={postLink}
+                setPostLink={setPostLink}
               />
             </Form>
           )}
