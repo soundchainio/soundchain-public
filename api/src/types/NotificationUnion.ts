@@ -3,7 +3,7 @@ import { CommentNotification } from './CommentNotification';
 import { NotificationType } from './NotificationType';
 
 export const NotificationUnion = createUnionType({
-  name: 'NotificationUnion',
+  name: 'Notification',
   types: () => [CommentNotification] as const,
   resolveType: value => {
     if (value.type === NotificationType.Comment) {

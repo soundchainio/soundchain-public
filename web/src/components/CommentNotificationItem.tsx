@@ -12,7 +12,7 @@ interface CommentNotificationProps {
 }
 
 export const CommentNotificationItem = ({
-  notification: { link, body, createdAt, previewBody, author, authorPicture },
+  notification: { link, body, createdAt, previewBody, authorName, authorPicture },
   index,
 }: CommentNotificationProps) => {
   return (
@@ -27,7 +27,7 @@ export const CommentNotificationItem = ({
           </div>
           <div>
             <div className="text-gray-100  flex text-sm">
-              <div className="font-semibold">{author}</div>&nbsp;{body}
+              <div className="font-semibold">{authorName}</div>&nbsp;{body}
             </div>
             <Timestamp small datetime={createdAt} className="text-sm" />
           </div>
