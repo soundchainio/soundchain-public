@@ -1,5 +1,3 @@
-import { CommentSkeleton } from './CommentSkeleton';
-
 interface DeleteModalProps {
   id: string;
   type: string;
@@ -7,13 +5,13 @@ interface DeleteModalProps {
 
 export const DeleteModal = ({ id, type }: DeleteModalProps) => {
   // const { data } = useDeleteCommentMutation({ variables: { id } });
-  const comment = data?.comment;
+  // const comment = data?.comment;
 
   const onEllipsisClick = () => {
     console.log('showDelete');
   };
 
-  if (!comment) return <CommentSkeleton />;
+  // if (!comment) return <CommentSkeleton />;
 
   return (
     <div className="flex flex-row space-x-3">
