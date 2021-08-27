@@ -1,31 +1,42 @@
-interface DeleteModalProps {
-  id: string;
-  type: string;
-}
+import classNames from 'classnames';
+import { useModalDispatch, useModalState } from 'contexts/providers/modal';
+import { DeleteModalType } from 'types/DeleteModalType';
+import { Delete as DeleteButton } from './Buttons/Delete';
+import { ModalsPortal } from './ModalsPortal';
 
-export const DeleteModal = ({ id, type }: DeleteModalProps) => {
+const baseClasses =
+  'fixed w-screen h-screen bottom-0 duration-500 bg-opacity-75 ease-in-out bg-gray-25 transform-gpu transform';
+
+export const DeleteModal = () => {
   // const { data } = useDeleteCommentMutation({ variables: { id } });
-  // const comment = data?.comment;
+  const { showDelete, deleteId, deleteType } = useModalState();
+  const { dispatchShowDeleteModal } = useModalDispatch();
 
-  const onEllipsisClick = () => {
-    console.log('showDelete');
+  const onOutsideClick = () => {
+    dispatchShowDeleteModal(false, DeleteModalType.COMMENT, '');
   };
 
-  // if (!comment) return <CommentSkeleton />;
+  const onDelete = () => {
+    console.log('delete');
+  };
 
   return (
-    <div className="flex flex-row space-x-3">
-      {/* <Avatar src={comment.profile.profilePicture} className="mt-4" />
-      <div className="flex-1 py-4 px-4 bg-gray-20 rounded-xl">
-        <div className="flex items-center">
-          <NextLink href={`/profiles/${comment.profile.id}`}>
-            <a className="text-white font-semibold">{comment.profile.displayName}</a>
-          </NextLink>
-          <Timestamp className="ml-2  flex-1" datetime={comment.createdAt} />
-          <Ellipsis className="pr-2 pl-2 w-10 h-3" onClick={onEllipsisClick} />
+    <ModalsPortal>
+      <div
+        className={classNames(baseClasses, {
+          'translate-y-0 opacity-100': showDelete,
+          'translate-y-full opacity-0': !showDelete,
+        })}
+      >
+        <div className="flex flex-col h-screen">
+          <div className="flex-1" onClick={onOutsideClick}></div>
+          <div className="text-white p-4">
+            <DeleteButton className="p-4" onClick={onDelete}>
+              Delete {deleteType}
+            </DeleteButton>
+          </div>
         </div>
-        <pre className="text-white font-thin tracking-wide text-sm whitespace-pre-wrap mt-4">{comment.body}</pre>
-      </div> */}
-    </div>
+      </div>
+    </ModalsPortal>
   );
 };

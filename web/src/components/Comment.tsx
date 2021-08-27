@@ -1,7 +1,9 @@
+import { useModalDispatch } from 'contexts/providers/modal';
 import { useMe } from 'hooks/useMe';
 import { Ellipsis } from 'icons/Ellipsis';
 import { useCommentQuery } from 'lib/graphql';
 import NextLink from 'next/link';
+import { DeleteModalType } from 'types/DeleteModalType';
 import { Avatar } from './Avatar';
 import { CommentSkeleton } from './CommentSkeleton';
 import { Timestamp } from './Timestamp';
@@ -13,10 +15,11 @@ interface CommentProps {
 export const Comment = ({ commentId }: CommentProps) => {
   const { data } = useCommentQuery({ variables: { id: commentId } });
   const me = useMe();
+  const { dispatchShowDeleteModal } = useModalDispatch();
   const comment = data?.comment;
 
   const onEllipsisClick = () => {
-    console.log('showDelete');
+    dispatchShowDeleteModal(true, DeleteModalType.COMMENT, commentId);
   };
 
   const canEdit = () => {
