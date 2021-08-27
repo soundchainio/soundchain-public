@@ -1,0 +1,12 @@
+fragment MessageComponentFields on Message {
+  id
+  message
+  from
+  to
+  createdAt
+  profile {
+    id
+    displayName
+    profilePicture
+  }
+}

@@ -1,0 +1,7 @@
+query Conversation($profileId: String!) {
+  conversation(recipient: $profileId) {
+    nodes {
+      ...MessageComponentFields
+    }
+  }
+}

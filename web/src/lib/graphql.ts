@@ -149,9 +149,27 @@ export type LoginInput = {
   password: Scalars['String'];
 };
 
+export type Message = {
+  __typename?: 'Message';
+  id: Scalars['ID'];
+  from: Scalars['String'];
+  to: Scalars['String'];
+  message: Scalars['String'];
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  profile: Profile;
+};
+
+export type MessageConnection = {
+  __typename?: 'MessageConnection';
+  pageInfo: PageInfo;
+  nodes: Array<Message>;
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   addComment: AddCommentPayload;
+  sendMessage: SendMessagePayload;
   resetNotificationCount: Profile;
   clearNotifications: ClearNotificationsPayload;
   createPost: CreatePostPayload;
@@ -173,6 +191,11 @@ export type Mutation = {
 
 export type MutationAddCommentArgs = {
   input: AddCommentInput;
+};
+
+
+export type MutationSendMessageArgs = {
+  input: SendMessageInput;
 };
 
 
@@ -322,6 +345,8 @@ export type Query = {
   __typename?: 'Query';
   comment: Comment;
   comments: Array<Comment>;
+  conversation: MessageConnection;
+  message: Message;
   notifications: NotificationConnection;
   notification: NotificationUnion;
   post: Post;
@@ -341,6 +366,17 @@ export type QueryCommentArgs = {
 
 export type QueryCommentsArgs = {
   postId: Scalars['String'];
+};
+
+
+export type QueryConversationArgs = {
+  page?: Maybe<PageInput>;
+  recipient: Scalars['String'];
+};
+
+
+export type QueryMessageArgs = {
+  id: Scalars['String'];
 };
 
 
@@ -414,6 +450,16 @@ export type ResetPasswordInput = {
 export type ResetPasswordPayload = {
   __typename?: 'ResetPasswordPayload';
   ok: Scalars['Boolean'];
+};
+
+export type SendMessageInput = {
+  message: Scalars['String'];
+  to: Scalars['String'];
+};
+
+export type SendMessagePayload = {
+  __typename?: 'SendMessagePayload';
+  message: Message;
 };
 
 export type SocialMedias = {
@@ -598,6 +644,22 @@ export type CommentsQuery = (
   )> }
 );
 
+export type ConversationQueryVariables = Exact<{
+  profileId: Scalars['String'];
+}>;
+
+
+export type ConversationQuery = (
+  { __typename?: 'Query' }
+  & { conversation: (
+    { __typename?: 'MessageConnection' }
+    & { nodes: Array<(
+      { __typename?: 'Message' }
+      & MessageComponentFieldsFragment
+    )> }
+  ) }
+);
+
 export type CreatePostMutationVariables = Exact<{
   input: CreatePostInput;
 }>;
@@ -698,6 +760,28 @@ export type MeQuery = (
       & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
     ) }
   )> }
+);
+
+export type MessageQueryVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+export type MessageQuery = (
+  { __typename?: 'Query' }
+  & { message: (
+    { __typename?: 'Message' }
+    & MessageComponentFieldsFragment
+  ) }
+);
+
+export type MessageComponentFieldsFragment = (
+  { __typename?: 'Message' }
+  & Pick<Message, 'id' | 'message' | 'from' | 'to' | 'createdAt'>
+  & { profile: (
+    { __typename?: 'Profile' }
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
+  ) }
 );
 
 export type MyProfileQueryVariables = Exact<{ [key: string]: never; }>;
@@ -864,6 +948,22 @@ export type ResetPasswordMutation = (
   ) }
 );
 
+export type SendMessageMutationVariables = Exact<{
+  input: SendMessageInput;
+}>;
+
+
+export type SendMessageMutation = (
+  { __typename?: 'Mutation' }
+  & { sendMessage: (
+    { __typename?: 'SendMessagePayload' }
+    & { message: (
+      { __typename?: 'Message' }
+      & MessageComponentFieldsFragment
+    ) }
+  ) }
+);
+
 export type UnfollowProfileMutationVariables = Exact<{
   input: UnfollowProfileInput;
 }>;
@@ -996,6 +1096,20 @@ export const CommentNotificationFieldsFragmentDoc = gql`
   createdAt
   author
   authorPicture
+}
+    `;
+export const MessageComponentFieldsFragmentDoc = gql`
+    fragment MessageComponentFields on Message {
+  id
+  message
+  from
+  to
+  createdAt
+  profile {
+    id
+    displayName
+    profilePicture
+  }
 }
     `;
 export const PostComponentFieldsFragmentDoc = gql`
@@ -1158,6 +1272,43 @@ export function useCommentsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<C
 export type CommentsQueryHookResult = ReturnType<typeof useCommentsQuery>;
 export type CommentsLazyQueryHookResult = ReturnType<typeof useCommentsLazyQuery>;
 export type CommentsQueryResult = Apollo.QueryResult<CommentsQuery, CommentsQueryVariables>;
+export const ConversationDocument = gql`
+    query Conversation($profileId: String!) {
+  conversation(recipient: $profileId) {
+    nodes {
+      ...MessageComponentFields
+    }
+  }
+}
+    ${MessageComponentFieldsFragmentDoc}`;
+
+/**
+ * __useConversationQuery__
+ *
+ * To run a query within a React component, call `useConversationQuery` and pass it any options that fit your needs.
+ * When your component renders, `useConversationQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useConversationQuery({
+ *   variables: {
+ *      profileId: // value for 'profileId'
+ *   },
+ * });
+ */
+export function useConversationQuery(baseOptions: Apollo.QueryHookOptions<ConversationQuery, ConversationQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ConversationQuery, ConversationQueryVariables>(ConversationDocument, options);
+      }
+export function useConversationLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ConversationQuery, ConversationQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ConversationQuery, ConversationQueryVariables>(ConversationDocument, options);
+        }
+export type ConversationQueryHookResult = ReturnType<typeof useConversationQuery>;
+export type ConversationLazyQueryHookResult = ReturnType<typeof useConversationLazyQuery>;
+export type ConversationQueryResult = Apollo.QueryResult<ConversationQuery, ConversationQueryVariables>;
 export const CreatePostDocument = gql`
     mutation CreatePost($input: CreatePostInput!) {
   createPost(input: $input) {
@@ -1408,6 +1559,41 @@ export function useMeLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<MeQuery
 export type MeQueryHookResult = ReturnType<typeof useMeQuery>;
 export type MeLazyQueryHookResult = ReturnType<typeof useMeLazyQuery>;
 export type MeQueryResult = Apollo.QueryResult<MeQuery, MeQueryVariables>;
+export const MessageDocument = gql`
+    query Message($id: String!) {
+  message(id: $id) {
+    ...MessageComponentFields
+  }
+}
+    ${MessageComponentFieldsFragmentDoc}`;
+
+/**
+ * __useMessageQuery__
+ *
+ * To run a query within a React component, call `useMessageQuery` and pass it any options that fit your needs.
+ * When your component renders, `useMessageQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useMessageQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useMessageQuery(baseOptions: Apollo.QueryHookOptions<MessageQuery, MessageQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<MessageQuery, MessageQueryVariables>(MessageDocument, options);
+      }
+export function useMessageLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<MessageQuery, MessageQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<MessageQuery, MessageQueryVariables>(MessageDocument, options);
+        }
+export type MessageQueryHookResult = ReturnType<typeof useMessageQuery>;
+export type MessageLazyQueryHookResult = ReturnType<typeof useMessageLazyQuery>;
+export type MessageQueryResult = Apollo.QueryResult<MessageQuery, MessageQueryVariables>;
 export const MyProfileDocument = gql`
     query MyProfile {
   myProfile {
@@ -1818,6 +2004,41 @@ export function useResetPasswordMutation(baseOptions?: Apollo.MutationHookOption
 export type ResetPasswordMutationHookResult = ReturnType<typeof useResetPasswordMutation>;
 export type ResetPasswordMutationResult = Apollo.MutationResult<ResetPasswordMutation>;
 export type ResetPasswordMutationOptions = Apollo.BaseMutationOptions<ResetPasswordMutation, ResetPasswordMutationVariables>;
+export const SendMessageDocument = gql`
+    mutation SendMessage($input: SendMessageInput!) {
+  sendMessage(input: $input) {
+    message {
+      ...MessageComponentFields
+    }
+  }
+}
+    ${MessageComponentFieldsFragmentDoc}`;
+export type SendMessageMutationFn = Apollo.MutationFunction<SendMessageMutation, SendMessageMutationVariables>;
+
+/**
+ * __useSendMessageMutation__
+ *
+ * To run a mutation, you first call `useSendMessageMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSendMessageMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [sendMessageMutation, { data, loading, error }] = useSendMessageMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useSendMessageMutation(baseOptions?: Apollo.MutationHookOptions<SendMessageMutation, SendMessageMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<SendMessageMutation, SendMessageMutationVariables>(SendMessageDocument, options);
+      }
+export type SendMessageMutationHookResult = ReturnType<typeof useSendMessageMutation>;
+export type SendMessageMutationResult = Apollo.MutationResult<SendMessageMutation>;
+export type SendMessageMutationOptions = Apollo.BaseMutationOptions<SendMessageMutation, SendMessageMutationVariables>;
 export const UnfollowProfileDocument = gql`
     mutation UnfollowProfile($input: UnfollowProfileInput!) {
   unfollowProfile(input: $input) {
