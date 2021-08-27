@@ -7,13 +7,13 @@ const linksRegex = /\bhttps?:\/\/\S+/gi;
 const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?youtu\.?be(?:\.com)?\/?.*(?:watch|embed)?(?:.*v=|v\/|\/)([\w\-_]+)\&?/;
 
 const soundcloudRegex = /soundcloud.com/;
-const soundcloudLinkRegex = /(?<=src=\").*(?=\">)/g;
+const soundcloudLinkRegex = /(src=")(.*)(")/g;
 
 const spotifyRegex = /spotify.com/;
-const spotifyLinkRegex = /(?<=track\/).*(?=\?)/g;
+const spotifyLinkRegex = /(?=track\/).*(?=\?)/g;
 
 const vimeoRegex = /(vimeo.com\/)/;
-const vimeoLinkRegex = /(?<=vimeo.com\/).*$/g;
+const vimeoLinkRegex = /(vimeo.com\/)(.*)/g;
 
 const normalizeYoutube = (str: string) => {
   return str.replace('/watch?v=', '/embed/');
@@ -26,25 +26,26 @@ const normalizeSoundcloud = async (str: string) => {
     // it returns a string '({a: test1, b: test2});'
     // we have to remove the first and last 2 characters from the response to parse as JSON
     const iframeString = JSON.parse(songInfo.data.substring(1).slice(0, -2)).html;
-    const src = iframeString.match(soundcloudLinkRegex) || [];
-    return src[0];
+    const src = iframeString.split(soundcloudLinkRegex) || [];
+    return src[2];
   }
 
   return str;
 };
 
-const normalizeSpotify = async (str: string) => {
+const normalizeSpotify = (str: string) => {
   const songId = (str.match(spotifyLinkRegex) || [])[0];
   if (songId[0]) {
-    const spotifyUrl = `https://open.spotify.com/embed/track/${songId}`;
+    const spotifyUrl = `https://open.spotify.com/embed/${songId}`;
     return spotifyUrl;
   }
 
   return str;
 };
 
-const normalizeVimeo = async (str: string) => {
-  const videoId = (str.match(vimeoLinkRegex) || [])[0];
+const normalizeVimeo = (str: string) => {
+  const videoLinkSplit = str.split(vimeoLinkRegex) || [];
+  const videoId = videoLinkSplit[videoLinkSplit.length - 2];
   if (videoId) {
     return `https://player.vimeo.com/video/${videoId}`;
   }
