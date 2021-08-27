@@ -11,7 +11,7 @@ export class CommentNotificationResolver {
   }
 
   @FieldResolver(() => String)
-  author(@Root() { metadata }: Notification): string {
+  authorName(@Root() { metadata }: Notification): string {
     const { authorName } = metadata as CommentNotificationMetadata;
     return authorName;
   }
@@ -24,7 +24,7 @@ export class CommentNotificationResolver {
 
   @FieldResolver(() => String)
   body(): string {
-    return `commented your post:`;
+    return 'commented your post:';
   }
 
   @FieldResolver(() => String)

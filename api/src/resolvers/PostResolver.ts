@@ -1,4 +1,4 @@
-import { sortBy } from 'lodash';
+import { toPairs } from 'lodash';
 import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
 import { CurrentUser } from '../decorators/current-user';
 import { Comment } from '../models/Comment';
@@ -42,22 +42,23 @@ export class PostResolver {
 
   @FieldResolver(() => Number)
   totalReactions(@Root() { reactionStats }: Post): number {
-    return reactionStats.reduce((total, stats) => total + stats.count, 0);
+    return Object.values(reactionStats).reduce((acc, value) => acc + value, 0);
   }
 
   @FieldResolver(() => [ReactionType])
   topReactions(@Root() { reactionStats }: Post, @Arg('top') top: number): ReactionType[] {
-    return sortBy(reactionStats, ['count'])
-      .reverse()
+    return toPairs(reactionStats)
+      .filter(pair => pair[1] !== 0)
+      .sort((a, b) => b[1] - a[1])
       .slice(0, top)
-      .map(({ type }) => type);
+      .map(pair => pair[0] as ReactionType);
   }
 
   @FieldResolver(() => ReactionType, { nullable: true })
   async myReaction(
     @Ctx() { reactionService }: Context,
     @Root() { _id: postId }: Post,
-    @CurrentUser() user: User,
+    @CurrentUser() user?: User,
   ): Promise<ReactionType | null> {
     if (!user) return null;
     const reaction = await reactionService.findReaction({ postId, profileId: user.profileId });
