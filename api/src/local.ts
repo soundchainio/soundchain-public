@@ -5,7 +5,6 @@ import { config } from './config';
 
 async function bootstrap() {
   await mongoose.connect(config.db.url, config.db.options);
-  mongoose.set('debug', true);
 
   const app = express();
   app.use(config.express.middlewares);
