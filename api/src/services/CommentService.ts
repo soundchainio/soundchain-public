@@ -37,7 +37,7 @@ export class CommentService extends ModelService<typeof Comment> {
 
   async removeComment(params: RemoveCommentParams): Promise<Comment> {
     const comment = await this.findOrFail(params.commentId);
-    await CommentModel.deleteOne(params.commentId);
+    await CommentModel.deleteOne(comment);
     return comment;
   }
 

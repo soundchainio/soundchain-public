@@ -10,14 +10,14 @@ const baseClasses =
   'fixed w-screen h-screen bottom-0 duration-500 bg-opacity-75 ease-in-out bg-gray-25 transform-gpu transform';
 
 export const DeleteModal = () => {
-  const { showDelete, deleteId, deleteType, deleteCommentPostId } = useModalState();
+  const { showDelete, deleteId, deleteType } = useModalState();
   const { dispatchShowDeleteModal } = useModalDispatch();
   const [removeComment] = useRemoveCommentMutation({
-    update: (cache, result) => updateCache(cache, result, deleteCommentPostId),
+    update: (cache, result) => updateCache(cache, result),
   });
 
   const onOutsideClick = () => {
-    dispatchShowDeleteModal(false, DeleteModalType.COMMENT, '', '');
+    dispatchShowDeleteModal(false, DeleteModalType.COMMENT, '');
   };
 
   const onDelete = async () => {
@@ -46,7 +46,7 @@ export const DeleteModal = () => {
   );
 };
 
-function updateCache(cache: ApolloCache<RemoveCommentMutation>, { data }: FetchResult, postId: string) {
+function updateCache(cache: ApolloCache<RemoveCommentMutation>, { data }: FetchResult) {
   cache.modify({
     id: 'ROOT_QUERY',
     fields: {

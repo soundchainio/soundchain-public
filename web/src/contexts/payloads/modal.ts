@@ -12,7 +12,6 @@ export interface ShowDeletePayload {
   show: boolean;
   type: DeleteModalType;
   deleteId: string;
-  deleteCommentPostId: string;
 }
 
 export type ModalPayload = ShowNewPostPayload | SetRepostIdPayload | ShowDeletePayload;
