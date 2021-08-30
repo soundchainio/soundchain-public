@@ -11,7 +11,7 @@ interface MessageProps {
   nextMessage?: MessageItem;
 }
 
-const TIMESTAMP_FORMAT = 'MM/dd/yyy, hh:mm';
+const TIMESTAMP_FORMAT = 'MM/dd/yyy, hh:mmaaa';
 
 export const Message = ({ messageId, nextMessage }: MessageProps) => {
   const me = useMe();
@@ -47,18 +47,18 @@ export const Message = ({ messageId, nextMessage }: MessageProps) => {
     <div className={classNames('flex flex-col w-full', isMyMessage() && 'items-end')}>
       <div className={classNames('flex flex-row w-3/4')}>
         {!isMyMessage() && (
-          <div className="w-12">{isLastMessage() && <Avatar src={profilePicture} className="mr-2" />}</div>
+          <div className="w-12">{isLastMessage() && <Avatar src={profilePicture} className="mr-2 mt-2" />}</div>
         )}
         <div className="flex flex-col w-full">
           <div
             className={classNames(
               'flex py-1 px-4 w-full rounded-t-xl',
-              isMyMessage() ? 'rounded-bl-xl' : 'rounded-br-xl bg-gray-20',
+              isMyMessage() ? 'rounded-bl-xl bg-purple-gradient' : 'rounded-br-xl bg-gray-20',
             )}
           >
             <pre
               className={classNames(
-                'text-white font-thin tracking-wide text-sm whitespace-pre-wrap w-full',
+                'text-white font-thin tracking-wide text-sm whitespace-pre-wrap w-full p-2',
                 isMyMessage() && 'text-right',
               )}
             >
