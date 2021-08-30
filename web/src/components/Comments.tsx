@@ -16,7 +16,7 @@ export const Comments = ({ postId }: CommentsProps) => {
     <div className="flex flex-col m-4 space-y-4">
       <h3 className="font-thin text-white">Comments</h3>
       {data?.comments.map(({ id }) => (
-        <Comment key={id} commentId={id} />
+        <Comment key={id} commentId={id} postId={postId} />
       ))}
     </div>
   );

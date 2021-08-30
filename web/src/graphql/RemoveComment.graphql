@@ -1,0 +1,7 @@
+mutation RemoveComment($input: RemoveCommentInput!) {
+  removeComment(input: $input) {
+    comment {
+      ...CommentComponentFields
+    }
+  }
+}

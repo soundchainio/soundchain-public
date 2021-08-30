@@ -1,5 +1,7 @@
+import { ApolloCache, FetchResult } from '@apollo/client';
 import classNames from 'classnames';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
+import { CommentComponentFieldsFragment, RemoveCommentMutation, useRemoveCommentMutation } from 'lib/graphql';
 import { DeleteModalType } from 'types/DeleteModalType';
 import { Delete as DeleteButton } from './Buttons/Delete';
 import { ModalsPortal } from './ModalsPortal';
@@ -8,16 +10,19 @@ const baseClasses =
   'fixed w-screen h-screen bottom-0 duration-500 bg-opacity-75 ease-in-out bg-gray-25 transform-gpu transform';
 
 export const DeleteModal = () => {
-  // const { data } = useDeleteCommentMutation({ variables: { id } });
-  const { showDelete, deleteId, deleteType } = useModalState();
+  const { showDelete, deleteId, deleteType, deleteCommentPostId } = useModalState();
   const { dispatchShowDeleteModal } = useModalDispatch();
+  const [removeComment] = useRemoveCommentMutation({
+    update: (cache, result) => updateCache(cache, result, deleteCommentPostId),
+  });
 
   const onOutsideClick = () => {
-    dispatchShowDeleteModal(false, DeleteModalType.COMMENT, '');
+    dispatchShowDeleteModal(false, DeleteModalType.COMMENT, '', '');
   };
 
-  const onDelete = () => {
-    console.log('delete');
+  const onDelete = async () => {
+    await removeComment({ variables: { input: { commentId: deleteId } } });
+    onOutsideClick();
   };
 
   return (
@@ -40,3 +45,18 @@ export const DeleteModal = () => {
     </ModalsPortal>
   );
 };
+
+function updateCache(cache: ApolloCache<RemoveCommentMutation>, { data }: FetchResult, postId: string) {
+  cache.modify({
+    id: 'ROOT_QUERY',
+    fields: {
+      comments(list, { readField }) {
+        return list.filter(
+          (comment: CommentComponentFieldsFragment) => readField('id', comment) !== data?.removeComment.comment.id,
+        );
+      },
+    },
+  });
+
+  cache.evict({ id: cache.identify(data?.removeComment.comment) });
+}

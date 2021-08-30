@@ -8,6 +8,11 @@ interface NewCommentParams {
   postId: string;
 }
 
+interface RemoveCommentParams {
+  profileId: string;
+  commentId: string;
+}
+
 export class CommentService extends ModelService<typeof Comment> {
   constructor(context: Context) {
     super(context, CommentModel);
@@ -28,6 +33,12 @@ export class CommentService extends ModelService<typeof Comment> {
       });
     }
     return newComment;
+  }
+
+  async removeComment(params: RemoveCommentParams): Promise<Comment> {
+    const comment = await this.findOrFail(params.commentId);
+    await CommentModel.deleteOne(params.commentId);
+    return comment;
   }
 
   getComments(postId: string): Promise<Comment[]> {

@@ -10,6 +10,7 @@ export interface ModalState {
   showDelete: boolean;
   deleteType?: DeleteModalType;
   deleteId: string;
+  deleteCommentPostId: string;
 }
 
 export const initialModalState = {
@@ -19,6 +20,7 @@ export const initialModalState = {
   showDelete: false,
   deleteType: undefined,
   deleteId: '',
+  deleteCommentPostId: '',
 };
 
 export const modalReducer = (state: ModalState, action: Action) => {
@@ -41,6 +43,7 @@ export const modalReducer = (state: ModalState, action: Action) => {
         anyModalOpened: (action.payload as ShowDeletePayload).show,
         deleteType: (action.payload as ShowDeletePayload).type,
         deleteId: (action.payload as ShowDeletePayload).deleteId,
+        deleteCommentPostId: (action.payload as ShowDeletePayload).deleteCommentPostId,
       };
     default:
       return state;
