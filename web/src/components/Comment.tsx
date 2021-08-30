@@ -10,17 +10,16 @@ import { Timestamp } from './Timestamp';
 
 interface CommentProps {
   commentId: string;
-  postId: string;
 }
 
-export const Comment = ({ commentId, postId }: CommentProps) => {
+export const Comment = ({ commentId }: CommentProps) => {
   const { data } = useCommentQuery({ variables: { id: commentId } });
   const me = useMe();
   const { dispatchShowDeleteModal } = useModalDispatch();
   const comment = data?.comment;
 
   const onEllipsisClick = () => {
-    dispatchShowDeleteModal(true, DeleteModalType.COMMENT, commentId, postId);
+    dispatchShowDeleteModal(true, DeleteModalType.COMMENT, commentId);
   };
 
   const canEdit = () => {
