@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import { Message as MessageItem, useChatQuery } from 'lib/graphql';
 import { useEffect, useRef, useState } from 'react';
 import { CommentSkeleton } from './CommentSkeleton';
@@ -14,36 +15,37 @@ export const Chat = ({ profileId }: ConversationProps) => {
   const { data, fetchMore } = useChatQuery({
     variables: { profileId },
   });
-  const conversation = data?.chat.nodes;
 
   useEffect(() => {
-    if (data && !initialLoad) {
+    if (data && endConversationRef.current && !initialLoad) {
       scrollToBottom();
-      setTimeout(() => setInitialLoad(true), 1000);
     }
-  }, [data, endConversationRef, initialLoad]);
+  }, [data, initialLoad, endConversationRef]);
 
-  if (!conversation) return <CommentSkeleton />;
+  if (!data) return <CommentSkeleton />;
+
+  const { nodes: messages, pageInfo } = data.chat;
 
   const scrollToBottom = () => {
-    endConversationRef.current?.scrollIntoView({ behavior: 'smooth' });
+    endConversationRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => setInitialLoad(true), 2000);
   };
 
   const loadMore = () => {
-    fetchMore({ variables: { profileId, page: { after: data?.chat.pageInfo.startCursor } } });
+    fetchMore({ variables: { profileId, page: { after: pageInfo.startCursor } } });
   };
 
   return (
-    <div className="flex flex-col m-3 space-y-4">
-      {data && (
-        <>
-          {initialLoad && data.chat.pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} />}
-          {data.chat.nodes.map(({ id }, index) => (
-            <Message key={id} messageId={id} nextMessage={data?.chat.nodes[index + 1] as MessageItem} />
-          ))}
-          <div ref={endConversationRef}></div>
-        </>
-      )}
-    </div>
+    <>
+      <div className={classNames(!(initialLoad && pageInfo.hasNextPage) && 'hidden')}>
+        <InfiniteLoader loadMore={loadMore} loadingMessage="Loading messages" />
+      </div>
+      <div className="flex flex-col m-3 space-y-4">
+        {messages.map(({ id }, index) => (
+          <Message key={id} messageId={id} nextMessage={messages[index + 1] as MessageItem} />
+        ))}
+      </div>
+      <div ref={endConversationRef}></div>
+    </>
   );
 };
