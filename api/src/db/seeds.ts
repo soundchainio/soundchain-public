@@ -2,6 +2,7 @@ import Faker from 'faker';
 import { random, range, sample, sampleSize } from 'lodash';
 import mongoose from 'mongoose';
 import { Comment, CommentModel } from '../models/Comment';
+import { FeedItemModel } from '../models/FeedItem';
 import { Follow, FollowModel } from '../models/Follow';
 import { Post, PostModel } from '../models/Post';
 import { Profile, ProfileModel } from '../models/Profile';
@@ -15,6 +16,13 @@ const dbOpts = {
   useUnifiedTopology: true,
 };
 
+const profiles: Profile[] = [];
+const users: User[] = [];
+const posts: Post[] = [];
+const comments: Comment[] = [];
+const follows: Follow[] = [];
+const reactions: Reaction[] = [];
+
 async function seedDb() {
   await dropDb();
   await mongoose.connect(DATABASE_URL, dbOpts);
@@ -22,13 +30,6 @@ async function seedDb() {
   console.log('Seeding db...');
 
   console.log('Seeding user profiles...');
-
-  const profiles: Profile[] = [];
-  const users: User[] = [];
-  const posts: Post[] = [];
-  const comments: Comment[] = [];
-  const follows: Follow[] = [];
-  const reactions: Reaction[] = [];
 
   for (let i = 0; i < 100; i++) {
     const profile = FakeProfile();
@@ -78,9 +79,18 @@ async function seedDb() {
 
   console.log('Posts + comments seeded!');
 
+  await seedDeveloper({ displayName: 'Mason Seale', email: 'mason.seale@ae.studio', password: 'SEED_PASSWORD_REDACTED' });
+
+  console.log('Developers seeded!');
+
   console.log('Success!');
 
   process.exit(0);
+}
+
+async function dropDb() {
+  const conn = await mongoose.createConnection(DATABASE_URL, dbOpts);
+  return conn.dropDatabase();
 }
 
 function FakeProfile(attrs = {}) {
@@ -121,6 +131,38 @@ function FakeComment(attrs = {}) {
   });
 }
 
+async function seedDeveloper({
+  displayName,
+  email,
+  password,
+}: {
+  displayName: string;
+  email: string;
+  password: string;
+}) {
+  const mason = FakeProfile({ displayName });
+  await mason.save();
+  const user = FakeUser({
+    email,
+    handle: Faker.internet.userName(),
+    password,
+    profileId: mason.id,
+  });
+  await user.save();
+
+  const follows = sampleSize(profiles, 50).map(
+    profile => new FollowModel({ followerId: mason.id, followedId: profile._id }),
+  );
+
+  await FollowModel.insertMany(follows);
+
+  const followedIds = follows.map(({ followedId }) => followedId);
+  const feedPosts = posts.filter(({ profileId }) => followedIds.includes(profileId));
+  const feedItems = feedPosts.map(post => new FeedItemModel({ profileId: mason._id, postId: post._id }));
+
+  await FeedItemModel.insertMany(feedItems);
+}
+
 function FakeReaction(attrs = {}) {
   const typeOptions = [
     ReactionType.HEART,
@@ -134,11 +176,6 @@ function FakeReaction(attrs = {}) {
     type: sample(typeOptions),
     ...attrs,
   });
-}
-
-async function dropDb() {
-  const conn = await mongoose.createConnection(DATABASE_URL, dbOpts);
-  return conn.dropDatabase();
 }
 
 seedDb();
