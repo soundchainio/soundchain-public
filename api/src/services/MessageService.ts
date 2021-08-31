@@ -6,8 +6,8 @@ import { SortOrder } from '../types/SortOrder';
 import { ModelService } from './ModelService';
 
 interface NewMessageParams {
-  profileId: string;
-  to: string;
+  fromId: string;
+  toId: string;
   message: string;
 }
 
@@ -26,12 +26,12 @@ export class MessageService extends ModelService<typeof Message> {
     return this.paginate({
       filter: {
         $or: [
-          { profileId: currentUser, to: otherUser },
-          { profileId: otherUser, to: currentUser },
+          { fromId: currentUser, toId: otherUser },
+          { fromId: otherUser, toId: currentUser },
         ],
       },
       sort: { field: 'createdAt', order: SortOrder.ASC },
-      page: { ...page, last: 25 },
+      page: { ...page, last: 15 },
     });
   }
 

@@ -22,7 +22,7 @@ export const Message = ({ messageId, nextMessage }: MessageProps) => {
 
   const {
     message: messageBody,
-    profile: { profilePicture },
+    fromProfile: { profilePicture },
   } = message;
 
   const isLastMessage = () => {
@@ -30,13 +30,13 @@ export const Message = ({ messageId, nextMessage }: MessageProps) => {
       return true;
     }
     return (
-      message.profile.id !== nextMessage.profile.id ||
+      message.fromProfile.id !== nextMessage.fromProfile.id ||
       getTimestamp(message.createdAt) !== getTimestamp(nextMessage.createdAt)
     );
   };
 
   const isMyMessage = () => {
-    return me?.profile.id === message.profile.id;
+    return me?.profile.id === message.fromProfile.id;
   };
 
   const getTimestamp = (timestamp: string) => {

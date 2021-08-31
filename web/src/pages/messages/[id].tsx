@@ -6,7 +6,7 @@ import { NewMessageForm } from 'components/NewMessageForm';
 import { RefreshButton } from 'components/Buttons/RefreshButton';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { cacheFor } from 'lib/apollo';
-import { ChatDocument, ProfileDocument, ProfileQuery } from 'lib/graphql';
+import { ChatHistoryDocument, ProfileDocument, ProfileQuery } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 
 export interface PostPageProps {
@@ -34,7 +34,7 @@ export default function MessagePage({ recipientName, recipientProfileId }: PostP
   const topNavBarProps: TopNavBarProps = {
     title: recipientName,
     leftButton: BackButton,
-    rightButton: () => RefreshButton({ queryDocument: ChatDocument }),
+    rightButton: () => RefreshButton({ queryDocument: ChatHistoryDocument }),
   };
 
   return (

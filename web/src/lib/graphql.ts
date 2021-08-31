@@ -31,12 +31,6 @@ export type AuthPayload = {
   jwt: Scalars['String'];
 };
 
-export type ChatConnection = {
-  __typename?: 'ChatConnection';
-  pageInfo: PageInfo;
-  nodes: Array<Message>;
-};
-
 export type ClearNotificationsPayload = {
   __typename?: 'ClearNotificationsPayload';
   ok: Scalars['Boolean'];
@@ -180,12 +174,18 @@ export type LoginInput = {
 export type Message = {
   __typename?: 'Message';
   id: Scalars['ID'];
-  profileId: Scalars['String'];
-  to: Scalars['String'];
+  fromId: Scalars['String'];
+  toId: Scalars['String'];
   message: Scalars['String'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
-  profile: Profile;
+  fromProfile: Profile;
+};
+
+export type MessageConnection = {
+  __typename?: 'MessageConnection';
+  pageInfo: PageInfo;
+  nodes: Array<Message>;
 };
 
 export type Mutation = {
@@ -373,7 +373,7 @@ export type Query = {
   __typename?: 'Query';
   comment: Comment;
   comments: Array<Comment>;
-  chat: ChatConnection;
+  chatHistory: MessageConnection;
   message: Message;
   feed: FeedConnection;
   notifications: NotificationConnection;
@@ -398,7 +398,7 @@ export type QueryCommentsArgs = {
 };
 
 
-export type QueryChatArgs = {
+export type QueryChatHistoryArgs = {
   page?: Maybe<PageInput>;
   profileId: Scalars['String'];
 };
@@ -488,7 +488,7 @@ export type ResetPasswordPayload = {
 
 export type SendMessageInput = {
   message: Scalars['String'];
-  to: Scalars['String'];
+  toId: Scalars['String'];
 };
 
 export type SendMessagePayload = {
@@ -627,16 +627,16 @@ export type AddCommentMutation = (
   ) }
 );
 
-export type ChatQueryVariables = Exact<{
+export type ChatHistoryQueryVariables = Exact<{
   profileId: Scalars['String'];
   page?: Maybe<PageInput>;
 }>;
 
 
-export type ChatQuery = (
+export type ChatHistoryQuery = (
   { __typename?: 'Query' }
-  & { chat: (
-    { __typename?: 'ChatConnection' }
+  & { chatHistory: (
+    { __typename?: 'MessageConnection' }
     & { pageInfo: (
       { __typename?: 'PageInfo' }
       & Pick<PageInfo, 'hasNextPage' | 'startCursor'>
@@ -854,8 +854,8 @@ export type MessageQuery = (
 
 export type MessageComponentFieldsFragment = (
   { __typename?: 'Message' }
-  & Pick<Message, 'id' | 'message' | 'profileId' | 'to' | 'createdAt'>
-  & { profile: (
+  & Pick<Message, 'id' | 'message' | 'fromId' | 'toId' | 'createdAt'>
+  & { fromProfile: (
     { __typename?: 'Profile' }
     & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
   ) }
@@ -1179,10 +1179,10 @@ export const MessageComponentFieldsFragmentDoc = gql`
     fragment MessageComponentFields on Message {
   id
   message
-  profileId
-  to
+  fromId
+  toId
   createdAt
-  profile {
+  fromProfile {
     id
     displayName
     profilePicture
@@ -1247,9 +1247,9 @@ export function useAddCommentMutation(baseOptions?: Apollo.MutationHookOptions<A
 export type AddCommentMutationHookResult = ReturnType<typeof useAddCommentMutation>;
 export type AddCommentMutationResult = Apollo.MutationResult<AddCommentMutation>;
 export type AddCommentMutationOptions = Apollo.BaseMutationOptions<AddCommentMutation, AddCommentMutationVariables>;
-export const ChatDocument = gql`
-    query Chat($profileId: String!, $page: PageInput) {
-  chat(profileId: $profileId, page: $page) {
+export const ChatHistoryDocument = gql`
+    query ChatHistory($profileId: String!, $page: PageInput) {
+  chatHistory(profileId: $profileId, page: $page) {
     pageInfo {
       hasNextPage
       startCursor
@@ -1262,33 +1262,33 @@ export const ChatDocument = gql`
     ${MessageComponentFieldsFragmentDoc}`;
 
 /**
- * __useChatQuery__
+ * __useChatHistoryQuery__
  *
- * To run a query within a React component, call `useChatQuery` and pass it any options that fit your needs.
- * When your component renders, `useChatQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useChatHistoryQuery` and pass it any options that fit your needs.
+ * When your component renders, `useChatHistoryQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useChatQuery({
+ * const { data, loading, error } = useChatHistoryQuery({
  *   variables: {
  *      profileId: // value for 'profileId'
  *      page: // value for 'page'
  *   },
  * });
  */
-export function useChatQuery(baseOptions: Apollo.QueryHookOptions<ChatQuery, ChatQueryVariables>) {
+export function useChatHistoryQuery(baseOptions: Apollo.QueryHookOptions<ChatHistoryQuery, ChatHistoryQueryVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<ChatQuery, ChatQueryVariables>(ChatDocument, options);
+        return Apollo.useQuery<ChatHistoryQuery, ChatHistoryQueryVariables>(ChatHistoryDocument, options);
       }
-export function useChatLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ChatQuery, ChatQueryVariables>) {
+export function useChatHistoryLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ChatHistoryQuery, ChatHistoryQueryVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<ChatQuery, ChatQueryVariables>(ChatDocument, options);
+          return Apollo.useLazyQuery<ChatHistoryQuery, ChatHistoryQueryVariables>(ChatHistoryDocument, options);
         }
-export type ChatQueryHookResult = ReturnType<typeof useChatQuery>;
-export type ChatLazyQueryHookResult = ReturnType<typeof useChatLazyQuery>;
-export type ChatQueryResult = Apollo.QueryResult<ChatQuery, ChatQueryVariables>;
+export type ChatHistoryQueryHookResult = ReturnType<typeof useChatHistoryQuery>;
+export type ChatHistoryLazyQueryHookResult = ReturnType<typeof useChatHistoryLazyQuery>;
+export type ChatHistoryQueryResult = Apollo.QueryResult<ChatHistoryQuery, ChatHistoryQueryVariables>;
 export const ClearNotificationsDocument = gql`
     mutation ClearNotifications {
   clearNotifications {

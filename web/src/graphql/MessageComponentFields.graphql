@@ -1,10 +1,10 @@
 fragment MessageComponentFields on Message {
   id
   message
-  profileId
-  to
+  fromId
+  toId
   createdAt
-  profile {
+  fromProfile {
     id
     displayName
     profilePicture

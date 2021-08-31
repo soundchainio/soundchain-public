@@ -4,7 +4,7 @@ import { useMe } from 'hooks/useMe';
 import { Send } from 'icons/Send';
 import { animateScroll } from 'react-scroll';
 import * as yup from 'yup';
-import { ChatDocument, ChatQuery, SendMessageMutation, useSendMessageMutation } from '../lib/graphql';
+import { ChatHistoryDocument, ChatHistoryQuery, SendMessageMutation, useSendMessageMutation } from '../lib/graphql';
 import { Avatar } from './Avatar';
 import { FlexareaField } from './FlexareaField';
 
@@ -29,7 +29,7 @@ export const NewMessageForm = ({ profileId }: NewMessageFormProps) => {
   const me = useMe();
 
   const handleSubmit = async ({ body }: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
-    await sendMessage({ variables: { input: { message: body, to: profileId } } });
+    await sendMessage({ variables: { input: { message: body, toId: profileId } } });
     resetForm();
     animateScroll.scrollToBottom({ duration: 200 });
   };
@@ -53,17 +53,17 @@ export const NewMessageForm = ({ profileId }: NewMessageFormProps) => {
 
 function updateCache(cache: ApolloCache<SendMessageMutation>, { data }: FetchResult, profileId: string) {
   const newMessage = data?.sendMessage.message;
-  const existingMessages = cache.readQuery<ChatQuery>({
-    query: ChatDocument,
+  const existingMessages = cache.readQuery<ChatHistoryQuery>({
+    query: ChatHistoryDocument,
     variables: { profileId },
   });
   cache.writeQuery({
-    query: ChatDocument,
+    query: ChatHistoryDocument,
     variables: { profileId },
     data: {
-      chat: {
+      chatHistory: {
         nodes: [newMessage],
-        pageInfo: existingMessages?.chat.pageInfo,
+        pageInfo: existingMessages?.chatHistory.pageInfo,
       },
     },
   });

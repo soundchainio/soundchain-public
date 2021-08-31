@@ -1,5 +1,5 @@
-query Chat($profileId: String!, $page: PageInput) {
-  chat(profileId: $profileId, page: $page) {
+query ChatHistory($profileId: String!, $page: PageInput) {
+  chatHistory(profileId: $profileId, page: $page) {
     pageInfo {
       hasNextPage
       startCursor

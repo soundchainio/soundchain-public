@@ -5,7 +5,7 @@ import { Message } from '../models/Message';
 import { Profile } from '../models/Profile';
 import { User } from '../models/User';
 import { Context } from '../types/Context';
-import { ChatConnection } from '../types/MessageConnection';
+import { MessageConnection } from '../types/MessageConnection';
 import { PageInput } from '../types/PageInput';
 import { SendMessageInput } from '../types/SendMessageInput';
 import { SendMessagePayload } from '../types/SendMessagePayload';
@@ -13,18 +13,18 @@ import { SendMessagePayload } from '../types/SendMessagePayload';
 @Resolver(Message)
 export class MessageResolver {
   @FieldResolver(() => Profile)
-  profile(@Ctx() { profileService }: Context, @Root() message: Message): Promise<Profile> {
-    return profileService.getProfile(message.profileId);
+  fromProfile(@Ctx() { profileService }: Context, @Root() message: Message): Promise<Profile> {
+    return profileService.getProfile(message.fromId);
   }
 
   @Authorized()
-  @Query(() => ChatConnection)
-  chat(
+  @Query(() => MessageConnection)
+  chatHistory(
     @Ctx() { messageService }: Context,
     @CurrentUser() { profileId: currentUserProfileId }: User,
     @Arg('profileId') profileId: string,
     @Arg('page', { nullable: true }) page?: PageInput,
-  ): Promise<ChatConnection> {
+  ): Promise<MessageConnection> {
     return messageService.getChat(currentUserProfileId, profileId, page);
   }
 
@@ -36,7 +36,7 @@ export class MessageResolver {
     @Arg('id') id: string,
   ): Promise<Message> {
     const message = await messageService.getMessage(id);
-    if (!(message.to === profileId || message.profileId === profileId))
+    if (!(message.fromId === profileId || message.toId === profileId))
       throw new NotAuthorizedError('Message', id, profileId);
     return message;
   }
@@ -45,10 +45,10 @@ export class MessageResolver {
   @Mutation(() => SendMessagePayload)
   async sendMessage(
     @Ctx() { messageService }: Context,
-    @Arg('input') { message, to }: SendMessageInput,
-    @CurrentUser() { profileId }: User,
+    @Arg('input') { message, toId }: SendMessageInput,
+    @CurrentUser() { profileId: fromId }: User,
   ): Promise<SendMessagePayload> {
-    const newMessage = await messageService.createMessage({ profileId, to, message });
+    const newMessage = await messageService.createMessage({ fromId, toId, message });
     return { message: newMessage };
   }
 }
