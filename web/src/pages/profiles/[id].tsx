@@ -14,6 +14,7 @@ import { GetServerSideProps } from 'next';
 import Image from 'next/image';
 import { ParsedUrlQuery } from 'querystring';
 import NextLink from 'next/link';
+import { MessageButton } from 'components/MessageButton';
 
 export interface ProfilePageProps {
   profileId: string;
@@ -96,19 +97,7 @@ export default function ProfilePage({ profileId }: ProfilePageProps) {
             <Subtitle className="">{displayName}</Subtitle>
             <p className="text-gray-80 text-sm">@{userHandle}</p>
           </div>
-          <NextLink href={`/messages/${profileId}`}>
-            <div className="h-8 ml-2">
-              <Button
-                variant="outline-rounded"
-                icon={Mail}
-                className="font-bold"
-                borderColor="bg-blue-gradient"
-                textColor="blue-gradient-text"
-              >
-                Message
-              </Button>
-            </div>
-          </NextLink>
+          <MessageButton profileId={profileId} />
         </div>
 
         <div className="flex space-x-4 mt-2">
