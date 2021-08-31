@@ -22,7 +22,7 @@ export const BottomNavBar = () => {
   };
 
   return (
-    <nav className="bg-gray-20 h-16 flex items-center inset-x-0 shadow-2xl">
+    <nav className="bg-black h-16 flex items-center inset-x-0 shadow-2xl">
       <div className="w-full flex">
         <BottomNavBarButton label="Home" path="/" icon={Home} activatedColor="yellow" />
         <BottomNavBarButton label="Explore" path="/search" icon={Search} activatedColor="green" />

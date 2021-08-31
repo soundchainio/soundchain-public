@@ -25,7 +25,7 @@ export const TopNavBar = ({ title, rightButton: RightButton, leftButton: LeftBut
   };
 
   return (
-    <nav className="bg-gray-20">
+    <nav className="bg-black">
       <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
         <div className="relative flex flex-row items-center h-16">
           <div

@@ -1,9 +1,9 @@
-import { BackButton } from 'components/BackButton';
+import { BackButton } from 'components/Buttons/BackButton';
 import { BottomSheet } from 'components/BottomSheet';
 import { Chat } from 'components/Chat';
 import { Layout } from 'components/Layout';
 import { NewMessageForm } from 'components/NewMessageForm';
-import { RefreshButton } from 'components/RefreshButton';
+import { RefreshButton } from 'components/Buttons/RefreshButton';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { cacheFor } from 'lib/apollo';
 import { ChatDocument, ProfileDocument, ProfileQuery } from 'lib/graphql';
