@@ -3,5 +3,8 @@ query Notification($id: String!) {
     ... on CommentNotification {
       ...CommentNotificationFields
     }
+    ... on FollowerNotification {
+      ...FollowerNotificationFields
+    }
   }
 }
