@@ -87,6 +87,16 @@ pre {
   color: transparent;
 }
 
+.bg-blue-gradient {
+  background: linear-gradient(90deg, #3b5bb1 0%, #6fa1ff 100%);
+}
+
+.blue-gradient-text {
+  background: linear-gradient(90deg, #3b5bb1 0%, #6fa1ff 100%);
+  background-clip: text;
+  color: transparent;
+}
+
 .max-height-from-menu {
   height: calc(100vh - 80px);
 }

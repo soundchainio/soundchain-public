@@ -1,4 +1,5 @@
 import { Avatar } from 'components/Avatar';
+import { Button } from 'components/Button';
 import { FollowButton } from 'components/FollowButton';
 import { Layout } from 'components/Layout';
 import { Number } from 'components/Number';
@@ -6,11 +7,13 @@ import { Posts } from 'components/Posts';
 import { ProfileTabs } from 'components/ProfileTabs';
 import { SocialMediaLink } from 'components/SocialMediaLink';
 import { Subtitle } from 'components/Subtitle';
+import { Mail } from 'icons/Mail';
 import { cacheFor, createApolloClient } from 'lib/apollo';
 import { ProfileDocument, useProfileQuery } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
 import Image from 'next/image';
 import { ParsedUrlQuery } from 'querystring';
+import NextLink from 'next/link';
 
 export interface ProfilePageProps {
   profileId: string;
@@ -88,8 +91,26 @@ export default function ProfilePage({ profileId }: ProfilePageProps) {
           </div>
           <FollowButton followedId={profileId} isFollowed={isFollowed} />
         </div>
-        <Subtitle className="mt-4">{displayName}</Subtitle>
-        <p className="text-gray-80 text-sm">@{userHandle}</p>
+        <div className="flex flex-row mt-4">
+          <div>
+            <Subtitle className="">{displayName}</Subtitle>
+            <p className="text-gray-80 text-sm">@{userHandle}</p>
+          </div>
+          <NextLink href={`/messages/${profileId}`}>
+            <div className="h-8 ml-2">
+              <Button
+                variant="outline-rounded"
+                icon={Mail}
+                className="font-bold"
+                borderColor="bg-blue-gradient"
+                textColor="blue-gradient-text"
+              >
+                Message
+              </Button>
+            </div>
+          </NextLink>
+        </div>
+
         <div className="flex space-x-4 mt-2">
           {socialMedias.instagram && <SocialMediaLink company="instagram" handle={socialMedias.instagram} />}
           {socialMedias.twitter && <SocialMediaLink company="twitter" handle={socialMedias.twitter} />}
