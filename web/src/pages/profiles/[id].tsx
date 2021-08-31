@@ -1,20 +1,17 @@
 import { Avatar } from 'components/Avatar';
-import { Button } from 'components/Button';
 import { FollowButton } from 'components/FollowButton';
 import { Layout } from 'components/Layout';
+import { MessageButton } from 'components/MessageButton';
 import { Number } from 'components/Number';
 import { Posts } from 'components/Posts';
 import { ProfileTabs } from 'components/ProfileTabs';
 import { SocialMediaLink } from 'components/SocialMediaLink';
 import { Subtitle } from 'components/Subtitle';
-import { Mail } from 'icons/Mail';
 import { cacheFor, createApolloClient } from 'lib/apollo';
 import { ProfileDocument, useProfileQuery } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
 import Image from 'next/image';
 import { ParsedUrlQuery } from 'querystring';
-import NextLink from 'next/link';
-import { MessageButton } from 'components/MessageButton';
 
 export interface ProfilePageProps {
   profileId: string;
