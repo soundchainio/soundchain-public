@@ -2,6 +2,7 @@ import { User } from '../models/User';
 import { AuthService } from '../services/AuthService';
 import { CommentService } from '../services/CommentService';
 import { EmailService } from '../services/EmailService';
+import { FeedService } from '../services/FeedService';
 import { FollowService } from '../services/FollowService';
 import { JwtService, JwtUser } from '../services/JwtService';
 import { MessageService } from '../services/MessageService';
@@ -16,6 +17,7 @@ export class Context {
   authService = new AuthService(this);
   commentService = new CommentService(this);
   emailService = new EmailService(this);
+  feedService = new FeedService(this);
   followService = new FollowService(this);
   jwtService = new JwtService(this);
   messageService = new MessageService(this);

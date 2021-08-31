@@ -4,7 +4,6 @@ import { Post, PostModel } from '../models/Post';
 import { Context } from '../types/Context';
 import { FilterPostInput } from '../types/FilterPostInput';
 import { PageInput } from '../types/PageInput';
-import { ReactionType } from '../types/ReactionType';
 import { SortPostInput } from '../types/SortPostInput';
 import { ModelService } from './ModelService';
 import { NewReactionParams } from './ReactionService';
@@ -34,6 +33,7 @@ export class PostService extends ModelService<typeof Post> {
   async createRepost(params: RepostParams): Promise<Post> {
     const post = new PostModel(params);
     await post.save();
+    await this.context.feedService.addPostToFollowerFeeds(post);
     return post;
   }
 
@@ -54,22 +54,8 @@ export class PostService extends ModelService<typeof Post> {
     if (alreadyReacted) throw new UserInputError('You already reacted to the post.');
 
     await this.context.reactionService.createReaction({ postId, profileId, type });
-    post.reactionStats = this.incrementReactionStats(post, type, 1);
-    await this.model.updateOne({ _id: postId }, { reactionStats: post.reactionStats });
+    await this.model.updateOne({ _id: postId }, { $inc: { [`reactionStats.${type}`]: 1 } });
+    post.reactionStats[type]++;
     return post;
-  }
-
-  private incrementReactionStats({ reactionStats }: Post, type: ReactionType, inc: 1 | -1) {
-    const typeStats = reactionStats.find(stats => stats.type === type);
-    if (!typeStats) {
-      if (inc === -1) throw new Error('No reaction to decrement.');
-      return [...reactionStats, { type, count: 1 }];
-    }
-
-    if (typeStats.count + inc < 1) {
-      return reactionStats.filter(stats => stats.type !== type);
-    }
-
-    return reactionStats.map(stats => (stats.type === type ? { ...stats, count: stats.count + inc } : stats));
   }
 }

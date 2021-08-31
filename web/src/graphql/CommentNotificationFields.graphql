@@ -5,6 +5,6 @@ fragment CommentNotificationFields on CommentNotification {
   previewBody
   link
   createdAt
-  author
+  authorName
   authorPicture
 }

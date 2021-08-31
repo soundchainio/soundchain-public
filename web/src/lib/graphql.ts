@@ -39,7 +39,7 @@ export type ChatConnection = {
 
 export type ClearNotificationsPayload = {
   __typename?: 'ClearNotificationsPayload';
-  success: Scalars['Boolean'];
+  ok: Scalars['Boolean'];
 };
 
 export type Comment = {
@@ -60,8 +60,8 @@ export type CommentNotification = {
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   id: Scalars['String'];
-  author: Scalars['String'];
-  authorPicture?: Maybe<Scalars['String']>;
+  authorName: Scalars['String'];
+  authorPicture: Maybe<Scalars['String']>;
   body: Scalars['String'];
   previewBody: Scalars['String'];
   link: Scalars['String'];
@@ -87,6 +87,19 @@ export type CreateRepostPayload = {
   post: Post;
 };
 
+
+export type FeedConnection = {
+  __typename?: 'FeedConnection';
+  pageInfo: PageInfo;
+  nodes: Array<FeedItem>;
+};
+
+export type FeedItem = {
+  __typename?: 'FeedItem';
+  id: Scalars['ID'];
+  createdAt: Scalars['DateTime'];
+  post: Post;
+};
 
 export type FilterPostInput = {
   profileId?: Maybe<Scalars['String']>;
@@ -268,25 +281,25 @@ export type MutationResetPasswordArgs = {
   input: ResetPasswordInput;
 };
 
+export type Notification = CommentNotification;
+
 export type NotificationConnection = {
   __typename?: 'NotificationConnection';
   pageInfo: PageInfo;
-  nodes: Array<NotificationUnion>;
+  nodes: Array<Notification>;
 };
 
 export enum NotificationType {
   Comment = 'Comment'
 }
 
-export type NotificationUnion = CommentNotification;
-
 export type PageInfo = {
   __typename?: 'PageInfo';
   totalCount: Scalars['Float'];
   hasPreviousPage: Scalars['Boolean'];
   hasNextPage: Scalars['Boolean'];
-  startCursor?: Maybe<Scalars['String']>;
-  endCursor?: Maybe<Scalars['String']>;
+  startCursor: Maybe<Scalars['String']>;
+  endCursor: Maybe<Scalars['String']>;
 };
 
 export type PageInput = {
@@ -300,8 +313,8 @@ export type Post = {
   __typename?: 'Post';
   id: Scalars['ID'];
   body: Scalars['String'];
-  mediaLink?: Maybe<Scalars['String']>;
-  repostId?: Maybe<Scalars['String']>;
+  mediaLink: Maybe<Scalars['String']>;
+  repostId: Maybe<Scalars['String']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   profile: Profile;
@@ -310,7 +323,7 @@ export type Post = {
   repostCount: Scalars['Float'];
   totalReactions: Scalars['Float'];
   topReactions: Array<ReactionType>;
-  myReaction?: Maybe<ReactionType>;
+  myReaction: Maybe<ReactionType>;
 };
 
 
@@ -328,8 +341,8 @@ export type Profile = {
   __typename?: 'Profile';
   id: Scalars['ID'];
   displayName: Scalars['String'];
-  profilePicture?: Maybe<Scalars['String']>;
-  coverPicture?: Maybe<Scalars['String']>;
+  profilePicture: Maybe<Scalars['String']>;
+  coverPicture: Maybe<Scalars['String']>;
   socialMedias: SocialMedias;
   favoriteGenres: Array<Genre>;
   followerCount: Scalars['Float'];
@@ -347,14 +360,15 @@ export type Query = {
   comments: Array<Comment>;
   chat: ChatConnection;
   message: Message;
+  feed: FeedConnection;
   notifications: NotificationConnection;
-  notification: NotificationUnion;
+  notification: Notification;
   post: Post;
   posts: PostConnection;
   myProfile: Profile;
   profile: Profile;
   uploadUrl: UploadUrl;
-  me?: Maybe<User>;
+  me: Maybe<User>;
   validPasswordResetToken: Scalars['Boolean'];
 };
 
@@ -377,6 +391,11 @@ export type QueryChatArgs = {
 
 export type QueryMessageArgs = {
   id: Scalars['String'];
+};
+
+
+export type QueryFeedArgs = {
+  page?: Maybe<PageInput>;
 };
 
 
@@ -464,10 +483,10 @@ export type SendMessagePayload = {
 
 export type SocialMedias = {
   __typename?: 'SocialMedias';
-  facebook?: Maybe<Scalars['String']>;
-  instagram?: Maybe<Scalars['String']>;
-  soundcloud?: Maybe<Scalars['String']>;
-  twitter?: Maybe<Scalars['String']>;
+  facebook: Maybe<Scalars['String']>;
+  instagram: Maybe<Scalars['String']>;
+  soundcloud: Maybe<Scalars['String']>;
+  twitter: Maybe<Scalars['String']>;
 };
 
 export enum SortNotificationField {
@@ -620,7 +639,7 @@ export type ClearNotificationsMutation = (
   { __typename?: 'Mutation' }
   & { clearNotifications: (
     { __typename?: 'ClearNotificationsPayload' }
-    & Pick<ClearNotificationsPayload, 'success'>
+    & Pick<ClearNotificationsPayload, 'ok'>
   ) }
 );
 
@@ -648,7 +667,7 @@ export type CommentComponentFieldsFragment = (
 
 export type CommentNotificationFieldsFragment = (
   { __typename?: 'CommentNotification' }
-  & Pick<CommentNotification, 'id' | 'type' | 'body' | 'previewBody' | 'link' | 'createdAt' | 'author' | 'authorPicture'>
+  & Pick<CommentNotification, 'id' | 'type' | 'body' | 'previewBody' | 'link' | 'createdAt' | 'authorName' | 'authorPicture'>
 );
 
 export type CommentsQueryVariables = Exact<{
@@ -692,6 +711,29 @@ export type CreateRepostMutation = (
     & { post: (
       { __typename?: 'Post' }
       & Pick<Post, 'id'>
+    ) }
+  ) }
+);
+
+export type FeedQueryVariables = Exact<{
+  page?: Maybe<PageInput>;
+}>;
+
+
+export type FeedQuery = (
+  { __typename?: 'Query' }
+  & { feed: (
+    { __typename?: 'FeedConnection' }
+    & { nodes: Array<(
+      { __typename?: 'FeedItem' }
+      & Pick<FeedItem, 'id'>
+      & { post: (
+        { __typename?: 'Post' }
+        & PostComponentFieldsFragment
+      ) }
+    )>, pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
     ) }
   ) }
 );
@@ -756,7 +798,7 @@ export type MeQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type MeQuery = (
   { __typename?: 'Query' }
-  & { me?: Maybe<(
+  & { me: Maybe<(
     { __typename?: 'User' }
     & Pick<User, 'id' | 'handle'>
     & { profile: (
@@ -1098,7 +1140,7 @@ export const CommentNotificationFieldsFragmentDoc = gql`
   previewBody
   link
   createdAt
-  author
+  authorName
   authorPicture
 }
     `;
@@ -1219,7 +1261,7 @@ export type ChatQueryResult = Apollo.QueryResult<ChatQuery, ChatQueryVariables>;
 export const ClearNotificationsDocument = gql`
     mutation ClearNotifications {
   clearNotifications {
-    success
+    ok
   }
 }
     `;
@@ -1388,6 +1430,50 @@ export function useCreateRepostMutation(baseOptions?: Apollo.MutationHookOptions
 export type CreateRepostMutationHookResult = ReturnType<typeof useCreateRepostMutation>;
 export type CreateRepostMutationResult = Apollo.MutationResult<CreateRepostMutation>;
 export type CreateRepostMutationOptions = Apollo.BaseMutationOptions<CreateRepostMutation, CreateRepostMutationVariables>;
+export const FeedDocument = gql`
+    query Feed($page: PageInput) {
+  feed(page: $page) {
+    nodes {
+      id
+      post {
+        ...PostComponentFields
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+    ${PostComponentFieldsFragmentDoc}`;
+
+/**
+ * __useFeedQuery__
+ *
+ * To run a query within a React component, call `useFeedQuery` and pass it any options that fit your needs.
+ * When your component renders, `useFeedQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useFeedQuery({
+ *   variables: {
+ *      page: // value for 'page'
+ *   },
+ * });
+ */
+export function useFeedQuery(baseOptions?: Apollo.QueryHookOptions<FeedQuery, FeedQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<FeedQuery, FeedQueryVariables>(FeedDocument, options);
+      }
+export function useFeedLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<FeedQuery, FeedQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<FeedQuery, FeedQueryVariables>(FeedDocument, options);
+        }
+export type FeedQueryHookResult = ReturnType<typeof useFeedQuery>;
+export type FeedLazyQueryHookResult = ReturnType<typeof useFeedLazyQuery>;
+export type FeedQueryResult = Apollo.QueryResult<FeedQuery, FeedQueryVariables>;
 export const FollowProfileDocument = gql`
     mutation FollowProfile($input: FollowProfileInput!) {
   followProfile(input: $input) {
