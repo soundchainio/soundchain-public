@@ -1,9 +1,8 @@
-import classNames from 'classnames';
 import { Message as MessageItem, useChatQuery } from 'lib/graphql';
 import { useEffect, useRef, useState } from 'react';
-import { CommentSkeleton } from './CommentSkeleton';
 import { InfiniteLoader } from './InfiniteLoader';
 import { Message } from './Message';
+import { MessageSkeleton } from './MessageSkeleton';
 
 interface ConversationProps {
   profileId: string;
@@ -22,7 +21,7 @@ export const Chat = ({ profileId }: ConversationProps) => {
     }
   }, [data, initialLoad, endConversationRef]);
 
-  if (!data) return <CommentSkeleton />;
+  if (!data) return <MessageSkeleton />;
 
   const { nodes: messages, pageInfo } = data.chat;
 
@@ -37,9 +36,7 @@ export const Chat = ({ profileId }: ConversationProps) => {
 
   return (
     <>
-      <div className={classNames(!(initialLoad && pageInfo.hasNextPage) && 'hidden')}>
-        <InfiniteLoader loadMore={loadMore} loadingMessage="Loading messages" />
-      </div>
+      {initialLoad && pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading messages" />}
       <div className="flex flex-col m-3 space-y-4">
         {messages.map(({ id }, index) => (
           <Message key={id} messageId={id} nextMessage={messages[index + 1] as MessageItem} />

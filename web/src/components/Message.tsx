@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { useMe } from 'hooks/useMe';
 import { Message as MessageItem, useMessageQuery } from 'lib/graphql';
 import { Avatar } from './Avatar';
-import { CommentSkeleton } from './CommentSkeleton';
+import { MessageSkeleton } from './MessageSkeleton';
 import { Timestamp } from './Timestamp';
 
 interface MessageProps {
@@ -18,7 +18,7 @@ export const Message = ({ messageId, nextMessage }: MessageProps) => {
   const { data } = useMessageQuery({ variables: { id: messageId } });
   const message = data?.message;
 
-  if (!message) return <CommentSkeleton />;
+  if (!message) return <MessageSkeleton />;
 
   const {
     message: messageBody,
