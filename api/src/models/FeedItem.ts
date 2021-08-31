@@ -14,7 +14,7 @@ export class FeedItem extends Model {
   postId: string;
 
   @Field(() => Date)
-  createdAt: Date;
+  postedAt: Date;
 }
 
 export const FeedItemModel = getModelForClass(FeedItem);

@@ -140,25 +140,27 @@ async function seedDeveloper({
   email: string;
   password: string;
 }) {
-  const mason = FakeProfile({ displayName });
-  await mason.save();
+  const devProfile = FakeProfile({ displayName });
+  await devProfile.save();
   const user = FakeUser({
     email,
     handle: Faker.internet.userName(),
     password,
-    profileId: mason.id,
+    profileId: devProfile.id,
   });
   await user.save();
 
   const follows = sampleSize(profiles, 50).map(
-    profile => new FollowModel({ followerId: mason.id, followedId: profile._id }),
+    profile => new FollowModel({ followerId: devProfile.id, followedId: profile._id }),
   );
 
   await FollowModel.insertMany(follows);
 
   const followedIds = follows.map(({ followedId }) => followedId);
   const feedPosts = posts.filter(({ profileId }) => followedIds.includes(profileId));
-  const feedItems = feedPosts.map(post => new FeedItemModel({ profileId: mason._id, postId: post._id }));
+  const feedItems = feedPosts.map(
+    post => new FeedItemModel({ profileId: devProfile._id, postId: post._id, postedAt: post.createdAt }),
+  );
 
   await FeedItemModel.insertMany(feedItems);
 }
