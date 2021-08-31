@@ -88,6 +88,15 @@ export type CreateRepostPayload = {
 };
 
 
+export type DeleteCommentInput = {
+  commentId: Scalars['String'];
+};
+
+export type DeleteCommentPayload = {
+  __typename?: 'DeleteCommentPayload';
+  comment: Comment;
+};
+
 export type FeedConnection = {
   __typename?: 'FeedConnection';
   pageInfo: PageInfo;
@@ -182,6 +191,7 @@ export type Message = {
 export type Mutation = {
   __typename?: 'Mutation';
   addComment: AddCommentPayload;
+  deleteComment: DeleteCommentPayload;
   sendMessage: SendMessagePayload;
   resetNotificationCount: Profile;
   clearNotifications: ClearNotificationsPayload;
@@ -204,6 +214,11 @@ export type Mutation = {
 
 export type MutationAddCommentArgs = {
   input: AddCommentInput;
+};
+
+
+export type MutationDeleteCommentArgs = {
+  input: DeleteCommentInput;
 };
 
 
@@ -711,6 +726,22 @@ export type CreateRepostMutation = (
     & { post: (
       { __typename?: 'Post' }
       & Pick<Post, 'id'>
+    ) }
+  ) }
+);
+
+export type DeleteCommentMutationVariables = Exact<{
+  input: DeleteCommentInput;
+}>;
+
+
+export type DeleteCommentMutation = (
+  { __typename?: 'Mutation' }
+  & { deleteComment: (
+    { __typename?: 'DeleteCommentPayload' }
+    & { comment: (
+      { __typename?: 'Comment' }
+      & CommentComponentFieldsFragment
     ) }
   ) }
 );
@@ -1430,6 +1461,41 @@ export function useCreateRepostMutation(baseOptions?: Apollo.MutationHookOptions
 export type CreateRepostMutationHookResult = ReturnType<typeof useCreateRepostMutation>;
 export type CreateRepostMutationResult = Apollo.MutationResult<CreateRepostMutation>;
 export type CreateRepostMutationOptions = Apollo.BaseMutationOptions<CreateRepostMutation, CreateRepostMutationVariables>;
+export const DeleteCommentDocument = gql`
+    mutation DeleteComment($input: DeleteCommentInput!) {
+  deleteComment(input: $input) {
+    comment {
+      ...CommentComponentFields
+    }
+  }
+}
+    ${CommentComponentFieldsFragmentDoc}`;
+export type DeleteCommentMutationFn = Apollo.MutationFunction<DeleteCommentMutation, DeleteCommentMutationVariables>;
+
+/**
+ * __useDeleteCommentMutation__
+ *
+ * To run a mutation, you first call `useDeleteCommentMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteCommentMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteCommentMutation, { data, loading, error }] = useDeleteCommentMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useDeleteCommentMutation(baseOptions?: Apollo.MutationHookOptions<DeleteCommentMutation, DeleteCommentMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteCommentMutation, DeleteCommentMutationVariables>(DeleteCommentDocument, options);
+      }
+export type DeleteCommentMutationHookResult = ReturnType<typeof useDeleteCommentMutation>;
+export type DeleteCommentMutationResult = Apollo.MutationResult<DeleteCommentMutation>;
+export type DeleteCommentMutationOptions = Apollo.BaseMutationOptions<DeleteCommentMutation, DeleteCommentMutationVariables>;
 export const FeedDocument = gql`
     query Feed($page: PageInput) {
   feed(page: $page) {
