@@ -7,8 +7,8 @@ import { User } from '../models/User';
 import { AddCommentInput } from '../types/AddCommentInput';
 import { AddCommentPayload } from '../types/AddCommentPayload';
 import { Context } from '../types/Context';
-import { RemoveCommentInput } from '../types/RemoveCommentInput';
-import { RemoveCommentPayload } from '../types/RemoveCommentPayload';
+import { DeleteCommentInput } from '../types/DeleteCommentInput';
+import { DeleteCommentPayload } from '../types/DeleteCommentPayload';
 
 @Resolver(Comment)
 export class CommentResolver {
@@ -43,14 +43,14 @@ export class CommentResolver {
     return { comment };
   }
 
-  @Mutation(() => RemoveCommentPayload)
+  @Mutation(() => DeleteCommentPayload)
   @Authorized()
-  async removeComment(
+  async deleteComment(
     @Ctx() { commentService }: Context,
-    @Arg('input') input: RemoveCommentInput,
+    @Arg('input') input: DeleteCommentInput,
     @CurrentUser() { profileId }: User,
-  ): Promise<RemoveCommentPayload> {
-    const comment = await commentService.removeComment({ profileId, ...input });
+  ): Promise<DeleteCommentPayload> {
+    const comment = await commentService.deleteComment({ profileId, ...input });
     return { comment };
   }
 }

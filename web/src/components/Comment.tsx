@@ -17,13 +17,10 @@ export const Comment = ({ commentId }: CommentProps) => {
   const me = useMe();
   const { dispatchShowDeleteModal } = useModalDispatch();
   const comment = data?.comment;
+  const canEdit = comment?.profile.id == me?.profile.id;
 
   const onEllipsisClick = () => {
     dispatchShowDeleteModal(true, DeleteModalType.COMMENT, commentId);
-  };
-
-  const canEdit = () => {
-    return comment?.profile.id == me?.profile.id ? true : false;
   };
 
   if (!comment) return <CommentSkeleton />;
@@ -37,9 +34,9 @@ export const Comment = ({ commentId }: CommentProps) => {
             <a className="text-white font-semibold">{comment.profile.displayName}</a>
           </NextLink>
           <Timestamp className="ml-2  flex-1" datetime={comment.createdAt} />
-          {canEdit() && <Ellipsis className="pr-2 pl-2 w-10 h-3" onClick={onEllipsisClick} />}
+          {canEdit && <Ellipsis className="pr-2 pl-2 w-10 h-3 cursor-pointer" onClick={onEllipsisClick} />}
         </div>
-        <pre className="text-white font-thin tracking-wide text-sm whitespace-pre-wrap mt-4">{comment.body}</pre>
+        <pre className="text-white font-thin tracking-wide text-sm whitespace-pre-wrap mt-1">{comment.body}</pre>
       </div>
     </div>
   );
