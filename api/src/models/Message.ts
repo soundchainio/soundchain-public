@@ -9,7 +9,7 @@ export class Message extends Model {
 
   @Field()
   @prop({ required: true })
-  from: string;
+  profileId: string;
 
   @Field()
   @prop({ required: true })

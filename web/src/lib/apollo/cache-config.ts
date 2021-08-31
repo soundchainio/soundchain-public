@@ -22,8 +22,8 @@ export const cacheConfig: InMemoryCacheConfig = {
             id: args?.id,
           });
         },
-        conversation: {
-          keyArgs: ['recipient'],
+        chat: {
+          keyArgs: ['profileId'],
           merge(existing = { nodes: [] }, { pageInfo, nodes }, { args }) {
             if (!args?.page) {
               return {

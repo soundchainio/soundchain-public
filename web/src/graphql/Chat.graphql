@@ -1,0 +1,11 @@
+query Chat($profileId: String!, $page: PageInput) {
+  chat(profileId: $profileId, page: $page) {
+    pageInfo {
+      hasNextPage
+      startCursor
+    }
+    nodes {
+      ...MessageComponentFields
+    }
+  }
+}

@@ -1,12 +1,12 @@
 import { BackButton } from 'components/BackButton';
 import { BottomSheet } from 'components/BottomSheet';
-import { Conversation } from 'components/Conversation';
+import { Chat } from 'components/Chat';
 import { Layout } from 'components/Layout';
 import { NewMessageForm } from 'components/NewMessageForm';
 import { RefreshButton } from 'components/RefreshButton';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { cacheFor } from 'lib/apollo';
-import { ConversationDocument, ProfileDocument, ProfileQuery } from 'lib/graphql';
+import { ChatDocument, ProfileDocument, ProfileQuery } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 
 export interface PostPageProps {
@@ -34,13 +34,13 @@ export default function MessagePage({ recipientName, recipientProfileId }: PostP
   const topNavBarProps: TopNavBarProps = {
     title: recipientName,
     leftButton: BackButton,
-    rightButton: () => RefreshButton({ queryDocument: ConversationDocument }),
+    rightButton: () => RefreshButton({ queryDocument: ChatDocument }),
   };
 
   return (
     <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
       <div>
-        <Conversation profileId={recipientProfileId} />
+        <Chat profileId={recipientProfileId} />
       </div>
       <BottomSheet>
         <NewMessageForm profileId={recipientProfileId} />

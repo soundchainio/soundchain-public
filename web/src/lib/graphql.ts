@@ -31,6 +31,12 @@ export type AuthPayload = {
   jwt: Scalars['String'];
 };
 
+export type ChatConnection = {
+  __typename?: 'ChatConnection';
+  pageInfo: PageInfo;
+  nodes: Array<Message>;
+};
+
 export type ClearNotificationsPayload = {
   __typename?: 'ClearNotificationsPayload';
   success: Scalars['Boolean'];
@@ -59,12 +65,6 @@ export type CommentNotification = {
   body: Scalars['String'];
   previewBody: Scalars['String'];
   link: Scalars['String'];
-};
-
-export type ConversationConnection = {
-  __typename?: 'ConversationConnection';
-  pageInfo: PageInfo;
-  nodes: Array<Message>;
 };
 
 export type CreatePostInput = {
@@ -158,7 +158,7 @@ export type LoginInput = {
 export type Message = {
   __typename?: 'Message';
   id: Scalars['ID'];
-  from: Scalars['String'];
+  profileId: Scalars['String'];
   to: Scalars['String'];
   message: Scalars['String'];
   createdAt: Scalars['DateTime'];
@@ -345,7 +345,7 @@ export type Query = {
   __typename?: 'Query';
   comment: Comment;
   comments: Array<Comment>;
-  conversation: ConversationConnection;
+  chat: ChatConnection;
   message: Message;
   notifications: NotificationConnection;
   notification: NotificationUnion;
@@ -369,9 +369,9 @@ export type QueryCommentsArgs = {
 };
 
 
-export type QueryConversationArgs = {
+export type QueryChatArgs = {
   page?: Maybe<PageInput>;
-  recipient: Scalars['String'];
+  profileId: Scalars['String'];
 };
 
 
@@ -593,6 +593,26 @@ export type AddCommentMutation = (
   ) }
 );
 
+export type ChatQueryVariables = Exact<{
+  profileId: Scalars['String'];
+  page?: Maybe<PageInput>;
+}>;
+
+
+export type ChatQuery = (
+  { __typename?: 'Query' }
+  & { chat: (
+    { __typename?: 'ChatConnection' }
+    & { pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage' | 'startCursor'>
+    ), nodes: Array<(
+      { __typename?: 'Message' }
+      & MessageComponentFieldsFragment
+    )> }
+  ) }
+);
+
 export type ClearNotificationsMutationVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -642,26 +662,6 @@ export type CommentsQuery = (
     { __typename?: 'Comment' }
     & CommentComponentFieldsFragment
   )> }
-);
-
-export type ConversationQueryVariables = Exact<{
-  profileId: Scalars['String'];
-  page?: Maybe<PageInput>;
-}>;
-
-
-export type ConversationQuery = (
-  { __typename?: 'Query' }
-  & { conversation: (
-    { __typename?: 'ConversationConnection' }
-    & { pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasPreviousPage' | 'hasNextPage' | 'startCursor' | 'endCursor'>
-    ), nodes: Array<(
-      { __typename?: 'Message' }
-      & MessageComponentFieldsFragment
-    )> }
-  ) }
 );
 
 export type CreatePostMutationVariables = Exact<{
@@ -781,7 +781,7 @@ export type MessageQuery = (
 
 export type MessageComponentFieldsFragment = (
   { __typename?: 'Message' }
-  & Pick<Message, 'id' | 'message' | 'from' | 'to' | 'createdAt'>
+  & Pick<Message, 'id' | 'message' | 'profileId' | 'to' | 'createdAt'>
   & { profile: (
     { __typename?: 'Profile' }
     & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
@@ -1106,7 +1106,7 @@ export const MessageComponentFieldsFragmentDoc = gql`
     fragment MessageComponentFields on Message {
   id
   message
-  from
+  profileId
   to
   createdAt
   profile {
@@ -1174,6 +1174,48 @@ export function useAddCommentMutation(baseOptions?: Apollo.MutationHookOptions<A
 export type AddCommentMutationHookResult = ReturnType<typeof useAddCommentMutation>;
 export type AddCommentMutationResult = Apollo.MutationResult<AddCommentMutation>;
 export type AddCommentMutationOptions = Apollo.BaseMutationOptions<AddCommentMutation, AddCommentMutationVariables>;
+export const ChatDocument = gql`
+    query Chat($profileId: String!, $page: PageInput) {
+  chat(profileId: $profileId, page: $page) {
+    pageInfo {
+      hasNextPage
+      startCursor
+    }
+    nodes {
+      ...MessageComponentFields
+    }
+  }
+}
+    ${MessageComponentFieldsFragmentDoc}`;
+
+/**
+ * __useChatQuery__
+ *
+ * To run a query within a React component, call `useChatQuery` and pass it any options that fit your needs.
+ * When your component renders, `useChatQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useChatQuery({
+ *   variables: {
+ *      profileId: // value for 'profileId'
+ *      page: // value for 'page'
+ *   },
+ * });
+ */
+export function useChatQuery(baseOptions: Apollo.QueryHookOptions<ChatQuery, ChatQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ChatQuery, ChatQueryVariables>(ChatDocument, options);
+      }
+export function useChatLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ChatQuery, ChatQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ChatQuery, ChatQueryVariables>(ChatDocument, options);
+        }
+export type ChatQueryHookResult = ReturnType<typeof useChatQuery>;
+export type ChatLazyQueryHookResult = ReturnType<typeof useChatLazyQuery>;
+export type ChatQueryResult = Apollo.QueryResult<ChatQuery, ChatQueryVariables>;
 export const ClearNotificationsDocument = gql`
     mutation ClearNotifications {
   clearNotifications {
@@ -1276,50 +1318,6 @@ export function useCommentsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<C
 export type CommentsQueryHookResult = ReturnType<typeof useCommentsQuery>;
 export type CommentsLazyQueryHookResult = ReturnType<typeof useCommentsLazyQuery>;
 export type CommentsQueryResult = Apollo.QueryResult<CommentsQuery, CommentsQueryVariables>;
-export const ConversationDocument = gql`
-    query Conversation($profileId: String!, $page: PageInput) {
-  conversation(recipient: $profileId, page: $page) {
-    pageInfo {
-      hasPreviousPage
-      hasNextPage
-      startCursor
-      endCursor
-    }
-    nodes {
-      ...MessageComponentFields
-    }
-  }
-}
-    ${MessageComponentFieldsFragmentDoc}`;
-
-/**
- * __useConversationQuery__
- *
- * To run a query within a React component, call `useConversationQuery` and pass it any options that fit your needs.
- * When your component renders, `useConversationQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useConversationQuery({
- *   variables: {
- *      profileId: // value for 'profileId'
- *      page: // value for 'page'
- *   },
- * });
- */
-export function useConversationQuery(baseOptions: Apollo.QueryHookOptions<ConversationQuery, ConversationQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<ConversationQuery, ConversationQueryVariables>(ConversationDocument, options);
-      }
-export function useConversationLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ConversationQuery, ConversationQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<ConversationQuery, ConversationQueryVariables>(ConversationDocument, options);
-        }
-export type ConversationQueryHookResult = ReturnType<typeof useConversationQuery>;
-export type ConversationLazyQueryHookResult = ReturnType<typeof useConversationLazyQuery>;
-export type ConversationQueryResult = Apollo.QueryResult<ConversationQuery, ConversationQueryVariables>;
 export const CreatePostDocument = gql`
     mutation CreatePost($input: CreatePostInput!) {
   createPost(input: $input) {

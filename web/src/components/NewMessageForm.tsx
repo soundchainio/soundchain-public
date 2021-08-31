@@ -4,7 +4,7 @@ import { useMe } from 'hooks/useMe';
 import { Send } from 'icons/Send';
 import { animateScroll } from 'react-scroll';
 import * as yup from 'yup';
-import { ConversationDocument, ConversationQuery, SendMessageMutation, useSendMessageMutation } from '../lib/graphql';
+import { ChatDocument, ChatQuery, SendMessageMutation, useSendMessageMutation } from '../lib/graphql';
 import { Avatar } from './Avatar';
 import { FlexareaField } from './FlexareaField';
 
@@ -53,17 +53,17 @@ export const NewMessageForm = ({ profileId }: NewMessageFormProps) => {
 
 function updateCache(cache: ApolloCache<SendMessageMutation>, { data }: FetchResult, profileId: string) {
   const newMessage = data?.sendMessage.message;
-  const existingMessages = cache.readQuery<ConversationQuery>({
-    query: ConversationDocument,
+  const existingMessages = cache.readQuery<ChatQuery>({
+    query: ChatDocument,
     variables: { profileId },
   });
   cache.writeQuery({
-    query: ConversationDocument,
+    query: ChatDocument,
     variables: { profileId },
     data: {
-      conversation: {
+      chat: {
         nodes: [newMessage],
-        pageInfo: existingMessages?.conversation.pageInfo,
+        pageInfo: existingMessages?.chat.pageInfo,
       },
     },
   });

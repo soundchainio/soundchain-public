@@ -5,7 +5,7 @@ import { Message } from '../models/Message';
 import { Profile } from '../models/Profile';
 import { User } from '../models/User';
 import { Context } from '../types/Context';
-import { ConversationConnection } from '../types/MessageConnection';
+import { ChatConnection } from '../types/MessageConnection';
 import { PageInput } from '../types/PageInput';
 import { SendMessageInput } from '../types/SendMessageInput';
 import { SendMessagePayload } from '../types/SendMessagePayload';
@@ -14,18 +14,18 @@ import { SendMessagePayload } from '../types/SendMessagePayload';
 export class MessageResolver {
   @FieldResolver(() => Profile)
   profile(@Ctx() { profileService }: Context, @Root() message: Message): Promise<Profile> {
-    return profileService.getProfile(message.from);
+    return profileService.getProfile(message.profileId);
   }
 
   @Authorized()
-  @Query(() => ConversationConnection)
-  conversation(
+  @Query(() => ChatConnection)
+  chat(
     @Ctx() { messageService }: Context,
-    @CurrentUser() { profileId }: User,
-    @Arg('recipient') recipient: string,
+    @CurrentUser() { profileId: currentUserProfileId }: User,
+    @Arg('profileId') profileId: string,
     @Arg('page', { nullable: true }) page?: PageInput,
-  ): Promise<ConversationConnection> {
-    return messageService.getConversation(profileId, recipient, page);
+  ): Promise<ChatConnection> {
+    return messageService.getChat(currentUserProfileId, profileId, page);
   }
 
   @Authorized()
@@ -36,7 +36,7 @@ export class MessageResolver {
     @Arg('id') id: string,
   ): Promise<Message> {
     const message = await messageService.getMessage(id);
-    if (!(message.to === profileId || message.from === profileId)) throw new ApolloError('Not authorized');
+    if (!(message.to === profileId || message.profileId === profileId)) throw new ApolloError('Not authorized');
     return message;
   }
 
@@ -47,7 +47,7 @@ export class MessageResolver {
     @Arg('input') { message, to }: SendMessageInput,
     @CurrentUser() { profileId }: User,
   ): Promise<SendMessagePayload> {
-    const newMessage = await messageService.createMessage({ from: profileId, to, message });
+    const newMessage = await messageService.createMessage({ profileId, to, message });
     return { message: newMessage };
   }
 }

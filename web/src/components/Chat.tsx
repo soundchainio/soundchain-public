@@ -1,4 +1,4 @@
-import { Message as MessageItem, useConversationQuery } from 'lib/graphql';
+import { Message as MessageItem, useChatQuery } from 'lib/graphql';
 import { useEffect, useRef, useState } from 'react';
 import { CommentSkeleton } from './CommentSkeleton';
 import { InfiniteLoader } from './InfiniteLoader';
@@ -8,13 +8,13 @@ interface ConversationProps {
   profileId: string;
 }
 
-export const Conversation = ({ profileId }: ConversationProps) => {
+export const Chat = ({ profileId }: ConversationProps) => {
   const endConversationRef = useRef<HTMLDivElement>(null);
   const [initialLoad, setInitialLoad] = useState(false);
-  const { data, fetchMore } = useConversationQuery({
+  const { data, fetchMore } = useChatQuery({
     variables: { profileId },
   });
-  const conversation = data?.conversation.nodes;
+  const conversation = data?.chat.nodes;
 
   useEffect(() => {
     if (data && !initialLoad) {
@@ -30,16 +30,16 @@ export const Conversation = ({ profileId }: ConversationProps) => {
   };
 
   const loadMore = () => {
-    fetchMore({ variables: { profileId, page: { after: data?.conversation.pageInfo.startCursor } } });
+    fetchMore({ variables: { profileId, page: { after: data?.chat.pageInfo.startCursor } } });
   };
 
   return (
     <div className="flex flex-col m-3 space-y-4">
       {data && (
         <>
-          {initialLoad && data.conversation.pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} />}
-          {data.conversation.nodes.map(({ id }, index) => (
-            <Message key={id} messageId={id} nextMessage={data?.conversation.nodes[index + 1] as MessageItem} />
+          {initialLoad && data.chat.pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} />}
+          {data.chat.nodes.map(({ id }, index) => (
+            <Message key={id} messageId={id} nextMessage={data?.chat.nodes[index + 1] as MessageItem} />
           ))}
           <div ref={endConversationRef}></div>
         </>
