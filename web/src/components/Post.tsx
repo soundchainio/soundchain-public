@@ -23,7 +23,7 @@ export const Post = ({ postId }: PostProps) => {
       <NextLink href={`/posts/${post.id}`}>
         <div className="p-4 bg-gray-20 break-words">
           <div className="flex items-center">
-            <Avatar src={post.profile.profilePicture} />
+            <Avatar profile={post.profile} />
             <div className="flex flex-col ml-4">
               <NextLink href={`/profiles/${post.profile.id}`}>
                 <a className="text-lg font-bold text-gray-100">{post.profile.displayName}</a>

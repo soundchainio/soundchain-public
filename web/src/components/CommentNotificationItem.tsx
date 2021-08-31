@@ -20,7 +20,7 @@ export const CommentNotificationItem = ({
       <div className={classNames('flex flex-col p-4', index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20')}>
         <div className="break-words flex">
           <div className="flex items-center pr-4">
-            <Avatar src={authorPicture} pixels={40} />
+            <Avatar profile={{ profilePicture: authorPicture }} pixels={40} />
             <div className="relative">
               <Comment className="absolute -right-1" />
             </div>
