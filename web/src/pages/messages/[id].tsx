@@ -39,7 +39,7 @@ export default function MessagePage({ recipientName, recipientProfileId }: PostP
 
   return (
     <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
-      <div className="pb-12">
+      <div>
         <Conversation profileId={recipientProfileId} />
       </div>
       <BottomSheet>

@@ -5,7 +5,7 @@ import { Message } from '../models/Message';
 import { Profile } from '../models/Profile';
 import { User } from '../models/User';
 import { Context } from '../types/Context';
-import { MessageConnection } from '../types/MessageConnection';
+import { ConversationConnection } from '../types/MessageConnection';
 import { PageInput } from '../types/PageInput';
 import { SendMessageInput } from '../types/SendMessageInput';
 import { SendMessagePayload } from '../types/SendMessagePayload';
@@ -18,13 +18,13 @@ export class MessageResolver {
   }
 
   @Authorized()
-  @Query(() => MessageConnection)
+  @Query(() => ConversationConnection)
   conversation(
     @Ctx() { messageService }: Context,
     @CurrentUser() { profileId }: User,
     @Arg('recipient') recipient: string,
     @Arg('page', { nullable: true }) page?: PageInput,
-  ): Promise<MessageConnection> {
+  ): Promise<ConversationConnection> {
     return messageService.getConversation(profileId, recipient, page);
   }
 

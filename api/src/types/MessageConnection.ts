@@ -3,7 +3,7 @@ import { Message } from '../models/Message';
 import { PageInfo } from './PageInfo';
 
 @ObjectType()
-export class MessageConnection {
+export class ConversationConnection {
   @Field()
   pageInfo: PageInfo;
 

@@ -1,5 +1,11 @@
-query Conversation($profileId: String!) {
-  conversation(recipient: $profileId) {
+query Conversation($profileId: String!, $page: PageInput) {
+  conversation(recipient: $profileId, page: $page) {
+    pageInfo {
+      hasPreviousPage
+      hasNextPage
+      startCursor
+      endCursor
+    }
     nodes {
       ...MessageComponentFields
     }

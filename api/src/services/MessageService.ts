@@ -33,7 +33,7 @@ export class MessageService extends ModelService<typeof Message> {
         ],
       },
       sort: { field: 'createdAt', order: SortOrder.ASC },
-      page,
+      page: { ...page, last: 15 },
     });
   }
 

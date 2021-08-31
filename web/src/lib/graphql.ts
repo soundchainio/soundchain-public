@@ -61,6 +61,12 @@ export type CommentNotification = {
   link: Scalars['String'];
 };
 
+export type ConversationConnection = {
+  __typename?: 'ConversationConnection';
+  pageInfo: PageInfo;
+  nodes: Array<Message>;
+};
+
 export type CreatePostInput = {
   body: Scalars['String'];
   mediaLink?: Maybe<Scalars['String']>;
@@ -158,12 +164,6 @@ export type Message = {
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   profile: Profile;
-};
-
-export type MessageConnection = {
-  __typename?: 'MessageConnection';
-  pageInfo: PageInfo;
-  nodes: Array<Message>;
 };
 
 export type Mutation = {
@@ -345,7 +345,7 @@ export type Query = {
   __typename?: 'Query';
   comment: Comment;
   comments: Array<Comment>;
-  conversation: MessageConnection;
+  conversation: ConversationConnection;
   message: Message;
   notifications: NotificationConnection;
   notification: NotificationUnion;
@@ -646,14 +646,18 @@ export type CommentsQuery = (
 
 export type ConversationQueryVariables = Exact<{
   profileId: Scalars['String'];
+  page?: Maybe<PageInput>;
 }>;
 
 
 export type ConversationQuery = (
   { __typename?: 'Query' }
   & { conversation: (
-    { __typename?: 'MessageConnection' }
-    & { nodes: Array<(
+    { __typename?: 'ConversationConnection' }
+    & { pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasPreviousPage' | 'hasNextPage' | 'startCursor' | 'endCursor'>
+    ), nodes: Array<(
       { __typename?: 'Message' }
       & MessageComponentFieldsFragment
     )> }
@@ -1273,8 +1277,14 @@ export type CommentsQueryHookResult = ReturnType<typeof useCommentsQuery>;
 export type CommentsLazyQueryHookResult = ReturnType<typeof useCommentsLazyQuery>;
 export type CommentsQueryResult = Apollo.QueryResult<CommentsQuery, CommentsQueryVariables>;
 export const ConversationDocument = gql`
-    query Conversation($profileId: String!) {
-  conversation(recipient: $profileId) {
+    query Conversation($profileId: String!, $page: PageInput) {
+  conversation(recipient: $profileId, page: $page) {
+    pageInfo {
+      hasPreviousPage
+      hasNextPage
+      startCursor
+      endCursor
+    }
     nodes {
       ...MessageComponentFields
     }
@@ -1295,6 +1305,7 @@ export const ConversationDocument = gql`
  * const { data, loading, error } = useConversationQuery({
  *   variables: {
  *      profileId: // value for 'profileId'
+ *      page: // value for 'page'
  *   },
  * });
  */

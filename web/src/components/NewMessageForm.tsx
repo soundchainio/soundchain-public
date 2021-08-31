@@ -62,7 +62,8 @@ function updateCache(cache: ApolloCache<SendMessageMutation>, { data }: FetchRes
     variables: { profileId },
     data: {
       conversation: {
-        nodes: [...(existingMessages?.conversation.nodes || []), newMessage],
+        nodes: [newMessage],
+        pageInfo: existingMessages?.conversation.pageInfo,
       },
     },
   });
