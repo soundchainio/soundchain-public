@@ -1,3 +1,5 @@
+import { DeleteModalType } from 'types/DeleteModalType';
+
 export interface ShowNewPostPayload {
   show: boolean;
 }
@@ -6,4 +8,10 @@ export interface SetRepostIdPayload {
   repostId?: string;
 }
 
-export type ModalPayload = ShowNewPostPayload | SetRepostIdPayload;
+export interface ShowDeletePayload {
+  show: boolean;
+  type: DeleteModalType;
+  deleteId: string;
+}
+
+export type ModalPayload = ShowNewPostPayload | SetRepostIdPayload | ShowDeletePayload;

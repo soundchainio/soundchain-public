@@ -1,5 +1,7 @@
+import { Feed } from 'components/Feed';
 import { Layout } from 'components/Layout';
 import { Posts } from 'components/Posts';
+import { useMe } from 'hooks/useMe';
 import { cacheFor } from 'lib/apollo';
 import { GetServerSideProps } from 'next';
 import Head from 'next/head';
@@ -9,6 +11,8 @@ export const getServerSideProps: GetServerSideProps = context => {
 };
 
 export default function HomePage() {
+  const me = useMe();
+
   return (
     <Layout>
       <Head>
@@ -16,9 +20,7 @@ export default function HomePage() {
         <meta name="description" content="Soundchain" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className="pt-3">
-        <Posts />
-      </div>
+      <div className="pt-3">{me ? <Feed /> : <Posts />}</div>
     </Layout>
   );
 }

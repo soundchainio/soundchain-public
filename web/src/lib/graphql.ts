@@ -82,6 +82,28 @@ export type CreateRepostPayload = {
 };
 
 
+export type DeleteCommentInput = {
+  commentId: Scalars['String'];
+};
+
+export type DeleteCommentPayload = {
+  __typename?: 'DeleteCommentPayload';
+  comment: Comment;
+};
+
+export type FeedConnection = {
+  __typename?: 'FeedConnection';
+  pageInfo: PageInfo;
+  nodes: Array<FeedItem>;
+};
+
+export type FeedItem = {
+  __typename?: 'FeedItem';
+  id: Scalars['ID'];
+  createdAt: Scalars['DateTime'];
+  post: Post;
+};
+
 export type FilterPostInput = {
   profileId?: Maybe<Scalars['String']>;
 };
@@ -152,6 +174,7 @@ export type LoginInput = {
 export type Mutation = {
   __typename?: 'Mutation';
   addComment: AddCommentPayload;
+  deleteComment: DeleteCommentPayload;
   resetNotificationCount: Profile;
   clearNotifications: ClearNotificationsPayload;
   createPost: CreatePostPayload;
@@ -173,6 +196,11 @@ export type Mutation = {
 
 export type MutationAddCommentArgs = {
   input: AddCommentInput;
+};
+
+
+export type MutationDeleteCommentArgs = {
+  input: DeleteCommentInput;
 };
 
 
@@ -322,6 +350,7 @@ export type Query = {
   __typename?: 'Query';
   comment: Comment;
   comments: Array<Comment>;
+  feed: FeedConnection;
   notifications: NotificationConnection;
   notification: Notification;
   post: Post;
@@ -341,6 +370,11 @@ export type QueryCommentArgs = {
 
 export type QueryCommentsArgs = {
   postId: Scalars['String'];
+};
+
+
+export type QueryFeedArgs = {
+  page?: Maybe<PageInput>;
 };
 
 
@@ -626,6 +660,45 @@ export type CreateRepostMutation = (
     & { post: (
       { __typename?: 'Post' }
       & Pick<Post, 'id'>
+    ) }
+  ) }
+);
+
+export type DeleteCommentMutationVariables = Exact<{
+  input: DeleteCommentInput;
+}>;
+
+
+export type DeleteCommentMutation = (
+  { __typename?: 'Mutation' }
+  & { deleteComment: (
+    { __typename?: 'DeleteCommentPayload' }
+    & { comment: (
+      { __typename?: 'Comment' }
+      & CommentComponentFieldsFragment
+    ) }
+  ) }
+);
+
+export type FeedQueryVariables = Exact<{
+  page?: Maybe<PageInput>;
+}>;
+
+
+export type FeedQuery = (
+  { __typename?: 'Query' }
+  & { feed: (
+    { __typename?: 'FeedConnection' }
+    & { nodes: Array<(
+      { __typename?: 'FeedItem' }
+      & Pick<FeedItem, 'id'>
+      & { post: (
+        { __typename?: 'Post' }
+        & PostComponentFieldsFragment
+      ) }
+    )>, pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
     ) }
   ) }
 );
@@ -1228,6 +1301,85 @@ export function useCreateRepostMutation(baseOptions?: Apollo.MutationHookOptions
 export type CreateRepostMutationHookResult = ReturnType<typeof useCreateRepostMutation>;
 export type CreateRepostMutationResult = Apollo.MutationResult<CreateRepostMutation>;
 export type CreateRepostMutationOptions = Apollo.BaseMutationOptions<CreateRepostMutation, CreateRepostMutationVariables>;
+export const DeleteCommentDocument = gql`
+    mutation DeleteComment($input: DeleteCommentInput!) {
+  deleteComment(input: $input) {
+    comment {
+      ...CommentComponentFields
+    }
+  }
+}
+    ${CommentComponentFieldsFragmentDoc}`;
+export type DeleteCommentMutationFn = Apollo.MutationFunction<DeleteCommentMutation, DeleteCommentMutationVariables>;
+
+/**
+ * __useDeleteCommentMutation__
+ *
+ * To run a mutation, you first call `useDeleteCommentMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteCommentMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteCommentMutation, { data, loading, error }] = useDeleteCommentMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useDeleteCommentMutation(baseOptions?: Apollo.MutationHookOptions<DeleteCommentMutation, DeleteCommentMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteCommentMutation, DeleteCommentMutationVariables>(DeleteCommentDocument, options);
+      }
+export type DeleteCommentMutationHookResult = ReturnType<typeof useDeleteCommentMutation>;
+export type DeleteCommentMutationResult = Apollo.MutationResult<DeleteCommentMutation>;
+export type DeleteCommentMutationOptions = Apollo.BaseMutationOptions<DeleteCommentMutation, DeleteCommentMutationVariables>;
+export const FeedDocument = gql`
+    query Feed($page: PageInput) {
+  feed(page: $page) {
+    nodes {
+      id
+      post {
+        ...PostComponentFields
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+    ${PostComponentFieldsFragmentDoc}`;
+
+/**
+ * __useFeedQuery__
+ *
+ * To run a query within a React component, call `useFeedQuery` and pass it any options that fit your needs.
+ * When your component renders, `useFeedQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useFeedQuery({
+ *   variables: {
+ *      page: // value for 'page'
+ *   },
+ * });
+ */
+export function useFeedQuery(baseOptions?: Apollo.QueryHookOptions<FeedQuery, FeedQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<FeedQuery, FeedQueryVariables>(FeedDocument, options);
+      }
+export function useFeedLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<FeedQuery, FeedQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<FeedQuery, FeedQueryVariables>(FeedDocument, options);
+        }
+export type FeedQueryHookResult = ReturnType<typeof useFeedQuery>;
+export type FeedLazyQueryHookResult = ReturnType<typeof useFeedLazyQuery>;
+export type FeedQueryResult = Apollo.QueryResult<FeedQuery, FeedQueryVariables>;
 export const FollowProfileDocument = gql`
     mutation FollowProfile($input: FollowProfileInput!) {
   followProfile(input: $input) {
