@@ -9,6 +9,7 @@ import { setContext } from '@apollo/client/link/context';
 import { getDataFromTree } from '@apollo/client/react/ssr';
 import { mergeDeep } from '@apollo/client/utilities';
 import Cookies from 'js-cookie';
+import { isSafari } from 'lib/isSafari';
 import { GetServerSidePropsContext } from 'next';
 import { RouterContext } from 'next/dist/shared/lib/router-context';
 import { useMemo } from 'react';
@@ -43,7 +44,7 @@ export function setJwt(newJwt?: string) {
 
   if (isBrowser) {
     if (jwt) {
-      Cookies.set(jwtKey, jwt, { secure: true });
+      Cookies.set(jwtKey, jwt, { secure: !isSafari });
     } else {
       Cookies.remove(jwtKey);
     }
