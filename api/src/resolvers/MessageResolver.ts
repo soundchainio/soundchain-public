@@ -1,6 +1,6 @@
-import { ApolloError } from 'apollo-server-express';
 import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
 import { CurrentUser } from '../decorators/current-user';
+import { NotAuthorizedError } from '../errors/NotAuthorized';
 import { Message } from '../models/Message';
 import { Profile } from '../models/Profile';
 import { User } from '../models/User';
@@ -36,7 +36,8 @@ export class MessageResolver {
     @Arg('id') id: string,
   ): Promise<Message> {
     const message = await messageService.getMessage(id);
-    if (!(message.to === profileId || message.profileId === profileId)) throw new ApolloError('Not authorized');
+    if (!(message.to === profileId || message.profileId === profileId))
+      throw new NotAuthorizedError('Message', id, profileId);
     return message;
   }
 
