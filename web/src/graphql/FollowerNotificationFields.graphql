@@ -1,0 +1,7 @@
+fragment FollowerNotificationFields on FollowerNotification {
+  id
+  link
+  createdAt
+  followerName
+  followerPicture
+}

@@ -32,6 +32,7 @@ export class FollowService extends ModelService<typeof Follow, FollowKeyComponen
     const follow = new FollowModel({ followerId, followedId });
     await follow.save();
     this.dataLoader.clear(this.getKeyFromComponents(follow));
+    this.context.notificationService.notifyNewFollower(follow);
     return follow;
   }
 
