@@ -9,6 +9,7 @@ import { Search } from 'icons/Search';
 import { setJwt } from 'lib/apollo';
 import { useRouter } from 'next/router';
 import { BottomNavBarButton } from './BottomNavBarButton';
+import { DeleteModal } from './DeleteModal';
 import { NotificationBadge } from './NotificationBadge';
 
 export const BottomNavBar = () => {
@@ -36,6 +37,7 @@ export const BottomNavBar = () => {
         />
         <BottomNavBarButton label="Profile" icon={Profile} onClick={setJwt} activatedColor="green-purple" />
         <NewPostModal />
+        <DeleteModal />
       </div>
     </nav>
   );

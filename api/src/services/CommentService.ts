@@ -8,6 +8,11 @@ interface NewCommentParams {
   postId: string;
 }
 
+interface DeleteCommentParams {
+  profileId: string;
+  commentId: string;
+}
+
 export class CommentService extends ModelService<typeof Comment> {
   constructor(context: Context) {
     super(context, CommentModel);
@@ -28,6 +33,15 @@ export class CommentService extends ModelService<typeof Comment> {
       });
     }
     return newComment;
+  }
+
+  async deleteComment(params: DeleteCommentParams): Promise<Comment> {
+    const comment = await this.findOrFail(params.commentId);
+    if (comment.profileId !== params.profileId) {
+      throw new Error(`Error while deleting a comment: The user trying to delete is not the author of the comment.`);
+    }
+    await CommentModel.deleteOne(comment);
+    return comment;
   }
 
   getComments(postId: string): Promise<Comment[]> {
