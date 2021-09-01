@@ -1,8 +1,9 @@
 import { disableBodyScroll, enableBodyScroll } from 'body-scroll-lock';
 import { Message as MessageItem, useChatHistoryQuery } from 'lib/graphql';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import InfiniteScroll from 'react-infinite-scroller';
 import { animateScroll as scroll } from 'react-scroll';
-import { InfiniteLoader } from './InfiniteLoader';
+import { LoaderAnimation } from './LoaderAnimation';
 import { Message } from './Message';
 import { MessageSkeleton } from './MessageSkeleton';
 
@@ -16,14 +17,10 @@ export const Chat = ({ profileId }: ChatProps) => {
   const { data, fetchMore } = useChatHistoryQuery({
     variables: { profileId },
   });
-  const [lastHeight, setLastHeight] = useState(0);
 
-  useEffect(() => {
-    if (containerRef.current && lastHeight !== containerRef.current.scrollHeight) {
-      scroll.scrollTo(containerRef.current?.scrollHeight - lastHeight, { duration: 0 });
-      setLastHeight(containerRef.current?.scrollHeight);
-    }
-  }, [containerRef.current?.scrollHeight, lastHeight]);
+  useLayoutEffect(() => {
+    if (containerRef.current) console.log(containerRef.current.scrollHeight);
+  }, [containerRef.current?.scrollHeight]);
 
   useEffect(() => {
     if (!renderLoader && data) initialScrollToBottom();
@@ -45,13 +42,20 @@ export const Chat = ({ profileId }: ChatProps) => {
   };
 
   return (
-    <>
-      {renderLoader && pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading messages" />}
-      <div className="flex flex-col m-3 space-y-4" ref={containerRef}>
-        {messages.map(({ id }, index) => (
-          <Message key={id} messageId={id} nextMessage={messages[index + 1] as MessageItem} />
-        ))}
-      </div>
-    </>
+    <InfiniteScroll
+      loadMore={loadMore}
+      hasMore={renderLoader && pageInfo.hasNextPage}
+      loader={
+        <div className="flex items-center">
+          <LoaderAnimation loadingMessage="Loading messages" />
+        </div>
+      }
+      isReverse
+      className="flex flex-col m-3 space-y-4"
+    >
+      {messages.map(({ id }, index) => (
+        <Message key={id} messageId={id} nextMessage={messages[index + 1] as MessageItem} />
+      ))}
+    </InfiniteScroll>
   );
 };
