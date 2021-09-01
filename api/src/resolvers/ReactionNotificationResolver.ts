@@ -2,6 +2,7 @@ import { FieldResolver, Resolver, Root } from 'type-graphql';
 import { Notification } from '../models/Notification';
 import { ReactionNotification } from '../types/ReactionNotification';
 import { ReactionNotificationMetadata } from '../types/ReactionNotificationMetadata';
+import { ReactionType } from '../types/ReactionType';
 
 @Resolver(ReactionNotification)
 export class ReactionNotificationResolver {
@@ -10,8 +11,20 @@ export class ReactionNotificationResolver {
     return _id;
   }
 
+  @FieldResolver(() => String)
+  authorName(@Root() { metadata }: Notification): string {
+    const { authorName } = metadata as ReactionNotificationMetadata;
+    return authorName;
+  }
+
   @FieldResolver(() => String, { nullable: true })
-  reactionType(@Root() { metadata }: Notification): string | undefined {
+  authorPicture(@Root() { metadata }: Notification): string {
+    const { authorPicture } = metadata as ReactionNotificationMetadata;
+    return authorPicture || '';
+  }
+
+  @FieldResolver(() => ReactionType)
+  reactionType(@Root() { metadata }: Notification): ReactionType {
     const { reactionType } = metadata as ReactionNotificationMetadata;
     return reactionType;
   }
@@ -19,6 +32,6 @@ export class ReactionNotificationResolver {
   @FieldResolver(() => String)
   link(@Root() { metadata }: Notification): string {
     const { postId } = metadata as ReactionNotificationMetadata;
-    return `/profiles/${postId}`;
+    return `/posts/${postId}`;
   }
 }

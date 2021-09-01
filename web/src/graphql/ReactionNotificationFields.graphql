@@ -1,5 +1,9 @@
 fragment ReactionNotificationFields on ReactionNotification {
   id
+  type
   reactionType
   link
+  authorName
+  authorPicture
+  createdAt
 }
