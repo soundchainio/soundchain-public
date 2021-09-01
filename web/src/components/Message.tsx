@@ -29,10 +29,9 @@ export const Message = ({ messageId, nextMessage }: MessageProps) => {
     if (!nextMessage) {
       return true;
     }
-    return (
-      message.fromProfile.id !== nextMessage.fromProfile.id ||
-      getTimestamp(message.createdAt) !== getTimestamp(nextMessage.createdAt)
-    );
+    return getTimestamp(message.createdAt) !== getTimestamp(nextMessage.createdAt)
+      ? true
+      : message.fromProfile.id !== nextMessage.fromProfile.id;
   };
 
   const isMyMessage = () => {
@@ -40,7 +39,7 @@ export const Message = ({ messageId, nextMessage }: MessageProps) => {
   };
 
   const getTimestamp = (timestamp: string) => {
-    format(new Date(timestamp), TIMESTAMP_FORMAT);
+    return format(new Date(timestamp), TIMESTAMP_FORMAT);
   };
 
   return (
