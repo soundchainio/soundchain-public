@@ -1,6 +1,7 @@
 import { PaginateResult } from '../db/pagination/paginate';
 import { NotFoundError } from '../errors/NotFoundError';
 import { Comment } from '../models/Comment';
+import { Follow } from '../models/Follow';
 import { Notification, NotificationModel } from '../models/Notification';
 import { Post } from '../models/Post';
 import { Profile, ProfileModel } from '../models/Profile';
@@ -39,6 +40,23 @@ export class NotificationService extends ModelService<typeof Notification> {
       type: NotificationType.Comment,
       profileId,
       metadata,
+    });
+    await notification.save();
+    await this.incrementNotificationCount(profileId);
+  }
+
+  async notifyNewFollower({ followerId, followedId: profileId }: Follow): Promise<void> {
+    const { displayName: followerName, profilePicture: followerPicture } = await this.context.profileService.getProfile(
+      followerId,
+    );
+    const notification = new NotificationModel({
+      type: NotificationType.Follower,
+      profileId,
+      metadata: {
+        followerId,
+        followerName,
+        followerPicture,
+      },
     });
     await notification.save();
     await this.incrementNotificationCount(profileId);
