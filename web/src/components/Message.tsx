@@ -24,10 +24,7 @@ export const Message = ({ messageId, nextMessage }: MessageProps) => {
 
   if (!message) return <MessageSkeleton />;
 
-  const {
-    message: messageBody,
-    fromProfile: { profilePicture },
-  } = message;
+  const { message: messageBody, fromProfile } = message;
 
   const isLastMessage =
     !nextMessage || getTimestamp(message.createdAt) !== getTimestamp(nextMessage.createdAt)
@@ -40,7 +37,7 @@ export const Message = ({ messageId, nextMessage }: MessageProps) => {
     <div className={classNames('flex flex-col w-full', isMyMessage && 'items-end')}>
       <div className={classNames('flex flex-row w-3/4')}>
         {!isMyMessage && (
-          <div className="w-12">{isLastMessage && <Avatar src={profilePicture} className="mr-2 mt-2" />}</div>
+          <div className="w-12">{isLastMessage && <Avatar profile={fromProfile} className="mr-2 mt-2" />}</div>
         )}
         <div className="flex flex-col w-full">
           <div

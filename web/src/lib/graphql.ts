@@ -306,7 +306,7 @@ export type MutationResetPasswordArgs = {
   input: ResetPasswordInput;
 };
 
-export type Notification = CommentNotification | FollowerNotification;
+export type Notification = CommentNotification | ReactionNotification | FollowerNotification;
 
 export type NotificationConnection = {
   __typename?: 'NotificationConnection';
@@ -316,6 +316,7 @@ export type NotificationConnection = {
 
 export enum NotificationType {
   Comment = 'Comment',
+  Reaction = 'Reaction',
   Follower = 'Follower'
 }
 
@@ -470,6 +471,19 @@ export type ReactToPostInput = {
 export type ReactToPostPayload = {
   __typename?: 'ReactToPostPayload';
   post: Post;
+};
+
+export type ReactionNotification = {
+  __typename?: 'ReactionNotification';
+  type: NotificationType;
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  id: Scalars['String'];
+  authorName: Scalars['String'];
+  authorPicture: Maybe<Scalars['String']>;
+  postId: Scalars['String'];
+  reactionType: ReactionType;
+  link: Scalars['String'];
 };
 
 export enum ReactionType {
@@ -916,6 +930,9 @@ export type NotificationQuery = (
     { __typename?: 'CommentNotification' }
     & CommentNotificationFieldsFragment
   ) | (
+    { __typename?: 'ReactionNotification' }
+    & ReactionNotificationFieldsFragment
+  ) | (
     { __typename?: 'FollowerNotification' }
     & FollowerNotificationFieldsFragment
   ) }
@@ -944,6 +961,9 @@ export type NotificationsQuery = (
     & { nodes: Array<(
       { __typename?: 'CommentNotification' }
       & CommentNotificationFieldsFragment
+    ) | (
+      { __typename?: 'ReactionNotification' }
+      & ReactionNotificationFieldsFragment
     ) | (
       { __typename?: 'FollowerNotification' }
       & FollowerNotificationFieldsFragment
@@ -1021,6 +1041,11 @@ export type ReactToPostMutation = (
       & Pick<Post, 'id' | 'totalReactions' | 'topReactions' | 'myReaction'>
     ) }
   ) }
+);
+
+export type ReactionNotificationFieldsFragment = (
+  { __typename?: 'ReactionNotification' }
+  & Pick<ReactionNotification, 'id' | 'type' | 'reactionType' | 'link' | 'authorName' | 'authorPicture' | 'createdAt' | 'postId'>
 );
 
 export type RegisterMutationVariables = Exact<{
@@ -1251,6 +1276,18 @@ export const PostComponentFieldsFragmentDoc = gql`
     displayName
     profilePicture
   }
+}
+    `;
+export const ReactionNotificationFieldsFragmentDoc = gql`
+    fragment ReactionNotificationFields on ReactionNotification {
+  id
+  type
+  reactionType
+  link
+  authorName
+  authorPicture
+  createdAt
+  postId
 }
     `;
 export const AddCommentDocument = gql`
@@ -1882,12 +1919,16 @@ export const NotificationDocument = gql`
     ... on CommentNotification {
       ...CommentNotificationFields
     }
+    ... on ReactionNotification {
+      ...ReactionNotificationFields
+    }
     ... on FollowerNotification {
       ...FollowerNotificationFields
     }
   }
 }
     ${CommentNotificationFieldsFragmentDoc}
+${ReactionNotificationFieldsFragmentDoc}
 ${FollowerNotificationFieldsFragmentDoc}`;
 
 /**
@@ -1959,6 +2000,9 @@ export const NotificationsDocument = gql`
       ... on CommentNotification {
         ...CommentNotificationFields
       }
+      ... on ReactionNotification {
+        ...ReactionNotificationFields
+      }
       ... on FollowerNotification {
         ...FollowerNotificationFields
       }
@@ -1966,6 +2010,7 @@ export const NotificationsDocument = gql`
   }
 }
     ${CommentNotificationFieldsFragmentDoc}
+${ReactionNotificationFieldsFragmentDoc}
 ${FollowerNotificationFieldsFragmentDoc}`;
 
 /**

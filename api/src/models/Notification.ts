@@ -3,6 +3,7 @@ import { Field } from 'type-graphql';
 import { CommentNotificationMetadata } from '../types/CommentNotificationMetadata';
 import { FollowerNotificationMetadata } from '../types/FollowerNotificationMetadata';
 import { NotificationType } from '../types/NotificationType';
+import { ReactionNotificationMetadata } from '../types/ReactionNotificationMetadata';
 import { Model } from './Model';
 
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
@@ -14,7 +15,7 @@ export class Notification extends Model {
   profileId: string;
 
   @prop({ required: true })
-  metadata: CommentNotificationMetadata | FollowerNotificationMetadata;
+  metadata: CommentNotificationMetadata | FollowerNotificationMetadata | ReactionNotificationMetadata;
 
   @Field(() => Date)
   createdAt: Date;
