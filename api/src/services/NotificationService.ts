@@ -46,11 +46,10 @@ export class NotificationService extends ModelService<typeof Notification> {
   }
 
   async notifyNewReaction({ postId, profileId, type: reactionType }: Reaction): Promise<void> {
-    const { displayName: authorName, profilePicture: authorPicture } = await this.context.profileService.getProfile(
-      profileId,
-    );
-
-    const { profileId: postProfileId } = await this.context.postService.getPost(postId);
+    let [{ profileId: postProfileId }, { displayName: authorName, profilePicture: authorPicture }] = await Promise.all([
+      this.context.postService.getPost(postId),
+      this.context.profileService.getProfile(profileId),
+    ]);
 
     const notification = new NotificationModel({
       type: NotificationType.Reaction,

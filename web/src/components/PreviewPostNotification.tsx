@@ -17,7 +17,7 @@ export const PreviewPostNotification = ({ postId }: PreviewPostNotificationProps
   return (
     <div className="w-full p-4 bg-gray-30 w-full rounded-xl">
       <NextLink href={`/posts/${post.id}`}>
-        <div className="">
+        <div>
           <pre className="text-gray-100 text-sm whitespace-pre-wrap">{post.body}</pre>
         </div>
       </NextLink>
