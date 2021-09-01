@@ -15,6 +15,7 @@ export class AuthService extends Service {
 
     const profile = new ProfileModel({ displayName });
     await profile.save();
+    await this.context.feedService.seedNewProfileFeed(profile.id);
 
     const emailVerificationToken = uuidv4();
     const user = new UserModel({ email, handle, password, profileId: profile._id, emailVerificationToken });

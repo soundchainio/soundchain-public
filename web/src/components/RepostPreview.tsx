@@ -22,7 +22,7 @@ export const RepostPreview = ({ postId }: RepostPreviewProps) => {
       </div>
       <div className="p-4 break-words bg-gray-30 rounded-lg mb-2">
         <div className="flex items-center">
-          <Avatar src={post.profile.profilePicture} />
+          <Avatar profile={post.profile} />
           <a className="ml-4 text-lg font-bold text-gray-100">{post.profile.displayName}</a>
           <Timestamp datetime={post.createdAt} className="flex-1 text-right text-gray-60" />
         </div>

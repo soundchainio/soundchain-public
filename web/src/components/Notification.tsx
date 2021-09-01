@@ -1,6 +1,13 @@
-import { CommentNotification, NotificationType, ReactionNotification, useNotificationQuery } from 'lib/graphql';
+import {
+  CommentNotification,
+  FollowerNotification,
+  NotificationType,
+  ReactionNotification,
+  useNotificationQuery,
+} from 'lib/graphql';
 import React from 'react';
 import { CommentNotificationItem } from './CommentNotificationItem';
+import { FollowerNotificationItem } from './FollowerNotificationItem';
 import { NotificationSkeleton } from './NotificationSkeleton';
 import { ReactionNotificationItem } from './ReactionNotificationItem';
 
@@ -17,6 +24,9 @@ export const Notification = ({ notificationId, index }: NotificationProps) => {
 
   if (notification.type === NotificationType.Comment) {
     return <CommentNotificationItem notification={notification as CommentNotification} index={index} />;
+  }
+  if (notification.type === NotificationType.Follower) {
+    return <FollowerNotificationItem notification={notification as FollowerNotification} index={index} />;
   }
 
   if (notification.type === NotificationType.Reaction) {

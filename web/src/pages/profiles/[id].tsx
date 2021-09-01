@@ -49,23 +49,15 @@ export default function ProfilePage({ profileId }: ProfilePageProps) {
     return null;
   }
 
-  const {
-    coverPicture,
-    profilePicture,
-    displayName,
-    userHandle,
-    socialMedias,
-    followerCount,
-    followingCount,
-    isFollowed,
-  } = data.profile;
+  const { coverPicture, displayName, userHandle, socialMedias, followerCount, followingCount, isFollowed } =
+    data.profile;
 
   return (
     <Layout>
       <div className="h-[125px] relative">
         {coverPicture && <Image src={coverPicture} alt="Cover pic" layout="fill" objectFit="cover" />}
         <Avatar
-          src={profilePicture}
+          profile={data.profile}
           pixels={80}
           className="absolute left-4 bottom-0 transform translate-y-2/3 border-gray-10 border-4 rounded-full"
         />

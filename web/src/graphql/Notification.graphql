@@ -6,5 +6,8 @@ query Notification($id: String!) {
     ... on ReactionNotification {
       ...ReactionNotificationFields
     }
+    ... on FollowerNotification {
+      ...FollowerNotificationFields
+    }
   }
 }

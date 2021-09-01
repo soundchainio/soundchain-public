@@ -7,6 +7,9 @@ query Notifications($sort: SortNotificationInput) {
       ... on ReactionNotification {
         ...ReactionNotificationFields
       }
+      ... on FollowerNotification {
+        ...FollowerNotificationFields
+      }
     }
   }
 }
