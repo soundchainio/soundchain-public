@@ -25,7 +25,7 @@ export class MessageResolver {
     @Arg('profileId') profileId: string,
     @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<MessageConnection> {
-    return messageService.getChat(currentUserProfileId, profileId, page);
+    return messageService.getMessages(currentUserProfileId, profileId, page);
   }
 
   @Authorized()

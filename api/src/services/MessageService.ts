@@ -22,7 +22,7 @@ export class MessageService extends ModelService<typeof Message> {
     return message;
   }
 
-  getChat(currentUser: string, otherUser: string, page?: PageInput): Promise<PaginateResult<Message>> {
+  getMessages(currentUser: string, otherUser: string, page?: PageInput): Promise<PaginateResult<Message>> {
     return this.paginate({
       filter: {
         $or: [
