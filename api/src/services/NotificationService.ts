@@ -18,6 +18,11 @@ interface CommentNotificationParams {
   authorProfileId: string;
 }
 
+interface ReactionNotificationParams {
+  post: Post;
+  authorProfileId: string;
+}
+
 export class NotificationService extends ModelService<typeof Notification> {
   constructor(context: Context) {
     super(context, NotificationModel);
@@ -42,6 +47,23 @@ export class NotificationService extends ModelService<typeof Notification> {
     });
     await notification.save();
     await this.incrementNotificationCount(profileId);
+  }
+
+  async notifyNewReaction({ post }: ReactionNotificationParams): Promise<void> {
+    // const { displayName: followerName, profilePicture: followerPicture } = await this.context.profileService.getProfile(
+    //   followerId,
+    // );
+    // const notification = new NotificationModel({
+    //   type: NotificationType.Follower,
+    //   profileId,
+    //   metadata: {
+    //     followerId,
+    //     followerName,
+    //     followerPicture,
+    //   },
+    // });
+    // await notification.save();
+    // await this.incrementNotificationCount(profileId);
   }
 
   async getNotifications(

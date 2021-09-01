@@ -273,7 +273,7 @@ export type MutationResetPasswordArgs = {
   input: ResetPasswordInput;
 };
 
-export type Notification = CommentNotification;
+export type Notification = CommentNotification | ReactionNotification;
 
 export type NotificationConnection = {
   __typename?: 'NotificationConnection';
@@ -282,7 +282,8 @@ export type NotificationConnection = {
 };
 
 export enum NotificationType {
-  Comment = 'Comment'
+  Comment = 'Comment',
+  Reaction = 'Reaction'
 }
 
 export type PageInfo = {
@@ -423,6 +424,16 @@ export type ReactToPostInput = {
 export type ReactToPostPayload = {
   __typename?: 'ReactToPostPayload';
   post: Post;
+};
+
+export type ReactionNotification = {
+  __typename?: 'ReactionNotification';
+  type: NotificationType;
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  id: Scalars['String'];
+  reaction: Maybe<Scalars['String']>;
+  link: Scalars['String'];
 };
 
 export enum ReactionType {
@@ -798,6 +809,9 @@ export type NotificationQuery = (
   & { notification: (
     { __typename?: 'CommentNotification' }
     & CommentNotificationFieldsFragment
+  ) | (
+    { __typename?: 'ReactionNotification' }
+    & ReactionNotificationFieldsFragment
   ) }
 );
 
@@ -824,6 +838,9 @@ export type NotificationsQuery = (
     & { nodes: Array<(
       { __typename?: 'CommentNotification' }
       & CommentNotificationFieldsFragment
+    ) | (
+      { __typename?: 'ReactionNotification' }
+      & ReactionNotificationFieldsFragment
     )> }
   ) }
 );
@@ -898,6 +915,11 @@ export type ReactToPostMutation = (
       & Pick<Post, 'id' | 'totalReactions' | 'topReactions' | 'myReaction'>
     ) }
   ) }
+);
+
+export type ReactionNotificationFieldsFragment = (
+  { __typename?: 'ReactionNotification' }
+  & Pick<ReactionNotification, 'id' | 'type' | 'link' | 'reaction'>
 );
 
 export type RegisterMutationVariables = Exact<{
@@ -1088,6 +1110,14 @@ export const PostComponentFieldsFragmentDoc = gql`
     displayName
     profilePicture
   }
+}
+    `;
+export const ReactionNotificationFieldsFragmentDoc = gql`
+    fragment ReactionNotificationFields on ReactionNotification {
+  id
+  type
+  link
+  reaction
 }
     `;
 export const AddCommentDocument = gql`
@@ -1607,9 +1637,13 @@ export const NotificationDocument = gql`
     ... on CommentNotification {
       ...CommentNotificationFields
     }
+    ... on ReactionNotification {
+      ...ReactionNotificationFields
+    }
   }
 }
-    ${CommentNotificationFieldsFragmentDoc}`;
+    ${CommentNotificationFieldsFragmentDoc}
+${ReactionNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationQuery__
@@ -1680,10 +1714,14 @@ export const NotificationsDocument = gql`
       ... on CommentNotification {
         ...CommentNotificationFields
       }
+      ... on ReactionNotification {
+        ...ReactionNotificationFields
+      }
     }
   }
 }
-    ${CommentNotificationFieldsFragmentDoc}`;
+    ${CommentNotificationFieldsFragmentDoc}
+${ReactionNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationsQuery__

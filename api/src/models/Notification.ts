@@ -2,6 +2,7 @@ import { getModelForClass, modelOptions, prop, Severity } from '@typegoose/typeg
 import { Field } from 'type-graphql';
 import { CommentNotificationMetadata } from '../types/CommentNotificationMetadata';
 import { NotificationType } from '../types/NotificationType';
+import { ReactionNotificationMetadata } from '../types/ReactionNotificationMetadata';
 import { Model } from './Model';
 
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
@@ -13,7 +14,7 @@ export class Notification extends Model {
   profileId: string;
 
   @prop({ required: true })
-  metadata: CommentNotificationMetadata;
+  metadata: CommentNotificationMetadata | ReactionNotificationMetadata;
 
   @Field(() => Date)
   createdAt: Date;

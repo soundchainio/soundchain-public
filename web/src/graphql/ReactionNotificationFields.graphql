@@ -1,0 +1,6 @@
+fragment ReactionNotificationFields on ReactionNotification {
+  id
+  type
+  link
+  reaction
+}
