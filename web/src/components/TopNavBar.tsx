@@ -41,7 +41,7 @@ export const TopNavBar = ({ title, rightButton: RightButton, leftButton: LeftBut
               ) : (
                 <>
                   <span className="sr-only">Open main menu</span>
-                  <MenuIcon className="block h-6 w-6" aria-hidden="true" />
+                  <MenuIcon className="block h-6 w-6 text-gray-80" aria-hidden="true" />
                 </>
               )}
             </button>
