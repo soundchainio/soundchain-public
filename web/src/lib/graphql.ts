@@ -100,7 +100,7 @@ export type FeedConnection = {
 export type FeedItem = {
   __typename?: 'FeedItem';
   id: Scalars['ID'];
-  createdAt: Scalars['DateTime'];
+  postedAt: Scalars['DateTime'];
   post: Post;
 };
 
@@ -115,6 +115,16 @@ export type FollowProfileInput = {
 export type FollowProfilePayload = {
   __typename?: 'FollowProfilePayload';
   followedProfile: Profile;
+};
+
+export type FollowerNotification = {
+  __typename?: 'FollowerNotification';
+  type: NotificationType;
+  createdAt: Scalars['DateTime'];
+  id: Scalars['String'];
+  followerName: Scalars['String'];
+  followerPicture: Maybe<Scalars['String']>;
+  link: Scalars['String'];
 };
 
 export type ForgotPasswordInput = {
@@ -296,7 +306,7 @@ export type MutationResetPasswordArgs = {
   input: ResetPasswordInput;
 };
 
-export type Notification = CommentNotification;
+export type Notification = CommentNotification | FollowerNotification;
 
 export type NotificationConnection = {
   __typename?: 'NotificationConnection';
@@ -305,7 +315,8 @@ export type NotificationConnection = {
 };
 
 export enum NotificationType {
-  Comment = 'Comment'
+  Comment = 'Comment',
+  Follower = 'Follower'
 }
 
 export type PageInfo = {
@@ -798,6 +809,11 @@ export type FollowProfileMutation = (
   ) }
 );
 
+export type FollowerNotificationFieldsFragment = (
+  { __typename?: 'FollowerNotification' }
+  & Pick<FollowerNotification, 'id' | 'type' | 'link' | 'createdAt' | 'followerName' | 'followerPicture'>
+);
+
 export type ForgotPasswordMutationVariables = Exact<{
   input: ForgotPasswordInput;
 }>;
@@ -899,6 +915,9 @@ export type NotificationQuery = (
   & { notification: (
     { __typename?: 'CommentNotification' }
     & CommentNotificationFieldsFragment
+  ) | (
+    { __typename?: 'FollowerNotification' }
+    & FollowerNotificationFieldsFragment
   ) }
 );
 
@@ -925,6 +944,9 @@ export type NotificationsQuery = (
     & { nodes: Array<(
       { __typename?: 'CommentNotification' }
       & CommentNotificationFieldsFragment
+    ) | (
+      { __typename?: 'FollowerNotification' }
+      & FollowerNotificationFieldsFragment
     )> }
   ) }
 );
@@ -1186,6 +1208,16 @@ export const CommentNotificationFieldsFragmentDoc = gql`
   createdAt
   authorName
   authorPicture
+}
+    `;
+export const FollowerNotificationFieldsFragmentDoc = gql`
+    fragment FollowerNotificationFields on FollowerNotification {
+  id
+  type
+  link
+  createdAt
+  followerName
+  followerPicture
 }
     `;
 export const MessageComponentFieldsFragmentDoc = gql`
@@ -1850,9 +1882,13 @@ export const NotificationDocument = gql`
     ... on CommentNotification {
       ...CommentNotificationFields
     }
+    ... on FollowerNotification {
+      ...FollowerNotificationFields
+    }
   }
 }
-    ${CommentNotificationFieldsFragmentDoc}`;
+    ${CommentNotificationFieldsFragmentDoc}
+${FollowerNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationQuery__
@@ -1923,10 +1959,14 @@ export const NotificationsDocument = gql`
       ... on CommentNotification {
         ...CommentNotificationFields
       }
+      ... on FollowerNotification {
+        ...FollowerNotificationFields
+      }
     }
   }
 }
-    ${CommentNotificationFieldsFragmentDoc}`;
+    ${CommentNotificationFieldsFragmentDoc}
+${FollowerNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationsQuery__

@@ -1,9 +1,11 @@
 import { PaginateResult } from '../db/pagination/paginate';
 import { FeedItem, FeedItemModel } from '../models/FeedItem';
+import { Follow } from '../models/Follow';
 import { Post } from '../models/Post';
 import { Context } from '../types/Context';
 import { PageInput } from '../types/PageInput';
 import { SortOrder } from '../types/SortOrder';
+import { SortPostField } from '../types/SortPostField';
 import { ModelService } from './ModelService';
 
 export class FeedService extends ModelService<typeof FeedItem> {
@@ -12,12 +14,38 @@ export class FeedService extends ModelService<typeof FeedItem> {
   }
 
   getFeed(profileId: string, page: PageInput): Promise<PaginateResult<FeedItem>> {
-    return this.paginate({ filter: { profileId }, sort: { field: 'createdAt', order: SortOrder.DESC }, page });
+    return this.paginate({ filter: { profileId }, sort: { field: 'postedAt', order: SortOrder.DESC }, page });
   }
 
   async addPostToFollowerFeeds(post: Post): Promise<void> {
     const followerIds = await this.context.followService.getFollowerIds(post.profileId);
-    const feedItems = followerIds.map(profileId => new FeedItemModel({ profileId, postId: post._id }));
-    await FeedItemModel.insertMany(feedItems);
+    const feedItems = followerIds.map(
+      profileId => new this.model({ profileId, postId: post._id, postedAt: post.createdAt }),
+    );
+    await this.model.insertMany(feedItems);
+  }
+
+  async addRecentPostsToFollowerFeed({ followerId, followedId }: Follow): Promise<void> {
+    const { nodes: posts } = await this.context.postService.getPosts(
+      { profileId: followedId },
+      { field: SortPostField.CREATED_AT, order: SortOrder.DESC },
+      { first: 20 },
+    );
+
+    const feedItems = posts.map(
+      post => new this.model({ profileId: followerId, postId: post._id, postedAt: post.createdAt }),
+    );
+    await this.model.insertMany(feedItems);
+  }
+
+  async seedNewProfileFeed(profileId: string): Promise<void> {
+    const { nodes: posts } = await this.context.postService.getPosts(
+      undefined,
+      { field: SortPostField.CREATED_AT, order: SortOrder.DESC },
+      { first: 50 },
+    );
+
+    const feedItems = posts.map(post => new this.model({ profileId, postId: post._id, postedAt: post.createdAt }));
+    await this.model.insertMany(feedItems);
   }
 }

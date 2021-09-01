@@ -4,6 +4,9 @@ query Notifications($sort: SortNotificationInput) {
       ... on CommentNotification {
         ...CommentNotificationFields
       }
+      ... on FollowerNotification {
+        ...FollowerNotificationFields
+      }
     }
   }
 }
