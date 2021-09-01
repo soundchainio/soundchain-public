@@ -4,6 +4,7 @@ import { Comment } from '../models/Comment';
 import { Notification, NotificationModel } from '../models/Notification';
 import { Post } from '../models/Post';
 import { Profile, ProfileModel } from '../models/Profile';
+import { Reaction } from '../models/Reaction';
 import { CommentNotificationMetadata } from '../types/CommentNotificationMetadata';
 import { Context } from '../types/Context';
 import { NotificationType } from '../types/NotificationType';
@@ -19,6 +20,7 @@ interface CommentNotificationParams {
 }
 
 interface ReactionNotificationParams {
+  reaction: Reaction;
   post: Post;
   authorProfileId: string;
 }
@@ -49,21 +51,26 @@ export class NotificationService extends ModelService<typeof Notification> {
     await this.incrementNotificationCount(profileId);
   }
 
-  async notifyNewReaction({ post }: ReactionNotificationParams): Promise<void> {
-    // const { displayName: followerName, profilePicture: followerPicture } = await this.context.profileService.getProfile(
-    //   followerId,
-    // );
-    // const notification = new NotificationModel({
-    //   type: NotificationType.Follower,
-    //   profileId,
-    //   metadata: {
-    //     followerId,
-    //     followerName,
-    //     followerPicture,
-    //   },
-    // });
-    // await notification.save();
-    // await this.incrementNotificationCount(profileId);
+  async notifyNewReaction({ postId, profileId, type: reactionType }: Reaction): Promise<void> {
+    const { displayName: authorName, profilePicture: authorPicture } = await this.context.profileService.getProfile(
+      profileId,
+    );
+
+    const { profileId: postProfileId } = await this.context.postService.getPost(postId);
+
+    const notification = new NotificationModel({
+      type: NotificationType.Reaction,
+      profileId: postProfileId,
+      metadata: {
+        authorName,
+        authorPicture,
+        postId,
+        reactionType,
+      },
+    });
+
+    await notification.save();
+    await this.incrementNotificationCount(postProfileId);
   }
 
   async getNotifications(

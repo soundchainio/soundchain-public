@@ -1,4 +1,6 @@
 export interface ReactionNotificationMetadata {
-  reaction: string;
   postId: string;
+  reactionType: string;
+  authorName: string;
+  authorPicture: string | undefined;
 }

@@ -11,9 +11,9 @@ export class ReactionNotificationResolver {
   }
 
   @FieldResolver(() => String, { nullable: true })
-  reaction(@Root() { metadata }: Notification): string | undefined {
-    const { reaction } = metadata as ReactionNotificationMetadata;
-    return `reacted ${reaction} to your post:`;
+  reactionType(@Root() { metadata }: Notification): string | undefined {
+    const { reactionType } = metadata as ReactionNotificationMetadata;
+    return reactionType;
   }
 
   @FieldResolver(() => String)
