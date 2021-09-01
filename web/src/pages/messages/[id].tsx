@@ -17,17 +17,21 @@ export interface PostPageProps {
 export const getServerSideProps = protectPage(async (context, apolloClient) => {
   const recipientProfileId = context.params?.id as string;
 
-  const { error, data } = await apolloClient.query<DisplayNameQuery>({
-    query: DisplayNameDocument,
-    variables: { id: recipientProfileId },
-    context,
-  });
-
-  if (error) {
+  try {
+    const { data } = await apolloClient.query<DisplayNameQuery>({
+      query: DisplayNameDocument,
+      variables: { id: recipientProfileId },
+      context,
+    });
+    return cacheFor(
+      MessagePage,
+      { recipientName: data.profile.displayName, recipientProfileId },
+      context,
+      apolloClient,
+    );
+  } catch (error) {
     return { notFound: true };
   }
-
-  return cacheFor(MessagePage, { recipientName: data.profile.displayName, recipientProfileId }, context, apolloClient);
 });
 
 export default function MessagePage({ recipientName, recipientProfileId }: PostPageProps) {
