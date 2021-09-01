@@ -82,6 +82,28 @@ export type CreateRepostPayload = {
 };
 
 
+export type DeleteCommentInput = {
+  commentId: Scalars['String'];
+};
+
+export type DeleteCommentPayload = {
+  __typename?: 'DeleteCommentPayload';
+  comment: Comment;
+};
+
+export type FeedConnection = {
+  __typename?: 'FeedConnection';
+  pageInfo: PageInfo;
+  nodes: Array<FeedItem>;
+};
+
+export type FeedItem = {
+  __typename?: 'FeedItem';
+  id: Scalars['ID'];
+  postedAt: Scalars['DateTime'];
+  post: Post;
+};
+
 export type FilterPostInput = {
   profileId?: Maybe<Scalars['String']>;
 };
@@ -93,6 +115,16 @@ export type FollowProfileInput = {
 export type FollowProfilePayload = {
   __typename?: 'FollowProfilePayload';
   followedProfile: Profile;
+};
+
+export type FollowerNotification = {
+  __typename?: 'FollowerNotification';
+  type: NotificationType;
+  createdAt: Scalars['DateTime'];
+  id: Scalars['String'];
+  followerName: Scalars['String'];
+  followerPicture: Maybe<Scalars['String']>;
+  link: Scalars['String'];
 };
 
 export type ForgotPasswordInput = {
@@ -149,9 +181,28 @@ export type LoginInput = {
   password: Scalars['String'];
 };
 
+export type Message = {
+  __typename?: 'Message';
+  id: Scalars['ID'];
+  fromId: Scalars['String'];
+  toId: Scalars['String'];
+  message: Scalars['String'];
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  fromProfile: Profile;
+};
+
+export type MessageConnection = {
+  __typename?: 'MessageConnection';
+  pageInfo: PageInfo;
+  nodes: Array<Message>;
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   addComment: AddCommentPayload;
+  deleteComment: DeleteCommentPayload;
+  sendMessage: SendMessagePayload;
   resetNotificationCount: Profile;
   clearNotifications: ClearNotificationsPayload;
   createPost: CreatePostPayload;
@@ -173,6 +224,16 @@ export type Mutation = {
 
 export type MutationAddCommentArgs = {
   input: AddCommentInput;
+};
+
+
+export type MutationDeleteCommentArgs = {
+  input: DeleteCommentInput;
+};
+
+
+export type MutationSendMessageArgs = {
+  input: SendMessageInput;
 };
 
 
@@ -245,7 +306,7 @@ export type MutationResetPasswordArgs = {
   input: ResetPasswordInput;
 };
 
-export type Notification = CommentNotification;
+export type Notification = CommentNotification | ReactionNotification | FollowerNotification;
 
 export type NotificationConnection = {
   __typename?: 'NotificationConnection';
@@ -254,7 +315,9 @@ export type NotificationConnection = {
 };
 
 export enum NotificationType {
-  Comment = 'Comment'
+  Comment = 'Comment',
+  Reaction = 'Reaction',
+  Follower = 'Follower'
 }
 
 export type PageInfo = {
@@ -322,6 +385,9 @@ export type Query = {
   __typename?: 'Query';
   comment: Comment;
   comments: Array<Comment>;
+  chatHistory: MessageConnection;
+  message: Message;
+  feed: FeedConnection;
   notifications: NotificationConnection;
   notification: Notification;
   post: Post;
@@ -341,6 +407,22 @@ export type QueryCommentArgs = {
 
 export type QueryCommentsArgs = {
   postId: Scalars['String'];
+};
+
+
+export type QueryChatHistoryArgs = {
+  page?: Maybe<PageInput>;
+  profileId: Scalars['String'];
+};
+
+
+export type QueryMessageArgs = {
+  id: Scalars['String'];
+};
+
+
+export type QueryFeedArgs = {
+  page?: Maybe<PageInput>;
 };
 
 
@@ -391,6 +473,19 @@ export type ReactToPostPayload = {
   post: Post;
 };
 
+export type ReactionNotification = {
+  __typename?: 'ReactionNotification';
+  type: NotificationType;
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  id: Scalars['String'];
+  authorName: Scalars['String'];
+  authorPicture: Maybe<Scalars['String']>;
+  postId: Scalars['String'];
+  reactionType: ReactionType;
+  link: Scalars['String'];
+};
+
 export enum ReactionType {
   Happy = 'HAPPY',
   Heart = 'HEART',
@@ -414,6 +509,16 @@ export type ResetPasswordInput = {
 export type ResetPasswordPayload = {
   __typename?: 'ResetPasswordPayload';
   ok: Scalars['Boolean'];
+};
+
+export type SendMessageInput = {
+  message: Scalars['String'];
+  toId: Scalars['String'];
+};
+
+export type SendMessagePayload = {
+  __typename?: 'SendMessagePayload';
+  message: Message;
 };
 
 export type SocialMedias = {
@@ -547,6 +652,26 @@ export type AddCommentMutation = (
   ) }
 );
 
+export type ChatHistoryQueryVariables = Exact<{
+  profileId: Scalars['String'];
+  page?: Maybe<PageInput>;
+}>;
+
+
+export type ChatHistoryQuery = (
+  { __typename?: 'Query' }
+  & { chatHistory: (
+    { __typename?: 'MessageConnection' }
+    & { pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage' | 'startCursor'>
+    ), nodes: Array<(
+      { __typename?: 'Message' }
+      & MessageComponentFieldsFragment
+    )> }
+  ) }
+);
+
 export type ClearNotificationsMutationVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -630,6 +755,45 @@ export type CreateRepostMutation = (
   ) }
 );
 
+export type DeleteCommentMutationVariables = Exact<{
+  input: DeleteCommentInput;
+}>;
+
+
+export type DeleteCommentMutation = (
+  { __typename?: 'Mutation' }
+  & { deleteComment: (
+    { __typename?: 'DeleteCommentPayload' }
+    & { comment: (
+      { __typename?: 'Comment' }
+      & CommentComponentFieldsFragment
+    ) }
+  ) }
+);
+
+export type FeedQueryVariables = Exact<{
+  page?: Maybe<PageInput>;
+}>;
+
+
+export type FeedQuery = (
+  { __typename?: 'Query' }
+  & { feed: (
+    { __typename?: 'FeedConnection' }
+    & { nodes: Array<(
+      { __typename?: 'FeedItem' }
+      & Pick<FeedItem, 'id'>
+      & { post: (
+        { __typename?: 'Post' }
+        & PostComponentFieldsFragment
+      ) }
+    )>, pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
+    ) }
+  ) }
+);
+
 export type FollowProfileMutationVariables = Exact<{
   input: FollowProfileInput;
 }>;
@@ -644,6 +808,11 @@ export type FollowProfileMutation = (
       & Pick<Profile, 'id' | 'followerCount' | 'isFollowed'>
     ) }
   ) }
+);
+
+export type FollowerNotificationFieldsFragment = (
+  { __typename?: 'FollowerNotification' }
+  & Pick<FollowerNotification, 'id' | 'type' | 'link' | 'createdAt' | 'followerName' | 'followerPicture'>
 );
 
 export type ForgotPasswordMutationVariables = Exact<{
@@ -700,6 +869,28 @@ export type MeQuery = (
   )> }
 );
 
+export type MessageQueryVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+export type MessageQuery = (
+  { __typename?: 'Query' }
+  & { message: (
+    { __typename?: 'Message' }
+    & MessageComponentFieldsFragment
+  ) }
+);
+
+export type MessageComponentFieldsFragment = (
+  { __typename?: 'Message' }
+  & Pick<Message, 'id' | 'message' | 'fromId' | 'toId' | 'createdAt'>
+  & { fromProfile: (
+    { __typename?: 'Profile' }
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
+  ) }
+);
+
 export type MyProfileQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -725,6 +916,12 @@ export type NotificationQuery = (
   & { notification: (
     { __typename?: 'CommentNotification' }
     & CommentNotificationFieldsFragment
+  ) | (
+    { __typename?: 'ReactionNotification' }
+    & ReactionNotificationFieldsFragment
+  ) | (
+    { __typename?: 'FollowerNotification' }
+    & FollowerNotificationFieldsFragment
   ) }
 );
 
@@ -751,6 +948,12 @@ export type NotificationsQuery = (
     & { nodes: Array<(
       { __typename?: 'CommentNotification' }
       & CommentNotificationFieldsFragment
+    ) | (
+      { __typename?: 'ReactionNotification' }
+      & ReactionNotificationFieldsFragment
+    ) | (
+      { __typename?: 'FollowerNotification' }
+      & FollowerNotificationFieldsFragment
     )> }
   ) }
 );
@@ -811,6 +1014,19 @@ export type ProfileQuery = (
   ) }
 );
 
+export type ProfileDisplayNameQueryVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+export type ProfileDisplayNameQuery = (
+  { __typename?: 'Query' }
+  & { profile: (
+    { __typename?: 'Profile' }
+    & Pick<Profile, 'displayName'>
+  ) }
+);
+
 export type ReactToPostMutationVariables = Exact<{
   input: ReactToPostInput;
 }>;
@@ -825,6 +1041,11 @@ export type ReactToPostMutation = (
       & Pick<Post, 'id' | 'totalReactions' | 'topReactions' | 'myReaction'>
     ) }
   ) }
+);
+
+export type ReactionNotificationFieldsFragment = (
+  { __typename?: 'ReactionNotification' }
+  & Pick<ReactionNotification, 'id' | 'type' | 'reactionType' | 'link' | 'authorName' | 'authorPicture' | 'createdAt' | 'postId'>
 );
 
 export type RegisterMutationVariables = Exact<{
@@ -861,6 +1082,22 @@ export type ResetPasswordMutation = (
   & { resetPassword: (
     { __typename?: 'ResetPasswordPayload' }
     & Pick<ResetPasswordPayload, 'ok'>
+  ) }
+);
+
+export type SendMessageMutationVariables = Exact<{
+  input: SendMessageInput;
+}>;
+
+
+export type SendMessageMutation = (
+  { __typename?: 'Mutation' }
+  & { sendMessage: (
+    { __typename?: 'SendMessagePayload' }
+    & { message: (
+      { __typename?: 'Message' }
+      & MessageComponentFieldsFragment
+    ) }
   ) }
 );
 
@@ -998,6 +1235,30 @@ export const CommentNotificationFieldsFragmentDoc = gql`
   authorPicture
 }
     `;
+export const FollowerNotificationFieldsFragmentDoc = gql`
+    fragment FollowerNotificationFields on FollowerNotification {
+  id
+  type
+  link
+  createdAt
+  followerName
+  followerPicture
+}
+    `;
+export const MessageComponentFieldsFragmentDoc = gql`
+    fragment MessageComponentFields on Message {
+  id
+  message
+  fromId
+  toId
+  createdAt
+  fromProfile {
+    id
+    displayName
+    profilePicture
+  }
+}
+    `;
 export const PostComponentFieldsFragmentDoc = gql`
     fragment PostComponentFields on Post {
   id
@@ -1015,6 +1276,18 @@ export const PostComponentFieldsFragmentDoc = gql`
     displayName
     profilePicture
   }
+}
+    `;
+export const ReactionNotificationFieldsFragmentDoc = gql`
+    fragment ReactionNotificationFields on ReactionNotification {
+  id
+  type
+  reactionType
+  link
+  authorName
+  authorPicture
+  createdAt
+  postId
 }
     `;
 export const AddCommentDocument = gql`
@@ -1056,6 +1329,48 @@ export function useAddCommentMutation(baseOptions?: Apollo.MutationHookOptions<A
 export type AddCommentMutationHookResult = ReturnType<typeof useAddCommentMutation>;
 export type AddCommentMutationResult = Apollo.MutationResult<AddCommentMutation>;
 export type AddCommentMutationOptions = Apollo.BaseMutationOptions<AddCommentMutation, AddCommentMutationVariables>;
+export const ChatHistoryDocument = gql`
+    query ChatHistory($profileId: String!, $page: PageInput) {
+  chatHistory(profileId: $profileId, page: $page) {
+    pageInfo {
+      hasNextPage
+      startCursor
+    }
+    nodes {
+      ...MessageComponentFields
+    }
+  }
+}
+    ${MessageComponentFieldsFragmentDoc}`;
+
+/**
+ * __useChatHistoryQuery__
+ *
+ * To run a query within a React component, call `useChatHistoryQuery` and pass it any options that fit your needs.
+ * When your component renders, `useChatHistoryQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useChatHistoryQuery({
+ *   variables: {
+ *      profileId: // value for 'profileId'
+ *      page: // value for 'page'
+ *   },
+ * });
+ */
+export function useChatHistoryQuery(baseOptions: Apollo.QueryHookOptions<ChatHistoryQuery, ChatHistoryQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ChatHistoryQuery, ChatHistoryQueryVariables>(ChatHistoryDocument, options);
+      }
+export function useChatHistoryLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ChatHistoryQuery, ChatHistoryQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ChatHistoryQuery, ChatHistoryQueryVariables>(ChatHistoryDocument, options);
+        }
+export type ChatHistoryQueryHookResult = ReturnType<typeof useChatHistoryQuery>;
+export type ChatHistoryLazyQueryHookResult = ReturnType<typeof useChatHistoryLazyQuery>;
+export type ChatHistoryQueryResult = Apollo.QueryResult<ChatHistoryQuery, ChatHistoryQueryVariables>;
 export const ClearNotificationsDocument = gql`
     mutation ClearNotifications {
   clearNotifications {
@@ -1228,6 +1543,85 @@ export function useCreateRepostMutation(baseOptions?: Apollo.MutationHookOptions
 export type CreateRepostMutationHookResult = ReturnType<typeof useCreateRepostMutation>;
 export type CreateRepostMutationResult = Apollo.MutationResult<CreateRepostMutation>;
 export type CreateRepostMutationOptions = Apollo.BaseMutationOptions<CreateRepostMutation, CreateRepostMutationVariables>;
+export const DeleteCommentDocument = gql`
+    mutation DeleteComment($input: DeleteCommentInput!) {
+  deleteComment(input: $input) {
+    comment {
+      ...CommentComponentFields
+    }
+  }
+}
+    ${CommentComponentFieldsFragmentDoc}`;
+export type DeleteCommentMutationFn = Apollo.MutationFunction<DeleteCommentMutation, DeleteCommentMutationVariables>;
+
+/**
+ * __useDeleteCommentMutation__
+ *
+ * To run a mutation, you first call `useDeleteCommentMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteCommentMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteCommentMutation, { data, loading, error }] = useDeleteCommentMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useDeleteCommentMutation(baseOptions?: Apollo.MutationHookOptions<DeleteCommentMutation, DeleteCommentMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteCommentMutation, DeleteCommentMutationVariables>(DeleteCommentDocument, options);
+      }
+export type DeleteCommentMutationHookResult = ReturnType<typeof useDeleteCommentMutation>;
+export type DeleteCommentMutationResult = Apollo.MutationResult<DeleteCommentMutation>;
+export type DeleteCommentMutationOptions = Apollo.BaseMutationOptions<DeleteCommentMutation, DeleteCommentMutationVariables>;
+export const FeedDocument = gql`
+    query Feed($page: PageInput) {
+  feed(page: $page) {
+    nodes {
+      id
+      post {
+        ...PostComponentFields
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+    ${PostComponentFieldsFragmentDoc}`;
+
+/**
+ * __useFeedQuery__
+ *
+ * To run a query within a React component, call `useFeedQuery` and pass it any options that fit your needs.
+ * When your component renders, `useFeedQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useFeedQuery({
+ *   variables: {
+ *      page: // value for 'page'
+ *   },
+ * });
+ */
+export function useFeedQuery(baseOptions?: Apollo.QueryHookOptions<FeedQuery, FeedQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<FeedQuery, FeedQueryVariables>(FeedDocument, options);
+      }
+export function useFeedLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<FeedQuery, FeedQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<FeedQuery, FeedQueryVariables>(FeedDocument, options);
+        }
+export type FeedQueryHookResult = ReturnType<typeof useFeedQuery>;
+export type FeedLazyQueryHookResult = ReturnType<typeof useFeedLazyQuery>;
+export type FeedQueryResult = Apollo.QueryResult<FeedQuery, FeedQueryVariables>;
 export const FollowProfileDocument = gql`
     mutation FollowProfile($input: FollowProfileInput!) {
   followProfile(input: $input) {
@@ -1408,6 +1802,41 @@ export function useMeLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<MeQuery
 export type MeQueryHookResult = ReturnType<typeof useMeQuery>;
 export type MeLazyQueryHookResult = ReturnType<typeof useMeLazyQuery>;
 export type MeQueryResult = Apollo.QueryResult<MeQuery, MeQueryVariables>;
+export const MessageDocument = gql`
+    query Message($id: String!) {
+  message(id: $id) {
+    ...MessageComponentFields
+  }
+}
+    ${MessageComponentFieldsFragmentDoc}`;
+
+/**
+ * __useMessageQuery__
+ *
+ * To run a query within a React component, call `useMessageQuery` and pass it any options that fit your needs.
+ * When your component renders, `useMessageQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useMessageQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useMessageQuery(baseOptions: Apollo.QueryHookOptions<MessageQuery, MessageQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<MessageQuery, MessageQueryVariables>(MessageDocument, options);
+      }
+export function useMessageLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<MessageQuery, MessageQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<MessageQuery, MessageQueryVariables>(MessageDocument, options);
+        }
+export type MessageQueryHookResult = ReturnType<typeof useMessageQuery>;
+export type MessageLazyQueryHookResult = ReturnType<typeof useMessageLazyQuery>;
+export type MessageQueryResult = Apollo.QueryResult<MessageQuery, MessageQueryVariables>;
 export const MyProfileDocument = gql`
     query MyProfile {
   myProfile {
@@ -1455,9 +1884,17 @@ export const NotificationDocument = gql`
     ... on CommentNotification {
       ...CommentNotificationFields
     }
+    ... on ReactionNotification {
+      ...ReactionNotificationFields
+    }
+    ... on FollowerNotification {
+      ...FollowerNotificationFields
+    }
   }
 }
-    ${CommentNotificationFieldsFragmentDoc}`;
+    ${CommentNotificationFieldsFragmentDoc}
+${ReactionNotificationFieldsFragmentDoc}
+${FollowerNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationQuery__
@@ -1528,10 +1965,18 @@ export const NotificationsDocument = gql`
       ... on CommentNotification {
         ...CommentNotificationFields
       }
+      ... on ReactionNotification {
+        ...ReactionNotificationFields
+      }
+      ... on FollowerNotification {
+        ...FollowerNotificationFields
+      }
     }
   }
 }
-    ${CommentNotificationFieldsFragmentDoc}`;
+    ${CommentNotificationFieldsFragmentDoc}
+${ReactionNotificationFieldsFragmentDoc}
+${FollowerNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationsQuery__
@@ -1681,6 +2126,41 @@ export function useProfileLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Pr
 export type ProfileQueryHookResult = ReturnType<typeof useProfileQuery>;
 export type ProfileLazyQueryHookResult = ReturnType<typeof useProfileLazyQuery>;
 export type ProfileQueryResult = Apollo.QueryResult<ProfileQuery, ProfileQueryVariables>;
+export const ProfileDisplayNameDocument = gql`
+    query ProfileDisplayName($id: String!) {
+  profile(id: $id) {
+    displayName
+  }
+}
+    `;
+
+/**
+ * __useProfileDisplayNameQuery__
+ *
+ * To run a query within a React component, call `useProfileDisplayNameQuery` and pass it any options that fit your needs.
+ * When your component renders, `useProfileDisplayNameQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useProfileDisplayNameQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useProfileDisplayNameQuery(baseOptions: Apollo.QueryHookOptions<ProfileDisplayNameQuery, ProfileDisplayNameQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ProfileDisplayNameQuery, ProfileDisplayNameQueryVariables>(ProfileDisplayNameDocument, options);
+      }
+export function useProfileDisplayNameLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ProfileDisplayNameQuery, ProfileDisplayNameQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ProfileDisplayNameQuery, ProfileDisplayNameQueryVariables>(ProfileDisplayNameDocument, options);
+        }
+export type ProfileDisplayNameQueryHookResult = ReturnType<typeof useProfileDisplayNameQuery>;
+export type ProfileDisplayNameLazyQueryHookResult = ReturnType<typeof useProfileDisplayNameLazyQuery>;
+export type ProfileDisplayNameQueryResult = Apollo.QueryResult<ProfileDisplayNameQuery, ProfileDisplayNameQueryVariables>;
 export const ReactToPostDocument = gql`
     mutation ReactToPost($input: ReactToPostInput!) {
   reactToPost(input: $input) {
@@ -1818,6 +2298,41 @@ export function useResetPasswordMutation(baseOptions?: Apollo.MutationHookOption
 export type ResetPasswordMutationHookResult = ReturnType<typeof useResetPasswordMutation>;
 export type ResetPasswordMutationResult = Apollo.MutationResult<ResetPasswordMutation>;
 export type ResetPasswordMutationOptions = Apollo.BaseMutationOptions<ResetPasswordMutation, ResetPasswordMutationVariables>;
+export const SendMessageDocument = gql`
+    mutation SendMessage($input: SendMessageInput!) {
+  sendMessage(input: $input) {
+    message {
+      ...MessageComponentFields
+    }
+  }
+}
+    ${MessageComponentFieldsFragmentDoc}`;
+export type SendMessageMutationFn = Apollo.MutationFunction<SendMessageMutation, SendMessageMutationVariables>;
+
+/**
+ * __useSendMessageMutation__
+ *
+ * To run a mutation, you first call `useSendMessageMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSendMessageMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [sendMessageMutation, { data, loading, error }] = useSendMessageMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useSendMessageMutation(baseOptions?: Apollo.MutationHookOptions<SendMessageMutation, SendMessageMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<SendMessageMutation, SendMessageMutationVariables>(SendMessageDocument, options);
+      }
+export type SendMessageMutationHookResult = ReturnType<typeof useSendMessageMutation>;
+export type SendMessageMutationResult = Apollo.MutationResult<SendMessageMutation>;
+export type SendMessageMutationOptions = Apollo.BaseMutationOptions<SendMessageMutation, SendMessageMutationVariables>;
 export const UnfollowProfileDocument = gql`
     mutation UnfollowProfile($input: UnfollowProfileInput!) {
   unfollowProfile(input: $input) {

@@ -23,11 +23,13 @@ export const Post = ({ postId }: PostProps) => {
       <NextLink href={`/posts/${post.id}`}>
         <div className="p-4 bg-gray-20 break-words">
           <div className="flex items-center">
-            <Avatar src={post.profile.profilePicture} />
-            <NextLink href={`/profiles/${post.profile.id}`}>
-              <a className="ml-4 text-lg font-bold text-gray-100">{post.profile.displayName}</a>
-            </NextLink>
-            <Timestamp datetime={post.createdAt} className="flex-1 text-right" />
+            <Avatar profile={post.profile} />
+            <div className="flex flex-col ml-4">
+              <NextLink href={`/profiles/${post.profile.id}`}>
+                <a className="text-lg font-bold text-gray-100">{post.profile.displayName}</a>
+              </NextLink>
+              <Timestamp datetime={post.createdAt} className="flex-1 text-right" />
+            </div>
           </div>
           <pre className="mt-4 text-gray-100 break-words whitespace-pre-wrap">{post.body}</pre>
           {post.mediaLink && (

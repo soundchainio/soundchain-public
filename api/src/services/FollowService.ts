@@ -32,6 +32,8 @@ export class FollowService extends ModelService<typeof Follow, FollowKeyComponen
     const follow = new FollowModel({ followerId, followedId });
     await follow.save();
     this.dataLoader.clear(this.getKeyFromComponents(follow));
+    this.context.notificationService.notifyNewFollower(follow);
+    this.context.feedService.addRecentPostsToFollowerFeed(follow);
     return follow;
   }
 
@@ -43,5 +45,10 @@ export class FollowService extends ModelService<typeof Follow, FollowKeyComponen
     }
 
     this.dataLoader.clear(this.getKeyFromComponents({ followerId, followedId }));
+  }
+
+  async getFollowerIds(profileId: string): Promise<string[]> {
+    const rest = await this.model.find({ followedId: profileId }, { followerId: 1, _id: 0 });
+    return rest.map(({ followerId }) => followerId);
   }
 }

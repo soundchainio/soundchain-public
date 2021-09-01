@@ -1,0 +1,5 @@
+query Message($id: String!) {
+  message(id: $id) {
+    ...MessageComponentFields
+  }
+}

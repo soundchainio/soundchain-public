@@ -1,6 +1,7 @@
 import { Avatar } from 'components/Avatar';
 import { FollowButton } from 'components/FollowButton';
 import { Layout } from 'components/Layout';
+import { MessageButton } from 'components/MessageButton';
 import { Number } from 'components/Number';
 import { Posts } from 'components/Posts';
 import { ProfileTabs } from 'components/ProfileTabs';
@@ -49,23 +50,15 @@ export default function ProfilePage({ profileId }: ProfilePageProps) {
     return null;
   }
 
-  const {
-    coverPicture,
-    profilePicture,
-    displayName,
-    userHandle,
-    socialMedias,
-    followerCount,
-    followingCount,
-    isFollowed,
-  } = data.profile;
+  const { coverPicture, displayName, userHandle, socialMedias, followerCount, followingCount, isFollowed } =
+    data.profile;
 
   return (
     <Layout>
       <div className="h-[125px] relative">
         {coverPicture && <Image src={coverPicture} alt="Cover pic" layout="fill" objectFit="cover" />}
         <Avatar
-          src={profilePicture}
+          profile={data.profile}
           pixels={80}
           className="absolute left-4 bottom-0 transform translate-y-2/3 border-gray-10 border-4 rounded-full"
         />
@@ -88,8 +81,14 @@ export default function ProfilePage({ profileId }: ProfilePageProps) {
           </div>
           <FollowButton followedId={profileId} isFollowed={isFollowed} />
         </div>
-        <Subtitle className="mt-4">{displayName}</Subtitle>
-        <p className="text-gray-80 text-sm">@{userHandle}</p>
+        <div className="flex flex-row mt-4">
+          <div>
+            <Subtitle className="">{displayName}</Subtitle>
+            <p className="text-gray-80 text-sm">@{userHandle}</p>
+          </div>
+          <MessageButton profileId={profileId} />
+        </div>
+
         <div className="flex space-x-4 mt-2">
           {socialMedias.instagram && <SocialMediaLink company="instagram" handle={socialMedias.instagram} />}
           {socialMedias.twitter && <SocialMediaLink company="twitter" handle={socialMedias.twitter} />}

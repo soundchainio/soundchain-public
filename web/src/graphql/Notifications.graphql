@@ -4,6 +4,12 @@ query Notifications($sort: SortNotificationInput) {
       ... on CommentNotification {
         ...CommentNotificationFields
       }
+      ... on ReactionNotification {
+        ...ReactionNotificationFields
+      }
+      ... on FollowerNotification {
+        ...FollowerNotificationFields
+      }
     }
   }
 }

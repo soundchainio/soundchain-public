@@ -1,9 +1,11 @@
 import { PaginateResult } from '../db/pagination/paginate';
 import { NotFoundError } from '../errors/NotFoundError';
 import { Comment } from '../models/Comment';
+import { Follow } from '../models/Follow';
 import { Notification, NotificationModel } from '../models/Notification';
 import { Post } from '../models/Post';
 import { Profile, ProfileModel } from '../models/Profile';
+import { Reaction } from '../models/Reaction';
 import { CommentNotificationMetadata } from '../types/CommentNotificationMetadata';
 import { Context } from '../types/Context';
 import { NotificationType } from '../types/NotificationType';
@@ -39,6 +41,44 @@ export class NotificationService extends ModelService<typeof Notification> {
       type: NotificationType.Comment,
       profileId,
       metadata,
+    });
+    await notification.save();
+    await this.incrementNotificationCount(profileId);
+  }
+
+  async notifyNewReaction({ postId, profileId, type: reactionType }: Reaction): Promise<void> {
+    let [{ profileId: postProfileId }, { displayName: authorName, profilePicture: authorPicture }] = await Promise.all([
+      this.context.postService.getPost(postId),
+      this.context.profileService.getProfile(profileId),
+    ]);
+
+    const notification = new NotificationModel({
+      type: NotificationType.Reaction,
+      profileId: postProfileId,
+      metadata: {
+        authorName,
+        authorPicture,
+        postId,
+        reactionType,
+      },
+    });
+
+    await notification.save();
+    await this.incrementNotificationCount(postProfileId);
+  }
+
+  async notifyNewFollower({ followerId, followedId: profileId }: Follow): Promise<void> {
+    const { displayName: followerName, profilePicture: followerPicture } = await this.context.profileService.getProfile(
+      followerId,
+    );
+    const notification = new NotificationModel({
+      type: NotificationType.Follower,
+      profileId,
+      metadata: {
+        followerId,
+        followerName,
+        followerPicture,
+      },
     });
     await notification.save();
     await this.incrementNotificationCount(profileId);

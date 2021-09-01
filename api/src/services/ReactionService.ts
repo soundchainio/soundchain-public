@@ -38,6 +38,7 @@ export class ReactionService extends ModelService<typeof Reaction, ReactionKeyCo
     const reaction = new this.model(params);
     await reaction.save();
     this.dataLoader.clear(this.getKeyFromComponents(reaction));
+    this.context.notificationService.notifyNewReaction(reaction);
     return reaction;
   }
 

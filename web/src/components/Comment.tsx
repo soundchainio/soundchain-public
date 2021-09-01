@@ -1,5 +1,9 @@
+import { useModalDispatch } from 'contexts/providers/modal';
+import { useMe } from 'hooks/useMe';
+import { Ellipsis } from 'icons/Ellipsis';
 import { useCommentQuery } from 'lib/graphql';
 import NextLink from 'next/link';
+import { DeleteModalType } from 'types/DeleteModalType';
 import { Avatar } from './Avatar';
 import { CommentSkeleton } from './CommentSkeleton';
 import { Timestamp } from './Timestamp';
@@ -10,21 +14,29 @@ interface CommentProps {
 
 export const Comment = ({ commentId }: CommentProps) => {
   const { data } = useCommentQuery({ variables: { id: commentId } });
+  const me = useMe();
+  const { dispatchShowDeleteModal } = useModalDispatch();
   const comment = data?.comment;
+  const canEdit = comment?.profile.id == me?.profile.id;
+
+  const onEllipsisClick = () => {
+    dispatchShowDeleteModal(true, DeleteModalType.COMMENT, commentId);
+  };
 
   if (!comment) return <CommentSkeleton />;
 
   return (
     <div className="flex flex-row space-x-3">
-      <Avatar src={comment.profile.profilePicture} className="mt-4" />
+      <Avatar profile={comment.profile} className="mt-4" />
       <div className="flex-1 py-4 px-4 bg-gray-20 rounded-xl">
-        <div className="flex justify-between items-center mb-1">
+        <div className="flex items-center">
           <NextLink href={`/profiles/${comment.profile.id}`}>
             <a className="text-white font-semibold">{comment.profile.displayName}</a>
           </NextLink>
-          <Timestamp datetime={comment.createdAt} />
+          <Timestamp className="ml-2  flex-1" datetime={comment.createdAt} />
+          {canEdit && <Ellipsis className="pr-2 pl-2 w-10 h-3 cursor-pointer" onClick={onEllipsisClick} />}
         </div>
-        <pre className="text-white font-thin tracking-wide text-sm whitespace-pre-wrap">{comment.body}</pre>
+        <pre className="text-white font-thin tracking-wide text-sm whitespace-pre-wrap mt-1">{comment.body}</pre>
       </div>
     </div>
   );

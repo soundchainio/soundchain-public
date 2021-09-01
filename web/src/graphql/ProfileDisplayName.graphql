@@ -1,0 +1,5 @@
+query ProfileDisplayName($id: String!) {
+  profile(id: $id) {
+    displayName
+  }
+}

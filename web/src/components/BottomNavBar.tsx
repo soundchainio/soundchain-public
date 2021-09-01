@@ -9,6 +9,7 @@ import { Search } from 'icons/Search';
 import { setJwt } from 'lib/apollo';
 import { useRouter } from 'next/router';
 import { BottomNavBarButton } from './BottomNavBarButton';
+import { DeleteModal } from './DeleteModal';
 import { NotificationBadge } from './NotificationBadge';
 
 export const BottomNavBar = () => {
@@ -22,7 +23,7 @@ export const BottomNavBar = () => {
   };
 
   return (
-    <nav className="bg-gray-20 h-16 flex items-center inset-x-0 shadow-2xl">
+    <nav className="bg-black h-16 flex items-center inset-x-0 shadow-2xl">
       <div className="w-full flex">
         <BottomNavBarButton label="Home" path="/" icon={Home} activatedColor="yellow" />
         <BottomNavBarButton label="Explore" path="/search" icon={Search} activatedColor="green" />
@@ -36,6 +37,7 @@ export const BottomNavBar = () => {
         />
         <BottomNavBarButton label="Profile" icon={Profile} onClick={setJwt} activatedColor="green-purple" />
         <NewPostModal />
+        <DeleteModal />
       </div>
     </nav>
   );

@@ -27,12 +27,14 @@ export class PostService extends ModelService<typeof Post> {
   async createPost(params: NewPostParams): Promise<Post> {
     const post = new this.model(params);
     await post.save();
+    this.context.feedService.addPostToFollowerFeeds(post);
     return post;
   }
 
   async createRepost(params: RepostParams): Promise<Post> {
     const post = new PostModel(params);
     await post.save();
+    this.context.feedService.addPostToFollowerFeeds(post);
     return post;
   }
 
