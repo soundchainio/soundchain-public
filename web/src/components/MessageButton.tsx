@@ -12,18 +12,13 @@ export const MessageButton = ({ profileId }: MessageButtonProps) => {
   const router = useRouter();
   const me = useMe();
 
-  const handleClick = () => {
-    if (!me) {
-      router.push({ pathname: '/login', query: { callbackUrl: window.location.href } });
-      return;
-    }
-
-    return router.push(`/messages/${profileId}`);
-  };
-
-  if (me?.profile.id === profileId) {
+  if (!me || me?.profile.id === profileId) {
     return null;
   }
+
+  const handleClick = () => {
+    return router.push(`/messages/${profileId}`);
+  };
 
   return (
     <div className="h-8 ml-2">

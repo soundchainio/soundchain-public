@@ -1,12 +1,12 @@
-import { BackButton } from 'components/Buttons/BackButton';
 import { BottomSheet } from 'components/BottomSheet';
+import { BackButton } from 'components/Buttons/BackButton';
+import { RefreshButton } from 'components/Buttons/RefreshButton';
 import { Chat } from 'components/Chat';
 import { Layout } from 'components/Layout';
 import { NewMessageForm } from 'components/NewMessageForm';
-import { RefreshButton } from 'components/Buttons/RefreshButton';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { cacheFor } from 'lib/apollo';
-import { ChatHistoryDocument, ProfileDocument, ProfileQuery } from 'lib/graphql';
+import { ChatHistoryDocument, DisplayNameDocument, DisplayNameQuery } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 
 export interface PostPageProps {
@@ -17,8 +17,8 @@ export interface PostPageProps {
 export const getServerSideProps = protectPage(async (context, apolloClient) => {
   const recipientProfileId = context.params?.id as string;
 
-  const { error, data } = await apolloClient.query<ProfileQuery>({
-    query: ProfileDocument,
+  const { error, data } = await apolloClient.query<DisplayNameQuery>({
+    query: DisplayNameDocument,
     variables: { id: recipientProfileId },
     context,
   });

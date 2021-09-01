@@ -13,6 +13,10 @@ interface MessageProps {
 
 const TIMESTAMP_FORMAT = 'MM/dd/yyy, hh:mmaaa';
 
+const getTimestamp = (timestamp: string) => {
+  return format(new Date(timestamp), TIMESTAMP_FORMAT);
+};
+
 export const Message = ({ messageId, nextMessage }: MessageProps) => {
   const me = useMe();
   const { data } = useMessageQuery({ variables: { id: messageId } });
@@ -25,51 +29,41 @@ export const Message = ({ messageId, nextMessage }: MessageProps) => {
     fromProfile: { profilePicture },
   } = message;
 
-  const isLastMessage = () => {
-    if (!nextMessage) {
-      return true;
-    }
-    return getTimestamp(message.createdAt) !== getTimestamp(nextMessage.createdAt)
+  const isLastMessage =
+    !nextMessage || getTimestamp(message.createdAt) !== getTimestamp(nextMessage.createdAt)
       ? true
       : message.fromProfile.id !== nextMessage.fromProfile.id;
-  };
 
-  const isMyMessage = () => {
-    return me?.profile.id === message.fromProfile.id;
-  };
-
-  const getTimestamp = (timestamp: string) => {
-    return format(new Date(timestamp), TIMESTAMP_FORMAT);
-  };
+  const isMyMessage = me?.profile.id === message.fromProfile.id;
 
   return (
-    <div className={classNames('flex flex-col w-full', isMyMessage() && 'items-end')}>
+    <div className={classNames('flex flex-col w-full', isMyMessage && 'items-end')}>
       <div className={classNames('flex flex-row w-3/4')}>
-        {!isMyMessage() && (
-          <div className="w-12">{isLastMessage() && <Avatar src={profilePicture} className="mr-2 mt-2" />}</div>
+        {!isMyMessage && (
+          <div className="w-12">{isLastMessage && <Avatar src={profilePicture} className="mr-2 mt-2" />}</div>
         )}
         <div className="flex flex-col w-full">
           <div
             className={classNames(
               'flex py-1 px-4 w-full rounded-t-xl',
-              isMyMessage() ? 'rounded-bl-xl bg-purple-gradient' : 'rounded-br-xl bg-gray-20',
+              isMyMessage ? 'rounded-bl-xl bg-purple-gradient' : 'rounded-br-xl bg-gray-20',
             )}
           >
             <pre
               className={classNames(
                 'text-white font-thin tracking-wide text-sm whitespace-pre-wrap w-full p-2',
-                isMyMessage() && 'text-right',
+                isMyMessage && 'text-right',
               )}
             >
               {messageBody}
             </pre>
           </div>
-          {isLastMessage() && (
+          {isLastMessage && (
             <Timestamp
               datetime={message.createdAt}
               format={TIMESTAMP_FORMAT}
               small
-              className={classNames('pt-1', isMyMessage() && 'text-right')}
+              className={classNames('pt-1', isMyMessage && 'text-right')}
             />
           )}
         </div>
