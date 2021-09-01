@@ -5,6 +5,7 @@ import { Comment } from '../models/Comment';
 import { Post } from '../models/Post';
 import { Profile } from '../models/Profile';
 import { User } from '../models/User';
+import { ChangeReactionInput } from '../types/ChangeReactionInput';
 import { Context } from '../types/Context';
 import { CreatePostInput } from '../types/CreatePostInput';
 import { CreatePostPayload } from '../types/CreatePostPayload';
@@ -16,6 +17,8 @@ import { PostConnection } from '../types/PostConnection';
 import { ReactionType } from '../types/ReactionType';
 import { ReactToPostInput } from '../types/ReactToPostInput';
 import { ReactToPostPayload } from '../types/ReactToPostPayload';
+import { RetractReactionInput } from '../types/RetractReactionInput';
+import { RetractReactionPayload } from '../types/RetractReactionPayload';
 import { SortPostInput } from '../types/SortPostInput';
 
 @Resolver(Post)
@@ -98,7 +101,29 @@ export class PostResolver {
     @Arg('input') input: ReactToPostInput,
     @CurrentUser() { profileId }: User,
   ): Promise<ReactToPostPayload> {
-    const post = await postService.reactToPost({ ...input, profileId });
+    const post = await postService.addReactionToPost({ ...input, profileId });
+    return { post };
+  }
+
+  @Mutation(() => RetractReactionPayload)
+  @Authorized()
+  async retractReaction(
+    @Ctx() { postService }: Context,
+    @Arg('input') { postId }: RetractReactionInput,
+    @CurrentUser() { profileId }: User,
+  ): Promise<RetractReactionPayload> {
+    const post = await postService.removeReactionFromPost({ postId, profileId });
+    return { post };
+  }
+
+  @Mutation(() => RetractReactionPayload)
+  @Authorized()
+  async changeReaction(
+    @Ctx() { postService }: Context,
+    @Arg('input') input: ChangeReactionInput,
+    @CurrentUser() { profileId }: User,
+  ): Promise<RetractReactionPayload> {
+    const post = await postService.changeReactionToPost({ profileId, ...input });
     return { post };
   }
 
