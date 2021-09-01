@@ -5,6 +5,7 @@ import { ReactionNotification } from 'lib/graphql';
 import NextLink from 'next/link';
 import React from 'react';
 import { Avatar } from './Avatar';
+import { PreviewPostNotification } from './PreviewPostNotification';
 import { Timestamp } from './Timestamp';
 
 interface ReactionNotificationProps {
@@ -13,7 +14,7 @@ interface ReactionNotificationProps {
 }
 
 export const ReactionNotificationItem = ({
-  notification: { link, authorPicture, authorName, createdAt, reactionType },
+  notification: { link, authorPicture, authorName, createdAt, reactionType, postId },
   index,
 }: ReactionNotificationProps) => {
   return (
@@ -37,7 +38,7 @@ export const ReactionNotificationItem = ({
           </div>
         </div>
         <div className="flex mt-4">
-          <div className="p-4 bg-gray-30 w-full break-words text-gray-100 rounded-xl text-sm">preview body</div>
+          <PreviewPostNotification postId={postId} />
         </div>
       </div>
     </NextLink>

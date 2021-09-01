@@ -19,12 +19,6 @@ interface CommentNotificationParams {
   authorProfileId: string;
 }
 
-interface ReactionNotificationParams {
-  reaction: Reaction;
-  post: Post;
-  authorProfileId: string;
-}
-
 export class NotificationService extends ModelService<typeof Notification> {
   constructor(context: Context) {
     super(context, NotificationModel);

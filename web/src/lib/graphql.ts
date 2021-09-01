@@ -434,6 +434,7 @@ export type ReactionNotification = {
   id: Scalars['String'];
   authorName: Scalars['String'];
   authorPicture: Maybe<Scalars['String']>;
+  postId: Scalars['String'];
   reactionType: ReactionType;
   link: Scalars['String'];
 };
@@ -921,7 +922,7 @@ export type ReactToPostMutation = (
 
 export type ReactionNotificationFieldsFragment = (
   { __typename?: 'ReactionNotification' }
-  & Pick<ReactionNotification, 'id' | 'type' | 'reactionType' | 'link' | 'authorName' | 'authorPicture' | 'createdAt'>
+  & Pick<ReactionNotification, 'id' | 'type' | 'reactionType' | 'link' | 'authorName' | 'authorPicture' | 'createdAt' | 'postId'>
 );
 
 export type RegisterMutationVariables = Exact<{
@@ -1123,6 +1124,7 @@ export const ReactionNotificationFieldsFragmentDoc = gql`
   authorName
   authorPicture
   createdAt
+  postId
 }
     `;
 export const AddCommentDocument = gql`

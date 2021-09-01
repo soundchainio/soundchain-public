@@ -6,4 +6,5 @@ fragment ReactionNotificationFields on ReactionNotification {
   authorName
   authorPicture
   createdAt
+  postId
 }

@@ -23,6 +23,12 @@ export class ReactionNotificationResolver {
     return authorPicture || '';
   }
 
+  @FieldResolver(() => String)
+  postId(@Root() { metadata }: Notification): string {
+    const { postId } = metadata as ReactionNotificationMetadata;
+    return postId;
+  }
+
   @FieldResolver(() => ReactionType)
   reactionType(@Root() { metadata }: Notification): ReactionType {
     const { reactionType } = metadata as ReactionNotificationMetadata;
