@@ -22,7 +22,7 @@ export const ReactionNotificationItem = ({
       <div className={classNames('flex flex-col p-4', index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20')}>
         <div className="break-words flex">
           <div className="flex items-center pr-4">
-            <Avatar src={authorPicture} pixels={40} />
+            <Avatar profile={{ profilePicture: authorPicture }} pixels={40} />
             <div className="relative">
               <ThumbsUpNotification className="absolute -right-1" />
             </div>
