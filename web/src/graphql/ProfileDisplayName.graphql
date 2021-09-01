@@ -1,4 +1,4 @@
-query DisplayName($id: String!) {
+query ProfileDisplayName($id: String!) {
   profile(id: $id) {
     displayName
   }

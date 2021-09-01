@@ -6,7 +6,7 @@ import { Layout } from 'components/Layout';
 import { NewMessageForm } from 'components/NewMessageForm';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { cacheFor } from 'lib/apollo';
-import { ChatHistoryDocument, DisplayNameDocument, DisplayNameQuery } from 'lib/graphql';
+import { ChatHistoryDocument, ProfileDisplayNameDocument, ProfileDisplayNameQuery } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 
 export interface PostPageProps {
@@ -18,23 +18,18 @@ export const getServerSideProps = protectPage(async (context, apolloClient) => {
   const recipientProfileId = context.params?.id as string;
 
   try {
-    const { data } = await apolloClient.query<DisplayNameQuery>({
-      query: DisplayNameDocument,
+    const { data } = await apolloClient.query<ProfileDisplayNameQuery>({
+      query: ProfileDisplayNameDocument,
       variables: { id: recipientProfileId },
       context,
     });
-    return cacheFor(
-      MessagePage,
-      { recipientName: data.profile.displayName, recipientProfileId },
-      context,
-      apolloClient,
-    );
+    return cacheFor(ChatPage, { recipientName: data.profile.displayName, recipientProfileId }, context, apolloClient);
   } catch (error) {
     return { notFound: true };
   }
 });
 
-export default function MessagePage({ recipientName, recipientProfileId }: PostPageProps) {
+export default function ChatPage({ recipientName, recipientProfileId }: PostPageProps) {
   const topNavBarProps: TopNavBarProps = {
     title: recipientName,
     leftButton: BackButton,

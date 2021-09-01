@@ -771,19 +771,6 @@ export type DeleteCommentMutation = (
   ) }
 );
 
-export type DisplayNameQueryVariables = Exact<{
-  id: Scalars['String'];
-}>;
-
-
-export type DisplayNameQuery = (
-  { __typename?: 'Query' }
-  & { profile: (
-    { __typename?: 'Profile' }
-    & Pick<Profile, 'displayName'>
-  ) }
-);
-
 export type FeedQueryVariables = Exact<{
   page?: Maybe<PageInput>;
 }>;
@@ -1024,6 +1011,19 @@ export type ProfileQuery = (
       { __typename?: 'SocialMedias' }
       & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
     ) }
+  ) }
+);
+
+export type ProfileDisplayNameQueryVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+export type ProfileDisplayNameQuery = (
+  { __typename?: 'Query' }
+  & { profile: (
+    { __typename?: 'Profile' }
+    & Pick<Profile, 'displayName'>
   ) }
 );
 
@@ -1578,41 +1578,6 @@ export function useDeleteCommentMutation(baseOptions?: Apollo.MutationHookOption
 export type DeleteCommentMutationHookResult = ReturnType<typeof useDeleteCommentMutation>;
 export type DeleteCommentMutationResult = Apollo.MutationResult<DeleteCommentMutation>;
 export type DeleteCommentMutationOptions = Apollo.BaseMutationOptions<DeleteCommentMutation, DeleteCommentMutationVariables>;
-export const DisplayNameDocument = gql`
-    query DisplayName($id: String!) {
-  profile(id: $id) {
-    displayName
-  }
-}
-    `;
-
-/**
- * __useDisplayNameQuery__
- *
- * To run a query within a React component, call `useDisplayNameQuery` and pass it any options that fit your needs.
- * When your component renders, `useDisplayNameQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useDisplayNameQuery({
- *   variables: {
- *      id: // value for 'id'
- *   },
- * });
- */
-export function useDisplayNameQuery(baseOptions: Apollo.QueryHookOptions<DisplayNameQuery, DisplayNameQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<DisplayNameQuery, DisplayNameQueryVariables>(DisplayNameDocument, options);
-      }
-export function useDisplayNameLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DisplayNameQuery, DisplayNameQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<DisplayNameQuery, DisplayNameQueryVariables>(DisplayNameDocument, options);
-        }
-export type DisplayNameQueryHookResult = ReturnType<typeof useDisplayNameQuery>;
-export type DisplayNameLazyQueryHookResult = ReturnType<typeof useDisplayNameLazyQuery>;
-export type DisplayNameQueryResult = Apollo.QueryResult<DisplayNameQuery, DisplayNameQueryVariables>;
 export const FeedDocument = gql`
     query Feed($page: PageInput) {
   feed(page: $page) {
@@ -2161,6 +2126,41 @@ export function useProfileLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Pr
 export type ProfileQueryHookResult = ReturnType<typeof useProfileQuery>;
 export type ProfileLazyQueryHookResult = ReturnType<typeof useProfileLazyQuery>;
 export type ProfileQueryResult = Apollo.QueryResult<ProfileQuery, ProfileQueryVariables>;
+export const ProfileDisplayNameDocument = gql`
+    query ProfileDisplayName($id: String!) {
+  profile(id: $id) {
+    displayName
+  }
+}
+    `;
+
+/**
+ * __useProfileDisplayNameQuery__
+ *
+ * To run a query within a React component, call `useProfileDisplayNameQuery` and pass it any options that fit your needs.
+ * When your component renders, `useProfileDisplayNameQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useProfileDisplayNameQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useProfileDisplayNameQuery(baseOptions: Apollo.QueryHookOptions<ProfileDisplayNameQuery, ProfileDisplayNameQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ProfileDisplayNameQuery, ProfileDisplayNameQueryVariables>(ProfileDisplayNameDocument, options);
+      }
+export function useProfileDisplayNameLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ProfileDisplayNameQuery, ProfileDisplayNameQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ProfileDisplayNameQuery, ProfileDisplayNameQueryVariables>(ProfileDisplayNameDocument, options);
+        }
+export type ProfileDisplayNameQueryHookResult = ReturnType<typeof useProfileDisplayNameQuery>;
+export type ProfileDisplayNameLazyQueryHookResult = ReturnType<typeof useProfileDisplayNameLazyQuery>;
+export type ProfileDisplayNameQueryResult = Apollo.QueryResult<ProfileDisplayNameQuery, ProfileDisplayNameQueryVariables>;
 export const ReactToPostDocument = gql`
     mutation ReactToPost($input: ReactToPostInput!) {
   reactToPost(input: $input) {
