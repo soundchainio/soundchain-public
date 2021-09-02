@@ -1,14 +1,13 @@
-import path from 'path';
-import { config, DATABASE_SSL_PATH } from './src/config';
+const { DATABASE_URL = 'mongodb://localhost:27017', DATABASE_SSL_PATH } = process.env;
 
 const migrationConfig = {
   mongodb: {
-    url: config.db.url,
+    url: DATABASE_URL,
     options: {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       ssl: Boolean(DATABASE_SSL_PATH),
-      sslCA: DATABASE_SSL_PATH && path.join(__dirname, 'src', DATABASE_SSL_PATH),
+      sslCA: DATABASE_SSL_PATH && require('path').join(__dirname, 'src', DATABASE_SSL_PATH),
       retryWrites: false,
     },
   },
@@ -17,4 +16,4 @@ const migrationConfig = {
   useFileHash: false,
 };
 
-export = migrationConfig;
+module.exports = migrationConfig;
