@@ -1,6 +1,6 @@
 import type { Handler } from 'aws-lambda';
 import { config, database, up } from 'migrate-mongo';
-import * as migrationConfig from '../../migrate-mongo-config';
+import migrationConfig from '../../migrate-mongo-config';
 
 export const handler: Handler = async () => {
   console.log('Starting migrations');
