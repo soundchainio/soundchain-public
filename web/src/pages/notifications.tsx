@@ -1,5 +1,5 @@
 import { ClearAllNotificationsButton } from 'components/ClearAllNotificationsButton';
-import { Layout } from 'components/Layout';
+import { LayoutMenu } from 'components/LayoutMenu';
 import { Notifications } from 'components/Notifications';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { cacheFor } from 'lib/apollo';
@@ -19,13 +19,13 @@ export default function UserNotifications() {
   };
 
   return (
-    <Layout topNavBarProps={topNavBarProps}>
+    <LayoutMenu topNavBarProps={topNavBarProps}>
       <Head>
         <title>Soundchain / Notifications</title>
         <meta name="description" content="Notifications" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Notifications />
-    </Layout>
+    </LayoutMenu>
   );
 }

@@ -2,7 +2,7 @@ import { BottomSheet } from 'components/BottomSheet';
 import { BackButton } from 'components/Buttons/BackButton';
 import { RefreshButton } from 'components/Buttons/RefreshButton';
 import { Chat } from 'components/Chat';
-import { Layout } from 'components/Layout';
+import { LayoutMenu } from 'components/LayoutMenu';
 import { NewMessageForm } from 'components/NewMessageForm';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { cacheFor } from 'lib/apollo';
@@ -37,13 +37,13 @@ export default function ChatPage({ recipientName, recipientProfileId }: PostPage
   };
 
   return (
-    <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
+    <LayoutMenu topNavBarProps={topNavBarProps} hideBottomNavBar>
       <div>
         <Chat profileId={recipientProfileId} />
       </div>
       <BottomSheet>
         <NewMessageForm profileId={recipientProfileId} />
       </BottomSheet>
-    </Layout>
+    </LayoutMenu>
   );
 }

@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import { IconProps } from 'icons/types/IconProps';
 import { Label } from './Label';
 
@@ -5,11 +6,12 @@ interface RefreshButtonProps {
   onClick: () => void;
   icon: (props: IconProps) => JSX.Element;
   label: string;
+  className?: string;
 }
 
-export const TopNavBarButton = ({ onClick, icon: Icon, label }: RefreshButtonProps) => {
+export const TopNavBarButton = ({ onClick, icon: Icon, label, className }: RefreshButtonProps) => {
   return (
-    <div className="flex flex-col items-center cursor-pointer" onClick={onClick}>
+    <div className={classNames(className, 'flex flex-col items-center cursor-pointer')} onClick={onClick}>
       <Icon />
       <Label textSize="xs" className="pt-1">
         {label}
