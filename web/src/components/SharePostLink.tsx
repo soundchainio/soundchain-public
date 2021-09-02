@@ -34,6 +34,7 @@ export const SharePostLink = ({ link, postId, opened, setOpened }: SharePostLink
           className="w-full pl-8 py-1 ml-4 mr-4 text-sm text-gray-80 bg-gray-10 rounded-xl focus:border-transparent border-transparent focus:outline-none no-bg-selection"
           id={`post-link-input${postId}`}
           value={link}
+          readOnly
         />
         <button onClick={handleCopy} className="text-white font-bold flex items-center pr-4 pl-4 w-40">
           <Copy className="mr-1 h-4 w-4" /> {copyText}
