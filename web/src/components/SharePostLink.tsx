@@ -31,7 +31,7 @@ export const SharePostLink = ({ link, postId, opened, setOpened }: SharePostLink
       <div className="flex items-center w-full relative">
         <Locker className="h-3 w-3 absolute left-7" />
         <input
-          className="w-full pl-8 py-1 ml-4 mr-4 text-sm text-gray-80 bg-gray-10 rounded-xl focus:border-transparent border-transparent focus:outline-none no-background-selection"
+          className="w-full pl-8 py-1 ml-4 mr-4 text-sm text-gray-80 bg-gray-10 rounded-xl focus:border-transparent border-transparent focus:outline-none no-bg-selection"
           id={`post-link-input${postId}`}
           value={link}
         />

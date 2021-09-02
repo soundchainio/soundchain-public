@@ -87,7 +87,7 @@ pre {
   height: calc(100vh - 80px);
 }
 
-.no-background-selection::selection {
+.no-bg-selection::selection {
   background: transparent;
 }
 

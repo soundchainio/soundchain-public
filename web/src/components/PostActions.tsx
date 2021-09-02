@@ -35,11 +35,7 @@ export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
   };
 
   const onShareClick = () => {
-    if (isMobile()) {
-      navigator.share({ url: postLink });
-    } else {
-      setShareOpened(true);
-    }
+    isMobile() ? navigator.share({ url: postLink }) : setShareOpened(true);
   };
 
   return (
