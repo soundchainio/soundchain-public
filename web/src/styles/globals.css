@@ -87,6 +87,10 @@ pre {
   height: calc(100vh - 80px);
 }
 
+.no-background-selection::selection {
+  background: transparent;
+}
+
 @layer utilities {
   .placeholder-semibold::placeholder {
     @apply font-semibold;
