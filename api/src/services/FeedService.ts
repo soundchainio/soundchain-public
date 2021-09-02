@@ -14,7 +14,7 @@ export class FeedService extends ModelService<typeof FeedItem> {
   }
 
   getFeed(profileId: string, page: PageInput): Promise<PaginateResult<FeedItem>> {
-    return this.paginate({ filter: { profileId }, sort: { field: 'postedAt', order: SortOrder.DESC }, page });
+    return this.paginate({ filter: { profileId }, sort: { field: 'postedAt', order: SortOrder.ASC }, page });
   }
 
   async addPostToFollowerFeeds(post: Post): Promise<void> {
