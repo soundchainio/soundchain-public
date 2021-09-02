@@ -40,7 +40,7 @@ export class FeedService extends ModelService<typeof FeedItem> {
 
   async seedNewProfileFeed(profileId: string): Promise<void> {
     const { nodes: posts } = await this.context.postService.getPosts(
-      undefined,
+      {},
       { field: SortPostField.CREATED_AT, order: SortOrder.DESC },
       { first: 50 },
     );
