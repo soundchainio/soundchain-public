@@ -62,7 +62,7 @@ export const TopNavBar = ({
           </div>
         </div>
       ) : (
-        <div className="flex-2 flex items-stretch justify-start">
+        <div className="flex-2 flex items-stretch justify-start ml-2">
           <div className="flex-shrink-0 flex items-center">
             <Button variant="outline" onClick={onLogin}>
               Login

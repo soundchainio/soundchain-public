@@ -864,7 +864,7 @@ export type MeQuery = (
     & Pick<User, 'id' | 'handle'>
     & { profile: (
       { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
+      & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'followerCount' | 'followingCount'>
     ) }
   )> }
 );
@@ -1771,6 +1771,8 @@ export const MeDocument = gql`
       id
       displayName
       profilePicture
+      followerCount
+      followingCount
     }
   }
 }

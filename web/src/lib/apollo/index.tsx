@@ -46,7 +46,7 @@ export function setJwt(newJwt?: string) {
     if (jwt) {
       Cookies.set(jwtKey, jwt, { secure: !isSafari });
     } else {
-      Cookies.remove(jwtKey);
+      Cookies.remove(jwtKey, { secure: !isSafari });
     }
 
     apolloClient.resetStore();

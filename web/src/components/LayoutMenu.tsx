@@ -1,7 +1,6 @@
 import { BottomNavBar } from 'components/BottomNavBar';
 import { ReactNode, useState } from 'react';
 import { SideMenu } from './SideMenu';
-import { SideMenuMobile } from './SideMenuMobile';
 import { TopNavBar, TopNavBarProps } from './TopNavBar';
 
 interface LayoutMenuProps {
@@ -15,10 +14,10 @@ export const LayoutMenu = ({ children, topNavBarProps, hideBottomNavBar }: Layou
 
   return (
     <div className="h-screen flex overflow-hidden ">
-      <SideMenuMobile isOpen={sideMenuOpen} setOpen={setSideMenuOpen} />
-      <SideMenu />
+      <SideMenu isOpen={sideMenuOpen} setOpen={setSideMenuOpen} />
       <div className="flex flex-col w-0 flex-1 overflow-hidden">
         <TopNavBar setSideMenuOpen={setSideMenuOpen} {...topNavBarProps} />
+        <div id="top-sheet"></div>
         <main className="flex-1 relative overflow-y-auto focus:outline-none bg-gray-10">
           <div className="max-w-7xl mx-auto pb-14">{children}</div>
         </main>
