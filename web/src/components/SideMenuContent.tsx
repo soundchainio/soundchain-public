@@ -23,6 +23,10 @@ export const SideMenuContent = ({ isMobile }: SideMenuContentProps) => {
   const me = useMe();
   const router = useRouter();
 
+  const onLogout = () => {
+    setJwt();
+  };
+
   return (
     <>
       <div className="mt-5 flex-1 h-0 overflow-y-auto">
@@ -61,7 +65,7 @@ export const SideMenuContent = ({ isMobile }: SideMenuContentProps) => {
       </div>
       <div>
         <MenuItem icon={Settings} label="Account Settings" onClick={() => router.push('/settings')} />
-        <MenuItem icon={Logout} label="Logout" onClick={setJwt} />
+        <MenuItem icon={Logout} label="Logout" onClick={onLogout} />
       </div>
 
       <div className="flex-shrink-0 flex p-4">
@@ -74,21 +78,11 @@ export const SideMenuContent = ({ isMobile }: SideMenuContentProps) => {
       </div>
       <div className="flex-shrink-0 flex">
         <div className="flex flex-row space-x-2 items-center h-10 justify-between px-10 w-full">
-          <NextLink href={'/reddit'}>
-            <Reddit />
-          </NextLink>
-          <NextLink href={'/twitter'}>
-            <TwitterSquare />
-          </NextLink>
-          <NextLink href={'/discord'}>
-            <Discord />
-          </NextLink>
-          <NextLink href={'/facebook'}>
-            <FacebookSquare />
-          </NextLink>
-          <NextLink href={'/instagram'}>
-            <InstagramSquare />
-          </NextLink>
+          <Reddit />
+          <TwitterSquare />
+          <Discord />
+          <FacebookSquare />
+          <InstagramSquare />
         </div>
       </div>
     </>
