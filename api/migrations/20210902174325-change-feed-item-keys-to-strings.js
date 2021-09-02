@@ -2,7 +2,9 @@ module.exports = {
   async up(db) {
     await db
       .collection('feeditems')
-      .updateMany({}, [{ $set: { postId: { $toString: '$postId' }, profileId: { $toString: '$profileId' } } }]);
+      .update({}, [{ $set: { postId: { $toString: '$postId' }, profileId: { $toString: '$profileId' } } }], {
+        multi: true,
+      });
   },
 
   async down(db) {
