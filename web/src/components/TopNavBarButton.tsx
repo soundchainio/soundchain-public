@@ -13,7 +13,7 @@ export const TopNavBarButton = ({ onClick, icon: Icon, label, className }: Refre
   return (
     <div className={classNames(className, 'flex flex-col items-center cursor-pointer')} onClick={onClick}>
       <Icon />
-      <Label textSize="xs" className="pt-1">
+      <Label textSize="xs" className="pt-1 font-semibold">
         {label}
       </Label>
     </div>

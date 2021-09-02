@@ -13,6 +13,7 @@ import { useRouter } from 'next/router';
 import { Avatar } from './Avatar';
 import { MenuItem } from './MenuItem';
 import { Title } from './Title';
+import NextLink from 'next/link';
 
 interface SideMenuContentProps {
   isMobile?: boolean;
@@ -62,19 +63,32 @@ export const SideMenuContent = ({ isMobile }: SideMenuContentProps) => {
         <MenuItem icon={Settings} label="Account Settings" onClick={() => router.push('/settings')} />
         <MenuItem icon={Logout} label="Logout" onClick={setJwt} />
       </div>
+
       <div className="flex-shrink-0 flex p-4">
-        <div className="flex flex-row space-x-2 items-center h-10 justify-between text-gray-CC px-4 w-full">
-          <div className="flex">PRIVACY POLICY</div>
-          <div className="flex">V0</div>
-        </div>
+        <NextLink href={'/privacy'}>
+          <div className="flex flex-row space-x-2 items-center h-10 justify-between text-gray-CC px-4 w-full">
+            <div className="flex">PRIVACY POLICY</div>
+            <div className="flex">V0</div>
+          </div>
+        </NextLink>
       </div>
       <div className="flex-shrink-0 flex">
         <div className="flex flex-row space-x-2 items-center h-10 justify-between px-10 w-full">
-          <Reddit />
-          <TwitterSquare />
-          <Discord />
-          <FacebookSquare />
-          <InstagramSquare />
+          <NextLink href={'/reddit'}>
+            <Reddit />
+          </NextLink>
+          <NextLink href={'/twitter'}>
+            <TwitterSquare />
+          </NextLink>
+          <NextLink href={'/discord'}>
+            <Discord />
+          </NextLink>
+          <NextLink href={'/facebook'}>
+            <FacebookSquare />
+          </NextLink>
+          <NextLink href={'/instagram'}>
+            <InstagramSquare />
+          </NextLink>
         </div>
       </div>
     </>
