@@ -14,7 +14,6 @@ export const SideMenu = () => {
   return (
     <div className="hidden bg-indigo-700 md:flex md:flex-shrink-0">
       <div className="flex flex-col w-64">
-        {/* Sidebar component, swap this element with another sidebar if you like */}
         <div className="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto">
           <div className="flex items-center flex-shrink-0 px-4"></div>
           <div className="mt-5 flex-1 flex flex-col">

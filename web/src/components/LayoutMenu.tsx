@@ -2,20 +2,15 @@ import { BottomNavBar } from 'components/BottomNavBar';
 import { ReactNode, useState } from 'react';
 import { SideMenu } from './SideMenu';
 import { SideMenuMobile } from './SideMenuMobile';
-import { TopNavBar } from './TopNavBar';
+import { TopNavBar, TopNavBarProps } from './TopNavBar';
 
-interface TopNavBarProps {
-  leftButton?: () => JSX.Element;
-  rightButton?: () => JSX.Element;
-  title?: string;
-}
-interface SideMenuProps {
+interface LayoutMenuProps {
   children: ReactNode;
   topNavBarProps?: TopNavBarProps;
   hideBottomNavBar?: boolean;
 }
 
-export const LayoutMenu = ({ children, topNavBarProps, hideBottomNavBar }: SideMenuProps) => {
+export const LayoutMenu = ({ children, topNavBarProps, hideBottomNavBar }: LayoutMenuProps) => {
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
 
   return (
@@ -25,7 +20,7 @@ export const LayoutMenu = ({ children, topNavBarProps, hideBottomNavBar }: SideM
       <div className="flex flex-col w-0 flex-1 overflow-hidden">
         <TopNavBar setSideMenuOpen={setSideMenuOpen} {...topNavBarProps} />
         <main className="flex-1 relative overflow-y-auto focus:outline-none bg-gray-10">
-          <div className="max-w-7xl mx-auto ">{children}</div>
+          <div className="max-w-7xl mx-auto pb-14">{children}</div>
         </main>
         <div className="fixed bottom-0 w-full">
           <div id="bottom-sheet"></div>
