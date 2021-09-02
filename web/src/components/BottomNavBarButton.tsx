@@ -35,7 +35,10 @@ export const BottomNavBarButton = ({
   };
 
   return (
-    <div onClick={onButtonClick} className="flex flex-col flex-1 items-center justify-center align-middle ">
+    <div
+      onClick={onButtonClick}
+      className="flex flex-col flex-1 items-center justify-center align-middle cursor-pointer"
+    >
       {Icon && (
         <div className="relative">
           {Badge && <Badge />}

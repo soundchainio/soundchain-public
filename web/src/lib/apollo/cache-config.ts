@@ -17,6 +17,27 @@ export const cacheConfig: InMemoryCacheConfig = {
             id: args?.id,
           });
         },
+        message(_, { args, toReference }) {
+          return toReference({
+            __typename: 'Message',
+            id: args?.id,
+          });
+        },
+        chatHistory: {
+          keyArgs: ['toId'],
+          merge(existing = { nodes: [] }, { pageInfo, nodes }, { args }) {
+            if (!args?.page) {
+              return {
+                nodes: [...existing.nodes, ...nodes],
+                pageInfo,
+              };
+            }
+            return {
+              nodes: [...nodes, ...existing.nodes],
+              pageInfo,
+            };
+          },
+        },
         feed: {
           keyArgs: false,
           merge(existing, incoming, { readField }): FeedConnection {
