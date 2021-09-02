@@ -15,6 +15,6 @@
     "moduleResolution": "node",
     "outDir": ".build"
   },
-  "include": ["**/*.ts"],
+  "include": ["**/*.ts", "migrate-mongo-config.js", "migrate-mongo-config.js", "migrate-mongo-config.js"],
   "exclude": ["node_modules"]
 }
