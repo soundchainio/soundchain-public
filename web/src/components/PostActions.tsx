@@ -3,7 +3,8 @@ import { useModalDispatch } from 'contexts/providers/modal';
 import { ReactionEmoji } from 'icons/ReactionEmoji';
 import { ReactionType } from 'lib/graphql';
 import NextLink from 'next/link';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { isMobile } from 'utils/IsMobile';
 import { ReactionSelector } from './ReactionSelector';
 import { SharePostLink } from './SharePostLink';
 
@@ -14,16 +15,11 @@ interface PostActionsProps {
 
 const commonClasses = 'text-white text-sm text-gray-80 text-center font-bold flex-1 flex justify-center px-1';
 
-const isMobile = () => {
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-};
-
 export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
   const [reactionSelectorOpened, setReactionSelectorOpened] = useState(false);
   const [shareOpened, setShareOpened] = useState(false);
   const { dispatchSetRepostId, dispatchShowNewPostModal } = useModalDispatch();
-
-  const postLink = `${process.env.NEXT_PUBLIC_CURRENT_DOMAIN}/posts/${postId}`;
+  const [postLink, setPostLink] = useState('');
 
   const onRepostClick = () => {
     dispatchSetRepostId(postId);
@@ -35,8 +31,13 @@ export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
   };
 
   const onShareClick = () => {
-    isMobile() ? navigator.share({ url: postLink }) : setShareOpened(true);
+    isMobile() ? (navigator.share ? navigator.share({ url: postLink }) : setShareOpened(true)) : setShareOpened(true);
   };
+
+  useEffect(() => {
+    const origin = window.location.origin;
+    setPostLink(`${origin}/posts/${postId}`);
+  }, []);
 
   return (
     <div className="bg-gray-25 px-0 py-2 flex items-center relative overflow-hidden">
