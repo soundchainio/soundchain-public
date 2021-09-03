@@ -24,7 +24,7 @@ const postSchema: yup.SchemaOf<FormValues> = yup.object().shape({
 });
 
 const baseClasses =
-  'fixed w-screen h-screen bottom-0 duration-500 bg-opacity-75 ease-in-out bg-gray-25 transform-gpu transform';
+  'fixed top-0 w-screen bottom-0 duration-500 bg-opacity-75 ease-in-out bg-gray-25 transform-gpu transform';
 
 export const maxLength = 160;
 
@@ -159,7 +159,7 @@ export const NewPostModal = () => {
       >
         <Formik initialValues={initialValues} validationSchema={postSchema} onSubmit={handleSubmit}>
           {({ values, setFieldValue }) => (
-            <Form className="flex flex-col h-screen">
+            <Form className="flex flex-col h-full">
               <div className="flex items-center rounded-tl-3xl rounded-tr-3xl bg-gray-30">
                 <div className="p-2 text-gray-400 font-bold flex-1 text-center" onClick={cancel(setFieldValue)}>
                   Cancel
