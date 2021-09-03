@@ -2,6 +2,7 @@ import classNames from 'classnames';
 import { SVGGradientColor } from 'icons/gradients';
 import { IconProps } from 'icons/types/IconProps';
 import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
 
 interface BottomNavBarButtonProps {
   badge?: () => JSX.Element;
@@ -20,18 +21,24 @@ export const BottomNavBarButton = ({
   badge: Badge,
   activatedColor,
 }: BottomNavBarButtonProps) => {
+  const [isActive, setActive] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    if (router.asPath === path) {
+      setActive(true);
+    }
+  }, [router.asPath, path]);
+
   const onButtonClick = () => {
+    setActive(true);
+
     if (onClick) {
       onClick();
     }
     if (path) {
       router.push(path);
     }
-  };
-
-  const isActivated = () => {
-    return router.asPath === path;
   };
 
   return (
@@ -42,14 +49,11 @@ export const BottomNavBarButton = ({
       {Icon && (
         <div className="relative">
           {Badge && <Badge />}
-          <Icon activatedColor={isActivated() ? activatedColor : undefined} />
+          <Icon activatedColor={isActive ? activatedColor : undefined} />
         </div>
       )}
       <span
-        className={classNames(
-          'text-gray-50 text-xs mt-2 font-semibold',
-          isActivated() && `${activatedColor}-gradient-text`,
-        )}
+        className={classNames('text-gray-50 text-xs mt-2 font-semibold', isActive && `${activatedColor}-gradient-text`)}
       >
         {label}
       </span>
