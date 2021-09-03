@@ -1,5 +1,5 @@
 import { Dialog, Transition } from '@headlessui/react';
-import { Fragment } from 'react';
+import { Fragment, useRef } from 'react';
 import { SideMenuContent } from './SideMenuContent';
 
 export interface SideMenuMobileProps {
@@ -8,9 +8,10 @@ export interface SideMenuMobileProps {
 }
 
 export const SideMenuMobile = ({ setOpen, isOpen }: SideMenuMobileProps) => {
+  const ref = useRef(null);
   return (
     <Transition.Root show={isOpen} as={Fragment}>
-      <Dialog as="div" className="fixed inset-0 flex z-40 md:hidden" onClose={setOpen}>
+      <Dialog as="div" className="fixed inset-0 flex z-40 md:hidden" onClose={setOpen} initialFocus={ref}>
         <Transition.Child
           as={Fragment}
           enter="transition-opacity ease-linear duration-300"
@@ -36,7 +37,7 @@ export const SideMenuMobile = ({ setOpen, isOpen }: SideMenuMobileProps) => {
             <SideMenuContent isMobile />
           </div>
         </Transition.Child>
-        <div className="flex-shrink-0 w-14" aria-hidden="true"></div>
+        <div className="flex-shrink-0 w-14" aria-hidden="true" ref={ref}></div>
       </Dialog>
     </Transition.Root>
   );
