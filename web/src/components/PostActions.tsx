@@ -34,7 +34,12 @@ export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
           <span className={myReaction ? 'text-[#62AAFF]' : ''}>Like</span>
         </div>
       </div>
-      <ReactionSelector postId={postId} opened={reactionSelectorOpened} setOpened={setReactionSelectorOpened} />
+      <ReactionSelector
+        postId={postId}
+        myReaction={myReaction}
+        opened={reactionSelectorOpened}
+        setOpened={setReactionSelectorOpened}
+      />
       <div className={commonClasses}>
         <NextLink href={`/posts/${postId}`}>
           <a className="flex items-center cursor-pointer">

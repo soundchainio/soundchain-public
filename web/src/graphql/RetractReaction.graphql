@@ -1,0 +1,10 @@
+mutation RetractReaction($input: RetractReactionInput!) {
+  retractReaction(input: $input) {
+    post {
+      id
+      totalReactions
+      topReactions(top: 2)
+      myReaction
+    }
+  }
+}
