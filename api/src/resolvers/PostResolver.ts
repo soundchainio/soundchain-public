@@ -6,6 +6,7 @@ import { Post } from '../models/Post';
 import { Profile } from '../models/Profile';
 import { User } from '../models/User';
 import { ChangeReactionInput } from '../types/ChangeReactionInput';
+import { ChangeReactionPayload } from '../types/ChangeReactionPayload';
 import { Context } from '../types/Context';
 import { CreatePostInput } from '../types/CreatePostInput';
 import { CreatePostPayload } from '../types/CreatePostPayload';
@@ -116,13 +117,13 @@ export class PostResolver {
     return { post };
   }
 
-  @Mutation(() => RetractReactionPayload)
+  @Mutation(() => ChangeReactionPayload)
   @Authorized()
   async changeReaction(
     @Ctx() { postService }: Context,
     @Arg('input') input: ChangeReactionInput,
     @CurrentUser() { profileId }: User,
-  ): Promise<RetractReactionPayload> {
+  ): Promise<ChangeReactionPayload> {
     const post = await postService.changeReactionToPost({ profileId, ...input });
     return { post };
   }

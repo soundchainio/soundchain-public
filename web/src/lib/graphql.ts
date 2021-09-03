@@ -36,6 +36,11 @@ export type ChangeReactionInput = {
   type: ReactionType;
 };
 
+export type ChangeReactionPayload = {
+  __typename?: 'ChangeReactionPayload';
+  post: Post;
+};
+
 export type ClearNotificationsPayload = {
   __typename?: 'ClearNotificationsPayload';
   ok: Scalars['Boolean'];
@@ -213,7 +218,7 @@ export type Mutation = {
   createPost: CreatePostPayload;
   reactToPost: ReactToPostPayload;
   retractReaction: RetractReactionPayload;
-  changeReaction: RetractReactionPayload;
+  changeReaction: ChangeReactionPayload;
   createRepost: CreateRepostPayload;
   updateSocialMedias: UpdateSocialMediasPayload;
   updateFavoriteGenres: UpdateFavoriteGenresPayload;
@@ -686,7 +691,7 @@ export type ChangeReactionMutationVariables = Exact<{
 export type ChangeReactionMutation = (
   { __typename?: 'Mutation' }
   & { changeReaction: (
-    { __typename?: 'RetractReactionPayload' }
+    { __typename?: 'ChangeReactionPayload' }
     & { post: (
       { __typename?: 'Post' }
       & Pick<Post, 'id' | 'totalReactions' | 'topReactions' | 'myReaction'>
