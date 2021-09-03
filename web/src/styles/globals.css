@@ -97,6 +97,10 @@ pre {
   color: transparent;
 }
 
+.no-bg-selection::selection {
+  background: transparent;
+}
+
 @layer utilities {
   .placeholder-semibold::placeholder {
     @apply font-semibold;
