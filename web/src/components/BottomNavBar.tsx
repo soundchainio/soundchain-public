@@ -6,7 +6,6 @@ import { Home } from 'icons/Home';
 import { NewPost } from 'icons/NewPost';
 import { Profile } from 'icons/Profile';
 import { Search } from 'icons/Search';
-import { setJwt } from 'lib/apollo';
 import { useRouter } from 'next/router';
 import { BottomNavBarButton } from './BottomNavBarButton';
 import { DeleteModal } from './DeleteModal';
@@ -35,7 +34,7 @@ export const BottomNavBar = () => {
           badge={me ? NotificationBadge : undefined}
           activatedColor="purple"
         />
-        <BottomNavBarButton label="Profile" icon={Profile} onClick={setJwt} activatedColor="green-purple" />
+        <BottomNavBarButton label="Profile" icon={Profile} activatedColor="green-purple" />
         <NewPostModal />
         <DeleteModal />
       </div>

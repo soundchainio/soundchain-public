@@ -25,6 +25,7 @@ export const SideMenuContent = ({ isMobile }: SideMenuContentProps) => {
 
   const onLogout = () => {
     setJwt();
+    router.reload();
   };
 
   return (
@@ -63,10 +64,12 @@ export const SideMenuContent = ({ isMobile }: SideMenuContentProps) => {
           )}
         </div>
       </div>
-      <div>
-        <MenuItem icon={Settings} label="Account Settings" onClick={() => router.push('/settings')} />
-        <MenuItem icon={Logout} label="Logout" onClick={onLogout} />
-      </div>
+      {me && (
+        <div>
+          <MenuItem icon={Settings} label="Account Settings" onClick={() => router.push('/settings')} />
+          <MenuItem icon={Logout} label="Logout" onClick={onLogout} />
+        </div>
+      )}
 
       <div className="flex-shrink-0 flex p-4">
         <NextLink href={'/privacy'}>

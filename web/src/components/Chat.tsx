@@ -14,9 +14,14 @@ export const Chat = ({ profileId }: ChatProps) => {
   const [renderLoader, setRenderLoader] = useState(false);
   const [lastContainerHeight, setLastContainerHeight] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
   const { data, fetchMore } = useChatHistoryQuery({
     variables: { profileId },
   });
+
+  useEffect(() => {
+    if (!renderLoader && data) initialScrollToBottom();
+  }, [data, renderLoader]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -33,10 +38,6 @@ export const Chat = ({ profileId }: ChatProps) => {
     setLastContainerHeight(containerRef.current?.scrollHeight);
   }, [containerRef.current?.scrollHeight, lastContainerHeight]);
 
-  useEffect(() => {
-    if (!renderLoader && data) initialScrollToBottom();
-  }, [data, renderLoader]);
-
   if (!data) return <MessageSkeleton />;
 
   const { nodes: messages, pageInfo } = data.chatHistory;
@@ -44,6 +45,7 @@ export const Chat = ({ profileId }: ChatProps) => {
   const initialScrollToBottom = () => {
     requestAnimationFrame(() => {
       setTimeout(() => scroll.scrollToBottom({ duration: 0 }), 100);
+
       setTimeout(() => setRenderLoader(true), 1000);
     });
   };
@@ -53,12 +55,13 @@ export const Chat = ({ profileId }: ChatProps) => {
   };
 
   return (
-    <div ref={containerRef}>
+    <div id="container" ref={containerRef} className="overflow-y-visible">
       {renderLoader && pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading messages" />}
-      <div className="flex flex-col m-3 space-y-4">
+      <div id="chat" className="flex flex-col m-3 space-y-4" ref={ref}>
         {messages.map(({ id }, index) => (
           <Message key={id} messageId={id} nextMessage={messages[index + 1] as MessageItem} />
         ))}
+        <div id="bottomRef"></div>
       </div>
     </div>
   );

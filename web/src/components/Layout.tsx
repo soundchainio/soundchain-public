@@ -1,6 +1,7 @@
 import { BottomNavBar } from 'components/BottomNavBar';
-import { TopNavBar, TopNavBarProps } from 'components/TopNavBar';
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
+import { SideMenu } from './SideMenu';
+import { TopNavBar, TopNavBarProps } from './TopNavBar';
 
 interface LayoutProps {
   children: ReactNode;
@@ -8,18 +9,25 @@ interface LayoutProps {
   hideBottomNavBar?: boolean;
 }
 
-export const Layout = ({ children, hideBottomNavBar, topNavBarProps }: LayoutProps) => {
+export const Layout = ({ children, topNavBarProps, hideBottomNavBar }: LayoutProps) => {
+  const [sideMenuOpen, setSideMenuOpen] = useState(false);
+
   return (
-    <div className="min-h-screen flex flex-col bg-gray-10">
-      <div className="fixed top-0 w-full z-10">
-        <TopNavBar {...topNavBarProps} />
+    <div className="h-screen flex overflow-hidden">
+      <SideMenu isOpen={sideMenuOpen} setOpen={setSideMenuOpen} />
+      <div className="flex flex-col w-0 flex-1 overflow-hidden">
+        <TopNavBar setSideMenuOpen={setSideMenuOpen} {...topNavBarProps} />
         <div id="top-sheet"></div>
-      </div>
-      <div className="pb-20 pt-16">{children}</div>
-      <div className="fixed bottom-0 w-full">
-        <div id="bottom-sheet"></div>
-        {!hideBottomNavBar && <BottomNavBar />}
-        <div id="modals"></div>
+        <main className="flex-1 relative overflow-y-auto focus:outline-none bg-gray-10">
+          <div id="main" className="max-w-7xl mx-auto mb-20">
+            {children}
+          </div>
+        </main>
+        <div className="fixed bottom-0 w-full">
+          <div id="bottom-sheet"></div>
+          {!hideBottomNavBar && <BottomNavBar />}
+          <div id="modals"></div>
+        </div>
       </div>
     </div>
   );

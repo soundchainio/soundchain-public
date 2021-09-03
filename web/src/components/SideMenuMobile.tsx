@@ -1,5 +1,4 @@
 import { Dialog, Transition } from '@headlessui/react';
-import { XIcon } from '@heroicons/react/outline';
 import { Fragment } from 'react';
 import { SideMenuContent } from './SideMenuContent';
 
@@ -33,26 +32,6 @@ export const SideMenuMobile = ({ setOpen, isOpen }: SideMenuMobileProps) => {
           leaveTo="-translate-x-full"
         >
           <div className="relative flex-1 flex flex-col max-w-xs w-full pt-5 pb-4 bg-gray-15">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-in-out duration-300"
-              enterFrom="opacity-0"
-              enterTo="opacity-100"
-              leave="ease-in-out duration-300"
-              leaveFrom="opacity-100"
-              leaveTo="opacity-0"
-            >
-              <div className="absolute top-0 right-0 -mr-12 pt-2">
-                <button
-                  type="button"
-                  className="ml-1 flex items-center justify-center h-10 w-10 rounded-full"
-                  onClick={() => setOpen(false)}
-                >
-                  <span className="sr-only">Close sidebar</span>
-                  <XIcon className="h-6 w-6 text-white" aria-hidden="true" />
-                </button>
-              </div>
-            </Transition.Child>
             <div className="flex-shrink-0 flex items-center"></div>
             <SideMenuContent isMobile />
           </div>
