@@ -35,8 +35,8 @@ export const BottomNavBar = () => {
         <BottomNavBarButton
           label="Profile"
           icon={Profile}
-          onClick={() => router.push(`/profiles/${me?.profile.id}`)}
-          activatedColor="green-purple"
+          path={me ? `/profiles/${me?.profile.id}` : '/login'}
+          activatedColor="purple-green"
         />
       </div>
     </nav>

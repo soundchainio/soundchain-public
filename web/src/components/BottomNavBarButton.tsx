@@ -31,13 +31,13 @@ export const BottomNavBarButton = ({
   };
 
   const isActivated = () => {
-    return router.pathname === path;
+    return router.asPath === path;
   };
 
   return (
     <div
       onClick={onButtonClick}
-      className="flex flex-col flex-1 items-center justify-center align-middle cursor-pointer"
+      className="flex flex-col flex-1 items-center justify-center align-middle cursor-pointer focus:ring-2 focus:ring-blue-600"
     >
       {Icon && (
         <div className="relative">

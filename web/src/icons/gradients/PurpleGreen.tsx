@@ -1,10 +1,16 @@
 export const PurpleGreenGradient = () => {
   return (
     <defs>
-      <linearGradient id="yellow-gradient" x1="14.309" x2="6.737" y1="3.244" y2="11.384" gradientUnits="userSpaceOnUse">
-        <stop stopColor="#FE5540"></stop>
-        <stop offset="0.69" stopColor="#FCAE1B"></stop>
-        <stop offset="1" stopColor="#FED603"></stop>
+      <linearGradient
+        id="purple-green-gradient"
+        x1="10.35"
+        x2="9.964"
+        y1="9.936"
+        y2="5.032"
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop stopColor="#3FDD8A"></stop>
+        <stop offset="1" stopColor="#A252FE"></stop>
       </linearGradient>
     </defs>
   );
