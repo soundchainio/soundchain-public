@@ -97,10 +97,6 @@ pre {
   color: transparent;
 }
 
-.max-height-from-menu {
-  height: calc(100vh - 80px);
-}
-
 @layer utilities {
   .placeholder-semibold::placeholder {
     @apply font-semibold;

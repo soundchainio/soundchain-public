@@ -46,7 +46,7 @@ export class PostService extends ModelService<typeof Post> {
     return this.findOrFail(id);
   }
 
-  async reactToPost({ profileId, postId, type }: NewReactionParams): Promise<Post> {
+  async addReactionToPost({ profileId, postId, type }: NewReactionParams): Promise<Post> {
     const [post, alreadyReacted] = await Promise.all([
       this.findOrFail(postId),
       this.context.reactionService.exists({ postId, profileId }),
@@ -57,6 +57,40 @@ export class PostService extends ModelService<typeof Post> {
     await this.context.reactionService.createReaction({ postId, profileId, type });
     await this.model.updateOne({ _id: postId }, { $inc: { [`reactionStats.${type}`]: 1 } });
     post.reactionStats[type]++;
+    return post;
+  }
+
+  async removeReactionFromPost({ profileId, postId }: { profileId: string; postId: string }): Promise<Post> {
+    const post = await this.findOrFail(postId);
+
+    const { type } = await this.context.reactionService.deleteReaction({ postId, profileId });
+    await this.model.updateOne(
+      { _id: postId, [`reactionStats.${type}`]: { $gt: 0 } },
+      { $inc: { [`reactionStats.${type}`]: -1 } },
+    );
+
+    if (post.reactionStats[type] > 0) {
+      post.reactionStats[type]--;
+    }
+
+    return post;
+  }
+
+  async changeReactionToPost({ postId, profileId, type: newType }: NewReactionParams): Promise<Post> {
+    const post = await this.findOrFail(postId);
+
+    const { type: oldType } = await this.context.reactionService.updateReaction({ postId, profileId, type: newType });
+
+    await this.model.updateOne(
+      { _id: postId, [`reactionStats.${oldType}`]: { $gt: 0 } },
+      { $inc: { [`reactionStats.${oldType}`]: -1, [`reactionStats.${newType}`]: 1 } },
+    );
+
+    if (post.reactionStats[oldType] > 0) {
+      post.reactionStats[oldType]--;
+    }
+
+    post.reactionStats[newType]++;
     return post;
   }
 }

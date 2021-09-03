@@ -23,6 +23,7 @@ export const FlexareaField = ({ ...props }: FlexareaFieldProps) => {
       {...field}
       onHeightChange={handleHeightChange}
       className={classNames(commonClasses, roundedFull ? 'rounded-full' : 'rounded-xl')}
+      placeholder="Write a comment..."
     />
   );
 };
