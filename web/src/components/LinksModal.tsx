@@ -19,7 +19,7 @@ interface AddLinkProps {
 }
 
 const baseClasses =
-  'absolute left-0 w-screen h-screen bottom-0 duration-500 bg-opacity-75 ease-in-out bg-gray-25 transform-gpu transform';
+  'fixed left-0 w-screen top-0 h-full bottom-0 duration-500 bg-opacity-75 ease-in-out bg-gray-25 transform-gpu transform';
 
 export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type, postLink, setPostLink }: AddLinkProps) => {
   const [link, setLink] = useState<MediaLink>();
@@ -44,13 +44,12 @@ export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type, post
     } else {
       setLink(undefined);
     }
-  }, [postLink]);
+  }, [postLink, link]);
 
   return (
     <ModalsPortal>
       <div className={classNames(baseClasses, show ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0')}>
-        <div className="w-screen h-20" onClick={onClose} />
-        <div className="flex flex-col max-height-from-menu bg-gray-20">
+        <div className="flex flex-col h-screen bg-gray-20">
           <div className="flex items-center rounded-tl-3xl rounded-tr-3xl bg-gray-30">
             <div className="p-2 text-gray-400 font-bold flex-1 text-center" onClick={onClose}>
               Cancel

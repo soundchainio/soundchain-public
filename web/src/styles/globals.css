@@ -81,7 +81,7 @@ pre {
   color: transparent;
 }
 
-.green-purple-gradient-text {
+.purple-green-gradient-text {
   background: linear-gradient(90deg, #3fdd8a 0%, #a252fe 100%);
   background-clip: text;
   color: transparent;
@@ -97,8 +97,8 @@ pre {
   color: transparent;
 }
 
-.max-height-from-menu {
-  height: calc(100vh - 80px);
+.no-bg-selection::selection {
+  background: transparent;
 }
 
 @layer utilities {

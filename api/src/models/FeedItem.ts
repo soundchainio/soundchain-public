@@ -14,6 +14,7 @@ export class FeedItem extends Model {
   postId: string;
 
   @Field(() => Date)
+  @prop({ required: true })
   postedAt: Date;
 }
 

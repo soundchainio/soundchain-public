@@ -31,6 +31,16 @@ export type AuthPayload = {
   jwt: Scalars['String'];
 };
 
+export type ChangeReactionInput = {
+  postId: Scalars['String'];
+  type: ReactionType;
+};
+
+export type ChangeReactionPayload = {
+  __typename?: 'ChangeReactionPayload';
+  post: Post;
+};
+
 export type ClearNotificationsPayload = {
   __typename?: 'ClearNotificationsPayload';
   ok: Scalars['Boolean'];
@@ -207,6 +217,8 @@ export type Mutation = {
   clearNotifications: ClearNotificationsPayload;
   createPost: CreatePostPayload;
   reactToPost: ReactToPostPayload;
+  retractReaction: RetractReactionPayload;
+  changeReaction: ChangeReactionPayload;
   createRepost: CreateRepostPayload;
   updateSocialMedias: UpdateSocialMediasPayload;
   updateFavoriteGenres: UpdateFavoriteGenresPayload;
@@ -244,6 +256,16 @@ export type MutationCreatePostArgs = {
 
 export type MutationReactToPostArgs = {
   input: ReactToPostInput;
+};
+
+
+export type MutationRetractReactionArgs = {
+  input: RetractReactionInput;
+};
+
+
+export type MutationChangeReactionArgs = {
+  input: ChangeReactionInput;
 };
 
 
@@ -511,6 +533,15 @@ export type ResetPasswordPayload = {
   ok: Scalars['Boolean'];
 };
 
+export type RetractReactionInput = {
+  postId: Scalars['String'];
+};
+
+export type RetractReactionPayload = {
+  __typename?: 'RetractReactionPayload';
+  post: Post;
+};
+
 export type SendMessageInput = {
   message: Scalars['String'];
   toId: Scalars['String'];
@@ -648,6 +679,22 @@ export type AddCommentMutation = (
         & Pick<Post, 'id' | 'commentCount'>
       ) }
       & CommentComponentFieldsFragment
+    ) }
+  ) }
+);
+
+export type ChangeReactionMutationVariables = Exact<{
+  input: ChangeReactionInput;
+}>;
+
+
+export type ChangeReactionMutation = (
+  { __typename?: 'Mutation' }
+  & { changeReaction: (
+    { __typename?: 'ChangeReactionPayload' }
+    & { post: (
+      { __typename?: 'Post' }
+      & Pick<Post, 'id' | 'totalReactions' | 'topReactions' | 'myReaction'>
     ) }
   ) }
 );
@@ -1085,6 +1132,22 @@ export type ResetPasswordMutation = (
   ) }
 );
 
+export type RetractReactionMutationVariables = Exact<{
+  input: RetractReactionInput;
+}>;
+
+
+export type RetractReactionMutation = (
+  { __typename?: 'Mutation' }
+  & { retractReaction: (
+    { __typename?: 'RetractReactionPayload' }
+    & { post: (
+      { __typename?: 'Post' }
+      & Pick<Post, 'id' | 'totalReactions' | 'topReactions' | 'myReaction'>
+    ) }
+  ) }
+);
+
 export type SendMessageMutationVariables = Exact<{
   input: SendMessageInput;
 }>;
@@ -1329,6 +1392,44 @@ export function useAddCommentMutation(baseOptions?: Apollo.MutationHookOptions<A
 export type AddCommentMutationHookResult = ReturnType<typeof useAddCommentMutation>;
 export type AddCommentMutationResult = Apollo.MutationResult<AddCommentMutation>;
 export type AddCommentMutationOptions = Apollo.BaseMutationOptions<AddCommentMutation, AddCommentMutationVariables>;
+export const ChangeReactionDocument = gql`
+    mutation ChangeReaction($input: ChangeReactionInput!) {
+  changeReaction(input: $input) {
+    post {
+      id
+      totalReactions
+      topReactions(top: 2)
+      myReaction
+    }
+  }
+}
+    `;
+export type ChangeReactionMutationFn = Apollo.MutationFunction<ChangeReactionMutation, ChangeReactionMutationVariables>;
+
+/**
+ * __useChangeReactionMutation__
+ *
+ * To run a mutation, you first call `useChangeReactionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useChangeReactionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [changeReactionMutation, { data, loading, error }] = useChangeReactionMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useChangeReactionMutation(baseOptions?: Apollo.MutationHookOptions<ChangeReactionMutation, ChangeReactionMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ChangeReactionMutation, ChangeReactionMutationVariables>(ChangeReactionDocument, options);
+      }
+export type ChangeReactionMutationHookResult = ReturnType<typeof useChangeReactionMutation>;
+export type ChangeReactionMutationResult = Apollo.MutationResult<ChangeReactionMutation>;
+export type ChangeReactionMutationOptions = Apollo.BaseMutationOptions<ChangeReactionMutation, ChangeReactionMutationVariables>;
 export const ChatHistoryDocument = gql`
     query ChatHistory($profileId: String!, $page: PageInput) {
   chatHistory(profileId: $profileId, page: $page) {
@@ -2300,6 +2401,44 @@ export function useResetPasswordMutation(baseOptions?: Apollo.MutationHookOption
 export type ResetPasswordMutationHookResult = ReturnType<typeof useResetPasswordMutation>;
 export type ResetPasswordMutationResult = Apollo.MutationResult<ResetPasswordMutation>;
 export type ResetPasswordMutationOptions = Apollo.BaseMutationOptions<ResetPasswordMutation, ResetPasswordMutationVariables>;
+export const RetractReactionDocument = gql`
+    mutation RetractReaction($input: RetractReactionInput!) {
+  retractReaction(input: $input) {
+    post {
+      id
+      totalReactions
+      topReactions(top: 2)
+      myReaction
+    }
+  }
+}
+    `;
+export type RetractReactionMutationFn = Apollo.MutationFunction<RetractReactionMutation, RetractReactionMutationVariables>;
+
+/**
+ * __useRetractReactionMutation__
+ *
+ * To run a mutation, you first call `useRetractReactionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRetractReactionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [retractReactionMutation, { data, loading, error }] = useRetractReactionMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useRetractReactionMutation(baseOptions?: Apollo.MutationHookOptions<RetractReactionMutation, RetractReactionMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<RetractReactionMutation, RetractReactionMutationVariables>(RetractReactionDocument, options);
+      }
+export type RetractReactionMutationHookResult = ReturnType<typeof useRetractReactionMutation>;
+export type RetractReactionMutationResult = Apollo.MutationResult<RetractReactionMutation>;
+export type RetractReactionMutationOptions = Apollo.BaseMutationOptions<RetractReactionMutation, RetractReactionMutationVariables>;
 export const SendMessageDocument = gql`
     mutation SendMessage($input: SendMessageInput!) {
   sendMessage(input: $input) {

@@ -1,4 +1,5 @@
 import { DocumentType } from '@typegoose/typegoose';
+import { UserInputError } from 'apollo-server-express';
 import { FilterQuery } from 'mongoose';
 import { Reaction, ReactionModel } from '../models/Reaction';
 import { Context } from '../types/Context';
@@ -10,10 +11,12 @@ interface ReactionKeyComponents {
   postId: string;
 }
 
-export interface NewReactionParams {
-  profileId: string;
-  postId: string;
+export interface NewReactionParams extends ReactionKeyComponents {
   type: ReactionType;
+}
+
+interface UpdateReactionParams extends NewReactionParams {
+  returnNew?: boolean;
 }
 
 export class ReactionService extends ModelService<typeof Reaction, ReactionKeyComponents> {
@@ -46,5 +49,29 @@ export class ReactionService extends ModelService<typeof Reaction, ReactionKeyCo
     const key = this.getKeyFromComponents(keyComponents);
     const reaction = await this.dataLoader.load(key);
     return reaction ? reaction : null;
+  }
+
+  async deleteReaction(keyComponents: ReactionKeyComponents): Promise<Reaction> {
+    const reaction = await this.model.findOneAndDelete(keyComponents);
+
+    if (!reaction) {
+      throw new UserInputError("Can't delete reaction because it doesn't exist.");
+    }
+
+    this.dataLoader.clear(this.getKeyFromComponents(keyComponents));
+    return reaction;
+  }
+
+  async updateReaction({ postId, profileId, type, returnNew }: UpdateReactionParams): Promise<Reaction> {
+    const reaction = await this.model.findOneAndUpdate({ postId, profileId }, { type }, { new: Boolean(returnNew) });
+
+    if (!reaction) {
+      throw new UserInputError("Can't update reaction because it doesn't exist.");
+    }
+
+    const key = this.getKeyFromComponents({ postId, profileId });
+    this.dataLoader.clear(key);
+
+    return reaction;
   }
 }

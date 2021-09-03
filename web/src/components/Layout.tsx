@@ -1,5 +1,8 @@
 import { BottomNavBar } from 'components/BottomNavBar';
-import { ReactNode, useState } from 'react';
+import { store } from 'contexts';
+import { ReactNode, useContext, useState } from 'react';
+import { DeleteModal } from './DeleteModal';
+import { NewPostModal } from './NewPostModal';
 import { SideMenu } from './SideMenu';
 import { TopNavBar, TopNavBarProps } from './TopNavBar';
 
@@ -11,6 +14,7 @@ interface LayoutProps {
 
 export const Layout = ({ children, topNavBarProps, hideBottomNavBar }: LayoutProps) => {
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
+  const { state } = useContext(store);
 
   return (
     <div className="h-screen flex overflow-hidden">
@@ -25,9 +29,12 @@ export const Layout = ({ children, topNavBarProps, hideBottomNavBar }: LayoutPro
         </main>
         <div className="fixed bottom-0 w-full">
           <div id="bottom-sheet"></div>
-          {!hideBottomNavBar && <BottomNavBar />}
-          <div id="modals"></div>
+          {!state?.modal.anyModalOpened && !hideBottomNavBar && <BottomNavBar />}
         </div>
+      </div>
+      <div id="modals" className="absolute z-20 w-full">
+        <NewPostModal />
+        <DeleteModal />
       </div>
     </div>
   );

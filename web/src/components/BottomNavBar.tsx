@@ -1,4 +1,3 @@
-import { NewPostModal } from 'components/NewPostModal';
 import { useModalDispatch } from 'contexts/providers/modal';
 import { useMe } from 'hooks/useMe';
 import { Bell } from 'icons/Bell';
@@ -8,7 +7,6 @@ import { Profile } from 'icons/Profile';
 import { Search } from 'icons/Search';
 import { useRouter } from 'next/router';
 import { BottomNavBarButton } from './BottomNavBarButton';
-import { DeleteModal } from './DeleteModal';
 import { NotificationBadge } from './NotificationBadge';
 
 export const BottomNavBar = () => {
@@ -38,9 +36,12 @@ export const BottomNavBar = () => {
           badge={me ? NotificationBadge : undefined}
           activatedColor="purple"
         />
-        <BottomNavBarButton label="Profile" icon={Profile} onClick={onProfile} activatedColor="green-purple" />
-        <NewPostModal />
-        <DeleteModal />
+        <BottomNavBarButton
+          label="Profile"
+          icon={Profile}
+          path={me ? `/profiles/${me?.profile.id}` : '/login'}
+          activatedColor="purple-green"
+        />
       </div>
     </nav>
   );
