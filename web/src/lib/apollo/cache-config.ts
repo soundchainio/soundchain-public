@@ -24,7 +24,7 @@ export const cacheConfig: InMemoryCacheConfig = {
           });
         },
         chatHistory: {
-          keyArgs: ['toId'],
+          keyArgs: ['profileId'],
           merge(existing = { nodes: [] }, { pageInfo, nodes }, { args }) {
             if (!args?.page) {
               return {
