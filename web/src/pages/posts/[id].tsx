@@ -1,8 +1,10 @@
 import { BottomSheet } from 'components/BottomSheet';
+import { BackButton } from 'components/Buttons/BackButton';
 import { Comments } from 'components/Comments';
 import { Layout } from 'components/Layout';
 import { NewCommentForm } from 'components/NewCommentForm';
 import { Post } from 'components/Post';
+import { TopNavBarProps } from 'components/TopNavBar';
 import { cacheFor, createApolloClient } from 'lib/apollo';
 import { PostDocument } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
@@ -39,8 +41,12 @@ export const getServerSideProps: GetServerSideProps<PostPageProps, PostPageParam
 };
 
 export default function PostPage({ postId }: PostPageProps) {
+  const topNovaBarProps: TopNavBarProps = {
+    leftButton: BackButton,
+  };
+
   return (
-    <Layout>
+    <Layout topNavBarProps={topNovaBarProps}>
       <Post postId={postId} />
       <div className="pb-12">
         <Comments postId={postId} />
