@@ -6,6 +6,7 @@ import * as yup from 'yup';
 import { ChatHistoryDocument, ChatHistoryQuery, SendMessageMutation, useSendMessageMutation } from '../lib/graphql';
 import { Avatar } from './Avatar';
 import { FlexareaField } from './FlexareaField';
+import { animateScroll as scroll } from 'react-scroll';
 
 export interface NewMessageFormProps {
   profileId: string;
@@ -30,7 +31,7 @@ export const NewMessageForm = ({ profileId }: NewMessageFormProps) => {
   const handleSubmit = async ({ body }: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
     await sendMessage({ variables: { input: { message: body, toId: profileId } } });
     resetForm();
-    document.getElementById('bottomRef')?.scrollIntoView();
+    scroll.scrollToBottom({ duration: 0 });
   };
 
   return (

@@ -19,10 +19,6 @@ export const BottomNavBar = () => {
     me ? dispatchShowNewPostModal(true) : router.push('/login');
   };
 
-  const onProfile = () => {
-    me ? router.push(`/profiles/${me?.profile.id}`) : router.push('/login');
-  };
-
   return (
     <nav className="bg-black h-16 flex items-center inset-x-0 shadow-2xl">
       <div className="w-full flex">

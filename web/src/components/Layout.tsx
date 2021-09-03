@@ -12,7 +12,7 @@ interface LayoutProps {
   hideBottomNavBar?: boolean;
 }
 
-export const Layout = ({ children, topNavBarProps, hideBottomNavBar }: LayoutProps) => {
+export const Layout = ({ children, hideBottomNavBar, topNavBarProps }: LayoutProps) => {
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
   const { state } = useContext(store);
 

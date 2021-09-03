@@ -14,7 +14,6 @@ export const Chat = ({ profileId }: ChatProps) => {
   const [renderLoader, setRenderLoader] = useState(false);
   const [lastContainerHeight, setLastContainerHeight] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
-  const ref = useRef<HTMLDivElement>(null);
   const { data, fetchMore } = useChatHistoryQuery({
     variables: { profileId },
   });
@@ -45,7 +44,6 @@ export const Chat = ({ profileId }: ChatProps) => {
   const initialScrollToBottom = () => {
     requestAnimationFrame(() => {
       setTimeout(() => scroll.scrollToBottom({ duration: 0 }), 100);
-
       setTimeout(() => setRenderLoader(true), 1000);
     });
   };
@@ -55,13 +53,12 @@ export const Chat = ({ profileId }: ChatProps) => {
   };
 
   return (
-    <div id="container" ref={containerRef} className="overflow-y-visible">
+    <div id="container" ref={containerRef}>
       {renderLoader && pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading messages" />}
-      <div id="chat" className="flex flex-col m-3 space-y-4" ref={ref}>
+      <div className="flex flex-col m-3 space-y-4">
         {messages.map(({ id }, index) => (
           <Message key={id} messageId={id} nextMessage={messages[index + 1] as MessageItem} />
         ))}
-        <div id="bottomRef"></div>
       </div>
     </div>
   );
