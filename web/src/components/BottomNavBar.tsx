@@ -21,6 +21,10 @@ export const BottomNavBar = () => {
     me ? dispatchShowNewPostModal(true) : router.push('/login');
   };
 
+  const onProfile = () => {
+    me ? router.push(`/profiles/${me?.profile.id}`) : router.push('/login');
+  };
+
   return (
     <nav className="bg-black h-16 flex items-center inset-x-0 shadow-2xl">
       <div className="w-full flex">
@@ -34,7 +38,7 @@ export const BottomNavBar = () => {
           badge={me ? NotificationBadge : undefined}
           activatedColor="purple"
         />
-        <BottomNavBarButton label="Profile" icon={Profile} activatedColor="green-purple" />
+        <BottomNavBarButton label="Profile" icon={Profile} onClick={onProfile} activatedColor="green-purple" />
         <NewPostModal />
         <DeleteModal />
       </div>

@@ -39,18 +39,18 @@ export const SideMenuContent = ({ isMobile }: SideMenuContentProps) => {
             <>
               <div className="flex flex-row mt-6 relative">
                 <Avatar profile={me.profile} pixels={60} className="h-[68px] border-gray-10 border-4 rounded-full" />
-                <div className="px-4 flex flex-grow space-x-8 justify-center items-center">
+                <div className="px-2 flex flex-grow space-x-4 justify-center items-center">
                   <div className="text-center text-lg">
                     <p className="font-semibold text-white">
                       <Number value={me.profile.followerCount} />
                     </p>
-                    <p className="text-gray-80 text-sm">Followers</p>
+                    <p className="text-gray-80 text-md">Followers</p>
                   </div>
                   <div className="text-center text-lg">
                     <p className="font-semibold text-white">
                       <Number value={me.profile.followingCount} />
                     </p>
-                    <p className="text-gray-80 text-sm">Following</p>
+                    <p className="text-gray-80 text-md">Following</p>
                   </div>
                 </div>
               </div>
