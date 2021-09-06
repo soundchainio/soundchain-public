@@ -1,6 +1,8 @@
+import { InboxButton } from 'components/Buttons/InboxButton';
 import { Feed } from 'components/Feed';
 import { Layout } from 'components/Layout';
 import { Posts } from 'components/Posts';
+import { TopNavBarProps } from 'components/TopNavBar';
 import { useMe } from 'hooks/useMe';
 import { cacheFor } from 'lib/apollo';
 import { GetServerSideProps } from 'next';
@@ -13,8 +15,12 @@ export const getServerSideProps: GetServerSideProps = context => {
 export default function HomePage() {
   const me = useMe();
 
+  const topNavBarProps: TopNavBarProps = {
+    rightButton: InboxButton,
+  };
+
   return (
-    <Layout>
+    <Layout topNavBarProps={topNavBarProps}>
       <Head>
         <title>Soundchain</title>
         <meta name="description" content="Soundchain" />

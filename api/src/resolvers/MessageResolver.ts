@@ -51,4 +51,10 @@ export class MessageResolver {
     const newMessage = await messageService.createMessage({ fromId, toId, message });
     return { message: newMessage };
   }
+
+  @Mutation(() => Profile)
+  @Authorized()
+  resetUnreadMessagesCount(@CurrentUser() { profileId }: User, @Ctx() { messageService }: Context): Promise<Profile> {
+    return messageService.resetUnreadMessagesCount(profileId);
+  }
 }

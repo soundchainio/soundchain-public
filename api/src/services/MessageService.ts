@@ -1,5 +1,7 @@
 import { PaginateResult } from '../db/pagination/paginate';
+import { NotFoundError } from '../errors/NotFoundError';
 import { Message, MessageModel } from '../models/Message';
+import { Profile, ProfileModel } from '../models/Profile';
 import { Context } from '../types/Context';
 import { PageInput } from '../types/PageInput';
 import { SortOrder } from '../types/SortOrder';
@@ -77,5 +79,17 @@ export class MessageService extends ModelService<typeof Message> {
       sort: { field: 'createdAt', order: SortOrder.DESC },
       page,
     });
+  }
+
+  async incrementUnreadMessagesCount(profileId: string): Promise<void> {
+    await ProfileModel.updateOne({ _id: profileId }, { $inc: { unreadMessagesCount: 1 } });
+  }
+
+  async resetUnreadMessagesCount(profileId: string): Promise<Profile> {
+    const updatedProfile = await ProfileModel.findByIdAndUpdate(profileId, { unreadMessagesCount: 0 }, { new: true });
+    if (!updatedProfile) {
+      throw new NotFoundError('Profile', profileId);
+    }
+    return updatedProfile;
   }
 }
