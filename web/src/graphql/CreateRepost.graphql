@@ -3,5 +3,9 @@ mutation CreateRepost($input: CreateRepostInput!) {
     post {
       id
     }
+    originalPost {
+      id,
+      repostCount
+    }
   }
 }
