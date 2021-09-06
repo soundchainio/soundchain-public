@@ -41,6 +41,22 @@ export type ChangeReactionPayload = {
   post: Post;
 };
 
+export type Chat = {
+  __typename?: 'Chat';
+  id: Scalars['ID'];
+  message: Scalars['String'];
+  readProfileIds: Array<Scalars['String']>;
+  createdAt: Scalars['DateTime'];
+  profile: Profile;
+  unread: Scalars['Boolean'];
+};
+
+export type ChatConnection = {
+  __typename?: 'ChatConnection';
+  pageInfo: PageInfo;
+  nodes: Array<Chat>;
+};
+
 export type ClearNotificationsPayload = {
   __typename?: 'ClearNotificationsPayload';
   ok: Scalars['Boolean'];
@@ -197,6 +213,7 @@ export type Message = {
   fromId: Scalars['String'];
   toId: Scalars['String'];
   message: Scalars['String'];
+  readProfileIds: Array<Scalars['String']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   fromProfile: Profile;
@@ -405,11 +422,12 @@ export type Profile = {
 
 export type Query = {
   __typename?: 'Query';
+  chats: ChatConnection;
   comment: Comment;
   comments: Array<Comment>;
+  feed: FeedConnection;
   chatHistory: MessageConnection;
   message: Message;
-  feed: FeedConnection;
   notifications: NotificationConnection;
   notification: Notification;
   post: Post;
@@ -419,6 +437,11 @@ export type Query = {
   uploadUrl: UploadUrl;
   me: Maybe<User>;
   validPasswordResetToken: Scalars['Boolean'];
+};
+
+
+export type QueryChatsArgs = {
+  page?: Maybe<PageInput>;
 };
 
 
@@ -432,6 +455,11 @@ export type QueryCommentsArgs = {
 };
 
 
+export type QueryFeedArgs = {
+  page?: Maybe<PageInput>;
+};
+
+
 export type QueryChatHistoryArgs = {
   page?: Maybe<PageInput>;
   profileId: Scalars['String'];
@@ -440,11 +468,6 @@ export type QueryChatHistoryArgs = {
 
 export type QueryMessageArgs = {
   id: Scalars['String'];
-};
-
-
-export type QueryFeedArgs = {
-  page?: Maybe<PageInput>;
 };
 
 
@@ -715,6 +738,26 @@ export type ChatHistoryQuery = (
     ), nodes: Array<(
       { __typename?: 'Message' }
       & MessageComponentFieldsFragment
+    )> }
+  ) }
+);
+
+export type ChatsQueryVariables = Exact<{
+  page?: Maybe<PageInput>;
+}>;
+
+
+export type ChatsQuery = (
+  { __typename?: 'Query' }
+  & { chats: (
+    { __typename?: 'ChatConnection' }
+    & { nodes: Array<(
+      { __typename?: 'Chat' }
+      & Pick<Chat, 'id' | 'message' | 'unread' | 'createdAt'>
+      & { profile: (
+        { __typename?: 'Profile' }
+        & Pick<Profile, 'displayName' | 'profilePicture'>
+      ) }
     )> }
   ) }
 );
@@ -1472,6 +1515,50 @@ export function useChatHistoryLazyQuery(baseOptions?: Apollo.LazyQueryHookOption
 export type ChatHistoryQueryHookResult = ReturnType<typeof useChatHistoryQuery>;
 export type ChatHistoryLazyQueryHookResult = ReturnType<typeof useChatHistoryLazyQuery>;
 export type ChatHistoryQueryResult = Apollo.QueryResult<ChatHistoryQuery, ChatHistoryQueryVariables>;
+export const ChatsDocument = gql`
+    query Chats($page: PageInput) {
+  chats(page: $page) {
+    nodes {
+      id
+      profile {
+        displayName
+        profilePicture
+      }
+      message
+      unread
+      createdAt
+    }
+  }
+}
+    `;
+
+/**
+ * __useChatsQuery__
+ *
+ * To run a query within a React component, call `useChatsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useChatsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useChatsQuery({
+ *   variables: {
+ *      page: // value for 'page'
+ *   },
+ * });
+ */
+export function useChatsQuery(baseOptions?: Apollo.QueryHookOptions<ChatsQuery, ChatsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ChatsQuery, ChatsQueryVariables>(ChatsDocument, options);
+      }
+export function useChatsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ChatsQuery, ChatsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ChatsQuery, ChatsQueryVariables>(ChatsDocument, options);
+        }
+export type ChatsQueryHookResult = ReturnType<typeof useChatsQuery>;
+export type ChatsLazyQueryHookResult = ReturnType<typeof useChatsLazyQuery>;
+export type ChatsQueryResult = Apollo.QueryResult<ChatsQuery, ChatsQueryVariables>;
 export const ClearNotificationsDocument = gql`
     mutation ClearNotifications {
   clearNotifications {
