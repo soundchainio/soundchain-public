@@ -58,7 +58,7 @@ function updateCache(cache: ApolloCache<AddCommentMutation>, { data }: FetchResu
     query: CommentsDocument,
     variables: { postId },
     data: {
-      comments: [...(existingComments?.comments || []), newComment],
+      comments: [newComment, ...(existingComments?.comments || [])],
     },
   });
 }
