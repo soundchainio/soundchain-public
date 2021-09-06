@@ -38,4 +38,38 @@ export class MessageService extends ModelService<typeof Message> {
   getMessage(id: string): Promise<Message> {
     return this.findOrFail(id);
   }
+
+  getChats(profileId: string, page?: PageInput): Promise<PaginateResult<Message>> {
+    return this.paginateAggregated({
+      filter: {
+        $or: [
+          {
+            fromId: profileId,
+          },
+          {
+            toId: profileId,
+          },
+        ],
+      },
+      group: {
+        _id: {
+          $cond: {
+            if: {
+              $eq: ['$fromId', profileId],
+            },
+            then: '$toId',
+            else: '$fromId',
+          },
+        },
+        createdAt: {
+          $last: '$createdAt',
+        },
+        message: {
+          $last: '$message',
+        },
+      },
+      sort: { field: 'createdAt', order: SortOrder.DESC },
+      page,
+    });
+  }
 }
