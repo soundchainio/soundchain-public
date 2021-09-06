@@ -34,6 +34,10 @@ export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
     isMobile() ? (navigator.share ? navigator.share({ url: postLink }) : setShareOpened(true)) : setShareOpened(true);
   };
 
+  const focusCommentTextarea = () => {
+    setTimeout(() => document.querySelector('textarea')?.focus(), 300)
+  }
+
   useEffect(() => {
     const origin = window.location.origin;
     setPostLink(`${origin}/posts/${postId}`);
@@ -55,7 +59,7 @@ export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
       />
       <div className={commonClasses}>
         <NextLink href={`/posts/${postId}`}>
-          <a className="flex items-center cursor-pointer">
+          <a className="flex items-center cursor-pointer" onClick={focusCommentTextarea}>
             <ChatAltIcon className="h-4 w-4 mr-1" />
             Comment
           </a>
