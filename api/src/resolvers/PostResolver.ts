@@ -40,8 +40,8 @@ export class PostResolver {
   }
 
   @FieldResolver(() => Number)
-  repostCount(): Promise<number> {
-    return Promise.resolve(Math.floor(Math.random() * 100));
+  repostCount(@Ctx() { postService }: Context, @Root() post: Post): Promise<number> {
+    return postService.countReposts(post._id);
   }
 
   @FieldResolver(() => Number)
@@ -134,8 +134,9 @@ export class PostResolver {
     @Ctx() { postService }: Context,
     @Arg('input') { body, repostId }: CreateRepostInput,
     @CurrentUser() { profileId }: User,
-  ): Promise<CreatePostPayload> {
+  ): Promise<CreateRepostPayload> {
     const post = await postService.createRepost({ profileId, body, repostId });
-    return { post };
+    const originalPost = await postService.getPost(repostId)
+    return { post, originalPost };
   }
 }
