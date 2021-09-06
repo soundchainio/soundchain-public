@@ -19,6 +19,10 @@ export class Message extends Model {
   @prop({ required: true })
   message: string;
 
+  @Field(() => [String])
+  @prop({ required: true })
+  readProfileIds: string[];
+
   @Field(() => Date)
   createdAt: Date;
 

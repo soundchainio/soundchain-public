@@ -8,6 +8,9 @@ export class Chat {
   @Field()
   message: string;
 
+  @Field(() => [String])
+  readProfileIds: string[];
+
   @Field(() => Date)
   createdAt: Date;
 }

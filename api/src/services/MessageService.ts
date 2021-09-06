@@ -17,7 +17,7 @@ export class MessageService extends ModelService<typeof Message> {
   }
 
   async createMessage(params: NewMessageParams): Promise<Message> {
-    const message = new this.model(params);
+    const message = new this.model({ ...params, readProfileIds: [params.fromId] });
     await message.save();
     return message;
   }
@@ -66,6 +66,12 @@ export class MessageService extends ModelService<typeof Message> {
         },
         message: {
           $last: '$message',
+        },
+        messageId: {
+          $last: '$_id',
+        },
+        readProfileIds: {
+          $last: '$readProfileIds',
         },
       },
       sort: { field: 'createdAt', order: SortOrder.DESC },
