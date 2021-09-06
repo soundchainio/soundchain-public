@@ -14,6 +14,7 @@ module.exports = {
       colors: {
         gray: {
           10: '#101010',
+          15: '#151515',
           20: '#202020',
           25: '#252525',
           30: '#303030',
@@ -23,11 +24,14 @@ module.exports = {
           60: '#606060',
           80: '#808080',
           '1A': '#1A1A1A',
+          CC: '#CCCCCC',
         },
       },
     },
   },
   variants: {
-    extend: {},
+    extend: {
+      borderWidth: ['last'],
+    },
   },
 };
