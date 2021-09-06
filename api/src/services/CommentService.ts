@@ -45,7 +45,7 @@ export class CommentService extends ModelService<typeof Comment> {
   }
 
   getComments(postId: string): Promise<Comment[]> {
-    return CommentModel.find({ postId }).sort({ createdAt: 'asc' }).exec();
+    return CommentModel.find({ postId }).sort({ createdAt: 'desc' }).exec();
   }
 
   countComments(postId: string): Promise<number> {
