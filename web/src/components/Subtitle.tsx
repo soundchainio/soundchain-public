@@ -2,10 +2,11 @@ import classNames from 'classnames';
 
 interface SubtitleProps extends React.ComponentPropsWithoutRef<'h4'> {
   children: string;
+  size?: 'base' | 'lg';
 }
 
-const baseClasses = 'text-base md:text-lg font-medium text-white';
+const baseClasses = 'font-medium text-white';
 
-export const Subtitle = ({ className, children }: SubtitleProps) => (
-  <h4 className={classNames(className, baseClasses)}>{children}</h4>
+export const Subtitle = ({ className, children, size = 'base' }: SubtitleProps) => (
+  <h4 className={classNames(className, baseClasses, `text-${size}`)}>{children}</h4>
 );

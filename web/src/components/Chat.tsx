@@ -19,6 +19,10 @@ export const Chat = ({ profileId }: ChatProps) => {
   });
 
   useEffect(() => {
+    if (!renderLoader && data) initialScrollToBottom();
+  }, [data, renderLoader]);
+
+  useEffect(() => {
     if (!containerRef.current) return;
     if (lastContainerHeight !== containerRef.current?.scrollHeight) {
       requestAnimationFrame(() => {
@@ -32,10 +36,6 @@ export const Chat = ({ profileId }: ChatProps) => {
     }
     setLastContainerHeight(containerRef.current?.scrollHeight);
   }, [containerRef.current?.scrollHeight, lastContainerHeight]);
-
-  useEffect(() => {
-    if (!renderLoader && data) initialScrollToBottom();
-  }, [data, renderLoader]);
 
   if (!data) return <MessageSkeleton />;
 
@@ -53,7 +53,7 @@ export const Chat = ({ profileId }: ChatProps) => {
   };
 
   return (
-    <div ref={containerRef}>
+    <div id="container" ref={containerRef}>
       {renderLoader && pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading messages" />}
       <div className="flex flex-col m-3 space-y-4">
         {messages.map(({ id }, index) => (

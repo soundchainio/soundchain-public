@@ -6,6 +6,8 @@ query Me {
       id
       displayName
       profilePicture
+      followerCount
+      followingCount
     }
   }
 }
