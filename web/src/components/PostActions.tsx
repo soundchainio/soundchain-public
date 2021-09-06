@@ -1,8 +1,10 @@
 import { ChatAltIcon, RefreshIcon, ShareIcon, ThumbUpIcon } from '@heroicons/react/solid';
 import { useModalDispatch } from 'contexts/providers/modal';
+import { useMe } from 'hooks/useMe';
 import { ReactionEmoji } from 'icons/ReactionEmoji';
 import { ReactionType } from 'lib/graphql';
 import NextLink from 'next/link';
+import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import { isMobile } from 'utils/IsMobile';
 import { ReactionSelector } from './ReactionSelector';
@@ -20,13 +22,17 @@ export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
   const [shareOpened, setShareOpened] = useState(false);
   const { dispatchSetRepostId, dispatchShowNewPostModal } = useModalDispatch();
   const [postLink, setPostLink] = useState('');
+  const me = useMe()
+  const router = useRouter()
 
   const onRepostClick = () => {
+    if (!me) return router.push('/login')
     dispatchSetRepostId(postId);
     dispatchShowNewPostModal(true);
   };
 
   const handleLikeButton = () => {
+    if (!me) return router.push('/login')
     setReactionSelectorOpened(!reactionSelectorOpened);
   };
 

@@ -34,6 +34,8 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
     animateScroll.scrollToBottom({ duration: 200 });
   };
 
+  if (!me) return null
+
   return (
     <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
       {({ isSubmitting, isValid, dirty }: FormikProps<FormValues>) => (
