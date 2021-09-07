@@ -22,11 +22,6 @@ function Link({ label, value, to }: LinkProps) {
   )
 }
 
-// this is shit because:
-// the person who made it is: 
-// the person did this because: 
-// oh wait actually: 
-
 const topNovaBarProps: TopNavBarProps = {
   leftButton: BackButton,
 };
