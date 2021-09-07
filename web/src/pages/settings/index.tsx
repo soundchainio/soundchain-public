@@ -43,7 +43,7 @@ export default function SettingsPage() {
         <Link to="/name" label="Name" value={me.profile.displayName} />
         <Link to="/username" label="Username" value={me.handle} />
         <Link to="/password" label="Password" value="********" />
-        <Link to="/musician-types" label="Musician Type(s)" value="Lorem ipsum" />
+        <Link to="/musician-type" label="Musician Type(s)" value="Lorem ipsum" />
         <Link to="/favorite-genres" label="Favorite Genre(s)" value="Lorem ipsum" />
         <Link to="/social-links" label="Social Link(s)" value="Lorem ipsum" />
       </div>
