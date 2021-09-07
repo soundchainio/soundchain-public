@@ -33,7 +33,7 @@ const topNavBarProps: TopNavBarProps = {
   leftButton: BackButton,
 };
 
-export default function SettingsUsernamePage() {
+export default function SettingsPasswordPage() {
   const me = useMe();
   const router = useRouter();
   const initialFormValues: PasswordFormValues = { password: '', passwordConfirmation: '' };

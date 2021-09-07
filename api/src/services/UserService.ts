@@ -24,11 +24,9 @@ export class UserService extends ModelService<typeof User> {
   }
 
   async updatePassword(id: string, password: string): Promise<void> {
-    const user = await UserModel.findById(id);
-    if (!user) {
-      throw new Error(`Could not update the profile with id: ${id}`);
-    }
-    user.password = password;
-    user.save()
+    const user = await this.getUser(id);
+    const userDoc = new this.model(user)
+    userDoc.password = password;
+    userDoc.save()
   }
 }
