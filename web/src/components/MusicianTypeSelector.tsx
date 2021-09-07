@@ -6,10 +6,11 @@ import { musicianTypes } from 'utils/MusicianTypes'
 
 interface MusicianTypeSelectorProps {
   onSelect: (selectedMusicianTypes: MusicianType[]) => void;
+  maxSelections?: number;
   initialValue?: MusicianType[]
 }
 
-export const MusicianTypeSelector = ({ onSelect, initialValue }: MusicianTypeSelectorProps) => {
+export const MusicianTypeSelector = ({ onSelect, maxSelections = 5, initialValue }: MusicianTypeSelectorProps) => {
   const [selectedMusicianTypes, setSelectedMusicianTypes] = useState<MusicianType[]>(initialValue || []);
 
   useEffect(() => {
@@ -21,8 +22,10 @@ export const MusicianTypeSelector = ({ onSelect, initialValue }: MusicianTypeSel
   };
 
   const onMusicianTypeClick = (key: MusicianType) => {
-    if (isMusicianTypeSelected(key)) setSelectedMusicianTypes(selectedMusicianTypes.filter(selectedMusicianType => selectedMusicianType !== key));
-    else setSelectedMusicianTypes([...selectedMusicianTypes, key]);
+    if (selectedMusicianTypes.length < maxSelections) {
+      if (isMusicianTypeSelected(key)) setSelectedMusicianTypes(selectedMusicianTypes.filter(selectedMusicianType => selectedMusicianType !== key));
+      else setSelectedMusicianTypes([...selectedMusicianTypes, key]);
+    }
   };
 
   return (
