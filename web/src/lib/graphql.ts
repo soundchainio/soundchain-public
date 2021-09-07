@@ -223,6 +223,7 @@ export type Mutation = {
   updateSocialMedias: UpdateSocialMediasPayload;
   updateFavoriteGenres: UpdateFavoriteGenresPayload;
   updateProfilePicture: UpdateProfilePicturePayload;
+  updateProfileDisplayName: UpdateProfileDisplayNamePayload;
   updateCoverPicture: UpdateCoverPicturePayload;
   followProfile: FollowProfilePayload;
   unfollowProfile: UnfollowProfilePayload;
@@ -286,6 +287,11 @@ export type MutationUpdateFavoriteGenresArgs = {
 
 export type MutationUpdateProfilePictureArgs = {
   input: UpdateProfilePictureInput;
+};
+
+
+export type MutationUpdateProfileDisplayNameArgs = {
+  input: UpdateProfileDisplayNameInput;
 };
 
 
@@ -607,6 +613,15 @@ export type UpdateFavoriteGenresInput = {
 
 export type UpdateFavoriteGenresPayload = {
   __typename?: 'UpdateFavoriteGenresPayload';
+  profile: Profile;
+};
+
+export type UpdateProfileDisplayNameInput = {
+  displayName: Scalars['String'];
+};
+
+export type UpdateProfileDisplayNamePayload = {
+  __typename?: 'UpdateProfileDisplayNamePayload';
   profile: Profile;
 };
 
@@ -1208,6 +1223,22 @@ export type UpdateFavoriteGenresMutation = (
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'favoriteGenres'>
+    ) }
+  ) }
+);
+
+export type UpdateProfileDisplayNameMutationVariables = Exact<{
+  input: UpdateProfileDisplayNameInput;
+}>;
+
+
+export type UpdateProfileDisplayNameMutation = (
+  { __typename?: 'Mutation' }
+  & { updateProfileDisplayName: (
+    { __typename?: 'UpdateProfileDisplayNamePayload' }
+    & { profile: (
+      { __typename?: 'Profile' }
+      & Pick<Profile, 'id' | 'displayName'>
     ) }
   ) }
 );
@@ -2584,6 +2615,42 @@ export function useUpdateFavoriteGenresMutation(baseOptions?: Apollo.MutationHoo
 export type UpdateFavoriteGenresMutationHookResult = ReturnType<typeof useUpdateFavoriteGenresMutation>;
 export type UpdateFavoriteGenresMutationResult = Apollo.MutationResult<UpdateFavoriteGenresMutation>;
 export type UpdateFavoriteGenresMutationOptions = Apollo.BaseMutationOptions<UpdateFavoriteGenresMutation, UpdateFavoriteGenresMutationVariables>;
+export const UpdateProfileDisplayNameDocument = gql`
+    mutation updateProfileDisplayName($input: UpdateProfileDisplayNameInput!) {
+  updateProfileDisplayName(input: $input) {
+    profile {
+      id
+      displayName
+    }
+  }
+}
+    `;
+export type UpdateProfileDisplayNameMutationFn = Apollo.MutationFunction<UpdateProfileDisplayNameMutation, UpdateProfileDisplayNameMutationVariables>;
+
+/**
+ * __useUpdateProfileDisplayNameMutation__
+ *
+ * To run a mutation, you first call `useUpdateProfileDisplayNameMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateProfileDisplayNameMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateProfileDisplayNameMutation, { data, loading, error }] = useUpdateProfileDisplayNameMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateProfileDisplayNameMutation(baseOptions?: Apollo.MutationHookOptions<UpdateProfileDisplayNameMutation, UpdateProfileDisplayNameMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateProfileDisplayNameMutation, UpdateProfileDisplayNameMutationVariables>(UpdateProfileDisplayNameDocument, options);
+      }
+export type UpdateProfileDisplayNameMutationHookResult = ReturnType<typeof useUpdateProfileDisplayNameMutation>;
+export type UpdateProfileDisplayNameMutationResult = Apollo.MutationResult<UpdateProfileDisplayNameMutation>;
+export type UpdateProfileDisplayNameMutationOptions = Apollo.BaseMutationOptions<UpdateProfileDisplayNameMutation, UpdateProfileDisplayNameMutationVariables>;
 export const UpdateProfilePictureDocument = gql`
     mutation UpdateProfilePicture($input: UpdateProfilePictureInput!) {
   updateProfilePicture(input: $input) {

@@ -13,7 +13,7 @@ interface LinkProps {
 
 function Link({ label, value, to }: LinkProps) {
   return (
-    <NextLink href={`/settings/${to}`}>
+    <NextLink href={`/settings${to}`}>
       <a className="block w-full px-4">
         <span className="block text-gray-50"> {label} </span>
         <span className="block text-white font-semibold"> {value} </span>
