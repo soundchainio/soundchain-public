@@ -6,9 +6,9 @@ import { TopNavBarProps } from 'components/TopNavBar';
 import { BackButton } from 'components/Buttons/BackButton';
 
 interface LinkProps {
-  label: string
-  value: string
-  to: string
+  label: string;
+  value: string;
+  to: string;
 }
 
 function Link({ label, value, to }: LinkProps) {
@@ -19,17 +19,17 @@ function Link({ label, value, to }: LinkProps) {
         <span className="block text-white font-semibold"> {value} </span>
       </a>
     </NextLink>
-  )
+  );
 }
 
 const topNovaBarProps: TopNavBarProps = {
-  leftButton: BackButton,
+  leftButton: <BackButton />,
 };
 
 export default function SettingsPage() {
-  const me = useMe()
+  const me = useMe();
 
-  if (!me) return null
+  if (!me) return null;
 
   return (
     <Layout topNavBarProps={topNovaBarProps}>
