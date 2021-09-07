@@ -45,7 +45,7 @@ export type Chat = {
   __typename?: 'Chat';
   id: Scalars['ID'];
   message: Scalars['String'];
-  readProfileIds: Array<Scalars['String']>;
+  readAt: Scalars['DateTime'];
   createdAt: Scalars['DateTime'];
   profile: Profile;
   unread: Scalars['Boolean'];
@@ -213,7 +213,7 @@ export type Message = {
   fromId: Scalars['String'];
   toId: Scalars['String'];
   message: Scalars['String'];
-  readProfileIds: Array<Scalars['String']>;
+  readAt: Maybe<Scalars['DateTime']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   fromProfile: Profile;
@@ -425,10 +425,10 @@ export type Profile = {
 export type Query = {
   __typename?: 'Query';
   chats: ChatConnection;
+  chatHistory: MessageConnection;
   comment: Comment;
   comments: Array<Comment>;
   feed: FeedConnection;
-  chatHistory: MessageConnection;
   message: Message;
   notifications: NotificationConnection;
   notification: Notification;
@@ -447,6 +447,12 @@ export type QueryChatsArgs = {
 };
 
 
+export type QueryChatHistoryArgs = {
+  page?: Maybe<PageInput>;
+  profileId: Scalars['String'];
+};
+
+
 export type QueryCommentArgs = {
   id: Scalars['String'];
 };
@@ -459,12 +465,6 @@ export type QueryCommentsArgs = {
 
 export type QueryFeedArgs = {
   page?: Maybe<PageInput>;
-};
-
-
-export type QueryChatHistoryArgs = {
-  page?: Maybe<PageInput>;
-  profileId: Scalars['String'];
 };
 
 

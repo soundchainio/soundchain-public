@@ -16,7 +16,7 @@ export default function HomePage() {
   const me = useMe();
 
   const topNavBarProps: TopNavBarProps = {
-    rightButton: InboxButton,
+    rightButton: me ? InboxButton : undefined,
   };
 
   return (

@@ -5,6 +5,7 @@ import { User } from '../models/User';
 import { Chat } from '../types/Chat';
 import { ChatConnection } from '../types/ChatConnection';
 import { Context } from '../types/Context';
+import { MessageConnection } from '../types/MessageConnection';
 import { PageInput } from '../types/PageInput';
 
 @Resolver(Chat)
@@ -16,7 +17,7 @@ export class ChatResolver {
 
   @FieldResolver()
   unread(@CurrentUser() { profileId }: User, @Root() chat: Chat): boolean {
-    return !chat.readProfileIds.includes(profileId);
+    return chat.lastFromId !== profileId && !chat.readAt;
   }
 
   @Authorized()
@@ -27,5 +28,16 @@ export class ChatResolver {
     @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<ChatConnection> {
     return messageService.getChats(profileId, page);
+  }
+
+  @Authorized()
+  @Query(() => MessageConnection)
+  chatHistory(
+    @Ctx() { messageService }: Context,
+    @CurrentUser() { profileId: currentUserProfileId }: User,
+    @Arg('profileId') profileId: string,
+    @Arg('page', { nullable: true }) page?: PageInput,
+  ): Promise<MessageConnection> {
+    return messageService.getMessages(currentUserProfileId, profileId, page);
   }
 }

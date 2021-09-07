@@ -1,15 +1,13 @@
 import { Chat, useChatsQuery } from 'lib/graphql';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { ChatItem } from './ChatItem';
-import { NotificationSkeleton } from './NotificationSkeleton';
+import { ChatSkeleton } from './ChatSkeleton';
 
 export const Inbox = () => {
   const { data } = useChatsQuery();
-  useEffect(() => {
-    console.log(data);
-  }, [data]);
+
   if (!data) {
-    return <NotificationSkeleton />;
+    return <ChatSkeleton />;
   }
 
   return (

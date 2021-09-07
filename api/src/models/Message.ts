@@ -19,9 +19,9 @@ export class Message extends Model {
   @prop({ required: true })
   message: string;
 
-  @Field(() => [String])
-  @prop({ required: true })
-  readProfileIds: string[];
+  @Field(() => Date, { nullable: true })
+  @prop({ required: false })
+  readAt: Date;
 
   @Field(() => Date)
   createdAt: Date;

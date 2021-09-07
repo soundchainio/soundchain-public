@@ -19,12 +19,14 @@ export class MessageService extends ModelService<typeof Message> {
   }
 
   async createMessage(params: NewMessageParams): Promise<Message> {
-    const message = new this.model({ ...params, readProfileIds: [params.fromId] });
+    const message = new this.model(params);
     await message.save();
+    await this.incrementUnreadMessagesCount(params.toId);
     return message;
   }
 
   getMessages(currentUser: string, otherUser: string, page?: PageInput): Promise<PaginateResult<Message>> {
+    this.markAsRead(otherUser, currentUser);
     return this.paginate({
       filter: {
         $or: [
@@ -69,11 +71,11 @@ export class MessageService extends ModelService<typeof Message> {
         message: {
           $last: '$message',
         },
-        messageId: {
-          $last: '$_id',
+        lastFromId: {
+          $last: '$fromId',
         },
-        readProfileIds: {
-          $last: '$readProfileIds',
+        readAt: {
+          $last: '$readAt',
         },
       },
       sort: { field: 'createdAt', order: SortOrder.DESC },
@@ -81,8 +83,25 @@ export class MessageService extends ModelService<typeof Message> {
     });
   }
 
+  async markAsRead(fromId: string, toId: string): Promise<boolean> {
+    let ok = true;
+    try {
+      const unreadMessagesCount = await this.model.find({ fromId, toId, readAt: null }).countDocuments();
+      await this.decrementUnreadMessagesCount(toId, unreadMessagesCount);
+      await this.model.updateMany({ fromId, toId }, { $set: { readAt: new Date() } });
+    } catch (err) {
+      ok = false;
+      throw new Error(`Error while mark as read: ${err}`);
+    }
+    return ok;
+  }
+
   async incrementUnreadMessagesCount(profileId: string): Promise<void> {
     await ProfileModel.updateOne({ _id: profileId }, { $inc: { unreadMessagesCount: 1 } });
+  }
+
+  async decrementUnreadMessagesCount(profileId: string, count: number): Promise<void> {
+    await ProfileModel.updateOne({ _id: profileId }, { $inc: { unreadMessagesCount: -count } });
   }
 
   async resetUnreadMessagesCount(profileId: string): Promise<Profile> {

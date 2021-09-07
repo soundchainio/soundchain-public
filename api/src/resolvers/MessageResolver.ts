@@ -5,8 +5,6 @@ import { Message } from '../models/Message';
 import { Profile } from '../models/Profile';
 import { User } from '../models/User';
 import { Context } from '../types/Context';
-import { MessageConnection } from '../types/MessageConnection';
-import { PageInput } from '../types/PageInput';
 import { SendMessageInput } from '../types/SendMessageInput';
 import { SendMessagePayload } from '../types/SendMessagePayload';
 
@@ -15,17 +13,6 @@ export class MessageResolver {
   @FieldResolver(() => Profile)
   fromProfile(@Ctx() { profileService }: Context, @Root() message: Message): Promise<Profile> {
     return profileService.getProfile(message.fromId);
-  }
-
-  @Authorized()
-  @Query(() => MessageConnection)
-  chatHistory(
-    @Ctx() { messageService }: Context,
-    @CurrentUser() { profileId: currentUserProfileId }: User,
-    @Arg('profileId') profileId: string,
-    @Arg('page', { nullable: true }) page?: PageInput,
-  ): Promise<MessageConnection> {
-    return messageService.getMessages(currentUserProfileId, profileId, page);
   }
 
   @Authorized()
