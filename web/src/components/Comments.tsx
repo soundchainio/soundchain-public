@@ -1,4 +1,4 @@
-import { useGetPaginatedCommentsQuery, GetPaginatedCommentsQuery } from 'lib/graphql';
+import { useGetPaginatedCommentsQuery } from 'lib/graphql';
 import { Comment } from './Comment';
 import { InfiniteLoader } from './InfiniteLoader';
 import { CommentSkeleton } from './CommentSkeleton';
@@ -15,6 +15,16 @@ export const Comments = ({ postId, pageSize = 10 }: CommentsProps) => {
   const [commentIds, setCommentIds] = useState<Array<string>>(['']);
   const [pageInfo, setPageInfo] = useState(initialPageInfo);
   const { data, fetchMore } = useGetPaginatedCommentsQuery({ variables: { postId, page: { first: pageSize } } });
+
+  useEffect(() => {
+    if (data) {
+      const iDs = data.getPaginatedComments.nodes.map(node => node.id);
+      const newPageInfo = data.getPaginatedComments.pageInfo;
+      setPageInfo({ hasNextPage: newPageInfo.hasNextPage, endCursor: newPageInfo.endCursor || '' });
+      setCommentIds(iDs);
+    }
+
+  }, [data]);
 
   if (!data) return <CommentSkeleton />;
 
@@ -33,16 +43,6 @@ export const Comments = ({ postId, pageSize = 10 }: CommentsProps) => {
       setPageInfo({ hasNextPage: newPageInfo.hasNextPage, endCursor: newPageInfo.endCursor || '' });
     });
   }
-
-  useEffect(() => {
-    if (data) {
-      const iDs = data.getPaginatedComments.nodes.map(node => node.id);
-      const newPageInfo = data.getPaginatedComments.pageInfo;
-      setPageInfo({ hasNextPage: newPageInfo.hasNextPage, endCursor: newPageInfo.endCursor || '' });
-      setCommentIds(iDs);
-    }
-
-  }, [data]);
 
   return (
     <div className="flex flex-col m-4 space-y-4">
