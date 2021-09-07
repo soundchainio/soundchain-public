@@ -10,5 +10,9 @@ query Chats($page: PageInput) {
       unread
       createdAt
     }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
   }
 }

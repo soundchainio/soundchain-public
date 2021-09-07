@@ -16,18 +16,16 @@ export class ChatResolver {
   }
 
   @FieldResolver()
-  unread(@CurrentUser() { profileId }: User, @Root() chat: Chat): boolean {
-    return chat.lastFromId !== profileId && !chat.readAt;
+  unread(@Root() chat: Chat): boolean {
+    return chat.lastFromId !== '612e7862f206df3ad07b1aa9' && !chat.readAt;
   }
 
-  @Authorized()
   @Query(() => ChatConnection)
   chats(
-    @CurrentUser() { profileId }: User,
     @Ctx() { messageService }: Context,
     @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<ChatConnection> {
-    return messageService.getChats(profileId, page);
+    return messageService.getChats('612e7862f206df3ad07b1aa9', page);
   }
 
   @Authorized()

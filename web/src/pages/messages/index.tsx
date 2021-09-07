@@ -1,7 +1,6 @@
 import { BackButton } from 'components/Buttons/BackButton';
 import { Inbox } from 'components/Inbox';
 import { Layout } from 'components/Layout';
-import { Notifications } from 'components/Notifications';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { cacheFor } from 'lib/apollo';
 import { protectPage } from 'lib/protectPage';

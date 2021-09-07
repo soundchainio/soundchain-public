@@ -12,7 +12,7 @@ export class Chat {
   lastFromId?: string;
 
   @Field(() => Date)
-  readAt: Date;
+  readAt?: Date;
 
   @Field(() => Date)
   createdAt: Date;

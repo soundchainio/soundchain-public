@@ -67,7 +67,7 @@ export async function paginateAggregated<T extends typeof Model>(
 
   const [results, totalCount] = await Promise.all([
     collection
-      .aggregate([{ $match: { $and: [cursorFilter, filter] } }, { $group: group }])
+      .aggregate([{ $match: filter }, { $group: group }, { $match: cursorFilter }])
       .sort(querySort)
       .limit(limit + 1)
       .exec(),

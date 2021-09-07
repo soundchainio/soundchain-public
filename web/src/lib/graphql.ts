@@ -45,6 +45,7 @@ export type Chat = {
   __typename?: 'Chat';
   id: Scalars['ID'];
   message: Scalars['String'];
+  lastFromId: Scalars['String'];
   readAt: Scalars['DateTime'];
   createdAt: Scalars['DateTime'];
   profile: Profile;
@@ -760,7 +761,10 @@ export type ChatsQuery = (
         { __typename?: 'Profile' }
         & Pick<Profile, 'displayName' | 'profilePicture'>
       ) }
-    )> }
+    )>, pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
+    ) }
   ) }
 );
 
@@ -1551,6 +1555,10 @@ export const ChatsDocument = gql`
       message
       unread
       createdAt
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
     }
   }
 }
