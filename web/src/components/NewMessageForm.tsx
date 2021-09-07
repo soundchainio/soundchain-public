@@ -31,7 +31,7 @@ export const NewMessageForm = ({ profileId }: NewMessageFormProps) => {
   const handleSubmit = async ({ body }: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
     await sendMessage({ variables: { input: { message: body, toId: profileId } } });
     resetForm();
-    scroll.scrollToBottom({ duration: 0 });
+    scroll.scrollToBottom({ duration: 500, smooth: 'easeInOutCubic' });
   };
 
   return (

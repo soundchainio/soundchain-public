@@ -12,6 +12,7 @@ interface ChatProps {
 
 export const Chat = ({ profileId }: ChatProps) => {
   const [renderLoader, setRenderLoader] = useState(false);
+  const [onLoadMore, setOnLoadMore] = useState(false);
   const [lastContainerHeight, setLastContainerHeight] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const { data, fetchMore } = useChatHistoryQuery({
@@ -24,18 +25,19 @@ export const Chat = ({ profileId }: ChatProps) => {
 
   useEffect(() => {
     if (!containerRef.current) return;
-    if (lastContainerHeight !== containerRef.current?.scrollHeight) {
+    if (onLoadMore && lastContainerHeight !== containerRef.current?.scrollHeight) {
       requestAnimationFrame(() => {
         if (!containerRef.current) return;
         disableBodyScroll(containerRef.current);
         scroll.scrollTo(containerRef.current?.scrollHeight - lastContainerHeight, { duration: 0 });
         requestAnimationFrame(() => {
           if (containerRef.current) enableBodyScroll(containerRef.current);
+          setOnLoadMore(false);
         });
       });
     }
     setLastContainerHeight(containerRef.current?.scrollHeight);
-  }, [containerRef.current?.scrollHeight, lastContainerHeight]);
+  }, [containerRef.current?.scrollHeight, lastContainerHeight, onLoadMore]);
 
   if (!data) return <MessageSkeleton />;
 
@@ -49,6 +51,7 @@ export const Chat = ({ profileId }: ChatProps) => {
   };
 
   const loadMore = async () => {
+    setOnLoadMore(true);
     await fetchMore({ variables: { profileId, page: { after: pageInfo.startCursor } } });
   };
 

@@ -82,28 +82,11 @@ export const cacheConfig: InMemoryCacheConfig = {
         },
         chats: {
           keyArgs: false,
-          merge(existing, incoming, { readField }): FeedConnection {
-            const nodes = existing ? { ...existing.nodes } : {};
-            incoming.nodes.forEach((node: FeedItem) => {
-              const key = readField('id', node);
-              nodes[key as string] = node;
-            });
-
+          merge(existing = { nodes: [] }, { nodes, pageInfo }): FeedConnection {
             return {
-              pageInfo: {
-                ...incoming.pageInfo,
-              },
-              nodes,
+              nodes: [...existing.nodes, ...nodes],
+              pageInfo,
             };
-          },
-
-          read(existing): FeedConnection | void {
-            if (existing) {
-              return {
-                pageInfo: { ...existing.pageInfo },
-                nodes: Object.values(existing.nodes),
-              };
-            }
           },
         },
       },
