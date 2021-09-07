@@ -1,5 +1,8 @@
+import { PaginateResult } from '../db/pagination/paginate';
 import { Comment, CommentModel } from '../models/Comment';
 import { Context } from '../types/Context';
+import { PageInput } from '../types/PageInput';
+import { SortOrder } from '../types/SortOrder';
 import { ModelService } from './ModelService';
 
 interface NewCommentParams {
@@ -44,11 +47,11 @@ export class CommentService extends ModelService<typeof Comment> {
     return comment;
   }
 
-  getComments(postId: string): Promise<Comment[]> {
-    return CommentModel.find({ postId }).sort({ createdAt: 'desc' }).exec();
-  }
-
   countComments(postId: string): Promise<number> {
     return CommentModel.countDocuments({ postId }).exec();
+  }
+
+  getComments(postId: string, page?: PageInput): Promise<PaginateResult<Comment>> {
+    return this.paginate({ filter: { postId }, sort: { field: 'createdAt', order: SortOrder.DESC }, page });
   }
 }

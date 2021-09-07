@@ -58,6 +58,12 @@ export type Comment = {
   profile: Profile;
 };
 
+export type CommentConnection = {
+  __typename?: 'CommentConnection';
+  pageInfo: PageInfo;
+  nodes: Array<Comment>;
+};
+
 export type CommentNotification = {
   __typename?: 'CommentNotification';
   type: NotificationType;
@@ -407,14 +413,13 @@ export type Profile = {
 export type Query = {
   __typename?: 'Query';
   comment: Comment;
-  comments: Array<Comment>;
+  comments: CommentConnection;
   chatHistory: MessageConnection;
   message: Message;
   feed: FeedConnection;
   notifications: NotificationConnection;
   notification: Notification;
   post: Post;
-  repost: Post;
   posts: PostConnection;
   myProfile: Profile;
   profile: Profile;
@@ -430,7 +435,8 @@ export type QueryCommentArgs = {
 
 
 export type QueryCommentsArgs = {
-  postId: Scalars['String'];
+  postId?: Maybe<Scalars['String']>;
+  page?: Maybe<PageInput>;
 };
 
 
@@ -462,11 +468,6 @@ export type QueryNotificationArgs = {
 
 
 export type QueryPostArgs = {
-  id: Scalars['String'];
-};
-
-
-export type QueryRepostArgs = {
   id: Scalars['String'];
 };
 
@@ -766,15 +767,22 @@ export type CommentNotificationFieldsFragment = (
 
 export type CommentsQueryVariables = Exact<{
   postId: Scalars['String'];
+  page?: Maybe<PageInput>;
 }>;
 
 
 export type CommentsQuery = (
   { __typename?: 'Query' }
-  & { comments: Array<(
-    { __typename?: 'Comment' }
-    & CommentComponentFieldsFragment
-  )> }
+  & { comments: (
+    { __typename?: 'CommentConnection' }
+    & { nodes: Array<(
+      { __typename?: 'Comment' }
+      & CommentComponentFieldsFragment
+    )>, pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
+    ) }
+  ) }
 );
 
 export type CreatePostMutationVariables = Exact<{
@@ -1550,9 +1558,15 @@ export type CommentQueryHookResult = ReturnType<typeof useCommentQuery>;
 export type CommentLazyQueryHookResult = ReturnType<typeof useCommentLazyQuery>;
 export type CommentQueryResult = Apollo.QueryResult<CommentQuery, CommentQueryVariables>;
 export const CommentsDocument = gql`
-    query Comments($postId: String!) {
-  comments(postId: $postId) {
-    ...CommentComponentFields
+    query Comments($postId: String!, $page: PageInput) {
+  comments(postId: $postId, page: $page) {
+    nodes {
+      ...CommentComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
   }
 }
     ${CommentComponentFieldsFragmentDoc}`;
@@ -1570,6 +1584,7 @@ export const CommentsDocument = gql`
  * const { data, loading, error } = useCommentsQuery({
  *   variables: {
  *      postId: // value for 'postId'
+ *      page: // value for 'page'
  *   },
  * });
  */

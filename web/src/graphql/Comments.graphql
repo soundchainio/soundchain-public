@@ -1,5 +1,11 @@
-query Comments($postId: String!) {
-  comments(postId: $postId) {
-    ...CommentComponentFields
+query Comments($postId: String!, $page: PageInput) {
+  comments(postId: $postId, page: $page) {
+    nodes {
+      ...CommentComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
   }
 }

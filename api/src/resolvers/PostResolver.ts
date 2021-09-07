@@ -1,5 +1,6 @@
 import { toPairs } from 'lodash';
 import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
+import { PaginateResult } from '../db/pagination/paginate';
 import { CurrentUser } from '../decorators/current-user';
 import { Comment } from '../models/Comment';
 import { Post } from '../models/Post';
@@ -30,7 +31,7 @@ export class PostResolver {
   }
 
   @FieldResolver(() => [Comment])
-  comments(@Ctx() { commentService }: Context, @Root() post: Post): Promise<Comment[]> {
+  comments(@Ctx() { commentService }: Context, @Root() post: Post): Promise<PaginateResult<Comment>> {
     return commentService.getComments(post._id);
   }
 
@@ -136,7 +137,7 @@ export class PostResolver {
     @CurrentUser() { profileId }: User,
   ): Promise<CreateRepostPayload> {
     const post = await postService.createRepost({ profileId, body, repostId });
-    const originalPost = await postService.getPost(repostId)
+    const originalPost = await postService.getPost(repostId);
     return { post, originalPost };
   }
 }
