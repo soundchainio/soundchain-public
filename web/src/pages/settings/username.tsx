@@ -33,7 +33,6 @@ const topNavBarProps: TopNavBarProps = {
 
 export default function SettingsUsernamePage() {
   const me = useMe();
-  console.log({ me });
   const router = useRouter();
   const initialFormValues: SetupProfileHandleFormValues = { handle: me?.handle };
   const [updateHandle, { loading }] = useUpdateHandleMutation();
