@@ -3,7 +3,7 @@ import { Comment } from '../models/Comment';
 import { PageInfo } from './PageInfo';
 
 @ObjectType()
-export class PaginatedCommentsConnection {
+export class CommentsConnection {
   @Field()
   pageInfo: PageInfo;
 

@@ -32,7 +32,7 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
     resetForm();
   };
 
-  if (!me) return null
+  if (!me) return null;
 
   return (
     <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
@@ -58,7 +58,7 @@ function updateCache(cache: ApolloCache<AddCommentMutation>, { data }: FetchResu
     query: CommentsDocument,
     variables: { postId },
     data: {
-      comments: [newComment, ...(existingComments?.comments || [])],
+      comments: { nodes: [newComment], pageInfo: existingComments?.comments.pageInfo },
     },
   });
 }

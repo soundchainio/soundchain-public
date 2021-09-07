@@ -71,6 +71,12 @@ export type CommentNotification = {
   link: Scalars['String'];
 };
 
+export type CommentsConnection = {
+  __typename?: 'CommentsConnection';
+  pageInfo: PageInfo;
+  nodes: Array<Comment>;
+};
+
 export type CreatePostInput = {
   body: Scalars['String'];
   mediaLink?: Maybe<Scalars['String']>;
@@ -359,12 +365,6 @@ export type PageInput = {
   before?: Maybe<Scalars['String']>;
 };
 
-export type PaginatedCommentsConnection = {
-  __typename?: 'PaginatedCommentsConnection';
-  pageInfo: PageInfo;
-  nodes: Array<Comment>;
-};
-
 export type Post = {
   __typename?: 'Post';
   id: Scalars['ID'];
@@ -413,8 +413,7 @@ export type Profile = {
 export type Query = {
   __typename?: 'Query';
   comment: Comment;
-  comments: Array<Comment>;
-  getPaginatedComments: PaginatedCommentsConnection;
+  comments: CommentsConnection;
   chatHistory: MessageConnection;
   message: Message;
   feed: FeedConnection;
@@ -436,11 +435,6 @@ export type QueryCommentArgs = {
 
 
 export type QueryCommentsArgs = {
-  postId: Scalars['String'];
-};
-
-
-export type QueryGetPaginatedCommentsArgs = {
   postId?: Maybe<Scalars['String']>;
   page?: Maybe<PageInput>;
 };
@@ -773,15 +767,22 @@ export type CommentNotificationFieldsFragment = (
 
 export type CommentsQueryVariables = Exact<{
   postId: Scalars['String'];
+  page?: Maybe<PageInput>;
 }>;
 
 
 export type CommentsQuery = (
   { __typename?: 'Query' }
-  & { comments: Array<(
-    { __typename?: 'Comment' }
-    & CommentComponentFieldsFragment
-  )> }
+  & { comments: (
+    { __typename?: 'CommentsConnection' }
+    & { nodes: Array<(
+      { __typename?: 'Comment' }
+      & CommentComponentFieldsFragment
+    )>, pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
+    ) }
+  ) }
 );
 
 export type CreatePostMutationVariables = Exact<{
@@ -902,26 +903,6 @@ export type UploadUrlQuery = (
   & { uploadUrl: (
     { __typename?: 'UploadUrl' }
     & Pick<UploadUrl, 'uploadUrl' | 'fileName' | 'readUrl'>
-  ) }
-);
-
-export type GetPaginatedCommentsQueryVariables = Exact<{
-  postId?: Maybe<Scalars['String']>;
-  page?: Maybe<PageInput>;
-}>;
-
-
-export type GetPaginatedCommentsQuery = (
-  { __typename?: 'Query' }
-  & { getPaginatedComments: (
-    { __typename?: 'PaginatedCommentsConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Comment' }
-      & Pick<Comment, 'id'>
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
-    ) }
   ) }
 );
 
@@ -1577,9 +1558,15 @@ export type CommentQueryHookResult = ReturnType<typeof useCommentQuery>;
 export type CommentLazyQueryHookResult = ReturnType<typeof useCommentLazyQuery>;
 export type CommentQueryResult = Apollo.QueryResult<CommentQuery, CommentQueryVariables>;
 export const CommentsDocument = gql`
-    query Comments($postId: String!) {
-  comments(postId: $postId) {
-    ...CommentComponentFields
+    query Comments($postId: String!, $page: PageInput) {
+  comments(postId: $postId, page: $page) {
+    nodes {
+      ...CommentComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
   }
 }
     ${CommentComponentFieldsFragmentDoc}`;
@@ -1597,6 +1584,7 @@ export const CommentsDocument = gql`
  * const { data, loading, error } = useCommentsQuery({
  *   variables: {
  *      postId: // value for 'postId'
+ *      page: // value for 'page'
  *   },
  * });
  */
@@ -1871,48 +1859,6 @@ export function useUploadUrlLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
 export type UploadUrlQueryHookResult = ReturnType<typeof useUploadUrlQuery>;
 export type UploadUrlLazyQueryHookResult = ReturnType<typeof useUploadUrlLazyQuery>;
 export type UploadUrlQueryResult = Apollo.QueryResult<UploadUrlQuery, UploadUrlQueryVariables>;
-export const GetPaginatedCommentsDocument = gql`
-    query GetPaginatedComments($postId: String, $page: PageInput) {
-  getPaginatedComments(postId: $postId, page: $page) {
-    nodes {
-      id
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
-  }
-}
-    `;
-
-/**
- * __useGetPaginatedCommentsQuery__
- *
- * To run a query within a React component, call `useGetPaginatedCommentsQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetPaginatedCommentsQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useGetPaginatedCommentsQuery({
- *   variables: {
- *      postId: // value for 'postId'
- *      page: // value for 'page'
- *   },
- * });
- */
-export function useGetPaginatedCommentsQuery(baseOptions?: Apollo.QueryHookOptions<GetPaginatedCommentsQuery, GetPaginatedCommentsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetPaginatedCommentsQuery, GetPaginatedCommentsQueryVariables>(GetPaginatedCommentsDocument, options);
-      }
-export function useGetPaginatedCommentsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetPaginatedCommentsQuery, GetPaginatedCommentsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetPaginatedCommentsQuery, GetPaginatedCommentsQueryVariables>(GetPaginatedCommentsDocument, options);
-        }
-export type GetPaginatedCommentsQueryHookResult = ReturnType<typeof useGetPaginatedCommentsQuery>;
-export type GetPaginatedCommentsLazyQueryHookResult = ReturnType<typeof useGetPaginatedCommentsLazyQuery>;
-export type GetPaginatedCommentsQueryResult = Apollo.QueryResult<GetPaginatedCommentsQuery, GetPaginatedCommentsQueryVariables>;
 export const LoginDocument = gql`
     mutation Login($input: LoginInput!) {
   login(input: $input) {

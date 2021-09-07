@@ -12,7 +12,9 @@ export const InfiniteLoader = ({ loadMore, loadingMessage }: InfiniteLoaderProps
   const isVisible = useOnScreen(loaderRef);
 
   useEffect(() => {
-    if (isVisible) loadMore();
+    if (isVisible) {
+      loadMore();
+    }
   }, [isVisible]);
 
   return (

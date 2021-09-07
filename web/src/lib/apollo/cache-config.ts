@@ -38,6 +38,21 @@ export const cacheConfig: InMemoryCacheConfig = {
             };
           },
         },
+        comments: {
+          keyArgs: ['postId'],
+          merge(existing = { nodes: [] }, { pageInfo, nodes }, { args }) {
+            if (!args?.page) {
+              return {
+                nodes: [...nodes, ...existing.nodes],
+                pageInfo,
+              };
+            }
+            return {
+              nodes: [...existing.nodes, ...nodes],
+              pageInfo,
+            };
+          },
+        },
         feed: {
           keyArgs: false,
           merge(existing, incoming, { readField }): FeedConnection {
