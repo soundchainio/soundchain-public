@@ -2,11 +2,11 @@ import { ApolloCache, FetchResult } from '@apollo/client';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import { useMe } from 'hooks/useMe';
 import { Send } from 'icons/Send';
-import { animateScroll } from 'react-scroll';
 import * as yup from 'yup';
 import { ChatHistoryDocument, ChatHistoryQuery, SendMessageMutation, useSendMessageMutation } from '../lib/graphql';
 import { Avatar } from './Avatar';
 import { FlexareaField } from './FlexareaField';
+import { animateScroll as scroll } from 'react-scroll';
 
 export interface NewMessageFormProps {
   profileId: string;
@@ -31,7 +31,7 @@ export const NewMessageForm = ({ profileId }: NewMessageFormProps) => {
   const handleSubmit = async ({ body }: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
     await sendMessage({ variables: { input: { message: body, toId: profileId } } });
     resetForm();
-    animateScroll.scrollToBottom({ duration: 200 });
+    scroll.scrollToBottom({ duration: 0 });
   };
 
   return (

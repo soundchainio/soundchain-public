@@ -6,9 +6,11 @@ import { Profile } from '../models/Profile';
 import { User } from '../models/User';
 import { AddCommentInput } from '../types/AddCommentInput';
 import { AddCommentPayload } from '../types/AddCommentPayload';
+import { CommentConnection } from '../types/CommentConnection';
 import { Context } from '../types/Context';
 import { DeleteCommentInput } from '../types/DeleteCommentInput';
 import { DeleteCommentPayload } from '../types/DeleteCommentPayload';
+import { PageInput } from '../types/PageInput';
 
 @Resolver(Comment)
 export class CommentResolver {
@@ -25,11 +27,6 @@ export class CommentResolver {
   @Query(() => Comment)
   comment(@Ctx() { commentService }: Context, @Arg('id') id: string): Promise<Comment> {
     return commentService.getComment(id);
-  }
-
-  @Query(() => [Comment])
-  comments(@Ctx() { commentService }: Context, @Arg('postId') postId: string): Promise<Comment[]> {
-    return commentService.getComments(postId);
   }
 
   @Mutation(() => AddCommentPayload)
@@ -52,5 +49,14 @@ export class CommentResolver {
   ): Promise<DeleteCommentPayload> {
     const comment = await commentService.deleteComment({ profileId, ...input });
     return { comment };
+  }
+
+  @Query(() => CommentConnection)
+  comments(
+    @Ctx() { commentService }: Context,
+    @Arg('page', { nullable: true }) page: PageInput,
+    @Arg('postId', { nullable: true }) postId: string,
+  ): Promise<CommentConnection> {
+    return commentService.getComments(postId, page);
   }
 }

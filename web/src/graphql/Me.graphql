@@ -2,10 +2,13 @@ query Me {
   me {
     id
     handle
+    email
     profile {
       id
       displayName
       profilePicture
+      followerCount
+      followingCount
     }
   }
 }

@@ -5,4 +5,7 @@ import { Post } from '../models/Post';
 export class CreateRepostPayload {
   @Field()
   post: Post;
+  
+  @Field()
+  originalPost: Post;
 }
