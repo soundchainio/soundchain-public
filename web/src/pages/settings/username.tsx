@@ -1,26 +1,23 @@
-import { Form, Formik } from 'formik';
-import React, { useState } from 'react';
-import * as yup from 'yup';
 import { Button } from 'components/Button';
+import { BackButton } from 'components/Buttons/BackButton';
 import { InputField } from 'components/InputField';
 import { Label } from 'components/Label';
 import { Layout } from 'components/Layout';
-import { useMe } from 'hooks/useMe';
-import Head from 'next/head';
 import { TopNavBarProps } from 'components/TopNavBar';
-import { BackButton } from 'components/Buttons/BackButton';
-import { useUpdateHandleMutation, useUpdateProfileDisplayNameMutation } from 'lib/graphql';
+import { Form, Formik } from 'formik';
+import { useMe } from 'hooks/useMe';
+import { useUpdateHandleMutation } from 'lib/graphql';
+import Head from 'next/head';
 import { useRouter } from 'next/router';
+import React from 'react';
 import { handleRegex } from 'utils/Validation';
+import * as yup from 'yup';
 
-export interface SetupProfileFormValues {
-  profilePicture?: string;
-  coverPicture?: string;
-  displayName: string;
-  handle: string;
+export interface SetupProfileHandleFormValues {
+  handle: string | undefined;
 }
 
-const validationSchema: yup.SchemaOf<SetupProfileFormValues> = yup.object().shape({
+const validationSchema: yup.SchemaOf<SetupProfileHandleFormValues> = yup.object().shape({
   handle: yup
     .string()
     .min(1)
@@ -30,29 +27,26 @@ const validationSchema: yup.SchemaOf<SetupProfileFormValues> = yup.object().shap
     .label('Username'),
 });
 
-const topNovaBarProps: TopNavBarProps = {
+const topNavBarProps: TopNavBarProps = {
   leftButton: BackButton,
 };
 
 export default function SettingsUsernamePage() {
-  const me = useMe()
-  console.log({me})
-  const router = useRouter()
-  const initialFormValues = { handle: me?.handle };
-  const [updateHandle] = useUpdateHandleMutation()
-  const [loading, setLoading] = useState(false)
+  const me = useMe();
+  console.log({ me });
+  const router = useRouter();
+  const initialFormValues: SetupProfileHandleFormValues = { handle: me?.handle };
+  const [updateHandle, { loading }] = useUpdateHandleMutation();
 
-  const onSubmit = async ({ handle }: any) => {
-    setLoading(true)
-    await updateHandle({ variables: { input: { handle } } });
-    setLoading(false)
-    router.push('/settings')
-  }
+  const onSubmit = async ({ handle }: SetupProfileHandleFormValues) => {
+    await updateHandle({ variables: { input: { handle: handle as string } } });
+    router.push('/settings');
+  };
 
-  if (!me) return null
+  if (!me) return null;
 
   return (
-    <Layout topNavBarProps={topNovaBarProps}>
+    <Layout topNavBarProps={topNavBarProps}>
       <Head>
         <title>Soundchain - Name Settings</title>
         <meta name="description" content="Name Settings" />
@@ -63,14 +57,10 @@ export default function SettingsUsernamePage() {
           <Form className="flex flex-1 flex-col space-y-6">
             <div>
               <Label>Username</Label>
-              <InputField
-                type="text"
-                name="handle"
-                placeholder="Username"
-              />
+              <InputField type="text" name="handle" placeholder="Username" />
             </div>
-            <p className="text-gray-50"> 
-              Usernames can only have letters and numbers and can be a max of 10 characters. 
+            <p className="text-gray-50">
+              Usernames can only have letters and numbers and can be a max of 10 characters.
             </p>
             <div className="flex flex-col">
               <Button type="submit">{loading ? 'Saving...' : 'Save'}</Button>
@@ -79,5 +69,5 @@ export default function SettingsUsernamePage() {
         </Formik>
       </div>
     </Layout>
-  )
+  );
 }

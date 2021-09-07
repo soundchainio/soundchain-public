@@ -1,50 +1,44 @@
-import { Form, Formik } from 'formik';
-import React, { useState } from 'react';
-import * as yup from 'yup';
 import { Button } from 'components/Button';
+import { BackButton } from 'components/Buttons/BackButton';
 import { InputField } from 'components/InputField';
 import { Label } from 'components/Label';
 import { Layout } from 'components/Layout';
-import { useMe } from 'hooks/useMe';
-import Head from 'next/head';
 import { TopNavBarProps } from 'components/TopNavBar';
-import { BackButton } from 'components/Buttons/BackButton';
+import { Form, Formik } from 'formik';
+import { useMe } from 'hooks/useMe';
 import { useUpdateProfileDisplayNameMutation } from 'lib/graphql';
+import Head from 'next/head';
 import { useRouter } from 'next/router';
+import React from 'react';
+import * as yup from 'yup';
 
-export interface SetupProfileFormValues {
-  profilePicture?: string;
-  coverPicture?: string;
-  displayName: string;
-  handle: string;
+export interface SetupProfileNameFormValues {
+  displayName: string | undefined;
 }
 
-const validationSchema: yup.SchemaOf<SetupProfileFormValues> = yup.object().shape({
+const validationSchema: yup.SchemaOf<SetupProfileNameFormValues> = yup.object().shape({
   displayName: yup.string().min(3).max(255).required().label('Name'),
 });
 
-const topNovaBarProps: TopNavBarProps = {
+const topNavBarProps: TopNavBarProps = {
   leftButton: BackButton,
 };
 
 export default function SettingsNamePage() {
-  const me = useMe()
-  const router = useRouter()
-  const initialFormValues = { displayName: me?.profile?.displayName };
-  const [updateDisplayName] = useUpdateProfileDisplayNameMutation()
-  const [loading, setLoading] = useState(false)
+  const me = useMe();
+  const router = useRouter();
+  const initialFormValues: SetupProfileNameFormValues = { displayName: me?.profile?.displayName };
+  const [updateDisplayName, { loading }] = useUpdateProfileDisplayNameMutation();
 
-  const onSubmit = async ({ displayName }: any) => {
-    setLoading(true)
-    await updateDisplayName({ variables: { input: { displayName } } });
-    setLoading(false)
-    router.push('/settings')
-  }
+  const onSubmit = async ({ displayName }: SetupProfileNameFormValues) => {
+    await updateDisplayName({ variables: { input: { displayName: displayName as string } } });
+    router.push('/settings');
+  };
 
-  if(!me) return null
+  if (!me) return null;
 
   return (
-    <Layout topNavBarProps={topNovaBarProps}>
+    <Layout topNavBarProps={topNavBarProps}>
       <Head>
         <title>Soundchain - Name Settings</title>
         <meta name="description" content="Name Settings" />
@@ -55,11 +49,7 @@ export default function SettingsNamePage() {
           <Form className="flex flex-1 flex-col space-y-6">
             <div>
               <Label>First or full name</Label>
-              <InputField
-                type="text"
-                name="displayName"
-                placeholder="Name"
-              />
+              <InputField type="text" name="displayName" placeholder="Name" />
             </div>
             <p className="text-gray-50"> This will be displayed publically to other users. </p>
             <div className="flex flex-col">
@@ -69,5 +59,5 @@ export default function SettingsNamePage() {
         </Formik>
       </div>
     </Layout>
-  )
+  );
 }
