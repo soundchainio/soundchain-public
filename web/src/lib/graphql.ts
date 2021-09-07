@@ -918,7 +918,7 @@ export type MeQuery = (
   { __typename?: 'Query' }
   & { me: Maybe<(
     { __typename?: 'User' }
-    & Pick<User, 'id' | 'handle'>
+    & Pick<User, 'id' | 'handle' | 'email'>
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'followerCount' | 'followingCount'>
@@ -1882,6 +1882,7 @@ export const MeDocument = gql`
   me {
     id
     handle
+    email
     profile {
       id
       displayName
