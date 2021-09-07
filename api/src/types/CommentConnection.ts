@@ -3,7 +3,7 @@ import { Comment } from '../models/Comment';
 import { PageInfo } from './PageInfo';
 
 @ObjectType()
-export class CommentsConnection {
+export class CommentConnection {
   @Field()
   pageInfo: PageInfo;
 

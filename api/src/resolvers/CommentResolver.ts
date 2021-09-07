@@ -6,7 +6,7 @@ import { Profile } from '../models/Profile';
 import { User } from '../models/User';
 import { AddCommentInput } from '../types/AddCommentInput';
 import { AddCommentPayload } from '../types/AddCommentPayload';
-import { CommentsConnection } from '../types/CommentsConnection';
+import { CommentConnection } from '../types/CommentConnection';
 import { Context } from '../types/Context';
 import { DeleteCommentInput } from '../types/DeleteCommentInput';
 import { DeleteCommentPayload } from '../types/DeleteCommentPayload';
@@ -51,12 +51,12 @@ export class CommentResolver {
     return { comment };
   }
 
-  @Query(() => CommentsConnection)
+  @Query(() => CommentConnection)
   comments(
     @Ctx() { commentService }: Context,
     @Arg('page', { nullable: true }) page: PageInput,
     @Arg('postId', { nullable: true }) postId: string,
-  ): Promise<CommentsConnection> {
+  ): Promise<CommentConnection> {
     return commentService.getComments(postId, page);
   }
 }

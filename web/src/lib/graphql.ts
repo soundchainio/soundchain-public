@@ -58,6 +58,12 @@ export type Comment = {
   profile: Profile;
 };
 
+export type CommentConnection = {
+  __typename?: 'CommentConnection';
+  pageInfo: PageInfo;
+  nodes: Array<Comment>;
+};
+
 export type CommentNotification = {
   __typename?: 'CommentNotification';
   type: NotificationType;
@@ -69,12 +75,6 @@ export type CommentNotification = {
   body: Scalars['String'];
   previewBody: Scalars['String'];
   link: Scalars['String'];
-};
-
-export type CommentsConnection = {
-  __typename?: 'CommentsConnection';
-  pageInfo: PageInfo;
-  nodes: Array<Comment>;
 };
 
 export type CreatePostInput = {
@@ -413,7 +413,7 @@ export type Profile = {
 export type Query = {
   __typename?: 'Query';
   comment: Comment;
-  comments: CommentsConnection;
+  comments: CommentConnection;
   chatHistory: MessageConnection;
   message: Message;
   feed: FeedConnection;
@@ -774,7 +774,7 @@ export type CommentsQueryVariables = Exact<{
 export type CommentsQuery = (
   { __typename?: 'Query' }
   & { comments: (
-    { __typename?: 'CommentsConnection' }
+    { __typename?: 'CommentConnection' }
     & { nodes: Array<(
       { __typename?: 'Comment' }
       & CommentComponentFieldsFragment
