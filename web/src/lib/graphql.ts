@@ -414,7 +414,6 @@ export type Query = {
   notifications: NotificationConnection;
   notification: Notification;
   post: Post;
-  repost: Post;
   posts: PostConnection;
   myProfile: Profile;
   profile: Profile;
@@ -462,11 +461,6 @@ export type QueryNotificationArgs = {
 
 
 export type QueryPostArgs = {
-  id: Scalars['String'];
-};
-
-
-export type QueryRepostArgs = {
   id: Scalars['String'];
 };
 
