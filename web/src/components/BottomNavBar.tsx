@@ -27,7 +27,7 @@ export const BottomNavBar = () => {
         <BottomNavBarButton label="Post" icon={NewPost} onClick={handleNewPostClick} />
         <BottomNavBarButton
           label="Notifications"
-          path="/notifications"
+          path={me ? '/notifications' : '/login'}
           icon={Bell}
           badge={me ? NotificationBadge : undefined}
           activatedColor="purple"
