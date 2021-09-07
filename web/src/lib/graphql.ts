@@ -248,6 +248,7 @@ export type Mutation = {
   forgotPassword: ForgotPasswordPayload;
   resetPassword: ResetPasswordPayload;
   updateHandle: UpdateHandlePayload;
+  updatePassword: UpdatePasswordPayload;
 };
 
 
@@ -358,6 +359,11 @@ export type MutationResetPasswordArgs = {
 
 export type MutationUpdateHandleArgs = {
   input: UpdateHandleInput;
+};
+
+
+export type MutationUpdatePasswordArgs = {
+  input: UpdatePasswordInput;
 };
 
 export type Notification = CommentNotification | ReactionNotification | FollowerNotification;
@@ -655,6 +661,15 @@ export type UpdateHandlePayload = {
 
 export type UpdateMusicianTypeInput = {
   musicianTypes: Array<MusicianType>;
+};
+
+export type UpdatePasswordInput = {
+  password: Scalars['String'];
+};
+
+export type UpdatePasswordPayload = {
+  __typename?: 'UpdatePasswordPayload';
+  ok: Scalars['Boolean'];
 };
 
 export type UpdateProfileDisplayNameInput = {
@@ -1119,7 +1134,7 @@ export type ProfileQuery = (
   { __typename?: 'Query' }
   & { profile: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'userHandle' | 'isFollowed' | 'followerCount' | 'followingCount'>
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'userHandle' | 'isFollowed' | 'followerCount' | 'followingCount' | 'musicianType'>
     & { socialMedias: (
       { __typename?: 'SocialMedias' }
       & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
@@ -1307,6 +1322,19 @@ export type UpdateMusicianTypeMutation = (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'musicianType'>
     ) }
+  ) }
+);
+
+export type UpdatePasswordMutationVariables = Exact<{
+  input: UpdatePasswordInput;
+}>;
+
+
+export type UpdatePasswordMutation = (
+  { __typename?: 'Mutation' }
+  & { updatePassword: (
+    { __typename?: 'UpdatePasswordPayload' }
+    & Pick<UpdatePasswordPayload, 'ok'>
   ) }
 );
 
@@ -2326,6 +2354,7 @@ export const ProfileDocument = gql`
     isFollowed
     followerCount
     followingCount
+    musicianType
   }
 }
     `;
@@ -2783,6 +2812,39 @@ export function useUpdateMusicianTypeMutation(baseOptions?: Apollo.MutationHookO
 export type UpdateMusicianTypeMutationHookResult = ReturnType<typeof useUpdateMusicianTypeMutation>;
 export type UpdateMusicianTypeMutationResult = Apollo.MutationResult<UpdateMusicianTypeMutation>;
 export type UpdateMusicianTypeMutationOptions = Apollo.BaseMutationOptions<UpdateMusicianTypeMutation, UpdateMusicianTypeMutationVariables>;
+export const UpdatePasswordDocument = gql`
+    mutation UpdatePassword($input: UpdatePasswordInput!) {
+  updatePassword(input: $input) {
+    ok
+  }
+}
+    `;
+export type UpdatePasswordMutationFn = Apollo.MutationFunction<UpdatePasswordMutation, UpdatePasswordMutationVariables>;
+
+/**
+ * __useUpdatePasswordMutation__
+ *
+ * To run a mutation, you first call `useUpdatePasswordMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdatePasswordMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updatePasswordMutation, { data, loading, error }] = useUpdatePasswordMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdatePasswordMutation(baseOptions?: Apollo.MutationHookOptions<UpdatePasswordMutation, UpdatePasswordMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdatePasswordMutation, UpdatePasswordMutationVariables>(UpdatePasswordDocument, options);
+      }
+export type UpdatePasswordMutationHookResult = ReturnType<typeof useUpdatePasswordMutation>;
+export type UpdatePasswordMutationResult = Apollo.MutationResult<UpdatePasswordMutation>;
+export type UpdatePasswordMutationOptions = Apollo.BaseMutationOptions<UpdatePasswordMutation, UpdatePasswordMutationVariables>;
 export const UpdateProfileDisplayNameDocument = gql`
     mutation updateProfileDisplayName($input: UpdateProfileDisplayNameInput!) {
   updateProfileDisplayName(input: $input) {
