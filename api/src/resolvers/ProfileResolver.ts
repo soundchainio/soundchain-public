@@ -15,7 +15,8 @@ import { UpdateProfilePicturePayload } from '../types/UpdateProfilePicturePayloa
 import { UpdateSocialMediasInput } from '../types/UpdateSocialMediasInput';
 import { UpdateSocialMediasPayload } from '../types/UpdateSocialMediasPayload';
 import { UpdateProfilePictureInput } from '../types/UploadProfilePictureInput';
-
+import { UpdateProfileDisplayNamePayload } from '../types/UpdateProfileDisplayNamePayload';
+import { UpdateProfileDisplayNameInput } from '../types/UpdateProfileDisplayNameInput';
 @Resolver(Profile)
 export class ProfileResolver {
   @FieldResolver(() => String)
@@ -77,6 +78,17 @@ export class ProfileResolver {
     @CurrentUser() { profileId }: User,
   ): Promise<UpdateProfilePicturePayload> {
     const profile = await profileService.updateProfilePicture(profileId, picture);
+    return { profile };
+  }
+
+  @Mutation(() => UpdateProfileDisplayNamePayload)
+  @Authorized()
+  async updateProfileDisplayName(
+    @Ctx() { profileService }: Context,
+    @Arg('input') { displayName }: UpdateProfileDisplayNameInput,
+    @CurrentUser() { profileId }: User,
+  ): Promise<UpdateProfileDisplayNamePayload> {
+    const profile = await profileService.updateDisplayName(profileId, displayName);
     return { profile };
   }
 
