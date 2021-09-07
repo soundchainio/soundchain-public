@@ -10,13 +10,16 @@ import { useEffect } from 'react';
 
 export default function UserNotifications() {
   const [resetNotificationCount] = useResetNotificationCountMutation();
-  const me = useMe()
-  const router = useRouter()
+  const me = useMe();
+  const router = useRouter();
 
   useEffect(() => {
-    if(!me) return router.push('/login')
-    resetNotificationCount();
-  }, []) 
+    if (!me) {
+      router.push('/login');
+    } else {
+      resetNotificationCount();
+    }
+  }, []);
 
   const topNavBarProps: TopNavBarProps = {
     title: 'Notifications',
