@@ -22,4 +22,13 @@ export class UserService extends ModelService<typeof User> {
     }
     return updatedUser;
   }
+
+  async updatePassword(id: string, password: string): Promise<void> {
+    const user = await UserModel.findById(id);
+    if (!user) {
+      throw new Error(`Could not update the profile with id: ${id}`);
+    }
+    user.password = password;
+    user.save()
+  }
 }
