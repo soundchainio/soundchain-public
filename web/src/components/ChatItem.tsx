@@ -21,7 +21,7 @@ export const ChatItem = ({
 }: FollowerNotificationProps) => {
   return (
     <NextLink href={`/messages/${id}`}>
-      <div className={'flex flex-col py-4 pl-1 pr-4 odd:bg-gray-25 bg-gray-20'}>
+      <div className={classNames('flex flex-col py-4 pl-1 pr-4', unread ? 'odd:bg-gray-25 bg-gray-20' : 'bg-gray-15')}>
         <div className="break-words flex items-center">
           <div className="w-2 self-center items-center mr-2">
             <div className={classNames('w-[6px] h-[6px] rounded-full', unread && 'bg-purple-gradient')}></div>

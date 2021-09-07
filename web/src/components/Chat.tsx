@@ -51,8 +51,11 @@ export const Chat = ({ profileId }: ChatProps) => {
   };
 
   const loadMore = async () => {
-    setOnLoadMore(true);
-    await fetchMore({ variables: { profileId, page: { after: pageInfo.startCursor } } });
+    if (!onLoadMore) {
+      setOnLoadMore(true);
+      await fetchMore({ variables: { profileId, page: { after: pageInfo.startCursor } } });
+      setOnLoadMore(false);
+    }
   };
 
   return (
