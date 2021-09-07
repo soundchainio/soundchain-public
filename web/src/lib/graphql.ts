@@ -75,6 +75,12 @@ export type Comment = {
   profile: Profile;
 };
 
+export type CommentConnection = {
+  __typename?: 'CommentConnection';
+  pageInfo: PageInfo;
+  nodes: Array<Comment>;
+};
+
 export type CommentNotification = {
   __typename?: 'CommentNotification';
   type: NotificationType;
@@ -106,6 +112,7 @@ export type CreateRepostInput = {
 export type CreateRepostPayload = {
   __typename?: 'CreateRepostPayload';
   post: Post;
+  originalPost: Post;
 };
 
 
@@ -242,6 +249,7 @@ export type Mutation = {
   updateSocialMedias: UpdateSocialMediasPayload;
   updateFavoriteGenres: UpdateFavoriteGenresPayload;
   updateProfilePicture: UpdateProfilePicturePayload;
+  updateProfileDisplayName: UpdateProfileDisplayNamePayload;
   updateCoverPicture: UpdateCoverPicturePayload;
   followProfile: FollowProfilePayload;
   unfollowProfile: UnfollowProfilePayload;
@@ -250,6 +258,7 @@ export type Mutation = {
   verifyUserEmail: VerifyUserEmailPayload;
   forgotPassword: ForgotPasswordPayload;
   resetPassword: ResetPasswordPayload;
+  updateHandle: UpdateHandlePayload;
 };
 
 
@@ -308,6 +317,11 @@ export type MutationUpdateProfilePictureArgs = {
 };
 
 
+export type MutationUpdateProfileDisplayNameArgs = {
+  input: UpdateProfileDisplayNameInput;
+};
+
+
 export type MutationUpdateCoverPictureArgs = {
   input: UpdateCoverPictureInput;
 };
@@ -345,6 +359,11 @@ export type MutationForgotPasswordArgs = {
 
 export type MutationResetPasswordArgs = {
   input: ResetPasswordInput;
+};
+
+
+export type MutationUpdateHandleArgs = {
+  input: UpdateHandleInput;
 };
 
 export type Notification = CommentNotification | ReactionNotification | FollowerNotification;
@@ -428,7 +447,7 @@ export type Query = {
   chats: ChatConnection;
   chatHistory: MessageConnection;
   comment: Comment;
-  comments: Array<Comment>;
+  comments: CommentConnection;
   feed: FeedConnection;
   message: Message;
   notifications: NotificationConnection;
@@ -460,7 +479,8 @@ export type QueryCommentArgs = {
 
 
 export type QueryCommentsArgs = {
-  postId: Scalars['String'];
+  postId?: Maybe<Scalars['String']>;
+  page?: Maybe<PageInput>;
 };
 
 
@@ -636,6 +656,24 @@ export type UpdateFavoriteGenresPayload = {
   profile: Profile;
 };
 
+export type UpdateHandleInput = {
+  handle: Scalars['String'];
+};
+
+export type UpdateHandlePayload = {
+  __typename?: 'UpdateHandlePayload';
+  user: User;
+};
+
+export type UpdateProfileDisplayNameInput = {
+  displayName: Scalars['String'];
+};
+
+export type UpdateProfileDisplayNamePayload = {
+  __typename?: 'UpdateProfileDisplayNamePayload';
+  profile: Profile;
+};
+
 export type UpdateProfilePictureInput = {
   picture: Scalars['String'];
 };
@@ -808,15 +846,22 @@ export type CommentNotificationFieldsFragment = (
 
 export type CommentsQueryVariables = Exact<{
   postId: Scalars['String'];
+  page?: Maybe<PageInput>;
 }>;
 
 
 export type CommentsQuery = (
   { __typename?: 'Query' }
-  & { comments: Array<(
-    { __typename?: 'Comment' }
-    & CommentComponentFieldsFragment
-  )> }
+  & { comments: (
+    { __typename?: 'CommentConnection' }
+    & { nodes: Array<(
+      { __typename?: 'Comment' }
+      & CommentComponentFieldsFragment
+    )>, pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
+    ) }
+  ) }
 );
 
 export type CreatePostMutationVariables = Exact<{
@@ -847,6 +892,9 @@ export type CreateRepostMutation = (
     & { post: (
       { __typename?: 'Post' }
       & Pick<Post, 'id'>
+    ), originalPost: (
+      { __typename?: 'Post' }
+      & Pick<Post, 'id' | 'repostCount'>
     ) }
   ) }
 );
@@ -957,7 +1005,7 @@ export type MeQuery = (
   { __typename?: 'Query' }
   & { me: Maybe<(
     { __typename?: 'User' }
-    & Pick<User, 'id' | 'handle'>
+    & Pick<User, 'id' | 'handle' | 'email'>
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'followerCount' | 'followingCount'>
@@ -1279,6 +1327,38 @@ export type UpdateFavoriteGenresMutation = (
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'favoriteGenres'>
+    ) }
+  ) }
+);
+
+export type UpdateHandleMutationVariables = Exact<{
+  input: UpdateHandleInput;
+}>;
+
+
+export type UpdateHandleMutation = (
+  { __typename?: 'Mutation' }
+  & { updateHandle: (
+    { __typename?: 'UpdateHandlePayload' }
+    & { user: (
+      { __typename?: 'User' }
+      & Pick<User, 'id' | 'handle'>
+    ) }
+  ) }
+);
+
+export type UpdateProfileDisplayNameMutationVariables = Exact<{
+  input: UpdateProfileDisplayNameInput;
+}>;
+
+
+export type UpdateProfileDisplayNameMutation = (
+  { __typename?: 'Mutation' }
+  & { updateProfileDisplayName: (
+    { __typename?: 'UpdateProfileDisplayNamePayload' }
+    & { profile: (
+      { __typename?: 'Profile' }
+      & Pick<Profile, 'id' | 'displayName'>
     ) }
   ) }
 );
@@ -1659,9 +1739,15 @@ export type CommentQueryHookResult = ReturnType<typeof useCommentQuery>;
 export type CommentLazyQueryHookResult = ReturnType<typeof useCommentLazyQuery>;
 export type CommentQueryResult = Apollo.QueryResult<CommentQuery, CommentQueryVariables>;
 export const CommentsDocument = gql`
-    query Comments($postId: String!) {
-  comments(postId: $postId) {
-    ...CommentComponentFields
+    query Comments($postId: String!, $page: PageInput) {
+  comments(postId: $postId, page: $page) {
+    nodes {
+      ...CommentComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
   }
 }
     ${CommentComponentFieldsFragmentDoc}`;
@@ -1679,6 +1765,7 @@ export const CommentsDocument = gql`
  * const { data, loading, error } = useCommentsQuery({
  *   variables: {
  *      postId: // value for 'postId'
+ *      page: // value for 'page'
  *   },
  * });
  */
@@ -1733,6 +1820,10 @@ export const CreateRepostDocument = gql`
   createRepost(input: $input) {
     post {
       id
+    }
+    originalPost {
+      id
+      repostCount
     }
   }
 }
@@ -1987,6 +2078,7 @@ export const MeDocument = gql`
   me {
     id
     handle
+    email
     profile {
       id
       displayName
@@ -2770,6 +2862,78 @@ export function useUpdateFavoriteGenresMutation(baseOptions?: Apollo.MutationHoo
 export type UpdateFavoriteGenresMutationHookResult = ReturnType<typeof useUpdateFavoriteGenresMutation>;
 export type UpdateFavoriteGenresMutationResult = Apollo.MutationResult<UpdateFavoriteGenresMutation>;
 export type UpdateFavoriteGenresMutationOptions = Apollo.BaseMutationOptions<UpdateFavoriteGenresMutation, UpdateFavoriteGenresMutationVariables>;
+export const UpdateHandleDocument = gql`
+    mutation UpdateHandle($input: UpdateHandleInput!) {
+  updateHandle(input: $input) {
+    user {
+      id
+      handle
+    }
+  }
+}
+    `;
+export type UpdateHandleMutationFn = Apollo.MutationFunction<UpdateHandleMutation, UpdateHandleMutationVariables>;
+
+/**
+ * __useUpdateHandleMutation__
+ *
+ * To run a mutation, you first call `useUpdateHandleMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateHandleMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateHandleMutation, { data, loading, error }] = useUpdateHandleMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateHandleMutation(baseOptions?: Apollo.MutationHookOptions<UpdateHandleMutation, UpdateHandleMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateHandleMutation, UpdateHandleMutationVariables>(UpdateHandleDocument, options);
+      }
+export type UpdateHandleMutationHookResult = ReturnType<typeof useUpdateHandleMutation>;
+export type UpdateHandleMutationResult = Apollo.MutationResult<UpdateHandleMutation>;
+export type UpdateHandleMutationOptions = Apollo.BaseMutationOptions<UpdateHandleMutation, UpdateHandleMutationVariables>;
+export const UpdateProfileDisplayNameDocument = gql`
+    mutation updateProfileDisplayName($input: UpdateProfileDisplayNameInput!) {
+  updateProfileDisplayName(input: $input) {
+    profile {
+      id
+      displayName
+    }
+  }
+}
+    `;
+export type UpdateProfileDisplayNameMutationFn = Apollo.MutationFunction<UpdateProfileDisplayNameMutation, UpdateProfileDisplayNameMutationVariables>;
+
+/**
+ * __useUpdateProfileDisplayNameMutation__
+ *
+ * To run a mutation, you first call `useUpdateProfileDisplayNameMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateProfileDisplayNameMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateProfileDisplayNameMutation, { data, loading, error }] = useUpdateProfileDisplayNameMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateProfileDisplayNameMutation(baseOptions?: Apollo.MutationHookOptions<UpdateProfileDisplayNameMutation, UpdateProfileDisplayNameMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateProfileDisplayNameMutation, UpdateProfileDisplayNameMutationVariables>(UpdateProfileDisplayNameDocument, options);
+      }
+export type UpdateProfileDisplayNameMutationHookResult = ReturnType<typeof useUpdateProfileDisplayNameMutation>;
+export type UpdateProfileDisplayNameMutationResult = Apollo.MutationResult<UpdateProfileDisplayNameMutation>;
+export type UpdateProfileDisplayNameMutationOptions = Apollo.BaseMutationOptions<UpdateProfileDisplayNameMutation, UpdateProfileDisplayNameMutationVariables>;
 export const UpdateProfilePictureDocument = gql`
     mutation UpdateProfilePicture($input: UpdateProfilePictureInput!) {
   updateProfilePicture(input: $input) {

@@ -93,4 +93,8 @@ export class PostService extends ModelService<typeof Post> {
     post.reactionStats[newType]++;
     return post;
   }
+
+  countReposts(postId: string): Promise<number> {
+    return PostModel.countDocuments({ repostId: postId }).exec();
+  }
 }

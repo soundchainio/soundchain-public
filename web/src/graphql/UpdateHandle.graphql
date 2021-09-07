@@ -1,0 +1,8 @@
+mutation UpdateHandle($input: UpdateHandleInput!) {
+  updateHandle(input: $input) {
+    user {
+      id
+      handle
+    }
+  }
+}

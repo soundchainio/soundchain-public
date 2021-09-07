@@ -2,17 +2,25 @@ import { ClearAllNotificationsButton } from 'components/ClearAllNotificationsBut
 import { Layout } from 'components/Layout';
 import { Notifications } from 'components/Notifications';
 import { TopNavBarProps } from 'components/TopNavBar';
-import { cacheFor } from 'lib/apollo';
-import { ResetNotificationCountDocument, ResetNotificationCountMutation } from 'lib/graphql';
-import { protectPage } from 'lib/protectPage';
+import { useMe } from 'hooks/useMe';
+import { useResetNotificationCountMutation } from 'lib/graphql';
 import Head from 'next/head';
-
-export const getServerSideProps = protectPage(async (context, apolloClient) => {
-  await apolloClient.mutate<ResetNotificationCountMutation>({ mutation: ResetNotificationCountDocument, context });
-  return cacheFor(UserNotifications, {}, context, apolloClient);
-});
+import { useRouter } from 'next/router';
+import { useEffect } from 'react';
 
 export default function UserNotifications() {
+  const [resetNotificationCount] = useResetNotificationCountMutation();
+  const me = useMe();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!me) {
+      router.push('/login');
+    } else {
+      resetNotificationCount();
+    }
+  }, []);
+
   const topNavBarProps: TopNavBarProps = {
     title: 'Notifications',
     rightButton: ClearAllNotificationsButton,
