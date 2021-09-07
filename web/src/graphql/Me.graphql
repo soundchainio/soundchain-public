@@ -9,6 +9,8 @@ query Me {
       profilePicture
       followerCount
       followingCount
+      favoriteGenres
+      musicianType
     }
   }
 }

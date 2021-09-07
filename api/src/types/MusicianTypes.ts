@@ -1,10 +1,10 @@
 import { registerEnumType } from 'type-graphql';
 
 enum MusicianType {
-  SINGER = 'singer',
-  DRUMMER = 'drummer',
-  GUITARIST = 'guitarist',
-  PRODUCES = 'producer',
+  SINGER = 'Singer',
+  DRUMMER = 'Drummer',
+  GUITARIST = 'Guitarist',
+  PRODUCER = 'Producer',
 }
 
 registerEnumType(MusicianType, {

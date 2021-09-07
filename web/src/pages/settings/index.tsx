@@ -4,6 +4,8 @@ import Head from 'next/head';
 import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { BackButton } from 'components/Buttons/BackButton';
+import { getGenreLabelByKey } from 'utils/Genres';
+import { getMusicianTypeLabelByKey } from 'utils/MusicianTypes';
 
 interface LinkProps {
   label: string
@@ -31,6 +33,10 @@ export default function SettingsPage() {
 
   if (!me) return null
 
+  const genres = me.profile.favoriteGenres.map(getGenreLabelByKey).join(', ')
+
+  const musicianTypes = me.profile.musicianType.map(getMusicianTypeLabelByKey).join(', ')
+
   return (
     <Layout topNavBarProps={topNovaBarProps}>
       <Head>
@@ -43,8 +49,8 @@ export default function SettingsPage() {
         <Link to="/name" label="Name" value={me.profile.displayName} />
         <Link to="/username" label="Username" value={me.handle} />
         <Link to="/password" label="Password" value="********" />
-        <Link to="/musician-type" label="Musician Type(s)" value="Lorem ipsum" />
-        <Link to="/favorite-genres" label="Favorite Genre(s)" value="Lorem ipsum" />
+        <Link to="/musician-type" label="Musician Type(s)" value={musicianTypes || 'Not selected'} />
+        <Link to="/favorite-genres" label="Favorite Genre(s)" value={genres || 'Not selected'} />
         <Link to="/social-links" label="Social Link(s)" value="Lorem ipsum" />
       </div>
     </Layout>
