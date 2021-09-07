@@ -11,13 +11,10 @@ import { useProfileQuery } from 'lib/graphql';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 
-export interface ProfilePageProps {
-  profileId: string;
-}
-
-export default function ProfilePage({ profileId }: ProfilePageProps) {
-  const router = useRouter()
-  const { data } = useProfileQuery({ variables: { id: router.query.id as string } });
+export default function ProfilePage() {
+  const router = useRouter();
+  const profileId = router.query.id as string;
+  const { data } = useProfileQuery({ variables: { id: profileId } });
 
   if (!data) {
     return null;
