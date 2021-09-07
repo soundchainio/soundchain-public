@@ -7,43 +7,13 @@ import { Posts } from 'components/Posts';
 import { ProfileTabs } from 'components/ProfileTabs';
 import { SocialMediaLink } from 'components/SocialMediaLink';
 import { Subtitle } from 'components/Subtitle';
-import { cacheFor, createApolloClient } from 'lib/apollo';
-import { ProfileDocument, useProfileQuery } from 'lib/graphql';
-import { GetServerSideProps } from 'next';
+import { useProfileQuery } from 'lib/graphql';
 import Image from 'next/image';
-import { ParsedUrlQuery } from 'querystring';
+import { useRouter } from 'next/router';
 
-export interface ProfilePageProps {
-  profileId: string;
-}
-
-interface ProfilePageParams extends ParsedUrlQuery {
-  id: string;
-}
-
-export const getServerSideProps: GetServerSideProps<ProfilePageProps, ProfilePageParams> = async context => {
-  const profileId = context.params?.id;
-
-  if (typeof profileId !== 'string') {
-    return { notFound: true };
-  }
-
-  const apolloClient = createApolloClient(context);
-
-  const { error } = await apolloClient.query({
-    query: ProfileDocument,
-    variables: { id: profileId },
-    context,
-  });
-
-  if (error) {
-    return { notFound: true };
-  }
-
-  return cacheFor(ProfilePage, { profileId }, context, apolloClient);
-};
-
-export default function ProfilePage({ profileId }: ProfilePageProps) {
+export default function ProfilePage() {
+  const router = useRouter();
+  const profileId = router.query.id as string;
   const { data } = useProfileQuery({ variables: { id: profileId } });
 
   if (!data) {

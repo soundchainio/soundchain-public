@@ -47,6 +47,14 @@ export class ProfileService extends ModelService<typeof Profile> {
     return updatedProfile;
   }
 
+  async updateDisplayName(id: string, displayName: string): Promise<Profile> {
+    const updatedProfile = await ProfileModel.findByIdAndUpdate(id, { displayName }, { new: true });
+    if (!updatedProfile) {
+      throw new Error(`Could not update the profile with id: ${id}`);
+    }
+    return updatedProfile;
+  }
+
   async getUserHandle(profileId: string): Promise<string> {
     const user = await UserModel.findOne({ profileId });
     if (!user) {

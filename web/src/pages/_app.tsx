@@ -23,6 +23,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <link rel="apple-touch-icon" href="/soundchain-app-icon.png" />
+        <link rel="manifest" href="/manifest.json"></link>
       </Head>
       <ApolloProvider pageProps={pageProps}>
         <StateProvider>

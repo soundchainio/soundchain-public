@@ -2,7 +2,6 @@ import { ApolloCache, FetchResult } from '@apollo/client';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import { useMe } from 'hooks/useMe';
 import { Send } from 'icons/Send';
-import { animateScroll } from 'react-scroll';
 import * as yup from 'yup';
 import { AddCommentMutation, CommentsDocument, CommentsQuery, useAddCommentMutation } from '../lib/graphql';
 import { Avatar } from './Avatar';
@@ -31,8 +30,9 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
   const handleSubmit = async ({ body }: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
     await addComment({ variables: { input: { postId, body } } });
     resetForm();
-    animateScroll.scrollToBottom({ duration: 200 });
   };
+
+  if (!me) return null;
 
   return (
     <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
@@ -58,7 +58,7 @@ function updateCache(cache: ApolloCache<AddCommentMutation>, { data }: FetchResu
     query: CommentsDocument,
     variables: { postId },
     data: {
-      comments: [...(existingComments?.comments || []), newComment],
+      comments: { nodes: [newComment], pageInfo: existingComments?.comments.pageInfo },
     },
   });
 }
