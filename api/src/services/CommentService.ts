@@ -1,6 +1,9 @@
 import { Comment, CommentModel } from '../models/Comment';
 import { Context } from '../types/Context';
 import { ModelService } from './ModelService';
+import { PageInput } from '../types/PageInput';
+import { PaginateResult } from '../db/pagination/paginate';
+import { SortOrder } from '../types/SortOrder';
 
 interface NewCommentParams {
   profileId: string;
@@ -50,5 +53,9 @@ export class CommentService extends ModelService<typeof Comment> {
 
   countComments(postId: string): Promise<number> {
     return CommentModel.countDocuments({ postId }).exec();
+  }
+
+  getPaginatedComments(postId: string, page: PageInput): Promise<PaginateResult<Comment>> {
+    return this.paginate({ filter: { postId }, sort: { field: 'createdAt', order: SortOrder.DESC }, page });
   }
 }

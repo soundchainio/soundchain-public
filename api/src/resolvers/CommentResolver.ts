@@ -9,6 +9,9 @@ import { AddCommentPayload } from '../types/AddCommentPayload';
 import { Context } from '../types/Context';
 import { DeleteCommentInput } from '../types/DeleteCommentInput';
 import { DeleteCommentPayload } from '../types/DeleteCommentPayload';
+import { PaginatedCommentsConnection } from '../types/PaginatedCommentsConnection';
+import { PageInput } from '../types/PageInput';
+
 
 @Resolver(Comment)
 export class CommentResolver {
@@ -52,5 +55,15 @@ export class CommentResolver {
   ): Promise<DeleteCommentPayload> {
     const comment = await commentService.deleteComment({ profileId, ...input });
     return { comment };
+  }
+
+  @Query(() => PaginatedCommentsConnection)
+  @Authorized()
+  getPaginatedComments(
+    @Ctx() { commentService }: Context,
+    @Arg('page', { nullable: true }) page: PageInput,
+    @Arg('postId', { nullable: true }) postId: string,
+  ): Promise<PaginatedCommentsConnection> {
+    return commentService.getPaginatedComments(postId, page);
   }
 }

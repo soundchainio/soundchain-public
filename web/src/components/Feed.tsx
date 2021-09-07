@@ -2,6 +2,7 @@ import { Post } from 'components/Post';
 import { useFeedQuery } from 'lib/graphql';
 import { InfiniteLoader } from './InfiniteLoader';
 import { PostSkeleton } from './PostSkeleton';
+import { useEffect } from 'react';
 
 interface FeedProps {
   pageSize?: number;
