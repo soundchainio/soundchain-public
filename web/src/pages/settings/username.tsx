@@ -9,8 +9,9 @@ import { useMe } from 'hooks/useMe';
 import Head from 'next/head';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { BackButton } from 'components/Buttons/BackButton';
-import { useUpdateProfileDisplayNameMutation } from 'lib/graphql';
+import { useUpdateHandleMutation, useUpdateProfileDisplayNameMutation } from 'lib/graphql';
 import { useRouter } from 'next/router';
+import { handleRegex } from 'utils/Validation';
 
 export interface SetupProfileFormValues {
   profilePicture?: string;
@@ -20,28 +21,35 @@ export interface SetupProfileFormValues {
 }
 
 const validationSchema: yup.SchemaOf<SetupProfileFormValues> = yup.object().shape({
-  displayName: yup.string().min(3).max(255).required().label('Name'),
+  handle: yup
+    .string()
+    .min(1)
+    .max(32)
+    .matches(handleRegex, 'Invalid characters. Only letters and numbers are accepted.')
+    .required()
+    .label('Username'),
 });
 
 const topNovaBarProps: TopNavBarProps = {
   leftButton: BackButton,
 };
 
-export default function SettingsNamePage() {
+export default function SettingsUsernamePage() {
   const me = useMe()
+  console.log({me})
   const router = useRouter()
-  const initialFormValues = { displayName: me?.profile?.displayName };
-  const [updateDisplayName] = useUpdateProfileDisplayNameMutation()
+  const initialFormValues = { handle: me?.handle };
+  const [updateHandle] = useUpdateHandleMutation()
   const [loading, setLoading] = useState(false)
 
-  const onSubmit = async ({ displayName }: any) => {
+  const onSubmit = async ({ handle }: any) => {
     setLoading(true)
-    await updateDisplayName({ variables: { input: { displayName } } });
+    await updateHandle({ variables: { input: { handle } } });
     setLoading(false)
     router.push('/settings')
   }
 
-  if(!me) return null
+  if (!me) return null
 
   return (
     <Layout topNavBarProps={topNovaBarProps}>
@@ -54,14 +62,16 @@ export default function SettingsNamePage() {
         <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={onSubmit}>
           <Form className="flex flex-1 flex-col space-y-6">
             <div>
-              <Label>First or full name</Label>
+              <Label>Username</Label>
               <InputField
                 type="text"
-                name="displayName"
-                placeholder="Name"
+                name="handle"
+                placeholder="Username"
               />
             </div>
-            <p className="text-gray-50"> This will be displayed publically to other users. </p>
+            <p className="text-gray-50"> 
+              Usernames can only have letters and numbers and can be a max of 10 characters. 
+            </p>
             <div className="flex flex-col">
               <Button type="submit">{loading ? 'Saving...' : 'Save'}</Button>
             </div>

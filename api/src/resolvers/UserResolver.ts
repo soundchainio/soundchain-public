@@ -1,5 +1,5 @@
 import { UserInputError } from 'apollo-server-express';
-import { Arg, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
+import { Arg, Ctx, Authorized, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
 import { CurrentUser } from '../decorators/current-user';
 import { Profile } from '../models/Profile';
 import { User } from '../models/User';
@@ -7,6 +7,8 @@ import { AuthPayload } from '../types/AuthPayload';
 import { Context } from '../types/Context';
 import { ForgotPasswordInput } from '../types/ForgotPasswordInput';
 import { ForgotPasswordPayload } from '../types/ForgotPasswordPayload';
+import { UpdateHandleInput } from '../types/UpdateHandleInput';
+import { UpdateHandlePayload } from '../types/UpdateHandlePayload';
 import { LoginInput } from '../types/LoginInput';
 import { RegisterInput } from '../types/RegisterInput';
 import { ResetPasswordInput } from '../types/ResetPasswordInput';
@@ -79,5 +81,16 @@ export class UserResolver {
   ): Promise<ResetPasswordPayload> {
     await authService.resetUserPassword(token, password);
     return { ok: true };
+  }
+
+  @Mutation(() => UpdateHandlePayload)
+  @Authorized()
+  async updateHandle(
+    @Ctx() { userService }: Context,
+    @Arg('input') { handle }: UpdateHandleInput,
+    @CurrentUser() { _id }: User,
+  ): Promise<UpdateHandlePayload> {
+    const user = await userService.updateHandle(_id, handle);
+    return { user };
   }
 }

@@ -232,6 +232,7 @@ export type Mutation = {
   verifyUserEmail: VerifyUserEmailPayload;
   forgotPassword: ForgotPasswordPayload;
   resetPassword: ResetPasswordPayload;
+  updateHandle: UpdateHandlePayload;
 };
 
 
@@ -332,6 +333,11 @@ export type MutationForgotPasswordArgs = {
 
 export type MutationResetPasswordArgs = {
   input: ResetPasswordInput;
+};
+
+
+export type MutationUpdateHandleArgs = {
+  input: UpdateHandleInput;
 };
 
 export type Notification = CommentNotification | ReactionNotification | FollowerNotification;
@@ -614,6 +620,15 @@ export type UpdateFavoriteGenresInput = {
 export type UpdateFavoriteGenresPayload = {
   __typename?: 'UpdateFavoriteGenresPayload';
   profile: Profile;
+};
+
+export type UpdateHandleInput = {
+  handle: Scalars['String'];
+};
+
+export type UpdateHandlePayload = {
+  __typename?: 'UpdateHandlePayload';
+  user: User;
 };
 
 export type UpdateProfileDisplayNameInput = {
@@ -1223,6 +1238,22 @@ export type UpdateFavoriteGenresMutation = (
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'favoriteGenres'>
+    ) }
+  ) }
+);
+
+export type UpdateHandleMutationVariables = Exact<{
+  input: UpdateHandleInput;
+}>;
+
+
+export type UpdateHandleMutation = (
+  { __typename?: 'Mutation' }
+  & { updateHandle: (
+    { __typename?: 'UpdateHandlePayload' }
+    & { user: (
+      { __typename?: 'User' }
+      & Pick<User, 'id' | 'handle'>
     ) }
   ) }
 );
@@ -2615,6 +2646,42 @@ export function useUpdateFavoriteGenresMutation(baseOptions?: Apollo.MutationHoo
 export type UpdateFavoriteGenresMutationHookResult = ReturnType<typeof useUpdateFavoriteGenresMutation>;
 export type UpdateFavoriteGenresMutationResult = Apollo.MutationResult<UpdateFavoriteGenresMutation>;
 export type UpdateFavoriteGenresMutationOptions = Apollo.BaseMutationOptions<UpdateFavoriteGenresMutation, UpdateFavoriteGenresMutationVariables>;
+export const UpdateHandleDocument = gql`
+    mutation UpdateHandle($input: UpdateHandleInput!) {
+  updateHandle(input: $input) {
+    user {
+      id
+      handle
+    }
+  }
+}
+    `;
+export type UpdateHandleMutationFn = Apollo.MutationFunction<UpdateHandleMutation, UpdateHandleMutationVariables>;
+
+/**
+ * __useUpdateHandleMutation__
+ *
+ * To run a mutation, you first call `useUpdateHandleMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateHandleMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateHandleMutation, { data, loading, error }] = useUpdateHandleMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateHandleMutation(baseOptions?: Apollo.MutationHookOptions<UpdateHandleMutation, UpdateHandleMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateHandleMutation, UpdateHandleMutationVariables>(UpdateHandleDocument, options);
+      }
+export type UpdateHandleMutationHookResult = ReturnType<typeof useUpdateHandleMutation>;
+export type UpdateHandleMutationResult = Apollo.MutationResult<UpdateHandleMutation>;
+export type UpdateHandleMutationOptions = Apollo.BaseMutationOptions<UpdateHandleMutation, UpdateHandleMutationVariables>;
 export const UpdateProfileDisplayNameDocument = gql`
     mutation updateProfileDisplayName($input: UpdateProfileDisplayNameInput!) {
   updateProfileDisplayName(input: $input) {
