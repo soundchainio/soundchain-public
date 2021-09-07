@@ -12,8 +12,10 @@ export const InfiniteLoader = ({ loadMore, loadingMessage }: InfiniteLoaderProps
   const isVisible = useOnScreen(loaderRef);
 
   useEffect(() => {
-    if (isVisible) loadMore();
-  }, [isVisible, loadMore]);
+    if (isVisible) {
+      loadMore();
+    }
+  }, [isVisible]);
 
   return (
     <div ref={loaderRef} className="flex items-center">

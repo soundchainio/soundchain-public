@@ -17,6 +17,7 @@ import { UpdateSocialMediasPayload } from '../types/UpdateSocialMediasPayload';
 import { UpdateProfilePictureInput } from '../types/UploadProfilePictureInput';
 import { UpdateProfileDisplayNamePayload } from '../types/UpdateProfileDisplayNamePayload';
 import { UpdateProfileDisplayNameInput } from '../types/UpdateProfileDisplayNameInput';
+
 @Resolver(Profile)
 export class ProfileResolver {
   @FieldResolver(() => String)

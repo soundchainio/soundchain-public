@@ -6,32 +6,39 @@ import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Form, Formik } from 'formik';
 import { useMe } from 'hooks/useMe';
-import { useUpdateProfileDisplayNameMutation } from 'lib/graphql';
+import { useUpdateHandleMutation } from 'lib/graphql';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React from 'react';
+import { handleRegex } from 'utils/Validation';
 import * as yup from 'yup';
 
-export interface SetupProfileNameFormValues {
-  displayName: string | undefined;
+export interface SetupProfileHandleFormValues {
+  handle: string | undefined;
 }
 
-const validationSchema: yup.SchemaOf<SetupProfileNameFormValues> = yup.object().shape({
-  displayName: yup.string().min(3).max(255).required().label('Name'),
+const validationSchema: yup.SchemaOf<SetupProfileHandleFormValues> = yup.object().shape({
+  handle: yup
+    .string()
+    .min(1)
+    .max(32)
+    .matches(handleRegex, 'Invalid characters. Only letters and numbers are accepted.')
+    .required()
+    .label('Username'),
 });
 
 const topNavBarProps: TopNavBarProps = {
   leftButton: BackButton,
 };
 
-export default function SettingsNamePage() {
+export default function SettingsUsernamePage() {
   const me = useMe();
   const router = useRouter();
-  const initialFormValues: SetupProfileNameFormValues = { displayName: me?.profile?.displayName };
-  const [updateDisplayName, { loading }] = useUpdateProfileDisplayNameMutation();
+  const initialFormValues: SetupProfileHandleFormValues = { handle: me?.handle };
+  const [updateHandle, { loading }] = useUpdateHandleMutation();
 
-  const onSubmit = async ({ displayName }: SetupProfileNameFormValues) => {
-    await updateDisplayName({ variables: { input: { displayName: displayName as string } } });
+  const onSubmit = async ({ handle }: SetupProfileHandleFormValues) => {
+    await updateHandle({ variables: { input: { handle: handle as string } } });
     router.push('/settings');
   };
 
@@ -48,10 +55,12 @@ export default function SettingsNamePage() {
         <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={onSubmit}>
           <Form className="flex flex-1 flex-col space-y-6">
             <div>
-              <Label>First or full name</Label>
-              <InputField type="text" name="displayName" placeholder="Name" />
+              <Label>Username</Label>
+              <InputField type="text" name="handle" placeholder="Username" />
             </div>
-            <p className="text-gray-50"> This will be displayed publically to other users. </p>
+            <p className="text-gray-50">
+              Usernames can only have letters and numbers and can be a max of 10 characters.
+            </p>
             <div className="flex flex-col">
               <Button type="submit">{loading ? 'Saving...' : 'Save'}</Button>
             </div>
