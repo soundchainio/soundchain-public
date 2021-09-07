@@ -89,6 +89,7 @@ export type CreateRepostInput = {
 export type CreateRepostPayload = {
   __typename?: 'CreateRepostPayload';
   post: Post;
+  originalPost: Post;
 };
 
 
@@ -420,6 +421,7 @@ export type Query = {
   notifications: NotificationConnection;
   notification: Notification;
   post: Post;
+  repost: Post;
   posts: PostConnection;
   myProfile: Profile;
   profile: Profile;
@@ -473,6 +475,11 @@ export type QueryNotificationArgs = {
 
 
 export type QueryPostArgs = {
+  id: Scalars['String'];
+};
+
+
+export type QueryRepostArgs = {
   id: Scalars['String'];
 };
 
@@ -811,6 +818,9 @@ export type CreateRepostMutation = (
     & { post: (
       { __typename?: 'Post' }
       & Pick<Post, 'id'>
+    ), originalPost: (
+      { __typename?: 'Post' }
+      & Pick<Post, 'id' | 'repostCount'>
     ) }
   ) }
 );
@@ -944,7 +954,7 @@ export type MeQuery = (
     & Pick<User, 'id' | 'handle'>
     & { profile: (
       { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
+      & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'followerCount' | 'followingCount'>
     ) }
   )> }
 );
@@ -1648,6 +1658,10 @@ export const CreateRepostDocument = gql`
     post {
       id
     }
+    originalPost {
+      id
+      repostCount
+    }
   }
 }
     `;
@@ -1947,6 +1961,8 @@ export const MeDocument = gql`
       id
       displayName
       profilePicture
+      followerCount
+      followingCount
     }
   }
 }

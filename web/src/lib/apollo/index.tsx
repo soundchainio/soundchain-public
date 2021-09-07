@@ -41,14 +41,13 @@ export const apolloClient = createApolloClient();
 
 export function setJwt(newJwt?: string) {
   jwt = newJwt;
-
   if (isBrowser) {
     if (jwt) {
       Cookies.set(jwtKey, jwt, { secure: !isSafari });
     } else {
       Cookies.remove(jwtKey);
+      apolloClient.clearStore();
     }
-
     apolloClient.resetStore();
   }
 }

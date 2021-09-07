@@ -1,8 +1,10 @@
 import { ChatAltIcon, RefreshIcon, ShareIcon, ThumbUpIcon } from '@heroicons/react/solid';
 import { useModalDispatch } from 'contexts/providers/modal';
+import { useMe } from 'hooks/useMe';
 import { ReactionEmoji } from 'icons/ReactionEmoji';
 import { ReactionType } from 'lib/graphql';
 import NextLink from 'next/link';
+import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import { isMobile } from 'utils/IsMobile';
 import { ReactionSelector } from './ReactionSelector';
@@ -20,19 +22,27 @@ export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
   const [shareOpened, setShareOpened] = useState(false);
   const { dispatchSetRepostId, dispatchShowNewPostModal } = useModalDispatch();
   const [postLink, setPostLink] = useState('');
+  const me = useMe()
+  const router = useRouter()
 
   const onRepostClick = () => {
+    if (!me) return router.push('/login')
     dispatchSetRepostId(postId);
     dispatchShowNewPostModal(true);
   };
 
   const handleLikeButton = () => {
+    if (!me) return router.push('/login')
     setReactionSelectorOpened(!reactionSelectorOpened);
   };
 
   const onShareClick = () => {
     isMobile() ? (navigator.share ? navigator.share({ url: postLink }) : setShareOpened(true)) : setShareOpened(true);
   };
+
+  const focusCommentTextarea = () => {
+    setTimeout(() => document.querySelector('textarea')?.focus(), 300)
+  }
 
   useEffect(() => {
     const origin = window.location.origin;
@@ -55,7 +65,7 @@ export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
       />
       <div className={commonClasses}>
         <NextLink href={`/posts/${postId}`}>
-          <a className="flex items-center cursor-pointer">
+          <a className="flex items-center cursor-pointer" onClick={focusCommentTextarea}>
             <ChatAltIcon className="h-4 w-4 mr-1" />
             Comment
           </a>
