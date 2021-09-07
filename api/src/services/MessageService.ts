@@ -87,7 +87,7 @@ export class MessageService extends ModelService<typeof Message> {
     let ok = true;
     try {
       const unreadMessagesCount = await this.model.find({ fromId, toId, readAt: null }).countDocuments();
-      await this.decrementUnreadMessagesCount(toId, unreadMessagesCount);
+      await this.decreaseUnreadMessagesCount(toId, unreadMessagesCount);
       await this.model.updateMany({ fromId, toId }, { $set: { readAt: new Date() } });
     } catch (err) {
       ok = false;
@@ -100,7 +100,7 @@ export class MessageService extends ModelService<typeof Message> {
     await ProfileModel.updateOne({ _id: profileId }, { $inc: { unreadMessagesCount: 1 } });
   }
 
-  async decrementUnreadMessagesCount(profileId: string, count: number): Promise<void> {
+  async decreaseUnreadMessagesCount(profileId: string, count: number): Promise<void> {
     await ProfileModel.updateOne({ _id: profileId }, { $inc: { unreadMessagesCount: -count } });
   }
 
