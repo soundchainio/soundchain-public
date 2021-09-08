@@ -19,7 +19,6 @@ export const initialModalState = {
   showDelete: false,
   deleteType: undefined,
   deleteId: '',
-  showFollowModal: false,
 };
 
 export const modalReducer = (state: ModalState, action: Action) => {
