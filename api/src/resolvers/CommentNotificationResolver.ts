@@ -38,6 +38,6 @@ export class CommentNotificationResolver {
   async link(@Root() { metadata }: Notification, @Ctx() { commentService }: Context): Promise<string> {
     const { postId, commentId } = metadata as CommentNotificationMetadata;
     const cursor = await commentService.getPageCursorById(commentId, 'createdAt');
-    return `/posts/${postId}?commentCursor=${cursor}`;
+    return `/posts/${postId}?commentId=${commentId}&cursor=${cursor}`;
   }
 }

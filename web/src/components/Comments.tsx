@@ -11,21 +11,22 @@ interface CommentsProps {
 
 export const Comments = ({ postId, pageSize = 10 }: CommentsProps) => {
   const router = useRouter();
-  const inclusiveCursor = router.query.commentCursor;
+  const inclusiveCursor = router.query.cursor;
   const firstPage: PageInput = { first: pageSize };
   if (typeof inclusiveCursor === 'string') {
     firstPage.after = inclusiveCursor;
     firstPage.inclusive = true;
   }
 
-  const { data, fetchMore } = useCommentsQuery({ variables: { postId, page: firstPage } });
+  const { data, fetchMore } = useCommentsQuery({
+    variables: { postId, page: firstPage },
+  });
 
   if (!data) return <CommentSkeleton />;
 
   const { nodes: comments, pageInfo } = data.comments;
-  console.log(comments.length);
+
   const loadNext = () => {
-    console.log('LOAD NEXT');
     fetchMore({
       variables: {
         page: {
