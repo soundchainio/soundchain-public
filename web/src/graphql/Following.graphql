@@ -3,6 +3,7 @@ query Following($profileId: String!, $page: PageInput) {
     nodes {
       id
       followedProfile {
+        id
         displayName
         profilePicture
       }

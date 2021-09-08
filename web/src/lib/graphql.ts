@@ -967,7 +967,7 @@ export type FollowersQuery = (
       & Pick<Follow, 'id'>
       & { followerProfile: (
         { __typename?: 'Profile' }
-        & Pick<Profile, 'displayName' | 'profilePicture'>
+        & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
       ) }
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
@@ -991,7 +991,7 @@ export type FollowingQuery = (
       & Pick<Follow, 'id'>
       & { followedProfile: (
         { __typename?: 'Profile' }
-        & Pick<Profile, 'displayName' | 'profilePicture'>
+        & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
       ) }
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
@@ -1960,6 +1960,7 @@ export const FollowersDocument = gql`
     nodes {
       id
       followerProfile {
+        id
         displayName
         profilePicture
       }
@@ -2007,6 +2008,7 @@ export const FollowingDocument = gql`
     nodes {
       id
       followedProfile {
+        id
         displayName
         profilePicture
       }

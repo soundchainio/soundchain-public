@@ -79,6 +79,58 @@ export const cacheConfig: InMemoryCacheConfig = {
             }
           },
         },
+        followers: {
+          keyArgs: ['id'],
+          merge(existing, incoming, { readField }): FeedConnection {
+            const nodes = existing ? { ...existing.nodes } : {};
+
+            incoming.nodes.forEach((node: FeedItem) => {
+              const key = readField('id', node);
+              nodes[key as string] = node;
+            });
+
+            return {
+              pageInfo: {
+                ...incoming.pageInfo,
+              },
+              nodes,
+            };
+          },
+          read(existing): FeedConnection | void {
+            if (existing) {
+              return {
+                pageInfo: { ...existing.pageInfo },
+                nodes: Object.values(existing.nodes),
+              };
+            }
+          },
+        },
+        following: {
+          keyArgs: ['id'],
+          merge(existing, incoming, { readField }): FeedConnection {
+            const nodes = existing ? { ...existing.nodes } : {};
+
+            incoming.nodes.forEach((node: FeedItem) => {
+              const key = readField('id', node);
+              nodes[key as string] = node;
+            });
+
+            return {
+              pageInfo: {
+                ...incoming.pageInfo,
+              },
+              nodes,
+            };
+          },
+          read(existing): FeedConnection | void {
+            if (existing) {
+              return {
+                pageInfo: { ...existing.pageInfo },
+                nodes: Object.values(existing.nodes),
+              };
+            }
+          },
+        },
       },
     },
   },

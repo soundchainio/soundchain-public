@@ -12,7 +12,7 @@ interface ModalProps {
 }
 
 const baseClasses =
-  'fixed top-0  w-screen bottom-0 duration-500 bg-opacity-75 ease-in-out bg-gray-25 transform-gpu transform';
+  'fixed top-0 w-screen h-screen bottom-0 duration-500 bg-opacity-75 ease-in-out bg-gray-25 transform-gpu transform';
 
 export const Modal = ({ show, children, title, leftButton, rightButton }: ModalProps) => {
   return (

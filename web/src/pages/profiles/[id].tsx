@@ -12,7 +12,7 @@ import { useModalDispatch } from 'contexts/providers/modal';
 import { useProfileQuery } from 'lib/graphql';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FollowModalType } from 'types/FollowModalType';
 
 export default function ProfilePage() {
@@ -21,6 +21,10 @@ export default function ProfilePage() {
   const { data } = useProfileQuery({ variables: { id: profileId } });
   const { dispatchShowFollowModal } = useModalDispatch();
   const [followModalType, setFollowModalType] = useState<FollowModalType>();
+
+  useEffect(() => {
+    dispatchShowFollowModal(false);
+  }, [router.asPath]);
 
   const onFollowers = () => {
     setFollowModalType(FollowModalType.FOLLOWERS);
@@ -82,7 +86,9 @@ export default function ProfilePage() {
       </div>
       <ProfileTabs />
       <Posts profileId={profileId} />
-      <FollowModal profileId={profileId} modalType={followModalType} onClose={() => dispatchShowFollowModal(false)} />
+      {followModalType && (
+        <FollowModal profileId={profileId} modalType={followModalType} onClose={() => dispatchShowFollowModal(false)} />
+      )}
     </Layout>
   );
 }
