@@ -11,7 +11,15 @@ interface CommentsProps {
 export const Comments = ({ postId, pageSize = 10 }: CommentsProps) => {
   const { data, fetchMore } = useCommentsQuery({ variables: { postId, page: { first: pageSize } } });
 
-  if (!data) return <CommentSkeleton />;
+  if (!data) {
+    return (
+      <>
+        <CommentSkeleton />
+        <CommentSkeleton />
+        <CommentSkeleton />
+      </>
+    )
+  }
 
   const { nodes: comments, pageInfo } = data.comments;
 
