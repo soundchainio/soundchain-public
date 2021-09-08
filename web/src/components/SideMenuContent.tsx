@@ -43,6 +43,10 @@ export const SideMenuContent = ({ isMobile }: SideMenuContentProps) => {
     setShowModal(true);
   };
 
+  const onCloseModal = () => {
+    setShowModal(false);
+  };
+
   return (
     <>
       <div className="mt-5 flex-1 h-0 overflow-y-auto">
@@ -108,7 +112,7 @@ export const SideMenuContent = ({ isMobile }: SideMenuContentProps) => {
           show={showModal}
           profileId={me.profile.id}
           modalType={followModalType as FollowModalType}
-          onClose={() => setShowModal(false)}
+          onClose={onCloseModal}
         />
       )}
     </>

@@ -35,6 +35,10 @@ export default function ProfilePage() {
     setShowModal(true);
   };
 
+  const onCloseModal = () => {
+    setShowModal(false);
+  };
+
   if (!data) {
     return null;
   }
@@ -89,7 +93,7 @@ export default function ProfilePage() {
         show={showModal}
         profileId={profileId}
         modalType={followModalType as FollowModalType}
-        onClose={() => setShowModal(false)}
+        onClose={onCloseModal}
       />
     </Layout>
   );
