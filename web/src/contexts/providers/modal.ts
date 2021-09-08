@@ -18,7 +18,5 @@ export const useModalDispatch = () => {
     dispatchShowNewPostModal: (show: boolean) => dispatch({ type: ModalActionTypes.SHOW_NEW_POST, payload: { show } }),
     dispatchShowDeleteModal: (show: boolean, type: DeleteModalType, deleteId: string) =>
       dispatch({ type: ModalActionTypes.SHOW_DELETE, payload: { show, type, deleteId } }),
-    dispatchShowFollowModal: (show: boolean) =>
-      dispatch({ type: ModalActionTypes.SHOW_FOLLOW_MODAL, payload: { show } }),
   };
 };
