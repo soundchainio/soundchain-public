@@ -24,7 +24,7 @@ const postSchema: yup.SchemaOf<FormValues> = yup.object().shape({
 });
 
 const baseClasses =
-  'fixed top-0 w-screen bottom-0 duration-500 bg-opacity-75 ease-in-out bg-gray-25 transform-gpu transform';
+  'fixed top-0 w-screen bottom-0 duration-500 bg-opacity-75 ease-in-out bg-black transform-gpu transform';
 
 export const maxLength = 160;
 

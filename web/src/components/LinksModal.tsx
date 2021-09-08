@@ -19,7 +19,7 @@ interface AddLinkProps {
 }
 
 const baseClasses =
-  'fixed left-0 w-screen top-0 h-full bottom-0 duration-500 bg-opacity-75 ease-in-out bg-gray-25 transform-gpu transform';
+  'fixed left-0 w-screen top-0 h-full bottom-0 duration-500 bg-opacity-75 ease-in-out bg-black transform-gpu transform';
 
 export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type, postLink, setPostLink }: AddLinkProps) => {
   const [link, setLink] = useState<MediaLink>();

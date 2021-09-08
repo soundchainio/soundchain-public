@@ -13,19 +13,26 @@ import { useRouter } from 'next/router';
 import { Avatar } from './Avatar';
 import { MenuItem } from './MenuItem';
 import { Title } from './Title';
-import NextLink from 'next/link';
+import { useModalDispatch } from 'contexts/providers/modal';
 
 interface SideMenuContentProps {
   isMobile?: boolean;
+  setOpen: (open: boolean) => void;
 }
 
-export const SideMenuContent = ({ isMobile }: SideMenuContentProps) => {
+export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => {
   const me = useMe();
   const router = useRouter();
+  const { dispatchShowUnderDevelopmentModal } = useModalDispatch();
 
   const onLogout = () => {
     setJwt();
     router.reload();
+  };
+
+  const onPrivacyClick = () => {
+    dispatchShowUnderDevelopmentModal(true);
+    setOpen(false);
   };
 
   return (
@@ -72,12 +79,12 @@ export const SideMenuContent = ({ isMobile }: SideMenuContentProps) => {
       )}
 
       <div className="flex-shrink-0 flex p-4">
-        <NextLink href={'/privacy'}>
+        <div onClick={onPrivacyClick}>
           <div className="flex flex-row space-x-2 items-center h-10 justify-between text-gray-CC px-4 w-full">
             <div className="flex">PRIVACY POLICY</div>
             <div className="flex">V0</div>
           </div>
-        </NextLink>
+        </div>
       </div>
       <div className="flex-shrink-0 flex">
         <div className="flex flex-row space-x-2 items-center h-10 justify-between px-10 w-full">
