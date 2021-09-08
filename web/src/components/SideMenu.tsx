@@ -9,7 +9,7 @@ export const SideMenu = ({ isOpen, setOpen }: SideMenuMobileProps) => {
         <div className="flex flex-col w-64">
           <div className="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto">
             <div className="flex items-center flex-shrink-0 px-4"></div>
-            <SideMenuContent />
+            <SideMenuContent setOpen={setOpen} />
           </div>
         </div>
       </div>
