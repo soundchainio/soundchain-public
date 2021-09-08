@@ -468,6 +468,8 @@ export type Query = {
   comment: Comment;
   comments: CommentConnection;
   feed: FeedConnection;
+  followers: FollowConnection;
+  following: FollowConnection;
   message: Message;
   notifications: NotificationConnection;
   notification: Notification;
@@ -510,6 +512,17 @@ export type QueryFeedArgs = {
 
 export type QueryFollowersArgs = {
   page?: Maybe<PageInput>;
+  id: Scalars['String'];
+};
+
+
+export type QueryFollowingArgs = {
+  page?: Maybe<PageInput>;
+  id: Scalars['String'];
+};
+
+
+export type QueryMessageArgs = {
   id: Scalars['String'];
 };
 
