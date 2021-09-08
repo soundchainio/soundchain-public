@@ -9,6 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { isMobile } from 'utils/IsMobile';
 import { ReactionSelector } from './ReactionSelector';
 import { SharePostLink } from './SharePostLink';
+import { delayFocus } from 'lib/delayFocus'
 
 interface PostActionsProps {
   postId: string;
@@ -41,7 +42,7 @@ export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
   };
 
   const focusCommentTextarea = () => {
-    setTimeout(() => document.querySelector('textarea')?.focus(), 300)
+    delayFocus('textarea')
   }
 
   useEffect(() => {
