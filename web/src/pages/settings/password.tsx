@@ -30,7 +30,7 @@ const validationSchema: yup.SchemaOf<PasswordFormValues> = yup.object().shape({
 });
 
 const topNavBarProps: TopNavBarProps = {
-  leftButton: BackButton,
+  leftButton: <BackButton />,
 };
 
 export default function SettingsPasswordPage() {
@@ -64,9 +64,7 @@ export default function SettingsPasswordPage() {
               <Label>Confirm Password</Label>
               <InputField type="password" name="passwordConfirmation" icon={LockClosedIcon} />
             </div>
-            <p className="text-gray-50">
-              Must be at least 8 characters
-            </p>
+            <p className="text-gray-50">Must be at least 8 characters</p>
             <div className="flex flex-col">
               <Button type="submit">{loading ? 'Saving...' : 'Save'}</Button>
             </div>
