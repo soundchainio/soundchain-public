@@ -8,7 +8,7 @@
     "seed": "ts-node src/db/seeds.ts",
     "migrate:create": "sh -c 'ts-node node_modules/migrate-mongo/bin/migrate-mongo create $0 -f migrate-mongo-config.ts' ",
     "migrate:status": "ts-node node_modules/migrate-mongo/bin/migrate-mongo status -f migrate-mongo-config.ts",
-    "migrate:down": "ts-node node_modules/migrate-mongo/bin/migrate-mongoo down -f migrate-mongo-config.ts && npm run migrate:status",
+    "migrate:down": "ts-node node_modules/migrate-mongo/bin/migrate-mongo down -f migrate-mongo-config.ts && npm run migrate:status",
     "migrate": "ts-node node_modules/migrate-mongo/bin/migrate-mongo up -f migrate-mongo-config.ts"
   },
   "lint-staged": {

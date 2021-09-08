@@ -17,7 +17,13 @@ export const Posts = ({ className, profileId }: PostsProps) => {
   });
 
   if (!data) {
-    return <PostSkeleton />;
+    return (
+      <>
+        <PostSkeleton />
+        <PostSkeleton />
+        <PostSkeleton />
+      </>
+    );
   }
 
   return (

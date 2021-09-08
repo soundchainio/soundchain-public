@@ -42,6 +42,10 @@ export class Profile extends Model {
   @prop({ required: true, default: 0 })
   unreadNotificationCount: number;
 
+  @Field(() => Number)
+  @prop({ required: true, default: 0 })
+  unreadMessageCount: number;
+
   @Field(() => Date)
   createdAt: Date;
 

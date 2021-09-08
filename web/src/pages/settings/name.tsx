@@ -21,7 +21,7 @@ const validationSchema: yup.SchemaOf<SetupProfileNameFormValues> = yup.object().
 });
 
 const topNavBarProps: TopNavBarProps = {
-  leftButton: BackButton,
+  leftButton: <BackButton />,
 };
 
 export default function SettingsNamePage() {

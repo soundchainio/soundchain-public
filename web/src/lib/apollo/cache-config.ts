@@ -23,21 +23,6 @@ export const cacheConfig: InMemoryCacheConfig = {
             id: args?.id,
           });
         },
-        chatHistory: {
-          keyArgs: ['profileId'],
-          merge(existing = { nodes: [] }, { pageInfo, nodes }, { args }) {
-            if (!args?.page) {
-              return {
-                nodes: [...existing.nodes, ...nodes],
-                pageInfo,
-              };
-            }
-            return {
-              nodes: [...nodes, ...existing.nodes],
-              pageInfo,
-            };
-          },
-        },
         comments: {
           keyArgs: ['postId'],
           merge(existing = { nodes: [] }, { pageInfo, nodes }, { args }) {
@@ -70,6 +55,7 @@ export const cacheConfig: InMemoryCacheConfig = {
               nodes,
             };
           },
+
           read(existing): FeedConnection | void {
             if (existing) {
               return {
@@ -129,6 +115,15 @@ export const cacheConfig: InMemoryCacheConfig = {
                 nodes: Object.values(existing.nodes),
               };
             }
+          },
+        },
+        chats: {
+          keyArgs: false,
+          merge(existing = { nodes: [] }, { nodes, pageInfo }): FeedConnection {
+            return {
+              nodes: [...existing.nodes, ...nodes],
+              pageInfo,
+            };
           },
         },
       },
