@@ -142,6 +142,19 @@ export type FilterPostInput = {
   profileId?: Maybe<Scalars['String']>;
 };
 
+export type Follow = {
+  __typename?: 'Follow';
+  id: Scalars['ID'];
+  followedProfile: Profile;
+  followerProfile: Profile;
+};
+
+export type FollowConnection = {
+  __typename?: 'FollowConnection';
+  pageInfo: PageInfo;
+  nodes: Array<Follow>;
+};
+
 export type FollowProfileInput = {
   followedId: Scalars['String'];
 };
@@ -455,6 +468,8 @@ export type Query = {
   comment: Comment;
   comments: CommentConnection;
   feed: FeedConnection;
+  followers: FollowConnection;
+  following: FollowConnection;
   message: Message;
   notifications: NotificationConnection;
   notification: Notification;
@@ -492,6 +507,18 @@ export type QueryCommentsArgs = {
 
 export type QueryFeedArgs = {
   page?: Maybe<PageInput>;
+};
+
+
+export type QueryFollowersArgs = {
+  page?: Maybe<PageInput>;
+  id: Scalars['String'];
+};
+
+
+export type QueryFollowingArgs = {
+  page?: Maybe<PageInput>;
+  id: Scalars['String'];
 };
 
 
@@ -972,6 +999,54 @@ export type FollowProfileMutation = (
 export type FollowerNotificationFieldsFragment = (
   { __typename?: 'FollowerNotification' }
   & Pick<FollowerNotification, 'id' | 'type' | 'link' | 'createdAt' | 'followerName' | 'followerPicture'>
+);
+
+export type FollowersQueryVariables = Exact<{
+  profileId: Scalars['String'];
+  page?: Maybe<PageInput>;
+}>;
+
+
+export type FollowersQuery = (
+  { __typename?: 'Query' }
+  & { followers: (
+    { __typename?: 'FollowConnection' }
+    & { nodes: Array<(
+      { __typename?: 'Follow' }
+      & Pick<Follow, 'id'>
+      & { followerProfile: (
+        { __typename?: 'Profile' }
+        & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
+      ) }
+    )>, pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
+    ) }
+  ) }
+);
+
+export type FollowingQueryVariables = Exact<{
+  profileId: Scalars['String'];
+  page?: Maybe<PageInput>;
+}>;
+
+
+export type FollowingQuery = (
+  { __typename?: 'Query' }
+  & { following: (
+    { __typename?: 'FollowConnection' }
+    & { nodes: Array<(
+      { __typename?: 'Follow' }
+      & Pick<Follow, 'id'>
+      & { followedProfile: (
+        { __typename?: 'Profile' }
+        & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
+      ) }
+    )>, pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
+    ) }
+  ) }
 );
 
 export type ForgotPasswordMutationVariables = Exact<{
@@ -1998,6 +2073,102 @@ export function useFollowProfileMutation(baseOptions?: Apollo.MutationHookOption
 export type FollowProfileMutationHookResult = ReturnType<typeof useFollowProfileMutation>;
 export type FollowProfileMutationResult = Apollo.MutationResult<FollowProfileMutation>;
 export type FollowProfileMutationOptions = Apollo.BaseMutationOptions<FollowProfileMutation, FollowProfileMutationVariables>;
+export const FollowersDocument = gql`
+    query Followers($profileId: String!, $page: PageInput) {
+  followers(id: $profileId, page: $page) {
+    nodes {
+      id
+      followerProfile {
+        id
+        displayName
+        profilePicture
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+      totalCount
+    }
+  }
+}
+    `;
+
+/**
+ * __useFollowersQuery__
+ *
+ * To run a query within a React component, call `useFollowersQuery` and pass it any options that fit your needs.
+ * When your component renders, `useFollowersQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useFollowersQuery({
+ *   variables: {
+ *      profileId: // value for 'profileId'
+ *      page: // value for 'page'
+ *   },
+ * });
+ */
+export function useFollowersQuery(baseOptions: Apollo.QueryHookOptions<FollowersQuery, FollowersQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<FollowersQuery, FollowersQueryVariables>(FollowersDocument, options);
+      }
+export function useFollowersLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<FollowersQuery, FollowersQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<FollowersQuery, FollowersQueryVariables>(FollowersDocument, options);
+        }
+export type FollowersQueryHookResult = ReturnType<typeof useFollowersQuery>;
+export type FollowersLazyQueryHookResult = ReturnType<typeof useFollowersLazyQuery>;
+export type FollowersQueryResult = Apollo.QueryResult<FollowersQuery, FollowersQueryVariables>;
+export const FollowingDocument = gql`
+    query Following($profileId: String!, $page: PageInput) {
+  following(id: $profileId, page: $page) {
+    nodes {
+      id
+      followedProfile {
+        id
+        displayName
+        profilePicture
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+      totalCount
+    }
+  }
+}
+    `;
+
+/**
+ * __useFollowingQuery__
+ *
+ * To run a query within a React component, call `useFollowingQuery` and pass it any options that fit your needs.
+ * When your component renders, `useFollowingQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useFollowingQuery({
+ *   variables: {
+ *      profileId: // value for 'profileId'
+ *      page: // value for 'page'
+ *   },
+ * });
+ */
+export function useFollowingQuery(baseOptions: Apollo.QueryHookOptions<FollowingQuery, FollowingQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<FollowingQuery, FollowingQueryVariables>(FollowingDocument, options);
+      }
+export function useFollowingLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<FollowingQuery, FollowingQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<FollowingQuery, FollowingQueryVariables>(FollowingDocument, options);
+        }
+export type FollowingQueryHookResult = ReturnType<typeof useFollowingQuery>;
+export type FollowingLazyQueryHookResult = ReturnType<typeof useFollowingLazyQuery>;
+export type FollowingQueryResult = Apollo.QueryResult<FollowingQuery, FollowingQueryVariables>;
 export const ForgotPasswordDocument = gql`
     mutation ForgotPassword($input: ForgotPasswordInput!) {
   forgotPassword(input: $input) {

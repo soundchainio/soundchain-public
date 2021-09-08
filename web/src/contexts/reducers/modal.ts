@@ -42,6 +42,7 @@ export const modalReducer = (state: ModalState, action: Action) => {
         deleteType: (action.payload as ShowDeletePayload).type,
         deleteId: (action.payload as ShowDeletePayload).deleteId,
       };
+
     default:
       return state;
   }

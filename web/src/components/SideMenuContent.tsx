@@ -1,3 +1,4 @@
+import { FollowModal } from 'components/FollowersModal';
 import { Number } from 'components/Number';
 import { useMe } from 'hooks/useMe';
 import { Logo } from 'icons/Logo';
@@ -9,11 +10,13 @@ import { InstagramSquare } from 'icons/social/InstagramSquare';
 import { Reddit } from 'icons/social/Reddit';
 import { TwitterSquare } from 'icons/social/TwitterSquare';
 import { setJwt } from 'lib/apollo';
+import NextLink from 'next/link';
 import { useRouter } from 'next/router';
+import { useState } from 'react';
+import { FollowModalType } from 'types/FollowModalType';
 import { Avatar } from './Avatar';
 import { MenuItem } from './MenuItem';
 import { Title } from './Title';
-import NextLink from 'next/link';
 
 interface SideMenuContentProps {
   isMobile?: boolean;
@@ -22,10 +25,26 @@ interface SideMenuContentProps {
 export const SideMenuContent = ({ isMobile }: SideMenuContentProps) => {
   const me = useMe();
   const router = useRouter();
+  const [showModal, setShowModal] = useState(false);
+  const [followModalType, setFollowModalType] = useState<FollowModalType>();
 
   const onLogout = () => {
     setJwt();
     router.reload();
+  };
+
+  const onFollowers = () => {
+    setFollowModalType(FollowModalType.FOLLOWERS);
+    setShowModal(true);
+  };
+
+  const onFollowing = () => {
+    setFollowModalType(FollowModalType.FOLLOWING);
+    setShowModal(true);
+  };
+
+  const onCloseModal = () => {
+    setShowModal(false);
   };
 
   return (
@@ -40,13 +59,13 @@ export const SideMenuContent = ({ isMobile }: SideMenuContentProps) => {
               <div className="flex flex-row mt-6 relative">
                 <Avatar profile={me.profile} pixels={60} className="h-[68px] border-gray-10 border-4 rounded-full" />
                 <div className="px-2 flex flex-grow space-x-4 justify-center items-center">
-                  <div className="text-center text-lg">
+                  <div className="text-center text-lg" onClick={onFollowers}>
                     <p className="font-semibold text-white">
                       <Number value={me.profile.followerCount} />
                     </p>
                     <p className="text-gray-80 text-md">Followers</p>
                   </div>
-                  <div className="text-center text-lg">
+                  <div className="text-center text-lg" onClick={onFollowing}>
                     <p className="font-semibold text-white">
                       <Number value={me.profile.followingCount} />
                     </p>
@@ -88,6 +107,14 @@ export const SideMenuContent = ({ isMobile }: SideMenuContentProps) => {
           <InstagramSquare />
         </div>
       </div>
+      {me && (
+        <FollowModal
+          show={showModal}
+          profileId={me.profile.id}
+          modalType={followModalType as FollowModalType}
+          onClose={onCloseModal}
+        />
+      )}
     </>
   );
 };

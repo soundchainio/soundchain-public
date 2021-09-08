@@ -3,6 +3,7 @@ import { CommentNotificationResolver } from './CommentNotificationResolver';
 import { CommentResolver } from './CommentResolver';
 import { FeedResolver } from './FeedResolver';
 import { FollowerNotificationResolver } from './FollowerNotificationResolver';
+import { FollowResolver } from './FollowResolver';
 import { MessageResolver } from './MessageResolver';
 import { NotificationResolver } from './NotificationResolver';
 import { PostResolver } from './PostResolver';
@@ -16,6 +17,7 @@ export const resolvers = [
   CommentResolver,
   CommentNotificationResolver,
   FollowerNotificationResolver,
+  FollowResolver,
   FeedResolver,
   MessageResolver,
   NotificationResolver,
