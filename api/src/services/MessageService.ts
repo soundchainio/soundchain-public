@@ -21,7 +21,7 @@ export class MessageService extends ModelService<typeof Message> {
   async createMessage(params: NewMessageParams): Promise<Message> {
     const message = new this.model(params);
     await message.save();
-    await this.incrementUnreadMessagesCount(params.toId);
+    await this.incrementUnreadMessageCount(params.toId);
     return message;
   }
 
@@ -86,8 +86,8 @@ export class MessageService extends ModelService<typeof Message> {
   async markAsRead(fromId: string, toId: string): Promise<boolean> {
     let ok = true;
     try {
-      const unreadMessagesCount = await this.model.find({ fromId, toId, readAt: null }).countDocuments();
-      await this.decreaseUnreadMessagesCount(toId, unreadMessagesCount);
+      const unreadMessageCount = await this.model.find({ fromId, toId, readAt: null }).countDocuments();
+      await this.decreaseUnreadMessageCount(toId, unreadMessageCount);
       await this.model.updateMany({ fromId, toId }, { $set: { readAt: new Date() } });
     } catch (err) {
       ok = false;
@@ -96,16 +96,16 @@ export class MessageService extends ModelService<typeof Message> {
     return ok;
   }
 
-  async incrementUnreadMessagesCount(profileId: string): Promise<void> {
-    await ProfileModel.updateOne({ _id: profileId }, { $inc: { unreadMessagesCount: 1 } });
+  async incrementUnreadMessageCount(profileId: string): Promise<void> {
+    await ProfileModel.updateOne({ _id: profileId }, { $inc: { unreadMessageCount: 1 } });
   }
 
-  async decreaseUnreadMessagesCount(profileId: string, count: number): Promise<void> {
-    await ProfileModel.updateOne({ _id: profileId }, { $inc: { unreadMessagesCount: -count } });
+  async decreaseUnreadMessageCount(profileId: string, count: number): Promise<void> {
+    await ProfileModel.updateOne({ _id: profileId }, { $inc: { unreadMessageCount: -count } });
   }
 
-  async resetUnreadMessagesCount(profileId: string): Promise<Profile> {
-    const updatedProfile = await ProfileModel.findByIdAndUpdate(profileId, { unreadMessagesCount: 0 }, { new: true });
+  async resetUnreadMessageCount(profileId: string): Promise<Profile> {
+    const updatedProfile = await ProfileModel.findByIdAndUpdate(profileId, { unreadMessageCount: 0 }, { new: true });
     if (!updatedProfile) {
       throw new NotFoundError('Profile', profileId);
     }

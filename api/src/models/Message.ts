@@ -21,7 +21,7 @@ export class Message extends Model {
 
   @Field(() => Date, { nullable: true })
   @prop({ required: false })
-  readAt: Date;
+  readAt?: Date;
 
   @Field(() => Date)
   createdAt: Date;

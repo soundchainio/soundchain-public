@@ -44,7 +44,7 @@ export class Profile extends Model {
 
   @Field(() => Number)
   @prop({ required: true, default: 0 })
-  unreadMessagesCount: number;
+  unreadMessageCount: number;
 
   @Field(() => Date)
   createdAt: Date;

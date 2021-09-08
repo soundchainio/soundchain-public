@@ -238,7 +238,7 @@ export type Mutation = {
   addComment: AddCommentPayload;
   deleteComment: DeleteCommentPayload;
   sendMessage: SendMessagePayload;
-  resetUnreadMessagesCount: Profile;
+  resetUnreadMessageCount: Profile;
   resetNotificationCount: Profile;
   clearNotifications: ClearNotificationsPayload;
   createPost: CreatePostPayload;
@@ -435,7 +435,7 @@ export type Profile = {
   followerCount: Scalars['Float'];
   followingCount: Scalars['Float'];
   unreadNotificationCount: Scalars['Float'];
-  unreadMessagesCount: Scalars['Float'];
+  unreadMessageCount: Scalars['Float'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   userHandle: Scalars['String'];
@@ -1050,17 +1050,6 @@ export type MyProfileQuery = (
   ) }
 );
 
-export type UnreadMessagesCountQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type UnreadMessagesCountQuery = (
-  { __typename?: 'Query' }
-  & { myProfile: (
-    { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'unreadMessagesCount'>
-  ) }
-);
-
 export type NotificationQueryVariables = Exact<{
   id: Scalars['String'];
 }>;
@@ -1240,14 +1229,14 @@ export type ResetPasswordMutation = (
   ) }
 );
 
-export type ResetUnreadMessagesCountMutationVariables = Exact<{ [key: string]: never; }>;
+export type ResetUnreadMessageCountMutationVariables = Exact<{ [key: string]: never; }>;
 
 
-export type ResetUnreadMessagesCountMutation = (
+export type ResetUnreadMessageCountMutation = (
   { __typename?: 'Mutation' }
-  & { resetUnreadMessagesCount: (
+  & { resetUnreadMessageCount: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'unreadMessagesCount'>
+    & Pick<Profile, 'id' | 'unreadMessageCount'>
   ) }
 );
 
@@ -1296,6 +1285,17 @@ export type UnfollowProfileMutation = (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'followerCount' | 'isFollowed'>
     ) }
+  ) }
+);
+
+export type UnreadMessageCountQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type UnreadMessageCountQuery = (
+  { __typename?: 'Query' }
+  & { myProfile: (
+    { __typename?: 'Profile' }
+    & Pick<Profile, 'id' | 'unreadMessageCount'>
   ) }
 );
 
@@ -2192,41 +2192,6 @@ export function useMyProfileLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
 export type MyProfileQueryHookResult = ReturnType<typeof useMyProfileQuery>;
 export type MyProfileLazyQueryHookResult = ReturnType<typeof useMyProfileLazyQuery>;
 export type MyProfileQueryResult = Apollo.QueryResult<MyProfileQuery, MyProfileQueryVariables>;
-export const UnreadMessagesCountDocument = gql`
-    query UnreadMessagesCount {
-  myProfile {
-    id
-    unreadMessagesCount
-  }
-}
-    `;
-
-/**
- * __useUnreadMessagesCountQuery__
- *
- * To run a query within a React component, call `useUnreadMessagesCountQuery` and pass it any options that fit your needs.
- * When your component renders, `useUnreadMessagesCountQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useUnreadMessagesCountQuery({
- *   variables: {
- *   },
- * });
- */
-export function useUnreadMessagesCountQuery(baseOptions?: Apollo.QueryHookOptions<UnreadMessagesCountQuery, UnreadMessagesCountQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<UnreadMessagesCountQuery, UnreadMessagesCountQueryVariables>(UnreadMessagesCountDocument, options);
-      }
-export function useUnreadMessagesCountLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UnreadMessagesCountQuery, UnreadMessagesCountQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<UnreadMessagesCountQuery, UnreadMessagesCountQueryVariables>(UnreadMessagesCountDocument, options);
-        }
-export type UnreadMessagesCountQueryHookResult = ReturnType<typeof useUnreadMessagesCountQuery>;
-export type UnreadMessagesCountLazyQueryHookResult = ReturnType<typeof useUnreadMessagesCountLazyQuery>;
-export type UnreadMessagesCountQueryResult = Apollo.QueryResult<UnreadMessagesCountQuery, UnreadMessagesCountQueryVariables>;
 export const NotificationDocument = gql`
     query Notification($id: String!) {
   notification(id: $id) {
@@ -2647,39 +2612,39 @@ export function useResetPasswordMutation(baseOptions?: Apollo.MutationHookOption
 export type ResetPasswordMutationHookResult = ReturnType<typeof useResetPasswordMutation>;
 export type ResetPasswordMutationResult = Apollo.MutationResult<ResetPasswordMutation>;
 export type ResetPasswordMutationOptions = Apollo.BaseMutationOptions<ResetPasswordMutation, ResetPasswordMutationVariables>;
-export const ResetUnreadMessagesCountDocument = gql`
-    mutation ResetUnreadMessagesCount {
-  resetUnreadMessagesCount {
+export const ResetUnreadMessageCountDocument = gql`
+    mutation ResetUnreadMessageCount {
+  resetUnreadMessageCount {
     id
-    unreadMessagesCount
+    unreadMessageCount
   }
 }
     `;
-export type ResetUnreadMessagesCountMutationFn = Apollo.MutationFunction<ResetUnreadMessagesCountMutation, ResetUnreadMessagesCountMutationVariables>;
+export type ResetUnreadMessageCountMutationFn = Apollo.MutationFunction<ResetUnreadMessageCountMutation, ResetUnreadMessageCountMutationVariables>;
 
 /**
- * __useResetUnreadMessagesCountMutation__
+ * __useResetUnreadMessageCountMutation__
  *
- * To run a mutation, you first call `useResetUnreadMessagesCountMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useResetUnreadMessagesCountMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useResetUnreadMessageCountMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useResetUnreadMessageCountMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [resetUnreadMessagesCountMutation, { data, loading, error }] = useResetUnreadMessagesCountMutation({
+ * const [resetUnreadMessageCountMutation, { data, loading, error }] = useResetUnreadMessageCountMutation({
  *   variables: {
  *   },
  * });
  */
-export function useResetUnreadMessagesCountMutation(baseOptions?: Apollo.MutationHookOptions<ResetUnreadMessagesCountMutation, ResetUnreadMessagesCountMutationVariables>) {
+export function useResetUnreadMessageCountMutation(baseOptions?: Apollo.MutationHookOptions<ResetUnreadMessageCountMutation, ResetUnreadMessageCountMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<ResetUnreadMessagesCountMutation, ResetUnreadMessagesCountMutationVariables>(ResetUnreadMessagesCountDocument, options);
+        return Apollo.useMutation<ResetUnreadMessageCountMutation, ResetUnreadMessageCountMutationVariables>(ResetUnreadMessageCountDocument, options);
       }
-export type ResetUnreadMessagesCountMutationHookResult = ReturnType<typeof useResetUnreadMessagesCountMutation>;
-export type ResetUnreadMessagesCountMutationResult = Apollo.MutationResult<ResetUnreadMessagesCountMutation>;
-export type ResetUnreadMessagesCountMutationOptions = Apollo.BaseMutationOptions<ResetUnreadMessagesCountMutation, ResetUnreadMessagesCountMutationVariables>;
+export type ResetUnreadMessageCountMutationHookResult = ReturnType<typeof useResetUnreadMessageCountMutation>;
+export type ResetUnreadMessageCountMutationResult = Apollo.MutationResult<ResetUnreadMessageCountMutation>;
+export type ResetUnreadMessageCountMutationOptions = Apollo.BaseMutationOptions<ResetUnreadMessageCountMutation, ResetUnreadMessageCountMutationVariables>;
 export const RetractReactionDocument = gql`
     mutation RetractReaction($input: RetractReactionInput!) {
   retractReaction(input: $input) {
@@ -2790,6 +2755,41 @@ export function useUnfollowProfileMutation(baseOptions?: Apollo.MutationHookOpti
 export type UnfollowProfileMutationHookResult = ReturnType<typeof useUnfollowProfileMutation>;
 export type UnfollowProfileMutationResult = Apollo.MutationResult<UnfollowProfileMutation>;
 export type UnfollowProfileMutationOptions = Apollo.BaseMutationOptions<UnfollowProfileMutation, UnfollowProfileMutationVariables>;
+export const UnreadMessageCountDocument = gql`
+    query UnreadMessageCount {
+  myProfile {
+    id
+    unreadMessageCount
+  }
+}
+    `;
+
+/**
+ * __useUnreadMessageCountQuery__
+ *
+ * To run a query within a React component, call `useUnreadMessageCountQuery` and pass it any options that fit your needs.
+ * When your component renders, `useUnreadMessageCountQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useUnreadMessageCountQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useUnreadMessageCountQuery(baseOptions?: Apollo.QueryHookOptions<UnreadMessageCountQuery, UnreadMessageCountQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<UnreadMessageCountQuery, UnreadMessageCountQueryVariables>(UnreadMessageCountDocument, options);
+      }
+export function useUnreadMessageCountLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UnreadMessageCountQuery, UnreadMessageCountQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<UnreadMessageCountQuery, UnreadMessageCountQueryVariables>(UnreadMessageCountDocument, options);
+        }
+export type UnreadMessageCountQueryHookResult = ReturnType<typeof useUnreadMessageCountQuery>;
+export type UnreadMessageCountLazyQueryHookResult = ReturnType<typeof useUnreadMessageCountLazyQuery>;
+export type UnreadMessageCountQueryResult = Apollo.QueryResult<UnreadMessageCountQuery, UnreadMessageCountQueryVariables>;
 export const UpdateCoverPictureDocument = gql`
     mutation UpdateCoverPicture($input: UpdateCoverPictureInput!) {
   updateCoverPicture(input: $input) {
