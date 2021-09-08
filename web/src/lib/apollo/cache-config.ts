@@ -1,5 +1,5 @@
 import { InMemoryCacheConfig } from '@apollo/client';
-import { FeedConnection, FeedItem } from 'lib/graphql';
+import { Comment, CommentConnection, FeedConnection, FeedItem } from 'lib/graphql';
 
 export const cacheConfig: InMemoryCacheConfig = {
   typePolicies: {
@@ -40,17 +40,48 @@ export const cacheConfig: InMemoryCacheConfig = {
         },
         comments: {
           keyArgs: ['postId'],
-          merge(existing = { nodes: [] }, { pageInfo, nodes }, { args }) {
-            if (!args?.page) {
+          // merge(existing = { nodes: [] }, { pageInfo, nodes }, { args, readField }) {
+          //   const existingNodeIds = existing.nodes.map(node => readField('id', node));
+          //   const newNodes = nodes.filter(node => !existingNodeIds.includes(readField('id', node)));
+          //   if (args?.page.before) {
+          //     return {
+          //       nodes: [...newNodes, ...existing.nodes],
+          //       pageInfo,
+          //     };
+          //   }
+          //   return {
+          //     nodes: [...existing.nodes, ...newNodes],
+          //     pageInfo,
+          //   };
+          // },
+          merge(existing, incoming, { readField }): CommentConnection {
+            const nodes = existing ? { ...existing.nodes } : {};
+
+            incoming.nodes.forEach((node: Comment) => {
+              const key = readField('id', node);
+              nodes[key as string] = node;
+            });
+
+            return {
+              pageInfo: {
+                ...incoming.pageInfo,
+              },
+              nodes,
+            };
+          },
+          read(existing, { readField }): CommentConnection | void {
+            if (existing) {
+              const nodes = Object.values(existing.nodes);
+              const newestComments = nodes.sort((a, b) => {
+                const aDate = new Date(readField('createdAt', a));
+                const bDate = new Date(readField('createdAt', b));
+                return bDate - aDate;
+              });
               return {
-                nodes: [...nodes, ...existing.nodes],
-                pageInfo,
+                pageInfo: { ...existing.pageInfo },
+                nodes: newestComments,
               };
             }
-            return {
-              nodes: [...existing.nodes, ...nodes],
-              pageInfo,
-            };
           },
         },
         feed: {

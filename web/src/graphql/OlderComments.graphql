@@ -1,4 +1,4 @@
-query Comments($postId: String!, $page: PageInput) {
+query OlderComments($postId: String!, $page: PageInput) {
   comments(postId: $postId, page: $page) {
     nodes {
       ...CommentComponentFields
@@ -6,7 +6,6 @@ query Comments($postId: String!, $page: PageInput) {
     pageInfo {
       hasPreviousPage
       hasNextPage
-      startCursor
       endCursor
     }
   }

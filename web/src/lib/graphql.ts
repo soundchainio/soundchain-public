@@ -375,6 +375,7 @@ export type PageInput = {
   after?: Maybe<Scalars['String']>;
   last?: Maybe<Scalars['Int']>;
   before?: Maybe<Scalars['String']>;
+  inclusive?: Maybe<Scalars['Boolean']>;
 };
 
 export type Post = {
@@ -810,7 +811,7 @@ export type CommentsQuery = (
       & CommentComponentFieldsFragment
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
+      & Pick<PageInfo, 'hasPreviousPage' | 'hasNextPage' | 'startCursor' | 'endCursor'>
     ) }
   ) }
 );
@@ -1001,6 +1002,26 @@ export type MyProfileQuery = (
   ) }
 );
 
+export type NewerCommentsQueryVariables = Exact<{
+  postId: Scalars['String'];
+  page?: Maybe<PageInput>;
+}>;
+
+
+export type NewerCommentsQuery = (
+  { __typename?: 'Query' }
+  & { comments: (
+    { __typename?: 'CommentConnection' }
+    & { nodes: Array<(
+      { __typename?: 'Comment' }
+      & CommentComponentFieldsFragment
+    )>, pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasPreviousPage' | 'startCursor'>
+    ) }
+  ) }
+);
+
 export type NotificationQueryVariables = Exact<{
   id: Scalars['String'];
 }>;
@@ -1050,6 +1071,26 @@ export type NotificationsQuery = (
       { __typename?: 'FollowerNotification' }
       & FollowerNotificationFieldsFragment
     )> }
+  ) }
+);
+
+export type OlderCommentsQueryVariables = Exact<{
+  postId: Scalars['String'];
+  page?: Maybe<PageInput>;
+}>;
+
+
+export type OlderCommentsQuery = (
+  { __typename?: 'Query' }
+  & { comments: (
+    { __typename?: 'CommentConnection' }
+    & { nodes: Array<(
+      { __typename?: 'Comment' }
+      & CommentComponentFieldsFragment
+    )>, pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasPreviousPage' | 'hasNextPage' | 'endCursor'>
+    ) }
   ) }
 );
 
@@ -1626,7 +1667,9 @@ export const CommentsDocument = gql`
       ...CommentComponentFields
     }
     pageInfo {
+      hasPreviousPage
       hasNextPage
+      startCursor
       endCursor
     }
   }
@@ -2073,6 +2116,48 @@ export function useMyProfileLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
 export type MyProfileQueryHookResult = ReturnType<typeof useMyProfileQuery>;
 export type MyProfileLazyQueryHookResult = ReturnType<typeof useMyProfileLazyQuery>;
 export type MyProfileQueryResult = Apollo.QueryResult<MyProfileQuery, MyProfileQueryVariables>;
+export const NewerCommentsDocument = gql`
+    query NewerComments($postId: String!, $page: PageInput) {
+  comments(postId: $postId, page: $page) {
+    nodes {
+      ...CommentComponentFields
+    }
+    pageInfo {
+      hasPreviousPage
+      startCursor
+    }
+  }
+}
+    ${CommentComponentFieldsFragmentDoc}`;
+
+/**
+ * __useNewerCommentsQuery__
+ *
+ * To run a query within a React component, call `useNewerCommentsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useNewerCommentsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useNewerCommentsQuery({
+ *   variables: {
+ *      postId: // value for 'postId'
+ *      page: // value for 'page'
+ *   },
+ * });
+ */
+export function useNewerCommentsQuery(baseOptions: Apollo.QueryHookOptions<NewerCommentsQuery, NewerCommentsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<NewerCommentsQuery, NewerCommentsQueryVariables>(NewerCommentsDocument, options);
+      }
+export function useNewerCommentsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<NewerCommentsQuery, NewerCommentsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<NewerCommentsQuery, NewerCommentsQueryVariables>(NewerCommentsDocument, options);
+        }
+export type NewerCommentsQueryHookResult = ReturnType<typeof useNewerCommentsQuery>;
+export type NewerCommentsLazyQueryHookResult = ReturnType<typeof useNewerCommentsLazyQuery>;
+export type NewerCommentsQueryResult = Apollo.QueryResult<NewerCommentsQuery, NewerCommentsQueryVariables>;
 export const NotificationDocument = gql`
     query Notification($id: String!) {
   notification(id: $id) {
@@ -2200,6 +2285,49 @@ export function useNotificationsLazyQuery(baseOptions?: Apollo.LazyQueryHookOpti
 export type NotificationsQueryHookResult = ReturnType<typeof useNotificationsQuery>;
 export type NotificationsLazyQueryHookResult = ReturnType<typeof useNotificationsLazyQuery>;
 export type NotificationsQueryResult = Apollo.QueryResult<NotificationsQuery, NotificationsQueryVariables>;
+export const OlderCommentsDocument = gql`
+    query OlderComments($postId: String!, $page: PageInput) {
+  comments(postId: $postId, page: $page) {
+    nodes {
+      ...CommentComponentFields
+    }
+    pageInfo {
+      hasPreviousPage
+      hasNextPage
+      endCursor
+    }
+  }
+}
+    ${CommentComponentFieldsFragmentDoc}`;
+
+/**
+ * __useOlderCommentsQuery__
+ *
+ * To run a query within a React component, call `useOlderCommentsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useOlderCommentsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useOlderCommentsQuery({
+ *   variables: {
+ *      postId: // value for 'postId'
+ *      page: // value for 'page'
+ *   },
+ * });
+ */
+export function useOlderCommentsQuery(baseOptions: Apollo.QueryHookOptions<OlderCommentsQuery, OlderCommentsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<OlderCommentsQuery, OlderCommentsQueryVariables>(OlderCommentsDocument, options);
+      }
+export function useOlderCommentsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<OlderCommentsQuery, OlderCommentsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<OlderCommentsQuery, OlderCommentsQueryVariables>(OlderCommentsDocument, options);
+        }
+export type OlderCommentsQueryHookResult = ReturnType<typeof useOlderCommentsQuery>;
+export type OlderCommentsLazyQueryHookResult = ReturnType<typeof useOlderCommentsLazyQuery>;
+export type OlderCommentsQueryResult = Apollo.QueryResult<OlderCommentsQuery, OlderCommentsQueryVariables>;
 export const PostDocument = gql`
     query Post($id: String!) {
   post(id: $id) {

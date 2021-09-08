@@ -1,13 +1,11 @@
-query Comments($postId: String!, $page: PageInput) {
+query NewerComments($postId: String!, $page: PageInput) {
   comments(postId: $postId, page: $page) {
     nodes {
       ...CommentComponentFields
     }
     pageInfo {
       hasPreviousPage
-      hasNextPage
       startCursor
-      endCursor
     }
   }
 }
