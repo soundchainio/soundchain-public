@@ -52,10 +52,11 @@ export const FollowModal = ({ profileId, modalType, onClose }: FollowersModal) =
           Close
         </div>
       }
+      setOpen={onClose}
     >
-      <div className="flex flex-col h-full pb-32 overflow-y-auto bg-gray-30 px-4 py-2 ">
+      <div className="flex flex-col h-full overflow-y-auto bg-gray-30 px-4 py-2 ">
         {modalType === FollowModalType.FOLLOWERS && (
-          <div className="pb-10">
+          <>
             <div className="space-y-6">
               {followersData?.followers.nodes.map(follower => (
                 <FollowItem key={follower.id} profile={follower.followerProfile as Profile} />
@@ -64,10 +65,10 @@ export const FollowModal = ({ profileId, modalType, onClose }: FollowersModal) =
             {followersData?.followers.pageInfo.hasNextPage && (
               <InfiniteLoader loadMore={onLoadMore} loadingMessage="Loading Followers" />
             )}
-          </div>
+          </>
         )}
         {modalType === FollowModalType.FOLLOWING && (
-          <div className="pb-10">
+          <>
             <div className="space-y-6">
               {followingData?.following.nodes.map(following => (
                 <FollowItem key={following.id} profile={following.followedProfile as Profile} />
@@ -76,7 +77,7 @@ export const FollowModal = ({ profileId, modalType, onClose }: FollowersModal) =
             {followingData?.following.pageInfo.hasNextPage && (
               <InfiniteLoader loadMore={onLoadMore} loadingMessage="Loading Following" />
             )}
-          </div>
+          </>
         )}
       </div>
     </Modal>

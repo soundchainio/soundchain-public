@@ -18,4 +18,4 @@ export interface ShowFollowPayload {
   show: boolean;
 }
 
-export type ModalPayload = ShowNewPostPayload | SetRepostIdPayload | ShowDeletePayload;
+export type ModalPayload = ShowNewPostPayload | SetRepostIdPayload | ShowDeletePayload | ShowFollowPayload;

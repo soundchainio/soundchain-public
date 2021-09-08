@@ -86,9 +86,11 @@ export default function ProfilePage() {
       </div>
       <ProfileTabs />
       <Posts profileId={profileId} />
-      {followModalType && (
-        <FollowModal profileId={profileId} modalType={followModalType} onClose={() => dispatchShowFollowModal(false)} />
-      )}
+      <FollowModal
+        profileId={profileId}
+        modalType={followModalType as FollowModalType}
+        onClose={() => dispatchShowFollowModal(false)}
+      />
     </Layout>
   );
 }
