@@ -1,0 +1,6 @@
+mutation ResetUnreadMessageCount {
+  resetUnreadMessageCount {
+    id
+    unreadMessageCount
+  }
+}

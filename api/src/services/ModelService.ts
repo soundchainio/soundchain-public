@@ -2,7 +2,7 @@ import { DocumentType, ReturnModelType } from '@typegoose/typegoose';
 import DataLoader from 'dataloader';
 import { iteratee, keyBy } from 'lodash';
 import { FilterQuery } from 'mongoose';
-import { paginate, PaginateParams, PaginateResult } from '../db/pagination/paginate';
+import { paginate, paginateAggregated, PaginateParams, PaginateResult } from '../db/pagination/paginate';
 import { NotFoundError } from '../errors/NotFoundError';
 import { Model } from '../models/Model';
 import { Context } from '../types/Context';
@@ -57,5 +57,9 @@ export class ModelService<T extends typeof Model, KeyComponents = string> extend
 
   async paginate(params: PaginateParams<T> = {}): Promise<PaginateResult<InstanceType<T>>> {
     return paginate(this.model, params);
+  }
+
+  async paginateAggregated(params: PaginateParams<T> = {}): Promise<PaginateResult<InstanceType<T>>> {
+    return paginateAggregated(this.model, params);
   }
 }

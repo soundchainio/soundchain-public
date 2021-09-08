@@ -41,6 +41,23 @@ export type ChangeReactionPayload = {
   post: Post;
 };
 
+export type Chat = {
+  __typename?: 'Chat';
+  id: Scalars['ID'];
+  message: Scalars['String'];
+  fromId: Scalars['String'];
+  readAt: Scalars['DateTime'];
+  createdAt: Scalars['DateTime'];
+  profile: Profile;
+  unread: Scalars['Boolean'];
+};
+
+export type ChatConnection = {
+  __typename?: 'ChatConnection';
+  pageInfo: PageInfo;
+  nodes: Array<Chat>;
+};
+
 export type ClearNotificationsPayload = {
   __typename?: 'ClearNotificationsPayload';
   ok: Scalars['Boolean'];
@@ -204,6 +221,7 @@ export type Message = {
   fromId: Scalars['String'];
   toId: Scalars['String'];
   message: Scalars['String'];
+  readAt: Maybe<Scalars['DateTime']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   fromProfile: Profile;
@@ -220,6 +238,7 @@ export type Mutation = {
   addComment: AddCommentPayload;
   deleteComment: DeleteCommentPayload;
   sendMessage: SendMessagePayload;
+  resetUnreadMessageCount: Profile;
   resetNotificationCount: Profile;
   clearNotifications: ClearNotificationsPayload;
   createPost: CreatePostPayload;
@@ -422,6 +441,7 @@ export type Profile = {
   followerCount: Scalars['Float'];
   followingCount: Scalars['Float'];
   unreadNotificationCount: Scalars['Float'];
+  unreadMessageCount: Scalars['Float'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   userHandle: Scalars['String'];
@@ -430,11 +450,12 @@ export type Profile = {
 
 export type Query = {
   __typename?: 'Query';
+  chats: ChatConnection;
+  chatHistory: MessageConnection;
   comment: Comment;
   comments: CommentConnection;
-  chatHistory: MessageConnection;
-  message: Message;
   feed: FeedConnection;
+  message: Message;
   notifications: NotificationConnection;
   notification: Notification;
   post: Post;
@@ -444,6 +465,17 @@ export type Query = {
   uploadUrl: UploadUrl;
   me: Maybe<User>;
   validPasswordResetToken: Scalars['Boolean'];
+};
+
+
+export type QueryChatsArgs = {
+  page?: Maybe<PageInput>;
+};
+
+
+export type QueryChatHistoryArgs = {
+  page?: Maybe<PageInput>;
+  profileId: Scalars['String'];
 };
 
 
@@ -458,19 +490,13 @@ export type QueryCommentsArgs = {
 };
 
 
-export type QueryChatHistoryArgs = {
+export type QueryFeedArgs = {
   page?: Maybe<PageInput>;
-  profileId: Scalars['String'];
 };
 
 
 export type QueryMessageArgs = {
   id: Scalars['String'];
-};
-
-
-export type QueryFeedArgs = {
-  page?: Maybe<PageInput>;
 };
 
 
@@ -769,6 +795,29 @@ export type ChatHistoryQuery = (
       { __typename?: 'Message' }
       & MessageComponentFieldsFragment
     )> }
+  ) }
+);
+
+export type ChatsQueryVariables = Exact<{
+  page?: Maybe<PageInput>;
+}>;
+
+
+export type ChatsQuery = (
+  { __typename?: 'Query' }
+  & { chats: (
+    { __typename?: 'ChatConnection' }
+    & { nodes: Array<(
+      { __typename?: 'Chat' }
+      & Pick<Chat, 'id' | 'message' | 'unread' | 'createdAt'>
+      & { profile: (
+        { __typename?: 'Profile' }
+        & Pick<Profile, 'displayName' | 'profilePicture'>
+      ) }
+    )>, pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
+    ) }
   ) }
 );
 
@@ -1195,6 +1244,17 @@ export type ResetPasswordMutation = (
   ) }
 );
 
+export type ResetUnreadMessageCountMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type ResetUnreadMessageCountMutation = (
+  { __typename?: 'Mutation' }
+  & { resetUnreadMessageCount: (
+    { __typename?: 'Profile' }
+    & Pick<Profile, 'id' | 'unreadMessageCount'>
+  ) }
+);
+
 export type RetractReactionMutationVariables = Exact<{
   input: RetractReactionInput;
 }>;
@@ -1240,6 +1300,17 @@ export type UnfollowProfileMutation = (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'followerCount' | 'isFollowed'>
     ) }
+  ) }
+);
+
+export type UnreadMessageCountQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type UnreadMessageCountQuery = (
+  { __typename?: 'Query' }
+  & { myProfile: (
+    { __typename?: 'Profile' }
+    & Pick<Profile, 'id' | 'unreadMessageCount'>
   ) }
 );
 
@@ -1580,6 +1651,54 @@ export function useChatHistoryLazyQuery(baseOptions?: Apollo.LazyQueryHookOption
 export type ChatHistoryQueryHookResult = ReturnType<typeof useChatHistoryQuery>;
 export type ChatHistoryLazyQueryHookResult = ReturnType<typeof useChatHistoryLazyQuery>;
 export type ChatHistoryQueryResult = Apollo.QueryResult<ChatHistoryQuery, ChatHistoryQueryVariables>;
+export const ChatsDocument = gql`
+    query Chats($page: PageInput) {
+  chats(page: $page) {
+    nodes {
+      id
+      profile {
+        displayName
+        profilePicture
+      }
+      message
+      unread
+      createdAt
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+    `;
+
+/**
+ * __useChatsQuery__
+ *
+ * To run a query within a React component, call `useChatsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useChatsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useChatsQuery({
+ *   variables: {
+ *      page: // value for 'page'
+ *   },
+ * });
+ */
+export function useChatsQuery(baseOptions?: Apollo.QueryHookOptions<ChatsQuery, ChatsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ChatsQuery, ChatsQueryVariables>(ChatsDocument, options);
+      }
+export function useChatsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ChatsQuery, ChatsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ChatsQuery, ChatsQueryVariables>(ChatsDocument, options);
+        }
+export type ChatsQueryHookResult = ReturnType<typeof useChatsQuery>;
+export type ChatsLazyQueryHookResult = ReturnType<typeof useChatsLazyQuery>;
+export type ChatsQueryResult = Apollo.QueryResult<ChatsQuery, ChatsQueryVariables>;
 export const ClearNotificationsDocument = gql`
     mutation ClearNotifications {
   clearNotifications {
@@ -2522,6 +2641,39 @@ export function useResetPasswordMutation(baseOptions?: Apollo.MutationHookOption
 export type ResetPasswordMutationHookResult = ReturnType<typeof useResetPasswordMutation>;
 export type ResetPasswordMutationResult = Apollo.MutationResult<ResetPasswordMutation>;
 export type ResetPasswordMutationOptions = Apollo.BaseMutationOptions<ResetPasswordMutation, ResetPasswordMutationVariables>;
+export const ResetUnreadMessageCountDocument = gql`
+    mutation ResetUnreadMessageCount {
+  resetUnreadMessageCount {
+    id
+    unreadMessageCount
+  }
+}
+    `;
+export type ResetUnreadMessageCountMutationFn = Apollo.MutationFunction<ResetUnreadMessageCountMutation, ResetUnreadMessageCountMutationVariables>;
+
+/**
+ * __useResetUnreadMessageCountMutation__
+ *
+ * To run a mutation, you first call `useResetUnreadMessageCountMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useResetUnreadMessageCountMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [resetUnreadMessageCountMutation, { data, loading, error }] = useResetUnreadMessageCountMutation({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useResetUnreadMessageCountMutation(baseOptions?: Apollo.MutationHookOptions<ResetUnreadMessageCountMutation, ResetUnreadMessageCountMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ResetUnreadMessageCountMutation, ResetUnreadMessageCountMutationVariables>(ResetUnreadMessageCountDocument, options);
+      }
+export type ResetUnreadMessageCountMutationHookResult = ReturnType<typeof useResetUnreadMessageCountMutation>;
+export type ResetUnreadMessageCountMutationResult = Apollo.MutationResult<ResetUnreadMessageCountMutation>;
+export type ResetUnreadMessageCountMutationOptions = Apollo.BaseMutationOptions<ResetUnreadMessageCountMutation, ResetUnreadMessageCountMutationVariables>;
 export const RetractReactionDocument = gql`
     mutation RetractReaction($input: RetractReactionInput!) {
   retractReaction(input: $input) {
@@ -2632,6 +2784,41 @@ export function useUnfollowProfileMutation(baseOptions?: Apollo.MutationHookOpti
 export type UnfollowProfileMutationHookResult = ReturnType<typeof useUnfollowProfileMutation>;
 export type UnfollowProfileMutationResult = Apollo.MutationResult<UnfollowProfileMutation>;
 export type UnfollowProfileMutationOptions = Apollo.BaseMutationOptions<UnfollowProfileMutation, UnfollowProfileMutationVariables>;
+export const UnreadMessageCountDocument = gql`
+    query UnreadMessageCount {
+  myProfile {
+    id
+    unreadMessageCount
+  }
+}
+    `;
+
+/**
+ * __useUnreadMessageCountQuery__
+ *
+ * To run a query within a React component, call `useUnreadMessageCountQuery` and pass it any options that fit your needs.
+ * When your component renders, `useUnreadMessageCountQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useUnreadMessageCountQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useUnreadMessageCountQuery(baseOptions?: Apollo.QueryHookOptions<UnreadMessageCountQuery, UnreadMessageCountQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<UnreadMessageCountQuery, UnreadMessageCountQueryVariables>(UnreadMessageCountDocument, options);
+      }
+export function useUnreadMessageCountLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UnreadMessageCountQuery, UnreadMessageCountQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<UnreadMessageCountQuery, UnreadMessageCountQueryVariables>(UnreadMessageCountDocument, options);
+        }
+export type UnreadMessageCountQueryHookResult = ReturnType<typeof useUnreadMessageCountQuery>;
+export type UnreadMessageCountLazyQueryHookResult = ReturnType<typeof useUnreadMessageCountLazyQuery>;
+export type UnreadMessageCountQueryResult = Apollo.QueryResult<UnreadMessageCountQuery, UnreadMessageCountQueryVariables>;
 export const UpdateCoverPictureDocument = gql`
     mutation UpdateCoverPicture($input: UpdateCoverPictureInput!) {
   updateCoverPicture(input: $input) {

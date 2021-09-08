@@ -9,8 +9,8 @@ import { TopNavBarButton } from './TopNavBarButton';
 
 export interface TopNavBarProps {
   setSideMenuOpen?: (open: boolean) => void;
-  leftButton?: () => JSX.Element;
-  rightButton?: () => JSX.Element;
+  leftButton?: JSX.Element;
+  rightButton?: JSX.Element;
   title?: string;
 }
 
@@ -43,7 +43,7 @@ export const TopNavBar = ({
       >
         <div className="flex flex-1 justify-start">
           {LeftButton ? (
-            <LeftButton />
+            LeftButton
           ) : (
             <TopNavBarButton icon={Menu} label="Menu" onClick={() => setSideMenuOpen && setSideMenuOpen(true)} />
           )}
@@ -73,11 +73,7 @@ export const TopNavBar = ({
           </div>
         </div>
       )}
-      {RightButton && (
-        <div className="flex flex-1 justify-end pr-4 items-center">
-          <RightButton />
-        </div>
-      )}
+      {RightButton && <div className="flex flex-1 justify-end pr-4 items-center">{RightButton}</div>}
     </div>
   );
 };

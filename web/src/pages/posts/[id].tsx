@@ -42,7 +42,7 @@ export const getServerSideProps: GetServerSideProps<PostPageProps, PostPageParam
 
 export default function PostPage({ postId }: PostPageProps) {
   const topNovaBarProps: TopNavBarProps = {
-    leftButton: BackButton,
+    leftButton: <BackButton />,
   };
 
   return (
