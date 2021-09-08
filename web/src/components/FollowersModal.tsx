@@ -1,4 +1,3 @@
-import { useModalState } from 'contexts/providers/modal';
 import { Profile, useFollowersLazyQuery, useFollowingLazyQuery } from 'lib/graphql';
 import { useEffect } from 'react';
 import { FollowModalType } from 'types/FollowModalType';
@@ -7,13 +6,13 @@ import { InfiniteLoader } from './InfiniteLoader';
 import { Modal } from './Modal';
 
 interface FollowersModal {
+  show: boolean;
   profileId: string;
   modalType: FollowModalType;
   onClose: () => void;
 }
 
-export const FollowModal = ({ profileId, modalType, onClose }: FollowersModal) => {
-  const { showFollowModal } = useModalState();
+export const FollowModal = ({ show, profileId, modalType, onClose }: FollowersModal) => {
   const [followers, { data: followersData, fetchMore: fetchMoreFollowers }] = useFollowersLazyQuery({
     variables: { profileId },
   });
@@ -22,14 +21,14 @@ export const FollowModal = ({ profileId, modalType, onClose }: FollowersModal) =
   });
 
   useEffect(() => {
-    if (showFollowModal) {
+    if (show) {
       if (modalType === FollowModalType.FOLLOWERS) {
         followers();
       } else {
         following();
       }
     }
-  }, [showFollowModal]);
+  }, [show]);
 
   const onLoadMore = () => {
     if (modalType === FollowModalType.FOLLOWERS && fetchMoreFollowers) {
@@ -41,7 +40,7 @@ export const FollowModal = ({ profileId, modalType, onClose }: FollowersModal) =
 
   return (
     <Modal
-      show={showFollowModal}
+      show={show}
       title={
         modalType === FollowModalType.FOLLOWERS
           ? `Followers (${followersData?.followers.pageInfo.totalCount})`
@@ -52,7 +51,7 @@ export const FollowModal = ({ profileId, modalType, onClose }: FollowersModal) =
           Close
         </div>
       }
-      setOpen={onClose}
+      onClose={onClose}
     >
       <div className="flex flex-col h-full overflow-y-auto bg-gray-30 px-4 py-2 ">
         {modalType === FollowModalType.FOLLOWERS && (

@@ -8,7 +8,6 @@ import { Posts } from 'components/Posts';
 import { ProfileTabs } from 'components/ProfileTabs';
 import { SocialMediaLink } from 'components/SocialMediaLink';
 import { Subtitle } from 'components/Subtitle';
-import { useModalDispatch } from 'contexts/providers/modal';
 import { useProfileQuery } from 'lib/graphql';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
@@ -19,21 +18,21 @@ export default function ProfilePage() {
   const router = useRouter();
   const profileId = router.query.id as string;
   const { data } = useProfileQuery({ variables: { id: profileId } });
-  const { dispatchShowFollowModal } = useModalDispatch();
+  const [showModal, setShowModal] = useState(false);
   const [followModalType, setFollowModalType] = useState<FollowModalType>();
 
   useEffect(() => {
-    dispatchShowFollowModal(false);
+    setShowModal(false);
   }, [router.asPath]);
 
   const onFollowers = () => {
     setFollowModalType(FollowModalType.FOLLOWERS);
-    dispatchShowFollowModal(true);
+    setShowModal(true);
   };
 
   const onFollowing = () => {
     setFollowModalType(FollowModalType.FOLLOWING);
-    dispatchShowFollowModal(true);
+    setShowModal(true);
   };
 
   if (!data) {
@@ -87,9 +86,10 @@ export default function ProfilePage() {
       <ProfileTabs />
       <Posts profileId={profileId} />
       <FollowModal
+        show={showModal}
         profileId={profileId}
         modalType={followModalType as FollowModalType}
-        onClose={() => dispatchShowFollowModal(false)}
+        onClose={() => setShowModal(false)}
       />
     </Layout>
   );

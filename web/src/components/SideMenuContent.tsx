@@ -1,3 +1,4 @@
+import { FollowModal } from 'components/FollowersModal';
 import { Number } from 'components/Number';
 import { useMe } from 'hooks/useMe';
 import { Logo } from 'icons/Logo';
@@ -9,26 +10,22 @@ import { InstagramSquare } from 'icons/social/InstagramSquare';
 import { Reddit } from 'icons/social/Reddit';
 import { TwitterSquare } from 'icons/social/TwitterSquare';
 import { setJwt } from 'lib/apollo';
+import NextLink from 'next/link';
 import { useRouter } from 'next/router';
+import { useState } from 'react';
+import { FollowModalType } from 'types/FollowModalType';
 import { Avatar } from './Avatar';
 import { MenuItem } from './MenuItem';
 import { Title } from './Title';
-import NextLink from 'next/link';
-import { useModalDispatch } from 'contexts/providers/modal';
-import { useState } from 'react';
-import { FollowModalType } from 'types/FollowModalType';
-import { FollowModal } from 'components/FollowersModal';
 
 interface SideMenuContentProps {
   isMobile?: boolean;
-  setOpen?: (open: boolean) => void;
 }
 
-export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => {
+export const SideMenuContent = ({ isMobile }: SideMenuContentProps) => {
   const me = useMe();
   const router = useRouter();
-  const { dispatchShowFollowModal } = useModalDispatch();
-
+  const [showModal, setShowModal] = useState(false);
   const [followModalType, setFollowModalType] = useState<FollowModalType>();
 
   const onLogout = () => {
@@ -38,14 +35,12 @@ export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => 
 
   const onFollowers = () => {
     setFollowModalType(FollowModalType.FOLLOWERS);
-    dispatchShowFollowModal(true);
-    if (setOpen) setOpen(false);
+    setShowModal(true);
   };
 
   const onFollowing = () => {
     setFollowModalType(FollowModalType.FOLLOWING);
-    dispatchShowFollowModal(true);
-    if (setOpen) setOpen(false);
+    setShowModal(true);
   };
 
   return (
@@ -110,9 +105,10 @@ export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => 
       </div>
       {me && (
         <FollowModal
+          show={showModal}
           profileId={me.profile.id}
           modalType={followModalType as FollowModalType}
-          onClose={() => dispatchShowFollowModal(false)}
+          onClose={() => setShowModal(false)}
         />
       )}
     </>
