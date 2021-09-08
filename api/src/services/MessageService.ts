@@ -1,7 +1,5 @@
 import { PaginateResult } from '../db/pagination/paginate';
-import { NotFoundError } from '../errors/NotFoundError';
 import { Message, MessageModel } from '../models/Message';
-import { Profile, ProfileModel } from '../models/Profile';
 import { Context } from '../types/Context';
 import { PageInput } from '../types/PageInput';
 import { SortOrder } from '../types/SortOrder';
@@ -21,7 +19,7 @@ export class MessageService extends ModelService<typeof Message> {
   async createMessage(params: NewMessageParams): Promise<Message> {
     const message = new this.model(params);
     await message.save();
-    await this.incrementUnreadMessageCount(params.toId);
+    await this.context.profileService.incrementUnreadMessageCount(params.toId);
     return message;
   }
 
@@ -71,7 +69,7 @@ export class MessageService extends ModelService<typeof Message> {
         message: {
           $last: '$message',
         },
-        lastFromId: {
+        fromId: {
           $last: '$fromId',
         },
         readAt: {
@@ -87,28 +85,12 @@ export class MessageService extends ModelService<typeof Message> {
     let ok = true;
     try {
       const unreadMessageCount = await this.model.find({ fromId, toId, readAt: null }).countDocuments();
-      await this.decreaseUnreadMessageCount(toId, unreadMessageCount);
+      await this.context.profileService.decreaseUnreadMessageCount(toId, unreadMessageCount);
       await this.model.updateMany({ fromId, toId }, { $set: { readAt: new Date() } });
     } catch (err) {
       ok = false;
       throw new Error(`Error while mark as read: ${err}`);
     }
     return ok;
-  }
-
-  async incrementUnreadMessageCount(profileId: string): Promise<void> {
-    await ProfileModel.updateOne({ _id: profileId }, { $inc: { unreadMessageCount: 1 } });
-  }
-
-  async decreaseUnreadMessageCount(profileId: string, count: number): Promise<void> {
-    await ProfileModel.updateOne({ _id: profileId }, { $inc: { unreadMessageCount: -count } });
-  }
-
-  async resetUnreadMessageCount(profileId: string): Promise<Profile> {
-    const updatedProfile = await ProfileModel.findByIdAndUpdate(profileId, { unreadMessageCount: 0 }, { new: true });
-    if (!updatedProfile) {
-      throw new NotFoundError('Profile', profileId);
-    }
-    return updatedProfile;
   }
 }

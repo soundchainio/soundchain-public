@@ -41,7 +41,7 @@ export class MessageResolver {
 
   @Mutation(() => Profile)
   @Authorized()
-  resetUnreadMessageCount(@CurrentUser() { profileId }: User, @Ctx() { messageService }: Context): Promise<Profile> {
-    return messageService.resetUnreadMessageCount(profileId);
+  resetUnreadMessageCount(@CurrentUser() { profileId }: User, @Ctx() { profileService }: Context): Promise<Profile> {
+    return profileService.resetUnreadMessageCount(profileId);
   }
 }

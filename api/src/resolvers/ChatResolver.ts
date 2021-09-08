@@ -17,7 +17,7 @@ export class ChatResolver {
 
   @FieldResolver()
   unread(@CurrentUser() { profileId }: User, @Root() chat: Chat): boolean {
-    return chat.lastFromId !== profileId && !chat.readAt;
+    return chat.fromId !== profileId && !chat.readAt;
   }
 
   @Authorized()

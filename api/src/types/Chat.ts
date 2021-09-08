@@ -9,7 +9,7 @@ export class Chat {
   message: string;
 
   @Field()
-  lastFromId?: string;
+  fromId?: string;
 
   @Field(() => Date)
   readAt?: Date;

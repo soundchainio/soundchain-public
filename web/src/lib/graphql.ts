@@ -45,7 +45,7 @@ export type Chat = {
   __typename?: 'Chat';
   id: Scalars['ID'];
   message: Scalars['String'];
-  lastFromId: Scalars['String'];
+  fromId: Scalars['String'];
   readAt: Scalars['DateTime'];
   createdAt: Scalars['DateTime'];
   profile: Profile;
