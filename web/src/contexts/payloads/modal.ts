@@ -14,4 +14,8 @@ export interface ShowDeletePayload {
   deleteId: string;
 }
 
+export interface ShowFollowPayload {
+  show: boolean;
+}
+
 export type ModalPayload = ShowNewPostPayload | SetRepostIdPayload | ShowDeletePayload;

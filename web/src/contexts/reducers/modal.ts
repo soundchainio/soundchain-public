@@ -1,7 +1,8 @@
 import { Action } from 'contexts/actions';
 import { ModalActionTypes } from 'contexts/actions/modal';
-import { SetRepostIdPayload, ShowDeletePayload, ShowNewPostPayload } from 'contexts/payloads/modal';
+import { SetRepostIdPayload, ShowDeletePayload, ShowFollowPayload, ShowNewPostPayload } from 'contexts/payloads/modal';
 import { DeleteModalType } from 'types/DeleteModalType';
+import { FollowModalType } from 'types/FollowModalType';
 
 export interface ModalState {
   showNewPost: boolean;
@@ -10,6 +11,8 @@ export interface ModalState {
   showDelete: boolean;
   deleteType?: DeleteModalType;
   deleteId: string;
+  showFollowModal: boolean;
+  followModalType?: FollowModalType;
 }
 
 export const initialModalState = {
@@ -19,6 +22,7 @@ export const initialModalState = {
   showDelete: false,
   deleteType: undefined,
   deleteId: '',
+  showFollowModal: false,
 };
 
 export const modalReducer = (state: ModalState, action: Action) => {
@@ -41,6 +45,11 @@ export const modalReducer = (state: ModalState, action: Action) => {
         anyModalOpened: (action.payload as ShowDeletePayload).show,
         deleteType: (action.payload as ShowDeletePayload).type,
         deleteId: (action.payload as ShowDeletePayload).deleteId,
+      };
+    case ModalActionTypes.SHOW_FOLLOW_MODAL:
+      return {
+        ...state,
+        showFollowModal: (action.payload as ShowFollowPayload).show,
       };
     default:
       return state;
