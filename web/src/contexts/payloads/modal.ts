@@ -18,4 +18,14 @@ export interface ShowDeletePayload {
   deleteId: string;
 }
 
-export type ModalPayload = ShowNewPostPayload | SetRepostIdPayload | ShowDeletePayload | ShowUnderDevelopmentPayload;
+export interface ShowReactionsPayload {
+  show: boolean;
+  postId: string;
+}
+
+export type ModalPayload =
+  | ShowNewPostPayload
+  | SetRepostIdPayload
+  | ShowDeletePayload
+  | ShowUnderDevelopmentPayload
+  | ShowReactionsPayload;

@@ -20,30 +20,31 @@ export const Post = ({ postId }: PostProps) => {
 
   return (
     <div>
-      <NextLink href={`/posts/${post.id}`}>
-        <div className="p-4 bg-gray-20 break-words">
-          <div className="flex items-center">
-            <Avatar profile={post.profile} />
-            <div className="flex flex-col ml-4">
-              <NextLink href={`/profiles/${post.profile.id}`}>
-                <a className="text-lg font-bold text-gray-100">{post.profile.displayName}</a>
-              </NextLink>
+      <div className="p-4 bg-gray-20 break-words">
+        <div className="flex items-center">
+          <Avatar profile={post.profile} />
+          <div className="flex flex-col ml-4">
+            <NextLink href={`/profiles/${post.profile.id}`}>
+              <a className="text-lg font-bold text-gray-100">{post.profile.displayName}</a>
+            </NextLink>
+            <NextLink href={`/posts/${post.id}`}>
               <Timestamp datetime={post.createdAt} className="flex-1 text-left" />
-            </div>
+            </NextLink>
           </div>
-          <pre className="mt-4 text-gray-100 break-words whitespace-pre-wrap">{post.body}</pre>
-          {post.mediaLink && (
-            <iframe frameBorder="0" className="mt-4 w-full bg-gray-20" allowFullScreen src={post.mediaLink} />
-          )}
-          {post.repostId && <RepostPreview postId={post.repostId} />}
-          <PostStats
-            totalReactions={post.totalReactions}
-            topReactions={post.topReactions}
-            commentCount={post.commentCount}
-            repostCount={post.repostCount}
-          />
         </div>
-      </NextLink>
+        <pre className="mt-4 text-gray-100 break-words whitespace-pre-wrap">{post.body}</pre>
+        {post.mediaLink && (
+          <iframe frameBorder="0" className="mt-4 w-full bg-gray-20" allowFullScreen src={post.mediaLink} />
+        )}
+        {post.repostId && <RepostPreview postId={post.repostId} />}
+        <PostStats
+          totalReactions={post.totalReactions}
+          topReactions={post.topReactions}
+          commentCount={post.commentCount}
+          repostCount={post.repostCount}
+          postId={postId}
+        />
+      </div>
       <PostActions postId={postId} myReaction={post.myReaction} />
     </div>
   );
