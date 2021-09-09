@@ -16,6 +16,7 @@ export const useModalDispatch = () => {
     dispatchSetRepostId: (repostId?: string) =>
       dispatch({ type: ModalActionTypes.SET_REPOST_ID, payload: { repostId } }),
     dispatchShowNewPostModal: (show: boolean) => dispatch({ type: ModalActionTypes.SHOW_NEW_POST, payload: { show } }),
+    dispatchShowUnderDevelopmentModal: (show: boolean) => dispatch({ type: ModalActionTypes.SHOW_UNDER_DEVELOPMENT, payload: { show } }),
     dispatchShowDeleteModal: (show: boolean, type: DeleteModalType, deleteId: string) =>
       dispatch({ type: ModalActionTypes.SHOW_DELETE, payload: { show, type, deleteId } }),
   };

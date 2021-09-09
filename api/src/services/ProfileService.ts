@@ -1,9 +1,11 @@
 import { UserInputError } from 'apollo-server-express';
+import { NotFoundError } from '../errors/NotFoundError';
 import { Profile, ProfileModel } from '../models/Profile';
 import { SocialMedias } from '../models/SocialMedias';
 import { UserModel } from '../models/User';
 import { Context } from '../types/Context';
 import { Genre } from '../types/Genres';
+import { MusicianType } from '../types/MusicianTypes';
 import { ModelService } from './ModelService';
 
 export class ProfileService extends ModelService<typeof Profile> {
@@ -25,6 +27,14 @@ export class ProfileService extends ModelService<typeof Profile> {
 
   async updateFavoriteGenres(id: string, favoriteGenres: Genre[]): Promise<Profile> {
     const updatedProfile = await ProfileModel.findByIdAndUpdate(id, { favoriteGenres }, { new: true });
+    if (!updatedProfile) {
+      throw new Error(`Could not update the profile with id: ${id}`);
+    }
+    return updatedProfile;
+  }
+
+  async updateMusicianType(id: string, musicianType: MusicianType[]): Promise<Profile> {
+    const updatedProfile = await ProfileModel.findByIdAndUpdate(id, { musicianType }, { new: true });
     if (!updatedProfile) {
       throw new Error(`Could not update the profile with id: ${id}`);
     }
@@ -103,5 +113,21 @@ export class ProfileService extends ModelService<typeof Profile> {
 
     followedProfile.followerCount--;
     return followedProfile;
+  }
+
+  async incrementUnreadMessageCount(profileId: string): Promise<void> {
+    await this.model.updateOne({ _id: profileId }, { $inc: { unreadMessageCount: 1 } });
+  }
+
+  async decreaseUnreadMessageCount(profileId: string, count: number): Promise<void> {
+    await this.model.updateOne({ _id: profileId }, { $inc: { unreadMessageCount: -count } });
+  }
+
+  async resetUnreadMessageCount(profileId: string): Promise<Profile> {
+    const updatedProfile = await this.model.findByIdAndUpdate(profileId, { unreadMessageCount: 0 }, { new: true });
+    if (!updatedProfile) {
+      throw new NotFoundError('Profile', profileId);
+    }
+    return updatedProfile;
   }
 }

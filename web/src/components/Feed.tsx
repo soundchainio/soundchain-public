@@ -12,7 +12,13 @@ export const Feed = ({ pageSize }: FeedProps) => {
   const { data, fetchMore } = useFeedQuery({ variables: { page: { first: pageSize } } });
 
   if (!data) {
-    return <PostSkeleton />;
+    return (
+      <div className="space-y-3">
+        <PostSkeleton />
+        <PostSkeleton />
+        <PostSkeleton />
+      </div>
+    );
   }
 
   const { nodes, pageInfo } = data.feed;

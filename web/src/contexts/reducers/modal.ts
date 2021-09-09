@@ -1,6 +1,6 @@
 import { Action } from 'contexts/actions';
 import { ModalActionTypes } from 'contexts/actions/modal';
-import { SetRepostIdPayload, ShowDeletePayload, ShowNewPostPayload } from 'contexts/payloads/modal';
+import { SetRepostIdPayload, ShowDeletePayload, ShowNewPostPayload, ShowUnderDevelopmentPayload } from 'contexts/payloads/modal';
 import { DeleteModalType } from 'types/DeleteModalType';
 
 export interface ModalState {
@@ -10,6 +10,7 @@ export interface ModalState {
   showDelete: boolean;
   deleteType?: DeleteModalType;
   deleteId: string;
+  showUnderDevelopment: boolean;
 }
 
 export const initialModalState = {
@@ -19,6 +20,7 @@ export const initialModalState = {
   showDelete: false,
   deleteType: undefined,
   deleteId: '',
+  showUnderDevelopment: false,
 };
 
 export const modalReducer = (state: ModalState, action: Action) => {
@@ -41,6 +43,12 @@ export const modalReducer = (state: ModalState, action: Action) => {
         anyModalOpened: (action.payload as ShowDeletePayload).show,
         deleteType: (action.payload as ShowDeletePayload).type,
         deleteId: (action.payload as ShowDeletePayload).deleteId,
+      };
+    case ModalActionTypes.SHOW_UNDER_DEVELOPMENT:
+      return {
+        ...state,
+        showUnderDevelopment: (action.payload as ShowUnderDevelopmentPayload).show,
+        anyModalOpened: (action.payload as ShowUnderDevelopmentPayload).show,
       };
     default:
       return state;

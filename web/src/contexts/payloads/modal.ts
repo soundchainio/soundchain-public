@@ -4,6 +4,10 @@ export interface ShowNewPostPayload {
   show: boolean;
 }
 
+export interface ShowUnderDevelopmentPayload {
+  show: boolean;
+}
+
 export interface SetRepostIdPayload {
   repostId?: string;
 }
@@ -14,4 +18,4 @@ export interface ShowDeletePayload {
   deleteId: string;
 }
 
-export type ModalPayload = ShowNewPostPayload | SetRepostIdPayload | ShowDeletePayload;
+export type ModalPayload = ShowNewPostPayload | SetRepostIdPayload | ShowDeletePayload | ShowUnderDevelopmentPayload;

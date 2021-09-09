@@ -15,6 +15,8 @@ import { ResetPasswordInput } from '../types/ResetPasswordInput';
 import { ResetPasswordPayload } from '../types/ResetPasswordPayload';
 import { VerifyUserEmailInput } from '../types/VerifyUserEmailInput';
 import { VerifyUserEmailPayload } from '../types/VerifyUserEmailPayload';
+import { UpdatePasswordInput } from '../types/UpdatePasswordInput';
+import { UpdatePasswordPayload } from '../types/UpdatePasswordPayload';
 
 @Resolver(User)
 export class UserResolver {
@@ -92,5 +94,16 @@ export class UserResolver {
   ): Promise<UpdateHandlePayload> {
     const user = await userService.updateHandle(_id, handle);
     return { user };
+  }
+
+  @Mutation(() => UpdatePasswordPayload)
+  @Authorized()
+  async updatePassword(
+    @Ctx() { userService }: Context,
+    @Arg('input') { password }: UpdatePasswordInput,
+    @CurrentUser() { _id }: User,
+  ): Promise<UpdatePasswordPayload> {
+    await userService.updatePassword(_id, password);
+    return { ok: true };
   }
 }

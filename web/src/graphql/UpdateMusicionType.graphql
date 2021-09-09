@@ -1,0 +1,8 @@
+mutation UpdateMusicianType($input: UpdateMusicianTypeInput!) {
+  updateMusicianType(input: $input) {
+    profile {
+      id
+      musicianType
+    }
+  }
+}

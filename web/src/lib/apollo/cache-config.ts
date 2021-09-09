@@ -23,21 +23,6 @@ export const cacheConfig: InMemoryCacheConfig = {
             id: args?.id,
           });
         },
-        chatHistory: {
-          keyArgs: ['profileId'],
-          merge(existing = { nodes: [] }, { pageInfo, nodes }, { args }) {
-            if (!args?.page) {
-              return {
-                nodes: [...existing.nodes, ...nodes],
-                pageInfo,
-              };
-            }
-            return {
-              nodes: [...nodes, ...existing.nodes],
-              pageInfo,
-            };
-          },
-        },
         comments: {
           keyArgs: ['postId'],
           merge(existing = { nodes: [] }, { pageInfo, nodes }, { args }) {
@@ -70,6 +55,7 @@ export const cacheConfig: InMemoryCacheConfig = {
               nodes,
             };
           },
+
           read(existing): FeedConnection | void {
             if (existing) {
               return {
@@ -77,6 +63,67 @@ export const cacheConfig: InMemoryCacheConfig = {
                 nodes: Object.values(existing.nodes),
               };
             }
+          },
+        },
+        followers: {
+          keyArgs: ['id'],
+          merge(existing, incoming, { readField }): FeedConnection {
+            const nodes = existing ? { ...existing.nodes } : {};
+
+            incoming.nodes.forEach((node: FeedItem) => {
+              const key = readField('id', node);
+              nodes[key as string] = node;
+            });
+
+            return {
+              pageInfo: {
+                ...incoming.pageInfo,
+              },
+              nodes,
+            };
+          },
+          read(existing): FeedConnection | void {
+            if (existing) {
+              return {
+                pageInfo: { ...existing.pageInfo },
+                nodes: Object.values(existing.nodes),
+              };
+            }
+          },
+        },
+        following: {
+          keyArgs: ['id'],
+          merge(existing, incoming, { readField }): FeedConnection {
+            const nodes = existing ? { ...existing.nodes } : {};
+
+            incoming.nodes.forEach((node: FeedItem) => {
+              const key = readField('id', node);
+              nodes[key as string] = node;
+            });
+
+            return {
+              pageInfo: {
+                ...incoming.pageInfo,
+              },
+              nodes,
+            };
+          },
+          read(existing): FeedConnection | void {
+            if (existing) {
+              return {
+                pageInfo: { ...existing.pageInfo },
+                nodes: Object.values(existing.nodes),
+              };
+            }
+          },
+        },
+        chats: {
+          keyArgs: false,
+          merge(existing = { nodes: [] }, { nodes, pageInfo }): FeedConnection {
+            return {
+              nodes: [...existing.nodes, ...nodes],
+              pageInfo,
+            };
           },
         },
       },

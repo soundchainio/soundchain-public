@@ -1,15 +1,15 @@
-import { ApolloCache, FetchResult } from '@apollo/client';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import { useMe } from 'hooks/useMe';
 import { Send } from 'icons/Send';
+import { animateScroll as scroll } from 'react-scroll';
 import * as yup from 'yup';
-import { ChatHistoryDocument, ChatHistoryQuery, SendMessageMutation, useSendMessageMutation } from '../lib/graphql';
+import { SendMessageMutation, useSendMessageMutation } from '../lib/graphql';
 import { Avatar } from './Avatar';
 import { FlexareaField } from './FlexareaField';
-import { animateScroll as scroll } from 'react-scroll';
 
 export interface NewMessageFormProps {
   profileId: string;
+  onNewMessage: (message: SendMessageMutation) => void;
 }
 
 interface FormValues {
@@ -22,16 +22,16 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
 
 const initialValues: FormValues = { body: '' };
 
-export const NewMessageForm = ({ profileId }: NewMessageFormProps) => {
+export const NewMessageForm = ({ profileId, onNewMessage }: NewMessageFormProps) => {
   const [sendMessage] = useSendMessageMutation({
-    update: (cache, result) => updateCache(cache, result, profileId),
+    onCompleted: data => onNewMessage(data),
   });
   const me = useMe();
 
   const handleSubmit = async ({ body }: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
     await sendMessage({ variables: { input: { message: body, toId: profileId } } });
     resetForm();
-    scroll.scrollToBottom({ duration: 0 });
+    scroll.scrollToBottom({ duration: 500, smooth: 'easeInOutCubic' });
   };
 
   return (
@@ -39,7 +39,7 @@ export const NewMessageForm = ({ profileId }: NewMessageFormProps) => {
       {({ isSubmitting, isValid, dirty }: FormikProps<FormValues>) => (
         <Form>
           <div className="flex flex-row items-start space-x-3 p-3 bg-gray-25">
-            {me && <Avatar profile={me.profile} linkToProfile={false} />}
+            {me && <Avatar className="flex self-center" profile={me.profile} linkToProfile={false} />}
             <FlexareaField name="body" placeholder="Write a comment..." />
             <button type="submit" disabled={isSubmitting} className="pt-1">
               <Send activatedColor={dirty && isValid ? 'green-blue' : undefined} />
@@ -50,21 +50,3 @@ export const NewMessageForm = ({ profileId }: NewMessageFormProps) => {
     </Formik>
   );
 };
-
-function updateCache(cache: ApolloCache<SendMessageMutation>, { data }: FetchResult, profileId: string) {
-  const newMessage = data?.sendMessage.message;
-  const existingMessages = cache.readQuery<ChatHistoryQuery>({
-    query: ChatHistoryDocument,
-    variables: { profileId },
-  });
-  cache.writeQuery({
-    query: ChatHistoryDocument,
-    variables: { profileId },
-    data: {
-      chatHistory: {
-        nodes: [newMessage],
-        pageInfo: existingMessages?.chatHistory.pageInfo,
-      },
-    },
-  });
-}

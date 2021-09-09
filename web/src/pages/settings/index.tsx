@@ -4,11 +4,15 @@ import Head from 'next/head';
 import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { BackButton } from 'components/Buttons/BackButton';
+import { getGenreLabelByKey } from 'utils/Genres';
+import { getMusicianTypeLabelByKey } from 'utils/MusicianTypes';
+import { useModalDispatch } from 'contexts/providers/modal';
 
 interface LinkProps {
   label: string
   value: string
-  to: string
+  to?: string
+  onClick?: () => void
 }
 
 function Link({ label, value, to }: LinkProps) {
@@ -19,17 +23,33 @@ function Link({ label, value, to }: LinkProps) {
         <span className="block text-white font-semibold"> {value} </span>
       </a>
     </NextLink>
+  );
+}
+
+function FakeLink({ label, value, onClick }: LinkProps) {
+  return (
+    <div onClick={onClick}>
+      <a className="block w-full px-4">
+        <span className="block text-gray-50"> {label} </span>
+        <span className="block text-white font-semibold"> {value} </span>
+      </a>
+    </div>
   )
 }
 
 const topNovaBarProps: TopNavBarProps = {
-  leftButton: BackButton,
+  leftButton: <BackButton />,
 };
 
 export default function SettingsPage() {
   const me = useMe()
+  const { dispatchShowUnderDevelopmentModal } = useModalDispatch();
 
-  if (!me) return null
+  if (!me) return null;
+
+  const genres = me.profile.favoriteGenres.map(getGenreLabelByKey).join(', ')
+
+  const musicianTypes = me.profile.musicianType.map(getMusicianTypeLabelByKey).join(', ')
 
   return (
     <Layout topNavBarProps={topNovaBarProps}>
@@ -43,9 +63,14 @@ export default function SettingsPage() {
         <Link to="/name" label="Name" value={me.profile.displayName} />
         <Link to="/username" label="Username" value={me.handle} />
         <Link to="/password" label="Password" value="********" />
-        <Link to="/musician-types" label="Musician Type(s)" value="Lorem ipsum" />
-        <Link to="/favorite-genres" label="Favorite Genre(s)" value="Lorem ipsum" />
-        <Link to="/social-links" label="Social Link(s)" value="Lorem ipsum" />
+        <Link to="/musician-type" label="Musician Type(s)" value={musicianTypes || 'Not selected'} />
+        <Link to="/favorite-genres" label="Favorite Genre(s)" value={genres || 'Not selected'} />
+         <FakeLink
+          to="/social-links"
+          onClick={() => dispatchShowUnderDevelopmentModal(true)}
+          label="Social Link(s)"
+          value="Under development"
+        />
       </div>
     </Layout>
   );

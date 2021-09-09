@@ -11,6 +11,7 @@ import {
   useRegisterMutation,
   useUpdateCoverPictureMutation,
   useUpdateFavoriteGenresMutation,
+  useUpdateMusicianTypeMutation,
   useUpdateProfilePictureMutation,
 } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
@@ -27,6 +28,7 @@ export default function CreateAccountPage() {
 
   const [register] = useRegisterMutation();
   const [updateGenres] = useUpdateFavoriteGenresMutation();
+  const [updateMusicianType] = useUpdateMusicianTypeMutation();
   const [updateProfilePicture] = useUpdateProfilePictureMutation();
   const [updateCoverPicture] = useUpdateCoverPictureMutation();
 
@@ -46,6 +48,10 @@ export default function CreateAccountPage() {
         await updateGenres({ variables: { input: { favoriteGenres: completeProfileValues.favoriteGenres } } });
       }
 
+      if (completeProfileValues && completeProfileValues.musicianType.length) {
+        await updateMusicianType({ variables: { input: { musicianTypes: completeProfileValues.musicianType } } });
+      }
+
       if (setupProfileValues) {
         const { profilePicture, coverPicture } = setupProfileValues;
 
@@ -60,7 +66,7 @@ export default function CreateAccountPage() {
 
       router.push(router.query.callbackUrl?.toString() ?? '/');
     } catch (err) {
-      setError(err);
+      setError(err as ApolloError);
       setLoading(false);
     }
   }, [completeProfileValues, router, setupProfileValues, updateGenres, updateCoverPicture, updateProfilePicture]);
@@ -81,7 +87,7 @@ export default function CreateAccountPage() {
         });
         setJwt(result.data?.register.jwt);
       } catch (err) {
-        setError(err);
+        setError(err as ApolloError);
         setLoading(false);
       }
     }
