@@ -1,3 +1,4 @@
+import { ReactionType } from 'lib/graphql';
 import { DeleteModalType } from 'types/DeleteModalType';
 
 export interface ShowNewPostPayload {
@@ -19,8 +20,9 @@ export interface ShowDeletePayload {
 }
 
 export interface ShowReactionsPayload {
-  show: boolean;
-  postId: string;
+  postId?: string;
+  top?: ReactionType[];
+  total?: number;
 }
 
 export type ModalPayload =

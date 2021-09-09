@@ -1,6 +1,7 @@
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
+import { ReactionEmoji } from 'icons/ReactionEmoji';
 import { Reaction, useReactionsLazyQuery } from 'lib/graphql';
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { InfiniteLoader } from './InfiniteLoader';
 import { LoaderAnimation } from './LoaderAnimation';
 import { Modal } from './Modal';
@@ -8,7 +9,7 @@ import { ReactionItem } from './ReactionItem';
 
 export const ReactionsModal = () => {
   const {
-    reactions: { postId, show },
+    reactions: { postId, show, top, total },
   } = useModalState();
   const [reactions, { data, fetchMore }] = useReactionsLazyQuery({ variables: { postId } });
   const { dispatchReactionsModal } = useModalDispatch();
@@ -30,7 +31,17 @@ export const ReactionsModal = () => {
   };
 
   const getTitle = () => {
-    return data ? `${data.reactions.pageInfo.totalCount} reactions` : 'Reactions';
+    return (
+      <div className="flex flex-row self-center items-center justify-center">
+        {top.map(reaction => (
+          <ReactionEmoji key={reaction} name={reaction} className="w-4 h-4" />
+        ))}
+        &nbsp;
+        {total}
+        &nbsp;
+        <div className="text-sm text-gray-60 font-normal">reactions</div>
+      </div>
+    );
   };
 
   return (

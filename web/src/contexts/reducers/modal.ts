@@ -7,6 +7,7 @@ import {
   ShowReactionsPayload,
   ShowUnderDevelopmentPayload,
 } from 'contexts/payloads/modal';
+import { ReactionType } from 'lib/graphql';
 import { DeleteModalType } from 'types/DeleteModalType';
 
 export interface ModalState {
@@ -20,6 +21,8 @@ export interface ModalState {
   reactions: {
     show: boolean;
     postId: string;
+    total: number;
+    top: ReactionType[];
   };
 }
 
@@ -34,6 +37,8 @@ export const initialModalState = {
   reactions: {
     show: false,
     postId: undefined,
+    top: [],
+    total: undefined,
   },
 };
 
@@ -68,8 +73,18 @@ export const modalReducer = (state: ModalState, action: Action) => {
       return {
         ...state,
         reactions: {
-          show: (action.payload as ShowReactionsPayload).show,
+          show: true,
           postId: (action.payload as ShowReactionsPayload).postId,
+          top: (action.payload as ShowReactionsPayload).top,
+          total: (action.payload as ShowReactionsPayload).total,
+        },
+      };
+    case ModalActionTypes.HIDE_REACTIONS:
+      return {
+        ...state,
+        reactions: {
+          ...state.reactions,
+          show: false,
         },
       };
     default:

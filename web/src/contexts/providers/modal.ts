@@ -1,5 +1,6 @@
 import { ModalActionTypes } from 'contexts/actions/modal';
 import { ModalState } from 'contexts/reducers/modal';
+import { ReactionType } from 'lib/graphql';
 import { useContext } from 'react';
 import { DeleteModalType } from 'types/DeleteModalType';
 import { store } from '..';
@@ -20,7 +21,10 @@ export const useModalDispatch = () => {
       dispatch({ type: ModalActionTypes.SHOW_UNDER_DEVELOPMENT, payload: { show } }),
     dispatchShowDeleteModal: (show: boolean, type: DeleteModalType, deleteId: string) =>
       dispatch({ type: ModalActionTypes.SHOW_DELETE, payload: { show, type, deleteId } }),
-    dispatchReactionsModal: (show: boolean, postId?: string) =>
-      dispatch({ type: ModalActionTypes.SHOW_REACTIONS, payload: { show, postId } }),
+    dispatchReactionsModal: (show: boolean, postId?: string, top?: ReactionType[], total?: number) =>
+      dispatch({
+        type: show ? ModalActionTypes.SHOW_REACTIONS : ModalActionTypes.HIDE_REACTIONS,
+        payload: { postId, top, total },
+      }),
   };
 };
