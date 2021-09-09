@@ -10,7 +10,6 @@ import { InstagramSquare } from 'icons/social/InstagramSquare';
 import { Reddit } from 'icons/social/Reddit';
 import { TwitterSquare } from 'icons/social/TwitterSquare';
 import { setJwt } from 'lib/apollo';
-import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { FollowModalType } from 'types/FollowModalType';
@@ -40,7 +39,7 @@ export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => 
     dispatchShowUnderDevelopmentModal(true);
     setOpen(false);
   };
-    
+
   const onFollowers = () => {
     setFollowModalType(FollowModalType.FOLLOWERS);
     setShowModal(true);
