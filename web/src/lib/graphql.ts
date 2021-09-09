@@ -246,6 +246,13 @@ export type MessageConnection = {
   nodes: Array<Message>;
 };
 
+export enum MusicianType {
+  Singer = 'SINGER',
+  Drummer = 'DRUMMER',
+  Guitarist = 'GUITARIST',
+  Producer = 'PRODUCER'
+}
+
 export type Mutation = {
   __typename?: 'Mutation';
   addComment: AddCommentPayload;
@@ -261,6 +268,7 @@ export type Mutation = {
   createRepost: CreateRepostPayload;
   updateSocialMedias: UpdateSocialMediasPayload;
   updateFavoriteGenres: UpdateFavoriteGenresPayload;
+  updateMusicianType: UpdateFavoriteGenresPayload;
   updateProfilePicture: UpdateProfilePicturePayload;
   updateProfileDisplayName: UpdateProfileDisplayNamePayload;
   updateCoverPicture: UpdateCoverPicturePayload;
@@ -323,6 +331,11 @@ export type MutationUpdateSocialMediasArgs = {
 
 export type MutationUpdateFavoriteGenresArgs = {
   input: UpdateFavoriteGenresInput;
+};
+
+
+export type MutationUpdateMusicianTypeArgs = {
+  input: UpdateMusicianTypeInput;
 };
 
 
@@ -451,6 +464,7 @@ export type Profile = {
   coverPicture: Maybe<Scalars['String']>;
   socialMedias: SocialMedias;
   favoriteGenres: Array<Genre>;
+  musicianType: Array<MusicianType>;
   followerCount: Scalars['Float'];
   followingCount: Scalars['Float'];
   unreadNotificationCount: Scalars['Float'];
@@ -696,6 +710,10 @@ export type UpdateHandleInput = {
 export type UpdateHandlePayload = {
   __typename?: 'UpdateHandlePayload';
   user: User;
+};
+
+export type UpdateMusicianTypeInput = {
+  musicianTypes: Array<MusicianType>;
 };
 
 export type UpdatePasswordInput = {
@@ -1098,7 +1116,7 @@ export type MeQuery = (
     & Pick<User, 'id' | 'handle' | 'email'>
     & { profile: (
       { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'followerCount' | 'followingCount' | 'favoriteGenres'>
+      & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'followerCount' | 'followingCount' | 'favoriteGenres' | 'musicianType'>
     ) }
   )> }
 );
@@ -1240,7 +1258,7 @@ export type ProfileQuery = (
   { __typename?: 'Query' }
   & { profile: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'userHandle' | 'isFollowed' | 'followerCount' | 'followingCount'>
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'userHandle' | 'isFollowed' | 'followerCount' | 'followingCount' | 'musicianType'>
     & { socialMedias: (
       { __typename?: 'SocialMedias' }
       & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
@@ -1433,6 +1451,22 @@ export type UpdateHandleMutation = (
     & { user: (
       { __typename?: 'User' }
       & Pick<User, 'id' | 'handle'>
+    ) }
+  ) }
+);
+
+export type UpdateMusicianTypeMutationVariables = Exact<{
+  input: UpdateMusicianTypeInput;
+}>;
+
+
+export type UpdateMusicianTypeMutation = (
+  { __typename?: 'Mutation' }
+  & { updateMusicianType: (
+    { __typename?: 'UpdateFavoriteGenresPayload' }
+    & { profile: (
+      { __typename?: 'Profile' }
+      & Pick<Profile, 'id' | 'musicianType'>
     ) }
   ) }
 );
@@ -2285,6 +2319,7 @@ export const MeDocument = gql`
       followerCount
       followingCount
       favoriteGenres
+      musicianType
     }
   }
 }
@@ -2609,6 +2644,7 @@ export const ProfileDocument = gql`
     isFollowed
     followerCount
     followingCount
+    musicianType
   }
 }
     `;
@@ -3098,6 +3134,42 @@ export function useUpdateHandleMutation(baseOptions?: Apollo.MutationHookOptions
 export type UpdateHandleMutationHookResult = ReturnType<typeof useUpdateHandleMutation>;
 export type UpdateHandleMutationResult = Apollo.MutationResult<UpdateHandleMutation>;
 export type UpdateHandleMutationOptions = Apollo.BaseMutationOptions<UpdateHandleMutation, UpdateHandleMutationVariables>;
+export const UpdateMusicianTypeDocument = gql`
+    mutation UpdateMusicianType($input: UpdateMusicianTypeInput!) {
+  updateMusicianType(input: $input) {
+    profile {
+      id
+      musicianType
+    }
+  }
+}
+    `;
+export type UpdateMusicianTypeMutationFn = Apollo.MutationFunction<UpdateMusicianTypeMutation, UpdateMusicianTypeMutationVariables>;
+
+/**
+ * __useUpdateMusicianTypeMutation__
+ *
+ * To run a mutation, you first call `useUpdateMusicianTypeMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateMusicianTypeMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateMusicianTypeMutation, { data, loading, error }] = useUpdateMusicianTypeMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateMusicianTypeMutation(baseOptions?: Apollo.MutationHookOptions<UpdateMusicianTypeMutation, UpdateMusicianTypeMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateMusicianTypeMutation, UpdateMusicianTypeMutationVariables>(UpdateMusicianTypeDocument, options);
+      }
+export type UpdateMusicianTypeMutationHookResult = ReturnType<typeof useUpdateMusicianTypeMutation>;
+export type UpdateMusicianTypeMutationResult = Apollo.MutationResult<UpdateMusicianTypeMutation>;
+export type UpdateMusicianTypeMutationOptions = Apollo.BaseMutationOptions<UpdateMusicianTypeMutation, UpdateMusicianTypeMutationVariables>;
 export const UpdatePasswordDocument = gql`
     mutation UpdatePassword($input: UpdatePasswordInput!) {
   updatePassword(input: $input) {

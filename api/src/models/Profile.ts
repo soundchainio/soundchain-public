@@ -1,6 +1,7 @@
 import { getModelForClass, modelOptions, prop, Severity } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { Genre } from '../types/Genres';
+import { MusicianType } from '../types/MusicianTypes';
 import { Model } from './Model';
 import { SocialMedias } from './SocialMedias';
 
@@ -29,6 +30,10 @@ export class Profile extends Model {
   @Field(() => [Genre])
   @prop({ required: true, type: [String], enum: Genre })
   favoriteGenres: Genre[];
+
+  @Field(() => [MusicianType])
+  @prop({ required: true, type: [String], enum: MusicianType })
+  musicianType: MusicianType[];
 
   @Field(() => Number)
   @prop({ required: true, default: 0 })

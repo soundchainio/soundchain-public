@@ -14,5 +14,6 @@ query Profile($id: String!) {
     isFollowed
     followerCount
     followingCount
+    musicianType
   }
 }
