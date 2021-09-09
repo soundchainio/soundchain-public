@@ -10,7 +10,7 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 
 const topNavBarProps: TopNavBarProps = {
-  leftButton: BackButton,
+  leftButton: <BackButton />,
 };
 
 export default function SettingsNamePage() {
@@ -20,11 +20,11 @@ export default function SettingsNamePage() {
   const [updateFavoriteGenres, { loading }] = useUpdateFavoriteGenresMutation();
 
   useEffect(() => {
-    setFavoriteGenres(me?.profile.favoriteGenres as Genre[])
-  }, [me?.profile.favoriteGenres])
+    setFavoriteGenres(me?.profile.favoriteGenres as Genre[]);
+  }, [me?.profile.favoriteGenres]);
 
   const onSubmit = async () => {
-    if (!favoriteGenres) return
+    if (!favoriteGenres) return;
     await updateFavoriteGenres({ variables: { input: { favoriteGenres } } });
     router.push('/settings');
   };
@@ -42,7 +42,9 @@ export default function SettingsNamePage() {
         <div className="flex flex-1 flex-col space-y-6">
           <GenreSelector initialValue={me?.profile.favoriteGenres as Genre[]} onSelect={setFavoriteGenres} />
           <div className="flex flex-col">
-            <Button type="submit" onClick={onSubmit}>{loading ? 'Saving...' : 'Save'}</Button>
+            <Button type="submit" onClick={onSubmit}>
+              {loading ? 'Saving...' : 'Save'}
+            </Button>
           </div>
         </div>
       </div>

@@ -1,0 +1,17 @@
+query Followers($profileId: String!, $page: PageInput) {
+  followers(id: $profileId, page: $page) {
+    nodes {
+      id
+      followerProfile {
+        id
+        displayName
+        profilePicture
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+      totalCount
+    }
+  }
+}

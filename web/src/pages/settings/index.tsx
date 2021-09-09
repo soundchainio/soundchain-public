@@ -8,9 +8,9 @@ import { getGenreLabelByKey } from 'utils/Genres';
 import { getMusicianTypeLabelByKey } from 'utils/MusicianTypes';
 
 interface LinkProps {
-  label: string
-  value: string
-  to: string
+  label: string;
+  value: string;
+  to: string;
 }
 
 function Link({ label, value, to }: LinkProps) {
@@ -21,17 +21,17 @@ function Link({ label, value, to }: LinkProps) {
         <span className="block text-white font-semibold"> {value} </span>
       </a>
     </NextLink>
-  )
+  );
 }
 
 const topNovaBarProps: TopNavBarProps = {
-  leftButton: BackButton,
+  leftButton: <BackButton />,
 };
 
 export default function SettingsPage() {
-  const me = useMe()
+  const me = useMe();
 
-  if (!me) return null
+  if (!me) return null;
 
   const genres = me.profile.favoriteGenres.map(getGenreLabelByKey).join(', ')
 

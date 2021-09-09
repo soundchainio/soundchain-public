@@ -13,12 +13,12 @@ import { UpdateFavoriteGenresInput } from '../types/UpdateFavoriteGenresInput';
 import { UpdateFavoriteGenresPayload } from '../types/UpdateFavoriteGenresPayload';
 import { UpdateMusicianTypeInput } from '../types/UpdateMusicianTypeInput';
 import { UpdateMusicianTypePayload } from '../types/UpdateMusicianTypePayload';
+import { UpdateProfileDisplayNameInput } from '../types/UpdateProfileDisplayNameInput';
+import { UpdateProfileDisplayNamePayload } from '../types/UpdateProfileDisplayNamePayload';
 import { UpdateProfilePicturePayload } from '../types/UpdateProfilePicturePayload';
 import { UpdateSocialMediasInput } from '../types/UpdateSocialMediasInput';
 import { UpdateSocialMediasPayload } from '../types/UpdateSocialMediasPayload';
 import { UpdateProfilePictureInput } from '../types/UploadProfilePictureInput';
-import { UpdateProfileDisplayNamePayload } from '../types/UpdateProfileDisplayNamePayload';
-import { UpdateProfileDisplayNameInput } from '../types/UpdateProfileDisplayNameInput';
 
 @Resolver(Profile)
 export class ProfileResolver {

@@ -1,0 +1,17 @@
+query Following($profileId: String!, $page: PageInput) {
+  following(id: $profileId, page: $page) {
+    nodes {
+      id
+      followedProfile {
+        id
+        displayName
+        profilePicture
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+      totalCount
+    }
+  }
+}
