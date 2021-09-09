@@ -7,7 +7,7 @@ import { Delete as DeleteButton } from './Buttons/Delete';
 import { ModalsPortal } from './ModalsPortal';
 
 const baseClasses =
-  'fixed w-screen h-screen bottom-0 duration-500 bg-opacity-75 ease-in-out bg-gray-25 transform-gpu transform';
+  'fixed w-screen h-screen bottom-0 duration-500 bg-opacity-75 ease-in-out bg-black transform-gpu transform';
 
 export const DeleteModal = () => {
   const { showDelete, deleteId, deleteType } = useModalState();

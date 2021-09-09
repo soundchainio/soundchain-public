@@ -10,7 +10,8 @@ import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 
 const topNavBarProps: TopNavBarProps = {
-  leftButton: BackButton,
+  leftButton: <BackButton />,
+  title: "Musician Type"
 };
 
 export default function SettingsMusicianTypePage() {
