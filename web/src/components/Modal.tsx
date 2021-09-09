@@ -38,13 +38,13 @@ export const Modal = ({ show, children, title, leftButton, rightButton, onClose 
             leaveFrom="translate-y-0"
             leaveTo="translate-y-full"
           >
-            <div className="relative flex-1 flex flex-col w-full">
+            <div className="relative flex-1 flex flex-col w-full h-full">
               <div className="flex h-16 items-center rounded-tl-3xl rounded-tr-3xl bg-gray-20">
                 <div className="flex-1">{leftButton}</div>
                 <div className="flex-1 text-center text-white font-bold">{title}</div>
                 <div className="flex-1 ">{rightButton}</div>
               </div>
-              {children}
+              <div className="flex flex-col h-full overflow-y-auto bg-gray-30 px-4 pt-4 pb-20">{children}</div>
             </div>
           </Transition.Child>
         </Dialog>

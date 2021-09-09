@@ -38,14 +38,17 @@ export const FollowModal = ({ show, profileId, modalType, onClose }: FollowersMo
     }
   };
 
+  const getTitle = () => {
+    if (modalType === FollowModalType.FOLLOWERS) {
+      return followersData ? `Followers (${followersData.followers.pageInfo.totalCount})` : `Followers`;
+    }
+    return followingData ? `Following (${followingData.following.pageInfo.totalCount})` : `Following`;
+  };
+
   return (
     <Modal
       show={show}
-      title={
-        modalType === FollowModalType.FOLLOWERS
-          ? `Followers (${followersData?.followers.pageInfo.totalCount})`
-          : `Following (${followingData?.following.pageInfo.totalCount})`
-      }
+      title={getTitle()}
       leftButton={
         <div className="p-2 text-gray-400 font-bold flex-1 text-center" onClick={onClose}>
           Close
@@ -53,10 +56,10 @@ export const FollowModal = ({ show, profileId, modalType, onClose }: FollowersMo
       }
       onClose={onClose}
     >
-      <div className="flex flex-col h-full overflow-y-auto bg-gray-30 px-4 py-2 ">
+      <>
         {modalType === FollowModalType.FOLLOWERS && (
           <>
-            <div className="space-y-6">
+            <div className="space-y-6 ">
               {followersData?.followers.nodes.map(follower => (
                 <FollowItem key={follower.id} profile={follower.followerProfile as Profile} />
               ))}
@@ -78,7 +81,7 @@ export const FollowModal = ({ show, profileId, modalType, onClose }: FollowersMo
             )}
           </>
         )}
-      </div>
+      </>
     </Modal>
   );
 };
