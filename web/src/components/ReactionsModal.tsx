@@ -11,7 +11,7 @@ export const ReactionsModal = () => {
   const {
     reactions: { postId, show, top, total },
   } = useModalState();
-  const [reactions, { data, fetchMore }] = useReactionsLazyQuery({ variables: { postId } });
+  const [reactions, { data, fetchMore }] = useReactionsLazyQuery({ variables: { postId: postId as string } });
   const { dispatchReactionsModal } = useModalDispatch();
 
   useEffect(() => {
@@ -33,8 +33,11 @@ export const ReactionsModal = () => {
   const getTitle = () => {
     return (
       <div className="flex flex-row self-center items-center justify-center">
-        {top.map(reaction => (
-          <ReactionEmoji key={reaction} name={reaction} className="w-4 h-4" />
+        {top?.map(reaction => (
+          <>
+            <ReactionEmoji key={reaction} name={reaction} className="w-4 h-4" />
+            <>&nbsp;</>
+          </>
         ))}
         &nbsp;
         {total}
