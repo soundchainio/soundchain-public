@@ -1,8 +1,10 @@
 import { DocumentType } from '@typegoose/typegoose';
 import { UserInputError } from 'apollo-server-express';
 import { FilterQuery } from 'mongoose';
+import { PaginateResult } from '../db/pagination/paginate';
 import { Reaction, ReactionModel } from '../models/Reaction';
 import { Context } from '../types/Context';
+import { PageInput } from '../types/PageInput';
 import { ReactionType } from '../types/ReactionType';
 import { ModelService } from './ModelService';
 
@@ -73,5 +75,9 @@ export class ReactionService extends ModelService<typeof Reaction, ReactionKeyCo
     this.dataLoader.clear(key);
 
     return reaction;
+  }
+
+  async getReactions(postId: string, page?: PageInput): Promise<PaginateResult<Reaction>> {
+    return this.paginate({ filter: { postId }, page });
   }
 }

@@ -16,6 +16,7 @@ import { CreateRepostPayload } from '../types/CreateRepostPayload';
 import { FilterPostInput } from '../types/FilterPostInput';
 import { PageInput } from '../types/PageInput';
 import { PostConnection } from '../types/PostConnection';
+import { ReactionConnection } from '../types/ReactionConnection';
 import { ReactionType } from '../types/ReactionType';
 import { ReactToPostInput } from '../types/ReactToPostInput';
 import { ReactToPostPayload } from '../types/ReactToPostPayload';
@@ -139,5 +140,14 @@ export class PostResolver {
     const post = await postService.createRepost({ profileId, body, repostId });
     const originalPost = await postService.getPost(repostId);
     return { post, originalPost };
+  }
+
+  @Query(() => ReactionConnection)
+  reactions(
+    @Ctx() { reactionService }: Context,
+    @Arg('postId') postId: string,
+    @Arg('page', { nullable: true }) page?: PageInput,
+  ): Promise<ReactionConnection> {
+    return reactionService.getReactions(postId, page);
   }
 }
