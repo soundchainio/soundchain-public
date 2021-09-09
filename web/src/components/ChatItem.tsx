@@ -35,7 +35,7 @@ export const ChatItem = ({
               <Timestamp small datetime={createdAt} className="text-sm" />
             </div>
           </div>
-          <div className="flex w-2/12 justify-end">
+          <div className="flex w-1/12 justify-end">
             <CircleRightArrow />
           </div>
         </div>
