@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { FollowModalType } from 'types/FollowModalType';
 import { FollowItem } from './FollowItem';
 import { InfiniteLoader } from './InfiniteLoader';
+import { LoaderAnimation } from './LoaderAnimation';
 import { Modal } from './Modal';
 
 interface FollowersModal {
@@ -59,6 +60,11 @@ export const FollowModal = ({ show, profileId, modalType, onClose }: FollowersMo
       <>
         {modalType === FollowModalType.FOLLOWERS && (
           <>
+            {!followersData && (
+              <div className="flex items-center">
+                <LoaderAnimation loadingMessage="Loading Followers" />
+              </div>
+            )}
             <div className="space-y-6 ">
               {followersData?.followers.nodes.map(follower => (
                 <FollowItem key={follower.id} profile={follower.followerProfile as Profile} />
@@ -71,6 +77,11 @@ export const FollowModal = ({ show, profileId, modalType, onClose }: FollowersMo
         )}
         {modalType === FollowModalType.FOLLOWING && (
           <>
+            {!followingData && (
+              <div className="flex items-center">
+                <LoaderAnimation loadingMessage="Loading Following" />
+              </div>
+            )}
             <div className="space-y-6">
               {followingData?.following.nodes.map(following => (
                 <FollowItem key={following.id} profile={following.followedProfile as Profile} />

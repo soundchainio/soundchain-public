@@ -18,11 +18,11 @@ export const Posts = ({ className, profileId }: PostsProps) => {
 
   if (!data) {
     return (
-      <>
+      <div className="space-y-3">
         <PostSkeleton />
         <PostSkeleton />
         <PostSkeleton />
-      </>
+      </div>
     );
   }
 

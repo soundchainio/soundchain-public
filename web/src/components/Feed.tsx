@@ -13,11 +13,11 @@ export const Feed = ({ pageSize }: FeedProps) => {
 
   if (!data) {
     return (
-      <>
+      <div className="space-y-3">
         <PostSkeleton />
         <PostSkeleton />
         <PostSkeleton />
-      </>
+      </div>
     );
   }
 
