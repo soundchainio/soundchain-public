@@ -11,12 +11,14 @@ import { UpdateCoverPictureInput } from '../types/UpdateCoverPictureInput';
 import { UpdateCoverPicturePayload } from '../types/UpdateCoverPicturePayload';
 import { UpdateFavoriteGenresInput } from '../types/UpdateFavoriteGenresInput';
 import { UpdateFavoriteGenresPayload } from '../types/UpdateFavoriteGenresPayload';
+import { UpdateMusicianTypeInput } from '../types/UpdateMusicianTypeInput';
+import { UpdateMusicianTypePayload } from '../types/UpdateMusicianTypePayload';
+import { UpdateProfileDisplayNameInput } from '../types/UpdateProfileDisplayNameInput';
+import { UpdateProfileDisplayNamePayload } from '../types/UpdateProfileDisplayNamePayload';
 import { UpdateProfilePicturePayload } from '../types/UpdateProfilePicturePayload';
 import { UpdateSocialMediasInput } from '../types/UpdateSocialMediasInput';
 import { UpdateSocialMediasPayload } from '../types/UpdateSocialMediasPayload';
 import { UpdateProfilePictureInput } from '../types/UploadProfilePictureInput';
-import { UpdateProfileDisplayNamePayload } from '../types/UpdateProfileDisplayNamePayload';
-import { UpdateProfileDisplayNameInput } from '../types/UpdateProfileDisplayNameInput';
 
 @Resolver(Profile)
 export class ProfileResolver {
@@ -68,6 +70,17 @@ export class ProfileResolver {
     @CurrentUser() { profileId }: User,
   ): Promise<UpdateFavoriteGenresPayload> {
     const profile = await profileService.updateFavoriteGenres(profileId, favoriteGenres);
+    return { profile };
+  }
+
+  @Mutation(() => UpdateFavoriteGenresPayload)
+  @Authorized()
+  async updateMusicianType(
+    @Ctx() { profileService }: Context,
+    @Arg('input') { musicianTypes }: UpdateMusicianTypeInput,
+    @CurrentUser() { profileId }: User,
+  ): Promise<UpdateMusicianTypePayload> {
+    const profile = await profileService.updateMusicianType(profileId, musicianTypes);
     return { profile };
   }
 

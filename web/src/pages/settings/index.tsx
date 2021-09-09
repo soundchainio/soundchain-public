@@ -5,6 +5,7 @@ import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { BackButton } from 'components/Buttons/BackButton';
 import { getGenreLabelByKey } from 'utils/Genres';
+import { getMusicianTypeLabelByKey } from 'utils/MusicianTypes';
 import { useModalDispatch } from 'contexts/providers/modal';
 
 interface LinkProps {
@@ -22,7 +23,7 @@ function Link({ label, value, to }: LinkProps) {
         <span className="block text-white font-semibold"> {value} </span>
       </a>
     </NextLink>
-  )
+  );
 }
 
 function FakeLink({ label, value, onClick }: LinkProps) {
@@ -37,16 +38,18 @@ function FakeLink({ label, value, onClick }: LinkProps) {
 }
 
 const topNovaBarProps: TopNavBarProps = {
-  leftButton: BackButton,
+  leftButton: <BackButton />,
 };
 
 export default function SettingsPage() {
   const me = useMe()
   const { dispatchShowUnderDevelopmentModal } = useModalDispatch();
 
-  if (!me) return null
+  if (!me) return null;
 
   const genres = me.profile.favoriteGenres.map(getGenreLabelByKey).join(', ')
+
+  const musicianTypes = me.profile.musicianType.map(getMusicianTypeLabelByKey).join(', ')
 
   return (
     <Layout topNavBarProps={topNovaBarProps}>
@@ -60,9 +63,9 @@ export default function SettingsPage() {
         <Link to="/name" label="Name" value={me.profile.displayName} />
         <Link to="/username" label="Username" value={me.handle} />
         <Link to="/password" label="Password" value="********" />
-        <Link to="/musician-types" label="Musician Type(s)" value="Lorem ipsum" />
-        <Link to="/favorite-genres" label="Favorite Genre(s)" value={genres} />
-        <FakeLink
+        <Link to="/musician-type" label="Musician Type(s)" value={musicianTypes || 'Not selected'} />
+        <Link to="/favorite-genres" label="Favorite Genre(s)" value={genres || 'Not selected'} />
+         <FakeLink
           to="/social-links"
           onClick={() => dispatchShowUnderDevelopmentModal(true)}
           label="Social Link(s)"

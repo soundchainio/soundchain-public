@@ -1,5 +1,6 @@
 import { disableBodyScroll, enableBodyScroll } from 'body-scroll-lock';
-import { Message as MessageItem, useChatHistoryQuery } from 'lib/graphql';
+import { useMountedState } from 'hooks/useMountedState';
+import { Message as MessageItem, PageInfo } from 'lib/graphql';
 import { useEffect, useRef, useState } from 'react';
 import { animateScroll as scroll } from 'react-scroll';
 import { InfiniteLoader } from './InfiniteLoader';
@@ -7,20 +8,20 @@ import { Message } from './Message';
 import { MessageSkeleton } from './MessageSkeleton';
 
 interface ChatProps {
-  profileId: string;
+  messages: MessageItem[];
+  pageInfo: PageInfo;
+  onFetchMore: () => void;
+  loading: boolean;
 }
 
-export const Chat = ({ profileId }: ChatProps) => {
+export const Chat = ({ messages, pageInfo, onFetchMore, loading }: ChatProps) => {
   const [renderLoader, setRenderLoader] = useState(false);
-  const [lastContainerHeight, setLastContainerHeight] = useState(0);
+  const [lastContainerHeight, setLastContainerHeight] = useMountedState(0);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { data, fetchMore } = useChatHistoryQuery({
-    variables: { profileId },
-  });
 
   useEffect(() => {
-    if (!renderLoader && data) initialScrollToBottom();
-  }, [data, renderLoader]);
+    if (!renderLoader && messages) initialScrollToBottom();
+  }, [messages, renderLoader]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -37,9 +38,7 @@ export const Chat = ({ profileId }: ChatProps) => {
     setLastContainerHeight(containerRef.current?.scrollHeight);
   }, [containerRef.current?.scrollHeight, lastContainerHeight]);
 
-  if (!data) return <MessageSkeleton />;
-
-  const { nodes: messages, pageInfo } = data.chatHistory;
+  if (!messages) return <MessageSkeleton />;
 
   const initialScrollToBottom = () => {
     requestAnimationFrame(() => {
@@ -48,13 +47,11 @@ export const Chat = ({ profileId }: ChatProps) => {
     });
   };
 
-  const loadMore = async () => {
-    await fetchMore({ variables: { profileId, page: { after: pageInfo.startCursor } } });
-  };
-
   return (
     <div id="container" ref={containerRef}>
-      {renderLoader && pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading messages" />}
+      {!loading && renderLoader && pageInfo.hasNextPage && (
+        <InfiniteLoader loadMore={onFetchMore} loadingMessage="Loading messages" />
+      )}
       <div className="flex flex-col m-3 space-y-4">
         {messages.map(({ id }, index) => (
           <Message key={id} messageId={id} nextMessage={messages[index + 1] as MessageItem} />

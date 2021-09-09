@@ -1,10 +1,11 @@
 import { LockClosedIcon } from '@heroicons/react/solid';
 import { Form, Formik } from 'formik';
-import { Genre } from 'lib/graphql';
+import { Genre, MusicianType } from 'lib/graphql';
 import React, { useState } from 'react';
 import * as yup from 'yup';
 import { Button } from './Button';
 import { GenreSelector } from './GenreSelector';
+import { MusicianTypeSelector } from './MusicianTypeSelector';
 import { InputField } from './InputField';
 import { Title } from './Title';
 
@@ -16,6 +17,7 @@ interface FormValidationValues {
 export interface CompleteProfileFormValues {
   password: string;
   favoriteGenres: Genre[];
+  musicianType: MusicianType[];
 }
 
 interface CompleteProfileFormProps {
@@ -38,8 +40,9 @@ const initialFormValues = { password: '', passwordConfirmation: '' };
 
 export const CompleteProfileForm = ({ onSubmit, loading }: CompleteProfileFormProps) => {
   const [favoriteGenres, setFavoriteGenres] = useState<Genre[]>([]);
+  const [musicianType, setMusicianType] = useState<MusicianType[]>([]);
   const handleSubmit = (values: FormValidationValues) => {
-    onSubmit({ ...values, favoriteGenres });
+    onSubmit({ ...values, favoriteGenres, musicianType });
   };
 
   return (
@@ -62,6 +65,7 @@ export const CompleteProfileForm = ({ onSubmit, loading }: CompleteProfileFormPr
               icon={LockClosedIcon}
             />
             <GenreSelector onSelect={setFavoriteGenres} />
+            <MusicianTypeSelector onSelect={setMusicianType} />
           </div>
           <Button type="submit" disabled={loading} loading={loading}>
             NEXT
