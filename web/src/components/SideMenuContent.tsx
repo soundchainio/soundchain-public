@@ -96,13 +96,10 @@ export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => 
           <MenuItem icon={Logout} label="Logout" onClick={onLogout} />
         </div>
       )}
-
-      <div className="flex-shrink-0 flex p-4">
-        <div onClick={onPrivacyClick}>
-          <div className="flex flex-row space-x-2 items-center h-10 justify-between text-gray-CC px-4 w-full">
-            <div className="flex">PRIVACY POLICY</div>
-            <div className="flex">V0</div>
-          </div>
+      <div className="flex-shrink-0 flex p-4" onClick={onPrivacyClick}>
+        <div className="flex flex-row space-x-2 items-center h-10 justify-between text-gray-CC px-4 w-full">
+          <div className="flex">PRIVACY POLICY</div>
+          <div className="flex">V0</div>
         </div>
       </div>
       <div className="flex-shrink-0 flex">
