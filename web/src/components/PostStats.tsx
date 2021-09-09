@@ -18,13 +18,15 @@ const validatePlural = (word: string, qty: number) => {
 
 export const PostStats = ({ totalReactions, topReactions, commentCount, repostCount, postId }: PostStatsProps) => {
   const { dispatchReactionsModal } = useModalDispatch();
+  const onReactions = (e: React.MouseEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    dispatchReactionsModal(true, postId, topReactions, totalReactions);
+  };
+
   return (
     <div className="px-0 mt-2 py-2">
       <div className="flex items-center">
-        <div
-          className="text-sm text-gray-100 flex items-center"
-          onClick={() => dispatchReactionsModal(true, postId, topReactions, totalReactions)}
-        >
+        <div className="text-sm text-gray-100 flex items-center" onClick={onReactions}>
           <div className="flex space-x-1">
             {topReactions.map(reaction => (
               <ReactionEmoji key={reaction} name={reaction} className="w-4 h-4" />

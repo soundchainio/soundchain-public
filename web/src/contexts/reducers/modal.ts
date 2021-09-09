@@ -20,9 +20,9 @@ export interface ModalState {
   showUnderDevelopment: boolean;
   reactions: {
     show: boolean;
-    postId: string;
-    total: number;
-    top: ReactionType[];
+    postId?: string;
+    total?: number;
+    top?: ReactionType[];
   };
 }
 
