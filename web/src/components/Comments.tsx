@@ -1,5 +1,6 @@
-import { PageInput, useCommentsQuery } from 'lib/graphql';
+import { PageInput, useCommentsLazyQuery } from 'lib/graphql';
 import { useRouter } from 'next/router';
+import { useEffect } from 'react';
 import { Comment } from './Comment';
 import { CommentSkeleton } from './CommentSkeleton';
 import { InfiniteLoader } from './InfiniteLoader';
@@ -18,9 +19,13 @@ export const Comments = ({ postId, pageSize = 10 }: CommentsProps) => {
     firstPage.inclusive = true;
   }
 
-  const { data, fetchMore } = useCommentsQuery({
+  const [loadComments, { data, fetchMore }] = useCommentsLazyQuery({
     variables: { postId, page: firstPage },
   });
+
+  useEffect(() => {
+    loadComments();
+  }, []);
 
   if (!data) return <CommentSkeleton />;
 
