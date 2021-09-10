@@ -73,7 +73,6 @@ export const SetupProfileForm = ({ onSubmit }: FormProps) => (
                 textarea
                 type="text"
                 name="bio"
-                rows="4"
                 placeholder="Add a bio..."
                 maxLength={setMaxInputLength(values.bio || '')}
               />

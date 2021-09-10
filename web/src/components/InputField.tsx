@@ -8,13 +8,14 @@ interface InputFieldProps {
   placeholder?: string;
   icon?: (props: React.ComponentProps<'svg'>) => JSX.Element;
   textarea?: boolean;
+  maxLength?: number;
 }
 
 const commonInputClasses = `appearance-none block w-full px-3 py-2 border-1 bg-gray-1A text-gray-200 shadow-sm placeholder-gray-60 placeholder-semibold focus:outline-none focus:ring-green-500 focus:border-green-500`;
 const validInputClasses = `${commonInputClasses} border-gray-30`;
 const errorInputClasses = `${commonInputClasses} border-green-500`;
 
-export const InputField = ({ label, icon: Icon, textarea, ...props }: InputFieldProps) => {
+export const InputField = ({ label, icon: Icon, textarea, maxLength, ...props }: InputFieldProps) => {
   const [field, meta] = useField(props);
   return (
     <div>
@@ -25,7 +26,7 @@ export const InputField = ({ label, icon: Icon, textarea, ...props }: InputField
       )}
       <div className="relative">
         {textarea ?
-          <textarea className={meta.touched && meta.error ? errorInputClasses : validInputClasses} {...field} {...props} ></textarea>
+          <textarea maxLength={maxLength} className={meta.touched && meta.error ? errorInputClasses : validInputClasses} {...field} {...props} rows={4} ></textarea>
           :
           <input className={meta.touched && meta.error ? errorInputClasses : validInputClasses} {...field} {...props} />
         }
@@ -34,6 +35,6 @@ export const InputField = ({ label, icon: Icon, textarea, ...props }: InputField
         </div>
       </div>
       {meta.touched && meta.error ? <div className="text-green-500 pl-1 text-sm">{meta.error}</div> : null}
-    </div>
+    </div >
   );
 };

@@ -63,7 +63,6 @@ export default function SettingsBioPage() {
                 <Label>Bio</Label>
                 <InputField
                   textarea
-                  rows="4"
                   type="text"
                   name="bio"
                   placeholder="Add a bio..."
