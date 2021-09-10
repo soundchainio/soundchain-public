@@ -7,7 +7,8 @@ import { ImageUploadField } from './ImageUploadField';
 import { InputField } from './InputField';
 import { Label } from './Label';
 import { Title } from './Title';
-import { setMaxInputLength } from '../pages/settings/bio';
+import { setMaxInputLength, maxBioLength } from '../pages/settings/bio';
+import { getBodyCharacterCount } from 'components/NewPostModal';
 
 export interface SetupProfileFormValues {
   profilePicture?: string;
@@ -76,6 +77,7 @@ export const SetupProfileForm = ({ onSubmit }: FormProps) => (
                 placeholder="Add a bio..."
                 maxLength={setMaxInputLength(values.bio || '')}
               />
+              <p className="text-gray-50 text-right"> {`${getBodyCharacterCount(values.bio || '')} / ${maxBioLength}`} </p>
             </div>
           </div>
           <div className="flex flex-col mt-4">

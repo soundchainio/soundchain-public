@@ -26,12 +26,12 @@ const topNavBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
 };
 
-const maxLength = 120;
+export const maxBioLength = 120;
 
 export const setMaxInputLength = (input: string) => {
   const rawValue = input.length;
 
-  return maxLength + (rawValue - getBodyCharacterCount(input));
+  return maxBioLength + (rawValue - getBodyCharacterCount(input));
 };
 
 export default function SettingsBioPage() {
@@ -67,10 +67,10 @@ export default function SettingsBioPage() {
                   type="text"
                   name="bio"
                   placeholder="Add a bio..."
-                  maxLength={setMaxInputLength(values.bio)}
+                  maxLength={setMaxInputLength(values.bio || '')}
                 />
               </div>
-              <p className="text-gray-50 text-right"> {`${getBodyCharacterCount(values.bio)} / ${maxLength}`} </p>
+              <p className="text-gray-50 text-right"> {`${getBodyCharacterCount(values.bio || '')} / ${maxBioLength}`} </p>
               <div className="flex flex-col">
                 <Button type="submit">{loading ? 'Saving...' : 'Save'}</Button>
               </div>
