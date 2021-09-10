@@ -35,7 +35,7 @@ export const Message = ({ messageId, nextMessage }: MessageProps) => {
 
   return (
     <div className={classNames('flex flex-col w-full', isMyMessage && 'items-end')}>
-      <div className={classNames('flex flex-row w-3/4')}>
+      <div className={classNames('flex flex-row', isMyMessage ? 'pl-12' : 'pr-12')}>
         {!isMyMessage && (
           <div className="w-12">{isLastMessage && <Avatar profile={fromProfile} className="mr-2 mt-2" />}</div>
         )}

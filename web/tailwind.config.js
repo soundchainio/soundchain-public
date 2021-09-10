@@ -2,7 +2,7 @@ module.exports = {
   mode: 'jit',
   purge: ['./src/**/*.{ts,tsx}'],
   darkMode: false, // or 'media' or 'class'
-  plugins: [require('@tailwindcss/forms')],
+  plugins: [require('@tailwindcss/forms'), require('@tailwindcss/line-clamp')],
   theme: {
     extend: {
       flex: {

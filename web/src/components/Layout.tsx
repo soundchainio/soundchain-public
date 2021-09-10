@@ -6,6 +6,7 @@ import { NewPostModal } from './NewPostModal';
 import { UnderDevelopmentModal } from './UnderDevelopmentModal';
 import { SideMenu } from './SideMenu';
 import { TopNavBar, TopNavBarProps } from './TopNavBar';
+import { ReactionsModal } from './ReactionsModal';
 
 interface LayoutProps {
   children: ReactNode;
@@ -35,6 +36,7 @@ export const Layout = ({ children, hideBottomNavBar, topNavBarProps }: LayoutPro
         <UnderDevelopmentModal />
         <NewPostModal />
         <DeleteModal />
+        <ReactionsModal />
       </div>
     </div>
   );
