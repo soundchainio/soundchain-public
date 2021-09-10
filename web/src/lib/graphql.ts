@@ -489,6 +489,7 @@ export type Query = {
   notification: Notification;
   post: Post;
   posts: PostConnection;
+  reactions: ReactionConnection;
   myProfile: Profile;
   profile: Profile;
   uploadUrl: UploadUrl;
@@ -564,6 +565,12 @@ export type QueryPostsArgs = {
 };
 
 
+export type QueryReactionsArgs = {
+  page?: Maybe<PageInput>;
+  postId: Scalars['String'];
+};
+
+
 export type QueryProfileArgs = {
   id: Scalars['String'];
 };
@@ -586,6 +593,23 @@ export type ReactToPostInput = {
 export type ReactToPostPayload = {
   __typename?: 'ReactToPostPayload';
   post: Post;
+};
+
+export type Reaction = {
+  __typename?: 'Reaction';
+  id: Scalars['ID'];
+  profileId: Scalars['String'];
+  postId: Scalars['String'];
+  type: Scalars['String'];
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  profile: Profile;
+};
+
+export type ReactionConnection = {
+  __typename?: 'ReactionConnection';
+  pageInfo: PageInfo;
+  nodes: Array<Reaction>;
 };
 
 export type ReactionNotification = {
@@ -1298,6 +1322,30 @@ export type ReactToPostMutation = (
 export type ReactionNotificationFieldsFragment = (
   { __typename?: 'ReactionNotification' }
   & Pick<ReactionNotification, 'id' | 'type' | 'reactionType' | 'link' | 'authorName' | 'authorPicture' | 'createdAt' | 'postId'>
+);
+
+export type ReactionsQueryVariables = Exact<{
+  postId: Scalars['String'];
+  page?: Maybe<PageInput>;
+}>;
+
+
+export type ReactionsQuery = (
+  { __typename?: 'Query' }
+  & { reactions: (
+    { __typename?: 'ReactionConnection' }
+    & { nodes: Array<(
+      { __typename?: 'Reaction' }
+      & Pick<Reaction, 'id' | 'type'>
+      & { profile: (
+        { __typename?: 'Profile' }
+        & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
+      ) }
+    )>, pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
+    ) }
+  ) }
 );
 
 export type RegisterMutationVariables = Exact<{
@@ -2749,6 +2797,55 @@ export function useReactToPostMutation(baseOptions?: Apollo.MutationHookOptions<
 export type ReactToPostMutationHookResult = ReturnType<typeof useReactToPostMutation>;
 export type ReactToPostMutationResult = Apollo.MutationResult<ReactToPostMutation>;
 export type ReactToPostMutationOptions = Apollo.BaseMutationOptions<ReactToPostMutation, ReactToPostMutationVariables>;
+export const ReactionsDocument = gql`
+    query Reactions($postId: String!, $page: PageInput) {
+  reactions(postId: $postId, page: $page) {
+    nodes {
+      id
+      type
+      profile {
+        id
+        displayName
+        profilePicture
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+      totalCount
+    }
+  }
+}
+    `;
+
+/**
+ * __useReactionsQuery__
+ *
+ * To run a query within a React component, call `useReactionsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useReactionsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useReactionsQuery({
+ *   variables: {
+ *      postId: // value for 'postId'
+ *      page: // value for 'page'
+ *   },
+ * });
+ */
+export function useReactionsQuery(baseOptions: Apollo.QueryHookOptions<ReactionsQuery, ReactionsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ReactionsQuery, ReactionsQueryVariables>(ReactionsDocument, options);
+      }
+export function useReactionsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ReactionsQuery, ReactionsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ReactionsQuery, ReactionsQueryVariables>(ReactionsDocument, options);
+        }
+export type ReactionsQueryHookResult = ReturnType<typeof useReactionsQuery>;
+export type ReactionsLazyQueryHookResult = ReturnType<typeof useReactionsLazyQuery>;
+export type ReactionsQueryResult = Apollo.QueryResult<ReactionsQuery, ReactionsQueryVariables>;
 export const RegisterDocument = gql`
     mutation Register($input: RegisterInput!) {
   register(input: $input) {

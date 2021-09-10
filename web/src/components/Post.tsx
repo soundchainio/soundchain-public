@@ -41,6 +41,7 @@ export const Post = ({ postId }: PostProps) => {
             topReactions={post.topReactions}
             commentCount={post.commentCount}
             repostCount={post.repostCount}
+            postId={postId}
           />
         </div>
       </NextLink>
