@@ -16,11 +16,9 @@ export const ReactionItem = ({ reaction: { type, profile } }: FollowItemProps) =
             <Avatar pixels={40} className="flex" profile={profile} />
           </div>
           <div className="text-white font-bold flex w-full">
-            <div className="flex-1">
-              {profile.displayName}
-            </div>
-            <div className="w-16 text-center">
-              {/* <ReactionEmoji name={ReactionType[`${type}`] as ReactionType} className="w-4 h-4" /> */}
+            <div className="flex-1">{profile.displayName}</div>
+            <div className="flex w-16 text-center items-center justify-end">
+              <ReactionEmoji name={type.toUpperCase() as ReactionType} className="w-4 h-4" />
             </div>
           </div>
         </div>
