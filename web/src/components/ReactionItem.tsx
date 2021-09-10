@@ -8,7 +8,6 @@ interface FollowItemProps {
 }
 
 export const ReactionItem = ({ reaction: { type, profile } }: FollowItemProps) => {
-  console.log('type: ', type);
   return (
     <>
       <Link href={`/profiles/${profile.id}`} passHref>

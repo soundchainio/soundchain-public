@@ -36,13 +36,10 @@ export const ReactionsModal = () => {
       <div className="flex flex-row self-center items-center justify-center">
         {top?.map(reaction => (
           <>
-            <ReactionEmoji key={reaction} name={reaction} className="w-4 h-4" />
-            <>&nbsp;</>
+            <ReactionEmoji key={reaction} name={reaction} className="w-4 h-4 mr-2" />
           </>
         ))}
-        &nbsp;
-        {total}
-        &nbsp;
+        <span className="pr-2">{total}</span>
         <div className="text-sm text-gray-60 font-normal">reaction{total && total > 1 ? 's' : null}</div>
       </div>
     );
