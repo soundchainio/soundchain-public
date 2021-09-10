@@ -1,5 +1,6 @@
 import { Avatar } from 'components/Avatar';
 import { FollowButton } from 'components/FollowButton';
+import { FollowModal } from 'components/FollowersModal';
 import { Layout } from 'components/Layout';
 import { MessageButton } from 'components/MessageButton';
 import { Number } from 'components/Number';
@@ -10,11 +11,33 @@ import { Subtitle } from 'components/Subtitle';
 import { useProfileQuery } from 'lib/graphql';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
+import { FollowModalType } from 'types/FollowModalType';
 
 export default function ProfilePage() {
   const router = useRouter();
   const profileId = router.query.id as string;
   const { data } = useProfileQuery({ variables: { id: profileId } });
+  const [showModal, setShowModal] = useState(false);
+  const [followModalType, setFollowModalType] = useState<FollowModalType>();
+
+  useEffect(() => {
+    setShowModal(false);
+  }, [router.asPath]);
+
+  const onFollowers = () => {
+    setFollowModalType(FollowModalType.FOLLOWERS);
+    setShowModal(true);
+  };
+
+  const onFollowing = () => {
+    setFollowModalType(FollowModalType.FOLLOWING);
+    setShowModal(true);
+  };
+
+  const onCloseModal = () => {
+    setShowModal(false);
+  };
 
   if (!data) {
     return null;
@@ -36,13 +59,13 @@ export default function ProfilePage() {
       <div className="p-4">
         <div className="flex items-center space-x-8">
           <div className="flex-1 pl-24 flex space-x-4">
-            <div className="text-center text-sm">
+            <div className="text-center text-sm cursor-pointer" onClick={onFollowers}>
               <p className="font-semibold text-white">
                 <Number value={followerCount} />
               </p>
               <p className="text-gray-80 text-xs">Followers</p>
             </div>
-            <div className="text-center text-sm">
+            <div className="text-center text-sm cursor-pointer" onClick={onFollowing}>
               <p className="font-semibold text-white">
                 <Number value={followingCount} />
               </p>
@@ -66,6 +89,12 @@ export default function ProfilePage() {
       </div>
       <ProfileTabs />
       <Posts profileId={profileId} />
+      <FollowModal
+        show={showModal}
+        profileId={profileId}
+        modalType={followModalType as FollowModalType}
+        onClose={onCloseModal}
+      />
     </Layout>
   );
 }

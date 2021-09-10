@@ -1,0 +1,18 @@
+query Chats($page: PageInput) {
+  chats(page: $page) {
+    nodes {
+      id
+      profile {
+        displayName
+        profilePicture
+      }
+      message
+      unread
+      createdAt
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

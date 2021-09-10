@@ -20,6 +20,7 @@ export interface PaginateParams<T extends typeof Model> {
     before?: string;
     inclusive?: boolean;
   };
+  group?: FilterQuery<T>;
 }
 
 export interface PaginateResult<T> {
@@ -43,6 +44,31 @@ export async function paginate<T extends typeof Model>(
   const [results, totalCount] = await Promise.all([
     collection
       .find({ $and: [cursorFilter, filter] })
+      .sort(querySort)
+      .limit(limit + 1)
+      .exec(),
+    collection.find(filter).countDocuments().exec(),
+  ]);
+
+  return prepareResult(field, last, limit, after, before, results, totalCount);
+}
+
+export async function paginateAggregated<T extends typeof Model>(
+  collection: ReturnModelType<T>,
+  params: PaginateParams<T>,
+): Promise<PaginateResult<InstanceType<T>>> {
+  const { filter = {}, sort = { field: '_id' }, page = {}, group = {} } = params;
+  const { field, order = SortOrder.ASC } = sort;
+  const { first = 25, after, last, before, inclusive } = page;
+  const ascending = (order === SortOrder.ASC) !== Boolean(last || before);
+  const limit = last ?? first;
+
+  const cursorFilter = buildCursorFilter(field, ascending, before, after, inclusive);
+  const querySort = buildQuerySort(field, ascending);
+
+  const [results, totalCount] = await Promise.all([
+    collection
+      .aggregate([{ $match: filter }, { $group: group }, { $match: cursorFilter }])
       .sort(querySort)
       .limit(limit + 1)
       .exec(),

@@ -1,11 +1,12 @@
-import { PageInput, useCommentsLazyQuery } from 'lib/graphql';
-import { findIndex } from 'lodash';
+import { useApolloClient } from '@apollo/client';
+import { PageInput, useCommentsQuery } from 'lib/graphql';
 import { useRouter } from 'next/router';
 import React, { useEffect, useRef, useState } from 'react';
 import * as Scroll from 'react-scroll';
 import { Comment } from './Comment';
 import { CommentSkeleton } from './CommentSkeleton';
 import { InfiniteLoader } from './InfiniteLoader';
+import { LoaderAnimation } from './LoaderAnimation';
 
 interface CommentsProps {
   postId: string;
@@ -14,39 +15,47 @@ interface CommentsProps {
 
 export const Comments = ({ postId, pageSize = 10 }: CommentsProps) => {
   const router = useRouter();
+  const { cache } = useApolloClient();
+  const [scrollToCommentId, setScrollToCommentId] = useState<string | null>(null);
+  const scrollToCommentRef = useRef<HTMLDivElement>(null);
+
   const inclusiveCursor = router.query.cursor;
   const firstPage: PageInput = { first: pageSize };
+
   if (typeof inclusiveCursor === 'string') {
     firstPage.after = inclusiveCursor;
     firstPage.inclusive = true;
   }
 
-  const [loadComments, { data, fetchMore }] = useCommentsLazyQuery({
+  const { data, loading, fetchMore } = useCommentsQuery({
     variables: { postId, page: firstPage },
+    ssr: false,
   });
-  const [showingNewer, setShowingNewer] = useState(false);
-  const [scrollToCommentId, setScrollToCommentId] = useState<string | null>(null);
-  const scrollToCommentRef = useRef<HTMLDivElement>(null);
-
-  const nodes = data?.comments.nodes || [];
-  const commentIndex = findIndex(nodes, comment => comment.id === router.query.commentId);
-  const olderComments = commentIndex === -1 ? nodes : nodes.slice(commentIndex, nodes.length);
-  const comments = showingNewer ? nodes : olderComments;
 
   useEffect(() => {
-    loadComments();
+    return () => {
+      cache.evict({ fieldName: 'comments', args: { postId } });
+    };
   }, []);
 
   useEffect(() => {
     if (scrollToCommentRef.current) {
       scrollToComment(scrollToCommentRef.current);
+      setScrollToCommentId(null);
     }
-  }, [comments.length]);
+  }, [data?.comments.nodes]);
 
-  if (!data || !fetchMore) return <CommentSkeleton />;
+  if (!data || !fetchMore) {
+    return (
+      <div className="flex flex-col m-4 space-y-4">
+        <CommentSkeleton />
+        <CommentSkeleton />
+        <CommentSkeleton />
+      </div>
+    );
+  }
 
-  const { pageInfo } = data.comments;
-  const showViewNewer = comments.length < nodes.length || pageInfo.hasPreviousPage;
+  const { nodes: comments, pageInfo } = data.comments;
 
   const loadNext = () => {
     fetchMore({
@@ -62,38 +71,36 @@ export const Comments = ({ postId, pageSize = 10 }: CommentsProps) => {
 
   const loadPrevious = () => {
     setScrollToCommentId(comments[0].id);
-
-    if (pageInfo.hasPreviousPage) {
-      fetchMore({
-        variables: {
-          page: {
-            last: pageSize,
-            before: pageInfo.startCursor,
-            inclusive: false,
-          },
+    fetchMore({
+      variables: {
+        page: {
+          last: pageSize,
+          before: pageInfo.startCursor,
+          inclusive: false,
         },
-      });
-    }
-
-    if (!showingNewer) {
-      setShowingNewer(true);
-    }
+      },
+    });
   };
 
   return (
     <div className="flex flex-col m-4 space-y-4">
-      <h3 className="font-thin text-white">Comments</h3>
-      {showViewNewer && (
-        <div onClick={loadPrevious} className="cursor-pointer text-white">
-          View Newer Comments
-        </div>
+      {pageInfo.hasPreviousPage ? (
+        loading ? (
+          <LoaderAnimation loadingMessage="Loading Comments" />
+        ) : (
+          <div onClick={loadPrevious} className="cursor-pointer text-white font-bold text-sm">
+            View Newer Comments
+          </div>
+        )
+      ) : (
+        <h3 className="font-thin text-white">Comments</h3>
       )}
       {comments.map(({ id }) => {
         if (id === scrollToCommentId) {
           return (
             <div key={id} ref={scrollToCommentRef}>
               <Comment commentId={id} />
-              <Scroll.Element name="firstComment"></Scroll.Element>
+              <Scroll.Element name="scrollToComment"></Scroll.Element>
             </div>
           );
         }
@@ -108,5 +115,5 @@ function scrollToComment(el: HTMLElement) {
   const main = document.querySelector('#main') as HTMLElement;
   const bottomSheet = document.querySelector('#bottom-sheet') as HTMLElement;
   const offset = el.clientHeight - main.clientHeight + bottomSheet.clientHeight;
-  Scroll.scroller.scrollTo('firstComment', { containerId: 'main', duration: 0, offset });
+  Scroll.scroller.scrollTo('scrollToComment', { containerId: 'main', duration: 0, offset });
 }

@@ -9,6 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { isMobile } from 'utils/IsMobile';
 import { ReactionSelector } from './ReactionSelector';
 import { SharePostLink } from './SharePostLink';
+import { delayFocus } from 'lib/delayFocus';
 
 interface PostActionsProps {
   postId: string;
@@ -22,17 +23,17 @@ export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
   const [shareOpened, setShareOpened] = useState(false);
   const { dispatchSetRepostId, dispatchShowNewPostModal } = useModalDispatch();
   const [postLink, setPostLink] = useState('');
-  const me = useMe()
-  const router = useRouter()
+  const me = useMe();
+  const router = useRouter();
 
   const onRepostClick = () => {
-    if (!me) return router.push('/login')
+    if (!me) return router.push('/login');
     dispatchSetRepostId(postId);
     dispatchShowNewPostModal(true);
   };
 
   const handleLikeButton = () => {
-    if (!me) return router.push('/login')
+    if (!me) return router.push('/login');
     setReactionSelectorOpened(!reactionSelectorOpened);
   };
 
@@ -41,8 +42,8 @@ export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
   };
 
   const focusCommentTextarea = () => {
-    setTimeout(() => document.querySelector('textarea')?.focus(), 300)
-  }
+    delayFocus('textarea');
+  };
 
   useEffect(() => {
     const origin = window.location.origin;

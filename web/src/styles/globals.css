@@ -49,6 +49,11 @@ pre {
   font-family: 'Metropolis';
 }
 
+body,
+html {
+  background-color: rgba(16, 16, 16);
+}
+
 .bg-purple-gradient {
   background: linear-gradient(76.4deg, #ab4eff 8.28%, #f1419e 83.02%);
 }

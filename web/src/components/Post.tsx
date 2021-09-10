@@ -28,7 +28,7 @@ export const Post = ({ postId }: PostProps) => {
               <NextLink href={`/profiles/${post.profile.id}`}>
                 <a className="text-lg font-bold text-gray-100">{post.profile.displayName}</a>
               </NextLink>
-              <Timestamp datetime={post.createdAt} className="flex-1 text-right" />
+              <Timestamp datetime={post.createdAt} className="flex-1 text-left" />
             </div>
           </div>
           <pre className="mt-4 text-gray-100 break-words whitespace-pre-wrap">{post.body}</pre>

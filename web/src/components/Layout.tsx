@@ -3,6 +3,7 @@ import { store } from 'contexts';
 import { ReactNode, useContext, useState } from 'react';
 import { DeleteModal } from './DeleteModal';
 import { NewPostModal } from './NewPostModal';
+import { UnderDevelopmentModal } from './UnderDevelopmentModal';
 import { SideMenu } from './SideMenu';
 import { TopNavBar, TopNavBarProps } from './TopNavBar';
 
@@ -31,6 +32,7 @@ export const Layout = ({ children, hideBottomNavBar, topNavBarProps }: LayoutPro
         </div>
       </div>
       <div id="modals" className="absolute z-20 w-full">
+        <UnderDevelopmentModal />
         <NewPostModal />
         <DeleteModal />
       </div>

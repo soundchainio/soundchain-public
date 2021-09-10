@@ -1,16 +1,10 @@
-import * as Apollo from '@apollo/client';
 import { Refresh } from 'icons/Refresh';
-import { apolloClient } from 'lib/apollo';
 import { TopNavBarButton } from '../TopNavBarButton';
 
 interface RefreshButtonProps {
-  queryDocument: Apollo.DocumentNode;
+  onClick: () => void;
 }
 
-export const RefreshButton = ({ queryDocument }: RefreshButtonProps) => {
-  const onClick = () => {
-    apolloClient.refetchQueries({ include: [queryDocument] });
-  };
-
+export const RefreshButton = ({ onClick }: RefreshButtonProps) => {
   return <TopNavBarButton onClick={onClick} label="Refresh" icon={Refresh} />;
 };
