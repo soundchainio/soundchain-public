@@ -38,9 +38,9 @@ export class UserResolver {
   @Mutation(() => AuthPayload)
   async register(
     @Ctx() { authService, jwtService }: Context,
-    @Arg('input') { email, handle, password, displayName }: RegisterInput,
+    @Arg('input') { email, handle, password, displayName, bio }: RegisterInput,
   ): Promise<AuthPayload> {
-    const user = await authService.register(email, handle, password, displayName);
+    const user = await authService.register(email, handle, password, displayName, bio);
     return { jwt: jwtService.create(user) };
   }
 

@@ -6,14 +6,14 @@ import { User, UserModel } from '../models/User';
 import { Service } from './Service';
 
 export class AuthService extends Service {
-  async register(email: string, handle: string, password: string, displayName: string): Promise<User> {
+  async register(email: string, handle: string, password: string, displayName: string, bio: string): Promise<User> {
     const existingUser = await UserModel.findOne({ $or: [{ email }, { handle }] });
 
     if (existingUser) {
       throw new UserInputError(`${existingUser.email === email ? email : handle} is in use`);
     }
 
-    const profile = new ProfileModel({ displayName });
+    const profile = new ProfileModel({ displayName, bio });
     await profile.save();
     await this.context.feedService.seedNewProfileFeed(profile.id);
 

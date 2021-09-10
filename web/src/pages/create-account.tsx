@@ -69,7 +69,7 @@ export default function CreateAccountPage() {
       setError(err as ApolloError);
       setLoading(false);
     }
-  }, [completeProfileValues, router, setupProfileValues, updateGenres, updateCoverPicture, updateProfilePicture]);
+  }, [completeProfileValues, router, setupProfileValues, updateGenres, updateCoverPicture, updateProfilePicture, updateMusicianType]);
 
   const registerUser = useCallback(async () => {
     if (registerEmailValues && setupProfileValues && completeProfileValues) {
@@ -80,6 +80,7 @@ export default function CreateAccountPage() {
             input: {
               email: registerEmailValues.email,
               displayName: setupProfileValues.displayName,
+              bio: setupProfileValues.bio,
               handle: setupProfileValues.handle,
               password: completeProfileValues.password,
             } as RegisterInput,

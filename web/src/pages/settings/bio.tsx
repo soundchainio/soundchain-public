@@ -11,13 +11,14 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React from 'react';
 import * as yup from 'yup';
+import { getBodyCharacterCount } from 'components/NewPostModal';
 
 export interface SetupProfileBioFormValues {
   bio: string | undefined;
 }
 
 const validationSchema: yup.SchemaOf<SetupProfileBioFormValues> = yup.object().shape({
-  bio: yup.string().min(3).max(255).required().label('Name'),
+  bio: yup.string().label('Bio'),
 });
 
 const topNavBarProps: TopNavBarProps = {
@@ -25,10 +26,18 @@ const topNavBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
 };
 
+const maxLength = 120;
+
+export const setMaxInputLength = (input: string) => {
+  const rawValue = input.length;
+
+  return maxLength + (rawValue - getBodyCharacterCount(input));
+};
+
 export default function SettingsBioPage() {
   const me = useMe();
   const router = useRouter();
-  const initialFormValues: SetupProfileBioFormValues = { bio: me?.profile?.bio };
+  const initialFormValues: SetupProfileBioFormValues = { bio: me?.profile?.bio || '' };
   const [updateBio, { loading }] = useUpdateProfileBioMutation();
 
   const onSubmit = async ({ bio }: SetupProfileBioFormValues) => {
@@ -47,16 +56,26 @@ export default function SettingsBioPage() {
       </Head>
       <div className="min-h-screen flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
         <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={onSubmit}>
-          <Form className="flex flex-1 flex-col space-y-6">
-            <div>
-              <Label>First or full name</Label>
-              <InputField type="text" name="bio" placeholder="Add a bio..." />
-            </div>
-            <p className="text-gray-50"> This will be displayed publically to other users. </p>
-            <div className="flex flex-col">
-              <Button type="submit">{loading ? 'Saving...' : 'Save'}</Button>
-            </div>
-          </Form>
+          {({ values }) => (
+
+            <Form className="flex flex-1 flex-col space-y-6">
+              <div>
+                <Label>Bio</Label>
+                <InputField
+                  textarea
+                  rows="4"
+                  type="text"
+                  name="bio"
+                  placeholder="Add a bio..."
+                  maxLength={setMaxInputLength(values.bio)}
+                />
+              </div>
+              <p className="text-gray-50 text-right"> {`${getBodyCharacterCount(values.bio)} / ${maxLength}`} </p>
+              <div className="flex flex-col">
+                <Button type="submit">{loading ? 'Saving...' : 'Save'}</Button>
+              </div>
+            </Form>
+          )}
         </Formik>
       </div>
     </Layout>
