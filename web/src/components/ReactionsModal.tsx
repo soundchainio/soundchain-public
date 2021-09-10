@@ -6,6 +6,7 @@ import { InfiniteLoader } from './InfiniteLoader';
 import { LoaderAnimation } from './LoaderAnimation';
 import { Modal } from './Modal';
 import { ReactionItem } from './ReactionItem';
+import { CloseNegative } from 'icons/CloseNegative';
 
 export const ReactionsModal = () => {
   const {
@@ -42,7 +43,7 @@ export const ReactionsModal = () => {
         &nbsp;
         {total}
         &nbsp;
-        <div className="text-sm text-gray-60 font-normal">reactions</div>
+        <div className="text-sm text-gray-60 font-normal">reaction{total && total > 1 ? 's' : null}</div>
       </div>
     );
   };
@@ -51,9 +52,9 @@ export const ReactionsModal = () => {
     <Modal
       show={show}
       title={getTitle()}
-      leftButton={
-        <div className="p-2 text-gray-400 font-bold flex-1 text-center" onClick={onClose}>
-          Close
+      rightButton={
+        <div className="p-2 text-gray-400 font-bold flex-1 text-center items-center flex" onClick={onClose}>
+          <CloseNegative className="h-6 w-6 m-auto" />
         </div>
       }
       onClose={onClose}
