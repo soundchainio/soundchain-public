@@ -426,6 +426,7 @@ export type PageInput = {
   after?: Maybe<Scalars['String']>;
   last?: Maybe<Scalars['Int']>;
   before?: Maybe<Scalars['String']>;
+  inclusive?: Maybe<Scalars['Boolean']>;
 };
 
 export type Post = {
@@ -943,7 +944,7 @@ export type CommentsQuery = (
       & CommentComponentFieldsFragment
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
+      & Pick<PageInfo, 'hasPreviousPage' | 'hasNextPage' | 'startCursor' | 'endCursor'>
     ) }
   ) }
 );
@@ -1930,7 +1931,9 @@ export const CommentsDocument = gql`
       ...CommentComponentFields
     }
     pageInfo {
+      hasPreviousPage
       hasNextPage
+      startCursor
       endCursor
     }
   }
