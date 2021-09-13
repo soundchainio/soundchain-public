@@ -8,7 +8,4 @@ export class NewPostNotification {
 
   @Field(() => Date)
   createdAt: Date;
-
-  @Field(() => Date)
-  updatedAt: Date;
 }

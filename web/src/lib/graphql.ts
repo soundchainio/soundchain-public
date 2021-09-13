@@ -410,7 +410,20 @@ export type MutationUpdatePasswordArgs = {
   input: UpdatePasswordInput;
 };
 
-export type Notification = CommentNotification | ReactionNotification | FollowerNotification;
+export type NewPostNotification = {
+  __typename?: 'NewPostNotification';
+  type: NotificationType;
+  createdAt: Scalars['DateTime'];
+  id: Scalars['String'];
+  authorName: Scalars['String'];
+  authorPicture: Maybe<Scalars['String']>;
+  body: Scalars['String'];
+  previewBody: Scalars['String'];
+  previewLink: Maybe<Scalars['String']>;
+  link: Scalars['String'];
+};
+
+export type Notification = CommentNotification | ReactionNotification | FollowerNotification | NewPostNotification;
 
 export type NotificationConnection = {
   __typename?: 'NotificationConnection';
@@ -421,7 +434,8 @@ export type NotificationConnection = {
 export enum NotificationType {
   Comment = 'Comment',
   Reaction = 'Reaction',
-  Follower = 'Follower'
+  Follower = 'Follower',
+  NewPost = 'NewPost'
 }
 
 export type PageInfo = {
@@ -1213,6 +1227,11 @@ export type MyProfileQuery = (
   ) }
 );
 
+export type NewPostNotificationFieldsFragment = (
+  { __typename?: 'NewPostNotification' }
+  & Pick<NewPostNotification, 'id' | 'type' | 'authorName' | 'authorPicture' | 'body' | 'link' | 'previewBody' | 'previewLink' | 'createdAt'>
+);
+
 export type NotificationQueryVariables = Exact<{
   id: Scalars['String'];
 }>;
@@ -1229,6 +1248,9 @@ export type NotificationQuery = (
   ) | (
     { __typename?: 'FollowerNotification' }
     & FollowerNotificationFieldsFragment
+  ) | (
+    { __typename?: 'NewPostNotification' }
+    & NewPostNotificationFieldsFragment
   ) }
 );
 
@@ -1261,6 +1283,9 @@ export type NotificationsQuery = (
     ) | (
       { __typename?: 'FollowerNotification' }
       & FollowerNotificationFieldsFragment
+    ) | (
+      { __typename?: 'NewPostNotification' }
+      & NewPostNotificationFieldsFragment
     )> }
   ) }
 );
@@ -1719,6 +1744,19 @@ export const MessageComponentFieldsFragmentDoc = gql`
     displayName
     profilePicture
   }
+}
+    `;
+export const NewPostNotificationFieldsFragmentDoc = gql`
+    fragment NewPostNotificationFields on NewPostNotification {
+  id
+  type
+  authorName
+  authorPicture
+  body
+  link
+  previewBody
+  previewLink
+  createdAt
 }
     `;
 export const PostComponentFieldsFragmentDoc = gql`
@@ -2550,11 +2588,15 @@ export const NotificationDocument = gql`
     ... on FollowerNotification {
       ...FollowerNotificationFields
     }
+    ... on NewPostNotification {
+      ...NewPostNotificationFields
+    }
   }
 }
     ${CommentNotificationFieldsFragmentDoc}
 ${ReactionNotificationFieldsFragmentDoc}
-${FollowerNotificationFieldsFragmentDoc}`;
+${FollowerNotificationFieldsFragmentDoc}
+${NewPostNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationQuery__
@@ -2631,12 +2673,16 @@ export const NotificationsDocument = gql`
       ... on FollowerNotification {
         ...FollowerNotificationFields
       }
+      ... on NewPostNotification {
+        ...NewPostNotificationFields
+      }
     }
   }
 }
     ${CommentNotificationFieldsFragmentDoc}
 ${ReactionNotificationFieldsFragmentDoc}
-${FollowerNotificationFieldsFragmentDoc}`;
+${FollowerNotificationFieldsFragmentDoc}
+${NewPostNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationsQuery__

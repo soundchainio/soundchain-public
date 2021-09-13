@@ -10,6 +10,9 @@ query Notifications($sort: SortNotificationInput) {
       ... on FollowerNotification {
         ...FollowerNotificationFields
       }
+      ... on NewPostNotification {
+        ...NewPostNotificationFields
+      }
     }
   }
 }

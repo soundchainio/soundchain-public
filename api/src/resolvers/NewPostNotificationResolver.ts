@@ -1,6 +1,5 @@
 import { FieldResolver, Resolver, Root } from 'type-graphql';
 import { Notification } from '../models/Notification';
-import { CommentNotificationMetadata } from '../types/CommentNotificationMetadata';
 import { NewPostNotification } from '../types/NewPostNotification';
 import { NewPostNotificationMetadata } from '../types/NewPostNotificationMetadata';
 
@@ -13,13 +12,13 @@ export class NewPostNotificationResolver {
 
   @FieldResolver(() => String)
   authorName(@Root() { metadata }: Notification): string {
-    const { authorName } = metadata as CommentNotificationMetadata;
+    const { authorName } = metadata as NewPostNotificationMetadata;
     return authorName;
   }
 
   @FieldResolver(() => String, { nullable: true })
   authorPicture(@Root() { metadata }: Notification): string | undefined {
-    const { authorPicture } = metadata as CommentNotificationMetadata;
+    const { authorPicture } = metadata as NewPostNotificationMetadata;
     return authorPicture;
   }
 
@@ -42,7 +41,7 @@ export class NewPostNotificationResolver {
 
   @FieldResolver(() => String)
   link(@Root() { metadata }: Notification): string {
-    const { postId, commentId } = metadata as CommentNotificationMetadata;
-    return `/posts/${postId}?commentId=${commentId}`;
+    const { postId } = metadata as NewPostNotificationMetadata;
+    return `/posts/${postId}`;
   }
 }
