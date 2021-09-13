@@ -6,6 +6,7 @@ import { NewPostModal } from './NewPostModal';
 import { UnderDevelopmentModal } from './UnderDevelopmentModal';
 import { SideMenu } from './SideMenu';
 import { TopNavBar, TopNavBarProps } from './TopNavBar';
+import { ReactionsModal } from './ReactionsModal';
 
 interface LayoutProps {
   children: ReactNode;
@@ -23,10 +24,8 @@ export const Layout = ({ children, hideBottomNavBar, topNavBarProps }: LayoutPro
       <div className="flex flex-col w-0 flex-1 overflow-hidden">
         <TopNavBar setSideMenuOpen={setSideMenuOpen} {...topNavBarProps} />
         <div id="top-sheet"></div>
-        <main className="flex-1 relative overflow-y-auto focus:outline-none bg-gray-10">
-          <div id="main" className="max-w-7xl mx-auto mb-20">
-            {children}
-          </div>
+        <main id="main" className="flex-1 relative overflow-y-auto focus:outline-none bg-gray-10">
+          <div className="max-w-7xl mx-auto mb-20">{children}</div>
         </main>
         <div className="fixed bottom-0 w-full">
           <div id="bottom-sheet"></div>
@@ -37,6 +36,7 @@ export const Layout = ({ children, hideBottomNavBar, topNavBarProps }: LayoutPro
         <UnderDevelopmentModal />
         <NewPostModal />
         <DeleteModal />
+        <ReactionsModal />
       </div>
     </div>
   );

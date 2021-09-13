@@ -9,10 +9,10 @@ import { getMusicianTypeLabelByKey } from 'utils/MusicianTypes';
 import { useModalDispatch } from 'contexts/providers/modal';
 
 interface LinkProps {
-  label: string
-  value: string
-  to?: string
-  onClick?: () => void
+  label: string;
+  value: string;
+  to?: string;
+  onClick?: () => void;
 }
 
 function Link({ label, value, to }: LinkProps) {
@@ -34,7 +34,7 @@ function FakeLink({ label, value, onClick }: LinkProps) {
         <span className="block text-white font-semibold"> {value} </span>
       </a>
     </div>
-  )
+  );
 }
 
 const topNovaBarProps: TopNavBarProps = {
@@ -42,14 +42,14 @@ const topNovaBarProps: TopNavBarProps = {
 };
 
 export default function SettingsPage() {
-  const me = useMe()
+  const me = useMe();
   const { dispatchShowUnderDevelopmentModal } = useModalDispatch();
 
   if (!me) return null;
 
-  const genres = me.profile.favoriteGenres.map(getGenreLabelByKey).join(', ')
+  const genres = me.profile.favoriteGenres.map(getGenreLabelByKey).join(', ');
 
-  const musicianTypes = me.profile.musicianType.map(getMusicianTypeLabelByKey).join(', ')
+  const musicianTypes = me.profile.musicianType.map(getMusicianTypeLabelByKey).join(', ');
 
   return (
     <Layout topNavBarProps={topNovaBarProps}>
@@ -59,13 +59,18 @@ export default function SettingsPage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div className="bg-gray-25 grid gap-4 py-4">
-        <Link to="/email" label="Email" value={me.email} />
+        <FakeLink
+          to="/email"
+          onClick={() => dispatchShowUnderDevelopmentModal(true)}
+          label="Email"
+          value={me.email}
+        />
         <Link to="/name" label="Name" value={me.profile.displayName} />
         <Link to="/username" label="Username" value={me.handle} />
         <Link to="/password" label="Password" value="********" />
         <Link to="/musician-type" label="Musician Type(s)" value={musicianTypes || 'Not selected'} />
         <Link to="/favorite-genres" label="Favorite Genre(s)" value={genres || 'Not selected'} />
-         <FakeLink
+        <FakeLink
           to="/social-links"
           onClick={() => dispatchShowUnderDevelopmentModal(true)}
           label="Social Link(s)"

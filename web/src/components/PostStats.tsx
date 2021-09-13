@@ -1,3 +1,4 @@
+import { useModalDispatch } from 'contexts/providers/modal';
 import { ReactionEmoji } from 'icons/ReactionEmoji';
 import { ReactionType } from 'lib/graphql';
 import React from 'react';
@@ -8,17 +9,24 @@ interface PostStatsProps {
   topReactions: ReactionType[];
   commentCount: number;
   repostCount: number;
+  postId: string;
 }
 
 const validatePlural = (word: string, qty: number) => {
   return <div className="ml-1 mr-4 text-gray-400">{word + (qty !== 1 ? 's' : '')}</div>;
 };
 
-export const PostStats = ({ totalReactions, topReactions, commentCount, repostCount }: PostStatsProps) => {
+export const PostStats = ({ totalReactions, topReactions, commentCount, repostCount, postId }: PostStatsProps) => {
+  const { dispatchReactionsModal } = useModalDispatch();
+  const onReactions = (e: React.MouseEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    dispatchReactionsModal(true, postId, topReactions, totalReactions);
+  };
+
   return (
     <div className="px-0 mt-2 py-2">
       <div className="flex items-center">
-        <div className="text-sm text-gray-100 flex items-center">
+        <div className="text-sm text-gray-100 flex items-center" onClick={onReactions}>
           <div className="flex space-x-1">
             {topReactions.map(reaction => (
               <ReactionEmoji key={reaction} name={reaction} className="w-4 h-4" />
