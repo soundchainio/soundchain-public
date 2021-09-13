@@ -2,7 +2,6 @@ import { AuthLayout } from 'components/AuthLayout';
 import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
 import { Label } from 'components/Label';
-import { RegisterEmailFormValues } from 'components/RegisterEmailForm';
 import { Form, Formik, FormikHelpers } from 'formik';
 import { setJwt } from 'lib/apollo';
 import { useRegisterMutation } from 'lib/graphql';
@@ -36,7 +35,7 @@ export default function CreateAccountPage() {
     }
   };
 
-  const validationSchema: yup.SchemaOf<RegisterEmailFormValues> = yup.object().shape({
+  const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
     email: yup.string().email().required().label('Email'),
     displayName: yup.string().min(3).max(255).required().label('Name'),
     handle: yup
