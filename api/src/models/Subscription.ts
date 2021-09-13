@@ -13,8 +13,10 @@ export class Subscription extends Model {
   @prop({ required: true })
   subscribedProfileId: string;
 
+  @Field(() => Date)
   createdAt: Date;
 
+  @Field(() => Date)
   updatedAt: Date;
 }
 
