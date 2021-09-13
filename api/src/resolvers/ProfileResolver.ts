@@ -5,8 +5,12 @@ import { User } from '../models/User';
 import { Context } from '../types/Context';
 import { FollowProfileInput } from '../types/FollowProfileInput';
 import { FollowProfilePayload } from '../types/FollowProfilePayload';
+import { SubscribeProfileInput } from '../types/SubscribeProfileInput';
+import { SubscribeProfilePayload } from '../types/SubscribeProfilePayload';
 import { UnfollowProfileInput } from '../types/UnfollowProfileInput';
 import { UnfollowProfilePayload } from '../types/UnfollowProfilePayload';
+import { UnsubscribeProfileInput } from '../types/UnsubscribeProfileInput';
+import { UnsubscribeProfilePayload } from '../types/UnsubscribeProfilePayload';
 import { UpdateCoverPictureInput } from '../types/UpdateCoverPictureInput';
 import { UpdateCoverPicturePayload } from '../types/UpdateCoverPicturePayload';
 import { UpdateFavoriteGenresInput } from '../types/UpdateFavoriteGenresInput';
@@ -149,6 +153,28 @@ export class ProfileResolver {
     @CurrentUser() { profileId: followerId }: User,
   ): Promise<UnfollowProfilePayload> {
     const unfollowedProfile = await profileService.unfollowProfile(followerId, followedId);
+    return { unfollowedProfile };
+  }
+
+  @Mutation(() => SubscribeProfilePayload)
+  @Authorized()
+  async subscribeProfile(
+    @Ctx() { profileService }: Context,
+    @Arg('input') { subscribedProfileId }: SubscribeProfileInput,
+    @CurrentUser() { profileId }: User,
+  ): Promise<SubscribeProfilePayload> {
+    const subscribedProfile = await profileService.subscribeProfile(profileId, subscribedProfileId);
+    return { subscribedProfile };
+  }
+
+  @Mutation(() => UnsubscribeProfilePayload)
+  @Authorized()
+  async unsubscribeProfile(
+    @Ctx() { profileService }: Context,
+    @Arg('input') { subscribedProfileId }: UnsubscribeProfileInput,
+    @CurrentUser() { profileId }: User,
+  ): Promise<UnfollowProfilePayload> {
+    const unfollowedProfile = await profileService.unsubscribeProfile(profileId, subscribedProfileId);
     return { unfollowedProfile };
   }
 }

@@ -130,4 +130,34 @@ export class ProfileService extends ModelService<typeof Profile> {
     }
     return updatedProfile;
   }
+
+  async subscribeProfile(profileId: string, subscribedProfileId: string): Promise<Profile> {
+    if (profileId === subscribedProfileId) {
+      throw new UserInputError('You cannot subscribe yourself.');
+    }
+
+    const [subscribedProfile, alreadySubscribed] = await Promise.all([
+      this.findOrFail(subscribedProfileId),
+      this.context.subscriptionService.exists({ profileId, subscribedProfileId }),
+    ]);
+
+    if (alreadySubscribed) {
+      throw new UserInputError(`User profile ${profileId} is already subscribing profile ${subscribedProfileId}.`);
+    }
+
+    await this.context.subscriptionService.createSubscription({ profileId, subscribedProfileId });
+
+    return subscribedProfile;
+  }
+
+  async unsubscribeProfile(profileId: string, subscribedProfileId: string): Promise<Profile> {
+    if (profileId === subscribedProfileId) {
+      throw new UserInputError('You cannot unsubscribe yourself.');
+    }
+
+    const subscribedProfile = await this.findOrFail(subscribedProfileId);
+    await this.context.followService.deleteFollow(profileId, subscribedProfileId);
+
+    return subscribedProfile;
+  }
 }

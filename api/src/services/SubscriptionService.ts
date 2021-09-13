@@ -31,14 +31,14 @@ export class SubscriptionService extends ModelService<typeof Subscription, Subsc
     };
   }
 
-  async subscribe(params: SubscriptionKeyComponents): Promise<Subscription> {
+  async createSubscription(params: SubscriptionKeyComponents): Promise<Subscription> {
     const subscription = new this.model(params);
     await subscription.save();
     this.dataLoader.clear(this.getKeyFromComponents(subscription));
     return subscription;
   }
 
-  async unsubscribe(profileId: string, subscribedProfileId: string): Promise<void> {
+  async deleteSubscription(profileId: string, subscribedProfileId: string): Promise<void> {
     const { deletedCount } = await SubscriptionModel.deleteOne({ profileId, subscribedProfileId });
 
     if (deletedCount === 0) {
