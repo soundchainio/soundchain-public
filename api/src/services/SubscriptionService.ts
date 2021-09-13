@@ -47,4 +47,9 @@ export class SubscriptionService extends ModelService<typeof Subscription, Subsc
 
     this.dataLoader.clear(this.getKeyFromComponents({ profileId, subscribedProfileId }));
   }
+
+  async getSubscribersIds(profileId: string): Promise<string[]> {
+    const rest = await this.model.find({ subscribedProfileId: profileId }, { subscribedProfileId: 1, _id: 0 });
+    return rest.map(({ subscribedProfileId }) => subscribedProfileId);
+  }
 }

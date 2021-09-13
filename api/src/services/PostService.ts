@@ -28,6 +28,7 @@ export class PostService extends ModelService<typeof Post> {
     const post = new this.model(params);
     await post.save();
     this.context.feedService.addPostToFollowerFeeds(post);
+    this.context.notificationService.notifyNewPostForSubscribers(post);
     return post;
   }
 

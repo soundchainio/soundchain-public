@@ -8,6 +8,7 @@ import { Profile, ProfileModel } from '../models/Profile';
 import { Reaction } from '../models/Reaction';
 import { CommentNotificationMetadata } from '../types/CommentNotificationMetadata';
 import { Context } from '../types/Context';
+import { NewPostNotificationMetadata } from '../types/NewPostNotificationMetadata';
 import { NotificationType } from '../types/NotificationType';
 import { NotificationUnion } from '../types/NotificationUnion';
 import { PageInput } from '../types/PageInput';
@@ -115,5 +116,21 @@ export class NotificationService extends ModelService<typeof Notification> {
       throw new NotFoundError('Profile', profileId);
     }
     return updatedProfile;
+  }
+
+  async notifyNewPostForSubscribers(post: Post): Promise<void> {
+    const authorProfile = await this.context.profileService.getProfile(post.profileId);
+    const subscribersIds = await this.context.subscriptionService.getSubscribersIds(post.profileId);
+    const metadata: NewPostNotificationMetadata = {
+      authorName: authorProfile.displayName,
+      authorPicture: authorProfile.profilePicture,
+      postBody: post.body,
+      postId: post._id,
+      postLink: post.mediaLink,
+    };
+    const notifications = subscribersIds.map(
+      profileId => new this.model({ type: NotificationType.NewPost, profileId, metadata }),
+    );
+    await this.model.insertMany(notifications);
   }
 }
