@@ -40,6 +40,19 @@ export class ProfileResolver {
     return followService.exists({ followerId: user.profileId, followedId: profile._id });
   }
 
+  @FieldResolver(() => Boolean)
+  isSubscribed(
+    @Ctx() { subscriptionService }: Context,
+    @Root() profile: Profile,
+    @CurrentUser() user?: User,
+  ): Promise<boolean> {
+    if (!user) {
+      return Promise.resolve(false);
+    }
+
+    return subscriptionService.exists({ profileId: user.profileId, subscribedProfileId: profile._id });
+  }
+
   @Query(() => Profile)
   @Authorized()
   myProfile(@Ctx() { profileService }: Context, @CurrentUser() { profileId }: User): Promise<Profile> {
