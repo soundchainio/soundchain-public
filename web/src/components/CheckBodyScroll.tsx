@@ -5,7 +5,7 @@ export const CheckBodyScroll = () => {
 
   return anyModalOpened ? (
     <style jsx global>{`
-      body {
+      body, main, html {
         overflow: hidden;
       }
     `}</style>
