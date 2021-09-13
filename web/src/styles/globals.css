@@ -51,6 +51,11 @@ pre {
 
 body, html {
   background-color: rgba(16, 16, 16);
+  -webkit-overflow-scrolling: touch;
+}
+
+main {
+  -webkit-overflow-scrolling: touch;
 }
 
 .bg-purple-gradient {
