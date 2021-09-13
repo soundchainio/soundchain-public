@@ -57,7 +57,7 @@ export default function ProfilePage() {
         />
       </div>
       <div className="p-4">
-        <div className="flex items-center space-x-8">
+        <div className="flex items-center">
           <div className="flex-1 pl-24 flex space-x-4">
             <div className="text-center text-sm cursor-pointer" onClick={onFollowers}>
               <p className="font-semibold text-white">

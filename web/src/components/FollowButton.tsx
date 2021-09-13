@@ -1,5 +1,7 @@
 import { Button } from 'components/Button';
+import { is } from 'date-fns/locale';
 import { useMe } from 'hooks/useMe';
+import { Checkmark } from 'icons/Checkmark';
 import { useFollowProfileMutation, useUnfollowProfileMutation } from 'lib/graphql';
 import { useRouter } from 'next/router';
 import React from 'react';
@@ -39,8 +41,16 @@ export const FollowButton = ({ followedId, isFollowed }: FollowButtonProps) => {
   }
 
   return (
-    <Button onClick={handleClick} variant="rainbow-rounded" className="w-20 bg-gray-10 text-sm">
-      {isFollowed ? 'Unfollow' : 'Follow'}
+    <Button
+      onClick={handleClick}
+      variant="outline-rounded"
+      borderColor="bg-green-gradient"
+      bgColor={isFollowed ? 'bg-green-gradient' : undefined}
+      className="w-[90px] bg-gray-10 text-sm"
+      textColor={isFollowed ? 'text-white' : 'green-gradient-text'}
+      icon={() => <Checkmark activatedColor={!isFollowed ? 'green' : undefined} />}
+    >
+      {isFollowed ? 'Following' : 'Follow'}
     </Button>
   );
 };

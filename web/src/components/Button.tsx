@@ -12,7 +12,7 @@ export type ButtonVariant =
   | 'outline'
   | 'rainbow-xs'
   | 'rainbow-rounded'
-  | 'green-gradient'
+  | 'green-yellow-gradient'
   | 'clear'
   | 'outline-rounded';
 
@@ -32,7 +32,7 @@ export const buttonByVariant: Record<ButtonVariant, (props: ButtonProps) => JSX.
   outline: OutlineButton,
   'rainbow-rounded': RainbowRounded,
   'rainbow-xs': RainbowXSButton,
-  'green-gradient': GreenGradient,
+  'green-yellow-gradient': GreenGradient,
   clear: ClearButton,
   'outline-rounded': OutlineRoundedButton,
 };

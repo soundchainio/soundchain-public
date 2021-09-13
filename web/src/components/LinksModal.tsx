@@ -56,7 +56,12 @@ export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type, post
             </div>
             <div className="flex-1 text-center text-white font-bold">Embed</div>
             <div className="flex-1 text-center m-2">
-              <Button className="bg-gray-30 text-sm" type="button" variant="green-gradient" onClick={handleSubmit}>
+              <Button
+                className="bg-gray-30 text-sm"
+                type="button"
+                variant="green-yellow-gradient"
+                onClick={handleSubmit}
+              >
                 Save
               </Button>
             </div>
