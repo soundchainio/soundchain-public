@@ -7,14 +7,13 @@ interface InputFieldProps {
   label?: string;
   placeholder?: string;
   icon?: (props: React.ComponentProps<'svg'>) => JSX.Element;
-  maxLength?: number;
 }
 
 const commonInputClasses = `appearance-none block w-full px-3 py-2 border-1 bg-gray-1A text-gray-200 shadow-sm placeholder-gray-60 placeholder-semibold focus:outline-none focus:ring-green-500 focus:border-green-500`;
 const validInputClasses = `${commonInputClasses} border-gray-30`;
 const errorInputClasses = `${commonInputClasses} border-green-500`;
 
-export const InputField = ({ label, icon: Icon, maxLength, ...props }: InputFieldProps) => {
+export const InputField = ({ label, icon: Icon, ...props }: InputFieldProps) => {
   const [field, meta] = useField(props);
   return (
     <div>
