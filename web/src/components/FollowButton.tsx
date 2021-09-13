@@ -1,5 +1,4 @@
 import { Button } from 'components/Button';
-import { is } from 'date-fns/locale';
 import { useMe } from 'hooks/useMe';
 import { Checkmark } from 'icons/Checkmark';
 import { useFollowProfileMutation, useUnfollowProfileMutation } from 'lib/graphql';
