@@ -1,6 +1,5 @@
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
-import { InputField } from 'components/InputField';
 import { Label } from 'components/Label';
 import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
@@ -12,6 +11,7 @@ import { useRouter } from 'next/router';
 import React from 'react';
 import * as yup from 'yup';
 import { getBodyCharacterCount } from 'components/NewPostModal';
+import { TextareaField } from 'components/TextareaField';
 
 export interface SetupProfileBioFormValues {
   bio: string | undefined;
@@ -61,9 +61,7 @@ export default function SettingsBioPage() {
             <Form className="flex flex-1 flex-col space-y-6">
               <div>
                 <Label>Bio</Label>
-                <InputField
-                  textarea
-                  type="text"
+                <TextareaField
                   name="bio"
                   placeholder="Add a bio..."
                   maxLength={setMaxInputLength(values.bio || '')}

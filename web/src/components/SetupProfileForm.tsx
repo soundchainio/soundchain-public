@@ -5,6 +5,7 @@ import * as yup from 'yup';
 import { Button } from './Button';
 import { ImageUploadField } from './ImageUploadField';
 import { InputField } from './InputField';
+import { TextareaField } from './TextareaField';
 import { Label } from './Label';
 import { Title } from './Title';
 import { setMaxInputLength, maxBioLength } from '../pages/settings/bio';
@@ -43,7 +44,6 @@ export const SetupProfileForm = ({ onSubmit }: FormProps) => (
     <Title>Let’s setup your profile.</Title>
     <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={onSubmit}>
       {({ values }) => (
-
         <Form className="flex flex-1 flex-col">
           <div className="mb-auto space-y-6">
             <div className="my-2 flex items-stretch h-28">
@@ -69,9 +69,7 @@ export const SetupProfileForm = ({ onSubmit }: FormProps) => (
             </div>
             <div>
               <Label className="pl-1 pb-4">Add a short bio. (Optional)</Label>
-              <InputField
-                textarea
-                type="text"
+              <TextareaField
                 name="bio"
                 placeholder="Add a bio..."
                 maxLength={setMaxInputLength(values.bio || '')}
