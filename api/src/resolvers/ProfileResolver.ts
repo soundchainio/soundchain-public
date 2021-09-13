@@ -45,7 +45,7 @@ export class ProfileResolver {
   }
 
   @FieldResolver(() => Boolean)
-  isSubscribed(
+  isSubscriber(
     @Ctx() { subscriptionService }: Context,
     @Root() profile: Profile,
     @CurrentUser() user?: User,

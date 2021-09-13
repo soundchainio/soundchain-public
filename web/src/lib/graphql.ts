@@ -274,6 +274,8 @@ export type Mutation = {
   updateCoverPicture: UpdateCoverPicturePayload;
   followProfile: FollowProfilePayload;
   unfollowProfile: UnfollowProfilePayload;
+  subscribeProfile: SubscribeProfilePayload;
+  unsubscribeProfile: UnsubscribeProfilePayload;
   register: AuthPayload;
   login: AuthPayload;
   verifyUserEmail: VerifyUserEmailPayload;
@@ -361,6 +363,16 @@ export type MutationFollowProfileArgs = {
 
 export type MutationUnfollowProfileArgs = {
   input: UnfollowProfileInput;
+};
+
+
+export type MutationSubscribeProfileArgs = {
+  input: SubscribeProfileInput;
+};
+
+
+export type MutationUnsubscribeProfileArgs = {
+  input: UnsubscribeProfileInput;
 };
 
 
@@ -473,6 +485,7 @@ export type Profile = {
   updatedAt: Scalars['DateTime'];
   userHandle: Scalars['String'];
   isFollowed: Scalars['Boolean'];
+  isSubscriber: Scalars['Boolean'];
 };
 
 export type Query = {
@@ -700,6 +713,15 @@ export type SortPostInput = {
   order?: Maybe<SortOrder>;
 };
 
+export type SubscribeProfileInput = {
+  subscribedProfileId: Scalars['String'];
+};
+
+export type SubscribeProfilePayload = {
+  __typename?: 'SubscribeProfilePayload';
+  subscribedProfile: Profile;
+};
+
 export type UnfollowProfileInput = {
   followedId: Scalars['String'];
 };
@@ -707,6 +729,15 @@ export type UnfollowProfileInput = {
 export type UnfollowProfilePayload = {
   __typename?: 'UnfollowProfilePayload';
   unfollowedProfile: Profile;
+};
+
+export type UnsubscribeProfileInput = {
+  subscribedProfileId: Scalars['String'];
+};
+
+export type UnsubscribeProfilePayload = {
+  __typename?: 'UnsubscribeProfilePayload';
+  unsubscribedProfile: Profile;
 };
 
 export type UpdateCoverPictureInput = {
@@ -1428,6 +1459,22 @@ export type SendMessageMutation = (
   ) }
 );
 
+export type SubscribeProfileMutationVariables = Exact<{
+  input: SubscribeProfileInput;
+}>;
+
+
+export type SubscribeProfileMutation = (
+  { __typename?: 'Mutation' }
+  & { subscribeProfile: (
+    { __typename?: 'SubscribeProfilePayload' }
+    & { subscribedProfile: (
+      { __typename?: 'Profile' }
+      & Pick<Profile, 'id' | 'isSubscriber'>
+    ) }
+  ) }
+);
+
 export type UnfollowProfileMutationVariables = Exact<{
   input: UnfollowProfileInput;
 }>;
@@ -1452,6 +1499,22 @@ export type UnreadMessageCountQuery = (
   & { myProfile: (
     { __typename?: 'Profile' }
     & Pick<Profile, 'id' | 'unreadMessageCount'>
+  ) }
+);
+
+export type UnsubscribeProfileMutationVariables = Exact<{
+  input: UnsubscribeProfileInput;
+}>;
+
+
+export type UnsubscribeProfileMutation = (
+  { __typename?: 'Mutation' }
+  & { unsubscribeProfile: (
+    { __typename?: 'UnsubscribeProfilePayload' }
+    & { unsubscribedProfile: (
+      { __typename?: 'Profile' }
+      & Pick<Profile, 'id' | 'isSubscriber'>
+    ) }
   ) }
 );
 
@@ -3051,6 +3114,42 @@ export function useSendMessageMutation(baseOptions?: Apollo.MutationHookOptions<
 export type SendMessageMutationHookResult = ReturnType<typeof useSendMessageMutation>;
 export type SendMessageMutationResult = Apollo.MutationResult<SendMessageMutation>;
 export type SendMessageMutationOptions = Apollo.BaseMutationOptions<SendMessageMutation, SendMessageMutationVariables>;
+export const SubscribeProfileDocument = gql`
+    mutation SubscribeProfile($input: SubscribeProfileInput!) {
+  subscribeProfile(input: $input) {
+    subscribedProfile {
+      id
+      isSubscriber
+    }
+  }
+}
+    `;
+export type SubscribeProfileMutationFn = Apollo.MutationFunction<SubscribeProfileMutation, SubscribeProfileMutationVariables>;
+
+/**
+ * __useSubscribeProfileMutation__
+ *
+ * To run a mutation, you first call `useSubscribeProfileMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSubscribeProfileMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [subscribeProfileMutation, { data, loading, error }] = useSubscribeProfileMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useSubscribeProfileMutation(baseOptions?: Apollo.MutationHookOptions<SubscribeProfileMutation, SubscribeProfileMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<SubscribeProfileMutation, SubscribeProfileMutationVariables>(SubscribeProfileDocument, options);
+      }
+export type SubscribeProfileMutationHookResult = ReturnType<typeof useSubscribeProfileMutation>;
+export type SubscribeProfileMutationResult = Apollo.MutationResult<SubscribeProfileMutation>;
+export type SubscribeProfileMutationOptions = Apollo.BaseMutationOptions<SubscribeProfileMutation, SubscribeProfileMutationVariables>;
 export const UnfollowProfileDocument = gql`
     mutation UnfollowProfile($input: UnfollowProfileInput!) {
   unfollowProfile(input: $input) {
@@ -3123,6 +3222,42 @@ export function useUnreadMessageCountLazyQuery(baseOptions?: Apollo.LazyQueryHoo
 export type UnreadMessageCountQueryHookResult = ReturnType<typeof useUnreadMessageCountQuery>;
 export type UnreadMessageCountLazyQueryHookResult = ReturnType<typeof useUnreadMessageCountLazyQuery>;
 export type UnreadMessageCountQueryResult = Apollo.QueryResult<UnreadMessageCountQuery, UnreadMessageCountQueryVariables>;
+export const UnsubscribeProfileDocument = gql`
+    mutation UnsubscribeProfile($input: UnsubscribeProfileInput!) {
+  unsubscribeProfile(input: $input) {
+    unsubscribedProfile {
+      id
+      isSubscriber
+    }
+  }
+}
+    `;
+export type UnsubscribeProfileMutationFn = Apollo.MutationFunction<UnsubscribeProfileMutation, UnsubscribeProfileMutationVariables>;
+
+/**
+ * __useUnsubscribeProfileMutation__
+ *
+ * To run a mutation, you first call `useUnsubscribeProfileMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUnsubscribeProfileMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [unsubscribeProfileMutation, { data, loading, error }] = useUnsubscribeProfileMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUnsubscribeProfileMutation(baseOptions?: Apollo.MutationHookOptions<UnsubscribeProfileMutation, UnsubscribeProfileMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UnsubscribeProfileMutation, UnsubscribeProfileMutationVariables>(UnsubscribeProfileDocument, options);
+      }
+export type UnsubscribeProfileMutationHookResult = ReturnType<typeof useUnsubscribeProfileMutation>;
+export type UnsubscribeProfileMutationResult = Apollo.MutationResult<UnsubscribeProfileMutation>;
+export type UnsubscribeProfileMutationOptions = Apollo.BaseMutationOptions<UnsubscribeProfileMutation, UnsubscribeProfileMutationVariables>;
 export const UpdateCoverPictureDocument = gql`
     mutation UpdateCoverPicture($input: UpdateCoverPictureInput!) {
   updateCoverPicture(input: $input) {
