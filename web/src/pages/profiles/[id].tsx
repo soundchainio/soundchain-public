@@ -7,7 +7,9 @@ import { Number } from 'components/Number';
 import { Posts } from 'components/Posts';
 import { ProfileTabs } from 'components/ProfileTabs';
 import { SocialMediaLink } from 'components/SocialMediaLink';
+import { SubscribeButton } from 'components/SubscribeButton';
 import { Subtitle } from 'components/Subtitle';
+import { useMountedState } from 'hooks/useMountedState';
 import { useProfileQuery } from 'lib/graphql';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
@@ -18,7 +20,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const profileId = router.query.id as string;
   const { data } = useProfileQuery({ variables: { id: profileId } });
-  const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useMountedState(false);
   const [followModalType, setFollowModalType] = useState<FollowModalType>();
 
   useEffect(() => {
@@ -43,8 +45,16 @@ export default function ProfilePage() {
     return null;
   }
 
-  const { coverPicture, displayName, userHandle, socialMedias, followerCount, followingCount, isFollowed } =
-    data.profile;
+  const {
+    coverPicture,
+    displayName,
+    userHandle,
+    socialMedias,
+    followerCount,
+    followingCount,
+    isFollowed,
+    isSubscriber,
+  } = data.profile;
 
   return (
     <Layout>
@@ -57,8 +67,8 @@ export default function ProfilePage() {
         />
       </div>
       <div className="p-4">
-        <div className="flex items-center space-x-8">
-          <div className="flex-1 pl-24 flex space-x-4">
+        <div className="flex items-center">
+          <div className="flex-1 pl-24 flex space-x-2">
             <div className="text-center text-sm cursor-pointer" onClick={onFollowers}>
               <p className="font-semibold text-white">
                 <Number value={followerCount} />
@@ -72,7 +82,10 @@ export default function ProfilePage() {
               <p className="text-gray-80 text-xs">Following</p>
             </div>
           </div>
-          <FollowButton followedId={profileId} isFollowed={isFollowed} />
+          <div className="flex flex-row space-x-2">
+            <SubscribeButton subscribedProfileId={profileId} isSubscriber={isSubscriber} />
+            <FollowButton followedId={profileId} isFollowed={isFollowed} />
+          </div>
         </div>
         <div className="flex flex-row mt-4">
           <div>

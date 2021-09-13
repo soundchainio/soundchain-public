@@ -156,7 +156,7 @@ export class ProfileService extends ModelService<typeof Profile> {
     }
 
     const subscribedProfile = await this.findOrFail(subscribedProfileId);
-    await this.context.followService.deleteFollow(profileId, subscribedProfileId);
+    await this.context.subscriptionService.deleteSubscription(profileId, subscribedProfileId);
 
     return subscribedProfile;
   }

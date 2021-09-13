@@ -12,6 +12,7 @@ query Profile($id: String!) {
     }
     userHandle
     isFollowed
+    isSubscriber
     followerCount
     followingCount
     musicianType

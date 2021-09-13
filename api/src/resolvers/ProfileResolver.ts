@@ -173,8 +173,8 @@ export class ProfileResolver {
     @Ctx() { profileService }: Context,
     @Arg('input') { subscribedProfileId }: UnsubscribeProfileInput,
     @CurrentUser() { profileId }: User,
-  ): Promise<UnfollowProfilePayload> {
-    const unfollowedProfile = await profileService.unsubscribeProfile(profileId, subscribedProfileId);
-    return { unfollowedProfile };
+  ): Promise<UnsubscribeProfilePayload> {
+    const unsubscribedProfile = await profileService.unsubscribeProfile(profileId, subscribedProfileId);
+    return { unsubscribedProfile };
   }
 }
