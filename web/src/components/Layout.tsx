@@ -18,9 +18,9 @@ export const Layout = ({ children, hideBottomNavBar, topNavBarProps }: LayoutPro
   const { state } = useContext(store);
 
   return (
-    <div className="h-screen flex">
+    <div className="h-screen flex overflow-hidden">
       <SideMenu isOpen={sideMenuOpen} setOpen={setSideMenuOpen} />
-      <div className="flex flex-col w-0 flex-1">
+      <div className="flex flex-col w-0 flex-1 overflow-hidden">
         <TopNavBar setSideMenuOpen={setSideMenuOpen} {...topNavBarProps} />
         <div id="top-sheet"></div>
         <main className="flex-1 relative overflow-y-auto focus:outline-none bg-gray-10">
