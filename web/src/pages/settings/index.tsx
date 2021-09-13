@@ -59,13 +59,18 @@ export default function SettingsPage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div className="bg-gray-25 grid gap-4 py-4">
-        <Link to="/email" label="Email" value={me.email} />
+        <FakeLink
+          to="/email"
+          onClick={() => dispatchShowUnderDevelopmentModal(true)}
+          label="Email"
+          value={me.email}
+        />
         <Link to="/name" label="Name" value={me.profile.displayName} />
         <Link to="/username" label="Username" value={me.handle} />
         <Link to="/password" label="Password" value="********" />
         <Link to="/musician-type" label="Musician Type(s)" value={musicianTypes || 'Not selected'} />
         <Link to="/favorite-genres" label="Favorite Genre(s)" value={genres || 'Not selected'} />
-         <FakeLink
+        <FakeLink
           to="/social-links"
           onClick={() => dispatchShowUnderDevelopmentModal(true)}
           label="Social Link(s)"
