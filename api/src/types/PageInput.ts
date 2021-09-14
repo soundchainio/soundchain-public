@@ -18,4 +18,7 @@ export class PageInput {
 
   @Field({ nullable: true })
   before?: string;
+
+  @Field({ defaultValue: false })
+  inclusive?: boolean;
 }

@@ -44,6 +44,6 @@ export const genres: GenreLabels[] = [
   { key: Genre.World, label: 'World' },
 ];
 
-export function getGenreLabelByKey(key: Genre) : string | undefined {
-  return genres.find((g) => g.key === key)?.label
+export function getGenreLabelByKey(key: Genre): string | undefined {
+  return genres.find(g => g.key === key)?.label;
 }

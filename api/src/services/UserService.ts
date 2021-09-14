@@ -25,8 +25,8 @@ export class UserService extends ModelService<typeof User> {
 
   async updatePassword(id: string, password: string): Promise<void> {
     const user = await this.getUser(id);
-    const userDoc = new this.model(user)
+    const userDoc = new this.model(user);
     userDoc.password = password;
-    userDoc.save()
+    userDoc.save();
   }
 }

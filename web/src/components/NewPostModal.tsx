@@ -32,8 +32,8 @@ const initialValues = { body: '' };
 
 const splitter = new GraphemeSplitter();
 
-export const getBodyCharacterCount = (body: string) => {
-  return splitter.splitGraphemes(body).length;
+export const getBodyCharacterCount = (body?: string) => {
+  return splitter.splitGraphemes(body || '').length;
 };
 
 // When we get string.length, emojis are counted as 2 characters

@@ -4,7 +4,7 @@ import { encodeCursor } from './cursor';
 import { PaginateResult } from './paginate';
 
 export function prepareResult<T extends typeof Model>(
-  field: keyof DocumentType<InstanceType<T>>,
+  field: keyof InstanceType<T>,
   last: number | undefined,
   limit: number,
   after: string | undefined,
