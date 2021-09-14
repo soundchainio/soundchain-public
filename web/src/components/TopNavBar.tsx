@@ -62,15 +62,17 @@ export const TopNavBar = ({
           </div>
         </div>
       ) : (
-        <div className="flex-2 flex items-stretch justify-start ml-2">
-          <div className="flex-shrink-0 flex items-center">
-            <Button variant="outline" onClick={onLogin}>
-              Login
-            </Button>
-            <Button variant="outline" onClick={onCreateAccount}>
-              Create Account
-            </Button>
-          </div>
+        <div className="flex-2 flex items-center justify-start ml-4 space-x-2">
+          <Button variant={router.pathname === '/login' ? 'rainbow-xs' : 'outline'} onClick={onLogin} className="w-32">
+            Login
+          </Button>
+          <Button
+            variant={router.pathname === '/create-account' ? 'rainbow-xs' : 'outline'}
+            onClick={onCreateAccount}
+            className="w-32"
+          >
+            Create Account
+          </Button>
         </div>
       )}
       {RightButton && <div className="flex flex-1 justify-end pr-4 items-center">{RightButton}</div>}

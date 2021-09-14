@@ -1,116 +1,66 @@
-import { ApolloError } from '@apollo/client';
 import { AuthLayout } from 'components/AuthLayout';
-import { CompleteProfileForm, CompleteProfileFormValues } from 'components/CompleteProfileForm';
-import { RegisterEmailForm, RegisterEmailFormValues } from 'components/RegisterEmailForm';
-import { RegisterErrorStep } from 'components/RegisterErrorStep';
-import { SetupProfileForm, SetupProfileFormValues } from 'components/SetupProfileForm';
-import { useMe } from 'hooks/useMe';
-import { cacheFor, setJwt } from 'lib/apollo';
-import {
-  RegisterInput,
-  useRegisterMutation,
-  useUpdateCoverPictureMutation,
-  useUpdateFavoriteGenresMutation,
-  useUpdateMusicianTypeMutation,
-  useUpdateProfilePictureMutation,
-} from 'lib/graphql';
-import { GetServerSideProps } from 'next';
+import { Button } from 'components/Button';
+import { InputField } from 'components/InputField';
+import { Label } from 'components/Label';
+import { Form, Formik, FormikHelpers } from 'formik';
+import { setJwt } from 'lib/apollo';
+import { useRegisterMutation } from 'lib/graphql';
+import { omit } from 'lodash';
 import { useRouter } from 'next/dist/client/router';
 import Head from 'next/head';
-import { useCallback, useEffect, useState } from 'react';
+import { formatValidationErrors } from 'utils/errorHelpers';
+import { handleRegex } from 'utils/Validation';
+import * as yup from 'yup';
 
-export const getServerSideProps: GetServerSideProps = context => {
-  return cacheFor(CreateAccountPage, {}, context);
-};
+interface FormValues {
+  email: string;
+  displayName: string;
+  handle: string;
+  password: string;
+  passwordConfirmation: string;
+}
 
 export default function CreateAccountPage() {
   const router = useRouter();
+  const [register, { loading }] = useRegisterMutation();
 
-  const [register] = useRegisterMutation();
-  const [updateGenres] = useUpdateFavoriteGenresMutation();
-  const [updateMusicianType] = useUpdateMusicianTypeMutation();
-  const [updateProfilePicture] = useUpdateProfilePictureMutation();
-  const [updateCoverPicture] = useUpdateCoverPictureMutation();
-
-  const [registerEmailValues, setRegisterEmailValues] = useState<RegisterEmailFormValues>();
-  const [setupProfileValues, setSetupProfileValues] = useState<SetupProfileFormValues>();
-  const [completeProfileValues, setCompleteProfileValues] = useState<CompleteProfileFormValues>();
-
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<ApolloError>();
-
-  const me = useMe();
-
-  const updateProfile = useCallback(async () => {
-    setLoading(true);
+  const handleSubmit = async (values: FormValues, { setErrors }: FormikHelpers<FormValues>) => {
     try {
-      if (completeProfileValues && completeProfileValues.favoriteGenres.length) {
-        await updateGenres({ variables: { input: { favoriteGenres: completeProfileValues.favoriteGenres } } });
-      }
-
-      if (completeProfileValues && completeProfileValues.musicianType.length) {
-        await updateMusicianType({ variables: { input: { musicianTypes: completeProfileValues.musicianType } } });
-      }
-
-      if (setupProfileValues) {
-        const { profilePicture, coverPicture } = setupProfileValues;
-
-        if (profilePicture) {
-          await updateProfilePicture({ variables: { input: { picture: profilePicture } } });
-        }
-
-        if (coverPicture) {
-          await updateCoverPicture({ variables: { input: { picture: coverPicture } } });
-        }
-      }
-
+      const { data } = await register({ variables: { input: omit(values, 'passwordConfirmation') } });
+      setJwt(data?.register.jwt);
       router.push(router.query.callbackUrl?.toString() ?? '/');
-    } catch (err) {
-      setError(err as ApolloError);
-      setLoading(false);
+    } catch (error) {
+      const formatted = formatValidationErrors<FormValues>(error.graphQLErrors[0]);
+      setErrors(formatted);
     }
-  }, [completeProfileValues, router, setupProfileValues, updateGenres, updateCoverPicture, updateProfilePicture, updateMusicianType]);
+  };
 
-  const registerUser = useCallback(async () => {
-    if (registerEmailValues && setupProfileValues && completeProfileValues) {
-      setLoading(true);
-      try {
-        const result = await register({
-          variables: {
-            input: {
-              email: registerEmailValues.email,
-              displayName: setupProfileValues.displayName,
-              bio: setupProfileValues.bio,
-              handle: setupProfileValues.handle,
-              password: completeProfileValues.password,
-            } as RegisterInput,
-          },
-        });
-        setJwt(result.data?.register.jwt);
-      } catch (err) {
-        setError(err as ApolloError);
-        setLoading(false);
-      }
-    }
-  }, [completeProfileValues, register, registerEmailValues, setupProfileValues]);
+  const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
+    email: yup.string().email().required().label('Email'),
+    displayName: yup.string().min(3).max(255).required().label('Name'),
+    handle: yup
+      .string()
+      .min(1)
+      .max(32)
+      .matches(handleRegex, 'Invalid characters. Only letters and numbers are accepted.')
+      .required()
+      .label('Username'),
+    password: yup.string().min(8).required().label('Password'),
+    passwordConfirmation: yup
+      .string()
+      .required()
+      .test('passwords-match', 'Passwords must match', function (value) {
+        return this.parent.password === value;
+      })
+      .label('Password confirmation'),
+  });
 
-  useEffect(() => {
-    registerUser();
-  }, [completeProfileValues, registerUser]);
-
-  useEffect(() => {
-    if (me && completeProfileValues) {
-      updateProfile();
-    } else if (me && !completeProfileValues) {
-      router.push(router.query.callbackUrl?.toString() ?? '/');
-    }
-  }, [completeProfileValues, me, router, updateProfile]);
-
-  const onBackError = () => {
-    setRegisterEmailValues(undefined);
-    setSetupProfileValues(undefined);
-    setCompleteProfileValues(undefined);
-    setError(undefined);
+  const initialValues = {
+    email: '',
+    displayName: '',
+    handle: '',
+    password: '',
+    passwordConfirmation: '',
   };
 
   return (
@@ -120,16 +70,36 @@ export default function CreateAccountPage() {
         <meta name="description" content="Soundchain" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      {!error && (
-        <>
-          {!registerEmailValues && <RegisterEmailForm onSubmit={setRegisterEmailValues} />}
-          {registerEmailValues && !setupProfileValues && <SetupProfileForm onSubmit={setSetupProfileValues} />}
-          {registerEmailValues && setupProfileValues && (
-            <CompleteProfileForm onSubmit={setCompleteProfileValues} loading={loading} />
-          )}
-        </>
-      )}
-      {error && <RegisterErrorStep error={error} onBack={onBackError} />}
+      <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
+        <Form className="flex flex-col flex-1" autoComplete="off">
+          <div className="flex flex-col mb-auto space-y-6">
+            <div className="space-y-3">
+              <p className="text-center">
+                <Label textSize="xs">
+                  A link will be sent to the email address you enter below which must be clicked to activate your
+                  account.
+                </Label>
+              </p>
+              <InputField type="email" name="email" placeholder="Email Address" />
+              <InputField type="text" name="displayName" placeholder="Name" />
+            </div>
+            <div className="space-y-3">
+              <Label textSize="xs">
+                Enter username. <i>(Only letters and numbers allowed)</i>
+              </Label>
+              <InputField type="text" name="handle" placeholder="Username" />
+            </div>
+            <div className="space-y-3">
+              <Label textSize="xs">Create a password to secure your account:</Label>
+              <InputField type="password" name="password" placeholder="Password" autoComplete="new-password" />
+              <InputField type="password" name="passwordConfirmation" placeholder="Confirm Password" />
+            </div>
+          </div>
+          <Button type="submit" loading={loading} disabled={loading}>
+            CREATE ACCOUNT
+          </Button>
+        </Form>
+      </Formik>
     </AuthLayout>
   );
 }

@@ -5,7 +5,7 @@ export const RainbowXSButton = ({ className, type = 'button', icon: Icon, childr
   return (
     <div className={classNames(className, 'p-0.5 bg-rainbow-gradient h-8')}>
       <button
-        className={`${commonClasses} sm:px-4 py-0 font-medium text-white bg-opacity-60 bg-black`}
+        className={`${commonClasses} sm:px-4 p-2 font-medium text-white text-xs bg-opacity-60 bg-black`}
         type={type}
         {...rest}
       >
