@@ -124,11 +124,20 @@ export class ProfileService extends ModelService<typeof Profile> {
   }
 
   async incrementUnreadMessageCount(profileId: string): Promise<void> {
+    const profile = await this.findOrFail(profileId);
+    if (profile.unreadMessageCount < 0) {
+      await this.resetUnreadMessageCount(profileId);
+    }
     await this.model.updateOne({ _id: profileId }, { $inc: { unreadMessageCount: 1 } });
   }
 
   async decreaseUnreadMessageCount(profileId: string, count: number): Promise<void> {
-    await this.model.updateOne({ _id: profileId }, { $inc: { unreadMessageCount: -count } });
+    const profile = await this.findOrFail(profileId);
+    if (profile.unreadMessageCount - count >= 0) {
+      await this.model.updateOne({ _id: profileId }, { $inc: { unreadMessageCount: -count } });
+    } else {
+      await this.resetUnreadMessageCount(profileId);
+    }
   }
 
   async resetUnreadMessageCount(profileId: string): Promise<Profile> {
