@@ -8,10 +8,10 @@ export class Subscription extends Model {
   readonly _id: string;
 
   @prop({ required: true })
-  profileId: string;
+  subscriberId: string;
 
   @prop({ required: true })
-  subscribedProfileId: string;
+  profileId: string;
 
   @Field(() => Date)
   createdAt: Date;

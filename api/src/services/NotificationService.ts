@@ -120,7 +120,7 @@ export class NotificationService extends ModelService<typeof Notification> {
 
   async notifyNewPostForSubscribers(post: Post): Promise<void> {
     const authorProfile = await this.context.profileService.getProfile(post.profileId);
-    const subscribersIds = await this.context.subscriptionService.getSubscribersIds(post.profileId);
+    const subscribersIds = await this.context.subscriptionService.getSubscriberIds(post.profileId);
     const metadata: NewPostNotificationMetadata = {
       authorName: authorProfile.displayName,
       authorPicture: authorProfile.profilePicture,

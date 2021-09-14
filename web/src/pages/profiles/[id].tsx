@@ -83,7 +83,7 @@ export default function ProfilePage() {
             </div>
           </div>
           <div className="flex flex-row space-x-2">
-            <SubscribeButton subscribedProfileId={profileId} isSubscriber={isSubscriber} />
+            <SubscribeButton profileId={profileId} isSubscriber={isSubscriber} />
             <FollowButton followedId={profileId} isFollowed={isFollowed} />
           </div>
         </div>

@@ -1,17 +1,17 @@
 import { useMe } from 'hooks/useMe';
 import { SubscribeBell } from 'icons/SubscribeBell';
-import { useSubscribeProfileMutation, useUnsubscribeProfileMutation } from 'lib/graphql';
+import { useSubscribeToProfileMutation, useUnsubscribeFromProfileMutation } from 'lib/graphql';
 import { useRouter } from 'next/router';
 import React from 'react';
 
 interface SubscribeButtonProps {
-  subscribedProfileId: string;
+  profileId: string;
   isSubscriber: boolean;
 }
 
-export const SubscribeButton = ({ subscribedProfileId, isSubscriber }: SubscribeButtonProps) => {
-  const [subscribeProfile, { loading: subscribeLoading }] = useSubscribeProfileMutation();
-  const [unsubscribeProfile, { loading: unsubscribeLoading }] = useUnsubscribeProfileMutation();
+export const SubscribeButton = ({ profileId, isSubscriber }: SubscribeButtonProps) => {
+  const [subscribeProfile, { loading: subscribeLoading }] = useSubscribeToProfileMutation();
+  const [unsubscribeProfile, { loading: unsubscribeLoading }] = useUnsubscribeFromProfileMutation();
   const router = useRouter();
   const me = useMe();
 
@@ -25,7 +25,7 @@ export const SubscribeButton = ({ subscribedProfileId, isSubscriber }: Subscribe
       return;
     }
 
-    const opts = { variables: { input: { subscribedProfileId } } };
+    const opts = { variables: { input: { profileId } } };
 
     if (!isSubscriber) {
       await subscribeProfile(opts);
@@ -34,7 +34,7 @@ export const SubscribeButton = ({ subscribedProfileId, isSubscriber }: Subscribe
     }
   };
 
-  if (me?.profile.id === subscribedProfileId) {
+  if (me?.profile.id === profileId) {
     return null;
   }
 

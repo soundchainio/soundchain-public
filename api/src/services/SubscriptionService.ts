@@ -1,13 +1,14 @@
 import { DocumentType } from '@typegoose/typegoose';
 import { UserInputError } from 'apollo-server-errors';
 import { FilterQuery } from 'mongoose';
+import { Profile } from '../models/Profile';
 import { Subscription, SubscriptionModel } from '../models/Subscription';
 import { Context } from '../types/Context';
 import { ModelService } from './ModelService';
 
 interface SubscriptionKeyComponents {
+  subscriberId: string;
   profileId: string;
-  subscribedProfileId: string;
 }
 
 export class SubscriptionService extends ModelService<typeof Subscription, SubscriptionKeyComponents> {
@@ -15,41 +16,57 @@ export class SubscriptionService extends ModelService<typeof Subscription, Subsc
     super(context, SubscriptionModel);
   }
 
-  keyIteratee = ({
-    profileId,
-    subscribedProfileId,
-  }: Partial<DocumentType<InstanceType<typeof Subscription>>>): string => {
-    return `${profileId}:${subscribedProfileId}`;
+  keyIteratee = ({ subscriberId, profileId }: Partial<DocumentType<InstanceType<typeof Subscription>>>): string => {
+    return `${subscriberId}:${profileId}`;
   };
 
   getFindConditionForKeys(keys: readonly string[]): FilterQuery<Subscription> {
     return {
       $or: keys.map(key => {
-        const [profileId, subscribedProfileId] = key.split(':');
-        return { profileId, subscribedProfileId };
+        const [subscriberId, profileId] = key.split(':');
+        return { subscriberId, profileId };
       }),
     };
   }
 
-  async createSubscription(params: SubscriptionKeyComponents): Promise<Subscription> {
-    const subscription = new this.model(params);
-    await subscription.save();
-    this.dataLoader.clear(this.getKeyFromComponents(subscription));
-    return subscription;
-  }
-
-  async deleteSubscription(profileId: string, subscribedProfileId: string): Promise<void> {
-    const { deletedCount } = await SubscriptionModel.deleteOne({ profileId, subscribedProfileId });
-
-    if (deletedCount === 0) {
-      throw new UserInputError(`User profile ${profileId} isn't subscribing profile ${subscribedProfileId}.`);
+  async subscribeProfile(subscriberId: string, profileId: string): Promise<Profile> {
+    if (subscriberId === profileId) {
+      throw new UserInputError('You cannot subscribe to your own profile.');
     }
 
-    this.dataLoader.clear(this.getKeyFromComponents({ profileId, subscribedProfileId }));
+    const [subscribedProfile, alreadySubscribed] = await Promise.all([
+      this.context.profileService.findOrFail(profileId),
+      this.exists({ subscriberId, profileId }),
+    ]);
+
+    if (alreadySubscribed) {
+      throw new UserInputError(`User profile ${subscriberId} is already subscribing profile ${profileId}.`);
+    }
+
+    const subscription = new this.model({ subscriberId, profileId });
+    await subscription.save();
+    this.dataLoader.clear(this.getKeyFromComponents(subscription));
+    return subscribedProfile;
   }
 
-  async getSubscribersIds(subscribedProfileId: string): Promise<string[]> {
-    const rest = await this.model.find({ subscribedProfileId }, { profileId: 1, _id: 0 });
-    return rest.map(({ profileId }) => profileId);
+  async unsubscribeProfile(subscriberId: string, profileId: string): Promise<Profile> {
+    const subscribedProfile = await this.context.profileService.findOrFail(profileId);
+    const { deletedCount } = await SubscriptionModel.deleteOne({
+      subscriberId,
+      profileId,
+    });
+
+    if (deletedCount === 0) {
+      throw new UserInputError(`User profile ${subscriberId} isn't subscribing profile ${profileId}.`);
+    }
+
+    this.dataLoader.clear(this.getKeyFromComponents({ subscriberId, profileId }));
+
+    return subscribedProfile;
+  }
+
+  async getSubscriberIds(profileId: string): Promise<string[]> {
+    const subscriptions = await this.model.find({ profileId }, { subscriberId: 1, _id: 0 });
+    return subscriptions.map(({ subscriberId }) => subscriberId);
   }
 }

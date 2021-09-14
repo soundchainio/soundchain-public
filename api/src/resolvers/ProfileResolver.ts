@@ -5,12 +5,12 @@ import { User } from '../models/User';
 import { Context } from '../types/Context';
 import { FollowProfileInput } from '../types/FollowProfileInput';
 import { FollowProfilePayload } from '../types/FollowProfilePayload';
-import { SubscribeProfileInput } from '../types/SubscribeProfileInput';
-import { SubscribeProfilePayload } from '../types/SubscribeProfilePayload';
+import { SubscribeToProfileInput } from '../types/SubscribeToProfileInput';
+import { SubscribeToProfilePayload } from '../types/SubscribeToProfilePayload';
 import { UnfollowProfileInput } from '../types/UnfollowProfileInput';
 import { UnfollowProfilePayload } from '../types/UnfollowProfilePayload';
-import { UnsubscribeProfileInput } from '../types/UnsubscribeProfileInput';
-import { UnsubscribeProfilePayload } from '../types/UnsubscribeProfilePayload';
+import { UnsubscribeFromProfileInput } from '../types/UnsubscribeProfileInput';
+import { UnsubscribeFromProfilePayload } from '../types/UnsubscribeProfilePayload';
 import { UpdateCoverPictureInput } from '../types/UpdateCoverPictureInput';
 import { UpdateCoverPicturePayload } from '../types/UpdateCoverPicturePayload';
 import { UpdateFavoriteGenresInput } from '../types/UpdateFavoriteGenresInput';
@@ -54,7 +54,7 @@ export class ProfileResolver {
       return Promise.resolve(false);
     }
 
-    return subscriptionService.exists({ profileId: user.profileId, subscribedProfileId: profile._id });
+    return subscriptionService.exists({ subscriberId: user.profileId, profileId: profile._id });
   }
 
   @Query(() => Profile)
@@ -156,25 +156,25 @@ export class ProfileResolver {
     return { unfollowedProfile };
   }
 
-  @Mutation(() => SubscribeProfilePayload)
+  @Mutation(() => SubscribeToProfilePayload)
   @Authorized()
-  async subscribeProfile(
-    @Ctx() { profileService }: Context,
-    @Arg('input') { subscribedProfileId }: SubscribeProfileInput,
-    @CurrentUser() { profileId }: User,
-  ): Promise<SubscribeProfilePayload> {
-    const subscribedProfile = await profileService.subscribeProfile(profileId, subscribedProfileId);
-    return { subscribedProfile };
+  async subscribeToProfile(
+    @Ctx() { subscriptionService }: Context,
+    @Arg('input') { profileId }: SubscribeToProfileInput,
+    @CurrentUser() { profileId: subscriberId }: User,
+  ): Promise<SubscribeToProfilePayload> {
+    const profile = await subscriptionService.subscribeProfile(subscriberId, profileId);
+    return { profile };
   }
 
-  @Mutation(() => UnsubscribeProfilePayload)
+  @Mutation(() => UnsubscribeFromProfilePayload)
   @Authorized()
-  async unsubscribeProfile(
-    @Ctx() { profileService }: Context,
-    @Arg('input') { subscribedProfileId }: UnsubscribeProfileInput,
-    @CurrentUser() { profileId }: User,
-  ): Promise<UnsubscribeProfilePayload> {
-    const unsubscribedProfile = await profileService.unsubscribeProfile(profileId, subscribedProfileId);
-    return { unsubscribedProfile };
+  async unsubscribeFromProfile(
+    @Ctx() { subscriptionService }: Context,
+    @Arg('input') { profileId }: UnsubscribeFromProfileInput,
+    @CurrentUser() { profileId: subscriberId }: User,
+  ): Promise<UnsubscribeFromProfilePayload> {
+    const profile = await subscriptionService.unsubscribeProfile(subscriberId, profileId);
+    return { profile };
   }
 }
