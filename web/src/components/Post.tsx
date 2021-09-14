@@ -1,6 +1,10 @@
+import { useModalDispatch } from 'contexts/providers/modal';
+import { useMe } from 'hooks/useMe';
+import { Ellipsis } from 'icons/Ellipsis';
 import { usePostQuery } from 'lib/graphql';
 import NextLink from 'next/link';
 import React from 'react';
+import { DeleteModalType } from 'types/DeleteModalType';
 import { Avatar } from './Avatar';
 import { PostActions } from './PostActions';
 import { PostSkeleton } from './PostSkeleton';
@@ -14,7 +18,15 @@ interface PostProps {
 
 export const Post = ({ postId }: PostProps) => {
   const { data } = usePostQuery({ variables: { id: postId } });
+  const { dispatchShowDeleteModal } = useModalDispatch();
+  const me = useMe();
+
   const post = data?.post;
+  const canEdit = post?.profile.id == me?.profile.id;
+
+  const onEllipsisClick = () => {
+    dispatchShowDeleteModal(true, DeleteModalType.POST, postId);
+  };
 
   if (!post) return <PostSkeleton />;
 
@@ -30,6 +42,11 @@ export const Post = ({ postId }: PostProps) => {
               </NextLink>
               <Timestamp datetime={post.createdAt} className="flex-1 text-left" />
             </div>
+            {canEdit && (
+              <div>
+                <Ellipsis className="pr-2 pl-2 w-10 h-3 cursor-pointer" onClick={onEllipsisClick} />
+              </div>
+            )}
           </div>
           <pre className="mt-4 text-gray-100 break-words whitespace-pre-wrap">{post.body}</pre>
           {post.mediaLink && (
@@ -49,3 +66,6 @@ export const Post = ({ postId }: PostProps) => {
     </div>
   );
 };
+function dispatchShowDeleteModal(arg0: boolean, COMMENT: any, commentId: any) {
+  throw new Error('Function not implemented.');
+}
