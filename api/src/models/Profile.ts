@@ -35,6 +35,10 @@ export class Profile extends Model {
   @prop({ required: true, type: [String], enum: MusicianType })
   musicianType: MusicianType[];
 
+  @Field({ nullable: true })
+  @prop({ required: false })
+  bio?: string;
+
   @Field(() => Number)
   @prop({ required: true, default: 0 })
   followerCount: number;

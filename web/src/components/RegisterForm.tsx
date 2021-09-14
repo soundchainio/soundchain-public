@@ -15,6 +15,7 @@ interface FormValues {
   displayName: string;
   password: string;
   passwordConfirmation: string | undefined;
+  bio: string;
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
@@ -26,6 +27,7 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
     .matches(handleRegex, 'Invalid characters. Only letters and numbers are accepted')
     .required(),
   displayName: yup.string().min(3).max(255).required().label('Display Name'),
+  bio: yup.string().required().label('Bio'),
   password: yup.string().min(8).required().label('Password'),
   passwordConfirmation: yup
     .string()
@@ -38,7 +40,7 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
 
 export const RegisterForm = () => {
   const [register, { loading, error }] = useRegisterMutation();
-  const initialFormValues = { email: '', handle: '', displayName: '', password: '', passwordConfirmation: '' };
+  const initialFormValues = { email: '', handle: '', displayName: '', password: '', passwordConfirmation: '', bio: '' };
 
   const handleSubmit = async (values: FormValues) => {
     delete values.passwordConfirmation;
@@ -56,6 +58,7 @@ export const RegisterForm = () => {
         <InputField type="text" name="handle" placeholder="Username" icon={UserIconOutline} />
         <InputField type="text" name="email" placeholder="Email" icon={MailIcon} />
         <InputField type="text" name="displayName" placeholder="Display Name" icon={UserIcon} />
+        <InputField type="text" name="bio" placeholder="Bio" icon={UserIcon} />
         <InputField type="password" name="password" placeholder="Password" icon={LockClosedIcon} />
         <InputField type="password" name="passwordConfirmation" placeholder="Confirm Password" icon={LockClosedIcon} />
         {error && <p>{error.message}</p>}

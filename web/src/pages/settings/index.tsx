@@ -68,6 +68,7 @@ export default function SettingsPage() {
         <Link to="/name" label="Name" value={me.profile.displayName} />
         <Link to="/username" label="Username" value={me.handle} />
         <Link to="/password" label="Password" value="********" />
+        <Link to="/bio" label="Bio" value={me.profile.bio || 'Add a bio...'} />
         <Link to="/musician-type" label="Musician Type(s)" value={musicianTypes || 'Not selected'} />
         <Link to="/favorite-genres" label="Favorite Genre(s)" value={genres || 'Not selected'} />
         <FakeLink
