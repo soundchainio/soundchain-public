@@ -22,7 +22,7 @@ interface FormValues {
 
 export default function CreateAccountPage() {
   const router = useRouter();
-  const [register] = useRegisterMutation();
+  const [register, { loading }] = useRegisterMutation();
 
   const handleSubmit = async (values: FormValues, { setErrors }: FormikHelpers<FormValues>) => {
     try {
@@ -95,7 +95,9 @@ export default function CreateAccountPage() {
               <InputField type="password" name="passwordConfirmation" placeholder="Confirm Password" />
             </div>
           </div>
-          <Button type="submit">CREATE ACCOUNT</Button>
+          <Button type="submit" loading={loading} disabled={loading}>
+            CREATE ACCOUNT
+          </Button>
         </Form>
       </Formik>
     </AuthLayout>
