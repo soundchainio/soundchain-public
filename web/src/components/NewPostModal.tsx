@@ -7,7 +7,7 @@ import GraphemeSplitter from 'grapheme-splitter';
 import { CreatePostInput, CreateRepostInput } from 'lib/graphql';
 import { default as React, useCallback, useEffect, useState } from 'react';
 import * as yup from 'yup';
-import { useCreatePostMutation, useCreateRepostMutation } from '../lib/graphql';
+import { useCreatePostMutation, useCreateRepostMutation, usePostLazyQuery } from '../lib/graphql';
 import { getNormalizedLink, hasLink } from '../utils/NormalizeEmbedLinks';
 import { ModalsPortal } from './ModalsPortal';
 import { NewPostBar } from './NewPostBar';
@@ -18,6 +18,8 @@ export interface FormValues {
   mediaLink?: string;
 }
 
+const initialValues = { body: '' };
+
 const postSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   body: yup.string().required(),
   mediaLink: yup.string(),
@@ -27,8 +29,6 @@ const baseClasses =
   'fixed top-0 w-screen bottom-0 duration-500 bg-opacity-75 ease-in-out bg-black transform-gpu transform';
 
 export const maxLength = 160;
-
-const initialValues = { body: '' };
 
 const splitter = new GraphemeSplitter();
 
@@ -47,18 +47,26 @@ const setMaxInputLength = (input: string) => {
 export const NewPostModal = () => {
   const [isEmojiPickerVisible, setEmojiPickerVisible] = useState(false);
   const [isRepost, setIsRepost] = useState(false);
+  const [isEditPost, setIsEditPost] = useState(false);
   const [originalLink, setOriginalLink] = useState('');
   const [postLink, setPostLink] = useState('');
   const [bodyValue, setBodyValue] = useState('');
   const [createPost] = useCreatePostMutation({ refetchQueries: ['Posts'] });
   const [createRepost] = useCreateRepostMutation({ refetchQueries: ['Posts'] });
-  const { showNewPost, repostId } = useModalState();
-  const { dispatchShowNewPostModal, dispatchSetRepostId } = useModalDispatch();
+  // const [editPost] = useEditPostMutation({ refetchQueries: ['Posts'] });
+
+  const { showNewPost, repostId, editPostId } = useModalState();
+  const { dispatchShowNewPostModal, dispatchSetRepostId, dispatchSetEditPostId } = useModalDispatch();
+
+  const [getPost, { data: editingPost }] = usePostLazyQuery({
+    variables: { id: editPostId! },
+  });
 
   const clearState = () => {
     dispatchShowNewPostModal(false);
     setPostLink('');
     dispatchSetRepostId(undefined);
+    dispatchSetEditPostId(undefined);
   };
 
   const cancel = (setFieldValue: (val: string, newVal: string) => void) => {
@@ -74,6 +82,8 @@ export const NewPostModal = () => {
       const params: CreateRepostInput = { body: values.body, repostId };
 
       await createRepost({ variables: { input: params } });
+    } else if (editPostId) {
+      console.log('edita o post');
     } else {
       const params: CreatePostInput = { body: values.body };
 
@@ -105,6 +115,15 @@ export const NewPostModal = () => {
   const onTextareaChange = (body: string) => {
     setBodyValue(body);
   };
+
+  useEffect(() => {
+    if (editPostId) {
+      getPost();
+    }
+  }, [editPostId]);
+
+  useEffect(() => {
+  }, [editingPost]);
 
   useEffect(() => {
     const delayDebounce = setTimeout(async () => {
@@ -147,7 +166,8 @@ export const NewPostModal = () => {
 
   useEffect(() => {
     repostId ? setIsRepost(true) : setIsRepost(false);
-  }, [repostId]);
+    editPostId ? setIsEditPost(true) : setIsEditPost(false);
+  }, [repostId, editPostId]);
 
   return (
     <ModalsPortal>
@@ -164,7 +184,11 @@ export const NewPostModal = () => {
                 <div className="p-2 text-gray-400 font-bold flex-1 text-center" onClick={cancel(setFieldValue)}>
                   Cancel
                 </div>
-                <div className="flex-1 text-center text-white font-bold">{isRepost ? 'Repost' : 'New Post'}</div>
+                <div className="flex-1 text-center text-white font-bold">
+                  {isRepost && 'Repost'}
+                  {isEditPost && 'Edit Post'}
+                  {(!isEditPost && !isRepost) && 'New Post'}
+                </div>
                 <div className="flex-1 text-center m-2">
                   <div className="ml-6">
                     <Button className="bg-gray-30 text-sm " type="submit" variant="rainbow-rounded">

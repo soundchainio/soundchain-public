@@ -1,5 +1,5 @@
 import { ReactionType } from 'lib/graphql';
-import { DeleteModalType } from 'types/DeleteModalType';
+import { ContextMenuType } from 'types/ContextMenuType';
 
 export interface ShowNewPostPayload {
   show: boolean;
@@ -13,10 +13,14 @@ export interface SetRepostIdPayload {
   repostId?: string;
 }
 
-export interface ShowDeletePayload {
-  show: boolean;
-  type: DeleteModalType;
-  deleteId: string;
+export interface SetEditPostIdPayload {
+  editPostId?: string;
+}
+
+export interface ShowContextMenuPayload {
+  showContextMenu: boolean;
+  contextMenuType: ContextMenuType;
+  contextMenuId: string;
 }
 
 export interface ShowReactionsPayload {
@@ -27,7 +31,8 @@ export interface ShowReactionsPayload {
 
 export type ModalPayload =
   | ShowNewPostPayload
+  | SetEditPostIdPayload
   | SetRepostIdPayload
-  | ShowDeletePayload
+  | ShowContextMenuPayload
   | ShowUnderDevelopmentPayload
   | ShowReactionsPayload;

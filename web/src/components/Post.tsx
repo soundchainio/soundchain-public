@@ -1,12 +1,16 @@
 import { usePostQuery } from 'lib/graphql';
 import NextLink from 'next/link';
 import React from 'react';
+import { ContextMenuType } from 'types/ContextMenuType';
+import { useModalDispatch } from 'contexts/providers/modal';
 import { Avatar } from './Avatar';
 import { PostActions } from './PostActions';
 import { PostSkeleton } from './PostSkeleton';
 import { PostStats } from './PostStats';
 import { RepostPreview } from './RepostPreview';
 import { Timestamp } from './Timestamp';
+import { useMe } from 'hooks/useMe';
+import { Ellipsis } from 'icons/Ellipsis';
 
 interface PostProps {
   postId: string;
@@ -15,8 +19,16 @@ interface PostProps {
 export const Post = ({ postId }: PostProps) => {
   const { data } = usePostQuery({ variables: { id: postId } });
   const post = data?.post;
+  const me = useMe();
+  const { dispatchShowContextMenuModal } = useModalDispatch();
 
   if (!post) return <PostSkeleton />;
+
+  const canEdit = post?.profile.id == me?.profile.id;
+
+  const onEllipsisClick = () => {
+    dispatchShowContextMenuModal(true, ContextMenuType.POST, post.id);
+  };
 
   return (
     <div>
@@ -24,12 +36,19 @@ export const Post = ({ postId }: PostProps) => {
         <div className="p-4 bg-gray-20 break-words">
           <div className="flex items-center">
             <Avatar profile={post.profile} />
-            <div className="flex flex-col ml-4">
-              <NextLink href={`/profiles/${post.profile.id}`}>
-                <a className="text-lg font-bold text-gray-100">{post.profile.displayName}</a>
-              </NextLink>
-              <Timestamp datetime={post.createdAt} className="flex-1 text-left" />
+            <div className="flex items-center w-full ml-4">
+              <div className="flex flex-1 flex-col">
+                <NextLink href={`/profiles/${post.profile.id}`}>
+                  <a className="text-lg font-bold text-gray-100">{post.profile.displayName}</a>
+                </NextLink>
+                <Timestamp
+                  datetime={post.createdAt} className="flex-1 text-left" />
+              </div>
+              <div className="w-14">
+                {canEdit && <Ellipsis className="pr-4 pl-4 w-full h-3 cursor-pointer" onClick={onEllipsisClick} />}
+              </div>
             </div>
+
           </div>
           <pre className="mt-4 text-gray-100 break-words whitespace-pre-wrap">{post.body}</pre>
           {post.mediaLink && (

@@ -2,21 +2,23 @@ import { Action } from 'contexts/actions';
 import { ModalActionTypes } from 'contexts/actions/modal';
 import {
   SetRepostIdPayload,
-  ShowDeletePayload,
+  SetEditPostIdPayload,
+  ShowContextMenuPayload,
   ShowNewPostPayload,
   ShowReactionsPayload,
   ShowUnderDevelopmentPayload,
 } from 'contexts/payloads/modal';
 import { ReactionType } from 'lib/graphql';
-import { DeleteModalType } from 'types/DeleteModalType';
+import { ContextMenuType } from 'types/ContextModalType';
 
 export interface ModalState {
   showNewPost: boolean;
   anyModalOpened: boolean;
   repostId?: string;
-  showDelete: boolean;
-  deleteType?: DeleteModalType;
-  deleteId: string;
+  editPostId?: string;
+  showContextMenu: boolean;
+  contextMenuType?: ContextMenuType;
+  contextMenuId: string;
   showUnderDevelopment: boolean;
   reactions: {
     show: boolean;
@@ -30,9 +32,10 @@ export const initialModalState = {
   showNewPost: false,
   anyModalOpened: false,
   repostId: undefined,
-  showDelete: false,
-  deleteType: undefined,
-  deleteId: '',
+  editPostId: undefined,
+  showContextMenu: false,
+  contextMenuType: undefined,
+  contextMenuId: '',
   showUnderDevelopment: false,
   reactions: {
     show: false,
@@ -55,13 +58,18 @@ export const modalReducer = (state: ModalState, action: Action) => {
         ...state,
         repostId: (action.payload as SetRepostIdPayload).repostId,
       };
-    case ModalActionTypes.SHOW_DELETE:
+    case ModalActionTypes.SET_EDIT_POST_ID:
       return {
         ...state,
-        showDelete: (action.payload as ShowDeletePayload).show,
-        anyModalOpened: (action.payload as ShowDeletePayload).show,
-        deleteType: (action.payload as ShowDeletePayload).type,
-        deleteId: (action.payload as ShowDeletePayload).deleteId,
+        editPostId: (action.payload as SetEditPostIdPayload).editPostId,
+      };
+    case ModalActionTypes.SHOW_CONTEXT_MENU:
+      return {
+        ...state,
+        showContextMenu: (action.payload as ShowContextMenuPayload).showContextMenu,
+        anyModalOpened: (action.payload as ShowContextMenuPayload).showContextMenu,
+        contextMenuType: (action.payload as ShowContextMenuPayload).contextMenuType,
+        contextMenuId: (action.payload as ShowContextMenuPayload).contextMenuId,
       };
     case ModalActionTypes.SHOW_UNDER_DEVELOPMENT:
       return {

@@ -1,4 +1,4 @@
-export enum DeleteModalType {
+export enum ContextMenuType {
   POST = 'post',
   COMMENT = 'comment',
 }
