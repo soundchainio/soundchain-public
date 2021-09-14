@@ -271,6 +271,7 @@ export type Mutation = {
   updateMusicianType: UpdateFavoriteGenresPayload;
   updateProfilePicture: UpdateProfilePicturePayload;
   updateProfileDisplayName: UpdateProfileDisplayNamePayload;
+  updateProfileBio: UpdateProfileDisplayNamePayload;
   updateCoverPicture: UpdateCoverPicturePayload;
   followProfile: FollowProfilePayload;
   unfollowProfile: UnfollowProfilePayload;
@@ -346,6 +347,11 @@ export type MutationUpdateProfilePictureArgs = {
 
 export type MutationUpdateProfileDisplayNameArgs = {
   input: UpdateProfileDisplayNameInput;
+};
+
+
+export type MutationUpdateProfileBioArgs = {
+  input: UpdateProfileBioInput;
 };
 
 
@@ -466,6 +472,7 @@ export type Profile = {
   socialMedias: SocialMedias;
   favoriteGenres: Array<Genre>;
   musicianType: Array<MusicianType>;
+  bio: Maybe<Scalars['String']>;
   followerCount: Scalars['Float'];
   followingCount: Scalars['Float'];
   unreadNotificationCount: Scalars['Float'];
@@ -638,6 +645,7 @@ export type RegisterInput = {
   email: Scalars['String'];
   displayName: Scalars['String'];
   handle: Scalars['String'];
+  bio: Scalars['String'];
   password: Scalars['String'];
 };
 
@@ -748,6 +756,10 @@ export type UpdatePasswordInput = {
 export type UpdatePasswordPayload = {
   __typename?: 'UpdatePasswordPayload';
   ok: Scalars['Boolean'];
+};
+
+export type UpdateProfileBioInput = {
+  bio: Scalars['String'];
 };
 
 export type UpdateProfileDisplayNameInput = {
@@ -1141,7 +1153,7 @@ export type MeQuery = (
     & Pick<User, 'id' | 'handle' | 'email'>
     & { profile: (
       { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'followerCount' | 'followingCount' | 'favoriteGenres' | 'musicianType'>
+      & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'followerCount' | 'followingCount' | 'favoriteGenres' | 'musicianType' | 'bio'>
     ) }
   )> }
 );
@@ -1283,7 +1295,7 @@ export type ProfileQuery = (
   { __typename?: 'Query' }
   & { profile: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'userHandle' | 'isFollowed' | 'followerCount' | 'followingCount' | 'musicianType'>
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'userHandle' | 'isFollowed' | 'followerCount' | 'followingCount' | 'musicianType' | 'bio'>
     & { socialMedias: (
       { __typename?: 'SocialMedias' }
       & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
@@ -1530,6 +1542,22 @@ export type UpdatePasswordMutation = (
   & { updatePassword: (
     { __typename?: 'UpdatePasswordPayload' }
     & Pick<UpdatePasswordPayload, 'ok'>
+  ) }
+);
+
+export type UpdateProfileBioMutationVariables = Exact<{
+  input: UpdateProfileBioInput;
+}>;
+
+
+export type UpdateProfileBioMutation = (
+  { __typename?: 'Mutation' }
+  & { updateProfileBio: (
+    { __typename?: 'UpdateProfileDisplayNamePayload' }
+    & { profile: (
+      { __typename?: 'Profile' }
+      & Pick<Profile, 'id' | 'bio'>
+    ) }
   ) }
 );
 
@@ -2371,6 +2399,7 @@ export const MeDocument = gql`
       followingCount
       favoriteGenres
       musicianType
+      bio
     }
   }
 }
@@ -2696,6 +2725,7 @@ export const ProfileDocument = gql`
     followerCount
     followingCount
     musicianType
+    bio
   }
 }
     `;
@@ -3303,6 +3333,42 @@ export function useUpdatePasswordMutation(baseOptions?: Apollo.MutationHookOptio
 export type UpdatePasswordMutationHookResult = ReturnType<typeof useUpdatePasswordMutation>;
 export type UpdatePasswordMutationResult = Apollo.MutationResult<UpdatePasswordMutation>;
 export type UpdatePasswordMutationOptions = Apollo.BaseMutationOptions<UpdatePasswordMutation, UpdatePasswordMutationVariables>;
+export const UpdateProfileBioDocument = gql`
+    mutation updateProfileBio($input: UpdateProfileBioInput!) {
+  updateProfileBio(input: $input) {
+    profile {
+      id
+      bio
+    }
+  }
+}
+    `;
+export type UpdateProfileBioMutationFn = Apollo.MutationFunction<UpdateProfileBioMutation, UpdateProfileBioMutationVariables>;
+
+/**
+ * __useUpdateProfileBioMutation__
+ *
+ * To run a mutation, you first call `useUpdateProfileBioMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateProfileBioMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateProfileBioMutation, { data, loading, error }] = useUpdateProfileBioMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateProfileBioMutation(baseOptions?: Apollo.MutationHookOptions<UpdateProfileBioMutation, UpdateProfileBioMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateProfileBioMutation, UpdateProfileBioMutationVariables>(UpdateProfileBioDocument, options);
+      }
+export type UpdateProfileBioMutationHookResult = ReturnType<typeof useUpdateProfileBioMutation>;
+export type UpdateProfileBioMutationResult = Apollo.MutationResult<UpdateProfileBioMutation>;
+export type UpdateProfileBioMutationOptions = Apollo.BaseMutationOptions<UpdateProfileBioMutation, UpdateProfileBioMutationVariables>;
 export const UpdateProfileDisplayNameDocument = gql`
     mutation updateProfileDisplayName($input: UpdateProfileDisplayNameInput!) {
   updateProfileDisplayName(input: $input) {
