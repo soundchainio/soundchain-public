@@ -645,7 +645,6 @@ export type RegisterInput = {
   email: Scalars['String'];
   displayName: Scalars['String'];
   handle: Scalars['String'];
-  bio: Scalars['String'];
   password: Scalars['String'];
 };
 

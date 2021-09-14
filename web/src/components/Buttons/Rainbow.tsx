@@ -5,7 +5,7 @@ export const RainbowButton = ({ className, type = 'button', icon: Icon, children
   return (
     <div className={classNames(className, 'p-0.5 bg-rainbow-gradient')}>
       <button
-        className={`${commonClasses} sm:px-4 py-3 font-extrabold text-white bg-opacity-60 bg-black`}
+        className={`${commonClasses} sm:px-4 py-3 font-extrabold text-white uppercase bg-opacity-60 bg-black`}
         type={type}
         {...rest}
       >

@@ -1,19 +1,16 @@
 import { UserInputError } from 'apollo-server-express';
 import { compare } from 'bcryptjs';
+import { ArgumentValidationError } from 'type-graphql';
 import { v4 as uuidv4 } from 'uuid';
 import { ProfileModel } from '../models/Profile';
 import { User, UserModel } from '../models/User';
 import { Service } from './Service';
 
 export class AuthService extends Service {
-  async register(email: string, handle: string, password: string, displayName: string, bio: string): Promise<User> {
-    const existingUser = await UserModel.findOne({ $or: [{ email }, { handle }] });
+  async register(email: string, handle: string, password: string, displayName: string): Promise<User> {
+    await validateUniqueIdentifiers({ email, handle });
 
-    if (existingUser) {
-      throw new UserInputError(`${existingUser.email === email ? email : handle} is in use`);
-    }
-
-    const profile = new ProfileModel({ displayName, bio });
+    const profile = new ProfileModel({ displayName });
     await profile.save();
     await this.context.feedService.seedNewProfileFeed(profile.id);
 
@@ -80,5 +77,25 @@ export class AuthService extends Service {
     user.password = password;
     user.passwordResetToken = undefined;
     await user.save();
+  }
+}
+
+async function validateUniqueIdentifiers({ email, handle }: Pick<User, 'email' | 'handle'>) {
+  const existingUsers = await UserModel.find({ $or: [{ email }, { handle }] });
+
+  if (existingUsers.length) {
+    const emails = existingUsers.map(user => user.email);
+    const handles = existingUsers.map(user => user.handle);
+    const errors = [];
+
+    if (emails.includes(email)) {
+      errors.push({ property: 'email', constraints: { unique: `${email} is already in use` } });
+    }
+
+    if (handles.includes(handle)) {
+      errors.push({ property: 'handle', constraints: { unique: `${handle} is already in use` } });
+    }
+
+    throw new ArgumentValidationError(errors);
   }
 }

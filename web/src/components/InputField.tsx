@@ -1,7 +1,7 @@
 import { useField } from 'formik';
 import { Label } from './Label';
 
-interface InputFieldProps {
+interface InputFieldProps extends React.ComponentPropsWithoutRef<'input'> {
   name: string;
   type: 'text' | 'email' | 'password';
   label?: string;
