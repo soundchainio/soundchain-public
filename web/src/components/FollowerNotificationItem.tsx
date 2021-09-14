@@ -19,14 +19,14 @@ export const FollowerNotificationItem = ({
     <NextLink href={link}>
       <div className={classNames('flex flex-col p-4', index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20')}>
         <div className="break-words flex">
-          <div className="flex items-center pr-4">
+          <div className="flex items-center pr-4 min-w-[50px]">
             <Avatar profile={{ profilePicture: followerPicture }} pixels={40} />
             <div className="relative">
               <NewFollowerBadge className="absolute -right-1" />
             </div>
           </div>
           <div>
-            <div className="text-gray-100  flex text-sm">
+            <div className="text-gray-100 w-full inline-block text-sm">
               <div className="font-semibold">{followerName}</div>&nbsp;started following you.
             </div>
             <Timestamp small datetime={createdAt} className="text-sm" />

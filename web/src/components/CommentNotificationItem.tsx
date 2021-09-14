@@ -19,16 +19,18 @@ export const CommentNotificationItem = ({
     <NextLink href={link}>
       <div className={classNames('flex flex-col p-4', index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20')}>
         <div className="break-words flex">
-          <div className="flex items-center pr-4">
+          <div className="flex items-center pr-4 min-w-[50px]">
             <Avatar profile={{ profilePicture: authorPicture }} pixels={40} />
             <div className="relative">
               <Comment className="absolute -right-1" />
             </div>
           </div>
           <div>
-            <div className="text-gray-100  flex text-sm">
-              <div className="font-semibold">{authorName}</div>&nbsp;{body}
-            </div>
+            <span className="text-gray-100 inline-block text-sm">
+              <div className="flex flex-wrap">
+                <div className="font-semibold">{authorName}</div>&nbsp;{body}
+              </div>
+            </span>
             <Timestamp small datetime={createdAt} className="text-sm" />
           </div>
         </div>

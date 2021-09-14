@@ -21,18 +21,20 @@ export const ReactionNotificationItem = ({
     <NextLink href={link}>
       <div className={classNames('flex flex-col p-4', index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20')}>
         <div className="break-words flex">
-          <div className="flex items-center pr-4">
+          <div className="flex items-center pr-4 min-w-[50px]">
             <Avatar profile={{ profilePicture: authorPicture }} pixels={40} />
             <div className="relative">
               <ThumbsUpNotification className="absolute -right-1" />
             </div>
           </div>
           <div>
-            <div className="text-gray-100 flex text-sm items-center">
-              <div className="font-semibold">{authorName}</div>
-              &nbsp; reacted
-              <ReactionEmoji key={reactionType} name={reactionType} className="w-6 h-6 ml-2 mr-2 mb-1" />
-              to your post.
+            <div className="text-gray-100 text-sm items-center w-full inline-block">
+              <span className="flex flex-wrap">
+                <div className="font-semibold">{authorName}</div>
+                &nbsp;reacted
+                <ReactionEmoji key={reactionType} name={reactionType} className="w-6 h-6 ml-2 mr-2" />
+                to your post.
+              </span>
             </div>
             <Timestamp small datetime={createdAt} className="text-sm" />
           </div>
