@@ -2,6 +2,7 @@ import { DocumentType, ReturnModelType } from '@typegoose/typegoose';
 import DataLoader from 'dataloader';
 import { iteratee, keyBy } from 'lodash';
 import { FilterQuery } from 'mongoose';
+import { encodeCursor } from '../db/pagination/cursor';
 import { paginate, paginateAggregated, PaginateParams, PaginateResult } from '../db/pagination/paginate';
 import { NotFoundError } from '../errors/NotFoundError';
 import { Model } from '../models/Model';
@@ -57,6 +58,15 @@ export class ModelService<T extends typeof Model, KeyComponents = string> extend
 
   async paginate(params: PaginateParams<T> = {}): Promise<PaginateResult<InstanceType<T>>> {
     return paginate(this.model, params);
+  }
+
+  getPageCursor(entity: InstanceType<T>, field: keyof InstanceType<T>): string | undefined {
+    return encodeCursor(entity, field);
+  }
+
+  async getPageCursorById(keyComponents: KeyComponents, field: keyof InstanceType<T>): Promise<string | undefined> {
+    const entity = await this.findOrFail(keyComponents);
+    return this.getPageCursor(entity, field);
   }
 
   async paginateAggregated(params: PaginateParams<T> = {}): Promise<PaginateResult<InstanceType<T>>> {

@@ -23,7 +23,12 @@ export const BottomNavBar = () => {
     <nav className="bg-black h-16 flex items-center inset-x-0 shadow-2xl">
       <div className="w-full flex">
         <BottomNavBarButton label="Home" path="/" icon={Home} activatedColor="yellow" />
-        <BottomNavBarButton label="Explore" onClick={() => dispatchShowUnderDevelopmentModal(true)} icon={Search} activatedColor="green" />
+        <BottomNavBarButton
+          label="Explore"
+          onClick={() => dispatchShowUnderDevelopmentModal(true)}
+          icon={Search}
+          activatedColor="green"
+        />
         <BottomNavBarButton label="Post" icon={NewPost} onClick={handleNewPostClick} />
         <BottomNavBarButton
           label="Notifications"

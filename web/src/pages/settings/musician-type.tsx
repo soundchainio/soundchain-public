@@ -11,7 +11,7 @@ import React, { useEffect, useState } from 'react';
 
 const topNavBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
-  title: "Musician Type"
+  title: 'Musician Type',
 };
 
 export default function SettingsMusicianTypePage() {
@@ -21,11 +21,11 @@ export default function SettingsMusicianTypePage() {
   const [updateMusicianType, { loading }] = useUpdateMusicianTypeMutation();
 
   useEffect(() => {
-    setMusicianType(me?.profile.musicianType as MusicianType[])
-  }, [me?.profile.musicianType])
+    setMusicianType(me?.profile.musicianType as MusicianType[]);
+  }, [me?.profile.musicianType]);
 
   const onSubmit = async () => {
-    if (!musicianType) return
+    if (!musicianType) return;
     await updateMusicianType({ variables: { input: { musicianTypes: musicianType } } });
     router.push('/settings');
   };
@@ -43,7 +43,9 @@ export default function SettingsMusicianTypePage() {
         <div className="flex flex-1 flex-col space-y-6">
           <MusicianTypeSelector initialValue={me?.profile.musicianType as MusicianType[]} onSelect={setMusicianType} />
           <div className="flex flex-col">
-            <Button type="submit" onClick={onSubmit}>{loading ? 'Saving...' : 'Save'}</Button>
+            <Button type="submit" onClick={onSubmit}>
+              {loading ? 'Saving...' : 'Save'}
+            </Button>
           </div>
         </div>
       </div>

@@ -18,7 +18,7 @@ export const InfiniteLoader = ({ loadMore, loadingMessage }: InfiniteLoaderProps
   }, [isVisible]);
 
   return (
-    <div ref={loaderRef} className="flex items-center">
+    <div ref={loaderRef}>
       <LoaderAnimation loadingMessage={loadingMessage} />
     </div>
   );

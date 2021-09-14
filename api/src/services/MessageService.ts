@@ -23,18 +23,22 @@ export class MessageService extends ModelService<typeof Message> {
     return message;
   }
 
-  getMessages(currentUser: string, otherUser: string, page?: PageInput): Promise<PaginateResult<Message>> {
-    this.markAsRead(otherUser, currentUser);
-    return this.paginate({
-      filter: {
-        $or: [
-          { fromId: currentUser, toId: otherUser },
-          { fromId: otherUser, toId: currentUser },
-        ],
-      },
-      sort: { field: 'createdAt', order: SortOrder.ASC },
-      page: { ...page, last: 25 },
-    });
+  async getMessages(currentUser: string, otherUser: string, page?: PageInput): Promise<PaginateResult<Message>> {
+    const [messages] = await Promise.all([
+      this.paginate({
+        filter: {
+          $or: [
+            { fromId: currentUser, toId: otherUser },
+            { fromId: otherUser, toId: currentUser },
+          ],
+        },
+        sort: { field: 'createdAt', order: SortOrder.ASC },
+        page: { ...page, last: 25 },
+      }),
+      this.markAsRead(otherUser, currentUser),
+    ]);
+
+    return messages;
   }
 
   getMessage(id: string): Promise<Message> {

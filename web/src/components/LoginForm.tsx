@@ -43,7 +43,7 @@ export const LoginForm = () => {
 
   return (
     <>
-      <div className="h-36 mt-6 mb-2 flex items-center justify-center">
+      <div className="h-36 mb-2 flex items-center justify-center">
         <LogoAndText />
       </div>
       <Formik

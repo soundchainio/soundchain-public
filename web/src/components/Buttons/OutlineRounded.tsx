@@ -13,7 +13,7 @@ export const OutlineRoundedButton = ({
   return (
     <div className={classNames('p-0.5 rounded-full h-full', borderColor)}>
       <button
-        className={classNames(commonClasses, 'p-2 text-white text-xs rounded-full bg-gray-10', className)}
+        className={classNames(commonClasses, 'p-2 text-white text-xs uppercase rounded-full bg-gray-10', className)}
         type={type}
         {...rest}
       >
