@@ -39,7 +39,7 @@ export const SubscribeButton = ({ profileId, isSubscriber }: SubscribeButtonProp
   }
 
   return (
-    <div onClick={handleClick}>
+    <div onClick={handleClick} className="w-[35px] h-[35px]">
       <SubscribeBell isSubscriber={isSubscriber} />
     </div>
   );

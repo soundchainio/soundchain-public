@@ -6,7 +6,7 @@ export const SubscribeBell = ({ isSubscriber }: SubscribeBellProps) => {
   return (
     <>
       {isSubscriber ? (
-        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="none" viewBox="0 0 30 30">
+        <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" fill="none" viewBox="0 0 30 30">
           <circle cx="15" cy="15" r="15" fill="url(#paint_bell_0_linear)"></circle>
           <path
             fill="#fff"
@@ -27,7 +27,7 @@ export const SubscribeBell = ({ isSubscriber }: SubscribeBellProps) => {
           </defs>
         </svg>
       ) : (
-        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="none" viewBox="0 0 30 30">
+        <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" fill="none" viewBox="0 0 30 30">
           <circle cx="15" cy="15" r="14" stroke="url(#paint_bell_0_linear)" strokeWidth="2"></circle>
           <path
             fill="url(#paint_bell_1_linear)"
