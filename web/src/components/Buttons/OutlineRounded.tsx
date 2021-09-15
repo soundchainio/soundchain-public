@@ -8,17 +8,27 @@ export const OutlineRoundedButton = ({
   children,
   borderColor,
   textColor,
+  bgColor,
   ...rest
 }: ButtonProps) => {
   return (
     <div className={classNames('p-0.5 rounded-full h-full', borderColor)}>
       <button
-        className={classNames(commonClasses, 'p-2 text-white text-xs uppercase rounded-full bg-gray-10', className)}
+        className={classNames(
+          commonClasses,
+          'p-2 text-white text-xs uppercase rounded-full',
+          className,
+          bgColor ? bgColor : 'bg-gray-10',
+        )}
         type={type}
         {...rest}
       >
-        {Icon && <Icon className="mr-1 h-5 w-5" />}
-        <span className={classNames(textColor, 'capitalize')}>{children}</span>
+        {Icon && (
+          <div className="flex h-5 w-5 px-1 items-center content-center">
+            <Icon />
+          </div>
+        )}
+        <span className={classNames(textColor, 'capitalize pr-1 font-semibold')}>{children}</span>
       </button>
     </div>
   );
