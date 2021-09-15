@@ -37,13 +37,11 @@ export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type, post
   useEffect(() => {
     if (postLink) {
       const identifiedSource = IdentifySource(postLink);
-
-      if (identifiedSource.type && identifiedSource != link) {
+      if (identifiedSource.type && identifiedSource.value != link?.value) {
         setLink(identifiedSource);
       }
-    } else {
-      setLink(undefined);
     }
+
   }, [postLink, link]);
 
   return (

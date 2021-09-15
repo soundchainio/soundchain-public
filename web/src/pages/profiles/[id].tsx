@@ -49,7 +49,7 @@ export default function ProfilePage() {
     return null;
   }
 
-  const { coverPicture, displayName, userHandle, socialMedias, followerCount, followingCount, isFollowed } =
+  const { coverPicture, displayName, userHandle, socialMedias, followerCount, followingCount, isFollowed, bio } =
     data.profile;
 
   return (
@@ -84,6 +84,7 @@ export default function ProfilePage() {
           <div>
             <Subtitle className="">{displayName}</Subtitle>
             <p className="text-gray-80 text-sm">@{userHandle}</p>
+            <p className="text-gray-80 py-2 text-sm">{bio}</p>
           </div>
           <MessageButton profileId={profileId} />
         </div>

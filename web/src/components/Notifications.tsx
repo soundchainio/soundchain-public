@@ -6,6 +6,7 @@ import { NotificationSkeleton } from './NotificationSkeleton';
 export const Notifications = () => {
   const { data } = useNotificationsQuery({
     variables: { sort: { field: SortNotificationField.CreatedAt, order: SortOrder.Desc } },
+    fetchPolicy: 'no-cache',
   });
 
   if (!data) {

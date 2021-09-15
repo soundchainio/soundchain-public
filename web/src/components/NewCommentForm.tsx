@@ -2,8 +2,9 @@ import { ApolloCache, FetchResult } from '@apollo/client';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import { useMe } from 'hooks/useMe';
 import { Send } from 'icons/Send';
+import { useRouter } from 'next/router';
 import * as yup from 'yup';
-import { AddCommentMutation, CommentsDocument, CommentsQuery, useAddCommentMutation } from '../lib/graphql';
+import { AddCommentMutation, CommentDocument, useAddCommentMutation } from '../lib/graphql';
 import { Avatar } from './Avatar';
 import { FlexareaField } from './FlexareaField';
 
@@ -22,14 +23,30 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
 const initialValues: FormValues = { body: '' };
 
 export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
-  const [addComment] = useAddCommentMutation({
-    update: (cache, result) => updateCache(cache, result, postId),
-  });
   const me = useMe();
+  const router = useRouter();
+  const [addComment] = useAddCommentMutation({
+    update: (cache, result) => {
+      if (router.pathname === '/posts/[id]' && !router.query.cursor) {
+        updateCache(cache, result);
+      } else {
+        cache.evict({ fieldName: 'comments', args: { postId } });
+      }
+    },
+  });
 
   const handleSubmit = async ({ body }: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
     await addComment({ variables: { input: { postId, body } } });
-    resetForm();
+
+    if (router.query.commentId) {
+      router.replace({ pathname: '/posts/[id]', query: { id: postId } }, `/posts/${postId}`, {
+        shallow: true,
+      });
+    } else {
+      resetForm();
+    }
+
+    document.querySelector('#main')?.scrollTo(0, 0);
   };
 
   if (!me) return null;
@@ -51,14 +68,24 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
   );
 };
 
-function updateCache(cache: ApolloCache<AddCommentMutation>, { data }: FetchResult, postId: string) {
+function updateCache(cache: ApolloCache<AddCommentMutation>, { data }: FetchResult) {
   const newComment = data?.addComment.comment;
-  const existingComments = cache.readQuery<CommentsQuery>({ query: CommentsDocument, variables: { postId } });
+
   cache.writeQuery({
-    query: CommentsDocument,
-    variables: { postId },
-    data: {
-      comments: { nodes: [newComment], pageInfo: existingComments?.comments.pageInfo },
+    query: CommentDocument,
+    variables: { id: newComment.id },
+    data: { comment: newComment },
+  });
+
+  cache.modify({
+    fields: {
+      comments({ nodes, pageInfo }, {}) {
+        const newNode = { __ref: cache.identify(newComment) };
+        return {
+          nodes: [newNode, ...nodes],
+          pageInfo,
+        };
+      },
     },
   });
 }

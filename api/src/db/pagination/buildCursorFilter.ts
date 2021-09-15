@@ -1,15 +1,16 @@
-import { DocumentType } from '@typegoose/typegoose';
 import { FilterQuery } from 'mongoose';
 import { Model } from '../../models/Model';
 import { decodeCursor } from './cursor';
 
 export function buildCursorFilter<T extends typeof Model>(
-  field: keyof DocumentType<InstanceType<T>>,
+  field: keyof InstanceType<T>,
   ascending: boolean,
   before: string | undefined,
   after: string | undefined,
+  inclusive: boolean | undefined,
 ): Promise<FilterQuery<T>> {
-  const op = ascending ? '$gt' : '$lt';
+  let op = ascending ? '$gt' : '$lt';
+  if (inclusive) op += 'e';
   const cursor = decodeCursor(before ?? after);
   const cursorFilter: FilterQuery<T> = {};
 

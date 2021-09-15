@@ -1,0 +1,8 @@
+mutation updateProfileBio($input: UpdateProfileBioInput!) {
+  updateProfileBio(input: $input) {
+    profile {
+      id
+      bio
+    }
+  }
+}

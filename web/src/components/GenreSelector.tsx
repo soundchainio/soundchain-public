@@ -2,11 +2,11 @@ import { Genre } from 'lib/graphql';
 import React, { useEffect, useState } from 'react';
 import { Badge } from './Badge';
 import { Label } from './Label';
-import { genres } from 'utils/Genres'
+import { genres } from 'utils/Genres';
 
 interface GenreSelectorProps {
   onSelect: (selectedGenres: Genre[]) => void;
-  initialValue?: Genre[]
+  initialValue?: Genre[];
 }
 
 export const GenreSelector = ({ onSelect, initialValue }: GenreSelectorProps) => {

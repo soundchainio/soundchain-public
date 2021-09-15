@@ -1,4 +1,3 @@
-import { DocumentType } from '@typegoose/typegoose';
 import { UserInputError } from 'apollo-server-express';
 import base64url from 'base64-url';
 import { EJSON } from 'bson';
@@ -14,8 +13,8 @@ function assertStringOrArray(value: EJSON.SerializableTypes): asserts value is s
 }
 
 export function encodeCursor<T extends typeof Model>(
-  doc: DocumentType<InstanceType<T>> | undefined,
-  field: keyof DocumentType<InstanceType<T>>,
+  doc: InstanceType<T> | undefined,
+  field: keyof InstanceType<T>,
 ): string | undefined {
   if (doc) {
     return base64url.encode(EJSON.stringify(field === '_id' ? doc._id.toString() : [doc[field], doc._id.toString()]));

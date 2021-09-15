@@ -1,4 +1,4 @@
-import { DocumentType, ReturnModelType } from '@typegoose/typegoose';
+import { ReturnModelType } from '@typegoose/typegoose';
 import { FilterQuery } from 'mongoose';
 import { Model } from '../../models/Model';
 import { PageInfo } from '../../types/PageInfo';
@@ -10,7 +10,7 @@ import { prepareResult } from './prepareResult';
 export interface PaginateParams<T extends typeof Model> {
   filter?: FilterQuery<T>;
   sort?: {
-    field: keyof DocumentType<InstanceType<T>>;
+    field: keyof InstanceType<T>;
     order?: SortOrder;
   };
   page?: {
@@ -18,6 +18,7 @@ export interface PaginateParams<T extends typeof Model> {
     after?: string;
     last?: number;
     before?: string;
+    inclusive?: boolean;
   };
   group?: FilterQuery<T>;
 }
@@ -33,11 +34,11 @@ export async function paginate<T extends typeof Model>(
 ): Promise<PaginateResult<InstanceType<T>>> {
   const { filter = {}, sort = { field: '_id' }, page = {} } = params;
   const { field, order = SortOrder.ASC } = sort;
-  const { first = 25, after, last, before } = page;
+  const { first = 25, after, last, before, inclusive } = page;
   const ascending = (order === SortOrder.ASC) !== Boolean(last || before);
   const limit = last ?? first;
 
-  const cursorFilter = buildCursorFilter(field, ascending, before, after);
+  const cursorFilter = buildCursorFilter(field, ascending, before, after, inclusive);
   const querySort = buildQuerySort(field, ascending);
 
   const [results, totalCount] = await Promise.all([
@@ -58,11 +59,11 @@ export async function paginateAggregated<T extends typeof Model>(
 ): Promise<PaginateResult<InstanceType<T>>> {
   const { filter = {}, sort = { field: '_id' }, page = {}, group = {} } = params;
   const { field, order = SortOrder.ASC } = sort;
-  const { first = 25, after, last, before } = page;
+  const { first = 25, after, last, before, inclusive } = page;
   const ascending = (order === SortOrder.ASC) !== Boolean(last || before);
   const limit = last ?? first;
 
-  const cursorFilter = buildCursorFilter(field, ascending, before, after);
+  const cursorFilter = buildCursorFilter(field, ascending, before, after, inclusive);
   const querySort = buildQuerySort(field, ascending);
 
   const [results, totalCount] = await Promise.all([

@@ -1,5 +1,5 @@
 import { InMemoryCacheConfig } from '@apollo/client';
-import { FeedConnection, FeedItem } from 'lib/graphql';
+import { ChatConnection, FeedConnection, FeedItem, Follow, FollowConnection } from 'lib/graphql';
 
 export const cacheConfig: InMemoryCacheConfig = {
   typePolicies: {
@@ -26,15 +26,31 @@ export const cacheConfig: InMemoryCacheConfig = {
         comments: {
           keyArgs: ['postId'],
           merge(existing = { nodes: [] }, { pageInfo, nodes }, { args }) {
-            if (!args?.page) {
+            if (!existing.pageInfo) {
               return {
-                nodes: [...nodes, ...existing.nodes],
+                nodes,
                 pageInfo,
               };
             }
+
+            if (args?.page.before) {
+              return {
+                nodes: [...nodes, ...existing.nodes],
+                pageInfo: {
+                  ...existing.pageInfo,
+                  startCursor: pageInfo.startCursor,
+                  hasPreviousPage: pageInfo.hasPreviousPage,
+                },
+              };
+            }
+
             return {
               nodes: [...existing.nodes, ...nodes],
-              pageInfo,
+              pageInfo: {
+                ...existing.pageInfo,
+                endCursor: pageInfo.endCursor,
+                hasNextPage: pageInfo.hasNextPage,
+              },
             };
           },
         },
@@ -67,10 +83,10 @@ export const cacheConfig: InMemoryCacheConfig = {
         },
         followers: {
           keyArgs: ['id'],
-          merge(existing, incoming, { readField }): FeedConnection {
+          merge(existing, incoming, { readField }): FollowConnection {
             const nodes = existing ? { ...existing.nodes } : {};
 
-            incoming.nodes.forEach((node: FeedItem) => {
+            incoming.nodes.forEach((node: Follow) => {
               const key = readField('id', node);
               nodes[key as string] = node;
             });
@@ -82,7 +98,7 @@ export const cacheConfig: InMemoryCacheConfig = {
               nodes,
             };
           },
-          read(existing): FeedConnection | void {
+          read(existing): FollowConnection | void {
             if (existing) {
               return {
                 pageInfo: { ...existing.pageInfo },
@@ -93,10 +109,10 @@ export const cacheConfig: InMemoryCacheConfig = {
         },
         following: {
           keyArgs: ['id'],
-          merge(existing, incoming, { readField }): FeedConnection {
+          merge(existing, incoming, { readField }): FollowConnection {
             const nodes = existing ? { ...existing.nodes } : {};
 
-            incoming.nodes.forEach((node: FeedItem) => {
+            incoming.nodes.forEach((node: Follow) => {
               const key = readField('id', node);
               nodes[key as string] = node;
             });
@@ -108,7 +124,7 @@ export const cacheConfig: InMemoryCacheConfig = {
               nodes,
             };
           },
-          read(existing): FeedConnection | void {
+          read(existing): FollowConnection | void {
             if (existing) {
               return {
                 pageInfo: { ...existing.pageInfo },
@@ -119,7 +135,7 @@ export const cacheConfig: InMemoryCacheConfig = {
         },
         chats: {
           keyArgs: false,
-          merge(existing = { nodes: [] }, { nodes, pageInfo }): FeedConnection {
+          merge(existing = { nodes: [] }, { nodes, pageInfo }): ChatConnection {
             return {
               nodes: [...existing.nodes, ...nodes],
               pageInfo,

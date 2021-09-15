@@ -13,5 +13,5 @@ export const musicianTypes: MusicianTypeLabels[] = [
 ];
 
 export function getMusicianTypeLabelByKey(key: MusicianType): string | undefined {
-  return musicianTypes.find((g) => g.key === key)?.label
+  return musicianTypes.find(g => g.key === key)?.label;
 }

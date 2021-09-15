@@ -16,7 +16,7 @@ export const OutlineRoundedButton = ({
       <button
         className={classNames(
           commonClasses,
-          'p-2 text-white text-xs rounded-full',
+          'p-2 text-white text-xs uppercase rounded-full',
           className,
           bgColor ? bgColor : 'bg-gray-10',
         )}
