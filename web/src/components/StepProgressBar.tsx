@@ -18,7 +18,7 @@ export const StepProgressBar = ({ steps: maxSteps, actualStep }: StepProgressBar
       {getSteps().map(step => (
         <div
           key={step}
-          className={classNames('w-2 h-2 border-2 border-gray-CC rounded-full', step === actualStep && 'bg-gray-CC')}
+          className={classNames('w-2 h-2 border-2 border-gray-CC rounded-full', step <= actualStep && 'bg-gray-CC')}
         ></div>
       ))}
     </div>

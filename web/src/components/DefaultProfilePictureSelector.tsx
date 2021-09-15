@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import { useMountedState } from 'hooks/useMountedState';
 import Image from 'next/image';
-import { defaultProfilePictures, getDefaultProfilePicturePath } from 'utils/DefaultProfilePictures';
+import { profilePictures, getDefaultProfilePicturePath } from 'utils/DefaultPictures';
 
 interface DefaultProfilePictureSelectorProps {
   onSelect: (picture: string) => void;
@@ -17,7 +17,7 @@ export const DefaultProfilePictureSelector = ({ onSelect }: DefaultProfilePictur
 
   return (
     <div className="grid grid-cols-4 gap-4">
-      {defaultProfilePictures.map(picture => (
+      {profilePictures.map(picture => (
         <div
           key={picture}
           className={classNames(

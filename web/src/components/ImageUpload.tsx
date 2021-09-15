@@ -9,6 +9,7 @@ export interface ImageUploadProps extends Omit<React.ComponentPropsWithoutRef<'d
   maxFileSize?: number;
   value?: string;
   onChange(value: string): void;
+  rounded?: boolean;
 }
 
 const defaultMaxFileSize = 1024 * 1024 * 3; // 3Mb
@@ -21,6 +22,7 @@ export function ImageUpload({
   value,
   onChange,
   children,
+  rounded,
   ...rest
 }: ImageUploadProps) {
   const { preview, uploading, upload } = useUpload(value, onChange);
@@ -38,8 +40,9 @@ export function ImageUpload({
         <div
           className={classNames(
             className,
-            'relative flex items-center justify-center bg-gray-30 border-gray-80 border-2',
-            thumbnail ? 'w-16 h-16 rounded-full' : 'w-3/4 rounded-lg',
+            'relative flex items-center justify-center bg-gray-30 border-gray-80 border-2 h-14',
+            rounded ? 'rounded-full' : 'rounded-lg',
+            thumbnail && rounded ? 'w-14' : 'w-3/4',
           )}
           {...rest}
           {...getRootProps()}
@@ -47,7 +50,7 @@ export function ImageUpload({
           <input {...getInputProps()} />
           {thumbnail ? (
             <Image
-              className={classNames('object-cover rounded-full')}
+              className={classNames('object-cover', rounded ? 'rounded-full' : 'rounded-lg')}
               src={thumbnail}
               alt="Upload preview"
               layout="fill"

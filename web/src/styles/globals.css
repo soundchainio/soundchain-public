@@ -116,6 +116,10 @@ html {
   background: transparent;
 }
 
+.vanta-canvas {
+  border-radius: 16px;
+}
+
 @layer utilities {
   .placeholder-semibold::placeholder {
     @apply font-semibold;
