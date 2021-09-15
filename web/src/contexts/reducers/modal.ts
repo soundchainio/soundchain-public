@@ -9,7 +9,7 @@ import {
   ShowUnderDevelopmentPayload,
 } from 'contexts/payloads/modal';
 import { ReactionType } from 'lib/graphql';
-import { ContextMenuType } from 'types/ContextModalType';
+import { ContextMenuType } from 'types/ContextMenuType';
 
 export interface ModalState {
   showNewPost: boolean;
