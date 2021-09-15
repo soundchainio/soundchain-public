@@ -20,7 +20,7 @@ export const ContextMenuModal = () => {
   });
 
   const onOutsideClick = () => {
-    dispatchShowContextMenuModal(false, undefined, '');
+    dispatchShowContextMenuModal(false, ContextMenuType.POST, '');
   };
 
   const onEdit = async () => {
