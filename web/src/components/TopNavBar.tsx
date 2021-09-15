@@ -12,6 +12,7 @@ export interface TopNavBarProps {
   leftButton?: JSX.Element;
   rightButton?: JSX.Element;
   title?: string;
+  subtitle?: JSX.Element;
 }
 
 export const TopNavBar = ({

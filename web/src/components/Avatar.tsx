@@ -2,7 +2,7 @@ import { Profile } from 'lib/graphql';
 import Image from 'next/image';
 import NextLink from 'next/link';
 import React from 'react';
-import ProfilePic from '../../public/profile.jpg';
+import ProfilePic from '../../public/defaultPictures/profile/default-red.png';
 
 interface AvatarProps extends React.ComponentPropsWithoutRef<'div'> {
   profile: Partial<Profile>;
