@@ -1,5 +1,5 @@
 import { UserInputError } from 'apollo-server-express';
-import { Arg, Ctx, Authorized, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
+import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
 import { CurrentUser } from '../decorators/current-user';
 import { Profile } from '../models/Profile';
 import { User } from '../models/User';
@@ -7,16 +7,16 @@ import { AuthPayload } from '../types/AuthPayload';
 import { Context } from '../types/Context';
 import { ForgotPasswordInput } from '../types/ForgotPasswordInput';
 import { ForgotPasswordPayload } from '../types/ForgotPasswordPayload';
-import { UpdateHandleInput } from '../types/UpdateHandleInput';
-import { UpdateHandlePayload } from '../types/UpdateHandlePayload';
 import { LoginInput } from '../types/LoginInput';
 import { RegisterInput } from '../types/RegisterInput';
 import { ResetPasswordInput } from '../types/ResetPasswordInput';
 import { ResetPasswordPayload } from '../types/ResetPasswordPayload';
-import { VerifyUserEmailInput } from '../types/VerifyUserEmailInput';
-import { VerifyUserEmailPayload } from '../types/VerifyUserEmailPayload';
+import { UpdateHandleInput } from '../types/UpdateHandleInput';
+import { UpdateHandlePayload } from '../types/UpdateHandlePayload';
 import { UpdatePasswordInput } from '../types/UpdatePasswordInput';
 import { UpdatePasswordPayload } from '../types/UpdatePasswordPayload';
+import { VerifyUserEmailInput } from '../types/VerifyUserEmailInput';
+import { VerifyUserEmailPayload } from '../types/VerifyUserEmailPayload';
 
 @Resolver(User)
 export class UserResolver {

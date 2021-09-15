@@ -15,6 +15,8 @@ import { UpdateCoverPictureInput } from '../types/UpdateCoverPictureInput';
 import { UpdateCoverPicturePayload } from '../types/UpdateCoverPicturePayload';
 import { UpdateFavoriteGenresInput } from '../types/UpdateFavoriteGenresInput';
 import { UpdateFavoriteGenresPayload } from '../types/UpdateFavoriteGenresPayload';
+import { UpdateProfileBioInput } from '../types/UpdateProfileBioInput';
+import { UpdateProfileBioPayload } from '../types/UpdateProfileBioPayload';
 import { UpdateMusicianTypeInput } from '../types/UpdateMusicianTypeInput';
 import { UpdateMusicianTypePayload } from '../types/UpdateMusicianTypePayload';
 import { UpdateProfileDisplayNameInput } from '../types/UpdateProfileDisplayNameInput';
@@ -120,6 +122,17 @@ export class ProfileResolver {
     @CurrentUser() { profileId }: User,
   ): Promise<UpdateProfileDisplayNamePayload> {
     const profile = await profileService.updateDisplayName(profileId, displayName);
+    return { profile };
+  }
+
+  @Mutation(() => UpdateProfileDisplayNamePayload)
+  @Authorized()
+  async updateProfileBio(
+    @Ctx() { profileService }: Context,
+    @Arg('input') { bio }: UpdateProfileBioInput,
+    @CurrentUser() { profileId }: User,
+  ): Promise<UpdateProfileBioPayload> {
+    const profile = await profileService.updateBio(profileId, bio);
     return { profile };
   }
 

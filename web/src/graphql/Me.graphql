@@ -11,6 +11,7 @@ query Me {
       followingCount
       favoriteGenres
       musicianType
+      bio
     }
   }
 }

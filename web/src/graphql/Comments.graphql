@@ -4,7 +4,9 @@ query Comments($postId: String!, $page: PageInput) {
       ...CommentComponentFields
     }
     pageInfo {
+      hasPreviousPage
       hasNextPage
+      startCursor
       endCursor
     }
   }

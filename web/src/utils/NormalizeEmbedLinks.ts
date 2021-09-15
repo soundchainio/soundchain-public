@@ -16,11 +16,12 @@ const vimeoRegex = /(vimeo.com\/)/;
 const vimeoLinkRegex = /(vimeo.com\/)(.*)/g;
 
 const normalizeYoutube = (str: string) => {
-  return str.replace('/watch?v=', '/embed/');
+  const urlParams = new URLSearchParams(str.replace('?', '&'));
+  return `https://www.youtube.com/embed/${urlParams.get('v')}`;
 };
 
 const normalizeSoundcloud = async (str: string) => {
-  const soundcloudUrl = `http://soundcloud.com/oembed?format=js&url=${str}&iframe=false`;
+  const soundcloudUrl = `https://soundcloud.com/oembed?format=js&url=${str}&iframe=false`;
   const songInfo = await axios(soundcloudUrl);
   if (songInfo.data) {
     // it returns a string '({a: test1, b: test2});'

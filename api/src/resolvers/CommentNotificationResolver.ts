@@ -1,7 +1,8 @@
-import { FieldResolver, Resolver, Root } from 'type-graphql';
+import { Ctx, FieldResolver, Resolver, Root } from 'type-graphql';
 import { Notification } from '../models/Notification';
 import { CommentNotification } from '../types/CommentNotification';
 import { CommentNotificationMetadata } from '../types/CommentNotificationMetadata';
+import { Context } from '../types/Context';
 
 @Resolver(CommentNotification)
 export class CommentNotificationResolver {
@@ -24,7 +25,7 @@ export class CommentNotificationResolver {
 
   @FieldResolver(() => String)
   body(): string {
-    return 'commented your post:';
+    return 'commented on your post:';
   }
 
   @FieldResolver(() => String)
@@ -34,8 +35,9 @@ export class CommentNotificationResolver {
   }
 
   @FieldResolver(() => String)
-  link(@Root() { metadata }: Notification): string {
+  async link(@Root() { metadata }: Notification, @Ctx() { commentService }: Context): Promise<string> {
     const { postId, commentId } = metadata as CommentNotificationMetadata;
-    return `/posts/${postId}?commentId=${commentId}`;
+    const cursor = await commentService.getPageCursorById(commentId, 'createdAt');
+    return `/posts/${postId}?commentId=${commentId}&cursor=${cursor}`;
   }
 }

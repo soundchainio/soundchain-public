@@ -9,8 +9,7 @@ import { ProfileTabs } from 'components/ProfileTabs';
 import { SocialMediaLink } from 'components/SocialMediaLink';
 import { SubscribeButton } from 'components/SubscribeButton';
 import { Subtitle } from 'components/Subtitle';
-import { useMountedState } from 'hooks/useMountedState';
-import { useProfileQuery } from 'lib/graphql';
+import { useProfileLazyQuery } from 'lib/graphql';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
@@ -19,9 +18,16 @@ import { FollowModalType } from 'types/FollowModalType';
 export default function ProfilePage() {
   const router = useRouter();
   const profileId = router.query.id as string;
-  const { data } = useProfileQuery({ variables: { id: profileId } });
-  const [showModal, setShowModal] = useMountedState(false);
+
+  const [profile, { data }] = useProfileLazyQuery({ variables: { id: profileId }, ssr: false });
+  const [showModal, setShowModal] = useState(false);
   const [followModalType, setFollowModalType] = useState<FollowModalType>();
+
+  useEffect(() => {
+    if (profileId) {
+      profile();
+    }
+  }, [profileId]);
 
   useEffect(() => {
     setShowModal(false);
@@ -53,6 +59,7 @@ export default function ProfilePage() {
     followerCount,
     followingCount,
     isFollowed,
+    bio,
     isSubscriber,
   } = data.profile;
 
@@ -91,6 +98,7 @@ export default function ProfilePage() {
           <div>
             <Subtitle className="">{displayName}</Subtitle>
             <p className="text-gray-80 text-sm">@{userHandle}</p>
+            <p className="text-gray-80 py-2 text-sm">{bio}</p>
           </div>
           <MessageButton profileId={profileId} />
         </div>
