@@ -137,9 +137,6 @@ export const NewPostModal = () => {
   }, [editPostId]);
 
   useEffect(() => {
-  }, [editingPost]);
-
-  useEffect(() => {
     const delayDebounce = setTimeout(async () => {
       if (bodyValue.length) {
         const link = await getNormalizedLink(bodyValue);
