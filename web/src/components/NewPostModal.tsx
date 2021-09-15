@@ -25,8 +25,6 @@ export interface FormValues {
   mediaLink?: string;
 }
 
-const initialValues = { body: '' };
-
 const postSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   body: yup.string().required(),
   mediaLink: yup.string(),
@@ -68,6 +66,9 @@ export const NewPostModal = () => {
   const [getPost, { data: editingPost }] = usePostLazyQuery({
     variables: { id: editPostId! },
   });
+
+  const initialValues = { body: editingPost?.post.body || '' };
+
 
   const clearState = () => {
     dispatchShowNewPostModal(false);
