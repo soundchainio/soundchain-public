@@ -23,7 +23,7 @@ export const ContextMenuModal = () => {
     dispatchShowContextMenuModal(false, ContextMenuType.POST, '');
   };
 
-  const onEdit = async () => {
+  const onEdit = () => {
     onOutsideClick();
     dispatchSetEditPostId(contextMenuId);
     dispatchShowNewPostModal(true);
