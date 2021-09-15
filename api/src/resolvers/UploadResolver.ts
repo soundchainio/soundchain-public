@@ -1,15 +1,15 @@
 import { Arg, Ctx, Query, Resolver } from 'type-graphql';
 import { Context } from '../types/Context';
-import { UploadFileType } from '../types/UploadFileType';
-import { UploadUrl } from '../types/UploadUrl';
+import { ImageUploadFileType } from '../types/ImageUploadFileType';
+import { ImageUploadUrl } from '../types/ImageUploadUrl';
 
 @Resolver()
 export class UploadResolver {
-  @Query(() => UploadUrl)
-  async uploadUrl(
+  @Query(() => ImageUploadUrl)
+  async imageUploadUrl(
     @Ctx() { uploadService }: Context,
-    @Arg('fileType', () => UploadFileType) fileType: UploadFileType,
-  ): Promise<UploadUrl> {
-    return uploadService.generateUploadUrl(fileType);
+    @Arg('fileType', () => ImageUploadFileType) fileType: ImageUploadFileType,
+  ): Promise<ImageUploadUrl> {
+    return uploadService.generateImageUploadUrl(fileType);
   }
 }

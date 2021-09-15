@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { useUpload } from 'hooks/useUpload';
+import { useImageUpload } from 'hooks/useImageUpload';
 import { Camera } from 'icons/Camera';
 import Image from 'next/image';
 import Dropzone from 'react-dropzone';
@@ -26,7 +26,7 @@ export function ImageUpload({
   children,
   ...rest
 }: ImageUploadProps) {
-  const { preview, uploading, upload } = useUpload(value, onChange);
+  const { preview, uploading, upload } = useImageUpload(value, onChange);
   const thumbnail = preview || value;
 
   return (

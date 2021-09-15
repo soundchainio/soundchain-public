@@ -1,7 +1,7 @@
 import { Field, ObjectType } from 'type-graphql';
 
 @ObjectType()
-export class UploadUrl {
+export class ImageUploadUrl {
   @Field()
   uploadUrl: string;
 

@@ -222,6 +222,18 @@ export enum Genre {
   World = 'WORLD'
 }
 
+export enum ImageUploadFileType {
+  Jpeg = 'JPEG',
+  Png = 'PNG'
+}
+
+export type ImageUploadUrl = {
+  __typename?: 'ImageUploadUrl';
+  uploadUrl: Scalars['String'];
+  fileName: Scalars['String'];
+  readUrl: Scalars['String'];
+};
+
 export type LoginInput = {
   /** Username can be email or handle */
   username: Scalars['String'];
@@ -527,7 +539,7 @@ export type Query = {
   reactions: ReactionConnection;
   myProfile: Profile;
   profile: Profile;
-  uploadUrl: UploadUrl;
+  imageUploadUrl: ImageUploadUrl;
   me: Maybe<User>;
   validPasswordResetToken: Scalars['Boolean'];
 };
@@ -611,8 +623,8 @@ export type QueryProfileArgs = {
 };
 
 
-export type QueryUploadUrlArgs = {
-  fileType: UploadFileType;
+export type QueryImageUploadUrlArgs = {
+  fileType: ImageUploadFileType;
 };
 
 
@@ -834,18 +846,6 @@ export type UpdateSocialMediasInput = {
 export type UpdateSocialMediasPayload = {
   __typename?: 'UpdateSocialMediasPayload';
   profile: Profile;
-};
-
-export enum UploadFileType {
-  Jpeg = 'JPEG',
-  Png = 'PNG'
-}
-
-export type UploadUrl = {
-  __typename?: 'UploadUrl';
-  uploadUrl: Scalars['String'];
-  fileName: Scalars['String'];
-  readUrl: Scalars['String'];
 };
 
 export type User = {
@@ -1161,16 +1161,16 @@ export type ForgotPasswordMutation = (
   ) }
 );
 
-export type UploadUrlQueryVariables = Exact<{
-  fileType: UploadFileType;
+export type ImageUploadUrlQueryVariables = Exact<{
+  fileType: ImageUploadFileType;
 }>;
 
 
-export type UploadUrlQuery = (
+export type ImageUploadUrlQuery = (
   { __typename?: 'Query' }
-  & { uploadUrl: (
-    { __typename?: 'UploadUrl' }
-    & Pick<UploadUrl, 'uploadUrl' | 'fileName' | 'readUrl'>
+  & { imageUploadUrl: (
+    { __typename?: 'ImageUploadUrl' }
+    & Pick<ImageUploadUrl, 'uploadUrl' | 'fileName' | 'readUrl'>
   ) }
 );
 
@@ -2415,9 +2415,9 @@ export function useForgotPasswordMutation(baseOptions?: Apollo.MutationHookOptio
 export type ForgotPasswordMutationHookResult = ReturnType<typeof useForgotPasswordMutation>;
 export type ForgotPasswordMutationResult = Apollo.MutationResult<ForgotPasswordMutation>;
 export type ForgotPasswordMutationOptions = Apollo.BaseMutationOptions<ForgotPasswordMutation, ForgotPasswordMutationVariables>;
-export const UploadUrlDocument = gql`
-    query UploadUrl($fileType: UploadFileType!) {
-  uploadUrl(fileType: $fileType) {
+export const ImageUploadUrlDocument = gql`
+    query ImageUploadUrl($fileType: ImageUploadFileType!) {
+  imageUploadUrl(fileType: $fileType) {
     uploadUrl
     fileName
     readUrl
@@ -2426,32 +2426,32 @@ export const UploadUrlDocument = gql`
     `;
 
 /**
- * __useUploadUrlQuery__
+ * __useImageUploadUrlQuery__
  *
- * To run a query within a React component, call `useUploadUrlQuery` and pass it any options that fit your needs.
- * When your component renders, `useUploadUrlQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useImageUploadUrlQuery` and pass it any options that fit your needs.
+ * When your component renders, `useImageUploadUrlQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useUploadUrlQuery({
+ * const { data, loading, error } = useImageUploadUrlQuery({
  *   variables: {
  *      fileType: // value for 'fileType'
  *   },
  * });
  */
-export function useUploadUrlQuery(baseOptions: Apollo.QueryHookOptions<UploadUrlQuery, UploadUrlQueryVariables>) {
+export function useImageUploadUrlQuery(baseOptions: Apollo.QueryHookOptions<ImageUploadUrlQuery, ImageUploadUrlQueryVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<UploadUrlQuery, UploadUrlQueryVariables>(UploadUrlDocument, options);
+        return Apollo.useQuery<ImageUploadUrlQuery, ImageUploadUrlQueryVariables>(ImageUploadUrlDocument, options);
       }
-export function useUploadUrlLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UploadUrlQuery, UploadUrlQueryVariables>) {
+export function useImageUploadUrlLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ImageUploadUrlQuery, ImageUploadUrlQueryVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<UploadUrlQuery, UploadUrlQueryVariables>(UploadUrlDocument, options);
+          return Apollo.useLazyQuery<ImageUploadUrlQuery, ImageUploadUrlQueryVariables>(ImageUploadUrlDocument, options);
         }
-export type UploadUrlQueryHookResult = ReturnType<typeof useUploadUrlQuery>;
-export type UploadUrlLazyQueryHookResult = ReturnType<typeof useUploadUrlLazyQuery>;
-export type UploadUrlQueryResult = Apollo.QueryResult<UploadUrlQuery, UploadUrlQueryVariables>;
+export type ImageUploadUrlQueryHookResult = ReturnType<typeof useImageUploadUrlQuery>;
+export type ImageUploadUrlLazyQueryHookResult = ReturnType<typeof useImageUploadUrlLazyQuery>;
+export type ImageUploadUrlQueryResult = Apollo.QueryResult<ImageUploadUrlQuery, ImageUploadUrlQueryVariables>;
 export const LoginDocument = gql`
     mutation Login($input: LoginInput!) {
   login(input: $input) {
