@@ -12,11 +12,11 @@ export const OutlineRoundedButton = ({
   ...rest
 }: ButtonProps) => {
   return (
-    <div className={classNames('p-0.5 rounded-full h-full', borderColor)}>
+    <div className={classNames('flex p-0.5 rounded-full h-auto', borderColor)}>
       <button
         className={classNames(
           commonClasses,
-          'p-2 text-white text-xs uppercase rounded-full',
+          'text-white text-xs uppercase rounded-full',
           className,
           bgColor ? bgColor : 'bg-gray-10',
         )}

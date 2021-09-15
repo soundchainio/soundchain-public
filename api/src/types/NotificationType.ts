@@ -4,6 +4,7 @@ enum NotificationType {
   Comment = 'Comment',
   Reaction = 'Reaction',
   Follower = 'Follower',
+  NewPost = 'NewPost',
 }
 
 registerEnumType(NotificationType, {
