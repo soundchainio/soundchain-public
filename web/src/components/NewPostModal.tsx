@@ -92,9 +92,6 @@ export const NewPostModal = () => {
     } else if (editPostId) {
       const params: UpdatePostInput = { body: values.body, postId: editPostId };
 
-
-      console.log('postLink: ', postLink);
-
       if (postLink.length) {
         params.mediaLink = postLink;
       }
@@ -179,7 +176,6 @@ export const NewPostModal = () => {
 
   useEffect(() => {
     if (editingPost) {
-      console.log('editing post', editingPost.post);
       setPostLink(editingPost.post.mediaLink || '');
       setBodyValue(editingPost.post.body);
     }
