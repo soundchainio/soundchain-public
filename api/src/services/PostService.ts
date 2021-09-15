@@ -19,6 +19,14 @@ interface RepostParams {
   body: string;
   repostId: string;
 }
+
+interface UpdatePostParams {
+  profileId: string;
+  postId: string;
+  body: string;
+  mediaLink?: string;
+}
+
 export class PostService extends ModelService<typeof Post> {
   constructor(context: Context) {
     super(context, PostModel);
@@ -36,6 +44,25 @@ export class PostService extends ModelService<typeof Post> {
     await post.save();
     this.context.feedService.addPostToFollowerFeeds(post);
     return post;
+  }
+
+  async updatePost(params: UpdatePostParams): Promise<Post> {
+    const validationPost = await this.findOrFail(params.postId);
+
+    if (validationPost.profileId !== params.profileId) {
+      throw new Error(`You are not the author of the post.`);
+    }
+
+    await this.model.updateOne(
+      { _id: params.postId },
+      {
+        body: params.body,
+        mediaLink: params.mediaLink,
+        edited: true
+      },
+    );
+
+    return await this.findOrFail(params.postId);
   }
 
   getPosts(filter?: FilterPostInput, sort?: SortPostInput, page?: PageInput): Promise<PaginateResult<Post>> {

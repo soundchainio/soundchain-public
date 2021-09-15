@@ -4,10 +4,17 @@ import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import 'emoji-mart/css/emoji-mart.css';
 import { Field, Form, Formik, FormikHelpers } from 'formik';
 import GraphemeSplitter from 'grapheme-splitter';
-import { CreatePostInput, CreateRepostInput } from 'lib/graphql';
+import {
+  CreatePostInput,
+  CreateRepostInput,
+  UpdatePostInput,
+  useCreatePostMutation,
+  useCreateRepostMutation,
+  usePostLazyQuery,
+  useUpdatePostMutation
+} from 'lib/graphql';
 import { default as React, useCallback, useEffect, useState } from 'react';
 import * as yup from 'yup';
-import { useCreatePostMutation, useCreateRepostMutation, usePostLazyQuery } from '../lib/graphql';
 import { getNormalizedLink, hasLink } from '../utils/NormalizeEmbedLinks';
 import { ModalsPortal } from './ModalsPortal';
 import { NewPostBar } from './NewPostBar';
@@ -53,7 +60,7 @@ export const NewPostModal = () => {
   const [bodyValue, setBodyValue] = useState('');
   const [createPost] = useCreatePostMutation({ refetchQueries: ['Posts'] });
   const [createRepost] = useCreateRepostMutation({ refetchQueries: ['Posts'] });
-  // const [editPost] = useEditPostMutation({ refetchQueries: ['Posts'] });
+  const [editPost] = useUpdatePostMutation({ refetchQueries: ['Post'] });
 
   const { showNewPost, repostId, editPostId } = useModalState();
   const { dispatchShowNewPostModal, dispatchSetRepostId, dispatchSetEditPostId } = useModalDispatch();
@@ -83,7 +90,16 @@ export const NewPostModal = () => {
 
       await createRepost({ variables: { input: params } });
     } else if (editPostId) {
-      console.log('edita o post');
+      const params: UpdatePostInput = { body: values.body, postId: editPostId };
+
+
+      console.log('postLink: ', postLink);
+
+      if (postLink.length) {
+        params.mediaLink = postLink;
+      }
+
+      await editPost({ variables: { input: params } });
     } else {
       const params: CreatePostInput = { body: values.body };
 
@@ -131,10 +147,10 @@ export const NewPostModal = () => {
         const link = await getNormalizedLink(bodyValue);
         if (link) {
           setPostLink(link);
-        } else if (!originalLink) {
+        } else if (!originalLink && !isEditPost) {
           setPostLink('');
         }
-      } else if (!originalLink) {
+      } else if (!originalLink && !isEditPost) {
         setPostLink('');
       }
     }, 1000);
@@ -144,16 +160,8 @@ export const NewPostModal = () => {
 
   useEffect(() => {
     if (originalLink) {
-      const normalizeOriginalLink = async () => {
-        if (originalLink.length && hasLink(originalLink)) {
-          const link = await getNormalizedLink(originalLink);
-          setPostLink(link);
-        } else {
-          setPostLink('');
-        }
-      };
       normalizeOriginalLink();
-    } else {
+    } else if (!isEditPost) {
       setPostLink('');
     }
   }, [normalizeOriginalLink, originalLink]);
@@ -169,6 +177,14 @@ export const NewPostModal = () => {
     editPostId ? setIsEditPost(true) : setIsEditPost(false);
   }, [repostId, editPostId]);
 
+  useEffect(() => {
+    if (editingPost) {
+      console.log('editing post', editingPost.post);
+      setPostLink(editingPost.post.mediaLink || '');
+      setBodyValue(editingPost.post.body);
+    }
+  }, [editingPost]);
+
   return (
     <ModalsPortal>
       <div
@@ -177,7 +193,7 @@ export const NewPostModal = () => {
           'translate-y-full opacity-0': !showNewPost,
         })}
       >
-        <Formik initialValues={initialValues} validationSchema={postSchema} onSubmit={handleSubmit}>
+        <Formik enableReinitialize={true} initialValues={initialValues} validationSchema={postSchema} onSubmit={handleSubmit}>
           {({ values, setFieldValue }) => (
             <Form className="flex flex-col h-full">
               <div className="flex items-center rounded-tl-3xl rounded-tr-3xl bg-gray-30">
@@ -192,7 +208,8 @@ export const NewPostModal = () => {
                 <div className="flex-1 text-center m-2">
                   <div className="ml-6">
                     <Button className="bg-gray-30 text-sm " type="submit" variant="rainbow-rounded">
-                      Post
+                      {isEditPost && 'Save'}
+                      {!isEditPost && 'Post'}
                     </Button>
                   </div>
                 </div>
@@ -203,7 +220,7 @@ export const NewPostModal = () => {
                 className="w-full h-24 resize-none focus:ring-0 bg-gray-20 border-none focus:outline-none outline-none text-white flex-auto"
                 placeholder="What's happening?"
                 maxLength={setMaxInputLength(values.body)}
-                inputprops={{ onChange: onTextareaChange(values.body) }}
+                inputprops={{ onChange: onTextareaChange(values.body), value: bodyValue }}
               />
               {isRepost && (
                 <div className="p-4 bg-gray-20">

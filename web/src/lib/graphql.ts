@@ -262,6 +262,7 @@ export type Mutation = {
   resetNotificationCount: Profile;
   clearNotifications: ClearNotificationsPayload;
   createPost: CreatePostPayload;
+  updatePost: UpdatePostPayload;
   reactToPost: ReactToPostPayload;
   retractReaction: RetractReactionPayload;
   changeReaction: ChangeReactionPayload;
@@ -302,6 +303,11 @@ export type MutationSendMessageArgs = {
 
 export type MutationCreatePostArgs = {
   input: CreatePostInput;
+};
+
+
+export type MutationUpdatePostArgs = {
+  input: UpdatePostInput;
 };
 
 
@@ -441,6 +447,7 @@ export type Post = {
   body: Scalars['String'];
   mediaLink: Maybe<Scalars['String']>;
   repostId: Maybe<Scalars['String']>;
+  edited: Maybe<Scalars['Boolean']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   profile: Profile;
@@ -755,6 +762,17 @@ export type UpdatePasswordInput = {
 export type UpdatePasswordPayload = {
   __typename?: 'UpdatePasswordPayload';
   ok: Scalars['Boolean'];
+};
+
+export type UpdatePostInput = {
+  postId: Scalars['String'];
+  body: Scalars['String'];
+  mediaLink?: Maybe<Scalars['String']>;
+};
+
+export type UpdatePostPayload = {
+  __typename?: 'UpdatePostPayload';
+  post: Post;
 };
 
 export type UpdateProfileBioInput = {
@@ -1261,7 +1279,7 @@ export type PostQuery = (
 
 export type PostComponentFieldsFragment = (
   { __typename?: 'Post' }
-  & Pick<Post, 'id' | 'body' | 'mediaLink' | 'repostId' | 'createdAt' | 'commentCount' | 'repostCount' | 'totalReactions' | 'topReactions' | 'myReaction'>
+  & Pick<Post, 'id' | 'body' | 'mediaLink' | 'repostId' | 'createdAt' | 'commentCount' | 'repostCount' | 'totalReactions' | 'topReactions' | 'myReaction' | 'edited'>
   & { profile: (
     { __typename?: 'Profile' }
     & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
@@ -1544,6 +1562,22 @@ export type UpdatePasswordMutation = (
   ) }
 );
 
+export type UpdatePostMutationVariables = Exact<{
+  input: UpdatePostInput;
+}>;
+
+
+export type UpdatePostMutation = (
+  { __typename?: 'Mutation' }
+  & { updatePost: (
+    { __typename?: 'UpdatePostPayload' }
+    & { post: (
+      { __typename?: 'Post' }
+      & Pick<Post, 'id'>
+    ) }
+  ) }
+);
+
 export type UpdateProfileBioMutationVariables = Exact<{
   input: UpdateProfileBioInput;
 }>;
@@ -1698,6 +1732,7 @@ export const PostComponentFieldsFragmentDoc = gql`
   totalReactions
   topReactions(top: 2)
   myReaction
+  edited
   profile {
     id
     displayName
@@ -3332,6 +3367,41 @@ export function useUpdatePasswordMutation(baseOptions?: Apollo.MutationHookOptio
 export type UpdatePasswordMutationHookResult = ReturnType<typeof useUpdatePasswordMutation>;
 export type UpdatePasswordMutationResult = Apollo.MutationResult<UpdatePasswordMutation>;
 export type UpdatePasswordMutationOptions = Apollo.BaseMutationOptions<UpdatePasswordMutation, UpdatePasswordMutationVariables>;
+export const UpdatePostDocument = gql`
+    mutation UpdatePost($input: UpdatePostInput!) {
+  updatePost(input: $input) {
+    post {
+      id
+    }
+  }
+}
+    `;
+export type UpdatePostMutationFn = Apollo.MutationFunction<UpdatePostMutation, UpdatePostMutationVariables>;
+
+/**
+ * __useUpdatePostMutation__
+ *
+ * To run a mutation, you first call `useUpdatePostMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdatePostMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updatePostMutation, { data, loading, error }] = useUpdatePostMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdatePostMutation(baseOptions?: Apollo.MutationHookOptions<UpdatePostMutation, UpdatePostMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdatePostMutation, UpdatePostMutationVariables>(UpdatePostDocument, options);
+      }
+export type UpdatePostMutationHookResult = ReturnType<typeof useUpdatePostMutation>;
+export type UpdatePostMutationResult = Apollo.MutationResult<UpdatePostMutation>;
+export type UpdatePostMutationOptions = Apollo.BaseMutationOptions<UpdatePostMutation, UpdatePostMutationVariables>;
 export const UpdateProfileBioDocument = gql`
     mutation updateProfileBio($input: UpdateProfileBioInput!) {
   updateProfileBio(input: $input) {

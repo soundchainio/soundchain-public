@@ -26,6 +26,10 @@ export class Post extends Model {
   @prop({ required: false })
   repostId?: string;
 
+  @Field({ nullable: true })
+  @prop({ required: false })
+  edited?: boolean;
+
   @Field(() => Date)
   createdAt: Date;
 

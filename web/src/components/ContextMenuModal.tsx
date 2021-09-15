@@ -4,7 +4,7 @@ import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { DeleteCommentMutation, useDeleteCommentMutation, CommentsDocument } from 'lib/graphql';
 import { ContextMenuType } from 'types/ContextMenuType';
 import { Delete as DeleteButton } from './Buttons/Delete';
-import { Button } from './Button';
+import { Edit as EditButton } from './Buttons/Edit';
 import { ModalsPortal } from './ModalsPortal';
 
 const baseClasses =
@@ -20,7 +20,7 @@ export const ContextMenuModal = () => {
   });
 
   const onOutsideClick = () => {
-    dispatchShowContextMenuModal(false, ContextMenuType.COMMENT, '');
+    dispatchShowContextMenuModal(false, undefined, '');
   };
 
   const onEdit = async () => {
@@ -45,9 +45,9 @@ export const ContextMenuModal = () => {
         <div className="flex flex-col h-screen">
           <div className="flex-1" onClick={onOutsideClick}></div>
           <div className="text-white p-4">
-            <Button variant="outline" className="p-4" onClick={onEdit}>
+            <EditButton className="p-4 mb-4" onClick={onEdit}>
               Edit {contextMenuType}
-            </Button>
+            </EditButton>
             <DeleteButton className="p-4" onClick={onDelete}>
               Delete {contextMenuType}
             </DeleteButton>

@@ -42,7 +42,7 @@ export const Post = ({ postId }: PostProps) => {
                   <a className="text-lg font-bold text-gray-100">{post.profile.displayName}</a>
                 </NextLink>
                 <Timestamp
-                  datetime={post.createdAt} className="flex-1 text-left" />
+                  datetime={post.createdAt} edited={post.edited || false} className="flex-1 text-left" />
               </div>
               <div className="w-14">
                 {canEdit && <Ellipsis className="pr-4 pl-4 w-full h-3 cursor-pointer" onClick={onEllipsisClick} />}

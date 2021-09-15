@@ -9,6 +9,7 @@ fragment PostComponentFields on Post {
   totalReactions
   topReactions(top: 2)
   myReaction
+  edited
   profile {
     id
     displayName
