@@ -1,16 +1,15 @@
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { ImageUploadField } from 'components/ImageUploadField';
-import { InputField } from 'components/InputField';
 import { Label } from 'components/Label';
 import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Form, Formik } from 'formik';
 import { useMe } from 'hooks/useMe';
-import { useUpdateProfileDisplayNameMutation, useUpdateProfilePictureMutation } from 'lib/graphql';
+import { useUpdateProfilePictureMutation } from 'lib/graphql';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import React, { useEffect } from 'react';
+import React from 'react';
 import * as yup from 'yup';
 
 export interface ProfilePictureFormValues {
@@ -57,7 +56,14 @@ export default function ProfilePicturePage() {
               </ImageUploadField>
             </div>
             <div className="flex flex-col ">
-              <Button type="submit" loading={loading} disabled={loading} variant="green-gradient">
+              <Button
+                type="submit"
+                loading={loading}
+                disabled={loading}
+                variant="outline"
+                borderColor="bg-green-gradient"
+                className="h-12"
+              >
                 {fromSettings ? 'Next' : 'Save'}
               </Button>
             </div>
