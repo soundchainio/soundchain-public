@@ -5,6 +5,7 @@ import { DefaultProfilePictureSelector } from 'components/DefaultProfilePictureS
 import { ImageUploadField } from 'components/ImageUploadField';
 import { Label } from 'components/Label';
 import { Layout } from 'components/Layout';
+import { StepProgressBar } from 'components/StepProgressBar';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Form, Formik } from 'formik';
 import { useMe } from 'hooks/useMe';
@@ -41,13 +42,14 @@ export default function ProfilePicturePage() {
   const topNavBarProps: TopNavBarProps = {
     title: 'Profile Picture',
     leftButton: newAccount ? (
-      <div className="p-2 text-gray-400 font-bold flex-1 text-left" onClick={onClose}>
+      <div className="text-gray-400 font-bold flex-1 text-left" onClick={onClose}>
         Cancel
       </div>
     ) : (
       <BackButton />
     ),
     rightButton: newAccount ? <Badge label="Skip" onClick={onClose} selected={false} /> : undefined,
+    subtitle: <StepProgressBar steps={4} actualStep={1} />,
   };
 
   if (!me) return null;

@@ -19,6 +19,7 @@ export const TopNavBar = ({
   title,
   rightButton: RightButton,
   leftButton: LeftButton,
+  subtitle: Subtitle,
   setSideMenuOpen,
 }: TopNavBarProps) => {
   const router = useRouter();
@@ -54,9 +55,12 @@ export const TopNavBar = ({
         <div className="flex-2 flex items-center justify-center md:items-stretch md:justify-start">
           <div className="flex-shrink-0 flex items-center">
             {title ? (
-              <Title navTitle className="text-sm text-center md:text-left">
-                {title}
-              </Title>
+              <div className="flex flex-col">
+                <Title navTitle className="text-sm text-center md:text-left">
+                  {title}
+                </Title>
+                {Subtitle}
+              </div>
             ) : (
               <Logo className="block h-8 w-auto" />
             )}
