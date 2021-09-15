@@ -8,7 +8,7 @@ import { Posts } from 'components/Posts';
 import { ProfileTabs } from 'components/ProfileTabs';
 import { SocialMediaLink } from 'components/SocialMediaLink';
 import { Subtitle } from 'components/Subtitle';
-import { useProfileQuery } from 'lib/graphql';
+import { useProfileLazyQuery } from 'lib/graphql';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
@@ -17,9 +17,15 @@ import { FollowModalType } from 'types/FollowModalType';
 export default function ProfilePage() {
   const router = useRouter();
   const profileId = router.query.id as string;
-  const { data } = useProfileQuery({ variables: { id: profileId } });
+  const [profile, { data }] = useProfileLazyQuery({ variables: { id: profileId }, ssr: false });
   const [showModal, setShowModal] = useState(false);
   const [followModalType, setFollowModalType] = useState<FollowModalType>();
+
+  useEffect(() => {
+    if (profileId) {
+      profile();
+    }
+  }, [profileId]);
 
   useEffect(() => {
     setShowModal(false);
@@ -57,7 +63,7 @@ export default function ProfilePage() {
         />
       </div>
       <div className="p-4">
-        <div className="flex items-center space-x-8">
+        <div className="flex items-center">
           <div className="flex-1 pl-24 flex space-x-4">
             <div className="text-center text-sm cursor-pointer" onClick={onFollowers}>
               <p className="font-semibold text-white">
