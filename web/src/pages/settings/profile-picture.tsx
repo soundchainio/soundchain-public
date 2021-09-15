@@ -12,7 +12,8 @@ import { useMe } from 'hooks/useMe';
 import { useUpdateProfilePictureMutation } from 'lib/graphql';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import React from 'react';
+import React, { useState } from 'react';
+import { getRandomProfilePicture } from 'utils/DefaultProfilePictures';
 import * as yup from 'yup';
 
 export interface ProfilePictureFormValues {
@@ -29,14 +30,33 @@ export default function ProfilePicturePage() {
   const newAccount = Boolean(router.query.newAccount);
   const initialFormValues: ProfilePictureFormValues = { profilePicture: '' };
   const [updateProfilePicture, { loading }] = useUpdateProfilePictureMutation();
+  const [defaultPicture, setDefaultPicture] = useState<string>();
 
   const onClose = () => {
     router.push('/');
   };
 
   const onSubmit = async ({ profilePicture }: ProfilePictureFormValues) => {
-    await updateProfilePicture({ variables: { input: { picture: profilePicture as string } } });
-    router.push('/settings');
+    await updateProfilePicture({
+      variables: {
+        input: {
+          picture: profilePicture
+            ? (profilePicture as string)
+            : defaultPicture
+            ? defaultPicture
+            : getRandomProfilePicture(),
+        },
+      },
+    });
+    if (newAccount) {
+      router.push('/settings');
+    } else {
+      router.back();
+    }
+  };
+
+  const onDefaultPicture = (picture: string) => {
+    setDefaultPicture(picture);
   };
 
   const topNavBarProps: TopNavBarProps = {
@@ -49,7 +69,7 @@ export default function ProfilePicturePage() {
       <BackButton />
     ),
     rightButton: newAccount ? <Badge label="Skip" onClick={onClose} selected={false} /> : undefined,
-    subtitle: <StepProgressBar steps={4} actualStep={1} />,
+    subtitle: newAccount ? <StepProgressBar steps={4} actualStep={1} /> : undefined,
   };
 
   if (!me) return null;
@@ -73,7 +93,7 @@ export default function ProfilePicturePage() {
               </div>
               <div className="flex flex-col space-y-8">
                 <Label textSize="base">Default Profile Photos:</Label>
-                <DefaultProfilePictureSelector onSelect={picture => console.log(picture)} />
+                <DefaultProfilePictureSelector onSelect={onDefaultPicture} />
               </div>
             </div>
             <div className="flex flex-col">
@@ -82,7 +102,7 @@ export default function ProfilePicturePage() {
                 loading={loading}
                 disabled={loading}
                 variant="outline"
-                borderColor="bg-green-gradient"
+                borderColor={newAccount ? 'bg-blue-gradient' : 'bg-green-gradient'}
                 className="h-12"
               >
                 {newAccount ? 'Next' : 'Save'}

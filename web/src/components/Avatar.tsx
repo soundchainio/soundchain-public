@@ -2,6 +2,7 @@ import { Profile } from 'lib/graphql';
 import Image from 'next/image';
 import NextLink from 'next/link';
 import React from 'react';
+import { getDefaultProfilePicturePath } from 'utils/DefaultProfilePictures';
 import ProfilePic from '../../public/defaultPictures/profile/default-red.png';
 
 interface AvatarProps extends React.ComponentPropsWithoutRef<'div'> {
@@ -25,7 +26,11 @@ export const Avatar = ({ profile, pixels = 30, linkToProfile = true, ...props }:
       {profile.profilePicture ? (
         <Image
           alt="Profile picture"
-          src={profile.profilePicture}
+          src={
+            profile.profilePicture.startsWith('default-')
+              ? getDefaultProfilePicturePath(profile.profilePicture)
+              : profile.profilePicture
+          }
           width={pixels}
           height={pixels}
           className="rounded-full"

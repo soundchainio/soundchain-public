@@ -1,24 +1,23 @@
 import classNames from 'classnames';
 import { useMountedState } from 'hooks/useMountedState';
 import Image from 'next/image';
+import { defaultProfilePictures, getDefaultProfilePicturePath } from 'utils/DefaultProfilePictures';
 
 interface DefaultProfilePictureSelectorProps {
   onSelect: (picture: string) => void;
 }
-
-const pictures = ['red', 'orange', 'yellow', 'green', 'light-blue', 'blue', 'purple', 'pink'];
 
 export const DefaultProfilePictureSelector = ({ onSelect }: DefaultProfilePictureSelectorProps) => {
   const [selected, setSelected] = useMountedState<string | undefined>(undefined);
 
   const onClick = (picture: string) => {
     setSelected(picture);
-    onSelect(`default-${picture}`);
+    onSelect(picture);
   };
 
   return (
     <div className="grid grid-cols-4 gap-4">
-      {pictures.map(picture => (
+      {defaultProfilePictures.map(picture => (
         <div
           key={picture}
           className={classNames(
@@ -27,12 +26,7 @@ export const DefaultProfilePictureSelector = ({ onSelect }: DefaultProfilePictur
           )}
           onClick={() => onClick(picture)}
         >
-          <Image
-            alt="Profile picture red"
-            src={`/defaultPictures/profile/default-${picture}.png`}
-            width={60}
-            height={60}
-          />
+          <Image alt="Profile picture red" src={getDefaultProfilePicturePath(picture)} width={60} height={60} />
         </div>
       ))}
     </div>
