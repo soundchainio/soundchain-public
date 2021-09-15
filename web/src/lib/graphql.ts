@@ -26,6 +26,12 @@ export type AddCommentPayload = {
   comment: Comment;
 };
 
+export type AudioUpload = {
+  __typename?: 'AudioUpload';
+  url: Scalars['String'];
+  id: Scalars['String'];
+};
+
 export type AuthPayload = {
   __typename?: 'AuthPayload';
   jwt: Scalars['String'];
@@ -540,6 +546,7 @@ export type Query = {
   myProfile: Profile;
   profile: Profile;
   imageUploadUrl: ImageUploadUrl;
+  audioUpload: AudioUpload;
   me: Maybe<User>;
   validPasswordResetToken: Scalars['Boolean'];
 };
@@ -885,6 +892,17 @@ export type AddCommentMutation = (
       ) }
       & CommentComponentFieldsFragment
     ) }
+  ) }
+);
+
+export type AudioUploadQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type AudioUploadQuery = (
+  { __typename?: 'Query' }
+  & { audioUpload: (
+    { __typename?: 'AudioUpload' }
+    & Pick<AudioUpload, 'id' | 'url'>
   ) }
 );
 
@@ -1857,6 +1875,41 @@ export function useAddCommentMutation(baseOptions?: Apollo.MutationHookOptions<A
 export type AddCommentMutationHookResult = ReturnType<typeof useAddCommentMutation>;
 export type AddCommentMutationResult = Apollo.MutationResult<AddCommentMutation>;
 export type AddCommentMutationOptions = Apollo.BaseMutationOptions<AddCommentMutation, AddCommentMutationVariables>;
+export const AudioUploadDocument = gql`
+    query AudioUpload {
+  audioUpload {
+    id
+    url
+  }
+}
+    `;
+
+/**
+ * __useAudioUploadQuery__
+ *
+ * To run a query within a React component, call `useAudioUploadQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAudioUploadQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAudioUploadQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useAudioUploadQuery(baseOptions?: Apollo.QueryHookOptions<AudioUploadQuery, AudioUploadQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<AudioUploadQuery, AudioUploadQueryVariables>(AudioUploadDocument, options);
+      }
+export function useAudioUploadLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<AudioUploadQuery, AudioUploadQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<AudioUploadQuery, AudioUploadQueryVariables>(AudioUploadDocument, options);
+        }
+export type AudioUploadQueryHookResult = ReturnType<typeof useAudioUploadQuery>;
+export type AudioUploadLazyQueryHookResult = ReturnType<typeof useAudioUploadLazyQuery>;
+export type AudioUploadQueryResult = Apollo.QueryResult<AudioUploadQuery, AudioUploadQueryVariables>;
 export const ChangeReactionDocument = gql`
     mutation ChangeReaction($input: ChangeReactionInput!) {
   changeReaction(input: $input) {

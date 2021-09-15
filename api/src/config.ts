@@ -34,6 +34,8 @@ export const {
   SENDGRID_API_KEY,
   UPLOADS_BUCKET_REGION,
   UPLOADS_BUCKET_NAME,
+  MUX_TOKEN_ID,
+  MUX_TOKEN_SECRET,
 } = process.env;
 
 function assertEnvVar(name: string, value: string | undefined): asserts value {
@@ -92,5 +94,9 @@ export const config = {
   },
   web: {
     url: WEB_APP_URL,
+  },
+  mux: {
+    tokenId: MUX_TOKEN_ID,
+    tokenSecret: MUX_TOKEN_SECRET,
   },
 };

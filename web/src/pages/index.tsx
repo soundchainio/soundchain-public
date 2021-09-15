@@ -1,3 +1,4 @@
+import { AudioUpload } from 'components/AudioUpload';
 import { InboxButton } from 'components/Buttons/InboxButton';
 import { Feed } from 'components/Feed';
 import { Layout } from 'components/Layout';
@@ -20,6 +21,7 @@ export default function HomePage() {
         <meta name="description" content="Soundchain" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
+      <AudioUpload />
       <div className="pt-3">{me ? <Feed /> : <Posts />}</div>
     </Layout>
   );
