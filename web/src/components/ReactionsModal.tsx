@@ -64,7 +64,7 @@ export const ReactionsModal = () => {
         )}
         <div className="space-y-6 ">
           {data?.reactions.nodes.map(reaction => (
-            <ReactionItem key={reaction.id} reaction={reaction as Reaction} />
+            <ReactionItem key={reaction.id} reaction={reaction as Reaction} onClick={onClose} />
           ))}
         </div>
         {data?.reactions.pageInfo.hasNextPage && (

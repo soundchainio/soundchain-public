@@ -1,6 +1,7 @@
 import {
   CommentNotification,
   FollowerNotification,
+  NewPostNotification,
   NotificationType,
   ReactionNotification,
   useNotificationQuery,
@@ -8,6 +9,7 @@ import {
 import React from 'react';
 import { CommentNotificationItem } from './CommentNotificationItem';
 import { FollowerNotificationItem } from './FollowerNotificationItem';
+import { NewPostNotificationItem } from './NewPostNotificationItem';
 import { NotificationSkeleton } from './NotificationSkeleton';
 import { ReactionNotificationItem } from './ReactionNotificationItem';
 
@@ -31,6 +33,10 @@ export const Notification = ({ notificationId, index }: NotificationProps) => {
 
   if (notification.type === NotificationType.Reaction) {
     return <ReactionNotificationItem notification={notification as ReactionNotification} index={index} />;
+  }
+
+  if (notification.type === NotificationType.NewPost) {
+    return <NewPostNotificationItem notification={notification as NewPostNotification} index={index} />;
   }
 
   return null;
