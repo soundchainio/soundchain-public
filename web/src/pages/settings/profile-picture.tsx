@@ -41,7 +41,7 @@ export default function ProfilePicturePage() {
   const topNavBarProps: TopNavBarProps = {
     title: 'Profile Picture',
     leftButton: newAccount ? (
-      <div className="p-2 text-gray-400 font-bold flex-1 text-center" onClick={onClose}>
+      <div className="p-2 text-gray-400 font-bold flex-1 text-left" onClick={onClose}>
         Cancel
       </div>
     ) : (

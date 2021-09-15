@@ -11,6 +11,7 @@ import React, { useEffect, useState } from 'react';
 
 const topNavBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
+  title: 'Favorite Genres',
 };
 
 export default function SettingsNamePage() {
@@ -32,15 +33,17 @@ export default function SettingsNamePage() {
   if (!favoriteGenres) return null;
 
   return (
-    <Layout topNavBarProps={topNavBarProps}>
+    <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
       <Head>
         <title>Soundchain - Name Settings</title>
         <meta name="description" content="Name Settings" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className="min-h-screen flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
+      <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
         <div className="flex flex-1 flex-col space-y-6">
-          <GenreSelector initialValue={me?.profile.favoriteGenres as Genre[]} onSelect={setFavoriteGenres} />
+          <div className="flex-grow flex">
+            <GenreSelector initialValue={me?.profile.favoriteGenres as Genre[]} onSelect={setFavoriteGenres} />
+          </div>
           <div className="flex flex-col">
             <Button type="submit" onClick={onSubmit}>
               {loading ? 'Saving...' : 'Save'}
