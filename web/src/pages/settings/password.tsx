@@ -47,13 +47,13 @@ export default function SettingsPasswordPage() {
   if (!me) return null;
 
   return (
-    <Layout topNavBarProps={topNavBarProps}>
+    <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
       <Head>
         <title>Soundchain - Password Settings</title>
         <meta name="description" content="Password Settings" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className="min-h-screen flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
+      <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
         <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={onSubmit}>
           <Form className="flex flex-1 flex-col space-y-6">
             <div>
@@ -64,9 +64,18 @@ export default function SettingsPasswordPage() {
               <Label>Confirm Password</Label>
               <InputField type="password" name="passwordConfirmation" icon={LockClosedIcon} />
             </div>
-            <p className="text-gray-50">Must be at least 8 characters</p>
+            <p className="text-gray-50 flex-grow">Must be at least 8 characters</p>
             <div className="flex flex-col">
-              <Button type="submit">{loading ? 'Saving...' : 'Save'}</Button>
+              <Button
+                type="submit"
+                loading={loading}
+                disabled={loading}
+                variant="outline"
+                borderColor="bg-green-gradient"
+                className="h-12"
+              >
+                SAVE
+              </Button>
             </div>
           </Form>
         </Formik>

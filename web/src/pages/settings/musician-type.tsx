@@ -33,18 +33,26 @@ export default function SettingsMusicianTypePage() {
   if (!musicianType) return null;
 
   return (
-    <Layout topNavBarProps={topNavBarProps}>
+    <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
       <Head>
         <title>Soundchain - Name Settings</title>
         <meta name="description" content="Name Settings" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className="min-h-screen flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
+      <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
         <div className="flex flex-1 flex-col space-y-6">
           <MusicianTypeSelector initialValue={me?.profile.musicianType as MusicianType[]} onSelect={setMusicianType} />
           <div className="flex flex-col">
-            <Button type="submit" onClick={onSubmit}>
-              {loading ? 'Saving...' : 'Save'}
+            <Button
+              type="submit"
+              loading={loading}
+              disabled={loading}
+              variant="outline"
+              borderColor="bg-green-gradient"
+              className="h-12"
+              onClick={onSubmit}
+            >
+              SAVE
             </Button>
           </div>
         </div>

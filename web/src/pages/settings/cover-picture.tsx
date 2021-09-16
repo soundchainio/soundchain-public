@@ -100,7 +100,7 @@ export default function CoverPicturePage() {
                 borderColor={newAccount ? 'bg-blue-gradient' : 'bg-green-gradient'}
                 className="h-12 mt-4"
               >
-                {newAccount ? 'Next' : 'Save'}
+                {newAccount ? 'NEXT' : 'SAVE'}
               </Button>
             </div>
           </Form>

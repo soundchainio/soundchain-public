@@ -30,7 +30,7 @@ export const MusicianTypeSelector = ({ onSelect, maxSelections = 5, initialValue
   };
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col flex-grow">
       <Label>
         What type of musician you are?{' '}
         {selectedMusicianTypes.length ? `(${selectedMusicianTypes.length} Selected)` : ''}
@@ -42,6 +42,7 @@ export const MusicianTypeSelector = ({ onSelect, maxSelections = 5, initialValue
             label={label}
             selected={isMusicianTypeSelected(key)}
             onClick={() => onMusicianTypeClick(key)}
+            className="mr-2"
           />
         ))}
       </div>
