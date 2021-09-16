@@ -11,6 +11,7 @@ import { PostService } from '../services/PostService';
 import { ProfileService } from '../services/ProfileService';
 import { ReactionService } from '../services/ReactionService';
 import { SubscriptionService } from '../services/SubscriptionService';
+import { TrackService } from '../services/TrackService';
 import { UploadService } from '../services/UploadService';
 import { UserService } from '../services/UserService';
 
@@ -27,6 +28,7 @@ export class Context {
   profileService = new ProfileService(this);
   reactionService = new ReactionService(this);
   subscriptionService = new SubscriptionService(this);
+  trackService = new TrackService(this);
   uploadService = new UploadService(this);
   userService = new UserService(this);
   user?: Promise<User>;

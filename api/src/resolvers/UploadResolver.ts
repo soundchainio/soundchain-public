@@ -1,5 +1,4 @@
-import { Arg, Authorized, Ctx, Query, Resolver } from 'type-graphql';
-import { AudioUpload } from '../types/AudioUpload';
+import { Arg, Ctx, Query, Resolver } from 'type-graphql';
 import { Context } from '../types/Context';
 import { ImageUploadFileType } from '../types/ImageUploadFileType';
 import { ImageUploadUrl } from '../types/ImageUploadUrl';
@@ -12,11 +11,5 @@ export class UploadResolver {
     @Arg('fileType', () => ImageUploadFileType) fileType: ImageUploadFileType,
   ): Promise<ImageUploadUrl> {
     return uploadService.generateImageUploadUrl(fileType);
-  }
-
-  @Query(() => AudioUpload)
-  @Authorized()
-  audioUpload(@Ctx() { uploadService }: Context): Promise<AudioUpload> {
-    return uploadService.createAudioUpload();
   }
 }

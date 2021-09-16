@@ -1,11 +1,20 @@
-import { useAudioUpload } from 'hooks/useAudioUpload';
+import { useUpChunk } from 'hooks/useUpChunk';
+import { useUploadTrackMutation } from 'lib/graphql';
 import Dropzone from 'react-dropzone';
 
 export const AudioUpload = () => {
-  const [createUpload, { uploading, progress, error, uploadId }] = useAudioUpload();
+  const [uploadTrack] = useUploadTrackMutation();
+  const [upload, { uploading, progress, error }] = useUpChunk();
+  const handleDrop = async ([file]: File[]) => {
+    const { data } = await uploadTrack();
+
+    if (data) {
+      upload(data.uploadTrack.track.upload.url, file);
+    }
+  };
 
   return (
-    <Dropzone onDrop={createUpload} disabled={uploading}>
+    <Dropzone onDrop={handleDrop} disabled={uploading}>
       {({ getRootProps, getInputProps }) => (
         <section>
           <div {...getRootProps()}>
@@ -15,7 +24,6 @@ export const AudioUpload = () => {
               {error && error.message}
               {uploading && 'Uploading!'}
               {progress && `${progress}% uploaded...`}
-              {progress === 100 && `UploadID: ${uploadId}`}
             </p>
           </div>
         </section>

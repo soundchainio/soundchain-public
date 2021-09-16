@@ -40,11 +40,12 @@ export class UploadService {
     };
   }
 
-  async createAudioUpload(): Promise<AudioUpload> {
+  async createAudioUpload(trackId: string): Promise<AudioUpload> {
     const { url, id } = await this.muxClient.Video.Uploads.create({
       cors_origin: config.web.url,
       new_asset_settings: {
         playback_policy: 'public',
+        passthrough: trackId,
         test: process.env.NODE_ENV === 'development',
       },
     });
