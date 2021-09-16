@@ -1,18 +1,18 @@
-import { Waves } from '../components/Covers/Waves';
-import { Clouds } from '../components/Covers/Clouds';
-import { Rings } from '../components/Covers/Rings';
-import { Net } from '../components/Covers/Net';
-import { Birds } from '../components/Covers/Birds';
 import { Cells } from 'components/Covers/Cells';
+import { Fog } from 'components/Covers/Fog';
+import { Birds } from '../components/Covers/Birds';
+import { Net } from '../components/Covers/Net';
+import { Rings } from '../components/Covers/Rings';
+import { Waves } from '../components/Covers/Waves';
 
 export const profilePictures = ['red', 'orange', 'yellow', 'green', 'light-blue', 'blue', 'purple', 'pink'];
 export const coverPictures = {
   'default-waves': <Waves />,
-  'default-clouds': <Clouds />,
   'default-rings': <Rings />,
   'default-net': <Net />,
   'default-birds': <Birds />,
   'default-cells': <Cells />,
+  'default-fog': <Fog />,
 };
 
 export const getRandomProfilePicture = () => {
