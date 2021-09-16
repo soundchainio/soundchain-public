@@ -14,7 +14,7 @@ export const StepProgressBar = ({ steps: maxSteps, actualStep }: StepProgressBar
     return steps;
   };
   return (
-    <div className="px-4 grid grid-cols-4 gap-2">
+    <div className={`px-4 flex flex-row space-x-2 items-center self-center justify-center`}>
       {getSteps().map(step => (
         <div
           key={step}

@@ -1,10 +1,6 @@
 import { Badge } from 'components/Badge';
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
-import { Birds } from 'components/Covers/Birds';
-import { Cells } from 'components/Covers/Cells';
-import { Dots } from 'components/Covers/Dots';
-import { Topology } from 'components/Covers/Topology';
 import { DefaultCoverPictureSelector } from 'components/DefaultCoverPictureSelector';
 import { ImageUploadField } from 'components/ImageUploadField';
 import { Label } from 'components/Label';
@@ -53,7 +49,7 @@ export default function CoverPicturePage() {
       },
     });
     if (newAccount) {
-      router.push('/settings');
+      router.push('/settings/favorite-genres?newAccount=true');
     } else {
       router.back();
     }
@@ -66,15 +62,9 @@ export default function CoverPicturePage() {
 
   const topNavBarProps: TopNavBarProps = {
     title: 'Cover Picture',
-    leftButton: newAccount ? (
-      <div className="text-gray-400 font-bold flex-1 text-left" onClick={onClose}>
-        Cancel
-      </div>
-    ) : (
-      <BackButton />
-    ),
+    leftButton: <BackButton />,
     rightButton: newAccount ? <Badge label="Skip" onClick={onClose} selected={false} /> : undefined,
-    subtitle: newAccount ? <StepProgressBar steps={4} actualStep={2} /> : undefined,
+    subtitle: newAccount ? <StepProgressBar steps={3} actualStep={2} /> : undefined,
   };
 
   if (!me) return null;

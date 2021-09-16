@@ -16,7 +16,7 @@ export const coverPictures = {
 };
 
 export const getRandomProfilePicture = () => {
-  return profilePictures[Math.round(Math.random() * profilePictures.length)];
+  return `default-${profilePictures[Math.round(Math.random() * profilePictures.length)]}`;
 };
 
 export const getDefaultProfilePicturePath = (picture: string) => {

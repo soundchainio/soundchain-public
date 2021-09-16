@@ -49,7 +49,7 @@ export default function ProfilePicturePage() {
       },
     });
     if (newAccount) {
-      router.push('/settings');
+      router.push('/settings/cover-picture?newAccount=true');
     } else {
       router.back();
     }
@@ -69,7 +69,7 @@ export default function ProfilePicturePage() {
       <BackButton />
     ),
     rightButton: newAccount ? <Badge label="Skip" onClick={onClose} selected={false} /> : undefined,
-    subtitle: newAccount ? <StepProgressBar steps={4} actualStep={1} /> : undefined,
+    subtitle: newAccount ? <StepProgressBar steps={3} actualStep={1} /> : undefined,
   };
 
   if (!me) return null;
@@ -87,7 +87,7 @@ export default function ProfilePicturePage() {
             <div className="flex-grow space-y-8">
               <div className="flex flex-col">
                 <Label textSize="base">Custom Profile Photo:</Label>
-                <ImageUploadField name="profilePicture" className="mt-8">
+                <ImageUploadField name="profilePicture" className="mt-8" rounded>
                   Upload Profile Photo
                 </ImageUploadField>
               </div>

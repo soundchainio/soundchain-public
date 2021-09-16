@@ -67,14 +67,22 @@ export const TopNavBar = ({
           </div>
         </div>
       ) : (
-        <div className="flex-2 flex items-center justify-start ml-4 space-x-2">
-          <Button variant={router.pathname === '/login' ? 'rainbow-xs' : 'outline'} onClick={onLogin} className="w-32">
+        <div className="flex-2 flex items-center justify-start ml-4 space-x-2 ">
+          <Button
+            variant={router.pathname === '/login' ? 'rainbow-xs' : 'outline'}
+            onClick={onLogin}
+            className="w-32 h-8 bg-opacity-70"
+            borderColor="bg-gray-40"
+            bgColor="bg-black"
+          >
             Login
           </Button>
           <Button
             variant={router.pathname === '/create-account' ? 'rainbow-xs' : 'outline'}
             onClick={onCreateAccount}
-            className="w-32"
+            className="w-32 h-8 bg-opacity-70"
+            borderColor="bg-gray-40"
+            bgColor="bg-black"
           >
             Create Account
           </Button>
