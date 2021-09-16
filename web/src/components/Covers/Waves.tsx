@@ -2,6 +2,7 @@ import classNames from 'classnames';
 import React, { useState, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import WAVES from 'vanta/dist/vanta.waves.min';
+import { VantaEffect } from './DefaultCover';
 
 export const Waves = () => {
   const [vantaEffect, setVantaEffect] = useState();
@@ -23,7 +24,7 @@ export const Waves = () => {
       );
     }
     return () => {
-      if (vantaEffect) vantaEffect.destroy();
+      if (vantaEffect) (vantaEffect as VantaEffect).destroy();
     };
   }, [vantaEffect]);
   return (

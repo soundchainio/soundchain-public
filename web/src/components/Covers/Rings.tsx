@@ -2,6 +2,7 @@ import classNames from 'classnames';
 import React, { useState, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import RINGS from 'vanta/dist/vanta.rings.min';
+import { VantaEffect } from './DefaultCover';
 
 export const Rings = () => {
   const [vantaEffect, setVantaEffect] = useState();
@@ -23,7 +24,7 @@ export const Rings = () => {
       );
     }
     return () => {
-      if (vantaEffect) vantaEffect.destroy();
+      if (vantaEffect) (vantaEffect as VantaEffect).destroy();
     };
   }, [vantaEffect]);
   return (

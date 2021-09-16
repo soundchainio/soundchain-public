@@ -2,6 +2,7 @@ import classNames from 'classnames';
 import React, { useState, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import NET from 'vanta/dist/vanta.net.min';
+import { VantaEffect } from './DefaultCover';
 
 export const Net = () => {
   const [vantaEffect, setVantaEffect] = useState();
@@ -23,7 +24,7 @@ export const Net = () => {
       );
     }
     return () => {
-      if (vantaEffect) vantaEffect.destroy();
+      if (vantaEffect) (vantaEffect as VantaEffect).destroy();
     };
   }, [vantaEffect]);
   return (

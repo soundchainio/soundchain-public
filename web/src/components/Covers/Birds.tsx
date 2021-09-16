@@ -2,6 +2,7 @@ import classNames from 'classnames';
 import React, { useState, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import BIRDS from 'vanta/dist/vanta.birds.min';
+import { VantaEffect } from './DefaultCover';
 
 export const Birds = () => {
   const [vantaEffect, setVantaEffect] = useState();
@@ -24,7 +25,7 @@ export const Birds = () => {
       );
     }
     return () => {
-      if (vantaEffect) vantaEffect.destroy();
+      if (vantaEffect) (vantaEffect as VantaEffect).destroy();
     };
   }, [vantaEffect]);
   return (
