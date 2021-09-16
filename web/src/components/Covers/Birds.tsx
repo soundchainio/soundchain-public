@@ -2,7 +2,6 @@ import classNames from 'classnames';
 import React, { useState, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import BIRDS from 'vanta/dist/vanta.birds.min';
-// Make sure window.THREE is defined, e.g. by including three.min.js in the document head using a <script> tag
 
 export const Birds = () => {
   const [vantaEffect, setVantaEffect] = useState();

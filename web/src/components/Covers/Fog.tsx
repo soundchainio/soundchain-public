@@ -2,7 +2,6 @@ import classNames from 'classnames';
 import React, { useState, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import FOG from 'vanta/dist/vanta.fog.min';
-// Make sure window.THREE is defined, e.g. by including three.min.js in the document head using a <script> tag
 
 export const Fog = () => {
   const [vantaEffect, setVantaEffect] = useState();
