@@ -3,6 +3,7 @@ import { Clouds } from '../components/Covers/Clouds';
 import { Rings } from '../components/Covers/Rings';
 import { Net } from '../components/Covers/Net';
 import { Birds } from '../components/Covers/Birds';
+import { Cells } from 'components/Covers/Cells';
 
 export const profilePictures = ['red', 'orange', 'yellow', 'green', 'light-blue', 'blue', 'purple', 'pink'];
 export const coverPictures = {
@@ -11,6 +12,7 @@ export const coverPictures = {
   'default-rings': <Rings />,
   'default-net': <Net />,
   'default-birds': <Birds />,
+  'default-cells': <Cells />,
 };
 
 export const getRandomProfilePicture = () => {

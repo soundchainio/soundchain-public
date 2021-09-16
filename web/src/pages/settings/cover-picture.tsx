@@ -2,6 +2,7 @@ import { Badge } from 'components/Badge';
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { Birds } from 'components/Covers/Birds';
+import { Cells } from 'components/Covers/Cells';
 import { Dots } from 'components/Covers/Dots';
 import { Topology } from 'components/Covers/Topology';
 import { DefaultCoverPictureSelector } from 'components/DefaultCoverPictureSelector';

@@ -18,8 +18,8 @@ export const Cells = () => {
           minWidth: 200.0,
           scale: 1.0,
           scaleMobile: 2.0,
-          color1: 0x18016b,
-          color2: 0x9d059d,
+          color1: 0x8c8c,
+          color2: 0xc3b351,
           THREE: THREE,
         }),
       );
@@ -29,7 +29,7 @@ export const Cells = () => {
     };
   }, [vantaEffect]);
   return (
-    <div className={classNames('flex w-full h-[150px] rounded-lg border-2 p-2')}>
+    <div className={classNames('flex w-full h-[130px]')}>
       <div ref={myRef} className="flex w-full h-full"></div>
     </div>
   );

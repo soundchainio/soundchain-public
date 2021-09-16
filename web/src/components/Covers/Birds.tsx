@@ -29,7 +29,7 @@ export const Birds = () => {
     };
   }, [vantaEffect]);
   return (
-    <div className={classNames('flex w-full h-[150px] rounded-lg border-2 p-2')}>
+    <div className={classNames('flex w-full h-[130px]')}>
       <div ref={myRef} className="flex w-full h-full"></div>
     </div>
   );
