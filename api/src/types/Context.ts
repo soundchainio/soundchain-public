@@ -10,6 +10,7 @@ import { NotificationService } from '../services/NotificationService';
 import { PostService } from '../services/PostService';
 import { ProfileService } from '../services/ProfileService';
 import { ReactionService } from '../services/ReactionService';
+import { SubscriptionService } from '../services/SubscriptionService';
 import { UploadService } from '../services/UploadService';
 import { UserService } from '../services/UserService';
 
@@ -25,6 +26,7 @@ export class Context {
   postService = new PostService(this);
   profileService = new ProfileService(this);
   reactionService = new ReactionService(this);
+  subscriptionService = new SubscriptionService(this);
   uploadService = new UploadService(this);
   userService = new UserService(this);
   user?: Promise<User>;

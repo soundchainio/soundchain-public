@@ -5,6 +5,7 @@ import { FeedResolver } from './FeedResolver';
 import { FollowerNotificationResolver } from './FollowerNotificationResolver';
 import { FollowResolver } from './FollowResolver';
 import { MessageResolver } from './MessageResolver';
+import { NewPostNotificationResolver } from './NewPostNotificationResolver';
 import { NotificationResolver } from './NotificationResolver';
 import { PostResolver } from './PostResolver';
 import { ProfileResolver } from './ProfileResolver';
@@ -21,6 +22,7 @@ export const resolvers = [
   FollowResolver,
   FeedResolver,
   MessageResolver,
+  NewPostNotificationResolver,
   NotificationResolver,
   PostResolver,
   ProfileResolver,

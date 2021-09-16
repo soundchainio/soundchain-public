@@ -68,8 +68,14 @@ html {
   color: transparent;
 }
 
-.green-gradient-text {
+.green-yellow-gradient-text {
   background: linear-gradient(90deg, #68d18d 0%, #42f07f 25%, #9eee1d 75%, #ffd604 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.green-gradient-text {
+  background: linear-gradient(90deg, #278e31 0%, #52b23b 100%);
   background-clip: text;
   color: transparent;
 }
@@ -86,7 +92,7 @@ html {
   color: transparent;
 }
 
-.purple-green-gradient-text {
+.purple-green-yellow-gradient-text {
   background: linear-gradient(90deg, #3fdd8a 0%, #a252fe 100%);
   background-clip: text;
   color: transparent;
@@ -94,6 +100,10 @@ html {
 
 .bg-blue-gradient {
   background: linear-gradient(90deg, #3b5bb1 0%, #6fa1ff 100%);
+}
+
+.bg-green-gradient {
+  background: linear-gradient(90deg, #278e31 0%, #52b23b 100%);
 }
 
 .blue-gradient-text {

@@ -1,15 +1,17 @@
 import { IconProps } from 'icons/types/IconProps';
-import { GreenGradient } from './Green';
 import { GreenBlue } from './GreenBlue';
+import { GreenGradient } from './GreenGradient';
+import { GreenYellowGradient } from './GreenYellow';
 import { PurpleGradient } from './Purple';
 import { PurpleGreenGradient } from './PurpleGreen';
 import { YellowGradient } from './Yellow';
 
-export type SVGGradientColor = 'yellow' | 'green' | 'purple' | 'purple-green' | 'green-blue';
+export type SVGGradientColor = 'yellow' | 'green' | 'green-yellow' | 'purple' | 'purple-green' | 'green-blue';
 
 const SVGGradients: Record<SVGGradientColor, (props: IconProps) => JSX.Element> = {
-  yellow: YellowGradient,
   green: GreenGradient,
+  yellow: YellowGradient,
+  'green-yellow': GreenYellowGradient,
   purple: PurpleGradient,
   'purple-green': PurpleGreenGradient,
   'green-blue': GreenBlue,
