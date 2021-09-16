@@ -1,9 +1,9 @@
 import classNames from 'classnames';
 import Image from 'next/image';
-import { coverPictures, getDefaultCoverPicturePath } from 'utils/DefaultPictures';
+import { CoverPictureOptions, coverPictures, getDefaultCoverPicturePath } from 'utils/DefaultPictures';
 
 interface CoverProps {
-  coverPicture: string;
+  coverPicture: CoverPictureOptions;
   settings?: boolean;
 }
 

@@ -14,6 +14,13 @@ export const coverPictures = {
   'default-cells': <Cells />,
   'default-fog': <Fog />,
 };
+export type CoverPictureOptions =
+  | 'default-waves'
+  | 'default-rings'
+  | 'default-net'
+  | 'default-birds'
+  | 'default-cells'
+  | 'default-fog';
 
 export const getRandomProfilePicture = () => {
   return `default-${profilePictures[Math.round(Math.random() * profilePictures.length)]}`;
