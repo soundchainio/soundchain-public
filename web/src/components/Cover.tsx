@@ -10,6 +10,7 @@ interface CoverProps {
 export default function Cover({ coverPicture, settings }: CoverProps) {
   return (
     <div className={classNames('relative', settings ? `h-[80px]` : 'h-[125px]')}>
+      {!coverPicture && <div className="flex h-full w-full rounded-lg bg-gray-40" />}
       {coverPicture && !coverPicture.startsWith('default-') && (
         <Image src={coverPicture} alt="Cover pic" layout="fill" objectFit="cover" />
       )}
