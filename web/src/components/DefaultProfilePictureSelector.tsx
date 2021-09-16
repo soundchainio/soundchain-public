@@ -24,9 +24,14 @@ export const DefaultProfilePictureSelector = ({ onSelect }: DefaultProfilePictur
             'flex justify-center justify-self-center rounded-full w-[60px] h-[60px] cursor-pointer',
             selected === picture && 'ring-4 ring-white',
           )}
-          onClick={() => onClick(picture)}
+          onClick={() => onClick(`default-${picture}`)}
         >
-          <Image alt="Profile picture red" src={getDefaultProfilePicturePath(picture)} width={60} height={60} />
+          <Image
+            alt="Profile picture red"
+            src={getDefaultProfilePicturePath(`default-${picture}`)}
+            width={60}
+            height={60}
+          />
         </div>
       ))}
     </div>

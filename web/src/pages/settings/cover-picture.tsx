@@ -1,14 +1,9 @@
 import { Badge } from 'components/Badge';
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
-import { Cells } from 'components/Covers/Cells';
-import { Clouds } from 'components/Covers/Clouds';
+import { Birds } from 'components/Covers/Birds';
 import { Dots } from 'components/Covers/Dots';
-import { Halo } from 'components/Covers/Halo';
-import { Net } from 'components/Covers/Net';
-import { Rings } from 'components/Covers/Rings';
 import { Topology } from 'components/Covers/Topology';
-import { Waves } from 'components/Covers/Waves';
 import { DefaultCoverPictureSelector } from 'components/DefaultCoverPictureSelector';
 import { ImageUploadField } from 'components/ImageUploadField';
 import { Label } from 'components/Label';
@@ -64,6 +59,7 @@ export default function CoverPicturePage() {
   };
 
   const onDefaultPicture = (picture: string) => {
+    console.log(picture);
     setDefaultPicture(picture);
   };
 
@@ -101,14 +97,13 @@ export default function CoverPicturePage() {
               </div>
               <div className="flex flex-col space-y-8">
                 <Label textSize="base">DEFAULT COVER PHOTOS:</Label>
-                <Topology />
                 <DefaultCoverPictureSelector onSelect={onDefaultPicture} />
               </div>
             </div>
             <div className="flex flex-col">
               <Button
                 type="submit"
-                loading={loading}
+                loading={loading ? true : undefined}
                 disabled={loading}
                 variant="outline"
                 borderColor={newAccount ? 'bg-blue-gradient' : 'bg-green-gradient'}

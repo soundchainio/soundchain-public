@@ -1,18 +1,16 @@
 import classNames from 'classnames';
 import React, { useState, useEffect, useRef } from 'react';
-import TRUNK from 'vanta/dist/vanta.trunk.min';
 import * as THREE from 'three';
-import dynamic from 'next/dynamic';
+import BIRDS from 'vanta/dist/vanta.birds.min';
+// Make sure window.THREE is defined, e.g. by including three.min.js in the document head using a <script> tag
 
-const P5 = dynamic(() => import('p5'), { ssr: false });
-
-export const Topology = () => {
+export const Birds = () => {
   const [vantaEffect, setVantaEffect] = useState();
   const myRef = useRef(null);
   useEffect(() => {
-    if (P5 && !vantaEffect) {
+    if (!vantaEffect) {
       setVantaEffect(
-        TRUNK({
+        BIRDS({
           el: myRef.current,
           mouseControls: true,
           touchControls: true,
@@ -20,10 +18,8 @@ export const Topology = () => {
           minHeight: 130.0,
           minWidth: 200.0,
           scale: 1.0,
-          scaleMobile: 2.0,
-          color1: 0x18016b,
-          color2: 0x9d059d,
-          P5: P5,
+          scaleMobile: 1.0,
+          backgroundColor: 0xffe5b2,
           THREE: THREE,
         }),
       );

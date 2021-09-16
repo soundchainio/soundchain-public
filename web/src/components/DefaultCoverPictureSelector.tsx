@@ -17,19 +17,19 @@ export const DefaultCoverPictureSelector = ({ onSelect }: DefaultCoverPictureSel
 
   return (
     <div className="flex flex-col space-y-4">
-      {coverPictures.map(picture => (
+      {Object.keys(coverPictures).map(picture => (
         <div
           key={picture}
           className={classNames(
             'relative flex justify-center justify-self-center rounded-full w-full h-[150px] p-2 cursor-pointer',
             selected === picture && 'rounded-xl border-2',
           )}
-          onClick={() => onClick(picture)}
+          onClick={() => onClick(`default-${picture}`)}
         >
           <div className="relative flex w-full h-full">
             <Image
               alt={`Cover Picture ${picture}`}
-              src={getDefaultCoverPicturePath(picture)}
+              src={getDefaultCoverPicturePath(`default-${picture}`)}
               layout="fill"
               objectFit="cover"
               className="rounded-lg"
