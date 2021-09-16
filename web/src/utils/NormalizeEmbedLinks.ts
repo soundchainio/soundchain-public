@@ -15,6 +15,9 @@ const spotifyLinkRegex = /(?=track\/).*(?=\?)/g;
 const vimeoRegex = /(vimeo.com\/)/;
 const vimeoLinkRegex = /(vimeo.com\/)(.*)/g;
 
+const bandcampRegex = /(bandcamp.com\/)/;
+const bandcampLinkRegex = /(bandcamp.com\/)(.*)/g;
+
 const normalizeYoutube = (str: string) => {
   const urlParams = new URLSearchParams(str.replace('?', '&'));
   return `https://www.youtube.com/embed/${urlParams.get('v')}`;
@@ -53,6 +56,27 @@ const normalizeVimeo = (str: string) => {
   return str;
 };
 
+const normalizeBandcamp = async (str: string) => {
+  const res = await axios.post(process.env.NEXT_PUBLIC_API_URL!, {
+    query: `query getBandcampLink($url: String!) {
+      getBandcampLink(url: $url)
+    }`,
+    variables: {
+      url: str
+    }
+  }, {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if (res.data.data.getBandcampLink) {
+    return res.data.data.getBandcampLink;
+  }
+
+  return str;
+};
+
 export const getNormalizedLink = async (str: string) => {
   const link = (str.match(linksRegex) || [])[0];
 
@@ -60,6 +84,7 @@ export const getNormalizedLink = async (str: string) => {
   if (soundcloudRegex.test(link)) return await normalizeSoundcloud(link);
   if (spotifyRegex.test(link)) return normalizeSpotify(link);
   if (vimeoRegex.test(link)) return normalizeVimeo(link);
+  if (bandcampRegex.test(link)) return await normalizeBandcamp(link);
 };
 
 export const hasLink = (str: string) => {
@@ -75,6 +100,7 @@ export const IdentifySource = (str: string) => {
   if (soundcloudRegex.test(str)) ret.type = MediaProvider.SOUNDCLOUD;
   if (spotifyRegex.test(str)) ret.type = MediaProvider.SPOTIFY;
   if (vimeoRegex.test(str)) ret.type = MediaProvider.VIMEO;
+  if (bandcampRegex.test(str)) ret.type = MediaProvider.BANDCAMP;
 
   return ret;
 };

@@ -150,4 +150,12 @@ export class PostResolver {
   ): Promise<ReactionConnection> {
     return reactionService.getReactions(postId, page);
   }
+
+  @Query(() => String)
+  getBandcampLink(
+    @Ctx() { postService }: Context,
+    @Arg('url') url: string,
+  ): Promise<String> {
+    return postService.getBandcampLink(url);
+  }
 }

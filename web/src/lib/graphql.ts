@@ -525,6 +525,7 @@ export type Query = {
   post: Post;
   posts: PostConnection;
   reactions: ReactionConnection;
+  getBandcampLink: Scalars['String'];
   myProfile: Profile;
   profile: Profile;
   uploadUrl: UploadUrl;
@@ -603,6 +604,11 @@ export type QueryPostsArgs = {
 export type QueryReactionsArgs = {
   page?: Maybe<PageInput>;
   postId: Scalars['String'];
+};
+
+
+export type QueryGetBandcampLinkArgs = {
+  url: Scalars['String'];
 };
 
 

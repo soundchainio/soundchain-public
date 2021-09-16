@@ -67,16 +67,12 @@ export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type, post
           {type === PostLinkType.MUSIC && (
             <>
               <div className="text-gray-400 mt-4 mb-4 w-9/12 ml-auto mr-auto text-sm">
-                Paste a video link from Soundcloud or Spotify to embed the video to your post.
+                Paste a music link from Soundcloud, Spotify or Bandcamp to embed the music to your post.
               </div>
               <div>
-                <PostLinkInput
-                  type={MediaProvider.SOUNDCLOUD}
-                  setLink={setLink}
-                  link={link}
-                  setPostLink={setPostLink}
-                />
+                <PostLinkInput type={MediaProvider.SOUNDCLOUD} setLink={setLink} link={link} setPostLink={setPostLink} />
                 <PostLinkInput type={MediaProvider.SPOTIFY} setLink={setLink} link={link} setPostLink={setPostLink} />
+                <PostLinkInput type={MediaProvider.BANDCAMP} setLink={setLink} link={link} setPostLink={setPostLink} />
               </div>
             </>
           )}
