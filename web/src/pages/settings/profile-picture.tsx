@@ -37,6 +37,7 @@ export default function ProfilePicturePage() {
   };
 
   const onSubmit = async ({ profilePicture }: ProfilePictureFormValues) => {
+    if (!newAccount && !profilePicture && !defaultPicture) return router.back();
     await updateProfilePicture({
       variables: {
         input: {

@@ -37,6 +37,7 @@ export default function CoverPicturePage() {
   };
 
   const onSubmit = async ({ coverPicture }: CoverPictureFormValues) => {
+    if (!newAccount && !coverPicture && !defaultPicture) return router.back();
     await updateCoverPicture({
       variables: {
         input: {
@@ -56,7 +57,6 @@ export default function CoverPicturePage() {
   };
 
   const onDefaultPicture = (picture: string) => {
-    console.log(picture);
     setDefaultPicture(picture);
   };
 
