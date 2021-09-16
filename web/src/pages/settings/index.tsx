@@ -1,6 +1,6 @@
 import { Avatar } from 'components/Avatar';
 import { BackButton } from 'components/Buttons/BackButton';
-import Cover from 'components/Cover';
+import { Cover } from 'components/Cover';
 import { Label } from 'components/Label';
 import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';

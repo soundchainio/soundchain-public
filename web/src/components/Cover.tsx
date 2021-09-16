@@ -7,7 +7,7 @@ interface CoverProps {
   settings?: boolean;
 }
 
-export default function Cover({ coverPicture, settings }: CoverProps) {
+export const Cover = ({ coverPicture, settings }: CoverProps) => {
   return (
     <div className={classNames('relative', settings ? `h-[80px]` : 'h-[125px]')}>
       {!coverPicture && <div className="flex h-full w-full rounded-lg bg-gray-40" />}
@@ -26,4 +26,4 @@ export default function Cover({ coverPicture, settings }: CoverProps) {
       )}
     </div>
   );
-}
+};

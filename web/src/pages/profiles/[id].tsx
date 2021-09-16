@@ -1,5 +1,5 @@
 import { Avatar } from 'components/Avatar';
-import Cover from 'components/Cover';
+import { Cover } from 'components/Cover';
 import { FollowButton } from 'components/FollowButton';
 import { FollowModal } from 'components/FollowersModal';
 import { Layout } from 'components/Layout';
@@ -10,11 +10,9 @@ import { ProfileTabs } from 'components/ProfileTabs';
 import { SocialMediaLink } from 'components/SocialMediaLink';
 import { Subtitle } from 'components/Subtitle';
 import { useProfileLazyQuery } from 'lib/graphql';
-import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { FollowModalType } from 'types/FollowModalType';
-import { coverPictures } from 'utils/DefaultPictures';
 
 export default function ProfilePage() {
   const router = useRouter();
