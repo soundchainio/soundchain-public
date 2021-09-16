@@ -24,7 +24,7 @@ export const Rings = () => {
       );
     }
     return () => {
-      if (vantaEffect) (vantaEffect as VantaEffect).destroy();
+      if (vantaEffect) (vantaEffect as unknown as VantaEffect).destroy();
     };
   }, [vantaEffect]);
   return (
