@@ -11,8 +11,10 @@ export const DefaultProfilePictureSelector = ({ onSelect }: DefaultProfilePictur
   const [selected, setSelected] = useMountedState<string | undefined>(undefined);
 
   const onClick = (picture: string) => {
+    console.log(picture);
+
     setSelected(picture);
-    onSelect(picture);
+    onSelect(`default-${picture}`);
   };
 
   return (
@@ -24,7 +26,7 @@ export const DefaultProfilePictureSelector = ({ onSelect }: DefaultProfilePictur
             'flex justify-center justify-self-center rounded-full w-[60px] h-[60px] cursor-pointer',
             selected === picture && 'ring-4 ring-white',
           )}
-          onClick={() => onClick(`default-${picture}`)}
+          onClick={() => onClick(picture)}
         >
           <Image
             alt="Profile picture red"
