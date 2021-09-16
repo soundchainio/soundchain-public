@@ -19,8 +19,21 @@ const bandcampRegex = /(bandcamp.com\/)/;
 const bandcampLinkRegex = /(bandcamp.com\/)(.*)/g;
 
 const normalizeYoutube = (str: string) => {
+  let videoId = '';
+  if (str.includes('/embed/')) {
+    return str;
+  }
+
+  if (str.includes('youtu.be/')) {
+    videoId = /[^/]*$/.exec(str)![0];
+  }
+
   const urlParams = new URLSearchParams(str.replace('?', '&'));
-  return `https://www.youtube.com/embed/${urlParams.get('v')}`;
+  if (urlParams.get('v')) {
+    videoId = urlParams.get('v')!;
+  }
+
+  return `https://www.youtube.com/embed/${videoId}`;
 };
 
 const normalizeSoundcloud = async (str: string) => {
