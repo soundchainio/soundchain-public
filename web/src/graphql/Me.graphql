@@ -7,6 +7,7 @@ query Me {
       id
       displayName
       profilePicture
+      coverPicture
       followerCount
       followingCount
       favoriteGenres

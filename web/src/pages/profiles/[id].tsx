@@ -1,4 +1,5 @@
 import { Avatar } from 'components/Avatar';
+import Cover from 'components/Cover';
 import { FollowButton } from 'components/FollowButton';
 import { FollowModal } from 'components/FollowersModal';
 import { Layout } from 'components/Layout';
@@ -56,10 +57,7 @@ export default function ProfilePage() {
   return (
     <Layout>
       <div className="h-[125px] relative">
-        {coverPicture && !coverPicture.startsWith('default-') && (
-          <Image src={coverPicture} alt="Cover pic" layout="fill" objectFit="cover" />
-        )}
-        {coverPicture && coverPicture.startsWith('default-') && coverPictures[coverPicture]}
+        <Cover coverPicture={coverPicture as string} />
         <Avatar
           profile={data.profile}
           pixels={80}
