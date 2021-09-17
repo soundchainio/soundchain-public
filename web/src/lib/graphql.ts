@@ -532,6 +532,7 @@ export type Query = {
   post: Post;
   posts: PostConnection;
   reactions: ReactionConnection;
+  bandcampLink: Scalars['String'];
   myProfile: Profile;
   profile: Profile;
   uploadUrl: UploadUrl;
@@ -610,6 +611,11 @@ export type QueryPostsArgs = {
 export type QueryReactionsArgs = {
   page?: Maybe<PageInput>;
   postId: Scalars['String'];
+};
+
+
+export type QueryBandcampLinkArgs = {
+  url: Scalars['String'];
 };
 
 
@@ -904,6 +910,16 @@ export type AddCommentMutation = (
       & CommentComponentFieldsFragment
     ) }
   ) }
+);
+
+export type BandcampLinkQueryVariables = Exact<{
+  url: Scalars['String'];
+}>;
+
+
+export type BandcampLinkQuery = (
+  { __typename?: 'Query' }
+  & Pick<Query, 'bandcampLink'>
 );
 
 export type ChangeReactionMutationVariables = Exact<{
@@ -1892,6 +1908,39 @@ export function useAddCommentMutation(baseOptions?: Apollo.MutationHookOptions<A
 export type AddCommentMutationHookResult = ReturnType<typeof useAddCommentMutation>;
 export type AddCommentMutationResult = Apollo.MutationResult<AddCommentMutation>;
 export type AddCommentMutationOptions = Apollo.BaseMutationOptions<AddCommentMutation, AddCommentMutationVariables>;
+export const BandcampLinkDocument = gql`
+    query BandcampLink($url: String!) {
+  bandcampLink(url: $url)
+}
+    `;
+
+/**
+ * __useBandcampLinkQuery__
+ *
+ * To run a query within a React component, call `useBandcampLinkQuery` and pass it any options that fit your needs.
+ * When your component renders, `useBandcampLinkQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useBandcampLinkQuery({
+ *   variables: {
+ *      url: // value for 'url'
+ *   },
+ * });
+ */
+export function useBandcampLinkQuery(baseOptions: Apollo.QueryHookOptions<BandcampLinkQuery, BandcampLinkQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<BandcampLinkQuery, BandcampLinkQueryVariables>(BandcampLinkDocument, options);
+      }
+export function useBandcampLinkLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<BandcampLinkQuery, BandcampLinkQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<BandcampLinkQuery, BandcampLinkQueryVariables>(BandcampLinkDocument, options);
+        }
+export type BandcampLinkQueryHookResult = ReturnType<typeof useBandcampLinkQuery>;
+export type BandcampLinkLazyQueryHookResult = ReturnType<typeof useBandcampLinkLazyQuery>;
+export type BandcampLinkQueryResult = Apollo.QueryResult<BandcampLinkQuery, BandcampLinkQueryVariables>;
 export const ChangeReactionDocument = gql`
     mutation ChangeReaction($input: ChangeReactionInput!) {
   changeReaction(input: $input) {

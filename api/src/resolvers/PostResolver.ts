@@ -163,4 +163,12 @@ export class PostResolver {
   ): Promise<ReactionConnection> {
     return reactionService.getReactions(postId, page);
   }
+
+  @Query(() => String)
+  bandcampLink(
+    @Ctx() { embedService }: Context,
+    @Arg('url') url: string,
+  ): Promise<String> {
+    return embedService.bandcampLink(url);
+  }
 }
