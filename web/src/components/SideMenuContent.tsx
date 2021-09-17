@@ -70,13 +70,13 @@ export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => 
                     <p className="font-semibold text-white">
                       <Number value={me.profile.followerCount} />
                     </p>
-                    <p className="text-gray-80 text-md">Followers</p>
+                    <p className="text-gray-80 text-md md:text-xs">Followers</p>
                   </div>
                   <div className="text-center text-lg" onClick={onFollowing}>
                     <p className="font-semibold text-white">
                       <Number value={me.profile.followingCount} />
                     </p>
-                    <p className="text-gray-80 text-md">Following</p>
+                    <p className="text-gray-80 text-md md:text-xs">Following</p>
                   </div>
                 </div>
               </div>
