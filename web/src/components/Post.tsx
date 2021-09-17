@@ -1,7 +1,7 @@
 import { usePostQuery } from 'lib/graphql';
 import NextLink from 'next/link';
 import React from 'react';
-import { ContextMenuType } from 'types/ContextMenuType';
+import { AuthorActionsType } from 'types/AuthorActionsType';
 import { useModalDispatch } from 'contexts/providers/modal';
 import { Avatar } from './Avatar';
 import { PostActions } from './PostActions';
@@ -20,14 +20,14 @@ export const Post = ({ postId }: PostProps) => {
   const { data } = usePostQuery({ variables: { id: postId } });
   const post = data?.post;
   const me = useMe();
-  const { dispatchShowContextMenuModal } = useModalDispatch();
+  const { dispatchShowAuthorActionsModal } = useModalDispatch();
 
   if (!post) return <PostSkeleton />;
 
   const canEdit = post?.profile.id == me?.profile.id;
 
   const onEllipsisClick = () => {
-    dispatchShowContextMenuModal(true, ContextMenuType.POST, post.id);
+    dispatchShowAuthorActionsModal(true, AuthorActionsType.POST, post.id);
   };
 
   return (
@@ -42,7 +42,10 @@ export const Post = ({ postId }: PostProps) => {
                   <a className="text-lg font-bold text-gray-100">{post.profile.displayName}</a>
                 </NextLink>
                 <Timestamp
-                  datetime={post.createdAt} edited={post.edited || false} className="flex-1 text-left" />
+                  datetime={post.createdAt}
+                  edited={(post.createdAt !== post.updatedAt) || false}
+                  className="flex-1 text-left"
+                />
               </div>
               <div className="w-14">
                 {canEdit && <Ellipsis className="pr-4 pl-4 w-full h-3 cursor-pointer" onClick={onEllipsisClick} />}

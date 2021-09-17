@@ -3,22 +3,22 @@ import { ModalActionTypes } from 'contexts/actions/modal';
 import {
   SetRepostIdPayload,
   SetEditPostIdPayload,
-  ShowContextMenuPayload,
+  ShowAuthorActionsPayload,
   ShowNewPostPayload,
   ShowReactionsPayload,
   ShowUnderDevelopmentPayload,
 } from 'contexts/payloads/modal';
 import { ReactionType } from 'lib/graphql';
-import { ContextMenuType } from 'types/ContextMenuType';
+import { AuthorActionsType } from 'types/AuthorActionsType';
 
 export interface ModalState {
   showNewPost: boolean;
   anyModalOpened: boolean;
   repostId?: string;
   editPostId?: string;
-  showContextMenu: boolean;
-  contextMenuType?: ContextMenuType;
-  contextMenuId: string;
+  showAuthorActions: boolean;
+  authorActionsType?: AuthorActionsType;
+  authorActionsId: string;
   showUnderDevelopment: boolean;
   reactions: {
     show: boolean;
@@ -33,9 +33,9 @@ export const initialModalState = {
   anyModalOpened: false,
   repostId: undefined,
   editPostId: undefined,
-  showContextMenu: false,
-  contextMenuType: undefined,
-  contextMenuId: '',
+  showAuthorActions: false,
+  authorActionsType: undefined,
+  authorActionsId: '',
   showUnderDevelopment: false,
   reactions: {
     show: false,
@@ -66,10 +66,10 @@ export const modalReducer = (state: ModalState, action: Action) => {
     case ModalActionTypes.SHOW_CONTEXT_MENU:
       return {
         ...state,
-        showContextMenu: (action.payload as ShowContextMenuPayload).showContextMenu,
-        anyModalOpened: (action.payload as ShowContextMenuPayload).showContextMenu,
-        contextMenuType: (action.payload as ShowContextMenuPayload).contextMenuType,
-        contextMenuId: (action.payload as ShowContextMenuPayload).contextMenuId,
+        showAuthorActions: (action.payload as ShowAuthorActionsPayload).showAuthorActions,
+        anyModalOpened: (action.payload as ShowAuthorActionsPayload).showAuthorActions,
+        authorActionsType: (action.payload as ShowAuthorActionsPayload).authorActionsType,
+        authorActionsId: (action.payload as ShowAuthorActionsPayload).authorActionsId,
       };
     case ModalActionTypes.SHOW_UNDER_DEVELOPMENT:
       return {

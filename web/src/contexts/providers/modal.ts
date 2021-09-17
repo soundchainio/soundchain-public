@@ -2,7 +2,7 @@ import { ModalActionTypes } from 'contexts/actions/modal';
 import { initialModalState, ModalState } from 'contexts/reducers/modal';
 import { ReactionType } from 'lib/graphql';
 import { useContext } from 'react';
-import { ContextMenuType } from 'types/ContextMenuType';
+import { AuthorActionsType } from 'types/AuthorActionsType';
 import { store } from '..';
 
 export const useModalState = (): ModalState => {
@@ -21,8 +21,8 @@ export const useModalDispatch = () => {
     dispatchShowNewPostModal: (show: boolean) => dispatch({ type: ModalActionTypes.SHOW_NEW_POST, payload: { show } }),
     dispatchShowUnderDevelopmentModal: (show: boolean) =>
       dispatch({ type: ModalActionTypes.SHOW_UNDER_DEVELOPMENT, payload: { show } }),
-    dispatchShowContextMenuModal: (showContextMenu: boolean, contextMenuType: ContextMenuType, contextMenuId: string) =>
-      dispatch({ type: ModalActionTypes.SHOW_CONTEXT_MENU, payload: { showContextMenu, contextMenuType, contextMenuId } }),
+    dispatchShowAuthorActionsModal: (showAuthorActions: boolean, authorActionsType: AuthorActionsType, authorActionsId: string) =>
+      dispatch({ type: ModalActionTypes.SHOW_CONTEXT_MENU, payload: { showAuthorActions, authorActionsType, authorActionsId } }),
     dispatchReactionsModal: (show: boolean, postId?: string, top?: ReactionType[], total?: number) =>
       dispatch({
         type: show ? ModalActionTypes.SHOW_REACTIONS : ModalActionTypes.HIDE_REACTIONS,

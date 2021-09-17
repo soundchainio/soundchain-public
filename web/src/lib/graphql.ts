@@ -1335,7 +1335,7 @@ export type PostQuery = (
 
 export type PostComponentFieldsFragment = (
   { __typename?: 'Post' }
-  & Pick<Post, 'id' | 'body' | 'mediaLink' | 'repostId' | 'createdAt' | 'commentCount' | 'repostCount' | 'totalReactions' | 'topReactions' | 'myReaction' | 'edited'>
+  & Pick<Post, 'id' | 'body' | 'mediaLink' | 'repostId' | 'createdAt' | 'updatedAt' | 'commentCount' | 'repostCount' | 'totalReactions' | 'topReactions' | 'myReaction'>
   & { profile: (
     { __typename?: 'Profile' }
     & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
@@ -1828,12 +1828,12 @@ export const PostComponentFieldsFragmentDoc = gql`
   mediaLink
   repostId
   createdAt
+  updatedAt
   commentCount
   repostCount
   totalReactions
   topReactions(top: 2)
   myReaction
-  edited
   profile {
     id
     displayName

@@ -3,7 +3,7 @@ import { useMe } from 'hooks/useMe';
 import { Ellipsis } from 'icons/Ellipsis';
 import { useCommentQuery } from 'lib/graphql';
 import NextLink from 'next/link';
-import { ContextMenuType } from 'types/ContextMenuType';
+import { AuthorActionsType } from 'types/AuthorActionsType';
 import { Avatar } from './Avatar';
 import { CommentSkeleton } from './CommentSkeleton';
 import { Timestamp } from './Timestamp';
@@ -15,12 +15,12 @@ interface CommentProps {
 export const Comment = ({ commentId }: CommentProps) => {
   const { data } = useCommentQuery({ variables: { id: commentId } });
   const me = useMe();
-  const { dispatchShowContextMenuModal } = useModalDispatch();
+  const { dispatchShowAuthorActionsModal } = useModalDispatch();
   const comment = data?.comment;
   const canEdit = comment?.profile.id == me?.profile.id;
 
   const onEllipsisClick = () => {
-    dispatchShowContextMenuModal(true, ContextMenuType.COMMENT, commentId);
+    dispatchShowAuthorActionsModal(true, AuthorActionsType.COMMENT, commentId);
   };
 
   if (!comment) return <CommentSkeleton />;

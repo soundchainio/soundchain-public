@@ -7,6 +7,7 @@ import { PageInput } from '../types/PageInput';
 import { SortPostInput } from '../types/SortPostInput';
 import { ModelService } from './ModelService';
 import { NewReactionParams } from './ReactionService';
+import { NotFoundError } from '../errors/NotFoundError';
 
 interface NewPostParams {
   profileId: string;
@@ -54,16 +55,19 @@ export class PostService extends ModelService<typeof Post> {
       throw new Error(`You are not the author of the post.`);
     }
 
-    await this.model.updateOne(
+    const updatedPost = await this.model.findByIdAndUpdate(
       { _id: params.postId },
       {
         body: params.body,
-        mediaLink: params.mediaLink,
-        edited: true
+        mediaLink: params.mediaLink
       },
+      { new: true }
     );
 
-    return await this.findOrFail(params.postId);
+    if (!updatedPost) {
+      throw new NotFoundError('Post ', params.postId);
+    }
+    return updatedPost;
   }
 
   getPosts(filter?: FilterPostInput, sort?: SortPostInput, page?: PageInput): Promise<PaginateResult<Post>> {

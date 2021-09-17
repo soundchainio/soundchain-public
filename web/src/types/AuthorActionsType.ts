@@ -1,4 +1,4 @@
-export enum ContextMenuType {
+export enum AuthorActionsType {
   POST = 'post',
   COMMENT = 'comment',
 }

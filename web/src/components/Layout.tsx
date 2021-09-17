@@ -1,7 +1,7 @@
 import { BottomNavBar } from 'components/BottomNavBar';
 import { store } from 'contexts';
 import { ReactNode, useContext, useState } from 'react';
-import { ContextMenuModal } from './ContextMenuModal';
+import { AuthorActionsModal } from './AuthorActionsModal';
 import { NewPostModal } from './NewPostModal';
 import { UnderDevelopmentModal } from './UnderDevelopmentModal';
 import { SideMenu } from './SideMenu';
@@ -35,7 +35,7 @@ export const Layout = ({ children, hideBottomNavBar, topNavBarProps }: LayoutPro
       <div id="modals" className="absolute z-20 w-full">
         <UnderDevelopmentModal />
         <NewPostModal />
-        <ContextMenuModal />
+        <AuthorActionsModal />
         <ReactionsModal />
       </div>
     </div>
