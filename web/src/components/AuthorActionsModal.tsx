@@ -16,7 +16,7 @@ export const AuthorActionsModal = () => {
   const [deleteComment] = useDeleteCommentMutation({
     refetchQueries: [CommentsDocument],
     update: (cache, data) => {
-      cache.evict({ id: cache.identify(data.data?.deleteComment.comment!) });
+      cache.evict({ id: cache.identify(data.data!.deleteComment.comment!) });
     },
   });
 
