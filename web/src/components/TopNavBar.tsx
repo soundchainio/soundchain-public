@@ -3,7 +3,9 @@ import { useMe } from 'hooks/useMe';
 import { Logo } from 'icons/Logo';
 import { Menu } from 'icons/Menu';
 import { useRouter } from 'next/router';
+import { BottomNavBar } from './BottomNavBar';
 import { Button } from './Button';
+import { NavBar } from './NavBar';
 import { Title } from './Title';
 import { TopNavBarButton } from './TopNavBarButton';
 
@@ -32,7 +34,7 @@ export const TopNavBar = ({
   };
 
   return (
-    <div className="relative z-10 flex-shrink-0 flex h-16 bg-black shadow">
+    <div className="relative z-10 flex-shrink-0 flex h-16 bg-black md:bg-gray-30 shadow">
       <button
         type="button"
         className={classNames(
@@ -50,17 +52,30 @@ export const TopNavBar = ({
         </div>
       </button>
       {me ? (
-        <div className="flex-2 flex items-center justify-center md:items-stretch md:justify-start">
-          <div className="flex-shrink-0 flex items-center">
-            {title ? (
-              <Title navTitle className="text-sm text-center md:text-left">
-                {title}
-              </Title>
-            ) : (
-              <Logo className="block h-8 w-auto" />
-            )}
+        <>
+          <div className="md:hidden flex-2 flex items-center justify-center md:items-stretch md:justify-start">
+            <div className="flex-shrink-0 flex items-center">
+              {title ? (
+                <Title navTitle className="text-sm text-center md:text-left">
+                  {title}
+                </Title>
+              ) : (
+                <Logo className="block h-8 w-auto" />
+              )}
+            </div>
           </div>
-        </div>
+          <div className="hidden w-full md:flex flex-1 items-center justify-center md:items-stretch md:justify-start">
+            <div className="flex items-center w-full">
+              {title ? (
+                <Title navTitle className="text-sm text-center md:text-left md:pl-4">
+                  {title}
+                </Title>
+              ) : (
+                <NavBar />
+              )}
+            </div>
+          </div>
+        </>
       ) : (
         <div className="flex-2 flex items-center justify-start ml-4 space-x-2">
           <Button variant={router.pathname === '/login' ? 'rainbow-xs' : 'outline'} onClick={onLogin} className="w-32">
