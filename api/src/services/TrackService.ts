@@ -28,4 +28,8 @@ export class TrackService extends ModelService<typeof Track> {
 
     return track;
   }
+
+  deleteTrack(id: string): Promise<Track> {
+    return this.model.deleteOne({ _id: id }).exec();
+  }
 }

@@ -1,6 +1,9 @@
 import { Webhooks } from '@mux/mux-node';
+import type { Handler } from 'aws-lambda';
 import express, { Router } from 'express';
 import { config } from '../config';
+import { TrackService } from '../services/TrackService';
+import { Context } from '../types/Context';
 
 const router = Router();
 
@@ -18,6 +21,38 @@ router.post('/', async (req, res) => {
   const { type: eventType, data: eventData } = JSON.parse(req.body);
   const { trackService } = req.app.locals.context;
 
+  await handleEvent(eventType, eventData, trackService);
+
+  res.sendStatus(200);
+});
+
+export const mux = router;
+
+export const handler: Handler = async ({ headers, body }) => {
+  try {
+    const sig = headers['mux-signature'] as string;
+    Webhooks.verifyHeader(body, sig, config.mux.webhookSecret);
+  } catch (err) {
+    return { statusCode: 400 };
+  }
+
+  const { type: eventType, data: eventData } = JSON.parse(body);
+  const { trackService } = new Context();
+  await handleEvent(eventType, eventData, trackService);
+
+  return { statusCode: 200 };
+};
+
+type EventType = 'video.asset.ready' | 'video.upload.cancelled';
+type EventData = {
+  id: string;
+  passthrough: string;
+  playback_ids: {
+    id: string;
+  }[];
+};
+
+async function handleEvent(eventType: EventType, eventData: EventData, trackService: TrackService) {
   switch (eventType) {
     case 'video.asset.ready': {
       const { id, playback_ids, passthrough } = eventData;
@@ -30,11 +65,6 @@ router.post('/', async (req, res) => {
       break;
     }
     default:
-      // Mux sends webhooks for *lots* of things, but we'll ignore those for now
       console.log('some other event!', eventType, eventData);
   }
-
-  res.sendStatus(200);
-});
-
-export const mux = router;
+}
