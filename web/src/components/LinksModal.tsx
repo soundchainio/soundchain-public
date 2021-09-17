@@ -42,7 +42,7 @@ export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type, post
       }
     }
 
-  }, [postLink, link]);
+  }, [postLink]);
 
   return (
     <ModalsPortal>

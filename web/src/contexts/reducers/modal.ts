@@ -2,21 +2,23 @@ import { Action } from 'contexts/actions';
 import { ModalActionTypes } from 'contexts/actions/modal';
 import {
   SetRepostIdPayload,
-  ShowDeletePayload,
+  SetEditPostIdPayload,
+  ShowAuthorActionsPayload,
   ShowNewPostPayload,
   ShowReactionsPayload,
   ShowUnderDevelopmentPayload,
 } from 'contexts/payloads/modal';
 import { ReactionType } from 'lib/graphql';
-import { DeleteModalType } from 'types/DeleteModalType';
+import { AuthorActionsType } from 'types/AuthorActionsType';
 
 export interface ModalState {
   showNewPost: boolean;
   anyModalOpened: boolean;
   repostId?: string;
-  showDelete: boolean;
-  deleteType?: DeleteModalType;
-  deleteId: string;
+  editPostId?: string;
+  showAuthorActions: boolean;
+  authorActionsType?: AuthorActionsType;
+  authorActionsId: string;
   showUnderDevelopment: boolean;
   reactions: {
     show: boolean;
@@ -30,9 +32,10 @@ export const initialModalState = {
   showNewPost: false,
   anyModalOpened: false,
   repostId: undefined,
-  showDelete: false,
-  deleteType: undefined,
-  deleteId: '',
+  editPostId: undefined,
+  showAuthorActions: false,
+  authorActionsType: undefined,
+  authorActionsId: '',
   showUnderDevelopment: false,
   reactions: {
     show: false,
@@ -55,13 +58,18 @@ export const modalReducer = (state: ModalState, action: Action) => {
         ...state,
         repostId: (action.payload as SetRepostIdPayload).repostId,
       };
-    case ModalActionTypes.SHOW_DELETE:
+    case ModalActionTypes.SET_EDIT_POST_ID:
       return {
         ...state,
-        showDelete: (action.payload as ShowDeletePayload).show,
-        anyModalOpened: (action.payload as ShowDeletePayload).show,
-        deleteType: (action.payload as ShowDeletePayload).type,
-        deleteId: (action.payload as ShowDeletePayload).deleteId,
+        editPostId: (action.payload as SetEditPostIdPayload).editPostId,
+      };
+    case ModalActionTypes.SHOW_CONTEXT_MENU:
+      return {
+        ...state,
+        showAuthorActions: (action.payload as ShowAuthorActionsPayload).showAuthorActions,
+        anyModalOpened: (action.payload as ShowAuthorActionsPayload).showAuthorActions,
+        authorActionsType: (action.payload as ShowAuthorActionsPayload).authorActionsType,
+        authorActionsId: (action.payload as ShowAuthorActionsPayload).authorActionsId,
       };
     case ModalActionTypes.SHOW_UNDER_DEVELOPMENT:
       return {
