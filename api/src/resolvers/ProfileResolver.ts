@@ -5,8 +5,12 @@ import { User } from '../models/User';
 import { Context } from '../types/Context';
 import { FollowProfileInput } from '../types/FollowProfileInput';
 import { FollowProfilePayload } from '../types/FollowProfilePayload';
+import { SubscribeToProfileInput } from '../types/SubscribeToProfileInput';
+import { SubscribeToProfilePayload } from '../types/SubscribeToProfilePayload';
 import { UnfollowProfileInput } from '../types/UnfollowProfileInput';
 import { UnfollowProfilePayload } from '../types/UnfollowProfilePayload';
+import { UnsubscribeFromProfileInput } from '../types/UnsubscribeProfileInput';
+import { UnsubscribeFromProfilePayload } from '../types/UnsubscribeProfilePayload';
 import { UpdateCoverPictureInput } from '../types/UpdateCoverPictureInput';
 import { UpdateCoverPicturePayload } from '../types/UpdateCoverPicturePayload';
 import { UpdateFavoriteGenresInput } from '../types/UpdateFavoriteGenresInput';
@@ -40,6 +44,19 @@ export class ProfileResolver {
     }
 
     return followService.exists({ followerId: user.profileId, followedId: profile._id });
+  }
+
+  @FieldResolver(() => Boolean)
+  isSubscriber(
+    @Ctx() { subscriptionService }: Context,
+    @Root() profile: Profile,
+    @CurrentUser() user?: User,
+  ): Promise<boolean> {
+    if (!user) {
+      return Promise.resolve(false);
+    }
+
+    return subscriptionService.exists({ subscriberId: user.profileId, profileId: profile._id });
   }
 
   @Query(() => Profile)
@@ -150,5 +167,27 @@ export class ProfileResolver {
   ): Promise<UnfollowProfilePayload> {
     const unfollowedProfile = await profileService.unfollowProfile(followerId, followedId);
     return { unfollowedProfile };
+  }
+
+  @Mutation(() => SubscribeToProfilePayload)
+  @Authorized()
+  async subscribeToProfile(
+    @Ctx() { subscriptionService }: Context,
+    @Arg('input') { profileId }: SubscribeToProfileInput,
+    @CurrentUser() { profileId: subscriberId }: User,
+  ): Promise<SubscribeToProfilePayload> {
+    const profile = await subscriptionService.subscribeProfile(subscriberId, profileId);
+    return { profile };
+  }
+
+  @Mutation(() => UnsubscribeFromProfilePayload)
+  @Authorized()
+  async unsubscribeFromProfile(
+    @Ctx() { subscriptionService }: Context,
+    @Arg('input') { profileId }: UnsubscribeFromProfileInput,
+    @CurrentUser() { profileId: subscriberId }: User,
+  ): Promise<UnsubscribeFromProfilePayload> {
+    const profile = await subscriptionService.unsubscribeProfile(subscriberId, profileId);
+    return { profile };
   }
 }

@@ -45,7 +45,7 @@ export const FollowButton = ({ followedId, isFollowed }: FollowButtonProps) => {
       variant="outline-rounded"
       borderColor="bg-green-gradient"
       bgColor={isFollowed ? 'bg-green-gradient' : undefined}
-      className="w-[90px] bg-gray-10 text-sm"
+      className="w-[85px] bg-gray-10 text-sm"
       textColor={isFollowed ? 'text-white' : 'green-gradient-text'}
       icon={() => <Checkmark activatedColor={!isFollowed ? 'green' : undefined} />}
     >

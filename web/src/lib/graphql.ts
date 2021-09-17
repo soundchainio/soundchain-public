@@ -262,6 +262,7 @@ export type Mutation = {
   resetNotificationCount: Profile;
   clearNotifications: ClearNotificationsPayload;
   createPost: CreatePostPayload;
+  updatePost: UpdatePostPayload;
   reactToPost: ReactToPostPayload;
   retractReaction: RetractReactionPayload;
   changeReaction: ChangeReactionPayload;
@@ -275,6 +276,8 @@ export type Mutation = {
   updateCoverPicture: UpdateCoverPicturePayload;
   followProfile: FollowProfilePayload;
   unfollowProfile: UnfollowProfilePayload;
+  subscribeToProfile: SubscribeToProfilePayload;
+  unsubscribeFromProfile: UnsubscribeFromProfilePayload;
   register: AuthPayload;
   login: AuthPayload;
   verifyUserEmail: VerifyUserEmailPayload;
@@ -302,6 +305,11 @@ export type MutationSendMessageArgs = {
 
 export type MutationCreatePostArgs = {
   input: CreatePostInput;
+};
+
+
+export type MutationUpdatePostArgs = {
+  input: UpdatePostInput;
 };
 
 
@@ -370,6 +378,16 @@ export type MutationUnfollowProfileArgs = {
 };
 
 
+export type MutationSubscribeToProfileArgs = {
+  input: SubscribeToProfileInput;
+};
+
+
+export type MutationUnsubscribeFromProfileArgs = {
+  input: UnsubscribeFromProfileInput;
+};
+
+
 export type MutationRegisterArgs = {
   input: RegisterInput;
 };
@@ -404,7 +422,20 @@ export type MutationUpdatePasswordArgs = {
   input: UpdatePasswordInput;
 };
 
-export type Notification = CommentNotification | ReactionNotification | FollowerNotification;
+export type NewPostNotification = {
+  __typename?: 'NewPostNotification';
+  type: NotificationType;
+  createdAt: Scalars['DateTime'];
+  id: Scalars['String'];
+  authorName: Scalars['String'];
+  authorPicture: Maybe<Scalars['String']>;
+  body: Scalars['String'];
+  previewBody: Scalars['String'];
+  previewLink: Maybe<Scalars['String']>;
+  link: Scalars['String'];
+};
+
+export type Notification = CommentNotification | ReactionNotification | FollowerNotification | NewPostNotification;
 
 export type NotificationConnection = {
   __typename?: 'NotificationConnection';
@@ -415,7 +446,8 @@ export type NotificationConnection = {
 export enum NotificationType {
   Comment = 'Comment',
   Reaction = 'Reaction',
-  Follower = 'Follower'
+  Follower = 'Follower',
+  NewPost = 'NewPost'
 }
 
 export type PageInfo = {
@@ -441,6 +473,7 @@ export type Post = {
   body: Scalars['String'];
   mediaLink: Maybe<Scalars['String']>;
   repostId: Maybe<Scalars['String']>;
+  edited: Maybe<Scalars['Boolean']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   profile: Profile;
@@ -481,6 +514,7 @@ export type Profile = {
   updatedAt: Scalars['DateTime'];
   userHandle: Scalars['String'];
   isFollowed: Scalars['Boolean'];
+  isSubscriber: Scalars['Boolean'];
 };
 
 export type Query = {
@@ -498,6 +532,7 @@ export type Query = {
   post: Post;
   posts: PostConnection;
   reactions: ReactionConnection;
+  bandcampLink: Scalars['String'];
   myProfile: Profile;
   profile: Profile;
   uploadUrl: UploadUrl;
@@ -576,6 +611,11 @@ export type QueryPostsArgs = {
 export type QueryReactionsArgs = {
   page?: Maybe<PageInput>;
   postId: Scalars['String'];
+};
+
+
+export type QueryBandcampLinkArgs = {
+  url: Scalars['String'];
 };
 
 
@@ -708,6 +748,15 @@ export type SortPostInput = {
   order?: Maybe<SortOrder>;
 };
 
+export type SubscribeToProfileInput = {
+  profileId: Scalars['String'];
+};
+
+export type SubscribeToProfilePayload = {
+  __typename?: 'SubscribeToProfilePayload';
+  profile: Profile;
+};
+
 export type UnfollowProfileInput = {
   followedId: Scalars['String'];
 };
@@ -715,6 +764,15 @@ export type UnfollowProfileInput = {
 export type UnfollowProfilePayload = {
   __typename?: 'UnfollowProfilePayload';
   unfollowedProfile: Profile;
+};
+
+export type UnsubscribeFromProfileInput = {
+  profileId: Scalars['String'];
+};
+
+export type UnsubscribeFromProfilePayload = {
+  __typename?: 'UnsubscribeFromProfilePayload';
+  profile: Profile;
 };
 
 export type UpdateCoverPictureInput = {
@@ -755,6 +813,17 @@ export type UpdatePasswordInput = {
 export type UpdatePasswordPayload = {
   __typename?: 'UpdatePasswordPayload';
   ok: Scalars['Boolean'];
+};
+
+export type UpdatePostInput = {
+  postId: Scalars['String'];
+  body: Scalars['String'];
+  mediaLink?: Maybe<Scalars['String']>;
+};
+
+export type UpdatePostPayload = {
+  __typename?: 'UpdatePostPayload';
+  post: Post;
 };
 
 export type UpdateProfileBioInput = {
@@ -841,6 +910,16 @@ export type AddCommentMutation = (
       & CommentComponentFieldsFragment
     ) }
   ) }
+);
+
+export type BandcampLinkQueryVariables = Exact<{
+  url: Scalars['String'];
+}>;
+
+
+export type BandcampLinkQuery = (
+  { __typename?: 'Query' }
+  & Pick<Query, 'bandcampLink'>
 );
 
 export type ChangeReactionMutationVariables = Exact<{
@@ -1194,6 +1273,11 @@ export type MyProfileQuery = (
   ) }
 );
 
+export type NewPostNotificationFieldsFragment = (
+  { __typename?: 'NewPostNotification' }
+  & Pick<NewPostNotification, 'id' | 'type' | 'authorName' | 'authorPicture' | 'body' | 'link' | 'previewBody' | 'previewLink' | 'createdAt'>
+);
+
 export type NotificationQueryVariables = Exact<{
   id: Scalars['String'];
 }>;
@@ -1210,6 +1294,9 @@ export type NotificationQuery = (
   ) | (
     { __typename?: 'FollowerNotification' }
     & FollowerNotificationFieldsFragment
+  ) | (
+    { __typename?: 'NewPostNotification' }
+    & NewPostNotificationFieldsFragment
   ) }
 );
 
@@ -1242,6 +1329,9 @@ export type NotificationsQuery = (
     ) | (
       { __typename?: 'FollowerNotification' }
       & FollowerNotificationFieldsFragment
+    ) | (
+      { __typename?: 'NewPostNotification' }
+      & NewPostNotificationFieldsFragment
     )> }
   ) }
 );
@@ -1261,7 +1351,7 @@ export type PostQuery = (
 
 export type PostComponentFieldsFragment = (
   { __typename?: 'Post' }
-  & Pick<Post, 'id' | 'body' | 'mediaLink' | 'repostId' | 'createdAt' | 'commentCount' | 'repostCount' | 'totalReactions' | 'topReactions' | 'myReaction'>
+  & Pick<Post, 'id' | 'body' | 'mediaLink' | 'repostId' | 'createdAt' | 'updatedAt' | 'commentCount' | 'repostCount' | 'totalReactions' | 'topReactions' | 'myReaction'>
   & { profile: (
     { __typename?: 'Profile' }
     & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
@@ -1294,7 +1384,7 @@ export type ProfileQuery = (
   { __typename?: 'Query' }
   & { profile: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'userHandle' | 'isFollowed' | 'followerCount' | 'followingCount' | 'musicianType' | 'bio'>
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'userHandle' | 'isFollowed' | 'isSubscriber' | 'followerCount' | 'followingCount' | 'musicianType' | 'bio'>
     & { socialMedias: (
       { __typename?: 'SocialMedias' }
       & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
@@ -1440,6 +1530,22 @@ export type SendMessageMutation = (
   ) }
 );
 
+export type SubscribeToProfileMutationVariables = Exact<{
+  input: SubscribeToProfileInput;
+}>;
+
+
+export type SubscribeToProfileMutation = (
+  { __typename?: 'Mutation' }
+  & { subscribeToProfile: (
+    { __typename?: 'SubscribeToProfilePayload' }
+    & { profile: (
+      { __typename?: 'Profile' }
+      & Pick<Profile, 'id' | 'isSubscriber'>
+    ) }
+  ) }
+);
+
 export type UnfollowProfileMutationVariables = Exact<{
   input: UnfollowProfileInput;
 }>;
@@ -1464,6 +1570,22 @@ export type UnreadMessageCountQuery = (
   & { myProfile: (
     { __typename?: 'Profile' }
     & Pick<Profile, 'id' | 'unreadMessageCount'>
+  ) }
+);
+
+export type UnsubscribeFromProfileMutationVariables = Exact<{
+  input: UnsubscribeFromProfileInput;
+}>;
+
+
+export type UnsubscribeFromProfileMutation = (
+  { __typename?: 'Mutation' }
+  & { unsubscribeFromProfile: (
+    { __typename?: 'UnsubscribeFromProfilePayload' }
+    & { profile: (
+      { __typename?: 'Profile' }
+      & Pick<Profile, 'id' | 'isSubscriber'>
+    ) }
   ) }
 );
 
@@ -1541,6 +1663,22 @@ export type UpdatePasswordMutation = (
   & { updatePassword: (
     { __typename?: 'UpdatePasswordPayload' }
     & Pick<UpdatePasswordPayload, 'ok'>
+  ) }
+);
+
+export type UpdatePostMutationVariables = Exact<{
+  input: UpdatePostInput;
+}>;
+
+
+export type UpdatePostMutation = (
+  { __typename?: 'Mutation' }
+  & { updatePost: (
+    { __typename?: 'UpdatePostPayload' }
+    & { post: (
+      { __typename?: 'Post' }
+      & Pick<Post, 'id'>
+    ) }
   ) }
 );
 
@@ -1686,6 +1824,19 @@ export const MessageComponentFieldsFragmentDoc = gql`
   }
 }
     `;
+export const NewPostNotificationFieldsFragmentDoc = gql`
+    fragment NewPostNotificationFields on NewPostNotification {
+  id
+  type
+  authorName
+  authorPicture
+  body
+  link
+  previewBody
+  previewLink
+  createdAt
+}
+    `;
 export const PostComponentFieldsFragmentDoc = gql`
     fragment PostComponentFields on Post {
   id
@@ -1693,6 +1844,7 @@ export const PostComponentFieldsFragmentDoc = gql`
   mediaLink
   repostId
   createdAt
+  updatedAt
   commentCount
   repostCount
   totalReactions
@@ -1756,6 +1908,39 @@ export function useAddCommentMutation(baseOptions?: Apollo.MutationHookOptions<A
 export type AddCommentMutationHookResult = ReturnType<typeof useAddCommentMutation>;
 export type AddCommentMutationResult = Apollo.MutationResult<AddCommentMutation>;
 export type AddCommentMutationOptions = Apollo.BaseMutationOptions<AddCommentMutation, AddCommentMutationVariables>;
+export const BandcampLinkDocument = gql`
+    query BandcampLink($url: String!) {
+  bandcampLink(url: $url)
+}
+    `;
+
+/**
+ * __useBandcampLinkQuery__
+ *
+ * To run a query within a React component, call `useBandcampLinkQuery` and pass it any options that fit your needs.
+ * When your component renders, `useBandcampLinkQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useBandcampLinkQuery({
+ *   variables: {
+ *      url: // value for 'url'
+ *   },
+ * });
+ */
+export function useBandcampLinkQuery(baseOptions: Apollo.QueryHookOptions<BandcampLinkQuery, BandcampLinkQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<BandcampLinkQuery, BandcampLinkQueryVariables>(BandcampLinkDocument, options);
+      }
+export function useBandcampLinkLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<BandcampLinkQuery, BandcampLinkQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<BandcampLinkQuery, BandcampLinkQueryVariables>(BandcampLinkDocument, options);
+        }
+export type BandcampLinkQueryHookResult = ReturnType<typeof useBandcampLinkQuery>;
+export type BandcampLinkLazyQueryHookResult = ReturnType<typeof useBandcampLinkLazyQuery>;
+export type BandcampLinkQueryResult = Apollo.QueryResult<BandcampLinkQuery, BandcampLinkQueryVariables>;
 export const ChangeReactionDocument = gql`
     mutation ChangeReaction($input: ChangeReactionInput!) {
   changeReaction(input: $input) {
@@ -2519,11 +2704,15 @@ export const NotificationDocument = gql`
     ... on FollowerNotification {
       ...FollowerNotificationFields
     }
+    ... on NewPostNotification {
+      ...NewPostNotificationFields
+    }
   }
 }
     ${CommentNotificationFieldsFragmentDoc}
 ${ReactionNotificationFieldsFragmentDoc}
-${FollowerNotificationFieldsFragmentDoc}`;
+${FollowerNotificationFieldsFragmentDoc}
+${NewPostNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationQuery__
@@ -2600,12 +2789,16 @@ export const NotificationsDocument = gql`
       ... on FollowerNotification {
         ...FollowerNotificationFields
       }
+      ... on NewPostNotification {
+        ...NewPostNotificationFields
+      }
     }
   }
 }
     ${CommentNotificationFieldsFragmentDoc}
 ${ReactionNotificationFieldsFragmentDoc}
-${FollowerNotificationFieldsFragmentDoc}`;
+${FollowerNotificationFieldsFragmentDoc}
+${NewPostNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationsQuery__
@@ -2722,6 +2915,7 @@ export const ProfileDocument = gql`
     }
     userHandle
     isFollowed
+    isSubscriber
     followerCount
     followingCount
     musicianType
@@ -3084,6 +3278,42 @@ export function useSendMessageMutation(baseOptions?: Apollo.MutationHookOptions<
 export type SendMessageMutationHookResult = ReturnType<typeof useSendMessageMutation>;
 export type SendMessageMutationResult = Apollo.MutationResult<SendMessageMutation>;
 export type SendMessageMutationOptions = Apollo.BaseMutationOptions<SendMessageMutation, SendMessageMutationVariables>;
+export const SubscribeToProfileDocument = gql`
+    mutation SubscribeToProfile($input: SubscribeToProfileInput!) {
+  subscribeToProfile(input: $input) {
+    profile {
+      id
+      isSubscriber
+    }
+  }
+}
+    `;
+export type SubscribeToProfileMutationFn = Apollo.MutationFunction<SubscribeToProfileMutation, SubscribeToProfileMutationVariables>;
+
+/**
+ * __useSubscribeToProfileMutation__
+ *
+ * To run a mutation, you first call `useSubscribeToProfileMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSubscribeToProfileMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [subscribeToProfileMutation, { data, loading, error }] = useSubscribeToProfileMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useSubscribeToProfileMutation(baseOptions?: Apollo.MutationHookOptions<SubscribeToProfileMutation, SubscribeToProfileMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<SubscribeToProfileMutation, SubscribeToProfileMutationVariables>(SubscribeToProfileDocument, options);
+      }
+export type SubscribeToProfileMutationHookResult = ReturnType<typeof useSubscribeToProfileMutation>;
+export type SubscribeToProfileMutationResult = Apollo.MutationResult<SubscribeToProfileMutation>;
+export type SubscribeToProfileMutationOptions = Apollo.BaseMutationOptions<SubscribeToProfileMutation, SubscribeToProfileMutationVariables>;
 export const UnfollowProfileDocument = gql`
     mutation UnfollowProfile($input: UnfollowProfileInput!) {
   unfollowProfile(input: $input) {
@@ -3156,6 +3386,42 @@ export function useUnreadMessageCountLazyQuery(baseOptions?: Apollo.LazyQueryHoo
 export type UnreadMessageCountQueryHookResult = ReturnType<typeof useUnreadMessageCountQuery>;
 export type UnreadMessageCountLazyQueryHookResult = ReturnType<typeof useUnreadMessageCountLazyQuery>;
 export type UnreadMessageCountQueryResult = Apollo.QueryResult<UnreadMessageCountQuery, UnreadMessageCountQueryVariables>;
+export const UnsubscribeFromProfileDocument = gql`
+    mutation UnsubscribeFromProfile($input: UnsubscribeFromProfileInput!) {
+  unsubscribeFromProfile(input: $input) {
+    profile {
+      id
+      isSubscriber
+    }
+  }
+}
+    `;
+export type UnsubscribeFromProfileMutationFn = Apollo.MutationFunction<UnsubscribeFromProfileMutation, UnsubscribeFromProfileMutationVariables>;
+
+/**
+ * __useUnsubscribeFromProfileMutation__
+ *
+ * To run a mutation, you first call `useUnsubscribeFromProfileMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUnsubscribeFromProfileMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [unsubscribeFromProfileMutation, { data, loading, error }] = useUnsubscribeFromProfileMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUnsubscribeFromProfileMutation(baseOptions?: Apollo.MutationHookOptions<UnsubscribeFromProfileMutation, UnsubscribeFromProfileMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UnsubscribeFromProfileMutation, UnsubscribeFromProfileMutationVariables>(UnsubscribeFromProfileDocument, options);
+      }
+export type UnsubscribeFromProfileMutationHookResult = ReturnType<typeof useUnsubscribeFromProfileMutation>;
+export type UnsubscribeFromProfileMutationResult = Apollo.MutationResult<UnsubscribeFromProfileMutation>;
+export type UnsubscribeFromProfileMutationOptions = Apollo.BaseMutationOptions<UnsubscribeFromProfileMutation, UnsubscribeFromProfileMutationVariables>;
 export const UpdateCoverPictureDocument = gql`
     mutation UpdateCoverPicture($input: UpdateCoverPictureInput!) {
   updateCoverPicture(input: $input) {
@@ -3333,6 +3599,41 @@ export function useUpdatePasswordMutation(baseOptions?: Apollo.MutationHookOptio
 export type UpdatePasswordMutationHookResult = ReturnType<typeof useUpdatePasswordMutation>;
 export type UpdatePasswordMutationResult = Apollo.MutationResult<UpdatePasswordMutation>;
 export type UpdatePasswordMutationOptions = Apollo.BaseMutationOptions<UpdatePasswordMutation, UpdatePasswordMutationVariables>;
+export const UpdatePostDocument = gql`
+    mutation UpdatePost($input: UpdatePostInput!) {
+  updatePost(input: $input) {
+    post {
+      id
+    }
+  }
+}
+    `;
+export type UpdatePostMutationFn = Apollo.MutationFunction<UpdatePostMutation, UpdatePostMutationVariables>;
+
+/**
+ * __useUpdatePostMutation__
+ *
+ * To run a mutation, you first call `useUpdatePostMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdatePostMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updatePostMutation, { data, loading, error }] = useUpdatePostMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdatePostMutation(baseOptions?: Apollo.MutationHookOptions<UpdatePostMutation, UpdatePostMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdatePostMutation, UpdatePostMutationVariables>(UpdatePostDocument, options);
+      }
+export type UpdatePostMutationHookResult = ReturnType<typeof useUpdatePostMutation>;
+export type UpdatePostMutationResult = Apollo.MutationResult<UpdatePostMutation>;
+export type UpdatePostMutationOptions = Apollo.BaseMutationOptions<UpdatePostMutation, UpdatePostMutationVariables>;
 export const UpdateProfileBioDocument = gql`
     mutation updateProfileBio($input: UpdateProfileBioInput!) {
   updateProfileBio(input: $input) {

@@ -9,5 +9,8 @@ query Notification($id: String!) {
     ... on FollowerNotification {
       ...FollowerNotificationFields
     }
+    ... on NewPostNotification {
+      ...NewPostNotificationFields
+    }
   }
 }

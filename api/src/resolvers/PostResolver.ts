@@ -11,6 +11,8 @@ import { ChangeReactionPayload } from '../types/ChangeReactionPayload';
 import { Context } from '../types/Context';
 import { CreatePostInput } from '../types/CreatePostInput';
 import { CreatePostPayload } from '../types/CreatePostPayload';
+import { UpdatePostInput } from '../types/UpdatePostInput';
+import { UpdatePostPayload } from '../types/UpdatePostPayload';
 import { CreateRepostInput } from '../types/CreateRepostInput';
 import { CreateRepostPayload } from '../types/CreateRepostPayload';
 import { FilterPostInput } from '../types/FilterPostInput';
@@ -97,6 +99,17 @@ export class PostResolver {
     return { post };
   }
 
+  @Mutation(() => UpdatePostPayload)
+  @Authorized()
+  async updatePost(
+    @Ctx() { postService }: Context,
+    @Arg('input') { body, mediaLink, postId }: UpdatePostInput,
+    @CurrentUser() { profileId }: User,
+  ): Promise<UpdatePostPayload> {
+    const post = await postService.updatePost({ postId, body, mediaLink, profileId });
+    return { post };
+  }
+
   @Mutation(() => ReactToPostPayload)
   @Authorized()
   async reactToPost(
@@ -149,5 +162,13 @@ export class PostResolver {
     @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<ReactionConnection> {
     return reactionService.getReactions(postId, page);
+  }
+
+  @Query(() => String)
+  bandcampLink(
+    @Ctx() { embedService }: Context,
+    @Arg('url') url: string,
+  ): Promise<String> {
+    return embedService.bandcampLink(url);
   }
 }

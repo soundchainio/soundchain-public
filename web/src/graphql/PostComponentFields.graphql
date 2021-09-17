@@ -4,6 +4,7 @@ fragment PostComponentFields on Post {
   mediaLink
   repostId
   createdAt
+  updatedAt
   commentCount
   repostCount
   totalReactions

@@ -1,6 +1,8 @@
 import axios from 'axios';
 import { MediaLink } from 'components/PostLinkInput';
 import { MediaProvider } from 'types/MediaProvider';
+import { BandcampLinkDocument } from 'lib/graphql';
+import { apolloClient } from 'lib/apollo';
 
 const linksRegex = /\bhttps?:\/\/\S+/gi;
 
@@ -15,9 +17,25 @@ const spotifyLinkRegex = /(?=track\/).*(?=\?)/g;
 const vimeoRegex = /(vimeo.com\/)/;
 const vimeoLinkRegex = /(vimeo.com\/)(.*)/g;
 
+const bandcampRegex = /(bandcamp.com\/)/;
+const bandcampLinkRegex = /(bandcamp.com\/)(.*)/g;
+
 const normalizeYoutube = (str: string) => {
+  let videoId = '';
+  if (str.includes('/embed/')) {
+    return str;
+  }
+
+  if (str.includes('youtu.be/')) {
+    videoId = /[^/]*$/.exec(str)![0];
+  }
+
   const urlParams = new URLSearchParams(str.replace('?', '&'));
-  return `https://www.youtube.com/embed/${urlParams.get('v')}`;
+  if (urlParams.get('v')) {
+    videoId = urlParams.get('v')!;
+  }
+
+  return `https://www.youtube.com/embed/${videoId}`;
 };
 
 const normalizeSoundcloud = async (str: string) => {
@@ -53,6 +71,20 @@ const normalizeVimeo = (str: string) => {
   return str;
 };
 
+const normalizeBandcamp = async (str: string) => {
+
+  const data = await apolloClient.query({
+    query: BandcampLinkDocument,
+    variables: { url: str },
+  })
+
+  if (data.data.bandcampLink) {
+    return data.data.bandcampLink;
+  }
+
+  return str;
+};
+
 export const getNormalizedLink = async (str: string) => {
   const link = (str.match(linksRegex) || [])[0];
 
@@ -60,6 +92,7 @@ export const getNormalizedLink = async (str: string) => {
   if (soundcloudRegex.test(link)) return await normalizeSoundcloud(link);
   if (spotifyRegex.test(link)) return normalizeSpotify(link);
   if (vimeoRegex.test(link)) return normalizeVimeo(link);
+  if (bandcampRegex.test(link)) return await normalizeBandcamp(link);
 };
 
 export const hasLink = (str: string) => {
@@ -75,6 +108,7 @@ export const IdentifySource = (str: string) => {
   if (soundcloudRegex.test(str)) ret.type = MediaProvider.SOUNDCLOUD;
   if (spotifyRegex.test(str)) ret.type = MediaProvider.SPOTIFY;
   if (vimeoRegex.test(str)) ret.type = MediaProvider.VIMEO;
+  if (bandcampRegex.test(str)) ret.type = MediaProvider.BANDCAMP;
 
   return ret;
 };
