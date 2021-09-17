@@ -64,7 +64,7 @@ export const TopNavBar = ({
               )}
             </div>
           </div>
-          <div className="hidden w-full md:flex flex-1 items-center justify-center md:items-stretch md:justify-start">
+          <div className="hidden w-full md:flex flex-2 items-center justify-center md:items-stretch md:justify-start">
             <div className="flex items-center w-full">
               {title ? (
                 <Title navTitle className="text-sm text-center md:text-left md:pl-4">
