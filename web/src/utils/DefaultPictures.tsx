@@ -1,11 +1,11 @@
-import { Cells } from 'components/Covers/Cells';
-import { Fog } from 'components/Covers/Fog';
-import { Birds } from '../components/Covers/Birds';
-import { Net } from '../components/Covers/Net';
-import { Rings } from '../components/Covers/Rings';
-import { Waves } from '../components/Covers/Waves';
+import { Cells } from 'components/profile-covers/Cells';
+import { Fog } from 'components/profile-covers/Fog';
+import { Birds } from '../components/profile-covers/Birds';
+import { Net } from '../components/profile-covers/Net';
+import { Rings } from '../components/profile-covers/Rings';
+import { Waves } from '../components/profile-covers/Waves';
 
-export const profilePictures = ['red', 'orange', 'yellow', 'green', 'light-blue', 'blue', 'purple', 'pink'];
+export const profilePictures = ['red', 'orange', 'yellow', 'green', 'teal', 'blue', 'purple', 'pink'];
 export const coverPictures = {
   'default-waves': <Waves />,
   'default-rings': <Rings />,
@@ -27,9 +27,9 @@ export const getRandomProfilePicture = () => {
 };
 
 export const getDefaultProfilePicturePath = (picture: string) => {
-  return `/defaultPictures/profile/${picture}.png`;
+  return `/default-pictures/profile/${picture}.png`;
 };
 
 export const getDefaultCoverPicturePath = (picture: string) => {
-  return `/defaultPictures/cover/${picture}.jpeg`;
+  return `/default-pictures/cover/${picture}.jpeg`;
 };

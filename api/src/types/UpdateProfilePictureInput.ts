@@ -1,10 +1,10 @@
 import { Field, InputType } from 'type-graphql';
 
 @InputType()
-export class UpdateCoverPictureInput {
+export class UpdateProfilePictureInput {
   @Field({ nullable: true })
-  coverPicture?: string;
+  profilePicture?: string;
 
   @Field({ nullable: true })
-  defaultCoverPicture?: string;
+  defaultProfilePicture?: string;
 }

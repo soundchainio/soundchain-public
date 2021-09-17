@@ -1,3 +1,4 @@
+import { isUndefined, omitBy } from 'lodash';
 import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
 import { CurrentUser } from '../decorators/current-user';
 import { Profile } from '../models/Profile';
@@ -15,16 +16,16 @@ import { UpdateCoverPictureInput } from '../types/UpdateCoverPictureInput';
 import { UpdateCoverPicturePayload } from '../types/UpdateCoverPicturePayload';
 import { UpdateFavoriteGenresInput } from '../types/UpdateFavoriteGenresInput';
 import { UpdateFavoriteGenresPayload } from '../types/UpdateFavoriteGenresPayload';
-import { UpdateProfileBioInput } from '../types/UpdateProfileBioInput';
-import { UpdateProfileBioPayload } from '../types/UpdateProfileBioPayload';
 import { UpdateMusicianTypeInput } from '../types/UpdateMusicianTypeInput';
 import { UpdateMusicianTypePayload } from '../types/UpdateMusicianTypePayload';
+import { UpdateProfileBioInput } from '../types/UpdateProfileBioInput';
+import { UpdateProfileBioPayload } from '../types/UpdateProfileBioPayload';
 import { UpdateProfileDisplayNameInput } from '../types/UpdateProfileDisplayNameInput';
 import { UpdateProfileDisplayNamePayload } from '../types/UpdateProfileDisplayNamePayload';
+import { UpdateProfilePictureInput } from '../types/UpdateProfilePictureInput';
 import { UpdateProfilePicturePayload } from '../types/UpdateProfilePicturePayload';
 import { UpdateSocialMediasInput } from '../types/UpdateSocialMediasInput';
 import { UpdateSocialMediasPayload } from '../types/UpdateSocialMediasPayload';
-import { UpdateProfilePictureInput } from '../types/UploadProfilePictureInput';
 
 @Resolver(Profile)
 export class ProfileResolver {
@@ -59,6 +60,18 @@ export class ProfileResolver {
     return subscriptionService.exists({ subscriberId: user.profileId, profileId: profile._id });
   }
 
+  @FieldResolver(() => String, { nullable: false })
+  profilePicture(@Root() { profilePicture, defaultProfilePicture }: Profile): string {
+    if (profilePicture) return profilePicture;
+    return `/default-pictures/profile/${defaultProfilePicture}.png`;
+  }
+
+  @FieldResolver(() => String, { nullable: false })
+  coverPicture(@Root() { coverPicture, defaultCoverPicture }: Profile): string {
+    if (coverPicture) return coverPicture;
+    return `/default-pictures/cover/${defaultCoverPicture}.png`;
+  }
+
   @Query(() => Profile)
   @Authorized()
   myProfile(@Ctx() { profileService }: Context, @CurrentUser() { profileId }: User): Promise<Profile> {
@@ -77,7 +90,7 @@ export class ProfileResolver {
     @Arg('input') socialMedias: UpdateSocialMediasInput,
     @CurrentUser() { profileId }: User,
   ): Promise<UpdateSocialMediasPayload> {
-    const profile = await profileService.updateSocialMedias(profileId, socialMedias);
+    const profile = await profileService.updateProfile(profileId, { socialMedias });
     return { profile };
   }
 
@@ -88,7 +101,7 @@ export class ProfileResolver {
     @Arg('input') { favoriteGenres }: UpdateFavoriteGenresInput,
     @CurrentUser() { profileId }: User,
   ): Promise<UpdateFavoriteGenresPayload> {
-    const profile = await profileService.updateFavoriteGenres(profileId, favoriteGenres);
+    const profile = await profileService.updateProfile(profileId, { favoriteGenres });
     return { profile };
   }
 
@@ -99,7 +112,7 @@ export class ProfileResolver {
     @Arg('input') { musicianTypes }: UpdateMusicianTypeInput,
     @CurrentUser() { profileId }: User,
   ): Promise<UpdateMusicianTypePayload> {
-    const profile = await profileService.updateMusicianType(profileId, musicianTypes);
+    const profile = await profileService.updateProfile(profileId, { musicianTypes });
     return { profile };
   }
 
@@ -107,10 +120,11 @@ export class ProfileResolver {
   @Authorized()
   async updateProfilePicture(
     @Ctx() { profileService }: Context,
-    @Arg('input') { picture }: UpdateProfilePictureInput,
+    @Arg('input') input: UpdateProfilePictureInput,
     @CurrentUser() { profileId }: User,
   ): Promise<UpdateProfilePicturePayload> {
-    const profile = await profileService.updateProfilePicture(profileId, picture);
+    const changes = omitBy(input, isUndefined);
+    const profile = await profileService.updateProfile(profileId, changes);
     return { profile };
   }
 
@@ -121,7 +135,7 @@ export class ProfileResolver {
     @Arg('input') { displayName }: UpdateProfileDisplayNameInput,
     @CurrentUser() { profileId }: User,
   ): Promise<UpdateProfileDisplayNamePayload> {
-    const profile = await profileService.updateDisplayName(profileId, displayName);
+    const profile = await profileService.updateProfile(profileId, { displayName });
     return { profile };
   }
 
@@ -132,7 +146,7 @@ export class ProfileResolver {
     @Arg('input') { bio }: UpdateProfileBioInput,
     @CurrentUser() { profileId }: User,
   ): Promise<UpdateProfileBioPayload> {
-    const profile = await profileService.updateBio(profileId, bio);
+    const profile = await profileService.updateProfile(profileId, { bio });
     return { profile };
   }
 
@@ -140,10 +154,11 @@ export class ProfileResolver {
   @Authorized()
   async updateCoverPicture(
     @Ctx() { profileService }: Context,
-    @Arg('input') { picture }: UpdateCoverPictureInput,
+    @Arg('input') input: UpdateCoverPictureInput,
     @CurrentUser() { profileId }: User,
   ): Promise<UpdateCoverPicturePayload> {
-    const profile = await profileService.updateCoverPicture(profileId, picture);
+    const changes = omitBy(input, isUndefined);
+    const profile = await profileService.updateProfile(profileId, changes);
     return { profile };
   }
 

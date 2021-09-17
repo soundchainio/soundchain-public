@@ -1,11 +1,11 @@
 import { Avatar } from 'components/Avatar';
-import { Cover } from 'components/Cover';
 import { FollowButton } from 'components/FollowButton';
 import { FollowModal } from 'components/FollowersModal';
 import { Layout } from 'components/Layout';
 import { MessageButton } from 'components/MessageButton';
 import { Number } from 'components/Number';
 import { Posts } from 'components/Posts';
+import { ProfileCover } from 'components/ProfileCover';
 import { ProfileTabs } from 'components/ProfileTabs';
 import { SocialMediaLink } from 'components/SocialMediaLink';
 import { SubscribeButton } from 'components/SubscribeButton';
@@ -67,7 +67,7 @@ export default function ProfilePage() {
   return (
     <Layout>
       <div className="h-[125px] relative">
-        <Cover coverPicture={coverPicture as CoverPictureOptions} />
+        <ProfileCover coverPicture={coverPicture as CoverPictureOptions} />
         <Avatar
           profile={data.profile}
           pixels={80}
