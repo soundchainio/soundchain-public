@@ -1,6 +1,8 @@
 import axios from 'axios';
 import { MediaLink } from 'components/PostLinkInput';
 import { MediaProvider } from 'types/MediaProvider';
+import { BandcampLinkDocument } from 'lib/graphql';
+import { apolloClient } from 'lib/apollo';
 
 const linksRegex = /\bhttps?:\/\/\S+/gi;
 
@@ -70,21 +72,14 @@ const normalizeVimeo = (str: string) => {
 };
 
 const normalizeBandcamp = async (str: string) => {
-  const res = await axios.post(process.env.NEXT_PUBLIC_API_URL!, {
-    query: `query getBandcampLink($url: String!) {
-      getBandcampLink(url: $url)
-    }`,
-    variables: {
-      url: str
-    }
-  }, {
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  });
 
-  if (res.data.data.getBandcampLink) {
-    return res.data.data.getBandcampLink;
+  const data = await apolloClient.query({
+    query: BandcampLinkDocument,
+    variables: { url: str },
+  })
+
+  if (data.data.bandcampLink) {
+    return data.data.bandcampLink;
   }
 
   return str;

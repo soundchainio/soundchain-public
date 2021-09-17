@@ -7,8 +7,6 @@ import { PageInput } from '../types/PageInput';
 import { SortPostInput } from '../types/SortPostInput';
 import { ModelService } from './ModelService';
 import { NewReactionParams } from './ReactionService';
-import axios from 'axios';
-import cheerio from 'cheerio';
 
 interface NewPostParams {
   profileId: string;
@@ -99,20 +97,5 @@ export class PostService extends ModelService<typeof Post> {
 
   countReposts(postId: string): Promise<number> {
     return PostModel.countDocuments({ repostId: postId }).exec();
-  }
-
-  async getBandcampLink(url: string): Promise<string> {
-    const html = await axios
-      .get(url, {
-        headers: {
-          'Accept-Encoding': 'gzip, deflate, br',
-        },
-      });
-
-    const $ = cheerio.load(html.data);
-
-    const embedUrl = $('meta[property="og:video"]').attr('content');
-
-    return embedUrl || '';
   }
 }

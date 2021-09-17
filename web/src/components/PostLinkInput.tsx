@@ -62,7 +62,7 @@ export const PostLinkInput = ({ type, setLink, link, setPostLink }: PostLinkInpu
 
   return (
     <div className="text-gray-400 flex items-center mt-4 mb-10">
-      <div className="w-20 mh-20 flex flex-col text-xs items-center">
+      <div className="w-20 flex flex-col text-xs items-center">
         {mediaProviderOptions[type].logo}
       </div>
       <div className="flex-1 flex flex-col">

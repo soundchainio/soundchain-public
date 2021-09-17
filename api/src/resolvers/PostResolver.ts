@@ -152,10 +152,10 @@ export class PostResolver {
   }
 
   @Query(() => String)
-  getBandcampLink(
-    @Ctx() { postService }: Context,
+  bandcampLink(
+    @Ctx() { embedService }: Context,
     @Arg('url') url: string,
   ): Promise<String> {
-    return postService.getBandcampLink(url);
+    return embedService.bandcampLink(url);
   }
 }
