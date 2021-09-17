@@ -3,7 +3,6 @@ import { useMe } from 'hooks/useMe';
 import { Logo } from 'icons/Logo';
 import { Menu } from 'icons/Menu';
 import { useRouter } from 'next/router';
-import { BottomNavBar } from './BottomNavBar';
 import { Button } from './Button';
 import { NavBar } from './NavBar';
 import { Title } from './Title';
