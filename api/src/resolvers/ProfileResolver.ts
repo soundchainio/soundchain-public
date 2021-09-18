@@ -1,4 +1,3 @@
-import { isUndefined, omitBy } from 'lodash';
 import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
 import { CurrentUser } from '../decorators/current-user';
 import { Profile } from '../models/Profile';
@@ -12,20 +11,8 @@ import { UnfollowProfileInput } from '../types/UnfollowProfileInput';
 import { UnfollowProfilePayload } from '../types/UnfollowProfilePayload';
 import { UnsubscribeFromProfileInput } from '../types/UnsubscribeProfileInput';
 import { UnsubscribeFromProfilePayload } from '../types/UnsubscribeProfilePayload';
-import { UpdateCoverPictureInput } from '../types/UpdateCoverPictureInput';
-import { UpdateCoverPicturePayload } from '../types/UpdateCoverPicturePayload';
-import { UpdateFavoriteGenresInput } from '../types/UpdateFavoriteGenresInput';
-import { UpdateFavoriteGenresPayload } from '../types/UpdateFavoriteGenresPayload';
-import { UpdateMusicianTypeInput } from '../types/UpdateMusicianTypeInput';
-import { UpdateMusicianTypePayload } from '../types/UpdateMusicianTypePayload';
-import { UpdateProfileBioInput } from '../types/UpdateProfileBioInput';
-import { UpdateProfileBioPayload } from '../types/UpdateProfileBioPayload';
-import { UpdateProfileDisplayNameInput } from '../types/UpdateProfileDisplayNameInput';
-import { UpdateProfileDisplayNamePayload } from '../types/UpdateProfileDisplayNamePayload';
-import { UpdateProfilePictureInput } from '../types/UpdateProfilePictureInput';
-import { UpdateProfilePicturePayload } from '../types/UpdateProfilePicturePayload';
-import { UpdateSocialMediasInput } from '../types/UpdateSocialMediasInput';
-import { UpdateSocialMediasPayload } from '../types/UpdateSocialMediasPayload';
+import { UpdateProfileInput } from '../types/UpdateProfileInput';
+import { UpdateProfilePayload } from '../types/UpdateProfilePayload';
 
 @Resolver(Profile)
 export class ProfileResolver {
@@ -83,82 +70,14 @@ export class ProfileResolver {
     return profileService.getProfile(id);
   }
 
-  @Mutation(() => UpdateSocialMediasPayload)
+  @Mutation(() => UpdateProfilePayload)
   @Authorized()
-  async updateSocialMedias(
+  async updateProfile(
     @Ctx() { profileService }: Context,
-    @Arg('input') socialMedias: UpdateSocialMediasInput,
+    @Arg('input') input: UpdateProfileInput,
     @CurrentUser() { profileId }: User,
-  ): Promise<UpdateSocialMediasPayload> {
-    const profile = await profileService.updateProfile(profileId, { socialMedias });
-    return { profile };
-  }
-
-  @Mutation(() => UpdateFavoriteGenresPayload)
-  @Authorized()
-  async updateFavoriteGenres(
-    @Ctx() { profileService }: Context,
-    @Arg('input') { favoriteGenres }: UpdateFavoriteGenresInput,
-    @CurrentUser() { profileId }: User,
-  ): Promise<UpdateFavoriteGenresPayload> {
-    const profile = await profileService.updateProfile(profileId, { favoriteGenres });
-    return { profile };
-  }
-
-  @Mutation(() => UpdateFavoriteGenresPayload)
-  @Authorized()
-  async updateMusicianType(
-    @Ctx() { profileService }: Context,
-    @Arg('input') { musicianTypes }: UpdateMusicianTypeInput,
-    @CurrentUser() { profileId }: User,
-  ): Promise<UpdateMusicianTypePayload> {
-    const profile = await profileService.updateProfile(profileId, { musicianTypes });
-    return { profile };
-  }
-
-  @Mutation(() => UpdateProfilePicturePayload)
-  @Authorized()
-  async updateProfilePicture(
-    @Ctx() { profileService }: Context,
-    @Arg('input') input: UpdateProfilePictureInput,
-    @CurrentUser() { profileId }: User,
-  ): Promise<UpdateProfilePicturePayload> {
-    const changes = omitBy(input, isUndefined);
-    const profile = await profileService.updateProfile(profileId, changes);
-    return { profile };
-  }
-
-  @Mutation(() => UpdateProfileDisplayNamePayload)
-  @Authorized()
-  async updateProfileDisplayName(
-    @Ctx() { profileService }: Context,
-    @Arg('input') { displayName }: UpdateProfileDisplayNameInput,
-    @CurrentUser() { profileId }: User,
-  ): Promise<UpdateProfileDisplayNamePayload> {
-    const profile = await profileService.updateProfile(profileId, { displayName });
-    return { profile };
-  }
-
-  @Mutation(() => UpdateProfileDisplayNamePayload)
-  @Authorized()
-  async updateProfileBio(
-    @Ctx() { profileService }: Context,
-    @Arg('input') { bio }: UpdateProfileBioInput,
-    @CurrentUser() { profileId }: User,
-  ): Promise<UpdateProfileBioPayload> {
-    const profile = await profileService.updateProfile(profileId, { bio });
-    return { profile };
-  }
-
-  @Mutation(() => UpdateCoverPicturePayload)
-  @Authorized()
-  async updateCoverPicture(
-    @Ctx() { profileService }: Context,
-    @Arg('input') input: UpdateCoverPictureInput,
-    @CurrentUser() { profileId }: User,
-  ): Promise<UpdateCoverPicturePayload> {
-    const changes = omitBy(input, isUndefined);
-    const profile = await profileService.updateProfile(profileId, changes);
+  ): Promise<UpdateProfilePayload> {
+    const profile = await profileService.updateProfile(profileId, { ...input });
     return { profile };
   }
 

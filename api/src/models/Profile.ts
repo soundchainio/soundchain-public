@@ -33,13 +33,13 @@ export class Profile extends Model {
   profilePicture?: string;
 
   @prop({ required: true })
-  defaultProfilePicture?: DefaultProfilePicture;
+  defaultProfilePicture: DefaultProfilePicture;
 
   @prop({ required: false })
   coverPicture?: string;
 
   @prop({ required: true })
-  defaultCoverPicture?: DefaultCoverPicture;
+  defaultCoverPicture: DefaultCoverPicture;
 
   @Field(() => SocialMedias)
   @prop({ required: true, default: {} })
