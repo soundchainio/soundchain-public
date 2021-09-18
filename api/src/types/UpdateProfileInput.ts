@@ -17,13 +17,13 @@ export class UpdateProfileInput {
   @Field({ nullable: true })
   profilePicture?: string;
 
-  @Field({ nullable: true })
+  @Field(() => DefaultProfilePicture, { nullable: true })
   defaultProfilePicture: DefaultProfilePicture;
 
   @Field({ nullable: true })
   coverPicture?: string;
 
-  @Field({ nullable: true })
+  @Field(() => DefaultCoverPicture, { nullable: true })
   defaultCoverPicture: DefaultCoverPicture;
 
   @ArrayUnique()

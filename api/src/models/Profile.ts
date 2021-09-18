@@ -21,12 +21,14 @@ export class Profile extends Model {
   @prop({ required: false })
   profilePicture?: string;
 
+  @Field(() => DefaultProfilePicture)
   @prop({ required: true, default: randomDefaultProfilePicture() })
   defaultProfilePicture: DefaultProfilePicture;
 
   @prop({ required: false })
   coverPicture?: string;
 
+  @Field(() => DefaultCoverPicture)
   @prop({ required: true, default: randomDefaultCoverPicture() })
   defaultCoverPicture: DefaultCoverPicture;
 

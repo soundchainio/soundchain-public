@@ -1,7 +1,7 @@
 import { Badge } from 'components/Badge';
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
-import { DefaultProfilePictureSelector } from 'components/DefaultProfilePictureSelector';
+import { DefaultProfilePictureField } from 'components/DefaultProfilePictureField';
 import { ImageUploadField } from 'components/ImageUploadField';
 import { Label } from 'components/Label';
 import { Layout } from 'components/Layout';
@@ -9,7 +9,7 @@ import { StepProgressBar } from 'components/StepProgressBar';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Form, Formik } from 'formik';
 import { useMe } from 'hooks/useMe';
-import { useUpdateProfilePictureMutation } from 'lib/graphql';
+import { DefaultProfilePicture, useUpdateProfilePictureMutation } from 'lib/graphql';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
@@ -18,16 +18,17 @@ import * as yup from 'yup';
 
 export interface ProfilePictureFormValues {
   profilePicture?: string | undefined;
+  defaultProfilePicture: DefaultProfilePicture;
 }
 
 const validationSchema: yup.SchemaOf<ProfilePictureFormValues> = yup.object().shape({
   profilePicture: yup.string(),
+  defaultProfilePicture: yup.string(),
 });
 
 export default function ProfilePicturePage() {
   const me = useMe();
   const router = useRouter();
-  const newAccount = Boolean(router.query.newAccount);
   const initialFormValues: ProfilePictureFormValues = { profilePicture: '' };
   const [updateProfilePicture, { loading }] = useUpdateProfilePictureMutation();
   const [defaultPicture, setDefaultPicture] = useState<string>();
@@ -94,7 +95,7 @@ export default function ProfilePicturePage() {
               </div>
               <div className="flex flex-col space-y-8">
                 <Label textSize="base">Default Profile Photos:</Label>
-                <DefaultProfilePictureSelector onSelect={onDefaultPicture} />
+                <DefaultProfilePictureField />
               </div>
             </div>
             <div className="flex flex-col">

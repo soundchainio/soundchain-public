@@ -116,6 +116,26 @@ export type CreateRepostPayload = {
 };
 
 
+export enum DefaultCoverPicture {
+  Birds = 'BIRDS',
+  Cells = 'CELLS',
+  Fog = 'FOG',
+  Net = 'NET',
+  Rings = 'RINGS',
+  Waves = 'WAVES'
+}
+
+export enum DefaultProfilePicture {
+  Blue = 'BLUE',
+  Green = 'GREEN',
+  Orange = 'ORANGE',
+  Pink = 'PINK',
+  Purple = 'PURPLE',
+  Red = 'RED',
+  Teal = 'TEAL',
+  Yellow = 'yellow'
+}
+
 export type DeleteCommentInput = {
   commentId: Scalars['String'];
 };
@@ -463,6 +483,8 @@ export type Profile = {
   __typename?: 'Profile';
   id: Scalars['ID'];
   displayName: Scalars['String'];
+  defaultProfilePicture: DefaultProfilePicture;
+  defaultCoverPicture: DefaultCoverPicture;
   socialMedias: SocialMedias;
   favoriteGenres: Array<Genre>;
   musicianTypes: Array<MusicianType>;
@@ -778,9 +800,9 @@ export type UpdateProfileInput = {
   displayName?: Maybe<Scalars['String']>;
   bio?: Maybe<Scalars['String']>;
   profilePicture?: Maybe<Scalars['String']>;
-  defaultProfilePicture?: Maybe<Scalars['String']>;
+  defaultProfilePicture?: Maybe<DefaultProfilePicture>;
   coverPicture?: Maybe<Scalars['String']>;
-  defaultCoverPicture?: Maybe<Scalars['String']>;
+  defaultCoverPicture?: Maybe<DefaultCoverPicture>;
   favoriteGenres?: Maybe<Array<Genre>>;
   musicianTypes?: Maybe<Array<MusicianType>>;
   socialMedias?: Maybe<SocialMediasInput>;
