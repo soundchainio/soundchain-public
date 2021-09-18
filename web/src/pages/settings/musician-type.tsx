@@ -1,7 +1,7 @@
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
-import { MusicianTypeSelector } from 'components/MusicianTypeSelector';
 import { Layout } from 'components/Layout';
+import { MusicianTypeSelector } from 'components/MusicianTypeSelector';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useMe } from 'hooks/useMe';
 import { MusicianType, useUpdateMusicianTypeMutation } from 'lib/graphql';
@@ -17,20 +17,20 @@ const topNavBarProps: TopNavBarProps = {
 export default function SettingsMusicianTypePage() {
   const me = useMe();
   const router = useRouter();
-  const [musicianType, setMusicianType] = useState<MusicianType[] | undefined>();
+  const [musicianTypes, setMusicianType] = useState<MusicianType[] | undefined>();
   const [updateMusicianType, { loading }] = useUpdateMusicianTypeMutation();
 
   useEffect(() => {
-    setMusicianType(me?.profile.musicianType as MusicianType[]);
-  }, [me?.profile.musicianType]);
+    setMusicianType(me?.profile.musicianTypes as MusicianType[]);
+  }, [me?.profile.musicianTypes]);
 
   const onSubmit = async () => {
-    if (!musicianType) return;
-    await updateMusicianType({ variables: { input: { musicianTypes: musicianType } } });
+    if (!musicianTypes) return;
+    await updateMusicianType({ variables: { input: { musicianTypes: musicianTypes } } });
     router.push('/settings');
   };
 
-  if (!musicianType) return null;
+  if (!musicianTypes) return null;
 
   return (
     <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
@@ -41,7 +41,7 @@ export default function SettingsMusicianTypePage() {
       </Head>
       <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
         <div className="flex flex-1 flex-col space-y-6">
-          <MusicianTypeSelector initialValue={me?.profile.musicianType as MusicianType[]} onSelect={setMusicianType} />
+          <MusicianTypeSelector initialValue={me?.profile.musicianTypes as MusicianType[]} onSelect={setMusicianType} />
           <div className="flex flex-col">
             <Button
               type="submit"

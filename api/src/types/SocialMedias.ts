@@ -1,7 +1,8 @@
 import { prop } from '@typegoose/typegoose';
-import { Field, ObjectType } from 'type-graphql';
+import { Field, InputType, ObjectType } from 'type-graphql';
 
 @ObjectType()
+@InputType('SocialMediasInput')
 export class SocialMedias {
   @Field({ nullable: true })
   @prop({ required: false })

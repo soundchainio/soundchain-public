@@ -1,24 +1,13 @@
-import { getModelForClass, modelOptions, pre, prop, Severity } from '@typegoose/typegoose';
+import { getModelForClass, modelOptions, prop, Severity } from '@typegoose/typegoose';
 import { sample } from 'lodash';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { DefaultCoverPicture } from '../types/DefaultCoverPicture';
 import { DefaultProfilePicture } from '../types/DefaultProfilePicture';
 import { Genre } from '../types/Genres';
 import { MusicianType } from '../types/MusicianTypes';
+import { SocialMedias } from '../types/SocialMedias';
 import { Model } from './Model';
-import { SocialMedias } from './SocialMedias';
 
-@pre<Profile>('save', async function (done) {
-  if (!this.defaultProfilePicture) {
-    this.defaultProfilePicture = sample(Object.values(DefaultProfilePicture));
-  }
-
-  if (!this.defaultCoverPicture) {
-    this.defaultCoverPicture = sample(Object.values(DefaultCoverPicture));
-  }
-
-  done();
-})
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
 @ObjectType()
 export class Profile extends Model {
@@ -32,13 +21,13 @@ export class Profile extends Model {
   @prop({ required: false })
   profilePicture?: string;
 
-  @prop({ required: true })
+  @prop({ required: true, default: randomDefaultProfilePicture() })
   defaultProfilePicture: DefaultProfilePicture;
 
   @prop({ required: false })
   coverPicture?: string;
 
-  @prop({ required: true })
+  @prop({ required: true, default: randomDefaultCoverPicture() })
   defaultCoverPicture: DefaultCoverPicture;
 
   @Field(() => SocialMedias)
@@ -81,3 +70,11 @@ export class Profile extends Model {
 }
 
 export const ProfileModel = getModelForClass(Profile);
+
+function randomDefaultProfilePicture() {
+  return sample(Object.values(DefaultProfilePicture));
+}
+
+function randomDefaultCoverPicture() {
+  return sample(Object.values(DefaultCoverPicture));
+}

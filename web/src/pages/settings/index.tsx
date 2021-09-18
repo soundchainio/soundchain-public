@@ -53,7 +53,7 @@ export default function SettingsPage() {
 
   const genres = me.profile.favoriteGenres.map(getGenreLabelByKey).join(', ');
 
-  const musicianTypes = me.profile.musicianType.map(getMusicianTypeLabelByKey).join(', ');
+  const musicianTypes = me.profile.musicianTypes.map(getMusicianTypeLabelByKey).join(', ');
 
   return (
     <Layout topNavBarProps={topNovaBarProps}>
