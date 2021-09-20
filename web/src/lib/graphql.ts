@@ -1322,7 +1322,7 @@ export type ProfileQuery = (
   { __typename?: 'Query' }
   & { profile: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'userHandle' | 'isFollowed' | 'isSubscriber' | 'followerCount' | 'followingCount' | 'musicianTypes' | 'bio'>
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'defaultCoverPicture' | 'userHandle' | 'isFollowed' | 'isSubscriber' | 'followerCount' | 'followingCount' | 'musicianTypes' | 'bio'>
     & { socialMedias: (
       { __typename?: 'SocialMedias' }
       & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
@@ -2786,6 +2786,7 @@ export const ProfileDocument = gql`
     displayName
     profilePicture
     coverPicture
+    defaultCoverPicture
     socialMedias {
       facebook
       instagram

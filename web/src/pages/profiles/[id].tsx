@@ -14,7 +14,6 @@ import { useProfileLazyQuery } from 'lib/graphql';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { FollowModalType } from 'types/FollowModalType';
-import { CoverPictureOptions } from 'utils/DefaultPictures';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -54,6 +53,7 @@ export default function ProfilePage() {
 
   const {
     coverPicture,
+    defaultCoverPicture
     displayName,
     userHandle,
     socialMedias,
@@ -67,7 +67,7 @@ export default function ProfilePage() {
   return (
     <Layout>
       <div className="h-[125px] relative">
-        <ProfileCover coverPicture={coverPicture as CoverPictureOptions} />
+        <ProfileCover coverPicture={coverPicture} defaultCoverPicture={defaultCoverPicture} className="h-[125px]" />
         <Avatar
           profile={data.profile}
           pixels={80}

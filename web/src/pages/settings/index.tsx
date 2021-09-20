@@ -8,7 +8,6 @@ import { useModalDispatch } from 'contexts/providers/modal';
 import { useMe } from 'hooks/useMe';
 import Head from 'next/head';
 import NextLink from 'next/link';
-import { CoverPictureOptions } from 'utils/DefaultPictures';
 import { getGenreLabelByKey } from 'utils/Genres';
 import { getMusicianTypeLabelByKey } from 'utils/MusicianTypes';
 
@@ -74,7 +73,7 @@ export default function SettingsPage() {
           </NextLink>
           <NextLink href="/settings/cover-picture">
             <div className="flex flex-col w-7/12 space-y-2 cursor-pointer">
-              <ProfileCover coverPicture={me.profile.coverPicture as CoverPictureOptions} settings />
+              <ProfileCover coverPicture={me.profile.coverPicture} className="h-[80px]" />
               <Label textSize="xs" className="text-center underline">
                 Change Cover Photo
               </Label>

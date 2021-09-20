@@ -4,6 +4,7 @@ query Profile($id: String!) {
     displayName
     profilePicture
     coverPicture
+    defaultCoverPicture
     socialMedias {
       facebook
       instagram
