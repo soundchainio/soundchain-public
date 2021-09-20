@@ -126,14 +126,14 @@ export enum DefaultCoverPicture {
 }
 
 export enum DefaultProfilePicture {
-  Blue = 'BLUE',
-  Green = 'GREEN',
-  Orange = 'ORANGE',
-  Pink = 'PINK',
-  Purple = 'PURPLE',
   Red = 'RED',
+  Orange = 'ORANGE',
+  Yellow = 'yellow',
+  Green = 'GREEN',
   Teal = 'TEAL',
-  Yellow = 'yellow'
+  Blue = 'BLUE',
+  Purple = 'PURPLE',
+  Pink = 'PINK'
 }
 
 export type DeleteCommentInput = {
@@ -1184,7 +1184,7 @@ export type MeQuery = (
     & Pick<User, 'id' | 'handle' | 'email'>
     & { profile: (
       { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'followerCount' | 'followingCount' | 'favoriteGenres' | 'musicianTypes' | 'bio'>
+      & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'defaultProfilePicture' | 'coverPicture' | 'defaultCoverPicture' | 'followerCount' | 'followingCount' | 'favoriteGenres' | 'musicianTypes' | 'bio'>
     ) }
   )> }
 );
@@ -2497,7 +2497,9 @@ export const MeDocument = gql`
       id
       displayName
       profilePicture
+      defaultProfilePicture
       coverPicture
+      defaultCoverPicture
       followerCount
       followingCount
       favoriteGenres

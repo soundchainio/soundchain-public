@@ -19,7 +19,12 @@ export const DefaultProfilePictureField = () => {
           )}
           onClick={() => setValue(picture)}
         >
-          <Image alt="Profile picture red" src={`/default-pictures/profile/${picture}.png`} width={60} height={60} />
+          <Image
+            alt={`Default profile picture ${picture}`}
+            src={`/default-pictures/profile/${picture}.png`}
+            width={60}
+            height={60}
+          />
         </div>
       ))}
     </div>

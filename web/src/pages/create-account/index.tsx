@@ -34,7 +34,7 @@ export default function CreateAccountPage() {
     try {
       const { data } = await register({ variables: { input: omit(values, 'passwordConfirmation') } });
       setJwt(data?.register.jwt);
-      router.push(router.query.callbackUrl?.toString() ?? '/settings/profile-picture?newAccount=true');
+      router.push(router.query.callbackUrl?.toString() ?? '/create-account/profile-picture');
     } catch (error) {
       const formatted = formatValidationErrors<FormValues>(error.graphQLErrors[0]);
       setErrors(formatted);
