@@ -9,7 +9,7 @@ import * as yup from 'yup';
 import { Button } from './Button';
 import { Label } from './Label';
 
-export interface ProfilePictureFormValues {
+interface ProfilePictureFormValues {
   profilePicture?: string | undefined;
   defaultProfilePicture: DefaultProfilePicture;
 }
@@ -27,12 +27,16 @@ export const ProfilePictureForm = ({ action }: ProfilePictureFormProps) => {
   const me = useMe();
   const [updateProfilePicture, { loading }] = useUpdateProfilePictureMutation();
   const router = useRouter();
+
   if (!me) return null;
+
   const initialFormValues: ProfilePictureFormValues = {
     profilePicture: '',
     defaultProfilePicture: me.profile.defaultProfilePicture,
   };
+
   const isNew = action === FormAction.NEW;
+
   const onSubmit = async (values: ProfilePictureFormValues) => {
     await updateProfilePicture({
       variables: {

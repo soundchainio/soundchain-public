@@ -29,8 +29,8 @@ export default function ProfilePicturePage() {
   return (
     <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
       <Head>
-        <title>Soundchain - Name Settings</title>
-        <meta name="description" content="Name Settings" />
+        <title>Soundchain - Profile Picture</title>
+        <meta name="description" content="Profile Picture" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
