@@ -1,4 +1,4 @@
-export enum DeleteModalType {
+export enum AuthorActionsType {
   POST = 'post',
   COMMENT = 'comment',
 }

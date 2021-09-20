@@ -7,11 +7,9 @@ const deleteClasses =
 
 export const Delete = ({ className, type = 'button', children, ...rest }: ButtonProps) => {
   return (
-    <div>
-      <button className={classNames(deleteClasses, className)} type={type} {...rest}>
-        <TrashCan className="mr-1 h-4 w-4" />
-        <span>{children}</span>
-      </button>
-    </div>
+    <button className={classNames(deleteClasses, className)} type={type} {...rest}>
+      <TrashCan className="mr-1 h-4 w-4" />
+      <span>{children}</span>
+    </button>
   );
 };

@@ -1,7 +1,7 @@
 import { BottomNavBar } from 'components/BottomNavBar';
 import { store } from 'contexts';
 import { ReactNode, useContext, useState } from 'react';
-import { DeleteModal } from './DeleteModal';
+import { AuthorActionsModal } from './AuthorActionsModal';
 import { NewPostModal } from './NewPostModal';
 import { UnderDevelopmentModal } from './UnderDevelopmentModal';
 import { SideMenu } from './SideMenu';
@@ -29,13 +29,13 @@ export const Layout = ({ children, hideBottomNavBar, topNavBarProps }: LayoutPro
         </main>
         <div className="fixed bottom-0 w-full">
           <div id="bottom-sheet"></div>
-          {!state?.modal.anyModalOpened && !hideBottomNavBar && <BottomNavBar />}
+          <div className="sm:hidden">{!state?.modal.anyModalOpened && !hideBottomNavBar && <BottomNavBar />}</div>
         </div>
       </div>
       <div id="modals" className="absolute z-20 w-full">
         <UnderDevelopmentModal />
         <NewPostModal />
-        <DeleteModal />
+        <AuthorActionsModal />
         <ReactionsModal />
       </div>
     </div>

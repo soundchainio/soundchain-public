@@ -19,6 +19,7 @@ const SVGGradients: Record<SVGGradientColor, (props: IconProps) => JSX.Element> 
 
 interface SVGGradientProps {
   color: SVGGradientColor;
+  id?: string;
 }
 
 export const SVGGradient = ({ color, ...props }: SVGGradientProps) => {
