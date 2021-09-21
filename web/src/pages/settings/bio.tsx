@@ -2,6 +2,8 @@ import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { Label } from 'components/Label';
 import { Layout } from 'components/Layout';
+import { getBodyCharacterCount } from 'components/NewPostModal';
+import { TextareaField } from 'components/TextareaField';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Form, Formik } from 'formik';
 import { useMe } from 'hooks/useMe';
@@ -10,8 +12,6 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React from 'react';
 import * as yup from 'yup';
-import { getBodyCharacterCount } from 'components/NewPostModal';
-import { TextareaField } from 'components/TextareaField';
 
 export interface SetupProfileBioFormValues {
   bio: string | undefined;
@@ -34,7 +34,7 @@ export const setMaxInputLength = (input: string) => {
   return maxBioLength + (rawValue - getBodyCharacterCount(input));
 };
 
-export default function SettingsBioPage() {
+export default function EditBioPage() {
   const me = useMe();
   const router = useRouter();
   const initialFormValues: SetupProfileBioFormValues = { bio: me?.profile?.bio || '' };
@@ -50,7 +50,7 @@ export default function SettingsBioPage() {
   return (
     <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
       <Head>
-        <title>Soundchain - Bio Settings</title>
+        <title>Soundchain - Bio</title>
         <meta name="description" content="Name Settings" />
         <link rel="icon" href="/favicon.ico" />
       </Head>

@@ -1538,7 +1538,7 @@ export type UpdateCoverPictureMutation = (
     { __typename?: 'UpdateProfilePayload' }
     & { profile: (
       { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'coverPicture'>
+      & Pick<Profile, 'id' | 'coverPicture' | 'defaultCoverPicture'>
     ) }
   ) }
 );
@@ -1663,7 +1663,7 @@ export type UpdateProfilePictureMutation = (
     { __typename?: 'UpdateProfilePayload' }
     & { profile: (
       { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'profilePicture'>
+      & Pick<Profile, 'id' | 'profilePicture' | 'defaultProfilePicture'>
     ) }
   ) }
 );
@@ -3308,6 +3308,7 @@ export const UpdateCoverPictureDocument = gql`
     profile {
       id
       coverPicture
+      defaultCoverPicture
     }
   }
 }
@@ -3592,6 +3593,7 @@ export const UpdateProfilePictureDocument = gql`
     profile {
       id
       profilePicture
+      defaultProfilePicture
     }
   }
 }

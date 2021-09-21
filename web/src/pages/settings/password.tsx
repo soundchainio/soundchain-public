@@ -1,3 +1,4 @@
+import { LockClosedIcon } from '@heroicons/react/solid';
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { InputField } from 'components/InputField';
@@ -11,7 +12,6 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React from 'react';
 import * as yup from 'yup';
-import { LockClosedIcon } from '@heroicons/react/solid';
 
 export interface PasswordFormValues {
   password: string | undefined;
@@ -31,9 +31,10 @@ const validationSchema: yup.SchemaOf<PasswordFormValues> = yup.object().shape({
 
 const topNavBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
+  title: 'Password',
 };
 
-export default function SettingsPasswordPage() {
+export default function ChangePasswordPage() {
   const me = useMe();
   const router = useRouter();
   const initialFormValues: PasswordFormValues = { password: '', passwordConfirmation: '' };
@@ -49,8 +50,8 @@ export default function SettingsPasswordPage() {
   return (
     <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
       <Head>
-        <title>Soundchain - Password Settings</title>
-        <meta name="description" content="Password Settings" />
+        <title>Soundchain - Change Password</title>
+        <meta name="description" content="Change Password" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">

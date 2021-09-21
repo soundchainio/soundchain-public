@@ -34,7 +34,7 @@ export default function ProfilePicturePage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
-        <ProfilePictureForm action={FormAction.NEW} />
+        <ProfilePictureForm action={FormAction.NEW} afterSubmit={() => router.push('/create-account/cover-picture')} />
       </div>
     </Layout>
   );

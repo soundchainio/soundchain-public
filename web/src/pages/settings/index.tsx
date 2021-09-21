@@ -2,11 +2,11 @@ import { Avatar } from 'components/Avatar';
 import { BackButton } from 'components/Buttons/BackButton';
 import { Label } from 'components/Label';
 import { Layout } from 'components/Layout';
-import { ProfileCover } from 'components/ProfileCover';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useModalDispatch } from 'contexts/providers/modal';
 import { useMe } from 'hooks/useMe';
 import Head from 'next/head';
+import Image from 'next/image';
 import NextLink from 'next/link';
 import { getGenreLabelByKey } from 'utils/Genres';
 import { getMusicianTypeLabelByKey } from 'utils/MusicianTypes';
@@ -73,7 +73,15 @@ export default function SettingsPage() {
           </NextLink>
           <NextLink href="/settings/cover-picture">
             <div className="flex flex-col w-7/12 space-y-2 cursor-pointer">
-              <ProfileCover coverPicture={me.profile.coverPicture} className="h-[80px]" />
+              <div className="relative h-[80px]">
+                <Image
+                  src={me.profile.coverPicture}
+                  className="rounded-lg"
+                  alt="Cover pic"
+                  layout="fill"
+                  objectFit="cover"
+                />
+              </div>
               <Label textSize="xs" className="text-center underline">
                 Change Cover Photo
               </Label>

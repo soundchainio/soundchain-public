@@ -53,7 +53,7 @@ export default function ProfilePage() {
 
   const {
     coverPicture,
-    defaultCoverPicture
+    defaultCoverPicture,
     displayName,
     userHandle,
     socialMedias,

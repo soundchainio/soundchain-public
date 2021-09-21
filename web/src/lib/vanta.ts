@@ -11,20 +11,18 @@ export interface VantaEffect {
   destroy: () => void;
 }
 
-export type EffectName = 'waves' | 'rings' | 'net' | 'birds' | 'cells' | 'fog';
-
 const defaultEffectConfig = {
   mouseControls: true,
   touchControls: true,
   gyroControls: true,
   minHeight: 130.0,
   minWidth: 200.0,
-  THREE: THREE,
+  THREE,
   scale: 1.0,
   scaleMobile: 1.0,
 };
 
-const customEffects = {
+export const customEffects = {
   [DefaultCoverPicture.Waves]: {
     effect: WAVES,
     config: {

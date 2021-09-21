@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import { DefaultCoverPicture } from 'lib/graphql';
-import { createEffect } from 'lib/vanta';
 import Image from 'next/image';
+import { VantaEffectContainer } from './VantaEffectContainer';
 
 interface ProfileCoverProps extends React.ComponentPropsWithoutRef<'div'> {
   coverPicture: string;
@@ -14,10 +14,7 @@ export const ProfileCover = ({ coverPicture, defaultCoverPicture, className }: P
   return (
     <div className={classNames('relative', className)}>
       {isDefault ? (
-        <>
-          {createEffect(defaultCoverPicture)}
-          <Image src={coverPicture} alt="Cover pic" layout="fill" objectFit="cover" className="rounded-lg" />
-        </>
+        <VantaEffectContainer effectName={defaultCoverPicture} />
       ) : (
         <Image src={coverPicture} alt="Cover pic" layout="fill" objectFit="cover" />
       )}

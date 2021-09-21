@@ -5,13 +5,13 @@ import { Label } from 'components/Label';
 import { Form, Formik } from 'formik';
 import { useMe } from 'hooks/useMe';
 import { DefaultCoverPicture, useUpdateCoverPictureMutation } from 'lib/graphql';
-import { useRouter } from 'next/router';
 import React from 'react';
 import { FormAction } from 'types/FormAction';
 import * as yup from 'yup';
 
 interface CoverPictureFormProps {
   action: FormAction;
+  afterSubmit: () => void;
 }
 
 interface CoverPictureFormValues {
@@ -24,10 +24,9 @@ const validationSchema: yup.SchemaOf<CoverPictureFormValues> = yup.object().shap
   defaultCoverPicture: yup.mixed<DefaultCoverPicture>().oneOf(Object.values(DefaultCoverPicture)).required(),
 });
 
-export const CoverPictureForm = ({ action }: CoverPictureFormProps) => {
+export const CoverPictureForm = ({ action, afterSubmit }: CoverPictureFormProps) => {
   const me = useMe();
   const [updateCoverPicture, { loading }] = useUpdateCoverPictureMutation();
-  const router = useRouter();
 
   if (!me) return null;
 
@@ -45,11 +44,7 @@ export const CoverPictureForm = ({ action }: CoverPictureFormProps) => {
       },
     });
 
-    if (isNew) {
-      router.push('/create-account/favorite-genres');
-    } else {
-      router.back();
-    }
+    afterSubmit();
   };
 
   return (
@@ -70,7 +65,6 @@ export const CoverPictureForm = ({ action }: CoverPictureFormProps) => {
         <div className="flex flex-col">
           <Button
             type="submit"
-            loading={loading ? true : undefined}
             disabled={loading}
             variant="outline"
             borderColor={isNew ? 'bg-blue-gradient' : 'bg-green-gradient'}

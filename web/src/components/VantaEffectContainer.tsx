@@ -1,14 +1,14 @@
 import classNames from 'classnames';
 import { useVantaEffect } from 'hooks/useVantaEffect';
-import { EffectName } from 'lib/vanta';
+import { DefaultCoverPicture } from 'lib/graphql';
 import React from 'react';
 
 interface VantaEffectContainerProps {
-  effect: EffectName;
+  effectName: DefaultCoverPicture;
 }
 
-export const VantaEffectContainer = ({ effect }: VantaEffectContainerProps) => {
-  const ref = useVantaEffect(effect);
+export const VantaEffectContainer = ({ effectName }: VantaEffectContainerProps) => {
+  const ref = useVantaEffect(effectName);
 
   return (
     <div className={classNames('flex w-full h-[130px]')}>

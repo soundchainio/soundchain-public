@@ -3,7 +3,6 @@ import { ImageUploadField } from 'components/ImageUploadField';
 import { Form, Formik } from 'formik';
 import { useMe } from 'hooks/useMe';
 import { DefaultProfilePicture, useUpdateProfilePictureMutation } from 'lib/graphql';
-import { useRouter } from 'next/router';
 import { FormAction } from 'types/FormAction';
 import * as yup from 'yup';
 import { Button } from './Button';
@@ -21,12 +20,12 @@ const validationSchema: yup.SchemaOf<ProfilePictureFormValues> = yup.object().sh
 
 interface ProfilePictureFormProps {
   action: FormAction;
+  afterSubmit: () => void;
 }
 
-export const ProfilePictureForm = ({ action }: ProfilePictureFormProps) => {
+export const ProfilePictureForm = ({ action, afterSubmit }: ProfilePictureFormProps) => {
   const me = useMe();
   const [updateProfilePicture, { loading }] = useUpdateProfilePictureMutation();
-  const router = useRouter();
 
   if (!me) return null;
 
@@ -44,11 +43,7 @@ export const ProfilePictureForm = ({ action }: ProfilePictureFormProps) => {
       },
     });
 
-    if (isNew) {
-      router.push('/create-account/cover-picture');
-    } else {
-      router.back();
-    }
+    afterSubmit();
   };
 
   return (
@@ -69,7 +64,6 @@ export const ProfilePictureForm = ({ action }: ProfilePictureFormProps) => {
         <div className="flex flex-col">
           <Button
             type="submit"
-            loading={loading}
             disabled={loading}
             variant="outline"
             borderColor={isNew ? 'bg-blue-gradient' : 'bg-green-gradient'}

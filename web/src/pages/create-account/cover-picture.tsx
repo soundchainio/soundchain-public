@@ -17,7 +17,7 @@ export default function CoverPicturePage() {
   };
 
   const topNavBarProps: TopNavBarProps = {
-    title: 'Cover Picture',
+    title: 'Cover Photo',
     leftButton: <BackButton />,
     rightButton: <Badge label="Skip" onClick={onClose} selected={false} />,
     subtitle: <StepProgressBar steps={3} actualStep={2} />,
@@ -31,7 +31,7 @@ export default function CoverPicturePage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
-        <CoverPictureForm action={FormAction.NEW} />
+        <CoverPictureForm action={FormAction.NEW} afterSubmit={() => router.push('/')} />
       </div>
     </Layout>
   );

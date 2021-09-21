@@ -14,7 +14,7 @@ const topNavBarProps: TopNavBarProps = {
   title: 'Musician Type',
 };
 
-export default function SettingsMusicianTypePage() {
+export default function EditMusicianTypePage() {
   const me = useMe();
   const router = useRouter();
   const [musicianTypes, setMusicianType] = useState<MusicianType[] | undefined>();
@@ -35,8 +35,8 @@ export default function SettingsMusicianTypePage() {
   return (
     <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
       <Head>
-        <title>Soundchain - Name Settings</title>
-        <meta name="description" content="Name Settings" />
+        <title>Soundchain - Musician Type</title>
+        <meta name="description" content="Musician Type" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">

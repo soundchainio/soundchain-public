@@ -12,11 +12,11 @@ import { useRouter } from 'next/router';
 import React from 'react';
 import * as yup from 'yup';
 
-export interface SetupProfileNameFormValues {
+export interface EditProfileDisplayNameFormValues {
   displayName: string | undefined;
 }
 
-const validationSchema: yup.SchemaOf<SetupProfileNameFormValues> = yup.object().shape({
+const validationSchema: yup.SchemaOf<EditProfileDisplayNameFormValues> = yup.object().shape({
   displayName: yup.string().min(3).max(255).required().label('Name'),
 });
 
@@ -25,13 +25,13 @@ const topNavBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
 };
 
-export default function SettingsNamePage() {
+export default function EditProfileDisplayNamePage() {
   const me = useMe();
   const router = useRouter();
-  const initialFormValues: SetupProfileNameFormValues = { displayName: me?.profile?.displayName };
+  const initialFormValues: EditProfileDisplayNameFormValues = { displayName: me?.profile?.displayName };
   const [updateDisplayName, { loading }] = useUpdateProfileDisplayNameMutation();
 
-  const onSubmit = async ({ displayName }: SetupProfileNameFormValues) => {
+  const onSubmit = async ({ displayName }: EditProfileDisplayNameFormValues) => {
     await updateDisplayName({ variables: { input: { displayName: displayName as string } } });
     router.push('/settings');
   };
@@ -41,8 +41,8 @@ export default function SettingsNamePage() {
   return (
     <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
       <Head>
-        <title>Soundchain - Name Settings</title>
-        <meta name="description" content="Name Settings" />
+        <title>Soundchain - Edit Name</title>
+        <meta name="description" content="Edit Name" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">

@@ -56,7 +56,7 @@ export class ProfileResolver {
   @FieldResolver(() => String, { nullable: false })
   coverPicture(@Root() { coverPicture, defaultCoverPicture }: Profile): string {
     if (coverPicture) return coverPicture;
-    return `/default-pictures/cover/${defaultCoverPicture}.png`;
+    return `/default-pictures/cover/${defaultCoverPicture}.jpeg`;
   }
 
   @Query(() => Profile)
