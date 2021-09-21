@@ -32,41 +32,39 @@ export const Post = ({ postId }: PostProps) => {
 
   return (
     <div>
-      <NextLink href={`/posts/${post.id}`}>
-        <div className="p-4 bg-gray-20 break-words">
-          <div className="flex items-center">
-            <Avatar profile={post.profile} />
-            <div className="flex items-center w-full ml-4">
-              <div className="flex flex-1 flex-col">
-                <NextLink href={`/profiles/${post.profile.id}`}>
-                  <a className="text-lg font-bold text-gray-100">{post.profile.displayName}</a>
-                </NextLink>
-                <Timestamp
-                  datetime={post.createdAt}
-                  edited={(post.createdAt !== post.updatedAt) || false}
-                  className="flex-1 text-left"
-                />
-              </div>
-              <div className="w-14">
-                {canEdit && <Ellipsis className="pr-4 pl-4 w-full h-3 cursor-pointer" onClick={onEllipsisClick} />}
-              </div>
+      <div className="p-4 bg-gray-20 break-words">
+        <div className="flex items-center">
+          <Avatar profile={post.profile} />
+          <div className="flex items-center w-full ml-4">
+            <div className="flex flex-1 flex-col">
+              <NextLink href={`/profiles/${post.profile.id}`}>
+                <a className="text-lg font-bold text-gray-100">{post.profile.displayName}</a>
+              </NextLink>
+              <Timestamp
+                datetime={post.createdAt}
+                edited={(post.createdAt !== post.updatedAt) || false}
+                className="flex-1 text-left"
+              />
             </div>
-
+            <div className="w-14">
+              {canEdit && <Ellipsis className="pr-4 pl-4 w-full h-3 cursor-pointer" onClick={onEllipsisClick} />}
+            </div>
           </div>
-          <pre className="mt-4 text-gray-100 break-words whitespace-pre-wrap">{post.body}</pre>
-          {post.mediaLink && (
-            <iframe frameBorder="0" className="mt-4 w-full bg-gray-20" allowFullScreen src={post.mediaLink} />
-          )}
-          {post.repostId && <RepostPreview postId={post.repostId} />}
-          <PostStats
-            totalReactions={post.totalReactions}
-            topReactions={post.topReactions}
-            commentCount={post.commentCount}
-            repostCount={post.repostCount}
-            postId={postId}
-          />
+
         </div>
-      </NextLink>
+        <pre className="mt-4 text-gray-100 break-words whitespace-pre-wrap">{post.body}</pre>
+        {post.mediaLink && (
+          <iframe frameBorder="0" className="mt-4 w-full bg-gray-20" allowFullScreen src={post.mediaLink} />
+        )}
+        {post.repostId && <RepostPreview postId={post.repostId} />}
+        <PostStats
+          totalReactions={post.totalReactions}
+          topReactions={post.topReactions}
+          commentCount={post.commentCount}
+          repostCount={post.repostCount}
+          postId={postId}
+        />
+      </div>
       <PostActions postId={postId} myReaction={post.myReaction} />
     </div>
   );
