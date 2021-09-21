@@ -116,6 +116,10 @@ html {
   background: transparent;
 }
 
+.repost-field {
+  min-height: 150px;
+}
+
 @layer utilities {
   .placeholder-semibold::placeholder {
     @apply font-semibold;

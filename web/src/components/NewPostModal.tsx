@@ -211,7 +211,7 @@ export const NewPostModal = () => {
               <Field
                 component="textarea"
                 name="body"
-                className="w-full h-24 resize-none focus:ring-0 bg-gray-20 border-none focus:outline-none outline-none text-white flex-auto"
+                className="w-full h-24 repost-field resize-none focus:ring-0 bg-gray-20 border-none focus:outline-none outline-none text-white flex-auto"
                 placeholder="What's happening?"
                 maxLength={setMaxInputLength(values.body)}
                 inputprops={{ onChange: onTextareaChange(values.body), value: bodyValue }}
