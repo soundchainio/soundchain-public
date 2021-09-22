@@ -13,12 +13,12 @@ import { useRouter } from 'next/router';
 import React from 'react';
 import * as yup from 'yup';
 
-export interface PasswordFormValues {
+interface FormValues {
   password: string | undefined;
   passwordConfirmation: string | undefined;
 }
 
-const validationSchema: yup.SchemaOf<PasswordFormValues> = yup.object().shape({
+const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   password: yup.string().min(8).required().label('Password'),
   passwordConfirmation: yup
     .string()
@@ -37,10 +37,10 @@ const topNavBarProps: TopNavBarProps = {
 export default function ChangePasswordPage() {
   const me = useMe();
   const router = useRouter();
-  const initialFormValues: PasswordFormValues = { password: '', passwordConfirmation: '' };
+  const initialFormValues: FormValues = { password: '', passwordConfirmation: '' };
   const [updatePassword, { loading }] = useUpdatePasswordMutation();
 
-  const onSubmit = async ({ password }: PasswordFormValues) => {
+  const onSubmit = async ({ password }: FormValues) => {
     await updatePassword({ variables: { input: { password: password as string } } });
     router.push('/settings');
   };

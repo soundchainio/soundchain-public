@@ -11,7 +11,7 @@ const topNavBarProps: TopNavBarProps = {
   title: 'Musician Type',
 };
 
-export default function EditMusicianTypePage() {
+export default function MusicianTypePage() {
   const router = useRouter();
 
   return (

@@ -7,7 +7,6 @@ import { TopNavBarProps } from 'components/TopNavBar';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React from 'react';
-import { FormAction } from 'types/FormAction';
 
 export default function CoverPicturePage() {
   const router = useRouter();
@@ -31,7 +30,11 @@ export default function CoverPicturePage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
-        <CoverPictureForm action={FormAction.NEW} afterSubmit={() => router.push('/')} />
+        <CoverPictureForm
+          afterSubmit={() => router.push('/')}
+          submitText="NEXT"
+          submitProps={{ borderColor: 'bg-blue-gradient' }}
+        />
       </div>
     </Layout>
   );

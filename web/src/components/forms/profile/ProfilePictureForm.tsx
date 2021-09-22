@@ -6,22 +6,22 @@ import { useUpdateProfilePictureMutation } from 'lib/graphql';
 import { sample } from 'lodash';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import { FormAction } from 'types/FormAction';
 import * as yup from 'yup';
-import { Button } from '../../Button';
+import { Button, ButtonProps } from '../../Button';
 import { Label } from '../../Label';
 
-interface ProfilePictureFormValues {
+interface FormValues {
   profilePicture?: string | undefined;
 }
 
-const validationSchema: yup.SchemaOf<ProfilePictureFormValues> = yup.object().shape({
+const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   profilePicture: yup.string(),
 });
 
 interface ProfilePictureFormProps {
-  action: FormAction;
   afterSubmit: () => void;
+  submitProps?: ButtonProps;
+  submitText: string;
 }
 
 const defaultPictures = [
@@ -35,7 +35,7 @@ const defaultPictures = [
   '/default-pictures/profile/pink.png',
 ];
 
-export const ProfilePictureForm = ({ action, afterSubmit }: ProfilePictureFormProps) => {
+export const ProfilePictureForm = ({ afterSubmit, submitText, submitProps }: ProfilePictureFormProps) => {
   const me = useMe();
   const [defaultPicture, setDefaultPicture] = useState<string | null>(null);
   const [updateProfilePicture, { loading }] = useUpdateProfilePictureMutation();
@@ -50,13 +50,11 @@ export const ProfilePictureForm = ({ action, afterSubmit }: ProfilePictureFormPr
 
   if (!me) return null;
 
-  const initialFormValues: ProfilePictureFormValues = {
+  const initialFormValues: FormValues = {
     profilePicture: '',
   };
 
-  const isNew = action === FormAction.NEW;
-
-  const onSubmit = async ({ profilePicture }: ProfilePictureFormValues) => {
+  const onSubmit = async ({ profilePicture }: FormValues) => {
     await updateProfilePicture({
       variables: {
         input: {
@@ -97,14 +95,8 @@ export const ProfilePictureForm = ({ action, afterSubmit }: ProfilePictureFormPr
           </div>
         </div>
         <div className="flex flex-col">
-          <Button
-            type="submit"
-            disabled={loading}
-            variant="outline"
-            borderColor={isNew ? 'bg-blue-gradient' : 'bg-green-gradient'}
-            className="h-12"
-          >
-            {isNew ? 'NEXT' : 'SAVE'}
+          <Button type="submit" disabled={loading} variant="outline" className="h-12" {...submitProps}>
+            {submitText}
           </Button>
         </div>
       </Form>

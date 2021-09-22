@@ -13,11 +13,11 @@ import React from 'react';
 import { handleRegex } from 'utils/Validation';
 import * as yup from 'yup';
 
-export interface SetupProfileHandleFormValues {
+interface FormValues {
   handle: string | undefined;
 }
 
-const validationSchema: yup.SchemaOf<SetupProfileHandleFormValues> = yup.object().shape({
+const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   handle: yup
     .string()
     .min(1)
@@ -35,10 +35,10 @@ const topNavBarProps: TopNavBarProps = {
 export default function SettingsUsernamePage() {
   const me = useMe();
   const router = useRouter();
-  const initialFormValues: SetupProfileHandleFormValues = { handle: me?.handle };
+  const initialFormValues: FormValues = { handle: me?.handle };
   const [updateHandle, { loading }] = useUpdateHandleMutation();
 
-  const onSubmit = async ({ handle }: SetupProfileHandleFormValues) => {
+  const onSubmit = async ({ handle }: FormValues) => {
     await updateHandle({ variables: { input: { handle: handle as string } } });
     router.push('/settings');
   };

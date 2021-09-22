@@ -28,7 +28,7 @@ export default function BioPage() {
       <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
         <BioForm
           afterSubmit={() => router.push('/')}
-          submitText="NEXT"
+          submitText="SAVE"
           submitProps={{ borderColor: 'bg-blue-gradient' }}
         />
       </div>

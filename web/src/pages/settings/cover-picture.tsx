@@ -5,14 +5,13 @@ import { TopNavBarProps } from 'components/TopNavBar';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React from 'react';
-import { FormAction } from 'types/FormAction';
 
 const topNavBarProps: TopNavBarProps = {
   title: 'Cover Picture',
   leftButton: <BackButton />,
 };
 
-export default function EditCoverPicturePage() {
+export default function CoverPicturePage() {
   const router = useRouter();
 
   return (
@@ -23,7 +22,11 @@ export default function EditCoverPicturePage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
-        <CoverPictureForm action={FormAction.EDIT} afterSubmit={() => router.push('/settings')} />
+        <CoverPictureForm
+          afterSubmit={() => router.push('/settings')}
+          submitText="SAVE"
+          submitProps={{ borderColor: 'bg-green-gradient' }}
+        />
       </div>
     </Layout>
   );

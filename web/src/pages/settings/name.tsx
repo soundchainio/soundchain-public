@@ -12,11 +12,11 @@ import { useRouter } from 'next/router';
 import React from 'react';
 import * as yup from 'yup';
 
-export interface EditProfileDisplayNameFormValues {
+interface FormValues {
   displayName: string | undefined;
 }
 
-const validationSchema: yup.SchemaOf<EditProfileDisplayNameFormValues> = yup.object().shape({
+const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   displayName: yup.string().min(3).max(255).required().label('Name'),
 });
 
@@ -25,13 +25,13 @@ const topNavBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
 };
 
-export default function EditProfileDisplayNamePage() {
+export default function NamePage() {
   const me = useMe();
   const router = useRouter();
-  const initialFormValues: EditProfileDisplayNameFormValues = { displayName: me?.profile?.displayName };
+  const initialFormValues: FormValues = { displayName: me?.profile?.displayName };
   const [updateDisplayName, { loading }] = useUpdateProfileDisplayNameMutation();
 
-  const onSubmit = async ({ displayName }: EditProfileDisplayNameFormValues) => {
+  const onSubmit = async ({ displayName }: FormValues) => {
     await updateDisplayName({ variables: { input: { displayName: displayName as string } } });
     router.push('/settings');
   };

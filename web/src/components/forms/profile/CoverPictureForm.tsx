@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { Button } from 'components/Button';
+import { Button, ButtonProps } from 'components/Button';
 import { ImageUploadField } from 'components/ImageUploadField';
 import { Label } from 'components/Label';
 import { Form, Formik } from 'formik';
@@ -8,19 +8,19 @@ import { useUpdateCoverPictureMutation } from 'lib/graphql';
 import { sample } from 'lodash';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
-import { FormAction } from 'types/FormAction';
 import * as yup from 'yup';
 
 interface CoverPictureFormProps {
-  action: FormAction;
   afterSubmit: () => void;
+  submitProps?: ButtonProps;
+  submitText: string;
 }
 
-interface CoverPictureFormValues {
+interface FormValues {
   coverPicture?: string | undefined;
 }
 
-const validationSchema: yup.SchemaOf<CoverPictureFormValues> = yup.object().shape({
+const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   coverPicture: yup.string(),
 });
 
@@ -33,7 +33,7 @@ const defaultPictures = [
   '/default-pictures/cover/waves.jpeg',
 ];
 
-export const CoverPictureForm = ({ action, afterSubmit }: CoverPictureFormProps) => {
+export const CoverPictureForm = ({ afterSubmit, submitText, submitProps }: CoverPictureFormProps) => {
   const me = useMe();
   const [defaultPicture, setDefaultPicture] = useState<string | null>(null);
   const [updateCoverPicture, { loading }] = useUpdateCoverPictureMutation();
@@ -48,13 +48,11 @@ export const CoverPictureForm = ({ action, afterSubmit }: CoverPictureFormProps)
 
   if (!me) return null;
 
-  const initialFormValues: CoverPictureFormValues = {
+  const initialFormValues: FormValues = {
     coverPicture: '',
   };
 
-  const isNew = action === FormAction.NEW;
-
-  const onSubmit = async ({ coverPicture }: CoverPictureFormValues) => {
+  const onSubmit = async ({ coverPicture }: FormValues) => {
     await updateCoverPicture({
       variables: {
         input: {
@@ -103,14 +101,8 @@ export const CoverPictureForm = ({ action, afterSubmit }: CoverPictureFormProps)
           </div>
         </div>
         <div className="flex flex-col">
-          <Button
-            type="submit"
-            disabled={loading}
-            variant="outline"
-            borderColor={isNew ? 'bg-blue-gradient' : 'bg-green-gradient'}
-            className="h-12 mt-4"
-          >
-            {isNew ? 'NEXT' : 'SAVE'}
+          <Button type="submit" disabled={loading} variant="outline" className="h-12 mt-4" {...submitProps}>
+            {submitText}
           </Button>
         </div>
       </Form>
