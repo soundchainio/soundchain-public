@@ -5,7 +5,6 @@ import FOG from 'vanta/dist/vanta.fog.min';
 import NET from 'vanta/dist/vanta.net.min';
 import RINGS from 'vanta/dist/vanta.rings.min';
 import WAVES from 'vanta/dist/vanta.waves.min';
-import { DefaultCoverPicture } from './graphql';
 
 export interface VantaEffect {
   destroy: () => void;
@@ -23,20 +22,20 @@ const defaultEffectConfig = {
 };
 
 export const customEffects = {
-  [DefaultCoverPicture.Waves]: {
+  waves: {
     effect: WAVES,
     config: {
       ...defaultEffectConfig,
     },
   },
-  [DefaultCoverPicture.Rings]: {
+  rings: {
     effect: RINGS,
     config: {
       ...defaultEffectConfig,
       scaleMobile: 2.0,
     },
   },
-  [DefaultCoverPicture.Net]: {
+  net: {
     effect: NET,
     config: {
       ...defaultEffectConfig,
@@ -44,14 +43,14 @@ export const customEffects = {
       scaleMobile: 3,
     },
   },
-  [DefaultCoverPicture.Birds]: {
+  birds: {
     effect: BIRDS,
     config: {
       ...defaultEffectConfig,
       backgroundColor: 0xffe5b2,
     },
   },
-  [DefaultCoverPicture.Cells]: {
+  cells: {
     effect: CELLS,
     config: {
       ...defaultEffectConfig,
@@ -60,15 +59,10 @@ export const customEffects = {
       color2: 0xc3b351,
     },
   },
-  [DefaultCoverPicture.Fog]: {
+  fog: {
     effect: FOG,
     config: {
       ...defaultEffectConfig,
     },
   },
-};
-
-export const createEffect = (effectName: DefaultCoverPicture): VantaEffect => {
-  const { effect, config } = customEffects[effectName];
-  return effect(config);
 };

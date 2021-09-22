@@ -1,5 +1,5 @@
 import { BackButton } from 'components/Buttons/BackButton';
-import { CoverPictureForm } from 'components/CoverPictureForm';
+import { CoverPictureForm } from 'components/forms/profile/CoverPictureForm';
 import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import Head from 'next/head';

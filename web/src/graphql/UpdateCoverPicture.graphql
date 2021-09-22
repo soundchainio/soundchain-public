@@ -3,7 +3,6 @@ mutation UpdateCoverPicture($input: UpdateProfileInput!) {
     profile {
       id
       coverPicture
-      defaultCoverPicture
     }
   }
 }

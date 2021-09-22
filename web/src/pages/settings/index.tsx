@@ -75,7 +75,7 @@ export default function SettingsPage() {
             <div className="flex flex-col w-7/12 space-y-2 cursor-pointer">
               <div className="relative h-[80px]">
                 <Image
-                  src={me.profile.coverPicture}
+                  src={me.profile.coverPicture || ''}
                   className="rounded-lg"
                   alt="Cover pic"
                   layout="fill"

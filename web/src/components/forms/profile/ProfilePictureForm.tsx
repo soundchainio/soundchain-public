@@ -1,21 +1,22 @@
-import { DefaultProfilePictureField } from 'components/DefaultProfilePictureField';
+import classNames from 'classnames';
 import { ImageUploadField } from 'components/ImageUploadField';
 import { Form, Formik } from 'formik';
 import { useMe } from 'hooks/useMe';
-import { DefaultProfilePicture, useUpdateProfilePictureMutation } from 'lib/graphql';
+import { useUpdateProfilePictureMutation } from 'lib/graphql';
+import { sample } from 'lodash';
+import Image from 'next/image';
+import { useEffect, useState } from 'react';
 import { FormAction } from 'types/FormAction';
 import * as yup from 'yup';
-import { Button } from './Button';
-import { Label } from './Label';
+import { Button } from '../../Button';
+import { Label } from '../../Label';
 
 interface ProfilePictureFormValues {
   profilePicture?: string | undefined;
-  defaultProfilePicture: DefaultProfilePicture;
 }
 
 const validationSchema: yup.SchemaOf<ProfilePictureFormValues> = yup.object().shape({
   profilePicture: yup.string(),
-  defaultProfilePicture: yup.mixed<DefaultProfilePicture>().oneOf(Object.values(DefaultProfilePicture)).required(),
 });
 
 interface ProfilePictureFormProps {
@@ -23,23 +24,44 @@ interface ProfilePictureFormProps {
   afterSubmit: () => void;
 }
 
+const defaultPictures = [
+  '/default-pictures/profile/red.png',
+  '/default-pictures/profile/orange.png',
+  '/default-pictures/profile/yellow.png',
+  '/default-pictures/profile/green.png',
+  '/default-pictures/profile/teal.png',
+  '/default-pictures/profile/blue.png',
+  '/default-pictures/profile/purple.png',
+  '/default-pictures/profile/pink.png',
+];
+
 export const ProfilePictureForm = ({ action, afterSubmit }: ProfilePictureFormProps) => {
   const me = useMe();
+  const [defaultPicture, setDefaultPicture] = useState<string | null>(null);
   const [updateProfilePicture, { loading }] = useUpdateProfilePictureMutation();
+
+  useEffect(() => {
+    const picture = me?.profile.profilePicture;
+
+    if (picture && defaultPictures.includes(picture)) {
+      setDefaultPicture(picture);
+    }
+  }, [me?.profile.profilePicture]);
 
   if (!me) return null;
 
   const initialFormValues: ProfilePictureFormValues = {
     profilePicture: '',
-    defaultProfilePicture: me.profile.defaultProfilePicture,
   };
 
   const isNew = action === FormAction.NEW;
 
-  const onSubmit = async (values: ProfilePictureFormValues) => {
+  const onSubmit = async ({ profilePicture }: ProfilePictureFormValues) => {
     await updateProfilePicture({
       variables: {
-        input: { ...values },
+        input: {
+          profilePicture: profilePicture || defaultPicture || sample(defaultPictures),
+        },
       },
     });
 
@@ -58,7 +80,20 @@ export const ProfilePictureForm = ({ action, afterSubmit }: ProfilePictureFormPr
           </div>
           <div className="flex flex-col space-y-8">
             <Label textSize="base">Default Profile Photos:</Label>
-            <DefaultProfilePictureField />
+            <div className="grid grid-cols-4 gap-4">
+              {defaultPictures.map(picture => (
+                <div
+                  key={picture}
+                  className={classNames(
+                    'flex justify-center justify-self-center rounded-full w-[60px] h-[60px] cursor-pointer',
+                    defaultPicture === picture && 'ring-4 ring-white',
+                  )}
+                  onClick={() => setDefaultPicture(picture)}
+                >
+                  <Image alt="Default profile picture" src={picture} width={60} height={60} />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
         <div className="flex flex-col">

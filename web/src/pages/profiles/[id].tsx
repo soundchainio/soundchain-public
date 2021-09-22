@@ -53,7 +53,6 @@ export default function ProfilePage() {
 
   const {
     coverPicture,
-    defaultCoverPicture,
     displayName,
     userHandle,
     socialMedias,
@@ -67,7 +66,7 @@ export default function ProfilePage() {
   return (
     <Layout>
       <div className="h-[125px] relative">
-        <ProfileCover coverPicture={coverPicture} defaultCoverPicture={defaultCoverPicture} className="h-[125px]" />
+        <ProfileCover coverPicture={coverPicture || ''} className="h-[125px]" />
         <Avatar
           profile={data.profile}
           pixels={80}

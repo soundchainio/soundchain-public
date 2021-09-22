@@ -1,10 +1,9 @@
 import classNames from 'classnames';
 import { useVantaEffect } from 'hooks/useVantaEffect';
-import { DefaultCoverPicture } from 'lib/graphql';
 import React from 'react';
 
 interface VantaEffectContainerProps {
-  effectName: DefaultCoverPicture;
+  effectName: string;
 }
 
 export const VantaEffectContainer = ({ effectName }: VantaEffectContainerProps) => {

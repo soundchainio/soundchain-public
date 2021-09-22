@@ -7,9 +7,7 @@ query Me {
       id
       displayName
       profilePicture
-      defaultProfilePicture
       coverPicture
-      defaultCoverPicture
       followerCount
       followingCount
       favoriteGenres

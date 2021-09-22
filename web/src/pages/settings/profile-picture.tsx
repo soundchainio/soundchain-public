@@ -1,6 +1,6 @@
 import { BackButton } from 'components/Buttons/BackButton';
+import { ProfilePictureForm } from 'components/forms/profile/ProfilePictureForm';
 import { Layout } from 'components/Layout';
-import { ProfilePictureForm } from 'components/ProfilePictureForm';
 import { TopNavBarProps } from 'components/TopNavBar';
 import Head from 'next/head';
 import { useRouter } from 'next/router';

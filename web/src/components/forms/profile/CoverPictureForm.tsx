@@ -1,11 +1,13 @@
+import classNames from 'classnames';
 import { Button } from 'components/Button';
-import { DefaultCoverPictureField } from 'components/DefaultCoverPictureField';
 import { ImageUploadField } from 'components/ImageUploadField';
 import { Label } from 'components/Label';
 import { Form, Formik } from 'formik';
 import { useMe } from 'hooks/useMe';
-import { DefaultCoverPicture, useUpdateCoverPictureMutation } from 'lib/graphql';
-import React from 'react';
+import { useUpdateCoverPictureMutation } from 'lib/graphql';
+import { sample } from 'lodash';
+import Image from 'next/image';
+import React, { useEffect, useState } from 'react';
 import { FormAction } from 'types/FormAction';
 import * as yup from 'yup';
 
@@ -16,31 +18,48 @@ interface CoverPictureFormProps {
 
 interface CoverPictureFormValues {
   coverPicture?: string | undefined;
-  defaultCoverPicture: DefaultCoverPicture;
 }
 
 const validationSchema: yup.SchemaOf<CoverPictureFormValues> = yup.object().shape({
   coverPicture: yup.string(),
-  defaultCoverPicture: yup.mixed<DefaultCoverPicture>().oneOf(Object.values(DefaultCoverPicture)).required(),
 });
+
+const defaultPictures = [
+  '/default-pictures/cover/birds.jpeg',
+  '/default-pictures/cover/cells.jpeg',
+  '/default-pictures/cover/fog.jpeg',
+  '/default-pictures/cover/net.jpeg',
+  '/default-pictures/cover/rings.jpeg',
+  '/default-pictures/cover/waves.jpeg',
+];
 
 export const CoverPictureForm = ({ action, afterSubmit }: CoverPictureFormProps) => {
   const me = useMe();
+  const [defaultPicture, setDefaultPicture] = useState<string | null>(null);
   const [updateCoverPicture, { loading }] = useUpdateCoverPictureMutation();
+
+  useEffect(() => {
+    const picture = me?.profile.coverPicture;
+
+    if (picture && defaultPictures.includes(picture)) {
+      setDefaultPicture(picture);
+    }
+  }, [me?.profile.coverPicture]);
 
   if (!me) return null;
 
   const initialFormValues: CoverPictureFormValues = {
     coverPicture: '',
-    defaultCoverPicture: me.profile.defaultCoverPicture,
   };
 
   const isNew = action === FormAction.NEW;
 
-  const onSubmit = async (values: CoverPictureFormValues) => {
+  const onSubmit = async ({ coverPicture }: CoverPictureFormValues) => {
     await updateCoverPicture({
       variables: {
-        input: { ...values },
+        input: {
+          coverPicture: coverPicture || defaultPicture || sample(defaultPictures),
+        },
       },
     });
 
@@ -59,7 +78,28 @@ export const CoverPictureForm = ({ action, afterSubmit }: CoverPictureFormProps)
           </div>
           <div className="flex flex-col space-y-8">
             <Label textSize="base">DEFAULT COVER PHOTOS:</Label>
-            <DefaultCoverPictureField />
+            <div className="flex flex-col space-y-4">
+              {defaultPictures.map(picture => (
+                <div
+                  key={picture}
+                  className={classNames(
+                    'relative flex justify-center justify-self-center rounded-full w-full h-[150px] p-2 cursor-pointer',
+                    defaultPicture === picture && 'rounded-xl border-2',
+                  )}
+                  onClick={() => setDefaultPicture(picture)}
+                >
+                  <div className="relative flex w-full h-full">
+                    <Image
+                      alt="Default cover picture"
+                      src={picture}
+                      layout="fill"
+                      objectFit="cover"
+                      className="rounded-lg"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
         <div className="flex flex-col">

@@ -1,6 +1,6 @@
 import { Badge } from 'components/Badge';
+import { ProfilePictureForm } from 'components/forms/profile/ProfilePictureForm';
 import { Layout } from 'components/Layout';
-import { ProfilePictureForm } from 'components/ProfilePictureForm';
 import { StepProgressBar } from 'components/StepProgressBar';
 import { TopNavBarProps } from 'components/TopNavBar';
 import Head from 'next/head';

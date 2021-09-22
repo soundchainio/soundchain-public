@@ -4,7 +4,7 @@ import NextLink from 'next/link';
 import React from 'react';
 
 interface AvatarProps extends React.ComponentPropsWithoutRef<'div'> {
-  profile: Pick<Profile, 'id' | 'profilePicture'>;
+  profile: Partial<Profile>;
   pixels?: number;
   className?: string;
   linkToProfile?: boolean;
@@ -24,7 +24,7 @@ export const Avatar = ({ profile, pixels = 30, linkToProfile = true, ...props }:
       {
         <Image
           alt="Profile picture"
-          src={profile.profilePicture}
+          src={profile.profilePicture || '/default-pictures/profile/red.png'}
           width={pixels}
           height={pixels}
           className="rounded-full"
