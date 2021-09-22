@@ -20,7 +20,7 @@ export default function CoverPicturePage() {
     title: 'Cover Photo',
     leftButton: <BackButton />,
     rightButton: <Badge label="Skip" onClick={onClose} selected={false} />,
-    subtitle: <StepProgressBar steps={3} actualStep={2} />,
+    subtitle: <StepProgressBar steps={5} currentStep={2} />,
   };
 
   return (

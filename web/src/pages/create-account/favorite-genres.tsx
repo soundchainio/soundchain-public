@@ -1,14 +1,14 @@
 import { Badge } from 'components/Badge';
-import { ProfilePictureForm } from 'components/forms/profile/ProfilePictureForm';
+import { BackButton } from 'components/Buttons/BackButton';
+import { FavoriteGenresForm } from 'components/forms/profile/FavoriteGenresForm';
 import { Layout } from 'components/Layout';
 import { StepProgressBar } from 'components/StepProgressBar';
 import { TopNavBarProps } from 'components/TopNavBar';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React from 'react';
-import { FormAction } from 'types/FormAction';
 
-export default function ProfilePicturePage() {
+export default function FavoriteGenresPage() {
   const router = useRouter();
 
   const onClose = () => {
@@ -16,25 +16,27 @@ export default function ProfilePicturePage() {
   };
 
   const topNavBarProps: TopNavBarProps = {
-    title: 'Profile Picture',
-    leftButton: (
-      <div className="text-gray-400 font-bold flex-1 text-left" onClick={onClose}>
-        Cancel
-      </div>
-    ),
+    title: 'Favorite Genres',
+    leftButton: <BackButton />,
     rightButton: <Badge label="Skip" onClick={onClose} selected={false} />,
-    subtitle: <StepProgressBar steps={5} currentStep={1} />,
+    subtitle: <StepProgressBar steps={5} currentStep={3} />,
   };
 
   return (
     <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
       <Head>
-        <title>Soundchain - Profile Picture</title>
-        <meta name="description" content="Profile Picture" />
+        <title>Soundchain - Favorite Genres</title>
+        <meta name="description" content="Favorite Genres" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
-        <ProfilePictureForm action={FormAction.NEW} afterSubmit={() => router.push('/create-account/cover-picture')} />
+        <div className="flex flex-1 flex-col space-y-6">
+          <FavoriteGenresForm
+            afterSubmit={() => router.push('/create-account/musician-type')}
+            submitText="NEXT"
+            submitProps={{ borderColor: 'bg-blue-gradient' }}
+          />
+        </div>
       </div>
     </Layout>
   );
