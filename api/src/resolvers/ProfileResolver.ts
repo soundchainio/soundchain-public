@@ -47,18 +47,6 @@ export class ProfileResolver {
     return subscriptionService.exists({ subscriberId: user.profileId, profileId: profile._id });
   }
 
-  @FieldResolver(() => String, { nullable: false })
-  profilePicture(@Root() { profilePicture, defaultProfilePicture }: Profile): string {
-    if (profilePicture) return profilePicture;
-    return `/default-pictures/profile/${defaultProfilePicture}.png`;
-  }
-
-  @FieldResolver(() => String, { nullable: false })
-  coverPicture(@Root() { coverPicture, defaultCoverPicture }: Profile): string {
-    if (coverPicture) return coverPicture;
-    return `/default-pictures/cover/${defaultCoverPicture}.jpeg`;
-  }
-
   @Query(() => Profile)
   @Authorized()
   myProfile(@Ctx() { profileService }: Context, @CurrentUser() { profileId }: User): Promise<Profile> {

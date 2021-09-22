@@ -1,7 +1,5 @@
 import { ArrayUnique } from 'class-validator';
 import { Field, InputType } from 'type-graphql';
-import { DefaultCoverPicture } from './DefaultCoverPicture';
-import { DefaultProfilePicture } from './DefaultProfilePicture';
 import { Genre } from './Genres';
 import { MusicianType } from './MusicianTypes';
 import { SocialMedias } from './SocialMedias';
@@ -17,14 +15,8 @@ export class UpdateProfileInput {
   @Field({ nullable: true })
   profilePicture?: string;
 
-  @Field(() => DefaultProfilePicture, { nullable: true })
-  defaultProfilePicture: DefaultProfilePicture;
-
   @Field({ nullable: true })
   coverPicture?: string;
-
-  @Field(() => DefaultCoverPicture, { nullable: true })
-  defaultCoverPicture: DefaultCoverPicture;
 
   @ArrayUnique()
   @Field(() => [Genre], { nullable: true })
