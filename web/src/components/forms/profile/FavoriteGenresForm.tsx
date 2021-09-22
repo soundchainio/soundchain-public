@@ -22,7 +22,7 @@ export const FavoriteGenresForm = ({
   const [updateFavoriteGenres, { loading }] = useUpdateFavoriteGenresMutation();
 
   useEffect(() => {
-    if (initialGenres) {
+    if (initialGenres.length) {
       setFavoriteGenres(initialGenres);
     }
   }, [initialGenres]);
@@ -43,7 +43,7 @@ export const FavoriteGenresForm = ({
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <>
       <div className="flex-grow flex">
         <div className="flex flex-col">
           <Label>
@@ -63,10 +63,17 @@ export const FavoriteGenresForm = ({
         </div>
       </div>
       <div className="flex flex-col">
-        <Button type="submit" disabled={loading} variant="outline" className="h-12 mt-4" {...submitProps}>
+        <Button
+          onClick={handleSubmit}
+          type="submit"
+          disabled={loading}
+          variant="outline"
+          className="h-12 mt-4"
+          {...submitProps}
+        >
           {submitText}
         </Button>
       </div>
-    </form>
+    </>
   );
 };

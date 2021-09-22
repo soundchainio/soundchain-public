@@ -31,7 +31,7 @@ export default function CoverPicturePage() {
       </Head>
       <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
         <CoverPictureForm
-          afterSubmit={() => router.push('/')}
+          afterSubmit={() => router.push('/create-account/favorite-genres')}
           submitText="NEXT"
           submitProps={{ borderColor: 'bg-blue-gradient' }}
         />

@@ -56,7 +56,6 @@ export default function NamePage() {
             <div className="flex flex-col">
               <Button
                 type="submit"
-                loading={loading}
                 disabled={loading}
                 variant="outline"
                 borderColor="bg-green-gradient"

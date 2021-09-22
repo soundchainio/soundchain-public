@@ -5,7 +5,6 @@ import { Label } from 'components/Label';
 import { Form, Formik } from 'formik';
 import { useMe } from 'hooks/useMe';
 import { useUpdateCoverPictureMutation } from 'lib/graphql';
-import { sample } from 'lodash';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import * as yup from 'yup';
@@ -20,11 +19,7 @@ interface FormValues {
   coverPicture?: string | undefined;
 }
 
-const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
-  coverPicture: yup.string(),
-});
-
-const defaultPictures = [
+const defaultCoverPictures = [
   '/default-pictures/cover/birds.jpeg',
   '/default-pictures/cover/cells.jpeg',
   '/default-pictures/cover/fog.jpeg',
@@ -32,6 +27,10 @@ const defaultPictures = [
   '/default-pictures/cover/rings.jpeg',
   '/default-pictures/cover/waves.jpeg',
 ];
+
+const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
+  coverPicture: yup.string(),
+});
 
 export const CoverPictureForm = ({ afterSubmit, submitText, submitProps }: CoverPictureFormProps) => {
   const me = useMe();
@@ -41,7 +40,7 @@ export const CoverPictureForm = ({ afterSubmit, submitText, submitProps }: Cover
   useEffect(() => {
     const picture = me?.profile.coverPicture;
 
-    if (picture && defaultPictures.includes(picture)) {
+    if (picture && defaultCoverPictures.includes(picture)) {
       setDefaultPicture(picture);
     }
   }, [me?.profile.coverPicture]);
@@ -56,7 +55,7 @@ export const CoverPictureForm = ({ afterSubmit, submitText, submitProps }: Cover
     await updateCoverPicture({
       variables: {
         input: {
-          coverPicture: coverPicture || defaultPicture || sample(defaultPictures),
+          coverPicture: coverPicture || defaultPicture,
         },
       },
     });
@@ -77,7 +76,7 @@ export const CoverPictureForm = ({ afterSubmit, submitText, submitProps }: Cover
           <div className="flex flex-col space-y-8">
             <Label textSize="base">DEFAULT COVER PHOTOS:</Label>
             <div className="flex flex-col space-y-4">
-              {defaultPictures.map(picture => (
+              {defaultCoverPictures.map(picture => (
                 <div
                   key={picture}
                   className={classNames(

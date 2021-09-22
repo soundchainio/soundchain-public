@@ -3,7 +3,6 @@ import { ImageUploadField } from 'components/ImageUploadField';
 import { Form, Formik } from 'formik';
 import { useMe } from 'hooks/useMe';
 import { useUpdateProfilePictureMutation } from 'lib/graphql';
-import { sample } from 'lodash';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import * as yup from 'yup';
@@ -24,7 +23,7 @@ interface ProfilePictureFormProps {
   submitText: string;
 }
 
-const defaultPictures = [
+const defaultProfilePictures = [
   '/default-pictures/profile/red.png',
   '/default-pictures/profile/orange.png',
   '/default-pictures/profile/yellow.png',
@@ -43,7 +42,7 @@ export const ProfilePictureForm = ({ afterSubmit, submitText, submitProps }: Pro
   useEffect(() => {
     const picture = me?.profile.profilePicture;
 
-    if (picture && defaultPictures.includes(picture)) {
+    if (picture && defaultProfilePictures.includes(picture)) {
       setDefaultPicture(picture);
     }
   }, [me?.profile.profilePicture]);
@@ -58,7 +57,7 @@ export const ProfilePictureForm = ({ afterSubmit, submitText, submitProps }: Pro
     await updateProfilePicture({
       variables: {
         input: {
-          profilePicture: profilePicture || defaultPicture || sample(defaultPictures),
+          profilePicture: profilePicture || defaultPicture,
         },
       },
     });
@@ -79,7 +78,7 @@ export const ProfilePictureForm = ({ afterSubmit, submitText, submitProps }: Pro
           <div className="flex flex-col space-y-8">
             <Label textSize="base">Default Profile Photos:</Label>
             <div className="grid grid-cols-4 gap-4">
-              {defaultPictures.map(picture => (
+              {defaultProfilePictures.map(picture => (
                 <div
                   key={picture}
                   className={classNames(

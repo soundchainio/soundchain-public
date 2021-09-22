@@ -1,4 +1,5 @@
 import { getModelForClass, modelOptions, prop, Severity } from '@typegoose/typegoose';
+import { sample } from 'lodash';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { Genre } from '../types/Genres';
 import { MusicianType } from '../types/MusicianTypes';
@@ -16,12 +17,12 @@ export class Profile extends Model {
   displayName: string;
 
   @Field({ nullable: true })
-  @prop({ required: false })
-  profilePicture?: string;
+  @prop({ required: true, default: randomDefaultProfilePicture() })
+  profilePicture: string;
 
   @Field({ nullable: true })
-  @prop({ required: false })
-  coverPicture?: string;
+  @prop({ required: true, default: randomDefaultCoverPicture() })
+  coverPicture: string;
 
   @Field(() => SocialMedias)
   @prop({ required: true, default: {} })
@@ -63,3 +64,27 @@ export class Profile extends Model {
 }
 
 export const ProfileModel = getModelForClass(Profile);
+
+function randomDefaultProfilePicture() {
+  return sample([
+    '/default-pictures/profile/red.png',
+    '/default-pictures/profile/orange.png',
+    '/default-pictures/profile/yellow.png',
+    '/default-pictures/profile/green.png',
+    '/default-pictures/profile/teal.png',
+    '/default-pictures/profile/blue.png',
+    '/default-pictures/profile/purple.png',
+    '/default-pictures/profile/pink.png',
+  ]);
+}
+
+function randomDefaultCoverPicture() {
+  return sample([
+    '/default-pictures/cover/birds.jpeg',
+    '/default-pictures/cover/cells.jpeg',
+    '/default-pictures/cover/fog.jpeg',
+    '/default-pictures/cover/net.jpeg',
+    '/default-pictures/cover/rings.jpeg',
+    '/default-pictures/cover/waves.jpeg',
+  ]);
+}
