@@ -14,10 +14,13 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { FollowModalType } from 'types/FollowModalType';
+import { useMe } from 'hooks/useMe';
+import { InboxButton } from 'components/Buttons/InboxButton';
 
 export default function ProfilePage() {
   const router = useRouter();
   const profileId = router.query.id as string;
+  const me = useMe();
 
   const [profile, { data }] = useProfileLazyQuery({ variables: { id: profileId }, ssr: false });
   const [showModal, setShowModal] = useState(false);
@@ -63,8 +66,12 @@ export default function ProfilePage() {
     isSubscriber,
   } = data.profile;
 
+  const topNovaBarProps: TopNavBarProps = {
+    rightButton: me ? <InboxButton /> : undefined,
+  };
+
   return (
-    <Layout>
+    <Layout topNavBarProps={topNovaBarProps}>
       <div className="h-[125px] relative">
         {coverPicture && <Image src={coverPicture} alt="Cover pic" layout="fill" objectFit="cover" />}
         <Avatar
