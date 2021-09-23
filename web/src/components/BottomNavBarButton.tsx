@@ -11,6 +11,7 @@ interface BottomNavBarButtonProps {
   onClick?: () => void;
   icon?: (props: IconProps) => JSX.Element;
   activatedColor?: SVGGradientColor;
+  id?: string;
 }
 
 export const BottomNavBarButton = ({
@@ -20,6 +21,7 @@ export const BottomNavBarButton = ({
   onClick,
   badge: Badge,
   activatedColor,
+  id,
 }: BottomNavBarButtonProps) => {
   const [isActive, setActive] = useState(false);
   const router = useRouter();
@@ -49,7 +51,7 @@ export const BottomNavBarButton = ({
       {Icon && (
         <div className="relative">
           {Badge && <Badge />}
-          <Icon activatedColor={isActive ? activatedColor : undefined} />
+          <Icon activatedColor={isActive ? activatedColor : undefined} id={id} />
         </div>
       )}
       <span

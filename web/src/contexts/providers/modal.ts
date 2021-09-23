@@ -2,7 +2,7 @@ import { ModalActionTypes } from 'contexts/actions/modal';
 import { initialModalState, ModalState } from 'contexts/reducers/modal';
 import { ReactionType } from 'lib/graphql';
 import { useContext } from 'react';
-import { DeleteModalType } from 'types/DeleteModalType';
+import { AuthorActionsType } from 'types/AuthorActionsType';
 import { store } from '..';
 
 export const useModalState = (): ModalState => {
@@ -16,11 +16,13 @@ export const useModalDispatch = () => {
   return {
     dispatchSetRepostId: (repostId?: string) =>
       dispatch({ type: ModalActionTypes.SET_REPOST_ID, payload: { repostId } }),
-    dispatchShowNewPostModal: (show: boolean) => dispatch({ type: ModalActionTypes.SHOW_NEW_POST, payload: { show } }),
+    dispatchSetEditPostId: (editPostId?: string) =>
+      dispatch({ type: ModalActionTypes.SET_EDIT_POST_ID, payload: { editPostId } }),
+    dispatchShowPostModal: (show: boolean) => dispatch({ type: ModalActionTypes.SHOW_NEW_POST, payload: { show } }),
     dispatchShowUnderDevelopmentModal: (show: boolean) =>
       dispatch({ type: ModalActionTypes.SHOW_UNDER_DEVELOPMENT, payload: { show } }),
-    dispatchShowDeleteModal: (show: boolean, type: DeleteModalType, deleteId: string) =>
-      dispatch({ type: ModalActionTypes.SHOW_DELETE, payload: { show, type, deleteId } }),
+    dispatchShowAuthorActionsModal: (showAuthorActions: boolean, authorActionsType: AuthorActionsType, authorActionsId: string) =>
+      dispatch({ type: ModalActionTypes.SHOW_CONTEXT_MENU, payload: { showAuthorActions, authorActionsType, authorActionsId } }),
     dispatchReactionsModal: (show: boolean, postId?: string, top?: ReactionType[], total?: number) =>
       dispatch({
         type: show ? ModalActionTypes.SHOW_REACTIONS : ModalActionTypes.HIDE_REACTIONS,

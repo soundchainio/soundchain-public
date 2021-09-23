@@ -12,11 +12,11 @@ import { useRouter } from 'next/router';
 import React from 'react';
 import * as yup from 'yup';
 
-export interface SetupProfileNameFormValues {
+interface FormValues {
   displayName: string | undefined;
 }
 
-const validationSchema: yup.SchemaOf<SetupProfileNameFormValues> = yup.object().shape({
+const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   displayName: yup.string().min(3).max(255).required().label('Name'),
 });
 
@@ -25,13 +25,13 @@ const topNavBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
 };
 
-export default function SettingsNamePage() {
+export default function NamePage() {
   const me = useMe();
   const router = useRouter();
-  const initialFormValues: SetupProfileNameFormValues = { displayName: me?.profile?.displayName };
+  const initialFormValues: FormValues = { displayName: me?.profile?.displayName };
   const [updateDisplayName, { loading }] = useUpdateProfileDisplayNameMutation();
 
-  const onSubmit = async ({ displayName }: SetupProfileNameFormValues) => {
+  const onSubmit = async ({ displayName }: FormValues) => {
     await updateDisplayName({ variables: { input: { displayName: displayName as string } } });
     router.push('/settings');
   };
@@ -39,22 +39,30 @@ export default function SettingsNamePage() {
   if (!me) return null;
 
   return (
-    <Layout topNavBarProps={topNavBarProps}>
+    <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
       <Head>
-        <title>Soundchain - Name Settings</title>
-        <meta name="description" content="Name Settings" />
+        <title>Soundchain - Edit Name</title>
+        <meta name="description" content="Edit Name" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className="min-h-screen flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
+      <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
         <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={onSubmit}>
           <Form className="flex flex-1 flex-col space-y-6">
             <div>
               <Label>First or full name</Label>
               <InputField type="text" name="displayName" placeholder="Name" />
             </div>
-            <p className="text-gray-50"> This will be displayed publically to other users. </p>
+            <p className="text-gray-50 flex-grow"> This will be displayed publically to other users. </p>
             <div className="flex flex-col">
-              <Button type="submit">{loading ? 'Saving...' : 'Save'}</Button>
+              <Button
+                type="submit"
+                disabled={loading}
+                variant="outline"
+                borderColor="bg-green-gradient"
+                className="h-12"
+              >
+                SAVE
+              </Button>
             </div>
           </Form>
         </Formik>

@@ -10,17 +10,17 @@ import { BottomNavBarButton } from './BottomNavBarButton';
 import { NotificationBadge } from './NotificationBadge';
 
 export const BottomNavBar = () => {
-  const { dispatchSetRepostId, dispatchShowNewPostModal, dispatchShowUnderDevelopmentModal } = useModalDispatch();
+  const { dispatchSetRepostId, dispatchShowPostModal, dispatchShowUnderDevelopmentModal } = useModalDispatch();
   const router = useRouter();
   const me = useMe();
 
   const handleNewPostClick = () => {
     dispatchSetRepostId(undefined);
-    me ? dispatchShowNewPostModal(true) : router.push('/login');
+    me ? dispatchShowPostModal(true) : router.push('/login');
   };
 
   return (
-    <nav className="bg-black h-16 flex items-center inset-x-0 shadow-2xl">
+    <nav className="bg-black md:bg-gray-30 h-16 flex items-center inset-x-0 shadow-2xl md:w-full">
       <div className="w-full flex">
         <BottomNavBarButton label="Home" path="/" icon={Home} activatedColor="yellow" />
         <BottomNavBarButton
@@ -41,7 +41,7 @@ export const BottomNavBar = () => {
           label="Profile"
           icon={Profile}
           path={me ? `/profiles/${me?.profile.id}` : '/login'}
-          activatedColor="purple-green"
+          activatedColor="green-blue"
         />
       </div>
     </nav>

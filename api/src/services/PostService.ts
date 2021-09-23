@@ -1,5 +1,6 @@
 import { UserInputError } from 'apollo-server-express';
 import { PaginateResult } from '../db/pagination/paginate';
+import { NotFoundError } from '../errors/NotFoundError';
 import { Post, PostModel } from '../models/Post';
 import { Context } from '../types/Context';
 import { FilterPostInput } from '../types/FilterPostInput';
@@ -19,6 +20,19 @@ interface RepostParams {
   body: string;
   repostId: string;
 }
+
+interface UpdatePostParams {
+  profileId: string;
+  postId: string;
+  body: string;
+  mediaLink?: string;
+}
+
+interface DeletePostParams {
+  profileId: string;
+  postId: string;
+}
+
 export class PostService extends ModelService<typeof Post> {
   constructor(context: Context) {
     super(context, PostModel);
@@ -27,6 +41,7 @@ export class PostService extends ModelService<typeof Post> {
   async createPost(params: NewPostParams): Promise<Post> {
     const post = new this.model(params);
     await post.save();
+    this.context.feedService.createFeedItem({ profileId: post.profileId, postId: post._id, postedAt: post.createdAt })
     this.context.feedService.addPostToFollowerFeeds(post);
     this.context.notificationService.notifyNewPostForSubscribers(post);
     return post;
@@ -35,8 +50,41 @@ export class PostService extends ModelService<typeof Post> {
   async createRepost(params: RepostParams): Promise<Post> {
     const post = new PostModel(params);
     await post.save();
+    this.context.feedService.createFeedItem({ profileId: post.profileId, postId: post._id, postedAt: post.createdAt })
     this.context.feedService.addPostToFollowerFeeds(post);
     return post;
+  }
+
+  async deletePost(params: DeletePostParams): Promise<Post> {
+    const post = await this.findOrFail(params.postId);
+    if (post.profileId !== params.profileId) {
+      throw new Error(`Error while deleting a post: The user trying to delete is not the author of the post.`);
+    }
+    await PostModel.deleteOne(post);
+    this.context.feedService.deleteItemsByPostId(params.postId);
+    return post;
+  }
+
+  async updatePost(params: UpdatePostParams): Promise<Post> {
+    const validationPost = await this.findOrFail(params.postId);
+
+    if (validationPost.profileId !== params.profileId) {
+      throw new Error(`You are not the author of the post.`);
+    }
+
+    const updatedPost = await this.model.findByIdAndUpdate(
+      { _id: params.postId },
+      {
+        body: params.body,
+        mediaLink: params.mediaLink
+      },
+      { new: true }
+    );
+
+    if (!updatedPost) {
+      throw new NotFoundError('Post ', params.postId);
+    }
+    return updatedPost;
   }
 
   getPosts(filter?: FilterPostInput, sort?: SortPostInput, page?: PageInput): Promise<PaginateResult<Post>> {

@@ -14,6 +14,7 @@ import { SubscriptionService } from '../services/SubscriptionService';
 import { TrackService } from '../services/TrackService';
 import { UploadService } from '../services/UploadService';
 import { UserService } from '../services/UserService';
+import { EmbedService } from '../services/EmbedService';
 
 export class Context {
   authService = new AuthService(this);
@@ -31,6 +32,7 @@ export class Context {
   trackService = new TrackService(this);
   uploadService = new UploadService(this);
   userService = new UserService(this);
+  embedService = new EmbedService(this);
   user?: Promise<User>;
 
   constructor(jwtUser?: JwtUser) {

@@ -1,5 +1,6 @@
 import { FollowModal } from 'components/FollowersModal';
 import { Number } from 'components/Number';
+import { useModalDispatch } from 'contexts/providers/modal';
 import { useMe } from 'hooks/useMe';
 import { Logo } from 'icons/Logo';
 import { Logout } from 'icons/Logout';
@@ -16,7 +17,6 @@ import { FollowModalType } from 'types/FollowModalType';
 import { Avatar } from './Avatar';
 import { MenuItem } from './MenuItem';
 import { Title } from './Title';
-import { useModalDispatch } from 'contexts/providers/modal';
 
 interface SideMenuContentProps {
   isMobile?: boolean;
@@ -70,13 +70,13 @@ export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => 
                     <p className="font-semibold text-white">
                       <Number value={me.profile.followerCount} />
                     </p>
-                    <p className="text-gray-80 text-md">Followers</p>
+                    <p className="text-gray-80 text-md md:text-xs">Followers</p>
                   </div>
                   <div className="text-center text-lg" onClick={onFollowing}>
                     <p className="font-semibold text-white">
                       <Number value={me.profile.followingCount} />
                     </p>
-                    <p className="text-gray-80 text-md">Following</p>
+                    <p className="text-gray-80 text-md md:text-xs">Following</p>
                   </div>
                 </div>
               </div>
