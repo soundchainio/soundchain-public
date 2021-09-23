@@ -1,25 +1,12 @@
 import classNames from 'classnames';
-import { Button } from 'components/Button';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import 'emoji-mart/css/emoji-mart.css';
-import { Field, Form, Formik, FormikHelpers } from 'formik';
 import GraphemeSplitter from 'grapheme-splitter';
-import { PostBodyField } from 'components/PostBodyField';
-import {
-  CreatePostInput,
-  CreateRepostInput,
-  UpdatePostInput,
-  useCreatePostMutation,
-  useCreateRepostMutation,
-  usePostLazyQuery,
-  useUpdatePostMutation
-} from 'lib/graphql';
+import { usePostLazyQuery } from 'lib/graphql';
 import { default as React, useCallback, useEffect, useState } from 'react';
 import { getNormalizedLink, hasLink } from '../utils/NormalizeEmbedLinks';
 import { ModalsPortal } from './ModalsPortal';
-import { PostForm, FormValues } from './PostForm';
-import { PostBar } from './PostBar';
-import { RepostPreview } from './RepostPreview';
+import { PostForm } from './PostForm';
 import { PostFormType } from 'types/PostFormType';
 
 const baseClasses =
@@ -43,15 +30,10 @@ export const setMaxInputLength = (input: string) => {
 
 export const PostModal = () => {
   const [postType, setPostType] = useState<PostFormType>(PostFormType.NEW);
-  const [isEmojiPickerVisible, setEmojiPickerVisible] = useState(false);
-  const [isRepost, setIsRepost] = useState(false);
-  const [isEditPost, setIsEditPost] = useState(false);
   const [originalLink, setOriginalLink] = useState('');
   const [postLink, setPostLink] = useState('');
   const [bodyValue, setBodyValue] = useState('');
-  const [createPost] = useCreatePostMutation({ refetchQueries: ['Posts', 'Feed'] });
-  const [createRepost] = useCreateRepostMutation({ refetchQueries: ['Posts', 'Feed'] });
-  const [editPost] = useUpdatePostMutation({ refetchQueries: ['Post'] });
+
 
   const { showNewPost, repostId, editPostId } = useModalState();
   const { dispatchShowPostModal, dispatchSetRepostId, dispatchSetEditPostId } = useModalDispatch();
@@ -74,38 +56,6 @@ export const PostModal = () => {
     clearState();
   };
 
-  const handleSubmit = async (values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
-    if (repostId) {
-      const params: CreateRepostInput = { body: values.body, repostId };
-
-      await createRepost({ variables: { input: params } });
-    } else if (editPostId) {
-      const params: UpdatePostInput = { body: values.body, postId: editPostId };
-
-      if (postLink.length) {
-        params.mediaLink = postLink;
-      }
-
-      await editPost({ variables: { input: params } });
-    } else {
-      const params: CreatePostInput = { body: values.body };
-
-      if (postLink.length) {
-        params.mediaLink = postLink;
-      }
-
-      await createPost({ variables: { input: params } });
-    }
-
-    setEmojiPickerVisible(false);
-    clearState();
-    resetForm();
-  };
-
-  const onEmojiPickerClick = () => {
-    setEmojiPickerVisible(!isEmojiPickerVisible);
-  };
-
   const normalizeOriginalLink = useCallback(async () => {
     if (originalLink.length && hasLink(originalLink)) {
       const link = await getNormalizedLink(originalLink);
@@ -114,10 +64,6 @@ export const PostModal = () => {
       setPostLink('');
     }
   }, [originalLink]);
-
-  const onTextareaChange = (body: string) => {
-    setBodyValue(body);
-  };
 
   useEffect(() => {
     if (editPostId) {
@@ -131,10 +77,10 @@ export const PostModal = () => {
         const link = await getNormalizedLink(bodyValue);
         if (link) {
           setPostLink(link);
-        } else if (!originalLink && !isEditPost) {
+        } else if (!originalLink && postType !== PostFormType.EDIT) {
           setPostLink('');
         }
-      } else if (!originalLink && !isEditPost) {
+      } else if (!originalLink && postType !== PostFormType.EDIT) {
         setPostLink('');
       }
     }, 1000);
@@ -145,7 +91,7 @@ export const PostModal = () => {
   useEffect(() => {
     if (originalLink) {
       normalizeOriginalLink();
-    } else if (!isEditPost) {
+    } else if (postType !== PostFormType.EDIT) {
       setPostLink('');
     }
   }, [normalizeOriginalLink, originalLink]);
@@ -169,9 +115,6 @@ export const PostModal = () => {
       setPostType(PostFormType.NEW);
     }
 
-    repostId ? setIsRepost(true) : setIsRepost(false);
-    editPostId ? setIsEditPost(true) : setIsEditPost(false);
-    !(editPostId || repostId) ? setIsEditPost(true) : setIsEditPost(false);
   }, [repostId, editPostId]);
 
   useEffect(() => {
@@ -192,28 +135,15 @@ export const PostModal = () => {
         <PostForm
           type={postType}
           initialValues={initialValues}
-          onSubmit={handleSubmit}
+          postLink={postLink}
+          afterSubmit={clearState}
           onCancel={cancel}
+          showNewPost={showNewPost}
+          setOriginalLink={setOriginalLink}
+          setPostLink={setPostLink}
+          setBodyValue={setBodyValue}
         />
 
-        {postType === PostFormType.REPOST && (
-          <div className="p-4 bg-gray-20">
-            <RepostPreview postId={repostId as string} />
-          </div>
-        )}
-        {postLink && postType !== PostFormType.REPOST && (
-          <iframe className="w-full bg-gray-20" frameBorder="0" allowFullScreen src={postLink} />
-        )}
-        {/* <PostBar
-          onEmojiPickerClick={onEmojiPickerClick}
-          isEmojiPickerVisible={isEmojiPickerVisible}
-          isRepost={isRepost}
-          showNewPost={showNewPost}
-          setFieldValue={setFieldValue}
-          values={values}
-          postLink={postLink}
-          setPostLink={setPostLink}
-        /> */}
       </div>
     </ModalsPortal>
   );

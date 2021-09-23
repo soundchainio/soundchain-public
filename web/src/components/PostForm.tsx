@@ -1,10 +1,20 @@
 import { Form, Formik, FormikHelpers } from 'formik';
 import * as yup from 'yup';
-
 import { PostBodyField } from './PostBodyField';
 import { PostFormType } from 'types/PostFormType'
 import { Button } from './Button';
 import { setMaxInputLength } from './PostModal';
+import {
+  CreatePostInput,
+  UpdatePostInput,
+  useCreatePostMutation,
+  useCreateRepostMutation,
+  useUpdatePostMutation
+} from 'lib/graphql';
+import { useModalState } from 'contexts/providers/modal';
+import { PostBar } from './PostBar';
+import { RepostPreview } from './RepostPreview';
+import { useState } from 'react';
 
 interface InitialValues {
   body: string
@@ -13,8 +23,13 @@ interface InitialValues {
 interface PostFormProps {
   type: PostFormType
   initialValues: InitialValues
-  onSubmit: (values: FormValues, { resetForm }: FormikHelpers<FormValues>) => void
+  postLink?: string
+  afterSubmit: () => void
   onCancel: (setFieldValue: (field: string, value: string) => void) => void
+  showNewPost: boolean;
+  setOriginalLink: (val: string) => void;
+  setPostLink: (val: string) => void;
+  setBodyValue: (val: string) => void;
 }
 
 export interface FormValues {
@@ -30,8 +45,52 @@ const postSchema: yup.SchemaOf<FormValues> = yup.object().shape({
 const defaultInitialValues = { body: '' };
 
 export const PostForm = ({ ...props }: PostFormProps) => {
+  const [isEmojiPickerVisible, setEmojiPickerVisible] = useState(false);
+  const [createPost] = useCreatePostMutation({ refetchQueries: ['Posts', 'Feed'] });
+  const [createRepost] = useCreateRepostMutation({ refetchQueries: ['Posts', 'Feed'] });
+  const [editPost] = useUpdatePostMutation({ refetchQueries: ['Post'] });
+  const { repostId, editPostId } = useModalState();
+
+  const onEmojiPickerClick = () => {
+    setEmojiPickerVisible(!isEmojiPickerVisible);
+  };
+
+  const onSubmit = async (values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
+    switch (props.type) {
+      case PostFormType.REPOST:
+        await createRepost({ variables: { input: { body: values.body, repostId: repostId! } } });
+        break;
+      case PostFormType.EDIT:
+        const updateParams: UpdatePostInput = { body: values.body, postId: editPostId! };
+
+        if (props.postLink?.length) {
+          updateParams.mediaLink = props.postLink;
+        }
+
+        await editPost({ variables: { input: updateParams } });
+        break;
+      case PostFormType.NEW:
+        const newPostParams: CreatePostInput = { body: values.body };
+
+        if (props.postLink?.length) {
+          newPostParams.mediaLink = props.postLink;
+        }
+
+        await createPost({ variables: { input: newPostParams } });
+    }
+
+    resetForm();
+
+    props.afterSubmit();
+
+  };
+
+  const onTextAreaChange = (newVal: string) => {
+    props.setBodyValue(newVal);
+  };
+
   return (
-    <Formik enableReinitialize={true} initialValues={props.initialValues || defaultInitialValues} validationSchema={postSchema} onSubmit={props.onSubmit}>
+    <Formik enableReinitialize={true} initialValues={props.initialValues || defaultInitialValues} validationSchema={postSchema} onSubmit={onSubmit}>
       {({ values, setFieldValue }) => (
         <Form className="flex flex-col h-full">
           <div className="flex items-center rounded-tl-3xl rounded-tr-3xl bg-gray-30">
@@ -56,16 +115,27 @@ export const PostForm = ({ ...props }: PostFormProps) => {
             name="body"
             placeholder="What's happening?"
             maxLength={setMaxInputLength(values.body)}
+            updatedValue={onTextAreaChange}
           />
-
-          {/* <Field
-        component="textarea"
-        name="body"
-        className="w-full h-24 resize-none focus:ring-0 bg-gray-20 border-none focus:outline-none outline-none text-white flex-auto"
-        placeholder=""
-
-        inputprops={{ onChange: onTextareaChange(values.body), value: bodyValue }}
-      /> */}
+          {props.type === PostFormType.REPOST && (
+            <div className="p-4 bg-gray-20">
+              <RepostPreview postId={repostId as string} />
+            </div>
+          )}
+          {props.postLink && props.type !== PostFormType.REPOST && (
+            <iframe className="w-full bg-gray-20" frameBorder="0" allowFullScreen src={props.postLink} />
+          )}
+          <PostBar
+            onEmojiPickerClick={onEmojiPickerClick}
+            isEmojiPickerVisible={isEmojiPickerVisible}
+            isRepost={props.type === PostFormType.REPOST}
+            showNewPost={props.showNewPost}
+            setOriginalLink={props.setOriginalLink}
+            setFieldValue={setFieldValue}
+            values={values}
+            postLink={props.postLink || ''}
+            setPostLink={props.setPostLink}
+          />
         </Form>
       )}
     </Formik>
