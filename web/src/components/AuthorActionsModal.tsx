@@ -1,10 +1,11 @@
 import classNames from 'classnames';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
-import { useDeleteCommentMutation, CommentsDocument } from 'lib/graphql';
+import { useDeleteCommentMutation, useDeletePostMutation, PostsDocument, CommentsDocument } from 'lib/graphql';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 import { Delete as DeleteButton } from './Buttons/Delete';
 import { Edit as EditButton } from './Buttons/Edit';
 import { ModalsPortal } from './ModalsPortal';
+import { useRouter } from 'next/router';
 
 const baseClasses =
   'fixed w-screen h-screen bottom-0 duration-500 bg-opacity-75 ease-in-out bg-black transform-gpu transform';
@@ -12,11 +13,19 @@ const baseClasses =
 export const AuthorActionsModal = () => {
   const { showAuthorActions, authorActionsId, authorActionsType } = useModalState();
   const { dispatchShowAuthorActionsModal, dispatchShowNewPostModal, dispatchSetEditPostId } = useModalDispatch();
+  const router = useRouter();
 
   const [deleteComment] = useDeleteCommentMutation({
     refetchQueries: [CommentsDocument],
     update: (cache, data) => {
       cache.evict({ id: cache.identify(data.data!.deleteComment.comment!) });
+    },
+  });
+
+  const [deletePost] = useDeletePostMutation({
+    refetchQueries: [PostsDocument],
+    update: (cache, data) => {
+      cache.evict({ id: cache.identify(data.data!.deletePost.post!) });
     },
   });
 
@@ -31,7 +40,17 @@ export const AuthorActionsModal = () => {
   };
 
   const onDelete = async () => {
-    await deleteComment({ variables: { input: { commentId: authorActionsId } } });
+    switch (authorActionsType) {
+      case AuthorActionsType.POST:
+        await deletePost({ variables: { input: { postId: authorActionsId } } });
+        if (router.asPath.includes('/posts/')) {
+          router.back();
+        }
+        break;
+      case AuthorActionsType.COMMENT:
+        await deleteComment({ variables: { input: { commentId: authorActionsId } } });
+        break;
+    }
     onOutsideClick();
   };
 

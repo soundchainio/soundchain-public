@@ -28,6 +28,11 @@ interface UpdatePostParams {
   mediaLink?: string;
 }
 
+interface DeletePostParams {
+  profileId: string;
+  postId: string;
+}
+
 export class PostService extends ModelService<typeof Post> {
   constructor(context: Context) {
     super(context, PostModel);
@@ -45,6 +50,15 @@ export class PostService extends ModelService<typeof Post> {
     const post = new PostModel(params);
     await post.save();
     this.context.feedService.addPostToFollowerFeeds(post);
+    return post;
+  }
+
+  async deletePost(params: DeletePostParams): Promise<Post> {
+    const post = await this.findOrFail(params.postId);
+    if (post.profileId !== params.profileId) {
+      throw new Error(`Error while deleting a post: The user trying to delete is not the author of the post.`);
+    }
+    await PostModel.deleteOne(post);
     return post;
   }
 
