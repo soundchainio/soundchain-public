@@ -15,6 +15,8 @@ import { UpdatePostInput } from '../types/UpdatePostInput';
 import { UpdatePostPayload } from '../types/UpdatePostPayload';
 import { CreateRepostInput } from '../types/CreateRepostInput';
 import { CreateRepostPayload } from '../types/CreateRepostPayload';
+import { DeletePostInput } from '../types/DeletePostInput';
+import { DeletePostPayload } from '../types/DeletePostPayload';
 import { FilterPostInput } from '../types/FilterPostInput';
 import { PageInput } from '../types/PageInput';
 import { PostConnection } from '../types/PostConnection';
@@ -153,6 +155,17 @@ export class PostResolver {
     const post = await postService.createRepost({ profileId, body, repostId });
     const originalPost = await postService.getPost(repostId);
     return { post, originalPost };
+  }
+
+  @Mutation(() => DeletePostPayload)
+  @Authorized()
+  async deletePost(
+    @Ctx() { postService }: Context,
+    @Arg('input') input: DeletePostInput,
+    @CurrentUser() { profileId }: User,
+  ): Promise<DeletePostPayload> {
+    const post = await postService.deletePost({ profileId, ...input });
+    return { post };
   }
 
   @Query(() => ReactionConnection)

@@ -53,4 +53,8 @@ export class FeedService extends ModelService<typeof FeedItem> {
     const feedItems = posts.map(post => new this.model({ profileId, postId: post._id, postedAt: post.createdAt }));
     await this.model.insertMany(feedItems);
   }
+
+  async deleteItemsByPostId(postId: string): Promise<void> {
+    await this.model.deleteMany({ postId });
+  }
 }
