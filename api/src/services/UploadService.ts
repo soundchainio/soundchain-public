@@ -5,8 +5,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { config } from '../config';
 import { AudioUpload } from '../types/AudioUpload';
 import { Context } from '../types/Context';
-import { ImageUploadFileType } from '../types/ImageUploadFileType';
-import { ImageUploadUrl } from '../types/ImageUploadUrl';
+import { UploadFileType } from '../types/UploadFileType';
+import { UploadUrl } from '../types/UploadUrl';
 
 const FIVE_MINUTES = 1000 * 60 * 5;
 
@@ -19,7 +19,7 @@ export class UploadService {
     this.muxClient = new Mux(config.mux.tokenId, config.mux.tokenSecret);
   }
 
-  async generateImageUploadUrl(fileType: ImageUploadFileType): Promise<ImageUploadUrl> {
+  async generateUploadUrl(fileType: UploadFileType): Promise<UploadUrl> {
     const imageId = uuidv4();
     const extension = fileType.split('/')[1];
     const fileName = `${imageId}.${extension}`;

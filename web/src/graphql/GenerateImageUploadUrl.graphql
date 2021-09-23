@@ -1,7 +1,0 @@
-query ImageUploadUrl($fileType: ImageUploadFileType!) {
-  imageUploadUrl(fileType: $fileType) {
-    uploadUrl
-    fileName
-    readUrl
-  }
-}
