@@ -10,7 +10,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React from 'react';
 import * as yup from 'yup';
-import { getBodyCharacterCount } from 'components/NewPostModal';
+import { getBodyCharacterCount } from 'components/PostModal';
 import { TextareaField } from 'components/TextareaField';
 
 export interface SetupProfileBioFormValues {
