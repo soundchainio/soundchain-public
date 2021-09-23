@@ -368,7 +368,8 @@ resources:
         ContentBasedDeduplication: true
         FifoQueue: true
         MessageRetentionPeriod: 1209600
-        QueueName: MintingQueue-${AWS::StackName}
+        QueueName:
+          Fn::Sub: MintingQueue-${AWS::StackName}.fifo
         VisibilityTimeout: 600
         RedrivePolicy:
           deadLetterTargetArn:
@@ -382,4 +383,5 @@ resources:
         ContentBasedDeduplication: true
         FifoQueue: true
         MessageRetentionPeriod: 1209600
-        QueueName: MintingDeadLetterQueue-${AWS::StackName}
+        QueueName:
+          Fn::Sub: MintingDeadLetterQueue-${AWS::StackName}.fifo
