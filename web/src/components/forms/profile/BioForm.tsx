@@ -48,8 +48,7 @@ export const BioForm = ({ afterSubmit, submitText, submitProps }: BioFormProps) 
             <TextareaField name="bio" placeholder="Add a bio..." maxLength={setMaxInputLength(values.bio || '')} />
           </div>
           <p className="text-gray-50 text-right flex-grow">
-            {' '}
-            {`${getBodyCharacterCount(values.bio || '')} / ${maxBioLength}`}{' '}
+            {`${getBodyCharacterCount(values.bio || '')} / ${maxBioLength}`}
           </p>
           <div className="flex flex-col">
             <Button type="submit" disabled={loading} variant="outline" className="h-12" {...submitProps}>
