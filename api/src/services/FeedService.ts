@@ -3,7 +3,6 @@ import { FeedItem, FeedItemModel } from '../models/FeedItem';
 import { Follow } from '../models/Follow';
 import { Post } from '../models/Post';
 import { Context } from '../types/Context';
-import { FeedItemInput } from '../types/FeedItemInput';
 import { PageInput } from '../types/PageInput';
 import { SortOrder } from '../types/SortOrder';
 import { SortPostField } from '../types/SortPostField';
@@ -55,7 +54,7 @@ export class FeedService extends ModelService<typeof FeedItem> {
     await this.model.insertMany(feedItems);
   }
 
-  async createFeedItem(item: FeedItemInput): Promise<void> {
+  async createFeedItem(item: Pick<FeedItem, 'profileId' | 'postId' | 'postedAt'>): Promise<void> {
     const feedItem = new FeedItemModel(item);
     await feedItem.save();
   }
