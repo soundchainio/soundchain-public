@@ -26,7 +26,7 @@ export const CommentNotificationItem = ({
             </div>
           </div>
           <div>
-            <span className="text-gray-100 inline-block text-sm">
+            <span className="text-gray-100 inline-block items-center w-full text-sm">
               <div className="flex flex-wrap">
                 <div className="font-semibold">{authorName}</div>&nbsp;{body}
               </div>

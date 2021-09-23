@@ -1,5 +1,5 @@
-mutation updateProfileBio($input: UpdateProfileBioInput!) {
-  updateProfileBio(input: $input) {
+mutation updateProfileBio($input: UpdateProfileInput!) {
+  updateProfile(input: $input) {
     profile {
       id
       bio

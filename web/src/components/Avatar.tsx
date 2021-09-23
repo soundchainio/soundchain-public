@@ -2,7 +2,6 @@ import { Profile } from 'lib/graphql';
 import Image from 'next/image';
 import NextLink from 'next/link';
 import React from 'react';
-import ProfilePic from '../../public/profile.jpg';
 
 interface AvatarProps extends React.ComponentPropsWithoutRef<'div'> {
   profile: Partial<Profile>;
@@ -22,18 +21,16 @@ export const Avatar = ({ profile, pixels = 30, linkToProfile = true, ...props }:
 
   return maybeLinkToProfile(
     <div {...props}>
-      {profile.profilePicture ? (
+      {
         <Image
           alt="Profile picture"
-          src={profile.profilePicture}
+          src={profile.profilePicture || '/default-pictures/profile/red.png'}
           width={pixels}
           height={pixels}
           className="rounded-full"
           objectFit="cover"
         />
-      ) : (
-        <Image alt="Profile picture" src={ProfilePic} width={pixels} height={pixels} className="rounded-full" />
-      )}
+      }
     </div>,
   );
 };

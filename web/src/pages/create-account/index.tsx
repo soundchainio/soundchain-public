@@ -1,7 +1,9 @@
 import { AuthLayout } from 'components/AuthLayout';
 import { Button } from 'components/Button';
+import { BackButton } from 'components/Buttons/BackButton';
 import { InputField } from 'components/InputField';
 import { Label } from 'components/Label';
+import { TopNavBarProps } from 'components/TopNavBar';
 import { Form, Formik, FormikHelpers } from 'formik';
 import { setJwt } from 'lib/apollo';
 import { useRegisterMutation } from 'lib/graphql';
@@ -20,6 +22,10 @@ interface FormValues {
   passwordConfirmation: string;
 }
 
+const topNavBarProps: TopNavBarProps = {
+  leftButton: <BackButton />,
+};
+
 export default function CreateAccountPage() {
   const router = useRouter();
   const [register, { loading }] = useRegisterMutation();
@@ -28,7 +34,7 @@ export default function CreateAccountPage() {
     try {
       const { data } = await register({ variables: { input: omit(values, 'passwordConfirmation') } });
       setJwt(data?.register.jwt);
-      router.push(router.query.callbackUrl?.toString() ?? '/');
+      router.push(router.query.callbackUrl?.toString() ?? '/create-account/profile-picture');
     } catch (error) {
       const formatted = formatValidationErrors<FormValues>(error.graphQLErrors[0]);
       setErrors(formatted);
@@ -64,7 +70,7 @@ export default function CreateAccountPage() {
   };
 
   return (
-    <AuthLayout>
+    <AuthLayout topNavBarProps={topNavBarProps}>
       <Head>
         <title>Soundchain - Create Account</title>
         <meta name="description" content="Soundchain" />

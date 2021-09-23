@@ -5,12 +5,12 @@ import { Layout } from 'components/Layout';
 import { MessageButton } from 'components/MessageButton';
 import { Number } from 'components/Number';
 import { Posts } from 'components/Posts';
+import { ProfileCover } from 'components/ProfileCover';
 import { ProfileTabs } from 'components/ProfileTabs';
 import { SocialMediaLink } from 'components/SocialMediaLink';
 import { SubscribeButton } from 'components/SubscribeButton';
 import { Subtitle } from 'components/Subtitle';
 import { useProfileLazyQuery } from 'lib/graphql';
-import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { FollowModalType } from 'types/FollowModalType';
@@ -66,7 +66,7 @@ export default function ProfilePage() {
   return (
     <Layout>
       <div className="h-[125px] relative">
-        {coverPicture && <Image src={coverPicture} alt="Cover pic" layout="fill" objectFit="cover" />}
+        <ProfileCover coverPicture={coverPicture || ''} className="h-[125px]" />
         <Avatar
           profile={data.profile}
           pixels={80}
