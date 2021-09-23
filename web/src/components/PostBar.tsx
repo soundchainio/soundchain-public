@@ -3,9 +3,10 @@ import { BaseEmoji, Picker } from 'emoji-mart';
 import { useState } from 'react';
 import { PostLinkType } from 'types/PostLinkType';
 import { LinksModal } from './LinksModal';
-import { FormValues, getBodyCharacterCount, maxLength } from './NewPostModal';
+import { getBodyCharacterCount, maxLength } from './PostModal';
+import { FormValues } from './PostForm';
 
-interface NewPostBarProps {
+interface PostBarProps {
   onEmojiPickerClick: () => void;
   isEmojiPickerVisible: boolean;
   isRepost: boolean;
@@ -17,7 +18,7 @@ interface NewPostBarProps {
   setPostLink: (val: string) => void;
 }
 
-export const NewPostBar = ({
+export const PostBar = ({
   onEmojiPickerClick,
   isEmojiPickerVisible,
   isRepost,
@@ -27,7 +28,7 @@ export const NewPostBar = ({
   values,
   postLink,
   setPostLink,
-}: NewPostBarProps) => {
+}: PostBarProps) => {
   const [showAddMusicLink, setShowAddMusicLink] = useState(false);
   const [showAddVideoLink, setShowAddVideoLink] = useState(false);
   const charCounter = `${getBodyCharacterCount(values.body)} / ${maxLength}`;

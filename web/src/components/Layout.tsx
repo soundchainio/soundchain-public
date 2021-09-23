@@ -2,7 +2,7 @@ import { BottomNavBar } from 'components/BottomNavBar';
 import { store } from 'contexts';
 import { ReactNode, useContext, useState } from 'react';
 import { AuthorActionsModal } from './AuthorActionsModal';
-import { NewPostModal } from './NewPostModal';
+import { PostModal } from './PostModal';
 import { UnderDevelopmentModal } from './UnderDevelopmentModal';
 import { SideMenu } from './SideMenu';
 import { TopNavBar, TopNavBarProps } from './TopNavBar';
@@ -35,7 +35,7 @@ export const Layout = ({ children, hideBottomNavBar, topNavBarProps }: LayoutPro
       </div>
       <div id="modals" className="absolute z-20 w-full">
         <UnderDevelopmentModal />
-        <NewPostModal />
+        <PostModal />
         <AuthorActionsModal />
         <ReactionsModal />
       </div>

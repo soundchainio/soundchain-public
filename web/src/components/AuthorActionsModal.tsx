@@ -11,7 +11,7 @@ const baseClasses =
 
 export const AuthorActionsModal = () => {
   const { showAuthorActions, authorActionsId, authorActionsType } = useModalState();
-  const { dispatchShowAuthorActionsModal, dispatchShowNewPostModal, dispatchSetEditPostId } = useModalDispatch();
+  const { dispatchShowAuthorActionsModal, dispatchShowPostModal, dispatchSetEditPostId } = useModalDispatch();
 
   const [deleteComment] = useDeleteCommentMutation({
     refetchQueries: [CommentsDocument],
@@ -27,7 +27,7 @@ export const AuthorActionsModal = () => {
   const onEdit = () => {
     onOutsideClick();
     dispatchSetEditPostId(authorActionsId);
-    dispatchShowNewPostModal(true);
+    dispatchShowPostModal(true);
   };
 
   const onDelete = async () => {
