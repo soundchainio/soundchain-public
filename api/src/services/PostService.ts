@@ -41,6 +41,7 @@ export class PostService extends ModelService<typeof Post> {
   async createPost(params: NewPostParams): Promise<Post> {
     const post = new this.model(params);
     await post.save();
+    this.context.feedService.createFeedItem({ profileId: post.profileId, postId: post._id, postedAt: post.createdAt })
     this.context.feedService.addPostToFollowerFeeds(post);
     this.context.notificationService.notifyNewPostForSubscribers(post);
     return post;
@@ -49,6 +50,7 @@ export class PostService extends ModelService<typeof Post> {
   async createRepost(params: RepostParams): Promise<Post> {
     const post = new PostModel(params);
     await post.save();
+    this.context.feedService.createFeedItem({ profileId: post.profileId, postId: post._id, postedAt: post.createdAt })
     this.context.feedService.addPostToFollowerFeeds(post);
     return post;
   }

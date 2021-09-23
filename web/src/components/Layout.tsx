@@ -30,7 +30,7 @@ export const Layout = ({ children, hideBottomNavBar, topNavBarProps }: LayoutPro
         </main>
         <div className="fixed bottom-0 w-full">
           <div id="bottom-sheet"></div>
-          <div className="sm:hidden">{!state?.modal.anyModalOpened && !hideBottomNavBar && <BottomNavBar />}</div>
+          <div className="md:hidden">{!state?.modal.anyModalOpened && !hideBottomNavBar && <BottomNavBar />}</div>
         </div>
       </div>
       <div id="modals" className="absolute z-20 w-full">

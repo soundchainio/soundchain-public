@@ -41,7 +41,7 @@ export const BottomNavBar = () => {
           label="Profile"
           icon={Profile}
           path={me ? `/profiles/${me?.profile.id}` : '/login'}
-          activatedColor="purple-green"
+          activatedColor="green-blue"
         />
       </div>
     </nav>

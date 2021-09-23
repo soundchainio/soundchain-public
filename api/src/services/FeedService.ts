@@ -54,6 +54,11 @@ export class FeedService extends ModelService<typeof FeedItem> {
     await this.model.insertMany(feedItems);
   }
 
+  async createFeedItem(item: Pick<FeedItem, 'profileId' | 'postId' | 'postedAt'>): Promise<void> {
+    const feedItem = new FeedItemModel(item);
+    await feedItem.save();
+  }
+
   async deleteItemsByPostId(postId: string): Promise<void> {
     await this.model.deleteMany({ postId });
   }

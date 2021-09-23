@@ -72,6 +72,9 @@ const normalizeVimeo = (str: string) => {
 };
 
 const normalizeBandcamp = async (str: string) => {
+  if (str.includes('EmbeddedPlayer')) {
+    return str;
+  }
 
   const data = await apolloClient.query({
     query: BandcampLinkDocument,
