@@ -8,7 +8,6 @@ import { SortPostInput } from '../types/SortPostInput';
 import { ModelService } from './ModelService';
 import { NewReactionParams } from './ReactionService';
 import { NotFoundError } from '../errors/NotFoundError';
-import { FeedItemModel } from '../models/FeedItem';
 
 interface NewPostParams {
   profileId: string;
@@ -37,7 +36,7 @@ export class PostService extends ModelService<typeof Post> {
   async createPost(params: NewPostParams): Promise<Post> {
     const post = new this.model(params);
     await post.save();
-    await FeedItemModel.insertMany({ profileId: post.profileId, postId: post._id, postedAt: post.createdAt });
+    this.context.feedService.createFeedItem({ profileId: post.profileId, postId: post._id, postedAt: post.createdAt })
     this.context.feedService.addPostToFollowerFeeds(post);
     this.context.notificationService.notifyNewPostForSubscribers(post);
     return post;
@@ -46,7 +45,7 @@ export class PostService extends ModelService<typeof Post> {
   async createRepost(params: RepostParams): Promise<Post> {
     const post = new PostModel(params);
     await post.save();
-    await FeedItemModel.insertMany({ profileId: post.profileId, postId: post._id, postedAt: post.createdAt });
+    this.context.feedService.createFeedItem({ profileId: post.profileId, postId: post._id, postedAt: post.createdAt })
     this.context.feedService.addPostToFollowerFeeds(post);
     return post;
   }
