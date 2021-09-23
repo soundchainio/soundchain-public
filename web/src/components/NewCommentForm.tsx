@@ -56,7 +56,7 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
       {({ isSubmitting, isValid, dirty }: FormikProps<FormValues>) => (
         <Form>
           <div className="flex flex-row items-start space-x-3 p-3 bg-gray-25">
-            <Avatar profile={{ profilePicture: me?.profile.profilePicture }} linkToProfile={false} />
+            <Avatar profile={me.profile} linkToProfile={false} />
             <FlexareaField name="body" placeholder="Write a comment..." />
             <button type="submit" disabled={isSubmitting} className="pt-1">
               <Send activatedColor={dirty && isValid ? 'green-blue' : undefined} />

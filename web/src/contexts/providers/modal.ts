@@ -18,7 +18,7 @@ export const useModalDispatch = () => {
       dispatch({ type: ModalActionTypes.SET_REPOST_ID, payload: { repostId } }),
     dispatchSetEditPostId: (editPostId?: string) =>
       dispatch({ type: ModalActionTypes.SET_EDIT_POST_ID, payload: { editPostId } }),
-    dispatchShowNewPostModal: (show: boolean) => dispatch({ type: ModalActionTypes.SHOW_NEW_POST, payload: { show } }),
+    dispatchShowPostModal: (show: boolean) => dispatch({ type: ModalActionTypes.SHOW_NEW_POST, payload: { show } }),
     dispatchShowUnderDevelopmentModal: (show: boolean) =>
       dispatch({ type: ModalActionTypes.SHOW_UNDER_DEVELOPMENT, payload: { show } }),
     dispatchShowAuthorActionsModal: (showAuthorActions: boolean, authorActionsType: AuthorActionsType, authorActionsId: string) =>

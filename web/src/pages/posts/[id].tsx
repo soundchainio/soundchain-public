@@ -9,6 +9,8 @@ import { cacheFor, createApolloClient } from 'lib/apollo';
 import { PostDocument } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
 import { ParsedUrlQuery } from 'querystring';
+import { useMe } from 'hooks/useMe';
+import { InboxButton } from 'components/Buttons/InboxButton';
 
 export interface PostPageProps {
   postId: string;
@@ -41,8 +43,11 @@ export const getServerSideProps: GetServerSideProps<PostPageProps, PostPageParam
 };
 
 export default function PostPage({ postId }: PostPageProps) {
+  const me = useMe();
+
   const topNovaBarProps: TopNavBarProps = {
     leftButton: <BackButton />,
+    rightButton: me ? <InboxButton /> : undefined,
   };
 
   return (
