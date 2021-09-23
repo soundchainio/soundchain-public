@@ -4,6 +4,7 @@ import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import 'emoji-mart/css/emoji-mart.css';
 import { Field, Form, Formik, FormikHelpers } from 'formik';
 import GraphemeSplitter from 'grapheme-splitter';
+import { PostBodyField } from 'components/PostBodyField';
 import {
   CreatePostInput,
   CreateRepostInput,
@@ -14,21 +15,12 @@ import {
   useUpdatePostMutation
 } from 'lib/graphql';
 import { default as React, useCallback, useEffect, useState } from 'react';
-import * as yup from 'yup';
 import { getNormalizedLink, hasLink } from '../utils/NormalizeEmbedLinks';
 import { ModalsPortal } from './ModalsPortal';
-import { NewPostBar } from './NewPostBar';
+import { PostForm, FormValues } from './PostForm';
+import { PostBar } from './PostBar';
 import { RepostPreview } from './RepostPreview';
-
-export interface FormValues {
-  body: string;
-  mediaLink?: string;
-}
-
-const postSchema: yup.SchemaOf<FormValues> = yup.object().shape({
-  body: yup.string().required(),
-  mediaLink: yup.string(),
-});
+import { PostFormType } from 'types/PostFormType';
 
 const baseClasses =
   'fixed top-0 w-screen bottom-0 duration-500 bg-opacity-75 ease-in-out bg-black transform-gpu transform';
@@ -43,25 +35,26 @@ export const getBodyCharacterCount = (body?: string) => {
 
 // When we get string.length, emojis are counted as 2 characters
 // This functions fixes the input maxLength and adjust to count an emoji as 1 char
-const setMaxInputLength = (input: string) => {
+export const setMaxInputLength = (input: string) => {
   const rawValue = input.length;
 
   return maxLength + (rawValue - getBodyCharacterCount(input));
 };
 
-export const NewPostModal = () => {
+export const PostModal = () => {
+  const [postType, setPostType] = useState<PostFormType>(PostFormType.NEW);
   const [isEmojiPickerVisible, setEmojiPickerVisible] = useState(false);
   const [isRepost, setIsRepost] = useState(false);
   const [isEditPost, setIsEditPost] = useState(false);
   const [originalLink, setOriginalLink] = useState('');
   const [postLink, setPostLink] = useState('');
   const [bodyValue, setBodyValue] = useState('');
-  const [createPost] = useCreatePostMutation({ refetchQueries: ['Posts'] });
-  const [createRepost] = useCreateRepostMutation({ refetchQueries: ['Posts'] });
+  const [createPost] = useCreatePostMutation({ refetchQueries: ['Posts', 'Feed'] });
+  const [createRepost] = useCreateRepostMutation({ refetchQueries: ['Posts', 'Feed'] });
   const [editPost] = useUpdatePostMutation({ refetchQueries: ['Post'] });
 
   const { showNewPost, repostId, editPostId } = useModalState();
-  const { dispatchShowNewPostModal, dispatchSetRepostId, dispatchSetEditPostId } = useModalDispatch();
+  const { dispatchShowPostModal, dispatchSetRepostId, dispatchSetEditPostId } = useModalDispatch();
 
   const [getPost, { data: editingPost }] = usePostLazyQuery({
     variables: { id: editPostId! },
@@ -69,20 +62,16 @@ export const NewPostModal = () => {
 
   const initialValues = { body: editingPost?.post.body || '' };
 
-
   const clearState = () => {
-    dispatchShowNewPostModal(false);
+    dispatchShowPostModal(false);
     setPostLink('');
     dispatchSetRepostId(undefined);
     dispatchSetEditPostId(undefined);
   };
 
   const cancel = (setFieldValue: (val: string, newVal: string) => void) => {
-    return (event: React.MouseEvent) => {
-      setFieldValue('body', '');
-      clearState();
-      event.preventDefault();
-    };
+    setFieldValue('body', '');
+    clearState();
   };
 
   const handleSubmit = async (values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
@@ -168,8 +157,21 @@ export const NewPostModal = () => {
   }, [showNewPost]);
 
   useEffect(() => {
+    if (repostId) {
+      setPostType(PostFormType.REPOST);
+    }
+
+    if (editPostId) {
+      setPostType(PostFormType.EDIT);
+    }
+
+    if ((!editPostId && !repostId)) {
+      setPostType(PostFormType.NEW);
+    }
+
     repostId ? setIsRepost(true) : setIsRepost(false);
     editPostId ? setIsEditPost(true) : setIsEditPost(false);
+    !(editPostId || repostId) ? setIsEditPost(true) : setIsEditPost(false);
   }, [repostId, editPostId]);
 
   useEffect(() => {
@@ -187,57 +189,31 @@ export const NewPostModal = () => {
           'translate-y-full opacity-0': !showNewPost,
         })}
       >
-        <Formik enableReinitialize={true} initialValues={initialValues} validationSchema={postSchema} onSubmit={handleSubmit}>
-          {({ values, setFieldValue }) => (
-            <Form className="flex flex-col h-full">
-              <div className="flex items-center rounded-tl-3xl rounded-tr-3xl bg-gray-30">
-                <div className="p-2 text-gray-400 font-bold flex-1 text-center" onClick={cancel(setFieldValue)}>
-                  Cancel
-                </div>
-                <div className="flex-1 text-center text-white font-bold">
-                  {isRepost && 'Repost'}
-                  {isEditPost && 'Edit Post'}
-                  {(!isEditPost && !isRepost) && 'New Post'}
-                </div>
-                <div className="flex-1 text-center m-2">
-                  <div className="ml-6">
-                    <Button className="bg-gray-30 text-sm " type="submit" variant="rainbow-rounded">
-                      {isEditPost && 'Save'}
-                      {!isEditPost && 'Post'}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              <Field
-                component="textarea"
-                name="body"
-                className="w-full h-24 resize-none focus:ring-0 bg-gray-20 border-none focus:outline-none outline-none text-white flex-auto"
-                placeholder="What's happening?"
-                maxLength={setMaxInputLength(values.body)}
-                inputprops={{ onChange: onTextareaChange(values.body), value: bodyValue }}
-              />
-              {isRepost && (
-                <div className="p-4 bg-gray-20">
-                  <RepostPreview postId={repostId as string} />
-                </div>
-              )}
-              {postLink && !isRepost && (
-                <iframe className="w-full bg-gray-20" frameBorder="0" allowFullScreen src={postLink} />
-              )}
-              <NewPostBar
-                onEmojiPickerClick={onEmojiPickerClick}
-                isEmojiPickerVisible={isEmojiPickerVisible}
-                isRepost={isRepost}
-                showNewPost={showNewPost}
-                setOriginalLink={setOriginalLink}
-                setFieldValue={setFieldValue}
-                values={values}
-                postLink={postLink}
-                setPostLink={setPostLink}
-              />
-            </Form>
-          )}
-        </Formik>
+        <PostForm
+          type={postType}
+          initialValues={initialValues}
+          onSubmit={handleSubmit}
+          onCancel={cancel}
+        />
+
+        {postType === PostFormType.REPOST && (
+          <div className="p-4 bg-gray-20">
+            <RepostPreview postId={repostId as string} />
+          </div>
+        )}
+        {postLink && postType !== PostFormType.REPOST && (
+          <iframe className="w-full bg-gray-20" frameBorder="0" allowFullScreen src={postLink} />
+        )}
+        {/* <PostBar
+          onEmojiPickerClick={onEmojiPickerClick}
+          isEmojiPickerVisible={isEmojiPickerVisible}
+          isRepost={isRepost}
+          showNewPost={showNewPost}
+          setFieldValue={setFieldValue}
+          values={values}
+          postLink={postLink}
+          setPostLink={setPostLink}
+        /> */}
       </div>
     </ModalsPortal>
   );

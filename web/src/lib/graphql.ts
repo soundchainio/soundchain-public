@@ -473,7 +473,6 @@ export type Post = {
   body: Scalars['String'];
   mediaLink: Maybe<Scalars['String']>;
   repostId: Maybe<Scalars['String']>;
-  edited: Maybe<Scalars['Boolean']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   profile: Profile;
