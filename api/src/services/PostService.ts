@@ -1,5 +1,6 @@
 import { UserInputError } from 'apollo-server-express';
 import { PaginateResult } from '../db/pagination/paginate';
+import { NotFoundError } from '../errors/NotFoundError';
 import { Post, PostModel } from '../models/Post';
 import { Context } from '../types/Context';
 import { FilterPostInput } from '../types/FilterPostInput';
@@ -7,7 +8,6 @@ import { PageInput } from '../types/PageInput';
 import { SortPostInput } from '../types/SortPostInput';
 import { ModelService } from './ModelService';
 import { NewReactionParams } from './ReactionService';
-import { NotFoundError } from '../errors/NotFoundError';
 
 interface NewPostParams {
   profileId: string;
@@ -59,7 +59,7 @@ export class PostService extends ModelService<typeof Post> {
       throw new Error(`Error while deleting a post: The user trying to delete is not the author of the post.`);
     }
     await PostModel.deleteOne(post);
-    this.context.feedService.onDeletePost(params.postId);
+    this.context.feedService.deleteItemsByPostId(params.postId);
     return post;
   }
 

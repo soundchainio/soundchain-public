@@ -49,7 +49,7 @@ export class FeedService extends ModelService<typeof FeedItem> {
     await this.model.insertMany(feedItems);
   }
 
-  async onDeletePost(postId: string): Promise<void> {
+  async deleteItemsByPostId(postId: string): Promise<void> {
     await this.model.deleteMany({ postId });
   }
 }
