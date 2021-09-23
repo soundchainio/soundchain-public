@@ -1,4 +1,5 @@
 import { Avatar } from 'components/Avatar';
+import { InboxButton } from 'components/Buttons/InboxButton';
 import { FollowButton } from 'components/FollowButton';
 import { FollowModal } from 'components/FollowersModal';
 import { Layout } from 'components/Layout';
@@ -9,13 +10,13 @@ import { ProfileTabs } from 'components/ProfileTabs';
 import { SocialMediaLink } from 'components/SocialMediaLink';
 import { SubscribeButton } from 'components/SubscribeButton';
 import { Subtitle } from 'components/Subtitle';
+import { TopNavBarProps } from 'components/TopNavBar';
+import { useMe } from 'hooks/useMe';
 import { useProfileLazyQuery } from 'lib/graphql';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { FollowModalType } from 'types/FollowModalType';
-import { useMe } from 'hooks/useMe';
-import { InboxButton } from 'components/Buttons/InboxButton';
 
 export default function ProfilePage() {
   const router = useRouter();
