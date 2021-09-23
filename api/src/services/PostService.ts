@@ -59,6 +59,7 @@ export class PostService extends ModelService<typeof Post> {
       throw new Error(`Error while deleting a post: The user trying to delete is not the author of the post.`);
     }
     await PostModel.deleteOne(post);
+    this.context.feedService.onDeletePost(params.postId);
     return post;
   }
 

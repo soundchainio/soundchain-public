@@ -47,16 +47,19 @@ export const Post = ({ postId }: PostProps) => {
                   className="flex-1 text-left"
                 />
               </div>
-              <div className="w-14">
-                {canEdit && <Ellipsis className="pr-4 pl-4 w-full h-3 cursor-pointer" onClick={onEllipsisClick} />}
-              </div>
             </div>
-
-          </div>
+            {canEdit && (
+              <div>
+                <Ellipsis className="pr-2 pl-2 w-10 h-3 cursor-pointer" onClick={onEllipsisClick} />
+              </div>
+            )}
+          </div >
           <pre className="mt-4 text-gray-100 break-words whitespace-pre-wrap">{post.body}</pre>
-          {post.mediaLink && (
-            <iframe frameBorder="0" className="mt-4 w-full bg-gray-20" allowFullScreen src={post.mediaLink} />
-          )}
+          {
+            post.mediaLink && (
+              <iframe frameBorder="0" className="mt-4 w-full bg-gray-20" allowFullScreen src={post.mediaLink} />
+            )
+          }
           {post.repostId && <RepostPreview postId={post.repostId} />}
           <PostStats
             totalReactions={post.totalReactions}
@@ -65,9 +68,9 @@ export const Post = ({ postId }: PostProps) => {
             repostCount={post.repostCount}
             postId={postId}
           />
-        </div>
-      </NextLink>
+        </div >
+      </NextLink >
       <PostActions postId={postId} myReaction={post.myReaction} />
-    </div>
+    </div >
   );
 };
