@@ -24,6 +24,17 @@ functions:
           cors: true
   migrate:
     handler: src/db/migrate.handler
+  mint:
+    handler: src/lambda.mint
+    timeout: 600
+    reservedConcurrency: 1
+    events:
+      - sqs:
+          batchSize: 1
+          arn:
+            Fn::GetAtt:
+              - MintingQueue
+              - Arn
 
 custom:
   db:
@@ -351,3 +362,24 @@ resources:
             - AllowedHeaders: ['*']
               AllowedMethods: [GET, PUT]
               AllowedOrigins: ['*']
+    MintingQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        ContentBasedDeduplication: true
+        FifoQueue: true
+        MessageRetentionPeriod: 1209600
+        QueueName: MintingQueue-${AWS::StackName}.fifo
+        VisibilityTimeout: 600
+        RedrivePolicy:
+          deadLetterTargetArn:
+            Fn::GetAtt:
+              - 'MintingDeadLetterQueue'
+              - 'Arn'
+          maxReceiveCount: 5
+    MintingDeadLetterQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        ContentBasedDeduplication: true
+        FifoQueue: true
+        MessageRetentionPeriod: 1209600
+        QueueName: MintingDeadLetterQueue-${AWS::StackName}.fifo
