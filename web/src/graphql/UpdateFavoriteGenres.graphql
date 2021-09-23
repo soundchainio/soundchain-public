@@ -1,5 +1,5 @@
-mutation UpdateFavoriteGenres($input: UpdateFavoriteGenresInput!) {
-  updateFavoriteGenres(input: $input) {
+mutation UpdateFavoriteGenres($input: UpdateProfileInput!) {
+  updateProfile(input: $input) {
     profile {
       id
       favoriteGenres

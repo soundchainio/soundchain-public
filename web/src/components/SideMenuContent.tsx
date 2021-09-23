@@ -1,5 +1,6 @@
 import { FollowModal } from 'components/FollowersModal';
 import { Number } from 'components/Number';
+import { useModalDispatch } from 'contexts/providers/modal';
 import { useMe } from 'hooks/useMe';
 import { Logo } from 'icons/Logo';
 import { Logout } from 'icons/Logout';
@@ -16,7 +17,6 @@ import { FollowModalType } from 'types/FollowModalType';
 import { Avatar } from './Avatar';
 import { MenuItem } from './MenuItem';
 import { Title } from './Title';
-import { useModalDispatch } from 'contexts/providers/modal';
 
 interface SideMenuContentProps {
   isMobile?: boolean;

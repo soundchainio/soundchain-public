@@ -1,6 +1,6 @@
 import { mongoose } from '@typegoose/typegoose';
 import { ApolloServer } from 'apollo-server-lambda';
-import type { Handler } from 'aws-lambda';
+import type { Handler, SQSEvent } from 'aws-lambda';
 import express from 'express';
 import { config } from './config';
 
@@ -18,4 +18,9 @@ export const handler: Handler = async (...args) => {
   });
 
   return apolloHandler(...args);
+};
+
+export const mint: Handler<SQSEvent> = async event => {
+  console.log('Got a cool event from SQS');
+  console.log(JSON.parse(event.Records[0].body));
 };

@@ -3,8 +3,8 @@ import { FeedItem, FeedItemModel } from '../models/FeedItem';
 import { Follow } from '../models/Follow';
 import { Post } from '../models/Post';
 import { Context } from '../types/Context';
-import { PageInput } from '../types/PageInput';
 import { FeedItemInput } from '../types/FeedItemInput';
+import { PageInput } from '../types/PageInput';
 import { SortOrder } from '../types/SortOrder';
 import { SortPostField } from '../types/SortPostField';
 import { ModelService } from './ModelService';
@@ -36,7 +36,12 @@ export class FeedService extends ModelService<typeof FeedItem> {
     const feedItems = posts.map(
       post => new this.model({ profileId: followerId, postId: post._id, postedAt: post.createdAt }),
     );
-    await this.model.insertMany(feedItems);
+
+    try {
+      await this.model.insertMany(feedItems, { ordered: false });
+    } catch (error) {
+      // ignore duplicates error
+    }
   }
 
   async seedNewProfileFeed(profileId: string): Promise<void> {
@@ -53,5 +58,9 @@ export class FeedService extends ModelService<typeof FeedItem> {
   async createFeedItem(item: FeedItemInput): Promise<void> {
     const feedItem = new FeedItemModel(item);
     await feedItem.save();
+  }
+
+  async deleteItemsByPostId(postId: string): Promise<void> {
+    await this.model.deleteMany({ postId });
   }
 }

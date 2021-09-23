@@ -1,16 +1,16 @@
+import { useModalDispatch } from 'contexts/providers/modal';
+import { useMe } from 'hooks/useMe';
+import { Ellipsis } from 'icons/Ellipsis';
 import { usePostQuery } from 'lib/graphql';
 import NextLink from 'next/link';
 import React from 'react';
 import { AuthorActionsType } from 'types/AuthorActionsType';
-import { useModalDispatch } from 'contexts/providers/modal';
 import { Avatar } from './Avatar';
 import { PostActions } from './PostActions';
 import { PostSkeleton } from './PostSkeleton';
 import { PostStats } from './PostStats';
 import { RepostPreview } from './RepostPreview';
 import { Timestamp } from './Timestamp';
-import { useMe } from 'hooks/useMe';
-import { Ellipsis } from 'icons/Ellipsis';
 
 interface PostProps {
   postId: string;
