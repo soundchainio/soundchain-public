@@ -35,7 +35,12 @@ export class FeedService extends ModelService<typeof FeedItem> {
     const feedItems = posts.map(
       post => new this.model({ profileId: followerId, postId: post._id, postedAt: post.createdAt }),
     );
-    await this.model.insertMany(feedItems);
+
+    try {
+      await this.model.insertMany(feedItems, { ordered: false });
+    } catch (error) {
+      // ignore duplicates error
+    }
   }
 
   async seedNewProfileFeed(profileId: string): Promise<void> {
