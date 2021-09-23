@@ -1,7 +1,5 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
-import { AudioAsset } from '../types/AudioAsset';
-import { AudioUpload } from '../types/AudioUpload';
 import { Model } from './Model';
 
 @ObjectType()
@@ -13,12 +11,12 @@ export class Track extends Model {
   profileId: string;
 
   @Field()
-  @prop()
-  upload: AudioUpload;
+  @prop({ required: true })
+  title: string;
 
   @Field()
-  @prop()
-  asset: AudioAsset;
+  @prop({ required: true })
+  audioUrl: string;
 
   @Field(() => Date)
   createdAt: Date;

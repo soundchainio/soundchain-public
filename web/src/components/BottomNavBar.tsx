@@ -10,7 +10,8 @@ import { BottomNavBarButton } from './BottomNavBarButton';
 import { NotificationBadge } from './NotificationBadge';
 
 export const BottomNavBar = () => {
-  const { dispatchSetRepostId, dispatchShowPostModal, dispatchShowUnderDevelopmentModal } = useModalDispatch();
+  const { dispatchSetRepostId, dispatchShowPostModal, dispatchShowUnderDevelopmentModal, dispatchShowNewTrackModal } =
+    useModalDispatch();
   const router = useRouter();
   const me = useMe();
 
@@ -29,6 +30,7 @@ export const BottomNavBar = () => {
           icon={Search}
           activatedColor="green"
         />
+        <BottomNavBarButton label="NFT" icon={NewPost} onClick={() => dispatchShowNewTrackModal(true)} />
         <BottomNavBarButton label="Post" icon={NewPost} onClick={handleNewPostClick} />
         <BottomNavBarButton
           label="Notifications"

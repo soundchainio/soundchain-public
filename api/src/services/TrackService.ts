@@ -12,9 +12,8 @@ export class TrackService extends ModelService<typeof Track> {
     return this.findOrFail(id);
   }
 
-  async createTrack(profileId: string): Promise<Track> {
-    const track = new this.model({ profileId });
-    track.upload = await this.context.uploadService.createAudioUpload(track.id);
+  async createTrack(params: Pick<Track, 'profileId' | 'title' | 'audioUrl'>): Promise<Track> {
+    const track = new this.model(params);
     await track.save();
     return track;
   }

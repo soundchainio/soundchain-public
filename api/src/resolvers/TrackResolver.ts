@@ -1,16 +1,21 @@
-import { Authorized, Ctx, Mutation, Resolver } from 'type-graphql';
+import { Arg, Authorized, Ctx, Mutation, Resolver } from 'type-graphql';
 import { CurrentUser } from '../decorators/current-user';
 import { Track } from '../models/Track';
 import { User } from '../models/User';
 import { Context } from '../types/Context';
-import { UploadTrackPayload } from '../types/UploadTrackPayload';
+import { CreateTrackInput } from '../types/CreateTrackInput';
+import { CreateTrackPayload } from '../types/CreateTrackPayload';
 
 @Resolver(Track)
 export class TrackResolver {
-  @Mutation(() => UploadTrackPayload)
+  @Mutation(() => CreateTrackPayload)
   @Authorized()
-  async uploadTrack(@Ctx() { trackService }: Context, @CurrentUser() { profileId }: User): Promise<UploadTrackPayload> {
-    const track = await trackService.createTrack(profileId);
+  async createTrack(
+    @Ctx() { trackService }: Context,
+    @CurrentUser() { profileId }: User,
+    @Arg('input') input: CreateTrackInput,
+  ): Promise<CreateTrackPayload> {
+    const track = await trackService.createTrack({ profileId, ...input });
     return { track };
   }
 }

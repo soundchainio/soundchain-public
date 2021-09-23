@@ -24,12 +24,6 @@ functions:
           cors: true
   migrate:
     handler: src/db/migrate.handler
-  mux:
-    handler: src/webhooks/mux.handler
-    events:
-      - http:
-          path: /
-          method: post
   mint:
     handler: src/lambda.mint
     timeout: 600

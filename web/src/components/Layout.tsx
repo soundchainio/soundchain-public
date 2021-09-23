@@ -1,13 +1,14 @@
+import classNames from 'classnames';
 import { BottomNavBar } from 'components/BottomNavBar';
 import { store } from 'contexts';
 import { ReactNode, useContext, useState } from 'react';
 import { AuthorActionsModal } from './AuthorActionsModal';
+import { NewTrackModal } from './modals/NewTrackModal';
 import { PostModal } from './PostModal';
-import { UnderDevelopmentModal } from './UnderDevelopmentModal';
+import { ReactionsModal } from './ReactionsModal';
 import { SideMenu } from './SideMenu';
 import { TopNavBar, TopNavBarProps } from './TopNavBar';
-import { ReactionsModal } from './ReactionsModal';
-import classNames from 'classnames';
+import { UnderDevelopmentModal } from './UnderDevelopmentModal';
 
 interface LayoutProps {
   children: ReactNode;
@@ -38,6 +39,7 @@ export const Layout = ({ children, hideBottomNavBar, topNavBarProps }: LayoutPro
         <PostModal />
         <AuthorActionsModal />
         <ReactionsModal />
+        <NewTrackModal />
       </div>
     </div>
   );
