@@ -4,6 +4,7 @@
   "license": "MIT",
   "scripts": {
     "bootstrap": "lerna bootstrap && husky install",
+    "seed": "cd api && yarn seed",
     "dev": "lerna run --parallel dev",
     "codegen": "lerna run --parallel codegen",
     "lint-staged": "lerna run --parallel lint-staged"

@@ -1,18 +1,18 @@
 import classNames from 'classnames';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
-import { useDeleteCommentMutation, useDeletePostMutation, PostsDocument, CommentsDocument } from 'lib/graphql';
+import { CommentsDocument, PostsDocument, useDeleteCommentMutation, useDeletePostMutation } from 'lib/graphql';
+import { useRouter } from 'next/router';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 import { Delete as DeleteButton } from './Buttons/Delete';
 import { Edit as EditButton } from './Buttons/Edit';
 import { ModalsPortal } from './ModalsPortal';
-import { useRouter } from 'next/router';
 
 const baseClasses =
   'fixed w-screen h-screen bottom-0 duration-500 bg-opacity-75 ease-in-out bg-black transform-gpu transform';
 
 export const AuthorActionsModal = () => {
   const { showAuthorActions, authorActionsId, authorActionsType } = useModalState();
-  const { dispatchShowAuthorActionsModal, dispatchShowNewPostModal, dispatchSetEditPostId } = useModalDispatch();
+  const { dispatchShowAuthorActionsModal, dispatchShowPostModal, dispatchSetEditPostId } = useModalDispatch();
   const router = useRouter();
 
   const [deleteComment] = useDeleteCommentMutation({
@@ -36,7 +36,7 @@ export const AuthorActionsModal = () => {
   const onEdit = () => {
     onOutsideClick();
     dispatchSetEditPostId(authorActionsId);
-    dispatchShowNewPostModal(true);
+    dispatchShowPostModal(true);
   };
 
   const onDelete = async () => {

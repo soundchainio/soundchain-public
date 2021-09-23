@@ -1,11 +1,11 @@
 import { Genre } from 'lib/graphql';
 
-type GenreLabels = {
+export type GenreLabel = {
   key: Genre;
   label: string;
 };
 
-export const genres: GenreLabels[] = [
+export const genres: GenreLabel[] = [
   { key: Genre.Acoustic, label: 'Acoustic' },
   { key: Genre.Alternative, label: 'Alternative' },
   { key: Genre.Ambient, label: 'Ambient' },

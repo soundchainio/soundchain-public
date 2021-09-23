@@ -277,13 +277,7 @@ export type Mutation = {
   changeReaction: ChangeReactionPayload;
   createRepost: CreateRepostPayload;
   deletePost: DeletePostPayload;
-  updateSocialMedias: UpdateSocialMediasPayload;
-  updateFavoriteGenres: UpdateFavoriteGenresPayload;
-  updateMusicianType: UpdateFavoriteGenresPayload;
-  updateProfilePicture: UpdateProfilePicturePayload;
-  updateProfileDisplayName: UpdateProfileDisplayNamePayload;
-  updateProfileBio: UpdateProfileDisplayNamePayload;
-  updateCoverPicture: UpdateCoverPicturePayload;
+  updateProfile: UpdateProfilePayload;
   followProfile: FollowProfilePayload;
   unfollowProfile: UnfollowProfilePayload;
   subscribeToProfile: SubscribeToProfilePayload;
@@ -348,38 +342,8 @@ export type MutationDeletePostArgs = {
 };
 
 
-export type MutationUpdateSocialMediasArgs = {
-  input: UpdateSocialMediasInput;
-};
-
-
-export type MutationUpdateFavoriteGenresArgs = {
-  input: UpdateFavoriteGenresInput;
-};
-
-
-export type MutationUpdateMusicianTypeArgs = {
-  input: UpdateMusicianTypeInput;
-};
-
-
-export type MutationUpdateProfilePictureArgs = {
-  input: UpdateProfilePictureInput;
-};
-
-
-export type MutationUpdateProfileDisplayNameArgs = {
-  input: UpdateProfileDisplayNameInput;
-};
-
-
-export type MutationUpdateProfileBioArgs = {
-  input: UpdateProfileBioInput;
-};
-
-
-export type MutationUpdateCoverPictureArgs = {
-  input: UpdateCoverPictureInput;
+export type MutationUpdateProfileArgs = {
+  input: UpdateProfileInput;
 };
 
 
@@ -518,7 +482,7 @@ export type Profile = {
   coverPicture: Maybe<Scalars['String']>;
   socialMedias: SocialMedias;
   favoriteGenres: Array<Genre>;
-  musicianType: Array<MusicianType>;
+  musicianTypes: Array<MusicianType>;
   bio: Maybe<Scalars['String']>;
   followerCount: Scalars['Float'];
   followingCount: Scalars['Float'];
@@ -739,6 +703,13 @@ export type SocialMedias = {
   twitter: Maybe<Scalars['String']>;
 };
 
+export type SocialMediasInput = {
+  facebook?: Maybe<Scalars['String']>;
+  instagram?: Maybe<Scalars['String']>;
+  soundcloud?: Maybe<Scalars['String']>;
+  twitter?: Maybe<Scalars['String']>;
+};
+
 export enum SortNotificationField {
   CreatedAt = 'CREATED_AT'
 }
@@ -789,24 +760,6 @@ export type UnsubscribeFromProfilePayload = {
   profile: Profile;
 };
 
-export type UpdateCoverPictureInput = {
-  picture: Scalars['String'];
-};
-
-export type UpdateCoverPicturePayload = {
-  __typename?: 'UpdateCoverPicturePayload';
-  profile: Profile;
-};
-
-export type UpdateFavoriteGenresInput = {
-  favoriteGenres: Array<Genre>;
-};
-
-export type UpdateFavoriteGenresPayload = {
-  __typename?: 'UpdateFavoriteGenresPayload';
-  profile: Profile;
-};
-
 export type UpdateHandleInput = {
   handle: Scalars['String'];
 };
@@ -814,10 +767,6 @@ export type UpdateHandleInput = {
 export type UpdateHandlePayload = {
   __typename?: 'UpdateHandlePayload';
   user: User;
-};
-
-export type UpdateMusicianTypeInput = {
-  musicianTypes: Array<MusicianType>;
 };
 
 export type UpdatePasswordInput = {
@@ -840,37 +789,18 @@ export type UpdatePostPayload = {
   post: Post;
 };
 
-export type UpdateProfileBioInput = {
-  bio: Scalars['String'];
+export type UpdateProfileInput = {
+  displayName?: Maybe<Scalars['String']>;
+  bio?: Maybe<Scalars['String']>;
+  profilePicture?: Maybe<Scalars['String']>;
+  coverPicture?: Maybe<Scalars['String']>;
+  favoriteGenres?: Maybe<Array<Genre>>;
+  musicianTypes?: Maybe<Array<MusicianType>>;
+  socialMedias?: Maybe<SocialMediasInput>;
 };
 
-export type UpdateProfileDisplayNameInput = {
-  displayName: Scalars['String'];
-};
-
-export type UpdateProfileDisplayNamePayload = {
-  __typename?: 'UpdateProfileDisplayNamePayload';
-  profile: Profile;
-};
-
-export type UpdateProfilePictureInput = {
-  picture: Scalars['String'];
-};
-
-export type UpdateProfilePicturePayload = {
-  __typename?: 'UpdateProfilePicturePayload';
-  profile: Profile;
-};
-
-export type UpdateSocialMediasInput = {
-  facebook?: Maybe<Scalars['String']>;
-  instagram?: Maybe<Scalars['String']>;
-  soundcloud?: Maybe<Scalars['String']>;
-  twitter?: Maybe<Scalars['String']>;
-};
-
-export type UpdateSocialMediasPayload = {
-  __typename?: 'UpdateSocialMediasPayload';
+export type UpdateProfilePayload = {
+  __typename?: 'UpdateProfilePayload';
   profile: Profile;
 };
 
@@ -1261,7 +1191,7 @@ export type MeQuery = (
     & Pick<User, 'id' | 'handle' | 'email'>
     & { profile: (
       { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'followerCount' | 'followingCount' | 'favoriteGenres' | 'musicianType' | 'bio'>
+      & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'followerCount' | 'followingCount' | 'favoriteGenres' | 'musicianTypes' | 'bio'>
     ) }
   )> }
 );
@@ -1285,21 +1215,6 @@ export type MessageComponentFieldsFragment = (
   & { fromProfile: (
     { __typename?: 'Profile' }
     & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
-  ) }
-);
-
-export type MyProfileQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type MyProfileQuery = (
-  { __typename?: 'Query' }
-  & { myProfile: (
-    { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName'>
-    & { socialMedias: (
-      { __typename?: 'SocialMedias' }
-      & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
-    ) }
   ) }
 );
 
@@ -1414,7 +1329,7 @@ export type ProfileQuery = (
   { __typename?: 'Query' }
   & { profile: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'userHandle' | 'isFollowed' | 'isSubscriber' | 'followerCount' | 'followingCount' | 'musicianType' | 'bio'>
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'userHandle' | 'isFollowed' | 'isSubscriber' | 'followerCount' | 'followingCount' | 'musicianTypes' | 'bio'>
     & { socialMedias: (
       { __typename?: 'SocialMedias' }
       & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
@@ -1620,14 +1535,14 @@ export type UnsubscribeFromProfileMutation = (
 );
 
 export type UpdateCoverPictureMutationVariables = Exact<{
-  input: UpdateCoverPictureInput;
+  input: UpdateProfileInput;
 }>;
 
 
 export type UpdateCoverPictureMutation = (
   { __typename?: 'Mutation' }
-  & { updateCoverPicture: (
-    { __typename?: 'UpdateCoverPicturePayload' }
+  & { updateProfile: (
+    { __typename?: 'UpdateProfilePayload' }
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'coverPicture'>
@@ -1636,14 +1551,14 @@ export type UpdateCoverPictureMutation = (
 );
 
 export type UpdateFavoriteGenresMutationVariables = Exact<{
-  input: UpdateFavoriteGenresInput;
+  input: UpdateProfileInput;
 }>;
 
 
 export type UpdateFavoriteGenresMutation = (
   { __typename?: 'Mutation' }
-  & { updateFavoriteGenres: (
-    { __typename?: 'UpdateFavoriteGenresPayload' }
+  & { updateProfile: (
+    { __typename?: 'UpdateProfilePayload' }
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'favoriteGenres'>
@@ -1668,17 +1583,17 @@ export type UpdateHandleMutation = (
 );
 
 export type UpdateMusicianTypeMutationVariables = Exact<{
-  input: UpdateMusicianTypeInput;
+  input: UpdateProfileInput;
 }>;
 
 
 export type UpdateMusicianTypeMutation = (
   { __typename?: 'Mutation' }
-  & { updateMusicianType: (
-    { __typename?: 'UpdateFavoriteGenresPayload' }
+  & { updateProfile: (
+    { __typename?: 'UpdateProfilePayload' }
     & { profile: (
       { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'musicianType'>
+      & Pick<Profile, 'id' | 'musicianTypes'>
     ) }
   ) }
 );
@@ -1713,14 +1628,14 @@ export type UpdatePostMutation = (
 );
 
 export type UpdateProfileBioMutationVariables = Exact<{
-  input: UpdateProfileBioInput;
+  input: UpdateProfileInput;
 }>;
 
 
 export type UpdateProfileBioMutation = (
   { __typename?: 'Mutation' }
-  & { updateProfileBio: (
-    { __typename?: 'UpdateProfileDisplayNamePayload' }
+  & { updateProfile: (
+    { __typename?: 'UpdateProfilePayload' }
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'bio'>
@@ -1729,14 +1644,14 @@ export type UpdateProfileBioMutation = (
 );
 
 export type UpdateProfileDisplayNameMutationVariables = Exact<{
-  input: UpdateProfileDisplayNameInput;
+  input: UpdateProfileInput;
 }>;
 
 
 export type UpdateProfileDisplayNameMutation = (
   { __typename?: 'Mutation' }
-  & { updateProfileDisplayName: (
-    { __typename?: 'UpdateProfileDisplayNamePayload' }
+  & { updateProfile: (
+    { __typename?: 'UpdateProfilePayload' }
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'displayName'>
@@ -1745,37 +1660,17 @@ export type UpdateProfileDisplayNameMutation = (
 );
 
 export type UpdateProfilePictureMutationVariables = Exact<{
-  input: UpdateProfilePictureInput;
+  input: UpdateProfileInput;
 }>;
 
 
 export type UpdateProfilePictureMutation = (
   { __typename?: 'Mutation' }
-  & { updateProfilePicture: (
-    { __typename?: 'UpdateProfilePicturePayload' }
+  & { updateProfile: (
+    { __typename?: 'UpdateProfilePayload' }
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'profilePicture'>
-    ) }
-  ) }
-);
-
-export type UpdateSocialMediasMutationVariables = Exact<{
-  input: UpdateSocialMediasInput;
-}>;
-
-
-export type UpdateSocialMediasMutation = (
-  { __typename?: 'Mutation' }
-  & { updateSocialMedias: (
-    { __typename?: 'UpdateSocialMediasPayload' }
-    & { profile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'id'>
-      & { socialMedias: (
-        { __typename?: 'SocialMedias' }
-        & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
-      ) }
     ) }
   ) }
 );
@@ -2644,10 +2539,11 @@ export const MeDocument = gql`
       id
       displayName
       profilePicture
+      coverPicture
       followerCount
       followingCount
       favoriteGenres
-      musicianType
+      musicianTypes
       bio
     }
   }
@@ -2715,47 +2611,6 @@ export function useMessageLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Me
 export type MessageQueryHookResult = ReturnType<typeof useMessageQuery>;
 export type MessageLazyQueryHookResult = ReturnType<typeof useMessageLazyQuery>;
 export type MessageQueryResult = Apollo.QueryResult<MessageQuery, MessageQueryVariables>;
-export const MyProfileDocument = gql`
-    query MyProfile {
-  myProfile {
-    id
-    displayName
-    socialMedias {
-      facebook
-      instagram
-      soundcloud
-      twitter
-    }
-  }
-}
-    `;
-
-/**
- * __useMyProfileQuery__
- *
- * To run a query within a React component, call `useMyProfileQuery` and pass it any options that fit your needs.
- * When your component renders, `useMyProfileQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useMyProfileQuery({
- *   variables: {
- *   },
- * });
- */
-export function useMyProfileQuery(baseOptions?: Apollo.QueryHookOptions<MyProfileQuery, MyProfileQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<MyProfileQuery, MyProfileQueryVariables>(MyProfileDocument, options);
-      }
-export function useMyProfileLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<MyProfileQuery, MyProfileQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<MyProfileQuery, MyProfileQueryVariables>(MyProfileDocument, options);
-        }
-export type MyProfileQueryHookResult = ReturnType<typeof useMyProfileQuery>;
-export type MyProfileLazyQueryHookResult = ReturnType<typeof useMyProfileLazyQuery>;
-export type MyProfileQueryResult = Apollo.QueryResult<MyProfileQuery, MyProfileQueryVariables>;
 export const NotificationDocument = gql`
     query Notification($id: String!) {
   notification(id: $id) {
@@ -2982,7 +2837,7 @@ export const ProfileDocument = gql`
     isSubscriber
     followerCount
     followingCount
-    musicianType
+    musicianTypes
     bio
   }
 }
@@ -3487,8 +3342,8 @@ export type UnsubscribeFromProfileMutationHookResult = ReturnType<typeof useUnsu
 export type UnsubscribeFromProfileMutationResult = Apollo.MutationResult<UnsubscribeFromProfileMutation>;
 export type UnsubscribeFromProfileMutationOptions = Apollo.BaseMutationOptions<UnsubscribeFromProfileMutation, UnsubscribeFromProfileMutationVariables>;
 export const UpdateCoverPictureDocument = gql`
-    mutation UpdateCoverPicture($input: UpdateCoverPictureInput!) {
-  updateCoverPicture(input: $input) {
+    mutation UpdateCoverPicture($input: UpdateProfileInput!) {
+  updateProfile(input: $input) {
     profile {
       id
       coverPicture
@@ -3523,8 +3378,8 @@ export type UpdateCoverPictureMutationHookResult = ReturnType<typeof useUpdateCo
 export type UpdateCoverPictureMutationResult = Apollo.MutationResult<UpdateCoverPictureMutation>;
 export type UpdateCoverPictureMutationOptions = Apollo.BaseMutationOptions<UpdateCoverPictureMutation, UpdateCoverPictureMutationVariables>;
 export const UpdateFavoriteGenresDocument = gql`
-    mutation UpdateFavoriteGenres($input: UpdateFavoriteGenresInput!) {
-  updateFavoriteGenres(input: $input) {
+    mutation UpdateFavoriteGenres($input: UpdateProfileInput!) {
+  updateProfile(input: $input) {
     profile {
       id
       favoriteGenres
@@ -3595,11 +3450,11 @@ export type UpdateHandleMutationHookResult = ReturnType<typeof useUpdateHandleMu
 export type UpdateHandleMutationResult = Apollo.MutationResult<UpdateHandleMutation>;
 export type UpdateHandleMutationOptions = Apollo.BaseMutationOptions<UpdateHandleMutation, UpdateHandleMutationVariables>;
 export const UpdateMusicianTypeDocument = gql`
-    mutation UpdateMusicianType($input: UpdateMusicianTypeInput!) {
-  updateMusicianType(input: $input) {
+    mutation UpdateMusicianType($input: UpdateProfileInput!) {
+  updateProfile(input: $input) {
     profile {
       id
-      musicianType
+      musicianTypes
     }
   }
 }
@@ -3699,8 +3554,8 @@ export type UpdatePostMutationHookResult = ReturnType<typeof useUpdatePostMutati
 export type UpdatePostMutationResult = Apollo.MutationResult<UpdatePostMutation>;
 export type UpdatePostMutationOptions = Apollo.BaseMutationOptions<UpdatePostMutation, UpdatePostMutationVariables>;
 export const UpdateProfileBioDocument = gql`
-    mutation updateProfileBio($input: UpdateProfileBioInput!) {
-  updateProfileBio(input: $input) {
+    mutation updateProfileBio($input: UpdateProfileInput!) {
+  updateProfile(input: $input) {
     profile {
       id
       bio
@@ -3735,8 +3590,8 @@ export type UpdateProfileBioMutationHookResult = ReturnType<typeof useUpdateProf
 export type UpdateProfileBioMutationResult = Apollo.MutationResult<UpdateProfileBioMutation>;
 export type UpdateProfileBioMutationOptions = Apollo.BaseMutationOptions<UpdateProfileBioMutation, UpdateProfileBioMutationVariables>;
 export const UpdateProfileDisplayNameDocument = gql`
-    mutation updateProfileDisplayName($input: UpdateProfileDisplayNameInput!) {
-  updateProfileDisplayName(input: $input) {
+    mutation updateProfileDisplayName($input: UpdateProfileInput!) {
+  updateProfile(input: $input) {
     profile {
       id
       displayName
@@ -3771,8 +3626,8 @@ export type UpdateProfileDisplayNameMutationHookResult = ReturnType<typeof useUp
 export type UpdateProfileDisplayNameMutationResult = Apollo.MutationResult<UpdateProfileDisplayNameMutation>;
 export type UpdateProfileDisplayNameMutationOptions = Apollo.BaseMutationOptions<UpdateProfileDisplayNameMutation, UpdateProfileDisplayNameMutationVariables>;
 export const UpdateProfilePictureDocument = gql`
-    mutation UpdateProfilePicture($input: UpdateProfilePictureInput!) {
-  updateProfilePicture(input: $input) {
+    mutation UpdateProfilePicture($input: UpdateProfileInput!) {
+  updateProfile(input: $input) {
     profile {
       id
       profilePicture
@@ -3806,47 +3661,6 @@ export function useUpdateProfilePictureMutation(baseOptions?: Apollo.MutationHoo
 export type UpdateProfilePictureMutationHookResult = ReturnType<typeof useUpdateProfilePictureMutation>;
 export type UpdateProfilePictureMutationResult = Apollo.MutationResult<UpdateProfilePictureMutation>;
 export type UpdateProfilePictureMutationOptions = Apollo.BaseMutationOptions<UpdateProfilePictureMutation, UpdateProfilePictureMutationVariables>;
-export const UpdateSocialMediasDocument = gql`
-    mutation updateSocialMedias($input: UpdateSocialMediasInput!) {
-  updateSocialMedias(input: $input) {
-    profile {
-      id
-      socialMedias {
-        facebook
-        instagram
-        soundcloud
-        twitter
-      }
-    }
-  }
-}
-    `;
-export type UpdateSocialMediasMutationFn = Apollo.MutationFunction<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>;
-
-/**
- * __useUpdateSocialMediasMutation__
- *
- * To run a mutation, you first call `useUpdateSocialMediasMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useUpdateSocialMediasMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [updateSocialMediasMutation, { data, loading, error }] = useUpdateSocialMediasMutation({
- *   variables: {
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useUpdateSocialMediasMutation(baseOptions?: Apollo.MutationHookOptions<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>(UpdateSocialMediasDocument, options);
-      }
-export type UpdateSocialMediasMutationHookResult = ReturnType<typeof useUpdateSocialMediasMutation>;
-export type UpdateSocialMediasMutationResult = Apollo.MutationResult<UpdateSocialMediasMutation>;
-export type UpdateSocialMediasMutationOptions = Apollo.BaseMutationOptions<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>;
 export const ValidPasswordResetTokenDocument = gql`
     query ValidPasswordResetToken($token: String!) {
   validPasswordResetToken(token: $token)

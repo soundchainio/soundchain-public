@@ -1,8 +1,8 @@
-mutation UpdateMusicianType($input: UpdateMusicianTypeInput!) {
-  updateMusicianType(input: $input) {
+mutation UpdateMusicianType($input: UpdateProfileInput!) {
+  updateProfile(input: $input) {
     profile {
       id
-      musicianType
+      musicianTypes
     }
   }
 }

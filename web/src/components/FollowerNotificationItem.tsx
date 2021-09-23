@@ -26,8 +26,10 @@ export const FollowerNotificationItem = ({
             </div>
           </div>
           <div>
-            <div className="text-gray-100 w-full inline-block text-sm">
-              <div className="font-semibold">{followerName}</div>&nbsp;started following you.
+            <div className="text-gray-100 w-full inline-block text-sm items-center">
+              <div className="flex flex-wrap">
+                <div className="font-semibold">{followerName}</div>&nbsp;started following you.
+              </div>
             </div>
             <Timestamp small datetime={createdAt} className="text-sm" />
           </div>
