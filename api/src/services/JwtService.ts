@@ -10,7 +10,7 @@ export interface JwtUser {
 }
 
 export class JwtService extends Service {
-  static middleware = expressJwt({ secret: JWT_SECRET, algorithms: ['HS256'], credentialsRequired: false });
+  static middleware = expressJwt({ secret: JWT_SECRET, algorithms: ['HS256'], credentialsRequired: false, expiresIn: '30 days' });
 
   create(user: User): string {
     return jwt.sign({ [JWT_NAMESPACE]: { roles: [] } }, JWT_SECRET, {
