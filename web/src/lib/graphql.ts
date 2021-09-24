@@ -578,7 +578,7 @@ export type QueryProfileArgs = {
 };
 
 export type QueryUploadUrlArgs = {
-  fileType: UploadFileType;
+  fileType: Scalars['String'];
 };
 
 export type QueryValidPasswordResetTokenArgs = {
@@ -786,11 +786,6 @@ export type UpdateProfilePayload = {
   __typename?: 'UpdateProfilePayload';
   profile: Profile;
 };
-
-export enum UploadFileType {
-  Jpeg = 'JPEG',
-  Png = 'PNG',
-}
 
 export type UploadUrl = {
   __typename?: 'UploadUrl';
@@ -1375,7 +1370,7 @@ export type UpdateProfilePictureMutation = { __typename?: 'Mutation' } & {
 };
 
 export type UploadUrlQueryVariables = Exact<{
-  fileType: UploadFileType;
+  fileType: Scalars['String'];
 }>;
 
 export type UploadUrlQuery = { __typename?: 'Query' } & {
@@ -3624,7 +3619,7 @@ export type UpdateProfilePictureMutationOptions = Apollo.BaseMutationOptions<
   UpdateProfilePictureMutationVariables
 >;
 export const UploadUrlDocument = gql`
-  query UploadUrl($fileType: UploadFileType!) {
+  query UploadUrl($fileType: String!) {
     uploadUrl(fileType: $fileType) {
       uploadUrl
       fileName

@@ -1,11 +1,11 @@
 import { Button } from 'components/Button';
-import { ImageUploadField } from 'components/ImageUploadField';
 import { InputField } from 'components/InputField';
 import { Label } from 'components/Label';
 import { Form, Formik, FormikProps } from 'formik';
 import { useCreateTrackMutation } from 'lib/graphql';
 import React from 'react';
 import * as yup from 'yup';
+import { AudioUploadField } from './fields/AudioUploadField';
 
 interface Props {
   afterSubmit: () => void;
@@ -39,7 +39,7 @@ export const TrackForm = ({ afterSubmit }: Props) => {
       {({ values }: FormikProps<FormValues>) => (
         <Form className="flex flex-col justify-between h-full">
           <div>
-            <ImageUploadField name="audioUrl">Upload Audio File</ImageUploadField>
+            <AudioUploadField name="audioUrl" />
             {values.audioUrl.length > 0 && (
               <div className="mt-6">
                 <Label>TRACK TITLE</Label>
