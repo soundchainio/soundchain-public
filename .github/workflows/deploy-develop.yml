@@ -38,6 +38,12 @@ jobs:
           SENDGRID_VERIFICATION_TEMPLATE: ${{ secrets.SENDGRID_VERIFICATION_TEMPLATE_DEVELOP }}
           SENDGRID_RESET_PASSWORD_TEMPLATE: ${{ secrets.SENDGRID_RESET_PASSWORD_TEMPLATE_DEVELOP }}
           WEB_APP_URL: ${{ secrets.WEB_APP_URL_DEVELOP }}
+          CONTRACT_ADDRESS: ${{ secrets.CONTRACT_ADDRESS_DEVELOP }}
+          WALLET_PUBLIC_KEY: ${{ secrets.WALLET_PUBLIC_KEY_DEVELOP }}
+          WALLET_PRIVATE_KEY: ${{ secrets.WALLET_PRIVATE_KEY_DEVELOP }}
+          ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY_DEVELOP }}
+          PINATA_API_KEY: ${{ secrets.PINATA_API_KEY_DEVELOP }}
+          PINATA_API_SECRET: ${{ secrets.PINATA_API_SECRET_DEVELOP }}
       - name: Trigger migrate lambda function
         run: |
           aws lambda invoke --function-name soundchain-api-develop-migrate response.json
