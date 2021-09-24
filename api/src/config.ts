@@ -34,6 +34,12 @@ export const {
   SENDGRID_API_KEY,
   UPLOADS_BUCKET_REGION,
   UPLOADS_BUCKET_NAME,
+  CONTRACT_ADDRESS = '0x1Ca9E523a3D4D2A771e22aaAf51EAB33108C6b2C',
+  WALLET_PUBLIC_KEY,
+  WALLET_PRIVATE_KEY,
+  ALCHEMY_API_KEY,
+  PINATA_API_KEY,
+  PINATA_API_SECRET,
 } = process.env;
 
 function assertEnvVar(name: string, value: string | undefined): asserts value {
@@ -92,5 +98,13 @@ export const config = {
   },
   web: {
     url: WEB_APP_URL,
+  },
+  minting: {
+    contractAddress: CONTRACT_ADDRESS,
+    pinataKey: PINATA_API_KEY,
+    pinataSecret: PINATA_API_SECRET,
+    walletPrivateKey: WALLET_PRIVATE_KEY,
+    walletPublicKey: WALLET_PUBLIC_KEY,
+    alchemyKey: ALCHEMY_API_KEY,
   },
 };

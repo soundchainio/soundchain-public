@@ -9,7 +9,9 @@
     "migrate:create": "sh -c 'ts-node node_modules/migrate-mongo/bin/migrate-mongo create $0 -f migrate-mongo-config.ts' ",
     "migrate:status": "ts-node node_modules/migrate-mongo/bin/migrate-mongo status -f migrate-mongo-config.ts",
     "migrate:down": "ts-node node_modules/migrate-mongo/bin/migrate-mongo down -f migrate-mongo-config.ts && npm run migrate:status",
-    "migrate": "ts-node node_modules/migrate-mongo/bin/migrate-mongo up -f migrate-mongo-config.ts"
+    "migrate": "ts-node node_modules/migrate-mongo/bin/migrate-mongo up -f migrate-mongo-config.ts",
+    "compile-contract": "npx hardhat compile",
+    "deploy-contract": "npx hardhat run ./src/deploy.ts --network matic"
   },
   "lint-staged": {
     "*.{ts,json,md}": "prettier --write"
@@ -22,8 +24,10 @@
     "semi": true
   },
   "dependencies": {
+    "@alch/alchemy-web3": "^1.1.4",
     "@aws-sdk/client-s3": "^3.25.0",
     "@aws-sdk/s3-request-presigner": "^3.25.0",
+    "@pinata/sdk": "^1.1.23",
     "@sendgrid/mail": "^7.4.5",
     "@typegoose/typegoose": "^7.6.3",
     "apollo-server-express": "^3.0.2",
@@ -48,6 +52,8 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "@openzeppelin/contracts": "^4.2.0",
     "@types/base64-url": "^2.2.0",
     "@types/bcryptjs": "^2.4.2",
     "@types/dotenv-flow": "^3.1.1",
@@ -58,12 +64,15 @@
     "@types/migrate-mongo": "^8.1.2",
     "@types/mongodb": "^4.0.7",
     "@types/mongoose": "5.10.5",
+    "@types/node": "^16.9.6",
     "@types/uuid": "^8.3.1",
     "@typescript-eslint/eslint-plugin": "^4.28.3",
     "@typescript-eslint/parser": "^4.28.3",
     "eslint": "^7.30.0",
     "eslint-config-prettier": "^8.3.0",
+    "ethers": "^5.4.2",
     "faker": "^5.5.3",
+    "hardhat": "^2.5.0",
     "lint-staged": "^11.0.1",
     "nodemon": "^2.0.12",
     "prettier": "^2.3.2",
