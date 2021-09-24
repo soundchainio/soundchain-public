@@ -16,6 +16,7 @@ export class JwtService extends Service {
     return jwt.sign({ [JWT_NAMESPACE]: { roles: [] } }, JWT_SECRET, {
       algorithm: 'HS256',
       subject: user._id.toString(),
+      expiresIn: '30 days'
     });
   }
 }

@@ -1,4 +1,4 @@
-import { Arg, Ctx, Query, Resolver } from 'type-graphql';
+import { Arg, Authorized, Ctx, Query, Resolver } from 'type-graphql';
 import { Context } from '../types/Context';
 import { UploadFileType } from '../types/UploadFileType';
 import { UploadUrl } from '../types/UploadUrl';
@@ -6,7 +6,8 @@ import { UploadUrl } from '../types/UploadUrl';
 @Resolver()
 export class UploadResolver {
   @Query(() => UploadUrl)
-  async uploadUrl(
+  @Authorized()
+  uploadUrl(
     @Ctx() { uploadService }: Context,
     @Arg('fileType', () => UploadFileType) fileType: UploadFileType,
   ): Promise<UploadUrl> {

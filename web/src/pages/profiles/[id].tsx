@@ -1,16 +1,19 @@
 import { Avatar } from 'components/Avatar';
+import { InboxButton } from 'components/Buttons/InboxButton';
 import { FollowButton } from 'components/FollowButton';
 import { FollowModal } from 'components/FollowersModal';
 import { Layout } from 'components/Layout';
 import { MessageButton } from 'components/MessageButton';
 import { Number } from 'components/Number';
 import { Posts } from 'components/Posts';
+import { ProfileCover } from 'components/ProfileCover';
 import { ProfileTabs } from 'components/ProfileTabs';
 import { SocialMediaLink } from 'components/SocialMediaLink';
 import { SubscribeButton } from 'components/SubscribeButton';
 import { Subtitle } from 'components/Subtitle';
+import { TopNavBarProps } from 'components/TopNavBar';
+import { useMe } from 'hooks/useMe';
 import { useProfileLazyQuery } from 'lib/graphql';
-import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { FollowModalType } from 'types/FollowModalType';
@@ -18,6 +21,7 @@ import { FollowModalType } from 'types/FollowModalType';
 export default function ProfilePage() {
   const router = useRouter();
   const profileId = router.query.id as string;
+  const me = useMe();
 
   const [profile, { data }] = useProfileLazyQuery({ variables: { id: profileId }, ssr: false });
   const [showModal, setShowModal] = useState(false);
@@ -63,10 +67,14 @@ export default function ProfilePage() {
     isSubscriber,
   } = data.profile;
 
+  const topNovaBarProps: TopNavBarProps = {
+    rightButton: me ? <InboxButton /> : undefined,
+  };
+
   return (
-    <Layout>
+    <Layout topNavBarProps={topNovaBarProps}>
       <div className="h-[125px] relative">
-        {coverPicture && <Image src={coverPicture} alt="Cover pic" layout="fill" objectFit="cover" />}
+        <ProfileCover coverPicture={coverPicture || ''} className="h-[125px]" />
         <Avatar
           profile={data.profile}
           pixels={80}

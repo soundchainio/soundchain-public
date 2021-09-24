@@ -21,7 +21,7 @@ const commonClasses = 'text-white text-sm text-gray-80 text-center font-bold fle
 export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
   const [reactionSelectorOpened, setReactionSelectorOpened] = useState(false);
   const [shareOpened, setShareOpened] = useState(false);
-  const { dispatchSetRepostId, dispatchShowNewPostModal } = useModalDispatch();
+  const { dispatchSetRepostId, dispatchShowPostModal } = useModalDispatch();
   const [postLink, setPostLink] = useState('');
   const me = useMe();
   const router = useRouter();
@@ -29,7 +29,7 @@ export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
   const onRepostClick = () => {
     if (!me) return router.push('/login');
     dispatchSetRepostId(postId);
-    dispatchShowNewPostModal(true);
+    dispatchShowPostModal(true);
   };
 
   const handleLikeButton = () => {

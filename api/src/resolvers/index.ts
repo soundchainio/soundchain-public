@@ -11,6 +11,7 @@ import { PostResolver } from './PostResolver';
 import { ProfileResolver } from './ProfileResolver';
 import { ReactionNotificationResolver } from './ReactionNotificationResolver';
 import { ReactionResolver } from './ReactionResolver';
+import { TrackResolver } from './TrackResolver';
 import { UploadResolver } from './UploadResolver';
 import { UserResolver } from './UserResolver';
 
@@ -28,6 +29,7 @@ export const resolvers = [
   ProfileResolver,
   ReactionResolver,
   ReactionNotificationResolver,
+  TrackResolver,
   UploadResolver,
   UserResolver,
 ] as const;

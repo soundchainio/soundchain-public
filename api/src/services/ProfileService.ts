@@ -1,11 +1,8 @@
 import { UserInputError } from 'apollo-server-express';
 import { NotFoundError } from '../errors/NotFoundError';
 import { Profile, ProfileModel } from '../models/Profile';
-import { SocialMedias } from '../models/SocialMedias';
 import { UserModel } from '../models/User';
 import { Context } from '../types/Context';
-import { Genre } from '../types/Genres';
-import { MusicianType } from '../types/MusicianTypes';
 import { ModelService } from './ModelService';
 
 export class ProfileService extends ModelService<typeof Profile> {
@@ -17,59 +14,13 @@ export class ProfileService extends ModelService<typeof Profile> {
     return this.findOrFail(id);
   }
 
-  async updateSocialMedias(id: string, socialMedias: SocialMedias): Promise<Profile> {
-    const updatedProfile = await ProfileModel.findByIdAndUpdate(id, { socialMedias }, { new: true });
-    if (!updatedProfile) {
-      throw new Error(`Could not update the profile with id: ${id}`);
-    }
-    return updatedProfile;
-  }
+  async updateProfile(id: string, changes: Partial<Profile>): Promise<Profile> {
+    const updatedProfile = await ProfileModel.findByIdAndUpdate(id, changes, { new: true });
 
-  async updateFavoriteGenres(id: string, favoriteGenres: Genre[]): Promise<Profile> {
-    const updatedProfile = await ProfileModel.findByIdAndUpdate(id, { favoriteGenres }, { new: true });
     if (!updatedProfile) {
       throw new Error(`Could not update the profile with id: ${id}`);
     }
-    return updatedProfile;
-  }
 
-  async updateMusicianType(id: string, musicianType: MusicianType[]): Promise<Profile> {
-    const updatedProfile = await ProfileModel.findByIdAndUpdate(id, { musicianType }, { new: true });
-    if (!updatedProfile) {
-      throw new Error(`Could not update the profile with id: ${id}`);
-    }
-    return updatedProfile;
-  }
-
-  async updateProfilePicture(id: string, profilePicture: string): Promise<Profile> {
-    const updatedProfile = await ProfileModel.findByIdAndUpdate(id, { profilePicture }, { new: true });
-    if (!updatedProfile) {
-      throw new Error(`Could not update the profile with id: ${id}`);
-    }
-    return updatedProfile;
-  }
-
-  async updateCoverPicture(id: string, coverPicture: string): Promise<Profile> {
-    const updatedProfile = await ProfileModel.findByIdAndUpdate(id, { coverPicture }, { new: true });
-    if (!updatedProfile) {
-      throw new Error(`Could not update the profile with id: ${id}`);
-    }
-    return updatedProfile;
-  }
-
-  async updateDisplayName(id: string, displayName: string): Promise<Profile> {
-    const updatedProfile = await ProfileModel.findByIdAndUpdate(id, { displayName }, { new: true });
-    if (!updatedProfile) {
-      throw new Error(`Could not update the profile with id: ${id}`);
-    }
-    return updatedProfile;
-  }
-
-  async updateBio(id: string, bio: string): Promise<Profile> {
-    const updatedProfile = await ProfileModel.findByIdAndUpdate(id, { bio }, { new: true });
-    if (!updatedProfile) {
-      throw new Error(`Could not update the profile with id: ${id}`);
-    }
     return updatedProfile;
   }
 
