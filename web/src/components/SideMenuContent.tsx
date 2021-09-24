@@ -26,7 +26,7 @@ interface SideMenuContentProps {
 export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => {
   const me = useMe();
   const router = useRouter();
-  const { dispatchShowUnderDevelopmentModal, dispatchShowNewTrackModal } = useModalDispatch();
+  const { dispatchShowUnderDevelopmentModal } = useModalDispatch();
   const [showModal, setShowModal] = useState(false);
   const [followModalType, setFollowModalType] = useState<FollowModalType>();
 
