@@ -37,9 +37,9 @@ export const mint: Handler<SQSEvent> = async event => {
 
   const pinToIPFS = async (url: string, name: string) => {
     const assetStream = new Promise<IncomingMessage>(resolve => {
-      get(url, stream => {
+      get({ timeout: 0, href: url }, stream => {
         resolve(stream);
-      });
+      }).on('error', err => console.log(err));
     });
 
     const assetFile = await assetStream;
