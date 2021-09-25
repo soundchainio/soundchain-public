@@ -10,7 +10,7 @@
     "migrate:status": "ts-node node_modules/migrate-mongo/bin/migrate-mongo status -f migrate-mongo-config.ts",
     "migrate:down": "ts-node node_modules/migrate-mongo/bin/migrate-mongo down -f migrate-mongo-config.ts && npm run migrate:status",
     "migrate": "ts-node node_modules/migrate-mongo/bin/migrate-mongo up -f migrate-mongo-config.ts",
-    "compile-contract": "npx hardhat compile",
+    "compile-contract": "npx hardhat compile && cp -r ./src/artifacts/contract ../web/src",
     "deploy-contract": "npx hardhat run ./src/deploy.ts --network matic"
   },
   "lint-staged": {

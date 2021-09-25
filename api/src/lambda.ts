@@ -64,8 +64,8 @@ export const mint: Handler<SQSEvent> = async event => {
     const metadata: Metadata = { ...nft, asset: `ipfs://${assetResult.IpfsHash}` };
 
     if (artUrl) {
-      const assetResult = await pinToIPFS(assetUrl, `${name}-preview`);
-      metadata.art = `ipfs://${assetResult.IpfsHash}`;
+      const artResult = await pinToIPFS(artUrl, `${name}-preview`);
+      metadata.art = `ipfs://${artResult.IpfsHash}`;
     }
 
     const metadataResult = await pinata.pinJSONToIPFS(metadata, { pinataMetadata: { name: `${name}-metadata` } });
@@ -86,7 +86,7 @@ export const mint: Handler<SQSEvent> = async event => {
 
     console.log(receipt.transactionHash);
   } catch (e) {
-    console.error(e);
-    throw Error(e.errorMessage || 'Execution error, please check AWS logs');
+    console.error('Execution error, please check AWS logs', e);
+    process.exit(1);
   }
 };
