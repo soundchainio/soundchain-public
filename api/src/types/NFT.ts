@@ -2,12 +2,12 @@ export interface NFT {
   to: string;
   name: string;
   description: string;
-  assetUrl: string;
-  artUrl?: string;
+  assetKey: string;
+  artKey?: string;
   attributes?: { trait_type: string; trait_value: string }[];
 }
 
-export interface Metadata extends Omit<NFT, 'to' | 'assetUrl' | 'artUrl'> {
+export interface Metadata extends Omit<NFT, 'to' | 'assetKey' | 'artKey'> {
   asset: string;
   art?: string;
 }

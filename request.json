@@ -3,7 +3,7 @@
     "to": "0xDbaF8fB344D9E57fff48659A4Eb718c480A1Fd62",
     "name": "Ogun (instrumental)",
     "description": "Ogun instrumental by The Architect",
-    "assetUrl": "https://soundchain.s3.amazonaws.com/soundchain-first-video.mp4",
+    "assetKey": "soundchain-first-video.mp4",
     "attributes": [
       { "trait_type": "Artist", "trait_value": "The Architect" },
       { "trait_type": "Royalties", "trait_value": "The Architect - 100%" }

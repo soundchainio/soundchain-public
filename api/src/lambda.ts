@@ -1,12 +1,11 @@
 import { createAlchemyWeb3 } from '@alch/alchemy-web3';
+import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import pinataClient from '@pinata/sdk';
 import { mongoose } from '@typegoose/typegoose';
 import { ApolloServer } from 'apollo-server-lambda';
 import type { Handler, SQSEvent } from 'aws-lambda';
 import express from 'express';
-import { IncomingMessage } from 'http';
-import { get } from 'https';
-import { URL } from 'url';
+import { Readable } from 'stream';
 import { AbiItem } from 'web3-utils';
 import { abi } from './artifacts/contract/SoundchainCollectible.sol/SoundchainCollectible.json';
 import { config } from './config';
@@ -29,23 +28,17 @@ export const handler: Handler = async (...args) => {
 };
 
 export const mint: Handler<SQSEvent> = async event => {
-  process.env.UV_THREADPOOL_SIZE = '128';
-
   if (event.Records.length !== 1) {
     console.error('Event message should contain exactly ONE record');
     return;
   }
 
-  const pinToIPFS = async (url: string, name: string) => {
-    const assetStream = new Promise<IncomingMessage>(resolve => {
-      const urlObject = new URL(url);
-      get({ ...urlObject, timeout: 0 }, stream => {
-        resolve(stream);
-      }).on('error', err => console.log(err));
-    });
-
-    const assetFile = await assetStream;
-    const assetResult = await pinata.pinFileToIPFS(assetFile, {
+  const pinToIPFS = async (key: string, name: string) => {
+    const s3Client = new S3Client({ region: config.uploads.region });
+    const command = new GetObjectCommand({ Bucket: config.uploads.bucket, Key: key });
+    const response = await s3Client.send(command);
+    const stream = Readable.from(response.Body);
+    const assetResult = await pinata.pinFileToIPFS(stream, {
       pinataMetadata: {
         name: name,
       },
@@ -59,7 +52,7 @@ export const mint: Handler<SQSEvent> = async event => {
 
   try {
     const body: NFT = JSON.parse(event.Records[0].body);
-    const { assetUrl, artUrl, to, ...nft } = body;
+    const { assetKey: assetUrl, artKey: artUrl, to, ...nft } = body;
     const name = body.name;
     const contract = new web3.eth.Contract(abi as AbiItem[], config.minting.contractAddress);
 
