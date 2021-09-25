@@ -6,8 +6,6 @@ import { abi } from '../contract/SoundchainCollectible.sol/SoundchainCollectible
 
 const contractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
 
-console.log(contractAddress);
-
 export const getIpfsAssetUrl = (uri: string) => {
   const [protocol, urn] = uri.split('//');
   return protocol === 'ipfs:' ? 'https://soundchain.mypinata.cloud/ipfs/' + urn : uri;

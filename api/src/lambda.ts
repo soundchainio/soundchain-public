@@ -28,6 +28,8 @@ export const handler: Handler = async (...args) => {
 };
 
 export const mint: Handler<SQSEvent> = async event => {
+  process.env.UV_THREADPOOL_SIZE = '128';
+
   if (event.Records.length !== 1) {
     console.error('Event message should contain exactly ONE record');
     return;
