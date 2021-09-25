@@ -5,7 +5,6 @@ import { mongoose } from '@typegoose/typegoose';
 import { ApolloServer } from 'apollo-server-lambda';
 import type { Handler, SQSEvent } from 'aws-lambda';
 import express from 'express';
-import { Readable } from 'stream';
 import { AbiItem } from 'web3-utils';
 import { abi } from './artifacts/contract/SoundchainCollectible.sol/SoundchainCollectible.json';
 import { config } from './config';
@@ -37,8 +36,7 @@ export const mint: Handler<SQSEvent> = async event => {
     const s3Client = new S3Client({ region: config.uploads.region });
     const command = new GetObjectCommand({ Bucket: config.uploads.bucket, Key: key });
     const response = await s3Client.send(command);
-    const stream = Readable.from(response.Body);
-    const assetResult = await pinata.pinFileToIPFS(stream, {
+    const assetResult = await pinata.pinFileToIPFS(response.Body, {
       pinataMetadata: {
         name: name,
       },
