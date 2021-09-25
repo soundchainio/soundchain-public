@@ -6,6 +6,7 @@ import type { Handler, SQSEvent } from 'aws-lambda';
 import express from 'express';
 import { IncomingMessage } from 'http';
 import { get } from 'https';
+import { URL } from 'node:url';
 import { AbiItem } from 'web3-utils';
 import { abi } from './artifacts/contract/SoundchainCollectible.sol/SoundchainCollectible.json';
 import { config } from './config';
@@ -37,7 +38,8 @@ export const mint: Handler<SQSEvent> = async event => {
 
   const pinToIPFS = async (url: string, name: string) => {
     const assetStream = new Promise<IncomingMessage>(resolve => {
-      get({ timeout: 0, href: url }, stream => {
+      const urlObject = new URL(url);
+      get({ ...urlObject, timeout: 0 }, stream => {
         resolve(stream);
       }).on('error', err => console.log(err));
     });
