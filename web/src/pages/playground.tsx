@@ -1,20 +1,24 @@
-import axios from 'axios';
+import { Button } from 'components/Button';
+import { TrackForm } from 'components/forms/track/TrackForm';
 import { Layout } from 'components/Layout';
+import { NFTCard } from 'components/NftCard';
+import { Subtitle } from 'components/Subtitle';
 import useMetaMask from 'hooks/useMetaMask';
+import { getNftTokensFromContract } from 'lib/blockchain';
 import Head from 'next/head';
 import { useEffect, useState } from 'react';
-import { Metadata } from 'types/NFT';
-import Web3 from 'web3';
-import { AbiItem } from 'web3-utils';
-import { abi } from '../contract/SoundchainCollectible.sol/SoundchainCollectible.json';
+import { NftToken } from 'types/NftTypes';
 
 export default function PlaygroundPage() {
   const { account, balance, web3, connect } = useMetaMask();
-  const [NFTs, setNFTs] = useState<Metadata[]>();
+  const [nfts, setNfts] = useState<NftToken[]>();
+  const [currentTab, setCurrentTab] = useState<'COLLECTION' | 'MINTING'>('COLLECTION');
 
   useEffect(() => {
     if (account && web3) {
-      getAssetsFromPolygon(account, web3).then(setNFTs);
+      getNftTokensFromContract(web3, account).then(setNfts);
+    } else {
+      setNfts(undefined);
     }
   }, [account]);
 
@@ -26,70 +30,61 @@ export default function PlaygroundPage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="m-8">
-        <div className="text-white">Metamask address {account}</div>
-        <div className="text-white">Metamask balance {balance}</div>
-        <button onClick={() => connect()} disabled={!!account} className="text-white">
-          {account ? 'Connected to MetaMask' : 'Connect to MetaMask'}
-        </button>
+      <div className="my-8">
+        <Subtitle>{`Metamask address: ${account}`}</Subtitle>
+        <Subtitle>{`Metamask balance: ${balance}`}</Subtitle>
+        {!account && (
+          <Button className="max-w-xs" onClick={() => connect()}>
+            Connect to MetaMask
+          </Button>
+        )}
       </div>
-      {NFTs && NFTs.map(nft => <NFTCard key={nft.name} {...nft} />)}
+      <div className="flex space-x-4 my-8 w-full text-white">
+        <div className="flex text-sm font-semibold text-center">
+          <div className="text-white flex-grow">
+            <div
+              className={`${currentTab == 'COLLECTION' ? 'text-white' : 'text-gray-50'} px-4 cursor-pointer`}
+              onClick={() => setCurrentTab('COLLECTION')}
+            >
+              Collection
+            </div>
+            {currentTab == 'COLLECTION' ? (
+              <div className="h-[2px] bg-gradient-to-r from-[#FF9191] to-[#CF6161] mt-1.5"></div>
+            ) : (
+              <div className="h-[2px] bg-gray-30 mt-1.5"></div>
+            )}
+          </div>
+          <div className="flex-grow">
+            <div
+              className={`${currentTab == 'MINTING' ? 'text-white' : 'text-gray-50'} px-4 cursor-pointer`}
+              onClick={() => setCurrentTab('MINTING')}
+            >
+              Minting
+            </div>
+            {currentTab == 'MINTING' ? (
+              <div className="h-[2px] bg-gradient-to-r from-[#FF9191] to-[#CF6161] mt-1.5"></div>
+            ) : (
+              <div className="h-[2px] bg-gray-30 mt-1.5"></div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="my-8 w-full text-white">
+        <div className={`${currentTab == 'COLLECTION' ? 'block' : 'hidden'} flex space-x-4`}>
+          {nfts &&
+            nfts.map((nft, idx) => (
+              <div key={idx} className="my-4 bg-rainbow-gradient max-w-md flex flex-row justify-center p-2">
+                <div key={idx} className="bg-black p-2">
+                  <NFTCard account={account!} web3={web3!} nftToken={nft} />
+                </div>
+              </div>
+            ))}
+        </div>
+        <div className={`${currentTab == 'MINTING' ? 'block' : 'hidden'}`}>
+          <TrackForm afterSubmit={() => console.log('nice')} />
+        </div>
+      </div>
     </Layout>
   );
 }
-
-const NFTCard = ({ asset, name, description, art, attributes }: Metadata) => {
-  const assetURL = getAssetURL(asset);
-  const [mimeType, setMimeType] = useState<string>();
-
-  useEffect(() => {
-    axios.head(assetURL).then(({ headers }) => {
-      setMimeType(headers['content-type']);
-    });
-  }, [assetURL]);
-
-  if (!mimeType) return <div className="text-white">Loading...</div>;
-
-  return (
-    <div className="m-8">
-      <div className="text-white">{name}</div>
-      <div className="text-white">{description}</div>
-      {attributes &&
-        attributes.map(({ trait_type, trait_value }) => (
-          <div key={trait_type} className="text-white">{`${trait_type}: ${trait_value}`}</div>
-        ))}
-      {mimeType === 'video/mp4' && <video src={assetURL} controls className="max-w-lg" />}
-    </div>
-  );
-};
-
-const getAssetURL = (uri: string) => {
-  const [protocol, urn] = uri.split('//');
-  return protocol === 'ipfs:' ? 'https://gateway.pinata.cloud/ipfs/' + urn : uri;
-};
-
-const getAssetsFromPolygon = async (address: string, web3: Web3) => {
-  const tokens: Metadata[] = [];
-  try {
-    // TODO: add async/multi-thread process
-    const contract = new web3.eth.Contract(abi as AbiItem[], '0x1Ca9E523a3D4D2A771e22aaAf51EAB33108C6b2C');
-
-    const balance = await contract.methods.balanceOf(address).call();
-
-    for (let tokenIndex = 0; tokenIndex < balance; tokenIndex++) {
-      const tokenId = await contract.methods.tokenOfOwnerByIndex(address, tokenIndex).call();
-      const tokenURI = await contract.methods.tokenURI(tokenId).call();
-      // const contractName = await contract.methods.name().call()
-      // const contractSymbol = await contract.methods.symbol().call()
-      try {
-        const { data } = await axios.get<Metadata>(getAssetURL(tokenURI));
-        tokens.push(data);
-      } catch (error) {
-        console.error('Unable to read token meta ', error);
-      }
-    }
-  } catch (error) {
-    console.error('Unable to get tokens info ', error);
-  }
-  return tokens;
-};

@@ -1,5 +1,7 @@
+import axios from 'axios';
 import { Arg, Authorized, Ctx, Query, Resolver } from 'type-graphql';
 import { Context } from '../types/Context';
+import { MimeType } from '../types/MimeType';
 import { UploadFileType } from '../types/UploadFileType';
 import { UploadUrl } from '../types/UploadUrl';
 
@@ -12,5 +14,12 @@ export class UploadResolver {
     @Arg('fileType', () => UploadFileType) fileType: UploadFileType,
   ): Promise<UploadUrl> {
     return uploadService.generateUploadUrl(fileType);
+  }
+
+  @Query(() => MimeType)
+  @Authorized()
+  async mimeType(@Arg('url') url: string): Promise<MimeType> {
+    const { headers } = await axios.head(url);
+    return { value: headers['content-type'] };
   }
 }

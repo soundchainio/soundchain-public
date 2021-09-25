@@ -10,10 +10,15 @@ export const useMetaMask = () => {
   const onboarding = useRef<MetaMaskOnboarding>();
 
   const handleNewAccount = ([newAccount]: string[]) => {
-    web3?.eth.getBalance(newAccount).then(balance => {
-      setBalance(web3.utils.fromWei(balance, 'ether'));
-    });
-    setAccount(newAccount);
+    if (newAccount) {
+      web3?.eth.getBalance(newAccount).then(balance => {
+        setBalance(web3.utils.fromWei(balance, 'ether'));
+      });
+      setAccount(newAccount);
+    } else {
+      setAccount(undefined);
+      setBalance(undefined);
+    }
   };
 
   useEffect(() => {
@@ -26,6 +31,9 @@ export const useMetaMask = () => {
     if (MetaMaskOnboarding.isMetaMaskInstalled()) {
       if (account) {
         onboarding?.current?.stopOnboarding();
+        web3?.eth.getBalance(account).then(balance => {
+          setBalance(web3.utils.fromWei(balance, 'ether'));
+        });
       }
     }
   }, [account]);
