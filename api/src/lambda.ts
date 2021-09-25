@@ -6,7 +6,7 @@ import type { Handler, SQSEvent } from 'aws-lambda';
 import express from 'express';
 import { IncomingMessage } from 'http';
 import { get } from 'https';
-import { URL } from 'node:url';
+import { URL } from 'url';
 import { AbiItem } from 'web3-utils';
 import { abi } from './artifacts/contract/SoundchainCollectible.sol/SoundchainCollectible.json';
 import { config } from './config';
