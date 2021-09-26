@@ -34,7 +34,7 @@ export const mint: Handler<SQSEvent> = async event => {
 
   const pinToIPFS = async (key: string, name: string) => {
     console.log('Loading ', key);
-    const s3Client = new S3Client({ region: config.uploads.region });
+    const s3Client = new S3Client({ region: config.uploads.region, forcePathStyle: true });
     const command = new GetObjectCommand({ Bucket: config.uploads.bucket, Key: key });
     const response = await s3Client.send(command);
     console.log('Pinning ', key);
