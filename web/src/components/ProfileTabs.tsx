@@ -27,8 +27,8 @@ export const ProfileTabs = ({ selectedTab, setSelectedTab }: ProfileTabsProps) =
 
   return (
     <div className="flex text-sm font-semibold text-center cursor-pointer">
-      {tabs.map(tab =>
-        <div className="text-white flex-grow" onClick={() => onTabSelect(tab)}>
+      {tabs.map((tab, idx) =>
+        <div key={idx} className="text-white flex-grow" onClick={() => onTabSelect(tab)}>
           <div className="px-2">
             {tab.title}  {tab.comingSoon && <span className="text-xs bg-gray-50 text-black py-0.5 px-1 rounded-full">Coming Soon</span>}
           </div>
