@@ -25,10 +25,11 @@
     "@headlessui/react": "^1.4.1",
     "@heroicons/react": "^1.0.3",
     "@lottiefiles/react-lottie-player": "^3.4.1",
+    "@metamask/onboarding": "^1.0.1",
     "@tailwindcss/forms": "^0.3.3",
     "@tailwindcss/line-clamp": "^0.2.1",
     "@types/react-scroll": "^1.8.3",
-    "axios": "^0.21.1",
+    "axios": "^0.21.4",
     "body-scroll-lock": "^4.0.0-beta.0",
     "classnames": "^2.3.1",
     "date-fns": "^2.23.0",
@@ -47,6 +48,7 @@
     "react-textarea-autosize": "^8.3.3",
     "three": "0.121.0",
     "vanta": "^0.5.21",
+    "web3": "^1.5.3",
     "yup": "^0.32.9"
   },
   "devDependencies": {
@@ -62,6 +64,7 @@
     "@types/react-combine-reducers": "^1.0.0",
     "@types/react-dom": "^17.0.9",
     "@types/three": "^0.131.1",
+    "@types/web3": "^1.2.2",
     "@typescript-eslint/eslint-plugin": "^4.28.3",
     "@typescript-eslint/parser": "^4.28.5",
     "autoprefixer": "^10.3.1",
