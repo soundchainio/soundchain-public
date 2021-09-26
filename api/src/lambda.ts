@@ -62,7 +62,7 @@ export const mint: Handler<SQSEvent> = async event => {
     const metadata: Metadata = { ...nft, asset: `ipfs://${assetResult.IpfsHash}` };
 
     if (artKey) {
-      const artResult = await pinToIPFS(assetKey, `${name}-preview`);
+      const artResult = await pinToIPFS(artKey, `${name}-preview`);
       metadata.art = `ipfs://${artResult.IpfsHash}`;
     }
 
