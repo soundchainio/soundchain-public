@@ -31,8 +31,8 @@ export default function PlaygroundPage() {
       </Head>
 
       <div className="my-8">
-        <Subtitle>{`Metamask address: ${account}`}</Subtitle>
-        <Subtitle>{`Metamask balance: ${balance}`}</Subtitle>
+        {account && <Subtitle>{`Metamask address: ${account}`}</Subtitle>}
+        {balance && <Subtitle>{`Metamask balance: ${balance}`}</Subtitle>}
         {!account && (
           <Button className="max-w-xs" onClick={() => connect()}>
             Connect to MetaMask

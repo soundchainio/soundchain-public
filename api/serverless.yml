@@ -339,6 +339,22 @@ resources:
         SubnetIds:
           - Ref: PrivateSubnetOne
           - Ref: PrivateSubnetTwo
+    S3Endpoint:
+      Type: 'AWS::EC2::VPCEndpoint'
+      Properties:
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action: '*'
+              Resource: '*'
+        RouteTableIds:
+          - !Ref PublicRouteTable
+          - !Ref PrivateRouteTableOne
+          - !Ref PrivateRouteTableTwo
+        ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
+        VpcId: !Ref VPC
     DBCluster:
       Type: AWS::DocDB::DBCluster
       DeletionPolicy: Delete
