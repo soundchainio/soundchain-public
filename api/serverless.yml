@@ -343,7 +343,7 @@ resources:
       Type: 'AWS::EC2::VPCEndpoint'
       Properties:
         PolicyDocument:
-          Version: 2012-10-17
+          Version: '2012-10-17'
           Statement:
             - Effect: Allow
               Principal: '*'
