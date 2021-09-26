@@ -1,8 +1,8 @@
 import classNames from 'classnames';
 import { Track } from 'components/Track';
+import { TrackSkeleton } from 'components/TrackSkeleton';
 import { SortOrder, SortTrackField, useTracksQuery } from 'lib/graphql';
 import React from 'react';
-import { TrackSkeleton } from './TrackSkeleton';
 
 interface TracksProps extends React.ComponentPropsWithoutRef<'div'> {
   profileId?: string;

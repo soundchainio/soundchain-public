@@ -6,6 +6,7 @@ import { Layout } from 'components/Layout';
 import { MessageButton } from 'components/MessageButton';
 import { Number } from 'components/Number';
 import { Posts } from 'components/Posts';
+import { Tracks } from 'components/profile/Tracks';
 import { ProfileCover } from 'components/ProfileCover';
 import { ProfileTabs } from 'components/ProfileTabs';
 import { SocialMediaLink } from 'components/SocialMediaLink';
@@ -124,7 +125,7 @@ export default function ProfilePage() {
       />
       {ProfileTabType.POSTS === selectedTab && <Posts profileId={profileId} />}
 
-      {ProfileTabType.TRACKS === selectedTab && <div> Tracks </div>}
+      {ProfileTabType.TRACKS === selectedTab && <Tracks profileId={profileId} />}
 
       {ProfileTabType.PLAYLISTS === selectedTab && <div> Playlists </div>}
 

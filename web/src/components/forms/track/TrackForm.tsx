@@ -27,7 +27,7 @@ const initialValues: FormValues = {
 };
 
 export const TrackForm = ({ afterSubmit }: Props) => {
-  const [createTrack] = useCreateTrackMutation();
+  const [createTrack] = useCreateTrackMutation({ refetchQueries: ['Tracks'] });
 
   const handleSubmit = async (values: FormValues) => {
     await createTrack({ variables: { input: values } });
