@@ -33,14 +33,17 @@ export const mint: Handler<SQSEvent> = async event => {
   }
 
   const pinToIPFS = async (key: string, name: string) => {
+    console.log('Loading ', key);
     const s3Client = new S3Client({ region: config.uploads.region });
     const command = new GetObjectCommand({ Bucket: config.uploads.bucket, Key: key });
     const response = await s3Client.send(command);
+    console.log('Pinning ', key);
     const assetResult = await pinata.pinFileToIPFS(response.Body, {
       pinataMetadata: {
         name: name,
       },
     });
+    console.log('Pinned ', key);
 
     return assetResult;
   };
@@ -50,22 +53,30 @@ export const mint: Handler<SQSEvent> = async event => {
 
   try {
     const body: NFT = JSON.parse(event.Records[0].body);
-    const { assetKey: assetUrl, artKey: artUrl, to, ...nft } = body;
+    const { assetKey, artKey, to, ...nft } = body;
     const name = body.name;
     const contract = new web3.eth.Contract(abi as AbiItem[], config.minting.contractAddress);
 
-    const assetResult = await pinToIPFS(assetUrl, name);
+    const assetResult = await pinToIPFS(assetKey, name);
 
     const metadata: Metadata = { ...nft, asset: `ipfs://${assetResult.IpfsHash}` };
 
-    if (artUrl) {
-      const artResult = await pinToIPFS(artUrl, `${name}-preview`);
+    if (artKey) {
+      const artResult = await pinToIPFS(assetKey, `${name}-preview`);
       metadata.art = `ipfs://${artResult.IpfsHash}`;
     }
 
+    console.log('Pinning', `${name}-metadata`);
+
     const metadataResult = await pinata.pinJSONToIPFS(metadata, { pinataMetadata: { name: `${name}-metadata` } });
 
+    console.log('Pinned', `${name}-metadata`);
+
+    console.log('Getting nonce');
+
     const nonce = await web3.eth.getTransactionCount(config.minting.walletPublicKey, 'latest'); //get latest nonce
+
+    console.log('Got nonce ', nonce);
 
     const transaction = {
       from: config.minting.walletPublicKey,
@@ -75,8 +86,12 @@ export const mint: Handler<SQSEvent> = async event => {
       data: contract.methods.safeMint(to, `ipfs://${metadataResult.IpfsHash}`).encodeABI(),
     };
 
+    console.log('Signing transaction');
     const signedTransaction = await web3.eth.accounts.signTransaction(transaction, config.minting.walletPrivateKey);
 
+    console.log('Signed transaction');
+
+    console.log('Sending transaction');
     const receipt = await web3.eth.sendSignedTransaction(signedTransaction.rawTransaction as string);
 
     console.log(receipt.transactionHash);

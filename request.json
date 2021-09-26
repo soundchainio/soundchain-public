@@ -13,8 +13,8 @@
     "to": "0xDbaF8fB344D9E57fff48659A4Eb718c480A1Fd62",
     "name": "no crypto for old men",
     "description": "no crypto for old men by The Architect, Killah Priest and MadFurda",
-    "assetUrl": "https://soundchain.s3.amazonaws.com/soundchain-first-audio.mp3",
-    "artUrl": "https://soundchain.s3.amazonaws.com/soundchain-first-audio-art.mp4",
+    "assetKey": "soundchain-first-audio.mp3",
+    "artKey": "soundchain-first-audio-art.mp4",
     "attributes": [
       { "trait_type": "Collaborator", "trait_value": "The Architect - 34%" },
       { "trait_type": "Collaborator", "trait_value": "Killah Priest - 33%" },
