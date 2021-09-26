@@ -1,6 +1,6 @@
+import { TrackSkeleton } from 'components/TrackSkeleton';
 import { useTrackQuery } from 'lib/graphql';
 import React from 'react';
-import { TrackSkeleton } from './TrackSkeleton';
 
 interface TrackProps {
   trackId: string;
