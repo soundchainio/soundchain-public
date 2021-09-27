@@ -20,7 +20,6 @@ interface FormValues {
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
-  to: yup.string().required(),
   name: yup.string().required(),
   description: yup.string().required(),
   assetUrl: yup.string().required(),
