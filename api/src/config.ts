@@ -1,7 +1,7 @@
 import '01/../reflect-metadata';
 import {
   ApolloServerPluginLandingPageGraphQLPlayground,
-  ApolloServerPluginLandingPageProductionDefault,
+  ApolloServerPluginLandingPageProductionDefault
 } from 'apollo-server-core';
 import cors from 'cors';
 import * as dotenv from 'dotenv-flow';
@@ -11,6 +11,7 @@ import { TypegooseMiddleware } from './middlewares/typegoose-middleware';
 import { resolvers } from './resolvers';
 import { JwtService, JwtUser } from './services/JwtService';
 import { Context } from './types/Context';
+import { SentryReportError } from './utils/SentryReportError';
 
 dotenv.config();
 
@@ -29,6 +30,7 @@ export const {
   DATABASE_SSL_PATH,
   WEB_APP_URL = 'http://localhost:3000',
   SENDGRID_SENDER_EMAIL,
+  SENTRY_URL,
   SENDGRID_VERIFICATION_TEMPLATE,
   SENDGRID_RESET_PASSWORD_TEMPLATE,
   SENDGRID_API_KEY,
@@ -59,6 +61,7 @@ export const config = {
       NODE_ENV === 'production'
         ? ApolloServerPluginLandingPageProductionDefault()
         : ApolloServerPluginLandingPageGraphQLPlayground(),
+      NODE_ENV === ('production' || 'staging') && SentryReportError
     ],
     context(context: ExpressContext | LambdaContext): Context {
       return new Context('req' in context ? context.req.user : context.express.req.user);
@@ -107,4 +110,7 @@ export const config = {
     walletPublicKey: WALLET_PUBLIC_KEY,
     alchemyKey: ALCHEMY_API_KEY,
   },
+  sentry: {
+    url: SENTRY_URL
+  }
 };

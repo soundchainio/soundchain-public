@@ -6,9 +6,8 @@ import { config } from './config';
 import { Context } from './types/Context';
 
 async function bootstrap() {
-
   Sentry.init({
-    dsn: "https://a49bd1c893324f19a16c1f972eb64f17@o1011186.ingest.sentry.io/5977741",
+    dsn: config.sentry.url,
     tracesSampleRate: 1.0,
   });
 
