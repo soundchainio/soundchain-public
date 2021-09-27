@@ -64,7 +64,7 @@ custom:
       - - Ref: 'AWS::StackName'
         - 'uploads'
   sqs:
-    url: !Ref: MintingQueue
+    url: !Ref MintingQueue
 
 provider:
   name: aws
