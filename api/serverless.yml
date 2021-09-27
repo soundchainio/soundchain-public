@@ -13,6 +13,7 @@ package:
 functions:
   graphql:
     handler: src/lambda.handler
+    timeout: 20
     events:
       - http:
           path: /
