@@ -77,8 +77,6 @@ provider:
       - Ref: VPCEndpointSecurityGroup
       - Ref: DocumentDBSecurityGroup
     subnetIds:
-      - Ref: PublicSubnetOne
-      - Ref: PublicSubnetTwo
       - Ref: PrivateSubnetOne
       - Ref: PrivateSubnetTwo
   environment:
