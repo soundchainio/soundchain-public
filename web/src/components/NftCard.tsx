@@ -34,8 +34,7 @@ export const NFTCard = ({ account, web3, nftToken }: NftCardProps) => {
     const confirmed = confirm('Heey! This will destroy this NFT, you sure?');
     if (confirmed) {
       await burnNftToken(web3, tokenId, account);
-      alert('Token burned!');
-      window.location.reload();
+      alert('Token burn requested!');
     }
   };
 
@@ -111,7 +110,7 @@ const Asset = ({ src, mimeType, art }: { src: string | undefined; mimeType: stri
   }
 
   return (
-    <div className="relative" style={{ height: '200px' }}>
+    <div className="relative" style={{ height: `${art ? '200px' : '254px'}` }}>
       <Image src={src} layout="fill" objectFit="cover" alt="" />
     </div>
   );
@@ -136,10 +135,13 @@ interface TransferFormProps {
 }
 
 const TransferForm = ({ name, web3, fromAddress, tokenId, onCancel }: TransferFormProps) => {
+  const [loading, setLoading] = useState(false);
   const handleSubmit = async (values: FormValues) => {
+    setLoading(true);
     await transferNftToken(web3, tokenId, fromAddress, values.to);
-    alert('Token transfered!');
-    window.location.reload();
+    alert('Token transfer requested!');
+    setLoading(false);
+    onCancel();
   };
 
   return (
@@ -152,7 +154,7 @@ const TransferForm = ({ name, web3, fromAddress, tokenId, onCancel }: TransferFo
               <InputField name="to" label="to" placeholder="0xDbaF8fB344D9E57fff48659A4Eb718c480A1Fd62" type="text" />
               <div className="flex gap-1 mt-4">
                 <Button type="submit" variant="rainbow-xs" loading={isSubmitting}>
-                  Transfer
+                  {loading ? 'Requesting...' : 'Transfer'}
                 </Button>
                 <Button type="button" variant="rainbow-xs" onClick={() => onCancel()}>
                   Cancel

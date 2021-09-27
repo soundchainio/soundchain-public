@@ -4,7 +4,7 @@ import { InputField } from 'components/InputField';
 import { TextareaField } from 'components/TextareaField';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import { useCreateTrackMutation } from 'lib/graphql';
-import React from 'react';
+import React, { useState } from 'react';
 import * as yup from 'yup';
 
 interface Props {
@@ -34,9 +34,12 @@ const initialValues: FormValues = {
 
 export const TrackForm = ({ to, afterSubmit }: Props) => {
   const [createTrack] = useCreateTrackMutation();
+  const [requesting, setRequesting] = useState(false);
 
   const handleSubmit = async (values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
+    setRequesting(true);
     await createTrack({ variables: { input: { to: to, ...values } } });
+    setRequesting(false);
     afterSubmit();
     resetForm();
   };
@@ -71,7 +74,7 @@ export const TrackForm = ({ to, afterSubmit }: Props) => {
             )}
           </div>
           <Button type="submit" variant="rainbow" className="mt-6">
-            Mint NFT
+            {requesting ? 'Requesting...' : 'Mint NFT'}
           </Button>
         </Form>
       )}

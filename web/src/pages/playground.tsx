@@ -13,10 +13,13 @@ export default function PlaygroundPage() {
   const { account, balance, web3, connect } = useMetaMask();
   const [nfts, setNfts] = useState<NftToken[]>();
   const [currentTab, setCurrentTab] = useState<'COLLECTION' | 'MINTING'>('COLLECTION');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (account && web3) {
+      setLoading(true);
       getNftTokensFromContract(web3, account).then(setNfts);
+      setLoading(false);
     } else {
       setNfts(undefined);
     }
@@ -85,10 +88,11 @@ export default function PlaygroundPage() {
 
       <div className="my-8 w-full text-white">
         <div className={`${currentTab == 'COLLECTION' ? 'block' : 'hidden'} flex flex-wrap gap-4`}>
+          {loading && <div>Loading NFTs...</div>}
           {nfts &&
             nfts.map((nft, idx) => (
-              <div key={idx} className="bg-rainbow-gradient max-w-sm flex flex-row justify-center p-2">
-                <div key={idx} className="bg-black p-2">
+              <div key={idx} className="bg-rainbow-gradient w-96 flex flex-row justify-center p-2">
+                <div key={idx} className="bg-black p-2 w-full">
                   <NFTCard account={account!} web3={web3!} nftToken={nft} />
                 </div>
               </div>
