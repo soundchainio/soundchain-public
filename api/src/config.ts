@@ -62,7 +62,7 @@ export const config = {
       NODE_ENV === 'production'
         ? ApolloServerPluginLandingPageProductionDefault()
         : ApolloServerPluginLandingPageGraphQLPlayground(),
-      NODE_ENV === ('production' || 'staging') && SentryReportError
+      NODE_ENV === ('production' || 'staging') ? SentryReportError : {}
     ],
     context(context: ExpressContext | LambdaContext): Context {
       return new Context('req' in context ? context.req.user : context.express.req.user);
