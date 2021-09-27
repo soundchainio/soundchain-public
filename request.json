@@ -1,0 +1,24 @@
+[
+  {
+    "to": "0xDbaF8fB344D9E57fff48659A4Eb718c480A1Fd62",
+    "name": "Ogun (instrumental)",
+    "description": "Ogun instrumental by The Architect",
+    "assetKey": "soundchain-first-video.mp4",
+    "attributes": [
+      { "trait_type": "Artist", "trait_value": "The Architect" },
+      { "trait_type": "Royalties", "trait_value": "The Architect - 100%" }
+    ]
+  },
+  {
+    "to": "0xDbaF8fB344D9E57fff48659A4Eb718c480A1Fd62",
+    "name": "no crypto for old men",
+    "description": "no crypto for old men by The Architect, Killah Priest and MadFurda",
+    "assetKey": "soundchain-first-audio.mp3",
+    "artKey": "soundchain-first-audio-art.mp4",
+    "attributes": [
+      { "trait_type": "Collaborator", "trait_value": "The Architect - 34%" },
+      { "trait_type": "Collaborator", "trait_value": "Killah Priest - 33%" },
+      { "trait_type": "Collaborator", "trait_value": "MadFurda - 33%" }
+    ]
+  }
+]

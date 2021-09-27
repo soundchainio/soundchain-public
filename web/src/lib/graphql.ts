@@ -115,6 +115,19 @@ export type CreateRepostPayload = {
   originalPost: Post;
 };
 
+export type CreateTrackInput = {
+  to: Scalars['String'];
+  name: Scalars['String'];
+  description: Scalars['String'];
+  assetUrl: Scalars['String'];
+  artUrl?: Maybe<Scalars['String']>;
+};
+
+export type CreateTrackPayload = {
+  __typename?: 'CreateTrackPayload';
+  track: Track;
+};
+
 
 export type DeleteCommentInput = {
   commentId: Scalars['String'];
@@ -255,6 +268,11 @@ export type MessageConnection = {
   nodes: Array<Message>;
 };
 
+export type MimeType = {
+  __typename?: 'MimeType';
+  value: Scalars['String'];
+};
+
 export enum MusicianType {
   Singer = 'SINGER',
   Drummer = 'DRUMMER',
@@ -282,6 +300,7 @@ export type Mutation = {
   unfollowProfile: UnfollowProfilePayload;
   subscribeToProfile: SubscribeToProfilePayload;
   unsubscribeFromProfile: UnsubscribeFromProfilePayload;
+  createTrack: CreateTrackPayload;
   register: AuthPayload;
   login: AuthPayload;
   verifyUserEmail: VerifyUserEmailPayload;
@@ -364,6 +383,11 @@ export type MutationSubscribeToProfileArgs = {
 
 export type MutationUnsubscribeFromProfileArgs = {
   input: UnsubscribeFromProfileInput;
+};
+
+
+export type MutationCreateTrackArgs = {
+  input: CreateTrackInput;
 };
 
 
@@ -514,6 +538,7 @@ export type Query = {
   myProfile: Profile;
   profile: Profile;
   uploadUrl: UploadUrl;
+  mimeType: MimeType;
   me: Maybe<User>;
   validPasswordResetToken: Scalars['Boolean'];
 };
@@ -604,6 +629,11 @@ export type QueryProfileArgs = {
 
 export type QueryUploadUrlArgs = {
   fileType: UploadFileType;
+};
+
+
+export type QueryMimeTypeArgs = {
+  url: Scalars['String'];
 };
 
 
@@ -742,6 +772,15 @@ export type SubscribeToProfilePayload = {
   profile: Profile;
 };
 
+export type Track = {
+  __typename?: 'Track';
+  id: Scalars['ID'];
+  title: Scalars['String'];
+  audioUrl: Scalars['String'];
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+};
+
 export type UnfollowProfileInput = {
   followedId: Scalars['String'];
 };
@@ -806,7 +845,9 @@ export type UpdateProfilePayload = {
 
 export enum UploadFileType {
   Jpeg = 'JPEG',
-  Png = 'PNG'
+  Png = 'PNG',
+  Video = 'VIDEO',
+  Audio = 'AUDIO'
 }
 
 export type UploadUrl = {
@@ -1018,6 +1059,22 @@ export type CreateRepostMutation = (
   ) }
 );
 
+export type CreateTrackMutationVariables = Exact<{
+  input: CreateTrackInput;
+}>;
+
+
+export type CreateTrackMutation = (
+  { __typename?: 'Mutation' }
+  & { createTrack: (
+    { __typename?: 'CreateTrackPayload' }
+    & { track: (
+      { __typename?: 'Track' }
+      & Pick<Track, 'id' | 'title' | 'audioUrl'>
+    ) }
+  ) }
+);
+
 export type DeleteCommentMutationVariables = Exact<{
   input: DeleteCommentInput;
 }>;
@@ -1155,19 +1212,6 @@ export type ForgotPasswordMutation = (
   ) }
 );
 
-export type UploadUrlQueryVariables = Exact<{
-  fileType: UploadFileType;
-}>;
-
-
-export type UploadUrlQuery = (
-  { __typename?: 'Query' }
-  & { uploadUrl: (
-    { __typename?: 'UploadUrl' }
-    & Pick<UploadUrl, 'uploadUrl' | 'fileName' | 'readUrl'>
-  ) }
-);
-
 export type LoginMutationVariables = Exact<{
   input: LoginInput;
 }>;
@@ -1215,6 +1259,19 @@ export type MessageComponentFieldsFragment = (
   & { fromProfile: (
     { __typename?: 'Profile' }
     & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
+  ) }
+);
+
+export type MimeTypeQueryVariables = Exact<{
+  url: Scalars['String'];
+}>;
+
+
+export type MimeTypeQuery = (
+  { __typename?: 'Query' }
+  & { mimeType: (
+    { __typename?: 'MimeType' }
+    & Pick<MimeType, 'value'>
   ) }
 );
 
@@ -1672,6 +1729,19 @@ export type UpdateProfilePictureMutation = (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'profilePicture'>
     ) }
+  ) }
+);
+
+export type UploadUrlQueryVariables = Exact<{
+  fileType: UploadFileType;
+}>;
+
+
+export type UploadUrlQuery = (
+  { __typename?: 'Query' }
+  & { uploadUrl: (
+    { __typename?: 'UploadUrl' }
+    & Pick<UploadUrl, 'uploadUrl' | 'fileName' | 'readUrl'>
   ) }
 );
 
@@ -2179,6 +2249,43 @@ export function useCreateRepostMutation(baseOptions?: Apollo.MutationHookOptions
 export type CreateRepostMutationHookResult = ReturnType<typeof useCreateRepostMutation>;
 export type CreateRepostMutationResult = Apollo.MutationResult<CreateRepostMutation>;
 export type CreateRepostMutationOptions = Apollo.BaseMutationOptions<CreateRepostMutation, CreateRepostMutationVariables>;
+export const CreateTrackDocument = gql`
+    mutation CreateTrack($input: CreateTrackInput!) {
+  createTrack(input: $input) {
+    track {
+      id
+      title
+      audioUrl
+    }
+  }
+}
+    `;
+export type CreateTrackMutationFn = Apollo.MutationFunction<CreateTrackMutation, CreateTrackMutationVariables>;
+
+/**
+ * __useCreateTrackMutation__
+ *
+ * To run a mutation, you first call `useCreateTrackMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateTrackMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createTrackMutation, { data, loading, error }] = useCreateTrackMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateTrackMutation(baseOptions?: Apollo.MutationHookOptions<CreateTrackMutation, CreateTrackMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateTrackMutation, CreateTrackMutationVariables>(CreateTrackDocument, options);
+      }
+export type CreateTrackMutationHookResult = ReturnType<typeof useCreateTrackMutation>;
+export type CreateTrackMutationResult = Apollo.MutationResult<CreateTrackMutation>;
+export type CreateTrackMutationOptions = Apollo.BaseMutationOptions<CreateTrackMutation, CreateTrackMutationVariables>;
 export const DeleteCommentDocument = gql`
     mutation DeleteComment($input: DeleteCommentInput!) {
   deleteComment(input: $input) {
@@ -2459,43 +2566,6 @@ export function useForgotPasswordMutation(baseOptions?: Apollo.MutationHookOptio
 export type ForgotPasswordMutationHookResult = ReturnType<typeof useForgotPasswordMutation>;
 export type ForgotPasswordMutationResult = Apollo.MutationResult<ForgotPasswordMutation>;
 export type ForgotPasswordMutationOptions = Apollo.BaseMutationOptions<ForgotPasswordMutation, ForgotPasswordMutationVariables>;
-export const UploadUrlDocument = gql`
-    query UploadUrl($fileType: UploadFileType!) {
-  uploadUrl(fileType: $fileType) {
-    uploadUrl
-    fileName
-    readUrl
-  }
-}
-    `;
-
-/**
- * __useUploadUrlQuery__
- *
- * To run a query within a React component, call `useUploadUrlQuery` and pass it any options that fit your needs.
- * When your component renders, `useUploadUrlQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useUploadUrlQuery({
- *   variables: {
- *      fileType: // value for 'fileType'
- *   },
- * });
- */
-export function useUploadUrlQuery(baseOptions: Apollo.QueryHookOptions<UploadUrlQuery, UploadUrlQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<UploadUrlQuery, UploadUrlQueryVariables>(UploadUrlDocument, options);
-      }
-export function useUploadUrlLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UploadUrlQuery, UploadUrlQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<UploadUrlQuery, UploadUrlQueryVariables>(UploadUrlDocument, options);
-        }
-export type UploadUrlQueryHookResult = ReturnType<typeof useUploadUrlQuery>;
-export type UploadUrlLazyQueryHookResult = ReturnType<typeof useUploadUrlLazyQuery>;
-export type UploadUrlQueryResult = Apollo.QueryResult<UploadUrlQuery, UploadUrlQueryVariables>;
 export const LoginDocument = gql`
     mutation Login($input: LoginInput!) {
   login(input: $input) {
@@ -2611,6 +2681,41 @@ export function useMessageLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Me
 export type MessageQueryHookResult = ReturnType<typeof useMessageQuery>;
 export type MessageLazyQueryHookResult = ReturnType<typeof useMessageLazyQuery>;
 export type MessageQueryResult = Apollo.QueryResult<MessageQuery, MessageQueryVariables>;
+export const MimeTypeDocument = gql`
+    query MimeType($url: String!) {
+  mimeType(url: $url) {
+    value
+  }
+}
+    `;
+
+/**
+ * __useMimeTypeQuery__
+ *
+ * To run a query within a React component, call `useMimeTypeQuery` and pass it any options that fit your needs.
+ * When your component renders, `useMimeTypeQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useMimeTypeQuery({
+ *   variables: {
+ *      url: // value for 'url'
+ *   },
+ * });
+ */
+export function useMimeTypeQuery(baseOptions: Apollo.QueryHookOptions<MimeTypeQuery, MimeTypeQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<MimeTypeQuery, MimeTypeQueryVariables>(MimeTypeDocument, options);
+      }
+export function useMimeTypeLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<MimeTypeQuery, MimeTypeQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<MimeTypeQuery, MimeTypeQueryVariables>(MimeTypeDocument, options);
+        }
+export type MimeTypeQueryHookResult = ReturnType<typeof useMimeTypeQuery>;
+export type MimeTypeLazyQueryHookResult = ReturnType<typeof useMimeTypeLazyQuery>;
+export type MimeTypeQueryResult = Apollo.QueryResult<MimeTypeQuery, MimeTypeQueryVariables>;
 export const NotificationDocument = gql`
     query Notification($id: String!) {
   notification(id: $id) {
@@ -3661,6 +3766,43 @@ export function useUpdateProfilePictureMutation(baseOptions?: Apollo.MutationHoo
 export type UpdateProfilePictureMutationHookResult = ReturnType<typeof useUpdateProfilePictureMutation>;
 export type UpdateProfilePictureMutationResult = Apollo.MutationResult<UpdateProfilePictureMutation>;
 export type UpdateProfilePictureMutationOptions = Apollo.BaseMutationOptions<UpdateProfilePictureMutation, UpdateProfilePictureMutationVariables>;
+export const UploadUrlDocument = gql`
+    query UploadUrl($fileType: UploadFileType!) {
+  uploadUrl(fileType: $fileType) {
+    uploadUrl
+    fileName
+    readUrl
+  }
+}
+    `;
+
+/**
+ * __useUploadUrlQuery__
+ *
+ * To run a query within a React component, call `useUploadUrlQuery` and pass it any options that fit your needs.
+ * When your component renders, `useUploadUrlQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useUploadUrlQuery({
+ *   variables: {
+ *      fileType: // value for 'fileType'
+ *   },
+ * });
+ */
+export function useUploadUrlQuery(baseOptions: Apollo.QueryHookOptions<UploadUrlQuery, UploadUrlQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<UploadUrlQuery, UploadUrlQueryVariables>(UploadUrlDocument, options);
+      }
+export function useUploadUrlLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UploadUrlQuery, UploadUrlQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<UploadUrlQuery, UploadUrlQueryVariables>(UploadUrlDocument, options);
+        }
+export type UploadUrlQueryHookResult = ReturnType<typeof useUploadUrlQuery>;
+export type UploadUrlLazyQueryHookResult = ReturnType<typeof useUploadUrlLazyQuery>;
+export type UploadUrlQueryResult = Apollo.QueryResult<UploadUrlQuery, UploadUrlQueryVariables>;
 export const ValidPasswordResetTokenDocument = gql`
     query ValidPasswordResetToken($token: String!) {
   validPasswordResetToken(token: $token)

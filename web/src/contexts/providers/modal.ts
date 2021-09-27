@@ -21,12 +21,21 @@ export const useModalDispatch = () => {
     dispatchShowPostModal: (show: boolean) => dispatch({ type: ModalActionTypes.SHOW_NEW_POST, payload: { show } }),
     dispatchShowUnderDevelopmentModal: (show: boolean) =>
       dispatch({ type: ModalActionTypes.SHOW_UNDER_DEVELOPMENT, payload: { show } }),
-    dispatchShowAuthorActionsModal: (showAuthorActions: boolean, authorActionsType: AuthorActionsType, authorActionsId: string) =>
-      dispatch({ type: ModalActionTypes.SHOW_CONTEXT_MENU, payload: { showAuthorActions, authorActionsType, authorActionsId } }),
+    dispatchShowAuthorActionsModal: (
+      showAuthorActions: boolean,
+      authorActionsType: AuthorActionsType,
+      authorActionsId: string,
+    ) =>
+      dispatch({
+        type: ModalActionTypes.SHOW_CONTEXT_MENU,
+        payload: { showAuthorActions, authorActionsType, authorActionsId },
+      }),
     dispatchReactionsModal: (show: boolean, postId?: string, top?: ReactionType[], total?: number) =>
       dispatch({
         type: show ? ModalActionTypes.SHOW_REACTIONS : ModalActionTypes.HIDE_REACTIONS,
         payload: { postId, top, total },
       }),
+    dispatchShowNewTrackModal: (show: boolean) =>
+      dispatch({ type: ModalActionTypes.SHOW_NEW_TRACK, payload: { show } }),
   };
 };

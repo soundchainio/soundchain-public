@@ -29,10 +29,15 @@ export interface ShowReactionsPayload {
   total?: number;
 }
 
+export interface ShowNewTrackPayload {
+  show: boolean;
+}
+
 export type ModalPayload =
   | ShowNewPostPayload
   | SetEditPostIdPayload
   | SetRepostIdPayload
   | ShowAuthorActionsPayload
   | ShowUnderDevelopmentPayload
-  | ShowReactionsPayload;
+  | ShowReactionsPayload
+  | ShowNewTrackPayload;

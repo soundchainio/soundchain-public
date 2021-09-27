@@ -1,7 +1,7 @@
 import '01/../reflect-metadata';
 import {
   ApolloServerPluginLandingPageGraphQLPlayground,
-  ApolloServerPluginLandingPageProductionDefault,
+  ApolloServerPluginLandingPageProductionDefault
 } from 'apollo-server-core';
 import cors from 'cors';
 import * as dotenv from 'dotenv-flow';
@@ -11,6 +11,7 @@ import { TypegooseMiddleware } from './middlewares/typegoose-middleware';
 import { resolvers } from './resolvers';
 import { JwtService, JwtUser } from './services/JwtService';
 import { Context } from './types/Context';
+import { SentryReportError } from './utils/SentryReportError';
 
 dotenv.config();
 
@@ -29,11 +30,19 @@ export const {
   DATABASE_SSL_PATH,
   WEB_APP_URL = 'http://localhost:3000',
   SENDGRID_SENDER_EMAIL,
+  SENTRY_URL,
   SENDGRID_VERIFICATION_TEMPLATE,
   SENDGRID_RESET_PASSWORD_TEMPLATE,
   SENDGRID_API_KEY,
   UPLOADS_BUCKET_REGION,
   UPLOADS_BUCKET_NAME,
+  SQS_URL,
+  CONTRACT_ADDRESS = '0x1Ca9E523a3D4D2A771e22aaAf51EAB33108C6b2C',
+  WALLET_PUBLIC_KEY,
+  WALLET_PRIVATE_KEY,
+  ALCHEMY_API_KEY,
+  PINATA_API_KEY,
+  PINATA_API_SECRET,
 } = process.env;
 
 function assertEnvVar(name: string, value: string | undefined): asserts value {
@@ -53,6 +62,7 @@ export const config = {
       NODE_ENV === 'production'
         ? ApolloServerPluginLandingPageProductionDefault()
         : ApolloServerPluginLandingPageGraphQLPlayground(),
+      NODE_ENV === ('production' || 'staging') ? SentryReportError : {}
     ],
     context(context: ExpressContext | LambdaContext): Context {
       return new Context('req' in context ? context.req.user : context.express.req.user);
@@ -93,4 +103,16 @@ export const config = {
   web: {
     url: WEB_APP_URL,
   },
+  minting: {
+    contractAddress: CONTRACT_ADDRESS,
+    pinataKey: PINATA_API_KEY,
+    pinataSecret: PINATA_API_SECRET,
+    walletPrivateKey: WALLET_PRIVATE_KEY,
+    walletPublicKey: WALLET_PUBLIC_KEY,
+    alchemyKey: ALCHEMY_API_KEY,
+    sqsUrl: SQS_URL,
+  },
+  sentry: {
+    url: SENTRY_URL
+  }
 };
