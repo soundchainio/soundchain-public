@@ -1,6 +1,7 @@
 import { useModalDispatch } from 'contexts/providers/modal';
 import { useMe } from 'hooks/useMe';
 import { Bell } from 'icons/Bell';
+import { Happy } from 'icons/emoji/Happy';
 import { Home } from 'icons/Home';
 import { NewPost } from 'icons/NewPost';
 import { Profile } from 'icons/Profile';
@@ -42,6 +43,12 @@ export const NavBar = () => {
           icon={Profile}
           path={me ? `/profiles/${me?.profile.id}` : '/login'}
           activatedColor="purple-green"
+        />
+        <BottomNavBarButton
+          label="Playground"
+          path="/playground"
+          icon={() => <Happy width={20} height={20} />}
+          activatedColor="yellow"
         />
       </div>
     </nav>

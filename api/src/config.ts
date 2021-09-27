@@ -36,6 +36,7 @@ export const {
   SENDGRID_API_KEY,
   UPLOADS_BUCKET_REGION,
   UPLOADS_BUCKET_NAME,
+  SQS_URL,
   CONTRACT_ADDRESS = '0x1Ca9E523a3D4D2A771e22aaAf51EAB33108C6b2C',
   WALLET_PUBLIC_KEY,
   WALLET_PRIVATE_KEY,
@@ -109,6 +110,7 @@ export const config = {
     walletPrivateKey: WALLET_PRIVATE_KEY,
     walletPublicKey: WALLET_PUBLIC_KEY,
     alchemyKey: ALCHEMY_API_KEY,
+    sqsUrl: SQS_URL,
   },
   sentry: {
     url: SENTRY_URL
