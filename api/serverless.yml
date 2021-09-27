@@ -77,6 +77,8 @@ provider:
       - Ref: VPCEndpointSecurityGroup
       - Ref: DocumentDBSecurityGroup
     subnetIds:
+      - Ref: PublicSubnetOne
+      - Ref: PublicSubnetTwo
       - Ref: PrivateSubnetOne
       - Ref: PrivateSubnetTwo
   environment:
@@ -141,6 +143,34 @@ resources:
             - SubnetConfig
             - VPC
             - CIDR
+    PublicSubnetOne:
+      Type: AWS::EC2::Subnet
+      Properties:
+        AvailabilityZone:
+          Fn::Select:
+            - 0
+            - Fn::GetAZs:
+                Ref: AWS::Region
+        CidrBlock:
+          Fn::FindInMap:
+            - SubnetConfig
+            - PublicOne
+            - CIDR
+        MapPublicIpOnLaunch: true
+    PublicSubnetTwo:
+      Type: AWS::EC2::Subnet
+      Properties:
+        AvailabilityZone:
+          Fn::Select:
+            - 1
+            - Fn::GetAZs:
+                Ref: AWS::Region
+        CidrBlock:
+          Fn::FindInMap:
+            - SubnetConfig
+            - PublicTwo
+            - CIDR
+        MapPublicIpOnLaunch: true
     PrivateSubnetOne:
       Type: AWS::EC2::Subnet
       Properties:
@@ -194,6 +224,20 @@ resources:
         DestinationCidrBlock: 0.0.0.0/0
         GatewayId:
           Ref: InternetGateway
+    PublicSubnetOneRouteTableAssociation:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId:
+          Ref: PublicSubnetOne
+        RouteTableId:
+          Ref: PublicRouteTable
+    PublicSubnetTwoRouteTableAssociation:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId:
+          Ref: PublicSubnetTwo
+        RouteTableId:
+          Ref: PublicRouteTable
     NatGatewayOneAttachment:
       Type: AWS::EC2::EIP
       DependsOn: GatewayAttachement
@@ -212,7 +256,7 @@ resources:
             - NatGatewayOneAttachment
             - AllocationId
         SubnetId:
-          Ref: PrivateSubnetOne
+          Ref: PublicSubnetOne
     NatGatewayTwo:
       Type: AWS::EC2::NatGateway
       Properties:
@@ -221,7 +265,7 @@ resources:
             - NatGatewayTwoAttachment
             - AllocationId
         SubnetId:
-          Ref: PrivateSubnetTwo
+          Ref: PublicSubnetTwo
     PrivateRouteTableOne:
       Type: AWS::EC2::RouteTable
       Properties:
