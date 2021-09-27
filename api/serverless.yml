@@ -26,7 +26,7 @@ functions:
     handler: src/db/migrate.handler
   mint:
     handler: src/lambda.mint
-    timeout: 600
+    timeout: 120
     reservedConcurrency: 1
     events:
       - sqs:
@@ -396,7 +396,7 @@ resources:
         MessageRetentionPeriod: 1209600
         QueueName:
           Fn::Sub: MintingQueue-${AWS::StackName}.fifo
-        VisibilityTimeout: 600
+        VisibilityTimeout: 125
         RedrivePolicy:
           deadLetterTargetArn:
             Fn::GetAtt:

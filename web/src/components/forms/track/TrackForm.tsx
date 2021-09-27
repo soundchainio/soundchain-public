@@ -2,7 +2,7 @@ import { AssetUploadField } from 'components/AssetUploadField';
 import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
 import { TextareaField } from 'components/TextareaField';
-import { Form, Formik, FormikProps } from 'formik';
+import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import { useCreateTrackMutation } from 'lib/graphql';
 import React from 'react';
 import * as yup from 'yup';
@@ -13,7 +13,6 @@ interface Props {
 }
 
 interface FormValues {
-  to: string;
   name: string;
   description: string;
   assetUrl: string;
@@ -28,23 +27,21 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   artUrl: yup.string(),
 });
 
-export const TrackForm = ({ to, afterSubmit }: Props) => {
-  const initialValues: FormValues = {
-    to: to,
-    name: '',
-    assetUrl: '',
-    description: '',
-  };
+const initialValues: FormValues = {
+  name: '',
+  assetUrl: '',
+  description: '',
+};
 
+export const TrackForm = ({ to, afterSubmit }: Props) => {
   const [createTrack] = useCreateTrackMutation();
 
-  const handleSubmit = async (values: FormValues) => {
-    console.log(values);
-    await createTrack({ variables: { input: values } });
+  const handleSubmit = async (values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
+    await createTrack({ variables: { input: { to: to, ...values } } });
     afterSubmit();
+    resetForm();
   };
 
-  console.log(initialValues);
   return (
     <Formik
       initialValues={initialValues}
@@ -55,9 +52,6 @@ export const TrackForm = ({ to, afterSubmit }: Props) => {
       {({ values }: FormikProps<FormValues>) => (
         <Form className="flex flex-col justify-between h-full">
           <div>
-            <div className="hidden">
-              <InputField label={'to'} name="to" type="text" />
-            </div>
             <div className="mt-6">
               <InputField label={'Name'} name="name" type="text" />
             </div>
