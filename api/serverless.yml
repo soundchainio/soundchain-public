@@ -151,6 +151,8 @@ resources:
             - 0
             - Fn::GetAZs:
                 Ref: AWS::Region
+        VpcId:
+          Ref: VPC
         CidrBlock:
           Fn::FindInMap:
             - SubnetConfig
@@ -165,6 +167,8 @@ resources:
             - 1
             - Fn::GetAZs:
                 Ref: AWS::Region
+        VpcId:
+          Ref: VPC
         CidrBlock:
           Fn::FindInMap:
             - SubnetConfig
