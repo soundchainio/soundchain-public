@@ -24,6 +24,7 @@ export const NewTrackModal = () => {
       }
     >
       <TrackForm
+        to=""
         afterSubmit={() => {
           dispatchShowNewTrackModal(false);
         }}
