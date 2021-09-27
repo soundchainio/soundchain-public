@@ -204,6 +204,24 @@ resources:
       DependsOn: GatewayAttachement
       Properties:
         Domain: vpc
+    NatGatewayOne:
+      Type: AWS::EC2::NatGateway
+      Properties:
+        AllocationId:
+          Fn::GetAtt:
+            - NatGatewayOneAttachment
+            - AllocationId
+        SubnetId:
+          Ref: PrivateSubnetOne
+    NatGatewayTwo:
+      Type: AWS::EC2::NatGateway
+      Properties:
+        AllocationId:
+          Fn::GetAtt:
+            - NatGatewayTwoAttachment
+            - AllocationId
+        SubnetId:
+          Ref: PrivateSubnetTwo
     PrivateRouteTableOne:
       Type: AWS::EC2::RouteTable
       Properties:
