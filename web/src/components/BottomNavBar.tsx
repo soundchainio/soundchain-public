@@ -30,7 +30,6 @@ export const BottomNavBar = () => {
           icon={Search}
           activatedColor="green"
         />
-        <BottomNavBarButton label="NFT" icon={NewPost} onClick={() => dispatchShowNewTrackModal(true)} />
         <BottomNavBarButton label="Post" icon={NewPost} onClick={handleNewPostClick} />
         <BottomNavBarButton
           label="Notifications"
