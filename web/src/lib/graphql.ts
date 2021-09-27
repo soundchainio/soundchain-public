@@ -116,8 +116,11 @@ export type CreateRepostPayload = {
 };
 
 export type CreateTrackInput = {
-  title: Scalars['String'];
-  audioUrl: Scalars['String'];
+  to: Scalars['String'];
+  name: Scalars['String'];
+  description: Scalars['String'];
+  assetUrl: Scalars['String'];
+  artUrl?: Maybe<Scalars['String']>;
 };
 
 export type CreateTrackPayload = {
@@ -842,7 +845,9 @@ export type UpdateProfilePayload = {
 
 export enum UploadFileType {
   Jpeg = 'JPEG',
-  Png = 'PNG'
+  Png = 'PNG',
+  Video = 'VIDEO',
+  Audio = 'AUDIO'
 }
 
 export type UploadUrl = {

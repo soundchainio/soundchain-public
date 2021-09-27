@@ -33,6 +33,19 @@ export default function PlaygroundPage() {
       <div className="my-8">
         {account && <Subtitle>{`Metamask address: ${account}`}</Subtitle>}
         {balance && <Subtitle>{`Metamask balance: ${balance}`}</Subtitle>}
+        {balance && (
+          <div className="text-white">
+            Need some test Matic?{' '}
+            <a
+              className="text-sm yellow-gradient-text font-bold"
+              href="https://faucet.polygon.technology/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Get some here
+            </a>
+          </div>
+        )}
         {!account && (
           <Button className="max-w-xs" onClick={() => connect()}>
             Connect to MetaMask
@@ -71,10 +84,10 @@ export default function PlaygroundPage() {
       </div>
 
       <div className="my-8 w-full text-white">
-        <div className={`${currentTab == 'COLLECTION' ? 'block' : 'hidden'} flex space-x-4`}>
+        <div className={`${currentTab == 'COLLECTION' ? 'block' : 'hidden'} flex flex-wrap gap-4`}>
           {nfts &&
             nfts.map((nft, idx) => (
-              <div key={idx} className="my-4 bg-rainbow-gradient max-w-md flex flex-row justify-center p-2">
+              <div key={idx} className="bg-rainbow-gradient max-w-sm flex flex-row justify-center p-2">
                 <div key={idx} className="bg-black p-2">
                   <NFTCard account={account!} web3={web3!} nftToken={nft} />
                 </div>
@@ -82,7 +95,7 @@ export default function PlaygroundPage() {
             ))}
         </div>
         <div className={`${currentTab == 'MINTING' ? 'block' : 'hidden'}`}>
-          <TrackForm afterSubmit={() => console.log('nice')} />
+          <TrackForm to={account!} afterSubmit={() => alert('Minting requested!')} />
         </div>
       </div>
     </Layout>

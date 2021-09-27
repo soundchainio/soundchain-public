@@ -63,6 +63,8 @@ custom:
       - '-'
       - - Ref: 'AWS::StackName'
         - 'uploads'
+  sqs:
+    url: !Ref: MintingQueue
 
 provider:
   name: aws
@@ -99,6 +101,7 @@ provider:
     ALCHEMY_API_KEY: ${env:ALCHEMY_API_KEY}
     PINATA_API_KEY: ${env:PINATA_API_KEY}
     PINATA_API_SECRET: ${env:PINATA_API_SECRET}
+    SQS_URL: ${self:custom.sqs.url}
 
   iam:
     role:

@@ -35,7 +35,12 @@ export const getNftTokensFromContract = async (web3: Web3, account: string) => {
   return tokens;
 };
 
-export const burnNftToken = async (web3: Web3, tokenId: string, account: string) => {
+export const burnNftToken = async (web3: Web3, tokenId: string, address: string) => {
   const contract = new web3.eth.Contract(abi as AbiItem[], contractAddress);
-  return await contract.methods.burn(tokenId).send({ from: account });
+  return await contract.methods.burn(tokenId).send({ from: address });
+};
+
+export const transferNftToken = async (web3: Web3, tokenId: string, fromAddress: string, toAddress: string) => {
+  const contract = new web3.eth.Contract(abi as AbiItem[], contractAddress);
+  return await contract.methods.safeTransferFrom(fromAddress, toAddress, tokenId).send({ from: fromAddress });
 };
