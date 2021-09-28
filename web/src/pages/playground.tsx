@@ -13,10 +13,13 @@ export default function PlaygroundPage() {
   const { account, balance, web3, connect } = useMetaMask();
   const [nfts, setNfts] = useState<NftToken[]>();
   const [currentTab, setCurrentTab] = useState<'COLLECTION' | 'MINTING'>('COLLECTION');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (account && web3) {
+      setLoading(true);
       getNftTokensFromContract(web3, account).then(setNfts);
+      setLoading(false);
     } else {
       setNfts(undefined);
     }
@@ -31,8 +34,21 @@ export default function PlaygroundPage() {
       </Head>
 
       <div className="my-8">
-        <Subtitle>{`Metamask address: ${account}`}</Subtitle>
-        <Subtitle>{`Metamask balance: ${balance}`}</Subtitle>
+        {account && <Subtitle>{`Metamask address: ${account}`}</Subtitle>}
+        {balance && <Subtitle>{`Metamask balance: ${balance}`}</Subtitle>}
+        {balance && (
+          <div className="text-white">
+            Need some test Matic?{' '}
+            <a
+              className="text-sm yellow-gradient-text font-bold"
+              href="https://faucet.polygon.technology/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Get some here
+            </a>
+          </div>
+        )}
         {!account && (
           <Button className="max-w-xs" onClick={() => connect()}>
             Connect to MetaMask
@@ -71,18 +87,19 @@ export default function PlaygroundPage() {
       </div>
 
       <div className="my-8 w-full text-white">
-        <div className={`${currentTab == 'COLLECTION' ? 'block' : 'hidden'} flex space-x-4`}>
+        <div className={`${currentTab == 'COLLECTION' ? 'block' : 'hidden'} flex flex-wrap gap-4`}>
+          {loading && <div>Loading NFTs...</div>}
           {nfts &&
             nfts.map((nft, idx) => (
-              <div key={idx} className="my-4 bg-rainbow-gradient max-w-md flex flex-row justify-center p-2">
-                <div key={idx} className="bg-black p-2">
+              <div key={idx} className="bg-rainbow-gradient w-96 flex flex-row justify-center p-2">
+                <div key={idx} className="bg-black p-2 w-full">
                   <NFTCard account={account!} web3={web3!} nftToken={nft} />
                 </div>
               </div>
             ))}
         </div>
         <div className={`${currentTab == 'MINTING' ? 'block' : 'hidden'}`}>
-          <TrackForm afterSubmit={() => console.log('nice')} />
+          <TrackForm to={account!} afterSubmit={() => alert('Minting requested!')} />
         </div>
       </div>
     </Layout>

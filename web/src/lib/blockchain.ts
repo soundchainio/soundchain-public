@@ -2,7 +2,7 @@ import axios from 'axios';
 import { Metadata, NftToken } from 'types/NftTypes';
 import Web3 from 'web3';
 import { AbiItem } from 'web3-utils';
-import { abi } from '../contract/SoundchainCollectible.sol/SoundchainCollectible.json';
+import soundchainContract from '../contract/SoundchainCollectible.sol/SoundchainCollectible.json';
 
 const contractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
 
@@ -14,7 +14,7 @@ export const getIpfsAssetUrl = (uri: string) => {
 export const getNftTokensFromContract = async (web3: Web3, account: string) => {
   const tokens: NftToken[] = [];
   try {
-    const contract = new web3.eth.Contract(abi as AbiItem[], contractAddress);
+    const contract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], contractAddress);
     const balance = await contract.methods.balanceOf(account).call();
 
     for (let tokenIndex = 0; tokenIndex < balance; tokenIndex++) {
@@ -35,7 +35,12 @@ export const getNftTokensFromContract = async (web3: Web3, account: string) => {
   return tokens;
 };
 
-export const burnNftToken = async (web3: Web3, tokenId: string, account: string) => {
-  const contract = new web3.eth.Contract(abi as AbiItem[], contractAddress);
-  return await contract.methods.burn(tokenId).send({ from: account });
+export const burnNftToken = async (web3: Web3, tokenId: string, address: string) => {
+  const contract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], contractAddress);
+  return await contract.methods.burn(tokenId).send({ from: address });
+};
+
+export const transferNftToken = async (web3: Web3, tokenId: string, fromAddress: string, toAddress: string) => {
+  const contract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], contractAddress);
+  return await contract.methods.safeTransferFrom(fromAddress, toAddress, tokenId).send({ from: fromAddress });
 };

@@ -38,6 +38,12 @@ jobs:
           SENDGRID_VERIFICATION_TEMPLATE: ${{ secrets.SENDGRID_VERIFICATION_TEMPLATE_STAGING }}
           SENDGRID_RESET_PASSWORD_TEMPLATE: ${{ secrets.SENDGRID_RESET_PASSWORD_TEMPLATE_STAGING }}
           WEB_APP_URL: ${{ secrets.WEB_APP_URL_STAGING }}
+          CONTRACT_ADDRESS: ${{ secrets.CONTRACT_ADDRESS_STAGING }}
+          WALLET_PUBLIC_KEY: ${{ secrets.WALLET_PUBLIC_KEY_STAGING }}
+          WALLET_PRIVATE_KEY: ${{ secrets.WALLET_PRIVATE_KEY_STAGING }}
+          ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY_STAGING }}
+          PINATA_API_KEY: ${{ secrets.PINATA_API_KEY_STAGING }}
+          PINATA_API_SECRET: ${{ secrets.PINATA_API_SECRET_STAGING }}
       - name: Trigger migrate lambda function
         run: |
           aws lambda invoke --function-name soundchain-api-staging-migrate response.json

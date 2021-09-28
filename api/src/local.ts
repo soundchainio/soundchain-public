@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/node';
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
 import mongoose from 'mongoose';
@@ -5,6 +6,11 @@ import { config } from './config';
 import { Context } from './types/Context';
 
 async function bootstrap() {
+  Sentry.init({
+    dsn: config.sentry.url,
+    tracesSampleRate: 1.0,
+  });
+
   await mongoose.connect(config.db.url, config.db.options);
 
   const app = express();
