@@ -15,7 +15,7 @@ export const AudioPlayer = ({ id, url, title, artist, coverPhotoUrl }: AudioPlay
   const [playing, setPlaying] = useState<boolean>(false);
   const [playState, setPlayState] = useState<number>(0);
   const [duration, setDuration] = useState<number>();
-  const audioRef = useRef<HTMLAudioElement>();
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   if (!(id && url)) { return null }
 
