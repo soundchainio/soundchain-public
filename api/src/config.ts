@@ -40,6 +40,9 @@ export const {
   ALCHEMY_API_KEY,
   PINATA_API_KEY,
   PINATA_API_SECRET,
+  MUX_TOKEN_ID,
+  MUX_TOKEN_SECRET,
+  MUX_WEBHOOK_SECRET,
 } = process.env;
 
 function assertEnvVar(name: string, value: string | undefined): asserts value {
@@ -52,6 +55,7 @@ assertEnvVar('SENDGRID_SENDER_EMAIL', SENDGRID_SENDER_EMAIL);
 assertEnvVar('SENDGRID_VERIFICATION_TEMPLATE', SENDGRID_VERIFICATION_TEMPLATE);
 assertEnvVar('SENDGRID_API_KEY', SENDGRID_API_KEY);
 assertEnvVar('SENDGRID_RESET_PASSWORD_TEMPLATE', SENDGRID_RESET_PASSWORD_TEMPLATE);
+assertEnvVar('MUX_WEBHOOK_SECRET', MUX_WEBHOOK_SECRET);
 
 export const config = {
   apollo: {
@@ -106,5 +110,10 @@ export const config = {
     walletPrivateKey: WALLET_PRIVATE_KEY,
     walletPublicKey: WALLET_PUBLIC_KEY,
     alchemyKey: ALCHEMY_API_KEY,
+  },
+  mux: {
+    tokenId: MUX_TOKEN_ID,
+    tokenSecret: MUX_TOKEN_SECRET,
+    webhookSecret: MUX_WEBHOOK_SECRET,
   },
 };

@@ -29,7 +29,7 @@ export interface ShowReactionsPayload {
   total?: number;
 }
 
-export interface ShowNewTrackPayload {
+export interface ShowCreatePayload {
   show: boolean;
 }
 
@@ -40,4 +40,4 @@ export type ModalPayload =
   | ShowAuthorActionsPayload
   | ShowUnderDevelopmentPayload
   | ShowReactionsPayload
-  | ShowNewTrackPayload;
+  | ShowCreatePayload;

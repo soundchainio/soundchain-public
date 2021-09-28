@@ -2,10 +2,12 @@ import { User } from '../models/User';
 import { AuthService } from '../services/AuthService';
 import { CommentService } from '../services/CommentService';
 import { EmailService } from '../services/EmailService';
+import { EmbedService } from '../services/EmbedService';
 import { FeedService } from '../services/FeedService';
 import { FollowService } from '../services/FollowService';
 import { JwtService, JwtUser } from '../services/JwtService';
 import { MessageService } from '../services/MessageService';
+import { MuxService } from '../services/MuxService';
 import { NotificationService } from '../services/NotificationService';
 import { PostService } from '../services/PostService';
 import { ProfileService } from '../services/ProfileService';
@@ -14,7 +16,6 @@ import { SubscriptionService } from '../services/SubscriptionService';
 import { TrackService } from '../services/TrackService';
 import { UploadService } from '../services/UploadService';
 import { UserService } from '../services/UserService';
-import { EmbedService } from '../services/EmbedService';
 
 export class Context {
   authService = new AuthService(this);
@@ -24,6 +25,7 @@ export class Context {
   followService = new FollowService(this);
   jwtService = new JwtService(this);
   messageService = new MessageService(this);
+  muxService = new MuxService(this);
   notificationService = new NotificationService(this);
   postService = new PostService(this);
   profileService = new ProfileService(this);

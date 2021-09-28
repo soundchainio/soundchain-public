@@ -1,5 +1,6 @@
 import classNames from 'classnames';
-import { TrackForm } from 'components/forms/track/TrackForm';
+import { TrackMetadataForm } from 'components/forms/track/TrackMetadataForm';
+import { TrackUploader } from 'components/forms/track/TrackUploader';
 import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import React, { useState } from 'react';
@@ -9,12 +10,19 @@ enum Tabs {
   POST = 'Post',
 }
 
-export const NewTrackModal = () => {
+export const CreateModal = () => {
   const modalState = useModalState();
-  const { dispatchShowNewTrackModal } = useModalDispatch();
+  const { dispatchShowCreateModal, dispatchShowPostModal } = useModalDispatch();
   const [tab, setTab] = useState(Tabs.NFT);
+  const [trackId, setTrackId] = useState<string | null>(null);
 
-  const isOpen = modalState.showNewTrack;
+  const isOpen = modalState.showCreate;
+
+  const handlePostTabClick = () => {
+    dispatchShowCreateModal(false);
+    dispatchShowPostModal(true);
+    setTrackId(null);
+  };
 
   const tabs = (
     <div className="flex bg-gray-10 rounded-lg">
@@ -28,7 +36,7 @@ export const NewTrackModal = () => {
         Mint NFT
       </div>
       <div
-        onClick={() => setTab(Tabs.POST)}
+        onClick={handlePostTabClick}
         className={classNames(
           'flex-1 rounded-lg font-bold text-sm py-1.5',
           tab === Tabs.POST ? 'text-white bg-gray-30' : 'text-gray-80 cursor-pointer',
@@ -39,25 +47,24 @@ export const NewTrackModal = () => {
     </div>
   );
 
+  const handleClose = () => {
+    dispatchShowCreateModal(false);
+    setTrackId(null);
+  };
+
   return (
     <Modal
       show={isOpen}
       title={tabs}
-      onClose={() => dispatchShowNewTrackModal(false)}
+      onClose={handleClose}
       leftButton={
-        <div
-          className="p-2 text-gray-400 font-bold flex-1 text-center text-sm"
-          onClick={() => dispatchShowNewTrackModal(false)}
-        >
+        <div className="p-2 text-gray-400 font-bold flex-1 text-center text-sm" onClick={handleClose}>
           Cancel
         </div>
       }
     >
-      <TrackForm
-        afterSubmit={() => {
-          dispatchShowNewTrackModal(false);
-        }}
-      />
+      <TrackUploader onSuccess={setTrackId} />
+      {trackId && <TrackMetadataForm trackId={trackId} afterSubmit={handleClose} />}
     </Modal>
   );
 };
