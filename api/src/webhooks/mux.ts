@@ -65,6 +65,6 @@ async function handleEvent(eventType: EventType, eventData: EventData, trackServ
       break;
     }
     default:
-      console.log('some other event!', eventType, eventData);
+      break;
   }
 }
