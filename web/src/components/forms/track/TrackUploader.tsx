@@ -26,7 +26,6 @@ export const TrackUploader = ({ onSuccess }: TrackUploaderProps) => {
   const [filename, setFilename] = useState<string>();
 
   const onDrop = async ([file]: File[]) => {
-    console.log(file);
     const { data } = await uploadTrack({ variables: { input: { fileType: file.type } } });
 
     if (data) {

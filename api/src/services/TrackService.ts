@@ -38,4 +38,10 @@ export class TrackService extends ModelService<typeof Track> {
   deleteTrack(id: string): Promise<Track> {
     return this.model.deleteOne({ _id: id }).exec();
   }
+
+  async createNftTrack(params: Pick<Track, 'profileId' | 'title' | 'file'>): Promise<Track> {
+    const track = new this.model(params);
+    await track.save();
+    return track;
+  }
 }

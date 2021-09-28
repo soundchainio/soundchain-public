@@ -13,6 +13,7 @@ package:
 functions:
   graphql:
     handler: src/lambda.handler
+    timeout: 20
     events:
       - http:
           path: /
@@ -32,7 +33,7 @@ functions:
           method: post
   mint:
     handler: src/lambda.mint
-    timeout: 600
+    timeout: 120
     reservedConcurrency: 1
     events:
       - sqs:
@@ -69,6 +70,8 @@ custom:
       - '-'
       - - Ref: 'AWS::StackName'
         - 'uploads'
+  sqs:
+    url: !Ref MintingQueue
 
 provider:
   name: aws
@@ -80,8 +83,6 @@ provider:
       - Ref: VPCEndpointSecurityGroup
       - Ref: DocumentDBSecurityGroup
     subnetIds:
-      - Ref: PublicSubnetOne
-      - Ref: PublicSubnetTwo
       - Ref: PrivateSubnetOne
       - Ref: PrivateSubnetTwo
   environment:
@@ -105,6 +106,7 @@ provider:
     ALCHEMY_API_KEY: ${env:ALCHEMY_API_KEY}
     PINATA_API_KEY: ${env:PINATA_API_KEY}
     PINATA_API_SECRET: ${env:PINATA_API_SECRET}
+    SQS_URL: ${self:custom.sqs.url}
 
   iam:
     role:
@@ -345,6 +347,22 @@ resources:
         SubnetIds:
           - Ref: PrivateSubnetOne
           - Ref: PrivateSubnetTwo
+    S3Endpoint:
+      Type: 'AWS::EC2::VPCEndpoint'
+      Properties:
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action: '*'
+              Resource: '*'
+        RouteTableIds:
+          - !Ref PublicRouteTable
+          - !Ref PrivateRouteTableOne
+          - !Ref PrivateRouteTableTwo
+        ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
+        VpcId: !Ref VPC
     DBCluster:
       Type: AWS::DocDB::DBCluster
       DeletionPolicy: Delete
@@ -383,7 +401,7 @@ resources:
         MessageRetentionPeriod: 1209600
         QueueName:
           Fn::Sub: MintingQueue-${AWS::StackName}.fifo
-        VisibilityTimeout: 600
+        VisibilityTimeout: 125
         RedrivePolicy:
           deadLetterTargetArn:
             Fn::GetAtt:

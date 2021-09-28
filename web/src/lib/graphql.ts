@@ -265,6 +265,11 @@ export type MessageConnection = {
   nodes: Array<Message>;
 };
 
+export type MimeType = {
+  __typename?: 'MimeType';
+  value: Scalars['String'];
+};
+
 export enum MusicianType {
   Singer = 'SINGER',
   Drummer = 'DRUMMER',
@@ -521,6 +526,7 @@ export type Query = {
   myProfile: Profile;
   profile: Profile;
   uploadUrl: UploadUrl;
+  mimeType: MimeType;
   me: Maybe<User>;
   validPasswordResetToken: Scalars['Boolean'];
 };
@@ -595,6 +601,10 @@ export type QueryProfileArgs = {
 
 export type QueryUploadUrlArgs = {
   fileType: Scalars['String'];
+};
+
+export type QueryMimeTypeArgs = {
+  url: Scalars['String'];
 };
 
 export type QueryValidPasswordResetTokenArgs = {
@@ -1093,6 +1103,14 @@ export type MessageComponentFieldsFragment = { __typename?: 'Message' } & Pick<
   Message,
   'id' | 'message' | 'fromId' | 'toId' | 'createdAt'
 > & { fromProfile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'displayName' | 'profilePicture'> };
+
+export type MimeTypeQueryVariables = Exact<{
+  url: Scalars['String'];
+}>;
+
+export type MimeTypeQuery = { __typename?: 'Query' } & {
+  mimeType: { __typename?: 'MimeType' } & Pick<MimeType, 'value'>;
+};
 
 export type NewPostNotificationFieldsFragment = { __typename?: 'NewPostNotification' } & Pick<
   NewPostNotification,
@@ -2414,6 +2432,41 @@ export function useMessageLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Me
 export type MessageQueryHookResult = ReturnType<typeof useMessageQuery>;
 export type MessageLazyQueryHookResult = ReturnType<typeof useMessageLazyQuery>;
 export type MessageQueryResult = Apollo.QueryResult<MessageQuery, MessageQueryVariables>;
+export const MimeTypeDocument = gql`
+  query MimeType($url: String!) {
+    mimeType(url: $url) {
+      value
+    }
+  }
+`;
+
+/**
+ * __useMimeTypeQuery__
+ *
+ * To run a query within a React component, call `useMimeTypeQuery` and pass it any options that fit your needs.
+ * When your component renders, `useMimeTypeQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useMimeTypeQuery({
+ *   variables: {
+ *      url: // value for 'url'
+ *   },
+ * });
+ */
+export function useMimeTypeQuery(baseOptions: Apollo.QueryHookOptions<MimeTypeQuery, MimeTypeQueryVariables>) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<MimeTypeQuery, MimeTypeQueryVariables>(MimeTypeDocument, options);
+}
+export function useMimeTypeLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<MimeTypeQuery, MimeTypeQueryVariables>) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<MimeTypeQuery, MimeTypeQueryVariables>(MimeTypeDocument, options);
+}
+export type MimeTypeQueryHookResult = ReturnType<typeof useMimeTypeQuery>;
+export type MimeTypeLazyQueryHookResult = ReturnType<typeof useMimeTypeLazyQuery>;
+export type MimeTypeQueryResult = Apollo.QueryResult<MimeTypeQuery, MimeTypeQueryVariables>;
 export const NotificationDocument = gql`
   query Notification($id: String!) {
     notification(id: $id) {
