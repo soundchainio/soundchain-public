@@ -35,6 +35,8 @@ export class TrackResolver {
     return { track };
   }
 
+  @Mutation(() => CreateTrackPayload)
+  @Authorized()
   async createTrack(
     @Arg('input') input: CreateTrackInput,
     @Ctx() { trackService }: Context,

@@ -1,0 +1,9 @@
+mutation CreateTrack($input: CreateTrackInput!) {
+  createTrack(input: $input) {
+    track {
+      id
+      title
+      file
+    }
+  }
+}

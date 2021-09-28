@@ -20,6 +20,7 @@ export class Track extends Model {
   @prop()
   description: string;
 
+  @Field()
   @prop({ required: true })
   file: string;
 
