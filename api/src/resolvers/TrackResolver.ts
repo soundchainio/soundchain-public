@@ -17,20 +17,8 @@ export class TrackResolver {
     @CurrentUser() { profileId }: User,
     @Arg('input') input: CreateTrackInput,
   ): Promise<CreateTrackPayload> {
-    const { assetUrl, artUrl, ...rest } = input;
-    const assetKey = assetUrl.substring(assetUrl.lastIndexOf('/') + 1);
-    const artKey = artUrl ? artUrl.substring(artUrl.lastIndexOf('/') + 1) : undefined;
-    const sqs = new SQS({
-      region: config.uploads.region,
-    });
-    await sqs
-      .sendMessage({
-        QueueUrl: config.minting.sqsUrl,
-        MessageBody: JSON.stringify({ assetKey: assetKey, artKey: artKey, ...rest }),
-        MessageGroupId: config.minting.contractAddress,
-      })
-      .promise();
-    const track = await trackService.createTrack({ profileId, audioUrl: input.assetUrl, title: input.name });
+    const { audioUrl, title } = input;
+    const track = await trackService.createTrack({ profileId, audioUrl, title });
     return { track };
   }
 }
