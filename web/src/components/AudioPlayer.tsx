@@ -1,6 +1,6 @@
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { remainingTime, timeFromSecs } from 'utils/calculateTime';
 
 interface AudioPlayerProps {
@@ -12,47 +12,46 @@ interface AudioPlayerProps {
 }
 
 export const AudioPlayer = ({ id, url, title, artist, coverPhotoUrl }: AudioPlayerProps) => {
-  const [audioEl, setAudioEl] = useState<HTMLAudioElement>();
   const [playing, setPlaying] = useState<boolean>(false);
   const [playState, setPlayState] = useState<number>(0);
   const [duration, setDuration] = useState<number>();
+  const audioRef = useRef<HTMLAudioElement>();
 
   if (!(id && url)) { return null }
 
   const togglePlay = () => {
     if (playing) {
-      audioEl?.pause();
+      audioRef.current?.pause();
       setPlaying(false);
     } else {
-      audioEl?.play();
+      audioRef.current?.play();
       setPlaying(true);
     }
   };
 
   const onSliderChange = (value: number) => {
     setPlayState(value);
-    if (audioEl) {
-      audioEl.currentTime = value;
+    if (audioRef.current) {
+      audioRef.current.currentTime = value;
     }
   };
 
-
   useEffect(() => {
-    const audioElement = document.getElementById(id) as HTMLAudioElement;
-    audioElement.onloadedmetadata = function () {
-      setAudioEl(audioElement);
-      setDuration(audioElement.duration);
-    };
+    if (audioRef.current) {
+      audioRef.current.onloadedmetadata = function () {
+        if (audioRef.current) setDuration(audioRef.current.duration);
+      };
+
+      audioRef.current.addEventListener('timeupdate', () => {
+        if (audioRef.current) setPlayState(Math.floor(audioRef.current.currentTime));
+      });
+
+      audioRef.current.addEventListener('ended', () => {
+        setPlayState(0);
+        setPlaying(false);
+      });
+    }
   }, []);
-
-  audioEl?.addEventListener('timeupdate', () => {
-    setPlayState(Math.floor(audioEl.currentTime));
-  });
-
-  audioEl?.addEventListener('ended', () => {
-    setPlayState(0);
-    setPlaying(false);
-  });
 
   return (
     <div className="bg-black rounded-md p-4 flex items-center">
@@ -97,7 +96,7 @@ export const AudioPlayer = ({ id, url, title, artist, coverPhotoUrl }: AudioPlay
           </div>
         </div>
       </div>
-      <audio id={id} src={url} className="opacity-0 h-0 w-0" />
+      <audio id={id} ref={audioRef} src={url} className="opacity-0 h-0 w-0" />
     </div >
   )
 }
