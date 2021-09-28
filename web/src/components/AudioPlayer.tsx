@@ -1,5 +1,6 @@
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
+import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { remainingTime, timeFromSecs } from 'utils/calculateTime';
 
@@ -58,7 +59,7 @@ export const AudioPlayer = ({ id, url, title, artist, coverPhotoUrl }: AudioPlay
     <div className="bg-black rounded-md p-4 flex items-center">
       {coverPhotoUrl &&
         <div style={{ maxWidth: "80px", maxHeight: "80px" }}>
-          <img src={coverPhotoUrl} className="m-auto" />
+          <Image src={coverPhotoUrl} className="m-auto" />
         </div>
       }
       <div className="flex flex-col w-full">
