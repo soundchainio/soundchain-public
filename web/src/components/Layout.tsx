@@ -29,7 +29,7 @@ export const Layout = ({ children, hideBottomNavBar, topNavBarProps }: LayoutPro
         <main id="main" className="flex-1 relative overflow-y-auto focus:outline-none bg-gray-10">
           <div className={classNames('max-w-7xl mx-auto', hideBottomNavBar ? 'h-full' : 'mb-20')}>{children}</div>
         </main>
-        <div className="fixed bottom-0 w-full">
+        <div className="bottom-0 w-full">
           <div id="bottom-sheet"></div>
           <div className="md:hidden">{!state?.modal.anyModalOpened && !hideBottomNavBar && <BottomNavBar />}</div>
         </div>
