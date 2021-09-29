@@ -1,7 +1,7 @@
 import { Field, InputType } from 'type-graphql';
 
 @InputType()
-export class MintingRequestInput {
+export class CreateMintingRequestInput {
   @Field()
   to: string;
 

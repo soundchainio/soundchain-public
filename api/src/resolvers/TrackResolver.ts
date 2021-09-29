@@ -1,6 +1,4 @@
-import { SQS } from 'aws-sdk';
 import { Arg, Authorized, Ctx, Mutation, Resolver } from 'type-graphql';
-import { config } from '../config';
 import { CurrentUser } from '../decorators/current-user';
 import { Track } from '../models/Track';
 import { User } from '../models/User';

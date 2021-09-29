@@ -1,5 +1,5 @@
 import { Button } from 'components/Button';
-import { TrackForm } from 'components/forms/track/TrackForm';
+import { MintingRequestForm } from 'components/forms/track/MintingRequestForm';
 import { Layout } from 'components/Layout';
 import { NFTCard } from 'components/NftCard';
 import { Subtitle } from 'components/Subtitle';
@@ -99,7 +99,7 @@ export default function PlaygroundPage() {
             ))}
         </div>
         <div className={`${currentTab == 'MINTING' ? 'block' : 'hidden'}`}>
-          <TrackForm to={account!} afterSubmit={() => alert('Minting requested!')} />
+          <MintingRequestForm to={account!} afterSubmit={() => alert('Minting requested!')} />
         </div>
       </div>
     </Layout>

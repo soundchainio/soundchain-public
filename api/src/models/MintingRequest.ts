@@ -24,10 +24,10 @@ export class MintingRequest extends Model {
 
   @Field()
   @prop({ required: true })
-  assetUrl: string;
+  assetKey: string;
 
   @Field({ nullable: true })
-  artUrl?: string;
+  artKey?: string;
 
   @Field({ nullable: true })
   minted?: boolean;

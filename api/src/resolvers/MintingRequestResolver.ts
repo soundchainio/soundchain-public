@@ -5,32 +5,37 @@ import { CurrentUser } from '../decorators/current-user';
 import { Track } from '../models/Track';
 import { User } from '../models/User';
 import { Context } from '../types/Context';
-import { CreateTrackPayload } from '../types/CreateTrackPayload';
-import { MintingRequestInput } from '../types/MintingRequestInput';
+import { CreateMintingRequestInput } from '../types/CreateMintingRequestInput';
+import { MintingRequestPayload } from '../types/MintingRequestPayload';
 
 @Resolver(Track)
 export class MintingRequestResolver {
-  @Mutation()
+  @Mutation(() => MintingRequestPayload)
   @Authorized()
-  async mintingRequest(
-    @Ctx() { trackService }: Context,
+  async createMintingRequest(
+    @Ctx() { mintingRequestService }: Context,
     @CurrentUser() { profileId }: User,
-    @Arg('input') input: MintingRequestInput,
-  ): Promise<CreateTrackPayload> {
+    @Arg('input') input: CreateMintingRequestInput,
+  ): Promise<MintingRequestPayload> {
     const { assetUrl, artUrl, ...rest } = input;
     const assetKey = assetUrl.substring(assetUrl.lastIndexOf('/') + 1);
     const artKey = artUrl ? artUrl.substring(artUrl.lastIndexOf('/') + 1) : undefined;
     const sqs = new SQS({
       region: config.uploads.region,
     });
-    await sqs
-      .sendMessage({
-        QueueUrl: config.minting.sqsUrl,
-        MessageBody: JSON.stringify({ assetKey: assetKey, artKey: artKey, ...rest }),
-        MessageGroupId: config.minting.contractAddress,
-      })
-      .promise();
-    const track = await trackService.createTrack({ profileId, audioUrl: input.assetUrl, title: input.name });
-    return { track };
+    try {
+      await sqs
+        .sendMessage({
+          QueueUrl: config.minting.sqsUrl,
+          MessageBody: JSON.stringify({ assetKey: assetKey, artKey: artKey, ...rest }),
+          MessageGroupId: config.minting.contractAddress,
+        })
+        .promise();
+    } catch (e) {
+      console.error('Failed to create minting request', e);
+    }
+    const mintingRequest = await mintingRequestService.createMintingRequest({ assetKey, artKey, profileId, ...rest });
+    console.log(mintingRequest);
+    return { mintingRequest };
   }
 }

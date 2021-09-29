@@ -94,6 +94,14 @@ export type CommentNotification = {
   link: Scalars['String'];
 };
 
+export type CreateMintingRequestInput = {
+  to: Scalars['String'];
+  name: Scalars['String'];
+  description: Scalars['String'];
+  assetUrl: Scalars['String'];
+  artUrl?: Maybe<Scalars['String']>;
+};
+
 export type CreatePostInput = {
   body: Scalars['String'];
   mediaLink?: Maybe<Scalars['String']>;
@@ -116,11 +124,8 @@ export type CreateRepostPayload = {
 };
 
 export type CreateTrackInput = {
-  to: Scalars['String'];
-  name: Scalars['String'];
-  description: Scalars['String'];
-  assetUrl: Scalars['String'];
-  artUrl?: Maybe<Scalars['String']>;
+  title: Scalars['String'];
+  audioUrl: Scalars['String'];
 };
 
 export type CreateTrackPayload = {
@@ -273,6 +278,25 @@ export type MimeType = {
   value: Scalars['String'];
 };
 
+export type MintingRequest = {
+  __typename?: 'MintingRequest';
+  id: Scalars['ID'];
+  to: Scalars['String'];
+  name: Scalars['String'];
+  description: Scalars['String'];
+  assetKey: Scalars['String'];
+  artKey: Maybe<Scalars['String']>;
+  minted: Maybe<Scalars['Boolean']>;
+  transactionId: Maybe<Scalars['Boolean']>;
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+};
+
+export type MintingRequestPayload = {
+  __typename?: 'MintingRequestPayload';
+  mintingRequest: MintingRequest;
+};
+
 export enum MusicianType {
   Singer = 'SINGER',
   Drummer = 'DRUMMER',
@@ -286,6 +310,7 @@ export type Mutation = {
   deleteComment: DeleteCommentPayload;
   sendMessage: SendMessagePayload;
   resetUnreadMessageCount: Profile;
+  createMintingRequest: MintingRequestPayload;
   resetNotificationCount: Profile;
   clearNotifications: ClearNotificationsPayload;
   createPost: CreatePostPayload;
@@ -323,6 +348,11 @@ export type MutationDeleteCommentArgs = {
 
 export type MutationSendMessageArgs = {
   input: SendMessageInput;
+};
+
+
+export type MutationCreateMintingRequestArgs = {
+  input: CreateMintingRequestInput;
 };
 
 
@@ -1020,6 +1050,22 @@ export type CommentsQuery = (
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
       & Pick<PageInfo, 'hasPreviousPage' | 'hasNextPage' | 'startCursor' | 'endCursor'>
+    ) }
+  ) }
+);
+
+export type CreateMintingRequestMutationVariables = Exact<{
+  input: CreateMintingRequestInput;
+}>;
+
+
+export type CreateMintingRequestMutation = (
+  { __typename?: 'Mutation' }
+  & { createMintingRequest: (
+    { __typename?: 'MintingRequestPayload' }
+    & { mintingRequest: (
+      { __typename?: 'MintingRequest' }
+      & Pick<MintingRequest, 'id' | 'transactionId'>
     ) }
   ) }
 );
@@ -2175,6 +2221,42 @@ export function useCommentsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<C
 export type CommentsQueryHookResult = ReturnType<typeof useCommentsQuery>;
 export type CommentsLazyQueryHookResult = ReturnType<typeof useCommentsLazyQuery>;
 export type CommentsQueryResult = Apollo.QueryResult<CommentsQuery, CommentsQueryVariables>;
+export const CreateMintingRequestDocument = gql`
+    mutation createMintingRequest($input: CreateMintingRequestInput!) {
+  createMintingRequest(input: $input) {
+    mintingRequest {
+      id
+      transactionId
+    }
+  }
+}
+    `;
+export type CreateMintingRequestMutationFn = Apollo.MutationFunction<CreateMintingRequestMutation, CreateMintingRequestMutationVariables>;
+
+/**
+ * __useCreateMintingRequestMutation__
+ *
+ * To run a mutation, you first call `useCreateMintingRequestMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateMintingRequestMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createMintingRequestMutation, { data, loading, error }] = useCreateMintingRequestMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateMintingRequestMutation(baseOptions?: Apollo.MutationHookOptions<CreateMintingRequestMutation, CreateMintingRequestMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateMintingRequestMutation, CreateMintingRequestMutationVariables>(CreateMintingRequestDocument, options);
+      }
+export type CreateMintingRequestMutationHookResult = ReturnType<typeof useCreateMintingRequestMutation>;
+export type CreateMintingRequestMutationResult = Apollo.MutationResult<CreateMintingRequestMutation>;
+export type CreateMintingRequestMutationOptions = Apollo.BaseMutationOptions<CreateMintingRequestMutation, CreateMintingRequestMutationVariables>;
 export const CreatePostDocument = gql`
     mutation CreatePost($input: CreatePostInput!) {
   createPost(input: $input) {

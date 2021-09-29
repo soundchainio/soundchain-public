@@ -1,4 +1,4 @@
-import { TrackForm } from 'components/forms/track/TrackForm';
+import { MintingRequestForm } from 'components/forms/track/MintingRequestForm';
 import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import React from 'react';
@@ -23,7 +23,7 @@ export const NewTrackModal = () => {
         </div>
       }
     >
-      <TrackForm
+      <MintingRequestForm
         to=""
         afterSubmit={() => {
           dispatchShowNewTrackModal(false);
