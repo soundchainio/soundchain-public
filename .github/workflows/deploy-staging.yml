@@ -47,6 +47,7 @@ jobs:
           MUX_TOKEN_ID: ${{ secrets.MUX_TOKEN_ID_STAGING }}
           MUX_TOKEN_SECRET: ${{ secrets.MUX_TOKEN_SECRET_STAGING }}
           MUX_WEBHOOK_SECRET: ${{ secrets.MUX_WEBHOOK_SECRET_STAGING }}
+          SENTRY_URL: ${{ secrets.SENTRY_URL }}
       - name: Trigger migrate lambda function
         run: |
           aws lambda invoke --function-name soundchain-api-staging-migrate response.json
