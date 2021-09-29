@@ -1,4 +1,4 @@
-import { MintingRequestForm } from 'components/forms/track/MintingRequestForm';
+import { MintingRequestForm } from 'components/forms/playground/MintingRequestForm';
 import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import React from 'react';

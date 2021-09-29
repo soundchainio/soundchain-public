@@ -1,5 +1,5 @@
 import { Button } from 'components/Button';
-import { MintingRequestForm } from 'components/forms/track/MintingRequestForm';
+import { MintingRequestForm } from 'components/forms/playground/MintingRequestForm';
 import { Layout } from 'components/Layout';
 import { NFTCard } from 'components/NftCard';
 import { Subtitle } from 'components/Subtitle';
