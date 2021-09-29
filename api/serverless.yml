@@ -29,7 +29,7 @@ functions:
     handler: src/webhooks/mux.handler
     events:
       - http:
-          path: /
+          path: /hooks/mux
           method: post
   mint:
     handler: src/lambda.mint
