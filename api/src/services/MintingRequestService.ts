@@ -8,7 +8,7 @@ export class MintingRequestService extends ModelService<typeof MintingRequest> {
     super(context, MintingRequestModel);
   }
 
-  getTrack(id: string): Promise<MintingRequest> {
+  getMintingRequest(id: string): Promise<MintingRequest> {
     return this.findOrFail(id);
   }
   async createMintingRequest(params: Omit<MintingRequest, '_id' | 'createdAt' | 'updatedAt'>): Promise<MintingRequest> {
