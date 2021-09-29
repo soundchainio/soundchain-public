@@ -29,6 +29,12 @@ export class MintingRequest extends Model {
   @Field({ nullable: true })
   artUrl?: string;
 
+  @Field({ nullable: true })
+  minted?: boolean;
+
+  @Field({ nullable: true })
+  transactionId?: boolean;
+
   @Field(() => Date)
   createdAt: Date;
 
