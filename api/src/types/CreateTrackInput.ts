@@ -3,17 +3,8 @@ import { Field, InputType } from 'type-graphql';
 @InputType()
 export class CreateTrackInput {
   @Field()
-  to: string;
+  title: string;
 
   @Field()
-  name: string;
-
-  @Field()
-  description: string;
-
-  @Field()
-  assetUrl: string;
-
-  @Field({ nullable: true })
-  artUrl?: string;
+  audioUrl: string;
 }

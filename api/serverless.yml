@@ -402,6 +402,24 @@ resources:
               - 'MintingDeadLetterQueue'
               - 'Arn'
           maxReceiveCount: 5
+    MintingQueuePolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        Queues:
+          - !Ref MintingQueue
+        PolicyDocument:
+          Statement:
+            - Action:
+                - 'SQS:SendMessage'
+                - 'SQS:ReceiveMessage'
+              Effect: 'Allow'
+              Resource:
+                Fn::GetAtt:
+                  - 'MintingQueue'
+                  - 'Arn'
+              Principal:
+                AWS:
+                  - '*'
     MintingDeadLetterQueue:
       Type: AWS::SQS::Queue
       Properties:
