@@ -33,7 +33,7 @@ const initialValues: FormValues = {
 };
 
 export const TrackForm = ({ to, afterSubmit }: Props) => {
-  const [createTrack] = useCreateTrackMutation();
+  const [createTrack] = useCreateTrackMutation({ refetchQueries: ['Tracks'] });
   const [requesting, setRequesting] = useState(false);
 
   const handleSubmit = async (values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {

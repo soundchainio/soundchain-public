@@ -164,6 +164,10 @@ export type FilterPostInput = {
   profileId?: Maybe<Scalars['String']>;
 };
 
+export type FilterTrackInput = {
+  profileId?: Maybe<Scalars['String']>;
+};
+
 export type Follow = {
   __typename?: 'Follow';
   id: Scalars['ID'];
@@ -537,6 +541,8 @@ export type Query = {
   bandcampLink: Scalars['String'];
   myProfile: Profile;
   profile: Profile;
+  track: Track;
+  tracks: TrackConnection;
   uploadUrl: UploadUrl;
   mimeType: MimeType;
   me: Maybe<User>;
@@ -624,6 +630,18 @@ export type QueryBandcampLinkArgs = {
 
 export type QueryProfileArgs = {
   id: Scalars['String'];
+};
+
+
+export type QueryTrackArgs = {
+  id: Scalars['String'];
+};
+
+
+export type QueryTracksArgs = {
+  page?: Maybe<PageInput>;
+  sort?: Maybe<SortTrackInput>;
+  filter?: Maybe<FilterTrackInput>;
 };
 
 
@@ -763,6 +781,15 @@ export type SortPostInput = {
   order?: Maybe<SortOrder>;
 };
 
+export enum SortTrackField {
+  CreatedAt = 'CREATED_AT'
+}
+
+export type SortTrackInput = {
+  field: SortTrackField;
+  order?: Maybe<SortOrder>;
+};
+
 export type SubscribeToProfileInput = {
   profileId: Scalars['String'];
 };
@@ -775,10 +802,17 @@ export type SubscribeToProfilePayload = {
 export type Track = {
   __typename?: 'Track';
   id: Scalars['ID'];
+  profileId: Scalars['String'];
   title: Scalars['String'];
   audioUrl: Scalars['String'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
+};
+
+export type TrackConnection = {
+  __typename?: 'TrackConnection';
+  pageInfo: PageInfo;
+  nodes: Array<Track>;
 };
 
 export type UnfollowProfileInput = {
@@ -1548,6 +1582,41 @@ export type SubscribeToProfileMutation = (
   ) }
 );
 
+export type TrackQueryVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+export type TrackQuery = (
+  { __typename?: 'Query' }
+  & { track: (
+    { __typename?: 'Track' }
+    & TrackComponentFieldsFragment
+  ) }
+);
+
+export type TrackComponentFieldsFragment = (
+  { __typename?: 'Track' }
+  & Pick<Track, 'id' | 'profileId' | 'title' | 'audioUrl' | 'createdAt' | 'updatedAt'>
+);
+
+export type TracksQueryVariables = Exact<{
+  filter?: Maybe<FilterTrackInput>;
+  sort?: Maybe<SortTrackInput>;
+}>;
+
+
+export type TracksQuery = (
+  { __typename?: 'Query' }
+  & { tracks: (
+    { __typename?: 'TrackConnection' }
+    & { nodes: Array<(
+      { __typename?: 'Track' }
+      & TrackComponentFieldsFragment
+    )> }
+  ) }
+);
+
 export type UnfollowProfileMutationVariables = Exact<{
   input: UnfollowProfileInput;
 }>;
@@ -1862,6 +1931,16 @@ export const ReactionNotificationFieldsFragmentDoc = gql`
   authorPicture
   createdAt
   postId
+}
+    `;
+export const TrackComponentFieldsFragmentDoc = gql`
+    fragment TrackComponentFields on Track {
+  id
+  profileId
+  title
+  audioUrl
+  createdAt
+  updatedAt
 }
     `;
 export const AddCommentDocument = gql`
@@ -3338,6 +3417,79 @@ export function useSubscribeToProfileMutation(baseOptions?: Apollo.MutationHookO
 export type SubscribeToProfileMutationHookResult = ReturnType<typeof useSubscribeToProfileMutation>;
 export type SubscribeToProfileMutationResult = Apollo.MutationResult<SubscribeToProfileMutation>;
 export type SubscribeToProfileMutationOptions = Apollo.BaseMutationOptions<SubscribeToProfileMutation, SubscribeToProfileMutationVariables>;
+export const TrackDocument = gql`
+    query Track($id: String!) {
+  track(id: $id) {
+    ...TrackComponentFields
+  }
+}
+    ${TrackComponentFieldsFragmentDoc}`;
+
+/**
+ * __useTrackQuery__
+ *
+ * To run a query within a React component, call `useTrackQuery` and pass it any options that fit your needs.
+ * When your component renders, `useTrackQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useTrackQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useTrackQuery(baseOptions: Apollo.QueryHookOptions<TrackQuery, TrackQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<TrackQuery, TrackQueryVariables>(TrackDocument, options);
+      }
+export function useTrackLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TrackQuery, TrackQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<TrackQuery, TrackQueryVariables>(TrackDocument, options);
+        }
+export type TrackQueryHookResult = ReturnType<typeof useTrackQuery>;
+export type TrackLazyQueryHookResult = ReturnType<typeof useTrackLazyQuery>;
+export type TrackQueryResult = Apollo.QueryResult<TrackQuery, TrackQueryVariables>;
+export const TracksDocument = gql`
+    query Tracks($filter: FilterTrackInput, $sort: SortTrackInput) {
+  tracks(filter: $filter, sort: $sort) {
+    nodes {
+      ...TrackComponentFields
+    }
+  }
+}
+    ${TrackComponentFieldsFragmentDoc}`;
+
+/**
+ * __useTracksQuery__
+ *
+ * To run a query within a React component, call `useTracksQuery` and pass it any options that fit your needs.
+ * When your component renders, `useTracksQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useTracksQuery({
+ *   variables: {
+ *      filter: // value for 'filter'
+ *      sort: // value for 'sort'
+ *   },
+ * });
+ */
+export function useTracksQuery(baseOptions?: Apollo.QueryHookOptions<TracksQuery, TracksQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<TracksQuery, TracksQueryVariables>(TracksDocument, options);
+      }
+export function useTracksLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TracksQuery, TracksQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<TracksQuery, TracksQueryVariables>(TracksDocument, options);
+        }
+export type TracksQueryHookResult = ReturnType<typeof useTracksQuery>;
+export type TracksLazyQueryHookResult = ReturnType<typeof useTracksLazyQuery>;
+export type TracksQueryResult = Apollo.QueryResult<TracksQuery, TracksQueryVariables>;
 export const UnfollowProfileDocument = gql`
     mutation UnfollowProfile($input: UnfollowProfileInput!) {
   unfollowProfile(input: $input) {

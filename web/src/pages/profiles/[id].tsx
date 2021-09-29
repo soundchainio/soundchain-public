@@ -6,6 +6,7 @@ import { Layout } from 'components/Layout';
 import { MessageButton } from 'components/MessageButton';
 import { Number } from 'components/Number';
 import { Posts } from 'components/Posts';
+import { Tracks } from 'components/profile/Tracks';
 import { ProfileCover } from 'components/ProfileCover';
 import { ProfileTabs } from 'components/ProfileTabs';
 import { SocialMediaLink } from 'components/SocialMediaLink';
@@ -17,6 +18,7 @@ import { useProfileLazyQuery } from 'lib/graphql';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { FollowModalType } from 'types/FollowModalType';
+import { ProfileTab } from 'types/ProfileTabType';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -26,6 +28,7 @@ export default function ProfilePage() {
   const [profile, { data }] = useProfileLazyQuery({ variables: { id: profileId }, ssr: false });
   const [showModal, setShowModal] = useState(false);
   const [followModalType, setFollowModalType] = useState<FollowModalType>();
+  const [selectedTab, setSelectedTab] = useState<ProfileTab>(ProfileTab.POSTS);
 
   useEffect(() => {
     if (profileId) {
@@ -116,8 +119,16 @@ export default function ProfilePage() {
           {socialMedias.twitter && <SocialMediaLink company="twitter" handle={socialMedias.twitter} />}
         </div>
       </div>
-      <ProfileTabs />
-      <Posts profileId={profileId} />
+      <ProfileTabs
+        selectedTab={selectedTab}
+        setSelectedTab={setSelectedTab}
+      />
+      {ProfileTab.POSTS === selectedTab && <Posts profileId={profileId} />}
+
+      {ProfileTab.TRACKS === selectedTab && <Tracks profileId={profileId} />}
+
+      {ProfileTab.PLAYLISTS === selectedTab && <div> Playlists </div>}
+
       <FollowModal
         show={showModal}
         profileId={profileId}

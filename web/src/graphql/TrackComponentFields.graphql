@@ -1,0 +1,8 @@
+fragment TrackComponentFields on Track {
+  id
+  profileId
+  title
+  audioUrl
+  createdAt
+  updatedAt  
+}

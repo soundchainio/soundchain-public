@@ -7,6 +7,7 @@ export class Track extends Model {
   @Field(() => ID, { name: 'id' })
   readonly _id: string;
 
+  @Field()
   @prop({ required: true })
   profileId: string;
 
