@@ -2,13 +2,13 @@ import { SQS } from 'aws-sdk';
 import { Arg, Authorized, Ctx, Mutation, Resolver } from 'type-graphql';
 import { config } from '../config';
 import { CurrentUser } from '../decorators/current-user';
-import { Track } from '../models/Track';
+import { MintingRequest } from '../models/MintingRequest';
 import { User } from '../models/User';
 import { Context } from '../types/Context';
 import { CreateMintingRequestInput } from '../types/CreateMintingRequestInput';
 import { MintingRequestPayload } from '../types/MintingRequestPayload';
 
-@Resolver(Track)
+@Resolver(MintingRequest)
 export class MintingRequestResolver {
   @Mutation(() => MintingRequestPayload)
   @Authorized()
@@ -35,7 +35,6 @@ export class MintingRequestResolver {
       console.error('Failed to create minting request', e);
     }
     const mintingRequest = await mintingRequestService.createMintingRequest({ assetKey, artKey, profileId, ...rest });
-    console.log(mintingRequest);
     return { mintingRequest };
   }
 }
