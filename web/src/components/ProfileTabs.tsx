@@ -2,32 +2,32 @@ import classNames from 'classnames';
 import { Music as MusicIcon } from 'icons/Music';
 import { Playlists as PlaylistsIcon } from 'icons/Playlists';
 import { Posts as PostsIcon } from 'icons/Posts';
-import { ProfileTabType } from 'types/ProfileTabType';
+import { ProfileTab } from 'types/ProfileTabType';
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
   fillColor?: string
 }
 
 interface ProfileTabsProps {
-  selectedTab: ProfileTabType
-  setSelectedTab: (tab: ProfileTabType) => void
+  selectedTab: ProfileTab
+  setSelectedTab: (tab: ProfileTab) => void
 }
 
-interface TabsListType {
+interface TabList {
   title: string
-  type: ProfileTabType
+  type: ProfileTab
   comingSoon: boolean
   icon: (props: IconProps) => JSX.Element;
 }
 
-const tabs: TabsListType[] = [
-  { title: 'Posts', type: ProfileTabType.POSTS, comingSoon: false, icon: PostsIcon },
-  { title: 'Music', type: ProfileTabType.TRACKS, comingSoon: false, icon: MusicIcon },
-  { title: 'Playlists', type: ProfileTabType.PLAYLISTS, comingSoon: true, icon: PlaylistsIcon },
+const tabs: TabList[] = [
+  { title: 'Posts', type: ProfileTab.POSTS, comingSoon: false, icon: PostsIcon },
+  { title: 'Music', type: ProfileTab.TRACKS, comingSoon: false, icon: MusicIcon },
+  { title: 'Playlists', type: ProfileTab.PLAYLISTS, comingSoon: true, icon: PlaylistsIcon },
 ];
 
 export const ProfileTabs = ({ selectedTab, setSelectedTab }: ProfileTabsProps) => {
-  const onTabSelect = (tab: TabsListType) => {
+  const onTabSelect = (tab: TabList) => {
     if (!tab.comingSoon) {
       setSelectedTab(tab.type);
     }

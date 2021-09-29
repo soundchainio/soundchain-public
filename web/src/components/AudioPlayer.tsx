@@ -53,8 +53,6 @@ export const AudioPlayer = ({ id, url, title, artist, coverPhotoUrl }: AudioPlay
     }
   }, []);
 
-  if (!(id && url)) { return null }
-
   return (
     <div className="bg-black rounded-md p-4 flex items-center">
       {coverPhotoUrl &&

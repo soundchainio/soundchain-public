@@ -19,7 +19,7 @@ export const Track = ({ trackId }: TrackProps) => {
         id={track.id}
         url={track.audioUrl}
         title={track.title}
-        coverPhotoUrl="https://images-na.ssl-images-amazon.com/images/I/91YlTtiGi0L._AC_SL1500_.jpg"
+      // coverPhotoUrl="https://images-na.ssl-images-amazon.com/images/I/91YlTtiGi0L._AC_SL1500_.jpg"
       />
     </div>
   );

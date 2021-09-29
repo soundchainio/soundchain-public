@@ -18,7 +18,7 @@ import { useProfileLazyQuery } from 'lib/graphql';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { FollowModalType } from 'types/FollowModalType';
-import { ProfileTabType } from 'types/ProfileTabType';
+import { ProfileTab } from 'types/ProfileTabType';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -28,7 +28,7 @@ export default function ProfilePage() {
   const [profile, { data }] = useProfileLazyQuery({ variables: { id: profileId }, ssr: false });
   const [showModal, setShowModal] = useState(false);
   const [followModalType, setFollowModalType] = useState<FollowModalType>();
-  const [selectedTab, setSelectedTab] = useState<ProfileTabType>(ProfileTabType.POSTS);
+  const [selectedTab, setSelectedTab] = useState<ProfileTab>(ProfileTab.POSTS);
 
   useEffect(() => {
     if (profileId) {
@@ -123,11 +123,11 @@ export default function ProfilePage() {
         selectedTab={selectedTab}
         setSelectedTab={setSelectedTab}
       />
-      {ProfileTabType.POSTS === selectedTab && <Posts profileId={profileId} />}
+      {ProfileTab.POSTS === selectedTab && <Posts profileId={profileId} />}
 
-      {ProfileTabType.TRACKS === selectedTab && <Tracks profileId={profileId} />}
+      {ProfileTab.TRACKS === selectedTab && <Tracks profileId={profileId} />}
 
-      {ProfileTabType.PLAYLISTS === selectedTab && <div> Playlists </div>}
+      {ProfileTab.PLAYLISTS === selectedTab && <div> Playlists </div>}
 
       <FollowModal
         show={showModal}
