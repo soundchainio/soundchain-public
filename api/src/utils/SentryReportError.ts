@@ -16,21 +16,21 @@ export const SentryReportError: ApolloServerPlugin = {
           }
 
           Sentry.withScope(scope => {
-            scope.setTag("kind", ctx.operation.operation);
-            scope.setExtra("query", ctx.request.query);
-            scope.setExtra("variables", ctx.request.variables);
+            scope.setTag('kind', ctx.operation.operation);
+            scope.setExtra('query', ctx.request.query);
+            scope.setExtra('variables', ctx.request.variables);
 
             if (err.path) {
               scope.addBreadcrumb({
-                category: "query-path",
-                message: err.path.join(" > "),
-                level: Sentry.Severity.Debug
+                category: 'query-path',
+                message: err.path.join(' > '),
+                level: Sentry.Severity.Debug,
               });
             }
             Sentry.captureException(err);
           });
         }
-      }
-    }
-  }
-}
+      },
+    };
+  },
+};

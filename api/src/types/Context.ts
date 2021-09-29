@@ -8,6 +8,7 @@ import { FollowService } from '../services/FollowService';
 import { JwtService, JwtUser } from '../services/JwtService';
 import { MessageService } from '../services/MessageService';
 import { MintingRequestService } from '../services/MintingRequestService';
+import { MuxService } from '../services/MuxService';
 import { NotificationService } from '../services/NotificationService';
 import { PostService } from '../services/PostService';
 import { ProfileService } from '../services/ProfileService';
@@ -25,6 +26,7 @@ export class Context {
   followService = new FollowService(this);
   jwtService = new JwtService(this);
   messageService = new MessageService(this);
+  muxService = new MuxService(this);
   notificationService = new NotificationService(this);
   postService = new PostService(this);
   profileService = new ProfileService(this);

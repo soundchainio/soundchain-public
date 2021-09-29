@@ -26,6 +26,17 @@ export type AddCommentPayload = {
   comment: Comment;
 };
 
+export type AddTrackMetadataInput = {
+  trackId: Scalars['String'];
+  title: Scalars['String'];
+  description?: Maybe<Scalars['String']>;
+};
+
+export type AddTrackMetadataPayload = {
+  __typename?: 'AddTrackMetadataPayload';
+  track: Track;
+};
+
 export type AuthPayload = {
   __typename?: 'AuthPayload';
   jwt: Scalars['String'];
@@ -121,16 +132,6 @@ export type CreateRepostPayload = {
   __typename?: 'CreateRepostPayload';
   post: Post;
   originalPost: Post;
-};
-
-export type CreateTrackInput = {
-  title: Scalars['String'];
-  audioUrl: Scalars['String'];
-};
-
-export type CreateTrackPayload = {
-  __typename?: 'CreateTrackPayload';
-  track: Track;
 };
 
 
@@ -329,7 +330,8 @@ export type Mutation = {
   unfollowProfile: UnfollowProfilePayload;
   subscribeToProfile: SubscribeToProfilePayload;
   unsubscribeFromProfile: UnsubscribeFromProfilePayload;
-  createTrack: CreateTrackPayload;
+  uploadTrack: UploadTrackPayload;
+  addTrackMetadata: AddTrackMetadataPayload;
   register: AuthPayload;
   login: AuthPayload;
   verifyUserEmail: VerifyUserEmailPayload;
@@ -420,8 +422,13 @@ export type MutationUnsubscribeFromProfileArgs = {
 };
 
 
-export type MutationCreateTrackArgs = {
-  input: CreateTrackInput;
+export type MutationUploadTrackArgs = {
+  input: UploadTrackInput;
+};
+
+
+export type MutationAddTrackMetadataArgs = {
+  input: AddTrackMetadataInput;
 };
 
 
@@ -457,6 +464,16 @@ export type MutationUpdateHandleArgs = {
 
 export type MutationUpdatePasswordArgs = {
   input: UpdatePasswordInput;
+};
+
+export type MuxAsset = {
+  __typename?: 'MuxAsset';
+  playbackId: Scalars['String'];
+};
+
+export type MuxUpload = {
+  __typename?: 'MuxUpload';
+  url: Scalars['String'];
 };
 
 export type NewPostNotification = {
@@ -676,7 +693,7 @@ export type QueryTracksArgs = {
 
 
 export type QueryUploadUrlArgs = {
-  fileType: UploadFileType;
+  fileType: Scalars['String'];
 };
 
 
@@ -834,7 +851,11 @@ export type Track = {
   id: Scalars['ID'];
   profileId: Scalars['String'];
   title: Scalars['String'];
-  audioUrl: Scalars['String'];
+  description: Maybe<Scalars['String']>;
+  file: Scalars['String'];
+  uploadUrl: Scalars['String'];
+  muxUpload: MuxUpload;
+  muxAsset: MuxAsset;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
 };
@@ -907,12 +928,14 @@ export type UpdateProfilePayload = {
   profile: Profile;
 };
 
-export enum UploadFileType {
-  Jpeg = 'JPEG',
-  Png = 'PNG',
-  Video = 'VIDEO',
-  Audio = 'AUDIO'
-}
+export type UploadTrackInput = {
+  fileType: Scalars['String'];
+};
+
+export type UploadTrackPayload = {
+  __typename?: 'UploadTrackPayload';
+  track: Track;
+};
 
 export type UploadUrl = {
   __typename?: 'UploadUrl';
@@ -957,6 +980,22 @@ export type AddCommentMutation = (
         & Pick<Post, 'id' | 'commentCount'>
       ) }
       & CommentComponentFieldsFragment
+    ) }
+  ) }
+);
+
+export type AddTrackMetadataMutationVariables = Exact<{
+  input: AddTrackMetadataInput;
+}>;
+
+
+export type AddTrackMetadataMutation = (
+  { __typename?: 'Mutation' }
+  & { addTrackMetadata: (
+    { __typename?: 'AddTrackMetadataPayload' }
+    & { track: (
+      { __typename?: 'Track' }
+      & Pick<Track, 'id' | 'title' | 'description'>
     ) }
   ) }
 );
@@ -1135,22 +1174,6 @@ export type CreateRepostMutation = (
     ), originalPost: (
       { __typename?: 'Post' }
       & Pick<Post, 'id' | 'repostCount'>
-    ) }
-  ) }
-);
-
-export type CreateTrackMutationVariables = Exact<{
-  input: CreateTrackInput;
-}>;
-
-
-export type CreateTrackMutation = (
-  { __typename?: 'Mutation' }
-  & { createTrack: (
-    { __typename?: 'CreateTrackPayload' }
-    & { track: (
-      { __typename?: 'Track' }
-      & Pick<Track, 'id' | 'title' | 'audioUrl'>
     ) }
   ) }
 );
@@ -1643,7 +1666,7 @@ export type TrackQuery = (
 
 export type TrackComponentFieldsFragment = (
   { __typename?: 'Track' }
-  & Pick<Track, 'id' | 'profileId' | 'title' | 'audioUrl' | 'createdAt' | 'updatedAt'>
+  & Pick<Track, 'id' | 'profileId' | 'title' | 'file' | 'createdAt' | 'updatedAt'>
 );
 
 export type TracksQueryVariables = Exact<{
@@ -1847,8 +1870,28 @@ export type UpdateProfilePictureMutation = (
   ) }
 );
 
+export type UploadTrackMutationVariables = Exact<{
+  input: UploadTrackInput;
+}>;
+
+
+export type UploadTrackMutation = (
+  { __typename?: 'Mutation' }
+  & { uploadTrack: (
+    { __typename?: 'UploadTrackPayload' }
+    & { track: (
+      { __typename?: 'Track' }
+      & Pick<Track, 'id' | 'uploadUrl'>
+      & { muxUpload: (
+        { __typename?: 'MuxUpload' }
+        & Pick<MuxUpload, 'url'>
+      ) }
+    ) }
+  ) }
+);
+
 export type UploadUrlQueryVariables = Exact<{
-  fileType: UploadFileType;
+  fileType: Scalars['String'];
 }>;
 
 
@@ -1984,7 +2027,7 @@ export const TrackComponentFieldsFragmentDoc = gql`
   id
   profileId
   title
-  audioUrl
+  file
   createdAt
   updatedAt
 }
@@ -2028,6 +2071,43 @@ export function useAddCommentMutation(baseOptions?: Apollo.MutationHookOptions<A
 export type AddCommentMutationHookResult = ReturnType<typeof useAddCommentMutation>;
 export type AddCommentMutationResult = Apollo.MutationResult<AddCommentMutation>;
 export type AddCommentMutationOptions = Apollo.BaseMutationOptions<AddCommentMutation, AddCommentMutationVariables>;
+export const AddTrackMetadataDocument = gql`
+    mutation AddTrackMetadata($input: AddTrackMetadataInput!) {
+  addTrackMetadata(input: $input) {
+    track {
+      id
+      title
+      description
+    }
+  }
+}
+    `;
+export type AddTrackMetadataMutationFn = Apollo.MutationFunction<AddTrackMetadataMutation, AddTrackMetadataMutationVariables>;
+
+/**
+ * __useAddTrackMetadataMutation__
+ *
+ * To run a mutation, you first call `useAddTrackMetadataMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddTrackMetadataMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addTrackMetadataMutation, { data, loading, error }] = useAddTrackMetadataMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useAddTrackMetadataMutation(baseOptions?: Apollo.MutationHookOptions<AddTrackMetadataMutation, AddTrackMetadataMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddTrackMetadataMutation, AddTrackMetadataMutationVariables>(AddTrackMetadataDocument, options);
+      }
+export type AddTrackMetadataMutationHookResult = ReturnType<typeof useAddTrackMetadataMutation>;
+export type AddTrackMetadataMutationResult = Apollo.MutationResult<AddTrackMetadataMutation>;
+export type AddTrackMetadataMutationOptions = Apollo.BaseMutationOptions<AddTrackMetadataMutation, AddTrackMetadataMutationVariables>;
 export const BandcampLinkDocument = gql`
     query BandcampLink($url: String!) {
   bandcampLink(url: $url)
@@ -2410,43 +2490,6 @@ export function useCreateRepostMutation(baseOptions?: Apollo.MutationHookOptions
 export type CreateRepostMutationHookResult = ReturnType<typeof useCreateRepostMutation>;
 export type CreateRepostMutationResult = Apollo.MutationResult<CreateRepostMutation>;
 export type CreateRepostMutationOptions = Apollo.BaseMutationOptions<CreateRepostMutation, CreateRepostMutationVariables>;
-export const CreateTrackDocument = gql`
-    mutation CreateTrack($input: CreateTrackInput!) {
-  createTrack(input: $input) {
-    track {
-      id
-      title
-      audioUrl
-    }
-  }
-}
-    `;
-export type CreateTrackMutationFn = Apollo.MutationFunction<CreateTrackMutation, CreateTrackMutationVariables>;
-
-/**
- * __useCreateTrackMutation__
- *
- * To run a mutation, you first call `useCreateTrackMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useCreateTrackMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [createTrackMutation, { data, loading, error }] = useCreateTrackMutation({
- *   variables: {
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useCreateTrackMutation(baseOptions?: Apollo.MutationHookOptions<CreateTrackMutation, CreateTrackMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateTrackMutation, CreateTrackMutationVariables>(CreateTrackDocument, options);
-      }
-export type CreateTrackMutationHookResult = ReturnType<typeof useCreateTrackMutation>;
-export type CreateTrackMutationResult = Apollo.MutationResult<CreateTrackMutation>;
-export type CreateTrackMutationOptions = Apollo.BaseMutationOptions<CreateTrackMutation, CreateTrackMutationVariables>;
 export const DeleteCommentDocument = gql`
     mutation DeleteComment($input: DeleteCommentInput!) {
   deleteComment(input: $input) {
@@ -4000,8 +4043,47 @@ export function useUpdateProfilePictureMutation(baseOptions?: Apollo.MutationHoo
 export type UpdateProfilePictureMutationHookResult = ReturnType<typeof useUpdateProfilePictureMutation>;
 export type UpdateProfilePictureMutationResult = Apollo.MutationResult<UpdateProfilePictureMutation>;
 export type UpdateProfilePictureMutationOptions = Apollo.BaseMutationOptions<UpdateProfilePictureMutation, UpdateProfilePictureMutationVariables>;
+export const UploadTrackDocument = gql`
+    mutation UploadTrack($input: UploadTrackInput!) {
+  uploadTrack(input: $input) {
+    track {
+      id
+      uploadUrl
+      muxUpload {
+        url
+      }
+    }
+  }
+}
+    `;
+export type UploadTrackMutationFn = Apollo.MutationFunction<UploadTrackMutation, UploadTrackMutationVariables>;
+
+/**
+ * __useUploadTrackMutation__
+ *
+ * To run a mutation, you first call `useUploadTrackMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUploadTrackMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [uploadTrackMutation, { data, loading, error }] = useUploadTrackMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUploadTrackMutation(baseOptions?: Apollo.MutationHookOptions<UploadTrackMutation, UploadTrackMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UploadTrackMutation, UploadTrackMutationVariables>(UploadTrackDocument, options);
+      }
+export type UploadTrackMutationHookResult = ReturnType<typeof useUploadTrackMutation>;
+export type UploadTrackMutationResult = Apollo.MutationResult<UploadTrackMutation>;
+export type UploadTrackMutationOptions = Apollo.BaseMutationOptions<UploadTrackMutation, UploadTrackMutationVariables>;
 export const UploadUrlDocument = gql`
-    query UploadUrl($fileType: UploadFileType!) {
+    query UploadUrl($fileType: String!) {
   uploadUrl(fileType: $fileType) {
     uploadUrl
     fileName

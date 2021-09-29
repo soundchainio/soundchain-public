@@ -3,16 +3,11 @@ import { Field, ObjectType } from 'type-graphql';
 
 @ObjectType()
 @modelOptions({ schemaOptions: { _id: false } })
-export class UploadUrl {
-  @Field()
+export class MuxAsset {
   @prop()
-  uploadUrl: string;
+  id: string;
 
   @Field()
   @prop()
-  fileName: string;
-
-  @Field()
-  @prop()
-  readUrl: string;
+  playbackId: string;
 }

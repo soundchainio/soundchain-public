@@ -20,8 +20,15 @@ export class TrackService extends ModelService<typeof Track> {
     return this.findOrFail(id);
   }
 
-  async createTrack(params: Pick<Track, 'profileId' | 'title' | 'audioUrl'>): Promise<Track> {
-    const track = new this.model(params);
+  async createTrack({ profileId, fileType }: { profileId: string; fileType: string }): Promise<Track> {
+    const track = new this.model({ profileId });
+    const [uploadUrl, muxUpload] = await Promise.all([
+      this.context.uploadService.generateUploadUrl(fileType),
+      this.context.muxService.createUpload(track.id),
+    ]);
+    track.file = uploadUrl.readUrl;
+    track.uploadUrl = uploadUrl.uploadUrl;
+    track.muxUpload = muxUpload;
     await track.save();
     return track;
   }

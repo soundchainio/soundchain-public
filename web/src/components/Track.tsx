@@ -17,9 +17,9 @@ export const Track = ({ trackId }: TrackProps) => {
     <div className="p-4 bg-gray-20 break-words">
       <AudioPlayer
         id={track.id}
-        url={track.audioUrl}
+        url={track.file}
         title={track.title}
-      // coverPhotoUrl="https://images-na.ssl-images-amazon.com/images/I/91YlTtiGi0L._AC_SL1500_.jpg"
+        // coverPhotoUrl="https://images-na.ssl-images-amazon.com/images/I/91YlTtiGi0L._AC_SL1500_.jpg"
       />
     </div>
   );

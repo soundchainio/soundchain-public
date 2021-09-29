@@ -1,0 +1,9 @@
+mutation AddTrackMetadata($input: AddTrackMetadataInput!) {
+  addTrackMetadata(input: $input) {
+    track {
+      id
+      title
+      description
+    }
+  }
+}
