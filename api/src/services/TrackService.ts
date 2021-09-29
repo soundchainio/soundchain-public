@@ -13,7 +13,8 @@ export class TrackService extends ModelService<typeof Track> {
   }
 
   getTracks(filter?: FilterTrackInput, sort?: SortTrackInput, page?: PageInput): Promise<PaginateResult<Track>> {
-    return this.paginate({ filter, sort, page });
+    const defaultFilter = { title: { $exists: true } };
+    return this.paginate({ filter: { ...defaultFilter, ...filter }, sort, page });
   }
 
   getTrack(id: string): Promise<Track> {
