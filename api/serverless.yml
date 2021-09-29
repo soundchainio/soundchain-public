@@ -31,6 +31,7 @@ functions:
       - http:
           path: /hooks/mux
           method: post
+          cors: true
   mint:
     handler: src/lambda.mint
     timeout: 120
