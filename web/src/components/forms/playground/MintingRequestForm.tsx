@@ -3,7 +3,7 @@ import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
 import { TextareaField } from 'components/TextareaField';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
-import { useCreateTrackMutation } from 'lib/graphql';
+import { useCreateMintingRequestMutation } from 'lib/graphql';
 import React, { useState } from 'react';
 import * as yup from 'yup';
 
@@ -32,13 +32,13 @@ const initialValues: FormValues = {
   description: '',
 };
 
-export const TrackForm = ({ to, afterSubmit }: Props) => {
-  const [createTrack] = useCreateTrackMutation();
+export const MintingRequestForm = ({ to, afterSubmit }: Props) => {
+  const [createMintingRequest] = useCreateMintingRequestMutation();
   const [requesting, setRequesting] = useState(false);
 
   const handleSubmit = async (values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
     setRequesting(true);
-    await createTrack({ variables: { input: { to: to, ...values } } });
+    await createMintingRequest({ variables: { input: { to: to, ...values } } });
     setRequesting(false);
     afterSubmit();
     resetForm();

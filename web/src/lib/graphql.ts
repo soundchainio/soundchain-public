@@ -105,6 +105,14 @@ export type CommentNotification = {
   link: Scalars['String'];
 };
 
+export type CreateMintingRequestInput = {
+  to: Scalars['String'];
+  name: Scalars['String'];
+  description: Scalars['String'];
+  assetUrl: Scalars['String'];
+  artUrl?: Maybe<Scalars['String']>;
+};
+
 export type CreatePostInput = {
   body: Scalars['String'];
   mediaLink?: Maybe<Scalars['String']>;
@@ -124,19 +132,6 @@ export type CreateRepostPayload = {
   __typename?: 'CreateRepostPayload';
   post: Post;
   originalPost: Post;
-};
-
-export type CreateTrackInput = {
-  to: Scalars['String'];
-  name: Scalars['String'];
-  description: Scalars['String'];
-  assetUrl: Scalars['String'];
-  artUrl?: Maybe<Scalars['String']>;
-};
-
-export type CreateTrackPayload = {
-  __typename?: 'CreateTrackPayload';
-  track: Track;
 };
 
 
@@ -172,6 +167,10 @@ export type FeedItem = {
 };
 
 export type FilterPostInput = {
+  profileId?: Maybe<Scalars['String']>;
+};
+
+export type FilterTrackInput = {
   profileId?: Maybe<Scalars['String']>;
 };
 
@@ -284,6 +283,25 @@ export type MimeType = {
   value: Scalars['String'];
 };
 
+export type MintingRequest = {
+  __typename?: 'MintingRequest';
+  id: Scalars['ID'];
+  to: Scalars['String'];
+  name: Scalars['String'];
+  description: Scalars['String'];
+  assetKey: Scalars['String'];
+  artKey: Maybe<Scalars['String']>;
+  minted: Maybe<Scalars['Boolean']>;
+  transactionId: Maybe<Scalars['Boolean']>;
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+};
+
+export type MintingRequestPayload = {
+  __typename?: 'MintingRequestPayload';
+  mintingRequest: MintingRequest;
+};
+
 export enum MusicianType {
   Singer = 'SINGER',
   Drummer = 'DRUMMER',
@@ -297,6 +315,7 @@ export type Mutation = {
   deleteComment: DeleteCommentPayload;
   sendMessage: SendMessagePayload;
   resetUnreadMessageCount: Profile;
+  createMintingRequest: MintingRequestPayload;
   resetNotificationCount: Profile;
   clearNotifications: ClearNotificationsPayload;
   createPost: CreatePostPayload;
@@ -313,7 +332,6 @@ export type Mutation = {
   unsubscribeFromProfile: UnsubscribeFromProfilePayload;
   uploadTrack: UploadTrackPayload;
   addTrackMetadata: AddTrackMetadataPayload;
-  createTrack: CreateTrackPayload;
   register: AuthPayload;
   login: AuthPayload;
   verifyUserEmail: VerifyUserEmailPayload;
@@ -336,6 +354,11 @@ export type MutationDeleteCommentArgs = {
 
 export type MutationSendMessageArgs = {
   input: SendMessageInput;
+};
+
+
+export type MutationCreateMintingRequestArgs = {
+  input: CreateMintingRequestInput;
 };
 
 
@@ -406,11 +429,6 @@ export type MutationUploadTrackArgs = {
 
 export type MutationAddTrackMetadataArgs = {
   input: AddTrackMetadataInput;
-};
-
-
-export type MutationCreateTrackArgs = {
-  input: CreateTrackInput;
 };
 
 
@@ -570,6 +588,8 @@ export type Query = {
   bandcampLink: Scalars['String'];
   myProfile: Profile;
   profile: Profile;
+  track: Track;
+  tracks: TrackConnection;
   uploadUrl: UploadUrl;
   mimeType: MimeType;
   me: Maybe<User>;
@@ -657,6 +677,18 @@ export type QueryBandcampLinkArgs = {
 
 export type QueryProfileArgs = {
   id: Scalars['String'];
+};
+
+
+export type QueryTrackArgs = {
+  id: Scalars['String'];
+};
+
+
+export type QueryTracksArgs = {
+  page?: Maybe<PageInput>;
+  sort?: Maybe<SortTrackInput>;
+  filter?: Maybe<FilterTrackInput>;
 };
 
 
@@ -796,6 +828,15 @@ export type SortPostInput = {
   order?: Maybe<SortOrder>;
 };
 
+export enum SortTrackField {
+  CreatedAt = 'CREATED_AT'
+}
+
+export type SortTrackInput = {
+  field: SortTrackField;
+  order?: Maybe<SortOrder>;
+};
+
 export type SubscribeToProfileInput = {
   profileId: Scalars['String'];
 };
@@ -808,6 +849,7 @@ export type SubscribeToProfilePayload = {
 export type Track = {
   __typename?: 'Track';
   id: Scalars['ID'];
+  profileId: Scalars['String'];
   title: Scalars['String'];
   description: Maybe<Scalars['String']>;
   file: Scalars['String'];
@@ -816,6 +858,12 @@ export type Track = {
   muxAsset: MuxAsset;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
+};
+
+export type TrackConnection = {
+  __typename?: 'TrackConnection';
+  pageInfo: PageInfo;
+  nodes: Array<Track>;
 };
 
 export type UnfollowProfileInput = {
@@ -1079,6 +1127,22 @@ export type CommentsQuery = (
   ) }
 );
 
+export type CreateMintingRequestMutationVariables = Exact<{
+  input: CreateMintingRequestInput;
+}>;
+
+
+export type CreateMintingRequestMutation = (
+  { __typename?: 'Mutation' }
+  & { createMintingRequest: (
+    { __typename?: 'MintingRequestPayload' }
+    & { mintingRequest: (
+      { __typename?: 'MintingRequest' }
+      & Pick<MintingRequest, 'id' | 'transactionId'>
+    ) }
+  ) }
+);
+
 export type CreatePostMutationVariables = Exact<{
   input: CreatePostInput;
 }>;
@@ -1110,22 +1174,6 @@ export type CreateRepostMutation = (
     ), originalPost: (
       { __typename?: 'Post' }
       & Pick<Post, 'id' | 'repostCount'>
-    ) }
-  ) }
-);
-
-export type CreateTrackMutationVariables = Exact<{
-  input: CreateTrackInput;
-}>;
-
-
-export type CreateTrackMutation = (
-  { __typename?: 'Mutation' }
-  & { createTrack: (
-    { __typename?: 'CreateTrackPayload' }
-    & { track: (
-      { __typename?: 'Track' }
-      & Pick<Track, 'id' | 'title' | 'file'>
     ) }
   ) }
 );
@@ -1603,6 +1651,41 @@ export type SubscribeToProfileMutation = (
   ) }
 );
 
+export type TrackQueryVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+export type TrackQuery = (
+  { __typename?: 'Query' }
+  & { track: (
+    { __typename?: 'Track' }
+    & TrackComponentFieldsFragment
+  ) }
+);
+
+export type TrackComponentFieldsFragment = (
+  { __typename?: 'Track' }
+  & Pick<Track, 'id' | 'profileId' | 'title' | 'file' | 'createdAt' | 'updatedAt'>
+);
+
+export type TracksQueryVariables = Exact<{
+  filter?: Maybe<FilterTrackInput>;
+  sort?: Maybe<SortTrackInput>;
+}>;
+
+
+export type TracksQuery = (
+  { __typename?: 'Query' }
+  & { tracks: (
+    { __typename?: 'TrackConnection' }
+    & { nodes: Array<(
+      { __typename?: 'Track' }
+      & TrackComponentFieldsFragment
+    )> }
+  ) }
+);
+
 export type UnfollowProfileMutationVariables = Exact<{
   input: UnfollowProfileInput;
 }>;
@@ -1937,6 +2020,16 @@ export const ReactionNotificationFieldsFragmentDoc = gql`
   authorPicture
   createdAt
   postId
+}
+    `;
+export const TrackComponentFieldsFragmentDoc = gql`
+    fragment TrackComponentFields on Track {
+  id
+  profileId
+  title
+  file
+  createdAt
+  updatedAt
 }
     `;
 export const AddCommentDocument = gql`
@@ -2287,6 +2380,42 @@ export function useCommentsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<C
 export type CommentsQueryHookResult = ReturnType<typeof useCommentsQuery>;
 export type CommentsLazyQueryHookResult = ReturnType<typeof useCommentsLazyQuery>;
 export type CommentsQueryResult = Apollo.QueryResult<CommentsQuery, CommentsQueryVariables>;
+export const CreateMintingRequestDocument = gql`
+    mutation createMintingRequest($input: CreateMintingRequestInput!) {
+  createMintingRequest(input: $input) {
+    mintingRequest {
+      id
+      transactionId
+    }
+  }
+}
+    `;
+export type CreateMintingRequestMutationFn = Apollo.MutationFunction<CreateMintingRequestMutation, CreateMintingRequestMutationVariables>;
+
+/**
+ * __useCreateMintingRequestMutation__
+ *
+ * To run a mutation, you first call `useCreateMintingRequestMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateMintingRequestMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createMintingRequestMutation, { data, loading, error }] = useCreateMintingRequestMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateMintingRequestMutation(baseOptions?: Apollo.MutationHookOptions<CreateMintingRequestMutation, CreateMintingRequestMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateMintingRequestMutation, CreateMintingRequestMutationVariables>(CreateMintingRequestDocument, options);
+      }
+export type CreateMintingRequestMutationHookResult = ReturnType<typeof useCreateMintingRequestMutation>;
+export type CreateMintingRequestMutationResult = Apollo.MutationResult<CreateMintingRequestMutation>;
+export type CreateMintingRequestMutationOptions = Apollo.BaseMutationOptions<CreateMintingRequestMutation, CreateMintingRequestMutationVariables>;
 export const CreatePostDocument = gql`
     mutation CreatePost($input: CreatePostInput!) {
   createPost(input: $input) {
@@ -2361,43 +2490,6 @@ export function useCreateRepostMutation(baseOptions?: Apollo.MutationHookOptions
 export type CreateRepostMutationHookResult = ReturnType<typeof useCreateRepostMutation>;
 export type CreateRepostMutationResult = Apollo.MutationResult<CreateRepostMutation>;
 export type CreateRepostMutationOptions = Apollo.BaseMutationOptions<CreateRepostMutation, CreateRepostMutationVariables>;
-export const CreateTrackDocument = gql`
-    mutation CreateTrack($input: CreateTrackInput!) {
-  createTrack(input: $input) {
-    track {
-      id
-      title
-      file
-    }
-  }
-}
-    `;
-export type CreateTrackMutationFn = Apollo.MutationFunction<CreateTrackMutation, CreateTrackMutationVariables>;
-
-/**
- * __useCreateTrackMutation__
- *
- * To run a mutation, you first call `useCreateTrackMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useCreateTrackMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [createTrackMutation, { data, loading, error }] = useCreateTrackMutation({
- *   variables: {
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useCreateTrackMutation(baseOptions?: Apollo.MutationHookOptions<CreateTrackMutation, CreateTrackMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateTrackMutation, CreateTrackMutationVariables>(CreateTrackDocument, options);
-      }
-export type CreateTrackMutationHookResult = ReturnType<typeof useCreateTrackMutation>;
-export type CreateTrackMutationResult = Apollo.MutationResult<CreateTrackMutation>;
-export type CreateTrackMutationOptions = Apollo.BaseMutationOptions<CreateTrackMutation, CreateTrackMutationVariables>;
 export const DeleteCommentDocument = gql`
     mutation DeleteComment($input: DeleteCommentInput!) {
   deleteComment(input: $input) {
@@ -3450,6 +3542,79 @@ export function useSubscribeToProfileMutation(baseOptions?: Apollo.MutationHookO
 export type SubscribeToProfileMutationHookResult = ReturnType<typeof useSubscribeToProfileMutation>;
 export type SubscribeToProfileMutationResult = Apollo.MutationResult<SubscribeToProfileMutation>;
 export type SubscribeToProfileMutationOptions = Apollo.BaseMutationOptions<SubscribeToProfileMutation, SubscribeToProfileMutationVariables>;
+export const TrackDocument = gql`
+    query Track($id: String!) {
+  track(id: $id) {
+    ...TrackComponentFields
+  }
+}
+    ${TrackComponentFieldsFragmentDoc}`;
+
+/**
+ * __useTrackQuery__
+ *
+ * To run a query within a React component, call `useTrackQuery` and pass it any options that fit your needs.
+ * When your component renders, `useTrackQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useTrackQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useTrackQuery(baseOptions: Apollo.QueryHookOptions<TrackQuery, TrackQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<TrackQuery, TrackQueryVariables>(TrackDocument, options);
+      }
+export function useTrackLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TrackQuery, TrackQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<TrackQuery, TrackQueryVariables>(TrackDocument, options);
+        }
+export type TrackQueryHookResult = ReturnType<typeof useTrackQuery>;
+export type TrackLazyQueryHookResult = ReturnType<typeof useTrackLazyQuery>;
+export type TrackQueryResult = Apollo.QueryResult<TrackQuery, TrackQueryVariables>;
+export const TracksDocument = gql`
+    query Tracks($filter: FilterTrackInput, $sort: SortTrackInput) {
+  tracks(filter: $filter, sort: $sort) {
+    nodes {
+      ...TrackComponentFields
+    }
+  }
+}
+    ${TrackComponentFieldsFragmentDoc}`;
+
+/**
+ * __useTracksQuery__
+ *
+ * To run a query within a React component, call `useTracksQuery` and pass it any options that fit your needs.
+ * When your component renders, `useTracksQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useTracksQuery({
+ *   variables: {
+ *      filter: // value for 'filter'
+ *      sort: // value for 'sort'
+ *   },
+ * });
+ */
+export function useTracksQuery(baseOptions?: Apollo.QueryHookOptions<TracksQuery, TracksQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<TracksQuery, TracksQueryVariables>(TracksDocument, options);
+      }
+export function useTracksLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TracksQuery, TracksQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<TracksQuery, TracksQueryVariables>(TracksDocument, options);
+        }
+export type TracksQueryHookResult = ReturnType<typeof useTracksQuery>;
+export type TracksLazyQueryHookResult = ReturnType<typeof useTracksLazyQuery>;
+export type TracksQueryResult = Apollo.QueryResult<TracksQuery, TracksQueryVariables>;
 export const UnfollowProfileDocument = gql`
     mutation UnfollowProfile($input: UnfollowProfileInput!) {
   unfollowProfile(input: $input) {

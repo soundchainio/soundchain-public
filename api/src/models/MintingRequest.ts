@@ -1,41 +1,39 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
-import { MuxAsset } from '../types/MuxAsset';
-import { MuxUpload } from '../types/MuxUpload';
 import { Model } from './Model';
 
 @ObjectType()
-export class Track extends Model {
+export class MintingRequest extends Model {
   @Field(() => ID, { name: 'id' })
   readonly _id: string;
 
-  @Field()
   @prop({ required: true })
   profileId: string;
 
   @Field()
-  @prop()
-  title: string;
+  @prop({ required: true })
+  to: string;
 
-  @Field({ nullable: true })
-  @prop()
+  @Field()
+  @prop({ required: true })
+  name: string;
+
+  @Field()
+  @prop({ required: true })
   description: string;
 
   @Field()
   @prop({ required: true })
-  file: string;
+  assetKey: string;
 
-  @Field()
-  @prop()
-  uploadUrl: string;
+  @Field({ nullable: true })
+  artKey?: string;
 
-  @Field()
-  @prop()
-  muxUpload: MuxUpload;
+  @Field({ nullable: true })
+  minted?: boolean;
 
-  @Field()
-  @prop()
-  muxAsset: MuxAsset;
+  @Field({ nullable: true })
+  transactionId?: boolean;
 
   @Field(() => Date)
   createdAt: Date;
@@ -44,4 +42,4 @@ export class Track extends Model {
   updatedAt: Date;
 }
 
-export const TrackModel = getModelForClass(Track);
+export const MintingRequestModel = getModelForClass(MintingRequest);

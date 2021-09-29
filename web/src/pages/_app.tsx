@@ -7,6 +7,7 @@ import type { AppProps } from 'next/app';
 import Head from 'next/head';
 import Router from 'next/router';
 import NProgress from 'nprogress';
+import 'styles/AudioPlayer.css';
 import 'styles/globals.css';
 import 'styles/nprogress.css';
 

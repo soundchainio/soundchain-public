@@ -7,6 +7,7 @@ import { FeedService } from '../services/FeedService';
 import { FollowService } from '../services/FollowService';
 import { JwtService, JwtUser } from '../services/JwtService';
 import { MessageService } from '../services/MessageService';
+import { MintingRequestService } from '../services/MintingRequestService';
 import { MuxService } from '../services/MuxService';
 import { NotificationService } from '../services/NotificationService';
 import { PostService } from '../services/PostService';
@@ -32,6 +33,7 @@ export class Context {
   reactionService = new ReactionService(this);
   subscriptionService = new SubscriptionService(this);
   trackService = new TrackService(this);
+  mintingRequestService = new MintingRequestService(this);
   uploadService = new UploadService(this);
   userService = new UserService(this);
   embedService = new EmbedService(this);
