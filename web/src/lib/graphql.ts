@@ -1672,6 +1672,7 @@ export type TrackComponentFieldsFragment = (
 export type TracksQueryVariables = Exact<{
   filter?: Maybe<FilterTrackInput>;
   sort?: Maybe<SortTrackInput>;
+  page?: Maybe<PageInput>;
 }>;
 
 
@@ -1682,7 +1683,10 @@ export type TracksQuery = (
     & { nodes: Array<(
       { __typename?: 'Track' }
       & TrackComponentFieldsFragment
-    )> }
+    )>, pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
+    ) }
   ) }
 );
 
@@ -3578,10 +3582,14 @@ export type TrackQueryHookResult = ReturnType<typeof useTrackQuery>;
 export type TrackLazyQueryHookResult = ReturnType<typeof useTrackLazyQuery>;
 export type TrackQueryResult = Apollo.QueryResult<TrackQuery, TrackQueryVariables>;
 export const TracksDocument = gql`
-    query Tracks($filter: FilterTrackInput, $sort: SortTrackInput) {
-  tracks(filter: $filter, sort: $sort) {
+    query Tracks($filter: FilterTrackInput, $sort: SortTrackInput, $page: PageInput) {
+  tracks(filter: $filter, sort: $sort, page: $page) {
     nodes {
       ...TrackComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
     }
   }
 }
@@ -3601,6 +3609,7 @@ export const TracksDocument = gql`
  *   variables: {
  *      filter: // value for 'filter'
  *      sort: // value for 'sort'
+ *      page: // value for 'page'
  *   },
  * });
  */
