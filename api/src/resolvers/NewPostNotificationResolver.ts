@@ -1,5 +1,7 @@
-import { FieldResolver, Resolver, Root } from 'type-graphql';
+import { Ctx, FieldResolver, Resolver, Root } from 'type-graphql';
 import { Notification } from '../models/Notification';
+import { Track } from '../models/Track';
+import { Context } from '../types/Context';
 import { NewPostNotification } from '../types/NewPostNotification';
 import { NewPostNotificationMetadata } from '../types/NewPostNotificationMetadata';
 
@@ -30,7 +32,7 @@ export class NewPostNotificationResolver {
   @FieldResolver(() => String)
   previewBody(@Root() { metadata }: Notification): string {
     const { postBody } = metadata as NewPostNotificationMetadata;
-    return postBody;
+    return postBody || '';
   }
 
   @FieldResolver(() => String, { nullable: true })
@@ -43,5 +45,12 @@ export class NewPostNotificationResolver {
   link(@Root() { metadata }: Notification): string {
     const { postId } = metadata as NewPostNotificationMetadata;
     return `/posts/${postId}`;
+  }
+
+  @FieldResolver(() => Track, { nullable: true })
+  track(@Ctx() { trackService }: Context, @Root() { metadata }: Notification): Promise<Track | null> {
+    const { trackId } = metadata as NewPostNotificationMetadata;
+    if (!trackId) return null;
+    return trackService.getTrack(trackId);
   }
 }
