@@ -34,7 +34,7 @@ export const TrackUploader = ({ onSuccess, setAssetUrl }: TrackUploaderProps) =>
       startUpload(data.uploadTrack.track.muxUpload.url, file);
       setTrackId(data.uploadTrack.track.id);
       setFilename(file.name);
-      if (setAssetUrl) setAssetUrl(data.uploadTrack.track.uploadUrl);
+      if (setAssetUrl) setAssetUrl(data.uploadTrack.track.file);
     }
   };
   const { getRootProps, getInputProps } = useDropzone({ maxFiles: 1, maxSize, accept, onDrop });

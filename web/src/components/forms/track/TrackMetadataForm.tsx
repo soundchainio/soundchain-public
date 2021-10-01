@@ -35,7 +35,7 @@ const initialValues: FormValues = {
 };
 
 export const TrackMetadataForm = ({ trackId, afterSubmit, setCoverPhotoUrl, assetUrl }: Props) => {
-  const [addMetadata] = useAddTrackMetadataMutation();
+  const [addMetadata] = useAddTrackMetadataMutation({ refetchQueries: ['Tracks'] });
   const { account } = useMetaMask();
   const [createMintingRequest] = useCreateMintingRequestMutation();
 
@@ -47,7 +47,7 @@ export const TrackMetadataForm = ({ trackId, afterSubmit, setCoverPhotoUrl, asse
           to: account!,
           name: values.title,
           description: values.description || '',
-          assetUrl: assetUrl.split("?")[0] || assetUrl,
+          assetUrl: assetUrl,
           artUrl: values.artworkUrl
         }
       }
@@ -68,7 +68,7 @@ export const TrackMetadataForm = ({ trackId, afterSubmit, setCoverPhotoUrl, asse
       {({ setFieldValue }) => (
         <Form className="flex flex-col justify-between h-full">
           <div>
-            <div className="flex items-center mt-6 ">
+            <div className="flex items-center mt-6">
               <div className="h-30 w-30 mr-2 flex flex-col items-center">
                 <ImageUpload artwork={true} onChange={(val) => onArtworkUpload(val, setFieldValue)} />
                 <span className="text-gray-80 underline text-xs mt-2">

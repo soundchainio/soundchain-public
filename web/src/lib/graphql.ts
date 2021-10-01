@@ -1883,7 +1883,7 @@ export type UploadTrackMutation = (
     { __typename?: 'UploadTrackPayload' }
     & { track: (
       { __typename?: 'Track' }
-      & Pick<Track, 'id' | 'uploadUrl'>
+      & Pick<Track, 'id' | 'uploadUrl' | 'file'>
       & { muxUpload: (
         { __typename?: 'MuxUpload' }
         & Pick<MuxUpload, 'url'>
@@ -4053,6 +4053,7 @@ export const UploadTrackDocument = gql`
     track {
       id
       uploadUrl
+      file
       muxUpload {
         url
       }

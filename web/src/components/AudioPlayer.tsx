@@ -60,7 +60,7 @@ export const AudioPlayer = ({ id, url, title, artist, coverPhotoUrl }: AudioPlay
           <Image src={coverPhotoUrl} layout="fill" className="m-auto object-cover" />
         </div>
       }
-      <div className="flex flex-col">
+      <div className="flex flex-col flex-1">
         <div className="flex">
           <div className="w-12 flex items-center">
             <div className="bg-white rounded-full w-8 h-8 flex items-center m-auto" onClick={togglePlay}>

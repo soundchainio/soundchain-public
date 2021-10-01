@@ -41,11 +41,11 @@ export function ImageUpload({
       {({ getRootProps, getInputProps }) => (
         <div
           className={classNames(
-            artwork ? 'w-20 h-20' : '',
-            'relative flex items-center justify-center bg-gray-30 border-gray-80 border-2 h-14',
+            'relative flex items-center justify-center bg-gray-30 border-gray-80 border-2',
             thumbnail && !artwork ? 'w-14' : 'w-3/4',
             thumbnail && rounded ? 'rounded-full' : 'rounded-lg',
             className,
+            artwork ? 'w-20 h-20' : 'h-14',
           )}
           {...rest}
           {...getRootProps()}
