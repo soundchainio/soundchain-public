@@ -12,7 +12,7 @@ interface AudioPlayerProps {
   art?: string;
 }
 
-export const AudioPlayer = ({ id, src, title, artist, art }: AudioPlayerProps) => {
+export const AudioPlayer = ({ src, title, artist, art }: AudioPlayerProps) => {
   const [playing, setPlaying] = useState<boolean>(false);
   const [playState, setPlayState] = useState<number>(0);
   const [duration, setDuration] = useState<number>();
