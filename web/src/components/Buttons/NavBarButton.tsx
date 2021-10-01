@@ -4,7 +4,7 @@ import { IconProps } from 'icons/types/IconProps';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
-interface BottomNavBarButtonProps {
+interface NavBarButtonProps {
   badge?: () => JSX.Element;
   label: string;
   path?: string;
@@ -14,7 +14,7 @@ interface BottomNavBarButtonProps {
   id?: string;
 }
 
-export const BottomNavBarButton = ({
+export const NavBarButton = ({
   label,
   path,
   icon: Icon,
@@ -22,7 +22,7 @@ export const BottomNavBarButton = ({
   badge: Badge,
   activatedColor,
   id,
-}: BottomNavBarButtonProps) => {
+}: NavBarButtonProps) => {
   const [isActive, setActive] = useState(false);
   const router = useRouter();
 

@@ -25,6 +25,7 @@
     "@headlessui/react": "^1.4.1",
     "@heroicons/react": "^1.0.3",
     "@lottiefiles/react-lottie-player": "^3.4.1",
+    "@mux/upchunk": "^2.2.2",
     "@sentry/react": "^6.13.2",
     "@sentry/tracing": "^6.13.2",
     "@metamask/onboarding": "^1.0.1",

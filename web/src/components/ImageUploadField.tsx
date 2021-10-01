@@ -5,7 +5,7 @@ export interface ImageUploadFieldProps extends Omit<ImageUploadProps, 'value' | 
   name: string;
 }
 
-export function ImageUploadField({ name, ...rest }: ImageUploadFieldProps) {
+export const ImageUploadField = ({ name, ...rest }: ImageUploadFieldProps) => {
   return (
     <Field
       name={name}
@@ -14,4 +14,4 @@ export function ImageUploadField({ name, ...rest }: ImageUploadFieldProps) {
       )}
     />
   );
-}
+};

@@ -13,7 +13,7 @@ export interface ImageUploadProps extends Omit<React.ComponentPropsWithoutRef<'d
 }
 
 const defaultMaxFileSize = 1024 * 1024 * 3; // 3Mb
-const acceptedMimeTypes = ['image/jpeg', 'image/png'];
+const acceptedMimeTypes = ['image/jpeg', 'image/png', 'audio/mp3'];
 
 export function ImageUpload({
   className,

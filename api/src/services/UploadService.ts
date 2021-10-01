@@ -3,7 +3,6 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuidv4 } from 'uuid';
 import { config } from '../config';
 import { Context } from '../types/Context';
-import { UploadFileType } from '../types/UploadFileType';
 import { UploadUrl } from '../types/UploadUrl';
 
 const FIVE_MINUTES = 1000 * 60 * 5;
@@ -15,7 +14,7 @@ export class UploadService {
     this.s3Client = new S3Client({ region: config.uploads.region });
   }
 
-  async generateUploadUrl(fileType: UploadFileType): Promise<UploadUrl> {
+  async generateUploadUrl(fileType: string): Promise<UploadUrl> {
     const imageId = uuidv4();
     const extension = fileType.split('/')[1];
     const fileName = `${imageId}.${extension}`;

@@ -35,7 +35,6 @@ export const useModalDispatch = () => {
         type: show ? ModalActionTypes.SHOW_REACTIONS : ModalActionTypes.HIDE_REACTIONS,
         payload: { postId, top, total },
       }),
-    dispatchShowNewTrackModal: (show: boolean) =>
-      dispatch({ type: ModalActionTypes.SHOW_NEW_TRACK, payload: { show } }),
+    dispatchShowCreateModal: (show: boolean) => dispatch({ type: ModalActionTypes.SHOW_CREATE, payload: { show } }),
   };
 };

@@ -4,6 +4,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import { config } from './config';
 import { Context } from './types/Context';
+import { webhooks } from './webhooks';
 
 async function bootstrap() {
   Sentry.init({
@@ -15,6 +16,7 @@ async function bootstrap() {
 
   const app = express();
   app.locals.context = new Context();
+  app.use('/hooks', webhooks);
   app.use(config.express.middlewares);
 
   const server = new ApolloServer(config.apollo);

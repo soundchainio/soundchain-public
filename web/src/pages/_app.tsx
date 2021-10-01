@@ -1,5 +1,5 @@
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
+import * as Sentry from '@sentry/react';
+import { Integrations } from '@sentry/tracing';
 import { CheckBodyScroll } from 'components/CheckBodyScroll';
 import { StateProvider } from 'contexts';
 import { ApolloProvider } from 'lib/apollo';
@@ -12,7 +12,7 @@ import 'styles/globals.css';
 import 'styles/nprogress.css';
 
 Sentry.init({
-  dsn: "https://43ff4c65582f427a8bf2dc33efd1c2fa@o1011186.ingest.sentry.io/5977714",
+  dsn: 'https://43ff4c65582f427a8bf2dc33efd1c2fa@o1011186.ingest.sentry.io/5977714',
   integrations: [new Integrations.BrowserTracing()],
   tracesSampleRate: 1.0,
 });

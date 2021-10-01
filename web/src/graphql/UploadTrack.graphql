@@ -1,0 +1,11 @@
+mutation UploadTrack($input: UploadTrackInput!) {
+  uploadTrack(input: $input) {
+    track {
+      id
+      uploadUrl
+      muxUpload {
+        url
+      }
+    }
+  }
+}
