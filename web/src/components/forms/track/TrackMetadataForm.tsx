@@ -69,14 +69,16 @@ export const TrackMetadataForm = ({ trackId, afterSubmit, setCoverPhotoUrl, asse
         <Form className="flex flex-col justify-between h-full">
           <div>
             <div className="flex items-center mt-6 ">
-              <div style={{ height: "80px", width: "80px" }}>
-                <ImageUpload className="bg-white w-full" onChange={(val) => onArtworkUpload(val, setFieldValue)} />
+              <div className="h-30 w-30 mr-2 flex flex-col items-center">
+                <ImageUpload artwork={true} onChange={(val) => onArtworkUpload(val, setFieldValue)} />
+                <span className="text-gray-80 underline text-xs mt-2">
+                  CHANGE ARTWORK
+                </span>
               </div>
               <div className="flex-1">
                 <Label>TRACK TITLE</Label>
                 <InputField name="title" type="text" />
               </div>
-
             </div>
             <div>
               <div className="mt-4">
