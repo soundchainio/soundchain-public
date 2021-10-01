@@ -15,7 +15,7 @@ export const Track = ({ trackId }: TrackProps) => {
 
   return (
     <div className="p-4 bg-gray-20 break-words">
-      <AudioPlayer id={track.id} src={track.playbackUrl} title={track.title} />
+      <AudioPlayer src={track.playbackUrl} title={track.title} />
     </div>
   );
 };
