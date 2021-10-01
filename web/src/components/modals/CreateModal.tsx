@@ -16,6 +16,7 @@ export const CreateModal = () => {
   const { dispatchShowCreateModal, dispatchShowPostModal } = useModalDispatch();
   const [tab, setTab] = useState(Tabs.NFT);
   const [trackId, setTrackId] = useState<string | null>(null);
+  const [assetUrl, setAssetUrl] = useState<string | null>(null);
   const [coverPhotoUrl, setCoverPhotoUrl] = useState<string | null>(null);
 
   const isOpen = modalState.showCreate;
@@ -65,9 +66,9 @@ export const CreateModal = () => {
         </div>
       }
     >
-      {!trackId && <TrackUploader onSuccess={setTrackId} />}
+      {!trackId && <TrackUploader onSuccess={setTrackId} setAssetUrl={setAssetUrl} />}
       {trackId && <Track trackId={trackId} coverPhotoUrl={coverPhotoUrl || undefined} />}
-      {trackId && <TrackMetadataForm trackId={trackId} setCoverPhotoUrl={setCoverPhotoUrl} afterSubmit={handleClose} />}
+      {trackId && <TrackMetadataForm trackId={trackId} assetUrl={assetUrl || ''} setCoverPhotoUrl={setCoverPhotoUrl} afterSubmit={handleClose} />}
     </Modal>
   );
 };

@@ -4,7 +4,8 @@ import { InputField } from 'components/InputField';
 import { Label } from 'components/Label';
 import { TextareaField } from 'components/TextareaField';
 import { Form, Formik } from 'formik';
-import { useAddTrackMetadataMutation } from 'lib/graphql';
+import useMetaMask from 'hooks/useMetaMask';
+import { useAddTrackMetadataMutation, useCreateMintingRequestMutation } from 'lib/graphql';
 import React from 'react';
 import * as yup from 'yup';
 
@@ -12,6 +13,7 @@ interface Props {
   trackId: string;
   afterSubmit: () => void;
   setCoverPhotoUrl?: (val: string) => void;
+  assetUrl: string;
 }
 
 interface FormValues {
@@ -32,10 +34,24 @@ const initialValues: FormValues = {
   artworkUrl: '',
 };
 
-export const TrackMetadataForm = ({ trackId, afterSubmit, setCoverPhotoUrl }: Props) => {
+export const TrackMetadataForm = ({ trackId, afterSubmit, setCoverPhotoUrl, assetUrl }: Props) => {
   const [addMetadata] = useAddTrackMetadataMutation();
+  const { account } = useMetaMask();
+  const [createMintingRequest] = useCreateMintingRequestMutation();
+
 
   const handleSubmit = async (values: FormValues) => {
+    await createMintingRequest({
+      variables: {
+        input: {
+          to: account!,
+          name: values.title,
+          description: values.description || '',
+          assetUrl: assetUrl.split("?")[0] || assetUrl,
+          artUrl: values.artworkUrl
+        }
+      }
+    });
     await addMetadata({ variables: { input: { trackId, ...values } } });
     afterSubmit();
   };
