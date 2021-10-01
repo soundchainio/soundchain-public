@@ -29,7 +29,9 @@ export const Tracks = ({ className, profileId }: TracksProps) => {
   return (
     <div className={classNames('space-y-3', className)}>
       {data.tracks.nodes.map(({ id }) => (
-        <Track key={id} trackId={id} />
+        <div className="p-4 bg-gray-20 break-words">
+          <Track key={id} trackId={id} />
+        </div>
       ))}
     </div>
   );

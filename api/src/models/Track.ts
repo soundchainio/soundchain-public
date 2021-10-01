@@ -29,6 +29,10 @@ export class Track extends Model {
   @prop()
   uploadUrl: string;
 
+  @Field({ nullable: true })
+  @prop()
+  artworkUrl: string;
+
   @Field()
   @prop()
   muxUpload: MuxUpload;

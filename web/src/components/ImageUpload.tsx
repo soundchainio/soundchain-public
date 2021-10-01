@@ -39,10 +39,10 @@ export function ImageUpload({
       {({ getRootProps, getInputProps }) => (
         <div
           className={classNames(
-            className,
             'relative flex items-center justify-center bg-gray-30 border-gray-80 border-2 h-14',
             thumbnail ? 'w-14' : 'w-3/4',
             thumbnail && rounded ? 'rounded-full' : 'rounded-lg',
+            className,
           )}
           {...rest}
           {...getRootProps()}

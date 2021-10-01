@@ -2,6 +2,7 @@ import classNames from 'classnames';
 import { TrackMetadataForm } from 'components/forms/track/TrackMetadataForm';
 import { TrackUploader } from 'components/forms/track/TrackUploader';
 import { Modal } from 'components/Modal';
+import { Track } from 'components/Track';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import React, { useState } from 'react';
 
@@ -15,6 +16,7 @@ export const CreateModal = () => {
   const { dispatchShowCreateModal, dispatchShowPostModal } = useModalDispatch();
   const [tab, setTab] = useState(Tabs.NFT);
   const [trackId, setTrackId] = useState<string | null>(null);
+  const [coverPhotoUrl, setCoverPhotoUrl] = useState<string | null>(null);
 
   const isOpen = modalState.showCreate;
 
@@ -63,8 +65,9 @@ export const CreateModal = () => {
         </div>
       }
     >
-      <TrackUploader onSuccess={setTrackId} />
-      {trackId && <TrackMetadataForm trackId={trackId} afterSubmit={handleClose} />}
+      {!trackId && <TrackUploader onSuccess={setTrackId} />}
+      {trackId && <Track trackId={trackId} coverPhotoUrl={coverPhotoUrl || undefined} />}
+      {trackId && <TrackMetadataForm trackId={trackId} setCoverPhotoUrl={setCoverPhotoUrl} afterSubmit={handleClose} />}
     </Modal>
   );
 };

@@ -20,7 +20,7 @@ export class TrackService extends ModelService<typeof Track> {
     return this.findOrFail(id);
   }
 
-  async createTrack({ profileId, fileType }: { profileId: string; fileType: string }): Promise<Track> {
+  async createTrack({ profileId, fileType, title }: { profileId: string; fileType: string; title: string }): Promise<Track> {
     const track = new this.model({ profileId });
     const [uploadUrl, muxUpload] = await Promise.all([
       this.context.uploadService.generateUploadUrl(fileType),
@@ -29,6 +29,7 @@ export class TrackService extends ModelService<typeof Track> {
     track.file = uploadUrl.readUrl;
     track.uploadUrl = uploadUrl.uploadUrl;
     track.muxUpload = muxUpload;
+    track.title = title;
     await track.save();
     return track;
   }

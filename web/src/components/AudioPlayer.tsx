@@ -56,8 +56,8 @@ export const AudioPlayer = ({ id, url, title, artist, coverPhotoUrl }: AudioPlay
   return (
     <div className="bg-black rounded-md p-4 flex items-center">
       {coverPhotoUrl &&
-        <div style={{ maxWidth: "80px", maxHeight: "80px" }}>
-          <Image src={coverPhotoUrl} className="m-auto" />
+        <div style={{ maxWidth: "80px", maxHeight: "80px", position: "relative" }}>
+          <Image src={coverPhotoUrl} width="80" height="80" layout="fixed" className="m-auto" />
         </div>
       }
       <div className="flex flex-col w-full">

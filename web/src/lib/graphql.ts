@@ -30,6 +30,7 @@ export type AddTrackMetadataInput = {
   trackId: Scalars['String'];
   title: Scalars['String'];
   description?: Maybe<Scalars['String']>;
+  artworkUrl?: Maybe<Scalars['String']>;
 };
 
 export type AddTrackMetadataPayload = {
@@ -854,6 +855,7 @@ export type Track = {
   description: Maybe<Scalars['String']>;
   file: Scalars['String'];
   uploadUrl: Scalars['String'];
+  artworkUrl: Maybe<Scalars['String']>;
   muxUpload: MuxUpload;
   muxAsset: MuxAsset;
   createdAt: Scalars['DateTime'];
@@ -995,7 +997,7 @@ export type AddTrackMetadataMutation = (
     { __typename?: 'AddTrackMetadataPayload' }
     & { track: (
       { __typename?: 'Track' }
-      & Pick<Track, 'id' | 'title' | 'description'>
+      & Pick<Track, 'id' | 'title' | 'description' | 'artworkUrl'>
     ) }
   ) }
 );
@@ -1666,7 +1668,7 @@ export type TrackQuery = (
 
 export type TrackComponentFieldsFragment = (
   { __typename?: 'Track' }
-  & Pick<Track, 'id' | 'profileId' | 'title' | 'file' | 'createdAt' | 'updatedAt'>
+  & Pick<Track, 'id' | 'profileId' | 'title' | 'file' | 'artworkUrl' | 'createdAt' | 'updatedAt'>
 );
 
 export type TracksQueryVariables = Exact<{
@@ -2028,6 +2030,7 @@ export const TrackComponentFieldsFragmentDoc = gql`
   profileId
   title
   file
+  artworkUrl
   createdAt
   updatedAt
 }
@@ -2078,6 +2081,7 @@ export const AddTrackMetadataDocument = gql`
       id
       title
       description
+      artworkUrl
     }
   }
 }
