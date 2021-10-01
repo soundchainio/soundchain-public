@@ -1,0 +1,7 @@
+query Tracks($filter: FilterTrackInput, $sort: SortTrackInput) {
+  tracks(filter: $filter, sort: $sort) {
+    nodes {
+      ...TrackComponentFields
+    }
+  }
+}

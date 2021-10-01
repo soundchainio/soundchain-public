@@ -4,8 +4,8 @@ import {
   SetEditPostIdPayload,
   SetRepostIdPayload,
   ShowAuthorActionsPayload,
+  ShowCreatePayload,
   ShowNewPostPayload,
-  ShowNewTrackPayload,
   ShowReactionsPayload,
   ShowUnderDevelopmentPayload,
 } from 'contexts/payloads/modal';
@@ -21,7 +21,7 @@ export interface ModalState {
   authorActionsType?: AuthorActionsType;
   authorActionsId: string;
   showUnderDevelopment: boolean;
-  showNewTrack: boolean;
+  showCreate: boolean;
   reactions: {
     show: boolean;
     postId?: string;
@@ -39,7 +39,7 @@ export const initialModalState = {
   authorActionsType: undefined,
   authorActionsId: '',
   showUnderDevelopment: false,
-  showNewTrack: false,
+  showCreate: false,
   reactions: {
     show: false,
     postId: undefined,
@@ -98,11 +98,11 @@ export const modalReducer = (state: ModalState, action: Action) => {
           show: false,
         },
       };
-    case ModalActionTypes.SHOW_NEW_TRACK:
+    case ModalActionTypes.SHOW_CREATE:
       return {
         ...state,
-        showNewTrack: (action.payload as ShowNewTrackPayload).show,
-        anyModalOpened: (action.payload as ShowNewTrackPayload).show,
+        showCreate: (action.payload as ShowCreatePayload).show,
+        anyModalOpened: (action.payload as ShowCreatePayload).show,
       };
     default:
       return state;

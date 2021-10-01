@@ -1,0 +1,26 @@
+interface BlockchainNetwork {
+  name: string;
+  rpc: string;
+  id: number;
+  idHex: string;
+  symbol: string;
+  blockExplorer: string;
+}
+
+export const mainNetwork: BlockchainNetwork = {
+  name: 'Polygon Mainnet',
+  rpc: 'https://rpc-mainnet.maticvigil.com/',
+  id: 137,
+  idHex: '0x89',
+  symbol: 'MATIC',
+  blockExplorer: 'https://polygonscan.com/',
+};
+
+export const testNetwork: BlockchainNetwork = {
+  name: 'Matic Mumbai',
+  rpc: 'https://rpc-mumbai.maticvigil.com',
+  id: 80001,
+  idHex: '0x13881',
+  symbol: 'MATIC',
+  blockExplorer: 'https://explorer-mumbai.maticvigil.com',
+};

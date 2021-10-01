@@ -1,36 +1,52 @@
-import { SQS } from 'aws-sdk';
-import { Arg, Authorized, Ctx, Mutation, Resolver } from 'type-graphql';
-import { config } from '../config';
+import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from 'type-graphql';
 import { CurrentUser } from '../decorators/current-user';
 import { Track } from '../models/Track';
 import { User } from '../models/User';
+import { AddTrackMetadataInput } from '../types/AddTrackMetadataInput';
+import { AddTrackMetadataPayload } from '../types/AddTrackMetadataPayload';
 import { Context } from '../types/Context';
-import { CreateTrackInput } from '../types/CreateTrackInput';
-import { CreateTrackPayload } from '../types/CreateTrackPayload';
+import { FilterTrackInput } from '../types/FilterTrackInput';
+import { PageInput } from '../types/PageInput';
+import { SortTrackInput } from '../types/SortTrackInput';
+import { TrackConnection } from '../types/TrackConnection';
+import { UploadTrackInput } from '../types/UploadTrackInput';
+import { UploadTrackPayload } from '../types/UploadTrackPayload';
 
 @Resolver(Track)
 export class TrackResolver {
-  @Mutation(() => CreateTrackPayload)
+  @Query(() => Track)
+  track(@Ctx() { trackService }: Context, @Arg('id') id: string): Promise<Track> {
+    return trackService.getTrack(id);
+  }
+
+  @Query(() => TrackConnection)
+  tracks(
+    @Ctx() { trackService }: Context,
+    @Arg('filter', { nullable: true }) filter?: FilterTrackInput,
+    @Arg('sort', { nullable: true }) sort?: SortTrackInput,
+    @Arg('page', { nullable: true }) page?: PageInput,
+  ): Promise<TrackConnection> {
+    return trackService.getTracks(filter, sort, page);
+  }
+
+  @Mutation(() => UploadTrackPayload)
   @Authorized()
-  async createTrack(
+  async uploadTrack(
     @Ctx() { trackService }: Context,
     @CurrentUser() { profileId }: User,
-    @Arg('input') input: CreateTrackInput,
-  ): Promise<CreateTrackPayload> {
-    const { assetUrl, artUrl, ...rest } = input;
-    const assetKey = assetUrl.substring(assetUrl.lastIndexOf('/') + 1);
-    const artKey = artUrl ? artUrl.substring(artUrl.lastIndexOf('/') + 1) : undefined;
-    const sqs = new SQS({
-      region: config.uploads.region,
-    });
-    await sqs
-      .sendMessage({
-        QueueUrl: config.minting.sqsUrl,
-        MessageBody: JSON.stringify({ assetKey: assetKey, artKey: artKey, ...rest }),
-        MessageGroupId: config.minting.contractAddress,
-      })
-      .promise();
-    const track = await trackService.createTrack({ profileId, audioUrl: input.assetUrl, title: input.name });
+    @Arg('input') { fileType }: UploadTrackInput,
+  ): Promise<UploadTrackPayload> {
+    const track = await trackService.createTrack({ profileId, fileType });
+    return { track };
+  }
+
+  @Mutation(() => AddTrackMetadataPayload)
+  @Authorized()
+  async addTrackMetadata(
+    @Ctx() { trackService }: Context,
+    @Arg('input') { trackId, ...metadata }: AddTrackMetadataInput,
+  ): Promise<AddTrackMetadataPayload> {
+    const track = await trackService.updateTrack(trackId, metadata);
     return { track };
   }
 }

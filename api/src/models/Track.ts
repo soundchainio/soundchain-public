@@ -1,5 +1,7 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
+import { MuxAsset } from '../types/MuxAsset';
+import { MuxUpload } from '../types/MuxUpload';
 import { Model } from './Model';
 
 @ObjectType()
@@ -7,16 +9,33 @@ export class Track extends Model {
   @Field(() => ID, { name: 'id' })
   readonly _id: string;
 
+  @Field()
   @prop({ required: true })
   profileId: string;
 
   @Field()
-  @prop({ required: true })
+  @prop()
   title: string;
+
+  @Field({ nullable: true })
+  @prop()
+  description: string;
 
   @Field()
   @prop({ required: true })
-  audioUrl: string;
+  file: string;
+
+  @Field()
+  @prop()
+  uploadUrl: string;
+
+  @Field()
+  @prop()
+  muxUpload: MuxUpload;
+
+  @Field()
+  @prop()
+  muxAsset: MuxAsset;
 
   @Field(() => Date)
   createdAt: Date;

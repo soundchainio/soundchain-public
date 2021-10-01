@@ -106,6 +106,16 @@ html {
   background: linear-gradient(90deg, #278e31 0%, #52b23b 100%);
 }
 
+.bg-pink-gradient {
+  background: linear-gradient(76.4deg, #ff9192 8.28%, #ff989e 83.02%);
+}
+
+.pink-gradient-text {
+  background: linear-gradient(76.4deg, #ff9192 8.28%, #ff989e 83.02%);
+  background-clip: text;
+  color: transparent;
+}
+
 .blue-gradient-text {
   background: linear-gradient(90deg, #3b5bb1 0%, #6fa1ff 100%);
   background-clip: text;

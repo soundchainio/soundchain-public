@@ -5,6 +5,7 @@ import { FeedResolver } from './FeedResolver';
 import { FollowerNotificationResolver } from './FollowerNotificationResolver';
 import { FollowResolver } from './FollowResolver';
 import { MessageResolver } from './MessageResolver';
+import { MintingRequestResolver } from './MintingRequestResolver';
 import { NewPostNotificationResolver } from './NewPostNotificationResolver';
 import { NotificationResolver } from './NotificationResolver';
 import { PostResolver } from './PostResolver';
@@ -32,4 +33,5 @@ export const resolvers = [
   TrackResolver,
   UploadResolver,
   UserResolver,
+  MintingRequestResolver,
 ] as const;
