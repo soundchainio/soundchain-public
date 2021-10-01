@@ -4,10 +4,10 @@ import 'emoji-mart/css/emoji-mart.css';
 import GraphemeSplitter from 'grapheme-splitter';
 import { usePostLazyQuery } from 'lib/graphql';
 import { default as React, useCallback, useEffect, useState } from 'react';
+import { PostFormType } from 'types/PostFormType';
 import { getNormalizedLink, hasLink } from '../utils/NormalizeEmbedLinks';
 import { ModalsPortal } from './ModalsPortal';
 import { PostForm } from './PostForm';
-import { PostFormType } from 'types/PostFormType';
 
 const baseClasses =
   'fixed top-0 w-screen bottom-0 duration-500 bg-opacity-75 ease-in-out bg-black transform-gpu transform';
@@ -34,12 +34,11 @@ export const PostModal = () => {
   const [postLink, setPostLink] = useState('');
   const [bodyValue, setBodyValue] = useState('');
 
-
   const { showNewPost, repostId, editPostId } = useModalState();
   const { dispatchShowPostModal, dispatchSetRepostId, dispatchSetEditPostId } = useModalDispatch();
 
   const [getPost, { data: editingPost }] = usePostLazyQuery({
-    variables: { id: editPostId! },
+    variables: { id: editPostId as string },
   });
 
   const initialValues = { body: editingPost?.post.body || '' };
@@ -111,10 +110,9 @@ export const PostModal = () => {
       setPostType(PostFormType.EDIT);
     }
 
-    if ((!editPostId && !repostId)) {
+    if (!editPostId && !repostId) {
       setPostType(PostFormType.NEW);
     }
-
   }, [repostId, editPostId]);
 
   useEffect(() => {
@@ -143,7 +141,6 @@ export const PostModal = () => {
           setPostLink={setPostLink}
           setBodyValue={setBodyValue}
         />
-
       </div>
     </ModalsPortal>
   );
