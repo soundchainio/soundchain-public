@@ -5,25 +5,41 @@ import { NFTCard } from 'components/NftCard';
 import { Subtitle } from 'components/Subtitle';
 import useMetaMask from 'hooks/useMetaMask';
 import { getNftTokensFromContract } from 'lib/blockchain';
+import { testNetwork } from 'lib/blockchainNetworks';
 import Head from 'next/head';
 import { useEffect, useState } from 'react';
 import { NftToken } from 'types/NftTypes';
 
 export default function PlaygroundPage() {
-  const { account, balance, web3, connect } = useMetaMask();
+  const { account, balance, web3, chainId, connect } = useMetaMask();
   const [nfts, setNfts] = useState<NftToken[]>();
   const [currentTab, setCurrentTab] = useState<'COLLECTION' | 'MINTING'>('COLLECTION');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [testnet, setTestnet] = useState(true);
+  const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    if (account && web3) {
-      setLoading(true);
-      getNftTokensFromContract(web3, account).then(setNfts);
+    if (!account || !web3) {
+      setConnected(false);
       setLoading(false);
-    } else {
       setNfts(undefined);
+      return;
     }
-  }, [account]);
+    setConnected(true);
+
+    if (chainId !== testNetwork.id) {
+      setTestnet(false);
+      setLoading(false);
+      return;
+    }
+    setTestnet(true);
+
+    setLoading(true);
+    getNftTokensFromContract(web3, account).then(result => {
+      setNfts(result);
+      setLoading(false);
+    });
+  }, [account, chainId, web3]);
 
   return (
     <Layout>
@@ -49,7 +65,7 @@ export default function PlaygroundPage() {
             </a>
           </div>
         )}
-        {!account && (
+        {!connected && (
           <Button className="max-w-xs" onClick={() => connect()}>
             Connect to MetaMask
           </Button>
@@ -87,21 +103,65 @@ export default function PlaygroundPage() {
       </div>
 
       <div className="my-8 w-full text-white">
-        <div className={`${currentTab == 'COLLECTION' ? 'block' : 'hidden'} flex flex-wrap gap-4`}>
-          {loading && <div>Loading NFTs...</div>}
-          {nfts &&
-            nfts.map((nft, idx) => (
-              <div key={idx} className="bg-rainbow-gradient w-96 flex flex-row justify-center p-2">
-                <div key={idx} className="bg-black p-2 w-full">
-                  <NFTCard account={account!} web3={web3!} nftToken={nft} />
+        <div className={`${currentTab == 'COLLECTION' ? 'block' : 'hidden'}`}>
+          <TabContent loading={loading} connected={connected} testnet={testnet}>
+            <div className="flex flex-wrap gap-4">
+              {nfts?.map((nft, idx) => (
+                <div key={idx} className="bg-rainbow-gradient w-96 flex flex-row justify-center p-2">
+                  <div key={idx} className="bg-black p-2 w-full">
+                    <NFTCard account={account!} web3={web3!} nftToken={nft} />
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+          </TabContent>
         </div>
         <div className={`${currentTab == 'MINTING' ? 'block' : 'hidden'}`}>
-          <MintingRequestForm to={account!} afterSubmit={() => alert('Minting requested!')} />
+          <TabContent loading={loading} connected={connected} testnet={testnet}>
+            <MintingRequestForm to={account!} afterSubmit={() => alert('Minting requested!')} />
+          </TabContent>
         </div>
       </div>
     </Layout>
   );
 }
+
+const TabContent = (props: React.PropsWithChildren<{ loading: boolean; connected: boolean; testnet: boolean }>) => {
+  const { loading, connected, testnet, children } = props;
+
+  if (loading) {
+    return <Loading />;
+  }
+
+  if (!connected) {
+    return <NotConnected />;
+  }
+
+  if (!testnet) {
+    return <NotTestnet />;
+  }
+
+  return <div>{children}</div>;
+};
+
+const NotTestnet = () => {
+  const { addMumbaiTestnet } = useMetaMask();
+  return (
+    <div>
+      <div className="text-white">{`It seems you might not be connected to Mumbai Testnet.`}</div>
+      <div className="text-white mt-4 max-w-sm">
+        <Button variant="rainbow-xs" onClick={() => addMumbaiTestnet()}>
+          Connect to Mumbai Testnet
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+const NotConnected = () => {
+  return <div className="text-white">{`It seems you might not be connected to MetaMask.`}</div>;
+};
+
+const Loading = () => {
+  return <div className="text-white">Loading NFTs...</div>;
+};
