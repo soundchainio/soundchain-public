@@ -11,7 +11,7 @@ export interface AssetUploadProps extends Omit<React.ComponentPropsWithoutRef<'d
 }
 
 const defaultMaxFileSize = 1024 * 1024 * 100; // 100Mb
-const acceptedMimeTypes = ['image/jpeg', 'image/png', 'video/mp4', 'audio/mpeg'];
+// const acceptedMimeTypes = ['image/jpeg', 'image/png', 'video/mp4', 'audio/mpeg'];
 
 export function AssetUpload({
   maxNumberOfFiles = 1,
@@ -23,13 +23,7 @@ export function AssetUpload({
   const { uploading, upload } = useUpload(value, onChange);
 
   return (
-    <Dropzone
-      maxFiles={maxNumberOfFiles}
-      maxSize={maxFileSize}
-      accept={acceptedMimeTypes}
-      onDrop={upload}
-      disabled={uploading}
-    >
+    <Dropzone maxFiles={maxNumberOfFiles} maxSize={maxFileSize} onDrop={upload} disabled={uploading}>
       {({ getRootProps, getInputProps }) => (
         <div {...getRootProps()}>
           <input {...getInputProps()} />
