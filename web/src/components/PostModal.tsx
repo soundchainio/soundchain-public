@@ -118,7 +118,7 @@ export const PostModal = () => {
   useEffect(() => {
     if (editingPost) {
       setPostLink(editingPost.post.mediaLink || '');
-      setBodyValue(editingPost.post.body);
+      setBodyValue(editingPost.post.body || '');
     }
   }, [editingPost]);
 
