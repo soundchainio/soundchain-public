@@ -111,7 +111,7 @@ const Asset = ({ src, mimeType, art }: { src: string | undefined; mimeType: stri
 
   return (
     <div className="relative" style={{ height: `${art ? '200px' : '254px'}` }}>
-      <Image src={src} layout="fill" objectFit="cover" alt="" />
+      <Image src={src} layout="fill" objectFit="contain" alt="" />
     </div>
   );
 };
