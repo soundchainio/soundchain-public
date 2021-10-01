@@ -10,6 +10,41 @@ import { NftToken } from 'types/NftTypes';
 import Web3 from 'web3';
 import * as yup from 'yup';
 
+export const audioMimeTypes = [
+  'audio/basic',
+  'audio/mid',
+  'audio/mp4',
+  'audio/mpeg',
+  'audio/ogg',
+  'audio/vnd.wav',
+  'audio/vorbis',
+  'audio/wav',
+  'audio/wave',
+  'audio/webm',
+  'audio/x-aiff',
+  'audio/x-mpegurl',
+  'audio/x-pn-wav',
+  'audio/x-wav',
+  'auido/L24',
+];
+
+export const videoMimeTypes = [
+  'application/vnd.apple.mpegurl',
+  'application/x-mpegurl',
+  'video/3gpp',
+  'video/mp2t',
+  'video/mp4',
+  'video/mpeg',
+  'video/ms-asf',
+  'video/ogg',
+  'video/quicktime',
+  'video/webm',
+  'video/x-flv',
+  'video/x-m4v',
+  'video/x-ms-wmv',
+  'video/x-msvideo',
+];
+
 interface NftCardProps {
   account: string;
   web3: Web3;
@@ -88,7 +123,7 @@ export const NFTCard = ({ account, web3, nftToken }: NftCardProps) => {
 const Asset = ({ src, mimeType, art }: { src: string | undefined; mimeType: string | undefined; art?: boolean }) => {
   if (!src || !mimeType) return null;
 
-  if (mimeType === 'video/mp4') {
+  if (videoMimeTypes.includes(mimeType)) {
     return (
       <video
         src={src}
@@ -102,7 +137,7 @@ const Asset = ({ src, mimeType, art }: { src: string | undefined; mimeType: stri
     );
   }
 
-  if (mimeType === 'audio/mpeg') {
+  if (audioMimeTypes.includes(mimeType)) {
     const isChrome = !!(window as any).chrome;
     return (
       <audio src={src} controls className="w-full" style={{ backgroundColor: `${isChrome ? '#f1f3f4' : 'unset'}` }} />
