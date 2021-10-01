@@ -127,6 +127,7 @@ export class NotificationService extends ModelService<typeof Notification> {
       postBody: post.body,
       postId: post._id,
       postLink: post.mediaLink,
+      trackId: post.trackId,
     };
     const notifications = subscribersIds.map(
       profileId => new this.model({ type: NotificationType.NewPost, profileId, metadata }),

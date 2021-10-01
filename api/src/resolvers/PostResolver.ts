@@ -5,14 +5,13 @@ import { CurrentUser } from '../decorators/current-user';
 import { Comment } from '../models/Comment';
 import { Post } from '../models/Post';
 import { Profile } from '../models/Profile';
+import { Track } from '../models/Track';
 import { User } from '../models/User';
 import { ChangeReactionInput } from '../types/ChangeReactionInput';
 import { ChangeReactionPayload } from '../types/ChangeReactionPayload';
 import { Context } from '../types/Context';
 import { CreatePostInput } from '../types/CreatePostInput';
 import { CreatePostPayload } from '../types/CreatePostPayload';
-import { UpdatePostInput } from '../types/UpdatePostInput';
-import { UpdatePostPayload } from '../types/UpdatePostPayload';
 import { CreateRepostInput } from '../types/CreateRepostInput';
 import { CreateRepostPayload } from '../types/CreateRepostPayload';
 import { DeletePostInput } from '../types/DeletePostInput';
@@ -27,6 +26,8 @@ import { ReactToPostPayload } from '../types/ReactToPostPayload';
 import { RetractReactionInput } from '../types/RetractReactionInput';
 import { RetractReactionPayload } from '../types/RetractReactionPayload';
 import { SortPostInput } from '../types/SortPostInput';
+import { UpdatePostInput } from '../types/UpdatePostInput';
+import { UpdatePostPayload } from '../types/UpdatePostPayload';
 
 @Resolver(Post)
 export class PostResolver {
@@ -73,6 +74,12 @@ export class PostResolver {
     if (!user) return null;
     const reaction = await reactionService.findReaction({ postId, profileId: user.profileId });
     return reaction ? reaction.type : null;
+  }
+
+  @FieldResolver(() => Track, { nullable: true })
+  async track(@Ctx() { trackService }: Context, @Root() { trackId }: Post): Promise<Track | null> {
+    if (!trackId) return null;
+    return trackService.getTrack(trackId);
   }
 
   @Query(() => Post)
@@ -178,10 +185,7 @@ export class PostResolver {
   }
 
   @Query(() => String)
-  bandcampLink(
-    @Ctx() { embedService }: Context,
-    @Arg('url') url: string,
-  ): Promise<String> {
+  bandcampLink(@Ctx() { embedService }: Context, @Arg('url') url: string): Promise<string> {
     return embedService.bandcampLink(url);
   }
 }
