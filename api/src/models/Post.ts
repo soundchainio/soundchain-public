@@ -11,9 +11,9 @@ export class Post extends Model {
   @prop({ required: true })
   profileId: string;
 
-  @Field()
-  @prop({ required: true })
-  body: string;
+  @Field({ nullable: true })
+  @prop({ required: false })
+  body?: string;
 
   @Field({ nullable: true })
   @prop({ required: false })
@@ -25,6 +25,9 @@ export class Post extends Model {
   @Field({ nullable: true })
   @prop({ required: false })
   repostId?: string;
+
+  @prop({ required: false })
+  trackId?: string;
 
   @Field(() => Date)
   createdAt: Date;

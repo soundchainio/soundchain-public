@@ -4,6 +4,7 @@ fragment TrackComponentFields on Track {
   title
   file
   artworkUrl
+  playbackUrl
   createdAt
   updatedAt
 }

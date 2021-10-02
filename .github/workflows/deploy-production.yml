@@ -41,6 +41,7 @@ jobs:
           MUX_TOKEN_ID: ${{ secrets.MUX_TOKEN_ID_PRODUCTION }}
           MUX_TOKEN_SECRET: ${{ secrets.MUX_TOKEN_SECRET_PRODUCTION }}
           MUX_WEBHOOK_SECRET: ${{ secrets.MUX_WEBHOOK_SECRET_PRODUCTION }}
+          SENTRY_URL: ${{ secrets.SENTRY_URL }}
       - name: Trigger migrate lambda function
         run: |
           aws lambda invoke --function-name soundchain-api-production-migrate response.json

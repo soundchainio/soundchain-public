@@ -37,7 +37,6 @@ export class Track extends Model {
   @prop()
   muxUpload: MuxUpload;
 
-  @Field()
   @prop()
   muxAsset: MuxAsset;
 

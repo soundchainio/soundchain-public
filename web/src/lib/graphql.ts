@@ -467,11 +467,6 @@ export type MutationUpdatePasswordArgs = {
   input: UpdatePasswordInput;
 };
 
-export type MuxAsset = {
-  __typename?: 'MuxAsset';
-  playbackId: Scalars['String'];
-};
-
 export type MuxUpload = {
   __typename?: 'MuxUpload';
   url: Scalars['String'];
@@ -488,6 +483,7 @@ export type NewPostNotification = {
   previewBody: Scalars['String'];
   previewLink: Maybe<Scalars['String']>;
   link: Scalars['String'];
+  track: Maybe<Track>;
 };
 
 export type Notification = CommentNotification | ReactionNotification | FollowerNotification | NewPostNotification;
@@ -525,7 +521,7 @@ export type PageInput = {
 export type Post = {
   __typename?: 'Post';
   id: Scalars['ID'];
-  body: Scalars['String'];
+  body: Maybe<Scalars['String']>;
   mediaLink: Maybe<Scalars['String']>;
   repostId: Maybe<Scalars['String']>;
   createdAt: Scalars['DateTime'];
@@ -537,6 +533,7 @@ export type Post = {
   totalReactions: Scalars['Float'];
   topReactions: Array<ReactionType>;
   myReaction: Maybe<ReactionType>;
+  track: Maybe<Track>;
 };
 
 
@@ -857,9 +854,9 @@ export type Track = {
   uploadUrl: Scalars['String'];
   artworkUrl: Maybe<Scalars['String']>;
   muxUpload: MuxUpload;
-  muxAsset: MuxAsset;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
+  playbackUrl: Scalars['String'];
 };
 
 export type TrackConnection = {
@@ -1383,6 +1380,10 @@ export type MimeTypeQuery = (
 export type NewPostNotificationFieldsFragment = (
   { __typename?: 'NewPostNotification' }
   & Pick<NewPostNotification, 'id' | 'type' | 'authorName' | 'authorPicture' | 'body' | 'link' | 'previewBody' | 'previewLink' | 'createdAt'>
+  & { track: Maybe<(
+    { __typename?: 'Track' }
+    & Pick<Track, 'title' | 'playbackUrl'>
+  )> }
 );
 
 export type NotificationQueryVariables = Exact<{
@@ -1462,7 +1463,10 @@ export type PostComponentFieldsFragment = (
   & { profile: (
     { __typename?: 'Profile' }
     & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
-  ) }
+  ), track: Maybe<(
+    { __typename?: 'Track' }
+    & TrackComponentFieldsFragment
+  )> }
 );
 
 export type PostsQueryVariables = Exact<{
@@ -1668,12 +1672,13 @@ export type TrackQuery = (
 
 export type TrackComponentFieldsFragment = (
   { __typename?: 'Track' }
-  & Pick<Track, 'id' | 'profileId' | 'title' | 'file' | 'artworkUrl' | 'createdAt' | 'updatedAt'>
+  & Pick<Track, 'id' | 'profileId' | 'title' | 'file' | 'artworkUrl' | 'playbackUrl' | 'createdAt' | 'updatedAt'>
 );
 
 export type TracksQueryVariables = Exact<{
   filter?: Maybe<FilterTrackInput>;
   sort?: Maybe<SortTrackInput>;
+  page?: Maybe<PageInput>;
 }>;
 
 
@@ -1684,7 +1689,10 @@ export type TracksQuery = (
     & { nodes: Array<(
       { __typename?: 'Track' }
       & TrackComponentFieldsFragment
-    )> }
+    )>, pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
+    ) }
   ) }
 );
 
@@ -1990,6 +1998,22 @@ export const NewPostNotificationFieldsFragmentDoc = gql`
   previewBody
   previewLink
   createdAt
+  track {
+    title
+    playbackUrl
+  }
+}
+    `;
+export const TrackComponentFieldsFragmentDoc = gql`
+    fragment TrackComponentFields on Track {
+  id
+  profileId
+  title
+  file
+  artworkUrl
+  playbackUrl
+  createdAt
+  updatedAt
 }
     `;
 export const PostComponentFieldsFragmentDoc = gql`
@@ -2010,8 +2034,11 @@ export const PostComponentFieldsFragmentDoc = gql`
     displayName
     profilePicture
   }
+  track {
+    ...TrackComponentFields
+  }
 }
-    `;
+    ${TrackComponentFieldsFragmentDoc}`;
 export const ReactionNotificationFieldsFragmentDoc = gql`
     fragment ReactionNotificationFields on ReactionNotification {
   id
@@ -2022,17 +2049,6 @@ export const ReactionNotificationFieldsFragmentDoc = gql`
   authorPicture
   createdAt
   postId
-}
-    `;
-export const TrackComponentFieldsFragmentDoc = gql`
-    fragment TrackComponentFields on Track {
-  id
-  profileId
-  title
-  file
-  artworkUrl
-  createdAt
-  updatedAt
 }
     `;
 export const AddCommentDocument = gql`
@@ -3582,10 +3598,14 @@ export type TrackQueryHookResult = ReturnType<typeof useTrackQuery>;
 export type TrackLazyQueryHookResult = ReturnType<typeof useTrackLazyQuery>;
 export type TrackQueryResult = Apollo.QueryResult<TrackQuery, TrackQueryVariables>;
 export const TracksDocument = gql`
-    query Tracks($filter: FilterTrackInput, $sort: SortTrackInput) {
-  tracks(filter: $filter, sort: $sort) {
+    query Tracks($filter: FilterTrackInput, $sort: SortTrackInput, $page: PageInput) {
+  tracks(filter: $filter, sort: $sort, page: $page) {
     nodes {
       ...TrackComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
     }
   }
 }
@@ -3605,6 +3625,7 @@ export const TracksDocument = gql`
  *   variables: {
  *      filter: // value for 'filter'
  *      sort: // value for 'sort'
+ *      page: // value for 'page'
  *   },
  * });
  */
