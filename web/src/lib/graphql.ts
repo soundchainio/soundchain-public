@@ -851,7 +851,7 @@ export type Track = {
   __typename?: 'Track';
   id: Scalars['ID'];
   profileId: Scalars['String'];
-  title: Scalars['String'];
+  title: Maybe<Scalars['String']>;
   description: Maybe<Scalars['String']>;
   file: Scalars['String'];
   uploadUrl: Scalars['String'];

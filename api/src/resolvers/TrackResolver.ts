@@ -36,7 +36,7 @@ export class TrackResolver {
     @CurrentUser() { profileId }: User,
     @Arg('input') { fileType }: UploadTrackInput,
   ): Promise<UploadTrackPayload> {
-    const track = await trackService.createTrack({ profileId, title: 'Title', fileType });
+    const track = await trackService.createTrack({ profileId, fileType });
     return { track };
   }
 

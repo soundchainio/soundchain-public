@@ -13,7 +13,7 @@ export class Track extends Model {
   @prop({ required: true })
   profileId: string;
 
-  @Field()
+  @Field({ nullable: true })
   @prop()
   title: string;
 
