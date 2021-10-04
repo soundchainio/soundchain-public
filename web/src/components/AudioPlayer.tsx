@@ -78,7 +78,7 @@ export const AudioPlayer = ({ src, title, artist, art }: AudioPlayerProps) => {
             <Image src={art} layout="fill" className="m-auto object-cover" />
           </div>
         )}
-        <div className="flex flex-col w-full">
+        <div className="flex flex-col flex-1">
           <div className="flex">
             <div className="w-12 flex items-center">
               <div className="bg-white rounded-full w-8 h-8 flex items-center m-auto" onClick={togglePlay}>

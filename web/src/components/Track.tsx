@@ -1,6 +1,6 @@
 import { TrackSkeleton } from 'components/TrackSkeleton';
-import { useTrackQuery } from 'lib/graphql';
-import React from 'react';
+import { useTrackLazyQuery } from 'lib/graphql';
+import React, { useEffect } from 'react';
 import { AudioPlayer } from './AudioPlayer';
 
 interface TrackProps {
@@ -9,16 +9,29 @@ interface TrackProps {
 }
 
 export const Track = ({ trackId, coverPhotoUrl }: TrackProps) => {
-  const { data } = useTrackQuery({ variables: { id: trackId } });
-  const track = data?.track;
+  const [track, { data, error }] = useTrackLazyQuery({ variables: { id: trackId } });
 
-  if (!track) return <TrackSkeleton />;
+  useEffect(() => {
+    if (!data?.track) {
+      track();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (error) {
+      setTimeout(() => {
+        track();
+      }, 2000);
+    }
+  }, [data, error]);
+
+  if (!data?.track) return <TrackSkeleton />;
 
   return (
     <AudioPlayer
-      title={track.title || ''}
-      src={track.playbackUrl}
-      art={track.artworkUrl || coverPhotoUrl || undefined}
+      title={data.track.title || ''}
+      src={data.track.playbackUrl}
+      art={data.track.artworkUrl || coverPhotoUrl || undefined}
     />
   );
 };
