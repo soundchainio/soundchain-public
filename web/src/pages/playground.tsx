@@ -3,6 +3,7 @@ import { MintingRequestForm } from 'components/forms/playground/MintingRequestFo
 import { Layout } from 'components/Layout';
 import { NFTCard } from 'components/NftCard';
 import { Subtitle } from 'components/Subtitle';
+import useMagic from 'hooks/useMagic';
 import useMetaMask from 'hooks/useMetaMask';
 import { getNftTokensFromContract } from 'lib/blockchain';
 import { testNetwork } from 'lib/blockchainNetworks';
@@ -12,20 +13,32 @@ import { NftToken } from 'types/NftTypes';
 
 export default function PlaygroundPage() {
   const { account, balance, web3, chainId, connect } = useMetaMask();
-  const [nfts, setNfts] = useState<NftToken[]>();
+  const { account: magicAccount, connect: magicConnect, web3: magicWeb3, balance: magicBalance } = useMagic();
+  const [metaMaskNfts, setMetaMaskNfts] = useState<NftToken[]>();
+  const [magicNfts, setMagicNfts] = useState<NftToken[]>();
   const [currentTab, setCurrentTab] = useState<'COLLECTION' | 'MINTING'>('COLLECTION');
   const [loading, setLoading] = useState(true);
   const [testnet, setTestnet] = useState(true);
-  const [connected, setConnected] = useState(false);
+  const [connectedToMetaMask, setConnectedToMetaMask] = useState(false);
+
+  useEffect(() => {
+    if (magicAccount && magicWeb3) {
+      getNftTokensFromContract(magicWeb3, magicAccount).then(result => {
+        setMagicNfts(result);
+        setLoading(false);
+      });
+    }
+    setLoading(true);
+  }, [magicAccount, magicWeb3]);
 
   useEffect(() => {
     if (!account || !web3) {
-      setConnected(false);
+      setConnectedToMetaMask(false);
       setLoading(false);
-      setNfts(undefined);
+      setMetaMaskNfts(undefined);
       return;
     }
-    setConnected(true);
+    setConnectedToMetaMask(true);
 
     if (chainId !== testNetwork.id) {
       setTestnet(false);
@@ -36,7 +49,7 @@ export default function PlaygroundPage() {
 
     setLoading(true);
     getNftTokensFromContract(web3, account).then(result => {
-      setNfts(result);
+      setMetaMaskNfts(result);
       setLoading(false);
     });
   }, [account, chainId, web3]);
@@ -49,9 +62,28 @@ export default function PlaygroundPage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="my-8">
-        {account && <Subtitle>{`Metamask address: ${account}`}</Subtitle>}
-        {balance && <Subtitle>{`Metamask balance: ${balance}`}</Subtitle>}
+      <div className="my-8 flex flex-col gap-4">
+        <div>
+          {magicAccount && <Subtitle>{`Soundchain address: ${magicAccount}`}</Subtitle>}
+          {magicBalance && <Subtitle>{`Soundchain balance: ${magicBalance}`}</Subtitle>}
+        </div>
+        <div>
+          {account && <Subtitle>{`Metamask address: ${account}`}</Subtitle>}
+          {balance && <Subtitle>{`Metamask balance: ${balance}`}</Subtitle>}
+        </div>
+
+        <div className="flex gap-4">
+          {!magicAccount && (
+            <Button variant="rainbow-xs" className="max-w-xs" onClick={() => magicConnect()}>
+              Connect to Soundchain Wallet
+            </Button>
+          )}
+          {!connectedToMetaMask && (
+            <Button variant="rainbow-xs" className="max-w-xs hidden lg:block" onClick={() => connect()}>
+              Connect to MetaMask Wallet
+            </Button>
+          )}
+        </div>
         {balance && (
           <div className="text-white">
             Need some test Matic?{' '}
@@ -64,11 +96,6 @@ export default function PlaygroundPage() {
               Get some here
             </a>
           </div>
-        )}
-        {!connected && (
-          <Button className="max-w-xs" onClick={() => connect()}>
-            Connect to MetaMask
-          </Button>
         )}
       </div>
       <div className="flex space-x-4 my-8 w-full text-white">
@@ -104,21 +131,36 @@ export default function PlaygroundPage() {
 
       <div className="my-8 w-full text-white">
         <div className={`${currentTab == 'COLLECTION' ? 'block' : 'hidden'}`}>
-          <TabContent loading={loading} connected={connected} testnet={testnet}>
-            <div className="flex flex-wrap gap-4">
-              {nfts?.map((nft, idx) => (
+          <Subtitle className="mb-2">Soundchain Collection</Subtitle>
+          <TabContent loading={loading} connected={!!magicAccount} testnet>
+            <div className="flex flex-wrap gap-4 mb-4">
+              {magicNfts?.map((nft, idx) => (
                 <div key={idx} className="bg-rainbow-gradient w-96 flex flex-row justify-center p-2">
                   <div key={idx} className="bg-black p-2 w-full">
-                    <NFTCard account={account!} web3={web3!} nftToken={nft} />
+                    <NFTCard account={magicAccount} web3={magicWeb3} nftToken={nft} />
                   </div>
                 </div>
               ))}
+              {!magicNfts && <div>Your collection is empty :(</div>}
+            </div>
+          </TabContent>
+          <Subtitle className="mb-2">MetaMask Collection</Subtitle>
+          <TabContent loading={loading} connected={connectedToMetaMask} testnet={testnet}>
+            <div className="flex flex-wrap gap-4">
+              {metaMaskNfts?.map((nft, idx) => (
+                <div key={idx} className="bg-rainbow-gradient w-96 flex flex-row justify-center p-2">
+                  <div key={idx} className="bg-black p-2 w-full">
+                    <NFTCard account={account} web3={web3} nftToken={nft} />
+                  </div>
+                </div>
+              ))}
+              {!metaMaskNfts && <div>Your collection is empty :(</div>}
             </div>
           </TabContent>
         </div>
         <div className={`${currentTab == 'MINTING' ? 'block' : 'hidden'}`}>
-          <TabContent loading={loading} connected={connected} testnet={testnet}>
-            <MintingRequestForm to={account!} afterSubmit={() => alert('Minting requested!')} />
+          <TabContent loading={loading} connected={connectedToMetaMask || !!magicAccount} testnet={testnet}>
+            <MintingRequestForm to={magicAccount || account} afterSubmit={() => alert('Minting requested!')} />
           </TabContent>
         </div>
       </div>
@@ -159,9 +201,9 @@ const NotTestnet = () => {
 };
 
 const NotConnected = () => {
-  return <div className="text-white">{`It seems you might not be connected to MetaMask.`}</div>;
+  return <div className="text-white">{`It seems you might not be connected to any wallet.`}</div>;
 };
 
 const Loading = () => {
-  return <div className="text-white">Loading NFTs...</div>;
+  return <div className="text-white">Loading...</div>;
 };

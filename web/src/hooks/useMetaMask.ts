@@ -1,6 +1,6 @@
 import MetaMaskOnboarding from '@metamask/onboarding';
 import { testNetwork } from 'lib/blockchainNetworks';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Web3 from 'web3';
 
 export const useMetaMask = () => {
@@ -10,27 +10,25 @@ export const useMetaMask = () => {
   const [chainId, setChainId] = useState<number>();
   const onboarding = useRef<MetaMaskOnboarding>();
 
-  const handleNewAccount = useCallback(
-    ([newAccount]) => {
-      if (newAccount) {
-        web3?.eth.getBalance(newAccount).then(balance => {
-          setBalance(web3.utils.fromWei(balance, 'ether'));
-        });
-        setAccount(newAccount);
-        window.ethereum.request({ method: 'eth_chainId' }).then((chainId: string) => {
-          setChainId(parseInt(chainId, 16));
-        });
-      } else {
-        setAccount(undefined);
-        setBalance(undefined);
-      }
-    },
-    [web3],
-  );
-
   useEffect(() => {
     if (!onboarding.current) {
       onboarding.current = new MetaMaskOnboarding();
+    }
+
+    if (MetaMaskOnboarding.isMetaMaskInstalled()) {
+      setWeb3(new Web3(window.ethereum));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (MetaMaskOnboarding.isMetaMaskInstalled()) {
+      if (window.ethereum.selectedAddress) {
+        window.ethereum
+          .request({ method: 'eth_requestAccounts' })
+          .then(([newAccount]: string[]) => setAccount(newAccount));
+      }
+      window.ethereum.on('accountsChanged', ([newAccount]: string[]) => setAccount(newAccount));
+      window.ethereum.on('chainChanged', () => window.location.reload());
     }
   }, []);
 
@@ -41,25 +39,15 @@ export const useMetaMask = () => {
         web3?.eth.getBalance(account).then(balance => {
           setBalance(web3.utils.fromWei(balance, 'ether'));
         });
+        window.ethereum.request({ method: 'eth_chainId' }).then((chainId: string) => {
+          setChainId(parseInt(chainId, 16));
+        });
+      } else {
+        setAccount(undefined);
+        setBalance(undefined);
       }
     }
   }, [account, web3]);
-
-  useEffect(() => {
-    if (MetaMaskOnboarding.isMetaMaskInstalled()) {
-      if (window.ethereum.selectedAddress) {
-        window.ethereum.request({ method: 'eth_requestAccounts' }).then(handleNewAccount);
-      }
-      window.ethereum.on('accountsChanged', handleNewAccount);
-      window.ethereum.on('chainChanged', () => window.location.reload());
-    }
-  }, [handleNewAccount]);
-
-  useEffect(() => {
-    if (MetaMaskOnboarding.isMetaMaskInstalled()) {
-      setWeb3(new Web3(window.ethereum));
-    }
-  }, []);
 
   const addMumbaiTestnet = () => {
     if (MetaMaskOnboarding.isMetaMaskInstalled()) {
@@ -86,7 +74,9 @@ export const useMetaMask = () => {
 
   const connect = () => {
     if (MetaMaskOnboarding.isMetaMaskInstalled()) {
-      window.ethereum.request({ method: 'eth_requestAccounts' }).then(handleNewAccount);
+      window.ethereum
+        .request({ method: 'eth_requestAccounts' })
+        .then(([newAccount]: string[]) => setAccount(newAccount));
     } else {
       onboarding?.current?.startOnboarding();
     }
