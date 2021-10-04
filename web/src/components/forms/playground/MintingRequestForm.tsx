@@ -13,6 +13,7 @@ interface Props {
 }
 
 interface FormValues {
+  to: string;
   name: string;
   description: string;
   assetUrl: string;
@@ -20,25 +21,27 @@ interface FormValues {
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
+  to: yup.string().required(),
   name: yup.string().required(),
   description: yup.string().required(),
   assetUrl: yup.string().required(),
   artUrl: yup.string(),
 });
 
-const initialValues: FormValues = {
-  name: '',
-  assetUrl: '',
-  description: '',
-};
-
 export const MintingRequestForm = ({ to, afterSubmit }: Props) => {
   const [createMintingRequest] = useCreateMintingRequestMutation();
   const [requesting, setRequesting] = useState(false);
 
+  const initialValues: FormValues = {
+    to: to,
+    name: '',
+    assetUrl: '',
+    description: '',
+  };
+
   const handleSubmit = async (values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
     setRequesting(true);
-    await createMintingRequest({ variables: { input: { to: to, ...values } } });
+    await createMintingRequest({ variables: { input: values } });
     setRequesting(false);
     afterSubmit();
     resetForm();
@@ -54,6 +57,9 @@ export const MintingRequestForm = ({ to, afterSubmit }: Props) => {
       {({ values }: FormikProps<FormValues>) => (
         <Form className="flex flex-col justify-between h-full">
           <div>
+            <div className="mt-6">
+              <InputField label={'Target wallet'} name="to" type="text" />
+            </div>
             <div className="mt-6">
               <InputField label={'Name'} name="name" type="text" />
             </div>
