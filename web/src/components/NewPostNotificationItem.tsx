@@ -36,7 +36,7 @@ export const NewPostNotificationItem = ({
         </div>
         <div className="flex mt-4">
           <div className="p-4 bg-gray-30 w-full break-words text-gray-100 rounded-xl text-sm">
-            {track ? <AudioPlayer src={track.playbackUrl} title={track.title} /> : previewBody}
+            {track ? <AudioPlayer src={track.playbackUrl} title={track.title || ''} /> : previewBody}
           </div>
         </div>
       </div>
