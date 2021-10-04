@@ -8,4 +8,8 @@ fragment NewPostNotificationFields on NewPostNotification {
   previewBody
   previewLink
   createdAt
+  track {
+    title
+    playbackUrl
+  }
 }

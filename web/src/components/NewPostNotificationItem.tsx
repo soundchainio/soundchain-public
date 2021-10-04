@@ -3,6 +3,7 @@ import { NewPostNotification as NewPostIcon } from 'icons/NewPostNotification';
 import { NewPostNotification } from 'lib/graphql';
 import NextLink from 'next/link';
 import React from 'react';
+import { AudioPlayer } from './AudioPlayer';
 import { Avatar } from './Avatar';
 import { Timestamp } from './Timestamp';
 
@@ -12,7 +13,7 @@ interface NewPostNotificationProps {
 }
 
 export const NewPostNotificationItem = ({
-  notification: { link, body, createdAt, previewBody, authorName, authorPicture },
+  notification: { link, track, createdAt, previewBody, authorName, authorPicture },
   index,
 }: NewPostNotificationProps) => {
   return (
@@ -27,13 +28,16 @@ export const NewPostNotificationItem = ({
           </div>
           <div>
             <div className="text-gray-100  flex text-sm">
-              <div className="font-semibold">{authorName}</div>&nbsp;{body}
+              <div className="font-semibold">{authorName}</div>&nbsp;
+              {track ? 'posted a new track:' : 'created a new post:'}
             </div>
             <Timestamp small datetime={createdAt} className="text-sm" />
           </div>
         </div>
         <div className="flex mt-4">
-          <div className="p-4 bg-gray-30 w-full break-words text-gray-100 rounded-xl text-sm">{previewBody}</div>
+          <div className="p-4 bg-gray-30 w-full break-words text-gray-100 rounded-xl text-sm">
+            {track ? <AudioPlayer src={track.playbackUrl} title={track.title} /> : previewBody}
+          </div>
         </div>
       </div>
     </NextLink>
