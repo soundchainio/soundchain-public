@@ -71,39 +71,41 @@ export const AudioPlayer = ({ src, title, artist, art }: AudioPlayerProps) => {
   }, []);
 
   return (
-    <div>
-      <div className="bg-black rounded-md p-4 flex items-center">
+    <div className="bg-black rounded-md p-4 items-center">
+      <div className="flex flex items-center">
         {art && (
           <div className="h-20 w-20 relative flex items-center relative">
             <Image src={art} layout="fill" className="m-auto object-cover" />
           </div>
         )}
         <div className="flex flex-col w-full">
-          <div className="w-12 flex items-center">
-            <div className="bg-white rounded-full w-8 h-8 flex items-center m-auto" onClick={togglePlay}>
-              {playing ? (
-                <Pause className="text-white m-auto scale-125" />
-              ) : (
-                <Play className="text-white m-auto scale-125" />
-              )}
+          <div className="flex">
+            <div className="w-12 flex items-center">
+              <div className="bg-white rounded-full w-8 h-8 flex items-center m-auto" onClick={togglePlay}>
+                {playing ? (
+                  <Pause className="text-white m-auto scale-125" />
+                ) : (
+                  <Play className="text-white m-auto scale-125" />
+                )}
+              </div>
             </div>
+            <div className="flex flex-col">
+              <div className="text-white font-bold">{title ? title : 'Unknown Title'}</div>
+              <div className="text-gray-80 font-bold">{artist ? artist : 'Unknown Artist'}</div>
+            </div>
+            <div className="flex-1 text-right text-gray-80">{timeFromSecs(duration || 0)}</div>
           </div>
-          <div className="flex flex-col">
-            <div className="text-white font-bold">{title ? title : 'Unknown Title'}</div>
-            <div className="text-gray-80 font-bold">{artist ? artist : 'Unknown Artist'}</div>
-          </div>
-          <div className="flex-1 text-right text-gray-80">{timeFromSecs(duration || 0)}</div>
-        </div>
-        <div className="text-white pl-2 flex flex-col mt-4">
-          <input
-            type="range"
-            onChange={e => onSliderChange(parseInt(e.target.value))}
-            max={duration}
-            value={playState}
-          />
-          <div className="flex mt-1 text-xs">
-            <div className="flex-1">{timeFromSecs(playState || 0)}</div>
-            <div className="flex-1 text-right">{remainingTime(playState, duration || 0)} </div>
+          <div className="text-white pl-2 flex flex-col mt-4">
+            <input
+              type="range"
+              onChange={e => onSliderChange(parseInt(e.target.value))}
+              max={duration}
+              value={playState}
+            />
+            <div className="flex mt-1 text-xs">
+              <div className="flex-1">{timeFromSecs(playState || 0)}</div>
+              <div className="flex-1 text-right">{remainingTime(playState, duration || 0)} </div>
+            </div>
           </div>
         </div>
       </div>
