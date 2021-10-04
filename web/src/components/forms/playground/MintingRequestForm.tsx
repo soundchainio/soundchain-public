@@ -41,7 +41,7 @@ export const MintingRequestForm = ({ to, afterSubmit }: Props) => {
 
   const handleSubmit = async (values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
     setRequesting(true);
-    await createMintingRequest({ variables: { input: { to: to, ...values } } });
+    await createMintingRequest({ variables: { input: values } });
     setRequesting(false);
     afterSubmit();
     resetForm();

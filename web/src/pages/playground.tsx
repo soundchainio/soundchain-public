@@ -137,7 +137,7 @@ export default function PlaygroundPage() {
               {magicNfts?.map((nft, idx) => (
                 <div key={idx} className="bg-rainbow-gradient w-96 flex flex-row justify-center p-2">
                   <div key={idx} className="bg-black p-2 w-full">
-                    <NFTCard account={magicAccount} web3={magicWeb3} nftToken={nft} />
+                    <NFTCard account={magicAccount!} web3={magicWeb3!} nftToken={nft} />
                   </div>
                 </div>
               ))}
@@ -150,7 +150,7 @@ export default function PlaygroundPage() {
               {metaMaskNfts?.map((nft, idx) => (
                 <div key={idx} className="bg-rainbow-gradient w-96 flex flex-row justify-center p-2">
                   <div key={idx} className="bg-black p-2 w-full">
-                    <NFTCard account={account} web3={web3} nftToken={nft} />
+                    <NFTCard account={account!} web3={web3!} nftToken={nft} />
                   </div>
                 </div>
               ))}
@@ -160,7 +160,7 @@ export default function PlaygroundPage() {
         </div>
         <div className={`${currentTab == 'MINTING' ? 'block' : 'hidden'}`}>
           <TabContent loading={loading} connected={connectedToMetaMask || !!magicAccount} testnet={testnet}>
-            <MintingRequestForm to={magicAccount || account} afterSubmit={() => alert('Minting requested!')} />
+            <MintingRequestForm to={magicAccount! || account!} afterSubmit={() => alert('Minting requested!')} />
           </TabContent>
         </div>
       </div>

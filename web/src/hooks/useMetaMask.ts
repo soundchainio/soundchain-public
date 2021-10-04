@@ -34,9 +34,9 @@ export const useMetaMask = () => {
 
   useEffect(() => {
     if (MetaMaskOnboarding.isMetaMaskInstalled()) {
-      if (account) {
+      if (account && web3) {
         onboarding?.current?.stopOnboarding();
-        web3?.eth.getBalance(account).then(balance => {
+        web3.eth.getBalance(account).then(balance => {
           setBalance(web3.utils.fromWei(balance, 'ether'));
         });
         window.ethereum.request({ method: 'eth_chainId' }).then((chainId: string) => {

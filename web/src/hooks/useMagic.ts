@@ -5,12 +5,12 @@ import Web3 from 'web3';
 import { testNetwork } from '../lib/blockchainNetworks';
 import { useMe } from './useMe';
 
-const magicPublicKey = process.env.NEXT_PUBLIC_MAGIC_KEY;
+const magicPublicKey = process.env.NEXT_PUBLIC_MAGIC_KEY || '';
 
 const useMagic = () => {
   const [magic, setMagic] = useState<InstanceWithExtensions<SDKBase, MagicSDKExtensionsOption<string>>>();
   const [web3, setWeb3] = useState<Web3>();
-  const [account, setAccount] = useState<string>();
+  const [account, setAccount] = useState<string | null>();
   const [balance, setBalance] = useState<string>();
   const me = useMe();
 
@@ -28,24 +28,24 @@ const useMagic = () => {
 
   useEffect(() => {
     const checkLogin = async () => {
-      const userLoggedIn = await magic.user.isLoggedIn();
-      if (userLoggedIn) {
-        const meta = await magic.user.getMetadata();
-        if (meta.email !== me.email) {
-          await magic.user.logout();
-          setAccount(undefined);
-          return;
+      if (me && magic) {
+        const userLoggedIn = await magic.user.isLoggedIn();
+        if (userLoggedIn) {
+          const meta = await magic.user.getMetadata();
+          if (meta.email !== me.email) {
+            await magic.user.logout();
+            setAccount(undefined);
+            return;
+          }
+          setAccount(meta?.publicAddress);
         }
-        setAccount(meta.publicAddress);
       }
     };
-    if (me && magic) {
-      checkLogin();
-    }
+    checkLogin();
   }, [me, magic]);
 
   useEffect(() => {
-    if (account) {
+    if (account && web3) {
       web3.eth.getBalance(account).then(balance => {
         setBalance(web3.utils.fromWei(balance, 'ether'));
       });
@@ -53,11 +53,13 @@ const useMagic = () => {
   }, [account, web3]);
 
   const connect = async () => {
-    await magic.auth.loginWithMagicLink({
-      email: me.email,
-    });
-    const meta = await magic.user.getMetadata();
-    setAccount(meta.publicAddress);
+    if (magic && me) {
+      await magic.auth.loginWithMagicLink({
+        email: me.email,
+      });
+      const meta = await magic.user.getMetadata();
+      setAccount(meta.publicAddress);
+    }
   };
 
   return { web3, account, balance, connect };
