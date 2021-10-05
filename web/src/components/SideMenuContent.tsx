@@ -16,7 +16,6 @@ import { useState } from 'react';
 import { FollowModalType } from 'types/FollowModalType';
 import { Avatar } from './Avatar';
 import { MenuItem } from './MenuItem';
-import { Title } from './Title';
 
 interface SideMenuContentProps {
   isMobile?: boolean;
@@ -80,11 +79,9 @@ export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => 
                   </div>
                 </div>
               </div>
-              <div className="flex flex-row mt-4">
-                <div>
-                  <Title>{me.profile.displayName}</Title>
-                  <p className="text-gray-80 text-md">@{me.handle}</p>
-                </div>
+              <div className="flex flex-col mt-4">
+                <h2 className="font-bold text-white">{me.profile.displayName}</h2>
+                <p className="text-gray-80 text-md">@{me.handle}</p>
               </div>
             </>
           )}

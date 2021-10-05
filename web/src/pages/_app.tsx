@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/react';
 import { Integrations } from '@sentry/tracing';
 import { CheckBodyScroll } from 'components/CheckBodyScroll';
+import { Favicons } from 'components/Favicons';
 import { StateProvider } from 'contexts';
 import { ApolloProvider } from 'lib/apollo';
 import type { AppProps } from 'next/app';
@@ -31,7 +32,7 @@ function SoundchainApp({ Component, pageProps }: AppProps) {
       <Head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-        <link rel="apple-touch-icon" href="/soundchain-app-icon.png" />
+        <Favicons />
         <link rel="manifest" href="/manifest.json"></link>
       </Head>
       <ApolloProvider pageProps={pageProps}>
