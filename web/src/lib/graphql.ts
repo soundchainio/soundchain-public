@@ -1670,7 +1670,7 @@ export type TrackQuery = (
 
 export type TrackComponentFieldsFragment = (
   { __typename?: 'Track' }
-  & Pick<Track, 'id' | 'profileId' | 'title' | 'playbackUrl' | 'createdAt' | 'updatedAt'>
+  & Pick<Track, 'id' | 'profileId' | 'title' | 'description' | 'playbackUrl' | 'createdAt' | 'updatedAt'>
 );
 
 export type TracksQueryVariables = Exact<{
@@ -2007,6 +2007,7 @@ export const TrackComponentFieldsFragmentDoc = gql`
   id
   profileId
   title
+  description
   playbackUrl
   createdAt
   updatedAt

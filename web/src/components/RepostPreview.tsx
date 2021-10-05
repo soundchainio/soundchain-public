@@ -31,7 +31,7 @@ export const RepostPreview = ({ postId }: RepostPreviewProps) => {
         {post.mediaLink && (
           <iframe frameBorder="0" className="mt-4 w-full bg-gray-20" allowFullScreen src={post.mediaLink} />
         )}
-        {post.track && <AudioPlayer src={post.track.playbackUrl} title={post.track.title} />}
+        {post.track && <AudioPlayer trackId={post.track.id} src={post.track.playbackUrl} title={post.track.title} />}
       </div>
     </div>
   );
