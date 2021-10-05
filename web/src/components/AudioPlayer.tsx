@@ -7,7 +7,7 @@ import { remainingTime, timeFromSecs } from 'utils/calculateTime';
 
 interface AudioPlayerProps {
   src: string;
-  title: string;
+  title?: string;
   artist?: string;
   art?: string;
 }
@@ -90,8 +90,8 @@ export const AudioPlayer = ({ src, title, artist, art }: AudioPlayerProps) => {
               </div>
             </div>
             <div className="flex flex-col">
-              <div className="text-white font-bold">{title ? title : 'Unknown Title'}</div>
-              <div className="text-gray-80 font-bold">{artist ? artist : 'Unknown Artist'}</div>
+              <div className="text-white font-bold">{title || 'Unknown Title'}</div>
+              <div className="text-gray-80 font-bold">{artist || 'Unknown Artist'}</div>
             </div>
             <div className="flex-1 text-right text-gray-80">{timeFromSecs(duration || 0)}</div>
           </div>
