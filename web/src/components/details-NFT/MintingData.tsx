@@ -1,6 +1,6 @@
 import { ChainLink } from 'icons/ChainLink';
-import { Matic } from 'icons/Matic';
 import { Pinata } from 'icons/Pinata';
+import { Token } from 'icons/Token';
 
 export const MintingData = () => {
   return (
@@ -29,7 +29,7 @@ export const MintingData = () => {
       </div>
       <div className="flex items-center">
         <div className="text-white text-sm flex items-center w-40 pl-4 py-1">
-          <Matic className="mr-2" />
+          <Token className="mr-2" />
           Token ID
         </div>
         <div className="text-center flex items-center text-sm overflow-hidden">
