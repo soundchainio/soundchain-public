@@ -35,10 +35,12 @@ export const LoginForm = () => {
     try {
      const token =  await magicConnect(values.username)
 
-      if(token){
-        const result = await login({ variables: { input: {token} } });
-        setJwt(result.data?.login.jwt);
-      }
+     if(!token){
+       throw new Error('Error connecting Magic')
+     }
+
+     const result = await login({ variables: { input: {token} } });
+     setJwt(result.data?.login.jwt);
     } catch (error) {
       window.localStorage.setItem("soundChainUserMagicEmail", values.username);
       router.push('/create-account');

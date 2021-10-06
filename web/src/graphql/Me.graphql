@@ -3,6 +3,7 @@ query Me {
     id
     handle
     email
+    walletAddress
     profile {
       id
       displayName

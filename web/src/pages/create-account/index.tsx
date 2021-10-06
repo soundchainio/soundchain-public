@@ -5,6 +5,7 @@ import { InputField } from 'components/InputField';
 import { Label } from 'components/Label';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Form, Formik, FormikHelpers } from 'formik';
+import useMagicAuth from 'hooks/useMagicAuth';
 import { setJwt } from 'lib/apollo';
 import { useRegisterMutation } from 'lib/graphql';
 import { useRouter } from 'next/dist/client/router';
@@ -25,6 +26,7 @@ const topNavBarProps: TopNavBarProps = {
 
 export default function CreateAccountPage() {
   const router = useRouter();
+  const { connect: magicConnect } = useMagicAuth();
   const [register, { loading }] = useRegisterMutation();
   const [email, setEmail] = useState<string>('');
 
@@ -34,13 +36,17 @@ export default function CreateAccountPage() {
 
   const handleSubmit = async (values: FormValues, { setErrors }: FormikHelpers<FormValues>) => {
     try {
-      const { data } = await register({variables: {input: {email, ...values}}});
+      const token =  await magicConnect(email)
+
+      if(!token){
+        throw new Error('Error connecting Magic')
+      }
+      const { data } = await register({variables: {input: {email, token, ...values}}});
       setJwt(data?.register.jwt);
       router.push(router.query.callbackUrl?.toString() ?? '/create-account/profile-picture');
     } catch (error) {
       const formatted = formatValidationErrors<FormValues>(error.graphQLErrors[0]);
       setErrors(formatted);
-
     }
   };
 

@@ -39,9 +39,13 @@ export class UserResolver {
   @Mutation(() => AuthPayload)
   async register(
     @Ctx() { authService, jwtService }: Context,
-    @Arg('input') { email, handle, displayName }: RegisterInput,
+    @Arg('input') { token, email, handle, displayName }: RegisterInput,
   ): Promise<AuthPayload> {
-    const user = await authService.register(email, handle, displayName);
+    const magic = new Magic(process.env.NEXT_PRIVATE_MAGIC_KEY)
+    const did = magic.utils.parseAuthorizationHeader(`Bearer ${token}`)
+    const magicUser = await magic.users.getMetadataByToken(did)
+
+    const user = await authService.register(email, handle, displayName, magicUser.publicAddress);
     return { jwt: jwtService.create(user) };
   }
 

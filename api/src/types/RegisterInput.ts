@@ -5,6 +5,9 @@ import { handleRegex } from '../utils/Validation';
 @InputType()
 export class RegisterInput {
   @Field()
+  token: string;
+
+  @Field()
   @IsEmail()
   email: string;
 

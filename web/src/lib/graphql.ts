@@ -750,6 +750,7 @@ export enum ReactionType {
 }
 
 export type RegisterInput = {
+  token: Scalars['String'];
   email: Scalars['String'];
   displayName: Scalars['String'];
   handle: Scalars['String'];
@@ -943,6 +944,7 @@ export type User = {
   id: Scalars['ID'];
   email: Scalars['String'];
   handle: Scalars['String'];
+  walletAddress: Scalars['String'];
   verified: Scalars['Boolean'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
@@ -1329,7 +1331,7 @@ export type MeQuery = (
   { __typename?: 'Query' }
   & { me: Maybe<(
     { __typename?: 'User' }
-    & Pick<User, 'id' | 'handle' | 'email'>
+    & Pick<User, 'id' | 'handle' | 'email' | 'walletAddress'>
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'followerCount' | 'followingCount' | 'favoriteGenres' | 'musicianTypes' | 'bio'>
@@ -2821,6 +2823,7 @@ export const MeDocument = gql`
     id
     handle
     email
+    walletAddress
     profile {
       id
       displayName

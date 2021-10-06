@@ -17,6 +17,10 @@ export class User extends Model {
   @prop({ required: true })
   handle: string;
 
+  @Field()
+  @prop({ required: true })
+  walletAddress: string;
+
   @prop({ required: false })
   password: string;
 

@@ -6,7 +6,7 @@ import { User, UserModel } from '../models/User';
 import { Service } from './Service';
 
 export class AuthService extends Service {
-  async register(email: string, handle: string, displayName: string): Promise<User> {
+  async register(email: string, handle: string, displayName: string, walletAddress: string): Promise<User> {
     await validateUniqueIdentifiers({ email, handle });
 
     const profile = new ProfileModel({ displayName });
@@ -14,7 +14,7 @@ export class AuthService extends Service {
     await this.context.feedService.seedNewProfileFeed(profile.id);
 
     const emailVerificationToken = uuidv4();
-    const user = new UserModel({ email, handle, profileId: profile._id, emailVerificationToken });
+    const user = new UserModel({ email, handle, profileId: profile._id, emailVerificationToken, walletAddress });
 
     try {
       await user.save();
