@@ -59,7 +59,7 @@ export default function TrackPage({ trackId }: TrackPageProps) {
       <div className="m-4">
         <Track trackId={trackId} />
       </div>
-      <Description description={data?.track.description} />
+      <Description description={data?.track.description || ''} />
       <TrackInfo trackTitle={data?.track.title || undefined} albumTitle={undefined} releaseYear={undefined} />
       <BottomSheet>
         <MintingData />
