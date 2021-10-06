@@ -132,7 +132,6 @@ export class NotificationService extends ModelService<typeof Notification> {
     const notifications = subscribersIds.map(
       profileId => new this.model({ type: NotificationType.NewPost, profileId, metadata })
     );
-    console.log('subscribers ids:', subscribersIds);
     await ProfileModel.updateMany({ _id: { $in: subscribersIds } }, { $inc: { unreadNotificationCount: 1 } });
     await this.model.insertMany(notifications);
   }
