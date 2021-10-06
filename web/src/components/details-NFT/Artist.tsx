@@ -18,7 +18,7 @@ export const Artist = ({ artistId }: ArtistProps) => {
           />
         </div>
         <div className="font-bold flex-1 px-4">
-          The Beatles
+          The Beatles - {artistId}
         </div>
         <div className="text-center text-sm">
           <p className="font-semibold text-white">
