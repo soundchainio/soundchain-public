@@ -10,6 +10,7 @@ import { MessageService } from '../services/MessageService';
 import { MintingRequestService } from '../services/MintingRequestService';
 import { MuxService } from '../services/MuxService';
 import { NotificationService } from '../services/NotificationService';
+import { PinningService } from '../services/PinningService';
 import { PostService } from '../services/PostService';
 import { ProfileService } from '../services/ProfileService';
 import { ReactionService } from '../services/ReactionService';
@@ -34,6 +35,7 @@ export class Context {
   subscriptionService = new SubscriptionService(this);
   trackService = new TrackService(this);
   mintingRequestService = new MintingRequestService(this);
+  pinningService = new PinningService(this);
   uploadService = new UploadService(this);
   userService = new UserService(this);
   embedService = new EmbedService(this);

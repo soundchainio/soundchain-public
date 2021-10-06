@@ -1,4 +1,4 @@
-import { Instagram, Twitter } from 'icons/social';
+import { Facebook, Instagram, Soundcloud, Twitter } from 'icons/social';
 
 const companies = {
   instagram: {
@@ -17,21 +17,21 @@ const companies = {
   },
   facebook: {
     label: 'Facebook',
-    icon: null,
+    icon: Facebook,
     getLink(handle: string) {
       return `https://www.facebook.com/${handle}`;
     },
   },
   soundcloud: {
     label: 'SoundCloud',
-    icon: null,
+    icon: Soundcloud,
     getLink(handle: string) {
       return `https://soundcloud.com/${handle}/`;
     },
   },
 };
 
-type SocialMediaCompany = 'instagram' | 'twitter';
+type SocialMediaCompany = 'instagram' | 'twitter' | 'facebook' | 'soundcloud';
 
 interface Props {
   company: SocialMediaCompany;
@@ -42,9 +42,9 @@ export const SocialMediaLink = ({ company, handle }: Props) => {
   const { getLink, icon: Icon, label } = companies[company];
 
   return (
-    <a href={getLink(handle)} className="text-gray-50 flex space-x-1 items-center" target="_blank" rel="noreferrer">
-      <Icon />
-      <span className="text-xs font-semibold">{label}</span>
+    <a href={getLink(handle)} className="text-gray-50 flex items-center" target="_blank" rel="noreferrer">
+      <Icon className={company === 'soundcloud' ? "scale-75" : ""} />
+      <span className="ml-1 text-xs font-semibold">{label}</span>
     </a>
   );
 };

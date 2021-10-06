@@ -14,8 +14,8 @@ export default function BioPage() {
   const topNavBarProps: TopNavBarProps = {
     title: 'Bio',
     leftButton: <BackButton />,
-    rightButton: <Badge label="Skip" onClick={() => router.push('/')} selected={false} />,
-    subtitle: <StepProgressBar steps={5} currentStep={5} />,
+    rightButton: <Badge label="Skip" onClick={() => router.push('/create-account/social-links')} selected={false} />,
+    subtitle: <StepProgressBar steps={6} currentStep={5} />,
   };
 
   return (
@@ -27,7 +27,7 @@ export default function BioPage() {
       </Head>
       <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
         <BioForm
-          afterSubmit={() => router.push('/')}
+          afterSubmit={() => router.push('/create-account/social-links')}
           submitText="SAVE"
           submitProps={{ borderColor: 'bg-blue-gradient' }}
         />

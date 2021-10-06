@@ -15,7 +15,7 @@ export default function MusicianTypePage() {
     title: 'Musician Type',
     leftButton: <BackButton />,
     rightButton: <Badge label="Skip" onClick={() => router.push('/')} selected={false} />,
-    subtitle: <StepProgressBar steps={5} currentStep={4} />,
+    subtitle: <StepProgressBar steps={6} currentStep={4} />,
   };
 
   return (

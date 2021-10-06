@@ -2,17 +2,19 @@ import Hls from 'hls.js';
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
 import Image from 'next/image';
+import NextLink from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { remainingTime, timeFromSecs } from 'utils/calculateTime';
 
 interface AudioPlayerProps {
   src: string;
   title?: string;
+  trackId: string;
   artist?: string;
   art?: string;
 }
 
-export const AudioPlayer = ({ src, title, artist, art }: AudioPlayerProps) => {
+export const AudioPlayer = ({ src, title, artist, art, trackId }: AudioPlayerProps) => {
   const [playing, setPlaying] = useState<boolean>(false);
   const [playState, setPlayState] = useState<number>(0);
   const [duration, setDuration] = useState<number>();
@@ -90,7 +92,11 @@ export const AudioPlayer = ({ src, title, artist, art }: AudioPlayerProps) => {
               </div>
             </div>
             <div className="flex flex-col">
-              <div className="text-white font-bold">{title || 'Unknown Title'}</div>
+              <div className="text-white font-bold">
+                <NextLink href={`/tracks/${trackId}`}>
+                  {title ? title : 'Unknown Title'}
+                </NextLink>
+              </div>
               <div className="text-gray-80 font-bold">{artist || 'Unknown Artist'}</div>
             </div>
             <div className="flex-1 text-right text-gray-80">{timeFromSecs(duration || 0)}</div>

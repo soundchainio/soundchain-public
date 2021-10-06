@@ -160,7 +160,11 @@ export default function PlaygroundPage() {
         </div>
         <div className={`${currentTab == 'MINTING' ? 'block' : 'hidden'}`}>
           <TabContent loading={loading} connected={connectedToMetaMask || !!magicAccount} testnet={testnet}>
-            <MintingRequestForm to={magicAccount! || account!} afterSubmit={() => alert('Minting requested!')} />
+            <MintingRequestForm
+              web3={magicWeb3! || web3!}
+              to={magicAccount! || account!}
+              afterSubmit={() => alert('Minting requested!')}
+            />
           </TabContent>
         </div>
       </div>
