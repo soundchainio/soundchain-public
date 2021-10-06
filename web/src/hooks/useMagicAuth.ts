@@ -31,7 +31,13 @@ const useMagicAuth = () => {
     }
   };
 
-  return { connect };
+  const logout = async () => {
+    if(magic) {
+      return await magic.user.logout()
+    }
+  }
+
+  return { connect, logout };
 };
 
 export default useMagicAuth;

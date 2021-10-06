@@ -17,8 +17,8 @@ export class User extends Model {
   @prop({ required: true })
   handle: string;
 
-  @Field()
-  @prop({ required: true })
+  @Field({ nullable: true })
+  @prop({ required: false })
   walletAddress: string;
 
   @prop({ required: false })

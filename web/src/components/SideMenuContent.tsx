@@ -1,6 +1,7 @@
 import { FollowModal } from 'components/FollowersModal';
 import { Number } from 'components/Number';
 import { useModalDispatch } from 'contexts/providers/modal';
+import useMagicAuth from 'hooks/useMagicAuth';
 import { useMe } from 'hooks/useMe';
 import { Logo } from 'icons/Logo';
 import { Logout } from 'icons/Logout';
@@ -26,10 +27,13 @@ export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => 
   const me = useMe();
   const router = useRouter();
   const { dispatchShowUnderDevelopmentModal } = useModalDispatch();
+  const { logout: magicLogout } = useMagicAuth();
+
   const [showModal, setShowModal] = useState(false);
   const [followModalType, setFollowModalType] = useState<FollowModalType>();
 
-  const onLogout = () => {
+  const onLogout = async () => {
+    await magicLogout();
     setJwt();
     router.reload();
   };
