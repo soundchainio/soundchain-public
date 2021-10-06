@@ -45,7 +45,9 @@ export const Tracks = ({ className, profileId, pageSize = 10 }: TracksProps) => 
   return (
     <div className={classNames('space-y-3', className)}>
       {nodes.map(({ id }) => (
-        <Track key={id} trackId={id} />
+        <div key={id} className="p-4 bg-gray-20 break-words">
+          <Track key={id} trackId={id} />
+        </div>
       ))}
       {pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading Tracks" />}
     </div>

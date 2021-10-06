@@ -13,7 +13,7 @@ export class Track extends Model {
   @prop({ required: true })
   profileId: string;
 
-  @Field()
+  @Field({ nullable: true })
   @prop()
   title: string;
 
@@ -28,6 +28,10 @@ export class Track extends Model {
   @Field()
   @prop()
   uploadUrl: string;
+
+  @Field({ nullable: true })
+  @prop()
+  artworkUrl: string;
 
   @Field()
   @prop()

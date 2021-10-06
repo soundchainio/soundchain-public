@@ -3,6 +3,7 @@ mutation UploadTrack($input: UploadTrackInput!) {
     track {
       id
       uploadUrl
+      file
       muxUpload {
         url
       }

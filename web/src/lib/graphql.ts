@@ -32,6 +32,7 @@ export type AddTrackMetadataInput = {
   trackId: Scalars['String'];
   title: Scalars['String'];
   description?: Maybe<Scalars['String']>;
+  artworkUrl?: Maybe<Scalars['String']>;
 };
 
 export type AddTrackMetadataPayload = {
@@ -877,10 +878,11 @@ export type Track = {
   __typename?: 'Track';
   id: Scalars['ID'];
   profileId: Scalars['String'];
-  title: Scalars['String'];
+  title: Maybe<Scalars['String']>;
   description: Maybe<Scalars['String']>;
   file: Scalars['String'];
   uploadUrl: Scalars['String'];
+  artworkUrl: Maybe<Scalars['String']>;
   muxUpload: MuxUpload;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
@@ -1022,7 +1024,7 @@ export type AddTrackMetadataMutation = (
     { __typename?: 'AddTrackMetadataPayload' }
     & { track: (
       { __typename?: 'Track' }
-      & Pick<Track, 'id' | 'title' | 'description'>
+      & Pick<Track, 'id' | 'title' | 'description' | 'artworkUrl'>
     ) }
   ) }
 );
@@ -1730,7 +1732,7 @@ export type TrackQuery = (
 
 export type TrackComponentFieldsFragment = (
   { __typename?: 'Track' }
-  & Pick<Track, 'id' | 'profileId' | 'title' | 'description' | 'playbackUrl' | 'createdAt' | 'updatedAt'>
+  & Pick<Track, 'id' | 'profileId' | 'title' | 'file' | 'artworkUrl' | 'description' | 'playbackUrl' | 'createdAt' | 'updatedAt'>
 );
 
 export type TracksQueryVariables = Exact<{
@@ -1969,7 +1971,7 @@ export type UploadTrackMutation = (
     { __typename?: 'UploadTrackPayload' }
     & { track: (
       { __typename?: 'Track' }
-      & Pick<Track, 'id' | 'uploadUrl'>
+      & Pick<Track, 'id' | 'uploadUrl' | 'file'>
       & { muxUpload: (
         { __typename?: 'MuxUpload' }
         & Pick<MuxUpload, 'url'>
@@ -2087,6 +2089,8 @@ export const TrackComponentFieldsFragmentDoc = gql`
   id
   profileId
   title
+  file
+  artworkUrl
   description
   playbackUrl
   createdAt
@@ -2174,6 +2178,7 @@ export const AddTrackMetadataDocument = gql`
       id
       title
       description
+      artworkUrl
     }
   }
 }
@@ -4263,6 +4268,7 @@ export const UploadTrackDocument = gql`
     track {
       id
       uploadUrl
+      file
       muxUpload {
         url
       }
