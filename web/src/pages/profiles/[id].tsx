@@ -115,8 +115,10 @@ export default function ProfilePage() {
         </div>
 
         <div className="flex space-x-4 mt-2">
+          {socialMedias.facebook && <SocialMediaLink company="facebook" handle={socialMedias.facebook} />}
           {socialMedias.instagram && <SocialMediaLink company="instagram" handle={socialMedias.instagram} />}
           {socialMedias.twitter && <SocialMediaLink company="twitter" handle={socialMedias.twitter} />}
+          {socialMedias.soundcloud && <SocialMediaLink company="soundcloud" handle={socialMedias.soundcloud} />}
         </div>
       </div>
       <ProfileTabs
