@@ -1,5 +1,4 @@
 import { UserInputError } from 'apollo-server-express';
-import { compare } from 'bcryptjs';
 import { ArgumentValidationError } from 'type-graphql';
 import { v4 as uuidv4 } from 'uuid';
 import { ProfileModel } from '../models/Profile';
@@ -7,7 +6,7 @@ import { User, UserModel } from '../models/User';
 import { Service } from './Service';
 
 export class AuthService extends Service {
-  async register(email: string, handle: string, password: string, displayName: string): Promise<User> {
+  async register(email: string, handle: string, displayName: string): Promise<User> {
     await validateUniqueIdentifiers({ email, handle });
 
     const profile = new ProfileModel({ displayName });
@@ -15,7 +14,7 @@ export class AuthService extends Service {
     await this.context.feedService.seedNewProfileFeed(profile.id);
 
     const emailVerificationToken = uuidv4();
-    const user = new UserModel({ email, handle, password, profileId: profile._id, emailVerificationToken });
+    const user = new UserModel({ email, handle, profileId: profile._id, emailVerificationToken });
 
     try {
       await user.save();
@@ -24,23 +23,20 @@ export class AuthService extends Service {
       throw new Error(`Error while creating user: ${err.message}`);
     }
 
-    try {
-      await this.context.emailService.sendEmailVerification(email, displayName, emailVerificationToken);
-    } catch (err) {
-      ProfileModel.deleteOne({ _id: profile.id });
-      UserModel.deleteOne({ _id: user.id });
-      throw new Error(`Error while sending email verification: ${err.message}`);
-    }
+    // try {
+    //   await this.context.emailService.sendEmailVerification(email, displayName, emailVerificationToken);
+    // } catch (err) {
+    //   ProfileModel.deleteOne({ _id: profile.id });
+    //   UserModel.deleteOne({ _id: user.id });
+    //   throw new Error(`Error while sending email verification: ${err.message}`);
+    // }
 
     return user;
   }
 
-  async getUserFromCredentials(username: string, password: string): Promise<User | undefined> {
-    const user = await UserModel.findOne({ $or: [{ email: username }, { handle: username }] });
+  async getUserFromCredentials(username: string): Promise<User | undefined> {
+    return await UserModel.findOne({ $or: [{ email: username }, { handle: username }] });
 
-    if (user && (await compare(password, user.password))) {
-      return user;
-    }
   }
 
   async verifyUserEmail(emailVerificationToken: string): Promise<User> {

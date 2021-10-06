@@ -30,10 +30,6 @@ export const TopNavBar = ({
     router.push('/login');
   };
 
-  const onCreateAccount = () => {
-    router.push('/create-account');
-  };
-
   return (
     <div className="relative z-10 flex-shrink-0 flex h-16 bg-black md:bg-gray-30 shadow">
       <button
@@ -89,16 +85,7 @@ export const TopNavBar = ({
             borderColor="bg-gray-40"
             bgColor="bg-black"
           >
-            Login
-          </Button>
-          <Button
-            variant={router.pathname === '/create-account' ? 'rainbow-xs' : 'outline'}
-            onClick={onCreateAccount}
-            className="w-32 h-8 bg-opacity-70"
-            borderColor="bg-gray-40"
-            bgColor="bg-black"
-          >
-            Create Account
+            Login in / Sign up
           </Button>
         </div>
       )}

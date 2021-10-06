@@ -255,9 +255,7 @@ export enum Genre {
 }
 
 export type LoginInput = {
-  /** Username can be email or handle */
-  username: Scalars['String'];
-  password: Scalars['String'];
+  token: Scalars['String'];
 };
 
 export type Message = {
@@ -755,7 +753,6 @@ export type RegisterInput = {
   email: Scalars['String'];
   displayName: Scalars['String'];
   handle: Scalars['String'];
-  password: Scalars['String'];
 };
 
 export type ResetPasswordInput = {

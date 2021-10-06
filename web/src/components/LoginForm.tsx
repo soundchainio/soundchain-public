@@ -1,8 +1,7 @@
 import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
-import { Label } from 'components/Label';
-import Link from 'components/Link';
 import { Form, Formik } from 'formik';
+import useMagicAuth from 'hooks/useMagicAuth';
 import { useMe } from 'hooks/useMe';
 import { LogoAndText } from 'icons/LogoAndText';
 import { setJwt } from 'lib/apollo';
@@ -13,17 +12,17 @@ import * as yup from 'yup';
 
 interface FormValues {
   username: string;
-  password: string;
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   username: yup.string().required(),
-  password: yup.string().required(),
 });
 
 export const LoginForm = () => {
-  const [login, { loading, error }] = useLoginMutation();
+  const [login, { loading }] = useLoginMutation();
   const me = useMe();
+  const { connect: magicConnect } = useMagicAuth();
+
   const router = useRouter();
 
   useEffect(() => {
@@ -34,10 +33,15 @@ export const LoginForm = () => {
 
   async function handleSubmit(values: FormValues) {
     try {
-      const result = await login({ variables: { input: values } });
-      setJwt(result.data?.login.jwt);
+     const token =  await magicConnect(values.username)
+
+      if(token){
+        const result = await login({ variables: { input: {token} } });
+        setJwt(result.data?.login.jwt);
+      }
     } catch (error) {
-      // handled by error state
+      window.localStorage.setItem("soundChainUserMagicEmail", values.username);
+      router.push('/create-account');
     }
   }
 
@@ -47,23 +51,16 @@ export const LoginForm = () => {
         <LogoAndText />
       </div>
       <Formik
-        initialValues={{ username: '', password: '' }}
+        initialValues={{ username: '' }}
         validationSchema={validationSchema}
         onSubmit={handleSubmit}
       >
         <Form className="flex flex-1 flex-col">
           <div className="space-y-6 mb-auto">
             <InputField type="text" name="username" placeholder="Username or Email Address" />
-            <InputField type="password" name="password" placeholder="Password" />
-            {error && <Label>{error.message}</Label>}
-            <div>
-              <Link href="/forgot-password" className="text-left">
-                Forgot Password?
-              </Link>
-            </div>
           </div>
           <Button type="submit" disabled={loading} loading={loading} className="w-full mt-12">
-            Login
+            Login / Sign up
           </Button>
         </Form>
       </Formik>

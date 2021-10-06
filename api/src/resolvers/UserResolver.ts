@@ -1,3 +1,4 @@
+import { Magic } from '@magic-sdk/admin';
 import { UserInputError } from 'apollo-server-express';
 import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
 import { CurrentUser } from '../decorators/current-user';
@@ -38,18 +39,22 @@ export class UserResolver {
   @Mutation(() => AuthPayload)
   async register(
     @Ctx() { authService, jwtService }: Context,
-    @Arg('input') { email, handle, password, displayName }: RegisterInput,
+    @Arg('input') { email, handle, displayName }: RegisterInput,
   ): Promise<AuthPayload> {
-    const user = await authService.register(email, handle, password, displayName);
+    const user = await authService.register(email, handle, displayName);
     return { jwt: jwtService.create(user) };
   }
 
   @Mutation(() => AuthPayload)
   async login(
     @Ctx() { authService, jwtService }: Context,
-    @Arg('input') { username, password }: LoginInput,
+    @Arg('input') { token }: LoginInput,
   ): Promise<AuthPayload> {
-    const user = await authService.getUserFromCredentials(username, password);
+    const magic = new Magic(process.env.NEXT_PRIVATE_MAGIC_KEY)
+    const did = magic.utils.parseAuthorizationHeader(`Bearer ${token}`)
+    const magicUser = await magic.users.getMetadataByToken(did)
+
+    const user = await authService.getUserFromCredentials(magicUser.email);
 
     if (!user) {
       throw new UserInputError('Invalid credentials');
