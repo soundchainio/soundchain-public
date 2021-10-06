@@ -10,4 +10,7 @@ export class AddTrackMetadataInput {
 
   @Field({ nullable: true })
   description: string;
+
+  @Field({ nullable: true })
+  artworkUrl: string;
 }

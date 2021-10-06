@@ -2,6 +2,7 @@ import { FollowModal } from 'components/FollowersModal';
 import { Number } from 'components/Number';
 import { useModalDispatch } from 'contexts/providers/modal';
 import { useMe } from 'hooks/useMe';
+import { Happy } from 'icons/emoji/Happy';
 import { Logo } from 'icons/Logo';
 import { Logout } from 'icons/Logout';
 import { Settings } from 'icons/Settings';
@@ -16,7 +17,6 @@ import { useState } from 'react';
 import { FollowModalType } from 'types/FollowModalType';
 import { Avatar } from './Avatar';
 import { MenuItem } from './MenuItem';
-import { Title } from './Title';
 
 interface SideMenuContentProps {
   isMobile?: boolean;
@@ -80,11 +80,9 @@ export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => 
                   </div>
                 </div>
               </div>
-              <div className="flex flex-row mt-4">
-                <div>
-                  <Title>{me.profile.displayName}</Title>
-                  <p className="text-gray-80 text-md">@{me.handle}</p>
-                </div>
+              <div className="flex flex-col mt-4">
+                <h2 className="font-bold text-white">{me.profile.displayName}</h2>
+                <p className="text-gray-80 text-md">@{me.handle}</p>
               </div>
             </>
           )}
@@ -92,6 +90,11 @@ export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => 
       </div>
       {me && (
         <div>
+          <MenuItem
+            icon={() => <Happy width={20} height={20} />}
+            label="Playground"
+            onClick={() => router.push('/playground')}
+          />
           <MenuItem icon={Settings} label="Account Settings" onClick={() => router.push('/settings')} />
           <MenuItem icon={Logout} label="Logout" onClick={onLogout} />
         </div>

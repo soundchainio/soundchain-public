@@ -22,7 +22,7 @@ export default function ProfilePicturePage() {
       </div>
     ),
     rightButton: <Badge label="Skip" onClick={onClose} selected={false} />,
-    subtitle: <StepProgressBar steps={5} currentStep={1} />,
+    subtitle: <StepProgressBar steps={6} currentStep={1} />,
   };
 
   return (

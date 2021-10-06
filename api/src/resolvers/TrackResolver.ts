@@ -1,4 +1,4 @@
-import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from 'type-graphql';
+import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
 import { CurrentUser } from '../decorators/current-user';
 import { Track } from '../models/Track';
 import { User } from '../models/User';
@@ -14,6 +14,11 @@ import { UploadTrackPayload } from '../types/UploadTrackPayload';
 
 @Resolver(Track)
 export class TrackResolver {
+  @FieldResolver(() => String)
+  playbackUrl(@Root() { muxAsset }: Track): string {
+    return `https://stream.mux.com/${muxAsset.playbackId}.m3u8`;
+  }
+
   @Query(() => Track)
   track(@Ctx() { trackService }: Context, @Arg('id') id: string): Promise<Track> {
     return trackService.getTrack(id);
@@ -43,10 +48,11 @@ export class TrackResolver {
   @Mutation(() => AddTrackMetadataPayload)
   @Authorized()
   async addTrackMetadata(
-    @Ctx() { trackService }: Context,
+    @Ctx() { trackService, postService }: Context,
     @Arg('input') { trackId, ...metadata }: AddTrackMetadataInput,
   ): Promise<AddTrackMetadataPayload> {
     const track = await trackService.updateTrack(trackId, metadata);
+    await postService.createPost({ profileId: track.profileId, trackId });
     return { track };
   }
 }

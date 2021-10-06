@@ -1,16 +1,17 @@
 import axios from 'axios';
-import { Button } from 'components/Button';
+import { JellyButton } from 'components/Buttons/JellyButton';
 import { ProgressBar } from 'components/ProgressBar';
 import { useUpChunk } from 'hooks/useUpChunk';
-import { BlueUpload } from 'icons/BlueUpload';
-import { Cancel } from 'icons/Cancel';
+import { Close as CancelIcon } from 'icons/Close';
 import { MusicFile } from 'icons/MusicFile';
+import { Upload as UploadIcon } from 'icons/Upload';
 import { useUploadTrackMutation } from 'lib/graphql';
 import { useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 
 export interface TrackUploaderProps {
   onSuccess: (trackId: string) => void;
+  setAssetUrl: (assetUrl: string) => void;
 }
 
 const maxSize = 1024 * 1024 * 30; // 30Mb
@@ -19,7 +20,7 @@ const accept = ['audio/*'];
 const containerClasses =
   'flex justify-around p-3 bg-black text-gray-30 border-gray-50 border-2 border-dashed rounded-md h-[100px]';
 
-export const TrackUploader = ({ onSuccess }: TrackUploaderProps) => {
+export const TrackUploader = ({ onSuccess, setAssetUrl }: TrackUploaderProps) => {
   const [uploadTrack] = useUploadTrackMutation();
   const [startUpload, { uploading, progress, cancelUpload }] = useUpChunk();
   const [trackId, setTrackId] = useState<string>();
@@ -33,6 +34,7 @@ export const TrackUploader = ({ onSuccess }: TrackUploaderProps) => {
       startUpload(data.uploadTrack.track.muxUpload.url, file);
       setTrackId(data.uploadTrack.track.id);
       setFilename(file.name);
+      if (setAssetUrl) setAssetUrl(data.uploadTrack.track.file);
     }
   };
   const { getRootProps, getInputProps } = useDropzone({ maxFiles: 1, maxSize, accept, onDrop });
@@ -60,16 +62,14 @@ export const TrackUploader = ({ onSuccess }: TrackUploaderProps) => {
           </div>
         </div>
         <div className="flex flex-col justify-center flex-shrink-0">
-          <Button
+          <JellyButton
             onClick={cancelUpload}
-            variant="outline-rounded"
-            borderColor="bg-pink-gradient"
-            textColor="pink-gradient-text"
-            icon={Cancel}
-            className="py-.75 px-1"
+            flavor="raspberry"
+            icon={<CancelIcon activatedColor="red" />}
+            className="text-xs"
           >
             Cancel
-          </Button>
+          </JellyButton>
         </div>
       </div>
     );
@@ -83,16 +83,14 @@ export const TrackUploader = ({ onSuccess }: TrackUploaderProps) => {
         <p className="font-semibold text-[9px]">WAV,MP3,AIFF,FLAC,OGA (Max: 30mb)</p>
       </div>
       <div className="flex flex-col justify-center flex-shrink-0">
-        <Button
-          variant="outline-rounded"
-          borderColor="bg-blue-gradient"
-          textColor="blue-gradient-text"
-          icon={BlueUpload}
-          className="py-.75 px-1"
+        <JellyButton
+          flavor="blueberry"
+          icon={<UploadIcon activatedColor="blue" id="blue-gradient" />}
+          className="text-xs"
         >
           Choose File
-          <input {...getInputProps()} />
-        </Button>
+        </JellyButton>
+        <input {...getInputProps()} />
       </div>
     </div>
   );

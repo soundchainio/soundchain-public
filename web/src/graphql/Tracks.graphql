@@ -1,7 +1,11 @@
-query Tracks($filter: FilterTrackInput, $sort: SortTrackInput) {
-  tracks(filter: $filter, sort: $sort) {
+query Tracks($filter: FilterTrackInput, $sort: SortTrackInput, $page: PageInput) {
+  tracks(filter: $filter, sort: $sort, page: $page) {
     nodes {
       ...TrackComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
     }
   }
 }

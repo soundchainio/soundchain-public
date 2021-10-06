@@ -14,6 +14,8 @@ export type Scalars = {
   Float: number;
   /** The javascript `Date` as string. Type represents date and time as the ISO Date string. */
   DateTime: string;
+  /** The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf). */
+  JSON: unknown;
 };
 
 export type AddCommentInput = {
@@ -30,6 +32,7 @@ export type AddTrackMetadataInput = {
   trackId: Scalars['String'];
   title: Scalars['String'];
   description?: Maybe<Scalars['String']>;
+  artworkUrl?: Maybe<Scalars['String']>;
 };
 
 export type AddTrackMetadataPayload = {
@@ -254,6 +257,7 @@ export enum Genre {
   World = 'WORLD'
 }
 
+
 export type LoginInput = {
   /** Username can be email or handle */
   username: Scalars['String'];
@@ -318,6 +322,8 @@ export type Mutation = {
   createMintingRequest: MintingRequestPayload;
   resetNotificationCount: Profile;
   clearNotifications: ClearNotificationsPayload;
+  pinToIPFS: PinningPayload;
+  pinJsonToIPFS: PinningPayload;
   createPost: CreatePostPayload;
   updatePost: UpdatePostPayload;
   reactToPost: ReactToPostPayload;
@@ -359,6 +365,16 @@ export type MutationSendMessageArgs = {
 
 export type MutationCreateMintingRequestArgs = {
   input: CreateMintingRequestInput;
+};
+
+
+export type MutationPinToIpfsArgs = {
+  input: PinToIpfsInput;
+};
+
+
+export type MutationPinJsonToIpfsArgs = {
+  input: PinJsonToIpfsInput;
 };
 
 
@@ -466,11 +482,6 @@ export type MutationUpdatePasswordArgs = {
   input: UpdatePasswordInput;
 };
 
-export type MuxAsset = {
-  __typename?: 'MuxAsset';
-  playbackId: Scalars['String'];
-};
-
 export type MuxUpload = {
   __typename?: 'MuxUpload';
   url: Scalars['String'];
@@ -487,6 +498,7 @@ export type NewPostNotification = {
   previewBody: Scalars['String'];
   previewLink: Maybe<Scalars['String']>;
   link: Scalars['String'];
+  track: Maybe<Track>;
 };
 
 export type Notification = CommentNotification | ReactionNotification | FollowerNotification | NewPostNotification;
@@ -521,10 +533,25 @@ export type PageInput = {
   inclusive?: Maybe<Scalars['Boolean']>;
 };
 
+export type PinJsonToIpfsInput = {
+  fileName: Scalars['String'];
+  json: Scalars['JSON'];
+};
+
+export type PinToIpfsInput = {
+  fileName: Scalars['String'];
+  fileKey: Scalars['String'];
+};
+
+export type PinningPayload = {
+  __typename?: 'PinningPayload';
+  cid: Scalars['String'];
+};
+
 export type Post = {
   __typename?: 'Post';
   id: Scalars['ID'];
-  body: Scalars['String'];
+  body: Maybe<Scalars['String']>;
   mediaLink: Maybe<Scalars['String']>;
   repostId: Maybe<Scalars['String']>;
   createdAt: Scalars['DateTime'];
@@ -536,6 +563,7 @@ export type Post = {
   totalReactions: Scalars['Float'];
   topReactions: Array<ReactionType>;
   myReaction: Maybe<ReactionType>;
+  track: Maybe<Track>;
 };
 
 
@@ -850,14 +878,15 @@ export type Track = {
   __typename?: 'Track';
   id: Scalars['ID'];
   profileId: Scalars['String'];
-  title: Scalars['String'];
+  title: Maybe<Scalars['String']>;
   description: Maybe<Scalars['String']>;
   file: Scalars['String'];
   uploadUrl: Scalars['String'];
+  artworkUrl: Maybe<Scalars['String']>;
   muxUpload: MuxUpload;
-  muxAsset: MuxAsset;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
+  playbackUrl: Scalars['String'];
 };
 
 export type TrackConnection = {
@@ -995,7 +1024,7 @@ export type AddTrackMetadataMutation = (
     { __typename?: 'AddTrackMetadataPayload' }
     & { track: (
       { __typename?: 'Track' }
-      & Pick<Track, 'id' | 'title' | 'description'>
+      & Pick<Track, 'id' | 'title' | 'description' | 'artworkUrl'>
     ) }
   ) }
 );
@@ -1339,6 +1368,10 @@ export type MeQuery = (
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'followerCount' | 'followingCount' | 'favoriteGenres' | 'musicianTypes' | 'bio'>
+      & { socialMedias: (
+        { __typename?: 'SocialMedias' }
+        & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
+      ) }
     ) }
   )> }
 );
@@ -1381,6 +1414,10 @@ export type MimeTypeQuery = (
 export type NewPostNotificationFieldsFragment = (
   { __typename?: 'NewPostNotification' }
   & Pick<NewPostNotification, 'id' | 'type' | 'authorName' | 'authorPicture' | 'body' | 'link' | 'previewBody' | 'previewLink' | 'createdAt'>
+  & { track: Maybe<(
+    { __typename?: 'Track' }
+    & Pick<Track, 'title' | 'playbackUrl'>
+  )> }
 );
 
 export type NotificationQueryVariables = Exact<{
@@ -1441,6 +1478,32 @@ export type NotificationsQuery = (
   ) }
 );
 
+export type PinJsonToIpfsMutationVariables = Exact<{
+  input: PinJsonToIpfsInput;
+}>;
+
+
+export type PinJsonToIpfsMutation = (
+  { __typename?: 'Mutation' }
+  & { pinJsonToIPFS: (
+    { __typename?: 'PinningPayload' }
+    & Pick<PinningPayload, 'cid'>
+  ) }
+);
+
+export type PinToIpfsMutationVariables = Exact<{
+  input: PinToIpfsInput;
+}>;
+
+
+export type PinToIpfsMutation = (
+  { __typename?: 'Mutation' }
+  & { pinToIPFS: (
+    { __typename?: 'PinningPayload' }
+    & Pick<PinningPayload, 'cid'>
+  ) }
+);
+
 export type PostQueryVariables = Exact<{
   id: Scalars['String'];
 }>;
@@ -1460,7 +1523,10 @@ export type PostComponentFieldsFragment = (
   & { profile: (
     { __typename?: 'Profile' }
     & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
-  ) }
+  ), track: Maybe<(
+    { __typename?: 'Track' }
+    & TrackComponentFieldsFragment
+  )> }
 );
 
 export type PostsQueryVariables = Exact<{
@@ -1666,12 +1732,13 @@ export type TrackQuery = (
 
 export type TrackComponentFieldsFragment = (
   { __typename?: 'Track' }
-  & Pick<Track, 'id' | 'profileId' | 'title' | 'file' | 'createdAt' | 'updatedAt'>
+  & Pick<Track, 'id' | 'profileId' | 'title' | 'file' | 'artworkUrl' | 'description' | 'playbackUrl' | 'createdAt' | 'updatedAt'>
 );
 
 export type TracksQueryVariables = Exact<{
   filter?: Maybe<FilterTrackInput>;
   sort?: Maybe<SortTrackInput>;
+  page?: Maybe<PageInput>;
 }>;
 
 
@@ -1682,7 +1749,10 @@ export type TracksQuery = (
     & { nodes: Array<(
       { __typename?: 'Track' }
       & TrackComponentFieldsFragment
-    )> }
+    )>, pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
+    ) }
   ) }
 );
 
@@ -1870,6 +1940,26 @@ export type UpdateProfilePictureMutation = (
   ) }
 );
 
+export type UpdateSocialMediasMutationVariables = Exact<{
+  input: UpdateProfileInput;
+}>;
+
+
+export type UpdateSocialMediasMutation = (
+  { __typename?: 'Mutation' }
+  & { updateProfile: (
+    { __typename?: 'UpdateProfilePayload' }
+    & { profile: (
+      { __typename?: 'Profile' }
+      & Pick<Profile, 'id'>
+      & { socialMedias: (
+        { __typename?: 'SocialMedias' }
+        & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
+      ) }
+    ) }
+  ) }
+);
+
 export type UploadTrackMutationVariables = Exact<{
   input: UploadTrackInput;
 }>;
@@ -1881,7 +1971,7 @@ export type UploadTrackMutation = (
     { __typename?: 'UploadTrackPayload' }
     & { track: (
       { __typename?: 'Track' }
-      & Pick<Track, 'id' | 'uploadUrl'>
+      & Pick<Track, 'id' | 'uploadUrl' | 'file'>
       & { muxUpload: (
         { __typename?: 'MuxUpload' }
         & Pick<MuxUpload, 'url'>
@@ -1988,6 +2078,23 @@ export const NewPostNotificationFieldsFragmentDoc = gql`
   previewBody
   previewLink
   createdAt
+  track {
+    title
+    playbackUrl
+  }
+}
+    `;
+export const TrackComponentFieldsFragmentDoc = gql`
+    fragment TrackComponentFields on Track {
+  id
+  profileId
+  title
+  file
+  artworkUrl
+  description
+  playbackUrl
+  createdAt
+  updatedAt
 }
     `;
 export const PostComponentFieldsFragmentDoc = gql`
@@ -2008,8 +2115,11 @@ export const PostComponentFieldsFragmentDoc = gql`
     displayName
     profilePicture
   }
+  track {
+    ...TrackComponentFields
+  }
 }
-    `;
+    ${TrackComponentFieldsFragmentDoc}`;
 export const ReactionNotificationFieldsFragmentDoc = gql`
     fragment ReactionNotificationFields on ReactionNotification {
   id
@@ -2020,16 +2130,6 @@ export const ReactionNotificationFieldsFragmentDoc = gql`
   authorPicture
   createdAt
   postId
-}
-    `;
-export const TrackComponentFieldsFragmentDoc = gql`
-    fragment TrackComponentFields on Track {
-  id
-  profileId
-  title
-  file
-  createdAt
-  updatedAt
 }
     `;
 export const AddCommentDocument = gql`
@@ -2078,6 +2178,7 @@ export const AddTrackMetadataDocument = gql`
       id
       title
       description
+      artworkUrl
     }
   }
 }
@@ -2819,6 +2920,12 @@ export const MeDocument = gql`
       favoriteGenres
       musicianTypes
       bio
+      socialMedias {
+        facebook
+        instagram
+        soundcloud
+        twitter
+      }
     }
   }
 }
@@ -3055,6 +3162,72 @@ export function useNotificationsLazyQuery(baseOptions?: Apollo.LazyQueryHookOpti
 export type NotificationsQueryHookResult = ReturnType<typeof useNotificationsQuery>;
 export type NotificationsLazyQueryHookResult = ReturnType<typeof useNotificationsLazyQuery>;
 export type NotificationsQueryResult = Apollo.QueryResult<NotificationsQuery, NotificationsQueryVariables>;
+export const PinJsonToIpfsDocument = gql`
+    mutation pinJsonToIPFS($input: PinJsonToIPFSInput!) {
+  pinJsonToIPFS(input: $input) {
+    cid
+  }
+}
+    `;
+export type PinJsonToIpfsMutationFn = Apollo.MutationFunction<PinJsonToIpfsMutation, PinJsonToIpfsMutationVariables>;
+
+/**
+ * __usePinJsonToIpfsMutation__
+ *
+ * To run a mutation, you first call `usePinJsonToIpfsMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `usePinJsonToIpfsMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [pinJsonToIpfsMutation, { data, loading, error }] = usePinJsonToIpfsMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function usePinJsonToIpfsMutation(baseOptions?: Apollo.MutationHookOptions<PinJsonToIpfsMutation, PinJsonToIpfsMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<PinJsonToIpfsMutation, PinJsonToIpfsMutationVariables>(PinJsonToIpfsDocument, options);
+      }
+export type PinJsonToIpfsMutationHookResult = ReturnType<typeof usePinJsonToIpfsMutation>;
+export type PinJsonToIpfsMutationResult = Apollo.MutationResult<PinJsonToIpfsMutation>;
+export type PinJsonToIpfsMutationOptions = Apollo.BaseMutationOptions<PinJsonToIpfsMutation, PinJsonToIpfsMutationVariables>;
+export const PinToIpfsDocument = gql`
+    mutation pinToIPFS($input: PinToIPFSInput!) {
+  pinToIPFS(input: $input) {
+    cid
+  }
+}
+    `;
+export type PinToIpfsMutationFn = Apollo.MutationFunction<PinToIpfsMutation, PinToIpfsMutationVariables>;
+
+/**
+ * __usePinToIpfsMutation__
+ *
+ * To run a mutation, you first call `usePinToIpfsMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `usePinToIpfsMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [pinToIpfsMutation, { data, loading, error }] = usePinToIpfsMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function usePinToIpfsMutation(baseOptions?: Apollo.MutationHookOptions<PinToIpfsMutation, PinToIpfsMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<PinToIpfsMutation, PinToIpfsMutationVariables>(PinToIpfsDocument, options);
+      }
+export type PinToIpfsMutationHookResult = ReturnType<typeof usePinToIpfsMutation>;
+export type PinToIpfsMutationResult = Apollo.MutationResult<PinToIpfsMutation>;
+export type PinToIpfsMutationOptions = Apollo.BaseMutationOptions<PinToIpfsMutation, PinToIpfsMutationVariables>;
 export const PostDocument = gql`
     query Post($id: String!) {
   post(id: $id) {
@@ -3578,10 +3751,14 @@ export type TrackQueryHookResult = ReturnType<typeof useTrackQuery>;
 export type TrackLazyQueryHookResult = ReturnType<typeof useTrackLazyQuery>;
 export type TrackQueryResult = Apollo.QueryResult<TrackQuery, TrackQueryVariables>;
 export const TracksDocument = gql`
-    query Tracks($filter: FilterTrackInput, $sort: SortTrackInput) {
-  tracks(filter: $filter, sort: $sort) {
+    query Tracks($filter: FilterTrackInput, $sort: SortTrackInput, $page: PageInput) {
+  tracks(filter: $filter, sort: $sort, page: $page) {
     nodes {
       ...TrackComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
     }
   }
 }
@@ -3601,6 +3778,7 @@ export const TracksDocument = gql`
  *   variables: {
  *      filter: // value for 'filter'
  *      sort: // value for 'sort'
+ *      page: // value for 'page'
  *   },
  * });
  */
@@ -4043,12 +4221,54 @@ export function useUpdateProfilePictureMutation(baseOptions?: Apollo.MutationHoo
 export type UpdateProfilePictureMutationHookResult = ReturnType<typeof useUpdateProfilePictureMutation>;
 export type UpdateProfilePictureMutationResult = Apollo.MutationResult<UpdateProfilePictureMutation>;
 export type UpdateProfilePictureMutationOptions = Apollo.BaseMutationOptions<UpdateProfilePictureMutation, UpdateProfilePictureMutationVariables>;
+export const UpdateSocialMediasDocument = gql`
+    mutation updateSocialMedias($input: UpdateProfileInput!) {
+  updateProfile(input: $input) {
+    profile {
+      id
+      socialMedias {
+        facebook
+        instagram
+        soundcloud
+        twitter
+      }
+    }
+  }
+}
+    `;
+export type UpdateSocialMediasMutationFn = Apollo.MutationFunction<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>;
+
+/**
+ * __useUpdateSocialMediasMutation__
+ *
+ * To run a mutation, you first call `useUpdateSocialMediasMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateSocialMediasMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateSocialMediasMutation, { data, loading, error }] = useUpdateSocialMediasMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateSocialMediasMutation(baseOptions?: Apollo.MutationHookOptions<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>(UpdateSocialMediasDocument, options);
+      }
+export type UpdateSocialMediasMutationHookResult = ReturnType<typeof useUpdateSocialMediasMutation>;
+export type UpdateSocialMediasMutationResult = Apollo.MutationResult<UpdateSocialMediasMutation>;
+export type UpdateSocialMediasMutationOptions = Apollo.BaseMutationOptions<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>;
 export const UploadTrackDocument = gql`
     mutation UploadTrack($input: UploadTrackInput!) {
   uploadTrack(input: $input) {
     track {
       id
       uploadUrl
+      file
       muxUpload {
         url
       }

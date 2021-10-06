@@ -1,26 +1,38 @@
 import { TrackSkeleton } from 'components/TrackSkeleton';
-import { useTrackQuery } from 'lib/graphql';
-import React from 'react';
+import { useTrackLazyQuery } from 'lib/graphql';
+import React, { useEffect } from 'react';
 import { AudioPlayer } from './AudioPlayer';
 
 interface TrackProps {
   trackId: string;
+  coverPhotoUrl?: string;
 }
 
-export const Track = ({ trackId }: TrackProps) => {
-  const { data } = useTrackQuery({ variables: { id: trackId } });
-  const track = data?.track;
+export const Track = ({ trackId, coverPhotoUrl }: TrackProps) => {
+  const [track, { data, error }] = useTrackLazyQuery({ variables: { id: trackId } });
 
-  if (!track) return <TrackSkeleton />;
+  useEffect(() => {
+    if (!data?.track) {
+      track();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (error) {
+      setTimeout(() => {
+        track();
+      }, 2000);
+    }
+  }, [data, error]);
+
+  if (!data?.track) return <TrackSkeleton />;
 
   return (
-    <div className="p-4 bg-gray-20 break-words">
-      <AudioPlayer
-        id={track.id}
-        url={track.file}
-        title={track.title}
-        // coverPhotoUrl="https://images-na.ssl-images-amazon.com/images/I/91YlTtiGi0L._AC_SL1500_.jpg"
-      />
-    </div>
+    <AudioPlayer
+      trackId={data.track.id}
+      title={data.track.title}
+      src={data.track.playbackUrl}
+      art={data.track.artworkUrl || coverPhotoUrl || undefined}
+    />
   );
 };

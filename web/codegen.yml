@@ -13,3 +13,4 @@ generates:
       strictScalars: true
       scalars:
         DateTime: string
+        JSON: unknown

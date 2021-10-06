@@ -7,7 +7,9 @@ import { NewPost } from 'icons/NewPost';
 import { Profile } from 'icons/Profile';
 import { Search } from 'icons/Search';
 import { useRouter } from 'next/router';
+import React from 'react';
 import { NavBarButton } from './Buttons/NavBarButton';
+import { NavBarLink } from './Buttons/NavBarLink';
 import { NotificationBadge } from './NotificationBadge';
 
 export const NavBar = () => {
@@ -22,7 +24,7 @@ export const NavBar = () => {
   return (
     <nav className="bg-black md:bg-gray-30 h-16 flex items-center inset-x-0 shadow-2xl md:w-full">
       <div className="w-full flex">
-        <NavBarButton label="Home" path="/" icon={Home} activatedColor="yellow" id="top" />
+        <NavBarLink label="Home" path="/" icon={Home} activatedColor="yellow" id="top" />
         <NavBarButton
           label="Explore"
           onClick={() => dispatchShowUnderDevelopmentModal(true)}
@@ -30,20 +32,20 @@ export const NavBar = () => {
           activatedColor="green"
         />
         <NavBarButton label="Create" icon={NewPost} onClick={handleCreateClick} />
-        <NavBarButton
+        <NavBarLink
           label="Notifications"
           path={me ? '/notifications' : '/login'}
           icon={Bell}
           badge={me ? NotificationBadge : undefined}
           activatedColor="purple"
         />
-        <NavBarButton
+        <NavBarLink
           label="Profile"
           icon={Profile}
           path={me ? `/profiles/${me?.profile.id}` : '/login'}
           activatedColor="purple-green"
         />
-        <NavBarButton
+        <NavBarLink
           label="Playground"
           path="/playground"
           icon={() => <Happy width={20} height={20} />}

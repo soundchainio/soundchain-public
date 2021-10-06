@@ -15,7 +15,7 @@ contract SoundchainCollectible is ERC721, ERC721Enumerable, ERC721URIStorage, ER
 
     constructor() ERC721("SoundchainCollectible", "SC") {}
 
-    function safeMint(address to, string memory _tokenURI) public onlyOwner {
+    function safeMint(address to, string memory _tokenURI) public {
         uint tokenId = _tokenIdCounter.current();
         
         _safeMint(to, tokenId);

@@ -4,4 +4,5 @@ export interface NewPostNotificationMetadata {
   postId: string;
   postBody: string;
   postLink?: string;
+  trackId?: string;
 }

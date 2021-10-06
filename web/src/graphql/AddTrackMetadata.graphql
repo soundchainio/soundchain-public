@@ -4,6 +4,7 @@ mutation AddTrackMetadata($input: AddTrackMetadataInput!) {
       id
       title
       description
+      artworkUrl
     }
   }
 }

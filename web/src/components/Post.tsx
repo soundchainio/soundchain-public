@@ -5,6 +5,7 @@ import { usePostQuery } from 'lib/graphql';
 import NextLink from 'next/link';
 import React from 'react';
 import { AuthorActionsType } from 'types/AuthorActionsType';
+import { AudioPlayer } from './AudioPlayer';
 import { Avatar } from './Avatar';
 import { PostActions } from './PostActions';
 import { PostSkeleton } from './PostSkeleton';
@@ -42,7 +43,7 @@ export const Post = ({ postId }: PostProps) => {
               </NextLink>
               <Timestamp
                 datetime={post.createdAt}
-                edited={(post.createdAt !== post.updatedAt) || false}
+                edited={post.createdAt !== post.updatedAt || false}
                 className="flex-1 text-left"
               />
             </div>
@@ -50,13 +51,13 @@ export const Post = ({ postId }: PostProps) => {
               {canEdit && <Ellipsis className="pr-4 pl-4 w-full h-3 cursor-pointer" onClick={onEllipsisClick} />}
             </div>
           </div>
-
         </div>
         <pre className="mt-4 text-gray-100 break-words whitespace-pre-wrap">{post.body}</pre>
         {post.mediaLink && (
           <iframe frameBorder="0" className="mt-4 w-full bg-gray-20" allowFullScreen src={post.mediaLink} />
         )}
         {post.repostId && <RepostPreview postId={post.repostId} />}
+        {post.track && <AudioPlayer trackId={post.track.id} src={post.track.playbackUrl} title={post.track.title} />}
         <PostStats
           totalReactions={post.totalReactions}
           topReactions={post.topReactions}

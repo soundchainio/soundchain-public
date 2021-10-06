@@ -3,6 +3,9 @@ fragment TrackComponentFields on Track {
   profileId
   title
   file
+  artworkUrl
+  description
+  playbackUrl
   createdAt
   updatedAt
 }
