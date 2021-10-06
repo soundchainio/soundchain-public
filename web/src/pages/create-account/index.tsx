@@ -31,7 +31,12 @@ export default function CreateAccountPage() {
   const [email, setEmail] = useState<string>('');
 
   useEffect(()=>{
-    setEmail(window.localStorage.getItem("soundChainUserMagicEmail") || '');
+    const emailStored = window.localStorage.getItem("soundChainUserMagicEmail")
+    if(emailStored){
+      setEmail(emailStored);
+    } else {
+      router.push('/login');
+    }
   },[])
 
   const handleSubmit = async (values: FormValues, { setErrors }: FormikHelpers<FormValues>) => {
@@ -43,6 +48,7 @@ export default function CreateAccountPage() {
       }
       const { data } = await register({variables: {input: {email, token, ...values}}});
       setJwt(data?.register.jwt);
+      window.localStorage.removeItem("soundChainUserMagicEmail");
       router.push(router.query.callbackUrl?.toString() ?? '/create-account/profile-picture');
     } catch (error) {
       const formatted = formatValidationErrors<FormValues>(error.graphQLErrors[0]);
@@ -65,6 +71,10 @@ export default function CreateAccountPage() {
     displayName: '',
     handle: '',
   };
+
+  if(!email){
+    return null;
+  }
 
   return (
     <AuthLayout topNavBarProps={topNavBarProps}>
