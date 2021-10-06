@@ -2,6 +2,7 @@ fragment TrackComponentFields on Track {
   id
   profileId
   title
+  description
   playbackUrl
   createdAt
   updatedAt

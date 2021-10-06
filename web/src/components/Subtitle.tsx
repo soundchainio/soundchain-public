@@ -2,7 +2,7 @@ import classNames from 'classnames';
 
 interface SubtitleProps extends React.ComponentPropsWithoutRef<'h4'> {
   children: string;
-  size?: 'base' | 'lg';
+  size?: 'base' | 'lg' | 'sm' | 'xs';
 }
 
 const baseClasses = 'font-medium text-white';
