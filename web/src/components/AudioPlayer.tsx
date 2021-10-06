@@ -8,10 +8,10 @@ import { remainingTime, timeFromSecs } from 'utils/calculateTime';
 
 interface AudioPlayerProps {
   src: string;
-  title?: string;
+  title?: string | null;
   trackId: string;
-  artist?: string;
-  art?: string;
+  artist?: string | null;
+  art?: string | null;
 }
 
 export const AudioPlayer = ({ src, title, artist, art, trackId }: AudioPlayerProps) => {
@@ -74,10 +74,10 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: AudioPlayerPro
 
   return (
     <div className="bg-black rounded-md p-4 items-center">
-      <div className="flex flex items-center">
+      <div className="flex items-center">
         {art && (
-          <div className="h-20 w-20 relative flex items-center relative">
-            <Image src={art} layout="fill" className="m-auto object-cover" />
+          <div className="h-20 w-20 relative flex items-center">
+            <Image src={art} alt="" layout="fill" className="m-auto object-cover" />
           </div>
         )}
         <div className="flex flex-col flex-1">
@@ -93,9 +93,7 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: AudioPlayerPro
             </div>
             <div className="flex flex-col">
               <div className="text-white font-bold">
-                <NextLink href={`/tracks/${trackId}`}>
-                  {title ? title : 'Unknown Title'}
-                </NextLink>
+                <NextLink href={`/tracks/${trackId}`}>{title ? title : 'Unknown Title'}</NextLink>
               </div>
               <div className="text-gray-80 font-bold">{artist || 'Unknown Artist'}</div>
             </div>
