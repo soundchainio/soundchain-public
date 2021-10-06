@@ -101,12 +101,7 @@ export default function SettingsPage() {
           <Link to="/bio" label="Bio" value={me.profile.bio || 'Add a bio...'} />
           <Link to="/musician-type" label="Musician Type(s)" value={musicianTypes || 'Not selected'} />
           <Link to="/favorite-genres" label="Favorite Genre(s)" value={genres || 'Not selected'} />
-          <FakeLink
-            to="/social-links"
-            onClick={() => dispatchShowUnderDevelopmentModal(true)}
-            label="Social Link(s)"
-            value="Under development"
-          />
+          <Link to="/social-links" label="Social Links" value={'Click to view your social links' || 'Not selected'} />
         </div>
       </div>
     </Layout>

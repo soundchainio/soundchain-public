@@ -1336,6 +1336,10 @@ export type MeQuery = (
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'followerCount' | 'followingCount' | 'favoriteGenres' | 'musicianTypes' | 'bio'>
+      & { socialMedias: (
+        { __typename?: 'SocialMedias' }
+        & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
+      ) }
     ) }
   )> }
 );
@@ -1874,6 +1878,26 @@ export type UpdateProfilePictureMutation = (
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'profilePicture'>
+    ) }
+  ) }
+);
+
+export type UpdateSocialMediasMutationVariables = Exact<{
+  input: UpdateProfileInput;
+}>;
+
+
+export type UpdateSocialMediasMutation = (
+  { __typename?: 'Mutation' }
+  & { updateProfile: (
+    { __typename?: 'UpdateProfilePayload' }
+    & { profile: (
+      { __typename?: 'Profile' }
+      & Pick<Profile, 'id'>
+      & { socialMedias: (
+        { __typename?: 'SocialMedias' }
+        & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
+      ) }
     ) }
   ) }
 );
@@ -2835,6 +2859,12 @@ export const MeDocument = gql`
       favoriteGenres
       musicianTypes
       bio
+      socialMedias {
+        facebook
+        instagram
+        soundcloud
+        twitter
+      }
     }
   }
 }
@@ -4064,6 +4094,47 @@ export function useUpdateProfilePictureMutation(baseOptions?: Apollo.MutationHoo
 export type UpdateProfilePictureMutationHookResult = ReturnType<typeof useUpdateProfilePictureMutation>;
 export type UpdateProfilePictureMutationResult = Apollo.MutationResult<UpdateProfilePictureMutation>;
 export type UpdateProfilePictureMutationOptions = Apollo.BaseMutationOptions<UpdateProfilePictureMutation, UpdateProfilePictureMutationVariables>;
+export const UpdateSocialMediasDocument = gql`
+    mutation updateSocialMedias($input: UpdateProfileInput!) {
+  updateProfile(input: $input) {
+    profile {
+      id
+      socialMedias {
+        facebook
+        instagram
+        soundcloud
+        twitter
+      }
+    }
+  }
+}
+    `;
+export type UpdateSocialMediasMutationFn = Apollo.MutationFunction<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>;
+
+/**
+ * __useUpdateSocialMediasMutation__
+ *
+ * To run a mutation, you first call `useUpdateSocialMediasMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateSocialMediasMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateSocialMediasMutation, { data, loading, error }] = useUpdateSocialMediasMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateSocialMediasMutation(baseOptions?: Apollo.MutationHookOptions<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>(UpdateSocialMediasDocument, options);
+      }
+export type UpdateSocialMediasMutationHookResult = ReturnType<typeof useUpdateSocialMediasMutation>;
+export type UpdateSocialMediasMutationResult = Apollo.MutationResult<UpdateSocialMediasMutation>;
+export type UpdateSocialMediasMutationOptions = Apollo.BaseMutationOptions<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>;
 export const UploadTrackDocument = gql`
     mutation UploadTrack($input: UploadTrackInput!) {
   uploadTrack(input: $input) {
