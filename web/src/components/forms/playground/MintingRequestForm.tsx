@@ -3,12 +3,16 @@ import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
 import { TextareaField } from 'components/TextareaField';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
-import { useCreateMintingRequestMutation } from 'lib/graphql';
+import { mintNftToken } from 'lib/blockchain';
+import { usePinJsonToIpfsMutation, usePinToIpfsMutation } from 'lib/graphql';
 import React, { useState } from 'react';
+import { Metadata } from 'types/NftTypes';
+import Web3 from 'web3';
 import * as yup from 'yup';
 
 interface Props {
   to: string;
+  web3: Web3;
   afterSubmit: () => void;
 }
 
@@ -28,8 +32,9 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   artUrl: yup.string(),
 });
 
-export const MintingRequestForm = ({ to, afterSubmit }: Props) => {
-  const [createMintingRequest] = useCreateMintingRequestMutation();
+export const MintingRequestForm = ({ to, web3, afterSubmit }: Props) => {
+  const [pinToIPFS] = usePinToIpfsMutation();
+  const [pinJsonToIPFS] = usePinJsonToIpfsMutation();
   const [requesting, setRequesting] = useState(false);
 
   const initialValues: FormValues = {
@@ -39,12 +44,61 @@ export const MintingRequestForm = ({ to, afterSubmit }: Props) => {
     description: '',
   };
 
-  const handleSubmit = async (values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
+  const handleSubmit = async (
+    { name, assetUrl, artUrl, to, description }: FormValues,
+    { resetForm }: FormikHelpers<FormValues>,
+  ) => {
     setRequesting(true);
-    await createMintingRequest({ variables: { input: values } });
+
+    const assetKey = assetUrl.substring(assetUrl.lastIndexOf('/') + 1);
+    const { data: assetPinResult } = await pinToIPFS({
+      variables: {
+        input: {
+          fileKey: assetKey,
+          fileName: name,
+        },
+      },
+    });
+
+    const metadata: Metadata = {
+      description,
+      name,
+      asset: `ipfs://${assetPinResult?.pinToIPFS.cid}`,
+    };
+
+    if (artUrl) {
+      const artPin = assetUrl.substring(assetUrl.lastIndexOf('/') + 1);
+      const { data: artPinResult } = await pinToIPFS({
+        variables: {
+          input: {
+            fileKey: artPin,
+            fileName: `${name}-art`,
+          },
+        },
+      });
+      metadata.art = `ipfs://${artPinResult?.pinToIPFS.cid}`;
+    }
+
+    const { data: metadataPinResult } = await pinJsonToIPFS({
+      variables: {
+        input: {
+          fileName: `${name}-metadata`,
+          json: metadata,
+        },
+      },
+    });
+
+    console.log(metadata);
+    console.log(metadataPinResult?.pinJsonToIPFS.cid);
+
+    const mintResult = await mintNftToken(web3, `ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`, to, to);
+
+    if (mintResult) {
+      afterSubmit();
+      resetForm();
+    }
+
     setRequesting(false);
-    afterSubmit();
-    resetForm();
   };
 
   return (

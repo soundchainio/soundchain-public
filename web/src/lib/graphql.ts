@@ -14,6 +14,8 @@ export type Scalars = {
   Float: number;
   /** The javascript `Date` as string. Type represents date and time as the ISO Date string. */
   DateTime: string;
+  /** The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf). */
+  JSON: unknown;
 };
 
 export type AddCommentInput = {
@@ -254,6 +256,7 @@ export enum Genre {
   World = 'WORLD'
 }
 
+
 export type LoginInput = {
   /** Username can be email or handle */
   username: Scalars['String'];
@@ -318,6 +321,8 @@ export type Mutation = {
   createMintingRequest: MintingRequestPayload;
   resetNotificationCount: Profile;
   clearNotifications: ClearNotificationsPayload;
+  pinToIPFS: PinningPayload;
+  pinJsonToIPFS: PinningPayload;
   createPost: CreatePostPayload;
   updatePost: UpdatePostPayload;
   reactToPost: ReactToPostPayload;
@@ -359,6 +364,16 @@ export type MutationSendMessageArgs = {
 
 export type MutationCreateMintingRequestArgs = {
   input: CreateMintingRequestInput;
+};
+
+
+export type MutationPinToIpfsArgs = {
+  input: PinToIpfsInput;
+};
+
+
+export type MutationPinJsonToIpfsArgs = {
+  input: PinJsonToIpfsInput;
 };
 
 
@@ -515,6 +530,21 @@ export type PageInput = {
   last?: Maybe<Scalars['Int']>;
   before?: Maybe<Scalars['String']>;
   inclusive?: Maybe<Scalars['Boolean']>;
+};
+
+export type PinJsonToIpfsInput = {
+  fileName: Scalars['String'];
+  json: Scalars['JSON'];
+};
+
+export type PinToIpfsInput = {
+  fileName: Scalars['String'];
+  fileKey: Scalars['String'];
+};
+
+export type PinningPayload = {
+  __typename?: 'PinningPayload';
+  cid: Scalars['String'];
 };
 
 export type Post = {
@@ -1439,6 +1469,32 @@ export type NotificationsQuery = (
       { __typename?: 'NewPostNotification' }
       & NewPostNotificationFieldsFragment
     )> }
+  ) }
+);
+
+export type PinJsonToIpfsMutationVariables = Exact<{
+  input: PinJsonToIpfsInput;
+}>;
+
+
+export type PinJsonToIpfsMutation = (
+  { __typename?: 'Mutation' }
+  & { pinJsonToIPFS: (
+    { __typename?: 'PinningPayload' }
+    & Pick<PinningPayload, 'cid'>
+  ) }
+);
+
+export type PinToIpfsMutationVariables = Exact<{
+  input: PinToIpfsInput;
+}>;
+
+
+export type PinToIpfsMutation = (
+  { __typename?: 'Mutation' }
+  & { pinToIPFS: (
+    { __typename?: 'PinningPayload' }
+    & Pick<PinningPayload, 'cid'>
   ) }
 );
 
@@ -3070,6 +3126,72 @@ export function useNotificationsLazyQuery(baseOptions?: Apollo.LazyQueryHookOpti
 export type NotificationsQueryHookResult = ReturnType<typeof useNotificationsQuery>;
 export type NotificationsLazyQueryHookResult = ReturnType<typeof useNotificationsLazyQuery>;
 export type NotificationsQueryResult = Apollo.QueryResult<NotificationsQuery, NotificationsQueryVariables>;
+export const PinJsonToIpfsDocument = gql`
+    mutation pinJsonToIPFS($input: PinJsonToIPFSInput!) {
+  pinJsonToIPFS(input: $input) {
+    cid
+  }
+}
+    `;
+export type PinJsonToIpfsMutationFn = Apollo.MutationFunction<PinJsonToIpfsMutation, PinJsonToIpfsMutationVariables>;
+
+/**
+ * __usePinJsonToIpfsMutation__
+ *
+ * To run a mutation, you first call `usePinJsonToIpfsMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `usePinJsonToIpfsMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [pinJsonToIpfsMutation, { data, loading, error }] = usePinJsonToIpfsMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function usePinJsonToIpfsMutation(baseOptions?: Apollo.MutationHookOptions<PinJsonToIpfsMutation, PinJsonToIpfsMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<PinJsonToIpfsMutation, PinJsonToIpfsMutationVariables>(PinJsonToIpfsDocument, options);
+      }
+export type PinJsonToIpfsMutationHookResult = ReturnType<typeof usePinJsonToIpfsMutation>;
+export type PinJsonToIpfsMutationResult = Apollo.MutationResult<PinJsonToIpfsMutation>;
+export type PinJsonToIpfsMutationOptions = Apollo.BaseMutationOptions<PinJsonToIpfsMutation, PinJsonToIpfsMutationVariables>;
+export const PinToIpfsDocument = gql`
+    mutation pinToIPFS($input: PinToIPFSInput!) {
+  pinToIPFS(input: $input) {
+    cid
+  }
+}
+    `;
+export type PinToIpfsMutationFn = Apollo.MutationFunction<PinToIpfsMutation, PinToIpfsMutationVariables>;
+
+/**
+ * __usePinToIpfsMutation__
+ *
+ * To run a mutation, you first call `usePinToIpfsMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `usePinToIpfsMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [pinToIpfsMutation, { data, loading, error }] = usePinToIpfsMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function usePinToIpfsMutation(baseOptions?: Apollo.MutationHookOptions<PinToIpfsMutation, PinToIpfsMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<PinToIpfsMutation, PinToIpfsMutationVariables>(PinToIpfsDocument, options);
+      }
+export type PinToIpfsMutationHookResult = ReturnType<typeof usePinToIpfsMutation>;
+export type PinToIpfsMutationResult = Apollo.MutationResult<PinToIpfsMutation>;
+export type PinToIpfsMutationOptions = Apollo.BaseMutationOptions<PinToIpfsMutation, PinToIpfsMutationVariables>;
 export const PostDocument = gql`
     query Post($id: String!) {
   post(id: $id) {

@@ -68,8 +68,10 @@ export const NFTCard = ({ account, web3, nftToken }: NftCardProps) => {
   const handleBurn = async (web3: Web3, tokenId: string) => {
     const confirmed = confirm('Heey! This will destroy this NFT, you sure?');
     if (confirmed) {
-      await burnNftToken(web3, tokenId, account);
-      alert('Token burn requested!');
+      const result = await burnNftToken(web3, tokenId, account);
+      if (result) {
+        alert('Token burn requested!');
+      }
     }
   };
 
@@ -173,8 +175,10 @@ const TransferForm = ({ name, web3, fromAddress, tokenId, onCancel }: TransferFo
   const [loading, setLoading] = useState(false);
   const handleSubmit = async (values: FormValues) => {
     setLoading(true);
-    await transferNftToken(web3, tokenId, fromAddress, values.to);
-    alert('Token transfer requested!');
+    const result = await transferNftToken(web3, tokenId, fromAddress, values.to);
+    if (result) {
+      alert('Token transfer requested!');
+    }
     setLoading(false);
     onCancel();
   };
