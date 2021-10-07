@@ -8,6 +8,9 @@ import useMagic from 'hooks/useMagic';
 import useMetaMask from 'hooks/useMetaMask';
 import { testNetwork } from 'lib/blockchainNetworks';
 import { Button } from 'components/Button';
+import { Wallet } from 'components/Wallet';
+import { MetaMask } from 'icons/MetaMask';
+
 
 const topNovaBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
@@ -21,6 +24,7 @@ export default function WalletPage() {
   const { account: magicAccount, connect: magicConnect, web3: magicWeb3, balance: magicBalance } = useMagic();
   const [loading, setLoading] = useState(true);
   const [testnet, setTestnet] = useState(true);
+  const [mainnet, setMainnet] = useState(true);
   const [connectedToMetaMask, setConnectedToMetaMask] = useState(false);
 
   useEffect(() => {
@@ -48,6 +52,8 @@ export default function WalletPage() {
 
   if (!me) return null;
 
+  console.log({web3})
+
   return (
     <Layout topNavBarProps={topNovaBarProps} fullHeight={true}>
       <Head>
@@ -55,20 +61,28 @@ export default function WalletPage() {
         <meta name="description" content="Account Settings" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className="h-full flex flex-col justify-between">
-        <div className="bg-gray-15 p-10">
+      <div className="h-full flex flex-col justify-between items-center">
+        <div className="bg-gray-15 w-full py-8">
           {!magicAccount && (
-            <Button variant="rainbow-xs" className="max-w-xs" onClick={() => magicConnect()}>
-              Connect to Soundchain Wallet
-            </Button>
+            <div className="flex justify-center items-center">
+              <Button variant="rainbow-xs" className="max-w-xs" onClick={() => magicConnect()}>
+                Connect to Soundchain Wallet
+              </Button>
+            </div>
           )}
+          
         </div>
-        <div className="bg-gray-15 p-10"> 
-          {!connectedToMetaMask && (
-            <Button variant="rainbow-xs" className="max-w-xs" onClick={() => connect()}>
-              Connect to MetaMask Wallet
-            </Button>
-          )}
+        <div className="bg-gray-15 w-full"> 
+          {connectedToMetaMask ? 
+            <Wallet title="MetaMask Wallet" icon={MetaMask} correctNetwork={testnet} balance={balance} account={account}/>
+           :
+            <div className="p-10">
+              <Button variant="rainbow-xs" className="max-w-xs" onClick={() => connect()}>
+                Connect to MetaMask Wallet
+              </Button>
+            </div>
+          }
+            
         </div>
       </div>
     </Layout>
