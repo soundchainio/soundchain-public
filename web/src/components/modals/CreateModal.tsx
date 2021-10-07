@@ -1,4 +1,5 @@
 import classNames from 'classnames';
+import { AudioPlayer } from 'components/AudioPlayer';
 import { TrackMetadataForm } from 'components/forms/track/TrackMetadataForm';
 import { TrackUploader } from 'components/forms/track/TrackUploader';
 import { Modal } from 'components/Modal';
@@ -18,6 +19,19 @@ export const CreateModal = () => {
   const [trackId, setTrackId] = useState<string | null>(null);
   const [assetUrl, setAssetUrl] = useState<string | null>(null);
   const [coverPhotoUrl, setCoverPhotoUrl] = useState<string | null>(null);
+
+  const [file, setFile] = useState<File>();
+  const [preview, setPreview] = useState<string>();
+
+  const handleFileDrop = (file: File) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+
+    reader.addEventListener('loadend', () => {
+      setPreview(reader.result as string);
+      setFile(file);
+    });
+  };
 
   const isOpen = modalState.showCreate;
 
@@ -55,6 +69,8 @@ export const CreateModal = () => {
     setTrackId(null);
   };
 
+  console.log('olha o bonitao aqui', file);
+
   return (
     <Modal
       show={isOpen}
@@ -66,9 +82,17 @@ export const CreateModal = () => {
         </div>
       }
     >
-      {!trackId && <TrackUploader onSuccess={setTrackId} setAssetUrl={setAssetUrl} />}
+      {!trackId && <TrackUploader onSuccess={handleFileDrop} setAssetUrl={setAssetUrl} />}
+      {file && preview && <AudioPlayer trackId={'1'} title={file.name} src={preview} />}
       {trackId && <Track trackId={trackId} coverPhotoUrl={coverPhotoUrl || undefined} />}
-      {trackId && <TrackMetadataForm trackId={trackId} assetUrl={assetUrl || ''} setCoverPhotoUrl={setCoverPhotoUrl} afterSubmit={handleClose} />}
+      {trackId && (
+        <TrackMetadataForm
+          trackId={trackId}
+          assetUrl={assetUrl || ''}
+          setCoverPhotoUrl={setCoverPhotoUrl}
+          afterSubmit={handleClose}
+        />
+      )}
     </Modal>
   );
 };

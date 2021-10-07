@@ -4,8 +4,7 @@ import { InputField } from 'components/InputField';
 import { Label } from 'components/Label';
 import { TextareaField } from 'components/TextareaField';
 import { Form, Formik } from 'formik';
-import useMetaMask from 'hooks/useMetaMask';
-import { useAddTrackMetadataMutation, useCreateMintingRequestMutation } from 'lib/graphql';
+import { useAddTrackMetadataMutation } from 'lib/graphql';
 import React from 'react';
 import * as yup from 'yup';
 
@@ -25,7 +24,7 @@ interface FormValues {
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   title: yup.string().required(),
   description: yup.string(),
-  artworkUrl: yup.string()
+  artworkUrl: yup.string(),
 });
 
 const initialValues: FormValues = {
@@ -34,24 +33,10 @@ const initialValues: FormValues = {
   artworkUrl: '',
 };
 
-export const TrackMetadataForm = ({ trackId, afterSubmit, setCoverPhotoUrl, assetUrl }: Props) => {
+export const TrackMetadataForm = ({ trackId, afterSubmit, setCoverPhotoUrl }: Props) => {
   const [addMetadata] = useAddTrackMetadataMutation({ refetchQueries: ['Tracks'] });
-  const { account } = useMetaMask();
-  const [createMintingRequest] = useCreateMintingRequestMutation();
-
 
   const handleSubmit = async (values: FormValues) => {
-    await createMintingRequest({
-      variables: {
-        input: {
-          to: account!,
-          name: values.title,
-          description: values.description || '',
-          assetUrl: assetUrl,
-          artUrl: values.artworkUrl
-        }
-      }
-    });
     await addMetadata({ variables: { input: { trackId, ...values } } });
     afterSubmit();
   };
@@ -70,10 +55,8 @@ export const TrackMetadataForm = ({ trackId, afterSubmit, setCoverPhotoUrl, asse
           <div>
             <div className="flex items-center mt-6">
               <div className="h-30 w-30 mr-2 flex flex-col items-center">
-                <ImageUpload artwork={true} onChange={(val) => onArtworkUpload(val, setFieldValue)} />
-                <span className="text-gray-80 underline text-xs mt-2">
-                  CHANGE ARTWORK
-                </span>
+                <ImageUpload artwork={true} onChange={val => onArtworkUpload(val, setFieldValue)} />
+                <span className="text-gray-80 underline text-xs mt-2">CHANGE ARTWORK</span>
               </div>
               <div className="flex-1">
                 <Label>TRACK TITLE</Label>
@@ -92,6 +75,6 @@ export const TrackMetadataForm = ({ trackId, afterSubmit, setCoverPhotoUrl, asse
           </Button>
         </Form>
       )}
-    </Formik >
+    </Formik>
   );
 };

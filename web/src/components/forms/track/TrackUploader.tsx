@@ -7,10 +7,10 @@ import { MusicFile } from 'icons/MusicFile';
 import { Upload as UploadIcon } from 'icons/Upload';
 import { useUploadTrackMutation } from 'lib/graphql';
 import { useEffect, useState } from 'react';
-import { useDropzone } from 'react-dropzone';
+import { DropEvent, FileRejection, useDropzone } from 'react-dropzone';
 
 export interface TrackUploaderProps {
-  onSuccess: (trackId: string) => void;
+  onSuccess: (file: File) => void;
   setAssetUrl: (assetUrl: string) => void;
 }
 
@@ -26,7 +26,14 @@ export const TrackUploader = ({ onSuccess, setAssetUrl }: TrackUploaderProps) =>
   const [trackId, setTrackId] = useState<string>();
   const [filename, setFilename] = useState<string>();
 
-  const onDrop = async ([file]: File[]) => {
+  function onDrop<T extends File>([file]: T[], fileRejections: FileRejection[], event: DropEvent) {
+    console.log(file);
+    console.log(fileRejections);
+    console.log(event);
+    onSuccess(file);
+  }
+
+  const onDrop2 = async ([file]: File[]) => {
     const { data } = await uploadTrack({ variables: { input: { fileType: file.type } } });
 
     if (data) {
@@ -41,7 +48,7 @@ export const TrackUploader = ({ onSuccess, setAssetUrl }: TrackUploaderProps) =>
 
   useEffect(() => {
     if (!uploading && progress === 100 && trackId) {
-      onSuccess(trackId);
+      // onSuccess(trackId);
     }
   }, [uploading]);
 
