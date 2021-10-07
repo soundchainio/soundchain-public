@@ -3,6 +3,7 @@ import { Integrations } from '@sentry/tracing';
 import { CheckBodyScroll } from 'components/CheckBodyScroll';
 import { Favicons } from 'components/Favicons';
 import { StateProvider } from 'contexts';
+import { MagicProvider } from 'hooks/useMagicContext';
 import { ApolloProvider } from 'lib/apollo';
 import type { AppProps } from 'next/app';
 import Head from 'next/head';
@@ -37,8 +38,10 @@ function SoundchainApp({ Component, pageProps }: AppProps) {
       </Head>
       <ApolloProvider pageProps={pageProps}>
         <StateProvider>
-          <CheckBodyScroll />
-          <Component {...pageProps} />
+          <MagicProvider>
+            <CheckBodyScroll />
+            <Component {...pageProps} />
+          </MagicProvider>
         </StateProvider>
       </ApolloProvider>
     </>

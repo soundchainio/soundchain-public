@@ -1,7 +1,7 @@
 import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
 import { Form, Formik } from 'formik';
-import useMagicAuth from 'hooks/useMagicAuth';
+import { useMagicContext } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
 import { LogoAndText } from 'icons/LogoAndText';
 import { setJwt } from 'lib/apollo';
@@ -15,13 +15,13 @@ interface FormValues {
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
-  email: yup.string().required("Please enter your email address"),
+  email: yup.string().required('Please enter your email address'),
 });
 
 export const LoginForm = () => {
   const [login, { loading }] = useLoginMutation();
   const me = useMe();
-  const { connect: magicConnect } = useMagicAuth();
+  const { magic } = useMagicContext();
 
   const router = useRouter();
 
@@ -33,16 +33,17 @@ export const LoginForm = () => {
 
   async function handleSubmit(values: FormValues) {
     try {
-     const token =  await magicConnect(values.email)
+      const token = await magic?.auth.loginWithMagicLink({
+        email: values.email,
+      });
 
-     if(!token){
-       throw new Error('Error connecting Magic')
-     }
+      if (!token) {
+        throw new Error('Error connecting Magic');
+      }
 
-     const result = await login({ variables: { input: {token} } });
-     setJwt(result.data?.login.jwt);
+      const result = await login({ variables: { input: { token } } });
+      setJwt(result.data?.login.jwt);
     } catch (error) {
-      window.localStorage.setItem("soundChainUserMagicEmail", values.email);
       router.push('/create-account');
     }
   }
@@ -52,11 +53,7 @@ export const LoginForm = () => {
       <div className="h-36 mb-2 flex items-center justify-center">
         <LogoAndText />
       </div>
-      <Formik
-        initialValues={{ email: '' }}
-        validationSchema={validationSchema}
-        onSubmit={handleSubmit}
-      >
+      <Formik initialValues={{ email: '' }} validationSchema={validationSchema} onSubmit={handleSubmit}>
         <Form className="flex flex-1 flex-col">
           <div className="space-y-6 mb-auto">
             <InputField type="text" name="email" placeholder="Email address" />

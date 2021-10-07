@@ -5,7 +5,7 @@ import { InputField } from 'components/InputField';
 import { Label } from 'components/Label';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Form, Formik, FormikHelpers } from 'formik';
-import useMagicAuth from 'hooks/useMagicAuth';
+import { useMagicContext } from 'hooks/useMagicContext';
 import { setJwt } from 'lib/apollo';
 import { useRegisterMutation } from 'lib/graphql';
 import { useRouter } from 'next/dist/client/router';
@@ -26,29 +26,33 @@ const topNavBarProps: TopNavBarProps = {
 
 export default function CreateAccountPage() {
   const router = useRouter();
-  const { connect: magicConnect } = useMagicAuth();
+  const { magic } = useMagicContext();
   const [register, { loading }] = useRegisterMutation();
   const [email, setEmail] = useState<string>('');
+  const [token, setToken] = useState<string>('');
 
-  useEffect(()=>{
-    const emailStored = window.localStorage.getItem("soundChainUserMagicEmail")
-    if(emailStored){
-      setEmail(emailStored);
-    } else {
-      router.push('/login');
+  useEffect(() => {
+    async function isLoggedInMagic() {
+      const user = magic?.user;
+      const isLoggedIn = await user?.isLoggedIn();
+
+      if (user && isLoggedIn) {
+        const token = await user.getIdToken();
+        const metaData = await user.getMetadata();
+        const email = metaData?.email;
+        setToken(token);
+        email && setEmail(email);
+      } else {
+        router.push('/login');
+      }
     }
-  },[])
+    isLoggedInMagic();
+  }, []);
 
   const handleSubmit = async (values: FormValues, { setErrors }: FormikHelpers<FormValues>) => {
     try {
-      const token =  await magicConnect(email)
-
-      if(!token){
-        throw new Error('Error connecting Magic')
-      }
-      const { data } = await register({variables: {input: {email, token, ...values}}});
+      const { data } = await register({ variables: { input: { email, token, ...values } } });
       setJwt(data?.register.jwt);
-      window.localStorage.removeItem("soundChainUserMagicEmail");
       router.push(router.query.callbackUrl?.toString() ?? '/create-account/profile-picture');
     } catch (error) {
       const formatted = formatValidationErrors<FormValues>(error.graphQLErrors[0]);
@@ -72,7 +76,7 @@ export default function CreateAccountPage() {
     handle: '',
   };
 
-  if(!email){
+  if (!email || !token) {
     return null;
   }
 

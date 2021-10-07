@@ -1,6 +1,7 @@
 import { Magic } from '@magic-sdk/admin';
 import { UserInputError } from 'apollo-server-express';
 import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
+import { config } from '../config';
 import { CurrentUser } from '../decorators/current-user';
 import { Profile } from '../models/Profile';
 import { User } from '../models/User';
@@ -41,7 +42,7 @@ export class UserResolver {
     @Ctx() { authService, jwtService }: Context,
     @Arg('input') { token, email, handle, displayName }: RegisterInput,
   ): Promise<AuthPayload> {
-    const magic = new Magic(process.env.NEXT_PRIVATE_MAGIC_KEY)
+    const magic = new Magic(config.magicLink.secretKey)
     const did = magic.utils.parseAuthorizationHeader(`Bearer ${token}`)
     const magicUser = await magic.users.getMetadataByToken(did)
 
@@ -54,7 +55,7 @@ export class UserResolver {
     @Ctx() { authService, jwtService }: Context,
     @Arg('input') { token }: LoginInput,
   ): Promise<AuthPayload> {
-    const magic = new Magic(process.env.NEXT_PRIVATE_MAGIC_KEY)
+    const magic = new Magic(config.magicLink.secretKey)
     const did = magic.utils.parseAuthorizationHeader(`Bearer ${token}`)
     const magicUser = await magic.users.getMetadataByToken(did)
 
