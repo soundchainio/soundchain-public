@@ -10,6 +10,7 @@ import { testNetwork } from 'lib/blockchainNetworks';
 import { Button } from 'components/Button';
 import { Wallet } from 'components/Wallet';
 import { MetaMask } from 'icons/MetaMask';
+import { Logo } from 'icons/Logo';
 
 
 const topNovaBarProps: TopNavBarProps = {
@@ -21,30 +22,20 @@ export default function WalletPage() {
   const me = useMe();
 
   const { account, balance, web3, chainId, connect } = useMetaMask();
-  const { account: magicAccount, connect: magicConnect, web3: magicWeb3, balance: magicBalance } = useMagic();
-  const [loading, setLoading] = useState(true);
+  const { account: magicAccount, connect: magicConnect, balance: magicBalance } = useMagic();
   const [testnet, setTestnet] = useState(true);
-  const [mainnet, setMainnet] = useState(true);
   const [connectedToMetaMask, setConnectedToMetaMask] = useState(false);
 
-  useEffect(() => {
-    if (magicAccount && magicWeb3) {
-      setLoading(false);
-    }
-    setLoading(true);
-  }, [magicAccount, magicWeb3]);
 
   useEffect(() => {
     if (!account || !web3) {
       setConnectedToMetaMask(false);
-      setLoading(false);
       return;
     }
     setConnectedToMetaMask(true);
 
     if (chainId !== testNetwork.id) {
       setTestnet(false);
-      setLoading(false);
       return;
     }
     setTestnet(true);
@@ -52,31 +43,30 @@ export default function WalletPage() {
 
   if (!me) return null;
 
-  console.log({web3})
-
   return (
     <Layout topNavBarProps={topNovaBarProps} fullHeight={true}>
       <Head>
-        <title>Soundchain - Account Settings</title>
-        <meta name="description" content="Account Settings" />
+        <title>Soundchain - Wallet</title>
+        <meta name="description" content="Wallet" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className="h-full flex flex-col justify-between items-center">
-        <div className="bg-gray-15 w-full py-8">
-          {!magicAccount && (
-            <div className="flex justify-center items-center">
+      <div className="h-full flex flex-col justify-between space-y-6 items-center">
+        <div className="bg-gray-15 w-full">
+          {magicAccount ?
+            <Wallet title="Soundchain Wallet" icon={() => <Logo id="soundchain-wallet" height="20" width="20" />} correctNetwork={testnet} balance={magicBalance} account={magicAccount} showActionButtons={true}/>
+          : 
+            <div className="flex justify-center items-center py-6">
               <Button variant="rainbow-xs" className="max-w-xs" onClick={() => magicConnect()}>
                 Connect to Soundchain Wallet
               </Button>
             </div>
-          )}
-          
+          }
         </div>
         <div className="bg-gray-15 w-full"> 
           {connectedToMetaMask ? 
             <Wallet title="MetaMask Wallet" icon={MetaMask} correctNetwork={testnet} balance={balance} account={account}/>
            :
-            <div className="p-10">
+            <div className="flex justify-center items-center py-6">
               <Button variant="rainbow-xs" className="max-w-xs" onClick={() => connect()}>
                 Connect to MetaMask Wallet
               </Button>
