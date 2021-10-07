@@ -23,20 +23,11 @@ export class AuthService extends Service {
       throw new Error(`Error while creating user: ${err.message}`);
     }
 
-    // try {
-    //   await this.context.emailService.sendEmailVerification(email, displayName, emailVerificationToken);
-    // } catch (err) {
-    //   ProfileModel.deleteOne({ _id: profile.id });
-    //   UserModel.deleteOne({ _id: user.id });
-    //   throw new Error(`Error while sending email verification: ${err.message}`);
-    // }
-
     return user;
   }
 
   async getUserFromCredentials(username: string): Promise<User | undefined> {
     return await UserModel.findOne({ $or: [{ email: username }, { handle: username }] });
-
   }
 
   async verifyUserEmail(emailVerificationToken: string): Promise<User> {
