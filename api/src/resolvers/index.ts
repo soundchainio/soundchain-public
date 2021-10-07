@@ -8,6 +8,7 @@ import { MessageResolver } from './MessageResolver';
 import { MintingRequestResolver } from './MintingRequestResolver';
 import { NewPostNotificationResolver } from './NewPostNotificationResolver';
 import { NotificationResolver } from './NotificationResolver';
+import { PinningResolver } from './PinningResolver';
 import { PostResolver } from './PostResolver';
 import { ProfileResolver } from './ProfileResolver';
 import { ReactionNotificationResolver } from './ReactionNotificationResolver';
@@ -34,4 +35,5 @@ export const resolvers = [
   UploadResolver,
   UserResolver,
   MintingRequestResolver,
+  PinningResolver,
 ] as const;

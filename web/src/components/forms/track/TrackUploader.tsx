@@ -11,6 +11,7 @@ import { useDropzone } from 'react-dropzone';
 
 export interface TrackUploaderProps {
   onSuccess: (trackId: string) => void;
+  setAssetUrl: (assetUrl: string) => void;
 }
 
 const maxSize = 1024 * 1024 * 30; // 30Mb
@@ -19,7 +20,7 @@ const accept = ['audio/*'];
 const containerClasses =
   'flex justify-around p-3 bg-black text-gray-30 border-gray-50 border-2 border-dashed rounded-md h-[100px]';
 
-export const TrackUploader = ({ onSuccess }: TrackUploaderProps) => {
+export const TrackUploader = ({ onSuccess, setAssetUrl }: TrackUploaderProps) => {
   const [uploadTrack] = useUploadTrackMutation();
   const [startUpload, { uploading, progress, cancelUpload }] = useUpChunk();
   const [trackId, setTrackId] = useState<string>();
@@ -33,6 +34,7 @@ export const TrackUploader = ({ onSuccess }: TrackUploaderProps) => {
       startUpload(data.uploadTrack.track.muxUpload.url, file);
       setTrackId(data.uploadTrack.track.id);
       setFilename(file.name);
+      if (setAssetUrl) setAssetUrl(data.uploadTrack.track.file);
     }
   };
   const { getRootProps, getInputProps } = useDropzone({ maxFiles: 1, maxSize, accept, onDrop });

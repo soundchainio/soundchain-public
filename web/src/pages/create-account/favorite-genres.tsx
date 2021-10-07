@@ -19,7 +19,7 @@ export default function FavoriteGenresPage() {
     title: 'Favorite Genres',
     leftButton: <BackButton />,
     rightButton: <Badge label="Skip" onClick={onClose} selected={false} />,
-    subtitle: <StepProgressBar steps={5} currentStep={3} />,
+    subtitle: <StepProgressBar steps={6} currentStep={3} />,
   };
 
   return (

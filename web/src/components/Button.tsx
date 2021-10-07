@@ -1,4 +1,5 @@
 import { IconComponent } from 'icons/types/IconComponent';
+import { BuyNFTButton } from './Buttons/BuyNFT';
 import { ClearButton } from './Buttons/Clear';
 import { GreenGradient } from './Buttons/GreenGradient';
 import { OutlineButton } from './Buttons/Outline';
@@ -6,6 +7,7 @@ import { OutlineRoundedButton } from './Buttons/OutlineRounded';
 import { RainbowButton } from './Buttons/Rainbow';
 import { RainbowRounded } from './Buttons/RainbowRounded';
 import { RainbowXSButton } from './Buttons/RainbowXS';
+import { SellNFTButton } from './Buttons/SellNFT';
 
 export type ButtonVariant =
   | 'rainbow'
@@ -14,6 +16,8 @@ export type ButtonVariant =
   | 'rainbow-rounded'
   | 'green-yellow-gradient'
   | 'clear'
+  | 'sell-nft'
+  | 'buy-nft'
   | 'outline-rounded';
 
 export interface ButtonProps extends React.ComponentPropsWithoutRef<'button'> {
@@ -35,6 +39,8 @@ export const buttonByVariant: Record<ButtonVariant, (props: ButtonProps) => JSX.
   'green-yellow-gradient': GreenGradient,
   clear: ClearButton,
   'outline-rounded': OutlineRoundedButton,
+  'sell-nft': SellNFTButton,
+  'buy-nft': BuyNFTButton,
 };
 
 export const Button = ({ variant = 'rainbow', ...props }: ButtonProps) => {
