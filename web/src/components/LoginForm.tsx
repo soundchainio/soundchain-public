@@ -11,11 +11,11 @@ import { useEffect } from 'react';
 import * as yup from 'yup';
 
 interface FormValues {
-  username: string;
+  email: string;
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
-  username: yup.string().required(),
+  email: yup.string().required("Please enter your email address"),
 });
 
 export const LoginForm = () => {
@@ -33,7 +33,7 @@ export const LoginForm = () => {
 
   async function handleSubmit(values: FormValues) {
     try {
-     const token =  await magicConnect(values.username)
+     const token =  await magicConnect(values.email)
 
      if(!token){
        throw new Error('Error connecting Magic')
@@ -42,7 +42,7 @@ export const LoginForm = () => {
      const result = await login({ variables: { input: {token} } });
      setJwt(result.data?.login.jwt);
     } catch (error) {
-      window.localStorage.setItem("soundChainUserMagicEmail", values.username);
+      window.localStorage.setItem("soundChainUserMagicEmail", values.email);
       router.push('/create-account');
     }
   }
@@ -53,13 +53,13 @@ export const LoginForm = () => {
         <LogoAndText />
       </div>
       <Formik
-        initialValues={{ username: '' }}
+        initialValues={{ email: '' }}
         validationSchema={validationSchema}
         onSubmit={handleSubmit}
       >
         <Form className="flex flex-1 flex-col">
           <div className="space-y-6 mb-auto">
-            <InputField type="text" name="username" placeholder="Username or Email Address" />
+            <InputField type="text" name="email" placeholder="Email address" />
           </div>
           <Button type="submit" disabled={loading} loading={loading} className="w-full mt-12">
             Login / Sign up

@@ -6,6 +6,7 @@ import Head from 'next/head';
 
 const topNavBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
+  showLoginSignUpButton: false
 };
 export default function LoginPage() {
   return (
