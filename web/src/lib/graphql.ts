@@ -751,7 +751,6 @@ export enum ReactionType {
 
 export type RegisterInput = {
   token: Scalars['String'];
-  email: Scalars['String'];
   displayName: Scalars['String'];
   handle: Scalars['String'];
 };
@@ -944,7 +943,7 @@ export type User = {
   id: Scalars['ID'];
   email: Scalars['String'];
   handle: Scalars['String'];
-  walletAddress: Scalars['String'];
+  walletAddress: Maybe<Scalars['String']>;
   verified: Scalars['Boolean'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];

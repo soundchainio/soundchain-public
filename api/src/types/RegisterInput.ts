@@ -1,4 +1,4 @@
-import { IsEmail, Length, Matches } from 'class-validator';
+import { Length, Matches } from 'class-validator';
 import { Field, InputType } from 'type-graphql';
 import { handleRegex } from '../utils/Validation';
 
@@ -6,10 +6,6 @@ import { handleRegex } from '../utils/Validation';
 export class RegisterInput {
   @Field()
   token: string;
-
-  @Field()
-  @IsEmail()
-  email: string;
 
   @Field()
   @Length(3, 255)

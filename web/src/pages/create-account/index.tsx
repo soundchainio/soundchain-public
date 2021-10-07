@@ -51,7 +51,7 @@ export default function CreateAccountPage() {
 
   const handleSubmit = async (values: FormValues, { setErrors }: FormikHelpers<FormValues>) => {
     try {
-      const { data } = await register({ variables: { input: { email, token, ...values } } });
+      const { data } = await register({ variables: { input: { token, ...values } } });
       setJwt(data?.register.jwt);
       router.push(router.query.callbackUrl?.toString() ?? '/create-account/profile-picture');
     } catch (error) {

@@ -27,7 +27,7 @@ export class AuthService extends Service {
   }
 
   async getUserFromCredentials(username: string): Promise<User | undefined> {
-    return await UserModel.findOne({ $or: [{ email: username }, { handle: username }] });
+    return await UserModel.findOne({ email: username });
   }
 
   async verifyUserEmail(emailVerificationToken: string): Promise<User> {
