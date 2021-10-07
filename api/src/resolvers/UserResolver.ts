@@ -7,18 +7,10 @@ import { Profile } from '../models/Profile';
 import { User } from '../models/User';
 import { AuthPayload } from '../types/AuthPayload';
 import { Context } from '../types/Context';
-import { ForgotPasswordInput } from '../types/ForgotPasswordInput';
-import { ForgotPasswordPayload } from '../types/ForgotPasswordPayload';
 import { LoginInput } from '../types/LoginInput';
 import { RegisterInput } from '../types/RegisterInput';
-import { ResetPasswordInput } from '../types/ResetPasswordInput';
-import { ResetPasswordPayload } from '../types/ResetPasswordPayload';
 import { UpdateHandleInput } from '../types/UpdateHandleInput';
 import { UpdateHandlePayload } from '../types/UpdateHandlePayload';
-import { UpdatePasswordInput } from '../types/UpdatePasswordInput';
-import { UpdatePasswordPayload } from '../types/UpdatePasswordPayload';
-import { VerifyUserEmailInput } from '../types/VerifyUserEmailInput';
-import { VerifyUserEmailPayload } from '../types/VerifyUserEmailPayload';
 
 @Resolver(User)
 export class UserResolver {
@@ -30,11 +22,6 @@ export class UserResolver {
   @Query(() => User, { nullable: true })
   async me(@CurrentUser() user?: User): Promise<User | undefined> {
     return user;
-  }
-
-  @Query(() => Boolean)
-  validPasswordResetToken(@Ctx() { userService }: Context, @Arg('token') token: string): Promise<boolean> {
-    return userService.userExists({ passwordResetToken: token });
   }
 
   @Mutation(() => AuthPayload)
@@ -68,33 +55,6 @@ export class UserResolver {
     return { jwt: jwtService.create(user) };
   }
 
-  @Mutation(() => VerifyUserEmailPayload)
-  async verifyUserEmail(
-    @Ctx() { authService }: Context,
-    @Arg('input') { token }: VerifyUserEmailInput,
-  ): Promise<VerifyUserEmailPayload> {
-    const user = await authService.verifyUserEmail(token);
-    return { user };
-  }
-
-  @Mutation(() => ForgotPasswordPayload)
-  async forgotPassword(
-    @Ctx() { authService }: Context,
-    @Arg('input') { email }: ForgotPasswordInput,
-  ): Promise<ForgotPasswordPayload> {
-    await authService.initPasswordReset(email);
-    return { ok: true };
-  }
-
-  @Mutation(() => ResetPasswordPayload)
-  async resetPassword(
-    @Ctx() { authService }: Context,
-    @Arg('input') { token, password }: ResetPasswordInput,
-  ): Promise<ResetPasswordPayload> {
-    await authService.resetUserPassword(token, password);
-    return { ok: true };
-  }
-
   @Mutation(() => UpdateHandlePayload)
   @Authorized()
   async updateHandle(
@@ -106,14 +66,4 @@ export class UserResolver {
     return { user };
   }
 
-  @Mutation(() => UpdatePasswordPayload)
-  @Authorized()
-  async updatePassword(
-    @Ctx() { userService }: Context,
-    @Arg('input') { password }: UpdatePasswordInput,
-    @CurrentUser() { _id }: User,
-  ): Promise<UpdatePasswordPayload> {
-    await userService.updatePassword(_id, password);
-    return { ok: true };
-  }
 }

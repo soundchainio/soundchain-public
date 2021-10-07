@@ -22,17 +22,7 @@ export class User extends Model {
   walletAddress: string;
 
   @prop({ required: false })
-  password: string;
-
-  @prop({ required: false })
   emailVerificationToken?: string;
-
-  @Field()
-  @prop({ required: true, default: false })
-  verified: boolean;
-
-  @prop({ required: false })
-  passwordResetToken?: string;
 
   @Field(() => Date)
   createdAt: Date;
