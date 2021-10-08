@@ -4,12 +4,10 @@ import { InputField } from 'components/InputField';
 import { Label } from 'components/Label';
 import { TextareaField } from 'components/TextareaField';
 import { Form, Formik } from 'formik';
-import { useAddTrackMetadataMutation } from 'lib/graphql';
 import React from 'react';
 import * as yup from 'yup';
 
 interface Props {
-  trackId: string;
   afterSubmit: () => void;
   setCoverPhotoUrl?: (val: string) => void;
   assetUrl: string;
@@ -33,11 +31,11 @@ const initialValues: FormValues = {
   artworkUrl: '',
 };
 
-export const TrackMetadataForm = ({ trackId, afterSubmit, setCoverPhotoUrl }: Props) => {
-  const [addMetadata] = useAddTrackMetadataMutation({ refetchQueries: ['Tracks'] });
+export const TrackMetadataForm = ({ afterSubmit, setCoverPhotoUrl }: Props) => {
+  // const [addMetadata] = useAddTrackMetadataMutation({ refetchQueries: ['Tracks'] });
 
-  const handleSubmit = async (values: FormValues) => {
-    await addMetadata({ variables: { input: { trackId, ...values } } });
+  const handleSubmit = (values: FormValues) => {
+    console.log(values);
     afterSubmit();
   };
 

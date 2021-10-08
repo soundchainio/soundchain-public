@@ -70,10 +70,10 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: AudioPlayerPro
         hls.destroy();
       }
     };
-  }, []);
+  }, [src]);
 
   return (
-    <div className="bg-black rounded-md p-4 items-center">
+    <div className="bg-transparent rounded-md items-center">
       <div className="flex items-center">
         {art && (
           <div className="h-20 w-20 relative flex items-center">

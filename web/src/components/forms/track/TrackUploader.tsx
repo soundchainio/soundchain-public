@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { AudioPlayer } from 'components/AudioPlayer';
 import { JellyButton } from 'components/Buttons/JellyButton';
 import { ProgressBar } from 'components/ProgressBar';
 import { useUpChunk } from 'hooks/useUpChunk';
@@ -17,8 +18,7 @@ export interface TrackUploaderProps {
 const maxSize = 1024 * 1024 * 30; // 30Mb
 const accept = ['audio/*'];
 
-const containerClasses =
-  'flex justify-around p-3 bg-black text-gray-30 border-gray-50 border-2 border-dashed rounded-md h-[100px]';
+const containerClasses = 'flex bg-black text-gray-30 border-gray-50 border-2 border-dashed rounded-md gap-4 p-4';
 
 export const TrackUploader = ({ onSuccess, setAssetUrl }: TrackUploaderProps) => {
   const [uploadTrack] = useUploadTrackMutation();
@@ -26,7 +26,18 @@ export const TrackUploader = ({ onSuccess, setAssetUrl }: TrackUploaderProps) =>
   const [trackId, setTrackId] = useState<string>();
   const [filename, setFilename] = useState<string>();
 
+  const [file, setFile] = useState<File>();
+  const [preview, setPreview] = useState<string>();
+
   function onDrop<T extends File>([file]: T[], fileRejections: FileRejection[], event: DropEvent) {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+
+    reader.addEventListener('loadend', () => {
+      setPreview(reader.result as string);
+      setFile(file);
+    });
+
     console.log(file);
     console.log(fileRejections);
     console.log(event);
@@ -82,9 +93,29 @@ export const TrackUploader = ({ onSuccess, setAssetUrl }: TrackUploaderProps) =>
     );
   }
 
+  if (file && preview) {
+    return (
+      <div className="flex flex-col items-center bg-black text-gray-30 border-gray-50 border-2 border-dashed rounded-md gap-4 p-4 md:flex-row">
+        <div className="mr-auto w-full">
+          <AudioPlayer trackId={'1'} title={file.name} src={preview} />
+        </div>
+        <div className="flex flex-col justify-center flex-shrink-0" {...getRootProps()}>
+          <JellyButton
+            flavor="blueberry"
+            icon={<UploadIcon activatedColor="blue" id="blue-gradient" />}
+            className="text-xs"
+          >
+            Choose File
+          </JellyButton>
+          <input {...getInputProps()} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div {...getRootProps()} className={containerClasses}>
-      <div>
+      <div className="mr-auto w-full">
         <MusicFile />
         <p className="font-bold text-[12px] mt-1">Upload music...</p>
         <p className="font-semibold text-[9px]">WAV,MP3,AIFF,FLAC,OGA (Max: 30mb)</p>
