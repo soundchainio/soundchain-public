@@ -12,7 +12,6 @@ import { Wallet } from 'components/Wallet';
 import { MetaMask } from 'icons/MetaMask';
 import { Logo } from 'icons/Logo';
 
-
 const topNovaBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
   title: 'Wallet'
@@ -20,12 +19,10 @@ const topNovaBarProps: TopNavBarProps = {
 
 export default function WalletPage() {
   const me = useMe();
-
   const { account, balance, web3, chainId, connect } = useMetaMask();
   const { account: magicAccount, connect: magicConnect, balance: magicBalance } = useMagic();
   const [testnet, setTestnet] = useState(true);
   const [connectedToMetaMask, setConnectedToMetaMask] = useState(false);
-
 
   useEffect(() => {
     if (!account || !web3) {
@@ -71,8 +68,7 @@ export default function WalletPage() {
                 Connect to MetaMask Wallet
               </Button>
             </div>
-          }
-            
+          }      
         </div>
       </div>
     </Layout>

@@ -71,7 +71,7 @@ const Account = ({ account, balance, defaultWallet, showActionButtons }: Partial
               <span className="uppercase green-gradient-text font-bold text-sm">Buy tokens</span>
             </button>
           </Link>
-          <Link href="/" passHref>
+          <Link href="/wallet/transfer" passHref>
             <button className="bg-gray-20 py-2 w-40">
               <span className="uppercase yellow-gradient-text font-bold text-sm">Send tokens</span>
             </button>
