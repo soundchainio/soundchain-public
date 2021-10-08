@@ -19,14 +19,4 @@ export class EmailService {
     });
   }
 
-  async sendPasswordResetEmail(email: string, token: string): Promise<void> {
-    await SendGrid.send({
-      to: email,
-      from: config.sendgrid.sender,
-      templateId: config.sendgrid.templates.passwordReset,
-      dynamicTemplateData: {
-        resetPasswordLink: `${config.web.url}/reset-password?token=${token}`,
-      },
-    });
-  }
 }

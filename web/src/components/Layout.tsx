@@ -14,9 +14,10 @@ interface LayoutProps {
   children: ReactNode;
   topNavBarProps?: TopNavBarProps;
   hideBottomNavBar?: boolean;
+  fullHeight?: boolean
 }
 
-export const Layout = ({ children, hideBottomNavBar, topNavBarProps }: LayoutProps) => {
+export const Layout = ({ children, hideBottomNavBar, topNavBarProps, fullHeight }: LayoutProps) => {
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
   const { state } = useContext(store);
 
@@ -27,7 +28,7 @@ export const Layout = ({ children, hideBottomNavBar, topNavBarProps }: LayoutPro
         <TopNavBar setSideMenuOpen={setSideMenuOpen} {...topNavBarProps} />
         <div id="top-sheet"></div>
         <main id="main" className="flex-1 relative overflow-y-auto focus:outline-none bg-gray-10">
-          <div className={classNames('max-w-7xl mx-auto', hideBottomNavBar ? 'h-full' : 'mb-20')}>{children}</div>
+          <div className={classNames('max-w-7xl mx-auto', (hideBottomNavBar || fullHeight) ? 'h-full' : 'mb-20')}>{children}</div>
         </main>
         <div className="bottom-0 w-full">
           <div id="bottom-sheet"></div>

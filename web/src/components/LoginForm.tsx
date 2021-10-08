@@ -1,8 +1,7 @@
 import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
-import { Label } from 'components/Label';
-import Link from 'components/Link';
 import { Form, Formik } from 'formik';
+import { useMagicContext } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
 import { LogoAndText } from 'icons/LogoAndText';
 import { setJwt } from 'lib/apollo';
@@ -12,18 +11,18 @@ import { useEffect } from 'react';
 import * as yup from 'yup';
 
 interface FormValues {
-  username: string;
-  password: string;
+  email: string;
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
-  username: yup.string().required(),
-  password: yup.string().required(),
+  email: yup.string().required('Please enter your email address'),
 });
 
 export const LoginForm = () => {
-  const [login, { loading, error }] = useLoginMutation();
+  const [login, { loading }] = useLoginMutation();
   const me = useMe();
+  const { magic } = useMagicContext();
+
   const router = useRouter();
 
   useEffect(() => {
@@ -34,10 +33,18 @@ export const LoginForm = () => {
 
   async function handleSubmit(values: FormValues) {
     try {
-      const result = await login({ variables: { input: values } });
+      const token = await magic?.auth.loginWithMagicLink({
+        email: values.email,
+      });
+
+      if (!token) {
+        throw new Error('Error connecting Magic');
+      }
+
+      const result = await login({ variables: { input: { token } } });
       setJwt(result.data?.login.jwt);
     } catch (error) {
-      // handled by error state
+      router.push('/create-account');
     }
   }
 
@@ -46,24 +53,13 @@ export const LoginForm = () => {
       <div className="h-36 mb-2 flex items-center justify-center">
         <LogoAndText />
       </div>
-      <Formik
-        initialValues={{ username: '', password: '' }}
-        validationSchema={validationSchema}
-        onSubmit={handleSubmit}
-      >
+      <Formik initialValues={{ email: '' }} validationSchema={validationSchema} onSubmit={handleSubmit}>
         <Form className="flex flex-1 flex-col">
           <div className="space-y-6 mb-auto">
-            <InputField type="text" name="username" placeholder="Username or Email Address" />
-            <InputField type="password" name="password" placeholder="Password" />
-            {error && <Label>{error.message}</Label>}
-            <div>
-              <Link href="/forgot-password" className="text-left">
-                Forgot Password?
-              </Link>
-            </div>
+            <InputField type="text" name="email" placeholder="Email address" />
           </div>
           <Button type="submit" disabled={loading} loading={loading} className="w-full mt-12">
-            Login
+            Login / Sign up
           </Button>
         </Form>
       </Formik>

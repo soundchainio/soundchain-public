@@ -12,6 +12,7 @@ export interface TopNavBarProps {
   setSideMenuOpen?: (open: boolean) => void;
   leftButton?: JSX.Element;
   rightButton?: JSX.Element;
+  showLoginSignUpButton?: boolean;
   title?: string;
   subtitle?: JSX.Element;
 }
@@ -21,6 +22,7 @@ export const TopNavBar = ({
   rightButton: RightButton,
   leftButton: LeftButton,
   subtitle: Subtitle,
+  showLoginSignUpButton = true,
   setSideMenuOpen,
 }: TopNavBarProps) => {
   const router = useRouter();
@@ -28,10 +30,6 @@ export const TopNavBar = ({
 
   const onLogin = () => {
     router.push('/login');
-  };
-
-  const onCreateAccount = () => {
-    router.push('/create-account');
   };
 
   return (
@@ -80,7 +78,7 @@ export const TopNavBar = ({
             </div>
           </div>
         </>
-      ) : (
+      ) : ( showLoginSignUpButton && (
         <div className="flex-2 flex items-center justify-start ml-4 space-x-2 ">
           <Button
             variant={router.pathname === '/login' ? 'rainbow-xs' : 'outline'}
@@ -88,19 +86,11 @@ export const TopNavBar = ({
             className="w-32 h-8 bg-opacity-70"
             borderColor="bg-gray-40"
             bgColor="bg-black"
-          >
-            Login
-          </Button>
-          <Button
-            variant={router.pathname === '/create-account' ? 'rainbow-xs' : 'outline'}
-            onClick={onCreateAccount}
-            className="w-32 h-8 bg-opacity-70"
-            borderColor="bg-gray-40"
-            bgColor="bg-black"
-          >
-            Create Account
+            >
+            Login in / Sign up
           </Button>
         </div>
+        )
       )}
       {RightButton && <div className="flex flex-1 justify-end pr-4 items-center">{RightButton}</div>}
     </div>
