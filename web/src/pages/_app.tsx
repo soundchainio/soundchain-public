@@ -1,13 +1,16 @@
 import * as Sentry from '@sentry/react';
 import { Integrations } from '@sentry/tracing';
+import { AudioPlayerTest } from 'components/AudioPlayerTest';
 import { CheckBodyScroll } from 'components/CheckBodyScroll';
 import { Favicons } from 'components/Favicons';
 import { StateProvider } from 'contexts';
+import { AudioPlayerProvider } from 'hooks/useAudioPlayer';
 import { ApolloProvider } from 'lib/apollo';
 import type { AppProps } from 'next/app';
 import Head from 'next/head';
 import Router from 'next/router';
 import NProgress from 'nprogress';
+import React from 'react';
 import 'styles/audio-player.css';
 import 'styles/globals.css';
 import 'styles/loading-ring.css';
@@ -38,8 +41,11 @@ function SoundchainApp({ Component, pageProps }: AppProps) {
       </Head>
       <ApolloProvider pageProps={pageProps}>
         <StateProvider>
-          <CheckBodyScroll />
-          <Component {...pageProps} />
+          <AudioPlayerProvider>
+            <CheckBodyScroll />
+            <Component {...pageProps} />
+            <AudioPlayerTest />
+          </AudioPlayerProvider>
         </StateProvider>
       </ApolloProvider>
     </>
