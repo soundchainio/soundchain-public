@@ -3,9 +3,7 @@ import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
 import Image from 'next/image';
-import NextLink from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { remainingTime, timeFromSecs } from 'utils/calculateTime';
 
 export const AudioPlayerTest = () => {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -79,46 +77,20 @@ export const AudioPlayerTest = () => {
   }
 
   return (
-    <div className="bg-black rounded-md p-4 items-center">
-      <div className="flex items-center">
-        {song.art && (
-          <div className="h-20 w-20 relative flex items-center">
-            <Image src={song.art} alt="" layout="fill" className="m-auto object-cover" />
-          </div>
-        )}
-        <div className="flex flex-col flex-1">
-          <div className="flex">
-            <div className="w-12 flex items-center">
-              <div className="bg-white rounded-full w-8 h-8 flex items-center m-auto" onClick={togglePlay}>
-                {isPlaying ? (
-                  <Pause className="text-white m-auto scale-125" />
-                ) : (
-                  <Play className="text-white m-auto scale-125" />
-                )}
-              </div>
-            </div>
-            <div className="flex flex-col">
-              <div className="text-white font-bold">
-                <NextLink href={`/tracks/${song.trackId}`}>{song.title ? song.title : 'Unknown Title'}</NextLink>
-              </div>
-              <div className="text-gray-80 font-bold">{song.artist || 'Unknown Artist'}</div>
-            </div>
-            <div className="flex-1 text-right text-gray-80">{timeFromSecs(duration || 0)}</div>
-          </div>
-          <div className="text-white pl-2 flex flex-col mt-4">
-            <input
-              type="range"
-              onChange={e => onSliderChange(parseInt(e.target.value))}
-              max={duration}
-              value={progress}
-            />
-            <div className="flex mt-1 text-xs">
-              <div className="flex-1">{timeFromSecs(progress || 0)}</div>
-              <div className="flex-1 text-right">{remainingTime(progress, duration || 0)} </div>
-            </div>
-          </div>
+    <div className="bg-black pt-3 px-2">
+      <div className="flex items-center gap-2">
+        <div className="h-10 w-10 bg-gray-80">
+          {song.art && <Image src={song.art} alt="art cover" layout="fill" className="m-auto object-cover" />}
         </div>
+        <div className="text-white text-xs flex flex-col">
+          <h2 className="font-black">Planet Caravan</h2>
+          <p className="font-medium">Black Sabbath</p>
+        </div>
+        <button className="h-10 w-10 flex items-center justify-center ml-auto" onClick={togglePlay}>
+          {isPlaying ? <Pause /> : <Play />}
+        </button>
       </div>
+      <input type="range" onChange={e => onSliderChange(parseInt(e.target.value))} max={duration} value={progress} />
       <audio
         ref={audioRef}
         onPlay={() => setPlayingState(true)}
