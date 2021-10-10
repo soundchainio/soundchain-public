@@ -4,6 +4,10 @@ import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
+import {
+  Slider
+} from "@reach/slider";
+import "@reach/slider/styles.css";
 
 export const AudioPlayerTest = () => {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -77,7 +81,7 @@ export const AudioPlayerTest = () => {
   }
 
   return (
-    <div className="bg-black pt-3 px-2 sticky bottom-0">
+    <div className="bg-black py-2 px-2 flex flex-col gap-2">
       <div className="flex items-center gap-2">
         <div className="h-10 w-10 bg-gray-80 relative flex items-center">
           {song.art && <Image src={song.art} alt="art cover" layout="fill" className="m-auto object-cover" />}
@@ -90,7 +94,7 @@ export const AudioPlayerTest = () => {
           {isPlaying ? <Pause /> : <Play />}
         </button>
       </div>
-      <input type="range" onChange={e => onSliderChange(parseInt(e.target.value))} max={duration} value={progress} />
+      <Slider min={0} max={duration} value={progress} onChange={onSliderChange}/>
       <audio
         ref={audioRef}
         onPlay={() => setPlayingState(true)}
