@@ -73,18 +73,18 @@ export const AudioPlayerTest = () => {
   }
 
   if (!song.src) {
-    return <div className="border-2 border-red-200">NO</div>;
+    return null;
   }
 
   return (
-    <div className="bg-black pt-3 px-2">
+    <div className="bg-black pt-3 px-2 sticky bottom-0">
       <div className="flex items-center gap-2">
-        <div className="h-10 w-10 bg-gray-80">
+        <div className="h-10 w-10 bg-gray-80 relative flex items-center">
           {song.art && <Image src={song.art} alt="art cover" layout="fill" className="m-auto object-cover" />}
         </div>
         <div className="text-white text-xs flex flex-col">
-          <h2 className="font-black">Planet Caravan</h2>
-          <p className="font-medium">Black Sabbath</p>
+          <h2 className="font-black">{song.title || 'Unknown title'}</h2>
+          <p className="font-medium">{song.artist || 'Unknown artist'}</p>
         </div>
         <button className="h-10 w-10 flex items-center justify-center ml-auto" onClick={togglePlay}>
           {isPlaying ? <Pause /> : <Play />}
