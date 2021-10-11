@@ -1,3 +1,4 @@
+import Slider from '@reach/slider';
 import Hls from 'hls.js';
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
@@ -83,13 +84,13 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: AudioPlayerPro
         <div className="flex flex-col flex-1">
           <div className="flex">
             <div className="w-12 flex items-center">
-              <div className="bg-white rounded-full w-8 h-8 flex items-center m-auto" onClick={togglePlay}>
+              <button className="bg-white rounded-full w-8 h-8 flex items-center m-auto" onClick={togglePlay}>
                 {playing ? (
                   <Pause className="text-white m-auto scale-125" />
                 ) : (
                   <Play className="text-white m-auto scale-125" />
                 )}
-              </div>
+              </button>
             </div>
             <div className="flex flex-col">
               <div className="text-white font-bold">
@@ -99,13 +100,8 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: AudioPlayerPro
             </div>
             <div className="flex-1 text-right text-gray-80">{timeFromSecs(duration || 0)}</div>
           </div>
-          <div className="text-white pl-2 flex flex-col mt-4">
-            <input
-              type="range"
-              onChange={e => onSliderChange(parseInt(e.target.value))}
-              max={duration}
-              value={playState}
-            />
+          <div className="post-audio-player text-white pl-2 flex flex-col mt-4">
+            <Slider min={0} max={duration} value={playState} onChange={onSliderChange} />
             <div className="flex mt-1 text-xs">
               <div className="flex-1">{timeFromSecs(playState || 0)}</div>
               <div className="flex-1 text-right">{remainingTime(playState, duration || 0)} </div>

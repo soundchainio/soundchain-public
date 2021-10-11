@@ -2,6 +2,7 @@ import { TrackSkeleton } from 'components/TrackSkeleton';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { useTrackLazyQuery } from 'lib/graphql';
 import React, { useEffect } from 'react';
+import { AudioPlayer } from './AudioPlayer';
 
 interface TrackProps {
   trackId: string;
@@ -36,14 +37,16 @@ export const Track = ({ trackId, coverPhotoUrl }: TrackProps) => {
   };
 
   return (
+    <>
     <button type="button" className="bg-white" onClick={() => play(song)}>
       Play
     </button>
-    // <AudioPlayer
-    //   trackId={data.track.id}
-    //   title={data.track.title}
-    //   src={data.track.playbackUrl}
-    //   art={data.track.artworkUrl || coverPhotoUrl || undefined}
-    // />
+    <AudioPlayer
+      trackId={data.track.id}
+      title={data.track.title}
+      src={data.track.playbackUrl}
+      art={data.track.artworkUrl || coverPhotoUrl || undefined}
+    />
+    </>
   );
 };

@@ -1,15 +1,12 @@
+import { Slider } from '@reach/slider';
 import Hls from 'hls.js';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
-import { Pause } from 'icons/Pause';
-import { Play } from 'icons/Play';
+import { Pause } from 'icons/PauseBottomAudioPlayer';
+import { Play } from 'icons/PlayBottomAudioPlayer';
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
-import {
-  Slider
-} from "@reach/slider";
-import "@reach/slider/styles.css";
 
-export const AudioPlayerTest = () => {
+export const BottomAudioPlayer = () => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [progress, setProgress] = useState<number>(0);
   const [duration, setDuration] = useState<number>();
@@ -81,8 +78,8 @@ export const AudioPlayerTest = () => {
   }
 
   return (
-    <div className="bg-black py-2 px-2 flex flex-col gap-2">
-      <div className="flex items-center gap-2">
+    <div className="bottom-audio-player bg-black py-2 flex flex-col gap-2">
+      <div className="flex items-center gap-2 px-2">
         <div className="h-10 w-10 bg-gray-80 relative flex items-center">
           {song.art && <Image src={song.art} alt="art cover" layout="fill" className="m-auto object-cover" />}
         </div>
@@ -94,7 +91,7 @@ export const AudioPlayerTest = () => {
           {isPlaying ? <Pause /> : <Play />}
         </button>
       </div>
-      <Slider min={0} max={duration} value={progress} onChange={onSliderChange}/>
+      <Slider min={0} max={duration} value={progress} onChange={onSliderChange} />
       <audio
         ref={audioRef}
         onPlay={() => setPlayingState(true)}
