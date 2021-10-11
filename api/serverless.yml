@@ -112,6 +112,7 @@ provider:
     MUX_TOKEN_SECRET: ${env:MUX_TOKEN_SECRET}
     MUX_WEBHOOK_SECRET: ${env:MUX_WEBHOOK_SECRET}
     SENTRY_URL: ${env:SENTRY_URL}
+    MAGIC_PRIVATE_KEY: ${env:MAGIC_PRIVATE_KEY}
 
   iam:
     role:
