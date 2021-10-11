@@ -21,7 +21,7 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
 export const LoginForm = () => {
   const [login, { loading }] = useLoginMutation();
   const me = useMe();
-  const { magic } = useMagicContext();
+  const { magic, setAccount } = useMagicContext();
 
   const router = useRouter();
 
@@ -43,6 +43,9 @@ export const LoginForm = () => {
 
       const result = await login({ variables: { input: { token } } });
       setJwt(result.data?.login.jwt);
+
+      const meta = await magic?.user.getMetadata();
+      setAccount(meta?.publicAddress);
     } catch (error) {
       router.push('/create-account');
     }

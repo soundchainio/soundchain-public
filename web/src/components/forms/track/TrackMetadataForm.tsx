@@ -8,12 +8,11 @@ import React from 'react';
 import * as yup from 'yup';
 
 interface Props {
-  afterSubmit: () => void;
+  handleSubmit: (values: FormValues) => void;
   setCoverPhotoUrl?: (val: string) => void;
-  assetUrl: string;
 }
 
-interface FormValues {
+export interface FormValues {
   title: string;
   description?: string;
   artworkUrl?: string;
@@ -31,18 +30,13 @@ const initialValues: FormValues = {
   artworkUrl: '',
 };
 
-export const TrackMetadataForm = ({ afterSubmit, setCoverPhotoUrl }: Props) => {
+export const TrackMetadataForm = ({ handleSubmit, setCoverPhotoUrl }: Props) => {
   // const [addMetadata] = useAddTrackMetadataMutation({ refetchQueries: ['Tracks'] });
 
-  const handleSubmit = (values: FormValues) => {
-    console.log(values);
-    afterSubmit();
-  };
-
   const onArtworkUpload = (val: string, setFieldValue: (field: string, value: string) => void) => {
+    setFieldValue('artworkUrl', val);
     if (setCoverPhotoUrl) {
       setCoverPhotoUrl(val);
-      setFieldValue('artworkUrl', val);
     }
   };
 

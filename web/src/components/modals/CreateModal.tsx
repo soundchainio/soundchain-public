@@ -1,8 +1,13 @@
+import axios from 'axios';
 import classNames from 'classnames';
-import { TrackMetadataForm } from 'components/forms/track/TrackMetadataForm';
+import { FormValues, TrackMetadataForm } from 'components/forms/track/TrackMetadataForm';
 import { TrackUploader } from 'components/forms/track/TrackUploader';
 import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
+import { useMagicContext } from 'hooks/useMagicContext';
+import { useMe } from 'hooks/useMe';
+import { useUpChunk } from 'hooks/useUpChunk';
+import { useUploadTrackMutation } from 'lib/graphql';
 import React, { useState } from 'react';
 
 enum Tabs {
@@ -14,11 +19,19 @@ export const CreateModal = () => {
   const modalState = useModalState();
   const { dispatchShowCreateModal, dispatchShowPostModal } = useModalDispatch();
   const [tab, setTab] = useState(Tabs.NFT);
-  const [assetUrl, setAssetUrl] = useState<string | null>(null);
-  const [coverPhotoUrl, setCoverPhotoUrl] = useState<string | null>(null);
 
   const [file, setFile] = useState<File>();
   const [preview, setPreview] = useState<string>();
+
+  const [uploadTrack] = useUploadTrackMutation();
+  const [startUpload, { uploading, progress, cancelUpload }] = useUpChunk();
+
+  const magic = useMagicContext();
+  console.log(magic);
+
+  const me = useMe();
+
+  console.log(me);
 
   const handleFileDrop = (file: File) => {
     const reader = new FileReader();
@@ -35,6 +48,25 @@ export const CreateModal = () => {
   const handlePostTabClick = () => {
     dispatchShowCreateModal(false);
     dispatchShowPostModal(true);
+  };
+
+  const handleSubmit = async (values: FormValues) => {
+    console.log(values);
+
+    if (file) {
+      const { data } = await uploadTrack({ variables: { input: { fileType: file.type } } });
+      console.log({ data });
+      if (data) {
+        axios.put(data.uploadTrack.track.uploadUrl, file, { headers: { 'Content-Type': file.type } });
+        startUpload(data.uploadTrack.track.muxUpload.url, file);
+        console.log(data.uploadTrack.track.file);
+        // if (setAssetUrl) setAssetUrl(data.uploadTrack.track.file);
+      }
+    }
+  };
+
+  const handleClose = () => {
+    dispatchShowCreateModal(false);
   };
 
   const tabs = (
@@ -60,10 +92,6 @@ export const CreateModal = () => {
     </div>
   );
 
-  const handleClose = () => {
-    dispatchShowCreateModal(false);
-  };
-
   return (
     <Modal
       show={isOpen}
@@ -75,10 +103,13 @@ export const CreateModal = () => {
         </div>
       }
     >
-      <TrackUploader onSuccess={handleFileDrop} setAssetUrl={setAssetUrl} />
-      {file && preview && (
-        <TrackMetadataForm assetUrl={assetUrl || ''} setCoverPhotoUrl={setCoverPhotoUrl} afterSubmit={handleClose} />
-      )}
+      <TrackUploader
+        onFileChange={handleFileDrop}
+        cancelUpload={cancelUpload}
+        progress={progress}
+        uploading={uploading}
+      />
+      {file && preview && <TrackMetadataForm handleSubmit={handleSubmit} />}
     </Modal>
   );
 };

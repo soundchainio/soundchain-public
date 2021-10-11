@@ -29,9 +29,9 @@ export class UserResolver {
     @Ctx() { authService, jwtService }: Context,
     @Arg('input') { token, handle, displayName }: RegisterInput,
   ): Promise<AuthPayload> {
-    const magic = new Magic(config.magicLink.secretKey)
-    const did = magic.utils.parseAuthorizationHeader(`Bearer ${token}`)
-    const magicUser = await magic.users.getMetadataByToken(did)
+    const magic = new Magic(config.magicLink.secretKey);
+    const did = magic.utils.parseAuthorizationHeader(`Bearer ${token}`);
+    const magicUser = await magic.users.getMetadataByToken(did);
 
     const user = await authService.register(magicUser.email, handle, displayName, magicUser.publicAddress);
     return { jwt: jwtService.create(user) };
@@ -39,14 +39,18 @@ export class UserResolver {
 
   @Mutation(() => AuthPayload)
   async login(
-    @Ctx() { authService, jwtService }: Context,
+    @Ctx() { authService, jwtService, userService }: Context,
     @Arg('input') { token }: LoginInput,
   ): Promise<AuthPayload> {
-    const magic = new Magic(config.magicLink.secretKey)
-    const did = magic.utils.parseAuthorizationHeader(`Bearer ${token}`)
-    const magicUser = await magic.users.getMetadataByToken(did)
+    const magic = new Magic(config.magicLink.secretKey);
+    const did = magic.utils.parseAuthorizationHeader(`Bearer ${token}`);
+    const magicUser = await magic.users.getMetadataByToken(did);
 
     const user = await authService.getUserFromCredentials(magicUser.email);
+
+    if (!user.walletAddress) {
+      userService.updateWalletAddress(user._id, magicUser.publicAddress);
+    }
 
     if (!user) {
       throw new UserInputError('Invalid credentials');
@@ -65,5 +69,4 @@ export class UserResolver {
     const user = await userService.updateHandle(_id, handle);
     return { user };
   }
-
 }

@@ -3,7 +3,7 @@ import { MintingRequestForm } from 'components/forms/playground/MintingRequestFo
 import { Layout } from 'components/Layout';
 import { NFTCard } from 'components/NftCard';
 import { Subtitle } from 'components/Subtitle';
-import useMagic from 'hooks/useMagic';
+import { useMagicContext } from 'hooks/useMagicContext';
 import useMetaMask from 'hooks/useMetaMask';
 import { getNftTokensFromContract } from 'lib/blockchain';
 import { testNetwork } from 'lib/blockchainNetworks';
@@ -13,7 +13,7 @@ import { NftToken } from 'types/NftTypes';
 
 export default function PlaygroundPage() {
   const { account, balance, web3, chainId, connect } = useMetaMask();
-  const { account: magicAccount, connect: magicConnect, web3: magicWeb3, balance: magicBalance } = useMagic();
+  const { account: magicAccount, web3: magicWeb3, balance: magicBalance } = useMagicContext();
   const [metaMaskNfts, setMetaMaskNfts] = useState<NftToken[]>();
   const [magicNfts, setMagicNfts] = useState<NftToken[]>();
   const [currentTab, setCurrentTab] = useState<'COLLECTION' | 'MINTING'>('COLLECTION');
@@ -73,11 +73,6 @@ export default function PlaygroundPage() {
         </div>
 
         <div className="flex gap-4">
-          {!magicAccount && (
-            <Button variant="rainbow-xs" className="max-w-xs" onClick={() => magicConnect()}>
-              Connect to Soundchain Wallet
-            </Button>
-          )}
           {!connectedToMetaMask && (
             <Button variant="rainbow-xs" className="max-w-xs hidden lg:block" onClick={() => connect()}>
               Connect to MetaMask Wallet
