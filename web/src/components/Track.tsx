@@ -36,7 +36,7 @@ export const Track = ({ trackId, coverPhotoUrl }: TrackProps) => {
   };
 
   return (
-    <button type="button" className="bg-red-500" onClick={() => play(song)}>
+    <button type="button" className="bg-white" onClick={() => play(song)}>
       Play
     </button>
     // <AudioPlayer

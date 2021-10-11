@@ -43,8 +43,10 @@ function SoundchainApp({ Component, pageProps }: AppProps) {
         <StateProvider>
           <AudioPlayerProvider>
             <CheckBodyScroll />
-            <Component {...pageProps} />
-            <AudioPlayerTest />
+            <div className="h-screen flex flex-col">
+              <Component {...pageProps} />
+              <AudioPlayerTest />
+            </div>
           </AudioPlayerProvider>
         </StateProvider>
       </ApolloProvider>

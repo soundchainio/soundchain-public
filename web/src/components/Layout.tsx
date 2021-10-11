@@ -22,7 +22,7 @@ export const Layout = ({ children, hideBottomNavBar, topNavBarProps, fullHeight 
   const { state } = useContext(store);
 
   return (
-    <div className="h-screen flex overflow-hidden">
+    <div className="flex-1 flex overflow-hidden">
       <SideMenu isOpen={sideMenuOpen} setOpen={setSideMenuOpen} />
       <div className="flex flex-col w-0 flex-1 overflow-hidden">
         <TopNavBar setSideMenuOpen={setSideMenuOpen} {...topNavBarProps} />
