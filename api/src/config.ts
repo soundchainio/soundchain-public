@@ -46,7 +46,7 @@ export const {
   MUX_TOKEN_ID,
   MUX_TOKEN_SECRET,
   MUX_WEBHOOK_SECRET,
-  NEXT_PRIVATE_MAGIC_KEY
+  MAGIC_PRIVATE_KEY
 } = process.env;
 
 function assertEnvVar(name: string, value: string | undefined): asserts value {
@@ -126,6 +126,6 @@ export const config = {
     url: SENTRY_URL,
   },
   magicLink: {
-    secretKey: NEXT_PRIVATE_MAGIC_KEY
+    secretKey: MAGIC_PRIVATE_KEY
   }
 };
