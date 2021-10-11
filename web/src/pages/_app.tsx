@@ -5,6 +5,7 @@ import { CheckBodyScroll } from 'components/CheckBodyScroll';
 import { Favicons } from 'components/Favicons';
 import { StateProvider } from 'contexts';
 import { AudioPlayerProvider } from 'hooks/useAudioPlayer';
+import { MagicProvider } from 'hooks/useMagicContext';
 import { ApolloProvider } from 'lib/apollo';
 import type { AppProps } from 'next/app';
 import Head from 'next/head';
@@ -41,13 +42,15 @@ function SoundchainApp({ Component, pageProps }: AppProps) {
       </Head>
       <ApolloProvider pageProps={pageProps}>
         <StateProvider>
-          <AudioPlayerProvider>
-            <CheckBodyScroll />
-            <div className="h-screen flex flex-col">
-              <Component {...pageProps} />
-              <AudioPlayerTest />
-            </div>
-          </AudioPlayerProvider>
+          <MagicProvider>
+            <AudioPlayerProvider>
+              <CheckBodyScroll />
+              <div className="h-screen flex flex-col">
+                <Component {...pageProps} />
+                <AudioPlayerTest />
+              </div>
+            </AudioPlayerProvider>
+          </MagicProvider>
         </StateProvider>
       </ApolloProvider>
     </>
