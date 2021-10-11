@@ -2,7 +2,7 @@
 import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
 import { Form, Formik } from 'formik';
-import { burnNftToken, getIpfsAssetUrl, transferNftToken } from 'lib/blockchain';
+import { approveMarketplace, burnNftToken, getIpfsAssetUrl, listItem, transferNftToken } from 'lib/blockchain';
 import { useMimeTypeLazyQuery, useMimeTypeQuery } from 'lib/graphql';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
@@ -25,7 +25,7 @@ export const audioMimeTypes = [
   'audio/x-mpegurl',
   'audio/x-pn-wav',
   'audio/x-wav',
-  'auido/L24',
+  'audio/L24',
 ];
 
 export const videoMimeTypes = [
@@ -52,12 +52,12 @@ interface NftCardProps {
 }
 
 export const NFTCard = ({ account, web3, nftToken }: NftCardProps) => {
-  const { tokenId, asset, name, description, art, attributes } = nftToken;
+  const { tokenId, asset, name, description, art, attributes, pricePerItem, quantity, startingTime } = nftToken;
   const assetURL = getIpfsAssetUrl(asset);
   const artURL = art && getIpfsAssetUrl(art);
   const { data: assetData } = useMimeTypeQuery({ variables: { url: getIpfsAssetUrl(asset) } });
   const [loadArtMimeType, { data: artData }] = useMimeTypeLazyQuery();
-  const [transfering, setTransfering] = useState(false);
+  const [transferring, setTransferring] = useState(false);
 
   useEffect(() => {
     if (artURL) {
@@ -66,7 +66,7 @@ export const NFTCard = ({ account, web3, nftToken }: NftCardProps) => {
   }, []);
 
   const handleBurn = async (web3: Web3, tokenId: string) => {
-    const confirmed = confirm('Heey! This will destroy this NFT, you sure?');
+    const confirmed = confirm('Hey! This will destroy this NFT, you sure?');
     if (confirmed) {
       const result = await burnNftToken(web3, tokenId, account);
       if (result) {
@@ -75,17 +75,41 @@ export const NFTCard = ({ account, web3, nftToken }: NftCardProps) => {
     }
   };
 
+  const handleList = async (web3: Web3, tokenId: string, price: number) => {
+    const confirmed = confirm('Hey! This will list this NFT, you sure?');
+    if (confirmed) {
+      const result = await listItem(web3, tokenId, account, price);
+      if (result) {
+        alert('Token list requested!');
+      }
+    }
+  };
+
+  const handleApprove = async (web3: Web3) => {
+    const confirmed = confirm('Hey! The marketplace will be able to transfer your NFTs, you sure?');
+    if (confirmed) {
+      const result = await approveMarketplace(web3, account);
+      if (result) {
+        alert('Token approve requested!');
+      }
+    }
+  };
+
+  const handleSubmit = async (values: ListFormValue) => {
+    await handleList(web3, tokenId, values.price);
+  };
+
   if (!assetData) return <div className="text-white">Loading...</div>;
 
   return (
     <div className="relative h-full mb-20">
-      {transfering && (
+      {transferring && (
         <TransferForm
           name={name}
           web3={web3}
           fromAddress={account}
           tokenId={tokenId}
-          onCancel={() => setTransfering(false)}
+          onCancel={() => setTransferring(false)}
         />
       )}
       <div className="border border-white border-solid">
@@ -99,16 +123,30 @@ export const NFTCard = ({ account, web3, nftToken }: NftCardProps) => {
           attributes.map(({ trait_type, trait_value }, idx) => (
             <div key={idx} className="text-white text-xs">{`${trait_type}: ${trait_value}`}</div>
           ))}
+        <div className="text-white text-xs">{`Price: ${pricePerItem}`}</div>
+        <div className="text-white text-xs">{`Quantity: ${quantity}`}</div>
+        <div className="text-white text-xs pb-5">{`Starting time: ${startingTime}`}</div>
       </div>
       <div className="absolute bottom-0">
-        <div className="flex space-x-2">
-          <Button variant="rainbow-xs" className="" onClick={() => setTransfering(true)}>
-            Transfer
-          </Button>
-          <Button variant="rainbow-xs" onClick={() => handleBurn(web3, tokenId)}>
-            Burn
-          </Button>
-        </div>
+        <Formik initialValues={listInitialValues} validationSchema={listValidationSchema} onSubmit={handleSubmit}>
+          <Form>
+            <div className="flex space-x-2">
+              <Button variant="rainbow-xs" className="" onClick={() => setTransferring(true)}>
+                Transfer
+              </Button>
+              <Button variant="rainbow-xs" onClick={() => handleBurn(web3, tokenId)}>
+                Burn
+              </Button>
+              <Button variant="rainbow-xs" onClick={() => handleApprove(web3)}>
+                Approve Marketplace
+              </Button>
+              <Button variant="rainbow-xs" type="submit">
+                List
+              </Button>
+              <InputField label={'Price'} name="price" type="text" />
+            </div>
+          </Form>
+        </Formik>
         <a
           href={`https://mumbai.polygonscan.com/token/0x1ca9e523a3d4d2a771e22aaaf51eab33108c6b2c?a=${tokenId}`}
           target="_blank"
@@ -161,6 +199,16 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
 });
 const initialValues: FormValues = {
   to: '',
+};
+
+interface ListFormValue {
+  price: number;
+}
+const listValidationSchema: yup.SchemaOf<ListFormValue> = yup.object().shape({
+  price: yup.number().required(),
+});
+const listInitialValues: ListFormValue = {
+  price: 0,
 };
 
 interface TransferFormProps {
