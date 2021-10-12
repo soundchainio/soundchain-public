@@ -43,11 +43,7 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: AudioPlayerPro
     if (audioRef.current) {
       const audio = audioRef.current;
 
-      if (
-        src.startsWith('data:audio/') ||
-        src.startsWith('https://') ||
-        audio.canPlayType('application/vnd.apple.mpegurl')
-      ) {
+      if (src.startsWith('data:audio/') || audio.canPlayType('application/vnd.apple.mpegurl')) {
         audio.src = src;
       } else if (Hls.isSupported()) {
         hls = new Hls();
@@ -77,7 +73,7 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: AudioPlayerPro
   }, [src]);
 
   return (
-    <div className="bg-transparent rounded-md items-center">
+    <div className="bg-black p-4 rounded-md items-center">
       <div className="flex items-center">
         {art && (
           <div className="h-20 w-20 relative flex items-center">

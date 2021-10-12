@@ -1,14 +1,11 @@
-mutation UploadTrack($input: UploadTrackInput!) {
-  uploadTrack(input: $input) {
+mutation CreateTrack($input: UploadTrackInput!) {
+  createTrack(input: $input) {
     track {
       id
       title
-      file
+      description
+      assetUrl
       artworkUrl
-      uploadUrl
-      muxUpload {
-        url
-      }
     }
   }
 }

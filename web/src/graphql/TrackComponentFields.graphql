@@ -2,7 +2,7 @@ fragment TrackComponentFields on Track {
   id
   profileId
   title
-  file
+  assetUrl
   artworkUrl
   description
   playbackUrl
