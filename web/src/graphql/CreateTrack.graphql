@@ -6,6 +6,7 @@ mutation CreateTrack($input: UploadTrackInput!) {
       description
       assetUrl
       artworkUrl
+      playbackUrl
     }
   }
 }

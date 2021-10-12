@@ -1145,7 +1145,7 @@ export type CreateTrackMutation = (
     { __typename?: 'UploadTrackPayload' }
     & { track: (
       { __typename?: 'Track' }
-      & Pick<Track, 'id' | 'title' | 'description' | 'assetUrl' | 'artworkUrl'>
+      & Pick<Track, 'id' | 'title' | 'description' | 'assetUrl' | 'artworkUrl' | 'playbackUrl'>
     ) }
   ) }
 );
@@ -2458,6 +2458,7 @@ export const CreateTrackDocument = gql`
       description
       assetUrl
       artworkUrl
+      playbackUrl
     }
   }
 }

@@ -170,7 +170,7 @@ export const CreateModal = () => {
         <div className="h-full w-full" style={{ backgroundColor: '#101010' }}>
           {newTrack && (
             <div className="p-4 m-4 bg-black rounded">
-              <AudioPlayer title={newTrack.title} src={newTrack.assetUrl} art={newTrack.artworkUrl} />
+              <AudioPlayer title={newTrack.title} src={newTrack.playbackUrl} art={newTrack.artworkUrl} />
             </div>
           )}
           <div
