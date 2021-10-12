@@ -1,5 +1,6 @@
 import { AudioPlayer } from 'components/AudioPlayer';
 import { JellyButton } from 'components/Buttons/JellyButton';
+import { audioMimeTypes } from 'components/NftCard';
 import { ProgressBar } from 'components/ProgressBar';
 import { Close as CancelIcon } from 'icons/Close';
 import { MusicFile } from 'icons/MusicFile';
@@ -15,7 +16,7 @@ export interface TrackUploaderProps {
 }
 
 const maxSize = 1024 * 1024 * 30; // 30Mb
-const accept = ['audio/*'];
+const accept = audioMimeTypes;
 
 const containerClasses = 'flex bg-black text-gray-30 border-gray-50 border-2 border-dashed rounded-md gap-4 p-4';
 
