@@ -831,6 +831,7 @@ export type Track = {
   file: Scalars['String'];
   uploadUrl: Scalars['String'];
   artworkUrl: Maybe<Scalars['String']>;
+  transactionAddress: Maybe<Scalars['String']>;
   muxUpload: MuxUpload;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
@@ -898,6 +899,9 @@ export type UpdateProfilePayload = {
 
 export type UploadTrackInput = {
   fileType: Scalars['String'];
+  title: Scalars['String'];
+  description?: Maybe<Scalars['String']>;
+  artworkUrl?: Maybe<Scalars['String']>;
 };
 
 export type UploadTrackPayload = {
@@ -1862,7 +1866,7 @@ export type UploadTrackMutation = (
     { __typename?: 'UploadTrackPayload' }
     & { track: (
       { __typename?: 'Track' }
-      & Pick<Track, 'id' | 'uploadUrl' | 'file'>
+      & Pick<Track, 'id' | 'title' | 'file' | 'artworkUrl' | 'uploadUrl'>
       & { muxUpload: (
         { __typename?: 'MuxUpload' }
         & Pick<MuxUpload, 'url'>
@@ -4034,8 +4038,10 @@ export const UploadTrackDocument = gql`
   uploadTrack(input: $input) {
     track {
       id
-      uploadUrl
+      title
       file
+      artworkUrl
+      uploadUrl
       muxUpload {
         url
       }

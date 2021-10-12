@@ -51,12 +51,16 @@ export const transferNftToken = (web3: Web3, tokenId: string, fromAddress: strin
   );
 };
 
-export const mintNftToken = (web3: Web3, uri: string, fromAddress: string, toAddress: string) => {
+export const mintNftToken = async (web3: Web3, uri: string, fromAddress: string, toAddress: string) => {
   const contract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], contractAddress);
-  return maxGasFeeAlert(
-    web3,
-    async () => await contract.methods.safeMint(toAddress, uri).send({ from: fromAddress, gas }),
-  );
+  return await contract.methods.safeMint(toAddress, uri).send({ from: fromAddress, gas });
+};
+
+export const getMaxGasFee = async (web3: Web3) => {
+  const gasPriceWei = await web3.eth.getGasPrice();
+  const gasPrice = parseInt(web3.utils.fromWei(gasPriceWei, 'Gwei'));
+  const maxFeeWei = gasPrice * gas;
+  return web3.utils.fromWei(maxFeeWei.toString(), 'Gwei');
 };
 
 const maxGasFeeAlert = async (web3: Web3, method: () => unknown) => {

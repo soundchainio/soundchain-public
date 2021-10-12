@@ -1,14 +1,24 @@
 import axios from 'axios';
 import classNames from 'classnames';
+import { AudioPlayer } from 'components/AudioPlayer';
 import { FormValues, TrackMetadataForm } from 'components/forms/track/TrackMetadataForm';
 import { TrackUploader } from 'components/forms/track/TrackUploader';
 import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { useMagicContext } from 'hooks/useMagicContext';
-import { useMe } from 'hooks/useMe';
 import { useUpChunk } from 'hooks/useUpChunk';
-import { useUploadTrackMutation } from 'lib/graphql';
+import { Anchor } from 'icons/Anchor';
+import { Polygon } from 'icons/Polygon';
+import { mintNftToken } from 'lib/blockchain';
+import {
+  UploadTrackMutation,
+  usePinJsonToIpfsMutation,
+  usePinToIpfsMutation,
+  useUploadTrackMutation,
+} from 'lib/graphql';
+import Image from 'next/image';
 import React, { useState } from 'react';
+import { Metadata } from 'types/NftTypes';
 
 enum Tabs {
   NFT = 'NFT',
@@ -22,16 +32,17 @@ export const CreateModal = () => {
 
   const [file, setFile] = useState<File>();
   const [preview, setPreview] = useState<string>();
+  const [newTrack, setNewTrack] = useState<UploadTrackMutation['uploadTrack']['track']>();
 
   const [uploadTrack] = useUploadTrackMutation();
   const [startUpload, { uploading, progress, cancelUpload }] = useUpChunk();
 
-  const magic = useMagicContext();
-  console.log(magic);
+  const { web3, account } = useMagicContext();
+  const [pinToIPFS] = usePinToIpfsMutation();
+  const [pinJsonToIPFS] = usePinJsonToIpfsMutation();
 
-  const me = useMe();
-
-  console.log(me);
+  const [transactionHash, setTransactionHash] = useState<string>();
+  const [mintingState, setMintingState] = useState<string>();
 
   const handleFileDrop = (file: File) => {
     const reader = new FileReader();
@@ -51,22 +62,80 @@ export const CreateModal = () => {
   };
 
   const handleSubmit = async (values: FormValues) => {
-    console.log(values);
-
-    if (file) {
-      const { data } = await uploadTrack({ variables: { input: { fileType: file.type } } });
-      console.log({ data });
+    if (file && web3 && account) {
+      const { data } = await uploadTrack({ variables: { input: { fileType: file.type, ...values } } });
       if (data) {
-        axios.put(data.uploadTrack.track.uploadUrl, file, { headers: { 'Content-Type': file.type } });
-        startUpload(data.uploadTrack.track.muxUpload.url, file);
-        console.log(data.uploadTrack.track.file);
-        // if (setAssetUrl) setAssetUrl(data.uploadTrack.track.file);
+        const { title, artworkUrl, description } = values;
+
+        const track = data.uploadTrack.track;
+        setNewTrack(track);
+        startUpload(track.muxUpload.url, file);
+
+        setMintingState('Uploading track file');
+        await axios.put(track.uploadUrl, file, { headers: { 'Content-Type': file.type } });
+
+        track.artworkUrl;
+        const assetUrl = track.file;
+        const artUrl = artworkUrl;
+
+        const assetKey = assetUrl.substring(assetUrl.lastIndexOf('/') + 1);
+        setMintingState('Pinning track to IPFS');
+        const { data: assetPinResult } = await pinToIPFS({
+          variables: {
+            input: {
+              fileKey: assetKey,
+              fileName: values.title,
+            },
+          },
+        });
+
+        const metadata: Metadata = {
+          description,
+          name: title,
+          asset: `ipfs://${assetPinResult?.pinToIPFS.cid}`,
+        };
+
+        if (artUrl) {
+          const artPin = artUrl.substring(artUrl.lastIndexOf('/') + 1);
+          setMintingState('Pinning artwork to IPFS');
+          const { data: artPinResult } = await pinToIPFS({
+            variables: {
+              input: {
+                fileKey: artPin,
+                fileName: `${title}-art`,
+              },
+            },
+          });
+          metadata.art = `ipfs://${artPinResult?.pinToIPFS.cid}`;
+        }
+
+        const { data: metadataPinResult } = await pinJsonToIPFS({
+          variables: {
+            input: {
+              fileName: `${title}-metadata`,
+              json: metadata,
+            },
+          },
+        });
+        setMintingState('Minting NFT');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const mintResult: any = await mintNftToken(
+          web3,
+          `ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`,
+          account,
+          account,
+        );
+
+        setMintingState(undefined);
+        setTransactionHash(mintResult.transactionHash);
       }
     }
   };
 
   const handleClose = () => {
     dispatchShowCreateModal(false);
+    setTransactionHash(undefined);
+    setFile(undefined);
   };
 
   const tabs = (
@@ -92,6 +161,65 @@ export const CreateModal = () => {
     </div>
   );
 
+  if (transactionHash) {
+    return (
+      <Modal
+        show={isOpen}
+        title={tabs}
+        onClose={handleClose}
+        leftButton={
+          <div className="p-2 text-gray-400 font-bold flex-1 text-center text-sm" onClick={handleClose}>
+            Close
+          </div>
+        }
+      >
+        <div className="h-full w-full" style={{ backgroundColor: '#101010' }}>
+          {newTrack && (
+            <div className="p-4 m-4 bg-black rounded">
+              <AudioPlayer title={newTrack.title} src={newTrack.file} art={newTrack.artworkUrl} />
+            </div>
+          )}
+          <div
+            className="h-96 p-4 flex flex-col justify-center items-center	bg-no-repeat text-center text-xl text-white font-black uppercase"
+            style={{ backgroundImage: 'url(/congratulations.gif)', backgroundSize: '100% 100%' }}
+          >
+            <div style={{ color: '#808080' }}>Congrats,</div>
+            <div>you created an NFT!</div>
+          </div>
+          <div className="flex">
+            <div className="uppercase mr-auto text-xs font-bold py-3 px-4" style={{ color: '#CCCCCC' }}>
+              Minting Status
+            </div>
+            <div
+              className="flex gap-2 items-center py-3 px-4 text-white font-bold text-xs"
+              style={{ backgroundColor: '#252525' }}
+            >
+              <Image width={16} height={16} priority src="/loading.gif" alt="" /> In progress...
+            </div>
+          </div>
+          <div className="flex gap-4 items-center text-xs text-white py-3 px-4" style={{ backgroundColor: '#151515;' }}>
+            <div className="flex items-center whitespace-nowrap font-bold">
+              <Polygon />
+              Token ID:
+            </div>
+            <div className="flex items-center gap-1 truncate">
+              <Anchor style={{ minWidth: '8px' }} />
+              <a
+                className="truncate font-black "
+                style={{ fontSize: '9px', lineHeight: '9px', borderBottom: '1px solid gray', color: '#808080' }}
+                href={`https://mumbai.polygonscan.com/tx/${transactionHash}`}
+                rel="noreferrer"
+                target="_blank"
+              >
+                {transactionHash}
+              </a>
+            </div>
+          </div>
+        </div>
+      </Modal>
+    );
+  }
+
   return (
     <Modal
       show={isOpen}
@@ -103,13 +231,21 @@ export const CreateModal = () => {
         </div>
       }
     >
-      <TrackUploader
-        onFileChange={handleFileDrop}
-        cancelUpload={cancelUpload}
-        progress={progress}
-        uploading={uploading}
-      />
+      <div className="p-4">
+        <TrackUploader
+          onFileChange={handleFileDrop}
+          cancelUpload={cancelUpload}
+          progress={progress}
+          uploading={uploading}
+        />
+      </div>
       {file && preview && <TrackMetadataForm handleSubmit={handleSubmit} />}
+      {mintingState && (
+        <div className="absolute top-0 left-0 flex flex-col items-center justify-center h-full w-full bg-gray-20 bg-opacity-80">
+          <Image height={200} width={200} src="/nyan-cat-rainbow.gif" alt="Loading" priority />
+          <div className="font-bold text-lg text-white">{mintingState}</div>
+        </div>
+      )}
     </Modal>
   );
 };

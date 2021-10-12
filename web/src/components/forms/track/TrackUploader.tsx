@@ -5,7 +5,7 @@ import { Close as CancelIcon } from 'icons/Close';
 import { MusicFile } from 'icons/MusicFile';
 import { Upload as UploadIcon } from 'icons/Upload';
 import { useState } from 'react';
-import { DropEvent, FileRejection, useDropzone } from 'react-dropzone';
+import { FileRejection, useDropzone } from 'react-dropzone';
 
 export interface TrackUploaderProps {
   onFileChange: (file: File) => void;
@@ -23,7 +23,12 @@ export const TrackUploader = ({ onFileChange, cancelUpload, uploading, progress 
   const [file, setFile] = useState<File>();
   const [preview, setPreview] = useState<string>();
 
-  function onDrop<T extends File>([file]: T[], fileRejections: FileRejection[], event: DropEvent) {
+  function onDrop<T extends File>([file]: T[], fileRejections: FileRejection[]) {
+    if (fileRejections.length > 0) {
+      alert(`${fileRejections[0].file.name} not supported!`);
+      return;
+    }
+
     const reader = new FileReader();
     reader.readAsDataURL(file);
 
@@ -32,19 +37,9 @@ export const TrackUploader = ({ onFileChange, cancelUpload, uploading, progress 
       setFile(file);
       onFileChange(file);
     });
-
-    console.log(file);
-    console.log(fileRejections);
-    console.log(event);
   }
 
   const { getRootProps, getInputProps } = useDropzone({ maxFiles: 1, maxSize, accept, onDrop });
-
-  // useEffect(() => {
-  //   if (!uploading && progress === 100 && trackId) {
-  //     // onSuccess(trackId);
-  //   }
-  // }, [uploading]);
 
   if (file && uploading) {
     return (
