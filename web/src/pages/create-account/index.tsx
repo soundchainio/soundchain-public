@@ -5,21 +5,19 @@ import { InputField } from 'components/InputField';
 import { Label } from 'components/Label';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Form, Formik, FormikHelpers } from 'formik';
+import { useMagicContext } from 'hooks/useMagicContext';
 import { setJwt } from 'lib/apollo';
 import { useRegisterMutation } from 'lib/graphql';
-import { omit } from 'lodash';
 import { useRouter } from 'next/dist/client/router';
 import Head from 'next/head';
+import { useEffect, useState } from 'react';
 import { formatValidationErrors } from 'utils/errorHelpers';
 import { handleRegex } from 'utils/Validation';
 import * as yup from 'yup';
 
 interface FormValues {
-  email: string;
   displayName: string;
   handle: string;
-  password: string;
-  passwordConfirmation: string;
 }
 
 const topNavBarProps: TopNavBarProps = {
@@ -28,11 +26,32 @@ const topNavBarProps: TopNavBarProps = {
 
 export default function CreateAccountPage() {
   const router = useRouter();
+  const { magic } = useMagicContext();
   const [register, { loading }] = useRegisterMutation();
+  const [email, setEmail] = useState<string>('');
+  const [token, setToken] = useState<string>('');
+
+  useEffect(() => {
+    async function isLoggedInMagic() {
+      const user = magic?.user;
+      const isLoggedIn = await user?.isLoggedIn();
+
+      if (user && isLoggedIn) {
+        const token = await user.getIdToken();
+        const metaData = await user.getMetadata();
+        const email = metaData?.email;
+        setToken(token);
+        email && setEmail(email);
+      } else {
+        router.push('/login');
+      }
+    }
+    isLoggedInMagic();
+  }, []);
 
   const handleSubmit = async (values: FormValues, { setErrors }: FormikHelpers<FormValues>) => {
     try {
-      const { data } = await register({ variables: { input: omit(values, 'passwordConfirmation') } });
+      const { data } = await register({ variables: { input: { token, ...values } } });
       setJwt(data?.register.jwt);
       router.push(router.query.callbackUrl?.toString() ?? '/create-account/profile-picture');
     } catch (error) {
@@ -42,7 +61,6 @@ export default function CreateAccountPage() {
   };
 
   const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
-    email: yup.string().email().required().label('Email'),
     displayName: yup.string().min(3).max(255).required().label('Name'),
     handle: yup
       .string()
@@ -51,23 +69,16 @@ export default function CreateAccountPage() {
       .matches(handleRegex, 'Invalid characters. Only letters and numbers are accepted.')
       .required()
       .label('Username'),
-    password: yup.string().min(8).required().label('Password'),
-    passwordConfirmation: yup
-      .string()
-      .required()
-      .test('passwords-match', 'Passwords must match', function (value) {
-        return this.parent.password === value;
-      })
-      .label('Password confirmation'),
   });
 
   const initialValues = {
-    email: '',
     displayName: '',
     handle: '',
-    password: '',
-    passwordConfirmation: '',
   };
+
+  if (!email || !token) {
+    return null;
+  }
 
   return (
     <AuthLayout topNavBarProps={topNavBarProps}>
@@ -80,13 +91,6 @@ export default function CreateAccountPage() {
         <Form className="flex flex-col flex-1" autoComplete="off">
           <div className="flex flex-col mb-auto space-y-6">
             <div className="space-y-3">
-              <p className="text-center">
-                <Label textSize="xs">
-                  A link will be sent to the email address you enter below which must be clicked to activate your
-                  account.
-                </Label>
-              </p>
-              <InputField type="email" name="email" placeholder="Email Address" />
               <InputField type="text" name="displayName" placeholder="Name" />
             </div>
             <div className="space-y-3">
@@ -94,11 +98,6 @@ export default function CreateAccountPage() {
                 Enter username. <i>(Only letters and numbers allowed)</i>
               </Label>
               <InputField type="text" name="handle" placeholder="Username" />
-            </div>
-            <div className="space-y-3">
-              <Label textSize="xs">Create a password to secure your account:</Label>
-              <InputField type="password" name="password" placeholder="Password" autoComplete="new-password" />
-              <InputField type="password" name="passwordConfirmation" placeholder="Confirm Password" />
             </div>
           </div>
           <Button type="submit" loading={loading} disabled={loading}>

@@ -2,8 +2,10 @@ mutation UploadTrack($input: UploadTrackInput!) {
   uploadTrack(input: $input) {
     track {
       id
-      uploadUrl
+      title
       file
+      artworkUrl
+      uploadUrl
       muxUpload {
         url
       }

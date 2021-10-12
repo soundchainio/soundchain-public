@@ -1,12 +1,11 @@
 import * as React from 'react';
-import { IconProps } from './types/IconProps';
 
-export const Logo = ({ id = 'logo', ...props }: IconProps) => {
+export const Logo = ({ id = 'logo', width, height, ...props }: React.SVGProps<SVGSVGElement>) => {
   return (
     <svg
       id={id || 'logo'}
-      width={100}
-      height={100}
+      width={width || 100}
+      height={height || 100}
       viewBox="0 0 100 100"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"

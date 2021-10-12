@@ -1,11 +1,13 @@
 import { FollowModal } from 'components/FollowersModal';
 import { Number } from 'components/Number';
 import { useModalDispatch } from 'contexts/providers/modal';
+import { useMagicContext } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
 import { Happy } from 'icons/emoji/Happy';
 import { Logo } from 'icons/Logo';
 import { Logout } from 'icons/Logout';
 import { Settings } from 'icons/Settings';
+import { Wallet } from 'icons/Wallet';
 import { Discord } from 'icons/social/Discord';
 import { FacebookSquare } from 'icons/social/FacebookSquare';
 import { InstagramSquare } from 'icons/social/InstagramSquare';
@@ -27,10 +29,13 @@ export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => 
   const me = useMe();
   const router = useRouter();
   const { dispatchShowUnderDevelopmentModal } = useModalDispatch();
+  const { magic } = useMagicContext();
+
   const [showModal, setShowModal] = useState(false);
   const [followModalType, setFollowModalType] = useState<FollowModalType>();
 
-  const onLogout = () => {
+  const onLogout = async () => {
+    await magic?.user.logout();
     setJwt();
     router.reload();
   };
@@ -84,9 +89,15 @@ export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => 
                 <h2 className="font-bold text-white">{me.profile.displayName}</h2>
                 <p className="text-gray-80 text-md">@{me.handle}</p>
               </div>
+              
             </>
           )}
         </div>
+        {me && 
+          <div className="mt-2">
+            <MenuItem icon={Wallet} label="Wallet" onClick={() => router.push('/wallet')} />
+          </div>
+        }
       </div>
       {me && (
         <div>

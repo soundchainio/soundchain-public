@@ -1,22 +1,6 @@
-import { getModelForClass, pre, prop } from '@typegoose/typegoose';
-import { hash } from 'bcryptjs';
+import { getModelForClass, prop } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { Model } from './Model';
-
-const saltWorkFactor = 10;
-
-@pre<User>('save', async function (done) {
-  if (!this.isModified('password')) {
-    return done();
-  }
-
-  try {
-    this.password = await hash(this.password, saltWorkFactor);
-    done();
-  } catch (error) {
-    done(error);
-  }
-})
 @ObjectType()
 export class User extends Model {
   @Field(() => ID, { name: 'id' })
@@ -33,18 +17,12 @@ export class User extends Model {
   @prop({ required: true })
   handle: string;
 
-  @prop({ required: true })
-  password: string;
+  @Field({ nullable: true })
+  @prop({ required: false })
+  walletAddress: string;
 
   @prop({ required: false })
   emailVerificationToken?: string;
-
-  @Field()
-  @prop({ required: true, default: false })
-  verified: boolean;
-
-  @prop({ required: false })
-  passwordResetToken?: string;
 
   @Field(() => Date)
   createdAt: Date;

@@ -23,10 +23,11 @@ export class UserService extends ModelService<typeof User> {
     return updatedUser;
   }
 
-  async updatePassword(id: string, password: string): Promise<void> {
-    const user = await this.getUser(id);
-    const userDoc = new this.model(user);
-    userDoc.password = password;
-    userDoc.save();
+  async updateWalletAddress(id: string, walletAddress: string): Promise<User> {
+    const updatedUser = await UserModel.findByIdAndUpdate(id, { walletAddress }, { new: true });
+    if (!updatedUser) {
+      throw new Error(`Could not update the profile with id: ${id}`);
+    }
+    return updatedUser;
   }
 }

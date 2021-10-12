@@ -4,28 +4,28 @@ import { InputField } from 'components/InputField';
 import { Label } from 'components/Label';
 import { TextareaField } from 'components/TextareaField';
 import { Form, Formik } from 'formik';
-import useMetaMask from 'hooks/useMetaMask';
-import { useAddTrackMetadataMutation, useCreateMintingRequestMutation } from 'lib/graphql';
-import React from 'react';
+import { useMagicContext } from 'hooks/useMagicContext';
+import { Logo } from 'icons/Logo';
+import { Matic } from 'icons/Matic';
+import { getMaxGasFee } from 'lib/blockchain';
+import React, { useEffect, useState } from 'react';
 import * as yup from 'yup';
 
 interface Props {
-  trackId: string;
-  afterSubmit: () => void;
+  handleSubmit: (values: FormValues) => void;
   setCoverPhotoUrl?: (val: string) => void;
-  assetUrl: string;
 }
 
-interface FormValues {
+export interface FormValues {
   title: string;
-  description?: string;
+  description: string;
   artworkUrl?: string;
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   title: yup.string().required(),
-  description: yup.string(),
-  artworkUrl: yup.string()
+  description: yup.string().required(),
+  artworkUrl: yup.string(),
 });
 
 const initialValues: FormValues = {
@@ -34,64 +34,82 @@ const initialValues: FormValues = {
   artworkUrl: '',
 };
 
-export const TrackMetadataForm = ({ trackId, afterSubmit, setCoverPhotoUrl, assetUrl }: Props) => {
-  const [addMetadata] = useAddTrackMetadataMutation({ refetchQueries: ['Tracks'] });
-  const { account } = useMetaMask();
-  const [createMintingRequest] = useCreateMintingRequestMutation();
-
-
-  const handleSubmit = async (values: FormValues) => {
-    await createMintingRequest({
-      variables: {
-        input: {
-          to: account!,
-          name: values.title,
-          description: values.description || '',
-          assetUrl: assetUrl,
-          artUrl: values.artworkUrl
-        }
-      }
-    });
-    await addMetadata({ variables: { input: { trackId, ...values } } });
-    afterSubmit();
-  };
+export const TrackMetadataForm = ({ handleSubmit, setCoverPhotoUrl }: Props) => {
+  const { web3, balance } = useMagicContext();
+  const [maxGasFee, setMaxGasFee] = useState<string>();
+  useEffect(() => {
+    if (web3) {
+      getMaxGasFee(web3).then(setMaxGasFee);
+    }
+  }, [web3]);
 
   const onArtworkUpload = (val: string, setFieldValue: (field: string, value: string) => void) => {
+    setFieldValue('artworkUrl', val);
     if (setCoverPhotoUrl) {
       setCoverPhotoUrl(val);
-      setFieldValue('artworkUrl', val);
     }
   };
 
   return (
     <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
       {({ setFieldValue }) => (
-        <Form className="flex flex-col justify-between h-full">
-          <div>
-            <div className="flex items-center mt-6">
+        <Form className="flex flex-col gap-4 h-full">
+          <div className="px-4">
+            <div className="flex items-center">
               <div className="h-30 w-30 mr-2 flex flex-col items-center">
-                <ImageUpload artwork={true} onChange={(val) => onArtworkUpload(val, setFieldValue)} />
-                <span className="text-gray-80 underline text-xs mt-2">
-                  CHANGE ARTWORK
-                </span>
+                <ImageUpload artwork={true} onChange={val => onArtworkUpload(val, setFieldValue)} />
+                <span className="text-gray-80 underline text-xs mt-2 font-bold">CHANGE ARTWORK</span>
               </div>
               <div className="flex-1">
-                <Label>TRACK TITLE</Label>
+                <Label className="font-bold">TRACK TITLE</Label>
                 <InputField name="title" type="text" />
               </div>
             </div>
             <div>
               <div className="mt-4">
-                <Label>DESCRIPTION</Label>
-                <TextareaField name="description" />
+                <Label className="font-bold">DESCRIPTION</Label>
+                <TextareaField rows={3} name="description" />
               </div>
             </div>
           </div>
-          <Button type="submit" variant="outline" borderColor="bg-green-gradient h-12">
-            MINT NFT AUDIO
-          </Button>
+          <div className="flex items-center justify-between py-3 px-4" style={{ backgroundColor: '#202020' }}>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-xs text-white font-bold">
+                <Logo id="soundchain-wallet" height="20" width="20" /> SoundChain Wallet
+              </div>
+              <div className="flex items-center gap-2 font-black text-xs" style={{ color: '#808080' }}>
+                Balance: <Matic />
+                <div className="text-white">{balance}</div>MATIC
+              </div>
+            </div>
+            <div className="text-white text-xs text-right">
+              Need some test Matic? <br />
+              <a
+                className="text-xs font-bold"
+                href="https://faucet.polygon.technology/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Get some here
+              </a>
+            </div>
+          </div>
+          <div className="pl-4 pr-4 pb-4 flex items-center">
+            <div className="flex-1 font-black text-xs" style={{ color: '#808080' }}>
+              <div>Max gas fee</div>
+              <div className="flex items-center gap-1">
+                <Matic />
+                <div className="text-white">{maxGasFee}</div>MATIC
+              </div>
+            </div>
+            <div className="flex-1">
+              <Button type="submit" variant="rainbow">
+                MINT NFT
+              </Button>
+            </div>
+          </div>
         </Form>
       )}
-    </Formik >
+    </Formik>
   );
 };
