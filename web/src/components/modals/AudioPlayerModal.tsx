@@ -68,7 +68,7 @@ export const AudioPlayerModal = () => {
           <div className="flex justify-evenly mt-8">
             <button
               className={`${!hasPrevious && 'cursor-default'} rounded-full w-12 h-12 flex justify-center items-center`}
-              aria-label="Previous"
+              aria-label="Previous track"
               onClick={playPrevious}
               disabled={!hasPrevious}
             >
@@ -83,7 +83,7 @@ export const AudioPlayerModal = () => {
             </button>
             <button
               className={`${!hasNext && 'cursor-default'} rounded-full w-12 h-12 flex justify-center items-center`}
-              aria-label="Next"
+              aria-label="Next track"
               onClick={playNext}
               disabled={!hasNext}
             >
