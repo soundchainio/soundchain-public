@@ -4,6 +4,7 @@ import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { DownArrow } from 'icons/DownArrow';
 import { Forward } from 'icons/ForwardButton';
+import { Pause } from 'icons/PauseBottomAudioPlayer';
 import { Play } from 'icons/PlayModal';
 import { Rewind } from 'icons/RewindButton';
 import Image from 'next/image';
@@ -12,7 +13,7 @@ import { remainingTime, timeFromSecs } from 'utils/calculateTime';
 export const AudioPlayerModal = () => {
   const modalState = useModalState();
   const { dispatchShowAudioPlayerModal } = useModalDispatch();
-  const { play, currentSong, isPlaying } = useAudioPlayerContext();
+  const { togglePlay, currentSong, isPlaying } = useAudioPlayerContext();
 
   const isOpen = modalState.showAudioPlayer;
 
@@ -48,13 +49,17 @@ export const AudioPlayerModal = () => {
             <div className="flex-1 text-right">{remainingTime(100, 200 || 0)} </div>
           </div>
           <div className="flex justify-evenly mt-8">
-            <button className="rounded-full w-12 h-12 flex justify-center items-center">
+            <button className="rounded-full w-12 h-12 flex justify-center items-center" aria-label="Previous">
               <Rewind />
             </button>
-            <button className="bg-white rounded-full w-12 h-12 flex justify-center items-center">
-              <Play />
+            <button
+              className="bg-white rounded-full w-12 h-12 flex justify-center items-center"
+              aria-label={isPlaying ? 'Pause' : 'Play'}
+              onClick={togglePlay}
+            >
+              {isPlaying ? <Pause /> : <Play />}
             </button>
-            <button className="rounded-full w-12 h-12 flex justify-center items-center">
+            <button className="rounded-full w-12 h-12 flex justify-center items-center" aria-label="Next">
               <Forward />
             </button>
           </div>
