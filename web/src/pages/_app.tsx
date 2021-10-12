@@ -1,8 +1,10 @@
+import '@reach/slider/styles.css';
 import * as Sentry from '@sentry/react';
 import { Integrations } from '@sentry/tracing';
 import { BottomAudioPlayer } from 'components/BottomAudioPlayer';
 import { CheckBodyScroll } from 'components/CheckBodyScroll';
 import { Favicons } from 'components/Favicons';
+import { AudioPlayerModal } from 'components/modals/AudioPlayerModal';
 import { StateProvider } from 'contexts';
 import { AudioPlayerProvider } from 'hooks/useAudioPlayer';
 import { MagicProvider } from 'hooks/useMagicContext';
@@ -12,9 +14,8 @@ import Head from 'next/head';
 import Router from 'next/router';
 import NProgress from 'nprogress';
 import React from 'react';
-import "@reach/slider/styles.css";
-import 'styles/bottom-audio-player.css';
 import 'styles/audio-player.css';
+import 'styles/bottom-audio-player.css';
 import 'styles/globals.css';
 import 'styles/loading-ring.css';
 import 'styles/nprogress.css';
@@ -50,6 +51,7 @@ function SoundchainApp({ Component, pageProps }: AppProps) {
               <div className="h-screen flex flex-col">
                 <Component {...pageProps} />
                 <BottomAudioPlayer />
+                <AudioPlayerModal />
               </div>
             </AudioPlayerProvider>
           </MagicProvider>

@@ -1,4 +1,5 @@
 import { Slider } from '@reach/slider';
+import { useModalDispatch } from 'contexts/providers/modal';
 import Hls from 'hls.js';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { Pause } from 'icons/PauseBottomAudioPlayer';
@@ -11,6 +12,7 @@ export const BottomAudioPlayer = () => {
   const [progress, setProgress] = useState<number>(0);
   const [duration, setDuration] = useState<number>();
   const { isPlaying, togglePlay, setPlayingState, currentSong } = useAudioPlayerContext();
+  const { dispatchShowAudioPlayerModal } = useModalDispatch();
 
   useEffect(() => {
     if (!audioRef.current || !currentSong.src) {
@@ -80,18 +82,22 @@ export const BottomAudioPlayer = () => {
   return (
     <div className="bottom-audio-player bg-black py-2 flex flex-col gap-2">
       <div className="flex items-center gap-2 px-2">
-        <div className="h-10 w-10 bg-gray-80 relative flex items-center">
+        <div
+          className="h-10 w-10 bg-gray-80 relative flex items-center"
+          onClick={() => dispatchShowAudioPlayerModal(true)}
+        >
           {currentSong.art && (
             <Image src={currentSong.art} alt="art cover" layout="fill" className="m-auto object-cover" />
           )}
         </div>
-        <div className="text-white text-xs flex flex-col">
+        <div className="text-white text-xs flex flex-col" onClick={() => dispatchShowAudioPlayerModal(true)}>
           <h2 className="font-black">{currentSong.title || 'Unknown title'}</h2>
           <p className="font-medium">{currentSong.artist || 'Unknown artist'}</p>
         </div>
+        <div className="flex flex-1 h-full" onClick={() => dispatchShowAudioPlayerModal(true)} />
         <button
           aria-label={isPlaying ? 'Pause' : 'Play'}
-          className="h-10 w-10 flex items-center justify-center ml-auto"
+          className="h-10 w-10 flex items-center justify-center"
           onClick={togglePlay}
         >
           {isPlaying ? <Pause /> : <Play />}

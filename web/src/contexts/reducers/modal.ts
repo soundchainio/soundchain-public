@@ -3,6 +3,7 @@ import { ModalActionTypes } from 'contexts/actions/modal';
 import {
   SetEditPostIdPayload,
   SetRepostIdPayload,
+  ShowAudioPlayerPayload,
   ShowAuthorActionsPayload,
   ShowCreatePayload,
   ShowNewPostPayload,
@@ -22,6 +23,7 @@ export interface ModalState {
   authorActionsId: string;
   showUnderDevelopment: boolean;
   showCreate: boolean;
+  showAudioPlayer: boolean;
   reactions: {
     show: boolean;
     postId?: string;
@@ -40,6 +42,7 @@ export const initialModalState = {
   authorActionsId: '',
   showUnderDevelopment: false,
   showCreate: false,
+  showAudioPlayer: false,
   reactions: {
     show: false,
     postId: undefined,
@@ -103,6 +106,12 @@ export const modalReducer = (state: ModalState, action: Action) => {
         ...state,
         showCreate: (action.payload as ShowCreatePayload).show,
         anyModalOpened: (action.payload as ShowCreatePayload).show,
+      };
+    case ModalActionTypes.SHOW_AUDIO_PLAYER:
+      return {
+        ...state,
+        showAudioPlayer: (action.payload as ShowAudioPlayerPayload).show,
+        anyModalOpened: (action.payload as ShowAudioPlayerPayload).show,
       };
     default:
       return state;
