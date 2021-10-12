@@ -5,7 +5,7 @@ import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { DownArrow } from 'icons/DownArrow';
 import { Forward } from 'icons/ForwardButton';
 import { Pause } from 'icons/PauseBottomAudioPlayer';
-import { Play } from 'icons/PlayModal';
+import { Play } from 'icons/PlayBottomAudioPlayer';
 import { Rewind } from 'icons/RewindButton';
 import Image from 'next/image';
 import { remainingTime, timeFromSecs } from 'utils/calculateTime';
@@ -42,7 +42,9 @@ export const AudioPlayerModal = () => {
       <div className="flex flex-col h-full justify-center items-center text-white">
         <div className="post-audio-player w-72">
           <div className="w-72 h-72 relative flex items-center bg-gray-80 rounded-lg overflow-hidden">
-            {currentSong.art && <Image src={currentSong.art} alt="" layout="fill" className="m-auto object-cover" />}
+            {currentSong.art && (
+              <Image src={currentSong.art} alt="" layout="fill" className="m-auto object-cover priority" />
+            )}
           </div>
           <div className="flex flex-col gap-1 mt-7 mb-4">
             <h2 className="font-black">{currentSong.title || 'Unknown title'}</h2>
@@ -55,17 +57,17 @@ export const AudioPlayerModal = () => {
           </div>
           <div className="flex justify-evenly mt-8">
             <button className="rounded-full w-12 h-12 flex justify-center items-center" aria-label="Previous">
-              <Rewind />
+              <Rewind className="hover:fill-current active:text-gray-80" />
             </button>
             <button
-              className="bg-white rounded-full w-12 h-12 flex justify-center items-center"
+              className="bg-white rounded-full w-12 h-12 flex justify-center items-center hover:scale-110 active:scale-100"
               aria-label={isPlaying ? 'Pause' : 'Play'}
               onClick={togglePlay}
             >
-              {isPlaying ? <Pause /> : <Play />}
+              {isPlaying ? <Pause fill="black" /> : <Play fill="black" />}
             </button>
             <button className="rounded-full w-12 h-12 flex justify-center items-center" aria-label="Next">
-              <Forward />
+              <Forward className="hover:fill-current active:text-gray-80" />
             </button>
           </div>
         </div>

@@ -19,7 +19,6 @@ export const BottomAudioPlayer = () => {
     setPlayingState,
     setDurationState,
     setProgressState,
-    setProgressStateFromSlider,
   } = useAudioPlayerContext();
   const { dispatchShowAudioPlayerModal } = useModalDispatch();
 
@@ -62,10 +61,6 @@ export const BottomAudioPlayer = () => {
     }
   }, [progressFromSlider]);
 
-  const onSliderChange = (value: number) => {
-    setProgressStateFromSlider(value);
-  };
-
   function onLoadedMetadata() {
     if (audioRef.current) {
       audioRef.current.currentTime = 0;
@@ -99,7 +94,7 @@ export const BottomAudioPlayer = () => {
           onClick={() => dispatchShowAudioPlayerModal(true)}
         >
           {currentSong.art && (
-            <Image src={currentSong.art} alt="art cover" layout="fill" className="m-auto object-cover" />
+            <Image src={currentSong.art} alt="art cover" layout="fill" className="m-auto object-cover priority" />
           )}
         </div>
         <div className="text-white text-xs flex flex-col" onClick={() => dispatchShowAudioPlayerModal(true)}>
@@ -115,7 +110,7 @@ export const BottomAudioPlayer = () => {
           {isPlaying ? <Pause /> : <Play />}
         </button>
       </div>
-      <Slider min={0} max={duration} value={progress} onChange={onSliderChange} />
+      <Slider min={0} max={duration} value={progress} disabled onClick={() => dispatchShowAudioPlayerModal(true)} />
       <audio
         ref={audioRef}
         onPlay={() => setPlayingState(true)}

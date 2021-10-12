@@ -1,6 +1,9 @@
 .bottom-audio-player [data-reach-slider-input][data-orientation='horizontal'] {
   height: 2px;
-  cursor: pointer;
+}
+.bottom-audio-player [data-reach-slider-input][data-disabled] {
+  opacity: initial;
+  pointer-events: none;
 }
 .bottom-audio-player [data-reach-slider-range] {
   background: linear-gradient(90deg, #26d1a8 0%, #ac4efd 25%, #fed503 75%, #fe5540 100%);
@@ -10,13 +13,7 @@
 }
 .bottom-audio-player [data-reach-slider-handle] {
   opacity: 0;
-  width: 32px;
-  height: 8px;
   background: white;
-}
-.bottom-audio-player [data-reach-slider-handle]:hover {
-  width: 12px;
-  height: 12px;
 }
 .bottom-audio-player [data-reach-slider-track][data-orientation='horizontal']:before {
   height: 0.5rem;
