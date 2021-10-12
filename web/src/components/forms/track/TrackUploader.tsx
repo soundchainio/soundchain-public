@@ -74,7 +74,7 @@ export const TrackUploader = ({ onFileChange, cancelUpload, uploading, progress 
 
   if (file && preview) {
     return (
-      <div className="flex flex-col items-center bg-black text-gray-30 border-gray-50 border-2 border-dashed rounded-md gap-4 p-4 md:flex-row">
+      <div className="flex flex-col items-center bg-black text-gray-30 border-gray-50 border-2 border-dashed rounded-md gap-0 md:gap-4 p-4 md:flex-row">
         <div className="mr-auto w-full">
           <AudioPlayer title={file.name} src={preview} />
         </div>

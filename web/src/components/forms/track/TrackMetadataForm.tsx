@@ -53,7 +53,7 @@ export const TrackMetadataForm = ({ handleSubmit, setCoverPhotoUrl }: Props) => 
   return (
     <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
       {({ setFieldValue }) => (
-        <Form className="flex flex-col justify-between h-full">
+        <Form className="flex flex-col gap-2 h-full">
           <div className="px-4">
             <div className="flex items-center">
               <div className="h-30 w-30 mr-2 flex flex-col items-center">
@@ -68,20 +68,22 @@ export const TrackMetadataForm = ({ handleSubmit, setCoverPhotoUrl }: Props) => 
             <div>
               <div className="mt-4">
                 <Label className="font-bold">DESCRIPTION</Label>
-                <TextareaField name="description" />
+                <TextareaField rows={3} name="description" />
               </div>
             </div>
           </div>
-          <div className="flex flex-col gap-2 py-3 px-4" style={{ backgroundColor: '#202020' }}>
-            <div className="flex items-center gap-2 text-xs text-white font-bold">
-              <Logo id="soundchain-wallet" height="20" width="20" /> SoundChain Wallet
+          <div className="flex items-center justify-between py-3 px-4" style={{ backgroundColor: '#202020' }}>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-xs text-white font-bold">
+                <Logo id="soundchain-wallet" height="20" width="20" /> SoundChain Wallet
+              </div>
+              <div className="flex items-center gap-2 font-black text-xs" style={{ color: '#808080' }}>
+                Balance: <Matic />
+                <div className="text-white">{balance}</div>MATIC
+              </div>
             </div>
-            <div className="flex items-center gap-2 font-black text-xs" style={{ color: '#808080' }}>
-              Balance: <Matic />
-              <div className="text-white">{balance}</div>MATIC
-            </div>
-            <div className="text-white text-xs">
-              Need some test Matic?{' '}
+            <div className="text-white text-xs text-right">
+              Need some test Matic? <br />
               <a
                 className="text-xs font-bold"
                 href="https://faucet.polygon.technology/"
