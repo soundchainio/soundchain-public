@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import { NftToken } from 'types/NftTypes';
 import Web3 from 'web3';
 import * as yup from 'yup';
+import { Label } from './Label';
 
 export const audioMimeTypes = [
   'audio/basic',
@@ -102,7 +103,7 @@ export const NFTCard = ({ account, web3, nftToken }: NftCardProps) => {
   if (!assetData) return <div className="text-white">Loading...</div>;
 
   return (
-    <div className="relative h-full mb-20">
+    <div className="relative h-full mb-24">
       {transferring && (
         <TransferForm
           name={name}
@@ -130,7 +131,7 @@ export const NFTCard = ({ account, web3, nftToken }: NftCardProps) => {
       <div className="absolute bottom-0">
         <Formik initialValues={listInitialValues} validationSchema={listValidationSchema} onSubmit={handleSubmit}>
           <Form>
-            <div className="flex space-x-2">
+            <div className="flex gap-2 flex-wrap items-center">
               <Button variant="rainbow-xs" className="" onClick={() => setTransferring(true)}>
                 Transfer
               </Button>
@@ -143,7 +144,10 @@ export const NFTCard = ({ account, web3, nftToken }: NftCardProps) => {
               <Button variant="rainbow-xs" type="submit">
                 List
               </Button>
-              <InputField label={'Price'} name="price" type="text" />
+              <div className="flex items-center gap-2">
+                <Label>Price</Label>
+                <InputField style={{ maxWidth: '60px' }} name="price" type="text" />
+              </div>
             </div>
           </Form>
         </Formik>
