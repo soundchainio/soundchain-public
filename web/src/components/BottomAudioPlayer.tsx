@@ -15,7 +15,9 @@ export const BottomAudioPlayer = () => {
     duration,
     progress,
     progressFromSlider,
+    hasNext,
     togglePlay,
+    playNext,
     setPlayingState,
     setDurationState,
     setProgressState,
@@ -79,7 +81,11 @@ export const BottomAudioPlayer = () => {
   }
 
   function handleEndedSong() {
-    setProgressState(0);
+    if (hasNext) {
+      playNext();
+    } else {
+      setProgressState(0);
+    }
   }
 
   if (!currentSong.src) {

@@ -6,15 +6,24 @@ import { useTrackLazyQuery } from 'lib/graphql';
 import Image from 'next/image';
 import React, { useEffect } from 'react';
 
+type Song = {
+  src: string;
+  title?: string | null;
+  trackId: string;
+  artist?: string | null;
+  art?: string | null;
+};
+
 interface TrackProps {
   trackId: string;
   index: number;
   coverPhotoUrl?: string;
+  handleOnPlayClicked: (song: Song) => void;
 }
 
-export const Track2 = ({ trackId, index, coverPhotoUrl }: TrackProps) => {
+export const Track2 = ({ trackId, index, coverPhotoUrl, handleOnPlayClicked }: TrackProps) => {
   const [track, { data, error }] = useTrackLazyQuery({ variables: { id: trackId } });
-  const { play, currentSong, isPlaying } = useAudioPlayerContext();
+  const { currentSong, isPlaying } = useAudioPlayerContext();
 
   useEffect(() => {
     if (!data?.track) {
@@ -57,7 +66,7 @@ export const Track2 = ({ trackId, index, coverPhotoUrl }: TrackProps) => {
       <button
         className="h-10 w-10 flex items-center justify-center ml-auto"
         aria-label={isPlaying && currentSong.trackId === song.trackId ? 'Pause' : 'Play'}
-        onClick={() => play(song)}
+        onClick={() => handleOnPlayClicked(song)}
       >
         {isPlaying && currentSong.trackId === song.trackId ? <Pause /> : <Play />}
       </button>

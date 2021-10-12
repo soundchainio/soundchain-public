@@ -13,8 +13,18 @@ import { remainingTime, timeFromSecs } from 'utils/calculateTime';
 export const AudioPlayerModal = () => {
   const modalState = useModalState();
   const { dispatchShowAudioPlayerModal } = useModalDispatch();
-  const { currentSong, isPlaying, duration, progress, togglePlay, setProgressStateFromSlider } =
-    useAudioPlayerContext();
+  const {
+    currentSong,
+    isPlaying,
+    duration,
+    progress,
+    hasPrevious,
+    hasNext,
+    togglePlay,
+    setProgressStateFromSlider,
+    playPrevious,
+    playNext,
+  } = useAudioPlayerContext();
 
   const isOpen = modalState.showAudioPlayer;
 
@@ -56,8 +66,13 @@ export const AudioPlayerModal = () => {
             <div className="flex-1 text-right">{remainingTime(progress, duration || 0)} </div>
           </div>
           <div className="flex justify-evenly mt-8">
-            <button className="rounded-full w-12 h-12 flex justify-center items-center" aria-label="Previous">
-              <Rewind className="hover:fill-current active:text-gray-80" />
+            <button
+              className={`${!hasPrevious && 'cursor-default'} rounded-full w-12 h-12 flex justify-center items-center`}
+              aria-label="Previous"
+              onClick={playPrevious}
+              disabled={!hasPrevious}
+            >
+              <Rewind className={`${hasPrevious && 'hover:fill-current'} active:text-gray-80`} />
             </button>
             <button
               className="bg-white rounded-full w-12 h-12 flex justify-center items-center hover:scale-110 active:scale-100"
@@ -66,8 +81,13 @@ export const AudioPlayerModal = () => {
             >
               {isPlaying ? <Pause fill="black" /> : <Play fill="black" />}
             </button>
-            <button className="rounded-full w-12 h-12 flex justify-center items-center" aria-label="Next">
-              <Forward className="hover:fill-current active:text-gray-80" />
+            <button
+              className={`${!hasNext && 'cursor-default'} rounded-full w-12 h-12 flex justify-center items-center`}
+              aria-label="Next"
+              onClick={playNext}
+              disabled={!hasNext}
+            >
+              <Forward className={`${hasNext && 'hover:fill-current'} active:text-gray-80`} />
             </button>
           </div>
         </div>
