@@ -5,7 +5,7 @@ import { AbiItem } from 'web3-utils';
 import soundchainContract from '../contract/SoundchainCollectible.sol/SoundchainCollectible.json';
 import soundchainMarketplace from '../contract/SoundchainMarketplace/SoundchainMarketplace.json';
 
-const nftAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
+const nftAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as string;
 const marketplaceAddress = process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS;
 const gas = 1200000;
 
@@ -32,7 +32,7 @@ export const getNftTokensFromContract = async (web3: Web3, account: string) => {
           .call();
         try {
           const { data } = await axios.get<Metadata>(getIpfsAssetUrl(tokenURI));
-          tokens.push({ ...data, tokenId, pricePerItem, quantity, startingTime });
+          tokens.push({ ...data, tokenId, pricePerItem, quantity, startingTime, contractAddress: contractAddr });
         } catch (error) {
           console.error('Unable to read token meta ', error);
         }

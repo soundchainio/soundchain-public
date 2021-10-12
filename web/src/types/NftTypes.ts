@@ -11,4 +11,5 @@ export interface NftToken extends Metadata {
   pricePerItem: number;
   quantity: number;
   startingTime: number;
+  contractAddress: string;
 }

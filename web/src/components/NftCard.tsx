@@ -53,7 +53,8 @@ interface NftCardProps {
 }
 
 export const NFTCard = ({ account, web3, nftToken }: NftCardProps) => {
-  const { tokenId, asset, name, description, art, attributes, pricePerItem, quantity, startingTime } = nftToken;
+  const { tokenId, asset, name, description, art, attributes, pricePerItem, quantity, startingTime, contractAddress } =
+    nftToken;
   const assetURL = getIpfsAssetUrl(asset);
   const artURL = art && getIpfsAssetUrl(art);
   const { data: assetData } = useMimeTypeQuery({ variables: { url: getIpfsAssetUrl(asset) } });
@@ -152,7 +153,7 @@ export const NFTCard = ({ account, web3, nftToken }: NftCardProps) => {
           </Form>
         </Formik>
         <a
-          href={`https://mumbai.polygonscan.com/token/0x1ca9e523a3d4d2a771e22aaaf51eab33108c6b2c?a=${tokenId}`}
+          href={`https://mumbai.polygonscan.com/token/${contractAddress}?a=${tokenId}`}
           target="_blank"
           rel="noreferrer"
           className="text-sm yellow-gradient-text"
