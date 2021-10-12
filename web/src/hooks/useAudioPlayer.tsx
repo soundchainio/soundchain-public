@@ -10,7 +10,7 @@ type Song = {
 
 interface AudioPlayerContextData {
   isPlaying: boolean;
-  song: Song;
+  currentSong: Song;
   play: (song: Song) => void;
   togglePlay: () => void;
   setPlayingState: (state: boolean) => void;
@@ -24,23 +24,27 @@ interface AudioPlayerProviderProps {
 
 export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [song, setSong] = useState<Song>({} as Song);
+  const [currentSong, setCurrentSong] = useState<Song>({} as Song);
 
   const play = (song: Song) => {
-    setIsPlaying(true);
-    setSong(song);
+    if (currentSong.trackId !== song.trackId) {
+      setIsPlaying(true);
+      setCurrentSong(song);
+    } else {
+      togglePlay();
+    }
   };
 
-  function togglePlay() {
+  const togglePlay = () => {
     setIsPlaying(!isPlaying);
-  }
+  };
 
-  function setPlayingState(state: boolean) {
+  const setPlayingState = (state: boolean) => {
     setIsPlaying(state);
-  }
+  };
 
   return (
-    <AudioPlayerContext.Provider value={{ isPlaying, song, play, togglePlay, setPlayingState }}>
+    <AudioPlayerContext.Provider value={{ isPlaying, currentSong, play, togglePlay, setPlayingState }}>
       {children}
     </AudioPlayerContext.Provider>
   );

@@ -1,0 +1,66 @@
+import { TrackSkeleton } from 'components/TrackSkeleton';
+import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
+import { Pause } from 'icons/PauseBottomAudioPlayer';
+import { Play } from 'icons/PlayBottomAudioPlayer';
+import { useTrackLazyQuery } from 'lib/graphql';
+import Image from 'next/image';
+import React, { useEffect } from 'react';
+
+interface TrackProps {
+  trackId: string;
+  index: number;
+  coverPhotoUrl?: string;
+}
+
+export const Track2 = ({ trackId, index, coverPhotoUrl }: TrackProps) => {
+  const [track, { data, error }] = useTrackLazyQuery({ variables: { id: trackId } });
+  const { play, currentSong, isPlaying } = useAudioPlayerContext();
+
+  useEffect(() => {
+    if (!data?.track) {
+      track();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (error) {
+      setTimeout(() => {
+        track();
+      }, 2000);
+    }
+  }, [data, error]);
+
+  if (!data?.track) return <TrackSkeleton />;
+
+  const song = {
+    src: data.track.playbackUrl,
+    trackId: data.track.id,
+    art: data.track.artworkUrl || coverPhotoUrl || undefined,
+    title: data.track.title,
+  };
+
+  return (
+    <li
+      className={`flex items-center gap-2 px-4 py-2 transition duration-300 hover:bg-gray-25 text-white text-sm ${
+        isPlaying && currentSong.trackId === song.trackId ? 'font-black' : 'font-semibold'
+      } text-white text-sm`}
+    >
+      <p>{index}</p>
+      <div className="h-10 w-10 relative flex items-center bg-gray-80">
+        {data.track.artworkUrl && (
+          <Image src={data.track.artworkUrl} alt="" layout="fill" className="m-auto object-cover" />
+        )}
+      </div>
+      <div>
+        <h2>{data.track.title}</h2>
+      </div>
+      <button
+        className="h-10 w-10 flex items-center justify-center ml-auto"
+        aria-label={isPlaying && currentSong.trackId === song.trackId ? 'Pause' : 'Play'}
+        onClick={() => play(song)}
+      >
+        {isPlaying && currentSong.trackId === song.trackId ? <Pause /> : <Play />}
+      </button>
+    </li>
+  );
+};
