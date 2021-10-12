@@ -23,6 +23,7 @@ export const Post = ({ postId }: PostProps) => {
   const me = useMe();
   const { dispatchShowAuthorActionsModal } = useModalDispatch();
 
+  console.log({ post });
   if (!post) return <PostSkeleton />;
 
   const canEdit = post?.profile.id == me?.profile.id;
@@ -57,7 +58,14 @@ export const Post = ({ postId }: PostProps) => {
           <iframe frameBorder="0" className="mt-4 w-full bg-gray-20" allowFullScreen src={post.mediaLink} />
         )}
         {post.repostId && <RepostPreview postId={post.repostId} />}
-        {post.track && <AudioPlayer trackId={post.track.id} src={post.track.playbackUrl} title={post.track.title} />}
+        {post.track && (
+          <AudioPlayer
+            art={post.track.artworkUrl}
+            trackId={post.track.id}
+            src={post.track.playbackUrl}
+            title={post.track.title}
+          />
+        )}
         <PostStats
           totalReactions={post.totalReactions}
           topReactions={post.topReactions}

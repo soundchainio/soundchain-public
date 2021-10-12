@@ -325,7 +325,7 @@ export type Mutation = {
   unfollowProfile: UnfollowProfilePayload;
   subscribeToProfile: SubscribeToProfilePayload;
   unsubscribeFromProfile: UnsubscribeFromProfilePayload;
-  uploadTrack: UploadTrackPayload;
+  createTrack: UploadTrackPayload;
   addTrackMetadata: AddTrackMetadataPayload;
   register: AuthPayload;
   login: AuthPayload;
@@ -423,7 +423,7 @@ export type MutationUnsubscribeFromProfileArgs = {
 };
 
 
-export type MutationUploadTrackArgs = {
+export type MutationCreateTrackArgs = {
   input: UploadTrackInput;
 };
 
@@ -445,11 +445,6 @@ export type MutationLoginArgs = {
 
 export type MutationUpdateHandleArgs = {
   input: UpdateHandleInput;
-};
-
-export type MuxUpload = {
-  __typename?: 'MuxUpload';
-  url: Scalars['String'];
 };
 
 export type NewPostNotification = {
@@ -828,11 +823,9 @@ export type Track = {
   profileId: Scalars['String'];
   title: Maybe<Scalars['String']>;
   description: Maybe<Scalars['String']>;
-  file: Scalars['String'];
-  uploadUrl: Scalars['String'];
+  assetUrl: Scalars['String'];
   artworkUrl: Maybe<Scalars['String']>;
   transactionAddress: Maybe<Scalars['String']>;
-  muxUpload: MuxUpload;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   playbackUrl: Scalars['String'];
@@ -898,9 +891,9 @@ export type UpdateProfilePayload = {
 };
 
 export type UploadTrackInput = {
-  fileType: Scalars['String'];
   title: Scalars['String'];
   description?: Maybe<Scalars['String']>;
+  assetUrl: Scalars['String'];
   artworkUrl?: Maybe<Scalars['String']>;
 };
 
@@ -1640,7 +1633,7 @@ export type TrackQuery = (
 
 export type TrackComponentFieldsFragment = (
   { __typename?: 'Track' }
-  & Pick<Track, 'id' | 'profileId' | 'title' | 'file' | 'artworkUrl' | 'description' | 'playbackUrl' | 'createdAt' | 'updatedAt'>
+  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'playbackUrl' | 'createdAt' | 'updatedAt'>
 );
 
 export type TracksQueryVariables = Exact<{
@@ -1855,22 +1848,18 @@ export type UpdateSocialMediasMutation = (
   ) }
 );
 
-export type UploadTrackMutationVariables = Exact<{
+export type CreateTrackMutationVariables = Exact<{
   input: UploadTrackInput;
 }>;
 
 
-export type UploadTrackMutation = (
+export type CreateTrackMutation = (
   { __typename?: 'Mutation' }
-  & { uploadTrack: (
+  & { createTrack: (
     { __typename?: 'UploadTrackPayload' }
     & { track: (
       { __typename?: 'Track' }
-      & Pick<Track, 'id' | 'title' | 'file' | 'artworkUrl' | 'uploadUrl'>
-      & { muxUpload: (
-        { __typename?: 'MuxUpload' }
-        & Pick<MuxUpload, 'url'>
-      ) }
+      & Pick<Track, 'id' | 'title' | 'description' | 'assetUrl' | 'artworkUrl'>
     ) }
   ) }
 );
@@ -1958,7 +1947,7 @@ export const TrackComponentFieldsFragmentDoc = gql`
   id
   profileId
   title
-  file
+  assetUrl
   artworkUrl
   description
   playbackUrl
@@ -4033,48 +4022,45 @@ export function useUpdateSocialMediasMutation(baseOptions?: Apollo.MutationHookO
 export type UpdateSocialMediasMutationHookResult = ReturnType<typeof useUpdateSocialMediasMutation>;
 export type UpdateSocialMediasMutationResult = Apollo.MutationResult<UpdateSocialMediasMutation>;
 export type UpdateSocialMediasMutationOptions = Apollo.BaseMutationOptions<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>;
-export const UploadTrackDocument = gql`
-    mutation UploadTrack($input: UploadTrackInput!) {
-  uploadTrack(input: $input) {
+export const CreateTrackDocument = gql`
+    mutation CreateTrack($input: UploadTrackInput!) {
+  createTrack(input: $input) {
     track {
       id
       title
-      file
+      description
+      assetUrl
       artworkUrl
-      uploadUrl
-      muxUpload {
-        url
-      }
     }
   }
 }
     `;
-export type UploadTrackMutationFn = Apollo.MutationFunction<UploadTrackMutation, UploadTrackMutationVariables>;
+export type CreateTrackMutationFn = Apollo.MutationFunction<CreateTrackMutation, CreateTrackMutationVariables>;
 
 /**
- * __useUploadTrackMutation__
+ * __useCreateTrackMutation__
  *
- * To run a mutation, you first call `useUploadTrackMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useUploadTrackMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useCreateTrackMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateTrackMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [uploadTrackMutation, { data, loading, error }] = useUploadTrackMutation({
+ * const [createTrackMutation, { data, loading, error }] = useCreateTrackMutation({
  *   variables: {
  *      input: // value for 'input'
  *   },
  * });
  */
-export function useUploadTrackMutation(baseOptions?: Apollo.MutationHookOptions<UploadTrackMutation, UploadTrackMutationVariables>) {
+export function useCreateTrackMutation(baseOptions?: Apollo.MutationHookOptions<CreateTrackMutation, CreateTrackMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UploadTrackMutation, UploadTrackMutationVariables>(UploadTrackDocument, options);
+        return Apollo.useMutation<CreateTrackMutation, CreateTrackMutationVariables>(CreateTrackDocument, options);
       }
-export type UploadTrackMutationHookResult = ReturnType<typeof useUploadTrackMutation>;
-export type UploadTrackMutationResult = Apollo.MutationResult<UploadTrackMutation>;
-export type UploadTrackMutationOptions = Apollo.BaseMutationOptions<UploadTrackMutation, UploadTrackMutationVariables>;
+export type CreateTrackMutationHookResult = ReturnType<typeof useCreateTrackMutation>;
+export type CreateTrackMutationResult = Apollo.MutationResult<CreateTrackMutation>;
+export type CreateTrackMutationOptions = Apollo.BaseMutationOptions<CreateTrackMutation, CreateTrackMutationVariables>;
 export const UploadUrlDocument = gql`
     query UploadUrl($fileType: String!) {
   uploadUrl(fileType: $fileType) {

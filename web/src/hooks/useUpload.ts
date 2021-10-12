@@ -4,7 +4,7 @@ import { UploadUrlDocument, UploadUrlQuery } from 'lib/graphql';
 import { useCallback } from 'react';
 import { useMountedState } from './useMountedState';
 
-export const useUpload = (value: string | undefined, onChange: (value: string) => void) => {
+export const useUpload = (value?: string, onChange?: (value: string) => void) => {
   const [uploading, setUploading] = useMountedState(false);
   const [preview, setPreview] = useMountedState<string | undefined>(value);
   const [fileType, setFileType] = useMountedState<string>('');
@@ -31,7 +31,9 @@ export const useUpload = (value: string | undefined, onChange: (value: string) =
       await axios.put(uploadUrl, file, { headers: { 'Content-Type': file.type } });
 
       setUploading(false);
-      onChange(readUrl);
+      onChange && onChange(readUrl);
+
+      return readUrl;
     },
     [onChange, setPreview, setUploading, setFileType],
   );
