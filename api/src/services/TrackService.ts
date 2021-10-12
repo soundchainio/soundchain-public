@@ -21,8 +21,8 @@ export class TrackService extends ModelService<typeof Track> {
     return this.findOrFail(id);
   }
 
-  async createTrack({ profileId, fileType }: { profileId: string; fileType: string }): Promise<Track> {
-    const track = new this.model({ profileId });
+  async createTrack(profileId: string, fileType: string, data: Partial<Track>): Promise<Track> {
+    const track = new this.model({ profileId, ...data });
     const [uploadUrl, muxUpload] = await Promise.all([
       this.context.uploadService.generateUploadUrl(fileType),
       this.context.muxService.createUpload(track.id),

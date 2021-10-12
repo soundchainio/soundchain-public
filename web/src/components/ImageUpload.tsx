@@ -3,6 +3,7 @@ import { useUpload } from 'hooks/useUpload';
 import { Upload } from 'icons/Upload';
 import Image from 'next/image';
 import Dropzone from 'react-dropzone';
+import { videoMimeTypes } from './NftCard';
 
 export interface ImageUploadProps extends Omit<React.ComponentPropsWithoutRef<'div'>, 'onChange'> {
   maxNumberOfFiles?: number;
@@ -13,8 +14,8 @@ export interface ImageUploadProps extends Omit<React.ComponentPropsWithoutRef<'d
   artwork?: boolean;
 }
 
-const defaultMaxFileSize = 1024 * 1024 * 3; // 3Mb
-const acceptedMimeTypes = ['image/jpeg', 'image/png', 'audio/mp3'];
+const defaultMaxFileSize = 1024 * 1024 * 100; // 100Mb
+const acceptedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', ...videoMimeTypes];
 
 export function ImageUpload({
   className,
@@ -27,7 +28,7 @@ export function ImageUpload({
   artwork = false,
   ...rest
 }: ImageUploadProps) {
-  const { preview, uploading, upload } = useUpload(value, onChange);
+  const { preview, fileType, uploading, upload } = useUpload(value, onChange);
   const thumbnail = preview || value;
 
   return (
@@ -42,25 +43,28 @@ export function ImageUpload({
         <div
           className={classNames(
             'relative flex items-center justify-center bg-gray-30 border-gray-80 border-2',
-            thumbnail && !artwork ? 'w-14' : 'w-3/4',
             thumbnail && rounded ? 'rounded-full' : 'rounded-lg',
             className,
-            artwork ? 'w-20 h-20' : 'h-14',
+            artwork ? 'w-24 h-24' : 'h-14',
           )}
           {...rest}
           {...getRootProps()}
         >
           <input {...getInputProps()} />
           {thumbnail ? (
-            <Image
-              className={classNames('object-cover', rounded ? 'rounded-full' : 'rounded-lg')}
-              src={thumbnail}
-              alt="Upload preview"
-              layout="fill"
-            />
+            videoMimeTypes.includes(fileType) ? (
+              <video src={thumbnail} loop muted autoPlay className="w-full h-full" />
+            ) : (
+              <Image
+                className={classNames('object-cover', rounded ? 'rounded-full' : 'rounded-lg')}
+                src={thumbnail}
+                alt="Upload preview"
+                layout="fill"
+              />
+            )
           ) : (
             <div className="flex flex-row p-4 text-center text-white text-sm font-semibold">
-              <Upload className="mr-2 mt-[2px]" />
+              <Upload />
               {children}
             </div>
           )}
