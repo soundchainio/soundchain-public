@@ -53,7 +53,7 @@ export const TrackMetadataForm = ({ handleSubmit, setCoverPhotoUrl }: Props) => 
   return (
     <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
       {({ setFieldValue }) => (
-        <Form className="flex flex-col gap-2 h-full">
+        <Form className="flex flex-col gap-4 h-full">
           <div className="px-4">
             <div className="flex items-center">
               <div className="h-30 w-30 mr-2 flex flex-col items-center">
@@ -94,7 +94,7 @@ export const TrackMetadataForm = ({ handleSubmit, setCoverPhotoUrl }: Props) => 
               </a>
             </div>
           </div>
-          <div className="p-4 flex items-center">
+          <div className="pl-4 pr-4 pb-4 flex items-center">
             <div className="flex-1 font-black text-xs" style={{ color: '#808080' }}>
               <div>Max gas fee</div>
               <div className="flex items-center gap-1">
