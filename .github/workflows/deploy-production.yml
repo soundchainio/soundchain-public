@@ -5,7 +5,7 @@ on:
     branches:
       - production
     paths:
-      - "api/**"
+      - 'api/**'
 
 jobs:
   deploy-api:
@@ -40,7 +40,6 @@ jobs:
           WEB_APP_URL: ${{ secrets.WEB_APP_URL_PRODUCTION }}
           MUX_TOKEN_ID: ${{ secrets.MUX_TOKEN_ID_PRODUCTION }}
           MUX_TOKEN_SECRET: ${{ secrets.MUX_TOKEN_SECRET_PRODUCTION }}
-          MUX_WEBHOOK_SECRET: ${{ secrets.MUX_WEBHOOK_SECRET_PRODUCTION }}
           SENTRY_URL: ${{ secrets.SENTRY_URL }}
           MAGIC_PRIVATE_KEY: ${{ secrets.MAGIC_PRIVATE_KEY_PRODUCTION }}
       - name: Trigger migrate lambda function

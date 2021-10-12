@@ -36,12 +36,12 @@ export class TrackResolver {
 
   @Mutation(() => UploadTrackPayload)
   @Authorized()
-  async uploadTrack(
+  async createTrack(
     @Ctx() { trackService, postService }: Context,
     @CurrentUser() { profileId }: User,
-    @Arg('input') { fileType, ...data }: UploadTrackInput,
+    @Arg('input') input: UploadTrackInput,
   ): Promise<UploadTrackPayload> {
-    const track = await trackService.createTrack(profileId, fileType, data);
+    const track = await trackService.createTrack(profileId, input);
     await postService.createPost({ profileId, trackId: track._id });
     return { track };
   }

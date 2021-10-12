@@ -1,4 +1,3 @@
-import axios from 'axios';
 import classNames from 'classnames';
 import { AudioPlayer } from 'components/AudioPlayer';
 import { FormValues, TrackMetadataForm } from 'components/forms/track/TrackMetadataForm';
@@ -6,15 +5,15 @@ import { TrackUploader } from 'components/forms/track/TrackUploader';
 import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { useMagicContext } from 'hooks/useMagicContext';
-import { useUpChunk } from 'hooks/useUpChunk';
+import { useUpload } from 'hooks/useUpload';
 import { Anchor } from 'icons/Anchor';
 import { Polygon } from 'icons/Polygon';
 import { mintNftToken } from 'lib/blockchain';
 import {
-  UploadTrackMutation,
+  CreateTrackMutation,
+  useCreateTrackMutation,
   usePinJsonToIpfsMutation,
   usePinToIpfsMutation,
-  useUploadTrackMutation,
 } from 'lib/graphql';
 import Image from 'next/image';
 import React, { useState } from 'react';
@@ -32,10 +31,11 @@ export const CreateModal = () => {
 
   const [file, setFile] = useState<File>();
   const [preview, setPreview] = useState<string>();
-  const [newTrack, setNewTrack] = useState<UploadTrackMutation['uploadTrack']['track']>();
 
-  const [uploadTrack] = useUploadTrackMutation();
-  const [startUpload, { uploading, progress, cancelUpload }] = useUpChunk();
+  const [newTrack, setNewTrack] = useState<CreateTrackMutation['createTrack']['track']>();
+
+  const { upload } = useUpload();
+  const [uploadTrack] = useCreateTrackMutation();
 
   const { web3, account } = useMagicContext();
   const [pinToIPFS] = usePinToIpfsMutation();
@@ -63,72 +63,66 @@ export const CreateModal = () => {
 
   const handleSubmit = async (values: FormValues) => {
     if (file && web3 && account) {
-      const { data } = await uploadTrack({ variables: { input: { fileType: file.type, ...values } } });
-      if (data) {
-        const { title, artworkUrl, description } = values;
+      const { title, artworkUrl, description } = values;
 
-        const track = data.uploadTrack.track;
-        setNewTrack(track);
-        startUpload(track.muxUpload.url, file);
+      setMintingState('Uploading track file');
+      const assetUrl = await upload([file]);
+      const artUrl = artworkUrl;
 
-        setMintingState('Uploading track file');
-        await axios.put(track.uploadUrl, file, { headers: { 'Content-Type': file.type } });
+      setMintingState('Creating streaming from track');
+      const { data } = await uploadTrack({ variables: { input: { assetUrl, ...values } } });
+      setNewTrack(data?.createTrack.track);
 
-        track.artworkUrl;
-        const assetUrl = track.file;
-        const artUrl = artworkUrl;
+      const assetKey = assetUrl.substring(assetUrl.lastIndexOf('/') + 1);
+      setMintingState('Pinning track to IPFS');
+      const { data: assetPinResult } = await pinToIPFS({
+        variables: {
+          input: {
+            fileKey: assetKey,
+            fileName: values.title,
+          },
+        },
+      });
 
-        const assetKey = assetUrl.substring(assetUrl.lastIndexOf('/') + 1);
-        setMintingState('Pinning track to IPFS');
-        const { data: assetPinResult } = await pinToIPFS({
+      const metadata: Metadata = {
+        description,
+        name: title,
+        asset: `ipfs://${assetPinResult?.pinToIPFS.cid}`,
+      };
+
+      if (artUrl) {
+        const artPin = artUrl.substring(artUrl.lastIndexOf('/') + 1);
+        setMintingState('Pinning artwork to IPFS');
+        const { data: artPinResult } = await pinToIPFS({
           variables: {
             input: {
-              fileKey: assetKey,
-              fileName: values.title,
+              fileKey: artPin,
+              fileName: `${title}-art`,
             },
           },
         });
-
-        const metadata: Metadata = {
-          description,
-          name: title,
-          asset: `ipfs://${assetPinResult?.pinToIPFS.cid}`,
-        };
-
-        if (artUrl) {
-          const artPin = artUrl.substring(artUrl.lastIndexOf('/') + 1);
-          setMintingState('Pinning artwork to IPFS');
-          const { data: artPinResult } = await pinToIPFS({
-            variables: {
-              input: {
-                fileKey: artPin,
-                fileName: `${title}-art`,
-              },
-            },
-          });
-          metadata.art = `ipfs://${artPinResult?.pinToIPFS.cid}`;
-        }
-
-        const { data: metadataPinResult } = await pinJsonToIPFS({
-          variables: {
-            input: {
-              fileName: `${title}-metadata`,
-              json: metadata,
-            },
-          },
-        });
-        setMintingState('Minting NFT');
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const mintResult: any = await mintNftToken(
-          web3,
-          `ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`,
-          account,
-          account,
-        );
-
-        setMintingState(undefined);
-        setTransactionHash(mintResult.transactionHash);
+        metadata.art = `ipfs://${artPinResult?.pinToIPFS.cid}`;
       }
+
+      const { data: metadataPinResult } = await pinJsonToIPFS({
+        variables: {
+          input: {
+            fileName: `${title}-metadata`,
+            json: metadata,
+          },
+        },
+      });
+      setMintingState('Minting NFT');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mintResult: any = await mintNftToken(
+        web3,
+        `ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`,
+        account,
+        account,
+      );
+
+      setMintingState(undefined);
+      setTransactionHash(mintResult.transactionHash);
     }
   };
 
@@ -176,7 +170,7 @@ export const CreateModal = () => {
         <div className="h-full w-full" style={{ backgroundColor: '#101010' }}>
           {newTrack && (
             <div className="p-4 m-4 bg-black rounded">
-              <AudioPlayer title={newTrack.title} src={newTrack.file} art={newTrack.artworkUrl} />
+              <AudioPlayer title={newTrack.title} src={newTrack.playbackUrl} art={newTrack.artworkUrl} />
             </div>
           )}
           <div
@@ -197,7 +191,7 @@ export const CreateModal = () => {
               <Image width={16} height={16} priority src="/loading.gif" alt="" /> In progress...
             </div>
           </div>
-          <div className="flex gap-4 items-center text-xs text-white py-3 px-4" style={{ backgroundColor: '#151515;' }}>
+          <div className="flex gap-4 items-center text-xs text-white py-3 px-4" style={{ backgroundColor: '#151515' }}>
             <div className="flex items-center whitespace-nowrap font-bold">
               <Polygon />
               Token ID:
@@ -232,12 +226,7 @@ export const CreateModal = () => {
       }
     >
       <div className="px-4 py-4">
-        <TrackUploader
-          onFileChange={handleFileDrop}
-          cancelUpload={cancelUpload}
-          progress={progress}
-          uploading={uploading}
-        />
+        <TrackUploader onFileChange={handleFileDrop} />
       </div>
       {file && preview && <TrackMetadataForm handleSubmit={handleSubmit} />}
       {mintingState && (
