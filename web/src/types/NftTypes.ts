@@ -8,4 +8,8 @@ export interface Metadata {
 
 export interface NftToken extends Metadata {
   tokenId: string;
+  pricePerItem: number;
+  quantity: number;
+  startingTime: number;
+  contractAddress: string;
 }

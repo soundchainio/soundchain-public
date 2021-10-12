@@ -22,7 +22,6 @@ export const LoginForm = () => {
   const [login, { loading }] = useLoginMutation();
   const me = useMe();
   const { magic } = useMagicContext();
-
   const router = useRouter();
 
   useEffect(() => {

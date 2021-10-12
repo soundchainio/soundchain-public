@@ -9,7 +9,7 @@ import { remainingTime, timeFromSecs } from 'utils/calculateTime';
 interface AudioPlayerProps {
   src: string;
   title?: string | null;
-  trackId: string;
+  trackId?: string;
   artist?: string | null;
   art?: string | null;
 }
@@ -43,7 +43,11 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: AudioPlayerPro
     if (audioRef.current) {
       const audio = audioRef.current;
 
-      if (audio.canPlayType('application/vnd.apple.mpegurl')) {
+      if (
+        src.startsWith('data:audio/') ||
+        src.startsWith('https://') ||
+        audio.canPlayType('application/vnd.apple.mpegurl')
+      ) {
         audio.src = src;
       } else if (Hls.isSupported()) {
         hls = new Hls();
@@ -70,14 +74,14 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: AudioPlayerPro
         hls.destroy();
       }
     };
-  }, []);
+  }, [src]);
 
   return (
-    <div className="bg-black rounded-md p-4 items-center">
+    <div className="bg-transparent rounded-md items-center">
       <div className="flex items-center">
         {art && (
           <div className="h-20 w-20 relative flex items-center">
-            <Image src={art} alt="" layout="fill" className="m-auto object-cover" />
+            <Image src={art} alt="" layout="fill" className="m-auto object-cover" priority />
           </div>
         )}
         <div className="flex flex-col flex-1">
@@ -92,12 +96,13 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: AudioPlayerPro
               </div>
             </div>
             <div className="flex flex-col">
-              <div className="text-white font-bold">
-                <NextLink href={`/tracks/${trackId}`}>{title ? title : 'Unknown Title'}</NextLink>
+              <div className="text-white font-bold text-xs">
+                {trackId && <NextLink href={`/tracks/${trackId}`}>{title ? title : 'Unknown Title'}</NextLink>}
+                {!trackId && <div>{title ? title : 'Unknown Title'}</div>}
               </div>
-              <div className="text-gray-80 font-bold">{artist || 'Unknown Artist'}</div>
+              {artist && <div className="text-gray-80 font-bold">{artist}</div>}
             </div>
-            <div className="flex-1 text-right text-gray-80">{timeFromSecs(duration || 0)}</div>
+            <div className="flex-1 text-right text-gray-80 text-xs">{timeFromSecs(duration || 0)}</div>
           </div>
           <div className="text-white pl-2 flex flex-col mt-4">
             <input
