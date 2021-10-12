@@ -23,7 +23,6 @@ export const Post = ({ postId }: PostProps) => {
   const me = useMe();
   const { dispatchShowAuthorActionsModal } = useModalDispatch();
 
-  console.log({ post });
   if (!post) return <PostSkeleton />;
 
   const canEdit = post?.profile.id == me?.profile.id;
