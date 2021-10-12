@@ -79,19 +79,17 @@ export default function PlaygroundPage() {
             </Button>
           )}
         </div>
-        {balance && (
-          <div className="text-white">
-            Need some test Matic?{' '}
-            <a
-              className="text-sm yellow-gradient-text font-bold"
-              href="https://faucet.polygon.technology/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Get some here
-            </a>
-          </div>
-        )}
+        <div className="text-white">
+          Need some test Matic?{' '}
+          <a
+            className="text-sm yellow-gradient-text font-bold"
+            href="https://faucet.polygon.technology/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Get some here
+          </a>
+        </div>
       </div>
       <div className="flex space-x-4 my-8 w-full text-white">
         <div className="flex text-sm font-semibold text-center">
