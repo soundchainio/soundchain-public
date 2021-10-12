@@ -5,13 +5,22 @@ import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { Pause } from 'icons/PauseBottomAudioPlayer';
 import { Play } from 'icons/PlayBottomAudioPlayer';
 import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 export const BottomAudioPlayer = () => {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [progress, setProgress] = useState<number>(0);
-  const [duration, setDuration] = useState<number>();
-  const { isPlaying, togglePlay, setPlayingState, currentSong } = useAudioPlayerContext();
+  const {
+    currentSong,
+    isPlaying,
+    duration,
+    progress,
+    progressFromSlider,
+    togglePlay,
+    setPlayingState,
+    setDurationState,
+    setProgressState,
+    setProgressStateFromSlider,
+  } = useAudioPlayerContext();
   const { dispatchShowAudioPlayerModal } = useModalDispatch();
 
   useEffect(() => {
@@ -47,17 +56,20 @@ export const BottomAudioPlayer = () => {
     }
   }, [isPlaying, currentSong]);
 
-  const onSliderChange = (value: number) => {
-    setProgress(value);
+  useEffect(() => {
     if (audioRef.current) {
-      audioRef.current.currentTime = value;
+      audioRef.current.currentTime = progressFromSlider;
     }
+  }, [progressFromSlider]);
+
+  const onSliderChange = (value: number) => {
+    setProgressStateFromSlider(value);
   };
 
   function onLoadedMetadata() {
     if (audioRef.current) {
       audioRef.current.currentTime = 0;
-      setDuration(audioRef.current.duration);
+      setDurationState(audioRef.current.duration);
     }
   }
 
@@ -65,14 +77,14 @@ export const BottomAudioPlayer = () => {
     if (audioRef.current) {
       audioRef.current.addEventListener('timeupdate', () => {
         if (audioRef?.current?.currentTime) {
-          setProgress(Math.floor(audioRef.current.currentTime));
+          setProgressState(Math.floor(audioRef.current.currentTime));
         }
       });
     }
   }
 
   function handleEndedSong() {
-    setProgress(0);
+    setProgressState(0);
   }
 
   if (!currentSong.src) {
@@ -81,7 +93,7 @@ export const BottomAudioPlayer = () => {
 
   return (
     <div className="bottom-audio-player bg-black py-2 flex flex-col gap-2">
-      <div className="flex items-center gap-2 px-2">
+      <div className="flex items-center gap-2 px-2 cursor-pointer">
         <div
           className="h-10 w-10 bg-gray-80 relative flex items-center"
           onClick={() => dispatchShowAudioPlayerModal(true)}

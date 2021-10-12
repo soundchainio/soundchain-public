@@ -10,10 +10,9 @@
 }
 .bottom-audio-player [data-reach-slider-handle] {
   opacity: 0;
-  width: 8px;
+  width: 32px;
   height: 8px;
   background: white;
-  border-radius: 50%;
 }
 .bottom-audio-player [data-reach-slider-handle]:hover {
   width: 12px;

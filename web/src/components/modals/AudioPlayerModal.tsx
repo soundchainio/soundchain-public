@@ -13,12 +13,17 @@ import { remainingTime, timeFromSecs } from 'utils/calculateTime';
 export const AudioPlayerModal = () => {
   const modalState = useModalState();
   const { dispatchShowAudioPlayerModal } = useModalDispatch();
-  const { togglePlay, currentSong, isPlaying } = useAudioPlayerContext();
+  const { currentSong, isPlaying, duration, progress, togglePlay, setProgressStateFromSlider } =
+    useAudioPlayerContext();
 
   const isOpen = modalState.showAudioPlayer;
 
   const handleClose = () => {
     dispatchShowAudioPlayerModal(false);
+  };
+
+  const onSliderChange = (value: number) => {
+    setProgressStateFromSlider(value);
   };
 
   return (
@@ -40,13 +45,13 @@ export const AudioPlayerModal = () => {
             {currentSong.art && <Image src={currentSong.art} alt="" layout="fill" className="m-auto object-cover" />}
           </div>
           <div className="flex flex-col gap-1 mt-7 mb-4">
-            <h2 className="font-black">Track Title</h2>
-            <h3 className="font-medium">Artist</h3>
+            <h2 className="font-black">{currentSong.title || 'Unknown title'}</h2>
+            <h3 className="font-medium">{currentSong.artist || 'Unknown artist'}</h3>
           </div>
-          <Slider min={0} max={100} value={50} />
+          <Slider min={0} max={duration} value={progress} onChange={onSliderChange} />
           <div className="flex mt-2 text-xs text-gray-80">
-            <div className="flex-1">{timeFromSecs(100 || 0)}</div>
-            <div className="flex-1 text-right">{remainingTime(100, 200 || 0)} </div>
+            <div className="flex-1">{timeFromSecs(progress || 0)}</div>
+            <div className="flex-1 text-right">{remainingTime(progress, duration || 0)} </div>
           </div>
           <div className="flex justify-evenly mt-8">
             <button className="rounded-full w-12 h-12 flex justify-center items-center" aria-label="Previous">
