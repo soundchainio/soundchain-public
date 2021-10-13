@@ -228,7 +228,7 @@ const TransferForm = ({ name, web3, fromAddress, tokenId, onCancel }: TransferFo
   const [loading, setLoading] = useState(false);
   const handleSubmit = async (values: FormValues) => {
     setLoading(true);
-    const result = await transferNftToken(web3, tokenId, fromAddress, values.to);
+    const result = await transferNftToken(web3, tokenId, fromAddress, values.to, 1);
     if (result) {
       alert('Token transfer requested!');
     }
