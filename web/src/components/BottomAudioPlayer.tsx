@@ -114,7 +114,7 @@ export const BottomAudioPlayer = () => {
         </button>
         <button
           aria-label={isPlaying ? 'Pause' : 'Play'}
-          className="h-10 w-10 flex items-center justify-center"
+          className="h-10 w-11 flex items-center justify-center hover:scale-125 duration-75"
           onClick={togglePlay}
         >
           {isPlaying ? <Pause /> : <Play />}

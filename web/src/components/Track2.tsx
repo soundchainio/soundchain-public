@@ -64,7 +64,7 @@ export const Track2 = ({ trackId, index, coverPhotoUrl, handleOnPlayClicked }: T
         <h2>{data.track.title}</h2>
       </div>
       <button
-        className="h-10 w-10 flex items-center justify-center ml-auto"
+        className="h-10 w-10 flex items-center justify-center ml-auto hover:scale-125 duration-75"
         aria-label={isPlaying && currentSong.trackId === song.trackId ? 'Pause' : 'Play'}
         onClick={() => handleOnPlayClicked(song)}
       >
