@@ -17,6 +17,8 @@ interface AudioPlayerContextData {
   hasNext: boolean;
   hasPrevious: boolean;
   play: (song: Song) => void;
+  isCurrentSong: (trackId: string) => boolean;
+  isCurrentlyPlaying: (trackId: string) => boolean;
   togglePlay: () => void;
   setPlayingState: (state: boolean) => void;
   setProgressState: (value: number) => void;
@@ -51,6 +53,14 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
     } else {
       togglePlay();
     }
+  };
+
+  const isCurrentSong = (trackId: string) => {
+    return trackId === currentSong?.trackId;
+  };
+
+  const isCurrentlyPlaying = (trackId: string) => {
+    return isPlaying && isCurrentSong(trackId);
   };
 
   const togglePlay = () => {
@@ -111,6 +121,8 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
         hasNext,
         hasPrevious,
         play,
+        isCurrentSong,
+        isCurrentlyPlaying,
         togglePlay,
         setPlayingState,
         setProgressState,

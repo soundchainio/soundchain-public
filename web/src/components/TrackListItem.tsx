@@ -23,7 +23,8 @@ interface TrackProps {
 
 export const TrackListItem = ({ trackId, index, coverPhotoUrl, handleOnPlayClicked }: TrackProps) => {
   const [track, { data }] = useTrackLazyQuery({ variables: { id: trackId } });
-  const { currentSong, isPlaying } = useAudioPlayerContext();
+  const { isCurrentlyPlaying } = useAudioPlayerContext();
+  const isPlaying = isCurrentlyPlaying(trackId);
 
   useEffect(() => {
     if (!data?.track) {
@@ -43,7 +44,7 @@ export const TrackListItem = ({ trackId, index, coverPhotoUrl, handleOnPlayClick
   return (
     <li
       className={`flex items-center gap-2 px-4 py-2 transition duration-300 hover:bg-gray-25 text-white text-sm ${
-        isPlaying && currentSong.trackId === song.trackId ? 'font-black' : 'font-semibold'
+        isPlaying ? 'font-black' : 'font-semibold'
       } text-white text-sm`}
     >
       <p>{index}</p>
@@ -57,10 +58,10 @@ export const TrackListItem = ({ trackId, index, coverPhotoUrl, handleOnPlayClick
       </div>
       <button
         className="h-10 w-10 flex items-center justify-center ml-auto hover:scale-125 duration-75"
-        aria-label={isPlaying && currentSong.trackId === song.trackId ? 'Pause' : 'Play'}
+        aria-label={isPlaying ? 'Pause' : 'Play'}
         onClick={() => handleOnPlayClicked(song)}
       >
-        {isPlaying && currentSong.trackId === song.trackId ? <Pause /> : <Play />}
+        {isPlaying ? <Pause /> : <Play />}
       </button>
     </li>
   );
