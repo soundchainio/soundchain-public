@@ -59,8 +59,8 @@ export const Post = ({ postId }: PostProps) => {
         {post.repostId && <RepostPreview postId={post.repostId} />}
         {post.track && (
           <AudioPlayer
-            art={post.track.artworkUrl}
             trackId={post.track.id}
+            art={post.track.artworkUrl}
             src={post.track.playbackUrl}
             title={post.track.title}
           />
