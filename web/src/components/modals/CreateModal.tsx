@@ -11,9 +11,11 @@ import { Polygon } from 'icons/Polygon';
 import { mintNftToken } from 'lib/blockchain';
 import {
   CreateTrackMutation,
+  FeedDocument,
   useCreateTrackMutation,
   usePinJsonToIpfsMutation,
   usePinToIpfsMutation,
+  useUpdateTrackMutation,
 } from 'lib/graphql';
 import Image from 'next/image';
 import React, { useState } from 'react';
@@ -35,7 +37,8 @@ export const CreateModal = () => {
   const [newTrack, setNewTrack] = useState<CreateTrackMutation['createTrack']['track']>();
 
   const { upload } = useUpload();
-  const [uploadTrack] = useCreateTrackMutation();
+  const [createTrack] = useCreateTrackMutation();
+  const [updateTrack] = useUpdateTrackMutation();
 
   const { web3, account } = useMagicContext();
   const [pinToIPFS] = usePinToIpfsMutation();
@@ -70,8 +73,11 @@ export const CreateModal = () => {
       const artUrl = artworkUrl;
 
       setMintingState('Creating streaming from track');
-      const { data } = await uploadTrack({ variables: { input: { assetUrl, ...values } } });
-      setNewTrack(data?.createTrack.track);
+      const { data } = await createTrack({
+        variables: { input: { assetUrl, ...values } },
+      });
+      const track = data?.createTrack.track;
+      setNewTrack(track);
 
       const assetKey = assetUrl.substring(assetUrl.lastIndexOf('/') + 1);
       setMintingState('Pinning track to IPFS');
@@ -120,9 +126,19 @@ export const CreateModal = () => {
         account,
         account,
       );
-
       setMintingState(undefined);
       setTransactionHash(mintResult.transactionHash);
+      if (track) {
+        updateTrack({
+          variables: {
+            input: {
+              trackId: track.id,
+              transactionAddress: mintResult.transactionHash,
+            },
+          },
+          refetchQueries: [FeedDocument],
+        });
+      }
     }
   };
 
