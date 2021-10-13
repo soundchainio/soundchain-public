@@ -48,6 +48,16 @@ export const BottomAudioPlayer = () => {
   }, [currentSong.src]);
 
   useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.addEventListener('durationchange', () => {
+        if (audioRef.current && audioRef.current.duration) {
+          setDurationState(audioRef.current.duration);
+        }
+      });
+    }
+  }, [setDurationState]);
+
+  useEffect(() => {
     if (!audioRef.current) {
       return;
     }
@@ -81,10 +91,6 @@ export const BottomAudioPlayer = () => {
     } else {
       setProgressState(0);
     }
-  }
-
-  if (audioRef.current) {
-    setDurationState(audioRef.current.duration);
   }
 
   if (!currentSong.src) {
