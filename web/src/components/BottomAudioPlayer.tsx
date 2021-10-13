@@ -40,10 +40,6 @@ export const BottomAudioPlayer = () => {
       hls.attachMedia(audioRef.current);
     }
 
-    audioRef.current.addEventListener('loadedmetadata', () => {
-      if (audioRef.current) setDurationState(audioRef.current.duration);
-    });
-
     return () => {
       if (hls) {
         hls.destroy();
@@ -85,6 +81,10 @@ export const BottomAudioPlayer = () => {
     } else {
       setProgressState(0);
     }
+  }
+
+  if (audioRef.current) {
+    setDurationState(audioRef.current.duration);
   }
 
   if (!currentSong.src) {
