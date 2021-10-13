@@ -83,7 +83,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
   const hasNext = currentPlaylistIndex + 1 < playlist.length;
 
   function playPrevious() {
-    if (hasPrevious && progress > RESTART_TOLERANCE_TIME) {
+    if (hasPrevious && progress < RESTART_TOLERANCE_TIME) {
       const previousIndex = currentPlaylistIndex - 1;
       setCurrentPlaylistIndex(previousIndex);
       play(playlist[previousIndex]);
