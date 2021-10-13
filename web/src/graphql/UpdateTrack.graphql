@@ -1,5 +1,5 @@
-mutation CreateTrack($input: CreateTrackInput!) {
-  createTrack(input: $input) {
+mutation updateTrack($input: UpdateTrackInput!) {
+  updateTrack(input: $input) {
     track {
       id
       title
