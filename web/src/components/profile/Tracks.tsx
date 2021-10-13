@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { InfiniteLoader } from 'components/InfiniteLoader';
-import { Track2 } from 'components/Track2';
+import { TrackListItem } from 'components/TrackListItem';
 import { TrackSkeleton } from 'components/TrackSkeleton';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { SortOrder, SortTrackField, useTracksQuery } from 'lib/graphql';
@@ -63,10 +63,7 @@ export const Tracks = ({ className, profileId, pageSize = 10 }: TracksProps) => 
   return (
     <ol className={classNames('space-y-5', className)}>
       {nodes.map(({ id }, index) => (
-        // <div key={id} className="p-4 bg-gray-20 break-words">
-        //   <Track key={id} trackId={id} />
-        // </div>
-        <Track2
+        <TrackListItem
           key={id}
           index={index + 1}
           trackId={id}

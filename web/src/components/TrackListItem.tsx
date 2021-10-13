@@ -21,8 +21,8 @@ interface TrackProps {
   handleOnPlayClicked: (song: Song) => void;
 }
 
-export const Track2 = ({ trackId, index, coverPhotoUrl, handleOnPlayClicked }: TrackProps) => {
-  const [track, { data, error }] = useTrackLazyQuery({ variables: { id: trackId } });
+export const TrackListItem = ({ trackId, index, coverPhotoUrl, handleOnPlayClicked }: TrackProps) => {
+  const [track, { data }] = useTrackLazyQuery({ variables: { id: trackId } });
   const { currentSong, isPlaying } = useAudioPlayerContext();
 
   useEffect(() => {
@@ -30,14 +30,6 @@ export const Track2 = ({ trackId, index, coverPhotoUrl, handleOnPlayClicked }: T
       track();
     }
   }, []);
-
-  useEffect(() => {
-    if (error) {
-      setTimeout(() => {
-        track();
-      }, 2000);
-    }
-  }, [data, error]);
 
   if (!data?.track) return <TrackSkeleton />;
 
