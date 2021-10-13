@@ -48,16 +48,6 @@ export const BottomAudioPlayer = () => {
   }, [currentSong.src]);
 
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.addEventListener('durationchange', () => {
-        if (audioRef.current && audioRef.current.duration) {
-          setDurationState(audioRef.current.duration);
-        }
-      });
-    }
-  }, [setDurationState]);
-
-  useEffect(() => {
     if (!audioRef.current) {
       return;
     }
@@ -75,13 +65,15 @@ export const BottomAudioPlayer = () => {
     }
   }, [progressFromSlider, setProgressStateFromSlider]);
 
-  function setupProgressListener() {
-    if (audioRef.current) {
-      audioRef.current.addEventListener('timeupdate', () => {
-        if (audioRef?.current?.currentTime) {
-          setProgressState(Math.floor(audioRef.current.currentTime));
-        }
-      });
+  function handleTimeUpdate() {
+    if (audioRef?.current?.currentTime) {
+      setProgressState(Math.floor(audioRef.current.currentTime));
+    }
+  }
+
+  function handleDurationChange() {
+    if (audioRef.current && audioRef.current.duration) {
+      setDurationState(audioRef.current.duration);
     }
   }
 
@@ -128,7 +120,8 @@ export const BottomAudioPlayer = () => {
         ref={audioRef}
         onPlay={() => setPlayingState(true)}
         onPause={() => setPlayingState(false)}
-        onTimeUpdate={setupProgressListener}
+        onTimeUpdate={handleTimeUpdate}
+        onDurationChange={handleDurationChange}
         onEnded={handleEndedSong}
         className="opacity-0 h-0 w-0"
       />
