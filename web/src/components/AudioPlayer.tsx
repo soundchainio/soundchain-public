@@ -2,10 +2,12 @@ import Slider from '@reach/slider';
 import Hls from 'hls.js';
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
+import { useMimeTypeQuery } from 'lib/graphql';
 import Image from 'next/image';
 import NextLink from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { remainingTime, timeFromSecs } from 'utils/calculateTime';
+import { videoMimeTypes } from 'utils/mimeTypes';
 
 interface AudioPlayerProps {
   src: string;
@@ -78,7 +80,7 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: AudioPlayerPro
       <div className="flex items-center gap-3">
         {art && (
           <div className="h-20 w-20 relative flex items-center">
-            <Image src={art} alt="" layout="fill" className="m-auto object-cover" priority />
+            <Asset src={art} />
           </div>
         )}
         <div className="flex flex-col flex-1">
@@ -113,4 +115,33 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: AudioPlayerPro
       <audio ref={audioRef} className="opacity-0 h-0 w-0" />
     </div>
   );
+};
+
+const Asset = ({ src }: { src: string }) => {
+  const [mimeType, setMimeType] = useState<string>();
+  const { data } = useMimeTypeQuery({ variables: { url: src } });
+
+  useEffect(() => {
+    if (data) {
+      setMimeType(data.mimeType.value);
+    }
+  }, [data]);
+
+  if (!mimeType) return null;
+
+  if (videoMimeTypes.includes(mimeType)) {
+    return (
+      <video
+        src={src}
+        controls={false}
+        loop
+        muted
+        autoPlay
+        className="w-full object-cover"
+        style={{ height: 'inherit' }}
+      />
+    );
+  }
+
+  return <Image src={src} alt="" layout="fill" className="m-auto object-cover" priority />;
 };
