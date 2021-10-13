@@ -40,6 +40,10 @@ export const BottomAudioPlayer = () => {
       hls.attachMedia(audioRef.current);
     }
 
+    audioRef.current.addEventListener('loadedmetadata', () => {
+      if (audioRef.current) setDurationState(audioRef.current.duration);
+    });
+
     return () => {
       if (hls) {
         hls.destroy();
@@ -64,13 +68,6 @@ export const BottomAudioPlayer = () => {
       setProgressStateFromSlider(null);
     }
   }, [progressFromSlider, setProgressStateFromSlider]);
-
-  function onLoadedMetadata() {
-    if (audioRef.current) {
-      audioRef.current.currentTime = 0;
-      setDurationState(audioRef.current.duration);
-    }
-  }
 
   function setupProgressListener() {
     if (audioRef.current) {
@@ -125,7 +122,6 @@ export const BottomAudioPlayer = () => {
         ref={audioRef}
         onPlay={() => setPlayingState(true)}
         onPause={() => setPlayingState(false)}
-        onLoadedMetadata={onLoadedMetadata}
         onTimeUpdate={setupProgressListener}
         onEnded={handleEndedSong}
         className="opacity-0 h-0 w-0"
