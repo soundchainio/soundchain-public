@@ -1,10 +1,10 @@
 import { AudioPlayer } from 'components/AudioPlayer';
 import { JellyButton } from 'components/Buttons/JellyButton';
-import { audioMimeTypes } from 'components/NftCard';
 import { MusicFile } from 'icons/MusicFile';
 import { Upload as UploadIcon } from 'icons/Upload';
 import { useState } from 'react';
 import { FileRejection, useDropzone } from 'react-dropzone';
+import { audioMimeTypes } from 'utils/mimeTypes';
 
 export interface TrackUploaderProps {
   onFileChange: (file: File) => void;
