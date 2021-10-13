@@ -8,7 +8,8 @@ import { Pause } from 'icons/PauseBottomAudioPlayer';
 import { Play } from 'icons/PlayBottomAudioPlayer';
 import { Rewind } from 'icons/RewindButton';
 import Image from 'next/image';
-import { timeFromSecs } from 'utils/calculateTime';
+import { useState } from 'react';
+import { remainingTime, timeFromSecs } from 'utils/calculateTime';
 
 export const AudioPlayerModal = () => {
   const modalState = useModalState();
@@ -24,6 +25,7 @@ export const AudioPlayerModal = () => {
     playPrevious,
     playNext,
   } = useAudioPlayerContext();
+  const [showTotalPlaybackDuration, setShowTotalPlaybackDuration] = useState(true);
 
   const isOpen = modalState.showAudioPlayer;
 
@@ -33,6 +35,10 @@ export const AudioPlayerModal = () => {
 
   const onSliderChange = (value: number) => {
     setProgressStateFromSlider(value);
+  };
+
+  const onPlaybackDurationClick = () => {
+    setShowTotalPlaybackDuration(!showTotalPlaybackDuration);
   };
 
   return (
@@ -60,9 +66,11 @@ export const AudioPlayerModal = () => {
             <h3 className="font-medium">{currentSong.artist || 'Unknown artist'}</h3>
           </div>
           <Slider min={0} max={duration} value={progress} onChange={onSliderChange} />
-          <div className="flex mt-2 text-xs text-gray-80">
-            <div className="flex-1">{timeFromSecs(progress || 0)}</div>
-            <div className="flex-1 text-right">{timeFromSecs(duration || 0)}</div>
+          <div className="flex justify-between mt-2 text-xs text-gray-80 cursor-default">
+            <div>{timeFromSecs(progress || 0)}</div>
+            <div onClick={onPlaybackDurationClick}>
+              {showTotalPlaybackDuration ? timeFromSecs(duration || 0) : remainingTime(progress, duration || 0)}
+            </div>
           </div>
           <div className="flex justify-evenly mt-8">
             <button
