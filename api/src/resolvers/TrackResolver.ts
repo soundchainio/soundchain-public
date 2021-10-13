@@ -2,15 +2,15 @@ import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } 
 import { CurrentUser } from '../decorators/current-user';
 import { Track } from '../models/Track';
 import { User } from '../models/User';
-import { AddTrackMetadataInput } from '../types/AddTrackMetadataInput';
-import { AddTrackMetadataPayload } from '../types/AddTrackMetadataPayload';
 import { Context } from '../types/Context';
+import { CreateTrackInput as CreateTrackInput } from '../types/CreateTrackInput';
+import { CreateTrackPayload } from '../types/CreateTrackPayload';
 import { FilterTrackInput } from '../types/FilterTrackInput';
 import { PageInput } from '../types/PageInput';
 import { SortTrackInput } from '../types/SortTrackInput';
 import { TrackConnection } from '../types/TrackConnection';
-import { UploadTrackInput } from '../types/UploadTrackInput';
-import { UploadTrackPayload } from '../types/UploadTrackPayload';
+import { UpdateTrackInput } from '../types/UpdateTrackInput';
+import { UpdateTrackPayload } from '../types/UpdateTrackPayload';
 
 @Resolver(Track)
 export class TrackResolver {
@@ -34,26 +34,25 @@ export class TrackResolver {
     return trackService.getTracks(filter, sort, page);
   }
 
-  @Mutation(() => UploadTrackPayload)
+  @Mutation(() => CreateTrackPayload)
   @Authorized()
   async createTrack(
     @Ctx() { trackService, postService }: Context,
     @CurrentUser() { profileId }: User,
-    @Arg('input') input: UploadTrackInput,
-  ): Promise<UploadTrackPayload> {
+    @Arg('input') input: CreateTrackInput,
+  ): Promise<CreateTrackPayload> {
     const track = await trackService.createTrack(profileId, input);
     await postService.createPost({ profileId, trackId: track._id });
     return { track };
   }
 
-  @Mutation(() => AddTrackMetadataPayload)
+  @Mutation(() => UpdateTrackPayload)
   @Authorized()
-  async addTrackMetadata(
-    @Ctx() { trackService, postService }: Context,
-    @Arg('input') { trackId, ...metadata }: AddTrackMetadataInput,
-  ): Promise<AddTrackMetadataPayload> {
-    const track = await trackService.updateTrack(trackId, metadata);
-    await postService.createPost({ profileId: track.profileId, trackId });
+  async updateTrack(
+    @Ctx() { trackService }: Context,
+    @Arg('input') { trackId, ...changes }: UpdateTrackInput,
+  ): Promise<UpdateTrackPayload> {
+    const track = await trackService.updateTrack(trackId, changes);
     return { track };
   }
 }

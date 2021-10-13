@@ -28,18 +28,6 @@ export type AddCommentPayload = {
   comment: Comment;
 };
 
-export type AddTrackMetadataInput = {
-  trackId: Scalars['String'];
-  title: Scalars['String'];
-  description?: Maybe<Scalars['String']>;
-  artworkUrl?: Maybe<Scalars['String']>;
-};
-
-export type AddTrackMetadataPayload = {
-  __typename?: 'AddTrackMetadataPayload';
-  track: Track;
-};
-
 export type AuthPayload = {
   __typename?: 'AuthPayload';
   jwt: Scalars['String'];
@@ -135,6 +123,18 @@ export type CreateRepostPayload = {
   __typename?: 'CreateRepostPayload';
   post: Post;
   originalPost: Post;
+};
+
+export type CreateTrackInput = {
+  title: Scalars['String'];
+  description?: Maybe<Scalars['String']>;
+  assetUrl: Scalars['String'];
+  artworkUrl?: Maybe<Scalars['String']>;
+};
+
+export type CreateTrackPayload = {
+  __typename?: 'CreateTrackPayload';
+  track: Track;
 };
 
 
@@ -325,8 +325,8 @@ export type Mutation = {
   unfollowProfile: UnfollowProfilePayload;
   subscribeToProfile: SubscribeToProfilePayload;
   unsubscribeFromProfile: UnsubscribeFromProfilePayload;
-  createTrack: UploadTrackPayload;
-  addTrackMetadata: AddTrackMetadataPayload;
+  createTrack: CreateTrackPayload;
+  updateTrack: UpdateTrackPayload;
   register: AuthPayload;
   login: AuthPayload;
   updateHandle: UpdateHandlePayload;
@@ -424,12 +424,12 @@ export type MutationUnsubscribeFromProfileArgs = {
 
 
 export type MutationCreateTrackArgs = {
-  input: UploadTrackInput;
+  input: CreateTrackInput;
 };
 
 
-export type MutationAddTrackMetadataArgs = {
-  input: AddTrackMetadataInput;
+export type MutationUpdateTrackArgs = {
+  input: UpdateTrackInput;
 };
 
 
@@ -890,15 +890,13 @@ export type UpdateProfilePayload = {
   profile: Profile;
 };
 
-export type UploadTrackInput = {
-  title: Scalars['String'];
-  description?: Maybe<Scalars['String']>;
-  assetUrl: Scalars['String'];
-  artworkUrl?: Maybe<Scalars['String']>;
+export type UpdateTrackInput = {
+  trackId: Scalars['String'];
+  transactionAddress?: Maybe<Scalars['String']>;
 };
 
-export type UploadTrackPayload = {
-  __typename?: 'UploadTrackPayload';
+export type UpdateTrackPayload = {
+  __typename?: 'UpdateTrackPayload';
   track: Track;
 };
 
@@ -936,22 +934,6 @@ export type AddCommentMutation = (
         & Pick<Post, 'id' | 'commentCount'>
       ) }
       & CommentComponentFieldsFragment
-    ) }
-  ) }
-);
-
-export type AddTrackMetadataMutationVariables = Exact<{
-  input: AddTrackMetadataInput;
-}>;
-
-
-export type AddTrackMetadataMutation = (
-  { __typename?: 'Mutation' }
-  & { addTrackMetadata: (
-    { __typename?: 'AddTrackMetadataPayload' }
-    & { track: (
-      { __typename?: 'Track' }
-      & Pick<Track, 'id' | 'title' | 'description' | 'artworkUrl'>
     ) }
   ) }
 );
@@ -1135,17 +1117,17 @@ export type CreateRepostMutation = (
 );
 
 export type CreateTrackMutationVariables = Exact<{
-  input: UploadTrackInput;
+  input: CreateTrackInput;
 }>;
 
 
 export type CreateTrackMutation = (
   { __typename?: 'Mutation' }
   & { createTrack: (
-    { __typename?: 'UploadTrackPayload' }
+    { __typename?: 'CreateTrackPayload' }
     & { track: (
       { __typename?: 'Track' }
-      & Pick<Track, 'id' | 'title' | 'description' | 'assetUrl' | 'artworkUrl' | 'playbackUrl'>
+      & Pick<Track, 'id' | 'title' | 'description' | 'assetUrl' | 'artworkUrl' | 'playbackUrl' | 'transactionAddress'>
     ) }
   ) }
 );
@@ -1864,6 +1846,22 @@ export type UpdateSocialMediasMutation = (
   ) }
 );
 
+export type UpdateTrackMutationVariables = Exact<{
+  input: UpdateTrackInput;
+}>;
+
+
+export type UpdateTrackMutation = (
+  { __typename?: 'Mutation' }
+  & { updateTrack: (
+    { __typename?: 'UpdateTrackPayload' }
+    & { track: (
+      { __typename?: 'Track' }
+      & Pick<Track, 'id' | 'title' | 'description' | 'assetUrl' | 'artworkUrl' | 'playbackUrl' | 'transactionAddress'>
+    ) }
+  ) }
+);
+
 export type UploadUrlQueryVariables = Exact<{
   fileType: Scalars['String'];
 }>;
@@ -2029,44 +2027,6 @@ export function useAddCommentMutation(baseOptions?: Apollo.MutationHookOptions<A
 export type AddCommentMutationHookResult = ReturnType<typeof useAddCommentMutation>;
 export type AddCommentMutationResult = Apollo.MutationResult<AddCommentMutation>;
 export type AddCommentMutationOptions = Apollo.BaseMutationOptions<AddCommentMutation, AddCommentMutationVariables>;
-export const AddTrackMetadataDocument = gql`
-    mutation AddTrackMetadata($input: AddTrackMetadataInput!) {
-  addTrackMetadata(input: $input) {
-    track {
-      id
-      title
-      description
-      artworkUrl
-    }
-  }
-}
-    `;
-export type AddTrackMetadataMutationFn = Apollo.MutationFunction<AddTrackMetadataMutation, AddTrackMetadataMutationVariables>;
-
-/**
- * __useAddTrackMetadataMutation__
- *
- * To run a mutation, you first call `useAddTrackMetadataMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useAddTrackMetadataMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [addTrackMetadataMutation, { data, loading, error }] = useAddTrackMetadataMutation({
- *   variables: {
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useAddTrackMetadataMutation(baseOptions?: Apollo.MutationHookOptions<AddTrackMetadataMutation, AddTrackMetadataMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<AddTrackMetadataMutation, AddTrackMetadataMutationVariables>(AddTrackMetadataDocument, options);
-      }
-export type AddTrackMetadataMutationHookResult = ReturnType<typeof useAddTrackMetadataMutation>;
-export type AddTrackMetadataMutationResult = Apollo.MutationResult<AddTrackMetadataMutation>;
-export type AddTrackMetadataMutationOptions = Apollo.BaseMutationOptions<AddTrackMetadataMutation, AddTrackMetadataMutationVariables>;
 export const BandcampLinkDocument = gql`
     query BandcampLink($url: String!) {
   bandcampLink(url: $url)
@@ -2450,7 +2410,7 @@ export type CreateRepostMutationHookResult = ReturnType<typeof useCreateRepostMu
 export type CreateRepostMutationResult = Apollo.MutationResult<CreateRepostMutation>;
 export type CreateRepostMutationOptions = Apollo.BaseMutationOptions<CreateRepostMutation, CreateRepostMutationVariables>;
 export const CreateTrackDocument = gql`
-    mutation CreateTrack($input: UploadTrackInput!) {
+    mutation CreateTrack($input: CreateTrackInput!) {
   createTrack(input: $input) {
     track {
       id
@@ -2459,6 +2419,7 @@ export const CreateTrackDocument = gql`
       assetUrl
       artworkUrl
       playbackUrl
+      transactionAddress
     }
   }
 }
@@ -4062,6 +4023,47 @@ export function useUpdateSocialMediasMutation(baseOptions?: Apollo.MutationHookO
 export type UpdateSocialMediasMutationHookResult = ReturnType<typeof useUpdateSocialMediasMutation>;
 export type UpdateSocialMediasMutationResult = Apollo.MutationResult<UpdateSocialMediasMutation>;
 export type UpdateSocialMediasMutationOptions = Apollo.BaseMutationOptions<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>;
+export const UpdateTrackDocument = gql`
+    mutation updateTrack($input: UpdateTrackInput!) {
+  updateTrack(input: $input) {
+    track {
+      id
+      title
+      description
+      assetUrl
+      artworkUrl
+      playbackUrl
+      transactionAddress
+    }
+  }
+}
+    `;
+export type UpdateTrackMutationFn = Apollo.MutationFunction<UpdateTrackMutation, UpdateTrackMutationVariables>;
+
+/**
+ * __useUpdateTrackMutation__
+ *
+ * To run a mutation, you first call `useUpdateTrackMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateTrackMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateTrackMutation, { data, loading, error }] = useUpdateTrackMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateTrackMutation(baseOptions?: Apollo.MutationHookOptions<UpdateTrackMutation, UpdateTrackMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateTrackMutation, UpdateTrackMutationVariables>(UpdateTrackDocument, options);
+      }
+export type UpdateTrackMutationHookResult = ReturnType<typeof useUpdateTrackMutation>;
+export type UpdateTrackMutationResult = Apollo.MutationResult<UpdateTrackMutation>;
+export type UpdateTrackMutationOptions = Apollo.BaseMutationOptions<UpdateTrackMutation, UpdateTrackMutationVariables>;
 export const UploadUrlDocument = gql`
     query UploadUrl($fileType: String!) {
   uploadUrl(fileType: $fileType) {
