@@ -65,20 +65,15 @@ export const BottomAudioPlayer = () => {
     }
   }, [progressFromSlider, setProgressStateFromSlider]);
 
-  function onLoadedMetadata() {
-    if (audioRef.current) {
-      audioRef.current.currentTime = 0;
-      setDurationState(audioRef.current.duration);
+  function handleTimeUpdate() {
+    if (audioRef?.current?.currentTime) {
+      setProgressState(Math.floor(audioRef.current.currentTime));
     }
   }
 
-  function setupProgressListener() {
-    if (audioRef.current) {
-      audioRef.current.addEventListener('timeupdate', () => {
-        if (audioRef?.current?.currentTime) {
-          setProgressState(Math.floor(audioRef.current.currentTime));
-        }
-      });
+  function handleDurationChange() {
+    if (audioRef.current && audioRef.current.duration) {
+      setDurationState(audioRef.current.duration);
     }
   }
 
@@ -123,8 +118,8 @@ export const BottomAudioPlayer = () => {
         ref={audioRef}
         onPlay={() => setPlayingState(true)}
         onPause={() => setPlayingState(false)}
-        onLoadedMetadata={onLoadedMetadata}
-        onTimeUpdate={setupProgressListener}
+        onTimeUpdate={handleTimeUpdate}
+        onDurationChange={handleDurationChange}
         onEnded={handleEndedSong}
         className="opacity-0 h-0 w-0"
       />
