@@ -2,7 +2,7 @@ import axios from 'axios';
 import { Metadata, NftToken } from 'types/NftTypes';
 import Web3 from 'web3';
 import { AbiItem } from 'web3-utils';
-import soundchainContract from '../contract/SoundchainCollectible.sol/SoundchainCollectible.json';
+import soundchainContract from '../contract/SoundchainCollectible/SoundchainCollectible.json';
 import soundchainMarketplace from '../contract/SoundchainMarketplace/SoundchainMarketplace.json';
 
 const nftAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as string;
