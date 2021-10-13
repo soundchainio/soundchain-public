@@ -13,7 +13,7 @@ interface AudioPlayerContextData {
   currentSong: Song;
   duration: number;
   progress: number;
-  progressFromSlider: number;
+  progressFromSlider: number | null;
   hasNext: boolean;
   hasPrevious: boolean;
   play: (song: Song) => void;
@@ -21,7 +21,7 @@ interface AudioPlayerContextData {
   setPlayingState: (state: boolean) => void;
   setProgressState: (value: number) => void;
   setDurationState: (value: number) => void;
-  setProgressStateFromSlider: (value: number) => void;
+  setProgressStateFromSlider: (value: number | null) => void;
   playlistState: (list: Song[], index: number) => void;
   playPrevious: () => void;
   playNext: () => void;
@@ -35,12 +35,14 @@ interface AudioPlayerProviderProps {
 
 export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
   const [progress, setProgress] = useState<number>(0);
-  const [progressFromSlider, setProgressFromSlider] = useState<number>(0);
+  const [progressFromSlider, setProgressFromSlider] = useState<number | null>(null);
   const [duration, setDuration] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSong, setCurrentSong] = useState<Song>({} as Song);
   const [playlist, setPlaylist] = useState<Song[]>([]);
   const [currentPlaylistIndex, setCurrentPlaylistIndex] = useState(0);
+
+  const RESTART_TOLERANCE_TIME = 2; //2 seconds
 
   const play = (song: Song) => {
     if (currentSong.trackId !== song.trackId) {
@@ -63,7 +65,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
     setProgress(value);
   };
 
-  const setProgressStateFromSlider = (value: number) => {
+  const setProgressStateFromSlider = (value: number | null) => {
     setProgressFromSlider(value);
   };
 
@@ -81,16 +83,20 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
   const hasNext = currentPlaylistIndex + 1 < playlist.length;
 
   function playPrevious() {
-    if (hasPrevious) {
-      setCurrentPlaylistIndex(currentPlaylistIndex - 1);
-      play(playlist[currentPlaylistIndex - 1]);
+    if (hasPrevious && progress > RESTART_TOLERANCE_TIME) {
+      const previousIndex = currentPlaylistIndex - 1;
+      setCurrentPlaylistIndex(previousIndex);
+      play(playlist[previousIndex]);
+    } else {
+      setProgressFromSlider(0);
     }
   }
 
   function playNext() {
     if (hasNext) {
-      setCurrentPlaylistIndex(currentPlaylistIndex + 1);
-      play(playlist[currentPlaylistIndex + 1]);
+      const nextIndex = currentPlaylistIndex + 1;
+      setCurrentPlaylistIndex(nextIndex);
+      play(playlist[nextIndex]);
     }
   }
 

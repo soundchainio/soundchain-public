@@ -21,6 +21,7 @@ export const BottomAudioPlayer = () => {
     setPlayingState,
     setDurationState,
     setProgressState,
+    setProgressStateFromSlider,
   } = useAudioPlayerContext();
   const { dispatchShowAudioPlayerModal } = useModalDispatch();
 
@@ -58,10 +59,11 @@ export const BottomAudioPlayer = () => {
   }, [isPlaying, currentSong]);
 
   useEffect(() => {
-    if (audioRef.current) {
+    if (audioRef.current && (progressFromSlider || progressFromSlider === 0)) {
       audioRef.current.currentTime = progressFromSlider;
+      setProgressStateFromSlider(null);
     }
-  }, [progressFromSlider]);
+  }, [progressFromSlider, setProgressStateFromSlider]);
 
   function onLoadedMetadata() {
     if (audioRef.current) {

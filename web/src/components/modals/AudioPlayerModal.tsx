@@ -8,7 +8,7 @@ import { Pause } from 'icons/PauseBottomAudioPlayer';
 import { Play } from 'icons/PlayBottomAudioPlayer';
 import { Rewind } from 'icons/RewindButton';
 import Image from 'next/image';
-import { remainingTime, timeFromSecs } from 'utils/calculateTime';
+import { timeFromSecs } from 'utils/calculateTime';
 
 export const AudioPlayerModal = () => {
   const modalState = useModalState();
@@ -18,7 +18,6 @@ export const AudioPlayerModal = () => {
     isPlaying,
     duration,
     progress,
-    hasPrevious,
     hasNext,
     togglePlay,
     setProgressStateFromSlider,
@@ -63,16 +62,15 @@ export const AudioPlayerModal = () => {
           <Slider min={0} max={duration} value={progress} onChange={onSliderChange} />
           <div className="flex mt-2 text-xs text-gray-80">
             <div className="flex-1">{timeFromSecs(progress || 0)}</div>
-            <div className="flex-1 text-right">{remainingTime(progress, duration || 0)} </div>
+            <div className="flex-1 text-right">{timeFromSecs(duration || 0)}</div>
           </div>
           <div className="flex justify-evenly mt-8">
             <button
-              className={`${!hasPrevious && 'cursor-default'} rounded-full w-12 h-12 flex justify-center items-center`}
+              className={'rounded-full w-12 h-12 flex justify-center items-center'}
               aria-label="Previous track"
               onClick={playPrevious}
-              disabled={!hasPrevious}
             >
-              <Rewind className={`${hasPrevious && 'hover:fill-current'} active:text-gray-80`} />
+              <Rewind className={'hover:fill-current active:text-gray-80'} />
             </button>
             <button
               className="bg-white rounded-full w-12 h-12 flex justify-center items-center hover:scale-110 active:scale-100"
