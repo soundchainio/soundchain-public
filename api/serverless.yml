@@ -25,13 +25,6 @@ functions:
           cors: true
   migrate:
     handler: src/db/migrate.handler
-  mux:
-    handler: src/webhooks/mux.handler
-    events:
-      - http:
-          path: /hooks/mux
-          method: post
-          cors: true
   mint:
     handler: src/lambda.mint
     timeout: 120
@@ -110,7 +103,6 @@ provider:
     SQS_URL: ${self:custom.sqs.url}
     MUX_TOKEN_ID: ${env:MUX_TOKEN_ID}
     MUX_TOKEN_SECRET: ${env:MUX_TOKEN_SECRET}
-    MUX_WEBHOOK_SECRET: ${env:MUX_WEBHOOK_SECRET}
     SENTRY_URL: ${env:SENTRY_URL}
     MAGIC_PRIVATE_KEY: ${env:MAGIC_PRIVATE_KEY}
 

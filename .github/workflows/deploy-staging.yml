@@ -5,7 +5,7 @@ on:
     branches:
       - staging
     paths:
-      - "api/**"
+      - 'api/**'
 
 jobs:
   deploy-api:
@@ -46,7 +46,6 @@ jobs:
           PINATA_API_SECRET: ${{ secrets.PINATA_API_SECRET_STAGING }}
           MUX_TOKEN_ID: ${{ secrets.MUX_TOKEN_ID_STAGING }}
           MUX_TOKEN_SECRET: ${{ secrets.MUX_TOKEN_SECRET_STAGING }}
-          MUX_WEBHOOK_SECRET: ${{ secrets.MUX_WEBHOOK_SECRET_STAGING }}
           SENTRY_URL: ${{ secrets.SENTRY_URL }}
           MAGIC_PRIVATE_KEY: ${{ secrets.MAGIC_PRIVATE_KEY_STAGING }}
       - name: Trigger migrate lambda function

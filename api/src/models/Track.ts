@@ -1,7 +1,6 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { MuxAsset } from '../types/MuxAsset';
-import { MuxUpload } from '../types/MuxUpload';
 import { Model } from './Model';
 
 @ObjectType()
@@ -23,11 +22,7 @@ export class Track extends Model {
 
   @Field()
   @prop({ required: true })
-  file: string;
-
-  @Field()
-  @prop()
-  uploadUrl: string;
+  assetUrl: string;
 
   @Field({ nullable: true })
   @prop()
@@ -36,10 +31,6 @@ export class Track extends Model {
   @Field({ nullable: true })
   @prop()
   transactionAddress: string;
-
-  @Field()
-  @prop()
-  muxUpload: MuxUpload;
 
   @prop()
   muxAsset: MuxAsset;

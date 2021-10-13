@@ -1,0 +1,12 @@
+mutation CreateTrack($input: UploadTrackInput!) {
+  createTrack(input: $input) {
+    track {
+      id
+      title
+      description
+      assetUrl
+      artworkUrl
+      playbackUrl
+    }
+  }
+}
