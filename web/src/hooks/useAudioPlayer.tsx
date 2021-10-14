@@ -48,6 +48,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
 
   const play = (song: Song) => {
     if (currentSong.trackId !== song.trackId) {
+      setProgressStateFromSlider(0);
       setIsPlaying(true);
       setCurrentSong(song);
     } else {
@@ -77,6 +78,9 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
 
   const setProgressStateFromSlider = (value: number | null) => {
     setProgressFromSlider(value);
+    if (value || value === 0) {
+      setProgress(value);
+    }
   };
 
   const setDurationState = (value: number) => {
@@ -98,7 +102,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
       setCurrentPlaylistIndex(previousIndex);
       play(playlist[previousIndex]);
     } else {
-      setProgressFromSlider(0);
+      setProgressStateFromSlider(0);
     }
   }
 
