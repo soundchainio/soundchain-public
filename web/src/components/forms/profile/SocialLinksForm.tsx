@@ -1,6 +1,5 @@
 import { Button, ButtonProps } from 'components/Button';
 import { InputField } from 'components/InputField';
-import { Label } from 'components/Label';
 import { Form, Formik } from 'formik';
 import { useMe } from 'hooks/useMe';
 import { useUpdateSocialMediasMutation } from 'lib/graphql';
@@ -48,7 +47,6 @@ export const SocialLinksForm = ({ afterSubmit, submitText, submitProps }: Social
           <InputField label="facebook.com/" type="text" name="facebook" />
         </div>
         <div className="flex items-center">
-          <Label></Label>
           <InputField label="instagram.com/" type="text" name="instagram" />
         </div>
         <div className="flex items-center">
