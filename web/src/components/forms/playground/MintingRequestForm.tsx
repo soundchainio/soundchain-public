@@ -88,7 +88,7 @@ export const MintingRequestForm = ({ to, web3, afterSubmit }: Props) => {
       },
     });
 
-    const mintResult = await mintNftToken(web3, `ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`, to, to);
+    const mintResult = await mintNftToken(web3, `ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`, to, to, 1);
 
     if (mintResult) {
       afterSubmit();

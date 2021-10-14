@@ -46,7 +46,7 @@ export const NFTCard = ({ account, web3, nftToken }: NftCardProps) => {
   const handleList = async (web3: Web3, tokenId: string, price: number) => {
     const confirmed = confirm('Hey! This will list this NFT, you sure?');
     if (confirmed) {
-      const result = await listItem(web3, tokenId, account, price);
+      const result = await listItem(web3, tokenId, 1, account, price);
       if (result) {
         alert('Token list requested!');
       }
@@ -194,7 +194,7 @@ const TransferForm = ({ name, web3, fromAddress, tokenId, onCancel }: TransferFo
   const [loading, setLoading] = useState(false);
   const handleSubmit = async (values: FormValues) => {
     setLoading(true);
-    const result = await transferNftToken(web3, tokenId, fromAddress, values.to);
+    const result = await transferNftToken(web3, tokenId, fromAddress, values.to, 1);
     if (result) {
       alert('Token transfer requested!');
     }
