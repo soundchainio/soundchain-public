@@ -51,7 +51,7 @@ export default function TrackPage({ trackId }: TrackPageProps) {
 
   const topNovaBarProps: TopNavBarProps = {
     leftButton: <BackButton />,
-    title: "NFT Details",
+    title: 'NFT Details',
   };
 
   return (
