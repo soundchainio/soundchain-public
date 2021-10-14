@@ -7,69 +7,115 @@ import { useMagicContext } from 'hooks/useMagicContext';
 import { Logo } from 'icons/Logo';
 import { Matic } from 'icons/Matic';
 import { getMaxGasFee } from 'lib/blockchain';
+import { Genre } from 'lib/graphql';
 import React, { useEffect, useState } from 'react';
 import * as yup from 'yup';
-
-interface Props {
-  handleSubmit: (values: FormValues) => void;
-  setCoverPhotoUrl?: (val: string) => void;
-}
 
 export interface FormValues {
   title: string;
   description: string;
+  artist?: string;
+  album?: string;
+  releaseYear?: number;
+  genres?: Genre[];
   artworkUrl?: string;
+  quantity: number;
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   title: yup.string().required(),
   description: yup.string().required(),
+  artist: yup.string(),
+  album: yup.string(),
+  releaseYear: yup.number(),
+  genres: yup.array(),
   artworkUrl: yup.string(),
+  quantity: yup.number().required(),
 });
 
-const initialValues: FormValues = {
+interface Props {
+  initialValues?: FormValues;
+  handleSubmit: (values: FormValues) => void;
+}
+
+const defaultValues: FormValues = {
   title: '',
   description: '',
+  artist: '',
+  album: '',
+  releaseYear: new Date().getFullYear(),
+  genres: [],
   artworkUrl: '',
+  quantity: 1,
 };
 
-export const TrackMetadataForm = ({ handleSubmit, setCoverPhotoUrl }: Props) => {
+export const TrackMetadataForm = ({ initialValues = defaultValues, handleSubmit }: Props) => {
   const { web3, balance } = useMagicContext();
   const [maxGasFee, setMaxGasFee] = useState<string>();
+  const [enoughFunds, setEnoughFunds] = useState<boolean>();
+  const [uploadingArt, setUploadingArt] = useState<boolean>();
+
   useEffect(() => {
-    if (web3) {
-      getMaxGasFee(web3).then(setMaxGasFee);
-    }
+    const gasCheck = () => {
+      if (web3) {
+        getMaxGasFee(web3).then(setMaxGasFee);
+      }
+    };
+    const interval = setInterval(() => {
+      gasCheck();
+    }, 10 * 1000);
+    gasCheck();
+    return () => clearInterval(interval);
   }, [web3]);
 
   const onArtworkUpload = (val: string, setFieldValue: (field: string, value: string) => void) => {
     setFieldValue('artworkUrl', val);
-    if (setCoverPhotoUrl) {
-      setCoverPhotoUrl(val);
-    }
   };
 
+  useEffect(() => {
+    if (balance && maxGasFee) {
+      setEnoughFunds(balance > maxGasFee);
+    }
+  }, [maxGasFee, balance]);
+
   return (
-    <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
+    <Formik
+      initialValues={initialValues}
+      enableReinitialize
+      validationSchema={validationSchema}
+      onSubmit={handleSubmit}
+    >
       {({ setFieldValue }) => (
         <Form className="flex flex-col gap-4 h-full">
-          <div className="px-4">
-            <div className="flex items-center">
-              <div className="h-30 w-30 mr-2 flex flex-col items-center">
-                <ImageUpload artwork={true} onChange={val => onArtworkUpload(val, setFieldValue)} />
-                <span className="text-gray-80 underline text-xs mt-2 font-bold">CHANGE ARTWORK</span>
-              </div>
-              <div className="flex-1">
-                <InputField label="TRACK TITLE" name="title" type="text" />
-              </div>
+          <div className="flex items-center px-4">
+            <div className="h-30 w-30 mr-2 flex flex-col items-center">
+              <ImageUpload
+                artwork={true}
+                onChange={val => onArtworkUpload(val, setFieldValue)}
+                onUpload={setUploadingArt}
+              />
+              <span className="text-gray-80 underline text-xs mt-2 font-bold">
+                {uploadingArt ? 'UPLOADING...' : 'CHANGE ARTWORK'}
+              </span>
             </div>
-            <div>
-              <div className="mt-4">
-                <TextareaField label="DESCRIPTION" rows={3} name="description" />
-              </div>
+            <div className="flex flex-col flex-1 gap-2">
+              <InputField name="title" type="text" label="TRACK TITLE" />
+              <InputField name="artist" type="text" label="ARTIST" />
             </div>
           </div>
-          <div className="flex items-center justify-between py-3 px-4" style={{ backgroundColor: '#202020' }}>
+          <div className="px-4">
+            <TextareaField rows={3} name="description" label="DESCRIPTION" />
+          </div>
+          <div className="px-4">
+            <InputField name="album" type="text" label="ALBUM" />
+          </div>
+          <div className="px-4">
+            <InputField name="releaseYear" type="number" label="RELEASE YEAR" />
+          </div>
+          <div className="px-4">
+            <InputField name="quantity" type="number" label="QUANTITY" />
+          </div>
+          <div className="flex items-center justify-between py-3 px-4 mt-4" style={{ backgroundColor: '#202020' }}>
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2 text-xs text-white font-bold">
                 <Logo id="soundchain-wallet" height="20" width="20" /> SoundChain Wallet
@@ -91,7 +137,7 @@ export const TrackMetadataForm = ({ handleSubmit, setCoverPhotoUrl }: Props) => 
               </a>
             </div>
           </div>
-          <div className="pl-4 pr-4 pb-4 flex items-center">
+          <div className="pl-4 pr-4 pb-4 flex items-center mt-4">
             <div className="flex-1 font-black text-xs" style={{ color: '#808080' }}>
               <div>Max gas fee</div>
               <div className="flex items-center gap-1">
@@ -100,9 +146,22 @@ export const TrackMetadataForm = ({ handleSubmit, setCoverPhotoUrl }: Props) => 
               </div>
             </div>
             <div className="flex-1">
-              <Button type="submit" variant="rainbow">
-                MINT NFT
-              </Button>
+              {enoughFunds && !uploadingArt && (
+                <Button type="submit" variant="rainbow">
+                  MINT NFT
+                </Button>
+              )}
+              {uploadingArt && (
+                <div className="flex-1">
+                  <div className="text-white text-right text-sm font-bold">Uploading artwork...</div>
+                </div>
+              )}
+              {!enoughFunds && (
+                <div className="text-white text-right text-sm font-bold">
+                  {`It seems like you might have not enough funds `}
+                  <span className="whitespace-nowrap">:(</span>
+                </div>
+              )}
             </div>
           </div>
         </Form>

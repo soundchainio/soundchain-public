@@ -17,13 +17,20 @@ import {
   usePinToIpfsMutation,
   useUpdateTrackMutation
 } from 'lib/graphql';
+import * as musicMetadata from 'music-metadata-browser';
 import Image from 'next/image';
 import React, { useState } from 'react';
-import { Metadata } from 'types/NftTypes';
+import { Metadata, Receipt } from 'types/NftTypes';
 
 enum Tabs {
   NFT = 'NFT',
   POST = 'Post',
+}
+
+enum MiningState {
+  IN_PROGRESS = 'In progress...',
+  DONE = 'Done!',
+  ERROR = 'Error :(',
 }
 
 export const CreateModal = () => {
@@ -33,6 +40,7 @@ export const CreateModal = () => {
 
   const [file, setFile] = useState<File>();
   const [preview, setPreview] = useState<string>();
+  const [fileMetadata, setFileMetadata] = useState<musicMetadata.IAudioMetadata['common']>();
 
   const [newTrack, setNewTrack] = useState<CreateTrackMutation['createTrack']['track']>();
 
@@ -46,8 +54,11 @@ export const CreateModal = () => {
 
   const [transactionHash, setTransactionHash] = useState<string>();
   const [mintingState, setMintingState] = useState<string>();
+  const [miningState, setMiningState] = useState<MiningState>(MiningState.IN_PROGRESS);
 
   const handleFileDrop = (file: File) => {
+    musicMetadata.parseBlob(file).then(result => setFileMetadata(result.common));
+
     const reader = new FileReader();
     reader.readAsDataURL(file);
 
@@ -66,7 +77,7 @@ export const CreateModal = () => {
 
   const handleSubmit = async (values: FormValues) => {
     if (file && web3 && account) {
-      const { title, artworkUrl, description } = values;
+      const { title, artworkUrl, description, quantity, album, artist, genres, releaseYear } = values;
 
       setMintingState('Uploading track file');
       const assetUrl = await upload([file]);
@@ -74,9 +85,16 @@ export const CreateModal = () => {
 
       setMintingState('Creating streaming from track');
       const { data } = await createTrack({
-        variables: { input: { assetUrl, ...values } },
+        variables: { input: { assetUrl, title, album, artist, artworkUrl, description, genres, releaseYear } },
       });
       const track = data?.createTrack.track;
+
+      if (!track) {
+        setMintingState(undefined);
+        alert('We had some trouble, please try again later!');
+        return;
+      }
+
       setNewTrack(track);
 
       const assetKey = assetUrl.substring(assetUrl.lastIndexOf('/') + 1);
@@ -94,6 +112,10 @@ export const CreateModal = () => {
         description,
         name: title,
         asset: `ipfs://${assetPinResult?.pinToIPFS.cid}`,
+        album,
+        artist,
+        releaseYear,
+        genres,
       };
 
       if (artUrl) {
@@ -119,27 +141,53 @@ export const CreateModal = () => {
         },
       });
       setMintingState('Minting NFT');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const mintResult: any = await mintNftToken(
-        web3,
-        `ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`,
-        account,
-        account,
-        1,
-      );
-      setMintingState(undefined);
-      setTransactionHash(mintResult.transactionHash);
-      if (track) {
+
+      const onTransactionHash = (hash: string) => {
         updateTrack({
           variables: {
             input: {
               trackId: track.id,
-              transactionAddress: mintResult.transactionHash,
+              nftData: {
+                transactionHash: hash,
+              },
             },
           },
           refetchQueries: [FeedDocument],
         });
-      }
+
+        setMintingState(undefined);
+        setTransactionHash(hash);
+      };
+
+      const onReceipt = (receipt: Receipt) => {
+        if (receipt.status) {
+          updateTrack({
+            variables: {
+              input: {
+                trackId: track.id,
+                nftData: {
+                  minter: account,
+                  contract: receipt.to,
+                  tokenId: receipt.events.TransferSingle.returnValues.id,
+                  quantity: parseInt(receipt.events.TransferSingle.returnValues.value),
+                },
+              },
+            },
+          });
+          setMiningState(MiningState.DONE);
+        } else {
+          setMiningState(MiningState.ERROR);
+        }
+      };
+      mintNftToken(
+        web3,
+        `ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`,
+        account,
+        account,
+        quantity,
+        onTransactionHash,
+        onReceipt,
+      );
     }
   };
 
@@ -186,9 +234,12 @@ export const CreateModal = () => {
       >
         <div className="h-full w-full" style={{ backgroundColor: '#101010' }}>
           {newTrack && (
-            <div className="p-4 m-4 bg-black rounded">
-              <AudioPlayer title={newTrack.title} src={newTrack.playbackUrl} art={newTrack.artworkUrl} />
-            </div>
+            <AudioPlayer
+              title={newTrack.title}
+              src={newTrack.playbackUrl}
+              art={newTrack.artworkUrl}
+              artist={newTrack.artist}
+            />
           )}
           <div
             className="h-96 p-4 flex flex-col justify-center items-center	bg-no-repeat text-center text-xl text-white font-black uppercase"
@@ -199,13 +250,19 @@ export const CreateModal = () => {
           </div>
           <div className="flex">
             <div className="uppercase mr-auto text-xs font-bold py-3 px-4" style={{ color: '#CCCCCC' }}>
-              Minting Status
+              Mining Status
             </div>
             <div
               className="flex gap-2 items-center py-3 px-4 text-white font-bold text-xs"
               style={{ backgroundColor: '#252525' }}
             >
-              <Image width={16} height={16} priority src="/loading.gif" alt="" /> In progress...
+              {miningState === MiningState.IN_PROGRESS ? (
+                <>
+                  <Image width={16} height={16} priority src="/loading.gif" alt="" /> {miningState}
+                </>
+              ) : (
+                <>{miningState}</>
+              )}
             </div>
           </div>
           <div className="flex gap-4 items-center text-xs text-white py-3 px-4" style={{ backgroundColor: '#151515' }}>
@@ -231,6 +288,15 @@ export const CreateModal = () => {
     );
   }
 
+  const initialValues: FormValues = {
+    title: fileMetadata?.title || '',
+    artist: fileMetadata?.artist || '',
+    description: fileMetadata?.comment ? fileMetadata.comment[0] : '',
+    album: fileMetadata?.album,
+    releaseYear: fileMetadata?.year,
+    quantity: 1,
+  };
+
   return (
     <Modal
       show={isOpen}
@@ -245,7 +311,7 @@ export const CreateModal = () => {
       <div className="px-4 py-4">
         <TrackUploader onFileChange={handleFileDrop} />
       </div>
-      {file && preview && <TrackMetadataForm handleSubmit={handleSubmit} />}
+      {file && preview && <TrackMetadataForm handleSubmit={handleSubmit} initialValues={initialValues} />}
       {mintingState && (
         <div className="absolute top-0 left-0 flex flex-col items-center justify-center h-full w-full bg-gray-20 bg-opacity-80">
           <Image height={200} width={200} src="/nyan-cat-rainbow.gif" alt="Loading" priority />

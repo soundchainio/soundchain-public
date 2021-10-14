@@ -31,6 +31,7 @@ export const Track = ({ trackId, coverPhotoUrl }: TrackProps) => {
     <AudioPlayer
       trackId={data.track.id}
       title={data.track.title}
+      artist={data.track.artist}
       src={data.track.playbackUrl}
       art={data.track.artworkUrl || coverPhotoUrl || undefined}
     />
