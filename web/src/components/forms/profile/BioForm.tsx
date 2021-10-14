@@ -1,5 +1,4 @@
 import { Button, ButtonProps } from 'components/Button';
-import { Label } from 'components/Label';
 import { getBodyCharacterCount } from 'components/PostModal';
 import { TextareaField } from 'components/TextareaField';
 import { Form, Formik } from 'formik';
@@ -44,8 +43,7 @@ export const BioForm = ({ afterSubmit, submitText, submitProps }: BioFormProps) 
       {({ values }) => (
         <Form className="flex flex-1 flex-col space-y-6">
           <div>
-            <Label>Bio</Label>
-            <TextareaField name="bio" placeholder="Add a bio..." maxLength={setMaxInputLength(values.bio || '')} />
+            <TextareaField label="Bio" name="bio" placeholder="Add a bio..." maxLength={setMaxInputLength(values.bio || '')} />
           </div>
           <p className="text-gray-50 text-right flex-grow">
             {`${getBodyCharacterCount(values.bio || '')} / ${maxBioLength}`}

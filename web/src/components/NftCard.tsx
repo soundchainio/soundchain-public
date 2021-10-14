@@ -10,7 +10,6 @@ import { NftToken } from 'types/NftTypes';
 import { audioMimeTypes, videoMimeTypes } from 'utils/mimeTypes';
 import Web3 from 'web3';
 import * as yup from 'yup';
-import { Label } from './Label';
 
 interface NftCardProps {
   account: string;
@@ -112,8 +111,7 @@ export const NFTCard = ({ account, web3, nftToken }: NftCardProps) => {
                 List
               </Button>
               <div className="flex items-center gap-2">
-                <Label>Price</Label>
-                <InputField style={{ maxWidth: '60px' }} name="price" type="text" />
+                <InputField label="Price" style={{ maxWidth: '60px' }} name="price" type="text" />
               </div>
             </div>
           </Form>

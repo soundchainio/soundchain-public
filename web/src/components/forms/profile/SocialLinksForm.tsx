@@ -45,20 +45,17 @@ export const SocialLinksForm = ({ afterSubmit, submitText, submitProps }: Social
     <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
       <Form className="flex flex-1 flex-col space-y-6">
         <div className="flex items-center">
-          <Label>facebook.com/</Label>
-          <InputField type="text" name="facebook" />
+          <InputField label="facebook.com/" type="text" name="facebook" />
         </div>
         <div className="flex items-center">
-          <Label>instagram.com/</Label>
-          <InputField type="text" name="instagram" />
+          <Label></Label>
+          <InputField label="instagram.com/" type="text" name="instagram" />
         </div>
         <div className="flex items-center">
-          <Label>twitter.com/</Label>
-          <InputField type="text" name="twitter" />
+          <InputField label="twitter.com/" type="text" name="twitter" />
         </div>
         <div className="flex items-center">
-          <Label>soundcloud.com/</Label>
-          <InputField type="text" name="soundcloud" />
+          <InputField label="soundcloud.com/" type="text" name="soundcloud" />
         </div>
         <div className="flex flex-col">
           <Button type="submit" disabled={loading} variant="outline" className="h-12" {...submitProps}>
