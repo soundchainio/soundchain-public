@@ -1,7 +1,6 @@
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { InputField } from 'components/InputField';
-import { Label } from 'components/Label';
 import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Form, Formik } from 'formik';
@@ -49,8 +48,7 @@ export default function NamePage() {
         <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={onSubmit}>
           <Form className="flex flex-1 flex-col space-y-6">
             <div>
-              <Label>First or full name</Label>
-              <InputField type="text" name="displayName" placeholder="Name" />
+              <InputField label="First or full name" type="text" name="displayName" placeholder="Name" />
             </div>
             <p className="text-gray-50 flex-grow"> This will be displayed publically to other users. </p>
             <div className="flex flex-col">

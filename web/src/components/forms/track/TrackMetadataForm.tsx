@@ -1,7 +1,6 @@
 import { Button } from 'components/Button';
 import { ImageUpload } from 'components/ImageUpload';
 import { InputField } from 'components/InputField';
-import { Label } from 'components/Label';
 import { TextareaField } from 'components/TextareaField';
 import { Form, Formik } from 'formik';
 import { useMagicContext } from 'hooks/useMagicContext';
@@ -61,14 +60,12 @@ export const TrackMetadataForm = ({ handleSubmit, setCoverPhotoUrl }: Props) => 
                 <span className="text-gray-80 underline text-xs mt-2 font-bold">CHANGE ARTWORK</span>
               </div>
               <div className="flex-1">
-                <Label className="font-bold">TRACK TITLE</Label>
-                <InputField name="title" type="text" />
+                <InputField label="TRACK TITLE" name="title" type="text" />
               </div>
             </div>
             <div>
               <div className="mt-4">
-                <Label className="font-bold">DESCRIPTION</Label>
-                <TextareaField rows={3} name="description" />
+                <TextareaField label="DESCRIPTION" rows={3} name="description" />
               </div>
             </div>
           </div>

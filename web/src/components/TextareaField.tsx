@@ -10,23 +10,23 @@ interface TextareaFieldProps {
   rows?: number;
 }
 
-const commonInputClasses = `appearance-none block w-full px-3 py-2 border-1 bg-gray-1A text-gray-200 shadow-sm placeholder-gray-60 placeholder-semibold focus:outline-none focus:ring-green-500 focus:border-green-500`;
+const commonInputClasses = `appearance-none block w-full px-2 py-1 rounded-md border border-gray-700 bg-gray-30 text-gray-200`;
 const validInputClasses = `${commonInputClasses} border-gray-30`;
 const errorInputClasses = `${commonInputClasses} border-green-500`;
 
 export const TextareaField = ({ label, icon: Icon, maxLength, rows = 4, ...props }: TextareaFieldProps) => {
   const [field, meta] = useField(props);
   return (
-    <div>
+    <div className={meta.touched && meta.error ? errorInputClasses : validInputClasses}>
       {label && (
-        <div className="mb-1 pl-1">
+        <div className="pl-3">
           <Label htmlFor={props.name}>{label}</Label>
         </div>
       )}
       <div className="relative">
         <textarea
           maxLength={maxLength}
-          className={meta.touched && meta.error ? errorInputClasses : validInputClasses}
+          className="bg-gray-30 w-full py-0 text-gray-200 border-none focus:outline-none focus:ring-transparent placeholder-gray-60 placeholder-semibold resize-none"
           {...field}
           {...props}
           rows={rows}

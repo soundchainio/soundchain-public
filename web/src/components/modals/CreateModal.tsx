@@ -15,7 +15,7 @@ import {
   useCreateTrackMutation,
   usePinJsonToIpfsMutation,
   usePinToIpfsMutation,
-  useUpdateTrackMutation,
+  useUpdateTrackMutation
 } from 'lib/graphql';
 import Image from 'next/image';
 import React, { useState } from 'react';
@@ -155,7 +155,7 @@ export const CreateModal = () => {
         onClick={() => setTab(Tabs.NFT)}
         className={classNames(
           'flex-1 rounded-lg font-bold text-sm py-1.5',
-          tab === Tabs.NFT ? 'text-white bg-gray-30' : 'text-gray-80 cursor-pointer',
+          tab === Tabs.NFT ? 'text-white bg-gray-20' : 'text-gray-80 cursor-pointer',
         )}
       >
         Mint NFT
@@ -164,7 +164,7 @@ export const CreateModal = () => {
         onClick={handlePostTabClick}
         className={classNames(
           'flex-1 rounded-lg font-bold text-sm py-1.5',
-          tab === Tabs.POST ? 'text-white bg-gray-30' : 'text-gray-80 cursor-pointer',
+          tab === Tabs.POST ? 'text-white bg-gray-20' : 'text-gray-80 cursor-pointer',
         )}
       >
         Post
