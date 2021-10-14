@@ -22,6 +22,7 @@ export const InputField = ({ label, icon: Icon, ...props }: InputFieldProps) => 
           <Label htmlFor={props.name}>{label}</Label>
         </div>
       )}
+
       <div className="relative">
         <input className="bg-gray-30 w-full py-0 text-gray-200 border-none focus:outline-none focus:ring-transparent placeholder-gray-60 placeholder-semibold" {...field} {...props} />
         <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
