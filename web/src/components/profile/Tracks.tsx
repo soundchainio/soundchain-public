@@ -32,7 +32,7 @@ export const Tracks = ({ className, profileId, pageSize = 10 }: TracksProps) => 
 
   if (!data) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-2">
         <TrackSkeleton />
         <TrackSkeleton />
         <TrackSkeleton />

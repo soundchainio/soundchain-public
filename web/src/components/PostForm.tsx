@@ -1,31 +1,31 @@
+import { useModalState } from 'contexts/providers/modal';
 import { Form, Formik, FormikHelpers } from 'formik';
-import * as yup from 'yup';
-import { PostBodyField } from './PostBodyField';
-import { PostFormType } from 'types/PostFormType'
-import { Button } from './Button';
-import { setMaxInputLength } from './PostModal';
 import {
   CreatePostInput,
   UpdatePostInput,
   useCreatePostMutation,
   useCreateRepostMutation,
-  useUpdatePostMutation
+  useUpdatePostMutation,
 } from 'lib/graphql';
-import { useModalState } from 'contexts/providers/modal';
-import { PostBar } from './PostBar';
-import { RepostPreview } from './RepostPreview';
 import { useState } from 'react';
+import { PostFormType } from 'types/PostFormType';
+import * as yup from 'yup';
+import { Button } from './Button';
+import { PostBar } from './PostBar';
+import { PostBodyField } from './PostBodyField';
+import { setMaxInputLength } from './PostModal';
+import { RepostPreview } from './RepostPreview';
 
 interface InitialValues {
-  body: string
+  body: string;
 }
 
 interface PostFormProps {
-  type: PostFormType
-  initialValues: InitialValues
-  postLink?: string
-  afterSubmit: () => void
-  onCancel: (setFieldValue: (field: string, value: string) => void) => void
+  type: PostFormType;
+  initialValues: InitialValues;
+  postLink?: string;
+  afterSubmit: () => void;
+  onCancel: (setFieldValue: (field: string, value: string) => void) => void;
   showNewPost: boolean;
   setOriginalLink: (val: string) => void;
   setPostLink: (val: string) => void;
@@ -82,7 +82,6 @@ export const PostForm = ({ ...props }: PostFormProps) => {
     resetForm();
 
     props.afterSubmit();
-
   };
 
   const onTextAreaChange = (newVal: string) => {
@@ -90,11 +89,19 @@ export const PostForm = ({ ...props }: PostFormProps) => {
   };
 
   return (
-    <Formik enableReinitialize={true} initialValues={props.initialValues || defaultInitialValues} validationSchema={postSchema} onSubmit={onSubmit}>
+    <Formik
+      enableReinitialize={true}
+      initialValues={props.initialValues || defaultInitialValues}
+      validationSchema={postSchema}
+      onSubmit={onSubmit}
+    >
       {({ values, setFieldValue }) => (
         <Form className="flex flex-col h-full">
-          <div className="flex items-center rounded-tl-3xl rounded-tr-3xl bg-gray-30">
-            <div className="p-2 text-gray-400 font-bold flex-1 text-center" onClick={() => props.onCancel(setFieldValue)}>
+          <div className="flex items-center rounded-tl-3xl rounded-tr-3xl bg-gray-20">
+            <div
+              className="p-2 text-gray-400 font-bold flex-1 text-center"
+              onClick={() => props.onCancel(setFieldValue)}
+            >
               Cancel
             </div>
             <div className="flex-1 text-center text-white font-bold">
@@ -139,5 +146,5 @@ export const PostForm = ({ ...props }: PostFormProps) => {
         </Form>
       )}
     </Formik>
-  )
+  );
 };

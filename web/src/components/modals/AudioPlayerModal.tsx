@@ -55,9 +55,11 @@ export const AudioPlayerModal = () => {
       onClose={handleClose}
     >
       <div className="flex flex-col h-full justify-center items-center text-white">
-        <div className="post-audio-player w-72">
-          <div className="w-72 h-72 relative flex items-center bg-gray-80 rounded-lg overflow-hidden">
-            {currentSong.art && <Asset src={currentSong.art} />}
+        <div className="post-audio-player w-full sm:max-w-xs px-8 sm:px-0">
+          <div className="flex justify-center">
+            <div className="relative w-3/4 sm:w-full after:block after:pb-full flex bg-gray-80 rounded-lg overflow-hidden">
+              {currentSong.art && <Asset src={currentSong.art} />}
+            </div>
           </div>
           <div className="flex flex-col gap-1 mt-7 mb-4">
             <h2 className="font-black">{currentSong.title || 'Unknown title'}</h2>
@@ -70,7 +72,7 @@ export const AudioPlayerModal = () => {
               {showTotalPlaybackDuration ? timeFromSecs(duration || 0) : remainingTime(progress, duration || 0)}
             </div>
           </div>
-          <div className="flex justify-evenly mt-8">
+          <div className="flex justify-center mt-8 gap-6">
             <button
               className={'rounded-full w-12 h-12 flex justify-center items-center'}
               aria-label="Previous track"

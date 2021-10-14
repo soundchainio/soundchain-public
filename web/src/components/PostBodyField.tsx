@@ -3,12 +3,12 @@ import { useField } from 'formik';
 import React, { useEffect } from 'react';
 
 interface PostBodyFieldProps extends React.ComponentPropsWithoutRef<'textarea'> {
-  name: string
-  maxLength?: number
-  updatedValue?: (val: string) => void
+  name: string;
+  maxLength?: number;
+  updatedValue?: (val: string) => void;
 }
 
-const commonClasses = 'flex-1 bg-gray-35 text-white text-sm placeholder-gray-50 focus:ring-0 border-0 resize-none';
+const commonClasses = 'flex-1 bg-gray-10 text-white text-sm placeholder-gray-50 focus:ring-0 border-0 resize-none';
 
 export const PostBodyField = ({ ...props }: PostBodyFieldProps) => {
   const [field, meta] = useField(props);

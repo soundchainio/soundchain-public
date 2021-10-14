@@ -17,6 +17,8 @@ interface AudioPlayerContextData {
   hasNext: boolean;
   hasPrevious: boolean;
   play: (song: Song) => void;
+  isCurrentSong: (trackId: string) => boolean;
+  isCurrentlyPlaying: (trackId: string) => boolean;
   togglePlay: () => void;
   setPlayingState: (state: boolean) => void;
   setProgressState: (value: number) => void;
@@ -46,11 +48,20 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
 
   const play = (song: Song) => {
     if (currentSong.trackId !== song.trackId) {
+      setProgressStateFromSlider(0);
       setIsPlaying(true);
       setCurrentSong(song);
     } else {
       togglePlay();
     }
+  };
+
+  const isCurrentSong = (trackId: string) => {
+    return trackId === currentSong?.trackId;
+  };
+
+  const isCurrentlyPlaying = (trackId: string) => {
+    return isPlaying && isCurrentSong(trackId);
   };
 
   const togglePlay = () => {
@@ -67,6 +78,9 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
 
   const setProgressStateFromSlider = (value: number | null) => {
     setProgressFromSlider(value);
+    if (value || value === 0) {
+      setProgress(value);
+    }
   };
 
   const setDurationState = (value: number) => {
@@ -88,7 +102,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
       setCurrentPlaylistIndex(previousIndex);
       play(playlist[previousIndex]);
     } else {
-      setProgressFromSlider(0);
+      setProgressStateFromSlider(0);
     }
   }
 
@@ -111,6 +125,8 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
         hasNext,
         hasPrevious,
         play,
+        isCurrentSong,
+        isCurrentlyPlaying,
         togglePlay,
         setPlayingState,
         setProgressState,
