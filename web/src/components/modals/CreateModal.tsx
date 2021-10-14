@@ -165,6 +165,7 @@ export const CreateModal = () => {
         `ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`,
         account,
         account,
+        1,
         onTransactionHash,
         onReceipt,
       );
