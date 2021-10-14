@@ -70,7 +70,7 @@ export const AudioPlayerModal = () => {
               {showTotalPlaybackDuration ? timeFromSecs(duration || 0) : remainingTime(progress, duration || 0)}
             </div>
           </div>
-          <div className="flex justify-evenly mt-8">
+          <div className="flex justify-center mt-8 gap-6">
             <button
               className={'rounded-full w-12 h-12 flex justify-center items-center'}
               aria-label="Previous track"
