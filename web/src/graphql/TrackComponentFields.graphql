@@ -5,7 +5,17 @@ fragment TrackComponentFields on Track {
   assetUrl
   artworkUrl
   description
+  artist
+  album
+  releaseYear
+  genres
   playbackUrl
   createdAt
   updatedAt
+  nftData {
+    transactionHash
+    tokenId
+    contract
+    minter
+  }
 }

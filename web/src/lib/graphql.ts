@@ -130,6 +130,10 @@ export type CreateTrackInput = {
   description?: Maybe<Scalars['String']>;
   assetUrl: Scalars['String'];
   artworkUrl?: Maybe<Scalars['String']>;
+  artist?: Maybe<Scalars['String']>;
+  album?: Maybe<Scalars['String']>;
+  releaseYear?: Maybe<Scalars['Float']>;
+  genres?: Maybe<Array<Genre>>;
 };
 
 export type CreateTrackPayload = {
@@ -445,6 +449,23 @@ export type MutationLoginArgs = {
 
 export type MutationUpdateHandleArgs = {
   input: UpdateHandleInput;
+};
+
+export type NftDataInput = {
+  transactionHash?: Maybe<Scalars['String']>;
+  tokenId?: Maybe<Scalars['String']>;
+  contract?: Maybe<Scalars['String']>;
+  minter?: Maybe<Scalars['String']>;
+  quantity?: Maybe<Scalars['Float']>;
+};
+
+export type NftDataType = {
+  __typename?: 'NFTDataType';
+  transactionHash: Maybe<Scalars['String']>;
+  tokenId: Maybe<Scalars['String']>;
+  contract: Maybe<Scalars['String']>;
+  minter: Maybe<Scalars['String']>;
+  quantity: Maybe<Scalars['Float']>;
 };
 
 export type NewPostNotification = {
@@ -825,7 +846,11 @@ export type Track = {
   description: Maybe<Scalars['String']>;
   assetUrl: Scalars['String'];
   artworkUrl: Maybe<Scalars['String']>;
-  transactionAddress: Maybe<Scalars['String']>;
+  artist: Maybe<Scalars['String']>;
+  album: Maybe<Scalars['String']>;
+  releaseYear: Maybe<Scalars['Float']>;
+  genres: Maybe<Array<Genre>>;
+  nftData: Maybe<NftDataType>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   playbackUrl: Scalars['String'];
@@ -892,7 +917,7 @@ export type UpdateProfilePayload = {
 
 export type UpdateTrackInput = {
   trackId: Scalars['String'];
-  transactionAddress?: Maybe<Scalars['String']>;
+  nftData?: Maybe<NftDataInput>;
 };
 
 export type UpdateTrackPayload = {
@@ -1127,7 +1152,7 @@ export type CreateTrackMutation = (
     { __typename?: 'CreateTrackPayload' }
     & { track: (
       { __typename?: 'Track' }
-      & Pick<Track, 'id' | 'title' | 'description' | 'assetUrl' | 'artworkUrl' | 'playbackUrl' | 'transactionAddress'>
+      & TrackComponentFieldsFragment
     ) }
   ) }
 );
@@ -1631,7 +1656,11 @@ export type TrackQuery = (
 
 export type TrackComponentFieldsFragment = (
   { __typename?: 'Track' }
-  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'playbackUrl' | 'createdAt' | 'updatedAt'>
+  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'album' | 'releaseYear' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt'>
+  & { nftData: Maybe<(
+    { __typename?: 'NFTDataType' }
+    & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter'>
+  )> }
 );
 
 export type TracksQueryVariables = Exact<{
@@ -1857,7 +1886,7 @@ export type UpdateTrackMutation = (
     { __typename?: 'UpdateTrackPayload' }
     & { track: (
       { __typename?: 'Track' }
-      & Pick<Track, 'id' | 'title' | 'description' | 'assetUrl' | 'artworkUrl' | 'playbackUrl' | 'transactionAddress'>
+      & TrackComponentFieldsFragment
     ) }
   ) }
 );
@@ -1948,9 +1977,19 @@ export const TrackComponentFieldsFragmentDoc = gql`
   assetUrl
   artworkUrl
   description
+  artist
+  album
+  releaseYear
+  genres
   playbackUrl
   createdAt
   updatedAt
+  nftData {
+    transactionHash
+    tokenId
+    contract
+    minter
+  }
 }
     `;
 export const PostComponentFieldsFragmentDoc = gql`
@@ -2413,17 +2452,11 @@ export const CreateTrackDocument = gql`
     mutation CreateTrack($input: CreateTrackInput!) {
   createTrack(input: $input) {
     track {
-      id
-      title
-      description
-      assetUrl
-      artworkUrl
-      playbackUrl
-      transactionAddress
+      ...TrackComponentFields
     }
   }
 }
-    `;
+    ${TrackComponentFieldsFragmentDoc}`;
 export type CreateTrackMutationFn = Apollo.MutationFunction<CreateTrackMutation, CreateTrackMutationVariables>;
 
 /**
@@ -4027,17 +4060,11 @@ export const UpdateTrackDocument = gql`
     mutation updateTrack($input: UpdateTrackInput!) {
   updateTrack(input: $input) {
     track {
-      id
-      title
-      description
-      assetUrl
-      artworkUrl
-      playbackUrl
-      transactionAddress
+      ...TrackComponentFields
     }
   }
 }
-    `;
+    ${TrackComponentFieldsFragmentDoc}`;
 export type UpdateTrackMutationFn = Apollo.MutationFunction<UpdateTrackMutation, UpdateTrackMutationVariables>;
 
 /**

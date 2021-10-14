@@ -43,7 +43,7 @@ export function MagicProvider({ children }: MagicProviderProps) {
     if (me && me.walletAddress && web3) {
       setAccount(me.walletAddress);
       web3.eth.getBalance(me.walletAddress).then(balance => {
-        setBalance(web3.utils.fromWei(balance, 'ether'));
+        setBalance(Number(web3.utils.fromWei(balance, 'ether')).toFixed(6));
       });
     }
   }, [me, web3]);

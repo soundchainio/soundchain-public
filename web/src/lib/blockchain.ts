@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Metadata, NftToken } from 'types/NftTypes';
+import { Metadata, NftToken, Receipt } from 'types/NftTypes';
 import Web3 from 'web3';
 import { AbiItem } from 'web3-utils';
 import soundchainContract from '../contract/SoundchainCollectible/SoundchainCollectible.json';
@@ -18,33 +18,31 @@ export const getNftTokensFromContract = async (web3: Web3, account: string) => {
   const tokens: NftToken[] = [];
   try {
     // temporary iteration over old contract number so
-    for (const contractAddr of [nftAddress, '0x1Ca9E523a3D4D2A771e22aaAf51EAB33108C6b2C']) {
-      const nftContract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], contractAddr);
-      const marketplaceContract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
-      const numberOfTokens = await nftContract.methods._tokenIdCounter().call();
+    const nftContract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress);
+    const marketplaceContract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
+    const numberOfTokens = await nftContract.methods._tokenIdCounter().call();
 
-      for (let tokenId = 0; tokenId < numberOfTokens; tokenId++) {
-        const balance = await nftContract.methods.balanceOf(account, tokenId).call();
-        if (parseInt(balance) == 0) {
-          break;
-        }
-        const tokenURI = await nftContract.methods.uri(tokenId).call();
-        const { pricePerItem, quantity, startingTime } = await marketplaceContract.methods
-          .listings(nftAddress, tokenId, account)
-          .call();
-        try {
-          const { data } = await axios.get<Metadata>(getIpfsAssetUrl(tokenURI));
-          tokens.push({
-            ...data,
-            tokenId: tokenId.toString(),
-            pricePerItem,
-            quantity,
-            startingTime,
-            contractAddress: contractAddr,
-          });
-        } catch (error) {
-          console.error('Unable to read token meta ', error);
-        }
+    for (let tokenId = 0; tokenId < numberOfTokens; tokenId++) {
+      const balance = await nftContract.methods.balanceOf(account, tokenId).call();
+      if (parseInt(balance) == 0) {
+        continue;
+      }
+      const tokenURI = await nftContract.methods.uri(tokenId).call();
+      const { pricePerItem, quantity, startingTime } = await marketplaceContract.methods
+        .listings(nftAddress, tokenId, account)
+        .call();
+      try {
+        const { data } = await axios.get<Metadata>(getIpfsAssetUrl(tokenURI));
+        tokens.push({
+          ...data,
+          tokenId: tokenId.toString(),
+          pricePerItem,
+          quantity,
+          startingTime,
+          contractAddress: nftAddress,
+        });
+      } catch (error) {
+        console.error('Unable to read token meta ', error);
       }
     }
   } catch (error) {
@@ -116,11 +114,23 @@ export const transferNftToken = (web3: Web3, tokenId: string, from: string, toAd
   );
 };
 
-export const mintNftToken = async (web3: Web3, uri: string, from: string, toAddress: string, amount: number) => {
+export const mintNftToken = (
+  web3: Web3,
+  uri: string,
+  from: string,
+  toAddress: string,
+  amount: number,
+  onTransactionHash: (hash: string) => void,
+  onReceipt: (receipt: Receipt) => void,
+) => {
   const contract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress);
   // https://web3js.readthedocs.io/en/v1.5.2/web3-eth-contract.html#methods-mymethod-send
   // check event emitters transactionHash | confirmation | receipt
-  return await contract.methods.mint(toAddress, amount, uri).send({ from, gas });
+  contract.methods
+    .mint(toAddress, amount, uri)
+    .send({ from, gas })
+    .on('transactionHash', onTransactionHash)
+    .on('receipt', onReceipt);
 };
 
 export const getMaxGasFee = async (web3: Web3) => {
