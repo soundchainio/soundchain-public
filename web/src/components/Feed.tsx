@@ -13,7 +13,7 @@ export const Feed = ({ pageSize }: FeedProps) => {
 
   if (!data) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-2">
         <PostSkeleton />
         <PostSkeleton />
         <PostSkeleton />
@@ -36,7 +36,7 @@ export const Feed = ({ pageSize }: FeedProps) => {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {postIds.map(id => (
         <Post key={id} postId={id} />
       ))}

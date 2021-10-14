@@ -64,6 +64,7 @@ export const Post = ({ postId }: PostProps) => {
               trackId: post.track.id,
               art: post.track.artworkUrl,
               title: post.track.title,
+              artist: post.track.artist,
             }}
           />
         )}
