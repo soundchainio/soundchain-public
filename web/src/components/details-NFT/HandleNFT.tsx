@@ -48,7 +48,9 @@ export const HandleNFT = ({ isOwner }: HandleNFTProps) => {
             <div className="text-xs text-gray-80 mt-1 font-bold">$38.37 USD</div>
           </div>
           <div className="flex-1 flex items-center justify-center">
-            <Button variant="buy-nft">BUY NFT</Button>
+            <Button variant="buy-nft" onClick={() => router.push(`${router.asPath}/buy`)}>
+              BUY NFT
+            </Button>
           </div>
         </div>
       )}
