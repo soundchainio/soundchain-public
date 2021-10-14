@@ -125,6 +125,7 @@ export const CreateModal = () => {
         `ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`,
         account,
         account,
+        1,
       );
       setMintingState(undefined);
       setTransactionHash(mintResult.transactionHash);
