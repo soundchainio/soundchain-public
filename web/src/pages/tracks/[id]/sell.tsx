@@ -40,10 +40,10 @@ export const getServerSideProps: GetServerSideProps<TrackPageProps, TrackPagePar
     return { notFound: true };
   }
 
-  return cacheFor(TrackPage, { trackId }, context, apolloClient);
+  return cacheFor(SellPage, { trackId }, context, apolloClient);
 };
 
-export default function TrackPage({ trackId }: TrackPageProps) {
+export default function SellPage({ trackId }: TrackPageProps) {
   const { data } = useTrackQuery({ variables: { id: trackId } });
   const { account, web3 } = useMagicContext();
 
