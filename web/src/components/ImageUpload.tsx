@@ -3,7 +3,7 @@ import { useUpload } from 'hooks/useUpload';
 import { Upload } from 'icons/Upload';
 import Image from 'next/image';
 import Dropzone from 'react-dropzone';
-import { videoMimeTypes } from './NftCard';
+import { imageMimeTypes, videoMimeTypes } from 'utils/mimeTypes';
 
 export interface ImageUploadProps extends Omit<React.ComponentPropsWithoutRef<'div'>, 'onChange'> {
   maxNumberOfFiles?: number;
@@ -15,7 +15,7 @@ export interface ImageUploadProps extends Omit<React.ComponentPropsWithoutRef<'d
 }
 
 const defaultMaxFileSize = 1024 * 1024 * 100; // 100Mb
-const acceptedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', ...videoMimeTypes];
+const acceptedMimeTypes = [...imageMimeTypes, ...videoMimeTypes];
 
 export function ImageUpload({
   className,

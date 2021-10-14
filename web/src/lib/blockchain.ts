@@ -76,6 +76,8 @@ export const transferNftToken = (web3: Web3, tokenId: string, fromAddress: strin
 
 export const mintNftToken = async (web3: Web3, uri: string, fromAddress: string, toAddress: string) => {
   const contract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress);
+  // https://web3js.readthedocs.io/en/v1.5.2/web3-eth-contract.html#methods-mymethod-send
+  // check event emitters transactionHash | confirmation | receipt
   return await contract.methods.safeMint(toAddress, uri).send({ from: fromAddress, gas });
 };
 

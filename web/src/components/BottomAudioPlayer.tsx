@@ -4,8 +4,8 @@ import Hls from 'hls.js';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { Pause } from 'icons/PauseBottomAudioPlayer';
 import { Play } from 'icons/PlayBottomAudioPlayer';
-import Image from 'next/image';
 import { useEffect, useRef } from 'react';
+import Asset from './Asset';
 
 export const BottomAudioPlayer = () => {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -65,20 +65,15 @@ export const BottomAudioPlayer = () => {
     }
   }, [progressFromSlider, setProgressStateFromSlider]);
 
-  function onLoadedMetadata() {
-    if (audioRef.current) {
-      audioRef.current.currentTime = 0;
-      setDurationState(audioRef.current.duration);
+  function handleTimeUpdate() {
+    if (audioRef?.current?.currentTime) {
+      setProgressState(Math.floor(audioRef.current.currentTime));
     }
   }
 
-  function setupProgressListener() {
-    if (audioRef.current) {
-      audioRef.current.addEventListener('timeupdate', () => {
-        if (audioRef?.current?.currentTime) {
-          setProgressState(Math.floor(audioRef.current.currentTime));
-        }
-      });
+  function handleDurationChange() {
+    if (audioRef.current && audioRef.current.duration) {
+      setDurationState(audioRef.current.duration);
     }
   }
 
@@ -103,9 +98,7 @@ export const BottomAudioPlayer = () => {
           onClick={() => dispatchShowAudioPlayerModal(true)}
         >
           <div className="h-10 w-10 bg-gray-80 relative flex items-center">
-            {currentSong.art && (
-              <Image src={currentSong.art} alt="art cover" layout="fill" className="m-auto object-cover priority" />
-            )}
+            {currentSong.art && <Asset src={currentSong.art} />}
           </div>
           <div className="text-white text-xs flex flex-col flex-1 items-start">
             <h2 className="font-black">{currentSong.title || 'Unknown title'}</h2>
@@ -125,8 +118,8 @@ export const BottomAudioPlayer = () => {
         ref={audioRef}
         onPlay={() => setPlayingState(true)}
         onPause={() => setPlayingState(false)}
-        onLoadedMetadata={onLoadedMetadata}
-        onTimeUpdate={setupProgressListener}
+        onTimeUpdate={handleTimeUpdate}
+        onDurationChange={handleDurationChange}
         onEnded={handleEndedSong}
         className="opacity-0 h-0 w-0"
       />
