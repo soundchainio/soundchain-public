@@ -1,4 +1,4 @@
-name: Deploy Development API
+name: Remove Development API
 
 on:
   workflow_dispatch:
