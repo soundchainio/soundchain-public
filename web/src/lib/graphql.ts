@@ -130,6 +130,10 @@ export type CreateTrackInput = {
   description?: Maybe<Scalars['String']>;
   assetUrl: Scalars['String'];
   artworkUrl?: Maybe<Scalars['String']>;
+  artist?: Maybe<Scalars['String']>;
+  album?: Maybe<Scalars['String']>;
+  releaseYear?: Maybe<Scalars['Float']>;
+  genres?: Maybe<Array<Genre>>;
 };
 
 export type CreateTrackPayload = {
@@ -825,6 +829,10 @@ export type Track = {
   description: Maybe<Scalars['String']>;
   assetUrl: Scalars['String'];
   artworkUrl: Maybe<Scalars['String']>;
+  artist: Maybe<Scalars['String']>;
+  album: Maybe<Scalars['String']>;
+  releaseYear: Maybe<Scalars['Float']>;
+  genres: Maybe<Array<Genre>>;
   transactionAddress: Maybe<Scalars['String']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
@@ -1127,7 +1135,7 @@ export type CreateTrackMutation = (
     { __typename?: 'CreateTrackPayload' }
     & { track: (
       { __typename?: 'Track' }
-      & Pick<Track, 'id' | 'title' | 'description' | 'assetUrl' | 'artworkUrl' | 'playbackUrl' | 'transactionAddress'>
+      & TrackComponentFieldsFragment
     ) }
   ) }
 );
@@ -1631,7 +1639,7 @@ export type TrackQuery = (
 
 export type TrackComponentFieldsFragment = (
   { __typename?: 'Track' }
-  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'playbackUrl' | 'createdAt' | 'updatedAt'>
+  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'album' | 'releaseYear' | 'genres' | 'transactionAddress' | 'playbackUrl' | 'createdAt' | 'updatedAt'>
 );
 
 export type TracksQueryVariables = Exact<{
@@ -1857,7 +1865,7 @@ export type UpdateTrackMutation = (
     { __typename?: 'UpdateTrackPayload' }
     & { track: (
       { __typename?: 'Track' }
-      & Pick<Track, 'id' | 'title' | 'description' | 'assetUrl' | 'artworkUrl' | 'playbackUrl' | 'transactionAddress'>
+      & TrackComponentFieldsFragment
     ) }
   ) }
 );
@@ -1948,6 +1956,11 @@ export const TrackComponentFieldsFragmentDoc = gql`
   assetUrl
   artworkUrl
   description
+  artist
+  album
+  releaseYear
+  genres
+  transactionAddress
   playbackUrl
   createdAt
   updatedAt
@@ -2413,17 +2426,11 @@ export const CreateTrackDocument = gql`
     mutation CreateTrack($input: CreateTrackInput!) {
   createTrack(input: $input) {
     track {
-      id
-      title
-      description
-      assetUrl
-      artworkUrl
-      playbackUrl
-      transactionAddress
+      ...TrackComponentFields
     }
   }
 }
-    `;
+    ${TrackComponentFieldsFragmentDoc}`;
 export type CreateTrackMutationFn = Apollo.MutationFunction<CreateTrackMutation, CreateTrackMutationVariables>;
 
 /**
@@ -4027,17 +4034,11 @@ export const UpdateTrackDocument = gql`
     mutation updateTrack($input: UpdateTrackInput!) {
   updateTrack(input: $input) {
     track {
-      id
-      title
-      description
-      assetUrl
-      artworkUrl
-      playbackUrl
-      transactionAddress
+      ...TrackComponentFields
     }
   }
 }
-    `;
+    ${TrackComponentFieldsFragmentDoc}`;
 export type UpdateTrackMutationFn = Apollo.MutationFunction<UpdateTrackMutation, UpdateTrackMutationVariables>;
 
 /**

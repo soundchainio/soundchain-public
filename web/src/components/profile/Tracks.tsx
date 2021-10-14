@@ -55,7 +55,14 @@ export const Tracks = ({ className, profileId, pageSize = 10 }: TracksProps) => 
 
   const handleOnPlayClicked = (song: Song, index: number) => {
     const list = nodes.map(
-      node => ({ trackId: node.id, src: node.playbackUrl, art: node.artworkUrl, title: node.title } as Song),
+      node =>
+        ({
+          trackId: node.id,
+          src: node.playbackUrl,
+          art: node.artworkUrl,
+          title: node.title,
+          artist: node.artist,
+        } as Song),
     );
     playlistState(list, index);
   };

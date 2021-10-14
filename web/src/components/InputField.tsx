@@ -3,7 +3,7 @@ import { Label } from './Label';
 
 interface InputFieldProps extends React.ComponentPropsWithoutRef<'input'> {
   name: string;
-  type: 'text' | 'email' | 'password';
+  type: 'text' | 'email' | 'password' | 'number';
   label?: string;
   placeholder?: string;
   icon?: (props: React.ComponentProps<'svg'>) => JSX.Element;
@@ -29,6 +29,6 @@ export const InputField = ({ label, icon: Icon, ...props }: InputFieldProps) => 
         </div>
       </div>
       {meta.touched && meta.error ? <div className="text-green-500 pl-1 text-sm">{meta.error}</div> : null}
-    </div >
+    </div>
   );
 };

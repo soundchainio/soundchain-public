@@ -63,6 +63,7 @@ export const Post = ({ postId }: PostProps) => {
             art={post.track.artworkUrl}
             src={post.track.playbackUrl}
             title={post.track.title}
+            artist={post.track.artist}
           />
         )}
         <PostStats

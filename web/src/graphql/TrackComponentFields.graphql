@@ -5,6 +5,11 @@ fragment TrackComponentFields on Track {
   assetUrl
   artworkUrl
   description
+  artist
+  album
+  releaseYear
+  genres
+  transactionAddress
   playbackUrl
   createdAt
   updatedAt

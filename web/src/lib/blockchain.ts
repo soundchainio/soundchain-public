@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Metadata, NftToken } from 'types/NftTypes';
+import { Metadata, NftToken, Receipt } from 'types/NftTypes';
 import Web3 from 'web3';
 import { AbiItem } from 'web3-utils';
 import soundchainContract from '../contract/SoundchainCollectible.sol/SoundchainCollectible.json';
@@ -74,11 +74,20 @@ export const transferNftToken = (web3: Web3, tokenId: string, fromAddress: strin
   );
 };
 
-export const mintNftToken = async (web3: Web3, uri: string, fromAddress: string, toAddress: string) => {
+export const mintNftToken = (
+  web3: Web3,
+  uri: string,
+  fromAddress: string,
+  toAddress: string,
+  onTransactionHash: (hash: string) => void,
+  onReceipt: (receipt: Receipt) => void,
+) => {
   const contract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress);
-  // https://web3js.readthedocs.io/en/v1.5.2/web3-eth-contract.html#methods-mymethod-send
-  // check event emitters transactionHash | confirmation | receipt
-  return await contract.methods.safeMint(toAddress, uri).send({ from: fromAddress, gas });
+  contract.methods
+    .safeMint(toAddress, uri)
+    .send({ from: fromAddress, gas })
+    .on('transactionHash', onTransactionHash)
+    .on('receipt', onReceipt);
 };
 
 export const getMaxGasFee = async (web3: Web3) => {
