@@ -98,7 +98,7 @@ export const TrackMetadataForm = ({ initialValues = defaultValues, handleSubmit 
                 {uploadingArt ? 'UPLOADING...' : 'CHANGE ARTWORK'}
               </span>
             </div>
-            <div className="flex-1">
+            <div className="flex flex-col flex-1 gap-2">
               <InputField name="title" type="text" label="TRACK TITLE" />
               <InputField name="artist" type="text" label="ARTIST" />
             </div>
