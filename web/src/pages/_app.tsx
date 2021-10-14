@@ -1,15 +1,21 @@
+import '@reach/slider/styles.css';
 import * as Sentry from '@sentry/react';
 import { Integrations } from '@sentry/tracing';
+import { BottomAudioPlayer } from 'components/BottomAudioPlayer';
 import { CheckBodyScroll } from 'components/CheckBodyScroll';
 import { Favicons } from 'components/Favicons';
+import { AudioPlayerModal } from 'components/modals/AudioPlayerModal';
 import { StateProvider } from 'contexts';
+import { AudioPlayerProvider } from 'hooks/useAudioPlayer';
 import { MagicProvider } from 'hooks/useMagicContext';
 import { ApolloProvider } from 'lib/apollo';
 import type { AppProps } from 'next/app';
 import Head from 'next/head';
 import Router from 'next/router';
 import NProgress from 'nprogress';
+import React from 'react';
 import 'styles/audio-player.css';
+import 'styles/bottom-audio-player.css';
 import 'styles/globals.css';
 import 'styles/loading-ring.css';
 import 'styles/nprogress.css';
@@ -40,8 +46,16 @@ function SoundchainApp({ Component, pageProps }: AppProps) {
       <ApolloProvider pageProps={pageProps}>
         <StateProvider>
           <MagicProvider>
-            <CheckBodyScroll />
-            <Component {...pageProps} />
+            <AudioPlayerProvider>
+              <CheckBodyScroll />
+              <div className="h-full flex flex-col">
+                <div className="flex-1 max-h-full overflow-y-auto">
+                  <Component {...pageProps} />
+                </div>
+                <BottomAudioPlayer />
+                <AudioPlayerModal />
+              </div>
+            </AudioPlayerProvider>
           </MagicProvider>
         </StateProvider>
       </ApolloProvider>

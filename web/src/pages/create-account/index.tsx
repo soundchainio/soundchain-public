@@ -2,7 +2,6 @@ import { AuthLayout } from 'components/AuthLayout';
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { InputField } from 'components/InputField';
-import { Label } from 'components/Label';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Form, Formik, FormikHelpers } from 'formik';
 import { useMagicContext } from 'hooks/useMagicContext';
@@ -91,13 +90,10 @@ export default function CreateAccountPage() {
         <Form className="flex flex-col flex-1" autoComplete="off">
           <div className="flex flex-col mb-auto space-y-6">
             <div className="space-y-3">
-              <InputField type="text" name="displayName" placeholder="Name" />
+              <InputField label="Name" type="text" name="displayName" />
             </div>
             <div className="space-y-3">
-              <Label textSize="xs">
-                Enter username. <i>(Only letters and numbers allowed)</i>
-              </Label>
-              <InputField type="text" name="handle" placeholder="Username" />
+              <InputField label="Enter username. (Only letters and numbers allowed)" type="text" name="handle" />
             </div>
           </div>
           <Button type="submit" loading={loading} disabled={loading}>

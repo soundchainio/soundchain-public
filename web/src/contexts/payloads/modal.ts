@@ -32,6 +32,9 @@ export interface ShowReactionsPayload {
 export interface ShowCreatePayload {
   show: boolean;
 }
+export interface ShowAudioPlayerPayload {
+  show: boolean;
+}
 
 export type ModalPayload =
   | ShowNewPostPayload
@@ -40,4 +43,5 @@ export type ModalPayload =
   | ShowAuthorActionsPayload
   | ShowUnderDevelopmentPayload
   | ShowReactionsPayload
-  | ShowCreatePayload;
+  | ShowCreatePayload
+  | ShowAudioPlayerPayload;

@@ -1,13 +1,7 @@
 mutation updateTrack($input: UpdateTrackInput!) {
   updateTrack(input: $input) {
     track {
-      id
-      title
-      description
-      assetUrl
-      artworkUrl
-      playbackUrl
-      transactionAddress
+      ...TrackComponentFields
     }
   }
 }

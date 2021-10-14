@@ -2,20 +2,22 @@ import classNames from 'classnames';
 import { useUpload } from 'hooks/useUpload';
 import { Upload } from 'icons/Upload';
 import Image from 'next/image';
+import { useEffect } from 'react';
 import Dropzone from 'react-dropzone';
-import { videoMimeTypes } from './NftCard';
+import { imageMimeTypes, videoMimeTypes } from 'utils/mimeTypes';
 
 export interface ImageUploadProps extends Omit<React.ComponentPropsWithoutRef<'div'>, 'onChange'> {
+  onChange(value: string): void;
+  onUpload?(isUploading: boolean): void;
   maxNumberOfFiles?: number;
   maxFileSize?: number;
   value?: string;
-  onChange(value: string): void;
   rounded?: boolean;
   artwork?: boolean;
 }
 
-const defaultMaxFileSize = 1024 * 1024 * 100; // 100Mb
-const acceptedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', ...videoMimeTypes];
+const defaultMaxFileSize = 1024 * 1024 * 30; // 30Mb
+const acceptedMimeTypes = [...imageMimeTypes, ...videoMimeTypes];
 
 export function ImageUpload({
   className,
@@ -23,6 +25,7 @@ export function ImageUpload({
   maxFileSize = defaultMaxFileSize,
   value,
   onChange,
+  onUpload,
   children,
   rounded,
   artwork = false,
@@ -30,6 +33,10 @@ export function ImageUpload({
 }: ImageUploadProps) {
   const { preview, fileType, uploading, upload } = useUpload(value, onChange);
   const thumbnail = preview || value;
+
+  useEffect(() => {
+    onUpload && onUpload(uploading);
+  }, [uploading, onUpload]);
 
   return (
     <Dropzone

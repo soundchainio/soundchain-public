@@ -36,5 +36,7 @@ export const useModalDispatch = () => {
         payload: { postId, top, total },
       }),
     dispatchShowCreateModal: (show: boolean) => dispatch({ type: ModalActionTypes.SHOW_CREATE, payload: { show } }),
+    dispatchShowAudioPlayerModal: (show: boolean) =>
+      dispatch({ type: ModalActionTypes.SHOW_AUDIO_PLAYER, payload: { show } }),
   };
 };

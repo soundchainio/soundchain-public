@@ -7,44 +7,9 @@ import { useMimeTypeLazyQuery, useMimeTypeQuery } from 'lib/graphql';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { NftToken } from 'types/NftTypes';
+import { audioMimeTypes, videoMimeTypes } from 'utils/mimeTypes';
 import Web3 from 'web3';
 import * as yup from 'yup';
-import { Label } from './Label';
-
-export const audioMimeTypes = [
-  'audio/basic',
-  'audio/mid',
-  'audio/mp4',
-  'audio/mpeg',
-  'audio/ogg',
-  'audio/vnd.wav',
-  'audio/vorbis',
-  'audio/wav',
-  'audio/wave',
-  'audio/webm',
-  'audio/x-aiff',
-  'audio/x-mpegurl',
-  'audio/x-pn-wav',
-  'audio/x-wav',
-  'audio/L24',
-];
-
-export const videoMimeTypes = [
-  'application/vnd.apple.mpegurl',
-  'application/x-mpegurl',
-  'video/3gpp',
-  'video/mp2t',
-  'video/mp4',
-  'video/mpeg',
-  'video/ms-asf',
-  'video/ogg',
-  'video/quicktime',
-  'video/webm',
-  'video/x-flv',
-  'video/x-m4v',
-  'video/x-ms-wmv',
-  'video/x-msvideo',
-];
 
 interface NftCardProps {
   account: string;
@@ -80,7 +45,7 @@ export const NFTCard = ({ account, web3, nftToken }: NftCardProps) => {
   const handleList = async (web3: Web3, tokenId: string, price: number) => {
     const confirmed = confirm('Hey! This will list this NFT, you sure?');
     if (confirmed) {
-      const result = await listItem(web3, tokenId, account, price);
+      const result = await listItem(web3, tokenId, 1, account, price);
       if (result) {
         alert('Token list requested!');
       }
@@ -146,8 +111,7 @@ export const NFTCard = ({ account, web3, nftToken }: NftCardProps) => {
                 List
               </Button>
               <div className="flex items-center gap-2">
-                <Label>Price</Label>
-                <InputField style={{ maxWidth: '60px' }} name="price" type="text" />
+                <InputField label="Price" style={{ maxWidth: '60px' }} name="price" type="text" />
               </div>
             </div>
           </Form>
@@ -228,7 +192,7 @@ const TransferForm = ({ name, web3, fromAddress, tokenId, onCancel }: TransferFo
   const [loading, setLoading] = useState(false);
   const handleSubmit = async (values: FormValues) => {
     setLoading(true);
-    const result = await transferNftToken(web3, tokenId, fromAddress, values.to);
+    const result = await transferNftToken(web3, tokenId, fromAddress, values.to, 1);
     if (result) {
       alert('Token transfer requested!');
     }

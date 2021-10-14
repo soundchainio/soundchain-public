@@ -11,6 +11,10 @@
 
 - `yarn dev`
 
+## Smart Contracts
+
+The smart contracts and scripts are located at this [repo](https://github.com/agencyenterprise/soundchain-contracts)
+
 ### Recommended
 
 Turn on some VSCode actions on save. In your settings.json file add:
