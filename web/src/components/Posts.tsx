@@ -18,7 +18,7 @@ export const Posts = ({ className, profileId }: PostsProps) => {
 
   if (!data) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-2">
         <PostSkeleton />
         <PostSkeleton />
         <PostSkeleton />
@@ -27,7 +27,7 @@ export const Posts = ({ className, profileId }: PostsProps) => {
   }
 
   return (
-    <div className={classNames('space-y-3', className)}>
+    <div className={classNames('space-y-2', className)}>
       {data.posts.nodes.map(({ id }) => (
         <Post key={id} postId={id} />
       ))}

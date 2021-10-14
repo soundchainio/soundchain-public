@@ -3,8 +3,8 @@ import { BaseEmoji, Picker } from 'emoji-mart';
 import { useState } from 'react';
 import { PostLinkType } from 'types/PostLinkType';
 import { LinksModal } from './LinksModal';
-import { getBodyCharacterCount, maxLength } from './PostModal';
 import { FormValues } from './PostForm';
+import { getBodyCharacterCount, maxLength } from './PostModal';
 
 interface PostBarProps {
   onEmojiPickerClick: () => void;
@@ -52,7 +52,7 @@ export const PostBar = ({
   };
 
   return (
-    <div className="p-4 flex items-center bg-gray-25">
+    <div className="p-4 flex items-center bg-gray-15">
       <div className="text-center w-16" onClick={onEmojiPickerClick}>
         {isEmojiPickerVisible ? '❌' : '😃'}
       </div>

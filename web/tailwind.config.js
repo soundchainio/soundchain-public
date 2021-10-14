@@ -11,6 +11,9 @@ module.exports = {
       container: {
         center: true,
       },
+      spacing: {
+        full: '100%',
+      },
       colors: {
         gray: {
           10: '#101010',
