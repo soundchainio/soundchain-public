@@ -361,27 +361,27 @@ resources:
           - !Ref PrivateRouteTableTwo
         ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
         VpcId: !Ref VPC
-    DBCluster:
-      Type: AWS::DocDB::DBCluster
-      DeletionPolicy: Delete
-      Properties:
-        DBClusterIdentifier:
-          Fn::Sub: DB-${AWS::StackName}
-        DBSubnetGroupName:
-          Ref: DocDBSubnetGroup
-        VpcSecurityGroupIds:
-          - Fn::GetAtt:
-              - DocumentDBSecurityGroup
-              - GroupId
-        MasterUsername: ${env:DATABASE_USERNAME}
-        MasterUserPassword: ${env:DATABASE_PASSWORD}
-    DBInstance:
-      Type: AWS::DocDB::DBInstance
-      Properties:
-        DBClusterIdentifier:
-          Ref: DBCluster
-        DBInstanceClass: db.t3.medium
-      DependsOn: DBCluster
+    # DBCluster:
+    #   Type: AWS::DocDB::DBCluster
+    #   DeletionPolicy: Delete
+    #   Properties:
+    #     DBClusterIdentifier:
+    #       Fn::Sub: DB-${AWS::StackName}
+    #     DBSubnetGroupName:
+    #       Ref: DocDBSubnetGroup
+    #     VpcSecurityGroupIds:
+    #       - Fn::GetAtt:
+    #           - DocumentDBSecurityGroup
+    #           - GroupId
+    #     MasterUsername: ${env:DATABASE_USERNAME}
+    #     MasterUserPassword: ${env:DATABASE_PASSWORD}
+    # DBInstance:
+    #   Type: AWS::DocDB::DBInstance
+    #   Properties:
+    #     DBClusterIdentifier:
+    #       Ref: DBCluster
+    #     DBInstanceClass: db.t3.medium
+    #   DependsOn: DBCluster
     UploadBucket:
       Type: AWS::S3::Bucket
       Properties:
