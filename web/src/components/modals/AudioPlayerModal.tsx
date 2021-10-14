@@ -55,9 +55,9 @@ export const AudioPlayerModal = () => {
       onClose={handleClose}
     >
       <div className="flex flex-col h-full justify-center items-center text-white">
-        <div className="post-audio-player w-52 sm:w-72">
+        <div className="post-audio-player w-full sm:max-w-xs px-8 sm:px-0">
           <div className="flex justify-center">
-            <div className="w-52 h-52 sm:w-72 sm:h-72 relative flex bg-gray-80 rounded-lg overflow-hidden">
+            <div className="relative w-3/4 sm:w-full after:block after:pb-full flex bg-gray-80 rounded-lg overflow-hidden">
               {currentSong.art && <Asset src={currentSong.art} />}
             </div>
           </div>
