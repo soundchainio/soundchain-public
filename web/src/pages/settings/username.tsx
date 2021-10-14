@@ -1,7 +1,6 @@
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { InputField } from 'components/InputField';
-import { Label } from 'components/Label';
 import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Form, Formik } from 'formik';
@@ -56,8 +55,7 @@ export default function SettingsUsernamePage() {
         <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={onSubmit}>
           <Form className="flex flex-1 flex-col space-y-6">
             <div>
-              <Label>Username</Label>
-              <InputField type="text" name="handle" placeholder="Username" />
+              <InputField label="Username" type="text" name="handle" placeholder="Username" />
             </div>
             <p className="text-gray-50 flex-grow">
               Usernames can only have letters and numbers and can be a max of 10 characters.

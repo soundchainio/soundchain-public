@@ -1,7 +1,6 @@
 import { Button } from 'components/Button';
 import { ImageUpload } from 'components/ImageUpload';
 import { InputField } from 'components/InputField';
-import { Label } from 'components/Label';
 import { TextareaField } from 'components/TextareaField';
 import { Form, Formik } from 'formik';
 import { useMagicContext } from 'hooks/useMagicContext';
@@ -100,27 +99,21 @@ export const TrackMetadataForm = ({ initialValues = defaultValues, handleSubmit 
               </span>
             </div>
             <div className="flex-1">
-              <Label className="font-bold">TRACK TITLE</Label>
-              <InputField name="title" type="text" />
-              <Label className="font-bold">ARTIST</Label>
-              <InputField name="artist" type="text" />
+              <InputField name="title" type="text" label="TRACK TITLE" />
+              <InputField name="artist" type="text" label="ARTIST" />
             </div>
           </div>
           <div className="px-4">
-            <Label className="font-bold">DESCRIPTION</Label>
-            <TextareaField rows={3} name="description" />
+            <TextareaField rows={3} name="description" label="DESCRIPTION" />
           </div>
           <div className="px-4">
-            <Label className="font-bold">ALBUM</Label>
-            <InputField name="album" type="text" />
+            <InputField name="album" type="text" label="ALBUM" />
           </div>
           <div className="px-4">
-            <Label className="font-bold">RELEASE YEAR</Label>
-            <InputField name="releaseYear" type="number" />
+            <InputField name="releaseYear" type="number" label="RELEASE YEAR" />
           </div>
           <div className="px-4">
-            <Label className="font-bold">QUANTITY</Label>
-            <InputField name="quantity" type="number" />
+            <InputField name="quantity" type="number" label="QUANTITY" />
           </div>
           <div className="flex items-center justify-between py-3 px-4 mt-4" style={{ backgroundColor: '#202020' }}>
             <div className="flex flex-col gap-2">
