@@ -18,33 +18,31 @@ export const getNftTokensFromContract = async (web3: Web3, account: string) => {
   const tokens: NftToken[] = [];
   try {
     // temporary iteration over old contract number so
-    for (const contractAddr of [nftAddress, '0x1Ca9E523a3D4D2A771e22aaAf51EAB33108C6b2C']) {
-      const nftContract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], contractAddr);
-      const marketplaceContract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
-      const numberOfTokens = await nftContract.methods._tokenIdCounter().call();
+    const nftContract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress);
+    const marketplaceContract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
+    const numberOfTokens = await nftContract.methods._tokenIdCounter().call();
 
-      for (let tokenId = 0; tokenId < numberOfTokens; tokenId++) {
-        const balance = await nftContract.methods.balanceOf(account, tokenId).call();
-        if (parseInt(balance) == 0) {
-          break;
-        }
-        const tokenURI = await nftContract.methods.uri(tokenId).call();
-        const { pricePerItem, quantity, startingTime } = await marketplaceContract.methods
-          .listings(nftAddress, tokenId, account)
-          .call();
-        try {
-          const { data } = await axios.get<Metadata>(getIpfsAssetUrl(tokenURI));
-          tokens.push({
-            ...data,
-            tokenId: tokenId.toString(),
-            pricePerItem,
-            quantity,
-            startingTime,
-            contractAddress: contractAddr,
-          });
-        } catch (error) {
-          console.error('Unable to read token meta ', error);
-        }
+    for (let tokenId = 0; tokenId < numberOfTokens; tokenId++) {
+      const balance = await nftContract.methods.balanceOf(account, tokenId).call();
+      if (parseInt(balance) == 0) {
+        continue;
+      }
+      const tokenURI = await nftContract.methods.uri(tokenId).call();
+      const { pricePerItem, quantity, startingTime } = await marketplaceContract.methods
+        .listings(nftAddress, tokenId, account)
+        .call();
+      try {
+        const { data } = await axios.get<Metadata>(getIpfsAssetUrl(tokenURI));
+        tokens.push({
+          ...data,
+          tokenId: tokenId.toString(),
+          pricePerItem,
+          quantity,
+          startingTime,
+          contractAddress: nftAddress,
+        });
+      } catch (error) {
+        console.error('Unable to read token meta ', error);
       }
     }
   } catch (error) {

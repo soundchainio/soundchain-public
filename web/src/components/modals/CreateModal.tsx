@@ -77,7 +77,7 @@ export const CreateModal = () => {
 
   const handleSubmit = async (values: FormValues) => {
     if (file && web3 && account) {
-      const { title, artworkUrl, description } = values;
+      const { title, artworkUrl, description, quantity, album, artist, genres, releaseYear } = values;
 
       setMintingState('Uploading track file');
       const assetUrl = await upload([file]);
@@ -85,7 +85,7 @@ export const CreateModal = () => {
 
       setMintingState('Creating streaming from track');
       const { data } = await createTrack({
-        variables: { input: { assetUrl, ...values } },
+        variables: { input: { assetUrl, title, album, artist, artworkUrl, description, genres, releaseYear } },
       });
       const track = data?.createTrack.track;
 
@@ -112,6 +112,10 @@ export const CreateModal = () => {
         description,
         name: title,
         asset: `ipfs://${assetPinResult?.pinToIPFS.cid}`,
+        album,
+        artist,
+        releaseYear,
+        genres,
       };
 
       if (artUrl) {
@@ -143,7 +147,9 @@ export const CreateModal = () => {
           variables: {
             input: {
               trackId: track.id,
-              transactionAddress: hash,
+              nftData: {
+                transactionHash: hash,
+              },
             },
           },
           refetchQueries: [FeedDocument],
@@ -155,6 +161,19 @@ export const CreateModal = () => {
 
       const onReceipt = (receipt: Receipt) => {
         if (receipt.status) {
+          updateTrack({
+            variables: {
+              input: {
+                trackId: track.id,
+                nftData: {
+                  minter: account,
+                  contract: receipt.to,
+                  tokenId: receipt.events.TransferSingle.returnValues.id,
+                  quantity: parseInt(receipt.events.TransferSingle.returnValues.value),
+                },
+              },
+            },
+          });
           setMiningState(MiningState.DONE);
         } else {
           setMiningState(MiningState.ERROR);
@@ -165,7 +184,7 @@ export const CreateModal = () => {
         `ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`,
         account,
         account,
-        1,
+        quantity,
         onTransactionHash,
         onReceipt,
       );
@@ -275,6 +294,7 @@ export const CreateModal = () => {
     description: fileMetadata?.comment ? fileMetadata.comment[0] : '',
     album: fileMetadata?.album,
     releaseYear: fileMetadata?.year,
+    quantity: 1,
   };
 
   return (

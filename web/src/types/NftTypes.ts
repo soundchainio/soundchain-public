@@ -3,6 +3,10 @@ export interface Metadata {
   description: string;
   asset: string;
   art?: string;
+  album?: string;
+  artist?: string;
+  genres?: string[];
+  releaseYear?: number;
   attributes?: { trait_type: string; trait_value: string }[];
 }
 
@@ -15,12 +19,14 @@ export interface NftToken extends Metadata {
 }
 
 export interface ReturnValues {
+  operator: string;
   from: string;
   to: string;
-  tokenId: string;
+  id: string;
+  value: string;
 }
 
-export interface Transfer {
+export interface TransferSingle {
   address: string;
   blockNumber: number;
   transactionHash: string;
@@ -35,7 +41,7 @@ export interface Transfer {
 }
 
 export interface Events {
-  Transfer: Transfer;
+  TransferSingle: TransferSingle;
 }
 
 export interface Receipt {

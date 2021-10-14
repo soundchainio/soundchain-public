@@ -20,6 +20,7 @@ export interface FormValues {
   releaseYear?: number;
   genres?: Genre[];
   artworkUrl?: string;
+  quantity: number;
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
@@ -30,12 +31,12 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   releaseYear: yup.number(),
   genres: yup.array(),
   artworkUrl: yup.string(),
+  quantity: yup.number().required(),
 });
 
 interface Props {
   initialValues?: FormValues;
   handleSubmit: (values: FormValues) => void;
-  setCoverPhotoUrl?: (val: string) => void;
 }
 
 const defaultValues: FormValues = {
@@ -43,27 +44,33 @@ const defaultValues: FormValues = {
   description: '',
   artist: '',
   album: '',
-  releaseYear: 0,
+  releaseYear: new Date().getFullYear(),
   genres: [],
   artworkUrl: '',
+  quantity: 1,
 };
 
-export const TrackMetadataForm = ({ initialValues = defaultValues, handleSubmit, setCoverPhotoUrl }: Props) => {
+export const TrackMetadataForm = ({ initialValues = defaultValues, handleSubmit }: Props) => {
   const { web3, balance } = useMagicContext();
   const [maxGasFee, setMaxGasFee] = useState<string>();
   const [enoughFunds, setEnoughFunds] = useState<boolean>();
+  const [uploadingArt, setUploadingArt] = useState<boolean>();
 
   useEffect(() => {
-    if (web3) {
-      getMaxGasFee(web3).then(setMaxGasFee);
-    }
+    const gasCheck = () => {
+      if (web3) {
+        getMaxGasFee(web3).then(setMaxGasFee);
+      }
+    };
+    const interval = setInterval(() => {
+      gasCheck();
+    }, 10 * 1000);
+    gasCheck();
+    return () => clearInterval(interval);
   }, [web3]);
 
   const onArtworkUpload = (val: string, setFieldValue: (field: string, value: string) => void) => {
     setFieldValue('artworkUrl', val);
-    if (setCoverPhotoUrl) {
-      setCoverPhotoUrl(val);
-    }
   };
 
   useEffect(() => {
@@ -83,8 +90,14 @@ export const TrackMetadataForm = ({ initialValues = defaultValues, handleSubmit,
         <Form className="flex flex-col gap-4 h-full">
           <div className="flex items-center px-4">
             <div className="h-30 w-30 mr-2 flex flex-col items-center">
-              <ImageUpload artwork={true} onChange={val => onArtworkUpload(val, setFieldValue)} />
-              <span className="text-gray-80 underline text-xs mt-2 font-bold">CHANGE ARTWORK</span>
+              <ImageUpload
+                artwork={true}
+                onChange={val => onArtworkUpload(val, setFieldValue)}
+                onUpload={setUploadingArt}
+              />
+              <span className="text-gray-80 underline text-xs mt-2 font-bold">
+                {uploadingArt ? 'UPLOADING...' : 'CHANGE ARTWORK'}
+              </span>
             </div>
             <div className="flex-1">
               <Label className="font-bold">TRACK TITLE</Label>
@@ -104,6 +117,10 @@ export const TrackMetadataForm = ({ initialValues = defaultValues, handleSubmit,
           <div className="px-4">
             <Label className="font-bold">RELEASE YEAR</Label>
             <InputField name="releaseYear" type="number" />
+          </div>
+          <div className="px-4">
+            <Label className="font-bold">QUANTITY</Label>
+            <InputField name="quantity" type="number" />
           </div>
           <div className="flex items-center justify-between py-3 px-4 mt-4" style={{ backgroundColor: '#202020' }}>
             <div className="flex flex-col gap-2">
@@ -135,16 +152,24 @@ export const TrackMetadataForm = ({ initialValues = defaultValues, handleSubmit,
                 <div className="text-white">{maxGasFee}</div>MATIC
               </div>
             </div>
-            {enoughFunds && (
-              <div className="flex-1">
-                <Button type="submit" variant="rainbow" disabled={!enoughFunds}>
+            <div className="flex-1">
+              {enoughFunds && !uploadingArt && (
+                <Button type="submit" variant="rainbow">
                   MINT NFT
                 </Button>
-              </div>
-            )}
-            {!enoughFunds && (
-              <div className="text-white text-center text-sm font-bold">{`It seems like you might have not enough funds :(`}</div>
-            )}
+              )}
+              {uploadingArt && (
+                <div className="flex-1">
+                  <div className="text-white text-right text-sm font-bold">Uploading artwork...</div>
+                </div>
+              )}
+              {!enoughFunds && (
+                <div className="text-white text-right text-sm font-bold">
+                  {`It seems like you might have not enough funds `}
+                  <span className="whitespace-nowrap">:(</span>
+                </div>
+              )}
+            </div>
           </div>
         </Form>
       )}

@@ -451,6 +451,23 @@ export type MutationUpdateHandleArgs = {
   input: UpdateHandleInput;
 };
 
+export type NftDataInput = {
+  transactionHash?: Maybe<Scalars['String']>;
+  tokenId?: Maybe<Scalars['String']>;
+  contract?: Maybe<Scalars['String']>;
+  minter?: Maybe<Scalars['String']>;
+  quantity?: Maybe<Scalars['Float']>;
+};
+
+export type NftDataType = {
+  __typename?: 'NFTDataType';
+  transactionHash: Maybe<Scalars['String']>;
+  tokenId: Maybe<Scalars['String']>;
+  contract: Maybe<Scalars['String']>;
+  minter: Maybe<Scalars['String']>;
+  quantity: Maybe<Scalars['Float']>;
+};
+
 export type NewPostNotification = {
   __typename?: 'NewPostNotification';
   type: NotificationType;
@@ -833,7 +850,7 @@ export type Track = {
   album: Maybe<Scalars['String']>;
   releaseYear: Maybe<Scalars['Float']>;
   genres: Maybe<Array<Genre>>;
-  transactionAddress: Maybe<Scalars['String']>;
+  nftData: Maybe<NftDataType>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   playbackUrl: Scalars['String'];
@@ -900,7 +917,7 @@ export type UpdateProfilePayload = {
 
 export type UpdateTrackInput = {
   trackId: Scalars['String'];
-  transactionAddress?: Maybe<Scalars['String']>;
+  nftData?: Maybe<NftDataInput>;
 };
 
 export type UpdateTrackPayload = {
@@ -1639,7 +1656,11 @@ export type TrackQuery = (
 
 export type TrackComponentFieldsFragment = (
   { __typename?: 'Track' }
-  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'album' | 'releaseYear' | 'genres' | 'transactionAddress' | 'playbackUrl' | 'createdAt' | 'updatedAt'>
+  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'album' | 'releaseYear' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt'>
+  & { nftData: Maybe<(
+    { __typename?: 'NFTDataType' }
+    & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter'>
+  )> }
 );
 
 export type TracksQueryVariables = Exact<{
@@ -1960,10 +1981,15 @@ export const TrackComponentFieldsFragmentDoc = gql`
   album
   releaseYear
   genres
-  transactionAddress
   playbackUrl
   createdAt
   updatedAt
+  nftData {
+    transactionHash
+    tokenId
+    contract
+    minter
+  }
 }
     `;
 export const PostComponentFieldsFragmentDoc = gql`

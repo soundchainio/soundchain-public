@@ -9,8 +9,13 @@ fragment TrackComponentFields on Track {
   album
   releaseYear
   genres
-  transactionAddress
   playbackUrl
   createdAt
   updatedAt
+  nftData {
+    transactionHash
+    tokenId
+    contract
+    minter
+  }
 }

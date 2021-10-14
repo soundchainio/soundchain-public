@@ -2,6 +2,7 @@ import { getModelForClass, prop } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { Genre } from '../types/Genres';
 import { MuxAsset } from '../types/MuxAsset';
+import { NFTData } from '../types/NFTData';
 import { Model } from './Model';
 
 @ObjectType()
@@ -45,9 +46,9 @@ export class Track extends Model {
   @prop({ type: [String], enum: Genre })
   genres: Genre[];
 
-  @Field({ nullable: true })
+  @Field(() => NFTData, { nullable: true })
   @prop()
-  transactionAddress: string;
+  nftData: NFTData;
 
   @prop()
   muxAsset: MuxAsset;
