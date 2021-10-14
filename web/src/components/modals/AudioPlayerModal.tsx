@@ -55,9 +55,11 @@ export const AudioPlayerModal = () => {
       onClose={handleClose}
     >
       <div className="flex flex-col h-full justify-center items-center text-white">
-        <div className="post-audio-player w-72">
-          <div className="w-72 h-72 relative flex items-center bg-gray-80 rounded-lg overflow-hidden">
-            {currentSong.art && <Asset src={currentSong.art} />}
+        <div className="post-audio-player w-52 sm:w-72">
+          <div className="flex justify-center">
+            <div className="w-52 h-52 sm:w-72 sm:h-72 relative flex bg-gray-80 rounded-lg overflow-hidden">
+              {currentSong.art && <Asset src={currentSong.art} />}
+            </div>
           </div>
           <div className="flex flex-col gap-1 mt-7 mb-4">
             <h2 className="font-black">{currentSong.title || 'Unknown title'}</h2>
