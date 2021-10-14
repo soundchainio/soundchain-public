@@ -48,8 +48,10 @@ function SoundchainApp({ Component, pageProps }: AppProps) {
           <MagicProvider>
             <AudioPlayerProvider>
               <CheckBodyScroll />
-              <div className="h-screen flex flex-col">
-                <Component {...pageProps} />
+              <div className="h-full flex flex-col">
+                <div className="flex-1 max-h-full overflow-y-auto">
+                  <Component {...pageProps} />
+                </div>
                 <BottomAudioPlayer />
                 <AudioPlayerModal />
               </div>
