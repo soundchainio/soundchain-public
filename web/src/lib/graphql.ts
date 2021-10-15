@@ -334,6 +334,7 @@ export type Mutation = {
   register: AuthPayload;
   login: AuthPayload;
   updateHandle: UpdateHandlePayload;
+  setIsApprovedOnMarketplace: UpdateHandlePayload;
 };
 
 
@@ -1621,6 +1622,20 @@ export type SendMessageMutation = (
     & { message: (
       { __typename?: 'Message' }
       & MessageComponentFieldsFragment
+    ) }
+  ) }
+);
+
+export type SetIsApprovedOnMarketplaceMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type SetIsApprovedOnMarketplaceMutation = (
+  { __typename?: 'Mutation' }
+  & { setIsApprovedOnMarketplace: (
+    { __typename?: 'UpdateHandlePayload' }
+    & { user: (
+      { __typename?: 'User' }
+      & Pick<User, 'id'>
     ) }
   ) }
 );
@@ -3506,6 +3521,40 @@ export function useSendMessageMutation(baseOptions?: Apollo.MutationHookOptions<
 export type SendMessageMutationHookResult = ReturnType<typeof useSendMessageMutation>;
 export type SendMessageMutationResult = Apollo.MutationResult<SendMessageMutation>;
 export type SendMessageMutationOptions = Apollo.BaseMutationOptions<SendMessageMutation, SendMessageMutationVariables>;
+export const SetIsApprovedOnMarketplaceDocument = gql`
+    mutation SetIsApprovedOnMarketplace {
+  setIsApprovedOnMarketplace {
+    user {
+      id
+    }
+  }
+}
+    `;
+export type SetIsApprovedOnMarketplaceMutationFn = Apollo.MutationFunction<SetIsApprovedOnMarketplaceMutation, SetIsApprovedOnMarketplaceMutationVariables>;
+
+/**
+ * __useSetIsApprovedOnMarketplaceMutation__
+ *
+ * To run a mutation, you first call `useSetIsApprovedOnMarketplaceMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSetIsApprovedOnMarketplaceMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [setIsApprovedOnMarketplaceMutation, { data, loading, error }] = useSetIsApprovedOnMarketplaceMutation({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useSetIsApprovedOnMarketplaceMutation(baseOptions?: Apollo.MutationHookOptions<SetIsApprovedOnMarketplaceMutation, SetIsApprovedOnMarketplaceMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<SetIsApprovedOnMarketplaceMutation, SetIsApprovedOnMarketplaceMutationVariables>(SetIsApprovedOnMarketplaceDocument, options);
+      }
+export type SetIsApprovedOnMarketplaceMutationHookResult = ReturnType<typeof useSetIsApprovedOnMarketplaceMutation>;
+export type SetIsApprovedOnMarketplaceMutationResult = Apollo.MutationResult<SetIsApprovedOnMarketplaceMutation>;
+export type SetIsApprovedOnMarketplaceMutationOptions = Apollo.BaseMutationOptions<SetIsApprovedOnMarketplaceMutation, SetIsApprovedOnMarketplaceMutationVariables>;
 export const SubscribeToProfileDocument = gql`
     mutation SubscribeToProfile($input: SubscribeToProfileInput!) {
   subscribeToProfile(input: $input) {
