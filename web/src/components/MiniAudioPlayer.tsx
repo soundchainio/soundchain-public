@@ -20,9 +20,14 @@ interface MiniAudioPlayerProps {
 
 export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
   const { art, artist, title, trackId } = song;
-  const { duration, progress, play, isCurrentSong, isCurrentlyPlaying } = useAudioPlayerContext();
+  const { duration, progress, play, isCurrentSong, isCurrentlyPlaying, setProgressStateFromSlider } =
+    useAudioPlayerContext();
   const isPlaying = isCurrentlyPlaying(trackId);
   const isSameSong = isCurrentSong(trackId);
+
+  const onSliderChange = (value: number) => {
+    setProgressStateFromSlider(value);
+  };
 
   return (
     <div className="bg-black rounded-lg p-4 items-center">
@@ -55,7 +60,7 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
           <div className="post-audio-player text-white flex flex-col mt-2">
             {isSameSong ? (
               <>
-                <Slider className="ml-1" min={0} max={duration} value={progress} />
+                <Slider className="ml-1" min={0} max={duration} value={progress} onChange={onSliderChange} />
                 <div className="flex mt-2 text-xs text-gray-80">
                   <div className="flex-1">{timeFromSecs(progress || 0)}</div>
                   <div className="flex-1 text-right">{remainingTime(progress, duration || 0)} </div>
@@ -63,7 +68,7 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
               </>
             ) : (
               <>
-                <Slider className="ml-1" min={0} max={1} value={0} />
+                <Slider className="ml-1" min={0} max={1} value={0} disabled />
                 <div className="flex mt-2 text-xs text-gray-80">
                   <div className="flex-1">0:00</div>
                   <div className="flex-1 text-right" />
