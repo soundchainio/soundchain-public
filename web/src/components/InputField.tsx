@@ -18,12 +18,13 @@ export const InputField = ({ label, icon: Icon, ...props }: InputFieldProps) => 
   return (
     <div className={meta.touched && meta.error ? errorInputClasses : validInputClasses}>
       {label && (
-        <div className="font-bold text-sm">
-          <Label htmlFor={props.name}>{label}</Label>
-        </div>
+        <Label className="block font-bold text-sm" htmlFor={props.name}>
+          {label}
+        </Label>
       )}
       <input
         className="text-sm font-bold bg-gray-30 w-full p-0 text-gray-200 border-none focus:outline-none focus:ring-transparent placeholder-gray-60 placeholder-semibold"
+        id={props.name}
         {...field}
         {...props}
       />

@@ -19,13 +19,14 @@ export const TextareaField = ({ label, icon: Icon, maxLength, rows = 4, ...props
   return (
     <div className={meta.touched && meta.error ? errorInputClasses : validInputClasses}>
       {label && (
-        <div className="font-bold text-sm">
-          <Label htmlFor={props.name}>{label}</Label>
-        </div>
+        <Label className="font-bold text-sm block" htmlFor={props.name}>
+          {label}
+        </Label>
       )}
       <textarea
         maxLength={maxLength}
         className="font-bold text-sm bg-gray-30 w-full p-0 text-gray-200 border-none focus:outline-none focus:ring-transparent placeholder-gray-60 placeholder-semibold resize-none"
+        id={props.name}
         {...field}
         {...props}
         rows={rows}
