@@ -1,7 +1,7 @@
-.bottom-audio-player [data-reach-slider-input][data-orientation='horizontal'] {
+.bottom-audio-player[data-reach-slider-input][data-orientation='horizontal'] {
   height: 2px;
 }
-.bottom-audio-player [data-reach-slider-input][data-disabled] {
+.bottom-audio-player[data-reach-slider-input][data-disabled] {
   opacity: initial;
   pointer-events: none;
 }
