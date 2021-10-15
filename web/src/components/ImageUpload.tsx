@@ -60,7 +60,7 @@ export function ImageUpload({
           <input {...getInputProps()} />
           {thumbnail ? (
             videoMimeTypes.includes(fileType) ? (
-              <video src={thumbnail} loop muted autoPlay className="w-full h-full" />
+              <video src={thumbnail} loop muted autoPlay controls={false} className="w-full h-full" />
             ) : (
               <Image
                 className={classNames('object-cover', rounded ? 'rounded-full' : 'rounded-lg')}

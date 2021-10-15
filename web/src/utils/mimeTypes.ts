@@ -159,6 +159,7 @@ export const audioMimeTypes = [
   'audio/vnd.vmx.cvsd',
   'audio/vorbis',
   'audio/vorbis-config',
+  'audio/m4a',
 ];
 
 export const videoMimeTypes = [
