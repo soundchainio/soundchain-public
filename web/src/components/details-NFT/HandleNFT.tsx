@@ -1,4 +1,6 @@
 import { Button } from 'components/Button';
+import { useModalDispatch } from 'contexts/providers/modal';
+import { useMe } from 'hooks/useMe';
 import { Checkmark } from 'icons/Checkmark';
 import { Matic } from 'icons/Matic';
 import { useRouter } from 'next/router';
@@ -10,6 +12,17 @@ interface HandleNFTProps {
 
 export const HandleNFT = ({ isOwner }: HandleNFTProps) => {
   const router = useRouter();
+  const me = useMe();
+
+  const isApproved = me?.isApprovedOnMarketplace;
+  const { dispatchShowApproveModal } = useModalDispatch();
+  console.log(isApproved);
+  const handleSellButton = () => {
+    if (isApproved) {
+      return router.push(`${router.asPath}/sell`);
+    }
+    me ? dispatchShowApproveModal(true) : router.push('/login');
+  };
 
   return (
     <div className="w-full bg-black text-white flex items-center py-2">
@@ -20,7 +33,7 @@ export const HandleNFT = ({ isOwner }: HandleNFTProps) => {
             You own this NFT
           </div>
           <div className="flex-1 flex items-center justify-center">
-            <Button variant="sell-nft" onClick={() => router.push(`${router.asPath}/sell`)}>
+            <Button variant="sell-nft" onClick={handleSellButton}>
               <div className="px-4">SELL NFT </div>
             </Button>
           </div>

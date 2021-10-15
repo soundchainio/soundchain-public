@@ -5,11 +5,14 @@ import { SellNFT } from 'components/details-NFT/SellNFT';
 import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
+import { useModalDispatch } from 'contexts/providers/modal';
 import { useMagicContext } from 'hooks/useMagicContext';
+import { useMe } from 'hooks/useMe';
 import { cacheFor, createApolloClient } from 'lib/apollo';
 import { listItem } from 'lib/blockchain';
 import { TrackDocument, useTrackQuery } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
+import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useState } from 'react';
 
@@ -44,14 +47,22 @@ export const getServerSideProps: GetServerSideProps<TrackPageProps, TrackPagePar
 };
 
 export default function SellPage({ trackId }: TrackPageProps) {
+  const router = useRouter();
+  const me = useMe();
   const { data } = useTrackQuery({ variables: { id: trackId } });
   const { account, web3 } = useMagicContext();
+  const isApproved = me?.isApprovedOnMarketplace;
+  const { dispatchShowApproveModal } = useModalDispatch();
 
   const [price, setPrice] = useState(0);
   const [quantity, setQuantity] = useState(0);
 
   const handleSell = async () => {
-    await listItem(web3!, data?.track.tokenId, quantity, account!, price);
+    dispatchShowApproveModal(true);
+    if (isApproved) {
+      await listItem(web3!, data?.track?.nftData?.tokenId!, quantity, account!, price);
+    }
+    me ? dispatchShowApproveModal(true) : router.push('/login');
   };
 
   const topNovaBarProps: TopNavBarProps = {

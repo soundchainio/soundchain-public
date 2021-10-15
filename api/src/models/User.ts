@@ -24,6 +24,7 @@ export class User extends Model {
   @prop({ required: false })
   emailVerificationToken?: string;
 
+  @Field()
   @prop({ default: false })
   isApprovedOnMarketplace: boolean;
 

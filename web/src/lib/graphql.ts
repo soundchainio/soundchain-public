@@ -939,6 +939,7 @@ export type User = {
   email: Scalars['String'];
   handle: Scalars['String'];
   walletAddress: Maybe<Scalars['String']>;
+  isApprovedOnMarketplace: Scalars['Boolean'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   profile: Profile;
@@ -1302,7 +1303,7 @@ export type MeQuery = (
   { __typename?: 'Query' }
   & { me: Maybe<(
     { __typename?: 'User' }
-    & Pick<User, 'id' | 'handle' | 'email' | 'walletAddress'>
+    & Pick<User, 'id' | 'handle' | 'email' | 'walletAddress' | 'isApprovedOnMarketplace'>
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'followerCount' | 'followingCount' | 'favoriteGenres' | 'musicianTypes' | 'bio'>
@@ -2785,6 +2786,7 @@ export const MeDocument = gql`
     handle
     email
     walletAddress
+    isApprovedOnMarketplace
     profile {
       id
       displayName
