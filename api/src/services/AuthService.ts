@@ -1,4 +1,3 @@
-import { UserInputError } from 'apollo-server-express';
 import { ArgumentValidationError } from 'type-graphql';
 import { v4 as uuidv4 } from 'uuid';
 import { ProfileModel } from '../models/Profile';
@@ -20,7 +19,7 @@ export class AuthService extends Service {
       await user.save();
     } catch (err) {
       ProfileModel.deleteOne({ _id: profile.id });
-      throw new Error(`Error while creating user: ${err.message}`);
+      throw new Error(`Error while creating user: ${err}`);
     }
 
     return user;
@@ -29,7 +28,6 @@ export class AuthService extends Service {
   async getUserFromCredentials(username: string): Promise<User | undefined> {
     return await UserModel.findOne({ email: username });
   }
-
 }
 
 async function validateUniqueIdentifiers({ email, handle }: Pick<User, 'email' | 'handle'>) {
