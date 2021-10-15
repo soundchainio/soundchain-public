@@ -3,12 +3,17 @@ import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { approveMarketplace } from 'lib/blockchain';
-import React from 'react';
+import { useSetIsApprovedOnMarketplaceMutation } from 'lib/graphql';
+import React, { useState } from 'react';
+import { Receipt } from 'types/NftTypes';
 
 export const ApproveModal = () => {
   const { account, web3 } = useMagicContext();
   const modalState = useModalState();
   const { dispatchShowApproveModal } = useModalDispatch();
+  const [setIsApprovedMutation] = useSetIsApprovedOnMarketplaceMutation();
+
+  const [isApproved, setIsApproved] = useState(false);
 
   const isOpen = modalState.showApprove;
 
@@ -17,7 +22,14 @@ export const ApproveModal = () => {
   };
 
   const setApprove = async () => {
-    await approveMarketplace(web3!, account);
+    await approveMarketplace(web3!, account, onReceipt);
+  };
+
+  const onReceipt = (receipt: Receipt) => {
+    if (receipt.status) {
+      setIsApprovedMutation();
+      setIsApproved(true);
+    }
   };
 
   return (
@@ -35,6 +47,7 @@ export const ApproveModal = () => {
         <Button variant="rainbow-xs" className="" onClick={setApprove}>
           Set Approve
         </Button>
+        <p className="text-lg text-gray-400">{isApproved ? 'Approved' : 'Not Approved'}</p>
       </div>
     </Modal>
   );

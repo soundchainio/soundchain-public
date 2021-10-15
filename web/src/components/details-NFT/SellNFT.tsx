@@ -2,27 +2,27 @@ import { InputField } from 'components/InputField';
 import { Form, Formik, FormikProps } from 'formik';
 import { Matic } from 'icons/Matic';
 import React from 'react';
-import * as yup from 'yup';
-
-interface SellNFTProps {
-  onSetPrice: (v: number) => void;
-  onSetQuantity: (v: number) => void;
-}
+import { number, object, SchemaOf } from 'yup';
 
 interface FormValues {
   price: number;
   quantity: number;
 }
 
-const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
-  price: yup.number().required(),
-  quantity: yup.number().required(),
+const validationSchema: SchemaOf<FormValues> = object().shape({
+  price: number().required(),
+  quantity: number().required(),
 });
 
 const initialValues: FormValues = {
   price: 0,
   quantity: 0,
 };
+
+interface SellNFTProps {
+  onSetPrice: (price: number) => void;
+  onSetQuantity: (quantity: number) => void;
+}
 
 export const SellNFT = ({ onSetPrice, onSetQuantity }: SellNFTProps) => {
   return (

@@ -51,14 +51,14 @@ export default function SellPage({ trackId }: TrackPageProps) {
   const me = useMe();
   const { data } = useTrackQuery({ variables: { id: trackId } });
   const { account, web3 } = useMagicContext();
-  const isApproved = me?.isApprovedOnMarketplace;
   const { dispatchShowApproveModal } = useModalDispatch();
+
+  const isApproved = me?.isApprovedOnMarketplace ?? false;
 
   const [price, setPrice] = useState(0);
   const [quantity, setQuantity] = useState(0);
 
   const handleSell = async () => {
-    dispatchShowApproveModal(true);
     if (isApproved) {
       await listItem(web3!, data?.track?.nftData?.tokenId!, quantity, account!, price);
     }
@@ -75,10 +75,10 @@ export default function SellPage({ trackId }: TrackPageProps) {
       <div className="m-4">
         <Track trackId={trackId} />
       </div>
-      <SellNFT onSetPrice={v => setPrice(v)} onSetQuantity={v => setQuantity(v)} />
+      <SellNFT onSetPrice={price => setPrice(price)} onSetQuantity={quantity => setQuantity(quantity)} />
       <BottomSheet>
         <div className="flex justify-center pb-3">
-          <Button variant="sell-nft" onClick={handleSell}>
+          <Button variant="sell-nft" disabled={quantity <= 0 || price <= 0} onClick={handleSell}>
             <div className="px-4">SELL NFT</div>
           </Button>
         </div>

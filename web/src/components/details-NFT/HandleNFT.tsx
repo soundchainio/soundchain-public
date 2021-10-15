@@ -4,7 +4,6 @@ import { useMe } from 'hooks/useMe';
 import { Checkmark } from 'icons/Checkmark';
 import { Matic } from 'icons/Matic';
 import { useRouter } from 'next/router';
-import React from 'react';
 
 interface HandleNFTProps {
   isOwner: boolean;
@@ -16,7 +15,7 @@ export const HandleNFT = ({ isOwner }: HandleNFTProps) => {
 
   const isApproved = me?.isApprovedOnMarketplace;
   const { dispatchShowApproveModal } = useModalDispatch();
-  console.log(isApproved);
+
   const handleSellButton = () => {
     if (isApproved) {
       return router.push(`${router.asPath}/sell`);
