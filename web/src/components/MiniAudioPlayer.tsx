@@ -4,6 +4,7 @@ import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
 import Image from 'next/image';
 import NextLink from 'next/link';
+import { useEffect, useState } from 'react';
 import { remainingTime, timeFromSecs } from 'utils/calculateTime';
 
 interface Song {
@@ -22,8 +23,13 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
   const { art, artist, title, trackId } = song;
   const { duration, progress, play, isCurrentSong, isCurrentlyPlaying, setProgressStateFromSlider } =
     useAudioPlayerContext();
-  const isPlaying = isCurrentlyPlaying(trackId);
-  const isSameSong = isCurrentSong(trackId);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isSameSong, setIsSameSong] = useState(false);
+
+  useEffect(() => {
+    setIsPlaying(isCurrentlyPlaying(trackId));
+    setIsSameSong(isCurrentSong(trackId));
+  }, [isCurrentSong, isCurrentlyPlaying, setIsPlaying, setIsSameSong, trackId]);
 
   const onSliderChange = (value: number) => {
     setProgressStateFromSlider(value);
