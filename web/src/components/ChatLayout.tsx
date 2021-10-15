@@ -8,7 +8,7 @@ interface LayoutMenuProps {
 
 export const ChatLayout = ({ children, topNavBarProps }: LayoutMenuProps) => {
   return (
-    <div className="h-screen flex">
+    <div className="h-full flex">
       <div className="flex flex-col w-0 flex-1 ">
         <div className="fixed top-0 w-full z-10">
           <TopNavBar {...topNavBarProps} />
