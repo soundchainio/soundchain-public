@@ -7,7 +7,7 @@ export const InboxButton = () => {
   return (
     <div className="relative">
       <InboxBadge />
-      <NavBarLink label="Inbox" path="/messages" icon={Inbox} activatedColor="yellow" />
+      <NavBarLink label="Inbox" path="/messages" icon={Inbox} color="yellow" />
     </div>
   );
 };

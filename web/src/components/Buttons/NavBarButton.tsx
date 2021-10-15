@@ -10,19 +10,11 @@ interface NavBarButtonProps {
   path?: string;
   onClick?: () => void;
   icon?: (props: IconProps) => JSX.Element;
-  activatedColor?: SVGGradientColor;
+  color?: SVGGradientColor;
   id?: string;
 }
 
-export const NavBarButton = ({
-  label,
-  path,
-  icon: Icon,
-  onClick,
-  badge: Badge,
-  activatedColor,
-  id,
-}: NavBarButtonProps) => {
+export const NavBarButton = ({ label, path, icon: Icon, onClick, badge: Badge, color, id }: NavBarButtonProps) => {
   const [isActive, setActive] = useState(false);
   const router = useRouter();
 
@@ -51,12 +43,10 @@ export const NavBarButton = ({
       {Icon && (
         <div className="relative">
           {Badge && <Badge />}
-          <Icon activatedColor={isActive ? activatedColor : undefined} id={id} />
+          <Icon color={isActive ? color : undefined} id={id} />
         </div>
       )}
-      <span
-        className={classNames('text-gray-50 text-xs mt-2 font-semibold', isActive && `${activatedColor}-gradient-text`)}
-      >
+      <span className={classNames('text-gray-50 text-xs mt-2 font-semibold', isActive && `${color}-gradient-text`)}>
         {label}
       </span>
     </button>

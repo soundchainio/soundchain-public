@@ -34,7 +34,6 @@ export function MagicProvider({ children }: MagicProviderProps) {
         chainId: testNetwork.id,
       },
     });
-    magic.preload();
     setMagic(magic);
     setWeb3(new Web3(magic.rpcProvider));
   }, []);
