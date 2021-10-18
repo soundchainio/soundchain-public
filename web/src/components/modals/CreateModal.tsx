@@ -58,11 +58,8 @@ export const CreateModal = () => {
 
   const [initialValues, setInitialValues] = useState<FormValues>();
 
-
   const handleFileDrop = (file: File) => {
-    musicMetadata.parseBlob(file).then(result => {
-      setFileMetadata(result.common);
-    });
+    musicMetadata.parseBlob(file).then(result => setFileMetadata(result.common));
 
     const reader = new FileReader();
     reader.readAsDataURL(file);
