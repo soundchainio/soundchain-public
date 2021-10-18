@@ -5,7 +5,8 @@ on:
     branches:
       - develop
     paths:
-      - "api/**"
+      - 'api/**'
+  workflow_dispatch:
 
 jobs:
   deploy-api:
@@ -46,8 +47,8 @@ jobs:
           PINATA_API_SECRET: ${{ secrets.PINATA_API_SECRET_DEVELOP }}
           MUX_TOKEN_ID: ${{ secrets.MUX_TOKEN_ID_DEVELOP }}
           MUX_TOKEN_SECRET: ${{ secrets.MUX_TOKEN_SECRET_DEVELOP }}
-          MUX_WEBHOOK_SECRET: ${{ secrets.MUX_WEBHOOK_SECRET_DEVELOP }}
           SENTRY_URL: ${{ secrets.SENTRY_URL }}
+          MAGIC_PRIVATE_KEY: ${{ secrets.MAGIC_PRIVATE_KEY_DEVELOP }}
       - name: Trigger migrate lambda function
         run: |
           aws lambda invoke --function-name soundchain-api-develop-migrate response.json

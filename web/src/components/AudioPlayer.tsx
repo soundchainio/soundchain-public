@@ -1,15 +1,16 @@
+import Slider from '@reach/slider';
 import Hls from 'hls.js';
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
-import Image from 'next/image';
 import NextLink from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { remainingTime, timeFromSecs } from 'utils/calculateTime';
+import Asset from './Asset';
 
 interface AudioPlayerProps {
   src: string;
   title?: string | null;
-  trackId: string;
+  trackId?: string;
   artist?: string | null;
   art?: string | null;
 }
@@ -43,7 +44,7 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: AudioPlayerPro
     if (audioRef.current) {
       const audio = audioRef.current;
 
-      if (audio.canPlayType('application/vnd.apple.mpegurl')) {
+      if (src.startsWith('data:audio/') || audio.canPlayType('application/vnd.apple.mpegurl')) {
         audio.src = src;
       } else if (Hls.isSupported()) {
         hls = new Hls();
@@ -70,43 +71,39 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: AudioPlayerPro
         hls.destroy();
       }
     };
-  }, []);
+  }, [src]);
 
   return (
-    <div className="bg-black rounded-md p-4 items-center">
-      <div className="flex items-center">
+    <div className="bg-black rounded-lg p-4 items-center">
+      <div className="flex items-center gap-3">
         {art && (
           <div className="h-20 w-20 relative flex items-center">
-            <Image src={art} alt="" layout="fill" className="m-auto object-cover" />
+            <Asset src={art} />
           </div>
         )}
         <div className="flex flex-col flex-1">
-          <div className="flex">
-            <div className="w-12 flex items-center">
-              <div className="bg-white rounded-full w-8 h-8 flex items-center m-auto" onClick={togglePlay}>
+          <div className="flex gap-2">
+            <div className="flex items-center">
+              <button className="bg-white rounded-full w-8 h-8 flex items-center" onClick={togglePlay}>
                 {playing ? (
                   <Pause className="text-white m-auto scale-125" />
                 ) : (
                   <Play className="text-white m-auto scale-125" />
                 )}
-              </div>
+              </button>
             </div>
             <div className="flex flex-col">
-              <div className="text-white font-bold">
-                <NextLink href={`/tracks/${trackId}`}>{title ? title : 'Unknown Title'}</NextLink>
+              <div className="text-white font-black text-xs">
+                {trackId && <NextLink href={`/tracks/${trackId}`}>{title ? title : 'Unknown Title'}</NextLink>}
+                {!trackId && <div>{title ? title : 'Unknown Title'}</div>}
               </div>
-              <div className="text-gray-80 font-bold">{artist || 'Unknown Artist'}</div>
+              {artist && <div className="text-gray-80 text-xs font-black">{artist}</div>}
             </div>
-            <div className="flex-1 text-right text-gray-80">{timeFromSecs(duration || 0)}</div>
+            <div className="flex-1 text-right text-gray-80 text-xs">{timeFromSecs(duration || 0)}</div>
           </div>
-          <div className="text-white pl-2 flex flex-col mt-4">
-            <input
-              type="range"
-              onChange={e => onSliderChange(parseInt(e.target.value))}
-              max={duration}
-              value={playState}
-            />
-            <div className="flex mt-1 text-xs">
+          <div className="post-audio-player text-white flex flex-col mt-2">
+            <Slider className="ml-1" min={0} max={duration} value={playState} onChange={onSliderChange} />
+            <div className="flex mt-2 text-xs text-gray-80">
               <div className="flex-1">{timeFromSecs(playState || 0)}</div>
               <div className="flex-1 text-right">{remainingTime(playState, duration || 0)} </div>
             </div>

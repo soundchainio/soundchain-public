@@ -2,10 +2,20 @@ fragment TrackComponentFields on Track {
   id
   profileId
   title
-  file
+  assetUrl
   artworkUrl
   description
+  artist
+  album
+  releaseYear
+  genres
   playbackUrl
   createdAt
   updatedAt
+  nftData {
+    transactionHash
+    tokenId
+    contract
+    minter
+  }
 }

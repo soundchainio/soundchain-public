@@ -28,18 +28,6 @@ export type AddCommentPayload = {
   comment: Comment;
 };
 
-export type AddTrackMetadataInput = {
-  trackId: Scalars['String'];
-  title: Scalars['String'];
-  description?: Maybe<Scalars['String']>;
-  artworkUrl?: Maybe<Scalars['String']>;
-};
-
-export type AddTrackMetadataPayload = {
-  __typename?: 'AddTrackMetadataPayload';
-  track: Track;
-};
-
 export type AuthPayload = {
   __typename?: 'AuthPayload';
   jwt: Scalars['String'];
@@ -137,6 +125,22 @@ export type CreateRepostPayload = {
   originalPost: Post;
 };
 
+export type CreateTrackInput = {
+  title: Scalars['String'];
+  description?: Maybe<Scalars['String']>;
+  assetUrl: Scalars['String'];
+  artworkUrl?: Maybe<Scalars['String']>;
+  artist?: Maybe<Scalars['String']>;
+  album?: Maybe<Scalars['String']>;
+  releaseYear?: Maybe<Scalars['Float']>;
+  genres?: Maybe<Array<Genre>>;
+};
+
+export type CreateTrackPayload = {
+  __typename?: 'CreateTrackPayload';
+  track: Track;
+};
+
 
 export type DeleteCommentInput = {
   commentId: Scalars['String'];
@@ -209,15 +213,6 @@ export type FollowerNotification = {
   link: Scalars['String'];
 };
 
-export type ForgotPasswordInput = {
-  email: Scalars['String'];
-};
-
-export type ForgotPasswordPayload = {
-  __typename?: 'ForgotPasswordPayload';
-  ok: Scalars['Boolean'];
-};
-
 export enum Genre {
   Acoustic = 'ACOUSTIC',
   Alternative = 'ALTERNATIVE',
@@ -259,9 +254,7 @@ export enum Genre {
 
 
 export type LoginInput = {
-  /** Username can be email or handle */
-  username: Scalars['String'];
-  password: Scalars['String'];
+  token: Scalars['String'];
 };
 
 export type Message = {
@@ -336,15 +329,11 @@ export type Mutation = {
   unfollowProfile: UnfollowProfilePayload;
   subscribeToProfile: SubscribeToProfilePayload;
   unsubscribeFromProfile: UnsubscribeFromProfilePayload;
-  uploadTrack: UploadTrackPayload;
-  addTrackMetadata: AddTrackMetadataPayload;
+  createTrack: CreateTrackPayload;
+  updateTrack: UpdateTrackPayload;
   register: AuthPayload;
   login: AuthPayload;
-  verifyUserEmail: VerifyUserEmailPayload;
-  forgotPassword: ForgotPasswordPayload;
-  resetPassword: ResetPasswordPayload;
   updateHandle: UpdateHandlePayload;
-  updatePassword: UpdatePasswordPayload;
 };
 
 
@@ -438,13 +427,13 @@ export type MutationUnsubscribeFromProfileArgs = {
 };
 
 
-export type MutationUploadTrackArgs = {
-  input: UploadTrackInput;
+export type MutationCreateTrackArgs = {
+  input: CreateTrackInput;
 };
 
 
-export type MutationAddTrackMetadataArgs = {
-  input: AddTrackMetadataInput;
+export type MutationUpdateTrackArgs = {
+  input: UpdateTrackInput;
 };
 
 
@@ -458,33 +447,25 @@ export type MutationLoginArgs = {
 };
 
 
-export type MutationVerifyUserEmailArgs = {
-  input: VerifyUserEmailInput;
-};
-
-
-export type MutationForgotPasswordArgs = {
-  input: ForgotPasswordInput;
-};
-
-
-export type MutationResetPasswordArgs = {
-  input: ResetPasswordInput;
-};
-
-
 export type MutationUpdateHandleArgs = {
   input: UpdateHandleInput;
 };
 
-
-export type MutationUpdatePasswordArgs = {
-  input: UpdatePasswordInput;
+export type NftDataInput = {
+  transactionHash?: Maybe<Scalars['String']>;
+  tokenId?: Maybe<Scalars['String']>;
+  contract?: Maybe<Scalars['String']>;
+  minter?: Maybe<Scalars['String']>;
+  quantity?: Maybe<Scalars['Float']>;
 };
 
-export type MuxUpload = {
-  __typename?: 'MuxUpload';
-  url: Scalars['String'];
+export type NftDataType = {
+  __typename?: 'NFTDataType';
+  transactionHash: Maybe<Scalars['String']>;
+  tokenId: Maybe<Scalars['String']>;
+  contract: Maybe<Scalars['String']>;
+  minter: Maybe<Scalars['String']>;
+  quantity: Maybe<Scalars['Float']>;
 };
 
 export type NewPostNotification = {
@@ -621,7 +602,6 @@ export type Query = {
   uploadUrl: UploadUrl;
   mimeType: MimeType;
   me: Maybe<User>;
-  validPasswordResetToken: Scalars['Boolean'];
 };
 
 
@@ -729,11 +709,6 @@ export type QueryMimeTypeArgs = {
   url: Scalars['String'];
 };
 
-
-export type QueryValidPasswordResetTokenArgs = {
-  token: Scalars['String'];
-};
-
 export type ReactToPostInput = {
   postId: Scalars['String'];
   type: ReactionType;
@@ -783,20 +758,9 @@ export enum ReactionType {
 }
 
 export type RegisterInput = {
-  email: Scalars['String'];
+  token: Scalars['String'];
   displayName: Scalars['String'];
   handle: Scalars['String'];
-  password: Scalars['String'];
-};
-
-export type ResetPasswordInput = {
-  token: Scalars['String'];
-  password: Scalars['String'];
-};
-
-export type ResetPasswordPayload = {
-  __typename?: 'ResetPasswordPayload';
-  ok: Scalars['Boolean'];
 };
 
 export type RetractReactionInput = {
@@ -880,10 +844,13 @@ export type Track = {
   profileId: Scalars['String'];
   title: Maybe<Scalars['String']>;
   description: Maybe<Scalars['String']>;
-  file: Scalars['String'];
-  uploadUrl: Scalars['String'];
+  assetUrl: Scalars['String'];
   artworkUrl: Maybe<Scalars['String']>;
-  muxUpload: MuxUpload;
+  artist: Maybe<Scalars['String']>;
+  album: Maybe<Scalars['String']>;
+  releaseYear: Maybe<Scalars['Float']>;
+  genres: Maybe<Array<Genre>>;
+  nftData: Maybe<NftDataType>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   playbackUrl: Scalars['String'];
@@ -922,15 +889,6 @@ export type UpdateHandlePayload = {
   user: User;
 };
 
-export type UpdatePasswordInput = {
-  password: Scalars['String'];
-};
-
-export type UpdatePasswordPayload = {
-  __typename?: 'UpdatePasswordPayload';
-  ok: Scalars['Boolean'];
-};
-
 export type UpdatePostInput = {
   postId: Scalars['String'];
   body: Scalars['String'];
@@ -957,12 +915,13 @@ export type UpdateProfilePayload = {
   profile: Profile;
 };
 
-export type UploadTrackInput = {
-  fileType: Scalars['String'];
+export type UpdateTrackInput = {
+  trackId: Scalars['String'];
+  nftData?: Maybe<NftDataInput>;
 };
 
-export type UploadTrackPayload = {
-  __typename?: 'UploadTrackPayload';
+export type UpdateTrackPayload = {
+  __typename?: 'UpdateTrackPayload';
   track: Track;
 };
 
@@ -978,19 +937,10 @@ export type User = {
   id: Scalars['ID'];
   email: Scalars['String'];
   handle: Scalars['String'];
-  verified: Scalars['Boolean'];
+  walletAddress: Maybe<Scalars['String']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   profile: Profile;
-};
-
-export type VerifyUserEmailInput = {
-  token: Scalars['String'];
-};
-
-export type VerifyUserEmailPayload = {
-  __typename?: 'VerifyUserEmailPayload';
-  user: User;
 };
 
 export type AddCommentMutationVariables = Exact<{
@@ -1009,22 +959,6 @@ export type AddCommentMutation = (
         & Pick<Post, 'id' | 'commentCount'>
       ) }
       & CommentComponentFieldsFragment
-    ) }
-  ) }
-);
-
-export type AddTrackMetadataMutationVariables = Exact<{
-  input: AddTrackMetadataInput;
-}>;
-
-
-export type AddTrackMetadataMutation = (
-  { __typename?: 'Mutation' }
-  & { addTrackMetadata: (
-    { __typename?: 'AddTrackMetadataPayload' }
-    & { track: (
-      { __typename?: 'Track' }
-      & Pick<Track, 'id' | 'title' | 'description' | 'artworkUrl'>
     ) }
   ) }
 );
@@ -1207,6 +1141,22 @@ export type CreateRepostMutation = (
   ) }
 );
 
+export type CreateTrackMutationVariables = Exact<{
+  input: CreateTrackInput;
+}>;
+
+
+export type CreateTrackMutation = (
+  { __typename?: 'Mutation' }
+  & { createTrack: (
+    { __typename?: 'CreateTrackPayload' }
+    & { track: (
+      { __typename?: 'Track' }
+      & TrackComponentFieldsFragment
+    ) }
+  ) }
+);
+
 export type DeleteCommentMutationVariables = Exact<{
   input: DeleteCommentInput;
 }>;
@@ -1331,19 +1281,6 @@ export type FollowingQuery = (
   ) }
 );
 
-export type ForgotPasswordMutationVariables = Exact<{
-  input: ForgotPasswordInput;
-}>;
-
-
-export type ForgotPasswordMutation = (
-  { __typename?: 'Mutation' }
-  & { forgotPassword: (
-    { __typename?: 'ForgotPasswordPayload' }
-    & Pick<ForgotPasswordPayload, 'ok'>
-  ) }
-);
-
 export type LoginMutationVariables = Exact<{
   input: LoginInput;
 }>;
@@ -1364,7 +1301,7 @@ export type MeQuery = (
   { __typename?: 'Query' }
   & { me: Maybe<(
     { __typename?: 'User' }
-    & Pick<User, 'id' | 'handle' | 'email'>
+    & Pick<User, 'id' | 'handle' | 'email' | 'walletAddress'>
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'followerCount' | 'followingCount' | 'favoriteGenres' | 'musicianTypes' | 'bio'>
@@ -1645,19 +1582,6 @@ export type ResetNotificationCountMutation = (
   ) }
 );
 
-export type ResetPasswordMutationVariables = Exact<{
-  input: ResetPasswordInput;
-}>;
-
-
-export type ResetPasswordMutation = (
-  { __typename?: 'Mutation' }
-  & { resetPassword: (
-    { __typename?: 'ResetPasswordPayload' }
-    & Pick<ResetPasswordPayload, 'ok'>
-  ) }
-);
-
 export type ResetUnreadMessageCountMutationVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -1732,7 +1656,11 @@ export type TrackQuery = (
 
 export type TrackComponentFieldsFragment = (
   { __typename?: 'Track' }
-  & Pick<Track, 'id' | 'profileId' | 'title' | 'file' | 'artworkUrl' | 'description' | 'playbackUrl' | 'createdAt' | 'updatedAt'>
+  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'album' | 'releaseYear' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt'>
+  & { nftData: Maybe<(
+    { __typename?: 'NFTDataType' }
+    & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter'>
+  )> }
 );
 
 export type TracksQueryVariables = Exact<{
@@ -1863,19 +1791,6 @@ export type UpdateMusicianTypeMutation = (
   ) }
 );
 
-export type UpdatePasswordMutationVariables = Exact<{
-  input: UpdatePasswordInput;
-}>;
-
-
-export type UpdatePasswordMutation = (
-  { __typename?: 'Mutation' }
-  & { updatePassword: (
-    { __typename?: 'UpdatePasswordPayload' }
-    & Pick<UpdatePasswordPayload, 'ok'>
-  ) }
-);
-
 export type UpdatePostMutationVariables = Exact<{
   input: UpdatePostInput;
 }>;
@@ -1960,22 +1875,18 @@ export type UpdateSocialMediasMutation = (
   ) }
 );
 
-export type UploadTrackMutationVariables = Exact<{
-  input: UploadTrackInput;
+export type UpdateTrackMutationVariables = Exact<{
+  input: UpdateTrackInput;
 }>;
 
 
-export type UploadTrackMutation = (
+export type UpdateTrackMutation = (
   { __typename?: 'Mutation' }
-  & { uploadTrack: (
-    { __typename?: 'UploadTrackPayload' }
+  & { updateTrack: (
+    { __typename?: 'UpdateTrackPayload' }
     & { track: (
       { __typename?: 'Track' }
-      & Pick<Track, 'id' | 'uploadUrl' | 'file'>
-      & { muxUpload: (
-        { __typename?: 'MuxUpload' }
-        & Pick<MuxUpload, 'url'>
-      ) }
+      & TrackComponentFieldsFragment
     ) }
   ) }
 );
@@ -1990,32 +1901,6 @@ export type UploadUrlQuery = (
   & { uploadUrl: (
     { __typename?: 'UploadUrl' }
     & Pick<UploadUrl, 'uploadUrl' | 'fileName' | 'readUrl'>
-  ) }
-);
-
-export type ValidPasswordResetTokenQueryVariables = Exact<{
-  token: Scalars['String'];
-}>;
-
-
-export type ValidPasswordResetTokenQuery = (
-  { __typename?: 'Query' }
-  & Pick<Query, 'validPasswordResetToken'>
-);
-
-export type VerifyUserEmailMutationVariables = Exact<{
-  input: VerifyUserEmailInput;
-}>;
-
-
-export type VerifyUserEmailMutation = (
-  { __typename?: 'Mutation' }
-  & { verifyUserEmail: (
-    { __typename?: 'VerifyUserEmailPayload' }
-    & { user: (
-      { __typename?: 'User' }
-      & Pick<User, 'id' | 'verified'>
-    ) }
   ) }
 );
 
@@ -2089,12 +1974,22 @@ export const TrackComponentFieldsFragmentDoc = gql`
   id
   profileId
   title
-  file
+  assetUrl
   artworkUrl
   description
+  artist
+  album
+  releaseYear
+  genres
   playbackUrl
   createdAt
   updatedAt
+  nftData {
+    transactionHash
+    tokenId
+    contract
+    minter
+  }
 }
     `;
 export const PostComponentFieldsFragmentDoc = gql`
@@ -2171,44 +2066,6 @@ export function useAddCommentMutation(baseOptions?: Apollo.MutationHookOptions<A
 export type AddCommentMutationHookResult = ReturnType<typeof useAddCommentMutation>;
 export type AddCommentMutationResult = Apollo.MutationResult<AddCommentMutation>;
 export type AddCommentMutationOptions = Apollo.BaseMutationOptions<AddCommentMutation, AddCommentMutationVariables>;
-export const AddTrackMetadataDocument = gql`
-    mutation AddTrackMetadata($input: AddTrackMetadataInput!) {
-  addTrackMetadata(input: $input) {
-    track {
-      id
-      title
-      description
-      artworkUrl
-    }
-  }
-}
-    `;
-export type AddTrackMetadataMutationFn = Apollo.MutationFunction<AddTrackMetadataMutation, AddTrackMetadataMutationVariables>;
-
-/**
- * __useAddTrackMetadataMutation__
- *
- * To run a mutation, you first call `useAddTrackMetadataMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useAddTrackMetadataMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [addTrackMetadataMutation, { data, loading, error }] = useAddTrackMetadataMutation({
- *   variables: {
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useAddTrackMetadataMutation(baseOptions?: Apollo.MutationHookOptions<AddTrackMetadataMutation, AddTrackMetadataMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<AddTrackMetadataMutation, AddTrackMetadataMutationVariables>(AddTrackMetadataDocument, options);
-      }
-export type AddTrackMetadataMutationHookResult = ReturnType<typeof useAddTrackMetadataMutation>;
-export type AddTrackMetadataMutationResult = Apollo.MutationResult<AddTrackMetadataMutation>;
-export type AddTrackMetadataMutationOptions = Apollo.BaseMutationOptions<AddTrackMetadataMutation, AddTrackMetadataMutationVariables>;
 export const BandcampLinkDocument = gql`
     query BandcampLink($url: String!) {
   bandcampLink(url: $url)
@@ -2591,6 +2448,41 @@ export function useCreateRepostMutation(baseOptions?: Apollo.MutationHookOptions
 export type CreateRepostMutationHookResult = ReturnType<typeof useCreateRepostMutation>;
 export type CreateRepostMutationResult = Apollo.MutationResult<CreateRepostMutation>;
 export type CreateRepostMutationOptions = Apollo.BaseMutationOptions<CreateRepostMutation, CreateRepostMutationVariables>;
+export const CreateTrackDocument = gql`
+    mutation CreateTrack($input: CreateTrackInput!) {
+  createTrack(input: $input) {
+    track {
+      ...TrackComponentFields
+    }
+  }
+}
+    ${TrackComponentFieldsFragmentDoc}`;
+export type CreateTrackMutationFn = Apollo.MutationFunction<CreateTrackMutation, CreateTrackMutationVariables>;
+
+/**
+ * __useCreateTrackMutation__
+ *
+ * To run a mutation, you first call `useCreateTrackMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateTrackMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createTrackMutation, { data, loading, error }] = useCreateTrackMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateTrackMutation(baseOptions?: Apollo.MutationHookOptions<CreateTrackMutation, CreateTrackMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateTrackMutation, CreateTrackMutationVariables>(CreateTrackDocument, options);
+      }
+export type CreateTrackMutationHookResult = ReturnType<typeof useCreateTrackMutation>;
+export type CreateTrackMutationResult = Apollo.MutationResult<CreateTrackMutation>;
+export type CreateTrackMutationOptions = Apollo.BaseMutationOptions<CreateTrackMutation, CreateTrackMutationVariables>;
 export const DeleteCommentDocument = gql`
     mutation DeleteComment($input: DeleteCommentInput!) {
   deleteComment(input: $input) {
@@ -2838,39 +2730,6 @@ export function useFollowingLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
 export type FollowingQueryHookResult = ReturnType<typeof useFollowingQuery>;
 export type FollowingLazyQueryHookResult = ReturnType<typeof useFollowingLazyQuery>;
 export type FollowingQueryResult = Apollo.QueryResult<FollowingQuery, FollowingQueryVariables>;
-export const ForgotPasswordDocument = gql`
-    mutation ForgotPassword($input: ForgotPasswordInput!) {
-  forgotPassword(input: $input) {
-    ok
-  }
-}
-    `;
-export type ForgotPasswordMutationFn = Apollo.MutationFunction<ForgotPasswordMutation, ForgotPasswordMutationVariables>;
-
-/**
- * __useForgotPasswordMutation__
- *
- * To run a mutation, you first call `useForgotPasswordMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useForgotPasswordMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [forgotPasswordMutation, { data, loading, error }] = useForgotPasswordMutation({
- *   variables: {
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useForgotPasswordMutation(baseOptions?: Apollo.MutationHookOptions<ForgotPasswordMutation, ForgotPasswordMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<ForgotPasswordMutation, ForgotPasswordMutationVariables>(ForgotPasswordDocument, options);
-      }
-export type ForgotPasswordMutationHookResult = ReturnType<typeof useForgotPasswordMutation>;
-export type ForgotPasswordMutationResult = Apollo.MutationResult<ForgotPasswordMutation>;
-export type ForgotPasswordMutationOptions = Apollo.BaseMutationOptions<ForgotPasswordMutation, ForgotPasswordMutationVariables>;
 export const LoginDocument = gql`
     mutation Login($input: LoginInput!) {
   login(input: $input) {
@@ -2910,6 +2769,7 @@ export const MeDocument = gql`
     id
     handle
     email
+    walletAddress
     profile {
       id
       displayName
@@ -3540,39 +3400,6 @@ export function useResetNotificationCountMutation(baseOptions?: Apollo.MutationH
 export type ResetNotificationCountMutationHookResult = ReturnType<typeof useResetNotificationCountMutation>;
 export type ResetNotificationCountMutationResult = Apollo.MutationResult<ResetNotificationCountMutation>;
 export type ResetNotificationCountMutationOptions = Apollo.BaseMutationOptions<ResetNotificationCountMutation, ResetNotificationCountMutationVariables>;
-export const ResetPasswordDocument = gql`
-    mutation ResetPassword($input: ResetPasswordInput!) {
-  resetPassword(input: $input) {
-    ok
-  }
-}
-    `;
-export type ResetPasswordMutationFn = Apollo.MutationFunction<ResetPasswordMutation, ResetPasswordMutationVariables>;
-
-/**
- * __useResetPasswordMutation__
- *
- * To run a mutation, you first call `useResetPasswordMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useResetPasswordMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [resetPasswordMutation, { data, loading, error }] = useResetPasswordMutation({
- *   variables: {
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useResetPasswordMutation(baseOptions?: Apollo.MutationHookOptions<ResetPasswordMutation, ResetPasswordMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<ResetPasswordMutation, ResetPasswordMutationVariables>(ResetPasswordDocument, options);
-      }
-export type ResetPasswordMutationHookResult = ReturnType<typeof useResetPasswordMutation>;
-export type ResetPasswordMutationResult = Apollo.MutationResult<ResetPasswordMutation>;
-export type ResetPasswordMutationOptions = Apollo.BaseMutationOptions<ResetPasswordMutation, ResetPasswordMutationVariables>;
 export const ResetUnreadMessageCountDocument = gql`
     mutation ResetUnreadMessageCount {
   resetUnreadMessageCount {
@@ -4045,39 +3872,6 @@ export function useUpdateMusicianTypeMutation(baseOptions?: Apollo.MutationHookO
 export type UpdateMusicianTypeMutationHookResult = ReturnType<typeof useUpdateMusicianTypeMutation>;
 export type UpdateMusicianTypeMutationResult = Apollo.MutationResult<UpdateMusicianTypeMutation>;
 export type UpdateMusicianTypeMutationOptions = Apollo.BaseMutationOptions<UpdateMusicianTypeMutation, UpdateMusicianTypeMutationVariables>;
-export const UpdatePasswordDocument = gql`
-    mutation UpdatePassword($input: UpdatePasswordInput!) {
-  updatePassword(input: $input) {
-    ok
-  }
-}
-    `;
-export type UpdatePasswordMutationFn = Apollo.MutationFunction<UpdatePasswordMutation, UpdatePasswordMutationVariables>;
-
-/**
- * __useUpdatePasswordMutation__
- *
- * To run a mutation, you first call `useUpdatePasswordMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useUpdatePasswordMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [updatePasswordMutation, { data, loading, error }] = useUpdatePasswordMutation({
- *   variables: {
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useUpdatePasswordMutation(baseOptions?: Apollo.MutationHookOptions<UpdatePasswordMutation, UpdatePasswordMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdatePasswordMutation, UpdatePasswordMutationVariables>(UpdatePasswordDocument, options);
-      }
-export type UpdatePasswordMutationHookResult = ReturnType<typeof useUpdatePasswordMutation>;
-export type UpdatePasswordMutationResult = Apollo.MutationResult<UpdatePasswordMutation>;
-export type UpdatePasswordMutationOptions = Apollo.BaseMutationOptions<UpdatePasswordMutation, UpdatePasswordMutationVariables>;
 export const UpdatePostDocument = gql`
     mutation UpdatePost($input: UpdatePostInput!) {
   updatePost(input: $input) {
@@ -4262,46 +4056,41 @@ export function useUpdateSocialMediasMutation(baseOptions?: Apollo.MutationHookO
 export type UpdateSocialMediasMutationHookResult = ReturnType<typeof useUpdateSocialMediasMutation>;
 export type UpdateSocialMediasMutationResult = Apollo.MutationResult<UpdateSocialMediasMutation>;
 export type UpdateSocialMediasMutationOptions = Apollo.BaseMutationOptions<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>;
-export const UploadTrackDocument = gql`
-    mutation UploadTrack($input: UploadTrackInput!) {
-  uploadTrack(input: $input) {
+export const UpdateTrackDocument = gql`
+    mutation updateTrack($input: UpdateTrackInput!) {
+  updateTrack(input: $input) {
     track {
-      id
-      uploadUrl
-      file
-      muxUpload {
-        url
-      }
+      ...TrackComponentFields
     }
   }
 }
-    `;
-export type UploadTrackMutationFn = Apollo.MutationFunction<UploadTrackMutation, UploadTrackMutationVariables>;
+    ${TrackComponentFieldsFragmentDoc}`;
+export type UpdateTrackMutationFn = Apollo.MutationFunction<UpdateTrackMutation, UpdateTrackMutationVariables>;
 
 /**
- * __useUploadTrackMutation__
+ * __useUpdateTrackMutation__
  *
- * To run a mutation, you first call `useUploadTrackMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useUploadTrackMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useUpdateTrackMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateTrackMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [uploadTrackMutation, { data, loading, error }] = useUploadTrackMutation({
+ * const [updateTrackMutation, { data, loading, error }] = useUpdateTrackMutation({
  *   variables: {
  *      input: // value for 'input'
  *   },
  * });
  */
-export function useUploadTrackMutation(baseOptions?: Apollo.MutationHookOptions<UploadTrackMutation, UploadTrackMutationVariables>) {
+export function useUpdateTrackMutation(baseOptions?: Apollo.MutationHookOptions<UpdateTrackMutation, UpdateTrackMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UploadTrackMutation, UploadTrackMutationVariables>(UploadTrackDocument, options);
+        return Apollo.useMutation<UpdateTrackMutation, UpdateTrackMutationVariables>(UpdateTrackDocument, options);
       }
-export type UploadTrackMutationHookResult = ReturnType<typeof useUploadTrackMutation>;
-export type UploadTrackMutationResult = Apollo.MutationResult<UploadTrackMutation>;
-export type UploadTrackMutationOptions = Apollo.BaseMutationOptions<UploadTrackMutation, UploadTrackMutationVariables>;
+export type UpdateTrackMutationHookResult = ReturnType<typeof useUpdateTrackMutation>;
+export type UpdateTrackMutationResult = Apollo.MutationResult<UpdateTrackMutation>;
+export type UpdateTrackMutationOptions = Apollo.BaseMutationOptions<UpdateTrackMutation, UpdateTrackMutationVariables>;
 export const UploadUrlDocument = gql`
     query UploadUrl($fileType: String!) {
   uploadUrl(fileType: $fileType) {
@@ -4339,72 +4128,3 @@ export function useUploadUrlLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
 export type UploadUrlQueryHookResult = ReturnType<typeof useUploadUrlQuery>;
 export type UploadUrlLazyQueryHookResult = ReturnType<typeof useUploadUrlLazyQuery>;
 export type UploadUrlQueryResult = Apollo.QueryResult<UploadUrlQuery, UploadUrlQueryVariables>;
-export const ValidPasswordResetTokenDocument = gql`
-    query ValidPasswordResetToken($token: String!) {
-  validPasswordResetToken(token: $token)
-}
-    `;
-
-/**
- * __useValidPasswordResetTokenQuery__
- *
- * To run a query within a React component, call `useValidPasswordResetTokenQuery` and pass it any options that fit your needs.
- * When your component renders, `useValidPasswordResetTokenQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useValidPasswordResetTokenQuery({
- *   variables: {
- *      token: // value for 'token'
- *   },
- * });
- */
-export function useValidPasswordResetTokenQuery(baseOptions: Apollo.QueryHookOptions<ValidPasswordResetTokenQuery, ValidPasswordResetTokenQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<ValidPasswordResetTokenQuery, ValidPasswordResetTokenQueryVariables>(ValidPasswordResetTokenDocument, options);
-      }
-export function useValidPasswordResetTokenLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ValidPasswordResetTokenQuery, ValidPasswordResetTokenQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<ValidPasswordResetTokenQuery, ValidPasswordResetTokenQueryVariables>(ValidPasswordResetTokenDocument, options);
-        }
-export type ValidPasswordResetTokenQueryHookResult = ReturnType<typeof useValidPasswordResetTokenQuery>;
-export type ValidPasswordResetTokenLazyQueryHookResult = ReturnType<typeof useValidPasswordResetTokenLazyQuery>;
-export type ValidPasswordResetTokenQueryResult = Apollo.QueryResult<ValidPasswordResetTokenQuery, ValidPasswordResetTokenQueryVariables>;
-export const VerifyUserEmailDocument = gql`
-    mutation VerifyUserEmail($input: VerifyUserEmailInput!) {
-  verifyUserEmail(input: $input) {
-    user {
-      id
-      verified
-    }
-  }
-}
-    `;
-export type VerifyUserEmailMutationFn = Apollo.MutationFunction<VerifyUserEmailMutation, VerifyUserEmailMutationVariables>;
-
-/**
- * __useVerifyUserEmailMutation__
- *
- * To run a mutation, you first call `useVerifyUserEmailMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useVerifyUserEmailMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [verifyUserEmailMutation, { data, loading, error }] = useVerifyUserEmailMutation({
- *   variables: {
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useVerifyUserEmailMutation(baseOptions?: Apollo.MutationHookOptions<VerifyUserEmailMutation, VerifyUserEmailMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<VerifyUserEmailMutation, VerifyUserEmailMutationVariables>(VerifyUserEmailDocument, options);
-      }
-export type VerifyUserEmailMutationHookResult = ReturnType<typeof useVerifyUserEmailMutation>;
-export type VerifyUserEmailMutationResult = Apollo.MutationResult<VerifyUserEmailMutation>;
-export type VerifyUserEmailMutationOptions = Apollo.BaseMutationOptions<VerifyUserEmailMutation, VerifyUserEmailMutationVariables>;

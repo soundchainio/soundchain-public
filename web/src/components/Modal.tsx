@@ -15,7 +15,12 @@ export const Modal = ({ show, children, title, leftButton, rightButton, onClose 
   const ref = useRef(null);
   return (
     <Transition.Root show={show} as={Fragment}>
-      <Dialog as="div" className="fixed w-full inset-0 flex flex-col z-40" onClose={onClose} initialFocus={ref}>
+      <Dialog
+        as="div"
+        className="fixed h-full overflow-y-scroll w-full inset-0 flex flex-col z-40"
+        onClose={onClose}
+        initialFocus={ref}
+      >
         <Transition.Child
           as={Fragment}
           enter="transition-opacity ease-linear duration-300"
@@ -37,13 +42,13 @@ export const Modal = ({ show, children, title, leftButton, rightButton, onClose 
           leaveFrom="translate-y-0"
           leaveTo="translate-y-full"
         >
-          <div className="relative flex-1 flex flex-col w-full h-full">
+          <div className="relative flex-1 flex flex-col w-full">
             <div className="flex h-16 items-center rounded-tl-3xl rounded-tr-3xl bg-gray-20">
               <div className="flex-1">{leftButton}</div>
               <div className="flex-2 text-center text-white font-bold">{title}</div>
               <div className="flex-1 ">{rightButton}</div>
             </div>
-            <div className="flex flex-col h-full overflow-y-auto bg-gray-30 p-4">{children}</div>
+            <div className="flex flex-col h-full bg-gray-10">{children}</div>
           </div>
         </Transition.Child>
       </Dialog>

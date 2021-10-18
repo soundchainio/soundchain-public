@@ -1,14 +1,23 @@
+import '@reach/slider/styles.css';
 import * as Sentry from '@sentry/react';
 import { Integrations } from '@sentry/tracing';
+import { BottomAudioPlayer } from 'components/BottomAudioPlayer';
+import { BottomNavBarWrapper } from 'components/BottomNavBarWrapper';
 import { CheckBodyScroll } from 'components/CheckBodyScroll';
 import { Favicons } from 'components/Favicons';
+import { AudioPlayerModal } from 'components/modals/AudioPlayerModal';
 import { StateProvider } from 'contexts';
+import { AudioPlayerProvider } from 'hooks/useAudioPlayer';
+import { HideBottomNavBarProvider } from 'hooks/useHideBottomNavBar';
+import { MagicProvider } from 'hooks/useMagicContext';
 import { ApolloProvider } from 'lib/apollo';
 import type { AppProps } from 'next/app';
 import Head from 'next/head';
 import Router from 'next/router';
 import NProgress from 'nprogress';
+import React from 'react';
 import 'styles/audio-player.css';
+import 'styles/bottom-audio-player.css';
 import 'styles/globals.css';
 import 'styles/loading-ring.css';
 import 'styles/nprogress.css';
@@ -33,13 +42,27 @@ function SoundchainApp({ Component, pageProps }: AppProps) {
       <Head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <meta name="theme-color" content="#000000" />
         <Favicons />
         <link rel="manifest" href="/manifest.json"></link>
       </Head>
       <ApolloProvider pageProps={pageProps}>
         <StateProvider>
-          <CheckBodyScroll />
-          <Component {...pageProps} />
+          <MagicProvider>
+            <AudioPlayerProvider>
+              <HideBottomNavBarProvider>
+                <CheckBodyScroll />
+                <div className="h-full flex flex-col">
+                  <div className="flex-1 max-h-full overflow-y-auto">
+                    <Component {...pageProps} />
+                  </div>
+                  <BottomAudioPlayer />
+                  <BottomNavBarWrapper />
+                  <AudioPlayerModal />
+                </div>
+              </HideBottomNavBarProvider>
+            </AudioPlayerProvider>
+          </MagicProvider>
         </StateProvider>
       </ApolloProvider>
     </>

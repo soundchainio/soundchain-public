@@ -5,8 +5,8 @@ import { usePostQuery } from 'lib/graphql';
 import NextLink from 'next/link';
 import React from 'react';
 import { AuthorActionsType } from 'types/AuthorActionsType';
-import { AudioPlayer } from './AudioPlayer';
 import { Avatar } from './Avatar';
+import { MiniAudioPlayer } from './MiniAudioPlayer';
 import { PostActions } from './PostActions';
 import { PostSkeleton } from './PostSkeleton';
 import { PostStats } from './PostStats';
@@ -57,7 +57,17 @@ export const Post = ({ postId }: PostProps) => {
           <iframe frameBorder="0" className="mt-4 w-full bg-gray-20" allowFullScreen src={post.mediaLink} />
         )}
         {post.repostId && <RepostPreview postId={post.repostId} />}
-        {post.track && <AudioPlayer trackId={post.track.id} src={post.track.playbackUrl} title={post.track.title} />}
+        {post.track && (
+          <MiniAudioPlayer
+            song={{
+              src: post.track.playbackUrl,
+              trackId: post.track.id,
+              art: post.track.artworkUrl,
+              title: post.track.title,
+              artist: post.track.artist,
+            }}
+          />
+        )}
         <PostStats
           totalReactions={post.totalReactions}
           topReactions={post.topReactions}

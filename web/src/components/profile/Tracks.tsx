@@ -1,9 +1,18 @@
 import classNames from 'classnames';
 import { InfiniteLoader } from 'components/InfiniteLoader';
-import { Track } from 'components/Track';
+import { TrackListItem } from 'components/TrackListItem';
 import { TrackSkeleton } from 'components/TrackSkeleton';
+import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { SortOrder, SortTrackField, useTracksQuery } from 'lib/graphql';
 import React from 'react';
+
+type Song = {
+  src: string;
+  title?: string | null;
+  trackId: string;
+  artist?: string | null;
+  art?: string | null;
+};
 
 interface TracksProps extends React.ComponentPropsWithoutRef<'div'> {
   profileId?: string;
@@ -11,6 +20,8 @@ interface TracksProps extends React.ComponentPropsWithoutRef<'div'> {
 }
 
 export const Tracks = ({ className, profileId, pageSize = 10 }: TracksProps) => {
+  const { playlistState } = useAudioPlayerContext();
+
   const { data, fetchMore } = useTracksQuery({
     variables: {
       filter: { profileId: profileId as string },
@@ -21,7 +32,7 @@ export const Tracks = ({ className, profileId, pageSize = 10 }: TracksProps) => 
 
   if (!data) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-2">
         <TrackSkeleton />
         <TrackSkeleton />
         <TrackSkeleton />
@@ -42,14 +53,31 @@ export const Tracks = ({ className, profileId, pageSize = 10 }: TracksProps) => 
     });
   };
 
+  const handleOnPlayClicked = (song: Song, index: number) => {
+    const list = nodes.map(
+      node =>
+        ({
+          trackId: node.id,
+          src: node.playbackUrl,
+          art: node.artworkUrl,
+          title: node.title,
+          artist: node.artist,
+        } as Song),
+    );
+    playlistState(list, index);
+  };
+
   return (
-    <div className={classNames('space-y-3', className)}>
-      {nodes.map(({ id }) => (
-        <div key={id} className="p-4 bg-gray-20 break-words">
-          <Track key={id} trackId={id} />
-        </div>
+    <ol className={classNames('space-y-5', className)}>
+      {nodes.map(({ id }, index) => (
+        <TrackListItem
+          key={id}
+          index={index + 1}
+          trackId={id}
+          handleOnPlayClicked={song => handleOnPlayClicked(song, index)}
+        />
       ))}
       {pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading Tracks" />}
-    </div>
+    </ol>
   );
 };

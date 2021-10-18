@@ -1,97 +1,172 @@
 import { Button } from 'components/Button';
 import { ImageUpload } from 'components/ImageUpload';
 import { InputField } from 'components/InputField';
-import { Label } from 'components/Label';
 import { TextareaField } from 'components/TextareaField';
 import { Form, Formik } from 'formik';
-import useMetaMask from 'hooks/useMetaMask';
-import { useAddTrackMetadataMutation, useCreateMintingRequestMutation } from 'lib/graphql';
-import React from 'react';
+import { useMagicContext } from 'hooks/useMagicContext';
+import { Logo } from 'icons/Logo';
+import { Matic } from 'icons/Matic';
+import { getMaxGasFee } from 'lib/blockchain';
+import { Genre } from 'lib/graphql';
+import React, { useEffect, useState } from 'react';
 import * as yup from 'yup';
 
-interface Props {
-  trackId: string;
-  afterSubmit: () => void;
-  setCoverPhotoUrl?: (val: string) => void;
-  assetUrl: string;
-}
-
-interface FormValues {
+export interface FormValues {
   title: string;
-  description?: string;
+  description: string;
+  artist?: string;
+  album?: string;
+  releaseYear?: number;
+  genres?: Genre[];
   artworkUrl?: string;
+  quantity: number;
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   title: yup.string().required(),
-  description: yup.string(),
-  artworkUrl: yup.string()
+  description: yup.string().required(),
+  artist: yup.string(),
+  album: yup.string(),
+  releaseYear: yup.number(),
+  genres: yup.array(),
+  artworkUrl: yup.string(),
+  quantity: yup.number().required(),
 });
 
-const initialValues: FormValues = {
+interface Props {
+  initialValues?: FormValues;
+  handleSubmit: (values: FormValues) => void;
+}
+
+const defaultValues: FormValues = {
   title: '',
   description: '',
+  artist: '',
+  album: '',
+  releaseYear: new Date().getFullYear(),
+  genres: [],
   artworkUrl: '',
+  quantity: 1,
 };
 
-export const TrackMetadataForm = ({ trackId, afterSubmit, setCoverPhotoUrl, assetUrl }: Props) => {
-  const [addMetadata] = useAddTrackMetadataMutation({ refetchQueries: ['Tracks'] });
-  const { account } = useMetaMask();
-  const [createMintingRequest] = useCreateMintingRequestMutation();
+export const TrackMetadataForm = ({ initialValues = defaultValues, handleSubmit }: Props) => {
+  const { web3, balance } = useMagicContext();
+  const [maxGasFee, setMaxGasFee] = useState<string>();
+  const [enoughFunds, setEnoughFunds] = useState<boolean>();
+  const [uploadingArt, setUploadingArt] = useState<boolean>();
 
-
-  const handleSubmit = async (values: FormValues) => {
-    await createMintingRequest({
-      variables: {
-        input: {
-          to: account!,
-          name: values.title,
-          description: values.description || '',
-          assetUrl: assetUrl,
-          artUrl: values.artworkUrl
-        }
+  useEffect(() => {
+    const gasCheck = () => {
+      if (web3) {
+        getMaxGasFee(web3).then(setMaxGasFee);
       }
-    });
-    await addMetadata({ variables: { input: { trackId, ...values } } });
-    afterSubmit();
-  };
+    };
+    const interval = setInterval(() => {
+      gasCheck();
+    }, 10 * 1000);
+    gasCheck();
+    return () => clearInterval(interval);
+  }, [web3]);
 
   const onArtworkUpload = (val: string, setFieldValue: (field: string, value: string) => void) => {
-    if (setCoverPhotoUrl) {
-      setCoverPhotoUrl(val);
-      setFieldValue('artworkUrl', val);
-    }
+    setFieldValue('artworkUrl', val);
   };
 
+  useEffect(() => {
+    if (balance && maxGasFee) {
+      setEnoughFunds(balance > maxGasFee);
+    }
+  }, [maxGasFee, balance]);
+
   return (
-    <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
+    <Formik
+      initialValues={initialValues}
+      enableReinitialize
+      validationSchema={validationSchema}
+      onSubmit={handleSubmit}
+    >
       {({ setFieldValue }) => (
-        <Form className="flex flex-col justify-between h-full">
-          <div>
-            <div className="flex items-center mt-6">
-              <div className="h-30 w-30 mr-2 flex flex-col items-center">
-                <ImageUpload artwork={true} onChange={(val) => onArtworkUpload(val, setFieldValue)} />
-                <span className="text-gray-80 underline text-xs mt-2">
-                  CHANGE ARTWORK
-                </span>
-              </div>
-              <div className="flex-1">
-                <Label>TRACK TITLE</Label>
-                <InputField name="title" type="text" />
-              </div>
+        <Form className="flex flex-col gap-4 h-full">
+          <div className="flex items-center px-4">
+            <div className="h-30 w-30 mr-2 flex flex-col items-center">
+              <ImageUpload
+                artwork={true}
+                onChange={val => onArtworkUpload(val, setFieldValue)}
+                onUpload={setUploadingArt}
+                initialUrl={initialValues.artworkUrl}
+              />
+              <span className="text-gray-80 underline text-xs mt-2 font-bold">
+                {uploadingArt ? 'UPLOADING...' : 'CHANGE ARTWORK'}
+              </span>
             </div>
-            <div>
-              <div className="mt-4">
-                <Label>DESCRIPTION</Label>
-                <TextareaField name="description" />
-              </div>
+            <div className="flex flex-col flex-1 gap-2">
+              <InputField name="title" type="text" label="TRACK TITLE" />
+              <InputField name="artist" type="text" label="ARTIST" />
             </div>
           </div>
-          <Button type="submit" variant="outline" borderColor="bg-green-gradient h-12">
-            MINT NFT AUDIO
-          </Button>
+          <div className="px-4">
+            <TextareaField rows={3} name="description" label="DESCRIPTION" />
+          </div>
+          <div className="px-4">
+            <InputField name="album" type="text" label="ALBUM" />
+          </div>
+          <div className="px-4">
+            <InputField name="releaseYear" type="number" label="RELEASE YEAR" />
+          </div>
+          <div className="px-4">
+            <InputField name="quantity" type="number" label="QUANTITY" />
+          </div>
+          <div className="flex items-center justify-between py-3 px-4 mt-4" style={{ backgroundColor: '#202020' }}>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-xs text-white font-bold">
+                <Logo id="soundchain-wallet" height="20" width="20" /> SoundChain Wallet
+              </div>
+              <div className="flex items-center gap-2 font-black text-xs" style={{ color: '#808080' }}>
+                Balance: <Matic />
+                <div className="text-white">{balance}</div>MATIC
+              </div>
+            </div>
+            <div className="text-white text-xs text-right">
+              Need some test Matic? <br />
+              <a
+                className="text-xs font-bold"
+                href="https://faucet.polygon.technology/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Get some here
+              </a>
+            </div>
+          </div>
+          <div className="pl-4 pr-4 pb-4 flex items-center mt-4">
+            <div className="flex-1 font-black text-xs" style={{ color: '#808080' }}>
+              <div>Max gas fee</div>
+              <div className="flex items-center gap-1">
+                <Matic />
+                <div className="text-white">{maxGasFee}</div>MATIC
+              </div>
+            </div>
+            <div className="flex-1">
+              {enoughFunds && !uploadingArt && (
+                <Button type="submit" variant="rainbow">
+                  MINT NFT
+                </Button>
+              )}
+              {uploadingArt && (
+                <div className="flex-1">
+                  <div className="text-white text-right text-sm font-bold">Uploading artwork...</div>
+                </div>
+              )}
+              {!enoughFunds && (
+                <div className="text-white text-right text-sm font-bold">
+                  {`It seems like you might have not enough funds `}
+                  <span className="whitespace-nowrap">:(</span>
+                </div>
+              )}
+            </div>
+          </div>
         </Form>
       )}
-    </Formik >
+    </Formik>
   );
 };

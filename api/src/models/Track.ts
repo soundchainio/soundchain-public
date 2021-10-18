@@ -1,7 +1,8 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
+import { Genre } from '../types/Genres';
 import { MuxAsset } from '../types/MuxAsset';
-import { MuxUpload } from '../types/MuxUpload';
+import { NFTData } from '../types/NFTData';
 import { Model } from './Model';
 
 @ObjectType()
@@ -23,19 +24,31 @@ export class Track extends Model {
 
   @Field()
   @prop({ required: true })
-  file: string;
-
-  @Field()
-  @prop()
-  uploadUrl: string;
+  assetUrl: string;
 
   @Field({ nullable: true })
   @prop()
   artworkUrl: string;
 
-  @Field()
+  @Field({ nullable: true })
   @prop()
-  muxUpload: MuxUpload;
+  artist: string;
+
+  @Field({ nullable: true })
+  @prop()
+  album: string;
+
+  @Field({ nullable: true })
+  @prop()
+  releaseYear: number;
+
+  @Field(() => [Genre], { nullable: true })
+  @prop({ type: [String], enum: Genre })
+  genres: Genre[];
+
+  @Field(() => NFTData, { nullable: true })
+  @prop()
+  nftData: NFTData;
 
   @prop()
   muxAsset: MuxAsset;
