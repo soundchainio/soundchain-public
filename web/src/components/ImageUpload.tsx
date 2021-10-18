@@ -42,7 +42,7 @@ export function ImageUpload({
 
   useEffect(() => {
     initialValue && upload([initialValue]);
-  }, [upload, initialValue]);
+  }, [initialValue]);
 
   return (
     <Dropzone
