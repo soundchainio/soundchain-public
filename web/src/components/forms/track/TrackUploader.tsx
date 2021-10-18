@@ -44,11 +44,7 @@ export const TrackUploader = ({ onFileChange }: TrackUploaderProps) => {
           <AudioPlayer title={file.name} src={preview} />
         </div>
         <div className="flex mb-4 md:mb-0 mr-4 flex-col justify-center flex-shrink-0" {...getRootProps()}>
-          <JellyButton
-            flavor="blueberry"
-            icon={<UploadIcon activatedColor="blue" id="blue-gradient" />}
-            className="text-xs"
-          >
+          <JellyButton flavor="blueberry" icon={<UploadIcon color="blue" id="blue-gradient" />} className="text-xs">
             Choose File
           </JellyButton>
           <input {...getInputProps()} />
@@ -65,11 +61,7 @@ export const TrackUploader = ({ onFileChange }: TrackUploaderProps) => {
         <p className="font-semibold text-[9px]">WAV,MP3,AIFF,FLAC,OGA (Max: 30mb)</p>
       </div>
       <div className="flex flex-col justify-center flex-shrink-0">
-        <JellyButton
-          flavor="blueberry"
-          icon={<UploadIcon activatedColor="blue" id="blue-gradient" />}
-          className="text-xs"
-        >
+        <JellyButton flavor="blueberry" icon={<UploadIcon color="blue" id="blue-gradient" />} className="text-xs">
           Choose File
         </JellyButton>
         <input {...getInputProps()} />

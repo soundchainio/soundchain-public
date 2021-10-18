@@ -7,7 +7,7 @@ import { LogoAndText } from 'icons/LogoAndText';
 import { setJwt } from 'lib/apollo';
 import { useLoginMutation } from 'lib/graphql';
 import { useRouter } from 'next/dist/client/router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import * as yup from 'yup';
 
 interface FormValues {
@@ -19,7 +19,8 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
 });
 
 export const LoginForm = () => {
-  const [login, { loading }] = useLoginMutation();
+  const [login] = useLoginMutation();
+  const [loading, setLoading] = useState(false);
   const me = useMe();
   const { magic } = useMagicContext();
   const router = useRouter();
@@ -32,7 +33,9 @@ export const LoginForm = () => {
 
   async function handleSubmit(values: FormValues) {
     try {
-      const token = await magic?.auth.loginWithMagicLink({
+      setLoading(true);
+      magic.preload();
+      const token = await magic.auth.loginWithMagicLink({
         email: values.email,
       });
 
@@ -44,6 +47,8 @@ export const LoginForm = () => {
       setJwt(result.data?.login.jwt);
     } catch (error) {
       router.push('/create-account');
+    } finally {
+      setLoading(false);
     }
   }
 

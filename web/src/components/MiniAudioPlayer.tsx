@@ -63,10 +63,16 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
             </div>
             {isSameSong && <div className="flex-1 text-right text-gray-80 text-xs">{timeFromSecs(duration || 0)}</div>}
           </div>
-          <div className="post-audio-player text-white flex flex-col mt-2">
+          <div className="text-white flex flex-col mt-2">
             {isSameSong ? (
               <>
-                <Slider className="ml-1" min={0} max={duration} value={progress} onChange={onSliderChange} />
+                <Slider
+                  className="audio-player ml-1"
+                  min={0}
+                  max={duration}
+                  value={progress}
+                  onChange={onSliderChange}
+                />
                 <div className="flex mt-2 text-xs text-gray-80">
                   <div className="flex-1">{timeFromSecs(progress || 0)}</div>
                   <div className="flex-1 text-right">{remainingTime(progress, duration || 0)} </div>
@@ -74,7 +80,7 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
               </>
             ) : (
               <>
-                <Slider className="ml-1" min={0} max={1} value={0} disabled />
+                <Slider className="audio-player ml-1" min={0} max={1} value={0} disabled />
                 <div className="flex mt-2 text-xs text-gray-80">
                   <div className="flex-1">0:00</div>
                   <div className="flex-1 text-right" />
