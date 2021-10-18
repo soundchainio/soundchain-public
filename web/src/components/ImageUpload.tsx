@@ -14,6 +14,7 @@ export interface ImageUploadProps extends Omit<React.ComponentPropsWithoutRef<'d
   value?: string;
   rounded?: boolean;
   artwork?: boolean;
+  initialValue?: File;
 }
 
 const defaultMaxFileSize = 1024 * 1024 * 30; // 30Mb
@@ -28,6 +29,7 @@ export function ImageUpload({
   onUpload,
   children,
   rounded,
+  initialValue,
   artwork = false,
   ...rest
 }: ImageUploadProps) {
@@ -37,6 +39,10 @@ export function ImageUpload({
   useEffect(() => {
     onUpload && onUpload(uploading);
   }, [uploading, onUpload]);
+
+  useEffect(() => {
+    initialValue && upload([initialValue]);
+  }, [upload, initialValue]);
 
   return (
     <Dropzone

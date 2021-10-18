@@ -1,13 +1,10 @@
 import classNames from 'classnames';
-import { AudioPlayer } from 'components/AudioPlayer';
-import { FormValues, TrackMetadataForm } from 'components/forms/track/TrackMetadataForm';
+import { FormValues, InitialValues, TrackMetadataForm } from 'components/forms/track/TrackMetadataForm';
 import { TrackUploader } from 'components/forms/track/TrackUploader';
 import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { useUpload } from 'hooks/useUpload';
-import { Anchor } from 'icons/Anchor';
-import { Polygon } from 'icons/Polygon';
 import { mintNftToken } from 'lib/blockchain';
 import {
   CreateTrackMutation,
@@ -21,16 +18,11 @@ import * as musicMetadata from 'music-metadata-browser';
 import Image from 'next/image';
 import React, { useState } from 'react';
 import { Metadata, Receipt } from 'types/NftTypes';
+import { MiningState, MintingDone } from './MintingDone';
 
 enum Tabs {
   NFT = 'NFT',
   POST = 'Post',
-}
-
-enum MiningState {
-  IN_PROGRESS = 'In progress...',
-  DONE = 'Done!',
-  ERROR = 'Error :(',
 }
 
 export const CreateModal = () => {
@@ -40,7 +32,6 @@ export const CreateModal = () => {
 
   const [file, setFile] = useState<File>();
   const [preview, setPreview] = useState<string>();
-  const [fileMetadata, setFileMetadata] = useState<musicMetadata.IAudioMetadata['common']>();
 
   const [newTrack, setNewTrack] = useState<CreateTrackMutation['createTrack']['track']>();
 
@@ -56,8 +47,28 @@ export const CreateModal = () => {
   const [mintingState, setMintingState] = useState<string>();
   const [miningState, setMiningState] = useState<MiningState>(MiningState.IN_PROGRESS);
 
+  const [initialValues, setInitialValues] = useState<InitialValues>();
+
   const handleFileDrop = (file: File) => {
-    musicMetadata.parseBlob(file).then(result => setFileMetadata(result.common));
+    musicMetadata.parseBlob(file).then(({ common: fileMetadata }) => {
+      let artworkFile;
+      if (fileMetadata?.picture?.length) {
+        const type = fileMetadata.picture[0].format;
+        const blob = new Blob([fileMetadata.picture[0].data], {
+          type,
+        });
+        artworkFile = new File([blob], 'artwork', { type });
+      }
+
+      setInitialValues({
+        title: fileMetadata?.title,
+        artist: fileMetadata?.artist,
+        description: fileMetadata?.comment && fileMetadata.comment[0],
+        album: fileMetadata?.album,
+        releaseYear: fileMetadata?.year,
+        artworkFile: artworkFile,
+      });
+    });
 
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -220,15 +231,6 @@ export const CreateModal = () => {
     </div>
   );
 
-  const initialValues: FormValues = {
-    title: fileMetadata?.title || '',
-    artist: fileMetadata?.artist || '',
-    description: fileMetadata?.comment ? fileMetadata.comment[0] : '',
-    album: fileMetadata?.album,
-    releaseYear: fileMetadata?.year,
-    quantity: 1,
-  };
-
   return (
     <Modal
       show={isOpen}
@@ -257,61 +259,5 @@ export const CreateModal = () => {
         </>
       )}
     </Modal>
-  );
-};
-
-interface MintingDoneProps {
-  track: CreateTrackMutation['createTrack']['track'];
-  miningState: MiningState;
-  transactionHash: string;
-}
-
-const MintingDone = ({ track, miningState, transactionHash }: MintingDoneProps) => {
-  return (
-    <div className="h-full w-full" style={{ backgroundColor: '#101010' }}>
-      <AudioPlayer title={track.title} src={track.playbackUrl} art={track.artworkUrl} artist={track.artist} />
-      <div
-        className="h-96 p-4 flex flex-col justify-center items-center	bg-no-repeat text-center text-xl text-white font-black uppercase"
-        style={{ backgroundImage: 'url(/congratulations.gif)', backgroundSize: '100% 100%' }}
-      >
-        <div style={{ color: '#808080' }}>Congrats,</div>
-        <div>you created an NFT!</div>
-      </div>
-      <div className="flex">
-        <div className="uppercase mr-auto text-xs font-bold py-3 px-4" style={{ color: '#CCCCCC' }}>
-          Mining Status
-        </div>
-        <div
-          className="flex gap-2 items-center py-3 px-4 text-white font-bold text-xs"
-          style={{ backgroundColor: '#252525' }}
-        >
-          {miningState === MiningState.IN_PROGRESS ? (
-            <>
-              <Image width={16} height={16} priority src="/loading.gif" alt="" /> {miningState}
-            </>
-          ) : (
-            <>{miningState}</>
-          )}
-        </div>
-      </div>
-      <div className="flex gap-4 items-center text-xs text-white py-3 px-4" style={{ backgroundColor: '#151515' }}>
-        <div className="flex items-center whitespace-nowrap font-bold">
-          <Polygon />
-          Token ID:
-        </div>
-        <div className="flex items-center gap-1 truncate">
-          <Anchor style={{ minWidth: '8px' }} />
-          <a
-            className="truncate font-black "
-            style={{ fontSize: '9px', lineHeight: '9px', borderBottom: '1px solid gray', color: '#808080' }}
-            href={`https://mumbai.polygonscan.com/tx/${transactionHash}`}
-            rel="noreferrer"
-            target="_blank"
-          >
-            {transactionHash}
-          </a>
-        </div>
-      </div>
-    </div>
   );
 };
