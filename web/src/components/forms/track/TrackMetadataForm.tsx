@@ -93,6 +93,7 @@ export const TrackMetadataForm = ({ initialValues = defaultValues, handleSubmit 
                 artwork={true}
                 onChange={val => onArtworkUpload(val, setFieldValue)}
                 onUpload={setUploadingArt}
+                initialUrl={initialValues.artworkUrl}
               />
               <span className="text-gray-80 underline text-xs mt-2 font-bold">
                 {uploadingArt ? 'UPLOADING...' : 'CHANGE ARTWORK'}

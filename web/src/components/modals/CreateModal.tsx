@@ -15,11 +15,11 @@ import {
   useCreateTrackMutation,
   usePinJsonToIpfsMutation,
   usePinToIpfsMutation,
-  useUpdateTrackMutation,
+  useUpdateTrackMutation
 } from 'lib/graphql';
 import * as musicMetadata from 'music-metadata-browser';
 import Image from 'next/image';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Metadata, Receipt } from 'types/NftTypes';
 
 enum Tabs {
@@ -56,8 +56,13 @@ export const CreateModal = () => {
   const [mintingState, setMintingState] = useState<string>();
   const [miningState, setMiningState] = useState<MiningState>(MiningState.IN_PROGRESS);
 
+  const [initialValues, setInitialValues] = useState<FormValues>();
+
+
   const handleFileDrop = (file: File) => {
-    musicMetadata.parseBlob(file).then(result => setFileMetadata(result.common));
+    musicMetadata.parseBlob(file).then(result => {
+      setFileMetadata(result.common);
+    });
 
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -197,6 +202,33 @@ export const CreateModal = () => {
     setFile(undefined);
   };
 
+  useEffect(() => {
+    const verifyMetadata = async () => {
+      let assetUrl = "";
+
+      if (fileMetadata?.picture?.length) {
+        const type = fileMetadata.picture[0].format;
+        const blob = new Blob([fileMetadata.picture[0].data], {
+          type
+        });
+        const imageFile = new File([blob], 'artwork', { type });
+        assetUrl = await upload([imageFile]);
+      }
+
+      setInitialValues({
+        title: fileMetadata?.title || '',
+        artist: fileMetadata?.artist || '',
+        description: fileMetadata?.comment ? fileMetadata.comment[0] : '',
+        album: fileMetadata?.album,
+        releaseYear: fileMetadata?.year,
+        artworkUrl: assetUrl,
+        quantity: 1,
+      });
+    }
+
+    verifyMetadata();
+  }, [fileMetadata]);
+
   const tabs = (
     <div className="flex bg-gray-10 rounded-lg">
       <div
@@ -287,15 +319,6 @@ export const CreateModal = () => {
       </Modal>
     );
   }
-
-  const initialValues: FormValues = {
-    title: fileMetadata?.title || '',
-    artist: fileMetadata?.artist || '',
-    description: fileMetadata?.comment ? fileMetadata.comment[0] : '',
-    album: fileMetadata?.album,
-    releaseYear: fileMetadata?.year,
-    quantity: 1,
-  };
 
   return (
     <Modal
