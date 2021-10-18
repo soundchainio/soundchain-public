@@ -41,24 +41,23 @@ export const NFTCard = ({ account, web3, nftToken }: NftCardProps) => {
       }
     }
   };
-
   const handleList = async (web3: Web3, tokenId: string, price: number) => {
     const confirmed = confirm('Hey! This will list this NFT, you sure?');
     if (confirmed) {
-      const result = await listItem(web3, tokenId, 1, account, price);
-      if (result) {
-        alert('Token list requested!');
-      }
+      await listItem(web3, tokenId, 1, account, price, console.log);
+      // if (result) {
+      //   alert('Token list requested!');
+      // }
     }
   };
 
   const handleApprove = async (web3: Web3) => {
     const confirmed = confirm('Hey! The marketplace will be able to transfer your NFTs, you sure?');
     if (confirmed) {
-      const result = await approveMarketplace(web3, account);
-      if (result) {
-        alert('Token approve requested!');
-      }
+      await approveMarketplace(web3, account, console.log);
+      // if (result) {
+      //   alert('Token approve requested!');
+      // }
     }
   };
 
