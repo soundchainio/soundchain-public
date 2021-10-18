@@ -61,10 +61,10 @@ export const TrackMetadataForm = ({ initialValues = defaultValues, handleSubmit 
         getMaxGasFee(web3).then(setMaxGasFee);
       }
     };
+    gasCheck();
     const interval = setInterval(() => {
       gasCheck();
-    }, 10 * 1000);
-    gasCheck();
+    }, 5 * 1000);
     return () => clearInterval(interval);
   }, [web3]);
 
