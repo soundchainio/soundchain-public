@@ -15,7 +15,6 @@ import { useEffect, useState } from 'react';
 
 const topNovaBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
-  title: 'Wallet',
 };
 
 export default function WalletPage() {
