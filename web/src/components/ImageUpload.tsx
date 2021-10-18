@@ -14,6 +14,7 @@ export interface ImageUploadProps extends Omit<React.ComponentPropsWithoutRef<'d
   value?: string;
   rounded?: boolean;
   artwork?: boolean;
+  initialUrl?: string;
 }
 
 const defaultMaxFileSize = 1024 * 1024 * 30; // 30Mb
@@ -28,11 +29,12 @@ export function ImageUpload({
   onUpload,
   children,
   rounded,
+  initialUrl,
   artwork = false,
   ...rest
 }: ImageUploadProps) {
   const { preview, fileType, uploading, upload } = useUpload(value, onChange);
-  const thumbnail = preview || value;
+  const thumbnail = preview || value || initialUrl;
 
   useEffect(() => {
     onUpload && onUpload(uploading);
