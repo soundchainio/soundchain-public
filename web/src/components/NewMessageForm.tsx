@@ -42,7 +42,7 @@ export const NewMessageForm = ({ profileId, onNewMessage }: NewMessageFormProps)
             {me && <Avatar className="flex self-center" profile={me.profile} linkToProfile={false} />}
             <FlexareaField name="body" placeholder="Write a comment..." />
             <button type="submit" disabled={isSubmitting} className="pt-1">
-              <Send activatedColor={dirty && isValid ? 'green-blue' : undefined} />
+              <Send color={dirty && isValid ? 'green-blue' : undefined} />
             </button>
           </div>
         </Form>

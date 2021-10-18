@@ -11,11 +11,11 @@ interface NavBarLinkProps {
   path: string;
   onClick?: () => void;
   icon?: (props: IconProps) => JSX.Element;
-  activatedColor?: SVGGradientColor;
+  color?: SVGGradientColor;
   id?: string;
 }
 
-export const NavBarLink = ({ label, path, icon: Icon, badge: Badge, activatedColor, id }: NavBarLinkProps) => {
+export const NavBarLink = ({ label, path, icon: Icon, badge: Badge, color, id }: NavBarLinkProps) => {
   const { asPath } = useRouter();
 
   const isActive = asPath === path;
@@ -26,13 +26,13 @@ export const NavBarLink = ({ label, path, icon: Icon, badge: Badge, activatedCol
         {Icon && (
           <div className="relative">
             {Badge && <Badge />}
-            <Icon activatedColor={isActive ? activatedColor : undefined} id={id} />
+            <Icon color={isActive ? color : undefined} id={id} />
           </div>
         )}
         <span
           className={classNames(
             'text-gray-50 text-xs mt-2 font-semibold',
-            isActive && `${activatedColor}-gradient-text`,
+            isActive && `${color}-gradient-text`,
           )}
         >
           {label}

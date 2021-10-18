@@ -32,7 +32,7 @@ export default function CreateAccountPage() {
 
   useEffect(() => {
     async function isLoggedInMagic() {
-      const user = magic?.user;
+      const user = magic.user;
       const isLoggedIn = await user?.isLoggedIn();
 
       if (user && isLoggedIn) {

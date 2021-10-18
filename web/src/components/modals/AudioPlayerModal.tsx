@@ -55,7 +55,7 @@ export const AudioPlayerModal = () => {
       onClose={handleClose}
     >
       <div className="flex flex-col h-full justify-center items-center text-white">
-        <div className="post-audio-player w-full sm:max-w-xs px-8 sm:px-0">
+        <div className="w-full sm:max-w-xs px-8 sm:px-0">
           <div className="flex justify-center">
             <div className="relative w-3/4 sm:w-full after:block after:pb-full flex bg-gray-80 rounded-lg overflow-hidden">
               {currentSong.art && <Asset src={currentSong.art} />}
@@ -65,7 +65,7 @@ export const AudioPlayerModal = () => {
             <h2 className="font-black">{currentSong.title || 'Unknown title'}</h2>
             <h3 className="font-medium">{currentSong.artist || 'Unknown artist'}</h3>
           </div>
-          <Slider min={0} max={duration} value={progress} onChange={onSliderChange} />
+          <Slider className="audio-player" min={0} max={duration} value={progress} onChange={onSliderChange} />
           <div className="flex justify-between mt-2 text-xs text-gray-80 cursor-default">
             <div>{timeFromSecs(progress || 0)}</div>
             <div onClick={onPlaybackDurationClick}>

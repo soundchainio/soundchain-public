@@ -90,7 +90,7 @@ export const BottomAudioPlayer = () => {
   }
 
   return (
-    <div className="bottom-audio-player bg-black py-2 flex flex-col gap-2">
+    <div className="bg-black py-2 flex flex-col gap-2">
       <div className="flex px-2">
         <button
           className="flex flex-1 items-center gap-2 cursor-pointer"
@@ -113,7 +113,7 @@ export const BottomAudioPlayer = () => {
           {isPlaying ? <Pause /> : <Play />}
         </button>
       </div>
-      <Slider min={0} max={duration} value={progress} disabled />
+      <Slider className="bottom-audio-player" min={0} max={duration} value={progress} disabled />
       <audio
         ref={audioRef}
         onPlay={() => setPlayingState(true)}
