@@ -22,8 +22,8 @@ export class ListingItemService extends ModelService<typeof ListingItem> {
     return listingItem;
   }
 
-  async isForSale(tokenId: number): Promise<boolean> {
-    const isForSaleQuery = await ListingItemModel.exists({ tokenId, valid: true });
-    return isForSaleQuery;
+  async findListingItem(tokenId: number): Promise<ListingItem> {
+    const listingItem = await ListingItemModel.findOne({ tokenId, valid: true });
+    return listingItem;
   }
 }

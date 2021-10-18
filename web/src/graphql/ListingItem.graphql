@@ -1,0 +1,10 @@
+query ListingItem($tokenId: Float!) {
+  listingItem(tokenId: $tokenId) {
+    owner
+    nft
+    tokenId
+    quantity
+    pricePerItem
+    startingTime
+  }
+}

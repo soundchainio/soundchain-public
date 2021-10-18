@@ -8,9 +8,10 @@ import { useRouter } from 'next/router';
 interface HandleNFTProps {
   isOwner: boolean;
   isForSale: boolean;
+  price: number;
 }
 
-export const HandleNFT = ({ isOwner, isForSale }: HandleNFTProps) => {
+export const HandleNFT = ({ isOwner, isForSale, price }: HandleNFTProps) => {
   const router = useRouter();
   const me = useMe();
 
@@ -48,10 +49,10 @@ export const HandleNFT = ({ isOwner, isForSale }: HandleNFTProps) => {
             <div className="flex flex-col flex-1 ml-4">
               <div className="text-md flex items-end font-bold">
                 <Matic className="mr-2 mb-1" />
-                <span className="self-end"> 34.547 </span>
+                <span className="self-end"> {price} </span>
                 <span className="ml-1 self-end text-xs text-gray-80">MATIC</span>
               </div>
-              <div className="text-xs text-gray-80 mt-1 font-bold">$38.37 USD</div>
+              <div className="text-xs text-gray-80 mt-1 font-bold"> USD</div>
             </div>
             <div className="flex-1 flex items-center justify-center">
               <Button variant="buy-nft" onClick={() => router.push(`${router.asPath}/buy`)}>

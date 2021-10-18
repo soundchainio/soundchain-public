@@ -8,9 +8,10 @@ import { Track } from 'components/Track';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { cacheFor, createApolloClient } from 'lib/apollo';
 import { buyItem } from 'lib/blockchain';
-import { TrackDocument, useTrackQuery } from 'lib/graphql';
+import { TrackDocument, useListingItemLazyQuery, useTrackQuery } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
 import { ParsedUrlQuery } from 'querystring';
+import { useEffect } from 'react';
 
 export interface TrackPageProps {
   trackId: string;
@@ -46,7 +47,19 @@ export default function BuyPage({ trackId }: TrackPageProps) {
   const { data } = useTrackQuery({ variables: { id: trackId } });
   const { account, web3, balance } = useMagicContext();
 
-  const price = 10;
+  const tokenId = data?.track.nftData?.tokenId || -1;
+
+  const [getListingItem, { data: listingItem }] = useListingItemLazyQuery({
+    variables: { tokenId },
+  });
+
+  useEffect(() => {
+    getListingItem();
+  }, [getListingItem]);
+
+  const isForSale = !!listingItem?.listingItem.pricePerItem ?? false;
+  const pricePerItem = listingItem?.listingItem.pricePerItem ?? 0;
+
   const parsedBalance = parseInt(balance || '0');
 
   const handleBuy = async () => {
@@ -61,15 +74,19 @@ export default function BuyPage({ trackId }: TrackPageProps) {
     title: 'Confirm Purchase',
   };
 
+  if (!isForSale) {
+    return <div></div>;
+  }
+
   return (
     <Layout topNavBarProps={topNovaBarProps}>
       <div className="m-4">
         <Track trackId={trackId} />
       </div>
-      <BuyNFT price={price} balance={balance || '0'} />
+      <BuyNFT price={pricePerItem} balance={balance || '0'} />
       <BottomSheet>
         <div className="flex justify-center pb-3">
-          <Button variant="buy-nft" onClick={handleBuy} disabled={parsedBalance < price}>
+          <Button variant="buy-nft" onClick={handleBuy} disabled={parsedBalance < pricePerItem}>
             <div className="px-4">BUY NFT</div>
           </Button>
         </div>

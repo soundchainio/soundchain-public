@@ -1,5 +1,0 @@
-query IsForSale($tokenId: Float!) {
-  isForSale(tokenId: $tokenId) {
-    is
-  }
-}

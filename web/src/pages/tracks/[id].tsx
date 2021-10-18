@@ -10,7 +10,7 @@ import { Track } from 'components/Track';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { cacheFor, createApolloClient } from 'lib/apollo';
 import { isTokenOwner } from 'lib/blockchain';
-import { TrackDocument, useIsForSaleLazyQuery, useTrackQuery } from 'lib/graphql';
+import { TrackDocument, useListingItemLazyQuery, useTrackQuery } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
@@ -53,11 +53,12 @@ export default function TrackPage({ trackId }: TrackPageProps) {
 
   const tokenId = data?.track.nftData?.tokenId || -1;
 
-  const [isForSale, { data: isForSaleRes }] = useIsForSaleLazyQuery({
+  const [getListingItem, { data: listingItem }] = useListingItemLazyQuery({
     variables: { tokenId },
   });
 
-  const isForSaleResponse = isForSaleRes?.isForSale.is || false;
+  const isForSaleResponse = !!listingItem?.listingItem.pricePerItem ?? false;
+  const pricePerItem = listingItem?.listingItem.pricePerItem ?? 0;
 
   useEffect(() => {
     const fetchIsOwner = async () => {
@@ -71,8 +72,8 @@ export default function TrackPage({ trackId }: TrackPageProps) {
   }, [account, web3, data?.track.nftData]);
 
   useEffect(() => {
-    isForSale();
-  }, [isForSale]);
+    getListingItem();
+  }, [getListingItem]);
 
   const topNovaBarProps: TopNavBarProps = {
     leftButton: <BackButton />,
@@ -88,7 +89,7 @@ export default function TrackPage({ trackId }: TrackPageProps) {
       <TrackInfo trackTitle={data?.track.title || undefined} albumTitle={undefined} releaseYear={undefined} />
       <BottomSheet>
         <MintingData />
-        <HandleNFT isOwner={isOwner} isForSale={isForSaleResponse} />
+        <HandleNFT price={pricePerItem} isOwner={isOwner} isForSale={isForSaleResponse} />
       </BottomSheet>
     </Layout>
   );
