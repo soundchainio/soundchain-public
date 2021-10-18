@@ -182,7 +182,7 @@ export const CreateModal = () => {
                 nftData: {
                   minter: account,
                   contract: receipt.to,
-                  tokenId: receipt.events.TransferSingle.returnValues.id,
+                  tokenId: parseInt(receipt.events.TransferSingle.returnValues.id),
                   quantity: parseInt(receipt.events.TransferSingle.returnValues.value),
                 },
               },

@@ -275,6 +275,11 @@ export enum Genre {
   World = 'WORLD',
 }
 
+export type IsForSaleOutput = {
+  __typename?: 'IsForSaleOutput';
+  is: Scalars['Boolean'];
+};
+
 export type LoginInput = {
   token: Scalars['String'];
 };
@@ -463,7 +468,7 @@ export type MutationUpdateDefaultWalletArgs = {
 
 export type NftDataInput = {
   transactionHash?: Maybe<Scalars['String']>;
-  tokenId?: Maybe<Scalars['String']>;
+  tokenId?: Maybe<Scalars['Float']>;
   contract?: Maybe<Scalars['String']>;
   minter?: Maybe<Scalars['String']>;
   quantity?: Maybe<Scalars['Float']>;
@@ -472,7 +477,7 @@ export type NftDataInput = {
 export type NftDataType = {
   __typename?: 'NFTDataType';
   transactionHash: Maybe<Scalars['String']>;
-  tokenId: Maybe<Scalars['String']>;
+  tokenId: Maybe<Scalars['Float']>;
   contract: Maybe<Scalars['String']>;
   minter: Maybe<Scalars['String']>;
   quantity: Maybe<Scalars['Float']>;
@@ -597,6 +602,7 @@ export type Query = {
   feed: FeedConnection;
   followers: FollowConnection;
   following: FollowConnection;
+  isForSale: IsForSaleOutput;
   message: Message;
   notifications: NotificationConnection;
   notification: Notification;
@@ -643,6 +649,10 @@ export type QueryFollowersArgs = {
 export type QueryFollowingArgs = {
   page?: Maybe<PageInput>;
   id: Scalars['String'];
+};
+
+export type QueryIsForSaleArgs = {
+  tokenId: Scalars['Float'];
 };
 
 export type QueryMessageArgs = {
@@ -1165,6 +1175,14 @@ export type FollowingQuery = { __typename?: 'Query' } & {
     >;
     pageInfo: { __typename?: 'PageInfo' } & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>;
   };
+};
+
+export type IsForSaleQueryVariables = Exact<{
+  tokenId: Scalars['Float'];
+}>;
+
+export type IsForSaleQuery = { __typename?: 'Query' } & {
+  isForSale: { __typename?: 'IsForSaleOutput' } & Pick<IsForSaleOutput, 'is'>;
 };
 
 export type LoginMutationVariables = Exact<{
@@ -2566,6 +2584,43 @@ export function useFollowingLazyQuery(
 export type FollowingQueryHookResult = ReturnType<typeof useFollowingQuery>;
 export type FollowingLazyQueryHookResult = ReturnType<typeof useFollowingLazyQuery>;
 export type FollowingQueryResult = Apollo.QueryResult<FollowingQuery, FollowingQueryVariables>;
+export const IsForSaleDocument = gql`
+  query IsForSale($tokenId: Float!) {
+    isForSale(tokenId: $tokenId) {
+      is
+    }
+  }
+`;
+
+/**
+ * __useIsForSaleQuery__
+ *
+ * To run a query within a React component, call `useIsForSaleQuery` and pass it any options that fit your needs.
+ * When your component renders, `useIsForSaleQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useIsForSaleQuery({
+ *   variables: {
+ *      tokenId: // value for 'tokenId'
+ *   },
+ * });
+ */
+export function useIsForSaleQuery(baseOptions: Apollo.QueryHookOptions<IsForSaleQuery, IsForSaleQueryVariables>) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<IsForSaleQuery, IsForSaleQueryVariables>(IsForSaleDocument, options);
+}
+export function useIsForSaleLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<IsForSaleQuery, IsForSaleQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<IsForSaleQuery, IsForSaleQueryVariables>(IsForSaleDocument, options);
+}
+export type IsForSaleQueryHookResult = ReturnType<typeof useIsForSaleQuery>;
+export type IsForSaleLazyQueryHookResult = ReturnType<typeof useIsForSaleLazyQuery>;
+export type IsForSaleQueryResult = Apollo.QueryResult<IsForSaleQuery, IsForSaleQueryVariables>;
 export const LoginDocument = gql`
   mutation Login($input: LoginInput!) {
     login(input: $input) {

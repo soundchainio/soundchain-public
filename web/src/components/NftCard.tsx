@@ -31,7 +31,7 @@ export const NFTCard = ({ account, web3, nftToken }: NftCardProps) => {
     }
   }, []);
 
-  const handleBurn = async (web3: Web3, tokenId: string) => {
+  const handleBurn = async (web3: Web3, tokenId: number) => {
     const confirmed = confirm('Hey! This will destroy this NFT, you sure?');
     if (confirmed) {
       const result = await burnNftToken(web3, tokenId, account);
@@ -40,7 +40,7 @@ export const NFTCard = ({ account, web3, nftToken }: NftCardProps) => {
       }
     }
   };
-  const handleList = async (web3: Web3, tokenId: string, price: number) => {
+  const handleList = async (web3: Web3, tokenId: number, price: number) => {
     const confirmed = confirm('Hey! This will list this NFT, you sure?');
     if (confirmed) {
       await listItem(web3, tokenId, 1, account, price, console.log);
@@ -181,7 +181,7 @@ const listInitialValues: ListFormValue = {
 interface TransferFormProps {
   web3: Web3;
   fromAddress: string;
-  tokenId: string;
+  tokenId: number;
   name: string;
   onCancel: () => void;
 }

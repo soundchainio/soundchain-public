@@ -21,4 +21,9 @@ export class ListingItemService extends ModelService<typeof ListingItem> {
     await listingItem.save();
     return listingItem;
   }
+
+  async isForSale(tokenId: number): Promise<boolean> {
+    const isForSaleQuery = await ListingItemModel.exists({ tokenId, valid: true });
+    return isForSaleQuery;
+  }
 }

@@ -50,7 +50,10 @@ export default function BuyPage({ trackId }: TrackPageProps) {
   const parsedBalance = parseInt(balance || '0');
 
   const handleBuy = async () => {
-    await buyItem(web3!, data?.track.tokenId, account!, data?.track.minter);
+    if (!web3 || !data?.track.nftData?.tokenId || !data?.track.nftData?.minter || !account) {
+      return;
+    }
+    await buyItem(web3, data?.track.nftData.tokenId, account, data?.track.nftData.minter);
   };
 
   const topNovaBarProps: TopNavBarProps = {

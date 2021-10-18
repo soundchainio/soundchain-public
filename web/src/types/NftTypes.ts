@@ -11,7 +11,7 @@ export interface Metadata {
 }
 
 export interface NftToken extends Metadata {
-  tokenId: string;
+  tokenId: number;
   pricePerItem: number;
   quantity: number;
   startingTime: number;
@@ -29,7 +29,7 @@ export interface ReturnValuesTransferSingle {
 export interface ReturnValuesItemListed {
   owner: string;
   nft: string;
-  tokenId: string;
+  tokenId: number;
   quantity: string;
   pricePerItem: string;
   startingTime: string;
