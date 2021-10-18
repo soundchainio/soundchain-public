@@ -9,6 +9,8 @@ import { AuthPayload } from '../types/AuthPayload';
 import { Context } from '../types/Context';
 import { LoginInput } from '../types/LoginInput';
 import { RegisterInput } from '../types/RegisterInput';
+import { UpdateDefaultWalletInput } from '../types/UpdateDefaultWalletInput';
+import { UpdateDefaultWalletPayload } from '../types/UpdateDefaultWalletPayload';
 import { UpdateHandleInput } from '../types/UpdateHandleInput';
 import { UpdateHandlePayload } from '../types/UpdateHandlePayload';
 
@@ -67,6 +69,17 @@ export class UserResolver {
     @CurrentUser() { _id }: User,
   ): Promise<UpdateHandlePayload> {
     const user = await userService.updateHandle(_id, handle);
+    return { user };
+  }
+
+  @Mutation(() => UpdateDefaultWalletPayload)
+  @Authorized()
+  async updateDefaultWallet(
+    @Ctx() { userService }: Context,
+    @Arg('input') { defaultWallet }: UpdateDefaultWalletInput,
+    @CurrentUser() { _id }: User,
+  ): Promise<UpdateHandlePayload> {
+    const user = await userService.updateDefaultWallet(_id, defaultWallet);
     return { user };
   }
 }

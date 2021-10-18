@@ -3,8 +3,8 @@ import { FormValues, InitialValues, TrackMetadataForm } from 'components/forms/t
 import { TrackUploader } from 'components/forms/track/TrackUploader';
 import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
-import { useMagicContext } from 'hooks/useMagicContext';
 import { useUpload } from 'hooks/useUpload';
+import { useWallet } from 'hooks/useWallet';
 import { mintNftToken } from 'lib/blockchain';
 import {
   CreateTrackMutation,
@@ -39,7 +39,7 @@ export const CreateModal = () => {
   const [createTrack] = useCreateTrackMutation();
   const [updateTrack] = useUpdateTrackMutation();
 
-  const { web3, account } = useMagicContext();
+  const { web3, account } = useWallet();
   const [pinToIPFS] = usePinToIpfsMutation();
   const [pinJsonToIPFS] = usePinJsonToIpfsMutation();
 

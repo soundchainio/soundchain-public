@@ -142,6 +142,11 @@ export type CreateTrackPayload = {
 };
 
 
+export enum DefaultWallet {
+  Soundchain = 'Soundchain',
+  MetaMask = 'MetaMask'
+}
+
 export type DeleteCommentInput = {
   commentId: Scalars['String'];
 };
@@ -334,6 +339,7 @@ export type Mutation = {
   register: AuthPayload;
   login: AuthPayload;
   updateHandle: UpdateHandlePayload;
+  updateDefaultWallet: UpdateDefaultWalletPayload;
 };
 
 
@@ -449,6 +455,11 @@ export type MutationLoginArgs = {
 
 export type MutationUpdateHandleArgs = {
   input: UpdateHandleInput;
+};
+
+
+export type MutationUpdateDefaultWalletArgs = {
+  input: UpdateDefaultWalletInput;
 };
 
 export type NftDataInput = {
@@ -880,6 +891,15 @@ export type UnsubscribeFromProfilePayload = {
   profile: Profile;
 };
 
+export type UpdateDefaultWalletInput = {
+  defaultWallet: Scalars['String'];
+};
+
+export type UpdateDefaultWalletPayload = {
+  __typename?: 'UpdateDefaultWalletPayload';
+  user: User;
+};
+
 export type UpdateHandleInput = {
   handle: Scalars['String'];
 };
@@ -938,6 +958,7 @@ export type User = {
   email: Scalars['String'];
   handle: Scalars['String'];
   walletAddress: Maybe<Scalars['String']>;
+  defaultWallet: DefaultWallet;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   profile: Profile;
@@ -1301,7 +1322,7 @@ export type MeQuery = (
   { __typename?: 'Query' }
   & { me: Maybe<(
     { __typename?: 'User' }
-    & Pick<User, 'id' | 'handle' | 'email' | 'walletAddress'>
+    & Pick<User, 'id' | 'handle' | 'email' | 'walletAddress' | 'defaultWallet'>
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'followerCount' | 'followingCount' | 'favoriteGenres' | 'musicianTypes' | 'bio'>
@@ -1739,6 +1760,22 @@ export type UpdateCoverPictureMutation = (
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'coverPicture'>
+    ) }
+  ) }
+);
+
+export type UpdateDefaultWalletMutationVariables = Exact<{
+  input: UpdateDefaultWalletInput;
+}>;
+
+
+export type UpdateDefaultWalletMutation = (
+  { __typename?: 'Mutation' }
+  & { updateDefaultWallet: (
+    { __typename?: 'UpdateDefaultWalletPayload' }
+    & { user: (
+      { __typename?: 'User' }
+      & Pick<User, 'id' | 'defaultWallet'>
     ) }
   ) }
 );
@@ -2770,6 +2807,7 @@ export const MeDocument = gql`
     handle
     email
     walletAddress
+    defaultWallet
     profile {
       id
       displayName
@@ -3764,6 +3802,42 @@ export function useUpdateCoverPictureMutation(baseOptions?: Apollo.MutationHookO
 export type UpdateCoverPictureMutationHookResult = ReturnType<typeof useUpdateCoverPictureMutation>;
 export type UpdateCoverPictureMutationResult = Apollo.MutationResult<UpdateCoverPictureMutation>;
 export type UpdateCoverPictureMutationOptions = Apollo.BaseMutationOptions<UpdateCoverPictureMutation, UpdateCoverPictureMutationVariables>;
+export const UpdateDefaultWalletDocument = gql`
+    mutation UpdateDefaultWallet($input: UpdateDefaultWalletInput!) {
+  updateDefaultWallet(input: $input) {
+    user {
+      id
+      defaultWallet
+    }
+  }
+}
+    `;
+export type UpdateDefaultWalletMutationFn = Apollo.MutationFunction<UpdateDefaultWalletMutation, UpdateDefaultWalletMutationVariables>;
+
+/**
+ * __useUpdateDefaultWalletMutation__
+ *
+ * To run a mutation, you first call `useUpdateDefaultWalletMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateDefaultWalletMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateDefaultWalletMutation, { data, loading, error }] = useUpdateDefaultWalletMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateDefaultWalletMutation(baseOptions?: Apollo.MutationHookOptions<UpdateDefaultWalletMutation, UpdateDefaultWalletMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateDefaultWalletMutation, UpdateDefaultWalletMutationVariables>(UpdateDefaultWalletDocument, options);
+      }
+export type UpdateDefaultWalletMutationHookResult = ReturnType<typeof useUpdateDefaultWalletMutation>;
+export type UpdateDefaultWalletMutationResult = Apollo.MutationResult<UpdateDefaultWalletMutation>;
+export type UpdateDefaultWalletMutationOptions = Apollo.BaseMutationOptions<UpdateDefaultWalletMutation, UpdateDefaultWalletMutationVariables>;
 export const UpdateFavoriteGenresDocument = gql`
     mutation UpdateFavoriteGenres($input: UpdateProfileInput!) {
   updateProfile(input: $input) {

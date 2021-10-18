@@ -9,6 +9,7 @@ import useMetaMask from 'hooks/useMetaMask';
 import { Logo } from 'icons/Logo';
 import { MetaMask } from 'icons/MetaMask';
 import { testNetwork } from 'lib/blockchainNetworks';
+import { DefaultWallet, useUpdateDefaultWalletMutation } from 'lib/graphql';
 import Head from 'next/head';
 import { useEffect, useState } from 'react';
 
@@ -19,6 +20,7 @@ const topNovaBarProps: TopNavBarProps = {
 
 export default function WalletPage() {
   const me = useMe();
+  const [updateDefaultWallet] = useUpdateDefaultWalletMutation();
 
   const { account, balance, web3, chainId, connect } = useMetaMask();
   const { account: magicAccount, balance: magicBalance } = useMagicContext();
@@ -54,10 +56,14 @@ export default function WalletPage() {
             <Wallet
               title="Soundchain Wallet"
               icon={() => <Logo id="soundchain-wallet" height="20" width="20" />}
-              correctNetwork={testnet}
+              correctNetwork={true}
               balance={magicBalance}
               account={magicAccount}
               showActionButtons={true}
+              defaultWallet={me.defaultWallet === DefaultWallet.Soundchain}
+              onDefaultWalletClick={() =>
+                updateDefaultWallet({ variables: { input: { defaultWallet: DefaultWallet.Soundchain } } })
+              }
             />
           )}
         </div>
@@ -69,6 +75,10 @@ export default function WalletPage() {
               correctNetwork={testnet}
               balance={balance}
               account={account}
+              defaultWallet={me.defaultWallet === DefaultWallet.MetaMask}
+              onDefaultWalletClick={() =>
+                updateDefaultWallet({ variables: { input: { defaultWallet: DefaultWallet.MetaMask } } })
+              }
             />
           ) : (
             <div className="flex justify-center items-center py-6">
