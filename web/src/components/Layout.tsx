@@ -1,7 +1,6 @@
 import classNames from 'classnames';
-import { BottomNavBar } from 'components/BottomNavBar';
-import { store } from 'contexts';
-import { ReactNode, useContext, useState } from 'react';
+import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar';
+import { ReactNode, useEffect, useState } from 'react';
 import { AuthorActionsModal } from './AuthorActionsModal';
 import { CreateModal } from './modals/CreateModal';
 import { PostModal } from './PostModal';
@@ -19,7 +18,11 @@ interface LayoutProps {
 
 export const Layout = ({ children, hideBottomNavBar, topNavBarProps, fullHeight }: LayoutProps) => {
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
-  const { state } = useContext(store);
+  const { setHideBottomNavBarState } = useHideBottomNavBar();
+
+  useEffect(() => {
+    setHideBottomNavBarState(!!hideBottomNavBar);
+  }, [hideBottomNavBar, setHideBottomNavBarState]);
 
   return (
     <div className="h-full flex-1 flex overflow-hidden">
@@ -32,10 +35,6 @@ export const Layout = ({ children, hideBottomNavBar, topNavBarProps, fullHeight 
             {children}
           </div>
         </main>
-        <div className="bottom-0 w-full">
-          <div id="bottom-sheet"></div>
-          <div className="md:hidden">{!state?.modal.anyModalOpened && !hideBottomNavBar && <BottomNavBar />}</div>
-        </div>
       </div>
       <div id="modals" className="absolute z-20 w-full">
         <UnderDevelopmentModal />
