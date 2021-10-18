@@ -35,7 +35,7 @@ export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => 
   const [followModalType, setFollowModalType] = useState<FollowModalType>();
 
   const onLogout = async () => {
-    await magic?.user.logout();
+    await magic.user.logout();
     setJwt();
     router.reload();
   };
@@ -89,11 +89,11 @@ export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => 
                 <h2 className="font-bold text-white">{me.profile.displayName}</h2>
                 <p className="text-gray-80 text-md">@{me.handle}</p>
               </div>
-              
+
             </>
           )}
         </div>
-        {me && 
+        {me &&
           <div className="mt-2">
             <MenuItem icon={Wallet} label="Wallet" onClick={() => router.push('/wallet')} />
           </div>

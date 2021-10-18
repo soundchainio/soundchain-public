@@ -26,7 +26,7 @@ export default function WalletPage() {
   const [connectedToMetaMask, setConnectedToMetaMask] = useState(false);
 
   useEffect(() => {
-    if (!account || !web3) {
+    if (!account) {
       setConnectedToMetaMask(false);
       return;
     }

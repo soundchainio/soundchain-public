@@ -9,9 +9,9 @@ import { AudioPlayerModal } from 'components/modals/AudioPlayerModal';
 import { StateProvider } from 'contexts';
 import { AudioPlayerProvider } from 'hooks/useAudioPlayer';
 import { HideBottomNavBarProvider } from 'hooks/useHideBottomNavBar';
-import { MagicProvider } from 'hooks/useMagicContext';
 import { ApolloProvider } from 'lib/apollo';
 import type { AppProps } from 'next/app';
+import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import Router from 'next/router';
 import NProgress from 'nprogress';
@@ -35,6 +35,8 @@ NProgress.configure({
 Router.events.on('routeChangeStart', NProgress.start);
 Router.events.on('routeChangeComplete', NProgress.done);
 Router.events.on('routeChangeError', NProgress.done);
+
+const MagicProvider = dynamic(() => import('hooks/useMagicContext'), { ssr: false });
 
 function SoundchainApp({ Component, pageProps }: AppProps) {
   return (

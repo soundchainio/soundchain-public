@@ -34,8 +34,8 @@ export const LoginForm = () => {
   async function handleSubmit(values: FormValues) {
     try {
       setLoading(true);
-      magic?.preload();
-      const token = await magic?.auth.loginWithMagicLink({
+      magic.preload();
+      const token = await magic.auth.loginWithMagicLink({
         email: values.email,
       });
 
