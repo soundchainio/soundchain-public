@@ -96,6 +96,25 @@ export type CommentNotification = {
   link: Scalars['String'];
 };
 
+export type CreateListingItemInput = {
+  owner: Scalars['String'];
+  nft: Scalars['String'];
+  tokenId: Scalars['Float'];
+  quantity: Scalars['Float'];
+  pricePerItem: Scalars['Float'];
+  startingTime: Scalars['Float'];
+};
+
+export type CreateListingItemType = {
+  __typename?: 'CreateListingItemType';
+  owner: Scalars['String'];
+  nft: Scalars['String'];
+  tokenId: Scalars['Float'];
+  quantity: Scalars['Float'];
+  pricePerItem: Scalars['Float'];
+  startingTime: Scalars['Float'];
+};
+
 export type CreateMintingRequestInput = {
   to: Scalars['String'];
   name: Scalars['String'];
@@ -310,6 +329,7 @@ export type Mutation = {
   __typename?: 'Mutation';
   addComment: AddCommentPayload;
   deleteComment: DeleteCommentPayload;
+  createListingItem: CreateListingItemType;
   sendMessage: SendMessagePayload;
   resetUnreadMessageCount: Profile;
   createMintingRequest: MintingRequestPayload;
@@ -345,6 +365,11 @@ export type MutationAddCommentArgs = {
 
 export type MutationDeleteCommentArgs = {
   input: DeleteCommentInput;
+};
+
+
+export type MutationCreateListingItemArgs = {
+  input: CreateListingItemInput;
 };
 
 
@@ -1089,6 +1114,19 @@ export type CommentsQuery = (
       { __typename?: 'PageInfo' }
       & Pick<PageInfo, 'hasPreviousPage' | 'hasNextPage' | 'startCursor' | 'endCursor'>
     ) }
+  ) }
+);
+
+export type CreateListingItemMutationVariables = Exact<{
+  input: CreateListingItemInput;
+}>;
+
+
+export type CreateListingItemMutation = (
+  { __typename?: 'Mutation' }
+  & { createListingItem: (
+    { __typename?: 'CreateListingItemType' }
+    & Pick<CreateListingItemType, 'owner' | 'nft' | 'tokenId' | 'quantity' | 'pricePerItem' | 'startingTime'>
   ) }
 );
 
@@ -2354,6 +2392,44 @@ export function useCommentsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<C
 export type CommentsQueryHookResult = ReturnType<typeof useCommentsQuery>;
 export type CommentsLazyQueryHookResult = ReturnType<typeof useCommentsLazyQuery>;
 export type CommentsQueryResult = Apollo.QueryResult<CommentsQuery, CommentsQueryVariables>;
+export const CreateListingItemDocument = gql`
+    mutation CreateListingItem($input: CreateListingItemInput!) {
+  createListingItem(input: $input) {
+    owner
+    nft
+    tokenId
+    quantity
+    pricePerItem
+    startingTime
+  }
+}
+    `;
+export type CreateListingItemMutationFn = Apollo.MutationFunction<CreateListingItemMutation, CreateListingItemMutationVariables>;
+
+/**
+ * __useCreateListingItemMutation__
+ *
+ * To run a mutation, you first call `useCreateListingItemMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateListingItemMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createListingItemMutation, { data, loading, error }] = useCreateListingItemMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateListingItemMutation(baseOptions?: Apollo.MutationHookOptions<CreateListingItemMutation, CreateListingItemMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateListingItemMutation, CreateListingItemMutationVariables>(CreateListingItemDocument, options);
+      }
+export type CreateListingItemMutationHookResult = ReturnType<typeof useCreateListingItemMutation>;
+export type CreateListingItemMutationResult = Apollo.MutationResult<CreateListingItemMutation>;
+export type CreateListingItemMutationOptions = Apollo.BaseMutationOptions<CreateListingItemMutation, CreateListingItemMutationVariables>;
 export const CreateMintingRequestDocument = gql`
     mutation createMintingRequest($input: CreateMintingRequestInput!) {
   createMintingRequest(input: $input) {

@@ -61,12 +61,16 @@ export const approveMarketplace = (web3: Web3, from: string, onReceipt: (receipt
   contract.methods.setApprovalForAll(marketplaceAddress, true).send({ from, gas }).on('receipt', onReceipt);
 };
 
-export const listItem = (web3: Web3, tokenId: string, quantity: number, from: string, price: number) => {
+export const listItem = (
+  web3: Web3,
+  tokenId: string,
+  quantity: number,
+  from: string,
+  price: number,
+  onReceipt: (receipt: Receipt) => void,
+) => {
   const contract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
-  return maxGasFeeAlert(
-    web3,
-    async () => await contract.methods.listItem(nftAddress, tokenId, quantity, price, 0).send({ from, gas }),
-  );
+  contract.methods.listItem(nftAddress, tokenId, quantity, price, 0).send({ from, gas }).on('receipt', onReceipt);
 };
 
 export const cancelListing = (web3: Web3, tokenId: string, from: string) => {

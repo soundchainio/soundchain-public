@@ -1,0 +1,10 @@
+mutation CreateListingItem($input: CreateListingItemInput!) {
+  createListingItem(input: $input) {
+    owner
+    nft
+    tokenId
+    quantity
+    pricePerItem
+    startingTime
+  }
+}

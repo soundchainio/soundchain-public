@@ -22,7 +22,10 @@ export const ApproveModal = () => {
   };
 
   const setApprove = async () => {
-    await approveMarketplace(web3!, account, onReceipt);
+    if (!web3 || !account) {
+      return;
+    }
+    await approveMarketplace(web3, account, onReceipt);
   };
 
   const onReceipt = (receipt: Receipt) => {

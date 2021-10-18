@@ -10,11 +10,12 @@ import { useMagicContext } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
 import { cacheFor, createApolloClient } from 'lib/apollo';
 import { listItem } from 'lib/blockchain';
-import { TrackDocument, useTrackQuery } from 'lib/graphql';
+import { CreateListingItemInput, TrackDocument, useCreateListingItemMutation, useTrackQuery } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useState } from 'react';
+import { Receipt } from 'types/NftTypes';
 
 export interface TrackPageProps {
   trackId: string;
@@ -52,17 +53,39 @@ export default function SellPage({ trackId }: TrackPageProps) {
   const { data } = useTrackQuery({ variables: { id: trackId } });
   const { account, web3 } = useMagicContext();
   const { dispatchShowApproveModal } = useModalDispatch();
+  const [createListingItem] = useCreateListingItemMutation();
 
   const isApproved = me?.isApprovedOnMarketplace ?? false;
 
   const [price, setPrice] = useState(0);
   const [quantity, setQuantity] = useState(0);
 
-  const handleSell = async () => {
+  const handleSell = () => {
+    if (!data?.track.nftData?.tokenId || !account || !web3) {
+      return;
+    }
+
     if (isApproved) {
-      await listItem(web3!, data?.track?.nftData?.tokenId!, quantity, account!, price);
+      listItem(web3, data.track.nftData.tokenId, quantity, account, price, onReceipt);
+      return;
     }
     me ? dispatchShowApproveModal(true) : router.push('/login');
+  };
+
+  const onReceipt = async (receipt: Receipt) => {
+    if (!receipt.events.ItemListed) {
+      return;
+    }
+    const { owner, nft, tokenId, quantity, pricePerItem, startingTime } = receipt.events.ItemListed.returnValues;
+    const listingItemParams: CreateListingItemInput = {
+      owner,
+      nft,
+      tokenId: parseInt(tokenId),
+      quantity: parseInt(quantity),
+      pricePerItem: parseInt(pricePerItem),
+      startingTime: parseInt(startingTime),
+    };
+    await createListingItem({ variables: { input: listingItemParams } });
   };
 
   const topNovaBarProps: TopNavBarProps = {
