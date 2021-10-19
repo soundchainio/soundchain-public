@@ -1,6 +1,7 @@
+import { Button } from 'components/Button';
 import { testNetwork } from 'lib/blockchainNetworks';
-import { DefaultWallet } from 'lib/graphql';
-import React, { createContext, useContext } from 'react';
+import { DefaultWallet, useUpdateDefaultWalletMutation } from 'lib/graphql';
+import React, { createContext, ReactNode, useContext } from 'react';
 import Web3 from 'web3';
 import { useMagicContext } from './useMagicContext';
 import { useMe } from './useMe';
@@ -14,10 +15,13 @@ interface WalletContextData {
 
 const WalletContext = createContext<WalletContextData>({});
 
-interface WalletProviderProps {}
+interface WalletProviderProps {
+  children?: ReactNode | undefined;
+}
 
-const WalletProvider = ({ children }: React.PropsWithChildren<WalletProviderProps>) => {
+const WalletProvider = ({ children }: WalletProviderProps) => {
   const me = useMe();
+  const [updateDefaultWallet] = useUpdateDefaultWalletMutation();
   const { account, balance, chainId, addMumbaiTestnet, connect, web3 } = useMetaMask();
   const { account: magicAccount, balance: magicBalance, web3: magicWeb3 } = useMagicContext();
 
@@ -35,11 +39,23 @@ const WalletProvider = ({ children }: React.PropsWithChildren<WalletProviderProp
 
   if (me?.defaultWallet === DefaultWallet.MetaMask) {
     if (!account) {
-      //   dispatchConnectWalletModal(true);
-      Content = <button onClick={() => connect()}>Connect MetaMask</button>;
-    }
-    if (chainId !== testNetwork.id) {
-      //   addMumbaiTestnet();
+      Content = (
+        <>
+          <div>Ops! It seems you may not be connected to MetaMask</div>
+          <Button variant="rainbow-xs" className="max-w-xs" onClick={() => connect()}>
+            Connect to MetaMask Wallet
+          </Button>
+        </>
+      );
+    } else if (chainId !== testNetwork.id) {
+      Content = (
+        <>
+          <div>Ops! It seems you may be connected to another network</div>
+          <Button variant="rainbow-xs" onClick={() => addMumbaiTestnet()}>
+            Connect to Mumbai Testnet
+          </Button>
+        </>
+      );
     }
 
     context = {
@@ -52,7 +68,26 @@ const WalletProvider = ({ children }: React.PropsWithChildren<WalletProviderProp
   return (
     <WalletContext.Provider value={context}>
       {children}
-      {Content && <div className="fixed top-0 left-0 h-full w-full z-50 bg-red-600">{Content}</div>}
+      {Content && (
+        <div className="fixed top-0 left-0 h-full w-full flex flex-col items-center gap-4 justify-center z-50 bg-gray-30 bg-opacity-95 text-center text-white font-bold">
+          {Content}
+          <div>or you can select your Soundchain Wallet</div>
+          <Button
+            variant="rainbow-xs"
+            onClick={() =>
+              updateDefaultWallet({
+                variables: {
+                  input: {
+                    defaultWallet: DefaultWallet.Soundchain,
+                  },
+                },
+              })
+            }
+          >
+            Select Soundchain Wallet
+          </Button>
+        </div>
+      )}
     </WalletContext.Provider>
   );
 };

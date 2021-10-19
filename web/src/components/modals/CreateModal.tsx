@@ -40,7 +40,6 @@ export const CreateModal = () => {
   const [updateTrack] = useUpdateTrackMutation();
 
   const { web3, account } = useWalletContext();
-  console.log({ account });
   const [pinToIPFS] = usePinToIpfsMutation();
   const [pinJsonToIPFS] = usePinJsonToIpfsMutation();
 

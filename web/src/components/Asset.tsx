@@ -14,8 +14,6 @@ const Asset = ({ src }: { src: string }) => {
 
   if (!mimeType) return null;
 
-  console.log(mimeType);
-
   if (mimeType.startsWith('video')) {
     return (
       <video
