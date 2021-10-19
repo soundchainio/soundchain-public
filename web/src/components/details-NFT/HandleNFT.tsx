@@ -8,7 +8,7 @@ import { useRouter } from 'next/router';
 interface HandleNFTProps {
   isOwner: boolean;
   isForSale: boolean;
-  price: number;
+  price: string;
 }
 
 export const HandleNFT = ({ isOwner, isForSale, price }: HandleNFTProps) => {

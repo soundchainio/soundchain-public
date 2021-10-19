@@ -57,9 +57,6 @@ export default function TrackPage({ trackId }: TrackPageProps) {
     variables: { tokenId },
   });
 
-  const isForSaleResponse = !!listingItem?.listingItem.pricePerItem ?? false;
-  const pricePerItem = listingItem?.listingItem.pricePerItem ?? 0;
-
   useEffect(() => {
     const fetchIsOwner = async () => {
       if (!account || !web3 || !data?.track.nftData?.tokenId) {
@@ -75,6 +72,13 @@ export default function TrackPage({ trackId }: TrackPageProps) {
     getListingItem();
   }, [getListingItem]);
 
+  if (!listingItem) {
+    return <div></div>;
+  }
+
+  const isForSaleResponse = !!listingItem.listingItem.pricePerItem ?? false;
+  const price = web3.utils.fromWei(listingItem.listingItem.pricePerItem.toString(), 'ether');
+
   const topNovaBarProps: TopNavBarProps = {
     leftButton: <BackButton />,
     title: 'NFT Details',
@@ -89,7 +93,7 @@ export default function TrackPage({ trackId }: TrackPageProps) {
       <TrackInfo trackTitle={data?.track.title || undefined} albumTitle={undefined} releaseYear={undefined} />
       <BottomSheet>
         <MintingData />
-        <HandleNFT price={pricePerItem} isOwner={isOwner} isForSale={isForSaleResponse} />
+        <HandleNFT price={price} isOwner={isOwner} isForSale={isForSaleResponse} />
       </BottomSheet>
     </Layout>
   );

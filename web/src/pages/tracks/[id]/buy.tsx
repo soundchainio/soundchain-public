@@ -65,14 +65,14 @@ export default function BuyPage({ trackId }: TrackPageProps) {
 
   const isOwner = listingItem.listingItem.owner.toLowerCase() === account?.toLowerCase();
   const isForSale = !!listingItem.listingItem.pricePerItem ?? false;
-  const pricePerItem = listingItem.listingItem.pricePerItem ?? 0;
+  const price = web3.utils.fromWei(listingItem.listingItem.pricePerItem.toString(), 'ether');
   const parsedBalance = parseInt(balance || '0');
 
   const handleBuy = () => {
     if (!web3 || !data?.track.nftData?.tokenId || !data?.track.nftData?.minter || !account) {
       return;
     }
-    buyItem(web3, data?.track.nftData.tokenId, account, data?.track.nftData.minter, pricePerItem, onReceipt);
+    buyItem(web3, data?.track.nftData.tokenId, account, data?.track.nftData.minter, price, onReceipt);
   };
 
   const onReceipt = async (receipt: Receipt) => {
@@ -97,7 +97,7 @@ export default function BuyPage({ trackId }: TrackPageProps) {
       <div className="m-4">
         <Track trackId={trackId} />
       </div>
-      <BuyNFT price={pricePerItem} balance={balance || '0'} />
+      <BuyNFT price={price} balance={balance || '0'} />
       <BottomSheet>
         <div className="flex justify-center pb-3">
           <Button variant="buy-nft" onClick={handleBuy} disabled={false}>
