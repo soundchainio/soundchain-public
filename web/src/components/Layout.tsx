@@ -2,6 +2,7 @@ import classNames from 'classnames';
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar';
 import { ReactNode, useEffect, useState } from 'react';
 import { AuthorActionsModal } from './AuthorActionsModal';
+import { ApproveModal } from './modals/ApproveModal';
 import { CreateModal } from './modals/CreateModal';
 import { PostModal } from './PostModal';
 import { ReactionsModal } from './ReactionsModal';
@@ -42,6 +43,7 @@ export const Layout = ({ children, hideBottomNavBar, topNavBarProps, fullHeight 
         <AuthorActionsModal />
         <ReactionsModal />
         <CreateModal />
+        <ApproveModal />
       </div>
     </div>
   );

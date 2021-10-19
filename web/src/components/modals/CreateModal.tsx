@@ -173,6 +173,9 @@ export const CreateModal = () => {
 
       const onReceipt = (receipt: Receipt) => {
         if (receipt.status) {
+          if (!receipt.events.TransferSingle) {
+            return;
+          }
           updateTrack({
             variables: {
               input: {

@@ -5,6 +5,7 @@ query Me {
     email
     walletAddress
     defaultWallet
+    isApprovedOnMarketplace
     profile {
       id
       displayName

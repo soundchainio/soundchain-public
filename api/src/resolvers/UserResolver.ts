@@ -82,4 +82,14 @@ export class UserResolver {
     const user = await userService.updateDefaultWallet(_id, defaultWallet);
     return { user };
   }
+
+  @Mutation(() => UpdateHandlePayload)
+  @Authorized()
+  async setIsApprovedOnMarketplace(
+    @Ctx() { userService }: Context,
+    @CurrentUser() { _id }: User,
+  ): Promise<UpdateHandlePayload> {
+    const user = await userService.setIsApprovedOnMarketplace(_id);
+    return { user };
+  }
 }

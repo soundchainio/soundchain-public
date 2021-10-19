@@ -7,11 +7,13 @@ import { TrackInfo } from 'components/details-NFT/TrackInfo';
 import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
-import { useMe } from 'hooks/useMe';
+import { useMagicContext } from 'hooks/useMagicContext';
 import { cacheFor, createApolloClient } from 'lib/apollo';
+import { isTokenOwner } from 'lib/blockchain';
 import { TrackDocument, useTrackQuery } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
 import { ParsedUrlQuery } from 'querystring';
+import { useEffect, useState } from 'react';
 
 export interface TrackPageProps {
   trackId: string;
@@ -44,14 +46,25 @@ export const getServerSideProps: GetServerSideProps<TrackPageProps, TrackPagePar
 };
 
 export default function TrackPage({ trackId }: TrackPageProps) {
-  const me = useMe();
+  const { account, web3 } = useMagicContext();
   const { data } = useTrackQuery({ variables: { id: trackId } });
 
-  const isOwner = me?.id === data?.track.profileId;
+  const [isOwner, setIsOwner] = useState(false);
+
+  useEffect(() => {
+    const fetchIsOwner = async () => {
+      if (!account || !web3 || !data?.track.nftData?.tokenId) {
+        return;
+      }
+      const isTokenOwnerRes = await isTokenOwner(web3, data.track.nftData.tokenId, account);
+      setIsOwner(isTokenOwnerRes);
+    };
+    fetchIsOwner();
+  }, [account, web3, data?.track.nftData]);
 
   const topNovaBarProps: TopNavBarProps = {
     leftButton: <BackButton />,
-    title: "NFT Details",
+    title: 'NFT Details',
   };
 
   return (

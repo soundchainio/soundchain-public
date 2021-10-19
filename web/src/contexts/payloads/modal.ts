@@ -32,6 +32,11 @@ export interface ShowReactionsPayload {
 export interface ShowCreatePayload {
   show: boolean;
 }
+
+export interface ShowApprove {
+  show: boolean;
+}
+
 export interface ShowAudioPlayerPayload {
   show: boolean;
 }
