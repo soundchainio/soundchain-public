@@ -37,7 +37,7 @@ export const SellNFT = ({ onSetPrice }: SellNFTProps) => {
                   icon={Matic}
                   onChange={el => {
                     handleChange(el);
-                    onSetPrice(parseInt(el.target.value));
+                    onSetPrice(parseFloat(el.target.value));
                   }}
                 />
               </div>

@@ -32,7 +32,7 @@ export const BuyNFT = ({ price, balance }: BuyNFTProps) => {
           <span className="my-auto">
             <Matic />
           </span>
-          <span className="mx-1 text-gray-80 font-bold text-md leading-tight">{parseInt(price) * 0.025}</span>
+          <span className="mx-1 text-gray-80 font-bold text-md leading-tight">{parseFloat(price) * 0.025}</span>
           <div className="items-end">
             <span className="text-gray-80 font-bold text-xs leading-tight">matic</span>
           </div>

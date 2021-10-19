@@ -35,7 +35,7 @@ export const getNftTokensFromContract = async (web3: Web3, account: string) => {
         const { data } = await axios.get<Metadata>(getIpfsAssetUrl(tokenURI));
         tokens.push({
           ...data,
-          tokenId: tokenId.toString(),
+          tokenId,
           pricePerItem,
           quantity,
           startingTime,
@@ -70,8 +70,7 @@ export const listItem = (
   onReceipt: (receipt: Receipt) => void,
 ) => {
   const contract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
-  const princeWei = web3.utils.toWei(price.toString(), 'ether');
-  contract.methods.listItem(nftAddress, tokenId, quantity, princeWei, 0).send({ from, gas }).on('receipt', onReceipt);
+  contract.methods.listItem(nftAddress, tokenId, quantity, price, 0).send({ from, gas }).on('receipt', onReceipt);
 };
 
 export const cancelListing = (web3: Web3, tokenId: number, from: string) => {
@@ -95,11 +94,10 @@ export const buyItem = (
   tokenId: number,
   from: string,
   owner: string,
-  valueInEther: string,
+  value: string,
   onReceipt: (receipt: Receipt) => void,
 ) => {
   const contract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
-  const value = web3.utils.toWei(valueInEther, 'ether');
   contract.methods.buyItem(nftAddress, tokenId, owner).send({ from, gas, value }).on('receipt', onReceipt);
 };
 

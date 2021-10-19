@@ -72,12 +72,8 @@ export default function TrackPage({ trackId }: TrackPageProps) {
     getListingItem();
   }, [getListingItem]);
 
-  if (!listingItem) {
-    return <div></div>;
-  }
-
-  const isForSaleResponse = !!listingItem.listingItem.pricePerItem ?? false;
-  const price = web3.utils.fromWei(listingItem.listingItem.pricePerItem.toString(), 'ether');
+  const isForSaleResponse = !!listingItem?.listingItem.pricePerItem ?? false;
+  const price = web3?.utils.fromWei(listingItem?.listingItem.pricePerItem.toString() ?? '0', 'ether');
 
   const topNovaBarProps: TopNavBarProps = {
     leftButton: <BackButton />,
