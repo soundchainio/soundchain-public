@@ -11,7 +11,7 @@ export interface Metadata {
 }
 
 export interface NftToken extends Metadata {
-  tokenId: string;
+  tokenId: number;
   pricePerItem: number;
   quantity: number;
   startingTime: number;
@@ -35,6 +35,15 @@ export interface ReturnValuesItemListed {
   startingTime: string;
 }
 
+export interface ReturnValuesItemSold {
+  seller: string;
+  buyer: string;
+  nft: string;
+  tokenId: string;
+  quantity: string;
+  pricePerItem: string;
+}
+
 interface BaseEvent {
   address: string;
   blockNumber: number;
@@ -56,9 +65,14 @@ export interface ItemListed extends BaseEvent {
   returnValues: ReturnValuesItemListed;
 }
 
+export interface ItemSold extends BaseEvent {
+  returnValues: ReturnValuesItemSold;
+}
+
 export interface Events {
   TransferSingle?: TransferSingle;
   ItemListed?: ItemListed;
+  ItemSold?: ItemSold;
 }
 
 export interface Receipt {

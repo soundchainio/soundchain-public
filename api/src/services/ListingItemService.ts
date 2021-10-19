@@ -21,4 +21,15 @@ export class ListingItemService extends ModelService<typeof ListingItem> {
     await listingItem.save();
     return listingItem;
   }
+
+  async findListingItem(tokenId: number): Promise<ListingItem> {
+    const listingItem = await this.model.findOne({ tokenId, valid: true });
+    return listingItem;
+  }
+
+  async setNotValid(tokenId: number): Promise<ListingItem> {
+    const listingItem = await this.model.findOne({ tokenId });
+    await this.model.updateOne({ tokenId }, { valid: false });
+    return listingItem;
+  }
 }

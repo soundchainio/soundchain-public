@@ -88,7 +88,7 @@ export const CreateModal = () => {
 
   const handleSubmit = async (values: FormValues) => {
     if (file && web3 && account) {
-      const { title, artworkUrl, description, quantity, album, artist, genres, releaseYear } = values;
+      const { title, artworkUrl, description, album, artist, genres, releaseYear } = values;
 
       setMintingState('Uploading track file');
       const assetUrl = await upload([file]);
@@ -182,7 +182,7 @@ export const CreateModal = () => {
                 nftData: {
                   minter: account,
                   contract: receipt.to,
-                  tokenId: receipt.events.TransferSingle.returnValues.id,
+                  tokenId: parseInt(receipt.events.TransferSingle.returnValues.id),
                   quantity: parseInt(receipt.events.TransferSingle.returnValues.value),
                 },
               },
@@ -198,7 +198,7 @@ export const CreateModal = () => {
         `ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`,
         account,
         account,
-        quantity,
+        1,
         onTransactionHash,
         onReceipt,
       );
