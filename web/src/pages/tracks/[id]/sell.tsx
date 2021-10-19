@@ -6,8 +6,8 @@ import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import { useModalDispatch } from 'contexts/providers/modal';
-import { useMagicContext } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
+import { useWalletContext } from 'hooks/useWalletContext';
 import { cacheFor, createApolloClient } from 'lib/apollo';
 import { listItem } from 'lib/blockchain';
 import { CreateListingItemInput, TrackDocument, useCreateListingItemMutation, useTrackQuery } from 'lib/graphql';
@@ -51,7 +51,7 @@ export default function SellPage({ trackId }: TrackPageProps) {
   const router = useRouter();
   const me = useMe();
   const { data } = useTrackQuery({ variables: { id: trackId } });
-  const { account, web3 } = useMagicContext();
+  const { account, web3 } = useWalletContext();
   const { dispatchShowApproveModal } = useModalDispatch();
   const [createListingItem] = useCreateListingItemMutation();
 

@@ -5,7 +5,7 @@ import { BuyNFT } from 'components/details-NFT/BuyNFT';
 import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
-import { useMagicContext } from 'hooks/useMagicContext';
+import { useWalletContext } from 'hooks/useWalletContext';
 import { cacheFor, createApolloClient } from 'lib/apollo';
 import { buyItem } from 'lib/blockchain';
 import { TrackDocument, useListingItemLazyQuery, useSetNotValidMutation, useTrackQuery } from 'lib/graphql';
@@ -46,7 +46,7 @@ export const getServerSideProps: GetServerSideProps<TrackPageProps, TrackPagePar
 
 export default function BuyPage({ trackId }: TrackPageProps) {
   const { data } = useTrackQuery({ variables: { id: trackId } });
-  const { account, web3, balance } = useMagicContext();
+  const { account, web3, balance } = useWalletContext();
   const [setNotValid] = useSetNotValidMutation();
 
   const tokenId = data?.track.nftData?.tokenId || -1;
@@ -65,7 +65,7 @@ export default function BuyPage({ trackId }: TrackPageProps) {
 
   const isOwner = listingItem.listingItem.owner.toLowerCase() === account?.toLowerCase();
   const isForSale = !!listingItem.listingItem.pricePerItem ?? false;
-  const price = web3.utils.fromWei(listingItem.listingItem.pricePerItem.toString(), 'ether');
+  const price = web3?.utils.fromWei(listingItem.listingItem.pricePerItem.toString(), 'ether') || '0';
 
   const handleBuy = () => {
     if (!web3 || !data?.track.nftData?.tokenId || !data?.track.nftData?.minter || !account) {
