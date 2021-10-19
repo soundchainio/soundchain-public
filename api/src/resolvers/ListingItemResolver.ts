@@ -27,4 +27,14 @@ export class ListingItemResolver {
     const listingItem = await listingItemService.findListingItem(tokenId);
     return listingItem;
   }
+
+  @Mutation(() => CreateListingItemData)
+  @Authorized()
+  async setNotValid(
+    @Ctx() { listingItemService }: Context,
+    @Arg('tokenId') tokenId: number,
+  ): Promise<CreateListingItemData> {
+    const listingItem = await listingItemService.setNotValid(tokenId);
+    return listingItem;
+  }
 }

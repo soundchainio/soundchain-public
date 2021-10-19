@@ -29,10 +29,19 @@ export interface ReturnValuesTransferSingle {
 export interface ReturnValuesItemListed {
   owner: string;
   nft: string;
-  tokenId: number;
+  tokenId: string;
   quantity: string;
   pricePerItem: string;
   startingTime: string;
+}
+
+export interface ReturnValuesItemSold {
+  seller: string;
+  buyer: string;
+  nft: string;
+  tokenId: string;
+  quantity: string;
+  pricePerItem: string;
 }
 
 interface BaseEvent {
@@ -56,9 +65,14 @@ export interface ItemListed extends BaseEvent {
   returnValues: ReturnValuesItemListed;
 }
 
+export interface ItemSold extends BaseEvent {
+  returnValues: ReturnValuesItemSold;
+}
+
 export interface Events {
   TransferSingle?: TransferSingle;
   ItemListed?: ItemListed;
+  ItemSold?: ItemSold;
 }
 
 export interface Receipt {

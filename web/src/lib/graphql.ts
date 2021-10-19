@@ -335,6 +335,7 @@ export type Mutation = {
   addComment: AddCommentPayload;
   deleteComment: DeleteCommentPayload;
   createListingItem: CreateListingItemType;
+  setNotValid: CreateListingItemType;
   sendMessage: SendMessagePayload;
   resetUnreadMessageCount: Profile;
   createMintingRequest: MintingRequestPayload;
@@ -376,6 +377,11 @@ export type MutationDeleteCommentArgs = {
 
 export type MutationCreateListingItemArgs = {
   input: CreateListingItemInput;
+};
+
+
+export type MutationSetNotValidArgs = {
+  tokenId: Scalars['Float'];
 };
 
 
@@ -1716,6 +1722,19 @@ export type SetIsApprovedOnMarketplaceMutation = (
       { __typename?: 'User' }
       & Pick<User, 'id'>
     ) }
+  ) }
+);
+
+export type SetNotValidMutationVariables = Exact<{
+  tokenId: Scalars['Float'];
+}>;
+
+
+export type SetNotValidMutation = (
+  { __typename?: 'Mutation' }
+  & { setNotValid: (
+    { __typename?: 'CreateListingItemType' }
+    & Pick<CreateListingItemType, 'owner' | 'nft' | 'tokenId' | 'quantity' | 'pricePerItem' | 'startingTime'>
   ) }
 );
 
@@ -3730,6 +3749,44 @@ export function useSetIsApprovedOnMarketplaceMutation(baseOptions?: Apollo.Mutat
 export type SetIsApprovedOnMarketplaceMutationHookResult = ReturnType<typeof useSetIsApprovedOnMarketplaceMutation>;
 export type SetIsApprovedOnMarketplaceMutationResult = Apollo.MutationResult<SetIsApprovedOnMarketplaceMutation>;
 export type SetIsApprovedOnMarketplaceMutationOptions = Apollo.BaseMutationOptions<SetIsApprovedOnMarketplaceMutation, SetIsApprovedOnMarketplaceMutationVariables>;
+export const SetNotValidDocument = gql`
+    mutation SetNotValid($tokenId: Float!) {
+  setNotValid(tokenId: $tokenId) {
+    owner
+    nft
+    tokenId
+    quantity
+    pricePerItem
+    startingTime
+  }
+}
+    `;
+export type SetNotValidMutationFn = Apollo.MutationFunction<SetNotValidMutation, SetNotValidMutationVariables>;
+
+/**
+ * __useSetNotValidMutation__
+ *
+ * To run a mutation, you first call `useSetNotValidMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSetNotValidMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [setNotValidMutation, { data, loading, error }] = useSetNotValidMutation({
+ *   variables: {
+ *      tokenId: // value for 'tokenId'
+ *   },
+ * });
+ */
+export function useSetNotValidMutation(baseOptions?: Apollo.MutationHookOptions<SetNotValidMutation, SetNotValidMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<SetNotValidMutation, SetNotValidMutationVariables>(SetNotValidDocument, options);
+      }
+export type SetNotValidMutationHookResult = ReturnType<typeof useSetNotValidMutation>;
+export type SetNotValidMutationResult = Apollo.MutationResult<SetNotValidMutation>;
+export type SetNotValidMutationOptions = Apollo.BaseMutationOptions<SetNotValidMutation, SetNotValidMutationVariables>;
 export const SubscribeToProfileDocument = gql`
     mutation SubscribeToProfile($input: SubscribeToProfileInput!) {
   subscribeToProfile(input: $input) {

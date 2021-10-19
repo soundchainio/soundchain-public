@@ -89,12 +89,16 @@ export const updateListing = (web3: Web3, tokenId: number, from: string, price: 
   );
 };
 
-export const buyItem = (web3: Web3, tokenId: number, from: string, owner: string) => {
+export const buyItem = (
+  web3: Web3,
+  tokenId: number,
+  from: string,
+  owner: string,
+  value: number,
+  onReceipt: (receipt: Receipt) => void,
+) => {
   const contract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
-  return maxGasFeeAlert(
-    web3,
-    async () => await contract.methods.buyItem(nftAddress, tokenId, owner).send({ from, gas }),
-  );
+  contract.methods.buyItem(nftAddress, tokenId, owner).send({ from, gas, value }).on('receipt', onReceipt);
 };
 
 export const registerRoyalty = (web3: Web3, tokenId: number, from: string, royalty: number) => {

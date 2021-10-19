@@ -8,10 +8,11 @@ import { Track } from 'components/Track';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { cacheFor, createApolloClient } from 'lib/apollo';
 import { buyItem } from 'lib/blockchain';
-import { TrackDocument, useListingItemLazyQuery, useTrackQuery } from 'lib/graphql';
+import { TrackDocument, useListingItemLazyQuery, useSetNotValidMutation, useTrackQuery } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect } from 'react';
+import { Receipt } from 'types/NftTypes';
 
 export interface TrackPageProps {
   trackId: string;
@@ -46,6 +47,7 @@ export const getServerSideProps: GetServerSideProps<TrackPageProps, TrackPagePar
 export default function BuyPage({ trackId }: TrackPageProps) {
   const { data } = useTrackQuery({ variables: { id: trackId } });
   const { account, web3, balance } = useMagicContext();
+  const [setNotValid] = useSetNotValidMutation();
 
   const tokenId = data?.track.nftData?.tokenId || -1;
 
@@ -57,16 +59,28 @@ export default function BuyPage({ trackId }: TrackPageProps) {
     getListingItem();
   }, [getListingItem]);
 
-  const isForSale = !!listingItem?.listingItem.pricePerItem ?? false;
-  const pricePerItem = listingItem?.listingItem.pricePerItem ?? 0;
+  if (!listingItem) {
+    return <div></div>;
+  }
 
+  const isOwner = listingItem.listingItem.owner.toLowerCase() === account?.toLowerCase();
+  const isForSale = !!listingItem.listingItem.pricePerItem ?? false;
+  const pricePerItem = listingItem.listingItem.pricePerItem ?? 0;
   const parsedBalance = parseInt(balance || '0');
 
-  const handleBuy = async () => {
+  const handleBuy = () => {
     if (!web3 || !data?.track.nftData?.tokenId || !data?.track.nftData?.minter || !account) {
       return;
     }
-    await buyItem(web3, data?.track.nftData.tokenId, account, data?.track.nftData.minter);
+    buyItem(web3, data?.track.nftData.tokenId, account, data?.track.nftData.minter, pricePerItem, onReceipt);
+  };
+
+  const onReceipt = async (receipt: Receipt) => {
+    if (!receipt.events.ItemSold) {
+      return;
+    }
+    const { tokenId } = receipt.events.ItemSold.returnValues;
+    await setNotValid({ variables: { tokenId: parseInt(tokenId) } });
   };
 
   const topNovaBarProps: TopNavBarProps = {
@@ -74,7 +88,7 @@ export default function BuyPage({ trackId }: TrackPageProps) {
     title: 'Confirm Purchase',
   };
 
-  if (!isForSale) {
+  if (!isForSale || isOwner) {
     return <div></div>;
   }
 
@@ -86,7 +100,7 @@ export default function BuyPage({ trackId }: TrackPageProps) {
       <BuyNFT price={pricePerItem} balance={balance || '0'} />
       <BottomSheet>
         <div className="flex justify-center pb-3">
-          <Button variant="buy-nft" onClick={handleBuy} disabled={parsedBalance < pricePerItem}>
+          <Button variant="buy-nft" onClick={handleBuy} disabled={false}>
             <div className="px-4">BUY NFT</div>
           </Button>
         </div>
