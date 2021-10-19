@@ -1,18 +1,19 @@
-import Link from 'next/link';
-import { Link as LinkIcon } from 'icons/Link';
-import { Copy2 as Copy } from 'icons/Copy2';
-import { Matic } from 'icons/Matic';
-import useMetaMask from 'hooks/useMetaMask';
 import { Button } from 'components/Button';
+import useMetaMask from 'hooks/useMetaMask';
+import { Copy2 as Copy } from 'icons/Copy2';
+import { Link as LinkIcon } from 'icons/Link';
+import { Matic } from 'icons/Matic';
+import Link from 'next/link';
 interface WalletProps extends React.ComponentPropsWithoutRef<'div'> {
   title: string;
   correctNetwork?: boolean;
   account?: string;
   balance?: string;
   icon: (props: React.SVGProps<SVGSVGElement>) => JSX.Element;
-  defaultWallet?: boolean
-  showAddMatic?: boolean
-  showActionButtons?: boolean
+  defaultWallet: boolean;
+  onDefaultWalletClick: () => void;
+  showAddMatic?: boolean;
+  showActionButtons?: boolean;
 }
 
 const NotTestnet = () => {
@@ -36,10 +37,14 @@ const Network = () => {
       <span className="text-gray-80 font-bold text-xs uppercase my-auto mr-1">Network: </span>
       <span className="text-gray-CC font-bold text-xs my-auto">Polygon</span>
     </div>
-  )
+  );
+};
+
+interface AccountProps extends Partial<Omit<WalletProps, 'onDefaultWalletClick'>> {
+  onDefaultWalletClick: () => void;
 }
 
-const Account = ({ account, balance, defaultWallet, showActionButtons }: Partial<WalletProps>) => {
+const Account = ({ account, balance, defaultWallet, showActionButtons, onDefaultWalletClick }: AccountProps) => {
   return (
     <>
       <div className="flex flex-row bg-gray-1A w-full pl-2 pr-3 py-2 items-center justify-between">
@@ -48,23 +53,32 @@ const Account = ({ account, balance, defaultWallet, showActionButtons }: Partial
           <span className="text-gray-80 text-xs md-text-sm font-bold mx-1 truncate w-full">{account}</span>
         </div>
         <div className="flex justify-end w-2/12">
-          <button className="flex flex-row items-center border border-gray-30 border-opacity-75 rounded-sm p-0.5" onClick={() => { navigator.clipboard.writeText(account + '') }}>
+          <button
+            className="flex flex-row items-center border border-gray-30 border-opacity-75 rounded-sm p-0.5"
+            onClick={() => {
+              navigator.clipboard.writeText(account + '');
+            }}
+          >
             <Copy />
             <span className="text-gray-80 text-xs pl-1 uppercase leading-none">copy</span>
           </button>
         </div>
       </div>
       <div className="flex w-full">
-        <div className="flex items-center justify-center w-7/12 bg-gray-20 text-gray-CC font-bold text-xs md-text-sm uppercase py-3">Total Balance</div>
+        <div className="flex items-center justify-center w-7/12 bg-gray-20 text-gray-CC font-bold text-xs md-text-sm uppercase py-3">
+          Total Balance
+        </div>
         <div className="flex flex-wrap items-center justify-center w-5/12 bg-gray-30 uppercase py-3">
-          <span className="my-auto"><Matic /></span>
+          <span className="my-auto">
+            <Matic />
+          </span>
           <span className="mx-1 text-gray-CC font-bold text-md leading-tight">{balance}</span>
           <div className="items-end">
             <span className="text-gray-80 font-bold text-xs leading-tight">matic</span>
           </div>
         </div>
       </div>
-      {showActionButtons &&
+      {showActionButtons && (
         <div className="flex w-full justify-around py-5">
           <Link href="/" passHref>
             <button className="bg-gray-20 py-2 w-40">
@@ -77,18 +91,22 @@ const Account = ({ account, balance, defaultWallet, showActionButtons }: Partial
             </button>
           </Link>
         </div>
-      }
+      )}
       <div className="flex w-full justify-between px-4">
         <div className="flex items-center justify-start">
-          {!defaultWallet &&
-            <label className="inline-flex items-center m-2">
-              <input type="checkbox" className="form-checkbox rounded bg-black text-black" />
+          {!defaultWallet && (
+            <label className="inline-flex items-center m-2 cursor-pointer">
+              <input
+                type="checkbox"
+                className="form-checkbox rounded bg-black text-black"
+                onClick={() => onDefaultWalletClick()}
+              />
               <span className="ml-2 text-sm font-bold text-white ">Default Wallet</span>
             </label>
-          }
+          )}
         </div>
         <div className="flex items-center justify-end">
-          {balance &&
+          {balance && (
             <>
               <a
                 className="text-sm text-gray-80 font-bold underline m-2"
@@ -98,14 +116,16 @@ const Account = ({ account, balance, defaultWallet, showActionButtons }: Partial
               >
                 Need some Matic?
               </a>
-              <span className="my-auto mr-2"><Matic /></span>
+              <span className="my-auto mr-2">
+                <Matic />
+              </span>
             </>
-          }
+          )}
         </div>
       </div>
     </>
-  )
-}
+  );
+};
 
 export const Wallet = ({ icon: Icon, title, correctNetwork, ...props }: WalletProps) => {
   return (
@@ -119,5 +139,5 @@ export const Wallet = ({ icon: Icon, title, correctNetwork, ...props }: WalletPr
       </div>
       {correctNetwork && <Account {...props} />}
     </>
-  )
-}
+  );
+};

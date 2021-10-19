@@ -101,8 +101,8 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: AudioPlayerPro
             </div>
             <div className="flex-1 text-right text-gray-80 text-xs">{timeFromSecs(duration || 0)}</div>
           </div>
-          <div className="post-audio-player text-white flex flex-col mt-2">
-            <Slider className="ml-1" min={0} max={duration} value={playState} onChange={onSliderChange} />
+          <div className="text-white flex flex-col mt-2">
+            <Slider className="audio-player ml-1" min={0} max={duration} value={playState} onChange={onSliderChange} />
             <div className="flex mt-2 text-xs text-gray-80">
               <div className="flex-1">{timeFromSecs(playState || 0)}</div>
               <div className="flex-1 text-right">{remainingTime(playState, duration || 0)} </div>

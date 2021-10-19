@@ -7,7 +7,6 @@ import { useMimeTypeLazyQuery, useMimeTypeQuery } from 'lib/graphql';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { NftToken } from 'types/NftTypes';
-import { audioMimeTypes, videoMimeTypes } from 'utils/mimeTypes';
 import Web3 from 'web3';
 import * as yup from 'yup';
 
@@ -131,7 +130,7 @@ export const NFTCard = ({ account, web3, nftToken }: NftCardProps) => {
 const Asset = ({ src, mimeType, art }: { src: string | undefined; mimeType: string | undefined; art?: boolean }) => {
   if (!src || !mimeType) return null;
 
-  if (videoMimeTypes.includes(mimeType)) {
+  if (mimeType.startsWith('video')) {
     return (
       <video
         src={src}
@@ -145,7 +144,7 @@ const Asset = ({ src, mimeType, art }: { src: string | undefined; mimeType: stri
     );
   }
 
-  if (audioMimeTypes.includes(mimeType)) {
+  if (mimeType.startsWith('audio')) {
     const isChrome = !!(window as any).chrome;
     return (
       <audio src={src} controls className="w-full" style={{ backgroundColor: `${isChrome ? '#f1f3f4' : 'unset'}` }} />

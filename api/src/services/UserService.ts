@@ -1,5 +1,6 @@
 import { User, UserModel } from '../models/User';
 import { Context } from '../types/Context';
+import { DefaultWallet } from '../types/DefaultWallet';
 import { ModelService } from './ModelService';
 
 export class UserService extends ModelService<typeof User> {
@@ -17,6 +18,14 @@ export class UserService extends ModelService<typeof User> {
 
   async updateHandle(id: string, handle: string): Promise<User> {
     const updatedUser = await UserModel.findByIdAndUpdate(id, { handle }, { new: true });
+    if (!updatedUser) {
+      throw new Error(`Could not update the profile with id: ${id}`);
+    }
+    return updatedUser;
+  }
+
+  async updateDefaultWallet(id: string, defaultWallet: DefaultWallet): Promise<User> {
+    const updatedUser = await UserModel.findByIdAndUpdate(id, { defaultWallet }, { new: true });
     if (!updatedUser) {
       throw new Error(`Could not update the profile with id: ${id}`);
     }

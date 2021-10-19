@@ -1,13 +1,10 @@
 import classNames from 'classnames';
-import { AudioPlayer } from 'components/AudioPlayer';
-import { FormValues, TrackMetadataForm } from 'components/forms/track/TrackMetadataForm';
+import { FormValues, InitialValues, TrackMetadataForm } from 'components/forms/track/TrackMetadataForm';
 import { TrackUploader } from 'components/forms/track/TrackUploader';
 import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
-import { useMagicContext } from 'hooks/useMagicContext';
 import { useUpload } from 'hooks/useUpload';
-import { Anchor } from 'icons/Anchor';
-import { Polygon } from 'icons/Polygon';
+import { useWalletContext } from 'hooks/useWalletContext';
 import { mintNftToken } from 'lib/blockchain';
 import {
   CreateTrackMutation,
@@ -19,18 +16,13 @@ import {
 } from 'lib/graphql';
 import * as musicMetadata from 'music-metadata-browser';
 import Image from 'next/image';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Metadata, Receipt } from 'types/NftTypes';
+import { MiningState, MintingDone } from './MintingDone';
 
 enum Tabs {
   NFT = 'NFT',
   POST = 'Post',
-}
-
-enum MiningState {
-  IN_PROGRESS = 'In progress...',
-  DONE = 'Done!',
-  ERROR = 'Error :(',
 }
 
 export const CreateModal = () => {
@@ -40,7 +32,6 @@ export const CreateModal = () => {
 
   const [file, setFile] = useState<File>();
   const [preview, setPreview] = useState<string>();
-  const [fileMetadata, setFileMetadata] = useState<musicMetadata.IAudioMetadata['common']>();
 
   const [newTrack, setNewTrack] = useState<CreateTrackMutation['createTrack']['track']>();
 
@@ -48,7 +39,7 @@ export const CreateModal = () => {
   const [createTrack] = useCreateTrackMutation();
   const [updateTrack] = useUpdateTrackMutation();
 
-  const { web3, account } = useMagicContext();
+  const { web3, account } = useWalletContext();
   const [pinToIPFS] = usePinToIpfsMutation();
   const [pinJsonToIPFS] = usePinJsonToIpfsMutation();
 
@@ -56,10 +47,28 @@ export const CreateModal = () => {
   const [mintingState, setMintingState] = useState<string>();
   const [miningState, setMiningState] = useState<MiningState>(MiningState.IN_PROGRESS);
 
-  const [initialValues, setInitialValues] = useState<FormValues>();
+  const [initialValues, setInitialValues] = useState<InitialValues>();
 
   const handleFileDrop = (file: File) => {
-    musicMetadata.parseBlob(file).then(result => setFileMetadata(result.common));
+    musicMetadata.parseBlob(file).then(({ common: fileMetadata }) => {
+      let artworkFile;
+      if (fileMetadata?.picture?.length) {
+        const type = fileMetadata.picture[0].format;
+        const blob = new Blob([fileMetadata.picture[0].data], {
+          type,
+        });
+        artworkFile = new File([blob], 'artwork', { type });
+      }
+
+      setInitialValues({
+        title: fileMetadata?.title,
+        artist: fileMetadata?.artist,
+        description: fileMetadata?.comment && fileMetadata.comment[0],
+        album: fileMetadata?.album,
+        releaseYear: fileMetadata?.year,
+        artworkFile: artworkFile,
+      });
+    });
 
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -202,33 +211,6 @@ export const CreateModal = () => {
     setFile(undefined);
   };
 
-  useEffect(() => {
-    const verifyMetadata = async () => {
-      let assetUrl = '';
-
-      if (fileMetadata?.picture?.length) {
-        const type = fileMetadata.picture[0].format;
-        const blob = new Blob([fileMetadata.picture[0].data], {
-          type,
-        });
-        const imageFile = new File([blob], 'artwork', { type });
-        assetUrl = await upload([imageFile]);
-      }
-
-      setInitialValues({
-        title: fileMetadata?.title || '',
-        artist: fileMetadata?.artist || '',
-        description: fileMetadata?.comment ? fileMetadata.comment[0] : '',
-        album: fileMetadata?.album,
-        releaseYear: fileMetadata?.year,
-        artworkUrl: assetUrl,
-        quantity: 1,
-      });
-    };
-
-    verifyMetadata();
-  }, [fileMetadata]);
-
   const tabs = (
     <div className="flex bg-gray-10 rounded-lg">
       <div
@@ -252,94 +234,32 @@ export const CreateModal = () => {
     </div>
   );
 
-  if (transactionHash) {
-    return (
-      <Modal
-        show={isOpen}
-        title={tabs}
-        onClose={handleClose}
-        leftButton={
-          <div className="p-2 text-gray-400 font-bold flex-1 text-center text-sm" onClick={handleClose}>
-            Close
-          </div>
-        }
-      >
-        <div className="h-full w-full" style={{ backgroundColor: '#101010' }}>
-          {newTrack && (
-            <AudioPlayer
-              title={newTrack.title}
-              src={newTrack.playbackUrl}
-              art={newTrack.artworkUrl}
-              artist={newTrack.artist}
-            />
-          )}
-          <div
-            className="h-96 p-4 flex flex-col justify-center items-center	bg-no-repeat text-center text-xl text-white font-black uppercase"
-            style={{ backgroundImage: 'url(/congratulations.gif)', backgroundSize: '100% 100%' }}
-          >
-            <div style={{ color: '#808080' }}>Congrats,</div>
-            <div>you created an NFT!</div>
-          </div>
-          <div className="flex">
-            <div className="uppercase mr-auto text-xs font-bold py-3 px-4" style={{ color: '#CCCCCC' }}>
-              Mining Status
-            </div>
-            <div
-              className="flex gap-2 items-center py-3 px-4 text-white font-bold text-xs"
-              style={{ backgroundColor: '#252525' }}
-            >
-              {miningState === MiningState.IN_PROGRESS ? (
-                <>
-                  <Image width={16} height={16} priority src="/loading.gif" alt="" /> {miningState}
-                </>
-              ) : (
-                <>{miningState}</>
-              )}
-            </div>
-          </div>
-          <div className="flex gap-4 items-center text-xs text-white py-3 px-4" style={{ backgroundColor: '#151515' }}>
-            <div className="flex items-center whitespace-nowrap font-bold">
-              <Polygon />
-              Token ID:
-            </div>
-            <div className="flex items-center gap-1 truncate">
-              <Anchor style={{ minWidth: '8px' }} />
-              <a
-                className="truncate font-black "
-                style={{ fontSize: '9px', lineHeight: '9px', borderBottom: '1px solid gray', color: '#808080' }}
-                href={`https://mumbai.polygonscan.com/tx/${transactionHash}`}
-                rel="noreferrer"
-                target="_blank"
-              >
-                {transactionHash}
-              </a>
-            </div>
-          </div>
-        </div>
-      </Modal>
-    );
-  }
-
   return (
     <Modal
       show={isOpen}
       title={tabs}
       onClose={handleClose}
       leftButton={
-        <div className="p-2 text-gray-400 font-bold flex-1 text-center text-sm" onClick={handleClose}>
-          Cancel
-        </div>
+        <button className="p-2 w-full text-gray-400 font-bold flex-1 text-center text-sm" onClick={handleClose}>
+          Close
+        </button>
       }
     >
-      <div className="px-4 py-4">
-        <TrackUploader onFileChange={handleFileDrop} />
-      </div>
-      {file && preview && <TrackMetadataForm handleSubmit={handleSubmit} initialValues={initialValues} />}
-      {mintingState && (
-        <div className="absolute top-0 left-0 flex flex-col items-center justify-center h-full w-full bg-gray-20 bg-opacity-80">
-          <Image height={200} width={200} src="/nyan-cat-rainbow.gif" alt="Loading" priority />
-          <div className="font-bold text-lg text-white">{mintingState}</div>
-        </div>
+      {transactionHash && newTrack ? (
+        <MintingDone transactionHash={transactionHash} track={newTrack} miningState={miningState} />
+      ) : (
+        <>
+          <div className="px-4 py-4">
+            <TrackUploader onFileChange={handleFileDrop} />
+          </div>
+          {file && preview && <TrackMetadataForm handleSubmit={handleSubmit} initialValues={initialValues} />}
+          {mintingState && (
+            <div className="absolute top-0 left-0 flex flex-col items-center justify-center h-full w-full bg-gray-20 bg-opacity-80">
+              <Image height={200} width={200} src="/nyan-cat-rainbow.gif" alt="Loading" priority />
+              <div className="font-bold text-lg text-white">{mintingState}</div>
+            </div>
+          )}
+        </>
       )}
     </Modal>
   );

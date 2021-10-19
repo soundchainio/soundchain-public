@@ -4,14 +4,12 @@ import { MusicFile } from 'icons/MusicFile';
 import { Upload as UploadIcon } from 'icons/Upload';
 import { useState } from 'react';
 import { FileRejection, useDropzone } from 'react-dropzone';
-import { audioMimeTypes } from 'utils/mimeTypes';
 
 export interface TrackUploaderProps {
   onFileChange: (file: File) => void;
 }
 
 const maxSize = 1024 * 1024 * 30; // 30Mb
-const accept = audioMimeTypes;
 
 const containerClasses = 'flex bg-black text-gray-30 border-gray-50 border-2 border-dashed rounded-md gap-4 p-4';
 
@@ -35,7 +33,7 @@ export const TrackUploader = ({ onFileChange }: TrackUploaderProps) => {
     });
   }
 
-  const { getRootProps, getInputProps } = useDropzone({ maxFiles: 1, maxSize, accept, onDrop });
+  const { getRootProps, getInputProps } = useDropzone({ maxFiles: 1, maxSize, accept: 'audio/*', onDrop });
 
   if (file && preview) {
     return (
