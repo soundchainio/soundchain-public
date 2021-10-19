@@ -8,18 +8,17 @@ interface BuyNFTProps {
 }
 
 export const BuyNFT = ({ price, balance }: BuyNFTProps) => {
+  // TODO: improve divs
   return (
     <div className="mb-2">
-      <div className="flex">
-        <div className="flex items-center w-full py-3 px-4 mb-10" style={{ backgroundColor: '#202020' }}>
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2 text-xs text-white font-bold">
-              <Logo id="soundchain-wallet" height="20" width="20" /> SoundChain Wallet
-            </div>
-            <div className="flex items-center gap-2 font-black text-xs" style={{ color: '#808080' }}>
-              Balance: <Matic />
-              <div className="text-white">{balance}</div>MATIC
-            </div>
+      <div className="flex items-center w-full py-3 px-4 mb-10 color bg-gray-20">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2 text-xs text-white font-bold">
+            <Logo id="soundchain-wallet" height="20" width="20" /> SoundChain Wallet
+          </div>
+          <div className="flex items-center gap-2 font-black text-xs text-gray-80">
+            Balance: <Matic />
+            <p className="text-white">{balance}</p>MATIC
           </div>
         </div>
       </div>
