@@ -31,9 +31,9 @@ export const SellNFT = ({ onSetPrice, onSetQuantity }: SellNFTProps) => {
         {({ values, handleChange }: FormikProps<FormValues>) => (
           <Form className="flex flex-col">
             <div className="flex">
-              <div className="flex items-center justify-start w-full bg-gray-20 text-gray-80 font-bold text-xs md-text-sm uppercase py-3 pl-5">
+              <label className="flex items-center justify-start w-full bg-gray-20 text-gray-80 font-bold text-xs md-text-sm uppercase py-3 pl-5">
                 Quantity
-              </div>
+              </label>
               <div className="flex flex-wrap items-center w-1/2 justify-end w-full bg-gray-20 uppercase py-3 pr-5">
                 <InputField
                   name="quantity"
@@ -46,9 +46,9 @@ export const SellNFT = ({ onSetPrice, onSetQuantity }: SellNFTProps) => {
               </div>
             </div>
             <div className="flex">
-              <div className="flex items-center justify-start w-full bg-gray-20 text-gray-80 font-bold text-xs md-text-sm uppercase py-3 pl-5">
+              <label className="flex items-center justify-start w-full bg-gray-20 text-gray-80 font-bold text-xs md-text-sm uppercase py-3 pl-5">
                 Sale Price
-              </div>
+              </label>
               <div className="flex flex-wrap items-center w-1/2 justify-end w-full bg-gray-20 uppercase py-3 pr-5">
                 <InputField
                   name="price"
