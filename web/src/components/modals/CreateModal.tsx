@@ -15,7 +15,7 @@ import {
   useCreateTrackMutation,
   usePinJsonToIpfsMutation,
   usePinToIpfsMutation,
-  useUpdateTrackMutation
+  useUpdateTrackMutation,
 } from 'lib/graphql';
 import * as musicMetadata from 'music-metadata-browser';
 import Image from 'next/image';
@@ -163,6 +163,9 @@ export const CreateModal = () => {
 
       const onReceipt = (receipt: Receipt) => {
         if (receipt.status) {
+          if (!receipt.events.TransferSingle) {
+            return;
+          }
           updateTrack({
             variables: {
               input: {
@@ -201,12 +204,12 @@ export const CreateModal = () => {
 
   useEffect(() => {
     const verifyMetadata = async () => {
-      let assetUrl = "";
+      let assetUrl = '';
 
       if (fileMetadata?.picture?.length) {
         const type = fileMetadata.picture[0].format;
         const blob = new Blob([fileMetadata.picture[0].data], {
-          type
+          type,
         });
         const imageFile = new File([blob], 'artwork', { type });
         assetUrl = await upload([imageFile]);
@@ -221,7 +224,7 @@ export const CreateModal = () => {
         artworkUrl: assetUrl,
         quantity: 1,
       });
-    }
+    };
 
     verifyMetadata();
   }, [fileMetadata]);

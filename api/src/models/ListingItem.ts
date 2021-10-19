@@ -1,38 +1,45 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { Model } from './Model';
+
 @ObjectType()
-export class User extends Model {
+export class ListingItem extends Model {
   @Field(() => ID, { name: 'id' })
   readonly _id: string;
 
+  @Field()
   @prop({ required: true })
-  profileId: string;
+  owner: string;
 
   @Field()
   @prop({ required: true })
-  email: string;
+  nft: string;
 
   @Field()
   @prop({ required: true })
-  handle: string;
-
-  @Field({ nullable: true })
-  @prop({ required: false })
-  walletAddress: string;
-
-  @prop({ required: false })
-  emailVerificationToken?: string;
+  tokenId: number;
 
   @Field()
-  @prop({ default: false })
-  isApprovedOnMarketplace: boolean;
+  @prop({ required: true })
+  startingTime: number;
+
+  @Field()
+  @prop({ required: true })
+  quantity: number;
+
+  @Field()
+  @prop({ required: true })
+  pricePerItem: number;
 
   @Field(() => Date)
   createdAt: Date;
 
   @Field(() => Date)
   updatedAt: Date;
+
+  @Field()
+  @prop({ default: true })
+  valid: boolean;
 }
 
-export const UserModel = getModelForClass(User);
+export const ListingItemModel = getModelForClass(ListingItem);

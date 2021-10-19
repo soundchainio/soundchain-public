@@ -96,6 +96,25 @@ export type CommentNotification = {
   link: Scalars['String'];
 };
 
+export type CreateListingItemInput = {
+  owner: Scalars['String'];
+  nft: Scalars['String'];
+  tokenId: Scalars['Float'];
+  quantity: Scalars['Float'];
+  pricePerItem: Scalars['Float'];
+  startingTime: Scalars['Float'];
+};
+
+export type CreateListingItemType = {
+  __typename?: 'CreateListingItemType';
+  owner: Scalars['String'];
+  nft: Scalars['String'];
+  tokenId: Scalars['Float'];
+  quantity: Scalars['Float'];
+  pricePerItem: Scalars['Float'];
+  startingTime: Scalars['Float'];
+};
+
 export type CreateMintingRequestInput = {
   to: Scalars['String'];
   name: Scalars['String'];
@@ -310,6 +329,7 @@ export type Mutation = {
   __typename?: 'Mutation';
   addComment: AddCommentPayload;
   deleteComment: DeleteCommentPayload;
+  createListingItem: CreateListingItemType;
   sendMessage: SendMessagePayload;
   resetUnreadMessageCount: Profile;
   createMintingRequest: MintingRequestPayload;
@@ -334,6 +354,7 @@ export type Mutation = {
   register: AuthPayload;
   login: AuthPayload;
   updateHandle: UpdateHandlePayload;
+  setIsApprovedOnMarketplace: UpdateHandlePayload;
 };
 
 
@@ -344,6 +365,11 @@ export type MutationAddCommentArgs = {
 
 export type MutationDeleteCommentArgs = {
   input: DeleteCommentInput;
+};
+
+
+export type MutationCreateListingItemArgs = {
+  input: CreateListingItemInput;
 };
 
 
@@ -938,6 +964,7 @@ export type User = {
   email: Scalars['String'];
   handle: Scalars['String'];
   walletAddress: Maybe<Scalars['String']>;
+  isApprovedOnMarketplace: Scalars['Boolean'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   profile: Profile;
@@ -1087,6 +1114,19 @@ export type CommentsQuery = (
       { __typename?: 'PageInfo' }
       & Pick<PageInfo, 'hasPreviousPage' | 'hasNextPage' | 'startCursor' | 'endCursor'>
     ) }
+  ) }
+);
+
+export type CreateListingItemMutationVariables = Exact<{
+  input: CreateListingItemInput;
+}>;
+
+
+export type CreateListingItemMutation = (
+  { __typename?: 'Mutation' }
+  & { createListingItem: (
+    { __typename?: 'CreateListingItemType' }
+    & Pick<CreateListingItemType, 'owner' | 'nft' | 'tokenId' | 'quantity' | 'pricePerItem' | 'startingTime'>
   ) }
 );
 
@@ -1301,7 +1341,7 @@ export type MeQuery = (
   { __typename?: 'Query' }
   & { me: Maybe<(
     { __typename?: 'User' }
-    & Pick<User, 'id' | 'handle' | 'email' | 'walletAddress'>
+    & Pick<User, 'id' | 'handle' | 'email' | 'walletAddress' | 'isApprovedOnMarketplace'>
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'followerCount' | 'followingCount' | 'favoriteGenres' | 'musicianTypes' | 'bio'>
@@ -1621,6 +1661,20 @@ export type SendMessageMutation = (
     & { message: (
       { __typename?: 'Message' }
       & MessageComponentFieldsFragment
+    ) }
+  ) }
+);
+
+export type SetIsApprovedOnMarketplaceMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type SetIsApprovedOnMarketplaceMutation = (
+  { __typename?: 'Mutation' }
+  & { setIsApprovedOnMarketplace: (
+    { __typename?: 'UpdateHandlePayload' }
+    & { user: (
+      { __typename?: 'User' }
+      & Pick<User, 'id'>
     ) }
   ) }
 );
@@ -2338,6 +2392,44 @@ export function useCommentsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<C
 export type CommentsQueryHookResult = ReturnType<typeof useCommentsQuery>;
 export type CommentsLazyQueryHookResult = ReturnType<typeof useCommentsLazyQuery>;
 export type CommentsQueryResult = Apollo.QueryResult<CommentsQuery, CommentsQueryVariables>;
+export const CreateListingItemDocument = gql`
+    mutation CreateListingItem($input: CreateListingItemInput!) {
+  createListingItem(input: $input) {
+    owner
+    nft
+    tokenId
+    quantity
+    pricePerItem
+    startingTime
+  }
+}
+    `;
+export type CreateListingItemMutationFn = Apollo.MutationFunction<CreateListingItemMutation, CreateListingItemMutationVariables>;
+
+/**
+ * __useCreateListingItemMutation__
+ *
+ * To run a mutation, you first call `useCreateListingItemMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateListingItemMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createListingItemMutation, { data, loading, error }] = useCreateListingItemMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateListingItemMutation(baseOptions?: Apollo.MutationHookOptions<CreateListingItemMutation, CreateListingItemMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateListingItemMutation, CreateListingItemMutationVariables>(CreateListingItemDocument, options);
+      }
+export type CreateListingItemMutationHookResult = ReturnType<typeof useCreateListingItemMutation>;
+export type CreateListingItemMutationResult = Apollo.MutationResult<CreateListingItemMutation>;
+export type CreateListingItemMutationOptions = Apollo.BaseMutationOptions<CreateListingItemMutation, CreateListingItemMutationVariables>;
 export const CreateMintingRequestDocument = gql`
     mutation createMintingRequest($input: CreateMintingRequestInput!) {
   createMintingRequest(input: $input) {
@@ -2770,6 +2862,7 @@ export const MeDocument = gql`
     handle
     email
     walletAddress
+    isApprovedOnMarketplace
     profile {
       id
       displayName
@@ -3506,6 +3599,40 @@ export function useSendMessageMutation(baseOptions?: Apollo.MutationHookOptions<
 export type SendMessageMutationHookResult = ReturnType<typeof useSendMessageMutation>;
 export type SendMessageMutationResult = Apollo.MutationResult<SendMessageMutation>;
 export type SendMessageMutationOptions = Apollo.BaseMutationOptions<SendMessageMutation, SendMessageMutationVariables>;
+export const SetIsApprovedOnMarketplaceDocument = gql`
+    mutation SetIsApprovedOnMarketplace {
+  setIsApprovedOnMarketplace {
+    user {
+      id
+    }
+  }
+}
+    `;
+export type SetIsApprovedOnMarketplaceMutationFn = Apollo.MutationFunction<SetIsApprovedOnMarketplaceMutation, SetIsApprovedOnMarketplaceMutationVariables>;
+
+/**
+ * __useSetIsApprovedOnMarketplaceMutation__
+ *
+ * To run a mutation, you first call `useSetIsApprovedOnMarketplaceMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSetIsApprovedOnMarketplaceMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [setIsApprovedOnMarketplaceMutation, { data, loading, error }] = useSetIsApprovedOnMarketplaceMutation({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useSetIsApprovedOnMarketplaceMutation(baseOptions?: Apollo.MutationHookOptions<SetIsApprovedOnMarketplaceMutation, SetIsApprovedOnMarketplaceMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<SetIsApprovedOnMarketplaceMutation, SetIsApprovedOnMarketplaceMutationVariables>(SetIsApprovedOnMarketplaceDocument, options);
+      }
+export type SetIsApprovedOnMarketplaceMutationHookResult = ReturnType<typeof useSetIsApprovedOnMarketplaceMutation>;
+export type SetIsApprovedOnMarketplaceMutationResult = Apollo.MutationResult<SetIsApprovedOnMarketplaceMutation>;
+export type SetIsApprovedOnMarketplaceMutationOptions = Apollo.BaseMutationOptions<SetIsApprovedOnMarketplaceMutation, SetIsApprovedOnMarketplaceMutationVariables>;
 export const SubscribeToProfileDocument = gql`
     mutation SubscribeToProfile($input: SubscribeToProfileInput!) {
   subscribeToProfile(input: $input) {
