@@ -49,7 +49,7 @@ export default function WalletPage() {
         <meta name="description" content="Wallet" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className="h-full flex flex-col justify-between space-y-6 items-center">
+      <div className="h-full flex flex-col justify-start space-y-6 items-center">
         <div className="bg-gray-15 w-full">
           {magicAccount && (
             <Wallet

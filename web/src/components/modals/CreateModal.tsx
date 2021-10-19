@@ -4,7 +4,7 @@ import { TrackUploader } from 'components/forms/track/TrackUploader';
 import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { useUpload } from 'hooks/useUpload';
-import { useWallet } from 'hooks/useWallet';
+import { useWalletContext } from 'hooks/useWalletContext';
 import { mintNftToken } from 'lib/blockchain';
 import {
   CreateTrackMutation,
@@ -39,7 +39,8 @@ export const CreateModal = () => {
   const [createTrack] = useCreateTrackMutation();
   const [updateTrack] = useUpdateTrackMutation();
 
-  const { web3, account } = useWallet();
+  const { web3, account } = useWalletContext();
+  console.log({ account });
   const [pinToIPFS] = usePinToIpfsMutation();
   const [pinJsonToIPFS] = usePinJsonToIpfsMutation();
 
