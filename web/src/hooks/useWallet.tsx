@@ -13,7 +13,7 @@ export interface WalletProps {
 
 export const useWallet = () => {
   const me = useMe();
-  const { account, balance, chainId, connect, addMumbaiTestnet, web3 } = useMetaMask();
+  const { account, balance, chainId, addMumbaiTestnet, web3 } = useMetaMask();
   const { account: magicAccount, balance: magicBalance, web3: magicWeb3 } = useMagicContext();
 
   if (me?.defaultWallet === DefaultWallet.Soundchain) {
@@ -26,7 +26,7 @@ export const useWallet = () => {
 
   if (me?.defaultWallet === DefaultWallet.MetaMask) {
     if (!account) {
-      connect();
+      //   dispatchConnectWalletModal(true);
     }
     if (chainId !== testNetwork.id) {
       addMumbaiTestnet();

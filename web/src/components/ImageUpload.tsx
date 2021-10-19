@@ -4,7 +4,6 @@ import { Upload } from 'icons/Upload';
 import Image from 'next/image';
 import { useEffect } from 'react';
 import Dropzone from 'react-dropzone';
-import { imageMimeTypes, videoMimeTypes } from 'utils/mimeTypes';
 
 export interface ImageUploadProps extends Omit<React.ComponentPropsWithoutRef<'div'>, 'onChange'> {
   onChange(value: string): void;
@@ -18,7 +17,7 @@ export interface ImageUploadProps extends Omit<React.ComponentPropsWithoutRef<'d
 }
 
 const defaultMaxFileSize = 1024 * 1024 * 30; // 30Mb
-const acceptedMimeTypes = [...imageMimeTypes, ...videoMimeTypes];
+const acceptedMimeTypes = ['image/*', 'video/*'];
 
 export function ImageUpload({
   className,
@@ -65,7 +64,7 @@ export function ImageUpload({
         >
           <input {...getInputProps()} />
           {thumbnail ? (
-            videoMimeTypes.includes(fileType) ? (
+            fileType.startsWith('video') ? (
               <video src={thumbnail} loop muted autoPlay controls={false} className="w-full h-full" />
             ) : (
               <Image

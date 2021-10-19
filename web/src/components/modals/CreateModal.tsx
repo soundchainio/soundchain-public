@@ -237,9 +237,9 @@ export const CreateModal = () => {
       title={tabs}
       onClose={handleClose}
       leftButton={
-        <div className="p-2 text-gray-400 font-bold flex-1 text-center text-sm" onClick={handleClose}>
+        <button className="p-2 w-full text-gray-400 font-bold flex-1 text-center text-sm" onClick={handleClose}>
           Close
-        </div>
+        </button>
       }
     >
       {transactionHash && newTrack ? (
