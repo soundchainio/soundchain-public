@@ -38,7 +38,7 @@ export const MintingDone = ({ track, miningState, transactionHash }: MintingDone
         >
           {miningState === MiningState.IN_PROGRESS ? (
             <>
-              <Image width={16} height={16} priority src="/loading.gif" alt="Artwork" /> {miningState}
+              <Image width={16} height={16} priority src="/loading.gif" alt="" /> {miningState}
             </>
           ) : (
             <>{miningState}</>
