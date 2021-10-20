@@ -20,7 +20,6 @@ export default function UserNotifications() {
   }, []);
 
   const topNavBarProps: TopNavBarProps = {
-    title: 'Notifications',
     rightButton: <ClearAllNotificationsButton />,
   };
 

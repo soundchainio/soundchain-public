@@ -37,6 +37,7 @@ export const RepostPreview = ({ postId }: RepostPreviewProps) => {
             src={post.track.playbackUrl}
             title={post.track.title}
             artist={post.track.artist}
+            art={post.track.artworkUrl}
           />
         )}
       </div>

@@ -17,7 +17,6 @@ export const getIpfsAssetUrl = (uri: string) => {
 export const getNftTokensFromContract = async (web3: Web3, account: string) => {
   const tokens: NftToken[] = [];
   try {
-    // temporary iteration over old contract number so
     const nftContract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress);
     const marketplaceContract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
     const numberOfTokens = await nftContract.methods._tokenIdCounter().call();
@@ -35,7 +34,7 @@ export const getNftTokensFromContract = async (web3: Web3, account: string) => {
         const { data } = await axios.get<Metadata>(getIpfsAssetUrl(tokenURI));
         tokens.push({
           ...data,
-          tokenId: tokenId.toString(),
+          tokenId,
           pricePerItem,
           quantity,
           startingTime,
@@ -51,28 +50,29 @@ export const getNftTokensFromContract = async (web3: Web3, account: string) => {
   return tokens;
 };
 
-export const burnNftToken = (web3: Web3, tokenId: string, from: string) => {
+export const burnNftToken = (web3: Web3, tokenId: number, from: string) => {
   const contract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress);
-  return maxGasFeeAlert(web3, async () => await contract.methods.burn(tokenId).send({ from, gas }));
+  return maxGasFeeAlert(web3, async () => await contract.methods.burn(from, tokenId, 1).send({ from, gas }));
 };
 
-export const approveMarketplace = (web3: Web3, from: string) => {
+export const approveMarketplace = (web3: Web3, from: string, onReceipt: (receipt: Receipt) => void) => {
   const contract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress);
-  return maxGasFeeAlert(
-    web3,
-    async () => await contract.methods.setApprovalForAll(marketplaceAddress, true).send({ from, gas }),
-  );
+  contract.methods.setApprovalForAll(marketplaceAddress, true).send({ from, gas }).on('receipt', onReceipt);
 };
 
-export const listItem = (web3: Web3, tokenId: string, quantity: number, from: string, price: number) => {
+export const listItem = (
+  web3: Web3,
+  tokenId: number,
+  quantity: number,
+  from: string,
+  price: number,
+  onReceipt: (receipt: Receipt) => void,
+) => {
   const contract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
-  return maxGasFeeAlert(
-    web3,
-    async () => await contract.methods.listItem(nftAddress, tokenId, quantity, price, 0).send({ from, gas }),
-  );
+  contract.methods.listItem(nftAddress, tokenId, quantity, price, 0).send({ from, gas }).on('receipt', onReceipt);
 };
 
-export const cancelListing = (web3: Web3, tokenId: string, from: string) => {
+export const cancelListing = (web3: Web3, tokenId: number, from: string) => {
   const contract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
   return maxGasFeeAlert(
     web3,
@@ -80,7 +80,7 @@ export const cancelListing = (web3: Web3, tokenId: string, from: string) => {
   );
 };
 
-export const updateListing = (web3: Web3, tokenId: string, from: string, price: number) => {
+export const updateListing = (web3: Web3, tokenId: number, from: string, price: number) => {
   const contract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
   return maxGasFeeAlert(
     web3,
@@ -88,15 +88,19 @@ export const updateListing = (web3: Web3, tokenId: string, from: string, price: 
   );
 };
 
-export const buyItem = (web3: Web3, tokenId: string, from: string, owner: string) => {
+export const buyItem = (
+  web3: Web3,
+  tokenId: number,
+  from: string,
+  owner: string,
+  value: string,
+  onReceipt: (receipt: Receipt) => void,
+) => {
   const contract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
-  return maxGasFeeAlert(
-    web3,
-    async () => await contract.methods.buyItem(nftAddress, tokenId, owner).send({ from, gas }),
-  );
+  contract.methods.buyItem(nftAddress, tokenId, owner).send({ from, gas, value }).on('receipt', onReceipt);
 };
 
-export const registerRoyalty = (web3: Web3, tokenId: string, from: string, royalty: number) => {
+export const registerRoyalty = (web3: Web3, tokenId: number, from: string, royalty: number) => {
   const contract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
   return maxGasFeeAlert(
     web3,
@@ -104,7 +108,7 @@ export const registerRoyalty = (web3: Web3, tokenId: string, from: string, royal
   );
 };
 
-export const transferNftToken = (web3: Web3, tokenId: string, from: string, toAddress: string, amount: number) => {
+export const transferNftToken = (web3: Web3, tokenId: number, from: string, toAddress: string, amount: number) => {
   const contract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress);
   const nullBytes = '0x0000000000000000000000000000000000000000000000000000000000000000';
   return maxGasFeeAlert(
@@ -112,6 +116,12 @@ export const transferNftToken = (web3: Web3, tokenId: string, from: string, toAd
     async () =>
       await contract.methods.safeTransferFrom(from, toAddress, tokenId, amount, nullBytes).send({ from, gas }),
   );
+};
+
+export const isTokenOwner = async (web3: Web3, tokenId: number, from: string) => {
+  const nftContract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress);
+  const balance = await nftContract.methods.balanceOf(from, tokenId).call();
+  return balance > 0;
 };
 
 export const mintNftToken = (
@@ -124,8 +134,6 @@ export const mintNftToken = (
   onReceipt: (receipt: Receipt) => void,
 ) => {
   const contract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress);
-  // https://web3js.readthedocs.io/en/v1.5.2/web3-eth-contract.html#methods-mymethod-send
-  // check event emitters transactionHash | confirmation | receipt
   contract.methods
     .mint(toAddress, amount, uri)
     .send({ from, gas })

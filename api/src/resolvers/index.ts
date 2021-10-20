@@ -4,6 +4,7 @@ import { CommentResolver } from './CommentResolver';
 import { FeedResolver } from './FeedResolver';
 import { FollowerNotificationResolver } from './FollowerNotificationResolver';
 import { FollowResolver } from './FollowResolver';
+import { ListingItemResolver } from './ListingItemResolver';
 import { MessageResolver } from './MessageResolver';
 import { MintingRequestResolver } from './MintingRequestResolver';
 import { NewPostNotificationResolver } from './NewPostNotificationResolver';
@@ -36,4 +37,5 @@ export const resolvers = [
   UserResolver,
   MintingRequestResolver,
   PinningResolver,
+  ListingItemResolver,
 ] as const;

@@ -1,10 +1,10 @@
 import classNames from 'classnames';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
-import { ModalsPortal } from './ModalsPortal';
 import { UnderDevelopment } from 'icons/UnderDevelopment';
+import { ModalsPortal } from './ModalsPortal';
 
 const baseClasses =
-  'fixed w-screen h-screen bottom-0 duration-500 bg-opacity-75 ease-in-out bg-black transform-gpu transform';
+  'fixed w-screen h-full bottom-0 duration-500 bg-opacity-75 ease-in-out bg-black transform-gpu transform';
 
 export const UnderDevelopmentModal = () => {
   const { showUnderDevelopment } = useModalState();
@@ -22,7 +22,7 @@ export const UnderDevelopmentModal = () => {
           'translate-y-full opacity-0': !showUnderDevelopment,
         })}
       >
-        <div className="flex flex-col h-screen">
+        <div className="flex flex-col h-full">
           <div className="flex-1" onClick={onOutsideClick}></div>
           <div className="text-white p-4 flex flex-col items-center bg-gray-30 rounded-tl-3xl rounded-tr-3xl">
             <div className="py-6">This feature is still under development.</div>

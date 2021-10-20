@@ -23,13 +23,13 @@ export const NavBar = () => {
 
   return (
     <nav className="bg-black md:bg-gray-30 h-16 flex items-center inset-x-0 shadow-2xl md:w-full">
-      <div className="w-full flex">
-        <NavBarLink label="Home" path="/" icon={Home} activatedColor="yellow" id="top" />
+      <div className="w-full flex justify-center gap-14">
+        <NavBarLink label="Home" path="/" icon={Home} color="yellow" id="top" />
         <NavBarButton
           label="Explore"
           onClick={() => dispatchShowUnderDevelopmentModal(true)}
           icon={Search}
-          activatedColor="green"
+          color="green"
         />
         <NavBarButton label="Create" icon={NewPost} onClick={handleCreateClick} />
         <NavBarLink
@@ -37,19 +37,19 @@ export const NavBar = () => {
           path={me ? '/notifications' : '/login'}
           icon={Bell}
           badge={me ? NotificationBadge : undefined}
-          activatedColor="purple"
+          color="purple"
         />
         <NavBarLink
           label="Profile"
           icon={Profile}
           path={me ? `/profiles/${me?.profile.id}` : '/login'}
-          activatedColor="purple-green"
+          color="purple-green"
         />
         <NavBarLink
           label="Playground"
           path="/playground"
           icon={() => <Happy width={20} height={20} />}
-          activatedColor="yellow"
+          color="yellow"
         />
       </div>
     </nav>

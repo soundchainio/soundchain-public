@@ -4,14 +4,12 @@ import { MusicFile } from 'icons/MusicFile';
 import { Upload as UploadIcon } from 'icons/Upload';
 import { useState } from 'react';
 import { FileRejection, useDropzone } from 'react-dropzone';
-import { audioMimeTypes } from 'utils/mimeTypes';
 
 export interface TrackUploaderProps {
   onFileChange: (file: File) => void;
 }
 
 const maxSize = 1024 * 1024 * 30; // 30Mb
-const accept = audioMimeTypes;
 
 const containerClasses = 'flex bg-black text-gray-30 border-gray-50 border-2 border-dashed rounded-md gap-4 p-4';
 
@@ -35,7 +33,7 @@ export const TrackUploader = ({ onFileChange }: TrackUploaderProps) => {
     });
   }
 
-  const { getRootProps, getInputProps } = useDropzone({ maxFiles: 1, maxSize, accept, onDrop });
+  const { getRootProps, getInputProps } = useDropzone({ maxFiles: 1, maxSize, accept: 'audio/*', onDrop });
 
   if (file && preview) {
     return (
@@ -44,11 +42,7 @@ export const TrackUploader = ({ onFileChange }: TrackUploaderProps) => {
           <AudioPlayer title={file.name} src={preview} />
         </div>
         <div className="flex mb-4 md:mb-0 mr-4 flex-col justify-center flex-shrink-0" {...getRootProps()}>
-          <JellyButton
-            flavor="blueberry"
-            icon={<UploadIcon activatedColor="blue" id="blue-gradient" />}
-            className="text-xs"
-          >
+          <JellyButton flavor="blueberry" icon={<UploadIcon color="blue" id="blue-gradient" />} className="text-xs">
             Choose File
           </JellyButton>
           <input {...getInputProps()} />
@@ -65,11 +59,7 @@ export const TrackUploader = ({ onFileChange }: TrackUploaderProps) => {
         <p className="font-semibold text-[9px]">WAV,MP3,AIFF,FLAC,OGA (Max: 30mb)</p>
       </div>
       <div className="flex flex-col justify-center flex-shrink-0">
-        <JellyButton
-          flavor="blueberry"
-          icon={<UploadIcon activatedColor="blue" id="blue-gradient" />}
-          className="text-xs"
-        >
+        <JellyButton flavor="blueberry" icon={<UploadIcon color="blue" id="blue-gradient" />} className="text-xs">
           Choose File
         </JellyButton>
         <input {...getInputProps()} />

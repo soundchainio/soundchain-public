@@ -8,7 +8,7 @@ import { Edit as EditButton } from './Buttons/Edit';
 import { ModalsPortal } from './ModalsPortal';
 
 const baseClasses =
-  'fixed w-screen h-screen bottom-0 duration-500 bg-opacity-75 ease-in-out bg-black transform-gpu transform';
+  'fixed w-screen h-full bottom-0 duration-500 bg-opacity-75 ease-in-out bg-black transform-gpu transform';
 
 export const AuthorActionsModal = () => {
   const { showAuthorActions, authorActionsId, authorActionsType } = useModalState();
@@ -62,7 +62,7 @@ export const AuthorActionsModal = () => {
           'translate-y-full opacity-0': !showAuthorActions,
         })}
       >
-        <div className="flex flex-col h-screen">
+        <div className="flex flex-col h-full">
           <div className="flex-1" onClick={onOutsideClick}></div>
           <div className="text-white p-4">
             <EditButton className="p-4 mb-4" onClick={onEdit}>
