@@ -2,7 +2,6 @@ import Slider from '@reach/slider';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
-import Image from 'next/image';
 import NextLink from 'next/link';
 import { useEffect, useState } from 'react';
 import { remainingTime, timeFromSecs } from 'utils/calculateTime';
@@ -40,7 +39,7 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
     <div className="bg-black rounded-lg p-4 items-center">
       <div className="flex items-center gap-3">
         <div className="h-20 w-20 relative flex items-center">
-          {art ? <Asset src={art} /> : <Image src="/default-pictures/album-artwork.png" alt="Artwork" layout="fill" className="m-auto object-cover" priority />}
+          <Asset src={art} />
         </div>
         <div className="flex flex-col flex-1">
           <div className="flex gap-2">

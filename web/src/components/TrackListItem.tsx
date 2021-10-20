@@ -3,7 +3,6 @@ import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { Pause } from 'icons/PauseBottomAudioPlayer';
 import { Play } from 'icons/PlayBottomAudioPlayer';
 import { useTrackLazyQuery } from 'lib/graphql';
-import Image from 'next/image';
 import React, { useEffect } from 'react';
 import Asset from './Asset';
 
@@ -49,8 +48,7 @@ export const TrackListItem = ({ trackId, index, coverPhotoUrl, handleOnPlayClick
     >
       <p>{index}</p>
       <div className="h-10 w-10 relative flex items-center bg-gray-80">
-        {data.track.artworkUrl ? <Asset src={data.track.artworkUrl} /> : <Image src="/default-pictures/album-artwork.png" alt="Artwork" layout="fill" className="m-auto object-cover" priority />}
-
+        <Asset src={data.track.artworkUrl} />
       </div>
       <div>
         <h2>{data.track.title}</h2>

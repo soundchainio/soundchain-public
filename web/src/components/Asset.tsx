@@ -1,23 +1,33 @@
-import { useMimeTypeQuery } from 'lib/graphql';
+import { useMimeTypeLazyQuery } from 'lib/graphql';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 
-const Asset = ({ src }: { src: string }) => {
+interface AssetProps {
+  src?: string | null
+}
+
+const Asset = ({ src }: AssetProps) => {
   const [mimeType, setMimeType] = useState<string>();
-  const { data } = useMimeTypeQuery({ variables: { url: src } });
+
+  const [getMimeType, { data }] = useMimeTypeLazyQuery({
+    variables: { url: src as string },
+  });
+
 
   useEffect(() => {
-    if (data) {
-      setMimeType(data.mimeType.value);
-    }
+    if (data) setMimeType(data.mimeType.value);
   }, [data]);
 
-  if (!mimeType) return null;
+  useEffect(() => {
+    if (src) getMimeType();
+  }, [src])
 
-  if (mimeType.startsWith('video')) {
+  if (!mimeType && src) return null;
+
+  if (mimeType?.startsWith('video')) {
     return (
       <video
-        src={src}
+        src={src || ''}
         controls={false}
         loop
         muted
@@ -28,7 +38,7 @@ const Asset = ({ src }: { src: string }) => {
     );
   }
 
-  return <Image src={src} alt="" layout="fill" className="m-auto object-cover" priority />;
+  return <Image src={src || '/default-pictures/album-artwork.png'} alt="" layout="fill" className="m-auto object-cover" priority />;
 };
 
 export default Asset;
