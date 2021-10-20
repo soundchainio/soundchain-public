@@ -7,12 +7,12 @@ import { Happy } from 'icons/emoji/Happy';
 import { Logo } from 'icons/Logo';
 import { Logout } from 'icons/Logout';
 import { Settings } from 'icons/Settings';
-import { Wallet } from 'icons/Wallet';
 import { Discord } from 'icons/social/Discord';
 import { FacebookSquare } from 'icons/social/FacebookSquare';
 import { InstagramSquare } from 'icons/social/InstagramSquare';
 import { Reddit } from 'icons/social/Reddit';
 import { TwitterSquare } from 'icons/social/TwitterSquare';
+import { Wallet } from 'icons/Wallet';
 import { setJwt } from 'lib/apollo';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
@@ -71,33 +71,32 @@ export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => 
               <div className="flex flex-row mt-6 relative">
                 <Avatar profile={me.profile} pixels={60} className="h-[68px] border-gray-10 border-4 rounded-full" />
                 <div className="px-2 flex flex-grow space-x-4 justify-center items-center">
-                  <div className="text-center text-lg" onClick={onFollowers}>
+                  <button className="text-center text-lg" onClick={onFollowers}>
                     <p className="font-semibold text-white">
                       <Number value={me.profile.followerCount} />
                     </p>
                     <p className="text-gray-80 text-md md:text-xs">Followers</p>
-                  </div>
-                  <div className="text-center text-lg" onClick={onFollowing}>
+                  </button>
+                  <button className="text-center text-lg" onClick={onFollowing}>
                     <p className="font-semibold text-white">
                       <Number value={me.profile.followingCount} />
                     </p>
                     <p className="text-gray-80 text-md md:text-xs">Following</p>
-                  </div>
+                  </button>
                 </div>
               </div>
               <div className="flex flex-col mt-4">
                 <h2 className="font-bold text-white">{me.profile.displayName}</h2>
                 <p className="text-gray-80 text-md">@{me.handle}</p>
               </div>
-
             </>
           )}
         </div>
-        {me &&
+        {me && (
           <div className="mt-2">
             <MenuItem icon={Wallet} label="Wallet" onClick={() => router.push('/wallet')} />
           </div>
-        }
+        )}
       </div>
       {me && (
         <div>

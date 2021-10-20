@@ -17,7 +17,6 @@ export const getIpfsAssetUrl = (uri: string) => {
 export const getNftTokensFromContract = async (web3: Web3, account: string) => {
   const tokens: NftToken[] = [];
   try {
-    // temporary iteration over old contract number so
     const nftContract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress);
     const marketplaceContract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
     const numberOfTokens = await nftContract.methods._tokenIdCounter().call();
@@ -131,8 +130,6 @@ export const mintNftToken = (
   onReceipt: (receipt: Receipt) => void,
 ) => {
   const contract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress);
-  // https://web3js.readthedocs.io/en/v1.5.2/web3-eth-contract.html#methods-mymethod-send
-  // check event emitters transactionHash | confirmation | receipt
   contract.methods
     .mint(toAddress, amount, uri)
     .send({ from, gas })

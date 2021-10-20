@@ -51,9 +51,9 @@ export const FollowModal = ({ show, profileId, modalType, onClose }: FollowersMo
       show={show}
       title={getTitle()}
       leftButton={
-        <div className="p-2 text-gray-400 font-bold flex-1 text-center" onClick={onClose}>
+        <button className="p-2 w-full text-gray-400 font-bold flex-1 text-center" onClick={onClose}>
           Close
-        </div>
+        </button>
       }
       onClose={onClose}
     >
