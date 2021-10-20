@@ -52,7 +52,7 @@ export const getNftTokensFromContract = async (web3: Web3, account: string) => {
 
 export const burnNftToken = (web3: Web3, tokenId: number, from: string) => {
   const contract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress);
-  return maxGasFeeAlert(web3, async () => await contract.methods.burn(tokenId).send({ from, gas }));
+  return maxGasFeeAlert(web3, async () => await contract.methods.burn(from, tokenId, 1).send({ from, gas }));
 };
 
 export const approveMarketplace = (web3: Web3, from: string, onReceipt: (receipt: Receipt) => void) => {
