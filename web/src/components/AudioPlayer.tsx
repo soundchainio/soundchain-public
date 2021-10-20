@@ -12,7 +12,7 @@ interface AudioPlayerProps {
   title?: string | null;
   trackId?: string;
   artist?: string | null;
-  art?: string;
+  art?: string | null;
 }
 
 export const AudioPlayer = ({ src, title, artist, art, trackId }: AudioPlayerProps) => {
