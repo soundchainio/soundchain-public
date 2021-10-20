@@ -43,7 +43,7 @@ export class CommentService extends ModelService<typeof Comment> {
     if (comment.profileId !== params.profileId) {
       throw new Error(`Error while deleting a comment: The user trying to delete is not the author of the comment.`);
     }
-    await CommentModel.deleteOne(comment);
+    await CommentModel.updateOne({ _id: params.commentId }, { deleted: true });
     return comment;
   }
 

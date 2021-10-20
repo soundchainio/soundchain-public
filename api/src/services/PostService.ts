@@ -61,7 +61,7 @@ export class PostService extends ModelService<typeof Post> {
     if (post.profileId !== params.profileId) {
       throw new Error(`Error while deleting a post: The user trying to delete is not the author of the post.`);
     }
-    await PostModel.deleteOne(post);
+    await PostModel.updateOne({ _id: params.postId }, { deleted: true });
     this.context.feedService.deleteItemsByPostId(params.postId);
     return post;
   }
@@ -89,7 +89,8 @@ export class PostService extends ModelService<typeof Post> {
   }
 
   getPosts(filter?: FilterPostInput, sort?: SortPostInput, page?: PageInput): Promise<PaginateResult<Post>> {
-    return this.paginate({ filter, sort, page });
+    const filterActive = { ...filter, deleted: false };
+    return this.paginate({ filter: filterActive, sort, page });
   }
 
   getPost(id: string): Promise<Post> {

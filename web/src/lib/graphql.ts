@@ -71,6 +71,7 @@ export type Comment = {
   body: Scalars['String'];
   postId: Scalars['String'];
   profileId: Scalars['String'];
+  deleted: Maybe<Scalars['Boolean']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   post: Post;
@@ -578,6 +579,7 @@ export type Post = {
   body: Maybe<Scalars['String']>;
   mediaLink: Maybe<Scalars['String']>;
   repostId: Maybe<Scalars['String']>;
+  deleted: Maybe<Scalars['Boolean']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   profile: Profile;
@@ -900,6 +902,7 @@ export type Track = {
   releaseYear: Maybe<Scalars['Float']>;
   genres: Maybe<Array<Genre>>;
   nftData: Maybe<NftDataType>;
+  deleted: Maybe<Scalars['Boolean']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   playbackUrl: Scalars['String'];
@@ -1118,7 +1121,7 @@ export type CommentQuery = (
 
 export type CommentComponentFieldsFragment = (
   { __typename?: 'Comment' }
-  & Pick<Comment, 'id' | 'body' | 'createdAt'>
+  & Pick<Comment, 'id' | 'body' | 'createdAt' | 'deleted'>
   & { profile: (
     { __typename?: 'Profile' }
     & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
@@ -1542,7 +1545,7 @@ export type PostQuery = (
 
 export type PostComponentFieldsFragment = (
   { __typename?: 'Post' }
-  & Pick<Post, 'id' | 'body' | 'mediaLink' | 'repostId' | 'createdAt' | 'updatedAt' | 'commentCount' | 'repostCount' | 'totalReactions' | 'topReactions' | 'myReaction'>
+  & Pick<Post, 'id' | 'body' | 'mediaLink' | 'repostId' | 'createdAt' | 'updatedAt' | 'commentCount' | 'repostCount' | 'totalReactions' | 'topReactions' | 'myReaction' | 'deleted'>
   & { profile: (
     { __typename?: 'Profile' }
     & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
@@ -2038,6 +2041,7 @@ export const CommentComponentFieldsFragmentDoc = gql`
   id
   body
   createdAt
+  deleted
   profile {
     id
     displayName
@@ -2134,6 +2138,7 @@ export const PostComponentFieldsFragmentDoc = gql`
   totalReactions
   topReactions(top: 2)
   myReaction
+  deleted
   profile {
     id
     displayName
