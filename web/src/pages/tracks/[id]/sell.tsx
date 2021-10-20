@@ -6,8 +6,8 @@ import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import { useModalDispatch } from 'contexts/providers/modal';
-import { useMagicContext } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
+import { useWalletContext } from 'hooks/useWalletContext';
 import { cacheFor, createApolloClient } from 'lib/apollo';
 import { listItem } from 'lib/blockchain';
 import { CreateListingItemInput, TrackDocument, useCreateListingItemMutation, useTrackQuery } from 'lib/graphql';
@@ -51,14 +51,13 @@ export default function SellPage({ trackId }: TrackPageProps) {
   const router = useRouter();
   const me = useMe();
   const { data } = useTrackQuery({ variables: { id: trackId } });
-  const { account, web3 } = useMagicContext();
+  const { account, web3 } = useWalletContext();
   const { dispatchShowApproveModal } = useModalDispatch();
   const [createListingItem] = useCreateListingItemMutation();
 
   const isApproved = me?.isApprovedOnMarketplace ?? false;
 
   const [price, setPrice] = useState(0);
-  const [quantity, setQuantity] = useState(0);
 
   const handleSell = () => {
     if (!data?.track.nftData?.tokenId || !account || !web3) {
@@ -66,7 +65,7 @@ export default function SellPage({ trackId }: TrackPageProps) {
     }
 
     if (isApproved) {
-      listItem(web3, data.track.nftData.tokenId, quantity, account, price, onReceipt);
+      listItem(web3, data.track.nftData.tokenId, 1, account, price, onReceipt);
       return;
     }
     me ? dispatchShowApproveModal(true) : router.push('/login');
@@ -98,10 +97,10 @@ export default function SellPage({ trackId }: TrackPageProps) {
       <div className="m-4">
         <Track trackId={trackId} />
       </div>
-      <SellNFT onSetPrice={price => setPrice(price)} onSetQuantity={quantity => setQuantity(quantity)} />
+      <SellNFT onSetPrice={price => setPrice(price)} />
       <BottomSheet>
         <div className="flex justify-center pb-3">
-          <Button variant="sell-nft" disabled={quantity <= 0 || price <= 0} onClick={handleSell}>
+          <Button variant="sell-nft" disabled={price <= 0} onClick={handleSell}>
             <div className="px-4">SELL NFT</div>
           </Button>
         </div>

@@ -1,4 +1,4 @@
-import { Arg, Authorized, Ctx, Mutation, Resolver } from 'type-graphql';
+import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from 'type-graphql';
 import { ListingItem } from '../models/ListingItem';
 import { Context } from '../types/Context';
 import { CreateListingItemData } from '../types/CreateListingItemData';
@@ -19,6 +19,22 @@ export class ListingItemResolver {
       pricePerItem,
       startingTime,
     });
+    return listingItem;
+  }
+
+  @Query(() => CreateListingItemData)
+  async listingItem(@Ctx() { listingItemService }: Context, @Arg('tokenId') tokenId: number): Promise<ListingItem> {
+    const listingItem = await listingItemService.findListingItem(tokenId);
+    return listingItem;
+  }
+
+  @Mutation(() => CreateListingItemData)
+  @Authorized()
+  async setNotValid(
+    @Ctx() { listingItemService }: Context,
+    @Arg('tokenId') tokenId: number,
+  ): Promise<CreateListingItemData> {
+    const listingItem = await listingItemService.setNotValid(tokenId);
     return listingItem;
   }
 }
