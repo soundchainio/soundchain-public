@@ -1,5 +1,8 @@
 import { PaginateResult } from '../db/pagination/paginate';
 import { NotFoundError } from '../errors/NotFoundError';
+import { FeedItemModel } from '../models/FeedItem';
+import { NotificationModel } from '../models/Notification';
+import { PostModel } from '../models/Post';
 import { Track, TrackModel } from '../models/Track';
 import { Context } from '../types/Context';
 import { FilterTrackInput } from '../types/FilterTrackInput';
@@ -39,7 +42,21 @@ export class TrackService extends ModelService<typeof Track> {
     return track;
   }
 
-  deleteTrack(id: string): Promise<Track> {
-    return this.model.deleteOne({ _id: id }).exec();
+  async deleteTrack(id: string): Promise<Track> {
+    return await this.model.deleteOne({ _id: id }).exec();
+  }
+
+  async deleteTrackOnError(id: string): Promise<Track> {
+    const posts = await PostModel.find({ trackId: id });
+    const postsIds = posts.map(post => post.id);
+
+    await NotificationModel.deleteMany({ metadata: { trackId: id } });
+
+    if (posts) {
+      await PostModel.deleteMany({ _id: { $in: postsIds } });
+      await FeedItemModel.deleteMany({ postId: { $in: postsIds } });
+    }
+
+    return await this.model.findOneAndDelete({ _id: id });
   }
 }
