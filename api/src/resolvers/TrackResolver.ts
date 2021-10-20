@@ -5,6 +5,8 @@ import { User } from '../models/User';
 import { Context } from '../types/Context';
 import { CreateTrackInput as CreateTrackInput } from '../types/CreateTrackInput';
 import { CreateTrackPayload } from '../types/CreateTrackPayload';
+import { DeleteTrackInput } from '../types/DeleteTrackInput';
+import { DeleteTrackPayload } from '../types/DeleteTrackPayload';
 import { FilterTrackInput } from '../types/FilterTrackInput';
 import { PageInput } from '../types/PageInput';
 import { SortTrackInput } from '../types/SortTrackInput';
@@ -16,7 +18,7 @@ import { UpdateTrackPayload } from '../types/UpdateTrackPayload';
 export class TrackResolver {
   @FieldResolver(() => String)
   playbackUrl(@Root() { muxAsset }: Track): string {
-    return `https://stream.mux.com/${muxAsset.playbackId}.m3u8`;
+    return muxAsset ? `https://stream.mux.com/${muxAsset.playbackId}.m3u8` : '';
   }
 
   @Query(() => Track)
@@ -53,6 +55,16 @@ export class TrackResolver {
     @Arg('input') { trackId, ...changes }: UpdateTrackInput,
   ): Promise<UpdateTrackPayload> {
     const track = await trackService.updateTrack(trackId, changes);
+    return { track };
+  }
+
+  @Mutation(() => UpdateTrackPayload)
+  @Authorized()
+  async deleteTrackOnError(
+    @Ctx() { trackService }: Context,
+    @Arg('input') { trackId }: DeleteTrackInput,
+  ): Promise<DeleteTrackPayload> {
+    const track = await trackService.deleteTrackOnError(trackId);
     return { track };
   }
 }
