@@ -8,6 +8,7 @@ import { Forward } from 'icons/ForwardButton';
 import { Pause } from 'icons/PauseBottomAudioPlayer';
 import { Play } from 'icons/PlayBottomAudioPlayer';
 import { Rewind } from 'icons/RewindButton';
+import Image from 'next/image';
 import { useState } from 'react';
 import { remainingTime, timeFromSecs } from 'utils/calculateTime';
 
@@ -58,7 +59,7 @@ export const AudioPlayerModal = () => {
         <div className="w-full sm:max-w-xs px-8 sm:px-0">
           <div className="flex justify-center">
             <div className="relative w-3/4 sm:w-full after:block after:pb-full flex bg-gray-80 rounded-lg overflow-hidden">
-              {currentSong.art && <Asset src={currentSong.art} />}
+              {currentSong.art ? <Asset src={currentSong.art} /> : <Image src="/default-pictures/album-artwork.png" alt="Artwork" layout="fill" className="m-auto object-cover" priority />}
             </div>
           </div>
           <div className="flex flex-col gap-1 mt-7 mb-4">

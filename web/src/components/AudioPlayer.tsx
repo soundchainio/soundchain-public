@@ -2,6 +2,7 @@ import Slider from '@reach/slider';
 import Hls from 'hls.js';
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
+import Image from 'next/image';
 import NextLink from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { remainingTime, timeFromSecs } from 'utils/calculateTime';
@@ -76,11 +77,9 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: AudioPlayerPro
   return (
     <div className="bg-black rounded-lg p-4 items-center">
       <div className="flex items-center gap-3">
-        {art && (
-          <div className="h-20 w-20 relative flex items-center">
-            <Asset src={art} />
-          </div>
-        )}
+        <div className="h-20 w-20 relative flex items-center">
+          {art ? <Asset src={art} /> : <Image src="/default-pictures/album-artwork.png" alt="Artwork" layout="fill" className="m-auto object-cover" priority />}
+        </div>
         <div className="flex flex-col flex-1">
           <div className="flex gap-2">
             <div className="flex items-center">

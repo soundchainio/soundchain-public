@@ -4,6 +4,7 @@ import Hls from 'hls.js';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { Pause } from 'icons/PauseBottomAudioPlayer';
 import { Play } from 'icons/PlayBottomAudioPlayer';
+import Image from 'next/image';
 import { useEffect, useRef } from 'react';
 import Asset from './Asset';
 
@@ -98,7 +99,7 @@ export const BottomAudioPlayer = () => {
           onClick={() => dispatchShowAudioPlayerModal(true)}
         >
           <div className="h-10 w-10 bg-gray-80 relative flex items-center">
-            {currentSong.art && <Asset src={currentSong.art} />}
+            {currentSong.art ? <Asset src={currentSong.art} /> : <Image src="/default-pictures/album-artwork.png" alt="Artwork" layout="fill" className="m-auto object-cover" priority />}
           </div>
           <div className="text-white text-xs flex flex-col flex-1 items-start">
             <h2 className="font-black">{currentSong.title || 'Unknown title'}</h2>
