@@ -48,7 +48,7 @@ export class CommentService extends ModelService<typeof Comment> {
   }
 
   countComments(postId: string): Promise<number> {
-    return CommentModel.countDocuments({ postId }).exec();
+    return CommentModel.countDocuments({ postId, deleted: false }).exec();
   }
 
   getComments(postId: string, page?: PageInput): Promise<PaginateResult<Comment>> {
