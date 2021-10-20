@@ -38,7 +38,7 @@ export const NavBarButton = ({ label, path, icon: Icon, onClick, badge: Badge, c
   return (
     <button
       onClick={onButtonClick}
-      className="flex flex-col flex-1 items-center justify-center align-middle cursor-pointer focus:ring-2 focus:ring-blue-600"
+      className="flex flex-col flex-1 md:flex-none items-center justify-center align-middle cursor-pointer focus:ring-2 focus:ring-blue-600"
     >
       {Icon && (
         <div className="relative">

@@ -7,7 +7,6 @@ import { useRouter } from 'next/router';
 import React from 'react';
 
 const topNavBarProps: TopNavBarProps = {
-  title: 'Profile Picture',
   leftButton: <BackButton />,
 };
 
