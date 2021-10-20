@@ -7,9 +7,9 @@ import { TrackInfo } from 'components/details-NFT/TrackInfo';
 import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
+import useBlockchain from 'hooks/useBlockchain';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { cacheFor, createApolloClient } from 'lib/apollo';
-import { isTokenOwner } from 'lib/blockchain';
 import { TrackDocument, useListingItemLazyQuery, useTrackQuery } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
 import { ParsedUrlQuery } from 'querystring';
@@ -48,6 +48,7 @@ export const getServerSideProps: GetServerSideProps<TrackPageProps, TrackPagePar
 export default function TrackPage({ trackId }: TrackPageProps) {
   const { account, web3 } = useMagicContext();
   const { data } = useTrackQuery({ variables: { id: trackId } });
+  const { isTokenOwner } = useBlockchain();
 
   const [isOwner, setIsOwner] = useState(false);
 

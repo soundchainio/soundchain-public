@@ -2,9 +2,9 @@ import { Button } from 'components/Button';
 import { Layout } from 'components/Layout';
 import { NFTCard } from 'components/NftCard';
 import { Subtitle } from 'components/Subtitle';
+import useBlockchain from 'hooks/useBlockchain';
 import { useMagicContext } from 'hooks/useMagicContext';
 import useMetaMask from 'hooks/useMetaMask';
-import { getNftTokensFromContract } from 'lib/blockchain';
 import { testNetwork } from 'lib/blockchainNetworks';
 import Head from 'next/head';
 import { useEffect, useState } from 'react';
@@ -18,6 +18,7 @@ export default function PlaygroundPage() {
   const [loading, setLoading] = useState(true);
   const [testnet, setTestnet] = useState(true);
   const [connectedToMetaMask, setConnectedToMetaMask] = useState(false);
+  const { getNftTokensFromContract } = useBlockchain();
 
   useEffect(() => {
     if (magicAccount && magicWeb3) {
