@@ -23,7 +23,7 @@ export const NavBar = () => {
 
   return (
     <nav className="bg-black md:bg-gray-30 h-16 flex items-center inset-x-0 shadow-2xl md:w-full">
-      <div className="w-full flex">
+      <div className="w-full flex justify-center gap-14">
         <NavBarLink label="Home" path="/" icon={Home} color="yellow" id="top" />
         <NavBarButton
           label="Explore"
