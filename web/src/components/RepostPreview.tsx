@@ -36,7 +36,7 @@ export const RepostPreview = ({ postId }: RepostPreviewProps) => {
             {post.mediaLink && (
               <iframe frameBorder="0" className="mt-4 w-full bg-gray-20" allowFullScreen src={post.mediaLink} />
             )}
-            {post.track && (
+            {(post.track && !post.track.deleted) ? (
               <AudioPlayer
                 trackId={post.track.id}
                 src={post.track.playbackUrl}
@@ -44,7 +44,9 @@ export const RepostPreview = ({ postId }: RepostPreviewProps) => {
                 artist={post.track.artist}
                 art={post.track.artworkUrl}
               />
-            )}
+            ) :
+              <NotAvailableMessage type="track" />
+            }
           </>
         }
       </div>
