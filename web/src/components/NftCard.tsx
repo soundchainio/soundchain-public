@@ -7,7 +7,6 @@ import { useMimeTypeLazyQuery, useMimeTypeQuery } from 'lib/graphql';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { NftToken } from 'types/NftTypes';
-import { audioMimeTypes, videoMimeTypes } from 'utils/mimeTypes';
 import Web3 from 'web3';
 import * as yup from 'yup';
 
@@ -32,7 +31,7 @@ export const NFTCard = ({ account, web3, nftToken }: NftCardProps) => {
     }
   }, []);
 
-  const handleBurn = async (web3: Web3, tokenId: string) => {
+  const handleBurn = async (web3: Web3, tokenId: number) => {
     const confirmed = confirm('Hey! This will destroy this NFT, you sure?');
     if (confirmed) {
       const result = await burnNftToken(web3, tokenId, account);
@@ -41,24 +40,23 @@ export const NFTCard = ({ account, web3, nftToken }: NftCardProps) => {
       }
     }
   };
-
-  const handleList = async (web3: Web3, tokenId: string, price: number) => {
+  const handleList = async (web3: Web3, tokenId: number, price: number) => {
     const confirmed = confirm('Hey! This will list this NFT, you sure?');
     if (confirmed) {
-      const result = await listItem(web3, tokenId, 1, account, price);
-      if (result) {
-        alert('Token list requested!');
-      }
+      await listItem(web3, tokenId, 1, account, price, console.log);
+      // if (result) {
+      //   alert('Token list requested!');
+      // }
     }
   };
 
   const handleApprove = async (web3: Web3) => {
     const confirmed = confirm('Hey! The marketplace will be able to transfer your NFTs, you sure?');
     if (confirmed) {
-      const result = await approveMarketplace(web3, account);
-      if (result) {
-        alert('Token approve requested!');
-      }
+      await approveMarketplace(web3, account, console.log);
+      // if (result) {
+      //   alert('Token approve requested!');
+      // }
     }
   };
 
@@ -132,7 +130,7 @@ export const NFTCard = ({ account, web3, nftToken }: NftCardProps) => {
 const Asset = ({ src, mimeType, art }: { src: string | undefined; mimeType: string | undefined; art?: boolean }) => {
   if (!src || !mimeType) return null;
 
-  if (videoMimeTypes.includes(mimeType)) {
+  if (mimeType.startsWith('video')) {
     return (
       <video
         src={src}
@@ -146,7 +144,7 @@ const Asset = ({ src, mimeType, art }: { src: string | undefined; mimeType: stri
     );
   }
 
-  if (audioMimeTypes.includes(mimeType)) {
+  if (mimeType.startsWith('audio')) {
     const isChrome = !!(window as any).chrome;
     return (
       <audio src={src} controls className="w-full" style={{ backgroundColor: `${isChrome ? '#f1f3f4' : 'unset'}` }} />
@@ -183,7 +181,7 @@ const listInitialValues: ListFormValue = {
 interface TransferFormProps {
   web3: Web3;
   fromAddress: string;
-  tokenId: string;
+  tokenId: number;
   name: string;
   onCancel: () => void;
 }

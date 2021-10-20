@@ -1,5 +1,6 @@
 import { User, UserModel } from '../models/User';
 import { Context } from '../types/Context';
+import { DefaultWallet } from '../types/DefaultWallet';
 import { ModelService } from './ModelService';
 
 export class UserService extends ModelService<typeof User> {
@@ -23,8 +24,24 @@ export class UserService extends ModelService<typeof User> {
     return updatedUser;
   }
 
+  async updateDefaultWallet(id: string, defaultWallet: DefaultWallet): Promise<User> {
+    const updatedUser = await UserModel.findByIdAndUpdate(id, { defaultWallet }, { new: true });
+    if (!updatedUser) {
+      throw new Error(`Could not update the profile with id: ${id}`);
+    }
+    return updatedUser;
+  }
+
   async updateWalletAddress(id: string, walletAddress: string): Promise<User> {
     const updatedUser = await UserModel.findByIdAndUpdate(id, { walletAddress }, { new: true });
+    if (!updatedUser) {
+      throw new Error(`Could not update the profile with id: ${id}`);
+    }
+    return updatedUser;
+  }
+
+  async setIsApprovedOnMarketplace(id: string): Promise<User> {
+    const updatedUser = await UserModel.findByIdAndUpdate(id, { isApprovedOnMarketplace: true }, { new: true });
     if (!updatedUser) {
       throw new Error(`Could not update the profile with id: ${id}`);
     }

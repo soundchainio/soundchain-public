@@ -7,11 +7,13 @@ import { TrackInfo } from 'components/details-NFT/TrackInfo';
 import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
-import { useMe } from 'hooks/useMe';
+import { useMagicContext } from 'hooks/useMagicContext';
 import { cacheFor, createApolloClient } from 'lib/apollo';
-import { TrackDocument, useTrackQuery } from 'lib/graphql';
+import { isTokenOwner } from 'lib/blockchain';
+import { TrackDocument, useListingItemLazyQuery, useTrackQuery } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
 import { ParsedUrlQuery } from 'querystring';
+import { useEffect, useState } from 'react';
 
 export interface TrackPageProps {
   trackId: string;
@@ -44,14 +46,38 @@ export const getServerSideProps: GetServerSideProps<TrackPageProps, TrackPagePar
 };
 
 export default function TrackPage({ trackId }: TrackPageProps) {
-  const me = useMe();
+  const { account, web3 } = useMagicContext();
   const { data } = useTrackQuery({ variables: { id: trackId } });
 
-  const isOwner = me?.id === data?.track.profileId;
+  const [isOwner, setIsOwner] = useState(false);
+
+  const tokenId = data?.track.nftData?.tokenId || -1;
+
+  const [getListingItem, { data: listingItem }] = useListingItemLazyQuery({
+    variables: { tokenId },
+  });
+
+  useEffect(() => {
+    const fetchIsOwner = async () => {
+      if (!account || !web3 || !data?.track.nftData?.tokenId) {
+        return;
+      }
+      const isTokenOwnerRes = await isTokenOwner(web3, data.track.nftData.tokenId, account);
+      setIsOwner(isTokenOwnerRes);
+    };
+    fetchIsOwner();
+  }, [account, web3, data?.track.nftData]);
+
+  useEffect(() => {
+    getListingItem();
+  }, [getListingItem]);
+
+  const isForSaleResponse = !!listingItem?.listingItem.pricePerItem ?? false;
+  const price = web3?.utils.fromWei(listingItem?.listingItem.pricePerItem.toString() ?? '0', 'ether');
 
   const topNovaBarProps: TopNavBarProps = {
     leftButton: <BackButton />,
-    title: "NFT Details",
+    title: 'NFT Details',
   };
 
   return (
@@ -63,7 +89,7 @@ export default function TrackPage({ trackId }: TrackPageProps) {
       <TrackInfo trackTitle={data?.track.title || undefined} albumTitle={undefined} releaseYear={undefined} />
       <BottomSheet>
         <MintingData />
-        <HandleNFT isOwner={isOwner} />
+        <HandleNFT price={price} isOwner={isOwner} isForSale={isForSaleResponse} />
       </BottomSheet>
     </Layout>
   );

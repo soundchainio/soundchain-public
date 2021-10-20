@@ -6,6 +6,7 @@ import { EmbedService } from '../services/EmbedService';
 import { FeedService } from '../services/FeedService';
 import { FollowService } from '../services/FollowService';
 import { JwtService, JwtUser } from '../services/JwtService';
+import { ListingItemService } from '../services/ListingItemService';
 import { MessageService } from '../services/MessageService';
 import { MintingRequestService } from '../services/MintingRequestService';
 import { MuxService } from '../services/MuxService';
@@ -39,6 +40,7 @@ export class Context {
   uploadService = new UploadService(this);
   userService = new UserService(this);
   embedService = new EmbedService(this);
+  listingItemService = new ListingItemService(this);
   user?: Promise<User>;
 
   constructor(jwtUser?: JwtUser) {

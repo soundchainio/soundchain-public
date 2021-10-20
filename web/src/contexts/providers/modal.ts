@@ -38,5 +38,6 @@ export const useModalDispatch = () => {
     dispatchShowCreateModal: (show: boolean) => dispatch({ type: ModalActionTypes.SHOW_CREATE, payload: { show } }),
     dispatchShowAudioPlayerModal: (show: boolean) =>
       dispatch({ type: ModalActionTypes.SHOW_AUDIO_PLAYER, payload: { show } }),
+    dispatchShowApproveModal: (show: boolean) => dispatch({ type: ModalActionTypes.SHOW_APPROVE, payload: { show } }),
   };
 };

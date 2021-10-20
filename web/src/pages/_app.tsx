@@ -9,6 +9,7 @@ import { AudioPlayerModal } from 'components/modals/AudioPlayerModal';
 import { StateProvider } from 'contexts';
 import { AudioPlayerProvider } from 'hooks/useAudioPlayer';
 import { HideBottomNavBarProvider } from 'hooks/useHideBottomNavBar';
+import WalletProvider from 'hooks/useWalletContext';
 import { ApolloProvider } from 'lib/apollo';
 import type { AppProps } from 'next/app';
 import dynamic from 'next/dynamic';
@@ -51,19 +52,21 @@ function SoundchainApp({ Component, pageProps }: AppProps) {
       <ApolloProvider pageProps={pageProps}>
         <StateProvider>
           <MagicProvider>
-            <AudioPlayerProvider>
-              <HideBottomNavBarProvider>
-                <CheckBodyScroll />
-                <div className="h-full flex flex-col">
-                  <div className="flex-1 max-h-full overflow-y-auto">
-                    <Component {...pageProps} />
+            <WalletProvider>
+              <AudioPlayerProvider>
+                <HideBottomNavBarProvider>
+                  <CheckBodyScroll />
+                  <div className="h-full flex flex-col">
+                    <div className="flex-1 max-h-full overflow-y-auto">
+                      <Component {...pageProps} />
+                    </div>
+                    <BottomAudioPlayer />
+                    <BottomNavBarWrapper />
+                    <AudioPlayerModal />
                   </div>
-                  <BottomAudioPlayer />
-                  <BottomNavBarWrapper />
-                  <AudioPlayerModal />
-                </div>
-              </HideBottomNavBarProvider>
-            </AudioPlayerProvider>
+                </HideBottomNavBarProvider>
+              </AudioPlayerProvider>
+            </WalletProvider>
           </MagicProvider>
         </StateProvider>
       </ApolloProvider>

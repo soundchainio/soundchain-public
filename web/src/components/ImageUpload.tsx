@@ -4,7 +4,6 @@ import { Upload } from 'icons/Upload';
 import Image from 'next/image';
 import { useEffect } from 'react';
 import Dropzone from 'react-dropzone';
-import { imageMimeTypes, videoMimeTypes } from 'utils/mimeTypes';
 
 export interface ImageUploadProps extends Omit<React.ComponentPropsWithoutRef<'div'>, 'onChange'> {
   onChange(value: string): void;
@@ -14,11 +13,11 @@ export interface ImageUploadProps extends Omit<React.ComponentPropsWithoutRef<'d
   value?: string;
   rounded?: boolean;
   artwork?: boolean;
-  initialUrl?: string;
+  initialValue?: File;
 }
 
 const defaultMaxFileSize = 1024 * 1024 * 30; // 30Mb
-const acceptedMimeTypes = [...imageMimeTypes, ...videoMimeTypes];
+const acceptedMimeTypes = ['image/*', 'video/*'];
 
 export function ImageUpload({
   className,
@@ -29,16 +28,20 @@ export function ImageUpload({
   onUpload,
   children,
   rounded,
-  initialUrl,
+  initialValue,
   artwork = false,
   ...rest
 }: ImageUploadProps) {
   const { preview, fileType, uploading, upload } = useUpload(value, onChange);
-  const thumbnail = preview || value || initialUrl;
+  const thumbnail = preview || value;
 
   useEffect(() => {
     onUpload && onUpload(uploading);
   }, [uploading, onUpload]);
+
+  useEffect(() => {
+    initialValue && upload([initialValue]);
+  }, [initialValue]);
 
   return (
     <Dropzone
@@ -61,8 +64,8 @@ export function ImageUpload({
         >
           <input {...getInputProps()} />
           {thumbnail ? (
-            videoMimeTypes.includes(fileType) ? (
-              <video src={thumbnail} loop muted autoPlay className="w-full h-full" />
+            fileType.startsWith('video') ? (
+              <video src={thumbnail} loop muted autoPlay controls={false} className="w-full h-full" />
             ) : (
               <Image
                 className={classNames('object-cover', rounded ? 'rounded-full' : 'rounded-lg')}

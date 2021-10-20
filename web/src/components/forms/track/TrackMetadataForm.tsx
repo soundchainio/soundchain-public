@@ -19,7 +19,6 @@ export interface FormValues {
   releaseYear?: number;
   genres?: Genre[];
   artworkUrl?: string;
-  quantity: number;
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
@@ -30,30 +29,32 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   releaseYear: yup.number(),
   genres: yup.array(),
   artworkUrl: yup.string(),
-  quantity: yup.number().required(),
 });
 
+export interface InitialValues extends Omit<Partial<FormValues>, 'artworkUrl'> {
+  artworkFile?: File;
+}
+
 interface Props {
-  initialValues?: FormValues;
+  initialValues?: InitialValues;
   handleSubmit: (values: FormValues) => void;
 }
 
-const defaultValues: FormValues = {
-  title: '',
-  description: '',
-  artist: '',
-  album: '',
-  releaseYear: new Date().getFullYear(),
-  genres: [],
-  artworkUrl: '',
-  quantity: 1,
-};
-
-export const TrackMetadataForm = ({ initialValues = defaultValues, handleSubmit }: Props) => {
+export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
   const { web3, balance } = useMagicContext();
   const [maxGasFee, setMaxGasFee] = useState<string>();
   const [enoughFunds, setEnoughFunds] = useState<boolean>();
   const [uploadingArt, setUploadingArt] = useState<boolean>();
+
+  const defaultValues: FormValues = {
+    title: initialValues?.title || '',
+    description: initialValues?.description || '',
+    artist: initialValues?.artist || '',
+    album: initialValues?.album || '',
+    releaseYear: initialValues?.releaseYear || new Date().getFullYear(),
+    genres: initialValues?.genres || [],
+    artworkUrl: '',
+  };
 
   useEffect(() => {
     const gasCheck = () => {
@@ -61,10 +62,10 @@ export const TrackMetadataForm = ({ initialValues = defaultValues, handleSubmit 
         getMaxGasFee(web3).then(setMaxGasFee);
       }
     };
+    gasCheck();
     const interval = setInterval(() => {
       gasCheck();
-    }, 10 * 1000);
-    gasCheck();
+    }, 5 * 1000);
     return () => clearInterval(interval);
   }, [web3]);
 
@@ -79,8 +80,8 @@ export const TrackMetadataForm = ({ initialValues = defaultValues, handleSubmit 
   }, [maxGasFee, balance]);
 
   return (
-    <Formik
-      initialValues={initialValues}
+    <Formik<FormValues>
+      initialValues={defaultValues}
       enableReinitialize
       validationSchema={validationSchema}
       onSubmit={handleSubmit}
@@ -93,7 +94,7 @@ export const TrackMetadataForm = ({ initialValues = defaultValues, handleSubmit 
                 artwork={true}
                 onChange={val => onArtworkUpload(val, setFieldValue)}
                 onUpload={setUploadingArt}
-                initialUrl={initialValues.artworkUrl}
+                initialValue={initialValues?.artworkFile}
               />
               <span className="text-gray-80 underline text-xs mt-2 font-bold">
                 {uploadingArt ? 'UPLOADING...' : 'CHANGE ARTWORK'}
@@ -112,9 +113,6 @@ export const TrackMetadataForm = ({ initialValues = defaultValues, handleSubmit 
           </div>
           <div className="px-4">
             <InputField name="releaseYear" type="number" label="RELEASE YEAR" />
-          </div>
-          <div className="px-4">
-            <InputField name="quantity" type="number" label="QUANTITY" />
           </div>
           <div className="flex items-center justify-between py-3 px-4 mt-4" style={{ backgroundColor: '#202020' }}>
             <div className="flex flex-col gap-2">

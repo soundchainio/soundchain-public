@@ -1,7 +1,6 @@
 import { useMimeTypeQuery } from 'lib/graphql';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
-import { videoMimeTypes } from 'utils/mimeTypes';
 
 const Asset = ({ src }: { src: string }) => {
   const [mimeType, setMimeType] = useState<string>();
@@ -15,7 +14,7 @@ const Asset = ({ src }: { src: string }) => {
 
   if (!mimeType) return null;
 
-  if (videoMimeTypes.includes(mimeType)) {
+  if (mimeType.startsWith('video')) {
     return (
       <video
         src={src}
