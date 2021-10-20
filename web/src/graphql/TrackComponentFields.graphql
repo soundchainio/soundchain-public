@@ -12,6 +12,7 @@ fragment TrackComponentFields on Track {
   playbackUrl
   createdAt
   updatedAt
+  deleted
   nftData {
     transactionHash
     tokenId

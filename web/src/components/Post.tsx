@@ -7,6 +7,7 @@ import React from 'react';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 import { Avatar } from './Avatar';
 import { MiniAudioPlayer } from './MiniAudioPlayer';
+import { NotAvailableMessage } from './NotAvailableMessage';
 import { PostActions } from './PostActions';
 import { PostSkeleton } from './PostSkeleton';
 import { PostStats } from './PostStats';
@@ -30,6 +31,12 @@ export const Post = ({ postId }: PostProps) => {
   const onEllipsisClick = () => {
     dispatchShowAuthorActionsModal(true, AuthorActionsType.POST, post.id);
   };
+
+  if (post?.deleted) {
+    return (
+      <NotAvailableMessage type="post" />
+    )
+  }
 
   return (
     <div>
