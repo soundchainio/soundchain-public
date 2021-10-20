@@ -89,8 +89,7 @@ export class PostService extends ModelService<typeof Post> {
   }
 
   getPosts(filter?: FilterPostInput, sort?: SortPostInput, page?: PageInput): Promise<PaginateResult<Post>> {
-    const filterActive = { ...filter, deleted: false };
-    return this.paginate({ filter: filterActive, sort, page });
+    return this.paginate({ filter: { ...filter, deleted: false }, sort, page });
   }
 
   getPost(id: string): Promise<Post> {

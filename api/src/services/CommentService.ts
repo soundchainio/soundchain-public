@@ -52,6 +52,6 @@ export class CommentService extends ModelService<typeof Comment> {
   }
 
   getComments(postId: string, page?: PageInput): Promise<PaginateResult<Comment>> {
-    return this.paginate({ filter: { postId }, sort: { field: 'createdAt', order: SortOrder.DESC }, page });
+    return this.paginate({ filter: { postId, deleted: false }, sort: { field: 'createdAt', order: SortOrder.DESC }, page });
   }
 }
