@@ -31,7 +31,7 @@ export const BottomNavBar = () => {
           color="green"
         />
         {isMinting ?
-          <NavBarButton label="Nyan cat..." icon={NewPost} onClick={handleCreateClick} />
+          <NavBarButton label="Minting..." nyanCat={true} onClick={handleCreateClick} />
           :
           <NavBarButton label="Create" icon={NewPost} onClick={handleCreateClick} />
         }
