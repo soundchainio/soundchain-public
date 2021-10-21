@@ -3,7 +3,6 @@ import { Number } from 'components/Number';
 import { useModalDispatch } from 'contexts/providers/modal';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
-import { Happy } from 'icons/emoji/Happy';
 import { Logo } from 'icons/Logo';
 import { Logout } from 'icons/Logout';
 import { Settings } from 'icons/Settings';
@@ -101,11 +100,6 @@ export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => 
       </div>
       {me && (
         <div>
-          <MenuItem
-            icon={() => <Happy width={20} height={20} />}
-            label="Playground"
-            onClick={() => router.push('/playground')}
-          />
           <MenuLink icon={Settings} label="Account Settings" href="/settings" />
           <MenuItem icon={Logout} label="Logout" onClick={onLogout} />
         </div>
