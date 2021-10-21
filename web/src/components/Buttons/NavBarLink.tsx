@@ -22,19 +22,14 @@ export const NavBarLink = ({ label, path, icon: Icon, badge: Badge, color, id }:
 
   return (
     <Link href={path} passHref>
-      <a className="flex flex-col flex-1 items-center justify-center align-middle cursor-pointer focus:ring-2 focus:ring-blue-600">
+      <a className="flex flex-col items-center justify-center align-middle cursor-pointer focus:ring-2 focus:ring-blue-600">
         {Icon && (
           <div className="relative">
             {Badge && <Badge />}
             <Icon color={isActive ? color : undefined} id={id} />
           </div>
         )}
-        <span
-          className={classNames(
-            'text-gray-50 text-xs mt-2 font-semibold',
-            isActive && `${color}-gradient-text`,
-          )}
-        >
+        <span className={classNames('text-gray-50 text-xs mt-2 font-semibold', isActive && `${color}-gradient-text`)}>
           {label}
         </span>
       </a>

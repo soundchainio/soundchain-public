@@ -25,17 +25,7 @@ const Asset = ({ src }: AssetProps) => {
   if (!mimeType && src) return null;
 
   if (mimeType?.startsWith('video')) {
-    return (
-      <video
-        src={src || ''}
-        controls={false}
-        loop
-        muted
-        autoPlay
-        className="w-full object-cover"
-        style={{ height: 'inherit' }}
-      />
-    );
+    return <video src={src || ''} loop muted autoPlay className="w-full object-cover" style={{ height: 'inherit' }} />;
   }
 
   return <Image src={src || '/default-pictures/album-artwork.png'} alt="" layout="fill" className="m-auto object-cover" priority />;
