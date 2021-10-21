@@ -1,3 +1,4 @@
+import { config } from 'config';
 import { ChainLink } from 'icons/ChainLink';
 import { Pinata } from 'icons/Pinata';
 import { Token } from 'icons/Token';
@@ -19,7 +20,14 @@ export const MintingData = ({ ipfsCid, transactionHash }: MintingDataProps) => {
           <div className="ml-2">
             <ChainLink className="mr-2 scale-150" />
           </div>
-          <div className="text-sm overflow-ellipsis overflow-hidden text-gray-80 cursor-pointer">{ipfsCid}</div>
+          <a
+            href={`${config.ipfsGateway}${ipfsCid}`}
+            target="_blank"
+            className="text-sm overflow-ellipsis overflow-hidden text-gray-80 cursor-pointer"
+            rel="noreferrer"
+          >
+            {ipfsCid}
+          </a>
         </div>
       </div>
       <div className="flex items-center font-bold">
@@ -31,7 +39,14 @@ export const MintingData = ({ ipfsCid, transactionHash }: MintingDataProps) => {
           <div className="ml-2">
             <ChainLink className="mr-2 scale-150" />
           </div>
-          <div className="text-sm overflow-ellipsis overflow-hidden text-gray-80 cursor-pointer">{transactionHash}</div>
+          <a
+            href={`${config.polygonscan}tx/${transactionHash}`}
+            target="_blank"
+            className="text-sm overflow-ellipsis overflow-hidden text-gray-80 cursor-pointer"
+            rel="noreferrer"
+          >
+            {transactionHash}
+          </a>
         </div>
       </div>
     </>
