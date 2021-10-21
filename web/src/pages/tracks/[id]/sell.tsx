@@ -6,10 +6,10 @@ import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import { useModalDispatch } from 'contexts/providers/modal';
+import useBlockchain from 'hooks/useBlockchain';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { cacheFor, createApolloClient } from 'lib/apollo';
-import { listItem } from 'lib/blockchain';
 import { CreateListingItemInput, TrackDocument, useCreateListingItemMutation, useTrackQuery } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
@@ -48,6 +48,7 @@ export const getServerSideProps: GetServerSideProps<TrackPageProps, TrackPagePar
 };
 
 export default function SellPage({ trackId }: TrackPageProps) {
+  const { listItem } = useBlockchain();
   const router = useRouter();
   const me = useMe();
   const { data } = useTrackQuery({ variables: { id: trackId } });
@@ -64,8 +65,10 @@ export default function SellPage({ trackId }: TrackPageProps) {
       return;
     }
 
+    const weiPrice = web3?.utils.toWei(price.toString(), 'ether') || '0';
+
     if (isApproved) {
-      listItem(web3, data.track.nftData.tokenId, 1, account, price, onReceipt);
+      listItem(web3, data.track.nftData.tokenId, 1, account, weiPrice, onReceipt);
       return;
     }
     me ? dispatchShowApproveModal(true) : router.push('/login');

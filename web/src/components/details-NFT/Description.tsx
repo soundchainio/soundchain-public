@@ -6,9 +6,11 @@ interface DescriptionProps {
 
 export const Description = ({ description }: DescriptionProps) => {
   return (
-    <div className="mx-4 mb-2">
-      <Subtitle size="sm"> DESCRIPTION </Subtitle>
-      <p className="text-gray-80 text-xs py-2">{description}</p>
+    <div className="">
+      <Subtitle className="font-bold" size="sm">
+        DESCRIPTION
+      </Subtitle>
+      <p className="text-gray-80 text-xs py-2 font-bold">{description}</p>
     </div>
-  )
-}
+  );
+};

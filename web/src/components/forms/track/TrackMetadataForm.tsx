@@ -3,10 +3,10 @@ import { ImageUpload } from 'components/ImageUpload';
 import { InputField } from 'components/InputField';
 import { TextareaField } from 'components/TextareaField';
 import { Form, Formik } from 'formik';
+import useBlockchain from 'hooks/useBlockchain';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { Logo } from 'icons/Logo';
 import { Matic } from 'icons/Matic';
-import { getMaxGasFee } from 'lib/blockchain';
 import { Genre } from 'lib/graphql';
 import React, { useEffect, useState } from 'react';
 import * as yup from 'yup';
@@ -42,6 +42,7 @@ interface Props {
 
 export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
   const { web3, balance } = useMagicContext();
+  const { getMaxGasFee } = useBlockchain();
   const [maxGasFee, setMaxGasFee] = useState<string>();
   const [enoughFunds, setEnoughFunds] = useState<boolean>();
   const [uploadingArt, setUploadingArt] = useState<boolean>();

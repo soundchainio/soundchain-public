@@ -43,13 +43,12 @@ export const TrackListItem = ({ trackId, index, coverPhotoUrl, handleOnPlayClick
 
   return (
     <li
-      className={`flex items-center gap-2 px-4 py-2 transition duration-300 hover:bg-gray-25 text-white text-sm ${
-        isPlaying ? 'font-black' : 'font-semibold'
-      } text-white text-sm`}
+      className={`flex items-center gap-2 px-4 py-2 transition duration-300 hover:bg-gray-25 text-white text-sm ${isPlaying ? 'font-black' : 'font-semibold'
+        } text-white text-sm`}
     >
       <p>{index}</p>
       <div className="h-10 w-10 relative flex items-center bg-gray-80">
-        {data.track.artworkUrl && <Asset src={data.track.artworkUrl} />}
+        <Asset src={data.track.artworkUrl} />
       </div>
       <div>
         <h2>{data.track.title}</h2>

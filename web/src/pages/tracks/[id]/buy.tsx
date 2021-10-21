@@ -5,9 +5,9 @@ import { BuyNFT } from 'components/details-NFT/BuyNFT';
 import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
+import useBlockchain from 'hooks/useBlockchain';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { cacheFor, createApolloClient } from 'lib/apollo';
-import { buyItem } from 'lib/blockchain';
 import { TrackDocument, useListingItemLazyQuery, useSetNotValidMutation, useTrackQuery } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
 import { ParsedUrlQuery } from 'querystring';
@@ -45,6 +45,7 @@ export const getServerSideProps: GetServerSideProps<TrackPageProps, TrackPagePar
 };
 
 export default function BuyPage({ trackId }: TrackPageProps) {
+  const { buyItem } = useBlockchain();
   const { data } = useTrackQuery({ variables: { id: trackId } });
   const { account, web3, balance } = useWalletContext();
   const [setNotValid] = useSetNotValidMutation();
@@ -71,7 +72,14 @@ export default function BuyPage({ trackId }: TrackPageProps) {
     if (!web3 || !data?.track.nftData?.tokenId || !data?.track.nftData?.minter || !account) {
       return;
     }
-    buyItem(web3, data?.track.nftData.tokenId, account, data?.track.nftData.minter, price, onReceipt);
+    buyItem(
+      web3,
+      data?.track.nftData.tokenId,
+      account,
+      data?.track.nftData.minter,
+      listingItem.listingItem.pricePerItem.toString(),
+      onReceipt,
+    );
   };
 
   const onReceipt = async (receipt: Receipt) => {

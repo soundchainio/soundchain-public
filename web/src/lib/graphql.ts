@@ -506,6 +506,7 @@ export type MutationUpdateDefaultWalletArgs = {
 
 export type NftDataInput = {
   transactionHash?: Maybe<Scalars['String']>;
+  ipfsCid?: Maybe<Scalars['String']>;
   tokenId?: Maybe<Scalars['Float']>;
   contract?: Maybe<Scalars['String']>;
   minter?: Maybe<Scalars['String']>;
@@ -515,6 +516,7 @@ export type NftDataInput = {
 export type NftDataType = {
   __typename?: 'NFTDataType';
   transactionHash: Maybe<Scalars['String']>;
+  ipfsCid: Maybe<Scalars['String']>;
   tokenId: Maybe<Scalars['Float']>;
   contract: Maybe<Scalars['String']>;
   minter: Maybe<Scalars['String']>;
@@ -1798,7 +1800,7 @@ export type TrackComponentFieldsFragment = (
   & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'album' | 'releaseYear' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt'>
   & { nftData: Maybe<(
     { __typename?: 'NFTDataType' }
-    & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter'>
+    & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid'>
   )> }
 );
 
@@ -2144,6 +2146,7 @@ export const TrackComponentFieldsFragmentDoc = gql`
     tokenId
     contract
     minter
+    ipfsCid
   }
 }
     `;
