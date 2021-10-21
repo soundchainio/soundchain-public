@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import { useUpload } from 'hooks/useUpload';
 import { Upload } from 'icons/Upload';
+import { imageMimeTypes, videoMimeTypes } from 'lib/mimeTypes';
 import Image from 'next/image';
 import { useEffect } from 'react';
 import Dropzone from 'react-dropzone';
@@ -17,7 +18,7 @@ export interface ImageUploadProps extends Omit<React.ComponentPropsWithoutRef<'d
 }
 
 const defaultMaxFileSize = 1024 * 1024 * 30; // 30Mb
-const acceptedMimeTypes = ['image/*', 'video/*'];
+const acceptedMimeTypes = [...videoMimeTypes, ...imageMimeTypes];
 
 export function ImageUpload({
   className,

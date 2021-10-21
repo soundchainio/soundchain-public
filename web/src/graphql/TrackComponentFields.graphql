@@ -17,5 +17,6 @@ fragment TrackComponentFields on Track {
     tokenId
     contract
     minter
+    ipfsCid
   }
 }

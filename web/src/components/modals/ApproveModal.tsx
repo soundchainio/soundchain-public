@@ -1,8 +1,8 @@
 import { Button } from 'components/Button';
 import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
+import useBlockchain from 'hooks/useBlockchain';
 import { useWalletContext } from 'hooks/useWalletContext';
-import { approveMarketplace } from 'lib/blockchain';
 import { useSetIsApprovedOnMarketplaceMutation } from 'lib/graphql';
 import React, { useState } from 'react';
 import { Receipt } from 'types/NftTypes';
@@ -12,6 +12,7 @@ export const ApproveModal = () => {
   const modalState = useModalState();
   const { dispatchShowApproveModal } = useModalDispatch();
   const [setIsApprovedMutation] = useSetIsApprovedOnMarketplaceMutation();
+  const { approveMarketplace } = useBlockchain();
 
   const [isApproved, setIsApproved] = useState(false);
 
