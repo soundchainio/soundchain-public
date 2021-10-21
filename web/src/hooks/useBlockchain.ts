@@ -1,5 +1,6 @@
 import { SDKBase } from '@magic-sdk/provider';
 import axios from 'axios';
+import { config } from 'config';
 import { magic } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
 import { Metadata, NftToken, Receipt } from 'types/NftTypes';
@@ -8,8 +9,8 @@ import { AbiItem } from 'web3-utils';
 import soundchainContract from '../contract/SoundchainCollectible/SoundchainCollectible.json';
 import soundchainMarketplace from '../contract/SoundchainMarketplace/SoundchainMarketplace.json';
 
-const nftAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as string;
-const marketplaceAddress = process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS;
+const nftAddress = config.contractAddress as string;
+const marketplaceAddress = config.marketplaceAddress;
 const gas = 1200000;
 
 const useBlockchain = () => {
@@ -26,7 +27,7 @@ const useBlockchain = () => {
 
   const getIpfsAssetUrl = (uri: string) => {
     const [protocol, urn] = uri.split('//');
-    return protocol === 'ipfs:' ? 'https://soundchain.mypinata.cloud/ipfs/' + urn : uri;
+    return protocol === 'ipfs:' ? config.ipfsGateway + urn : uri;
   };
 
   const getNftTokensFromContract = async (web3: Web3, account: string) => {
