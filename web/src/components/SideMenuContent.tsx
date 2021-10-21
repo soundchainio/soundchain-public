@@ -19,6 +19,7 @@ import { useState } from 'react';
 import { FollowModalType } from 'types/FollowModalType';
 import { Avatar } from './Avatar';
 import { MenuItem } from './MenuItem';
+import { MenuLink } from './MenuLink';
 
 interface SideMenuContentProps {
   isMobile?: boolean;
@@ -94,7 +95,7 @@ export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => 
         </div>
         {me && (
           <div className="mt-2">
-            <MenuItem icon={Wallet} label="Wallet" onClick={() => router.push('/wallet')} />
+            <MenuLink icon={Wallet} label="Wallet" href="/wallet" />
           </div>
         )}
       </div>
@@ -105,7 +106,7 @@ export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => 
             label="Playground"
             onClick={() => router.push('/playground')}
           />
-          <MenuItem icon={Settings} label="Account Settings" onClick={() => router.push('/settings')} />
+          <MenuLink icon={Settings} label="Account Settings" href="/settings" />
           <MenuItem icon={Logout} label="Logout" onClick={onLogout} />
         </div>
       )}
