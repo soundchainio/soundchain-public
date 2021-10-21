@@ -6,6 +6,7 @@ import { BottomNavBarWrapper } from 'components/BottomNavBarWrapper';
 import { CheckBodyScroll } from 'components/CheckBodyScroll';
 import { Favicons } from 'components/Favicons';
 import { AudioPlayerModal } from 'components/modals/AudioPlayerModal';
+import { CreateModal } from 'components/modals/CreateModal';
 import { StateProvider } from 'contexts';
 import { AudioPlayerProvider } from 'hooks/useAudioPlayer';
 import { HideBottomNavBarProvider } from 'hooks/useHideBottomNavBar';
@@ -62,6 +63,7 @@ function SoundchainApp({ Component, pageProps }: AppProps) {
                     </div>
                     <BottomAudioPlayer />
                     <BottomNavBarWrapper />
+                    <CreateModal />
                     <AudioPlayerModal />
                   </div>
                 </HideBottomNavBarProvider>

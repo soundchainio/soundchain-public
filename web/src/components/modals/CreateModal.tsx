@@ -4,6 +4,7 @@ import { FormValues, InitialValues, TrackMetadataForm } from 'components/forms/t
 import { TrackUploader } from 'components/forms/track/TrackUploader';
 import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
+import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar';
 import { useUpload } from 'hooks/useUpload';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { mintNftToken } from 'lib/blockchain';
@@ -15,7 +16,7 @@ import {
 } from 'lib/graphql';
 import * as musicMetadata from 'music-metadata-browser';
 import Image from 'next/image';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Metadata, Receipt } from 'types/NftTypes';
 import { MiningState, MintingDone } from './MintingDone';
 
@@ -28,6 +29,7 @@ export const CreateModal = () => {
   const modalState = useModalState();
   const { dispatchShowCreateModal, dispatchShowPostModal } = useModalDispatch();
   const [tab, setTab] = useState(Tabs.NFT);
+  const { setIsMintingState } = useHideBottomNavBar();
 
   const [file, setFile] = useState<File>();
   const [preview, setPreview] = useState<string>();
@@ -186,7 +188,7 @@ export const CreateModal = () => {
             },
             refetchQueries: [FeedDocument],
           });
-
+          dispatchShowCreateModal(true);
           setMintingState(undefined);
           setTransactionHash(hash);
         };
@@ -231,9 +233,15 @@ export const CreateModal = () => {
 
   const handleClose = () => {
     dispatchShowCreateModal(false);
-    setTransactionHash(undefined);
-    setFile(undefined);
+    if (!mintingState) {
+      setTransactionHash(undefined);
+      setFile(undefined);
+    }
   };
+
+  useEffect(() => {
+    mintingState?.length ? setIsMintingState(true) : setIsMintingState(false);
+  }, [mintingState]);
 
   const tabs = (
     <div className="flex bg-gray-10 rounded-lg">
