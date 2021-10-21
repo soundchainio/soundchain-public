@@ -1,4 +1,3 @@
-import { BottomSheet } from 'components/BottomSheet';
 import { BackButton } from 'components/Buttons/BackButton';
 import { Description } from 'components/details-NFT/Description';
 import { HandleNFT } from 'components/details-NFT/HandleNFT';
@@ -83,15 +82,13 @@ export default function TrackPage({ trackId }: TrackPageProps) {
 
   return (
     <Layout topNavBarProps={topNovaBarProps}>
-      <div className="m-4">
+      <div className="p-3 flex flex-col gap-5">
         <Track trackId={trackId} />
+        <Description description={data?.track.description || ''} />
       </div>
-      <Description description={data?.track.description || ''} />
-      <TrackInfo trackTitle={data?.track.title || undefined} albumTitle={undefined} releaseYear={undefined} />
-      <BottomSheet>
-        <MintingData />
-        <HandleNFT price={price} isOwner={isOwner} isForSale={isForSaleResponse} />
-      </BottomSheet>
+      <TrackInfo trackTitle={data?.track.title} albumTitle={data?.track.album} releaseYear={data?.track.releaseYear} />
+      <MintingData transactionHash={data?.track.nftData?.transactionHash} ipfsCid={data?.track.nftData?.ipfsCid} />
+      <HandleNFT price={price} isOwner={isOwner} isForSale={isForSaleResponse} />
     </Layout>
   );
 }

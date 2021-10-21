@@ -21,14 +21,7 @@ const useBlockchain = () => {
         await magic.auth.loginWithMagicLink({ email: me?.email });
       }
     }
-
-    const gasPriceWei = await web3.eth.getGasPrice();
-    const gasPrice = parseInt(web3.utils.fromWei(gasPriceWei, 'Gwei'));
-    const maxFeeWei = gasPrice * gas;
-
-    if (confirm(`Total fee: ${web3.utils.fromWei(maxFeeWei.toString(), 'Gwei')} MATIC`)) {
-      return await method();
-    }
+    return await method();
   };
 
   const getIpfsAssetUrl = (uri: string) => {
@@ -87,7 +80,7 @@ const useBlockchain = () => {
     tokenId: number,
     quantity: number,
     from: string,
-    price: number,
+    price: string,
     onReceipt: (receipt: Receipt) => void,
   ) => {
     const contract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
@@ -156,11 +149,13 @@ const useBlockchain = () => {
     onReceipt: (receipt: Receipt) => void,
   ) => {
     const contract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress);
-    contract.methods
-      .mint(toAddress, amount, uri)
-      .send({ from, gas })
-      .on('transactionHash', onTransactionHash)
-      .on('receipt', onReceipt);
+    beforeSending(web3, () =>
+      contract.methods
+        .mint(toAddress, amount, uri)
+        .send({ from, gas })
+        .on('transactionHash', onTransactionHash)
+        .on('receipt', onReceipt),
+    );
   };
 
   const getMaxGasFee = async (web3: Web3) => {

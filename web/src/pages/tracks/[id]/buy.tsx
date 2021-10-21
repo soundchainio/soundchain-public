@@ -72,7 +72,14 @@ export default function BuyPage({ trackId }: TrackPageProps) {
     if (!web3 || !data?.track.nftData?.tokenId || !data?.track.nftData?.minter || !account) {
       return;
     }
-    buyItem(web3, data?.track.nftData.tokenId, account, data?.track.nftData.minter, price, onReceipt);
+    buyItem(
+      web3,
+      data?.track.nftData.tokenId,
+      account,
+      data?.track.nftData.minter,
+      listingItem.listingItem.pricePerItem.toString(),
+      onReceipt,
+    );
   };
 
   const onReceipt = async (receipt: Receipt) => {

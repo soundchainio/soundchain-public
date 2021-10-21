@@ -65,8 +65,10 @@ export default function SellPage({ trackId }: TrackPageProps) {
       return;
     }
 
+    const weiPrice = web3?.utils.toWei(price.toString(), 'ether') || '0';
+
     if (isApproved) {
-      listItem(web3, data.track.nftData.tokenId, 1, account, price, onReceipt);
+      listItem(web3, data.track.nftData.tokenId, 1, account, weiPrice, onReceipt);
       return;
     }
     me ? dispatchShowApproveModal(true) : router.push('/login');

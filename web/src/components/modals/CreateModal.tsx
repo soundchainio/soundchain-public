@@ -209,6 +209,8 @@ export const CreateModal = () => {
                     contract: receipt.to,
                     tokenId: parseInt(receipt.events.TransferSingle.returnValues.id),
                     quantity: parseInt(receipt.events.TransferSingle.returnValues.value),
+                    transactionHash: receipt.transactionHash,
+                    ipfsCid: metadataPinResult?.pinJsonToIPFS.cid,
                   },
                 },
               },

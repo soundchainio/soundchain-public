@@ -46,7 +46,7 @@ export const NFTCard = ({ account, web3, nftToken }: NftCardProps) => {
   const handleList = async (web3: Web3, tokenId: number, price: number) => {
     const confirmed = confirm('Hey! This will list this NFT, you sure?');
     if (confirmed) {
-      await listItem(web3, tokenId, 1, account, price, console.log);
+      await listItem(web3, tokenId, 1, account, price.toString(), console.log);
       // if (result) {
       //   alert('Token list requested!');
       // }

@@ -1,5 +1,6 @@
 import Slider from '@reach/slider';
 import Hls from 'hls.js';
+import { Navigate } from 'icons/Navigate';
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
 import NextLink from 'next/link';
@@ -92,14 +93,21 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: AudioPlayerPro
                 )}
               </button>
             </div>
-            <div className="flex flex-col">
-              <div className="text-white font-black text-xs">
-                {trackId && <NextLink href={`/tracks/${trackId}`}>{title ? title : 'Unknown Title'}</NextLink>}
-                {!trackId && <div>{title ? title : 'Unknown Title'}</div>}
-              </div>
-              {artist && <div className="text-gray-80 text-xs font-black">{artist}</div>}
+            <div className={`flex w-full ${trackId && 'cursor-pointer'}`}>
+              <NextLink href={trackId ? `/tracks/${trackId}` : '#'}>
+                <div>
+                  <div className="text-white font-black text-xs">
+                    <div>{title ? title : 'Unknown Title'}</div>
+                  </div>
+                  {artist && <div className="text-gray-80 text-xs font-black">{artist}</div>}
+                </div>
+              </NextLink>
+              {trackId && (
+                <div className="ml-auto">
+                  <Navigate />
+                </div>
+              )}
             </div>
-            <div className="flex-1 text-right text-gray-80 text-xs">{timeFromSecs(duration || 0)}</div>
           </div>
           <div className="text-white flex flex-col mt-2">
             <Slider className="audio-player ml-1" min={0} max={duration} value={playState} onChange={onSliderChange} />

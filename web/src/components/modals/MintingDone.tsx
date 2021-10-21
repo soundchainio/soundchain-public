@@ -20,7 +20,15 @@ interface MintingDoneProps {
 export const MintingDone = ({ track, miningState, transactionHash }: MintingDoneProps) => {
   return (
     <div className="h-full w-full" style={{ backgroundColor: '#101010' }}>
-      <AudioPlayer title={track.title} src={track.playbackUrl} art={track.artworkUrl} artist={track.artist} />
+      <div className="p-4">
+        <AudioPlayer
+          trackId={track.id}
+          title={track.title}
+          src={track.playbackUrl}
+          art={track.artworkUrl}
+          artist={track.artist}
+        />
+      </div>
       <div
         className="h-96 p-4 flex flex-col justify-center items-center	bg-no-repeat text-center text-xl text-white font-black uppercase"
         style={{ backgroundImage: 'url(/congratulations.gif)', backgroundSize: '100% 100%' }}

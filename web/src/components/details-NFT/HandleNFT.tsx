@@ -1,7 +1,7 @@
 import { Button } from 'components/Button';
 import { useModalDispatch } from 'contexts/providers/modal';
 import { useMe } from 'hooks/useMe';
-import { Checkmark } from 'icons/Checkmark';
+import { CheckmarkFilled } from 'icons/CheckmarkFilled';
 import { Matic } from 'icons/Matic';
 import { useRouter } from 'next/router';
 
@@ -28,13 +28,13 @@ export const HandleNFT = ({ isOwner, isForSale, price }: HandleNFTProps) => {
   if (isOwner) {
     return (
       <div className="w-full bg-black text-white flex items-center py-2">
-        <div className="flex items-center flex-1 text-sm justify-center">
-          <Checkmark className="mr-2" />
+        <div className="flex items-center flex-1 gap-2 text-sm font-bold pl-4">
+          <CheckmarkFilled />
           You own this NFT
         </div>
         <div className="flex-1 flex items-center justify-center">
           <Button variant="sell-nft" onClick={handleSellButton}>
-            <div className="px-4">SELL NFT </div>
+            <div className="px-4 font-bold">SELL NFT </div>
           </Button>
         </div>
       </div>
