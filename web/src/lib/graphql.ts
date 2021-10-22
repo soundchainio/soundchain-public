@@ -152,6 +152,7 @@ export type CreateTrackInput = {
   artist?: Maybe<Scalars['String']>;
   album?: Maybe<Scalars['String']>;
   releaseYear?: Maybe<Scalars['Float']>;
+  copyright?: Maybe<Scalars['String']>;
   genres?: Maybe<Array<Genre>>;
 };
 
@@ -909,6 +910,7 @@ export type Track = {
   artworkUrl: Maybe<Scalars['String']>;
   artist: Maybe<Scalars['String']>;
   album: Maybe<Scalars['String']>;
+  copyright: Maybe<Scalars['String']>;
   releaseYear: Maybe<Scalars['Float']>;
   genres: Maybe<Array<Genre>>;
   nftData: Maybe<NftDataType>;
@@ -1797,7 +1799,7 @@ export type TrackQuery = (
 
 export type TrackComponentFieldsFragment = (
   { __typename?: 'Track' }
-  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'album' | 'releaseYear' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt'>
+  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt'>
   & { nftData: Maybe<(
     { __typename?: 'NFTDataType' }
     & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid'>
@@ -2137,6 +2139,7 @@ export const TrackComponentFieldsFragmentDoc = gql`
   artist
   album
   releaseYear
+  copyright
   genres
   playbackUrl
   createdAt

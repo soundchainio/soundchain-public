@@ -86,7 +86,13 @@ export default function TrackPage({ trackId }: TrackPageProps) {
         <Track trackId={trackId} />
         <Description description={data?.track.description || ''} />
       </div>
-      <TrackInfo trackTitle={data?.track.title} albumTitle={data?.track.album} releaseYear={data?.track.releaseYear} />
+      <TrackInfo
+        trackTitle={data?.track.title}
+        albumTitle={data?.track.album}
+        releaseYear={data?.track.releaseYear}
+        genres={data?.track.genres}
+        copyright={data?.track.copyright}
+      />
       <MintingData transactionHash={data?.track.nftData?.transactionHash} ipfsCid={data?.track.nftData?.ipfsCid} />
       <HandleNFT price={price} isOwner={isOwner} isForSale={isForSaleResponse} />
     </Layout>

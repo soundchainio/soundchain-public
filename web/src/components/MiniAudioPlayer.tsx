@@ -55,21 +55,19 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
                 )}
               </button>
             </div>
-            <div className={`flex w-full ${trackId && 'cursor-pointer'}`}>
-              <NextLink href={trackId ? `/tracks/${trackId}` : '#'}>
+            <NextLink href={`/tracks/${trackId}`}>
+              <div className="flex w-full cursor-pointer">
                 <div>
                   <div className="text-white font-black text-xs">
                     <div>{title ? title : 'Unknown Title'}</div>
                   </div>
                   {artist && <div className="text-gray-80 text-xs font-black">{artist}</div>}
                 </div>
-              </NextLink>
-              {trackId && (
                 <div className="ml-auto">
                   <Navigate />
                 </div>
-              )}
-            </div>
+              </div>
+            </NextLink>
           </div>
           <div className="text-white flex flex-col mt-2">
             {isSameSong ? (

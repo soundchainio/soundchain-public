@@ -40,6 +40,10 @@ export class Track extends Model {
 
   @Field({ nullable: true })
   @prop()
+  copyright: string;
+
+  @Field({ nullable: true })
+  @prop()
   releaseYear: number;
 
   @Field(() => [Genre], { nullable: true })

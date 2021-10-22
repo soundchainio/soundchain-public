@@ -93,21 +93,21 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: AudioPlayerPro
                 )}
               </button>
             </div>
-            <div className={`flex w-full ${trackId && 'cursor-pointer'}`}>
-              <NextLink href={trackId ? `/tracks/${trackId}` : '#'}>
+            <NextLink href={trackId ? `/tracks/${trackId}` : '#'}>
+              <div className={`flex w-full ${trackId && 'cursor-pointer'}`}>
                 <div>
                   <div className="text-white font-black text-xs">
                     <div>{title ? title : 'Unknown Title'}</div>
                   </div>
                   {artist && <div className="text-gray-80 text-xs font-black">{artist}</div>}
                 </div>
-              </NextLink>
-              {trackId && (
-                <div className="ml-auto">
-                  <Navigate />
-                </div>
-              )}
-            </div>
+                {trackId && (
+                  <div className="ml-auto">
+                    <Navigate />
+                  </div>
+                )}
+              </div>
+            </NextLink>
           </div>
           <div className="text-white flex flex-col mt-2">
             <Slider className="audio-player ml-1" min={0} max={duration} value={playState} onChange={onSliderChange} />

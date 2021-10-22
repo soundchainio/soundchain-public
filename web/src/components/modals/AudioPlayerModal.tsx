@@ -69,14 +69,14 @@ export const AudioPlayerModal = () => {
               {currentSong.art && <Asset src={currentSong.art} />}
             </div>
           </div>
-          <div className="flex justify-center mt-7 mb-4">
+          <div className="flex justify-between mt-7 mb-4 w-full">
             <NextLink href={`/tracks/${currentSong.trackId}`}>
-              <div className="flex">
-                <div className="flex flex-col gap-1">
+              <div className="flex w-full">
+                <div className="flex flex-col flex-1 gap-1">
                   <h2 className="font-black">{currentSong.title || 'Unknown title'}</h2>
                   <h3 className="font-medium">{currentSong.artist || 'Unknown artist'}</h3>
                 </div>
-                <div className="ml-auto">
+                <div>
                   <Navigate />
                 </div>
               </div>
