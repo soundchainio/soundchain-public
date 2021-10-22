@@ -57,6 +57,10 @@ export class Track extends Model {
   @prop()
   muxAsset: MuxAsset;
 
+  @Field({ nullable: true })
+  @prop({ default: false })
+  deleted?: boolean;
+
   @Field(() => Date)
   createdAt: Date;
 
