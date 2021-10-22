@@ -16,7 +16,7 @@ export class TrackService extends ModelService<typeof Track> {
   }
 
   getTracks(filter?: FilterTrackInput, sort?: SortTrackInput, page?: PageInput): Promise<PaginateResult<Track>> {
-    const defaultFilter = { title: { $exists: true } };
+    const defaultFilter = { title: { $exists: true }, deleted: false };
     return this.paginate({ filter: { ...defaultFilter, ...filter }, sort, page });
   }
 

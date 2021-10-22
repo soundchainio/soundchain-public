@@ -1,3 +1,4 @@
+import { NotAvailableMessage } from 'components/NotAvailableMessage';
 import { useModalDispatch } from 'contexts/providers/modal';
 import { useMe } from 'hooks/useMe';
 import { Ellipsis } from 'icons/Ellipsis';
@@ -24,6 +25,12 @@ export const Comment = ({ commentId }: CommentProps) => {
   };
 
   if (!comment) return <CommentSkeleton />;
+
+  if (data?.comment.deleted) {
+    return (
+      <NotAvailableMessage type="comment" />
+    )
+  }
 
   return (
     <div className="flex flex-row space-x-3">

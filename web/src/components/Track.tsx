@@ -1,3 +1,4 @@
+import { NotAvailableMessage } from 'components/NotAvailableMessage';
 import { TrackSkeleton } from 'components/TrackSkeleton';
 import { useTrackLazyQuery } from 'lib/graphql';
 import React, { useEffect } from 'react';
@@ -26,6 +27,12 @@ export const Track = ({ trackId, coverPhotoUrl }: TrackProps) => {
   }, [data, error]);
 
   if (!data?.track) return <TrackSkeleton />;
+
+  if (data?.track.deleted) {
+    return (
+      <NotAvailableMessage type="track" />
+    )
+  }
 
   return (
     <AudioPlayer
