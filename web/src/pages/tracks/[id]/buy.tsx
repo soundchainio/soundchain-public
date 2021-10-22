@@ -46,7 +46,7 @@ export const getServerSideProps: GetServerSideProps<TrackPageProps, TrackPagePar
 export default function BuyPage({ trackId }: TrackPageProps) {
   const { buyItem } = useBlockchain();
   const { data } = useTrackQuery({ variables: { id: trackId } });
-  const { account, web3, balance } = useWalletContext();
+  const { account, web3 } = useWalletContext();
   const [setNotValid] = useSetNotValidMutation();
 
   const tokenId = data?.track.nftData?.tokenId || -1;
@@ -103,7 +103,7 @@ export default function BuyPage({ trackId }: TrackPageProps) {
       <div className="m-4">
         <Track trackId={trackId} />
       </div>
-      <BuyNFT price={price} balance={balance || '0'} />
+      <BuyNFT price={price} />
       <div className="flex justify-center mt-6">
         <Button variant="buy-nft" onClick={handleBuy}>
           <div className="px-4">BUY NFT</div>
