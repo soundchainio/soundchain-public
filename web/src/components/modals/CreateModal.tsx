@@ -5,14 +5,17 @@ import { TrackUploader } from 'components/forms/track/TrackUploader';
 import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar';
+import useBlockchain from 'hooks/useBlockchain';
 import { useUpload } from 'hooks/useUpload';
 import { useWalletContext } from 'hooks/useWalletContext';
-import { mintNftToken } from 'lib/blockchain';
 import {
   CreateTrackMutation,
   FeedDocument,
-  useCreateTrackMutation, useDeleteTrackOnErrorMutation, usePinJsonToIpfsMutation,
-  usePinToIpfsMutation, useUpdateTrackMutation
+  useCreateTrackMutation,
+  useDeleteTrackOnErrorMutation,
+  usePinJsonToIpfsMutation,
+  usePinToIpfsMutation,
+  useUpdateTrackMutation,
 } from 'lib/graphql';
 import * as musicMetadata from 'music-metadata-browser';
 import Image from 'next/image';
@@ -45,6 +48,7 @@ export const CreateModal = () => {
   const [pinToIPFS] = usePinToIpfsMutation();
   const [pinJsonToIPFS] = usePinJsonToIpfsMutation();
 
+  const { mintNftToken } = useBlockchain();
   const [transactionHash, setTransactionHash] = useState<string>();
   const [mintingState, setMintingState] = useState<string>();
   const [miningState, setMiningState] = useState<MiningState>(MiningState.IN_PROGRESS);
@@ -93,7 +97,7 @@ export const CreateModal = () => {
     await deleteTrackOnError({
       variables: {
         input: {
-          trackId
+          trackId,
         },
       },
     });
@@ -207,6 +211,8 @@ export const CreateModal = () => {
                     contract: receipt.to,
                     tokenId: parseInt(receipt.events.TransferSingle.returnValues.id),
                     quantity: parseInt(receipt.events.TransferSingle.returnValues.value),
+                    transactionHash: receipt.transactionHash,
+                    ipfsCid: metadataPinResult?.pinJsonToIPFS.cid,
                   },
                 },
               },
@@ -287,10 +293,16 @@ export const CreateModal = () => {
           {file && preview && <TrackMetadataForm handleSubmit={handleSubmit} initialValues={initialValues} />}
           {mintingState && (
             <div className="absolute top-0 left-0 flex flex-col items-center justify-center h-full w-full bg-gray-20 bg-opacity-80">
-              <Image height={200} width={200} src={mintError ? "/nyan-cat-dead.png" : "/nyan-cat-rainbow.gif"} alt="Loading" priority />
+              <Image
+                height={200}
+                width={200}
+                src={mintError ? '/nyan-cat-dead.png' : '/nyan-cat-rainbow.gif'}
+                alt="Loading"
+                priority
+              />
               <div className="font-bold text-lg text-white text-center mt-4">{mintingState}</div>
               {mintError && (
-                <Button variant='rainbow-xs' onClick={onCloseError} className="mt-4">
+                <Button variant="rainbow-xs" onClick={onCloseError} className="mt-4">
                   CANCEL
                 </Button>
               )}

@@ -2,6 +2,7 @@ import { AudioPlayer } from 'components/AudioPlayer';
 import { JellyButton } from 'components/Buttons/JellyButton';
 import { MusicFile } from 'icons/MusicFile';
 import { Upload as UploadIcon } from 'icons/Upload';
+import { audioMimeTypes } from 'lib/mimeTypes';
 import { useState } from 'react';
 import { FileRejection, useDropzone } from 'react-dropzone';
 
@@ -33,7 +34,7 @@ export const TrackUploader = ({ onFileChange }: TrackUploaderProps) => {
     });
   }
 
-  const { getRootProps, getInputProps } = useDropzone({ maxFiles: 1, maxSize, accept: 'audio/*', onDrop });
+  const { getRootProps, getInputProps } = useDropzone({ maxFiles: 1, maxSize, accept: audioMimeTypes, onDrop });
 
   if (file && preview) {
     return (
