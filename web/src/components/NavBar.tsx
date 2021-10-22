@@ -1,4 +1,5 @@
 import { useModalDispatch } from 'contexts/providers/modal';
+import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar';
 import { useMe } from 'hooks/useMe';
 import { Bell } from 'icons/Bell';
 import { Happy } from 'icons/emoji/Happy';
@@ -16,6 +17,7 @@ export const NavBar = () => {
   const { dispatchShowUnderDevelopmentModal, dispatchShowCreateModal } = useModalDispatch();
   const router = useRouter();
   const me = useMe();
+  const { isMinting } = useHideBottomNavBar();
 
   const handleCreateClick = () => {
     me ? dispatchShowCreateModal(true) : router.push('/login');
@@ -31,7 +33,11 @@ export const NavBar = () => {
           icon={Search}
           color="green"
         />
-        <NavBarButton label="Create" icon={NewPost} onClick={handleCreateClick} />
+        {isMinting ?
+          <NavBarButton label="Minting..." nyanCat={true} onClick={handleCreateClick} />
+          :
+          <NavBarButton label="Create" icon={NewPost} onClick={handleCreateClick} />
+        }
         <NavBarLink
           label="Notifications"
           path={me ? '/notifications' : '/login'}
