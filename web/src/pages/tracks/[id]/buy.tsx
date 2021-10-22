@@ -1,4 +1,3 @@
-import { BottomSheet } from 'components/BottomSheet';
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { BuyNFT } from 'components/details-NFT/BuyNFT';
@@ -105,13 +104,11 @@ export default function BuyPage({ trackId }: TrackPageProps) {
         <Track trackId={trackId} />
       </div>
       <BuyNFT price={price} balance={balance || '0'} />
-      <BottomSheet>
-        <div className="flex justify-center pb-3">
-          <Button variant="buy-nft" onClick={handleBuy}>
-            <div className="px-4">BUY NFT</div>
-          </Button>
-        </div>
-      </BottomSheet>
+      <div className="flex justify-center mt-6">
+        <Button variant="buy-nft" onClick={handleBuy}>
+          <div className="px-4">BUY NFT</div>
+        </Button>
+      </div>
     </Layout>
   );
 }
