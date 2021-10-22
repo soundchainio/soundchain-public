@@ -7,7 +7,7 @@ import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import useBlockchain from 'hooks/useBlockchain';
-import { useMagicContext } from 'hooks/useMagicContext';
+import { useWalletContext } from 'hooks/useWalletContext';
 import { cacheFor, createApolloClient } from 'lib/apollo';
 import { TrackDocument, useListingItemLazyQuery, useTrackQuery } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
@@ -45,7 +45,7 @@ export const getServerSideProps: GetServerSideProps<TrackPageProps, TrackPagePar
 };
 
 export default function TrackPage({ trackId }: TrackPageProps) {
-  const { account, web3 } = useMagicContext();
+  const { account, web3 } = useWalletContext();
   const { data } = useTrackQuery({ variables: { id: trackId } });
   const { isTokenOwner } = useBlockchain();
 
@@ -72,8 +72,10 @@ export default function TrackPage({ trackId }: TrackPageProps) {
     getListingItem();
   }, [getListingItem]);
 
+  if (!web3) return null;
+
   const isForSaleResponse = !!listingItem?.listingItem.pricePerItem ?? false;
-  const price = web3?.utils.fromWei(listingItem?.listingItem.pricePerItem.toString() ?? '0', 'ether');
+  const price = web3.utils.fromWei(listingItem?.listingItem.pricePerItem.toString() ?? '0', 'ether');
 
   const topNovaBarProps: TopNavBarProps = {
     leftButton: <BackButton />,
