@@ -98,7 +98,7 @@ export const BottomAudioPlayer = () => {
           onClick={() => dispatchShowAudioPlayerModal(true)}
         >
           <div className="h-10 w-10 bg-gray-80 relative flex items-center">
-            {currentSong.art && <Asset src={currentSong.art} />}
+            <Asset src={currentSong.art} />
           </div>
           <div className="text-white text-xs flex flex-col flex-1 items-start">
             <h2 className="font-black">{currentSong.title || 'Unknown title'}</h2>

@@ -66,7 +66,7 @@ export const AudioPlayerModal = () => {
         <div className="w-full sm:max-w-xs px-8 sm:px-0">
           <div className="flex justify-center">
             <div className="relative w-3/4 max-h-80 sm:w-full after:block after:pb-full flex bg-gray-80 rounded-lg overflow-hidden">
-              {currentSong.art && <Asset src={currentSong.art} />}
+              <Asset src={currentSong.art} />
             </div>
           </div>
           <div className="flex justify-between mt-7 mb-4 w-full">
