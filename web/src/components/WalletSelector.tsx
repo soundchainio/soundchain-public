@@ -11,6 +11,7 @@ import React from 'react';
 
 interface WalletSelectorProps {
   className?: string | undefined;
+  ownerAddressAccount?: string;
 }
 
 interface WalletProps {
@@ -21,10 +22,10 @@ interface WalletProps {
   className?: string | undefined;
 }
 
-export const WalletSelector = ({ className }: WalletSelectorProps) => {
+export const WalletSelector = ({ className, ownerAddressAccount }: WalletSelectorProps) => {
   const me = useMe();
   const { account: metamaskAccount, balance } = useMetaMask();
-  const { balance: magicBalance } = useMagicContext();
+  const { account: magicAccount, balance: magicBalance } = useMagicContext();
   const [updateDefaultWallet] = useUpdateDefaultWalletMutation();
 
   const Wallet = ({ walletName, balance, isSounchainWallet, onDefaultWalletClick, className }: WalletProps) => {
@@ -65,15 +66,17 @@ export const WalletSelector = ({ className }: WalletSelectorProps) => {
 
   return (
     <div className={className}>
-      <Wallet
-        walletName={DefaultWallet.Soundchain}
-        balance={magicBalance || '0'}
-        isSounchainWallet
-        onDefaultWalletClick={() =>
-          updateDefaultWallet({ variables: { input: { defaultWallet: DefaultWallet.Soundchain } } })
-        }
-      />
-      {metamaskAccount && (
+      {magicAccount?.toLowerCase() !== ownerAddressAccount && (
+        <Wallet
+          walletName={DefaultWallet.Soundchain}
+          balance={magicBalance || '0'}
+          isSounchainWallet
+          onDefaultWalletClick={() =>
+            updateDefaultWallet({ variables: { input: { defaultWallet: DefaultWallet.Soundchain } } })
+          }
+        />
+      )}
+      {metamaskAccount && metamaskAccount?.toLowerCase() !== ownerAddressAccount && (
         <Wallet
           className="bg-gray-15"
           walletName={DefaultWallet.MetaMask}

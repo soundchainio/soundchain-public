@@ -4,12 +4,13 @@ import React from 'react';
 
 interface BuyNFTProps {
   price: string;
+  ownerAddressAccount: string;
 }
 
-export const BuyNFT = ({ price }: BuyNFTProps) => {
+export const BuyNFT = ({ price, ownerAddressAccount }: BuyNFTProps) => {
   return (
     <div className="mb-2">
-      <WalletSelector className="mb-10" />
+      <WalletSelector className="mb-10" ownerAddressAccount={ownerAddressAccount} />
 
       <div className="flex p-5 bg-gray-20 text-gray-80">
         <p className="flex items-center flex-shrink-0 justify-start font-bold text-xs md-text-sm uppercase">

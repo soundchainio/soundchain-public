@@ -63,7 +63,8 @@ export default function BuyPage({ trackId }: TrackPageProps) {
     return <div></div>;
   }
 
-  const isOwner = listingItem.listingItem.owner.toLowerCase() === account?.toLowerCase();
+  const ownerAddressAccount = listingItem.listingItem.owner.toLowerCase();
+  const isOwner = ownerAddressAccount === account?.toLowerCase();
   const isForSale = !!listingItem.listingItem.pricePerItem ?? false;
   const price = web3?.utils.fromWei(listingItem.listingItem.pricePerItem.toString(), 'ether') || '0';
 
@@ -103,7 +104,7 @@ export default function BuyPage({ trackId }: TrackPageProps) {
       <div className="m-4">
         <Track trackId={trackId} />
       </div>
-      <BuyNFT price={price} />
+      <BuyNFT price={price} ownerAddressAccount={ownerAddressAccount} />
       <div className="flex justify-center mt-6">
         <Button variant="buy-nft" onClick={handleBuy}>
           <div className="px-4">BUY NFT</div>
