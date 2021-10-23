@@ -3,7 +3,7 @@ import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 
 interface AssetProps {
-  src?: string | null
+  src?: string | null;
 }
 
 const Asset = ({ src }: AssetProps) => {
@@ -13,22 +13,41 @@ const Asset = ({ src }: AssetProps) => {
     variables: { url: src as string },
   });
 
-
   useEffect(() => {
     if (data) setMimeType(data.mimeType.value);
   }, [data]);
 
   useEffect(() => {
     if (src) getMimeType();
-  }, [src])
+  }, [src]);
 
-  if (!mimeType && src) return null;
+  if (src && !mimeType) return null;
 
-  if (mimeType?.startsWith('video')) {
-    return <video src={src || ''} loop muted autoPlay className="w-full object-cover" style={{ height: 'inherit' }} />;
+  if (src && mimeType?.startsWith('video')) {
+    return (
+      <video
+        src={src}
+        loop
+        muted
+        autoPlay
+        playsInline
+        disablePictureInPicture
+        disableRemotePlayback
+        className="w-full object-cover"
+        style={{ height: 'inherit' }}
+      />
+    );
   }
 
-  return <Image src={src || '/default-pictures/album-artwork.png'} alt="" layout="fill" className="m-auto object-cover" priority />;
+  return (
+    <Image
+      src={src || '/default-pictures/album-artwork.png'}
+      alt=""
+      layout="fill"
+      className="m-auto object-cover"
+      priority
+    />
+  );
 };
 
 export default Asset;

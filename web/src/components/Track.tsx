@@ -29,9 +29,7 @@ export const Track = ({ trackId, coverPhotoUrl }: TrackProps) => {
   if (!data?.track) return <TrackSkeleton />;
 
   if (data?.track.deleted) {
-    return (
-      <NotAvailableMessage type="track" />
-    )
+    return <NotAvailableMessage type="track" />;
   }
 
   return (
