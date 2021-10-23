@@ -21,9 +21,9 @@ const Asset = ({ src }: AssetProps) => {
     if (src) getMimeType();
   }, [src]);
 
-  if (!mimeType) return null;
+  if (src && !mimeType) return null;
 
-  if (src && mimeType.startsWith('video')) {
+  if (src && mimeType?.startsWith('video')) {
     return (
       <video
         src={src}

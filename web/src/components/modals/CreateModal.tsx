@@ -4,8 +4,8 @@ import { FormValues, InitialValues, TrackMetadataForm } from 'components/forms/t
 import { TrackUploader } from 'components/forms/track/TrackUploader';
 import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
-import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar';
 import useBlockchain from 'hooks/useBlockchain';
+import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar';
 import { useUpload } from 'hooks/useUpload';
 import { useWalletContext } from 'hooks/useWalletContext';
 import {

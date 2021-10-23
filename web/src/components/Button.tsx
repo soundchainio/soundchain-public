@@ -29,7 +29,7 @@ export interface ButtonProps extends React.ComponentPropsWithoutRef<'button'> {
   textColor?: string;
 }
 
-export const commonClasses = 'flex items-center justify-center w-full h-full';
+export const commonClasses = 'flex items-center justify-center w-full h-full font-bold';
 
 export const buttonByVariant: Record<ButtonVariant, (props: ButtonProps) => JSX.Element> = {
   rainbow: RainbowButton,

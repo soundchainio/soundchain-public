@@ -34,7 +34,6 @@ export class ListingItemResolver {
     @Ctx() { listingItemService }: Context,
     @Arg('tokenId') tokenId: number,
   ): Promise<CreateListingItemData> {
-    const listingItem = await listingItemService.setNotValid(tokenId);
-    return listingItem;
+    return await listingItemService.setNotValid(tokenId);
   }
 }

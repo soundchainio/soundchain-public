@@ -7,10 +7,10 @@ import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import useBlockchain from 'hooks/useBlockchain';
-import { useMagicContext } from 'hooks/useMagicContext';
-import { cacheFor, createApolloClient } from 'lib/apollo';
-import { TrackDocument, useListingItemLazyQuery, useTrackQuery } from 'lib/graphql';
-import { GetServerSideProps } from 'next';
+import { useWalletContext } from 'hooks/useWalletContext';
+import { cacheFor } from 'lib/apollo';
+import { TrackDocument, useListingItemQuery, useTrackQuery } from 'lib/graphql';
+import { protectPage } from 'lib/protectPage';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 
@@ -22,14 +22,12 @@ interface TrackPageParams extends ParsedUrlQuery {
   id: string;
 }
 
-export const getServerSideProps: GetServerSideProps<TrackPageProps, TrackPageParams> = async context => {
+export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(async (context, apolloClient) => {
   const trackId = context.params?.id;
 
   if (!trackId) {
     return { notFound: true };
   }
-
-  const apolloClient = createApolloClient(context);
 
   const { error } = await apolloClient.query({
     query: TrackDocument,
@@ -42,19 +40,19 @@ export const getServerSideProps: GetServerSideProps<TrackPageProps, TrackPagePar
   }
 
   return cacheFor(TrackPage, { trackId }, context, apolloClient);
-};
+});
 
 export default function TrackPage({ trackId }: TrackPageProps) {
-  const { account, web3 } = useMagicContext();
+  const { account, web3 } = useWalletContext();
   const { data } = useTrackQuery({ variables: { id: trackId } });
   const { isTokenOwner } = useBlockchain();
-
-  const [isOwner, setIsOwner] = useState(false);
+  const [isOwner, setIsOwner] = useState<boolean>();
 
   const tokenId = data?.track.nftData?.tokenId || -1;
 
-  const [getListingItem, { data: listingItem }] = useListingItemLazyQuery({
+  const { data: listingItem, loading } = useListingItemQuery({
     variables: { tokenId },
+    fetchPolicy: 'no-cache',
   });
 
   useEffect(() => {
@@ -68,11 +66,7 @@ export default function TrackPage({ trackId }: TrackPageProps) {
     fetchIsOwner();
   }, [account, web3, data?.track.nftData]);
 
-  useEffect(() => {
-    getListingItem();
-  }, [getListingItem]);
-
-  const isForSaleResponse = !!listingItem?.listingItem.pricePerItem ?? false;
+  const isForSale = !!listingItem?.listingItem.pricePerItem ?? false;
   const price = web3?.utils.fromWei(listingItem?.listingItem.pricePerItem.toString() ?? '0', 'ether');
 
   const topNovaBarProps: TopNavBarProps = {
@@ -94,7 +88,14 @@ export default function TrackPage({ trackId }: TrackPageProps) {
         copyright={data?.track.copyright}
       />
       <MintingData transactionHash={data?.track.nftData?.transactionHash} ipfsCid={data?.track.nftData?.ipfsCid} />
-      <HandleNFT price={price} isOwner={isOwner} isForSale={isForSaleResponse} />
+
+      {loading || isOwner === undefined || !price ? (
+        <div className=" flex justify-center items-center">
+          <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white"></div>
+        </div>
+      ) : (
+        <HandleNFT price={price} isOwner={isOwner} isForSale={isForSale} />
+      )}
     </Layout>
   );
 }
