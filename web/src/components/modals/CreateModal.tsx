@@ -4,8 +4,8 @@ import { FormValues, InitialValues, TrackMetadataForm } from 'components/forms/t
 import { TrackUploader } from 'components/forms/track/TrackUploader';
 import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
-import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar';
 import useBlockchain from 'hooks/useBlockchain';
+import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar';
 import { useUpload } from 'hooks/useUpload';
 import { useWalletContext } from 'hooks/useWalletContext';
 import {
@@ -21,6 +21,7 @@ import * as musicMetadata from 'music-metadata-browser';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import { Metadata, Receipt } from 'types/NftTypes';
+import { genres } from 'utils/Genres';
 import { MiningState, MintingDone } from './MintingDone';
 
 enum Tabs {
@@ -67,6 +68,11 @@ export const CreateModal = () => {
         artworkFile = new File([blob], 'artwork', { type });
       }
 
+      let initialGenres;
+      if (fileMetadata.genre && fileMetadata.genre.length) {
+        initialGenres = genres.filter(genre => fileMetadata.genre?.includes(genre.label)).map(genre => genre.key);
+      }
+
       setInitialValues({
         title: fileMetadata?.title,
         artist: fileMetadata?.artist,
@@ -74,6 +80,7 @@ export const CreateModal = () => {
         album: fileMetadata?.album,
         releaseYear: fileMetadata?.year,
         artworkFile: artworkFile,
+        genres: initialGenres,
       });
     });
 
@@ -114,7 +121,7 @@ export const CreateModal = () => {
 
   const handleSubmit = async (values: FormValues) => {
     if (file && web3 && account) {
-      const { title, artworkUrl, description, album, artist, genres, releaseYear } = values;
+      const { title, artworkUrl, description, album, artist, genres, releaseYear, copyright } = values;
 
       setMintingState('Uploading track file');
       const assetUrl = await upload([file]);
@@ -122,7 +129,9 @@ export const CreateModal = () => {
 
       setMintingState('Creating streaming from track');
       const { data } = await createTrack({
-        variables: { input: { assetUrl, title, album, artist, artworkUrl, description, genres, releaseYear } },
+        variables: {
+          input: { assetUrl, title, album, artist, artworkUrl, description, genres, releaseYear, copyright },
+        },
       });
       const track = data?.createTrack.track;
 

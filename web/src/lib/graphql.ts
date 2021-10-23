@@ -98,6 +98,7 @@ export type CommentNotification = {
 };
 
 export type CreateListingItemInput = {
+  id?: Maybe<Scalars['String']>;
   owner: Scalars['String'];
   nft: Scalars['String'];
   tokenId: Scalars['Float'];
@@ -108,6 +109,7 @@ export type CreateListingItemInput = {
 
 export type CreateListingItemType = {
   __typename?: 'CreateListingItemType';
+  id: Maybe<Scalars['String']>;
   owner: Scalars['String'];
   nft: Scalars['String'];
   tokenId: Scalars['Float'];
@@ -153,6 +155,7 @@ export type CreateTrackInput = {
   artist?: Maybe<Scalars['String']>;
   album?: Maybe<Scalars['String']>;
   releaseYear?: Maybe<Scalars['Float']>;
+  copyright?: Maybe<Scalars['String']>;
   genres?: Maybe<Array<Genre>>;
 };
 
@@ -911,6 +914,7 @@ export type Track = {
   artworkUrl: Maybe<Scalars['String']>;
   artist: Maybe<Scalars['String']>;
   album: Maybe<Scalars['String']>;
+  copyright: Maybe<Scalars['String']>;
   releaseYear: Maybe<Scalars['Float']>;
   genres: Maybe<Array<Genre>>;
   nftData: Maybe<NftDataType>;
@@ -990,6 +994,7 @@ export type UpdateProfilePayload = {
 
 export type UpdateTrackInput = {
   trackId: Scalars['String'];
+  profileId?: Maybe<Scalars['String']>;
   nftData?: Maybe<NftDataInput>;
 };
 
@@ -1174,7 +1179,7 @@ export type CreateListingItemMutation = (
   { __typename?: 'Mutation' }
   & { createListingItem: (
     { __typename?: 'CreateListingItemType' }
-    & Pick<CreateListingItemType, 'owner' | 'nft' | 'tokenId' | 'quantity' | 'pricePerItem' | 'startingTime'>
+    & Pick<CreateListingItemType, 'id' | 'owner' | 'nft' | 'tokenId' | 'quantity' | 'pricePerItem' | 'startingTime'>
   ) }
 );
 
@@ -1394,7 +1399,7 @@ export type ListingItemQuery = (
   { __typename?: 'Query' }
   & { listingItem: (
     { __typename?: 'CreateListingItemType' }
-    & Pick<CreateListingItemType, 'owner' | 'nft' | 'tokenId' | 'quantity' | 'pricePerItem' | 'startingTime'>
+    & Pick<CreateListingItemType, 'id' | 'owner' | 'nft' | 'tokenId' | 'quantity' | 'pricePerItem' | 'startingTime'>
   ) }
 );
 
@@ -1765,7 +1770,7 @@ export type SetNotValidMutation = (
   { __typename?: 'Mutation' }
   & { setNotValid: (
     { __typename?: 'CreateListingItemType' }
-    & Pick<CreateListingItemType, 'owner' | 'nft' | 'tokenId' | 'quantity' | 'pricePerItem' | 'startingTime'>
+    & Pick<CreateListingItemType, 'id' | 'owner' | 'nft' | 'tokenId' | 'quantity' | 'pricePerItem' | 'startingTime'>
   ) }
 );
 
@@ -1800,7 +1805,7 @@ export type TrackQuery = (
 
 export type TrackComponentFieldsFragment = (
   { __typename?: 'Track' }
-  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'album' | 'releaseYear' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted'>
+  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted'>
   & { nftData: Maybe<(
     { __typename?: 'NFTDataType' }
     & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid'>
@@ -2141,6 +2146,7 @@ export const TrackComponentFieldsFragmentDoc = gql`
   artist
   album
   releaseYear
+  copyright
   genres
   playbackUrl
   createdAt
@@ -2505,6 +2511,7 @@ export type CommentsQueryResult = Apollo.QueryResult<CommentsQuery, CommentsQuer
 export const CreateListingItemDocument = gql`
     mutation CreateListingItem($input: CreateListingItemInput!) {
   createListingItem(input: $input) {
+    id
     owner
     nft
     tokenId
@@ -2970,6 +2977,7 @@ export type FollowingQueryResult = Apollo.QueryResult<FollowingQuery, FollowingQ
 export const ListingItemDocument = gql`
     query ListingItem($tokenId: Float!) {
   listingItem(tokenId: $tokenId) {
+    id
     owner
     nft
     tokenId
@@ -3822,6 +3830,7 @@ export type SetIsApprovedOnMarketplaceMutationOptions = Apollo.BaseMutationOptio
 export const SetNotValidDocument = gql`
     mutation SetNotValid($tokenId: Float!) {
   setNotValid(tokenId: $tokenId) {
+    id
     owner
     nft
     tokenId

@@ -8,13 +8,14 @@ import { FileRejection, useDropzone } from 'react-dropzone';
 
 export interface TrackUploaderProps {
   onFileChange: (file: File) => void;
+  art?: string;
 }
 
 const maxSize = 1024 * 1024 * 30; // 30Mb
 
 const containerClasses = 'flex bg-black text-gray-30 border-gray-50 border-2 border-dashed rounded-md gap-4 p-4';
 
-export const TrackUploader = ({ onFileChange }: TrackUploaderProps) => {
+export const TrackUploader = ({ onFileChange, art }: TrackUploaderProps) => {
   const [file, setFile] = useState<File>();
   const [preview, setPreview] = useState<string>();
 
@@ -40,7 +41,7 @@ export const TrackUploader = ({ onFileChange }: TrackUploaderProps) => {
     return (
       <div className="flex flex-col items-center bg-black text-gray-30 border-gray-50 border-2 border-dashed rounded-md gap-0 md:gap-4 md:flex-row">
         <div className="mr-auto w-full">
-          <AudioPlayer title={file.name} src={preview} />
+          <AudioPlayer title={file.name} src={preview} art={art} />
         </div>
         <div className="flex mb-4 md:mb-0 mr-4 flex-col justify-center flex-shrink-0" {...getRootProps()}>
           <JellyButton flavor="blueberry" icon={<UploadIcon color="blue" id="blue-gradient" />} className="text-xs">

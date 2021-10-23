@@ -36,7 +36,7 @@ export const SellNFT = ({ onSetPrice }: SellNFTProps) => {
               <div className="flex flex-wrap items-center w-1/2 justify-end bg-gray-20 uppercase py-3 pr-5">
                 <InputField
                   name="price"
-                  type="text"
+                  type="number"
                   icon={Matic}
                   onChange={el => {
                     handleChange(el);

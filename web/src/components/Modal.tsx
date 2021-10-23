@@ -48,7 +48,7 @@ export const Modal = ({ show, children, title, leftButton, rightButton, onClose 
               <div className="flex-2 text-center text-white font-bold">{title}</div>
               <div className="flex-1 ">{rightButton}</div>
             </div>
-            <div className="flex flex-col h-full bg-gray-10">{children}</div>
+            <div className="relative flex flex-col h-full bg-gray-10">{children}</div>
           </div>
         </Transition.Child>
       </Dialog>
