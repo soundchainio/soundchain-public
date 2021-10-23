@@ -40,6 +40,10 @@ export class Track extends Model {
 
   @Field({ nullable: true })
   @prop()
+  copyright: string;
+
+  @Field({ nullable: true })
+  @prop()
   releaseYear: number;
 
   @Field(() => [Genre], { nullable: true })
@@ -52,6 +56,10 @@ export class Track extends Model {
 
   @prop()
   muxAsset: MuxAsset;
+
+  @Field({ nullable: true })
+  @prop({ default: false })
+  deleted?: boolean;
 
   @Field(() => Date)
   createdAt: Date;

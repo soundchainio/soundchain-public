@@ -3,6 +3,7 @@ import { usePostQuery } from 'lib/graphql';
 import React from 'react';
 import { AudioPlayer } from './AudioPlayer';
 import { Avatar } from './Avatar';
+import { NotAvailableMessage } from './NotAvailableMessage';
 import { RepostPreviewSkeleton } from './RepostPreviewSkeleton';
 import { Timestamp } from './Timestamp';
 
@@ -22,24 +23,32 @@ export const RepostPreview = ({ postId }: RepostPreviewProps) => {
         <RefreshIcon className="h-4 w-4 mr-1" /> Repost
       </div>
       <div className="p-4 break-words bg-gray-30 rounded-lg mb-2">
-        <div className="flex items-center">
-          <Avatar profile={post.profile} />
-          <a className="ml-4 text-lg font-bold text-gray-100">{post.profile.displayName}</a>
-          <Timestamp datetime={post.createdAt} className="flex-1 text-right text-gray-60" />
-        </div>
-        <pre className="mt-4 text-gray-100 break-words whitespace-pre-wrap">{post.body}</pre>
-        {post.mediaLink && (
-          <iframe frameBorder="0" className="mt-4 w-full bg-gray-20" allowFullScreen src={post.mediaLink} />
-        )}
-        {post.track && (
-          <AudioPlayer
-            trackId={post.track.id}
-            src={post.track.playbackUrl}
-            title={post.track.title}
-            artist={post.track.artist}
-            art={post.track.artworkUrl}
-          />
-        )}
+        {post.deleted ?
+          <NotAvailableMessage type="post" />
+          :
+          <>
+            <div className="flex items-center">
+              <Avatar profile={post.profile} />
+              <a className="ml-4 text-lg font-bold text-gray-100">{post.profile.displayName}</a>
+              <Timestamp datetime={post.createdAt} className="flex-1 text-right text-gray-60" />
+            </div>
+            <pre className="mt-4 text-gray-100 break-words whitespace-pre-wrap">{post.body}</pre>
+            {post.mediaLink && (
+              <iframe frameBorder="0" className="mt-4 w-full bg-gray-20" allowFullScreen src={post.mediaLink} />
+            )}
+            {(post.track && !post.track.deleted) ? (
+              <AudioPlayer
+                trackId={post.track.id}
+                src={post.track.playbackUrl}
+                title={post.track.title}
+                artist={post.track.artist}
+                art={post.track.artworkUrl}
+              />
+            ) :
+              <NotAvailableMessage type="track" />
+            }
+          </>
+        }
       </div>
     </div>
   );

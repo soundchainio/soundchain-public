@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import { SVGGradientColor } from 'icons/gradients';
 import { IconProps } from 'icons/types/IconProps';
+import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
@@ -12,9 +13,10 @@ interface NavBarButtonProps {
   icon?: (props: IconProps) => JSX.Element;
   color?: SVGGradientColor;
   id?: string;
+  nyanCat?: boolean;
 }
 
-export const NavBarButton = ({ label, path, icon: Icon, onClick, badge: Badge, color, id }: NavBarButtonProps) => {
+export const NavBarButton = ({ label, path, icon: Icon, onClick, badge: Badge, color, id, nyanCat }: NavBarButtonProps) => {
   const [isActive, setActive] = useState(false);
   const router = useRouter();
 
@@ -46,7 +48,12 @@ export const NavBarButton = ({ label, path, icon: Icon, onClick, badge: Badge, c
           <Icon color={isActive ? color : undefined} id={id} />
         </div>
       )}
-      <span className={classNames('text-gray-50 text-xs mt-2 font-semibold', isActive && `${color}-gradient-text`)}>
+      {nyanCat &&
+        <div className="relative overflow-hidden scale-150">
+          <Image height={20} width={40} src="/nyan-cat-cropped.gif" alt="Loading" priority />
+        </div>
+      }
+      <span className={classNames('text-gray-50 text-xs font-semibold', !nyanCat && 'mt-2', isActive && `${color}-gradient-text`)}>
         {label}
       </span>
     </button>

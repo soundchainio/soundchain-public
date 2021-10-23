@@ -16,7 +16,7 @@ export class TrackService extends ModelService<typeof Track> {
   }
 
   getTracks(filter?: FilterTrackInput, sort?: SortTrackInput, page?: PageInput): Promise<PaginateResult<Track>> {
-    const defaultFilter = { title: { $exists: true } };
+    const defaultFilter = { title: { $exists: true }, deleted: false };
     return this.paginate({ filter: { ...defaultFilter, ...filter }, sort, page });
   }
 
@@ -50,7 +50,7 @@ export class TrackService extends ModelService<typeof Track> {
     const posts = await PostModel.find({ trackId: id });
     const postsIds = posts.map(post => post.id);
 
-    await NotificationModel.deleteMany({ "metadata.trackId": id });
+    await NotificationModel.deleteMany({ 'metadata.trackId': id });
 
     if (posts) {
       await PostModel.deleteMany({ _id: { $in: postsIds } });

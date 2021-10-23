@@ -2,6 +2,7 @@ fragment CommentComponentFields on Comment {
   id
   body
   createdAt
+  deleted
   profile {
     id
     displayName
