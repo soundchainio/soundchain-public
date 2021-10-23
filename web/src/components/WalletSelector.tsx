@@ -29,8 +29,16 @@ export const WalletSelector = ({ className, ownerAddressAccount }: WalletSelecto
   const [updateDefaultWallet] = useUpdateDefaultWalletMutation();
 
   const Wallet = ({ walletName, balance, isSounchainWallet, onDefaultWalletClick, className }: WalletProps) => {
+    const isWalletSelected = me?.defaultWallet === walletName;
     return (
-      <div className={classNames('flex items-center w-full py-3 px-4 color bg-gray-20', className)}>
+      <div
+        className={classNames(
+          `flex items-center w-full py-3 px-4 color bg-gray-20 ${
+            isWalletSelected ? 'border-2 border-green-800' : 'border-0'
+          }`,
+          className,
+        )}
+      >
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2 text-xs text-white font-bold">
             {isSounchainWallet ? <Logo id="soundchain-wallet" height="20" width="20" /> : <MetaMask />}
@@ -47,7 +55,7 @@ export const WalletSelector = ({ className, ownerAddressAccount }: WalletSelecto
             </div>
           </div>
         </div>
-        {me?.defaultWallet === walletName ? (
+        {isWalletSelected ? (
           <div className="flex items-center gap-1 ml-auto">
             <CheckmarkFilled />
             <span className="flex-shrink-0 text-xxs uppercase font-bold green-gradient-text">Wallet selected</span>
