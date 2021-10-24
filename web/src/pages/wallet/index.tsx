@@ -7,6 +7,7 @@ import { useMagicContext } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
 import useMetaMask from 'hooks/useMetaMask';
 import { Logo } from 'icons/Logo';
+import { Matic } from 'icons/Matic';
 import { MetaMask } from 'icons/MetaMask';
 import { testNetwork } from 'lib/blockchainNetworks';
 import { DefaultWallet, useUpdateDefaultWalletMutation } from 'lib/graphql';
@@ -86,6 +87,19 @@ export default function WalletPage() {
               </Button>
             </div>
           )}
+        </div>
+        <div className="flex items-center justify-end">
+          <a
+            className="text-xs text-gray-80 font-bold underline m-2"
+            href="https://faucet.polygon.technology/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Need some Matic?
+          </a>
+          <span className="my-auto mr-2">
+            <Matic />
+          </span>
         </div>
       </div>
     </Layout>
