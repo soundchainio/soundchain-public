@@ -21,7 +21,7 @@ export class CreateListingItemData {
   quantity: number;
 
   @Field()
-  pricePerItem: number;
+  pricePerItem: string;
 
   @Field()
   startingTime: number;

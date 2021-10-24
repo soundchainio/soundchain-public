@@ -2,12 +2,12 @@ import { IconComponent } from 'icons/types/IconComponent';
 import { BuyNFTButton } from './Buttons/BuyNFT';
 import { ClearButton } from './Buttons/Clear';
 import { GreenGradient } from './Buttons/GreenGradient';
+import { ListNFTButton } from './Buttons/ListNFT';
 import { OutlineButton } from './Buttons/Outline';
 import { OutlineRoundedButton } from './Buttons/OutlineRounded';
 import { RainbowButton } from './Buttons/Rainbow';
 import { RainbowRounded } from './Buttons/RainbowRounded';
 import { RainbowXSButton } from './Buttons/RainbowXS';
-import { SellNFTButton } from './Buttons/SellNFT';
 
 export type ButtonVariant =
   | 'rainbow'
@@ -16,7 +16,7 @@ export type ButtonVariant =
   | 'rainbow-rounded'
   | 'green-yellow-gradient'
   | 'clear'
-  | 'sell-nft'
+  | 'list-nft'
   | 'buy-nft'
   | 'outline-rounded';
 
@@ -39,7 +39,7 @@ export const buttonByVariant: Record<ButtonVariant, (props: ButtonProps) => JSX.
   'green-yellow-gradient': GreenGradient,
   clear: ClearButton,
   'outline-rounded': OutlineRoundedButton,
-  'sell-nft': SellNFTButton,
+  'list-nft': ListNFTButton,
   'buy-nft': BuyNFTButton,
 };
 

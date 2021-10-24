@@ -11,8 +11,8 @@ import { cacheFor } from 'lib/apollo';
 import {
   ListingItemDocument,
   TrackDocument,
+  useFinishListingMutation,
   useListingItemLazyQuery,
-  useSetNotValidMutation,
   useTrackQuery,
   useUpdateTrackMutation,
 } from 'lib/graphql';
@@ -52,15 +52,15 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 
 export default function BuyPage({ trackId }: TrackPageProps) {
   const { buyItem } = useBlockchain();
-  const { data } = useTrackQuery({ variables: { id: trackId } });
+  const { data: track } = useTrackQuery({ variables: { id: trackId } });
   const { account, web3 } = useWalletContext();
-  const [setNotValid] = useSetNotValidMutation();
   const [updateTrack] = useUpdateTrackMutation();
+  const [finishListing] = useFinishListingMutation();
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const me = useMe();
 
-  const tokenId = data?.track.nftData?.tokenId || -1;
+  const tokenId = track?.track.nftData?.tokenId || -1;
 
   const [getListingItem, { data: listingItem }] = useListingItemLazyQuery({
     variables: { tokenId },
@@ -96,12 +96,21 @@ export default function BuyPage({ trackId }: TrackPageProps) {
 
   const onReceipt = async (receipt: Receipt) => {
     try {
-      if (!receipt.events.ItemSold) {
+      if (!receipt.events.ItemSold || !me || !track) {
         return;
       }
       const { tokenId } = receipt.events.ItemSold.returnValues;
-      await setNotValid({
-        variables: { tokenId: parseInt(tokenId) },
+
+      await finishListing({
+        variables: {
+          input: {
+            trackId: trackId,
+            buyerProfileId: me.profile.id,
+            price: price,
+            sellerProfileId: track.track.profileId,
+            tokenId: parseInt(tokenId),
+          },
+        },
         refetchQueries: [ListingItemDocument],
         fetchPolicy: 'no-cache',
       });
@@ -125,7 +134,7 @@ export default function BuyPage({ trackId }: TrackPageProps) {
     title: 'Confirm Purchase',
   };
 
-  if (!isForSale || isOwner || !me) {
+  if (!isForSale || isOwner || !me || !track) {
     return null;
   }
 

@@ -1,6 +1,6 @@
 import { ButtonProps } from 'components/Button';
 
-export const SellNFTButton = ({ className, type = 'button', children, loading, ...rest }: ButtonProps) => {
+export const ListNFTButton = ({ className, type = 'button', children, loading, ...rest }: ButtonProps) => {
   return (
     <div className={className}>
       <button

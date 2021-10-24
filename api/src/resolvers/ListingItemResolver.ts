@@ -2,6 +2,7 @@ import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from 'type-graphql';
 import { ListingItem } from '../models/ListingItem';
 import { Context } from '../types/Context';
 import { CreateListingItemData } from '../types/CreateListingItemData';
+import { FinishListingItemInput } from '../types/FinishListingItemInput';
 
 @Resolver(ListingItem)
 export class ListingItemResolver {
@@ -34,6 +35,22 @@ export class ListingItemResolver {
     @Ctx() { listingItemService }: Context,
     @Arg('tokenId') tokenId: number,
   ): Promise<CreateListingItemData> {
+    return await listingItemService.setNotValid(tokenId);
+  }
+
+  @Mutation(() => CreateListingItemData)
+  @Authorized()
+  async finishListing(
+    @Ctx() { listingItemService, notificationService }: Context,
+    @Arg('input') { tokenId, buyerProfileId, price, sellerProfileId, trackId }: FinishListingItemInput,
+  ): Promise<CreateListingItemData> {
+    await notificationService.notifyNFTSold({
+      buyerProfileId,
+      price,
+      sellerProfileId,
+      trackId,
+    });
+
     return await listingItemService.setNotValid(tokenId);
   }
 }

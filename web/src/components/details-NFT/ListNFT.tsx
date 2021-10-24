@@ -16,11 +16,11 @@ const initialValues: FormValues = {
   price: 0,
 };
 
-interface SellNFTProps {
+interface ListNFTProps {
   onSetPrice: (price: number) => void;
 }
 
-export const SellNFT = ({ onSetPrice }: SellNFTProps) => {
+export const ListNFT = ({ onSetPrice }: ListNFTProps) => {
   return (
     <div className="mb-2">
       <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={console.log}>
@@ -31,7 +31,7 @@ export const SellNFT = ({ onSetPrice }: SellNFTProps) => {
                 htmlFor="price"
                 className="flex items-center justify-start w-full bg-gray-20 text-gray-80 font-bold text-xs md-text-sm uppercase py-3 pl-5"
               >
-                Sale Price
+                List Price
               </label>
               <div className="flex flex-wrap items-center w-1/2 justify-end bg-gray-20 uppercase py-3 pr-5">
                 <InputField
