@@ -5,6 +5,9 @@ module.exports = {
   plugins: [require('@tailwindcss/forms'), require('@tailwindcss/line-clamp')],
   theme: {
     extend: {
+      fontSize: {
+        xxs: '0.625rem',
+      },
       flex: {
         2: '2 2 0%',
       },

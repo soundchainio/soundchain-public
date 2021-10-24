@@ -3,10 +3,10 @@ import { Button } from 'components/Button';
 import { ImageUpload } from 'components/ImageUpload';
 import { InputField } from 'components/InputField';
 import { TextareaField } from 'components/TextareaField';
+import { WalletSelector } from 'components/WalletSelector';
 import { Form, Formik } from 'formik';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMagicContext } from 'hooks/useMagicContext';
-import { Logo } from 'icons/Logo';
 import { Matic } from 'icons/Matic';
 import { Genre } from 'lib/graphql';
 import React, { useEffect, useState } from 'react';
@@ -151,28 +151,9 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
               />
             ))}
           </div>
-          <div className="flex items-center justify-between py-3 px-4 mt-4" style={{ backgroundColor: '#202020' }}>
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2 text-xs text-white font-bold">
-                <Logo id="soundchain-wallet" height="20" width="20" /> SoundChain Wallet
-              </div>
-              <div className="flex items-center gap-2 font-black text-xs" style={{ color: '#808080' }}>
-                Balance: <Matic />
-                <div className="text-white">{balance}</div>MATIC
-              </div>
-            </div>
-            <div className="text-white text-xs text-right">
-              Need some test Matic? <br />
-              <a
-                className="text-xs font-bold"
-                href="https://faucet.polygon.technology/"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Get some here
-              </a>
-            </div>
-          </div>
+
+          <WalletSelector className="mt-4 py-3 px-4" />
+
           <div className="pl-4 pr-4 pb-4 flex items-center mt-4">
             <div className="flex-1 font-black text-xs" style={{ color: '#808080' }}>
               <div>Max gas fee</div>
