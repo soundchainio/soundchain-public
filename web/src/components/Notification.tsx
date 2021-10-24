@@ -2,6 +2,7 @@ import {
   CommentNotification,
   FollowerNotification,
   NewPostNotification,
+  NftSoldNotification,
   NotificationType,
   ReactionNotification,
   useNotificationQuery,
@@ -10,6 +11,7 @@ import React from 'react';
 import { CommentNotificationItem } from './CommentNotificationItem';
 import { FollowerNotificationItem } from './FollowerNotificationItem';
 import { NewPostNotificationItem } from './NewPostNotificationItem';
+import { NFTSoldNotificationItem } from './NFTSoldNotificationItem';
 import { NotificationSkeleton } from './NotificationSkeleton';
 import { ReactionNotificationItem } from './ReactionNotificationItem';
 
@@ -37,6 +39,10 @@ export const Notification = ({ notificationId, index }: NotificationProps) => {
 
   if (notification.type === NotificationType.NewPost) {
     return <NewPostNotificationItem notification={notification as NewPostNotification} index={index} />;
+  }
+
+  if (notification.type === NotificationType.NftSold) {
+    return <NFTSoldNotificationItem notification={notification as NftSoldNotification} index={index} />;
   }
 
   return null;

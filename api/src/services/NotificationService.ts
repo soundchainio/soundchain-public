@@ -8,6 +8,7 @@ import { Profile, ProfileModel } from '../models/Profile';
 import { Reaction } from '../models/Reaction';
 import { CommentNotificationMetadata } from '../types/CommentNotificationMetadata';
 import { Context } from '../types/Context';
+import { FinishListingItemInput } from '../types/FinishListingItemInput';
 import { NewPostNotificationMetadata } from '../types/NewPostNotificationMetadata';
 import { NotificationType } from '../types/NotificationType';
 import { NotificationUnion } from '../types/NotificationUnion';
@@ -83,6 +84,30 @@ export class NotificationService extends ModelService<typeof Notification> {
     await this.incrementNotificationCount(profileId);
   }
 
+  async notifyNFTSold({
+    sellerProfileId,
+    buyerProfileId,
+    price,
+    trackId,
+  }: Omit<FinishListingItemInput, 'tokenId'>): Promise<void> {
+    const { displayName: buyerName, profilePicture: buyerPicture } = await this.context.profileService.getProfile(
+      buyerProfileId,
+    );
+    const notification = new NotificationModel({
+      type: NotificationType.NFTSold,
+      profileId: sellerProfileId,
+      metadata: {
+        buyerProfileId,
+        trackId,
+        price,
+        buyerName,
+        buyerPicture,
+      },
+    });
+    await notification.save();
+    await this.incrementNotificationCount(sellerProfileId);
+  }
+
   async getNotifications(
     profileId: string,
     sort?: SortNotificationInput,
@@ -130,7 +155,7 @@ export class NotificationService extends ModelService<typeof Notification> {
       trackId: post.trackId,
     };
     const notifications = subscribersIds.map(
-      profileId => new this.model({ type: NotificationType.NewPost, profileId, metadata })
+      profileId => new this.model({ type: NotificationType.NewPost, profileId, metadata }),
     );
     await ProfileModel.updateMany({ _id: { $in: subscribersIds } }, { $inc: { unreadNotificationCount: 1 } });
     await this.model.insertMany(notifications);

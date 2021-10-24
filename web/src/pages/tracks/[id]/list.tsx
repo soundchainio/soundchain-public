@@ -1,6 +1,6 @@
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
-import { SellNFT } from 'components/details-NFT/SellNFT';
+import { ListNFT } from 'components/details-NFT/ListNFT';
 import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
@@ -111,7 +111,7 @@ export default function SellPage({ trackId }: TrackPageProps) {
         nft,
         tokenId: parseInt(tokenId),
         quantity: parseInt(quantity),
-        pricePerItem: parseInt(pricePerItem),
+        pricePerItem,
         startingTime: parseInt(startingTime),
       };
       await createListingItem({ variables: { input: listingItemParams }, fetchPolicy: 'no-cache' });
@@ -135,10 +135,10 @@ export default function SellPage({ trackId }: TrackPageProps) {
       <div className="m-4">
         <Track trackId={trackId} />
       </div>
-      <SellNFT onSetPrice={price => setPrice(price)} />
+      <ListNFT onSetPrice={price => setPrice(price)} />
       <div className="flex justify-center pb-3">
-        <Button className="w-40" variant="sell-nft" disabled={price <= 0} onClick={handleSell} loading={loading}>
-          <div className="px-4 font-bold">SELL NFT</div>
+        <Button className="w-40" variant="list-nft" disabled={price <= 0} onClick={handleSell} loading={loading}>
+          <div className="px-4 font-bold">LIST NFT</div>
         </Button>
       </div>
     </Layout>

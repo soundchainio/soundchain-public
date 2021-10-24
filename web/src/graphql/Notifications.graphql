@@ -13,6 +13,9 @@ query Notifications($sort: SortNotificationInput) {
       ... on NewPostNotification {
         ...NewPostNotificationFields
       }
+      ... on NFTSoldNotification {
+        ...NFTSoldNotificationFields
+      }
     }
   }
 }

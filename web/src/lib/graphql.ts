@@ -103,7 +103,7 @@ export type CreateListingItemInput = {
   nft: Scalars['String'];
   tokenId: Scalars['Float'];
   quantity: Scalars['Float'];
-  pricePerItem: Scalars['Float'];
+  pricePerItem: Scalars['String'];
   startingTime: Scalars['Float'];
 };
 
@@ -114,7 +114,7 @@ export type CreateListingItemType = {
   nft: Scalars['String'];
   tokenId: Scalars['Float'];
   quantity: Scalars['Float'];
-  pricePerItem: Scalars['Float'];
+  pricePerItem: Scalars['String'];
   startingTime: Scalars['Float'];
 };
 
@@ -211,6 +211,14 @@ export type FilterPostInput = {
 
 export type FilterTrackInput = {
   profileId?: Maybe<Scalars['String']>;
+};
+
+export type FinishListingItemInput = {
+  sellerProfileId: Scalars['String'];
+  buyerProfileId: Scalars['String'];
+  tokenId: Scalars['Float'];
+  trackId: Scalars['String'];
+  price: Scalars['String'];
 };
 
 export type Follow = {
@@ -344,6 +352,7 @@ export type Mutation = {
   deleteComment: DeleteCommentPayload;
   createListingItem: CreateListingItemType;
   setNotValid: CreateListingItemType;
+  finishListing: CreateListingItemType;
   sendMessage: SendMessagePayload;
   resetUnreadMessageCount: Profile;
   createMintingRequest: MintingRequestPayload;
@@ -391,6 +400,11 @@ export type MutationCreateListingItemArgs = {
 
 export type MutationSetNotValidArgs = {
   tokenId: Scalars['Float'];
+};
+
+
+export type MutationFinishListingArgs = {
+  input: FinishListingItemInput;
 };
 
 
@@ -527,6 +541,19 @@ export type NftDataType = {
   quantity: Maybe<Scalars['Float']>;
 };
 
+export type NftSoldNotification = {
+  __typename?: 'NFTSoldNotification';
+  type: NotificationType;
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  id: Scalars['String'];
+  buyerName: Scalars['String'];
+  buyerPicture: Scalars['String'];
+  buyerProfileId: Scalars['String'];
+  trackId: Scalars['String'];
+  price: Scalars['String'];
+};
+
 export type NewPostNotification = {
   __typename?: 'NewPostNotification';
   type: NotificationType;
@@ -541,7 +568,7 @@ export type NewPostNotification = {
   track: Maybe<Track>;
 };
 
-export type Notification = CommentNotification | ReactionNotification | FollowerNotification | NewPostNotification;
+export type Notification = CommentNotification | ReactionNotification | FollowerNotification | NewPostNotification | NftSoldNotification;
 
 export type NotificationConnection = {
   __typename?: 'NotificationConnection';
@@ -553,7 +580,8 @@ export enum NotificationType {
   Comment = 'Comment',
   Reaction = 'Reaction',
   Follower = 'Follower',
-  NewPost = 'NewPost'
+  NewPost = 'NewPost',
+  NftSold = 'NFTSold'
 }
 
 export type PageInfo = {
@@ -1321,6 +1349,19 @@ export type FeedQuery = (
   ) }
 );
 
+export type FinishListingMutationVariables = Exact<{
+  input: FinishListingItemInput;
+}>;
+
+
+export type FinishListingMutation = (
+  { __typename?: 'Mutation' }
+  & { finishListing: (
+    { __typename?: 'CreateListingItemType' }
+    & Pick<CreateListingItemType, 'id' | 'owner' | 'nft' | 'tokenId' | 'quantity' | 'pricePerItem' | 'startingTime'>
+  ) }
+);
+
 export type FollowProfileMutationVariables = Exact<{
   input: FollowProfileInput;
 }>;
@@ -1470,6 +1511,11 @@ export type MimeTypeQuery = (
   ) }
 );
 
+export type NftSoldNotificationFieldsFragment = (
+  { __typename?: 'NFTSoldNotification' }
+  & Pick<NftSoldNotification, 'id' | 'type' | 'createdAt' | 'buyerName' | 'buyerPicture' | 'buyerProfileId' | 'trackId' | 'price'>
+);
+
 export type NewPostNotificationFieldsFragment = (
   { __typename?: 'NewPostNotification' }
   & Pick<NewPostNotification, 'id' | 'type' | 'authorName' | 'authorPicture' | 'body' | 'link' | 'previewBody' | 'previewLink' | 'createdAt'>
@@ -1498,6 +1544,9 @@ export type NotificationQuery = (
   ) | (
     { __typename?: 'NewPostNotification' }
     & NewPostNotificationFieldsFragment
+  ) | (
+    { __typename?: 'NFTSoldNotification' }
+    & NftSoldNotificationFieldsFragment
   ) }
 );
 
@@ -1533,6 +1582,9 @@ export type NotificationsQuery = (
     ) | (
       { __typename?: 'NewPostNotification' }
       & NewPostNotificationFieldsFragment
+    ) | (
+      { __typename?: 'NFTSoldNotification' }
+      & NftSoldNotificationFieldsFragment
     )> }
   ) }
 );
@@ -2116,6 +2168,18 @@ export const MessageComponentFieldsFragmentDoc = gql`
     displayName
     profilePicture
   }
+}
+    `;
+export const NftSoldNotificationFieldsFragmentDoc = gql`
+    fragment NFTSoldNotificationFields on NFTSoldNotification {
+  id
+  type
+  createdAt
+  buyerName
+  buyerPicture
+  buyerProfileId
+  trackId
+  price
 }
     `;
 export const NewPostNotificationFieldsFragmentDoc = gql`
@@ -2841,6 +2905,45 @@ export function useFeedLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<FeedQ
 export type FeedQueryHookResult = ReturnType<typeof useFeedQuery>;
 export type FeedLazyQueryHookResult = ReturnType<typeof useFeedLazyQuery>;
 export type FeedQueryResult = Apollo.QueryResult<FeedQuery, FeedQueryVariables>;
+export const FinishListingDocument = gql`
+    mutation FinishListing($input: FinishListingItemInput!) {
+  finishListing(input: $input) {
+    id
+    owner
+    nft
+    tokenId
+    quantity
+    pricePerItem
+    startingTime
+  }
+}
+    `;
+export type FinishListingMutationFn = Apollo.MutationFunction<FinishListingMutation, FinishListingMutationVariables>;
+
+/**
+ * __useFinishListingMutation__
+ *
+ * To run a mutation, you first call `useFinishListingMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useFinishListingMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [finishListingMutation, { data, loading, error }] = useFinishListingMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useFinishListingMutation(baseOptions?: Apollo.MutationHookOptions<FinishListingMutation, FinishListingMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<FinishListingMutation, FinishListingMutationVariables>(FinishListingDocument, options);
+      }
+export type FinishListingMutationHookResult = ReturnType<typeof useFinishListingMutation>;
+export type FinishListingMutationResult = Apollo.MutationResult<FinishListingMutation>;
+export type FinishListingMutationOptions = Apollo.BaseMutationOptions<FinishListingMutation, FinishListingMutationVariables>;
 export const FollowProfileDocument = gql`
     mutation FollowProfile($input: FollowProfileInput!) {
   followProfile(input: $input) {
@@ -3189,12 +3292,16 @@ export const NotificationDocument = gql`
     ... on NewPostNotification {
       ...NewPostNotificationFields
     }
+    ... on NFTSoldNotification {
+      ...NFTSoldNotificationFields
+    }
   }
 }
     ${CommentNotificationFieldsFragmentDoc}
 ${ReactionNotificationFieldsFragmentDoc}
 ${FollowerNotificationFieldsFragmentDoc}
-${NewPostNotificationFieldsFragmentDoc}`;
+${NewPostNotificationFieldsFragmentDoc}
+${NftSoldNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationQuery__
@@ -3274,13 +3381,17 @@ export const NotificationsDocument = gql`
       ... on NewPostNotification {
         ...NewPostNotificationFields
       }
+      ... on NFTSoldNotification {
+        ...NFTSoldNotificationFields
+      }
     }
   }
 }
     ${CommentNotificationFieldsFragmentDoc}
 ${ReactionNotificationFieldsFragmentDoc}
 ${FollowerNotificationFieldsFragmentDoc}
-${NewPostNotificationFieldsFragmentDoc}`;
+${NewPostNotificationFieldsFragmentDoc}
+${NftSoldNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationsQuery__

@@ -1,0 +1,11 @@
+mutation FinishListing($input: FinishListingItemInput!) {
+  finishListing(input: $input) {
+    id
+    owner
+    nft
+    tokenId
+    quantity
+    pricePerItem
+    startingTime
+  }
+}
