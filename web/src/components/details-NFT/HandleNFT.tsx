@@ -18,9 +18,9 @@ export const HandleNFT = ({ isOwner, isForSale, price }: HandleNFTProps) => {
   const isApproved = me?.isApprovedOnMarketplace;
   const { dispatchShowApproveModal } = useModalDispatch();
 
-  const handleSellButton = () => {
+  const handleListButton = () => {
     if (isApproved) {
-      return router.push(`${router.asPath}/sell`);
+      return router.push(`${router.asPath}/list`);
     }
     me ? dispatchShowApproveModal(true) : router.push('/login');
   };
@@ -42,8 +42,8 @@ export const HandleNFT = ({ isOwner, isForSale, price }: HandleNFTProps) => {
           You own this NFT
         </div>
         <div className="flex-1 flex items-center justify-center">
-          <Button variant="sell-nft" onClick={handleSellButton}>
-            <div className="px-4 font-bold">SELL NFT </div>
+          <Button variant="list-nft" onClick={handleListButton}>
+            <div className="px-4 font-bold">LIST NFT </div>
           </Button>
         </div>
       </div>

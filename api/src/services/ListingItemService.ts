@@ -7,7 +7,7 @@ interface NewListingItem {
   nft: string;
   tokenId: number;
   quantity: number;
-  pricePerItem: number;
+  pricePerItem: string;
   startingTime: number;
 }
 
