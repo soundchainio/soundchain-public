@@ -6,6 +6,7 @@ import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import { useModalDispatch } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
+import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Matic } from 'icons/Matic';
@@ -52,17 +53,17 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 });
 
 export default function SellPage({ trackId }: TrackPageProps) {
-  const { listItem, isTokenOwner, getMaxGasFee } = useBlockchain();
+  const { listItem, isTokenOwner } = useBlockchain();
   const router = useRouter();
   const me = useMe();
   const { data } = useTrackQuery({ variables: { id: trackId } });
   const { account, web3 } = useWalletContext();
+  const maxGasFee = useMaxGasFee();
   const { dispatchShowApproveModal } = useModalDispatch();
   const [createListingItem] = useCreateListingItemMutation();
   const [loading, setLoading] = useState(false);
   const [price, setPrice] = useState(0);
   const [isOwner, setIsOwner] = useState(false);
-  const [maxGasFee, setMaxGasFee] = useState<string>();
 
   const tokenId = data?.track.nftData?.tokenId || -1;
 
@@ -80,19 +81,6 @@ export default function SellPage({ trackId }: TrackPageProps) {
     };
     fetchIsOwner();
   }, [account, web3, data?.track.nftData, isTokenOwner]);
-
-  useEffect(() => {
-    const gasCheck = async () => {
-      if (!web3 || !getMaxGasFee) return;
-      const maxFee = await getMaxGasFee(web3);
-      setMaxGasFee(maxFee);
-    };
-    gasCheck();
-    const interval = setInterval(() => {
-      gasCheck();
-    }, 5 * 1000);
-    return () => clearInterval(interval);
-  }, [web3, getMaxGasFee]);
 
   useEffect(() => {
     getListingItem();

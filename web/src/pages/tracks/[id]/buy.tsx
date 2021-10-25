@@ -5,6 +5,7 @@ import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import useBlockchain from 'hooks/useBlockchain';
+import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Matic } from 'icons/Matic';
@@ -52,15 +53,15 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 });
 
 export default function BuyPage({ trackId }: TrackPageProps) {
-  const { buyItem, getMaxGasFee } = useBlockchain();
+  const { buyItem } = useBlockchain();
   const { data: track } = useTrackQuery({ variables: { id: trackId } });
   const { account, web3 } = useWalletContext();
   const [updateTrack] = useUpdateTrackMutation();
+  const maxGasFee = useMaxGasFee();
   const [finishListing] = useFinishListingMutation();
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const me = useMe();
-  const [maxGasFee, setMaxGasFee] = useState<string>();
 
   const tokenId = track?.track.nftData?.tokenId || -1;
 
@@ -71,19 +72,6 @@ export default function BuyPage({ trackId }: TrackPageProps) {
   useEffect(() => {
     getListingItem();
   }, [getListingItem]);
-
-  useEffect(() => {
-    const gasCheck = async () => {
-      if (!web3 || !getMaxGasFee) return;
-      const maxFee = await getMaxGasFee(web3);
-      setMaxGasFee(maxFee);
-    };
-    gasCheck();
-    const interval = setInterval(() => {
-      gasCheck();
-    }, 5 * 1000);
-    return () => clearInterval(interval);
-  }, [web3, getMaxGasFee]);
 
   if (!listingItem) {
     return null;
