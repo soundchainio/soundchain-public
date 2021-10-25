@@ -7,6 +7,7 @@ import { Track } from 'components/Track';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
+import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
 import {
   ListingItemDocument,
@@ -51,7 +52,7 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 });
 
 export default function BuyPage({ trackId }: TrackPageProps) {
-  const { buyItem } = useBlockchain();
+  const { buyItem, getMaxGasFee } = useBlockchain();
   const { data: track } = useTrackQuery({ variables: { id: trackId } });
   const { account, web3 } = useWalletContext();
   const [updateTrack] = useUpdateTrackMutation();
@@ -59,6 +60,7 @@ export default function BuyPage({ trackId }: TrackPageProps) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const me = useMe();
+  const [maxGasFee, setMaxGasFee] = useState<string>();
 
   const tokenId = track?.track.nftData?.tokenId || -1;
 
@@ -69,6 +71,19 @@ export default function BuyPage({ trackId }: TrackPageProps) {
   useEffect(() => {
     getListingItem();
   }, [getListingItem]);
+
+  useEffect(() => {
+    const gasCheck = async () => {
+      if (!web3 || !getMaxGasFee) return;
+      const maxFee = await getMaxGasFee(web3);
+      setMaxGasFee(maxFee);
+    };
+    gasCheck();
+    const interval = setInterval(() => {
+      gasCheck();
+    }, 5 * 1000);
+    return () => clearInterval(interval);
+  }, [web3, getMaxGasFee]);
 
   if (!listingItem) {
     return null;
@@ -144,8 +159,15 @@ export default function BuyPage({ trackId }: TrackPageProps) {
         <Track trackId={trackId} />
       </div>
       <BuyNFT price={price} ownerAddressAccount={ownerAddressAccount} />
-      <div className="flex justify-center mt-6">
-        <Button className="w-40" variant="buy-nft" onClick={handleBuy} loading={loading}>
+      <div className="flex p-4">
+        <div className="flex-1 font-black text-xs text-gray-80">
+          <p>Max gas fee</p>
+          <div className="flex items-center gap-1">
+            <Matic />
+            <div className="text-white">{maxGasFee}</div>MATIC
+          </div>
+        </div>
+        <Button variant="buy-nft" onClick={handleBuy} loading={loading}>
           <div className="px-4">BUY NFT</div>
         </Button>
       </div>
