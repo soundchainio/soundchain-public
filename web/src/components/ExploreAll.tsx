@@ -39,8 +39,13 @@ export const ExploreAll = ({ searchTerm, setSelectedTab }: ExplorePageProps) => 
   return (
     <div>
       <div className="flex items-center w-full p-4">
-        <Subtitle className="flex-1 font-bold"> Users ({data?.explore.totalProfiles}) </Subtitle>
-        <Button className="text-gray-300" onClick={() => setSelectedTab(ExploreTab.USERS)} variant="clear">VIEW ALL</Button>
+        <div className="flex flex-1 items-center text-white font-bold">
+          <Subtitle className="font-bold"> Users </Subtitle>
+          <span className="ml-2">({data?.explore.totalProfiles})</span>
+        </div>
+        <Button className="text-gray-300" onClick={() => setSelectedTab(ExploreTab.USERS)} variant="clear">
+          VIEW ALL
+        </Button>
       </div>
       {profiles?.map(profile => (
         <div key={profile.id} className="text-white">
@@ -48,8 +53,13 @@ export const ExploreAll = ({ searchTerm, setSelectedTab }: ExplorePageProps) => 
         </div>
       ))}
       <div className="flex items-center w-full p-4">
-        <Subtitle className="flex-1 font-bold"> Tracks ({data?.explore.totalTracks}) </Subtitle>
-        <Button className="text-gray-300" onClick={() => setSelectedTab(ExploreTab.TRACKS)} variant="clear">VIEW ALL</Button>
+        <div className="flex flex-1 items-center text-white font-bold">
+          <Subtitle className="font-bold"> Tracks  </Subtitle>
+          <span className="ml-2">({data?.explore.totalTracks})</span>
+        </div>
+        <Button className="text-gray-300" onClick={() => setSelectedTab(ExploreTab.TRACKS)} variant="clear">
+          VIEW ALL
+        </Button>
       </div>
       {tracks?.map((track, index) => (
         <div key={track.id} className="text-white">
