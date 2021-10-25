@@ -1,0 +1,10 @@
+query Explore($search: String) {
+  explore(search: $search) {
+    tracks {
+      id
+    }
+    profiles {
+      id
+    }
+  }
+}

@@ -3,6 +3,7 @@ import { AuthService } from '../services/AuthService';
 import { CommentService } from '../services/CommentService';
 import { EmailService } from '../services/EmailService';
 import { EmbedService } from '../services/EmbedService';
+import { ExploreService } from '../services/ExploreService';
 import { FeedService } from '../services/FeedService';
 import { FollowService } from '../services/FollowService';
 import { JwtService, JwtUser } from '../services/JwtService';
@@ -40,6 +41,7 @@ export class Context {
   uploadService = new UploadService(this);
   userService = new UserService(this);
   embedService = new EmbedService(this);
+  exploreService = new ExploreService(this);
   listingItemService = new ListingItemService(this);
   user?: Promise<User>;
 

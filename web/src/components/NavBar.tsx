@@ -13,7 +13,7 @@ import { NavBarLink } from './Buttons/NavBarLink';
 import { NotificationBadge } from './NotificationBadge';
 
 export const NavBar = () => {
-  const { dispatchShowUnderDevelopmentModal, dispatchShowCreateModal } = useModalDispatch();
+  const { dispatchShowCreateModal } = useModalDispatch();
   const router = useRouter();
   const me = useMe();
 
@@ -25,9 +25,9 @@ export const NavBar = () => {
     <nav className="bg-black md:bg-gray-30 h-16 flex items-center inset-x-0 shadow-2xl md:w-full">
       <div className="w-full flex justify-center gap-14">
         <NavBarLink label="Home" path="/" icon={Home} color="yellow" id="top" />
-        <NavBarButton
+        <NavBarLink
           label="Explore"
-          onClick={() => dispatchShowUnderDevelopmentModal(true)}
+          path={me ? '/explore' : '/login'}
           icon={Search}
           color="green"
         />

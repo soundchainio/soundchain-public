@@ -24,6 +24,10 @@ export class TrackService extends ModelService<typeof Track> {
     return this.findOrFail(id);
   }
 
+  async searchTracks(search: string): Promise<Track[]> {
+    return this.model.find({ title: { $regex: search } });
+  }
+
   async createTrack(profileId: string, data: Partial<Track>): Promise<Track> {
     const track = new this.model({ profileId, ...data });
     const asset = await this.context.muxService.create(data.assetUrl, track._id);

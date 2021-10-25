@@ -188,6 +188,12 @@ export type DeleteTrackInput = {
   trackId: Scalars['String'];
 };
 
+export type ExplorePayload = {
+  __typename?: 'ExplorePayload';
+  profiles: Array<Profile>;
+  tracks: Array<Track>;
+};
+
 export type FeedConnection = {
   __typename?: 'FeedConnection';
   pageInfo: PageInfo;
@@ -640,6 +646,7 @@ export type Query = {
   chatHistory: MessageConnection;
   comment: Comment;
   comments: CommentConnection;
+  explore: ExplorePayload;
   feed: FeedConnection;
   followers: FollowConnection;
   following: FollowConnection;
@@ -680,6 +687,11 @@ export type QueryCommentArgs = {
 export type QueryCommentsArgs = {
   postId?: Maybe<Scalars['String']>;
   page?: Maybe<PageInput>;
+};
+
+
+export type QueryExploreArgs = {
+  search?: Maybe<Scalars['String']>;
 };
 
 
@@ -1287,6 +1299,25 @@ export type DeleteTrackOnErrorMutation = (
       { __typename?: 'Track' }
       & TrackComponentFieldsFragment
     ) }
+  ) }
+);
+
+export type ExploreQueryVariables = Exact<{
+  search?: Maybe<Scalars['String']>;
+}>;
+
+
+export type ExploreQuery = (
+  { __typename?: 'Query' }
+  & { explore: (
+    { __typename?: 'ExplorePayload' }
+    & { tracks: Array<(
+      { __typename?: 'Track' }
+      & Pick<Track, 'id'>
+    )>, profiles: Array<(
+      { __typename?: 'Profile' }
+      & Pick<Profile, 'id'>
+    )> }
   ) }
 );
 
@@ -2784,6 +2815,46 @@ export function useDeleteTrackOnErrorMutation(baseOptions?: Apollo.MutationHookO
 export type DeleteTrackOnErrorMutationHookResult = ReturnType<typeof useDeleteTrackOnErrorMutation>;
 export type DeleteTrackOnErrorMutationResult = Apollo.MutationResult<DeleteTrackOnErrorMutation>;
 export type DeleteTrackOnErrorMutationOptions = Apollo.BaseMutationOptions<DeleteTrackOnErrorMutation, DeleteTrackOnErrorMutationVariables>;
+export const ExploreDocument = gql`
+    query Explore($search: String) {
+  explore(search: $search) {
+    tracks {
+      id
+    }
+    profiles {
+      id
+    }
+  }
+}
+    `;
+
+/**
+ * __useExploreQuery__
+ *
+ * To run a query within a React component, call `useExploreQuery` and pass it any options that fit your needs.
+ * When your component renders, `useExploreQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useExploreQuery({
+ *   variables: {
+ *      search: // value for 'search'
+ *   },
+ * });
+ */
+export function useExploreQuery(baseOptions?: Apollo.QueryHookOptions<ExploreQuery, ExploreQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ExploreQuery, ExploreQueryVariables>(ExploreDocument, options);
+      }
+export function useExploreLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ExploreQuery, ExploreQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ExploreQuery, ExploreQueryVariables>(ExploreDocument, options);
+        }
+export type ExploreQueryHookResult = ReturnType<typeof useExploreQuery>;
+export type ExploreLazyQueryHookResult = ReturnType<typeof useExploreLazyQuery>;
+export type ExploreQueryResult = Apollo.QueryResult<ExploreQuery, ExploreQueryVariables>;
 export const FeedDocument = gql`
     query Feed($page: PageInput) {
   feed(page: $page) {

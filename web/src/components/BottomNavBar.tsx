@@ -10,7 +10,7 @@ import { NavBarButton } from './Buttons/NavBarButton';
 import { NotificationBadge } from './NotificationBadge';
 
 export const BottomNavBar = () => {
-  const { dispatchShowCreateModal, dispatchShowUnderDevelopmentModal } = useModalDispatch();
+  const { dispatchShowCreateModal } = useModalDispatch();
   const router = useRouter();
   const me = useMe();
 
@@ -24,7 +24,7 @@ export const BottomNavBar = () => {
         <NavBarButton label="Home" path="/" icon={Home} color="yellow" />
         <NavBarButton
           label="Explore"
-          onClick={() => dispatchShowUnderDevelopmentModal(true)}
+          path={me ? '/explore' : '/login'}
           icon={Search}
           color="green"
         />

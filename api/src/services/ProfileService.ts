@@ -14,6 +14,10 @@ export class ProfileService extends ModelService<typeof Profile> {
     return this.findOrFail(id);
   }
 
+  async searchProfiles(search: string): Promise<Profile[]> {
+    return this.model.find({ displayName: { $regex: search } });
+  }
+
   async updateProfile(id: string, changes: Partial<Profile>): Promise<Profile> {
     const updatedProfile = await ProfileModel.findByIdAndUpdate(id, changes, { new: true });
 
