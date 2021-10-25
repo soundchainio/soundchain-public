@@ -196,6 +196,8 @@ export type ExplorePayload = {
   __typename?: 'ExplorePayload';
   profiles: Array<Profile>;
   tracks: Array<Track>;
+  totalProfiles: Scalars['Float'];
+  totalTracks: Scalars['Float'];
 };
 
 export type FeedConnection = {
@@ -1367,6 +1369,7 @@ export type ExploreQuery = (
   { __typename?: 'Query' }
   & { explore: (
     { __typename?: 'ExplorePayload' }
+    & Pick<ExplorePayload, 'totalTracks' | 'totalProfiles'>
     & { tracks: Array<(
       { __typename?: 'Track' }
       & TrackComponentFieldsFragment
@@ -2961,6 +2964,8 @@ export const ExploreDocument = gql`
     profiles {
       id
     }
+    totalTracks
+    totalProfiles
   }
 }
     ${TrackComponentFieldsFragmentDoc}`;

@@ -14,7 +14,7 @@ export class ExploreService extends Service {
   async getExplore(search?: string): Promise<ExplorePayload> {
     const profiles = await this.context.profileService.searchProfiles(search);
     const tracks = await this.context.trackService.searchTracks(search);
-    return { profiles, tracks };
+    return { profiles: profiles.list, totalProfiles: profiles.total, tracks: tracks.list, totalTracks: tracks.total, };
   }
 
   getExploreTracks(search: string, page?: PageInput): Promise<PaginateResult<Track>> {

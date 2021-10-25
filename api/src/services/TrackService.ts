@@ -24,9 +24,11 @@ export class TrackService extends ModelService<typeof Track> {
     return this.findOrFail(id);
   }
 
-  async searchTracks(search: string): Promise<Track[]> {
+  async searchTracks(search: string): Promise<{ list: Track[], total: number }> {
     const regex = new RegExp(search, 'i');
-    return this.model.find({ $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }] }).limit(5);
+    const list = await this.model.find({ $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }] }).limit(5);
+    const total = await this.model.find({ deleted: false, $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }] }).countDocuments().exec();
+    return { list, total };
   }
 
   async createTrack(profileId: string, data: Partial<Track>): Promise<Track> {

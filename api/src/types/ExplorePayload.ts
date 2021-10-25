@@ -9,4 +9,10 @@ export class ExplorePayload {
 
   @Field(() => [Track])
   tracks: Track[];
+
+  @Field()
+  totalProfiles: number;
+
+  @Field()
+  totalTracks: number;
 }

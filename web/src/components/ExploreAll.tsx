@@ -39,7 +39,7 @@ export const ExploreAll = ({ searchTerm, setSelectedTab }: ExplorePageProps) => 
   return (
     <div>
       <div className="flex items-center w-full p-4">
-        <Subtitle className="flex-1 font-bold"> Users </Subtitle>
+        <Subtitle className="flex-1 font-bold"> Users ({data?.explore.totalProfiles}) </Subtitle>
         <Button className="text-gray-300" onClick={() => setSelectedTab(ExploreTab.USERS)} variant="clear">VIEW ALL</Button>
       </div>
       {profiles?.map(profile => (
@@ -48,7 +48,7 @@ export const ExploreAll = ({ searchTerm, setSelectedTab }: ExplorePageProps) => 
         </div>
       ))}
       <div className="flex items-center w-full p-4">
-        <Subtitle className="flex-1 font-bold"> Tracks </Subtitle>
+        <Subtitle className="flex-1 font-bold"> Tracks ({data?.explore.totalTracks}) </Subtitle>
         <Button className="text-gray-300" onClick={() => setSelectedTab(ExploreTab.TRACKS)} variant="clear">VIEW ALL</Button>
       </div>
       {tracks?.map((track, index) => (

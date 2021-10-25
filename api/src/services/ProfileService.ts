@@ -14,8 +14,10 @@ export class ProfileService extends ModelService<typeof Profile> {
     return this.findOrFail(id);
   }
 
-  async searchProfiles(search: string): Promise<Profile[]> {
-    return this.model.find({ displayName: new RegExp(search, 'i') }).limit(5);
+  async searchProfiles(search: string): Promise<{ list: Profile[], total: number }> {
+    const list = await this.model.find({ displayName: new RegExp(search, 'i') }).limit(5);
+    const total = await this.model.find({ displayName: new RegExp(search, 'i') }).countDocuments().exec();
+    return { list, total };
   }
 
   async updateProfile(id: string, changes: Partial<Profile>): Promise<Profile> {
