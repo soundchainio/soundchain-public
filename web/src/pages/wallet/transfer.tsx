@@ -1,20 +1,16 @@
 import { TopNavBarProps } from 'components/TopNavBar';
 import { BackButton } from 'components/Buttons/BackButton';
 import { useMe } from 'hooks/useMe';
-import { useEffect, useState } from 'react';
+import { useModalDispatch } from 'contexts/providers/modal';
 import { Layout } from 'components/Layout';
 import Head from 'next/head';
-import useMagic from 'hooks/useMagic';
-import useMetaMask from 'hooks/useMetaMask';
-import { testNetwork } from 'lib/blockchainNetworks';
+import { useMagicContext } from 'hooks/useMagicContext';
 import { Button } from 'components/Button';
 import { Form, Formik } from 'formik';
 import { Label } from 'components/Label';
 import { InputField } from 'components/InputField';
-import { MetaMask } from 'icons/MetaMask';
-import { Logo } from 'icons/Logo';
-import { useRouter } from 'next/dist/client/router';
 import { Matic } from 'icons/Matic';
+import * as yup from 'yup';
 
 const topNovaBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
@@ -23,19 +19,24 @@ const topNovaBarProps: TopNavBarProps = {
 
 export default function TransferPage() {
   const me = useMe();
-  const router = useRouter();
-  const { account, web3, balance } = useMagic();
-  const [connected, setConnected] = useState(false);
-
-  useEffect(() => {
-    if (!account || !web3) {
-      setConnected(false);
-      return;
-    }
-    setConnected(true); 
-  }, [account, web3]);
+  const { account, balance } = useMagicContext();
+  const { dispatchShowTransferConfirmationModal } = useModalDispatch();
 
   if (!me) return null;
+
+  interface FormValues {
+    recipient: string;
+    amount: string;
+    gasPrice: string,
+    gasLimit: number,
+  }
+  
+  const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
+    recipient: yup.string().required('Please enter a valid wallet address'),
+    amount: yup.string().required('Please enter a matic amount'),
+    gasPrice: yup.string().default(() => '3.0'),
+    gasLimit: yup.number().default(() => 21000)
+  });
 
   const initialValues = {
     recipient: '',
@@ -45,7 +46,7 @@ export default function TransferPage() {
   };
   
   const handleSubmit = () => {
-    router.push('wallet/transfer/confirm')
+    dispatchShowTransferConfirmationModal(true)
   }
 
   return (
@@ -55,33 +56,42 @@ export default function TransferPage() {
         <meta name="description" content="Wallet" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      
-        <Formik initialValues={initialValues} onSubmit={handleSubmit}>
+      <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
           <Form className="flex flex-col w-full h-full justify-between" autoComplete="off">
-            <div className="flex flex-col mb-auto space-y-6 p-4">
-              <div className="space-y-1">
-                <Label className="uppercase" textSize="xs">
-                  Recipient Wallet Address
-                </Label>
-                <InputField type="text" name="recipient" placeholder="0xDbaF8fB344D9E57fff48659A4Eb718c480A1Fd62" />
+            <div className="flex flex-col mb-auto space-y-6 p-4 h-full justify-between">
+              <div className="flex flex-col justify-between space-y-6">
+                <div className="space-y-2">
+                  <span className="text-gray-80 text-sm font-bold">
+                    Please enter recipient wallet address:
+                  </span>
+                  <InputField type="text" label="wallet address" name="recipient" placeholder="0xDbaF8fB344D9E57fff48659A4Eb718c480A1Fd62" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="uppercase font-bold" textSize="sm">
+                    Amount to send: 
+                  </Label>
+                  <InputField type="text" name="amount" placeholder="00.00" icon={Matic} />
+                </div>
               </div>
-              <div className="space-y-1">
-                <Label className="uppercase" textSize="xs">
-                  Amount to send
-                </Label>
-                <InputField type="text" name="amount" placeholder="00.00" />
-              </div>
-              <div className="space-y-3">
-                <Label className="uppercase" textSize="xs">Max gas fee</Label>
-                <div className="flex space-x-2">
-                  <div className="space-y-1">
-                    <Label className="uppercase" textSize="xs">Gas Price</Label>
-                    <InputField type="text" name="gasPrice" />
+              <div>
+                <div className="space-y-3">
+                  <span className="text-gray-80 text-sm uppercase font-bold">Estimated Gas Fee: </span>
+                  <div className="flex space-x-2">
+                    <div className="space-y-1">
+                      <InputField type="text" label="gas price" name="gasPrice" disabled />
+                    </div>
+                    <div className="space-y-1">
+                      <InputField type="text" label="gas limit" name="gasLimit" disabled />
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <Label className="uppercase" textSize="xs">Gas limit</Label>
-                    <InputField type="text" name="gasLimit" />
-                  </div>
+                </div>
+                <div className="space-y-3 flex self-end items-end content-end">
+                  <p className="py-6 text-xs text-gray-80 text-left">
+                    Gas fees are paid to crypto miners who process transactions on the Polygon network. 
+                    SoundChain does not profit from gas fees. <br/><br/>
+                  
+                    Gas fees are set by the network and fluctuate based on network traffic and transaction complexity.
+                  </p>
                 </div>
               </div>
             </div>
@@ -94,14 +104,13 @@ export default function TransferPage() {
                 </div>
               </div>
               <div className="w-6/12">
-                <Button className="p-1" type="submit" loading={!connected} disabled={!connected}>
+                <Button className="p-1" type="submit" variant="orange">
                   SEND TOKENS
                 </Button>
               </div>
             </div>
           </Form>
         </Formik>
-      
     </Layout>
   )
 }

@@ -9,7 +9,7 @@ interface InputFieldProps extends React.ComponentPropsWithoutRef<'input'> {
   icon?: (props: React.ComponentProps<'svg'>) => JSX.Element;
 }
 
-const commonInputClasses = `appearance-none block w-full p-3 rounded-md border-2 bg-gray-30 border-gray-80 text-gray-200`;
+const commonInputClasses = `relative appearance-none block w-full p-3 rounded-md border-2 bg-gray-30 border-gray-80 text-gray-200`;
 const validInputClasses = `${commonInputClasses} border-gray-80`;
 const errorInputClasses = `${commonInputClasses} border-green-500`;
 
@@ -18,7 +18,7 @@ export const InputField = ({ label, icon: Icon, ...props }: InputFieldProps) => 
   return (
     <div className={meta.touched && meta.error ? errorInputClasses : validInputClasses}>
       {label && (
-        <Label className="block font-bold text-sm" htmlFor={props.name}>
+        <Label className="block font-bold text-sm uppercase" htmlFor={props.name}>
           {label}
         </Label>
       )}
@@ -33,7 +33,7 @@ export const InputField = ({ label, icon: Icon, ...props }: InputFieldProps) => 
           <Icon className="h-5 w-5 text-gray-400" aria-hidden="true" />
         </div>
       )}
-      {meta.touched && meta.error ? <div className="text-green-500 pl-1 text-sm">{meta.error}</div> : null}
+      {meta.touched && meta.error ? <div className="text-green-500 text-sm">{meta.error}</div> : null}
     </div>
   );
 };

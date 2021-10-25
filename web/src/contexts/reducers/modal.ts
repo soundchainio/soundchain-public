@@ -8,6 +8,7 @@ import {
   ShowCreatePayload,
   ShowNewPostPayload,
   ShowReactionsPayload,
+  ShowTransferConfirmationPayload,
   ShowUnderDevelopmentPayload,
 } from 'contexts/payloads/modal';
 import { ReactionType } from 'lib/graphql';
@@ -30,6 +31,7 @@ export interface ModalState {
     total?: number;
     top?: ReactionType[];
   };
+  showTransferConfirmation: boolean;
 }
 
 export const initialModalState = {
@@ -49,6 +51,7 @@ export const initialModalState = {
     top: [],
     total: undefined,
   },
+  showTransferConfirmation: false,
 };
 
 export const modalReducer = (state: ModalState, action: Action) => {
@@ -112,6 +115,12 @@ export const modalReducer = (state: ModalState, action: Action) => {
         ...state,
         showAudioPlayer: (action.payload as ShowAudioPlayerPayload).show,
         anyModalOpened: (action.payload as ShowAudioPlayerPayload).show,
+      };
+    case ModalActionTypes.SHOW_TRANSFER_CONFIRMATION: 
+      return {
+        ...state,
+        showTransferConfirmation: (action.payload as ShowTransferConfirmationPayload).show,
+        anyModalOpened: (action.payload as ShowTransferConfirmationPayload).show,
       };
     default:
       return state;

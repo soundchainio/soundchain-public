@@ -36,6 +36,10 @@ export interface ShowAudioPlayerPayload {
   show: boolean;
 }
 
+export interface ShowTransferConfirmationPayload {
+  show: boolean;
+}
+
 export type ModalPayload =
   | ShowNewPostPayload
   | SetEditPostIdPayload
@@ -44,4 +48,5 @@ export type ModalPayload =
   | ShowUnderDevelopmentPayload
   | ShowReactionsPayload
   | ShowCreatePayload
-  | ShowAudioPlayerPayload;
+  | ShowAudioPlayerPayload
+  | ShowTransferConfirmationPayload;
