@@ -6,8 +6,10 @@ import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import { useModalDispatch } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
+import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
+import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
 import {
   CreateListingItemInput,
@@ -56,6 +58,7 @@ export default function SellPage({ trackId }: TrackPageProps) {
   const me = useMe();
   const { data } = useTrackQuery({ variables: { id: trackId } });
   const { account, web3 } = useWalletContext();
+  const maxGasFee = useMaxGasFee();
   const { dispatchShowApproveModal } = useModalDispatch();
   const [createListingItem] = useCreateListingItemMutation();
   const [loading, setLoading] = useState(false);
@@ -70,14 +73,14 @@ export default function SellPage({ trackId }: TrackPageProps) {
 
   useEffect(() => {
     const fetchIsOwner = async () => {
-      if (!account || !web3 || !data?.track.nftData?.tokenId) {
+      if (!account || !web3 || !data?.track.nftData?.tokenId || !isTokenOwner) {
         return;
       }
       const isTokenOwnerRes = await isTokenOwner(web3, data.track.nftData.tokenId, account);
       setIsOwner(isTokenOwnerRes);
     };
     fetchIsOwner();
-  }, [account, web3, data?.track.nftData]);
+  }, [account, web3, data?.track.nftData, isTokenOwner]);
 
   useEffect(() => {
     getListingItem();
@@ -136,8 +139,15 @@ export default function SellPage({ trackId }: TrackPageProps) {
         <Track trackId={trackId} />
       </div>
       <ListNFT onSetPrice={price => setPrice(price)} />
-      <div className="flex justify-center pb-3">
-        <Button className="w-40" variant="list-nft" disabled={price <= 0} onClick={handleSell} loading={loading}>
+      <div className="flex p-4">
+        <div className="flex-1 font-black text-xs text-gray-80">
+          <p>Max gas fee</p>
+          <div className="flex items-center gap-1">
+            <Matic />
+            <div className="text-white">{maxGasFee}</div>MATIC
+          </div>
+        </div>
+        <Button variant="list-nft" disabled={price <= 0} onClick={handleSell} loading={loading}>
           <div className="px-4 font-bold">LIST NFT</div>
         </Button>
       </div>
