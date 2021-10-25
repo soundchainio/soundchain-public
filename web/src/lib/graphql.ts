@@ -1349,7 +1349,7 @@ export type ExploreQuery = (
     { __typename?: 'ExplorePayload' }
     & { tracks: Array<(
       { __typename?: 'Track' }
-      & Pick<Track, 'id'>
+      & TrackComponentFieldsFragment
     )>, profiles: Array<(
       { __typename?: 'Profile' }
       & Pick<Profile, 'id'>
@@ -2896,14 +2896,14 @@ export const ExploreDocument = gql`
     query Explore($search: String) {
   explore(search: $search) {
     tracks {
-      id
+      ...TrackComponentFields
     }
     profiles {
       id
     }
   }
 }
-    `;
+    ${TrackComponentFieldsFragmentDoc}`;
 
 /**
  * __useExploreQuery__

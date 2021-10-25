@@ -1,7 +1,7 @@
 query Explore($search: String) {
   explore(search: $search) {
     tracks {
-      id
+     ...TrackComponentFields
     }
     profiles {
       id

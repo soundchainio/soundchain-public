@@ -26,7 +26,7 @@ export class TrackService extends ModelService<typeof Track> {
 
   async searchTracks(search: string): Promise<Track[]> {
     const regex = new RegExp(search, 'i');
-    return this.model.find({ $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }] });
+    return this.model.find({ $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }] }).limit(5);
   }
 
   async createTrack(profileId: string, data: Partial<Track>): Promise<Track> {

@@ -15,7 +15,7 @@ export class ProfileService extends ModelService<typeof Profile> {
   }
 
   async searchProfiles(search: string): Promise<Profile[]> {
-    return this.model.find({ displayName: new RegExp(search, 'i') });
+    return this.model.find({ displayName: new RegExp(search, 'i') }).limit(5);
   }
 
   async updateProfile(id: string, changes: Partial<Profile>): Promise<Profile> {

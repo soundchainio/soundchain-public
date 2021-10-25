@@ -1,21 +1,23 @@
-import { useExploreQuery } from 'lib/graphql';
-import React, { useEffect } from 'react';
+import { ExploreAll } from 'components/ExploreAll';
+import { ExploreTabs } from 'components/ExploreTabs';
+import { ExploreTracks } from 'components/ExploreTracks';
+import { ExploreUsers } from 'components/ExploreUsers';
+import React, { useState } from 'react';
+import { ExploreTab } from 'types/ExploreTabType';
 
 interface ExplorePageProps {
   searchTerm?: string;
 }
 
 export const Explore = ({ searchTerm }: ExplorePageProps) => {
-  const { data, loading } = useExploreQuery({ variables: { search: searchTerm } });
-
-  useEffect(() => {
-    if (data) console.log('data: ', data);
-  }, [data]);
+  const [selectedTab, setSelectedTab] = useState<ExploreTab>(ExploreTab.ALL);
 
   return (
-    <div>
-      {/* {loading && <div> loading... </div>} */}
-      explore component - {searchTerm}
+    <div className="pt-2 bg-black">
+      <ExploreTabs selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
+      {selectedTab === ExploreTab.ALL && <ExploreAll setSelectedTab={setSelectedTab} searchTerm={searchTerm} />}
+      {selectedTab === ExploreTab.USERS && <ExploreUsers searchTerm={searchTerm} />}
+      {selectedTab === ExploreTab.TRACKS && <ExploreTracks searchTerm={searchTerm} />}
     </div>
   );
 };

@@ -6,7 +6,7 @@ import { useTrackLazyQuery } from 'lib/graphql';
 import React, { useEffect } from 'react';
 import Asset from './Asset';
 
-type Song = {
+export type Song = {
   src: string;
   title?: string | null;
   trackId: string;

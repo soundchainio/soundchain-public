@@ -8,12 +8,8 @@ export class ExploreService extends Service {
   }
 
   async getExplore(profileId: string, search?: string): Promise<ExplorePayload> {
-
     const profiles = await this.context.profileService.searchProfiles(search);
     const tracks = await this.context.trackService.searchTracks(search);
-
-    console.log('mah oe, profileid:', profileId);
-    console.log('mah oe, search:', search);
     return { profiles, tracks };
   }
 
