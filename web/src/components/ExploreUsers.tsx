@@ -1,16 +1,38 @@
 import { ProfileListItem } from 'components/ProfileListItem';
-import { useExploreQuery } from 'lib/graphql';
+import { PageInput, useExploreUsersQuery } from 'lib/graphql';
 import React from 'react';
+import { InfiniteLoader } from './InfiniteLoader';
 
 interface ExplorePageProps {
   searchTerm?: string;
 }
 
-export const ExploreUsers = ({ searchTerm }: ExplorePageProps) => {
-  const { data, loading } = useExploreQuery({ variables: { search: searchTerm } });
-  const profiles = data?.explore.profiles;
+const pageSize = 15;
 
-  if (loading) return <div> loading... </div>;
+export const ExploreUsers = ({ searchTerm }: ExplorePageProps) => {
+  const firstPage: PageInput = { first: pageSize };
+  const { data, loading, fetchMore } = useExploreUsersQuery({
+    variables: { search: searchTerm, page: firstPage },
+  });
+
+  if (!data) return null;
+
+  if (loading) return <div>loading...</div>;
+
+  const loadNext = () => {
+    fetchMore({
+      variables: {
+        search: searchTerm,
+        page: {
+          first: pageSize,
+          after: pageInfo.endCursor,
+          inclusive: false,
+        },
+      }
+    });
+  };
+
+  const { nodes: profiles, pageInfo } = data?.exploreUsers;
 
   return (
     <div>
@@ -19,6 +41,7 @@ export const ExploreUsers = ({ searchTerm }: ExplorePageProps) => {
           <ProfileListItem profileId={profile.id} />
         </div>
       ))}
+      {pageInfo.hasNextPage && <InfiniteLoader loadMore={loadNext} loadingMessage="Loading Users" />}
     </div>
   );
 };

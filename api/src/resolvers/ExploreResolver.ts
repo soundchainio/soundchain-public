@@ -1,8 +1,9 @@
 import { Arg, Authorized, Ctx, Query, Resolver } from 'type-graphql';
-import { CurrentUser } from '../decorators/current-user';
-import { User } from '../models/User';
 import { Context } from '../types/Context';
 import { ExplorePayload } from '../types/ExplorePayload';
+import { PageInput } from '../types/PageInput';
+import { ProfileConnection } from '../types/ProfileConnection';
+import { TrackConnection } from '../types/TrackConnection';
 
 @Resolver()
 export class ExploreResolver {
@@ -11,8 +12,27 @@ export class ExploreResolver {
   explore(
     @Ctx() { exploreService }: Context,
     @Arg('search', { nullable: true }) search: string,
-    @CurrentUser() { profileId }: User,
   ): Promise<ExplorePayload> {
-    return exploreService.getExplore(profileId, search);
+    return exploreService.getExplore(search);
+  }
+
+  @Query(() => TrackConnection)
+  @Authorized()
+  exploreTracks(
+    @Ctx() { exploreService }: Context,
+    @Arg('search', { nullable: true }) search: string,
+    @Arg('page', { nullable: true }) page: PageInput,
+  ): Promise<TrackConnection> {
+    return exploreService.getExploreTracks(search, page);
+  }
+
+  @Query(() => ProfileConnection)
+  @Authorized()
+  exploreUsers(
+    @Ctx() { exploreService }: Context,
+    @Arg('search', { nullable: true }) search: string,
+    @Arg('page', { nullable: true }) page: PageInput,
+  ): Promise<ProfileConnection> {
+    return exploreService.getExploreUsers(search, page);
   }
 }
