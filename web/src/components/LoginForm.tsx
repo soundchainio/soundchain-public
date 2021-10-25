@@ -1,5 +1,6 @@
 import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
+import { config } from 'config';
 import { Form, Formik } from 'formik';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
@@ -35,7 +36,7 @@ export const LoginForm = () => {
       magic.preload();
       await magic.auth.loginWithMagicLink({
         email: values.email,
-        redirectURI: 'http://localhost:3000/callback-login',
+        redirectURI: `${config.domainUrl}/callback-login`,
       });
       setEmailLinkSent(true);
     } catch (error) {
