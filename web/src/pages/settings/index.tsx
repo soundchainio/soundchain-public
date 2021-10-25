@@ -5,6 +5,7 @@ import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useModalDispatch } from 'contexts/providers/modal';
 import { useMe } from 'hooks/useMe';
+import { RightArrow } from 'icons/RightArrow';
 import Head from 'next/head';
 import Image from 'next/image';
 import NextLink from 'next/link';
@@ -21,9 +22,12 @@ interface LinkProps {
 function Link({ label, value, to }: LinkProps) {
   return (
     <NextLink href={`/settings${to}`}>
-      <a className="block w-full px-4">
-        <span className="block text-gray-50"> {label} </span>
-        <span className="block text-white font-semibold"> {value} </span>
+      <a className="w-full px-4 flex items-center justify-center h-16">
+        <div className="flex-1">
+          <span className="block text-gray-50 text-xs font-bold uppercase"> {label} </span>
+          <span className="block text-white font-bold mt-1"> {value} </span>
+        </div>
+        <RightArrow />
       </a>
     </NextLink>
   );
@@ -32,9 +36,12 @@ function Link({ label, value, to }: LinkProps) {
 function FakeLink({ label, value, onClick }: LinkProps) {
   return (
     <div onClick={onClick}>
-      <a className="block w-full px-4">
-        <span className="block text-gray-50"> {label} </span>
-        <span className="block text-white font-semibold"> {value} </span>
+      <a className="w-full px-4 flex items-center justify-center h-16">
+        <div className="flex-1">
+          <span className="block text-gray-50 text-xs font-bold uppercase"> {label} </span>
+          <span className="block text-white font-bold mt-1"> {value} </span>
+        </div>
+        <RightArrow />
       </a>
     </div>
   );
@@ -42,6 +49,7 @@ function FakeLink({ label, value, onClick }: LinkProps) {
 
 const topNovaBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
+  title: 'Account Settings',
 };
 
 export default function SettingsPage() {
@@ -61,8 +69,8 @@ export default function SettingsPage() {
         <meta name="description" content="Account Settings" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div>
-        <div className="flex flex-row p-4">
+      <div className="flex flex-col gap-8 mt-8">
+        <div className="flex flex-row px-4">
           <NextLink href="/settings/profile-picture">
             <div className="flex flex-col w-5/12 self-center justify-center items-center space-y-2 cursor-pointer">
               <Avatar profile={me.profile} pixels={80} className="h-[80px]" linkToProfile={false} />
@@ -88,11 +96,11 @@ export default function SettingsPage() {
             </div>
           </NextLink>
         </div>
-        <div className="bg-gray-25 grid gap-4 py-4">
+        <div className="bg-gray-15 grid">
           <FakeLink
             to="/email"
             onClick={() => dispatchShowUnderDevelopmentModal(true)}
-            label="Email"
+            label="Email address"
             value={me.email}
           />
           <Link to="/name" label="Name" value={me.profile.displayName} />
@@ -100,7 +108,7 @@ export default function SettingsPage() {
           <Link to="/bio" label="Bio" value={me.profile.bio || 'Add a bio...'} />
           <Link to="/musician-type" label="Musician Type(s)" value={musicianTypes || 'Not selected'} />
           <Link to="/favorite-genres" label="Favorite Genre(s)" value={genres || 'Not selected'} />
-          <Link to="/social-links" label="Social Links" value={'Click to view your social links' || 'Not selected'} />
+          <Link to="/social-links" label="Social Link(s)" value={'Click to view your social links' || 'Not selected'} />
         </div>
       </div>
     </Layout>

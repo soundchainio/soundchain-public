@@ -1,3 +1,4 @@
+import { DownArrow } from 'icons/DownArrow';
 import { Profile, useFollowersLazyQuery, useFollowingLazyQuery } from 'lib/graphql';
 import { useEffect } from 'react';
 import { FollowModalType } from 'types/FollowModalType';
@@ -50,14 +51,16 @@ export const FollowModal = ({ show, profileId, modalType, onClose }: FollowersMo
     <Modal
       show={show}
       title={getTitle()}
-      leftButton={
-        <button className="p-2 w-full text-gray-400 font-bold flex-1 text-center" onClick={onClose}>
-          Close
-        </button>
+      rightButton={
+        <div className="flex justify-end mr-6">
+          <button aria-label="Close" className="w-10 h-10 flex justify-center items-center" onClick={onClose}>
+            <DownArrow />
+          </button>
+        </div>
       }
       onClose={onClose}
     >
-      <>
+      <div className="bg-gray-25 h-full">
         {modalType === FollowModalType.FOLLOWERS && (
           <>
             {!followersData && (
@@ -65,7 +68,7 @@ export const FollowModal = ({ show, profileId, modalType, onClose }: FollowersMo
                 <LoaderAnimation loadingMessage="Loading Followers" />
               </div>
             )}
-            <div className="space-y-6 ">
+            <div className="space-y-6 px-4 py-3">
               {followersData?.followers.nodes.map(follower => (
                 <FollowItem key={follower.id} profile={follower.followerProfile as Profile} />
               ))}
@@ -82,7 +85,7 @@ export const FollowModal = ({ show, profileId, modalType, onClose }: FollowersMo
                 <LoaderAnimation loadingMessage="Loading Following" />
               </div>
             )}
-            <div className="space-y-6">
+            <div className="space-y-6 px-4 py-3">
               {followingData?.following.nodes.map(following => (
                 <FollowItem key={following.id} profile={following.followedProfile as Profile} />
               ))}
@@ -92,7 +95,7 @@ export const FollowModal = ({ show, profileId, modalType, onClose }: FollowersMo
             )}
           </>
         )}
-      </>
+      </div>
     </Modal>
   );
 };
