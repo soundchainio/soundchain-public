@@ -2,6 +2,7 @@ import { ChatAltIcon, RefreshIcon, ShareIcon, ThumbUpIcon } from '@heroicons/rea
 import { useModalDispatch } from 'contexts/providers/modal';
 import { useMe } from 'hooks/useMe';
 import { ReactionEmoji } from 'icons/ReactionEmoji';
+import { delayFocus } from 'lib/delayFocus';
 import { ReactionType } from 'lib/graphql';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
@@ -9,7 +10,6 @@ import React, { useEffect, useState } from 'react';
 import { isMobile } from 'utils/IsMobile';
 import { ReactionSelector } from './ReactionSelector';
 import { SharePostLink } from './SharePostLink';
-import { delayFocus } from 'lib/delayFocus';
 
 interface PostActionsProps {
   postId: string;

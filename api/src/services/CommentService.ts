@@ -43,15 +43,15 @@ export class CommentService extends ModelService<typeof Comment> {
     if (comment.profileId !== params.profileId) {
       throw new Error(`Error while deleting a comment: The user trying to delete is not the author of the comment.`);
     }
-    await CommentModel.deleteOne(comment);
+    await CommentModel.updateOne({ _id: params.commentId }, { deleted: true });
     return comment;
   }
 
   countComments(postId: string): Promise<number> {
-    return CommentModel.countDocuments({ postId }).exec();
+    return CommentModel.countDocuments({ postId, deleted: false }).exec();
   }
 
   getComments(postId: string, page?: PageInput): Promise<PaginateResult<Comment>> {
-    return this.paginate({ filter: { postId }, sort: { field: 'createdAt', order: SortOrder.DESC }, page });
+    return this.paginate({ filter: { postId, deleted: false }, sort: { field: 'createdAt', order: SortOrder.DESC }, page });
   }
 }

@@ -19,6 +19,10 @@ export class Comment extends Model {
   @prop({ required: true })
   profileId: string;
 
+  @Field({ nullable: true })
+  @prop({ default: false })
+  deleted?: boolean;
+
   @Field(() => Date)
   createdAt: Date;
 

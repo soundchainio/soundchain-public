@@ -3,7 +3,7 @@ import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
 import { useWalletContext } from 'hooks/useWalletContext';
-import { useSetIsApprovedOnMarketplaceMutation } from 'lib/graphql';
+import { MeDocument, useSetIsApprovedOnMarketplaceMutation } from 'lib/graphql';
 import React, { useState } from 'react';
 import { Receipt } from 'types/NftTypes';
 
@@ -13,8 +13,7 @@ export const ApproveModal = () => {
   const { dispatchShowApproveModal } = useModalDispatch();
   const [setIsApprovedMutation] = useSetIsApprovedOnMarketplaceMutation();
   const { approveMarketplace } = useBlockchain();
-
-  const [isApproved, setIsApproved] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const isOpen = modalState.showApprove;
 
@@ -22,17 +21,22 @@ export const ApproveModal = () => {
     dispatchShowApproveModal(false);
   };
 
-  const setApprove = async () => {
+  const setApprove = () => {
     if (!web3 || !account) {
       return;
     }
-    await approveMarketplace(web3, account, onReceipt);
+    setLoading(true);
+    approveMarketplace(web3, account, onReceipt);
   };
 
-  const onReceipt = (receipt: Receipt) => {
-    if (receipt.status) {
-      setIsApprovedMutation();
-      setIsApproved(true);
+  const onReceipt = async (receipt: Receipt) => {
+    try {
+      if (receipt.status) {
+        await setIsApprovedMutation({ refetchQueries: [MeDocument] });
+      }
+    } finally {
+      setLoading(false);
+      dispatchShowApproveModal(false);
     }
   };
 
@@ -47,11 +51,15 @@ export const ApproveModal = () => {
         </button>
       }
     >
-      <div className="flex flex-col justify-center m-auto">
-        <Button variant="rainbow-xs" className="" onClick={setApprove}>
-          Set Approve
-        </Button>
-        <p className="text-lg text-gray-400">{isApproved ? 'Approved' : 'Not Approved'}</p>
+      <div className="flex flex-col justify-evenly items-center p-4 gap-4 h-full">
+        <div className="flex flex-col items-center gap-4">
+          <div className="text-white font-bold text-center">
+            You must approve the marketplace to trade your Soundchain NFT
+          </div>
+          <Button variant="rainbow-xs" className="w-40" onClick={setApprove} loading={loading}>
+            Aprove
+          </Button>
+        </div>
       </div>
     </Modal>
   );

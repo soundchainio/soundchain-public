@@ -1,16 +1,17 @@
 import { BottomSheet } from 'components/BottomSheet';
 import { BackButton } from 'components/Buttons/BackButton';
+import { InboxButton } from 'components/Buttons/InboxButton';
 import { Comments } from 'components/Comments';
 import { Layout } from 'components/Layout';
 import { NewCommentForm } from 'components/NewCommentForm';
+import { NotAvailableMessage } from 'components/NotAvailableMessage';
 import { Post } from 'components/Post';
 import { TopNavBarProps } from 'components/TopNavBar';
+import { useMe } from 'hooks/useMe';
 import { cacheFor, createApolloClient } from 'lib/apollo';
-import { PostDocument } from 'lib/graphql';
+import { PostDocument, usePostQuery } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
 import { ParsedUrlQuery } from 'querystring';
-import { useMe } from 'hooks/useMe';
-import { InboxButton } from 'components/Buttons/InboxButton';
 
 export interface PostPageProps {
   postId: string;
@@ -44,6 +45,8 @@ export const getServerSideProps: GetServerSideProps<PostPageProps, PostPageParam
 
 export default function PostPage({ postId }: PostPageProps) {
   const me = useMe();
+  const { data } = usePostQuery({ variables: { id: postId } });
+  const deleted = data?.post.deleted;
 
   const topNovaBarProps: TopNavBarProps = {
     leftButton: <BackButton />,
@@ -52,13 +55,19 @@ export default function PostPage({ postId }: PostPageProps) {
 
   return (
     <Layout topNavBarProps={topNovaBarProps}>
-      <Post postId={postId} />
-      <div className="pb-12">
-        <Comments postId={postId} />
-      </div>
-      <BottomSheet>
-        <NewCommentForm postId={postId} />
-      </BottomSheet>
+      {deleted ?
+        <NotAvailableMessage type="post" />
+        :
+        <div>
+          <Post postId={postId} />
+          <div className="pb-12">
+            <Comments postId={postId} />
+          </div>
+          <BottomSheet>
+            <NewCommentForm postId={postId} />
+          </BottomSheet>
+        </div>
+      }
     </Layout>
   );
 }

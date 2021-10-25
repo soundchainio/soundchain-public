@@ -9,6 +9,7 @@ import { ListingItemResolver } from './ListingItemResolver';
 import { MessageResolver } from './MessageResolver';
 import { MintingRequestResolver } from './MintingRequestResolver';
 import { NewPostNotificationResolver } from './NewPostNotificationResolver';
+import { NFTSoldNotificationResolver } from './NFTSoldNotificationResolver';
 import { NotificationResolver } from './NotificationResolver';
 import { PinningResolver } from './PinningResolver';
 import { PostResolver } from './PostResolver';
@@ -40,4 +41,5 @@ export const resolvers = [
   PinningResolver,
   ListingItemResolver,
   ExploreResolver,
+  NFTSoldNotificationResolver,
 ] as const;

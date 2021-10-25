@@ -5,6 +5,9 @@ import { Field, InputType, ObjectType } from 'type-graphql';
 @InputType('CreateListingItemInput')
 @modelOptions({ schemaOptions: { _id: false } })
 export class CreateListingItemData {
+  @Field({ nullable: true })
+  readonly id?: string;
+
   @Field()
   owner: string;
 
@@ -18,7 +21,7 @@ export class CreateListingItemData {
   quantity: number;
 
   @Field()
-  pricePerItem: number;
+  pricePerItem: string;
 
   @Field()
   startingTime: number;

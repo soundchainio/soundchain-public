@@ -3,7 +3,7 @@ import Image from 'next/image';
 import NextLink from 'next/link';
 import React from 'react';
 
-interface AvatarProps extends React.ComponentPropsWithoutRef<'div'> {
+interface AvatarProps extends React.ComponentPropsWithoutRef<'a'> {
   profile: Partial<Profile>;
   pixels?: number;
   className?: string;
@@ -20,7 +20,7 @@ export const Avatar = ({ profile, pixels = 30, linkToProfile = true, ...props }:
   };
 
   return maybeLinkToProfile(
-    <div {...props}>
+    <a {...props}>
       {
         <Image
           alt="Profile picture"
@@ -31,6 +31,6 @@ export const Avatar = ({ profile, pixels = 30, linkToProfile = true, ...props }:
           objectFit="cover"
         />
       }
-    </div>,
+    </a>,
   );
 };

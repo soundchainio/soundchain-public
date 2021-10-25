@@ -71,6 +71,7 @@ export type Comment = {
   body: Scalars['String'];
   postId: Scalars['String'];
   profileId: Scalars['String'];
+  deleted: Maybe<Scalars['Boolean']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   post: Post;
@@ -97,21 +98,23 @@ export type CommentNotification = {
 };
 
 export type CreateListingItemInput = {
+  id?: Maybe<Scalars['String']>;
   owner: Scalars['String'];
   nft: Scalars['String'];
   tokenId: Scalars['Float'];
   quantity: Scalars['Float'];
-  pricePerItem: Scalars['Float'];
+  pricePerItem: Scalars['String'];
   startingTime: Scalars['Float'];
 };
 
 export type CreateListingItemType = {
   __typename?: 'CreateListingItemType';
+  id: Maybe<Scalars['String']>;
   owner: Scalars['String'];
   nft: Scalars['String'];
   tokenId: Scalars['Float'];
   quantity: Scalars['Float'];
-  pricePerItem: Scalars['Float'];
+  pricePerItem: Scalars['String'];
   startingTime: Scalars['Float'];
 };
 
@@ -152,6 +155,7 @@ export type CreateTrackInput = {
   artist?: Maybe<Scalars['String']>;
   album?: Maybe<Scalars['String']>;
   releaseYear?: Maybe<Scalars['Float']>;
+  copyright?: Maybe<Scalars['String']>;
   genres?: Maybe<Array<Genre>>;
 };
 
@@ -213,6 +217,14 @@ export type FilterPostInput = {
 
 export type FilterTrackInput = {
   profileId?: Maybe<Scalars['String']>;
+};
+
+export type FinishListingItemInput = {
+  sellerProfileId: Scalars['String'];
+  buyerProfileId: Scalars['String'];
+  tokenId: Scalars['Float'];
+  trackId: Scalars['String'];
+  price: Scalars['String'];
 };
 
 export type Follow = {
@@ -346,6 +358,7 @@ export type Mutation = {
   deleteComment: DeleteCommentPayload;
   createListingItem: CreateListingItemType;
   setNotValid: CreateListingItemType;
+  finishListing: CreateListingItemType;
   sendMessage: SendMessagePayload;
   resetUnreadMessageCount: Profile;
   createMintingRequest: MintingRequestPayload;
@@ -393,6 +406,11 @@ export type MutationCreateListingItemArgs = {
 
 export type MutationSetNotValidArgs = {
   tokenId: Scalars['Float'];
+};
+
+
+export type MutationFinishListingArgs = {
+  input: FinishListingItemInput;
 };
 
 
@@ -529,6 +547,19 @@ export type NftDataType = {
   quantity: Maybe<Scalars['Float']>;
 };
 
+export type NftSoldNotification = {
+  __typename?: 'NFTSoldNotification';
+  type: NotificationType;
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  id: Scalars['String'];
+  buyerName: Scalars['String'];
+  buyerPicture: Scalars['String'];
+  buyerProfileId: Scalars['String'];
+  trackId: Scalars['String'];
+  price: Scalars['String'];
+};
+
 export type NewPostNotification = {
   __typename?: 'NewPostNotification';
   type: NotificationType;
@@ -543,7 +574,7 @@ export type NewPostNotification = {
   track: Maybe<Track>;
 };
 
-export type Notification = CommentNotification | ReactionNotification | FollowerNotification | NewPostNotification;
+export type Notification = CommentNotification | ReactionNotification | FollowerNotification | NewPostNotification | NftSoldNotification;
 
 export type NotificationConnection = {
   __typename?: 'NotificationConnection';
@@ -555,7 +586,8 @@ export enum NotificationType {
   Comment = 'Comment',
   Reaction = 'Reaction',
   Follower = 'Follower',
-  NewPost = 'NewPost'
+  NewPost = 'NewPost',
+  NftSold = 'NFTSold'
 }
 
 export type PageInfo = {
@@ -596,6 +628,7 @@ export type Post = {
   body: Maybe<Scalars['String']>;
   mediaLink: Maybe<Scalars['String']>;
   repostId: Maybe<Scalars['String']>;
+  deleted: Maybe<Scalars['Boolean']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   profile: Profile;
@@ -921,9 +954,11 @@ export type Track = {
   artworkUrl: Maybe<Scalars['String']>;
   artist: Maybe<Scalars['String']>;
   album: Maybe<Scalars['String']>;
+  copyright: Maybe<Scalars['String']>;
   releaseYear: Maybe<Scalars['Float']>;
   genres: Maybe<Array<Genre>>;
   nftData: Maybe<NftDataType>;
+  deleted: Maybe<Scalars['Boolean']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   playbackUrl: Scalars['String'];
@@ -999,6 +1034,7 @@ export type UpdateProfilePayload = {
 
 export type UpdateTrackInput = {
   trackId: Scalars['String'];
+  profileId?: Maybe<Scalars['String']>;
   nftData?: Maybe<NftDataInput>;
 };
 
@@ -1142,7 +1178,7 @@ export type CommentQuery = (
 
 export type CommentComponentFieldsFragment = (
   { __typename?: 'Comment' }
-  & Pick<Comment, 'id' | 'body' | 'createdAt'>
+  & Pick<Comment, 'id' | 'body' | 'createdAt' | 'deleted'>
   & { profile: (
     { __typename?: 'Profile' }
     & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
@@ -1183,7 +1219,7 @@ export type CreateListingItemMutation = (
   { __typename?: 'Mutation' }
   & { createListingItem: (
     { __typename?: 'CreateListingItemType' }
-    & Pick<CreateListingItemType, 'owner' | 'nft' | 'tokenId' | 'quantity' | 'pricePerItem' | 'startingTime'>
+    & Pick<CreateListingItemType, 'id' | 'owner' | 'nft' | 'tokenId' | 'quantity' | 'pricePerItem' | 'startingTime'>
   ) }
 );
 
@@ -1344,6 +1380,19 @@ export type FeedQuery = (
   ) }
 );
 
+export type FinishListingMutationVariables = Exact<{
+  input: FinishListingItemInput;
+}>;
+
+
+export type FinishListingMutation = (
+  { __typename?: 'Mutation' }
+  & { finishListing: (
+    { __typename?: 'CreateListingItemType' }
+    & Pick<CreateListingItemType, 'id' | 'owner' | 'nft' | 'tokenId' | 'quantity' | 'pricePerItem' | 'startingTime'>
+  ) }
+);
+
 export type FollowProfileMutationVariables = Exact<{
   input: FollowProfileInput;
 }>;
@@ -1422,7 +1471,7 @@ export type ListingItemQuery = (
   { __typename?: 'Query' }
   & { listingItem: (
     { __typename?: 'CreateListingItemType' }
-    & Pick<CreateListingItemType, 'owner' | 'nft' | 'tokenId' | 'quantity' | 'pricePerItem' | 'startingTime'>
+    & Pick<CreateListingItemType, 'id' | 'owner' | 'nft' | 'tokenId' | 'quantity' | 'pricePerItem' | 'startingTime'>
   ) }
 );
 
@@ -1493,6 +1542,11 @@ export type MimeTypeQuery = (
   ) }
 );
 
+export type NftSoldNotificationFieldsFragment = (
+  { __typename?: 'NFTSoldNotification' }
+  & Pick<NftSoldNotification, 'id' | 'type' | 'createdAt' | 'buyerName' | 'buyerPicture' | 'buyerProfileId' | 'trackId' | 'price'>
+);
+
 export type NewPostNotificationFieldsFragment = (
   { __typename?: 'NewPostNotification' }
   & Pick<NewPostNotification, 'id' | 'type' | 'authorName' | 'authorPicture' | 'body' | 'link' | 'previewBody' | 'previewLink' | 'createdAt'>
@@ -1521,6 +1575,9 @@ export type NotificationQuery = (
   ) | (
     { __typename?: 'NewPostNotification' }
     & NewPostNotificationFieldsFragment
+  ) | (
+    { __typename?: 'NFTSoldNotification' }
+    & NftSoldNotificationFieldsFragment
   ) }
 );
 
@@ -1556,6 +1613,9 @@ export type NotificationsQuery = (
     ) | (
       { __typename?: 'NewPostNotification' }
       & NewPostNotificationFieldsFragment
+    ) | (
+      { __typename?: 'NFTSoldNotification' }
+      & NftSoldNotificationFieldsFragment
     )> }
   ) }
 );
@@ -1601,7 +1661,7 @@ export type PostQuery = (
 
 export type PostComponentFieldsFragment = (
   { __typename?: 'Post' }
-  & Pick<Post, 'id' | 'body' | 'mediaLink' | 'repostId' | 'createdAt' | 'updatedAt' | 'commentCount' | 'repostCount' | 'totalReactions' | 'topReactions' | 'myReaction'>
+  & Pick<Post, 'id' | 'body' | 'mediaLink' | 'repostId' | 'createdAt' | 'updatedAt' | 'commentCount' | 'repostCount' | 'totalReactions' | 'topReactions' | 'myReaction' | 'deleted'>
   & { profile: (
     { __typename?: 'Profile' }
     & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
@@ -1793,7 +1853,7 @@ export type SetNotValidMutation = (
   { __typename?: 'Mutation' }
   & { setNotValid: (
     { __typename?: 'CreateListingItemType' }
-    & Pick<CreateListingItemType, 'owner' | 'nft' | 'tokenId' | 'quantity' | 'pricePerItem' | 'startingTime'>
+    & Pick<CreateListingItemType, 'id' | 'owner' | 'nft' | 'tokenId' | 'quantity' | 'pricePerItem' | 'startingTime'>
   ) }
 );
 
@@ -1828,7 +1888,7 @@ export type TrackQuery = (
 
 export type TrackComponentFieldsFragment = (
   { __typename?: 'Track' }
-  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'album' | 'releaseYear' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt'>
+  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted'>
   & { nftData: Maybe<(
     { __typename?: 'NFTDataType' }
     & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid'>
@@ -2097,6 +2157,7 @@ export const CommentComponentFieldsFragmentDoc = gql`
   id
   body
   createdAt
+  deleted
   profile {
     id
     displayName
@@ -2140,6 +2201,18 @@ export const MessageComponentFieldsFragmentDoc = gql`
   }
 }
     `;
+export const NftSoldNotificationFieldsFragmentDoc = gql`
+    fragment NFTSoldNotificationFields on NFTSoldNotification {
+  id
+  type
+  createdAt
+  buyerName
+  buyerPicture
+  buyerProfileId
+  trackId
+  price
+}
+    `;
 export const NewPostNotificationFieldsFragmentDoc = gql`
     fragment NewPostNotificationFields on NewPostNotification {
   id
@@ -2168,10 +2241,12 @@ export const TrackComponentFieldsFragmentDoc = gql`
   artist
   album
   releaseYear
+  copyright
   genres
   playbackUrl
   createdAt
   updatedAt
+  deleted
   nftData {
     transactionHash
     tokenId
@@ -2194,6 +2269,7 @@ export const PostComponentFieldsFragmentDoc = gql`
   totalReactions
   topReactions(top: 2)
   myReaction
+  deleted
   profile {
     id
     displayName
@@ -2530,6 +2606,7 @@ export type CommentsQueryResult = Apollo.QueryResult<CommentsQuery, CommentsQuer
 export const CreateListingItemDocument = gql`
     mutation CreateListingItem($input: CreateListingItemInput!) {
   createListingItem(input: $input) {
+    id
     owner
     nft
     tokenId
@@ -2899,6 +2976,45 @@ export function useFeedLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<FeedQ
 export type FeedQueryHookResult = ReturnType<typeof useFeedQuery>;
 export type FeedLazyQueryHookResult = ReturnType<typeof useFeedLazyQuery>;
 export type FeedQueryResult = Apollo.QueryResult<FeedQuery, FeedQueryVariables>;
+export const FinishListingDocument = gql`
+    mutation FinishListing($input: FinishListingItemInput!) {
+  finishListing(input: $input) {
+    id
+    owner
+    nft
+    tokenId
+    quantity
+    pricePerItem
+    startingTime
+  }
+}
+    `;
+export type FinishListingMutationFn = Apollo.MutationFunction<FinishListingMutation, FinishListingMutationVariables>;
+
+/**
+ * __useFinishListingMutation__
+ *
+ * To run a mutation, you first call `useFinishListingMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useFinishListingMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [finishListingMutation, { data, loading, error }] = useFinishListingMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useFinishListingMutation(baseOptions?: Apollo.MutationHookOptions<FinishListingMutation, FinishListingMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<FinishListingMutation, FinishListingMutationVariables>(FinishListingDocument, options);
+      }
+export type FinishListingMutationHookResult = ReturnType<typeof useFinishListingMutation>;
+export type FinishListingMutationResult = Apollo.MutationResult<FinishListingMutation>;
+export type FinishListingMutationOptions = Apollo.BaseMutationOptions<FinishListingMutation, FinishListingMutationVariables>;
 export const FollowProfileDocument = gql`
     mutation FollowProfile($input: FollowProfileInput!) {
   followProfile(input: $input) {
@@ -3035,6 +3151,7 @@ export type FollowingQueryResult = Apollo.QueryResult<FollowingQuery, FollowingQ
 export const ListingItemDocument = gql`
     query ListingItem($tokenId: Float!) {
   listingItem(tokenId: $tokenId) {
+    id
     owner
     nft
     tokenId
@@ -3246,12 +3363,16 @@ export const NotificationDocument = gql`
     ... on NewPostNotification {
       ...NewPostNotificationFields
     }
+    ... on NFTSoldNotification {
+      ...NFTSoldNotificationFields
+    }
   }
 }
     ${CommentNotificationFieldsFragmentDoc}
 ${ReactionNotificationFieldsFragmentDoc}
 ${FollowerNotificationFieldsFragmentDoc}
-${NewPostNotificationFieldsFragmentDoc}`;
+${NewPostNotificationFieldsFragmentDoc}
+${NftSoldNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationQuery__
@@ -3331,13 +3452,17 @@ export const NotificationsDocument = gql`
       ... on NewPostNotification {
         ...NewPostNotificationFields
       }
+      ... on NFTSoldNotification {
+        ...NFTSoldNotificationFields
+      }
     }
   }
 }
     ${CommentNotificationFieldsFragmentDoc}
 ${ReactionNotificationFieldsFragmentDoc}
 ${FollowerNotificationFieldsFragmentDoc}
-${NewPostNotificationFieldsFragmentDoc}`;
+${NewPostNotificationFieldsFragmentDoc}
+${NftSoldNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationsQuery__
@@ -3887,6 +4012,7 @@ export type SetIsApprovedOnMarketplaceMutationOptions = Apollo.BaseMutationOptio
 export const SetNotValidDocument = gql`
     mutation SetNotValid($tokenId: Float!) {
   setNotValid(tokenId: $tokenId) {
+    id
     owner
     nft
     tokenId
