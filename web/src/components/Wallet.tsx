@@ -47,34 +47,32 @@ interface AccountProps extends Partial<Omit<WalletProps, 'onDefaultWalletClick'>
 const Account = ({ account, balance, defaultWallet, showActionButtons, onDefaultWalletClick }: AccountProps) => {
   return (
     <>
-      <div className="flex flex-row bg-gray-1A w-full pl-2 pr-3 py-2 items-center justify-between">
+      <div className="flex flex-row text-xxs bg-gray-1A w-full pl-2 pr-3 py-2 items-center justify-between">
         <div className="flex flex-row items-center w-10/12 justify-start">
           <LinkIcon />
-          <span className="text-gray-80 text-xs md-text-sm font-bold mx-1 truncate w-full">{account}</span>
+          <span className="text-gray-80 md-text-sm font-bold mx-1 truncate w-full">{account}</span>
         </div>
-        <div className="flex justify-end w-2/12">
-          <button
-            className="flex flex-row items-center border border-gray-30 border-opacity-75 rounded-sm p-0.5"
-            onClick={() => {
-              navigator.clipboard.writeText(account + '');
-            }}
-          >
-            <Copy />
-            <span className="text-gray-80 text-xs pl-1 uppercase leading-none">copy</span>
-          </button>
-        </div>
+        <button
+          className="flex flex-row gap-1 items-center border-2 border-gray-30 border-opacity-75 rounded p-1"
+          onClick={() => {
+            navigator.clipboard.writeText(account + '');
+          }}
+        >
+          <Copy />
+          <span className="text-gray-80 uppercase leading-none">copy</span>
+        </button>
       </div>
       <div className="flex w-full">
-        <div className="flex items-center justify-center w-7/12 bg-gray-20 text-gray-CC font-bold text-xs md-text-sm uppercase py-3">
+        <div className="flex-1 flex items-center justify-start bg-gray-20 text-gray-CC font-bold text-xs uppercase px-4 py-3">
           Total Balance
         </div>
-        <div className="flex flex-wrap items-center justify-center w-5/12 bg-gray-30 uppercase py-3">
+        <div className="flex flex-wrap items-center justify-center bg-gray-30 uppercase px-4 py-3">
           <span className="my-auto">
             <Matic />
           </span>
-          <span className="mx-1 text-gray-CC font-bold text-md leading-tight">{balance}</span>
+          <span className="mx-1 text-white font-bold text-md leading-tight">{balance}</span>
           <div className="items-end">
-            <span className="text-gray-80 font-bold text-xs leading-tight">matic</span>
+            <span className="text-gray-80 font-black text-xxs leading-tight">matic</span>
           </div>
         </div>
       </div>
@@ -92,37 +90,17 @@ const Account = ({ account, balance, defaultWallet, showActionButtons, onDefault
           </Link>
         </div>
       )}
-      <div className="flex w-full justify-between px-4">
-        <div className="flex items-center justify-start">
-          {!defaultWallet && (
-            <label className="inline-flex items-center m-2 cursor-pointer">
-              <input
-                type="checkbox"
-                className="form-checkbox rounded bg-black text-black"
-                onClick={() => onDefaultWalletClick()}
-              />
-              <span className="ml-2 text-sm font-bold text-white ">Default Wallet</span>
-            </label>
-          )}
-        </div>
-        <div className="flex items-center justify-end">
-          {balance && (
-            <>
-              <a
-                className="text-sm text-gray-80 font-bold underline m-2"
-                href="https://faucet.polygon.technology/"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Need some Matic?
-              </a>
-              <span className="my-auto mr-2">
-                <Matic />
-              </span>
-            </>
-          )}
-        </div>
-      </div>
+
+      {!defaultWallet && (
+        <label className="justify-start inline-flex items-center cursor-pointer w-full gap-2 p-4">
+          <input
+            type="checkbox"
+            className="h-5 w-5 text-black bg-black border-gray-30 rounded border-2"
+            onClick={() => onDefaultWalletClick()}
+          />
+          <span className="text-sm font-bold text-white">Set as default</span>
+        </label>
+      )}
     </>
   );
 };
@@ -130,10 +108,10 @@ const Account = ({ account, balance, defaultWallet, showActionButtons, onDefault
 export const Wallet = ({ icon: Icon, title, correctNetwork, ...props }: WalletProps) => {
   return (
     <>
-      <div className="flex flex-col space-y-2 px-6 py-5">
+      <div className="flex items-center justify-between px-6 py-5">
         <div className="flex flex-row space-x-2 items-center">
           <Icon />
-          <div className="text-gray-CC font-bold">{title}</div>
+          <div className="text-white font-bold text-sm">{title}</div>
         </div>
         {correctNetwork ? <Network /> : <NotTestnet />}
       </div>

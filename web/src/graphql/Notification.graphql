@@ -12,5 +12,8 @@ query Notification($id: String!) {
     ... on NewPostNotification {
       ...NewPostNotificationFields
     }
+    ... on NFTSoldNotification {
+      ...NFTSoldNotificationFields
+    }
   }
 }

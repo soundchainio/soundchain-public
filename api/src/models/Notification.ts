@@ -3,6 +3,7 @@ import { Field } from 'type-graphql';
 import { CommentNotificationMetadata } from '../types/CommentNotificationMetadata';
 import { FollowerNotificationMetadata } from '../types/FollowerNotificationMetadata';
 import { NewPostNotificationMetadata } from '../types/NewPostNotificationMetadata';
+import { NFTSoldNotificationMetadata } from '../types/NFTSoldNotificationMetadata';
 import { NotificationType } from '../types/NotificationType';
 import { ReactionNotificationMetadata } from '../types/ReactionNotificationMetadata';
 import { Model } from './Model';
@@ -20,7 +21,8 @@ export class Notification extends Model {
     | CommentNotificationMetadata
     | FollowerNotificationMetadata
     | ReactionNotificationMetadata
-    | NewPostNotificationMetadata;
+    | NewPostNotificationMetadata
+    | NFTSoldNotificationMetadata;
 
   @Field(() => Date)
   createdAt: Date;

@@ -1,14 +1,16 @@
+import { Badge } from 'components/Badge';
 import { Button } from 'components/Button';
 import { ImageUpload } from 'components/ImageUpload';
 import { InputField } from 'components/InputField';
 import { TextareaField } from 'components/TextareaField';
+import { WalletSelector } from 'components/WalletSelector';
 import { Form, Formik } from 'formik';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMagicContext } from 'hooks/useMagicContext';
-import { Logo } from 'icons/Logo';
 import { Matic } from 'icons/Matic';
 import { Genre } from 'lib/graphql';
 import React, { useEffect, useState } from 'react';
+import { GenreLabel, genres } from 'utils/Genres';
 import * as yup from 'yup';
 
 export interface FormValues {
@@ -16,6 +18,7 @@ export interface FormValues {
   description: string;
   artist?: string;
   album?: string;
+  copyright?: string;
   releaseYear?: number;
   genres?: Genre[];
   artworkUrl?: string;
@@ -26,6 +29,7 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   description: yup.string().required(),
   artist: yup.string(),
   album: yup.string(),
+  copyright: yup.string(),
   releaseYear: yup.number(),
   genres: yup.array(),
   artworkUrl: yup.string(),
@@ -52,6 +56,7 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
     description: initialValues?.description || '',
     artist: initialValues?.artist || '',
     album: initialValues?.album || '',
+    copyright: initialValues?.copyright || '',
     releaseYear: initialValues?.releaseYear || new Date().getFullYear(),
     genres: initialValues?.genres || [],
     artworkUrl: '',
@@ -74,6 +79,22 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
     setFieldValue('artworkUrl', val);
   };
 
+  const handleGenreClick = (
+    setFieldValue: (field: string, value: Genre[]) => void,
+    newValue: Genre,
+    currentValues?: Genre[],
+  ) => {
+    if (!currentValues) {
+      setFieldValue('genres', [newValue]);
+    } else if (currentValues.includes(newValue)) {
+      const nextGenres = currentValues.filter(g => g !== newValue);
+      setFieldValue('genres', nextGenres);
+      return;
+    } else {
+      setFieldValue('genres', [...currentValues, newValue]);
+    }
+  };
+
   useEffect(() => {
     if (balance && maxGasFee) {
       setEnoughFunds(balance > maxGasFee);
@@ -87,7 +108,7 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
       validationSchema={validationSchema}
       onSubmit={handleSubmit}
     >
-      {({ setFieldValue }) => (
+      {({ setFieldValue, values }) => (
         <Form className="flex flex-col gap-4 h-full">
           <div className="flex items-center px-4">
             <div className="h-30 w-30 mr-2 flex flex-col items-center">
@@ -112,31 +133,27 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
           <div className="px-4">
             <InputField name="album" type="text" label="ALBUM" />
           </div>
-          <div className="px-4">
+          <div className="px-4 flex gap-4">
             <InputField name="releaseYear" type="number" label="RELEASE YEAR" />
+            <InputField name="copyright" type="text" label="COPYRIGHT" />
           </div>
-          <div className="flex items-center justify-between py-3 px-4 mt-4" style={{ backgroundColor: '#202020' }}>
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2 text-xs text-white font-bold">
-                <Logo id="soundchain-wallet" height="20" width="20" /> SoundChain Wallet
-              </div>
-              <div className="flex items-center gap-2 font-black text-xs" style={{ color: '#808080' }}>
-                Balance: <Matic />
-                <div className="text-white">{balance}</div>MATIC
-              </div>
-            </div>
-            <div className="text-white text-xs text-right">
-              Need some test Matic? <br />
-              <a
-                className="text-xs font-bold"
-                href="https://faucet.polygon.technology/"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Get some here
-              </a>
-            </div>
+          <div className="text-gray-80 font-bold px-4">
+            Select Genres {values.genres && `(${values.genres.length} Selected)`}
           </div>
+          <div className="px-4 flex flex-wrap gap-2">
+            {genres.map(({ label, key }: GenreLabel) => (
+              <Badge
+                key={key}
+                label={label}
+                selected={values.genres ? values.genres.includes(key) : false}
+                onClick={() => handleGenreClick(setFieldValue, key, values.genres)}
+                className=""
+              />
+            ))}
+          </div>
+
+          <WalletSelector className="mt-4 py-3 px-4" />
+
           <div className="pl-4 pr-4 pb-4 flex items-center mt-4">
             <div className="flex-1 font-black text-xs" style={{ color: '#808080' }}>
               <div>Max gas fee</div>

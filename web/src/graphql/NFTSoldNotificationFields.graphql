@@ -1,0 +1,10 @@
+fragment NFTSoldNotificationFields on NFTSoldNotification {
+  id
+  type
+  createdAt
+  buyerName
+  buyerPicture
+  buyerProfileId
+  trackId
+  price
+}

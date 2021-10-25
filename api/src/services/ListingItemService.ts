@@ -7,7 +7,7 @@ interface NewListingItem {
   nft: string;
   tokenId: number;
   quantity: number;
-  pricePerItem: number;
+  pricePerItem: string;
   startingTime: number;
 }
 
@@ -23,13 +23,14 @@ export class ListingItemService extends ModelService<typeof ListingItem> {
   }
 
   async findListingItem(tokenId: number): Promise<ListingItem> {
-    const listingItem = await this.model.findOne({ tokenId, valid: true });
+    const listingItem = await this.model.findOne({ tokenId, valid: true }).sort({ createdAt: -1 }).exec();
     return listingItem;
   }
 
   async setNotValid(tokenId: number): Promise<ListingItem> {
-    const listingItem = await this.model.findOne({ tokenId });
-    await this.model.updateOne({ tokenId }, { valid: false });
+    const listingItem = await this.model.findOne({ tokenId }).sort({ createdAt: -1 }).exec();
+    listingItem.valid = false;
+    listingItem.save();
     return listingItem;
   }
 }

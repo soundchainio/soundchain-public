@@ -73,7 +73,11 @@ const useBlockchain = () => {
 
   const approveMarketplace = (web3: Web3, from: string, onReceipt: (receipt: Receipt) => void) => {
     const contract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress);
-    contract.methods.setApprovalForAll(marketplaceAddress, true).send({ from, gas }).on('receipt', onReceipt);
+    return beforeSending(
+      web3,
+      async () =>
+        await contract.methods.setApprovalForAll(marketplaceAddress, true).send({ from, gas }).on('receipt', onReceipt),
+    );
   };
 
   const listItem = (
@@ -85,7 +89,14 @@ const useBlockchain = () => {
     onReceipt: (receipt: Receipt) => void,
   ) => {
     const contract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
-    contract.methods.listItem(nftAddress, tokenId, quantity, price, 0).send({ from, gas }).on('receipt', onReceipt);
+    return beforeSending(
+      web3,
+      async () =>
+        await contract.methods
+          .listItem(nftAddress, tokenId, quantity, price, 0)
+          .send({ from, gas })
+          .on('receipt', onReceipt),
+    );
   };
 
   const cancelListing = (web3: Web3, tokenId: number, from: string) => {

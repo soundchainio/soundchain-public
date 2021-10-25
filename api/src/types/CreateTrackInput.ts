@@ -24,6 +24,9 @@ export class CreateTrackInput {
   @Field({ nullable: true })
   releaseYear: number;
 
+  @Field({ nullable: true })
+  copyright: string;
+
   @Field(() => [Genre], { nullable: true })
   genres: Genre[];
 }
