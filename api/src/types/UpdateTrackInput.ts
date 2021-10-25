@@ -6,6 +6,9 @@ export class UpdateTrackInput {
   @Field()
   trackId: string;
 
+  @Field({ nullable: true })
+  profileId: string;
+
   @Field(() => NFTData, { nullable: true })
   nftData: NFTData;
 }

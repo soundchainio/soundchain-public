@@ -1,5 +1,6 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
+import { DefaultWallet } from '../types/DefaultWallet';
 import { Model } from './Model';
 @ObjectType()
 export class User extends Model {
@@ -21,8 +22,16 @@ export class User extends Model {
   @prop({ required: false })
   walletAddress: string;
 
+  @Field(() => DefaultWallet)
+  @prop({ type: String, enum: DefaultWallet, default: DefaultWallet.Soundchain })
+  defaultWallet: DefaultWallet;
+
   @prop({ required: false })
   emailVerificationToken?: string;
+
+  @Field()
+  @prop({ default: false })
+  isApprovedOnMarketplace: boolean;
 
   @Field(() => Date)
   createdAt: Date;

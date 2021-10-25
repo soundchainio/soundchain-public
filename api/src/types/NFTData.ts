@@ -11,7 +11,11 @@ export class NFTData {
 
   @Field({ nullable: true })
   @prop()
-  tokenId: string;
+  ipfsCid: string;
+
+  @Field({ nullable: true })
+  @prop()
+  tokenId: number;
 
   @Field({ nullable: true })
   @prop()

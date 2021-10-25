@@ -12,7 +12,6 @@ export const getServerSideProps = protectPage((context, apolloClient) => {
 
 export default function MessagesPage() {
   const topNavBarProps: TopNavBarProps = {
-    title: 'Inbox',
     leftButton: <BackButton />,
   };
 

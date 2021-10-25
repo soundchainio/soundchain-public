@@ -3,7 +3,7 @@ import Image from 'next/image';
 import NextLink from 'next/link';
 import React from 'react';
 
-interface AvatarProps extends React.ComponentPropsWithoutRef<'div'> {
+interface AvatarProps extends React.ComponentPropsWithoutRef<'a'> {
   profile: Partial<Profile>;
   pixels?: number;
   className?: string;
@@ -20,17 +20,17 @@ export const Avatar = ({ profile, pixels = 30, linkToProfile = true, ...props }:
   };
 
   return maybeLinkToProfile(
-    <div {...props}>
+    <a {...props}>
       {
         <Image
           alt="Profile picture"
           src={profile.profilePicture || '/default-pictures/profile/red.png'}
           width={pixels}
           height={pixels}
-          className="rounded-full"
+          className="rounded-full cursor-pointer"
           objectFit="cover"
         />
       }
-    </div>,
+    </a>,
   );
 };

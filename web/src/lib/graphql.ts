@@ -71,6 +71,7 @@ export type Comment = {
   body: Scalars['String'];
   postId: Scalars['String'];
   profileId: Scalars['String'];
+  deleted: Maybe<Scalars['Boolean']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   post: Post;
@@ -94,6 +95,27 @@ export type CommentNotification = {
   body: Scalars['String'];
   previewBody: Scalars['String'];
   link: Scalars['String'];
+};
+
+export type CreateListingItemInput = {
+  id?: Maybe<Scalars['String']>;
+  owner: Scalars['String'];
+  nft: Scalars['String'];
+  tokenId: Scalars['Float'];
+  quantity: Scalars['Float'];
+  pricePerItem: Scalars['String'];
+  startingTime: Scalars['Float'];
+};
+
+export type CreateListingItemType = {
+  __typename?: 'CreateListingItemType';
+  id: Maybe<Scalars['String']>;
+  owner: Scalars['String'];
+  nft: Scalars['String'];
+  tokenId: Scalars['Float'];
+  quantity: Scalars['Float'];
+  pricePerItem: Scalars['String'];
+  startingTime: Scalars['Float'];
 };
 
 export type CreateMintingRequestInput = {
@@ -133,6 +155,7 @@ export type CreateTrackInput = {
   artist?: Maybe<Scalars['String']>;
   album?: Maybe<Scalars['String']>;
   releaseYear?: Maybe<Scalars['Float']>;
+  copyright?: Maybe<Scalars['String']>;
   genres?: Maybe<Array<Genre>>;
 };
 
@@ -141,6 +164,11 @@ export type CreateTrackPayload = {
   track: Track;
 };
 
+
+export enum DefaultWallet {
+  Soundchain = 'Soundchain',
+  MetaMask = 'MetaMask'
+}
 
 export type DeleteCommentInput = {
   commentId: Scalars['String'];
@@ -158,6 +186,10 @@ export type DeletePostInput = {
 export type DeletePostPayload = {
   __typename?: 'DeletePostPayload';
   post: Post;
+};
+
+export type DeleteTrackInput = {
+  trackId: Scalars['String'];
 };
 
 export type FeedConnection = {
@@ -179,6 +211,14 @@ export type FilterPostInput = {
 
 export type FilterTrackInput = {
   profileId?: Maybe<Scalars['String']>;
+};
+
+export type FinishListingItemInput = {
+  sellerProfileId: Scalars['String'];
+  buyerProfileId: Scalars['String'];
+  tokenId: Scalars['Float'];
+  trackId: Scalars['String'];
+  price: Scalars['String'];
 };
 
 export type Follow = {
@@ -310,6 +350,9 @@ export type Mutation = {
   __typename?: 'Mutation';
   addComment: AddCommentPayload;
   deleteComment: DeleteCommentPayload;
+  createListingItem: CreateListingItemType;
+  setNotValid: CreateListingItemType;
+  finishListing: CreateListingItemType;
   sendMessage: SendMessagePayload;
   resetUnreadMessageCount: Profile;
   createMintingRequest: MintingRequestPayload;
@@ -331,9 +374,12 @@ export type Mutation = {
   unsubscribeFromProfile: UnsubscribeFromProfilePayload;
   createTrack: CreateTrackPayload;
   updateTrack: UpdateTrackPayload;
+  deleteTrackOnError: UpdateTrackPayload;
   register: AuthPayload;
   login: AuthPayload;
   updateHandle: UpdateHandlePayload;
+  updateDefaultWallet: UpdateDefaultWalletPayload;
+  setIsApprovedOnMarketplace: UpdateHandlePayload;
 };
 
 
@@ -344,6 +390,21 @@ export type MutationAddCommentArgs = {
 
 export type MutationDeleteCommentArgs = {
   input: DeleteCommentInput;
+};
+
+
+export type MutationCreateListingItemArgs = {
+  input: CreateListingItemInput;
+};
+
+
+export type MutationSetNotValidArgs = {
+  tokenId: Scalars['Float'];
+};
+
+
+export type MutationFinishListingArgs = {
+  input: FinishListingItemInput;
 };
 
 
@@ -437,6 +498,11 @@ export type MutationUpdateTrackArgs = {
 };
 
 
+export type MutationDeleteTrackOnErrorArgs = {
+  input: DeleteTrackInput;
+};
+
+
 export type MutationRegisterArgs = {
   input: RegisterInput;
 };
@@ -451,9 +517,15 @@ export type MutationUpdateHandleArgs = {
   input: UpdateHandleInput;
 };
 
+
+export type MutationUpdateDefaultWalletArgs = {
+  input: UpdateDefaultWalletInput;
+};
+
 export type NftDataInput = {
   transactionHash?: Maybe<Scalars['String']>;
-  tokenId?: Maybe<Scalars['String']>;
+  ipfsCid?: Maybe<Scalars['String']>;
+  tokenId?: Maybe<Scalars['Float']>;
   contract?: Maybe<Scalars['String']>;
   minter?: Maybe<Scalars['String']>;
   quantity?: Maybe<Scalars['Float']>;
@@ -462,10 +534,24 @@ export type NftDataInput = {
 export type NftDataType = {
   __typename?: 'NFTDataType';
   transactionHash: Maybe<Scalars['String']>;
-  tokenId: Maybe<Scalars['String']>;
+  ipfsCid: Maybe<Scalars['String']>;
+  tokenId: Maybe<Scalars['Float']>;
   contract: Maybe<Scalars['String']>;
   minter: Maybe<Scalars['String']>;
   quantity: Maybe<Scalars['Float']>;
+};
+
+export type NftSoldNotification = {
+  __typename?: 'NFTSoldNotification';
+  type: NotificationType;
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  id: Scalars['String'];
+  buyerName: Scalars['String'];
+  buyerPicture: Scalars['String'];
+  buyerProfileId: Scalars['String'];
+  trackId: Scalars['String'];
+  price: Scalars['String'];
 };
 
 export type NewPostNotification = {
@@ -482,7 +568,7 @@ export type NewPostNotification = {
   track: Maybe<Track>;
 };
 
-export type Notification = CommentNotification | ReactionNotification | FollowerNotification | NewPostNotification;
+export type Notification = CommentNotification | ReactionNotification | FollowerNotification | NewPostNotification | NftSoldNotification;
 
 export type NotificationConnection = {
   __typename?: 'NotificationConnection';
@@ -494,7 +580,8 @@ export enum NotificationType {
   Comment = 'Comment',
   Reaction = 'Reaction',
   Follower = 'Follower',
-  NewPost = 'NewPost'
+  NewPost = 'NewPost',
+  NftSold = 'NFTSold'
 }
 
 export type PageInfo = {
@@ -535,6 +622,7 @@ export type Post = {
   body: Maybe<Scalars['String']>;
   mediaLink: Maybe<Scalars['String']>;
   repostId: Maybe<Scalars['String']>;
+  deleted: Maybe<Scalars['Boolean']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   profile: Profile;
@@ -588,6 +676,7 @@ export type Query = {
   feed: FeedConnection;
   followers: FollowConnection;
   following: FollowConnection;
+  listingItem: CreateListingItemType;
   message: Message;
   notifications: NotificationConnection;
   notification: Notification;
@@ -641,6 +730,11 @@ export type QueryFollowersArgs = {
 export type QueryFollowingArgs = {
   page?: Maybe<PageInput>;
   id: Scalars['String'];
+};
+
+
+export type QueryListingItemArgs = {
+  tokenId: Scalars['Float'];
 };
 
 
@@ -848,9 +942,11 @@ export type Track = {
   artworkUrl: Maybe<Scalars['String']>;
   artist: Maybe<Scalars['String']>;
   album: Maybe<Scalars['String']>;
+  copyright: Maybe<Scalars['String']>;
   releaseYear: Maybe<Scalars['Float']>;
   genres: Maybe<Array<Genre>>;
   nftData: Maybe<NftDataType>;
+  deleted: Maybe<Scalars['Boolean']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   playbackUrl: Scalars['String'];
@@ -878,6 +974,15 @@ export type UnsubscribeFromProfileInput = {
 export type UnsubscribeFromProfilePayload = {
   __typename?: 'UnsubscribeFromProfilePayload';
   profile: Profile;
+};
+
+export type UpdateDefaultWalletInput = {
+  defaultWallet: Scalars['String'];
+};
+
+export type UpdateDefaultWalletPayload = {
+  __typename?: 'UpdateDefaultWalletPayload';
+  user: User;
 };
 
 export type UpdateHandleInput = {
@@ -917,6 +1022,7 @@ export type UpdateProfilePayload = {
 
 export type UpdateTrackInput = {
   trackId: Scalars['String'];
+  profileId?: Maybe<Scalars['String']>;
   nftData?: Maybe<NftDataInput>;
 };
 
@@ -938,6 +1044,8 @@ export type User = {
   email: Scalars['String'];
   handle: Scalars['String'];
   walletAddress: Maybe<Scalars['String']>;
+  defaultWallet: DefaultWallet;
+  isApprovedOnMarketplace: Scalars['Boolean'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   profile: Profile;
@@ -1058,7 +1166,7 @@ export type CommentQuery = (
 
 export type CommentComponentFieldsFragment = (
   { __typename?: 'Comment' }
-  & Pick<Comment, 'id' | 'body' | 'createdAt'>
+  & Pick<Comment, 'id' | 'body' | 'createdAt' | 'deleted'>
   & { profile: (
     { __typename?: 'Profile' }
     & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
@@ -1087,6 +1195,19 @@ export type CommentsQuery = (
       { __typename?: 'PageInfo' }
       & Pick<PageInfo, 'hasPreviousPage' | 'hasNextPage' | 'startCursor' | 'endCursor'>
     ) }
+  ) }
+);
+
+export type CreateListingItemMutationVariables = Exact<{
+  input: CreateListingItemInput;
+}>;
+
+
+export type CreateListingItemMutation = (
+  { __typename?: 'Mutation' }
+  & { createListingItem: (
+    { __typename?: 'CreateListingItemType' }
+    & Pick<CreateListingItemType, 'id' | 'owner' | 'nft' | 'tokenId' | 'quantity' | 'pricePerItem' | 'startingTime'>
   ) }
 );
 
@@ -1189,6 +1310,22 @@ export type DeletePostMutation = (
   ) }
 );
 
+export type DeleteTrackOnErrorMutationVariables = Exact<{
+  input: DeleteTrackInput;
+}>;
+
+
+export type DeleteTrackOnErrorMutation = (
+  { __typename?: 'Mutation' }
+  & { deleteTrackOnError: (
+    { __typename?: 'UpdateTrackPayload' }
+    & { track: (
+      { __typename?: 'Track' }
+      & TrackComponentFieldsFragment
+    ) }
+  ) }
+);
+
 export type FeedQueryVariables = Exact<{
   page?: Maybe<PageInput>;
 }>;
@@ -1209,6 +1346,19 @@ export type FeedQuery = (
       { __typename?: 'PageInfo' }
       & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
     ) }
+  ) }
+);
+
+export type FinishListingMutationVariables = Exact<{
+  input: FinishListingItemInput;
+}>;
+
+
+export type FinishListingMutation = (
+  { __typename?: 'Mutation' }
+  & { finishListing: (
+    { __typename?: 'CreateListingItemType' }
+    & Pick<CreateListingItemType, 'id' | 'owner' | 'nft' | 'tokenId' | 'quantity' | 'pricePerItem' | 'startingTime'>
   ) }
 );
 
@@ -1281,6 +1431,19 @@ export type FollowingQuery = (
   ) }
 );
 
+export type ListingItemQueryVariables = Exact<{
+  tokenId: Scalars['Float'];
+}>;
+
+
+export type ListingItemQuery = (
+  { __typename?: 'Query' }
+  & { listingItem: (
+    { __typename?: 'CreateListingItemType' }
+    & Pick<CreateListingItemType, 'id' | 'owner' | 'nft' | 'tokenId' | 'quantity' | 'pricePerItem' | 'startingTime'>
+  ) }
+);
+
 export type LoginMutationVariables = Exact<{
   input: LoginInput;
 }>;
@@ -1301,7 +1464,7 @@ export type MeQuery = (
   { __typename?: 'Query' }
   & { me: Maybe<(
     { __typename?: 'User' }
-    & Pick<User, 'id' | 'handle' | 'email' | 'walletAddress'>
+    & Pick<User, 'id' | 'handle' | 'email' | 'walletAddress' | 'defaultWallet' | 'isApprovedOnMarketplace'>
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'followerCount' | 'followingCount' | 'favoriteGenres' | 'musicianTypes' | 'bio'>
@@ -1348,6 +1511,11 @@ export type MimeTypeQuery = (
   ) }
 );
 
+export type NftSoldNotificationFieldsFragment = (
+  { __typename?: 'NFTSoldNotification' }
+  & Pick<NftSoldNotification, 'id' | 'type' | 'createdAt' | 'buyerName' | 'buyerPicture' | 'buyerProfileId' | 'trackId' | 'price'>
+);
+
 export type NewPostNotificationFieldsFragment = (
   { __typename?: 'NewPostNotification' }
   & Pick<NewPostNotification, 'id' | 'type' | 'authorName' | 'authorPicture' | 'body' | 'link' | 'previewBody' | 'previewLink' | 'createdAt'>
@@ -1376,6 +1544,9 @@ export type NotificationQuery = (
   ) | (
     { __typename?: 'NewPostNotification' }
     & NewPostNotificationFieldsFragment
+  ) | (
+    { __typename?: 'NFTSoldNotification' }
+    & NftSoldNotificationFieldsFragment
   ) }
 );
 
@@ -1411,6 +1582,9 @@ export type NotificationsQuery = (
     ) | (
       { __typename?: 'NewPostNotification' }
       & NewPostNotificationFieldsFragment
+    ) | (
+      { __typename?: 'NFTSoldNotification' }
+      & NftSoldNotificationFieldsFragment
     )> }
   ) }
 );
@@ -1456,7 +1630,7 @@ export type PostQuery = (
 
 export type PostComponentFieldsFragment = (
   { __typename?: 'Post' }
-  & Pick<Post, 'id' | 'body' | 'mediaLink' | 'repostId' | 'createdAt' | 'updatedAt' | 'commentCount' | 'repostCount' | 'totalReactions' | 'topReactions' | 'myReaction'>
+  & Pick<Post, 'id' | 'body' | 'mediaLink' | 'repostId' | 'createdAt' | 'updatedAt' | 'commentCount' | 'repostCount' | 'totalReactions' | 'topReactions' | 'myReaction' | 'deleted'>
   & { profile: (
     { __typename?: 'Profile' }
     & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
@@ -1625,6 +1799,33 @@ export type SendMessageMutation = (
   ) }
 );
 
+export type SetIsApprovedOnMarketplaceMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type SetIsApprovedOnMarketplaceMutation = (
+  { __typename?: 'Mutation' }
+  & { setIsApprovedOnMarketplace: (
+    { __typename?: 'UpdateHandlePayload' }
+    & { user: (
+      { __typename?: 'User' }
+      & Pick<User, 'id'>
+    ) }
+  ) }
+);
+
+export type SetNotValidMutationVariables = Exact<{
+  tokenId: Scalars['Float'];
+}>;
+
+
+export type SetNotValidMutation = (
+  { __typename?: 'Mutation' }
+  & { setNotValid: (
+    { __typename?: 'CreateListingItemType' }
+    & Pick<CreateListingItemType, 'id' | 'owner' | 'nft' | 'tokenId' | 'quantity' | 'pricePerItem' | 'startingTime'>
+  ) }
+);
+
 export type SubscribeToProfileMutationVariables = Exact<{
   input: SubscribeToProfileInput;
 }>;
@@ -1656,10 +1857,10 @@ export type TrackQuery = (
 
 export type TrackComponentFieldsFragment = (
   { __typename?: 'Track' }
-  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'album' | 'releaseYear' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt'>
+  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted'>
   & { nftData: Maybe<(
     { __typename?: 'NFTDataType' }
-    & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter'>
+    & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid'>
   )> }
 );
 
@@ -1739,6 +1940,22 @@ export type UpdateCoverPictureMutation = (
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'coverPicture'>
+    ) }
+  ) }
+);
+
+export type UpdateDefaultWalletMutationVariables = Exact<{
+  input: UpdateDefaultWalletInput;
+}>;
+
+
+export type UpdateDefaultWalletMutation = (
+  { __typename?: 'Mutation' }
+  & { updateDefaultWallet: (
+    { __typename?: 'UpdateDefaultWalletPayload' }
+    & { user: (
+      { __typename?: 'User' }
+      & Pick<User, 'id' | 'defaultWallet'>
     ) }
   ) }
 );
@@ -1909,6 +2126,7 @@ export const CommentComponentFieldsFragmentDoc = gql`
   id
   body
   createdAt
+  deleted
   profile {
     id
     displayName
@@ -1952,6 +2170,18 @@ export const MessageComponentFieldsFragmentDoc = gql`
   }
 }
     `;
+export const NftSoldNotificationFieldsFragmentDoc = gql`
+    fragment NFTSoldNotificationFields on NFTSoldNotification {
+  id
+  type
+  createdAt
+  buyerName
+  buyerPicture
+  buyerProfileId
+  trackId
+  price
+}
+    `;
 export const NewPostNotificationFieldsFragmentDoc = gql`
     fragment NewPostNotificationFields on NewPostNotification {
   id
@@ -1980,15 +2210,18 @@ export const TrackComponentFieldsFragmentDoc = gql`
   artist
   album
   releaseYear
+  copyright
   genres
   playbackUrl
   createdAt
   updatedAt
+  deleted
   nftData {
     transactionHash
     tokenId
     contract
     minter
+    ipfsCid
   }
 }
     `;
@@ -2005,6 +2238,7 @@ export const PostComponentFieldsFragmentDoc = gql`
   totalReactions
   topReactions(top: 2)
   myReaction
+  deleted
   profile {
     id
     displayName
@@ -2338,6 +2572,45 @@ export function useCommentsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<C
 export type CommentsQueryHookResult = ReturnType<typeof useCommentsQuery>;
 export type CommentsLazyQueryHookResult = ReturnType<typeof useCommentsLazyQuery>;
 export type CommentsQueryResult = Apollo.QueryResult<CommentsQuery, CommentsQueryVariables>;
+export const CreateListingItemDocument = gql`
+    mutation CreateListingItem($input: CreateListingItemInput!) {
+  createListingItem(input: $input) {
+    id
+    owner
+    nft
+    tokenId
+    quantity
+    pricePerItem
+    startingTime
+  }
+}
+    `;
+export type CreateListingItemMutationFn = Apollo.MutationFunction<CreateListingItemMutation, CreateListingItemMutationVariables>;
+
+/**
+ * __useCreateListingItemMutation__
+ *
+ * To run a mutation, you first call `useCreateListingItemMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateListingItemMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createListingItemMutation, { data, loading, error }] = useCreateListingItemMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateListingItemMutation(baseOptions?: Apollo.MutationHookOptions<CreateListingItemMutation, CreateListingItemMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateListingItemMutation, CreateListingItemMutationVariables>(CreateListingItemDocument, options);
+      }
+export type CreateListingItemMutationHookResult = ReturnType<typeof useCreateListingItemMutation>;
+export type CreateListingItemMutationResult = Apollo.MutationResult<CreateListingItemMutation>;
+export type CreateListingItemMutationOptions = Apollo.BaseMutationOptions<CreateListingItemMutation, CreateListingItemMutationVariables>;
 export const CreateMintingRequestDocument = gql`
     mutation createMintingRequest($input: CreateMintingRequestInput!) {
   createMintingRequest(input: $input) {
@@ -2553,6 +2826,41 @@ export function useDeletePostMutation(baseOptions?: Apollo.MutationHookOptions<D
 export type DeletePostMutationHookResult = ReturnType<typeof useDeletePostMutation>;
 export type DeletePostMutationResult = Apollo.MutationResult<DeletePostMutation>;
 export type DeletePostMutationOptions = Apollo.BaseMutationOptions<DeletePostMutation, DeletePostMutationVariables>;
+export const DeleteTrackOnErrorDocument = gql`
+    mutation deleteTrackOnError($input: DeleteTrackInput!) {
+  deleteTrackOnError(input: $input) {
+    track {
+      ...TrackComponentFields
+    }
+  }
+}
+    ${TrackComponentFieldsFragmentDoc}`;
+export type DeleteTrackOnErrorMutationFn = Apollo.MutationFunction<DeleteTrackOnErrorMutation, DeleteTrackOnErrorMutationVariables>;
+
+/**
+ * __useDeleteTrackOnErrorMutation__
+ *
+ * To run a mutation, you first call `useDeleteTrackOnErrorMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteTrackOnErrorMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteTrackOnErrorMutation, { data, loading, error }] = useDeleteTrackOnErrorMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useDeleteTrackOnErrorMutation(baseOptions?: Apollo.MutationHookOptions<DeleteTrackOnErrorMutation, DeleteTrackOnErrorMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteTrackOnErrorMutation, DeleteTrackOnErrorMutationVariables>(DeleteTrackOnErrorDocument, options);
+      }
+export type DeleteTrackOnErrorMutationHookResult = ReturnType<typeof useDeleteTrackOnErrorMutation>;
+export type DeleteTrackOnErrorMutationResult = Apollo.MutationResult<DeleteTrackOnErrorMutation>;
+export type DeleteTrackOnErrorMutationOptions = Apollo.BaseMutationOptions<DeleteTrackOnErrorMutation, DeleteTrackOnErrorMutationVariables>;
 export const FeedDocument = gql`
     query Feed($page: PageInput) {
   feed(page: $page) {
@@ -2597,6 +2905,45 @@ export function useFeedLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<FeedQ
 export type FeedQueryHookResult = ReturnType<typeof useFeedQuery>;
 export type FeedLazyQueryHookResult = ReturnType<typeof useFeedLazyQuery>;
 export type FeedQueryResult = Apollo.QueryResult<FeedQuery, FeedQueryVariables>;
+export const FinishListingDocument = gql`
+    mutation FinishListing($input: FinishListingItemInput!) {
+  finishListing(input: $input) {
+    id
+    owner
+    nft
+    tokenId
+    quantity
+    pricePerItem
+    startingTime
+  }
+}
+    `;
+export type FinishListingMutationFn = Apollo.MutationFunction<FinishListingMutation, FinishListingMutationVariables>;
+
+/**
+ * __useFinishListingMutation__
+ *
+ * To run a mutation, you first call `useFinishListingMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useFinishListingMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [finishListingMutation, { data, loading, error }] = useFinishListingMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useFinishListingMutation(baseOptions?: Apollo.MutationHookOptions<FinishListingMutation, FinishListingMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<FinishListingMutation, FinishListingMutationVariables>(FinishListingDocument, options);
+      }
+export type FinishListingMutationHookResult = ReturnType<typeof useFinishListingMutation>;
+export type FinishListingMutationResult = Apollo.MutationResult<FinishListingMutation>;
+export type FinishListingMutationOptions = Apollo.BaseMutationOptions<FinishListingMutation, FinishListingMutationVariables>;
 export const FollowProfileDocument = gql`
     mutation FollowProfile($input: FollowProfileInput!) {
   followProfile(input: $input) {
@@ -2730,6 +3077,47 @@ export function useFollowingLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
 export type FollowingQueryHookResult = ReturnType<typeof useFollowingQuery>;
 export type FollowingLazyQueryHookResult = ReturnType<typeof useFollowingLazyQuery>;
 export type FollowingQueryResult = Apollo.QueryResult<FollowingQuery, FollowingQueryVariables>;
+export const ListingItemDocument = gql`
+    query ListingItem($tokenId: Float!) {
+  listingItem(tokenId: $tokenId) {
+    id
+    owner
+    nft
+    tokenId
+    quantity
+    pricePerItem
+    startingTime
+  }
+}
+    `;
+
+/**
+ * __useListingItemQuery__
+ *
+ * To run a query within a React component, call `useListingItemQuery` and pass it any options that fit your needs.
+ * When your component renders, `useListingItemQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useListingItemQuery({
+ *   variables: {
+ *      tokenId: // value for 'tokenId'
+ *   },
+ * });
+ */
+export function useListingItemQuery(baseOptions: Apollo.QueryHookOptions<ListingItemQuery, ListingItemQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ListingItemQuery, ListingItemQueryVariables>(ListingItemDocument, options);
+      }
+export function useListingItemLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ListingItemQuery, ListingItemQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ListingItemQuery, ListingItemQueryVariables>(ListingItemDocument, options);
+        }
+export type ListingItemQueryHookResult = ReturnType<typeof useListingItemQuery>;
+export type ListingItemLazyQueryHookResult = ReturnType<typeof useListingItemLazyQuery>;
+export type ListingItemQueryResult = Apollo.QueryResult<ListingItemQuery, ListingItemQueryVariables>;
 export const LoginDocument = gql`
     mutation Login($input: LoginInput!) {
   login(input: $input) {
@@ -2770,6 +3158,8 @@ export const MeDocument = gql`
     handle
     email
     walletAddress
+    defaultWallet
+    isApprovedOnMarketplace
     profile {
       id
       displayName
@@ -2902,12 +3292,16 @@ export const NotificationDocument = gql`
     ... on NewPostNotification {
       ...NewPostNotificationFields
     }
+    ... on NFTSoldNotification {
+      ...NFTSoldNotificationFields
+    }
   }
 }
     ${CommentNotificationFieldsFragmentDoc}
 ${ReactionNotificationFieldsFragmentDoc}
 ${FollowerNotificationFieldsFragmentDoc}
-${NewPostNotificationFieldsFragmentDoc}`;
+${NewPostNotificationFieldsFragmentDoc}
+${NftSoldNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationQuery__
@@ -2987,13 +3381,17 @@ export const NotificationsDocument = gql`
       ... on NewPostNotification {
         ...NewPostNotificationFields
       }
+      ... on NFTSoldNotification {
+        ...NFTSoldNotificationFields
+      }
     }
   }
 }
     ${CommentNotificationFieldsFragmentDoc}
 ${ReactionNotificationFieldsFragmentDoc}
 ${FollowerNotificationFieldsFragmentDoc}
-${NewPostNotificationFieldsFragmentDoc}`;
+${NewPostNotificationFieldsFragmentDoc}
+${NftSoldNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationsQuery__
@@ -3506,6 +3904,79 @@ export function useSendMessageMutation(baseOptions?: Apollo.MutationHookOptions<
 export type SendMessageMutationHookResult = ReturnType<typeof useSendMessageMutation>;
 export type SendMessageMutationResult = Apollo.MutationResult<SendMessageMutation>;
 export type SendMessageMutationOptions = Apollo.BaseMutationOptions<SendMessageMutation, SendMessageMutationVariables>;
+export const SetIsApprovedOnMarketplaceDocument = gql`
+    mutation SetIsApprovedOnMarketplace {
+  setIsApprovedOnMarketplace {
+    user {
+      id
+    }
+  }
+}
+    `;
+export type SetIsApprovedOnMarketplaceMutationFn = Apollo.MutationFunction<SetIsApprovedOnMarketplaceMutation, SetIsApprovedOnMarketplaceMutationVariables>;
+
+/**
+ * __useSetIsApprovedOnMarketplaceMutation__
+ *
+ * To run a mutation, you first call `useSetIsApprovedOnMarketplaceMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSetIsApprovedOnMarketplaceMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [setIsApprovedOnMarketplaceMutation, { data, loading, error }] = useSetIsApprovedOnMarketplaceMutation({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useSetIsApprovedOnMarketplaceMutation(baseOptions?: Apollo.MutationHookOptions<SetIsApprovedOnMarketplaceMutation, SetIsApprovedOnMarketplaceMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<SetIsApprovedOnMarketplaceMutation, SetIsApprovedOnMarketplaceMutationVariables>(SetIsApprovedOnMarketplaceDocument, options);
+      }
+export type SetIsApprovedOnMarketplaceMutationHookResult = ReturnType<typeof useSetIsApprovedOnMarketplaceMutation>;
+export type SetIsApprovedOnMarketplaceMutationResult = Apollo.MutationResult<SetIsApprovedOnMarketplaceMutation>;
+export type SetIsApprovedOnMarketplaceMutationOptions = Apollo.BaseMutationOptions<SetIsApprovedOnMarketplaceMutation, SetIsApprovedOnMarketplaceMutationVariables>;
+export const SetNotValidDocument = gql`
+    mutation SetNotValid($tokenId: Float!) {
+  setNotValid(tokenId: $tokenId) {
+    id
+    owner
+    nft
+    tokenId
+    quantity
+    pricePerItem
+    startingTime
+  }
+}
+    `;
+export type SetNotValidMutationFn = Apollo.MutationFunction<SetNotValidMutation, SetNotValidMutationVariables>;
+
+/**
+ * __useSetNotValidMutation__
+ *
+ * To run a mutation, you first call `useSetNotValidMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSetNotValidMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [setNotValidMutation, { data, loading, error }] = useSetNotValidMutation({
+ *   variables: {
+ *      tokenId: // value for 'tokenId'
+ *   },
+ * });
+ */
+export function useSetNotValidMutation(baseOptions?: Apollo.MutationHookOptions<SetNotValidMutation, SetNotValidMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<SetNotValidMutation, SetNotValidMutationVariables>(SetNotValidDocument, options);
+      }
+export type SetNotValidMutationHookResult = ReturnType<typeof useSetNotValidMutation>;
+export type SetNotValidMutationResult = Apollo.MutationResult<SetNotValidMutation>;
+export type SetNotValidMutationOptions = Apollo.BaseMutationOptions<SetNotValidMutation, SetNotValidMutationVariables>;
 export const SubscribeToProfileDocument = gql`
     mutation SubscribeToProfile($input: SubscribeToProfileInput!) {
   subscribeToProfile(input: $input) {
@@ -3764,6 +4235,42 @@ export function useUpdateCoverPictureMutation(baseOptions?: Apollo.MutationHookO
 export type UpdateCoverPictureMutationHookResult = ReturnType<typeof useUpdateCoverPictureMutation>;
 export type UpdateCoverPictureMutationResult = Apollo.MutationResult<UpdateCoverPictureMutation>;
 export type UpdateCoverPictureMutationOptions = Apollo.BaseMutationOptions<UpdateCoverPictureMutation, UpdateCoverPictureMutationVariables>;
+export const UpdateDefaultWalletDocument = gql`
+    mutation UpdateDefaultWallet($input: UpdateDefaultWalletInput!) {
+  updateDefaultWallet(input: $input) {
+    user {
+      id
+      defaultWallet
+    }
+  }
+}
+    `;
+export type UpdateDefaultWalletMutationFn = Apollo.MutationFunction<UpdateDefaultWalletMutation, UpdateDefaultWalletMutationVariables>;
+
+/**
+ * __useUpdateDefaultWalletMutation__
+ *
+ * To run a mutation, you first call `useUpdateDefaultWalletMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateDefaultWalletMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateDefaultWalletMutation, { data, loading, error }] = useUpdateDefaultWalletMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateDefaultWalletMutation(baseOptions?: Apollo.MutationHookOptions<UpdateDefaultWalletMutation, UpdateDefaultWalletMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateDefaultWalletMutation, UpdateDefaultWalletMutationVariables>(UpdateDefaultWalletDocument, options);
+      }
+export type UpdateDefaultWalletMutationHookResult = ReturnType<typeof useUpdateDefaultWalletMutation>;
+export type UpdateDefaultWalletMutationResult = Apollo.MutationResult<UpdateDefaultWalletMutation>;
+export type UpdateDefaultWalletMutationOptions = Apollo.BaseMutationOptions<UpdateDefaultWalletMutation, UpdateDefaultWalletMutationVariables>;
 export const UpdateFavoriteGenresDocument = gql`
     mutation UpdateFavoriteGenres($input: UpdateProfileInput!) {
   updateProfile(input: $input) {

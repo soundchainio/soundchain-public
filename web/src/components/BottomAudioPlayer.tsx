@@ -90,7 +90,7 @@ export const BottomAudioPlayer = () => {
   }
 
   return (
-    <div className="bottom-audio-player bg-black py-2 flex flex-col gap-2">
+    <div className="bg-black py-2 flex flex-col gap-2">
       <div className="flex px-2">
         <button
           className="flex flex-1 items-center gap-2 cursor-pointer"
@@ -98,7 +98,7 @@ export const BottomAudioPlayer = () => {
           onClick={() => dispatchShowAudioPlayerModal(true)}
         >
           <div className="h-10 w-10 bg-gray-80 relative flex items-center">
-            {currentSong.art && <Asset src={currentSong.art} />}
+            <Asset src={currentSong.art} />
           </div>
           <div className="text-white text-xs flex flex-col flex-1 items-start">
             <h2 className="font-black">{currentSong.title || 'Unknown title'}</h2>
@@ -113,7 +113,7 @@ export const BottomAudioPlayer = () => {
           {isPlaying ? <Pause /> : <Play />}
         </button>
       </div>
-      <Slider min={0} max={duration} value={progress} disabled />
+      <Slider className="bottom-audio-player" min={0} max={duration} value={progress} disabled />
       <audio
         ref={audioRef}
         onPlay={() => setPlayingState(true)}

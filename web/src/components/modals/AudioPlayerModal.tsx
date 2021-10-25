@@ -5,13 +5,17 @@ import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { DownArrow } from 'icons/DownArrow';
 import { Forward } from 'icons/ForwardButton';
+import { Navigate } from 'icons/Navigate';
 import { Pause } from 'icons/PauseBottomAudioPlayer';
 import { Play } from 'icons/PlayBottomAudioPlayer';
 import { Rewind } from 'icons/RewindButton';
-import { useState } from 'react';
+import NextLink from 'next/link';
+import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
 import { remainingTime, timeFromSecs } from 'utils/calculateTime';
 
 export const AudioPlayerModal = () => {
+  const { asPath } = useRouter();
   const modalState = useModalState();
   const { dispatchShowAudioPlayerModal } = useModalDispatch();
   const {
@@ -41,6 +45,10 @@ export const AudioPlayerModal = () => {
     setShowTotalPlaybackDuration(!showTotalPlaybackDuration);
   };
 
+  useEffect(() => {
+    handleClose();
+  }, [asPath]);
+
   return (
     <Modal
       show={isOpen}
@@ -55,17 +63,26 @@ export const AudioPlayerModal = () => {
       onClose={handleClose}
     >
       <div className="flex flex-col h-full justify-center items-center text-white">
-        <div className="post-audio-player w-full sm:max-w-xs px-8 sm:px-0">
+        <div className="w-full sm:max-w-xs px-8 sm:px-0">
           <div className="flex justify-center">
-            <div className="relative w-3/4 sm:w-full after:block after:pb-full flex bg-gray-80 rounded-lg overflow-hidden">
-              {currentSong.art && <Asset src={currentSong.art} />}
+            <div className="relative w-3/4 max-h-80 sm:w-full after:block after:pb-full flex bg-gray-80 rounded-lg overflow-hidden">
+              <Asset src={currentSong.art} />
             </div>
           </div>
-          <div className="flex flex-col gap-1 mt-7 mb-4">
-            <h2 className="font-black">{currentSong.title || 'Unknown title'}</h2>
-            <h3 className="font-medium">{currentSong.artist || 'Unknown artist'}</h3>
+          <div className="flex justify-between mt-7 mb-4 w-full cursor-pointer">
+            <NextLink href={`/tracks/${currentSong.trackId}`}>
+              <div className="flex w-full">
+                <div className="flex flex-col flex-1 gap-1">
+                  <h2 className="font-black">{currentSong.title || 'Unknown title'}</h2>
+                  <h3 className="font-medium">{currentSong.artist || 'Unknown artist'}</h3>
+                </div>
+                <div>
+                  <Navigate />
+                </div>
+              </div>
+            </NextLink>
           </div>
-          <Slider min={0} max={duration} value={progress} onChange={onSliderChange} />
+          <Slider className="audio-player" min={0} max={duration} value={progress} onChange={onSliderChange} />
           <div className="flex justify-between mt-2 text-xs text-gray-80 cursor-default">
             <div>{timeFromSecs(progress || 0)}</div>
             <div onClick={onPlaybackDurationClick}>

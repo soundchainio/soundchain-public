@@ -1,0 +1,8 @@
+mutation UpdateDefaultWallet($input: UpdateDefaultWalletInput!) {
+  updateDefaultWallet(input: $input) {
+    user {
+      id
+      defaultWallet
+    }
+  }
+}

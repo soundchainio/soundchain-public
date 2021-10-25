@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { InstanceWithExtensions, MagicSDKExtensionsOption, SDKBase } from '@magic-sdk/provider';
 import { Magic } from 'magic-sdk';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
@@ -8,9 +9,9 @@ import { useMe } from './useMe';
 const magicPublicKey = process.env.NEXT_PUBLIC_MAGIC_KEY || '';
 
 interface MagicContextData {
-  magic: InstanceWithExtensions<SDKBase, MagicSDKExtensionsOption<string>> | undefined;
-  web3: Web3 | undefined;
-  account: string | null | undefined;
+  magic: InstanceWithExtensions<SDKBase, MagicSDKExtensionsOption<string>>;
+  web3: Web3;
+  account: string | undefined;
   balance: string | undefined;
 }
 
@@ -20,24 +21,31 @@ interface MagicProviderProps {
   children: ReactNode;
 }
 
+// Create client-side Magic instance
+const createMagic = (magicPublicKey: string) => {
+  return typeof window != 'undefined'
+    ? new Magic(magicPublicKey, {
+        network: {
+          rpcUrl: testNetwork.rpc,
+          chainId: testNetwork.id,
+        },
+      })
+    : null;
+};
+
+export const magic = createMagic(magicPublicKey)!;
+
+// Create Web3 instance
+const createWeb3 = (magic: false | InstanceWithExtensions<SDKBase, MagicSDKExtensionsOption<string>>) => {
+  return magic ? new Web3(magic.rpcProvider) : null;
+};
+
+const web3: Web3 = createWeb3(magic)!;
+
 export function MagicProvider({ children }: MagicProviderProps) {
   const me = useMe();
-  const [magic, setMagic] = useState<InstanceWithExtensions<SDKBase, MagicSDKExtensionsOption<string>>>();
-  const [web3, setWeb3] = useState<Web3>();
-  const [account, setAccount] = useState<string | null>();
+  const [account, setAccount] = useState<string>();
   const [balance, setBalance] = useState<string>();
-
-  useEffect(() => {
-    const magic = new Magic(magicPublicKey, {
-      network: {
-        rpcUrl: testNetwork.rpc,
-        chainId: testNetwork.id,
-      },
-    });
-    magic.preload();
-    setMagic(magic);
-    setWeb3(new Web3(magic.rpcProvider));
-  }, []);
 
   useEffect(() => {
     if (me && me.walletAddress && web3) {
@@ -46,9 +54,11 @@ export function MagicProvider({ children }: MagicProviderProps) {
         setBalance(Number(web3.utils.fromWei(balance, 'ether')).toFixed(6));
       });
     }
-  }, [me, web3]);
+  }, [me]);
 
   return <MagicContext.Provider value={{ magic, web3, account, balance }}>{children}</MagicContext.Provider>;
 }
 
 export const useMagicContext = () => useContext(MagicContext);
+
+export default MagicProvider;

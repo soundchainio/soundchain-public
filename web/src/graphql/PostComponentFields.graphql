@@ -10,6 +10,7 @@ fragment PostComponentFields on Post {
   totalReactions
   topReactions(top: 2)
   myReaction
+  deleted
   profile {
     id
     displayName

@@ -1,6 +1,6 @@
 import { IconProps } from './types/IconProps';
 
-export const Copy = ({ activatedColor, ...props }: IconProps) => {
+export const Copy = ({ color, ...props }: IconProps) => {
   return (
     <svg width={10} height={10} viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
       <path d="M9 0H4a1 1 0 00-1 1v1h4a1 1 0 011 1v4h1a1 1 0 001-1V1a1 1 0 00-1-1z" fill="#fff" />

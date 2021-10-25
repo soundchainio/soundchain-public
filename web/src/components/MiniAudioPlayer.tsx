@@ -1,11 +1,12 @@
 import Slider from '@reach/slider';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
+import { Navigate } from 'icons/Navigate';
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
-import Image from 'next/image';
 import NextLink from 'next/link';
 import { useEffect, useState } from 'react';
 import { remainingTime, timeFromSecs } from 'utils/calculateTime';
+import Asset from './Asset';
 
 interface Song {
   src: string;
@@ -38,11 +39,9 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
   return (
     <div className="bg-black rounded-lg p-4 items-center">
       <div className="flex items-center gap-3">
-        {art && (
-          <div className="h-20 w-20 relative flex items-center">
-            <Image src={art} alt="" layout="fill" className="m-auto object-cover" priority />
-          </div>
-        )}
+        <div className="h-20 w-20 relative flex items-center">
+          <Asset src={art} />
+        </div>
         <div className="flex flex-col flex-1">
           <div className="flex gap-2">
             <div className="flex items-center">
@@ -54,19 +53,30 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
                 )}
               </button>
             </div>
-            <div className="flex flex-col">
-              <div className="text-white font-bold text-xs">
-                {trackId && <NextLink href={`/tracks/${trackId}`}>{title ? title : 'Unknown Title'}</NextLink>}
-                {!trackId && <div>{title ? title : 'Unknown Title'}</div>}
+            <NextLink href={`/tracks/${trackId}`}>
+              <div className="flex w-full cursor-pointer">
+                <div>
+                  <div className="text-white font-black text-xs">
+                    <div>{title ? title : 'Unknown Title'}</div>
+                  </div>
+                  {artist && <div className="text-gray-80 text-xs font-black">{artist}</div>}
+                </div>
+                <div className="ml-auto">
+                  <Navigate />
+                </div>
               </div>
-              {artist && <div className="text-gray-80 font-bold">{artist}</div>}
-            </div>
-            {isSameSong && <div className="flex-1 text-right text-gray-80 text-xs">{timeFromSecs(duration || 0)}</div>}
+            </NextLink>
           </div>
-          <div className="post-audio-player text-white flex flex-col mt-2">
+          <div className="text-white flex flex-col mt-2">
             {isSameSong ? (
               <>
-                <Slider className="ml-1" min={0} max={duration} value={progress} onChange={onSliderChange} />
+                <Slider
+                  className="audio-player ml-1"
+                  min={0}
+                  max={duration}
+                  value={progress}
+                  onChange={onSliderChange}
+                />
                 <div className="flex mt-2 text-xs text-gray-80">
                   <div className="flex-1">{timeFromSecs(progress || 0)}</div>
                   <div className="flex-1 text-right">{remainingTime(progress, duration || 0)} </div>
@@ -74,7 +84,7 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
               </>
             ) : (
               <>
-                <Slider className="ml-1" min={0} max={1} value={0} disabled />
+                <Slider className="audio-player ml-1" min={0} max={1} value={0} disabled />
                 <div className="flex mt-2 text-xs text-gray-80">
                   <div className="flex-1">0:00</div>
                   <div className="flex-1 text-right" />

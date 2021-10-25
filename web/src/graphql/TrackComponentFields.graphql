@@ -8,14 +8,17 @@ fragment TrackComponentFields on Track {
   artist
   album
   releaseYear
+  copyright
   genres
   playbackUrl
   createdAt
   updatedAt
+  deleted
   nftData {
     transactionHash
     tokenId
     contract
     minter
+    ipfsCid
   }
 }

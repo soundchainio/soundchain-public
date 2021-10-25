@@ -1,5 +1,6 @@
 import Slider from '@reach/slider';
 import Hls from 'hls.js';
+import { Navigate } from 'icons/Navigate';
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
 import NextLink from 'next/link';
@@ -76,11 +77,9 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: AudioPlayerPro
   return (
     <div className="bg-black rounded-lg p-4 items-center">
       <div className="flex items-center gap-3">
-        {art && (
-          <div className="h-20 w-20 relative flex items-center">
-            <Asset src={art} />
-          </div>
-        )}
+        <div className="h-20 w-20 relative flex items-center">
+          <Asset src={art} />
+        </div>
         <div className="flex flex-col flex-1">
           <div className="flex gap-2">
             <div className="flex items-center">
@@ -92,17 +91,24 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: AudioPlayerPro
                 )}
               </button>
             </div>
-            <div className="flex flex-col">
-              <div className="text-white font-black text-xs">
-                {trackId && <NextLink href={`/tracks/${trackId}`}>{title ? title : 'Unknown Title'}</NextLink>}
-                {!trackId && <div>{title ? title : 'Unknown Title'}</div>}
+            <NextLink href={trackId ? `/tracks/${trackId}` : '#'}>
+              <div className={`flex w-full ${trackId && 'cursor-pointer'}`}>
+                <div>
+                  <div className="text-white font-black text-xs">
+                    <div>{title ? title : 'Unknown Title'}</div>
+                  </div>
+                  {artist && <div className="text-gray-80 text-xs font-black">{artist}</div>}
+                </div>
+                {trackId && (
+                  <div className="ml-auto">
+                    <Navigate />
+                  </div>
+                )}
               </div>
-              {artist && <div className="text-gray-80 text-xs font-black">{artist}</div>}
-            </div>
-            <div className="flex-1 text-right text-gray-80 text-xs">{timeFromSecs(duration || 0)}</div>
+            </NextLink>
           </div>
-          <div className="post-audio-player text-white flex flex-col mt-2">
-            <Slider className="ml-1" min={0} max={duration} value={playState} onChange={onSliderChange} />
+          <div className="text-white flex flex-col mt-2">
+            <Slider className="audio-player ml-1" min={0} max={duration} value={playState} onChange={onSliderChange} />
             <div className="flex mt-2 text-xs text-gray-80">
               <div className="flex-1">{timeFromSecs(playState || 0)}</div>
               <div className="flex-1 text-right">{remainingTime(playState, duration || 0)} </div>

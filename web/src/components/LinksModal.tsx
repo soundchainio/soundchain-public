@@ -41,13 +41,12 @@ export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type, post
         setLink(identifiedSource);
       }
     }
-
   }, [postLink]);
 
   return (
     <ModalsPortal>
       <div className={classNames(baseClasses, show ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0')}>
-        <div className="flex flex-col h-screen bg-gray-20">
+        <div className="flex flex-col h-full bg-gray-20">
           <div className="flex items-center rounded-tl-3xl rounded-tr-3xl bg-gray-30">
             <div className="p-2 text-gray-400 font-bold flex-1 text-center" onClick={onClose}>
               Cancel
@@ -70,7 +69,12 @@ export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type, post
                 Paste a music link from Soundcloud, Spotify or Bandcamp to embed the music to your post.
               </div>
               <div>
-                <PostLinkInput type={MediaProvider.SOUNDCLOUD} setLink={setLink} link={link} setPostLink={setPostLink} />
+                <PostLinkInput
+                  type={MediaProvider.SOUNDCLOUD}
+                  setLink={setLink}
+                  link={link}
+                  setPostLink={setPostLink}
+                />
                 <PostLinkInput type={MediaProvider.SPOTIFY} setLink={setLink} link={link} setPostLink={setPostLink} />
                 <PostLinkInput type={MediaProvider.BANDCAMP} setLink={setLink} link={link} setPostLink={setPostLink} />
               </div>

@@ -2,12 +2,12 @@ import { IconComponent } from 'icons/types/IconComponent';
 import { BuyNFTButton } from './Buttons/BuyNFT';
 import { ClearButton } from './Buttons/Clear';
 import { GreenGradient } from './Buttons/GreenGradient';
+import { ListNFTButton } from './Buttons/ListNFT';
 import { OutlineButton } from './Buttons/Outline';
 import { OutlineRoundedButton } from './Buttons/OutlineRounded';
 import { RainbowButton } from './Buttons/Rainbow';
 import { RainbowRounded } from './Buttons/RainbowRounded';
 import { RainbowXSButton } from './Buttons/RainbowXS';
-import { SellNFTButton } from './Buttons/SellNFT';
 import { OrangeButton } from './Buttons/Orange';
 
 export type ButtonVariant =
@@ -17,7 +17,7 @@ export type ButtonVariant =
   | 'rainbow-rounded'
   | 'green-yellow-gradient'
   | 'clear'
-  | 'sell-nft'
+  | 'list-nft'
   | 'buy-nft'
   | 'outline-rounded'
   | 'orange';
@@ -31,7 +31,7 @@ export interface ButtonProps extends React.ComponentPropsWithoutRef<'button'> {
   textColor?: string;
 }
 
-export const commonClasses = 'flex items-center justify-center w-full h-full';
+export const commonClasses = 'flex items-center justify-center w-full h-full font-bold';
 
 export const buttonByVariant: Record<ButtonVariant, (props: ButtonProps) => JSX.Element> = {
   'rainbow': RainbowButton,
@@ -41,7 +41,7 @@ export const buttonByVariant: Record<ButtonVariant, (props: ButtonProps) => JSX.
   'green-yellow-gradient': GreenGradient,
   'clear': ClearButton,
   'outline-rounded': OutlineRoundedButton,
-  'sell-nft': SellNFTButton,
+  'list-nft': ListNFTButton,
   'buy-nft': BuyNFTButton,
   'orange': OrangeButton,
 };

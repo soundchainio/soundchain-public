@@ -29,6 +29,10 @@ export class Post extends Model {
   @prop({ required: false })
   trackId?: string;
 
+  @Field({ nullable: true })
+  @prop({ default: false })
+  deleted?: boolean;
+
   @Field(() => Date)
   createdAt: Date;
 

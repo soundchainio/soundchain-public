@@ -87,18 +87,18 @@ export default function ProfilePage() {
       <div className="p-4">
         <div className="flex items-center space-x-2">
           <div className="flex-1 pl-[86px] flex space-x-2">
-            <div className="text-center text-sm cursor-pointer" onClick={onFollowers}>
+            <button className="text-center text-sm cursor-pointer" onClick={onFollowers}>
               <p className="font-semibold text-white">
                 <Number value={followerCount} />
               </p>
               <p className="text-gray-80 text-xs">Followers</p>
-            </div>
-            <div className="text-center text-sm cursor-pointer mr-2" onClick={onFollowing}>
+            </button>
+            <button className="text-center text-sm cursor-pointer mr-2" onClick={onFollowing}>
               <p className="font-semibold text-white">
                 <Number value={followingCount} />
               </p>
               <p className="text-gray-80 text-xs">Following</p>
-            </div>
+            </button>
           </div>
           <div className="flex flex-row space-x-2">
             <SubscribeButton profileId={profileId} isSubscriber={isSubscriber} />
@@ -121,10 +121,7 @@ export default function ProfilePage() {
           {socialMedias.soundcloud && <SocialMediaLink company="soundcloud" handle={socialMedias.soundcloud} />}
         </div>
       </div>
-      <ProfileTabs
-        selectedTab={selectedTab}
-        setSelectedTab={setSelectedTab}
-      />
+      <ProfileTabs selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
       {ProfileTab.POSTS === selectedTab && <Posts profileId={profileId} />}
 
       {ProfileTab.TRACKS === selectedTab && <Tracks profileId={profileId} />}

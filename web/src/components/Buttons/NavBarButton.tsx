@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import { SVGGradientColor } from 'icons/gradients';
 import { IconProps } from 'icons/types/IconProps';
+import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
@@ -10,19 +11,12 @@ interface NavBarButtonProps {
   path?: string;
   onClick?: () => void;
   icon?: (props: IconProps) => JSX.Element;
-  activatedColor?: SVGGradientColor;
+  color?: SVGGradientColor;
   id?: string;
+  nyanCat?: boolean;
 }
 
-export const NavBarButton = ({
-  label,
-  path,
-  icon: Icon,
-  onClick,
-  badge: Badge,
-  activatedColor,
-  id,
-}: NavBarButtonProps) => {
+export const NavBarButton = ({ label, path, icon: Icon, onClick, badge: Badge, color, id, nyanCat }: NavBarButtonProps) => {
   const [isActive, setActive] = useState(false);
   const router = useRouter();
 
@@ -46,17 +40,20 @@ export const NavBarButton = ({
   return (
     <button
       onClick={onButtonClick}
-      className="flex flex-col flex-1 items-center justify-center align-middle cursor-pointer focus:ring-2 focus:ring-blue-600"
+      className="flex flex-col flex-1 md:flex-none items-center justify-center align-middle cursor-pointer focus:ring-2 focus:ring-blue-600"
     >
       {Icon && (
         <div className="relative">
           {Badge && <Badge />}
-          <Icon activatedColor={isActive ? activatedColor : undefined} id={id} />
+          <Icon color={isActive ? color : undefined} id={id} />
         </div>
       )}
-      <span
-        className={classNames('text-gray-50 text-xs mt-2 font-semibold', isActive && `${activatedColor}-gradient-text`)}
-      >
+      {nyanCat &&
+        <div className="relative overflow-hidden scale-150">
+          <Image height={20} width={40} src="/nyan-cat-cropped.gif" alt="Loading" priority />
+        </div>
+      }
+      <span className={classNames('text-gray-50 text-xs font-semibold', !nyanCat && 'mt-2', isActive && `${color}-gradient-text`)}>
         {label}
       </span>
     </button>

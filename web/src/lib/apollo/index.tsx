@@ -8,6 +8,7 @@ import {
 import { setContext } from '@apollo/client/link/context';
 import { getDataFromTree } from '@apollo/client/react/ssr';
 import { mergeDeep } from '@apollo/client/utilities';
+import { config } from 'config';
 import Cookies from 'js-cookie';
 import { isSafari } from 'lib/isSafari';
 import { GetServerSidePropsContext } from 'next';
@@ -21,7 +22,7 @@ const jwtKey = 'token';
 
 let jwt = (isBrowser && Cookies.get(jwtKey)) || undefined;
 
-const httpLink = createHttpLink({ uri: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/graphql' });
+const httpLink = createHttpLink({ uri: config.apiUrl ?? 'http://localhost:4000/graphql' });
 
 export function createApolloClient(context?: GetServerSidePropsContext) {
   const authLink = setContext(() => {
