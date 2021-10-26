@@ -5,4 +5,5 @@ export const config = {
   marketplaceAddress: process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS,
   ipfsGateway: process.env.NEXT_PUBLIC_IPFS_GATEWAY,
   polygonscan: process.env.NEXT_PUBLIC_POLYGONSCAN,
+  muxData: process.env.NEXT_PUBLIC_MUX_DATA,
 };

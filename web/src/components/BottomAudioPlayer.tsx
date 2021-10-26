@@ -1,9 +1,11 @@
 import { Slider } from '@reach/slider';
+import { config } from 'config';
 import { useModalDispatch } from 'contexts/providers/modal';
 import Hls from 'hls.js';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { Pause } from 'icons/PauseBottomAudioPlayer';
 import { Play } from 'icons/PlayBottomAudioPlayer';
+import mux from 'mux-embed';
 import { useEffect, useRef } from 'react';
 import Asset from './Asset';
 
@@ -39,6 +41,19 @@ export const BottomAudioPlayer = () => {
       hls.loadSource(currentSong.src);
       hls.attachMedia(audioRef.current);
     }
+
+    const initTime = Date.now();
+    mux.monitor(audioRef.current, {
+      debug: false,
+      data: {
+        env_key: config.muxData,
+        player_name: 'Main Player',
+        player_init_time: initTime,
+        video_id: currentSong.trackId,
+        video_title: `${currentSong.artist} - ${currentSong.title}`,
+        video_producer: currentSong.artist,
+      },
+    });
 
     return () => {
       if (hls) {

@@ -1,8 +1,10 @@
 import Slider from '@reach/slider';
+import { config } from 'config';
 import Hls from 'hls.js';
 import { Navigate } from 'icons/Navigate';
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
+import mux from 'mux-embed';
 import NextLink from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { remainingTime, timeFromSecs } from 'utils/calculateTime';
@@ -52,6 +54,19 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: AudioPlayerPro
         hls.loadSource(src);
         hls.attachMedia(audio);
       }
+
+      const initTime = Date.now();
+      mux.monitor(audioRef.current, {
+        debug: false,
+        data: {
+          env_key: config.muxData,
+          player_name: 'Embedded Player',
+          player_init_time: initTime,
+          video_id: trackId,
+          video_title: `${artist} - ${title}`,
+          video_producer: artist,
+        },
+      });
 
       audio.onloadedmetadata = function () {
         if (audio) setDuration(audio.duration);
