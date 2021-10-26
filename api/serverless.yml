@@ -435,7 +435,8 @@ resources:
     BlockchainEventWatcher:
       Type: AWS::AppRunner::Service
       Properties:
-        ServiceName: python-app,
+        ServiceName:
+          Fn::Sub: EventWatcher-${AWS::StackName}
         SourceConfiguration:
           AuthenticationConfiguration:
             ConnectionArn: ${env:AWS_GITHUB_CONNECTOR}
