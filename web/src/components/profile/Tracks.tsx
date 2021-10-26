@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import { InfiniteLoader } from 'components/InfiniteLoader';
 import { TrackListItem } from 'components/TrackListItem';
-import { TrackSkeleton } from 'components/TrackSkeleton';
+import { TrackListItemSkeleton } from 'components/TrackListItemSkeleton';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { SortOrder, SortTrackField, useTracksQuery } from 'lib/graphql';
 import React from 'react';
@@ -33,9 +33,9 @@ export const Tracks = ({ className, profileId, pageSize = 10 }: TracksProps) => 
   if (!data) {
     return (
       <div className="space-y-2">
-        <TrackSkeleton />
-        <TrackSkeleton />
-        <TrackSkeleton />
+        <TrackListItemSkeleton />
+        <TrackListItemSkeleton />
+        <TrackListItemSkeleton />
       </div>
     );
   }
@@ -68,7 +68,7 @@ export const Tracks = ({ className, profileId, pageSize = 10 }: TracksProps) => 
   };
 
   return (
-    <ol className={classNames('space-y-5', className)}>
+    <ol className={classNames('space-y-1', className)}>
       {nodes.map(({ id }, index) => (
         <TrackListItem
           key={id}

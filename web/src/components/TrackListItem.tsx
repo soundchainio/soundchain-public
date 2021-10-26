@@ -1,10 +1,11 @@
-import { TrackSkeleton } from 'components/TrackSkeleton';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { Pause } from 'icons/PauseBottomAudioPlayer';
 import { Play } from 'icons/PlayBottomAudioPlayer';
 import { useTrackLazyQuery } from 'lib/graphql';
 import React, { useEffect } from 'react';
 import Asset from './Asset';
+import { NotAvailableMessage } from './NotAvailableMessage';
+import { TrackListItemSkeleton } from './TrackListItemSkeleton';
 
 type Song = {
   src: string;
@@ -32,7 +33,11 @@ export const TrackListItem = ({ trackId, index, coverPhotoUrl, handleOnPlayClick
     }
   }, []);
 
-  if (!data?.track) return <TrackSkeleton />;
+  if (!data?.track) return <TrackListItemSkeleton />;
+
+  if (data?.track.deleted) {
+    return <NotAvailableMessage type="track" />;
+  }
 
   const song = {
     src: data.track.playbackUrl,
@@ -43,15 +48,24 @@ export const TrackListItem = ({ trackId, index, coverPhotoUrl, handleOnPlayClick
 
   return (
     <li
-      className={`flex items-center gap-2 px-4 py-2 transition duration-300 hover:bg-gray-25 text-white text-sm ${isPlaying ? 'font-black' : 'font-semibold'
-        } text-white text-sm`}
+      className={`flex items-center gap-2 px-4 py-2 transition duration-300 hover:bg-gray-25 ${
+        isPlaying ? 'font-black' : 'font-semibold'
+      } text-white text-xs`}
     >
       <p>{index}</p>
       <div className="h-10 w-10 relative flex items-center bg-gray-80">
         <Asset src={data.track.artworkUrl} />
       </div>
       <div>
-        <h2>{data.track.title}</h2>
+        <p>{data.track.title}</p>
+        <div className="flex items-center gap-1">
+          {data.track.playbackCount && (
+            <>
+              <Play fill={'#808080'} width={7} height={8} />
+              <p className="text-xxs text-gray-80">{data.track.playbackCount}</p>
+            </>
+          )}
+        </div>
       </div>
       <button
         className="h-10 w-10 flex items-center justify-center ml-auto hover:scale-125 duration-75"
