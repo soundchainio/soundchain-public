@@ -6,6 +6,7 @@ on:
       - develop
     paths:
       - 'api/**'
+      - 'event-watcher/**'
   workflow_dispatch:
 
 jobs:

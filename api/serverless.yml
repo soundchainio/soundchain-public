@@ -451,7 +451,7 @@ resources:
               CodeConfigurationValues:
                 Runtime: NODEJS_12
                 BuildCommand: 'cd event-watcher && yarn install'
-                StartCommand: 'cd event-watcher && npx ts-node --transpile-only src/index.ts'
+                StartCommand: 'npx ts-node --transpile-only src/index.ts'
                 Port: 3002
                 RuntimeEnvironmentVariables:
                   - Name: PROVIDER_URL
