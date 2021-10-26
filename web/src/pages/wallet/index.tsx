@@ -21,7 +21,6 @@ const topNovaBarProps: TopNavBarProps = {
 export default function WalletPage() {
   const me = useMe();
   const [updateDefaultWallet] = useUpdateDefaultWalletMutation();
-
   const { account, balance, web3, chainId, connect } = useMetaMask();
   const { account: magicAccount, balance: magicBalance } = useMagicContext();
   const [testnet, setTestnet] = useState(true);
