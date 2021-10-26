@@ -1,11 +1,13 @@
 {
   "name": "soundchain-event-watcher",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": ".build/index.js",
   "license": "MIT",
   "private": true,
   "scripts": {
-    "dev": "nodemon -w 'src/**' -e 'ts,json' -x ts-node src/index.ts"
+    "dev": "nodemon -w 'src/**' -e 'ts,json' -x ts-node src/index.ts",
+    "build": "tsc",
+    "start": "node ."
   },
   "devDependencies": {
     "@types/express": "^4.17.13",
