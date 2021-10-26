@@ -432,7 +432,7 @@ resources:
         MessageRetentionPeriod: 1209600
         QueueName:
           Fn::Sub: MintingDeadLetterQueue-${AWS::StackName}.fifo
-    BlockchainEventWatcher:
+    EventWatcher:
       Type: AWS::AppRunner::Service
       Properties:
         ServiceName:
@@ -442,7 +442,7 @@ resources:
             ConnectionArn: arn:aws:apprunner:us-east-1:271937159223:connection/soundchain/6a9caeac0cc74e8c825807d275f897a2
           AutoDeploymentsEnabled: true
           CodeRepository:
-            RepositoryUrl: https://github.com/agencyenterprise/soundchain
+            RepositoryUrl: https://github.com/agencyenterprise/soundchain.git
             SourceCodeVersion:
               Type: BRANCH
               Value: ${env:BRANCH}
