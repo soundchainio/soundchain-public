@@ -432,3 +432,35 @@ resources:
         MessageRetentionPeriod: 1209600
         QueueName:
           Fn::Sub: MintingDeadLetterQueue-${AWS::StackName}.fifo
+    BlockchainEventWatcher:
+      Type: AWS::AppRunner::Service
+      Properties:
+        ServiceName: python-app,
+        SourceConfiguration:
+          AuthenticationConfiguration:
+            ConnectionArn: ${env:AWS_GITHUB_CONNECTOR}
+          AutoDeploymentsEnabled: true
+          CodeRepository:
+            RepositoryUrl: 'https://github.com/agencyenterprise/soundchain'
+            SourceCodeVersion:
+              Type: BRANCH
+              Value: ${env:BRANCH}
+            CodeConfiguration:
+              ConfigurationSource: API
+              CodeConfigurationValues:
+                Runtime: NODEJS_12
+                BuildCommand: 'cd event-watcher && yarn install'
+                StartCommand: 'cd event-watcher && npx ts-node --transpile-only src/index.ts'
+                Port: 3002
+                RuntimeEnvironmentVariables:
+                  - Name: PROVIDER_URL
+                    Value: 'wss://polygon-mumbai.g.alchemy.com/v2/iRRgkrOCET0SiKBdl1aYA_TkV9-nI4WW'
+                  - Name: DATABASE_URL
+                    Value: ${self:custom.db.url}
+                  - Name: MARKETPLACE_ADDRESS
+                    Value: '0x30D3cc77d96a125966e3f01D6BF9Ea95a7f86Fa5'
+                  - Name: NFT_ADDRESS
+                    Value: '0x1CA766577e56F73583f64B79BE79783E33812Aae'
+        InstanceConfiguration:
+          Cpu: 1 vCPU
+          Memory: 3 GB
