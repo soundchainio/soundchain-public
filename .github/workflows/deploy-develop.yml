@@ -27,7 +27,9 @@ jobs:
       - run: yarn
       - run: serverless deploy -s ${GITHUB_REF#refs/heads/}
         env:
-          NODE_ENV: staging
+          NODE_ENV: develop
+          BRANCH: ${GITHUB_REF#refs/heads/}
+          AWS_GITHUB_CONNECTOR: ${{ secrets.AWS_GITHUB_CONNECTOR }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD_DEVELOP }}
