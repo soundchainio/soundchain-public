@@ -100,19 +100,27 @@ const useBlockchain = () => {
     );
   };
 
-  const cancelListing = (web3: Web3, tokenId: number, from: string) => {
+  const cancelListing = (web3: Web3, tokenId: number, from: string, onReceipt: (receipt: Receipt) => void) => {
     const contract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
     return beforeSending(
       web3,
-      async () => await contract.methods.cancelListing(nftAddress, tokenId).send({ from, gas }),
+      async () =>
+        await contract.methods.cancelListing(nftAddress, tokenId).send({ from, gas }).on('receipt', onReceipt),
     );
   };
 
-  const updateListing = (web3: Web3, tokenId: number, from: string, price: number) => {
+  const updateListing = (
+    web3: Web3,
+    tokenId: number,
+    from: string,
+    price: string,
+    onReceipt: (receipt: Receipt) => void,
+  ) => {
     const contract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
     return beforeSending(
       web3,
-      async () => await contract.methods.updateListing(nftAddress, tokenId, price).send({ from, gas }),
+      async () =>
+        await contract.methods.updateListing(nftAddress, tokenId, price).send({ from, gas }).on('receipt', onReceipt),
     );
   };
 

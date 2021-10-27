@@ -12,6 +12,7 @@ import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
 import { TrackDocument, useListingItemLazyQuery, useTrackQuery } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
+import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 
@@ -44,6 +45,7 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 });
 
 export default function EditPage({ trackId }: TrackPageProps) {
+  const router = useRouter();
   const { updateListing, cancelListing } = useBlockchain();
   const { data: track } = useTrackQuery({ variables: { id: trackId } });
   const { account, web3 } = useWalletContext();
@@ -66,8 +68,6 @@ export default function EditPage({ trackId }: TrackPageProps) {
     return null;
   }
 
-  console.log(account);
-
   const ownerAddressAccount = listingItem.listingItem.owner.toLowerCase();
   const isOwner = ownerAddressAccount === account?.toLowerCase();
   const isForSale = !!listingItem.listingItem.pricePerItem ?? false;
@@ -77,26 +77,32 @@ export default function EditPage({ trackId }: TrackPageProps) {
     if (!web3 || !listingItem.listingItem.tokenId || !newPrice || !account) {
       return;
     }
-    updateListing(web3, listingItem.listingItem.tokenId, account, newPrice);
     setLoading(true);
+    const weiPrice = web3?.utils.toWei(newPrice.toString(), 'ether') || '0';
+    updateListing(web3, listingItem.listingItem.tokenId, account, weiPrice, () => setLoading(false));
   };
 
   const handleRemove = () => {
     if (!web3 || !listingItem.listingItem.tokenId || !account) {
       return;
     }
-    cancelListing(web3, listingItem.listingItem.tokenId, account);
+    // TODO: ask confirmation
     setLoading(true);
+    cancelListing(web3, listingItem.listingItem.tokenId, account, () => router.push(router.asPath.replace('edit', '')));
   };
 
-  const rightButton = () => {
-    return <div onClick={handleRemove}>Remove Listing</div>;
-  };
+  const RemoveListing = (
+    <div className="flex-shrink-0 flex items-center">
+      <h2 className="text-sm text-red-400 font-bold" onClick={handleRemove}>
+        Remove Listing
+      </h2>
+    </div>
+  );
 
   const topNovaBarProps: TopNavBarProps = {
     leftButton: <BackButton />,
-    title: 'Confirm Purchase',
-    rightButton: rightButton(),
+    title: 'Edit Listing',
+    rightButton: RemoveListing,
   };
 
   if (!isForSale || !isOwner || !me || !track) {
