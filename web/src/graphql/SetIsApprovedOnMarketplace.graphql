@@ -1,7 +1,0 @@
-mutation SetIsApprovedOnMarketplace {
-  setIsApprovedOnMarketplace {
-    user {
-      id
-    }
-  }
-}
