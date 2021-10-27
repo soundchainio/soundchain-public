@@ -69,11 +69,18 @@ export const Tracks = ({ className, profileId, pageSize = 10 }: TracksProps) => 
 
   return (
     <ol className={classNames('space-y-1', className)}>
-      {nodes.map(({ id }, index) => (
+      {nodes.map((song, index) => (
         <TrackListItem
-          key={id}
+          key={song.id}
           index={index + 1}
-          trackId={id}
+          song={{
+            trackId: song.id,
+            src: song.playbackUrl,
+            art: song.artworkUrl,
+            title: song.title,
+            artist: song.artist,
+            playbackCount: song.playbackCount,
+          }}
           handleOnPlayClicked={song => handleOnPlayClicked(song, index)}
         />
       ))}

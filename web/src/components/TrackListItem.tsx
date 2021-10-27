@@ -1,11 +1,8 @@
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { Pause } from 'icons/PauseBottomAudioPlayer';
 import { Play } from 'icons/PlayBottomAudioPlayer';
-import { useTrackLazyQuery } from 'lib/graphql';
-import React, { useEffect } from 'react';
+import React from 'react';
 import Asset from './Asset';
-import { NotAvailableMessage } from './NotAvailableMessage';
-import { TrackListItemSkeleton } from './TrackListItemSkeleton';
 
 type Song = {
   src: string;
@@ -16,35 +13,22 @@ type Song = {
 };
 
 interface TrackProps {
-  trackId: string;
   index: number;
-  coverPhotoUrl?: string;
+  song: {
+    src: string;
+    title?: string | null;
+    trackId: string;
+    artist?: string | null;
+    art?: string | null;
+    playbackCount?: number | null;
+  };
   handleOnPlayClicked: (song: Song) => void;
 }
 
-export const TrackListItem = ({ trackId, index, coverPhotoUrl, handleOnPlayClicked }: TrackProps) => {
-  const [track, { data }] = useTrackLazyQuery({ variables: { id: trackId } });
+export const TrackListItem = ({ song, index, handleOnPlayClicked }: TrackProps) => {
+  const { trackId, art, title, playbackCount } = song;
   const { isCurrentlyPlaying } = useAudioPlayerContext();
   const isPlaying = isCurrentlyPlaying(trackId);
-
-  useEffect(() => {
-    if (!data?.track) {
-      track();
-    }
-  }, []);
-
-  if (!data?.track) return <TrackListItemSkeleton />;
-
-  if (data?.track.deleted) {
-    return <NotAvailableMessage type="track" />;
-  }
-
-  const song = {
-    src: data.track.playbackUrl,
-    trackId: data.track.id,
-    art: data.track.artworkUrl || coverPhotoUrl || undefined,
-    title: data.track.title,
-  };
 
   return (
     <li
@@ -54,15 +38,15 @@ export const TrackListItem = ({ trackId, index, coverPhotoUrl, handleOnPlayClick
     >
       <p>{index}</p>
       <div className="h-10 w-10 relative flex items-center bg-gray-80">
-        <Asset src={data.track.artworkUrl} />
+        <Asset src={art} />
       </div>
       <div>
-        <p>{data.track.title}</p>
+        <p>{title}</p>
         <div className="flex items-center gap-1">
-          {data.track.playbackCount && (
+          {playbackCount && (
             <>
               <Play fill={'#808080'} width={7} height={8} />
-              <p className="text-xxs text-gray-80">{data.track.playbackCount}</p>
+              <p className="text-xxs text-gray-80">{playbackCount}</p>
             </>
           )}
         </div>
