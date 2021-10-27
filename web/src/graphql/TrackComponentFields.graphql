@@ -14,7 +14,7 @@ fragment TrackComponentFields on Track {
   createdAt
   updatedAt
   deleted
-  playbackCount
+  playbackCountFormatted
   nftData {
     transactionHash
     tokenId

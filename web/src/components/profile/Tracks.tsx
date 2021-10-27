@@ -79,7 +79,7 @@ export const Tracks = ({ className, profileId, pageSize = 10 }: TracksProps) => 
             art: song.artworkUrl,
             title: song.title,
             artist: song.artist,
-            playbackCount: song.playbackCount,
+            playbackCount: song.playbackCountFormatted,
           }}
           handleOnPlayClicked={song => handleOnPlayClicked(song, index)}
         />

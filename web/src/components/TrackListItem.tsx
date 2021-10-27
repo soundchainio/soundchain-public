@@ -20,7 +20,7 @@ interface TrackProps {
     trackId: string;
     artist?: string | null;
     art?: string | null;
-    playbackCount?: number | null;
+    playbackCount: string;
   };
   handleOnPlayClicked: (song: Song) => void;
 }
