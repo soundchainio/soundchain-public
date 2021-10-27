@@ -39,12 +39,4 @@ export class UserService extends ModelService<typeof User> {
     }
     return updatedUser;
   }
-
-  async setIsApprovedOnMarketplace(id: string): Promise<User> {
-    const updatedUser = await UserModel.findByIdAndUpdate(id, { isApprovedOnMarketplace: true }, { new: true });
-    if (!updatedUser) {
-      throw new Error(`Could not update the profile with id: ${id}`);
-    }
-    return updatedUser;
-  }
 }

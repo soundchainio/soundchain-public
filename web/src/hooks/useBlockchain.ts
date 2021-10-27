@@ -170,6 +170,11 @@ const useBlockchain = () => {
     );
   };
 
+  const isApproved = async (web3: Web3, from: string) => {
+    const nftContract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress);
+    return await nftContract.methods.isApprovedForAll(from, marketplaceAddress).call();
+  };
+
   const getMaxGasFee = async (web3: Web3) => {
     const gasPriceWei = await web3.eth.getGasPrice();
     const gasPrice = parseInt(web3.utils.fromWei(gasPriceWei, 'Gwei'));
@@ -191,6 +196,7 @@ const useBlockchain = () => {
     mintNftToken,
     getMaxGasFee,
     getIpfsAssetUrl,
+    isApproved,
   };
 };
 
