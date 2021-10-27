@@ -1,7 +1,6 @@
 import { InputField } from 'components/InputField';
 import { Form, Formik, FormikProps } from 'formik';
 import { Matic } from 'icons/Matic';
-import React from 'react';
 import { number, object, SchemaOf } from 'yup';
 
 interface FormValues {
