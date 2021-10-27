@@ -4,7 +4,7 @@ import { useMe } from 'hooks/useMe';
 import { useModalDispatch } from 'contexts/providers/modal';
 import { Layout } from 'components/Layout';
 import Head from 'next/head';
-import { FormValues, TransferForm } from 'components/forms/transfer/transferForm';
+import { FormValues, TransferForm } from 'components/forms/transfer/TransferForm';
 import React from 'react';
 
 const topNovaBarProps: TopNavBarProps = {
@@ -19,8 +19,9 @@ export default function TransferPage() {
   
   const handleSubmit = (values: FormValues) => {
     const {recipient, amount} = values
+    const precision = -(Math.log10(parseFloat(amount)))
     dispatchSetRecipientWalletAddress(recipient)
-    dispatchSetAmountToTransfer(amount)
+    dispatchSetAmountToTransfer((parseFloat(amount).toFixed(precision)))
     dispatchShowTransferConfirmationModal(true)
   }
 

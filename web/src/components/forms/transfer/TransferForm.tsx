@@ -39,7 +39,16 @@ export const TransferForm = ({ handleSubmit }: Props) => {
   const [gasPrice, setGasPrice] = useState<string>('');
   
   useEffect(() => {
-    if (web3) getCurrentGasPrice(web3).then(price => setGasPrice(price))
+    const gasCheck = () => {
+      if (web3) { 
+        getCurrentGasPrice(web3).then(price => setGasPrice(price)) 
+      }
+    };
+    gasCheck();
+    const interval = setInterval(() => {
+      gasCheck();
+    }, 5 * 1000);
+    return () => clearInterval(interval);
   }, [web3, getCurrentGasPrice])
 
   if (!me) return null;
