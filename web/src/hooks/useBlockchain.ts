@@ -124,7 +124,11 @@ const useBlockchain = () => {
     onReceipt: (receipt: Receipt) => void,
   ) => {
     const contract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
-    contract.methods.buyItem(nftAddress, tokenId, owner).send({ from, gas, value }).on('receipt', onReceipt);
+    return beforeSending(
+      web3,
+      async () =>
+        await contract.methods.buyItem(nftAddress, tokenId, owner).send({ from, gas, value }).on('receipt', onReceipt),
+    );
   };
 
   const registerRoyalty = (web3: Web3, tokenId: number, from: string, royalty: number) => {
