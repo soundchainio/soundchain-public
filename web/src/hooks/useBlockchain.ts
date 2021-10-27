@@ -125,7 +125,11 @@ const useBlockchain = () => {
     onReceipt: (receipt: Receipt) => void,
   ) => {
     const contract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
-    contract.methods.buyItem(nftAddress, tokenId, owner).send({ from, gas, value }).on('receipt', onReceipt);
+    return beforeSending(
+      web3,
+      async () =>
+        await contract.methods.buyItem(nftAddress, tokenId, owner).send({ from, gas, value }).on('receipt', onReceipt),
+    );
   };
 
   const registerRoyalty = (web3: Web3, tokenId: number, from: string, royalty: number) => {
@@ -189,6 +193,11 @@ const useBlockchain = () => {
     );
   };
 
+  const isApproved = async (web3: Web3, from: string) => {
+    const nftContract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress);
+    return await nftContract.methods.isApprovedForAll(from, marketplaceAddress).call();
+  };
+
   const getMaxGasFee = async (web3: Web3) => {
     const gasPriceWei = await web3.eth.getGasPrice();
     const gasPrice = parseInt(web3.utils.fromWei(gasPriceWei, 'Gwei'));
@@ -217,6 +226,7 @@ const useBlockchain = () => {
     getCurrentGasPrice,
     getIpfsAssetUrl,
     transfer,
+    isApproved,
   };
 };
 

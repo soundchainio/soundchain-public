@@ -6,8 +6,10 @@ import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import { useModalDispatch } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
+import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
+import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
 import {
   CreateListingItemInput,
@@ -47,20 +49,22 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
     return { notFound: true };
   }
 
-  return cacheFor(SellPage, { trackId }, context, apolloClient);
+  return cacheFor(ListPage, { trackId }, context, apolloClient);
 });
 
-export default function SellPage({ trackId }: TrackPageProps) {
-  const { listItem, isTokenOwner } = useBlockchain();
+export default function ListPage({ trackId }: TrackPageProps) {
+  const { listItem, isTokenOwner, isApproved: checkIsApproved } = useBlockchain();
   const router = useRouter();
   const me = useMe();
   const { data } = useTrackQuery({ variables: { id: trackId } });
   const { account, web3 } = useWalletContext();
+  const maxGasFee = useMaxGasFee();
   const { dispatchShowApproveModal } = useModalDispatch();
   const [createListingItem] = useCreateListingItemMutation();
   const [loading, setLoading] = useState(false);
   const [price, setPrice] = useState(0);
   const [isOwner, setIsOwner] = useState(false);
+  const [isApproved, setIsApproved] = useState(false);
 
   const tokenId = data?.track.nftData?.tokenId || -1;
 
@@ -70,21 +74,30 @@ export default function SellPage({ trackId }: TrackPageProps) {
 
   useEffect(() => {
     const fetchIsOwner = async () => {
-      if (!account || !web3 || !data?.track.nftData?.tokenId) {
+      if (!account || !web3 || !data?.track.nftData?.tokenId || !isTokenOwner) {
         return;
       }
       const isTokenOwnerRes = await isTokenOwner(web3, data.track.nftData.tokenId, account);
       setIsOwner(isTokenOwnerRes);
     };
     fetchIsOwner();
-  }, [account, web3, data?.track.nftData]);
+  }, [account, web3, data?.track.nftData, isTokenOwner]);
 
   useEffect(() => {
     getListingItem();
   }, [getListingItem]);
 
+  useEffect(() => {
+    const fetchIsApproved = async () => {
+      if (!web3 || !checkIsApproved || !account) return;
+
+      const is = await checkIsApproved(web3, account);
+      setIsApproved(is);
+    };
+    fetchIsApproved();
+  }, [account, web3, checkIsApproved]);
+
   const isForSale = !!listingItem?.listingItem.pricePerItem ?? false;
-  const isApproved = me?.isApprovedOnMarketplace ?? false;
 
   const handleSell = () => {
     if (!data?.track.nftData?.tokenId || !account || !web3) {
@@ -136,8 +149,15 @@ export default function SellPage({ trackId }: TrackPageProps) {
         <Track trackId={trackId} />
       </div>
       <ListNFT onSetPrice={price => setPrice(price)} />
-      <div className="flex justify-center pb-3">
-        <Button className="w-40" variant="list-nft" disabled={price <= 0} onClick={handleSell} loading={loading}>
+      <div className="flex p-4">
+        <div className="flex-1 font-black text-xs text-gray-80">
+          <p>Max gas fee</p>
+          <div className="flex items-center gap-1">
+            <Matic />
+            <div className="text-white">{maxGasFee}</div>MATIC
+          </div>
+        </div>
+        <Button variant="list-nft" disabled={price <= 0} onClick={handleSell} loading={loading}>
           <div className="px-4 font-bold">LIST NFT</div>
         </Button>
       </div>

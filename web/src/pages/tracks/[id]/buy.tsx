@@ -5,8 +5,10 @@ import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import useBlockchain from 'hooks/useBlockchain';
+import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
+import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
 import {
   ListingItemDocument,
@@ -55,6 +57,7 @@ export default function BuyPage({ trackId }: TrackPageProps) {
   const { data: track } = useTrackQuery({ variables: { id: trackId } });
   const { account, web3 } = useWalletContext();
   const [updateTrack] = useUpdateTrackMutation();
+  const maxGasFee = useMaxGasFee();
   const [finishListing] = useFinishListingMutation();
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -144,8 +147,15 @@ export default function BuyPage({ trackId }: TrackPageProps) {
         <Track trackId={trackId} />
       </div>
       <BuyNFT price={price} ownerAddressAccount={ownerAddressAccount} />
-      <div className="flex justify-center mt-6">
-        <Button className="w-40" variant="buy-nft" onClick={handleBuy} loading={loading}>
+      <div className="flex p-4">
+        <div className="flex-1 font-black text-xs text-gray-80">
+          <p>Max gas fee</p>
+          <div className="flex items-center gap-1">
+            <Matic />
+            <div className="text-white">{maxGasFee}</div>MATIC
+          </div>
+        </div>
+        <Button variant="buy-nft" onClick={handleBuy} loading={loading}>
           <div className="px-4">BUY NFT</div>
         </Button>
       </div>

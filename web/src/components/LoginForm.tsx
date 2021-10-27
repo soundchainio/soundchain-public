@@ -1,11 +1,10 @@
 import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
+import { config } from 'config';
 import { Form, Formik } from 'formik';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
 import { LogoAndText } from 'icons/LogoAndText';
-import { setJwt } from 'lib/apollo';
-import { useLoginMutation } from 'lib/graphql';
 import { useRouter } from 'next/dist/client/router';
 import { useEffect, useState } from 'react';
 import * as yup from 'yup';
@@ -19,8 +18,8 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
 });
 
 export const LoginForm = () => {
-  const [login] = useLoginMutation();
   const [loading, setLoading] = useState(false);
+  const [emailLinkSent, setEmailLinkSent] = useState(false);
   const me = useMe();
   const { magic } = useMagicContext();
   const router = useRouter();
@@ -35,21 +34,27 @@ export const LoginForm = () => {
     try {
       setLoading(true);
       magic.preload();
-      const token = await magic.auth.loginWithMagicLink({
+      await magic.auth.loginWithMagicLink({
         email: values.email,
+        redirectURI: `${config.domainUrl}/callback-login`,
       });
-
-      if (!token) {
-        throw new Error('Error connecting Magic');
-      }
-
-      const result = await login({ variables: { input: { token } } });
-      setJwt(result.data?.login.jwt);
+      setEmailLinkSent(true);
     } catch (error) {
-      router.push('/create-account');
+      console.error(error);
     } finally {
       setLoading(false);
     }
+  }
+
+  if (emailLinkSent) {
+    return (
+      <>
+        <div className="h-36 mb-2 flex items-center justify-center">
+          <LogoAndText />
+        </div>
+        <div className="text-white flex items-center justify-center">Now you can close this tab</div>
+      </>
+    );
   }
 
   return (
