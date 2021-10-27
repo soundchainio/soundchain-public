@@ -450,8 +450,8 @@ resources:
               ConfigurationSource: API
               CodeConfigurationValues:
                 Runtime: NODEJS_12
-                BuildCommand: 'cd event-watcher && yarn install && yarn build'
-                StartCommand: 'node .'
+                BuildCommand: 'cd event-watcher && yarn install'
+                StartCommand: 'npx ts-node --transpile-only src/index.ts'
                 Port: 3002
                 RuntimeEnvironmentVariables:
                   - Name: PROVIDER_URL

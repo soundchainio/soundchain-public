@@ -1,5 +1,4 @@
 import { Button } from 'components/Button';
-import { useModalDispatch } from 'contexts/providers/modal';
 import { useMe } from 'hooks/useMe';
 import { CheckmarkFilled } from 'icons/CheckmarkFilled';
 import { Matic } from 'icons/Matic';
@@ -15,14 +14,8 @@ export const HandleNFT = ({ isOwner, isForSale, price }: HandleNFTProps) => {
   const router = useRouter();
   const me = useMe();
 
-  const isApproved = me?.isApprovedOnMarketplace;
-  const { dispatchShowApproveModal } = useModalDispatch();
-
   const handleListButton = () => {
-    if (isApproved) {
-      return router.push(`${router.asPath}/list`);
-    }
-    me ? dispatchShowApproveModal(true) : router.push('/login');
+    me ? router.push(`${router.asPath}/list`) : router.push('/login');
   };
 
   if (isOwner && isForSale) {
