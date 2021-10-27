@@ -3,6 +3,7 @@ import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { PageInput, useExploreTracksQuery } from 'lib/graphql';
 import React from 'react';
 import { InfiniteLoader } from './InfiniteLoader';
+import { NoResultFound } from './NoResultFound';
 
 interface ExplorePageProps {
   searchTerm?: string;
@@ -54,11 +55,11 @@ export const ExploreTracks = ({ searchTerm }: ExplorePageProps) => {
 
   return (
     <div>
-      {tracks?.map((track, index) => (
+      {tracks.length > 0 ? tracks?.map((track, index) => (
         <div key={track.id} className="text-white">
           <TrackListItem trackId={track.id} index={index + 1} handleOnPlayClicked={song => handleOnPlayClicked(song, index)} />
         </div>
-      ))}
+      )) : <NoResultFound type="Tracks" />}
       {pageInfo.hasNextPage && <InfiniteLoader loadMore={loadNext} loadingMessage="Loading Tracks" />}
     </div>
   );

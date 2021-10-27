@@ -2,6 +2,7 @@ import { ProfileListItem } from 'components/ProfileListItem';
 import { PageInput, useExploreUsersQuery } from 'lib/graphql';
 import React from 'react';
 import { InfiniteLoader } from './InfiniteLoader';
+import { NoResultFound } from './NoResultFound';
 
 interface ExplorePageProps {
   searchTerm?: string;
@@ -36,11 +37,11 @@ export const ExploreUsers = ({ searchTerm }: ExplorePageProps) => {
 
   return (
     <div>
-      {profiles?.map(profile => (
+      {profiles.length > 0 ? profiles?.map(profile => (
         <div key={profile.id} className="text-white">
           <ProfileListItem profileId={profile.id} />
         </div>
-      ))}
+      )) : <NoResultFound type="Users" />}
       {pageInfo.hasNextPage && <InfiniteLoader loadMore={loadNext} loadingMessage="Loading Users" />}
     </div>
   );

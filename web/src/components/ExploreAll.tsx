@@ -1,4 +1,5 @@
 import { Button } from 'components/Button';
+import { NoResultFound } from 'components/NoResultFound';
 import { ProfileListItem } from 'components/ProfileListItem';
 import { Subtitle } from 'components/Subtitle';
 import { Song, TrackListItem } from 'components/TrackListItem';
@@ -47,11 +48,11 @@ export const ExploreAll = ({ searchTerm, setSelectedTab }: ExplorePageProps) => 
           VIEW ALL
         </Button>
       </div>
-      {profiles?.map(profile => (
+      {data && data?.explore.totalProfiles > 0 ? profiles?.map(profile => (
         <div key={profile.id} className="text-white">
           <ProfileListItem profileId={profile.id} />
         </div>
-      ))}
+      )) : <NoResultFound type="Users" />}
       <div className="flex items-center w-full p-4">
         <div className="flex flex-1 items-center text-white font-bold">
           <Subtitle className="font-bold"> Tracks  </Subtitle>
@@ -61,11 +62,11 @@ export const ExploreAll = ({ searchTerm, setSelectedTab }: ExplorePageProps) => 
           VIEW ALL
         </Button>
       </div>
-      {tracks?.map((track, index) => (
+      {data && data.explore.totalTracks > 0 ? tracks?.map((track, index) => (
         <div key={track.id} className="text-white">
           <TrackListItem trackId={track.id} index={index + 1} handleOnPlayClicked={song => handleOnPlayClicked(song, index)} />
         </div>
-      ))}
+      )) : <NoResultFound type="Tracks" />}
     </div>
   );
 };
