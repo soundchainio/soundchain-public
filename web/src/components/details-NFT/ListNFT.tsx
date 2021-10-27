@@ -11,15 +11,16 @@ const validationSchema: SchemaOf<FormValues> = object().shape({
   price: number().required(),
 });
 
-const initialValues: FormValues = {
-  price: 0,
-};
-
 interface ListNFTProps {
   onSetPrice: (price: number) => void;
+  initialPrice?: number;
 }
 
-export const ListNFT = ({ onSetPrice }: ListNFTProps) => {
+export const ListNFT = ({ onSetPrice, initialPrice }: ListNFTProps) => {
+  const initialValues: FormValues = {
+    price: initialPrice || 0,
+  };
+
   return (
     <div className="mb-2">
       <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={console.log}>
