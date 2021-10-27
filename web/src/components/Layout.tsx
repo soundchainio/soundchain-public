@@ -8,6 +8,7 @@ import { ReactionsModal } from './ReactionsModal';
 import { SideMenu } from './SideMenu';
 import { TopNavBar, TopNavBarProps } from './TopNavBar';
 import { UnderDevelopmentModal } from './UnderDevelopmentModal';
+import { TransferConfirmationModal } from './TransferConfirmationModal'
 
 interface LayoutProps {
   children: ReactNode;
@@ -41,6 +42,7 @@ export const Layout = ({ children, hideBottomNavBar, topNavBarProps, fullHeight 
         <PostModal />
         <AuthorActionsModal />
         <ReactionsModal />
+        <TransferConfirmationModal />
         <ApproveModal />
       </div>
     </div>
