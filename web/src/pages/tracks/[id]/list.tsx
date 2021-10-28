@@ -49,11 +49,11 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
     return { notFound: true };
   }
 
-  return cacheFor(SellPage, { trackId }, context, apolloClient);
+  return cacheFor(ListPage, { trackId }, context, apolloClient);
 });
 
-export default function SellPage({ trackId }: TrackPageProps) {
-  const { listItem, isTokenOwner } = useBlockchain();
+export default function ListPage({ trackId }: TrackPageProps) {
+  const { listItem, isTokenOwner, isApproved: checkIsApproved } = useBlockchain();
   const router = useRouter();
   const me = useMe();
   const { data } = useTrackQuery({ variables: { id: trackId } });
@@ -64,6 +64,7 @@ export default function SellPage({ trackId }: TrackPageProps) {
   const [loading, setLoading] = useState(false);
   const [price, setPrice] = useState(0);
   const [isOwner, setIsOwner] = useState(false);
+  const [isApproved, setIsApproved] = useState(false);
 
   const tokenId = data?.track.nftData?.tokenId || -1;
 
@@ -86,8 +87,17 @@ export default function SellPage({ trackId }: TrackPageProps) {
     getListingItem();
   }, [getListingItem]);
 
+  useEffect(() => {
+    const fetchIsApproved = async () => {
+      if (!web3 || !checkIsApproved || !account) return;
+
+      const is = await checkIsApproved(web3, account);
+      setIsApproved(is);
+    };
+    fetchIsApproved();
+  }, [account, web3, checkIsApproved]);
+
   const isForSale = !!listingItem?.listingItem.pricePerItem ?? false;
-  const isApproved = me?.isApprovedOnMarketplace ?? false;
 
   const handleSell = () => {
     if (!data?.track.nftData?.tokenId || !account || !web3) {

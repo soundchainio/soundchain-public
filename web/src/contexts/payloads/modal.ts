@@ -41,6 +41,18 @@ export interface ShowAudioPlayerPayload {
   show: boolean;
 }
 
+export interface ShowTransferConfirmationPayload {
+  show: boolean;
+}
+
+export interface SetRecipientWalletAddress {
+  address: string;
+}
+
+export interface SetAmountToTransfer {
+  amount: string;
+}
+
 export type ModalPayload =
   | ShowNewPostPayload
   | SetEditPostIdPayload
@@ -49,4 +61,7 @@ export type ModalPayload =
   | ShowUnderDevelopmentPayload
   | ShowReactionsPayload
   | ShowCreatePayload
-  | ShowAudioPlayerPayload;
+  | ShowAudioPlayerPayload
+  | ShowTransferConfirmationPayload
+  | SetRecipientWalletAddress
+  | SetAmountToTransfer;
