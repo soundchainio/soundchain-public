@@ -8,6 +8,7 @@ import { CreateTrackPayload } from '../types/CreateTrackPayload';
 import { DeleteTrackInput } from '../types/DeleteTrackInput';
 import { DeleteTrackPayload } from '../types/DeleteTrackPayload';
 import { FilterTrackInput } from '../types/FilterTrackInput';
+import { IncrementPlaybackCountInput } from '../types/IncrementPlaybackCountInput';
 import { PageInput } from '../types/PageInput';
 import { SortTrackInput } from '../types/SortTrackInput';
 import { TrackConnection } from '../types/TrackConnection';
@@ -70,6 +71,16 @@ export class TrackResolver {
     @Arg('input') { trackId }: DeleteTrackInput,
   ): Promise<DeleteTrackPayload> {
     const track = await trackService.deleteTrackOnError(trackId);
+    return { track };
+  }
+
+  @Mutation(() => UpdateTrackPayload)
+  @Authorized()
+  async incrementPlaybackCount(
+    @Ctx() { trackService }: Context,
+    @Arg('input') { trackId, amount }: IncrementPlaybackCountInput,
+  ): Promise<UpdateTrackPayload> {
+    const track = await trackService.incrementPlaybackCount(trackId, amount);
     return { track };
   }
 }

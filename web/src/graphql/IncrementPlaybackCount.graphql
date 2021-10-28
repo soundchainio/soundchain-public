@@ -1,0 +1,7 @@
+mutation incrementPlaybackCount($input: IncrementPlaybackCountInput!) {
+  incrementPlaybackCount(input: $input) {
+    track {
+      ...TrackComponentFields
+    }
+  }
+}

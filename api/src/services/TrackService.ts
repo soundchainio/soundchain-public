@@ -59,4 +59,8 @@ export class TrackService extends ModelService<typeof Track> {
 
     return await this.model.findOneAndDelete({ _id: id });
   }
+
+  async incrementPlaybackCount(id: string, amount: number): Promise<Track> {
+    return await this.model.findByIdAndUpdate(id, { $inc: { playbackCount: amount } });
+  }
 }
