@@ -24,6 +24,18 @@ export interface ReturnValuesItemSold {
   pricePerItem: string;
 }
 
+export interface ReturnValuesItemUpdated {
+  owner: string;
+  nft: string;
+  tokenId: string;
+  newPrice: string;
+}
+
+export interface ReturnValuesItemCanceled {
+  owner: string;
+  nft: string;
+  tokenId: string;
+}
 interface BaseEvent {
   address: string;
   blockNumber: number;
@@ -59,4 +71,16 @@ export interface ReceiptSold {
   transactionHash: string;
   transactionIndex: number;
   returnValues: ReturnValuesItemSold;
+}
+
+export interface ReceiptItemUpdated {
+  transactionHash: string;
+  transactionIndex: number;
+  returnValues: ReturnValuesItemUpdated;
+}
+
+export interface ReceiptItemCanceled {
+  transactionHash: string;
+  transactionIndex: number;
+  returnValues: ReturnValuesItemCanceled;
 }
