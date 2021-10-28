@@ -5,10 +5,12 @@ import { number, object, SchemaOf } from 'yup';
 
 interface FormValues {
   price: number;
+  royalty: number;
 }
 
 const validationSchema: SchemaOf<FormValues> = object().shape({
-  price: number().required(),
+  price: number().min(0.000001).required(),
+  royalty: number().max(100).min(0).required(),
 });
 
 interface ListNFTProps {
@@ -21,6 +23,7 @@ interface ListNFTProps {
 export const ListNFT = ({ onSetPrice, initialPrice, isSetRoyalty, onSetRoyalty }: ListNFTProps) => {
   const initialValues: FormValues = {
     price: initialPrice || 0,
+    royalty: 0,
   };
 
   return (
@@ -51,14 +54,20 @@ export const ListNFT = ({ onSetPrice, initialPrice, isSetRoyalty, onSetRoyalty }
               <div className="flex">
                 <label
                   htmlFor="royalty"
-                  className="flex items-center justify-start w-full bg-gray-20 text-gray-80 font-bold text-xs md-text-sm uppercase py-3 pl-5"
+                  className="flex items-center justify-start w-full bg-gray-20 text-gray-80 font-bold text-xs md-text-sm  py-3 pl-5"
                 >
-                  Royalty
+                  <div className="flex flex-col mr-3">
+                    <p className="uppercase">Royalty %</p>
+                    <p className="font-medium" style={{ fontSize: 10 }}>
+                      Setting a royalty % will allow you to earn a cut on all secondary sales.
+                    </p>
+                  </div>
                 </label>
                 <div className="flex flex-wrap items-center w-1/2 justify-end bg-gray-20 uppercase py-3 pr-5">
                   <InputField
                     name="royalty"
                     type="number"
+                    symbol={'%'}
                     onChange={el => {
                       handleChange(el);
                       onSetRoyalty(parseInt(el.target.value));
