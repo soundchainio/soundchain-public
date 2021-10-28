@@ -8,6 +8,7 @@ import useBlockchain from 'hooks/useBlockchain';
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar';
 import { useUpload } from 'hooks/useUpload';
 import { useWalletContext } from 'hooks/useWalletContext';
+import { useMe } from 'hooks/useMe';
 import {
   CreateTrackMutation,
   FeedDocument,
@@ -32,6 +33,7 @@ enum Tabs {
 export const CreateModal = () => {
   const modalState = useModalState();
   const { dispatchShowCreateModal, dispatchShowPostModal } = useModalDispatch();
+  const me = useMe();
   const [tab, setTab] = useState(Tabs.NFT);
   const { setIsMintingState } = useHideBottomNavBar();
 
@@ -75,7 +77,7 @@ export const CreateModal = () => {
 
       setInitialValues({
         title: fileMetadata?.title,
-        artist: fileMetadata?.artist,
+        artist: me?.profile.displayName,
         description: fileMetadata?.comment && fileMetadata.comment[0],
         album: fileMetadata?.album,
         releaseYear: fileMetadata?.year,
@@ -121,7 +123,7 @@ export const CreateModal = () => {
 
   const handleSubmit = async (values: FormValues) => {
     if (file && web3 && account) {
-      const { title, artworkUrl, description, album, artist, genres, releaseYear, copyright } = values;
+      const { title, artworkUrl, description, artist, album, genres, releaseYear, copyright } = values;
 
       setMintingState('Uploading track file');
       const assetUrl = await upload([file]);
