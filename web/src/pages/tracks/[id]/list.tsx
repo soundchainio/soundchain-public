@@ -17,6 +17,7 @@ import {
   useCreateListingItemMutation,
   useListingItemLazyQuery,
   useTrackQuery,
+  useWasListedBeforeLazyQuery,
 } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
@@ -73,6 +74,10 @@ export default function ListPage({ trackId }: TrackPageProps) {
     variables: { tokenId },
   });
 
+  const [getWasListedBefore, { data: wasListedBefore }] = useWasListedBeforeLazyQuery({
+    variables: { tokenId },
+  });
+
   useEffect(() => {
     const fetchIsOwner = async () => {
       if (!account || !web3 || !data?.track.nftData?.tokenId || !isTokenOwner) {
@@ -89,6 +94,10 @@ export default function ListPage({ trackId }: TrackPageProps) {
   }, [getListingItem]);
 
   useEffect(() => {
+    getWasListedBefore();
+  }, [getWasListedBefore]);
+
+  useEffect(() => {
     const fetchIsApproved = async () => {
       if (!web3 || !checkIsApproved || !account) return;
 
@@ -99,7 +108,7 @@ export default function ListPage({ trackId }: TrackPageProps) {
   }, [account, web3, checkIsApproved]);
 
   const isForSale = !!listingItem?.listingItem.pricePerItem ?? false;
-  const isSetRoyalty = !listingItem;
+  const isSetRoyalty = !wasListedBefore?.wasListedBefore;
 
   const handleList = () => {
     if (!data?.track.nftData?.tokenId || !account || !web3) {
