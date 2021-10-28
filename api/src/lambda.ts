@@ -5,9 +5,14 @@ import { mongoose } from '@typegoose/typegoose';
 import { ApolloServer } from 'apollo-server-lambda';
 import type { Handler, SQSEvent } from 'aws-lambda';
 import express from 'express';
+import Web3 from 'web3';
 import { AbiItem } from 'web3-utils';
-import { abi } from './artifacts/contract/SoundchainCollectible.sol/SoundchainCollectible.json';
 import { config } from './config';
+import SoundchainCollectible from './contract/SoundchainCollectible/SoundchainCollectible.json';
+import SoundchainMarketplace from './contract/SoundchainMarketplace/SoundchainMarketplace.json';
+import { UserModel } from './models/User';
+import { ReceiptItemCanceled, ReceiptItemListed, ReceiptItemUpdated, ReceiptSold } from './types/BlockchainEvents';
+import { Context } from './types/Context';
 import { Metadata, NFT } from './types/NFT';
 
 export const handler: Handler = async (...args) => {
@@ -25,6 +30,66 @@ export const handler: Handler = async (...args) => {
 
   return apolloHandler(...args);
 };
+
+export const watcher: Handler = async event => {
+  const { PROVIDER_URL, MARKETPLACE_ADDRESS, NFT_ADDRESS } = process.env;
+
+  await mongoose.connect(config.db.url, config.db.options);
+  const web3 = new Web3(PROVIDER_URL);
+  const marketplaceContract = new web3.eth.Contract(SoundchainMarketplace.abi as AbiItem[], MARKETPLACE_ADDRESS);
+  const nftContract = new web3.eth.Contract(SoundchainCollectible.abi as AbiItem[], NFT_ADDRESS);
+  const user = await UserModel.findOne({ handle: '_system' });
+  const context = new Context({ sub: user._id });
+
+  marketplaceContract.getPastEvents('allEvents', { fromBlock: 20715661 }, (_, events: any) => {
+    for (const event of events) {
+      switch (event.event) {
+        case 'ItemListed':
+          {
+            const { owner, nft, tokenId, quantity, pricePerItem, startingTime } = (event as ReceiptItemListed)
+              .returnValues;
+            context.listingItemService.createListingItem({
+              owner,
+              nft,
+              tokenId: parseInt(tokenId),
+              quantity: parseInt(quantity),
+              pricePerItem,
+              startingTime: parseInt(startingTime),
+            });
+            console.log('ItemListed');
+          }
+          break;
+        case 'ItemSold':
+          {
+            const { tokenId } = (event as ReceiptSold).returnValues;
+            context.listingItemService.setNotValid(parseInt(tokenId));
+            console.log('ItemSold');
+          }
+          break;
+        case 'ItemUpdated':
+          {
+            const { tokenId, newPrice } = (event as ReceiptItemUpdated).returnValues;
+            context.listingItemService.updateListingItem(parseInt(tokenId), { pricePerItem: newPrice });
+            console.log('ItemUpdated');
+          }
+          break;
+        case 'ItemCanceled':
+          {
+            const { tokenId } = (event as ReceiptItemCanceled).returnValues;
+            context.listingItemService.setNotValid(parseInt(tokenId));
+            console.log('ItemCanceled');
+          }
+          break;
+      }
+    }
+  });
+
+  nftContract.getPastEvents('allEvents', { fromBlock: 20744645 }, (_, events: any) => {
+    console.log(events);
+  });
+};
+
+watcher({}, undefined, null);
 
 export const mint: Handler<SQSEvent> = async event => {
   if (event.Records.length !== 1) {
@@ -51,7 +116,7 @@ export const mint: Handler<SQSEvent> = async event => {
     const body: NFT = JSON.parse(event.Records[0].body);
     const { assetKey, artKey, to, ...nft } = body;
     const name = body.name;
-    const contract = new web3.eth.Contract(abi as AbiItem[], config.minting.contractAddress);
+    const contract = new web3.eth.Contract(SoundchainCollectible.abi as AbiItem[], config.minting.contractAddress);
 
     const assetResult = await pinToIPFS(assetKey, name);
 

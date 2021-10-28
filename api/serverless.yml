@@ -25,6 +25,8 @@ functions:
           cors: true
   migrate:
     handler: src/db/migrate.handler
+  watcher:
+    handler: src/lambda.watcher
   mint:
     handler: src/lambda.mint
     timeout: 120
