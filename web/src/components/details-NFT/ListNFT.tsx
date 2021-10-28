@@ -16,8 +16,8 @@ const validationSchema: SchemaOf<FormValues> = object().shape({
 interface ListNFTProps {
   onSetPrice: (price: number) => void;
   initialPrice?: number;
-  isSetRoyalty: boolean;
-  onSetRoyalty: (royalty: number) => void;
+  isSetRoyalty?: boolean;
+  onSetRoyalty?: (royalty: number) => void;
 }
 
 export const ListNFT = ({ onSetPrice, initialPrice, isSetRoyalty, onSetRoyalty }: ListNFTProps) => {
@@ -50,7 +50,7 @@ export const ListNFT = ({ onSetPrice, initialPrice, isSetRoyalty, onSetRoyalty }
                 />
               </div>
             </div>
-            {isSetRoyalty && (
+            {isSetRoyalty && onSetRoyalty && (
               <div className="flex">
                 <label
                   htmlFor="royalty"
