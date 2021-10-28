@@ -64,7 +64,7 @@ export default function TrackPage({ trackId }: TrackPageProps) {
       setIsOwner(isTokenOwnerRes);
     };
     fetchIsOwner();
-  }, [account, web3, data?.track.nftData]);
+  }, [account, web3, data?.track.nftData, isTokenOwner]);
 
   const isForSale = !!listingItem?.listingItem.pricePerItem ?? false;
   const price = web3?.utils.fromWei(listingItem?.listingItem.pricePerItem.toString() ?? '0', 'ether');

@@ -14,9 +14,11 @@ const validationSchema: SchemaOf<FormValues> = object().shape({
 interface ListNFTProps {
   onSetPrice: (price: number) => void;
   initialPrice?: number;
+  isSetRoyalty: boolean;
+  onSetRoyalty: (royalty: number) => void;
 }
 
-export const ListNFT = ({ onSetPrice, initialPrice }: ListNFTProps) => {
+export const ListNFT = ({ onSetPrice, initialPrice, isSetRoyalty, onSetRoyalty }: ListNFTProps) => {
   const initialValues: FormValues = {
     price: initialPrice || 0,
   };
@@ -45,6 +47,26 @@ export const ListNFT = ({ onSetPrice, initialPrice }: ListNFTProps) => {
                 />
               </div>
             </div>
+            {isSetRoyalty && (
+              <div className="flex">
+                <label
+                  htmlFor="royalty"
+                  className="flex items-center justify-start w-full bg-gray-20 text-gray-80 font-bold text-xs md-text-sm uppercase py-3 pl-5"
+                >
+                  Royalty
+                </label>
+                <div className="flex flex-wrap items-center w-1/2 justify-end bg-gray-20 uppercase py-3 pr-5">
+                  <InputField
+                    name="royalty"
+                    type="number"
+                    onChange={el => {
+                      handleChange(el);
+                      onSetRoyalty(parseInt(el.target.value));
+                    }}
+                  />
+                </div>
+              </div>
+            )}
             <p className="mx-6 text-gray-80 text-sm py-2 text-center">
               Soundchain transaction fee and Gas fees will be applied to buyer during checkout.
             </p>
