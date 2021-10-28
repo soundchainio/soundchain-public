@@ -5,7 +5,7 @@ import { magic } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
 import { Metadata, NftToken, Receipt } from 'types/NftTypes';
 import Web3 from 'web3';
-import { TransactionReceipt } from 'web3-core/types'
+import { TransactionReceipt } from 'web3-core/types';
 import { AbiItem } from 'web3-utils';
 import soundchainContract from '../contract/SoundchainCollectible/SoundchainCollectible.json';
 import soundchainMarketplace from '../contract/SoundchainMarketplace/SoundchainMarketplace.json';
@@ -87,6 +87,7 @@ const useBlockchain = () => {
     quantity: number,
     from: string,
     price: string,
+    royalty = 0,
     onReceipt: (receipt: Receipt) => void,
   ) => {
     const contract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
@@ -94,7 +95,7 @@ const useBlockchain = () => {
       web3,
       async () =>
         await contract.methods
-          .listItem(nftAddress, tokenId, quantity, price, 0)
+          .listItem(nftAddress, tokenId, quantity, price, 0, royalty)
           .send({ from, gas })
           .on('receipt', onReceipt),
     );
@@ -159,22 +160,25 @@ const useBlockchain = () => {
   };
 
   const transfer = (
-    web3: Web3, 
-    to: string, 
-    from: string, 
-    amount: string, 
+    web3: Web3,
+    to: string,
+    from: string,
+    amount: string,
     onTransactionHash: (hash: string) => void,
-    onReceipt: (receipt: TransactionReceipt) => void) => {
-      const amountWei = web3.utils.toWei(amount); 
-      beforeSending(web3, () => 
-          web3.eth.sendTransaction({
+    onReceipt: (receipt: TransactionReceipt) => void,
+  ) => {
+    const amountWei = web3.utils.toWei(amount);
+    beforeSending(web3, () =>
+      web3.eth
+        .sendTransaction({
           from: from,
           to: to,
-          value: amountWei
+          value: amountWei,
         })
         .on('transactionHash', onTransactionHash)
-        .on('receipt', onReceipt),    
-  )}
+        .on('receipt', onReceipt),
+    );
+  };
 
   const isTokenOwner = async (web3: Web3, tokenId: number, from: string) => {
     const nftContract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress);
@@ -216,7 +220,7 @@ const useBlockchain = () => {
   const getCurrentGasPrice = async (web3: Web3) => {
     const gasPriceWei = await web3.eth.getGasPrice();
     return web3.utils.fromWei(gasPriceWei, 'ether');
-  }
+  };
 
   return {
     burnNftToken,
