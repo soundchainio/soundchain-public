@@ -17,6 +17,7 @@ import {
   useCreateListingItemMutation,
   useListingItemLazyQuery,
   useTrackQuery,
+  useWasListedBeforeLazyQuery,
 } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
@@ -63,12 +64,17 @@ export default function ListPage({ trackId }: TrackPageProps) {
   const [createListingItem] = useCreateListingItemMutation();
   const [loading, setLoading] = useState(false);
   const [price, setPrice] = useState(0);
+  const [royalty, setRoyalty] = useState(0);
   const [isOwner, setIsOwner] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
 
   const tokenId = data?.track.nftData?.tokenId || -1;
 
   const [getListingItem, { data: listingItem }] = useListingItemLazyQuery({
+    variables: { tokenId },
+  });
+
+  const [getWasListedBefore, { data: wasListedBefore }] = useWasListedBeforeLazyQuery({
     variables: { tokenId },
   });
 
@@ -88,6 +94,10 @@ export default function ListPage({ trackId }: TrackPageProps) {
   }, [getListingItem]);
 
   useEffect(() => {
+    getWasListedBefore();
+  }, [getWasListedBefore]);
+
+  useEffect(() => {
     const fetchIsApproved = async () => {
       if (!web3 || !checkIsApproved || !account) return;
 
@@ -98,8 +108,9 @@ export default function ListPage({ trackId }: TrackPageProps) {
   }, [account, web3, checkIsApproved]);
 
   const isForSale = !!listingItem?.listingItem.pricePerItem ?? false;
+  const isSetRoyalty = !wasListedBefore?.wasListedBefore;
 
-  const handleSell = () => {
+  const handleList = () => {
     if (!data?.track.nftData?.tokenId || !account || !web3) {
       return;
     }
@@ -107,7 +118,7 @@ export default function ListPage({ trackId }: TrackPageProps) {
     const weiPrice = web3?.utils.toWei(price.toString(), 'ether') || '0';
 
     if (isApproved) {
-      listItem(web3, data.track.nftData.tokenId, 1, account, weiPrice, onReceipt);
+      listItem(web3, data.track.nftData.tokenId, 1, account, weiPrice, royalty * 100, onReceipt);
       return;
     }
     me ? dispatchShowApproveModal(true) : router.push('/login');
@@ -148,7 +159,11 @@ export default function ListPage({ trackId }: TrackPageProps) {
       <div className="m-4">
         <Track trackId={trackId} />
       </div>
-      <ListNFT onSetPrice={price => setPrice(price)} />
+      <ListNFT
+        onSetPrice={price => setPrice(price)}
+        isSetRoyalty={isSetRoyalty}
+        onSetRoyalty={royalty => setRoyalty(royalty)}
+      />
       <div className="flex p-4">
         <div className="flex-1 font-black text-xs text-gray-80">
           <p>Max gas fee</p>
@@ -157,7 +172,7 @@ export default function ListPage({ trackId }: TrackPageProps) {
             <div className="text-white">{maxGasFee}</div>MATIC
           </div>
         </div>
-        <Button variant="list-nft" disabled={price <= 0} onClick={handleSell} loading={loading}>
+        <Button variant="list-nft" disabled={price <= 0} onClick={handleList} loading={loading}>
           <div className="px-4 font-bold">LIST NFT</div>
         </Button>
       </div>

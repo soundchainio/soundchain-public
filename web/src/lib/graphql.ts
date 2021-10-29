@@ -693,6 +693,7 @@ export type Query = {
   followers: FollowConnection;
   following: FollowConnection;
   listingItem: CreateListingItemType;
+  wasListedBefore: Scalars['Boolean'];
   message: Message;
   notifications: NotificationConnection;
   notification: Notification;
@@ -767,6 +768,11 @@ export type QueryFollowingArgs = {
 
 
 export type QueryListingItemArgs = {
+  tokenId: Scalars['Float'];
+};
+
+
+export type QueryWasListedBeforeArgs = {
   tokenId: Scalars['Float'];
 };
 
@@ -2203,6 +2209,16 @@ export type UploadUrlQuery = (
     { __typename?: 'UploadUrl' }
     & Pick<UploadUrl, 'uploadUrl' | 'fileName' | 'readUrl'>
   ) }
+);
+
+export type WasListedBeforeQueryVariables = Exact<{
+  tokenId: Scalars['Float'];
+}>;
+
+
+export type WasListedBeforeQuery = (
+  { __typename?: 'Query' }
+  & Pick<Query, 'wasListedBefore'>
 );
 
 export const CommentComponentFieldsFragmentDoc = gql`
@@ -4822,3 +4838,36 @@ export function useUploadUrlLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
 export type UploadUrlQueryHookResult = ReturnType<typeof useUploadUrlQuery>;
 export type UploadUrlLazyQueryHookResult = ReturnType<typeof useUploadUrlLazyQuery>;
 export type UploadUrlQueryResult = Apollo.QueryResult<UploadUrlQuery, UploadUrlQueryVariables>;
+export const WasListedBeforeDocument = gql`
+    query WasListedBefore($tokenId: Float!) {
+  wasListedBefore(tokenId: $tokenId)
+}
+    `;
+
+/**
+ * __useWasListedBeforeQuery__
+ *
+ * To run a query within a React component, call `useWasListedBeforeQuery` and pass it any options that fit your needs.
+ * When your component renders, `useWasListedBeforeQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useWasListedBeforeQuery({
+ *   variables: {
+ *      tokenId: // value for 'tokenId'
+ *   },
+ * });
+ */
+export function useWasListedBeforeQuery(baseOptions: Apollo.QueryHookOptions<WasListedBeforeQuery, WasListedBeforeQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<WasListedBeforeQuery, WasListedBeforeQueryVariables>(WasListedBeforeDocument, options);
+      }
+export function useWasListedBeforeLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<WasListedBeforeQuery, WasListedBeforeQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<WasListedBeforeQuery, WasListedBeforeQueryVariables>(WasListedBeforeDocument, options);
+        }
+export type WasListedBeforeQueryHookResult = ReturnType<typeof useWasListedBeforeQuery>;
+export type WasListedBeforeLazyQueryHookResult = ReturnType<typeof useWasListedBeforeLazyQuery>;
+export type WasListedBeforeQueryResult = Apollo.QueryResult<WasListedBeforeQuery, WasListedBeforeQueryVariables>;

@@ -59,6 +59,19 @@ html {
   height: 100%;
 }
 
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  #bottom-nav-bar {
+    padding-top: max(0.75rem, env(safe-area-inset-bottom));
+  }
+  #bottom-nav-bar > div {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+}
+
 .bg-yellow-gradient {
   background: linear-gradient(76.4deg, rgba(177, 159, 59, 0.2) 8.28%, rgba(255, 241, 111, 0.2) 83.02%);
 }
@@ -97,6 +110,12 @@ html {
 
 .purple-gradient-text {
   background: linear-gradient(90deg, #ab4eff 0%, #f1419e 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.purple-green-gradient-text {
+  background: linear-gradient(90deg, #ab4eff 0%, #84FF82 100%);
   background-clip: text;
   color: transparent;
 }

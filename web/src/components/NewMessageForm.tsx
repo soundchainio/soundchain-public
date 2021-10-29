@@ -39,7 +39,7 @@ export const NewMessageForm = ({ profileId, onNewMessage }: NewMessageFormProps)
       <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
         {({ isSubmitting, isValid, dirty }: FormikProps<FormValues>) => (
           <Form>
-            <div className="flex flex-row items-start space-x-3 p-3 bg-gray-25">
+            <div className="flex flex-row items-start space-x-3 p-3 py-5 bg-gray-25">
               {me && <Avatar className="flex self-center" profile={me.profile} linkToProfile={false} />}
               <FlexareaField name="body" placeholder="Write a message..." />
               <button type="submit" disabled={isSubmitting} className="pt-1">
