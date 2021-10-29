@@ -77,7 +77,7 @@ export const CreateModal = () => {
 
       setInitialValues({
         title: fileMetadata?.title,
-        artist: me?.profile.displayName,
+        artist: me?.handle,
         description: fileMetadata?.comment && fileMetadata.comment[0],
         album: fileMetadata?.album,
         releaseYear: fileMetadata?.year,
