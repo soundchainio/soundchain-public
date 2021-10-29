@@ -107,6 +107,8 @@ provider:
     MUX_TOKEN_SECRET: ${env:MUX_TOKEN_SECRET}
     SENTRY_URL: ${env:SENTRY_URL}
     MAGIC_PRIVATE_KEY: ${env:MAGIC_PRIVATE_KEY}
+    MUX_DATA_ID: ${env:MUX_DATA_ID}
+    MUX_DATA_SECRET: ${env:MUX_DATA_SECRET}
 
   iam:
     role:

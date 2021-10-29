@@ -16,6 +16,18 @@ type RecursivePartial<T> = {
   [P in keyof T]?: RecursivePartial<T[P]>;
 };
 
+type bulkType = {
+  updateOne: {
+    filter: {
+      _id: string;
+    };
+    update: {
+      $inc: {
+        playbackCount: number;
+      };
+    };
+  };
+};
 export class TrackService extends ModelService<typeof Track> {
   constructor(context: Context) {
     super(context, TrackModel);
@@ -96,26 +108,18 @@ export class TrackService extends ModelService<typeof Track> {
   }
 
   async incrementPlaybackCount(values: { trackId: string; amount: number }[]): Promise<boolean> {
-    const newValues: { trackId: string; amount: number }[] = [];
+    const bulkOps: bulkType[] = [];
 
-    console.log('values' + JSON.stringify(values));
     for (let index = 0; index < values.length; index++) {
       const element = values[index];
       if (mongoose.Types.ObjectId.isValid(element.trackId)) {
-        console.log('entrou' + JSON.stringify(element));
-
-        newValues.push(element);
+        bulkOps.push({
+          updateOne: { filter: { _id: element.trackId }, update: { $inc: { playbackCount: element.amount } } },
+        });
       }
     }
-    const result = await this.model.bulkWrite(
-      newValues.map(value => ({
-        updateOne: {
-          filter: { _id: value.trackId },
-          update: { $inc: { playbackCount: value.amount } },
-        },
-      })),
-    );
 
-    return true;
+    const result = await this.model.bulkWrite(bulkOps);
+    return Boolean(result.result.ok);
   }
 }

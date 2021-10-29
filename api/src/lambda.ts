@@ -11,6 +11,7 @@ import { config } from './config';
 import SoundchainCollectible from './contract/SoundchainCollectible/SoundchainCollectible.json';
 import SoundchainMarketplace from './contract/SoundchainMarketplace/SoundchainMarketplace.json';
 import { UserModel } from './models/User';
+import muxDataApi from './muxDataApi';
 import { ItemCanceled, ItemListed, ItemSold, ItemUpdated, TransferSingle } from './types/BlockchainEvents';
 import { Context } from './types/Context';
 import { Metadata, NFT } from './types/NFT';
@@ -174,6 +175,53 @@ export const mint: Handler<SQSEvent> = async event => {
 
     const receipt = await web3.eth.sendSignedTransaction(signedTransaction.rawTransaction as string);
     console.log(receipt.transactionHash);
+  } catch (e) {
+    console.error('Execution error, please check AWS logs', e);
+    process.exit(1);
+  }
+};
+
+interface MuxServerData {
+  total_row_count: number;
+  data: {
+    field: string;
+    views: number;
+  }[];
+}
+
+export const incrementPlaybackCount: Handler = async () => {
+  await mongoose.connect(config.db.url, config.db.options);
+
+  const user = await UserModel.findOne({ handle: '_system' });
+  const context = new Context({ sub: user._id });
+
+  let currentPage = 1;
+  const pageSize = 100;
+
+  const fetchAndUpdate = async (pageSize: number, currentPage: number): Promise<number> => {
+    const { data } = await muxDataApi.get<MuxServerData>(
+      `/metrics/unique_viewers/breakdown?group_by=video_id&timeframe[]=7:days&limit=${pageSize}&page=${currentPage}`,
+    );
+
+    console.log(data);
+    const totalRowCount = data.total_row_count;
+    if (totalRowCount) {
+      const inputValues = data.data.map(video => ({ trackId: video.field, amount: video.views }));
+      await context.trackService.incrementPlaybackCount(inputValues);
+    }
+    return totalRowCount;
+  };
+
+  try {
+    const totalRowCount = await fetchAndUpdate(pageSize, currentPage);
+    const totalPages = Math.ceil(totalRowCount / pageSize);
+
+    if (totalPages > currentPage) {
+      currentPage++;
+      for (let index = currentPage; index <= totalPages; index++) {
+        await fetchAndUpdate(pageSize, index);
+      }
+    }
   } catch (e) {
     console.error('Execution error, please check AWS logs', e);
     process.exit(1);
