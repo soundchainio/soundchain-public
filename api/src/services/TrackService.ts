@@ -1,3 +1,4 @@
+import { mongoose } from '@typegoose/typegoose';
 import { PaginateResult } from '../db/pagination/paginate';
 import { NotFoundError } from '../errors/NotFoundError';
 import { FeedItemModel } from '../models/FeedItem';
@@ -60,7 +61,27 @@ export class TrackService extends ModelService<typeof Track> {
     return await this.model.findOneAndDelete({ _id: id });
   }
 
-  async incrementPlaybackCount(id: string, amount: number): Promise<Track> {
-    return await this.model.findByIdAndUpdate(id, { $inc: { playbackCount: amount } });
+  async incrementPlaybackCount(values: { trackId: string; amount: number }[]): Promise<boolean> {
+    const newValues: { trackId: string; amount: number }[] = [];
+
+    console.log('values' + JSON.stringify(values));
+    for (let index = 0; index < values.length; index++) {
+      const element = values[index];
+      if (mongoose.Types.ObjectId.isValid(element.trackId)) {
+        console.log('entrou' + JSON.stringify(element));
+
+        newValues.push(element);
+      }
+    }
+    const result = await this.model.bulkWrite(
+      newValues.map(value => ({
+        updateOne: {
+          filter: { _id: value.trackId },
+          update: { $inc: { playbackCount: value.amount } },
+        },
+      })),
+    );
+
+    return true;
   }
 }

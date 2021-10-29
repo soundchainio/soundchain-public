@@ -293,8 +293,17 @@ export enum Genre {
 }
 
 export type IncrementPlaybackCountInput = {
+  values: Array<IncrementPlaybackCountTuple>;
+};
+
+export type IncrementPlaybackCountPayload = {
+  __typename?: 'IncrementPlaybackCountPayload';
+  success: Scalars['Boolean'];
+};
+
+export type IncrementPlaybackCountTuple = {
   trackId: Scalars['String'];
-  amount?: Maybe<Scalars['Float']>;
+  amount: Scalars['Float'];
 };
 
 
@@ -380,7 +389,7 @@ export type Mutation = {
   createTrack: CreateTrackPayload;
   updateTrack: UpdateTrackPayload;
   deleteTrackOnError: UpdateTrackPayload;
-  incrementPlaybackCount: UpdateTrackPayload;
+  incrementPlaybackCount: IncrementPlaybackCountPayload;
   register: AuthPayload;
   login: AuthPayload;
   updateHandle: UpdateHandlePayload;
@@ -1452,11 +1461,8 @@ export type IncrementPlaybackCountMutationVariables = Exact<{
 export type IncrementPlaybackCountMutation = (
   { __typename?: 'Mutation' }
   & { incrementPlaybackCount: (
-    { __typename?: 'UpdateTrackPayload' }
-    & { track: (
-      { __typename?: 'Track' }
-      & TrackComponentFieldsFragment
-    ) }
+    { __typename?: 'IncrementPlaybackCountPayload' }
+    & Pick<IncrementPlaybackCountPayload, 'success'>
   ) }
 );
 
@@ -3110,12 +3116,10 @@ export type FollowingQueryResult = Apollo.QueryResult<FollowingQuery, FollowingQ
 export const IncrementPlaybackCountDocument = gql`
     mutation incrementPlaybackCount($input: IncrementPlaybackCountInput!) {
   incrementPlaybackCount(input: $input) {
-    track {
-      ...TrackComponentFields
-    }
+    success
   }
 }
-    ${TrackComponentFieldsFragmentDoc}`;
+    `;
 export type IncrementPlaybackCountMutationFn = Apollo.MutationFunction<IncrementPlaybackCountMutation, IncrementPlaybackCountMutationVariables>;
 
 /**

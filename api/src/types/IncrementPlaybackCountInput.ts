@@ -1,10 +1,8 @@
 import { Field, InputType } from 'type-graphql';
+import { IncrementPlaybackCountTuple } from './IncrementPlaybackCountTuple';
 
 @InputType()
 export class IncrementPlaybackCountInput {
-  @Field()
-  trackId: string;
-
-  @Field({ nullable: true })
-  amount: number;
+  @Field(() => [IncrementPlaybackCountTuple])
+  values: IncrementPlaybackCountTuple[];
 }
