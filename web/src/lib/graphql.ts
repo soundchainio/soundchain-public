@@ -523,6 +523,7 @@ export type MutationUpdateDefaultWalletArgs = {
 
 export type NftDataInput = {
   transactionHash?: Maybe<Scalars['String']>;
+  pendingRequest?: Maybe<PendingRequest>;
   ipfsCid?: Maybe<Scalars['String']>;
   tokenId?: Maybe<Scalars['Float']>;
   contract?: Maybe<Scalars['String']>;
@@ -533,6 +534,7 @@ export type NftDataInput = {
 export type NftDataType = {
   __typename?: 'NFTDataType';
   transactionHash: Maybe<Scalars['String']>;
+  pendingRequest: Maybe<PendingRequest>;
   ipfsCid: Maybe<Scalars['String']>;
   tokenId: Maybe<Scalars['Float']>;
   contract: Maybe<Scalars['String']>;
@@ -599,6 +601,13 @@ export type PageInput = {
   before?: Maybe<Scalars['String']>;
   inclusive?: Maybe<Scalars['Boolean']>;
 };
+
+export enum PendingRequest {
+  Mint = 'Mint',
+  List = 'List',
+  Buy = 'Buy',
+  None = 'None'
+}
 
 export type PinJsonToIpfsInput = {
   fileName: Scalars['String'];

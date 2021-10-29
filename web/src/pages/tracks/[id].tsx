@@ -91,7 +91,7 @@ export default function TrackPage({ trackId }: TrackPageProps) {
 
       {loading || isOwner === undefined || !price ? (
         <div className=" flex justify-center items-center">
-          <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white"></div>
+          <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" />
         </div>
       ) : (
         <HandleNFT price={price} isOwner={isOwner} isForSale={isForSale} />

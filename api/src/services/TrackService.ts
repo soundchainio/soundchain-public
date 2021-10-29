@@ -1,3 +1,4 @@
+import { DocumentType } from '@typegoose/typegoose';
 import { PaginateResult } from '../db/pagination/paginate';
 import { NotFoundError } from '../errors/NotFoundError';
 import { FeedItemModel } from '../models/FeedItem';
@@ -6,9 +7,14 @@ import { PostModel } from '../models/Post';
 import { Track, TrackModel } from '../models/Track';
 import { Context } from '../types/Context';
 import { FilterTrackInput } from '../types/FilterTrackInput';
+import { NFTData } from '../types/NFTData';
 import { PageInput } from '../types/PageInput';
 import { SortTrackInput } from '../types/SortTrackInput';
 import { ModelService } from './ModelService';
+
+type RecursivePartial<T> = {
+  [P in keyof T]?: RecursivePartial<T[P]>;
+};
 
 export class TrackService extends ModelService<typeof Track> {
   constructor(context: Context) {
@@ -32,11 +38,40 @@ export class TrackService extends ModelService<typeof Track> {
     return track;
   }
 
-  async updateTrack(id: string, changes: Partial<Track>): Promise<Track> {
-    const track = await this.model.findByIdAndUpdate(id, changes, { new: true });
+  async updateTrackByTransactionHash(transactionHash: string, changes: RecursivePartial<Track>): Promise<Track> {
+    const { nftData: newNftData, ...data } = changes;
+
+    const track = await this.model.findOneAndUpdate(
+      {
+        'nftData.transactionHash': '0xce2f5d1f69a0f0511dcbebd07f9ffdaa52c9a066cc9101b7d62d6f1e0295bb79',
+      },
+      data,
+    );
+
+    if (!track) {
+      throw new NotFoundError('Track', transactionHash);
+    }
+
+    return this.updateNftData(track, newNftData);
+  }
+
+  async updateTrack(id: string, changes: RecursivePartial<Track>): Promise<Track> {
+    const { nftData: newNftData, ...data } = changes;
+
+    const track = await this.model.findByIdAndUpdate(id, data, { new: true });
 
     if (!track) {
       throw new NotFoundError('Track', id);
+    }
+    return this.updateNftData(track, newNftData);
+  }
+
+  private updateNftData(track: DocumentType<Track>, newNftData?: Partial<NFTData>) {
+    if (newNftData) {
+      const trackAsData = track.toObject();
+      const nftData = trackAsData.nftData;
+      track.nftData = { ...nftData, ...newNftData };
+      track.save();
     }
 
     return track;

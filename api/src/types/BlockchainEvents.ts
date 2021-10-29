@@ -51,18 +51,18 @@ export interface ItemSold extends EventData {
   returnValues: ReturnValuesItemSold;
 }
 
-export interface ReceiptItemListed extends EventData {
+export interface ItemListed extends EventData {
   returnValues: ReturnValuesItemListed;
 }
 
-export interface ReceiptSold extends EventData {
+export interface ItemSold extends EventData {
   returnValues: ReturnValuesItemSold;
 }
 
-export interface ReceiptItemUpdated extends EventData {
+export interface ItemUpdated extends EventData {
   returnValues: ReturnValuesItemUpdated;
 }
 
-export interface ReceiptItemCanceled extends EventData {
+export interface ItemCanceled extends EventData {
   returnValues: ReturnValuesItemCanceled;
 }

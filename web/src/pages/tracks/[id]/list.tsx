@@ -13,10 +13,12 @@ import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
 import {
   CreateListingItemInput,
+  PendingRequest,
   TrackDocument,
   useCreateListingItemMutation,
   useListingItemLazyQuery,
   useTrackQuery,
+  useUpdateTrackMutation,
   useWasListedBeforeLazyQuery,
 } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
@@ -58,6 +60,7 @@ export default function ListPage({ trackId }: TrackPageProps) {
   const router = useRouter();
   const me = useMe();
   const { data } = useTrackQuery({ variables: { id: trackId } });
+  const [trackUpdate] = useUpdateTrackMutation();
   const { account, web3 } = useWalletContext();
   const maxGasFee = useMaxGasFee();
   const { dispatchShowApproveModal } = useModalDispatch();
@@ -119,6 +122,16 @@ export default function ListPage({ trackId }: TrackPageProps) {
 
     if (isApproved) {
       listItem(web3, data.track.nftData.tokenId, 1, account, weiPrice, royalty * 100, onReceipt);
+      trackUpdate({
+        variables: {
+          input: {
+            trackId: trackId,
+            nftData: {
+              pendingRequest: PendingRequest.List,
+            },
+          },
+        },
+      });
       return;
     }
     me ? dispatchShowApproveModal(true) : router.push('/login');

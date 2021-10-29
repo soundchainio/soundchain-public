@@ -193,15 +193,10 @@ const useBlockchain = () => {
     toAddress: string,
     amount: number,
     onTransactionHash: (hash: string) => void,
-    onReceipt: (receipt: Receipt) => void,
   ) => {
     const contract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress);
     beforeSending(web3, () =>
-      contract.methods
-        .mint(toAddress, amount, uri)
-        .send({ from, gas })
-        .on('transactionHash', onTransactionHash)
-        .on('receipt', onReceipt),
+      contract.methods.mint(toAddress, amount, uri).send({ from, gas }).on('transactionHash', onTransactionHash),
     );
   };
 

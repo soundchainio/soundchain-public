@@ -35,11 +35,6 @@ export const TrackInfo = ({ trackTitle, albumTitle, releaseYear, genres, copyrig
           {genres?.map(genre => (
             <Badge key={genre} label={getGenreLabelByKey(genre) || genre} />
           ))}
-          {/* <Badge
-            label={"Electronic"}
-            selected={false}
-            onClick={() => false}
-          /> */}
         </div>
       </div>
     </div>
