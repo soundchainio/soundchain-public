@@ -12,7 +12,6 @@ import { useWalletContext } from 'hooks/useWalletContext';
 import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
 import {
-  CreateListingItemInput,
   PendingRequest,
   TrackDocument,
   useCreateListingItemMutation,
@@ -137,25 +136,12 @@ export default function ListPage({ trackId }: TrackPageProps) {
     me ? dispatchShowApproveModal(true) : router.push('/login');
   };
 
-  const onReceipt = async (receipt: Receipt) => {
+  const onReceipt = (receipt: Receipt) => {
     if (!receipt.events.ItemListed) {
       return;
     }
-    try {
-      const { owner, nft, tokenId, quantity, pricePerItem, startingTime } = receipt.events.ItemListed.returnValues;
-      const listingItemParams: CreateListingItemInput = {
-        owner,
-        nft,
-        tokenId: parseInt(tokenId),
-        quantity: parseInt(quantity),
-        pricePerItem,
-        startingTime: parseInt(startingTime),
-      };
-      await createListingItem({ variables: { input: listingItemParams }, fetchPolicy: 'no-cache' });
-    } finally {
-      setLoading(false);
-      router.back();
-    }
+    setLoading(false);
+    router.back();
   };
 
   const topNovaBarProps: TopNavBarProps = {
