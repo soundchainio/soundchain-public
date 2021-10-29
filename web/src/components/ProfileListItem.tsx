@@ -1,16 +1,14 @@
 import { Avatar } from 'components/Avatar';
 import { Number } from 'components/Number';
 import { ProfileListItemSkeleton } from 'components/ProfileListItemSkeleton';
-import { useProfileQuery } from 'lib/graphql';
+import { Profile } from 'lib/graphql';
 import NextLink from 'next/link';
 
 interface ProfileListItemProps {
-  profileId: string
+  profile: Profile
 }
 
-export const ProfileListItem = ({ profileId }: ProfileListItemProps) => {
-  const { data } = useProfileQuery({ variables: { id: profileId } });
-  const profile = data?.profile;
+export const ProfileListItem = ({ profile }: ProfileListItemProps) => {
 
   if (!profile) return <ProfileListItemSkeleton />;
 

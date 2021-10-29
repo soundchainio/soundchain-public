@@ -50,7 +50,7 @@ export const ExploreAll = ({ searchTerm, setSelectedTab }: ExplorePageProps) => 
       </div>
       {data && data?.explore.totalProfiles > 0 ? profiles?.map(profile => (
         <div key={profile.id} className="text-white">
-          <ProfileListItem profileId={profile.id} />
+          <ProfileListItem profile={profile} />
         </div>
       )) : <NoResultFound type="Users" />}
       <div className="flex items-center w-full p-4">

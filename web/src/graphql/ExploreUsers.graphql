@@ -1,7 +1,7 @@
 query ExploreUsers($search: String, $page: PageInput) {
   exploreUsers(search: $search, page: $page) {
     nodes {
-      id
+      ...ProfileComponentFields
     }
     pageInfo {
       hasNextPage

@@ -39,7 +39,7 @@ export const ExploreUsers = ({ searchTerm }: ExplorePageProps) => {
     <div>
       {profiles.length > 0 ? profiles?.map(profile => (
         <div key={profile.id} className="text-white">
-          <ProfileListItem profileId={profile.id} />
+          <ProfileListItem profile={profile} />
         </div>
       )) : <NoResultFound type="Users" />}
       {pageInfo.hasNextPage && <InfiniteLoader loadMore={loadNext} loadingMessage="Loading Users" />}

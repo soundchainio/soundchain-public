@@ -1374,7 +1374,7 @@ export type ExploreQuery = (
       & TrackComponentFieldsFragment
     )>, profiles: Array<(
       { __typename?: 'Profile' }
-      & Pick<Profile, 'id'>
+      & ProfileComponentFieldsFragment
     )> }
   ) }
 );
@@ -1411,7 +1411,7 @@ export type ExploreUsersQuery = (
     { __typename?: 'ProfileConnection' }
     & { nodes: Array<(
       { __typename?: 'Profile' }
-      & Pick<Profile, 'id'>
+      & ProfileComponentFieldsFragment
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
       & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
@@ -1759,11 +1759,16 @@ export type ProfileQuery = (
   { __typename?: 'Query' }
   & { profile: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'userHandle' | 'isFollowed' | 'isSubscriber' | 'followerCount' | 'followingCount' | 'musicianTypes' | 'bio'>
-    & { socialMedias: (
-      { __typename?: 'SocialMedias' }
-      & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
-    ) }
+    & ProfileComponentFieldsFragment
+  ) }
+);
+
+export type ProfileComponentFieldsFragment = (
+  { __typename?: 'Profile' }
+  & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'favoriteGenres' | 'musicianTypes' | 'bio' | 'followerCount' | 'followingCount' | 'userHandle' | 'isFollowed' | 'isSubscriber' | 'unreadNotificationCount' | 'unreadMessageCount' | 'createdAt' | 'updatedAt'>
+  & { socialMedias: (
+    { __typename?: 'SocialMedias' }
+    & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
   ) }
 );
 
@@ -2328,6 +2333,32 @@ export const PostComponentFieldsFragmentDoc = gql`
   }
 }
     ${TrackComponentFieldsFragmentDoc}`;
+export const ProfileComponentFieldsFragmentDoc = gql`
+    fragment ProfileComponentFields on Profile {
+  id
+  displayName
+  profilePicture
+  coverPicture
+  socialMedias {
+    facebook
+    instagram
+    soundcloud
+    twitter
+  }
+  favoriteGenres
+  musicianTypes
+  bio
+  followerCount
+  followingCount
+  userHandle
+  isFollowed
+  isSubscriber
+  unreadNotificationCount
+  unreadMessageCount
+  createdAt
+  updatedAt
+}
+    `;
 export const ReactionNotificationFieldsFragmentDoc = gql`
     fragment ReactionNotificationFields on ReactionNotification {
   id
@@ -2947,13 +2978,14 @@ export const ExploreDocument = gql`
       ...TrackComponentFields
     }
     profiles {
-      id
+      ...ProfileComponentFields
     }
     totalTracks
     totalProfiles
   }
 }
-    ${TrackComponentFieldsFragmentDoc}`;
+    ${TrackComponentFieldsFragmentDoc}
+${ProfileComponentFieldsFragmentDoc}`;
 
 /**
  * __useExploreQuery__
@@ -3028,7 +3060,7 @@ export const ExploreUsersDocument = gql`
     query ExploreUsers($search: String, $page: PageInput) {
   exploreUsers(search: $search, page: $page) {
     nodes {
-      id
+      ...ProfileComponentFields
     }
     pageInfo {
       hasNextPage
@@ -3036,7 +3068,7 @@ export const ExploreUsersDocument = gql`
     }
   }
 }
-    `;
+    ${ProfileComponentFieldsFragmentDoc}`;
 
 /**
  * __useExploreUsersQuery__
@@ -3767,26 +3799,10 @@ export type PostsQueryResult = Apollo.QueryResult<PostsQuery, PostsQueryVariable
 export const ProfileDocument = gql`
     query Profile($id: String!) {
   profile(id: $id) {
-    id
-    displayName
-    profilePicture
-    coverPicture
-    socialMedias {
-      facebook
-      instagram
-      soundcloud
-      twitter
-    }
-    userHandle
-    isFollowed
-    isSubscriber
-    followerCount
-    followingCount
-    musicianTypes
-    bio
+    ...ProfileComponentFields
   }
 }
-    `;
+    ${ProfileComponentFieldsFragmentDoc}`;
 
 /**
  * __useProfileQuery__
