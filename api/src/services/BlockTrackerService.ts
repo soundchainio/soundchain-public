@@ -8,7 +8,7 @@ export class BlockTrackerService extends ModelService<typeof BlockTracker> {
   }
 
   async getCurrentBlockNumber(): Promise<number> {
-    return (await this.model.findOne()).blockNumber;
+    return (await this.model.findOne({})).blockNumber;
   }
 
   async updateCurrentBlocknumber(blockNumber: number): Promise<void> {
