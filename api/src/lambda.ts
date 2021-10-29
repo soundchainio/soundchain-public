@@ -189,41 +189,67 @@ interface MuxServerData {
   }[];
 }
 
+interface InputValue {
+  totalCount: number;
+  values: {
+    trackId: string;
+    amount: number;
+  }[];
+}
+
 export const incrementPlaybackCount: Handler = async () => {
   await mongoose.connect(config.db.url, config.db.options);
 
   const user = await UserModel.findOne({ handle: '_system' });
   const context = new Context({ sub: user._id });
 
-  let currentPage = 1;
-  const pageSize = 100;
-
-  const fetchAndUpdate = async (pageSize: number, currentPage: number): Promise<number> => {
+  const fetch = async (pageSize: number, currentPage: number): Promise<InputValue> => {
     const { data } = await muxDataApi.get<MuxServerData>(
       `/metrics/unique_viewers/breakdown?group_by=video_id&timeframe[]=7:days&limit=${pageSize}&page=${currentPage}`,
     );
 
-    console.log(data);
-    const totalRowCount = data.total_row_count;
-    if (totalRowCount) {
-      const inputValues = data.data.map(video => ({ trackId: video.field, amount: video.views }));
-      await context.trackService.incrementPlaybackCount(inputValues);
-    }
-    return totalRowCount;
+    const values = data.data.map(video => ({ trackId: video.field, amount: video.views }));
+    return { totalCount: data.total_row_count, values };
+  };
+
+  const update = async (inputValue: InputValue): Promise<number> => {
+    return await context.trackService.incrementPlaybackCount(inputValue.values);
   };
 
   try {
-    const totalRowCount = await fetchAndUpdate(pageSize, currentPage);
-    const totalPages = Math.ceil(totalRowCount / pageSize);
+    console.log('Starting');
+
+    let currentPage = 1;
+    const pageSize = 100;
+
+    const inputValues = await fetch(pageSize, currentPage);
+    const totalCount = inputValues.totalCount;
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    if (!totalCount) {
+      console.log(`${totalCount} tracks fetched`);
+      return;
+    }
+
+    console.log(`Page size: ${pageSize} - Mux data fetched: ${totalCount} tracks to be updated...`);
+    const tracksUpdated = await update(inputValues);
+    console.log(
+      `Page: ${currentPage}/${totalPages} - Tracks on page: ${inputValues.values.length} - Tracks updated: ${tracksUpdated}`,
+    );
 
     if (totalPages > currentPage) {
-      currentPage++;
-      for (let index = currentPage; index <= totalPages; index++) {
-        await fetchAndUpdate(pageSize, index);
+      for (currentPage = 2; currentPage <= totalPages; currentPage++) {
+        const inputValues = await fetch(pageSize, currentPage);
+        const tracksUpdated = await update(inputValues);
+        console.log(
+          `Page: ${currentPage}/${totalPages} - Tracks on page: ${inputValues.values.length} - Tracks updated: ${tracksUpdated}`,
+        );
       }
     }
   } catch (e) {
     console.error('Execution error, please check AWS logs', e);
     process.exit(1);
+  } finally {
+    console.log('Finished');
   }
 };

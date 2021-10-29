@@ -107,7 +107,7 @@ export class TrackService extends ModelService<typeof Track> {
     return await this.model.findOneAndDelete({ _id: id });
   }
 
-  async incrementPlaybackCount(values: { trackId: string; amount: number }[]): Promise<boolean> {
+  async incrementPlaybackCount(values: { trackId: string; amount: number }[]): Promise<number> {
     const bulkOps: bulkType[] = [];
 
     for (let index = 0; index < values.length; index++) {
@@ -120,6 +120,6 @@ export class TrackService extends ModelService<typeof Track> {
     }
 
     const result = await this.model.bulkWrite(bulkOps);
-    return Boolean(result.result.ok);
+    return result.modifiedCount;
   }
 }

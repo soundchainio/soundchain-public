@@ -82,6 +82,6 @@ export class TrackResolver {
     @Arg('input') { values }: IncrementPlaybackCountInput,
   ): Promise<IncrementPlaybackCountPayload> {
     const success = await trackService.incrementPlaybackCount(values);
-    return { success };
+    return { success: true };
   }
 }
