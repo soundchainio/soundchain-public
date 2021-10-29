@@ -97,8 +97,8 @@ export class TrackService extends ModelService<typeof Track> {
 
   async setPendingNone(tokenId: number): Promise<Track> {
     return await this.model.findOneAndUpdate(
-      { nftData: { tokenId } },
-      { nftData: { pendingRequest: PendingRequest.None } },
+      { 'nftData.tokenId': tokenId },
+      { 'nftData.pendingRequest': PendingRequest.None },
     );
   }
 }

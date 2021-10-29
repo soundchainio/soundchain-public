@@ -4,6 +4,7 @@ enum PendingRequest {
   Mint = 'Mint',
   List = 'List',
   Buy = 'Buy',
+  CancelListing = 'CancelListing',
   None = 'None',
 }
 

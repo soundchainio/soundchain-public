@@ -92,6 +92,7 @@ export const watcher: Handler = async () => {
         {
           const { tokenId } = (event as ItemCanceled).returnValues;
           context.listingItemService.setNotValid(parseInt(tokenId));
+          context.trackService.setPendingNone(parseInt(tokenId));
           console.log('ItemCanceled');
         }
         break;

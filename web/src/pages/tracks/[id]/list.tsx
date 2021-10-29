@@ -14,7 +14,6 @@ import { cacheFor } from 'lib/apollo';
 import {
   PendingRequest,
   TrackDocument,
-  useCreateListingItemMutation,
   useListingItemLazyQuery,
   useTrackQuery,
   useUpdateTrackMutation,
@@ -63,7 +62,6 @@ export default function ListPage({ trackId }: TrackPageProps) {
   const { account, web3 } = useWalletContext();
   const maxGasFee = useMaxGasFee();
   const { dispatchShowApproveModal } = useModalDispatch();
-  const [createListingItem] = useCreateListingItemMutation();
   const [loading, setLoading] = useState(false);
   const [price, setPrice] = useState(0);
   const [royalty, setRoyalty] = useState(0);

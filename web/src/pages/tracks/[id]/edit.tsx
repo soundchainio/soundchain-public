@@ -10,7 +10,13 @@ import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
-import { TrackDocument, useListingItemLazyQuery, useTrackQuery } from 'lib/graphql';
+import {
+  PendingRequest,
+  TrackDocument,
+  useListingItemLazyQuery,
+  useTrackQuery,
+  useUpdateTrackMutation,
+} from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
@@ -48,6 +54,7 @@ export default function EditPage({ trackId }: TrackPageProps) {
   const router = useRouter();
   const { updateListing, cancelListing } = useBlockchain();
   const { data: track } = useTrackQuery({ variables: { id: trackId } });
+  const [trackUpdate] = useUpdateTrackMutation();
   const { account, web3 } = useWalletContext();
   const maxGasFee = useMaxGasFee();
   const [loading, setLoading] = useState(false);
@@ -89,6 +96,16 @@ export default function EditPage({ trackId }: TrackPageProps) {
     // TODO: ask confirmation
     setLoading(true);
     cancelListing(web3, listingItem.listingItem.tokenId, account, () => router.push(router.asPath.replace('edit', '')));
+    trackUpdate({
+      variables: {
+        input: {
+          trackId: trackId,
+          nftData: {
+            pendingRequest: PendingRequest.CancelListing,
+          },
+        },
+      },
+    });
   };
 
   const RemoveListing = (
