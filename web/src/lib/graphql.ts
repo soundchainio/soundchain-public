@@ -136,6 +136,12 @@ export type CreatePostPayload = {
   post: Post;
 };
 
+export type CreateProfileVerificationRequestInput = {
+  soundcloud?: Maybe<Scalars['String']>;
+  youtube?: Maybe<Scalars['String']>;
+  bandcamp?: Maybe<Scalars['String']>;
+};
+
 export type CreateRepostInput = {
   body: Scalars['String'];
   repostId: Scalars['String'];
@@ -372,6 +378,7 @@ export type Mutation = {
   unfollowProfile: UnfollowProfilePayload;
   subscribeToProfile: SubscribeToProfilePayload;
   unsubscribeFromProfile: UnsubscribeFromProfilePayload;
+  createProfileVerificationRequest: ProfileVerificationRequestPayload;
   createTrack: CreateTrackPayload;
   updateTrack: UpdateTrackPayload;
   deleteTrackOnError: UpdateTrackPayload;
@@ -484,6 +491,11 @@ export type MutationSubscribeToProfileArgs = {
 
 export type MutationUnsubscribeFromProfileArgs = {
   input: UnsubscribeFromProfileInput;
+};
+
+
+export type MutationCreateProfileVerificationRequestArgs = {
+  input: CreateProfileVerificationRequestInput;
 };
 
 
@@ -664,6 +676,23 @@ export type Profile = {
   userHandle: Scalars['String'];
   isFollowed: Scalars['Boolean'];
   isSubscriber: Scalars['Boolean'];
+};
+
+export type ProfileVerificationRequest = {
+  __typename?: 'ProfileVerificationRequest';
+  id: Scalars['ID'];
+  soundcloud: Maybe<Scalars['String']>;
+  youtube: Maybe<Scalars['String']>;
+  bandcamp: Maybe<Scalars['String']>;
+  status: Maybe<Scalars['String']>;
+  reason: Maybe<Scalars['String']>;
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+};
+
+export type ProfileVerificationRequestPayload = {
+  __typename?: 'ProfileVerificationRequestPayload';
+  profileVerificationRequest: ProfileVerificationRequest;
 };
 
 export type Query = {
@@ -1244,6 +1273,22 @@ export type CreatePostMutation = (
     & { post: (
       { __typename?: 'Post' }
       & Pick<Post, 'id'>
+    ) }
+  ) }
+);
+
+export type CreateProfileVerificationRequestMutationVariables = Exact<{
+  input: CreateProfileVerificationRequestInput;
+}>;
+
+
+export type CreateProfileVerificationRequestMutation = (
+  { __typename?: 'Mutation' }
+  & { createProfileVerificationRequest: (
+    { __typename?: 'ProfileVerificationRequestPayload' }
+    & { profileVerificationRequest: (
+      { __typename?: 'ProfileVerificationRequest' }
+      & Pick<ProfileVerificationRequest, 'id'>
     ) }
   ) }
 );
@@ -2683,6 +2728,41 @@ export function useCreatePostMutation(baseOptions?: Apollo.MutationHookOptions<C
 export type CreatePostMutationHookResult = ReturnType<typeof useCreatePostMutation>;
 export type CreatePostMutationResult = Apollo.MutationResult<CreatePostMutation>;
 export type CreatePostMutationOptions = Apollo.BaseMutationOptions<CreatePostMutation, CreatePostMutationVariables>;
+export const CreateProfileVerificationRequestDocument = gql`
+    mutation CreateProfileVerificationRequest($input: CreateProfileVerificationRequestInput!) {
+  createProfileVerificationRequest(input: $input) {
+    profileVerificationRequest {
+      id
+    }
+  }
+}
+    `;
+export type CreateProfileVerificationRequestMutationFn = Apollo.MutationFunction<CreateProfileVerificationRequestMutation, CreateProfileVerificationRequestMutationVariables>;
+
+/**
+ * __useCreateProfileVerificationRequestMutation__
+ *
+ * To run a mutation, you first call `useCreateProfileVerificationRequestMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateProfileVerificationRequestMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createProfileVerificationRequestMutation, { data, loading, error }] = useCreateProfileVerificationRequestMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateProfileVerificationRequestMutation(baseOptions?: Apollo.MutationHookOptions<CreateProfileVerificationRequestMutation, CreateProfileVerificationRequestMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateProfileVerificationRequestMutation, CreateProfileVerificationRequestMutationVariables>(CreateProfileVerificationRequestDocument, options);
+      }
+export type CreateProfileVerificationRequestMutationHookResult = ReturnType<typeof useCreateProfileVerificationRequestMutation>;
+export type CreateProfileVerificationRequestMutationResult = Apollo.MutationResult<CreateProfileVerificationRequestMutation>;
+export type CreateProfileVerificationRequestMutationOptions = Apollo.BaseMutationOptions<CreateProfileVerificationRequestMutation, CreateProfileVerificationRequestMutationVariables>;
 export const CreateRepostDocument = gql`
     mutation CreateRepost($input: CreateRepostInput!) {
   createRepost(input: $input) {

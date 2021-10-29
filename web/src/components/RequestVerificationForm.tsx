@@ -9,33 +9,31 @@ import * as yup from 'yup';
 
 export interface FormValues {
   soundcloud?: string;
-  spotify?: string;
+  youtube?: string;
+  bandcamp?: string;
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   soundcloud: yup.string(),
-  spotify: yup.string(),
+  youtube: yup.string(),
+  bandcamp: yup.string(),
 });
 
-export interface InitialValues extends Omit<Partial<FormValues>, 'artworkUrl'> {
-  artworkFile?: File;
-}
-
 interface Props {
-  initialValues?: InitialValues;
   handleSubmit: (values: FormValues) => void;
 }
 
 const sourceList = [
-  { name: 'SoundCloud', icon: <Soundcloud className="h-7 w-7" /> },
-  { name: 'YouTube', icon: <Youtube className="h-7 w-7" /> },
-  { name: 'BandCamp', icon: <Bandcamp className="h-6 scale-50" /> },
+  { name: 'SoundCloud', fieldName: 'soundcloud', icon: <Soundcloud className="h-7 w-7" /> },
+  { name: 'YouTube', fieldName: 'youtube', icon: <Youtube className="h-7 w-7" /> },
+  { name: 'BandCamp', fieldName: 'bandcamp', icon: <Bandcamp className="h-6 scale-50" /> },
 ];
 
-export const RequestVerificationForm = ({ initialValues, handleSubmit }: Props) => {
+export const RequestVerificationForm = ({ handleSubmit }: Props) => {
   const defaultValues: FormValues = {
-    soundcloud: initialValues?.soundcloud || '',
-    spotify: initialValues?.spotify || '',
+    soundcloud: '',
+    bandcamp: '',
+    youtube: '',
   };
 
   return (
@@ -55,7 +53,7 @@ export const RequestVerificationForm = ({ initialValues, handleSubmit }: Props) 
                 </div>
                 {src.name}
               </div>
-              <InputField name={src.name} type="text" placeholder={`${src.name} Link`} />
+              <InputField name={src.fieldName} type="text" placeholder={`${src.name} Link`} />
             </div>
           ))}
         </div>

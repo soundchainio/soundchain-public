@@ -6,7 +6,7 @@ import { TopNavBarProps } from 'components/TopNavBar';
 import { useMe } from 'hooks/useMe';
 import { Verified } from 'icons/Verified';
 import { cacheFor } from 'lib/apollo';
-// import { useRequestVerificationMutation } from 'lib/graphql';
+import { useCreateProfileVerificationRequestMutation } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import Head from 'next/head';
 import { useEffect, useState } from 'react';
@@ -17,17 +17,12 @@ export const getServerSideProps = protectPage((context, apolloClient) => {
 
 
 export default function GetVerified() {
-  // const [requestVerification] = useRequestVerificationMutation();
+  const [createRequestVerification] = useCreateProfileVerificationRequestMutation();
   const me = useMe();
   const [myProfileLink, setMyProfileLink] = useState('');
 
-  // useEffect(() => {
-  //   requestVerification();
-  // }, []);
-
   const handleSubmit = (values: FormValues) => {
-    // requestVerification({ variables: values });
-    console.log('handle submit')
+    createRequestVerification({ variables: { input: values } });
   };
 
   const topNavBarProps: TopNavBarProps = {
