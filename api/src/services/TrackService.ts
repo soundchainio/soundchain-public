@@ -43,7 +43,7 @@ export class TrackService extends ModelService<typeof Track> {
 
     const track = await this.model.findOneAndUpdate(
       {
-        'nftData.transactionHash': '0xce2f5d1f69a0f0511dcbebd07f9ffdaa52c9a066cc9101b7d62d6f1e0295bb79',
+        'nftData.transactionHash': transactionHash,
       },
       data,
     );
@@ -51,7 +51,6 @@ export class TrackService extends ModelService<typeof Track> {
     if (!track) {
       throw new NotFoundError('Track', transactionHash);
     }
-
     return this.updateNftData(track, newNftData);
   }
 
