@@ -10,7 +10,7 @@ export class UpdateTrackInput {
   profileId: string;
 
   @Field(() => NFTData, { nullable: true })
-  nftData: NFTData;
+  nftData: Partial<NFTData>;
 
   @Field({ nullable: true })
   playbackCount: number;

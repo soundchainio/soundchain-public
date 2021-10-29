@@ -1,8 +1,10 @@
 import { IconComponent } from 'icons/types/IconComponent';
 import { BuyNFTButton } from './Buttons/BuyNFT';
 import { ClearButton } from './Buttons/Clear';
+import { EditListingButton } from './Buttons/EditListing';
 import { GreenGradient } from './Buttons/GreenGradient';
 import { ListNFTButton } from './Buttons/ListNFT';
+import { OrangeButton } from './Buttons/Orange';
 import { OutlineButton } from './Buttons/Outline';
 import { OutlineRoundedButton } from './Buttons/OutlineRounded';
 import { RainbowButton } from './Buttons/Rainbow';
@@ -18,7 +20,9 @@ export type ButtonVariant =
   | 'clear'
   | 'list-nft'
   | 'buy-nft'
-  | 'outline-rounded';
+  | 'outline-rounded'
+  | 'orange'
+  | 'edit-listing';
 
 export interface ButtonProps extends React.ComponentPropsWithoutRef<'button'> {
   variant?: ButtonVariant;
@@ -41,6 +45,8 @@ export const buttonByVariant: Record<ButtonVariant, (props: ButtonProps) => JSX.
   'outline-rounded': OutlineRoundedButton,
   'list-nft': ListNFTButton,
   'buy-nft': BuyNFTButton,
+  orange: OrangeButton,
+  'edit-listing': EditListingButton,
 };
 
 export const Button = ({ variant = 'rainbow', ...props }: ButtonProps) => {

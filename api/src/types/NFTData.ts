@@ -1,5 +1,6 @@
 import { modelOptions, prop } from '@typegoose/typegoose';
 import { Field, InputType, ObjectType } from 'type-graphql';
+import { PendingRequest } from './PendingRequest';
 
 @ObjectType('NFTDataType')
 @InputType('NFTDataInput')
@@ -8,6 +9,10 @@ export class NFTData {
   @Field({ nullable: true })
   @prop()
   transactionHash: string;
+
+  @Field(() => PendingRequest, { defaultValue: PendingRequest.None })
+  @prop({ type: String, enum: PendingRequest, default: PendingRequest.None })
+  pendingRequest: PendingRequest;
 
   @Field({ nullable: true })
   @prop()

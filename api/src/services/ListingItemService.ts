@@ -27,6 +27,19 @@ export class ListingItemService extends ModelService<typeof ListingItem> {
     return listingItem;
   }
 
+  async updateListingItem(tokenId: number, changes: Partial<ListingItem>): Promise<ListingItem> {
+    const listingItem = await this.model
+      .findOneAndUpdate({ tokenId, valid: true }, changes, { new: true })
+      .sort({ createdAt: -1 })
+      .exec();
+    return listingItem;
+  }
+
+  async wasListedBefore(tokenId: number): Promise<boolean> {
+    const listingItem = await this.model.findOne({ tokenId }).exec();
+    return !!listingItem;
+  }
+
   async setNotValid(tokenId: number): Promise<ListingItem> {
     const listingItem = await this.model.findOne({ tokenId }).sort({ createdAt: -1 }).exec();
     listingItem.valid = false;

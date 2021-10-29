@@ -1,5 +1,6 @@
 import { User } from '../models/User';
 import { AuthService } from '../services/AuthService';
+import { BlockTrackerService } from '../services/BlockTrackerService';
 import { CommentService } from '../services/CommentService';
 import { EmailService } from '../services/EmailService';
 import { EmbedService } from '../services/EmbedService';
@@ -41,6 +42,7 @@ export class Context {
   userService = new UserService(this);
   embedService = new EmbedService(this);
   listingItemService = new ListingItemService(this);
+  blockTrackerService = new BlockTrackerService(this);
   user?: Promise<User>;
 
   constructor(jwtUser?: JwtUser) {

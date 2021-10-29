@@ -1,5 +1,4 @@
 import { Button } from 'components/Button';
-import { useModalDispatch } from 'contexts/providers/modal';
 import { useMe } from 'hooks/useMe';
 import { CheckmarkFilled } from 'icons/CheckmarkFilled';
 import { Matic } from 'icons/Matic';
@@ -15,22 +14,24 @@ export const HandleNFT = ({ isOwner, isForSale, price }: HandleNFTProps) => {
   const router = useRouter();
   const me = useMe();
 
-  const isApproved = me?.isApprovedOnMarketplace;
-  const { dispatchShowApproveModal } = useModalDispatch();
-
   const handleListButton = () => {
-    if (isApproved) {
-      return router.push(`${router.asPath}/list`);
-    }
-    me ? dispatchShowApproveModal(true) : router.push('/login');
+    me ? router.push(`${router.asPath}/list`) : router.push('/login');
   };
 
   if (isOwner && isForSale) {
     return (
-      <div className="w-full bg-black text-white flex justify-center p-3">
-        <div className="flex items-center gap-2 text-sm font-bold">
-          <CheckmarkFilled />
-          {`You've listed this NFT`}
+      <div className="w-full bg-black text-white flex items-center py-3">
+        <div className="flex flex-col flex-1 ml-4">
+          <div className="text-md flex items-center font-bold gap-1">
+            <Matic />
+            <span>{price}</span>
+            <span className="text-xs text-gray-80">MATIC</span>
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <Button variant="edit-listing" onClick={() => router.push(`${router.asPath}/edit`)}>
+            EDIT LISTING
+          </Button>
         </div>
       </div>
     );

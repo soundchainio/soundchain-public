@@ -25,6 +25,8 @@ functions:
           cors: true
   migrate:
     handler: src/db/migrate.handler
+  watcher:
+    handler: src/lambda.watcher
   mint:
     handler: src/lambda.mint
     timeout: 120
@@ -432,3 +434,36 @@ resources:
         MessageRetentionPeriod: 1209600
         QueueName:
           Fn::Sub: MintingDeadLetterQueue-${AWS::StackName}.fifo
+    EventWatcher:
+      Type: AWS::AppRunner::Service
+      Properties:
+        ServiceName:
+          Fn::Sub: EventWatcher-${AWS::StackName}
+        SourceConfiguration:
+          AuthenticationConfiguration:
+            ConnectionArn: arn:aws:apprunner:us-east-1:271937159223:connection/soundchain/6a9caeac0cc74e8c825807d275f897a2
+          AutoDeploymentsEnabled: true
+          CodeRepository:
+            RepositoryUrl: https://github.com/agencyenterprise/soundchain.git
+            SourceCodeVersion:
+              Type: BRANCH
+              Value: ${env:BRANCH}
+            CodeConfiguration:
+              ConfigurationSource: API
+              CodeConfigurationValues:
+                Runtime: NODEJS_12
+                BuildCommand: 'cd event-watcher && yarn install'
+                StartCommand: 'npx ts-node --transpile-only src/index.ts'
+                Port: 3002
+                RuntimeEnvironmentVariables:
+                  - Name: PROVIDER_URL
+                    Value: wss://polygon-mumbai.g.alchemy.com/v2/iRRgkrOCET0SiKBdl1aYA_TkV9-nI4WW
+                  - Name: DATABASE_URL
+                    Value: ${self:custom.db.url}
+                  - Name: MARKETPLACE_ADDRESS
+                    Value: 0x30D3cc77d96a125966e3f01D6BF9Ea95a7f86Fa5
+                  - Name: NFT_ADDRESS
+                    Value: 0x1CA766577e56F73583f64B79BE79783E33812Aae
+        InstanceConfiguration:
+          Cpu: 1 vCPU
+          Memory: 3 GB

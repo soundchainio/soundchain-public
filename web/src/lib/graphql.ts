@@ -394,7 +394,6 @@ export type Mutation = {
   login: AuthPayload;
   updateHandle: UpdateHandlePayload;
   updateDefaultWallet: UpdateDefaultWalletPayload;
-  setIsApprovedOnMarketplace: UpdateHandlePayload;
 };
 
 
@@ -544,6 +543,7 @@ export type MutationUpdateDefaultWalletArgs = {
 
 export type NftDataInput = {
   transactionHash?: Maybe<Scalars['String']>;
+  pendingRequest?: Maybe<PendingRequest>;
   ipfsCid?: Maybe<Scalars['String']>;
   tokenId?: Maybe<Scalars['Float']>;
   contract?: Maybe<Scalars['String']>;
@@ -554,6 +554,7 @@ export type NftDataInput = {
 export type NftDataType = {
   __typename?: 'NFTDataType';
   transactionHash: Maybe<Scalars['String']>;
+  pendingRequest: Maybe<PendingRequest>;
   ipfsCid: Maybe<Scalars['String']>;
   tokenId: Maybe<Scalars['Float']>;
   contract: Maybe<Scalars['String']>;
@@ -620,6 +621,13 @@ export type PageInput = {
   before?: Maybe<Scalars['String']>;
   inclusive?: Maybe<Scalars['Boolean']>;
 };
+
+export enum PendingRequest {
+  Mint = 'Mint',
+  List = 'List',
+  Buy = 'Buy',
+  None = 'None'
+}
 
 export type PinJsonToIpfsInput = {
   fileName: Scalars['String'];
@@ -697,6 +705,7 @@ export type Query = {
   followers: FollowConnection;
   following: FollowConnection;
   listingItem: CreateListingItemType;
+  wasListedBefore: Scalars['Boolean'];
   message: Message;
   notifications: NotificationConnection;
   notification: Notification;
@@ -754,6 +763,11 @@ export type QueryFollowingArgs = {
 
 
 export type QueryListingItemArgs = {
+  tokenId: Scalars['Float'];
+};
+
+
+export type QueryWasListedBeforeArgs = {
   tokenId: Scalars['Float'];
 };
 
@@ -1834,20 +1848,6 @@ export type SendMessageMutation = (
   ) }
 );
 
-export type SetIsApprovedOnMarketplaceMutationVariables = Exact<{ [key: string]: never; }>;
-
-
-export type SetIsApprovedOnMarketplaceMutation = (
-  { __typename?: 'Mutation' }
-  & { setIsApprovedOnMarketplace: (
-    { __typename?: 'UpdateHandlePayload' }
-    & { user: (
-      { __typename?: 'User' }
-      & Pick<User, 'id'>
-    ) }
-  ) }
-);
-
 export type SetNotValidMutationVariables = Exact<{
   tokenId: Scalars['Float'];
 }>;
@@ -2154,6 +2154,16 @@ export type UploadUrlQuery = (
     { __typename?: 'UploadUrl' }
     & Pick<UploadUrl, 'uploadUrl' | 'fileName' | 'readUrl'>
   ) }
+);
+
+export type WasListedBeforeQueryVariables = Exact<{
+  tokenId: Scalars['Float'];
+}>;
+
+
+export type WasListedBeforeQuery = (
+  { __typename?: 'Query' }
+  & Pick<Query, 'wasListedBefore'>
 );
 
 export const CommentComponentFieldsFragmentDoc = gql`
@@ -3973,40 +3983,6 @@ export function useSendMessageMutation(baseOptions?: Apollo.MutationHookOptions<
 export type SendMessageMutationHookResult = ReturnType<typeof useSendMessageMutation>;
 export type SendMessageMutationResult = Apollo.MutationResult<SendMessageMutation>;
 export type SendMessageMutationOptions = Apollo.BaseMutationOptions<SendMessageMutation, SendMessageMutationVariables>;
-export const SetIsApprovedOnMarketplaceDocument = gql`
-    mutation SetIsApprovedOnMarketplace {
-  setIsApprovedOnMarketplace {
-    user {
-      id
-    }
-  }
-}
-    `;
-export type SetIsApprovedOnMarketplaceMutationFn = Apollo.MutationFunction<SetIsApprovedOnMarketplaceMutation, SetIsApprovedOnMarketplaceMutationVariables>;
-
-/**
- * __useSetIsApprovedOnMarketplaceMutation__
- *
- * To run a mutation, you first call `useSetIsApprovedOnMarketplaceMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useSetIsApprovedOnMarketplaceMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [setIsApprovedOnMarketplaceMutation, { data, loading, error }] = useSetIsApprovedOnMarketplaceMutation({
- *   variables: {
- *   },
- * });
- */
-export function useSetIsApprovedOnMarketplaceMutation(baseOptions?: Apollo.MutationHookOptions<SetIsApprovedOnMarketplaceMutation, SetIsApprovedOnMarketplaceMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<SetIsApprovedOnMarketplaceMutation, SetIsApprovedOnMarketplaceMutationVariables>(SetIsApprovedOnMarketplaceDocument, options);
-      }
-export type SetIsApprovedOnMarketplaceMutationHookResult = ReturnType<typeof useSetIsApprovedOnMarketplaceMutation>;
-export type SetIsApprovedOnMarketplaceMutationResult = Apollo.MutationResult<SetIsApprovedOnMarketplaceMutation>;
-export type SetIsApprovedOnMarketplaceMutationOptions = Apollo.BaseMutationOptions<SetIsApprovedOnMarketplaceMutation, SetIsApprovedOnMarketplaceMutationVariables>;
 export const SetNotValidDocument = gql`
     mutation SetNotValid($tokenId: Float!) {
   setNotValid(tokenId: $tokenId) {
@@ -4704,3 +4680,36 @@ export function useUploadUrlLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
 export type UploadUrlQueryHookResult = ReturnType<typeof useUploadUrlQuery>;
 export type UploadUrlLazyQueryHookResult = ReturnType<typeof useUploadUrlLazyQuery>;
 export type UploadUrlQueryResult = Apollo.QueryResult<UploadUrlQuery, UploadUrlQueryVariables>;
+export const WasListedBeforeDocument = gql`
+    query WasListedBefore($tokenId: Float!) {
+  wasListedBefore(tokenId: $tokenId)
+}
+    `;
+
+/**
+ * __useWasListedBeforeQuery__
+ *
+ * To run a query within a React component, call `useWasListedBeforeQuery` and pass it any options that fit your needs.
+ * When your component renders, `useWasListedBeforeQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useWasListedBeforeQuery({
+ *   variables: {
+ *      tokenId: // value for 'tokenId'
+ *   },
+ * });
+ */
+export function useWasListedBeforeQuery(baseOptions: Apollo.QueryHookOptions<WasListedBeforeQuery, WasListedBeforeQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<WasListedBeforeQuery, WasListedBeforeQueryVariables>(WasListedBeforeDocument, options);
+      }
+export function useWasListedBeforeLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<WasListedBeforeQuery, WasListedBeforeQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<WasListedBeforeQuery, WasListedBeforeQueryVariables>(WasListedBeforeDocument, options);
+        }
+export type WasListedBeforeQueryHookResult = ReturnType<typeof useWasListedBeforeQuery>;
+export type WasListedBeforeLazyQueryHookResult = ReturnType<typeof useWasListedBeforeLazyQuery>;
+export type WasListedBeforeQueryResult = Apollo.QueryResult<WasListedBeforeQuery, WasListedBeforeQueryVariables>;

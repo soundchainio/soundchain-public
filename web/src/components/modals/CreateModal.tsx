@@ -11,6 +11,7 @@ import { useWalletContext } from 'hooks/useWalletContext';
 import {
   CreateTrackMutation,
   FeedDocument,
+  PendingRequest,
   useCreateTrackMutation,
   useDeleteTrackOnErrorMutation,
   usePinJsonToIpfsMutation,
@@ -20,7 +21,7 @@ import {
 import * as musicMetadata from 'music-metadata-browser';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
-import { Metadata, Receipt } from 'types/NftTypes';
+import { Metadata } from 'types/NftTypes';
 import { genres } from 'utils/Genres';
 import { MiningState, MintingDone } from './MintingDone';
 
@@ -196,6 +197,9 @@ export const CreateModal = () => {
                 trackId: track.id,
                 nftData: {
                   transactionHash: hash,
+                  minter: account,
+                  ipfsCid: metadataPinResult?.pinJsonToIPFS.cid,
+                  pendingRequest: PendingRequest.Mint,
                 },
               },
             },
@@ -206,41 +210,9 @@ export const CreateModal = () => {
           setTransactionHash(hash);
         };
 
-        const onReceipt = (receipt: Receipt) => {
-          if (receipt.status) {
-            if (!receipt.events.TransferSingle) {
-              return;
-            }
-            updateTrack({
-              variables: {
-                input: {
-                  trackId: track.id,
-                  nftData: {
-                    minter: account,
-                    contract: receipt.to,
-                    tokenId: parseInt(receipt.events.TransferSingle.returnValues.id),
-                    quantity: parseInt(receipt.events.TransferSingle.returnValues.value),
-                    transactionHash: receipt.transactionHash,
-                    ipfsCid: metadataPinResult?.pinJsonToIPFS.cid,
-                  },
-                },
-              },
-            });
-            setMiningState(MiningState.DONE);
-          } else {
-            setMiningState(MiningState.ERROR);
-          }
-        };
-        mintNftToken(
-          web3,
-          `ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`,
-          account,
-          account,
-          1,
-          onTransactionHash,
-          onReceipt,
-        );
+        mintNftToken(web3, `ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`, account, account, 1, onTransactionHash);
       } catch (e) {
+        setMiningState(MiningState.ERROR);
         if (e) await onMintError(track.id);
       }
     }
