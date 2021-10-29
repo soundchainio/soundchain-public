@@ -9,6 +9,7 @@ import { Context } from '../types/Context';
 import { FilterTrackInput } from '../types/FilterTrackInput';
 import { NFTData } from '../types/NFTData';
 import { PageInput } from '../types/PageInput';
+import { PendingRequest } from '../types/PendingRequest';
 import { SortTrackInput } from '../types/SortTrackInput';
 import { ModelService } from './ModelService';
 
@@ -92,5 +93,12 @@ export class TrackService extends ModelService<typeof Track> {
     }
 
     return await this.model.findOneAndDelete({ _id: id });
+  }
+
+  async setPendingNone(tokenId: number): Promise<Track> {
+    return await this.model.findOneAndUpdate(
+      { nftData: { tokenId } },
+      { nftData: { pendingRequest: PendingRequest.None } },
+    );
   }
 }

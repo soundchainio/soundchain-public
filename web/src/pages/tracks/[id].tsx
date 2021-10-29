@@ -9,7 +9,7 @@ import { Track } from 'components/Track';
 import useBlockchain from 'hooks/useBlockchain';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { cacheFor } from 'lib/apollo';
-import { TrackDocument, useListingItemQuery, useTrackQuery } from 'lib/graphql';
+import { PendingRequest, TrackDocument, useListingItemQuery, useTrackQuery } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
@@ -46,7 +46,9 @@ export default function TrackPage({ trackId }: TrackPageProps) {
   const { account, web3 } = useWalletContext();
   const { data } = useTrackQuery({ variables: { id: trackId } });
   const { isTokenOwner } = useBlockchain();
-  const [isOwner, setIsOwner] = useState<boolean>();
+  const [isOwner, setIsOwner] = useState<boolean>(false);
+
+  const isProcessing = data?.track.nftData?.pendingRequest != PendingRequest.None;
 
   const tokenId = data?.track.nftData?.tokenId || -1;
 
@@ -89,9 +91,10 @@ export default function TrackPage({ trackId }: TrackPageProps) {
       />
       <MintingData transactionHash={data?.track.nftData?.transactionHash} ipfsCid={data?.track.nftData?.ipfsCid} />
 
-      {loading || isOwner === undefined || !price ? (
+      {loading || !price || isProcessing ? (
         <div className=" flex justify-center items-center">
           <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" />
+          <div className="text-white text-sm pl-3">Processing {data?.track.nftData?.pendingRequest}</div>
         </div>
       ) : (
         <HandleNFT price={price} isOwner={isOwner} isForSale={isForSale} />

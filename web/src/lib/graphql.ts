@@ -1860,7 +1860,7 @@ export type TrackComponentFieldsFragment = (
   & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted'>
   & { nftData: Maybe<(
     { __typename?: 'NFTDataType' }
-    & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid'>
+    & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest'>
   )> }
 );
 
@@ -2232,6 +2232,7 @@ export const TrackComponentFieldsFragmentDoc = gql`
     contract
     minter
     ipfsCid
+    pendingRequest
   }
 }
     `;

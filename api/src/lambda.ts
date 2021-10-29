@@ -70,6 +70,7 @@ export const watcher: Handler = async () => {
             pricePerItem,
             startingTime: parseInt(startingTime),
           });
+          context.trackService.setPendingNone(parseInt(tokenId));
           console.log('ItemListed');
         }
         break;

@@ -20,5 +20,6 @@ fragment TrackComponentFields on Track {
     contract
     minter
     ipfsCid
+    pendingRequest
   }
 }
