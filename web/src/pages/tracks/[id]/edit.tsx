@@ -94,8 +94,8 @@ export default function EditPage({ trackId }: TrackPageProps) {
       return;
     }
     // TODO: ask confirmation
-    setLoading(true);
     cancelListing(web3, listingItem.listingItem.tokenId, account, () => router.push(router.asPath.replace('edit', '')));
+    setLoading(true);
     trackUpdate({
       variables: {
         input: {
