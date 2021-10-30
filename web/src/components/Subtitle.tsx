@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 
 interface SubtitleProps extends React.ComponentPropsWithoutRef<'h4'> {
-  children: string;
+  children: JSX.Element | string;
   size?: 'base' | 'lg' | 'sm' | 'xs';
 }
 

@@ -16,7 +16,7 @@ import {
   useDeleteTrackOnErrorMutation,
   usePinJsonToIpfsMutation,
   usePinToIpfsMutation,
-  useUpdateTrackMutation,
+  useUpdateTrackMutation
 } from 'lib/graphql';
 import * as musicMetadata from 'music-metadata-browser';
 import Image from 'next/image';

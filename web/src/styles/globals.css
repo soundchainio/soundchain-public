@@ -114,6 +114,18 @@ html {
   color: transparent;
 }
 
+.purple-green-gradient-text {
+  background: linear-gradient(90deg, #ab4eff 0%, #84FF82 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.green-blue-gradient-text {
+  background: linear-gradient(90deg, #84FF82 0%, #4870FF 100%);
+  background-clip: text;
+  color: transparent;
+}
+
 .purple-green-yellow-gradient-text {
   background: linear-gradient(90deg, #3fdd8a 0%, #a252fe 100%);
   background-clip: text;

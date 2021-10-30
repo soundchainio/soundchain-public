@@ -192,6 +192,14 @@ export type DeleteTrackInput = {
   trackId: Scalars['String'];
 };
 
+export type ExplorePayload = {
+  __typename?: 'ExplorePayload';
+  profiles: Array<Profile>;
+  tracks: Array<Track>;
+  totalProfiles: Scalars['Float'];
+  totalTracks: Scalars['Float'];
+};
+
 export type FeedConnection = {
   __typename?: 'FeedConnection';
   pageInfo: PageInfo;
@@ -668,12 +676,21 @@ export type Profile = {
   isSubscriber: Scalars['Boolean'];
 };
 
+export type ProfileConnection = {
+  __typename?: 'ProfileConnection';
+  pageInfo: PageInfo;
+  nodes: Array<Profile>;
+};
+
 export type Query = {
   __typename?: 'Query';
   chats: ChatConnection;
   chatHistory: MessageConnection;
   comment: Comment;
   comments: CommentConnection;
+  explore: ExplorePayload;
+  exploreTracks: TrackConnection;
+  exploreUsers: ProfileConnection;
   feed: FeedConnection;
   followers: FollowConnection;
   following: FollowConnection;
@@ -715,6 +732,23 @@ export type QueryCommentArgs = {
 export type QueryCommentsArgs = {
   postId?: Maybe<Scalars['String']>;
   page?: Maybe<PageInput>;
+};
+
+
+export type QueryExploreArgs = {
+  search?: Maybe<Scalars['String']>;
+};
+
+
+export type QueryExploreTracksArgs = {
+  page?: Maybe<PageInput>;
+  search?: Maybe<Scalars['String']>;
+};
+
+
+export type QueryExploreUsersArgs = {
+  page?: Maybe<PageInput>;
+  search?: Maybe<Scalars['String']>;
 };
 
 
@@ -1333,6 +1367,66 @@ export type DeleteTrackOnErrorMutation = (
   ) }
 );
 
+export type ExploreQueryVariables = Exact<{
+  search?: Maybe<Scalars['String']>;
+}>;
+
+
+export type ExploreQuery = (
+  { __typename?: 'Query' }
+  & { explore: (
+    { __typename?: 'ExplorePayload' }
+    & Pick<ExplorePayload, 'totalTracks' | 'totalProfiles'>
+    & { tracks: Array<(
+      { __typename?: 'Track' }
+      & TrackComponentFieldsFragment
+    )>, profiles: Array<(
+      { __typename?: 'Profile' }
+      & ProfileComponentFieldsFragment
+    )> }
+  ) }
+);
+
+export type ExploreTracksQueryVariables = Exact<{
+  search?: Maybe<Scalars['String']>;
+  page?: Maybe<PageInput>;
+}>;
+
+
+export type ExploreTracksQuery = (
+  { __typename?: 'Query' }
+  & { exploreTracks: (
+    { __typename?: 'TrackConnection' }
+    & { nodes: Array<(
+      { __typename?: 'Track' }
+      & TrackComponentFieldsFragment
+    )>, pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
+    ) }
+  ) }
+);
+
+export type ExploreUsersQueryVariables = Exact<{
+  search?: Maybe<Scalars['String']>;
+  page?: Maybe<PageInput>;
+}>;
+
+
+export type ExploreUsersQuery = (
+  { __typename?: 'Query' }
+  & { exploreUsers: (
+    { __typename?: 'ProfileConnection' }
+    & { nodes: Array<(
+      { __typename?: 'Profile' }
+      & ProfileComponentFieldsFragment
+    )>, pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
+    ) }
+  ) }
+);
+
 export type FeedQueryVariables = Exact<{
   page?: Maybe<PageInput>;
 }>;
@@ -1673,11 +1767,16 @@ export type ProfileQuery = (
   { __typename?: 'Query' }
   & { profile: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'userHandle' | 'isFollowed' | 'isSubscriber' | 'followerCount' | 'followingCount' | 'musicianTypes' | 'bio'>
-    & { socialMedias: (
-      { __typename?: 'SocialMedias' }
-      & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
-    ) }
+    & ProfileComponentFieldsFragment
+  ) }
+);
+
+export type ProfileComponentFieldsFragment = (
+  { __typename?: 'Profile' }
+  & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'favoriteGenres' | 'musicianTypes' | 'bio' | 'followerCount' | 'followingCount' | 'userHandle' | 'isFollowed' | 'isSubscriber' | 'unreadNotificationCount' | 'unreadMessageCount' | 'createdAt' | 'updatedAt'>
+  & { socialMedias: (
+    { __typename?: 'SocialMedias' }
+    & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
   ) }
 );
 
@@ -2252,6 +2351,32 @@ export const PostComponentFieldsFragmentDoc = gql`
   }
 }
     ${TrackComponentFieldsFragmentDoc}`;
+export const ProfileComponentFieldsFragmentDoc = gql`
+    fragment ProfileComponentFields on Profile {
+  id
+  displayName
+  profilePicture
+  coverPicture
+  socialMedias {
+    facebook
+    instagram
+    soundcloud
+    twitter
+  }
+  favoriteGenres
+  musicianTypes
+  bio
+  followerCount
+  followingCount
+  userHandle
+  isFollowed
+  isSubscriber
+  unreadNotificationCount
+  unreadMessageCount
+  createdAt
+  updatedAt
+}
+    `;
 export const ReactionNotificationFieldsFragmentDoc = gql`
     fragment ReactionNotificationFields on ReactionNotification {
   id
@@ -2864,6 +2989,133 @@ export function useDeleteTrackOnErrorMutation(baseOptions?: Apollo.MutationHookO
 export type DeleteTrackOnErrorMutationHookResult = ReturnType<typeof useDeleteTrackOnErrorMutation>;
 export type DeleteTrackOnErrorMutationResult = Apollo.MutationResult<DeleteTrackOnErrorMutation>;
 export type DeleteTrackOnErrorMutationOptions = Apollo.BaseMutationOptions<DeleteTrackOnErrorMutation, DeleteTrackOnErrorMutationVariables>;
+export const ExploreDocument = gql`
+    query Explore($search: String) {
+  explore(search: $search) {
+    tracks {
+      ...TrackComponentFields
+    }
+    profiles {
+      ...ProfileComponentFields
+    }
+    totalTracks
+    totalProfiles
+  }
+}
+    ${TrackComponentFieldsFragmentDoc}
+${ProfileComponentFieldsFragmentDoc}`;
+
+/**
+ * __useExploreQuery__
+ *
+ * To run a query within a React component, call `useExploreQuery` and pass it any options that fit your needs.
+ * When your component renders, `useExploreQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useExploreQuery({
+ *   variables: {
+ *      search: // value for 'search'
+ *   },
+ * });
+ */
+export function useExploreQuery(baseOptions?: Apollo.QueryHookOptions<ExploreQuery, ExploreQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ExploreQuery, ExploreQueryVariables>(ExploreDocument, options);
+      }
+export function useExploreLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ExploreQuery, ExploreQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ExploreQuery, ExploreQueryVariables>(ExploreDocument, options);
+        }
+export type ExploreQueryHookResult = ReturnType<typeof useExploreQuery>;
+export type ExploreLazyQueryHookResult = ReturnType<typeof useExploreLazyQuery>;
+export type ExploreQueryResult = Apollo.QueryResult<ExploreQuery, ExploreQueryVariables>;
+export const ExploreTracksDocument = gql`
+    query ExploreTracks($search: String, $page: PageInput) {
+  exploreTracks(search: $search, page: $page) {
+    nodes {
+      ...TrackComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+    ${TrackComponentFieldsFragmentDoc}`;
+
+/**
+ * __useExploreTracksQuery__
+ *
+ * To run a query within a React component, call `useExploreTracksQuery` and pass it any options that fit your needs.
+ * When your component renders, `useExploreTracksQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useExploreTracksQuery({
+ *   variables: {
+ *      search: // value for 'search'
+ *      page: // value for 'page'
+ *   },
+ * });
+ */
+export function useExploreTracksQuery(baseOptions?: Apollo.QueryHookOptions<ExploreTracksQuery, ExploreTracksQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ExploreTracksQuery, ExploreTracksQueryVariables>(ExploreTracksDocument, options);
+      }
+export function useExploreTracksLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ExploreTracksQuery, ExploreTracksQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ExploreTracksQuery, ExploreTracksQueryVariables>(ExploreTracksDocument, options);
+        }
+export type ExploreTracksQueryHookResult = ReturnType<typeof useExploreTracksQuery>;
+export type ExploreTracksLazyQueryHookResult = ReturnType<typeof useExploreTracksLazyQuery>;
+export type ExploreTracksQueryResult = Apollo.QueryResult<ExploreTracksQuery, ExploreTracksQueryVariables>;
+export const ExploreUsersDocument = gql`
+    query ExploreUsers($search: String, $page: PageInput) {
+  exploreUsers(search: $search, page: $page) {
+    nodes {
+      ...ProfileComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+    ${ProfileComponentFieldsFragmentDoc}`;
+
+/**
+ * __useExploreUsersQuery__
+ *
+ * To run a query within a React component, call `useExploreUsersQuery` and pass it any options that fit your needs.
+ * When your component renders, `useExploreUsersQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useExploreUsersQuery({
+ *   variables: {
+ *      search: // value for 'search'
+ *      page: // value for 'page'
+ *   },
+ * });
+ */
+export function useExploreUsersQuery(baseOptions?: Apollo.QueryHookOptions<ExploreUsersQuery, ExploreUsersQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ExploreUsersQuery, ExploreUsersQueryVariables>(ExploreUsersDocument, options);
+      }
+export function useExploreUsersLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ExploreUsersQuery, ExploreUsersQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ExploreUsersQuery, ExploreUsersQueryVariables>(ExploreUsersDocument, options);
+        }
+export type ExploreUsersQueryHookResult = ReturnType<typeof useExploreUsersQuery>;
+export type ExploreUsersLazyQueryHookResult = ReturnType<typeof useExploreUsersLazyQuery>;
+export type ExploreUsersQueryResult = Apollo.QueryResult<ExploreUsersQuery, ExploreUsersQueryVariables>;
 export const FeedDocument = gql`
     query Feed($page: PageInput) {
   feed(page: $page) {
@@ -3565,26 +3817,10 @@ export type PostsQueryResult = Apollo.QueryResult<PostsQuery, PostsQueryVariable
 export const ProfileDocument = gql`
     query Profile($id: String!) {
   profile(id: $id) {
-    id
-    displayName
-    profilePicture
-    coverPicture
-    socialMedias {
-      facebook
-      instagram
-      soundcloud
-      twitter
-    }
-    userHandle
-    isFollowed
-    isSubscriber
-    followerCount
-    followingCount
-    musicianTypes
-    bio
+    ...ProfileComponentFields
   }
 }
-    `;
+    ${ProfileComponentFieldsFragmentDoc}`;
 
 /**
  * __useProfileQuery__
