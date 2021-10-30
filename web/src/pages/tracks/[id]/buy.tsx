@@ -97,7 +97,7 @@ export default function BuyPage({ trackId }: TrackPageProps) {
         input: {
           trackId: trackId,
           nftData: {
-            pendingRequest: PendingRequest.CancelListing,
+            pendingRequest: PendingRequest.Buy,
           },
         },
       },

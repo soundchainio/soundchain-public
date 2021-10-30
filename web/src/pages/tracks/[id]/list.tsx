@@ -138,7 +138,6 @@ export default function ListPage({ trackId }: TrackPageProps) {
     if (!receipt.events.ItemListed) {
       return;
     }
-    setLoading(false);
     router.back();
   };
 

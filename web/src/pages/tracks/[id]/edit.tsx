@@ -21,6 +21,7 @@ import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
+import { Receipt } from 'types/NftTypes';
 
 export interface TrackPageProps {
   trackId: string;
@@ -86,7 +87,24 @@ export default function EditPage({ trackId }: TrackPageProps) {
     }
     setLoading(true);
     const weiPrice = web3?.utils.toWei(newPrice.toString(), 'ether') || '0';
-    updateListing(web3, listingItem.listingItem.tokenId, account, weiPrice, () => setLoading(false));
+    updateListing(web3, listingItem.listingItem.tokenId, account, weiPrice, onReceipt);
+    trackUpdate({
+      variables: {
+        input: {
+          trackId: trackId,
+          nftData: {
+            pendingRequest: PendingRequest.UpdateListing,
+          },
+        },
+      },
+    });
+  };
+
+  const onReceipt = (receipt: Receipt) => {
+    if (!receipt.events.ItemUpdated) {
+      return;
+    }
+    router.back();
   };
 
   const handleRemove = () => {
@@ -127,7 +145,7 @@ export default function EditPage({ trackId }: TrackPageProps) {
     rightButton: RemoveListing,
   };
 
-  if (!isForSale || !isOwner || !me || !track) {
+  if (!isForSale || !isOwner || !me || !track || track?.track.nftData?.pendingRequest != PendingRequest.None) {
     return null;
   }
 
