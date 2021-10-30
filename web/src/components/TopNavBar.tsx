@@ -15,6 +15,7 @@ export interface TopNavBarProps {
   showLoginSignUpButton?: boolean;
   title?: string;
   subtitle?: JSX.Element;
+  midRightButton?: JSX.Element;
 }
 
 export const TopNavBar = ({
@@ -24,6 +25,7 @@ export const TopNavBar = ({
   subtitle: Subtitle,
   showLoginSignUpButton = true,
   setSideMenuOpen,
+  midRightButton,
 }: TopNavBarProps) => {
   const router = useRouter();
   const me = useMe();
@@ -39,7 +41,7 @@ export const TopNavBar = ({
         className={classNames(
           'text-gray-80 md:hidden items-center h-full pl-4',
           me && !RightButton && 'absolute left-0 justify-center',
-          RightButton && 'flex-1',
+          (RightButton || midRightButton) && 'flex-1',
         )}
       >
         <div className="flex flex-1 justify-start">
@@ -50,7 +52,7 @@ export const TopNavBar = ({
           )}
         </div>
       </button>
-      {me ? (
+      {me && !midRightButton ? (
         <>
           <div className="md:hidden flex-2 flex items-center justify-center md:items-stretch md:justify-start">
             <div className="flex-shrink-0 flex items-center">
@@ -79,7 +81,7 @@ export const TopNavBar = ({
           </div>
         </>
       ) : (
-        showLoginSignUpButton && (
+        showLoginSignUpButton && !midRightButton && (
           <div className="flex-2 flex items-center justify-start ml-4 space-x-2 ">
             <Button
               variant={router.pathname === '/login' ? 'rainbow-xs' : 'outline'}
@@ -93,7 +95,12 @@ export const TopNavBar = ({
           </div>
         )
       )}
-      {RightButton && <div className="flex flex-1 md:flex-none justify-end pr-4 items-center">{RightButton}</div>}
+      {RightButton && !midRightButton && <div className="flex flex-1 md:flex-none justify-end pr-4 items-center">{RightButton}</div>}
+      {midRightButton &&
+        <div className="flex flex-1 justify-left pl-20 items-center">
+          {midRightButton}
+        </div>
+      }
     </div>
   );
 };
