@@ -117,7 +117,7 @@ export default function BuyPage({ trackId }: TrackPageProps) {
     title: 'Confirm Purchase',
   };
 
-  if (!isForSale || isOwner || !me || !track) {
+  if (!isForSale || isOwner || !me || track?.track.nftData?.pendingRequest != PendingRequest.None) {
     return null;
   }
 

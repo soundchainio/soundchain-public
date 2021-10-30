@@ -90,12 +90,17 @@ export default function EditPage({ trackId }: TrackPageProps) {
   };
 
   const handleRemove = () => {
-    if (!web3 || !listingItem.listingItem.tokenId || !account) {
+    if (
+      !web3 ||
+      !listingItem.listingItem.tokenId ||
+      !account ||
+      track?.track.nftData?.pendingRequest != PendingRequest.None
+    ) {
       return;
     }
     // TODO: ask confirmation
-    cancelListing(web3, listingItem.listingItem.tokenId, account, () => router.push(router.asPath.replace('edit', '')));
     setLoading(true);
+    cancelListing(web3, listingItem.listingItem.tokenId, account, () => router.push(router.asPath.replace('edit', '')));
     trackUpdate({
       variables: {
         input: {

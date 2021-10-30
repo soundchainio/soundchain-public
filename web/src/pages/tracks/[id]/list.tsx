@@ -147,7 +147,7 @@ export default function ListPage({ trackId }: TrackPageProps) {
     title: 'List for Sale',
   };
 
-  if (!isOwner || isForSale) {
+  if (!isOwner || isForSale || data?.track.nftData?.pendingRequest != PendingRequest.None) {
     return null;
   }
 
