@@ -1,5 +1,5 @@
 {
-  "packages": ["api", "web", "event-watcher"],
+  "packages": ["api", "web"],
   "version": "1.0.0",
   "npmClient": "yarn"
 }
