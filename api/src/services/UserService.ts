@@ -39,4 +39,9 @@ export class UserService extends ModelService<typeof User> {
     }
     return updatedUser;
   }
+
+  async getUserByWallet(walletAddress: string): Promise<User> {
+    const user = await this.model.findOne({ walletAddress });
+    return user;
+  }
 }

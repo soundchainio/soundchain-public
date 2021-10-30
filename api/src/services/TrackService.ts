@@ -101,4 +101,8 @@ export class TrackService extends ModelService<typeof Track> {
       { 'nftData.pendingRequest': PendingRequest.None },
     );
   }
+
+  async getTrackByTokenId(tokenId: number): Promise<Track> {
+    return await this.model.findOne({ 'nftData.tokenId': tokenId });
+  }
 }

@@ -1,5 +1,5 @@
-import * as Apollo from '@apollo/client';
 import { gql } from '@apollo/client';
+import * as Apollo from '@apollo/client';
 export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
@@ -213,14 +213,6 @@ export type FilterTrackInput = {
   profileId?: Maybe<Scalars['String']>;
 };
 
-export type FinishListingItemInput = {
-  sellerProfileId: Scalars['String'];
-  buyerProfileId: Scalars['String'];
-  tokenId: Scalars['Float'];
-  trackId: Scalars['String'];
-  price: Scalars['String'];
-};
-
 export type Follow = {
   __typename?: 'Follow';
   id: Scalars['ID'];
@@ -352,7 +344,6 @@ export type Mutation = {
   deleteComment: DeleteCommentPayload;
   createListingItem: CreateListingItemType;
   setNotValid: CreateListingItemType;
-  finishListing: CreateListingItemType;
   sendMessage: SendMessagePayload;
   resetUnreadMessageCount: Profile;
   createMintingRequest: MintingRequestPayload;
@@ -399,11 +390,6 @@ export type MutationCreateListingItemArgs = {
 
 export type MutationSetNotValidArgs = {
   tokenId: Scalars['Float'];
-};
-
-
-export type MutationFinishListingArgs = {
-  input: FinishListingItemInput;
 };
 
 
@@ -1361,19 +1347,6 @@ export type FeedQuery = (
       { __typename?: 'PageInfo' }
       & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
     ) }
-  ) }
-);
-
-export type FinishListingMutationVariables = Exact<{
-  input: FinishListingItemInput;
-}>;
-
-
-export type FinishListingMutation = (
-  { __typename?: 'Mutation' }
-  & { finishListing: (
-    { __typename?: 'CreateListingItemType' }
-    & Pick<CreateListingItemType, 'id' | 'owner' | 'nft' | 'tokenId' | 'quantity' | 'pricePerItem' | 'startingTime'>
   ) }
 );
 
@@ -2917,45 +2890,6 @@ export function useFeedLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<FeedQ
 export type FeedQueryHookResult = ReturnType<typeof useFeedQuery>;
 export type FeedLazyQueryHookResult = ReturnType<typeof useFeedLazyQuery>;
 export type FeedQueryResult = Apollo.QueryResult<FeedQuery, FeedQueryVariables>;
-export const FinishListingDocument = gql`
-    mutation FinishListing($input: FinishListingItemInput!) {
-  finishListing(input: $input) {
-    id
-    owner
-    nft
-    tokenId
-    quantity
-    pricePerItem
-    startingTime
-  }
-}
-    `;
-export type FinishListingMutationFn = Apollo.MutationFunction<FinishListingMutation, FinishListingMutationVariables>;
-
-/**
- * __useFinishListingMutation__
- *
- * To run a mutation, you first call `useFinishListingMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useFinishListingMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [finishListingMutation, { data, loading, error }] = useFinishListingMutation({
- *   variables: {
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useFinishListingMutation(baseOptions?: Apollo.MutationHookOptions<FinishListingMutation, FinishListingMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<FinishListingMutation, FinishListingMutationVariables>(FinishListingDocument, options);
-      }
-export type FinishListingMutationHookResult = ReturnType<typeof useFinishListingMutation>;
-export type FinishListingMutationResult = Apollo.MutationResult<FinishListingMutation>;
-export type FinishListingMutationOptions = Apollo.BaseMutationOptions<FinishListingMutation, FinishListingMutationVariables>;
 export const FollowProfileDocument = gql`
     mutation FollowProfile($input: FollowProfileInput!) {
   followProfile(input: $input) {

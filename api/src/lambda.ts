@@ -76,8 +76,8 @@ export const watcher: Handler = async () => {
         break;
       case 'ItemSold':
         {
-          const { tokenId } = (event as ItemSold).returnValues;
-          context.listingItemService.setNotValid(parseInt(tokenId));
+          const { tokenId, seller, buyer, pricePerItem } = (event as ItemSold).returnValues;
+          context.listingItemService.finishListing(tokenId, seller, buyer, pricePerItem);
           console.log('ItemSold');
         }
         break;
@@ -121,7 +121,7 @@ export const watcher: Handler = async () => {
     }
   }
 
-  context.blockTrackerService.updateCurrentBlocknumber(toBlock);
+  context.blockTrackerService.updateCurrentBlocknumber(toBlock + 1);
 };
 
 export const mint: Handler<SQSEvent> = async event => {

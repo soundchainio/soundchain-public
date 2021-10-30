@@ -27,7 +27,8 @@ export const NFTSoldNotificationItem = ({
           </div>
           <div>
             <div className="text-gray-100 text-sm items-center w-full inline-block">
-              <span className="font-semibold">{buyerName}</span> just bought your NFT at the price {price} MATIC
+              <span className="font-semibold">{buyerName}</span> just bought your NFT at the price{' '}
+              {parseInt(price) / 1e18} MATIC
             </div>
             <Timestamp small datetime={createdAt} className="text-sm" />
           </div>

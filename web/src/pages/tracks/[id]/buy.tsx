@@ -11,9 +11,8 @@ import { useWalletContext } from 'hooks/useWalletContext';
 import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
 import {
-  ListingItemDocument,
+  PendingRequest,
   TrackDocument,
-  useFinishListingMutation,
   useListingItemLazyQuery,
   useTrackQuery,
   useUpdateTrackMutation,
@@ -56,9 +55,8 @@ export default function BuyPage({ trackId }: TrackPageProps) {
   const { buyItem } = useBlockchain();
   const { data: track } = useTrackQuery({ variables: { id: trackId } });
   const { account, web3 } = useWalletContext();
-  const [updateTrack] = useUpdateTrackMutation();
+  const [trackUpdate] = useUpdateTrackMutation();
   const maxGasFee = useMaxGasFee();
-  const [finishListing] = useFinishListingMutation();
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const me = useMe();
@@ -94,42 +92,24 @@ export default function BuyPage({ trackId }: TrackPageProps) {
       listingItem.listingItem.pricePerItem.toString(),
       onReceipt,
     );
+    trackUpdate({
+      variables: {
+        input: {
+          trackId: trackId,
+          nftData: {
+            pendingRequest: PendingRequest.CancelListing,
+          },
+        },
+      },
+    });
     setLoading(true);
   };
 
-  const onReceipt = async (receipt: Receipt) => {
-    try {
-      if (!receipt.events.ItemSold || !me || !track) {
-        return;
-      }
-      const { tokenId } = receipt.events.ItemSold.returnValues;
-
-      await finishListing({
-        variables: {
-          input: {
-            trackId: trackId,
-            buyerProfileId: me.profile.id,
-            price: price,
-            sellerProfileId: track.track.profileId,
-            tokenId: parseInt(tokenId),
-          },
-        },
-        refetchQueries: [ListingItemDocument],
-        fetchPolicy: 'no-cache',
-      });
-
-      await updateTrack({
-        variables: {
-          input: {
-            trackId: trackId,
-            profileId: me?.profile.id,
-          },
-        },
-      });
-    } finally {
-      router.push(router.asPath.replace('buy', ''));
-      setLoading(false);
+  const onReceipt = (receipt: Receipt) => {
+    if (!receipt.events.ItemSold || !me || !track) {
+      return;
     }
+    router.push(router.asPath.replace('buy', ''));
   };
 
   const topNovaBarProps: TopNavBarProps = {
