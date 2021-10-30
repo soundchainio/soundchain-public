@@ -2,7 +2,6 @@ import { useModalDispatch } from 'contexts/providers/modal';
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar';
 import { useMe } from 'hooks/useMe';
 import { Bell } from 'icons/Bell';
-import { Happy } from 'icons/emoji/Happy';
 import { Home } from 'icons/Home';
 import { NewPost } from 'icons/NewPost';
 import { Profile } from 'icons/Profile';
@@ -33,11 +32,11 @@ export const NavBar = () => {
           icon={Search}
           color="green"
         />
-        {isMinting ?
+        {isMinting ? (
           <NavBarButton label="Minting..." nyanCat={true} onClick={handleCreateClick} />
-          :
+        ) : (
           <NavBarButton label="Create" icon={NewPost} onClick={handleCreateClick} />
-        }
+        )}
         <NavBarLink
           label="Notifications"
           path={me ? '/notifications' : '/login'}
@@ -50,12 +49,6 @@ export const NavBar = () => {
           icon={Profile}
           path={me ? `/profiles/${me?.profile.id}` : '/login'}
           color="purple-green"
-        />
-        <NavBarLink
-          label="Playground"
-          path="/playground"
-          icon={() => <Happy width={20} height={20} />}
-          color="yellow"
         />
       </div>
     </nav>
