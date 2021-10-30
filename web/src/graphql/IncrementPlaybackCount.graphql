@@ -1,5 +1,0 @@
-mutation incrementPlaybackCount($input: IncrementPlaybackCountInput!) {
-  incrementPlaybackCount(input: $input) {
-    success
-  }
-}

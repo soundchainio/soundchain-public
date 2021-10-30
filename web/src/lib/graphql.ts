@@ -292,20 +292,6 @@ export enum Genre {
   World = 'WORLD'
 }
 
-export type IncrementPlaybackCountInput = {
-  values: Array<IncrementPlaybackCountTuple>;
-};
-
-export type IncrementPlaybackCountPayload = {
-  __typename?: 'IncrementPlaybackCountPayload';
-  success: Scalars['Boolean'];
-};
-
-export type IncrementPlaybackCountTuple = {
-  trackId: Scalars['String'];
-  amount: Scalars['Float'];
-};
-
 
 export type LoginInput = {
   token: Scalars['String'];
@@ -389,7 +375,6 @@ export type Mutation = {
   createTrack: CreateTrackPayload;
   updateTrack: UpdateTrackPayload;
   deleteTrackOnError: UpdateTrackPayload;
-  incrementPlaybackCount: IncrementPlaybackCountPayload;
   register: AuthPayload;
   login: AuthPayload;
   updateHandle: UpdateHandlePayload;
@@ -514,11 +499,6 @@ export type MutationUpdateTrackArgs = {
 
 export type MutationDeleteTrackOnErrorArgs = {
   input: DeleteTrackInput;
-};
-
-
-export type MutationIncrementPlaybackCountArgs = {
-  input: IncrementPlaybackCountInput;
 };
 
 
@@ -1464,19 +1444,6 @@ export type FollowingQuery = (
       { __typename?: 'PageInfo' }
       & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
     ) }
-  ) }
-);
-
-export type IncrementPlaybackCountMutationVariables = Exact<{
-  input: IncrementPlaybackCountInput;
-}>;
-
-
-export type IncrementPlaybackCountMutation = (
-  { __typename?: 'Mutation' }
-  & { incrementPlaybackCount: (
-    { __typename?: 'IncrementPlaybackCountPayload' }
-    & Pick<IncrementPlaybackCountPayload, 'success'>
   ) }
 );
 
@@ -3123,39 +3090,6 @@ export function useFollowingLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
 export type FollowingQueryHookResult = ReturnType<typeof useFollowingQuery>;
 export type FollowingLazyQueryHookResult = ReturnType<typeof useFollowingLazyQuery>;
 export type FollowingQueryResult = Apollo.QueryResult<FollowingQuery, FollowingQueryVariables>;
-export const IncrementPlaybackCountDocument = gql`
-    mutation incrementPlaybackCount($input: IncrementPlaybackCountInput!) {
-  incrementPlaybackCount(input: $input) {
-    success
-  }
-}
-    `;
-export type IncrementPlaybackCountMutationFn = Apollo.MutationFunction<IncrementPlaybackCountMutation, IncrementPlaybackCountMutationVariables>;
-
-/**
- * __useIncrementPlaybackCountMutation__
- *
- * To run a mutation, you first call `useIncrementPlaybackCountMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useIncrementPlaybackCountMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [incrementPlaybackCountMutation, { data, loading, error }] = useIncrementPlaybackCountMutation({
- *   variables: {
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useIncrementPlaybackCountMutation(baseOptions?: Apollo.MutationHookOptions<IncrementPlaybackCountMutation, IncrementPlaybackCountMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<IncrementPlaybackCountMutation, IncrementPlaybackCountMutationVariables>(IncrementPlaybackCountDocument, options);
-      }
-export type IncrementPlaybackCountMutationHookResult = ReturnType<typeof useIncrementPlaybackCountMutation>;
-export type IncrementPlaybackCountMutationResult = Apollo.MutationResult<IncrementPlaybackCountMutation>;
-export type IncrementPlaybackCountMutationOptions = Apollo.BaseMutationOptions<IncrementPlaybackCountMutation, IncrementPlaybackCountMutationVariables>;
 export const ListingItemDocument = gql`
     query ListingItem($tokenId: Float!) {
   listingItem(tokenId: $tokenId) {
