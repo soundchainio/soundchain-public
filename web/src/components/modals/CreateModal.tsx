@@ -82,6 +82,7 @@ export const CreateModal = () => {
         releaseYear: fileMetadata?.year,
         artworkFile: artworkFile,
         genres: initialGenres,
+        copyright: fileMetadata?.license,
       });
     });
 
