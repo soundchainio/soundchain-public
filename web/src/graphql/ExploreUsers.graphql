@@ -1,0 +1,11 @@
+query ExploreUsers($search: String, $page: PageInput) {
+  exploreUsers(search: $search, page: $page) {
+    nodes {
+      ...ProfileComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

@@ -6,7 +6,7 @@ import { useTrackLazyQuery } from 'lib/graphql';
 import React, { useEffect } from 'react';
 import Asset from './Asset';
 
-type Song = {
+export type Song = {
   src: string;
   title?: string | null;
   trackId: string;
@@ -24,7 +24,7 @@ interface TrackProps {
 export const TrackListItem = ({ trackId, index, coverPhotoUrl, handleOnPlayClicked }: TrackProps) => {
   const [track, { data }] = useTrackLazyQuery({ variables: { id: trackId } });
   const { isCurrentlyPlaying } = useAudioPlayerContext();
-  const isPlaying = isCurrentlyPlaying(trackId);
+  const isPlaying = isCurrentlyPlaying && isCurrentlyPlaying(trackId);
 
   useEffect(() => {
     if (!data?.track) {

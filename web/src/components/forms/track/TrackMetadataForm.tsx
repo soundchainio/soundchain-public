@@ -110,7 +110,7 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
             </div>
             <div className="flex flex-col flex-1 gap-2">
               <InputField name="title" type="text" label="TRACK TITLE" />
-              <InputField name="artist" type="text" label="ARTIST" />
+              <InputField name="artist" type="text" label="ARTIST" disabled />
             </div>
           </div>
           <div className="px-4">

@@ -1,6 +1,7 @@
 import { ChatResolver } from './ChatResolver';
 import { CommentNotificationResolver } from './CommentNotificationResolver';
 import { CommentResolver } from './CommentResolver';
+import { ExploreResolver } from './ExploreResolver';
 import { FeedResolver } from './FeedResolver';
 import { FollowerNotificationResolver } from './FollowerNotificationResolver';
 import { FollowResolver } from './FollowResolver';
@@ -41,5 +42,6 @@ export const resolvers = [
   ProfileVerificationRequestResolver,
   PinningResolver,
   ListingItemResolver,
+  ExploreResolver,
   NFTSoldNotificationResolver,
 ] as const;
