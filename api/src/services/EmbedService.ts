@@ -1,12 +1,11 @@
-import { User, UserModel } from '../models/User';
-import { Context } from '../types/Context';
-import { ModelService } from './ModelService';
 import axios from 'axios';
 import cheerio from 'cheerio';
+import { Context } from '../types/Context';
+import { Service } from './Service';
 
-export class EmbedService extends ModelService<typeof User> {
+export class EmbedService extends Service {
   constructor(context: Context) {
-    super(context, UserModel);
+    super(context);
   }
 
   async bandcampLink(url: string): Promise<string> {

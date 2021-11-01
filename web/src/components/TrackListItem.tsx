@@ -4,7 +4,7 @@ import { Play } from 'icons/PlayBottomAudioPlayer';
 import React from 'react';
 import Asset from './Asset';
 
-type Song = {
+export type Song = {
   src: string;
   title?: string | null;
   trackId: string;
@@ -28,7 +28,7 @@ interface TrackProps {
 export const TrackListItem = ({ song, index, handleOnPlayClicked }: TrackProps) => {
   const { trackId, art, title, playbackCount } = song;
   const { isCurrentlyPlaying } = useAudioPlayerContext();
-  const isPlaying = isCurrentlyPlaying(trackId);
+  const isPlaying = isCurrentlyPlaying && isCurrentlyPlaying(trackId);
 
   return (
     <li

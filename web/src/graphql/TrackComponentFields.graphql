@@ -6,6 +6,7 @@ fragment TrackComponentFields on Track {
   artworkUrl
   description
   artist
+  artistId
   album
   releaseYear
   copyright
