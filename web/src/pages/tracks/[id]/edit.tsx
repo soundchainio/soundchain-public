@@ -4,6 +4,7 @@ import { ListNFT } from 'components/details-NFT/ListNFT';
 import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
+import { useModalDispatch } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { useMe } from 'hooks/useMe';
@@ -53,7 +54,8 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 
 export default function EditPage({ trackId }: TrackPageProps) {
   const router = useRouter();
-  const { updateListing, cancelListing } = useBlockchain();
+  const { updateListing } = useBlockchain();
+  const { dispatchShowRemoveListingModal } = useModalDispatch();
   const { data: track } = useTrackQuery({ variables: { id: trackId } });
   const [trackUpdate] = useUpdateTrackMutation();
   const { account, web3 } = useWalletContext();
@@ -116,19 +118,7 @@ export default function EditPage({ trackId }: TrackPageProps) {
     ) {
       return;
     }
-    // TODO: ask confirmation
-    setLoading(true);
-    cancelListing(web3, listingItem.listingItem.tokenId, account, () => router.push(router.asPath.replace('edit', '')));
-    trackUpdate({
-      variables: {
-        input: {
-          trackId: trackId,
-          nftData: {
-            pendingRequest: PendingRequest.CancelListing,
-          },
-        },
-      },
-    });
+    dispatchShowRemoveListingModal(true, listingItem.listingItem.tokenId, trackId);
   };
 
   const RemoveListing = (
