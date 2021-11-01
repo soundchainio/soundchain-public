@@ -11,6 +11,7 @@ interface TrackInfoProps {
   genres?: Genre[] | null;
   mintingPending?: boolean;
   artistProfile: Profile | undefined;
+  royalties?: number;
 }
 
 export const TrackInfo = ({
@@ -21,6 +22,7 @@ export const TrackInfo = ({
   copyright,
   mintingPending,
   artistProfile,
+  royalties,
 }: TrackInfoProps) => {
   return (
     <div className="w-full text-white">
@@ -41,6 +43,10 @@ export const TrackInfo = ({
           <div className="text-center text-sm font-bold">{artistProfile?.followingCount}</div>
           <div className="text-center text-gray-CC">Following</div>
         </div>
+      </div>
+      <div className="flex items-center font-bold">
+        <div className="w-2/4 uppercase text-sm pl-4 py-3 bg-gray-20">Artist Royalty %</div>
+        <div className="text-center w-2/4 text-sm bg-gray-30 pr-4 py-3">{royalties || '-'}</div>
       </div>
       <div className="flex items-center font-bold">
         <div className="w-2/4 uppercase text-sm pl-4 py-3 bg-gray-20">Track Title</div>

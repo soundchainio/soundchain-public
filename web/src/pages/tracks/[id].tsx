@@ -53,8 +53,9 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 export default function TrackPage({ trackId }: TrackPageProps) {
   const { account, web3 } = useWalletContext();
   const { data } = useTrackQuery({ variables: { id: trackId } });
-  const { isTokenOwner } = useBlockchain();
+  const { isTokenOwner, getRoyalties } = useBlockchain();
   const [isOwner, setIsOwner] = useState<boolean>();
+  const [royalties, setRoyalties] = useState(0);
 
   const mintingPending = data?.track.nftData?.pendingRequest === PendingRequest.Mint;
   const isProcessing = data?.track.nftData?.pendingRequest != PendingRequest.None;
@@ -99,6 +100,17 @@ export default function TrackPage({ trackId }: TrackPageProps) {
     fetchIsOwner();
   }, [account, web3, data?.track.nftData, isTokenOwner]);
 
+  useEffect(() => {
+    const fetchRoyalties = async () => {
+      if (!account || !web3 || !data?.track.nftData?.tokenId) {
+        return;
+      }
+      const royalties = await getRoyalties(web3, data.track.nftData.tokenId);
+      setRoyalties(royalties);
+    };
+    fetchRoyalties();
+  }, [account, web3, data?.track.nftData, getRoyalties]);
+
   const isForSale = !!listingItem?.listingItem.pricePerItem ?? false;
   const price = web3?.utils.fromWei(listingItem?.listingItem.pricePerItem.toString() ?? '0', 'ether');
 
@@ -121,6 +133,7 @@ export default function TrackPage({ trackId }: TrackPageProps) {
         copyright={data?.track.copyright}
         mintingPending={mintingPending}
         artistProfile={profileInfo?.profile}
+        royalties={royalties}
       />
       <MintingData
         transactionHash={data?.track.nftData?.transactionHash}
