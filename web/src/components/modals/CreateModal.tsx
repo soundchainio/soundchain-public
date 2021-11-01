@@ -148,6 +148,7 @@ export const CreateModal = () => {
     if (file && web3 && account && me) {
       const { title, artworkUrl, description, artist, album, genres, releaseYear, copyright } = values;
       const artistId = me.id;
+      const artistProfileId = me.profile.id;
 
       setMintingState('Writing data to ID3Tag ');
       const taggedFile = await saveID3Tag(values, file);
@@ -215,12 +216,14 @@ export const CreateModal = () => {
                 description,
                 genres,
                 releaseYear,
+                artistProfileId,
                 copyright,
                 nftData: {
                   transactionHash: hash,
                   minter: account,
                   ipfsCid: metadataPinResult?.pinJsonToIPFS.cid,
                   pendingRequest: PendingRequest.Mint,
+                  owner: account,
                 },
               },
             },

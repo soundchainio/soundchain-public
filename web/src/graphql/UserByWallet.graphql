@@ -1,0 +1,13 @@
+query UserByWallet($walletAddress: String!) {
+  getUserByWallet(walletAddress: $walletAddress) {
+    id
+    profile {
+      id
+      displayName
+      profilePicture
+      userHandle
+      followerCount
+      followingCount
+    }
+  }
+}

@@ -121,6 +121,8 @@ export const watcher: Handler = async () => {
                 },
               })
               .catch(console.error);
+          } else {
+            context.trackService.updateOwnerByTokenId(parseInt(returnValues.id), returnValues.to).catch(console.error);
           }
           console.log('TransferSingle');
         }

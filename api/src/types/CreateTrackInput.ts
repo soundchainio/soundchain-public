@@ -23,6 +23,9 @@ export class CreateTrackInput {
   artistId: string;
 
   @Field({ nullable: true })
+  artistProfileId: string;
+
+  @Field({ nullable: true })
   album: string;
 
   @Field({ nullable: true })

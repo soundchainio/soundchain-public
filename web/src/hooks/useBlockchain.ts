@@ -195,6 +195,12 @@ const useBlockchain = () => {
     return balance > 0;
   };
 
+  const getRoyalties = async (web3: Web3, tokenId: number) => {
+    const nftContract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
+    const royalties = await nftContract.methods.royalties(nftAddress, tokenId).call();
+    return royalties;
+  };
+
   const mintNftToken = (
     web3: Web3,
     uri: string,
@@ -248,6 +254,7 @@ const useBlockchain = () => {
     getIpfsAssetUrl,
     transfer,
     isApproved,
+    getRoyalties,
   };
 };
 
