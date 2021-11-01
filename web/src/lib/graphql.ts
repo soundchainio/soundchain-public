@@ -908,6 +908,11 @@ export type RetractReactionPayload = {
   post: Post;
 };
 
+export enum Role {
+  Admin = 'ADMIN',
+  User = 'USER'
+}
+
 export type SendMessageInput = {
   message: Scalars['String'];
   toId: Scalars['String'];
@@ -1089,6 +1094,7 @@ export type User = {
   walletAddress: Maybe<Scalars['String']>;
   defaultWallet: DefaultWallet;
   isApprovedOnMarketplace: Scalars['Boolean'];
+  roles: Role;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   profile: Profile;

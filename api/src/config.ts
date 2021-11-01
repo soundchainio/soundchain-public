@@ -73,7 +73,15 @@ export const config = {
     schema: buildSchemaSync({
       resolvers,
       globalMiddlewares: [TypegooseMiddleware],
-      authChecker: ({ context }) => Boolean(context.user),
+      authChecker: async ({ context }, roles) => {
+        const user = await context.user;
+        if (roles.length === 0) {
+          return Boolean(user);
+        }
+        if (user.roles.some((role: string) => roles.includes(role))) {
+          return true;
+        }
+      },
     }),
   },
   uploads: {
