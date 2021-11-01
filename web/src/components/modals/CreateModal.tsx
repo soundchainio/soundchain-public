@@ -1,3 +1,4 @@
+import ID3Writer from 'browser-id3-writer';
 import classNames from 'classnames';
 import { Button } from 'components/Button';
 import { FormValues, InitialValues, TrackMetadataForm } from 'components/forms/track/TrackMetadataForm';
@@ -119,12 +120,54 @@ export const CreateModal = () => {
     setMintingState(undefined);
   };
 
+  const saveID3Tag = (values: FormValues, assetFile: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      try {
+        const bufferReader = new FileReader();
+        bufferReader.readAsArrayBuffer(assetFile);
+        bufferReader.addEventListener('loadend', async () => {
+          const id3Writer = new ID3Writer(bufferReader.result);
+
+          id3Writer
+            .setFrame('TIT2', values.title)
+            .setFrame('TPE1', [values.artist])
+            .setFrame('TALB', values.album)
+            .setFrame('TYER', values.releaseYear)
+            .setFrame('TCON', values.genres)
+            .setFrame('WCOP', values.copyright)
+            .setFrame('COMM', {
+              description: 'Track description made by the author',
+              text: values.description,
+              language: 'eng',
+            });
+
+          if (values.artworkUrl) {
+            const artWorkArrayBuffer = values.artworkUrl && (await fetch(values.artworkUrl).then(r => r.arrayBuffer()));
+            id3Writer.setFrame('APIC', {
+              type: 0,
+              data: artWorkArrayBuffer,
+              description: 'Artwork',
+            });
+          }
+          id3Writer.addTag();
+          const newFile: File = id3Writer.getBlob();
+          resolve(newFile);
+        });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  };
+
   const handleSubmit = async (values: FormValues) => {
     if (file && web3 && account) {
+      setMintingState('Writing data to ID3Tag ');
+      const taggedFile = await saveID3Tag(values, file);
+
       const { title, artworkUrl, description, album, artist, genres, releaseYear, copyright } = values;
 
       setMintingState('Uploading track file');
-      const assetUrl = await upload([file]);
+      const assetUrl = await upload([taggedFile]);
       const artUrl = artworkUrl;
 
       setMintingState('Creating streaming from track');
