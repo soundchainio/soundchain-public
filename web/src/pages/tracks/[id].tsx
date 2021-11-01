@@ -46,7 +46,7 @@ export default function TrackPage({ trackId }: TrackPageProps) {
   const { account, web3 } = useWalletContext();
   const { data } = useTrackQuery({ variables: { id: trackId } });
   const { isTokenOwner } = useBlockchain();
-  const [isOwner, setIsOwner] = useState<boolean>(false);
+  const [isOwner, setIsOwner] = useState<boolean>();
 
   const mintingPending = data?.track.nftData?.pendingRequest === PendingRequest.Mint;
   const isProcessing = data?.track.nftData?.pendingRequest != PendingRequest.None;
@@ -93,10 +93,15 @@ export default function TrackPage({ trackId }: TrackPageProps) {
       />
       <MintingData transactionHash={data?.track.nftData?.transactionHash} ipfsCid={data?.track.nftData?.ipfsCid} />
 
-      {(loading || isProcessing) && !mintingPending ? (
+      {isProcessing && !mintingPending ? (
         <div className=" flex justify-center items-center">
           <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" />
           <div className="text-white text-sm pl-3">Processing {data?.track.nftData?.pendingRequest}</div>
+        </div>
+      ) : isOwner == undefined || loading ? (
+        <div className=" flex justify-center items-center">
+          <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" />
+          <div className="text-white text-sm pl-3">Loading</div>
         </div>
       ) : (
         <HandleNFT price={price} isOwner={isOwner} isForSale={isForSale} />

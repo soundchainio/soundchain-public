@@ -4,6 +4,7 @@ import { ListNFT } from 'components/details-NFT/ListNFT';
 import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
+import { useModalDispatch } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { useMe } from 'hooks/useMe';
@@ -21,6 +22,7 @@ import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
+import { Receipt } from 'types/NftTypes';
 
 export interface TrackPageProps {
   trackId: string;
@@ -52,7 +54,8 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 
 export default function EditPage({ trackId }: TrackPageProps) {
   const router = useRouter();
-  const { updateListing, cancelListing } = useBlockchain();
+  const { updateListing } = useBlockchain();
+  const { dispatchShowRemoveListingModal } = useModalDispatch();
   const { data: track } = useTrackQuery({ variables: { id: trackId } });
   const [trackUpdate] = useUpdateTrackMutation();
   const { account, web3 } = useWalletContext();
@@ -86,26 +89,36 @@ export default function EditPage({ trackId }: TrackPageProps) {
     }
     setLoading(true);
     const weiPrice = web3?.utils.toWei(newPrice.toString(), 'ether') || '0';
-    updateListing(web3, listingItem.listingItem.tokenId, account, weiPrice, () => setLoading(false));
-  };
-
-  const handleRemove = () => {
-    if (!web3 || !listingItem.listingItem.tokenId || !account) {
-      return;
-    }
-    // TODO: ask confirmation
-    cancelListing(web3, listingItem.listingItem.tokenId, account, () => router.push(router.asPath.replace('edit', '')));
-    setLoading(true);
+    updateListing(web3, listingItem.listingItem.tokenId, account, weiPrice, onReceipt);
     trackUpdate({
       variables: {
         input: {
           trackId: trackId,
           nftData: {
-            pendingRequest: PendingRequest.CancelListing,
+            pendingRequest: PendingRequest.UpdateListing,
           },
         },
       },
     });
+  };
+
+  const onReceipt = (receipt: Receipt) => {
+    if (!receipt.events.ItemUpdated) {
+      return;
+    }
+    router.back();
+  };
+
+  const handleRemove = () => {
+    if (
+      !web3 ||
+      !listingItem.listingItem.tokenId ||
+      !account ||
+      track?.track.nftData?.pendingRequest != PendingRequest.None
+    ) {
+      return;
+    }
+    dispatchShowRemoveListingModal(true, listingItem.listingItem.tokenId, trackId);
   };
 
   const RemoveListing = (
@@ -122,7 +135,7 @@ export default function EditPage({ trackId }: TrackPageProps) {
     rightButton: RemoveListing,
   };
 
-  if (!isForSale || !isOwner || !me || !track) {
+  if (!isForSale || !isOwner || !me || !track || track?.track.nftData?.pendingRequest != PendingRequest.None) {
     return null;
   }
 

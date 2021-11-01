@@ -38,11 +38,14 @@ export const useModalDispatch = () => {
     dispatchShowCreateModal: (show: boolean) => dispatch({ type: ModalActionTypes.SHOW_CREATE, payload: { show } }),
     dispatchShowAudioPlayerModal: (show: boolean) =>
       dispatch({ type: ModalActionTypes.SHOW_AUDIO_PLAYER, payload: { show } }),
-    dispatchShowTransferConfirmationModal: (show: boolean) => 
-      dispatch({type: ModalActionTypes.SHOW_TRANSFER_CONFIRMATION, payload: {show}}),
-    dispatchSetRecipientWalletAddress: (address: string) => 
-      dispatch({type: ModalActionTypes.SET_RECIPIENT_WALLET_ADDRESS, payload: { address }}),
-    dispatchSetAmountToTransfer: (amount: string) => dispatch({type: ModalActionTypes.SET_AMOUNT_TO_TRANSFER, payload: { amount } }),
+    dispatchShowTransferConfirmationModal: (show: boolean) =>
+      dispatch({ type: ModalActionTypes.SHOW_TRANSFER_CONFIRMATION, payload: { show } }),
+    dispatchSetRecipientWalletAddress: (address: string) =>
+      dispatch({ type: ModalActionTypes.SET_RECIPIENT_WALLET_ADDRESS, payload: { address } }),
+    dispatchSetAmountToTransfer: (amount: string) =>
+      dispatch({ type: ModalActionTypes.SET_AMOUNT_TO_TRANSFER, payload: { amount } }),
     dispatchShowApproveModal: (show: boolean) => dispatch({ type: ModalActionTypes.SHOW_APPROVE, payload: { show } }),
+    dispatchShowRemoveListingModal: (show: boolean, tokenId: number, trackId: string) =>
+      dispatch({ type: ModalActionTypes.SHOW_REMOVE_LISTING, payload: { show, tokenId, trackId } }),
   };
 };

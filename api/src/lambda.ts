@@ -85,6 +85,7 @@ export const watcher: Handler = async () => {
         {
           const { tokenId, newPrice } = (event as ItemUpdated).returnValues;
           context.listingItemService.updateListingItem(parseInt(tokenId), { pricePerItem: newPrice });
+          context.trackService.setPendingNone(parseInt(tokenId));
           console.log('ItemUpdated');
         }
         break;

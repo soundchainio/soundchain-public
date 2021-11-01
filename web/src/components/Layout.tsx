@@ -5,10 +5,11 @@ import { AuthorActionsModal } from './AuthorActionsModal';
 import { ApproveModal } from './modals/ApproveModal';
 import { PostModal } from './PostModal';
 import { ReactionsModal } from './ReactionsModal';
+import { RemoveListingConfirmationModal } from './RemoveListingConfirmationModal';
 import { SideMenu } from './SideMenu';
 import { TopNavBar, TopNavBarProps } from './TopNavBar';
+import { TransferConfirmationModal } from './TransferConfirmationModal';
 import { UnderDevelopmentModal } from './UnderDevelopmentModal';
-import { TransferConfirmationModal } from './TransferConfirmationModal'
 
 interface LayoutProps {
   children: ReactNode;
@@ -44,6 +45,7 @@ export const Layout = ({ children, hideBottomNavBar, topNavBarProps, fullHeight 
         <ReactionsModal />
         <TransferConfirmationModal />
         <ApproveModal />
+        <RemoveListingConfirmationModal />
       </div>
     </div>
   );
