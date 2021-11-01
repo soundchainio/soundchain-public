@@ -22,7 +22,6 @@ import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
-import { Receipt } from 'types/NftTypes';
 
 export interface TrackPageProps {
   trackId: string;
@@ -66,7 +65,7 @@ export default function EditPage({ trackId }: TrackPageProps) {
 
   const tokenId = track?.track.nftData?.tokenId || -1;
 
-  const [getListingItem, { data: listingItem }] = useListingItemLazyQuery({
+  const [getListingItem, { data: listingPayload }] = useListingItemLazyQuery({
     variables: { tokenId },
   });
 
@@ -74,51 +73,49 @@ export default function EditPage({ trackId }: TrackPageProps) {
     getListingItem();
   }, [getListingItem]);
 
-  if (!listingItem) {
+  if (!listingPayload) {
     return null;
   }
 
-  const ownerAddressAccount = listingItem.listingItem.owner.toLowerCase();
+  const ownerAddressAccount = listingPayload.listingItem?.listingItem?.owner.toLowerCase();
   const isOwner = ownerAddressAccount === account?.toLowerCase();
-  const isForSale = !!listingItem.listingItem.pricePerItem ?? false;
-  const price = web3?.utils.fromWei(listingItem.listingItem.pricePerItem.toString(), 'ether') || '0';
+  const isForSale = !!listingPayload.listingItem?.listingItem?.pricePerItem ?? false;
+  const price = web3?.utils.fromWei(listingPayload.listingItem?.listingItem?.pricePerItem.toString() || '0', 'ether');
 
   const handleUpdate = () => {
-    if (!web3 || !listingItem.listingItem.tokenId || !newPrice || !account) {
+    if (!web3 || !listingPayload.listingItem?.listingItem?.tokenId || !newPrice || !account) {
       return;
     }
     setLoading(true);
     const weiPrice = web3?.utils.toWei(newPrice.toString(), 'ether') || '0';
-    updateListing(web3, listingItem.listingItem.tokenId, account, weiPrice, onReceipt);
-    trackUpdate({
-      variables: {
-        input: {
-          trackId: trackId,
-          nftData: {
-            pendingRequest: PendingRequest.UpdateListing,
+
+    const onTransactionHash = () => {
+      trackUpdate({
+        variables: {
+          input: {
+            trackId: trackId,
+            nftData: {
+              pendingRequest: PendingRequest.UpdateListing,
+            },
           },
         },
-      },
-    });
-  };
+      });
+      router.back();
+    };
 
-  const onReceipt = (receipt: Receipt) => {
-    if (!receipt.events.ItemUpdated) {
-      return;
-    }
-    router.back();
+    updateListing(web3, listingPayload.listingItem?.listingItem?.tokenId, account, weiPrice, onTransactionHash);
   };
 
   const handleRemove = () => {
     if (
       !web3 ||
-      !listingItem.listingItem.tokenId ||
+      !listingPayload.listingItem?.listingItem?.tokenId ||
       !account ||
       track?.track.nftData?.pendingRequest != PendingRequest.None
     ) {
       return;
     }
-    dispatchShowRemoveListingModal(true, listingItem.listingItem.tokenId, trackId);
+    dispatchShowRemoveListingModal(true, listingPayload.listingItem?.listingItem?.tokenId, trackId);
   };
 
   const RemoveListing = (
@@ -144,7 +141,7 @@ export default function EditPage({ trackId }: TrackPageProps) {
       <div className="m-4">
         <Track trackId={trackId} />
       </div>
-      <ListNFT onSetPrice={setNewPrice} initialPrice={parseFloat(price)} />
+      {price && <ListNFT onSetPrice={setNewPrice} initialPrice={parseFloat(price)} />}
       <div className="flex p-4">
         <div className="flex-1 font-black text-xs text-gray-80">
           <p>Max gas fee</p>

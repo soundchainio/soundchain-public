@@ -1,5 +1,5 @@
-import * as Apollo from '@apollo/client';
 import { gql } from '@apollo/client';
+import * as Apollo from '@apollo/client';
 export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
@@ -158,6 +158,7 @@ export type CreateTrackInput = {
   releaseYear?: Maybe<Scalars['Float']>;
   copyright?: Maybe<Scalars['String']>;
   genres?: Maybe<Array<Genre>>;
+  nftData?: Maybe<NftDataInput>;
 };
 
 export type CreateTrackPayload = {
@@ -295,6 +296,25 @@ export enum Genre {
   World = 'WORLD'
 }
 
+
+export type ListingItem = {
+  __typename?: 'ListingItem';
+  id: Scalars['ID'];
+  owner: Scalars['String'];
+  nft: Scalars['String'];
+  tokenId: Scalars['Float'];
+  startingTime: Scalars['Float'];
+  quantity: Scalars['Float'];
+  pricePerItem: Scalars['String'];
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  valid: Scalars['Boolean'];
+};
+
+export type ListingItemPayload = {
+  __typename?: 'ListingItemPayload';
+  listingItem: Maybe<ListingItem>;
+};
 
 export type LoginInput = {
   token: Scalars['String'];
@@ -692,7 +712,7 @@ export type Query = {
   feed: FeedConnection;
   followers: FollowConnection;
   following: FollowConnection;
-  listingItem: CreateListingItemType;
+  listingItem: ListingItemPayload;
   wasListedBefore: Scalars['Boolean'];
   message: Message;
   notifications: NotificationConnection;
@@ -1526,8 +1546,11 @@ export type ListingItemQueryVariables = Exact<{
 export type ListingItemQuery = (
   { __typename?: 'Query' }
   & { listingItem: (
-    { __typename?: 'CreateListingItemType' }
-    & Pick<CreateListingItemType, 'id' | 'owner' | 'nft' | 'tokenId' | 'quantity' | 'pricePerItem' | 'startingTime'>
+    { __typename?: 'ListingItemPayload' }
+    & { listingItem: Maybe<(
+      { __typename?: 'ListingItem' }
+      & Pick<ListingItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'quantity' | 'pricePerItem' | 'startingTime'>
+    )> }
   ) }
 );
 
@@ -3284,13 +3307,15 @@ export type FollowingQueryResult = Apollo.QueryResult<FollowingQuery, FollowingQ
 export const ListingItemDocument = gql`
     query ListingItem($tokenId: Float!) {
   listingItem(tokenId: $tokenId) {
-    id
-    owner
-    nft
-    tokenId
-    quantity
-    pricePerItem
-    startingTime
+    listingItem {
+      id
+      owner
+      nft
+      tokenId
+      quantity
+      pricePerItem
+      startingTime
+    }
   }
 }
     `;

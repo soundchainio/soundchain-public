@@ -42,9 +42,18 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
   return cacheFor(TrackPage, { trackId }, context, apolloClient);
 });
 
+const pendingRequestMapping: Record<PendingRequest, string> = {
+  CancelListing: 'cancel listing',
+  Buy: 'buy',
+  List: 'list',
+  Mint: 'mint',
+  None: 'none',
+  UpdateListing: 'update listing',
+};
+
 export default function TrackPage({ trackId }: TrackPageProps) {
   const { account, web3 } = useWalletContext();
-  const { data } = useTrackQuery({ variables: { id: trackId } });
+  const { data, refetch: refetchTrack } = useTrackQuery({ variables: { id: trackId }, fetchPolicy: 'network-only' });
   const { isTokenOwner } = useBlockchain();
   const [isOwner, setIsOwner] = useState<boolean>();
 
@@ -53,9 +62,13 @@ export default function TrackPage({ trackId }: TrackPageProps) {
 
   const tokenId = data?.track.nftData?.tokenId || -1;
 
-  const { data: listingItem, loading } = useListingItemQuery({
+  const {
+    data: listingPayload,
+    loading,
+    refetch: refetchListing,
+  } = useListingItemQuery({
     variables: { tokenId },
-    fetchPolicy: 'no-cache',
+    fetchPolicy: 'network-only',
   });
 
   useEffect(() => {
@@ -69,13 +82,25 @@ export default function TrackPage({ trackId }: TrackPageProps) {
     fetchIsOwner();
   }, [account, web3, data?.track.nftData, isTokenOwner]);
 
-  const isForSale = !!listingItem?.listingItem.pricePerItem ?? false;
-  const price = web3?.utils.fromWei(listingItem?.listingItem.pricePerItem.toString() ?? '0', 'ether');
+  const isForSale = !!listingPayload?.listingItem.listingItem?.pricePerItem ?? false;
+  const price = web3?.utils.fromWei(listingPayload?.listingItem?.listingItem?.pricePerItem.toString() ?? '0', 'ether');
 
   const topNovaBarProps: TopNavBarProps = {
     leftButton: <BackButton />,
     title: 'NFT Details',
   };
+  //Cannot return null for non-nullable field Query.listingItem."
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (isProcessing && tokenId !== -1) {
+        refetchListing({ tokenId: tokenId });
+        refetchTrack({ id: trackId });
+      }
+    }, 5 * 1000);
+
+    return () => clearInterval(interval);
+  }, [isProcessing, refetchTrack, refetchListing, tokenId, trackId]);
 
   return (
     <Layout topNavBarProps={topNovaBarProps}>
@@ -93,15 +118,17 @@ export default function TrackPage({ trackId }: TrackPageProps) {
       />
       <MintingData transactionHash={data?.track.nftData?.transactionHash} ipfsCid={data?.track.nftData?.ipfsCid} />
 
-      {isProcessing && !mintingPending ? (
+      {isProcessing && !mintingPending && data?.track.nftData?.pendingRequest ? (
         <div className=" flex justify-center items-center">
           <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" />
-          <div className="text-white text-sm pl-3">Processing {data?.track.nftData?.pendingRequest}</div>
+          <div className="text-white text-sm pl-3 font-bold">
+            Processing {pendingRequestMapping[data.track.nftData.pendingRequest]}
+          </div>
         </div>
       ) : isOwner == undefined || loading ? (
         <div className=" flex justify-center items-center">
           <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" />
-          <div className="text-white text-sm pl-3">Loading</div>
+          <div className="text-white text-sm pl-3 font-bold">Loading</div>
         </div>
       ) : (
         <HandleNFT price={price} isOwner={isOwner} isForSale={isForSale} />

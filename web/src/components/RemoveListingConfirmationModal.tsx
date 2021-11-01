@@ -52,27 +52,28 @@ export const RemoveListingConfirmationModal = () => {
     try {
       setLoading(true);
       if (!account) return;
-      cancelListing(web3, tokenId, account, onReceipt);
-      trackUpdate({
-        variables: {
-          input: {
-            trackId: trackId,
-            nftData: {
-              pendingRequest: PendingRequest.CancelListing,
+      const onTransactionHash = async () => {
+        await trackUpdate({
+          variables: {
+            input: {
+              trackId: trackId,
+              nftData: {
+                pendingRequest: PendingRequest.CancelListing,
+              },
             },
           },
-        },
-      });
+        });
+
+        dispatchShowRemoveListingModal(false, 0, '');
+        router.push(router.asPath.replace('edit', ''));
+      };
+
+      cancelListing(web3, tokenId, account, onTransactionHash);
     } catch (e) {
       console.log(e);
       setLoading(false);
       alert('We had some trouble, please try again later!');
     }
-  };
-
-  const onReceipt = () => {
-    dispatchShowRemoveListingModal(false, 0, '');
-    router.push(router.asPath.replace('edit', ''));
   };
 
   return (

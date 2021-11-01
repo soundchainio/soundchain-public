@@ -3,6 +3,7 @@ import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
 import { useWalletContext } from 'hooks/useWalletContext';
+import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 
 export const ApproveModal = () => {
@@ -10,6 +11,7 @@ export const ApproveModal = () => {
   const modalState = useModalState();
   const { dispatchShowApproveModal } = useModalDispatch();
   const { approveMarketplace } = useBlockchain();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   const isOpen = modalState.showApprove;
@@ -29,6 +31,7 @@ export const ApproveModal = () => {
   const onReceipt = () => {
     setLoading(false);
     dispatchShowApproveModal(false);
+    router.reload();
   };
 
   return (

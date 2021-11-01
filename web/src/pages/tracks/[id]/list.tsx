@@ -23,7 +23,6 @@ import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
-import { Receipt } from 'types/NftTypes';
 
 export interface TrackPageProps {
   trackId: string;
@@ -107,7 +106,7 @@ export default function ListPage({ trackId }: TrackPageProps) {
     fetchIsApproved();
   }, [account, web3, checkIsApproved]);
 
-  const isForSale = !!listingItem?.listingItem.pricePerItem ?? false;
+  const isForSale = !!listingItem?.listingItem?.listingItem?.pricePerItem ?? false;
   const isSetRoyalty = !wasListedBefore?.wasListedBefore;
 
   const handleList = () => {
@@ -118,27 +117,23 @@ export default function ListPage({ trackId }: TrackPageProps) {
     const weiPrice = web3?.utils.toWei(price.toString(), 'ether') || '0';
 
     if (isApproved) {
-      listItem(web3, data.track.nftData.tokenId, 1, account, weiPrice, royalty * 100, onReceipt);
-      trackUpdate({
-        variables: {
-          input: {
-            trackId: trackId,
-            nftData: {
-              pendingRequest: PendingRequest.List,
+      const onTransactionHash = async () => {
+        await trackUpdate({
+          variables: {
+            input: {
+              trackId: trackId,
+              nftData: {
+                pendingRequest: PendingRequest.List,
+              },
             },
           },
-        },
-      });
-      return;
+        });
+        router.back();
+      };
+      listItem(web3, data.track.nftData.tokenId, 1, account, weiPrice, royalty * 100, onTransactionHash);
+    } else {
+      me ? dispatchShowApproveModal(true) : router.push('/login');
     }
-    me ? dispatchShowApproveModal(true) : router.push('/login');
-  };
-
-  const onReceipt = (receipt: Receipt) => {
-    if (!receipt.events.ItemListed) {
-      return;
-    }
-    router.back();
   };
 
   const topNovaBarProps: TopNavBarProps = {

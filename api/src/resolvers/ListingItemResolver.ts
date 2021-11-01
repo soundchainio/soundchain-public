@@ -2,6 +2,7 @@ import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from 'type-graphql';
 import { ListingItem } from '../models/ListingItem';
 import { Context } from '../types/Context';
 import { CreateListingItemData } from '../types/CreateListingItemData';
+import { ListingItemPayload } from '../types/ListingItemPayload';
 
 @Resolver(ListingItem)
 export class ListingItemResolver {
@@ -22,10 +23,13 @@ export class ListingItemResolver {
     return listingItem;
   }
 
-  @Query(() => CreateListingItemData)
-  async listingItem(@Ctx() { listingItemService }: Context, @Arg('tokenId') tokenId: number): Promise<ListingItem> {
+  @Query(() => ListingItemPayload)
+  async listingItem(
+    @Ctx() { listingItemService }: Context,
+    @Arg('tokenId') tokenId: number,
+  ): Promise<ListingItemPayload> {
     const listingItem = await listingItemService.findListingItem(tokenId);
-    return listingItem;
+    return { listingItem };
   }
 
   @Query(() => Boolean)

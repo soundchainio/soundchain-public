@@ -1,5 +1,6 @@
 import { Field, InputType } from 'type-graphql';
 import { Genre } from './Genres';
+import { NFTData } from './NFTData';
 
 @InputType()
 export class CreateTrackInput {
@@ -18,7 +19,7 @@ export class CreateTrackInput {
   @Field({ nullable: true })
   artist: string;
 
-  @Field({nullable: true})
+  @Field({ nullable: true })
   artistId: string;
 
   @Field({ nullable: true })
@@ -32,4 +33,7 @@ export class CreateTrackInput {
 
   @Field(() => [Genre], { nullable: true })
   genres: Genre[];
+
+  @Field(() => NFTData, { nullable: true })
+  nftData: NFTData;
 }

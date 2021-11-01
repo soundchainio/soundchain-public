@@ -6,25 +6,23 @@ import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar';
+import { useMe } from 'hooks/useMe';
 import { useUpload } from 'hooks/useUpload';
 import { useWalletContext } from 'hooks/useWalletContext';
-import { useMe } from 'hooks/useMe';
 import {
   CreateTrackMutation,
   FeedDocument,
   PendingRequest,
   useCreateTrackMutation,
-  useDeleteTrackOnErrorMutation,
   usePinJsonToIpfsMutation,
   usePinToIpfsMutation,
-  useUpdateTrackMutation
 } from 'lib/graphql';
 import * as musicMetadata from 'music-metadata-browser';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import { Metadata } from 'types/NftTypes';
 import { genres } from 'utils/Genres';
-import { MiningState, MintingDone } from './MintingDone';
+import { MintingDone } from './MintingDone';
 
 enum Tabs {
   NFT = 'NFT',
@@ -45,8 +43,6 @@ export const CreateModal = () => {
 
   const { upload } = useUpload();
   const [createTrack] = useCreateTrackMutation();
-  const [updateTrack] = useUpdateTrackMutation();
-  const [deleteTrackOnError] = useDeleteTrackOnErrorMutation();
 
   const { web3, account } = useWalletContext();
   const [pinToIPFS] = usePinToIpfsMutation();
@@ -55,7 +51,6 @@ export const CreateModal = () => {
   const { mintNftToken } = useBlockchain();
   const [transactionHash, setTransactionHash] = useState<string>();
   const [mintingState, setMintingState] = useState<string>();
-  const [miningState, setMiningState] = useState<MiningState>(MiningState.IN_PROGRESS);
   const [mintError, setMintError] = useState<boolean>(false);
 
   const [initialValues, setInitialValues] = useState<InitialValues>();
@@ -103,20 +98,6 @@ export const CreateModal = () => {
     dispatchShowPostModal(true);
   };
 
-  const onMintError = async (trackId: string) => {
-    await deleteTrackOnError({
-      variables: {
-        input: {
-          trackId,
-        },
-      },
-    });
-
-    setMintError(true);
-    setMintingState('There was an error while minting your NFT');
-    setTransactionHash(undefined);
-  };
-
   const onCloseError = () => {
     setMintError(false);
     setMintingState(undefined);
@@ -125,27 +106,11 @@ export const CreateModal = () => {
   const handleSubmit = async (values: FormValues) => {
     if (file && web3 && account && me) {
       const { title, artworkUrl, description, artist, album, genres, releaseYear, copyright } = values;
-      const artistId = me.id
+      const artistId = me.id;
 
       setMintingState('Uploading track file');
       const assetUrl = await upload([file]);
       const artUrl = artworkUrl;
-
-      setMintingState('Creating streaming from track');
-      const { data } = await createTrack({
-        variables: {
-          input: { assetUrl, title, album, artist, artistId, artworkUrl, description, genres, releaseYear, copyright },
-        },
-      });
-      const track = data?.createTrack.track;
-
-      if (!track) {
-        setMintingState(undefined);
-        alert('We had some trouble, please try again later!');
-        return;
-      }
-
-      setNewTrack(track);
 
       try {
         const assetKey = assetUrl.substring(assetUrl.lastIndexOf('/') + 1);
@@ -191,13 +156,22 @@ export const CreateModal = () => {
             },
           },
         });
-        setMintingState('Minting NFT');
 
-        const onTransactionHash = (hash: string) => {
-          updateTrack({
+        const onTransactionHash = async (hash: string) => {
+          setMintingState('Creating your track');
+          const { data } = await createTrack({
             variables: {
               input: {
-                trackId: track.id,
+                assetUrl,
+                title,
+                album,
+                artist,
+                artistId,
+                artworkUrl,
+                description,
+                genres,
+                releaseYear,
+                copyright,
                 nftData: {
                   transactionHash: hash,
                   minter: account,
@@ -208,15 +182,34 @@ export const CreateModal = () => {
             },
             refetchQueries: [FeedDocument],
           });
+          const track = data?.createTrack.track;
+
+          setNewTrack(track);
           dispatchShowCreateModal(true);
           setMintingState(undefined);
           setTransactionHash(hash);
         };
 
-        mintNftToken(web3, `ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`, account, account, 1, onTransactionHash);
-      } catch (e) {
-        setMiningState(MiningState.ERROR);
-        if (e) await onMintError(track.id);
+        const onError = () => {
+          setTransactionHash(undefined);
+          setMintingState('There was an error while minting your NFT');
+          setMintError(true);
+        };
+
+        setMintingState('Minting NFT');
+        mintNftToken(
+          web3,
+          `ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`,
+          account,
+          account,
+          1,
+          onTransactionHash,
+          onError,
+        );
+      } catch {
+        setTransactionHash(undefined);
+        setMintingState('There was an error while minting your NFT');
+        setMintError(true);
       }
     }
   };
@@ -268,7 +261,7 @@ export const CreateModal = () => {
       }
     >
       {transactionHash && newTrack ? (
-        <MintingDone transactionHash={transactionHash} track={newTrack} miningState={miningState} />
+        <MintingDone transactionHash={transactionHash} track={newTrack} />
       ) : (
         <>
           <div className="px-4 py-4">
