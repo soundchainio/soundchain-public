@@ -1,5 +1,6 @@
+import { Avatar } from 'components/Avatar';
 import { Badge } from 'components/Badge';
-import { Genre } from 'lib/graphql';
+import { Genre, Profile } from 'lib/graphql';
 import { getGenreLabelByKey } from 'utils/Genres';
 
 interface TrackInfoProps {
@@ -9,6 +10,7 @@ interface TrackInfoProps {
   releaseYear?: number | null;
   genres?: Genre[] | null;
   mintingPending?: boolean;
+  artistProfile: Profile | undefined;
 }
 
 export const TrackInfo = ({
@@ -18,9 +20,28 @@ export const TrackInfo = ({
   genres,
   copyright,
   mintingPending,
+  artistProfile,
 }: TrackInfoProps) => {
   return (
     <div className="w-full text-white">
+      <div className="flex items-center text-xxs px-4 py-1">
+        <div className="w-1/6 uppercase text-xs text-gray-CC font-bold mr-1">Artist</div>
+        <div className="flex w-3/6">
+          <Avatar profile={{ profilePicture: artistProfile?.profilePicture }} pixels={30} />
+          <div className="flex flex-col pl-1">
+            <div className="text-center text-sm font-bold">{artistProfile?.displayName}</div>
+            <div className="text-center text-xxs text-gray-CC">@{artistProfile?.userHandle}</div>
+          </div>
+        </div>
+        <div className="flex flex-col w-1/6">
+          <div className="text-center text-sm font-bold">{artistProfile?.followerCount}</div>
+          <div className="text-center text-gray-CC">Followers</div>
+        </div>
+        <div className="flex flex-col w-1/6">
+          <div className="text-center text-sm font-bold">{artistProfile?.followingCount}</div>
+          <div className="text-center text-gray-CC">Following</div>
+        </div>
+      </div>
       <div className="flex items-center font-bold">
         <div className="w-2/4 uppercase text-sm pl-4 py-3 bg-gray-20">Track Title</div>
         <div className="text-center w-2/4 text-sm bg-gray-30 pr-4 py-3">{trackTitle || '-'}</div>

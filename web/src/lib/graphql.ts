@@ -1,5 +1,5 @@
-import * as Apollo from '@apollo/client';
 import { gql } from '@apollo/client';
+import * as Apollo from '@apollo/client';
 export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
@@ -154,6 +154,7 @@ export type CreateTrackInput = {
   artworkUrl?: Maybe<Scalars['String']>;
   artist?: Maybe<Scalars['String']>;
   artistId?: Maybe<Scalars['String']>;
+  artistProfileId?: Maybe<Scalars['String']>;
   album?: Maybe<Scalars['String']>;
   releaseYear?: Maybe<Scalars['Float']>;
   copyright?: Maybe<Scalars['String']>;
@@ -981,6 +982,7 @@ export type Track = {
   artworkUrl: Maybe<Scalars['String']>;
   artist: Maybe<Scalars['String']>;
   artistId: Maybe<Scalars['String']>;
+  artistProfileId: Maybe<Scalars['String']>;
   album: Maybe<Scalars['String']>;
   copyright: Maybe<Scalars['String']>;
   releaseYear: Maybe<Scalars['Float']>;
@@ -1935,7 +1937,7 @@ export type TrackQuery = (
 
 export type TrackComponentFieldsFragment = (
   { __typename?: 'Track' }
-  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'artistId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted'>
+  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted'>
   & { nftData: Maybe<(
     { __typename?: 'NFTDataType' }
     & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest'>
@@ -2297,6 +2299,7 @@ export const TrackComponentFieldsFragmentDoc = gql`
   description
   artist
   artistId
+  artistProfileId
   album
   releaseYear
   copyright

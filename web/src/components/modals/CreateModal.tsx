@@ -6,9 +6,9 @@ import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar';
+import { useMe } from 'hooks/useMe';
 import { useUpload } from 'hooks/useUpload';
 import { useWalletContext } from 'hooks/useWalletContext';
-import { useMe } from 'hooks/useMe';
 import {
   CreateTrackMutation,
   FeedDocument,
@@ -17,7 +17,7 @@ import {
   useDeleteTrackOnErrorMutation,
   usePinJsonToIpfsMutation,
   usePinToIpfsMutation,
-  useUpdateTrackMutation
+  useUpdateTrackMutation,
 } from 'lib/graphql';
 import * as musicMetadata from 'music-metadata-browser';
 import Image from 'next/image';
@@ -125,7 +125,8 @@ export const CreateModal = () => {
   const handleSubmit = async (values: FormValues) => {
     if (file && web3 && account && me) {
       const { title, artworkUrl, description, artist, album, genres, releaseYear, copyright } = values;
-      const artistId = me.id
+      const artistId = me.id;
+      const artistProfileId = me.profile.id;
 
       setMintingState('Uploading track file');
       const assetUrl = await upload([file]);
@@ -134,7 +135,19 @@ export const CreateModal = () => {
       setMintingState('Creating streaming from track');
       const { data } = await createTrack({
         variables: {
-          input: { assetUrl, title, album, artist, artistId, artworkUrl, description, genres, releaseYear, copyright },
+          input: {
+            assetUrl,
+            title,
+            album,
+            artist,
+            artistId,
+            artistProfileId,
+            artworkUrl,
+            description,
+            genres,
+            releaseYear,
+            copyright,
+          },
         },
       });
       const track = data?.createTrack.track;

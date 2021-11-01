@@ -9,7 +9,7 @@ import { Track } from 'components/Track';
 import useBlockchain from 'hooks/useBlockchain';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { cacheFor } from 'lib/apollo';
-import { PendingRequest, TrackDocument, useListingItemQuery, useTrackQuery } from 'lib/graphql';
+import { PendingRequest, TrackDocument, useListingItemQuery, useProfileLazyQuery, useTrackQuery } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
@@ -58,6 +58,17 @@ export default function TrackPage({ trackId }: TrackPageProps) {
     fetchPolicy: 'no-cache',
   });
 
+  const [profile, { data: profileInfo }] = useProfileLazyQuery({
+    variables: { id: data?.track.artistProfileId ?? '' },
+    ssr: false,
+  });
+
+  useEffect(() => {
+    if (data?.track.artistProfileId) {
+      profile();
+    }
+  }, [data?.track.artistProfileId, profile]);
+
   useEffect(() => {
     const fetchIsOwner = async () => {
       if (!account || !web3 || !data?.track.nftData?.tokenId) {
@@ -90,6 +101,7 @@ export default function TrackPage({ trackId }: TrackPageProps) {
         genres={data?.track.genres}
         copyright={data?.track.copyright}
         mintingPending={mintingPending}
+        artistProfile={profileInfo?.profile}
       />
       <MintingData transactionHash={data?.track.nftData?.transactionHash} ipfsCid={data?.track.nftData?.ipfsCid} />
 
