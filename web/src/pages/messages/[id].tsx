@@ -1,4 +1,3 @@
-import { BottomSheet } from 'components/BottomSheet';
 import { BackButton } from 'components/Buttons/BackButton';
 import { RefreshButton } from 'components/Buttons/RefreshButton';
 import { Chat } from 'components/Chat';
@@ -14,7 +13,7 @@ import {
   ProfileDisplayNameDocument,
   ProfileDisplayNameQuery,
   SendMessageMutation,
-  useChatHistoryQuery,
+  useChatHistoryQuery
 } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { animateScroll as scroll } from 'react-scroll';
@@ -92,9 +91,7 @@ export default function ChatPage({ recipientName, profileId }: PostPageProps) {
   return (
     <ChatLayout topNavBarProps={topNavBarProps}>
       <Chat messages={messages} pageInfo={pageInfo} onFetchMore={onFetchMore} loading={loading} />
-      <BottomSheet>
-        <NewMessageForm profileId={profileId} onNewMessage={onNewMessage} />
-      </BottomSheet>
+      <NewMessageForm profileId={profileId} onNewMessage={onNewMessage} />
     </ChatLayout>
   );
 }

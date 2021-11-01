@@ -1,21 +1,5 @@
 query Profile($id: String!) {
   profile(id: $id) {
-    id
-    displayName
-    profilePicture
-    coverPicture
-    socialMedias {
-      facebook
-      instagram
-      soundcloud
-      twitter
-    }
-    userHandle
-    isFollowed
-    isSubscriber
-    followerCount
-    followingCount
-    musicianTypes
-    bio
+    ...ProfileComponentFields
   }
 }

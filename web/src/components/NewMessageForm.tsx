@@ -35,18 +35,20 @@ export const NewMessageForm = ({ profileId, onNewMessage }: NewMessageFormProps)
   };
 
   return (
-    <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
-      {({ isSubmitting, isValid, dirty }: FormikProps<FormValues>) => (
-        <Form>
-          <div className="flex flex-row items-start space-x-3 p-3 bg-gray-25">
-            {me && <Avatar className="flex self-center" profile={me.profile} linkToProfile={false} />}
-            <FlexareaField name="body" placeholder="Write a comment..." />
-            <button type="submit" disabled={isSubmitting} className="pt-1">
-              <Send color={dirty && isValid ? 'green-blue' : undefined} />
-            </button>
-          </div>
-        </Form>
-      )}
-    </Formik>
+    <div className="fixed bottom-0 right-0 left-0 z-50">
+      <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
+        {({ isSubmitting, isValid, dirty }: FormikProps<FormValues>) => (
+          <Form>
+            <div className="flex flex-row items-start space-x-3 p-3 py-5 bg-gray-25">
+              {me && <Avatar className="flex self-center" profile={me.profile} linkToProfile={false} />}
+              <FlexareaField name="body" placeholder="Write a message..." />
+              <button type="submit" disabled={isSubmitting} className="pt-1">
+                <Send color={dirty && isValid ? 'green-blue' : undefined} />
+              </button>
+            </div>
+          </Form>
+        )}
+      </Formik>
+    </div>
   );
 };

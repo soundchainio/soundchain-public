@@ -9,7 +9,7 @@ export const ClearAllNotificationsButton = () => {
   };
 
   return (
-    <Button variant="clear" onClick={onClick} disabled={loading}>
+    <Button className="text-white" variant="clear" onClick={onClick} disabled={loading}>
       Clear All
     </Button>
   );

@@ -151,6 +151,24 @@ export const cacheConfig: InMemoryCacheConfig = {
             };
           },
         },
+        exploreTracks: {
+          keyArgs: ['search'],
+          merge(existing = { nodes: [] }, { nodes, pageInfo }): TrackConnection {
+            return {
+              nodes: [...existing.nodes, ...nodes],
+              pageInfo,
+            };
+          },
+        },
+        exploreUsers: {
+          keyArgs: ['search'],
+          merge(existing = { nodes: [] }, { nodes, pageInfo }): TrackConnection {
+            return {
+              nodes: [...existing.nodes, ...nodes],
+              pageInfo,
+            };
+          },
+        },
       },
     },
   },

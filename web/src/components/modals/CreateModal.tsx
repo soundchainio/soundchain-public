@@ -7,6 +7,7 @@ import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar';
+import { useMe } from 'hooks/useMe';
 import { useUpload } from 'hooks/useUpload';
 import { useWalletContext } from 'hooks/useWalletContext';
 import {
@@ -33,6 +34,7 @@ enum Tabs {
 export const CreateModal = () => {
   const modalState = useModalState();
   const { dispatchShowCreateModal, dispatchShowPostModal } = useModalDispatch();
+  const me = useMe();
   const [tab, setTab] = useState(Tabs.NFT);
   const { setIsMintingState } = useHideBottomNavBar();
 
@@ -76,7 +78,7 @@ export const CreateModal = () => {
 
       setInitialValues({
         title: fileMetadata?.title,
-        artist: fileMetadata?.artist,
+        artist: me?.handle,
         description: fileMetadata?.comment && fileMetadata.comment[0],
         album: fileMetadata?.album,
         releaseYear: fileMetadata?.year,
@@ -161,11 +163,12 @@ export const CreateModal = () => {
   };
 
   const handleSubmit = async (values: FormValues) => {
-    if (file && web3 && account) {
+    if (file && web3 && account && me) {
+      const { title, artworkUrl, description, artist, album, genres, releaseYear, copyright } = values;
+      const artistId = me.id;
+
       setMintingState('Writing data to ID3Tag ');
       const taggedFile = await saveID3Tag(values, file);
-
-      const { title, artworkUrl, description, album, artist, genres, releaseYear, copyright } = values;
 
       setMintingState('Uploading track file');
       const assetUrl = await upload([taggedFile]);
@@ -174,7 +177,7 @@ export const CreateModal = () => {
       setMintingState('Creating streaming from track');
       const { data } = await createTrack({
         variables: {
-          input: { assetUrl, title, album, artist, artworkUrl, description, genres, releaseYear, copyright },
+          input: { assetUrl, title, album, artist, artistId, artworkUrl, description, genres, releaseYear, copyright },
         },
       });
       const track = data?.createTrack.track;
