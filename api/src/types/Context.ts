@@ -16,6 +16,7 @@ import { NotificationService } from '../services/NotificationService';
 import { PinningService } from '../services/PinningService';
 import { PostService } from '../services/PostService';
 import { ProfileService } from '../services/ProfileService';
+import { ProfileVerificationRequestService } from '../services/ProfileVerificationRequestService';
 import { ReactionService } from '../services/ReactionService';
 import { SubscriptionService } from '../services/SubscriptionService';
 import { TrackService } from '../services/TrackService';
@@ -38,6 +39,7 @@ export class Context {
   subscriptionService = new SubscriptionService(this);
   trackService = new TrackService(this);
   mintingRequestService = new MintingRequestService(this);
+  profileVerificationRequestService = new ProfileVerificationRequestService(this);
   pinningService = new PinningService(this);
   uploadService = new UploadService(this);
   userService = new UserService(this);

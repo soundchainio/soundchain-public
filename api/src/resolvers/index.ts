@@ -14,6 +14,7 @@ import { NotificationResolver } from './NotificationResolver';
 import { PinningResolver } from './PinningResolver';
 import { PostResolver } from './PostResolver';
 import { ProfileResolver } from './ProfileResolver';
+import { ProfileVerificationRequestResolver } from './ProfileVerificationRequestResolver';
 import { ReactionNotificationResolver } from './ReactionNotificationResolver';
 import { ReactionResolver } from './ReactionResolver';
 import { TrackResolver } from './TrackResolver';
@@ -38,6 +39,7 @@ export const resolvers = [
   UploadResolver,
   UserResolver,
   MintingRequestResolver,
+  ProfileVerificationRequestResolver,
   PinningResolver,
   ListingItemResolver,
   ExploreResolver,
