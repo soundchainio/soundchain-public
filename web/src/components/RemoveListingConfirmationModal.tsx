@@ -3,11 +3,11 @@ import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { Form, Formik } from 'formik';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMagicContext } from 'hooks/useMagicContext';
+import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { Logo } from 'icons/Logo';
 import { Matic } from 'icons/Matic';
 import { PendingRequest, useUpdateTrackMutation } from 'lib/graphql';
 import router from 'next/router';
-import React, { useEffect, useState } from 'react';
 import { Button } from './Button';
 import { Label } from './Label';
 import { Account, Wallet } from './Wallet';
@@ -20,23 +20,9 @@ export const RemoveListingConfirmationModal = () => {
   const { showRemoveListing } = useModalState();
   const { dispatchShowRemoveListingModal } = useModalDispatch();
   const [loading, setLoading] = useState(false);
-  const { getMaxGasFee, cancelListing } = useBlockchain();
+  const { cancelListing } = useBlockchain();
   const { web3, account, balance } = useMagicContext();
-
-  const [maxGasFee, setMaxGasFee] = useState<string>();
-
-  useEffect(() => {
-    const gasCheck = () => {
-      if (web3) {
-        getMaxGasFee(web3).then(setMaxGasFee);
-      }
-    };
-    gasCheck();
-    const interval = setInterval(() => {
-      gasCheck();
-    }, 5 * 1000);
-    return () => clearInterval(interval);
-  }, [web3, getMaxGasFee]);
+  const maxGasFee = useMaxGasFee();
 
   const handleClose = () => {
     dispatchShowRemoveListingModal(false, 0, '');
