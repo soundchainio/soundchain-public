@@ -34,8 +34,8 @@ export class User extends Model {
   @prop({ default: false })
   isApprovedOnMarketplace: boolean;
 
-  @Field(() => Role)
-  @prop({ type: String, enum: Role, default: Role.USER })
+  @Field(() => [Role])
+  @prop({ type: [String], enum: Role, default: [Role.USER] })
   roles: string[];
 
   @Field(() => Date)

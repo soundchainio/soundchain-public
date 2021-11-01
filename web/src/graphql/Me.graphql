@@ -6,6 +6,7 @@ query Me {
     walletAddress
     defaultWallet
     isApprovedOnMarketplace
+    roles
     profile {
       id
       displayName
