@@ -527,6 +527,7 @@ export type NftDataInput = {
   contract?: Maybe<Scalars['String']>;
   minter?: Maybe<Scalars['String']>;
   quantity?: Maybe<Scalars['Float']>;
+  owner?: Maybe<Scalars['String']>;
 };
 
 export type NftDataType = {
@@ -538,6 +539,7 @@ export type NftDataType = {
   contract: Maybe<Scalars['String']>;
   minter: Maybe<Scalars['String']>;
   quantity: Maybe<Scalars['Float']>;
+  owner: Maybe<Scalars['String']>;
 };
 
 export type NftSoldNotification = {
@@ -709,6 +711,7 @@ export type Query = {
   uploadUrl: UploadUrl;
   mimeType: MimeType;
   me: Maybe<User>;
+  getUserByWallet: Maybe<User>;
 };
 
 
@@ -841,6 +844,11 @@ export type QueryUploadUrlArgs = {
 
 export type QueryMimeTypeArgs = {
   url: Scalars['String'];
+};
+
+
+export type QueryGetUserByWalletArgs = {
+  walletAddress: Scalars['String'];
 };
 
 export type ReactToPostInput = {
@@ -1940,7 +1948,7 @@ export type TrackComponentFieldsFragment = (
   & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted'>
   & { nftData: Maybe<(
     { __typename?: 'NFTDataType' }
-    & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest'>
+    & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner'>
   )> }
 );
 
@@ -2201,6 +2209,23 @@ export type UploadUrlQuery = (
   ) }
 );
 
+export type UserByWalletQueryVariables = Exact<{
+  walletAddress: Scalars['String'];
+}>;
+
+
+export type UserByWalletQuery = (
+  { __typename?: 'Query' }
+  & { getUserByWallet: Maybe<(
+    { __typename?: 'User' }
+    & Pick<User, 'id'>
+    & { profile: (
+      { __typename?: 'Profile' }
+      & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'userHandle' | 'followerCount' | 'followingCount'>
+    ) }
+  )> }
+);
+
 export type WasListedBeforeQueryVariables = Exact<{
   tokenId: Scalars['Float'];
 }>;
@@ -2315,6 +2340,7 @@ export const TrackComponentFieldsFragmentDoc = gql`
     minter
     ipfsCid
     pendingRequest
+    owner
   }
 }
     `;
@@ -4792,6 +4818,49 @@ export function useUploadUrlLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
 export type UploadUrlQueryHookResult = ReturnType<typeof useUploadUrlQuery>;
 export type UploadUrlLazyQueryHookResult = ReturnType<typeof useUploadUrlLazyQuery>;
 export type UploadUrlQueryResult = Apollo.QueryResult<UploadUrlQuery, UploadUrlQueryVariables>;
+export const UserByWalletDocument = gql`
+    query UserByWallet($walletAddress: String!) {
+  getUserByWallet(walletAddress: $walletAddress) {
+    id
+    profile {
+      id
+      displayName
+      profilePicture
+      userHandle
+      followerCount
+      followingCount
+    }
+  }
+}
+    `;
+
+/**
+ * __useUserByWalletQuery__
+ *
+ * To run a query within a React component, call `useUserByWalletQuery` and pass it any options that fit your needs.
+ * When your component renders, `useUserByWalletQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useUserByWalletQuery({
+ *   variables: {
+ *      walletAddress: // value for 'walletAddress'
+ *   },
+ * });
+ */
+export function useUserByWalletQuery(baseOptions: Apollo.QueryHookOptions<UserByWalletQuery, UserByWalletQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<UserByWalletQuery, UserByWalletQueryVariables>(UserByWalletDocument, options);
+      }
+export function useUserByWalletLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UserByWalletQuery, UserByWalletQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<UserByWalletQuery, UserByWalletQueryVariables>(UserByWalletDocument, options);
+        }
+export type UserByWalletQueryHookResult = ReturnType<typeof useUserByWalletQuery>;
+export type UserByWalletLazyQueryHookResult = ReturnType<typeof useUserByWalletLazyQuery>;
+export type UserByWalletQueryResult = Apollo.QueryResult<UserByWalletQuery, UserByWalletQueryVariables>;
 export const WasListedBeforeDocument = gql`
     query WasListedBefore($tokenId: Float!) {
   wasListedBefore(tokenId: $tokenId)

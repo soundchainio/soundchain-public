@@ -115,6 +115,8 @@ export const watcher: Handler = async () => {
                 pendingRequest: PendingRequest.None,
               },
             });
+          } else {
+            context.trackService.updateOwnerByTokenId(parseInt(returnValues.id), returnValues.to);
           }
           console.log('TransferSingle');
         }

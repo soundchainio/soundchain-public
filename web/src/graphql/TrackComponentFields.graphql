@@ -23,5 +23,6 @@ fragment TrackComponentFields on Track {
     minter
     ipfsCid
     pendingRequest
+    owner
   }
 }

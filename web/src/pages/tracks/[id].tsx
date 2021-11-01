@@ -9,7 +9,15 @@ import { Track } from 'components/Track';
 import useBlockchain from 'hooks/useBlockchain';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { cacheFor } from 'lib/apollo';
-import { PendingRequest, TrackDocument, useListingItemQuery, useProfileLazyQuery, useTrackQuery } from 'lib/graphql';
+import {
+  PendingRequest,
+  Profile,
+  TrackDocument,
+  useListingItemQuery,
+  useProfileLazyQuery,
+  useTrackQuery,
+  useUserByWalletLazyQuery,
+} from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
@@ -63,11 +71,22 @@ export default function TrackPage({ trackId }: TrackPageProps) {
     ssr: false,
   });
 
+  const [userByWallet, { data: ownerProfile }] = useUserByWalletLazyQuery({
+    variables: { walletAddress: data?.track.nftData?.owner ?? '' },
+    ssr: false,
+  });
+
   useEffect(() => {
     if (data?.track.artistProfileId) {
       profile();
     }
   }, [data?.track.artistProfileId, profile]);
+
+  useEffect(() => {
+    if (data?.track.nftData?.owner) {
+      userByWallet();
+    }
+  }, [data?.track.nftData?.owner, userByWallet]);
 
   useEffect(() => {
     const fetchIsOwner = async () => {
@@ -103,7 +122,11 @@ export default function TrackPage({ trackId }: TrackPageProps) {
         mintingPending={mintingPending}
         artistProfile={profileInfo?.profile}
       />
-      <MintingData transactionHash={data?.track.nftData?.transactionHash} ipfsCid={data?.track.nftData?.ipfsCid} />
+      <MintingData
+        transactionHash={data?.track.nftData?.transactionHash}
+        ipfsCid={data?.track.nftData?.ipfsCid}
+        ownerProfile={ownerProfile?.getUserByWallet?.profile as Partial<Profile>}
+      />
 
       {isProcessing && !mintingPending ? (
         <div className=" flex justify-center items-center">

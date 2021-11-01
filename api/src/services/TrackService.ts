@@ -31,10 +31,15 @@ export class TrackService extends ModelService<typeof Track> {
     return this.findOrFail(id);
   }
 
-  async searchTracks(search: string): Promise<{ list: Track[], total: number }> {
+  async searchTracks(search: string): Promise<{ list: Track[]; total: number }> {
     const regex = new RegExp(search, 'i');
-    const list = await this.model.find({ $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }] }).limit(5);
-    const total = await this.model.find({ deleted: false, $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }] }).countDocuments().exec();
+    const list = await this.model
+      .find({ $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }] })
+      .limit(5);
+    const total = await this.model
+      .find({ deleted: false, $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }] })
+      .countDocuments()
+      .exec();
     return { list, total };
   }
 
@@ -111,5 +116,11 @@ export class TrackService extends ModelService<typeof Track> {
 
   async getTrackByTokenId(tokenId: number): Promise<Track> {
     return await this.model.findOne({ 'nftData.tokenId': tokenId });
+  }
+
+  async updateOwnerByTokenId(tokenId: number, owner: string): Promise<Track> {
+    const oldNftData = await this.model.findOne({ 'nftData.tokenId': tokenId });
+    const nftData = { ...oldNftData, owner };
+    return await this.model.findOneAndUpdate({ 'nftData.tokenId': tokenId }, { nftData });
   }
 }

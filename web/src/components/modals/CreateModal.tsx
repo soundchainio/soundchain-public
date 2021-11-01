@@ -216,6 +216,7 @@ export const CreateModal = () => {
                   minter: account,
                   ipfsCid: metadataPinResult?.pinJsonToIPFS.cid,
                   pendingRequest: PendingRequest.Mint,
+                  owner: account,
                 },
               },
             },
