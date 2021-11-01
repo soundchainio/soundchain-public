@@ -6,6 +6,8 @@ fragment TrackComponentFields on Track {
   artworkUrl
   description
   artist
+  artistId
+  artistProfileId
   album
   releaseYear
   copyright
@@ -21,5 +23,6 @@ fragment TrackComponentFields on Track {
     minter
     ipfsCid
     pendingRequest
+    owner
   }
 }

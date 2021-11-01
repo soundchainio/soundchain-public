@@ -33,4 +33,8 @@ export class NFTData {
   @Field({ nullable: true })
   @prop()
   quantity: number;
+
+  @Field({ nullable: true })
+  @prop()
+  owner: string;
 }

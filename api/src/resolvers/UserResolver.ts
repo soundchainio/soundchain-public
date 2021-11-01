@@ -82,4 +82,10 @@ export class UserResolver {
     const user = await userService.updateDefaultWallet(_id, defaultWallet);
     return { user };
   }
+
+  @Query(() => User, { nullable: true })
+  async getUserByWallet(@Ctx() { userService }: Context, @Arg('walletAddress') walletAddress: string): Promise<User> {
+    const user = await userService.getUserByWallet(walletAddress);
+    return user;
+  }
 }
