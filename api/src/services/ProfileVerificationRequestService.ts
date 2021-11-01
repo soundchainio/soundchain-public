@@ -10,8 +10,9 @@ export class ProfileVerificationRequestService extends ModelService<typeof Profi
     super(context, ProfileVerificationRequestModel);
   }
 
-  getProfileVerificationRequest(id: string): Promise<ProfileVerificationRequest> {
-    return this.findOrFail(id);
+  async getProfileVerificationRequest(profileId: string): Promise<ProfileVerificationRequest> {
+    const req = await this.model.findOne({ profileId: profileId });
+    return req;
   }
 
   async createProfileVerificationRequest(profileId: string, input: CreateProfileVerificationRequestInput): Promise<ProfileVerificationRequest> {

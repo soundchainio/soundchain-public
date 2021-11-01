@@ -21,6 +21,7 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
 
 interface Props {
   handleSubmit: (values: FormValues) => void;
+  loading: boolean;
 }
 
 const sourceList = [
@@ -29,7 +30,7 @@ const sourceList = [
   { name: 'BandCamp', fieldName: 'bandcamp', icon: <Bandcamp className="h-6 scale-50" /> },
 ];
 
-export const RequestVerificationForm = ({ handleSubmit }: Props) => {
+export const RequestVerificationForm = ({ handleSubmit, loading }: Props) => {
   const defaultValues: FormValues = {
     soundcloud: '',
     bandcamp: '',
@@ -57,7 +58,15 @@ export const RequestVerificationForm = ({ handleSubmit }: Props) => {
             </div>
           ))}
         </div>
-        <Button variant="outline" type="submit"> REQUEST VERIFICATION </Button>
+        <Button
+          type="submit"
+          variant="outline"
+          borderColor="bg-green-gradient"
+          className="h-12 mx-6 mt-5"
+          disabled={loading}
+        >
+          REQUEST VERIFICATION
+        </Button>
       </Form>
     </Formik>
   );

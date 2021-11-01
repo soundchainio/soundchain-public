@@ -37,7 +37,7 @@ export class Context {
   subscriptionService = new SubscriptionService(this);
   trackService = new TrackService(this);
   mintingRequestService = new MintingRequestService(this);
-  ProfileVerificationRequestService = new ProfileVerificationRequestService(this);
+  profileVerificationRequestService = new ProfileVerificationRequestService(this);
   pinningService = new PinningService(this);
   uploadService = new UploadService(this);
   userService = new UserService(this);

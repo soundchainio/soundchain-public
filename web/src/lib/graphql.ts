@@ -681,6 +681,7 @@ export type Profile = {
 export type ProfileVerificationRequest = {
   __typename?: 'ProfileVerificationRequest';
   id: Scalars['ID'];
+  profileId: Scalars['String'];
   soundcloud: Maybe<Scalars['String']>;
   youtube: Maybe<Scalars['String']>;
   bandcamp: Maybe<Scalars['String']>;
@@ -715,6 +716,7 @@ export type Query = {
   bandcampLink: Scalars['String'];
   myProfile: Profile;
   profile: Profile;
+  profileVerificationRequest: ProfileVerificationRequest;
   track: Track;
   tracks: TrackConnection;
   uploadUrl: UploadUrl;
@@ -1288,7 +1290,7 @@ export type CreateProfileVerificationRequestMutation = (
     { __typename?: 'ProfileVerificationRequestPayload' }
     & { profileVerificationRequest: (
       { __typename?: 'ProfileVerificationRequest' }
-      & Pick<ProfileVerificationRequest, 'id'>
+      & ProfileVerificationRequestComponentFieldsFragment
     ) }
   ) }
 );
@@ -1735,6 +1737,22 @@ export type ProfileDisplayNameQuery = (
     { __typename?: 'Profile' }
     & Pick<Profile, 'displayName'>
   ) }
+);
+
+export type ProfileVerificationRequestQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type ProfileVerificationRequestQuery = (
+  { __typename?: 'Query' }
+  & { profileVerificationRequest: (
+    { __typename?: 'ProfileVerificationRequest' }
+    & ProfileVerificationRequestComponentFieldsFragment
+  ) }
+);
+
+export type ProfileVerificationRequestComponentFieldsFragment = (
+  { __typename?: 'ProfileVerificationRequest' }
+  & Pick<ProfileVerificationRequest, 'id' | 'profileId' | 'soundcloud' | 'youtube' | 'bandcamp' | 'status' | 'reason' | 'createdAt' | 'updatedAt'>
 );
 
 export type ReactToPostMutationVariables = Exact<{
@@ -2295,6 +2313,19 @@ export const PostComponentFieldsFragmentDoc = gql`
   }
 }
     ${TrackComponentFieldsFragmentDoc}`;
+export const ProfileVerificationRequestComponentFieldsFragmentDoc = gql`
+    fragment ProfileVerificationRequestComponentFields on ProfileVerificationRequest {
+  id
+  profileId
+  soundcloud
+  youtube
+  bandcamp
+  status
+  reason
+  createdAt
+  updatedAt
+}
+    `;
 export const ReactionNotificationFieldsFragmentDoc = gql`
     fragment ReactionNotificationFields on ReactionNotification {
   id
@@ -2732,11 +2763,11 @@ export const CreateProfileVerificationRequestDocument = gql`
     mutation CreateProfileVerificationRequest($input: CreateProfileVerificationRequestInput!) {
   createProfileVerificationRequest(input: $input) {
     profileVerificationRequest {
-      id
+      ...ProfileVerificationRequestComponentFields
     }
   }
 }
-    `;
+    ${ProfileVerificationRequestComponentFieldsFragmentDoc}`;
 export type CreateProfileVerificationRequestMutationFn = Apollo.MutationFunction<CreateProfileVerificationRequestMutation, CreateProfileVerificationRequestMutationVariables>;
 
 /**
@@ -3726,6 +3757,40 @@ export function useProfileDisplayNameLazyQuery(baseOptions?: Apollo.LazyQueryHoo
 export type ProfileDisplayNameQueryHookResult = ReturnType<typeof useProfileDisplayNameQuery>;
 export type ProfileDisplayNameLazyQueryHookResult = ReturnType<typeof useProfileDisplayNameLazyQuery>;
 export type ProfileDisplayNameQueryResult = Apollo.QueryResult<ProfileDisplayNameQuery, ProfileDisplayNameQueryVariables>;
+export const ProfileVerificationRequestDocument = gql`
+    query ProfileVerificationRequest {
+  profileVerificationRequest {
+    ...ProfileVerificationRequestComponentFields
+  }
+}
+    ${ProfileVerificationRequestComponentFieldsFragmentDoc}`;
+
+/**
+ * __useProfileVerificationRequestQuery__
+ *
+ * To run a query within a React component, call `useProfileVerificationRequestQuery` and pass it any options that fit your needs.
+ * When your component renders, `useProfileVerificationRequestQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useProfileVerificationRequestQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useProfileVerificationRequestQuery(baseOptions?: Apollo.QueryHookOptions<ProfileVerificationRequestQuery, ProfileVerificationRequestQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ProfileVerificationRequestQuery, ProfileVerificationRequestQueryVariables>(ProfileVerificationRequestDocument, options);
+      }
+export function useProfileVerificationRequestLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ProfileVerificationRequestQuery, ProfileVerificationRequestQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ProfileVerificationRequestQuery, ProfileVerificationRequestQueryVariables>(ProfileVerificationRequestDocument, options);
+        }
+export type ProfileVerificationRequestQueryHookResult = ReturnType<typeof useProfileVerificationRequestQuery>;
+export type ProfileVerificationRequestLazyQueryHookResult = ReturnType<typeof useProfileVerificationRequestLazyQuery>;
+export type ProfileVerificationRequestQueryResult = Apollo.QueryResult<ProfileVerificationRequestQuery, ProfileVerificationRequestQueryVariables>;
 export const ReactToPostDocument = gql`
     mutation ReactToPost($input: ReactToPostInput!) {
   reactToPost(input: $input) {

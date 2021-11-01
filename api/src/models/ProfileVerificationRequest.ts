@@ -8,6 +8,7 @@ export class ProfileVerificationRequest extends Model {
   @Field(() => ID, { name: 'id' })
   readonly _id: string;
 
+  @Field({ nullable: false })
   @prop({ required: true })
   profileId: string;
 
