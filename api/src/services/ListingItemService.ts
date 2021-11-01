@@ -56,6 +56,7 @@ export class ListingItemService extends ModelService<typeof ListingItem> {
       this.context.userService.getUserByWallet(buyerWaller),
       this.context.trackService.getTrackByTokenId(parseInt(tokenId)),
     ]);
+    this.context.trackService.updateTrack(track._id, { profileId: buyerUser.profileId });
     this.context.notificationService.notifyNFTSold({
       sellerProfileId: sellerUser.profileId,
       buyerProfileId: buyerUser.profileId,
