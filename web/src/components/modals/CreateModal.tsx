@@ -123,8 +123,9 @@ export const CreateModal = () => {
   };
 
   const handleSubmit = async (values: FormValues) => {
-    if (file && web3 && account) {
+    if (file && web3 && account && me) {
       const { title, artworkUrl, description, artist, album, genres, releaseYear, copyright } = values;
+      const artistId = me.id
 
       setMintingState('Uploading track file');
       const assetUrl = await upload([file]);
@@ -133,7 +134,7 @@ export const CreateModal = () => {
       setMintingState('Creating streaming from track');
       const { data } = await createTrack({
         variables: {
-          input: { assetUrl, title, album, artist, artworkUrl, description, genres, releaseYear, copyright },
+          input: { assetUrl, title, album, artist, artistId, artworkUrl, description, genres, releaseYear, copyright },
         },
       });
       const track = data?.createTrack.track;
