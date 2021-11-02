@@ -134,9 +134,11 @@ export default function TrackPage({ trackId }: TrackPageProps) {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      if (isProcessing && tokenId !== -1) {
-        refetchListing({ tokenId: tokenId });
+      if (isProcessing) {
         refetchTrack({ id: trackId });
+      }
+      if (tokenId !== -1) {
+        refetchListing({ tokenId: tokenId });
       }
     }, 5 * 1000);
 
