@@ -5,8 +5,7 @@ on:
     branches:
       - develop
     paths:
-      - "api/**"
-      - "event-watcher/**"
+      - 'api/**'
   workflow_dispatch:
 
 jobs:
