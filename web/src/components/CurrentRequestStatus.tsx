@@ -2,9 +2,10 @@ import { ManageRequestTab } from 'types/ManageRequestTabType';
 
 interface CurrentRequestStatusProps {
   status: ManageRequestTab;
+  reason?: string
 }
 
-export const CurrentRequestStatus = ({ status }: CurrentRequestStatusProps) => {
+export const CurrentRequestStatus = ({ status, reason }: CurrentRequestStatusProps) => {
   let classes = '';
 
   switch (status) {
@@ -20,8 +21,11 @@ export const CurrentRequestStatus = ({ status }: CurrentRequestStatusProps) => {
   }
 
   return (
-    <div className="flex flex-row space-x-2 px-4 items-center cursor-pointer py-2 bg-gray-20 text-white">
-      Current status: <span className={classes}>{status}</span>
+    <div className="flex flex-col space-y-2 px-4 cursor-pointer py-2 bg-gray-20 text-white">
+      <div>
+        Current status: <span className={classes}>{status}</span>
+      </div>
+      {reason && status === ManageRequestTab.DENIED && <div>Reason: {reason} </div>}
     </div>
   );
 };

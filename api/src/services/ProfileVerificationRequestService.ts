@@ -30,6 +30,12 @@ export class ProfileVerificationRequestService extends ModelService<typeof Profi
   async updateProfileVerificationRequest(id: string, changes: Partial<ProfileVerificationRequest>): Promise<ProfileVerificationRequest> {
     const profileVerificationRequest = await this.model.findByIdAndUpdate(id, changes, { new: true });
 
+    if (changes.status === ProfileVerificationStatusType.APPROVED) {
+      await this.context.profileService.verifyProfile(profileVerificationRequest.profileId, true);
+    } else if (changes.status === ProfileVerificationStatusType.DENIED) {
+      await this.context.profileService.verifyProfile(profileVerificationRequest.profileId, false);
+    }
+
     if (!profileVerificationRequest) {
       throw new NotFoundError('ProfileVerificationRequest', id);
     }

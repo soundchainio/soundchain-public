@@ -4,7 +4,7 @@ import { Delete as DeleteButton } from 'components/Buttons/Delete';
 import { TextareaField } from 'components/TextareaField';
 import { Form, Formik } from 'formik';
 import { useMe } from 'hooks/useMe';
-import { useUpdateProfileVerificationRequestMutation } from 'lib/graphql';
+import { ProfileVerificationRequestsDocument, useUpdateProfileVerificationRequestMutation } from 'lib/graphql';
 import { useRouter } from 'next/router';
 import { ManageRequestTab } from 'types/ManageRequestTabType';
 import * as yup from 'yup';
@@ -24,7 +24,7 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
 });
 
 export const DenyReasonModal = ({ requestId, showReason, setShowReason }: DenyReasonModalProps) => {
-  const [updateRequestVerification] = useUpdateProfileVerificationRequestMutation();
+  const [updateRequestVerification] = useUpdateProfileVerificationRequestMutation({ refetchQueries: [ProfileVerificationRequestsDocument] });
   const router = useRouter();
   const me = useMe();
 

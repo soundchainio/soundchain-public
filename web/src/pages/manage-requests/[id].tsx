@@ -12,7 +12,7 @@ import { Bandcamp } from 'icons/Bandcamp';
 import { Soundcloud } from 'icons/Soundcloud';
 import { Youtube } from 'icons/Youtube';
 import { cacheFor, createApolloClient } from 'lib/apollo';
-import { ProfileVerificationRequest, ProfileVerificationRequestDocument, useProfileQuery, useUpdateProfileVerificationRequestMutation } from 'lib/graphql';
+import { ProfileVerificationRequest, ProfileVerificationRequestDocument, ProfileVerificationRequestsDocument, useProfileQuery, useUpdateProfileVerificationRequestMutation } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
@@ -53,7 +53,7 @@ export const getServerSideProps: GetServerSideProps<RequestPageProps, RequestPag
 export default function RequestPage({ data }: RequestPageProps) {
   const [showReason, setShowReason] = useState<boolean>(false);
   const { data: profile } = useProfileQuery({ variables: { id: data.profileId } });
-  const [updateRequestVerification] = useUpdateProfileVerificationRequestMutation();
+  const [updateRequestVerification] = useUpdateProfileVerificationRequestMutation({ refetchQueries: [ProfileVerificationRequestsDocument] });
   const me = useMe();
   const router = useRouter();
 
@@ -105,7 +105,7 @@ export default function RequestPage({ data }: RequestPageProps) {
           </div>
         </div>
       </NextLink>
-      <CurrentRequestStatus status={data.status as ManageRequestTab} />
+      <CurrentRequestStatus reason={data.reason || ''} status={data.status as ManageRequestTab} />
       {sourceList.map((src) => (
         <div key={src.name} className="flex items-center my-8 text-white">
           <div className="flex flex-col items-center justify-center  text-xs px-2">

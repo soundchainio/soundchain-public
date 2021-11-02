@@ -1,5 +1,5 @@
 import { InMemoryCacheConfig } from '@apollo/client';
-import { ChatConnection, FeedConnection, FeedItem, Follow, FollowConnection, TrackConnection } from 'lib/graphql';
+import { ChatConnection, FeedConnection, FeedItem, Follow, FollowConnection, ProfileVerificationRequestConnection, TrackConnection } from 'lib/graphql';
 
 export const cacheConfig: InMemoryCacheConfig = {
   typePolicies: {
@@ -171,7 +171,7 @@ export const cacheConfig: InMemoryCacheConfig = {
         },
         profileVerificationRequests: {
           keyArgs: ['status'],
-          merge(existing = { nodes: [] }, { nodes, pageInfo }): TrackConnection {
+          merge(existing = { nodes: [] }, { nodes, pageInfo }): ProfileVerificationRequestConnection {
             return {
               nodes: [...existing.nodes, ...nodes],
               pageInfo,

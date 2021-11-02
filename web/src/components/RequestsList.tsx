@@ -14,7 +14,7 @@ const pageSize = 15;
 export const RequestsList = ({ status }: RequestsListProps) => {
   const firstPage: PageInput = { first: pageSize };
   const { data, loading, fetchMore } = useProfileVerificationRequestsQuery({
-    variables: { status, page: firstPage },
+    variables: { status, page: firstPage }
   });
 
   if (!data) return null;
