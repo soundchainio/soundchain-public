@@ -373,7 +373,12 @@ export enum MusicianType {
   Singer = 'SINGER',
   Drummer = 'DRUMMER',
   Guitarist = 'GUITARIST',
-  Producer = 'PRODUCER'
+  Producer = 'PRODUCER',
+  Emcee = 'EMCEE',
+  BeatMaker = 'BEAT_MAKER',
+  Dj = 'DJ',
+  Engineer = 'ENGINEER',
+  Instrumentalist = 'INSTRUMENTALIST'
 }
 
 export type Mutation = {
