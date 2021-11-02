@@ -13,6 +13,7 @@ import { UpdateDefaultWalletInput } from '../types/UpdateDefaultWalletInput';
 import { UpdateDefaultWalletPayload } from '../types/UpdateDefaultWalletPayload';
 import { UpdateHandleInput } from '../types/UpdateHandleInput';
 import { UpdateHandlePayload } from '../types/UpdateHandlePayload';
+import { UpdateWalletInput } from '../types/UpdateWalletInput';
 
 @Resolver(User)
 export class UserResolver {
@@ -50,8 +51,8 @@ export class UserResolver {
 
     const user = await authService.getUserFromCredentials(magicUser.email);
 
-    if (!user.walletAddress) {
-      userService.updateWalletAddress(user._id, magicUser.publicAddress);
+    if (!user.magicWalletAddress) {
+      userService.updateMagicWallet(user._id, magicUser.publicAddress);
     }
 
     if (!user) {
@@ -80,6 +81,17 @@ export class UserResolver {
     @CurrentUser() { _id }: User,
   ): Promise<UpdateHandlePayload> {
     const user = await userService.updateDefaultWallet(_id, defaultWallet);
+    return { user };
+  }
+
+  @Mutation(() => UpdateDefaultWalletPayload)
+  @Authorized()
+  async updateMetaMaskAddresses(
+    @Ctx() { userService }: Context,
+    @Arg('input') { wallet }: UpdateWalletInput,
+    @CurrentUser() { _id }: User,
+  ): Promise<UpdateHandlePayload> {
+    const user = await userService.updateMetaMaskAddresses(_id, wallet);
     return { user };
   }
 
