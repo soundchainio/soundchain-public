@@ -68,7 +68,7 @@ export default function TrackPage({ trackId }: TrackPageProps) {
 
   const mintingPending = data?.track.nftData?.pendingRequest === PendingRequest.Mint;
   const isProcessing = data?.track.nftData?.pendingRequest != PendingRequest.None;
-  const tokenId = data?.track.nftData?.tokenId || -1;
+  const tokenId = data?.track.nftData?.tokenId ?? -1;
 
   const {
     data: listingPayload,
