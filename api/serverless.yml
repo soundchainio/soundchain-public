@@ -29,6 +29,10 @@ functions:
     handler: src/lambda.watcher
     events:
       - schedule: rate(1 minute)
+  playbackCount:
+    handler: src/lambda.playbackCount
+    events:
+      - schedule: cron(0 15 * * ? *)
   mint:
     handler: src/lambda.mint
     timeout: 120

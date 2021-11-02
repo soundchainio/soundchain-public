@@ -14,6 +14,7 @@ import { UserModel } from './models/User';
 import muxDataApi from './muxDataApi';
 import { ItemCanceled, ItemListed, ItemSold, ItemUpdated, TransferSingle } from './types/BlockchainEvents';
 import { Context } from './types/Context';
+import { MuxDataInputValue, MuxServerData } from './types/MuxData';
 import { Metadata, NFT } from './types/NFT';
 import { PendingRequest } from './types/PendingRequest';
 
@@ -203,38 +204,22 @@ export const mint: Handler<SQSEvent> = async event => {
   }
 };
 
-interface MuxServerData {
-  total_row_count: number;
-  data: {
-    field: string;
-    views: number;
-  }[];
-}
-
-interface InputValue {
-  totalCount: number;
-  values: {
-    trackId: string;
-    amount: number;
-  }[];
-}
-
-export const incrementPlaybackCount: Handler = async () => {
+export const playbackCount: Handler = async () => {
   await mongoose.connect(config.db.url, config.db.options);
 
   const user = await UserModel.findOne({ handle: '_system' });
   const context = new Context({ sub: user._id });
 
-  const fetch = async (pageSize: number, currentPage: number): Promise<InputValue> => {
+  const fetch = async (pageSize: number, currentPage: number): Promise<MuxDataInputValue> => {
     const { data } = await muxDataApi.get<MuxServerData>(
-      `/metrics/unique_viewers/breakdown?group_by=video_id&timeframe[]=7:days&limit=${pageSize}&page=${currentPage}`,
+      `/metrics/unique_viewers/breakdown?group_by=video_id&timeframe[]=24:hours&limit=${pageSize}&page=${currentPage}`,
     );
 
     const values = data.data.map(video => ({ trackId: video.field, amount: video.views }));
     return { totalCount: data.total_row_count, values };
   };
 
-  const update = async (inputValue: InputValue): Promise<number> => {
+  const update = async (inputValue: MuxDataInputValue): Promise<number> => {
     return await context.trackService.incrementPlaybackCount(inputValue.values);
   };
 
@@ -242,7 +227,7 @@ export const incrementPlaybackCount: Handler = async () => {
     console.log('Starting');
 
     let currentPage = 1;
-    const pageSize = 100;
+    const pageSize = 10000;
 
     const inputValues = await fetch(pageSize, currentPage);
     const totalCount = inputValues.totalCount;
