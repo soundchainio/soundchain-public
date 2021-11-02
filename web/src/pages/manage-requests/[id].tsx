@@ -3,6 +3,7 @@ import { BottomSheet } from 'components/BottomSheet';
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { Delete as DeleteButton } from 'components/Buttons/Delete';
+import { CurrentRequestStatus } from 'components/CurrentRequestStatus';
 import { DenyReasonModal } from 'components/DenyReasonModal';
 import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
@@ -13,6 +14,7 @@ import { Youtube } from 'icons/Youtube';
 import { cacheFor, createApolloClient } from 'lib/apollo';
 import { ProfileVerificationRequest, ProfileVerificationRequestDocument, useProfileQuery, useUpdateProfileVerificationRequestMutation } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
+import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useState } from 'react';
@@ -87,19 +89,23 @@ export default function RequestPage({ data }: RequestPageProps) {
 
   return (
     <Layout topNavBarProps={topNovaBarProps}>
-      <div className="flex flex-col text-white cursor-pointer">
-        <div className="relative flex items-center p-4">
-          <Avatar
-            profile={profile.profile}
-            pixels={40}
-            className="rounded-full min-w-max flex items-center"
-          />
-          <div className="mx-4">
-            <span className="font-bold text-md text-white overflow-ellipsis overflow-hidden">{profile.profile.displayName}</span>
-            <p className="text-gray-80 text-sm">@{profile.profile.userHandle}</p>
+      <NextLink href={`/profiles/${data.profileId}`}>
+
+        <div className="flex flex-col text-white cursor-pointer">
+          <div className="relative flex items-center p-4">
+            <Avatar
+              profile={profile.profile}
+              pixels={40}
+              className="rounded-full min-w-max flex items-center"
+            />
+            <div className="mx-4">
+              <span className="font-bold text-md text-white overflow-ellipsis overflow-hidden">{profile.profile.displayName}</span>
+              <p className="text-gray-80 text-sm">@{profile.profile.userHandle}</p>
+            </div>
           </div>
         </div>
-      </div>
+      </NextLink>
+      <CurrentRequestStatus status={data.status as ManageRequestTab} />
       {sourceList.map((src) => (
         <div key={src.name} className="flex items-center my-8 text-white">
           <div className="flex flex-col items-center justify-center  text-xs px-2">
@@ -120,17 +126,21 @@ export default function RequestPage({ data }: RequestPageProps) {
       ))}
       <BottomSheet>
         <div className="flex items-center my-5">
-          <DeleteButton onClick={handleDeny} className="h-12 w-full mx-6 mt-5 text-white text-sm">
-            DENY
-          </DeleteButton>
-          <Button
-            variant="outline"
-            borderColor="bg-green-gradient"
-            className="h-12 mx-6 mt-5 w-full"
-            onClick={handleApprove}
-          >
-            APPROVE
-          </Button>
+          {data.status !== ManageRequestTab.DENIED &&
+            <DeleteButton onClick={handleDeny} className="h-12 w-full mx-6 mt-5 text-white text-sm">
+              {data.status === ManageRequestTab.APPROVED ? 'REMOVE VERIFICATION' : 'DENY'}
+            </DeleteButton>
+          }
+          {data.status !== ManageRequestTab.APPROVED &&
+            <Button
+              variant="outline"
+              borderColor="bg-green-gradient"
+              className="h-12 mx-6 mt-5 w-full"
+              onClick={handleApprove}
+            >
+              APPROVE
+            </Button>
+          }
         </div>
       </BottomSheet>
       <DenyReasonModal showReason={showReason} setShowReason={setShowReason} requestId={data.id} />
