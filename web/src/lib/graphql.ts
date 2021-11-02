@@ -968,6 +968,11 @@ export type RetractReactionPayload = {
   post: Post;
 };
 
+export enum Role {
+  Admin = 'ADMIN',
+  User = 'USER'
+}
+
 export type SendMessageInput = {
   message: Scalars['String'];
   toId: Scalars['String'];
@@ -1150,6 +1155,7 @@ export type User = {
   walletAddress: Maybe<Scalars['String']>;
   defaultWallet: DefaultWallet;
   isApprovedOnMarketplace: Scalars['Boolean'];
+  roles: Array<Role>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   profile: Profile;
@@ -1634,7 +1640,7 @@ export type MeQuery = (
   { __typename?: 'Query' }
   & { me: Maybe<(
     { __typename?: 'User' }
-    & Pick<User, 'id' | 'handle' | 'email' | 'walletAddress' | 'defaultWallet' | 'isApprovedOnMarketplace'>
+    & Pick<User, 'id' | 'handle' | 'email' | 'walletAddress' | 'defaultWallet' | 'isApprovedOnMarketplace' | 'roles'>
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'followerCount' | 'followingCount' | 'favoriteGenres' | 'musicianTypes' | 'bio'>
@@ -3535,6 +3541,7 @@ export const MeDocument = gql`
     walletAddress
     defaultWallet
     isApprovedOnMarketplace
+    roles
     profile {
       id
       displayName
