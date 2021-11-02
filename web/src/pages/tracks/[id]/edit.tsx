@@ -63,7 +63,7 @@ export default function EditPage({ trackId }: TrackPageProps) {
   const [newPrice, setNewPrice] = useState(0);
   const me = useMe();
 
-  const tokenId = track?.track.nftData?.tokenId || -1;
+  const tokenId = track?.track.nftData?.tokenId ?? -1;
 
   const [getListingItem, { data: listingPayload }] = useListingItemLazyQuery({
     variables: { tokenId },
