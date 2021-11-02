@@ -67,7 +67,7 @@ export default function ListPage({ trackId }: TrackPageProps) {
   const [isOwner, setIsOwner] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
 
-  const tokenId = data?.track.nftData?.tokenId || -1;
+  const tokenId = data?.track.nftData?.tokenId ?? -1;
 
   const [getListingItem, { data: listingItem }] = useListingItemLazyQuery({
     variables: { tokenId },

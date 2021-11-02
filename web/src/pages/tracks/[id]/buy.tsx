@@ -60,7 +60,7 @@ export default function BuyPage({ trackId }: TrackPageProps) {
   const router = useRouter();
   const me = useMe();
 
-  const tokenId = track?.track.nftData?.tokenId || -1;
+  const tokenId = track?.track.nftData?.tokenId ?? -1;
 
   const [getListingItem, { data: listingPayload }] = useListingItemLazyQuery({
     variables: { tokenId },
