@@ -7,7 +7,7 @@ import { useRouter } from 'next/router';
 interface HandleNFTProps {
   isOwner: boolean;
   isForSale: boolean;
-  price: string;
+  price: string | undefined;
 }
 
 export const HandleNFT = ({ isOwner, isForSale, price }: HandleNFTProps) => {
@@ -18,7 +18,7 @@ export const HandleNFT = ({ isOwner, isForSale, price }: HandleNFTProps) => {
     me ? router.push(`${router.asPath}/list`) : router.push('/login');
   };
 
-  if (isOwner && isForSale) {
+  if (isOwner && isForSale && price) {
     return (
       <div className="w-full bg-black text-white flex items-center py-3">
         <div className="flex flex-col flex-1 ml-4">
@@ -49,7 +49,7 @@ export const HandleNFT = ({ isOwner, isForSale, price }: HandleNFTProps) => {
         </div>
       </div>
     );
-  } else if (isForSale) {
+  } else if (isForSale && price) {
     return (
       <div className="w-full bg-black text-white flex items-center py-3">
         <div className="flex flex-col flex-1 ml-4">

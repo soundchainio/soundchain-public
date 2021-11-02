@@ -20,7 +20,9 @@ export const BuyNFT = ({ price, ownerAddressAccount }: BuyNFTProps) => {
           <span className="my-auto">
             <Matic />
           </span>
-          <span className="mx-1 text-white font-bold text-md leading-tight">{parseFloat(price) * 0.025}</span>
+          <span className="mx-1 text-white font-bold text-md leading-tight">
+            {(parseFloat(price) * 0.025).toFixed(6)}
+          </span>
           <span className="items-end font-bold text-xs leading-tight">matic</span>
         </p>
       </div>

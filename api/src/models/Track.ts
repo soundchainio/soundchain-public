@@ -34,9 +34,13 @@ export class Track extends Model {
   @prop()
   artist: string;
 
-  @Field({nullable: true})
+  @Field({ nullable: true })
   @prop()
   artistId: string;
+
+  @Field({ nullable: true })
+  @prop()
+  artistProfileId: string;
 
   @Field({ nullable: true })
   @prop()

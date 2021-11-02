@@ -5,19 +5,12 @@ import { CreateTrackMutation } from 'lib/graphql';
 import Image from 'next/image';
 import React from 'react';
 
-export enum MiningState {
-  IN_PROGRESS = 'In progress...',
-  DONE = 'Done!',
-  ERROR = 'Error :(',
-}
-
 interface MintingDoneProps {
   track: CreateTrackMutation['createTrack']['track'];
-  miningState: MiningState;
   transactionHash: string;
 }
 
-export const MintingDone = ({ track, miningState, transactionHash }: MintingDoneProps) => {
+export const MintingDone = ({ track, transactionHash }: MintingDoneProps) => {
   return (
     <div className="h-full w-full" style={{ backgroundColor: '#101010' }}>
       <div className="p-4">
@@ -44,13 +37,9 @@ export const MintingDone = ({ track, miningState, transactionHash }: MintingDone
           className="flex gap-2 items-center py-3 px-4 text-white font-bold text-xs"
           style={{ backgroundColor: '#252525' }}
         >
-          {miningState === MiningState.IN_PROGRESS ? (
-            <>
-              <Image width={16} height={16} priority src="/loading.gif" alt="" /> {miningState}
-            </>
-          ) : (
-            <>{miningState}</>
-          )}
+          <>
+            <Image width={16} height={16} priority src="/loading.gif" alt="" /> In progress...
+          </>
         </div>
       </div>
       <div className="flex gap-4 items-center text-xs text-white py-3 px-4" style={{ backgroundColor: '#151515' }}>
