@@ -46,4 +46,25 @@ export class ListingItemService extends ModelService<typeof ListingItem> {
     listingItem.save();
     return listingItem;
   }
+
+  async finishListing(tokenId: string, sellerWallet: string, buyerWaller: string, price: string): Promise<void> {
+    this.context.listingItemService.setNotValid(parseInt(tokenId));
+    this.context.trackService.setPendingNone(parseInt(tokenId));
+
+    const [sellerUser, buyerUser, track] = await Promise.all([
+      this.context.userService.getUserByWallet(sellerWallet),
+      this.context.userService.getUserByWallet(buyerWaller),
+      this.context.trackService.getTrackByTokenId(parseInt(tokenId)),
+    ]);
+    this.context.trackService.updateTrack(track._id, { profileId: buyerUser.profileId });
+    this.context.notificationService.notifyNFTSold({
+      sellerProfileId: sellerUser.profileId,
+      buyerProfileId: buyerUser.profileId,
+      price,
+      trackId: track._id,
+      trackName: track.title,
+      artist: track.artist,
+      artworkUrl: track.artworkUrl,
+    });
+  }
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { SDKBase } from '@magic-sdk/provider';
 import axios from 'axios';
 import { config } from 'config';
@@ -88,7 +89,7 @@ const useBlockchain = () => {
     from: string,
     price: string,
     royalty = 0,
-    onReceipt: (receipt: Receipt) => void,
+    onTransactionHash: (hash: string) => void,
   ) => {
     const contract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
     return beforeSending(
@@ -97,16 +98,19 @@ const useBlockchain = () => {
         await contract.methods
           .listItem(nftAddress, tokenId, quantity, price, 0, royalty)
           .send({ from, gas })
-          .on('receipt', onReceipt),
+          .on('transactionHash', onTransactionHash),
     );
   };
 
-  const cancelListing = (web3: Web3, tokenId: number, from: string, onReceipt: (receipt: Receipt) => void) => {
+  const cancelListing = (web3: Web3, tokenId: number, from: string, onTransactionHash: (hash: string) => void) => {
     const contract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
     return beforeSending(
       web3,
       async () =>
-        await contract.methods.cancelListing(nftAddress, tokenId).send({ from, gas }).on('receipt', onReceipt),
+        await contract.methods
+          .cancelListing(nftAddress, tokenId)
+          .send({ from, gas })
+          .on('transactionHash', onTransactionHash),
     );
   };
 
@@ -115,13 +119,16 @@ const useBlockchain = () => {
     tokenId: number,
     from: string,
     price: string,
-    onReceipt: (receipt: Receipt) => void,
+    onTransactionHash: (hash: string) => void,
   ) => {
     const contract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
     return beforeSending(
       web3,
       async () =>
-        await contract.methods.updateListing(nftAddress, tokenId, price).send({ from, gas }).on('receipt', onReceipt),
+        await contract.methods
+          .updateListing(nftAddress, tokenId, price)
+          .send({ from, gas })
+          .on('transactionHash', onTransactionHash),
     );
   };
 
@@ -131,13 +138,16 @@ const useBlockchain = () => {
     from: string,
     owner: string,
     value: string,
-    onReceipt: (receipt: Receipt) => void,
+    onTransactionHash: (hash: string) => void,
   ) => {
     const contract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
     return beforeSending(
       web3,
       async () =>
-        await contract.methods.buyItem(nftAddress, tokenId, owner).send({ from, gas, value }).on('receipt', onReceipt),
+        await contract.methods
+          .buyItem(nftAddress, tokenId, owner)
+          .send({ from, gas, value })
+          .on('transactionHash', onTransactionHash),
     );
   };
 
@@ -186,6 +196,12 @@ const useBlockchain = () => {
     return balance > 0;
   };
 
+  const getRoyalties = async (web3: Web3, tokenId: number) => {
+    const nftContract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
+    const royalties = await nftContract.methods.royalties(nftAddress, tokenId).call();
+    return royalties;
+  };
+
   const mintNftToken = (
     web3: Web3,
     uri: string,
@@ -193,11 +209,16 @@ const useBlockchain = () => {
     toAddress: string,
     amount: number,
     onTransactionHash: (hash: string) => void,
+    onError?: (error: any, receipt: string) => void,
   ) => {
     const contract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress);
-    beforeSending(web3, () =>
-      contract.methods.mint(toAddress, amount, uri).send({ from, gas }).on('transactionHash', onTransactionHash),
-    );
+    beforeSending(web3, () => {
+      contract.methods
+        .mint(toAddress, amount, uri)
+        .send({ from, gas })
+        .on('transactionHash', onTransactionHash)
+        .on('error', onError);
+    });
   };
 
   const isApproved = async (web3: Web3, from: string) => {
@@ -234,6 +255,7 @@ const useBlockchain = () => {
     getIpfsAssetUrl,
     transfer,
     isApproved,
+    getRoyalties,
   };
 };
 

@@ -1,5 +1,6 @@
+import { Avatar } from 'components/Avatar';
 import { Badge } from 'components/Badge';
-import { Genre } from 'lib/graphql';
+import { Genre, Profile } from 'lib/graphql';
 import { getGenreLabelByKey } from 'utils/Genres';
 
 interface TrackInfoProps {
@@ -8,11 +9,49 @@ interface TrackInfoProps {
   copyright?: string | null;
   releaseYear?: number | null;
   genres?: Genre[] | null;
+  mintingPending?: boolean;
+  artistProfile: Profile | undefined;
+  royalties?: number;
 }
 
-export const TrackInfo = ({ trackTitle, albumTitle, releaseYear, genres, copyright }: TrackInfoProps) => {
+export const TrackInfo = ({
+  trackTitle,
+  albumTitle,
+  releaseYear,
+  genres,
+  copyright,
+  mintingPending,
+  artistProfile,
+  royalties,
+}: TrackInfoProps) => {
   return (
     <div className="w-full text-white">
+      <div className="flex items-center text-xxs px-4 py-3">
+        <div className="w-1/6 uppercase text-xs text-gray-CC font-bold mr-1">Artist</div>
+        <div className="flex w-3/6 gap-2">
+          <Avatar
+            profile={{ profilePicture: artistProfile?.profilePicture, id: artistProfile?.id }}
+            pixels={30}
+            linkToProfile
+          />
+          <div className="flex flex-col ">
+            <div className="text-sm font-bold">{artistProfile?.displayName}</div>
+            <div className="text-xxs text-gray-CC font-bold">@{artistProfile?.userHandle}</div>
+          </div>
+        </div>
+        <div className="flex flex-col w-1/6">
+          <div className="text-center text-sm font-bold">{artistProfile?.followerCount}</div>
+          <div className="text-center text-gray-CC font-bold">Followers</div>
+        </div>
+        <div className="flex flex-col w-1/6">
+          <div className="text-center text-sm font-bold">{artistProfile?.followingCount}</div>
+          <div className="text-center text-gray-CC font-bold">Following</div>
+        </div>
+      </div>
+      <div className="flex items-center font-bold">
+        <div className="w-2/4 uppercase text-sm pl-4 py-3 bg-gray-20">Artist Royalty %</div>
+        <div className="text-center w-2/4 text-sm bg-gray-30 pr-4 py-3">{royalties ? `${royalties / 100}%` : '-'}</div>
+      </div>
       <div className="flex items-center font-bold">
         <div className="w-2/4 uppercase text-sm pl-4 py-3 bg-gray-20">Track Title</div>
         <div className="text-center w-2/4 text-sm bg-gray-30 pr-4 py-3">{trackTitle || '-'}</div>
@@ -35,6 +74,18 @@ export const TrackInfo = ({ trackTitle, albumTitle, releaseYear, genres, copyrig
           {genres?.map(genre => (
             <Badge key={genre} label={getGenreLabelByKey(genre) || genre} />
           ))}
+        </div>
+      </div>
+      <div className="flex items-center font-bold">
+        <div className="w-2/4 uppercase text-sm pl-4 py-3 bg-gray-20">Minting Status</div>
+        <div className="text-center w-2/4 text-sm bg-gray-30 pr-4 py-3">
+          {mintingPending ? (
+            <div className="flex justify-center items-center gap-4">
+              <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" /> In progress...
+            </div>
+          ) : (
+            'Done'
+          )}
         </div>
       </div>
     </div>

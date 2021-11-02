@@ -9,6 +9,7 @@ import { Context } from '../types/Context';
 import { FilterTrackInput } from '../types/FilterTrackInput';
 import { NFTData } from '../types/NFTData';
 import { PageInput } from '../types/PageInput';
+import { PendingRequest } from '../types/PendingRequest';
 import { SortTrackInput } from '../types/SortTrackInput';
 import { ModelService } from './ModelService';
 
@@ -42,10 +43,15 @@ export class TrackService extends ModelService<typeof Track> {
     return this.findOrFail(id);
   }
 
-  async searchTracks(search: string): Promise<{ list: Track[], total: number }> {
+  async searchTracks(search: string): Promise<{ list: Track[]; total: number }> {
     const regex = new RegExp(search, 'i');
-    const list = await this.model.find({ $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }] }).limit(5);
-    const total = await this.model.find({ deleted: false, $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }] }).countDocuments().exec();
+    const list = await this.model
+      .find({ $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }] })
+      .limit(5);
+    const total = await this.model
+      .find({ deleted: false, $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }] })
+      .countDocuments()
+      .exec();
     return { list, total };
   }
 
@@ -62,7 +68,7 @@ export class TrackService extends ModelService<typeof Track> {
 
     const track = await this.model.findOneAndUpdate(
       {
-        'nftData.transactionHash': '0xce2f5d1f69a0f0511dcbebd07f9ffdaa52c9a066cc9101b7d62d6f1e0295bb79',
+        'nftData.transactionHash': transactionHash,
       },
       data,
     );
@@ -70,7 +76,6 @@ export class TrackService extends ModelService<typeof Track> {
     if (!track) {
       throw new NotFoundError('Track', transactionHash);
     }
-
     return this.updateNftData(track, newNftData);
   }
 
@@ -128,5 +133,21 @@ export class TrackService extends ModelService<typeof Track> {
 
     const result = await this.model.bulkWrite(bulkOps);
     return result.modifiedCount;
+  }
+
+  async setPendingNone(tokenId: number): Promise<Track> {
+    return await this.model.findOneAndUpdate(
+      { 'nftData.tokenId': tokenId },
+      { 'nftData.pendingRequest': PendingRequest.None },
+    );
+  }
+
+  async getTrackByTokenId(tokenId: number): Promise<Track> {
+    return await this.model.findOne({ 'nftData.tokenId': tokenId });
+  }
+
+  async updateOwnerByTokenId(tokenId: number, owner: string): Promise<Track> {
+    const { id } = await this.model.findOne({ 'nftData.tokenId': tokenId });
+    return await this.updateTrack(id, { nftData: { owner } });
   }
 }

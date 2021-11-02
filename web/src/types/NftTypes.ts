@@ -69,10 +69,15 @@ export interface ItemSold extends BaseEvent {
   returnValues: ReturnValuesItemSold;
 }
 
+export interface ItemUpdated extends BaseEvent {
+  returnValues: ReturnValuesItemSold;
+}
+
 export interface Events {
   TransferSingle?: TransferSingle;
   ItemListed?: ItemListed;
   ItemSold?: ItemSold;
+  ItemUpdated?: ItemUpdated;
 }
 
 export interface Receipt {

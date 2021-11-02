@@ -4,13 +4,20 @@ import { ListNFT } from 'components/details-NFT/ListNFT';
 import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
+import { useModalDispatch } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
-import { TrackDocument, useListingItemLazyQuery, useTrackQuery } from 'lib/graphql';
+import {
+  PendingRequest,
+  TrackDocument,
+  useListingItemLazyQuery,
+  useTrackQuery,
+  useUpdateTrackMutation,
+} from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
@@ -46,17 +53,19 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 
 export default function EditPage({ trackId }: TrackPageProps) {
   const router = useRouter();
-  const { updateListing, cancelListing } = useBlockchain();
+  const { updateListing } = useBlockchain();
+  const { dispatchShowRemoveListingModal } = useModalDispatch();
   const { data: track } = useTrackQuery({ variables: { id: trackId } });
+  const [trackUpdate] = useUpdateTrackMutation();
   const { account, web3 } = useWalletContext();
   const maxGasFee = useMaxGasFee();
   const [loading, setLoading] = useState(false);
   const [newPrice, setNewPrice] = useState(0);
   const me = useMe();
 
-  const tokenId = track?.track.nftData?.tokenId || -1;
+  const tokenId = track?.track.nftData?.tokenId ?? -1;
 
-  const [getListingItem, { data: listingItem }] = useListingItemLazyQuery({
+  const [getListingItem, { data: listingPayload }] = useListingItemLazyQuery({
     variables: { tokenId },
   });
 
@@ -64,35 +73,53 @@ export default function EditPage({ trackId }: TrackPageProps) {
     getListingItem();
   }, [getListingItem]);
 
-  if (!listingItem) {
+  if (!listingPayload) {
     return null;
   }
 
-  const ownerAddressAccount = listingItem.listingItem.owner.toLowerCase();
+  const ownerAddressAccount = listingPayload.listingItem?.listingItem?.owner.toLowerCase();
   const isOwner = ownerAddressAccount === account?.toLowerCase();
-  const isForSale = !!listingItem.listingItem.pricePerItem ?? false;
-  const price = web3?.utils.fromWei(listingItem.listingItem.pricePerItem.toString(), 'ether') || '0';
+  const isForSale = !!listingPayload.listingItem?.listingItem?.pricePerItem ?? false;
+  const price = web3?.utils.fromWei(listingPayload.listingItem?.listingItem?.pricePerItem.toString() || '0', 'ether');
 
   const handleUpdate = () => {
-    if (!web3 || !listingItem.listingItem.tokenId || !newPrice || !account) {
+    if (!web3 || !listingPayload.listingItem?.listingItem?.tokenId || !newPrice || !account) {
       return;
     }
     setLoading(true);
     const weiPrice = web3?.utils.toWei(newPrice.toString(), 'ether') || '0';
-    updateListing(web3, listingItem.listingItem.tokenId, account, weiPrice, () => setLoading(false));
+
+    const onTransactionHash = () => {
+      trackUpdate({
+        variables: {
+          input: {
+            trackId: trackId,
+            nftData: {
+              pendingRequest: PendingRequest.UpdateListing,
+            },
+          },
+        },
+      });
+      router.back();
+    };
+
+    updateListing(web3, listingPayload.listingItem?.listingItem?.tokenId, account, weiPrice, onTransactionHash);
   };
 
   const handleRemove = () => {
-    if (!web3 || !listingItem.listingItem.tokenId || !account) {
+    if (
+      !web3 ||
+      !listingPayload.listingItem?.listingItem?.tokenId ||
+      !account ||
+      track?.track.nftData?.pendingRequest != PendingRequest.None
+    ) {
       return;
     }
-    // TODO: ask confirmation
-    setLoading(true);
-    cancelListing(web3, listingItem.listingItem.tokenId, account, () => router.push(router.asPath.replace('edit', '')));
+    dispatchShowRemoveListingModal(true, listingPayload.listingItem?.listingItem?.tokenId, trackId);
   };
 
   const RemoveListing = (
-    <div className="flex-shrink-0 flex items-center">
+    <div className="flex-shrink-0 flex items-center cursor-pointer">
       <h2 className="text-sm text-red-400 font-bold" onClick={handleRemove}>
         Remove Listing
       </h2>
@@ -105,7 +132,7 @@ export default function EditPage({ trackId }: TrackPageProps) {
     rightButton: RemoveListing,
   };
 
-  if (!isForSale || !isOwner || !me || !track) {
+  if (!isForSale || !isOwner || !me || !track || track?.track.nftData?.pendingRequest != PendingRequest.None) {
     return null;
   }
 
@@ -114,7 +141,7 @@ export default function EditPage({ trackId }: TrackPageProps) {
       <div className="m-4">
         <Track trackId={trackId} />
       </div>
-      <ListNFT onSetPrice={setNewPrice} initialPrice={parseFloat(price)} />
+      {price && <ListNFT onSetPrice={setNewPrice} initialPrice={parseFloat(price)} />}
       <div className="flex p-4">
         <div className="flex-1 font-black text-xs text-gray-80">
           <p>Max gas fee</p>

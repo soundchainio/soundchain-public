@@ -32,11 +32,32 @@ export class UserService extends ModelService<typeof User> {
     return updatedUser;
   }
 
-  async updateWalletAddress(id: string, walletAddress: string): Promise<User> {
-    const updatedUser = await UserModel.findByIdAndUpdate(id, { walletAddress }, { new: true });
+  async updateMetaMaskAddresses(id: string, walletAddress: string): Promise<User> {
+    const user = (await this.model.findById(id)).toObject();
+    const wallets = new Set([...user.metaMaskWalletAddressees, walletAddress]);
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      id,
+      { metaMaskWalletAddressees: [...wallets] },
+      { new: true },
+    );
     if (!updatedUser) {
       throw new Error(`Could not update the profile with id: ${id}`);
     }
     return updatedUser;
+  }
+
+  async updateMagicWallet(id: string, magicWalletAddress: string): Promise<User> {
+    const updatedUser = await UserModel.findByIdAndUpdate(id, { magicWalletAddress }, { new: true });
+    if (!updatedUser) {
+      throw new Error(`Could not update the profile with id: ${id}`);
+    }
+    return updatedUser;
+  }
+
+  async getUserByWallet(walletAddress: string): Promise<User> {
+    const user = await this.model.findOne({
+      $or: [{ magicWalletAddress: walletAddress }, { metaMaskWalletAddressees: { $in: [walletAddress] } }],
+    });
+    return user;
   }
 }

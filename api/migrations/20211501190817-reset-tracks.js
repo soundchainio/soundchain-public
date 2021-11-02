@@ -1,5 +1,8 @@
 module.exports = {
   async up(db) {
+    await db.collection('tracks').remove();
+    await db.collection('notifications').deleteMany({});
+    await db.collection('profiles').updateMany({}, { $set: { unreadNotificationCount: 0 } });
     await db.collection('posts').deleteMany({ trackId: { $exists: true } });
 
     const orphanFeedItems = await db
