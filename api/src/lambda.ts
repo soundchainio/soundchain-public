@@ -11,8 +11,10 @@ import { config } from './config';
 import SoundchainCollectible from './contract/SoundchainCollectible/SoundchainCollectible.json';
 import SoundchainMarketplace from './contract/SoundchainMarketplace/SoundchainMarketplace.json';
 import { UserModel } from './models/User';
+import muxDataApi from './muxDataApi';
 import { ItemCanceled, ItemListed, ItemSold, ItemUpdated, TransferSingle } from './types/BlockchainEvents';
 import { Context } from './types/Context';
+import { MuxDataInputValue, MuxServerData } from './types/MuxData';
 import { Metadata, NFT } from './types/NFT';
 import { PendingRequest } from './types/PendingRequest';
 
@@ -199,5 +201,62 @@ export const mint: Handler<SQSEvent> = async event => {
   } catch (e) {
     console.error('Execution error, please check AWS logs', e);
     process.exit(1);
+  }
+};
+
+export const playbackCount: Handler = async () => {
+  await mongoose.connect(config.db.url, config.db.options);
+
+  const user = await UserModel.findOne({ handle: '_system' });
+  const context = new Context({ sub: user._id });
+
+  const fetch = async (pageSize: number, currentPage: number): Promise<MuxDataInputValue> => {
+    const { data } = await muxDataApi.get<MuxServerData>(
+      `/metrics/unique_viewers/breakdown?group_by=video_id&timeframe[]=24:hours&limit=${pageSize}&page=${currentPage}`,
+    );
+
+    const values = data.data.map(video => ({ trackId: video.field, amount: video.views }));
+    return { totalCount: data.total_row_count, values };
+  };
+
+  const update = async (inputValue: MuxDataInputValue): Promise<number> => {
+    return await context.trackService.incrementPlaybackCount(inputValue.values);
+  };
+
+  try {
+    console.log('Starting');
+
+    let currentPage = 1;
+    const pageSize = 10000;
+
+    const inputValues = await fetch(pageSize, currentPage);
+    const totalCount = inputValues.totalCount;
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    if (!totalCount) {
+      console.log(`${totalCount} tracks fetched`);
+      return;
+    }
+
+    console.log(`Page size: ${pageSize} - Mux data fetched: ${totalCount} tracks to be updated...`);
+    const tracksUpdated = await update(inputValues);
+    console.log(
+      `Page: ${currentPage}/${totalPages} - Tracks on page: ${inputValues.values.length} - Tracks updated: ${tracksUpdated}`,
+    );
+
+    if (totalPages > currentPage) {
+      for (currentPage = 2; currentPage <= totalPages; currentPage++) {
+        const inputValues = await fetch(pageSize, currentPage);
+        const tracksUpdated = await update(inputValues);
+        console.log(
+          `Page: ${currentPage}/${totalPages} - Tracks on page: ${inputValues.values.length} - Tracks updated: ${tracksUpdated}`,
+        );
+      }
+    }
+  } catch (e) {
+    console.error('Execution error, please check AWS logs', e);
+    process.exit(1);
+  } finally {
+    console.log('Finished');
   }
 };

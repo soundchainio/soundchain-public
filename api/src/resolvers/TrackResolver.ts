@@ -21,6 +21,11 @@ export class TrackResolver {
     return muxAsset ? `https://stream.mux.com/${muxAsset.playbackId}.m3u8` : '';
   }
 
+  @FieldResolver(() => String)
+  playbackCountFormatted(@Root() { playbackCount }: Track): string {
+    return playbackCount ? new Intl.NumberFormat('en-US').format(playbackCount) : '';
+  }
+
   @Query(() => Track)
   track(@Ctx() { trackService }: Context, @Arg('id') id: string): Promise<Track> {
     return trackService.getTrack(id);

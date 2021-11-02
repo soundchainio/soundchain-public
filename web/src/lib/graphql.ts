@@ -1066,6 +1066,7 @@ export type Track = {
   releaseYear: Maybe<Scalars['Float']>;
   genres: Maybe<Array<Genre>>;
   nftData: Maybe<NftDataType>;
+  playbackCountFormatted: Scalars['String'];
   deleted: Maybe<Scalars['Boolean']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
@@ -1144,6 +1145,7 @@ export type UpdateTrackInput = {
   trackId: Scalars['String'];
   profileId?: Maybe<Scalars['String']>;
   nftData?: Maybe<NftDataInput>;
+  playbackCount?: Maybe<Scalars['Float']>;
 };
 
 export type UpdateTrackPayload = {
@@ -2056,7 +2058,7 @@ export type TrackQuery = (
 
 export type TrackComponentFieldsFragment = (
   { __typename?: 'Track' }
-  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted'>
+  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted'>
   & { nftData: Maybe<(
     { __typename?: 'NFTDataType' }
     & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner'>
@@ -2463,6 +2465,7 @@ export const TrackComponentFieldsFragmentDoc = gql`
   createdAt
   updatedAt
   deleted
+  playbackCountFormatted
   nftData {
     transactionHash
     tokenId

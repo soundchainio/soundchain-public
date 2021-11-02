@@ -11,4 +11,7 @@ export class UpdateTrackInput {
 
   @Field(() => NFTData, { nullable: true })
   nftData: Partial<NFTData>;
+
+  @Field({ nullable: true })
+  playbackCount: number;
 }

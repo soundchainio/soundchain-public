@@ -48,6 +48,8 @@ export const {
   MAGIC_PRIVATE_KEY,
   MARKETPLACE_ADDRESS,
   NFT_ADDRESS,
+  MUX_DATA_ID,
+  MUX_DATA_SECRET,
 } = process.env;
 
 function assertEnvVar(name: string, value: string | undefined): asserts value {
@@ -130,6 +132,10 @@ export const config = {
   mux: {
     tokenId: MUX_TOKEN_ID,
     tokenSecret: MUX_TOKEN_SECRET,
+  },
+  muxData: {
+    tokenId: MUX_DATA_ID,
+    tokenSecret: MUX_DATA_SECRET,
   },
   sentry: {
     url: SENTRY_URL,

@@ -6,7 +6,6 @@ on:
       - develop
     paths:
       - 'api/**'
-      - 'event-watcher/**'
   workflow_dispatch:
 
 jobs:
@@ -53,6 +52,8 @@ jobs:
           MUX_TOKEN_SECRET: ${{ secrets.MUX_TOKEN_SECRET_DEVELOP }}
           SENTRY_URL: ${{ secrets.SENTRY_URL }}
           MAGIC_PRIVATE_KEY: ${{ secrets.MAGIC_PRIVATE_KEY_DEVELOP }}
+          MUX_DATA_ID: ${{ secrets.MUX_DATA_ID_DEVELOP }}
+          MUX_DATA_SECRET: ${{ secrets.MUX_DATA_SECRET_DEVELOP }}
       - name: Trigger migrate lambda function
         run: |
           aws lambda invoke --function-name soundchain-api-develop-migrate response.json

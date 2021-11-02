@@ -22,13 +22,13 @@ export const ExploreTracks = ({ searchTerm }: ExplorePageProps) => {
     if (tracks) {
       const list = tracks.map(
         track =>
-        ({
-          trackId: track.id,
-          src: track.playbackUrl,
-          art: track.artworkUrl,
-          title: track.title,
-          artist: track.artist,
-        } as Song),
+          ({
+            trackId: track.id,
+            src: track.playbackUrl,
+            art: track.artworkUrl,
+            title: track.title,
+            artist: track.artist,
+          } as Song),
       );
       playlistState(list, index);
     }
@@ -47,7 +47,7 @@ export const ExploreTracks = ({ searchTerm }: ExplorePageProps) => {
           after: pageInfo.endCursor,
           inclusive: false,
         },
-      }
+      },
     });
   };
 
@@ -55,11 +55,26 @@ export const ExploreTracks = ({ searchTerm }: ExplorePageProps) => {
 
   return (
     <div>
-      {tracks.length > 0 ? tracks?.map((track, index) => (
-        <div key={track.id} className="text-white">
-          <TrackListItem trackId={track.id} index={index + 1} handleOnPlayClicked={song => handleOnPlayClicked(song, index)} />
-        </div>
-      )) : <NoResultFound type="Tracks" />}
+      {tracks.length > 0 ? (
+        tracks?.map((track, index) => (
+          <div key={track.id} className="text-white">
+            <TrackListItem
+              song={{
+                trackId: track.id,
+                src: track.playbackUrl,
+                art: track.artworkUrl,
+                title: track.title,
+                artist: track.artist,
+                playbackCount: track.playbackCountFormatted,
+              }}
+              index={index + 1}
+              handleOnPlayClicked={song => handleOnPlayClicked(song, index)}
+            />
+          </div>
+        ))
+      ) : (
+        <NoResultFound type="Tracks" />
+      )}
       {pageInfo.hasNextPage && <InfiniteLoader loadMore={loadNext} loadingMessage="Loading Tracks" />}
     </div>
   );
