@@ -1,7 +1,9 @@
 import { Action } from 'contexts/actions';
 import { ModalActionTypes } from 'contexts/actions/modal';
 import {
+  SetAmountToTransfer,
   SetEditPostIdPayload,
+  SetRecipientWalletAddress,
   SetRepostIdPayload,
   ShowApprove,
   ShowAudioPlayerPayload,
@@ -9,6 +11,8 @@ import {
   ShowCreatePayload,
   ShowNewPostPayload,
   ShowReactionsPayload,
+  ShowRemoveListing,
+  ShowTransferConfirmationPayload,
   ShowUnderDevelopmentPayload,
 } from 'contexts/payloads/modal';
 import { ReactionType } from 'lib/graphql';
@@ -26,12 +30,18 @@ export interface ModalState {
   showCreate: boolean;
   showAudioPlayer: boolean;
   showApprove: boolean;
+  showRemoveListing: boolean;
+  tokenId?: number;
+  trackId?: string;
   reactions: {
     show: boolean;
     postId?: string;
     total?: number;
     top?: ReactionType[];
   };
+  showTransferConfirmation: boolean;
+  walletRecipient?: string;
+  amountToTransfer?: string;
 }
 
 export const initialModalState = {
@@ -46,12 +56,16 @@ export const initialModalState = {
   showCreate: false,
   showAudioPlayer: false,
   showApprove: false,
+  showRemoveListing: false,
   reactions: {
     show: false,
     postId: undefined,
     top: [],
     total: undefined,
   },
+  showTransferConfirmation: false,
+  walletRecipient: undefined,
+  amountToTransfer: undefined,
 };
 
 export const modalReducer = (state: ModalState, action: Action) => {
@@ -116,11 +130,35 @@ export const modalReducer = (state: ModalState, action: Action) => {
         showApprove: (action.payload as ShowApprove).show,
         anyModalOpened: (action.payload as ShowApprove).show,
       };
+    case ModalActionTypes.SHOW_REMOVE_LISTING:
+      return {
+        ...state,
+        showRemoveListing: (action.payload as ShowRemoveListing).show,
+        tokenId: (action.payload as ShowRemoveListing).tokenId,
+        trackId: (action.payload as ShowRemoveListing).trackId,
+        anyModalOpened: (action.payload as ShowRemoveListing).show,
+      };
     case ModalActionTypes.SHOW_AUDIO_PLAYER:
       return {
         ...state,
         showAudioPlayer: (action.payload as ShowAudioPlayerPayload).show,
         anyModalOpened: (action.payload as ShowAudioPlayerPayload).show,
+      };
+    case ModalActionTypes.SHOW_TRANSFER_CONFIRMATION:
+      return {
+        ...state,
+        showTransferConfirmation: (action.payload as ShowTransferConfirmationPayload).show,
+        anyModalOpened: (action.payload as ShowTransferConfirmationPayload).show,
+      };
+    case ModalActionTypes.SET_AMOUNT_TO_TRANSFER:
+      return {
+        ...state,
+        amountToTransfer: (action.payload as SetAmountToTransfer).amount,
+      };
+    case ModalActionTypes.SET_RECIPIENT_WALLET_ADDRESS:
+      return {
+        ...state,
+        walletRecipient: (action.payload as SetRecipientWalletAddress).address,
       };
     default:
       return state;

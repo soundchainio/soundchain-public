@@ -37,8 +37,26 @@ export interface ShowApprove {
   show: boolean;
 }
 
+export interface ShowRemoveListing {
+  show: boolean;
+  tokenId: number;
+  trackId: string;
+}
+
 export interface ShowAudioPlayerPayload {
   show: boolean;
+}
+
+export interface ShowTransferConfirmationPayload {
+  show: boolean;
+}
+
+export interface SetRecipientWalletAddress {
+  address: string;
+}
+
+export interface SetAmountToTransfer {
+  amount: string;
 }
 
 export type ModalPayload =
@@ -49,4 +67,8 @@ export type ModalPayload =
   | ShowUnderDevelopmentPayload
   | ShowReactionsPayload
   | ShowCreatePayload
-  | ShowAudioPlayerPayload;
+  | ShowAudioPlayerPayload
+  | ShowTransferConfirmationPayload
+  | SetRecipientWalletAddress
+  | SetAmountToTransfer
+  | ShowRemoveListing;

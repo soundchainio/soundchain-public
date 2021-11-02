@@ -23,6 +23,8 @@ export const NavBarButton = ({ label, path, icon: Icon, onClick, badge: Badge, c
   useEffect(() => {
     if (router.asPath === path) {
       setActive(true);
+    } else {
+      setActive(false);
     }
   }, [router.asPath, path]);
 

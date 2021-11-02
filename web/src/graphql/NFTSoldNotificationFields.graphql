@@ -6,5 +6,8 @@ fragment NFTSoldNotificationFields on NFTSoldNotification {
   buyerPicture
   buyerProfileId
   trackId
+  trackName
+  artist
+  artworkUrl
   price
 }

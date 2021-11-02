@@ -136,6 +136,12 @@ export type CreatePostPayload = {
   post: Post;
 };
 
+export type CreateProfileVerificationRequestInput = {
+  soundcloud?: Maybe<Scalars['String']>;
+  youtube?: Maybe<Scalars['String']>;
+  bandcamp?: Maybe<Scalars['String']>;
+};
+
 export type CreateRepostInput = {
   body: Scalars['String'];
   repostId: Scalars['String'];
@@ -153,10 +159,13 @@ export type CreateTrackInput = {
   assetUrl: Scalars['String'];
   artworkUrl?: Maybe<Scalars['String']>;
   artist?: Maybe<Scalars['String']>;
+  artistId?: Maybe<Scalars['String']>;
+  artistProfileId?: Maybe<Scalars['String']>;
   album?: Maybe<Scalars['String']>;
   releaseYear?: Maybe<Scalars['Float']>;
   copyright?: Maybe<Scalars['String']>;
   genres?: Maybe<Array<Genre>>;
+  nftData?: Maybe<NftDataInput>;
 };
 
 export type CreateTrackPayload = {
@@ -192,6 +201,14 @@ export type DeleteTrackInput = {
   trackId: Scalars['String'];
 };
 
+export type ExplorePayload = {
+  __typename?: 'ExplorePayload';
+  profiles: Array<Profile>;
+  tracks: Array<Track>;
+  totalProfiles: Scalars['Float'];
+  totalTracks: Scalars['Float'];
+};
+
 export type FeedConnection = {
   __typename?: 'FeedConnection';
   pageInfo: PageInfo;
@@ -211,14 +228,6 @@ export type FilterPostInput = {
 
 export type FilterTrackInput = {
   profileId?: Maybe<Scalars['String']>;
-};
-
-export type FinishListingItemInput = {
-  sellerProfileId: Scalars['String'];
-  buyerProfileId: Scalars['String'];
-  tokenId: Scalars['Float'];
-  trackId: Scalars['String'];
-  price: Scalars['String'];
 };
 
 export type Follow = {
@@ -258,6 +267,7 @@ export enum Genre {
   Alternative = 'ALTERNATIVE',
   Ambient = 'AMBIENT',
   Americana = 'AMERICANA',
+  Blues = 'BLUES',
   CPop = 'C_POP',
   Christian = 'CHRISTIAN',
   ClassicRock = 'CLASSIC_ROCK',
@@ -275,6 +285,7 @@ export enum Genre {
   KPop = 'K_POP',
   KidsAndFamily = 'KIDS_AND_FAMILY',
   Latin = 'LATIN',
+  Lofi = 'LOFI',
   Metal = 'METAL',
   MusicaMexicana = 'MUSICA_MEXICANA',
   MusicaTropical = 'MUSICA_TROPICAL',
@@ -292,6 +303,25 @@ export enum Genre {
   World = 'WORLD'
 }
 
+
+export type ListingItem = {
+  __typename?: 'ListingItem';
+  id: Scalars['ID'];
+  owner: Scalars['String'];
+  nft: Scalars['String'];
+  tokenId: Scalars['Float'];
+  startingTime: Scalars['Float'];
+  quantity: Scalars['Float'];
+  pricePerItem: Scalars['String'];
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  valid: Scalars['Boolean'];
+};
+
+export type ListingItemPayload = {
+  __typename?: 'ListingItemPayload';
+  listingItem: Maybe<ListingItem>;
+};
 
 export type LoginInput = {
   token: Scalars['String'];
@@ -352,7 +382,6 @@ export type Mutation = {
   deleteComment: DeleteCommentPayload;
   createListingItem: CreateListingItemType;
   setNotValid: CreateListingItemType;
-  finishListing: CreateListingItemType;
   sendMessage: SendMessagePayload;
   resetUnreadMessageCount: Profile;
   createMintingRequest: MintingRequestPayload;
@@ -372,6 +401,7 @@ export type Mutation = {
   unfollowProfile: UnfollowProfilePayload;
   subscribeToProfile: SubscribeToProfilePayload;
   unsubscribeFromProfile: UnsubscribeFromProfilePayload;
+  createProfileVerificationRequest: ProfileVerificationRequestPayload;
   createTrack: CreateTrackPayload;
   updateTrack: UpdateTrackPayload;
   deleteTrackOnError: UpdateTrackPayload;
@@ -379,7 +409,6 @@ export type Mutation = {
   login: AuthPayload;
   updateHandle: UpdateHandlePayload;
   updateDefaultWallet: UpdateDefaultWalletPayload;
-  setIsApprovedOnMarketplace: UpdateHandlePayload;
 };
 
 
@@ -400,11 +429,6 @@ export type MutationCreateListingItemArgs = {
 
 export type MutationSetNotValidArgs = {
   tokenId: Scalars['Float'];
-};
-
-
-export type MutationFinishListingArgs = {
-  input: FinishListingItemInput;
 };
 
 
@@ -488,6 +512,11 @@ export type MutationUnsubscribeFromProfileArgs = {
 };
 
 
+export type MutationCreateProfileVerificationRequestArgs = {
+  input: CreateProfileVerificationRequestInput;
+};
+
+
 export type MutationCreateTrackArgs = {
   input: CreateTrackInput;
 };
@@ -524,21 +553,25 @@ export type MutationUpdateDefaultWalletArgs = {
 
 export type NftDataInput = {
   transactionHash?: Maybe<Scalars['String']>;
+  pendingRequest?: Maybe<PendingRequest>;
   ipfsCid?: Maybe<Scalars['String']>;
   tokenId?: Maybe<Scalars['Float']>;
   contract?: Maybe<Scalars['String']>;
   minter?: Maybe<Scalars['String']>;
   quantity?: Maybe<Scalars['Float']>;
+  owner?: Maybe<Scalars['String']>;
 };
 
 export type NftDataType = {
   __typename?: 'NFTDataType';
   transactionHash: Maybe<Scalars['String']>;
+  pendingRequest: Maybe<PendingRequest>;
   ipfsCid: Maybe<Scalars['String']>;
   tokenId: Maybe<Scalars['Float']>;
   contract: Maybe<Scalars['String']>;
   minter: Maybe<Scalars['String']>;
   quantity: Maybe<Scalars['Float']>;
+  owner: Maybe<Scalars['String']>;
 };
 
 export type NftSoldNotification = {
@@ -552,6 +585,9 @@ export type NftSoldNotification = {
   buyerProfileId: Scalars['String'];
   trackId: Scalars['String'];
   price: Scalars['String'];
+  trackName: Scalars['String'];
+  artist: Scalars['String'];
+  artworkUrl: Scalars['String'];
 };
 
 export type NewPostNotification = {
@@ -600,6 +636,15 @@ export type PageInput = {
   before?: Maybe<Scalars['String']>;
   inclusive?: Maybe<Scalars['Boolean']>;
 };
+
+export enum PendingRequest {
+  Mint = 'Mint',
+  List = 'List',
+  Buy = 'Buy',
+  CancelListing = 'CancelListing',
+  UpdateListing = 'UpdateListing',
+  None = 'None'
+}
 
 export type PinJsonToIpfsInput = {
   fileName: Scalars['String'];
@@ -667,16 +712,44 @@ export type Profile = {
   isSubscriber: Scalars['Boolean'];
 };
 
+export type ProfileConnection = {
+  __typename?: 'ProfileConnection';
+  pageInfo: PageInfo;
+  nodes: Array<Profile>;
+};
+
+export type ProfileVerificationRequest = {
+  __typename?: 'ProfileVerificationRequest';
+  id: Scalars['ID'];
+  profileId: Scalars['String'];
+  soundcloud: Maybe<Scalars['String']>;
+  youtube: Maybe<Scalars['String']>;
+  bandcamp: Maybe<Scalars['String']>;
+  status: Maybe<Scalars['String']>;
+  reason: Maybe<Scalars['String']>;
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+};
+
+export type ProfileVerificationRequestPayload = {
+  __typename?: 'ProfileVerificationRequestPayload';
+  profileVerificationRequest: ProfileVerificationRequest;
+};
+
 export type Query = {
   __typename?: 'Query';
   chats: ChatConnection;
   chatHistory: MessageConnection;
   comment: Comment;
   comments: CommentConnection;
+  explore: ExplorePayload;
+  exploreTracks: TrackConnection;
+  exploreUsers: ProfileConnection;
   feed: FeedConnection;
   followers: FollowConnection;
   following: FollowConnection;
-  listingItem: CreateListingItemType;
+  listingItem: ListingItemPayload;
+  wasListedBefore: Scalars['Boolean'];
   message: Message;
   notifications: NotificationConnection;
   notification: Notification;
@@ -686,11 +759,13 @@ export type Query = {
   bandcampLink: Scalars['String'];
   myProfile: Profile;
   profile: Profile;
+  profileVerificationRequest: ProfileVerificationRequest;
   track: Track;
   tracks: TrackConnection;
   uploadUrl: UploadUrl;
   mimeType: MimeType;
   me: Maybe<User>;
+  getUserByWallet: Maybe<User>;
 };
 
 
@@ -716,6 +791,23 @@ export type QueryCommentsArgs = {
 };
 
 
+export type QueryExploreArgs = {
+  search?: Maybe<Scalars['String']>;
+};
+
+
+export type QueryExploreTracksArgs = {
+  page?: Maybe<PageInput>;
+  search?: Maybe<Scalars['String']>;
+};
+
+
+export type QueryExploreUsersArgs = {
+  page?: Maybe<PageInput>;
+  search?: Maybe<Scalars['String']>;
+};
+
+
 export type QueryFeedArgs = {
   page?: Maybe<PageInput>;
 };
@@ -734,6 +826,11 @@ export type QueryFollowingArgs = {
 
 
 export type QueryListingItemArgs = {
+  tokenId: Scalars['Float'];
+};
+
+
+export type QueryWasListedBeforeArgs = {
   tokenId: Scalars['Float'];
 };
 
@@ -801,6 +898,11 @@ export type QueryUploadUrlArgs = {
 
 export type QueryMimeTypeArgs = {
   url: Scalars['String'];
+};
+
+
+export type QueryGetUserByWalletArgs = {
+  walletAddress: Scalars['String'];
 };
 
 export type ReactToPostInput = {
@@ -941,6 +1043,8 @@ export type Track = {
   assetUrl: Scalars['String'];
   artworkUrl: Maybe<Scalars['String']>;
   artist: Maybe<Scalars['String']>;
+  artistId: Maybe<Scalars['String']>;
+  artistProfileId: Maybe<Scalars['String']>;
   album: Maybe<Scalars['String']>;
   copyright: Maybe<Scalars['String']>;
   releaseYear: Maybe<Scalars['Float']>;
@@ -1243,6 +1347,22 @@ export type CreatePostMutation = (
   ) }
 );
 
+export type CreateProfileVerificationRequestMutationVariables = Exact<{
+  input: CreateProfileVerificationRequestInput;
+}>;
+
+
+export type CreateProfileVerificationRequestMutation = (
+  { __typename?: 'Mutation' }
+  & { createProfileVerificationRequest: (
+    { __typename?: 'ProfileVerificationRequestPayload' }
+    & { profileVerificationRequest: (
+      { __typename?: 'ProfileVerificationRequest' }
+      & ProfileVerificationRequestComponentFieldsFragment
+    ) }
+  ) }
+);
+
 export type CreateRepostMutationVariables = Exact<{
   input: CreateRepostInput;
 }>;
@@ -1326,6 +1446,66 @@ export type DeleteTrackOnErrorMutation = (
   ) }
 );
 
+export type ExploreQueryVariables = Exact<{
+  search?: Maybe<Scalars['String']>;
+}>;
+
+
+export type ExploreQuery = (
+  { __typename?: 'Query' }
+  & { explore: (
+    { __typename?: 'ExplorePayload' }
+    & Pick<ExplorePayload, 'totalTracks' | 'totalProfiles'>
+    & { tracks: Array<(
+      { __typename?: 'Track' }
+      & TrackComponentFieldsFragment
+    )>, profiles: Array<(
+      { __typename?: 'Profile' }
+      & ProfileComponentFieldsFragment
+    )> }
+  ) }
+);
+
+export type ExploreTracksQueryVariables = Exact<{
+  search?: Maybe<Scalars['String']>;
+  page?: Maybe<PageInput>;
+}>;
+
+
+export type ExploreTracksQuery = (
+  { __typename?: 'Query' }
+  & { exploreTracks: (
+    { __typename?: 'TrackConnection' }
+    & { nodes: Array<(
+      { __typename?: 'Track' }
+      & TrackComponentFieldsFragment
+    )>, pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
+    ) }
+  ) }
+);
+
+export type ExploreUsersQueryVariables = Exact<{
+  search?: Maybe<Scalars['String']>;
+  page?: Maybe<PageInput>;
+}>;
+
+
+export type ExploreUsersQuery = (
+  { __typename?: 'Query' }
+  & { exploreUsers: (
+    { __typename?: 'ProfileConnection' }
+    & { nodes: Array<(
+      { __typename?: 'Profile' }
+      & ProfileComponentFieldsFragment
+    )>, pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
+    ) }
+  ) }
+);
+
 export type FeedQueryVariables = Exact<{
   page?: Maybe<PageInput>;
 }>;
@@ -1346,19 +1526,6 @@ export type FeedQuery = (
       { __typename?: 'PageInfo' }
       & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
     ) }
-  ) }
-);
-
-export type FinishListingMutationVariables = Exact<{
-  input: FinishListingItemInput;
-}>;
-
-
-export type FinishListingMutation = (
-  { __typename?: 'Mutation' }
-  & { finishListing: (
-    { __typename?: 'CreateListingItemType' }
-    & Pick<CreateListingItemType, 'id' | 'owner' | 'nft' | 'tokenId' | 'quantity' | 'pricePerItem' | 'startingTime'>
   ) }
 );
 
@@ -1439,8 +1606,11 @@ export type ListingItemQueryVariables = Exact<{
 export type ListingItemQuery = (
   { __typename?: 'Query' }
   & { listingItem: (
-    { __typename?: 'CreateListingItemType' }
-    & Pick<CreateListingItemType, 'id' | 'owner' | 'nft' | 'tokenId' | 'quantity' | 'pricePerItem' | 'startingTime'>
+    { __typename?: 'ListingItemPayload' }
+    & { listingItem: Maybe<(
+      { __typename?: 'ListingItem' }
+      & Pick<ListingItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'quantity' | 'pricePerItem' | 'startingTime'>
+    )> }
   ) }
 );
 
@@ -1513,7 +1683,7 @@ export type MimeTypeQuery = (
 
 export type NftSoldNotificationFieldsFragment = (
   { __typename?: 'NFTSoldNotification' }
-  & Pick<NftSoldNotification, 'id' | 'type' | 'createdAt' | 'buyerName' | 'buyerPicture' | 'buyerProfileId' | 'trackId' | 'price'>
+  & Pick<NftSoldNotification, 'id' | 'type' | 'createdAt' | 'buyerName' | 'buyerPicture' | 'buyerProfileId' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price'>
 );
 
 export type NewPostNotificationFieldsFragment = (
@@ -1666,11 +1836,16 @@ export type ProfileQuery = (
   { __typename?: 'Query' }
   & { profile: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'userHandle' | 'isFollowed' | 'isSubscriber' | 'followerCount' | 'followingCount' | 'musicianTypes' | 'bio'>
-    & { socialMedias: (
-      { __typename?: 'SocialMedias' }
-      & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
-    ) }
+    & ProfileComponentFieldsFragment
+  ) }
+);
+
+export type ProfileComponentFieldsFragment = (
+  { __typename?: 'Profile' }
+  & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'favoriteGenres' | 'musicianTypes' | 'bio' | 'followerCount' | 'followingCount' | 'userHandle' | 'isFollowed' | 'isSubscriber' | 'unreadNotificationCount' | 'unreadMessageCount' | 'createdAt' | 'updatedAt'>
+  & { socialMedias: (
+    { __typename?: 'SocialMedias' }
+    & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
   ) }
 );
 
@@ -1685,6 +1860,22 @@ export type ProfileDisplayNameQuery = (
     { __typename?: 'Profile' }
     & Pick<Profile, 'displayName'>
   ) }
+);
+
+export type ProfileVerificationRequestQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type ProfileVerificationRequestQuery = (
+  { __typename?: 'Query' }
+  & { profileVerificationRequest: (
+    { __typename?: 'ProfileVerificationRequest' }
+    & ProfileVerificationRequestComponentFieldsFragment
+  ) }
+);
+
+export type ProfileVerificationRequestComponentFieldsFragment = (
+  { __typename?: 'ProfileVerificationRequest' }
+  & Pick<ProfileVerificationRequest, 'id' | 'profileId' | 'soundcloud' | 'youtube' | 'bandcamp' | 'status' | 'reason' | 'createdAt' | 'updatedAt'>
 );
 
 export type ReactToPostMutationVariables = Exact<{
@@ -1799,20 +1990,6 @@ export type SendMessageMutation = (
   ) }
 );
 
-export type SetIsApprovedOnMarketplaceMutationVariables = Exact<{ [key: string]: never; }>;
-
-
-export type SetIsApprovedOnMarketplaceMutation = (
-  { __typename?: 'Mutation' }
-  & { setIsApprovedOnMarketplace: (
-    { __typename?: 'UpdateHandlePayload' }
-    & { user: (
-      { __typename?: 'User' }
-      & Pick<User, 'id'>
-    ) }
-  ) }
-);
-
 export type SetNotValidMutationVariables = Exact<{
   tokenId: Scalars['Float'];
 }>;
@@ -1857,10 +2034,10 @@ export type TrackQuery = (
 
 export type TrackComponentFieldsFragment = (
   { __typename?: 'Track' }
-  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted'>
+  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted'>
   & { nftData: Maybe<(
     { __typename?: 'NFTDataType' }
-    & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid'>
+    & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner'>
   )> }
 );
 
@@ -2121,6 +2298,33 @@ export type UploadUrlQuery = (
   ) }
 );
 
+export type UserByWalletQueryVariables = Exact<{
+  walletAddress: Scalars['String'];
+}>;
+
+
+export type UserByWalletQuery = (
+  { __typename?: 'Query' }
+  & { getUserByWallet: Maybe<(
+    { __typename?: 'User' }
+    & Pick<User, 'id'>
+    & { profile: (
+      { __typename?: 'Profile' }
+      & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'userHandle' | 'followerCount' | 'followingCount'>
+    ) }
+  )> }
+);
+
+export type WasListedBeforeQueryVariables = Exact<{
+  tokenId: Scalars['Float'];
+}>;
+
+
+export type WasListedBeforeQuery = (
+  { __typename?: 'Query' }
+  & Pick<Query, 'wasListedBefore'>
+);
+
 export const CommentComponentFieldsFragmentDoc = gql`
     fragment CommentComponentFields on Comment {
   id
@@ -2179,6 +2383,9 @@ export const NftSoldNotificationFieldsFragmentDoc = gql`
   buyerPicture
   buyerProfileId
   trackId
+  trackName
+  artist
+  artworkUrl
   price
 }
     `;
@@ -2208,6 +2415,8 @@ export const TrackComponentFieldsFragmentDoc = gql`
   artworkUrl
   description
   artist
+  artistId
+  artistProfileId
   album
   releaseYear
   copyright
@@ -2222,6 +2431,8 @@ export const TrackComponentFieldsFragmentDoc = gql`
     contract
     minter
     ipfsCid
+    pendingRequest
+    owner
   }
 }
     `;
@@ -2249,6 +2460,45 @@ export const PostComponentFieldsFragmentDoc = gql`
   }
 }
     ${TrackComponentFieldsFragmentDoc}`;
+export const ProfileComponentFieldsFragmentDoc = gql`
+    fragment ProfileComponentFields on Profile {
+  id
+  displayName
+  profilePicture
+  coverPicture
+  socialMedias {
+    facebook
+    instagram
+    soundcloud
+    twitter
+  }
+  favoriteGenres
+  musicianTypes
+  bio
+  followerCount
+  followingCount
+  userHandle
+  isFollowed
+  isSubscriber
+  unreadNotificationCount
+  unreadMessageCount
+  createdAt
+  updatedAt
+}
+    `;
+export const ProfileVerificationRequestComponentFieldsFragmentDoc = gql`
+    fragment ProfileVerificationRequestComponentFields on ProfileVerificationRequest {
+  id
+  profileId
+  soundcloud
+  youtube
+  bandcamp
+  status
+  reason
+  createdAt
+  updatedAt
+}
+    `;
 export const ReactionNotificationFieldsFragmentDoc = gql`
     fragment ReactionNotificationFields on ReactionNotification {
   id
@@ -2682,6 +2932,41 @@ export function useCreatePostMutation(baseOptions?: Apollo.MutationHookOptions<C
 export type CreatePostMutationHookResult = ReturnType<typeof useCreatePostMutation>;
 export type CreatePostMutationResult = Apollo.MutationResult<CreatePostMutation>;
 export type CreatePostMutationOptions = Apollo.BaseMutationOptions<CreatePostMutation, CreatePostMutationVariables>;
+export const CreateProfileVerificationRequestDocument = gql`
+    mutation CreateProfileVerificationRequest($input: CreateProfileVerificationRequestInput!) {
+  createProfileVerificationRequest(input: $input) {
+    profileVerificationRequest {
+      ...ProfileVerificationRequestComponentFields
+    }
+  }
+}
+    ${ProfileVerificationRequestComponentFieldsFragmentDoc}`;
+export type CreateProfileVerificationRequestMutationFn = Apollo.MutationFunction<CreateProfileVerificationRequestMutation, CreateProfileVerificationRequestMutationVariables>;
+
+/**
+ * __useCreateProfileVerificationRequestMutation__
+ *
+ * To run a mutation, you first call `useCreateProfileVerificationRequestMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateProfileVerificationRequestMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createProfileVerificationRequestMutation, { data, loading, error }] = useCreateProfileVerificationRequestMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateProfileVerificationRequestMutation(baseOptions?: Apollo.MutationHookOptions<CreateProfileVerificationRequestMutation, CreateProfileVerificationRequestMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateProfileVerificationRequestMutation, CreateProfileVerificationRequestMutationVariables>(CreateProfileVerificationRequestDocument, options);
+      }
+export type CreateProfileVerificationRequestMutationHookResult = ReturnType<typeof useCreateProfileVerificationRequestMutation>;
+export type CreateProfileVerificationRequestMutationResult = Apollo.MutationResult<CreateProfileVerificationRequestMutation>;
+export type CreateProfileVerificationRequestMutationOptions = Apollo.BaseMutationOptions<CreateProfileVerificationRequestMutation, CreateProfileVerificationRequestMutationVariables>;
 export const CreateRepostDocument = gql`
     mutation CreateRepost($input: CreateRepostInput!) {
   createRepost(input: $input) {
@@ -2861,6 +3146,133 @@ export function useDeleteTrackOnErrorMutation(baseOptions?: Apollo.MutationHookO
 export type DeleteTrackOnErrorMutationHookResult = ReturnType<typeof useDeleteTrackOnErrorMutation>;
 export type DeleteTrackOnErrorMutationResult = Apollo.MutationResult<DeleteTrackOnErrorMutation>;
 export type DeleteTrackOnErrorMutationOptions = Apollo.BaseMutationOptions<DeleteTrackOnErrorMutation, DeleteTrackOnErrorMutationVariables>;
+export const ExploreDocument = gql`
+    query Explore($search: String) {
+  explore(search: $search) {
+    tracks {
+      ...TrackComponentFields
+    }
+    profiles {
+      ...ProfileComponentFields
+    }
+    totalTracks
+    totalProfiles
+  }
+}
+    ${TrackComponentFieldsFragmentDoc}
+${ProfileComponentFieldsFragmentDoc}`;
+
+/**
+ * __useExploreQuery__
+ *
+ * To run a query within a React component, call `useExploreQuery` and pass it any options that fit your needs.
+ * When your component renders, `useExploreQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useExploreQuery({
+ *   variables: {
+ *      search: // value for 'search'
+ *   },
+ * });
+ */
+export function useExploreQuery(baseOptions?: Apollo.QueryHookOptions<ExploreQuery, ExploreQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ExploreQuery, ExploreQueryVariables>(ExploreDocument, options);
+      }
+export function useExploreLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ExploreQuery, ExploreQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ExploreQuery, ExploreQueryVariables>(ExploreDocument, options);
+        }
+export type ExploreQueryHookResult = ReturnType<typeof useExploreQuery>;
+export type ExploreLazyQueryHookResult = ReturnType<typeof useExploreLazyQuery>;
+export type ExploreQueryResult = Apollo.QueryResult<ExploreQuery, ExploreQueryVariables>;
+export const ExploreTracksDocument = gql`
+    query ExploreTracks($search: String, $page: PageInput) {
+  exploreTracks(search: $search, page: $page) {
+    nodes {
+      ...TrackComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+    ${TrackComponentFieldsFragmentDoc}`;
+
+/**
+ * __useExploreTracksQuery__
+ *
+ * To run a query within a React component, call `useExploreTracksQuery` and pass it any options that fit your needs.
+ * When your component renders, `useExploreTracksQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useExploreTracksQuery({
+ *   variables: {
+ *      search: // value for 'search'
+ *      page: // value for 'page'
+ *   },
+ * });
+ */
+export function useExploreTracksQuery(baseOptions?: Apollo.QueryHookOptions<ExploreTracksQuery, ExploreTracksQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ExploreTracksQuery, ExploreTracksQueryVariables>(ExploreTracksDocument, options);
+      }
+export function useExploreTracksLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ExploreTracksQuery, ExploreTracksQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ExploreTracksQuery, ExploreTracksQueryVariables>(ExploreTracksDocument, options);
+        }
+export type ExploreTracksQueryHookResult = ReturnType<typeof useExploreTracksQuery>;
+export type ExploreTracksLazyQueryHookResult = ReturnType<typeof useExploreTracksLazyQuery>;
+export type ExploreTracksQueryResult = Apollo.QueryResult<ExploreTracksQuery, ExploreTracksQueryVariables>;
+export const ExploreUsersDocument = gql`
+    query ExploreUsers($search: String, $page: PageInput) {
+  exploreUsers(search: $search, page: $page) {
+    nodes {
+      ...ProfileComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+    ${ProfileComponentFieldsFragmentDoc}`;
+
+/**
+ * __useExploreUsersQuery__
+ *
+ * To run a query within a React component, call `useExploreUsersQuery` and pass it any options that fit your needs.
+ * When your component renders, `useExploreUsersQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useExploreUsersQuery({
+ *   variables: {
+ *      search: // value for 'search'
+ *      page: // value for 'page'
+ *   },
+ * });
+ */
+export function useExploreUsersQuery(baseOptions?: Apollo.QueryHookOptions<ExploreUsersQuery, ExploreUsersQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ExploreUsersQuery, ExploreUsersQueryVariables>(ExploreUsersDocument, options);
+      }
+export function useExploreUsersLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ExploreUsersQuery, ExploreUsersQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ExploreUsersQuery, ExploreUsersQueryVariables>(ExploreUsersDocument, options);
+        }
+export type ExploreUsersQueryHookResult = ReturnType<typeof useExploreUsersQuery>;
+export type ExploreUsersLazyQueryHookResult = ReturnType<typeof useExploreUsersLazyQuery>;
+export type ExploreUsersQueryResult = Apollo.QueryResult<ExploreUsersQuery, ExploreUsersQueryVariables>;
 export const FeedDocument = gql`
     query Feed($page: PageInput) {
   feed(page: $page) {
@@ -2905,45 +3317,6 @@ export function useFeedLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<FeedQ
 export type FeedQueryHookResult = ReturnType<typeof useFeedQuery>;
 export type FeedLazyQueryHookResult = ReturnType<typeof useFeedLazyQuery>;
 export type FeedQueryResult = Apollo.QueryResult<FeedQuery, FeedQueryVariables>;
-export const FinishListingDocument = gql`
-    mutation FinishListing($input: FinishListingItemInput!) {
-  finishListing(input: $input) {
-    id
-    owner
-    nft
-    tokenId
-    quantity
-    pricePerItem
-    startingTime
-  }
-}
-    `;
-export type FinishListingMutationFn = Apollo.MutationFunction<FinishListingMutation, FinishListingMutationVariables>;
-
-/**
- * __useFinishListingMutation__
- *
- * To run a mutation, you first call `useFinishListingMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useFinishListingMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [finishListingMutation, { data, loading, error }] = useFinishListingMutation({
- *   variables: {
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useFinishListingMutation(baseOptions?: Apollo.MutationHookOptions<FinishListingMutation, FinishListingMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<FinishListingMutation, FinishListingMutationVariables>(FinishListingDocument, options);
-      }
-export type FinishListingMutationHookResult = ReturnType<typeof useFinishListingMutation>;
-export type FinishListingMutationResult = Apollo.MutationResult<FinishListingMutation>;
-export type FinishListingMutationOptions = Apollo.BaseMutationOptions<FinishListingMutation, FinishListingMutationVariables>;
 export const FollowProfileDocument = gql`
     mutation FollowProfile($input: FollowProfileInput!) {
   followProfile(input: $input) {
@@ -3080,13 +3453,15 @@ export type FollowingQueryResult = Apollo.QueryResult<FollowingQuery, FollowingQ
 export const ListingItemDocument = gql`
     query ListingItem($tokenId: Float!) {
   listingItem(tokenId: $tokenId) {
-    id
-    owner
-    nft
-    tokenId
-    quantity
-    pricePerItem
-    startingTime
+    listingItem {
+      id
+      owner
+      nft
+      tokenId
+      quantity
+      pricePerItem
+      startingTime
+    }
   }
 }
     `;
@@ -3562,26 +3937,10 @@ export type PostsQueryResult = Apollo.QueryResult<PostsQuery, PostsQueryVariable
 export const ProfileDocument = gql`
     query Profile($id: String!) {
   profile(id: $id) {
-    id
-    displayName
-    profilePicture
-    coverPicture
-    socialMedias {
-      facebook
-      instagram
-      soundcloud
-      twitter
-    }
-    userHandle
-    isFollowed
-    isSubscriber
-    followerCount
-    followingCount
-    musicianTypes
-    bio
+    ...ProfileComponentFields
   }
 }
-    `;
+    ${ProfileComponentFieldsFragmentDoc}`;
 
 /**
  * __useProfileQuery__
@@ -3645,6 +4004,40 @@ export function useProfileDisplayNameLazyQuery(baseOptions?: Apollo.LazyQueryHoo
 export type ProfileDisplayNameQueryHookResult = ReturnType<typeof useProfileDisplayNameQuery>;
 export type ProfileDisplayNameLazyQueryHookResult = ReturnType<typeof useProfileDisplayNameLazyQuery>;
 export type ProfileDisplayNameQueryResult = Apollo.QueryResult<ProfileDisplayNameQuery, ProfileDisplayNameQueryVariables>;
+export const ProfileVerificationRequestDocument = gql`
+    query ProfileVerificationRequest {
+  profileVerificationRequest {
+    ...ProfileVerificationRequestComponentFields
+  }
+}
+    ${ProfileVerificationRequestComponentFieldsFragmentDoc}`;
+
+/**
+ * __useProfileVerificationRequestQuery__
+ *
+ * To run a query within a React component, call `useProfileVerificationRequestQuery` and pass it any options that fit your needs.
+ * When your component renders, `useProfileVerificationRequestQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useProfileVerificationRequestQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useProfileVerificationRequestQuery(baseOptions?: Apollo.QueryHookOptions<ProfileVerificationRequestQuery, ProfileVerificationRequestQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ProfileVerificationRequestQuery, ProfileVerificationRequestQueryVariables>(ProfileVerificationRequestDocument, options);
+      }
+export function useProfileVerificationRequestLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ProfileVerificationRequestQuery, ProfileVerificationRequestQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ProfileVerificationRequestQuery, ProfileVerificationRequestQueryVariables>(ProfileVerificationRequestDocument, options);
+        }
+export type ProfileVerificationRequestQueryHookResult = ReturnType<typeof useProfileVerificationRequestQuery>;
+export type ProfileVerificationRequestLazyQueryHookResult = ReturnType<typeof useProfileVerificationRequestLazyQuery>;
+export type ProfileVerificationRequestQueryResult = Apollo.QueryResult<ProfileVerificationRequestQuery, ProfileVerificationRequestQueryVariables>;
 export const ReactToPostDocument = gql`
     mutation ReactToPost($input: ReactToPostInput!) {
   reactToPost(input: $input) {
@@ -3904,40 +4297,6 @@ export function useSendMessageMutation(baseOptions?: Apollo.MutationHookOptions<
 export type SendMessageMutationHookResult = ReturnType<typeof useSendMessageMutation>;
 export type SendMessageMutationResult = Apollo.MutationResult<SendMessageMutation>;
 export type SendMessageMutationOptions = Apollo.BaseMutationOptions<SendMessageMutation, SendMessageMutationVariables>;
-export const SetIsApprovedOnMarketplaceDocument = gql`
-    mutation SetIsApprovedOnMarketplace {
-  setIsApprovedOnMarketplace {
-    user {
-      id
-    }
-  }
-}
-    `;
-export type SetIsApprovedOnMarketplaceMutationFn = Apollo.MutationFunction<SetIsApprovedOnMarketplaceMutation, SetIsApprovedOnMarketplaceMutationVariables>;
-
-/**
- * __useSetIsApprovedOnMarketplaceMutation__
- *
- * To run a mutation, you first call `useSetIsApprovedOnMarketplaceMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useSetIsApprovedOnMarketplaceMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [setIsApprovedOnMarketplaceMutation, { data, loading, error }] = useSetIsApprovedOnMarketplaceMutation({
- *   variables: {
- *   },
- * });
- */
-export function useSetIsApprovedOnMarketplaceMutation(baseOptions?: Apollo.MutationHookOptions<SetIsApprovedOnMarketplaceMutation, SetIsApprovedOnMarketplaceMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<SetIsApprovedOnMarketplaceMutation, SetIsApprovedOnMarketplaceMutationVariables>(SetIsApprovedOnMarketplaceDocument, options);
-      }
-export type SetIsApprovedOnMarketplaceMutationHookResult = ReturnType<typeof useSetIsApprovedOnMarketplaceMutation>;
-export type SetIsApprovedOnMarketplaceMutationResult = Apollo.MutationResult<SetIsApprovedOnMarketplaceMutation>;
-export type SetIsApprovedOnMarketplaceMutationOptions = Apollo.BaseMutationOptions<SetIsApprovedOnMarketplaceMutation, SetIsApprovedOnMarketplaceMutationVariables>;
 export const SetNotValidDocument = gql`
     mutation SetNotValid($tokenId: Float!) {
   setNotValid(tokenId: $tokenId) {
@@ -4635,3 +4994,79 @@ export function useUploadUrlLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
 export type UploadUrlQueryHookResult = ReturnType<typeof useUploadUrlQuery>;
 export type UploadUrlLazyQueryHookResult = ReturnType<typeof useUploadUrlLazyQuery>;
 export type UploadUrlQueryResult = Apollo.QueryResult<UploadUrlQuery, UploadUrlQueryVariables>;
+export const UserByWalletDocument = gql`
+    query UserByWallet($walletAddress: String!) {
+  getUserByWallet(walletAddress: $walletAddress) {
+    id
+    profile {
+      id
+      displayName
+      profilePicture
+      userHandle
+      followerCount
+      followingCount
+    }
+  }
+}
+    `;
+
+/**
+ * __useUserByWalletQuery__
+ *
+ * To run a query within a React component, call `useUserByWalletQuery` and pass it any options that fit your needs.
+ * When your component renders, `useUserByWalletQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useUserByWalletQuery({
+ *   variables: {
+ *      walletAddress: // value for 'walletAddress'
+ *   },
+ * });
+ */
+export function useUserByWalletQuery(baseOptions: Apollo.QueryHookOptions<UserByWalletQuery, UserByWalletQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<UserByWalletQuery, UserByWalletQueryVariables>(UserByWalletDocument, options);
+      }
+export function useUserByWalletLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UserByWalletQuery, UserByWalletQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<UserByWalletQuery, UserByWalletQueryVariables>(UserByWalletDocument, options);
+        }
+export type UserByWalletQueryHookResult = ReturnType<typeof useUserByWalletQuery>;
+export type UserByWalletLazyQueryHookResult = ReturnType<typeof useUserByWalletLazyQuery>;
+export type UserByWalletQueryResult = Apollo.QueryResult<UserByWalletQuery, UserByWalletQueryVariables>;
+export const WasListedBeforeDocument = gql`
+    query WasListedBefore($tokenId: Float!) {
+  wasListedBefore(tokenId: $tokenId)
+}
+    `;
+
+/**
+ * __useWasListedBeforeQuery__
+ *
+ * To run a query within a React component, call `useWasListedBeforeQuery` and pass it any options that fit your needs.
+ * When your component renders, `useWasListedBeforeQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useWasListedBeforeQuery({
+ *   variables: {
+ *      tokenId: // value for 'tokenId'
+ *   },
+ * });
+ */
+export function useWasListedBeforeQuery(baseOptions: Apollo.QueryHookOptions<WasListedBeforeQuery, WasListedBeforeQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<WasListedBeforeQuery, WasListedBeforeQueryVariables>(WasListedBeforeDocument, options);
+      }
+export function useWasListedBeforeLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<WasListedBeforeQuery, WasListedBeforeQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<WasListedBeforeQuery, WasListedBeforeQueryVariables>(WasListedBeforeDocument, options);
+        }
+export type WasListedBeforeQueryHookResult = ReturnType<typeof useWasListedBeforeQuery>;
+export type WasListedBeforeLazyQueryHookResult = ReturnType<typeof useWasListedBeforeLazyQuery>;
+export type WasListedBeforeQueryResult = Apollo.QueryResult<WasListedBeforeQuery, WasListedBeforeQueryVariables>;

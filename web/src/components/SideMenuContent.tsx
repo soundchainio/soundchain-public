@@ -11,8 +11,10 @@ import { FacebookSquare } from 'icons/social/FacebookSquare';
 import { InstagramSquare } from 'icons/social/InstagramSquare';
 import { Reddit } from 'icons/social/Reddit';
 import { TwitterSquare } from 'icons/social/TwitterSquare';
+import { Verified } from 'icons/Verified';
 import { Wallet } from 'icons/Wallet';
 import { setJwt } from 'lib/apollo';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { FollowModalType } from 'types/FollowModalType';
@@ -64,7 +66,11 @@ export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => 
       <div className="mt-5 flex-1 h-0 overflow-y-auto">
         <div className="px-4">
           <div className="flex justify-center">
-            <Logo id={isMobile ? 'mobile-logo' : 'side-logo'} className="h-[50px]" />
+            <Link href="/" passHref>
+              <a aria-label="Home">
+                <Logo id={isMobile ? 'mobile-logo' : 'side-logo'} className="h-[50px]" />
+              </a>
+            </Link>
           </div>
           {me && (
             <>
@@ -100,6 +106,7 @@ export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => 
       </div>
       {me && (
         <div>
+          <MenuLink icon={Verified} label="Get Verified" href="/get-verified" />
           <MenuLink icon={Settings} label="Account Settings" href="/settings" />
           <MenuItem icon={Logout} label="Logout" onClick={onLogout} />
         </div>

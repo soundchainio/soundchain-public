@@ -5,8 +5,8 @@ import { InputField } from 'components/InputField';
 import { TextareaField } from 'components/TextareaField';
 import { WalletSelector } from 'components/WalletSelector';
 import { Form, Formik } from 'formik';
-import useBlockchain from 'hooks/useBlockchain';
 import { useMagicContext } from 'hooks/useMagicContext';
+import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { Matic } from 'icons/Matic';
 import { Genre } from 'lib/graphql';
 import React, { useEffect, useState } from 'react';
@@ -45,9 +45,8 @@ interface Props {
 }
 
 export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
-  const { web3, balance } = useMagicContext();
-  const { getMaxGasFee } = useBlockchain();
-  const [maxGasFee, setMaxGasFee] = useState<string>();
+  const { balance } = useMagicContext();
+  const maxGasFee = useMaxGasFee();
   const [enoughFunds, setEnoughFunds] = useState<boolean>();
   const [uploadingArt, setUploadingArt] = useState<boolean>();
 
@@ -61,19 +60,6 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
     genres: initialValues?.genres || [],
     artworkUrl: '',
   };
-
-  useEffect(() => {
-    const gasCheck = () => {
-      if (web3) {
-        getMaxGasFee(web3).then(setMaxGasFee);
-      }
-    };
-    gasCheck();
-    const interval = setInterval(() => {
-      gasCheck();
-    }, 5 * 1000);
-    return () => clearInterval(interval);
-  }, [web3]);
 
   const onArtworkUpload = (val: string, setFieldValue: (field: string, value: string) => void) => {
     setFieldValue('artworkUrl', val);
@@ -124,7 +110,7 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
             </div>
             <div className="flex flex-col flex-1 gap-2">
               <InputField name="title" type="text" label="TRACK TITLE" />
-              <InputField name="artist" type="text" label="ARTIST" />
+              <InputField name="artist" type="text" label="ARTIST" disabled />
             </div>
           </div>
           <div className="px-4">

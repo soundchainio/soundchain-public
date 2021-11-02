@@ -1,3 +1,4 @@
+import ID3Writer from 'browser-id3-writer';
 import classNames from 'classnames';
 import { Button } from 'components/Button';
 import { FormValues, InitialValues, TrackMetadataForm } from 'components/forms/track/TrackMetadataForm';
@@ -6,23 +7,23 @@ import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar';
+import { useMe } from 'hooks/useMe';
 import { useUpload } from 'hooks/useUpload';
 import { useWalletContext } from 'hooks/useWalletContext';
 import {
   CreateTrackMutation,
   FeedDocument,
+  PendingRequest,
   useCreateTrackMutation,
-  useDeleteTrackOnErrorMutation,
   usePinJsonToIpfsMutation,
   usePinToIpfsMutation,
-  useUpdateTrackMutation,
 } from 'lib/graphql';
 import * as musicMetadata from 'music-metadata-browser';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
-import { Metadata, Receipt } from 'types/NftTypes';
+import { Metadata } from 'types/NftTypes';
 import { genres } from 'utils/Genres';
-import { MiningState, MintingDone } from './MintingDone';
+import { MintingDone } from './MintingDone';
 
 enum Tabs {
   NFT = 'NFT',
@@ -32,6 +33,7 @@ enum Tabs {
 export const CreateModal = () => {
   const modalState = useModalState();
   const { dispatchShowCreateModal, dispatchShowPostModal } = useModalDispatch();
+  const me = useMe();
   const [tab, setTab] = useState(Tabs.NFT);
   const { setIsMintingState } = useHideBottomNavBar();
 
@@ -42,8 +44,6 @@ export const CreateModal = () => {
 
   const { upload } = useUpload();
   const [createTrack] = useCreateTrackMutation();
-  const [updateTrack] = useUpdateTrackMutation();
-  const [deleteTrackOnError] = useDeleteTrackOnErrorMutation();
 
   const { web3, account } = useWalletContext();
   const [pinToIPFS] = usePinToIpfsMutation();
@@ -52,7 +52,6 @@ export const CreateModal = () => {
   const { mintNftToken } = useBlockchain();
   const [transactionHash, setTransactionHash] = useState<string>();
   const [mintingState, setMintingState] = useState<string>();
-  const [miningState, setMiningState] = useState<MiningState>(MiningState.IN_PROGRESS);
   const [mintError, setMintError] = useState<boolean>(false);
 
   const [initialValues, setInitialValues] = useState<InitialValues>();
@@ -75,12 +74,13 @@ export const CreateModal = () => {
 
       setInitialValues({
         title: fileMetadata?.title,
-        artist: fileMetadata?.artist,
+        artist: me?.handle,
         description: fileMetadata?.comment && fileMetadata.comment[0],
         album: fileMetadata?.album,
         releaseYear: fileMetadata?.year,
         artworkFile: artworkFile,
         genres: initialGenres,
+        copyright: fileMetadata?.license,
       });
     });
 
@@ -100,48 +100,62 @@ export const CreateModal = () => {
     dispatchShowPostModal(true);
   };
 
-  const onMintError = async (trackId: string) => {
-    await deleteTrackOnError({
-      variables: {
-        input: {
-          trackId,
-        },
-      },
-    });
-
-    setMintError(true);
-    setMintingState('There was an error while minting your NFT');
-    setTransactionHash(undefined);
-  };
-
   const onCloseError = () => {
     setMintError(false);
     setMintingState(undefined);
   };
 
+  const saveID3Tag = (values: FormValues, assetFile: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      try {
+        const bufferReader = new FileReader();
+        bufferReader.readAsArrayBuffer(assetFile);
+        bufferReader.addEventListener('loadend', async () => {
+          const id3Writer = new ID3Writer(bufferReader.result);
+
+          id3Writer
+            .setFrame('TIT2', values.title)
+            .setFrame('TPE1', [values.artist])
+            .setFrame('TALB', values.album)
+            .setFrame('TYER', values.releaseYear)
+            .setFrame('TCON', values.genres)
+            .setFrame('WCOP', values.copyright)
+            .setFrame('COMM', {
+              description: 'Track description made by the author',
+              text: values.description,
+              language: 'eng',
+            });
+
+          if (values.artworkUrl) {
+            const artWorkArrayBuffer = values.artworkUrl && (await fetch(values.artworkUrl).then(r => r.arrayBuffer()));
+            id3Writer.setFrame('APIC', {
+              type: 0,
+              data: artWorkArrayBuffer,
+              description: 'Artwork',
+            });
+          }
+          id3Writer.addTag();
+          const newFile: File = id3Writer.getBlob();
+          resolve(newFile);
+        });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  };
+
   const handleSubmit = async (values: FormValues) => {
-    if (file && web3 && account) {
-      const { title, artworkUrl, description, album, artist, genres, releaseYear, copyright } = values;
+    if (file && web3 && account && me) {
+      const { title, artworkUrl, description, artist, album, genres, releaseYear, copyright } = values;
+      const artistId = me.id;
+      const artistProfileId = me.profile.id;
+
+      setMintingState('Writing data to ID3Tag ');
+      const taggedFile = await saveID3Tag(values, file);
 
       setMintingState('Uploading track file');
-      const assetUrl = await upload([file]);
+      const assetUrl = await upload([taggedFile]);
       const artUrl = artworkUrl;
-
-      setMintingState('Creating streaming from track');
-      const { data } = await createTrack({
-        variables: {
-          input: { assetUrl, title, album, artist, artworkUrl, description, genres, releaseYear, copyright },
-        },
-      });
-      const track = data?.createTrack.track;
-
-      if (!track) {
-        setMintingState(undefined);
-        alert('We had some trouble, please try again later!');
-        return;
-      }
-
-      setNewTrack(track);
 
       try {
         const assetKey = assetUrl.substring(assetUrl.lastIndexOf('/') + 1);
@@ -187,50 +201,49 @@ export const CreateModal = () => {
             },
           },
         });
-        setMintingState('Minting NFT');
 
-        const onTransactionHash = (hash: string) => {
-          updateTrack({
+        const onTransactionHash = async (hash: string) => {
+          setMintingState('Creating your track');
+          const { data } = await createTrack({
             variables: {
               input: {
-                trackId: track.id,
+                assetUrl,
+                title,
+                album,
+                artist,
+                artistId,
+                artworkUrl,
+                description,
+                genres,
+                releaseYear,
+                artistProfileId,
+                copyright,
                 nftData: {
                   transactionHash: hash,
+                  minter: account,
+                  ipfsCid: metadataPinResult?.pinJsonToIPFS.cid,
+                  pendingRequest: PendingRequest.Mint,
+                  owner: account,
                 },
               },
             },
             refetchQueries: [FeedDocument],
           });
+          const track = data?.createTrack.track;
+
+          setNewTrack(track);
           dispatchShowCreateModal(true);
           setMintingState(undefined);
           setTransactionHash(hash);
         };
 
-        const onReceipt = (receipt: Receipt) => {
-          if (receipt.status) {
-            if (!receipt.events.TransferSingle) {
-              return;
-            }
-            updateTrack({
-              variables: {
-                input: {
-                  trackId: track.id,
-                  nftData: {
-                    minter: account,
-                    contract: receipt.to,
-                    tokenId: parseInt(receipt.events.TransferSingle.returnValues.id),
-                    quantity: parseInt(receipt.events.TransferSingle.returnValues.value),
-                    transactionHash: receipt.transactionHash,
-                    ipfsCid: metadataPinResult?.pinJsonToIPFS.cid,
-                  },
-                },
-              },
-            });
-            setMiningState(MiningState.DONE);
-          } else {
-            setMiningState(MiningState.ERROR);
-          }
+        const onError = () => {
+          setTransactionHash(undefined);
+          setMintingState('There was an error while minting your NFT');
+          setMintError(true);
         };
+
+        setMintingState('Minting NFT');
         mintNftToken(
           web3,
           `ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`,
@@ -238,10 +251,12 @@ export const CreateModal = () => {
           account,
           1,
           onTransactionHash,
-          onReceipt,
+          onError,
         );
-      } catch (e) {
-        if (e) await onMintError(track.id);
+      } catch {
+        setTransactionHash(undefined);
+        setMintingState('There was an error while minting your NFT');
+        setMintError(true);
       }
     }
   };
@@ -256,7 +271,7 @@ export const CreateModal = () => {
 
   useEffect(() => {
     mintingState?.length ? setIsMintingState(true) : setIsMintingState(false);
-  }, [mintingState]);
+  }, [mintingState, setIsMintingState]);
 
   const tabs = (
     <div className="flex bg-gray-10 rounded-lg">
@@ -293,7 +308,7 @@ export const CreateModal = () => {
       }
     >
       {transactionHash && newTrack ? (
-        <MintingDone transactionHash={transactionHash} track={newTrack} miningState={miningState} />
+        <MintingDone transactionHash={transactionHash} track={newTrack} />
       ) : (
         <>
           <div className="px-4 py-4">

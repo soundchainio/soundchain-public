@@ -25,6 +25,10 @@ functions:
           cors: true
   migrate:
     handler: src/db/migrate.handler
+  watcher:
+    handler: src/lambda.watcher
+    events:
+      - schedule: rate(1 minute)
   mint:
     handler: src/lambda.mint
     timeout: 120
@@ -98,6 +102,8 @@ provider:
     WALLET_PUBLIC_KEY: ${env:WALLET_PUBLIC_KEY}
     WALLET_PRIVATE_KEY: ${env:WALLET_PRIVATE_KEY}
     ALCHEMY_API_KEY: ${env:ALCHEMY_API_KEY}
+    MARKETPLACE_ADDRESS: ${env:MARKETPLACE_ADDRESS}
+    NFT_ADDRESS: ${env:NFT_ADDRESS}
     PINATA_API_KEY: ${env:PINATA_API_KEY}
     PINATA_API_SECRET: ${env:PINATA_API_SECRET}
     SQS_URL: ${self:custom.sqs.url}
