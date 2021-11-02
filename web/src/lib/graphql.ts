@@ -585,6 +585,9 @@ export type NftSoldNotification = {
   buyerProfileId: Scalars['String'];
   trackId: Scalars['String'];
   price: Scalars['String'];
+  trackName: Scalars['String'];
+  artist: Scalars['String'];
+  artworkUrl: Scalars['String'];
 };
 
 export type NewPostNotification = {
@@ -1680,7 +1683,7 @@ export type MimeTypeQuery = (
 
 export type NftSoldNotificationFieldsFragment = (
   { __typename?: 'NFTSoldNotification' }
-  & Pick<NftSoldNotification, 'id' | 'type' | 'createdAt' | 'buyerName' | 'buyerPicture' | 'buyerProfileId' | 'trackId' | 'price'>
+  & Pick<NftSoldNotification, 'id' | 'type' | 'createdAt' | 'buyerName' | 'buyerPicture' | 'buyerProfileId' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price'>
 );
 
 export type NewPostNotificationFieldsFragment = (
@@ -2380,6 +2383,9 @@ export const NftSoldNotificationFieldsFragmentDoc = gql`
   buyerPicture
   buyerProfileId
   trackId
+  trackName
+  artist
+  artworkUrl
   price
 }
     `;

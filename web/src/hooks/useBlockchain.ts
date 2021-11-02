@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { SDKBase } from '@magic-sdk/provider';
 import axios from 'axios';
 import { config } from 'config';

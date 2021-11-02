@@ -62,6 +62,9 @@ export class ListingItemService extends ModelService<typeof ListingItem> {
       buyerProfileId: buyerUser.profileId,
       price,
       trackId: track._id,
+      trackName: track.title,
+      artist: track.artist,
+      artworkUrl: track.artworkUrl,
     });
   }
 }

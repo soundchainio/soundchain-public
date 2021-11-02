@@ -26,27 +26,31 @@ export const TrackInfo = ({
 }: TrackInfoProps) => {
   return (
     <div className="w-full text-white">
-      <div className="flex items-center text-xxs px-4 py-1">
+      <div className="flex items-center text-xxs px-4 py-3">
         <div className="w-1/6 uppercase text-xs text-gray-CC font-bold mr-1">Artist</div>
-        <div className="flex w-3/6">
-          <Avatar profile={{ profilePicture: artistProfile?.profilePicture }} pixels={30} />
-          <div className="flex flex-col pl-1">
-            <div className="text-center text-sm font-bold">{artistProfile?.displayName}</div>
-            <div className="text-center text-xxs text-gray-CC">@{artistProfile?.userHandle}</div>
+        <div className="flex w-3/6 gap-2">
+          <Avatar
+            profile={{ profilePicture: artistProfile?.profilePicture, id: artistProfile?.id }}
+            pixels={30}
+            linkToProfile
+          />
+          <div className="flex flex-col ">
+            <div className="text-sm font-bold">{artistProfile?.displayName}</div>
+            <div className="text-xxs text-gray-CC font-bold">@{artistProfile?.userHandle}</div>
           </div>
         </div>
         <div className="flex flex-col w-1/6">
           <div className="text-center text-sm font-bold">{artistProfile?.followerCount}</div>
-          <div className="text-center text-gray-CC">Followers</div>
+          <div className="text-center text-gray-CC font-bold">Followers</div>
         </div>
         <div className="flex flex-col w-1/6">
           <div className="text-center text-sm font-bold">{artistProfile?.followingCount}</div>
-          <div className="text-center text-gray-CC">Following</div>
+          <div className="text-center text-gray-CC font-bold">Following</div>
         </div>
       </div>
       <div className="flex items-center font-bold">
         <div className="w-2/4 uppercase text-sm pl-4 py-3 bg-gray-20">Artist Royalty %</div>
-        <div className="text-center w-2/4 text-sm bg-gray-30 pr-4 py-3">{royalties || '-'}</div>
+        <div className="text-center w-2/4 text-sm bg-gray-30 pr-4 py-3">{royalties ? `${royalties / 100}%` : '-'}</div>
       </div>
       <div className="flex items-center font-bold">
         <div className="w-2/4 uppercase text-sm pl-4 py-3 bg-gray-20">Track Title</div>

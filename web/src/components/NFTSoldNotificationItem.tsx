@@ -3,6 +3,7 @@ import { Matic } from 'icons/Matic';
 import { NftSoldNotification } from 'lib/graphql';
 import NextLink from 'next/link';
 import React from 'react';
+import Asset from './Asset';
 import { Avatar } from './Avatar';
 import { Timestamp } from './Timestamp';
 
@@ -12,28 +13,39 @@ interface NFTSoldNotificationProps {
 }
 
 export const NFTSoldNotificationItem = ({
-  notification: { buyerName, createdAt, buyerPicture, price, trackId },
+  notification: { buyerName, createdAt, buyerPicture, price, trackId, trackName, artist, artworkUrl },
   index,
 }: NFTSoldNotificationProps) => {
   return (
-    <NextLink href={`/tracks/${trackId}`}>
-      <div className={classNames('flex flex-col p-4', index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20')}>
-        <div className="break-words flex">
-          <div className="flex items-center pr-4 min-w-[50px]">
-            <Avatar profile={{ profilePicture: buyerPicture }} pixels={40} />
-            <div className="relative">
-              <Matic className="absolute -right-1" />
-            </div>
-          </div>
-          <div>
-            <div className="text-gray-100 text-sm items-center w-full inline-block">
-              <span className="font-semibold">{buyerName}</span> just bought your NFT at the price{' '}
-              {parseInt(price) / 1e18} MATIC
-            </div>
-            <Timestamp small datetime={createdAt} className="text-sm" />
+    <div className={classNames('flex flex-col p-4', index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20')}>
+      <div className="break-words flex">
+        <div className="flex items-center pr-4 min-w-[50px]">
+          <Avatar profile={{ profilePicture: buyerPicture }} pixels={40} />
+          <div className="relative">
+            <Matic className="absolute -right-1" />
           </div>
         </div>
+        <div>
+          <div className="text-gray-100 text-sm items-center w-full inline-block">
+            <span className="font-semibold">{buyerName}</span> purchased your NFT:
+          </div>
+          <Timestamp small datetime={createdAt} className="text-sm" />
+        </div>
       </div>
-    </NextLink>
+      <NextLink href={`/tracks/${trackId}`}>
+        <div className="flex items-center gap-3 p-3 bg-gray-30 rounded-lg cursor-pointer mt-4">
+          <div className="w-10 h-10 relative">
+            <Asset src={artworkUrl} />
+          </div>
+          <div>
+            <div className="text-white font-bold text-xs">{trackName}</div>
+            <div className="text-gray-80 font-bold text-xs">{artist}</div>
+          </div>
+          <div className="flex gap-2 text-white font-bold text-xs ml-auto">
+            <Matic /> {parseInt(price) / 1e18} MATIC
+          </div>
+        </div>
+      </NextLink>
+    </div>
   );
 };

@@ -119,8 +119,7 @@ export class TrackService extends ModelService<typeof Track> {
   }
 
   async updateOwnerByTokenId(tokenId: number, owner: string): Promise<Track> {
-    const oldNftData = await this.model.findOne({ 'nftData.tokenId': tokenId });
-    const nftData = { ...oldNftData, owner };
-    return await this.model.findOneAndUpdate({ 'nftData.tokenId': tokenId }, { nftData });
+    const { id } = await this.model.findOne({ 'nftData.tokenId': tokenId });
+    return await this.updateTrack(id, { nftData: { owner } });
   }
 }
