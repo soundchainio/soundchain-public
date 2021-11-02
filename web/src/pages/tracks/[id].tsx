@@ -67,8 +67,8 @@ export default function TrackPage({ trackId }: TrackPageProps) {
   const [royalties, setRoyalties] = useState(0);
 
   const mintingPending = data?.track.nftData?.pendingRequest === PendingRequest.Mint;
-  const isProcessing = data?.track.nftData?.pendingRequest != PendingRequest.None;
-
+  // const isProcessing = data?.track.nftData?.pendingRequest != PendingRequest.None;
+  const isProcessing = true;
   const tokenId = data?.track.nftData?.tokenId || -1;
 
   const {
@@ -140,7 +140,7 @@ export default function TrackPage({ trackId }: TrackPageProps) {
       if (tokenId !== -1) {
         refetchListing({ tokenId: tokenId });
       }
-    }, 5 * 1000);
+    }, 10 * 1000);
 
     return () => clearInterval(interval);
   }, [isProcessing, refetchTrack, refetchListing, tokenId, trackId]);
@@ -168,7 +168,7 @@ export default function TrackPage({ trackId }: TrackPageProps) {
       />
 
       {isProcessing && !mintingPending && data?.track.nftData?.pendingRequest ? (
-        <div className=" flex justify-center items-center">
+        <div className=" flex justify-center items-center p-3">
           <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" />
           <div className="text-white text-sm pl-3 font-bold">
             Processing {pendingRequestMapping[data.track.nftData.pendingRequest]}
