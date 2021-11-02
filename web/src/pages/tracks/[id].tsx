@@ -67,8 +67,7 @@ export default function TrackPage({ trackId }: TrackPageProps) {
   const [royalties, setRoyalties] = useState(0);
 
   const mintingPending = data?.track.nftData?.pendingRequest === PendingRequest.Mint;
-  // const isProcessing = data?.track.nftData?.pendingRequest != PendingRequest.None;
-  const isProcessing = true;
+  const isProcessing = data?.track.nftData?.pendingRequest != PendingRequest.None;
   const tokenId = data?.track.nftData?.tokenId || -1;
 
   const {
