@@ -21,7 +21,11 @@ export class User extends Model {
 
   @Field({ nullable: true })
   @prop({ required: false })
-  walletAddress: string;
+  magicWalletAddress: string;
+
+  @Field(() => [String], { nullable: true })
+  @prop({ type: [String], required: false })
+  metaMaskWalletAddressees: string[];
 
   @Field(() => DefaultWallet)
   @prop({ type: String, enum: DefaultWallet, default: DefaultWallet.Soundchain })

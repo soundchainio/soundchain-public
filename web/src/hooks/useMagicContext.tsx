@@ -48,9 +48,9 @@ export function MagicProvider({ children }: MagicProviderProps) {
   const [balance, setBalance] = useState<string>();
 
   useEffect(() => {
-    if (me && me.walletAddress && web3) {
-      setAccount(me.walletAddress);
-      web3.eth.getBalance(me.walletAddress).then(balance => {
+    if (me && me.magicWalletAddress && web3) {
+      setAccount(me.magicWalletAddress);
+      web3.eth.getBalance(me.magicWalletAddress).then(balance => {
         setBalance(Number(web3.utils.fromWei(balance, 'ether')).toFixed(6));
       });
     }

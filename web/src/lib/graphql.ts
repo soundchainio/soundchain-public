@@ -414,6 +414,7 @@ export type Mutation = {
   login: AuthPayload;
   updateHandle: UpdateHandlePayload;
   updateDefaultWallet: UpdateDefaultWalletPayload;
+  updateMetaMaskAddresses: UpdateDefaultWalletPayload;
 };
 
 
@@ -554,6 +555,11 @@ export type MutationUpdateHandleArgs = {
 
 export type MutationUpdateDefaultWalletArgs = {
   input: UpdateDefaultWalletInput;
+};
+
+
+export type MutationUpdateMetaMaskAddressesArgs = {
+  input: UpdateWalletInput;
 };
 
 export type NftDataInput = {
@@ -1145,6 +1151,10 @@ export type UpdateTrackPayload = {
   track: Track;
 };
 
+export type UpdateWalletInput = {
+  wallet: Scalars['String'];
+};
+
 export type UploadUrl = {
   __typename?: 'UploadUrl';
   uploadUrl: Scalars['String'];
@@ -1157,7 +1167,8 @@ export type User = {
   id: Scalars['ID'];
   email: Scalars['String'];
   handle: Scalars['String'];
-  walletAddress: Maybe<Scalars['String']>;
+  magicWalletAddress: Maybe<Scalars['String']>;
+  metaMaskWalletAddressees: Maybe<Array<Scalars['String']>>;
   defaultWallet: DefaultWallet;
   isApprovedOnMarketplace: Scalars['Boolean'];
   roles: Array<Role>;
@@ -1645,7 +1656,7 @@ export type MeQuery = (
   { __typename?: 'Query' }
   & { me: Maybe<(
     { __typename?: 'User' }
-    & Pick<User, 'id' | 'handle' | 'email' | 'walletAddress' | 'defaultWallet' | 'isApprovedOnMarketplace' | 'roles'>
+    & Pick<User, 'id' | 'handle' | 'email' | 'magicWalletAddress' | 'defaultWallet' | 'isApprovedOnMarketplace' | 'roles'>
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'followerCount' | 'followingCount' | 'favoriteGenres' | 'musicianTypes' | 'bio'>
@@ -2292,6 +2303,22 @@ export type UpdateTrackMutation = (
     & { track: (
       { __typename?: 'Track' }
       & TrackComponentFieldsFragment
+    ) }
+  ) }
+);
+
+export type UpdateMetaMaskAddressesMutationVariables = Exact<{
+  input: UpdateWalletInput;
+}>;
+
+
+export type UpdateMetaMaskAddressesMutation = (
+  { __typename?: 'Mutation' }
+  & { updateMetaMaskAddresses: (
+    { __typename?: 'UpdateDefaultWalletPayload' }
+    & { user: (
+      { __typename?: 'User' }
+      & Pick<User, 'id' | 'metaMaskWalletAddressees'>
     ) }
   ) }
 );
@@ -3543,7 +3570,7 @@ export const MeDocument = gql`
     id
     handle
     email
-    walletAddress
+    magicWalletAddress
     defaultWallet
     isApprovedOnMarketplace
     roles
@@ -4969,6 +4996,42 @@ export function useUpdateTrackMutation(baseOptions?: Apollo.MutationHookOptions<
 export type UpdateTrackMutationHookResult = ReturnType<typeof useUpdateTrackMutation>;
 export type UpdateTrackMutationResult = Apollo.MutationResult<UpdateTrackMutation>;
 export type UpdateTrackMutationOptions = Apollo.BaseMutationOptions<UpdateTrackMutation, UpdateTrackMutationVariables>;
+export const UpdateMetaMaskAddressesDocument = gql`
+    mutation UpdateMetaMaskAddresses($input: UpdateWalletInput!) {
+  updateMetaMaskAddresses(input: $input) {
+    user {
+      id
+      metaMaskWalletAddressees
+    }
+  }
+}
+    `;
+export type UpdateMetaMaskAddressesMutationFn = Apollo.MutationFunction<UpdateMetaMaskAddressesMutation, UpdateMetaMaskAddressesMutationVariables>;
+
+/**
+ * __useUpdateMetaMaskAddressesMutation__
+ *
+ * To run a mutation, you first call `useUpdateMetaMaskAddressesMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateMetaMaskAddressesMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateMetaMaskAddressesMutation, { data, loading, error }] = useUpdateMetaMaskAddressesMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateMetaMaskAddressesMutation(baseOptions?: Apollo.MutationHookOptions<UpdateMetaMaskAddressesMutation, UpdateMetaMaskAddressesMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateMetaMaskAddressesMutation, UpdateMetaMaskAddressesMutationVariables>(UpdateMetaMaskAddressesDocument, options);
+      }
+export type UpdateMetaMaskAddressesMutationHookResult = ReturnType<typeof useUpdateMetaMaskAddressesMutation>;
+export type UpdateMetaMaskAddressesMutationResult = Apollo.MutationResult<UpdateMetaMaskAddressesMutation>;
+export type UpdateMetaMaskAddressesMutationOptions = Apollo.BaseMutationOptions<UpdateMetaMaskAddressesMutation, UpdateMetaMaskAddressesMutationVariables>;
 export const UploadUrlDocument = gql`
     query UploadUrl($fileType: String!) {
   uploadUrl(fileType: $fileType) {
