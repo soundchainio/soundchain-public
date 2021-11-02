@@ -17,7 +17,7 @@ export const MusicianTypesForm = ({
   afterSubmit,
   submitProps,
   submitText,
-  maxSelections = 5,
+  maxSelections = musicianTypes.length,
 }: MusicianTypesFormProps) => {
   const [types, setTypes] = useState<MusicianType[]>([]);
   const [updateMusicianType, { loading }] = useUpdateMusicianTypeMutation();
@@ -37,7 +37,7 @@ export const MusicianTypesForm = ({
   };
 
   const onTypeClick = (key: MusicianType) => {
-    if (types.length < maxSelections) {
+    if (types.length <= maxSelections) {
       if (types.includes(key)) {
         setTypes(types.filter(type => type !== key));
       } else {
