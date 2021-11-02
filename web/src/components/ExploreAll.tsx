@@ -23,13 +23,13 @@ export const ExploreAll = ({ searchTerm, setSelectedTab }: ExplorePageProps) => 
     if (tracks) {
       const list = tracks.map(
         track =>
-        ({
-          trackId: track.id,
-          src: track.playbackUrl,
-          art: track.artworkUrl,
-          title: track.title,
-          artist: track.artist,
-        } as Song),
+          ({
+            trackId: track.id,
+            src: track.playbackUrl,
+            art: track.artworkUrl,
+            title: track.title,
+            artist: track.artist,
+          } as Song),
       );
       playlistState(list, index);
     }
@@ -48,25 +48,44 @@ export const ExploreAll = ({ searchTerm, setSelectedTab }: ExplorePageProps) => 
           VIEW ALL
         </Button>
       </div>
-      {data && data?.explore.totalProfiles > 0 ? profiles?.map(profile => (
-        <div key={profile.id} className="text-white">
-          <ProfileListItem profile={profile} />
-        </div>
-      )) : <NoResultFound type="Users" />}
+      {data && data?.explore.totalProfiles > 0 ? (
+        profiles?.map(profile => (
+          <div key={profile.id} className="text-white">
+            <ProfileListItem profile={profile} />
+          </div>
+        ))
+      ) : (
+        <NoResultFound type="Users" />
+      )}
       <div className="flex items-center w-full p-4">
         <div className="flex flex-1 items-center text-white font-bold">
-          <Subtitle className="font-bold"> Tracks  </Subtitle>
+          <Subtitle className="font-bold"> Tracks </Subtitle>
           <span className="ml-2">({data?.explore.totalTracks})</span>
         </div>
         <Button className="text-gray-300" onClick={() => setSelectedTab(ExploreTab.TRACKS)} variant="clear">
           VIEW ALL
         </Button>
       </div>
-      {data && data.explore.totalTracks > 0 ? tracks?.map((track, index) => (
-        <div key={track.id} className="text-white">
-          <TrackListItem trackId={track.id} index={index + 1} handleOnPlayClicked={song => handleOnPlayClicked(song, index)} />
-        </div>
-      )) : <NoResultFound type="Tracks" />}
+      {data && data.explore.totalTracks > 0 ? (
+        tracks?.map((track, index) => (
+          <div key={track.id} className="text-white">
+            <TrackListItem
+              song={{
+                trackId: track.id,
+                src: track.playbackUrl,
+                art: track.artworkUrl,
+                title: track.title,
+                artist: track.artist,
+                playbackCount: track.playbackCountFormatted,
+              }}
+              index={index + 1}
+              handleOnPlayClicked={song => handleOnPlayClicked(song, index)}
+            />
+          </div>
+        ))
+      ) : (
+        <NoResultFound type="Tracks" />
+      )}
     </div>
   );
 };
