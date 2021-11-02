@@ -15,5 +15,14 @@ export class FinishListingItemInput {
   trackId: string;
 
   @Field()
+  trackName: string;
+
+  @Field()
+  artist: string;
+
+  @Field()
+  artworkUrl: string;
+
+  @Field()
   price: string;
 }

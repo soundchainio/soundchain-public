@@ -1,4 +1,21 @@
-import { EventData } from 'web3/node_modules/web3-eth-contract/types';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export interface EventData {
+  returnValues: {
+    [key: string]: any;
+  };
+  raw: {
+    data: string;
+    topics: string[];
+  };
+  event: string;
+  signature: string;
+  logIndex: number;
+  transactionIndex: number;
+  transactionHash: string;
+  blockHash: string;
+  blockNumber: number;
+  address: string;
+}
 
 export interface ReturnValuesTransferSingle {
   operator: string;
@@ -51,18 +68,18 @@ export interface ItemSold extends EventData {
   returnValues: ReturnValuesItemSold;
 }
 
-export interface ReceiptItemListed extends EventData {
+export interface ItemListed extends EventData {
   returnValues: ReturnValuesItemListed;
 }
 
-export interface ReceiptSold extends EventData {
+export interface ItemSold extends EventData {
   returnValues: ReturnValuesItemSold;
 }
 
-export interface ReceiptItemUpdated extends EventData {
+export interface ItemUpdated extends EventData {
   returnValues: ReturnValuesItemUpdated;
 }
 
-export interface ReceiptItemCanceled extends EventData {
+export interface ItemCanceled extends EventData {
   returnValues: ReturnValuesItemCanceled;
 }

@@ -12,18 +12,17 @@ import { useWalletContext } from 'hooks/useWalletContext';
 import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
 import {
-  CreateListingItemInput,
+  PendingRequest,
   TrackDocument,
-  useCreateListingItemMutation,
   useListingItemLazyQuery,
   useTrackQuery,
+  useUpdateTrackMutation,
   useWasListedBeforeLazyQuery,
 } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
-import { Receipt } from 'types/NftTypes';
 
 export interface TrackPageProps {
   trackId: string;
@@ -58,10 +57,10 @@ export default function ListPage({ trackId }: TrackPageProps) {
   const router = useRouter();
   const me = useMe();
   const { data } = useTrackQuery({ variables: { id: trackId } });
+  const [trackUpdate] = useUpdateTrackMutation();
   const { account, web3 } = useWalletContext();
   const maxGasFee = useMaxGasFee();
   const { dispatchShowApproveModal } = useModalDispatch();
-  const [createListingItem] = useCreateListingItemMutation();
   const [loading, setLoading] = useState(false);
   const [price, setPrice] = useState(0);
   const [royalty, setRoyalty] = useState(0);
@@ -107,7 +106,7 @@ export default function ListPage({ trackId }: TrackPageProps) {
     fetchIsApproved();
   }, [account, web3, checkIsApproved]);
 
-  const isForSale = !!listingItem?.listingItem.pricePerItem ?? false;
+  const isForSale = !!listingItem?.listingItem?.listingItem?.pricePerItem ?? false;
   const isSetRoyalty = !wasListedBefore?.wasListedBefore;
 
   const handleList = () => {
@@ -118,30 +117,22 @@ export default function ListPage({ trackId }: TrackPageProps) {
     const weiPrice = web3?.utils.toWei(price.toString(), 'ether') || '0';
 
     if (isApproved) {
-      listItem(web3, data.track.nftData.tokenId, 1, account, weiPrice, royalty * 100, onReceipt);
-      return;
-    }
-    me ? dispatchShowApproveModal(true) : router.push('/login');
-  };
-
-  const onReceipt = async (receipt: Receipt) => {
-    if (!receipt.events.ItemListed) {
-      return;
-    }
-    try {
-      const { owner, nft, tokenId, quantity, pricePerItem, startingTime } = receipt.events.ItemListed.returnValues;
-      const listingItemParams: CreateListingItemInput = {
-        owner,
-        nft,
-        tokenId: parseInt(tokenId),
-        quantity: parseInt(quantity),
-        pricePerItem,
-        startingTime: parseInt(startingTime),
+      const onTransactionHash = async () => {
+        await trackUpdate({
+          variables: {
+            input: {
+              trackId: trackId,
+              nftData: {
+                pendingRequest: PendingRequest.List,
+              },
+            },
+          },
+        });
+        router.back();
       };
-      await createListingItem({ variables: { input: listingItemParams }, fetchPolicy: 'no-cache' });
-    } finally {
-      setLoading(false);
-      router.back();
+      listItem(web3, data.track.nftData.tokenId, 1, account, weiPrice, royalty * 100, onTransactionHash);
+    } else {
+      me ? dispatchShowApproveModal(true) : router.push('/login');
     }
   };
 
@@ -150,7 +141,7 @@ export default function ListPage({ trackId }: TrackPageProps) {
     title: 'List for Sale',
   };
 
-  if (!isOwner || isForSale) {
+  if (!isOwner || isForSale || data?.track.nftData?.pendingRequest != PendingRequest.None) {
     return null;
   }
 

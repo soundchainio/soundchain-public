@@ -46,6 +46,8 @@ export const {
   MUX_TOKEN_ID,
   MUX_TOKEN_SECRET,
   MAGIC_PRIVATE_KEY,
+  MARKETPLACE_ADDRESS,
+  NFT_ADDRESS,
 } = process.env;
 
 function assertEnvVar(name: string, value: string | undefined): asserts value {
@@ -112,6 +114,8 @@ export const config = {
     pinataSecret: PINATA_API_SECRET,
     walletPrivateKey: WALLET_PRIVATE_KEY,
     walletPublicKey: WALLET_PUBLIC_KEY,
+    marketplaceAddress: MARKETPLACE_ADDRESS,
+    nftAddress: NFT_ADDRESS,
     alchemyKey: ALCHEMY_API_KEY,
     sqsUrl: SQS_URL,
   },
