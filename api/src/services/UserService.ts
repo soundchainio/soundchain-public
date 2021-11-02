@@ -55,7 +55,9 @@ export class UserService extends ModelService<typeof User> {
   }
 
   async getUserByWallet(walletAddress: string): Promise<User> {
-    const user = await this.model.findOne({ walletAddress });
+    const user = await this.model.findOne({
+      $or: [{ magicWalletAddress: walletAddress }, { metaMaskWalletAddressees: { $in: [walletAddress] } }],
+    });
     return user;
   }
 }
