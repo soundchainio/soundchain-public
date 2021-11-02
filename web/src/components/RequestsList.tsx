@@ -14,8 +14,11 @@ const pageSize = 15;
 export const RequestsList = ({ status }: RequestsListProps) => {
   const firstPage: PageInput = { first: pageSize };
   const { data, loading, fetchMore } = useProfileVerificationRequestsQuery({
+    fetchPolicy: 'network-only',
     variables: { status, page: firstPage }
   });
+
+  console.log('list: ', data);
 
   if (!data) return null;
 

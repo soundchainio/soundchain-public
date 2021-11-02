@@ -24,7 +24,7 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
 });
 
 export const DenyReasonModal = ({ requestId, showReason, setShowReason }: DenyReasonModalProps) => {
-  const [updateRequestVerification] = useUpdateProfileVerificationRequestMutation({ refetchQueries: [ProfileVerificationRequestsDocument] });
+  const [updateRequestVerification] = useUpdateProfileVerificationRequestMutation({ fetchPolicy: 'network-only', refetchQueries: [ProfileVerificationRequestsDocument] });
   const router = useRouter();
   const me = useMe();
 

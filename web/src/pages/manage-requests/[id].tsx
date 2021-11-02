@@ -53,7 +53,10 @@ export const getServerSideProps: GetServerSideProps<RequestPageProps, RequestPag
 export default function RequestPage({ data }: RequestPageProps) {
   const [showReason, setShowReason] = useState<boolean>(false);
   const { data: profile } = useProfileQuery({ variables: { id: data.profileId } });
-  const [updateRequestVerification] = useUpdateProfileVerificationRequestMutation({ refetchQueries: [ProfileVerificationRequestsDocument] });
+  const [updateRequestVerification] = useUpdateProfileVerificationRequestMutation({
+    fetchPolicy: 'network-only',
+    refetchQueries: [ProfileVerificationRequestsDocument]
+  });
   const me = useMe();
   const router = useRouter();
 
