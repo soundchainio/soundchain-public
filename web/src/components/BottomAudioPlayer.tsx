@@ -3,6 +3,7 @@ import { config } from 'config';
 import { useModalDispatch } from 'contexts/providers/modal';
 import Hls from 'hls.js';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
+import { useMe } from 'hooks/useMe';
 import { Pause } from 'icons/PauseBottomAudioPlayer';
 import { Play } from 'icons/PlayBottomAudioPlayer';
 import mux from 'mux-embed';
@@ -10,6 +11,7 @@ import { useEffect, useRef } from 'react';
 import Asset from './Asset';
 
 export const BottomAudioPlayer = () => {
+  const me = useMe();
   const audioRef = useRef<HTMLAudioElement>(null);
   const {
     currentSong,
@@ -42,13 +44,13 @@ export const BottomAudioPlayer = () => {
       hls.attachMedia(audioRef.current);
     }
 
-    const initTime = Date.now();
     mux.monitor(audioRef.current, {
       debug: false,
       data: {
         env_key: config.muxData,
+        viewer_user_id: me?.id ?? '',
         player_name: 'Main Player',
-        player_init_time: initTime,
+        player_init_time: Date.now(),
         video_id: currentSong.trackId,
         video_title: `${currentSong.artist} - ${currentSong.title}`,
         video_producer: currentSong.artist,
@@ -60,7 +62,7 @@ export const BottomAudioPlayer = () => {
         hls.destroy();
       }
     };
-  }, [currentSong.src]);
+  }, [currentSong, me]);
 
   useEffect(() => {
     if (!audioRef.current) {
