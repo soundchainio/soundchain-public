@@ -7,21 +7,7 @@ query Me {
     defaultWallet
     isApprovedOnMarketplace
     profile {
-      id
-      displayName
-      profilePicture
-      coverPicture
-      followerCount
-      followingCount
-      favoriteGenres
-      musicianTypes
-      bio
-      socialMedias {
-        facebook
-        instagram
-        soundcloud
-        twitter
-      }
+      ...ProfileComponentFields
     }
   }
 }

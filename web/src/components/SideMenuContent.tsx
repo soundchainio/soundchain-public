@@ -106,6 +106,7 @@ export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => 
       </div>
       {me && (
         <div>
+          <MenuLink icon={Verified} label="Admin Panel" href="/manage-requests" />
           <MenuLink icon={Verified} label="Get Verified" href="/get-verified" />
           <MenuLink icon={Settings} label="Account Settings" href="/settings" />
           <MenuItem icon={Logout} label="Logout" onClick={onLogout} />

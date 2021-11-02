@@ -19,6 +19,7 @@ fragment ProfileComponentFields on Profile {
   isSubscriber
   unreadNotificationCount
   unreadMessageCount
+  verified
   createdAt
   updatedAt
 }

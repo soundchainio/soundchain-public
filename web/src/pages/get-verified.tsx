@@ -81,7 +81,7 @@ export default function GetVerified() {
         <div className="mt-6 mb-6">
           You will get notified when we review the information you submitted.
         </div>
-        <Image alt="Status: Waiting..." height="100" width="100" className="animate-spin" src="/vinyl-record.png" />
+        <Image alt="Status: Pending" height="100" width="100" className="animate-spin" src="/vinyl-record.png" />
       </div>
       }
     </Layout>

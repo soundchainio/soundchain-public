@@ -169,6 +169,15 @@ export const cacheConfig: InMemoryCacheConfig = {
             };
           },
         },
+        profileVerificationRequests: {
+          keyArgs: ['status'],
+          merge(existing = { nodes: [] }, { nodes, pageInfo }): TrackConnection {
+            return {
+              nodes: [...existing.nodes, ...nodes],
+              pageInfo,
+            };
+          },
+        },
       },
     },
   },
