@@ -5,6 +5,11 @@ enum MusicianType {
   DRUMMER = 'Drummer',
   GUITARIST = 'Guitarist',
   PRODUCER = 'Producer',
+  EMCEE = 'Emcee',
+  BEAT_MAKER = 'Beat Maker',
+  DJ = 'DJ',
+  ENGINEER = 'Engineer',
+  INSTRUMENTALIST = 'Instrumentalist',
 }
 
 registerEnumType(MusicianType, {
