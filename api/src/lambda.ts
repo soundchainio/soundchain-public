@@ -141,7 +141,7 @@ export const watcher: Handler = async () => {
         break;
     }
   }
-  context.blockTrackerService.updateCurrentBlocknumber(toBlock + 1);
+  await context.blockTrackerService.updateCurrentBlocknumber(toBlock + 1);
 };
 
 export const mint: Handler<SQSEvent> = async event => {
