@@ -79,7 +79,13 @@ export default function ListPage({ trackId }: TrackPageProps) {
 
   useEffect(() => {
     const fetchIsOwner = async () => {
-      if (!account || !web3 || !data?.track.nftData?.tokenId || !isTokenOwner) {
+      if (
+        !account ||
+        !web3 ||
+        data?.track.nftData?.tokenId === null ||
+        data?.track.nftData?.tokenId === undefined ||
+        !isTokenOwner
+      ) {
         return;
       }
       const isTokenOwnerRes = await isTokenOwner(web3, data.track.nftData.tokenId, account);
@@ -110,7 +116,7 @@ export default function ListPage({ trackId }: TrackPageProps) {
   const isSetRoyalty = !wasListedBefore?.wasListedBefore;
 
   const handleList = () => {
-    if (!data?.track.nftData?.tokenId || !account || !web3) {
+    if (data?.track.nftData?.tokenId === null || data?.track.nftData?.tokenId === undefined || !account || !web3) {
       return;
     }
     setLoading(true);

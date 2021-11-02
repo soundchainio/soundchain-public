@@ -103,7 +103,7 @@ export default function TrackPage({ trackId }: TrackPageProps) {
 
   useEffect(() => {
     const fetchIsOwner = async () => {
-      if (!account || !web3 || !data?.track.nftData?.tokenId) {
+      if (!account || !web3 || data?.track.nftData?.tokenId === null || data?.track.nftData?.tokenId === undefined) {
         return;
       }
       const isTokenOwnerRes = await isTokenOwner(web3, data.track.nftData.tokenId, account);
@@ -114,7 +114,7 @@ export default function TrackPage({ trackId }: TrackPageProps) {
 
   useEffect(() => {
     const fetchRoyalties = async () => {
-      if (!account || !web3 || !data?.track.nftData?.tokenId) {
+      if (!account || !web3 || data?.track.nftData?.tokenId === null || data?.track.nftData?.tokenId === undefined) {
         return;
       }
       const royalties = await getRoyalties(web3, data.track.nftData.tokenId);
