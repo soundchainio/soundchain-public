@@ -35,107 +35,101 @@ export const handler: Handler = async (...args) => {
 const zeroAddress = '0x0000000000000000000000000000000000000000';
 
 export const watcher: Handler = async () => {
-  try {
-    await mongoose.connect(config.db.url, config.db.options);
-    const web3 = new Web3(config.minting.alchemyKey);
+  await mongoose.connect(config.db.url, config.db.options);
+  const web3 = new Web3(config.minting.alchemyKey);
 
-    const marketplaceContract = new web3.eth.Contract(
-      SoundchainMarketplace.abi as AbiItem[],
-      config.minting.marketplaceAddress,
-    );
+  const marketplaceContract = new web3.eth.Contract(
+    SoundchainMarketplace.abi as AbiItem[],
+    config.minting.marketplaceAddress,
+  );
 
-    const nftContract = new web3.eth.Contract(SoundchainCollectible.abi as AbiItem[], config.minting.nftAddress);
-    const user = await UserModel.findOne({ handle: '_system' });
-    const context = new Context({ sub: user._id });
+  const nftContract = new web3.eth.Contract(SoundchainCollectible.abi as AbiItem[], config.minting.nftAddress);
+  const user = await UserModel.findOne({ handle: '_system' });
+  const context = new Context({ sub: user._id });
 
-    const fromBlock = await context.blockTrackerService.getCurrentBlockNumber();
-    const toBlock = await web3.eth.getBlockNumber();
+  const fromBlock = await context.blockTrackerService.getCurrentBlockNumber();
+  const toBlock = await web3.eth.getBlockNumber();
 
-    const marketplaceEvents = await marketplaceContract.getPastEvents('allEvents', {
-      fromBlock,
-      toBlock,
-    });
-    const contractEvents = await nftContract.getPastEvents('allEvents', { fromBlock, toBlock });
+  const marketplaceEvents = await marketplaceContract.getPastEvents('allEvents', {
+    fromBlock,
+    toBlock,
+  });
+  const contractEvents = await nftContract.getPastEvents('allEvents', { fromBlock, toBlock });
 
-    for (const event of marketplaceEvents) {
-      switch (event.event) {
-        case 'ItemListed':
-          {
-            const { owner, nft, tokenId, quantity, pricePerItem, startingTime } = (event as ItemListed).returnValues;
-            context.listingItemService
-              .createListingItem({
-                owner,
-                nft,
-                tokenId: parseInt(tokenId),
-                quantity: parseInt(quantity),
-                pricePerItem,
-                startingTime: parseInt(startingTime),
+  for (const event of marketplaceEvents) {
+    switch (event.event) {
+      case 'ItemListed':
+        {
+          const { owner, nft, tokenId, quantity, pricePerItem, startingTime } = (event as ItemListed).returnValues;
+          context.listingItemService
+            .createListingItem({
+              owner,
+              nft,
+              tokenId: parseInt(tokenId),
+              quantity: parseInt(quantity),
+              pricePerItem,
+              startingTime: parseInt(startingTime),
+            })
+            .catch(console.error);
+
+          context.trackService.setPendingNone(parseInt(tokenId)).catch(console.error);
+          console.log('ItemListed');
+        }
+        break;
+      case 'ItemSold':
+        {
+          const { tokenId, seller, buyer, pricePerItem } = (event as ItemSold).returnValues;
+          context.listingItemService.finishListing(tokenId, seller, buyer, pricePerItem).catch(console.error);
+          console.log('ItemSold');
+        }
+        break;
+      case 'ItemUpdated':
+        {
+          const { tokenId, newPrice } = (event as ItemUpdated).returnValues;
+          context.listingItemService
+            .updateListingItem(parseInt(tokenId), { pricePerItem: newPrice })
+            .catch(console.error);
+          context.trackService.setPendingNone(parseInt(tokenId)).catch(console.error);
+          console.log('ItemUpdated');
+        }
+        break;
+      case 'ItemCanceled':
+        {
+          const { tokenId } = (event as ItemCanceled).returnValues;
+          context.listingItemService.setNotValid(parseInt(tokenId)).catch(console.error);
+          context.trackService.setPendingNone(parseInt(tokenId)).catch(console.error);
+          console.log('ItemCanceled');
+        }
+        break;
+    }
+  }
+
+  for (const event of contractEvents) {
+    switch (event.event) {
+      case 'TransferSingle':
+        {
+          const { transactionHash, address, returnValues } = event as TransferSingle;
+
+          if (returnValues.from === zeroAddress) {
+            context.trackService
+              .updateTrackByTransactionHash(transactionHash, {
+                nftData: {
+                  tokenId: parseInt(returnValues.id),
+                  quantity: parseInt(returnValues.value),
+                  contract: address,
+                  pendingRequest: PendingRequest.None,
+                },
               })
               .catch(console.error);
-
-            context.trackService.setPendingNone(parseInt(tokenId)).catch(console.error);
-            console.log('ItemListed');
+          } else {
+            context.trackService.updateOwnerByTokenId(parseInt(returnValues.id), returnValues.to).catch(console.error);
           }
-          break;
-        case 'ItemSold':
-          {
-            const { tokenId, seller, buyer, pricePerItem } = (event as ItemSold).returnValues;
-            context.listingItemService.finishListing(tokenId, seller, buyer, pricePerItem).catch(console.error);
-            console.log('ItemSold');
-          }
-          break;
-        case 'ItemUpdated':
-          {
-            const { tokenId, newPrice } = (event as ItemUpdated).returnValues;
-            context.listingItemService
-              .updateListingItem(parseInt(tokenId), { pricePerItem: newPrice })
-              .catch(console.error);
-            context.trackService.setPendingNone(parseInt(tokenId)).catch(console.error);
-            console.log('ItemUpdated');
-          }
-          break;
-        case 'ItemCanceled':
-          {
-            const { tokenId } = (event as ItemCanceled).returnValues;
-            context.listingItemService.setNotValid(parseInt(tokenId)).catch(console.error);
-            context.trackService.setPendingNone(parseInt(tokenId)).catch(console.error);
-            console.log('ItemCanceled');
-          }
-          break;
-      }
+          console.log('TransferSingle');
+        }
+        break;
     }
-
-    for (const event of contractEvents) {
-      switch (event.event) {
-        case 'TransferSingle':
-          {
-            const { transactionHash, address, returnValues } = event as TransferSingle;
-
-            if (returnValues.from === zeroAddress) {
-              context.trackService
-                .updateTrackByTransactionHash(transactionHash, {
-                  nftData: {
-                    tokenId: parseInt(returnValues.id),
-                    quantity: parseInt(returnValues.value),
-                    contract: address,
-                    pendingRequest: PendingRequest.None,
-                  },
-                })
-                .catch(console.error);
-            } else {
-              context.trackService
-                .updateOwnerByTokenId(parseInt(returnValues.id), returnValues.to)
-                .catch(console.error);
-            }
-            console.log('TransferSingle');
-          }
-          break;
-      }
-    }
-    context.blockTrackerService.updateCurrentBlocknumber(toBlock + 1);
-  } finally {
-    mongoose.connection?.close();
   }
+  context.blockTrackerService.updateCurrentBlocknumber(toBlock + 1);
 };
 
 export const mint: Handler<SQSEvent> = async event => {
