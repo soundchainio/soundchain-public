@@ -1,9 +1,11 @@
 import MetaMaskOnboarding from '@metamask/onboarding';
 import { testNetwork } from 'lib/blockchainNetworks';
+import { useUpdateMetaMaskAddressesMutation } from 'lib/graphql';
 import { useEffect, useRef, useState } from 'react';
 import Web3 from 'web3';
 
 export const useMetaMask = () => {
+  const [updateWallet] = useUpdateMetaMaskAddressesMutation();
   const [web3, setWeb3] = useState<Web3>();
   const [account, setAccount] = useState<string>();
   const [balance, setBalance] = useState<string>();
@@ -21,16 +23,21 @@ export const useMetaMask = () => {
   }, []);
 
   useEffect(() => {
+    const onSetAccount = async (newAccount: string) => {
+      await updateWallet({ variables: { input: { wallet: newAccount } } });
+      setAccount(newAccount);
+    };
+
     if (MetaMaskOnboarding.isMetaMaskInstalled()) {
       if (window.ethereum.selectedAddress) {
         window.ethereum
           .request({ method: 'eth_requestAccounts' })
-          .then(([newAccount]: string[]) => setAccount(newAccount));
+          .then(([newAccount]: string[]) => onSetAccount(newAccount));
       }
-      window.ethereum.on('accountsChanged', ([newAccount]: string[]) => setAccount(newAccount));
+      window.ethereum.on('accountsChanged', ([newAccount]: string[]) => onSetAccount(newAccount));
       window.ethereum.on('chainChanged', () => window.location.reload());
     }
-  }, []);
+  }, [updateWallet]);
 
   useEffect(() => {
     if (MetaMaskOnboarding.isMetaMaskInstalled()) {
@@ -72,11 +79,16 @@ export const useMetaMask = () => {
     }
   };
 
+  const onSetAccount = async (newAccount: string) => {
+    await updateWallet({ variables: { input: { wallet: newAccount } } });
+    setAccount(newAccount);
+  };
+
   const connect = () => {
     if (MetaMaskOnboarding.isMetaMaskInstalled()) {
       window.ethereum
         .request({ method: 'eth_requestAccounts' })
-        .then(([newAccount]: string[]) => setAccount(newAccount));
+        .then(([newAccount]: string[]) => onSetAccount(newAccount));
     } else {
       onboarding?.current?.startOnboarding();
     }
