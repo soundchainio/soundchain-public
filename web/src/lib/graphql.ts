@@ -394,6 +394,7 @@ export type Mutation = {
   unsubscribeFromProfile: UnsubscribeFromProfilePayload;
   createProfileVerificationRequest: ProfileVerificationRequestPayload;
   updateProfileVerificationRequest: ProfileVerificationRequestPayload;
+  removeProfileVerificationRequest: ProfileVerificationRequestPayload;
   createTrack: CreateTrackPayload;
   updateTrack: UpdateTrackPayload;
   deleteTrackOnError: UpdateTrackPayload;
@@ -516,6 +517,11 @@ export type MutationCreateProfileVerificationRequestArgs = {
 
 export type MutationUpdateProfileVerificationRequestArgs = {
   input: CreateProfileVerificationRequestInput;
+  id: Scalars['String'];
+};
+
+
+export type MutationRemoveProfileVerificationRequestArgs = {
   id: Scalars['String'];
 };
 
@@ -1963,6 +1969,22 @@ export type RegisterMutation = (
   & { register: (
     { __typename?: 'AuthPayload' }
     & Pick<AuthPayload, 'jwt'>
+  ) }
+);
+
+export type RemoveProfileVerificationRequestMutationVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+export type RemoveProfileVerificationRequestMutation = (
+  { __typename?: 'Mutation' }
+  & { removeProfileVerificationRequest: (
+    { __typename?: 'ProfileVerificationRequestPayload' }
+    & { profileVerificationRequest: (
+      { __typename?: 'ProfileVerificationRequest' }
+      & Pick<ProfileVerificationRequest, 'id'>
+    ) }
   ) }
 );
 
@@ -4259,6 +4281,41 @@ export function useRegisterMutation(baseOptions?: Apollo.MutationHookOptions<Reg
 export type RegisterMutationHookResult = ReturnType<typeof useRegisterMutation>;
 export type RegisterMutationResult = Apollo.MutationResult<RegisterMutation>;
 export type RegisterMutationOptions = Apollo.BaseMutationOptions<RegisterMutation, RegisterMutationVariables>;
+export const RemoveProfileVerificationRequestDocument = gql`
+    mutation RemoveProfileVerificationRequest($id: String!) {
+  removeProfileVerificationRequest(id: $id) {
+    profileVerificationRequest {
+      id
+    }
+  }
+}
+    `;
+export type RemoveProfileVerificationRequestMutationFn = Apollo.MutationFunction<RemoveProfileVerificationRequestMutation, RemoveProfileVerificationRequestMutationVariables>;
+
+/**
+ * __useRemoveProfileVerificationRequestMutation__
+ *
+ * To run a mutation, you first call `useRemoveProfileVerificationRequestMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRemoveProfileVerificationRequestMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [removeProfileVerificationRequestMutation, { data, loading, error }] = useRemoveProfileVerificationRequestMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useRemoveProfileVerificationRequestMutation(baseOptions?: Apollo.MutationHookOptions<RemoveProfileVerificationRequestMutation, RemoveProfileVerificationRequestMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<RemoveProfileVerificationRequestMutation, RemoveProfileVerificationRequestMutationVariables>(RemoveProfileVerificationRequestDocument, options);
+      }
+export type RemoveProfileVerificationRequestMutationHookResult = ReturnType<typeof useRemoveProfileVerificationRequestMutation>;
+export type RemoveProfileVerificationRequestMutationResult = Apollo.MutationResult<RemoveProfileVerificationRequestMutation>;
+export type RemoveProfileVerificationRequestMutationOptions = Apollo.BaseMutationOptions<RemoveProfileVerificationRequestMutation, RemoveProfileVerificationRequestMutationVariables>;
 export const ResetNotificationCountDocument = gql`
     mutation ResetNotificationCount {
   resetNotificationCount {

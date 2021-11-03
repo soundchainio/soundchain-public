@@ -43,4 +43,7 @@ export class ProfileVerificationRequestService extends ModelService<typeof Profi
     return profileVerificationRequest;
   }
 
+  async removeProfileVerificationRequest(id: string): Promise<ProfileVerificationRequest> {
+    return this.model.findOneAndDelete({ _id: id }).exec();
+  }
 }

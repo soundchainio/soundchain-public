@@ -54,4 +54,14 @@ export class ProfileVerificationRequestResolver {
     const profileVerificationRequest = await profileVerificationRequestService.updateProfileVerificationRequest(id, { ...input });
     return { profileVerificationRequest };
   }
+
+  @Mutation(() => ProfileVerificationRequestPayload)
+  @Authorized()
+  async removeProfileVerificationRequest(
+    @Ctx() { profileVerificationRequestService }: Context,
+    @Arg('id') id: string,
+  ): Promise<ProfileVerificationRequestPayload> {
+    const profileVerificationRequest = await profileVerificationRequestService.removeProfileVerificationRequest(id);
+    return { profileVerificationRequest };
+  }
 }
