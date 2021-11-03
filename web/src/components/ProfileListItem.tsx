@@ -5,21 +5,16 @@ import { Profile } from 'lib/graphql';
 import NextLink from 'next/link';
 
 interface ProfileListItemProps {
-  profile: Profile
+  profile: Profile;
 }
 
 export const ProfileListItem = ({ profile }: ProfileListItemProps) => {
-
   if (!profile) return <ProfileListItemSkeleton />;
 
   return (
-    <NextLink href={`/profiles/${profile.id}`}>
+    <NextLink href={`/profiles/${profile.userHandle}`}>
       <div className="relative flex items-center bg-gray-20 p-4 m-4 rounded-lg">
-        <Avatar
-          profile={profile}
-          pixels={50}
-          className="rounded-full min-w-max"
-        />
+        <Avatar profile={profile} pixels={50} className="rounded-full min-w-max" />
         <div className="mx-4">
           <span className="font-bold text-md text-white overflow-ellipsis overflow-hidden">{profile.displayName}</span>
           <p className="text-gray-80 text-sm">@{profile.userHandle}</p>

@@ -33,9 +33,7 @@ export const Post = ({ postId }: PostProps) => {
   };
 
   if (post?.deleted) {
-    return (
-      <NotAvailableMessage type="post" />
-    )
+    return <NotAvailableMessage type="post" />;
   }
 
   return (
@@ -45,7 +43,7 @@ export const Post = ({ postId }: PostProps) => {
           <Avatar profile={post.profile} />
           <div className="flex items-center w-full ml-4">
             <div className="flex flex-1 flex-col">
-              <NextLink href={`/profiles/${post.profile.id}`}>
+              <NextLink href={`/profiles/${post.profile.userHandle}`}>
                 <a className="text-lg font-bold text-gray-100">{post.profile.displayName}</a>
               </NextLink>
               <Timestamp
