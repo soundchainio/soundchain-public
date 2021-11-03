@@ -25,17 +25,12 @@ export const BottomNavBar = () => {
       <div className="w-full">
         <div className="w-full flex">
           <NavBarButton label="Home" path="/" icon={Home} color="yellow" />
-          <NavBarButton
-            label="Explore"
-            path={me ? '/explore' : '/login'}
-            icon={Search}
-            color="green"
-          />
-          {isMinting ?
+          <NavBarButton label="Explore" path={me ? '/explore' : '/login'} icon={Search} color="green" />
+          {isMinting ? (
             <NavBarButton label="Minting..." nyanCat={true} onClick={handleCreateClick} />
-            :
+          ) : (
             <NavBarButton label="Create" icon={NewPost} onClick={handleCreateClick} />
-          }
+          )}
           <NavBarButton
             label="Notifications"
             path={me ? '/notifications' : '/login'}
@@ -46,7 +41,7 @@ export const BottomNavBar = () => {
           <NavBarButton
             label="Profile"
             icon={Profile}
-            path={me ? `/profiles/${me?.profile.id}` : '/login'}
+            path={me ? `/profiles/${me?.handle}` : '/login'}
             color="green-blue"
           />
         </div>
