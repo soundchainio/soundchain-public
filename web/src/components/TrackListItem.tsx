@@ -1,9 +1,7 @@
-import { TrackSkeleton } from 'components/TrackSkeleton';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { Pause } from 'icons/PauseBottomAudioPlayer';
 import { Play } from 'icons/PlayBottomAudioPlayer';
-import { useTrackLazyQuery } from 'lib/graphql';
-import React, { useEffect } from 'react';
+import React from 'react';
 import Asset from './Asset';
 
 export type Song = {
@@ -15,43 +13,43 @@ export type Song = {
 };
 
 interface TrackProps {
-  trackId: string;
   index: number;
-  coverPhotoUrl?: string;
+  song: {
+    src: string;
+    title?: string | null;
+    trackId: string;
+    artist?: string | null;
+    art?: string | null;
+    playbackCount: string;
+  };
   handleOnPlayClicked: (song: Song) => void;
 }
 
-export const TrackListItem = ({ trackId, index, coverPhotoUrl, handleOnPlayClicked }: TrackProps) => {
-  const [track, { data }] = useTrackLazyQuery({ variables: { id: trackId } });
+export const TrackListItem = ({ song, index, handleOnPlayClicked }: TrackProps) => {
+  const { trackId, art, title, playbackCount } = song;
   const { isCurrentlyPlaying } = useAudioPlayerContext();
   const isPlaying = isCurrentlyPlaying && isCurrentlyPlaying(trackId);
 
-  useEffect(() => {
-    if (!data?.track) {
-      track();
-    }
-  }, []);
-
-  if (!data?.track) return <TrackSkeleton />;
-
-  const song = {
-    src: data.track.playbackUrl,
-    trackId: data.track.id,
-    art: data.track.artworkUrl || coverPhotoUrl || undefined,
-    title: data.track.title,
-  };
-
   return (
     <li
-      className={`flex items-center gap-2 px-4 py-2 transition duration-300 hover:bg-gray-25 text-white text-sm ${isPlaying ? 'font-black' : 'font-semibold'
-        } text-white text-sm`}
+      className={`flex items-center gap-2 px-4 py-2 transition duration-300 hover:bg-gray-25 ${
+        isPlaying ? 'font-black' : 'font-semibold'
+      } text-white text-xs`}
     >
       <p>{index}</p>
       <div className="h-10 w-10 relative flex items-center bg-gray-80">
-        <Asset src={data.track.artworkUrl} />
+        <Asset src={art} />
       </div>
       <div>
-        <h2>{data.track.title}</h2>
+        <p>{title}</p>
+        <div className="flex items-center gap-1">
+          {playbackCount && (
+            <>
+              <Play fill={'#808080'} width={7} height={8} />
+              <p className="text-xxs text-gray-80">{playbackCount}</p>
+            </>
+          )}
+        </div>
       </div>
       <button
         className="h-10 w-10 flex items-center justify-center ml-auto hover:scale-125 duration-75"

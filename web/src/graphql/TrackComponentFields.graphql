@@ -7,6 +7,7 @@ fragment TrackComponentFields on Track {
   description
   artist
   artistId
+  artistProfileId
   album
   releaseYear
   copyright
@@ -15,11 +16,14 @@ fragment TrackComponentFields on Track {
   createdAt
   updatedAt
   deleted
+  playbackCountFormatted
   nftData {
     transactionHash
     tokenId
     contract
     minter
     ipfsCid
+    pendingRequest
+    owner
   }
 }

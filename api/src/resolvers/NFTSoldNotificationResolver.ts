@@ -39,4 +39,22 @@ export class NFTSoldNotificationResolver {
     const { price } = metadata as NFTSoldNotificationMetadata;
     return price;
   }
+
+  @FieldResolver(() => String)
+  trackName(@Root() { metadata }: Notification): string {
+    const { trackName } = metadata as NFTSoldNotificationMetadata;
+    return trackName;
+  }
+
+  @FieldResolver(() => String)
+  artist(@Root() { metadata }: Notification): string {
+    const { artist } = metadata as NFTSoldNotificationMetadata;
+    return artist;
+  }
+
+  @FieldResolver(() => String)
+  artworkUrl(@Root() { metadata }: Notification): string {
+    const { artworkUrl } = metadata as NFTSoldNotificationMetadata;
+    return artworkUrl;
+  }
 }

@@ -1,6 +1,7 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { DefaultWallet } from '../types/DefaultWallet';
+import { Role } from '../types/Role';
 import { Model } from './Model';
 @ObjectType()
 export class User extends Model {
@@ -20,7 +21,11 @@ export class User extends Model {
 
   @Field({ nullable: true })
   @prop({ required: false })
-  walletAddress: string;
+  magicWalletAddress: string;
+
+  @Field(() => [String], { nullable: true })
+  @prop({ type: [String], required: false })
+  metaMaskWalletAddressees: string[];
 
   @Field(() => DefaultWallet)
   @prop({ type: String, enum: DefaultWallet, default: DefaultWallet.Soundchain })
@@ -32,6 +37,10 @@ export class User extends Model {
   @Field()
   @prop({ default: false })
   isApprovedOnMarketplace: boolean;
+
+  @Field(() => [Role])
+  @prop({ type: [String], enum: Role, default: [Role.USER] })
+  roles: string[];
 
   @Field(() => Date)
   createdAt: Date;

@@ -34,9 +34,13 @@ export class Track extends Model {
   @prop()
   artist: string;
 
-  @Field({nullable: true})
+  @Field({ nullable: true })
   @prop()
   artistId: string;
+
+  @Field({ nullable: true })
+  @prop()
+  artistProfileId: string;
 
   @Field({ nullable: true })
   @prop()
@@ -60,6 +64,12 @@ export class Track extends Model {
 
   @prop()
   muxAsset: MuxAsset;
+
+  @prop()
+  playbackCount: number;
+
+  @Field()
+  playbackCountFormatted: string;
 
   @Field({ nullable: true })
   @prop({ default: false })

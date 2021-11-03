@@ -6,7 +6,6 @@ on:
       - develop
     paths:
       - 'api/**'
-      - 'event-watcher/**'
   workflow_dispatch:
 
 jobs:
@@ -30,7 +29,6 @@ jobs:
         env:
           NODE_ENV: develop
           BRANCH: ${GITHUB_REF#refs/heads/}
-          AWS_GITHUB_CONNECTOR: ${{ secrets.AWS_GITHUB_CONNECTOR }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD_DEVELOP }}
@@ -46,12 +44,16 @@ jobs:
           WALLET_PUBLIC_KEY: ${{ secrets.WALLET_PUBLIC_KEY_DEVELOP }}
           WALLET_PRIVATE_KEY: ${{ secrets.WALLET_PRIVATE_KEY_DEVELOP }}
           ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY_DEVELOP }}
+          MARKETPLACE_ADDRESS: ${{ secrets.MARKETPLACE_ADDRESS_DEVELOP }}
+          NFT_ADDRESS: ${{ secrets.NFT_ADDRESS_DEVELOP }}
           PINATA_API_KEY: ${{ secrets.PINATA_API_KEY_DEVELOP }}
           PINATA_API_SECRET: ${{ secrets.PINATA_API_SECRET_DEVELOP }}
           MUX_TOKEN_ID: ${{ secrets.MUX_TOKEN_ID_DEVELOP }}
           MUX_TOKEN_SECRET: ${{ secrets.MUX_TOKEN_SECRET_DEVELOP }}
           SENTRY_URL: ${{ secrets.SENTRY_URL }}
           MAGIC_PRIVATE_KEY: ${{ secrets.MAGIC_PRIVATE_KEY_DEVELOP }}
+          MUX_DATA_ID: ${{ secrets.MUX_DATA_ID_DEVELOP }}
+          MUX_DATA_SECRET: ${{ secrets.MUX_DATA_SECRET_DEVELOP }}
       - name: Trigger migrate lambda function
         run: |
           aws lambda invoke --function-name soundchain-api-develop-migrate response.json

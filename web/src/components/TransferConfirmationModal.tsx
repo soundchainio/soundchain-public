@@ -1,38 +1,26 @@
-import { useModalDispatch, useModalState } from 'contexts/providers/modal';
-import React, { useEffect, useState } from 'react';
-import { Form, Formik } from 'formik';
 import { Modal } from 'components/Modal';
+import { useModalDispatch, useModalState } from 'contexts/providers/modal';
+import { Form, Formik } from 'formik';
 import useBlockchain from 'hooks/useBlockchain';
-import { TransactionReceipt } from 'web3-core/types'
 import { useMagicContext } from 'hooks/useMagicContext';
-import { Matic } from 'icons/Matic';
+import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { Logo } from 'icons/Logo';
-import { Account, Wallet } from './Wallet';
-import { Label } from './Label';
-import { Button } from './Button';
+import { Matic } from 'icons/Matic';
 import router from 'next/router';
+import React, { useState } from 'react';
+import { TransactionReceipt } from 'web3-core/types';
+import { Button } from './Button';
+import { Label } from './Label';
+import { Account, Wallet } from './Wallet';
 
 export const TransferConfirmationModal = () => {
   const { showTransferConfirmation, walletRecipient, amountToTransfer } = useModalState();
   const { dispatchShowTransferConfirmationModal } = useModalDispatch();
   const [loading, setLoading] = useState(false);
-  const { getMaxGasFee, transfer } = useBlockchain();
+  const { transfer } = useBlockchain();
   const { web3, account, balance } = useMagicContext();
 
-  const [maxGasFee, setMaxGasFee] = useState<string>();
-
-  useEffect(() => {
-    const gasCheck = () => {
-      if (web3) {
-        getMaxGasFee(web3).then(setMaxGasFee);
-      }
-    };
-    gasCheck();
-    const interval = setInterval(() => {
-      gasCheck();
-    }, 5 * 1000);
-    return () => clearInterval(interval);
-  }, [web3, getMaxGasFee]);
+  const maxGasFee = useMaxGasFee();
 
   const handleClose = () => {
     dispatchShowTransferConfirmationModal(false);
@@ -49,39 +37,40 @@ export const TransferConfirmationModal = () => {
   };
 
   const hasEnoughFunds = () => {
-    if(balance && maxGasFee && amountToTransfer) {
-      return (+balance > +maxGasFee + +amountToTransfer)
-    } return false;
-  }
+    if (balance && maxGasFee && amountToTransfer) {
+      return +balance > +maxGasFee + +amountToTransfer;
+    }
+    return false;
+  };
 
   const handleSubmit = () => {
     if (hasEnoughFunds()) {
       try {
-        setLoading(true)
-        const onTransactionHash = (hash:string) => {
+        setLoading(true);
+        const onTransactionHash = (hash: string) => {
           console.log(hash);
-        }
+        };
 
         const onReceipt = (receipt: TransactionReceipt) => {
-          console.log(receipt)
-          alert('Transaction completed!')
-          setLoading(false)
+          console.log(receipt);
+          alert('Transaction completed!');
+          setLoading(false);
           handleClose();
-          router.push('/wallet')
-        }
-        if(account && walletRecipient && amountToTransfer) {
+          router.push('/wallet');
+        };
+        if (account && walletRecipient && amountToTransfer) {
           transfer(web3, account, walletRecipient, amountToTransfer, onTransactionHash, onReceipt);
         }
-      } catch(e) { 
-        console.log(e)
-        setLoading(false)
+      } catch (e) {
+        console.log(e);
+        setLoading(false);
         alert('We had some trouble, please try again later!');
-      } 
+      }
     } else {
-        alert("Uh-oh, it seems you don't have enough funds for this transaction. Please select an appropriate amount")
-        handleClose();
+      alert("Uh-oh, it seems you don't have enough funds for this transaction. Please select an appropriate amount");
+      handleClose();
     }
-  }
+  };
 
   return (
     <Modal
@@ -111,11 +100,25 @@ export const TransferConfirmationModal = () => {
               </div>
               <div className="flex flex-col w-full space-y-6 py-6">
                 <div className="space-y-2">
-                  <div className="px-4"><Label className="uppercase font-bold" textSize="xs">FROM: </Label></div>
-                  <Wallet account={account} icon={() => <Logo id="soundchain-wallet" height="20" width="20" />} title="SoundChain Wallet" correctNetwork={true} defaultWallet={true} />
+                  <div className="px-4">
+                    <Label className="uppercase font-bold" textSize="xs">
+                      FROM:{' '}
+                    </Label>
+                  </div>
+                  <Wallet
+                    account={account}
+                    icon={() => <Logo id="soundchain-wallet" height="20" width="20" />}
+                    title="SoundChain Wallet"
+                    correctNetwork={true}
+                    defaultWallet={true}
+                  />
                 </div>
                 <div className="space-y-2">
-                  <div className="px-4"><Label className="uppercase font-bold" textSize="xs">TO: </Label></div>
+                  <div className="px-4">
+                    <Label className="uppercase font-bold" textSize="xs">
+                      TO:{' '}
+                    </Label>
+                  </div>
                   <Account account={walletRecipient} defaultWallet={true} />
                 </div>
               </div>
@@ -143,7 +146,9 @@ export const TransferConfirmationModal = () => {
                   <span className="my-auto">
                     <Matic />
                   </span>
-                  <span className="mx-1 text-white font-bold text-md leading-tight">{parseFloat(maxGasFee || '0') + parseFloat(amountToTransfer || '0')}</span>
+                  <span className="mx-1 text-white font-bold text-md leading-tight">
+                    {parseFloat(maxGasFee || '0') + parseFloat(amountToTransfer || '0')}
+                  </span>
                   <div className="items-end">
                     <span className="text-gray-80 font-black text-xxs leading-tight">matic</span>
                   </div>
@@ -152,7 +157,9 @@ export const TransferConfirmationModal = () => {
             </div>
           </div>
           <div>
-            <Button type="submit" loading={loading}>Confirm Transaction</Button>
+            <Button type="submit" loading={loading}>
+              Confirm Transaction
+            </Button>
           </div>
         </Form>
       </Formik>

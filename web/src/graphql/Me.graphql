@@ -3,9 +3,10 @@ query Me {
     id
     handle
     email
-    walletAddress
+    magicWalletAddress
     defaultWallet
     isApprovedOnMarketplace
+    roles
     profile {
       ...ProfileComponentFields
     }
