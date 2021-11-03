@@ -1236,7 +1236,7 @@ export type ChatsQuery = (
       & Pick<Chat, 'id' | 'message' | 'unread' | 'createdAt'>
       & { profile: (
         { __typename?: 'Profile' }
-        & Pick<Profile, 'displayName' | 'profilePicture'>
+        & Pick<Profile, 'displayName' | 'profilePicture' | 'verified'>
       ) }
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
@@ -1274,7 +1274,7 @@ export type CommentComponentFieldsFragment = (
   & Pick<Comment, 'id' | 'body' | 'createdAt' | 'deleted'>
   & { profile: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified'>
   ) }
 );
 
@@ -1579,7 +1579,7 @@ export type FollowersQuery = (
       & Pick<Follow, 'id'>
       & { followerProfile: (
         { __typename?: 'Profile' }
-        & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
+        & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified'>
       ) }
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
@@ -1603,7 +1603,7 @@ export type FollowingQuery = (
       & Pick<Follow, 'id'>
       & { followedProfile: (
         { __typename?: 'Profile' }
-        & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
+        & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified'>
       ) }
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
@@ -1671,7 +1671,7 @@ export type MessageComponentFieldsFragment = (
   & Pick<Message, 'id' | 'message' | 'fromId' | 'toId' | 'createdAt'>
   & { fromProfile: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified'>
   ) }
 );
 
@@ -1810,7 +1810,7 @@ export type PostComponentFieldsFragment = (
   & Pick<Post, 'id' | 'body' | 'mediaLink' | 'repostId' | 'createdAt' | 'updatedAt' | 'commentCount' | 'repostCount' | 'totalReactions' | 'topReactions' | 'myReaction' | 'deleted'>
   & { profile: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified'>
   ), track: Maybe<(
     { __typename?: 'Track' }
     & TrackComponentFieldsFragment
@@ -1865,7 +1865,7 @@ export type ProfileDisplayNameQuery = (
   { __typename?: 'Query' }
   & { profile: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'displayName'>
+    & Pick<Profile, 'displayName' | 'verified'>
   ) }
 );
 
@@ -1944,7 +1944,7 @@ export type ReactionsQuery = (
       & Pick<Reaction, 'id' | 'type'>
       & { profile: (
         { __typename?: 'Profile' }
-        & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
+        & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified'>
       ) }
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
@@ -2365,6 +2365,7 @@ export const CommentComponentFieldsFragmentDoc = gql`
     id
     displayName
     profilePicture
+    verified
   }
 }
     `;
@@ -2401,6 +2402,7 @@ export const MessageComponentFieldsFragmentDoc = gql`
     id
     displayName
     profilePicture
+    verified
   }
 }
     `;
@@ -2478,6 +2480,7 @@ export const PostComponentFieldsFragmentDoc = gql`
     id
     displayName
     profilePicture
+    verified
   }
   track {
     ...TrackComponentFields
@@ -2697,6 +2700,7 @@ export const ChatsDocument = gql`
       profile {
         displayName
         profilePicture
+        verified
       }
       message
       unread
@@ -3428,6 +3432,7 @@ export const FollowersDocument = gql`
         id
         displayName
         profilePicture
+        verified
       }
     }
     pageInfo {
@@ -3476,6 +3481,7 @@ export const FollowingDocument = gql`
         id
         displayName
         profilePicture
+        verified
       }
     }
     pageInfo {
@@ -4022,6 +4028,7 @@ export const ProfileDisplayNameDocument = gql`
     query ProfileDisplayName($id: String!) {
   profile(id: $id) {
     displayName
+    verified
   }
 }
     `;
@@ -4179,6 +4186,7 @@ export const ReactionsDocument = gql`
         id
         displayName
         profilePicture
+        verified
       }
     }
     pageInfo {

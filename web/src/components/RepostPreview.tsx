@@ -3,6 +3,7 @@ import { usePostQuery } from 'lib/graphql';
 import React from 'react';
 import { AudioPlayer } from './AudioPlayer';
 import { Avatar } from './Avatar';
+import { DisplayName } from './DisplayName';
 import { NotAvailableMessage } from './NotAvailableMessage';
 import { RepostPreviewSkeleton } from './RepostPreviewSkeleton';
 import { Timestamp } from './Timestamp';
@@ -28,8 +29,8 @@ export const RepostPreview = ({ postId }: RepostPreviewProps) => {
           :
           <>
             <div className="flex items-center">
-              <Avatar profile={post.profile} />
-              <a className="ml-4 text-lg font-bold text-gray-100">{post.profile.displayName}</a>
+              <Avatar className="mr-4" profile={post.profile} />
+              <DisplayName name={post.profile.displayName} verified={post.profile.verified} />
               <Timestamp datetime={post.createdAt} className="flex-1 text-right text-gray-60" />
             </div>
             <pre className="mt-4 text-gray-100 break-words whitespace-pre-wrap">{post.body}</pre>

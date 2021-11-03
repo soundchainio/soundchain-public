@@ -15,6 +15,7 @@ fragment PostComponentFields on Post {
     id
     displayName
     profilePicture
+    verified
   }
   track {
     ...TrackComponentFields

@@ -7,5 +7,6 @@ fragment CommentComponentFields on Comment {
     id
     displayName
     profilePicture
+    verified
   }
 }

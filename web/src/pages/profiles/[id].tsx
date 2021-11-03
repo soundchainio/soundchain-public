@@ -1,5 +1,6 @@
 import { Avatar } from 'components/Avatar';
 import { InboxButton } from 'components/Buttons/InboxButton';
+import { DisplayName } from 'components/DisplayName';
 import { FollowButton } from 'components/FollowButton';
 import { FollowModal } from 'components/FollowersModal';
 import { Layout } from 'components/Layout';
@@ -11,7 +12,6 @@ import { ProfileCover } from 'components/ProfileCover';
 import { ProfileTabs } from 'components/ProfileTabs';
 import { SocialMediaLink } from 'components/SocialMediaLink';
 import { SubscribeButton } from 'components/SubscribeButton';
-import { Subtitle } from 'components/Subtitle';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useMe } from 'hooks/useMe';
 import { useProfileLazyQuery } from 'lib/graphql';
@@ -68,6 +68,7 @@ export default function ProfilePage() {
     isFollowed,
     bio,
     isSubscriber,
+    verified,
   } = data.profile;
 
   const topNovaBarProps: TopNavBarProps = {
@@ -107,7 +108,7 @@ export default function ProfilePage() {
         </div>
         <div className="flex flex-row mt-4">
           <div>
-            <Subtitle className="">{displayName}</Subtitle>
+            <DisplayName name={displayName} verified={verified} />
             <p className="text-gray-80 text-sm">@{userHandle}</p>
             <p className="text-gray-80 py-2 text-sm">{bio}</p>
           </div>

@@ -18,8 +18,6 @@ export const RequestsList = ({ status }: RequestsListProps) => {
     variables: { status, page: firstPage }
   });
 
-  console.log('list: ', data);
-
   if (!data) return null;
 
   if (loading) return <div>loading...</div>;

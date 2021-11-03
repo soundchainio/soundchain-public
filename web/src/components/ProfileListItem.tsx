@@ -3,6 +3,7 @@ import { Number } from 'components/Number';
 import { ProfileListItemSkeleton } from 'components/ProfileListItemSkeleton';
 import { Profile } from 'lib/graphql';
 import NextLink from 'next/link';
+import { DisplayName } from './DisplayName';
 
 interface ProfileListItemProps {
   profile: Profile
@@ -21,7 +22,7 @@ export const ProfileListItem = ({ profile }: ProfileListItemProps) => {
           className="rounded-full min-w-max"
         />
         <div className="mx-4">
-          <span className="font-bold text-md text-white overflow-ellipsis overflow-hidden">{profile.displayName}</span>
+          <DisplayName name={profile.displayName} verified={profile.verified} />
           <p className="text-gray-80 text-sm">@{profile.userHandle}</p>
         </div>
         <div className="flex-1 flex justify-end">

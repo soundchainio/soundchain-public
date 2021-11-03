@@ -5,6 +5,7 @@ import { BackButton } from 'components/Buttons/BackButton';
 import { Delete as DeleteButton } from 'components/Buttons/Delete';
 import { CurrentRequestStatus } from 'components/CurrentRequestStatus';
 import { DenyReasonModal } from 'components/DenyReasonModal';
+import { DisplayName } from 'components/DisplayName';
 import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useMe } from 'hooks/useMe';
@@ -102,7 +103,7 @@ export default function RequestPage({ data }: RequestPageProps) {
               className="rounded-full min-w-max flex items-center"
             />
             <div className="mx-4">
-              <span className="font-bold text-md text-white overflow-ellipsis overflow-hidden">{profile.profile.displayName}</span>
+              <DisplayName name={profile.profile.displayName} verified={profile.profile.verified} />
               <p className="text-gray-80 text-sm">@{profile.profile.userHandle}</p>
             </div>
           </div>

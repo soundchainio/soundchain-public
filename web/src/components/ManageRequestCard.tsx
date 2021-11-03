@@ -3,6 +3,7 @@ import { ManageRequestCardSkeleton } from 'components/ManageRequestCardSkeleton'
 import { RightArrow } from 'icons/RightArrow';
 import { ProfileVerificationRequestComponentFieldsFragment, useProfileQuery } from 'lib/graphql';
 import NextLink from 'next/link';
+import { DisplayName } from './DisplayName';
 
 interface ManageRequestCardProps {
   request: ProfileVerificationRequestComponentFieldsFragment
@@ -24,7 +25,7 @@ export const ManageRequestCard = ({ request }: ManageRequestCardProps) => {
             className="rounded-full min-w-max flex items-center"
           />
           <div className="mx-4">
-            <span className="font-bold text-md text-white overflow-ellipsis overflow-hidden">{profile.profile.displayName}</span>
+            <DisplayName name={profile.profile.displayName} verified={profile.profile.verified} />
             <p className="text-gray-80 text-sm">@{profile.profile.userHandle}</p>
           </div>
           <div className="flex-1 flex justify-end">
