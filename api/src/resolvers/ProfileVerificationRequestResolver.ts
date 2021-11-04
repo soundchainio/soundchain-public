@@ -8,6 +8,7 @@ import { PageInput } from '../types/PageInput';
 import { ProfileVerificationRequestConnection } from '../types/ProfileVerificationRequestConnection';
 import { ProfileVerificationRequestPayload } from '../types/ProfileVerificationRequestPayload';
 import { ProfileVerificationStatusType } from '../types/ProfileVerificationStatusType';
+import { Role } from '../types/Role';
 
 @Resolver(ProfileVerificationRequest)
 export class ProfileVerificationRequestResolver {
@@ -22,9 +23,8 @@ export class ProfileVerificationRequestResolver {
     return profileVerificationRequestService.getProfileVerificationRequest(id, argProfileId || profileId);
   }
 
-
   @Query(() => ProfileVerificationRequestConnection)
-  @Authorized()
+  @Authorized(Role.ADMIN)
   profileVerificationRequests(
     @Ctx() { profileVerificationRequestService }: Context,
     @Arg('status', { nullable: true }) status: ProfileVerificationStatusType,
@@ -40,18 +40,23 @@ export class ProfileVerificationRequestResolver {
     @CurrentUser() { profileId }: User,
     @Arg('input') input: CreateProfileVerificationRequestInput,
   ): Promise<ProfileVerificationRequestPayload> {
-    const profileVerificationRequest = await profileVerificationRequestService.createProfileVerificationRequest(profileId, { ...input });
+    const profileVerificationRequest = await profileVerificationRequestService.createProfileVerificationRequest(
+      profileId,
+      { ...input },
+    );
     return { profileVerificationRequest };
   }
 
   @Mutation(() => ProfileVerificationRequestPayload)
-  @Authorized()
+  @Authorized(Role.ADMIN)
   async updateProfileVerificationRequest(
     @Ctx() { profileVerificationRequestService }: Context,
     @Arg('id') id: string,
     @Arg('input') input: CreateProfileVerificationRequestInput,
   ): Promise<ProfileVerificationRequestPayload> {
-    const profileVerificationRequest = await profileVerificationRequestService.updateProfileVerificationRequest(id, { ...input });
+    const profileVerificationRequest = await profileVerificationRequestService.updateProfileVerificationRequest(id, {
+      ...input,
+    });
     return { profileVerificationRequest };
   }
 
