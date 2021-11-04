@@ -13,6 +13,7 @@ interface MagicContextData {
   web3: Web3;
   account: string | undefined;
   balance: string | undefined;
+  refetchBalance: () => void;
 }
 
 const MagicContext = createContext<MagicContextData>({} as MagicContextData);
@@ -47,6 +48,14 @@ export function MagicProvider({ children }: MagicProviderProps) {
   const [account, setAccount] = useState<string>();
   const [balance, setBalance] = useState<string>();
 
+  const refetchBalance = () => {
+    if(account) {
+      web3.eth.getBalance(account).then(balance => {
+        setBalance(Number(web3.utils.fromWei(balance, 'ether')).toFixed(6));
+      });
+    }
+  }
+
   useEffect(() => {
     if (me && me.magicWalletAddress && web3) {
       setAccount(me.magicWalletAddress);
@@ -56,7 +65,7 @@ export function MagicProvider({ children }: MagicProviderProps) {
     }
   }, [me]);
 
-  return <MagicContext.Provider value={{ magic, web3, account, balance }}>{children}</MagicContext.Provider>;
+  return <MagicContext.Provider value={{ magic, web3, account, balance, refetchBalance }}>{children}</MagicContext.Provider>;
 }
 
 export const useMagicContext = () => useContext(MagicContext);
