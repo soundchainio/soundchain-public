@@ -8,7 +8,6 @@ import { Logo } from 'icons/Logo';
 import { Matic } from 'icons/Matic';
 import router from 'next/router';
 import React, { useState } from 'react';
-import { TransactionReceipt } from 'web3-core/types';
 import { Button } from './Button';
 import { Label } from './Label';
 import { Account, Wallet } from './Wallet';
