@@ -59,7 +59,7 @@ export const TransferConfirmationModal = () => {
           router.push('/wallet');
         };
         if (account && walletRecipient && amountToTransfer) {
-          transfer(web3, account, walletRecipient, amountToTransfer, onTransactionHash, onReceipt);
+          transfer(web3, walletRecipient, account, amountToTransfer, onTransactionHash, onReceipt);
         }
       } catch (e) {
         console.log(e);
