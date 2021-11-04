@@ -631,7 +631,7 @@ export type NewPostNotification = {
   track: Maybe<Track>;
 };
 
-export type Notification = CommentNotification | ReactionNotification | FollowerNotification | NewPostNotification | NftSoldNotification;
+export type Notification = CommentNotification | ReactionNotification | FollowerNotification | NewPostNotification | NftSoldNotification | VerificationRequestNotification;
 
 export type NotificationConnection = {
   __typename?: 'NotificationConnection';
@@ -644,7 +644,8 @@ export enum NotificationType {
   Reaction = 'Reaction',
   Follower = 'Follower',
   NewPost = 'NewPost',
-  NftSold = 'NFTSold'
+  NftSold = 'NFTSold',
+  VerificationRequestUpdate = 'VerificationRequestUpdate'
 }
 
 export type PageInfo = {
@@ -1222,6 +1223,15 @@ export type User = {
   profile: Profile;
 };
 
+export type VerificationRequestNotification = {
+  __typename?: 'VerificationRequestNotification';
+  type: NotificationType;
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  id: Scalars['String'];
+  body: Scalars['String'];
+};
+
 export type AddCommentMutationVariables = Exact<{
   input: AddCommentInput;
 }>;
@@ -1780,6 +1790,9 @@ export type NotificationQuery = (
   ) | (
     { __typename?: 'NFTSoldNotification' }
     & NftSoldNotificationFieldsFragment
+  ) | (
+    { __typename?: 'VerificationRequestNotification' }
+    & VerificationRequestNotificationFieldsFragment
   ) }
 );
 
@@ -1818,6 +1831,9 @@ export type NotificationsQuery = (
     ) | (
       { __typename?: 'NFTSoldNotification' }
       & NftSoldNotificationFieldsFragment
+    ) | (
+      { __typename?: 'VerificationRequestNotification' }
+      & VerificationRequestNotificationFieldsFragment
     )> }
   ) }
 );
@@ -2463,6 +2479,11 @@ export type UserByWalletQuery = (
   )> }
 );
 
+export type VerificationRequestNotificationFieldsFragment = (
+  { __typename?: 'VerificationRequestNotification' }
+  & Pick<VerificationRequestNotification, 'id' | 'type' | 'body' | 'createdAt'>
+);
+
 export type WasListedBeforeQueryVariables = Exact<{
   tokenId: Scalars['Float'];
 }>;
@@ -2665,6 +2686,14 @@ export const ReactionNotificationFieldsFragmentDoc = gql`
   authorPicture
   createdAt
   postId
+}
+    `;
+export const VerificationRequestNotificationFieldsFragmentDoc = gql`
+    fragment VerificationRequestNotificationFields on VerificationRequestNotification {
+  id
+  type
+  body
+  createdAt
 }
     `;
 export const AddCommentDocument = gql`
@@ -3816,13 +3845,17 @@ export const NotificationDocument = gql`
     ... on NFTSoldNotification {
       ...NFTSoldNotificationFields
     }
+    ... on VerificationRequestNotification {
+      ...VerificationRequestNotificationFields
+    }
   }
 }
     ${CommentNotificationFieldsFragmentDoc}
 ${ReactionNotificationFieldsFragmentDoc}
 ${FollowerNotificationFieldsFragmentDoc}
 ${NewPostNotificationFieldsFragmentDoc}
-${NftSoldNotificationFieldsFragmentDoc}`;
+${NftSoldNotificationFieldsFragmentDoc}
+${VerificationRequestNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationQuery__
@@ -3905,6 +3938,9 @@ export const NotificationsDocument = gql`
       ... on NFTSoldNotification {
         ...NFTSoldNotificationFields
       }
+      ... on VerificationRequestNotification {
+        ...VerificationRequestNotificationFields
+      }
     }
   }
 }
@@ -3912,7 +3948,8 @@ export const NotificationsDocument = gql`
 ${ReactionNotificationFieldsFragmentDoc}
 ${FollowerNotificationFieldsFragmentDoc}
 ${NewPostNotificationFieldsFragmentDoc}
-${NftSoldNotificationFieldsFragmentDoc}`;
+${NftSoldNotificationFieldsFragmentDoc}
+${VerificationRequestNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationsQuery__

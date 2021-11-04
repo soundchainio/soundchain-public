@@ -6,6 +6,7 @@ import { NewPostNotificationMetadata } from '../types/NewPostNotificationMetadat
 import { NFTSoldNotificationMetadata } from '../types/NFTSoldNotificationMetadata';
 import { NotificationType } from '../types/NotificationType';
 import { ReactionNotificationMetadata } from '../types/ReactionNotificationMetadata';
+import { VerificationRequestNotificationMetadata } from '../types/VerificationRequestNotificationMetadata';
 import { Model } from './Model';
 
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
@@ -22,7 +23,8 @@ export class Notification extends Model {
     | FollowerNotificationMetadata
     | ReactionNotificationMetadata
     | NewPostNotificationMetadata
-    | NFTSoldNotificationMetadata;
+    | NFTSoldNotificationMetadata
+    | VerificationRequestNotificationMetadata;
 
   @Field(() => Date)
   createdAt: Date;

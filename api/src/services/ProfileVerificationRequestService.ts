@@ -16,24 +16,41 @@ export class ProfileVerificationRequestService extends ModelService<typeof Profi
     return id ? await this.model.findOne({ _id: id }) : await this.model.findOne({ profileId: profileId });
   }
 
-  getProfileVerificationRequests(type: ProfileVerificationStatusType, page: PageInput): Promise<PaginateResult<ProfileVerificationRequest>> {
+  getProfileVerificationRequests(
+    type: ProfileVerificationStatusType,
+    page: PageInput,
+  ): Promise<PaginateResult<ProfileVerificationRequest>> {
     return this.context.profileVerificationRequestService.paginate({ filter: { status: type }, page });
   }
 
-  async createProfileVerificationRequest(profileId: string, input: CreateProfileVerificationRequestInput): Promise<ProfileVerificationRequest> {
+  async createProfileVerificationRequest(
+    profileId: string,
+    input: CreateProfileVerificationRequestInput,
+  ): Promise<ProfileVerificationRequest> {
     const { soundcloud, bandcamp, youtube } = input;
-    const profileVerificationRequest = new this.model({ profileId, soundcloud, bandcamp, youtube, status: ProfileVerificationStatusType.PENDING });
+    const profileVerificationRequest = new this.model({
+      profileId,
+      soundcloud,
+      bandcamp,
+      youtube,
+      status: ProfileVerificationStatusType.PENDING,
+    });
     await profileVerificationRequest.save();
     return profileVerificationRequest;
   }
 
-  async updateProfileVerificationRequest(id: string, changes: Partial<ProfileVerificationRequest>): Promise<ProfileVerificationRequest> {
+  async updateProfileVerificationRequest(
+    id: string,
+    changes: Partial<ProfileVerificationRequest>,
+  ): Promise<ProfileVerificationRequest> {
     const profileVerificationRequest = await this.model.findByIdAndUpdate(id, changes, { new: true });
 
     if (changes.status === ProfileVerificationStatusType.APPROVED) {
       await this.context.profileService.verifyProfile(profileVerificationRequest.profileId, true);
+      await this.context.notificationService.notifyVerificationRequestUpdate(profileVerificationRequest.profileId);
     } else if (changes.status === ProfileVerificationStatusType.DENIED) {
       await this.context.profileService.verifyProfile(profileVerificationRequest.profileId, false);
+      await this.context.notificationService.notifyVerificationRequestUpdate(profileVerificationRequest.profileId);
     }
 
     if (!profileVerificationRequest) {
