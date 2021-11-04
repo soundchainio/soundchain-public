@@ -24,9 +24,9 @@ export const RepostPreview = ({ postId }: RepostPreviewProps) => {
         <RefreshIcon className="h-4 w-4 mr-1" /> Repost
       </div>
       <div className="p-4 break-words bg-gray-30 rounded-lg mb-2">
-        {post.deleted ?
+        {post.deleted ? (
           <NotAvailableMessage type="post" />
-          :
+        ) : (
           <>
             <div className="flex items-center">
               <Avatar className="mr-4" profile={post.profile} />
@@ -37,7 +37,7 @@ export const RepostPreview = ({ postId }: RepostPreviewProps) => {
             {post.mediaLink && (
               <iframe frameBorder="0" className="mt-4 w-full bg-gray-20" allowFullScreen src={post.mediaLink} />
             )}
-            {(post.track && !post.track.deleted) ? (
+            {post.track && !post.track.deleted && (
               <AudioPlayer
                 trackId={post.track.id}
                 src={post.track.playbackUrl}
@@ -45,11 +45,10 @@ export const RepostPreview = ({ postId }: RepostPreviewProps) => {
                 artist={post.track.artist}
                 art={post.track.artworkUrl}
               />
-            ) :
-              <NotAvailableMessage type="track" />
-            }
+            )}
+            {post.track?.deleted && <NotAvailableMessage type="track" />}
           </>
-        }
+        )}
       </div>
     </div>
   );
