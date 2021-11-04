@@ -57,6 +57,7 @@ export const Account = ({ account, balance, defaultWallet, showActionButtons, on
           onClick={() => {
             navigator.clipboard.writeText(account + '');
           }}
+          type="button"
         >
           <Copy />
           <span className="text-gray-80 uppercase leading-none">copy</span>

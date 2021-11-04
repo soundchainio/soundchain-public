@@ -6,7 +6,7 @@ import { Layout } from 'components/Layout';
 import Head from 'next/head';
 import { FormValues, TransferForm } from 'components/forms/transfer/TransferForm';
 import React from 'react';
-import {precision} from 'utils/getPrecision'
+import { precision } from 'utils/getPrecision'
 
 const topNovaBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
