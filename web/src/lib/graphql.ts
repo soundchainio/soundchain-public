@@ -1033,6 +1033,7 @@ export type SortPostInput = {
 };
 
 export enum SortTrackField {
+  PlaybackCount = 'PLAYBACK_COUNT',
   CreatedAt = 'CREATED_AT'
 }
 

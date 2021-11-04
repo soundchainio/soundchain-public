@@ -7,6 +7,7 @@ import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { useExploreQuery } from 'lib/graphql';
 import React from 'react';
 import { ExploreTab } from 'types/ExploreTabType';
+import { ExploreTopTracksBanner } from './ExploreTopTracksBanner';
 
 interface ExplorePageProps {
   searchTerm?: string;
@@ -38,7 +39,10 @@ export const ExploreAll = ({ searchTerm, setSelectedTab }: ExplorePageProps) => 
   if (loading) return <div> loading... </div>;
 
   return (
-    <div>
+    <>
+      <div className="px-4 pt-6">
+        <ExploreTopTracksBanner />
+      </div>
       <div className="flex items-center w-full p-4">
         <div className="flex flex-1 items-center text-white font-bold">
           <Subtitle className="font-bold"> Users </Subtitle>
@@ -86,6 +90,6 @@ export const ExploreAll = ({ searchTerm, setSelectedTab }: ExplorePageProps) => 
       ) : (
         <NoResultFound type="Tracks" />
       )}
-    </div>
+    </>
   );
 };

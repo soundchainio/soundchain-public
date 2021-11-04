@@ -36,7 +36,7 @@ export const TrackListItem = ({ song, index, handleOnPlayClicked }: TrackProps) 
         isPlaying ? 'font-black' : 'font-semibold'
       } text-white text-xs`}
     >
-      <p>{index}</p>
+      <p className="w-6 text-right">{index}</p>
       <div className="h-10 w-10 relative flex items-center bg-gray-80">
         <Asset src={art} />
       </div>
