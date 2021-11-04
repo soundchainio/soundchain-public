@@ -1,4 +1,5 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
+import { ObjectId } from 'mongodb';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { DefaultWallet } from '../types/DefaultWallet';
 import { Role } from '../types/Role';
@@ -8,7 +9,7 @@ export class User extends Model {
   @Field(() => ID, { name: 'id' })
   readonly _id: string;
 
-  @prop({ required: true })
+  @prop({ type: ObjectId, required: true })
   profileId: string;
 
   @Field()

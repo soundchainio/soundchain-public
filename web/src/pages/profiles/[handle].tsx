@@ -14,7 +14,7 @@ import { SubscribeButton } from 'components/SubscribeButton';
 import { Subtitle } from 'components/Subtitle';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useMe } from 'hooks/useMe';
-import { useProfileLazyQuery } from 'lib/graphql';
+import { useProfileByHandleLazyQuery } from 'lib/graphql';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { FollowModalType } from 'types/FollowModalType';
@@ -22,19 +22,19 @@ import { ProfileTab } from 'types/ProfileTabType';
 
 export default function ProfilePage() {
   const router = useRouter();
-  const profileId = router.query.id as string;
+  const handle = router.query.handle as string;
   const me = useMe();
 
-  const [profile, { data }] = useProfileLazyQuery({ variables: { id: profileId }, ssr: false });
+  const [profile, { data }] = useProfileByHandleLazyQuery({ variables: { handle }, ssr: false });
   const [showModal, setShowModal] = useState(false);
   const [followModalType, setFollowModalType] = useState<FollowModalType>();
   const [selectedTab, setSelectedTab] = useState<ProfileTab>(ProfileTab.POSTS);
 
   useEffect(() => {
-    if (profileId) {
+    if (handle && profile) {
       profile();
     }
-  }, [profileId]);
+  }, [handle, profile]);
 
   useEffect(() => {
     setShowModal(false);
@@ -58,6 +58,8 @@ export default function ProfilePage() {
     return null;
   }
 
+  const profileId = data.profileByHandle.id;
+
   const {
     coverPicture,
     displayName,
@@ -68,7 +70,7 @@ export default function ProfilePage() {
     isFollowed,
     bio,
     isSubscriber,
-  } = data.profile;
+  } = data.profileByHandle;
 
   const topNovaBarProps: TopNavBarProps = {
     rightButton: me ? <InboxButton /> : undefined,
@@ -79,7 +81,7 @@ export default function ProfilePage() {
       <div className="h-[125px] relative">
         <ProfileCover coverPicture={coverPicture || ''} className="h-[125px]" />
         <Avatar
-          profile={data.profile}
+          profile={data.profileByHandle}
           pixels={80}
           className="absolute left-4 bottom-0 transform translate-y-2/3 border-gray-10 border-4 rounded-full"
         />
@@ -102,7 +104,7 @@ export default function ProfilePage() {
           </div>
           <div className="flex flex-row space-x-2">
             <SubscribeButton profileId={profileId} isSubscriber={isSubscriber} />
-            <FollowButton followedId={profileId} isFollowed={isFollowed} />
+            <FollowButton followedId={handle} isFollowed={isFollowed} />
           </div>
         </div>
         <div className="flex flex-row mt-4">

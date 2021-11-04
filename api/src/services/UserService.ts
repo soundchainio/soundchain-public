@@ -60,4 +60,9 @@ export class UserService extends ModelService<typeof User> {
     });
     return user;
   }
+
+  async getUserByHandle(handle: string): Promise<User> {
+    const user = await this.model.findOne({ handle });
+    return user;
+  }
 }

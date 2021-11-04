@@ -27,9 +27,7 @@ export const Comment = ({ commentId }: CommentProps) => {
   if (!comment) return <CommentSkeleton />;
 
   if (data?.comment.deleted) {
-    return (
-      <NotAvailableMessage type="comment" />
-    )
+    return <NotAvailableMessage type="comment" />;
   }
 
   return (
@@ -38,7 +36,7 @@ export const Comment = ({ commentId }: CommentProps) => {
       <div className="flex-1 py-4 px-4 bg-gray-20 rounded-xl">
         <div className="flex items-center">
           <div className="flex-1 flex flex-col">
-            <NextLink href={`/profiles/${comment.profile.id}`}>
+            <NextLink href={`/profiles/${comment.profile.userHandle}`}>
               <a className="text-white font-semibold">{comment.profile.displayName}</a>
             </NextLink>
             <Timestamp className="flex-1" datetime={comment.createdAt} />

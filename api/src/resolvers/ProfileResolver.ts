@@ -58,6 +58,11 @@ export class ProfileResolver {
     return profileService.getProfile(id);
   }
 
+  @Query(() => Profile)
+  profileByHandle(@Ctx() { profileService }: Context, @Arg('handle') handle: string): Promise<Profile> {
+    return profileService.getProfileByHandle(handle);
+  }
+
   @Mutation(() => UpdateProfilePayload)
   @Authorized()
   async updateProfile(

@@ -14,9 +14,41 @@ export class ProfileService extends ModelService<typeof Profile> {
     return this.findOrFail(id);
   }
 
-  async searchProfiles(search: string): Promise<{ list: Profile[], total: number }> {
+  async getProfileByHandle(handle: string): Promise<Profile> {
+    const profile = await UserModel.aggregate([
+      {
+        $match: {
+          handle,
+        },
+      },
+      {
+        $lookup: {
+          from: 'profiles',
+          localField: 'profileId',
+          foreignField: '_id',
+          as: 'profile',
+        },
+      },
+      {
+        $unwind: {
+          path: '$profile',
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: '$profile',
+        },
+      },
+    ]);
+    return profile[0];
+  }
+
+  async searchProfiles(search: string): Promise<{ list: Profile[]; total: number }> {
     const list = await this.model.find({ displayName: new RegExp(search, 'i') }).limit(5);
-    const total = await this.model.find({ displayName: new RegExp(search, 'i') }).countDocuments().exec();
+    const total = await this.model
+      .find({ displayName: new RegExp(search, 'i') })
+      .countDocuments()
+      .exec();
     return { list, total };
   }
 
