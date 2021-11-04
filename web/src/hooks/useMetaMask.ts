@@ -56,6 +56,14 @@ export const useMetaMask = () => {
     }
   }, [account, web3]);
 
+  const refetchBalance = () => {
+    if(web3 && account) {
+      web3.eth.getBalance(account).then(balance => {
+        setBalance(web3.utils.fromWei(balance, 'ether'));
+      });
+    }
+  }
+
   const addMumbaiTestnet = () => {
     if (MetaMaskOnboarding.isMetaMaskInstalled()) {
       window.ethereum.request({
@@ -94,7 +102,7 @@ export const useMetaMask = () => {
     }
   };
 
-  return { connect, addMumbaiTestnet, account, balance, chainId, web3 };
+  return { connect, addMumbaiTestnet, account, balance, chainId, web3, refetchBalance };
 };
 
 export default useMetaMask;
