@@ -205,22 +205,42 @@ export const mint: Handler<SQSEvent> = async event => {
 };
 
 export const playbackCount: Handler = async () => {
+  const intervalGapInMinutes = 60 * 24; // 24 hours
+  const nowTimestampInSeconds = Math.round(Date.now() / 1000);
+  const initialTimestampInSeconds = nowTimestampInSeconds - intervalGapInMinutes * 60;
+
   await mongoose.connect(config.db.url, config.db.options);
 
   const user = await UserModel.findOne({ handle: '_system' });
   const context = new Context({ sub: user._id });
 
+  let url: string;
   const fetch = async (pageSize: number, currentPage: number): Promise<MuxDataInputValue> => {
-    const { data } = await muxDataApi.get<MuxServerData>(
-      `/metrics/unique_viewers/breakdown?group_by=video_id&timeframe[]=24:hours&limit=${pageSize}&page=${currentPage}`,
-    );
+    try {
+      url = `/metrics/unique_viewers/breakdown?group_by=video_id&limit=${pageSize}&page=${currentPage}&timeframe[]=${initialTimestampInSeconds}&timeframe[]=${nowTimestampInSeconds}&order_by=field&order_direction=asc`;
+      const { data } = await muxDataApi.get<MuxServerData>(url);
 
-    const values = data.data.map(video => ({ trackId: video.field, amount: video.views }));
-    return { totalCount: data.total_row_count, values };
+      const values = data.data.map(video => ({ trackId: video.field, amount: video.views }));
+      return { totalCount: data.total_row_count, values };
+    } catch (error) {
+      console.error(error);
+      context.logErrorService.createLogError(
+        'Lambda function: playbackCount - Error fetching Mux Data',
+        `URL: ${url} Error: ${error}`,
+      );
+    }
   };
 
-  const update = async (inputValue: MuxDataInputValue): Promise<number> => {
-    return await context.trackService.incrementPlaybackCount(inputValue.values);
+  const update = async (inputValue: MuxDataInputValue, url: string): Promise<number> => {
+    try {
+      return await context.trackService.incrementPlaybackCount(inputValue.values);
+    } catch (error) {
+      console.error(error);
+      context.logErrorService.createLogError(
+        'Lambda function: playbackCount - Error updating track',
+        `URL: ${url} Error: ${error}`,
+      );
+    }
   };
 
   try {
@@ -239,7 +259,7 @@ export const playbackCount: Handler = async () => {
     }
 
     console.log(`Page size: ${pageSize} - Mux data fetched: ${totalCount} tracks to be updated...`);
-    const tracksUpdated = await update(inputValues);
+    const tracksUpdated = await update(inputValues, url);
     console.log(
       `Page: ${currentPage}/${totalPages} - Tracks on page: ${inputValues.values.length} - Tracks updated: ${tracksUpdated}`,
     );
@@ -247,7 +267,7 @@ export const playbackCount: Handler = async () => {
     if (totalPages > currentPage) {
       for (currentPage = 2; currentPage <= totalPages; currentPage++) {
         const inputValues = await fetch(pageSize, currentPage);
-        const tracksUpdated = await update(inputValues);
+        const tracksUpdated = await update(inputValues, url);
         console.log(
           `Page: ${currentPage}/${totalPages} - Tracks on page: ${inputValues.values.length} - Tracks updated: ${tracksUpdated}`,
         );
