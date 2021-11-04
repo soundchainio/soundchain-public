@@ -51,8 +51,7 @@ export const TransferConfirmationModal = () => {
           console.log(hash);
         };
 
-        const onReceipt = (receipt: TransactionReceipt) => {
-          console.log(receipt);
+        const onReceipt = () => {
           alert('Transaction completed!');
           setLoading(false);
           handleClose();
