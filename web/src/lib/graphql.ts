@@ -794,6 +794,7 @@ export type Query = {
   bandcampLink: Scalars['String'];
   myProfile: Profile;
   profile: Profile;
+  profileByHandle: Profile;
   profileVerificationRequest: ProfileVerificationRequest;
   profileVerificationRequests: ProfileVerificationRequestConnection;
   track: Track;
@@ -912,6 +913,11 @@ export type QueryBandcampLinkArgs = {
 
 export type QueryProfileArgs = {
   id: Scalars['String'];
+};
+
+
+export type QueryProfileByHandleArgs = {
+  handle: Scalars['String'];
 };
 
 
@@ -1334,7 +1340,7 @@ export type CommentComponentFieldsFragment = (
   & Pick<Comment, 'id' | 'body' | 'createdAt' | 'deleted'>
   & { profile: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified'>
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle'>
   ) }
 );
 
@@ -1860,7 +1866,7 @@ export type PostComponentFieldsFragment = (
   & Pick<Post, 'id' | 'body' | 'mediaLink' | 'repostId' | 'createdAt' | 'updatedAt' | 'commentCount' | 'repostCount' | 'totalReactions' | 'topReactions' | 'myReaction' | 'deleted'>
   & { profile: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified'>
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle'>
   ), track: Maybe<(
     { __typename?: 'Track' }
     & TrackComponentFieldsFragment
@@ -1892,6 +1898,19 @@ export type ProfileQueryVariables = Exact<{
 export type ProfileQuery = (
   { __typename?: 'Query' }
   & { profile: (
+    { __typename?: 'Profile' }
+    & ProfileComponentFieldsFragment
+  ) }
+);
+
+export type ProfileByHandleQueryVariables = Exact<{
+  handle: Scalars['String'];
+}>;
+
+
+export type ProfileByHandleQuery = (
+  { __typename?: 'Query' }
+  & { profileByHandle: (
     { __typename?: 'Profile' }
     & ProfileComponentFieldsFragment
   ) }
@@ -2465,6 +2484,7 @@ export const CommentComponentFieldsFragmentDoc = gql`
     displayName
     profilePicture
     verified
+    userHandle
   }
 }
     `;
@@ -2587,6 +2607,7 @@ export const PostComponentFieldsFragmentDoc = gql`
     displayName
     profilePicture
     verified
+    userHandle
   }
   track {
     ...TrackComponentFields
@@ -4094,6 +4115,41 @@ export function useProfileLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Pr
 export type ProfileQueryHookResult = ReturnType<typeof useProfileQuery>;
 export type ProfileLazyQueryHookResult = ReturnType<typeof useProfileLazyQuery>;
 export type ProfileQueryResult = Apollo.QueryResult<ProfileQuery, ProfileQueryVariables>;
+export const ProfileByHandleDocument = gql`
+    query ProfileByHandle($handle: String!) {
+  profileByHandle(handle: $handle) {
+    ...ProfileComponentFields
+  }
+}
+    ${ProfileComponentFieldsFragmentDoc}`;
+
+/**
+ * __useProfileByHandleQuery__
+ *
+ * To run a query within a React component, call `useProfileByHandleQuery` and pass it any options that fit your needs.
+ * When your component renders, `useProfileByHandleQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useProfileByHandleQuery({
+ *   variables: {
+ *      handle: // value for 'handle'
+ *   },
+ * });
+ */
+export function useProfileByHandleQuery(baseOptions: Apollo.QueryHookOptions<ProfileByHandleQuery, ProfileByHandleQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ProfileByHandleQuery, ProfileByHandleQueryVariables>(ProfileByHandleDocument, options);
+      }
+export function useProfileByHandleLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ProfileByHandleQuery, ProfileByHandleQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ProfileByHandleQuery, ProfileByHandleQueryVariables>(ProfileByHandleDocument, options);
+        }
+export type ProfileByHandleQueryHookResult = ReturnType<typeof useProfileByHandleQuery>;
+export type ProfileByHandleLazyQueryHookResult = ReturnType<typeof useProfileByHandleLazyQuery>;
+export type ProfileByHandleQueryResult = Apollo.QueryResult<ProfileByHandleQuery, ProfileByHandleQueryVariables>;
 export const ProfileDisplayNameDocument = gql`
     query ProfileDisplayName($id: String!) {
   profile(id: $id) {

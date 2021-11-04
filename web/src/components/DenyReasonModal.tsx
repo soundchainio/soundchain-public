@@ -1,4 +1,4 @@
-import { Dialog } from "@reach/dialog";
+import { Dialog } from '@reach/dialog';
 import { Button } from 'components/Button';
 import { Delete as DeleteButton } from 'components/Buttons/Delete';
 import { TextareaField } from 'components/TextareaField';
@@ -10,9 +10,9 @@ import { ManageRequestTab } from 'types/ManageRequestTabType';
 import * as yup from 'yup';
 
 interface DenyReasonModalProps {
-  requestId: string
-  showReason: boolean
-  setShowReason: (val: boolean) => void
+  requestId: string;
+  showReason: boolean;
+  setShowReason: (val: boolean) => void;
 }
 
 interface FormValues {
@@ -24,7 +24,10 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
 });
 
 export const DenyReasonModal = ({ requestId, showReason, setShowReason }: DenyReasonModalProps) => {
-  const [updateRequestVerification] = useUpdateProfileVerificationRequestMutation({ fetchPolicy: 'network-only', refetchQueries: [ProfileVerificationRequestsDocument] });
+  const [updateRequestVerification] = useUpdateProfileVerificationRequestMutation({
+    fetchPolicy: 'network-only',
+    refetchQueries: [ProfileVerificationRequestsDocument],
+  });
   const router = useRouter();
   const me = useMe();
 
@@ -37,37 +40,26 @@ export const DenyReasonModal = ({ requestId, showReason, setShowReason }: DenyRe
         input: {
           reviewerProfileId: me?.profile.id,
           status: ManageRequestTab.DENIED,
-          reason: values.reason
-        }
-      }
+          reason: values.reason,
+        },
+      },
     });
     router.push('/manage-requests');
   };
 
   return (
-    <Dialog
-      isOpen={showReason}
-      onDismiss={close}
-      className="w-80 bg-gray-20"
-    >
+    <Dialog isOpen={showReason} onDismiss={close} className="w-80 bg-gray-20">
       <Formik initialValues={{ reason: '' }} validationSchema={validationSchema} onSubmit={handleSubmit}>
         <Form className="flex flex-1 flex-col">
           <TextareaField label="Reason" name="reason" />
-          <DeleteButton
-            type="submit"
-            className="h-12 w-full mt-5 text-white text-sm"
-          >
+          <DeleteButton type="submit" className="h-12 w-full mt-5 text-white text-sm">
             DENY
           </DeleteButton>
-          <Button
-            variant="outline"
-            className="h-12 mt-5 w-full"
-            onClick={close}
-          >
+          <Button variant="outline" className="h-12 mt-5 w-full" onClick={close}>
             CANCEL
           </Button>
         </Form>
       </Formik>
     </Dialog>
   );
-}
+};

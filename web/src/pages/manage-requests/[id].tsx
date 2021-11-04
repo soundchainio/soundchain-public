@@ -12,9 +12,16 @@ import { useMe } from 'hooks/useMe';
 import { Bandcamp } from 'icons/Bandcamp';
 import { Soundcloud } from 'icons/Soundcloud';
 import { Youtube } from 'icons/Youtube';
-import { cacheFor, createApolloClient } from 'lib/apollo';
-import { ProfileVerificationRequest, ProfileVerificationRequestDocument, ProfileVerificationRequestsDocument, useProfileQuery, useUpdateProfileVerificationRequestMutation } from 'lib/graphql';
-import { GetServerSideProps } from 'next';
+import { cacheFor } from 'lib/apollo';
+import {
+  ProfileVerificationRequest,
+  ProfileVerificationRequestDocument,
+  ProfileVerificationRequestsDocument,
+  Role,
+  useProfileQuery,
+  useUpdateProfileVerificationRequestMutation,
+} from 'lib/graphql';
+import { protectPage } from 'lib/protectPage';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
@@ -22,21 +29,19 @@ import { useState } from 'react';
 import { ManageRequestTab } from 'types/ManageRequestTabType';
 
 export interface RequestPageProps {
-  data: ProfileVerificationRequest
+  data: ProfileVerificationRequest;
 }
 
 interface RequestPageParams extends ParsedUrlQuery {
   id: string;
 }
 
-export const getServerSideProps: GetServerSideProps<RequestPageProps, RequestPageParams> = async context => {
+export const getServerSideProps = protectPage<RequestPageProps, RequestPageParams>(async (context, apolloClient) => {
   const requestId = context.params?.id;
 
   if (!requestId) {
     return { notFound: true };
   }
-
-  const apolloClient = createApolloClient(context);
 
   const { data, error } = await apolloClient.query({
     query: ProfileVerificationRequestDocument,
@@ -44,19 +49,21 @@ export const getServerSideProps: GetServerSideProps<RequestPageProps, RequestPag
     context,
   });
 
+  if (!context.user?.roles.includes(Role.Admin)) return { notFound: true };
+
   if (error) {
     return { notFound: true };
   }
 
   return cacheFor(RequestPage, { data: data.profileVerificationRequest }, context, apolloClient);
-};
+});
 
 export default function RequestPage({ data }: RequestPageProps) {
   const [showReason, setShowReason] = useState<boolean>(false);
   const { data: profile } = useProfileQuery({ variables: { id: data.profileId } });
   const [updateRequestVerification] = useUpdateProfileVerificationRequestMutation({
     fetchPolicy: 'network-only',
-    refetchQueries: [ProfileVerificationRequestsDocument]
+    refetchQueries: [ProfileVerificationRequestsDocument],
   });
   const me = useMe();
   const router = useRouter();
@@ -71,7 +78,7 @@ export default function RequestPage({ data }: RequestPageProps) {
 
   const topNovaBarProps: TopNavBarProps = {
     leftButton: <BackButton />,
-    title: "Verification Request"
+    title: 'Verification Request',
   };
 
   const handleApprove = async () => {
@@ -80,9 +87,9 @@ export default function RequestPage({ data }: RequestPageProps) {
         id: data.id,
         input: {
           reviewerProfileId: me?.profile.id,
-          status: ManageRequestTab.APPROVED
-        }
-      }
+          status: ManageRequestTab.APPROVED,
+        },
+      },
     });
     router.push('/manage-requests');
   };
@@ -94,14 +101,9 @@ export default function RequestPage({ data }: RequestPageProps) {
   return (
     <Layout topNavBarProps={topNovaBarProps}>
       <NextLink href={`/profiles/${data.profileId}`}>
-
         <div className="flex flex-col text-white cursor-pointer">
           <div className="relative flex items-center p-4">
-            <Avatar
-              profile={profile.profile}
-              pixels={40}
-              className="rounded-full min-w-max flex items-center"
-            />
+            <Avatar profile={profile.profile} pixels={40} className="rounded-full min-w-max flex items-center" />
             <div className="mx-4">
               <DisplayName name={profile.profile.displayName} verified={profile.profile.verified} />
               <p className="text-gray-80 text-sm">@{profile.profile.userHandle}</p>
@@ -110,32 +112,25 @@ export default function RequestPage({ data }: RequestPageProps) {
         </div>
       </NextLink>
       <CurrentRequestStatus reason={data.reason || ''} status={data.status as ManageRequestTab} />
-      {sourceList.map((src) => (
+      {sourceList.map(src => (
         <div key={src.name} className="flex items-center my-8 text-white">
           <div className="flex flex-col items-center justify-center  text-xs px-2">
-            <div className="w-20 flex flex-col text-xs items-center">
-              {src.icon}
-            </div>
+            <div className="w-20 flex flex-col text-xs items-center">{src.icon}</div>
             {src.name}
           </div>
-          <a
-            href={src.link || ''}
-            target="_blank"
-            rel="noreferrer"
-            className="text-sm text-blue-400 underline"
-          >
+          <a href={src.link || ''} target="_blank" rel="noreferrer" className="text-sm text-blue-400 underline">
             {src.link}
           </a>
         </div>
       ))}
       <BottomSheet>
         <div className="flex items-center my-5">
-          {data.status !== ManageRequestTab.DENIED &&
+          {data.status !== ManageRequestTab.DENIED && (
             <DeleteButton onClick={handleDeny} className="h-12 w-full mx-6 mt-5 text-white text-sm">
               {data.status === ManageRequestTab.APPROVED ? 'REMOVE VERIFICATION' : 'DENY'}
             </DeleteButton>
-          }
-          {data.status !== ManageRequestTab.APPROVED &&
+          )}
+          {data.status !== ManageRequestTab.APPROVED && (
             <Button
               variant="outline"
               borderColor="bg-green-gradient"
@@ -144,7 +139,7 @@ export default function RequestPage({ data }: RequestPageProps) {
             >
               APPROVE
             </Button>
-          }
+          )}
         </div>
       </BottomSheet>
       <DenyReasonModal showReason={showReason} setShowReason={setShowReason} requestId={data.id} />

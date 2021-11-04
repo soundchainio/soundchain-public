@@ -13,7 +13,7 @@ export const ReactionItem = ({ reaction: { type, profile }, onClick }: FollowIte
   const router = useRouter();
   const onReactionClick = () => {
     onClick();
-    router.push(`/profiles/${profile.id}`);
+    router.push(`/profiles/${profile.userHandle}`);
   };
 
   return (

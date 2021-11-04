@@ -6,21 +6,16 @@ import NextLink from 'next/link';
 import { DisplayName } from './DisplayName';
 
 interface ProfileListItemProps {
-  profile: Profile
+  profile: Profile;
 }
 
 export const ProfileListItem = ({ profile }: ProfileListItemProps) => {
-
   if (!profile) return <ProfileListItemSkeleton />;
 
   return (
-    <NextLink href={`/profiles/${profile.id}`}>
+    <NextLink href={`/profiles/${profile.userHandle}`}>
       <div className="relative flex items-center bg-gray-20 p-4 m-4 rounded-lg">
-        <Avatar
-          profile={profile}
-          pixels={50}
-          className="rounded-full min-w-max"
-        />
+        <Avatar profile={profile} pixels={50} className="rounded-full min-w-max" />
         <div className="mx-4">
           <DisplayName name={profile.displayName} verified={profile.verified} />
           <p className="text-gray-80 text-sm">@{profile.userHandle}</p>
