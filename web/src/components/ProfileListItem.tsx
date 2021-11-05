@@ -14,7 +14,7 @@ export const ProfileListItem = ({ profile }: ProfileListItemProps) => {
   return (
     <NextLink href={`/profiles/${profile.userHandle}`}>
       <a className="relative flex items-center bg-gray-20 px-3 py-2 rounded-lg gap-3">
-        <Avatar profile={profile} pixels={40} className="rounded-full min-w-max" />
+        <Avatar linkToProfile={false} profile={profile} pixels={40} className="rounded-full min-w-max" />
         <div className="truncate">
           <span className="font-bold text-sm text-white overflow-ellipsis overflow-hidden">{profile.displayName}</span>
           <p className="text-gray-80 text-xs font-semibold">{`@${profile.userHandle}`}</p>

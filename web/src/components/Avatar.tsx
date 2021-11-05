@@ -3,7 +3,7 @@ import Image from 'next/image';
 import NextLink from 'next/link';
 import React from 'react';
 
-interface AvatarProps extends React.ComponentPropsWithoutRef<'a'> {
+interface AvatarProps extends React.ComponentPropsWithoutRef<'div'> {
   profile: Partial<Profile>;
   pixels?: number;
   className?: string;
@@ -13,14 +13,16 @@ interface AvatarProps extends React.ComponentPropsWithoutRef<'a'> {
 export const Avatar = ({ profile, pixels = 30, linkToProfile = true, ...props }: AvatarProps) => {
   const maybeLinkToProfile = (children: JSX.Element) => {
     return linkToProfile && Boolean(profile.userHandle) ? (
-      <NextLink href={`/profiles/${profile.userHandle}`}>{children}</NextLink>
+      <NextLink href={`/profiles/${profile.userHandle}`}>
+        <a>{children}</a>
+      </NextLink>
     ) : (
       children
     );
   };
 
   return maybeLinkToProfile(
-    <a {...props}>
+    <div {...props}>
       {
         <Image
           alt="Profile picture"
@@ -31,6 +33,6 @@ export const Avatar = ({ profile, pixels = 30, linkToProfile = true, ...props }:
           objectFit="cover"
         />
       }
-    </a>,
+    </div>,
   );
 };

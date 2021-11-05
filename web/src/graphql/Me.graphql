@@ -10,6 +10,7 @@ query Me {
     profile {
       id
       displayName
+      userHandle
       profilePicture
       coverPicture
       followerCount

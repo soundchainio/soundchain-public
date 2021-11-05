@@ -1668,7 +1668,7 @@ export type MeQuery = (
     & Pick<User, 'id' | 'handle' | 'email' | 'magicWalletAddress' | 'defaultWallet' | 'isApprovedOnMarketplace' | 'roles'>
     & { profile: (
       { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'followerCount' | 'followingCount' | 'favoriteGenres' | 'musicianTypes' | 'bio'>
+      & Pick<Profile, 'id' | 'displayName' | 'userHandle' | 'profilePicture' | 'coverPicture' | 'followerCount' | 'followingCount' | 'favoriteGenres' | 'musicianTypes' | 'bio'>
       & { socialMedias: (
         { __typename?: 'SocialMedias' }
         & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
@@ -3604,6 +3604,7 @@ export const MeDocument = gql`
     profile {
       id
       displayName
+      userHandle
       profilePicture
       coverPicture
       followerCount
