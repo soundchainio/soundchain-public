@@ -1,5 +1,4 @@
 import { Avatar } from 'components/Avatar';
-import { BottomSheet } from 'components/BottomSheet';
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { Delete as DeleteButton } from 'components/Buttons/Delete';
@@ -99,49 +98,46 @@ export default function RequestPage({ data }: RequestPageProps) {
   };
 
   return (
-    <Layout topNavBarProps={topNovaBarProps}>
-      <NextLink href={`/profiles/${data.profileId}`}>
-        <div className="flex flex-col text-white cursor-pointer">
-          <div className="relative flex items-center p-4">
-            <Avatar profile={profile.profile} pixels={40} className="rounded-full min-w-max flex items-center" />
-            <div className="mx-4">
-              <DisplayName name={profile.profile.displayName} verified={profile.profile.verified} />
-              <p className="text-gray-80 text-sm">@{profile.profile.userHandle}</p>
+    <Layout topNavBarProps={topNovaBarProps} fullHeight>
+      <div className="flex flex-col justify-between h-full">
+        <div>
+          <NextLink href={`/profiles/${data.profileId}`}>
+            <div className="flex flex-col text-white cursor-pointer">
+              <div className="relative flex items-center p-4">
+                <Avatar profile={profile.profile} pixels={40} className="rounded-full min-w-max flex items-center" />
+                <div className="mx-4">
+                  <DisplayName name={profile.profile.displayName} verified={profile.profile.verified} />
+                  <p className="text-gray-80 text-sm">@{profile.profile.userHandle}</p>
+                </div>
+              </div>
             </div>
-          </div>
+          </NextLink>
+          <CurrentRequestStatus reason={data.reason || ''} status={data.status as ManageRequestTab} />
+          {sourceList.map(src => (
+            <div key={src.name} className="flex items-center my-8 text-white">
+              <div className="flex flex-col items-center justify-center  text-xs px-2">
+                <div className="w-20 flex flex-col text-xs items-center">{src.icon}</div>
+                {src.name}
+              </div>
+              <a href={src.link || ''} target="_blank" rel="noreferrer" className="text-sm text-blue-400 underline">
+                {src.link}
+              </a>
+            </div>
+          ))}
         </div>
-      </NextLink>
-      <CurrentRequestStatus reason={data.reason || ''} status={data.status as ManageRequestTab} />
-      {sourceList.map(src => (
-        <div key={src.name} className="flex items-center my-8 text-white">
-          <div className="flex flex-col items-center justify-center  text-xs px-2">
-            <div className="w-20 flex flex-col text-xs items-center">{src.icon}</div>
-            {src.name}
-          </div>
-          <a href={src.link || ''} target="_blank" rel="noreferrer" className="text-sm text-blue-400 underline">
-            {src.link}
-          </a>
-        </div>
-      ))}
-      <BottomSheet>
-        <div className="flex items-center my-5">
+        <div className="flex gap-4 px-4 md:px-0 items-center my-5 mt-auto">
           {data.status !== ManageRequestTab.DENIED && (
-            <DeleteButton onClick={handleDeny} className="h-12 w-full mx-6 mt-5 text-white text-sm">
+            <DeleteButton onClick={handleDeny} className="h-12 w-full text-white text-sm">
               {data.status === ManageRequestTab.APPROVED ? 'REMOVE VERIFICATION' : 'DENY'}
             </DeleteButton>
           )}
           {data.status !== ManageRequestTab.APPROVED && (
-            <Button
-              variant="outline"
-              borderColor="bg-green-gradient"
-              className="h-12 mx-6 mt-5 w-full"
-              onClick={handleApprove}
-            >
+            <Button variant="outline" borderColor="bg-green-gradient" className="h-12 w-full" onClick={handleApprove}>
               APPROVE
             </Button>
           )}
         </div>
-      </BottomSheet>
+      </div>
       <DenyReasonModal showReason={showReason} setShowReason={setShowReason} requestId={data.id} />
     </Layout>
   );
