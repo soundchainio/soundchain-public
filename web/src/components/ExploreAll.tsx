@@ -39,7 +39,7 @@ export const ExploreAll = ({ searchTerm, setSelectedTab }: ExplorePageProps) => 
   if (loading) return <div> loading... </div>;
 
   return (
-    <>
+    <div className="bg-gray-10">
       <div className="px-4 pt-6">
         <ExploreTopTracksBanner />
       </div>
@@ -90,6 +90,6 @@ export const ExploreAll = ({ searchTerm, setSelectedTab }: ExplorePageProps) => 
       ) : (
         <NoResultFound type="Tracks" />
       )}
-    </>
+    </div>
   );
 };
