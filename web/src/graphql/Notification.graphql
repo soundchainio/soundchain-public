@@ -15,5 +15,8 @@ query Notification($id: String!) {
     ... on NFTSoldNotification {
       ...NFTSoldNotificationFields
     }
+    ... on VerificationRequestNotification {
+      ...VerificationRequestNotificationFields
+    }
   }
 }

@@ -65,6 +65,12 @@ export class Track extends Model {
   @prop()
   muxAsset: MuxAsset;
 
+  @prop()
+  playbackCount: number;
+
+  @Field()
+  playbackCountFormatted: string;
+
   @Field({ nullable: true })
   @prop({ default: false })
   deleted?: boolean;

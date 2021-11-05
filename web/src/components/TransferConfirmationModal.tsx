@@ -8,7 +8,6 @@ import { Logo } from 'icons/Logo';
 import { Matic } from 'icons/Matic';
 import router from 'next/router';
 import React, { useState } from 'react';
-import { TransactionReceipt } from 'web3-core/types';
 import { Button } from './Button';
 import { Label } from './Label';
 import { Account, Wallet } from './Wallet';
@@ -18,7 +17,7 @@ export const TransferConfirmationModal = () => {
   const { dispatchShowTransferConfirmationModal } = useModalDispatch();
   const [loading, setLoading] = useState(false);
   const { transfer } = useBlockchain();
-  const { web3, account, balance } = useMagicContext();
+  const { web3, account, balance, refetchBalance } = useMagicContext();
 
   const maxGasFee = useMaxGasFee();
 
@@ -33,7 +32,7 @@ export const TransferConfirmationModal = () => {
   const initialValues = {
     recipient: '',
     amount: '0.00',
-    totalGasFee: maxGasFee,
+    totalGasFee: '',
   };
 
   const hasEnoughFunds = () => {
@@ -51,15 +50,15 @@ export const TransferConfirmationModal = () => {
           console.log(hash);
         };
 
-        const onReceipt = (receipt: TransactionReceipt) => {
-          console.log(receipt);
+        const onReceipt = () => {
           alert('Transaction completed!');
           setLoading(false);
           handleClose();
+          refetchBalance();
           router.push('/wallet');
         };
         if (account && walletRecipient && amountToTransfer) {
-          transfer(web3, account, walletRecipient, amountToTransfer, onTransactionHash, onReceipt);
+          transfer(web3, walletRecipient, account, amountToTransfer, onTransactionHash, onReceipt);
         }
       } catch (e) {
         console.log(e);
@@ -147,7 +146,7 @@ export const TransferConfirmationModal = () => {
                     <Matic />
                   </span>
                   <span className="mx-1 text-white font-bold text-md leading-tight">
-                    {parseFloat(maxGasFee || '0') + parseFloat(amountToTransfer || '0')}
+                    {Number(maxGasFee || '0') + Number(amountToTransfer || '0')}
                   </span>
                   <div className="items-end">
                     <span className="text-gray-80 font-black text-xxs leading-tight">matic</span>

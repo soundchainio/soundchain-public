@@ -1,0 +1,6 @@
+fragment VerificationRequestNotificationFields on VerificationRequestNotification {
+  id
+  type
+  body
+  createdAt
+}

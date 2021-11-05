@@ -7,6 +7,7 @@ import NextLink from 'next/link';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 import { Avatar } from './Avatar';
 import { CommentSkeleton } from './CommentSkeleton';
+import { DisplayName } from './DisplayName';
 import { Timestamp } from './Timestamp';
 
 interface CommentProps {
@@ -27,9 +28,7 @@ export const Comment = ({ commentId }: CommentProps) => {
   if (!comment) return <CommentSkeleton />;
 
   if (data?.comment.deleted) {
-    return (
-      <NotAvailableMessage type="comment" />
-    )
+    return <NotAvailableMessage type="comment" />;
   }
 
   return (
@@ -38,8 +37,8 @@ export const Comment = ({ commentId }: CommentProps) => {
       <div className="flex-1 py-4 px-4 bg-gray-20 rounded-xl">
         <div className="flex items-center">
           <div className="flex-1 flex flex-col">
-            <NextLink href={`/profiles/${comment.profile.id}`}>
-              <a className="text-white font-semibold">{comment.profile.displayName}</a>
+            <NextLink href={`/profiles/${comment.profile.userHandle}`}>
+              <DisplayName name={comment.profile.displayName} verified={comment.profile.verified} />
             </NextLink>
             <Timestamp className="flex-1" datetime={comment.createdAt} />
           </div>

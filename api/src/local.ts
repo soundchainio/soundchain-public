@@ -24,6 +24,7 @@ async function bootstrap() {
 
   await new Promise<void>(resolve => app.listen({ port: config.express.port }, resolve));
   setInterval(() => watcher({}, undefined, null), 60 * 1000);
+  // setInterval(() => playbackCount({}, undefined, null), 60 * 1000);
 
   console.log(`🚀 Server ready at http://localhost:${config.express.port}${server.graphqlPath}`);
 }

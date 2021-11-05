@@ -1,4 +1,4 @@
-import { DocumentType } from '@typegoose/typegoose';
+import { DocumentType, mongoose } from '@typegoose/typegoose';
 import { PaginateResult } from '../db/pagination/paginate';
 import { NotFoundError } from '../errors/NotFoundError';
 import { FeedItemModel } from '../models/FeedItem';
@@ -17,6 +17,18 @@ type RecursivePartial<T> = {
   [P in keyof T]?: RecursivePartial<T[P]>;
 };
 
+type bulkType = {
+  updateOne: {
+    filter: {
+      _id: string;
+    };
+    update: {
+      $inc: {
+        playbackCount: number;
+      };
+    };
+  };
+};
 export class TrackService extends ModelService<typeof Track> {
   constructor(context: Context) {
     super(context, TrackModel);
@@ -105,6 +117,22 @@ export class TrackService extends ModelService<typeof Track> {
     }
 
     return await this.model.findOneAndDelete({ _id: id });
+  }
+
+  async incrementPlaybackCount(values: { trackId: string; amount: number }[]): Promise<number> {
+    const bulkOps: bulkType[] = [];
+
+    for (let index = 0; index < values.length; index++) {
+      const element = values[index];
+      if (mongoose.Types.ObjectId.isValid(element.trackId)) {
+        bulkOps.push({
+          updateOne: { filter: { _id: element.trackId }, update: { $inc: { playbackCount: element.amount } } },
+        });
+      }
+    }
+
+    const result = await this.model.bulkWrite(bulkOps);
+    return result.modifiedCount;
   }
 
   async setPendingNone(tokenId: number): Promise<Track> {

@@ -52,7 +52,17 @@ export const LoginForm = () => {
         <div className="h-36 mb-2 flex items-center justify-center">
           <LogoAndText />
         </div>
-        <div className="text-white flex items-center justify-center">Now you can close this tab</div>
+        <div className="text-white flex items-center justify-center text-center">
+          Now you can close this tab
+          <br />
+          Or refresh the page to continue using here.
+        </div>
+        <button
+          className="text-white flex items-center justify-center border border-white mt-6 w-60 h-8 self-center"
+          onClick={() => document.location.reload()}
+        >
+          Refresh
+        </button>
       </>
     );
   }

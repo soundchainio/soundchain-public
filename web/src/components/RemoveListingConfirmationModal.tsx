@@ -40,7 +40,6 @@ export const RemoveListingConfirmationModal = () => {
   };
 
   const handleSubmit = () => {
-    console.log(tokenId, trackId);
     if (!tokenId || !trackId) return;
 
     if (!hasEnoughFunds()) {

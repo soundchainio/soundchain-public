@@ -6,6 +6,8 @@ query Followers($profileId: String!, $page: PageInput) {
         id
         displayName
         profilePicture
+        verified
+        userHandle
       }
     }
     pageInfo {

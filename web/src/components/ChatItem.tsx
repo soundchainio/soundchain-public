@@ -4,6 +4,7 @@ import { Chat } from 'lib/graphql';
 import NextLink from 'next/link';
 import React from 'react';
 import { Avatar } from './Avatar';
+import { DisplayName } from './DisplayName';
 import { Timestamp } from './Timestamp';
 
 interface FollowerNotificationProps {
@@ -14,7 +15,7 @@ export const ChatItem = ({
   chatItem: {
     id,
     message,
-    profile: { displayName, profilePicture },
+    profile: { displayName, profilePicture, verified },
     createdAt,
     unread,
   },
@@ -28,7 +29,7 @@ export const ChatItem = ({
           </div>
           <Avatar className="flex w-[40px]" profile={{ profilePicture: profilePicture }} pixels={40} />
           <div className="flex w-9/12 flex-col pl-4">
-            <div className="font-semibold text-white flex text-sm line-clamp-1">{displayName}</div>
+            <DisplayName name={displayName} verified={verified} />
             <div className="text-gray-80 flex text-sm whitespace-nowrap">
               <div className="truncate">{`${message}`}</div>&nbsp;<div className="text-gray-40">•</div>
               &nbsp;

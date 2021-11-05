@@ -166,4 +166,17 @@ export class NotificationService extends ModelService<typeof Notification> {
     await ProfileModel.updateMany({ _id: { $in: subscribersIds } }, { $inc: { unreadNotificationCount: 1 } });
     await this.model.insertMany(notifications);
   }
+
+  async notifyVerificationRequestUpdate(profileId: string): Promise<void> {
+    const notification = new NotificationModel({
+      type: NotificationType.VerificationRequestUpdate,
+      profileId: profileId,
+      metadata: {
+        body: 'Your verification request has been updated!',
+      },
+    });
+
+    await notification.save();
+    await this.incrementNotificationCount(profileId);
+  }
 }

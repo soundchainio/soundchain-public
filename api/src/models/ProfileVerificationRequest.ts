@@ -32,6 +32,10 @@ export class ProfileVerificationRequest extends Model {
   @prop({ default: false })
   reason?: string;
 
+  @Field({ nullable: true })
+  @prop({ default: false })
+  reviewerProfileId?: string;
+
   @Field(() => Date)
   createdAt: Date;
 

@@ -16,6 +16,9 @@ query Notifications($sort: SortNotificationInput) {
       ... on NFTSoldNotification {
         ...NFTSoldNotificationFields
       }
+      ... on VerificationRequestNotification {
+        ...VerificationRequestNotificationFields
+      }
     }
   }
 }

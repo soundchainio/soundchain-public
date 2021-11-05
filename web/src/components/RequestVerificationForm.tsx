@@ -45,16 +45,16 @@ export const RequestVerificationForm = ({ handleSubmit, loading }: Props) => {
       onSubmit={handleSubmit}
     >
       <Form className="flex flex-col gap-4">
-        <div className="flex flex-col flex-1 gap-2 mt-2">
-          {sourceList.map((src) => (
-            <div key={src.name} className="flex items-center my-4">
-              <div className="flex flex-col items-center justify-center  text-xs px-2">
-                <div className="w-20 flex flex-col text-xs items-center">
-                  {src.icon}
-                </div>
+        <div className="flex flex-col flex-1 gap-6 mt-2">
+          {sourceList.map(src => (
+            <div key={src.name} className="flex items-center gap-2">
+              <div className="flex flex-col items-center justify-center  text-xs">
+                <div className="w-20 flex flex-col text-xs items-center">{src.icon}</div>
                 {src.name}
               </div>
-              <InputField name={src.fieldName} type="text" placeholder={`${src.name} Link`} />
+              <div className="flex-1">
+                <InputField name={src.fieldName} type="text" placeholder={`${src.name} Link`} />
+              </div>
             </div>
           ))}
         </div>
@@ -62,7 +62,7 @@ export const RequestVerificationForm = ({ handleSubmit, loading }: Props) => {
           type="submit"
           variant="outline"
           borderColor="bg-green-gradient"
-          className="h-12 mx-6 mt-5"
+          className="h-12 mt-5"
           disabled={loading}
         >
           REQUEST VERIFICATION

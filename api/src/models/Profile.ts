@@ -56,6 +56,10 @@ export class Profile extends Model {
   @prop({ required: true, default: 0 })
   unreadMessageCount: number;
 
+  @Field({ nullable: true })
+  @prop({ required: true, default: false })
+  verified: boolean;
+
   @Field(() => Date)
   createdAt: Date;
 

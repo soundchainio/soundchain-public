@@ -29,19 +29,23 @@ export const ExploreUsers = ({ searchTerm }: ExplorePageProps) => {
           after: pageInfo.endCursor,
           inclusive: false,
         },
-      }
+      },
     });
   };
 
   const { nodes: profiles, pageInfo } = data?.exploreUsers;
 
   return (
-    <div>
-      {profiles.length > 0 ? profiles?.map(profile => (
-        <div key={profile.id} className="text-white">
-          <ProfileListItem profile={profile} />
-        </div>
-      )) : <NoResultFound type="Users" />}
+    <div className="bg-gray-10 p-5 space-y-3">
+      {profiles.length > 0 ? (
+        profiles?.map(profile => (
+          <div key={profile.id} className="text-white">
+            <ProfileListItem profile={profile} />
+          </div>
+        ))
+      ) : (
+        <NoResultFound type="Users" />
+      )}
       {pageInfo.hasNextPage && <InfiniteLoader loadMore={loadNext} loadingMessage="Loading Users" />}
     </div>
   );

@@ -25,12 +25,7 @@ export const NavBar = () => {
     <nav className="bg-black md:bg-gray-30 h-16 flex items-center inset-x-0 shadow-2xl md:w-full">
       <div className="w-full flex justify-center gap-14">
         <NavBarButton label="Home" path="/" icon={Home} color="yellow" id="top" />
-        <NavBarButton
-          label="Explore"
-          path={me ? '/explore' : '/login'}
-          icon={Search}
-          color="green"
-        />
+        <NavBarButton label="Explore" path={me ? '/explore' : '/login'} icon={Search} color="green" />
         {isMinting ? (
           <NavBarButton label="Minting..." nyanCat={true} onClick={handleCreateClick} />
         ) : (
@@ -46,7 +41,7 @@ export const NavBar = () => {
         <NavBarButton
           label="Profile"
           icon={Profile}
-          path={me ? `/profiles/${me?.profile.id}` : '/login'}
+          path={me ? `/profiles/${me?.handle}` : '/login'}
           color="purple-green"
         />
       </div>
