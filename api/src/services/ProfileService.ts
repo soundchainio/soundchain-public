@@ -136,4 +136,12 @@ export class ProfileService extends ModelService<typeof Profile> {
     }
     return updatedProfile;
   }
+
+  async verifyProfile(profileId: string, verified: boolean): Promise<Profile> {
+    const updatedProfile = await this.model.findByIdAndUpdate(profileId, { verified }, { new: true });
+    if (!updatedProfile) {
+      throw new NotFoundError('Profile', profileId);
+    }
+    return updatedProfile;
+  }
 }

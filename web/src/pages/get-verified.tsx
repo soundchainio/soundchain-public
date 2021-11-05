@@ -1,3 +1,4 @@
+import { Button } from 'components/Button';
 import { InboxButton } from 'components/Buttons/InboxButton';
 import { CopyLink } from 'components/CopyLink';
 import { Layout } from 'components/Layout';
@@ -11,11 +12,13 @@ import {
   ProfileVerificationRequest,
   useCreateProfileVerificationRequestMutation,
   useProfileVerificationRequestQuery,
+  useRemoveProfileVerificationRequestMutation,
 } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import Head from 'next/head';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import { ManageRequestTab } from 'types/ManageRequestTabType';
 
 export const getServerSideProps = protectPage((context, apolloClient) => {
   return cacheFor(GetVerified, {}, context, apolloClient);
@@ -23,6 +26,7 @@ export const getServerSideProps = protectPage((context, apolloClient) => {
 
 export default function GetVerified() {
   const [createRequestVerification] = useCreateProfileVerificationRequestMutation();
+  const [removeRequestVerification] = useRemoveProfileVerificationRequestMutation();
   const { data: request } = useProfileVerificationRequestQuery();
   const [loading, setLoading] = useState(false);
   const [requested, setRequested] = useState<ProfileVerificationRequest>();
@@ -41,6 +45,13 @@ export default function GetVerified() {
   const topNavBarProps: TopNavBarProps = {
     rightButton: <InboxButton />,
     title: 'Get Verified',
+  };
+
+  const handleResend = async () => {
+    if (requested) {
+      await removeRequestVerification({ variables: { id: requested.id } });
+      setRequested(undefined);
+    }
   };
 
   useEffect(() => {
@@ -76,7 +87,7 @@ export default function GetVerified() {
           </ol>
         </>
       )}
-      {requested && (
+      {requested?.status === ManageRequestTab.PENDING && (
         <div className="text-gray-400 text-sm px-4 pb-10 text-center">
           Your request has been sent!
           <div className="mt-6 mb-6">
@@ -84,7 +95,28 @@ export default function GetVerified() {
             {formatTimestamp(new Date(requested.createdAt), "hh:mmaaaaa'm'")}
           </div>
           <div className="mt-6 mb-6">You will get notified when we review the information you submitted.</div>
-          <Image alt="Status: Waiting..." height="100" width="100" className="animate-spin" src="/vinyl-record.png" />
+          <Image alt="Status: Pending" height="100" width="100" className="animate-spin" src="/vinyl-record.png" />
+        </div>
+      )}
+
+      {requested?.status === ManageRequestTab.APPROVED && (
+        <div className="text-gray-400 text-sm px-4 pb-10 text-center">Your account is legitimate!</div>
+      )}
+
+      {requested?.status === ManageRequestTab.DENIED && (
+        <div className="text-gray-400 text-sm px-4 pb-10 text-center">
+          Your request was <span className="font-bold text-red-500">DENIED</span>.
+          <div className="mt-5">Reason: {requested.reason}</div>
+          <div className="mt-5 flex items-center">
+            <Button
+              variant="outline"
+              borderColor="bg-green-gradient"
+              className="h-12 mx-6 mt-5 w-full"
+              onClick={handleResend}
+            >
+              RESEND THE FORM
+            </Button>
+          </div>
         </div>
       )}
     </Layout>

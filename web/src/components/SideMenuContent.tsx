@@ -14,11 +14,13 @@ import { TwitterSquare } from 'icons/social/TwitterSquare';
 import { Verified } from 'icons/Verified';
 import { Wallet } from 'icons/Wallet';
 import { setJwt } from 'lib/apollo';
+import { Role } from 'lib/graphql';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { FollowModalType } from 'types/FollowModalType';
 import { Avatar } from './Avatar';
+import { DisplayName } from './DisplayName';
 import { MenuItem } from './MenuItem';
 import { MenuLink } from './MenuLink';
 
@@ -92,7 +94,7 @@ export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => 
                 </div>
               </div>
               <div className="flex flex-col mt-4">
-                <h2 className="font-bold text-white">{me.profile.displayName}</h2>
+                <DisplayName name={me.profile.displayName} verified={me.profile.verified} />
                 <p className="text-gray-80 text-md">@{me.handle}</p>
               </div>
             </>
@@ -106,7 +108,16 @@ export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => 
       </div>
       {me && (
         <div>
-          <MenuLink icon={Verified} label="Get Verified" href="/get-verified" />
+          {me.roles.includes(Role.Admin) ? (
+            <MenuLink icon={Verified} label="Admin Panel" href="/manage-requests" />
+          ) : (
+            <MenuLink
+              icon={Verified}
+              label={me.profile.verified ? 'Verified Account' : 'Get Verified'}
+              href={me.profile.verified ? '#' : '/get-verified'}
+            />
+          )}
+
           <MenuLink icon={Settings} label="Account Settings" href="/settings" />
           <MenuItem icon={Logout} label="Logout" onClick={onLogout} />
         </div>
