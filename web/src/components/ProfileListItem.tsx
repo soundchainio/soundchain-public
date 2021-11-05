@@ -14,19 +14,19 @@ export const ProfileListItem = ({ profile }: ProfileListItemProps) => {
   return (
     <NextLink href={`/profiles/${profile.userHandle}`}>
       <a className="relative flex items-center bg-gray-20 px-3 py-2 rounded-lg gap-3">
-        <Avatar linkToProfile={false} profile={profile} pixels={40} className="rounded-full min-w-max" />
+        <Avatar linkToProfile={false} profile={profile} pixels={40} className="rounded-full h-[40px] w-[40px]" />
         <div className="truncate">
           <span className="font-bold text-sm text-white overflow-ellipsis overflow-hidden">{profile.displayName}</span>
           <p className="text-gray-80 text-xs font-semibold">{`@${profile.userHandle}`}</p>
         </div>
         <div className="flex-1 flex justify-end gap-2">
-          <div className="text-center text-xs">
+          <div className="text-center text-sm">
             <p className="font-black text-white">
               <Number value={profile.followerCount} />
             </p>
             <p className="text-gray-80 font-medium text-xs">Followers</p>
           </div>
-          <div className="text-center text-xs">
+          <div className="text-center text-sm">
             <p className="font-black text-white">
               <Number value={profile.followingCount} />
             </p>
