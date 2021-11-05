@@ -14,29 +14,32 @@ export const ProfileListItem = ({ profile }: ProfileListItemProps) => {
 
   return (
     <NextLink href={`/profiles/${profile.userHandle}`}>
-      <div className="flex items-center bg-gray-20 rounded-lg p-1">
-        <div className="flex items-center justify-start space-x-3">
-          <Avatar profile={profile} pixels={50} className="rounded-full min-w-max flex" />
-          <div className="w-full">
-          <DisplayName name={profile.displayName} verified={profile.verified} />
-            <p className="text-gray-80 text-xs leading-tight">@{profile.userHandle}</p>
+      <a className="relative flex items-center bg-gray-20 px-3 py-2 rounded-lg gap-3">
+        <Avatar
+          linkToProfile={false}
+          profile={profile}
+          pixels={40}
+          className="rounded-full h-[40px] w-[40px] flex-shrink-0"
+        />
+        <div>
+          <DisplayName name={profile.displayName} verified={profile.verified} className="text-sm" />
+          <p className="text-gray-80 text-xxs font-semibold">{`@${profile.userHandle}`}</p>
         </div>
-        </div>
-        <div className="flex-1 flex justify-end">
-          <div className="text-center text-sm cursor-pointer">
-            <p className="font-semibold text-white">
+        <div className="flex-1 flex justify-end gap-2">
+          <div className="text-center text-sm">
+            <p className="font-black text-white">
               <Number value={profile.followerCount} />
             </p>
-            <p className="text-gray-80 text-xs">Followers</p>
+            <p className="text-gray-80 font-medium text-xs">Followers</p>
           </div>
-          <div className="text-center text-sm cursor-pointer mx-2">
-            <p className="font-semibold text-white">
+          <div className="text-center text-sm">
+            <p className="font-black text-white">
               <Number value={profile.followingCount} />
             </p>
-            <p className="text-gray-80 text-xs">Following</p>
+            <p className="text-gray-80 font-medium text-xs">Following</p>
           </div>
         </div>
-      </div>
+      </a>
     </NextLink>
   );
 };

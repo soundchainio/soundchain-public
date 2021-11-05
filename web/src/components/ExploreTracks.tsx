@@ -54,7 +54,7 @@ export const ExploreTracks = ({ searchTerm }: ExplorePageProps) => {
   if (loading) return <div> loading... </div>;
 
   return (
-    <div>
+    <div className="bg-gray-10">
       {tracks.length > 0 ? (
         tracks?.map((track, index) => (
           <div key={track.id} className="text-white">
