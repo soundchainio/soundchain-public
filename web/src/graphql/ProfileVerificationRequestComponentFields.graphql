@@ -6,6 +6,7 @@ fragment ProfileVerificationRequestComponentFields on ProfileVerificationRequest
   bandcamp
   status
   reason
+  reviewerProfileId
   createdAt
   updatedAt
 }

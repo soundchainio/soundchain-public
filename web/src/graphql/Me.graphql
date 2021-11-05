@@ -8,21 +8,7 @@ query Me {
     isApprovedOnMarketplace
     roles
     profile {
-      id
-      displayName
-      profilePicture
-      coverPicture
-      followerCount
-      followingCount
-      favoriteGenres
-      musicianTypes
-      bio
-      socialMedias {
-        facebook
-        instagram
-        soundcloud
-        twitter
-      }
+      ...ProfileComponentFields
     }
   }
 }

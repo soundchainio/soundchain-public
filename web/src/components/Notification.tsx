@@ -6,6 +6,7 @@ import {
   NotificationType,
   ReactionNotification,
   useNotificationQuery,
+  VerificationRequestNotification,
 } from 'lib/graphql';
 import React from 'react';
 import { CommentNotificationItem } from './CommentNotificationItem';
@@ -14,6 +15,7 @@ import { NewPostNotificationItem } from './NewPostNotificationItem';
 import { NFTSoldNotificationItem } from './NFTSoldNotificationItem';
 import { NotificationSkeleton } from './NotificationSkeleton';
 import { ReactionNotificationItem } from './ReactionNotificationItem';
+import { VerificationRequestNotificationItem } from './VerificationRequestNotificationItem';
 
 interface NotificationProps {
   notificationId: string;
@@ -43,6 +45,15 @@ export const Notification = ({ notificationId, index }: NotificationProps) => {
 
   if (notification.type === NotificationType.NftSold) {
     return <NFTSoldNotificationItem notification={notification as NftSoldNotification} index={index} />;
+  }
+
+  if (notification.type === NotificationType.VerificationRequestUpdate) {
+    return (
+      <VerificationRequestNotificationItem
+        notification={notification as VerificationRequestNotification}
+        index={index}
+      />
+    );
   }
 
   return null;

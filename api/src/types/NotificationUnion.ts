@@ -5,6 +5,7 @@ import { NewPostNotification } from './NewPostNotification';
 import { NFTSoldNotification } from './NFTSoldNotification';
 import { NotificationType } from './NotificationType';
 import { ReactionNotification } from './ReactionNotification';
+import { VerificationRequestNotification } from './VerificationRequestNotification';
 
 export const NotificationUnion = createUnionType({
   name: 'Notification',
@@ -15,6 +16,7 @@ export const NotificationUnion = createUnionType({
       FollowerNotification,
       NewPostNotification,
       NFTSoldNotification,
+      VerificationRequestNotification,
     ] as const,
   resolveType: value => {
     if (value.type === NotificationType.Comment) {
@@ -31,6 +33,9 @@ export const NotificationUnion = createUnionType({
     }
     if (value.type === NotificationType.NFTSold) {
       return NFTSoldNotification;
+    }
+    if (value.type === NotificationType.VerificationRequestUpdate) {
+      return VerificationRequestNotification;
     }
     return undefined;
   },

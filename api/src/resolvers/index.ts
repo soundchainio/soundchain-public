@@ -20,11 +20,13 @@ import { ReactionResolver } from './ReactionResolver';
 import { TrackResolver } from './TrackResolver';
 import { UploadResolver } from './UploadResolver';
 import { UserResolver } from './UserResolver';
+import { VerificationRequestNotificationResolver } from './VerificationRequestNotificationResolver';
 
 export const resolvers = [
   ChatResolver,
   CommentResolver,
   CommentNotificationResolver,
+  VerificationRequestNotificationResolver,
   FollowerNotificationResolver,
   FollowResolver,
   FeedResolver,

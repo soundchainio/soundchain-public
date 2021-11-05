@@ -1,0 +1,7 @@
+mutation RemoveProfileVerificationRequest($id: String!) {
+  removeProfileVerificationRequest(id: $id) {
+    profileVerificationRequest {
+      id
+    }
+  }
+}

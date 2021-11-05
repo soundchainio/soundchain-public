@@ -27,6 +27,7 @@
     "@lottiefiles/react-lottie-player": "^3.4.1",
     "@metamask/onboarding": "^1.0.1",
     "@mux/upchunk": "^2.2.2",
+    "@reach/dialog": "^0.16.2",
     "@reach/slider": "^0.16.0",
     "@sentry/react": "^6.13.2",
     "@sentry/tracing": "^6.13.2",

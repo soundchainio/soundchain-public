@@ -1,0 +1,7 @@
+mutation UpdateProfileVerificationRequest($id: String!, $input: CreateProfileVerificationRequestInput!) {
+  updateProfileVerificationRequest(id: $id, input: $input) {
+    profileVerificationRequest {
+      ...ProfileVerificationRequestComponentFields
+    }
+  }
+}

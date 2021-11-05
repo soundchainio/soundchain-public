@@ -7,6 +7,7 @@ query Reactions($postId: String!, $page: PageInput) {
         id
         displayName
         profilePicture
+        verified
       }
     }
     pageInfo {
