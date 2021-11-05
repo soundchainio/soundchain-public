@@ -56,7 +56,7 @@ export default function GetVerified() {
 
   useEffect(() => {
     setMyProfileLink(`${window.location.origin}/profiles/${me?.handle}`);
-  }, []);
+  }, [me]);
 
   useEffect(() => {
     if (request?.profileVerificationRequest.id) setRequested(request.profileVerificationRequest);
