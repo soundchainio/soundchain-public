@@ -140,6 +140,9 @@ export type CreateProfileVerificationRequestInput = {
   soundcloud?: Maybe<Scalars['String']>;
   youtube?: Maybe<Scalars['String']>;
   bandcamp?: Maybe<Scalars['String']>;
+  status?: Maybe<Scalars['String']>;
+  reason?: Maybe<Scalars['String']>;
+  reviewerProfileId?: Maybe<Scalars['String']>;
 };
 
 export type CreateRepostInput = {
@@ -407,6 +410,8 @@ export type Mutation = {
   subscribeToProfile: SubscribeToProfilePayload;
   unsubscribeFromProfile: UnsubscribeFromProfilePayload;
   createProfileVerificationRequest: ProfileVerificationRequestPayload;
+  updateProfileVerificationRequest: ProfileVerificationRequestPayload;
+  removeProfileVerificationRequest: ProfileVerificationRequestPayload;
   createTrack: CreateTrackPayload;
   updateTrack: UpdateTrackPayload;
   deleteTrackOnError: UpdateTrackPayload;
@@ -523,6 +528,17 @@ export type MutationCreateProfileVerificationRequestArgs = {
 };
 
 
+export type MutationUpdateProfileVerificationRequestArgs = {
+  input: CreateProfileVerificationRequestInput;
+  id: Scalars['String'];
+};
+
+
+export type MutationRemoveProfileVerificationRequestArgs = {
+  id: Scalars['String'];
+};
+
+
 export type MutationCreateTrackArgs = {
   input: CreateTrackInput;
 };
@@ -615,7 +631,7 @@ export type NewPostNotification = {
   track: Maybe<Track>;
 };
 
-export type Notification = CommentNotification | ReactionNotification | FollowerNotification | NewPostNotification | NftSoldNotification;
+export type Notification = CommentNotification | ReactionNotification | FollowerNotification | NewPostNotification | NftSoldNotification | VerificationRequestNotification;
 
 export type NotificationConnection = {
   __typename?: 'NotificationConnection';
@@ -628,7 +644,8 @@ export enum NotificationType {
   Reaction = 'Reaction',
   Follower = 'Follower',
   NewPost = 'NewPost',
-  NftSold = 'NFTSold'
+  NftSold = 'NFTSold',
+  VerificationRequestUpdate = 'VerificationRequestUpdate'
 }
 
 export type PageInfo = {
@@ -716,6 +733,7 @@ export type Profile = {
   followingCount: Scalars['Float'];
   unreadNotificationCount: Scalars['Float'];
   unreadMessageCount: Scalars['Float'];
+  verified: Maybe<Scalars['Boolean']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   userHandle: Scalars['String'];
@@ -738,8 +756,15 @@ export type ProfileVerificationRequest = {
   bandcamp: Maybe<Scalars['String']>;
   status: Maybe<Scalars['String']>;
   reason: Maybe<Scalars['String']>;
+  reviewerProfileId: Maybe<Scalars['String']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
+};
+
+export type ProfileVerificationRequestConnection = {
+  __typename?: 'ProfileVerificationRequestConnection';
+  pageInfo: PageInfo;
+  nodes: Array<ProfileVerificationRequest>;
 };
 
 export type ProfileVerificationRequestPayload = {
@@ -772,6 +797,7 @@ export type Query = {
   profile: Profile;
   profileByHandle: Profile;
   profileVerificationRequest: ProfileVerificationRequest;
+  profileVerificationRequests: ProfileVerificationRequestConnection;
   track: Track;
   tracks: TrackConnection;
   uploadUrl: UploadUrl;
@@ -893,6 +919,18 @@ export type QueryProfileArgs = {
 
 export type QueryProfileByHandleArgs = {
   handle: Scalars['String'];
+};
+
+
+export type QueryProfileVerificationRequestArgs = {
+  id?: Maybe<Scalars['String']>;
+  profileId?: Maybe<Scalars['String']>;
+};
+
+
+export type QueryProfileVerificationRequestsArgs = {
+  page?: Maybe<PageInput>;
+  status?: Maybe<Scalars['String']>;
 };
 
 
@@ -1185,6 +1223,15 @@ export type User = {
   profile: Profile;
 };
 
+export type VerificationRequestNotification = {
+  __typename?: 'VerificationRequestNotification';
+  type: NotificationType;
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  id: Scalars['String'];
+  body: Scalars['String'];
+};
+
 export type AddCommentMutationVariables = Exact<{
   input: AddCommentInput;
 }>;
@@ -1265,7 +1312,7 @@ export type ChatsQuery = (
       & Pick<Chat, 'id' | 'message' | 'unread' | 'createdAt'>
       & { profile: (
         { __typename?: 'Profile' }
-        & Pick<Profile, 'displayName' | 'profilePicture'>
+        & Pick<Profile, 'displayName' | 'profilePicture' | 'verified'>
       ) }
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
@@ -1303,7 +1350,7 @@ export type CommentComponentFieldsFragment = (
   & Pick<Comment, 'id' | 'body' | 'createdAt' | 'deleted'>
   & { profile: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'userHandle'>
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle'>
   ) }
 );
 
@@ -1595,7 +1642,7 @@ export type FollowersQuery = (
       & Pick<Follow, 'id'>
       & { followerProfile: (
         { __typename?: 'Profile' }
-        & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'userHandle'>
+        & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle'>
       ) }
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
@@ -1619,7 +1666,7 @@ export type FollowingQuery = (
       & Pick<Follow, 'id'>
       & { followedProfile: (
         { __typename?: 'Profile' }
-        & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'userHandle'>
+        & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle'>
       ) }
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
@@ -1667,11 +1714,7 @@ export type MeQuery = (
     & Pick<User, 'id' | 'handle' | 'email' | 'magicWalletAddress' | 'defaultWallet' | 'isApprovedOnMarketplace' | 'roles'>
     & { profile: (
       { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'followerCount' | 'followingCount' | 'favoriteGenres' | 'musicianTypes' | 'bio'>
-      & { socialMedias: (
-        { __typename?: 'SocialMedias' }
-        & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
-      ) }
+      & ProfileComponentFieldsFragment
     ) }
   )> }
 );
@@ -1694,7 +1737,7 @@ export type MessageComponentFieldsFragment = (
   & Pick<Message, 'id' | 'message' | 'fromId' | 'toId' | 'createdAt'>
   & { fromProfile: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified'>
   ) }
 );
 
@@ -1747,6 +1790,9 @@ export type NotificationQuery = (
   ) | (
     { __typename?: 'NFTSoldNotification' }
     & NftSoldNotificationFieldsFragment
+  ) | (
+    { __typename?: 'VerificationRequestNotification' }
+    & VerificationRequestNotificationFieldsFragment
   ) }
 );
 
@@ -1785,6 +1831,9 @@ export type NotificationsQuery = (
     ) | (
       { __typename?: 'NFTSoldNotification' }
       & NftSoldNotificationFieldsFragment
+    ) | (
+      { __typename?: 'VerificationRequestNotification' }
+      & VerificationRequestNotificationFieldsFragment
     )> }
   ) }
 );
@@ -1833,7 +1882,7 @@ export type PostComponentFieldsFragment = (
   & Pick<Post, 'id' | 'body' | 'mediaLink' | 'repostId' | 'createdAt' | 'updatedAt' | 'commentCount' | 'repostCount' | 'totalReactions' | 'topReactions' | 'myReaction' | 'deleted'>
   & { profile: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'userHandle'>
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle'>
   ), track: Maybe<(
     { __typename?: 'Track' }
     & TrackComponentFieldsFragment
@@ -1885,7 +1934,7 @@ export type ProfileByHandleQuery = (
 
 export type ProfileComponentFieldsFragment = (
   { __typename?: 'Profile' }
-  & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'favoriteGenres' | 'musicianTypes' | 'bio' | 'followerCount' | 'followingCount' | 'userHandle' | 'isFollowed' | 'isSubscriber' | 'unreadNotificationCount' | 'unreadMessageCount' | 'createdAt' | 'updatedAt'>
+  & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'favoriteGenres' | 'musicianTypes' | 'bio' | 'followerCount' | 'followingCount' | 'userHandle' | 'isFollowed' | 'isSubscriber' | 'unreadNotificationCount' | 'unreadMessageCount' | 'verified' | 'createdAt' | 'updatedAt'>
   & { socialMedias: (
     { __typename?: 'SocialMedias' }
     & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
@@ -1901,11 +1950,14 @@ export type ProfileDisplayNameQuery = (
   { __typename?: 'Query' }
   & { profile: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'displayName'>
+    & Pick<Profile, 'displayName' | 'verified'>
   ) }
 );
 
-export type ProfileVerificationRequestQueryVariables = Exact<{ [key: string]: never; }>;
+export type ProfileVerificationRequestQueryVariables = Exact<{
+  id?: Maybe<Scalars['String']>;
+  profileId?: Maybe<Scalars['String']>;
+}>;
 
 
 export type ProfileVerificationRequestQuery = (
@@ -1918,7 +1970,27 @@ export type ProfileVerificationRequestQuery = (
 
 export type ProfileVerificationRequestComponentFieldsFragment = (
   { __typename?: 'ProfileVerificationRequest' }
-  & Pick<ProfileVerificationRequest, 'id' | 'profileId' | 'soundcloud' | 'youtube' | 'bandcamp' | 'status' | 'reason' | 'createdAt' | 'updatedAt'>
+  & Pick<ProfileVerificationRequest, 'id' | 'profileId' | 'soundcloud' | 'youtube' | 'bandcamp' | 'status' | 'reason' | 'reviewerProfileId' | 'createdAt' | 'updatedAt'>
+);
+
+export type ProfileVerificationRequestsQueryVariables = Exact<{
+  status?: Maybe<Scalars['String']>;
+  page?: Maybe<PageInput>;
+}>;
+
+
+export type ProfileVerificationRequestsQuery = (
+  { __typename?: 'Query' }
+  & { profileVerificationRequests: (
+    { __typename?: 'ProfileVerificationRequestConnection' }
+    & { nodes: Array<(
+      { __typename?: 'ProfileVerificationRequest' }
+      & ProfileVerificationRequestComponentFieldsFragment
+    )>, pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
+    ) }
+  ) }
 );
 
 export type ReactToPostMutationVariables = Exact<{
@@ -1957,7 +2029,7 @@ export type ReactionsQuery = (
       & Pick<Reaction, 'id' | 'type'>
       & { profile: (
         { __typename?: 'Profile' }
-        & Pick<Profile, 'id' | 'displayName' | 'profilePicture'>
+        & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified'>
       ) }
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
@@ -1976,6 +2048,22 @@ export type RegisterMutation = (
   & { register: (
     { __typename?: 'AuthPayload' }
     & Pick<AuthPayload, 'jwt'>
+  ) }
+);
+
+export type RemoveProfileVerificationRequestMutationVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+export type RemoveProfileVerificationRequestMutation = (
+  { __typename?: 'Mutation' }
+  & { removeProfileVerificationRequest: (
+    { __typename?: 'ProfileVerificationRequestPayload' }
+    & { profileVerificationRequest: (
+      { __typename?: 'ProfileVerificationRequest' }
+      & Pick<ProfileVerificationRequest, 'id'>
+    ) }
   ) }
 );
 
@@ -2312,6 +2400,23 @@ export type UpdateSocialMediasMutation = (
   ) }
 );
 
+export type UpdateProfileVerificationRequestMutationVariables = Exact<{
+  id: Scalars['String'];
+  input: CreateProfileVerificationRequestInput;
+}>;
+
+
+export type UpdateProfileVerificationRequestMutation = (
+  { __typename?: 'Mutation' }
+  & { updateProfileVerificationRequest: (
+    { __typename?: 'ProfileVerificationRequestPayload' }
+    & { profileVerificationRequest: (
+      { __typename?: 'ProfileVerificationRequest' }
+      & ProfileVerificationRequestComponentFieldsFragment
+    ) }
+  ) }
+);
+
 export type UpdateTrackMutationVariables = Exact<{
   input: UpdateTrackInput;
 }>;
@@ -2374,6 +2479,11 @@ export type UserByWalletQuery = (
   )> }
 );
 
+export type VerificationRequestNotificationFieldsFragment = (
+  { __typename?: 'VerificationRequestNotification' }
+  & Pick<VerificationRequestNotification, 'id' | 'type' | 'body' | 'createdAt'>
+);
+
 export type WasListedBeforeQueryVariables = Exact<{
   tokenId: Scalars['Float'];
 }>;
@@ -2394,6 +2504,7 @@ export const CommentComponentFieldsFragmentDoc = gql`
     id
     displayName
     profilePicture
+    verified
     userHandle
   }
 }
@@ -2431,6 +2542,7 @@ export const MessageComponentFieldsFragmentDoc = gql`
     id
     displayName
     profilePicture
+    verified
   }
 }
     `;
@@ -2515,6 +2627,7 @@ export const PostComponentFieldsFragmentDoc = gql`
     id
     displayName
     profilePicture
+    verified
     userHandle
   }
   track {
@@ -2544,6 +2657,7 @@ export const ProfileComponentFieldsFragmentDoc = gql`
   isSubscriber
   unreadNotificationCount
   unreadMessageCount
+  verified
   createdAt
   updatedAt
 }
@@ -2557,6 +2671,7 @@ export const ProfileVerificationRequestComponentFieldsFragmentDoc = gql`
   bandcamp
   status
   reason
+  reviewerProfileId
   createdAt
   updatedAt
 }
@@ -2571,6 +2686,14 @@ export const ReactionNotificationFieldsFragmentDoc = gql`
   authorPicture
   createdAt
   postId
+}
+    `;
+export const VerificationRequestNotificationFieldsFragmentDoc = gql`
+    fragment VerificationRequestNotificationFields on VerificationRequestNotification {
+  id
+  type
+  body
+  createdAt
 }
     `;
 export const AddCommentDocument = gql`
@@ -2733,6 +2856,7 @@ export const ChatsDocument = gql`
       profile {
         displayName
         profilePicture
+        verified
       }
       message
       unread
@@ -3425,6 +3549,7 @@ export const FollowersDocument = gql`
         id
         displayName
         profilePicture
+        verified
         userHandle
       }
     }
@@ -3474,6 +3599,7 @@ export const FollowingDocument = gql`
         id
         displayName
         profilePicture
+        verified
         userHandle
       }
     }
@@ -3601,25 +3727,11 @@ export const MeDocument = gql`
     isApprovedOnMarketplace
     roles
     profile {
-      id
-      displayName
-      profilePicture
-      coverPicture
-      followerCount
-      followingCount
-      favoriteGenres
-      musicianTypes
-      bio
-      socialMedias {
-        facebook
-        instagram
-        soundcloud
-        twitter
-      }
+      ...ProfileComponentFields
     }
   }
 }
-    `;
+    ${ProfileComponentFieldsFragmentDoc}`;
 
 /**
  * __useMeQuery__
@@ -3735,13 +3847,17 @@ export const NotificationDocument = gql`
     ... on NFTSoldNotification {
       ...NFTSoldNotificationFields
     }
+    ... on VerificationRequestNotification {
+      ...VerificationRequestNotificationFields
+    }
   }
 }
     ${CommentNotificationFieldsFragmentDoc}
 ${ReactionNotificationFieldsFragmentDoc}
 ${FollowerNotificationFieldsFragmentDoc}
 ${NewPostNotificationFieldsFragmentDoc}
-${NftSoldNotificationFieldsFragmentDoc}`;
+${NftSoldNotificationFieldsFragmentDoc}
+${VerificationRequestNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationQuery__
@@ -3824,6 +3940,9 @@ export const NotificationsDocument = gql`
       ... on NFTSoldNotification {
         ...NFTSoldNotificationFields
       }
+      ... on VerificationRequestNotification {
+        ...VerificationRequestNotificationFields
+      }
     }
   }
 }
@@ -3831,7 +3950,8 @@ export const NotificationsDocument = gql`
 ${ReactionNotificationFieldsFragmentDoc}
 ${FollowerNotificationFieldsFragmentDoc}
 ${NewPostNotificationFieldsFragmentDoc}
-${NftSoldNotificationFieldsFragmentDoc}`;
+${NftSoldNotificationFieldsFragmentDoc}
+${VerificationRequestNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationsQuery__
@@ -4073,6 +4193,7 @@ export const ProfileDisplayNameDocument = gql`
     query ProfileDisplayName($id: String!) {
   profile(id: $id) {
     displayName
+    verified
   }
 }
     `;
@@ -4105,8 +4226,8 @@ export type ProfileDisplayNameQueryHookResult = ReturnType<typeof useProfileDisp
 export type ProfileDisplayNameLazyQueryHookResult = ReturnType<typeof useProfileDisplayNameLazyQuery>;
 export type ProfileDisplayNameQueryResult = Apollo.QueryResult<ProfileDisplayNameQuery, ProfileDisplayNameQueryVariables>;
 export const ProfileVerificationRequestDocument = gql`
-    query ProfileVerificationRequest {
-  profileVerificationRequest {
+    query ProfileVerificationRequest($id: String, $profileId: String) {
+  profileVerificationRequest(id: $id, profileId: $profileId) {
     ...ProfileVerificationRequestComponentFields
   }
 }
@@ -4124,6 +4245,8 @@ export const ProfileVerificationRequestDocument = gql`
  * @example
  * const { data, loading, error } = useProfileVerificationRequestQuery({
  *   variables: {
+ *      id: // value for 'id'
+ *      profileId: // value for 'profileId'
  *   },
  * });
  */
@@ -4138,6 +4261,48 @@ export function useProfileVerificationRequestLazyQuery(baseOptions?: Apollo.Lazy
 export type ProfileVerificationRequestQueryHookResult = ReturnType<typeof useProfileVerificationRequestQuery>;
 export type ProfileVerificationRequestLazyQueryHookResult = ReturnType<typeof useProfileVerificationRequestLazyQuery>;
 export type ProfileVerificationRequestQueryResult = Apollo.QueryResult<ProfileVerificationRequestQuery, ProfileVerificationRequestQueryVariables>;
+export const ProfileVerificationRequestsDocument = gql`
+    query ProfileVerificationRequests($status: String, $page: PageInput) {
+  profileVerificationRequests(status: $status, page: $page) {
+    nodes {
+      ...ProfileVerificationRequestComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+    ${ProfileVerificationRequestComponentFieldsFragmentDoc}`;
+
+/**
+ * __useProfileVerificationRequestsQuery__
+ *
+ * To run a query within a React component, call `useProfileVerificationRequestsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useProfileVerificationRequestsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useProfileVerificationRequestsQuery({
+ *   variables: {
+ *      status: // value for 'status'
+ *      page: // value for 'page'
+ *   },
+ * });
+ */
+export function useProfileVerificationRequestsQuery(baseOptions?: Apollo.QueryHookOptions<ProfileVerificationRequestsQuery, ProfileVerificationRequestsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ProfileVerificationRequestsQuery, ProfileVerificationRequestsQueryVariables>(ProfileVerificationRequestsDocument, options);
+      }
+export function useProfileVerificationRequestsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ProfileVerificationRequestsQuery, ProfileVerificationRequestsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ProfileVerificationRequestsQuery, ProfileVerificationRequestsQueryVariables>(ProfileVerificationRequestsDocument, options);
+        }
+export type ProfileVerificationRequestsQueryHookResult = ReturnType<typeof useProfileVerificationRequestsQuery>;
+export type ProfileVerificationRequestsLazyQueryHookResult = ReturnType<typeof useProfileVerificationRequestsLazyQuery>;
+export type ProfileVerificationRequestsQueryResult = Apollo.QueryResult<ProfileVerificationRequestsQuery, ProfileVerificationRequestsQueryVariables>;
 export const ReactToPostDocument = gql`
     mutation ReactToPost($input: ReactToPostInput!) {
   reactToPost(input: $input) {
@@ -4186,6 +4351,7 @@ export const ReactionsDocument = gql`
         id
         displayName
         profilePicture
+        verified
       }
     }
     pageInfo {
@@ -4258,6 +4424,41 @@ export function useRegisterMutation(baseOptions?: Apollo.MutationHookOptions<Reg
 export type RegisterMutationHookResult = ReturnType<typeof useRegisterMutation>;
 export type RegisterMutationResult = Apollo.MutationResult<RegisterMutation>;
 export type RegisterMutationOptions = Apollo.BaseMutationOptions<RegisterMutation, RegisterMutationVariables>;
+export const RemoveProfileVerificationRequestDocument = gql`
+    mutation RemoveProfileVerificationRequest($id: String!) {
+  removeProfileVerificationRequest(id: $id) {
+    profileVerificationRequest {
+      id
+    }
+  }
+}
+    `;
+export type RemoveProfileVerificationRequestMutationFn = Apollo.MutationFunction<RemoveProfileVerificationRequestMutation, RemoveProfileVerificationRequestMutationVariables>;
+
+/**
+ * __useRemoveProfileVerificationRequestMutation__
+ *
+ * To run a mutation, you first call `useRemoveProfileVerificationRequestMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRemoveProfileVerificationRequestMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [removeProfileVerificationRequestMutation, { data, loading, error }] = useRemoveProfileVerificationRequestMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useRemoveProfileVerificationRequestMutation(baseOptions?: Apollo.MutationHookOptions<RemoveProfileVerificationRequestMutation, RemoveProfileVerificationRequestMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<RemoveProfileVerificationRequestMutation, RemoveProfileVerificationRequestMutationVariables>(RemoveProfileVerificationRequestDocument, options);
+      }
+export type RemoveProfileVerificationRequestMutationHookResult = ReturnType<typeof useRemoveProfileVerificationRequestMutation>;
+export type RemoveProfileVerificationRequestMutationResult = Apollo.MutationResult<RemoveProfileVerificationRequestMutation>;
+export type RemoveProfileVerificationRequestMutationOptions = Apollo.BaseMutationOptions<RemoveProfileVerificationRequestMutation, RemoveProfileVerificationRequestMutationVariables>;
 export const ResetNotificationCountDocument = gql`
     mutation ResetNotificationCount {
   resetNotificationCount {
@@ -5022,6 +5223,42 @@ export function useUpdateSocialMediasMutation(baseOptions?: Apollo.MutationHookO
 export type UpdateSocialMediasMutationHookResult = ReturnType<typeof useUpdateSocialMediasMutation>;
 export type UpdateSocialMediasMutationResult = Apollo.MutationResult<UpdateSocialMediasMutation>;
 export type UpdateSocialMediasMutationOptions = Apollo.BaseMutationOptions<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>;
+export const UpdateProfileVerificationRequestDocument = gql`
+    mutation UpdateProfileVerificationRequest($id: String!, $input: CreateProfileVerificationRequestInput!) {
+  updateProfileVerificationRequest(id: $id, input: $input) {
+    profileVerificationRequest {
+      ...ProfileVerificationRequestComponentFields
+    }
+  }
+}
+    ${ProfileVerificationRequestComponentFieldsFragmentDoc}`;
+export type UpdateProfileVerificationRequestMutationFn = Apollo.MutationFunction<UpdateProfileVerificationRequestMutation, UpdateProfileVerificationRequestMutationVariables>;
+
+/**
+ * __useUpdateProfileVerificationRequestMutation__
+ *
+ * To run a mutation, you first call `useUpdateProfileVerificationRequestMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateProfileVerificationRequestMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateProfileVerificationRequestMutation, { data, loading, error }] = useUpdateProfileVerificationRequestMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateProfileVerificationRequestMutation(baseOptions?: Apollo.MutationHookOptions<UpdateProfileVerificationRequestMutation, UpdateProfileVerificationRequestMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateProfileVerificationRequestMutation, UpdateProfileVerificationRequestMutationVariables>(UpdateProfileVerificationRequestDocument, options);
+      }
+export type UpdateProfileVerificationRequestMutationHookResult = ReturnType<typeof useUpdateProfileVerificationRequestMutation>;
+export type UpdateProfileVerificationRequestMutationResult = Apollo.MutationResult<UpdateProfileVerificationRequestMutation>;
+export type UpdateProfileVerificationRequestMutationOptions = Apollo.BaseMutationOptions<UpdateProfileVerificationRequestMutation, UpdateProfileVerificationRequestMutationVariables>;
 export const UpdateTrackDocument = gql`
     mutation updateTrack($input: UpdateTrackInput!) {
   updateTrack(input: $input) {

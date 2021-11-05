@@ -1,8 +1,8 @@
 import { registerEnumType } from 'type-graphql';
 
 enum ProfileVerificationStatusType {
-  WAITING = 'waiting',
-  ACCEPTED = 'accepted',
+  PENDING = 'pending',
+  APPROVED = 'approved',
   DENIED = 'denied',
 }
 

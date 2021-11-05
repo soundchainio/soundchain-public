@@ -3,6 +3,7 @@ import { Number } from 'components/Number';
 import { ProfileListItemSkeleton } from 'components/ProfileListItemSkeleton';
 import { Profile } from 'lib/graphql';
 import NextLink from 'next/link';
+import { DisplayName } from './DisplayName';
 
 interface ProfileListItemProps {
   profile: Profile;
@@ -17,7 +18,7 @@ export const ProfileListItem = ({ profile }: ProfileListItemProps) => {
         <div className="flex items-center justify-start space-x-3">
           <Avatar profile={profile} pixels={50} className="rounded-full min-w-max flex" />
           <div className="w-full">
-            <span className="font-bold text-sm text-white overflow-ellipsis overflow-hidden">{profile.displayName}</span>
+          <DisplayName name={profile.displayName} verified={profile.verified} />
             <p className="text-gray-80 text-xs leading-tight">@{profile.userHandle}</p>
         </div>
         </div>

@@ -8,5 +8,6 @@ fragment MessageComponentFields on Message {
     id
     displayName
     profilePicture
+    verified
   }
 }

@@ -6,6 +6,7 @@ import NextLink from 'next/link';
 import React from 'react';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 import { Avatar } from './Avatar';
+import { DisplayName } from './DisplayName';
 import { MiniAudioPlayer } from './MiniAudioPlayer';
 import { NotAvailableMessage } from './NotAvailableMessage';
 import { PostActions } from './PostActions';
@@ -44,7 +45,7 @@ export const Post = ({ postId }: PostProps) => {
           <div className="flex items-center w-full ml-2">
             <div className="flex flex-1 flex-col">
               <NextLink href={`/profiles/${post.profile.userHandle}`}>
-                <a className="text-xs font-bold text-gray-100">{post.profile.displayName}</a>
+                <DisplayName name={post.profile.displayName} verified={post.profile.verified} />
               </NextLink>
               <Timestamp
                 datetime={post.createdAt}
