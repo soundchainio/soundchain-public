@@ -15,10 +15,15 @@ export const ProfileListItem = ({ profile }: ProfileListItemProps) => {
   return (
     <NextLink href={`/profiles/${profile.userHandle}`}>
       <a className="relative flex items-center bg-gray-20 px-3 py-2 rounded-lg gap-3">
-        <Avatar linkToProfile={false} profile={profile} pixels={40} className="rounded-full h-[40px] w-[40px]" />
-        <div className="truncate">
-          <DisplayName name={profile.displayName} verified className="text-sm" />
-          <p className="text-gray-80 text-xs font-semibold">{`@${profile.userHandle}`}</p>
+        <Avatar
+          linkToProfile={false}
+          profile={profile}
+          pixels={40}
+          className="rounded-full h-[40px] w-[40px] flex-shrink-0"
+        />
+        <div>
+          <DisplayName name={profile.displayName} verified={profile.verified} className="text-sm" />
+          <p className="text-gray-80 text-xxs font-semibold">{`@${profile.userHandle}`}</p>
         </div>
         <div className="flex-1 flex justify-end gap-2">
           <div className="text-center text-sm">
