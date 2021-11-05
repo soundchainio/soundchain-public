@@ -38,8 +38,8 @@ export const ExploreAll = ({ searchTerm, setSelectedTab }: ExplorePageProps) => 
   if (loading) return <div> loading... </div>;
 
   return (
-    <div>
-      <div className="flex items-center w-full p-4">
+    <div className="flex flex-col space-y-6 w-full p-4">
+      <div className="flex items-center">
         <div className="flex flex-1 items-center text-white font-bold">
           <Subtitle className="font-bold"> Users </Subtitle>
           <span className="ml-2">({data?.explore.totalProfiles})</span>
