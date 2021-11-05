@@ -80,7 +80,7 @@ export const TransferForm = ({ handleSubmit }: Props) => {
               <Label className="uppercase font-bold" textSize="sm">
                 Amount to send: 
               </Label>
-              <InputField type="number" name="amount" placeholder="00.00" icon={Matic} />
+              <InputField type="number" name="amount" placeholder="00.00" min="0" step="0.000000000000000001" icon={Matic} />
             </div>
           </div>
           <div>

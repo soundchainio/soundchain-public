@@ -22,8 +22,8 @@ const topNovaBarProps: TopNavBarProps = {
 export default function WalletPage() {
   const me = useMe();
   const [updateDefaultWallet] = useUpdateDefaultWalletMutation();
-  const { account, balance, web3, chainId, connect } = useMetaMask();
-  const { account: magicAccount, balance: magicBalance } = useMagicContext();
+  const { account, balance, web3, chainId, connect, refetchBalance } = useMetaMask();
+  const { account: magicAccount, balance: magicBalance, refetchBalance: refetchMagicBalance} = useMagicContext();
   const [testnet, setTestnet] = useState(true);
   const [connectedToMetaMask, setConnectedToMetaMask] = useState(false);
 
@@ -40,6 +40,14 @@ export default function WalletPage() {
     }
     setTestnet(true);
   }, [account, chainId, web3]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetchBalance()
+      refetchMagicBalance()
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [refetchBalance, refetchMagicBalance])
 
   if (!me) return null;
 

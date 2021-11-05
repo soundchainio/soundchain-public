@@ -1642,7 +1642,7 @@ export type FollowersQuery = (
       & Pick<Follow, 'id'>
       & { followerProfile: (
         { __typename?: 'Profile' }
-        & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified'>
+        & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle'>
       ) }
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
@@ -1666,7 +1666,7 @@ export type FollowingQuery = (
       & Pick<Follow, 'id'>
       & { followedProfile: (
         { __typename?: 'Profile' }
-        & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified'>
+        & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle'>
       ) }
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
@@ -3550,6 +3550,7 @@ export const FollowersDocument = gql`
         displayName
         profilePicture
         verified
+        userHandle
       }
     }
     pageInfo {
@@ -3599,6 +3600,7 @@ export const FollowingDocument = gql`
         displayName
         profilePicture
         verified
+        userHandle
       }
     }
     pageInfo {

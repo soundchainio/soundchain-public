@@ -85,6 +85,7 @@ export const config = {
         if (user.roles.some((role: string) => roles.includes(role))) {
           return true;
         }
+        return false;
       },
     }),
   },

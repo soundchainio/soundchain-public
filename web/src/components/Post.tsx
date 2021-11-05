@@ -41,8 +41,8 @@ export const Post = ({ postId }: PostProps) => {
     <div>
       <div className="p-4 bg-gray-20 break-words">
         <div className="flex items-center">
-          <Avatar profile={post.profile} />
-          <div className="flex items-center w-full ml-4">
+          <Avatar profile={post.profile} pixels={34} className="flex items-center justify-center" />
+          <div className="flex items-center w-full ml-2">
             <div className="flex flex-1 flex-col">
               <NextLink href={`/profiles/${post.profile.userHandle}`}>
                 <DisplayName name={post.profile.displayName} verified={post.profile.verified} />
@@ -51,6 +51,7 @@ export const Post = ({ postId }: PostProps) => {
                 datetime={post.createdAt}
                 edited={post.createdAt !== post.updatedAt || false}
                 className="flex-1 text-left"
+                small
               />
             </div>
             <div className="w-14">
