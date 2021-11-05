@@ -36,7 +36,7 @@ export const ExploreUsers = ({ searchTerm }: ExplorePageProps) => {
   const { nodes: profiles, pageInfo } = data?.exploreUsers;
 
   return (
-    <div>
+    <div className="flex flex-col space-y-6 w-full p-4">
       {profiles.length > 0 ? profiles?.map(profile => (
         <div key={profile.id} className="text-white">
           <ProfileListItem profile={profile} />
