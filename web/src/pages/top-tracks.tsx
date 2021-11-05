@@ -1,21 +1,19 @@
-import { ExploreSearchBar } from 'components/ExploreSearchBar';
+import { BackButton } from 'components/Buttons/BackButton';
 import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { TopTracks } from 'components/TopTracks';
 import { cacheFor } from 'lib/apollo';
 import { protectPage } from 'lib/protectPage';
 import Head from 'next/head';
-import React, { useState } from 'react';
+import React from 'react';
 
 export const getServerSideProps = protectPage((context, apolloClient) => {
   return cacheFor(TopTracksPage, {}, context, apolloClient);
 });
 
 export default function TopTracksPage() {
-  const [searchTerm, setSearchTerm] = useState<string>('');
-
   const topNavBarProps: TopNavBarProps = {
-    midRightButton: <ExploreSearchBar setSearchTerm={setSearchTerm} />,
+    leftButton: <BackButton />,
   };
 
   return (
