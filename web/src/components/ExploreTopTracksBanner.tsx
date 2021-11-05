@@ -13,7 +13,7 @@ export const ExploreTopTracksBanner = () => {
         <div className="flex-1 flex justify-center">
           <List />
         </div>
-        <RightArrow fillColor="white" />
+        <RightArrow stroke="white" />
       </a>
     </Link>
   );
