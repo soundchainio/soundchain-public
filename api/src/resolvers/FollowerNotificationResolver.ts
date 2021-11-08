@@ -24,7 +24,7 @@ export class FollowerNotificationResolver {
 
   @FieldResolver(() => String)
   link(@Root() { metadata }: Notification): string {
-    const { followerId } = metadata as FollowerNotificationMetadata;
-    return `/profiles/${followerId}`;
+    const { followerHandle } = metadata as FollowerNotificationMetadata;
+    return `/profiles/${followerHandle}`;
   }
 }

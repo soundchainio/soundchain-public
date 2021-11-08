@@ -105,7 +105,7 @@ export default function ProfilePage() {
           </div>
           <div className="flex flex-row space-x-2">
             <SubscribeButton profileId={profileId} isSubscriber={isSubscriber} />
-            <FollowButton followedId={handle} isFollowed={isFollowed} />
+            <FollowButton followedId={profileId} isFollowed={isFollowed} />
           </div>
         </div>
         <div className="flex flex-row mt-4">
