@@ -9,13 +9,11 @@ interface DisplayNameProps {
 
 export const DisplayName = ({ name, verified, className, ...props }: DisplayNameProps) => {
   return (
-    <div {...props} className={classNames('text-white font-semibold flex gap-2 items-center', className)}>
-      {name}
-      {verified && (
-        <span className="flex-shrink-0">
-          <Verified />
-        </span>
-      )}
+    <div className="flex gap-1 min-w-0">
+      <span {...props} className={classNames('text-white font-semibold truncate', className)}>
+        {name}
+      </span>
+      {verified && <Verified aria-label="Verified user" className="flex-shrink-0" />}
     </div>
   );
 };
