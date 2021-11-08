@@ -68,6 +68,8 @@ export default function ListPage({ trackId }: TrackPageProps) {
   const [isApproved, setIsApproved] = useState(false);
 
   const tokenId = data?.track.nftData?.tokenId ?? -1;
+  const canList =
+    (me?.profile.verified && data?.track.nftData?.minter === account) || data?.track.nftData?.minter != account;
 
   const [getListingItem, { data: listingItem }] = useListingItemLazyQuery({
     variables: { tokenId },
@@ -147,7 +149,7 @@ export default function ListPage({ trackId }: TrackPageProps) {
     title: 'List for Sale',
   };
 
-  if (!isOwner || isForSale || data?.track.nftData?.pendingRequest != PendingRequest.None) {
+  if (!isOwner || isForSale || data?.track.nftData?.pendingRequest != PendingRequest.None || !canList) {
     return null;
   }
 

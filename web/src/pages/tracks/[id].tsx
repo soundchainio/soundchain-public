@@ -7,6 +7,7 @@ import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import useBlockchain from 'hooks/useBlockchain';
+import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { cacheFor } from 'lib/apollo';
 import {
@@ -60,6 +61,7 @@ const pendingRequestMapping: Record<PendingRequest, string> = {
 };
 
 export default function TrackPage({ trackId }: TrackPageProps) {
+  const me = useMe();
   const { account, web3 } = useWalletContext();
   const { data, refetch: refetchTrack } = useTrackQuery({ variables: { id: trackId }, fetchPolicy: 'network-only' });
   const { isTokenOwner, getRoyalties } = useBlockchain();
@@ -69,6 +71,8 @@ export default function TrackPage({ trackId }: TrackPageProps) {
   const mintingPending = data?.track.nftData?.pendingRequest === PendingRequest.Mint;
   const isProcessing = data?.track.nftData?.pendingRequest != PendingRequest.None;
   const tokenId = data?.track.nftData?.tokenId ?? -1;
+  const canList =
+    (me?.profile.verified && data?.track.nftData?.minter === account) || data?.track.nftData?.minter != account;
 
   const {
     data: listingPayload,
@@ -179,7 +183,7 @@ export default function TrackPage({ trackId }: TrackPageProps) {
           <div className="text-white text-sm pl-3 font-bold">Loading</div>
         </div>
       ) : (
-        <HandleNFT price={price} isOwner={isOwner} isForSale={isForSale} />
+        <HandleNFT canList={canList} price={price} isOwner={isOwner} isForSale={isForSale} />
       )}
     </Layout>
   );
