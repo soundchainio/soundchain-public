@@ -75,7 +75,7 @@ export const LoginForm = () => {
       <Formik initialValues={{ email: '' }} validationSchema={validationSchema} onSubmit={handleSubmit}>
         <Form className="flex flex-1 flex-col">
           <div className="space-y-6 mb-auto">
-            <InputField label="Email address" type="text" name="email" />
+            <InputField label="Email address" type="email" name="email" />
           </div>
           <Button type="submit" disabled={loading} loading={loading} className="w-full mt-12">
             Login / Sign up
