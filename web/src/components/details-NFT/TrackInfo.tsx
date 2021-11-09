@@ -54,19 +54,19 @@ export const TrackInfo = ({
       </div>
       <div className="flex items-center font-bold">
         <div className="w-2/4 uppercase text-sm pl-4 py-3 bg-gray-20">Track Title</div>
-        <div className="text-center w-2/4 text-sm bg-gray-30 pr-4 py-3">{trackTitle || '-'}</div>
+        <div className="text-center w-2/4 text-sm bg-gray-30 pr-4 py-3 truncate">{trackTitle || '-'}</div>
       </div>
       <div className="flex items-center font-bold">
         <div className="w-2/4 uppercase text-sm pl-4 py-3 bg-gray-30">Album Title</div>
-        <div className="text-center w-2/4 text-sm bg-gray-40 pr-4 py-3">{albumTitle || '-'}</div>
+        <div className="text-center w-2/4 text-sm bg-gray-40 pr-4 py-3 truncate">{albumTitle || '-'}</div>
       </div>
       <div className="flex items-center font-bold">
         <div className="w-2/4 uppercase text-sm pl-4 py-3 bg-gray-20">Release Year</div>
-        <div className="text-center w-2/4 text-sm bg-gray-30 pr-4 py-3">{releaseYear || '-'}</div>
+        <div className="text-center w-2/4 text-sm bg-gray-30 pr-4 py-3 truncate">{releaseYear || '-'}</div>
       </div>
       <div className="flex items-center font-bold">
         <div className="w-2/4 uppercase text-sm pl-4 py-3 bg-gray-30">Copyright</div>
-        <div className="text-center w-2/4 text-sm bg-gray-40 pr-4 py-3">{copyright || '-'}</div>
+        <div className="text-center w-2/4 text-sm bg-gray-40 pr-4 py-3 truncate">{copyright || '-'}</div>
       </div>
       <div className="flex items-center font-bold">
         <div className="w-2/4 uppercase text-sm pl-4 py-3">Genres</div>
