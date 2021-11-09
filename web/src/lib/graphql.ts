@@ -212,6 +212,13 @@ export type ExplorePayload = {
   totalTracks: Scalars['Float'];
 };
 
+export type FavoriteProfileTrack = {
+  __typename?: 'FavoriteProfileTrack';
+  id: Scalars['ID'];
+  profileId: Scalars['String'];
+  trackId: Scalars['String'];
+};
+
 export type FeedConnection = {
   __typename?: 'FeedConnection';
   pageInfo: PageInfo;
@@ -415,6 +422,7 @@ export type Mutation = {
   createTrack: CreateTrackPayload;
   updateTrack: UpdateTrackPayload;
   deleteTrackOnError: UpdateTrackPayload;
+  toggleFavorite: ToggleFavoritePayload;
   register: AuthPayload;
   login: AuthPayload;
   updateHandle: UpdateHandlePayload;
@@ -551,6 +559,11 @@ export type MutationUpdateTrackArgs = {
 
 export type MutationDeleteTrackOnErrorArgs = {
   input: DeleteTrackInput;
+};
+
+
+export type MutationToggleFavoriteArgs = {
+  trackId: Scalars['String'];
 };
 
 
@@ -1095,6 +1108,11 @@ export type SubscribeToProfilePayload = {
   profile: Profile;
 };
 
+export type ToggleFavoritePayload = {
+  __typename?: 'ToggleFavoritePayload';
+  favoriteProfileTrack: FavoriteProfileTrack;
+};
+
 export type Track = {
   __typename?: 'Track';
   id: Scalars['ID'];
@@ -1116,6 +1134,7 @@ export type Track = {
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   playbackUrl: Scalars['String'];
+  isFavorite: Scalars['Boolean'];
 };
 
 export type TrackConnection = {
@@ -2151,6 +2170,22 @@ export type SubscribeToProfileMutation = (
   ) }
 );
 
+export type ToggleFavoriteMutationVariables = Exact<{
+  trackId: Scalars['String'];
+}>;
+
+
+export type ToggleFavoriteMutation = (
+  { __typename?: 'Mutation' }
+  & { toggleFavorite: (
+    { __typename?: 'ToggleFavoritePayload' }
+    & { favoriteProfileTrack: (
+      { __typename?: 'FavoriteProfileTrack' }
+      & Pick<FavoriteProfileTrack, 'id' | 'trackId' | 'profileId'>
+    ) }
+  ) }
+);
+
 export type TrackQueryVariables = Exact<{
   id: Scalars['String'];
 }>;
@@ -2166,7 +2201,7 @@ export type TrackQuery = (
 
 export type TrackComponentFieldsFragment = (
   { __typename?: 'Track' }
-  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted'>
+  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite'>
   & { nftData: Maybe<(
     { __typename?: 'NFTDataType' }
     & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner'>
@@ -2599,6 +2634,7 @@ export const TrackComponentFieldsFragmentDoc = gql`
   updatedAt
   deleted
   playbackCountFormatted
+  isFavorite
   nftData {
     transactionHash
     tokenId
@@ -4674,6 +4710,43 @@ export function useSubscribeToProfileMutation(baseOptions?: Apollo.MutationHookO
 export type SubscribeToProfileMutationHookResult = ReturnType<typeof useSubscribeToProfileMutation>;
 export type SubscribeToProfileMutationResult = Apollo.MutationResult<SubscribeToProfileMutation>;
 export type SubscribeToProfileMutationOptions = Apollo.BaseMutationOptions<SubscribeToProfileMutation, SubscribeToProfileMutationVariables>;
+export const ToggleFavoriteDocument = gql`
+    mutation ToggleFavorite($trackId: String!) {
+  toggleFavorite(trackId: $trackId) {
+    favoriteProfileTrack {
+      id
+      trackId
+      profileId
+    }
+  }
+}
+    `;
+export type ToggleFavoriteMutationFn = Apollo.MutationFunction<ToggleFavoriteMutation, ToggleFavoriteMutationVariables>;
+
+/**
+ * __useToggleFavoriteMutation__
+ *
+ * To run a mutation, you first call `useToggleFavoriteMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useToggleFavoriteMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [toggleFavoriteMutation, { data, loading, error }] = useToggleFavoriteMutation({
+ *   variables: {
+ *      trackId: // value for 'trackId'
+ *   },
+ * });
+ */
+export function useToggleFavoriteMutation(baseOptions?: Apollo.MutationHookOptions<ToggleFavoriteMutation, ToggleFavoriteMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ToggleFavoriteMutation, ToggleFavoriteMutationVariables>(ToggleFavoriteDocument, options);
+      }
+export type ToggleFavoriteMutationHookResult = ReturnType<typeof useToggleFavoriteMutation>;
+export type ToggleFavoriteMutationResult = Apollo.MutationResult<ToggleFavoriteMutation>;
+export type ToggleFavoriteMutationOptions = Apollo.BaseMutationOptions<ToggleFavoriteMutation, ToggleFavoriteMutationVariables>;
 export const TrackDocument = gql`
     query Track($id: String!) {
   track(id: $id) {

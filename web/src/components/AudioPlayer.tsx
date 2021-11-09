@@ -10,15 +10,16 @@ import { useEffect, useRef, useState } from 'react';
 import { remainingTime, timeFromSecs } from 'utils/calculateTime';
 import Asset from './Asset';
 
-interface AudioPlayerProps {
+export interface Song {
   src: string;
   title?: string | null;
   trackId?: string;
   artist?: string | null;
   art?: string | null;
+  isFavorite?: boolean | null;
 }
 
-export const AudioPlayer = ({ src, title, artist, art, trackId }: AudioPlayerProps) => {
+export const AudioPlayer = ({ src, title, artist, art, trackId }: Song) => {
   const [playing, setPlaying] = useState<boolean>(false);
   const [playState, setPlayState] = useState<number>(0);
   const [duration, setDuration] = useState<number>();

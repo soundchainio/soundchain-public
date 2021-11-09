@@ -10,6 +10,7 @@ import { DeleteTrackPayload } from '../types/DeleteTrackPayload';
 import { FilterTrackInput } from '../types/FilterTrackInput';
 import { PageInput } from '../types/PageInput';
 import { SortTrackInput } from '../types/SortTrackInput';
+import { ToggleFavoritePayload } from '../types/ToggleFavoritePayload';
 import { TrackConnection } from '../types/TrackConnection';
 import { UpdateTrackInput } from '../types/UpdateTrackInput';
 import { UpdateTrackPayload } from '../types/UpdateTrackPayload';
@@ -24,6 +25,15 @@ export class TrackResolver {
   @FieldResolver(() => String)
   playbackCountFormatted(@Root() { playbackCount }: Track): string {
     return playbackCount ? new Intl.NumberFormat('en-US').format(playbackCount) : '';
+  }
+
+  @FieldResolver(() => Boolean)
+  isFavorite(
+    @Ctx() { trackService }: Context,
+    @Root() { _id: trackId }: Track,
+    @CurrentUser() user?: User,
+  ): Promise<boolean> {
+    return trackService.isFavorite(trackId, user.profileId);
   }
 
   @Query(() => Track)
@@ -71,5 +81,16 @@ export class TrackResolver {
   ): Promise<DeleteTrackPayload> {
     const track = await trackService.deleteTrackOnError(trackId);
     return { track };
+  }
+
+  @Mutation(() => ToggleFavoritePayload)
+  @Authorized()
+  async toggleFavorite(
+    @Ctx() { trackService }: Context,
+    @CurrentUser() { profileId }: User,
+    @Arg('trackId') trackId: string,
+  ): Promise<ToggleFavoritePayload> {
+    const favoriteProfileTrack = await trackService.toggleFavorite(trackId, profileId);
+    return { favoriteProfileTrack };
   }
 }

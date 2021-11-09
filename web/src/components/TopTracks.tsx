@@ -48,6 +48,7 @@ export const TopTracks = () => {
           art: node.artworkUrl,
           title: node.title,
           artist: node.artist,
+          isFavorite: node.isFavorite,
         } as Song),
     );
     playlistState(list, index);

@@ -10,6 +10,7 @@ export type Song = {
   trackId: string;
   artist?: string | null;
   art?: string | null;
+  isFavorite?: boolean | null;
 };
 
 interface TrackProps {
@@ -21,6 +22,7 @@ interface TrackProps {
     artist?: string | null;
     art?: string | null;
     playbackCount: string;
+    isFavorite?: boolean | null;
   };
   handleOnPlayClicked: (song: Song) => void;
 }

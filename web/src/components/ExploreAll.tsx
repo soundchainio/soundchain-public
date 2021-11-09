@@ -94,6 +94,7 @@ export const ExploreAll = ({ searchTerm, setSelectedTab }: ExplorePageProps) => 
                 title: track.title,
                 artist: track.artist,
                 playbackCount: track.playbackCountFormatted,
+                isFavorite: track.isFavorite,
               }}
               index={index + 1}
               handleOnPlayClicked={song => handleOnPlayClicked(song, index)}
