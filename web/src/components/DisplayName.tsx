@@ -9,8 +9,8 @@ interface DisplayNameProps {
 
 export const DisplayName = ({ name, verified, className, ...props }: DisplayNameProps) => {
   return (
-    <div className="flex gap-1 min-w-0">
-      <span {...props} className={classNames('text-white font-semibold truncate', className)}>
+    <div className={classNames('flex gap-1 items-baseline', className)}>
+      <span {...props} className="text-white font-semibold truncate">
         {name}
       </span>
       {verified && <Verified aria-label="Verified user" className="flex-shrink-0" />}
