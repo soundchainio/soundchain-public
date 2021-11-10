@@ -813,6 +813,7 @@ export type Query = {
   profileVerificationRequests: ProfileVerificationRequestConnection;
   track: Track;
   tracks: TrackConnection;
+  favoriteTracks: TrackConnection;
   uploadUrl: UploadUrl;
   mimeType: MimeType;
   me: Maybe<User>;
@@ -953,6 +954,13 @@ export type QueryTrackArgs = {
 
 
 export type QueryTracksArgs = {
+  page?: Maybe<PageInput>;
+  sort?: Maybe<SortTrackInput>;
+  filter?: Maybe<FilterTrackInput>;
+};
+
+
+export type QueryFavoriteTracksArgs = {
   page?: Maybe<PageInput>;
   sort?: Maybe<SortTrackInput>;
   filter?: Maybe<FilterTrackInput>;
@@ -1596,6 +1604,26 @@ export type ExploreUsersQuery = (
     & { nodes: Array<(
       { __typename?: 'Profile' }
       & ProfileComponentFieldsFragment
+    )>, pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
+    ) }
+  ) }
+);
+
+export type FavoriteTracksQueryVariables = Exact<{
+  sort?: Maybe<SortTrackInput>;
+  page?: Maybe<PageInput>;
+}>;
+
+
+export type FavoriteTracksQuery = (
+  { __typename?: 'Query' }
+  & { favoriteTracks: (
+    { __typename?: 'TrackConnection' }
+    & { nodes: Array<(
+      { __typename?: 'Track' }
+      & TrackComponentFieldsFragment
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
       & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
@@ -3496,6 +3524,48 @@ export function useExploreUsersLazyQuery(baseOptions?: Apollo.LazyQueryHookOptio
 export type ExploreUsersQueryHookResult = ReturnType<typeof useExploreUsersQuery>;
 export type ExploreUsersLazyQueryHookResult = ReturnType<typeof useExploreUsersLazyQuery>;
 export type ExploreUsersQueryResult = Apollo.QueryResult<ExploreUsersQuery, ExploreUsersQueryVariables>;
+export const FavoriteTracksDocument = gql`
+    query FavoriteTracks($sort: SortTrackInput, $page: PageInput) {
+  favoriteTracks(sort: $sort, page: $page) {
+    nodes {
+      ...TrackComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+    ${TrackComponentFieldsFragmentDoc}`;
+
+/**
+ * __useFavoriteTracksQuery__
+ *
+ * To run a query within a React component, call `useFavoriteTracksQuery` and pass it any options that fit your needs.
+ * When your component renders, `useFavoriteTracksQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useFavoriteTracksQuery({
+ *   variables: {
+ *      sort: // value for 'sort'
+ *      page: // value for 'page'
+ *   },
+ * });
+ */
+export function useFavoriteTracksQuery(baseOptions?: Apollo.QueryHookOptions<FavoriteTracksQuery, FavoriteTracksQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<FavoriteTracksQuery, FavoriteTracksQueryVariables>(FavoriteTracksDocument, options);
+      }
+export function useFavoriteTracksLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<FavoriteTracksQuery, FavoriteTracksQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<FavoriteTracksQuery, FavoriteTracksQueryVariables>(FavoriteTracksDocument, options);
+        }
+export type FavoriteTracksQueryHookResult = ReturnType<typeof useFavoriteTracksQuery>;
+export type FavoriteTracksLazyQueryHookResult = ReturnType<typeof useFavoriteTracksLazyQuery>;
+export type FavoriteTracksQueryResult = Apollo.QueryResult<FavoriteTracksQuery, FavoriteTracksQueryVariables>;
 export const FeedDocument = gql`
     query Feed($page: PageInput) {
   feed(page: $page) {

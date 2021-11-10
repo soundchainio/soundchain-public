@@ -1,5 +1,7 @@
+import { ObjectId } from 'mongodb';
 import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
 import { CurrentUser } from '../decorators/current-user';
+import { FavoriteProfileTrackModel } from '../models/FavoriteProfileTrack';
 import { Track } from '../models/Track';
 import { User } from '../models/User';
 import { Context } from '../types/Context';
@@ -92,5 +94,18 @@ export class TrackResolver {
   ): Promise<ToggleFavoritePayload> {
     const favoriteProfileTrack = await trackService.toggleFavorite(trackId, profileId);
     return { favoriteProfileTrack };
+  }
+
+  @Query(() => TrackConnection)
+  async favoriteTracks(
+    @Ctx() { trackService }: Context,
+    @CurrentUser() { profileId }: User,
+    @Arg('filter', { nullable: true }) filter?: FilterTrackInput,
+    @Arg('sort', { nullable: true }) sort?: SortTrackInput,
+    @Arg('page', { nullable: true }) page?: PageInput,
+  ): Promise<TrackConnection> {
+    const favorites = await FavoriteProfileTrackModel.find({ profileId });
+    const ids = favorites.map(item => new ObjectId(item.trackId));
+    return trackService.getFavoriteTracks(ids, { ...filter }, sort, page);
   }
 }

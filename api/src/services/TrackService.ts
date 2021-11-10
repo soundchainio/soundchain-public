@@ -1,4 +1,5 @@
 import { DocumentType, mongoose } from '@typegoose/typegoose';
+import { ObjectId } from 'mongodb';
 import { PaginateResult } from '../db/pagination/paginate';
 import { NotFoundError } from '../errors/NotFoundError';
 import { FavoriteProfileTrack, FavoriteProfileTrackModel } from '../models/FavoriteProfileTrack';
@@ -157,7 +158,7 @@ export class TrackService extends ModelService<typeof Track> {
     return hasRecord ? true : false;
   }
 
-  async toggleFavorite(profileId: string, trackId: string): Promise<FavoriteProfileTrack> {
+  async toggleFavorite(trackId: string, profileId: string): Promise<FavoriteProfileTrack> {
     const favTrack = await FavoriteProfileTrackModel.findOne({ trackId, profileId });
     if (favTrack?.id) {
       return await FavoriteProfileTrackModel.findOneAndDelete({ trackId, profileId });
@@ -166,5 +167,18 @@ export class TrackService extends ModelService<typeof Track> {
       await favorite.save();
       return favorite;
     }
+  }
+
+  getFavoriteTracks(
+    ids: ObjectId[],
+    filter?: FilterTrackInput,
+    sort?: SortTrackInput,
+    page?: PageInput,
+  ): Promise<PaginateResult<Track>> {
+    return this.paginate({
+      filter: { _id: { $in: ids }, title: { $exists: true }, deleted: false, ...filter },
+      sort,
+      page,
+    });
   }
 }
