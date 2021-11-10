@@ -27,7 +27,7 @@ export default function EditFavoriteGenresPage() {
         <div className="flex flex-1 flex-col space-y-6">
           <FavoriteGenresForm
             afterSubmit={() => router.push('/settings')}
-            initialGenres={me?.profile.favoriteGenres}
+            initialGenres={me?.profile?.favoriteGenres || []}
             submitText="SAVE"
             submitProps={{ borderColor: 'bg-green-gradient' }}
           />

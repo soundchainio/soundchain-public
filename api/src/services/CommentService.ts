@@ -28,7 +28,7 @@ export class CommentService extends ModelService<typeof Comment> {
   async createComment(params: NewCommentParams): Promise<Comment> {
     const newComment = new CommentModel(params);
     const [post] = await Promise.all([this.context.postService.getPost(params.postId), newComment.save()]);
-    if (newComment.profileId !== post.profileId) {
+    if (!newComment.profileId.equals(post.profileId)) {
       this.context.notificationService.notifyNewCommentOnPost({
         comment: newComment,
         post,
@@ -39,12 +39,11 @@ export class CommentService extends ModelService<typeof Comment> {
   }
 
   async deleteComment(params: DeleteCommentParams): Promise<Comment> {
-    const comment = await this.findOrFail(params.commentId);
-    if (comment.profileId !== params.profileId) {
-      throw new Error(`Error while deleting a comment: The user trying to delete is not the author of the comment.`);
-    }
-    await CommentModel.updateOne({ _id: params.commentId }, { deleted: true });
-    return comment;
+    return await CommentModel.updateOne(
+      { _id: params.commentId, profileId: params.profileId },
+      { deleted: true },
+      { new: true },
+    );
   }
 
   countComments(postId: string): Promise<number> {
@@ -52,6 +51,10 @@ export class CommentService extends ModelService<typeof Comment> {
   }
 
   getComments(postId: string, page?: PageInput): Promise<PaginateResult<Comment>> {
-    return this.paginate({ filter: { postId, deleted: false }, sort: { field: 'createdAt', order: SortOrder.DESC }, page });
+    return this.paginate({
+      filter: { postId, deleted: false },
+      sort: { field: 'createdAt', order: SortOrder.DESC },
+      page,
+    });
   }
 }

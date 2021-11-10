@@ -8,13 +8,13 @@ import { NotificationType } from '../types/NotificationType';
 import { ReactionNotificationMetadata } from '../types/ReactionNotificationMetadata';
 import { VerificationRequestNotificationMetadata } from '../types/VerificationRequestNotificationMetadata';
 import { Model } from './Model';
-
+import { ObjectId } from 'mongodb';
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
 export class Notification extends Model {
   @prop({ required: true })
   type: NotificationType;
 
-  @prop({ required: true })
+  @prop({ type: ObjectId, required: true })
   profileId: string;
 
   @prop({ required: true })
