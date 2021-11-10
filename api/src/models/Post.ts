@@ -2,13 +2,14 @@ import { getModelForClass, prop } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { ReactionStats } from '../types/ReactionStats';
 import { Model } from './Model';
+import { ObjectId } from 'mongodb';
 
 @ObjectType()
 export class Post extends Model {
   @Field(() => ID, { name: 'id' })
   readonly _id: string;
 
-  @prop({ required: true })
+  @prop({ type: ObjectId, required: true })
   profileId: string;
 
   @Field({ nullable: true })

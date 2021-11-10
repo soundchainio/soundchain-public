@@ -2,6 +2,7 @@ import { getModelForClass, prop } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { ReactionType } from '../types/ReactionType';
 import { Model } from './Model';
+import { ObjectId } from 'mongodb';
 
 @ObjectType()
 export class Reaction extends Model {
@@ -9,7 +10,7 @@ export class Reaction extends Model {
   readonly _id: string;
 
   @Field()
-  @prop({ required: true })
+  @prop({ type: ObjectId, required: true })
   profileId: string;
 
   @Field()

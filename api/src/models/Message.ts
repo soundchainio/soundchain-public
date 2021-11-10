@@ -1,6 +1,7 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { Model } from './Model';
+import { ObjectId } from 'mongodb';
 
 @ObjectType()
 export class Message extends Model {
@@ -8,11 +9,11 @@ export class Message extends Model {
   readonly _id: string;
 
   @Field()
-  @prop({ required: true })
+  @prop({ type: ObjectId, required: true })
   fromId: string;
 
   @Field()
-  @prop({ required: true })
+  @prop({ type: ObjectId, required: true })
   toId: string;
 
   @Field()

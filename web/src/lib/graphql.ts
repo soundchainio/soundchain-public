@@ -726,7 +726,7 @@ export type Profile = {
   profilePicture: Maybe<Scalars['String']>;
   coverPicture: Maybe<Scalars['String']>;
   socialMedias: SocialMedias;
-  favoriteGenres: Array<Genre>;
+  favoriteGenres: Maybe<Array<Genre>>;
   musicianTypes: Maybe<Array<MusicianType>>;
   bio: Maybe<Scalars['String']>;
   followerCount: Scalars['Float'];
@@ -2328,7 +2328,7 @@ export type UpdatePostMutation = (
     { __typename?: 'UpdatePostPayload' }
     & { post: (
       { __typename?: 'Post' }
-      & Pick<Post, 'id'>
+      & Pick<Post, 'id' | 'body'>
     ) }
   ) }
 );
@@ -5045,6 +5045,7 @@ export const UpdatePostDocument = gql`
   updatePost(input: $input) {
     post {
       id
+      body
     }
   }
 }
