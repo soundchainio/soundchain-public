@@ -57,35 +57,22 @@ export class PostService extends ModelService<typeof Post> {
   }
 
   async deletePost(params: DeletePostParams): Promise<Post> {
-    const post = await this.findOrFail(params.postId);
-    if (post.profileId !== params.profileId) {
-      throw new Error(`Error while deleting a post: The user trying to delete is not the author of the post.`);
-    }
-    await PostModel.updateOne({ _id: params.postId }, { deleted: true });
-    this.context.feedService.deleteItemsByPostId(params.postId);
-    return post;
+    return await PostModel.updateOne(
+      { _id: params.postId, profileId: params.profileId },
+      { deleted: true },
+      { new: true },
+    );
   }
 
   async updatePost(params: UpdatePostParams): Promise<Post> {
-    const validationPost = await this.findOrFail(params.postId);
-
-    if (validationPost.profileId !== params.profileId) {
-      throw new Error(`You are not the author of the post.`);
-    }
-
-    const updatedPost = await this.model.findByIdAndUpdate(
-      { _id: params.postId },
+    return await this.model.findByIdAndUpdate(
+      { _id: params.postId, profileId: params.profileId },
       {
         body: params.body,
         mediaLink: params.mediaLink,
       },
       { new: true },
     );
-
-    if (!updatedPost) {
-      throw new NotFoundError('Post ', params.postId);
-    }
-    return updatedPost;
   }
 
   getPosts(filter?: FilterPostInput, sort?: SortPostInput, page?: PageInput): Promise<PaginateResult<Post>> {

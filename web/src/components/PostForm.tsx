@@ -48,7 +48,7 @@ export const PostForm = ({ ...props }: PostFormProps) => {
   const [isEmojiPickerVisible, setEmojiPickerVisible] = useState(false);
   const [createPost] = useCreatePostMutation({ refetchQueries: ['Posts', 'Feed'] });
   const [createRepost] = useCreateRepostMutation({ refetchQueries: ['Posts', 'Feed'] });
-  const [editPost] = useUpdatePostMutation({ refetchQueries: ['Post'] });
+  const [editPost] = useUpdatePostMutation();
   const { repostId, editPostId } = useModalState();
 
   const onEmojiPickerClick = () => {
