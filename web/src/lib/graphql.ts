@@ -1024,6 +1024,7 @@ export type RetractReactionPayload = {
 };
 
 export enum Role {
+  System = 'SYSTEM',
   Admin = 'ADMIN',
   User = 'USER'
 }
