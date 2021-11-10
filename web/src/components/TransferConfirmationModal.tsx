@@ -19,7 +19,7 @@ export const TransferConfirmationModal = () => {
   const { transfer } = useBlockchain();
   const { web3, account, balance, refetchBalance } = useMagicContext();
 
-  const maxGasFee = useMaxGasFee();
+  const maxGasFee = useMaxGasFee(showTransferConfirmation);
 
   const handleClose = () => {
     dispatchShowTransferConfirmationModal(false);

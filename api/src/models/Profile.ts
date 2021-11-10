@@ -32,7 +32,7 @@ export class Profile extends Model {
   @prop({ required: true, type: [String], enum: Genre })
   favoriteGenres: Genre[];
 
-  @Field(() => [MusicianType])
+  @Field(() => [MusicianType], { nullable: true })
   @prop({ required: true, type: [String], enum: MusicianType })
   musicianTypes: MusicianType[];
 

@@ -19,10 +19,10 @@ export const RemoveListingConfirmationModal = () => {
   const [trackUpdate] = useUpdateTrackMutation();
   const { showRemoveListing } = useModalState();
   const { dispatchShowRemoveListingModal } = useModalDispatch();
-  const [loading, setLoading] = useState(false);
   const { cancelListing } = useBlockchain();
   const { web3, account, balance } = useMagicContext();
-  const maxGasFee = useMaxGasFee();
+  const maxGasFee = useMaxGasFee(showRemoveListing);
+  const [loading, setLoading] = useState(false);
 
   const handleClose = () => {
     dispatchShowRemoveListingModal(false, 0, '');

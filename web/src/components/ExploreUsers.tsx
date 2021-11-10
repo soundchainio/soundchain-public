@@ -3,6 +3,7 @@ import { PageInput, useExploreUsersQuery } from 'lib/graphql';
 import React from 'react';
 import { InfiniteLoader } from './InfiniteLoader';
 import { NoResultFound } from './NoResultFound';
+import { ProfileListItemSkeleton } from './ProfileListItemSkeleton';
 
 interface ExplorePageProps {
   searchTerm?: string;
@@ -16,9 +17,14 @@ export const ExploreUsers = ({ searchTerm }: ExplorePageProps) => {
     variables: { search: searchTerm, page: firstPage },
   });
 
-  if (!data) return null;
-
-  if (loading) return <div>loading...</div>;
+  if (!data || loading)
+    return (
+      <>
+        <ProfileListItemSkeleton />
+        <ProfileListItemSkeleton />
+        <ProfileListItemSkeleton />
+      </>
+    );
 
   const loadNext = () => {
     fetchMore({

@@ -4,6 +4,7 @@ import { PageInput, useExploreTracksQuery } from 'lib/graphql';
 import React from 'react';
 import { InfiniteLoader } from './InfiniteLoader';
 import { NoResultFound } from './NoResultFound';
+import { TrackListItemSkeleton } from './TrackListItemSkeleton';
 
 interface ExplorePageProps {
   searchTerm?: string;
@@ -34,7 +35,14 @@ export const ExploreTracks = ({ searchTerm }: ExplorePageProps) => {
     }
   };
 
-  if (!data) return null;
+  if (!data || loading)
+    return (
+      <>
+        <TrackListItemSkeleton />
+        <TrackListItemSkeleton />
+        <TrackListItemSkeleton />
+      </>
+    );
 
   const { nodes: tracks, pageInfo } = data?.exploreTracks;
 
@@ -50,8 +58,6 @@ export const ExploreTracks = ({ searchTerm }: ExplorePageProps) => {
       },
     });
   };
-
-  if (loading) return <div> loading... </div>;
 
   return (
     <div className="bg-gray-10">

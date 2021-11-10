@@ -21,7 +21,7 @@ export const ProfileListItem = ({ profile }: ProfileListItemProps) => {
           pixels={40}
           className="rounded-full h-[40px] w-[40px] flex-shrink-0"
         />
-        <div>
+        <div className="min-w-0">
           <DisplayName name={profile.displayName} verified={profile.verified} className="text-sm" />
           <p className="text-gray-80 text-xxs font-semibold">{`@${profile.userHandle}`}</p>
         </div>
