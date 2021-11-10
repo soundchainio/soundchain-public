@@ -727,7 +727,7 @@ export type Profile = {
   coverPicture: Maybe<Scalars['String']>;
   socialMedias: SocialMedias;
   favoriteGenres: Array<Genre>;
-  musicianTypes: Array<MusicianType>;
+  musicianTypes: Maybe<Array<MusicianType>>;
   bio: Maybe<Scalars['String']>;
   followerCount: Scalars['Float'];
   followingCount: Scalars['Float'];

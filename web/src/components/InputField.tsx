@@ -1,4 +1,5 @@
 import { useField } from 'formik';
+import { createRef } from 'react';
 import { Label } from './Label';
 
 interface InputFieldProps extends React.ComponentPropsWithoutRef<'input'> {
@@ -16,11 +17,15 @@ const errorInputClasses = `${commonInputClasses} border-red-500`;
 
 export const InputField = ({ label, icon: Icon, ...props }: InputFieldProps) => {
   const [field, meta] = useField(props);
+  const inputRef = createRef<HTMLInputElement>();
   return (
     <div className="flex flex-col gap-2">
-      <div className={meta.touched && meta.error ? errorInputClasses : validInputClasses}>
+      <div
+        className={meta.touched && meta.error ? errorInputClasses : validInputClasses}
+        onClick={() => inputRef.current?.focus()}
+      >
         {label && (
-          <Label className="block font-bold text-sm uppercase cursor-text" htmlFor={props.name}>
+          <Label className="block font-bold text-sm uppercase cursor-auto" htmlFor={props.name}>
             {label}
           </Label>
         )}
@@ -29,6 +34,7 @@ export const InputField = ({ label, icon: Icon, ...props }: InputFieldProps) => 
           id={props.name}
           {...field}
           {...props}
+          ref={inputRef}
         />
         {Icon && (
           <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
