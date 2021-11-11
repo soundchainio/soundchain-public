@@ -170,7 +170,7 @@ export const cacheConfig: InMemoryCacheConfig = {
           },
         },
         favoriteTracks: {
-          keyArgs: ['page'],
+          keyArgs: false,
           merge(existing = { nodes: [] }, { nodes, pageInfo }): TrackConnection {
             return {
               nodes: [...existing.nodes, ...nodes],
