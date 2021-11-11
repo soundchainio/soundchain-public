@@ -57,7 +57,7 @@ export class PostService extends ModelService<typeof Post> {
   }
 
   async deletePost(params: DeletePostParams): Promise<Post> {
-    return await PostModel.updateOne(
+    return await PostModel.findByIdAndUpdate(
       { _id: params.postId, profileId: params.profileId },
       { deleted: true },
       { new: true },
