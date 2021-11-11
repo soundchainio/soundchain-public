@@ -1,4 +1,5 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
+import { ObjectId } from 'mongodb';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { Model } from './Model';
 
@@ -15,9 +16,9 @@ export class Comment extends Model {
   @prop({ required: true })
   postId: string;
 
-  @Field()
-  @prop({ required: true })
-  profileId: string;
+  @Field(() => String)
+  @prop({ type: ObjectId, required: true })
+  profileId: ObjectId;
 
   @Field({ nullable: true })
   @prop({ default: false })

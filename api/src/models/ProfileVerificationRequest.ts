@@ -2,14 +2,14 @@ import { getModelForClass, prop } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { ProfileVerificationStatusType } from '../types/ProfileVerificationStatusType';
 import { Model } from './Model';
-
+import { ObjectId } from 'mongodb';
 @ObjectType()
 export class ProfileVerificationRequest extends Model {
   @Field(() => ID, { name: 'id' })
   readonly _id: string;
 
   @Field({ nullable: false })
-  @prop({ required: true })
+  @prop({ type: ObjectId, required: true })
   profileId: string;
 
   @Field({ nullable: true })

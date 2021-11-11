@@ -21,7 +21,7 @@ export class CommentResolver {
 
   @FieldResolver(() => Profile)
   profile(@Ctx() { profileService }: Context, @Root() comment: Comment): Promise<Profile> {
-    return profileService.getProfile(comment.profileId);
+    return profileService.getProfile(comment.profileId.toString());
   }
 
   @Query(() => Comment)

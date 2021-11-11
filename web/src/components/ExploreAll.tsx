@@ -8,6 +8,8 @@ import { useExploreQuery } from 'lib/graphql';
 import React from 'react';
 import { ExploreTab } from 'types/ExploreTabType';
 import { ExploreTopTracksBanner } from './ExploreTopTracksBanner';
+import { ProfileListItemSkeleton } from './ProfileListItemSkeleton';
+import { TrackListItemSkeleton } from './TrackListItemSkeleton';
 
 interface ExplorePageProps {
   searchTerm?: string;
@@ -36,8 +38,6 @@ export const ExploreAll = ({ searchTerm, setSelectedTab }: ExplorePageProps) => 
     }
   };
 
-  if (loading) return <div> loading... </div>;
-
   return (
     <div className="bg-gray-10">
       <div className="px-4 py-6">
@@ -46,7 +46,7 @@ export const ExploreAll = ({ searchTerm, setSelectedTab }: ExplorePageProps) => 
       <div className="flex items-center w-full px-4">
         <div className="flex flex-1 items-center text-white font-bold text-sm">
           <Subtitle size="sm" className="font-bold">
-            {`Users (${data?.explore.totalProfiles})`}
+            {`Users (${data?.explore.totalProfiles || '0'})`}
           </Subtitle>
         </div>
         <button
@@ -57,7 +57,14 @@ export const ExploreAll = ({ searchTerm, setSelectedTab }: ExplorePageProps) => 
           <RightArrow width={6} height={10} />
         </button>
       </div>
-      {data && data?.explore.totalProfiles > 0 ? (
+      {loading && (
+        <div className="m-4">
+          <ProfileListItemSkeleton />
+          <ProfileListItemSkeleton />
+          <ProfileListItemSkeleton />
+        </div>
+      )}
+      {data && !loading && data?.explore.totalProfiles > 0 ? (
         <div className="px-5 py-3 space-y-3">
           {profiles?.map(profile => (
             <div key={profile.id} className="text-white">
@@ -66,12 +73,12 @@ export const ExploreAll = ({ searchTerm, setSelectedTab }: ExplorePageProps) => 
           ))}
         </div>
       ) : (
-        <NoResultFound type="Users" />
+        <>{!loading && <NoResultFound type="Users" />}</>
       )}
       <div className="flex items-center w-full px-4 py-2">
         <div className="flex flex-1 items-center text-white font-bold">
           <Subtitle size="sm" className="font-bold">
-            {`Tracks (${data?.explore.totalTracks})`}
+            {`Tracks (${data?.explore.totalTracks || '0'})`}
           </Subtitle>
         </div>
         <button
@@ -82,7 +89,14 @@ export const ExploreAll = ({ searchTerm, setSelectedTab }: ExplorePageProps) => 
           <RightArrow width={6} height={10} />
         </button>
       </div>
-      {data && data.explore.totalTracks > 0 ? (
+      {loading && (
+        <>
+          <TrackListItemSkeleton />
+          <TrackListItemSkeleton />
+          <TrackListItemSkeleton />
+        </>
+      )}
+      {data && !loading && data.explore.totalTracks > 0 ? (
         <div className="py-3">
           {tracks?.map((track, index) => (
             <TrackListItem
@@ -102,7 +116,7 @@ export const ExploreAll = ({ searchTerm, setSelectedTab }: ExplorePageProps) => 
           ))}
         </div>
       ) : (
-        <NoResultFound type="Tracks" />
+        <>{!loading && <NoResultFound type="Tracks" />} </>
       )}
     </div>
   );

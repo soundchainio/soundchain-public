@@ -58,9 +58,9 @@ export default function SettingsPage() {
 
   if (!me) return null;
 
-  const genres = me.profile.favoriteGenres.map(getGenreLabelByKey).join(', ');
+  const genres = me.profile?.favoriteGenres?.map(getGenreLabelByKey).join(', ');
 
-  const musicianTypes = me.profile.musicianTypes.map(getMusicianTypeLabelByKey).join(', ');
+  const musicianTypes = me.profile?.musicianTypes?.map(getMusicianTypeLabelByKey).join(', ');
 
   return (
     <Layout topNavBarProps={topNovaBarProps}>

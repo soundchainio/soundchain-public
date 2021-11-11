@@ -64,15 +64,26 @@ export const watcher: Handler = async () => {
         {
           try {
             const { owner, nft, tokenId, quantity, pricePerItem, startingTime } = (event as ItemListed).returnValues;
-            await context.listingItemService.createListingItem({
-              owner,
-              nft,
-              tokenId: parseInt(tokenId),
-              quantity: parseInt(quantity),
-              pricePerItem,
-              startingTime: parseInt(startingTime),
-            });
-            await context.trackService.setPendingNone(parseInt(tokenId));
+            const [user, listedBefore] = await Promise.all([
+              context.userService.getUserByWallet(owner),
+              context.listingItemService.wasListedBefore(parseInt(tokenId)),
+            ]);
+            const profile = await context.profileService.getProfile(user.profileId);
+            if (!profile.verified && !listedBefore) {
+              context.trackService.setPendingNone(parseInt(tokenId));
+              continue;
+            }
+            await Promise.all([
+              context.listingItemService.createListingItem({
+                owner,
+                nft,
+                tokenId: parseInt(tokenId),
+                quantity: parseInt(quantity),
+                pricePerItem,
+                startingTime: parseInt(startingTime),
+              }),
+              context.trackService.setPendingNone(parseInt(tokenId)),
+            ]);
           } catch (error) {
             console.error(error);
           }

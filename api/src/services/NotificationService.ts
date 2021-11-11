@@ -71,6 +71,7 @@ export class NotificationService extends ModelService<typeof Notification> {
     const { displayName: followerName, profilePicture: followerPicture } = await this.context.profileService.getProfile(
       followerId,
     );
+    const followerHandle= await this.context.profileService.getUserHandle(followerId)
     const notification = new NotificationModel({
       type: NotificationType.Follower,
       profileId,
@@ -78,6 +79,7 @@ export class NotificationService extends ModelService<typeof Notification> {
         followerId,
         followerName,
         followerPicture,
+        followerHandle,
       },
     });
     await notification.save();

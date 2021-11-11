@@ -4,6 +4,7 @@ import { Genre } from '../types/Genres';
 import { MuxAsset } from '../types/MuxAsset';
 import { NFTData } from '../types/NFTData';
 import { Model } from './Model';
+import { ObjectId } from 'mongodb';
 
 @ObjectType()
 export class Track extends Model {
@@ -11,7 +12,7 @@ export class Track extends Model {
   readonly _id: string;
 
   @Field()
-  @prop({ required: true })
+  @prop({ type: ObjectId, required: true })
   profileId: string;
 
   @Field({ nullable: true })
