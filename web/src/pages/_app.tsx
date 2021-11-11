@@ -19,6 +19,8 @@ import Head from 'next/head';
 import Router from 'next/router';
 import NProgress from 'nprogress';
 import React from 'react';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import 'styles/audio-player.css';
 import 'styles/bottom-audio-player.css';
 import 'styles/globals.css';
@@ -46,7 +48,10 @@ function SoundchainApp({ Component, pageProps }: AppProps) {
     <>
       <Head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no viewport-fit=cover" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no viewport-fit=cover"
+        />
         <meta name="theme-color" content="#000000" />
         <Favicons />
         <link rel="manifest" href="/manifest.json"></link>
@@ -66,6 +71,14 @@ function SoundchainApp({ Component, pageProps }: AppProps) {
                     <BottomNavBarWrapper />
                     <CreateModal />
                     <AudioPlayerModal />
+                    <ToastContainer
+                      position="top-right"
+                      autoClose={1200}
+                      closeButton={false}
+                      hideProgressBar
+                      closeOnClick
+                      toastStyle={{ backgroundColor: '#202020', color: 'white', textAlign: 'center' }}
+                    />
                   </div>
                 </HideBottomNavBarProvider>
               </AudioPlayerProvider>
