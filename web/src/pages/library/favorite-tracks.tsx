@@ -74,7 +74,7 @@ export default function FavoriteTracksPage() {
   };
 
   return (
-    <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
+    <Layout topNavBarProps={topNavBarProps}>
       <Head>
         <title>Soundchain - Favorite Tracks</title>
         <meta name="description" content="FavoritfavoriteT Tracks" />
