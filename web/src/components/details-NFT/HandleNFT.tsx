@@ -2,6 +2,7 @@ import { Button } from 'components/Button';
 import { useMe } from 'hooks/useMe';
 import { CheckmarkFilled } from 'icons/CheckmarkFilled';
 import { Matic } from 'icons/Matic';
+import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import React from 'react';
 
@@ -31,9 +32,9 @@ export const HandleNFT = ({ isOwner, isForSale, price, canList }: HandleNFTProps
           </div>
         </div>
         <div className="flex-1 flex items-center justify-center">
-          <Button variant="edit-listing" onClick={() => router.push(`${router.asPath}/edit`)}>
-            EDIT LISTING
-          </Button>
+          <NextLink href={`${router.asPath}/edit`}>
+            <Button variant="edit-listing">EDIT LISTING</Button>
+          </NextLink>
         </div>
       </div>
     );
@@ -48,9 +49,9 @@ export const HandleNFT = ({ isOwner, isForSale, price, canList }: HandleNFTProps
           </div>
         </div>
         <div className="flex-1 flex items-center justify-center">
-          <Button variant="buy-nft" onClick={() => router.push(`${router.asPath}/buy`)}>
-            BUY NFT
-          </Button>
+          <NextLink href={`${router.asPath}/buy`}>
+            <Button variant="buy-nft">BUY NFT</Button>
+          </NextLink>
         </div>
       </div>
     );
@@ -61,9 +62,11 @@ export const HandleNFT = ({ isOwner, isForSale, price, canList }: HandleNFTProps
           You must be verified in order to sell NFT’s.
         </div>
         <div className="flex-1 flex items-center justify-center">
-          <Button variant="list-nft" onClick={() => router.push('/get-verified')}>
-            <div className="px-4 font-bold">GET VERIFIED</div>
-          </Button>
+          <NextLink href={'/get-verified'}>
+            <Button variant="list-nft">
+              <div className="px-4 font-bold">GET VERIFIED</div>
+            </Button>
+          </NextLink>
         </div>
       </div>
     );
