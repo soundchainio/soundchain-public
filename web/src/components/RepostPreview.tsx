@@ -1,9 +1,9 @@
 import { RefreshIcon } from '@heroicons/react/solid';
 import { usePostQuery } from 'lib/graphql';
 import React from 'react';
-import { AudioPlayer } from './AudioPlayer';
 import { Avatar } from './Avatar';
 import { DisplayName } from './DisplayName';
+import { MiniAudioPlayer } from './MiniAudioPlayer';
 import { NotAvailableMessage } from './NotAvailableMessage';
 import { RepostPreviewSkeleton } from './RepostPreviewSkeleton';
 import { Timestamp } from './Timestamp';
@@ -38,12 +38,14 @@ export const RepostPreview = ({ postId }: RepostPreviewProps) => {
               <iframe frameBorder="0" className="mt-4 w-full bg-gray-20" allowFullScreen src={post.mediaLink} />
             )}
             {post.track && !post.track.deleted && (
-              <AudioPlayer
-                trackId={post.track.id}
-                src={post.track.playbackUrl}
-                title={post.track.title}
-                artist={post.track.artist}
-                art={post.track.artworkUrl}
+              <MiniAudioPlayer
+                song={{
+                  src: post.track.playbackUrl,
+                  trackId: post.track.id,
+                  art: post.track.artworkUrl,
+                  title: post.track.title,
+                  artist: post.track.artist,
+                }}
               />
             )}
             {post.track?.deleted && <NotAvailableMessage type="track" />}

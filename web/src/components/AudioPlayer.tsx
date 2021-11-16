@@ -1,6 +1,7 @@
 import Slider from '@reach/slider';
 import { config } from 'config';
 import Hls from 'hls.js';
+import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { Navigate } from 'icons/Navigate';
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
@@ -23,12 +24,14 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: AudioPlayerPro
   const [playState, setPlayState] = useState<number>(0);
   const [duration, setDuration] = useState<number>();
   const audioRef = useRef<HTMLAudioElement>(null);
+  const { isPlaying: isBottomPlayerPlaying, togglePlay: pauseBottomPlayer } = useAudioPlayerContext();
 
   const togglePlay = () => {
     if (playing) {
       audioRef.current?.pause();
       setPlaying(false);
     } else {
+      isBottomPlayerPlaying && pauseBottomPlayer();
       audioRef.current?.play();
       setPlaying(true);
     }
