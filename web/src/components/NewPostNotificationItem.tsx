@@ -44,6 +44,7 @@ export const NewPostNotificationItem = ({
                   art: track.artworkUrl,
                   title: track.title,
                   artist: track.artist,
+                  isFavorite: track.isFavorite,
                 }}
               />
             ) : (
