@@ -77,7 +77,7 @@ export default function FavoriteTracksPage() {
     <Layout topNavBarProps={topNavBarProps}>
       <Head>
         <title>Soundchain - Favorite Tracks</title>
-        <meta name="description" content="FavoritfavoriteT Tracks" />
+        <meta name="description" content="Favorite Tracks" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <ol className={classNames('space-y-1')}>

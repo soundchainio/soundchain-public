@@ -2,6 +2,7 @@ import { BackButton } from 'components/Buttons/BackButton';
 import { Layout } from 'components/Layout';
 import { MenuLink } from 'components/MenuLink';
 import { TopNavBarProps } from 'components/TopNavBar';
+import { Artist } from 'icons/Artist';
 import { Heart } from 'icons/Heart';
 import { cacheFor } from 'lib/apollo';
 import { protectPage } from 'lib/protectPage';
@@ -26,6 +27,7 @@ export default function LibraryPage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <MenuLink icon={Heart} label="Favorite Tracks" href="/library/favorite-tracks" />
+      <MenuLink icon={Artist} label="Artists" href="/library/artists" />
     </Layout>
   );
 }

@@ -27,7 +27,7 @@ function Link({ label, value, to }: LinkProps) {
           <span className="block text-gray-50 text-xs font-bold uppercase"> {label} </span>
           <span className="block text-white font-bold mt-1"> {value} </span>
         </div>
-        <RightArrow />
+        <RightArrow className="scale-150" />
       </a>
     </NextLink>
   );
@@ -41,7 +41,7 @@ function FakeLink({ label, value, onClick }: LinkProps) {
           <span className="block text-gray-50 text-xs font-bold uppercase"> {label} </span>
           <span className="block text-white font-bold mt-1"> {value} </span>
         </div>
-        <RightArrow />
+        <RightArrow className="scale-150" />
       </a>
     </div>
   );
