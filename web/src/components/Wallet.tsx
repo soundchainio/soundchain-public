@@ -4,6 +4,7 @@ import { Copy2 as Copy } from 'icons/Copy2';
 import { Link as LinkIcon } from 'icons/Link';
 import { Matic } from 'icons/Matic';
 import Link from 'next/link';
+import { toast } from 'react-toastify';
 interface WalletProps extends React.ComponentPropsWithoutRef<'div'> {
   title: string;
   correctNetwork?: boolean;
@@ -44,7 +45,13 @@ interface AccountProps extends Partial<Omit<WalletProps, 'onDefaultWalletClick'>
   onDefaultWalletClick?: () => void;
 }
 
-export const Account = ({ account, balance, defaultWallet, showActionButtons, onDefaultWalletClick = () => null }: AccountProps) => {
+export const Account = ({
+  account,
+  balance,
+  defaultWallet,
+  showActionButtons,
+  onDefaultWalletClick = () => null,
+}: AccountProps) => {
   return (
     <>
       <div className="flex flex-row text-xxs bg-gray-1A w-full pl-2 pr-3 py-2 items-center justify-between">
@@ -56,6 +63,7 @@ export const Account = ({ account, balance, defaultWallet, showActionButtons, on
           className="flex flex-row gap-1 items-center border-2 border-gray-30 border-opacity-75 rounded p-1"
           onClick={() => {
             navigator.clipboard.writeText(account + '');
+            toast('Copied to clipboard');
           }}
           type="button"
         >
@@ -63,7 +71,7 @@ export const Account = ({ account, balance, defaultWallet, showActionButtons, on
           <span className="text-gray-80 uppercase leading-none">copy</span>
         </button>
       </div>
-      {balance &&
+      {balance && (
         <div className="flex w-full">
           <div className="flex-1 flex items-center justify-start bg-gray-20 text-gray-CC font-bold text-xs uppercase px-4 py-3">
             Total Balance
@@ -78,7 +86,7 @@ export const Account = ({ account, balance, defaultWallet, showActionButtons, on
             </div>
           </div>
         </div>
-      }
+      )}
       {showActionButtons && (
         <div className="flex w-full justify-around py-5">
           <Link href="/" passHref>

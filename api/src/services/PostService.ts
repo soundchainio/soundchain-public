@@ -57,6 +57,7 @@ export class PostService extends ModelService<typeof Post> {
   }
 
   async deletePost(params: DeletePostParams): Promise<Post> {
+    this.context.feedService.deleteItemsByPostId(params.postId)
     return await PostModel.findByIdAndUpdate(
       { _id: params.postId, profileId: params.profileId },
       { deleted: true },

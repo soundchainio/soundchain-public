@@ -17,11 +17,11 @@ export const ReactionItem = ({ reaction: { type, profile }, onClick }: FollowIte
   };
 
   return (
-    <div className="flex flex-row space-x-2 items-center p-5" onClick={onReactionClick}>
+    <div className="flex flex-row space-x-2 items-center px-4 py-3" onClick={onReactionClick}>
       <div className="items-center self-center content-center">
         <Avatar pixels={40} className="flex" profile={profile} />
       </div>
-      <div className="text-white font-bold flex justify-between w-full">
+      <div className="text-white flex justify-between w-full text-sm">
         <DisplayName name={profile.displayName} verified={profile.verified} />
         <div className="flex w-16 text-center items-center justify-end">
           <ReactionEmoji name={type.toUpperCase() as ReactionType} className="w-4 h-4" />
