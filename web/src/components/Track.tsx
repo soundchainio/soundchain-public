@@ -40,6 +40,7 @@ export const Track = ({ trackId, coverPhotoUrl }: TrackProps) => {
         art: data.track.artworkUrl || coverPhotoUrl || undefined,
         title: data.track.title,
         artist: data.track.artist,
+        isFavorite: data.track.isFavorite,
       }}
     />
   );

@@ -45,6 +45,7 @@ export const RepostPreview = ({ postId }: RepostPreviewProps) => {
                   art: post.track.artworkUrl,
                   title: post.track.title,
                   artist: post.track.artist,
+                  isFavorite: post.track.isFavorite,
                 }}
               />
             )}
