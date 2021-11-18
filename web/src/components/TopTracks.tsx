@@ -67,6 +67,7 @@ export const TopTracks = () => {
             title: song.title,
             artist: song.artist,
             playbackCount: song.playbackCountFormatted,
+            isFavorite: song.isFavorite,
           }}
           handleOnPlayClicked={song => handleOnPlayClicked(song, index)}
         />
