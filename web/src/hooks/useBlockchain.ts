@@ -4,10 +4,12 @@ import { config } from 'config';
 import { magic } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
 import { Soundchain721 } from 'types/web3-v1-contracts/Soundchain721';
+import { SoundchainAuction } from 'types/web3-v1-contracts/SoundchainAuction';
 import { SoundchainMarketplace } from 'types/web3-v1-contracts/SoundchainMarketplace';
 import Web3 from 'web3';
 import { TransactionReceipt } from 'web3-core/types';
 import { AbiItem } from 'web3-utils';
+import soundchainAuction from '../contract/Auction.sol/SoundchainAuction.json';
 import soundchainMarketplace from '../contract/Marketplace.sol/SoundchainMarketplace.json';
 import soundchainContract from '../contract/Soundchain721.sol/Soundchain721.json';
 
@@ -200,6 +202,73 @@ const useBlockchain = () => {
     return await nftContract.methods.isApprovedForAll(from, marketplaceAddress).call();
   };
 
+  const createAuction = (
+    web3: Web3,
+    tokenId: number,
+    reservePrice: number,
+    startTime: number,
+    endTime: number,
+    from: string,
+    onReceipt: (receipt: TransactionReceipt) => void,
+  ) => {
+    const auctionContract = new web3.eth.Contract(
+      soundchainAuction.abi as AbiItem[],
+      nftAddress,
+    ) as unknown as SoundchainAuction;
+    beforeSending(web3, () => {
+      auctionContract.methods
+        .createAuction(nftAddress, tokenId, reservePrice, startTime, true, endTime)
+        .send({ from, gas })
+        .on('receipt', onReceipt);
+    });
+  };
+
+  const cancelAuction = (
+    web3: Web3,
+    tokenId: number,
+    from: string,
+    onReceipt: (receipt: TransactionReceipt) => void,
+  ) => {
+    const auctionContract = new web3.eth.Contract(
+      soundchainAuction.abi as AbiItem[],
+      nftAddress,
+    ) as unknown as SoundchainAuction;
+    beforeSending(web3, () => {
+      auctionContract.methods.cancelAuction(nftAddress, tokenId).send({ from, gas }).on('receipt', onReceipt);
+    });
+  };
+
+  const placeBid = (
+    web3: Web3,
+    tokenId: number,
+    from: string,
+    value: number,
+    onReceipt: (receipt: TransactionReceipt) => void,
+  ) => {
+    const auctionContract = new web3.eth.Contract(
+      soundchainAuction.abi as AbiItem[],
+      nftAddress,
+    ) as unknown as SoundchainAuction;
+    beforeSending(web3, () => {
+      auctionContract.methods.placeBid(nftAddress, tokenId).send({ from, gas, value }).on('receipt', onReceipt);
+    });
+  };
+
+  const resultAuction = (
+    web3: Web3,
+    tokenId: number,
+    from: string,
+    onReceipt: (receipt: TransactionReceipt) => void,
+  ) => {
+    const auctionContract = new web3.eth.Contract(
+      soundchainAuction.abi as AbiItem[],
+      nftAddress,
+    ) as unknown as SoundchainAuction;
+    beforeSending(web3, () => {
+      auctionContract.methods.resultAuction(nftAddress, tokenId).send({ from, gas }).on('receipt', onReceipt);
+    });
+  };
+
   const getMaxGasFee = async (web3: Web3) => {
     const gasPriceWei = await web3.eth.getGasPrice();
     const gasPrice = parseInt(web3.utils.fromWei(gasPriceWei, 'Gwei'));
@@ -216,7 +285,9 @@ const useBlockchain = () => {
     approveMarketplace,
     burnNftToken,
     buyItem,
+    cancelAuction,
     cancelListing,
+    createAuction,
     getCurrentGasPrice,
     getIpfsAssetUrl,
     getMaxGasFee,
@@ -225,6 +296,8 @@ const useBlockchain = () => {
     isTokenOwner,
     listItem,
     mintNftToken,
+    placeBid,
+    resultAuction,
     sendMatic,
     transferNftToken,
     updateListing,
