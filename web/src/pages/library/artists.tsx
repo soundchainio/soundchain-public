@@ -1,11 +1,15 @@
+import { Avatar } from 'components/Avatar';
 import { BackButton } from 'components/Buttons/BackButton';
+import { DisplayName } from 'components/DisplayName';
 import { InfiniteLoader } from 'components/InfiniteLoader';
 import { Layout } from 'components/Layout';
 import { LoaderAnimation } from 'components/LoaderAnimation';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useMe } from 'hooks/useMe';
+import { RightArrow } from 'icons/RightArrow';
 import { useFollowingLazyQuery } from 'lib/graphql';
 import Head from 'next/head';
+import Link from 'next/link';
 import React, { useEffect } from 'react';
 
 const topNavBarProps: TopNavBarProps = {
@@ -43,7 +47,22 @@ export default function ArtistsPage() {
         )}
         <div className="space-y-6 px-4 py-3">
           {data?.following.nodes.map(following => (
-            <div key={following.id}>ola</div>
+            <div key={following.id}>
+              <Link href={`/profiles/${following.followedProfile.userHandle}`} passHref>
+                <div className="flex flex-row space-x-2 items-center cursor-pointer text-sm">
+                  <div className="items-center self-center content-center">
+                    <Avatar pixels={40} className="flex" profile={following.followedProfile} />
+                  </div>
+                  <DisplayName
+                    name={following.followedProfile.displayName}
+                    verified={following.followedProfile.verified}
+                  />
+                  <div className="flex-1 justify-end flex">
+                    <RightArrow className="scale-150" />
+                  </div>
+                </div>
+              </Link>
+            </div>
           ))}
         </div>
         {data?.following.pageInfo.hasNextPage && (
