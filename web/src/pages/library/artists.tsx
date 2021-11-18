@@ -66,7 +66,7 @@ export default function ArtistsPage() {
           ))}
         </div>
         {data?.following.pageInfo.hasNextPage && (
-          <InfiniteLoader loadMore={onLoadMore} loadingMessage="Loading Following" />
+          <InfiniteLoader loadMore={onLoadMore} loadingMessage="Loading Artists" />
         )}
       </div>
     </Layout>
