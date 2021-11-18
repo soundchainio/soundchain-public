@@ -238,6 +238,7 @@ export type FilterPostInput = {
 
 export type FilterTrackInput = {
   profileId?: Maybe<Scalars['String']>;
+  nftData?: Maybe<NftDataInput>;
 };
 
 export type Follow = {

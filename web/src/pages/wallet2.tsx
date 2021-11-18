@@ -1,6 +1,7 @@
 import { BackButton } from 'components/Buttons/BackButton';
 import { Jazzicon } from 'components/Jazzicon';
 import { Layout } from 'components/Layout';
+import { OwnedNfts } from 'components/OwnedNfts';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
@@ -17,7 +18,7 @@ import { Polygon } from 'icons/Polygon';
 import { DefaultWallet, useUpdateDefaultWalletMutation } from 'lib/graphql';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 
 const topNovaBarProps: TopNavBarProps = {
@@ -61,7 +62,7 @@ export default function WalletPage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div className="h-full flex flex-col">
-        <div className="flex items-center gap-2 bg-gray-15 font-bold text-xs py-4 px-2">
+        <div className="flex items-center gap-2 bg-gray-15 font-bold text-xs py-4 px-3">
           <div className="relative">
             <select
               className="bg-gray-25 text-gray-80 font-bold text-xs rounded-lg border-0 pl-8"
@@ -90,7 +91,7 @@ export default function WalletPage() {
             <input
               type="checkbox"
               className="h-5 w-5 text-black bg-black border-gray-30 rounded border-2"
-              onClick={() => updateDefaultWallet({ variables: { input: { defaultWallet: selectedWallet } } })}
+              onChange={() => updateDefaultWallet({ variables: { input: { defaultWallet: selectedWallet } } })}
               checked={me?.defaultWallet === selectedWallet}
             />
           </label>
@@ -141,6 +142,7 @@ export default function WalletPage() {
         <div className="p-3 mt-3">
           <span className="text-gray-80 font-bold">Owned NFT’s</span>
         </div>
+        {getAccount && <OwnedNfts owner={getAccount} />}
       </div>
     </Layout>
   );
