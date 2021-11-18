@@ -21,6 +21,7 @@ export const MintingDone = ({ track, transactionHash }: MintingDoneProps) => {
             art: track.artworkUrl,
             title: track.title,
             artist: track.artist,
+            isFavorite: track.isFavorite,
           }}
         />
       </div>
