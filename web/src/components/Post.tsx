@@ -72,6 +72,7 @@ export const Post = ({ postId }: PostProps) => {
               art: post.track.artworkUrl,
               title: post.track.title,
               artist: post.track.artist,
+              isFavorite: post.track.isFavorite,
             }}
           />
         )}

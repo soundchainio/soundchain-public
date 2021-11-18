@@ -14,6 +14,7 @@ interface Song {
   trackId: string;
   artist?: string | null;
   art?: string | null;
+  isFavorite: boolean | null;
 }
 
 interface MiniAudioPlayerProps {
