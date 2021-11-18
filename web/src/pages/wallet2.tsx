@@ -18,6 +18,7 @@ import { DefaultWallet, useUpdateDefaultWalletMutation } from 'lib/graphql';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useState } from 'react';
+import { toast } from 'react-toastify';
 
 const topNovaBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
@@ -112,6 +113,7 @@ export default function WalletPage() {
               className="flex flex-row gap-1 items-center border-2 border-gray-30 border-opacity-75 rounded p-1"
               onClick={() => {
                 navigator.clipboard.writeText(getAccount + '');
+                toast('Copied to clipboard');
               }}
               type="button"
             >
