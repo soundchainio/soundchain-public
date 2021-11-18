@@ -3,8 +3,8 @@ import { NewPostNotification as NewPostIcon } from 'icons/NewPostNotification';
 import { NewPostNotification } from 'lib/graphql';
 import NextLink from 'next/link';
 import React from 'react';
-import { AudioPlayer } from './AudioPlayer';
 import { Avatar } from './Avatar';
+import { MiniAudioPlayer } from './MiniAudioPlayer';
 import { Timestamp } from './Timestamp';
 
 interface NewPostNotificationProps {
@@ -37,7 +37,15 @@ export const NewPostNotificationItem = ({
         <div className="flex mt-4">
           <div className="p-4 bg-gray-30 w-full break-words text-gray-100 rounded-xl text-sm">
             {track ? (
-              <AudioPlayer trackId={track.id} src={track.playbackUrl} title={track.title} artist={track.artist} />
+              <MiniAudioPlayer
+                song={{
+                  src: track.playbackUrl,
+                  trackId: track.id,
+                  art: track.artworkUrl,
+                  title: track.title,
+                  artist: track.artist,
+                }}
+              />
             ) : (
               previewBody
             )}
