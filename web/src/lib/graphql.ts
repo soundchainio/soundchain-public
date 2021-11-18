@@ -963,7 +963,7 @@ export type QueryTracksArgs = {
 export type QueryFavoriteTracksArgs = {
   page?: Maybe<PageInput>;
   sort?: Maybe<SortTrackInput>;
-  filter?: Maybe<FilterTrackInput>;
+  search?: Maybe<Scalars['String']>;
 };
 
 
@@ -1613,6 +1613,7 @@ export type ExploreUsersQuery = (
 );
 
 export type FavoriteTracksQueryVariables = Exact<{
+  search?: Maybe<Scalars['String']>;
   sort?: Maybe<SortTrackInput>;
   page?: Maybe<PageInput>;
 }>;
@@ -3526,8 +3527,8 @@ export type ExploreUsersQueryHookResult = ReturnType<typeof useExploreUsersQuery
 export type ExploreUsersLazyQueryHookResult = ReturnType<typeof useExploreUsersLazyQuery>;
 export type ExploreUsersQueryResult = Apollo.QueryResult<ExploreUsersQuery, ExploreUsersQueryVariables>;
 export const FavoriteTracksDocument = gql`
-    query FavoriteTracks($sort: SortTrackInput, $page: PageInput) {
-  favoriteTracks(sort: $sort, page: $page) {
+    query FavoriteTracks($search: String, $sort: SortTrackInput, $page: PageInput) {
+  favoriteTracks(search: $search, sort: $sort, page: $page) {
     nodes {
       ...TrackComponentFields
     }
@@ -3551,6 +3552,7 @@ export const FavoriteTracksDocument = gql`
  * @example
  * const { data, loading, error } = useFavoriteTracksQuery({
  *   variables: {
+ *      search: // value for 'search'
  *      sort: // value for 'sort'
  *      page: // value for 'page'
  *   },

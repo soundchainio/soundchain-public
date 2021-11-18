@@ -100,12 +100,12 @@ export class TrackResolver {
   async favoriteTracks(
     @Ctx() { trackService }: Context,
     @CurrentUser() { profileId }: User,
-    @Arg('filter', { nullable: true }) filter?: FilterTrackInput,
+    @Arg('search', { nullable: true }) search?: string,
     @Arg('sort', { nullable: true }) sort?: SortTrackInput,
     @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<TrackConnection> {
     const favorites = await FavoriteProfileTrackModel.find({ profileId });
     const ids = favorites.map(item => new ObjectId(item.trackId));
-    return trackService.getFavoriteTracks(ids, { ...filter }, sort, page);
+    return trackService.getFavoriteTracks(ids, search, sort, page);
   }
 }
