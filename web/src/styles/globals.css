@@ -177,3 +177,9 @@ html {
     @apply font-semibold;
   }
 }
+
+@media only screen and (max-height: 615px) {
+  #mobile-logo {
+    display: none;
+  }
+}

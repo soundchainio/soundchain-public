@@ -3,6 +3,7 @@ import { Number } from 'components/Number';
 import { useModalDispatch } from 'contexts/providers/modal';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
+import { Feedback } from 'icons/Feedback';
 import { Logo } from 'icons/Logo';
 import { Logout } from 'icons/Logout';
 import { Settings } from 'icons/Settings';
@@ -100,14 +101,11 @@ export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => 
             </>
           )}
         </div>
-        {me && (
-          <div className="mt-2">
-            <MenuLink icon={Wallet} label="Wallet" href="/wallet" />
-          </div>
-        )}
       </div>
       {me && (
         <div>
+          <MenuLink icon={Wallet} label="Wallet" href="/wallet" />
+          <MenuLink icon={Feedback} label="Leave Feedback" href="/feedback" />
           {me.roles.includes(Role.Admin) ? (
             <MenuLink icon={Verified} label="Admin Panel" href="/manage-requests" />
           ) : (
