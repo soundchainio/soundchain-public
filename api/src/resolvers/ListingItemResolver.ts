@@ -32,12 +32,6 @@ export class ListingItemResolver {
     return { listingItem };
   }
 
-  @Query(() => Boolean)
-  async wasListedBefore(@Ctx() { listingItemService }: Context, @Arg('tokenId') tokenId: number): Promise<boolean> {
-    const wasListed = await listingItemService.wasListedBefore(tokenId);
-    return wasListed;
-  }
-
   @Mutation(() => CreateListingItemData)
   @Authorized()
   async setNotValid(

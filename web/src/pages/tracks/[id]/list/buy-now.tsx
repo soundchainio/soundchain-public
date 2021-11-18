@@ -17,7 +17,6 @@ import {
   useListingItemLazyQuery,
   useTrackQuery,
   useUpdateTrackMutation,
-  useWasListedBeforeLazyQuery,
 } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
@@ -49,10 +48,10 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
     return { notFound: true };
   }
 
-  return cacheFor(ListPage, { trackId }, context, apolloClient);
+  return cacheFor(ListBuyNowPage, { trackId }, context, apolloClient);
 });
 
-export default function ListPage({ trackId }: TrackPageProps) {
+export default function ListBuyNowPage({ trackId }: TrackPageProps) {
   const { listItem, isTokenOwner, isApproved: checkIsApproved } = useBlockchain();
   const router = useRouter();
   const me = useMe();
@@ -63,7 +62,6 @@ export default function ListPage({ trackId }: TrackPageProps) {
   const { dispatchShowApproveModal } = useModalDispatch();
   const [loading, setLoading] = useState(false);
   const [price, setPrice] = useState(0);
-  const [royalty, setRoyalty] = useState(0);
   const [isOwner, setIsOwner] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
 
@@ -72,10 +70,6 @@ export default function ListPage({ trackId }: TrackPageProps) {
     (me?.profile.verified && data?.track.nftData?.minter === account) || data?.track.nftData?.minter != account;
 
   const [getListingItem, { data: listingItem }] = useListingItemLazyQuery({
-    variables: { tokenId },
-  });
-
-  const [getWasListedBefore, { data: wasListedBefore }] = useWasListedBeforeLazyQuery({
     variables: { tokenId },
   });
 
@@ -101,10 +95,6 @@ export default function ListPage({ trackId }: TrackPageProps) {
   }, [getListingItem]);
 
   useEffect(() => {
-    getWasListedBefore();
-  }, [getWasListedBefore]);
-
-  useEffect(() => {
     const fetchIsApproved = async () => {
       if (!web3 || !checkIsApproved || !account) return;
 
@@ -115,7 +105,6 @@ export default function ListPage({ trackId }: TrackPageProps) {
   }, [account, web3, checkIsApproved]);
 
   const isForSale = !!listingItem?.listingItem?.listingItem?.pricePerItem ?? false;
-  const isSetRoyalty = !wasListedBefore?.wasListedBefore;
 
   const handleList = () => {
     if (data?.track.nftData?.tokenId === null || data?.track.nftData?.tokenId === undefined || !account || !web3) {
@@ -138,7 +127,7 @@ export default function ListPage({ trackId }: TrackPageProps) {
         });
         router.back();
       };
-      listItem(web3, data.track.nftData.tokenId, 1, account, weiPrice, royalty * 100, onTransactionHash);
+      listItem(web3, data.track.nftData.tokenId, account, weiPrice, onTransactionHash);
     } else {
       me ? dispatchShowApproveModal(true) : router.push('/login');
     }
@@ -158,11 +147,7 @@ export default function ListPage({ trackId }: TrackPageProps) {
       <div className="m-4">
         <Track trackId={trackId} />
       </div>
-      <ListNFT
-        onSetPrice={price => setPrice(price)}
-        isSetRoyalty={isSetRoyalty}
-        onSetRoyalty={royalty => setRoyalty(royalty)}
-      />
+      <ListNFT onSetPrice={price => setPrice(price)} />
       <div className="flex p-4">
         <div className="flex-1 font-black text-xs text-gray-80">
           <p>Max gas fee</p>

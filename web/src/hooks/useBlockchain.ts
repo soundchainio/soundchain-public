@@ -51,7 +51,6 @@ const useBlockchain = () => {
   const listItem = (
     web3: Web3,
     tokenId: number,
-    quantity: number,
     from: string,
     price: string,
     onTransactionHash: (hash: string) => void,
@@ -64,7 +63,7 @@ const useBlockchain = () => {
       web3,
       async () =>
         await contract.methods
-          .listItem(nftAddress, tokenId, quantity, price, 0)
+          .listItem(nftAddress, tokenId, 1, price, 0)
           .send({ from, gas })
           .on('transactionHash', onTransactionHash),
     );
@@ -157,13 +156,13 @@ const useBlockchain = () => {
     );
   };
 
-  const isTokenOwner = async (web3: Web3, tokenId: number) => {
+  const isTokenOwner = async (web3: Web3, tokenId: number, from: string) => {
     const nftContract = new web3.eth.Contract(
       soundchainContract.abi as AbiItem[],
       nftAddress,
     ) as unknown as Soundchain721;
     const ownerOf = await nftContract.methods.ownerOf(tokenId).call();
-    return ownerOf;
+    return ownerOf == from;
   };
 
   const getRoyalties = async (web3: Web3, tokenId: number) => {
