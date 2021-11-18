@@ -9,7 +9,8 @@
     "migrate:create": "sh -c 'ts-node node_modules/migrate-mongo/bin/migrate-mongo create $0 -f migrate-mongo-config.ts' ",
     "migrate:status": "ts-node node_modules/migrate-mongo/bin/migrate-mongo status -f migrate-mongo-config.ts",
     "migrate:down": "ts-node node_modules/migrate-mongo/bin/migrate-mongo down -f migrate-mongo-config.ts && npm run migrate:status",
-    "migrate": "ts-node node_modules/migrate-mongo/bin/migrate-mongo up -f migrate-mongo-config.ts"
+    "migrate": "ts-node node_modules/migrate-mongo/bin/migrate-mongo up -f migrate-mongo-config.ts",
+    "generate-types": "typechain --target=web3-v1 'src/contract/*.json'"
   },
   "lint-staged": {
     "*.{ts,json,md}": "prettier --write"
@@ -56,6 +57,7 @@
     "web3": "^1.6.0"
   },
   "devDependencies": {
+    "@typechain/web3-v1": "^4.0.0",
     "@types/base64-url": "^2.2.0",
     "@types/dotenv-flow": "^3.1.1",
     "@types/express-jwt": "^6.0.2",
@@ -77,6 +79,7 @@
     "prettier": "^2.3.2",
     "serverless-plugin-typescript": "^1.1.9",
     "ts-node": "^10.1.0",
+    "typechain": "^6.0.3",
     "typescript": "^4.3.5"
   }
 }

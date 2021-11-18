@@ -3,7 +3,8 @@ import { SDKBase } from '@magic-sdk/provider';
 import { config } from 'config';
 import { magic } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
-import { Receipt } from 'types/NftTypes';
+import { Soundchain721 } from 'types/web3-v1-contracts/Soundchain721';
+import { SoundchainMarketplace } from 'types/web3-v1-contracts/SoundchainMarketplace';
 import Web3 from 'web3';
 import { TransactionReceipt } from 'web3-core/types';
 import { AbiItem } from 'web3-utils';
@@ -11,7 +12,7 @@ import soundchainMarketplace from '../contract/Marketplace.sol/SoundchainMarketp
 import soundchainContract from '../contract/Soundchain721.sol/Soundchain721.json';
 
 const nftAddress = config.contractAddress as string;
-const marketplaceAddress = config.marketplaceAddress;
+const marketplaceAddress = config.marketplaceAddress || '';
 export const gas = 1200000;
 
 const useBlockchain = () => {
@@ -32,12 +33,12 @@ const useBlockchain = () => {
   };
 
   const burnNftToken = (web3: Web3, tokenId: number, from: string) => {
-    const contract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress);
+    const contract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress) as unknown as Soundchain721;
     return beforeSending(web3, async () => await contract.methods.burn(tokenId).send({ from, gas }));
   };
 
-  const approveMarketplace = (web3: Web3, from: string, onReceipt: (receipt: Receipt) => void) => {
-    const contract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress);
+  const approveMarketplace = (web3: Web3, from: string, onReceipt: (receipt: TransactionReceipt) => void) => {
+    const contract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress) as unknown as Soundchain721;
     return beforeSending(
       web3,
       async () =>
@@ -53,7 +54,10 @@ const useBlockchain = () => {
     price: string,
     onTransactionHash: (hash: string) => void,
   ) => {
-    const contract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
+    const contract = new web3.eth.Contract(
+      soundchainMarketplace.abi as AbiItem[],
+      marketplaceAddress,
+    ) as unknown as SoundchainMarketplace;
     return beforeSending(
       web3,
       async () =>
@@ -65,7 +69,10 @@ const useBlockchain = () => {
   };
 
   const cancelListing = (web3: Web3, tokenId: number, from: string, onTransactionHash: (hash: string) => void) => {
-    const contract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
+    const contract = new web3.eth.Contract(
+      soundchainMarketplace.abi as AbiItem[],
+      marketplaceAddress,
+    ) as unknown as SoundchainMarketplace;
     return beforeSending(
       web3,
       async () =>
@@ -83,7 +90,10 @@ const useBlockchain = () => {
     price: string,
     onTransactionHash: (hash: string) => void,
   ) => {
-    const contract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
+    const contract = new web3.eth.Contract(
+      soundchainMarketplace.abi as AbiItem[],
+      marketplaceAddress,
+    ) as unknown as SoundchainMarketplace;
     return beforeSending(
       web3,
       async () =>
@@ -102,7 +112,10 @@ const useBlockchain = () => {
     value: string,
     onTransactionHash: (hash: string) => void,
   ) => {
-    const contract = new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress);
+    const contract = new web3.eth.Contract(
+      soundchainMarketplace.abi as AbiItem[],
+      marketplaceAddress,
+    ) as unknown as SoundchainMarketplace;
     return beforeSending(
       web3,
       async () =>
@@ -114,10 +127,10 @@ const useBlockchain = () => {
   };
 
   const transferNftToken = (web3: Web3, tokenId: number, from: string, toAddress: string) => {
-    const contract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress);
+    const contract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress) as unknown as Soundchain721;
     return beforeSending(
       web3,
-      async () => await contract.methods.safeTransferFrom(from, toAddress, tokenId).send({ from, gas }),
+      async () => await contract.methods.transferFrom(from, toAddress, tokenId).send({ from, gas }),
     );
   };
 
@@ -143,13 +156,19 @@ const useBlockchain = () => {
   };
 
   const isTokenOwner = async (web3: Web3, tokenId: number) => {
-    const nftContract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress);
+    const nftContract = new web3.eth.Contract(
+      soundchainContract.abi as AbiItem[],
+      nftAddress,
+    ) as unknown as Soundchain721;
     const ownerOf = await nftContract.methods.ownerOf(tokenId).call();
     return ownerOf;
   };
 
   const getRoyalties = async (web3: Web3, tokenId: number) => {
-    const nftContract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress);
+    const nftContract = new web3.eth.Contract(
+      soundchainContract.abi as AbiItem[],
+      nftAddress,
+    ) as unknown as Soundchain721;
     const royalties = await nftContract.methods.royaltyPercentage(tokenId).call();
     return royalties;
   };
@@ -159,13 +178,14 @@ const useBlockchain = () => {
     uri: string,
     from: string,
     toAddress: string,
+    royaltyPercentage: number,
     onTransactionHash: (hash: string) => void,
-    onError?: (error: any, receipt: string) => void,
+    onError: (error: Error) => void,
   ) => {
-    const contract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress);
+    const contract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress) as unknown as Soundchain721;
     beforeSending(web3, () => {
       contract.methods
-        .safeMint(toAddress, uri)
+        .safeMint(toAddress, uri, royaltyPercentage)
         .send({ from, gas })
         .on('transactionHash', onTransactionHash)
         .on('error', onError);
@@ -173,7 +193,10 @@ const useBlockchain = () => {
   };
 
   const isApproved = async (web3: Web3, from: string) => {
-    const nftContract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress);
+    const nftContract = new web3.eth.Contract(
+      soundchainContract.abi as AbiItem[],
+      nftAddress,
+    ) as unknown as Soundchain721;
     return await nftContract.methods.isApprovedForAll(from, marketplaceAddress).call();
   };
 
