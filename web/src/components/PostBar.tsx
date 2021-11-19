@@ -53,15 +53,15 @@ export const PostBar = ({
 
   return (
     <div className="p-4 flex items-center bg-gray-15">
-      <div className="text-center w-16" onClick={onEmojiPickerClick}>
+      <div className="text-center w-16 cursor-pointer" onClick={onEmojiPickerClick}>
         {isEmojiPickerVisible ? '❌' : '😃'}
       </div>
       {!isRepost && (
         <>
-          <div className="text-center w-16" onClick={onAddMusicClick}>
+          <div className="text-center w-16 cursor-pointer" onClick={onAddMusicClick}>
             <MusicNoteIcon className="text-gray-400 w-5 m-auto" />
           </div>
-          <div className="text-center w-16" onClick={onAddVideoClick}>
+          <div className="text-center w-16 cursor-pointer" onClick={onAddVideoClick}>
             <VideoCameraIcon className="text-gray-400 w-5 m-auto" />
           </div>
         </>
