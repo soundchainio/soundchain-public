@@ -1,3 +1,4 @@
+import { AuctionItemResolver } from './AuctionItemResolver';
 import { BuyNowItemResolver } from './BuyNowItemResolver';
 import { ChatResolver } from './ChatResolver';
 import { CommentNotificationResolver } from './CommentNotificationResolver';
@@ -24,10 +25,13 @@ import { UserResolver } from './UserResolver';
 import { VerificationRequestNotificationResolver } from './VerificationRequestNotificationResolver';
 
 export const resolvers = [
+  AuctionItemResolver,
+  BuyNowItemResolver,
   BuyNowItemResolver,
   ChatResolver,
   CommentNotificationResolver,
   CommentResolver,
+  ExploreResolver,
   ExploreResolver,
   ExploreResolver,
   FeedResolver,
@@ -36,16 +40,18 @@ export const resolvers = [
   MessageResolver,
   MintingRequestResolver,
   MintingRequestResolver,
+  MintingRequestResolver,
   NewPostNotificationResolver,
+  NFTSoldNotificationResolver,
   NFTSoldNotificationResolver,
   NFTSoldNotificationResolver,
   NotificationResolver,
   PinningResolver,
   PinningResolver,
+  PinningResolver,
   PolygonscanResolver,
   PostResolver,
   ProfileResolver,
-  ProfileVerificationRequestResolver,
   ProfileVerificationRequestResolver,
   ReactionNotificationResolver,
   ReactionResolver,

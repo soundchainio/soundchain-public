@@ -1,6 +1,6 @@
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
-import { BuyNFT } from 'components/details-NFT/BuyNFT';
+import { PlaceBid } from 'components/details-NFT/PlaceBid';
 import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
@@ -13,7 +13,7 @@ import { cacheFor } from 'lib/apollo';
 import {
   PendingRequest,
   TrackDocument,
-  useBuyNowItemLazyQuery,
+  useAuctionItemLazyQuery,
   useTrackQuery,
   useUpdateTrackMutation,
 } from 'lib/graphql';
@@ -47,43 +47,44 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
     return { notFound: true };
   }
 
-  return cacheFor(BuyPage, { trackId }, context, apolloClient);
+  return cacheFor(PlaceBidPage, { trackId }, context, apolloClient);
 });
 
-export default function BuyPage({ trackId }: TrackPageProps) {
-  const { buyItem } = useBlockchain();
+export default function PlaceBidPage({ trackId }: TrackPageProps) {
+  const { placeBid } = useBlockchain();
   const { data: track } = useTrackQuery({ variables: { id: trackId } });
   const { account, web3 } = useWalletContext();
   const [trackUpdate] = useUpdateTrackMutation();
   const maxGasFee = useMaxGasFee();
   const [loading, setLoading] = useState(false);
+  const [bidAmount, setBidAmount] = useState('0');
   const router = useRouter();
   const me = useMe();
 
   const tokenId = track?.track.nftData?.tokenId ?? -1;
 
-  const [getBuyNowItem, { data: listingPayload }] = useBuyNowItemLazyQuery({
+  const [getAuctionItem, { data: auctionItem }] = useAuctionItemLazyQuery({
     variables: { tokenId },
   });
 
   useEffect(() => {
-    getBuyNowItem();
-  }, [getBuyNowItem]);
+    getAuctionItem();
+  }, [getAuctionItem]);
 
-  if (!listingPayload) {
+  if (!auctionItem) {
     return null;
   }
 
-  const ownerAddressAccount = listingPayload.buyNowItem?.buyNowItem?.owner.toLowerCase();
+  const ownerAddressAccount = 'listingPayload.buyNowItem?.buyNowItem?.owner.toLowerCase()';
   const isOwner = ownerAddressAccount === account?.toLowerCase();
-  const isForSale = !!listingPayload.buyNowItem?.buyNowItem?.pricePerItem ?? false;
-  const price = web3?.utils.fromWei(listingPayload.buyNowItem?.buyNowItem?.pricePerItem.toString() || '0', 'ether');
+  const isForSale = !!auctionItem.auctionItem.auctionItem?.reservePrice ?? false;
+  const price = '1';
 
-  const handleBuy = () => {
+  const handlePlaceBid = () => {
     if (
       !web3 ||
-      !listingPayload.buyNowItem?.buyNowItem?.tokenId ||
-      !listingPayload.buyNowItem?.buyNowItem?.owner ||
+      !auctionItem.auctionItem?.auctionItem?.tokenId ||
+      !auctionItem.auctionItem?.auctionItem?.owner ||
       !account
     ) {
       return;
@@ -95,28 +96,21 @@ export default function BuyPage({ trackId }: TrackPageProps) {
           input: {
             trackId: trackId,
             nftData: {
-              pendingRequest: PendingRequest.Buy,
+              pendingRequest: PendingRequest.PlaceBid,
             },
           },
         },
       });
-      router.push(router.asPath.replace('buy', ''));
+      router.push(router.asPath.replace('place-bid', ''));
     };
 
-    buyItem(
-      web3,
-      listingPayload.buyNowItem?.buyNowItem?.tokenId,
-      account,
-      listingPayload.buyNowItem?.buyNowItem?.owner,
-      listingPayload.buyNowItem?.buyNowItem?.pricePerItem.toString(),
-      onTransactionHash,
-    );
+    placeBid(web3, auctionItem.auctionItem?.auctionItem?.tokenId, account, bidAmount, onTransactionHash);
     setLoading(true);
   };
 
   const topNovaBarProps: TopNavBarProps = {
     leftButton: <BackButton />,
-    title: 'Confirm Purchase',
+    title: 'Place Bid',
   };
 
   if (!isForSale || isOwner || !me || track?.track.nftData?.pendingRequest != PendingRequest.None) {
@@ -128,7 +122,13 @@ export default function BuyPage({ trackId }: TrackPageProps) {
       <div className="m-4">
         <Track trackId={trackId} />
       </div>
-      {price && ownerAddressAccount && <BuyNFT price={price} ownerAddressAccount={ownerAddressAccount} />}
+      {price && ownerAddressAccount && (
+        <PlaceBid
+          bidAmount={bidAmount}
+          onSetBidAmount={amount => setBidAmount(amount)}
+          ownerAddressAccount={ownerAddressAccount}
+        />
+      )}
       <div className="flex p-4">
         <div className="flex-1 font-black text-xs text-gray-80">
           <p>Max gas fee</p>
@@ -137,8 +137,8 @@ export default function BuyPage({ trackId }: TrackPageProps) {
             <div className="text-white">{maxGasFee}</div>MATIC
           </div>
         </div>
-        <Button variant="buy-nft" onClick={handleBuy} loading={loading}>
-          <div className="px-4">BUY NFT</div>
+        <Button variant="buy-nft" onClick={handlePlaceBid} loading={loading}>
+          <div className="px-4">CONFIRM BID</div>
         </Button>
       </div>
     </Layout>

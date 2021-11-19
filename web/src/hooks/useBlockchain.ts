@@ -260,7 +260,7 @@ const useBlockchain = () => {
     web3: Web3,
     tokenId: number,
     from: string,
-    value: number,
+    value: string,
     onReceipt: (receipt: TransactionReceipt) => void,
   ) => {
     const auctionContract = new web3.eth.Contract(

@@ -1,5 +1,5 @@
-import { gql } from '@apollo/client';
 import * as Apollo from '@apollo/client';
+import { gql } from '@apollo/client';
 export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
@@ -26,6 +26,26 @@ export type AddCommentInput = {
 export type AddCommentPayload = {
   __typename?: 'AddCommentPayload';
   comment: Comment;
+};
+
+export type AuctionItem = {
+  __typename?: 'AuctionItem';
+  id: Scalars['ID'];
+  owner: Scalars['String'];
+  nft: Scalars['String'];
+  tokenId: Scalars['Float'];
+  startingTime: Scalars['Float'];
+  endingTime: Scalars['Float'];
+  minimumBid: Scalars['String'];
+  reservePrice: Scalars['String'];
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  valid: Scalars['Boolean'];
+};
+
+export type AuctionItemPayload = {
+  __typename?: 'AuctionItemPayload';
+  auctionItem: Maybe<AuctionItem>;
 };
 
 export type AuthPayload = {
@@ -113,6 +133,29 @@ export type CommentNotification = {
   body: Scalars['String'];
   previewBody: Scalars['String'];
   link: Scalars['String'];
+};
+
+export type CreateAuctionItemInput = {
+  id?: Maybe<Scalars['String']>;
+  owner: Scalars['String'];
+  nft: Scalars['String'];
+  tokenId: Scalars['Float'];
+  startingTime: Scalars['Float'];
+  endingTime: Scalars['Float'];
+  minimumBid: Scalars['String'];
+  reservePrice: Scalars['String'];
+};
+
+export type CreateAuctionItemType = {
+  __typename?: 'CreateAuctionItemType';
+  id: Maybe<Scalars['String']>;
+  owner: Scalars['String'];
+  nft: Scalars['String'];
+  tokenId: Scalars['Float'];
+  startingTime: Scalars['Float'];
+  endingTime: Scalars['Float'];
+  minimumBid: Scalars['String'];
+  reservePrice: Scalars['String'];
 };
 
 export type CreateBuyNowItemInput = {
@@ -391,8 +434,9 @@ export enum MusicianType {
 
 export type Mutation = {
   __typename?: 'Mutation';
-  createBuyNowItem: CreateBuyNowItemType;
+  createAuctionItem: CreateAuctionItemType;
   setNotValid: CreateBuyNowItemType;
+  createBuyNowItem: CreateBuyNowItemType;
   addComment: AddCommentPayload;
   deleteComment: DeleteCommentPayload;
   sendMessage: SendMessagePayload;
@@ -429,13 +473,18 @@ export type Mutation = {
 };
 
 
-export type MutationCreateBuyNowItemArgs = {
-  input: CreateBuyNowItemInput;
+export type MutationCreateAuctionItemArgs = {
+  input: CreateAuctionItemInput;
 };
 
 
 export type MutationSetNotValidArgs = {
   tokenId: Scalars['Float'];
+};
+
+
+export type MutationCreateBuyNowItemArgs = {
+  input: CreateBuyNowItemInput;
 };
 
 
@@ -680,6 +729,7 @@ export enum PendingRequest {
   Buy = 'Buy',
   CancelListing = 'CancelListing',
   UpdateListing = 'UpdateListing',
+  PlaceBid = "PlaceBid",
   None = 'None'
 }
 
@@ -783,6 +833,7 @@ export type ProfileVerificationRequestPayload = {
 
 export type Query = {
   __typename?: 'Query';
+  auctionItem: AuctionItemPayload;
   buyNowItem: BuyNowPayload;
   chats: ChatConnection;
   chatHistory: MessageConnection;
@@ -814,6 +865,11 @@ export type Query = {
   mimeType: MimeType;
   me: Maybe<User>;
   getUserByWallet: Maybe<User>;
+};
+
+
+export type QueryAuctionItemArgs = {
+  tokenId: Scalars['Float'];
 };
 
 
@@ -1273,6 +1329,22 @@ export type AddCommentMutation = (
   ) }
 );
 
+export type AuctionItemQueryVariables = Exact<{
+  tokenId: Scalars['Float'];
+}>;
+
+
+export type AuctionItemQuery = (
+  { __typename?: 'Query' }
+  & { auctionItem: (
+    { __typename?: 'AuctionItemPayload' }
+    & { auctionItem: Maybe<(
+      { __typename?: 'AuctionItem' }
+      & Pick<AuctionItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'startingTime' | 'endingTime' | 'minimumBid' | 'reservePrice'>
+    )> }
+  ) }
+);
+
 export type BandcampLinkQueryVariables = Exact<{
   url: Scalars['String'];
 }>;
@@ -1281,6 +1353,22 @@ export type BandcampLinkQueryVariables = Exact<{
 export type BandcampLinkQuery = (
   { __typename?: 'Query' }
   & Pick<Query, 'bandcampLink'>
+);
+
+export type BuyNowItemQueryVariables = Exact<{
+  tokenId: Scalars['Float'];
+}>;
+
+
+export type BuyNowItemQuery = (
+  { __typename?: 'Query' }
+  & { buyNowItem: (
+    { __typename?: 'BuyNowPayload' }
+    & { buyNowItem: Maybe<(
+      { __typename?: 'BuyNowItem' }
+      & Pick<BuyNowItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'startingTime'>
+    )> }
+  ) }
 );
 
 export type ChangeReactionMutationVariables = Exact<{
@@ -1713,22 +1801,6 @@ export type FollowingQuery = (
       { __typename?: 'PageInfo' }
       & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
     ) }
-  ) }
-);
-
-export type BuyNowItemQueryVariables = Exact<{
-  tokenId: Scalars['Float'];
-}>;
-
-
-export type BuyNowItemQuery = (
-  { __typename?: 'Query' }
-  & { buyNowItem: (
-    { __typename?: 'BuyNowPayload' }
-    & { buyNowItem: Maybe<(
-      { __typename?: 'BuyNowItem' }
-      & Pick<BuyNowItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'startingTime'>
-    )> }
   ) }
 );
 
@@ -2791,6 +2863,50 @@ export function useAddCommentMutation(baseOptions?: Apollo.MutationHookOptions<A
 export type AddCommentMutationHookResult = ReturnType<typeof useAddCommentMutation>;
 export type AddCommentMutationResult = Apollo.MutationResult<AddCommentMutation>;
 export type AddCommentMutationOptions = Apollo.BaseMutationOptions<AddCommentMutation, AddCommentMutationVariables>;
+export const AuctionItemDocument = gql`
+    query AuctionItem($tokenId: Float!) {
+  auctionItem(tokenId: $tokenId) {
+    auctionItem {
+      id
+      owner
+      nft
+      tokenId
+      startingTime
+      endingTime
+      minimumBid
+      reservePrice
+    }
+  }
+}
+    `;
+
+/**
+ * __useAuctionItemQuery__
+ *
+ * To run a query within a React component, call `useAuctionItemQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAuctionItemQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAuctionItemQuery({
+ *   variables: {
+ *      tokenId: // value for 'tokenId'
+ *   },
+ * });
+ */
+export function useAuctionItemQuery(baseOptions: Apollo.QueryHookOptions<AuctionItemQuery, AuctionItemQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<AuctionItemQuery, AuctionItemQueryVariables>(AuctionItemDocument, options);
+      }
+export function useAuctionItemLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<AuctionItemQuery, AuctionItemQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<AuctionItemQuery, AuctionItemQueryVariables>(AuctionItemDocument, options);
+        }
+export type AuctionItemQueryHookResult = ReturnType<typeof useAuctionItemQuery>;
+export type AuctionItemLazyQueryHookResult = ReturnType<typeof useAuctionItemLazyQuery>;
+export type AuctionItemQueryResult = Apollo.QueryResult<AuctionItemQuery, AuctionItemQueryVariables>;
 export const BandcampLinkDocument = gql`
     query BandcampLink($url: String!) {
   bandcampLink(url: $url)
@@ -2824,6 +2940,48 @@ export function useBandcampLinkLazyQuery(baseOptions?: Apollo.LazyQueryHookOptio
 export type BandcampLinkQueryHookResult = ReturnType<typeof useBandcampLinkQuery>;
 export type BandcampLinkLazyQueryHookResult = ReturnType<typeof useBandcampLinkLazyQuery>;
 export type BandcampLinkQueryResult = Apollo.QueryResult<BandcampLinkQuery, BandcampLinkQueryVariables>;
+export const BuyNowItemDocument = gql`
+    query BuyNowItem($tokenId: Float!) {
+  buyNowItem(tokenId: $tokenId) {
+    buyNowItem {
+      id
+      owner
+      nft
+      tokenId
+      pricePerItem
+      startingTime
+    }
+  }
+}
+    `;
+
+/**
+ * __useBuyNowItemQuery__
+ *
+ * To run a query within a React component, call `useBuyNowItemQuery` and pass it any options that fit your needs.
+ * When your component renders, `useBuyNowItemQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useBuyNowItemQuery({
+ *   variables: {
+ *      tokenId: // value for 'tokenId'
+ *   },
+ * });
+ */
+export function useBuyNowItemQuery(baseOptions: Apollo.QueryHookOptions<BuyNowItemQuery, BuyNowItemQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<BuyNowItemQuery, BuyNowItemQueryVariables>(BuyNowItemDocument, options);
+      }
+export function useBuyNowItemLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<BuyNowItemQuery, BuyNowItemQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<BuyNowItemQuery, BuyNowItemQueryVariables>(BuyNowItemDocument, options);
+        }
+export type BuyNowItemQueryHookResult = ReturnType<typeof useBuyNowItemQuery>;
+export type BuyNowItemLazyQueryHookResult = ReturnType<typeof useBuyNowItemLazyQuery>;
+export type BuyNowItemQueryResult = Apollo.QueryResult<BuyNowItemQuery, BuyNowItemQueryVariables>;
 export const ChangeReactionDocument = gql`
     mutation ChangeReaction($input: ChangeReactionInput!) {
   changeReaction(input: $input) {
@@ -3737,48 +3895,6 @@ export function useFollowingLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
 export type FollowingQueryHookResult = ReturnType<typeof useFollowingQuery>;
 export type FollowingLazyQueryHookResult = ReturnType<typeof useFollowingLazyQuery>;
 export type FollowingQueryResult = Apollo.QueryResult<FollowingQuery, FollowingQueryVariables>;
-export const BuyNowItemDocument = gql`
-    query BuyNowItem($tokenId: Float!) {
-  buyNowItem(tokenId: $tokenId) {
-    buyNowItem {
-      id
-      owner
-      nft
-      tokenId
-      pricePerItem
-      startingTime
-    }
-  }
-}
-    `;
-
-/**
- * __useBuyNowItemQuery__
- *
- * To run a query within a React component, call `useBuyNowItemQuery` and pass it any options that fit your needs.
- * When your component renders, `useBuyNowItemQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useBuyNowItemQuery({
- *   variables: {
- *      tokenId: // value for 'tokenId'
- *   },
- * });
- */
-export function useBuyNowItemQuery(baseOptions: Apollo.QueryHookOptions<BuyNowItemQuery, BuyNowItemQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<BuyNowItemQuery, BuyNowItemQueryVariables>(BuyNowItemDocument, options);
-      }
-export function useBuyNowItemLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<BuyNowItemQuery, BuyNowItemQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<BuyNowItemQuery, BuyNowItemQueryVariables>(BuyNowItemDocument, options);
-        }
-export type BuyNowItemQueryHookResult = ReturnType<typeof useBuyNowItemQuery>;
-export type BuyNowItemLazyQueryHookResult = ReturnType<typeof useBuyNowItemLazyQuery>;
-export type BuyNowItemQueryResult = Apollo.QueryResult<BuyNowItemQuery, BuyNowItemQueryVariables>;
 export const LoginDocument = gql`
     mutation Login($input: LoginInput!) {
   login(input: $input) {

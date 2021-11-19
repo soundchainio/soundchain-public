@@ -6,6 +6,7 @@ enum PendingRequest {
   Buy = 'Buy',
   CancelListing = 'CancelListing',
   UpdateListing = 'UpdateListing',
+  PlaceBid = 'PlaceBid',
   None = 'None',
 }
 

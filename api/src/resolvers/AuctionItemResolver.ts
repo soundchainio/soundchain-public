@@ -8,11 +8,11 @@ import { CreateAuctionItemData } from '../types/CreateAuctionItemData';
 export class AuctionItemResolver {
   @Mutation(() => CreateAuctionItemData)
   @Authorized()
-  async createBuyNowItem(
+  async createAuctionItem(
     @Ctx() { auctionItemService }: Context,
     @Arg('input') { owner, nft, tokenId, startingTime, endingTime, reservePrice, minimumBid }: CreateAuctionItemData,
   ): Promise<CreateAuctionItemData> {
-    const buyNowItem = await auctionItemService.createAuctionItem({
+    const auctionItem = await auctionItemService.createAuctionItem({
       owner,
       nft,
       tokenId,
@@ -21,11 +21,11 @@ export class AuctionItemResolver {
       reservePrice,
       minimumBid,
     });
-    return buyNowItem;
+    return auctionItem;
   }
 
   @Query(() => AuctionItemPayload)
-  async buyNowItem(
+  async auctionItem(
     @Ctx() { auctionItemService }: Context,
     @Arg('tokenId') tokenId: number,
   ): Promise<AuctionItemPayload> {
