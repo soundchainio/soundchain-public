@@ -802,6 +802,7 @@ export type Query = {
   message: Message;
   notifications: NotificationConnection;
   notification: Notification;
+  maticUsd: Scalars['String'];
   post: Post;
   posts: PostConnection;
   reactions: ReactionConnection;
@@ -1746,6 +1747,14 @@ export type LoginMutation = (
     { __typename?: 'AuthPayload' }
     & Pick<AuthPayload, 'jwt'>
   ) }
+);
+
+export type MaticUsdQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type MaticUsdQuery = (
+  { __typename?: 'Query' }
+  & Pick<Query, 'maticUsd'>
 );
 
 export type MeQueryVariables = Exact<{ [key: string]: never; }>;
@@ -3809,6 +3818,38 @@ export function useLoginMutation(baseOptions?: Apollo.MutationHookOptions<LoginM
 export type LoginMutationHookResult = ReturnType<typeof useLoginMutation>;
 export type LoginMutationResult = Apollo.MutationResult<LoginMutation>;
 export type LoginMutationOptions = Apollo.BaseMutationOptions<LoginMutation, LoginMutationVariables>;
+export const MaticUsdDocument = gql`
+    query MaticUsd {
+  maticUsd
+}
+    `;
+
+/**
+ * __useMaticUsdQuery__
+ *
+ * To run a query within a React component, call `useMaticUsdQuery` and pass it any options that fit your needs.
+ * When your component renders, `useMaticUsdQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useMaticUsdQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useMaticUsdQuery(baseOptions?: Apollo.QueryHookOptions<MaticUsdQuery, MaticUsdQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<MaticUsdQuery, MaticUsdQueryVariables>(MaticUsdDocument, options);
+      }
+export function useMaticUsdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<MaticUsdQuery, MaticUsdQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<MaticUsdQuery, MaticUsdQueryVariables>(MaticUsdDocument, options);
+        }
+export type MaticUsdQueryHookResult = ReturnType<typeof useMaticUsdQuery>;
+export type MaticUsdLazyQueryHookResult = ReturnType<typeof useMaticUsdLazyQuery>;
+export type MaticUsdQueryResult = Apollo.QueryResult<MaticUsdQuery, MaticUsdQueryVariables>;
 export const MeDocument = gql`
     query Me {
   me {

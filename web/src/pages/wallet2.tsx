@@ -15,11 +15,12 @@ import { Logo } from 'icons/Logo';
 import { Matic2 } from 'icons/Matic2';
 import { MetaMask } from 'icons/MetaMask';
 import { Polygon } from 'icons/Polygon';
-import { DefaultWallet, useUpdateDefaultWalletMutation } from 'lib/graphql';
+import { DefaultWallet, useMaticUsdQuery, useUpdateDefaultWalletMutation } from 'lib/graphql';
 import Head from 'next/head';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
+import { currency } from 'utils/format';
 
 const topNovaBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
@@ -27,6 +28,7 @@ const topNovaBarProps: TopNavBarProps = {
 };
 export default function WalletPage() {
   const me = useMe();
+  const { data } = useMaticUsdQuery();
   const { account, balance, connect } = useMetaMask();
   const { account: magicAccount, balance: magicBalance } = useMagicContext();
   const [updateDefaultWallet] = useUpdateDefaultWalletMutation();
@@ -34,6 +36,7 @@ export default function WalletPage() {
   const [connectedToMetaMask, setConnectedToMetaMask] = useState(false);
 
   const getAccount = selectedWallet === DefaultWallet.Soundchain ? magicAccount : account;
+  const getBalance = selectedWallet === DefaultWallet.Soundchain ? magicBalance : balance;
 
   useEffect(() => {
     if (!account) {
@@ -42,8 +45,6 @@ export default function WalletPage() {
     }
     setConnectedToMetaMask(true);
   }, [account]);
-
-  //   console.log(web3?.eth.net.getNetworkType().then(console.log));
 
   interface WalletButtonProps {
     href: string;
@@ -149,12 +150,14 @@ export default function WalletPage() {
               <div className="flex flex-col items-center gap-1">
                 <Matic2 />
                 <span className="text-blue-400 font-bold text-xs uppercase mt-2">
-                  <strong className="text-white font-bold text-2xl">
-                    {selectedWallet === DefaultWallet.Soundchain ? magicBalance : balance}
-                  </strong>
+                  <strong className="text-white font-bold text-2xl">{getBalance}</strong>
                   {` matic`}
                 </span>
-                <span className="text-xs text-gray-50 font-bold">{'$xx.xx USD'}</span>
+                {getBalance && data?.maticUsd && (
+                  <span className="text-xs text-gray-50 font-bold">
+                    {`${currency(parseFloat(getBalance) * parseFloat(data?.maticUsd))} USD`}
+                  </span>
+                )}
               </div>
               <div className="flex gap-5 mt-4">
                 <WalletButton href="/wallet/transfer" title="Activity" icon={Activity} />
