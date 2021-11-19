@@ -1,7 +1,6 @@
-import axios from 'axios';
+import { config } from '../config';
+import { polygonScanApi } from '../polygonApi';
 import { Service } from './Service';
-
-const { POLYGON_SCAN_API_KEY } = process.env;
 
 interface PolygonscanMaticUsdResponse {
   result: {
@@ -11,9 +10,9 @@ interface PolygonscanMaticUsdResponse {
 
 export class PolygonscanService extends Service {
   async getMaticUsd(): Promise<string> {
-    const url = `https://api.polygonscan.com/api?module=stats&action=maticprice&apikey=${POLYGON_SCAN_API_KEY}`;
-
-    const { data } = await axios.get<PolygonscanMaticUsdResponse>(url);
+    const { data } = await polygonScanApi.get<PolygonscanMaticUsdResponse>(
+      `?apikey=${config.minting.polygonScan}&module=stats&action=maticprice`,
+    );
     return data.result.maticusd;
   }
 }

@@ -1,6 +1,7 @@
 import { BackButton } from 'components/Buttons/BackButton';
 import { Jazzicon } from 'components/Jazzicon';
 import { Layout } from 'components/Layout';
+import { LoaderAnimation } from 'components/LoaderAnimation';
 import { OwnedNfts } from 'components/OwnedNfts';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useMagicContext } from 'hooks/useMagicContext';
@@ -153,10 +154,12 @@ export default function WalletPage() {
                   <strong className="text-white font-bold text-2xl">{getBalance}</strong>
                   {` matic`}
                 </span>
-                {getBalance && data?.maticUsd && (
+                {getBalance && data?.maticUsd ? (
                   <span className="text-xs text-gray-50 font-bold">
                     {`${currency(parseFloat(getBalance) * parseFloat(data?.maticUsd))} USD`}
                   </span>
+                ) : (
+                  <LoaderAnimation />
                 )}
               </div>
               <div className="flex gap-5 mt-4">

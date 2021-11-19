@@ -5,7 +5,7 @@ on:
     branches:
       - develop
     paths:
-      - 'api/**'
+      - "api/**"
   workflow_dispatch:
 
 jobs:
@@ -54,6 +54,7 @@ jobs:
           MAGIC_PRIVATE_KEY: ${{ secrets.MAGIC_PRIVATE_KEY_DEVELOP }}
           MUX_DATA_ID: ${{ secrets.MUX_DATA_ID_DEVELOP }}
           MUX_DATA_SECRET: ${{ secrets.MUX_DATA_SECRET_DEVELOP }}
+          POLYGON_SCAN_API_KEY: ${{ secrets.POLYGON_SCAN_API_KEY_DEVELOP }}
       - name: Trigger migrate lambda function
         run: |
           aws lambda invoke --function-name soundchain-api-develop-migrate response.json
