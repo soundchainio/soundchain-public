@@ -22,6 +22,7 @@ import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
+import { ApproveType } from 'types/ApproveType';
 
 export interface TrackPageProps {
   trackId: string;
@@ -52,7 +53,7 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 });
 
 export default function AuctionPage({ trackId }: TrackPageProps) {
-  const { createAuction, isTokenOwner, isApproved: checkIsApproved } = useBlockchain();
+  const { createAuction, isTokenOwner, isApprovedAuction: checkIsApproved } = useBlockchain();
   const router = useRouter();
   const me = useMe();
   const { data } = useTrackQuery({ variables: { id: trackId } });
@@ -116,7 +117,7 @@ export default function AuctionPage({ trackId }: TrackPageProps) {
     const blockNumber = await web3.eth.getBlockNumber();
     const block = await web3.eth.getBlock(blockNumber);
     const blockTimeStamp = block.timestamp as number;
-    const startTime = blockTimeStamp + 100;
+    const startTime = blockTimeStamp + 1000;
     const endTime = startTime + duration * 3.6e6;
     if (isApproved) {
       const onTransactionHash = async () => {
@@ -134,7 +135,7 @@ export default function AuctionPage({ trackId }: TrackPageProps) {
       };
       createAuction(web3, data.track.nftData.tokenId, weiPrice, startTime, endTime, account, onTransactionHash);
     } else {
-      me ? dispatchShowApproveModal(true) : router.push('/login');
+      me ? dispatchShowApproveModal(true, ApproveType.AUCTION) : router.push('/login');
     }
   };
 

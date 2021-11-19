@@ -14,7 +14,9 @@ import soundchainMarketplace from '../contract/Marketplace.sol/SoundchainMarketp
 import soundchainContract from '../contract/Soundchain721.sol/Soundchain721.json';
 
 const nftAddress = config.contractAddress as string;
-const marketplaceAddress = config.marketplaceAddress || '';
+const marketplaceAddress = config.marketplaceAddress as string;
+const auctionAddress = config.auctionAddress as string;
+
 export const gas = 1200000;
 
 const useBlockchain = () => {
@@ -45,6 +47,15 @@ const useBlockchain = () => {
       web3,
       async () =>
         await contract.methods.setApprovalForAll(marketplaceAddress, true).send({ from, gas }).on('receipt', onReceipt),
+    );
+  };
+
+  const approveAuction = (web3: Web3, from: string, onReceipt: (receipt: TransactionReceipt) => void) => {
+    const contract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress) as unknown as Soundchain721;
+    return beforeSending(
+      web3,
+      async () =>
+        await contract.methods.setApprovalForAll(auctionAddress, true).send({ from, gas }).on('receipt', onReceipt),
     );
   };
 
@@ -193,12 +204,20 @@ const useBlockchain = () => {
     });
   };
 
-  const isApproved = async (web3: Web3, from: string) => {
+  const isApprovedMarketplace = async (web3: Web3, from: string) => {
     const nftContract = new web3.eth.Contract(
       soundchainContract.abi as AbiItem[],
       nftAddress,
     ) as unknown as Soundchain721;
     return await nftContract.methods.isApprovedForAll(from, marketplaceAddress).call();
+  };
+
+  const isApprovedAuction = async (web3: Web3, from: string) => {
+    const nftContract = new web3.eth.Contract(
+      soundchainContract.abi as AbiItem[],
+      nftAddress,
+    ) as unknown as Soundchain721;
+    return await nftContract.methods.isApprovedForAll(from, auctionAddress).call();
   };
 
   const createAuction = (
@@ -212,7 +231,7 @@ const useBlockchain = () => {
   ) => {
     const auctionContract = new web3.eth.Contract(
       soundchainAuction.abi as AbiItem[],
-      nftAddress,
+      auctionAddress,
     ) as unknown as SoundchainAuction;
     beforeSending(web3, () => {
       auctionContract.methods
@@ -230,7 +249,7 @@ const useBlockchain = () => {
   ) => {
     const auctionContract = new web3.eth.Contract(
       soundchainAuction.abi as AbiItem[],
-      nftAddress,
+      auctionAddress,
     ) as unknown as SoundchainAuction;
     beforeSending(web3, () => {
       auctionContract.methods.cancelAuction(nftAddress, tokenId).send({ from, gas }).on('receipt', onReceipt);
@@ -246,7 +265,7 @@ const useBlockchain = () => {
   ) => {
     const auctionContract = new web3.eth.Contract(
       soundchainAuction.abi as AbiItem[],
-      nftAddress,
+      auctionAddress,
     ) as unknown as SoundchainAuction;
     beforeSending(web3, () => {
       auctionContract.methods.placeBid(nftAddress, tokenId).send({ from, gas, value }).on('receipt', onReceipt);
@@ -261,7 +280,7 @@ const useBlockchain = () => {
   ) => {
     const auctionContract = new web3.eth.Contract(
       soundchainAuction.abi as AbiItem[],
-      nftAddress,
+      auctionAddress,
     ) as unknown as SoundchainAuction;
     beforeSending(web3, () => {
       auctionContract.methods.resultAuction(nftAddress, tokenId).send({ from, gas }).on('receipt', onReceipt);
@@ -281,6 +300,7 @@ const useBlockchain = () => {
   };
 
   return {
+    approveAuction,
     approveMarketplace,
     burnNftToken,
     buyItem,
@@ -291,7 +311,8 @@ const useBlockchain = () => {
     getIpfsAssetUrl,
     getMaxGasFee,
     getRoyalties,
-    isApproved,
+    isApprovedAuction,
+    isApprovedMarketplace,
     isTokenOwner,
     listItem,
     mintNftToken,

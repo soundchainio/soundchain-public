@@ -22,6 +22,7 @@ import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
+import { ApproveType } from 'types/ApproveType';
 
 export interface TrackPageProps {
   trackId: string;
@@ -52,7 +53,7 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 });
 
 export default function ListBuyNowPage({ trackId }: TrackPageProps) {
-  const { listItem, isTokenOwner, isApproved: checkIsApproved } = useBlockchain();
+  const { listItem, isTokenOwner, isApprovedMarketplace: checkIsApproved } = useBlockchain();
   const router = useRouter();
   const me = useMe();
   const { data } = useTrackQuery({ variables: { id: trackId } });
@@ -129,7 +130,7 @@ export default function ListBuyNowPage({ trackId }: TrackPageProps) {
       };
       listItem(web3, data.track.nftData.tokenId, account, weiPrice, onTransactionHash);
     } else {
-      me ? dispatchShowApproveModal(true) : router.push('/login');
+      me ? dispatchShowApproveModal(true, ApproveType.MARKETPLACE) : router.push('/login');
     }
   };
 

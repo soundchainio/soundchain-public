@@ -65,6 +65,7 @@ export const ListNFTAuction = ({ initialPrice, onSetPrice, onSetDuration }: List
                 <InputField
                   name="duration"
                   type="number"
+                  symbol={'H'}
                   onChange={el => {
                     handleChange(el);
                     onSetDuration(parseFloat(el.target.value));
