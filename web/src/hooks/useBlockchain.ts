@@ -182,7 +182,7 @@ const useBlockchain = () => {
       nftAddress,
     ) as unknown as Soundchain721;
     const royalties = await nftContract.methods.royaltyPercentage(tokenId).call();
-    return royalties;
+    return parseFloat(royalties);
   };
 
   const mintNftToken = (
