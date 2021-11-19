@@ -42,6 +42,7 @@
     "cheerio": "^1.0.0-rc.10",
     "class-validator": "^0.13.1",
     "dataloader": "^2.0.0",
+    "dot-object": "^2.1.4",
     "dotenv-flow": "^3.2.0",
     "express": "^4.17.1",
     "express-jwt": "^6.0.0",
@@ -59,6 +60,7 @@
   "devDependencies": {
     "@typechain/web3-v1": "^4.0.0",
     "@types/base64-url": "^2.2.0",
+    "@types/dot-object": "^2.1.2",
     "@types/dotenv-flow": "^3.1.1",
     "@types/express-jwt": "^6.0.2",
     "@types/faker": "^5.5.7",

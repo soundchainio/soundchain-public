@@ -18,7 +18,7 @@ import { Polygon } from 'icons/Polygon';
 import { DefaultWallet, useUpdateDefaultWalletMutation } from 'lib/graphql';
 import Head from 'next/head';
 import Link from 'next/link';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 
 const topNovaBarProps: TopNavBarProps = {
@@ -27,12 +27,21 @@ const topNovaBarProps: TopNavBarProps = {
 };
 export default function WalletPage() {
   const me = useMe();
-  const { account, balance } = useMetaMask();
+  const { account, balance, connect } = useMetaMask();
   const { account: magicAccount, balance: magicBalance } = useMagicContext();
   const [updateDefaultWallet] = useUpdateDefaultWalletMutation();
   const [selectedWallet, setSelectedWallet] = useState(DefaultWallet.Soundchain);
+  const [connectedToMetaMask, setConnectedToMetaMask] = useState(false);
 
   const getAccount = selectedWallet === DefaultWallet.Soundchain ? magicAccount : account;
+
+  useEffect(() => {
+    if (!account) {
+      setConnectedToMetaMask(false);
+      return;
+    }
+    setConnectedToMetaMask(true);
+  }, [account]);
 
   //   console.log(web3?.eth.net.getNetworkType().then(console.log));
 
@@ -86,63 +95,80 @@ export default function WalletPage() {
               )}
             </span>
           </div>
-          <label className="ml-auto flex items-center gap-2">
-            <span className="text-sm leading-3 font-bold text-white">Default wallet</span>
-            <input
-              type="checkbox"
-              className="h-5 w-5 text-black bg-black border-gray-30 rounded border-2"
-              onChange={() => updateDefaultWallet({ variables: { input: { defaultWallet: selectedWallet } } })}
-              checked={me?.defaultWallet === selectedWallet}
-            />
-          </label>
+          {(selectedWallet === DefaultWallet.Soundchain ||
+            (selectedWallet === DefaultWallet.MetaMask && connectedToMetaMask)) && (
+            <label className="ml-auto flex items-center gap-2">
+              <span className="text-sm leading-3 font-bold text-white">Default wallet</span>
+              <input
+                type="checkbox"
+                className="h-5 w-5 text-black bg-black border-gray-30 rounded border-2"
+                onChange={() => updateDefaultWallet({ variables: { input: { defaultWallet: selectedWallet } } })}
+                checked={me?.defaultWallet === selectedWallet}
+              />
+            </label>
+          )}
         </div>
-        <div className="flex flex-col gap-4 justify-center items-center p-4">
-          {getAccount && <Jazzicon address={getAccount} size={54} />}
-          <div className="flex gap-2 items-center font-bold text-xs">
-            <span className="ml-auto uppercase relative text-gray-80 before:bg-green-400 before:rounded-full before:h-1 before:w-1 before:inline-block before:absolute before:mt-[0.375rem] before:-ml-2">
-              Network:
-            </span>
-            <Polygon />
-            <span className="text-white mr-2">Polygon</span>
-          </div>
-          <div className="flex flex-row text-xxs bg-gray-1A w-full pl-2 pr-3 py-2 items-center justify-between border border-gray-50 rounded-sm">
-            <div className="flex flex-row items-center w-10/12 justify-start">
-              <Polygon />
-              <span className="text-gray-80 md-text-sm font-bold mx-1 truncate w-full">{getAccount}</span>
-            </div>
+        {selectedWallet === DefaultWallet.MetaMask && !connectedToMetaMask ? (
+          <div className="flex justify-center items-center h-full">
             <button
-              className="flex flex-row gap-1 items-center border-2 border-gray-30 border-opacity-75 rounded p-1"
-              onClick={() => {
-                navigator.clipboard.writeText(getAccount + '');
-                toast('Copied to clipboard');
-              }}
-              type="button"
+              className="flex gap-2 justify-center items-center border-2 rounded-lg border-gray-50 bg-gray-30 text-white font-black text-xs uppercase px-4 h-16"
+              onClick={() => connect()}
             >
-              <Copy />
-              <span className="text-gray-80 uppercase leading-none">copy</span>
+              <MetaMask height="30" width="30" />
+              Connect Metamask
             </button>
           </div>
-          <div className="flex flex-col items-center gap-1">
-            <Matic2 />
-            <span className="text-blue-400 font-bold text-xs uppercase mt-2">
-              <strong className="text-white font-bold text-2xl">
-                {selectedWallet === DefaultWallet.Soundchain ? magicBalance : balance}
-              </strong>
-              {` matic`}
-            </span>
-            <span className="text-xs text-gray-50 font-bold">{'$xx.xx USD'}</span>
-          </div>
-          <div className="flex gap-5 mt-4">
-            <WalletButton href="/wallet/transfer" title="Activity" icon={Activity} />
-            <WalletButton href="/wallet/transfer" title="Receive" icon={ArrowDown} />
-            <WalletButton href="/wallet/transfer" title="Buy" icon={CreditCard} />
-            <WalletButton href="/wallet/transfer" title="Send" icon={ArrowUpRight} />
-          </div>
-        </div>
-        <div className="p-3 mt-3">
-          <span className="text-gray-80 font-bold">Owned NFT’s</span>
-        </div>
-        {getAccount && <OwnedNfts owner={getAccount} />}
+        ) : (
+          <>
+            <div className="flex flex-col gap-4 justify-center items-center p-4">
+              {getAccount && <Jazzicon address={getAccount} size={54} />}
+              <div className="flex gap-2 items-center font-bold text-xs">
+                <span className="ml-auto uppercase relative text-gray-80 before:bg-green-400 before:rounded-full before:h-1 before:w-1 before:inline-block before:absolute before:mt-[0.375rem] before:-ml-2">
+                  Network:
+                </span>
+                <Polygon />
+                <span className="text-white mr-2">Polygon</span>
+              </div>
+              <div className="flex flex-row text-xxs bg-gray-1A w-full pl-2 pr-3 py-2 items-center justify-between border border-gray-50 rounded-sm">
+                <div className="flex flex-row items-center w-10/12 justify-start">
+                  <Polygon />
+                  <span className="text-gray-80 md-text-sm font-bold mx-1 truncate w-full">{getAccount}</span>
+                </div>
+                <button
+                  className="flex flex-row gap-1 items-center border-2 border-gray-30 border-opacity-75 rounded p-1"
+                  onClick={() => {
+                    navigator.clipboard.writeText(getAccount + '');
+                    toast('Copied to clipboard');
+                  }}
+                  type="button"
+                >
+                  <Copy />
+                  <span className="text-gray-80 uppercase leading-none">copy</span>
+                </button>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <Matic2 />
+                <span className="text-blue-400 font-bold text-xs uppercase mt-2">
+                  <strong className="text-white font-bold text-2xl">
+                    {selectedWallet === DefaultWallet.Soundchain ? magicBalance : balance}
+                  </strong>
+                  {` matic`}
+                </span>
+                <span className="text-xs text-gray-50 font-bold">{'$xx.xx USD'}</span>
+              </div>
+              <div className="flex gap-5 mt-4">
+                <WalletButton href="/wallet/transfer" title="Activity" icon={Activity} />
+                <WalletButton href="/wallet/transfer" title="Receive" icon={ArrowDown} />
+                <WalletButton href="/wallet/transfer" title="Buy" icon={CreditCard} />
+                <WalletButton href="/wallet/transfer" title="Send" icon={ArrowUpRight} />
+              </div>
+            </div>
+            <div className="p-3 mt-3">
+              <span className="text-gray-80 font-bold">Owned NFT’s</span>
+            </div>
+            {getAccount && <OwnedNfts owner={getAccount} />}
+          </>
+        )}
       </div>
     </Layout>
   );

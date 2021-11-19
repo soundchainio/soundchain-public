@@ -10,8 +10,6 @@ interface OwnedNftsProps {
 }
 
 export const OwnedNfts = ({ owner }: OwnedNftsProps) => {
-  console.log(owner);
-
   const { playlistState } = useAudioPlayerContext();
 
   const pageSize = 10;
