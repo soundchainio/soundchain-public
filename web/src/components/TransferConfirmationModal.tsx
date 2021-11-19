@@ -16,7 +16,7 @@ export const TransferConfirmationModal = () => {
   const { showTransferConfirmation, walletRecipient, amountToTransfer } = useModalState();
   const { dispatchShowTransferConfirmationModal } = useModalDispatch();
   const [loading, setLoading] = useState(false);
-  const { transfer } = useBlockchain();
+  const { sendMatic } = useBlockchain();
   const { web3, account, balance, refetchBalance } = useMagicContext();
 
   const maxGasFee = useMaxGasFee(showTransferConfirmation);
@@ -58,7 +58,7 @@ export const TransferConfirmationModal = () => {
           router.push('/wallet');
         };
         if (account && walletRecipient && amountToTransfer) {
-          transfer(web3, walletRecipient, account, amountToTransfer, onTransactionHash, onReceipt);
+          sendMatic(web3, walletRecipient, account, amountToTransfer, onTransactionHash, onReceipt);
         }
       } catch (e) {
         console.log(e);

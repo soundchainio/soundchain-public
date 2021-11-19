@@ -146,7 +146,7 @@ export const CreateModal = () => {
 
   const handleSubmit = async (values: FormValues) => {
     if (file && web3 && account && me) {
-      const { title, artworkUrl, description, artist, album, genres, releaseYear, copyright } = values;
+      const { title, artworkUrl, description, artist, album, genres, releaseYear, copyright, royalty } = values;
       const artistId = me.id;
       const artistProfileId = me.profile.id;
 
@@ -249,7 +249,7 @@ export const CreateModal = () => {
           `ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`,
           account,
           account,
-          1,
+          royalty,
           onTransactionHash,
           onError,
         );

@@ -17,12 +17,11 @@ export interface EventData {
   address: string;
 }
 
-export interface ReturnValuesTransferSingle {
+export interface ReturnValuesTransfer {
   operator: string;
   from: string;
   to: string;
-  id: string;
-  value: string;
+  tokenId: string;
 }
 
 export interface ReturnValuesItemListed {
@@ -56,8 +55,8 @@ export interface ReturnValuesItemCanceled {
   tokenId: string;
 }
 
-export interface TransferSingle extends EventData {
-  returnValues: ReturnValuesTransferSingle;
+export interface Transfer extends EventData {
+  returnValues: ReturnValuesTransfer;
 }
 
 export interface ItemListed extends EventData {

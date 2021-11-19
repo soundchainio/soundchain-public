@@ -1,4 +1,5 @@
 import { ReactionType } from 'lib/graphql';
+import { ApproveType } from 'types/ApproveType';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 
 export interface ShowNewPostPayload {
@@ -35,6 +36,7 @@ export interface ShowCreatePayload {
 
 export interface ShowApprove {
   show: boolean;
+  type: ApproveType;
 }
 
 export interface ShowRemoveListing {
@@ -71,4 +73,5 @@ export type ModalPayload =
   | ShowTransferConfirmationPayload
   | SetRecipientWalletAddress
   | SetAmountToTransfer
-  | ShowRemoveListing;
+  | ShowRemoveListing
+  | ShowApprove;

@@ -5,25 +5,24 @@ import { number, object, SchemaOf } from 'yup';
 
 interface FormValues {
   price: number;
-  royalty: number;
+  duration: number;
 }
 
 const validationSchema: SchemaOf<FormValues> = object().shape({
   price: number().min(0.000001).required(),
-  royalty: number().max(100).min(0).required(),
+  duration: number().min(1).required(),
 });
 
 interface ListNFTProps {
   onSetPrice: (price: number) => void;
+  onSetDuration: (duration: number) => void;
   initialPrice?: number;
-  isSetRoyalty?: boolean;
-  onSetRoyalty?: (royalty: number) => void;
 }
 
-export const ListNFT = ({ onSetPrice, initialPrice, isSetRoyalty, onSetRoyalty }: ListNFTProps) => {
+export const ListNFTAuction = ({ initialPrice, onSetPrice, onSetDuration }: ListNFTProps) => {
   const initialValues: FormValues = {
     price: initialPrice || 0,
-    royalty: 0,
+    duration: 0,
   };
 
   return (
@@ -36,7 +35,7 @@ export const ListNFT = ({ onSetPrice, initialPrice, isSetRoyalty, onSetRoyalty }
                 htmlFor="price"
                 className="flex items-center justify-start w-full bg-gray-20 text-gray-80 font-bold text-xs md-text-sm uppercase py-3 pl-5"
               >
-                List Price
+                auction start price
               </label>
               <div className="flex flex-wrap items-center w-1/2 justify-end bg-gray-20 uppercase py-3 pr-5">
                 <InputField
@@ -50,34 +49,32 @@ export const ListNFT = ({ onSetPrice, initialPrice, isSetRoyalty, onSetRoyalty }
                 />
               </div>
             </div>
-            {isSetRoyalty && onSetRoyalty && (
-              <div className="flex">
-                <label
-                  htmlFor="royalty"
-                  className="flex items-center justify-start w-full bg-gray-20 text-gray-80 font-bold text-xs md-text-sm  py-3 pl-5"
-                >
-                  <div className="flex flex-col mr-3">
-                    <p className="uppercase">Royalty %</p>
-                    <p className="font-medium" style={{ fontSize: 10 }}>
-                      Setting a royalty % will allow you to earn a cut on all secondary sales.
-                    </p>
-                  </div>
-                </label>
-                <div className="flex flex-wrap items-center w-1/2 justify-end bg-gray-20 uppercase py-3 pr-5">
-                  <InputField
-                    name="royalty"
-                    type="number"
-                    symbol={'%'}
-                    onChange={el => {
-                      handleChange(el);
-                      onSetRoyalty(parseInt(el.target.value));
-                    }}
-                  />
+            <div className="flex">
+              <label
+                htmlFor="duration"
+                className="flex items-center justify-start w-full bg-gray-20 text-gray-80 font-bold text-xs md-text-sm  py-3 pl-5"
+              >
+                <div className="flex flex-col mr-3">
+                  <p className="uppercase">duration</p>
+                  <p className="font-medium" style={{ fontSize: 10 }}>
+                    Set a time for how long this auction will last before item goes to highest bidder.
+                  </p>
                 </div>
+              </label>
+              <div className="flex flex-wrap items-center w-1/2 justify-end bg-gray-20 uppercase py-3 pr-5">
+                <InputField
+                  name="duration"
+                  type="number"
+                  symbol={'H'}
+                  onChange={el => {
+                    handleChange(el);
+                    onSetDuration(parseFloat(el.target.value));
+                  }}
+                />
               </div>
-            )}
+            </div>
             <p className="mx-6 text-gray-80 text-sm py-2 text-center">
-              Soundchain transaction fee and Gas fees will be applied to buyer during checkout.
+              Soundchain transaction fee and Polygon gas fees will be applied to buyer during checkout.
             </p>
             <div className="flex">
               <div className="flex items-center justify-start bg-gray-20 text-gray-80 font-bold text-xs md-text-sm uppercase py-3 pl-5">
