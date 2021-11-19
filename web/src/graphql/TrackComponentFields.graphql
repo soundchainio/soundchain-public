@@ -17,6 +17,7 @@ fragment TrackComponentFields on Track {
   updatedAt
   deleted
   playbackCountFormatted
+  isFavorite
   nftData {
     transactionHash
     tokenId

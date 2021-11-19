@@ -1,0 +1,9 @@
+mutation ToggleFavorite($trackId: String!) {
+  toggleFavorite(trackId: $trackId) {
+    favoriteProfileTrack {
+      id
+      trackId
+      profileId
+    }
+  }
+}

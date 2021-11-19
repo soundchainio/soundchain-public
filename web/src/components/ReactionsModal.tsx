@@ -1,4 +1,5 @@
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
+import { DownArrow } from 'icons/DownArrow';
 import { ReactionEmoji } from 'icons/ReactionEmoji';
 import { Reaction, useReactionsLazyQuery } from 'lib/graphql';
 import React, { useEffect } from 'react';
@@ -6,7 +7,6 @@ import { InfiniteLoader } from './InfiniteLoader';
 import { LoaderAnimation } from './LoaderAnimation';
 import { Modal } from './Modal';
 import { ReactionItem } from './ReactionItem';
-import { CloseNegative } from 'icons/CloseNegative';
 
 export const ReactionsModal = () => {
   const {
@@ -50,27 +50,29 @@ export const ReactionsModal = () => {
       show={show}
       title={getTitle()}
       rightButton={
-        <div className="p-2 text-gray-400 font-bold flex-1 text-center items-center flex" onClick={onClose}>
-          <CloseNegative className="h-6 w-6 m-auto" />
+        <div className="flex justify-end mr-6">
+          <button aria-label="Close" className="w-10 h-10 flex justify-center items-center" onClick={onClose}>
+            <DownArrow />
+          </button>
         </div>
       }
       onClose={onClose}
     >
-      <>
+      <div className="bg-gray-25 h-full">
         {!data && (
           <div className="flex items-center">
             <LoaderAnimation loadingMessage="Loading Rections" />
           </div>
         )}
-        <div className="space-y-6 ">
+        <div>
           {data?.reactions.nodes.map(reaction => (
             <ReactionItem key={reaction.id} reaction={reaction as Reaction} onClick={onClose} />
           ))}
         </div>
         {data?.reactions.pageInfo.hasNextPage && (
-          <InfiniteLoader loadMore={onLoadMore} loadingMessage="Loading Followers" />
+          <InfiniteLoader loadMore={onLoadMore} loadingMessage="Loading   Followers" />
         )}
-      </>
+      </div>
     </Modal>
   );
 };

@@ -1,14 +1,13 @@
 import { useModalDispatch } from 'contexts/providers/modal';
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar';
 import { useMe } from 'hooks/useMe';
-import { Bell } from 'icons/Bell';
 import { Home } from 'icons/Home';
+import { Library } from 'icons/Library';
 import { NewPost } from 'icons/NewPost';
 import { Profile } from 'icons/Profile';
 import { Search } from 'icons/Search';
 import { useRouter } from 'next/router';
 import { NavBarButton } from './Buttons/NavBarButton';
-import { NotificationBadge } from './NotificationBadge';
 
 export const BottomNavBar = () => {
   const { dispatchShowCreateModal } = useModalDispatch();
@@ -23,7 +22,7 @@ export const BottomNavBar = () => {
   return (
     <nav id="bottom-nav-bar" className="bg-black md:bg-gray-30 py-3 flex items-center inset-x-0 shadow-2xl md:w-full">
       <div className="w-full">
-        <div className="w-full flex">
+        <div className="w-full flex items-end">
           <NavBarButton label="Home" path="/" icon={Home} color="yellow" />
           <NavBarButton label="Explore" path={me ? '/explore' : '/login'} icon={Search} color="green" />
           {isMinting ? (
@@ -31,13 +30,7 @@ export const BottomNavBar = () => {
           ) : (
             <NavBarButton label="Create" icon={NewPost} onClick={handleCreateClick} />
           )}
-          <NavBarButton
-            label="Notifications"
-            path={me ? '/notifications' : '/login'}
-            icon={Bell}
-            badge={me ? NotificationBadge : undefined}
-            color="purple"
-          />
+          <NavBarButton label="Library" path={me ? '/library' : '/login'} icon={Library} color="purple" />
           <NavBarButton
             label="Profile"
             icon={Profile}

@@ -39,7 +39,7 @@ export const TopNavBar = ({
       <button
         type="button"
         className={classNames(
-          'text-gray-80 md:hidden items-center h-full pl-4',
+          'text-gray-80 md:hidden items-center h-full pl-4 flex-grow-basis-0',
           me && !RightButton && 'absolute left-0 justify-center',
           (RightButton || midRightButton) && 'flex-1',
         )}
@@ -54,7 +54,7 @@ export const TopNavBar = ({
       </button>
       {me && !midRightButton ? (
         <>
-          <div className="md:hidden flex-2 flex items-center justify-center md:items-stretch md:justify-start">
+          <div className="md:hidden flex-2 flex-grow-basis flex items-center justify-center md:items-stretch md:justify-start">
             <div className="flex-shrink-0 flex items-center">
               {title ? (
                 <div className="flex flex-col">
@@ -81,7 +81,8 @@ export const TopNavBar = ({
           </div>
         </>
       ) : (
-        showLoginSignUpButton && !midRightButton && (
+        showLoginSignUpButton &&
+        !midRightButton && (
           <div className="flex-2 flex items-center justify-start ml-4 space-x-2 ">
             <Button
               variant={router.pathname === '/login' ? 'rainbow-xs' : 'outline'}
@@ -95,12 +96,10 @@ export const TopNavBar = ({
           </div>
         )
       )}
-      {RightButton && !midRightButton && <div className="flex flex-1 md:flex-none justify-end pr-4 items-center">{RightButton}</div>}
-      {midRightButton &&
-        <div className="flex flex-1 justify-left pl-20 items-center">
-          {midRightButton}
-        </div>
-      }
+      {RightButton && !midRightButton && (
+        <div className="flex flex-1 md:flex-none justify-end pr-4 items-center">{RightButton}</div>
+      )}
+      {midRightButton && <div className="flex flex-1 justify-left pl-20 items-center">{midRightButton}</div>}
     </div>
   );
 };

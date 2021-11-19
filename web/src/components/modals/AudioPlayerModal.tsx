@@ -5,10 +5,12 @@ import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { DownArrow } from 'icons/DownArrow';
 import { Forward } from 'icons/ForwardButton';
-import { Navigate } from 'icons/Navigate';
+import { HeartBorder } from 'icons/HeartBorder';
+import { HeartFull } from 'icons/HeartFull';
 import { Pause } from 'icons/PauseBottomAudioPlayer';
 import { Play } from 'icons/PlayBottomAudioPlayer';
 import { Rewind } from 'icons/RewindButton';
+import { TrackDocument, useToggleFavoriteMutation } from 'lib/graphql';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
@@ -17,6 +19,7 @@ import { remainingTime, timeFromSecs } from 'utils/calculateTime';
 export const AudioPlayerModal = () => {
   const { asPath } = useRouter();
   const modalState = useModalState();
+  const [toggleFavorite] = useToggleFavoriteMutation();
   const { dispatchShowAudioPlayerModal } = useModalDispatch();
   const {
     currentSong,
@@ -30,6 +33,7 @@ export const AudioPlayerModal = () => {
     playNext,
   } = useAudioPlayerContext();
   const [showTotalPlaybackDuration, setShowTotalPlaybackDuration] = useState(true);
+  const [isFavorite, setIsFavorite] = useState(currentSong.isFavorite);
 
   const isOpen = modalState.showAudioPlayer;
 
@@ -45,9 +49,18 @@ export const AudioPlayerModal = () => {
     setShowTotalPlaybackDuration(!showTotalPlaybackDuration);
   };
 
+  const handleFavorite = async () => {
+    await toggleFavorite({ variables: { trackId: currentSong.trackId }, refetchQueries: [TrackDocument] });
+    setIsFavorite(!isFavorite);
+  };
+
   useEffect(() => {
     handleClose();
   }, [asPath]);
+
+  useEffect(() => {
+    setIsFavorite(currentSong.isFavorite);
+  }, [currentSong]);
 
   return (
     <Modal
@@ -70,17 +83,18 @@ export const AudioPlayerModal = () => {
             </div>
           </div>
           <div className="flex justify-between mt-7 mb-4 w-full cursor-pointer">
-            <NextLink href={`/tracks/${currentSong.trackId}`}>
-              <div className="flex w-full">
+            <div className="flex w-full">
+              <NextLink href={`/tracks/${currentSong.trackId}`}>
                 <div className="flex flex-col flex-1 gap-1">
                   <h2 className="font-black">{currentSong.title || 'Unknown title'}</h2>
                   <h3 className="font-medium">{currentSong.artist || 'Unknown artist'}</h3>
                 </div>
-                <div>
-                  <Navigate />
-                </div>
+              </NextLink>
+              <div className="flex items-center pl-4" onClick={handleFavorite}>
+                {isFavorite && <HeartFull />}
+                {!isFavorite && <HeartBorder />}
               </div>
-            </NextLink>
+            </div>
           </div>
           <Slider className="audio-player" min={0} max={duration} value={progress} onChange={onSliderChange} />
           <div className="flex justify-between mt-2 text-xs text-gray-80 cursor-default">

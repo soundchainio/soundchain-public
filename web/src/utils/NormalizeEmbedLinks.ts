@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { MediaLink } from 'components/PostLinkInput';
-import { MediaProvider } from 'types/MediaProvider';
-import { BandcampLinkDocument } from 'lib/graphql';
 import { apolloClient } from 'lib/apollo';
+import { BandcampLinkDocument } from 'lib/graphql';
+import { MediaProvider } from 'types/MediaProvider';
 
 const linksRegex = /\bhttps?:\/\/\S+/gi;
 
@@ -79,7 +79,7 @@ const normalizeBandcamp = async (str: string) => {
   const data = await apolloClient.query({
     query: BandcampLinkDocument,
     variables: { url: str },
-  })
+  });
 
   if (data.data.bandcampLink) {
     return data.data.bandcampLink;
@@ -114,4 +114,11 @@ export const IdentifySource = (str: string) => {
   if (bandcampRegex.test(str)) ret.type = MediaProvider.BANDCAMP;
 
   return ret;
+};
+
+//Media providers that React player can Lazy load with thumbnail art: https://www.npmjs.com/package/react-player
+export const hasLazyLoadWithThumbnailSupport = (mediaUrl: string) => {
+  return (
+    IdentifySource(mediaUrl).type === MediaProvider.YOUTUBE || IdentifySource(mediaUrl).type === MediaProvider.VIMEO
+  );
 };

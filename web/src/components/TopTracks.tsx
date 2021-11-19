@@ -48,6 +48,7 @@ export const TopTracks = () => {
           art: node.artworkUrl,
           title: node.title,
           artist: node.artist,
+          isFavorite: node.isFavorite,
         } as Song),
     );
     playlistState(list, index);
@@ -66,6 +67,7 @@ export const TopTracks = () => {
             title: song.title,
             artist: song.artist,
             playbackCount: song.playbackCountFormatted,
+            isFavorite: song.isFavorite,
           }}
           handleOnPlayClicked={song => handleOnPlayClicked(song, index)}
         />

@@ -2,7 +2,7 @@ import { NotAvailableMessage } from 'components/NotAvailableMessage';
 import { TrackSkeleton } from 'components/TrackSkeleton';
 import { useTrackLazyQuery } from 'lib/graphql';
 import React, { useEffect } from 'react';
-import { AudioPlayer } from './AudioPlayer';
+import { MiniAudioPlayer } from './MiniAudioPlayer';
 
 interface TrackProps {
   trackId: string;
@@ -33,12 +33,15 @@ export const Track = ({ trackId, coverPhotoUrl }: TrackProps) => {
   }
 
   return (
-    <AudioPlayer
-      trackId={data.track.id}
-      title={data.track.title}
-      artist={data.track.artist}
-      src={data.track.playbackUrl}
-      art={data.track.artworkUrl || coverPhotoUrl || undefined}
+    <MiniAudioPlayer
+      song={{
+        src: data.track.playbackUrl,
+        trackId: data.track.id,
+        art: data.track.artworkUrl || coverPhotoUrl || undefined,
+        title: data.track.title,
+        artist: data.track.artist,
+        isFavorite: data.track.isFavorite,
+      }}
     />
   );
 };

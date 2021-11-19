@@ -1,4 +1,4 @@
-import { AudioPlayer } from 'components/AudioPlayer';
+import { MiniAudioPlayer } from 'components/MiniAudioPlayer';
 import { Anchor } from 'icons/Anchor';
 import { Polygon } from 'icons/Polygon';
 import { CreateTrackMutation } from 'lib/graphql';
@@ -14,12 +14,15 @@ export const MintingDone = ({ track, transactionHash }: MintingDoneProps) => {
   return (
     <div className="h-full w-full" style={{ backgroundColor: '#101010' }}>
       <div className="p-4">
-        <AudioPlayer
-          trackId={track.id}
-          title={track.title}
-          src={track.playbackUrl}
-          art={track.artworkUrl}
-          artist={track.artist}
+        <MiniAudioPlayer
+          song={{
+            src: track.playbackUrl,
+            trackId: track.id,
+            art: track.artworkUrl,
+            title: track.title,
+            artist: track.artist,
+            isFavorite: track.isFavorite,
+          }}
         />
       </div>
       <div

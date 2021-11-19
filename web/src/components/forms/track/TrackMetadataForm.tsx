@@ -119,7 +119,7 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
           <div className="px-4">
             <InputField name="album" type="text" label="ALBUM" />
           </div>
-          <div className="px-4 flex gap-4">
+          <div className="px-4 flex gap-4 w-full">
             <InputField name="releaseYear" type="number" label="RELEASE YEAR" />
             <InputField name="copyright" type="text" label="COPYRIGHT" />
           </div>

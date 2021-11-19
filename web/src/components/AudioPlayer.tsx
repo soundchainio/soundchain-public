@@ -1,6 +1,7 @@
 import Slider from '@reach/slider';
 import { config } from 'config';
 import Hls from 'hls.js';
+import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { Navigate } from 'icons/Navigate';
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
@@ -10,25 +11,28 @@ import { useEffect, useRef, useState } from 'react';
 import { remainingTime, timeFromSecs } from 'utils/calculateTime';
 import Asset from './Asset';
 
-interface AudioPlayerProps {
+export interface Song {
   src: string;
   title?: string | null;
   trackId?: string;
   artist?: string | null;
   art?: string | null;
+  isFavorite?: boolean | null;
 }
 
-export const AudioPlayer = ({ src, title, artist, art, trackId }: AudioPlayerProps) => {
+export const AudioPlayer = ({ src, title, artist, art, trackId }: Song) => {
   const [playing, setPlaying] = useState<boolean>(false);
   const [playState, setPlayState] = useState<number>(0);
   const [duration, setDuration] = useState<number>();
   const audioRef = useRef<HTMLAudioElement>(null);
+  const { isPlaying: isBottomPlayerPlaying, togglePlay: pauseBottomPlayer } = useAudioPlayerContext();
 
   const togglePlay = () => {
     if (playing) {
       audioRef.current?.pause();
       setPlaying(false);
     } else {
+      isBottomPlayerPlaying && pauseBottomPlayer();
       audioRef.current?.play();
       setPlaying(true);
     }

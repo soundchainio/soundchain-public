@@ -13,7 +13,7 @@ interface AvatarProps extends React.ComponentPropsWithoutRef<'div'> {
 export const Avatar = ({ profile, pixels = 30, linkToProfile = true, ...props }: AvatarProps) => {
   const maybeLinkToProfile = (children: JSX.Element) => {
     return linkToProfile && Boolean(profile.userHandle) ? (
-      <NextLink href={`/profiles/${profile.userHandle}`}>
+      <NextLink href={`/profiles/${profile.userHandle}`} passHref>
         <a>{children}</a>
       </NextLink>
     ) : (

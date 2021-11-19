@@ -1,6 +1,8 @@
 import { DocumentType, mongoose } from '@typegoose/typegoose';
+import { ObjectId } from 'mongodb';
 import { PaginateResult } from '../db/pagination/paginate';
 import { NotFoundError } from '../errors/NotFoundError';
+import { FavoriteProfileTrack, FavoriteProfileTrackModel } from '../models/FavoriteProfileTrack';
 import { FeedItemModel } from '../models/FeedItem';
 import { NotificationModel } from '../models/Notification';
 import { PostModel } from '../models/Post';
@@ -149,5 +151,34 @@ export class TrackService extends ModelService<typeof Track> {
   async updateOwnerByTokenId(tokenId: number, owner: string): Promise<Track> {
     const { id } = await this.model.findOne({ 'nftData.tokenId': tokenId });
     return await this.updateTrack(id, { nftData: { owner } });
+  }
+
+  async isFavorite(trackId: string, profileId: string): Promise<boolean> {
+    const hasRecord = await FavoriteProfileTrackModel.findOne({ trackId, profileId });
+    return hasRecord ? true : false;
+  }
+
+  async toggleFavorite(trackId: string, profileId: string): Promise<FavoriteProfileTrack> {
+    const favTrack = await FavoriteProfileTrackModel.findOne({ trackId, profileId });
+    if (favTrack?.id) {
+      return await FavoriteProfileTrackModel.findOneAndDelete({ trackId, profileId });
+    } else {
+      const favorite = new FavoriteProfileTrackModel({ profileId, trackId });
+      await favorite.save();
+      return favorite;
+    }
+  }
+
+  getFavoriteTracks(
+    ids: ObjectId[],
+    filter?: FilterTrackInput,
+    sort?: SortTrackInput,
+    page?: PageInput,
+  ): Promise<PaginateResult<Track>> {
+    return this.paginate({
+      filter: { _id: { $in: ids }, title: { $exists: true }, deleted: false, ...filter },
+      sort,
+      page,
+    });
   }
 }

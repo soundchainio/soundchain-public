@@ -4,7 +4,9 @@ import { Ellipsis } from 'icons/Ellipsis';
 import { usePostQuery } from 'lib/graphql';
 import NextLink from 'next/link';
 import React from 'react';
+import ReactPlayer from 'react-player';
 import { AuthorActionsType } from 'types/AuthorActionsType';
+import { hasLazyLoadWithThumbnailSupport } from 'utils/NormalizeEmbedLinks';
 import { Avatar } from './Avatar';
 import { DisplayName } from './DisplayName';
 import { MiniAudioPlayer } from './MiniAudioPlayer';
@@ -60,9 +62,20 @@ export const Post = ({ postId }: PostProps) => {
           </div>
         </div>
         <pre className="mt-4 text-gray-100 break-words whitespace-pre-wrap">{post.body}</pre>
-        {post.mediaLink && (
-          <iframe frameBorder="0" className="mt-4 w-full bg-gray-20" allowFullScreen src={post.mediaLink} />
-        )}
+        {post.mediaLink &&
+          (hasLazyLoadWithThumbnailSupport(post.mediaLink) ? (
+            <ReactPlayer
+              width="100%"
+              height="150px"
+              style={{ marginTop: '1rem' }}
+              url={post.mediaLink}
+              playsinline
+              controls
+              light
+            />
+          ) : (
+            <iframe frameBorder="0" className="mt-4 w-full bg-gray-20" allowFullScreen src={post.mediaLink} />
+          ))}
         {post.repostId && <RepostPreview postId={post.repostId} />}
         {post.track && (
           <MiniAudioPlayer
@@ -72,6 +85,7 @@ export const Post = ({ postId }: PostProps) => {
               art: post.track.artworkUrl,
               title: post.track.title,
               artist: post.track.artist,
+              isFavorite: post.track.isFavorite,
             }}
           />
         )}
