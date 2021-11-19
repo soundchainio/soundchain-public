@@ -30,8 +30,18 @@ export type AuctionCancelled = ContractEventLog<{
 export type AuctionCreated = ContractEventLog<{
   nftAddress: string;
   tokenId: string;
+  owner: string;
+  minimumBid: string;
+  reservePrice: string;
+  startTimestamp: string;
+  endTimestamp: string;
   0: string;
   1: string;
+  2: string;
+  3: string;
+  4: string;
+  5: string;
+  6: string;
 }>;
 export type AuctionResulted = ContractEventLog<{
   oldOwner: string;
@@ -56,16 +66,6 @@ export type BidPlaced = ContractEventLog<{
   3: string;
 }>;
 export type BidRefunded = ContractEventLog<{
-  nftAddress: string;
-  tokenId: string;
-  bidder: string;
-  bid: string;
-  0: string;
-  1: string;
-  2: string;
-  3: string;
-}>;
-export type BidWithdrawn = ContractEventLog<{
   nftAddress: string;
   tokenId: string;
   bidder: string;
@@ -259,11 +259,6 @@ export interface SoundchainAuction extends BaseContract {
     updatePlatformFeeRecipient(
       _platformFeeRecipient: string
     ): NonPayableTransactionObject<void>;
-
-    withdrawBid(
-      _nftAddress: string,
-      _tokenId: number | string | BN
-    ): NonPayableTransactionObject<void>;
   };
   events: {
     AuctionCancelled(cb?: Callback<AuctionCancelled>): EventEmitter;
@@ -291,12 +286,6 @@ export interface SoundchainAuction extends BaseContract {
     BidRefunded(
       options?: EventOptions,
       cb?: Callback<BidRefunded>
-    ): EventEmitter;
-
-    BidWithdrawn(cb?: Callback<BidWithdrawn>): EventEmitter;
-    BidWithdrawn(
-      options?: EventOptions,
-      cb?: Callback<BidWithdrawn>
     ): EventEmitter;
 
     OwnershipTransferred(cb?: Callback<OwnershipTransferred>): EventEmitter;
@@ -387,13 +376,6 @@ export interface SoundchainAuction extends BaseContract {
     event: "BidRefunded",
     options: EventOptions,
     cb: Callback<BidRefunded>
-  ): void;
-
-  once(event: "BidWithdrawn", cb: Callback<BidWithdrawn>): void;
-  once(
-    event: "BidWithdrawn",
-    options: EventOptions,
-    cb: Callback<BidWithdrawn>
   ): void;
 
   once(event: "OwnershipTransferred", cb: Callback<OwnershipTransferred>): void;

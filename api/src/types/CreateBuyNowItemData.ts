@@ -1,10 +1,10 @@
 import { modelOptions } from '@typegoose/typegoose';
 import { Field, InputType, ObjectType } from 'type-graphql';
 
-@ObjectType('CreateListingItemType')
-@InputType('CreateListingItemInput')
+@ObjectType('CreateBuyNowItemType')
+@InputType('CreateBuyNowItemInput')
 @modelOptions({ schemaOptions: { _id: false } })
-export class CreateListingItemData {
+export class CreateBuyNowItemData {
   @Field({ nullable: true })
   readonly id?: string;
 
@@ -16,9 +16,6 @@ export class CreateListingItemData {
 
   @Field()
   tokenId: number;
-
-  @Field()
-  quantity: number;
 
   @Field()
   pricePerItem: string;

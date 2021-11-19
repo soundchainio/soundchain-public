@@ -14,7 +14,7 @@ import { cacheFor } from 'lib/apollo';
 import {
   PendingRequest,
   TrackDocument,
-  useListingItemLazyQuery,
+  useBuyNowItemLazyQuery,
   useTrackQuery,
   useUpdateTrackMutation,
 } from 'lib/graphql';
@@ -65,25 +65,25 @@ export default function EditPage({ trackId }: TrackPageProps) {
 
   const tokenId = track?.track.nftData?.tokenId ?? -1;
 
-  const [getListingItem, { data: listingPayload }] = useListingItemLazyQuery({
+  const [getBuyNowItem, { data: listingPayload }] = useBuyNowItemLazyQuery({
     variables: { tokenId },
   });
 
   useEffect(() => {
-    getListingItem();
-  }, [getListingItem]);
+    getBuyNowItem();
+  }, [getBuyNowItem]);
 
   if (!listingPayload) {
     return null;
   }
 
-  const ownerAddressAccount = listingPayload.listingItem?.listingItem?.owner.toLowerCase();
+  const ownerAddressAccount = listingPayload.buyNowItem?.buyNowItem?.owner.toLowerCase();
   const isOwner = ownerAddressAccount === account?.toLowerCase();
-  const isForSale = !!listingPayload.listingItem?.listingItem?.pricePerItem ?? false;
-  const price = web3?.utils.fromWei(listingPayload.listingItem?.listingItem?.pricePerItem.toString() || '0', 'ether');
+  const isForSale = !!listingPayload.buyNowItem?.buyNowItem?.pricePerItem ?? false;
+  const price = web3?.utils.fromWei(listingPayload.buyNowItem?.buyNowItem?.pricePerItem.toString() || '0', 'ether');
 
   const handleUpdate = () => {
-    if (!web3 || !listingPayload.listingItem?.listingItem?.tokenId || !newPrice || !account) {
+    if (!web3 || !listingPayload.buyNowItem?.buyNowItem?.tokenId || !newPrice || !account) {
       return;
     }
     setLoading(true);
@@ -103,19 +103,19 @@ export default function EditPage({ trackId }: TrackPageProps) {
       router.back();
     };
 
-    updateListing(web3, listingPayload.listingItem?.listingItem?.tokenId, account, weiPrice, onTransactionHash);
+    updateListing(web3, listingPayload.buyNowItem?.buyNowItem?.tokenId, account, weiPrice, onTransactionHash);
   };
 
   const handleRemove = () => {
     if (
       !web3 ||
-      !listingPayload.listingItem?.listingItem?.tokenId ||
+      !listingPayload.buyNowItem?.buyNowItem?.tokenId ||
       !account ||
       track?.track.nftData?.pendingRequest != PendingRequest.None
     ) {
       return;
     }
-    dispatchShowRemoveListingModal(true, listingPayload.listingItem?.listingItem?.tokenId, trackId);
+    dispatchShowRemoveListingModal(true, listingPayload.buyNowItem?.buyNowItem?.tokenId, trackId);
   };
 
   const RemoveListing = (

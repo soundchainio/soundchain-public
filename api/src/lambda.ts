@@ -7,8 +7,10 @@ import type { Handler, SQSEvent } from 'aws-lambda';
 import express from 'express';
 import Web3 from 'web3';
 import { AbiItem } from 'web3-utils';
+import { AuctionCreated } from '../types/web3-v1-contracts/SoundchainAuction';
 import { config } from './config';
 import SoundchainCollectible from './contract/Soundchain721.json';
+import SoundchainAuction from './contract/SoundchainAuction.json';
 import SoundchainMarketplace from './contract/SoundchainMarketplace.json';
 import { UserModel } from './models/User';
 import muxDataApi from './muxDataApi';
@@ -45,6 +47,7 @@ export const watcher: Handler = async () => {
     config.minting.marketplaceAddress,
   );
 
+  const auctionContract = new web3.eth.Contract(SoundchainAuction.abi as AbiItem[], config.minting.auctionAddress);
   const nftContract = new web3.eth.Contract(SoundchainCollectible.abi as AbiItem[], config.minting.nftAddress);
   const user = await UserModel.findOne({ handle: '_system' });
   const context = new Context({ sub: user._id });
@@ -57,16 +60,17 @@ export const watcher: Handler = async () => {
     toBlock,
   });
   const contractEvents = await nftContract.getPastEvents('allEvents', { fromBlock, toBlock });
+  const auctionEvents = await auctionContract.getPastEvents('allEvents', { fromBlock, toBlock });
 
   for (const event of marketplaceEvents) {
     switch (event.event) {
       case 'ItemListed':
         {
           try {
-            const { owner, nft, tokenId, quantity, pricePerItem, startingTime } = (event as ItemListed).returnValues;
+            const { owner, nft, tokenId, pricePerItem, startingTime } = (event as ItemListed).returnValues;
             const [user, listedBefore] = await Promise.all([
               context.userService.getUserByWallet(owner),
-              context.listingItemService.wasListedBefore(parseInt(tokenId)),
+              context.buyNowItemService.wasListedBefore(parseInt(tokenId)),
             ]);
             const profile = await context.profileService.getProfile(user.profileId);
             if (!profile.verified && !listedBefore) {
@@ -74,11 +78,10 @@ export const watcher: Handler = async () => {
               continue;
             }
             await Promise.all([
-              context.listingItemService.createListingItem({
+              context.buyNowItemService.createBuyNowItem({
                 owner,
                 nft,
                 tokenId: parseInt(tokenId),
-                quantity: parseInt(quantity),
                 pricePerItem,
                 startingTime: parseInt(startingTime),
               }),
@@ -94,7 +97,7 @@ export const watcher: Handler = async () => {
         {
           try {
             const { tokenId, seller, buyer, pricePerItem } = (event as ItemSold).returnValues;
-            await context.listingItemService.finishListing(tokenId, seller, buyer, pricePerItem);
+            await context.buyNowItemService.finishListing(tokenId, seller, buyer, pricePerItem);
           } catch (error) {
             console.error(error);
           }
@@ -105,7 +108,7 @@ export const watcher: Handler = async () => {
         {
           try {
             const { tokenId, newPrice } = (event as ItemUpdated).returnValues;
-            await context.listingItemService.updateListingItem(parseInt(tokenId), { pricePerItem: newPrice });
+            await context.buyNowItemService.updateBuyNowItem(parseInt(tokenId), { pricePerItem: newPrice });
             await context.trackService.setPendingNone(parseInt(tokenId));
           } catch (error) {
             console.error(error);
@@ -117,7 +120,7 @@ export const watcher: Handler = async () => {
         {
           try {
             const { tokenId } = (event as ItemCanceled).returnValues;
-            await context.listingItemService.setNotValid(parseInt(tokenId));
+            await context.buyNowItemService.setNotValid(parseInt(tokenId));
             await context.trackService.setPendingNone(parseInt(tokenId));
           } catch (error) {
             console.error(error);
@@ -149,6 +152,45 @@ export const watcher: Handler = async () => {
             console.error(error);
           }
           console.log('TransferSingle');
+        }
+        break;
+    }
+  }
+
+  for (const event of auctionEvents) {
+    console.log(event);
+    switch (event.event) {
+      case 'AuctionCreated':
+        {
+          try {
+            const { nftAddress, tokenId, owner, minimumBid, reservePrice, startTimestamp, endTimestamp } = (
+              event as unknown as AuctionCreated
+            ).returnValues;
+            const [user, listedBefore] = await Promise.all([
+              context.userService.getUserByWallet(owner),
+              context.auctionItemService.wasListedBefore(parseInt(tokenId)),
+            ]);
+            const profile = await context.profileService.getProfile(user.profileId);
+            if (!profile.verified && !listedBefore) {
+              context.trackService.setPendingNone(parseInt(tokenId));
+              continue;
+            }
+            await Promise.all([
+              context.auctionItemService.createAuctionItem({
+                owner,
+                nft: nftAddress,
+                tokenId: parseInt(tokenId),
+                startingTime: parseInt(startTimestamp),
+                endingTime: parseInt(endTimestamp),
+                reservePrice,
+                minimumBid,
+              }),
+              context.trackService.setPendingNone(parseInt(tokenId)),
+            ]);
+          } catch (error) {
+            console.error(error);
+          }
+          console.log('AuctionCreated');
         }
         break;
     }

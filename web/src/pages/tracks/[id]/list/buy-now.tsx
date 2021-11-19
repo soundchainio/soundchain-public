@@ -14,7 +14,7 @@ import { cacheFor } from 'lib/apollo';
 import {
   PendingRequest,
   TrackDocument,
-  useListingItemLazyQuery,
+  useBuyNowItemLazyQuery,
   useTrackQuery,
   useUpdateTrackMutation,
 } from 'lib/graphql';
@@ -70,7 +70,7 @@ export default function ListBuyNowPage({ trackId }: TrackPageProps) {
   const canList =
     (me?.profile.verified && data?.track.nftData?.minter === account) || data?.track.nftData?.minter != account;
 
-  const [getListingItem, { data: listingItem }] = useListingItemLazyQuery({
+  const [getBuyNowItem, { data: buyNowItem }] = useBuyNowItemLazyQuery({
     variables: { tokenId },
   });
 
@@ -92,8 +92,8 @@ export default function ListBuyNowPage({ trackId }: TrackPageProps) {
   }, [account, web3, data?.track.nftData, isTokenOwner]);
 
   useEffect(() => {
-    getListingItem();
-  }, [getListingItem]);
+    getBuyNowItem();
+  }, [getBuyNowItem]);
 
   useEffect(() => {
     const fetchIsApproved = async () => {
@@ -105,7 +105,7 @@ export default function ListBuyNowPage({ trackId }: TrackPageProps) {
     fetchIsApproved();
   }, [account, web3, checkIsApproved]);
 
-  const isForSale = !!listingItem?.listingItem?.listingItem?.pricePerItem ?? false;
+  const isForSale = !!buyNowItem?.buyNowItem?.buyNowItem?.pricePerItem ?? false;
 
   const handleList = () => {
     if (data?.track.nftData?.tokenId === null || data?.track.nftData?.tokenId === undefined || !account || !web3) {

@@ -14,7 +14,7 @@ import {
   PendingRequest,
   Profile,
   TrackDocument,
-  useListingItemQuery,
+  useBuyNowItemQuery,
   useProfileLazyQuery,
   useTrackQuery,
   useUserByWalletLazyQuery,
@@ -78,7 +78,7 @@ export default function TrackPage({ trackId }: TrackPageProps) {
     data: listingPayload,
     loading,
     refetch: refetchListing,
-  } = useListingItemQuery({
+  } = useBuyNowItemQuery({
     variables: { tokenId },
     fetchPolicy: 'network-only',
   });
@@ -127,8 +127,8 @@ export default function TrackPage({ trackId }: TrackPageProps) {
     fetchRoyalties();
   }, [account, web3, data?.track.nftData, getRoyalties]);
 
-  const isForSale = !!listingPayload?.listingItem.listingItem?.pricePerItem ?? false;
-  const price = web3?.utils.fromWei(listingPayload?.listingItem?.listingItem?.pricePerItem.toString() ?? '0', 'ether');
+  const isForSale = !!listingPayload?.buyNowItem.buyNowItem?.pricePerItem ?? false;
+  const price = web3?.utils.fromWei(listingPayload?.buyNowItem?.buyNowItem?.pricePerItem.toString() ?? '0', 'ether');
 
   const topNovaBarProps: TopNavBarProps = {
     leftButton: <BackButton />,

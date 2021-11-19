@@ -13,7 +13,7 @@ import { cacheFor } from 'lib/apollo';
 import {
   PendingRequest,
   TrackDocument,
-  useListingItemLazyQuery,
+  useBuyNowItemLazyQuery,
   useTrackQuery,
   useUpdateTrackMutation,
 } from 'lib/graphql';
@@ -62,28 +62,28 @@ export default function BuyPage({ trackId }: TrackPageProps) {
 
   const tokenId = track?.track.nftData?.tokenId ?? -1;
 
-  const [getListingItem, { data: listingPayload }] = useListingItemLazyQuery({
+  const [getBuyNowItem, { data: listingPayload }] = useBuyNowItemLazyQuery({
     variables: { tokenId },
   });
 
   useEffect(() => {
-    getListingItem();
-  }, [getListingItem]);
+    getBuyNowItem();
+  }, [getBuyNowItem]);
 
   if (!listingPayload) {
     return null;
   }
 
-  const ownerAddressAccount = listingPayload.listingItem?.listingItem?.owner.toLowerCase();
+  const ownerAddressAccount = listingPayload.buyNowItem?.buyNowItem?.owner.toLowerCase();
   const isOwner = ownerAddressAccount === account?.toLowerCase();
-  const isForSale = !!listingPayload.listingItem?.listingItem?.pricePerItem ?? false;
-  const price = web3?.utils.fromWei(listingPayload.listingItem?.listingItem?.pricePerItem.toString() || '0', 'ether');
+  const isForSale = !!listingPayload.buyNowItem?.buyNowItem?.pricePerItem ?? false;
+  const price = web3?.utils.fromWei(listingPayload.buyNowItem?.buyNowItem?.pricePerItem.toString() || '0', 'ether');
 
   const handleBuy = () => {
     if (
       !web3 ||
-      !listingPayload.listingItem?.listingItem?.tokenId ||
-      !listingPayload.listingItem?.listingItem?.owner ||
+      !listingPayload.buyNowItem?.buyNowItem?.tokenId ||
+      !listingPayload.buyNowItem?.buyNowItem?.owner ||
       !account
     ) {
       return;
@@ -105,10 +105,10 @@ export default function BuyPage({ trackId }: TrackPageProps) {
 
     buyItem(
       web3,
-      listingPayload.listingItem?.listingItem?.tokenId,
+      listingPayload.buyNowItem?.buyNowItem?.tokenId,
       account,
-      listingPayload.listingItem?.listingItem?.owner,
-      listingPayload.listingItem?.listingItem?.pricePerItem.toString(),
+      listingPayload.buyNowItem?.buyNowItem?.owner,
+      listingPayload.buyNowItem?.buyNowItem?.pricePerItem.toString(),
       onTransactionHash,
     );
     setLoading(true);

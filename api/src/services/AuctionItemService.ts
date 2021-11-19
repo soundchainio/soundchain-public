@@ -1,54 +1,55 @@
-import { ListingItem, ListingItemModel } from '../models/ListingItem';
+import { AuctionItem, AuctionItemModel } from '../models/AuctionItem';
 import { Context } from '../types/Context';
 import { ModelService } from './ModelService';
 
-interface NewListingItem {
+interface NewAuctionItem {
   owner: string;
   nft: string;
   tokenId: number;
-  quantity: number;
-  pricePerItem: string;
+  reservePrice: string;
+  minimumBid: string;
   startingTime: number;
+  endingTime: number;
 }
 
-export class ListingItemService extends ModelService<typeof ListingItem> {
+export class AuctionItemService extends ModelService<typeof AuctionItem> {
   constructor(context: Context) {
-    super(context, ListingItemModel);
+    super(context, AuctionItemModel);
   }
 
-  async createListingItem(params: NewListingItem): Promise<ListingItem> {
-    const listingItem = new this.model(params);
-    await listingItem.save();
-    return listingItem;
+  async createAuctionItem(params: NewAuctionItem): Promise<AuctionItem> {
+    const AuctionItem = new this.model(params);
+    await AuctionItem.save();
+    return AuctionItem;
   }
 
-  async findListingItem(tokenId: number): Promise<ListingItem> {
-    const listingItem = await this.model.findOne({ tokenId, valid: true }).sort({ createdAt: -1 }).exec();
-    return listingItem;
+  async findAuctionItem(tokenId: number): Promise<AuctionItem> {
+    const AuctionItem = await this.model.findOne({ tokenId, valid: true }).sort({ createdAt: -1 }).exec();
+    return AuctionItem;
   }
 
-  async updateListingItem(tokenId: number, changes: Partial<ListingItem>): Promise<ListingItem> {
-    const listingItem = await this.model
+  async updateAuctionItem(tokenId: number, changes: Partial<AuctionItem>): Promise<AuctionItem> {
+    const AuctionItem = await this.model
       .findOneAndUpdate({ tokenId, valid: true }, changes, { new: true })
       .sort({ createdAt: -1 })
       .exec();
-    return listingItem;
+    return AuctionItem;
   }
 
   async wasListedBefore(tokenId: number): Promise<boolean> {
-    const listingItem = await this.model.findOne({ tokenId }).exec();
-    return !!listingItem;
+    const AuctionItem = await this.model.findOne({ tokenId }).exec();
+    return !!AuctionItem;
   }
 
-  async setNotValid(tokenId: number): Promise<ListingItem> {
-    const listingItem = await this.model.findOne({ tokenId }).sort({ createdAt: -1 }).exec();
-    listingItem.valid = false;
-    listingItem.save();
-    return listingItem;
+  async setNotValid(tokenId: number): Promise<AuctionItem> {
+    const AuctionItem = await this.model.findOne({ tokenId }).sort({ createdAt: -1 }).exec();
+    AuctionItem.valid = false;
+    AuctionItem.save();
+    return AuctionItem;
   }
 
   async finishListing(tokenId: string, sellerWallet: string, buyerWaller: string, price: string): Promise<void> {
-    this.context.listingItemService.setNotValid(parseInt(tokenId));
+    this.context.auctionItemService.setNotValid(parseInt(tokenId));
     this.context.trackService.setPendingNone(parseInt(tokenId));
 
     const [sellerUser, buyerUser, track] = await Promise.all([

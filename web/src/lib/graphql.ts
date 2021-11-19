@@ -33,6 +33,24 @@ export type AuthPayload = {
   jwt: Scalars['String'];
 };
 
+export type BuyNowItem = {
+  __typename?: 'BuyNowItem';
+  id: Scalars['ID'];
+  owner: Scalars['String'];
+  nft: Scalars['String'];
+  tokenId: Scalars['Float'];
+  startingTime: Scalars['Float'];
+  pricePerItem: Scalars['String'];
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  valid: Scalars['Boolean'];
+};
+
+export type BuyNowPayload = {
+  __typename?: 'BuyNowPayload';
+  buyNowItem: Maybe<BuyNowItem>;
+};
+
 export type ChangeReactionInput = {
   postId: Scalars['String'];
   type: ReactionType;
@@ -97,23 +115,21 @@ export type CommentNotification = {
   link: Scalars['String'];
 };
 
-export type CreateListingItemInput = {
+export type CreateBuyNowItemInput = {
   id?: Maybe<Scalars['String']>;
   owner: Scalars['String'];
   nft: Scalars['String'];
   tokenId: Scalars['Float'];
-  quantity: Scalars['Float'];
   pricePerItem: Scalars['String'];
   startingTime: Scalars['Float'];
 };
 
-export type CreateListingItemType = {
-  __typename?: 'CreateListingItemType';
+export type CreateBuyNowItemType = {
+  __typename?: 'CreateBuyNowItemType';
   id: Maybe<Scalars['String']>;
   owner: Scalars['String'];
   nft: Scalars['String'];
   tokenId: Scalars['Float'];
-  quantity: Scalars['Float'];
   pricePerItem: Scalars['String'];
   startingTime: Scalars['Float'];
 };
@@ -315,25 +331,6 @@ export enum Genre {
 }
 
 
-export type ListingItem = {
-  __typename?: 'ListingItem';
-  id: Scalars['ID'];
-  owner: Scalars['String'];
-  nft: Scalars['String'];
-  tokenId: Scalars['Float'];
-  startingTime: Scalars['Float'];
-  quantity: Scalars['Float'];
-  pricePerItem: Scalars['String'];
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  valid: Scalars['Boolean'];
-};
-
-export type ListingItemPayload = {
-  __typename?: 'ListingItemPayload';
-  listingItem: Maybe<ListingItem>;
-};
-
 export type LoginInput = {
   token: Scalars['String'];
 };
@@ -394,10 +391,10 @@ export enum MusicianType {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  createBuyNowItem: CreateBuyNowItemType;
+  setNotValid: CreateBuyNowItemType;
   addComment: AddCommentPayload;
   deleteComment: DeleteCommentPayload;
-  createListingItem: CreateListingItemType;
-  setNotValid: CreateListingItemType;
   sendMessage: SendMessagePayload;
   resetUnreadMessageCount: Profile;
   createMintingRequest: MintingRequestPayload;
@@ -432,6 +429,16 @@ export type Mutation = {
 };
 
 
+export type MutationCreateBuyNowItemArgs = {
+  input: CreateBuyNowItemInput;
+};
+
+
+export type MutationSetNotValidArgs = {
+  tokenId: Scalars['Float'];
+};
+
+
 export type MutationAddCommentArgs = {
   input: AddCommentInput;
 };
@@ -439,16 +446,6 @@ export type MutationAddCommentArgs = {
 
 export type MutationDeleteCommentArgs = {
   input: DeleteCommentInput;
-};
-
-
-export type MutationCreateListingItemArgs = {
-  input: CreateListingItemInput;
-};
-
-
-export type MutationSetNotValidArgs = {
-  tokenId: Scalars['Float'];
 };
 
 
@@ -786,6 +783,7 @@ export type ProfileVerificationRequestPayload = {
 
 export type Query = {
   __typename?: 'Query';
+  buyNowItem: BuyNowPayload;
   chats: ChatConnection;
   chatHistory: MessageConnection;
   comment: Comment;
@@ -796,7 +794,6 @@ export type Query = {
   feed: FeedConnection;
   followers: FollowConnection;
   following: FollowConnection;
-  listingItem: ListingItemPayload;
   message: Message;
   notifications: NotificationConnection;
   notification: Notification;
@@ -817,6 +814,11 @@ export type Query = {
   mimeType: MimeType;
   me: Maybe<User>;
   getUserByWallet: Maybe<User>;
+};
+
+
+export type QueryBuyNowItemArgs = {
+  tokenId: Scalars['Float'];
 };
 
 
@@ -873,11 +875,6 @@ export type QueryFollowersArgs = {
 export type QueryFollowingArgs = {
   page?: Maybe<PageInput>;
   id: Scalars['String'];
-};
-
-
-export type QueryListingItemArgs = {
-  tokenId: Scalars['Float'];
 };
 
 
@@ -1403,16 +1400,16 @@ export type CommentsQuery = (
   ) }
 );
 
-export type CreateListingItemMutationVariables = Exact<{
-  input: CreateListingItemInput;
+export type CreateBuyNowItemMutationVariables = Exact<{
+  input: CreateBuyNowItemInput;
 }>;
 
 
-export type CreateListingItemMutation = (
+export type CreateBuyNowItemMutation = (
   { __typename?: 'Mutation' }
-  & { createListingItem: (
-    { __typename?: 'CreateListingItemType' }
-    & Pick<CreateListingItemType, 'id' | 'owner' | 'nft' | 'tokenId' | 'quantity' | 'pricePerItem' | 'startingTime'>
+  & { createBuyNowItem: (
+    { __typename?: 'CreateBuyNowItemType' }
+    & Pick<CreateBuyNowItemType, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'startingTime'>
   ) }
 );
 
@@ -1719,18 +1716,18 @@ export type FollowingQuery = (
   ) }
 );
 
-export type ListingItemQueryVariables = Exact<{
+export type BuyNowItemQueryVariables = Exact<{
   tokenId: Scalars['Float'];
 }>;
 
 
-export type ListingItemQuery = (
+export type BuyNowItemQuery = (
   { __typename?: 'Query' }
-  & { listingItem: (
-    { __typename?: 'ListingItemPayload' }
-    & { listingItem: Maybe<(
-      { __typename?: 'ListingItem' }
-      & Pick<ListingItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'quantity' | 'pricePerItem' | 'startingTime'>
+  & { buyNowItem: (
+    { __typename?: 'BuyNowPayload' }
+    & { buyNowItem: Maybe<(
+      { __typename?: 'BuyNowItem' }
+      & Pick<BuyNowItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'startingTime'>
     )> }
   ) }
 );
@@ -2181,8 +2178,8 @@ export type SetNotValidMutationVariables = Exact<{
 export type SetNotValidMutation = (
   { __typename?: 'Mutation' }
   & { setNotValid: (
-    { __typename?: 'CreateListingItemType' }
-    & Pick<CreateListingItemType, 'id' | 'owner' | 'nft' | 'tokenId' | 'quantity' | 'pricePerItem' | 'startingTime'>
+    { __typename?: 'CreateBuyNowItemType' }
+    & Pick<CreateBuyNowItemType, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'startingTime'>
   ) }
 );
 
@@ -3067,45 +3064,44 @@ export function useCommentsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<C
 export type CommentsQueryHookResult = ReturnType<typeof useCommentsQuery>;
 export type CommentsLazyQueryHookResult = ReturnType<typeof useCommentsLazyQuery>;
 export type CommentsQueryResult = Apollo.QueryResult<CommentsQuery, CommentsQueryVariables>;
-export const CreateListingItemDocument = gql`
-    mutation CreateListingItem($input: CreateListingItemInput!) {
-  createListingItem(input: $input) {
+export const CreateBuyNowItemDocument = gql`
+    mutation CreateBuyNowItem($input: CreateBuyNowItemInput!) {
+  createBuyNowItem(input: $input) {
     id
     owner
     nft
     tokenId
-    quantity
     pricePerItem
     startingTime
   }
 }
     `;
-export type CreateListingItemMutationFn = Apollo.MutationFunction<CreateListingItemMutation, CreateListingItemMutationVariables>;
+export type CreateBuyNowItemMutationFn = Apollo.MutationFunction<CreateBuyNowItemMutation, CreateBuyNowItemMutationVariables>;
 
 /**
- * __useCreateListingItemMutation__
+ * __useCreateBuyNowItemMutation__
  *
- * To run a mutation, you first call `useCreateListingItemMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useCreateListingItemMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useCreateBuyNowItemMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateBuyNowItemMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [createListingItemMutation, { data, loading, error }] = useCreateListingItemMutation({
+ * const [createBuyNowItemMutation, { data, loading, error }] = useCreateBuyNowItemMutation({
  *   variables: {
  *      input: // value for 'input'
  *   },
  * });
  */
-export function useCreateListingItemMutation(baseOptions?: Apollo.MutationHookOptions<CreateListingItemMutation, CreateListingItemMutationVariables>) {
+export function useCreateBuyNowItemMutation(baseOptions?: Apollo.MutationHookOptions<CreateBuyNowItemMutation, CreateBuyNowItemMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateListingItemMutation, CreateListingItemMutationVariables>(CreateListingItemDocument, options);
+        return Apollo.useMutation<CreateBuyNowItemMutation, CreateBuyNowItemMutationVariables>(CreateBuyNowItemDocument, options);
       }
-export type CreateListingItemMutationHookResult = ReturnType<typeof useCreateListingItemMutation>;
-export type CreateListingItemMutationResult = Apollo.MutationResult<CreateListingItemMutation>;
-export type CreateListingItemMutationOptions = Apollo.BaseMutationOptions<CreateListingItemMutation, CreateListingItemMutationVariables>;
+export type CreateBuyNowItemMutationHookResult = ReturnType<typeof useCreateBuyNowItemMutation>;
+export type CreateBuyNowItemMutationResult = Apollo.MutationResult<CreateBuyNowItemMutation>;
+export type CreateBuyNowItemMutationOptions = Apollo.BaseMutationOptions<CreateBuyNowItemMutation, CreateBuyNowItemMutationVariables>;
 export const CreateMintingRequestDocument = gql`
     mutation createMintingRequest($input: CreateMintingRequestInput!) {
   createMintingRequest(input: $input) {
@@ -3741,15 +3737,14 @@ export function useFollowingLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
 export type FollowingQueryHookResult = ReturnType<typeof useFollowingQuery>;
 export type FollowingLazyQueryHookResult = ReturnType<typeof useFollowingLazyQuery>;
 export type FollowingQueryResult = Apollo.QueryResult<FollowingQuery, FollowingQueryVariables>;
-export const ListingItemDocument = gql`
-    query ListingItem($tokenId: Float!) {
-  listingItem(tokenId: $tokenId) {
-    listingItem {
+export const BuyNowItemDocument = gql`
+    query BuyNowItem($tokenId: Float!) {
+  buyNowItem(tokenId: $tokenId) {
+    buyNowItem {
       id
       owner
       nft
       tokenId
-      quantity
       pricePerItem
       startingTime
     }
@@ -3758,32 +3753,32 @@ export const ListingItemDocument = gql`
     `;
 
 /**
- * __useListingItemQuery__
+ * __useBuyNowItemQuery__
  *
- * To run a query within a React component, call `useListingItemQuery` and pass it any options that fit your needs.
- * When your component renders, `useListingItemQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useBuyNowItemQuery` and pass it any options that fit your needs.
+ * When your component renders, `useBuyNowItemQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useListingItemQuery({
+ * const { data, loading, error } = useBuyNowItemQuery({
  *   variables: {
  *      tokenId: // value for 'tokenId'
  *   },
  * });
  */
-export function useListingItemQuery(baseOptions: Apollo.QueryHookOptions<ListingItemQuery, ListingItemQueryVariables>) {
+export function useBuyNowItemQuery(baseOptions: Apollo.QueryHookOptions<BuyNowItemQuery, BuyNowItemQueryVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<ListingItemQuery, ListingItemQueryVariables>(ListingItemDocument, options);
+        return Apollo.useQuery<BuyNowItemQuery, BuyNowItemQueryVariables>(BuyNowItemDocument, options);
       }
-export function useListingItemLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ListingItemQuery, ListingItemQueryVariables>) {
+export function useBuyNowItemLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<BuyNowItemQuery, BuyNowItemQueryVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<ListingItemQuery, ListingItemQueryVariables>(ListingItemDocument, options);
+          return Apollo.useLazyQuery<BuyNowItemQuery, BuyNowItemQueryVariables>(BuyNowItemDocument, options);
         }
-export type ListingItemQueryHookResult = ReturnType<typeof useListingItemQuery>;
-export type ListingItemLazyQueryHookResult = ReturnType<typeof useListingItemLazyQuery>;
-export type ListingItemQueryResult = Apollo.QueryResult<ListingItemQuery, ListingItemQueryVariables>;
+export type BuyNowItemQueryHookResult = ReturnType<typeof useBuyNowItemQuery>;
+export type BuyNowItemLazyQueryHookResult = ReturnType<typeof useBuyNowItemLazyQuery>;
+export type BuyNowItemQueryResult = Apollo.QueryResult<BuyNowItemQuery, BuyNowItemQueryVariables>;
 export const LoginDocument = gql`
     mutation Login($input: LoginInput!) {
   login(input: $input) {
@@ -4738,7 +4733,6 @@ export const SetNotValidDocument = gql`
     owner
     nft
     tokenId
-    quantity
     pricePerItem
     startingTime
   }
