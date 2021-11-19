@@ -1,6 +1,6 @@
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
-import { ListNFT } from 'components/details-NFT/ListNFT';
+import { ListNFTBuyNow } from 'components/details-NFT/ListNFTBuyNow';
 import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
@@ -147,7 +147,7 @@ export default function ListBuyNowPage({ trackId }: TrackPageProps) {
       <div className="m-4">
         <Track trackId={trackId} />
       </div>
-      <ListNFT onSetPrice={price => setPrice(price)} />
+      <ListNFTBuyNow onSetPrice={price => setPrice(price)} />
       <div className="flex p-4">
         <div className="flex-1 font-black text-xs text-gray-80">
           <p>Max gas fee</p>

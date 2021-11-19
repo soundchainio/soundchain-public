@@ -19,7 +19,7 @@ export default function ListPage() {
       <div className="flex flex-col  gap-3">
         <p className="text-gray-80 text-center font-bold text-sm mt-20">Select Listing Type:</p>
         <div>
-          <div className="flex flex-col bg-black border-2 border-gray-700 rounded m-3 p-4 gap-3">
+          <div className="flex flex-col bg-black border-2 border-gray-700 rounded m-3 p-4 gap-4">
             <div className="flex flex-row gap-2">
               <CheckmarkFilled className="h-6 w-6" />
               <p className="text-white font-bold text-sm">Buy it Now</p>
@@ -39,7 +39,7 @@ export default function ListPage() {
           </div>
         </div>
         <div>
-          <div className="flex flex-col bg-black border-2 border-gray-700 rounded m-3 p-4 gap-3">
+          <div className="flex flex-col bg-black border-2 border-gray-700 rounded m-3 p-4 gap-4">
             <div className="flex flex-row gap-2">
               <Auction className="h-6 w-6" />
               <p className="text-white font-bold text-sm">Auction</p>

@@ -204,7 +204,7 @@ const useBlockchain = () => {
   const createAuction = (
     web3: Web3,
     tokenId: number,
-    reservePrice: number,
+    reservePrice: string,
     startTime: number,
     endTime: number,
     from: string,
