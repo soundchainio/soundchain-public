@@ -1,0 +1,28 @@
+import { Field, ObjectType } from 'type-graphql';
+
+@ObjectType()
+export class ListingItemPayload {
+  @Field({ nullable: true })
+  owner: string;
+
+  @Field({ nullable: true })
+  nft: string;
+
+  @Field({ nullable: true })
+  tokenId: number;
+
+  @Field({ nullable: true })
+  startingTime: number;
+
+  @Field({ nullable: true })
+  endingTime: number;
+
+  @Field({ nullable: true })
+  minimumBid: string;
+
+  @Field({ nullable: true })
+  reservePrice: string;
+
+  @Field({ nullable: true })
+  pricePerItem: string;
+}

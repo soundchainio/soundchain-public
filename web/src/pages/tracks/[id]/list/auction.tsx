@@ -131,7 +131,7 @@ export default function AuctionPage({ trackId }: TrackPageProps) {
             },
           },
         });
-        router.back();
+        router.push(router.asPath.replace('/list/auction', ''));
       };
       createAuction(web3, data.track.nftData.tokenId, weiPrice, startTime, endTime, account, onTransactionHash);
     } else {

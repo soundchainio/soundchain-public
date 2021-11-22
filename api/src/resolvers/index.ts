@@ -7,6 +7,7 @@ import { ExploreResolver } from './ExploreResolver';
 import { FeedResolver } from './FeedResolver';
 import { FollowerNotificationResolver } from './FollowerNotificationResolver';
 import { FollowResolver } from './FollowResolver';
+import { ListingItemResolver } from './ListingItemResolver';
 import { MessageResolver } from './MessageResolver';
 import { MintingRequestResolver } from './MintingRequestResolver';
 import { NewPostNotificationResolver } from './NewPostNotificationResolver';
@@ -27,27 +28,19 @@ import { VerificationRequestNotificationResolver } from './VerificationRequestNo
 export const resolvers = [
   AuctionItemResolver,
   BuyNowItemResolver,
-  BuyNowItemResolver,
   ChatResolver,
   CommentNotificationResolver,
   CommentResolver,
   ExploreResolver,
-  ExploreResolver,
-  ExploreResolver,
   FeedResolver,
   FollowerNotificationResolver,
   FollowResolver,
+  ListingItemResolver,
   MessageResolver,
-  MintingRequestResolver,
-  MintingRequestResolver,
   MintingRequestResolver,
   NewPostNotificationResolver,
   NFTSoldNotificationResolver,
-  NFTSoldNotificationResolver,
-  NFTSoldNotificationResolver,
   NotificationResolver,
-  PinningResolver,
-  PinningResolver,
   PinningResolver,
   PolygonscanResolver,
   PostResolver,

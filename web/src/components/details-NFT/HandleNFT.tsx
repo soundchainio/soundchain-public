@@ -8,12 +8,13 @@ import React from 'react';
 
 interface HandleNFTProps {
   isOwner: boolean;
-  isForSale: boolean;
   canList: boolean;
   price: string | undefined;
+  isAuction: boolean;
+  isBuyNow: boolean;
 }
 
-export const HandleNFT = ({ isOwner, isForSale, price, canList }: HandleNFTProps) => {
+export const HandleNFT = ({ isOwner, price, canList, isAuction, isBuyNow }: HandleNFTProps) => {
   const router = useRouter();
   const me = useMe();
 
@@ -21,7 +22,7 @@ export const HandleNFT = ({ isOwner, isForSale, price, canList }: HandleNFTProps
     me ? router.push(`${router.asPath}/list`) : router.push('/login');
   };
 
-  if (isOwner && isForSale && price) {
+  if (isOwner && (isAuction || isBuyNow)) {
     return (
       <div className="w-full bg-black text-white flex items-center py-3">
         <div className="flex flex-col flex-1 ml-4">
@@ -40,7 +41,7 @@ export const HandleNFT = ({ isOwner, isForSale, price, canList }: HandleNFTProps
         </div>
       </div>
     );
-  } else if (isForSale && price) {
+  } else if (price && isBuyNow) {
     return (
       <div className="w-full bg-black text-white flex items-center py-3">
         <div className="flex flex-col flex-1 ml-4">
@@ -55,6 +56,23 @@ export const HandleNFT = ({ isOwner, isForSale, price, canList }: HandleNFTProps
             <a aria-label="Buy NFT">
               <Button variant="buy-nft">BUY NFT</Button>
             </a>
+          </NextLink>
+        </div>
+      </div>
+    );
+  } else if (price && isAuction) {
+    return (
+      <div className="w-full bg-black text-white flex items-center py-3">
+        <div className="flex flex-col flex-1 ml-4">
+          <div className="text-md flex items-center font-bold gap-1">
+            <Matic />
+            <span>{price}</span>
+            <span className="text-xs text-gray-80">MATIC</span>
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <NextLink href={`${router.asPath}/place-bid`}>
+            <Button variant="buy-nft">PLACE BID</Button>
           </NextLink>
         </div>
       </div>

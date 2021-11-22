@@ -11,6 +11,7 @@ import { ExploreService } from '../services/ExploreService';
 import { FeedService } from '../services/FeedService';
 import { FollowService } from '../services/FollowService';
 import { JwtService, JwtUser } from '../services/JwtService';
+import { ListingItemService } from '../services/ListingItemService';
 import { LogErrorService } from '../services/LogErrorService';
 import { MessageService } from '../services/MessageService';
 import { MintingRequestService } from '../services/MintingRequestService';
@@ -55,6 +56,7 @@ export class Context {
   uploadService = new UploadService(this);
   userService = new UserService(this);
   bidService = new BidService(this);
+  listingItemService = new ListingItemService(this);
   user?: Promise<User>;
 
   constructor(jwtUser?: JwtUser) {

@@ -126,7 +126,7 @@ export default function ListBuyNowPage({ trackId }: TrackPageProps) {
             },
           },
         });
-        router.back();
+        router.push(router.asPath.replace('/list/buy-now', ''));
       };
       listItem(web3, data.track.nftData.tokenId, account, weiPrice, onTransactionHash);
     } else {

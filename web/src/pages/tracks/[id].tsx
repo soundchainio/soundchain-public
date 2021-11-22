@@ -14,7 +14,7 @@ import {
   PendingRequest,
   Profile,
   TrackDocument,
-  useBuyNowItemQuery,
+  useListingItemQuery,
   useProfileLazyQuery,
   useTrackQuery,
   useUserByWalletLazyQuery,
@@ -58,6 +58,7 @@ const pendingRequestMapping: Record<PendingRequest, string> = {
   Mint: 'mint',
   None: 'none',
   UpdateListing: 'update listing',
+  PlaceBid: 'place bid',
 };
 
 export default function TrackPage({ trackId }: TrackPageProps) {
@@ -78,7 +79,7 @@ export default function TrackPage({ trackId }: TrackPageProps) {
     data: listingPayload,
     loading,
     refetch: refetchListing,
-  } = useBuyNowItemQuery({
+  } = useListingItemQuery({
     variables: { tokenId },
     fetchPolicy: 'network-only',
   });
@@ -127,8 +128,9 @@ export default function TrackPage({ trackId }: TrackPageProps) {
     fetchRoyalties();
   }, [account, web3, data?.track.nftData, getRoyalties]);
 
-  const isForSale = !!listingPayload?.buyNowItem.buyNowItem?.pricePerItem ?? false;
-  const price = web3?.utils.fromWei(listingPayload?.buyNowItem?.buyNowItem?.pricePerItem.toString() ?? '0', 'ether');
+  const isAuction = !!listingPayload?.listingItem.minimumBid ?? false;
+  const isBuyNow = !!listingPayload?.listingItem.pricePerItem ?? false;
+  const price = web3?.utils.fromWei(listingPayload?.listingItem.pricePerItem?.toString() ?? '0', 'ether');
 
   const topNovaBarProps: TopNavBarProps = {
     leftButton: <BackButton />,
@@ -183,7 +185,7 @@ export default function TrackPage({ trackId }: TrackPageProps) {
           <div className="text-white text-sm pl-3 font-bold">Loading</div>
         </div>
       ) : (
-        <HandleNFT canList={canList} price={price} isOwner={isOwner} isForSale={isForSale} />
+        <HandleNFT canList={canList} price={price} isOwner={isOwner} isBuyNow={isBuyNow} isAuction={isAuction} />
       )}
     </Layout>
   );

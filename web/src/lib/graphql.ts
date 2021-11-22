@@ -1,5 +1,5 @@
-import * as Apollo from '@apollo/client';
 import { gql } from '@apollo/client';
+import * as Apollo from '@apollo/client';
 export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
@@ -374,6 +374,18 @@ export enum Genre {
 }
 
 
+export type ListingItemPayload = {
+  __typename?: 'ListingItemPayload';
+  owner: Maybe<Scalars['String']>;
+  nft: Maybe<Scalars['String']>;
+  tokenId: Maybe<Scalars['Float']>;
+  startingTime: Maybe<Scalars['Float']>;
+  endingTime: Maybe<Scalars['Float']>;
+  minimumBid: Maybe<Scalars['String']>;
+  reservePrice: Maybe<Scalars['String']>;
+  pricePerItem: Maybe<Scalars['String']>;
+};
+
 export type LoginInput = {
   token: Scalars['String'];
 };
@@ -729,7 +741,7 @@ export enum PendingRequest {
   Buy = 'Buy',
   CancelListing = 'CancelListing',
   UpdateListing = 'UpdateListing',
-  PlaceBid = "PlaceBid",
+  PlaceBid = 'PlaceBid',
   None = 'None'
 }
 
@@ -845,6 +857,7 @@ export type Query = {
   feed: FeedConnection;
   followers: FollowConnection;
   following: FollowConnection;
+  listingItem: ListingItemPayload;
   message: Message;
   notifications: NotificationConnection;
   notification: Notification;
@@ -931,6 +944,11 @@ export type QueryFollowersArgs = {
 export type QueryFollowingArgs = {
   page?: Maybe<PageInput>;
   id: Scalars['String'];
+};
+
+
+export type QueryListingItemArgs = {
+  tokenId: Scalars['Float'];
 };
 
 
@@ -1801,6 +1819,19 @@ export type FollowingQuery = (
       { __typename?: 'PageInfo' }
       & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
     ) }
+  ) }
+);
+
+export type ListingItemQueryVariables = Exact<{
+  tokenId: Scalars['Float'];
+}>;
+
+
+export type ListingItemQuery = (
+  { __typename?: 'Query' }
+  & { listingItem: (
+    { __typename?: 'ListingItemPayload' }
+    & Pick<ListingItemPayload, 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'startingTime' | 'endingTime' | 'minimumBid' | 'reservePrice'>
   ) }
 );
 
@@ -3895,6 +3926,48 @@ export function useFollowingLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
 export type FollowingQueryHookResult = ReturnType<typeof useFollowingQuery>;
 export type FollowingLazyQueryHookResult = ReturnType<typeof useFollowingLazyQuery>;
 export type FollowingQueryResult = Apollo.QueryResult<FollowingQuery, FollowingQueryVariables>;
+export const ListingItemDocument = gql`
+    query ListingItem($tokenId: Float!) {
+  listingItem(tokenId: $tokenId) {
+    owner
+    nft
+    tokenId
+    pricePerItem
+    startingTime
+    endingTime
+    minimumBid
+    reservePrice
+  }
+}
+    `;
+
+/**
+ * __useListingItemQuery__
+ *
+ * To run a query within a React component, call `useListingItemQuery` and pass it any options that fit your needs.
+ * When your component renders, `useListingItemQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useListingItemQuery({
+ *   variables: {
+ *      tokenId: // value for 'tokenId'
+ *   },
+ * });
+ */
+export function useListingItemQuery(baseOptions: Apollo.QueryHookOptions<ListingItemQuery, ListingItemQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ListingItemQuery, ListingItemQueryVariables>(ListingItemDocument, options);
+      }
+export function useListingItemLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ListingItemQuery, ListingItemQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ListingItemQuery, ListingItemQueryVariables>(ListingItemDocument, options);
+        }
+export type ListingItemQueryHookResult = ReturnType<typeof useListingItemQuery>;
+export type ListingItemLazyQueryHookResult = ReturnType<typeof useListingItemLazyQuery>;
+export type ListingItemQueryResult = Apollo.QueryResult<ListingItemQuery, ListingItemQueryVariables>;
 export const LoginDocument = gql`
     mutation Login($input: LoginInput!) {
   login(input: $input) {
