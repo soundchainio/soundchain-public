@@ -20,6 +20,7 @@ import {
 } from 'lib/graphql';
 import * as musicMetadata from 'music-metadata-browser';
 import Image from 'next/image';
+import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import { Metadata } from 'types/NftTypes';
 import { genres } from 'utils/Genres';
@@ -32,6 +33,7 @@ enum Tabs {
 
 export const CreateModal = () => {
   const modalState = useModalState();
+  const { asPath } = useRouter();
   const { dispatchShowCreateModal, dispatchShowPostModal } = useModalDispatch();
   const me = useMe();
   const [tab, setTab] = useState(Tabs.NFT);
@@ -55,6 +57,10 @@ export const CreateModal = () => {
   const [mintError, setMintError] = useState<boolean>(false);
 
   const [initialValues, setInitialValues] = useState<InitialValues>();
+
+  useEffect(() => {
+    handleClose();
+  }, [asPath]);
 
   const handleFileDrop = (file: File) => {
     musicMetadata.parseBlob(file).then(({ common: fileMetadata }) => {
