@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { SoundchainGoldLogo } from 'icons/SoundChainGoldLogo';
+import { SoundchainGoldLogo } from 'icons/SoundchainGoldLogo';
 import { Verified } from 'icons/Verified';
 import { Role, useMeQuery } from 'lib/graphql';
 import { forwardRef } from 'react';
