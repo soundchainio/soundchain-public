@@ -10,15 +10,8 @@ import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
-import {
-  PendingRequest,
-  TrackDocument,
-  useAuctionItemLazyQuery,
-  useTrackQuery,
-  useUpdateTrackMutation,
-} from 'lib/graphql';
+import { PendingRequest, TrackDocument, useAuctionItemLazyQuery, useTrackQuery } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
-import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 
@@ -54,12 +47,10 @@ export default function PlaceBidPage({ trackId }: TrackPageProps) {
   const { placeBid, getHighestBid } = useBlockchain();
   const { data: track } = useTrackQuery({ variables: { id: trackId } });
   const { account, web3 } = useWalletContext();
-  const [trackUpdate] = useUpdateTrackMutation();
   const maxGasFee = useMaxGasFee();
   const [loading, setLoading] = useState(false);
   const [bidAmount, setBidAmount] = useState(0);
   const [highestBid, setHighestBid] = useState('0');
-  const router = useRouter();
   const me = useMe();
 
   const tokenId = track?.track.nftData?.tokenId ?? -1;
@@ -81,7 +72,12 @@ export default function PlaceBidPage({ trackId }: TrackPageProps) {
       setHighestBid(_bid);
     };
     fetchHighestBid();
-  }, [web3]);
+    const interval = setInterval(() => {
+      fetchHighestBid();
+    }, 10 * 1000);
+
+    return () => clearInterval(interval);
+  }, [tokenId, trackId, web3]);
 
   if (!auctionItem) {
     return null;
@@ -101,24 +97,8 @@ export default function PlaceBidPage({ trackId }: TrackPageProps) {
     ) {
       return;
     }
-
-    const onTransactionHash = async () => {
-      await trackUpdate({
-        variables: {
-          input: {
-            trackId: trackId,
-            nftData: {
-              pendingRequest: PendingRequest.PlaceBid,
-            },
-          },
-        },
-      });
-      router.push(router.asPath.replace('place-bid', ''));
-    };
-
     const amount = (bidAmount * 1e18).toString();
-
-    placeBid(web3, auctionItem.auctionItem?.auctionItem?.tokenId, account, amount, onTransactionHash);
+    placeBid(web3, tokenId, account, amount, () => setLoading(false));
     setLoading(true);
   };
 
