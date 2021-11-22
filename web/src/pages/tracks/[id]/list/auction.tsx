@@ -117,8 +117,8 @@ export default function AuctionPage({ trackId }: TrackPageProps) {
     const blockNumber = await web3.eth.getBlockNumber();
     const block = await web3.eth.getBlock(blockNumber);
     const blockTimeStamp = block.timestamp as number;
-    const startTime = blockTimeStamp + 1000;
-    const endTime = startTime + duration * 3.6e6;
+    const startTime = blockTimeStamp + 60;
+    const endTime = startTime + duration * 3600;
     if (isApproved) {
       const onTransactionHash = async () => {
         await trackUpdate({

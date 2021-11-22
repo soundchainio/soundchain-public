@@ -1,6 +1,7 @@
 import { User } from '../models/User';
 import { AuctionItemService } from '../services/AuctionItemService';
 import { AuthService } from '../services/AuthService';
+import { BidService } from '../services/BidService';
 import { BlockTrackerService } from '../services/BlockTrackerService';
 import { BuyNowService } from '../services/BuyNowItemService';
 import { CommentService } from '../services/CommentService';
@@ -52,8 +53,9 @@ export class Context {
   subscriptionService = new SubscriptionService(this);
   trackService = new TrackService(this);
   uploadService = new UploadService(this);
-  user?: Promise<User>;
   userService = new UserService(this);
+  bidService = new BidService(this);
+  user?: Promise<User>;
 
   constructor(jwtUser?: JwtUser) {
     this.user = jwtUser && this.userService.getUser(jwtUser.sub);

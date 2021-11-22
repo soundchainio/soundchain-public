@@ -57,7 +57,7 @@ export default function PlaceBidPage({ trackId }: TrackPageProps) {
   const [trackUpdate] = useUpdateTrackMutation();
   const maxGasFee = useMaxGasFee();
   const [loading, setLoading] = useState(false);
-  const [bidAmount, setBidAmount] = useState('0');
+  const [bidAmount, setBidAmount] = useState(0);
   const router = useRouter();
   const me = useMe();
 
@@ -104,7 +104,9 @@ export default function PlaceBidPage({ trackId }: TrackPageProps) {
       router.push(router.asPath.replace('place-bid', ''));
     };
 
-    placeBid(web3, auctionItem.auctionItem?.auctionItem?.tokenId, account, bidAmount, onTransactionHash);
+    const amount = (bidAmount * 1e18).toString();
+
+    placeBid(web3, auctionItem.auctionItem?.auctionItem?.tokenId, account, amount, onTransactionHash);
     setLoading(true);
   };
 

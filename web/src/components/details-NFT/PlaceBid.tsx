@@ -6,8 +6,8 @@ import React from 'react';
 import { number, object, SchemaOf } from 'yup';
 
 interface PlaceBidProps {
-  onSetBidAmount: (price: string) => void;
-  bidAmount: string;
+  onSetBidAmount: (price: number) => void;
+  bidAmount: number;
   ownerAddressAccount: string;
 }
 
@@ -21,7 +21,7 @@ const validationSchema: SchemaOf<FormValues> = object().shape({
 
 export const PlaceBid = ({ bidAmount, ownerAddressAccount, onSetBidAmount }: PlaceBidProps) => {
   const initialValues: FormValues = {
-    bidAmount: parseFloat(bidAmount),
+    bidAmount,
   };
 
   return (
@@ -37,9 +37,7 @@ export const PlaceBid = ({ bidAmount, ownerAddressAccount, onSetBidAmount }: Pla
                 <span className="my-auto">
                   <Matic />
                 </span>
-                <span className="mx-1 text-white font-bold text-md leading-tight">
-                  {parseFloat(bidAmount).toFixed(6)}
-                </span>
+                <span className="mx-1 text-white font-bold text-md leading-tight">{bidAmount.toFixed(6)}</span>
                 <span className="items-end font-bold text-xs leading-tight">matic</span>
               </p>
             </div>
@@ -70,7 +68,7 @@ export const PlaceBid = ({ bidAmount, ownerAddressAccount, onSetBidAmount }: Pla
                   icon={Matic}
                   onChange={el => {
                     handleChange(el);
-                    onSetBidAmount(el.target.value);
+                    onSetBidAmount(parseFloat(el.target.value));
                   }}
                 />
               </div>
