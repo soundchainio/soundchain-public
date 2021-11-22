@@ -1,4 +1,5 @@
 import { DocumentType, mongoose } from '@typegoose/typegoose';
+import dot from 'dot-object';
 import { ObjectId } from 'mongodb';
 import { PaginateResult } from '../db/pagination/paginate';
 import { NotFoundError } from '../errors/NotFoundError';
@@ -38,7 +39,8 @@ export class TrackService extends ModelService<typeof Track> {
 
   getTracks(filter?: FilterTrackInput, sort?: SortTrackInput, page?: PageInput): Promise<PaginateResult<Track>> {
     const defaultFilter = { title: { $exists: true }, deleted: false };
-    return this.paginate({ filter: { ...defaultFilter, ...filter }, sort, page });
+    const dotNotationFilter = filter && dot.dot(filter);
+    return this.paginate({ filter: { ...defaultFilter, ...dotNotationFilter }, sort, page });
   }
 
   getTrack(id: string): Promise<Track> {

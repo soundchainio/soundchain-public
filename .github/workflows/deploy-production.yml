@@ -45,6 +45,7 @@ jobs:
           MAGIC_PRIVATE_KEY: ${{ secrets.MAGIC_PRIVATE_KEY_PRODUCTION }}
           MUX_DATA_ID: ${{ secrets.MUX_DATA_ID_PRODUCTION }}
           MUX_DATA_SECRET: ${{ secrets.MUX_DATA_SECRET_PRODUCTION }}
+          POLYGON_SCAN_API_KEY: ${{ secrets.POLYGON_SCAN_API_KEY_PRODUCTION }}
       - name: Trigger migrate lambda function
         run: |
           aws lambda invoke --function-name soundchain-api-production-migrate response.json
