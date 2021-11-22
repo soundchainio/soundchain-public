@@ -51,13 +51,14 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 });
 
 export default function PlaceBidPage({ trackId }: TrackPageProps) {
-  const { placeBid } = useBlockchain();
+  const { placeBid, getHighestBid } = useBlockchain();
   const { data: track } = useTrackQuery({ variables: { id: trackId } });
   const { account, web3 } = useWalletContext();
   const [trackUpdate] = useUpdateTrackMutation();
   const maxGasFee = useMaxGasFee();
   const [loading, setLoading] = useState(false);
   const [bidAmount, setBidAmount] = useState(0);
+  const [highestBid, setHighestBid] = useState('0');
   const router = useRouter();
   const me = useMe();
 
@@ -70,6 +71,17 @@ export default function PlaceBidPage({ trackId }: TrackPageProps) {
   useEffect(() => {
     getAuctionItem();
   }, [getAuctionItem]);
+
+  useEffect(() => {
+    if (!web3) {
+      return;
+    }
+    const fetchHighestBid = async () => {
+      const { _bid } = await getHighestBid(web3, tokenId);
+      setHighestBid(_bid);
+    };
+    fetchHighestBid();
+  }, [web3]);
 
   if (!auctionItem) {
     return null;
@@ -126,6 +138,7 @@ export default function PlaceBidPage({ trackId }: TrackPageProps) {
       </div>
       {price && ownerAddressAccount && (
         <PlaceBid
+          highestBid={highestBid}
           bidAmount={bidAmount}
           onSetBidAmount={amount => setBidAmount(amount)}
           ownerAddressAccount={ownerAddressAccount}

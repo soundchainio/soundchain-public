@@ -287,6 +287,14 @@ const useBlockchain = () => {
     });
   };
 
+  const getHighestBid = async (web3: Web3, tokenId: number) => {
+    const auctionContract = new web3.eth.Contract(
+      soundchainAuction.abi as AbiItem[],
+      auctionAddress,
+    ) as unknown as SoundchainAuction;
+    return await auctionContract.methods.getHighestBidder(nftAddress, tokenId).call();
+  };
+
   const getMaxGasFee = async (web3: Web3) => {
     const gasPriceWei = await web3.eth.getGasPrice();
     const gasPrice = parseInt(web3.utils.fromWei(gasPriceWei, 'Gwei'));
@@ -308,6 +316,7 @@ const useBlockchain = () => {
     cancelListing,
     createAuction,
     getCurrentGasPrice,
+    getHighestBid,
     getIpfsAssetUrl,
     getMaxGasFee,
     getRoyalties,
