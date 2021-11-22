@@ -1,4 +1,5 @@
 import { InputField } from 'components/InputField';
+import { TimeCounter } from 'components/TimeCounter';
 import { WalletSelector } from 'components/WalletSelector';
 import { Form, Formik, FormikProps } from 'formik';
 import { Matic } from 'icons/Matic';
@@ -9,6 +10,7 @@ interface PlaceBidProps {
   onSetBidAmount: (price: number) => void;
   bidAmount: number;
   ownerAddressAccount: string;
+  endingTime: number;
 }
 
 interface FormValues {
@@ -19,7 +21,7 @@ const validationSchema: SchemaOf<FormValues> = object().shape({
   bidAmount: number().min(0).required(),
 });
 
-export const PlaceBid = ({ bidAmount, ownerAddressAccount, onSetBidAmount }: PlaceBidProps) => {
+export const PlaceBid = ({ bidAmount, ownerAddressAccount, onSetBidAmount, endingTime }: PlaceBidProps) => {
   const initialValues: FormValues = {
     bidAmount,
   };
@@ -45,8 +47,20 @@ export const PlaceBid = ({ bidAmount, ownerAddressAccount, onSetBidAmount }: Pla
               <p className="flex items-center flex-shrink-0 justify-start font-bold text-xs md-text-sm uppercase">
                 time reaming
               </p>
-              <p className="flex items-center w-full uppercase">
-                <span className="mx-1 text-white font-bold text-md leading-tight">3 days 11 hours 34 seconds</span>
+              <p className="flex items-center w-full justify-end">
+                <span className="mx-1 text-white font-bold text-xs leading-tight">
+                  <TimeCounter date={new Date(endingTime * 1000)}>
+                    {(days, hours, minutes, seconds) => (
+                      <div>
+                        {days} <span className="text-gray-80">days </span>
+                        {hours} <span className="text-gray-80">hours </span>
+                        {minutes} <span className="text-gray-80">minutes </span>
+                        {seconds}
+                        <span className="text-gray-80"> seconds</span>
+                      </div>
+                    )}
+                  </TimeCounter>
+                </span>
               </p>
             </div>
             <div className="flex">

@@ -129,6 +129,7 @@ export default function PlaceBidPage({ trackId }: TrackPageProps) {
           bidAmount={bidAmount}
           onSetBidAmount={amount => setBidAmount(amount)}
           ownerAddressAccount={ownerAddressAccount}
+          endingTime={auctionItem.auctionItem?.auctionItem?.endingTime ?? 0}
         />
       )}
       <div className="flex p-4">
