@@ -30,7 +30,7 @@ export const TrackInfo = ({
         <div className="w-1/6 uppercase text-xs text-gray-CC font-bold mr-1">Artist</div>
         <div className="flex w-3/6 gap-2">
           <Avatar
-            profile={{ profilePicture: artistProfile?.profilePicture, id: artistProfile?.id }}
+            profile={{ profilePicture: artistProfile?.profilePicture, userHandle: artistProfile?.userHandle }}
             pixels={30}
             linkToProfile
           />
