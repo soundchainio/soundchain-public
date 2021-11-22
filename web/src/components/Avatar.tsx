@@ -11,28 +11,30 @@ interface AvatarProps extends React.ComponentPropsWithoutRef<'div'> {
 }
 
 export const Avatar = ({ profile, pixels = 30, linkToProfile = true, ...props }: AvatarProps) => {
-  const maybeLinkToProfile = (children: JSX.Element) => {
-    return linkToProfile && Boolean(profile.userHandle) ? (
-      <NextLink href={`/profiles/${profile.userHandle}`} passHref>
-        <a>{children}</a>
-      </NextLink>
-    ) : (
-      children
-    );
-  };
+  if (!linkToProfile) {
+    return <Content profile={profile} pixels={pixels} {...props} />;
+  }
 
-  return maybeLinkToProfile(
+  return (
+    <NextLink href={`/profiles/${profile.userHandle}`} passHref>
+      <a aria-label={profile.displayName}>
+        <Content profile={profile} pixels={pixels} {...props} />
+      </a>
+    </NextLink>
+  );
+};
+
+const Content = ({ profile, pixels = 30, ...props }: AvatarProps) => {
+  return (
     <div {...props}>
-      {
-        <Image
-          alt="Profile picture"
-          src={profile.profilePicture || '/default-pictures/profile/red.png'}
-          width={pixels}
-          height={pixels}
-          className="rounded-full cursor-pointer"
-          objectFit="cover"
-        />
-      }
-    </div>,
+      <Image
+        alt="Profile picture"
+        src={profile.profilePicture || '/default-pictures/profile/red.png'}
+        width={pixels}
+        height={pixels}
+        className="rounded-full cursor-pointer"
+        objectFit="cover"
+      />
+    </div>
   );
 };

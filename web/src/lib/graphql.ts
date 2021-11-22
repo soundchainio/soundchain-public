@@ -598,7 +598,6 @@ export type NftDataInput = {
   tokenId?: Maybe<Scalars['Float']>;
   contract?: Maybe<Scalars['String']>;
   minter?: Maybe<Scalars['String']>;
-  quantity?: Maybe<Scalars['Float']>;
   owner?: Maybe<Scalars['String']>;
 };
 
@@ -610,7 +609,6 @@ export type NftDataType = {
   tokenId: Maybe<Scalars['Float']>;
   contract: Maybe<Scalars['String']>;
   minter: Maybe<Scalars['String']>;
-  quantity: Maybe<Scalars['Float']>;
   owner: Maybe<Scalars['String']>;
 };
 
@@ -1041,7 +1039,8 @@ export type RetractReactionPayload = {
 export enum Role {
   System = 'SYSTEM',
   Admin = 'ADMIN',
-  User = 'USER'
+  User = 'USER',
+  TeamMember = 'TEAM_MEMBER'
 }
 
 export type SendMessageInput = {
