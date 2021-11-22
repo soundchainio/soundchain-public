@@ -76,4 +76,71 @@ export class ListingItemService extends Service {
     ]);
     return listing[0];
   }
+
+  async wasListedBefore(tokenId: number): Promise<boolean> {
+    const found = await TrackModel.aggregate([
+      {
+        $match: {
+          'nftData.tokenId': tokenId,
+        },
+      },
+      {
+        $lookup: {
+          from: 'auctionitems',
+          as: 'auction',
+          let: {
+            tokenId: '$nftData.tokenId',
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ['$tokenId', '$$tokenId'],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+        },
+      },
+      {
+        $lookup: {
+          from: 'buynowitems',
+          as: 'buynow',
+          let: {
+            tokenId: '$nftData.tokenId',
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ['$tokenId', '$$tokenId'],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+        },
+      },
+      {
+        $unwind: {
+          path: '$auction',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $unwind: {
+          path: '$buynow',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+    ]);
+    return !!found[0].auction || !!found[0].buynow;
+  }
 }
