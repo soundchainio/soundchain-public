@@ -10,13 +10,13 @@ import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
-import { PendingRequest, TrackDocument, useAuctionItemLazyQuery, useTrackQuery } from 'lib/graphql';
+import { PendingRequest, TrackDocument, TrackQuery, useAuctionItemLazyQuery } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 
 export interface TrackPageProps {
-  trackId: string;
+  track: TrackQuery['track'];
 }
 
 export interface HighestBid {
@@ -35,7 +35,7 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
     return { notFound: true };
   }
 
-  const { error } = await apolloClient.query({
+  const { data, error } = await apolloClient.query({
     query: TrackDocument,
     variables: { id: trackId },
     context,
@@ -45,19 +45,18 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
     return { notFound: true };
   }
 
-  return cacheFor(CompleteAuctionPage, { trackId }, context, apolloClient);
+  return cacheFor(CompleteAuctionPage, { track: data.track }, context, apolloClient);
 });
 
-export default function CompleteAuctionPage({ trackId }: TrackPageProps) {
+export default function CompleteAuctionPage({ track }: TrackPageProps) {
   const { resultAuction, getHighestBid } = useBlockchain();
-  const { data: track } = useTrackQuery({ variables: { id: trackId } });
   const { account, web3 } = useWalletContext();
   const maxGasFee = useMaxGasFee();
   const [loading, setLoading] = useState(false);
   const [highestBid, setHighestBid] = useState<HighestBid>({} as HighestBid);
   const me = useMe();
 
-  const tokenId = track?.track.nftData?.tokenId ?? -1;
+  const tokenId = track.nftData?.tokenId ?? -1;
 
   const [getAuctionItem, { data: auctionItem }] = useAuctionItemLazyQuery({
     variables: { tokenId },
@@ -97,19 +96,14 @@ export default function CompleteAuctionPage({ trackId }: TrackPageProps) {
     title: 'Complete Auction',
   };
 
-  if (
-    account !== highestBid.bidder ||
-    !saleEnded ||
-    !me ||
-    track?.track.nftData?.pendingRequest != PendingRequest.None
-  ) {
+  if (account !== highestBid.bidder || !saleEnded || !me || track.nftData?.pendingRequest != PendingRequest.None) {
     return null;
   }
 
   return (
     <Layout topNavBarProps={topNovaBarProps}>
       <div className="m-4">
-        <Track trackId={trackId} />
+        <Track trackId={track.id} track={track} />
       </div>
       <AuctionEnded highestBid={highestBid} />
       <div className="flex p-4">

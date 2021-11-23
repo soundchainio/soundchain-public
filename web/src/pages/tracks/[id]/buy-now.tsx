@@ -120,7 +120,7 @@ export default function BuyNowPage({ track }: TrackPageProps) {
   return (
     <Layout topNavBarProps={topNovaBarProps}>
       <div className="m-4">
-        <Track trackId={track.id} />
+        <Track trackId={track.id} track={track} />
       </div>
       {price && ownerAddressAccount && <BuyNow price={price} ownerAddressAccount={ownerAddressAccount} />}
       <div className="flex p-4">
