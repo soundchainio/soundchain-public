@@ -64,13 +64,14 @@ const pendingRequestMapping: Record<PendingRequest, string> = {
   CompleteAuction: 'complete auction',
 };
 
-export default function TrackPage({ track }: TrackPageProps) {
+export default function TrackPage({ track: initialState }: TrackPageProps) {
   const me = useMe();
   const { account, web3 } = useWalletContext();
   const { isTokenOwner, getRoyalties, getHighestBid } = useBlockchain();
   const [isOwner, setIsOwner] = useState<boolean>();
   const [royalties, setRoyalties] = useState(0);
-  const [refetchTrack] = useTrackLazyQuery();
+  const [refetchTrack, { data: trackData }] = useTrackLazyQuery({ fetchPolicy: 'network-only' });
+  const [track, setTrack] = useState<TrackQuery['track']>(initialState);
   const [highestBid, setHighestBid] = useState<HighestBid>({} as HighestBid);
 
   const nftData = track.nftData;
@@ -143,6 +144,12 @@ export default function TrackPage({ track }: TrackPageProps) {
     fetchHighestBid();
   }, [tokenId, web3, getHighestBid, highestBid.bidder]);
 
+  useEffect(() => {
+    if (trackData) {
+      setTrack(trackData.track);
+    }
+  }, [trackData]);
+
   const isAuction = !!listingPayload?.listingItem.minimumBid ?? false;
   const isBuyNow = !!listingPayload?.listingItem.pricePerItem ?? false;
   const price =
@@ -159,6 +166,7 @@ export default function TrackPage({ track }: TrackPageProps) {
 
   useEffect(() => {
     const interval = setInterval(() => {
+      console.log(isProcessing);
       if (isProcessing) {
         refetchTrack({ variables: { id: track.id } });
       }

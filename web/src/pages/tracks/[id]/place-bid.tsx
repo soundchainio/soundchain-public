@@ -5,7 +5,6 @@ import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import useBlockchain from 'hooks/useBlockchain';
-import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Matic } from 'icons/Matic';
@@ -48,7 +47,6 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
   const { placeBid, getHighestBid } = useBlockchain();
   const { account, web3 } = useWalletContext();
   const { data: maticQuery } = useMaticUsdQuery();
-  const maxGasFee = useMaxGasFee();
   const [loading, setLoading] = useState(false);
   const [bidAmount, setBidAmount] = useState(0);
   const [highestBid, setHighestBid] = useState('0');
