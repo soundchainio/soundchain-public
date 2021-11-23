@@ -263,6 +263,12 @@ export type FollowProfilePayload = {
   followedProfile: Profile;
 };
 
+export type FollowedArtistsConnection = {
+  __typename?: 'FollowedArtistsConnection';
+  pageInfo: PageInfo;
+  nodes: Array<Profile>;
+};
+
 export type FollowerNotification = {
   __typename?: 'FollowerNotification';
   type: NotificationType;
@@ -808,6 +814,7 @@ export type Query = {
   myProfile: Profile;
   profile: Profile;
   profileByHandle: Profile;
+  followedArtists: FollowedArtistsConnection;
   profileVerificationRequest: ProfileVerificationRequest;
   profileVerificationRequests: ProfileVerificationRequestConnection;
   track: Track;
@@ -927,6 +934,13 @@ export type QueryProfileArgs = {
 
 export type QueryProfileByHandleArgs = {
   handle: Scalars['String'];
+};
+
+
+export type QueryFollowedArtistsArgs = {
+  page?: Maybe<PageInput>;
+  search?: Maybe<Scalars['String']>;
+  profileId: Scalars['String'];
 };
 
 
@@ -1663,6 +1677,27 @@ export type FollowProfileMutation = (
     & { followedProfile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'followerCount' | 'isFollowed'>
+    ) }
+  ) }
+);
+
+export type FollowedArtistsQueryVariables = Exact<{
+  profileId: Scalars['String'];
+  search?: Maybe<Scalars['String']>;
+  page?: Maybe<PageInput>;
+}>;
+
+
+export type FollowedArtistsQuery = (
+  { __typename?: 'Query' }
+  & { followedArtists: (
+    { __typename?: 'FollowedArtistsConnection' }
+    & { nodes: Array<(
+      { __typename?: 'Profile' }
+      & ProfileComponentFieldsFragment
+    )>, pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
     ) }
   ) }
 );
@@ -3643,6 +3678,50 @@ export function useFollowProfileMutation(baseOptions?: Apollo.MutationHookOption
 export type FollowProfileMutationHookResult = ReturnType<typeof useFollowProfileMutation>;
 export type FollowProfileMutationResult = Apollo.MutationResult<FollowProfileMutation>;
 export type FollowProfileMutationOptions = Apollo.BaseMutationOptions<FollowProfileMutation, FollowProfileMutationVariables>;
+export const FollowedArtistsDocument = gql`
+    query FollowedArtists($profileId: String!, $search: String, $page: PageInput) {
+  followedArtists(profileId: $profileId, search: $search, page: $page) {
+    nodes {
+      ...ProfileComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+      totalCount
+    }
+  }
+}
+    ${ProfileComponentFieldsFragmentDoc}`;
+
+/**
+ * __useFollowedArtistsQuery__
+ *
+ * To run a query within a React component, call `useFollowedArtistsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useFollowedArtistsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useFollowedArtistsQuery({
+ *   variables: {
+ *      profileId: // value for 'profileId'
+ *      search: // value for 'search'
+ *      page: // value for 'page'
+ *   },
+ * });
+ */
+export function useFollowedArtistsQuery(baseOptions: Apollo.QueryHookOptions<FollowedArtistsQuery, FollowedArtistsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<FollowedArtistsQuery, FollowedArtistsQueryVariables>(FollowedArtistsDocument, options);
+      }
+export function useFollowedArtistsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<FollowedArtistsQuery, FollowedArtistsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<FollowedArtistsQuery, FollowedArtistsQueryVariables>(FollowedArtistsDocument, options);
+        }
+export type FollowedArtistsQueryHookResult = ReturnType<typeof useFollowedArtistsQuery>;
+export type FollowedArtistsLazyQueryHookResult = ReturnType<typeof useFollowedArtistsLazyQuery>;
+export type FollowedArtistsQueryResult = Apollo.QueryResult<FollowedArtistsQuery, FollowedArtistsQueryVariables>;
 export const FollowersDocument = gql`
     query Followers($profileId: String!, $page: PageInput) {
   followers(id: $profileId, page: $page) {

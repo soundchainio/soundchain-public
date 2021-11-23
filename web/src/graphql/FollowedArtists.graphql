@@ -1,0 +1,12 @@
+query FollowedArtists($profileId: String!, $search: String, $page: PageInput) {
+  followedArtists(profileId: $profileId, search: $search, page: $page) {
+    nodes {
+      ...ProfileComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+      totalCount
+    }
+  }
+}

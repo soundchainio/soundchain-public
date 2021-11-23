@@ -3,7 +3,9 @@ import { InfiniteLoader } from 'components/InfiniteLoader';
 import { TrackListItem } from 'components/TrackListItem';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { SortOrder, SortTrackField, useFavoriteTracksQuery } from 'lib/graphql';
-import React, { useEffect } from 'react';
+import React from 'react';
+import { NoResultFound } from './NoResultFound';
+import { TrackListItemSkeleton } from './TrackListItemSkeleton';
 interface FavoriteTracksProps {
   searchTerm?: string;
 }
@@ -21,7 +23,7 @@ const pageSize = 15;
 export const FavoriteTracks = ({ searchTerm }: FavoriteTracksProps) => {
   const { playlistState } = useAudioPlayerContext();
 
-  const { data, fetchMore } = useFavoriteTracksQuery({
+  const { data, loading, fetchMore } = useFavoriteTracksQuery({
     variables: {
       search: searchTerm,
       sort: { field: SortTrackField.CreatedAt, order: SortOrder.Desc },
@@ -57,12 +59,14 @@ export const FavoriteTracks = ({ searchTerm }: FavoriteTracksProps) => {
     playlistState(list, index);
   };
 
-  useEffect(() => {
-    console.log('data: ', data);
-  }, [data]);
-
-  if (!data) {
-    return <div>aaaa</div>;
+  if (loading || !data) {
+    return (
+      <div>
+        <TrackListItemSkeleton />
+        <TrackListItemSkeleton />
+        <TrackListItemSkeleton />
+      </div>
+    );
   }
   const { nodes, pageInfo } = data.favoriteTracks;
 
@@ -85,6 +89,7 @@ export const FavoriteTracks = ({ searchTerm }: FavoriteTracksProps) => {
             handleOnPlayClicked={song => handleOnPlayClicked(song, index)}
           />
         ))}
+        {nodes.length === 0 && !loading && <NoResultFound type="Favorite Tracks" />}
         {pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading favorite tracks" />}
       </ol>
     </>
