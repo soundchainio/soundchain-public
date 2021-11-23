@@ -1,5 +1,4 @@
-import { Button } from 'components/Button';
-import { useMe } from 'hooks/useMe';
+import { Button, ButtonVariant } from 'components/Button';
 import { CheckmarkFilled } from 'icons/CheckmarkFilled';
 import { Matic } from 'icons/Matic';
 import NextLink from 'next/link';
@@ -26,119 +25,89 @@ export const HandleNFT = ({
   auctionIsOver,
 }: HandleNFTProps) => {
   const router = useRouter();
-  const me = useMe();
 
-  const handleListButton = () => {
-    me ? router.push(`${router.asPath}/list`) : router.push('/login');
-  };
   // TODO check if all states are covered and test
-  if (isOwner && (isBuyNow || (!auctionIsOver && isAuction))) {
-    return (
-      <div className="w-full bg-black text-white flex items-center py-3">
-        <div className="flex flex-col flex-1 ml-4">
-          <div className="text-md flex items-center font-bold gap-1">
-            <Matic />
-            <span>{price}</span>
-            <span className="text-xs text-gray-80">MATIC</span>
-          </div>
-        </div>
-        <div className="flex-1 flex items-center justify-center">
-          <NextLink href={`${router.asPath}/edit`} passHref>
-            <a aria-label="Edit Listing">
-              <Button variant="edit-listing">EDIT LISTING</Button>
-            </a>
-          </NextLink>
-        </div>
-      </div>
-    );
-  } else if (price && isBuyNow && !isOwner) {
-    return (
-      <div className="w-full bg-black text-white flex items-center py-3">
-        <div className="flex flex-col flex-1 ml-4">
-          <div className="text-md flex items-center font-bold gap-1">
-            <Matic />
-            <span>{price}</span>
-            <span className="text-xs text-gray-80">MATIC</span>
-          </div>
-        </div>
-        <div className="flex-1 flex items-center justify-center">
-          <NextLink href={`${router.asPath}/buy`} passHref>
-            <a aria-label="Buy NFT">
-              <Button variant="buy-nft">BUY NFT</Button>
-            </a>
-          </NextLink>
-        </div>
-      </div>
-    );
-  } else if (price && isAuction && !isOwner) {
-    return (
-      <div className="w-full bg-black text-white flex items-center py-3">
-        <div className="flex flex-col flex-1 ml-4">
-          <div className="text-md flex items-center font-bold gap-1">
-            <Matic />
-            <span>{price}</span>
-            <span className="text-xs text-gray-80">MATIC</span>
-          </div>
-        </div>
-        <div className="flex-1 flex items-center justify-center">
-          <NextLink href={`${router.asPath}/place-bid`}>
-            <Button variant="buy-nft">PLACE BID</Button>
-          </NextLink>
-        </div>
-      </div>
-    );
-  } else if (canComplete && isAuction && !isOwner) {
-    return (
-      <div className="w-full bg-black text-white flex items-center py-3">
-        <div className="flex flex-col flex-1 ml-4">
-          <div className="text-md flex items-center font-bold gap-1">
-            <Matic />
-            <span>{price}</span>
-            <span className="text-xs text-gray-80">MATIC</span>
-          </div>
-        </div>
-        <div className="flex-1 flex items-center justify-center">
-          <NextLink href={`${router.asPath}/complete-auction`}>
-            <Button variant="buy-nft">COMPLETE AUCTION</Button>
-          </NextLink>
-        </div>
-      </div>
-    );
-  } else if (!canList && isOwner) {
-    return (
-      <div className="w-full bg-black text-white flex items-center py-3">
-        <div className="flex items-center flex-1 gap-2 text-sm font-bold pl-4">
+  if (isOwner) {
+    if (!canList) {
+      return (
+        <ListingAction href={`${router.asPath}/get-verified`} action="GET VERIFIED">
           You must be verified in order to sell NFT’s.
-        </div>
-        <div className="flex-1 flex items-center justify-center">
-          <NextLink href="/get-verified" passHref>
-            <a aria-label="Get Verified">
-              <Button variant="list-nft">
-                <div className="px-4 font-bold">GET VERIFIED</div>
-              </Button>
-            </a>
-          </NextLink>
-        </div>
-      </div>
-    );
-  } else if (isOwner) {
+        </ListingAction>
+      );
+    }
+    if (isBuyNow || (!auctionIsOver && isAuction)) {
+      return <ListedAction href={`${router.asPath}/edit`} price={price} action="EDIT LISTING" variant="edit-listing" />;
+    }
     return (
-      <div className="w-full bg-black text-white flex items-center py-3">
-        <div className="flex items-center flex-1 gap-2 text-sm font-bold pl-4">
-          <CheckmarkFilled />
-          You own this NFT
-        </div>
-        <div className="flex-1 flex items-center justify-center">
-          <NextLink href={`${router.asPath}/list`} passHref>
-            <a aria-label="List NFT">
-              <Button variant="list-nft" onClick={handleListButton}>
-                <div className="px-4 font-bold">LIST NFT</div>
-              </Button>
-            </a>
-          </NextLink>
-        </div>
-      </div>
+      <ListingAction href={`${router.asPath}/list`} action="LIST NFT">
+        <CheckmarkFilled />
+        You own this NFT
+      </ListingAction>
     );
+    // not the owner
+  } else {
+    if (price && isBuyNow) {
+      return <ListedAction href={`${router.asPath}/buy`} price={price} action="BUY NFT" variant="buy-nft" />;
+    }
+    if (price && isAuction) {
+      return <ListedAction href={`${router.asPath}/place-bid`} price={price} action="PLACE BID" variant="buy-nft" />;
+    }
+    if (canComplete && isAuction) {
+      return (
+        <ListedAction
+          href={`${router.asPath}/complete-auction`}
+          price={price}
+          action="COMPLETE AUCTION"
+          variant="buy-nft"
+        />
+      );
+    }
   }
   return null;
+};
+
+interface ListingActionProps {
+  href: string;
+  action: string;
+}
+
+const ListingAction = ({ href, action, children }: React.PropsWithChildren<ListingActionProps>) => {
+  return (
+    <div className="w-full bg-black text-white flex items-center py-3">
+      <div className="flex items-center flex-1 gap-2 text-sm font-bold pl-4">{children}</div>
+      <div className="flex-1 flex items-center justify-center">
+        <NextLink href={href}>
+          <Button variant="list-nft">
+            <div className="px-4 font-bold">{action}</div>
+          </Button>
+        </NextLink>
+      </div>
+    </div>
+  );
+};
+
+interface ListedActionProps {
+  href: string;
+  price: string | undefined;
+  action: string;
+  variant: ButtonVariant;
+}
+
+const ListedAction = ({ href, price, action, variant }: ListedActionProps) => {
+  return (
+    <div className="w-full bg-black text-white flex items-center py-3">
+      <div className="flex flex-col flex-1 ml-4">
+        <div className="text-md flex items-center font-bold gap-1">
+          <Matic />
+          <span>{price}</span>
+          <span className="text-xs text-gray-80">MATIC</span>
+        </div>
+      </div>
+      <div className="flex-1 flex items-center justify-center">
+        <NextLink href={href}>
+          <Button variant={variant}>{action}</Button>
+        </NextLink>
+      </div>
+    </div>
+  );
 };
