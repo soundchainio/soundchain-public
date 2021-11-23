@@ -10,13 +10,13 @@ import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
-import { PendingRequest, TrackDocument, useAuctionItemLazyQuery, useTrackQuery } from 'lib/graphql';
+import { PendingRequest, TrackDocument, TrackQuery, useAuctionItemLazyQuery } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 
 export interface TrackPageProps {
-  trackId: string;
+  track: TrackQuery['track'];
 }
 
 interface TrackPageParams extends ParsedUrlQuery {
@@ -30,7 +30,7 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
     return { notFound: true };
   }
 
-  const { error } = await apolloClient.query({
+  const { data, error } = await apolloClient.query({
     query: TrackDocument,
     variables: { id: trackId },
     context,
@@ -40,12 +40,11 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
     return { notFound: true };
   }
 
-  return cacheFor(PlaceBidPage, { trackId }, context, apolloClient);
+  return cacheFor(PlaceBidPage, { track: data.track }, context, apolloClient);
 });
 
-export default function PlaceBidPage({ trackId }: TrackPageProps) {
+export default function PlaceBidPage({ track }: TrackPageProps) {
   const { placeBid, getHighestBid } = useBlockchain();
-  const { data: track } = useTrackQuery({ variables: { id: trackId } });
   const { account, web3 } = useWalletContext();
   const maxGasFee = useMaxGasFee();
   const [loading, setLoading] = useState(false);
@@ -53,7 +52,7 @@ export default function PlaceBidPage({ trackId }: TrackPageProps) {
   const [highestBid, setHighestBid] = useState('0');
   const me = useMe();
 
-  const tokenId = track?.track.nftData?.tokenId ?? -1;
+  const tokenId = track.nftData?.tokenId ?? -1;
 
   const [getAuctionItem, { data: auctionItem }] = useAuctionItemLazyQuery({
     variables: { tokenId },
@@ -77,7 +76,7 @@ export default function PlaceBidPage({ trackId }: TrackPageProps) {
     }, 10 * 1000);
 
     return () => clearInterval(interval);
-  }, [tokenId, trackId, web3]);
+  }, [tokenId, track.id, web3, getHighestBid]);
 
   if (!auctionItem) {
     return null;
@@ -107,14 +106,14 @@ export default function PlaceBidPage({ trackId }: TrackPageProps) {
     title: 'Place Bid',
   };
 
-  if (!isForSale || isOwner || !me || track?.track.nftData?.pendingRequest != PendingRequest.None) {
+  if (!isForSale || isOwner || !me || track.nftData?.pendingRequest != PendingRequest.None) {
     return null;
   }
 
   return (
     <Layout topNavBarProps={topNovaBarProps}>
       <div className="m-4">
-        <Track trackId={trackId} />
+        <Track trackId={track.id} />
       </div>
       {price && ownerAddressAccount && (
         <PlaceBid

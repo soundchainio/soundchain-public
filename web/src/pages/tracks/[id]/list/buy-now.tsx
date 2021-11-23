@@ -11,13 +11,7 @@ import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
-import {
-  PendingRequest,
-  TrackDocument,
-  useBuyNowItemLazyQuery,
-  useTrackQuery,
-  useUpdateTrackMutation,
-} from 'lib/graphql';
+import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemLazyQuery, useUpdateTrackMutation } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
@@ -25,7 +19,7 @@ import { useEffect, useState } from 'react';
 import { ApproveType } from 'types/ApproveType';
 
 export interface TrackPageProps {
-  trackId: string;
+  track: TrackQuery['track'];
 }
 
 interface TrackPageParams extends ParsedUrlQuery {
@@ -39,7 +33,7 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
     return { notFound: true };
   }
 
-  const { error } = await apolloClient.query({
+  const { data, error } = await apolloClient.query({
     query: TrackDocument,
     variables: { id: trackId },
     context,
@@ -49,14 +43,13 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
     return { notFound: true };
   }
 
-  return cacheFor(ListBuyNowPage, { trackId }, context, apolloClient);
+  return cacheFor(ListBuyNowPage, { track: data.track }, context, apolloClient);
 });
 
-export default function ListBuyNowPage({ trackId }: TrackPageProps) {
+export default function ListBuyNowPage({ track }: TrackPageProps) {
   const { listItem, isTokenOwner, isApprovedMarketplace: checkIsApproved } = useBlockchain();
   const router = useRouter();
   const me = useMe();
-  const { data } = useTrackQuery({ variables: { id: trackId } });
   const [trackUpdate] = useUpdateTrackMutation();
   const { account, web3 } = useWalletContext();
   const maxGasFee = useMaxGasFee();
@@ -66,9 +59,9 @@ export default function ListBuyNowPage({ trackId }: TrackPageProps) {
   const [isOwner, setIsOwner] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
 
-  const tokenId = data?.track.nftData?.tokenId ?? -1;
-  const canList =
-    (me?.profile.verified && data?.track.nftData?.minter === account) || data?.track.nftData?.minter != account;
+  const nftData = track.nftData;
+  const tokenId = track.nftData?.tokenId ?? -1;
+  const canList = (me?.profile.verified && nftData?.minter === account) || nftData?.minter != account;
 
   const [getBuyNowItem, { data: buyNowItem }] = useBuyNowItemLazyQuery({
     variables: { tokenId },
@@ -76,20 +69,14 @@ export default function ListBuyNowPage({ trackId }: TrackPageProps) {
 
   useEffect(() => {
     const fetchIsOwner = async () => {
-      if (
-        !account ||
-        !web3 ||
-        data?.track.nftData?.tokenId === null ||
-        data?.track.nftData?.tokenId === undefined ||
-        !isTokenOwner
-      ) {
+      if (!account || !web3 || nftData?.tokenId === null || nftData?.tokenId === undefined || !isTokenOwner) {
         return;
       }
-      const isTokenOwnerRes = await isTokenOwner(web3, data.track.nftData.tokenId, account);
+      const isTokenOwnerRes = await isTokenOwner(web3, nftData.tokenId, account);
       setIsOwner(isTokenOwnerRes);
     };
     fetchIsOwner();
-  }, [account, web3, data?.track.nftData, isTokenOwner]);
+  }, [account, web3, nftData, isTokenOwner]);
 
   useEffect(() => {
     getBuyNowItem();
@@ -108,7 +95,7 @@ export default function ListBuyNowPage({ trackId }: TrackPageProps) {
   const isForSale = !!buyNowItem?.buyNowItem?.buyNowItem?.pricePerItem ?? false;
 
   const handleList = () => {
-    if (data?.track.nftData?.tokenId === null || data?.track.nftData?.tokenId === undefined || !account || !web3) {
+    if (nftData?.tokenId === null || nftData?.tokenId === undefined || !account || !web3) {
       return;
     }
     setLoading(true);
@@ -119,7 +106,7 @@ export default function ListBuyNowPage({ trackId }: TrackPageProps) {
         await trackUpdate({
           variables: {
             input: {
-              trackId: trackId,
+              trackId: track.id,
               nftData: {
                 pendingRequest: PendingRequest.List,
               },
@@ -128,7 +115,7 @@ export default function ListBuyNowPage({ trackId }: TrackPageProps) {
         });
         router.push(router.asPath.replace('/list/buy-now', ''));
       };
-      listItem(web3, data.track.nftData.tokenId, account, weiPrice, onTransactionHash);
+      listItem(web3, nftData.tokenId, account, weiPrice, onTransactionHash);
     } else {
       me ? dispatchShowApproveModal(true, ApproveType.MARKETPLACE) : router.push('/login');
     }
@@ -139,14 +126,14 @@ export default function ListBuyNowPage({ trackId }: TrackPageProps) {
     title: 'List for Sale',
   };
 
-  if (!isOwner || isForSale || data?.track.nftData?.pendingRequest != PendingRequest.None || !canList) {
+  if (!isOwner || isForSale || nftData?.pendingRequest != PendingRequest.None || !canList) {
     return null;
   }
 
   return (
     <Layout topNavBarProps={topNovaBarProps}>
       <div className="m-4">
-        <Track trackId={trackId} />
+        <Track trackId={track.id} />
       </div>
       <ListNFTBuyNow onSetPrice={price => setPrice(price)} />
       <div className="flex p-4">

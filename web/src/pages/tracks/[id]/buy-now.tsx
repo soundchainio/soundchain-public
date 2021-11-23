@@ -10,20 +10,14 @@ import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
-import {
-  PendingRequest,
-  TrackDocument,
-  useBuyNowItemLazyQuery,
-  useTrackQuery,
-  useUpdateTrackMutation,
-} from 'lib/graphql';
+import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemLazyQuery, useUpdateTrackMutation } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 
 export interface TrackPageProps {
-  trackId: string;
+  track: TrackQuery['track'];
 }
 
 interface TrackPageParams extends ParsedUrlQuery {
@@ -37,7 +31,7 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
     return { notFound: true };
   }
 
-  const { error } = await apolloClient.query({
+  const { data, error } = await apolloClient.query({
     query: TrackDocument,
     variables: { id: trackId },
     context,
@@ -47,12 +41,11 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
     return { notFound: true };
   }
 
-  return cacheFor(BuyNowPage, { trackId }, context, apolloClient);
+  return cacheFor(BuyNowPage, { track: data.track }, context, apolloClient);
 });
 
-export default function BuyNowPage({ trackId }: TrackPageProps) {
+export default function BuyNowPage({ track }: TrackPageProps) {
   const { buyItem } = useBlockchain();
-  const { data: track } = useTrackQuery({ variables: { id: trackId } });
   const { account, web3 } = useWalletContext();
   const [trackUpdate] = useUpdateTrackMutation();
   const maxGasFee = useMaxGasFee();
@@ -60,7 +53,8 @@ export default function BuyNowPage({ trackId }: TrackPageProps) {
   const router = useRouter();
   const me = useMe();
 
-  const tokenId = track?.track.nftData?.tokenId ?? -1;
+  const nftData = track.nftData;
+  const tokenId = nftData?.tokenId ?? -1;
 
   const [getBuyNowItem, { data: listingPayload }] = useBuyNowItemLazyQuery({
     variables: { tokenId },
@@ -93,7 +87,7 @@ export default function BuyNowPage({ trackId }: TrackPageProps) {
       await trackUpdate({
         variables: {
           input: {
-            trackId: trackId,
+            trackId: track.id,
             nftData: {
               pendingRequest: PendingRequest.Buy,
             },
@@ -119,14 +113,14 @@ export default function BuyNowPage({ trackId }: TrackPageProps) {
     title: 'Confirm Purchase',
   };
 
-  if (!isForSale || isOwner || !me || track?.track.nftData?.pendingRequest != PendingRequest.None) {
+  if (!isForSale || isOwner || !me || nftData?.pendingRequest != PendingRequest.None) {
     return null;
   }
 
   return (
     <Layout topNavBarProps={topNovaBarProps}>
       <div className="m-4">
-        <Track trackId={trackId} />
+        <Track trackId={track.id} />
       </div>
       {price && ownerAddressAccount && <BuyNow price={price} ownerAddressAccount={ownerAddressAccount} />}
       <div className="flex p-4">
