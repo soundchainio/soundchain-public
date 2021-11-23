@@ -1,7 +1,7 @@
 import { FieldResolver, Resolver, Root } from 'type-graphql';
 import { Notification } from '../models/Notification';
 import { NFTSoldNotification } from '../types/NFTSoldNotification';
-import { NFTSoldNotificationMetadata } from '../types/NFTSoldNotificationMetadata';
+import { NFTSoldNotificationMetadata, SellType } from '../types/NFTSoldNotificationMetadata';
 
 @Resolver(NFTSoldNotification)
 export class NFTSoldNotificationResolver {
@@ -56,5 +56,11 @@ export class NFTSoldNotificationResolver {
   artworkUrl(@Root() { metadata }: Notification): string {
     const { artworkUrl } = metadata as NFTSoldNotificationMetadata;
     return artworkUrl;
+  }
+
+  @FieldResolver(() => SellType)
+  sellType(@Root() { metadata }: Notification): SellType {
+    const { sellType } = metadata as NFTSoldNotificationMetadata;
+    return sellType;
   }
 }

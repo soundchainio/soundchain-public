@@ -7,6 +7,7 @@ enum PendingRequest {
   CancelListing = 'CancelListing',
   UpdateListing = 'UpdateListing',
   PlaceBid = 'PlaceBid',
+  CompleteAuction = 'CompleteAuction',
   None = 'None',
 }
 

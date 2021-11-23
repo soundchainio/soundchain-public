@@ -1,5 +1,6 @@
 import { AuctionItem, AuctionItemModel } from '../models/AuctionItem';
 import { Context } from '../types/Context';
+import { SellType } from '../types/NFTSoldNotificationMetadata';
 import { ModelService } from './ModelService';
 
 interface NewAuctionItem {
@@ -66,6 +67,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       trackName: track.title,
       artist: track.artist,
       artworkUrl: track.artworkUrl,
+      sellType: SellType.Auction,
     });
   }
 }

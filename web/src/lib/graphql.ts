@@ -685,6 +685,7 @@ export type NftSoldNotification = {
   trackName: Scalars['String'];
   artist: Scalars['String'];
   artworkUrl: Scalars['String'];
+  sellType: SellType;
 };
 
 export type NewPostNotification = {
@@ -742,6 +743,7 @@ export enum PendingRequest {
   CancelListing = 'CancelListing',
   UpdateListing = 'UpdateListing',
   PlaceBid = 'PlaceBid',
+  CompleteAuction = 'CompleteAuction',
   None = 'None'
 }
 
@@ -1114,6 +1116,11 @@ export enum Role {
   Admin = 'ADMIN',
   User = 'USER',
   TeamMember = 'TEAM_MEMBER'
+}
+
+export enum SellType {
+  BuyNow = 'BuyNow',
+  Auction = 'Auction'
 }
 
 export type SendMessageInput = {
@@ -1908,7 +1915,7 @@ export type MimeTypeQuery = (
 
 export type NftSoldNotificationFieldsFragment = (
   { __typename?: 'NFTSoldNotification' }
-  & Pick<NftSoldNotification, 'id' | 'type' | 'createdAt' | 'buyerName' | 'buyerPicture' | 'buyerProfileId' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price'>
+  & Pick<NftSoldNotification, 'id' | 'type' | 'createdAt' | 'buyerName' | 'buyerPicture' | 'buyerProfileId' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price' | 'sellType'>
 );
 
 export type NewPostNotificationFieldsFragment = (
@@ -2717,6 +2724,7 @@ export const NftSoldNotificationFieldsFragmentDoc = gql`
   artist
   artworkUrl
   price
+  sellType
 }
     `;
 export const NewPostNotificationFieldsFragmentDoc = gql`

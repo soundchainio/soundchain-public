@@ -94,6 +94,7 @@ export class NotificationService extends ModelService<typeof Notification> {
     artist,
     artworkUrl,
     trackName,
+    sellType,
   }: Omit<FinishBuyNowItemInput, 'tokenId'>): Promise<void> {
     const { displayName: buyerName, profilePicture: buyerPicture } = await this.context.profileService.getProfile(
       buyerProfileId,
@@ -110,6 +111,7 @@ export class NotificationService extends ModelService<typeof Notification> {
         artist,
         artworkUrl,
         trackName,
+        sellType,
       },
     });
     await notification.save();
