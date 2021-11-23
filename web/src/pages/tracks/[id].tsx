@@ -23,6 +23,7 @@ import {
 import { protectPage } from 'lib/protectPage';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
+import { HighestBid } from './[id]/complete-auction';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -65,10 +66,11 @@ const pendingRequestMapping: Record<PendingRequest, string> = {
 export default function TrackPage({ track }: TrackPageProps) {
   const me = useMe();
   const { account, web3 } = useWalletContext();
-  const { isTokenOwner, getRoyalties } = useBlockchain();
+  const { isTokenOwner, getRoyalties, getHighestBid } = useBlockchain();
   const [isOwner, setIsOwner] = useState<boolean>();
   const [royalties, setRoyalties] = useState(0);
   const [refetchTrack] = useTrackLazyQuery();
+  const [highestBid, setHighestBid] = useState<HighestBid>({} as HighestBid);
 
   const nftData = track.nftData;
   const mintingPending = nftData?.pendingRequest === PendingRequest.Mint;
@@ -129,9 +131,22 @@ export default function TrackPage({ track }: TrackPageProps) {
     fetchRoyalties();
   }, [account, web3, nftData, getRoyalties]);
 
+  useEffect(() => {
+    const fetchHighestBid = async () => {
+      if (!web3 || !tokenId || !getHighestBid || highestBid.bidder) {
+        return;
+      }
+      const { _bid, _bidder } = await getHighestBid(web3, tokenId);
+      setHighestBid({ bid: _bid, bidder: _bidder });
+    };
+    fetchHighestBid();
+  }, [tokenId, web3, getHighestBid, highestBid.bidder]);
+
   const isAuction = !!listingPayload?.listingItem.minimumBid ?? false;
   const isBuyNow = !!listingPayload?.listingItem.pricePerItem ?? false;
   const price = web3?.utils.fromWei(listingPayload?.listingItem.pricePerItem?.toString() ?? '0', 'ether');
+  const auctionIsOver = (listingPayload?.listingItem.endingTime || 0) < Math.floor(Date.now() / 1000);
+  const canComplete = auctionIsOver && highestBid.bidder?.toLowerCase() === account?.toLowerCase();
 
   const topNovaBarProps: TopNavBarProps = {
     leftButton: <BackButton />,
@@ -187,7 +202,15 @@ export default function TrackPage({ track }: TrackPageProps) {
           <div className="text-white text-sm pl-3 font-bold">Loading</div>
         </div>
       ) : (
-        <HandleNFT canList={canList} price={price} isOwner={isOwner} isBuyNow={isBuyNow} isAuction={isAuction} />
+        <HandleNFT
+          canList={canList}
+          price={price}
+          isOwner={isOwner}
+          isBuyNow={isBuyNow}
+          isAuction={isAuction}
+          canComplete={canComplete}
+          auctionIsOver={auctionIsOver}
+        />
       )}
     </Layout>
   );

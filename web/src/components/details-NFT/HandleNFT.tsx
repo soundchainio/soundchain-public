@@ -12,17 +12,27 @@ interface HandleNFTProps {
   price: string | undefined;
   isAuction: boolean;
   isBuyNow: boolean;
+  canComplete: boolean;
+  auctionIsOver: boolean;
 }
 
-export const HandleNFT = ({ isOwner, price, canList, isAuction, isBuyNow }: HandleNFTProps) => {
+export const HandleNFT = ({
+  isOwner,
+  price,
+  canList,
+  isAuction,
+  isBuyNow,
+  canComplete,
+  auctionIsOver,
+}: HandleNFTProps) => {
   const router = useRouter();
   const me = useMe();
 
   const handleListButton = () => {
     me ? router.push(`${router.asPath}/list`) : router.push('/login');
   };
-
-  if (isOwner && (isAuction || isBuyNow)) {
+  // TODO check if all states are covered and test
+  if (isOwner && (isBuyNow || (!auctionIsOver && isAuction))) {
     return (
       <div className="w-full bg-black text-white flex items-center py-3">
         <div className="flex flex-col flex-1 ml-4">
@@ -41,7 +51,7 @@ export const HandleNFT = ({ isOwner, price, canList, isAuction, isBuyNow }: Hand
         </div>
       </div>
     );
-  } else if (price && isBuyNow) {
+  } else if (price && isBuyNow && !isOwner) {
     return (
       <div className="w-full bg-black text-white flex items-center py-3">
         <div className="flex flex-col flex-1 ml-4">
@@ -60,7 +70,7 @@ export const HandleNFT = ({ isOwner, price, canList, isAuction, isBuyNow }: Hand
         </div>
       </div>
     );
-  } else if (price && isAuction) {
+  } else if (price && isAuction && !isOwner) {
     return (
       <div className="w-full bg-black text-white flex items-center py-3">
         <div className="flex flex-col flex-1 ml-4">
@@ -77,7 +87,24 @@ export const HandleNFT = ({ isOwner, price, canList, isAuction, isBuyNow }: Hand
         </div>
       </div>
     );
-  } else if (!canList) {
+  } else if (canComplete && isAuction && !isOwner) {
+    return (
+      <div className="w-full bg-black text-white flex items-center py-3">
+        <div className="flex flex-col flex-1 ml-4">
+          <div className="text-md flex items-center font-bold gap-1">
+            <Matic />
+            <span>{price}</span>
+            <span className="text-xs text-gray-80">MATIC</span>
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <NextLink href={`${router.asPath}/complete-auction`}>
+            <Button variant="buy-nft">COMPLETE AUCTION</Button>
+          </NextLink>
+        </div>
+      </div>
+    );
+  } else if (!canList && isOwner) {
     return (
       <div className="w-full bg-black text-white flex items-center py-3">
         <div className="flex items-center flex-1 gap-2 text-sm font-bold pl-4">
