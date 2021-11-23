@@ -1,5 +1,6 @@
 import { BuyNowItem, BuyNowItemModel } from '../models/BuyNowItem';
 import { Context } from '../types/Context';
+import { SellType } from '../types/NFTSoldNotificationMetadata';
 import { ModelService } from './ModelService';
 
 interface NewBuyNowItem {
@@ -64,6 +65,7 @@ export class BuyNowService extends ModelService<typeof BuyNowItem> {
       trackName: track.title,
       artist: track.artist,
       artworkUrl: track.artworkUrl,
+      sellType: SellType.BuyNow,
     });
   }
 }
