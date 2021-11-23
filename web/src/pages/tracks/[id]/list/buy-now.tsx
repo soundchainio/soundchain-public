@@ -133,7 +133,7 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
   return (
     <Layout topNavBarProps={topNovaBarProps}>
       <div className="m-4">
-        <Track trackId={track.id} />
+        <Track trackId={track.id} track={track} />
       </div>
       <ListNFTBuyNow onSetPrice={price => setPrice(price)} />
       <div className="flex p-4">

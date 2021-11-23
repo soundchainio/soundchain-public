@@ -113,7 +113,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
   return (
     <Layout topNavBarProps={topNovaBarProps}>
       <div className="m-4">
-        <Track trackId={track.id} />
+        <Track trackId={track.id} track={track} />
       </div>
       {price && ownerAddressAccount && (
         <PlaceBid
