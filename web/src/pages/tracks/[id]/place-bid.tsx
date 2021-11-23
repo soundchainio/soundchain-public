@@ -10,10 +10,11 @@ import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
-import { PendingRequest, TrackDocument, TrackQuery, useAuctionItemLazyQuery } from 'lib/graphql';
+import { PendingRequest, TrackDocument, TrackQuery, useAuctionItemLazyQuery, useMaticUsdQuery } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
+import { currency } from 'utils/format';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -46,6 +47,7 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 export default function PlaceBidPage({ track }: TrackPageProps) {
   const { placeBid, getHighestBid } = useBlockchain();
   const { account, web3 } = useWalletContext();
+  const { data: maticQuery } = useMaticUsdQuery();
   const maxGasFee = useMaxGasFee();
   const [loading, setLoading] = useState(false);
   const [bidAmount, setBidAmount] = useState(0);
@@ -119,18 +121,25 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
         <PlaceBid
           highestBid={highestBid}
           bidAmount={bidAmount}
-          onSetBidAmount={amount => setBidAmount(amount)}
+          onSetBidAmount={amount => {
+            console.log(amount);
+            return setBidAmount(amount);
+          }}
           ownerAddressAccount={ownerAddressAccount}
           endingTime={auctionItem.auctionItem?.auctionItem?.endingTime ?? 0}
         />
       )}
       <div className="flex p-4">
-        <div className="flex-1 font-black text-xs text-gray-80">
-          <p>Max gas fee</p>
-          <div className="flex items-center gap-1">
+        <div className="flex-1 font-black text-xs">
+          <div className="flex items-center gap-2 text-white">
             <Matic />
-            <div className="text-white">{maxGasFee}</div>MATIC
+            <div className="text-white">{bidAmount}</div>MATIC
           </div>
+          {maticQuery?.maticUsd && (
+            <span className="text-xs text-gray-50 font-bold">
+              {`${currency(bidAmount * parseFloat(maticQuery?.maticUsd))} USD`}
+            </span>
+          )}
         </div>
         <Button variant="buy-nft" onClick={handlePlaceBid} loading={loading}>
           <div className="px-4">CONFIRM BID</div>

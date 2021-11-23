@@ -2,6 +2,7 @@ import { InputField } from 'components/InputField';
 import { TimeCounter } from 'components/TimeCounter';
 import { WalletSelector } from 'components/WalletSelector';
 import { Form, Formik, FormikProps } from 'formik';
+import { Auction } from 'icons/Auction';
 import { Matic } from 'icons/Matic';
 import React from 'react';
 import { number, object, SchemaOf } from 'yup';
@@ -72,13 +73,20 @@ export const PlaceBid = ({ highestBid, bidAmount, ownerAddressAccount, onSetBidA
                 htmlFor="bidAmount"
                 className="flex items-center justify-start w-full bg-gray-20 text-gray-80 font-bold text-xs md-text-sm  py-3 pl-5"
               >
-                <div className="flex flex-col mr-3">
-                  <p className="uppercase">bid amount</p>
+                <div className="flex flex-col mr-3 gap-1">
+                  <div className="flex gap-2">
+                    <Auction className="h-4 w-4" purple={false} />
+                    <p className="uppercase">bid amount</p>
+                  </div>
                   <p className="font-medium" style={{ fontSize: 10 }}>
                     Must be at least 1% of current bid price. Enter{' '}
                     <span
                       className="text-white font-bold cursor-pointer"
-                      onClick={() => setFieldValue('bidAmount', ((parseInt(highestBid) * 1.01) / 1e18).toFixed(6))}
+                      onClick={() => {
+                        const amount = ((parseInt(highestBid) * 1.01) / 1e18).toFixed(6);
+                        onSetBidAmount(parseFloat(amount));
+                        setFieldValue('bidAmount', amount);
+                      }}
                     >
                       {((parseInt(highestBid) * 1.01) / 1e18).toFixed(6)}
                     </span>{' '}
