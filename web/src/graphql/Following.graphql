@@ -8,6 +8,7 @@ query Following($profileId: String!, $page: PageInput) {
         profilePicture
         verified
         userHandle
+        teamMember
       }
     }
     pageInfo {

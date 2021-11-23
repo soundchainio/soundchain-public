@@ -808,6 +808,7 @@ export type Profile = {
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   userHandle: Scalars['String'];
+  teamMember: Scalars['Boolean'];
   isFollowed: Scalars['Boolean'];
   isSubscriber: Scalars['Boolean'];
 };
@@ -1439,7 +1440,7 @@ export type ChatsQuery = (
       & Pick<Chat, 'id' | 'message' | 'unread' | 'createdAt'>
       & { profile: (
         { __typename?: 'Profile' }
-        & Pick<Profile, 'displayName' | 'profilePicture' | 'verified'>
+        & Pick<Profile, 'displayName' | 'profilePicture' | 'verified' | 'teamMember'>
       ) }
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
@@ -1477,7 +1478,7 @@ export type CommentComponentFieldsFragment = (
   & Pick<Comment, 'id' | 'body' | 'createdAt' | 'deleted'>
   & { profile: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle'>
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'teamMember' | 'userHandle'>
   ) }
 );
 
@@ -1813,7 +1814,7 @@ export type FollowingQuery = (
       & Pick<Follow, 'id'>
       & { followedProfile: (
         { __typename?: 'Profile' }
-        & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle'>
+        & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle' | 'teamMember'>
       ) }
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
@@ -2034,7 +2035,7 @@ export type PostComponentFieldsFragment = (
   & Pick<Post, 'id' | 'body' | 'mediaLink' | 'repostId' | 'createdAt' | 'updatedAt' | 'commentCount' | 'repostCount' | 'totalReactions' | 'topReactions' | 'myReaction' | 'deleted'>
   & { profile: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle'>
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'teamMember' | 'userHandle'>
   ), track: Maybe<(
     { __typename?: 'Track' }
     & TrackComponentFieldsFragment
@@ -2086,7 +2087,7 @@ export type ProfileByHandleQuery = (
 
 export type ProfileComponentFieldsFragment = (
   { __typename?: 'Profile' }
-  & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'favoriteGenres' | 'musicianTypes' | 'bio' | 'followerCount' | 'followingCount' | 'userHandle' | 'isFollowed' | 'isSubscriber' | 'unreadNotificationCount' | 'unreadMessageCount' | 'verified' | 'createdAt' | 'updatedAt'>
+  & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'favoriteGenres' | 'musicianTypes' | 'bio' | 'followerCount' | 'followingCount' | 'userHandle' | 'isFollowed' | 'isSubscriber' | 'unreadNotificationCount' | 'unreadMessageCount' | 'verified' | 'teamMember' | 'createdAt' | 'updatedAt'>
   & { socialMedias: (
     { __typename?: 'SocialMedias' }
     & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
@@ -2663,6 +2664,7 @@ export const CommentComponentFieldsFragmentDoc = gql`
     displayName
     profilePicture
     verified
+    teamMember
     userHandle
   }
 }
@@ -2787,6 +2789,7 @@ export const PostComponentFieldsFragmentDoc = gql`
     displayName
     profilePicture
     verified
+    teamMember
     userHandle
   }
   track {
@@ -2817,6 +2820,7 @@ export const ProfileComponentFieldsFragmentDoc = gql`
   unreadNotificationCount
   unreadMessageCount
   verified
+  teamMember
   createdAt
   updatedAt
 }
@@ -3102,6 +3106,7 @@ export const ChatsDocument = gql`
         displayName
         profilePicture
         verified
+        teamMember
       }
       message
       unread
@@ -3887,6 +3892,7 @@ export const FollowingDocument = gql`
         profilePicture
         verified
         userHandle
+        teamMember
       }
     }
     pageInfo {

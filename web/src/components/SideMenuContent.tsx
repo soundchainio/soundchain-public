@@ -95,7 +95,11 @@ export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => 
                 </div>
               </div>
               <div className="flex flex-col mt-4">
-                <DisplayName name={me.profile.displayName} verified={me.profile.verified} />
+                <DisplayName
+                  name={me.profile.displayName}
+                  verified={me.profile.verified}
+                  teamMember={me.profile.teamMember}
+                />
                 <p className="text-gray-80 text-md">@{me.handle}</p>
               </div>
             </>
