@@ -1,0 +1,129 @@
+import { Button } from 'components/Button';
+import { BackButton } from 'components/Buttons/BackButton';
+import { AuctionEnded } from 'components/details-NFT/AuctionEnded';
+import { Layout } from 'components/Layout';
+import { TopNavBarProps } from 'components/TopNavBar';
+import { Track } from 'components/Track';
+import useBlockchain from 'hooks/useBlockchain';
+import { useMaxGasFee } from 'hooks/useMaxGasFee';
+import { useMe } from 'hooks/useMe';
+import { useWalletContext } from 'hooks/useWalletContext';
+import { Matic } from 'icons/Matic';
+import { cacheFor } from 'lib/apollo';
+import { PendingRequest, TrackDocument, useAuctionItemLazyQuery, useTrackQuery } from 'lib/graphql';
+import { protectPage } from 'lib/protectPage';
+import { ParsedUrlQuery } from 'querystring';
+import { useEffect, useState } from 'react';
+
+export interface TrackPageProps {
+  trackId: string;
+}
+
+export interface HighestBid {
+  bid: string;
+  bidder: string;
+}
+
+interface TrackPageParams extends ParsedUrlQuery {
+  id: string;
+}
+
+export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(async (context, apolloClient) => {
+  const trackId = context.params?.id;
+
+  if (!trackId) {
+    return { notFound: true };
+  }
+
+  const { error } = await apolloClient.query({
+    query: TrackDocument,
+    variables: { id: trackId },
+    context,
+  });
+
+  if (error) {
+    return { notFound: true };
+  }
+
+  return cacheFor(CompleteAuctionPage, { trackId }, context, apolloClient);
+});
+
+export default function CompleteAuctionPage({ trackId }: TrackPageProps) {
+  const { resultAuction, getHighestBid } = useBlockchain();
+  const { data: track } = useTrackQuery({ variables: { id: trackId } });
+  const { account, web3 } = useWalletContext();
+  const maxGasFee = useMaxGasFee();
+  const [loading, setLoading] = useState(false);
+  const [highestBid, setHighestBid] = useState<HighestBid>({} as HighestBid);
+  const me = useMe();
+
+  const tokenId = track?.track.nftData?.tokenId ?? -1;
+
+  const [getAuctionItem, { data: auctionItem }] = useAuctionItemLazyQuery({
+    variables: { tokenId },
+  });
+
+  useEffect(() => {
+    getAuctionItem();
+  }, [getAuctionItem]);
+
+  useEffect(() => {
+    const fetchHighestBid = async () => {
+      if (!web3 || !tokenId || !getHighestBid || highestBid.bidder) {
+        return;
+      }
+      const { _bid, _bidder } = await getHighestBid(web3, tokenId);
+      setHighestBid({ bid: _bid, bidder: _bidder });
+    };
+    fetchHighestBid();
+  }, [tokenId, web3, getHighestBid, highestBid.bidder]);
+
+  if (!auctionItem) {
+    return null;
+  }
+
+  const saleEnded = (auctionItem.auctionItem?.auctionItem?.endingTime || 0) < Math.floor(Date.now() / 1000);
+
+  const handleClaim = () => {
+    if (!web3 || !auctionItem.auctionItem?.auctionItem?.tokenId || !account) {
+      return;
+    }
+    resultAuction(web3, tokenId, account, () => setLoading(false));
+    setLoading(true);
+  };
+
+  const topNovaBarProps: TopNavBarProps = {
+    leftButton: <BackButton />,
+    title: 'Complete Auction',
+  };
+
+  if (
+    account !== highestBid.bidder ||
+    !saleEnded ||
+    !me ||
+    track?.track.nftData?.pendingRequest != PendingRequest.None
+  ) {
+    return null;
+  }
+
+  return (
+    <Layout topNavBarProps={topNovaBarProps}>
+      <div className="m-4">
+        <Track trackId={trackId} />
+      </div>
+      <AuctionEnded highestBid={highestBid} />
+      <div className="flex p-4">
+        <div className="flex-1 font-black text-xs text-gray-80">
+          <p>Max gas fee</p>
+          <div className="flex items-center gap-1">
+            <Matic />
+            <div className="text-white">{maxGasFee}</div>MATIC
+          </div>
+        </div>
+        <Button variant="buy-nft" onClick={handleClaim} loading={loading}>
+          <div className="px-4">CLAIM NFT</div>
+        </Button>
+      </div>
+    </Layout>
+  );
+}
