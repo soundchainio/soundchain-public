@@ -1,4 +1,5 @@
 import { IconComponent } from 'icons/types/IconComponent';
+import { forwardRef } from 'react';
 import { BuyNFTButton } from './Buttons/BuyNFT';
 import { ClearButton } from './Buttons/Clear';
 import { EditListingButton } from './Buttons/EditListing';
@@ -24,7 +25,7 @@ export type ButtonVariant =
   | 'orange'
   | 'edit-listing';
 
-export interface ButtonProps extends React.ComponentPropsWithoutRef<'button'> {
+export interface ButtonProps extends React.ComponentPropsWithRef<'button'> {
   variant?: ButtonVariant;
   icon?: IconComponent;
   loading?: boolean;
@@ -49,6 +50,8 @@ export const buttonByVariant: Record<ButtonVariant, (props: ButtonProps) => JSX.
   'edit-listing': EditListingButton,
 };
 
-export const Button = ({ variant = 'rainbow', ...props }: ButtonProps) => {
-  return buttonByVariant[variant](props);
-};
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({ variant = 'rainbow', ...props }, ref) => {
+  return buttonByVariant[variant]({ ...props, ref });
+});
+
+Button.displayName = 'Button';
