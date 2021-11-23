@@ -61,6 +61,7 @@ const pendingRequestMapping: Record<PendingRequest, string> = {
   None: 'none',
   UpdateListing: 'update listing',
   PlaceBid: 'place bid',
+  CompleteAuction: 'complete auction',
 };
 
 export default function TrackPage({ track }: TrackPageProps) {

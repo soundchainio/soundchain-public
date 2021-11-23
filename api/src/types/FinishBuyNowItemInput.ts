@@ -1,4 +1,5 @@
 import { Field, InputType } from 'type-graphql';
+import { SellType } from './NFTSoldNotificationMetadata';
 
 @InputType()
 export class FinishBuyNowItemInput {
@@ -25,4 +26,7 @@ export class FinishBuyNowItemInput {
 
   @Field()
   price: string;
+
+  @Field()
+  sellType: SellType;
 }

@@ -7,7 +7,7 @@ import type { Handler, SQSEvent } from 'aws-lambda';
 import express from 'express';
 import Web3 from 'web3';
 import { AbiItem } from 'web3-utils';
-import { AuctionCreated, BidPlaced } from '../types/web3-v1-contracts/SoundchainAuction';
+import { AuctionCreated, AuctionResulted, BidPlaced } from '../types/web3-v1-contracts/SoundchainAuction';
 import { config } from './config';
 import SoundchainCollectible from './contract/Soundchain721.json';
 import SoundchainAuction from './contract/SoundchainAuction.json';
@@ -151,15 +151,13 @@ export const watcher: Handler = async () => {
           } catch (error) {
             console.error(error);
           }
-          console.log('TransferSingle');
+          console.log('Transfer');
         }
         break;
     }
   }
 
   for (const event of auctionEvents) {
-    console.log(event);
-
     switch (event.event) {
       case 'AuctionCreated':
         {
@@ -210,6 +208,17 @@ export const watcher: Handler = async () => {
             console.error(error);
           }
           console.log('BidPlaced');
+        }
+        break;
+      case 'AuctionResulted':
+        {
+          try {
+            const { tokenId, winner, oldOwner, winningBid } = (event as unknown as AuctionResulted).returnValues;
+            await context.auctionItemService.finishListing(tokenId, oldOwner, winner, winningBid);
+          } catch (error) {
+            console.error(error);
+          }
+          console.log('AuctionResulted');
         }
         break;
     }

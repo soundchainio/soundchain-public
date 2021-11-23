@@ -10,8 +10,15 @@ import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
-import { PendingRequest, TrackDocument, TrackQuery, useAuctionItemLazyQuery } from 'lib/graphql';
+import {
+  PendingRequest,
+  TrackDocument,
+  TrackQuery,
+  useAuctionItemLazyQuery,
+  useUpdateTrackMutation,
+} from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
+import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 
@@ -51,10 +58,12 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 export default function CompleteAuctionPage({ track }: TrackPageProps) {
   const { resultAuction, getHighestBid } = useBlockchain();
   const { account, web3 } = useWalletContext();
+  const [trackUpdate] = useUpdateTrackMutation();
   const maxGasFee = useMaxGasFee();
   const [loading, setLoading] = useState(false);
   const [highestBid, setHighestBid] = useState<HighestBid>({} as HighestBid);
   const me = useMe();
+  const router = useRouter();
 
   const tokenId = track.nftData?.tokenId ?? -1;
 
@@ -87,7 +96,20 @@ export default function CompleteAuctionPage({ track }: TrackPageProps) {
     if (!web3 || !auctionItem.auctionItem?.auctionItem?.tokenId || !account) {
       return;
     }
-    resultAuction(web3, tokenId, account, () => setLoading(false));
+    const onTransactionHash = async () => {
+      await trackUpdate({
+        variables: {
+          input: {
+            trackId: track.id,
+            nftData: {
+              pendingRequest: PendingRequest.CompleteAuction,
+            },
+          },
+        },
+      });
+      router.push(router.asPath.replace('complete-auction', ''));
+    };
+    resultAuction(web3, tokenId, account, onTransactionHash);
     setLoading(true);
   };
 
