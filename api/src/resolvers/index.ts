@@ -12,6 +12,7 @@ import { NewPostNotificationResolver } from './NewPostNotificationResolver';
 import { NFTSoldNotificationResolver } from './NFTSoldNotificationResolver';
 import { NotificationResolver } from './NotificationResolver';
 import { PinningResolver } from './PinningResolver';
+import { PolygonscanResolver } from './PolygonResolver';
 import { PostResolver } from './PostResolver';
 import { ProfileResolver } from './ProfileResolver';
 import { ProfileVerificationRequestResolver } from './ProfileVerificationRequestResolver';
@@ -24,26 +25,27 @@ import { VerificationRequestNotificationResolver } from './VerificationRequestNo
 
 export const resolvers = [
   ChatResolver,
-  CommentResolver,
   CommentNotificationResolver,
-  VerificationRequestNotificationResolver,
+  CommentResolver,
+  ExploreResolver,
+  FeedResolver,
   FollowerNotificationResolver,
   FollowResolver,
-  FeedResolver,
+  ListingItemResolver,
   MessageResolver,
+  MintingRequestResolver,
   NewPostNotificationResolver,
+  NFTSoldNotificationResolver,
   NotificationResolver,
+  PinningResolver,
+  PolygonscanResolver,
   PostResolver,
   ProfileResolver,
-  ReactionResolver,
+  ProfileVerificationRequestResolver,
   ReactionNotificationResolver,
+  ReactionResolver,
   TrackResolver,
   UploadResolver,
   UserResolver,
-  MintingRequestResolver,
-  ProfileVerificationRequestResolver,
-  PinningResolver,
-  ListingItemResolver,
-  ExploreResolver,
-  NFTSoldNotificationResolver,
+  VerificationRequestNotificationResolver,
 ] as const;

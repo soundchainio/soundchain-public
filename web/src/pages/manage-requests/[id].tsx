@@ -119,7 +119,12 @@ export default function RequestPage({ data }: RequestPageProps) {
                 <div className="w-20 flex flex-col text-xs items-center">{src.icon}</div>
                 {src.name}
               </div>
-              <a href={src.link || ''} target="_blank" rel="noreferrer" className="text-sm text-blue-400 underline">
+              <a
+                href={normalizeURL(src.link)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-blue-400 underline"
+              >
                 {src.link}
               </a>
             </div>
@@ -142,3 +147,15 @@ export default function RequestPage({ data }: RequestPageProps) {
     </Layout>
   );
 }
+
+const normalizeURL = (url: string | undefined | null) => {
+  if (!url) {
+    return '';
+  }
+
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+
+  return `https://${url}`;
+};

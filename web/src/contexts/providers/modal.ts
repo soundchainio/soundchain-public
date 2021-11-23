@@ -2,6 +2,7 @@ import { ModalActionTypes } from 'contexts/actions/modal';
 import { initialModalState, ModalState } from 'contexts/reducers/modal';
 import { ReactionType } from 'lib/graphql';
 import { useContext } from 'react';
+import { ApproveType } from 'types/ApproveType';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 import { store } from '..';
 
@@ -44,7 +45,8 @@ export const useModalDispatch = () => {
       dispatch({ type: ModalActionTypes.SET_RECIPIENT_WALLET_ADDRESS, payload: { address } }),
     dispatchSetAmountToTransfer: (amount: string) =>
       dispatch({ type: ModalActionTypes.SET_AMOUNT_TO_TRANSFER, payload: { amount } }),
-    dispatchShowApproveModal: (show: boolean) => dispatch({ type: ModalActionTypes.SHOW_APPROVE, payload: { show } }),
+    dispatchShowApproveModal: (show: boolean, type: ApproveType) =>
+      dispatch({ type: ModalActionTypes.SHOW_APPROVE, payload: { show, type } }),
     dispatchShowRemoveListingModal: (show: boolean, tokenId: number, trackId: string) =>
       dispatch({ type: ModalActionTypes.SHOW_REMOVE_LISTING, payload: { show, tokenId, trackId } }),
   };

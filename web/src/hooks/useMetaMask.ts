@@ -24,7 +24,9 @@ export const useMetaMask = () => {
 
   useEffect(() => {
     const onSetAccount = async (newAccount: string) => {
-      await updateWallet({ variables: { input: { wallet: newAccount } } });
+      if (newAccount) {
+        await updateWallet({ variables: { input: { wallet: newAccount } } });
+      }
       setAccount(newAccount);
     };
 
@@ -57,12 +59,12 @@ export const useMetaMask = () => {
   }, [account, web3]);
 
   const refetchBalance = () => {
-    if(web3 && account) {
+    if (web3 && account) {
       web3.eth.getBalance(account).then(balance => {
         setBalance(web3.utils.fromWei(balance, 'ether'));
       });
     }
-  }
+  };
 
   const addMumbaiTestnet = () => {
     if (MetaMaskOnboarding.isMetaMaskInstalled()) {

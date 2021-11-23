@@ -32,8 +32,10 @@ export const HandleNFT = ({ isOwner, isForSale, price, canList }: HandleNFTProps
           </div>
         </div>
         <div className="flex-1 flex items-center justify-center">
-          <NextLink href={`${router.asPath}/edit`}>
-            <Button variant="edit-listing">EDIT LISTING</Button>
+          <NextLink href={`${router.asPath}/edit`} passHref>
+            <a aria-label="Edit Listing">
+              <Button variant="edit-listing">EDIT LISTING</Button>
+            </a>
           </NextLink>
         </div>
       </div>
@@ -49,8 +51,10 @@ export const HandleNFT = ({ isOwner, isForSale, price, canList }: HandleNFTProps
           </div>
         </div>
         <div className="flex-1 flex items-center justify-center">
-          <NextLink href={`${router.asPath}/buy`}>
-            <Button variant="buy-nft">BUY NFT</Button>
+          <NextLink href={`${router.asPath}/buy`} passHref>
+            <a aria-label="Buy NFT">
+              <Button variant="buy-nft">BUY NFT</Button>
+            </a>
           </NextLink>
         </div>
       </div>
@@ -62,10 +66,12 @@ export const HandleNFT = ({ isOwner, isForSale, price, canList }: HandleNFTProps
           You must be verified in order to sell NFT’s.
         </div>
         <div className="flex-1 flex items-center justify-center">
-          <NextLink href={'/get-verified'}>
-            <Button variant="list-nft">
-              <div className="px-4 font-bold">GET VERIFIED</div>
-            </Button>
+          <NextLink href="/get-verified" passHref>
+            <a aria-label="Get Verified">
+              <Button variant="list-nft">
+                <div className="px-4 font-bold">GET VERIFIED</div>
+              </Button>
+            </a>
           </NextLink>
         </div>
       </div>
@@ -78,9 +84,13 @@ export const HandleNFT = ({ isOwner, isForSale, price, canList }: HandleNFTProps
           You own this NFT
         </div>
         <div className="flex-1 flex items-center justify-center">
-          <Button variant="list-nft" onClick={handleListButton}>
-            <div className="px-4 font-bold">LIST NFT</div>
-          </Button>
+          <NextLink href={`${router.asPath}/list`} passHref>
+            <a aria-label="List NFT">
+              <Button variant="list-nft" onClick={handleListButton}>
+                <div className="px-4 font-bold">LIST NFT</div>
+              </Button>
+            </a>
+          </NextLink>
         </div>
       </div>
     );

@@ -15,6 +15,7 @@ import { MintingRequestService } from '../services/MintingRequestService';
 import { MuxService } from '../services/MuxService';
 import { NotificationService } from '../services/NotificationService';
 import { PinningService } from '../services/PinningService';
+import { PolygonscanService } from '../services/PolygonService';
 import { PostService } from '../services/PostService';
 import { ProfileService } from '../services/ProfileService';
 import { ProfileVerificationRequestService } from '../services/ProfileVerificationRequestService';
@@ -49,6 +50,7 @@ export class Context {
   listingItemService = new ListingItemService(this);
   blockTrackerService = new BlockTrackerService(this);
   logErrorService = new LogErrorService(this);
+  polygonscanService = new PolygonscanService(this);
   user?: Promise<User>;
 
   constructor(jwtUser?: JwtUser) {

@@ -16,6 +16,7 @@ import {
   ShowUnderDevelopmentPayload,
 } from 'contexts/payloads/modal';
 import { ReactionType } from 'lib/graphql';
+import { ApproveType } from 'types/ApproveType';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 
 export interface ModalState {
@@ -42,6 +43,7 @@ export interface ModalState {
   showTransferConfirmation: boolean;
   walletRecipient?: string;
   amountToTransfer?: string;
+  type?: ApproveType;
 }
 
 export const initialModalState = {
@@ -66,6 +68,7 @@ export const initialModalState = {
   showTransferConfirmation: false,
   walletRecipient: undefined,
   amountToTransfer: undefined,
+  type: undefined,
 };
 
 export const modalReducer = (state: ModalState, action: Action) => {
@@ -128,6 +131,7 @@ export const modalReducer = (state: ModalState, action: Action) => {
       return {
         ...state,
         showApprove: (action.payload as ShowApprove).show,
+        type: (action.payload as ShowApprove).type,
         anyModalOpened: (action.payload as ShowApprove).show,
       };
     case ModalActionTypes.SHOW_REMOVE_LISTING:

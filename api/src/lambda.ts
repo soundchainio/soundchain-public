@@ -8,11 +8,11 @@ import express from 'express';
 import Web3 from 'web3';
 import { AbiItem } from 'web3-utils';
 import { config } from './config';
-import SoundchainCollectible from './contract/SoundchainCollectible/SoundchainCollectible.json';
-import SoundchainMarketplace from './contract/SoundchainMarketplace/SoundchainMarketplace.json';
+import SoundchainCollectible from './contract/Soundchain721.json';
+import SoundchainMarketplace from './contract/SoundchainMarketplace.json';
 import { UserModel } from './models/User';
 import muxDataApi from './muxDataApi';
-import { ItemCanceled, ItemListed, ItemSold, ItemUpdated, TransferSingle } from './types/BlockchainEvents';
+import { ItemCanceled, ItemListed, ItemSold, ItemUpdated, Transfer } from './types/BlockchainEvents';
 import { Context } from './types/Context';
 import { MuxDataInputValue, MuxServerData } from './types/MuxData';
 import { Metadata, NFT } from './types/NFT';
@@ -130,21 +130,20 @@ export const watcher: Handler = async () => {
 
   for (const event of contractEvents) {
     switch (event.event) {
-      case 'TransferSingle':
+      case 'Transfer':
         {
           try {
-            const { transactionHash, address, returnValues } = event as TransferSingle;
+            const { transactionHash, address, returnValues } = event as Transfer;
             if (returnValues.from === zeroAddress) {
               await context.trackService.updateTrackByTransactionHash(transactionHash, {
                 nftData: {
-                  tokenId: parseInt(returnValues.id),
-                  quantity: parseInt(returnValues.value),
+                  tokenId: parseInt(returnValues.tokenId),
                   contract: address,
                   pendingRequest: PendingRequest.None,
                 },
               });
             } else {
-              await context.trackService.updateOwnerByTokenId(parseInt(returnValues.id), returnValues.to);
+              await context.trackService.updateOwnerByTokenId(parseInt(returnValues.tokenId), returnValues.to);
             }
           } catch (error) {
             console.error(error);

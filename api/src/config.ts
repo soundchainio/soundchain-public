@@ -50,6 +50,7 @@ export const {
   NFT_ADDRESS,
   MUX_DATA_ID,
   MUX_DATA_SECRET,
+  POLYGON_SCAN_API_KEY,
 } = process.env;
 
 function assertEnvVar(name: string, value: string | undefined): asserts value {
@@ -129,6 +130,7 @@ export const config = {
     nftAddress: NFT_ADDRESS,
     alchemyKey: ALCHEMY_API_KEY,
     sqsUrl: SQS_URL,
+    polygonScan: POLYGON_SCAN_API_KEY,
   },
   mux: {
     tokenId: MUX_TOKEN_ID,

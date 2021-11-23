@@ -1,6 +1,6 @@
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
-import { ListNFT } from 'components/details-NFT/ListNFT';
+import { ListNFTAuction } from 'components/details-NFT/ListNFTAuction';
 import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
@@ -17,12 +17,12 @@ import {
   useListingItemLazyQuery,
   useTrackQuery,
   useUpdateTrackMutation,
-  useWasListedBeforeLazyQuery,
 } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
+import { ApproveType } from 'types/ApproveType';
 
 export interface TrackPageProps {
   trackId: string;
@@ -49,11 +49,11 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
     return { notFound: true };
   }
 
-  return cacheFor(ListPage, { trackId }, context, apolloClient);
+  return cacheFor(AuctionPage, { trackId }, context, apolloClient);
 });
 
-export default function ListPage({ trackId }: TrackPageProps) {
-  const { listItem, isTokenOwner, isApproved: checkIsApproved } = useBlockchain();
+export default function AuctionPage({ trackId }: TrackPageProps) {
+  const { createAuction, isTokenOwner, isApprovedAuction: checkIsApproved } = useBlockchain();
   const router = useRouter();
   const me = useMe();
   const { data } = useTrackQuery({ variables: { id: trackId } });
@@ -63,7 +63,7 @@ export default function ListPage({ trackId }: TrackPageProps) {
   const { dispatchShowApproveModal } = useModalDispatch();
   const [loading, setLoading] = useState(false);
   const [price, setPrice] = useState(0);
-  const [royalty, setRoyalty] = useState(0);
+  const [duration, setDuration] = useState(0);
   const [isOwner, setIsOwner] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
 
@@ -72,10 +72,6 @@ export default function ListPage({ trackId }: TrackPageProps) {
     (me?.profile.verified && data?.track.nftData?.minter === account) || data?.track.nftData?.minter != account;
 
   const [getListingItem, { data: listingItem }] = useListingItemLazyQuery({
-    variables: { tokenId },
-  });
-
-  const [getWasListedBefore, { data: wasListedBefore }] = useWasListedBeforeLazyQuery({
     variables: { tokenId },
   });
 
@@ -101,10 +97,6 @@ export default function ListPage({ trackId }: TrackPageProps) {
   }, [getListingItem]);
 
   useEffect(() => {
-    getWasListedBefore();
-  }, [getWasListedBefore]);
-
-  useEffect(() => {
     const fetchIsApproved = async () => {
       if (!web3 || !checkIsApproved || !account) return;
 
@@ -115,15 +107,18 @@ export default function ListPage({ trackId }: TrackPageProps) {
   }, [account, web3, checkIsApproved]);
 
   const isForSale = !!listingItem?.listingItem?.listingItem?.pricePerItem ?? false;
-  const isSetRoyalty = !wasListedBefore?.wasListedBefore;
 
-  const handleList = () => {
+  const handleList = async () => {
     if (data?.track.nftData?.tokenId === null || data?.track.nftData?.tokenId === undefined || !account || !web3) {
       return;
     }
     setLoading(true);
     const weiPrice = web3?.utils.toWei(price.toString(), 'ether') || '0';
-
+    const blockNumber = await web3.eth.getBlockNumber();
+    const block = await web3.eth.getBlock(blockNumber);
+    const blockTimeStamp = block.timestamp as number;
+    const startTime = blockTimeStamp + 1000;
+    const endTime = startTime + duration * 3.6e6;
     if (isApproved) {
       const onTransactionHash = async () => {
         await trackUpdate({
@@ -138,15 +133,15 @@ export default function ListPage({ trackId }: TrackPageProps) {
         });
         router.back();
       };
-      listItem(web3, data.track.nftData.tokenId, 1, account, weiPrice, royalty * 100, onTransactionHash);
+      createAuction(web3, data.track.nftData.tokenId, weiPrice, startTime, endTime, account, onTransactionHash);
     } else {
-      me ? dispatchShowApproveModal(true) : router.push('/login');
+      me ? dispatchShowApproveModal(true, ApproveType.AUCTION) : router.push('/login');
     }
   };
 
   const topNovaBarProps: TopNavBarProps = {
     leftButton: <BackButton />,
-    title: 'List for Sale',
+    title: 'List for Auction',
   };
 
   if (!isOwner || isForSale || data?.track.nftData?.pendingRequest != PendingRequest.None || !canList) {
@@ -158,11 +153,7 @@ export default function ListPage({ trackId }: TrackPageProps) {
       <div className="m-4">
         <Track trackId={trackId} />
       </div>
-      <ListNFT
-        onSetPrice={price => setPrice(price)}
-        isSetRoyalty={isSetRoyalty}
-        onSetRoyalty={royalty => setRoyalty(royalty)}
-      />
+      <ListNFTAuction onSetPrice={price => setPrice(price)} onSetDuration={duration => setDuration(duration)} />
       <div className="flex p-4">
         <div className="flex-1 font-black text-xs text-gray-80">
           <p>Max gas fee</p>
