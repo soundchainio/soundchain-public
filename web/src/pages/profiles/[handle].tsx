@@ -71,6 +71,7 @@ export default function ProfilePage() {
     bio,
     isSubscriber,
     verified,
+    teamMember,
   } = data.profileByHandle;
 
   const topNovaBarProps: TopNavBarProps = {
@@ -110,7 +111,7 @@ export default function ProfilePage() {
         </div>
         <div className="flex flex-row mt-4">
           <div>
-            <DisplayName name={displayName} verified={verified} />
+            <DisplayName name={displayName} verified={verified} teamMember={teamMember} />
             <p className="text-gray-80 text-sm">@{userHandle}</p>
             <p className="text-gray-80 py-2 text-sm">{bio}</p>
           </div>

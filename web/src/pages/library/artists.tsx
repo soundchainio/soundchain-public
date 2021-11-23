@@ -30,7 +30,7 @@ export default function ArtistsPage() {
 
   useEffect(() => {
     if (me?.profile.id) following({ variables: { profileId: me.profile.id } });
-  }, [me]);
+  }, [me, following]);
 
   return (
     <Layout topNavBarProps={topNavBarProps}>
@@ -56,6 +56,7 @@ export default function ArtistsPage() {
                   <DisplayName
                     name={following.followedProfile.displayName}
                     verified={following.followedProfile.verified}
+                    teamMember={following.followedProfile.teamMember}
                   />
                   <div className="flex-1 justify-end flex">
                     <RightArrow className="scale-150" />

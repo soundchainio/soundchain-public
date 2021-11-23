@@ -30,7 +30,11 @@ export const RepostPreview = ({ postId }: RepostPreviewProps) => {
           <>
             <div className="flex items-center">
               <Avatar className="mr-4" profile={post.profile} />
-              <DisplayName name={post.profile.displayName} verified={post.profile.verified} />
+              <DisplayName
+                name={post.profile.displayName}
+                verified={post.profile.verified}
+                teamMember={post.profile.teamMember}
+              />
               <Timestamp datetime={post.createdAt} className="flex-1 text-right text-gray-60" />
             </div>
             <pre className="mt-4 text-gray-100 break-words whitespace-pre-wrap">{post.body}</pre>

@@ -47,7 +47,11 @@ export const Post = ({ postId }: PostProps) => {
           <div className="flex items-center w-full ml-2">
             <div className="flex flex-1 flex-col">
               <NextLink href={`/profiles/${post.profile.userHandle}`}>
-                <DisplayName name={post.profile.displayName} verified={post.profile.verified} />
+                <DisplayName
+                  name={post.profile.displayName}
+                  verified={post.profile.verified}
+                  teamMember={post.profile.teamMember}
+                />
               </NextLink>
               <Timestamp
                 datetime={post.createdAt}

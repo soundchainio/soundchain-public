@@ -5,6 +5,7 @@ import { User } from '../models/User';
 import { Context } from '../types/Context';
 import { FollowProfileInput } from '../types/FollowProfileInput';
 import { FollowProfilePayload } from '../types/FollowProfilePayload';
+import { Role } from '../types/Role';
 import { SubscribeToProfileInput } from '../types/SubscribeToProfileInput';
 import { SubscribeToProfilePayload } from '../types/SubscribeToProfilePayload';
 import { UnfollowProfileInput } from '../types/UnfollowProfileInput';
@@ -19,6 +20,12 @@ export class ProfileResolver {
   @FieldResolver(() => String)
   userHandle(@Ctx() { profileService }: Context, @Root() profile: Profile): Promise<string> {
     return profileService.getUserHandle(profile._id);
+  }
+
+  @FieldResolver(() => Boolean)
+  async teamMember(@Ctx() { userService }: Context, @Root() profile: Profile): Promise<boolean> {
+    const user = await userService.getUserByProfileId(profile._id);
+    return user.roles.includes(Role.TEAM_MEMBER);
   }
 
   @FieldResolver(() => Boolean)

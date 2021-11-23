@@ -15,7 +15,7 @@ export const ChatItem = ({
   chatItem: {
     id,
     message,
-    profile: { displayName, profilePicture, verified },
+    profile: { displayName, profilePicture, verified, teamMember },
     createdAt,
     unread,
   },
@@ -29,7 +29,7 @@ export const ChatItem = ({
           </div>
           <Avatar className="flex w-[40px]" profile={{ profilePicture: profilePicture }} pixels={40} />
           <div className="flex w-9/12 flex-col pl-4">
-            <DisplayName name={displayName} verified={verified} />
+            <DisplayName name={displayName} verified={verified} teamMember={teamMember} />
             <div className="text-gray-80 flex text-sm whitespace-nowrap">
               <div className="truncate">{`${message}`}</div>&nbsp;<div className="text-gray-40">•</div>
               &nbsp;
