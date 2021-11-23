@@ -206,7 +206,7 @@ export default function WalletPage() {
               <div className="flex gap-5 mt-4">
                 <WalletButton href="/wallet/transfer" title="Activity" icon={Activity} />
                 <WalletButton href="/wallet/transfer" title="Receive" icon={ArrowDown} />
-                <WalletButton href="/wallet/transfer" title="Buy" icon={CreditCard} />
+                <WalletButton href="/wallet/buy" title="Buy" icon={CreditCard} />
                 <WalletButton href="/wallet/transfer" title="Send" icon={ArrowUpRight} />
               </div>
             </div>
