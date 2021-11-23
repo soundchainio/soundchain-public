@@ -48,7 +48,7 @@ export default function BuyMaticPage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div className="px-8 py-4 text-gray-80 text-xs">
-        <p className="text-center m-4">In order to mint or purchase NFT's on SoundChain, you must have:</p>
+        <p className="text-center m-4">In order to mint or purchase {"NFT's"} on SoundChain, you must have:</p>
         <p className="flex items-center justify-center">
           {MaticSign} on the {PolygonSign} chain.
         </p>
