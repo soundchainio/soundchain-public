@@ -32,7 +32,7 @@ export const PlaceBid = ({ highestBid, bidAmount, ownerAddressAccount, onSetBidA
   return (
     <div className="mb-2">
       <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={console.log}>
-        {({ values, handleChange }: FormikProps<FormValues>) => (
+        {({ handleChange, setFieldValue }: FormikProps<FormValues>) => (
           <Form>
             <div className="flex p-5 bg-gray-20 text-gray-80">
               <p className="flex items-center flex-shrink-0 justify-start font-bold text-xs md-text-sm uppercase">
@@ -66,6 +66,7 @@ export const PlaceBid = ({ highestBid, bidAmount, ownerAddressAccount, onSetBidA
                 </span>
               </p>
             </div>
+            <WalletSelector className="mb-10" ownerAddressAccount={ownerAddressAccount} />
             <div className="flex">
               <label
                 htmlFor="bidAmount"
@@ -74,7 +75,14 @@ export const PlaceBid = ({ highestBid, bidAmount, ownerAddressAccount, onSetBidA
                 <div className="flex flex-col mr-3">
                   <p className="uppercase">bid amount</p>
                   <p className="font-medium" style={{ fontSize: 10 }}>
-                    Must be at least 1% of current bid price. Enter X MATIC or more.
+                    Must be at least 1% of current bid price. Enter{' '}
+                    <span
+                      className="text-white font-bold cursor-pointer"
+                      onClick={() => setFieldValue('bidAmount', ((parseInt(highestBid) * 1.01) / 1e18).toFixed(6))}
+                    >
+                      {((parseInt(highestBid) * 1.01) / 1e18).toFixed(6)}
+                    </span>{' '}
+                    MATIC or more.
                   </p>
                 </div>
               </label>
@@ -90,8 +98,6 @@ export const PlaceBid = ({ highestBid, bidAmount, ownerAddressAccount, onSetBidA
                 />
               </div>
             </div>
-
-            <WalletSelector className="mb-10" ownerAddressAccount={ownerAddressAccount} />
           </Form>
         )}
       </Formik>
