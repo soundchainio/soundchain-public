@@ -14,9 +14,10 @@ import {
   PendingRequest,
   Profile,
   TrackDocument,
+  TrackQuery,
   useListingItemQuery,
   useProfileLazyQuery,
-  useTrackQuery,
+  useTrackLazyQuery,
   useUserByWalletLazyQuery,
 } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
@@ -24,7 +25,7 @@ import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 
 export interface TrackPageProps {
-  trackId: string;
+  track: TrackQuery['track'];
 }
 
 interface TrackPageParams extends ParsedUrlQuery {
@@ -38,7 +39,7 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
     return { notFound: true };
   }
 
-  const { error } = await apolloClient.query({
+  const { data, error } = await apolloClient.query({
     query: TrackDocument,
     variables: { id: trackId },
     context,
@@ -48,7 +49,7 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
     return { notFound: true };
   }
 
-  return cacheFor(TrackPage, { trackId }, context, apolloClient);
+  return cacheFor(TrackPage, { track: data.track }, context, apolloClient);
 });
 
 const pendingRequestMapping: Record<PendingRequest, string> = {
@@ -61,19 +62,19 @@ const pendingRequestMapping: Record<PendingRequest, string> = {
   PlaceBid: 'place bid',
 };
 
-export default function TrackPage({ trackId }: TrackPageProps) {
+export default function TrackPage({ track }: TrackPageProps) {
   const me = useMe();
   const { account, web3 } = useWalletContext();
-  const { data, refetch: refetchTrack } = useTrackQuery({ variables: { id: trackId }, fetchPolicy: 'network-only' });
   const { isTokenOwner, getRoyalties } = useBlockchain();
   const [isOwner, setIsOwner] = useState<boolean>();
   const [royalties, setRoyalties] = useState(0);
+  const [refetchTrack] = useTrackLazyQuery();
 
-  const mintingPending = data?.track.nftData?.pendingRequest === PendingRequest.Mint;
-  const isProcessing = data?.track.nftData?.pendingRequest != PendingRequest.None;
-  const tokenId = data?.track.nftData?.tokenId ?? -1;
-  const canList =
-    (me?.profile.verified && data?.track.nftData?.minter === account) || data?.track.nftData?.minter != account;
+  const nftData = track.nftData;
+  const mintingPending = nftData?.pendingRequest === PendingRequest.Mint;
+  const isProcessing = nftData?.pendingRequest != PendingRequest.None;
+  const tokenId = nftData?.tokenId ?? -1;
+  const canList = (me?.profile.verified && nftData?.minter === account) || nftData?.minter != account;
 
   const {
     data: listingPayload,
@@ -85,48 +86,48 @@ export default function TrackPage({ trackId }: TrackPageProps) {
   });
 
   const [profile, { data: profileInfo }] = useProfileLazyQuery({
-    variables: { id: data?.track.artistProfileId ?? '' },
+    variables: { id: track.artistProfileId ?? '' },
     ssr: false,
   });
 
   const [userByWallet, { data: ownerProfile }] = useUserByWalletLazyQuery({
-    variables: { walletAddress: data?.track.nftData?.owner ?? '' },
+    variables: { walletAddress: track.nftData?.owner ?? '' },
     ssr: false,
   });
 
   useEffect(() => {
-    if (data?.track.artistProfileId) {
+    if (track.artistProfileId) {
       profile();
     }
-  }, [data?.track.artistProfileId, profile]);
+  }, [track.artistProfileId, profile]);
 
   useEffect(() => {
-    if (data?.track.nftData?.owner) {
+    if (nftData?.owner) {
       userByWallet();
     }
-  }, [data?.track.nftData?.owner, userByWallet]);
+  }, [nftData?.owner, userByWallet]);
 
   useEffect(() => {
     const fetchIsOwner = async () => {
-      if (!account || !web3 || data?.track.nftData?.tokenId === null || data?.track.nftData?.tokenId === undefined) {
+      if (!account || !web3 || nftData?.tokenId === null || nftData?.tokenId === undefined) {
         return;
       }
-      const isTokenOwnerRes = await isTokenOwner(web3, data.track.nftData.tokenId, account);
+      const isTokenOwnerRes = await isTokenOwner(web3, nftData.tokenId, account);
       setIsOwner(isTokenOwnerRes);
     };
     fetchIsOwner();
-  }, [account, web3, data?.track.nftData, isTokenOwner]);
+  }, [account, web3, nftData, isTokenOwner]);
 
   useEffect(() => {
     const fetchRoyalties = async () => {
-      if (!account || !web3 || data?.track.nftData?.tokenId === null || data?.track.nftData?.tokenId === undefined) {
+      if (!account || !web3 || nftData?.tokenId === null || nftData?.tokenId === undefined) {
         return;
       }
-      const royalties = await getRoyalties(web3, data.track.nftData.tokenId);
+      const royalties = await getRoyalties(web3, nftData.tokenId);
       setRoyalties(royalties);
     };
     fetchRoyalties();
-  }, [account, web3, data?.track.nftData, getRoyalties]);
+  }, [account, web3, nftData, getRoyalties]);
 
   const isAuction = !!listingPayload?.listingItem.minimumBid ?? false;
   const isBuyNow = !!listingPayload?.listingItem.pricePerItem ?? false;
@@ -140,7 +141,7 @@ export default function TrackPage({ trackId }: TrackPageProps) {
   useEffect(() => {
     const interval = setInterval(() => {
       if (isProcessing) {
-        refetchTrack({ id: trackId });
+        refetchTrack({ variables: { id: track.id } });
       }
       if (tokenId !== -1) {
         refetchListing({ tokenId: tokenId });
@@ -148,35 +149,36 @@ export default function TrackPage({ trackId }: TrackPageProps) {
     }, 10 * 1000);
 
     return () => clearInterval(interval);
-  }, [isProcessing, refetchTrack, refetchListing, tokenId, trackId]);
+  }, [isProcessing, refetchTrack, refetchListing, tokenId, track.id]);
 
   return (
     <Layout topNavBarProps={topNovaBarProps}>
       <div className="p-3 flex flex-col gap-5">
-        <Track trackId={trackId} />
-        <Description description={data?.track.description || ''} />
+        <Track trackId={track.id} />
+        <Description description={track.description || ''} />
       </div>
       <TrackInfo
-        trackTitle={data?.track.title}
-        albumTitle={data?.track.album}
-        releaseYear={data?.track.releaseYear}
-        genres={data?.track.genres}
-        copyright={data?.track.copyright}
+        trackTitle={track.title}
+        albumTitle={track.album}
+        releaseYear={track.releaseYear}
+        genres={track.genres}
+        copyright={track.copyright}
         mintingPending={mintingPending}
         artistProfile={profileInfo?.profile}
         royalties={royalties}
       />
-      <MintingData
-        transactionHash={data?.track.nftData?.transactionHash}
-        ipfsCid={data?.track.nftData?.ipfsCid}
-        ownerProfile={ownerProfile?.getUserByWallet?.profile as Partial<Profile>}
-      />
-
-      {isProcessing && !mintingPending && data?.track.nftData?.pendingRequest ? (
+      {nftData && (
+        <MintingData
+          transactionHash={nftData.transactionHash}
+          ipfsCid={nftData.ipfsCid}
+          ownerProfile={ownerProfile?.getUserByWallet?.profile as Partial<Profile>}
+        />
+      )}
+      {isProcessing && !mintingPending && nftData?.pendingRequest ? (
         <div className=" flex justify-center items-center p-3">
           <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" />
           <div className="text-white text-sm pl-3 font-bold">
-            Processing {pendingRequestMapping[data.track.nftData.pendingRequest]}
+            Processing {pendingRequestMapping[nftData.pendingRequest]}
           </div>
         </div>
       ) : isOwner == undefined || loading ? (
