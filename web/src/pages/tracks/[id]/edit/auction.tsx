@@ -42,10 +42,10 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
     return { notFound: true };
   }
 
-  return cacheFor(EditPage, { track: data.track }, context, apolloClient);
+  return cacheFor(EditBuyNowPage, { track: data.track }, context, apolloClient);
 });
 
-export default function EditPage({ track }: TrackPageProps) {
+export default function EditBuyNowPage({ track }: TrackPageProps) {
   const router = useRouter();
   const { updateListing } = useBlockchain();
   const { dispatchShowRemoveListingModal } = useModalDispatch();

@@ -36,7 +36,14 @@ export const HandleNFT = ({
       );
     }
     if (isBuyNow || (!auctionIsOver && isAuction)) {
-      return <ListedAction href={`${router.asPath}/edit`} price={price} action="EDIT LISTING" variant="edit-listing" />;
+      return (
+        <ListedAction
+          href={isBuyNow ? `${router.asPath}/edit/buy-now` : `${router.asPath}/edit/auction`}
+          price={price}
+          action="EDIT LISTING"
+          variant="edit-listing"
+        />
+      );
     }
     return (
       <ListingAction href={`${router.asPath}/list`} action="LIST NFT">
