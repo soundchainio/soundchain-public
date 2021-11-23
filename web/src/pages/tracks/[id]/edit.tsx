@@ -11,20 +11,14 @@ import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
-import {
-  PendingRequest,
-  TrackDocument,
-  useBuyNowItemLazyQuery,
-  useTrackQuery,
-  useUpdateTrackMutation,
-} from 'lib/graphql';
+import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemLazyQuery, useUpdateTrackMutation } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 
 export interface TrackPageProps {
-  trackId: string;
+  track: TrackQuery['track'];
 }
 
 interface TrackPageParams extends ParsedUrlQuery {
@@ -38,7 +32,7 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
     return { notFound: true };
   }
 
-  const { error } = await apolloClient.query({
+  const { data, error } = await apolloClient.query({
     query: TrackDocument,
     variables: { id: trackId },
     context,
@@ -48,14 +42,13 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
     return { notFound: true };
   }
 
-  return cacheFor(EditPage, { trackId }, context, apolloClient);
+  return cacheFor(EditPage, { track: data.track }, context, apolloClient);
 });
 
-export default function EditPage({ trackId }: TrackPageProps) {
+export default function EditPage({ track }: TrackPageProps) {
   const router = useRouter();
   const { updateListing } = useBlockchain();
   const { dispatchShowRemoveListingModal } = useModalDispatch();
-  const { data: track } = useTrackQuery({ variables: { id: trackId } });
   const [trackUpdate] = useUpdateTrackMutation();
   const { account, web3 } = useWalletContext();
   const maxGasFee = useMaxGasFee();
@@ -63,7 +56,8 @@ export default function EditPage({ trackId }: TrackPageProps) {
   const [newPrice, setNewPrice] = useState(0);
   const me = useMe();
 
-  const tokenId = track?.track.nftData?.tokenId ?? -1;
+  const nftData = track.nftData;
+  const tokenId = nftData?.tokenId ?? -1;
 
   const [getBuyNowItem, { data: listingPayload }] = useBuyNowItemLazyQuery({
     variables: { tokenId },
@@ -93,7 +87,7 @@ export default function EditPage({ trackId }: TrackPageProps) {
       trackUpdate({
         variables: {
           input: {
-            trackId: trackId,
+            trackId: track.id,
             nftData: {
               pendingRequest: PendingRequest.UpdateListing,
             },
@@ -111,11 +105,11 @@ export default function EditPage({ trackId }: TrackPageProps) {
       !web3 ||
       !listingPayload.buyNowItem?.buyNowItem?.tokenId ||
       !account ||
-      track?.track.nftData?.pendingRequest != PendingRequest.None
+      nftData?.pendingRequest != PendingRequest.None
     ) {
       return;
     }
-    dispatchShowRemoveListingModal(true, listingPayload.buyNowItem?.buyNowItem?.tokenId, trackId);
+    dispatchShowRemoveListingModal(true, listingPayload.buyNowItem?.buyNowItem?.tokenId, track.id);
   };
 
   const RemoveListing = (
@@ -132,14 +126,14 @@ export default function EditPage({ trackId }: TrackPageProps) {
     rightButton: RemoveListing,
   };
 
-  if (!isForSale || !isOwner || !me || !track || track?.track.nftData?.pendingRequest != PendingRequest.None) {
+  if (!isForSale || !isOwner || !me || !track || nftData?.pendingRequest != PendingRequest.None) {
     return null;
   }
 
   return (
     <Layout topNavBarProps={topNovaBarProps}>
       <div className="m-4">
-        <Track trackId={trackId} />
+        <Track trackId={track.id} />
       </div>
       {price && <ListNFTBuyNow onSetPrice={setNewPrice} initialPrice={parseFloat(price)} />}
       <div className="flex p-4">
