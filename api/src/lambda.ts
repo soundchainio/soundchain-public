@@ -70,7 +70,7 @@ export const watcher: Handler = async () => {
             const { owner, nft, tokenId, pricePerItem, startingTime } = (event as ItemListed).returnValues;
             const [user, listedBefore] = await Promise.all([
               context.userService.getUserByWallet(owner),
-              context.buyNowItemService.wasListedBefore(parseInt(tokenId)),
+              context.listingItemService.wasListedBefore(parseInt(tokenId)),
             ]);
             const profile = await context.profileService.getProfile(user.profileId);
             if (!profile.verified && !listedBefore) {
@@ -169,7 +169,7 @@ export const watcher: Handler = async () => {
             ).returnValues;
             const [user, listedBefore] = await Promise.all([
               context.userService.getUserByWallet(owner),
-              context.auctionItemService.wasListedBefore(parseInt(tokenId)),
+              context.listingItemService.wasListedBefore(parseInt(tokenId)),
             ]);
             const profile = await context.profileService.getProfile(user.profileId);
             if (!profile.verified && !listedBefore) {
@@ -199,16 +199,13 @@ export const watcher: Handler = async () => {
           try {
             const { nftAddress, tokenId, bidder, bid } = (event as unknown as BidPlaced).returnValues;
             const auction = await context.auctionItemService.findAuctionItem(parseInt(tokenId));
-            await Promise.all([
-              context.bidService.createBid({
-                nft: nftAddress,
-                tokenId: parseInt(tokenId),
-                bidder,
-                amount: parseInt(bid),
-                auctionId: auction._id,
-              }),
-              context.trackService.setPendingNone(parseInt(tokenId)),
-            ]);
+            await context.bidService.createBid({
+              nft: nftAddress,
+              tokenId: parseInt(tokenId),
+              bidder,
+              amount: parseInt(bid),
+              auctionId: auction._id,
+            });
           } catch (error) {
             console.error(error);
           }
