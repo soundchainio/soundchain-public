@@ -133,7 +133,7 @@ export default function EditPage({ track }: TrackPageProps) {
   return (
     <Layout topNavBarProps={topNovaBarProps}>
       <div className="m-4">
-        <Track trackId={track.id} track={track} />
+        <Track track={track} />
       </div>
       {price && <ListNFTBuyNow onSetPrice={setNewPrice} initialPrice={parseFloat(price)} />}
       <div className="flex p-4">

@@ -173,7 +173,7 @@ export default function TrackPage({ track }: TrackPageProps) {
   return (
     <Layout topNavBarProps={topNovaBarProps}>
       <div className="p-3 flex flex-col gap-5">
-        <Track trackId={track.id} track={track} />
+        <Track track={track} />
         <Description description={track.description || ''} />
       </div>
       <TrackInfo

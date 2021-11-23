@@ -125,7 +125,7 @@ export default function CompleteAuctionPage({ track }: TrackPageProps) {
   return (
     <Layout topNavBarProps={topNovaBarProps}>
       <div className="m-4">
-        <Track trackId={track.id} track={track} />
+        <Track track={track} />
       </div>
       <AuctionEnded highestBid={highestBid} />
       <div className="flex p-4">

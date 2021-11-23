@@ -138,7 +138,7 @@ export default function AuctionPage({ track }: TrackPageProps) {
   return (
     <Layout topNavBarProps={topNovaBarProps}>
       <div className="m-4">
-        <Track trackId={track.id} track={track} />
+        <Track track={track} />
       </div>
       <ListNFTAuction onSetPrice={price => setPrice(price)} onSetDuration={duration => setDuration(duration)} />
       <div className="flex p-4">
