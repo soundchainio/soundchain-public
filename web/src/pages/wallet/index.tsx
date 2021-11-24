@@ -3,6 +3,7 @@ import { Jazzicon } from 'components/Jazzicon';
 import { Layout } from 'components/Layout';
 import { LoaderAnimation } from 'components/LoaderAnimation';
 import { OwnedNfts } from 'components/OwnedNfts';
+import ReceiveMatic from 'components/ReceiveMatic';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
@@ -24,10 +25,48 @@ import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { currency } from 'utils/format';
 
-const topNovaBarProps: TopNavBarProps = {
+const topNavBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
   title: 'Wallet',
 };
+
+interface WalletButtonProps {
+  href?: string;
+  title: string;
+  icon: (props: React.SVGProps<SVGSVGElement>) => JSX.Element;
+  handleOnClick?: () => void;
+}
+const WalletButton = ({ href, title, icon: Icon, handleOnClick }: WalletButtonProps) => {
+  const className = 'text-gray-80 text-xs font-bold flex flex-col items-center gap-2';
+
+  const Content = () => {
+    return (
+      <>
+        <div className="rounded-full border-gray-50 border-2 w-10 h-10 flex justify-center items-center">
+          <Icon />
+        </div>
+        {title}
+      </>
+    );
+  };
+
+  if (href) {
+    return (
+      <Link href={href}>
+        <a className={className}>
+          <Content />
+        </a>
+      </Link>
+    );
+  }
+
+  return (
+    <button className={className} onClick={handleOnClick}>
+      <Content />
+    </button>
+  );
+};
+
 export default function WalletPage() {
   const me = useMe();
   const { data } = useMaticUsdQuery();
@@ -38,6 +77,7 @@ export default function WalletPage() {
   const [selectedWallet, setSelectedWallet] = useState(DefaultWallet.Soundchain);
   const [connectedToMetaMask, setConnectedToMetaMask] = useState(false);
   const [correctNetwork, setCorrectNetwork] = useState(true);
+  const [showReceivePage, setShowReceivePage] = useState(false);
 
   const getAccount = selectedWallet === DefaultWallet.Soundchain ? magicAccount : account;
   const getBalance = selectedWallet === DefaultWallet.Soundchain ? magicBalance : balance;
@@ -57,24 +97,6 @@ export default function WalletPage() {
       setCorrectNetwork(true);
     }
   }, [chainId]);
-
-  interface WalletButtonProps {
-    href: string;
-    title: string;
-    icon: (props: React.SVGProps<SVGSVGElement>) => JSX.Element;
-  }
-  const WalletButton = ({ href, title, icon: Icon }: WalletButtonProps) => {
-    return (
-      <Link href={href}>
-        <a className="text-gray-80 text-xs font-bold flex flex-col items-center gap-2">
-          <div className="rounded-full border-gray-50 border-2 w-10 h-10 flex justify-center items-center">
-            <Icon />
-          </div>
-          {title}
-        </a>
-      </Link>
-    );
-  };
 
   const WalletHeader = () => {
     return (
@@ -135,8 +157,12 @@ export default function WalletPage() {
     );
   };
 
+  if (showReceivePage && getAccount) {
+    return <ReceiveMatic address={getAccount} backButton={() => setShowReceivePage(false)} />;
+  }
+
   return (
-    <Layout topNavBarProps={topNovaBarProps} fullHeight={true}>
+    <Layout topNavBarProps={topNavBarProps} fullHeight={true}>
       <Head>
         <title>Soundchain - Wallet</title>
         <meta name="description" content="Wallet" />
@@ -204,10 +230,10 @@ export default function WalletPage() {
                 )}
               </div>
               <div className="flex gap-5 mt-4">
-                <WalletButton href="/wallet/transfer" title="Activity" icon={Activity} />
-                <WalletButton href="/wallet/transfer" title="Receive" icon={ArrowDown} />
-                <WalletButton href="/wallet/transfer" title="Buy" icon={CreditCard} />
-                <WalletButton href="/wallet/transfer" title="Send" icon={ArrowUpRight} />
+                <WalletButton title="Activity" icon={Activity} href="/wallet/transfer" />
+                <WalletButton title="Receive" icon={ArrowDown} handleOnClick={() => setShowReceivePage(true)} />
+                <WalletButton title="Buy" icon={CreditCard} href="/wallet/transfer" />
+                <WalletButton title="Send" icon={ArrowUpRight} href="/wallet/transfer" />
               </div>
             </div>
             <div className="p-3 mt-3">
