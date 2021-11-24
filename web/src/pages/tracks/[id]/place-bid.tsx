@@ -9,7 +9,7 @@ import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
-import { PendingRequest, TrackDocument, TrackQuery, useAuctionItemLazyQuery, useMaticUsdQuery } from 'lib/graphql';
+import { TrackDocument, TrackQuery, useAuctionItemLazyQuery, useCountBidsQuery, useMaticUsdQuery } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
@@ -57,6 +57,8 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
   const [getAuctionItem, { data: auctionItem }] = useAuctionItemLazyQuery({
     variables: { tokenId },
   });
+
+  const { data: countBids } = useCountBidsQuery({ variables: { tokenId } });
 
   useEffect(() => {
     getAuctionItem();
@@ -123,6 +125,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
           onSetBidAmount={amount => setBidAmount(amount)}
           ownerAddressAccount={ownerAddressAccount}
           endingTime={auctionItem.auctionItem?.auctionItem?.endingTime ?? 0}
+          countBids={countBids?.countBids.numberOfBids ?? 0}
         />
       )}
       {bidAmount >= 0 && (

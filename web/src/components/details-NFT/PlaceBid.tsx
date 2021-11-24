@@ -14,6 +14,7 @@ interface PlaceBidProps {
   ownerAddressAccount: string;
   endingTime: number;
   reservePrice: string;
+  countBids: number;
 }
 
 interface FormValues {
@@ -31,6 +32,7 @@ export const PlaceBid = ({
   onSetBidAmount,
   endingTime,
   reservePrice,
+  countBids,
 }: PlaceBidProps) => {
   const initialValues: FormValues = {
     bidAmount,
@@ -53,6 +55,7 @@ export const PlaceBid = ({
                 </span>
                 <span className="mx-1 text-white font-bold text-md leading-tight">{currentBid}</span>
                 <span className="items-end font-bold text-xs leading-tight">matic</span>
+                <span className="text-xs text-blue-400 font-bold leading-tight pl-1">({countBids} bids)</span>
               </p>
             </div>
             <div className="flex p-5 bg-gray-20 text-gray-80">
@@ -64,11 +67,26 @@ export const PlaceBid = ({
                   <TimeCounter date={new Date(endingTime * 1000)}>
                     {(days, hours, minutes, seconds) => (
                       <div>
-                        {days} <span className="text-gray-80">days </span>
-                        {hours} <span className="text-gray-80">hours </span>
-                        {minutes} <span className="text-gray-80">minutes </span>
-                        {seconds}
-                        <span className="text-gray-80"> seconds</span>
+                        {days !== 0 && (
+                          <>
+                            {days} <span className="text-gray-80">days </span>
+                          </>
+                        )}
+                        {hours !== 0 && (
+                          <>
+                            {hours} <span className="text-gray-80">hours </span>
+                          </>
+                        )}
+                        {minutes !== 0 && (
+                          <>
+                            {minutes} <span className="text-gray-80">minutes </span>
+                          </>
+                        )}
+                        {seconds !== 0 && (
+                          <>
+                            {seconds} <span className="text-gray-80">seconds </span>
+                          </>
+                        )}
                       </div>
                     )}
                   </TimeCounter>

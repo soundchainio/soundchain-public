@@ -13,6 +13,7 @@ interface HandleNFTProps {
   isBuyNow: boolean;
   canComplete: boolean;
   auctionIsOver: boolean;
+  countBids: number;
 }
 
 export const HandleNFT = ({
@@ -23,6 +24,7 @@ export const HandleNFT = ({
   isBuyNow,
   canComplete,
   auctionIsOver,
+  countBids,
 }: HandleNFTProps) => {
   const router = useRouter();
 
@@ -57,7 +59,15 @@ export const HandleNFT = ({
       return <ListedAction href={`${router.asPath}/buy`} price={price} action="BUY NFT" variant="buy-nft" />;
     }
     if (price && isAuction) {
-      return <ListedAction href={`${router.asPath}/place-bid`} price={price} action="PLACE BID" variant="buy-nft" />;
+      return (
+        <ListedAction
+          href={`${router.asPath}/place-bid`}
+          countBids={countBids}
+          price={price}
+          action="PLACE BID"
+          variant="buy-nft"
+        />
+      );
     }
     if (canComplete && isAuction) {
       return (
@@ -98,9 +108,10 @@ interface ListedActionProps {
   price: string | undefined | null;
   action: string;
   variant: ButtonVariant;
+  countBids?: number;
 }
 
-const ListedAction = ({ href, price, action, variant }: ListedActionProps) => {
+const ListedAction = ({ href, price, action, variant, countBids }: ListedActionProps) => {
   return (
     <div className="w-full bg-black text-white flex items-center py-3">
       <div className="flex flex-col flex-1 ml-4">
@@ -110,6 +121,13 @@ const ListedAction = ({ href, price, action, variant }: ListedActionProps) => {
           <span className="text-xs text-gray-80">MATIC</span>
         </div>
       </div>
+      {countBids != 0 && (
+        <div className="flex flex-col">
+          <div className="text-xs flex items-center font-bold">
+            <span className="text-blue-400">({countBids} bids)</span>
+          </div>
+        </div>
+      )}
       <div className="flex-1 flex items-center justify-center">
         <NextLink href={href}>
           <Button variant={variant}>{action}</Button>

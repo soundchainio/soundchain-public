@@ -15,6 +15,7 @@ import {
   Profile,
   TrackDocument,
   TrackQuery,
+  useCountBidsQuery,
   useListingItemQuery,
   useProfileLazyQuery,
   useTrackLazyQuery,
@@ -79,6 +80,8 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const isProcessing = nftData?.pendingRequest != PendingRequest.None;
   const tokenId = nftData?.tokenId ?? -1;
   const canList = (me?.profile.verified && nftData?.minter === account) || nftData?.minter != account;
+
+  const { data: countBids } = useCountBidsQuery({ variables: { tokenId } });
 
   const {
     data: listingPayload,
@@ -226,6 +229,7 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
           isAuction={isAuction}
           canComplete={canComplete}
           auctionIsOver={auctionIsOver}
+          countBids={countBids?.countBids.numberOfBids ?? 0}
         />
       )}
     </Layout>

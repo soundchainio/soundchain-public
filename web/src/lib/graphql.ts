@@ -134,6 +134,11 @@ export type CommentNotification = {
   link: Scalars['String'];
 };
 
+export type CountBidsPayload = {
+  __typename?: 'CountBidsPayload';
+  numberOfBids: Maybe<Scalars['Float']>;
+};
+
 export type CreateAuctionItemInput = {
   id?: Maybe<Scalars['String']>;
   owner: Scalars['String'];
@@ -845,6 +850,7 @@ export type ProfileVerificationRequestPayload = {
 export type Query = {
   __typename?: 'Query';
   auctionItem: AuctionItemPayload;
+  countBids: CountBidsPayload;
   buyNowItem: BuyNowPayload;
   chats: ChatConnection;
   chatHistory: MessageConnection;
@@ -881,6 +887,11 @@ export type Query = {
 
 
 export type QueryAuctionItemArgs = {
+  tokenId: Scalars['Float'];
+};
+
+
+export type QueryCountBidsArgs = {
   tokenId: Scalars['Float'];
 };
 
@@ -1507,6 +1518,19 @@ export type CommentsQuery = (
       { __typename?: 'PageInfo' }
       & Pick<PageInfo, 'hasPreviousPage' | 'hasNextPage' | 'startCursor' | 'endCursor'>
     ) }
+  ) }
+);
+
+export type CountBidsQueryVariables = Exact<{
+  tokenId: Scalars['Float'];
+}>;
+
+
+export type CountBidsQuery = (
+  { __typename?: 'Query' }
+  & { countBids: (
+    { __typename?: 'CountBidsPayload' }
+    & Pick<CountBidsPayload, 'numberOfBids'>
   ) }
 );
 
@@ -3261,6 +3285,41 @@ export function useCommentsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<C
 export type CommentsQueryHookResult = ReturnType<typeof useCommentsQuery>;
 export type CommentsLazyQueryHookResult = ReturnType<typeof useCommentsLazyQuery>;
 export type CommentsQueryResult = Apollo.QueryResult<CommentsQuery, CommentsQueryVariables>;
+export const CountBidsDocument = gql`
+    query CountBids($tokenId: Float!) {
+  countBids(tokenId: $tokenId) {
+    numberOfBids
+  }
+}
+    `;
+
+/**
+ * __useCountBidsQuery__
+ *
+ * To run a query within a React component, call `useCountBidsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useCountBidsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useCountBidsQuery({
+ *   variables: {
+ *      tokenId: // value for 'tokenId'
+ *   },
+ * });
+ */
+export function useCountBidsQuery(baseOptions: Apollo.QueryHookOptions<CountBidsQuery, CountBidsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<CountBidsQuery, CountBidsQueryVariables>(CountBidsDocument, options);
+      }
+export function useCountBidsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<CountBidsQuery, CountBidsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<CountBidsQuery, CountBidsQueryVariables>(CountBidsDocument, options);
+        }
+export type CountBidsQueryHookResult = ReturnType<typeof useCountBidsQuery>;
+export type CountBidsLazyQueryHookResult = ReturnType<typeof useCountBidsLazyQuery>;
+export type CountBidsQueryResult = Apollo.QueryResult<CountBidsQuery, CountBidsQueryVariables>;
 export const CreateBuyNowItemDocument = gql`
     mutation CreateBuyNowItem($input: CreateBuyNowItemInput!) {
   createBuyNowItem(input: $input) {

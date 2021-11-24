@@ -2,6 +2,7 @@ import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from 'type-graphql';
 import { AuctionItem } from '../models/AuctionItem';
 import { AuctionItemPayload } from '../types/AuctionItemPayload';
 import { Context } from '../types/Context';
+import { CountBidsPayload } from '../types/CountBids';
 import { CreateAuctionItemData } from '../types/CreateAuctionItemData';
 
 @Resolver(AuctionItem)
@@ -39,5 +40,11 @@ export class AuctionItemResolver {
     @Arg('tokenId') tokenId: number,
   ): Promise<CreateAuctionItemData> {
     return await auctionItemService.setNotValid(tokenId);
+  }
+
+  @Query(() => CountBidsPayload)
+  async countBids(@Ctx() { auctionItemService }: Context, @Arg('tokenId') tokenId: number): Promise<CountBidsPayload> {
+    const count = await auctionItemService.countBids(tokenId);
+    return count;
   }
 }

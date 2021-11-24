@@ -12,6 +12,10 @@ interface NewAuctionItem {
   endingTime: number;
 }
 
+interface CountBids {
+  numberOfBids: number;
+}
+
 export class AuctionItemService extends ModelService<typeof AuctionItem> {
   constructor(context: Context) {
     super(context, AuctionItemModel);
@@ -68,5 +72,31 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       artworkUrl: track.artworkUrl,
       sellType: SellType.Auction,
     });
+  }
+
+  async countBids(tokenId: number): Promise<CountBids> {
+    const count = await this.model.aggregate<CountBids>([
+      {
+        $match: {
+          tokenId,
+        },
+      },
+      {
+        $lookup: {
+          from: 'bids',
+          localField: '_id',
+          foreignField: 'auctionId',
+          as: 'bids',
+        },
+      },
+      {
+        $project: {
+          numberOfBids: {
+            $size: '$bids',
+          },
+        },
+      },
+    ]);
+    return count[0];
   }
 }
