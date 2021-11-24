@@ -6,7 +6,6 @@ query ListingItem($tokenId: Float!) {
     pricePerItem
     startingTime
     endingTime
-    minimumBid
     reservePrice
   }
 }

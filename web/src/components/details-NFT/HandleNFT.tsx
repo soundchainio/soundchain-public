@@ -8,7 +8,7 @@ import React from 'react';
 interface HandleNFTProps {
   isOwner: boolean;
   canList: boolean;
-  price: string | undefined;
+  price: string | undefined | null;
   isAuction: boolean;
   isBuyNow: boolean;
   canComplete: boolean;
@@ -95,7 +95,7 @@ const ListingAction = ({ href, action, children }: React.PropsWithChildren<Listi
 
 interface ListedActionProps {
   href: string;
-  price: string | undefined;
+  price: string | undefined | null;
   action: string;
   variant: ButtonVariant;
 }

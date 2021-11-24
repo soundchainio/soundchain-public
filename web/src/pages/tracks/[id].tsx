@@ -150,12 +150,17 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
     }
   }, [trackData]);
 
-  const isAuction = !!listingPayload?.listingItem.minimumBid ?? false;
+  const isAuction = !!listingPayload?.listingItem.reservePrice ?? false;
   const isBuyNow = !!listingPayload?.listingItem.pricePerItem ?? false;
-  const price =
-    web3?.utils.fromWei(listingPayload?.listingItem.pricePerItem?.toString() ?? '0', 'ether') === '0'
-      ? web3?.utils.fromWei(highestBid.bid ?? '0', 'ether')
-      : web3?.utils.fromWei(listingPayload?.listingItem.pricePerItem?.toString() ?? '0', 'ether');
+  let price;
+  if (isAuction && highestBid.bid === '0') {
+    price = web3?.utils.fromWei(listingPayload?.listingItem.reservePrice ?? '0', 'ether');
+  } else if (isAuction) {
+    price = web3?.utils.fromWei(highestBid.bid ?? '0', 'ether');
+  } else {
+    price = web3?.utils.fromWei(listingPayload?.listingItem.pricePerItem?.toString() ?? '0', 'ether');
+  }
+
   const auctionIsOver = (listingPayload?.listingItem.endingTime || 0) < Math.floor(Date.now() / 1000);
   const canComplete = auctionIsOver && highestBid.bidder?.toLowerCase() === account?.toLowerCase();
 

@@ -31,7 +31,6 @@ export type AuctionCreated = ContractEventLog<{
   nftAddress: string;
   tokenId: string;
   owner: string;
-  minimumBid: string;
   reservePrice: string;
   startTimestamp: string;
   endTimestamp: string;
@@ -41,7 +40,6 @@ export type AuctionCreated = ContractEventLog<{
   3: string;
   4: string;
   5: string;
-  6: string;
 }>;
 export type AuctionResulted = ContractEventLog<{
   oldOwner: string;
@@ -135,7 +133,6 @@ export interface SoundchainAuction extends BaseContract {
       arg1: number | string | BN
     ): NonPayableTransactionObject<{
       owner: string;
-      minBid: string;
       reservePrice: string;
       startTime: string;
       endTime: string;
@@ -144,8 +141,7 @@ export interface SoundchainAuction extends BaseContract {
       1: string;
       2: string;
       3: string;
-      4: string;
-      5: boolean;
+      4: boolean;
     }>;
 
     cancelAuction(
@@ -158,7 +154,6 @@ export interface SoundchainAuction extends BaseContract {
       _tokenId: number | string | BN,
       _reservePrice: number | string | BN,
       _startTimestamp: number | string | BN,
-      minBidReserve: boolean,
       _endTimestamp: number | string | BN
     ): NonPayableTransactionObject<void>;
 
@@ -171,13 +166,11 @@ export interface SoundchainAuction extends BaseContract {
       _startTime: string;
       _endTime: string;
       _resulted: boolean;
-      minBid: string;
       0: string;
       1: string;
       2: string;
       3: string;
       4: boolean;
-      5: string;
     }>;
 
     getHighestBidder(

@@ -36,7 +36,6 @@ export type AuctionItem = {
   tokenId: Scalars['Float'];
   startingTime: Scalars['Float'];
   endingTime: Scalars['Float'];
-  minimumBid: Scalars['String'];
   reservePrice: Scalars['String'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
@@ -142,7 +141,6 @@ export type CreateAuctionItemInput = {
   tokenId: Scalars['Float'];
   startingTime: Scalars['Float'];
   endingTime: Scalars['Float'];
-  minimumBid: Scalars['String'];
   reservePrice: Scalars['String'];
 };
 
@@ -154,7 +152,6 @@ export type CreateAuctionItemType = {
   tokenId: Scalars['Float'];
   startingTime: Scalars['Float'];
   endingTime: Scalars['Float'];
-  minimumBid: Scalars['String'];
   reservePrice: Scalars['String'];
 };
 
@@ -381,7 +378,6 @@ export type ListingItemPayload = {
   tokenId: Maybe<Scalars['Float']>;
   startingTime: Maybe<Scalars['Float']>;
   endingTime: Maybe<Scalars['Float']>;
-  minimumBid: Maybe<Scalars['String']>;
   reservePrice: Maybe<Scalars['String']>;
   pricePerItem: Maybe<Scalars['String']>;
 };
@@ -1366,7 +1362,7 @@ export type AuctionItemQuery = (
     { __typename?: 'AuctionItemPayload' }
     & { auctionItem: Maybe<(
       { __typename?: 'AuctionItem' }
-      & Pick<AuctionItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'startingTime' | 'endingTime' | 'minimumBid' | 'reservePrice'>
+      & Pick<AuctionItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'startingTime' | 'endingTime' | 'reservePrice'>
     )> }
   ) }
 );
@@ -1839,7 +1835,7 @@ export type ListingItemQuery = (
   { __typename?: 'Query' }
   & { listingItem: (
     { __typename?: 'ListingItemPayload' }
-    & Pick<ListingItemPayload, 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'startingTime' | 'endingTime' | 'minimumBid' | 'reservePrice'>
+    & Pick<ListingItemPayload, 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'startingTime' | 'endingTime' | 'reservePrice'>
   ) }
 );
 
@@ -2916,7 +2912,6 @@ export const AuctionItemDocument = gql`
       tokenId
       startingTime
       endingTime
-      minimumBid
       reservePrice
     }
   }
@@ -3949,7 +3944,6 @@ export const ListingItemDocument = gql`
     pricePerItem
     startingTime
     endingTime
-    minimumBid
     reservePrice
   }
 }

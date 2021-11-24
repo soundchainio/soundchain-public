@@ -13,6 +13,7 @@ interface PlaceBidProps {
   bidAmount: number;
   ownerAddressAccount: string;
   endingTime: number;
+  reservePrice: string;
 }
 
 interface FormValues {
@@ -23,12 +24,19 @@ const validationSchema: SchemaOf<FormValues> = object().shape({
   bidAmount: number().min(0).required(),
 });
 
-export const PlaceBid = ({ highestBid, bidAmount, ownerAddressAccount, onSetBidAmount, endingTime }: PlaceBidProps) => {
+export const PlaceBid = ({
+  highestBid,
+  bidAmount,
+  ownerAddressAccount,
+  onSetBidAmount,
+  endingTime,
+  reservePrice,
+}: PlaceBidProps) => {
   const initialValues: FormValues = {
     bidAmount,
   };
 
-  const currentBid = (parseFloat(highestBid) / 1e18).toFixed(6);
+  const currentBid = highestBid === '0' ? reservePrice : (parseFloat(highestBid) / 1e18).toFixed(6);
 
   return (
     <div className="mb-2">
@@ -83,12 +91,12 @@ export const PlaceBid = ({ highestBid, bidAmount, ownerAddressAccount, onSetBidA
                     <span
                       className="text-white font-bold cursor-pointer"
                       onClick={() => {
-                        const amount = ((parseInt(highestBid) * 1.01) / 1e18).toFixed(6);
+                        const amount = (parseFloat(currentBid) * 1.01).toFixed(6);
                         onSetBidAmount(parseFloat(amount));
                         setFieldValue('bidAmount', amount);
                       }}
                     >
-                      {((parseInt(highestBid) * 1.01) / 1e18).toFixed(6)}
+                      {(parseFloat(currentBid) * 1.01).toFixed(6)}
                     </span>{' '}
                     MATIC or more.
                   </p>

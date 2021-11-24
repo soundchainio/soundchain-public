@@ -7,7 +7,6 @@ query AuctionItem($tokenId: Float!) {
       tokenId
       startingTime
       endingTime
-      minimumBid
       reservePrice
     }
   }

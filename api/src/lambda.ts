@@ -162,7 +162,7 @@ export const watcher: Handler = async () => {
       case 'AuctionCreated':
         {
           try {
-            const { nftAddress, tokenId, owner, minimumBid, reservePrice, startTimestamp, endTimestamp } = (
+            const { nftAddress, tokenId, owner, reservePrice, startTimestamp, endTimestamp } = (
               event as unknown as AuctionCreated
             ).returnValues;
             const [user, listedBefore] = await Promise.all([
@@ -182,7 +182,6 @@ export const watcher: Handler = async () => {
                 startingTime: parseInt(startTimestamp),
                 endingTime: parseInt(endTimestamp),
                 reservePrice,
-                minimumBid,
               }),
               context.trackService.setPendingNone(parseInt(tokenId)),
             ]);

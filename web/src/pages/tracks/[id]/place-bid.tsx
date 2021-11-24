@@ -82,10 +82,10 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     return null;
   }
 
-  const ownerAddressAccount = 'listingPayload.buyNowItem?.buyNowItem?.owner.toLowerCase()';
+  const ownerAddressAccount = auctionItem.auctionItem?.auctionItem?.owner.toLowerCase();
   const isOwner = ownerAddressAccount === account?.toLowerCase();
   const isForSale = !!auctionItem.auctionItem.auctionItem?.reservePrice ?? false;
-  const price = '1';
+  const reservePrice = web3?.utils.fromWei(auctionItem.auctionItem.auctionItem?.reservePrice ?? '0', 'ether');
 
   const handlePlaceBid = () => {
     if (
@@ -115,34 +115,34 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
       <div className="m-4">
         <Track track={track} />
       </div>
-      {price && ownerAddressAccount && (
+      {reservePrice && ownerAddressAccount && (
         <PlaceBid
           highestBid={highestBid}
+          reservePrice={reservePrice}
           bidAmount={bidAmount}
-          onSetBidAmount={amount => {
-            console.log(amount);
-            return setBidAmount(amount);
-          }}
+          onSetBidAmount={amount => setBidAmount(amount)}
           ownerAddressAccount={ownerAddressAccount}
           endingTime={auctionItem.auctionItem?.auctionItem?.endingTime ?? 0}
         />
       )}
-      <div className="flex p-4">
-        <div className="flex-1 font-black text-xs">
-          <div className="flex items-center gap-2 text-white">
-            <Matic />
-            <div className="text-white">{bidAmount}</div>MATIC
+      {bidAmount >= 0 && (
+        <div className="flex p-4">
+          <div className="flex-1 font-black text-xs">
+            <div className="flex items-center gap-2 text-white">
+              <Matic />
+              <div className="text-white">{bidAmount}</div>MATIC
+            </div>
+            {maticQuery?.maticUsd && (
+              <span className="text-xs text-gray-50 font-bold">
+                {`${currency(bidAmount * parseFloat(maticQuery?.maticUsd))} USD`}
+              </span>
+            )}
           </div>
-          {maticQuery?.maticUsd && (
-            <span className="text-xs text-gray-50 font-bold">
-              {`${currency(bidAmount * parseFloat(maticQuery?.maticUsd))} USD`}
-            </span>
-          )}
+          <Button variant="buy-nft" onClick={handlePlaceBid} loading={loading}>
+            <div className="px-4">CONFIRM BID</div>
+          </Button>
         </div>
-        <Button variant="buy-nft" onClick={handlePlaceBid} loading={loading}>
-          <div className="px-4">CONFIRM BID</div>
-        </Button>
-      </div>
+      )}
     </Layout>
   );
 }

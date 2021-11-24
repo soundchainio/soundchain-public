@@ -235,7 +235,7 @@ const useBlockchain = () => {
     ) as unknown as SoundchainAuction;
     beforeSending(web3, () => {
       auctionContract.methods
-        .createAuction(nftAddress, tokenId, reservePrice, startTime, true, endTime)
+        .createAuction(nftAddress, tokenId, reservePrice, startTime, endTime)
         .send({ from, gas })
         .on('receipt', onReceipt);
     });

@@ -24,8 +24,5 @@ export class CreateAuctionItemData {
   endingTime: number;
 
   @Field()
-  minimumBid: string;
-
-  @Field()
   reservePrice: string;
 }

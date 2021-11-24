@@ -8,7 +8,6 @@ interface NewAuctionItem {
   nft: string;
   tokenId: number;
   reservePrice: string;
-  minimumBid: string;
   startingTime: number;
   endingTime: number;
 }

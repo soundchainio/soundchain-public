@@ -29,10 +29,6 @@ export class AuctionItem extends Model {
 
   @Field()
   @prop({ required: true })
-  minimumBid: string;
-
-  @Field()
-  @prop({ required: true })
   reservePrice: string;
 
   @Field(() => Date)

@@ -18,9 +18,6 @@ export class ListingItemPayload {
   endingTime: number;
 
   @Field({ nullable: true })
-  minimumBid: string;
-
-  @Field({ nullable: true })
   reservePrice: string;
 
   @Field({ nullable: true })
