@@ -50,7 +50,7 @@ export const TrackInfo = ({
       </div>
       <div className="flex items-center font-bold">
         <div className="w-2/4 uppercase text-sm pl-4 py-3 bg-gray-20">Artist Royalty %</div>
-        <div className="text-center w-2/4 text-sm bg-gray-30 pr-4 py-3">{royalties ? `${royalties}%` : '-'}</div>
+        <div className="text-center w-2/4 text-sm bg-gray-30 pr-4 py-3">{`${royalties}%`}</div>
       </div>
       <div className="flex items-center font-bold">
         <div className="w-2/4 uppercase text-sm pl-4 py-3 bg-gray-20">Track Title</div>
