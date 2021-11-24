@@ -9,7 +9,14 @@ import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
-import { TrackDocument, TrackQuery, useAuctionItemLazyQuery, useCountBidsQuery, useMaticUsdQuery } from 'lib/graphql';
+import {
+  PendingRequest,
+  TrackDocument,
+  TrackQuery,
+  useAuctionItemLazyQuery,
+  useCountBidsQuery,
+  useMaticUsdQuery,
+} from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
