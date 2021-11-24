@@ -166,7 +166,6 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      console.log(isProcessing);
       if (isProcessing) {
         refetchTrack({ variables: { id: track.id } });
       }
