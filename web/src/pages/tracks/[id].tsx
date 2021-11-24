@@ -166,6 +166,7 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
 
   const auctionIsOver = (listingPayload?.listingItem.endingTime || 0) < Math.floor(Date.now() / 1000);
   const canComplete = auctionIsOver && highestBid.bidder?.toLowerCase() === account?.toLowerCase();
+  const endingDate = new Date((listingPayload?.listingItem.endingTime || 0) * 1000);
 
   const topNovaBarProps: TopNavBarProps = {
     leftButton: <BackButton />,
@@ -230,6 +231,7 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
           canComplete={canComplete}
           auctionIsOver={auctionIsOver}
           countBids={countBids?.countBids.numberOfBids ?? 0}
+          endingDate={endingDate}
         />
       )}
     </Layout>

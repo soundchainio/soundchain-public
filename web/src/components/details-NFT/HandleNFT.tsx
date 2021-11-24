@@ -1,4 +1,5 @@
 import { Button, ButtonVariant } from 'components/Button';
+import { TimeCounter } from 'components/TimeCounter';
 import { CheckmarkFilled } from 'icons/CheckmarkFilled';
 import { Matic } from 'icons/Matic';
 import NextLink from 'next/link';
@@ -14,6 +15,7 @@ interface HandleNFTProps {
   canComplete: boolean;
   auctionIsOver: boolean;
   countBids: number;
+  endingDate: Date;
 }
 
 export const HandleNFT = ({
@@ -25,10 +27,10 @@ export const HandleNFT = ({
   canComplete,
   auctionIsOver,
   countBids,
+  endingDate,
 }: HandleNFTProps) => {
   const router = useRouter();
 
-  // TODO check if all states are covered and test
   if (isOwner) {
     if (!canList) {
       return (
@@ -63,6 +65,7 @@ export const HandleNFT = ({
         <ListedAction
           href={`${router.asPath}/place-bid`}
           countBids={countBids}
+          endingDate={endingDate}
           price={price}
           action="PLACE BID"
           variant="buy-nft"
@@ -109,9 +112,10 @@ interface ListedActionProps {
   action: string;
   variant: ButtonVariant;
   countBids?: number;
+  endingDate?: Date;
 }
 
-const ListedAction = ({ href, price, action, variant, countBids }: ListedActionProps) => {
+const ListedAction = ({ href, price, action, variant, countBids, endingDate }: ListedActionProps) => {
   return (
     <div className="w-full bg-black text-white flex items-center py-3">
       <div className="flex flex-col flex-1 ml-4">
@@ -121,11 +125,35 @@ const ListedAction = ({ href, price, action, variant, countBids }: ListedActionP
           <span className="text-xs text-gray-80">MATIC</span>
         </div>
       </div>
-      {countBids != 0 && (
-        <div className="flex flex-col">
-          <div className="text-xs flex items-center font-bold">
-            <span className="text-blue-400">({countBids} bids)</span>
-          </div>
+      {endingDate && (
+        <div className="flex flex-col text-xs items-center ">
+          {countBids != 0 && <span className="text-blue-400 font-bold">({countBids} bids)</span>}
+          <TimeCounter date={endingDate}>
+            {(days, hours, minutes, seconds) => (
+              <div>
+                {days !== 0 && (
+                  <>
+                    <span className="text-gray-80">{days}D </span>
+                  </>
+                )}
+                {hours !== 0 && (
+                  <>
+                    <span className="text-gray-80">{hours}H </span>
+                  </>
+                )}
+                {minutes !== 0 && (
+                  <>
+                    <span className="text-gray-80">{minutes}M </span>
+                  </>
+                )}
+                {seconds !== 0 && (
+                  <>
+                    <span className="text-gray-80">{seconds}S</span>
+                  </>
+                )}
+              </div>
+            )}
+          </TimeCounter>
         </div>
       )}
       <div className="flex-1 flex items-center justify-center">
