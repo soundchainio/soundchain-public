@@ -37,7 +37,6 @@ export const {
   UPLOADS_BUCKET_REGION,
   UPLOADS_BUCKET_NAME,
   SQS_URL,
-  CONTRACT_ADDRESS = '0x69CEf6953750a3Ed91B973Df524236215468Aacc',
   WALLET_PUBLIC_KEY,
   WALLET_PRIVATE_KEY,
   ALCHEMY_API_KEY,
@@ -122,7 +121,6 @@ export const config = {
     url: WEB_APP_URL,
   },
   minting: {
-    contractAddress: CONTRACT_ADDRESS,
     pinataKey: PINATA_API_KEY,
     pinataSecret: PINATA_API_SECRET,
     walletPrivateKey: WALLET_PRIVATE_KEY,

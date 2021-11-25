@@ -250,7 +250,7 @@ export const mint: Handler<SQSEvent> = async event => {
     const body: NFT = JSON.parse(event.Records[0].body);
     const { assetKey, artKey, to, ...nft } = body;
     const name = body.name;
-    const contract = new web3.eth.Contract(SoundchainCollectible.abi as AbiItem[], config.minting.contractAddress);
+    const contract = new web3.eth.Contract(SoundchainCollectible.abi as AbiItem[], config.minting.nftAddress);
 
     const assetResult = await pinToIPFS(assetKey, name);
 
@@ -267,7 +267,7 @@ export const mint: Handler<SQSEvent> = async event => {
 
     const transaction = {
       from: config.minting.walletPublicKey,
-      to: config.minting.contractAddress,
+      to: config.minting.nftAddress,
       nonce,
       gas: 260000, // minimum
       data: contract.methods.safeMint(to, `ipfs://${metadataResult.IpfsHash}`).encodeABI(),
