@@ -88,6 +88,10 @@ export const Post = ({ post }: PostProps) => {
               title: post.track.title,
               artist: post.track.artist,
               isFavorite: post.track.isFavorite,
+              playbackCount: post.track.playbackCountFormatted,
+              favoriteCount: post.track.favoriteCount,
+              saleType: post.track.saleType,
+              price: post.track.price,
             }}
           />
         )}

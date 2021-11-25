@@ -378,6 +378,7 @@ export enum Genre {
 
 export type ListingItemPayload = {
   __typename?: 'ListingItemPayload';
+  _id: Maybe<Scalars['String']>;
   owner: Maybe<Scalars['String']>;
   nft: Maybe<Scalars['String']>;
   tokenId: Maybe<Scalars['Float']>;
@@ -1224,6 +1225,9 @@ export type Track = {
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   playbackUrl: Scalars['String'];
+  favoriteCount: Scalars['Float'];
+  price: Scalars['String'];
+  saleType: Scalars['String'];
   isFavorite: Scalars['Boolean'];
 };
 
@@ -2361,7 +2365,7 @@ export type TrackQuery = (
 
 export type TrackComponentFieldsFragment = (
   { __typename?: 'Track' }
-  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite'>
+  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'saleType' | 'price'>
   & { nftData: Maybe<(
     { __typename?: 'NFTDataType' }
     & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner'>
@@ -2787,6 +2791,9 @@ export const TrackComponentFieldsFragmentDoc = gql`
   deleted
   playbackCountFormatted
   isFavorite
+  favoriteCount
+  saleType
+  price
   nftData {
     transactionHash
     tokenId

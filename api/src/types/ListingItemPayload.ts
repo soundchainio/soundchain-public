@@ -3,6 +3,9 @@ import { Field, ObjectType } from 'type-graphql';
 @ObjectType()
 export class ListingItemPayload {
   @Field({ nullable: true })
+  _id: string;
+
+  @Field({ nullable: true })
   owner: string;
 
   @Field({ nullable: true })

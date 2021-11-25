@@ -22,6 +22,10 @@ export const Track = ({ track, coverPhotoUrl }: TrackProps) => {
         title: track.title,
         artist: track.artist,
         isFavorite: track.isFavorite,
+        playbackCount: track.playbackCountFormatted,
+        favoriteCount: track.favoriteCount,
+        saleType: track.saleType,
+        price: track.price,
       }}
     />
   );

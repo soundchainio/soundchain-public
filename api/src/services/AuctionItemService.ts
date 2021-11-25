@@ -1,4 +1,5 @@
 import { AuctionItem, AuctionItemModel } from '../models/AuctionItem';
+import { BidModel } from '../models/Bid';
 import { Context } from '../types/Context';
 import { SellType } from '../types/NFTSoldNotificationMetadata';
 import { ModelService } from './ModelService';
@@ -38,6 +39,25 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       .sort({ createdAt: -1 })
       .exec();
     return AuctionItem;
+  }
+
+  async getHighestBid(auctionId: string): Promise<string> {
+    const res = await BidModel.aggregate([
+      {
+        $match: {
+          auctionId,
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          highestBid: {
+            $max: '$amount',
+          },
+        },
+      },
+    ]);
+    return res.length ? res[0].highestBid : '0';
   }
 
   async wasListedBefore(tokenId: number): Promise<boolean> {
