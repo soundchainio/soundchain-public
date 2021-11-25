@@ -15,8 +15,8 @@ import {
   Profile,
   TrackDocument,
   TrackQuery,
-  useCountBidsQuery,
-  useListingItemQuery,
+  useCountBidsLazyQuery,
+  useListingItemLazyQuery,
   useProfileLazyQuery,
   useTrackLazyQuery,
   useUserByWalletLazyQuery,
@@ -78,19 +78,23 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const nftData = track.nftData;
   const mintingPending = nftData?.pendingRequest === PendingRequest.Mint;
   const isProcessing = nftData?.pendingRequest != PendingRequest.None;
-  const tokenId = nftData?.tokenId ?? -1;
+  const tokenId = nftData?.tokenId;
   const canList = (me?.profile.verified && nftData?.minter === account) || nftData?.minter != account;
 
-  const { data: countBids } = useCountBidsQuery({ variables: { tokenId } });
+  const [fetchCountBids, { data: countBids }] = useCountBidsLazyQuery();
 
-  const {
-    data: listingPayload,
-    loading,
-    refetch: refetchListing,
-  } = useListingItemQuery({
-    variables: { tokenId },
+  const [fetchListingItem, { data: listingPayload, loading }] = useListingItemLazyQuery({
     fetchPolicy: 'network-only',
   });
+
+  useEffect(() => {
+    if (track.nftData?.tokenId) {
+      fetchCountBids({ variables: { tokenId: track.nftData.tokenId } });
+      fetchListingItem({
+        variables: { tokenId: track.nftData.tokenId },
+      });
+    }
+  }, [track, fetchCountBids, fetchListingItem]);
 
   const [profile, { data: profileInfo }] = useProfileLazyQuery({
     variables: { id: track.artistProfileId ?? '' },
@@ -166,6 +170,7 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
 
   const auctionIsOver = (listingPayload?.listingItem.endingTime || 0) < Math.floor(Date.now() / 1000);
   const canComplete = auctionIsOver && highestBid.bidder?.toLowerCase() === account?.toLowerCase();
+  const isHighestBidder = highestBid.bidder?.toLowerCase() === account?.toLowerCase();
   const endingDate = new Date((listingPayload?.listingItem.endingTime || 0) * 1000);
 
   const topNovaBarProps: TopNavBarProps = {
@@ -177,14 +182,14 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
     const interval = setInterval(() => {
       if (isProcessing) {
         refetchTrack({ variables: { id: track.id } });
-      }
-      if (tokenId !== -1) {
-        refetchListing({ tokenId: tokenId });
+        if (tokenId) {
+          fetchListingItem({ variables: { tokenId } });
+        }
       }
     }, 10 * 1000);
 
     return () => clearInterval(interval);
-  }, [isProcessing, refetchTrack, refetchListing, tokenId, track.id]);
+  }, [isProcessing, refetchTrack, fetchListingItem, tokenId, track.id]);
 
   return (
     <Layout topNavBarProps={topNovaBarProps}>
@@ -222,17 +227,22 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
           <div className="text-white text-sm pl-3 font-bold">Loading</div>
         </div>
       ) : (
-        <HandleNFT
-          canList={canList}
-          price={price}
-          isOwner={isOwner}
-          isBuyNow={isBuyNow}
-          isAuction={isAuction}
-          canComplete={canComplete}
-          auctionIsOver={auctionIsOver}
-          countBids={countBids?.countBids.numberOfBids ?? 0}
-          endingDate={endingDate}
-        />
+        <>
+          {isAuction && isHighestBidder && (
+            <div className="text-green-500 font-bold p-4 text-center">You have the highest bid!</div>
+          )}
+          <HandleNFT
+            canList={canList}
+            price={price}
+            isOwner={isOwner}
+            isBuyNow={isBuyNow}
+            isAuction={isAuction}
+            canComplete={canComplete}
+            auctionIsOver={auctionIsOver}
+            countBids={countBids?.countBids.numberOfBids ?? 0}
+            endingDate={endingDate}
+          />
+        </>
       )}
     </Layout>
   );

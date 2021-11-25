@@ -2,13 +2,12 @@ import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { AuctionEnded } from 'components/details-NFT/AuctionEnded';
 import { Layout } from 'components/Layout';
+import MaxGasFee from 'components/MaxGasFee';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import useBlockchain from 'hooks/useBlockchain';
-import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
-import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
 import {
   PendingRequest,
@@ -59,7 +58,6 @@ export default function CompleteAuctionPage({ track }: TrackPageProps) {
   const { resultAuction, getHighestBid } = useBlockchain();
   const { account, web3 } = useWalletContext();
   const [trackUpdate] = useUpdateTrackMutation();
-  const maxGasFee = useMaxGasFee();
   const [loading, setLoading] = useState(false);
   const [highestBid, setHighestBid] = useState<HighestBid>({} as HighestBid);
   const me = useMe();
@@ -129,13 +127,7 @@ export default function CompleteAuctionPage({ track }: TrackPageProps) {
       </div>
       <AuctionEnded highestBid={highestBid} />
       <div className="flex p-4">
-        <div className="flex-1 font-black text-xs text-gray-80">
-          <p>Max gas fee</p>
-          <div className="flex items-center gap-1">
-            <Matic />
-            <div className="text-white">{maxGasFee}</div>MATIC
-          </div>
-        </div>
+        <MaxGasFee />
         <Button variant="buy-nft" onClick={handleClaim} loading={loading}>
           <div className="px-4">CLAIM NFT</div>
         </Button>

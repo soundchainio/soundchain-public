@@ -2,14 +2,13 @@ import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { ListNFTBuyNow } from 'components/details-NFT/ListNFTBuyNow';
 import { Layout } from 'components/Layout';
+import MaxGasFee from 'components/MaxGasFee';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import { useModalDispatch } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
-import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
-import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
 import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemLazyQuery, useUpdateTrackMutation } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
@@ -52,7 +51,6 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
   const me = useMe();
   const [trackUpdate] = useUpdateTrackMutation();
   const { account, web3 } = useWalletContext();
-  const maxGasFee = useMaxGasFee();
   const { dispatchShowApproveModal } = useModalDispatch();
   const [loading, setLoading] = useState(false);
   const [price, setPrice] = useState(0);
@@ -137,13 +135,7 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
       </div>
       <ListNFTBuyNow onSetPrice={price => setPrice(price)} />
       <div className="flex p-4">
-        <div className="flex-1 font-black text-xs text-gray-80">
-          <p>Max gas fee</p>
-          <div className="flex items-center gap-1">
-            <Matic />
-            <div className="text-white">{maxGasFee}</div>MATIC
-          </div>
-        </div>
+        <MaxGasFee />
         <Button variant="list-nft" disabled={price <= 0} onClick={handleList} loading={loading}>
           <div className="px-4 font-bold">LIST NFT</div>
         </Button>

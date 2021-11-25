@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { InputField } from 'components/InputField';
 import { TimeCounter } from 'components/TimeCounter';
 import { WalletSelector } from 'components/WalletSelector';
@@ -42,7 +43,7 @@ export const PlaceBid = ({
 
   return (
     <div className="mb-2">
-      <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={console.log}>
+      <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={() => {}}>
         {({ handleChange, setFieldValue }: FormikProps<FormValues>) => (
           <Form>
             <div className="flex p-5 bg-gray-20 text-gray-80">
@@ -62,7 +63,7 @@ export const PlaceBid = ({
               <p className="flex items-center flex-shrink-0 justify-start font-bold text-xs md-text-sm uppercase">
                 time reaming
               </p>
-              <p className="flex items-center w-full justify-end">
+              <div className="flex items-center w-full justify-end">
                 <span className="mx-1 text-white font-bold text-xs leading-tight">
                   <TimeCounter date={new Date(endingTime * 1000)}>
                     {(days, hours, minutes, seconds) => (
@@ -91,9 +92,9 @@ export const PlaceBid = ({
                     )}
                   </TimeCounter>
                 </span>
-              </p>
+              </div>
             </div>
-            <WalletSelector className="mb-10" ownerAddressAccount={ownerAddressAccount} />
+            <WalletSelector ownerAddressAccount={ownerAddressAccount} />
             <div className="flex">
               <label
                 htmlFor="bidAmount"

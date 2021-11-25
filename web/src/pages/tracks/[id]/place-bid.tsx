@@ -57,6 +57,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
   const [loading, setLoading] = useState(false);
   const [bidAmount, setBidAmount] = useState(0);
   const [highestBid, setHighestBid] = useState('0');
+  const [isHighestBidder, setIsHighestBidder] = useState(false);
   const me = useMe();
 
   const tokenId = track.nftData?.tokenId ?? -1;
@@ -76,7 +77,8 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
       return;
     }
     const fetchHighestBid = async () => {
-      const { _bid } = await getHighestBid(web3, tokenId);
+      const { _bid, _bidder } = await getHighestBid(web3, tokenId);
+      setIsHighestBidder(_bidder.toLowerCase() === account?.toLowerCase());
       setHighestBid(_bid);
     };
     fetchHighestBid();
@@ -85,7 +87,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     }, 10 * 1000);
 
     return () => clearInterval(interval);
-  }, [tokenId, track.id, web3, getHighestBid]);
+  }, [tokenId, track.id, web3, getHighestBid, account]);
 
   if (!auctionItem) {
     return null;
@@ -135,6 +137,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
           countBids={countBids?.countBids.numberOfBids ?? 0}
         />
       )}
+      {isHighestBidder && <div className="text-green-500 font-bold p-4 text-center">You have the highest bid!</div>}
       {bidAmount >= 0 && (
         <div className="flex p-4">
           <div className="flex-1 font-black text-xs">

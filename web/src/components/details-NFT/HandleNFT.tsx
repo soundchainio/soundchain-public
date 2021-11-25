@@ -39,7 +39,7 @@ export const HandleNFT = ({
         </ListingAction>
       );
     }
-    if (isBuyNow || (!auctionIsOver && isAuction)) {
+    if (isBuyNow || (isAuction && !auctionIsOver)) {
       return (
         <ListedAction
           href={isBuyNow ? `${router.asPath}/edit/buy-now` : `${router.asPath}/edit/auction`}
@@ -48,6 +48,9 @@ export const HandleNFT = ({
           variant="edit-listing"
         />
       );
+    }
+    if (isAuction && auctionIsOver) {
+      return null;
     }
     return (
       <ListingAction href={`${router.asPath}/list`} action="LIST NFT">
@@ -58,9 +61,9 @@ export const HandleNFT = ({
     // not the owner
   } else {
     if (price && isBuyNow) {
-      return <ListedAction href={`${router.asPath}/buy`} price={price} action="BUY NFT" variant="buy-nft" />;
+      return <ListedAction href={`${router.asPath}/buy-now`} price={price} action="BUY NFT" variant="buy-nft" />;
     }
-    if (price && isAuction) {
+    if (price && isAuction && !auctionIsOver) {
       return (
         <ListedAction
           href={`${router.asPath}/place-bid`}

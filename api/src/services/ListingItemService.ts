@@ -16,6 +16,7 @@ export class ListingItemService extends Service {
           as: 'auction',
           let: {
             tokenId: '$nftData.tokenId',
+            valid: '$auction.valid',
           },
           pipeline: [
             {
@@ -24,6 +25,9 @@ export class ListingItemService extends Service {
                   $and: [
                     {
                       $eq: ['$tokenId', '$$tokenId'],
+                    },
+                    {
+                      $eq: ['$valid', true],
                     },
                   ],
                 },
@@ -38,6 +42,7 @@ export class ListingItemService extends Service {
           as: 'buynow',
           let: {
             tokenId: '$nftData.tokenId',
+            valid: '$buynow.valid',
           },
           pipeline: [
             {
@@ -46,6 +51,9 @@ export class ListingItemService extends Service {
                   $and: [
                     {
                       $eq: ['$tokenId', '$$tokenId'],
+                    },
+                    {
+                      $eq: ['$valid', true],
                     },
                   ],
                 },

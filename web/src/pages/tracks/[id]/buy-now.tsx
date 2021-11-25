@@ -2,13 +2,12 @@ import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { BuyNow } from 'components/details-NFT/BuyNow';
 import { Layout } from 'components/Layout';
+import MaxGasFee from 'components/MaxGasFee';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import useBlockchain from 'hooks/useBlockchain';
-import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
-import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
 import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemLazyQuery, useUpdateTrackMutation } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
@@ -48,7 +47,6 @@ export default function BuyNowPage({ track }: TrackPageProps) {
   const { buyItem } = useBlockchain();
   const { account, web3 } = useWalletContext();
   const [trackUpdate] = useUpdateTrackMutation();
-  const maxGasFee = useMaxGasFee();
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const me = useMe();
@@ -124,13 +122,7 @@ export default function BuyNowPage({ track }: TrackPageProps) {
       </div>
       {price && ownerAddressAccount && <BuyNow price={price} ownerAddressAccount={ownerAddressAccount} />}
       <div className="flex p-4">
-        <div className="flex-1 font-black text-xs text-gray-80">
-          <p>Max gas fee</p>
-          <div className="flex items-center gap-1">
-            <Matic />
-            <div className="text-white">{maxGasFee}</div>MATIC
-          </div>
-        </div>
+        <MaxGasFee />
         <Button variant="buy-nft" onClick={handleBuy} loading={loading}>
           <div className="px-4">BUY NFT</div>
         </Button>

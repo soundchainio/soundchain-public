@@ -99,6 +99,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       {
         $match: {
           tokenId,
+          valid: true,
         },
       },
       {
