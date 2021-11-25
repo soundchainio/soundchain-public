@@ -28,7 +28,7 @@ export class MintingRequestResolver {
         .sendMessage({
           QueueUrl: config.minting.sqsUrl,
           MessageBody: JSON.stringify({ assetKey: assetKey, artKey: artKey, ...rest }),
-          MessageGroupId: config.minting.contractAddress,
+          MessageGroupId: config.minting.nftAddress,
         })
         .promise();
     } catch (e) {
