@@ -72,6 +72,12 @@ export class Track extends Model {
   @prop()
   favoriteCount: number;
 
+  @prop()
+  price: number;
+
+  @prop()
+  saleType: string;
+
   @Field()
   playbackCountFormatted: string;
 
