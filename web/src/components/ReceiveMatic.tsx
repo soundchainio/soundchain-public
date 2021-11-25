@@ -28,7 +28,6 @@ export default function ReceiveMatic({ address, backButton }: ReceiveMaticProps)
         leftButton: <TopNavBarButton onClick={backButton} label="Back" icon={LeftArrow} />,
         title: 'Receive',
       }}
-      fullHeight={true}
     >
       <div className="h-full flex flex-col gap-5 px-4 py-7 items-center">
         <div className="flex-1 flex flex-col gap-5 items-center w-full">

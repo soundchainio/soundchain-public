@@ -98,7 +98,7 @@ export default function RequestPage({ data }: RequestPageProps) {
   };
 
   return (
-    <Layout topNavBarProps={topNovaBarProps} fullHeight>
+    <Layout topNavBarProps={topNovaBarProps}>
       <div className="flex flex-col justify-between h-full">
         <div>
           <NextLink href={`/profiles/${data.profileId}`}>
