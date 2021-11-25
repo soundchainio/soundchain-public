@@ -1,7 +1,7 @@
 import { useModalDispatch } from 'contexts/providers/modal';
 import { useMe } from 'hooks/useMe';
 import { Ellipsis } from 'icons/Ellipsis';
-import { usePostQuery } from 'lib/graphql';
+import { PostQuery } from 'lib/graphql';
 import NextLink from 'next/link';
 import React from 'react';
 import ReactPlayer from 'react-player';
@@ -18,12 +18,10 @@ import { RepostPreview } from './RepostPreview';
 import { Timestamp } from './Timestamp';
 
 interface PostProps {
-  postId: string;
+  post: PostQuery['post'];
 }
 
-export const Post = ({ postId }: PostProps) => {
-  const { data } = usePostQuery({ variables: { id: postId } });
-  const post = data?.post;
+export const Post = ({ post }: PostProps) => {
   const me = useMe();
   const { dispatchShowAuthorActionsModal } = useModalDispatch();
 
@@ -47,7 +45,11 @@ export const Post = ({ postId }: PostProps) => {
           <div className="flex items-center w-full ml-2">
             <div className="flex flex-1 flex-col">
               <NextLink href={`/profiles/${post.profile.userHandle}`}>
-                <DisplayName name={post.profile.displayName} verified={post.profile.verified} />
+                <DisplayName
+                  name={post.profile.displayName}
+                  verified={post.profile.verified}
+                  teamMember={post.profile.teamMember}
+                />
               </NextLink>
               <Timestamp
                 datetime={post.createdAt}
@@ -86,6 +88,10 @@ export const Post = ({ postId }: PostProps) => {
               title: post.track.title,
               artist: post.track.artist,
               isFavorite: post.track.isFavorite,
+              playbackCount: post.track.playbackCountFormatted,
+              favoriteCount: post.track.favoriteCount,
+              saleType: post.track.saleType,
+              price: post.track.price,
             }}
           />
         )}
@@ -94,10 +100,10 @@ export const Post = ({ postId }: PostProps) => {
           topReactions={post.topReactions}
           commentCount={post.commentCount}
           repostCount={post.repostCount}
-          postId={postId}
+          postId={post.id}
         />
       </div>
-      <PostActions postId={postId} myReaction={post.myReaction} />
+      <PostActions postId={post.id} myReaction={post.myReaction} />
     </div>
   );
 };

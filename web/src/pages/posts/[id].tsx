@@ -9,12 +9,12 @@ import { Post } from 'components/Post';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useMe } from 'hooks/useMe';
 import { cacheFor, createApolloClient } from 'lib/apollo';
-import { PostDocument, usePostQuery } from 'lib/graphql';
+import { PostDocument, PostQuery } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 
 export interface PostPageProps {
-  postId: string;
+  post: PostQuery['post'];
 }
 
 interface PostPageParams extends ParsedUrlQuery {
@@ -30,7 +30,7 @@ export const getServerSideProps: GetServerSideProps<PostPageProps, PostPageParam
 
   const apolloClient = createApolloClient(context);
 
-  const { error } = await apolloClient.query({
+  const { data, error } = await apolloClient.query({
     query: PostDocument,
     variables: { id: postId },
     context,
@@ -40,13 +40,12 @@ export const getServerSideProps: GetServerSideProps<PostPageProps, PostPageParam
     return { notFound: true };
   }
 
-  return cacheFor(PostPage, { postId }, context, apolloClient);
+  return cacheFor(PostPage, { post: data.post }, context, apolloClient);
 };
 
-export default function PostPage({ postId }: PostPageProps) {
+export default function PostPage({ post }: PostPageProps) {
   const me = useMe();
-  const { data } = usePostQuery({ variables: { id: postId } });
-  const deleted = data?.post.deleted;
+  const deleted = post.deleted;
 
   const topNovaBarProps: TopNavBarProps = {
     leftButton: <BackButton />,
@@ -55,19 +54,19 @@ export default function PostPage({ postId }: PostPageProps) {
 
   return (
     <Layout topNavBarProps={topNovaBarProps}>
-      {deleted ?
+      {deleted ? (
         <NotAvailableMessage type="post" />
-        :
+      ) : (
         <div>
-          <Post postId={postId} />
+          <Post post={post} />
           <div className="pb-12">
-            <Comments postId={postId} />
+            <Comments postId={post.id} />
           </div>
           <BottomSheet>
-            <NewCommentForm postId={postId} />
+            <NewCommentForm postId={post.id} />
           </BottomSheet>
         </div>
-      }
+      )}
     </Layout>
   );
 }

@@ -1,0 +1,13 @@
+query AuctionItem($tokenId: Float!) {
+  auctionItem(tokenId: $tokenId) {
+    auctionItem {
+      id
+      owner
+      nft
+      tokenId
+      startingTime
+      endingTime
+      reservePrice
+    }
+  }
+}

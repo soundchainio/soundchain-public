@@ -6,6 +6,7 @@ query Chats($page: PageInput) {
         displayName
         profilePicture
         verified
+        teamMember
       }
       message
       unread

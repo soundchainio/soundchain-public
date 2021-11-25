@@ -38,7 +38,11 @@ export const Comment = ({ commentId }: CommentProps) => {
         <div className="flex items-center">
           <div className="flex-1 flex flex-col">
             <NextLink href={`/profiles/${comment.profile.userHandle}`}>
-              <DisplayName name={comment.profile.displayName} verified={comment.profile.verified} />
+              <DisplayName
+                name={comment.profile.displayName}
+                verified={comment.profile.verified}
+                teamMember={comment.profile.teamMember}
+              />
             </NextLink>
             <Timestamp className="flex-1" datetime={comment.createdAt} />
           </div>

@@ -162,7 +162,7 @@ export default function WalletPage() {
   }
 
   return (
-    <Layout topNavBarProps={topNavBarProps} fullHeight={true}>
+    <Layout topNavBarProps={topNavBarProps}>
       <Head>
         <title>Soundchain - Wallet</title>
         <meta name="description" content="Wallet" />

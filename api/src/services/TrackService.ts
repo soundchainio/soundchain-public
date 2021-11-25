@@ -16,6 +16,10 @@ import { PendingRequest } from '../types/PendingRequest';
 import { SortTrackInput } from '../types/SortTrackInput';
 import { ModelService } from './ModelService';
 
+export interface FavoriteCount {
+  count: number;
+}
+
 type RecursivePartial<T> = {
   [P in keyof T]?: RecursivePartial<T[P]>;
 };
@@ -182,5 +186,44 @@ export class TrackService extends ModelService<typeof Track> {
       sort,
       page,
     });
+  }
+
+  async favoriteCount(trackId: string): Promise<FavoriteCount> {
+    const res = await FavoriteProfileTrackModel.aggregate([
+      {
+        $match: {
+          trackId: trackId.toString(),
+        },
+      },
+      {
+        $count: 'trackId',
+      },
+      {
+        $project: {
+          count: '$trackId',
+        },
+      },
+    ]);
+    return res.length ? res[0].count : 0;
+  }
+
+  async saleType(tokenId: number): Promise<string> {
+    const res = await this.context.listingItemService.getListingItem(tokenId);
+    if (res.endingTime) {
+      return 'auction';
+    } else if (res.pricePerItem) {
+      return 'buy now';
+    }
+    return '';
+  }
+
+  async price(tokenId: number): Promise<string> {
+    const res = await this.context.listingItemService.getListingItem(tokenId);
+    if (res.endingTime) {
+      return await this.context.auctionItemService.getHighestBid(res._id);
+    } else if (res.pricePerItem) {
+      return res.pricePerItem;
+    }
+    return '0';
   }
 }

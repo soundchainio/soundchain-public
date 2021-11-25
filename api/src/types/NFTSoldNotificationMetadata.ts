@@ -1,3 +1,5 @@
+import { registerEnumType } from 'type-graphql';
+
 export interface NFTSoldNotificationMetadata {
   buyerName: string;
   buyerPicture: string | undefined;
@@ -7,4 +9,14 @@ export interface NFTSoldNotificationMetadata {
   artworkUrl: string;
   trackId: string;
   price: string;
+  sellType: SellType;
 }
+
+export enum SellType {
+  BuyNow = 'BuyNow',
+  Auction = 'Auction',
+}
+
+registerEnumType(SellType, {
+  name: 'SellType',
+});

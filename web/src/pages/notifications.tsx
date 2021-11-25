@@ -17,7 +17,7 @@ export default function UserNotifications() {
 
   useEffect(() => {
     resetNotificationCount();
-  }, []);
+  }, [resetNotificationCount]);
 
   const topNavBarProps: TopNavBarProps = {
     rightButton: <ClearAllNotificationsButton />,

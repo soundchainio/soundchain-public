@@ -5,7 +5,7 @@ on:
     branches:
       - staging
     paths:
-      - "api/**"
+      - 'api/**'
 
 jobs:
   deploy-api:
@@ -45,6 +45,7 @@ jobs:
           ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY_STAGING }}
           MARKETPLACE_ADDRESS: ${{ secrets.MARKETPLACE_ADDRESS_STAGING }}
           NFT_ADDRESS: ${{ secrets.NFT_ADDRESS_STAGING }}
+          AUCTION_ADDRESS: ${{ secrets.AUCTION_ADDRESS_STAGING }}
           PINATA_API_KEY: ${{ secrets.PINATA_API_KEY_STAGING }}
           PINATA_API_SECRET: ${{ secrets.PINATA_API_SECRET_STAGING }}
           MUX_TOKEN_ID: ${{ secrets.MUX_TOKEN_ID_STAGING }}

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { InputField } from 'components/InputField';
 import { Form, Formik, FormikProps } from 'formik';
 import { Matic } from 'icons/Matic';
@@ -26,7 +27,7 @@ export const ListNFTBuyNow = ({ onSetPrice, initialPrice }: ListNFTProps) => {
 
   return (
     <div className="mb-2">
-      <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={console.log}>
+      <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={() => {}}>
         {({ values, handleChange }: FormikProps<FormValues>) => (
           <Form>
             <div className="flex">

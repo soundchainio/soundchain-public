@@ -2,12 +2,12 @@ import { WalletSelector } from 'components/WalletSelector';
 import { Matic } from 'icons/Matic';
 import React from 'react';
 
-interface BuyNFTProps {
+interface BuyNowProps {
   price: string;
   ownerAddressAccount: string;
 }
 
-export const BuyNFT = ({ price, ownerAddressAccount }: BuyNFTProps) => {
+export const BuyNow = ({ price, ownerAddressAccount }: BuyNowProps) => {
   return (
     <div className="mb-2">
       <WalletSelector className="mb-10" ownerAddressAccount={ownerAddressAccount} />

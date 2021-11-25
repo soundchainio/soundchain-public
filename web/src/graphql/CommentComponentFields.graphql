@@ -8,6 +8,7 @@ fragment CommentComponentFields on Comment {
     displayName
     profilePicture
     verified
+    teamMember
     userHandle
   }
 }

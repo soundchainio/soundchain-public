@@ -30,8 +30,16 @@ export type AuctionCancelled = ContractEventLog<{
 export type AuctionCreated = ContractEventLog<{
   nftAddress: string;
   tokenId: string;
+  owner: string;
+  reservePrice: string;
+  startTimestamp: string;
+  endTimestamp: string;
   0: string;
   1: string;
+  2: string;
+  3: string;
+  4: string;
+  5: string;
 }>;
 export type AuctionResulted = ContractEventLog<{
   oldOwner: string;
@@ -56,16 +64,6 @@ export type BidPlaced = ContractEventLog<{
   3: string;
 }>;
 export type BidRefunded = ContractEventLog<{
-  nftAddress: string;
-  tokenId: string;
-  bidder: string;
-  bid: string;
-  0: string;
-  1: string;
-  2: string;
-  3: string;
-}>;
-export type BidWithdrawn = ContractEventLog<{
   nftAddress: string;
   tokenId: string;
   bidder: string;
@@ -135,7 +133,6 @@ export interface SoundchainAuction extends BaseContract {
       arg1: number | string | BN
     ): NonPayableTransactionObject<{
       owner: string;
-      minBid: string;
       reservePrice: string;
       startTime: string;
       endTime: string;
@@ -144,8 +141,7 @@ export interface SoundchainAuction extends BaseContract {
       1: string;
       2: string;
       3: string;
-      4: string;
-      5: boolean;
+      4: boolean;
     }>;
 
     cancelAuction(
@@ -158,7 +154,6 @@ export interface SoundchainAuction extends BaseContract {
       _tokenId: number | string | BN,
       _reservePrice: number | string | BN,
       _startTimestamp: number | string | BN,
-      minBidReserve: boolean,
       _endTimestamp: number | string | BN
     ): NonPayableTransactionObject<void>;
 
@@ -171,13 +166,11 @@ export interface SoundchainAuction extends BaseContract {
       _startTime: string;
       _endTime: string;
       _resulted: boolean;
-      minBid: string;
       0: string;
       1: string;
       2: string;
       3: string;
       4: boolean;
-      5: string;
     }>;
 
     getHighestBidder(
@@ -259,11 +252,6 @@ export interface SoundchainAuction extends BaseContract {
     updatePlatformFeeRecipient(
       _platformFeeRecipient: string
     ): NonPayableTransactionObject<void>;
-
-    withdrawBid(
-      _nftAddress: string,
-      _tokenId: number | string | BN
-    ): NonPayableTransactionObject<void>;
   };
   events: {
     AuctionCancelled(cb?: Callback<AuctionCancelled>): EventEmitter;
@@ -291,12 +279,6 @@ export interface SoundchainAuction extends BaseContract {
     BidRefunded(
       options?: EventOptions,
       cb?: Callback<BidRefunded>
-    ): EventEmitter;
-
-    BidWithdrawn(cb?: Callback<BidWithdrawn>): EventEmitter;
-    BidWithdrawn(
-      options?: EventOptions,
-      cb?: Callback<BidWithdrawn>
     ): EventEmitter;
 
     OwnershipTransferred(cb?: Callback<OwnershipTransferred>): EventEmitter;
@@ -387,13 +369,6 @@ export interface SoundchainAuction extends BaseContract {
     event: "BidRefunded",
     options: EventOptions,
     cb: Callback<BidRefunded>
-  ): void;
-
-  once(event: "BidWithdrawn", cb: Callback<BidWithdrawn>): void;
-  once(
-    event: "BidWithdrawn",
-    options: EventOptions,
-    cb: Callback<BidWithdrawn>
   ): void;
 
   once(event: "OwnershipTransferred", cb: Callback<OwnershipTransferred>): void;

@@ -98,7 +98,7 @@ export default function RequestPage({ data }: RequestPageProps) {
   };
 
   return (
-    <Layout topNavBarProps={topNovaBarProps} fullHeight>
+    <Layout topNavBarProps={topNovaBarProps}>
       <div className="flex flex-col justify-between h-full">
         <div>
           <NextLink href={`/profiles/${data.profileId}`}>
@@ -106,7 +106,11 @@ export default function RequestPage({ data }: RequestPageProps) {
               <div className="relative flex items-center p-4">
                 <Avatar profile={profile.profile} pixels={40} className="rounded-full min-w-max flex items-center" />
                 <div className="mx-4">
-                  <DisplayName name={profile.profile.displayName} verified={profile.profile.verified} />
+                  <DisplayName
+                    name={profile.profile.displayName}
+                    verified={profile.profile.verified}
+                    teamMember={profile.profile.teamMember}
+                  />
                   <p className="text-gray-80 text-sm">@{profile.profile.userHandle}</p>
                 </div>
               </div>
