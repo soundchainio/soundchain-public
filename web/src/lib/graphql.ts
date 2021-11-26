@@ -775,6 +775,36 @@ export type PinningPayload = {
   cid: Scalars['String'];
 };
 
+export type PolygonscanResult = {
+  __typename?: 'PolygonscanResult';
+  result: Array<PolygonscanResultObj>;
+  nextPage: Maybe<Scalars['String']>;
+};
+
+export type PolygonscanResultObj = {
+  __typename?: 'PolygonscanResultObj';
+  blockNumber: Scalars['String'];
+  timeStamp: Scalars['String'];
+  hash: Scalars['String'];
+  nonce: Scalars['String'];
+  blockHash: Scalars['String'];
+  transactionIndex: Scalars['String'];
+  from: Scalars['String'];
+  to: Scalars['String'];
+  value: Scalars['String'];
+  gas: Scalars['String'];
+  gasPrice: Scalars['String'];
+  isError: Scalars['String'];
+  txreceipt_status: Scalars['String'];
+  input: Scalars['String'];
+  contractAddress: Scalars['String'];
+  cumulativeGasUsed: Scalars['String'];
+  gasUsed: Scalars['String'];
+  confirmations: Scalars['String'];
+  method: Maybe<Scalars['String']>;
+  date: Scalars['String'];
+};
+
 export type Post = {
   __typename?: 'Post';
   id: Scalars['ID'];
@@ -880,6 +910,7 @@ export type Query = {
   notifications: NotificationConnection;
   notification: Notification;
   maticUsd: Scalars['String'];
+  getTransactionHistory: PolygonscanResult;
   post: Post;
   posts: PostConnection;
   reactions: ReactionConnection;
@@ -995,6 +1026,12 @@ export type QueryNotificationsArgs = {
 
 export type QueryNotificationArgs = {
   id: Scalars['String'];
+};
+
+
+export type QueryGetTransactionHistoryArgs = {
+  page?: Maybe<PageInput>;
+  wallet: Scalars['String'];
 };
 
 
@@ -2107,6 +2144,24 @@ export type PinToIpfsMutation = (
   & { pinToIPFS: (
     { __typename?: 'PinningPayload' }
     & Pick<PinningPayload, 'cid'>
+  ) }
+);
+
+export type PolygonscanQueryVariables = Exact<{
+  wallet: Scalars['String'];
+  page?: Maybe<PageInput>;
+}>;
+
+
+export type PolygonscanQuery = (
+  { __typename?: 'Query' }
+  & { getTransactionHistory: (
+    { __typename?: 'PolygonscanResult' }
+    & Pick<PolygonscanResult, 'nextPage'>
+    & { result: Array<(
+      { __typename?: 'PolygonscanResultObj' }
+      & Pick<PolygonscanResultObj, 'blockNumber' | 'timeStamp' | 'hash' | 'nonce' | 'blockHash' | 'transactionIndex' | 'from' | 'to' | 'value' | 'gas' | 'gasPrice' | 'isError' | 'txreceipt_status' | 'input' | 'contractAddress' | 'cumulativeGasUsed' | 'gasUsed' | 'confirmations' | 'method' | 'date'>
+    )> }
   ) }
 );
 
@@ -4581,6 +4636,64 @@ export function usePinToIpfsMutation(baseOptions?: Apollo.MutationHookOptions<Pi
 export type PinToIpfsMutationHookResult = ReturnType<typeof usePinToIpfsMutation>;
 export type PinToIpfsMutationResult = Apollo.MutationResult<PinToIpfsMutation>;
 export type PinToIpfsMutationOptions = Apollo.BaseMutationOptions<PinToIpfsMutation, PinToIpfsMutationVariables>;
+export const PolygonscanDocument = gql`
+    query Polygonscan($wallet: String!, $page: PageInput) {
+  getTransactionHistory(wallet: $wallet, page: $page) {
+    nextPage
+    result {
+      blockNumber
+      timeStamp
+      hash
+      nonce
+      blockHash
+      transactionIndex
+      from
+      to
+      value
+      gas
+      gasPrice
+      isError
+      txreceipt_status
+      input
+      contractAddress
+      cumulativeGasUsed
+      gasUsed
+      confirmations
+      method
+      date
+    }
+  }
+}
+    `;
+
+/**
+ * __usePolygonscanQuery__
+ *
+ * To run a query within a React component, call `usePolygonscanQuery` and pass it any options that fit your needs.
+ * When your component renders, `usePolygonscanQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = usePolygonscanQuery({
+ *   variables: {
+ *      wallet: // value for 'wallet'
+ *      page: // value for 'page'
+ *   },
+ * });
+ */
+export function usePolygonscanQuery(baseOptions: Apollo.QueryHookOptions<PolygonscanQuery, PolygonscanQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<PolygonscanQuery, PolygonscanQueryVariables>(PolygonscanDocument, options);
+      }
+export function usePolygonscanLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<PolygonscanQuery, PolygonscanQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<PolygonscanQuery, PolygonscanQueryVariables>(PolygonscanDocument, options);
+        }
+export type PolygonscanQueryHookResult = ReturnType<typeof usePolygonscanQuery>;
+export type PolygonscanLazyQueryHookResult = ReturnType<typeof usePolygonscanLazyQuery>;
+export type PolygonscanQueryResult = Apollo.QueryResult<PolygonscanQuery, PolygonscanQueryVariables>;
 export const PostDocument = gql`
     query Post($id: String!) {
   post(id: $id) {
