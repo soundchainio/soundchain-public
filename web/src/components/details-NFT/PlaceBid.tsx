@@ -110,12 +110,12 @@ export const PlaceBid = ({
                     <span
                       className="text-white font-bold cursor-pointer"
                       onClick={() => {
-                        const amount = (parseFloat(currentBid) * 1.01).toFixed(6);
+                        const amount = (parseFloat(currentBid) * 1.015).toFixed(6);
                         onSetBidAmount(parseFloat(amount));
                         setFieldValue('bidAmount', amount);
                       }}
                     >
-                      {(parseFloat(currentBid) * 1.01).toFixed(6)}
+                      {(parseFloat(currentBid) * 1.015).toFixed(6)}
                     </span>{' '}
                     MATIC or more.
                   </p>
