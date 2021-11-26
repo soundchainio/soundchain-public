@@ -41,7 +41,7 @@ export const getServerSideProps = protectPage<HistoryPageProps, HistoryPageParam
   return cacheFor(HistoryPage, { address }, context, apolloClient);
 });
 
-const topNovaBarProps: TopNavBarProps = {
+const topNavBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
   title: 'History',
 };
@@ -81,7 +81,7 @@ export default function HistoryPage({ address }: HistoryPageProps) {
   };
 
   return (
-    <Layout topNavBarProps={topNovaBarProps}>
+    <Layout topNavBarProps={topNavBarProps}>
       <Head>
         <title>Soundchain - Wallet</title>
         <meta name="description" content="Wallet" />

@@ -5,7 +5,6 @@ import { Jazzicon } from 'components/Jazzicon';
 import { Layout } from 'components/Layout';
 import { LoaderAnimation } from 'components/LoaderAnimation';
 import { OwnedNfts } from 'components/OwnedNfts';
-import ReceiveMatic from 'components/ReceiveMatic';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
@@ -30,39 +29,21 @@ const topNavBarProps: TopNavBarProps = {
 };
 
 interface WalletButtonProps {
-  href?: string;
+  href: string;
   title: string;
   icon: (props: React.SVGProps<SVGSVGElement>) => JSX.Element;
   handleOnClick?: () => void;
 }
-const WalletButton = ({ href, title, icon: Icon, handleOnClick }: WalletButtonProps) => {
-  const className = 'text-gray-80 text-xs font-bold flex flex-col items-center gap-2';
-
-  const Content = () => {
-    return (
-      <>
+const WalletButton = ({ href, title, icon: Icon }: WalletButtonProps) => {
+  return (
+    <Link href={href}>
+      <a className="text-gray-80 text-xs font-bold flex flex-col items-center gap-2">
         <div className="rounded-full border-gray-50 border-2 w-10 h-10 flex justify-center items-center">
           <Icon />
         </div>
         {title}
-      </>
-    );
-  };
-
-  if (href) {
-    return (
-      <Link href={href}>
-        <a className={className}>
-          <Content />
-        </a>
-      </Link>
-    );
-  }
-
-  return (
-    <button className={className} onClick={handleOnClick}>
-      <Content />
-    </button>
+      </a>
+    </Link>
   );
 };
 
@@ -76,10 +57,12 @@ export default function WalletPage() {
   const [selectedWallet, setSelectedWallet] = useState(DefaultWallet.Soundchain);
   const [connectedToMetaMask, setConnectedToMetaMask] = useState(false);
   const [correctNetwork, setCorrectNetwork] = useState(true);
-  const [showReceivePage, setShowReceivePage] = useState(false);
 
-  const getAccount = selectedWallet === DefaultWallet.Soundchain ? magicAccount : account;
-  const getBalance = selectedWallet === DefaultWallet.Soundchain ? magicBalance : balance;
+  const isSoundChainSelected = selectedWallet === DefaultWallet.Soundchain;
+  const isMetamaskSelected = selectedWallet === DefaultWallet.MetaMask;
+
+  const getAccount = isSoundChainSelected ? magicAccount : account;
+  const getBalance = isSoundChainSelected ? magicBalance : balance;
 
   useEffect(() => {
     if (!account) {
@@ -116,15 +99,14 @@ export default function WalletPage() {
             <option value={DefaultWallet.MetaMask}>MetaMask</option>
           </select>
           <span className="absolute top-2 left-2 pointer-events-none">
-            {selectedWallet === DefaultWallet.Soundchain ? (
+            {isSoundChainSelected ? (
               <Logo id="soundchain-wallet" height="16" width="16" />
             ) : (
               <MetaMask height="16" width="16" />
             )}
           </span>
         </div>
-        {(selectedWallet === DefaultWallet.Soundchain ||
-          (selectedWallet === DefaultWallet.MetaMask && connectedToMetaMask && correctNetwork)) && (
+        {(isSoundChainSelected || (isMetamaskSelected && connectedToMetaMask && correctNetwork)) && (
           <label className="ml-auto flex items-center gap-2">
             <span className="text-sm leading-3 font-bold text-white">Default wallet</span>
             <input
@@ -156,10 +138,6 @@ export default function WalletPage() {
     );
   };
 
-  if (showReceivePage && getAccount) {
-    return <ReceiveMatic address={getAccount} backButton={() => setShowReceivePage(false)} />;
-  }
-
   return (
     <Layout topNavBarProps={topNavBarProps}>
       <Head>
@@ -169,7 +147,7 @@ export default function WalletPage() {
       </Head>
       <div className="h-full flex flex-col">
         <WalletHeader />
-        {selectedWallet === DefaultWallet.MetaMask && (!connectedToMetaMask || !correctNetwork) ? (
+        {isMetamaskSelected && (!connectedToMetaMask || !correctNetwork) ? (
           !connectedToMetaMask ? (
             <div className="flex justify-center items-center h-full">
               <MetaMaskButton caption="Connect Metamask" handleOnClick={connect} />
@@ -208,9 +186,9 @@ export default function WalletPage() {
               </div>
               <div className="flex gap-5 mt-4">
                 <WalletButton title="Activity" icon={Activity} href={`/wallet/${getAccount}/history`} />
-                <WalletButton title="Receive" icon={ArrowDown} handleOnClick={() => setShowReceivePage(true)} />
+                <WalletButton title="Receive" icon={ArrowDown} href={`/wallet/${getAccount}/receive`} />
                 <WalletButton title="Buy" icon={CreditCard} href="/wallet/buy" />
-                <WalletButton title="Send" icon={ArrowUpRight} href="/wallet/transfer" />
+                {isSoundChainSelected && <WalletButton title="Send" icon={ArrowUpRight} href="/wallet/transfer" />}
               </div>
             </div>
             <div className="p-3 mt-3">
