@@ -177,10 +177,16 @@ export class TrackService extends ModelService<typeof Track> {
 
   getFavoriteTracks(
     ids: ObjectId[],
-    filter?: FilterTrackInput,
+    search?: string,
     sort?: SortTrackInput,
     page?: PageInput,
   ): Promise<PaginateResult<Track>> {
+    const regex = new RegExp(search, 'i');
+
+    const filter = {
+      $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }],
+    };
+
     return this.paginate({
       filter: { _id: { $in: ids }, title: { $exists: true }, deleted: false, ...filter },
       sort,

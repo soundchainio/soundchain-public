@@ -1,8 +1,13 @@
 import { UserInputError } from 'apollo-server-express';
+import { ObjectId } from 'mongodb';
+import { PaginateResult } from '../db/pagination/paginate';
 import { NotFoundError } from '../errors/NotFoundError';
+import { FollowModel } from '../models/Follow';
 import { Profile, ProfileModel } from '../models/Profile';
 import { UserModel } from '../models/User';
 import { Context } from '../types/Context';
+import { PageInput } from '../types/PageInput';
+import { SortOrder } from '../types/SortOrder';
 import { ModelService } from './ModelService';
 
 export class ProfileService extends ModelService<typeof Profile> {
@@ -143,5 +148,20 @@ export class ProfileService extends ModelService<typeof Profile> {
       throw new NotFoundError('Profile', profileId);
     }
     return updatedProfile;
+  }
+
+  async getFollowedArtists(profileId: string, search: string, page: PageInput): Promise<PaginateResult<Profile>> {
+    const regex = new RegExp(search, 'i');
+    const filter = {
+      $or: [{ displayName: regex }, { bio: regex }],
+    };
+    const followers = await FollowModel.find({ followerId: profileId });
+    const ids = followers.map(follower => new ObjectId(follower.followedId));
+
+    return this.paginate({
+      filter: { _id: { $in: ids }, ...filter },
+      page,
+      sort: { field: 'createdAt', order: SortOrder.DESC },
+    });
   }
 }
