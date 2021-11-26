@@ -67,7 +67,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     variables: { tokenId },
   });
 
-  const [fetchHaveBided, { data: haveBided }] = useHaveBidedLazyQuery();
+  const [fetchHaveBided, { data: haveBided, refetch: refetchHaveBided }] = useHaveBidedLazyQuery();
 
   useEffect(() => {
     if (account && auctionItem?.auctionItem.auctionItem?.id) {
@@ -75,7 +75,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     }
   }, [fetchHaveBided, auctionItem?.auctionItem.auctionItem?.id, account]);
 
-  const { data: countBids } = useCountBidsQuery({ variables: { tokenId } });
+  const { data: countBids, refetch: refetchCountBids } = useCountBidsQuery({ variables: { tokenId } });
 
   useEffect(() => {
     getAuctionItem();
@@ -89,6 +89,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
       const { _bid, _bidder } = await getHighestBid(web3, tokenId);
       setIsHighestBidder(_bidder.toLowerCase() === account?.toLowerCase());
       setHighestBid(_bid);
+      refetchCountBids();
     };
     fetchHighestBid();
     const interval = setInterval(() => {
@@ -96,7 +97,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     }, 10 * 1000);
 
     return () => clearInterval(interval);
-  }, [tokenId, track.id, web3, getHighestBid, account]);
+  }, [tokenId, track.id, web3, getHighestBid, account, refetchCountBids]);
 
   if (!auctionItem) {
     return null;
@@ -117,7 +118,11 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
       return;
     }
     const amount = (bidAmount * 1e18).toString();
-    placeBid(web3, tokenId, account, amount, () => setLoading(false));
+    placeBid(web3, tokenId, account, amount, () => {
+      setLoading(false);
+      if (refetchHaveBided) refetchHaveBided();
+      refetchCountBids();
+    });
     setLoading(true);
   };
 
