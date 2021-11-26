@@ -41,7 +41,7 @@ export default function BuyMaticPage() {
   if (!me) return null;
 
   return (
-    <Layout topNavBarProps={topNovaBarProps} fullHeight={true}>
+    <Layout topNavBarProps={topNovaBarProps}>
       <Head>
         <title>Soundchain - Wallet</title>
         <meta name="description" content="Wallet" />
