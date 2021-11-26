@@ -232,7 +232,7 @@ export default function WalletPage() {
               <div className="flex gap-5 mt-4">
                 <WalletButton title="Activity" icon={Activity} href="/wallet/transfer" />
                 <WalletButton title="Receive" icon={ArrowDown} handleOnClick={() => setShowReceivePage(true)} />
-                <WalletButton title="Buy" icon={CreditCard} href="/wallet/transfer" />
+                <WalletButton title="Buy" icon={CreditCard} href="/wallet/buy" />
                 <WalletButton title="Send" icon={ArrowUpRight} href="/wallet/transfer" />
               </div>
             </div>
