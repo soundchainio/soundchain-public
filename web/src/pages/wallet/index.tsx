@@ -14,7 +14,7 @@ import { ArrowUpRight } from 'icons/ArrowUpRight';
 import { Copy2 as Copy } from 'icons/Copy2';
 import { CreditCard } from 'icons/CreditCard';
 import { Logo } from 'icons/Logo';
-import { Matic2 } from 'icons/Matic2';
+import { Matic } from 'icons/Matic';
 import { MetaMask } from 'icons/MetaMask';
 import { Polygon } from 'icons/Polygon';
 import { testNetwork } from 'lib/blockchainNetworks';
@@ -212,7 +212,7 @@ export default function WalletPage() {
                 </button>
               </div>
               <div className="flex flex-col items-center gap-1">
-                <Matic2 />
+                <Matic height="30" width="30" />
                 {getBalance ? (
                   <>
                     <p className="text-blue-400 font-bold text-xs uppercase mt-2">

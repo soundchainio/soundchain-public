@@ -1,5 +1,6 @@
 import { Activity } from 'icons/Activity';
 import { Checkmark2 } from 'icons/Checkmark2';
+import { Matic } from 'icons/Matic';
 import { PriceTag } from 'icons/PriceTag';
 import { Stars } from 'icons/Stars';
 import { PolygonscanResultObj } from 'lib/graphql';
@@ -31,13 +32,14 @@ export const Transaction = ({ transaction, maticUsdValue }: TransactionProps) =>
       {Icon && <Icon />}
       <div>
         <p className="text-white text-xs font-bold">
-          {(transaction.method && map[transaction.method]?.methodName) || 'Off SoundChain'}
+          {(transaction.method && map[transaction.method]?.methodName) || 'Unknown'}
         </p>
         <p className="text-gray-80 text-xxs font-medium">{transaction.date}</p>
       </div>
       <div className="ml-auto">
-        <p className="text-white text-sm font-bold">
+        <p className="text-white text-sm font-bold flex items-center gap-1">
           {gasFee}
+          <Matic height="10" width="10" />
           <span className="text-gray-80 text-xxs font-bold uppercase"> Matic</span>
         </p>
         {maticUsdValue && (
