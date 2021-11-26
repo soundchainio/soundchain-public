@@ -1,0 +1,5 @@
+query HaveBided($auctionId: String!, $bidder: String!) {
+  haveBided(auctionId: $auctionId, bidder: $bidder) {
+    bided
+  }
+}

@@ -16,6 +16,7 @@ import {
   TrackDocument,
   TrackQuery,
   useCountBidsLazyQuery,
+  useHaveBidedLazyQuery,
   useListingItemLazyQuery,
   useProfileLazyQuery,
   useTrackLazyQuery,
@@ -82,6 +83,7 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const canList = (me?.profile.verified && nftData?.minter === account) || nftData?.minter != account;
 
   const [fetchCountBids, { data: countBids }] = useCountBidsLazyQuery();
+  const [fetchHaveBided, { data: haveBided }] = useHaveBidedLazyQuery();
 
   const [fetchListingItem, { data: listingPayload, loading }] = useListingItemLazyQuery({
     fetchPolicy: 'network-only',
@@ -158,6 +160,13 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   }, [trackData]);
 
   const isAuction = !!listingPayload?.listingItem.reservePrice ?? false;
+
+  useEffect(() => {
+    if (isAuction && account && listingPayload?.listingItem._id) {
+      fetchHaveBided({ variables: { auctionId: listingPayload.listingItem._id, bidder: account } });
+    }
+  }, [fetchHaveBided, isAuction, listingPayload?.listingItem._id, account]);
+
   const isBuyNow = !!listingPayload?.listingItem.pricePerItem ?? false;
   let price;
   if (isAuction && highestBid.bid === '0') {
@@ -230,6 +239,9 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
         <>
           {isAuction && isHighestBidder && (
             <div className="text-green-500 font-bold p-4 text-center">You have the highest bid!</div>
+          )}
+          {isAuction && haveBided?.haveBided.bided && !isHighestBidder && (
+            <div className="text-red-500 font-bold p-4 text-center">You have been outbid!</div>
           )}
           <HandleNFT
             canList={canList}

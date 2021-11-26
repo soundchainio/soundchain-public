@@ -120,4 +120,9 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
     ]);
     return count[0];
   }
+
+  async haveBided(auctionId: string, bidder: string): Promise<boolean> {
+    const bid = await BidModel.findOne({ auctionId, bidder });
+    return !!bid;
+  }
 }
