@@ -92,7 +92,7 @@ export default function BuyNowPage({ track }: TrackPageProps) {
           },
         },
       });
-      router.push(router.asPath.replace('buy', ''));
+      router.push(router.asPath.replace('buy-now', ''));
     };
 
     buyItem(
