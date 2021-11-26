@@ -15,6 +15,7 @@ import {
   TrackQuery,
   useAuctionItemLazyQuery,
   useCountBidsQuery,
+  useHaveBidedLazyQuery,
   useMaticUsdQuery,
 } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
@@ -65,6 +66,14 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
   const [getAuctionItem, { data: auctionItem }] = useAuctionItemLazyQuery({
     variables: { tokenId },
   });
+
+  const [fetchHaveBided, { data: haveBided }] = useHaveBidedLazyQuery();
+
+  useEffect(() => {
+    if (account && auctionItem?.auctionItem.auctionItem?.id) {
+      fetchHaveBided({ variables: { auctionId: auctionItem.auctionItem.auctionItem.id, bidder: account } });
+    }
+  }, [fetchHaveBided, auctionItem?.auctionItem.auctionItem?.id, account]);
 
   const { data: countBids } = useCountBidsQuery({ variables: { tokenId } });
 
@@ -138,6 +147,9 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
         />
       )}
       {isHighestBidder && <div className="text-green-500 font-bold p-4 text-center">You have the highest bid!</div>}
+      {haveBided?.haveBided.bided && !isHighestBidder && (
+        <div className="text-red-500 font-bold p-4 text-center">You have been outbid!</div>
+      )}
       {bidAmount >= 0 && (
         <div className="flex p-4">
           <div className="flex-1 font-black text-xs">

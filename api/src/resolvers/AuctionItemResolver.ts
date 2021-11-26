@@ -1,6 +1,7 @@
 import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from 'type-graphql';
 import { AuctionItem } from '../models/AuctionItem';
 import { AuctionItemPayload } from '../types/AuctionItemPayload';
+import { Bided } from '../types/Bided.ts';
 import { Context } from '../types/Context';
 import { CountBidsPayload } from '../types/CountBids';
 import { CreateAuctionItemData } from '../types/CreateAuctionItemData';
@@ -46,5 +47,15 @@ export class AuctionItemResolver {
   async countBids(@Ctx() { auctionItemService }: Context, @Arg('tokenId') tokenId: number): Promise<CountBidsPayload> {
     const count = await auctionItemService.countBids(tokenId);
     return count;
+  }
+
+  @Query(() => Bided)
+  async haveBided(
+    @Ctx() { auctionItemService }: Context,
+    @Arg('auctionId') auctionId: string,
+    @Arg('bidder') bidder: string,
+  ): Promise<Bided> {
+    const bided = await auctionItemService.haveBided(auctionId, bidder);
+    return { bided };
   }
 }

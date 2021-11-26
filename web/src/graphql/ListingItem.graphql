@@ -1,5 +1,6 @@
 query ListingItem($tokenId: Float!) {
   listingItem(tokenId: $tokenId) {
+    _id
     owner
     nft
     tokenId

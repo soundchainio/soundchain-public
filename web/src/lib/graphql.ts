@@ -52,6 +52,11 @@ export type AuthPayload = {
   jwt: Scalars['String'];
 };
 
+export type Bided = {
+  __typename?: 'Bided';
+  bided: Maybe<Scalars['Boolean']>;
+};
+
 export type BuyNowItem = {
   __typename?: 'BuyNowItem';
   id: Scalars['ID'];
@@ -852,6 +857,7 @@ export type Query = {
   __typename?: 'Query';
   auctionItem: AuctionItemPayload;
   countBids: CountBidsPayload;
+  haveBided: Bided;
   buyNowItem: BuyNowPayload;
   chats: ChatConnection;
   chatHistory: MessageConnection;
@@ -894,6 +900,12 @@ export type QueryAuctionItemArgs = {
 
 export type QueryCountBidsArgs = {
   tokenId: Scalars['Float'];
+};
+
+
+export type QueryHaveBidedArgs = {
+  bidder: Scalars['String'];
+  auctionId: Scalars['String'];
 };
 
 
@@ -1854,6 +1866,20 @@ export type FollowingQuery = (
   ) }
 );
 
+export type HaveBidedQueryVariables = Exact<{
+  auctionId: Scalars['String'];
+  bidder: Scalars['String'];
+}>;
+
+
+export type HaveBidedQuery = (
+  { __typename?: 'Query' }
+  & { haveBided: (
+    { __typename?: 'Bided' }
+    & Pick<Bided, 'bided'>
+  ) }
+);
+
 export type ListingItemQueryVariables = Exact<{
   tokenId: Scalars['Float'];
 }>;
@@ -1863,7 +1889,7 @@ export type ListingItemQuery = (
   { __typename?: 'Query' }
   & { listingItem: (
     { __typename?: 'ListingItemPayload' }
-    & Pick<ListingItemPayload, 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'startingTime' | 'endingTime' | 'reservePrice'>
+    & Pick<ListingItemPayload, '_id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'startingTime' | 'endingTime' | 'reservePrice'>
   ) }
 );
 
@@ -4001,9 +4027,46 @@ export function useFollowingLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
 export type FollowingQueryHookResult = ReturnType<typeof useFollowingQuery>;
 export type FollowingLazyQueryHookResult = ReturnType<typeof useFollowingLazyQuery>;
 export type FollowingQueryResult = Apollo.QueryResult<FollowingQuery, FollowingQueryVariables>;
+export const HaveBidedDocument = gql`
+    query HaveBided($auctionId: String!, $bidder: String!) {
+  haveBided(auctionId: $auctionId, bidder: $bidder) {
+    bided
+  }
+}
+    `;
+
+/**
+ * __useHaveBidedQuery__
+ *
+ * To run a query within a React component, call `useHaveBidedQuery` and pass it any options that fit your needs.
+ * When your component renders, `useHaveBidedQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useHaveBidedQuery({
+ *   variables: {
+ *      auctionId: // value for 'auctionId'
+ *      bidder: // value for 'bidder'
+ *   },
+ * });
+ */
+export function useHaveBidedQuery(baseOptions: Apollo.QueryHookOptions<HaveBidedQuery, HaveBidedQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<HaveBidedQuery, HaveBidedQueryVariables>(HaveBidedDocument, options);
+      }
+export function useHaveBidedLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<HaveBidedQuery, HaveBidedQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<HaveBidedQuery, HaveBidedQueryVariables>(HaveBidedDocument, options);
+        }
+export type HaveBidedQueryHookResult = ReturnType<typeof useHaveBidedQuery>;
+export type HaveBidedLazyQueryHookResult = ReturnType<typeof useHaveBidedLazyQuery>;
+export type HaveBidedQueryResult = Apollo.QueryResult<HaveBidedQuery, HaveBidedQueryVariables>;
 export const ListingItemDocument = gql`
     query ListingItem($tokenId: Float!) {
   listingItem(tokenId: $tokenId) {
+    _id
     owner
     nft
     tokenId
