@@ -3,7 +3,7 @@ import { Field, ID, ObjectType } from 'type-graphql';
 import { Model } from './Model';
 
 @ObjectType()
-export class ListingItem extends Model {
+export class AuctionItem extends Model {
   @Field(() => ID, { name: 'id' })
   readonly _id: string;
 
@@ -25,11 +25,11 @@ export class ListingItem extends Model {
 
   @Field()
   @prop({ required: true })
-  quantity: number;
+  endingTime: number;
 
   @Field()
   @prop({ required: true })
-  pricePerItem: string;
+  reservePrice: string;
 
   @Field(() => Date)
   createdAt: Date;
@@ -42,4 +42,4 @@ export class ListingItem extends Model {
   valid: boolean;
 }
 
-export const ListingItemModel = getModelForClass(ListingItem);
+export const AuctionItemModel = getModelForClass(AuctionItem);

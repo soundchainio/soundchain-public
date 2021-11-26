@@ -21,7 +21,6 @@ export const Feed = ({ pageSize }: FeedProps) => {
   }
 
   const { nodes, pageInfo } = data.feed;
-  const postIds = nodes.map(node => node.post.id);
 
   const loadMore = () => {
     fetchMore({
@@ -36,8 +35,8 @@ export const Feed = ({ pageSize }: FeedProps) => {
 
   return (
     <div className="space-y-2">
-      {postIds.map(id => (
-        <Post key={id} postId={id} />
+      {nodes.map(feedItem => (
+        <Post key={feedItem.post.id} post={feedItem.post} />
       ))}
       {pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading Posts" />}
     </div>

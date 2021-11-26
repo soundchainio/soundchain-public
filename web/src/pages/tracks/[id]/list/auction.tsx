@@ -2,22 +2,15 @@ import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { ListNFTAuction } from 'components/details-NFT/ListNFTAuction';
 import { Layout } from 'components/Layout';
+import MaxGasFee from 'components/MaxGasFee';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import { useModalDispatch } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
-import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
-import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
-import {
-  PendingRequest,
-  TrackDocument,
-  useListingItemLazyQuery,
-  useTrackQuery,
-  useUpdateTrackMutation,
-} from 'lib/graphql';
+import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemLazyQuery, useUpdateTrackMutation } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
@@ -25,7 +18,7 @@ import { useEffect, useState } from 'react';
 import { ApproveType } from 'types/ApproveType';
 
 export interface TrackPageProps {
-  trackId: string;
+  track: TrackQuery['track'];
 }
 
 interface TrackPageParams extends ParsedUrlQuery {
@@ -39,7 +32,7 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
     return { notFound: true };
   }
 
-  const { error } = await apolloClient.query({
+  const { data, error } = await apolloClient.query({
     query: TrackDocument,
     variables: { id: trackId },
     context,
@@ -49,17 +42,15 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
     return { notFound: true };
   }
 
-  return cacheFor(AuctionPage, { trackId }, context, apolloClient);
+  return cacheFor(AuctionPage, { track: data.track }, context, apolloClient);
 });
 
-export default function AuctionPage({ trackId }: TrackPageProps) {
+export default function AuctionPage({ track }: TrackPageProps) {
   const { createAuction, isTokenOwner, isApprovedAuction: checkIsApproved } = useBlockchain();
   const router = useRouter();
   const me = useMe();
-  const { data } = useTrackQuery({ variables: { id: trackId } });
   const [trackUpdate] = useUpdateTrackMutation();
   const { account, web3 } = useWalletContext();
-  const maxGasFee = useMaxGasFee();
   const { dispatchShowApproveModal } = useModalDispatch();
   const [loading, setLoading] = useState(false);
   const [price, setPrice] = useState(0);
@@ -67,34 +58,28 @@ export default function AuctionPage({ trackId }: TrackPageProps) {
   const [isOwner, setIsOwner] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
 
-  const tokenId = data?.track.nftData?.tokenId ?? -1;
-  const canList =
-    (me?.profile.verified && data?.track.nftData?.minter === account) || data?.track.nftData?.minter != account;
+  const nftData = track.nftData;
+  const tokenId = nftData?.tokenId ?? -1;
+  const canList = (me?.profile.verified && nftData?.minter === account) || nftData?.minter != account;
 
-  const [getListingItem, { data: listingItem }] = useListingItemLazyQuery({
+  const [getBuyNowItem, { data: buyNowItem }] = useBuyNowItemLazyQuery({
     variables: { tokenId },
   });
 
   useEffect(() => {
     const fetchIsOwner = async () => {
-      if (
-        !account ||
-        !web3 ||
-        data?.track.nftData?.tokenId === null ||
-        data?.track.nftData?.tokenId === undefined ||
-        !isTokenOwner
-      ) {
+      if (!account || !web3 || nftData?.tokenId === null || nftData?.tokenId === undefined || !isTokenOwner) {
         return;
       }
-      const isTokenOwnerRes = await isTokenOwner(web3, data.track.nftData.tokenId, account);
+      const isTokenOwnerRes = await isTokenOwner(web3, nftData.tokenId, account);
       setIsOwner(isTokenOwnerRes);
     };
     fetchIsOwner();
-  }, [account, web3, data?.track.nftData, isTokenOwner]);
+  }, [account, web3, nftData, isTokenOwner]);
 
   useEffect(() => {
-    getListingItem();
-  }, [getListingItem]);
+    getBuyNowItem();
+  }, [getBuyNowItem]);
 
   useEffect(() => {
     const fetchIsApproved = async () => {
@@ -106,10 +91,10 @@ export default function AuctionPage({ trackId }: TrackPageProps) {
     fetchIsApproved();
   }, [account, web3, checkIsApproved]);
 
-  const isForSale = !!listingItem?.listingItem?.listingItem?.pricePerItem ?? false;
+  const isForSale = !!buyNowItem?.buyNowItem?.buyNowItem?.pricePerItem ?? false;
 
   const handleList = async () => {
-    if (data?.track.nftData?.tokenId === null || data?.track.nftData?.tokenId === undefined || !account || !web3) {
+    if (nftData?.tokenId === null || nftData?.tokenId === undefined || !account || !web3) {
       return;
     }
     setLoading(true);
@@ -117,23 +102,23 @@ export default function AuctionPage({ trackId }: TrackPageProps) {
     const blockNumber = await web3.eth.getBlockNumber();
     const block = await web3.eth.getBlock(blockNumber);
     const blockTimeStamp = block.timestamp as number;
-    const startTime = blockTimeStamp + 1000;
-    const endTime = startTime + duration * 3.6e6;
+    const startTime = blockTimeStamp + 60;
+    const endTime = startTime + duration * 3600;
     if (isApproved) {
       const onTransactionHash = async () => {
         await trackUpdate({
           variables: {
             input: {
-              trackId: trackId,
+              trackId: track.id,
               nftData: {
                 pendingRequest: PendingRequest.List,
               },
             },
           },
         });
-        router.back();
+        router.push(router.asPath.replace('/list/auction', ''));
       };
-      createAuction(web3, data.track.nftData.tokenId, weiPrice, startTime, endTime, account, onTransactionHash);
+      createAuction(web3, nftData.tokenId, weiPrice, startTime, endTime, account, onTransactionHash);
     } else {
       me ? dispatchShowApproveModal(true, ApproveType.AUCTION) : router.push('/login');
     }
@@ -144,24 +129,18 @@ export default function AuctionPage({ trackId }: TrackPageProps) {
     title: 'List for Auction',
   };
 
-  if (!isOwner || isForSale || data?.track.nftData?.pendingRequest != PendingRequest.None || !canList) {
+  if (!isOwner || isForSale || nftData?.pendingRequest != PendingRequest.None || !canList) {
     return null;
   }
 
   return (
     <Layout topNavBarProps={topNovaBarProps}>
       <div className="m-4">
-        <Track trackId={trackId} />
+        <Track track={track} />
       </div>
       <ListNFTAuction onSetPrice={price => setPrice(price)} onSetDuration={duration => setDuration(duration)} />
       <div className="flex p-4">
-        <div className="flex-1 font-black text-xs text-gray-80">
-          <p>Max gas fee</p>
-          <div className="flex items-center gap-1">
-            <Matic />
-            <div className="text-white">{maxGasFee}</div>MATIC
-          </div>
-        </div>
+        <MaxGasFee />
         <Button variant="list-nft" disabled={price <= 0} onClick={handleList} loading={loading}>
           <div className="px-4 font-bold">LIST NFT</div>
         </Button>

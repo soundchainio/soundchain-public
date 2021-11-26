@@ -4,6 +4,7 @@ import { CurrentUser } from '../decorators/current-user';
 import { FavoriteProfileTrackModel } from '../models/FavoriteProfileTrack';
 import { Track } from '../models/Track';
 import { User } from '../models/User';
+import { FavoriteCount } from '../services/TrackService';
 import { Context } from '../types/Context';
 import { CreateTrackInput as CreateTrackInput } from '../types/CreateTrackInput';
 import { CreateTrackPayload } from '../types/CreateTrackPayload';
@@ -27,6 +28,21 @@ export class TrackResolver {
   @FieldResolver(() => String)
   playbackCountFormatted(@Root() { playbackCount }: Track): string {
     return playbackCount ? new Intl.NumberFormat('en-US').format(playbackCount) : '';
+  }
+
+  @FieldResolver(() => Number)
+  favoriteCount(@Ctx() { trackService }: Context, @Root() { _id: trackId }: Track): Promise<FavoriteCount> {
+    return trackService.favoriteCount(trackId);
+  }
+
+  @FieldResolver(() => String)
+  price(@Ctx() { trackService }: Context, @Root() { nftData }: Track): Promise<string> {
+    return trackService.price(nftData.tokenId);
+  }
+
+  @FieldResolver(() => String)
+  saleType(@Ctx() { trackService }: Context, @Root() { nftData }: Track): Promise<string> {
+    return trackService.saleType(nftData.tokenId);
   }
 
   @FieldResolver(() => Boolean)

@@ -4,6 +4,7 @@ import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Auction } from 'icons/Auction';
 import { CheckmarkFilled } from 'icons/CheckmarkFilled';
+import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 
 export default function ListPage() {
@@ -11,13 +12,12 @@ export default function ListPage() {
 
   const topNovaBarProps: TopNavBarProps = {
     leftButton: <BackButton />,
-    title: 'List for Sale',
+    title: 'Select Listing Type',
   };
 
   return (
     <Layout topNavBarProps={topNovaBarProps}>
-      <div className="flex flex-col  gap-3">
-        <p className="text-gray-80 text-center font-bold text-sm mt-20">Select Listing Type:</p>
+      <div className="flex flex-col gap-3">
         <div>
           <div className="flex flex-col bg-black border-2 border-gray-700 rounded m-3 p-4 gap-4">
             <div className="flex flex-row gap-2">
@@ -28,20 +28,17 @@ export default function ListPage() {
               With a fixed-price Buy It Now listing, a buyer knows the exact price they need to pay for your NFT and can
               complete their purchase immediately. There is no bidding on fixed-price listings.
             </p>
-            <Button
-              variant="outline"
-              borderColor="bg-green-gradient"
-              className="h-10 w-1/2"
-              onClick={() => router.push(`${router.asPath}/buy-now`)}
-            >
-              BUY NOW LISTING
-            </Button>
+            <NextLink href={`${router.asPath}/buy-now`}>
+              <Button variant="outline" borderColor="bg-green-gradient" className="h-10 w-1/2">
+                BUY NOW LISTING
+              </Button>
+            </NextLink>
           </div>
         </div>
         <div>
           <div className="flex flex-col bg-black border-2 border-gray-700 rounded m-3 p-4 gap-4">
             <div className="flex flex-row gap-2">
-              <Auction className="h-6 w-6" />
+              <Auction className="h-6 w-6" purple />
               <p className="text-white font-bold text-sm">Auction</p>
             </div>
             <p className="text-white text-xs">
@@ -49,14 +46,11 @@ export default function ListPage() {
               Interested buyers will place bids and when the auction ends, your NFT is sold to the highest bidder as
               long as it meets the reserve price.
             </p>
-            <Button
-              variant="outline"
-              borderColor="bg-purple-gradient"
-              className="h-10 w-1/2"
-              onClick={() => router.push(`${router.asPath}/auction`)}
-            >
-              AUCTION LISTING
-            </Button>
+            <NextLink href={`${router.asPath}/auction`}>
+              <Button variant="outline" borderColor="bg-purple-gradient" className="h-10 w-1/2">
+                AUCTION LISTING
+              </Button>
+            </NextLink>
           </div>
         </div>
       </div>

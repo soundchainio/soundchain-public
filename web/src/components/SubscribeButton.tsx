@@ -32,6 +32,7 @@ export const SubscribeButton = ({ profileId, isSubscriber }: SubscribeButtonProp
     } else {
       await unsubscribeProfile(opts);
     }
+    router.replace(router.asPath);
   };
 
   if (me?.profile.id === profileId) {
@@ -39,7 +40,7 @@ export const SubscribeButton = ({ profileId, isSubscriber }: SubscribeButtonProp
   }
 
   return (
-    <div onClick={handleClick} className="w-[35px] h-[35px]">
+    <div onClick={handleClick} className="w-[35px] h-[35px] cursor-pointer">
       <SubscribeBell isSubscriber={isSubscriber} />
     </div>
   );
