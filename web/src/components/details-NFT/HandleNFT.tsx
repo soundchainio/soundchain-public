@@ -34,7 +34,7 @@ export const HandleNFT = ({
   if (isOwner) {
     if (!canList) {
       return (
-        <ListingAction href={`${router.asPath}/get-verified`} action="GET VERIFIED">
+        <ListingAction href={`/get-verified`} action="GET VERIFIED">
           You must be verified in order to sell NFT’s.
         </ListingAction>
       );
