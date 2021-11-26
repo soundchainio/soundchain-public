@@ -50,7 +50,7 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
         <div className="h-20 w-20 relative flex items-center">
           <Asset src={art} />
         </div>
-        <div className="flex flex-col flex-1">
+        <div className="flex flex-col flex-1 truncate">
           <div className="flex gap-2">
             <div className="flex items-center">
               <button className="bg-white rounded-full w-8 h-8 flex items-center" onClick={() => play(song)}>
@@ -62,10 +62,12 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
               </button>
             </div>
             <NextLink href={`/tracks/${trackId}`}>
-              <div className="flex w-full cursor-pointer gap-1">
-                <div>
-                  <div style={{ width: '104px' }} className="text-white font-black text-xs line-clamp-1">
-                    <div>{title ? title : 'Unknown Title'}</div>
+              <div className="flex w-full cursor-pointer gap-1 truncate">
+                <div className="truncate">
+                  <div className="text-white font-black text-xs w-full truncate">
+                    <div className="truncate" title={title || ''}>
+                      {title ? title : 'Unknown Title'}
+                    </div>
                   </div>
                   {artist && <div className="text-gray-80 text-xs font-black">{artist}</div>}
                 </div>

@@ -21,12 +21,11 @@ export const InboxButton = () => {
         />
       </div>
       <div className="relative md:mt-2">
-        <InboxBadge />
         <NavBarButton
           label="Inbox"
           path={me ? '/messages' : '/login'}
           icon={Inbox}
-          badge={me ? NotificationBadge : undefined}
+          badge={me ? InboxBadge : undefined}
           color="yellow"
         />
       </div>

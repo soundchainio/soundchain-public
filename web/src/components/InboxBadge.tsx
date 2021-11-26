@@ -8,7 +8,7 @@ export const InboxBadge = () => {
 
   useEffect(() => {
     fetchUnreadMessagesCount();
-  }, [router.pathname]);
+  }, [router.pathname, fetchUnreadMessagesCount]);
 
   return (
     <>
