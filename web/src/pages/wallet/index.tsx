@@ -1,4 +1,6 @@
 import { BackButton } from 'components/Buttons/BackButton';
+import { ConnectedNetwork } from 'components/ConnectedNetwork';
+import { CopyWalletAddress } from 'components/CopyWalletAddress';
 import { Jazzicon } from 'components/Jazzicon';
 import { Layout } from 'components/Layout';
 import { LoaderAnimation } from 'components/LoaderAnimation';
@@ -11,18 +13,15 @@ import useMetaMask from 'hooks/useMetaMask';
 import { Activity } from 'icons/Activity';
 import { ArrowDown } from 'icons/ArrowDown';
 import { ArrowUpRight } from 'icons/ArrowUpRight';
-import { Copy2 as Copy } from 'icons/Copy2';
 import { CreditCard } from 'icons/CreditCard';
 import { Logo } from 'icons/Logo';
 import { Matic } from 'icons/Matic';
 import { MetaMask } from 'icons/MetaMask';
-import { Polygon } from 'icons/Polygon';
 import { testNetwork } from 'lib/blockchainNetworks';
 import { DefaultWallet, useMaticUsdQuery, useUpdateDefaultWalletMutation } from 'lib/graphql';
 import Head from 'next/head';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
 import { currency } from 'utils/format';
 
 const topNavBarProps: TopNavBarProps = {
@@ -187,30 +186,8 @@ export default function WalletPage() {
           <>
             <div className="flex flex-col gap-4 justify-center items-center p-4">
               {getAccount && <Jazzicon address={getAccount} size={54} />}
-              <div className="flex gap-2 items-center font-bold text-xs">
-                <span className="ml-auto uppercase relative text-gray-80 before:bg-green-400 before:rounded-full before:h-1 before:w-1 before:inline-block before:absolute before:mt-[0.375rem] before:-ml-2">
-                  Network:
-                </span>
-                <Polygon />
-                <span className="text-white mr-2">Polygon</span>
-              </div>
-              <div className="flex flex-row text-xxs bg-gray-1A w-full pl-2 pr-3 py-2 items-center justify-between border border-gray-50 rounded-sm">
-                <div className="flex flex-row items-center w-10/12 justify-start">
-                  <Polygon />
-                  <span className="text-gray-80 md-text-sm font-bold mx-1 truncate w-full">{getAccount}</span>
-                </div>
-                <button
-                  className="flex flex-row gap-1 items-center border-2 border-gray-30 border-opacity-75 rounded p-1"
-                  onClick={() => {
-                    navigator.clipboard.writeText(getAccount + '');
-                    toast('Copied to clipboard');
-                  }}
-                  type="button"
-                >
-                  <Copy />
-                  <span className="text-gray-80 uppercase leading-none">copy</span>
-                </button>
-              </div>
+              <ConnectedNetwork />
+              {getAccount && <CopyWalletAddress walletAddress={getAccount} />}
               <div className="flex flex-col items-center gap-1">
                 <Matic height="30" width="30" />
                 {getBalance ? (
