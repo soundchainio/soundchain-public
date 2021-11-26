@@ -3,8 +3,10 @@ import { CurrentUser } from '../decorators/current-user';
 import { Profile } from '../models/Profile';
 import { User } from '../models/User';
 import { Context } from '../types/Context';
+import { FollowedArtistsConnection } from '../types/FollowedArtistsConnection';
 import { FollowProfileInput } from '../types/FollowProfileInput';
 import { FollowProfilePayload } from '../types/FollowProfilePayload';
+import { PageInput } from '../types/PageInput';
 import { Role } from '../types/Role';
 import { SubscribeToProfileInput } from '../types/SubscribeToProfileInput';
 import { SubscribeToProfilePayload } from '../types/SubscribeToProfilePayload';
@@ -68,6 +70,16 @@ export class ProfileResolver {
   @Query(() => Profile)
   profileByHandle(@Ctx() { profileService }: Context, @Arg('handle') handle: string): Promise<Profile> {
     return profileService.getProfileByHandle(handle);
+  }
+
+  @Query(() => FollowedArtistsConnection)
+  followedArtists(
+    @Ctx() { profileService }: Context,
+    @Arg('profileId') profileId: string,
+    @Arg('search', { nullable: true }) search: string,
+    @Arg('page', { nullable: true }) page: PageInput,
+  ): Promise<FollowedArtistsConnection> {
+    return profileService.getFollowedArtists(profileId, search, page);
   }
 
   @Mutation(() => UpdateProfilePayload)
