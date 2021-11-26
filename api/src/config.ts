@@ -37,7 +37,6 @@ export const {
   UPLOADS_BUCKET_REGION,
   UPLOADS_BUCKET_NAME,
   SQS_URL,
-  CONTRACT_ADDRESS = '0x69CEf6953750a3Ed91B973Df524236215468Aacc',
   WALLET_PUBLIC_KEY,
   WALLET_PRIVATE_KEY,
   ALCHEMY_API_KEY,
@@ -51,6 +50,7 @@ export const {
   MUX_DATA_ID,
   MUX_DATA_SECRET,
   POLYGON_SCAN_API_KEY,
+  AUCTION_ADDRESS,
 } = process.env;
 
 function assertEnvVar(name: string, value: string | undefined): asserts value {
@@ -121,13 +121,13 @@ export const config = {
     url: WEB_APP_URL,
   },
   minting: {
-    contractAddress: CONTRACT_ADDRESS,
     pinataKey: PINATA_API_KEY,
     pinataSecret: PINATA_API_SECRET,
     walletPrivateKey: WALLET_PRIVATE_KEY,
     walletPublicKey: WALLET_PUBLIC_KEY,
     marketplaceAddress: MARKETPLACE_ADDRESS,
     nftAddress: NFT_ADDRESS,
+    auctionAddress: AUCTION_ADDRESS,
     alchemyKey: ALCHEMY_API_KEY,
     sqsUrl: SQS_URL,
     polygonScan: POLYGON_SCAN_API_KEY,

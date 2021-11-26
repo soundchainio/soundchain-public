@@ -1,3 +1,5 @@
+import { AuctionItemResolver } from './AuctionItemResolver';
+import { BuyNowItemResolver } from './BuyNowItemResolver';
 import { ChatResolver } from './ChatResolver';
 import { CommentNotificationResolver } from './CommentNotificationResolver';
 import { CommentResolver } from './CommentResolver';
@@ -24,6 +26,8 @@ import { UserResolver } from './UserResolver';
 import { VerificationRequestNotificationResolver } from './VerificationRequestNotificationResolver';
 
 export const resolvers = [
+  AuctionItemResolver,
+  BuyNowItemResolver,
   ChatResolver,
   CommentNotificationResolver,
   CommentResolver,

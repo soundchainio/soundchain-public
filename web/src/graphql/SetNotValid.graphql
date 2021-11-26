@@ -4,7 +4,6 @@ mutation SetNotValid($tokenId: Float!) {
     owner
     nft
     tokenId
-    quantity
     pricePerItem
     startingTime
   }

@@ -33,6 +33,7 @@ export const FollowButton = ({ followedId, isFollowed }: FollowButtonProps) => {
     } else {
       await unfollowProfile(opts);
     }
+    router.replace(router.asPath);
   };
 
   if (me?.profile.id === followedId) {

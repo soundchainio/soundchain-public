@@ -12,6 +12,10 @@ export class UserService extends ModelService<typeof User> {
     return this.findOrFail(id);
   }
 
+  async getUserByProfileId(profileId: string): Promise<User> {
+    return await UserModel.findOne({ profileId });
+  }
+
   userExists(filter: Partial<User>): Promise<boolean> {
     return UserModel.exists(filter);
   }

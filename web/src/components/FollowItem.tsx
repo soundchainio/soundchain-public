@@ -14,7 +14,7 @@ export const FollowItem = ({ profile }: FollowItemProps) => {
         <div className="items-center self-center content-center">
           <Avatar pixels={40} className="flex" profile={profile} />
         </div>
-        <DisplayName name={profile.displayName} verified={profile.verified} />
+        <DisplayName name={profile.displayName} verified={profile.verified} teamMember={profile.teamMember} />
       </div>
     </Link>
   );

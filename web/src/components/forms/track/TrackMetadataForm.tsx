@@ -2,12 +2,12 @@ import { Badge } from 'components/Badge';
 import { Button } from 'components/Button';
 import { ImageUpload } from 'components/ImageUpload';
 import { InputField } from 'components/InputField';
+import MaxGasFee from 'components/MaxGasFee';
 import { TextareaField } from 'components/TextareaField';
 import { WalletSelector } from 'components/WalletSelector';
 import { Form, Formik } from 'formik';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { useMaxGasFee } from 'hooks/useMaxGasFee';
-import { Matic } from 'icons/Matic';
 import { Genre } from 'lib/graphql';
 import React, { useEffect, useState } from 'react';
 import { GenreLabel, genres } from 'utils/Genres';
@@ -147,13 +147,7 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
           <WalletSelector className="mt-4 py-3 px-4" />
 
           <div className="pl-4 pr-4 pb-4 flex items-center mt-4">
-            <div className="flex-1 font-black text-xs" style={{ color: '#808080' }}>
-              <div>Max gas fee</div>
-              <div className="flex items-center gap-1">
-                <Matic />
-                <div className="text-white">{maxGasFee}</div>MATIC
-              </div>
-            </div>
+            <MaxGasFee />
             <div className="flex-1">
               {enoughFunds && !uploadingArt && (
                 <Button type="submit" variant="rainbow">

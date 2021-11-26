@@ -8,7 +8,7 @@ import { Profile, ProfileModel } from '../models/Profile';
 import { Reaction } from '../models/Reaction';
 import { CommentNotificationMetadata } from '../types/CommentNotificationMetadata';
 import { Context } from '../types/Context';
-import { FinishListingItemInput } from '../types/FinishListingItemInput';
+import { FinishBuyNowItemInput } from '../types/FinishBuyNowItemInput';
 import { NewPostNotificationMetadata } from '../types/NewPostNotificationMetadata';
 import { NotificationType } from '../types/NotificationType';
 import { NotificationUnion } from '../types/NotificationUnion';
@@ -71,7 +71,7 @@ export class NotificationService extends ModelService<typeof Notification> {
     const { displayName: followerName, profilePicture: followerPicture } = await this.context.profileService.getProfile(
       followerId,
     );
-    const followerHandle= await this.context.profileService.getUserHandle(followerId)
+    const followerHandle = await this.context.profileService.getUserHandle(followerId);
     const notification = new NotificationModel({
       type: NotificationType.Follower,
       profileId,
@@ -94,7 +94,8 @@ export class NotificationService extends ModelService<typeof Notification> {
     artist,
     artworkUrl,
     trackName,
-  }: Omit<FinishListingItemInput, 'tokenId'>): Promise<void> {
+    sellType,
+  }: Omit<FinishBuyNowItemInput, 'tokenId'>): Promise<void> {
     const { displayName: buyerName, profilePicture: buyerPicture } = await this.context.profileService.getProfile(
       buyerProfileId,
     );
@@ -110,6 +111,7 @@ export class NotificationService extends ModelService<typeof Notification> {
         artist,
         artworkUrl,
         trackName,
+        sellType,
       },
     });
     await notification.save();

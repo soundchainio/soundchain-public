@@ -2,29 +2,22 @@ import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { ListNFTBuyNow } from 'components/details-NFT/ListNFTBuyNow';
 import { Layout } from 'components/Layout';
+import MaxGasFee from 'components/MaxGasFee';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import { useModalDispatch } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
-import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
-import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
-import {
-  PendingRequest,
-  TrackDocument,
-  useListingItemLazyQuery,
-  useTrackQuery,
-  useUpdateTrackMutation,
-} from 'lib/graphql';
+import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemLazyQuery, useUpdateTrackMutation } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 
 export interface TrackPageProps {
-  trackId: string;
+  track: TrackQuery['track'];
 }
 
 interface TrackPageParams extends ParsedUrlQuery {
@@ -38,7 +31,7 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
     return { notFound: true };
   }
 
-  const { error } = await apolloClient.query({
+  const { data, error } = await apolloClient.query({
     query: TrackDocument,
     variables: { id: trackId },
     context,
@@ -48,42 +41,41 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
     return { notFound: true };
   }
 
-  return cacheFor(EditPage, { trackId }, context, apolloClient);
+  return cacheFor(EditBuyNowPage, { track: data.track }, context, apolloClient);
 });
 
-export default function EditPage({ trackId }: TrackPageProps) {
+export default function EditBuyNowPage({ track }: TrackPageProps) {
   const router = useRouter();
   const { updateListing } = useBlockchain();
   const { dispatchShowRemoveListingModal } = useModalDispatch();
-  const { data: track } = useTrackQuery({ variables: { id: trackId } });
   const [trackUpdate] = useUpdateTrackMutation();
   const { account, web3 } = useWalletContext();
-  const maxGasFee = useMaxGasFee();
   const [loading, setLoading] = useState(false);
   const [newPrice, setNewPrice] = useState(0);
   const me = useMe();
 
-  const tokenId = track?.track.nftData?.tokenId ?? -1;
+  const nftData = track.nftData;
+  const tokenId = nftData?.tokenId ?? -1;
 
-  const [getListingItem, { data: listingPayload }] = useListingItemLazyQuery({
+  const [getBuyNowItem, { data: listingPayload }] = useBuyNowItemLazyQuery({
     variables: { tokenId },
   });
 
   useEffect(() => {
-    getListingItem();
-  }, [getListingItem]);
+    getBuyNowItem();
+  }, [getBuyNowItem]);
 
   if (!listingPayload) {
     return null;
   }
 
-  const ownerAddressAccount = listingPayload.listingItem?.listingItem?.owner.toLowerCase();
+  const ownerAddressAccount = listingPayload.buyNowItem?.buyNowItem?.owner.toLowerCase();
   const isOwner = ownerAddressAccount === account?.toLowerCase();
-  const isForSale = !!listingPayload.listingItem?.listingItem?.pricePerItem ?? false;
-  const price = web3?.utils.fromWei(listingPayload.listingItem?.listingItem?.pricePerItem.toString() || '0', 'ether');
+  const isForSale = !!listingPayload.buyNowItem?.buyNowItem?.pricePerItem ?? false;
+  const price = web3?.utils.fromWei(listingPayload.buyNowItem?.buyNowItem?.pricePerItem.toString() || '0', 'ether');
 
   const handleUpdate = () => {
-    if (!web3 || !listingPayload.listingItem?.listingItem?.tokenId || !newPrice || !account) {
+    if (!web3 || !listingPayload.buyNowItem?.buyNowItem?.tokenId || !newPrice || !account) {
       return;
     }
     setLoading(true);
@@ -93,7 +85,7 @@ export default function EditPage({ trackId }: TrackPageProps) {
       trackUpdate({
         variables: {
           input: {
-            trackId: trackId,
+            trackId: track.id,
             nftData: {
               pendingRequest: PendingRequest.UpdateListing,
             },
@@ -103,19 +95,19 @@ export default function EditPage({ trackId }: TrackPageProps) {
       router.back();
     };
 
-    updateListing(web3, listingPayload.listingItem?.listingItem?.tokenId, account, weiPrice, onTransactionHash);
+    updateListing(web3, listingPayload.buyNowItem?.buyNowItem?.tokenId, account, weiPrice, onTransactionHash);
   };
 
   const handleRemove = () => {
     if (
       !web3 ||
-      !listingPayload.listingItem?.listingItem?.tokenId ||
+      !listingPayload.buyNowItem?.buyNowItem?.tokenId ||
       !account ||
-      track?.track.nftData?.pendingRequest != PendingRequest.None
+      nftData?.pendingRequest != PendingRequest.None
     ) {
       return;
     }
-    dispatchShowRemoveListingModal(true, listingPayload.listingItem?.listingItem?.tokenId, trackId);
+    dispatchShowRemoveListingModal(true, listingPayload.buyNowItem?.buyNowItem?.tokenId, track.id);
   };
 
   const RemoveListing = (
@@ -132,24 +124,18 @@ export default function EditPage({ trackId }: TrackPageProps) {
     rightButton: RemoveListing,
   };
 
-  if (!isForSale || !isOwner || !me || !track || track?.track.nftData?.pendingRequest != PendingRequest.None) {
+  if (!isForSale || !isOwner || !me || !track || nftData?.pendingRequest != PendingRequest.None) {
     return null;
   }
 
   return (
     <Layout topNavBarProps={topNovaBarProps}>
       <div className="m-4">
-        <Track trackId={trackId} />
+        <Track track={track} />
       </div>
       {price && <ListNFTBuyNow onSetPrice={setNewPrice} initialPrice={parseFloat(price)} />}
       <div className="flex p-4">
-        <div className="flex-1 font-black text-xs text-gray-80">
-          <p>Max gas fee</p>
-          <div className="flex items-center gap-1">
-            <Matic />
-            <div className="text-white">{maxGasFee}</div>MATIC
-          </div>
-        </div>
+        <MaxGasFee />
         <Button variant="edit-listing" onClick={handleUpdate} loading={loading}>
           <div className="px-4">EDIT LISTING</div>
         </Button>

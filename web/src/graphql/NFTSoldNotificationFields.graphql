@@ -10,4 +10,5 @@ fragment NFTSoldNotificationFields on NFTSoldNotification {
   artist
   artworkUrl
   price
+  sellType
 }

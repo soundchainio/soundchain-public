@@ -4,11 +4,11 @@ fragment ProfileComponentFields on Profile {
   profilePicture
   coverPicture
   socialMedias {
-      facebook
-      instagram
-      soundcloud
-      twitter
-    }
+    facebook
+    instagram
+    soundcloud
+    twitter
+  }
   favoriteGenres
   musicianTypes
   bio
@@ -20,6 +20,7 @@ fragment ProfileComponentFields on Profile {
   unreadNotificationCount
   unreadMessageCount
   verified
+  teamMember
   createdAt
   updatedAt
 }
