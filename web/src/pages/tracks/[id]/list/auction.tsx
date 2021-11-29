@@ -15,7 +15,7 @@ import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
-import { ApproveType } from 'types/ApproveType';
+import { SaleType } from 'types/SaleType';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -118,7 +118,7 @@ export default function AuctionPage({ track }: TrackPageProps) {
       };
       createAuction(web3, nftData.tokenId, weiPrice, startTimestamp, endTimestamp, account, onTransactionHash);
     } else {
-      me ? dispatchShowApproveModal(true, ApproveType.AUCTION) : router.push('/login');
+      me ? dispatchShowApproveModal(true, SaleType.AUCTION) : router.push('/login');
     }
   };
 

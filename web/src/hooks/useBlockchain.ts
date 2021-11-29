@@ -287,6 +287,27 @@ const useBlockchain = () => {
     });
   };
 
+  const updateAuction = (
+    web3: Web3,
+    tokenId: number,
+    from: string,
+    reservePrice: string,
+    startTime: number,
+    endTime: number,
+    onReceipt: (receipt: TransactionReceipt) => void,
+  ) => {
+    const auctionContract = new web3.eth.Contract(
+      soundchainAuction.abi as AbiItem[],
+      auctionAddress,
+    ) as unknown as SoundchainAuction;
+    beforeSending(web3, () => {
+      auctionContract.methods
+        .updateAuction(nftAddress, tokenId, reservePrice, startTime, endTime)
+        .send({ from, gas })
+        .on('receipt', onReceipt);
+    });
+  };
+
   const getHighestBid = async (web3: Web3, tokenId: number) => {
     const auctionContract = new web3.eth.Contract(
       soundchainAuction.abi as AbiItem[],
@@ -329,6 +350,7 @@ const useBlockchain = () => {
     resultAuction,
     sendMatic,
     transferNftToken,
+    updateAuction,
     updateListing,
   };
 };

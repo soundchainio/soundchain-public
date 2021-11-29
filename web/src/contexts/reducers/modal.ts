@@ -16,8 +16,8 @@ import {
   ShowUnderDevelopmentPayload,
 } from 'contexts/payloads/modal';
 import { ReactionType } from 'lib/graphql';
-import { ApproveType } from 'types/ApproveType';
 import { AuthorActionsType } from 'types/AuthorActionsType';
+import { SaleType } from 'types/SaleType';
 
 export interface ModalState {
   showNewPost: boolean;
@@ -43,7 +43,8 @@ export interface ModalState {
   showTransferConfirmation: boolean;
   walletRecipient?: string;
   amountToTransfer?: string;
-  type?: ApproveType;
+  type?: SaleType;
+  listingType?: SaleType;
 }
 
 export const initialModalState = {
@@ -140,6 +141,7 @@ export const modalReducer = (state: ModalState, action: Action) => {
         showRemoveListing: (action.payload as ShowRemoveListing).show,
         tokenId: (action.payload as ShowRemoveListing).tokenId,
         trackId: (action.payload as ShowRemoveListing).trackId,
+        saleType: (action.payload as ShowRemoveListing).saleType,
         anyModalOpened: (action.payload as ShowRemoveListing).show,
       };
     case ModalActionTypes.SHOW_AUDIO_PLAYER:

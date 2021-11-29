@@ -1,6 +1,6 @@
 import { ReactionType } from 'lib/graphql';
-import { ApproveType } from 'types/ApproveType';
 import { AuthorActionsType } from 'types/AuthorActionsType';
+import { SaleType } from 'types/SaleType';
 
 export interface ShowNewPostPayload {
   show: boolean;
@@ -36,13 +36,14 @@ export interface ShowCreatePayload {
 
 export interface ShowApprove {
   show: boolean;
-  type: ApproveType;
+  type: SaleType;
 }
 
 export interface ShowRemoveListing {
   show: boolean;
   tokenId: number;
   trackId: string;
+  saleType: SaleType;
 }
 
 export interface ShowAudioPlayerPayload {

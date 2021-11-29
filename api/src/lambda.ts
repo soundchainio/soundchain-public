@@ -7,7 +7,12 @@ import type { Handler, SQSEvent } from 'aws-lambda';
 import express from 'express';
 import Web3 from 'web3';
 import { AbiItem } from 'web3-utils';
-import { AuctionCreated, AuctionResulted, BidPlaced } from '../types/web3-v1-contracts/SoundchainAuction';
+import {
+  AuctionCancelled,
+  AuctionCreated,
+  AuctionResulted,
+  BidPlaced,
+} from '../types/web3-v1-contracts/SoundchainAuction';
 import { config } from './config';
 import SoundchainCollectible from './contract/Soundchain721.json';
 import SoundchainAuction from './contract/SoundchainAuction.json';
@@ -218,6 +223,18 @@ export const watcher: Handler = async () => {
             console.error(error);
           }
           console.log('AuctionResulted');
+        }
+        break;
+      case 'AuctionCancelled':
+        {
+          try {
+            const { tokenId } = (event as unknown as AuctionCancelled).returnValues;
+            await context.auctionItemService.setNotValid(parseInt(tokenId));
+            await context.trackService.setPendingNone(parseInt(tokenId));
+          } catch (error) {
+            console.error(error);
+          }
+          console.log('AuctionCancelled');
         }
         break;
     }

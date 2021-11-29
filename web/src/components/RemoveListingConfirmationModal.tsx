@@ -8,6 +8,7 @@ import { Matic } from 'icons/Matic';
 import { PendingRequest, useUpdateTrackMutation } from 'lib/graphql';
 import router from 'next/router';
 import { useState } from 'react';
+import { SaleType } from 'types/SaleType';
 import { Button } from './Button';
 import { Label } from './Label';
 import { Account, Wallet } from './Wallet';
@@ -15,17 +16,16 @@ import { Account, Wallet } from './Wallet';
 const marketplaceAddress = process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS || '';
 
 export const RemoveListingConfirmationModal = () => {
-  const { trackId, tokenId } = useModalState();
+  const { showRemoveListing, trackId, tokenId, listingType } = useModalState();
   const [trackUpdate] = useUpdateTrackMutation();
-  const { showRemoveListing } = useModalState();
   const { dispatchShowRemoveListingModal } = useModalDispatch();
-  const { cancelListing } = useBlockchain();
+  const { cancelListing, cancelAuction } = useBlockchain();
   const { web3, account, balance } = useMagicContext();
   const maxGasFee = useMaxGasFee(showRemoveListing);
   const [loading, setLoading] = useState(false);
 
   const handleClose = () => {
-    dispatchShowRemoveListingModal(false, 0, '');
+    dispatchShowRemoveListingModal(false, 0, '', SaleType.CLOSE);
   };
 
   const handleCancel = () => {
@@ -63,11 +63,15 @@ export const RemoveListingConfirmationModal = () => {
           },
         });
 
-        dispatchShowRemoveListingModal(false, 0, '');
-        router.push(router.asPath.replace('edit', ''));
+        dispatchShowRemoveListingModal(false, 0, '', SaleType.CLOSE);
+        listingType === SaleType.MARKETPLACE
+          ? router.push(router.asPath.replace('edit/buy-now', ''))
+          : router.push(router.asPath.replace('edit/auction', ''));
       };
 
-      cancelListing(web3, tokenId, account, onTransactionHash);
+      listingType === SaleType.MARKETPLACE
+        ? cancelListing(web3, tokenId, account, onTransactionHash)
+        : cancelAuction(web3, tokenId, account, onTransactionHash);
     } catch (e) {
       console.log(e);
       setLoading(false);

@@ -1,4 +1,4 @@
-export enum ApproveType {
+export enum SaleType {
   MARKETPLACE,
   AUCTION,
   CLOSE,
