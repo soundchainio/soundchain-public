@@ -70,6 +70,7 @@ export class ProfileVerificationRequestService extends ModelService<typeof Profi
   }
 
   async removeProfileVerificationRequest(id: string): Promise<ProfileVerificationRequest> {
+    await this.context.notificationService.deleteNotificationsByVerificationRequestId(id);
     return this.model.findOneAndDelete({ _id: id }).exec();
   }
 }

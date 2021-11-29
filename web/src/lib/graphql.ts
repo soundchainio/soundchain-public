@@ -2055,7 +2055,10 @@ export type NotificationQuery = (
   ) | (
     { __typename?: 'VerificationRequestNotification' }
     & VerificationRequestNotificationFieldsFragment
-  ) | { __typename?: 'NewVerificationRequestNotification' } }
+  ) | (
+    { __typename?: 'NewVerificationRequestNotification' }
+    & NewVerificationRequestNotificationFieldsFragment
+  ) }
 );
 
 export type NotificationCountQueryVariables = Exact<{ [key: string]: never; }>;
@@ -4420,6 +4423,9 @@ export const NotificationDocument = gql`
     ... on VerificationRequestNotification {
       ...VerificationRequestNotificationFields
     }
+    ... on NewVerificationRequestNotification {
+      ...NewVerificationRequestNotificationFields
+    }
   }
 }
     ${CommentNotificationFieldsFragmentDoc}
@@ -4427,7 +4433,8 @@ ${ReactionNotificationFieldsFragmentDoc}
 ${FollowerNotificationFieldsFragmentDoc}
 ${NewPostNotificationFieldsFragmentDoc}
 ${NftSoldNotificationFieldsFragmentDoc}
-${VerificationRequestNotificationFieldsFragmentDoc}`;
+${VerificationRequestNotificationFieldsFragmentDoc}
+${NewVerificationRequestNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationQuery__

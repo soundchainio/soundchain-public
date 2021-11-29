@@ -198,4 +198,8 @@ export class NotificationService extends ModelService<typeof Notification> {
     await ProfileModel.updateMany({ _id: { $in: adminsIds } }, { $inc: { unreadNotificationCount: 1 } });
     await this.model.insertMany(notifications);
   }
+
+  async deleteNotificationsByVerificationRequestId(verificationRequestId: string): Promise<void> {
+    await this.model.deleteMany({ 'metadata.verificationRequestId': verificationRequestId });
+  }
 }
