@@ -10,6 +10,7 @@ import { CommentNotificationMetadata } from '../types/CommentNotificationMetadat
 import { Context } from '../types/Context';
 import { FinishBuyNowItemInput } from '../types/FinishBuyNowItemInput';
 import { NewPostNotificationMetadata } from '../types/NewPostNotificationMetadata';
+import { NewVerificationRequestNotificationMetadata } from '../types/NewVerificationRequestNotificationMetadata';
 import { NotificationType } from '../types/NotificationType';
 import { NotificationUnion } from '../types/NotificationUnion';
 import { PageInput } from '../types/PageInput';
@@ -182,5 +183,19 @@ export class NotificationService extends ModelService<typeof Notification> {
 
     await notification.save();
     await this.incrementNotificationCount(profileId);
+  }
+
+  async newVerificationRequest(verificationRequestId: string): Promise<void> {
+    const adminsIds = await this.context.userService.getAdminsProfileIds();
+    const metadata: NewVerificationRequestNotificationMetadata = {
+      verificationRequestId,
+    };
+
+    const notifications = adminsIds.map(
+      profileId => new this.model({ type: NotificationType.NewVerificationRequest, profileId, metadata }),
+    );
+
+    await ProfileModel.updateMany({ _id: { $in: adminsIds } }, { $inc: { unreadNotificationCount: 1 } });
+    await this.model.insertMany(notifications);
   }
 }

@@ -36,6 +36,9 @@ export class ProfileVerificationRequestService extends ModelService<typeof Profi
       status: ProfileVerificationStatusType.PENDING,
     });
     await profileVerificationRequest.save();
+
+    this.context.notificationService.newVerificationRequest(profileVerificationRequest.id);
+
     return profileVerificationRequest;
   }
 

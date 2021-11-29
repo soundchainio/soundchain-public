@@ -19,6 +19,9 @@ query Notifications($sort: SortNotificationInput) {
       ... on VerificationRequestNotification {
         ...VerificationRequestNotificationFields
       }
+      ... on NewVerificationRequestNotification {
+        ...NewVerificationRequestNotificationFields
+      }
     }
   }
 }

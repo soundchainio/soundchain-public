@@ -715,7 +715,16 @@ export type NewPostNotification = {
   track: Maybe<Track>;
 };
 
-export type Notification = CommentNotification | ReactionNotification | FollowerNotification | NewPostNotification | NftSoldNotification | VerificationRequestNotification;
+export type NewVerificationRequestNotification = {
+  __typename?: 'NewVerificationRequestNotification';
+  type: NotificationType;
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  id: Scalars['String'];
+  verificationRequestId: Scalars['String'];
+};
+
+export type Notification = CommentNotification | ReactionNotification | FollowerNotification | NewPostNotification | NftSoldNotification | VerificationRequestNotification | NewVerificationRequestNotification;
 
 export type NotificationConnection = {
   __typename?: 'NotificationConnection';
@@ -729,7 +738,8 @@ export enum NotificationType {
   Follower = 'Follower',
   NewPost = 'NewPost',
   NftSold = 'NFTSold',
-  VerificationRequestUpdate = 'VerificationRequestUpdate'
+  VerificationRequestUpdate = 'VerificationRequestUpdate',
+  NewVerificationRequest = 'NewVerificationRequest'
 }
 
 export type PageInfo = {
@@ -2015,6 +2025,11 @@ export type NewPostNotificationFieldsFragment = (
   )> }
 );
 
+export type NewVerificationRequestNotificationFieldsFragment = (
+  { __typename?: 'NewVerificationRequestNotification' }
+  & Pick<NewVerificationRequestNotification, 'id' | 'type' | 'verificationRequestId' | 'createdAt'>
+);
+
 export type NotificationQueryVariables = Exact<{
   id: Scalars['String'];
 }>;
@@ -2040,7 +2055,7 @@ export type NotificationQuery = (
   ) | (
     { __typename?: 'VerificationRequestNotification' }
     & VerificationRequestNotificationFieldsFragment
-  ) }
+  ) | { __typename?: 'NewVerificationRequestNotification' } }
 );
 
 export type NotificationCountQueryVariables = Exact<{ [key: string]: never; }>;
@@ -2081,6 +2096,9 @@ export type NotificationsQuery = (
     ) | (
       { __typename?: 'VerificationRequestNotification' }
       & VerificationRequestNotificationFieldsFragment
+    ) | (
+      { __typename?: 'NewVerificationRequestNotification' }
+      & NewVerificationRequestNotificationFieldsFragment
     )> }
   ) }
 );
@@ -2839,6 +2857,14 @@ export const NewPostNotificationFieldsFragmentDoc = gql`
     title
     playbackUrl
   }
+}
+    `;
+export const NewVerificationRequestNotificationFieldsFragmentDoc = gql`
+    fragment NewVerificationRequestNotificationFields on NewVerificationRequestNotification {
+  id
+  type
+  verificationRequestId
+  createdAt
 }
     `;
 export const TrackComponentFieldsFragmentDoc = gql`
@@ -4487,6 +4513,9 @@ export const NotificationsDocument = gql`
       ... on VerificationRequestNotification {
         ...VerificationRequestNotificationFields
       }
+      ... on NewVerificationRequestNotification {
+        ...NewVerificationRequestNotificationFields
+      }
     }
   }
 }
@@ -4495,7 +4524,8 @@ ${ReactionNotificationFieldsFragmentDoc}
 ${FollowerNotificationFieldsFragmentDoc}
 ${NewPostNotificationFieldsFragmentDoc}
 ${NftSoldNotificationFieldsFragmentDoc}
-${VerificationRequestNotificationFieldsFragmentDoc}`;
+${VerificationRequestNotificationFieldsFragmentDoc}
+${NewVerificationRequestNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationsQuery__
