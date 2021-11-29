@@ -890,6 +890,7 @@ export type Query = {
   followedArtists: FollowedArtistsConnection;
   profileVerificationRequest: ProfileVerificationRequest;
   profileVerificationRequests: ProfileVerificationRequestConnection;
+  pendingRequestsBadgeNumber: Scalars['Float'];
   track: Track;
   tracks: TrackConnection;
   favoriteTracks: TrackConnection;
@@ -2082,6 +2083,14 @@ export type NotificationsQuery = (
       & VerificationRequestNotificationFieldsFragment
     )> }
   ) }
+);
+
+export type PendingRequestsBadgeNumberQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type PendingRequestsBadgeNumberQuery = (
+  { __typename?: 'Query' }
+  & Pick<Query, 'pendingRequestsBadgeNumber'>
 );
 
 export type PinJsonToIpfsMutationVariables = Exact<{
@@ -4515,6 +4524,38 @@ export function useNotificationsLazyQuery(baseOptions?: Apollo.LazyQueryHookOpti
 export type NotificationsQueryHookResult = ReturnType<typeof useNotificationsQuery>;
 export type NotificationsLazyQueryHookResult = ReturnType<typeof useNotificationsLazyQuery>;
 export type NotificationsQueryResult = Apollo.QueryResult<NotificationsQuery, NotificationsQueryVariables>;
+export const PendingRequestsBadgeNumberDocument = gql`
+    query PendingRequestsBadgeNumber {
+  pendingRequestsBadgeNumber
+}
+    `;
+
+/**
+ * __usePendingRequestsBadgeNumberQuery__
+ *
+ * To run a query within a React component, call `usePendingRequestsBadgeNumberQuery` and pass it any options that fit your needs.
+ * When your component renders, `usePendingRequestsBadgeNumberQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = usePendingRequestsBadgeNumberQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function usePendingRequestsBadgeNumberQuery(baseOptions?: Apollo.QueryHookOptions<PendingRequestsBadgeNumberQuery, PendingRequestsBadgeNumberQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<PendingRequestsBadgeNumberQuery, PendingRequestsBadgeNumberQueryVariables>(PendingRequestsBadgeNumberDocument, options);
+      }
+export function usePendingRequestsBadgeNumberLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<PendingRequestsBadgeNumberQuery, PendingRequestsBadgeNumberQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<PendingRequestsBadgeNumberQuery, PendingRequestsBadgeNumberQueryVariables>(PendingRequestsBadgeNumberDocument, options);
+        }
+export type PendingRequestsBadgeNumberQueryHookResult = ReturnType<typeof usePendingRequestsBadgeNumberQuery>;
+export type PendingRequestsBadgeNumberLazyQueryHookResult = ReturnType<typeof usePendingRequestsBadgeNumberLazyQuery>;
+export type PendingRequestsBadgeNumberQueryResult = Apollo.QueryResult<PendingRequestsBadgeNumberQuery, PendingRequestsBadgeNumberQueryVariables>;
 export const PinJsonToIpfsDocument = gql`
     mutation pinJsonToIPFS($input: PinJsonToIPFSInput!) {
   pinJsonToIPFS(input: $input) {

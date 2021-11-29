@@ -60,6 +60,12 @@ export class ProfileVerificationRequestService extends ModelService<typeof Profi
     return profileVerificationRequest;
   }
 
+  async getPendingRequestsBadgeNumber(): Promise<number> {
+    const count = await this.model.find({ status: ProfileVerificationStatusType.PENDING }).countDocuments();
+
+    return count;
+  }
+
   async removeProfileVerificationRequest(id: string): Promise<ProfileVerificationRequest> {
     return this.model.findOneAndDelete({ _id: id }).exec();
   }

@@ -15,7 +15,7 @@ import { TwitterSquare } from 'icons/social/TwitterSquare';
 import { Verified } from 'icons/Verified';
 import { Wallet } from 'icons/Wallet';
 import { setJwt } from 'lib/apollo';
-import { Role } from 'lib/graphql';
+import { Role, usePendingRequestsBadgeNumberQuery } from 'lib/graphql';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
@@ -31,6 +31,7 @@ interface SideMenuContentProps {
 }
 
 export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => {
+  const { data: pendingRequestsBadgeNumber } = usePendingRequestsBadgeNumberQuery();
   const me = useMe();
   const router = useRouter();
   const { dispatchShowUnderDevelopmentModal } = useModalDispatch();
@@ -111,7 +112,12 @@ export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => 
           <MenuLink icon={Wallet} label="Wallet" href="/wallet" />
           <MenuLink icon={Feedback} label="Leave Feedback" href="/feedback" />
           {me.roles.includes(Role.Admin) ? (
-            <MenuLink icon={Verified} label="Admin Panel" href="/manage-requests" />
+            <MenuLink
+              icon={Verified}
+              label="Admin Panel"
+              href="/manage-requests"
+              badgeNumber={pendingRequestsBadgeNumber?.pendingRequestsBadgeNumber}
+            />
           ) : (
             <MenuLink
               icon={Verified}
