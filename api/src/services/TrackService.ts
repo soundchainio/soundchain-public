@@ -55,6 +55,7 @@ export class TrackService extends ModelService<typeof Track> {
     const regex = new RegExp(search, 'i');
     const list = await this.model
       .find({ $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }] })
+      .sort({ createdAt: -1 })
       .limit(5);
     const total = await this.model
       .find({ deleted: false, $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }] })
