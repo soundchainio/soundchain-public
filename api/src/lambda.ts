@@ -12,6 +12,7 @@ import {
   AuctionCreated,
   AuctionResulted,
   BidPlaced,
+  UpdateAuction,
 } from '../types/web3-v1-contracts/SoundchainAuction';
 import { config } from './config';
 import SoundchainCollectible from './contract/Soundchain721.json';
@@ -229,12 +230,32 @@ export const watcher: Handler = async () => {
         {
           try {
             const { tokenId } = (event as unknown as AuctionCancelled).returnValues;
-            await context.auctionItemService.setNotValid(parseInt(tokenId));
-            await context.trackService.setPendingNone(parseInt(tokenId));
+            await Promise.all([
+              context.auctionItemService.setNotValid(parseInt(tokenId)),
+              context.trackService.setPendingNone(parseInt(tokenId)),
+            ]);
           } catch (error) {
             console.error(error);
           }
           console.log('AuctionCancelled');
+        }
+        break;
+      case 'UpdateAuction':
+        {
+          try {
+            const { tokenId, reservePrice, startTime, endTime } = (event as unknown as UpdateAuction).returnValues;
+            await Promise.all([
+              context.auctionItemService.updateAuctionItem(parseInt(tokenId), {
+                reservePrice,
+                startingTime: parseInt(startTime),
+                endingTime: parseInt(endTime),
+              }),
+              context.trackService.setPendingNone(parseInt(tokenId)),
+            ]);
+          } catch (error) {
+            console.error(error);
+          }
+          console.log('UpdateAuction');
         }
         break;
     }
