@@ -54,7 +54,8 @@ export default function AuctionPage({ track }: TrackPageProps) {
   const { dispatchShowApproveModal } = useModalDispatch();
   const [loading, setLoading] = useState(false);
   const [price, setPrice] = useState(0);
-  const [duration, setDuration] = useState(0);
+  const [startTime, setStartTime] = useState<Date | null>();
+  const [endTime, setEndTime] = useState<Date | null>();
   const [isOwner, setIsOwner] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
 
@@ -93,17 +94,14 @@ export default function AuctionPage({ track }: TrackPageProps) {
 
   const isForSale = !!buyNowItem?.buyNowItem?.buyNowItem?.pricePerItem ?? false;
 
-  const handleList = async () => {
-    if (nftData?.tokenId === null || nftData?.tokenId === undefined || !account || !web3) {
+  const handleList = () => {
+    if (nftData?.tokenId === null || nftData?.tokenId === undefined || !account || !web3 || !startTime || !endTime) {
       return;
     }
     setLoading(true);
     const weiPrice = web3?.utils.toWei(price.toString(), 'ether') || '0';
-    const blockNumber = await web3.eth.getBlockNumber();
-    const block = await web3.eth.getBlock(blockNumber);
-    const blockTimeStamp = block.timestamp as number;
-    const startTime = blockTimeStamp + 60;
-    const endTime = startTime + duration * 3600;
+    const startTimestamp = startTime.getTime() / 1000;
+    const endTimestamp = endTime.getTime() / 1000;
     if (isApproved) {
       const onTransactionHash = async () => {
         await trackUpdate({
@@ -118,7 +116,7 @@ export default function AuctionPage({ track }: TrackPageProps) {
         });
         router.push(router.asPath.replace('/list/auction', ''));
       };
-      createAuction(web3, nftData.tokenId, weiPrice, startTime, endTime, account, onTransactionHash);
+      createAuction(web3, nftData.tokenId, weiPrice, startTimestamp, endTimestamp, account, onTransactionHash);
     } else {
       me ? dispatchShowApproveModal(true, ApproveType.AUCTION) : router.push('/login');
     }
@@ -138,10 +136,14 @@ export default function AuctionPage({ track }: TrackPageProps) {
       <div className="m-4">
         <Track track={track} />
       </div>
-      <ListNFTAuction onSetPrice={price => setPrice(price)} onSetDuration={duration => setDuration(duration)} />
+      <ListNFTAuction
+        onSetPrice={price => setPrice(price)}
+        onSetStartTime={newStartTime => setStartTime(newStartTime)}
+        onSetEndTime={newEndTime => setEndTime(newEndTime)}
+      />
       <div className="flex p-4">
         <MaxGasFee />
-        <Button variant="list-nft" disabled={price <= 0} onClick={handleList} loading={loading}>
+        <Button variant="list-nft" onClick={handleList} loading={loading}>
           <div className="px-4 font-bold">LIST NFT</div>
         </Button>
       </div>
