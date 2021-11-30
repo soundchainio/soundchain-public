@@ -61,4 +61,22 @@ export class PolygonscanService extends Service {
 
     return { result: data.result, nextPage };
   }
+
+  async getInternalTransactionHistory(
+    wallet: string,
+    page?: PageInput,
+  ): Promise<{ result: PolygonscanResultInterface[]; nextPage: string }> {
+    const offset = page.first;
+    const pageRequest = (page.after && parseInt(page.after)) ?? 1;
+    const url = `?apikey=${config.minting.polygonScan}&module=account&action=txlistinternal&address=${wallet}&startblock=1&endblock=99999999&page=${pageRequest}&offset=${offset}&sort=desc`;
+
+    const { data } = await polygonScanTestNetApi.get<PolygonscanResponse>(url);
+
+    let nextPage: string;
+    if (data.result.length === offset) {
+      nextPage = (pageRequest + 1).toString();
+    }
+
+    return { result: data.result, nextPage };
+  }
 }

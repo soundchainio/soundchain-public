@@ -1,17 +1,18 @@
 import { BackButton } from 'components/Buttons/BackButton';
 import { ConnectedNetwork } from 'components/ConnectedNetwork';
 import { CopyWalletAddress } from 'components/CopyWalletAddress';
-import { InfiniteLoader } from 'components/InfiniteLoader';
+import { HistoryTabs } from 'components/HistoryTabs';
+import { InternalTransactionsTab } from 'components/InternalTransactionsTab';
 import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
-import { TrackListItemSkeleton } from 'components/TrackListItemSkeleton';
-import { Transaction } from 'components/Transaction';
+import { TransactionsTab } from 'components/TransactionsTab';
 import { cacheFor } from 'lib/apollo';
-import { useMaticUsdQuery, usePolygonscanQuery, UserByWalletDocument } from 'lib/graphql';
+import { UserByWalletDocument } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import Head from 'next/head';
 import { ParsedUrlQuery } from 'querystring';
-import React from 'react';
+import React, { useState } from 'react';
+import { HistoryTab } from 'types/HistoryTabType';
 
 export interface HistoryPageProps {
   address: string;
@@ -47,38 +48,7 @@ const topNavBarProps: TopNavBarProps = {
 };
 
 export default function HistoryPage({ address }: HistoryPageProps) {
-  const { data: maticUsd } = useMaticUsdQuery();
-
-  const pageSize = 50;
-  const { data, fetchMore } = usePolygonscanQuery({
-    variables: {
-      wallet: address,
-      page: { first: pageSize },
-    },
-  });
-
-  if (!data) {
-    return (
-      <div className="space-y-2">
-        <TrackListItemSkeleton />
-        <TrackListItemSkeleton />
-        <TrackListItemSkeleton />
-      </div>
-    );
-  }
-
-  const { result, nextPage } = data.getTransactionHistory;
-
-  const loadMore = () => {
-    fetchMore({
-      variables: {
-        page: {
-          first: pageSize,
-          after: nextPage,
-        },
-      },
-    });
-  };
+  const [selectedTab, setSelectedTab] = useState<HistoryTab>(HistoryTab.TRANSACTIONS);
 
   return (
     <Layout topNavBarProps={topNavBarProps}>
@@ -91,16 +61,9 @@ export default function HistoryPage({ address }: HistoryPageProps) {
         <ConnectedNetwork />
         <CopyWalletAddress walletAddress={address} />
       </div>
-      <ol className="flex flex-col text-white">
-        {result.map((item, idx) => {
-          return (
-            <li key={item.hash} className={idx % 2 ? 'bg-gray-15' : 'bg-gray-20'}>
-              <Transaction transaction={item} maticUsdValue={maticUsd?.maticUsd} />
-            </li>
-          );
-        })}
-        {nextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading history" />}
-      </ol>
+      <HistoryTabs selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
+      {selectedTab === HistoryTab.TRANSACTIONS && <TransactionsTab address={address} />}
+      {selectedTab === HistoryTab.INTERNAL && <InternalTransactionsTab address={address} />}
     </Layout>
   );
 }

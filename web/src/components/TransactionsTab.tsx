@@ -1,0 +1,57 @@
+import { InfiniteLoader } from 'components/InfiniteLoader';
+import { TrackListItemSkeleton } from 'components/TrackListItemSkeleton';
+import { Transaction } from 'components/Transaction';
+import { useMaticUsdQuery, usePolygonscanQuery } from 'lib/graphql';
+import React from 'react';
+
+interface TransactionsTabProps {
+  address: string;
+}
+
+export const TransactionsTab = ({ address }: TransactionsTabProps) => {
+  const { data: maticUsd } = useMaticUsdQuery();
+
+  const pageSize = 50;
+  const { data, fetchMore } = usePolygonscanQuery({
+    variables: {
+      wallet: address,
+      page: { first: pageSize },
+    },
+  });
+
+  if (!data) {
+    return (
+      <div className="space-y-2">
+        <TrackListItemSkeleton />
+        <TrackListItemSkeleton />
+        <TrackListItemSkeleton />
+      </div>
+    );
+  }
+
+  const { result, nextPage } = data.getTransactionHistory;
+
+  const loadMore = () => {
+    fetchMore({
+      variables: {
+        page: {
+          first: pageSize,
+          after: nextPage,
+        },
+      },
+    });
+  };
+
+  return (
+    <ol className="flex flex-col text-white">
+      {result.map((item, idx) => {
+        return (
+          <li key={item.hash} className={idx % 2 ? 'bg-gray-15' : 'bg-gray-20'}>
+            <Transaction transaction={item} maticUsdValue={maticUsd?.maticUsd} />
+          </li>
+        );
+      })}
+      {nextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading history" />}
+    </ol>
+  );
+};

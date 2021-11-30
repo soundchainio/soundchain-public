@@ -36,4 +36,23 @@ export class PolygonscanResolver {
 
     return { result, nextPage };
   }
+
+  @Query(() => PolygonscanResult)
+  @Authorized()
+  async getInternalTransactionHistory(
+    @Ctx() { polygonscanService }: Context,
+    @Arg('wallet') wallet: string,
+    @Arg('page', { nullable: true }) page?: PageInput,
+  ): Promise<PolygonscanResult> {
+    const { nextPage, result: serviceResult } = await polygonscanService.getInternalTransactionHistory(wallet, page);
+
+    const result = serviceResult.map(trx => {
+      return {
+        ...trx,
+        date: new Date(parseInt(trx.timeStamp) * 1000).toLocaleDateString('en-US'),
+      } as PolygonscanResultObj;
+    });
+
+    return { result, nextPage };
+  }
 }
