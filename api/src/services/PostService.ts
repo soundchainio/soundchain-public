@@ -58,7 +58,7 @@ export class PostService extends ModelService<typeof Post> {
 
   async deletePost(params: DeletePostParams): Promise<Post> {
     this.context.feedService.deleteItemsByPostId(params.postId)
-    return await PostModel.findByIdAndUpdate(
+    return await PostModel.findOneAndUpdate(
       { _id: params.postId, profileId: params.profileId },
       { deleted: true },
       { new: true },
@@ -66,7 +66,7 @@ export class PostService extends ModelService<typeof Post> {
   }
 
   async updatePost(params: UpdatePostParams): Promise<Post> {
-    return await this.model.findByIdAndUpdate(
+    return await this.model.findOneAndUpdate(
       { _id: params.postId, profileId: params.profileId },
       {
         body: params.body,
