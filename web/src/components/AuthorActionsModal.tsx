@@ -65,12 +65,11 @@ export const AuthorActionsModal = () => {
         <div className="flex flex-col h-full">
           <div className="flex-1" onClick={onOutsideClick}></div>
           <div className="text-white p-4">
-            {
-              !showOnlyDeleteOption && 
+            {!showOnlyDeleteOption && (
               <EditButton className="p-4 mb-4" onClick={onEdit}>
                 Edit {authorActionsType}
               </EditButton>
-            }
+            )}
             <DeleteButton className="p-4" onClick={onDelete}>
               Delete {authorActionsType}
             </DeleteButton>

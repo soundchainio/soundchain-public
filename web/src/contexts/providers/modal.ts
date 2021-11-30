@@ -26,7 +26,7 @@ export const useModalDispatch = () => {
       showAuthorActions: boolean,
       authorActionsType: AuthorActionsType,
       authorActionsId: string,
-      showOnlyDeleteOption: boolean,
+      showOnlyDeleteOption = false,
     ) =>
       dispatch({
         type: ModalActionTypes.SHOW_CONTEXT_MENU,
