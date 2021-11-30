@@ -10,8 +10,8 @@ interface InternalTransactionProps {
 export const InternalTransaction = ({ transaction, maticUsdValue }: InternalTransactionProps) => {
   return (
     <div className="flex items-center p-4 gap-2">
-      <div>
-        <p className="text-white text-xs font-bold">{transaction.blockNumber}</p>
+      <div className="min-w-0">
+        <p className="text-white text-xs font-bold truncate">{transaction.hash}</p>
         <p className="text-gray-80 text-xxs font-medium">{transaction.date}</p>
       </div>
       <div className="ml-auto">

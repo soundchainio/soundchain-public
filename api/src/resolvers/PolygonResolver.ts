@@ -1,5 +1,6 @@
 import { Arg, Authorized, Ctx, Query, Resolver } from 'type-graphql';
 import soundchainCollectible from '../contract/Soundchain721.json';
+import soundchainAuction from '../contract/SoundchainAuction.json';
 import soundchainMarketplace from '../contract/SoundchainMarketplace.json';
 import { Context } from '../types/Context';
 import { PageInput } from '../types/PageInput';
@@ -23,13 +24,16 @@ export class PolygonscanResolver {
     @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<PolygonscanResult> {
     const { nextPage, result: serviceResult } = await polygonscanService.getTransactionHistory(wallet, page);
-    abiDecoder.addABI([...soundchainMarketplace.abi, ...soundchainCollectible.abi]);
+    abiDecoder.addABI([...soundchainMarketplace.abi, ...soundchainCollectible.abi, ...soundchainAuction.abi]);
 
     const result = serviceResult.map(trx => {
-      const decoded = abiDecoder.decodeMethod(trx.input);
+      let decoded = abiDecoder.decodeMethod(trx.input)?.name;
+      if (!decoded && parseInt(trx.value)) {
+        decoded = 'transfer';
+      }
       return {
         ...trx,
-        method: decoded?.name,
+        method: decoded,
         date: new Date(parseInt(trx.timeStamp) * 1000).toLocaleDateString('en-US'),
       } as PolygonscanResultObj;
     });

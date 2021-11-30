@@ -21,12 +21,21 @@ const map: Record<string, TransactionData> = {
   safeMint: { methodName: 'Minted NFT', icon: Stars },
   buyItem: { methodName: 'Bought NFT Item', icon: Activity },
   setApprovalForAll: { methodName: 'Set Approval for all', icon: Checkmark2 },
+  transfer: { methodName: 'Transfer', icon: Checkmark2 },
+  createAuction: { methodName: 'Auction created', icon: Checkmark2 },
 };
 
 export const Transaction = ({ transaction, maticUsdValue }: TransactionProps) => {
   const Icon = transaction.method && map[transaction.method].icon;
 
+  const transactionValue = parseInt(transaction.value) / 1e18;
   const gasFee = (parseInt(transaction.gasUsed) * parseInt(transaction.gasPrice)) / 1e18;
+
+  const getValueInMaticField = transactionValue > 0 ? transactionValue : gasFee;
+  const getValueInDollar = maticUsdValue && getValueInMaticField * parseFloat(maticUsdValue);
+
+  const getValueInDollarField = getValueInDollar && getValueInDollar.toFixed(2) !== '0.00' ? getValueInDollar : 0.01;
+
   return (
     <div className="flex items-center p-4 gap-2">
       {Icon && <Icon />}
@@ -38,15 +47,11 @@ export const Transaction = ({ transaction, maticUsdValue }: TransactionProps) =>
       </div>
       <div className="ml-auto">
         <p className="text-white text-sm font-bold flex items-center gap-1">
-          {gasFee}
+          {getValueInMaticField}
           <Matic height="10" width="10" />
           <span className="text-gray-80 text-xxs font-bold uppercase"> Matic</span>
         </p>
-        {maticUsdValue && (
-          <p className="text-gray-50 text-xxs font-bold text-right">
-            {`${currency(gasFee * parseFloat(maticUsdValue))} USD`}
-          </p>
-        )}
+        <p className="text-gray-50 text-xxs font-bold text-right">{`${currency(getValueInDollarField)} USD`}</p>
       </div>
     </div>
   );
