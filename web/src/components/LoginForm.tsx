@@ -1,5 +1,6 @@
 import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
+import { LoaderAnimation } from 'components/LoaderAnimation';
 import { config } from 'config';
 import { Form, Formik } from 'formik';
 import { useMagicContext } from 'hooks/useMagicContext';
@@ -21,6 +22,7 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
 export const LoginForm = () => {
   const [login] = useLoginMutation();
   const [loading, setLoading] = useState(false);
+  const [loggingIn, setLoggingIn] = useState(false);
   const me = useMe();
   const { magic } = useMagicContext();
   const router = useRouter();
@@ -33,34 +35,34 @@ export const LoginForm = () => {
   }, [me, router]);
 
   const handleOAuthCallback = async () => {
+    setLoggingIn(true);
     try {
       let result;
-      if(magic.oauth) {
+      if (magic.oauth) {
         result = await magic.oauth.getRedirectResult();
       }
       if (result) {
         const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
         setJwt(loginResult.data?.login.jwt);
       }
-    } catch(error) {
+    } catch (error) {
       router.push('/create-account');
     }
-  }
+  };
 
   const handleGoogleLogin = async () => {
     await magic.oauth.loginWithRedirect({
       provider: 'google',
       redirectURI: `${config.domainUrl}/login`,
-      scope: ['openid', 'https://www.googleapis.com/auth/userinfo.email']
+      scope: ['openid', 'https://www.googleapis.com/auth/userinfo.email'],
     });
-  }
+  };
 
   useEffect(() => {
-    if(magic && magicParam) 
-    { 
-      handleOAuthCallback() 
+    if (magic && magicParam) {
+      handleOAuthCallback();
     }
-  }, [magic, magicParam]) 
+  }, [magic, magicParam]);
 
   async function handleSubmit(values: FormValues) {
     try {
@@ -83,10 +85,18 @@ export const LoginForm = () => {
     }
   }
 
-  return (
+  return loggingIn ? (
+    <div className="flex items-center justify-center w-full h-full text-center font-bold sm:px-4 py-3">
+      <LoaderAnimation ring />
+      <span className="text-white">Logging in</span>
+    </div>
+  ) : (
     <>
-      <button className="flex items-center justify-center rounded-sm w-full font-bold sm:px-4 py-3 text-gray-60 bg-white" onClick={handleGoogleLogin}>
-        <Google className="mr-1 h-5 w-5"/> 
+      <button
+        className="flex items-center justify-center rounded-sm w-full font-bold sm:px-4 py-3 text-gray-60 bg-white"
+        onClick={handleGoogleLogin}
+      >
+        <Google className="mr-1 h-5 w-5" />
         <span>Sign in With Google</span>
       </button>
       <div className="h-36 mb-2 flex items-center justify-center">
