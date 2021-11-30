@@ -103,10 +103,10 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     return null;
   }
 
-  const ownerAddressAccount = auctionItem.auctionItem?.auctionItem?.owner.toLowerCase();
-  const isOwner = ownerAddressAccount === account?.toLowerCase();
+  const isOwner = auctionItem.auctionItem?.auctionItem?.owner.toLowerCase() === account?.toLowerCase();
   const isForSale = !!auctionItem.auctionItem.auctionItem?.reservePrice ?? false;
   const reservePrice = web3?.utils.fromWei(auctionItem.auctionItem.auctionItem?.reservePrice ?? '0', 'ether');
+  const hasStarted = (auctionItem.auctionItem?.auctionItem?.startingTime ?? 0) <= new Date().getTime() / 1000;
 
   const handlePlaceBid = () => {
     if (
@@ -140,13 +140,14 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
       <div className="m-4">
         <Track track={track} />
       </div>
-      {reservePrice && ownerAddressAccount && (
+      {reservePrice && account && (
         <PlaceBid
           highestBid={highestBid}
           reservePrice={reservePrice}
           bidAmount={bidAmount}
           onSetBidAmount={amount => setBidAmount(amount)}
-          ownerAddressAccount={ownerAddressAccount}
+          ownerAddressAccount={account}
+          startTime={auctionItem.auctionItem?.auctionItem?.startingTime ?? 0}
           endingTime={auctionItem.auctionItem?.auctionItem?.endingTime ?? 0}
           countBids={countBids?.countBids.numberOfBids ?? 0}
         />
@@ -155,7 +156,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
       {haveBided?.haveBided.bided && !isHighestBidder && (
         <div className="text-red-500 font-bold p-4 text-center">You have been outbid!</div>
       )}
-      {bidAmount >= 0 && (
+      {bidAmount >= 0 && hasStarted && (
         <div className="flex p-4">
           <div className="flex-1 font-black text-xs">
             <div className="flex items-center gap-2 text-white">

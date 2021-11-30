@@ -83,29 +83,17 @@ export type PauseToggled = ContractEventLog<{
   isPaused: boolean;
   0: boolean;
 }>;
-export type UpdateAuctionEndTime = ContractEventLog<{
+export type UpdateAuction = ContractEventLog<{
   nftAddress: string;
   tokenId: string;
+  reservePrice: string;
+  startTime: string;
   endTime: string;
   0: string;
   1: string;
   2: string;
-}>;
-export type UpdateAuctionReservePrice = ContractEventLog<{
-  nftAddress: string;
-  tokenId: string;
-  reservePrice: string;
-  0: string;
-  1: string;
-  2: string;
-}>;
-export type UpdateAuctionStartTime = ContractEventLog<{
-  nftAddress: string;
-  tokenId: string;
-  startTime: string;
-  0: string;
-  1: string;
-  2: string;
+  3: string;
+  4: string;
 }>;
 export type UpdateMinBidIncrement = ContractEventLog<{
   minBidIncrement: string;
@@ -223,22 +211,12 @@ export interface SoundchainAuction extends BaseContract {
 
     transferOwnership(newOwner: string): NonPayableTransactionObject<void>;
 
-    updateAuctionEndTime(
+    updateAuction(
       _nftAddress: string,
       _tokenId: number | string | BN,
-      _endTimestamp: number | string | BN
-    ): NonPayableTransactionObject<void>;
-
-    updateAuctionReservePrice(
-      _nftAddress: string,
-      _tokenId: number | string | BN,
-      _reservePrice: number | string | BN
-    ): NonPayableTransactionObject<void>;
-
-    updateAuctionStartTime(
-      _nftAddress: string,
-      _tokenId: number | string | BN,
-      _startTime: number | string | BN
+      _reservePrice: number | string | BN,
+      _startTime: number | string | BN,
+      _endTime: number | string | BN
     ): NonPayableTransactionObject<void>;
 
     updateMinBidIncrement(
@@ -293,24 +271,10 @@ export interface SoundchainAuction extends BaseContract {
       cb?: Callback<PauseToggled>
     ): EventEmitter;
 
-    UpdateAuctionEndTime(cb?: Callback<UpdateAuctionEndTime>): EventEmitter;
-    UpdateAuctionEndTime(
+    UpdateAuction(cb?: Callback<UpdateAuction>): EventEmitter;
+    UpdateAuction(
       options?: EventOptions,
-      cb?: Callback<UpdateAuctionEndTime>
-    ): EventEmitter;
-
-    UpdateAuctionReservePrice(
-      cb?: Callback<UpdateAuctionReservePrice>
-    ): EventEmitter;
-    UpdateAuctionReservePrice(
-      options?: EventOptions,
-      cb?: Callback<UpdateAuctionReservePrice>
-    ): EventEmitter;
-
-    UpdateAuctionStartTime(cb?: Callback<UpdateAuctionStartTime>): EventEmitter;
-    UpdateAuctionStartTime(
-      options?: EventOptions,
-      cb?: Callback<UpdateAuctionStartTime>
+      cb?: Callback<UpdateAuction>
     ): EventEmitter;
 
     UpdateMinBidIncrement(cb?: Callback<UpdateMinBidIncrement>): EventEmitter;
@@ -385,31 +349,11 @@ export interface SoundchainAuction extends BaseContract {
     cb: Callback<PauseToggled>
   ): void;
 
-  once(event: "UpdateAuctionEndTime", cb: Callback<UpdateAuctionEndTime>): void;
+  once(event: "UpdateAuction", cb: Callback<UpdateAuction>): void;
   once(
-    event: "UpdateAuctionEndTime",
+    event: "UpdateAuction",
     options: EventOptions,
-    cb: Callback<UpdateAuctionEndTime>
-  ): void;
-
-  once(
-    event: "UpdateAuctionReservePrice",
-    cb: Callback<UpdateAuctionReservePrice>
-  ): void;
-  once(
-    event: "UpdateAuctionReservePrice",
-    options: EventOptions,
-    cb: Callback<UpdateAuctionReservePrice>
-  ): void;
-
-  once(
-    event: "UpdateAuctionStartTime",
-    cb: Callback<UpdateAuctionStartTime>
-  ): void;
-  once(
-    event: "UpdateAuctionStartTime",
-    options: EventOptions,
-    cb: Callback<UpdateAuctionStartTime>
+    cb: Callback<UpdateAuction>
   ): void;
 
   once(

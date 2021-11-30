@@ -1,6 +1,6 @@
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
-import { ListNFTBuyNow } from 'components/details-NFT/ListNFTBuyNow';
+import { ListNFTAuction } from 'components/details-NFT/ListNFTAuction';
 import { Layout } from 'components/Layout';
 import MaxGasFee from 'components/MaxGasFee';
 import { TopNavBarProps } from 'components/TopNavBar';
@@ -10,11 +10,18 @@ import useBlockchain from 'hooks/useBlockchain';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { cacheFor } from 'lib/apollo';
-import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemLazyQuery, useUpdateTrackMutation } from 'lib/graphql';
+import {
+  PendingRequest,
+  TrackDocument,
+  TrackQuery,
+  useAuctionItemLazyQuery,
+  useUpdateTrackMutation,
+} from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { SaleType } from 'types/SaleType';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -46,40 +53,43 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 
 export default function EditBuyNowPage({ track }: TrackPageProps) {
   const router = useRouter();
-  const { updateListing } = useBlockchain();
+  const { updateAuction } = useBlockchain();
   const { dispatchShowRemoveListingModal } = useModalDispatch();
   const [trackUpdate] = useUpdateTrackMutation();
   const { account, web3 } = useWalletContext();
   const [loading, setLoading] = useState(false);
   const [newPrice, setNewPrice] = useState(0);
+  const [startTime, setStartTime] = useState<Date | null>();
+  const [endTime, setEndTime] = useState<Date | null>();
   const me = useMe();
 
   const nftData = track.nftData;
   const tokenId = nftData?.tokenId ?? -1;
 
-  const [getBuyNowItem, { data: listingPayload }] = useBuyNowItemLazyQuery({
+  const [getAuctionItem, { data: listingPayload }] = useAuctionItemLazyQuery({
     variables: { tokenId },
   });
 
   useEffect(() => {
-    getBuyNowItem();
-  }, [getBuyNowItem]);
+    getAuctionItem();
+  }, [getAuctionItem]);
 
   if (!listingPayload) {
     return null;
   }
 
-  const ownerAddressAccount = listingPayload.buyNowItem?.buyNowItem?.owner.toLowerCase();
+  const ownerAddressAccount = listingPayload.auctionItem?.auctionItem?.owner.toLowerCase();
   const isOwner = ownerAddressAccount === account?.toLowerCase();
-  const isForSale = !!listingPayload.buyNowItem?.buyNowItem?.pricePerItem ?? false;
-  const price = web3?.utils.fromWei(listingPayload.buyNowItem?.buyNowItem?.pricePerItem.toString() || '0', 'ether');
+  const isForSale = !!listingPayload.auctionItem?.auctionItem?.reservePrice ?? false;
 
   const handleUpdate = () => {
-    if (!web3 || !listingPayload.buyNowItem?.buyNowItem?.tokenId || !newPrice || !account) {
+    if (!web3 || !listingPayload.auctionItem?.auctionItem?.tokenId || !newPrice || !account || !startTime || !endTime) {
       return;
     }
     setLoading(true);
     const weiPrice = web3?.utils.toWei(newPrice.toString(), 'ether') || '0';
+    const startTimestamp = startTime.getTime() / 1000;
+    const endTimestamp = endTime.getTime() / 1000;
 
     const onTransactionHash = () => {
       trackUpdate({
@@ -95,19 +105,27 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       router.back();
     };
 
-    updateListing(web3, listingPayload.buyNowItem?.buyNowItem?.tokenId, account, weiPrice, onTransactionHash);
+    updateAuction(
+      web3,
+      listingPayload.auctionItem?.auctionItem?.tokenId,
+      account,
+      weiPrice,
+      startTimestamp,
+      endTimestamp,
+      onTransactionHash,
+    );
   };
 
   const handleRemove = () => {
     if (
       !web3 ||
-      !listingPayload.buyNowItem?.buyNowItem?.tokenId ||
+      !listingPayload.auctionItem?.auctionItem?.tokenId ||
       !account ||
       nftData?.pendingRequest != PendingRequest.None
     ) {
       return;
     }
-    dispatchShowRemoveListingModal(true, listingPayload.buyNowItem?.buyNowItem?.tokenId, track.id);
+    dispatchShowRemoveListingModal(true, listingPayload.auctionItem?.auctionItem?.tokenId, track.id, SaleType.AUCTION);
   };
 
   const RemoveListing = (
@@ -133,7 +151,11 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       <div className="m-4">
         <Track track={track} />
       </div>
-      {price && <ListNFTBuyNow onSetPrice={setNewPrice} initialPrice={parseFloat(price)} />}
+      <ListNFTAuction
+        onSetPrice={price => setNewPrice(price)}
+        onSetStartTime={newStartTime => setStartTime(newStartTime)}
+        onSetEndTime={newEndTime => setEndTime(newEndTime)}
+      />
       <div className="flex p-4">
         <MaxGasFee />
         <Button variant="edit-listing" onClick={handleUpdate} loading={loading}>

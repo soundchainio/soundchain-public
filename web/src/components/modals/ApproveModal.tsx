@@ -4,14 +4,14 @@ import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { useWalletContext } from 'hooks/useWalletContext';
-import { useRouter } from 'next/router';
-import React, { useState } from 'react';
-import { ApproveType } from 'types/ApproveType';
+import { ApproveBuyNow } from 'icons/ApproveBuyNow';
+import { ApproveMarketplace } from 'icons/ApproveMarketplace';
 import { Auction } from 'icons/Auction';
 import { CheckmarkFilled } from 'icons/CheckmarkFilled';
-import { ApproveMarketplace } from 'icons/ApproveMarketplace';
-import { ApproveBuyNow } from 'icons/ApproveBuyNow';
 import { Matic } from 'icons/Matic';
+import { useRouter } from 'next/router';
+import React, { useState } from 'react';
+import { SaleType } from 'types/SaleType';
 
 export const ApproveModal = () => {
   const { account, web3 } = useWalletContext();
@@ -24,7 +24,7 @@ export const ApproveModal = () => {
   const maxGasFee = useMaxGasFee(showApprove);
 
   const handleClose = () => {
-    dispatchShowApproveModal(false, ApproveType.CLOSE);
+    dispatchShowApproveModal(false, SaleType.CLOSE);
   };
 
   const setApprove = () => {
@@ -32,33 +32,33 @@ export const ApproveModal = () => {
       return;
     }
     setLoading(true);
-    if (type === ApproveType.AUCTION) {
+    if (type === SaleType.AUCTION) {
       approveAuction(web3, account, onReceipt);
-    } else if (type === ApproveType.MARKETPLACE) {
+    } else if (type === SaleType.MARKETPLACE) {
       approveMarketplace(web3, account, onReceipt);
     }
   };
 
   const onReceipt = () => {
     setLoading(false);
-    dispatchShowApproveModal(false, ApproveType.CLOSE);
+    dispatchShowApproveModal(false, SaleType.CLOSE);
     router.reload();
   };
 
   const icon = () => {
-    if (type === ApproveType.AUCTION) return <Auction className="h-8 w-8" purple />
-    return <CheckmarkFilled className="h-6 w-6" />
-  }
+    if (type === SaleType.AUCTION) return <Auction className="h-8 w-8" purple />;
+    return <CheckmarkFilled className="h-6 w-6" />;
+  };
 
   const title = () => {
-    if (type === ApproveType.AUCTION) return "Auction"
-    return "Buy Now"
-  }
+    if (type === SaleType.AUCTION) return 'Auction';
+    return 'Buy Now';
+  };
 
   const image = () => {
-    if (type === ApproveType.AUCTION) return <ApproveMarketplace />
-    return <ApproveBuyNow />
-  }
+    if (type === SaleType.AUCTION) return <ApproveMarketplace />;
+    return <ApproveBuyNow />;
+  };
 
   return (
     <Modal
@@ -78,13 +78,10 @@ export const ApproveModal = () => {
             <span className="text-white font-bold">{title()}</span>
           </div>
           <div className="text-xs text-gray-80">
-            To get set up for selling on SoundChain for the first time,
-            you must approve the SoundChain marketplace smart contracts to move your NFT.
-            This is only required once and includes a small gas fee.
+            To get set up for selling on SoundChain for the first time, you must approve the SoundChain marketplace
+            smart contracts to move your NFT. This is only required once and includes a small gas fee.
           </div>
-          <div>
-            {image()}
-          </div>
+          <div>{image()}</div>
         </div>
         <div>
           <div className="flex w-full bg-gray-15 p-4">
@@ -100,7 +97,7 @@ export const ApproveModal = () => {
             </div>
           </div>
           <div className="flex justify-around p-6 gap-6">
-            <Button className="w-full" variant="cancel" onClick={handleClose} loading={loading}>
+            <Button className="w-full" variant="cancel" onClick={handleClose}>
               Cancel
             </Button>
             <Button className="w-full" variant="approve" onClick={setApprove} loading={loading}>
@@ -108,7 +105,6 @@ export const ApproveModal = () => {
             </Button>
           </div>
         </div>
-        
       </div>
     </Modal>
   );
