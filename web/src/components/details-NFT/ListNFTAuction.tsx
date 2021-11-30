@@ -2,28 +2,28 @@
 import { InputField } from 'components/InputField';
 import { Form, Formik, FormikProps } from 'formik';
 import { Matic } from 'icons/Matic';
-import { number, object, SchemaOf } from 'yup';
+import { date, number, object, SchemaOf } from 'yup';
 
 interface FormValues {
   price: number;
-  duration: number;
 }
 
 const validationSchema: SchemaOf<FormValues> = object().shape({
   price: number().min(0.000001).required(),
-  duration: number().min(1).required(),
+  endTime: date().min(new Date()).required(),
+  startTime: date().min(new Date()).required(),
 });
 
 interface ListNFTProps {
   onSetPrice: (price: number) => void;
-  onSetDuration: (duration: number) => void;
+  onSetStartTime: (startTime: Date | null) => void;
+  onSetEndTime: (endTime: Date | null) => void;
   initialPrice?: number;
 }
 
-export const ListNFTAuction = ({ initialPrice, onSetPrice, onSetDuration }: ListNFTProps) => {
+export const ListNFTAuction = ({ initialPrice, onSetPrice, onSetStartTime, onSetEndTime }: ListNFTProps) => {
   const initialValues: FormValues = {
     price: initialPrice || 0,
-    duration: 0,
   };
 
   return (
@@ -34,42 +34,66 @@ export const ListNFTAuction = ({ initialPrice, onSetPrice, onSetDuration }: List
             <div className="flex">
               <label
                 htmlFor="price"
-                className="flex items-center justify-start w-full bg-gray-20 text-gray-80 font-bold text-xs md-text-sm uppercase py-3 pl-5"
+                className="flex items-center justify-start w-1/2 bg-gray-20 text-gray-80 font-bold text-xs md-text-sm uppercase py-3 pl-5"
               >
                 auction start price
               </label>
-              <div className="flex flex-wrap items-center w-1/2 justify-end bg-gray-20 uppercase py-3 pr-5">
+              <div className="flex flex-wrap items-center w-1/2 bg-gray-20 uppercase py-3 pr-5">
                 <InputField
                   name="price"
                   type="number"
                   icon={Matic}
                   onChange={el => {
                     handleChange(el);
-                    onSetPrice(parseFloat(el.target.value));
+                    onSetPrice(el.target.valueAsNumber);
                   }}
                 />
               </div>
             </div>
             <div className="flex">
               <label
-                htmlFor="duration"
-                className="flex items-center justify-start w-full bg-gray-20 text-gray-80 font-bold text-xs md-text-sm  py-3 pl-5"
+                htmlFor="startTime"
+                className="flex items-center justify-start w-1/2 bg-gray-20 text-gray-80 font-bold text-xs md-text-sm  py-3 pl-5"
               >
                 <div className="flex flex-col mr-3">
-                  <p className="uppercase">duration</p>
+                  <p className="uppercase">start time</p>
                   <p className="font-medium" style={{ fontSize: 10 }}>
-                    Set a time for how long this auction will last before item goes to highest bidder.
+                    Set a time to start the auction
                   </p>
                 </div>
               </label>
               <div className="flex flex-wrap items-center w-1/2 justify-end bg-gray-20 uppercase py-3 pr-5">
-                <InputField
-                  name="duration"
-                  type="number"
-                  symbol={'H'}
+                <input
+                  name="startTime"
+                  type="datetime-local"
+                  className="text-sm font-bold bg-gray-30 text-gray-200 focus:outline-none focus:ring-transparent placeholder-gray-60 placeholder-semibold"
                   onChange={el => {
                     handleChange(el);
-                    onSetDuration(parseFloat(el.target.value));
+                    onSetStartTime(new Date(el.target.value));
+                  }}
+                />
+              </div>
+            </div>
+            <div className="flex">
+              <label
+                htmlFor="endTime"
+                className="flex items-center justify-start w-1/2 bg-gray-20 text-gray-80 font-bold text-xs md-text-sm  py-3 pl-5"
+              >
+                <div className="flex flex-col mr-3">
+                  <p className="uppercase">end time</p>
+                  <p className="font-medium" style={{ fontSize: 10 }}>
+                    Set a time to end the auction
+                  </p>
+                </div>
+              </label>
+              <div className="flex flex-wrap items-center w-1/2 justify-end bg-gray-20 uppercase py-3 pr-5">
+                <input
+                  name="endTime"
+                  type="datetime-local"
+                  className="text-sm font-bold bg-gray-30 text-gray-200 focus:outline-none focus:ring-transparent placeholder-gray-60 placeholder-semibold"
+                  onChange={el => {
+                    handleChange(el);
+                    onSetEndTime(new Date(el.target.value));
                   }}
                 />
               </div>

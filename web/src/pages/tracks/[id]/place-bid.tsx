@@ -67,7 +67,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     variables: { tokenId },
   });
 
-  const [fetchHaveBided, { data: haveBided }] = useHaveBidedLazyQuery();
+  const [fetchHaveBided, { data: haveBided, refetch: refetchHaveBided }] = useHaveBidedLazyQuery();
 
   useEffect(() => {
     if (account && auctionItem?.auctionItem.auctionItem?.id) {
@@ -75,7 +75,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     }
   }, [fetchHaveBided, auctionItem?.auctionItem.auctionItem?.id, account]);
 
-  const { data: countBids } = useCountBidsQuery({ variables: { tokenId } });
+  const { data: countBids, refetch: refetchCountBids } = useCountBidsQuery({ variables: { tokenId } });
 
   useEffect(() => {
     getAuctionItem();
@@ -89,6 +89,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
       const { _bid, _bidder } = await getHighestBid(web3, tokenId);
       setIsHighestBidder(_bidder.toLowerCase() === account?.toLowerCase());
       setHighestBid(_bid);
+      refetchCountBids();
     };
     fetchHighestBid();
     const interval = setInterval(() => {
@@ -96,16 +97,16 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     }, 10 * 1000);
 
     return () => clearInterval(interval);
-  }, [tokenId, track.id, web3, getHighestBid, account]);
+  }, [tokenId, track.id, web3, getHighestBid, account, refetchCountBids]);
 
   if (!auctionItem) {
     return null;
   }
 
-  const ownerAddressAccount = auctionItem.auctionItem?.auctionItem?.owner.toLowerCase();
-  const isOwner = ownerAddressAccount === account?.toLowerCase();
+  const isOwner = auctionItem.auctionItem?.auctionItem?.owner.toLowerCase() === account?.toLowerCase();
   const isForSale = !!auctionItem.auctionItem.auctionItem?.reservePrice ?? false;
   const reservePrice = web3?.utils.fromWei(auctionItem.auctionItem.auctionItem?.reservePrice ?? '0', 'ether');
+  const hasStarted = (auctionItem.auctionItem?.auctionItem?.startingTime ?? 0) <= new Date().getTime() / 1000;
 
   const handlePlaceBid = () => {
     if (
@@ -117,7 +118,11 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
       return;
     }
     const amount = (bidAmount * 1e18).toString();
-    placeBid(web3, tokenId, account, amount, () => setLoading(false));
+    placeBid(web3, tokenId, account, amount, () => {
+      setLoading(false);
+      if (refetchHaveBided) refetchHaveBided();
+      refetchCountBids();
+    });
     setLoading(true);
   };
 
@@ -135,13 +140,14 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
       <div className="m-4">
         <Track track={track} />
       </div>
-      {reservePrice && ownerAddressAccount && (
+      {reservePrice && account && (
         <PlaceBid
           highestBid={highestBid}
           reservePrice={reservePrice}
           bidAmount={bidAmount}
           onSetBidAmount={amount => setBidAmount(amount)}
-          ownerAddressAccount={ownerAddressAccount}
+          ownerAddressAccount={account}
+          startTime={auctionItem.auctionItem?.auctionItem?.startingTime ?? 0}
           endingTime={auctionItem.auctionItem?.auctionItem?.endingTime ?? 0}
           countBids={countBids?.countBids.numberOfBids ?? 0}
         />
@@ -150,7 +156,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
       {haveBided?.haveBided.bided && !isHighestBidder && (
         <div className="text-red-500 font-bold p-4 text-center">You have been outbid!</div>
       )}
-      {bidAmount >= 0 && (
+      {bidAmount >= 0 && hasStarted && (
         <div className="flex p-4">
           <div className="flex-1 font-black text-xs">
             <div className="flex items-center gap-2 text-white">

@@ -15,7 +15,7 @@ import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
-import { ApproveType } from 'types/ApproveType';
+import { SaleType } from 'types/SaleType';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -115,7 +115,7 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
       };
       listItem(web3, nftData.tokenId, account, weiPrice, onTransactionHash);
     } else {
-      me ? dispatchShowApproveModal(true, ApproveType.MARKETPLACE) : router.push('/login');
+      me ? dispatchShowApproveModal(true, SaleType.MARKETPLACE) : router.push('/login');
     }
   };
 

@@ -11,6 +11,7 @@ import { ListingItemResolver } from './ListingItemResolver';
 import { MessageResolver } from './MessageResolver';
 import { MintingRequestResolver } from './MintingRequestResolver';
 import { NewPostNotificationResolver } from './NewPostNotificationResolver';
+import { NewVerificationRequestNotificationResolver } from './NewVerificationRequestNotificationResolver';
 import { NFTSoldNotificationResolver } from './NFTSoldNotificationResolver';
 import { NotificationResolver } from './NotificationResolver';
 import { PinningResolver } from './PinningResolver';
@@ -52,4 +53,5 @@ export const resolvers = [
   UploadResolver,
   UserResolver,
   VerificationRequestNotificationResolver,
+  NewVerificationRequestNotificationResolver,
 ] as const;

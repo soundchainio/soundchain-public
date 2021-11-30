@@ -15,6 +15,7 @@ import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
+import { SaleType } from 'types/SaleType';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -107,7 +108,12 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
     ) {
       return;
     }
-    dispatchShowRemoveListingModal(true, listingPayload.buyNowItem?.buyNowItem?.tokenId, track.id);
+    dispatchShowRemoveListingModal(
+      true,
+      listingPayload.buyNowItem?.buyNowItem?.tokenId,
+      track.id,
+      SaleType.MARKETPLACE,
+    );
   };
 
   const RemoveListing = (

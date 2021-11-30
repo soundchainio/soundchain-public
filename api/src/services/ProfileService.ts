@@ -49,7 +49,10 @@ export class ProfileService extends ModelService<typeof Profile> {
   }
 
   async searchProfiles(search: string): Promise<{ list: Profile[]; total: number }> {
-    const list = await this.model.find({ displayName: new RegExp(search, 'i') }).limit(5);
+    const list = await this.model
+      .find({ displayName: new RegExp(search, 'i') })
+      .sort({ createdAt: -1 })
+      .limit(5);
     const total = await this.model
       .find({ displayName: new RegExp(search, 'i') })
       .countDocuments()

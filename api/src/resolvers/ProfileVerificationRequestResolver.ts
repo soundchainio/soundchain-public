@@ -33,6 +33,12 @@ export class ProfileVerificationRequestResolver {
     return profileVerificationRequestService.getProfileVerificationRequests(status, page);
   }
 
+  @Query(() => Number)
+  @Authorized()
+  pendingRequestsBadgeNumber(@Ctx() { profileVerificationRequestService }: Context): Promise<number> {
+    return profileVerificationRequestService.getPendingRequestsBadgeNumber();
+  }
+
   @Mutation(() => ProfileVerificationRequestPayload)
   @Authorized()
   async createProfileVerificationRequest(
