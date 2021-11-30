@@ -1,5 +1,5 @@
 export enum SaleType {
-  MARKETPLACE,
-  AUCTION,
-  CLOSE,
+  MARKETPLACE = 'MARKETPLACE',
+  AUCTION = 'AUCTION',
+  CLOSE = 'CLOSE',
 }

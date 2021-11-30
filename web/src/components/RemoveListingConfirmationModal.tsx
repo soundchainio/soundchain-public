@@ -16,7 +16,7 @@ import { Account, Wallet } from './Wallet';
 const marketplaceAddress = process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS || '';
 
 export const RemoveListingConfirmationModal = () => {
-  const { showRemoveListing, trackId, tokenId, listingType } = useModalState();
+  const { showRemoveListing, trackId, tokenId, saleType } = useModalState();
   const [trackUpdate] = useUpdateTrackMutation();
   const { dispatchShowRemoveListingModal } = useModalDispatch();
   const { cancelListing, cancelAuction } = useBlockchain();
@@ -64,12 +64,11 @@ export const RemoveListingConfirmationModal = () => {
         });
 
         dispatchShowRemoveListingModal(false, 0, '', SaleType.CLOSE);
-        listingType === SaleType.MARKETPLACE
+        saleType === SaleType.MARKETPLACE
           ? router.push(router.asPath.replace('edit/buy-now', ''))
           : router.push(router.asPath.replace('edit/auction', ''));
       };
-
-      listingType === SaleType.MARKETPLACE
+      saleType === SaleType.MARKETPLACE
         ? cancelListing(web3, tokenId, account, onTransactionHash)
         : cancelAuction(web3, tokenId, account, onTransactionHash);
     } catch (e) {

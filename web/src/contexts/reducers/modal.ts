@@ -44,7 +44,7 @@ export interface ModalState {
   walletRecipient?: string;
   amountToTransfer?: string;
   type?: SaleType;
-  listingType?: SaleType;
+  saleType?: SaleType;
 }
 
 export const initialModalState = {
