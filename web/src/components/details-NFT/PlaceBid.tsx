@@ -119,7 +119,7 @@ interface TimerProps {
   time: number;
 }
 
-const Timer = ({ title, time }: TimerProps) => {
+export const Timer = ({ title, time }: TimerProps) => {
   return (
     <div className="flex p-5 bg-gray-20 text-gray-80">
       <p className="flex items-center flex-shrink-0 justify-start font-bold text-xs md-text-sm uppercase">{title}</p>

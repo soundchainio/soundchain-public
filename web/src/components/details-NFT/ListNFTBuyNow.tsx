@@ -17,9 +17,10 @@ const validationSchema: SchemaOf<FormValues> = object().shape({
 interface ListNFTProps {
   onSetPrice: (price: number) => void;
   initialPrice?: number;
+  onSetStartTime: (endTime: Date | null) => void;
 }
 
-export const ListNFTBuyNow = ({ onSetPrice, initialPrice }: ListNFTProps) => {
+export const ListNFTBuyNow = ({ onSetPrice, initialPrice, onSetStartTime }: ListNFTProps) => {
   const initialValues: FormValues = {
     price: initialPrice || 0,
     royalty: 0,
@@ -33,7 +34,7 @@ export const ListNFTBuyNow = ({ onSetPrice, initialPrice }: ListNFTProps) => {
             <div className="flex">
               <label
                 htmlFor="price"
-                className="flex items-center justify-start w-full bg-gray-20 text-gray-80 font-bold text-xs md-text-sm uppercase py-3 pl-5"
+                className="flex items-center justify-start w-1/2 bg-gray-20 text-gray-80 font-bold text-xs md-text-sm uppercase py-3 pl-5"
               >
                 List Price
               </label>
@@ -45,6 +46,30 @@ export const ListNFTBuyNow = ({ onSetPrice, initialPrice }: ListNFTProps) => {
                   onChange={el => {
                     handleChange(el);
                     onSetPrice(parseFloat(el.target.value));
+                  }}
+                />
+              </div>
+            </div>
+            <div className="flex">
+              <label
+                htmlFor="startTime"
+                className="flex items-center justify-start w-1/2 bg-gray-20 text-gray-80 font-bold text-xs md-text-sm  py-3 pl-5"
+              >
+                <div className="flex flex-col mr-3">
+                  <p className="uppercase">start time</p>
+                  <p className="font-medium" style={{ fontSize: 10 }}>
+                    Set a time to start the sale
+                  </p>
+                </div>
+              </label>
+              <div className="flex flex-wrap items-center w-1/2 justify-end bg-gray-20 uppercase py-3 pr-5">
+                <input
+                  name="startTime"
+                  type="datetime-local"
+                  className="text-sm font-bold bg-gray-30 text-gray-200 focus:outline-none focus:ring-transparent placeholder-gray-60 placeholder-semibold"
+                  onChange={el => {
+                    handleChange(el);
+                    onSetStartTime(new Date(el.target.value));
                   }}
                 />
               </div>
