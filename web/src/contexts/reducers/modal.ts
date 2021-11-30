@@ -27,7 +27,7 @@ export interface ModalState {
   showAuthorActions: boolean;
   authorActionsType?: AuthorActionsType;
   authorActionsId: string;
-  showOnlyDeleteOption: boolean;
+  showOnlyDeleteOption?: boolean;
   showUnderDevelopment: boolean;
   showCreate: boolean;
   showAudioPlayer: boolean;
