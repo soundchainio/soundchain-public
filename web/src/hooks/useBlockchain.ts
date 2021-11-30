@@ -101,6 +101,7 @@ const useBlockchain = () => {
     tokenId: number,
     from: string,
     price: string,
+    startingTime: number,
     onTransactionHash: (hash: string) => void,
   ) => {
     const contract = new web3.eth.Contract(
@@ -111,7 +112,7 @@ const useBlockchain = () => {
       web3,
       async () =>
         await contract.methods
-          .updateListing(nftAddress, tokenId, price)
+          .updateListing(nftAddress, tokenId, price, startingTime)
           .send({ from, gas })
           .on('transactionHash', onTransactionHash),
     );

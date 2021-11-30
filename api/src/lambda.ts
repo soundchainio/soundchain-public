@@ -14,13 +14,14 @@ import {
   BidPlaced,
   UpdateAuction,
 } from '../types/web3-v1-contracts/SoundchainAuction';
+import { ItemUpdated } from '../types/web3-v1-contracts/SoundchainMarketplace';
 import { config } from './config';
 import SoundchainCollectible from './contract/Soundchain721.json';
 import SoundchainAuction from './contract/SoundchainAuction.json';
 import SoundchainMarketplace from './contract/SoundchainMarketplace.json';
 import { UserModel } from './models/User';
 import muxDataApi from './muxDataApi';
-import { ItemCanceled, ItemListed, ItemSold, ItemUpdated, Transfer } from './types/BlockchainEvents';
+import { ItemCanceled, ItemListed, ItemSold, Transfer } from './types/BlockchainEvents';
 import { Context } from './types/Context';
 import { MuxDataInputValue, MuxServerData } from './types/MuxData';
 import { Metadata, NFT } from './types/NFT';
@@ -113,9 +114,14 @@ export const watcher: Handler = async () => {
       case 'ItemUpdated':
         {
           try {
-            const { tokenId, newPrice } = (event as ItemUpdated).returnValues;
-            await context.buyNowItemService.updateBuyNowItem(parseInt(tokenId), { pricePerItem: newPrice });
-            await context.trackService.setPendingNone(parseInt(tokenId));
+            const { tokenId, newPrice, startingTime } = (event as unknown as ItemUpdated).returnValues;
+            await Promise.all([
+              context.buyNowItemService.updateBuyNowItem(parseInt(tokenId), {
+                pricePerItem: newPrice,
+                startingTime: parseInt(startingTime),
+              }),
+              context.trackService.setPendingNone(parseInt(tokenId)),
+            ]);
           } catch (error) {
             console.error(error);
           }

@@ -62,10 +62,12 @@ export type ItemUpdated = ContractEventLog<{
   nft: string;
   tokenId: string;
   newPrice: string;
+  startingTime: string;
   0: string;
   1: string;
   2: string;
   3: string;
+  4: string;
 }>;
 export type OwnershipTransferred = ContractEventLog<{
   previousOwner: string;
@@ -135,7 +137,8 @@ export interface SoundchainMarketplace extends BaseContract {
     updateListing(
       _nftAddress: string,
       _tokenId: number | string | BN,
-      _newPrice: number | string | BN
+      _newPrice: number | string | BN,
+      _startingTime: number | string | BN
     ): NonPayableTransactionObject<void>;
 
     updatePlatformFee(

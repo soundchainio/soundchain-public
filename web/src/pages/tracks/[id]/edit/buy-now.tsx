@@ -53,6 +53,8 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
   const { account, web3 } = useWalletContext();
   const [loading, setLoading] = useState(false);
   const [newPrice, setNewPrice] = useState(0);
+  const [startTime, setStartTime] = useState<Date | null>();
+
   const me = useMe();
 
   const nftData = track.nftData;
@@ -60,6 +62,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
 
   const [getBuyNowItem, { data: listingPayload }] = useBuyNowItemLazyQuery({
     variables: { tokenId },
+    fetchPolicy: 'network-only',
   });
 
   useEffect(() => {
@@ -76,11 +79,12 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
   const price = web3?.utils.fromWei(listingPayload.buyNowItem?.buyNowItem?.pricePerItem.toString() || '0', 'ether');
 
   const handleUpdate = () => {
-    if (!web3 || !listingPayload.buyNowItem?.buyNowItem?.tokenId || !newPrice || !account) {
+    if (!web3 || !listingPayload.buyNowItem?.buyNowItem?.tokenId || !newPrice || !account || !startTime) {
       return;
     }
     setLoading(true);
     const weiPrice = web3?.utils.toWei(newPrice.toString(), 'ether') || '0';
+    const startTimestamp = startTime.getTime() / 1000;
 
     const onTransactionHash = () => {
       trackUpdate({
@@ -96,7 +100,14 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       router.back();
     };
 
-    updateListing(web3, listingPayload.buyNowItem?.buyNowItem?.tokenId, account, weiPrice, onTransactionHash);
+    updateListing(
+      web3,
+      listingPayload.buyNowItem?.buyNowItem?.tokenId,
+      account,
+      weiPrice,
+      startTimestamp,
+      onTransactionHash,
+    );
   };
 
   const handleRemove = () => {
@@ -139,7 +150,13 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       <div className="m-4">
         <Track track={track} />
       </div>
-      {price && <ListNFTBuyNow onSetPrice={setNewPrice} initialPrice={parseFloat(price)} />}
+      {price && (
+        <ListNFTBuyNow
+          onSetPrice={setNewPrice}
+          initialPrice={parseFloat(price)}
+          onSetStartTime={time => setStartTime(time)}
+        />
+      )}
       <div className="flex p-4">
         <MaxGasFee />
         <Button variant="edit-listing" onClick={handleUpdate} loading={loading}>
