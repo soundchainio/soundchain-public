@@ -71,7 +71,7 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const { account, web3 } = useWalletContext();
   const { isTokenOwner, getRoyalties, getHighestBid } = useBlockchain();
   const [isOwner, setIsOwner] = useState<boolean>();
-  const [royalties, setRoyalties] = useState(0);
+  const [royalties, setRoyalties] = useState<number>();
   const [refetchTrack, { data: trackData }] = useTrackLazyQuery({ fetchPolicy: 'network-only' });
   const [track, setTrack] = useState<TrackQuery['track']>(initialState);
   const [highestBid, setHighestBid] = useState<HighestBid>({} as HighestBid);
@@ -122,29 +122,29 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
 
   useEffect(() => {
     const fetchIsOwner = async () => {
-      if (!account || !web3 || nftData?.tokenId === null || nftData?.tokenId === undefined) {
+      if (!account || !web3 || tokenId === null || tokenId === undefined || isOwner != undefined) {
         return;
       }
-      const isTokenOwnerRes = await isTokenOwner(web3, nftData.tokenId, account);
+      const isTokenOwnerRes = await isTokenOwner(web3, tokenId, account);
       setIsOwner(isTokenOwnerRes);
     };
     fetchIsOwner();
-  }, [account, web3, nftData, isTokenOwner]);
+  }, [account, web3, tokenId, isTokenOwner, isOwner]);
 
   useEffect(() => {
     const fetchRoyalties = async () => {
-      if (!account || !web3 || nftData?.tokenId === null || nftData?.tokenId === undefined) {
+      if (!account || !web3 || tokenId === null || tokenId === undefined || royalties != undefined) {
         return;
       }
-      const royalties = await getRoyalties(web3, nftData.tokenId);
-      setRoyalties(royalties);
+      const royaltiesFromBlockchain = await getRoyalties(web3, tokenId);
+      setRoyalties(royaltiesFromBlockchain);
     };
     fetchRoyalties();
-  }, [account, web3, nftData, getRoyalties]);
+  }, [account, web3, tokenId, getRoyalties, royalties]);
 
   useEffect(() => {
     const fetchHighestBid = async () => {
-      if (!web3 || !tokenId || !getHighestBid || highestBid.bidder) {
+      if (!web3 || !tokenId || !getHighestBid || highestBid.bidder != undefined) {
         return;
       }
       const { _bid, _bidder } = await getHighestBid(web3, tokenId);

@@ -56,6 +56,7 @@ export default function BuyNowPage({ track }: TrackPageProps) {
 
   const [getBuyNowItem, { data: listingPayload }] = useBuyNowItemLazyQuery({
     variables: { tokenId },
+    fetchPolicy: 'network-only',
   });
 
   useEffect(() => {
@@ -66,10 +67,10 @@ export default function BuyNowPage({ track }: TrackPageProps) {
     return null;
   }
 
-  const ownerAddressAccount = listingPayload.buyNowItem?.buyNowItem?.owner.toLowerCase();
-  const isOwner = ownerAddressAccount === account?.toLowerCase();
+  const isOwner = listingPayload.buyNowItem?.buyNowItem?.owner.toLowerCase() === account?.toLowerCase();
   const isForSale = !!listingPayload.buyNowItem?.buyNowItem?.pricePerItem ?? false;
   const price = web3?.utils.fromWei(listingPayload.buyNowItem?.buyNowItem?.pricePerItem.toString() || '0', 'ether');
+  const hasStarted = (listingPayload.buyNowItem?.buyNowItem?.startingTime ?? 0) <= new Date().getTime() / 1000;
 
   const handleBuy = () => {
     if (
@@ -120,13 +121,21 @@ export default function BuyNowPage({ track }: TrackPageProps) {
       <div className="m-4">
         <Track track={track} />
       </div>
-      {price && ownerAddressAccount && <BuyNow price={price} ownerAddressAccount={ownerAddressAccount} />}
-      <div className="flex p-4">
-        <MaxGasFee />
-        <Button variant="buy-nft" onClick={handleBuy} loading={loading}>
-          <div className="px-4">BUY NFT</div>
-        </Button>
-      </div>
+      {price && account && (
+        <BuyNow
+          price={price}
+          ownerAddressAccount={account}
+          startTime={listingPayload.buyNowItem?.buyNowItem?.startingTime ?? 0}
+        />
+      )}
+      {hasStarted && (
+        <div className="flex p-4">
+          <MaxGasFee />
+          <Button variant="buy-nft" onClick={handleBuy} loading={loading}>
+            <div className="px-4">BUY NFT</div>
+          </Button>
+        </div>
+      )}
     </Layout>
   );
 }
