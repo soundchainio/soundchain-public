@@ -55,6 +55,20 @@ function SoundchainApp({ Component, pageProps }: AppProps) {
         <meta name="theme-color" content="#000000" />
         <Favicons />
         <link rel="manifest" href="/manifest.json"></link>
+        <script
+          async
+          src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_ANALYTICS_ID}`}
+        ></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', ${process.env.NEXT_PUBLIC_ANALYTICS_ID});
+            `,
+          }}
+        />
       </Head>
       <ApolloProvider pageProps={pageProps}>
         <StateProvider>
