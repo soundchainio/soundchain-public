@@ -27,6 +27,7 @@ export interface ModalState {
   showAuthorActions: boolean;
   authorActionsType?: AuthorActionsType;
   authorActionsId: string;
+  showOnlyDeleteOption: boolean;
   showUnderDevelopment: boolean;
   showCreate: boolean;
   showAudioPlayer: boolean;
@@ -54,6 +55,7 @@ export const initialModalState = {
   showAuthorActions: false,
   authorActionsType: undefined,
   authorActionsId: '',
+  showOnlyDeleteOption: false,
   showUnderDevelopment: false,
   showCreate: false,
   showAudioPlayer: false,
@@ -96,6 +98,7 @@ export const modalReducer = (state: ModalState, action: Action) => {
         anyModalOpened: (action.payload as ShowAuthorActionsPayload).showAuthorActions,
         authorActionsType: (action.payload as ShowAuthorActionsPayload).authorActionsType,
         authorActionsId: (action.payload as ShowAuthorActionsPayload).authorActionsId,
+        showOnlyDeleteOption: (action.payload as ShowAuthorActionsPayload).showOnlyDeleteOption,
       };
     case ModalActionTypes.SHOW_UNDER_DEVELOPMENT:
       return {

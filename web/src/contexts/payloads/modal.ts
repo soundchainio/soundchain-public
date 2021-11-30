@@ -22,6 +22,7 @@ export interface ShowAuthorActionsPayload {
   showAuthorActions: boolean;
   authorActionsType: AuthorActionsType;
   authorActionsId: string;
+  showOnlyDeleteOption?: boolean;
 }
 
 export interface ShowReactionsPayload {

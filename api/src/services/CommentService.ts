@@ -39,13 +39,11 @@ export class CommentService extends ModelService<typeof Comment> {
   }
 
   async deleteComment(params: DeleteCommentParams): Promise<Comment> {
-    const debug = await CommentModel.findOneAndUpdate(
+    return await CommentModel.findOneAndUpdate(
       { _id: params.commentId, profileId: params.profileId },
       { deleted: true },
       { new: true },
     );
-    console.log({debug})
-    return debug
   }
 
   async deleteCommentByAdmin(params: DeleteCommentParams): Promise<Comment> {

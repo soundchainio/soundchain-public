@@ -37,7 +37,6 @@ export class CommentResolver {
     @Arg('input') input: AddCommentInput,
     @CurrentUser() { profileId }: User,
   ): Promise<AddCommentPayload> {
-    
     const comment = await commentService.createComment({ profileId, ...input });
     return { comment };
   }
@@ -49,7 +48,6 @@ export class CommentResolver {
     @Arg('input') input: DeleteCommentInput,
     @CurrentUser() { profileId, roles }: User,
   ): Promise<DeleteCommentPayload> {
-    console.log({roles})
     const isAdmin = roles.includes(Role.ADMIN) || roles.includes(Role.TEAM_MEMBER)
     if (isAdmin) {
       const comment = await commentService.deleteCommentByAdmin({ profileId, ...input });
