@@ -193,3 +193,8 @@ input::-webkit-inner-spin-button {
 input[type='number'] {
   -moz-appearance: textfield; /* Firefox */
 }
+
+.social-links div,
+.social-links div input {
+  width: 100%;
+}

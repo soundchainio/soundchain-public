@@ -31,7 +31,7 @@ export const SocialLinksForm = ({ afterSubmit, submitText, submitProps }: Social
     facebook: me?.profile?.socialMedias.facebook || '',
     instagram: me?.profile?.socialMedias.instagram || '',
     twitter: me?.profile?.socialMedias.twitter || '',
-    soundcloud: me?.profile?.socialMedias.soundcloud || ''
+    soundcloud: me?.profile?.socialMedias.soundcloud || '',
   };
   const [updateSocialMedias, { loading }] = useUpdateSocialMediasMutation();
 
@@ -42,7 +42,7 @@ export const SocialLinksForm = ({ afterSubmit, submitText, submitProps }: Social
 
   return (
     <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
-      <Form className="flex flex-1 flex-col space-y-6">
+      <Form className="flex flex-1 flex-col space-y-6 social-links">
         <div className="flex items-center">
           <InputField label="facebook.com/" type="text" name="facebook" />
         </div>
