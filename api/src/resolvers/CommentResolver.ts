@@ -11,6 +11,7 @@ import { Context } from '../types/Context';
 import { DeleteCommentInput } from '../types/DeleteCommentInput';
 import { DeleteCommentPayload } from '../types/DeleteCommentPayload';
 import { PageInput } from '../types/PageInput';
+import { Role } from '../types/Role';
 
 @Resolver(Comment)
 export class CommentResolver {
@@ -36,6 +37,7 @@ export class CommentResolver {
     @Arg('input') input: AddCommentInput,
     @CurrentUser() { profileId }: User,
   ): Promise<AddCommentPayload> {
+    
     const comment = await commentService.createComment({ profileId, ...input });
     return { comment };
   }
@@ -45,8 +47,14 @@ export class CommentResolver {
   async deleteComment(
     @Ctx() { commentService }: Context,
     @Arg('input') input: DeleteCommentInput,
-    @CurrentUser() { profileId }: User,
+    @CurrentUser() { profileId, roles }: User,
   ): Promise<DeleteCommentPayload> {
+    console.log({roles})
+    const isAdmin = roles.includes(Role.ADMIN) || roles.includes(Role.TEAM_MEMBER)
+    if (isAdmin) {
+      const comment = await commentService.deleteCommentByAdmin({ profileId, ...input });
+      return { comment };
+    }
     const comment = await commentService.deleteComment({ profileId, ...input });
     return { comment };
   }
