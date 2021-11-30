@@ -62,82 +62,10 @@ export const PlaceBid = ({
                 <span className="text-xs text-blue-400 font-bold leading-tight pl-1">({countBids} bids)</span>
               </p>
             </div>
-            {hasStarted && (
-              <div className="flex p-5 bg-gray-20 text-gray-80">
-                <p className="flex items-center flex-shrink-0 justify-start font-bold text-xs md-text-sm uppercase">
-                  time reaming
-                </p>
-                <div className="flex items-center w-full justify-end">
-                  <span className="mx-1 text-white font-bold text-xs leading-tight">
-                    <TimeCounter date={new Date(endingTime * 1000)}>
-                      {(days, hours, minutes, seconds) => (
-                        <div>
-                          {days !== 0 && (
-                            <>
-                              {days} <span className="text-gray-80">days </span>
-                            </>
-                          )}
-                          {hours !== 0 && (
-                            <>
-                              {hours} <span className="text-gray-80">hours </span>
-                            </>
-                          )}
-                          {minutes !== 0 && (
-                            <>
-                              {minutes} <span className="text-gray-80">minutes </span>
-                            </>
-                          )}
-                          {seconds !== 0 && (
-                            <>
-                              {seconds} <span className="text-gray-80">seconds </span>
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </TimeCounter>
-                  </span>
-                </div>
-              </div>
-            )}
-            {!hasStarted && (
-              <div className="flex p-5 bg-gray-20 text-gray-80">
-                <p className="flex items-center flex-shrink-0 justify-start font-bold text-xs md-text-sm uppercase">
-                  starting in
-                </p>
-                <div className="flex items-center w-full justify-end">
-                  <span className="mx-1 text-white font-bold text-xs leading-tight">
-                    <TimeCounter date={new Date(startTime * 1000)}>
-                      {(days, hours, minutes, seconds) => (
-                        <div>
-                          {days !== 0 && (
-                            <>
-                              {days} <span className="text-gray-80">days </span>
-                            </>
-                          )}
-                          {hours !== 0 && (
-                            <>
-                              {hours} <span className="text-gray-80">hours </span>
-                            </>
-                          )}
-                          {minutes !== 0 && (
-                            <>
-                              {minutes} <span className="text-gray-80">minutes </span>
-                            </>
-                          )}
-                          {seconds !== 0 && (
-                            <>
-                              {seconds} <span className="text-gray-80">seconds </span>
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </TimeCounter>
-                  </span>
-                </div>
-              </div>
-            )}
+            {!hasStarted && <Timer title="starting in" time={startTime} />}
             {hasStarted && (
               <>
+                <Timer title="time remaining" time={endingTime} />
                 <WalletSelector ownerAddressAccount={ownerAddressAccount} />
                 <div className="flex">
                   <label
@@ -182,6 +110,49 @@ export const PlaceBid = ({
           </Form>
         )}
       </Formik>
+    </div>
+  );
+};
+
+interface TimerProps {
+  title: string;
+  time: number;
+}
+
+const Timer = ({ title, time }: TimerProps) => {
+  return (
+    <div className="flex p-5 bg-gray-20 text-gray-80">
+      <p className="flex items-center flex-shrink-0 justify-start font-bold text-xs md-text-sm uppercase">{title}</p>
+      <div className="flex items-center w-full justify-end">
+        <span className="mx-1 text-white font-bold text-xs leading-tight">
+          <TimeCounter date={new Date(time * 1000)}>
+            {(days, hours, minutes, seconds) => (
+              <div>
+                {days !== 0 && (
+                  <>
+                    {days} <span className="text-gray-80">days </span>
+                  </>
+                )}
+                {hours !== 0 && (
+                  <>
+                    {hours} <span className="text-gray-80">hours </span>
+                  </>
+                )}
+                {minutes !== 0 && (
+                  <>
+                    {minutes} <span className="text-gray-80">minutes </span>
+                  </>
+                )}
+                {seconds !== 0 && (
+                  <>
+                    {seconds} <span className="text-gray-80">seconds </span>
+                  </>
+                )}
+              </div>
+            )}
+          </TimeCounter>
+        </span>
+      </div>
     </div>
   );
 };

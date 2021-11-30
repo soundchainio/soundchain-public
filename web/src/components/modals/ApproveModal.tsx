@@ -97,7 +97,7 @@ export const ApproveModal = () => {
             </div>
           </div>
           <div className="flex justify-around p-6 gap-6">
-            <Button className="w-full" variant="cancel" onClick={handleClose} loading={loading}>
+            <Button className="w-full" variant="cancel" onClick={handleClose}>
               Cancel
             </Button>
             <Button className="w-full" variant="approve" onClick={setApprove} loading={loading}>
