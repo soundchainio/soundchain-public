@@ -1,14 +1,15 @@
 import { getModelForClass, modelOptions, prop, Severity } from '@typegoose/typegoose';
+import { ObjectId } from 'mongodb';
 import { Field } from 'type-graphql';
 import { CommentNotificationMetadata } from '../types/CommentNotificationMetadata';
 import { FollowerNotificationMetadata } from '../types/FollowerNotificationMetadata';
 import { NewPostNotificationMetadata } from '../types/NewPostNotificationMetadata';
+import { NewVerificationRequestNotificationMetadata } from '../types/NewVerificationRequestNotificationMetadata';
 import { NFTSoldNotificationMetadata } from '../types/NFTSoldNotificationMetadata';
 import { NotificationType } from '../types/NotificationType';
 import { ReactionNotificationMetadata } from '../types/ReactionNotificationMetadata';
 import { VerificationRequestNotificationMetadata } from '../types/VerificationRequestNotificationMetadata';
 import { Model } from './Model';
-import { ObjectId } from 'mongodb';
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
 export class Notification extends Model {
   @prop({ required: true })
@@ -24,7 +25,8 @@ export class Notification extends Model {
     | ReactionNotificationMetadata
     | NewPostNotificationMetadata
     | NFTSoldNotificationMetadata
-    | VerificationRequestNotificationMetadata;
+    | VerificationRequestNotificationMetadata
+    | NewVerificationRequestNotificationMetadata;
 
   @Field(() => Date)
   createdAt: Date;
