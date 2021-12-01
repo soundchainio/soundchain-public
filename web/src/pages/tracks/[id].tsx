@@ -242,12 +242,12 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
               Processing {pendingRequestMapping[nftData.pendingRequest]}
             </div>
           </div>
-        ) : isOwner == undefined || loading ? (
+        ) : loading ? (
           <div className=" flex justify-center items-center">
             <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" />
             <div className="text-white text-sm pl-3 font-bold">Loading</div>
           </div>
-        ) : (
+        ) : me ? (
           <>
             {isAuction && isHighestBidder && (
               <div className="text-green-500 font-bold p-4 text-center">You have the highest bid!</div>
@@ -267,7 +267,7 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
               endingDate={endingDate}
             />
           </>
-        )}
+        ) : null}
       </Layout>
     </>
   );
