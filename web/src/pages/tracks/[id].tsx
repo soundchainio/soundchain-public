@@ -4,12 +4,13 @@ import { HandleNFT } from 'components/details-NFT/HandleNFT';
 import { MintingData } from 'components/details-NFT/MintingData';
 import { TrackInfo } from 'components/details-NFT/TrackInfo';
 import { Layout } from 'components/Layout';
+import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
-import { cacheFor } from 'lib/apollo';
+import { cacheFor, createApolloClient } from 'lib/apollo';
 import {
   PendingRequest,
   Profile,
@@ -22,7 +23,8 @@ import {
   useTrackLazyQuery,
   useUserByWalletLazyQuery,
 } from 'lib/graphql';
-import { protectPage } from 'lib/protectPage';
+import { GetServerSideProps } from 'next';
+import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 import { HighestBid } from './[id]/complete-auction';
@@ -35,12 +37,14 @@ interface TrackPageParams extends ParsedUrlQuery {
   id: string;
 }
 
-export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(async (context, apolloClient) => {
+export const getServerSideProps: GetServerSideProps<TrackPageProps, TrackPageParams> = async context => {
   const trackId = context.params?.id;
 
   if (!trackId) {
     return { notFound: true };
   }
+
+  const apolloClient = createApolloClient(context);
 
   const { data, error } = await apolloClient.query({
     query: TrackDocument,
@@ -53,7 +57,7 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
   }
 
   return cacheFor(TrackPage, { track: data.track }, context, apolloClient);
-});
+};
 
 const pendingRequestMapping: Record<PendingRequest, string> = {
   CancelListing: 'cancel listing',
@@ -70,11 +74,12 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const me = useMe();
   const { account, web3 } = useWalletContext();
   const { isTokenOwner, getRoyalties, getHighestBid } = useBlockchain();
-  const [isOwner, setIsOwner] = useState<boolean>();
+  const [isOwner, setIsOwner] = useState<boolean>(false);
   const [royalties, setRoyalties] = useState<number>();
   const [refetchTrack, { data: trackData }] = useTrackLazyQuery({ fetchPolicy: 'network-only' });
   const [track, setTrack] = useState<TrackQuery['track']>(initialState);
   const [highestBid, setHighestBid] = useState<HighestBid>({} as HighestBid);
+  const router = useRouter();
 
   const nftData = track.nftData;
   const mintingPending = nftData?.pendingRequest === PendingRequest.Mint;
@@ -122,14 +127,14 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
 
   useEffect(() => {
     const fetchIsOwner = async () => {
-      if (!account || !web3 || tokenId === null || tokenId === undefined || isOwner != undefined) {
+      if (!account || !web3 || tokenId === null || tokenId === undefined) {
         return;
       }
       const isTokenOwnerRes = await isTokenOwner(web3, tokenId, account);
       setIsOwner(isTokenOwnerRes);
     };
     fetchIsOwner();
-  }, [account, web3, tokenId, isTokenOwner, isOwner]);
+  }, [account, web3, tokenId, isTokenOwner]);
 
   useEffect(() => {
     const fetchRoyalties = async () => {
@@ -201,61 +206,69 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   }, [isProcessing, refetchTrack, fetchListingItem, tokenId, track.id]);
 
   return (
-    <Layout topNavBarProps={topNovaBarProps}>
-      <div className="p-3 flex flex-col gap-5">
-        <Track track={track} />
-        <Description description={track.description || ''} />
-      </div>
-      <TrackInfo
-        trackTitle={track.title}
-        albumTitle={track.album}
-        releaseYear={track.releaseYear}
-        genres={track.genres}
-        copyright={track.copyright}
-        mintingPending={mintingPending}
-        artistProfile={profileInfo?.profile}
-        royalties={royalties}
+    <>
+      <SEO
+        title={`Track - ${track.title}`}
+        description={track.artist || 'on Soundchain'}
+        canonicalUrl={router.asPath}
+        image={track.artworkUrl}
       />
-      {nftData && (
-        <MintingData
-          transactionHash={nftData.transactionHash}
-          ipfsCid={nftData.ipfsCid}
-          ownerProfile={ownerProfile?.getUserByWallet?.profile as Partial<Profile>}
+      <Layout topNavBarProps={topNovaBarProps}>
+        <div className="p-3 flex flex-col gap-5">
+          <Track track={track} />
+          <Description description={track.description || ''} />
+        </div>
+        <TrackInfo
+          trackTitle={track.title}
+          albumTitle={track.album}
+          releaseYear={track.releaseYear}
+          genres={track.genres}
+          copyright={track.copyright}
+          mintingPending={mintingPending}
+          artistProfile={profileInfo?.profile}
+          royalties={royalties}
         />
-      )}
-      {isProcessing && !mintingPending && nftData?.pendingRequest ? (
-        <div className=" flex justify-center items-center p-3">
-          <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" />
-          <div className="text-white text-sm pl-3 font-bold">
-            Processing {pendingRequestMapping[nftData.pendingRequest]}
-          </div>
-        </div>
-      ) : isOwner == undefined || loading ? (
-        <div className=" flex justify-center items-center">
-          <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" />
-          <div className="text-white text-sm pl-3 font-bold">Loading</div>
-        </div>
-      ) : (
-        <>
-          {isAuction && isHighestBidder && (
-            <div className="text-green-500 font-bold p-4 text-center">You have the highest bid!</div>
-          )}
-          {isAuction && haveBided?.haveBided.bided && !isHighestBidder && (
-            <div className="text-red-500 font-bold p-4 text-center">You have been outbid!</div>
-          )}
-          <HandleNFT
-            canList={canList}
-            price={price}
-            isOwner={isOwner}
-            isBuyNow={isBuyNow}
-            isAuction={isAuction}
-            canComplete={canComplete}
-            auctionIsOver={auctionIsOver}
-            countBids={countBids?.countBids.numberOfBids ?? 0}
-            endingDate={endingDate}
+        {nftData && (
+          <MintingData
+            transactionHash={nftData.transactionHash}
+            ipfsCid={nftData.ipfsCid}
+            ownerProfile={ownerProfile?.getUserByWallet?.profile as Partial<Profile>}
           />
-        </>
-      )}
-    </Layout>
+        )}
+        {isProcessing && !mintingPending && nftData?.pendingRequest ? (
+          <div className=" flex justify-center items-center p-3">
+            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" />
+            <div className="text-white text-sm pl-3 font-bold">
+              Processing {pendingRequestMapping[nftData.pendingRequest]}
+            </div>
+          </div>
+        ) : isOwner == undefined || loading ? (
+          <div className=" flex justify-center items-center">
+            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" />
+            <div className="text-white text-sm pl-3 font-bold">Loading</div>
+          </div>
+        ) : (
+          <>
+            {isAuction && isHighestBidder && (
+              <div className="text-green-500 font-bold p-4 text-center">You have the highest bid!</div>
+            )}
+            {isAuction && haveBided?.haveBided.bided && !isHighestBidder && (
+              <div className="text-red-500 font-bold p-4 text-center">You have been outbid!</div>
+            )}
+            <HandleNFT
+              canList={canList}
+              price={price}
+              isOwner={isOwner}
+              isBuyNow={isBuyNow}
+              isAuction={isAuction}
+              canComplete={canComplete}
+              auctionIsOver={auctionIsOver}
+              countBids={countBids?.countBids.numberOfBids ?? 0}
+              endingDate={endingDate}
+            />
+          </>
+        )}
+      </Layout>
+    </>
   );
 }

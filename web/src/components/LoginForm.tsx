@@ -92,6 +92,19 @@ export const LoginForm = () => {
     </div>
   ) : (
     <>
+      <div className="h-36 mb-2 flex items-center justify-center">
+        <LogoAndText />
+      </div>
+      <Formik initialValues={{ email: '' }} validationSchema={validationSchema} onSubmit={handleSubmit}>
+        <Form className="flex flex-1 flex-col">
+          <div className="space-y-6">
+            <InputField label="Email address" type="email" name="email" />
+          </div>
+          <Button type="submit" disabled={loading} loading={loading} className="w-full mt-6">
+            Login / Sign up
+          </Button>
+        </Form>
+      </Formik>
       <button
         className="flex items-center justify-center rounded-sm w-full font-bold sm:px-4 py-3 text-gray-60 bg-white"
         onClick={handleGoogleLogin}
@@ -99,19 +112,6 @@ export const LoginForm = () => {
         <Google className="mr-1 h-5 w-5" />
         <span>Sign in With Google</span>
       </button>
-      <div className="h-36 mb-2 flex items-center justify-center">
-        <LogoAndText />
-      </div>
-      <Formik initialValues={{ email: '' }} validationSchema={validationSchema} onSubmit={handleSubmit}>
-        <Form className="flex flex-1 flex-col">
-          <div className="space-y-6 mb-auto">
-            <InputField label="Email address" type="email" name="email" />
-          </div>
-          <Button type="submit" disabled={loading} loading={loading} className="w-full mt-12">
-            Login / Sign up
-          </Button>
-        </Form>
-      </Formik>
     </>
   );
 };
