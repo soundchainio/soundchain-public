@@ -9,7 +9,7 @@ import { Track } from 'components/Track';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
-import { cacheFor } from 'lib/apollo';
+import { cacheFor, createApolloClient } from 'lib/apollo';
 import {
   PendingRequest,
   Profile,
@@ -22,7 +22,7 @@ import {
   useTrackLazyQuery,
   useUserByWalletLazyQuery,
 } from 'lib/graphql';
-import { protectPage } from 'lib/protectPage';
+import { GetServerSideProps } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 import { HighestBid } from './[id]/complete-auction';
@@ -35,12 +35,14 @@ interface TrackPageParams extends ParsedUrlQuery {
   id: string;
 }
 
-export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(async (context, apolloClient) => {
+export const getServerSideProps: GetServerSideProps<TrackPageProps, TrackPageParams> = async context => {
   const trackId = context.params?.id;
 
   if (!trackId) {
     return { notFound: true };
   }
+
+  const apolloClient = createApolloClient(context);
 
   const { data, error } = await apolloClient.query({
     query: TrackDocument,
@@ -53,7 +55,7 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
   }
 
   return cacheFor(TrackPage, { track: data.track }, context, apolloClient);
-});
+};
 
 const pendingRequestMapping: Record<PendingRequest, string> = {
   CancelListing: 'cancel listing',
@@ -70,7 +72,7 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const me = useMe();
   const { account, web3 } = useWalletContext();
   const { isTokenOwner, getRoyalties, getHighestBid } = useBlockchain();
-  const [isOwner, setIsOwner] = useState<boolean>();
+  const [isOwner, setIsOwner] = useState<boolean>(false);
   const [royalties, setRoyalties] = useState<number>();
   const [refetchTrack, { data: trackData }] = useTrackLazyQuery({ fetchPolicy: 'network-only' });
   const [track, setTrack] = useState<TrackQuery['track']>(initialState);
@@ -122,14 +124,14 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
 
   useEffect(() => {
     const fetchIsOwner = async () => {
-      if (!account || !web3 || tokenId === null || tokenId === undefined || isOwner != undefined) {
+      if (!account || !web3 || tokenId === null || tokenId === undefined) {
         return;
       }
       const isTokenOwnerRes = await isTokenOwner(web3, tokenId, account);
       setIsOwner(isTokenOwnerRes);
     };
     fetchIsOwner();
-  }, [account, web3, tokenId, isTokenOwner, isOwner]);
+  }, [account, web3, tokenId, isTokenOwner]);
 
   useEffect(() => {
     const fetchRoyalties = async () => {
