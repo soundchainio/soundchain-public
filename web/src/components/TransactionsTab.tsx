@@ -1,6 +1,6 @@
 import { InfiniteLoader } from 'components/InfiniteLoader';
-import { TrackListItemSkeleton } from 'components/TrackListItemSkeleton';
 import { Transaction } from 'components/Transaction';
+import { TransactionItemSkeleton } from 'components/TransactionItemSkeleton';
 import { useMaticUsdQuery, usePolygonscanQuery } from 'lib/graphql';
 import React from 'react';
 
@@ -22,9 +22,9 @@ export const TransactionsTab = ({ address }: TransactionsTabProps) => {
   if (!data) {
     return (
       <div className="space-y-2">
-        <TrackListItemSkeleton />
-        <TrackListItemSkeleton />
-        <TrackListItemSkeleton />
+        <TransactionItemSkeleton />
+        <TransactionItemSkeleton />
+        <TransactionItemSkeleton />
       </div>
     );
   }

@@ -37,7 +37,12 @@ export const Transaction = ({ transaction, maticUsdValue }: TransactionProps) =>
   const getValueInDollarField = getValueInDollar && getValueInDollar.toFixed(2) !== '0.00' ? getValueInDollar : 0.01;
 
   return (
-    <div className="flex items-center p-4 gap-2">
+    <a
+      href={`https://mumbai.polygonscan.com/tx/${transaction.hash}`}
+      target="_blank"
+      rel="noreferrer"
+      className="flex items-center p-4 gap-2"
+    >
       {Icon && <Icon />}
       <div>
         <p className="text-white text-xs font-bold">
@@ -53,6 +58,6 @@ export const Transaction = ({ transaction, maticUsdValue }: TransactionProps) =>
         </p>
         <p className="text-gray-50 text-xxs font-bold text-right">{`${currency(getValueInDollarField)} USD`}</p>
       </div>
-    </div>
+    </a>
   );
 };

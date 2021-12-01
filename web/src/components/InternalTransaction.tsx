@@ -9,7 +9,12 @@ interface InternalTransactionProps {
 
 export const InternalTransaction = ({ transaction, maticUsdValue }: InternalTransactionProps) => {
   return (
-    <div className="flex items-center p-4 gap-2">
+    <a
+      href={`https://mumbai.polygonscan.com/tx/${transaction.hash}`}
+      target="_blank"
+      rel="noreferrer"
+      className="flex items-center p-4 gap-2"
+    >
       <div className="min-w-0">
         <p className="text-white text-xs font-bold truncate">{transaction.hash}</p>
         <p className="text-gray-80 text-xxs font-medium">{transaction.date}</p>
@@ -26,6 +31,6 @@ export const InternalTransaction = ({ transaction, maticUsdValue }: InternalTran
           </p>
         )}
       </div>
-    </div>
+    </a>
   );
 };
