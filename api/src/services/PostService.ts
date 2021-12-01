@@ -1,6 +1,5 @@
 import { UserInputError } from 'apollo-server-express';
 import { PaginateResult } from '../db/pagination/paginate';
-import { NotFoundError } from '../errors/NotFoundError';
 import { Post, PostModel } from '../models/Post';
 import { Context } from '../types/Context';
 import { FilterPostInput } from '../types/FilterPostInput';
@@ -57,7 +56,7 @@ export class PostService extends ModelService<typeof Post> {
   }
 
   async deletePost(params: DeletePostParams): Promise<Post> {
-    this.context.feedService.deleteItemsByPostId(params.postId)
+    this.context.feedService.deleteItemsByPostId(params.postId);
     return await PostModel.findOneAndUpdate(
       { _id: params.postId, profileId: params.profileId },
       { deleted: true },
@@ -66,12 +65,8 @@ export class PostService extends ModelService<typeof Post> {
   }
 
   async deletePostByAdmin(params: DeletePostParams): Promise<Post> {
-    this.context.feedService.deleteItemsByPostId(params.postId)
-    return await PostModel.findOneAndUpdate(
-      { _id: params.postId },
-      { deleted: true },
-      { new: true },
-    );
+    this.context.feedService.deleteItemsByPostId(params.postId);
+    return await PostModel.findOneAndUpdate({ _id: params.postId }, { deleted: true }, { new: true });
   }
 
   async updatePost(params: UpdatePostParams): Promise<Post> {

@@ -25,11 +25,10 @@ import { ReactToPostInput } from '../types/ReactToPostInput';
 import { ReactToPostPayload } from '../types/ReactToPostPayload';
 import { RetractReactionInput } from '../types/RetractReactionInput';
 import { RetractReactionPayload } from '../types/RetractReactionPayload';
+import { Role } from '../types/Role';
 import { SortPostInput } from '../types/SortPostInput';
 import { UpdatePostInput } from '../types/UpdatePostInput';
 import { UpdatePostPayload } from '../types/UpdatePostPayload';
-import { Role } from '../types/Role';
-import { PostService } from '../services/PostService';
 
 @Resolver(Post)
 export class PostResolver {
@@ -173,13 +172,13 @@ export class PostResolver {
     @Arg('input') input: DeletePostInput,
     @CurrentUser() { profileId, roles }: User,
   ): Promise<DeletePostPayload> {
-    const isAdmin = roles.includes(Role.ADMIN) || roles.includes(Role.TEAM_MEMBER)
-    
-    if(isAdmin) {
+    const isAdmin = roles.includes(Role.ADMIN) || roles.includes(Role.TEAM_MEMBER);
+
+    if (isAdmin) {
       const post = await postService.deletePostByAdmin({ profileId, ...input });
       return { post };
     }
-    
+
     const post = await postService.deletePost({ profileId, ...input });
     return { post };
   }
