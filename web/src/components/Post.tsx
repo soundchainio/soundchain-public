@@ -1,7 +1,7 @@
 import { useModalDispatch } from 'contexts/providers/modal';
 import { useMe } from 'hooks/useMe';
 import { Ellipsis } from 'icons/Ellipsis';
-import { PostQuery } from 'lib/graphql';
+import { Role, PostQuery } from 'lib/graphql';
 import NextLink from 'next/link';
 import React from 'react';
 import ReactPlayer from 'react-player';
@@ -27,10 +27,11 @@ export const Post = ({ post }: PostProps) => {
 
   if (!post) return <PostSkeleton />;
 
-  const canEdit = post?.profile.id == me?.profile.id;
+  const isAuthor = post?.profile.id == me?.profile.id;
+  const canEdit = isAuthor || me?.roles?.includes(Role.Admin) || me?.roles?.includes(Role.TeamMember);
 
   const onEllipsisClick = () => {
-    dispatchShowAuthorActionsModal(true, AuthorActionsType.POST, post.id);
+    dispatchShowAuthorActionsModal(true, AuthorActionsType.POST, post.id, !isAuthor);
   };
 
   if (post?.deleted) {

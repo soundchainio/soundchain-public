@@ -39,8 +39,16 @@ export class CommentService extends ModelService<typeof Comment> {
   }
 
   async deleteComment(params: DeleteCommentParams): Promise<Comment> {
-    return await CommentModel.updateOne(
+    return await CommentModel.findOneAndUpdate(
       { _id: params.commentId, profileId: params.profileId },
+      { deleted: true },
+      { new: true },
+    );
+  }
+
+  async deleteCommentByAdmin(params: DeleteCommentParams): Promise<Comment> {
+    return await CommentModel.findOneAndUpdate(
+      { _id: params.commentId },
       { deleted: true },
       { new: true },
     );

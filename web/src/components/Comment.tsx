@@ -2,7 +2,7 @@ import { NotAvailableMessage } from 'components/NotAvailableMessage';
 import { useModalDispatch } from 'contexts/providers/modal';
 import { useMe } from 'hooks/useMe';
 import { Ellipsis } from 'icons/Ellipsis';
-import { useCommentQuery } from 'lib/graphql';
+import { Role, useCommentQuery } from 'lib/graphql';
 import NextLink from 'next/link';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 import { Avatar } from './Avatar';
@@ -19,10 +19,11 @@ export const Comment = ({ commentId }: CommentProps) => {
   const me = useMe();
   const { dispatchShowAuthorActionsModal } = useModalDispatch();
   const comment = data?.comment;
-  const canEdit = comment?.profile.id == me?.profile.id;
+  const isAuthor = comment?.profile.id == me?.profile.id
+  const canEdit = isAuthor || me?.roles?.includes(Role.Admin) || me?.roles?.includes(Role.TeamMember);
 
   const onEllipsisClick = () => {
-    dispatchShowAuthorActionsModal(true, AuthorActionsType.COMMENT, commentId);
+    dispatchShowAuthorActionsModal(true, AuthorActionsType.COMMENT, commentId, !isAuthor);
   };
 
   if (!comment) return <CommentSkeleton />;

@@ -26,10 +26,11 @@ export const useModalDispatch = () => {
       showAuthorActions: boolean,
       authorActionsType: AuthorActionsType,
       authorActionsId: string,
+      showOnlyDeleteOption = false,
     ) =>
       dispatch({
         type: ModalActionTypes.SHOW_CONTEXT_MENU,
-        payload: { showAuthorActions, authorActionsType, authorActionsId },
+        payload: { showAuthorActions, authorActionsType, authorActionsId, showOnlyDeleteOption },
       }),
     dispatchReactionsModal: (show: boolean, postId?: string, top?: ReactionType[], total?: number) =>
       dispatch({
