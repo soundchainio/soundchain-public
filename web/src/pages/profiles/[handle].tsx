@@ -10,6 +10,7 @@ import { Posts } from 'components/Posts';
 import { Tracks } from 'components/profile/Tracks';
 import { ProfileCover } from 'components/ProfileCover';
 import { ProfileTabs } from 'components/ProfileTabs';
+import SEO from 'components/SEO';
 import { SocialMediaLink } from 'components/SocialMediaLink';
 import { SubscribeButton } from 'components/SubscribeButton';
 import { TopNavBarProps } from 'components/TopNavBar';
@@ -93,6 +94,7 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
     isSubscriber,
     verified,
     teamMember,
+    profilePicture,
   } = profile;
 
   const topNovaBarProps: TopNavBarProps = {
@@ -100,65 +102,73 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
   };
 
   return (
-    <Layout topNavBarProps={topNovaBarProps}>
-      <div className="h-[125px] relative">
-        <ProfileCover coverPicture={coverPicture || ''} className="h-[125px]" />
-        <Avatar
-          profile={profile}
-          pixels={80}
-          className="absolute left-4 bottom-0 transform translate-y-2/3 border-gray-10 border-4 rounded-full"
-        />
-      </div>
-      <div className="p-4">
-        <div className="flex items-center space-x-2">
-          <div className="flex-1 pl-[86px] flex space-x-2">
-            <button className="text-center text-sm cursor-pointer" onClick={onFollowers}>
-              <p className="font-semibold text-white">
-                <Number value={followerCount} />
-              </p>
-              <p className="text-gray-80 text-xs">Followers</p>
-            </button>
-            <button className="text-center text-sm cursor-pointer mr-2" onClick={onFollowing}>
-              <p className="font-semibold text-white">
-                <Number value={followingCount} />
-              </p>
-              <p className="text-gray-80 text-xs">Following</p>
-            </button>
-          </div>
-          <div className="flex flex-row space-x-2">
-            <SubscribeButton profileId={profileId} isSubscriber={isSubscriber} />
-            <FollowButton followedId={profileId} isFollowed={isFollowed} />
-          </div>
-        </div>
-        <div className="flex flex-row mt-4">
-          <div>
-            <DisplayName name={displayName} verified={verified} teamMember={teamMember} />
-            <p className="text-gray-80 text-sm">@{userHandle}</p>
-            <p className="text-gray-80 py-2 text-sm">{bio}</p>
-          </div>
-          <MessageButton profileId={profileId} />
-        </div>
-
-        <div className="flex space-x-4 mt-2">
-          {socialMedias.facebook && <SocialMediaLink company="facebook" handle={socialMedias.facebook} />}
-          {socialMedias.instagram && <SocialMediaLink company="instagram" handle={socialMedias.instagram} />}
-          {socialMedias.twitter && <SocialMediaLink company="twitter" handle={socialMedias.twitter} />}
-          {socialMedias.soundcloud && <SocialMediaLink company="soundcloud" handle={socialMedias.soundcloud} />}
-        </div>
-      </div>
-      <ProfileTabs selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
-      {ProfileTab.POSTS === selectedTab && <Posts profileId={profileId} />}
-
-      {ProfileTab.TRACKS === selectedTab && <Tracks profileId={profileId} />}
-
-      {ProfileTab.PLAYLISTS === selectedTab && <div> Playlists </div>}
-
-      <FollowModal
-        show={showModal}
-        profileId={profileId}
-        modalType={followModalType as FollowModalType}
-        onClose={onCloseModal}
+    <>
+      <SEO
+        title={`Profile - ${displayName}`}
+        description={bio || 'my Soundchain profile'}
+        canonicalUrl={router.asPath}
+        image={profilePicture}
       />
-    </Layout>
+      <Layout topNavBarProps={topNovaBarProps}>
+        <div className="h-[125px] relative">
+          <ProfileCover coverPicture={coverPicture || ''} className="h-[125px]" />
+          <Avatar
+            profile={profile}
+            pixels={80}
+            className="absolute left-4 bottom-0 transform translate-y-2/3 border-gray-10 border-4 rounded-full"
+          />
+        </div>
+        <div className="p-4">
+          <div className="flex items-center space-x-2">
+            <div className="flex-1 pl-[86px] flex space-x-2">
+              <button className="text-center text-sm cursor-pointer" onClick={onFollowers}>
+                <p className="font-semibold text-white">
+                  <Number value={followerCount} />
+                </p>
+                <p className="text-gray-80 text-xs">Followers</p>
+              </button>
+              <button className="text-center text-sm cursor-pointer mr-2" onClick={onFollowing}>
+                <p className="font-semibold text-white">
+                  <Number value={followingCount} />
+                </p>
+                <p className="text-gray-80 text-xs">Following</p>
+              </button>
+            </div>
+            <div className="flex flex-row space-x-2">
+              <SubscribeButton profileId={profileId} isSubscriber={isSubscriber} />
+              <FollowButton followedId={profileId} isFollowed={isFollowed} />
+            </div>
+          </div>
+          <div className="flex flex-row mt-4">
+            <div>
+              <DisplayName name={displayName} verified={verified} teamMember={teamMember} />
+              <p className="text-gray-80 text-sm">@{userHandle}</p>
+              <p className="text-gray-80 py-2 text-sm">{bio}</p>
+            </div>
+            <MessageButton profileId={profileId} />
+          </div>
+
+          <div className="flex space-x-4 mt-2">
+            {socialMedias.facebook && <SocialMediaLink company="facebook" handle={socialMedias.facebook} />}
+            {socialMedias.instagram && <SocialMediaLink company="instagram" handle={socialMedias.instagram} />}
+            {socialMedias.twitter && <SocialMediaLink company="twitter" handle={socialMedias.twitter} />}
+            {socialMedias.soundcloud && <SocialMediaLink company="soundcloud" handle={socialMedias.soundcloud} />}
+          </div>
+        </div>
+        <ProfileTabs selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
+        {ProfileTab.POSTS === selectedTab && <Posts profileId={profileId} />}
+
+        {ProfileTab.TRACKS === selectedTab && <Tracks profileId={profileId} />}
+
+        {ProfileTab.PLAYLISTS === selectedTab && <div> Playlists </div>}
+
+        <FollowModal
+          show={showModal}
+          profileId={profileId}
+          modalType={followModalType as FollowModalType}
+          onClose={onCloseModal}
+        />
+      </Layout>
+    </>
   );
 }

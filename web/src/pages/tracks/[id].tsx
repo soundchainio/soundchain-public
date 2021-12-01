@@ -4,6 +4,7 @@ import { HandleNFT } from 'components/details-NFT/HandleNFT';
 import { MintingData } from 'components/details-NFT/MintingData';
 import { TrackInfo } from 'components/details-NFT/TrackInfo';
 import { Layout } from 'components/Layout';
+import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import useBlockchain from 'hooks/useBlockchain';
@@ -23,6 +24,7 @@ import {
   useUserByWalletLazyQuery,
 } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
+import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 import { HighestBid } from './[id]/complete-auction';
@@ -77,6 +79,7 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const [refetchTrack, { data: trackData }] = useTrackLazyQuery({ fetchPolicy: 'network-only' });
   const [track, setTrack] = useState<TrackQuery['track']>(initialState);
   const [highestBid, setHighestBid] = useState<HighestBid>({} as HighestBid);
+  const router = useRouter();
 
   const nftData = track.nftData;
   const mintingPending = nftData?.pendingRequest === PendingRequest.Mint;
@@ -203,61 +206,69 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   }, [isProcessing, refetchTrack, fetchListingItem, tokenId, track.id]);
 
   return (
-    <Layout topNavBarProps={topNovaBarProps}>
-      <div className="p-3 flex flex-col gap-5">
-        <Track track={track} />
-        <Description description={track.description || ''} />
-      </div>
-      <TrackInfo
-        trackTitle={track.title}
-        albumTitle={track.album}
-        releaseYear={track.releaseYear}
-        genres={track.genres}
-        copyright={track.copyright}
-        mintingPending={mintingPending}
-        artistProfile={profileInfo?.profile}
-        royalties={royalties}
+    <>
+      <SEO
+        title={`Track - ${track.title}`}
+        description={track.artist || 'on Soundchain'}
+        canonicalUrl={router.asPath}
+        image={track.artworkUrl}
       />
-      {nftData && (
-        <MintingData
-          transactionHash={nftData.transactionHash}
-          ipfsCid={nftData.ipfsCid}
-          ownerProfile={ownerProfile?.getUserByWallet?.profile as Partial<Profile>}
+      <Layout topNavBarProps={topNovaBarProps}>
+        <div className="p-3 flex flex-col gap-5">
+          <Track track={track} />
+          <Description description={track.description || ''} />
+        </div>
+        <TrackInfo
+          trackTitle={track.title}
+          albumTitle={track.album}
+          releaseYear={track.releaseYear}
+          genres={track.genres}
+          copyright={track.copyright}
+          mintingPending={mintingPending}
+          artistProfile={profileInfo?.profile}
+          royalties={royalties}
         />
-      )}
-      {isProcessing && !mintingPending && nftData?.pendingRequest ? (
-        <div className=" flex justify-center items-center p-3">
-          <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" />
-          <div className="text-white text-sm pl-3 font-bold">
-            Processing {pendingRequestMapping[nftData.pendingRequest]}
-          </div>
-        </div>
-      ) : isOwner == undefined || loading ? (
-        <div className=" flex justify-center items-center">
-          <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" />
-          <div className="text-white text-sm pl-3 font-bold">Loading</div>
-        </div>
-      ) : (
-        <>
-          {isAuction && isHighestBidder && (
-            <div className="text-green-500 font-bold p-4 text-center">You have the highest bid!</div>
-          )}
-          {isAuction && haveBided?.haveBided.bided && !isHighestBidder && (
-            <div className="text-red-500 font-bold p-4 text-center">You have been outbid!</div>
-          )}
-          <HandleNFT
-            canList={canList}
-            price={price}
-            isOwner={isOwner}
-            isBuyNow={isBuyNow}
-            isAuction={isAuction}
-            canComplete={canComplete}
-            auctionIsOver={auctionIsOver}
-            countBids={countBids?.countBids.numberOfBids ?? 0}
-            endingDate={endingDate}
+        {nftData && (
+          <MintingData
+            transactionHash={nftData.transactionHash}
+            ipfsCid={nftData.ipfsCid}
+            ownerProfile={ownerProfile?.getUserByWallet?.profile as Partial<Profile>}
           />
-        </>
-      )}
-    </Layout>
+        )}
+        {isProcessing && !mintingPending && nftData?.pendingRequest ? (
+          <div className=" flex justify-center items-center p-3">
+            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" />
+            <div className="text-white text-sm pl-3 font-bold">
+              Processing {pendingRequestMapping[nftData.pendingRequest]}
+            </div>
+          </div>
+        ) : isOwner == undefined || loading ? (
+          <div className=" flex justify-center items-center">
+            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" />
+            <div className="text-white text-sm pl-3 font-bold">Loading</div>
+          </div>
+        ) : (
+          <>
+            {isAuction && isHighestBidder && (
+              <div className="text-green-500 font-bold p-4 text-center">You have the highest bid!</div>
+            )}
+            {isAuction && haveBided?.haveBided.bided && !isHighestBidder && (
+              <div className="text-red-500 font-bold p-4 text-center">You have been outbid!</div>
+            )}
+            <HandleNFT
+              canList={canList}
+              price={price}
+              isOwner={isOwner}
+              isBuyNow={isBuyNow}
+              isAuction={isAuction}
+              canComplete={canComplete}
+              auctionIsOver={auctionIsOver}
+              countBids={countBids?.countBids.numberOfBids ?? 0}
+              endingDate={endingDate}
+            />
+          </>
+        )}
+      </Layout>
+    </>
   );
 }
