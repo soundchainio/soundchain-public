@@ -1,5 +1,6 @@
-import { Activity } from 'icons/Activity';
 import { Checkmark2 } from 'icons/Checkmark2';
+import { Fire } from 'icons/Fire';
+import { Marketplace } from 'icons/Marketplace';
 import { Matic } from 'icons/Matic';
 import { PriceTag } from 'icons/PriceTag';
 import { Stars } from 'icons/Stars';
@@ -19,10 +20,17 @@ interface TransactionData {
 const map: Record<string, TransactionData> = {
   listItem: { methodName: 'Listed NFT', icon: PriceTag },
   safeMint: { methodName: 'Minted NFT', icon: Stars },
-  buyItem: { methodName: 'Bought NFT Item', icon: Activity },
-  setApprovalForAll: { methodName: 'Set Approval for all', icon: Checkmark2 },
+  buyItem: { methodName: 'Bought NFT Item', icon: Checkmark2 },
+  setApprovalForAll: { methodName: 'Approve Marketplace', icon: Marketplace },
   transfer: { methodName: 'Transfer', icon: Checkmark2 },
   createAuction: { methodName: 'Auction created', icon: Checkmark2 },
+  burn: { methodName: 'Burn/Delete NFT', icon: Fire },
+  cancelListing: { methodName: 'Listed NFT canceled', icon: Checkmark2 },
+  updateListing: { methodName: 'Listed NFT updated', icon: Checkmark2 },
+  transferFrom: { methodName: 'Transfered NFT', icon: Checkmark2 },
+  cancelAuction: { methodName: 'Auction canceled', icon: Checkmark2 },
+  placeBid: { methodName: 'Place bid', icon: Checkmark2 },
+  resultAuction: { methodName: 'Result auction', icon: Checkmark2 },
 };
 
 export const Transaction = ({ transaction, maticUsdValue }: TransactionProps) => {
