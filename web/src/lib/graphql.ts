@@ -717,6 +717,20 @@ export type NewPostNotification = {
   track: Maybe<Track>;
 };
 
+export type DeletedPostNotification = {
+  __typename?: 'DeletedPostNotification';
+  type: NotificationType;
+  createdAt: Scalars['DateTime'];
+  id: Scalars['String'];
+  authorName: Scalars['String'];
+  authorPicture: Maybe<Scalars['String']>;
+  body: Scalars['String'];
+  previewBody: Scalars['String'];
+  previewLink: Maybe<Scalars['String']>;
+  link: Scalars['String'];
+  track: Maybe<Track>;
+};
+
 export type NewVerificationRequestNotification = {
   __typename?: 'NewVerificationRequestNotification';
   type: NotificationType;
@@ -726,7 +740,7 @@ export type NewVerificationRequestNotification = {
   verificationRequestId: Scalars['String'];
 };
 
-export type Notification = CommentNotification | ReactionNotification | FollowerNotification | NewPostNotification | NftSoldNotification | VerificationRequestNotification | NewVerificationRequestNotification;
+export type Notification = CommentNotification | ReactionNotification | FollowerNotification | NewPostNotification | NftSoldNotification | VerificationRequestNotification | NewVerificationRequestNotification | DeletedPostNotification;
 
 export type NotificationConnection = {
   __typename?: 'NotificationConnection';
@@ -741,7 +755,8 @@ export enum NotificationType {
   NewPost = 'NewPost',
   NftSold = 'NFTSold',
   VerificationRequestUpdate = 'VerificationRequestUpdate',
-  NewVerificationRequest = 'NewVerificationRequest'
+  NewVerificationRequest = 'NewVerificationRequest',
+  DeletedPost = 'DeletedPost',
 }
 
 export type PageInfo = {
@@ -2027,6 +2042,15 @@ export type NewPostNotificationFieldsFragment = (
   )> }
 );
 
+export type DeletedPostNotificationFieldsFragment = (
+  { __typename?: 'DeletedPostNotification' }
+  & Pick<DeletedPostNotification, 'id' | 'type' | 'authorName' | 'authorPicture' | 'body' | 'link' | 'previewBody' | 'previewLink' | 'createdAt'>
+  & { track: Maybe<(
+    { __typename?: 'Track' }
+    & Pick<Track, 'title' | 'playbackUrl'>
+  )> }
+);
+
 export type NewVerificationRequestNotificationFieldsFragment = (
   { __typename?: 'NewVerificationRequestNotification' }
   & Pick<NewVerificationRequestNotification, 'id' | 'type' | 'verificationRequestId' | 'createdAt'>
@@ -2051,6 +2075,9 @@ export type NotificationQuery = (
   ) | (
     { __typename?: 'NewPostNotification' }
     & NewPostNotificationFieldsFragment
+  ) | (
+    { __typename?: 'DeletedPostNotification' }
+    & DeletedPostNotificationFieldsFragment
   ) | (
     { __typename?: 'NFTSoldNotification' }
     & NftSoldNotificationFieldsFragment
@@ -2095,6 +2122,9 @@ export type NotificationsQuery = (
     ) | (
       { __typename?: 'NewPostNotification' }
       & NewPostNotificationFieldsFragment
+    ) | (
+      { __typename?: 'DeletedPostNotification' }
+      & DeletedPostNotificationFieldsFragment
     ) | (
       { __typename?: 'NFTSoldNotification' }
       & NftSoldNotificationFieldsFragment
@@ -2849,6 +2879,23 @@ export const NftSoldNotificationFieldsFragmentDoc = gql`
     `;
 export const NewPostNotificationFieldsFragmentDoc = gql`
     fragment NewPostNotificationFields on NewPostNotification {
+  id
+  type
+  authorName
+  authorPicture
+  body
+  link
+  previewBody
+  previewLink
+  createdAt
+  track {
+    title
+    playbackUrl
+  }
+}
+    `;
+export const DeletedPostNotificationFieldsFragmentDoc = gql`
+    fragment DeletedPostNotificationFields on DeletedPostNotification {
   id
   type
   authorName
@@ -4428,12 +4475,16 @@ export const NotificationDocument = gql`
     ... on NewVerificationRequestNotification {
       ...NewVerificationRequestNotificationFields
     }
+    ... on DeletedPostNotification {
+      ...DeletedPostNotificationFields
+    }
   }
 }
     ${CommentNotificationFieldsFragmentDoc}
 ${ReactionNotificationFieldsFragmentDoc}
 ${FollowerNotificationFieldsFragmentDoc}
 ${NewPostNotificationFieldsFragmentDoc}
+${DeletedPostNotificationFieldsFragmentDoc}
 ${NftSoldNotificationFieldsFragmentDoc}
 ${VerificationRequestNotificationFieldsFragmentDoc}
 ${NewVerificationRequestNotificationFieldsFragmentDoc}`;
@@ -4516,6 +4567,9 @@ export const NotificationsDocument = gql`
       ... on NewPostNotification {
         ...NewPostNotificationFields
       }
+      ... on DeletedPostNotification {
+        ...DeletedPostNotificationFields
+      }
       ... on NFTSoldNotification {
         ...NFTSoldNotificationFields
       }
@@ -4532,6 +4586,7 @@ export const NotificationsDocument = gql`
 ${ReactionNotificationFieldsFragmentDoc}
 ${FollowerNotificationFieldsFragmentDoc}
 ${NewPostNotificationFieldsFragmentDoc}
+${DeletedPostNotificationFieldsFragmentDoc}
 ${NftSoldNotificationFieldsFragmentDoc}
 ${VerificationRequestNotificationFieldsFragmentDoc}
 ${NewVerificationRequestNotificationFieldsFragmentDoc}`;

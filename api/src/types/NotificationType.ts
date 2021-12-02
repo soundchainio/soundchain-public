@@ -8,6 +8,7 @@ enum NotificationType {
   NFTSold = 'NFTSold',
   VerificationRequestUpdate = 'VerificationRequestUpdate',
   NewVerificationRequest = 'NewVerificationRequest',
+  DeletedPost = 'DeletedPost',
 }
 
 registerEnumType(NotificationType, {

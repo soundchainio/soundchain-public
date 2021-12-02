@@ -11,6 +11,7 @@ import { Context } from '../types/Context';
 import { FinishBuyNowItemInput } from '../types/FinishBuyNowItemInput';
 import { NewPostNotificationMetadata } from '../types/NewPostNotificationMetadata';
 import { NewVerificationRequestNotificationMetadata } from '../types/NewVerificationRequestNotificationMetadata';
+import { DeletedPostNotificationMetadata } from '../types/DeletedPostNotificationMetadata';
 import { NotificationType } from '../types/NotificationType';
 import { NotificationUnion } from '../types/NotificationUnion';
 import { PageInput } from '../types/PageInput';
@@ -201,5 +202,21 @@ export class NotificationService extends ModelService<typeof Notification> {
 
   async deleteNotificationsByVerificationRequestId(verificationRequestId: string): Promise<void> {
     await this.model.deleteMany({ 'metadata.verificationRequestId': verificationRequestId });
+  }
+
+  async notifyPostDeletedByAdmin(post: Post): Promise<void> {
+    const {profileId} = post
+    const authorProfile = await this.context.profileService.getProfile(profileId);
+    const metadata: DeletedPostNotificationMetadata = {
+      authorName: authorProfile.displayName,
+      authorPicture: authorProfile.profilePicture,
+      postBody: post.body,
+      postId: post._id,
+      postLink: post.mediaLink,
+      trackId: post.trackId,
+    };
+    const notification = new NotificationModel({ type: NotificationType.DeletedPost, profileId, metadata })
+    await notification.save();
+    await this.incrementNotificationCount(profileId);
   }
 }

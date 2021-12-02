@@ -3,6 +3,7 @@ import { BuyNowItemResolver } from './BuyNowItemResolver';
 import { ChatResolver } from './ChatResolver';
 import { CommentNotificationResolver } from './CommentNotificationResolver';
 import { CommentResolver } from './CommentResolver';
+import { DeletedPostNotificationResolver } from './DeletedPostNotificationResolver';
 import { ExploreResolver } from './ExploreResolver';
 import { FeedResolver } from './FeedResolver';
 import { FollowerNotificationResolver } from './FollowerNotificationResolver';
@@ -54,4 +55,5 @@ export const resolvers = [
   UserResolver,
   VerificationRequestNotificationResolver,
   NewVerificationRequestNotificationResolver,
+  DeletedPostNotificationResolver,
 ] as const;

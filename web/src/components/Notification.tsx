@@ -8,6 +8,7 @@ import {
   ReactionNotification,
   useNotificationQuery,
   VerificationRequestNotification,
+  DeletedPostNotification,
 } from 'lib/graphql';
 import React from 'react';
 import { CommentNotificationItem } from './CommentNotificationItem';
@@ -18,6 +19,7 @@ import { NFTSoldNotificationItem } from './NFTSoldNotificationItem';
 import { NotificationSkeleton } from './NotificationSkeleton';
 import { ReactionNotificationItem } from './ReactionNotificationItem';
 import { VerificationRequestNotificationItem } from './VerificationRequestNotificationItem';
+import { DeletedPostNotificationItem } from './DeletedPostNotificationItem';
 
 interface NotificationProps {
   notificationId: string;
@@ -62,6 +64,15 @@ export const Notification = ({ notificationId, index }: NotificationProps) => {
     return (
       <NewVerificationRequestNotificationItem
         notification={notification as NewVerificationRequestNotification}
+        index={index}
+      />
+    );
+  }
+
+  if (notification.type === NotificationType.DeletedPost) {
+    return (
+      <DeletedPostNotificationItem
+        notification={notification as DeletedPostNotification}
         index={index}
       />
     );
