@@ -51,6 +51,9 @@ export class TrackResolver {
     @Root() { _id: trackId }: Track,
     @CurrentUser() user?: User,
   ): Promise<boolean> {
+    if (!user) {
+      return Promise.resolve(false);
+    }
     return trackService.isFavorite(trackId, user.profileId);
   }
 

@@ -13,7 +13,6 @@ export class UploadResolver {
   }
 
   @Query(() => MimeType)
-  @Authorized()
   async mimeType(@Arg('url') url: string): Promise<MimeType> {
     const { headers } = await axios.head(url);
     return { value: headers['content-type'] };
