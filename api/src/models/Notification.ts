@@ -2,8 +2,10 @@ import { getModelForClass, modelOptions, prop, Severity } from '@typegoose/typeg
 import { ObjectId } from 'mongodb';
 import { Field } from 'type-graphql';
 import { CommentNotificationMetadata } from '../types/CommentNotificationMetadata';
+import { DeletedCommentNotificationMetadata } from '../types/DeletedCommentNotificationMetadata';
 import { FollowerNotificationMetadata } from '../types/FollowerNotificationMetadata';
 import { NewPostNotificationMetadata } from '../types/NewPostNotificationMetadata';
+import { DeletedPostNotificationMetadata } from '../types/DeletedPostNotificationMetadata';
 import { NewVerificationRequestNotificationMetadata } from '../types/NewVerificationRequestNotificationMetadata';
 import { NFTSoldNotificationMetadata } from '../types/NFTSoldNotificationMetadata';
 import { NotificationType } from '../types/NotificationType';
@@ -21,9 +23,11 @@ export class Notification extends Model {
   @prop({ required: true })
   metadata:
     | CommentNotificationMetadata
+    | DeletedCommentNotificationMetadata
     | FollowerNotificationMetadata
     | ReactionNotificationMetadata
     | NewPostNotificationMetadata
+    | DeletedPostNotificationMetadata
     | NFTSoldNotificationMetadata
     | VerificationRequestNotificationMetadata
     | NewVerificationRequestNotificationMetadata;
