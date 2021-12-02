@@ -1,8 +1,6 @@
 import classNames from 'classnames';
-import { NewPostNotification as NewPostIcon } from 'icons/NewPostNotification';
 import { DeletedPostNotification } from 'lib/graphql';
 import React from 'react';
-import { Avatar } from './Avatar';
 import { MiniAudioPlayer } from './MiniAudioPlayer';
 import { Timestamp } from './Timestamp';
 
@@ -12,7 +10,7 @@ interface DeletedPostNotificationProps {
 }
 
 export const DeletedPostNotificationItem = ({
-  notification: { track, createdAt, previewBody, authorName, authorPicture },
+  notification: { track, createdAt, previewBody },
   index,
 }: DeletedPostNotificationProps) => {
   return (
@@ -21,19 +19,6 @@ export const DeletedPostNotificationItem = ({
         <div>
           <div className="text-gray-100 text-sm items-center w-full inline-block">
             <span className="flex flex-wrap">This post was removed by an admin from our platform</span>
-          </div>
-          <Timestamp small datetime={createdAt} className="text-sm" />
-        </div>
-        <div className="flex items-center pr-4">
-          <Avatar profile={{ profilePicture: authorPicture }} pixels={40} />
-          <div className="relative">
-            <NewPostIcon className="absolute -right-1" />
-          </div>
-        </div>
-        <div>
-          <div className="text-gray-100  flex text-sm">
-            <div className="font-semibold">{authorName}</div>&nbsp;
-            {track ? 'posted a new track:' : 'created a new post:'}
           </div>
           <Timestamp small datetime={createdAt} className="text-sm" />
         </div>
