@@ -24,7 +24,6 @@ import {
   useUserByWalletLazyQuery,
 } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
-import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 import { HighestBid } from './[id]/complete-auction';
@@ -79,7 +78,6 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const [refetchTrack, { data: trackData }] = useTrackLazyQuery({ fetchPolicy: 'network-only' });
   const [track, setTrack] = useState<TrackQuery['track']>(initialState);
   const [highestBid, setHighestBid] = useState<HighestBid>({} as HighestBid);
-  const router = useRouter();
 
   const nftData = track.nftData;
   const mintingPending = nftData?.pendingRequest === PendingRequest.Mint;
@@ -210,7 +208,7 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
       <SEO
         title={`Track - ${track.title}`}
         description={track.artist || 'on Soundchain'}
-        canonicalUrl={router.asPath}
+        canonicalUrl={`/tracks/${track.id}`}
         image={track.artworkUrl}
       />
       <Layout topNavBarProps={topNovaBarProps}>

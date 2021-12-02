@@ -106,7 +106,7 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
       <SEO
         title={`Profile - ${displayName}`}
         description={bio || 'my Soundchain profile'}
-        canonicalUrl={router.asPath}
+        canonicalUrl={`/profiles/${userHandle}`}
         image={profilePicture}
       />
       <Layout topNavBarProps={topNovaBarProps}>
