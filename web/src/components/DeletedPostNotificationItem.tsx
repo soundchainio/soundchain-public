@@ -18,7 +18,7 @@ export const DeletedPostNotificationItem = ({
       <div className="break-words flex">
         <div>
           <div className="text-gray-100 text-sm items-center w-full inline-block">
-            <span className="flex flex-wrap">This post was removed by an admin from our platform</span>
+            <span className="flex flex-wrap">The following post was removed by an admin from our platform</span>
           </div>
           <Timestamp small datetime={createdAt} className="text-sm" />
         </div>

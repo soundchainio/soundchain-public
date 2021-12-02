@@ -1,0 +1,10 @@
+fragment DeletedCommentNotificationFields on DeletedCommentNotification {
+  id
+  type
+  body
+  previewBody
+  link
+  createdAt
+  authorName
+  authorPicture
+}

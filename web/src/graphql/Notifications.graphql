@@ -25,6 +25,9 @@ query Notifications($sort: SortNotificationInput) {
       ... on DeletedPostNotification {
         ...DeletedPostNotificationFields
       }
+      ... on DeletedCommentNotification {
+        ...DeletedCommentNotificationFields
+      }
     }
   }
 }

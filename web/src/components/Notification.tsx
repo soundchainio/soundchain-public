@@ -9,6 +9,7 @@ import {
   useNotificationQuery,
   VerificationRequestNotification,
   DeletedPostNotification,
+  DeletedCommentNotification,
 } from 'lib/graphql';
 import React from 'react';
 import { CommentNotificationItem } from './CommentNotificationItem';
@@ -20,6 +21,7 @@ import { NotificationSkeleton } from './NotificationSkeleton';
 import { ReactionNotificationItem } from './ReactionNotificationItem';
 import { VerificationRequestNotificationItem } from './VerificationRequestNotificationItem';
 import { DeletedPostNotificationItem } from './DeletedPostNotificationItem';
+import { DeletedCommentNotificationItem } from './DeletedCommentNotificationItem'
 
 interface NotificationProps {
   notificationId: string;
@@ -73,6 +75,15 @@ export const Notification = ({ notificationId, index }: NotificationProps) => {
     return (
       <DeletedPostNotificationItem
         notification={notification as DeletedPostNotification}
+        index={index}
+      />
+    );
+  }
+
+  if (notification.type === NotificationType.DeletedComment) {
+    return (
+      <DeletedCommentNotificationItem
+        notification={notification as DeletedCommentNotification}
         index={index}
       />
     );

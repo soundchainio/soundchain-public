@@ -1,5 +1,6 @@
 import { createUnionType } from 'type-graphql';
 import { CommentNotification } from './CommentNotification';
+import { DeletedCommentNotification } from './DeletedCommentNotification';
 import { DeletedPostNotification } from './DeletedPostNotification';
 import { FollowerNotification } from './FollowerNotification';
 import { NewPostNotification } from './NewPostNotification';
@@ -21,6 +22,7 @@ export const NotificationUnion = createUnionType({
       VerificationRequestNotification,
       NewVerificationRequestNotification,
       DeletedPostNotification,
+      DeletedCommentNotification
     ] as const,
   resolveType: value => {
     if (value.type === NotificationType.Comment) {
@@ -46,6 +48,9 @@ export const NotificationUnion = createUnionType({
     }
     if (value.type === NotificationType.DeletedPost) {
       return DeletedPostNotification;
+    }
+    if (value.type === NotificationType.DeletedComment) {
+      return DeletedCommentNotification;
     }
     return undefined;
   },

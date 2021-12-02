@@ -24,5 +24,8 @@ query Notification($id: String!) {
     ... on DeletedPostNotification {
       ...DeletedPostNotificationFields
     }
+    ... on DeletedCommentNotification {
+      ...DeletedCommentNotificationFields
+    }
   }
 }

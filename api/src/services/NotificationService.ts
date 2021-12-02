@@ -205,7 +205,7 @@ export class NotificationService extends ModelService<typeof Notification> {
   }
 
   async notifyPostDeletedByAdmin(post: Post): Promise<void> {
-    const {profileId} = post
+    const { profileId } = post
     const authorProfile = await this.context.profileService.getProfile(profileId);
     const metadata: DeletedPostNotificationMetadata = {
       authorName: authorProfile.displayName,
@@ -218,5 +218,27 @@ export class NotificationService extends ModelService<typeof Notification> {
     const notification = new NotificationModel({ type: NotificationType.DeletedPost, profileId, metadata })
     await notification.save();
     await this.incrementNotificationCount(profileId);
+  }
+
+  async notifyCommentDeletedByAdmin({ comment, post, authorProfileId }: CommentNotificationParams): Promise<void> {
+    const authorProfile = await this.context.profileService.getProfile(authorProfileId);
+    const { body: commentBody, _id: commentId } = comment;
+    const { _id: postId } = post;
+
+    const { displayName: authorName, profilePicture: authorPicture } = authorProfile;
+    const metadata: CommentNotificationMetadata = {
+      authorName,
+      commentBody,
+      postId,
+      commentId,
+      authorPicture,
+    };
+    const notification = new NotificationModel({
+      type: NotificationType.DeletedComment,
+      profileId: authorProfileId,
+      metadata,
+    });
+    await notification.save();
+    await this.incrementNotificationCount(authorProfileId);
   }
 }
