@@ -63,6 +63,7 @@ export default function WalletPage() {
 
   const getAccount = isSoundChainSelected ? magicAccount : account;
   const getBalance = isSoundChainSelected ? magicBalance : balance;
+  const getBalanceFormatted = parseFloat(getBalance ?? '0');
 
   useEffect(() => {
     if (!account) {
@@ -171,12 +172,12 @@ export default function WalletPage() {
                 {getBalance ? (
                   <>
                     <p className="text-blue-400 font-bold text-xs uppercase mt-2">
-                      <span className="text-white font-bold text-2xl">{getBalance}</span>
+                      <span className="text-white font-bold text-2xl">{getBalanceFormatted}</span>
                       {` matic`}
                     </p>
                     {data?.maticUsd && (
                       <span className="text-xs text-gray-50 font-bold">
-                        {`${currency(parseFloat(getBalance) * parseFloat(data?.maticUsd))} USD`}
+                        {`${currency(getBalanceFormatted * parseFloat(data?.maticUsd))} USD`}
                       </span>
                     )}
                   </>

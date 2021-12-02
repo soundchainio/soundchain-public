@@ -3,6 +3,7 @@ import { Transaction } from 'components/Transaction';
 import { TransactionItemSkeleton } from 'components/TransactionItemSkeleton';
 import { useMaticUsdQuery, usePolygonscanQuery } from 'lib/graphql';
 import React from 'react';
+import { EmptyTransactionList } from './EmptyTransactionList';
 
 interface TransactionsTabProps {
   address: string;
@@ -30,6 +31,10 @@ export const TransactionsTab = ({ address }: TransactionsTabProps) => {
   }
 
   const { result, nextPage } = data.getTransactionHistory;
+
+  if (!result.length) {
+    return <EmptyTransactionList />;
+  }
 
   const loadMore = () => {
     fetchMore({

@@ -2,6 +2,7 @@ import { InfiniteLoader } from 'components/InfiniteLoader';
 import { TransactionItemSkeleton } from 'components/TransactionItemSkeleton';
 import { useMaticUsdQuery, usePolygonscanInternalTrxQuery } from 'lib/graphql';
 import React from 'react';
+import { EmptyTransactionList } from './EmptyTransactionList';
 import { InternalTransaction } from './InternalTransaction';
 
 interface InternalTransactionsTabProps {
@@ -30,6 +31,10 @@ export const InternalTransactionsTab = ({ address }: InternalTransactionsTabProp
   }
 
   const { result, nextPage } = data.getInternalTransactionHistory;
+
+  if (!result.length) {
+    return <EmptyTransactionList />;
+  }
 
   const loadMore = () => {
     fetchMore({
