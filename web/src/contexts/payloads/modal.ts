@@ -63,6 +63,12 @@ export interface SetAmountToTransfer {
   amount: string;
 }
 
+export interface ShowConfirmDeleteNFT {
+  show: boolean;
+  trackId?: string;
+  burn: boolean;
+}
+
 export type ModalPayload =
   | ShowNewPostPayload
   | SetEditPostIdPayload
@@ -76,4 +82,5 @@ export type ModalPayload =
   | SetRecipientWalletAddress
   | SetAmountToTransfer
   | ShowRemoveListing
-  | ShowApprove;
+  | ShowApprove
+  | ShowConfirmDeleteNFT ;

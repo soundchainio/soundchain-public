@@ -3,6 +3,7 @@ import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar';
 import { ReactNode, useEffect, useState } from 'react';
 import { AuthorActionsModal } from './AuthorActionsModal';
 import { ApproveModal } from './modals/ApproveModal';
+import { ConfirmDeleteNFTModal } from './modals/ConfirmDeleteNFTModal';
 import { PostModal } from './PostModal';
 import { ReactionsModal } from './ReactionsModal';
 import { RemoveListingConfirmationModal } from './RemoveListingConfirmationModal';
@@ -42,6 +43,7 @@ export const Layout = ({ children, hideBottomNavBar, topNavBarProps, className }
         <AuthorActionsModal />
         <ReactionsModal />
         <TransferConfirmationModal />
+        <ConfirmDeleteNFTModal />
         <ApproveModal />
         <RemoveListingConfirmationModal />
       </div>

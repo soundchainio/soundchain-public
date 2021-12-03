@@ -27,6 +27,9 @@ import { GetServerSideProps } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 import { HighestBid } from './[id]/complete-auction';
+import { Ellipsis } from 'icons/Ellipsis';
+import { useModalDispatch } from 'contexts/providers/modal';
+import { AuthorActionsType } from 'types/AuthorActionsType';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -91,6 +94,8 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const [fetchListingItem, { data: listingPayload, loading }] = useListingItemLazyQuery({
     fetchPolicy: 'network-only',
   });
+
+  const { dispatchShowAuthorActionsModal } = useModalDispatch();
 
   useEffect(() => {
     if (track.nftData?.tokenId) {
@@ -185,9 +190,14 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const isHighestBidder = highestBid.bidder?.toLowerCase() === account?.toLowerCase();
   const endingDate = new Date((listingPayload?.listingItem.endingTime || 0) * 1000);
 
+  const onEllipsisClick = () => {
+    dispatchShowAuthorActionsModal(true, AuthorActionsType.NFT, track.id, true);
+  };
+  
   const topNovaBarProps: TopNavBarProps = {
     leftButton: <BackButton />,
     title: 'NFT Details',
+    rightButton: isOwner ? <Ellipsis className="cursor-pointer" onClick={onEllipsisClick} /> : undefined
   };
 
   useEffect(() => {
