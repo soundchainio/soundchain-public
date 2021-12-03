@@ -15,7 +15,7 @@ import React from 'react';
 
 const topNovaBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
-  title: 'Buy MATIC',
+  title: 'Buy Matic',
 };
 
 const MaticSign = (
