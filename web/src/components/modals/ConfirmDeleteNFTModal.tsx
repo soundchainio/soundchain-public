@@ -7,7 +7,7 @@ import { Matic } from 'icons/Matic';
 import React, { useEffect, useState } from 'react';
 import { Button } from 'components/Button';
 import { Track as TrackComponent } from 'components/Track';
-import { TrackQuery, Track, useTrackLazyQuery } from 'lib/graphql';
+import { TrackQuery, useTrackLazyQuery } from 'lib/graphql';
 
 export const ConfirmDeleteNFTModal = () => {
   const { showConfirmDeleteNFT, trackId, burn } = useModalState();
