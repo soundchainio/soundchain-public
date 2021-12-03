@@ -78,7 +78,7 @@ export default function BuyMaticPage() {
             <MexcGlobal />
           </a>
         </div>
-        <div className="flex flex-col space-y-2 rounded-lg p-4 bg-black border-2 border-gray-40 my-4">
+        <div className="flex flex-col gap-3 rounded-lg p-4 bg-black border-2 border-gray-40 my-4">
           <div className="flex space-beetween text-gray-200 justify-between">
             <Moonpay />
             <a href="https://www.moonpay.com/" rel="noreferrer" target="_blank" className="flex items-center">
@@ -87,7 +87,7 @@ export default function BuyMaticPage() {
           </div>
           <div>MoonPay allows users to purchase Matic on the Polygon chain via credit card.</div>
         </div>
-        <div className="flex flex-col space-y-2 rounded-lg p-4 bg-black border-2 border-gray-40 my-4">
+        <div className="flex flex-col gap-3 rounded-lg p-4 bg-black border-2 border-gray-40 my-4">
           <div className="flex space-beetween text-gray-200 justify-between">
             <PolygonBridge />
             <a href="https://wallet.polygon.technology/" rel="noreferrer" target="_blank" className="flex items-center">
