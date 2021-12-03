@@ -1,3 +1,4 @@
+import abiDecoder from 'abi-decoder';
 import { Arg, Authorized, Ctx, Query, Resolver } from 'type-graphql';
 import soundchainCollectible from '../contract/Soundchain721.json';
 import soundchainAuction from '../contract/SoundchainAuction.json';
@@ -5,8 +6,6 @@ import soundchainMarketplace from '../contract/SoundchainMarketplace.json';
 import { Context } from '../types/Context';
 import { PageInput } from '../types/PageInput';
 import { PolygonscanResult, PolygonscanResultObj } from '../types/PolygonscanResult';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const abiDecoder = require('abi-decoder');
 
 @Resolver()
 export class PolygonscanResolver {
