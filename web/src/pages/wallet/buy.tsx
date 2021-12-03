@@ -19,21 +19,21 @@ const topNovaBarProps: TopNavBarProps = {
 };
 
 const MaticSign = (
-  <div className="flex items-center text-blue-400 mx-2 font-semibold">
+  <span className="flex items-center text-blue-400 mx-2 font-semibold">
     <Matic className="mr-2" /> MATIC
-  </div>
+  </span>
 );
 
 const PolygonSign = (
-  <div className="flex items-center text-purple-500 mx-2 font-semibold">
+  <span className="flex items-center text-purple-500 mx-2 font-semibold">
     <Polygon className="mr-2" /> Polygon
-  </div>
+  </span>
 );
 
 const MacNCheeseSign = (
-  <div className="flex items-center text-white mx-2 font-semibold">
+  <span className="flex items-center text-white mx-2 font-semibold">
     <MacNCheese className="mr-2" /> {'Mac&Cheese'}
-  </div>
+  </span>
 );
 
 export default function BuyMaticPage() {
@@ -52,12 +52,19 @@ export default function BuyMaticPage() {
         <p className="flex items-center justify-center">
           {MaticSign} on the {PolygonSign} chain.
         </p>
-        <div className="flex flex-col space-y-2 items-center rounded-lg p-6 bg-black border-2 border-gray-40 text-center my-4">
-          <div className="flex items-center text-gray-200">{MacNCheeseSign} Finance</div>
-          <div className="flex items-center font-bold">
-            Claim <span className="text-white mx-2">FREE</span> .001 {MaticSign}
+        <a
+          href="https://macncheese.finance/matic-polygon-mainnet-faucet.php"
+          target="_blank"
+          rel="noreferrer"
+          aria-label={`Claim free 0.001 Matic on Mac&Cheese Finance`}
+        >
+          <div className="flex flex-col space-y-2 items-center rounded-lg p-6 bg-black border-2 border-gray-40 text-center my-4">
+            <div className="flex items-center text-gray-200">{MacNCheeseSign} Finance</div>
+            <div className="flex items-center font-bold">
+              Claim <span className="text-white mx-2">FREE</span> .001 {MaticSign}
+            </div>
           </div>
-        </div>
+        </a>
         <p className="text-center m-4">
           If you live in the United States, the following exchanges support buying Matic.
         </p>
