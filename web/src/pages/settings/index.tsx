@@ -22,7 +22,7 @@ interface LinkProps {
 function Link({ label, value, to }: LinkProps) {
   return (
     <NextLink href={`/settings${to}`}>
-      <a className="w-full px-4 flex items-center justify-center h-16">
+      <a className="w-full px-4 py-2 flex items-center justify-center">
         <div className="flex-1">
           <span className="block text-gray-50 text-xs font-bold uppercase"> {label} </span>
           <span className="block text-white font-bold mt-1"> {value} </span>
@@ -36,7 +36,7 @@ function Link({ label, value, to }: LinkProps) {
 function FakeLink({ label, value, onClick }: LinkProps) {
   return (
     <div onClick={onClick}>
-      <a className="w-full px-4 flex items-center justify-center h-16">
+      <a className="w-full px-4 py-2 flex items-center justify-center h-16">
         <div className="flex-1">
           <span className="block text-gray-50 text-xs font-bold uppercase"> {label} </span>
           <span className="block text-white font-bold mt-1"> {value} </span>
