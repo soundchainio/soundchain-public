@@ -48,7 +48,9 @@ export default function BuyMaticPage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div className="px-8 py-4 text-gray-80 text-xs">
-        <p className="text-center m-4">In order to mint or purchase {"NFT's"} on SoundChain, you must have:</p>
+        <p className="text-center m-4 font-bold">
+          In order to mint or purchase {"NFT's"} on SoundChain, you must have:
+        </p>
         <p className="flex items-center justify-center">
           {MaticSign} on the {PolygonSign} chain.
         </p>
@@ -65,10 +67,10 @@ export default function BuyMaticPage() {
             </div>
           </div>
         </a>
-        <p className="text-center m-4">
+        <p className="text-center my-10 font-bold">
           If you live in the United States, the following exchanges support buying Matic.
         </p>
-        <div className="flex items-center space-x-4 my-8">
+        <div className="flex items-center justify-center space-x-4 my-10">
           <a href="https://www.okcoin.com/" rel="noreferrer" target="_blank">
             <OkCoin />
           </a>
