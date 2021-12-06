@@ -2,7 +2,7 @@ import Slider from '@reach/slider';
 import { config } from 'config';
 import Hls from 'hls.js';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
-import { Navigate } from 'icons/Navigate';
+import { Info } from 'icons/Info';
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
 import mux from 'mux-embed';
@@ -120,7 +120,7 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: Song) => {
                 </div>
                 {trackId && (
                   <div className="ml-auto">
-                    <Navigate />
+                    <Info />
                   </div>
                 )}
               </div>
