@@ -1,19 +1,50 @@
+import { BackButton } from 'components/Buttons/BackButton';
 import { Jazzicon } from 'components/Jazzicon';
 import { Layout } from 'components/Layout';
+import { TopNavBarProps } from 'components/TopNavBar';
 import { Copy2 as Copy } from 'icons/Copy2';
-import { LeftArrow } from 'icons/LeftArrow';
 import { Polygon } from 'icons/Polygon';
+import { cacheFor } from 'lib/apollo';
+import { UserByWalletDocument } from 'lib/graphql';
+import { protectPage } from 'lib/protectPage';
 import QRCode from 'qrcode';
-import React, { useEffect } from 'react';
+import { ParsedUrlQuery } from 'querystring';
+import { useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { TopNavBarButton } from './TopNavBarButton';
 
-interface ReceiveMaticProps {
+export interface ReceivePageProps {
   address: string;
-  backButton: () => void;
 }
 
-export default function ReceiveMatic({ address, backButton }: ReceiveMaticProps) {
+interface ReceivePageParams extends ParsedUrlQuery {
+  address: string;
+}
+
+export const getServerSideProps = protectPage<ReceivePageProps, ReceivePageParams>(async (context, apolloClient) => {
+  const address = context.params?.address;
+
+  if (!address) {
+    return { notFound: true };
+  }
+
+  const { data } = await apolloClient.query({
+    query: UserByWalletDocument,
+    variables: { walletAddress: address },
+    context,
+  });
+
+  if (!data.getUserByWallet) {
+    return { notFound: true };
+  }
+
+  return cacheFor(ReceivePage, { address }, context, apolloClient);
+});
+const topNavBarProps: TopNavBarProps = {
+  leftButton: <BackButton />,
+  title: 'Receive',
+};
+
+export default function ReceivePage({ address }: ReceivePageProps) {
   useEffect(() => {
     async function createQrCode() {
       const canvas = document.getElementById('addressQrCodeCanvas');
@@ -21,14 +52,8 @@ export default function ReceiveMatic({ address, backButton }: ReceiveMaticProps)
     }
     createQrCode();
   });
-
   return (
-    <Layout
-      topNavBarProps={{
-        leftButton: <TopNavBarButton onClick={backButton} label="Back" icon={LeftArrow} />,
-        title: 'Receive',
-      }}
-    >
+    <Layout topNavBarProps={topNavBarProps}>
       <div className="h-full flex flex-col gap-5 px-4 py-7 items-center">
         <div className="flex-1 flex flex-col gap-5 items-center w-full">
           {address && <Jazzicon address={address} size={54} />}
