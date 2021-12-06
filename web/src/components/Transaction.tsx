@@ -9,7 +9,7 @@ interface TransactionProps {
 }
 
 export const Transaction = ({ transaction, maticUsdValue }: TransactionProps) => {
-  const Icon = transaction.method && transactionDataMap[transaction.method].icon;
+  const Icon = transaction.method && transactionDataMap[transaction.method]?.icon;
 
   const transactionValue = parseInt(transaction.value) / 1e18;
   const gasFee = (parseInt(transaction.gasUsed) * parseInt(transaction.gasPrice)) / 1e18;
