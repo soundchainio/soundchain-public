@@ -4,6 +4,7 @@ import { CurrentUser } from '../decorators/current-user';
 import { FavoriteProfileTrackModel } from '../models/FavoriteProfileTrack';
 import { Track } from '../models/Track';
 import { User } from '../models/User';
+import { FavoriteCount } from '../services/TrackService';
 import { Context } from '../types/Context';
 import { CreateTrackInput as CreateTrackInput } from '../types/CreateTrackInput';
 import { CreateTrackPayload } from '../types/CreateTrackPayload';
@@ -29,12 +30,30 @@ export class TrackResolver {
     return playbackCount ? new Intl.NumberFormat('en-US').format(playbackCount) : '';
   }
 
+  @FieldResolver(() => Number)
+  favoriteCount(@Ctx() { trackService }: Context, @Root() { _id: trackId }: Track): Promise<FavoriteCount> {
+    return trackService.favoriteCount(trackId);
+  }
+
+  @FieldResolver(() => String)
+  price(@Ctx() { trackService }: Context, @Root() { nftData }: Track): Promise<string> {
+    return trackService.price(nftData.tokenId);
+  }
+
+  @FieldResolver(() => String)
+  saleType(@Ctx() { trackService }: Context, @Root() { nftData }: Track): Promise<string> {
+    return trackService.saleType(nftData.tokenId);
+  }
+
   @FieldResolver(() => Boolean)
   isFavorite(
     @Ctx() { trackService }: Context,
     @Root() { _id: trackId }: Track,
     @CurrentUser() user?: User,
   ): Promise<boolean> {
+    if (!user) {
+      return Promise.resolve(false);
+    }
     return trackService.isFavorite(trackId, user.profileId);
   }
 
@@ -100,12 +119,12 @@ export class TrackResolver {
   async favoriteTracks(
     @Ctx() { trackService }: Context,
     @CurrentUser() { profileId }: User,
-    @Arg('filter', { nullable: true }) filter?: FilterTrackInput,
+    @Arg('search', { nullable: true }) search?: string,
     @Arg('sort', { nullable: true }) sort?: SortTrackInput,
     @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<TrackConnection> {
     const favorites = await FavoriteProfileTrackModel.find({ profileId });
     const ids = favorites.map(item => new ObjectId(item.trackId));
-    return trackService.getFavoriteTracks(ids, { ...filter }, sort, page);
+    return trackService.getFavoriteTracks(ids, search, sort, page);
   }
 }

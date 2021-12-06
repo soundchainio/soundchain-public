@@ -1,3 +1,0 @@
-query WasListedBefore($tokenId: Float!) {
-  wasListedBefore(tokenId: $tokenId)
-}

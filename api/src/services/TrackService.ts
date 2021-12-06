@@ -1,4 +1,5 @@
 import { DocumentType, mongoose } from '@typegoose/typegoose';
+import dot from 'dot-object';
 import { ObjectId } from 'mongodb';
 import { PaginateResult } from '../db/pagination/paginate';
 import { NotFoundError } from '../errors/NotFoundError';
@@ -14,6 +15,10 @@ import { PageInput } from '../types/PageInput';
 import { PendingRequest } from '../types/PendingRequest';
 import { SortTrackInput } from '../types/SortTrackInput';
 import { ModelService } from './ModelService';
+
+export interface FavoriteCount {
+  count: number;
+}
 
 type RecursivePartial<T> = {
   [P in keyof T]?: RecursivePartial<T[P]>;
@@ -38,7 +43,8 @@ export class TrackService extends ModelService<typeof Track> {
 
   getTracks(filter?: FilterTrackInput, sort?: SortTrackInput, page?: PageInput): Promise<PaginateResult<Track>> {
     const defaultFilter = { title: { $exists: true }, deleted: false };
-    return this.paginate({ filter: { ...defaultFilter, ...filter }, sort, page });
+    const dotNotationFilter = filter && dot.dot(filter);
+    return this.paginate({ filter: { ...defaultFilter, ...dotNotationFilter }, sort, page });
   }
 
   getTrack(id: string): Promise<Track> {
@@ -49,6 +55,7 @@ export class TrackService extends ModelService<typeof Track> {
     const regex = new RegExp(search, 'i');
     const list = await this.model
       .find({ $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }] })
+      .sort({ createdAt: -1 })
       .limit(5);
     const total = await this.model
       .find({ deleted: false, $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }] })
@@ -171,14 +178,59 @@ export class TrackService extends ModelService<typeof Track> {
 
   getFavoriteTracks(
     ids: ObjectId[],
-    filter?: FilterTrackInput,
+    search?: string,
     sort?: SortTrackInput,
     page?: PageInput,
   ): Promise<PaginateResult<Track>> {
+    const regex = new RegExp(search, 'i');
+
+    const filter = {
+      $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }],
+    };
+
     return this.paginate({
       filter: { _id: { $in: ids }, title: { $exists: true }, deleted: false, ...filter },
       sort,
       page,
     });
+  }
+
+  async favoriteCount(trackId: string): Promise<FavoriteCount> {
+    const res = await FavoriteProfileTrackModel.aggregate([
+      {
+        $match: {
+          trackId: trackId.toString(),
+        },
+      },
+      {
+        $count: 'trackId',
+      },
+      {
+        $project: {
+          count: '$trackId',
+        },
+      },
+    ]);
+    return res.length ? res[0].count : 0;
+  }
+
+  async saleType(tokenId: number): Promise<string> {
+    const res = await this.context.listingItemService.getListingItem(tokenId);
+    if (res.endingTime) {
+      return 'auction';
+    } else if (res.pricePerItem) {
+      return 'buy now';
+    }
+    return '';
+  }
+
+  async price(tokenId: number): Promise<string> {
+    const res = await this.context.listingItemService.getListingItem(tokenId);
+    if (res.endingTime) {
+      return await this.context.auctionItemService.getHighestBid(res._id);
+    } else if (res.pricePerItem) {
+      return res.pricePerItem;
+    }
+    return '0';
   }
 }

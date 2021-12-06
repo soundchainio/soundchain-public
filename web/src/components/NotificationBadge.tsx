@@ -8,7 +8,7 @@ export const NotificationBadge = () => {
 
   useEffect(() => {
     fetchNotificationCount();
-  }, [router.pathname]);
+  }, [router.pathname, fetchNotificationCount]);
 
   return (
     <>

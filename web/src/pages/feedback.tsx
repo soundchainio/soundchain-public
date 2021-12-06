@@ -23,7 +23,7 @@ export default function FeedbackPage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <iframe
-        src="https://docs.google.com/forms/d/1r-P7fbvspXlBzy3khDUXOHsmMdxObo6ITlqRRP9dTo8/viewform?edit_requested=true"
+        src="https://docs.google.com/forms/d/e/1FAIpQLScmoMksAwl26GABnutNksgWOlfDGvfZbGeEqAiaSqIHo5sI9g/viewform?embedded=true"
         className="h-full w-full"
       />
     </Layout>

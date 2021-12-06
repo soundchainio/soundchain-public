@@ -1,10 +1,10 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
+import { ObjectId } from 'mongodb';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { Genre } from '../types/Genres';
 import { MuxAsset } from '../types/MuxAsset';
 import { NFTData } from '../types/NFTData';
 import { Model } from './Model';
-import { ObjectId } from 'mongodb';
 
 @ObjectType()
 export class Track extends Model {
@@ -68,6 +68,15 @@ export class Track extends Model {
 
   @prop()
   playbackCount: number;
+
+  @prop()
+  favoriteCount: number;
+
+  @prop()
+  price: number;
+
+  @prop()
+  saleType: string;
 
   @Field()
   playbackCountFormatted: string;

@@ -5,7 +5,7 @@ on:
     branches:
       - staging
     paths:
-      - "api/**"
+      - 'api/**'
 
 jobs:
   deploy-api:
@@ -45,6 +45,7 @@ jobs:
           ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY_STAGING }}
           MARKETPLACE_ADDRESS: ${{ secrets.MARKETPLACE_ADDRESS_STAGING }}
           NFT_ADDRESS: ${{ secrets.NFT_ADDRESS_STAGING }}
+          AUCTION_ADDRESS: ${{ secrets.AUCTION_ADDRESS_STAGING }}
           PINATA_API_KEY: ${{ secrets.PINATA_API_KEY_STAGING }}
           PINATA_API_SECRET: ${{ secrets.PINATA_API_SECRET_STAGING }}
           MUX_TOKEN_ID: ${{ secrets.MUX_TOKEN_ID_STAGING }}
@@ -53,6 +54,7 @@ jobs:
           MAGIC_PRIVATE_KEY: ${{ secrets.MAGIC_PRIVATE_KEY_STAGING }}
           MUX_DATA_ID: ${{ secrets.MUX_DATA_ID_STAGING }}
           MUX_DATA_SECRET: ${{ secrets.MUX_DATA_SECRET_STAGING }}
+          POLYGON_SCAN_API_KEY: ${{ secrets.POLYGON_SCAN_API_KEY_STAGING }}
       - name: Trigger migrate lambda function
         run: |
           aws lambda invoke --function-name soundchain-api-staging-migrate response.json

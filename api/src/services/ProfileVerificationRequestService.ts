@@ -36,6 +36,9 @@ export class ProfileVerificationRequestService extends ModelService<typeof Profi
       status: ProfileVerificationStatusType.PENDING,
     });
     await profileVerificationRequest.save();
+
+    this.context.notificationService.newVerificationRequest(profileVerificationRequest.id);
+
     return profileVerificationRequest;
   }
 
@@ -60,7 +63,14 @@ export class ProfileVerificationRequestService extends ModelService<typeof Profi
     return profileVerificationRequest;
   }
 
+  async getPendingRequestsBadgeNumber(): Promise<number> {
+    const count = await this.model.find({ status: ProfileVerificationStatusType.PENDING }).countDocuments();
+
+    return count;
+  }
+
   async removeProfileVerificationRequest(id: string): Promise<ProfileVerificationRequest> {
+    await this.context.notificationService.deleteNotificationsByVerificationRequestId(id);
     return this.model.findOneAndDelete({ _id: id }).exec();
   }
 }

@@ -1,6 +1,8 @@
+import { ObjectId } from 'mongodb';
 import { User, UserModel } from '../models/User';
 import { Context } from '../types/Context';
 import { DefaultWallet } from '../types/DefaultWallet';
+import { Role } from '../types/Role';
 import { ModelService } from './ModelService';
 
 export class UserService extends ModelService<typeof User> {
@@ -10,6 +12,10 @@ export class UserService extends ModelService<typeof User> {
 
   getUser(id: string): Promise<User> {
     return this.findOrFail(id);
+  }
+
+  async getUserByProfileId(profileId: string): Promise<User> {
+    return await UserModel.findOne({ profileId });
   }
 
   userExists(filter: Partial<User>): Promise<boolean> {
@@ -64,5 +70,16 @@ export class UserService extends ModelService<typeof User> {
   async getUserByHandle(handle: string): Promise<User> {
     const user = await this.model.findOne({ handle });
     return user;
+  }
+
+  async getAdminsProfileIds(): Promise<ObjectId[]> {
+    const admins = await this.model.find({
+      roles: {
+        $in: [Role.ADMIN],
+      },
+    });
+    const ids = admins.map(admin => new ObjectId(admin.profileId));
+
+    return ids;
   }
 }

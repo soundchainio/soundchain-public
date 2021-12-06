@@ -1,70 +1,20 @@
-import { ListingItem, ListingItemModel } from '../models/ListingItem';
-import { Context } from '../types/Context';
-import { ModelService } from './ModelService';
+import { AuctionItemModel } from '../models/AuctionItem';
+import { BuyNowItemModel } from '../models/BuyNowItem';
+import { ListingItemPayload } from '../types/ListingItemPayload';
+import { Service } from './Service';
 
-interface NewListingItem {
-  owner: string;
-  nft: string;
-  tokenId: number;
-  quantity: number;
-  pricePerItem: string;
-  startingTime: number;
-}
-
-export class ListingItemService extends ModelService<typeof ListingItem> {
-  constructor(context: Context) {
-    super(context, ListingItemModel);
-  }
-
-  async createListingItem(params: NewListingItem): Promise<ListingItem> {
-    const listingItem = new this.model(params);
-    await listingItem.save();
-    return listingItem;
-  }
-
-  async findListingItem(tokenId: number): Promise<ListingItem> {
-    const listingItem = await this.model.findOne({ tokenId, valid: true }).sort({ createdAt: -1 }).exec();
-    return listingItem;
-  }
-
-  async updateListingItem(tokenId: number, changes: Partial<ListingItem>): Promise<ListingItem> {
-    const listingItem = await this.model
-      .findOneAndUpdate({ tokenId, valid: true }, changes, { new: true })
-      .sort({ createdAt: -1 })
-      .exec();
-    return listingItem;
+export class ListingItemService extends Service {
+  async getListingItem(tokenId: number): Promise<ListingItemPayload> {
+    // we cant have lookup with uncorrelated queries, see https://docs.aws.amazon.com/documentdb/latest/developerguide/functional-differences.html#functional-differences.lookup
+    const auctionItem = await (await AuctionItemModel.findOne({ tokenId, valid: true }))?.toObject();
+    const buyNowItem = await (await BuyNowItemModel.findOne({ tokenId, valid: true }))?.toObject();
+    return { ...auctionItem, ...buyNowItem };
   }
 
   async wasListedBefore(tokenId: number): Promise<boolean> {
-    const listingItem = await this.model.findOne({ tokenId }).exec();
-    return !!listingItem;
-  }
-
-  async setNotValid(tokenId: number): Promise<ListingItem> {
-    const listingItem = await this.model.findOne({ tokenId }).sort({ createdAt: -1 }).exec();
-    listingItem.valid = false;
-    listingItem.save();
-    return listingItem;
-  }
-
-  async finishListing(tokenId: string, sellerWallet: string, buyerWaller: string, price: string): Promise<void> {
-    this.context.listingItemService.setNotValid(parseInt(tokenId));
-    this.context.trackService.setPendingNone(parseInt(tokenId));
-
-    const [sellerUser, buyerUser, track] = await Promise.all([
-      this.context.userService.getUserByWallet(sellerWallet),
-      this.context.userService.getUserByWallet(buyerWaller),
-      this.context.trackService.getTrackByTokenId(parseInt(tokenId)),
-    ]);
-    this.context.trackService.updateTrack(track._id, { profileId: buyerUser.profileId });
-    this.context.notificationService.notifyNFTSold({
-      sellerProfileId: sellerUser.profileId,
-      buyerProfileId: buyerUser.profileId,
-      price,
-      trackId: track._id,
-      trackName: track.title,
-      artist: track.artist,
-      artworkUrl: track.artworkUrl,
-    });
+    // we cant have lookup with uncorrelated queries, see https://docs.aws.amazon.com/documentdb/latest/developerguide/functional-differences.html#functional-differences.lookup
+    const auctionItem = await (await AuctionItemModel.findOne({ tokenId, valid: true }))?.toObject();
+    const buyNowItem = await (await BuyNowItemModel.findOne({ tokenId, valid: true }))?.toObject();
+    return !!auctionItem || !!buyNowItem;
   }
 }

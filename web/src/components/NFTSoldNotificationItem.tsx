@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { Matic } from 'icons/Matic';
-import { NftSoldNotification } from 'lib/graphql';
+import { NftSoldNotification, SellType } from 'lib/graphql';
 import NextLink from 'next/link';
 import React from 'react';
 import Asset from './Asset';
@@ -13,7 +13,7 @@ interface NFTSoldNotificationProps {
 }
 
 export const NFTSoldNotificationItem = ({
-  notification: { buyerName, createdAt, buyerPicture, price, trackId, trackName, artist, artworkUrl },
+  notification: { buyerName, createdAt, buyerPicture, price, trackId, trackName, artist, artworkUrl, sellType },
   index,
 }: NFTSoldNotificationProps) => {
   return (
@@ -26,9 +26,16 @@ export const NFTSoldNotificationItem = ({
           </div>
         </div>
         <div>
-          <div className="text-gray-100 text-sm items-center w-full inline-block">
-            <span className="font-semibold">{buyerName}</span> purchased your NFT:
-          </div>
+          {sellType === SellType.BuyNow && (
+            <div className="text-gray-100 text-sm items-center w-full inline-block">
+              <span className="font-semibold">{buyerName}</span> purchased your NFT:
+            </div>
+          )}
+          {sellType === SellType.Auction && (
+            <div className="text-gray-100 text-sm items-center w-full inline-block">
+              <span className="font-semibold">{buyerName}</span> won the auction:
+            </div>
+          )}
           <Timestamp small datetime={createdAt} className="text-sm" />
         </div>
       </div>

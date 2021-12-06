@@ -1,10 +1,9 @@
-mutation CreateListingItem($input: CreateListingItemInput!) {
-  createListingItem(input: $input) {
+mutation CreateBuyNowItem($input: CreateBuyNowItemInput!) {
+  createBuyNowItem(input: $input) {
     id
     owner
     nft
     tokenId
-    quantity
     pricePerItem
     startingTime
   }

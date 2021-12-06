@@ -79,20 +79,3 @@ export interface Events {
   ItemSold?: ItemSold;
   ItemUpdated?: ItemUpdated;
 }
-
-export interface Receipt {
-  blockHash: string;
-  blockNumber: number;
-  contractAddress?: string;
-  cumulativeGasUsed: number;
-  effectiveGasPrice: string;
-  from: string;
-  gasUsed: number;
-  logsBloom: string;
-  status: boolean;
-  to: string;
-  transactionHash: string;
-  transactionIndex: number;
-  type: string;
-  events: Events;
-}

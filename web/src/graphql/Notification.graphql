@@ -18,5 +18,14 @@ query Notification($id: String!) {
     ... on VerificationRequestNotification {
       ...VerificationRequestNotificationFields
     }
+    ... on NewVerificationRequestNotification {
+      ...NewVerificationRequestNotificationFields
+    }
+    ... on DeletedPostNotification {
+      ...DeletedPostNotificationFields
+    }
+    ... on DeletedCommentNotification {
+      ...DeletedCommentNotificationFields
+    }
   }
 }

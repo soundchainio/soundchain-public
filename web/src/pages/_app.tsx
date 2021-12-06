@@ -11,10 +11,10 @@ import { CreateModal } from 'components/modals/CreateModal';
 import { StateProvider } from 'contexts';
 import { AudioPlayerProvider } from 'hooks/useAudioPlayer';
 import { HideBottomNavBarProvider } from 'hooks/useHideBottomNavBar';
+import MagicProvider from 'hooks/useMagicContext';
 import WalletProvider from 'hooks/useWalletContext';
 import { ApolloProvider } from 'lib/apollo';
 import type { AppProps } from 'next/app';
-import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import Router from 'next/router';
 import NProgress from 'nprogress';
@@ -41,8 +41,6 @@ Router.events.on('routeChangeStart', NProgress.start);
 Router.events.on('routeChangeComplete', NProgress.done);
 Router.events.on('routeChangeError', NProgress.done);
 
-const MagicProvider = dynamic(() => import('hooks/useMagicContext'), { ssr: false });
-
 function SoundchainApp({ Component, pageProps }: AppProps) {
   return (
     <>
@@ -55,6 +53,20 @@ function SoundchainApp({ Component, pageProps }: AppProps) {
         <meta name="theme-color" content="#000000" />
         <Favicons />
         <link rel="manifest" href="/manifest.json"></link>
+        <script
+          async
+          src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_ANALYTICS_ID}`}
+        ></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', '${process.env.NEXT_PUBLIC_ANALYTICS_ID}');
+            `,
+          }}
+        />
       </Head>
       <ApolloProvider pageProps={pageProps}>
         <StateProvider>

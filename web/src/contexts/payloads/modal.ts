@@ -1,5 +1,6 @@
 import { ReactionType } from 'lib/graphql';
 import { AuthorActionsType } from 'types/AuthorActionsType';
+import { SaleType } from 'types/SaleType';
 
 export interface ShowNewPostPayload {
   show: boolean;
@@ -21,6 +22,7 @@ export interface ShowAuthorActionsPayload {
   showAuthorActions: boolean;
   authorActionsType: AuthorActionsType;
   authorActionsId: string;
+  showOnlyDeleteOption?: boolean;
 }
 
 export interface ShowReactionsPayload {
@@ -35,12 +37,14 @@ export interface ShowCreatePayload {
 
 export interface ShowApprove {
   show: boolean;
+  type: SaleType;
 }
 
 export interface ShowRemoveListing {
   show: boolean;
   tokenId: number;
   trackId: string;
+  saleType: SaleType;
 }
 
 export interface ShowAudioPlayerPayload {
@@ -71,4 +75,5 @@ export type ModalPayload =
   | ShowTransferConfirmationPayload
   | SetRecipientWalletAddress
   | SetAmountToTransfer
-  | ShowRemoveListing;
+  | ShowRemoveListing
+  | ShowApprove;

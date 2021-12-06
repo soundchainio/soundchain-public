@@ -1,5 +1,7 @@
+import { Post } from '@typegoose/typegoose';
 import { PaginateResult } from '../db/pagination/paginate';
 import { Comment, CommentModel } from '../models/Comment';
+import { PostModel } from '../models/Post';
 import { Context } from '../types/Context';
 import { PageInput } from '../types/PageInput';
 import { SortOrder } from '../types/SortOrder';
@@ -39,11 +41,29 @@ export class CommentService extends ModelService<typeof Comment> {
   }
 
   async deleteComment(params: DeleteCommentParams): Promise<Comment> {
-    return await CommentModel.updateOne(
+    return await CommentModel.findOneAndUpdate(
       { _id: params.commentId, profileId: params.profileId },
       { deleted: true },
       { new: true },
     );
+  }
+
+  async deleteCommentByAdmin(params: DeleteCommentParams): Promise<Comment> {
+    const deletedComment = await CommentModel.findOneAndUpdate(
+      { _id: params.commentId },
+      { deleted: true },
+      { new: true },
+    );
+
+    const post = await PostModel.findById({ _id: deletedComment.postId });
+
+    this.context.notificationService.notifyCommentDeletedByAdmin({
+      comment: deletedComment,
+      post: post,
+      authorProfileId: deletedComment.profileId.toString(),
+    });
+    
+    return deletedComment;
   }
 
   countComments(postId: string): Promise<number> {

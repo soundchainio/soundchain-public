@@ -28,8 +28,8 @@ export const Posts = ({ className, profileId }: PostsProps) => {
 
   return (
     <div className={classNames('space-y-2', className)}>
-      {data.posts.nodes.map(({ id }) => (
-        <Post key={id} postId={id} />
+      {data.posts.nodes.map(post => (
+        <Post key={post.id} post={post} />
       ))}
     </div>
   );

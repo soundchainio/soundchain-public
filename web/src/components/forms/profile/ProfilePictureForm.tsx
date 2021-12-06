@@ -37,7 +37,8 @@ const defaultProfilePictures = [
 export const ProfilePictureForm = ({ afterSubmit, submitText, submitProps }: ProfilePictureFormProps) => {
   const me = useMe();
   const [defaultPicture, setDefaultPicture] = useState<string | null>(null);
-  const [updateProfilePicture, { loading }] = useUpdateProfilePictureMutation();
+  const [updateProfilePicture] = useUpdateProfilePictureMutation();
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const picture = me?.profile.profilePicture;
@@ -67,38 +68,45 @@ export const ProfilePictureForm = ({ afterSubmit, submitText, submitProps }: Pro
 
   return (
     <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={onSubmit}>
-      <Form className="flex flex-1 flex-col">
-        <div className="flex-grow space-y-8">
-          <div className="flex flex-col">
-            <Label textSize="base">Custom Profile Photo:</Label>
-            <ImageUploadField name="profilePicture" className="mt-8" rounded>
-              Upload Profile Photo
-            </ImageUploadField>
-          </div>
-          <div className="flex flex-col space-y-8">
-            <Label textSize="base">Default Profile Photos:</Label>
-            <div className="grid grid-cols-4 gap-4">
-              {defaultProfilePictures.map(picture => (
-                <div
-                  key={picture}
-                  className={classNames(
-                    'flex justify-center justify-self-center rounded-full w-[60px] h-[60px] cursor-pointer',
-                    defaultPicture === picture && 'ring-4 ring-white',
-                  )}
-                  onClick={() => setDefaultPicture(picture)}
-                >
-                  <Image alt="Default profile picture" src={picture} width={60} height={60} />
-                </div>
-              ))}
+      {({ values: { profilePicture } }) => (
+        <Form className="flex flex-1 flex-col">
+          <div className="flex-grow space-y-8">
+            <div className="flex flex-col">
+              <Label textSize="base">Custom Profile Photo:</Label>
+              <ImageUploadField
+                name="profilePicture"
+                className={`${loading || profilePicture ? 'self-center w-14 ' : ''}cursor-pointer mt-8`}
+                onUpload={setLoading}
+                rounded
+              >
+                Upload Profile Photo
+              </ImageUploadField>
+            </div>
+            <div className="flex flex-col space-y-8">
+              <Label textSize="base">Default Profile Photos:</Label>
+              <div className="grid grid-cols-4 gap-4">
+                {defaultProfilePictures.map(picture => (
+                  <div
+                    key={picture}
+                    className={classNames(
+                      'flex justify-center justify-self-center rounded-full w-[60px] h-[60px] cursor-pointer',
+                      defaultPicture === picture && 'ring-4 ring-white',
+                    )}
+                    onClick={() => setDefaultPicture(picture)}
+                  >
+                    <Image alt="Default profile picture" src={picture} width={60} height={60} />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-        <div className="flex flex-col">
-          <Button type="submit" disabled={loading} variant="outline" className="h-12" {...submitProps}>
-            {submitText}
-          </Button>
-        </div>
-      </Form>
+          <div className="flex flex-col">
+            <Button type="submit" disabled={loading} variant="outline" className="h-12" {...submitProps}>
+              {submitText}
+            </Button>
+          </div>
+        </Form>
+      )}
     </Formik>
   );
 };

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { InstanceWithExtensions, MagicSDKExtensionsOption, SDKBase } from '@magic-sdk/provider';
 import { Magic } from 'magic-sdk';
+import { InstanceWithExtensions, MagicSDKExtensionsOption, SDKBase } from '@magic-sdk/provider';
+import { OAuthExtension } from '@magic-ext/oauth';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import Web3 from 'web3';
 import { testNetwork } from '../lib/blockchainNetworks';
@@ -9,7 +10,7 @@ import { useMe } from './useMe';
 const magicPublicKey = process.env.NEXT_PUBLIC_MAGIC_KEY || '';
 
 interface MagicContextData {
-  magic: InstanceWithExtensions<SDKBase, MagicSDKExtensionsOption<string>>;
+  magic: InstanceWithExtensions<SDKBase, OAuthExtension[]>;
   web3: Web3;
   account: string | undefined;
   balance: string | undefined;
@@ -30,6 +31,7 @@ const createMagic = (magicPublicKey: string) => {
           rpcUrl: testNetwork.rpc,
           chainId: testNetwork.id,
         },
+        extensions: [new OAuthExtension()],
       })
     : null;
 };
@@ -37,7 +39,7 @@ const createMagic = (magicPublicKey: string) => {
 export const magic = createMagic(magicPublicKey)!;
 
 // Create Web3 instance
-const createWeb3 = (magic: false | InstanceWithExtensions<SDKBase, MagicSDKExtensionsOption<string>>) => {
+const createWeb3 = (magic: false | InstanceWithExtensions<SDKBase, MagicSDKExtensionsOption<string>> | InstanceWithExtensions<SDKBase, OAuthExtension[]>) => {
   return magic ? new Web3(magic.rpcProvider) : null;
 };
 

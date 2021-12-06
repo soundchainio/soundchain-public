@@ -1,5 +1,5 @@
-import { Button } from 'components/Button';
-import { useMe } from 'hooks/useMe';
+import { Button, ButtonVariant } from 'components/Button';
+import { TimeCounter } from 'components/TimeCounter';
 import { CheckmarkFilled } from 'icons/CheckmarkFilled';
 import { Matic } from 'icons/Matic';
 import NextLink from 'next/link';
@@ -8,82 +8,162 @@ import React from 'react';
 
 interface HandleNFTProps {
   isOwner: boolean;
-  isForSale: boolean;
   canList: boolean;
-  price: string | undefined;
+  price: string | undefined | null;
+  isAuction: boolean;
+  isBuyNow: boolean;
+  canComplete: boolean;
+  auctionIsOver: boolean;
+  countBids: number;
+  endingDate: Date;
 }
 
-export const HandleNFT = ({ isOwner, isForSale, price, canList }: HandleNFTProps) => {
+export const HandleNFT = ({
+  isOwner,
+  price,
+  canList,
+  isAuction,
+  isBuyNow,
+  canComplete,
+  auctionIsOver,
+  countBids,
+  endingDate,
+}: HandleNFTProps) => {
   const router = useRouter();
-  const me = useMe();
 
-  const handleListButton = () => {
-    me ? router.push(`${router.asPath}/list`) : router.push('/login');
-  };
-
-  if (isOwner && isForSale && price) {
-    return (
-      <div className="w-full bg-black text-white flex items-center py-3">
-        <div className="flex flex-col flex-1 ml-4">
-          <div className="text-md flex items-center font-bold gap-1">
-            <Matic />
-            <span>{price}</span>
-            <span className="text-xs text-gray-80">MATIC</span>
-          </div>
-        </div>
-        <div className="flex-1 flex items-center justify-center">
-          <NextLink href={`${router.asPath}/edit`}>
-            <Button variant="edit-listing">EDIT LISTING</Button>
-          </NextLink>
-        </div>
-      </div>
-    );
-  } else if (isForSale && price) {
-    return (
-      <div className="w-full bg-black text-white flex items-center py-3">
-        <div className="flex flex-col flex-1 ml-4">
-          <div className="text-md flex items-center font-bold gap-1">
-            <Matic />
-            <span>{price}</span>
-            <span className="text-xs text-gray-80">MATIC</span>
-          </div>
-        </div>
-        <div className="flex-1 flex items-center justify-center">
-          <NextLink href={`${router.asPath}/buy`}>
-            <Button variant="buy-nft">BUY NFT</Button>
-          </NextLink>
-        </div>
-      </div>
-    );
-  } else if (!canList) {
-    return (
-      <div className="w-full bg-black text-white flex items-center py-3">
-        <div className="flex items-center flex-1 gap-2 text-sm font-bold pl-4">
+  if (isOwner) {
+    if (!canList) {
+      return (
+        <ListingAction href={`/get-verified`} action="GET VERIFIED">
           You must be verified in order to sell NFT’s.
-        </div>
-        <div className="flex-1 flex items-center justify-center">
-          <NextLink href={'/get-verified'}>
-            <Button variant="list-nft">
-              <div className="px-4 font-bold">GET VERIFIED</div>
-            </Button>
-          </NextLink>
-        </div>
-      </div>
-    );
-  } else if (isOwner) {
+        </ListingAction>
+      );
+    }
+    if (isBuyNow || (isAuction && !auctionIsOver)) {
+      return (
+        <ListedAction
+          href={isBuyNow ? `${router.asPath}/edit/buy-now` : `${router.asPath}/edit/auction`}
+          price={price}
+          action="EDIT LISTING"
+          variant="edit-listing"
+        />
+      );
+    }
+    if (isAuction && auctionIsOver) {
+      return null;
+    }
     return (
-      <div className="w-full bg-black text-white flex items-center py-3">
-        <div className="flex items-center flex-1 gap-2 text-sm font-bold pl-4">
-          <CheckmarkFilled />
-          You own this NFT
-        </div>
-        <div className="flex-1 flex items-center justify-center">
-          <Button variant="list-nft" onClick={handleListButton}>
-            <div className="px-4 font-bold">LIST NFT</div>
-          </Button>
-        </div>
-      </div>
+      <ListingAction href={`${router.asPath}/list`} action="LIST NFT">
+        <CheckmarkFilled />
+        You own this NFT
+      </ListingAction>
     );
+    // not the owner
+  } else {
+    if (price && isBuyNow) {
+      return <ListedAction href={`${router.asPath}/buy-now`} price={price} action="BUY NFT" variant="buy-nft" />;
+    }
+    if (price && isAuction && !auctionIsOver) {
+      return (
+        <ListedAction
+          href={`${router.asPath}/place-bid`}
+          countBids={countBids}
+          endingDate={endingDate}
+          price={price}
+          action="PLACE BID"
+          variant="buy-nft"
+        />
+      );
+    }
+    if (canComplete && isAuction) {
+      return (
+        <ListedAction
+          href={`${router.asPath}/complete-auction`}
+          price={price}
+          action="COMPLETE AUCTION"
+          variant="buy-nft"
+        />
+      );
+    }
   }
   return null;
+};
+
+interface ListingActionProps {
+  href: string;
+  action: string;
+}
+
+const ListingAction = ({ href, action, children }: React.PropsWithChildren<ListingActionProps>) => {
+  return (
+    <div className="w-full bg-black text-white flex items-center py-3">
+      <div className="flex items-center flex-1 gap-2 text-sm font-bold pl-4">{children}</div>
+      <div className="flex-1 flex items-center justify-center">
+        <NextLink href={href}>
+          <Button variant="list-nft">
+            <div className="px-4 font-bold">{action}</div>
+          </Button>
+        </NextLink>
+      </div>
+    </div>
+  );
+};
+
+interface ListedActionProps {
+  href: string;
+  price: string | undefined | null;
+  action: string;
+  variant: ButtonVariant;
+  countBids?: number;
+  endingDate?: Date;
+}
+
+const ListedAction = ({ href, price, action, variant, countBids, endingDate }: ListedActionProps) => {
+  return (
+    <div className="w-full bg-black text-white flex items-center py-3">
+      <div className="flex flex-col flex-1 ml-4">
+        <div className="text-md flex items-center font-bold gap-1">
+          <Matic />
+          <span>{price}</span>
+          <span className="text-xs text-gray-80">MATIC</span>
+        </div>
+      </div>
+      {endingDate && (
+        <div className="flex flex-col text-xs items-center ">
+          {countBids != 0 && <span className="text-blue-400 font-bold">({countBids} bids)</span>}
+          <TimeCounter date={endingDate}>
+            {(days, hours, minutes, seconds) => (
+              <div>
+                {days !== 0 && (
+                  <>
+                    <span className="text-gray-80">{days}D </span>
+                  </>
+                )}
+                {hours !== 0 && (
+                  <>
+                    <span className="text-gray-80">{hours}H </span>
+                  </>
+                )}
+                {minutes !== 0 && (
+                  <>
+                    <span className="text-gray-80">{minutes}M </span>
+                  </>
+                )}
+                {seconds !== 0 && (
+                  <>
+                    <span className="text-gray-80">{seconds}S</span>
+                  </>
+                )}
+              </div>
+            )}
+          </TimeCounter>
+        </div>
+      )}
+      <div className="flex-1 flex items-center justify-center">
+        <NextLink href={href}>
+          <Button variant={variant}>{action}</Button>
+        </NextLink>
+      </div>
+    </div>
+  );
 };

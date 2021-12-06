@@ -46,6 +46,7 @@ jobs:
           ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY_DEVELOP }}
           MARKETPLACE_ADDRESS: ${{ secrets.MARKETPLACE_ADDRESS_DEVELOP }}
           NFT_ADDRESS: ${{ secrets.NFT_ADDRESS_DEVELOP }}
+          AUCTION_ADDRESS: ${{ secrets.AUCTION_ADDRESS_DEVELOP }}
           PINATA_API_KEY: ${{ secrets.PINATA_API_KEY_DEVELOP }}
           PINATA_API_SECRET: ${{ secrets.PINATA_API_SECRET_DEVELOP }}
           MUX_TOKEN_ID: ${{ secrets.MUX_TOKEN_ID_DEVELOP }}
@@ -54,6 +55,7 @@ jobs:
           MAGIC_PRIVATE_KEY: ${{ secrets.MAGIC_PRIVATE_KEY_DEVELOP }}
           MUX_DATA_ID: ${{ secrets.MUX_DATA_ID_DEVELOP }}
           MUX_DATA_SECRET: ${{ secrets.MUX_DATA_SECRET_DEVELOP }}
+          POLYGON_SCAN_API_KEY: ${{ secrets.POLYGON_SCAN_API_KEY_DEVELOP }}
       - name: Trigger migrate lambda function
         run: |
           aws lambda invoke --function-name soundchain-api-develop-migrate response.json

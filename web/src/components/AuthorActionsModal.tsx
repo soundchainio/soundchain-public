@@ -11,7 +11,7 @@ const baseClasses =
   'fixed w-screen h-full bottom-0 duration-500 bg-opacity-75 ease-in-out bg-black transform-gpu transform';
 
 export const AuthorActionsModal = () => {
-  const { showAuthorActions, authorActionsId, authorActionsType } = useModalState();
+  const { showAuthorActions, authorActionsId, authorActionsType, showOnlyDeleteOption } = useModalState();
   const { dispatchShowAuthorActionsModal, dispatchShowPostModal, dispatchSetEditPostId } = useModalDispatch();
   const router = useRouter();
 
@@ -65,9 +65,11 @@ export const AuthorActionsModal = () => {
         <div className="flex flex-col h-full">
           <div className="flex-1" onClick={onOutsideClick}></div>
           <div className="text-white p-4">
-            <EditButton className="p-4 mb-4" onClick={onEdit}>
-              Edit {authorActionsType}
-            </EditButton>
+            {!showOnlyDeleteOption && (
+              <EditButton className="p-4 mb-4" onClick={onEdit}>
+                Edit {authorActionsType}
+              </EditButton>
+            )}
             <DeleteButton className="p-4" onClick={onDelete}>
               Delete {authorActionsType}
             </DeleteButton>

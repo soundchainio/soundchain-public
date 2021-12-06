@@ -8,8 +8,10 @@ import { Profile, ProfileModel } from '../models/Profile';
 import { Reaction } from '../models/Reaction';
 import { CommentNotificationMetadata } from '../types/CommentNotificationMetadata';
 import { Context } from '../types/Context';
-import { FinishListingItemInput } from '../types/FinishListingItemInput';
+import { FinishBuyNowItemInput } from '../types/FinishBuyNowItemInput';
 import { NewPostNotificationMetadata } from '../types/NewPostNotificationMetadata';
+import { NewVerificationRequestNotificationMetadata } from '../types/NewVerificationRequestNotificationMetadata';
+import { DeletedPostNotificationMetadata } from '../types/DeletedPostNotificationMetadata';
 import { NotificationType } from '../types/NotificationType';
 import { NotificationUnion } from '../types/NotificationUnion';
 import { PageInput } from '../types/PageInput';
@@ -71,7 +73,7 @@ export class NotificationService extends ModelService<typeof Notification> {
     const { displayName: followerName, profilePicture: followerPicture } = await this.context.profileService.getProfile(
       followerId,
     );
-    const followerHandle= await this.context.profileService.getUserHandle(followerId)
+    const followerHandle = await this.context.profileService.getUserHandle(followerId);
     const notification = new NotificationModel({
       type: NotificationType.Follower,
       profileId,
@@ -94,7 +96,8 @@ export class NotificationService extends ModelService<typeof Notification> {
     artist,
     artworkUrl,
     trackName,
-  }: Omit<FinishListingItemInput, 'tokenId'>): Promise<void> {
+    sellType,
+  }: Omit<FinishBuyNowItemInput, 'tokenId'>): Promise<void> {
     const { displayName: buyerName, profilePicture: buyerPicture } = await this.context.profileService.getProfile(
       buyerProfileId,
     );
@@ -110,6 +113,7 @@ export class NotificationService extends ModelService<typeof Notification> {
         artist,
         artworkUrl,
         trackName,
+        sellType,
       },
     });
     await notification.save();
@@ -180,5 +184,61 @@ export class NotificationService extends ModelService<typeof Notification> {
 
     await notification.save();
     await this.incrementNotificationCount(profileId);
+  }
+
+  async newVerificationRequest(verificationRequestId: string): Promise<void> {
+    const adminsIds = await this.context.userService.getAdminsProfileIds();
+    const metadata: NewVerificationRequestNotificationMetadata = {
+      verificationRequestId,
+    };
+
+    const notifications = adminsIds.map(
+      profileId => new this.model({ type: NotificationType.NewVerificationRequest, profileId, metadata }),
+    );
+
+    await ProfileModel.updateMany({ _id: { $in: adminsIds } }, { $inc: { unreadNotificationCount: 1 } });
+    await this.model.insertMany(notifications);
+  }
+
+  async deleteNotificationsByVerificationRequestId(verificationRequestId: string): Promise<void> {
+    await this.model.deleteMany({ 'metadata.verificationRequestId': verificationRequestId });
+  }
+
+  async notifyPostDeletedByAdmin(post: Post): Promise<void> {
+    const { profileId } = post
+    const authorProfile = await this.context.profileService.getProfile(profileId);
+    const metadata: DeletedPostNotificationMetadata = {
+      authorName: authorProfile.displayName,
+      authorPicture: authorProfile.profilePicture,
+      postBody: post.body,
+      postId: post._id,
+      postLink: post.mediaLink,
+      trackId: post.trackId,
+    };
+    const notification = new NotificationModel({ type: NotificationType.DeletedPost, profileId, metadata })
+    await notification.save();
+    await this.incrementNotificationCount(profileId);
+  }
+
+  async notifyCommentDeletedByAdmin({ comment, post, authorProfileId }: CommentNotificationParams): Promise<void> {
+    const authorProfile = await this.context.profileService.getProfile(authorProfileId);
+    const { body: commentBody, _id: commentId } = comment;
+    const { _id: postId } = post;
+
+    const { displayName: authorName, profilePicture: authorPicture } = authorProfile;
+    const metadata: CommentNotificationMetadata = {
+      authorName,
+      commentBody,
+      postId,
+      commentId,
+      authorPicture,
+    };
+    const notification = new NotificationModel({
+      type: NotificationType.DeletedComment,
+      profileId: authorProfileId,
+      metadata,
+    });
+    await notification.save();
+    await this.incrementNotificationCount(authorProfileId);
   }
 }

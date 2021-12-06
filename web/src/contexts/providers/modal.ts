@@ -3,6 +3,7 @@ import { initialModalState, ModalState } from 'contexts/reducers/modal';
 import { ReactionType } from 'lib/graphql';
 import { useContext } from 'react';
 import { AuthorActionsType } from 'types/AuthorActionsType';
+import { SaleType } from 'types/SaleType';
 import { store } from '..';
 
 export const useModalState = (): ModalState => {
@@ -25,10 +26,11 @@ export const useModalDispatch = () => {
       showAuthorActions: boolean,
       authorActionsType: AuthorActionsType,
       authorActionsId: string,
+      showOnlyDeleteOption = false,
     ) =>
       dispatch({
         type: ModalActionTypes.SHOW_CONTEXT_MENU,
-        payload: { showAuthorActions, authorActionsType, authorActionsId },
+        payload: { showAuthorActions, authorActionsType, authorActionsId, showOnlyDeleteOption },
       }),
     dispatchReactionsModal: (show: boolean, postId?: string, top?: ReactionType[], total?: number) =>
       dispatch({
@@ -44,8 +46,9 @@ export const useModalDispatch = () => {
       dispatch({ type: ModalActionTypes.SET_RECIPIENT_WALLET_ADDRESS, payload: { address } }),
     dispatchSetAmountToTransfer: (amount: string) =>
       dispatch({ type: ModalActionTypes.SET_AMOUNT_TO_TRANSFER, payload: { amount } }),
-    dispatchShowApproveModal: (show: boolean) => dispatch({ type: ModalActionTypes.SHOW_APPROVE, payload: { show } }),
-    dispatchShowRemoveListingModal: (show: boolean, tokenId: number, trackId: string) =>
-      dispatch({ type: ModalActionTypes.SHOW_REMOVE_LISTING, payload: { show, tokenId, trackId } }),
+    dispatchShowApproveModal: (show: boolean, type: SaleType) =>
+      dispatch({ type: ModalActionTypes.SHOW_APPROVE, payload: { show, type } }),
+    dispatchShowRemoveListingModal: (show: boolean, tokenId: number, trackId: string, saleType: SaleType) =>
+      dispatch({ type: ModalActionTypes.SHOW_REMOVE_LISTING, payload: { show, tokenId, trackId, saleType } }),
   };
 };

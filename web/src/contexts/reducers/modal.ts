@@ -17,6 +17,7 @@ import {
 } from 'contexts/payloads/modal';
 import { ReactionType } from 'lib/graphql';
 import { AuthorActionsType } from 'types/AuthorActionsType';
+import { SaleType } from 'types/SaleType';
 
 export interface ModalState {
   showNewPost: boolean;
@@ -26,6 +27,7 @@ export interface ModalState {
   showAuthorActions: boolean;
   authorActionsType?: AuthorActionsType;
   authorActionsId: string;
+  showOnlyDeleteOption?: boolean;
   showUnderDevelopment: boolean;
   showCreate: boolean;
   showAudioPlayer: boolean;
@@ -42,6 +44,8 @@ export interface ModalState {
   showTransferConfirmation: boolean;
   walletRecipient?: string;
   amountToTransfer?: string;
+  type?: SaleType;
+  saleType?: SaleType;
 }
 
 export const initialModalState = {
@@ -52,6 +56,7 @@ export const initialModalState = {
   showAuthorActions: false,
   authorActionsType: undefined,
   authorActionsId: '',
+  showOnlyDeleteOption: false,
   showUnderDevelopment: false,
   showCreate: false,
   showAudioPlayer: false,
@@ -66,6 +71,7 @@ export const initialModalState = {
   showTransferConfirmation: false,
   walletRecipient: undefined,
   amountToTransfer: undefined,
+  type: undefined,
 };
 
 export const modalReducer = (state: ModalState, action: Action) => {
@@ -93,6 +99,7 @@ export const modalReducer = (state: ModalState, action: Action) => {
         anyModalOpened: (action.payload as ShowAuthorActionsPayload).showAuthorActions,
         authorActionsType: (action.payload as ShowAuthorActionsPayload).authorActionsType,
         authorActionsId: (action.payload as ShowAuthorActionsPayload).authorActionsId,
+        showOnlyDeleteOption: (action.payload as ShowAuthorActionsPayload).showOnlyDeleteOption,
       };
     case ModalActionTypes.SHOW_UNDER_DEVELOPMENT:
       return {
@@ -128,6 +135,7 @@ export const modalReducer = (state: ModalState, action: Action) => {
       return {
         ...state,
         showApprove: (action.payload as ShowApprove).show,
+        type: (action.payload as ShowApprove).type,
         anyModalOpened: (action.payload as ShowApprove).show,
       };
     case ModalActionTypes.SHOW_REMOVE_LISTING:
@@ -136,6 +144,7 @@ export const modalReducer = (state: ModalState, action: Action) => {
         showRemoveListing: (action.payload as ShowRemoveListing).show,
         tokenId: (action.payload as ShowRemoveListing).tokenId,
         trackId: (action.payload as ShowRemoveListing).trackId,
+        saleType: (action.payload as ShowRemoveListing).saleType,
         anyModalOpened: (action.payload as ShowRemoveListing).show,
       };
     case ModalActionTypes.SHOW_AUDIO_PLAYER:
