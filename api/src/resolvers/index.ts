@@ -3,6 +3,8 @@ import { BuyNowItemResolver } from './BuyNowItemResolver';
 import { ChatResolver } from './ChatResolver';
 import { CommentNotificationResolver } from './CommentNotificationResolver';
 import { CommentResolver } from './CommentResolver';
+import { DeletedCommentNotificationResolver } from './DeletedCommentNotificationResolver';
+import { DeletedPostNotificationResolver } from './DeletedPostNotificationResolver';
 import { ExploreResolver } from './ExploreResolver';
 import { FeedResolver } from './FeedResolver';
 import { FollowerNotificationResolver } from './FollowerNotificationResolver';
@@ -31,6 +33,7 @@ export const resolvers = [
   BuyNowItemResolver,
   ChatResolver,
   CommentNotificationResolver,
+  DeletedCommentNotificationResolver,
   CommentResolver,
   ExploreResolver,
   FeedResolver,
@@ -40,6 +43,7 @@ export const resolvers = [
   MessageResolver,
   MintingRequestResolver,
   NewPostNotificationResolver,
+  DeletedPostNotificationResolver,
   NFTSoldNotificationResolver,
   NotificationResolver,
   PinningResolver,

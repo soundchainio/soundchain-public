@@ -1,0 +1,15 @@
+fragment DeletedPostNotificationFields on DeletedPostNotification {
+  id
+  type
+  authorName
+  authorPicture
+  body
+  link
+  previewBody
+  previewLink
+  createdAt
+  track {
+    title
+    playbackUrl
+  }
+}

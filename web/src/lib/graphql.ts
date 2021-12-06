@@ -270,6 +270,33 @@ export type DeleteTrackInput = {
   trackId: Scalars['String'];
 };
 
+export type DeletedCommentNotification = {
+  __typename?: 'DeletedCommentNotification';
+  type: NotificationType;
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  id: Scalars['String'];
+  authorName: Scalars['String'];
+  authorPicture: Maybe<Scalars['String']>;
+  body: Scalars['String'];
+  previewBody: Scalars['String'];
+  link: Scalars['String'];
+};
+
+export type DeletedPostNotification = {
+  __typename?: 'DeletedPostNotification';
+  type: NotificationType;
+  createdAt: Scalars['DateTime'];
+  id: Scalars['String'];
+  authorName: Scalars['String'];
+  authorPicture: Maybe<Scalars['String']>;
+  body: Scalars['String'];
+  previewBody: Scalars['String'];
+  previewLink: Maybe<Scalars['String']>;
+  link: Scalars['String'];
+  track: Maybe<Track>;
+};
+
 export type ExplorePayload = {
   __typename?: 'ExplorePayload';
   profiles: Array<Profile>;
@@ -726,7 +753,7 @@ export type NewVerificationRequestNotification = {
   verificationRequestId: Scalars['String'];
 };
 
-export type Notification = CommentNotification | ReactionNotification | FollowerNotification | NewPostNotification | NftSoldNotification | VerificationRequestNotification | NewVerificationRequestNotification;
+export type Notification = CommentNotification | ReactionNotification | FollowerNotification | NewPostNotification | NftSoldNotification | VerificationRequestNotification | NewVerificationRequestNotification | DeletedPostNotification | DeletedCommentNotification;
 
 export type NotificationConnection = {
   __typename?: 'NotificationConnection';
@@ -741,7 +768,9 @@ export enum NotificationType {
   NewPost = 'NewPost',
   NftSold = 'NFTSold',
   VerificationRequestUpdate = 'VerificationRequestUpdate',
-  NewVerificationRequest = 'NewVerificationRequest'
+  NewVerificationRequest = 'NewVerificationRequest',
+  DeletedPost = 'DeletedPost',
+  DeletedComment = 'DeletedComment'
 }
 
 export type PageInfo = {
@@ -1721,6 +1750,20 @@ export type DeleteTrackOnErrorMutation = (
   ) }
 );
 
+export type DeletedCommentNotificationFieldsFragment = (
+  { __typename?: 'DeletedCommentNotification' }
+  & Pick<DeletedCommentNotification, 'id' | 'type' | 'body' | 'previewBody' | 'link' | 'createdAt' | 'authorName' | 'authorPicture'>
+);
+
+export type DeletedPostNotificationFieldsFragment = (
+  { __typename?: 'DeletedPostNotification' }
+  & Pick<DeletedPostNotification, 'id' | 'type' | 'authorName' | 'authorPicture' | 'body' | 'link' | 'previewBody' | 'previewLink' | 'createdAt'>
+  & { track: Maybe<(
+    { __typename?: 'Track' }
+    & Pick<Track, 'title' | 'playbackUrl'>
+  )> }
+);
+
 export type ExploreQueryVariables = Exact<{
   search?: Maybe<Scalars['String']>;
 }>;
@@ -2060,6 +2103,12 @@ export type NotificationQuery = (
   ) | (
     { __typename?: 'NewVerificationRequestNotification' }
     & NewVerificationRequestNotificationFieldsFragment
+  ) | (
+    { __typename?: 'DeletedPostNotification' }
+    & DeletedPostNotificationFieldsFragment
+  ) | (
+    { __typename?: 'DeletedCommentNotification' }
+    & DeletedCommentNotificationFieldsFragment
   ) }
 );
 
@@ -2104,6 +2153,12 @@ export type NotificationsQuery = (
     ) | (
       { __typename?: 'NewVerificationRequestNotification' }
       & NewVerificationRequestNotificationFieldsFragment
+    ) | (
+      { __typename?: 'DeletedPostNotification' }
+      & DeletedPostNotificationFieldsFragment
+    ) | (
+      { __typename?: 'DeletedCommentNotification' }
+      & DeletedCommentNotificationFieldsFragment
     )> }
   ) }
 );
@@ -2804,6 +2859,35 @@ export const CommentNotificationFieldsFragmentDoc = gql`
   createdAt
   authorName
   authorPicture
+}
+    `;
+export const DeletedCommentNotificationFieldsFragmentDoc = gql`
+    fragment DeletedCommentNotificationFields on DeletedCommentNotification {
+  id
+  type
+  body
+  previewBody
+  link
+  createdAt
+  authorName
+  authorPicture
+}
+    `;
+export const DeletedPostNotificationFieldsFragmentDoc = gql`
+    fragment DeletedPostNotificationFields on DeletedPostNotification {
+  id
+  type
+  authorName
+  authorPicture
+  body
+  link
+  previewBody
+  previewLink
+  createdAt
+  track {
+    title
+    playbackUrl
+  }
 }
     `;
 export const FollowerNotificationFieldsFragmentDoc = gql`
@@ -4428,6 +4512,12 @@ export const NotificationDocument = gql`
     ... on NewVerificationRequestNotification {
       ...NewVerificationRequestNotificationFields
     }
+    ... on DeletedPostNotification {
+      ...DeletedPostNotificationFields
+    }
+    ... on DeletedCommentNotification {
+      ...DeletedCommentNotificationFields
+    }
   }
 }
     ${CommentNotificationFieldsFragmentDoc}
@@ -4436,7 +4526,9 @@ ${FollowerNotificationFieldsFragmentDoc}
 ${NewPostNotificationFieldsFragmentDoc}
 ${NftSoldNotificationFieldsFragmentDoc}
 ${VerificationRequestNotificationFieldsFragmentDoc}
-${NewVerificationRequestNotificationFieldsFragmentDoc}`;
+${NewVerificationRequestNotificationFieldsFragmentDoc}
+${DeletedPostNotificationFieldsFragmentDoc}
+${DeletedCommentNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationQuery__
@@ -4525,6 +4617,12 @@ export const NotificationsDocument = gql`
       ... on NewVerificationRequestNotification {
         ...NewVerificationRequestNotificationFields
       }
+      ... on DeletedPostNotification {
+        ...DeletedPostNotificationFields
+      }
+      ... on DeletedCommentNotification {
+        ...DeletedCommentNotificationFields
+      }
     }
   }
 }
@@ -4534,7 +4632,9 @@ ${FollowerNotificationFieldsFragmentDoc}
 ${NewPostNotificationFieldsFragmentDoc}
 ${NftSoldNotificationFieldsFragmentDoc}
 ${VerificationRequestNotificationFieldsFragmentDoc}
-${NewVerificationRequestNotificationFieldsFragmentDoc}`;
+${NewVerificationRequestNotificationFieldsFragmentDoc}
+${DeletedPostNotificationFieldsFragmentDoc}
+${DeletedCommentNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationsQuery__
