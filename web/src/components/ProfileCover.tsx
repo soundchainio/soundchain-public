@@ -15,7 +15,12 @@ export const ProfileCover = ({ coverPicture, className }: ProfileCoverProps) => 
       {isDefault ? (
         <VantaEffectContainer effectName={effectName as string} />
       ) : (
-        <Image src={coverPicture} alt="Cover pic" layout="fill" objectFit="cover" />
+        <Image
+          src={coverPicture || '/default-pictures/cover/fog.jpeg'}
+          alt="Cover pic"
+          layout="fill"
+          objectFit="cover"
+        />
       )}
     </div>
   );
