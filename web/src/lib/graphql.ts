@@ -1969,7 +1969,7 @@ export type FollowersQuery = (
       & Pick<Follow, 'id'>
       & { followerProfile: (
         { __typename?: 'Profile' }
-        & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle'>
+        & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle' | 'teamMember'>
       ) }
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
@@ -4222,6 +4222,7 @@ export const FollowersDocument = gql`
         profilePicture
         verified
         userHandle
+        teamMember
       }
     }
     pageInfo {
