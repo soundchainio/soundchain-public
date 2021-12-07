@@ -75,7 +75,7 @@ export const ProfilePictureForm = ({ afterSubmit, submitText, submitProps }: Pro
               <Label textSize="base">Custom Profile Photo:</Label>
               <ImageUploadField
                 name="profilePicture"
-                className={`${loading || profilePicture ? 'self-center w-14 ' : ''}cursor-pointer mt-8`}
+                className={`${loading || profilePicture ? 'self-center w-24 h-24' : ''} cursor-pointer mt-8`}
                 onUpload={setLoading}
                 rounded
               >
