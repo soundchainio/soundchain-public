@@ -1,11 +1,22 @@
-import classNames from 'classnames';
 import { Filter } from 'icons/Filter';
 import { GridView } from 'icons/GridView';
 import { ListView } from 'icons/ListView';
 import { SortOrder, SortTrackField, useListingItemsViewQuery } from 'lib/graphql';
 import React, { useState } from 'react';
 import { PostSkeleton } from './PostSkeleton';
-
+import { TrackGrid } from './TrackGrid';
+interface Song {
+  src: string;
+  title?: string | null;
+  trackId: string;
+  artist?: string | null;
+  art?: string | null;
+  isFavorite: boolean | null;
+  playbackCount: string;
+  favoriteCount: number;
+  saleType: string;
+  price: string;
+}
 export const Marketplace = () => {
   const [isGrid, setIsGrid] = useState(true);
 
@@ -48,10 +59,20 @@ export const Marketplace = () => {
           <option value={1}>Newest</option>
         </select>
       </div>
-      <div className={classNames('space-y-2')}>
-        {/* {data.listingItems.nodes.map(post => (
-        <Post key={post.id} post={post} />
-      ))} */}
+      <div className="grid grid-cols-2 gap-2 p-4">
+        {data.listingItemsView.nodes.map(post => (
+          <TrackGrid
+            key={post.id}
+            song={
+              {
+                saleType: 'auction',
+                price: '1018123123123231 ',
+                favoriteCount: 38278,
+                playbackCount: 32217,
+              } as Song
+            }
+          />
+        ))}
       </div>
     </div>
   );
