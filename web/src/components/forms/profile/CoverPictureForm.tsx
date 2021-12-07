@@ -75,13 +75,19 @@ export const CoverPictureForm = ({ afterSubmit, submitText, submitProps }: Cover
           <div className="flex-grow space-y-8">
             <div className="flex flex-col">
               <Label textSize="base">CUSTOM COVER PHOTO:</Label>
-              <ImageUploadField
-                name="coverPicture"
-                onUpload={onUpload}
-                className={`${loading || coverPicture ? 'h-[150px]' : ''} cursor-pointer mt-8`}
-              >
-                Upload Cover Photo
-              </ImageUploadField>
+              {loading && !coverPicture ? (
+                <ImageUploadField name="coverPicture" className="mt-8">
+                  Uploading
+                </ImageUploadField>
+              ) : (
+                <ImageUploadField
+                  name="coverPicture"
+                  onUpload={onUpload}
+                  className={`${coverPicture ? 'h-[150px]' : ''} cursor-pointer mt-8`}
+                >
+                  Upload Cover Photo
+                </ImageUploadField>
+              )}
             </div>
             <div className="flex flex-col space-y-8">
               <Label textSize="base">DEFAULT COVER PHOTOS:</Label>
