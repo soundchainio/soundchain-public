@@ -1,7 +1,7 @@
 import { registerEnumType } from 'type-graphql';
 
 enum SortTrackField {
-  PLAYBACK_COUNT = 'playbackCount',
+  // PLAYBACK_COUNT = 'playbackCount',
   CREATED_AT = 'createdAt',
 }
 

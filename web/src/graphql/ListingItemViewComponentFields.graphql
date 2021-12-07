@@ -1,0 +1,12 @@
+fragment ListingItemViewComponentFields on ListingItemView {
+  id
+  owner
+  nft
+  tokenId
+  pricePerItem
+  startingTime
+  endingTime
+  reservePrice
+  createdAt
+  updatedAt
+}

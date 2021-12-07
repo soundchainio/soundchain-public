@@ -332,6 +332,7 @@ export type FilterPostInput = {
 export type FilterTrackInput = {
   profileId?: Maybe<Scalars['String']>;
   nftData?: Maybe<NftDataInput>;
+  saleType?: Maybe<Scalars['String']>;
 };
 
 export type Follow = {
@@ -416,9 +417,15 @@ export enum Genre {
 }
 
 
-export type ListingItemPayload = {
-  __typename?: 'ListingItemPayload';
-  _id: Maybe<Scalars['String']>;
+export type ListingItemConnection = {
+  __typename?: 'ListingItemConnection';
+  pageInfo: PageInfo;
+  nodes: Array<ListingItemView>;
+};
+
+export type ListingItemView = {
+  __typename?: 'ListingItemView';
+  id: Scalars['ID'];
   owner: Maybe<Scalars['String']>;
   nft: Maybe<Scalars['String']>;
   tokenId: Maybe<Scalars['Float']>;
@@ -426,6 +433,8 @@ export type ListingItemPayload = {
   endingTime: Maybe<Scalars['Float']>;
   reservePrice: Maybe<Scalars['String']>;
   pricePerItem: Maybe<Scalars['String']>;
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
 };
 
 export type LoginInput = {
@@ -946,7 +955,8 @@ export type Query = {
   feed: FeedConnection;
   followers: FollowConnection;
   following: FollowConnection;
-  listingItem: ListingItemPayload;
+  listingItem: ListingItemView;
+  listingItemsView: ListingItemConnection;
   message: Message;
   notifications: NotificationConnection;
   notification: Notification;
@@ -1053,6 +1063,12 @@ export type QueryFollowingArgs = {
 
 export type QueryListingItemArgs = {
   tokenId: Scalars['Float'];
+};
+
+
+export type QueryListingItemsViewArgs = {
+  page?: Maybe<PageInput>;
+  sort?: Maybe<SortListingItemInput>;
 };
 
 
@@ -1269,6 +1285,11 @@ export type SocialMediasInput = {
   twitter?: Maybe<Scalars['String']>;
 };
 
+export type SortListingItemInput = {
+  field: SortTrackField;
+  order?: Maybe<SortOrder>;
+};
+
 export enum SortNotificationField {
   CreatedAt = 'CREATED_AT'
 }
@@ -1293,7 +1314,6 @@ export type SortPostInput = {
 };
 
 export enum SortTrackField {
-  PlaybackCount = 'PLAYBACK_COUNT',
   CreatedAt = 'CREATED_AT'
 }
 
@@ -2024,8 +2044,33 @@ export type ListingItemQueryVariables = Exact<{
 export type ListingItemQuery = (
   { __typename?: 'Query' }
   & { listingItem: (
-    { __typename?: 'ListingItemPayload' }
-    & Pick<ListingItemPayload, '_id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'startingTime' | 'endingTime' | 'reservePrice'>
+    { __typename?: 'ListingItemView' }
+    & ListingItemViewComponentFieldsFragment
+  ) }
+);
+
+export type ListingItemViewComponentFieldsFragment = (
+  { __typename?: 'ListingItemView' }
+  & Pick<ListingItemView, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'startingTime' | 'endingTime' | 'reservePrice' | 'createdAt' | 'updatedAt'>
+);
+
+export type ListingItemsViewQueryVariables = Exact<{
+  sort?: Maybe<SortListingItemInput>;
+  page?: Maybe<PageInput>;
+}>;
+
+
+export type ListingItemsViewQuery = (
+  { __typename?: 'Query' }
+  & { listingItemsView: (
+    { __typename?: 'ListingItemConnection' }
+    & { nodes: Array<(
+      { __typename?: 'ListingItemView' }
+      & ListingItemViewComponentFieldsFragment
+    )>, pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
+    ) }
   ) }
 );
 
@@ -2978,6 +3023,20 @@ export const FollowerNotificationFieldsFragmentDoc = gql`
   createdAt
   followerName
   followerPicture
+}
+    `;
+export const ListingItemViewComponentFieldsFragmentDoc = gql`
+    fragment ListingItemViewComponentFields on ListingItemView {
+  id
+  owner
+  nft
+  tokenId
+  pricePerItem
+  startingTime
+  endingTime
+  reservePrice
+  createdAt
+  updatedAt
 }
     `;
 export const MessageComponentFieldsFragmentDoc = gql`
@@ -4352,17 +4411,10 @@ export type HaveBidedQueryResult = Apollo.QueryResult<HaveBidedQuery, HaveBidedQ
 export const ListingItemDocument = gql`
     query ListingItem($tokenId: Float!) {
   listingItem(tokenId: $tokenId) {
-    _id
-    owner
-    nft
-    tokenId
-    pricePerItem
-    startingTime
-    endingTime
-    reservePrice
+    ...ListingItemViewComponentFields
   }
 }
-    `;
+    ${ListingItemViewComponentFieldsFragmentDoc}`;
 
 /**
  * __useListingItemQuery__
@@ -4391,6 +4443,48 @@ export function useListingItemLazyQuery(baseOptions?: Apollo.LazyQueryHookOption
 export type ListingItemQueryHookResult = ReturnType<typeof useListingItemQuery>;
 export type ListingItemLazyQueryHookResult = ReturnType<typeof useListingItemLazyQuery>;
 export type ListingItemQueryResult = Apollo.QueryResult<ListingItemQuery, ListingItemQueryVariables>;
+export const ListingItemsViewDocument = gql`
+    query ListingItemsView($sort: SortListingItemInput, $page: PageInput) {
+  listingItemsView(sort: $sort, page: $page) {
+    nodes {
+      ...ListingItemViewComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+    ${ListingItemViewComponentFieldsFragmentDoc}`;
+
+/**
+ * __useListingItemsViewQuery__
+ *
+ * To run a query within a React component, call `useListingItemsViewQuery` and pass it any options that fit your needs.
+ * When your component renders, `useListingItemsViewQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useListingItemsViewQuery({
+ *   variables: {
+ *      sort: // value for 'sort'
+ *      page: // value for 'page'
+ *   },
+ * });
+ */
+export function useListingItemsViewQuery(baseOptions?: Apollo.QueryHookOptions<ListingItemsViewQuery, ListingItemsViewQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ListingItemsViewQuery, ListingItemsViewQueryVariables>(ListingItemsViewDocument, options);
+      }
+export function useListingItemsViewLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ListingItemsViewQuery, ListingItemsViewQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ListingItemsViewQuery, ListingItemsViewQueryVariables>(ListingItemsViewDocument, options);
+        }
+export type ListingItemsViewQueryHookResult = ReturnType<typeof useListingItemsViewQuery>;
+export type ListingItemsViewLazyQueryHookResult = ReturnType<typeof useListingItemsViewLazyQuery>;
+export type ListingItemsViewQueryResult = Apollo.QueryResult<ListingItemsViewQuery, ListingItemsViewQueryVariables>;
 export const LoginDocument = gql`
     mutation Login($input: LoginInput!) {
   login(input: $input) {
