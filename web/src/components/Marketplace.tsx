@@ -1,7 +1,7 @@
 import { Filter } from 'icons/Filter';
 import { GridView } from 'icons/GridView';
 import { ListView } from 'icons/ListView';
-import { SortOrder, SortTrackField, TrackQuery, useListingItemsQuery } from 'lib/graphql';
+import { SortListingItemField, SortOrder, TrackQuery, useListingItemsQuery } from 'lib/graphql';
 import React, { useState } from 'react';
 import { PostSkeleton } from './PostSkeleton';
 import { Track } from './Track';
@@ -12,7 +12,7 @@ export const Marketplace = () => {
 
   const { data } = useListingItemsQuery({
     variables: {
-      sort: { field: SortTrackField.CreatedAt, order: SortOrder.Desc },
+      sort: { field: SortListingItemField.CreatedAt, order: SortOrder.Desc },
     },
   });
 

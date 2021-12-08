@@ -1284,8 +1284,14 @@ export type SocialMediasInput = {
   twitter?: Maybe<Scalars['String']>;
 };
 
+export enum SortListingItemField {
+  PlaybackCount = 'PLAYBACK_COUNT',
+  CreatedAt = 'CREATED_AT',
+  Price = 'PRICE'
+}
+
 export type SortListingItemInput = {
-  field: SortTrackField;
+  field: SortListingItemField;
   order?: Maybe<SortOrder>;
 };
 
@@ -1313,6 +1319,7 @@ export type SortPostInput = {
 };
 
 export enum SortTrackField {
+  PlaybackCount = 'PLAYBACK_COUNT',
   CreatedAt = 'CREATED_AT'
 }
 

@@ -1,11 +1,11 @@
 import { Field, InputType } from 'type-graphql';
+import { SortListingItemField } from './SortListingItemField';
 import { SortOrder } from './SortOrder';
-import { SortTrackField } from './SortTrackField';
 
 @InputType()
 export class SortListingItemInput {
-  @Field(() => SortTrackField)
-  field: SortTrackField;
+  @Field(() => SortListingItemField)
+  field: SortListingItemField;
 
   @Field(() => SortOrder, { nullable: true })
   order?: SortOrder;

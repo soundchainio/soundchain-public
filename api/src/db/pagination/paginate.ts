@@ -26,7 +26,7 @@ export interface PaginateParams<T extends typeof Model> {
 export interface PaginateParamsAggregated<T extends typeof Model> {
   filter?: FilterQuery<T>;
   sort?: {
-    field: keyof InstanceType<T>;
+    field: any;
     order?: SortOrder;
   };
   page?: {
