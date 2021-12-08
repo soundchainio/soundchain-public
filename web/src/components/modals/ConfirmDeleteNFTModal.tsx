@@ -25,14 +25,12 @@ export const ConfirmDeleteNFTModal = () => {
 
   useEffect(() => {
     if (showConfirmDeleteNFT && trackId) {
-      console.log({ trackId });
       getTrack({ variables: { id: trackId } });
     }
   }, [showConfirmDeleteNFT, trackId, getTrack]);
 
   useEffect(() => {
     if (data?.track) {
-      console.log({ data });
       setTrack(data.track);
     }
   }, [data]);
