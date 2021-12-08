@@ -1,4 +1,3 @@
-import { Filter } from 'icons/Filter';
 import { GridView } from 'icons/GridView';
 import { ListView } from 'icons/ListView';
 import { SortListingItemField, SortOrder, TrackQuery, useListingItemsQuery } from 'lib/graphql';
@@ -51,8 +50,8 @@ export const Marketplace = () => {
       </div>
       <div className="flex gap-2 bg-black p-4 justify-center items-center">
         <div className="flex flex-1 items-center">
-          <Filter />
-          <span className="text-white text-xs font-bold pl-1">Filter</span>
+          {/* <Filter /> */}
+          {/* <span className="text-white text-xs font-bold pl-1">Filter</span> */}
         </div>
         <span className="text-gray-80 text-xs font-bold">Sort By</span>
         <select
