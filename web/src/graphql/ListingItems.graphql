@@ -1,0 +1,12 @@
+query ListingItems($sort: SortListingItemInput, $page: PageInput) {
+  listingItems(sort: $sort, page: $page) {
+    nodes {
+      ...ListingItemComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+      totalCount
+    }
+  }
+}

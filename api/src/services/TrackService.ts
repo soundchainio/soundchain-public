@@ -8,11 +8,13 @@ import { FeedItemModel } from '../models/FeedItem';
 import { NotificationModel } from '../models/Notification';
 import { PostModel } from '../models/Post';
 import { Track, TrackModel } from '../models/Track';
+import { TrackWithListingItem } from '../models/TrackWithListingItem';
 import { Context } from '../types/Context';
 import { FilterTrackInput } from '../types/FilterTrackInput';
 import { NFTData } from '../types/NFTData';
 import { PageInput } from '../types/PageInput';
 import { PendingRequest } from '../types/PendingRequest';
+import { SortListingItemInput } from '../types/SortListingItemInput';
 import { SortTrackInput } from '../types/SortTrackInput';
 import { ModelService } from './ModelService';
 
@@ -196,7 +198,7 @@ export class TrackService extends ModelService<typeof Track> {
   }
 
   async favoriteCount(trackId: string): Promise<FavoriteCount> {
-    const res = await FavoriteProfileTrackModel.aggregate([
+    const favTrack = await FavoriteProfileTrackModel.aggregate([
       {
         $match: {
           trackId: trackId.toString(),
@@ -211,26 +213,102 @@ export class TrackService extends ModelService<typeof Track> {
         },
       },
     ]);
-    return res.length ? res[0].count : 0;
+    return favTrack.length ? favTrack[0].count : 0;
   }
 
   async saleType(tokenId: number): Promise<string> {
-    const res = await this.context.listingItemService.getListingItem(tokenId);
-    if (res.endingTime) {
+    const listing = await this.context.listingItemService.getListingItem(tokenId);
+    if (listing.endingTime) {
       return 'auction';
-    } else if (res.pricePerItem) {
+    } else if (listing.pricePerItem) {
       return 'buy now';
     }
     return '';
   }
 
   async price(tokenId: number): Promise<string> {
-    const res = await this.context.listingItemService.getListingItem(tokenId);
-    if (res.endingTime) {
-      return await this.context.auctionItemService.getHighestBid(res._id);
-    } else if (res.pricePerItem) {
-      return res.pricePerItem;
+    const listing = await this.context.listingItemService.getListingItem(tokenId);
+    if (listing.endingTime) {
+      return (await this.context.auctionItemService.getHighestBid(listing._id)) || listing.reservePrice;
+    } else if (listing.pricePerItem) {
+      return listing.pricePerItem;
     }
     return '0';
+  }
+
+  getListingItems(sort?: SortListingItemInput, page?: PageInput): Promise<PaginateResult<TrackWithListingItem>> {
+    const aggregation = [
+      {
+        $lookup: {
+          from: 'buynowitems',
+          localField: 'nftData.tokenId',
+          foreignField: 'tokenId',
+          as: 'buynowitem',
+        },
+      },
+      {
+        $lookup: {
+          from: 'auctionitems',
+          localField: 'nftData.tokenId',
+          foreignField: 'tokenId',
+          as: 'auctionitem',
+        },
+      },
+      {
+        $addFields: {
+          auctionitem: {
+            $filter: {
+              input: '$auctionitem',
+              as: 'item',
+              cond: {
+                $eq: ['$$item.valid', true],
+              },
+            },
+          },
+          buynowitem: {
+            $filter: {
+              input: '$buynowitem',
+              as: 'item',
+              cond: {
+                $eq: ['$$item.valid', true],
+              },
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          listingItem: {
+            $concatArrays: ['$auctionitem', '$buynowitem'],
+          },
+        },
+      },
+      {
+        $project: {
+          buynowitem: 0,
+          auctionitem: 0,
+        },
+      },
+      {
+        $unwind: {
+          path: '$listingItem',
+        },
+      },
+      {
+        $addFields: {
+          'listingItem.priceToShow': {
+            $toDouble: {
+              $ifNull: [
+                '$listingItem.highestBid',
+                {
+                  $ifNull: ['$listingItem.reservePrice', '$listingItem.pricePerItem'],
+                },
+              ],
+            },
+          },
+        },
+      },
+    ];
+    return this.paginatePipelineAggregated({ aggregation, sort, page });
   }
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ReturnModelType } from '@typegoose/typegoose';
 import { FilterQuery } from 'mongoose';
 import { Model } from '../../models/Model';
@@ -21,6 +22,22 @@ export interface PaginateParams<T extends typeof Model> {
     inclusive?: boolean;
   };
   group?: FilterQuery<T>;
+}
+export interface PaginateParamsAggregated<T extends typeof Model> {
+  filter?: FilterQuery<T>;
+  sort?: {
+    field: any;
+    order?: SortOrder;
+  };
+  page?: {
+    first?: number;
+    after?: string;
+    last?: number;
+    before?: string;
+    inclusive?: boolean;
+  };
+  group?: FilterQuery<T>;
+  aggregation?: any[];
 }
 
 export interface PaginateResult<T> {
@@ -74,6 +91,34 @@ export async function paginateAggregated<T extends typeof Model>(
       .exec(),
     collection.find(filter).countDocuments().exec(),
   ]);
+
+  return prepareResult(field, last, limit, after, before, results, totalCount);
+}
+
+export async function paginatePipelineAggregated<T extends typeof Model>(
+  collection: ReturnModelType<T>,
+  params: PaginateParamsAggregated<T>,
+): Promise<PaginateResult<InstanceType<T>>> {
+  const { filter = {}, sort = { field: '_id' }, page = {}, aggregation } = params;
+  const { field, order = SortOrder.ASC } = sort;
+  const { first = 25, after, last, before, inclusive } = page;
+  const ascending = (order === SortOrder.ASC) !== Boolean(last || before);
+  const limit = last ?? first;
+
+  const cursorFilter = buildCursorFilter(field, ascending, before, after, inclusive);
+  const querySort = buildQuerySort(field, ascending);
+  const results = await collection
+    .aggregate([...aggregation, { $match: cursorFilter }])
+    .sort(querySort)
+    .limit(limit + 1)
+    .exec();
+  const totalCount = (
+    await collection
+      .aggregate([...aggregation, { $match: cursorFilter }])
+      .group({ _id: '$_id', count: { $sum: 1 } })
+      .count('count')
+      .exec()
+  )[0].count;
 
   return prepareResult(field, last, limit, after, before, results, totalCount);
 }

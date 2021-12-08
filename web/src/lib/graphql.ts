@@ -40,6 +40,7 @@ export type AuctionItem = {
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   valid: Scalars['Boolean'];
+  highestBid: Scalars['String'];
 };
 
 export type AuctionItemPayload = {
@@ -416,9 +417,9 @@ export enum Genre {
 }
 
 
-export type ListingItemPayload = {
-  __typename?: 'ListingItemPayload';
-  _id: Maybe<Scalars['String']>;
+export type ListingItem = {
+  __typename?: 'ListingItem';
+  id: Scalars['ID'];
   owner: Maybe<Scalars['String']>;
   nft: Maybe<Scalars['String']>;
   tokenId: Maybe<Scalars['Float']>;
@@ -426,6 +427,29 @@ export type ListingItemPayload = {
   endingTime: Maybe<Scalars['Float']>;
   reservePrice: Maybe<Scalars['String']>;
   pricePerItem: Maybe<Scalars['String']>;
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+};
+
+export type ListingItemConnection = {
+  __typename?: 'ListingItemConnection';
+  pageInfo: PageInfo;
+  nodes: Array<TrackWithListingItem>;
+};
+
+export type ListingItemWithPrice = {
+  __typename?: 'ListingItemWithPrice';
+  id: Scalars['ID'];
+  owner: Maybe<Scalars['String']>;
+  nft: Maybe<Scalars['String']>;
+  tokenId: Maybe<Scalars['Float']>;
+  startingTime: Maybe<Scalars['Float']>;
+  endingTime: Maybe<Scalars['Float']>;
+  reservePrice: Maybe<Scalars['String']>;
+  pricePerItem: Maybe<Scalars['String']>;
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  priceToShow: Maybe<Scalars['Float']>;
 };
 
 export type LoginInput = {
@@ -946,7 +970,7 @@ export type Query = {
   feed: FeedConnection;
   followers: FollowConnection;
   following: FollowConnection;
-  listingItem: ListingItemPayload;
+  listingItem: ListingItem;
   message: Message;
   notifications: NotificationConnection;
   notification: Notification;
@@ -967,6 +991,7 @@ export type Query = {
   track: Track;
   tracks: TrackConnection;
   favoriteTracks: TrackConnection;
+  listingItems: ListingItemConnection;
   uploadUrl: UploadUrl;
   mimeType: MimeType;
   me: Maybe<User>;
@@ -1155,6 +1180,12 @@ export type QueryFavoriteTracksArgs = {
 };
 
 
+export type QueryListingItemsArgs = {
+  page?: Maybe<PageInput>;
+  sort?: Maybe<SortListingItemInput>;
+};
+
+
 export type QueryUploadUrlArgs = {
   fileType: Scalars['String'];
 };
@@ -1269,6 +1300,17 @@ export type SocialMediasInput = {
   twitter?: Maybe<Scalars['String']>;
 };
 
+export enum SortListingItemField {
+  PlaybackCount = 'PLAYBACK_COUNT',
+  CreatedAt = 'CREATED_AT',
+  Price = 'PRICE'
+}
+
+export type SortListingItemInput = {
+  field: SortListingItemField;
+  order?: Maybe<SortOrder>;
+};
+
 export enum SortNotificationField {
   CreatedAt = 'CREATED_AT'
 }
@@ -1347,6 +1389,34 @@ export type TrackConnection = {
   __typename?: 'TrackConnection';
   pageInfo: PageInfo;
   nodes: Array<Track>;
+};
+
+export type TrackWithListingItem = {
+  __typename?: 'TrackWithListingItem';
+  id: Scalars['ID'];
+  profileId: Scalars['String'];
+  title: Maybe<Scalars['String']>;
+  description: Maybe<Scalars['String']>;
+  assetUrl: Scalars['String'];
+  artworkUrl: Maybe<Scalars['String']>;
+  artist: Maybe<Scalars['String']>;
+  artistId: Maybe<Scalars['String']>;
+  artistProfileId: Maybe<Scalars['String']>;
+  album: Maybe<Scalars['String']>;
+  copyright: Maybe<Scalars['String']>;
+  releaseYear: Maybe<Scalars['Float']>;
+  genres: Maybe<Array<Genre>>;
+  nftData: Maybe<NftDataType>;
+  playbackCountFormatted: Scalars['String'];
+  deleted: Maybe<Scalars['Boolean']>;
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  playbackUrl: Scalars['String'];
+  favoriteCount: Scalars['Float'];
+  price: Scalars['String'];
+  saleType: Scalars['String'];
+  isFavorite: Scalars['Boolean'];
+  listingItem: Maybe<ListingItemWithPrice>;
 };
 
 export type UnfollowProfileInput = {
@@ -2024,8 +2094,45 @@ export type ListingItemQueryVariables = Exact<{
 export type ListingItemQuery = (
   { __typename?: 'Query' }
   & { listingItem: (
-    { __typename?: 'ListingItemPayload' }
-    & Pick<ListingItemPayload, '_id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'startingTime' | 'endingTime' | 'reservePrice'>
+    { __typename?: 'ListingItem' }
+    & ListingItemViewComponentFieldsFragment
+  ) }
+);
+
+export type ListingItemComponentFieldsFragment = (
+  { __typename?: 'TrackWithListingItem' }
+  & Pick<TrackWithListingItem, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'saleType' | 'price'>
+  & { nftData: Maybe<(
+    { __typename?: 'NFTDataType' }
+    & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner'>
+  )>, listingItem: Maybe<(
+    { __typename?: 'ListingItemWithPrice' }
+    & Pick<ListingItemWithPrice, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'startingTime' | 'endingTime' | 'reservePrice' | 'createdAt' | 'updatedAt' | 'priceToShow'>
+  )> }
+);
+
+export type ListingItemViewComponentFieldsFragment = (
+  { __typename?: 'ListingItem' }
+  & Pick<ListingItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'startingTime' | 'endingTime' | 'reservePrice' | 'createdAt' | 'updatedAt'>
+);
+
+export type ListingItemsQueryVariables = Exact<{
+  sort?: Maybe<SortListingItemInput>;
+  page?: Maybe<PageInput>;
+}>;
+
+
+export type ListingItemsQuery = (
+  { __typename?: 'Query' }
+  & { listingItems: (
+    { __typename?: 'ListingItemConnection' }
+    & { nodes: Array<(
+      { __typename?: 'TrackWithListingItem' }
+      & ListingItemComponentFieldsFragment
+    )>, pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
+    ) }
   ) }
 );
 
@@ -2978,6 +3085,68 @@ export const FollowerNotificationFieldsFragmentDoc = gql`
   createdAt
   followerName
   followerPicture
+}
+    `;
+export const ListingItemComponentFieldsFragmentDoc = gql`
+    fragment ListingItemComponentFields on TrackWithListingItem {
+  id
+  profileId
+  title
+  assetUrl
+  artworkUrl
+  description
+  artist
+  artistId
+  artistProfileId
+  album
+  releaseYear
+  copyright
+  genres
+  playbackUrl
+  createdAt
+  updatedAt
+  deleted
+  playbackCountFormatted
+  isFavorite
+  favoriteCount
+  saleType
+  price
+  nftData {
+    transactionHash
+    tokenId
+    contract
+    minter
+    ipfsCid
+    pendingRequest
+    owner
+  }
+  listingItem {
+    id
+    owner
+    nft
+    tokenId
+    pricePerItem
+    startingTime
+    endingTime
+    reservePrice
+    createdAt
+    updatedAt
+    priceToShow
+  }
+}
+    `;
+export const ListingItemViewComponentFieldsFragmentDoc = gql`
+    fragment ListingItemViewComponentFields on ListingItem {
+  id
+  owner
+  nft
+  tokenId
+  pricePerItem
+  startingTime
+  endingTime
+  reservePrice
+  createdAt
+  updatedAt
 }
     `;
 export const MessageComponentFieldsFragmentDoc = gql`
@@ -4352,17 +4521,10 @@ export type HaveBidedQueryResult = Apollo.QueryResult<HaveBidedQuery, HaveBidedQ
 export const ListingItemDocument = gql`
     query ListingItem($tokenId: Float!) {
   listingItem(tokenId: $tokenId) {
-    _id
-    owner
-    nft
-    tokenId
-    pricePerItem
-    startingTime
-    endingTime
-    reservePrice
+    ...ListingItemViewComponentFields
   }
 }
-    `;
+    ${ListingItemViewComponentFieldsFragmentDoc}`;
 
 /**
  * __useListingItemQuery__
@@ -4391,6 +4553,49 @@ export function useListingItemLazyQuery(baseOptions?: Apollo.LazyQueryHookOption
 export type ListingItemQueryHookResult = ReturnType<typeof useListingItemQuery>;
 export type ListingItemLazyQueryHookResult = ReturnType<typeof useListingItemLazyQuery>;
 export type ListingItemQueryResult = Apollo.QueryResult<ListingItemQuery, ListingItemQueryVariables>;
+export const ListingItemsDocument = gql`
+    query ListingItems($sort: SortListingItemInput, $page: PageInput) {
+  listingItems(sort: $sort, page: $page) {
+    nodes {
+      ...ListingItemComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+      totalCount
+    }
+  }
+}
+    ${ListingItemComponentFieldsFragmentDoc}`;
+
+/**
+ * __useListingItemsQuery__
+ *
+ * To run a query within a React component, call `useListingItemsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useListingItemsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useListingItemsQuery({
+ *   variables: {
+ *      sort: // value for 'sort'
+ *      page: // value for 'page'
+ *   },
+ * });
+ */
+export function useListingItemsQuery(baseOptions?: Apollo.QueryHookOptions<ListingItemsQuery, ListingItemsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ListingItemsQuery, ListingItemsQueryVariables>(ListingItemsDocument, options);
+      }
+export function useListingItemsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ListingItemsQuery, ListingItemsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ListingItemsQuery, ListingItemsQueryVariables>(ListingItemsDocument, options);
+        }
+export type ListingItemsQueryHookResult = ReturnType<typeof useListingItemsQuery>;
+export type ListingItemsLazyQueryHookResult = ReturnType<typeof useListingItemsLazyQuery>;
+export type ListingItemsQueryResult = Apollo.QueryResult<ListingItemsQuery, ListingItemsQueryVariables>;
 export const LoginDocument = gql`
     mutation Login($input: LoginInput!) {
   login(input: $input) {
