@@ -1,24 +1,14 @@
 import { Filter } from 'icons/Filter';
 import { GridView } from 'icons/GridView';
 import { ListView } from 'icons/ListView';
-import { SortOrder, SortTrackField, useListingItemsQuery } from 'lib/graphql';
+import { SortOrder, SortTrackField, TrackQuery, useListingItemsQuery } from 'lib/graphql';
 import React, { useState } from 'react';
 import { PostSkeleton } from './PostSkeleton';
+import { Track } from './Track';
 import { TrackGrid } from './TrackGrid';
-interface Song {
-  src: string;
-  title?: string | null;
-  trackId: string;
-  artist?: string | null;
-  art?: string | null;
-  isFavorite: boolean | null;
-  playbackCount: string;
-  favoriteCount: number;
-  saleType: string;
-  price: string;
-}
+
 export const Marketplace = () => {
-  const [isGrid, setIsGrid] = useState(true);
+  const [isGrid, setIsGrid] = useState(false);
 
   const { data } = useListingItemsQuery({
     variables: {
@@ -35,7 +25,6 @@ export const Marketplace = () => {
       </div>
     );
   }
-  console.log(data);
 
   return (
     <div>
@@ -59,11 +48,19 @@ export const Marketplace = () => {
           <option value={1}>Newest</option>
         </select>
       </div>
-      <div className="grid grid-cols-2 gap-2 p-4">
-        {data.listingItems.nodes.map(track => (
-          <TrackGrid key={track.id} track={track} />
-        ))}
-      </div>
+      {isGrid ? (
+        <div className="grid grid-cols-2 gap-2 p-4">
+          {data.listingItems.nodes.map(track => (
+            <TrackGrid key={track.id} track={track} />
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {data.listingItems.nodes.map(track => (
+            <Track key={track.id} track={track as TrackQuery['track']} />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
