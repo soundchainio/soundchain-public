@@ -13,7 +13,7 @@ import {
   PendingRequest,
   TrackDocument,
   TrackQuery,
-  useAuctionItemLazyQuery,
+  useAuctionItemQuery,
   useCountBidsQuery,
   useHaveBidedLazyQuery,
   useMaticUsdQuery,
@@ -63,11 +63,13 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
 
   const tokenId = track.nftData?.tokenId ?? -1;
 
-  const [getAuctionItem, { data: auctionItem }] = useAuctionItemLazyQuery({
+  const { data: auctionItem } = useAuctionItemQuery({
     variables: { tokenId },
   });
 
-  const [fetchHaveBided, { data: haveBided, refetch: refetchHaveBided }] = useHaveBidedLazyQuery();
+  const [fetchHaveBided, { data: haveBided, refetch: refetchHaveBided }] = useHaveBidedLazyQuery({
+    fetchPolicy: 'network-only',
+  });
 
   useEffect(() => {
     if (account && auctionItem?.auctionItem.auctionItem?.id) {
@@ -76,10 +78,6 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
   }, [fetchHaveBided, auctionItem?.auctionItem.auctionItem?.id, account]);
 
   const { data: countBids, refetch: refetchCountBids } = useCountBidsQuery({ variables: { tokenId } });
-
-  useEffect(() => {
-    getAuctionItem();
-  }, [getAuctionItem]);
 
   useEffect(() => {
     if (!web3) {
@@ -169,7 +167,12 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
               </span>
             )}
           </div>
-          <Button variant="buy-nft" onClick={handlePlaceBid} loading={loading}>
+          <Button
+            variant="buy-nft"
+            onClick={handlePlaceBid}
+            loading={loading}
+            disabled={bidAmount <= parseFloat(reservePrice || '0') || bidAmount <= parseFloat(highestBid) * 1.015}
+          >
             <div className="px-4">CONFIRM BID</div>
           </Button>
         </div>

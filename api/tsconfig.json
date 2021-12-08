@@ -15,8 +15,9 @@
     "preserveConstEnums": true,
     "sourceMap": true,
     "moduleResolution": "node",
-    "outDir": ".build"
+    "outDir": ".build",
+    "typeRoots": ["./typings", "./node_modules/@typings"]
   },
   "include": ["**/*.ts", "migrate-mongo-config.js"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "typings"]
 }
