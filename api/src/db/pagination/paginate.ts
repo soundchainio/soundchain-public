@@ -99,7 +99,7 @@ export async function paginatePipelineAggregated<T extends typeof Model>(
   collection: ReturnModelType<T>,
   params: PaginateParamsAggregated<T>,
 ): Promise<PaginateResult<InstanceType<T>>> {
-  const { filter = {}, sort = { field: '_id' }, page = {}, aggregation } = params;
+  const { filter = {}, sort = { field: 'createdAt' }, page = {}, aggregation } = params;
   const { field, order = SortOrder.ASC } = sort;
   const { first = 25, after, last, before, inclusive } = page;
   const ascending = (order === SortOrder.ASC) !== Boolean(last || before);
@@ -114,11 +114,11 @@ export async function paginatePipelineAggregated<T extends typeof Model>(
     .exec();
   const totalCount = (
     await collection
-      .aggregate([...aggregation, { $match: cursorFilter }])
+      .aggregate([...aggregation])
       .group({ _id: '$_id', count: { $sum: 1 } })
       .count('count')
       .exec()
-  )[0].count;
+  )[0]?.count;
 
   return prepareResult(field, last, limit, after, before, results, totalCount);
 }

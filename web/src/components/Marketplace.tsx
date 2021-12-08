@@ -2,6 +2,7 @@ import { GridView } from 'icons/GridView';
 import { ListView } from 'icons/ListView';
 import { SortListingItemField, SortOrder, TrackQuery, useListingItemsQuery } from 'lib/graphql';
 import React, { useEffect, useState } from 'react';
+import { InfiniteLoader } from './InfiniteLoader';
 import { PostSkeleton } from './PostSkeleton';
 import { Track } from './Track';
 import { TrackGrid } from './TrackGrid';
@@ -12,18 +13,20 @@ enum SortListingItemPrice {
 }
 
 export const Marketplace = () => {
+  const pageSize = 3;
   const [isGrid, setIsGrid] = useState(false);
-  const [sorting, setSorting] = useState<SortListingItemField>(SortListingItemField.CreatedAt);
+  const [sorting, setSorting] = useState<SortListingItemField>(SortListingItemField.Price);
   const [priceSorting, setPriceSorting] = useState<SortOrder>(SortOrder.Asc);
 
-  const { data, refetch } = useListingItemsQuery({
-    variables: {
-      sort: { field: SortListingItemField.CreatedAt, order: SortOrder.Desc },
-    },
+  const { data, refetch, fetchMore } = useListingItemsQuery({
+    variables: { page: { first: pageSize }, sort: { field: sorting, order: priceSorting } },
   });
 
   useEffect(() => {
     refetch({
+      page: {
+        first: pageSize,
+      },
       sort: { field: sorting, order: priceSorting },
     });
   }, [sorting, priceSorting]);
@@ -37,6 +40,18 @@ export const Marketplace = () => {
       </div>
     );
   }
+
+  const loadMore = () => {
+    fetchMore({
+      variables: {
+        page: {
+          first: pageSize,
+          after: data.listingItems.pageInfo.endCursor,
+        },
+        sort: { field: sorting, order: priceSorting },
+      },
+    });
+  };
 
   return (
     <div>
@@ -92,6 +107,9 @@ export const Marketplace = () => {
             <Track key={track.id} track={track as TrackQuery['track']} />
           ))}
         </div>
+      )}
+      {data.listingItems.pageInfo.hasNextPage && (
+        <InfiniteLoader loadMore={loadMore} loadingMessage="Loading Marketplace" />
       )}
     </div>
   );
