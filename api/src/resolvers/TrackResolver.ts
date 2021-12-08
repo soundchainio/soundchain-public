@@ -12,6 +12,7 @@ import { DeleteTrackInput } from '../types/DeleteTrackInput';
 import { DeleteTrackPayload } from '../types/DeleteTrackPayload';
 import { FilterTrackInput } from '../types/FilterTrackInput';
 import { PageInput } from '../types/PageInput';
+import { Role } from '../types/Role';
 import { SortTrackInput } from '../types/SortTrackInput';
 import { ToggleFavoritePayload } from '../types/ToggleFavoritePayload';
 import { TrackConnection } from '../types/TrackConnection';
@@ -102,6 +103,24 @@ export class TrackResolver {
   ): Promise<DeleteTrackPayload> {
     const track = await trackService.deleteTrackOnError(trackId);
     return { track };
+  }
+
+  @Mutation(() => Track)
+  @Authorized()
+  async deleteTrack(
+    @Ctx() { trackService }: Context,
+    @CurrentUser() { profileId, roles }: User,
+    @Arg('trackId') trackId: string,
+  ): Promise<Track> {
+    const isAdmin = roles.includes(Role.ADMIN) || roles.includes(Role.TEAM_MEMBER);
+
+    if (isAdmin) {
+      const track = await trackService.deleteTrackByAdmin(trackId);
+      return track;
+    }
+
+    const track = await trackService.deleteTrack(trackId, profileId);
+    return track;
   }
 
   @Mutation(() => ToggleFavoritePayload)

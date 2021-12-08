@@ -1,13 +1,13 @@
+import { Button } from 'components/Button';
 import { Modal } from 'components/Modal';
+import { Track as TrackComponent } from 'components/Track';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { Matic } from 'icons/Matic';
+import { TrackQuery, useDeleteTrackMutation, useTrackLazyQuery } from 'lib/graphql';
 import React, { useEffect, useState } from 'react';
-import { Button } from 'components/Button';
-import { Track as TrackComponent } from 'components/Track';
-import { TrackQuery, useTrackLazyQuery } from 'lib/graphql';
 
 export const ConfirmDeleteNFTModal = () => {
   const { showConfirmDeleteNFT, trackId, burn } = useModalState();
@@ -15,6 +15,7 @@ export const ConfirmDeleteNFTModal = () => {
   const [loading, setLoading] = useState(false);
   const [track, setTrack] = useState<TrackQuery['track']>();
   const { web3, account, balance } = useMagicContext();
+  const [deleteTrack] = useDeleteTrackMutation();
   const { burnNftToken } = useBlockchain();
   const [disabled, setDisabled] = useState(true);
 
@@ -64,7 +65,13 @@ export const ConfirmDeleteNFTModal = () => {
   };
 
   const handleDelete = () => {
-    // soft delete query here
+    if (track?.id) {
+      deleteTrack({
+        variables: {
+          trackId: track.id,
+        },
+      });
+    }
   };
 
   const handleBurn = () => {
@@ -72,7 +79,7 @@ export const ConfirmDeleteNFTModal = () => {
     if (hasEnoughFunds() && tokenId && account) {
       try {
         setLoading(true);
-          burnNftToken(web3, tokenId, account )
+        burnNftToken(web3, tokenId, account);
       } catch (e) {
         console.log(e);
         setLoading(false);

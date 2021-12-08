@@ -518,6 +518,7 @@ export type Mutation = {
   createTrack: CreateTrackPayload;
   updateTrack: UpdateTrackPayload;
   deleteTrackOnError: UpdateTrackPayload;
+  deleteTrack: Track;
   toggleFavorite: ToggleFavoritePayload;
   register: AuthPayload;
   login: AuthPayload;
@@ -660,6 +661,11 @@ export type MutationUpdateTrackArgs = {
 
 export type MutationDeleteTrackOnErrorArgs = {
   input: DeleteTrackInput;
+};
+
+
+export type MutationDeleteTrackArgs = {
+  trackId: Scalars['String'];
 };
 
 
@@ -1775,6 +1781,19 @@ export type DeletePostMutation = (
       { __typename?: 'Post' }
       & PostComponentFieldsFragment
     ) }
+  ) }
+);
+
+export type DeleteTrackMutationVariables = Exact<{
+  trackId: Scalars['String'];
+}>;
+
+
+export type DeleteTrackMutation = (
+  { __typename?: 'Mutation' }
+  & { deleteTrack: (
+    { __typename?: 'Track' }
+    & TrackComponentFieldsFragment
   ) }
 );
 
@@ -3881,6 +3900,39 @@ export function useDeletePostMutation(baseOptions?: Apollo.MutationHookOptions<D
 export type DeletePostMutationHookResult = ReturnType<typeof useDeletePostMutation>;
 export type DeletePostMutationResult = Apollo.MutationResult<DeletePostMutation>;
 export type DeletePostMutationOptions = Apollo.BaseMutationOptions<DeletePostMutation, DeletePostMutationVariables>;
+export const DeleteTrackDocument = gql`
+    mutation deleteTrack($trackId: String!) {
+  deleteTrack(trackId: $trackId) {
+    ...TrackComponentFields
+  }
+}
+    ${TrackComponentFieldsFragmentDoc}`;
+export type DeleteTrackMutationFn = Apollo.MutationFunction<DeleteTrackMutation, DeleteTrackMutationVariables>;
+
+/**
+ * __useDeleteTrackMutation__
+ *
+ * To run a mutation, you first call `useDeleteTrackMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteTrackMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteTrackMutation, { data, loading, error }] = useDeleteTrackMutation({
+ *   variables: {
+ *      trackId: // value for 'trackId'
+ *   },
+ * });
+ */
+export function useDeleteTrackMutation(baseOptions?: Apollo.MutationHookOptions<DeleteTrackMutation, DeleteTrackMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteTrackMutation, DeleteTrackMutationVariables>(DeleteTrackDocument, options);
+      }
+export type DeleteTrackMutationHookResult = ReturnType<typeof useDeleteTrackMutation>;
+export type DeleteTrackMutationResult = Apollo.MutationResult<DeleteTrackMutation>;
+export type DeleteTrackMutationOptions = Apollo.BaseMutationOptions<DeleteTrackMutation, DeleteTrackMutationVariables>;
 export const DeleteTrackOnErrorDocument = gql`
     mutation deleteTrackOnError($input: DeleteTrackInput!) {
   deleteTrackOnError(input: $input) {
