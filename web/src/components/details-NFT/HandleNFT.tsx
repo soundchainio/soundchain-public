@@ -39,18 +39,55 @@ export const HandleNFT = ({
         </ListingAction>
       );
     }
-    if (isBuyNow || (isAuction && !auctionIsOver)) {
+    if (isBuyNow || (isAuction && !auctionIsOver && countBids === 0)) {
       return (
         <ListedAction
           href={isBuyNow ? `${router.asPath}/edit/buy-now` : `${router.asPath}/edit/auction`}
           price={price}
+          countBids={countBids}
+          endingDate={endingDate}
           action="EDIT LISTING"
           variant="edit-listing"
         />
       );
     }
-    if (isAuction && auctionIsOver) {
-      return null;
+    if (isAuction && (auctionIsOver || countBids > 0)) {
+      return (
+        <div className="w-full bg-black text-white flex items-center py-3">
+          <div className="w-full flex flex-col text-xs items-center ">
+            {auctionIsOver && <div className="uppercase font-bold">Auction is over</div>}
+            {countBids != 0 && <span className="text-blue-400 font-bold">({countBids} bids)</span>}
+            {endingDate && (
+              <TimeCounter date={endingDate}>
+                {(days, hours, minutes, seconds) => (
+                  <div>
+                    {days !== 0 && (
+                      <>
+                        <span className="text-gray-80">{days}D </span>
+                      </>
+                    )}
+                    {hours !== 0 && (
+                      <>
+                        <span className="text-gray-80">{hours}H </span>
+                      </>
+                    )}
+                    {minutes !== 0 && (
+                      <>
+                        <span className="text-gray-80">{minutes}M </span>
+                      </>
+                    )}
+                    {seconds !== 0 && (
+                      <>
+                        <span className="text-gray-80">{seconds}S</span>
+                      </>
+                    )}
+                  </div>
+                )}
+              </TimeCounter>
+            )}
+          </div>
+        </div>
+      );
     }
     return (
       <ListingAction href={`${router.asPath}/list`} action="LIST NFT">

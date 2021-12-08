@@ -31,14 +31,11 @@ export const ListNFTAuction = ({ initialPrice, onSetPrice, onSetStartTime, onSet
       <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={() => {}}>
         {({ values, handleChange }: FormikProps<FormValues>) => (
           <Form>
-            <div className="flex">
-              <label
-                htmlFor="price"
-                className="flex items-center justify-start w-1/2 bg-gray-20 text-gray-80 font-bold text-xs md-text-sm uppercase py-3 pl-5"
-              >
+            <div className="flex items-center justify-between bg-gray-20 py-3 px-5 gap-3">
+              <label htmlFor="price" className="flex-shrink-0 text-gray-80 font-bold text-xs uppercase ">
                 auction start price
               </label>
-              <div className="flex flex-wrap items-center w-1/2 bg-gray-20 uppercase py-3 pr-5">
+              <div className="w-32 sm:w-52">
                 <InputField
                   name="price"
                   type="number"
@@ -50,23 +47,23 @@ export const ListNFTAuction = ({ initialPrice, onSetPrice, onSetStartTime, onSet
                 />
               </div>
             </div>
-            <div className="flex">
+            <div className="flex items-center justify-between bg-gray-20 py-3 px-5">
               <label
                 htmlFor="startTime"
-                className="flex items-center justify-start w-1/2 bg-gray-20 text-gray-80 font-bold text-xs md-text-sm  py-3 pl-5"
+                className="flex items-center justify-start flex-shrink-0 text-gray-80 font-bold text-xs"
               >
                 <div className="flex flex-col mr-3">
                   <p className="uppercase">start time</p>
                   <p className="font-medium" style={{ fontSize: 10 }}>
-                    Set a time to start the auction
+                    Set a date/time for the auction to start.
                   </p>
                 </div>
               </label>
-              <div className="flex flex-wrap items-center w-1/2 justify-end bg-gray-20 uppercase py-3 pr-5">
+              <div className="w-32 sm:w-52 uppercase">
                 <input
                   name="startTime"
                   type="datetime-local"
-                  className="text-sm font-bold bg-gray-30 text-gray-200 focus:outline-none focus:ring-transparent placeholder-gray-60 placeholder-semibold"
+                  className="p-3 text-sm font-bold bg-gray-30 text-gray-200 focus:outline-none focus:ring-transparent placeholder-gray-60 placeholder-semibold rounded-md border-2 border-gray-80 w-full"
                   onChange={el => {
                     handleChange(el);
                     onSetStartTime(new Date(el.target.value));
@@ -74,23 +71,23 @@ export const ListNFTAuction = ({ initialPrice, onSetPrice, onSetStartTime, onSet
                 />
               </div>
             </div>
-            <div className="flex">
+            <div className="flex items-center justify-between bg-gray-20 py-3 px-5">
               <label
                 htmlFor="endTime"
-                className="flex items-center justify-start w-1/2 bg-gray-20 text-gray-80 font-bold text-xs md-text-sm  py-3 pl-5"
+                className="flex items-center justify-start  text-gray-80 font-bold text-xs md-text-sm "
               >
                 <div className="flex flex-col mr-3">
                   <p className="uppercase">end time</p>
                   <p className="font-medium" style={{ fontSize: 10 }}>
-                    Set a time to end the auction
+                    Set a date/time for the auction to end.
                   </p>
                 </div>
               </label>
-              <div className="flex flex-wrap items-center w-1/2 justify-end bg-gray-20 uppercase py-3 pr-5">
+              <div className="w-32 sm:w-52 uppercase">
                 <input
                   name="endTime"
                   type="datetime-local"
-                  className="text-sm font-bold bg-gray-30 text-gray-200 focus:outline-none focus:ring-transparent placeholder-gray-60 placeholder-semibold"
+                  className="p-3 text-sm font-bold bg-gray-30 text-gray-200 focus:outline-none focus:ring-transparent placeholder-gray-60 placeholder-semibold rounded-md border-2 border-gray-80 w-full"
                   onChange={el => {
                     handleChange(el);
                     onSetEndTime(new Date(el.target.value));
@@ -98,14 +95,14 @@ export const ListNFTAuction = ({ initialPrice, onSetPrice, onSetStartTime, onSet
                 />
               </div>
             </div>
-            <p className="mx-6 text-gray-80 text-sm py-2 text-center">
+            <p className="text-gray-80 text-sm text-center py-3 px-5">
               Soundchain transaction fee and Polygon gas fees will be applied to buyer during checkout.
             </p>
-            <div className="flex">
-              <div className="flex items-center justify-start bg-gray-20 text-gray-80 font-bold text-xs md-text-sm uppercase py-3 pl-5">
+            <div className="flex py-3 px-5">
+              <div className="flex items-center justify-start text-gray-80 font-bold text-xs md-text-sm uppercase">
                 Total
               </div>
-              <div className="flex flex-wrap items-center justify-end w-full bg-gray-20 uppercase py-3 pr-5">
+              <div className="flex flex-wrap items-center justify-end w-full uppercase">
                 <span className="my-auto">
                   <Matic />
                 </span>

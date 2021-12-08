@@ -159,7 +159,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       <div className="flex p-4">
         <MaxGasFee />
         <Button variant="edit-listing" onClick={handleUpdate} loading={loading}>
-          <div className="px-4">EDIT LISTING</div>
+          <div className="px-4">UPDATE LISTING</div>
         </Button>
       </div>
     </Layout>
