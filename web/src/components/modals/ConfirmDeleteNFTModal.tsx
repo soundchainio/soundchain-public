@@ -7,6 +7,7 @@ import { useMagicContext } from 'hooks/useMagicContext';
 import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { Matic } from 'icons/Matic';
 import { TrackQuery, useDeleteTrackMutation, useTrackLazyQuery } from 'lib/graphql';
+import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 
 export const ConfirmDeleteNFTModal = () => {
@@ -15,9 +16,10 @@ export const ConfirmDeleteNFTModal = () => {
   const [loading, setLoading] = useState(false);
   const [track, setTrack] = useState<TrackQuery['track']>();
   const { web3, account, balance } = useMagicContext();
-  const [deleteTrack] = useDeleteTrackMutation();
+  const [deleteTrack] = useDeleteTrackMutation({ refetchQueries: ['Posts', 'Tracks'] });
   const { burnNftToken } = useBlockchain();
   const [disabled, setDisabled] = useState(true);
+  const router = useRouter();
 
   const maxGasFee = useMaxGasFee(showConfirmDeleteNFT);
 
@@ -62,9 +64,9 @@ export const ConfirmDeleteNFTModal = () => {
     return false;
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (track?.id) {
-      deleteTrack({
+      await deleteTrack({
         variables: {
           trackId: track.id,
         },
@@ -72,7 +74,7 @@ export const ConfirmDeleteNFTModal = () => {
     }
   };
 
-  const handleBurn = () => {
+  const handleBurn = async () => {
     const tokenId = track?.nftData?.tokenId;
     if (hasEnoughFunds() && tokenId && account) {
       try {
@@ -83,7 +85,11 @@ export const ConfirmDeleteNFTModal = () => {
         setLoading(false);
         alert('We had some trouble, please try again later!');
       } finally {
-        handleDelete();
+        await handleDelete();
+        console.log('finally');
+        setLoading(false);
+        handleClose();
+        router.back();
       }
     } else {
       alert("Uh-oh, it seems you don't have enough funds to pay for the gas fee of this operation");
