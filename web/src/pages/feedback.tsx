@@ -25,6 +25,7 @@ export default function FeedbackPage() {
       <iframe
         src="https://docs.google.com/forms/d/e/1FAIpQLScmoMksAwl26GABnutNksgWOlfDGvfZbGeEqAiaSqIHo5sI9g/viewform?embedded=true"
         className="h-full w-full"
+        title="Feedback form"
       />
     </Layout>
   );

@@ -1,7 +1,7 @@
 import { useModalDispatch } from 'contexts/providers/modal';
 import { useMe } from 'hooks/useMe';
 import { Ellipsis } from 'icons/Ellipsis';
-import { Role, PostQuery } from 'lib/graphql';
+import { PostQuery, Role } from 'lib/graphql';
 import NextLink from 'next/link';
 import React from 'react';
 import ReactPlayer from 'react-player';
@@ -77,7 +77,13 @@ export const Post = ({ post }: PostProps) => {
               light
             />
           ) : (
-            <iframe frameBorder="0" className="mt-4 w-full bg-gray-20" allowFullScreen src={post.mediaLink} />
+            <iframe
+              frameBorder="0"
+              className="mt-4 w-full bg-gray-20"
+              allowFullScreen
+              src={post.mediaLink}
+              title="Media"
+            />
           ))}
         {post.repostId && <RepostPreview postId={post.repostId} />}
         {post.track && (
