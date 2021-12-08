@@ -107,15 +107,18 @@ export async function paginatePipelineAggregated<T extends typeof Model>(
 
   const cursorFilter = buildCursorFilter(field, ascending, before, after, inclusive);
   const querySort = buildQuerySort(field, ascending);
-
-  const [results, totalCount] = await Promise.all([
-    collection
+  const results = await collection
+    .aggregate([...aggregation, { $match: cursorFilter }])
+    .sort(querySort)
+    .limit(limit + 1)
+    .exec();
+  const totalCount = (
+    await collection
       .aggregate([...aggregation, { $match: cursorFilter }])
-      .sort(querySort)
-      .limit(limit + 1)
-      .exec(),
-    collection.find(filter).countDocuments().exec(),
-  ]);
+      .group({ _id: '$_id', count: { $sum: 1 } })
+      .count('count')
+      .exec()
+  )[0].count;
 
   return prepareResult(field, last, limit, after, before, results, totalCount);
 }

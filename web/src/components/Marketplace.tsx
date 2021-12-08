@@ -43,7 +43,7 @@ export const Marketplace = () => {
     <div>
       <div className="flex gap-2 bg-gray-15 p-4 justify-center items-center">
         <div className="flex-1">
-          <span className="text-white text-sm font-bold">12,346 </span>
+          <span className="text-white text-sm font-bold">{`${data.listingItems.pageInfo.totalCount} `} </span>
           <span className="text-gray-80 text-sm">Tracks</span>
         </div>
         <ListView color={isGrid ? undefined : 'rainbow'} onClick={() => setIsGrid(false)} />

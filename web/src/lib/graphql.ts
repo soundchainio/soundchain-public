@@ -449,7 +449,7 @@ export type ListingItemWithPrice = {
   pricePerItem: Maybe<Scalars['String']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
-  priceToShow: Maybe<Scalars['String']>;
+  priceToShow: Maybe<Scalars['Float']>;
 };
 
 export type LoginInput = {
@@ -2131,7 +2131,7 @@ export type ListingItemsQuery = (
       & ListingItemComponentFieldsFragment
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
     ) }
   ) }
 );
@@ -4562,6 +4562,7 @@ export const ListingItemsDocument = gql`
     pageInfo {
       hasNextPage
       endCursor
+      totalCount
     }
   }
 }
