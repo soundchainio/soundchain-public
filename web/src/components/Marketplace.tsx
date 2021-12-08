@@ -7,9 +7,15 @@ import { PostSkeleton } from './PostSkeleton';
 import { Track } from './Track';
 import { TrackGrid } from './TrackGrid';
 
+enum SortListingItemPrice {
+  PriceAsc = 'PriceAsc',
+  PriceDesc = 'PriceDesc',
+}
+
 export const Marketplace = () => {
   const [isGrid, setIsGrid] = useState(false);
   const [sorting, setSorting] = useState<SortListingItemField>(SortListingItemField.CreatedAt);
+  const [priceSorting, setPriceSorting] = useState<SortOrder>(SortOrder.Asc);
 
   const { data, refetch } = useListingItemsQuery({
     variables: {
@@ -19,11 +25,9 @@ export const Marketplace = () => {
 
   useEffect(() => {
     refetch({
-      sort: { field: sorting, order: SortOrder.Desc },
+      sort: { field: sorting, order: priceSorting },
     });
-  }, [sorting]);
-
-  console.log(data?.listingItems.nodes.map(d => d.listingItem?.priceToShow));
+  }, [sorting, priceSorting]);
 
   if (!data) {
     return (
@@ -55,16 +59,25 @@ export const Marketplace = () => {
           className="bg-gray-25 text-gray-80 font-bold text-xs rounded-lg border-0"
           name="Wallet"
           id="wallet"
-          onChange={e =>
-            setSorting(
-              SortListingItemField.Price === e.target.value
-                ? SortListingItemField.Price
-                : SortListingItemField.CreatedAt,
-            )
-          }
+          onChange={e => {
+            if (SortListingItemPrice.PriceAsc === e.target.value) {
+              setSorting(SortListingItemField.Price);
+              setPriceSorting(SortOrder.Asc);
+            } else if (SortListingItemPrice.PriceDesc === e.target.value) {
+              setSorting(SortListingItemField.Price);
+              setPriceSorting(SortOrder.Desc);
+            } else if (SortListingItemField.PlaybackCount === e.target.value) {
+              setSorting(SortListingItemField.PlaybackCount);
+              setPriceSorting(SortOrder.Desc);
+            } else {
+              setSorting(SortListingItemField.CreatedAt);
+              setPriceSorting(SortOrder.Desc);
+            }
+          }}
         >
-          <option value={SortListingItemField.Price}>Least expensive</option>
-          <option value={SortListingItemField.Price}>Most expensive</option>
+          <option value={SortListingItemPrice.PriceAsc}>Least expensive</option>
+          <option value={SortListingItemPrice.PriceDesc}>Most expensive</option>
+          <option value={SortListingItemField.PlaybackCount}>Most listened</option>
           <option value={SortListingItemField.CreatedAt}>Newest</option>
         </select>
       </div>
