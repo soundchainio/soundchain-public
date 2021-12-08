@@ -6,6 +6,10 @@ export interface ShowNewPostPayload {
   show: boolean;
 }
 
+export interface ShowCommentModalPayload {
+  show: boolean;
+}
+
 export interface ShowUnderDevelopmentPayload {
   show: boolean;
 }
@@ -16,6 +20,10 @@ export interface SetRepostIdPayload {
 
 export interface SetEditPostIdPayload {
   editPostId?: string;
+}
+
+export interface SetEditCommentIdPayload {
+  editCommentId?: string;
 }
 
 export interface ShowAuthorActionsPayload {
@@ -65,7 +73,9 @@ export interface SetAmountToTransfer {
 
 export type ModalPayload =
   | ShowNewPostPayload
+  | ShowCommentModalPayload
   | SetEditPostIdPayload
+  | SetEditCommentIdPayload
   | SetRepostIdPayload
   | ShowAuthorActionsPayload
   | ShowUnderDevelopmentPayload

@@ -516,6 +516,7 @@ export type Mutation = {
   setNotValid: CreateBuyNowItemType;
   createBuyNowItem: CreateBuyNowItemType;
   addComment: AddCommentPayload;
+  updateComment: UpdateCommentPayload;
   deleteComment: DeleteCommentPayload;
   sendMessage: SendMessagePayload;
   resetUnreadMessageCount: Profile;
@@ -568,6 +569,11 @@ export type MutationCreateBuyNowItemArgs = {
 
 export type MutationAddCommentArgs = {
   input: AddCommentInput;
+};
+
+
+export type MutationUpdateCommentArgs = {
+  input: UpdateCommentInput;
 };
 
 
@@ -1435,6 +1441,16 @@ export type UnsubscribeFromProfileInput = {
 export type UnsubscribeFromProfilePayload = {
   __typename?: 'UnsubscribeFromProfilePayload';
   profile: Profile;
+};
+
+export type UpdateCommentInput = {
+  commentId: Scalars['String'];
+  body: Scalars['String'];
+};
+
+export type UpdateCommentPayload = {
+  __typename?: 'UpdateCommentPayload';
+  comment: Comment;
 };
 
 export type UpdateDefaultWalletInput = {
@@ -2768,6 +2784,22 @@ export type UnsubscribeFromProfileMutation = (
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'isSubscriber'>
+    ) }
+  ) }
+);
+
+export type UpdateCommentMutationVariables = Exact<{
+  input: UpdateCommentInput;
+}>;
+
+
+export type UpdateCommentMutation = (
+  { __typename?: 'Mutation' }
+  & { updateComment: (
+    { __typename?: 'UpdateCommentPayload' }
+    & { comment: (
+      { __typename?: 'Comment' }
+      & CommentComponentFieldsFragment
     ) }
   ) }
 );
@@ -6004,6 +6036,41 @@ export function useUnsubscribeFromProfileMutation(baseOptions?: Apollo.MutationH
 export type UnsubscribeFromProfileMutationHookResult = ReturnType<typeof useUnsubscribeFromProfileMutation>;
 export type UnsubscribeFromProfileMutationResult = Apollo.MutationResult<UnsubscribeFromProfileMutation>;
 export type UnsubscribeFromProfileMutationOptions = Apollo.BaseMutationOptions<UnsubscribeFromProfileMutation, UnsubscribeFromProfileMutationVariables>;
+export const UpdateCommentDocument = gql`
+    mutation UpdateComment($input: UpdateCommentInput!) {
+  updateComment(input: $input) {
+    comment {
+      ...CommentComponentFields
+    }
+  }
+}
+    ${CommentComponentFieldsFragmentDoc}`;
+export type UpdateCommentMutationFn = Apollo.MutationFunction<UpdateCommentMutation, UpdateCommentMutationVariables>;
+
+/**
+ * __useUpdateCommentMutation__
+ *
+ * To run a mutation, you first call `useUpdateCommentMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateCommentMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateCommentMutation, { data, loading, error }] = useUpdateCommentMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateCommentMutation(baseOptions?: Apollo.MutationHookOptions<UpdateCommentMutation, UpdateCommentMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateCommentMutation, UpdateCommentMutationVariables>(UpdateCommentDocument, options);
+      }
+export type UpdateCommentMutationHookResult = ReturnType<typeof useUpdateCommentMutation>;
+export type UpdateCommentMutationResult = Apollo.MutationResult<UpdateCommentMutation>;
+export type UpdateCommentMutationOptions = Apollo.BaseMutationOptions<UpdateCommentMutation, UpdateCommentMutationVariables>;
 export const UpdateCoverPictureDocument = gql`
     mutation UpdateCoverPicture($input: UpdateProfileInput!) {
   updateProfile(input: $input) {
