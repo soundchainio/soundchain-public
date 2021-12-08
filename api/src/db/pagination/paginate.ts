@@ -77,3 +77,87 @@ export async function paginateAggregated<T extends typeof Model>(
 
   return prepareResult(field, last, limit, after, before, results, totalCount);
 }
+
+export async function paginateAggregatedTest<T extends typeof Model>(
+  collection: ReturnModelType<T>,
+  aggregation: any,
+  params: PaginateParams<T>,
+): Promise<PaginateResult<InstanceType<T>>> {
+  const { filter = {}, sort = { field: '_id' }, page = {}, group = {} } = params;
+  const { field, order = SortOrder.ASC } = sort;
+  const { first = 25, after, last, before, inclusive } = page;
+  const ascending = (order === SortOrder.ASC) !== Boolean(last || before);
+  const limit = last ?? first;
+
+  const cursorFilter = buildCursorFilter(field, ascending, before, after, inclusive);
+  const querySort = buildQuerySort(field, ascending);
+
+  const [results, totalCount] = await Promise.all([
+    collection
+      .aggregate([
+        {
+          $lookup: {
+            from: 'buynowitems',
+            localField: 'nftData.tokenId',
+            foreignField: 'tokenId',
+            as: 'buynowitem',
+          },
+        },
+        {
+          $lookup: {
+            from: 'auctionitems',
+            localField: 'nftData.tokenId',
+            foreignField: 'tokenId',
+            as: 'auctionitem',
+          },
+        },
+        {
+          $addFields: {
+            auctionitem: {
+              $filter: {
+                input: '$auctionitem',
+                as: 'item',
+                cond: {
+                  $eq: ['$$item.valid', true],
+                },
+              },
+            },
+            buynowitem: {
+              $filter: {
+                input: '$buynowitem',
+                as: 'item',
+                cond: {
+                  $eq: ['$$item.valid', true],
+                },
+              },
+            },
+          },
+        },
+        {
+          $addFields: {
+            listing: {
+              $concatArrays: ['$auctionitem', '$buynowitem'],
+            },
+          },
+        },
+        {
+          $project: {
+            buynowitem: 0,
+            auctionitem: 0,
+          },
+        },
+        {
+          $unwind: {
+            path: '$listing',
+          },
+        },
+        { $match: cursorFilter },
+      ])
+      .sort(querySort)
+      .limit(limit + 1)
+      .exec(),
+    collection.find(filter).countDocuments().exec(),
+  ]);
+
+  return prepareResult(field, last, limit, after, before, results, totalCount);
+}
