@@ -1,8 +1,8 @@
 import Slider from '@reach/slider';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { HeartFilled } from 'icons/HeartFilled';
+import { Info } from 'icons/Info';
 import { Matic } from 'icons/Matic';
-import { Navigate } from 'icons/Navigate';
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
 import NextLink from 'next/link';
@@ -78,7 +78,7 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
                   </div>
                 )}
                 <div className="self-center">
-                  <Navigate />
+                  <Info />
                 </div>
               </div>
             </NextLink>

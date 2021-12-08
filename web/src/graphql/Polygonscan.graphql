@@ -1,0 +1,27 @@
+query Polygonscan($wallet: String!, $page: PageInput) {
+  getTransactionHistory(wallet: $wallet, page: $page) {
+    nextPage
+    result {
+      blockNumber
+      timeStamp
+      hash
+      nonce
+      blockHash
+      transactionIndex
+      from
+      to
+      value
+      gas
+      gasPrice
+      isError
+      txreceipt_status
+      input
+      contractAddress
+      cumulativeGasUsed
+      gasUsed
+      confirmations
+      method
+      date
+    }
+  }
+}

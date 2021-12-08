@@ -6,6 +6,7 @@ import {
   Follow,
   FollowConnection,
   FollowedArtistsConnection,
+  PolygonscanResult,
   TrackConnection,
 } from 'lib/graphql';
 
@@ -192,6 +193,15 @@ export const cacheConfig: InMemoryCacheConfig = {
             return {
               nodes: [...existing.nodes, ...nodes],
               pageInfo,
+            };
+          },
+        },
+        getTransactionHistory: {
+          keyArgs: ['wallet'],
+          merge(existing = { result: [] }, { result, nextPage }): PolygonscanResult {
+            return {
+              result: [...existing.result, ...result],
+              nextPage,
             };
           },
         },
