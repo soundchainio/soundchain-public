@@ -9,8 +9,8 @@ import { Moonpay } from 'icons/Moonpay';
 import { Navigate } from 'icons/Navigate';
 import { OkCoin } from 'icons/OkCoin';
 import { Polygon } from 'icons/Polygon';
-import { PolygonBridge } from 'icons/PolygonBridge';
 import Head from 'next/head';
+import Image from 'next/image';
 import React from 'react';
 
 const topNovaBarProps: TopNavBarProps = {
@@ -89,7 +89,10 @@ export default function BuyMaticPage() {
         </div>
         <div className="flex flex-col gap-3 rounded-lg p-4 bg-black border-2 border-gray-40 my-4">
           <div className="flex space-beetween text-gray-200 justify-between">
-            <PolygonBridge />
+            <div className="flex items-center gap-2 text-white text-xs font-bold">
+              <Image height="28" width="26" src="/polygon-bridge.png" alt="" priority />
+              <span>Polygon Bridge</span>
+            </div>
             <a href="https://wallet.polygon.technology/" rel="noreferrer" target="_blank" className="flex items-center">
               wallet.polygon <Navigate className="ml-2" />
             </a>
