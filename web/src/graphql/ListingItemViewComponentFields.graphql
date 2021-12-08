@@ -1,4 +1,4 @@
-fragment ListingItemViewComponentFields on ListingItemView {
+fragment ListingItemViewComponentFields on ListingItem {
   id
   owner
   nft

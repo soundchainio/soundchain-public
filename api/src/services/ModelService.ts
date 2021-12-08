@@ -6,8 +6,9 @@ import { encodeCursor } from '../db/pagination/cursor';
 import {
   paginate,
   paginateAggregated,
-  paginateAggregatedTest,
   PaginateParams,
+  PaginateParamsAggregated,
+  paginatePipelineAggregated,
   PaginateResult,
 } from '../db/pagination/paginate';
 import { NotFoundError } from '../errors/NotFoundError';
@@ -79,7 +80,7 @@ export class ModelService<T extends typeof Model, KeyComponents = string> extend
     return paginateAggregated(this.model, params);
   }
 
-  async paginateAggregatedTest(params: PaginateParams<T> = {}): Promise<PaginateResult<InstanceType<T>>> {
-    return paginateAggregatedTest(this.model, {}, params);
+  async paginatePipelineAggregated(params: PaginateParamsAggregated<T> = {}): Promise<PaginateResult<any>> {
+    return paginatePipelineAggregated(this.model, params);
   }
 }

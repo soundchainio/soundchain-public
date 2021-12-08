@@ -1,7 +1,7 @@
 import { Filter } from 'icons/Filter';
 import { GridView } from 'icons/GridView';
 import { ListView } from 'icons/ListView';
-import { SortOrder, SortTrackField, useListingItemsViewQuery } from 'lib/graphql';
+import { SortOrder, SortTrackField, useListingItemsQuery } from 'lib/graphql';
 import React, { useState } from 'react';
 import { PostSkeleton } from './PostSkeleton';
 import { TrackGrid } from './TrackGrid';
@@ -20,7 +20,7 @@ interface Song {
 export const Marketplace = () => {
   const [isGrid, setIsGrid] = useState(true);
 
-  const { data } = useListingItemsViewQuery({
+  const { data } = useListingItemsQuery({
     variables: {
       sort: { field: SortTrackField.CreatedAt, order: SortOrder.Desc },
     },
@@ -60,18 +60,8 @@ export const Marketplace = () => {
         </select>
       </div>
       <div className="grid grid-cols-2 gap-2 p-4">
-        {data.listingItemsView.nodes.map(post => (
-          <TrackGrid
-            key={post.id}
-            song={
-              {
-                saleType: 'auction',
-                price: '1018123123123231 ',
-                favoriteCount: 38278,
-                playbackCount: 32217,
-              } as Song
-            }
-          />
+        {data.listingItems.nodes.map(track => (
+          <TrackGrid key={track.id} track={track} />
         ))}
       </div>
     </div>

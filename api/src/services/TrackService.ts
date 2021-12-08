@@ -8,11 +8,13 @@ import { FeedItemModel } from '../models/FeedItem';
 import { NotificationModel } from '../models/Notification';
 import { PostModel } from '../models/Post';
 import { Track, TrackModel } from '../models/Track';
+import { TrackWithListingItem } from '../models/TrackWithListingItem';
 import { Context } from '../types/Context';
 import { FilterTrackInput } from '../types/FilterTrackInput';
 import { NFTData } from '../types/NFTData';
 import { PageInput } from '../types/PageInput';
 import { PendingRequest } from '../types/PendingRequest';
+import { SortListingItemInput } from '../types/SortListingItemInput';
 import { SortTrackInput } from '../types/SortTrackInput';
 import { ModelService } from './ModelService';
 
@@ -232,5 +234,67 @@ export class TrackService extends ModelService<typeof Track> {
       return res.pricePerItem;
     }
     return '0';
+  }
+
+  getListingItems(sort?: SortListingItemInput, page?: PageInput): Promise<PaginateResult<TrackWithListingItem>> {
+    const aggregation = [
+      {
+        $lookup: {
+          from: 'buynowitems',
+          localField: 'nftData.tokenId',
+          foreignField: 'tokenId',
+          as: 'buynowitem',
+        },
+      },
+      {
+        $lookup: {
+          from: 'auctionitems',
+          localField: 'nftData.tokenId',
+          foreignField: 'tokenId',
+          as: 'auctionitem',
+        },
+      },
+      {
+        $addFields: {
+          auctionitem: {
+            $filter: {
+              input: '$auctionitem',
+              as: 'item',
+              cond: {
+                $eq: ['$$item.valid', true],
+              },
+            },
+          },
+          buynowitem: {
+            $filter: {
+              input: '$buynowitem',
+              as: 'item',
+              cond: {
+                $eq: ['$$item.valid', true],
+              },
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          listingItem: {
+            $concatArrays: ['$auctionitem', '$buynowitem'],
+          },
+        },
+      },
+      {
+        $project: {
+          buynowitem: 0,
+          auctionitem: 0,
+        },
+      },
+      {
+        $unwind: {
+          path: '$listingItem',
+        },
+      },
+    ];
+    return this.paginatePipelineAggregated({ aggregation, sort, page });
   }
 }

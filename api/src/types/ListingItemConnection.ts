@@ -1,5 +1,5 @@
 import { Field, ObjectType } from 'type-graphql';
-import { ListingItemView } from '../models/ListingItem';
+import { TrackWithListingItem } from '../models/TrackWithListingItem';
 import { PageInfo } from './PageInfo';
 
 @ObjectType()
@@ -7,6 +7,6 @@ export class ListingItemConnection {
   @Field()
   pageInfo: PageInfo;
 
-  @Field(() => [ListingItemView])
-  nodes: ListingItemView[];
+  @Field(() => [TrackWithListingItem])
+  nodes: TrackWithListingItem[];
 }

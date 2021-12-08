@@ -1,9 +1,8 @@
 import { ObjectId } from 'mongodb';
 import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
-import { paginateAggregatedTest } from '../db/pagination/paginate';
 import { CurrentUser } from '../decorators/current-user';
 import { FavoriteProfileTrackModel } from '../models/FavoriteProfileTrack';
-import { Track, TrackModel } from '../models/Track';
+import { Track } from '../models/Track';
 import { User } from '../models/User';
 import { FavoriteCount } from '../services/TrackService';
 import { Context } from '../types/Context';
@@ -12,7 +11,9 @@ import { CreateTrackPayload } from '../types/CreateTrackPayload';
 import { DeleteTrackInput } from '../types/DeleteTrackInput';
 import { DeleteTrackPayload } from '../types/DeleteTrackPayload';
 import { FilterTrackInput } from '../types/FilterTrackInput';
+import { ListingItemConnection } from '../types/ListingItemConnection';
 import { PageInput } from '../types/PageInput';
+import { SortListingItemInput } from '../types/SortListingItemInput';
 import { SortTrackInput } from '../types/SortTrackInput';
 import { ToggleFavoritePayload } from '../types/ToggleFavoritePayload';
 import { TrackConnection } from '../types/TrackConnection';
@@ -60,7 +61,6 @@ export class TrackResolver {
 
   @Query(() => Track)
   track(@Ctx() { trackService }: Context, @Arg('id') id: string): Promise<Track> {
-    paginateAggregatedTest<typeof Track>(TrackModel, {}, {}).then(console.log);
     return trackService.getTrack(id);
   }
 
@@ -128,5 +128,15 @@ export class TrackResolver {
     const favorites = await FavoriteProfileTrackModel.find({ profileId });
     const ids = favorites.map(item => new ObjectId(item.trackId));
     return trackService.getFavoriteTracks(ids, search, sort, page);
+  }
+
+  @Query(() => ListingItemConnection)
+  listingItems(
+    @Ctx() { trackService }: Context,
+    @Arg('sort', { nullable: true }) sort?: SortListingItemInput,
+    @Arg('page', { nullable: true }) page?: PageInput,
+  ): Promise<ListingItemConnection> {
+    trackService.getListingItems(sort, page).then(console.log);
+    return trackService.getListingItems(sort, page);
   }
 }

@@ -3,7 +3,7 @@ import { Field, ID, ObjectType } from 'type-graphql';
 import { Model } from './Model';
 
 @ObjectType()
-export class ListingItemView extends Model {
+export class ListingItem extends Model {
   @Field(() => ID, { name: 'id' })
   readonly _id: string;
 
@@ -35,4 +35,4 @@ export class ListingItemView extends Model {
   updatedAt: Date;
 }
 
-export const ListingItemModel = getModelForClass(ListingItemView);
+export const ListingItemModel = getModelForClass(ListingItem);

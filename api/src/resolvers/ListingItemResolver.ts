@@ -1,25 +1,12 @@
 import { Arg, Ctx, Query, Resolver } from 'type-graphql';
-import { ListingItemView } from '../models/ListingItem';
+import { ListingItem } from '../models/ListingItem';
 import { Context } from '../types/Context';
-import { ListingItemConnection } from '../types/ListingItemConnection';
-import { PageInput } from '../types/PageInput';
-import { SortListingItemInput } from '../types/SortListingItemInput';
 
-@Resolver(ListingItemView)
+@Resolver(ListingItem)
 export class ListingItemResolver {
-  @Query(() => ListingItemView)
-  async listingItem(@Ctx() { listingItemService }: Context, @Arg('tokenId') tokenId: number): Promise<ListingItemView> {
+  @Query(() => ListingItem)
+  async listingItem(@Ctx() { listingItemService }: Context, @Arg('tokenId') tokenId: number): Promise<ListingItem> {
     const listingItem = await listingItemService.getListingItem(tokenId);
     return listingItem;
-  }
-
-  @Query(() => ListingItemConnection)
-  listingItemsView(
-    @Ctx() { listingItemService }: Context,
-    @Arg('sort', { nullable: true }) sort?: SortListingItemInput,
-    @Arg('page', { nullable: true }) page?: PageInput,
-  ): Promise<ListingItemConnection> {
-    console.log(listingItemService);
-    return listingItemService.getListingItems(sort, page);
   }
 }
