@@ -69,7 +69,7 @@ export const Marketplace = () => {
         </select>
       </div>
       {isGrid ? (
-        <div className="grid grid-cols-2 gap-2 p-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 p-4 justify-center">
           {data.listingItems.nodes.map(track => (
             <TrackGrid key={track.id} track={track} />
           ))}

@@ -46,7 +46,7 @@ export const TrackGrid = ({ track }: TrackProps) => {
   }, [isCurrentSong, isCurrentlyPlaying, setIsPlaying, trackId]);
 
   return (
-    <div className={'p-0.5 rounded-xl bg-rainbow-gradient'}>
+    <div className="p-0.5 rounded-xl bg-rainbow-gradient">
       <div className="bg-black rounded-lg p-4 items-center">
         <div className="flex justify-center items-center mb-2">
           <div className="h-24 w-24 relative">

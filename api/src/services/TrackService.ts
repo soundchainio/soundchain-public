@@ -198,7 +198,7 @@ export class TrackService extends ModelService<typeof Track> {
   }
 
   async favoriteCount(trackId: string): Promise<FavoriteCount> {
-    const res = await FavoriteProfileTrackModel.aggregate([
+    const favTrack = await FavoriteProfileTrackModel.aggregate([
       {
         $match: {
           trackId: trackId.toString(),
@@ -213,25 +213,25 @@ export class TrackService extends ModelService<typeof Track> {
         },
       },
     ]);
-    return res.length ? res[0].count : 0;
+    return favTrack.length ? favTrack[0].count : 0;
   }
 
   async saleType(tokenId: number): Promise<string> {
-    const res = await this.context.listingItemService.getListingItem(tokenId);
-    if (res.endingTime) {
+    const listing = await this.context.listingItemService.getListingItem(tokenId);
+    if (listing.endingTime) {
       return 'auction';
-    } else if (res.pricePerItem) {
+    } else if (listing.pricePerItem) {
       return 'buy now';
     }
     return '';
   }
 
   async price(tokenId: number): Promise<string> {
-    const res = await this.context.listingItemService.getListingItem(tokenId);
-    if (res.endingTime) {
-      return await this.context.auctionItemService.getHighestBid(res._id);
-    } else if (res.pricePerItem) {
-      return res.pricePerItem;
+    const listing = await this.context.listingItemService.getListingItem(tokenId);
+    if (listing.endingTime) {
+      return (await this.context.auctionItemService.getHighestBid(listing._id)) || listing.reservePrice;
+    } else if (listing.pricePerItem) {
+      return listing.pricePerItem;
     }
     return '0';
   }
