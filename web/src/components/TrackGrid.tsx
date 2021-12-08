@@ -74,7 +74,7 @@ export const TrackGrid = ({ track }: TrackProps) => {
             <div className="flex items-center gap-1">
               {saleType && saleType !== '' && (
                 <>
-                  <div className="text-white font-bold text-xxs">{(parseInt(price) / 1e18).toFixed(3)}</div>
+                  <div className="text-white font-bold text-xxs">{parseInt(price) / 1e18}</div>
                   <div className="flex items-center justify-center flex-shrink-0 h-full">
                     <Matic height="12" width="12" />
                   </div>
