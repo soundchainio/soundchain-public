@@ -45,7 +45,7 @@ export default function BuyMaticPage() {
       <Head>
         <title>Soundchain - Wallet</title>
         <meta name="description" content="Wallet" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicons/favicon.ico" />
       </Head>
       <div className="px-8 py-4 text-gray-80 text-xs">
         <p className="text-center m-4 font-bold">

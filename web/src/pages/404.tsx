@@ -14,7 +14,7 @@ export default function Page404() {
       <Head>
         <title>Soundchain / Explore</title>
         <meta name="description" content="Explore" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicons/favicon.ico" />
       </Head>
       <div className="h-full w-full flex flex-col items-center justify-center">
         <Sad className="w-12" />

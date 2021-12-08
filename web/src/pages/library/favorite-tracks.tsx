@@ -19,7 +19,7 @@ export default function FavoriteTracksPage() {
       <Head>
         <title>Soundchain - Favorite Tracks</title>
         <meta name="description" content="Favorite Tracks" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicons/favicon.ico" />
       </Head>
       <SearchLibrary placeholder="Search tracks..." setSearchTerm={setSearchTerm} />
       <FavoriteTracks searchTerm={searchTerm} />

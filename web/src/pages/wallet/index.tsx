@@ -144,7 +144,7 @@ export default function WalletPage() {
       <Head>
         <title>Soundchain - Wallet</title>
         <meta name="description" content="Wallet" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicons/favicon.ico" />
       </Head>
       <div className="h-full flex flex-col">
         <WalletHeader />

@@ -42,7 +42,7 @@ export default function NamePage() {
       <Head>
         <title>Soundchain - Edit Name</title>
         <meta name="description" content="Edit Name" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicons/favicon.ico" />
       </Head>
       <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
         <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={onSubmit}>

@@ -20,7 +20,7 @@ export default function MessagesPage() {
       <Head>
         <title>Soundchain / Inbox</title>
         <meta name="description" content="Inbox" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicons/favicon.ico" />
       </Head>
       <Inbox />
     </Layout>
