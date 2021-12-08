@@ -3,7 +3,7 @@ import { HeartFilled } from 'icons/HeartFilled';
 import { Matic } from 'icons/Matic';
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
-import { ListingItem, Maybe, TrackWithListingItem } from 'lib/graphql';
+import { ListingItemWithPrice, Maybe, TrackWithListingItem } from 'lib/graphql';
 import NextLink from 'next/link';
 import React, { useEffect, useState } from 'react';
 import Asset from './Asset';
@@ -14,14 +14,14 @@ interface TrackProps {
   coverPhotoUrl?: string;
 }
 
-function saleType1(res: Maybe<ListingItem>): string {
+const getSaleType = (res: Maybe<ListingItemWithPrice>): string => {
   if (res?.endingTime) {
     return 'auction';
   } else if (res?.pricePerItem) {
     return 'buy now';
   }
   return '';
-}
+};
 
 export const TrackGrid = ({ track }: TrackProps) => {
   const song = {
@@ -35,8 +35,8 @@ export const TrackGrid = ({ track }: TrackProps) => {
     favoriteCount: track.favoriteCount,
   };
   const { listingItem } = track;
-  const saleType = saleType1(listingItem);
-  const price = (listingItem?.reservePrice || listingItem?.pricePerItem) ?? '';
+  const saleType = getSaleType(listingItem);
+  const price = listingItem?.priceToShow ?? '';
   const { art, artist, title, trackId, playbackCount, favoriteCount } = song;
   const { play, isCurrentSong, isCurrentlyPlaying } = useAudioPlayerContext();
   const [isPlaying, setIsPlaying] = useState(false);

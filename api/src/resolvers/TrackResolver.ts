@@ -136,7 +136,6 @@ export class TrackResolver {
     @Arg('sort', { nullable: true }) sort?: SortListingItemInput,
     @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<ListingItemConnection> {
-    trackService.getListingItems(sort, page).then(console.log);
     return trackService.getListingItems(sort, page);
   }
 }

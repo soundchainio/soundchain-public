@@ -40,6 +40,7 @@ export type AuctionItem = {
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   valid: Scalars['Boolean'];
+  highestBid: Scalars['String'];
 };
 
 export type AuctionItemPayload = {
@@ -434,6 +435,21 @@ export type ListingItemConnection = {
   __typename?: 'ListingItemConnection';
   pageInfo: PageInfo;
   nodes: Array<TrackWithListingItem>;
+};
+
+export type ListingItemWithPrice = {
+  __typename?: 'ListingItemWithPrice';
+  id: Scalars['ID'];
+  owner: Maybe<Scalars['String']>;
+  nft: Maybe<Scalars['String']>;
+  tokenId: Maybe<Scalars['Float']>;
+  startingTime: Maybe<Scalars['Float']>;
+  endingTime: Maybe<Scalars['Float']>;
+  reservePrice: Maybe<Scalars['String']>;
+  pricePerItem: Maybe<Scalars['String']>;
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  priceToShow: Maybe<Scalars['String']>;
 };
 
 export type LoginInput = {
@@ -1400,7 +1416,7 @@ export type TrackWithListingItem = {
   price: Scalars['String'];
   saleType: Scalars['String'];
   isFavorite: Scalars['Boolean'];
-  listingItem: Maybe<ListingItem>;
+  listingItem: Maybe<ListingItemWithPrice>;
 };
 
 export type UnfollowProfileInput = {
@@ -2090,8 +2106,8 @@ export type ListingItemComponentFieldsFragment = (
     { __typename?: 'NFTDataType' }
     & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner'>
   )>, listingItem: Maybe<(
-    { __typename?: 'ListingItem' }
-    & Pick<ListingItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'startingTime' | 'endingTime' | 'reservePrice' | 'createdAt' | 'updatedAt'>
+    { __typename?: 'ListingItemWithPrice' }
+    & Pick<ListingItemWithPrice, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'startingTime' | 'endingTime' | 'reservePrice' | 'createdAt' | 'updatedAt' | 'priceToShow'>
   )> }
 );
 
@@ -3115,6 +3131,7 @@ export const ListingItemComponentFieldsFragmentDoc = gql`
     reservePrice
     createdAt
     updatedAt
+    priceToShow
   }
 }
     `;

@@ -294,6 +294,20 @@ export class TrackService extends ModelService<typeof Track> {
           path: '$listingItem',
         },
       },
+      {
+        $addFields: {
+          'listingItem.priceToShow': {
+            $toDouble: {
+              $ifNull: [
+                '$listingItem.highestBid',
+                {
+                  $ifNull: ['$listingItem.reservePrice', '$listingItem.pricePerItem'],
+                },
+              ],
+            },
+          },
+        },
+      },
     ];
     return this.paginatePipelineAggregated({ aggregation, sort, page });
   }

@@ -41,5 +41,6 @@ fragment ListingItemComponentFields on TrackWithListingItem {
     reservePrice
     createdAt
     updatedAt
+    priceToShow
   }
 }

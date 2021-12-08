@@ -36,3 +36,11 @@ export class ListingItem extends Model {
 }
 
 export const ListingItemModel = getModelForClass(ListingItem);
+
+@ObjectType()
+export class ListingItemWithPrice extends ListingItem {
+  @Field({ nullable: true })
+  priceToShow: number;
+}
+
+export const ListingItemWithPriceModel = getModelForClass(ListingItemWithPrice);
