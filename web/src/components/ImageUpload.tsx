@@ -42,7 +42,8 @@ export function ImageUpload({
 
   useEffect(() => {
     initialValue && upload([initialValue]);
-  }, [initialValue, upload]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialValue]);
 
   return (
     <Dropzone
