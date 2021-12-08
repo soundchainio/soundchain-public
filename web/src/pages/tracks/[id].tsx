@@ -7,9 +7,11 @@ import { Layout } from 'components/Layout';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
+import { useModalDispatch } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
+import { Ellipsis } from 'icons/Ellipsis';
 import { cacheFor, createApolloClient } from 'lib/apollo';
 import {
   PendingRequest,
@@ -26,10 +28,8 @@ import {
 import { GetServerSideProps } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
-import { HighestBid } from './[id]/complete-auction';
-import { Ellipsis } from 'icons/Ellipsis';
-import { useModalDispatch } from 'contexts/providers/modal';
 import { AuthorActionsType } from 'types/AuthorActionsType';
+import { HighestBid } from './[id]/complete-auction';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -54,7 +54,7 @@ export const getServerSideProps: GetServerSideProps<TrackPageProps, TrackPagePar
     context,
   });
 
-  if (error) {
+  if (error || data.track.deleted) {
     return { notFound: true };
   }
 
@@ -193,11 +193,11 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const onEllipsisClick = () => {
     dispatchShowAuthorActionsModal(true, AuthorActionsType.NFT, track.id, true);
   };
-  
+
   const topNovaBarProps: TopNavBarProps = {
     leftButton: <BackButton />,
     title: 'NFT Details',
-    rightButton: isOwner ? <Ellipsis className="cursor-pointer" onClick={onEllipsisClick} /> : undefined
+    rightButton: isOwner ? <Ellipsis className="cursor-pointer" onClick={onEllipsisClick} /> : undefined,
   };
 
   useEffect(() => {
