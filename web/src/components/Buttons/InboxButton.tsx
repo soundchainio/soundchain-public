@@ -13,7 +13,7 @@ export const InboxButton = () => {
     <div className="flex items-end">
       <div className="relative md:mt-2 mr-2">
         <NavBarButton
-          label="Notifications"
+          label="Alerts"
           path={me ? '/notifications' : '/login'}
           icon={Bell}
           badge={me ? NotificationBadge : undefined}
