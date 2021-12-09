@@ -12,7 +12,13 @@ const baseClasses =
 
 export const AuthorActionsModal = () => {
   const { showAuthorActions, authorActionsId, authorActionsType, showOnlyDeleteOption } = useModalState();
-  const { dispatchShowAuthorActionsModal, dispatchShowPostModal, dispatchSetEditPostId } = useModalDispatch();
+  const {
+    dispatchShowAuthorActionsModal,
+    dispatchShowPostModal,
+    dispatchSetEditPostId,
+    dispatchSetEditCommentId,
+    dispatchShowCommentModal,
+  } = useModalDispatch();
   const router = useRouter();
 
   const [deleteComment] = useDeleteCommentMutation({
@@ -35,8 +41,16 @@ export const AuthorActionsModal = () => {
 
   const onEdit = () => {
     onOutsideClick();
-    dispatchSetEditPostId(authorActionsId);
-    dispatchShowPostModal(true);
+    switch (authorActionsType) {
+      case AuthorActionsType.POST:
+        dispatchSetEditPostId(authorActionsId);
+        dispatchShowPostModal(true);
+        break;
+      case AuthorActionsType.COMMENT:
+        dispatchSetEditCommentId(authorActionsId);
+        dispatchShowCommentModal(true);
+        break;
+    }
   };
 
   const onDelete = async () => {

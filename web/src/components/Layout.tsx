@@ -4,12 +4,14 @@ import { ReactNode, useEffect, useState } from 'react';
 import { AuthorActionsModal } from './AuthorActionsModal';
 import { ApproveModal } from './modals/ApproveModal';
 import { PostModal } from './PostModal';
+import { CommentModal } from './CommentModal';
 import { ReactionsModal } from './ReactionsModal';
 import { RemoveListingConfirmationModal } from './RemoveListingConfirmationModal';
 import { SideMenu } from './SideMenu';
 import { TopNavBar, TopNavBarProps } from './TopNavBar';
 import { TransferConfirmationModal } from './TransferConfirmationModal';
 import { UnderDevelopmentModal } from './UnderDevelopmentModal';
+import { useModalState } from 'contexts/providers/modal';
 
 interface LayoutProps {
   children: ReactNode;
@@ -21,6 +23,7 @@ interface LayoutProps {
 export const Layout = ({ children, hideBottomNavBar, topNavBarProps, className }: LayoutProps) => {
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
   const { setHideBottomNavBarState } = useHideBottomNavBar();
+  const { showCommentModal } = useModalState();
 
   useEffect(() => {
     setHideBottomNavBarState(!!hideBottomNavBar);
@@ -39,6 +42,7 @@ export const Layout = ({ children, hideBottomNavBar, topNavBarProps, className }
       <div id="modals" className="absolute z-20 w-full">
         <UnderDevelopmentModal />
         <PostModal />
+        {showCommentModal && <CommentModal />}
         <AuthorActionsModal />
         <ReactionsModal />
         <TransferConfirmationModal />
