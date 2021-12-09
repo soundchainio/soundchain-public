@@ -13,7 +13,7 @@ enum SortListingItemPrice {
 }
 
 export const Marketplace = () => {
-  const pageSize = 3;
+  const pageSize = 10;
   const [isGrid, setIsGrid] = useState(false);
   const [sorting, setSorting] = useState<SortListingItemField>(SortListingItemField.Price);
   const [priceSorting, setPriceSorting] = useState<SortOrder>(SortOrder.Asc);
