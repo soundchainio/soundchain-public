@@ -17,10 +17,10 @@ export const FollowerNotificationItem = ({
 }: FollowerNotificationProps) => {
   return (
     <NextLink href={link}>
-      <div className={classNames('flex flex-col p-4', index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20')}>
+      <div className={classNames('cursor-pointer flex flex-col p-4', index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20')}>
         <div className="break-words flex">
           <div className="flex items-center pr-4 min-w-[50px]">
-            <Avatar profile={{ profilePicture: followerPicture }} pixels={40} />
+            <Avatar profile={{ profilePicture: followerPicture }} linkToProfile={false} pixels={40} />
             <div className="relative">
               <NewFollowerBadge className="absolute -right-1" />
             </div>
