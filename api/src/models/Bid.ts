@@ -1,5 +1,5 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
-import { ObjectId } from 'mongodb';
+import { Double, ObjectId } from 'mongodb';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { Model } from './Model';
 
@@ -21,8 +21,8 @@ export class Bid extends Model {
   bidder: string;
 
   @Field()
-  @prop({ required: true })
-  amount: number;
+  @prop({ type: Double, required: true })
+  amount: Double;
 
   @Field()
   @prop({ type: ObjectId, required: true })

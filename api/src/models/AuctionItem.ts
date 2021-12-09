@@ -1,4 +1,5 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
+import { Double } from 'bson';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { Model } from './Model';
 
@@ -28,8 +29,8 @@ export class AuctionItem extends Model {
   endingTime: number;
 
   @Field()
-  @prop({ required: true })
-  reservePrice: string;
+  @prop({ type: Double, required: true })
+  reservePrice: number;
 
   @Field(() => Date)
   createdAt: Date;
@@ -42,8 +43,8 @@ export class AuctionItem extends Model {
   valid: boolean;
 
   @Field()
-  @prop()
-  highestBid: string;
+  @prop({ type: Double })
+  highestBid: number;
 }
 
 export const AuctionItemModel = getModelForClass(AuctionItem);

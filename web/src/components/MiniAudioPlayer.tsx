@@ -21,7 +21,7 @@ interface Song {
   playbackCount: string;
   favoriteCount: number;
   saleType: string;
-  price: string;
+  price: number;
 }
 
 interface MiniAudioPlayerProps {

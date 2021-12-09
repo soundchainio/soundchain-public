@@ -8,7 +8,7 @@ interface NewAuctionItem {
   owner: string;
   nft: string;
   tokenId: number;
-  reservePrice: string;
+  reservePrice: number;
   startingTime: number;
   endingTime: number;
 }
@@ -41,7 +41,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
     return AuctionItem;
   }
 
-  async getHighestBid(auctionId: string): Promise<string | undefined> {
+  async getHighestBid(auctionId: string): Promise<number | undefined> {
     const res = await BidModel.aggregate([
       {
         $match: {
