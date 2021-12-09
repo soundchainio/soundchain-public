@@ -40,6 +40,10 @@ export class AuctionItem extends Model {
   @Field()
   @prop({ default: true })
   valid: boolean;
+
+  @Field()
+  @prop()
+  highestBid: string;
 }
 
 export const AuctionItemModel = getModelForClass(AuctionItem);

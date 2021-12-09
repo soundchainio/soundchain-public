@@ -11,7 +11,9 @@ import { CreateTrackPayload } from '../types/CreateTrackPayload';
 import { DeleteTrackInput } from '../types/DeleteTrackInput';
 import { DeleteTrackPayload } from '../types/DeleteTrackPayload';
 import { FilterTrackInput } from '../types/FilterTrackInput';
+import { ListingItemConnection } from '../types/ListingItemConnection';
 import { PageInput } from '../types/PageInput';
+import { SortListingItemInput } from '../types/SortListingItemInput';
 import { SortTrackInput } from '../types/SortTrackInput';
 import { ToggleFavoritePayload } from '../types/ToggleFavoritePayload';
 import { TrackConnection } from '../types/TrackConnection';
@@ -126,5 +128,14 @@ export class TrackResolver {
     const favorites = await FavoriteProfileTrackModel.find({ profileId });
     const ids = favorites.map(item => new ObjectId(item.trackId));
     return trackService.getFavoriteTracks(ids, search, sort, page);
+  }
+
+  @Query(() => ListingItemConnection)
+  listingItems(
+    @Ctx() { trackService }: Context,
+    @Arg('sort', { nullable: true }) sort?: SortListingItemInput,
+    @Arg('page', { nullable: true }) page?: PageInput,
+  ): Promise<ListingItemConnection> {
+    return trackService.getListingItems(sort, page);
   }
 }
