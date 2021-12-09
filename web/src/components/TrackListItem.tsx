@@ -40,7 +40,7 @@ export const TrackListItem = ({ song, index, handleOnPlayClicked }: TrackProps) 
     >
       <p className="w-6 text-right">{index}</p>
       <div className="h-10 w-10 relative flex items-center bg-gray-80">
-        <Asset src={art} />
+        <Asset src={art} sizes="2.5rem" />
       </div>
       <div>
         <p>{title}</p>
