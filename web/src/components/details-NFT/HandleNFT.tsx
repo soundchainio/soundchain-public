@@ -96,7 +96,7 @@ interface ListingActionProps {
 
 const ListingAction = ({ href, action, children }: React.PropsWithChildren<ListingActionProps>) => {
   return (
-    <div className="w-full bg-black text-white flex items-center py-3">
+    <div className="w-full bg-black text-white flex items-center py-3 fixed bottom-20">
       <div className="flex items-center flex-1 gap-2 text-sm font-bold pl-4">{children}</div>
       <div className="flex-1 flex items-center justify-center">
         <NextLink href={href}>
@@ -120,7 +120,7 @@ interface ListedActionProps {
 
 const ListedAction = ({ href, price, action, variant, countBids, endingDate }: ListedActionProps) => {
   return (
-    <div className="w-full bg-black text-white flex items-center py-3">
+    <div className="w-full bg-black text-white flex items-center py-3 fixed bottom-20">
       <div className="flex flex-col flex-1 ml-4">
         <div className="text-md flex items-center font-bold gap-1">
           <Matic />
