@@ -1,6 +1,7 @@
 import { UserInputError } from 'apollo-server-express';
 import base64url from 'base64-url';
 import { EJSON } from 'bson';
+import dot from 'dot-object';
 import { Model } from '../../models/Model';
 
 function assertStringOrArray(value: EJSON.SerializableTypes): asserts value is string | unknown[] {
@@ -14,10 +15,13 @@ function assertStringOrArray(value: EJSON.SerializableTypes): asserts value is s
 
 export function encodeCursor<T extends typeof Model>(
   doc: InstanceType<T> | undefined,
-  field: keyof InstanceType<T>,
+  field: keyof InstanceType<T> | string,
 ): string | undefined {
   if (doc) {
-    return base64url.encode(EJSON.stringify(field === '_id' ? doc._id.toString() : [doc[field], doc._id.toString()]));
+    const value = (field as string).includes('.')
+      ? dot.pick(field as string, doc)
+      : doc[field as keyof InstanceType<T>];
+    return base64url.encode(EJSON.stringify(field === '_id' ? doc._id.toString() : [value, doc._id.toString()]));
   }
 }
 

@@ -145,6 +145,14 @@ html {
   background: linear-gradient(90deg, #3b5bb1 0%, #6fa1ff 100%);
 }
 
+.bg-light-blue-gradient {
+  background: linear-gradient(76.4deg, #87d5ed 8.28%, #9be8f7 83.02%);
+}
+
+.bg-light-green-gradient {
+  background: linear-gradient(76.4deg, #98dd9f 8.28%, #afe2a3 83.02%);
+}
+
 .bg-green-gradient {
   background: linear-gradient(90deg, #278e31 0%, #52b23b 100%);
 }

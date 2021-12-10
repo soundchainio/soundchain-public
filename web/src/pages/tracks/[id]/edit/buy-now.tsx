@@ -76,7 +76,10 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
   const ownerAddressAccount = listingPayload.buyNowItem?.buyNowItem?.owner.toLowerCase();
   const isOwner = ownerAddressAccount === account?.toLowerCase();
   const isForSale = !!listingPayload.buyNowItem?.buyNowItem?.pricePerItem ?? false;
-  const price = web3?.utils.fromWei(listingPayload.buyNowItem?.buyNowItem?.pricePerItem.toString() || '0', 'ether');
+  const price = web3?.utils.fromWei(
+    listingPayload.buyNowItem?.buyNowItem?.pricePerItem.toLocaleString('fullwide', { useGrouping: false }) || '0',
+    'ether',
+  );
 
   const handleUpdate = () => {
     if (!web3 || !listingPayload.buyNowItem?.buyNowItem?.tokenId || !newPrice || !account || !startTime) {
