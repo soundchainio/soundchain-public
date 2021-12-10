@@ -1,12 +1,5 @@
 query ListingItem($tokenId: Float!) {
   listingItem(tokenId: $tokenId) {
-    _id
-    owner
-    nft
-    tokenId
-    pricePerItem
-    startingTime
-    endingTime
-    reservePrice
+    ...ListingItemViewComponentFields
   }
 }

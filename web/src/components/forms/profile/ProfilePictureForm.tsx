@@ -4,7 +4,7 @@ import { Form, Formik } from 'formik';
 import { useMe } from 'hooks/useMe';
 import { useUpdateProfilePictureMutation } from 'lib/graphql';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import * as yup from 'yup';
 import { Button, ButtonProps } from '../../Button';
 import { Label } from '../../Label';
@@ -48,6 +48,10 @@ export const ProfilePictureForm = ({ afterSubmit, submitText, submitProps }: Pro
     }
   }, [me?.profile.profilePicture]);
 
+  const onUpload = useCallback(uploading => {
+    setLoading(uploading);
+  }, []);
+
   if (!me) return null;
 
   const initialFormValues: FormValues = {
@@ -73,14 +77,20 @@ export const ProfilePictureForm = ({ afterSubmit, submitText, submitProps }: Pro
           <div className="flex-grow space-y-8">
             <div className="flex flex-col">
               <Label textSize="base">Custom Profile Photo:</Label>
-              <ImageUploadField
-                name="profilePicture"
-                className={`${loading || profilePicture ? 'self-center w-14 ' : ''}cursor-pointer mt-8`}
-                onUpload={setLoading}
-                rounded
-              >
-                Upload Profile Photo
-              </ImageUploadField>
+              {loading && !profilePicture ? (
+                <ImageUploadField name="profilePicture" className="mt-8">
+                  Uploading
+                </ImageUploadField>
+              ) : (
+                <ImageUploadField
+                  name="profilePicture"
+                  className={`${loading || profilePicture ? 'self-center w-24 h-24' : ''} cursor-pointer mt-8`}
+                  onUpload={onUpload}
+                  rounded
+                >
+                  Upload Profile Photo
+                </ImageUploadField>
+              )}
             </div>
             <div className="flex flex-col space-y-8">
               <Label textSize="base">Default Profile Photos:</Label>

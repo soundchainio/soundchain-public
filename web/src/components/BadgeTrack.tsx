@@ -10,7 +10,7 @@ export const BadgeTrack = ({ label, className, auction, ...rest }: BadgeProps) =
     className={classNames(
       className,
       'inline-flex items-center px-1 py-1 rounded-full font-black',
-      auction ? 'bg-blue-300' : 'bg-green-300',
+      auction ? 'bg-light-blue-gradient' : 'bg-light-green-gradient',
     )}
     style={{ fontSize: '8px' }}
     {...rest}

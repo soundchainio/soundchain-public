@@ -89,7 +89,7 @@ export const watcher: Handler = async () => {
                 owner,
                 nft,
                 tokenId: parseInt(tokenId),
-                pricePerItem,
+                pricePerItem: parseInt(pricePerItem),
                 startingTime: parseInt(startingTime),
               }),
               context.trackService.setPendingNone(parseInt(tokenId)),
@@ -104,7 +104,7 @@ export const watcher: Handler = async () => {
         {
           try {
             const { tokenId, seller, buyer, pricePerItem } = (event as ItemSold).returnValues;
-            await context.buyNowItemService.finishListing(tokenId, seller, buyer, pricePerItem);
+            await context.buyNowItemService.finishListing(tokenId, seller, buyer, parseInt(pricePerItem));
           } catch (error) {
             console.error(error);
           }
@@ -117,7 +117,7 @@ export const watcher: Handler = async () => {
             const { tokenId, newPrice, startingTime } = (event as unknown as ItemUpdated).returnValues;
             await Promise.all([
               context.buyNowItemService.updateBuyNowItem(parseInt(tokenId), {
-                pricePerItem: newPrice,
+                pricePerItem: parseInt(newPrice),
                 startingTime: parseInt(startingTime),
               }),
               context.trackService.setPendingNone(parseInt(tokenId)),
@@ -193,7 +193,7 @@ export const watcher: Handler = async () => {
                 tokenId: parseInt(tokenId),
                 startingTime: parseInt(startTimestamp),
                 endingTime: parseInt(endTimestamp),
-                reservePrice,
+                reservePrice: parseInt(reservePrice),
               }),
               context.trackService.setPendingNone(parseInt(tokenId)),
             ]);
@@ -207,7 +207,9 @@ export const watcher: Handler = async () => {
         {
           try {
             const { nftAddress, tokenId, bidder, bid } = (event as unknown as BidPlaced).returnValues;
-            const auction = await context.auctionItemService.findAuctionItem(parseInt(tokenId));
+            const auction = await context.auctionItemService.updateAuctionItem(parseInt(tokenId), {
+              highestBid: parseInt(bid),
+            });
             await context.bidService.createBid({
               nft: nftAddress,
               tokenId: parseInt(tokenId),
@@ -225,7 +227,7 @@ export const watcher: Handler = async () => {
         {
           try {
             const { tokenId, winner, oldOwner, winningBid } = (event as unknown as AuctionResulted).returnValues;
-            await context.auctionItemService.finishListing(tokenId, oldOwner, winner, winningBid);
+            await context.auctionItemService.finishListing(tokenId, oldOwner, winner, parseInt(winningBid));
           } catch (error) {
             console.error(error);
           }
@@ -252,7 +254,7 @@ export const watcher: Handler = async () => {
             const { tokenId, reservePrice, startTime, endTime } = (event as unknown as UpdateAuction).returnValues;
             await Promise.all([
               context.auctionItemService.updateAuctionItem(parseInt(tokenId), {
-                reservePrice,
+                reservePrice: parseInt(reservePrice),
                 startingTime: parseInt(startTime),
                 endingTime: parseInt(endTime),
               }),

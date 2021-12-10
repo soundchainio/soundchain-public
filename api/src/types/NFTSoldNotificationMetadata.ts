@@ -8,7 +8,7 @@ export interface NFTSoldNotificationMetadata {
   artist: string;
   artworkUrl: string;
   trackId: string;
-  price: string;
+  price: number;
   sellType: SellType;
 }
 

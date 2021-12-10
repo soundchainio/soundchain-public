@@ -165,19 +165,25 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const isAuction = !!listingPayload?.listingItem.reservePrice ?? false;
 
   useEffect(() => {
-    if (isAuction && account && listingPayload?.listingItem._id) {
-      fetchHaveBided({ variables: { auctionId: listingPayload.listingItem._id, bidder: account } });
+    if (isAuction && account && listingPayload?.listingItem.id) {
+      fetchHaveBided({ variables: { auctionId: listingPayload.listingItem.id, bidder: account } });
     }
-  }, [fetchHaveBided, isAuction, listingPayload?.listingItem._id, account]);
+  }, [fetchHaveBided, isAuction, listingPayload?.listingItem.id, account]);
 
   const isBuyNow = !!listingPayload?.listingItem.pricePerItem ?? false;
   let price;
   if (isAuction && highestBid.bid === '0') {
-    price = web3?.utils.fromWei(listingPayload?.listingItem.reservePrice ?? '0', 'ether');
+    price = web3?.utils.fromWei(
+      listingPayload?.listingItem.reservePrice?.toLocaleString('fullwide', { useGrouping: false }) ?? '0',
+      'ether',
+    );
   } else if (isAuction) {
     price = web3?.utils.fromWei(highestBid.bid ?? '0', 'ether');
   } else {
-    price = web3?.utils.fromWei(listingPayload?.listingItem.pricePerItem?.toString() ?? '0', 'ether');
+    price = web3?.utils.fromWei(
+      listingPayload?.listingItem.pricePerItem?.toLocaleString('fullwide', { useGrouping: false }) ?? '0',
+      'ether',
+    );
   }
 
   const auctionIsOver = (listingPayload?.listingItem.endingTime || 0) < Math.floor(Date.now() / 1000);

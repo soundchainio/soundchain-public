@@ -57,8 +57,8 @@ export function ImageUpload({
           className={classNames(
             'relative flex items-center justify-center bg-gray-30 border-gray-80 border-2',
             thumbnail && rounded ? 'rounded-full' : 'rounded-lg',
+            artwork ? 'w-24 h-24' : '',
             className,
-            artwork ? 'w-24 h-24' : 'h-14',
           )}
           {...rest}
           {...getRootProps()}

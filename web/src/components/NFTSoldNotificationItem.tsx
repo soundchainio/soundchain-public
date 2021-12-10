@@ -17,10 +17,10 @@ export const NFTSoldNotificationItem = ({
   index,
 }: NFTSoldNotificationProps) => {
   return (
-    <div className={classNames('flex flex-col p-4', index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20')}>
+    <div className={classNames('cursor-pointer flex flex-col p-4', index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20')}>
       <div className="break-words flex">
         <div className="flex items-center pr-4 min-w-[50px]">
-          <Avatar profile={{ profilePicture: buyerPicture }} pixels={40} />
+          <Avatar profile={{ profilePicture: buyerPicture }} linkToProfile={false} pixels={40} />
           <div className="relative">
             <Matic className="absolute -right-1" />
           </div>
@@ -49,7 +49,7 @@ export const NFTSoldNotificationItem = ({
             <div className="text-gray-80 font-bold text-xs">{artist}</div>
           </div>
           <div className="flex gap-2 text-white font-bold text-xs ml-auto">
-            <Matic /> {parseInt(price) / 1e18} MATIC
+            <Matic /> {price / 1e18} MATIC
           </div>
         </div>
       </NextLink>
