@@ -170,10 +170,10 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const isAuction = !!listingPayload?.listingItem.reservePrice ?? false;
 
   useEffect(() => {
-    if (isAuction && account && listingPayload?.listingItem._id) {
-      fetchHaveBided({ variables: { auctionId: listingPayload.listingItem._id, bidder: account } });
+    if (isAuction && account && listingPayload?.listingItem.id) {
+      fetchHaveBided({ variables: { auctionId: listingPayload.listingItem.id, bidder: account } });
     }
-  }, [fetchHaveBided, isAuction, listingPayload?.listingItem._id, account]);
+  }, [fetchHaveBided, isAuction, listingPayload?.listingItem.id, account]);
 
   const isBuyNow = !!listingPayload?.listingItem.pricePerItem ?? false;
   let price;

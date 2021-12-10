@@ -3,6 +3,7 @@ import { ModalActionTypes } from 'contexts/actions/modal';
 import {
   SetAmountToTransfer,
   SetEditPostIdPayload,
+  SetEditCommentIdPayload,
   SetRecipientWalletAddress,
   SetRepostIdPayload,
   ShowApprove,
@@ -11,6 +12,7 @@ import {
   ShowConfirmDeleteNFT,
   ShowCreatePayload,
   ShowNewPostPayload,
+  ShowCommentModalPayload,
   ShowReactionsPayload,
   ShowRemoveListing,
   ShowTransferConfirmationPayload,
@@ -22,9 +24,11 @@ import { SaleType } from 'types/SaleType';
 
 export interface ModalState {
   showNewPost: boolean;
+  showCommentModal: boolean;
   anyModalOpened: boolean;
   repostId?: string;
   editPostId?: string;
+  editCommentId?: string;
   showAuthorActions: boolean;
   authorActionsType?: AuthorActionsType;
   authorActionsId: string;
@@ -53,9 +57,11 @@ export interface ModalState {
 
 export const initialModalState = {
   showNewPost: false,
+  showCommentModal: false,
   anyModalOpened: false,
   repostId: undefined,
   editPostId: undefined,
+  editCommentId: undefined,
   showAuthorActions: false,
   authorActionsType: undefined,
   authorActionsId: '',
@@ -87,6 +93,12 @@ export const modalReducer = (state: ModalState, action: Action) => {
         showNewPost: (action.payload as ShowNewPostPayload).show,
         anyModalOpened: (action.payload as ShowNewPostPayload).show,
       };
+    case ModalActionTypes.SHOW_COMMENT_MODAL:
+      return {
+        ...state,
+        showCommentModal: (action.payload as ShowCommentModalPayload).show,
+        anyModalOpened: (action.payload as ShowCommentModalPayload).show,
+      };
     case ModalActionTypes.SET_REPOST_ID:
       return {
         ...state,
@@ -96,6 +108,12 @@ export const modalReducer = (state: ModalState, action: Action) => {
       return {
         ...state,
         editPostId: (action.payload as SetEditPostIdPayload).editPostId,
+      };
+    case ModalActionTypes.SET_EDIT_COMMENT_ID:
+      return {
+        ...state,
+        authorActionsType: AuthorActionsType.COMMENT,
+        editCommentId: (action.payload as SetEditCommentIdPayload).editCommentId,
       };
     case ModalActionTypes.SHOW_CONTEXT_MENU:
       return {

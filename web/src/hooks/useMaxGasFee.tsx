@@ -15,10 +15,6 @@ export const useMaxGasFee = (fetch = true) => {
       setMaxGasFee(maxFee);
     };
     gasCheck();
-    const interval = setInterval(() => {
-      gasCheck();
-    }, 5 * 1000);
-    return () => clearInterval(interval);
   }, [web3, getMaxGasFee, fetch]);
 
   return maxGasFee;

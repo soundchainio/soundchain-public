@@ -41,7 +41,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
     return AuctionItem;
   }
 
-  async getHighestBid(auctionId: string): Promise<string> {
+  async getHighestBid(auctionId: string): Promise<string | undefined> {
     const res = await BidModel.aggregate([
       {
         $match: {
@@ -57,7 +57,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
         },
       },
     ]);
-    return res.length ? res[0].highestBid : '0';
+    return res.length ? res[0].highestBid : undefined;
   }
 
   async wasListedBefore(tokenId: number): Promise<boolean> {

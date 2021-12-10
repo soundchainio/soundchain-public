@@ -6,6 +6,7 @@ import {
   Follow,
   FollowConnection,
   FollowedArtistsConnection,
+  ListingItemConnection,
   PolygonscanResult,
   TrackConnection,
 } from 'lib/graphql';
@@ -202,6 +203,15 @@ export const cacheConfig: InMemoryCacheConfig = {
             return {
               result: [...existing.result, ...result],
               nextPage,
+            };
+          },
+        },
+        listingItems: {
+          keyArgs: ['sort'],
+          merge(existing = { nodes: [] }, { nodes, pageInfo }): ListingItemConnection {
+            return {
+              nodes: [...existing.nodes, ...nodes],
+              pageInfo,
             };
           },
         },

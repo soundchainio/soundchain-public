@@ -12,7 +12,14 @@ const baseClasses =
 
 export const AuthorActionsModal = () => {
   const { showAuthorActions, authorActionsId, authorActionsType, showOnlyDeleteOption } = useModalState();
-  const { dispatchShowAuthorActionsModal, dispatchShowPostModal, dispatchSetEditPostId, dispatchShowConfirmDeleteNFTModal} = useModalDispatch();
+  const {
+    dispatchShowAuthorActionsModal,
+    dispatchShowPostModal,
+    dispatchSetEditPostId,
+    dispatchSetEditCommentId,
+    dispatchShowCommentModal,
+    dispatchShowConfirmDeleteNFTModal,
+  } = useModalDispatch();
   const router = useRouter();
 
   const [deleteComment] = useDeleteCommentMutation({
@@ -35,14 +42,22 @@ export const AuthorActionsModal = () => {
 
   const onEdit = () => {
     onOutsideClick();
-    dispatchSetEditPostId(authorActionsId);
-    dispatchShowPostModal(true);
+    switch (authorActionsType) {
+      case AuthorActionsType.POST:
+        dispatchSetEditPostId(authorActionsId);
+        dispatchShowPostModal(true);
+        break;
+      case AuthorActionsType.COMMENT:
+        dispatchSetEditCommentId(authorActionsId);
+        dispatchShowCommentModal(true);
+        break;
+    }
   };
 
   const onDeleteNFT = () => {
     onOutsideClick();
     dispatchShowConfirmDeleteNFTModal(true, authorActionsId, true); // todo when it's an admin and not the owner of the nft, burn = false
-  }
+  };
 
   const onDelete = async () => {
     switch (authorActionsType) {

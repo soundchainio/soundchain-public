@@ -207,7 +207,7 @@ export const watcher: Handler = async () => {
         {
           try {
             const { nftAddress, tokenId, bidder, bid } = (event as unknown as BidPlaced).returnValues;
-            const auction = await context.auctionItemService.findAuctionItem(parseInt(tokenId));
+            const auction = await context.auctionItemService.updateAuctionItem(parseInt(tokenId), { highestBid: bid });
             await context.bidService.createBid({
               nft: nftAddress,
               tokenId: parseInt(tokenId),
