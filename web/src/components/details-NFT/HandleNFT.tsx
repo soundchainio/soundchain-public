@@ -1,5 +1,7 @@
+import classNames from 'classnames';
 import { Button, ButtonVariant } from 'components/Button';
 import { TimeCounter } from 'components/TimeCounter';
+import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { CheckmarkFilled } from 'icons/CheckmarkFilled';
 import { Matic } from 'icons/Matic';
 import NextLink from 'next/link';
@@ -95,8 +97,14 @@ interface ListingActionProps {
 }
 
 const ListingAction = ({ href, action, children }: React.PropsWithChildren<ListingActionProps>) => {
+  const { currentSong } = useAudioPlayerContext();
   return (
-    <div className="w-full bg-black text-white flex items-center py-3 fixed bottom-20">
+    <div
+      className={classNames(
+        'w-full bg-black text-white flex items-center py-3 fixed',
+        currentSong.src ? 'bottom-36' : 'bottom-20',
+      )}
+    >
       <div className="flex items-center flex-1 gap-2 text-sm font-bold pl-4">{children}</div>
       <div className="flex-1 flex items-center justify-center">
         <NextLink href={href}>
