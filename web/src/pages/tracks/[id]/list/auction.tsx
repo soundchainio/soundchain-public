@@ -1,8 +1,6 @@
-import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
-import { ListNFTAuction } from 'components/details-NFT/ListNFTAuction';
+import { ListNFTAuction, ListNFTAuctionFormValues } from 'components/details-NFT/ListNFTAuction';
 import { Layout } from 'components/Layout';
-import MaxGasFee from 'components/MaxGasFee';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import { useModalDispatch } from 'contexts/providers/modal';
@@ -52,10 +50,6 @@ export default function AuctionPage({ track }: TrackPageProps) {
   const [trackUpdate] = useUpdateTrackMutation();
   const { account, web3 } = useWalletContext();
   const { dispatchShowApproveModal } = useModalDispatch();
-  const [loading, setLoading] = useState(false);
-  const [price, setPrice] = useState(0);
-  const [startTime, setStartTime] = useState<Date | null>();
-  const [endTime, setEndTime] = useState<Date | null>();
   const [isOwner, setIsOwner] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
 
@@ -94,11 +88,10 @@ export default function AuctionPage({ track }: TrackPageProps) {
 
   const isForSale = !!buyNowItem?.buyNowItem?.buyNowItem?.pricePerItem ?? false;
 
-  const handleList = () => {
-    if (nftData?.tokenId === null || nftData?.tokenId === undefined || !account || !web3 || !startTime || !endTime) {
+  const handleList = ({ price, startTime, endTime }: ListNFTAuctionFormValues) => {
+    if (nftData?.tokenId === null || nftData?.tokenId === undefined || !account || !web3) {
       return;
     }
-    setLoading(true);
     const weiPrice = web3?.utils.toWei(price.toString(), 'ether') || '0';
     const startTimestamp = startTime.getTime() / 1000;
     const endTimestamp = endTime.getTime() / 1000;
@@ -136,17 +129,7 @@ export default function AuctionPage({ track }: TrackPageProps) {
       <div className="m-4">
         <Track track={track} />
       </div>
-      <ListNFTAuction
-        onSetPrice={price => setPrice(price)}
-        onSetStartTime={newStartTime => setStartTime(newStartTime)}
-        onSetEndTime={newEndTime => setEndTime(newEndTime)}
-      />
-      <div className="flex p-4">
-        <MaxGasFee />
-        <Button variant="list-nft" onClick={handleList} loading={loading}>
-          <div className="px-4 font-bold">LIST NFT</div>
-        </Button>
-      </div>
+      <ListNFTAuction handleSubmit={handleList} submitLabel="LIST NFT" />
     </Layout>
   );
 }

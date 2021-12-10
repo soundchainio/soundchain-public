@@ -53,40 +53,7 @@ export const HandleNFT = ({
     }
     if (isAuction && (auctionIsOver || countBids > 0)) {
       return (
-        <div className="w-full bg-black text-white flex items-center py-3">
-          <div className="w-full flex flex-col text-xs items-center ">
-            {auctionIsOver && <div className="uppercase font-bold">Auction is over</div>}
-            {countBids != 0 && <span className="text-blue-400 font-bold">({countBids} bids)</span>}
-            {endingDate && (
-              <TimeCounter date={endingDate}>
-                {(days, hours, minutes, seconds) => (
-                  <div>
-                    {days !== 0 && (
-                      <>
-                        <span className="text-gray-80">{days}D </span>
-                      </>
-                    )}
-                    {hours !== 0 && (
-                      <>
-                        <span className="text-gray-80">{hours}H </span>
-                      </>
-                    )}
-                    {minutes !== 0 && (
-                      <>
-                        <span className="text-gray-80">{minutes}M </span>
-                      </>
-                    )}
-                    {seconds !== 0 && (
-                      <>
-                        <span className="text-gray-80">{seconds}S</span>
-                      </>
-                    )}
-                  </div>
-                )}
-              </TimeCounter>
-            )}
-          </div>
-        </div>
+        <AuctionDetails auctionIsOver={auctionIsOver} countBids={countBids} endingDate={endingDate} price={price} />
       );
     }
     return (
@@ -157,8 +124,8 @@ interface ListedActionProps {
 
 const ListedAction = ({ href, price, action, variant, countBids, endingDate }: ListedActionProps) => {
   return (
-    <div className="w-full bg-black text-white flex items-center py-3">
-      <div className="flex flex-col flex-1 ml-4">
+    <div className="w-full bg-black text-white flex items-center p-3 gap-2">
+      <div className="flex flex-col flex-1">
         <div className="text-md flex items-center font-bold gap-1">
           <Matic />
           <span>{price}</span>
@@ -200,6 +167,61 @@ const ListedAction = ({ href, price, action, variant, countBids, endingDate }: L
         <NextLink href={href}>
           <Button variant={variant}>{action}</Button>
         </NextLink>
+      </div>
+    </div>
+  );
+};
+
+interface AuctionDetailsProps {
+  auctionIsOver: boolean;
+  price: string | undefined | null;
+  countBids?: number;
+  endingDate?: Date;
+}
+
+const AuctionDetails = ({ auctionIsOver, price, countBids, endingDate }: AuctionDetailsProps) => {
+  return (
+    <div className="w-full bg-black text-white flex items-center py-3 px-4">
+      <div className="flex flex-col flex-1">
+        <div className="text-md flex items-center font-bold gap-1">
+          <Matic />
+          <span>{price}</span>
+          <span className="text-xs text-gray-80">MATIC</span>
+        </div>
+      </div>
+      <div className="text-center">
+        {auctionIsOver && countBids === 0 && <div className="uppercase font-bold">Auction ended with no bids</div>}
+        {countBids != 0 && <div className="text-xs font-bold text-blue-400">({countBids} bids)</div>}
+        {endingDate && (
+          <div className="flex flex-col text-xs items-center ">
+            <TimeCounter date={endingDate}>
+              {(days, hours, minutes, seconds) => (
+                <div>
+                  {days !== 0 && (
+                    <>
+                      <span className="text-gray-80">{days}D </span>
+                    </>
+                  )}
+                  {hours !== 0 && (
+                    <>
+                      <span className="text-gray-80">{hours}H </span>
+                    </>
+                  )}
+                  {minutes !== 0 && (
+                    <>
+                      <span className="text-gray-80">{minutes}M </span>
+                    </>
+                  )}
+                  {seconds !== 0 && (
+                    <>
+                      <span className="text-gray-80">{seconds}S</span>
+                    </>
+                  )}
+                </div>
+              )}
+            </TimeCounter>
+          </div>
+        )}
       </div>
     </div>
   );

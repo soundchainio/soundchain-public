@@ -1,8 +1,6 @@
-import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
-import { ListNFTAuction } from 'components/details-NFT/ListNFTAuction';
+import { ListNFTAuction, ListNFTAuctionFormValues } from 'components/details-NFT/ListNFTAuction';
 import { Layout } from 'components/Layout';
-import MaxGasFee from 'components/MaxGasFee';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import { useModalDispatch } from 'contexts/providers/modal';
@@ -20,7 +18,7 @@ import {
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { SaleType } from 'types/SaleType';
 
 export interface TrackPageProps {
@@ -57,10 +55,6 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
   const { dispatchShowRemoveListingModal } = useModalDispatch();
   const [trackUpdate] = useUpdateTrackMutation();
   const { account, web3 } = useWalletContext();
-  const [loading, setLoading] = useState(false);
-  const [newPrice, setNewPrice] = useState(0);
-  const [startTime, setStartTime] = useState<Date | null>();
-  const [endTime, setEndTime] = useState<Date | null>();
   const me = useMe();
 
   const nftData = track.nftData;
@@ -82,12 +76,11 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
   const isOwner = ownerAddressAccount === account?.toLowerCase();
   const isForSale = !!listingPayload.auctionItem?.auctionItem?.reservePrice ?? false;
 
-  const handleUpdate = () => {
-    if (!web3 || !listingPayload.auctionItem?.auctionItem?.tokenId || !newPrice || !account || !startTime || !endTime) {
+  const handleUpdate = ({ price, startTime, endTime }: ListNFTAuctionFormValues) => {
+    if (!web3 || !listingPayload.auctionItem?.auctionItem?.tokenId || !account) {
       return;
     }
-    setLoading(true);
-    const weiPrice = web3?.utils.toWei(newPrice.toString(), 'ether') || '0';
+    const weiPrice = web3?.utils.toWei(price.toString(), 'ether') || '0';
     const startTimestamp = startTime.getTime() / 1000;
     const endTimestamp = endTime.getTime() / 1000;
 
@@ -151,17 +144,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       <div className="m-4">
         <Track track={track} />
       </div>
-      <ListNFTAuction
-        onSetPrice={price => setNewPrice(price)}
-        onSetStartTime={newStartTime => setStartTime(newStartTime)}
-        onSetEndTime={newEndTime => setEndTime(newEndTime)}
-      />
-      <div className="flex p-4">
-        <MaxGasFee />
-        <Button variant="edit-listing" onClick={handleUpdate} loading={loading}>
-          <div className="px-4">UPDATE LISTING</div>
-        </Button>
-      </div>
+      <ListNFTAuction handleSubmit={handleUpdate} submitLabel="UPDATE LISTING" />
     </Layout>
   );
 }
