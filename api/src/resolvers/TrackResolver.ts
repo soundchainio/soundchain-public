@@ -37,8 +37,8 @@ export class TrackResolver {
     return trackService.favoriteCount(trackId);
   }
 
-  @FieldResolver(() => String)
-  price(@Ctx() { trackService }: Context, @Root() { nftData }: Track): Promise<string> {
+  @FieldResolver(() => Number)
+  price(@Ctx() { trackService }: Context, @Root() { nftData }: Track): Promise<number> {
     return trackService.price(nftData.tokenId);
   }
 

@@ -15,7 +15,7 @@ export const VerificationRequestNotificationItem = ({
 }: VerificationRequestNotificationProps) => {
   return (
     <NextLink href="/get-verified">
-      <div className={classNames('flex flex-col p-4', index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20')}>
+      <div className={classNames('cursor-pointer flex flex-col p-4', index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20')}>
         <div className="break-words flex">
           <div>
             <div className="text-gray-100 text-sm items-center w-full inline-block">

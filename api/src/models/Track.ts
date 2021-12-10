@@ -66,7 +66,7 @@ export class Track extends Model {
   @prop()
   muxAsset: MuxAsset;
 
-  @prop()
+  @prop({ default: 0 })
   playbackCount: number;
 
   @prop()

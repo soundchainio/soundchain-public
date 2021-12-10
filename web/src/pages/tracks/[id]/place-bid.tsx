@@ -63,7 +63,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
 
   const tokenId = track.nftData?.tokenId ?? -1;
 
-  const { data: auctionItem } = useAuctionItemQuery({
+  const { data: { auctionItem } = {} } = useAuctionItemQuery({
     variables: { tokenId },
   });
 
@@ -72,10 +72,10 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
   });
 
   useEffect(() => {
-    if (account && auctionItem?.auctionItem.auctionItem?.id) {
-      fetchHaveBided({ variables: { auctionId: auctionItem.auctionItem.auctionItem.id, bidder: account } });
+    if (account && auctionItem?.auctionItem?.id) {
+      fetchHaveBided({ variables: { auctionId: auctionItem.auctionItem.id, bidder: account } });
     }
-  }, [fetchHaveBided, auctionItem?.auctionItem.auctionItem?.id, account]);
+  }, [fetchHaveBided, auctionItem?.auctionItem?.id, account]);
 
   const { data: countBids, refetch: refetchCountBids } = useCountBidsQuery({ variables: { tokenId } });
 
@@ -101,18 +101,16 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     return null;
   }
 
-  const isOwner = auctionItem.auctionItem?.auctionItem?.owner.toLowerCase() === account?.toLowerCase();
-  const isForSale = !!auctionItem.auctionItem.auctionItem?.reservePrice ?? false;
-  const reservePrice = web3?.utils.fromWei(auctionItem.auctionItem.auctionItem?.reservePrice ?? '0', 'ether');
-  const hasStarted = (auctionItem.auctionItem?.auctionItem?.startingTime ?? 0) <= new Date().getTime() / 1000;
+  const isOwner = auctionItem.auctionItem?.owner.toLowerCase() === account?.toLowerCase();
+  const isForSale = !!auctionItem.auctionItem?.reservePrice ?? false;
+  const reservePrice = web3?.utils.fromWei(
+    auctionItem.auctionItem?.reservePrice.toLocaleString('fullwide', { useGrouping: false }) ?? '0',
+    'ether',
+  );
+  const hasStarted = (auctionItem.auctionItem?.startingTime ?? 0) <= new Date().getTime() / 1000;
 
   const handlePlaceBid = () => {
-    if (
-      !web3 ||
-      !auctionItem.auctionItem?.auctionItem?.tokenId ||
-      !auctionItem.auctionItem?.auctionItem?.owner ||
-      !account
-    ) {
+    if (!web3 || !auctionItem.auctionItem?.tokenId || !auctionItem.auctionItem?.owner || !account) {
       return;
     }
     const amount = (bidAmount * 1e18).toString();
@@ -145,8 +143,8 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
           bidAmount={bidAmount}
           onSetBidAmount={amount => setBidAmount(amount)}
           ownerAddressAccount={account}
-          startTime={auctionItem.auctionItem?.auctionItem?.startingTime ?? 0}
-          endingTime={auctionItem.auctionItem?.auctionItem?.endingTime ?? 0}
+          startTime={auctionItem.auctionItem?.startingTime ?? 0}
+          endingTime={auctionItem.auctionItem?.endingTime ?? 0}
           countBids={countBids?.countBids.numberOfBids ?? 0}
         />
       )}

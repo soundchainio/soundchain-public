@@ -24,5 +24,5 @@ export class CreateAuctionItemData {
   endingTime: number;
 
   @Field()
-  reservePrice: string;
+  reservePrice: number;
 }

@@ -21,7 +21,7 @@ import { NotificationSkeleton } from './NotificationSkeleton';
 import { ReactionNotificationItem } from './ReactionNotificationItem';
 import { VerificationRequestNotificationItem } from './VerificationRequestNotificationItem';
 import { DeletedPostNotificationItem } from './DeletedPostNotificationItem';
-import { DeletedCommentNotificationItem } from './DeletedCommentNotificationItem'
+import { DeletedCommentNotificationItem } from './DeletedCommentNotificationItem';
 
 interface NotificationProps {
   notificationId: string;
@@ -34,60 +34,46 @@ export const Notification = ({ notificationId, index }: NotificationProps) => {
 
   if (!notification) return <NotificationSkeleton />;
 
-  if (notification.type === NotificationType.Comment) {
-    return <CommentNotificationItem notification={notification as CommentNotification} index={index} />;
+  switch (notification.type) {
+    case NotificationType.Comment: {
+      return <CommentNotificationItem notification={notification as CommentNotification} index={index} />;
+    }
+    case NotificationType.Follower: {
+      return <FollowerNotificationItem notification={notification as FollowerNotification} index={index} />;
+    }
+    case NotificationType.Reaction: {
+      return <ReactionNotificationItem notification={notification as ReactionNotification} index={index} />;
+    }
+    case NotificationType.NewPost: {
+      return <NewPostNotificationItem notification={notification as NewPostNotification} index={index} />;
+    }
+    case NotificationType.NftSold: {
+      return <NFTSoldNotificationItem notification={notification as NftSoldNotification} index={index} />;
+    }
+    case NotificationType.VerificationRequestUpdate: {
+      return (
+        <VerificationRequestNotificationItem
+          notification={notification as VerificationRequestNotification}
+          index={index}
+        />
+      );
+    }
+    case NotificationType.NewVerificationRequest: {
+      return (
+        <NewVerificationRequestNotificationItem
+          notification={notification as NewVerificationRequestNotification}
+          index={index}
+        />
+      );
+    }
+    case NotificationType.DeletedPost: {
+      return <DeletedPostNotificationItem notification={notification as DeletedPostNotification} index={index} />;
+    }
+    case NotificationType.DeletedComment: {
+      return <DeletedCommentNotificationItem notification={notification as DeletedCommentNotification} index={index} />;
+    }
+    default: {
+      return null;
+    }
   }
-  if (notification.type === NotificationType.Follower) {
-    return <FollowerNotificationItem notification={notification as FollowerNotification} index={index} />;
-  }
-
-  if (notification.type === NotificationType.Reaction) {
-    return <ReactionNotificationItem notification={notification as ReactionNotification} index={index} />;
-  }
-
-  if (notification.type === NotificationType.NewPost) {
-    return <NewPostNotificationItem notification={notification as NewPostNotification} index={index} />;
-  }
-
-  if (notification.type === NotificationType.NftSold) {
-    return <NFTSoldNotificationItem notification={notification as NftSoldNotification} index={index} />;
-  }
-
-  if (notification.type === NotificationType.VerificationRequestUpdate) {
-    return (
-      <VerificationRequestNotificationItem
-        notification={notification as VerificationRequestNotification}
-        index={index}
-      />
-    );
-  }
-
-  if (notification.type === NotificationType.NewVerificationRequest) {
-    return (
-      <NewVerificationRequestNotificationItem
-        notification={notification as NewVerificationRequestNotification}
-        index={index}
-      />
-    );
-  }
-
-  if (notification.type === NotificationType.DeletedPost) {
-    return (
-      <DeletedPostNotificationItem
-        notification={notification as DeletedPostNotification}
-        index={index}
-      />
-    );
-  }
-
-  if (notification.type === NotificationType.DeletedComment) {
-    return (
-      <DeletedCommentNotificationItem
-        notification={notification as DeletedCommentNotification}
-        index={index}
-      />
-    );
-  }
-
-  return null;
 };

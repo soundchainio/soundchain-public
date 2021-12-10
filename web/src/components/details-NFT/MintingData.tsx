@@ -53,7 +53,7 @@ export const MintingData = ({ ipfsCid, transactionHash, ownerProfile }: MintingD
           </a>
         </div>
       </div>
-      <div className="flex items-center text-xxs text-white px-4 py-3">
+      <div className="flex items-center text-xxs text-white px-4 py-3 pb-20">
         <div className="w-1/6 uppercase text-xs text-gray-CC font-bold mr-1">Owner</div>
         <div className="flex w-3/6 gap-2">
           <Avatar
