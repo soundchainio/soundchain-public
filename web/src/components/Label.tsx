@@ -7,7 +7,7 @@ interface LabelProps extends React.ComponentPropsWithoutRef<'label'> {
   textSize?: 'xs' | 'sm' | 'base';
 }
 
-const baseClasses = 'text-gray-80';
+const baseClasses = 'text-gray-60';
 
 export const Label = ({ className, children, textSize, ...props }: LabelProps) => (
   <label
