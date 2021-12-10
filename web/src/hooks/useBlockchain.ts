@@ -36,9 +36,17 @@ const useBlockchain = () => {
     return protocol === 'ipfs:' ? config.ipfsGateway + urn : uri;
   };
 
-  const burnNftToken = (web3: Web3, tokenId: number, from: string) => {
+  const burnNftToken = (
+    web3: Web3,
+    tokenId: number,
+    from: string,
+    onConfirmation: (confirmationNumber: number, receipt: TransactionReceipt) => void,
+  ) => {
     const contract = new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress) as unknown as Soundchain721;
-    return beforeSending(web3, async () => await contract.methods.burn(tokenId).send({ from, gas }));
+    return beforeSending(
+      web3,
+      async () => await contract.methods.burn(tokenId).send({ from, gas }).on('confirmation', onConfirmation),
+    );
   };
 
   const approveMarketplace = (web3: Web3, from: string, onReceipt: (receipt: TransactionReceipt) => void) => {

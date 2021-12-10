@@ -1,5 +1,6 @@
 import classNames from 'classnames';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
+import { useMe } from 'hooks/useMe';
 import { CommentsDocument, PostsDocument, useDeleteCommentMutation, useDeletePostMutation } from 'lib/graphql';
 import { useRouter } from 'next/router';
 import { AuthorActionsType } from 'types/AuthorActionsType';
@@ -11,6 +12,7 @@ const baseClasses =
   'fixed w-screen h-full bottom-0 duration-500 bg-opacity-75 ease-in-out bg-black transform-gpu transform';
 
 export const AuthorActionsModal = () => {
+  const me = useMe();
   const { showAuthorActions, authorActionsId, authorActionsType, showOnlyDeleteOption } = useModalState();
   const {
     dispatchShowAuthorActionsModal,

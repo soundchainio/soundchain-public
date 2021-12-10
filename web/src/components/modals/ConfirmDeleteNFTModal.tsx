@@ -64,32 +64,24 @@ export const ConfirmDeleteNFTModal = () => {
     return false;
   };
 
-  const handleDelete = async () => {
-    if (track?.id) {
-      await deleteTrack({
-        variables: {
-          trackId: track.id,
-        },
+  const onBurnConfirmation = () => {
+    if (track) {
+      deleteTrack({
+        variables: { trackId: track.id },
       });
+      router.push('/');
     }
   };
 
-  const handleBurn = async () => {
+  const handleBurn = () => {
     const tokenId = track?.nftData?.tokenId;
     if (hasEnoughFunds() && tokenId && account) {
       try {
         setLoading(true);
-        burnNftToken(web3, tokenId, account);
+        burnNftToken(web3, tokenId, account, onBurnConfirmation);
       } catch (e) {
-        console.log(e);
         setLoading(false);
         alert('We had some trouble, please try again later!');
-      } finally {
-        await handleDelete();
-        console.log('finally');
-        setLoading(false);
-        handleClose();
-        router.back();
       }
     } else {
       alert("Uh-oh, it seems you don't have enough funds to pay for the gas fee of this operation");
@@ -98,11 +90,7 @@ export const ConfirmDeleteNFTModal = () => {
   };
 
   const handleSubmit = () => {
-    if (burn) {
-      handleBurn();
-    } else {
-      handleDelete();
-    }
+    if (burn) handleBurn();
   };
 
   return (
