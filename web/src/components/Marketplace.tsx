@@ -23,7 +23,7 @@ const SelectToApolloQuery: Record<SortListingItem, { field: SortListingItemField
 
 export const Marketplace = () => {
   const pageSize = 10;
-  const [isGrid, setIsGrid] = useState(false);
+  const [isGrid, setIsGrid] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
   const [sorting, setSorting] = useState<SortListingItem>(SortListingItem.PriceAsc);
   const { field, order } = SelectToApolloQuery[sorting];
