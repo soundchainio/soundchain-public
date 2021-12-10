@@ -144,7 +144,7 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
             ))}
           </div>
 
-          <WalletSelector className="mt-4 py-3 px-4" />
+          <WalletSelector className="mt-4 py-3" />
 
           <div className="pl-4 pr-4 pb-4 flex items-center mt-4">
             <MaxGasFee />
