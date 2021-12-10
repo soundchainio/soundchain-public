@@ -101,8 +101,8 @@ const ListingAction = ({ href, action, children }: React.PropsWithChildren<Listi
   return (
     <div
       className={classNames(
-        'w-full bg-black text-white flex items-center py-3 fixed',
-        currentSong.src ? 'bottom-36' : 'bottom-20',
+        'bg-black text-white flex items-center py-3 fixed right-0 md:left-64 left-0',
+        currentSong.src ? 'bottom-36 md:bottom-16' : 'bottom-20 md:bottom-0',
       )}
     >
       <div className="flex items-center flex-1 gap-2 text-sm font-bold pl-4">{children}</div>
@@ -127,8 +127,15 @@ interface ListedActionProps {
 }
 
 const ListedAction = ({ href, price, action, variant, countBids, endingDate }: ListedActionProps) => {
+  const { currentSong } = useAudioPlayerContext();
+
   return (
-    <div className="w-full bg-black text-white flex items-center py-3 fixed bottom-20">
+    <div
+      className={classNames(
+        'bg-black text-white flex items-center py-3 fixed right-0 md:left-64 left-0',
+        currentSong.src ? 'bottom-36 md:bottom-16' : 'bottom-20 md:bottom-0',
+      )}
+    >
       <div className="flex flex-col flex-1 ml-4">
         <div className="text-md flex items-center font-bold gap-1">
           <Matic />

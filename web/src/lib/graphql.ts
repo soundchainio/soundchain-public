@@ -36,11 +36,11 @@ export type AuctionItem = {
   tokenId: Scalars['Float'];
   startingTime: Scalars['Float'];
   endingTime: Scalars['Float'];
-  reservePrice: Scalars['String'];
+  reservePrice: Scalars['Float'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   valid: Scalars['Boolean'];
-  highestBid: Scalars['String'];
+  highestBid: Scalars['Float'];
 };
 
 export type AuctionItemPayload = {
@@ -65,7 +65,7 @@ export type BuyNowItem = {
   nft: Scalars['String'];
   tokenId: Scalars['Float'];
   startingTime: Scalars['Float'];
-  pricePerItem: Scalars['String'];
+  pricePerItem: Scalars['Float'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   valid: Scalars['Boolean'];
@@ -152,7 +152,7 @@ export type CreateAuctionItemInput = {
   tokenId: Scalars['Float'];
   startingTime: Scalars['Float'];
   endingTime: Scalars['Float'];
-  reservePrice: Scalars['String'];
+  reservePrice: Scalars['Float'];
 };
 
 export type CreateAuctionItemType = {
@@ -163,7 +163,7 @@ export type CreateAuctionItemType = {
   tokenId: Scalars['Float'];
   startingTime: Scalars['Float'];
   endingTime: Scalars['Float'];
-  reservePrice: Scalars['String'];
+  reservePrice: Scalars['Float'];
 };
 
 export type CreateBuyNowItemInput = {
@@ -171,7 +171,7 @@ export type CreateBuyNowItemInput = {
   owner: Scalars['String'];
   nft: Scalars['String'];
   tokenId: Scalars['Float'];
-  pricePerItem: Scalars['String'];
+  pricePerItem: Scalars['Float'];
   startingTime: Scalars['Float'];
 };
 
@@ -181,7 +181,7 @@ export type CreateBuyNowItemType = {
   owner: Scalars['String'];
   nft: Scalars['String'];
   tokenId: Scalars['Float'];
-  pricePerItem: Scalars['String'];
+  pricePerItem: Scalars['Float'];
   startingTime: Scalars['Float'];
 };
 
@@ -425,8 +425,8 @@ export type ListingItem = {
   tokenId: Maybe<Scalars['Float']>;
   startingTime: Maybe<Scalars['Float']>;
   endingTime: Maybe<Scalars['Float']>;
-  reservePrice: Maybe<Scalars['String']>;
-  pricePerItem: Maybe<Scalars['String']>;
+  reservePrice: Maybe<Scalars['Float']>;
+  pricePerItem: Maybe<Scalars['Float']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
 };
@@ -445,8 +445,8 @@ export type ListingItemWithPrice = {
   tokenId: Maybe<Scalars['Float']>;
   startingTime: Maybe<Scalars['Float']>;
   endingTime: Maybe<Scalars['Float']>;
-  reservePrice: Maybe<Scalars['String']>;
-  pricePerItem: Maybe<Scalars['String']>;
+  reservePrice: Maybe<Scalars['Float']>;
+  pricePerItem: Maybe<Scalars['Float']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   priceToShow: Maybe<Scalars['Float']>;
@@ -759,7 +759,7 @@ export type NftSoldNotification = {
   buyerPicture: Scalars['String'];
   buyerProfileId: Scalars['String'];
   trackId: Scalars['String'];
-  price: Scalars['String'];
+  price: Scalars['Float'];
   trackName: Scalars['String'];
   artist: Scalars['String'];
   artworkUrl: Scalars['String'];
@@ -1392,7 +1392,7 @@ export type Track = {
   updatedAt: Scalars['DateTime'];
   playbackUrl: Scalars['String'];
   favoriteCount: Scalars['Float'];
-  price: Scalars['String'];
+  price: Scalars['Float'];
   saleType: Scalars['String'];
   isFavorite: Scalars['Boolean'];
 };
@@ -1425,7 +1425,7 @@ export type TrackWithListingItem = {
   updatedAt: Scalars['DateTime'];
   playbackUrl: Scalars['String'];
   favoriteCount: Scalars['Float'];
-  price: Scalars['String'];
+  price: Scalars['Float'];
   saleType: Scalars['String'];
   isFavorite: Scalars['Boolean'];
   listingItem: Maybe<ListingItemWithPrice>;

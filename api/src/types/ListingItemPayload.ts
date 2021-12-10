@@ -21,8 +21,8 @@ export class ListingItemPayload {
   endingTime: number;
 
   @Field({ nullable: true })
-  reservePrice: string;
+  reservePrice: number;
 
   @Field({ nullable: true })
-  pricePerItem: string;
+  pricePerItem: number;
 }
