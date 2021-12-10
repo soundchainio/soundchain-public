@@ -21,7 +21,7 @@ interface Song {
   playbackCount: string;
   favoriteCount: number;
   saleType: string;
-  price: string;
+  price: number;
 }
 
 interface MiniAudioPlayerProps {
@@ -90,7 +90,7 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
             <span>{favoriteCount || 0}</span>
             {saleType !== '' && (
               <>
-                <div className="ml-auto text-white font-bold">{parseInt(price) / 1e18}</div>
+                <div className="ml-auto text-white font-bold">{price / 1e18}</div>
                 <Matic />
               </>
             )}
