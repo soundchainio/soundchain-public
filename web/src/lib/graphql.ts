@@ -747,7 +747,7 @@ export type NftSoldNotification = {
   buyerPicture: Scalars['String'];
   buyerProfileId: Scalars['String'];
   trackId: Scalars['String'];
-  price: Scalars['String'];
+  price: Scalars['Float'];
   trackName: Scalars['String'];
   artist: Scalars['String'];
   artworkUrl: Scalars['String'];

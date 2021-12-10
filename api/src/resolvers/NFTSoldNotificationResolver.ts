@@ -34,8 +34,8 @@ export class NFTSoldNotificationResolver {
     return trackId;
   }
 
-  @FieldResolver(() => String)
-  price(@Root() { metadata }: Notification): string {
+  @FieldResolver(() => Number)
+  price(@Root() { metadata }: Notification): number {
     const { price } = metadata as NFTSoldNotificationMetadata;
     return price;
   }

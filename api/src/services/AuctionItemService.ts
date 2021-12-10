@@ -72,7 +72,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
     return AuctionItem;
   }
 
-  async finishListing(tokenId: string, sellerWallet: string, buyerWaller: string, price: string): Promise<void> {
+  async finishListing(tokenId: string, sellerWallet: string, buyerWaller: string, price: number): Promise<void> {
     this.context.auctionItemService.setNotValid(parseInt(tokenId));
     this.context.trackService.setPendingNone(parseInt(tokenId));
 

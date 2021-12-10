@@ -1,5 +1,4 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
-import { Double } from 'mongodb';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { Model } from './Model';
 
@@ -24,11 +23,11 @@ export class ListingItem extends Model {
   endingTime: number;
 
   @Field({ nullable: true })
-  @prop({ type: Double })
+  @prop({ type: Number })
   reservePrice: number;
 
   @Field({ nullable: true })
-  @prop({ type: Double })
+  @prop({ type: Number })
   pricePerItem: number;
 
   @Field(() => Date)
@@ -43,7 +42,7 @@ export const ListingItemModel = getModelForClass(ListingItem);
 @ObjectType()
 export class ListingItemWithPrice extends ListingItem {
   @Field({ nullable: true })
-  @prop({ type: Double })
+  @prop({ type: Number })
   priceToShow: number;
 }
 

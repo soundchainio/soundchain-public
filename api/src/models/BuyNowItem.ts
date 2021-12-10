@@ -1,5 +1,4 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
-import { Double } from 'mongodb';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { Model } from './Model';
 
@@ -25,7 +24,7 @@ export class BuyNowItem extends Model {
   startingTime: number;
 
   @Field()
-  @prop({ type: Double, required: true })
+  @prop({ type: Number, required: true })
   pricePerItem: number;
 
   @Field(() => Date)

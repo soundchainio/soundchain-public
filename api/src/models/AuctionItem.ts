@@ -1,5 +1,4 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
-import { Double } from 'bson';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { Model } from './Model';
 
@@ -29,7 +28,7 @@ export class AuctionItem extends Model {
   endingTime: number;
 
   @Field()
-  @prop({ type: Double, required: true })
+  @prop({ type: Number, required: true })
   reservePrice: number;
 
   @Field(() => Date)
@@ -43,7 +42,7 @@ export class AuctionItem extends Model {
   valid: boolean;
 
   @Field()
-  @prop({ type: Double })
+  @prop({ type: Number })
   highestBid: number;
 }
 

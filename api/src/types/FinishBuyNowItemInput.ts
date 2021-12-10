@@ -25,7 +25,7 @@ export class FinishBuyNowItemInput {
   artworkUrl: string;
 
   @Field()
-  price: string;
+  price: number;
 
   @Field()
   sellType: SellType;

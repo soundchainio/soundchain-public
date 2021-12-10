@@ -104,7 +104,7 @@ export const watcher: Handler = async () => {
         {
           try {
             const { tokenId, seller, buyer, pricePerItem } = (event as ItemSold).returnValues;
-            await context.buyNowItemService.finishListing(tokenId, seller, buyer, pricePerItem);
+            await context.buyNowItemService.finishListing(tokenId, seller, buyer, parseInt(pricePerItem));
           } catch (error) {
             console.error(error);
           }
@@ -227,7 +227,7 @@ export const watcher: Handler = async () => {
         {
           try {
             const { tokenId, winner, oldOwner, winningBid } = (event as unknown as AuctionResulted).returnValues;
-            await context.auctionItemService.finishListing(tokenId, oldOwner, winner, winningBid);
+            await context.auctionItemService.finishListing(tokenId, oldOwner, winner, parseInt(winningBid));
           } catch (error) {
             console.error(error);
           }

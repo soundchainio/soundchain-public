@@ -47,7 +47,7 @@ export class BuyNowService extends ModelService<typeof BuyNowItem> {
     return buyNowItem;
   }
 
-  async finishListing(tokenId: string, sellerWallet: string, buyerWaller: string, price: string): Promise<void> {
+  async finishListing(tokenId: string, sellerWallet: string, buyerWaller: string, price: number): Promise<void> {
     this.context.buyNowItemService.setNotValid(parseInt(tokenId));
     this.context.trackService.setPendingNone(parseInt(tokenId));
 
