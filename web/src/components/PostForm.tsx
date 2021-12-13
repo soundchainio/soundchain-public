@@ -130,7 +130,13 @@ export const PostForm = ({ ...props }: PostFormProps) => {
             </div>
           )}
           {props.postLink && props.type !== PostFormType.REPOST && (
-            <iframe className="w-full bg-gray-20" frameBorder="0" allowFullScreen src={props.postLink} />
+            <iframe
+              className="w-full bg-gray-20"
+              frameBorder="0"
+              allowFullScreen
+              src={props.postLink}
+              title="Media preview"
+            />
           )}
           <PostBar
             onEmojiPickerClick={onEmojiPickerClick}

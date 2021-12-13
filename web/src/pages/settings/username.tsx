@@ -49,7 +49,7 @@ export default function SettingsUsernamePage() {
       <Head>
         <title>Soundchain - Name Settings</title>
         <meta name="description" content="Name Settings" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicons/favicon.ico" />
       </Head>
       <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
         <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={onSubmit}>

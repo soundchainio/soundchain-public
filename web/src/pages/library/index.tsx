@@ -24,7 +24,7 @@ export default function LibraryPage() {
       <Head>
         <title>Soundchain - Library</title>
         <meta name="description" content="Library" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicons/favicon.ico" />
       </Head>
       <MenuLink icon={Heart} label="Favorite Tracks" href="/library/favorite-tracks" />
       <MenuLink icon={Artist} label="Artists" href="/library/artists" />

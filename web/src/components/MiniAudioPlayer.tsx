@@ -48,12 +48,16 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
     <div className="bg-black rounded-lg p-4 items-center">
       <div className="flex items-center gap-3">
         <div className="h-20 w-20 relative flex items-center">
-          <Asset src={art} />
+          <Asset src={art} sizes="5rem" />
         </div>
         <div className="flex flex-col flex-1 truncate">
           <div className="flex gap-2">
             <div className="flex items-center">
-              <button className="bg-white rounded-full w-8 h-8 flex items-center" onClick={() => play(song)}>
+              <button
+                className="bg-white rounded-full w-8 h-8 flex items-center"
+                onClick={() => play(song)}
+                aria-label={isPlaying ? 'Pause' : 'Play'}
+              >
                 {isPlaying ? (
                   <Pause className="text-white m-auto scale-125" />
                 ) : (

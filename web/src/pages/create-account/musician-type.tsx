@@ -23,7 +23,7 @@ export default function MusicianTypePage() {
       <Head>
         <title>Soundchain - Musician Type</title>
         <meta name="description" content="Musician Type" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicons/favicon.ico" />
       </Head>
       <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
         <div className="flex flex-1 flex-col space-y-6">

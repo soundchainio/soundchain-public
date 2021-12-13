@@ -23,7 +23,7 @@ export default function ExplorePage() {
       <Head>
         <title>Soundchain / Explore</title>
         <meta name="description" content="Explore" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicons/favicon.ico" />
       </Head>
       <Explore searchTerm={searchTerm} />
     </Layout>
