@@ -3,7 +3,14 @@ import DataLoader from 'dataloader';
 import { iteratee, keyBy } from 'lodash';
 import { FilterQuery } from 'mongoose';
 import { encodeCursor } from '../db/pagination/cursor';
-import { paginate, paginateAggregated, PaginateParams, PaginateResult } from '../db/pagination/paginate';
+import {
+  paginate,
+  paginateAggregated,
+  PaginateParams,
+  PaginateParamsAggregated,
+  paginatePipelineAggregated,
+  PaginateResult,
+} from '../db/pagination/paginate';
 import { NotFoundError } from '../errors/NotFoundError';
 import { Model } from '../models/Model';
 import { Context } from '../types/Context';
@@ -71,5 +78,9 @@ export class ModelService<T extends typeof Model, KeyComponents = string> extend
 
   async paginateAggregated(params: PaginateParams<T> = {}): Promise<PaginateResult<InstanceType<T>>> {
     return paginateAggregated(this.model, params);
+  }
+
+  async paginatePipelineAggregated(params: PaginateParamsAggregated<T> = {}): Promise<PaginateResult<any>> {
+    return paginatePipelineAggregated(this.model, params);
   }
 }

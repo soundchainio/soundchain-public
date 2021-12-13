@@ -1,4 +1,3 @@
-import { Post } from '@typegoose/typegoose';
 import { PaginateResult } from '../db/pagination/paginate';
 import { Comment, CommentModel } from '../models/Comment';
 import { PostModel } from '../models/Post';
@@ -15,6 +14,11 @@ interface NewCommentParams {
 
 interface DeleteCommentParams {
   profileId: string;
+  commentId: string;
+}
+
+interface UpdateCommentParams {
+  body: string;
   commentId: string;
 }
 
@@ -40,6 +44,10 @@ export class CommentService extends ModelService<typeof Comment> {
     return newComment;
   }
 
+  async updateComment({ commentId, body }: UpdateCommentParams): Promise<Comment> {
+    return await CommentModel.findOneAndUpdate({ _id: commentId }, { body }, { new: true });
+  }
+
   async deleteComment(params: DeleteCommentParams): Promise<Comment> {
     return await CommentModel.findOneAndUpdate(
       { _id: params.commentId, profileId: params.profileId },
@@ -62,7 +70,7 @@ export class CommentService extends ModelService<typeof Comment> {
       post: post,
       authorProfileId: deletedComment.profileId.toString(),
     });
-    
+
     return deletedComment;
   }
 

@@ -1,10 +1,10 @@
 import { AuctionItemModel } from '../models/AuctionItem';
 import { BuyNowItemModel } from '../models/BuyNowItem';
-import { ListingItemPayload } from '../types/ListingItemPayload';
+import { ListingItem } from '../models/ListingItem';
 import { Service } from './Service';
 
 export class ListingItemService extends Service {
-  async getListingItem(tokenId: number): Promise<ListingItemPayload> {
+  async getListingItem(tokenId: number): Promise<ListingItem> {
     // we cant have lookup with uncorrelated queries, see https://docs.aws.amazon.com/documentdb/latest/developerguide/functional-differences.html#functional-differences.lookup
     const auctionItem = await (await AuctionItemModel.findOne({ tokenId, valid: true }))?.toObject();
     const buyNowItem = await (await BuyNowItemModel.findOne({ tokenId, valid: true }))?.toObject();

@@ -3,7 +3,6 @@ import { BackButton } from 'components/Buttons/BackButton';
 import { Label } from 'components/Label';
 import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
-import { useModalDispatch } from 'contexts/providers/modal';
 import { useMe } from 'hooks/useMe';
 import { RightArrow } from 'icons/RightArrow';
 import Head from 'next/head';
@@ -33,15 +32,14 @@ function Link({ label, value, to }: LinkProps) {
   );
 }
 
-function FakeLink({ label, value, onClick }: LinkProps) {
+function FakeLink({ label, value }: LinkProps) {
   return (
-    <div onClick={onClick}>
+    <div>
       <a className="w-full px-4 py-2 flex items-center justify-center h-16">
         <div className="flex-1">
           <span className="block text-gray-50 text-xs font-bold uppercase"> {label} </span>
           <span className="block text-white font-bold mt-1"> {value} </span>
         </div>
-        <RightArrow className="scale-150" />
       </a>
     </div>
   );
@@ -54,7 +52,6 @@ const topNovaBarProps: TopNavBarProps = {
 
 export default function SettingsPage() {
   const me = useMe();
-  const { dispatchShowUnderDevelopmentModal } = useModalDispatch();
 
   if (!me) return null;
 
@@ -97,12 +94,7 @@ export default function SettingsPage() {
           </NextLink>
         </div>
         <div className="bg-gray-15 grid">
-          <FakeLink
-            to="/email"
-            onClick={() => dispatchShowUnderDevelopmentModal(true)}
-            label="Email address"
-            value={me.email}
-          />
+          <FakeLink to="/email" label="Email address" value={me.email} />
           <Link to="/name" label="Name" value={me.profile.displayName} />
           <Link to="/username" label="Username" value={me.handle} />
           <Link to="/bio" label="Bio" value={me.profile.bio || 'Add a bio...'} />

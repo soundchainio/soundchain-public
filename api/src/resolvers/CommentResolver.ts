@@ -12,6 +12,8 @@ import { DeleteCommentInput } from '../types/DeleteCommentInput';
 import { DeleteCommentPayload } from '../types/DeleteCommentPayload';
 import { PageInput } from '../types/PageInput';
 import { Role } from '../types/Role';
+import { UpdateCommentInput } from '../types/UpdateCommentInput';
+import { UpdateCommentPayload } from '../types/UpdateCommentPayload';
 
 @Resolver(Comment)
 export class CommentResolver {
@@ -41,6 +43,16 @@ export class CommentResolver {
     return { comment };
   }
 
+  @Mutation(() => UpdateCommentPayload)
+  @Authorized()
+  async updateComment(
+    @Ctx() { commentService }: Context,
+    @Arg('input') input: UpdateCommentInput,
+  ): Promise<UpdateCommentPayload> {
+    const comment = await commentService.updateComment({ ...input });
+    return { comment };
+  }
+
   @Mutation(() => DeleteCommentPayload)
   @Authorized()
   async deleteComment(
@@ -48,7 +60,7 @@ export class CommentResolver {
     @Arg('input') input: DeleteCommentInput,
     @CurrentUser() { profileId, roles }: User,
   ): Promise<DeleteCommentPayload> {
-    const isAdmin = roles.includes(Role.ADMIN) || roles.includes(Role.TEAM_MEMBER)
+    const isAdmin = roles.includes(Role.ADMIN) || roles.includes(Role.TEAM_MEMBER);
     if (isAdmin) {
       const comment = await commentService.deleteCommentByAdmin({ profileId, ...input });
       return { comment };

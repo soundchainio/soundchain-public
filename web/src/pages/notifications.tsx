@@ -26,8 +26,8 @@ export default function UserNotifications() {
   return (
     <Layout topNavBarProps={topNavBarProps}>
       <Head>
-        <title>Soundchain / Notifications</title>
-        <meta name="description" content="Notifications" />
+        <title>Soundchain / Alerts</title>
+        <meta name="description" content="Alerts" />
         <link rel="icon" href="/favicons/favicon.ico" />
       </Head>
       <Notifications />

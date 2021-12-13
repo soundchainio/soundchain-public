@@ -3,8 +3,8 @@ import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar';
 import { useMe } from 'hooks/useMe';
 import { Home } from 'icons/Home';
 import { Library } from 'icons/Library';
+import { MarketplaceNavBar } from 'icons/MarketplaceNavBar';
 import { NewPost } from 'icons/NewPost';
-import { Profile } from 'icons/Profile';
 import { Search } from 'icons/Search';
 import { useRouter } from 'next/router';
 import { NavBarButton } from './Buttons/NavBarButton';
@@ -31,12 +31,7 @@ export const BottomNavBar = () => {
             <NavBarButton label="Create" icon={NewPost} onClick={handleCreateClick} />
           )}
           <NavBarButton label="Library" path={me ? '/library' : '/login'} icon={Library} color="purple" />
-          <NavBarButton
-            label="Profile"
-            icon={Profile}
-            path={me ? `/profiles/${me?.handle}` : '/login'}
-            color="green-blue"
-          />
+          <NavBarButton label="Market" icon={MarketplaceNavBar} color="purple-green" path={'/marketplace'} />
         </div>
       </div>
     </nav>

@@ -8,7 +8,7 @@ interface NewAuctionItem {
   owner: string;
   nft: string;
   tokenId: number;
-  reservePrice: string;
+  reservePrice: number;
   startingTime: number;
   endingTime: number;
 }
@@ -41,7 +41,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
     return AuctionItem;
   }
 
-  async getHighestBid(auctionId: string): Promise<string> {
+  async getHighestBid(auctionId: string): Promise<number | undefined> {
     const res = await BidModel.aggregate([
       {
         $match: {
@@ -57,7 +57,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
         },
       },
     ]);
-    return res.length ? res[0].highestBid : '0';
+    return res.length ? res[0].highestBid : undefined;
   }
 
   async wasListedBefore(tokenId: number): Promise<boolean> {
@@ -72,7 +72,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
     return AuctionItem;
   }
 
-  async finishListing(tokenId: string, sellerWallet: string, buyerWaller: string, price: string): Promise<void> {
+  async finishListing(tokenId: string, sellerWallet: string, buyerWaller: string, price: number): Promise<void> {
     this.context.auctionItemService.setNotValid(parseInt(tokenId));
     this.context.trackService.setPendingNone(parseInt(tokenId));
 
