@@ -3,7 +3,7 @@ import { BackButton } from 'components/Buttons/BackButton';
 import { InputField } from 'components/InputField';
 import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
-import { Form, Formik } from 'formik';
+import { Form, Formik, FormikHelpers } from 'formik';
 import { useMe } from 'hooks/useMe';
 import { useUpdateHandleMutation } from 'lib/graphql';
 import Head from 'next/head';
@@ -37,9 +37,15 @@ export default function SettingsUsernamePage() {
   const initialFormValues: FormValues = { handle: me?.handle };
   const [updateHandle, { loading }] = useUpdateHandleMutation();
 
-  const onSubmit = async ({ handle }: FormValues) => {
-    await updateHandle({ variables: { input: { handle: handle as string } } });
-    router.push('/settings');
+  const onSubmit = async ({ handle }: FormValues, { setErrors }: FormikHelpers<FormValues>) => {
+    try {
+      await updateHandle({ variables: { input: { handle: handle as string } } });
+      router.push('/settings');
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setErrors({ handle: error.message });
+      }
+    }
   };
 
   if (!me) return null;

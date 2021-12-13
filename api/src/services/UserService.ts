@@ -23,6 +23,10 @@ export class UserService extends ModelService<typeof User> {
   }
 
   async updateHandle(id: string, handle: string): Promise<User> {
+    const alreadyExists = await UserModel.findOne({ handle });
+    if (alreadyExists) {
+      throw new Error('Username already taken');
+    }
     const updatedUser = await UserModel.findByIdAndUpdate(id, { handle }, { new: true });
     if (!updatedUser) {
       throw new Error(`Could not update the profile with id: ${id}`);
