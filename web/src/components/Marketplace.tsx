@@ -31,7 +31,10 @@ export const Marketplace = () => {
   const [sorting, setSorting] = useState<SortListingItem>(SortListingItem.PriceAsc);
   const { field, order } = SelectToApolloQuery[sorting];
   const { data, refetch, fetchMore, loading } = useListingItemsQuery({
-    variables: { page: { first: pageSize }, sort: { field, order } },
+    variables: {
+      page: { first: pageSize },
+      sort: { field, order },
+    },
   });
 
   useEffect(() => {
