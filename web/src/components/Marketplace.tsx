@@ -1,3 +1,5 @@
+import { useModalDispatch } from 'contexts/providers/modal';
+import { Filter } from 'icons/Filter';
 import { GridView } from 'icons/GridView';
 import { ListView } from 'icons/ListView';
 import { SortListingItemField, SortOrder, TrackQuery, TrackWithListingItem, useListingItemsQuery } from 'lib/graphql';
@@ -23,6 +25,7 @@ const SelectToApolloQuery: Record<SortListingItem, { field: SortListingItemField
 
 export const Marketplace = () => {
   const pageSize = 10;
+  const { dispatchShowFilterMarketplaceModal } = useModalDispatch();
   const [isGrid, setIsGrid] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
   const [sorting, setSorting] = useState<SortListingItem>(SortListingItem.PriceAsc);
@@ -70,8 +73,10 @@ export const Marketplace = () => {
       </div>
       <div className="flex gap-2 bg-black p-4 justify-center items-center">
         <div className="flex flex-1 items-center">
-          {/* <Filter /> */}
-          {/* <span className="text-white text-xs font-bold pl-1">Filter</span> */}
+          <div className="flex cursor-pointer" onClick={() => dispatchShowFilterMarketplaceModal(true)}>
+            <Filter />
+            <span className="text-white text-xs font-bold pl-1">Filter</span>
+          </div>
         </div>
         <span className="text-gray-80 text-xs font-bold">Sort By</span>
         <select

@@ -63,6 +63,10 @@ export interface ShowTransferConfirmationPayload {
   show: boolean;
 }
 
+export interface ShowMarketplaceFilterPayload {
+  show: boolean;
+}
+
 export interface SetRecipientWalletAddress {
   address: string;
 }
@@ -86,4 +90,5 @@ export type ModalPayload =
   | SetRecipientWalletAddress
   | SetAmountToTransfer
   | ShowRemoveListing
-  | ShowApprove;
+  | ShowApprove
+  | ShowMarketplaceFilterPayload;

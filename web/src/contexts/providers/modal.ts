@@ -54,5 +54,7 @@ export const useModalDispatch = () => {
       dispatch({ type: ModalActionTypes.SHOW_APPROVE, payload: { show, type } }),
     dispatchShowRemoveListingModal: (show: boolean, tokenId: number, trackId: string, saleType: SaleType) =>
       dispatch({ type: ModalActionTypes.SHOW_REMOVE_LISTING, payload: { show, tokenId, trackId, saleType } }),
+    dispatchShowFilterMarketplaceModal: (show: boolean) =>
+      dispatch({ type: ModalActionTypes.SHOW_FILTER_MARKETPLACE, payload: { show } }),
   };
 };

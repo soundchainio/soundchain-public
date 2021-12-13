@@ -2,16 +2,17 @@ import { Action } from 'contexts/actions';
 import { ModalActionTypes } from 'contexts/actions/modal';
 import {
   SetAmountToTransfer,
-  SetEditPostIdPayload,
   SetEditCommentIdPayload,
+  SetEditPostIdPayload,
   SetRecipientWalletAddress,
   SetRepostIdPayload,
   ShowApprove,
   ShowAudioPlayerPayload,
   ShowAuthorActionsPayload,
-  ShowCreatePayload,
-  ShowNewPostPayload,
   ShowCommentModalPayload,
+  ShowCreatePayload,
+  ShowMarketplaceFilterPayload,
+  ShowNewPostPayload,
   ShowReactionsPayload,
   ShowRemoveListing,
   ShowTransferConfirmationPayload,
@@ -50,6 +51,7 @@ export interface ModalState {
   amountToTransfer?: string;
   type?: SaleType;
   saleType?: SaleType;
+  showMarketplaceFilter: boolean;
 }
 
 export const initialModalState = {
@@ -78,6 +80,7 @@ export const initialModalState = {
   walletRecipient: undefined,
   amountToTransfer: undefined,
   type: undefined,
+  showMarketplaceFilter: false,
 };
 
 export const modalReducer = (state: ModalState, action: Action) => {
@@ -186,6 +189,11 @@ export const modalReducer = (state: ModalState, action: Action) => {
       return {
         ...state,
         walletRecipient: (action.payload as SetRecipientWalletAddress).address,
+      };
+    case ModalActionTypes.SHOW_FILTER_MARKETPLACE:
+      return {
+        ...state,
+        showMarketplaceFilter: (action.payload as ShowMarketplaceFilterPayload).show,
       };
     default:
       return state;
