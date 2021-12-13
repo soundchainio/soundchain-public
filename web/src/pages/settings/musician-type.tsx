@@ -21,7 +21,7 @@ export default function MusicianTypePage() {
         <meta name="description" content="Musician Type" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
+      <div className="min-h-full flex flex-col px-6 lg:px-8 py-6">
         <div className="flex flex-1 flex-col space-y-6">
           <MusicianTypesForm
             afterSubmit={() => router.push('/settings')}
