@@ -2,7 +2,6 @@ import * as yup from 'yup';
 import { Form, Formik } from 'formik';
 import React, { useState, useEffect } from 'react';
 import { Button } from 'components/Button';
-import { Label } from 'components/Label';
 import { InputField } from 'components/InputField';
 import useBlockchain, { gas } from 'hooks/useBlockchain';
 import { useMe } from 'hooks/useMe';
