@@ -18,7 +18,7 @@ import {
   ShowTransferConfirmationPayload,
   ShowUnderDevelopmentPayload,
 } from 'contexts/payloads/modal';
-import { ReactionType } from 'lib/graphql';
+import { Genre, ReactionType, SaleType as SaleTypeGraphQl } from 'lib/graphql';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 import { SaleType } from 'types/SaleType';
 
@@ -52,6 +52,8 @@ export interface ModalState {
   type?: SaleType;
   saleType?: SaleType;
   showMarketplaceFilter: boolean;
+  genres?: Genre[];
+  filterSaleType?: SaleTypeGraphQl;
 }
 
 export const initialModalState = {
@@ -81,6 +83,8 @@ export const initialModalState = {
   amountToTransfer: undefined,
   type: undefined,
   showMarketplaceFilter: false,
+  genres: undefined,
+  filterSaleType: undefined,
 };
 
 export const modalReducer = (state: ModalState, action: Action) => {
@@ -194,6 +198,8 @@ export const modalReducer = (state: ModalState, action: Action) => {
       return {
         ...state,
         showMarketplaceFilter: (action.payload as ShowMarketplaceFilterPayload).show,
+        genres: (action.payload as ShowMarketplaceFilterPayload).genres,
+        filterSaleType: (action.payload as ShowMarketplaceFilterPayload).filterSaleType,
       };
     default:
       return state;

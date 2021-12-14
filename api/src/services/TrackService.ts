@@ -334,7 +334,7 @@ export class TrackService extends ModelService<typeof Track> {
     }
     return this.paginatePipelineAggregated({
       aggregation,
-      filter: filter ? { genres: filter.genres, ...dotNotationFilter } : {},
+      filter: filter ? { ...(filter.genres ? { genres: filter.genres } : {}), ...dotNotationFilter } : {},
       sort,
       page,
     });

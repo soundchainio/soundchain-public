@@ -1,8 +1,16 @@
-import { useModalDispatch } from 'contexts/providers/modal';
+import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { Filter } from 'icons/Filter';
 import { GridView } from 'icons/GridView';
 import { ListView } from 'icons/ListView';
-import { SortListingItemField, SortOrder, TrackQuery, TrackWithListingItem, useListingItemsQuery } from 'lib/graphql';
+import {
+  Genre,
+  SaleType,
+  SortListingItemField,
+  SortOrder,
+  TrackQuery,
+  TrackWithListingItem,
+  useListingItemsQuery,
+} from 'lib/graphql';
 import React, { useEffect, useState } from 'react';
 import { InfiniteLoader } from './InfiniteLoader';
 import { PostSkeleton } from './PostSkeleton';
@@ -26,8 +34,11 @@ const SelectToApolloQuery: Record<SortListingItem, { field: SortListingItemField
 export const Marketplace = () => {
   const pageSize = 10;
   const { dispatchShowFilterMarketplaceModal } = useModalDispatch();
+  const { genres: genresFromModal, filterSaleType } = useModalState();
   const [isGrid, setIsGrid] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
+  const [genres, setGenres] = useState<Genre[] | undefined>(undefined);
+  const [saleType, setSaleType] = useState<SaleType | undefined>(undefined);
   const [sorting, setSorting] = useState<SortListingItem>(SortListingItem.PriceAsc);
   const { field, order } = SelectToApolloQuery[sorting];
   const { data, refetch, fetchMore, loading } = useListingItemsQuery({
@@ -38,16 +49,22 @@ export const Marketplace = () => {
   });
 
   useEffect(() => {
+    if (genresFromModal) setGenres(genresFromModal);
+    if (filterSaleType) setSaleType(filterSaleType);
     refetch({
       page: {
         first: pageSize,
       },
       sort: { field, order },
+      filter: {
+        ...(genresFromModal ? { genres: genresFromModal } : {}),
+        ...(filterSaleType ? { listingItem: { saleType: filterSaleType } } : {}),
+      },
     });
-  }, [sorting]);
+  }, [sorting, genresFromModal, filterSaleType]);
 
   useEffect(() => {
-    if (!totalCount && data) {
+    if (data) {
       setTotalCount(data.listingItems.pageInfo.totalCount);
     }
   }, [data?.listingItems.pageInfo.totalCount, totalCount, data]);
@@ -60,6 +77,7 @@ export const Marketplace = () => {
           after: data?.listingItems.pageInfo.endCursor,
         },
         sort: { field, order },
+        filter: { ...(genres ? { genres } : {}), ...(saleType ? { listingItem: { saleType } } : {}) },
       },
     });
   };
@@ -76,7 +94,10 @@ export const Marketplace = () => {
       </div>
       <div className="flex gap-2 bg-black p-4 justify-center items-center">
         <div className="flex flex-1 items-center">
-          <div className="flex cursor-pointer" onClick={() => dispatchShowFilterMarketplaceModal(true)}>
+          <div
+            className="flex cursor-pointer"
+            onClick={() => dispatchShowFilterMarketplaceModal(true, genres, saleType)}
+          >
             <Filter />
             <span className="text-white text-xs font-bold pl-1">Filter</span>
           </div>
