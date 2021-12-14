@@ -12,6 +12,7 @@ import {
   useListingItemsQuery,
 } from 'lib/graphql';
 import React, { useEffect, useState } from 'react';
+import { Badge } from './Badge';
 import { InfiniteLoader } from './InfiniteLoader';
 import { PostSkeleton } from './PostSkeleton';
 import { Track } from './Track';
@@ -57,11 +58,24 @@ export const Marketplace = () => {
       },
       sort: { field, order },
       filter: {
-        ...(genresFromModal ? { genres: genresFromModal } : {}),
+        ...(genresFromModal?.length ? { genres: genresFromModal } : {}),
         ...(filterSaleType ? { listingItem: { saleType: filterSaleType } } : {}),
       },
     });
   }, [sorting, genresFromModal, filterSaleType]);
+
+  useEffect(() => {
+    refetch({
+      page: {
+        first: pageSize,
+      },
+      sort: { field, order },
+      filter: {
+        ...(genres?.length ? { genres } : {}),
+        ...(saleType ? { listingItem: { saleType: saleType } } : {}),
+      },
+    });
+  }, [sorting, genres, saleType]);
 
   useEffect(() => {
     if (data) {
@@ -115,6 +129,12 @@ export const Marketplace = () => {
           <option value={SortListingItem.PlaybackCount}>Most listened</option>
           <option value={SortListingItem.CreatedAt}>Newest</option>
         </select>
+      </div>
+      <div className="flex flex-wrap p-4 gap-2">
+        {saleType && <Badge label={saleType} hasDelete onDelete={() => setSaleType(undefined)} />}
+        {genres?.map(genre => (
+          <Badge key={genre} label={genre} hasDelete onDelete={() => setGenres(genres.filter(it => it !== genre))} />
+        ))}
       </div>
       {!data || loading ? (
         <div className="space-y-2">

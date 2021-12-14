@@ -4,7 +4,7 @@ import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { Form, Formik } from 'formik';
 import { Genre, SaleType } from 'lib/graphql';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { GenreLabel, genres } from 'utils/Genres';
 
 export interface FormValues {
@@ -15,11 +15,13 @@ export interface FormValues {
 export const FilterModalMarketplace = () => {
   const { showMarketplaceFilter, genres: genresModalState, filterSaleType } = useModalState();
   const { dispatchShowFilterMarketplaceModal } = useModalDispatch();
-  const [saleType, setSaleType] = useState<SaleType>();
+  const [saleType, setSaleType] = useState<SaleType | undefined>(filterSaleType);
 
   const handleClose = (values: FormValues) => {
     dispatchShowFilterMarketplaceModal(false, values.genres, saleType);
   };
+
+  useEffect(() => setSaleType(filterSaleType), [filterSaleType]);
 
   const handleGenreClick = (
     setFieldValue: (field: string, value: Genre[]) => void,
