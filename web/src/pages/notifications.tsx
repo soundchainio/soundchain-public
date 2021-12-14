@@ -28,7 +28,7 @@ export default function UserNotifications() {
       <Head>
         <title>Soundchain / Alerts</title>
         <meta name="description" content="Alerts" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicons/favicon.ico" />
       </Head>
       <Notifications />
     </Layout>

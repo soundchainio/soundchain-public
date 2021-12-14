@@ -64,7 +64,7 @@ export default function SettingsPage() {
       <Head>
         <title>Soundchain - Account Settings</title>
         <meta name="description" content="Account Settings" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicons/favicon.ico" />
       </Head>
       <div className="flex flex-col gap-8 mt-8">
         <div className="flex flex-row px-4">

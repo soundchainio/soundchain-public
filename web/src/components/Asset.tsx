@@ -4,9 +4,10 @@ import React, { useEffect, useState } from 'react';
 
 interface AssetProps {
   src?: string | null;
+  sizes?: string;
 }
 
-const Asset = ({ src }: AssetProps) => {
+const Asset = ({ src, sizes }: AssetProps) => {
   const [mimeType, setMimeType] = useState<string>();
 
   const [getMimeType, { data }] = useMimeTypeLazyQuery({
@@ -46,6 +47,7 @@ const Asset = ({ src }: AssetProps) => {
       layout="fill"
       className="m-auto object-cover"
       priority
+      sizes={sizes}
     />
   );
 };

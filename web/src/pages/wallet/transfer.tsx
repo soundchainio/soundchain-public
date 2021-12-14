@@ -32,7 +32,7 @@ export default function TransferPage() {
       <Head>
         <title>Soundchain - Wallet</title>
         <meta name="description" content="Wallet" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicons/favicon.ico" />
       </Head>
       <TransferForm handleSubmit={handleSubmit}></TransferForm>
     </Layout>

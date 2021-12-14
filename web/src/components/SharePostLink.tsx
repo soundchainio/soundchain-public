@@ -36,10 +36,14 @@ export const SharePostLink = ({ link, postId, opened, setOpened }: SharePostLink
           value={link}
           readOnly
         />
-        <button onClick={handleCopy} className="text-white font-bold flex items-center pr-4 pl-4 w-40">
+        <button
+          onClick={handleCopy}
+          className="text-white font-bold flex items-center pr-4 pl-4 w-40"
+          aria-label="Copy"
+        >
           <Copy className="mr-1 h-4 w-4" /> {copyText}
         </button>
-        <button onClick={handleClose} className="w-20 pr-4 pl-4">
+        <button onClick={handleClose} className="w-20 pr-4 pl-4" aria-label="Close">
           <Close className="h-4 w-4" />
         </button>
       </div>

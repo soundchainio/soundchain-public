@@ -17,13 +17,13 @@ enum SortListingItem {
 const SelectToApolloQuery: Record<SortListingItem, { field: SortListingItemField; order: SortOrder }> = {
   [SortListingItem.PriceAsc]: { field: SortListingItemField.Price, order: SortOrder.Asc },
   [SortListingItem.PriceDesc]: { field: SortListingItemField.Price, order: SortOrder.Desc },
-  [SortListingItem.PlaybackCount]: { field: SortListingItemField.PlaybackCount, order: SortOrder.Asc },
-  [SortListingItem.CreatedAt]: { field: SortListingItemField.CreatedAt, order: SortOrder.Asc },
+  [SortListingItem.PlaybackCount]: { field: SortListingItemField.PlaybackCount, order: SortOrder.Desc },
+  [SortListingItem.CreatedAt]: { field: SortListingItemField.CreatedAt, order: SortOrder.Desc },
 };
 
 export const Marketplace = () => {
   const pageSize = 10;
-  const [isGrid, setIsGrid] = useState(false);
+  const [isGrid, setIsGrid] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
   const [sorting, setSorting] = useState<SortListingItem>(SortListingItem.PriceAsc);
   const { field, order } = SelectToApolloQuery[sorting];

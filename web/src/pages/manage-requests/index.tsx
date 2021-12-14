@@ -30,7 +30,7 @@ export default function ManageRequests() {
       <Head>
         <title>Soundchain / Get Verified</title>
         <meta name="description" content="Get Verified" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicons/favicon.ico" />
       </Head>
       <div className="pt-2 bg-black">
         <ManageRequestTabs selectedTab={selectedTab} setSelectedTab={setSelectedTab} />

@@ -97,12 +97,16 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: Song) => {
     <div className="bg-black rounded-lg p-4 items-center">
       <div className="flex items-center gap-3">
         <div className="h-20 w-20 relative flex items-center">
-          <Asset src={art} />
+          <Asset src={art} sizes="5rem" />
         </div>
         <div className="flex flex-col flex-1">
           <div className="flex gap-2">
             <div className="flex items-center">
-              <button className="bg-white rounded-full w-8 h-8 flex items-center" onClick={togglePlay}>
+              <button
+                className="bg-white rounded-full w-8 h-8 flex items-center"
+                onClick={togglePlay}
+                aria-label={playing ? 'Pause' : 'Play'}
+              >
                 {playing ? (
                   <Pause className="text-white m-auto scale-125" />
                 ) : (

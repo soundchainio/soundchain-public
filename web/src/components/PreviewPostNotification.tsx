@@ -15,14 +15,20 @@ export const PreviewPostNotification = ({ postId }: PreviewPostNotificationProps
   }
 
   return (
-    <div className="w-full p-4 bg-gray-30 w-full rounded-xl">
+    <div className="w-full p-4 bg-gray-30 rounded-xl">
       <NextLink href={`/posts/${post.id}`}>
         <div>
           <pre className="text-gray-100 text-sm whitespace-pre-wrap">{post.body}</pre>
         </div>
       </NextLink>
       {post.mediaLink && (
-        <iframe frameBorder="0" className="mt-4 w-full bg-gray-20" allowFullScreen src={post.mediaLink} />
+        <iframe
+          frameBorder="0"
+          className="mt-4 w-full bg-gray-20"
+          allowFullScreen
+          src={post.mediaLink}
+          title="Media preview"
+        />
       )}
     </div>
   );

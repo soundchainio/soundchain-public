@@ -2,6 +2,7 @@ import classNames from 'classnames';
 import { useMe } from 'hooks/useMe';
 import { Logo } from 'icons/Logo';
 import { Menu } from 'icons/Menu';
+import { Profile } from 'icons/Profile';
 import { useRouter } from 'next/router';
 import { Button } from './Button';
 import { NavBar } from './NavBar';
@@ -44,11 +45,14 @@ export const TopNavBar = ({
           (RightButton || midRightButton) && 'flex-1',
         )}
       >
-        <div className="flex flex-1 justify-start">
+        <div className="flex flex-1 justify-start gap-2">
           {LeftButton ? (
             LeftButton
           ) : (
-            <TopNavBarButton icon={Menu} label="Menu" onClick={() => setSideMenuOpen && setSideMenuOpen(true)} />
+            <>
+              <TopNavBarButton icon={Menu} label="Menu" onClick={() => setSideMenuOpen && setSideMenuOpen(true)} />
+              <TopNavBarButton icon={Profile} label="Profile" path={`/profiles/${me?.handle}`} color="pink-blue" />
+            </>
           )}
         </div>
       </button>

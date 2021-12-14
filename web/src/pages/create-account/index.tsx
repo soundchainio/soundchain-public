@@ -84,7 +84,7 @@ export default function CreateAccountPage() {
       <Head>
         <title>Soundchain - Create Account</title>
         <meta name="description" content="Soundchain" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicons/favicon.ico" />
       </Head>
       <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
         <Form className="flex flex-col flex-1" autoComplete="off">
