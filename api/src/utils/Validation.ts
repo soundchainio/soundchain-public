@@ -1,3 +1,4 @@
+import escapeStringRegexp from 'escape-string-regexp';
 import { ArgumentValidationError } from 'type-graphql';
 import { UserModel } from '../models/User';
 
@@ -14,12 +15,12 @@ export async function validateUniqueIdentifiers({
 
   if (id) {
     existingUsers = await UserModel.findOne({
-      $text: { $search: handle, $caseSensitive: false },
+      handle: { $regex: `^${escapeStringRegexp(handle)}$`, $options: 'i' },
       _id: { $ne: id },
     });
   } else {
     existingUsers = await UserModel.findOne({
-      $text: { $search: handle, $caseSensitive: false },
+      handle: { $regex: `^${escapeStringRegexp(handle)}$`, $options: 'i' },
     });
   }
 

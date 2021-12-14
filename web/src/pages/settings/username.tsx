@@ -42,7 +42,7 @@ export default function SettingsUsernamePage() {
     try {
       await updateHandle({ variables: { input: { handle: handle as string } } });
       router.push('/settings');
-    } catch (error: unknown) {
+    } catch (error) {
       const formatted = formatValidationErrors<FormValues>(error.graphQLErrors[0]);
       setErrors(formatted);
     }
