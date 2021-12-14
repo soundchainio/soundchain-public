@@ -42,7 +42,7 @@ export const NFTSoldNotificationItem = ({
       <NextLink href={`/tracks/${trackId}`}>
         <div className="flex items-center gap-3 p-3 bg-gray-30 rounded-lg cursor-pointer mt-4">
           <div className="w-10 h-10 relative">
-            <Asset src={artworkUrl} />
+            <Asset src={artworkUrl} sizes="2.5rem" />
           </div>
           <div>
             <div className="text-white font-bold text-xs">{trackName}</div>

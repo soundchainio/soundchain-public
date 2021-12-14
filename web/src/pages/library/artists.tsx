@@ -19,7 +19,7 @@ export default function ArtistsPage() {
       <Head>
         <title>Soundchain - Artists</title>
         <meta name="description" content="Artists" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicons/favicon.ico" />
       </Head>
       <SearchLibrary placeholder="Search artists..." setSearchTerm={setSearchTerm} />
       <Artists searchTerm={searchTerm} />

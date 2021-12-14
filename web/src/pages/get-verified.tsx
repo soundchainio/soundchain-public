@@ -67,7 +67,7 @@ export default function GetVerified() {
       <Head>
         <title>Soundchain / Get Verified</title>
         <meta name="description" content="Get Verified" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicons/favicon.ico" />
       </Head>
       <div className="text-white font-bold text-center w-full px-4 py-10 flex items-center justify-center">
         Receive a blue checkmark <Verified className="ml-4 scale-150" />

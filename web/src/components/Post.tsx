@@ -77,7 +77,13 @@ export const Post = ({ post }: PostProps) => {
               light
             />
           ) : (
-            <iframe frameBorder="0" className="mt-4 w-full bg-gray-20" allowFullScreen src={post.mediaLink} />
+            <iframe
+              frameBorder="0"
+              className="mt-4 w-full bg-gray-20"
+              allowFullScreen
+              src={post.mediaLink}
+              title="Media"
+            />
           ))}
         {post.repostId && <RepostPreview postId={post.repostId} />}
         {post.track && !post.track.deleted && (
