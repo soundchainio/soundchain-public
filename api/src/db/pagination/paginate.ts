@@ -5,6 +5,7 @@ import { Model } from '../../models/Model';
 import { PageInfo } from '../../types/PageInfo';
 import { SortOrder } from '../../types/SortOrder';
 import { buildCursorFilter } from './buildCursorFilter';
+import { buildFilter } from './buildFilter';
 import { buildQuerySort } from './buildQuerySort';
 import { prepareResult } from './prepareResult';
 
@@ -105,17 +106,18 @@ export async function paginatePipelineAggregated<T extends typeof Model>(
   const ascending = (order === SortOrder.ASC) !== Boolean(last || before);
   const limit = last ?? first;
 
+  const filterQuery = buildFilter(filter);
   const cursorFilter = buildCursorFilter(field, ascending, before, after, inclusive);
   const querySort = buildQuerySort(field, ascending);
   const results = await collection
-    .aggregate([...aggregation, { $match: cursorFilter }, { $match: filter }])
+    .aggregate([...aggregation, { $match: cursorFilter }, { $match: filterQuery }])
     .sort(querySort)
     .limit(limit + 1)
     .exec();
   const totalCount =
     (
       await collection
-        .aggregate([...aggregation, { $match: filter }])
+        .aggregate([...aggregation, { $match: filterQuery }])
         .group({ _id: '$_id', count: { $sum: 1 } })
         .count('count')
         .exec()
