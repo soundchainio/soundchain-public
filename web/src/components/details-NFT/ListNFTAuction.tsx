@@ -2,8 +2,10 @@
 import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
 import MaxGasFee from 'components/MaxGasFee';
-import { Field, Form, Formik, FormikHelpers, FormikProps } from 'formik';
+import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import { Matic } from 'icons/Matic';
+import ReactDatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import { date, number, object, ref, SchemaOf } from 'yup';
 
 export interface ListNFTAuctionFormValues {
@@ -15,7 +17,7 @@ export interface ListNFTAuctionFormValues {
 const validationSchema: SchemaOf<ListNFTAuctionFormValues> = object().shape({
   price: number().min(0.000001).required(),
   startTime: date()
-    .min(new Date(new Date().getTime() + 5 * 1000 * 60), 'Start time should have a 5 minutes interval')
+    .min(new Date(new Date().getTime() + 10 * 1000 * 60), 'The start time should be at least ten minutes from now')
     .required(), // current  date + 5 minutes
   endTime: date().min(ref('startTime'), "End time can't be before start time").required(),
 });
@@ -23,30 +25,27 @@ const validationSchema: SchemaOf<ListNFTAuctionFormValues> = object().shape({
 interface ListNFTProps {
   submitLabel: string;
   handleSubmit: (values: ListNFTAuctionFormValues, formikHelpers: FormikHelpers<ListNFTAuctionFormValues>) => void;
-  initialPrice?: number;
+  initialValues?: Partial<ListNFTAuctionFormValues>;
 }
 
-export const ListNFTAuction = ({ submitLabel, handleSubmit, initialPrice }: ListNFTProps) => {
-  const initialValues: ListNFTAuctionFormValues = {
-    price: initialPrice || 0,
-    startTime: new Date(),
-    endTime: new Date(),
+export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: ListNFTProps) => {
+  const defaultValues: ListNFTAuctionFormValues = {
+    price: initialValues?.price || 0,
+    startTime: initialValues?.startTime || new Date(new Date().getTime() + 10 * 1000 * 60),
+    endTime: initialValues?.startTime || new Date(new Date().getTime() + 20 * 1000 * 60),
   };
 
   return (
     <div className="mb-2">
       <Formik
-        initialValues={initialValues}
+        initialValues={defaultValues}
         enableReinitialize
         validationSchema={validationSchema}
         onSubmit={(values, helper) => {
-          handleSubmit(
-            { price: values.price, startTime: new Date(values.startTime), endTime: new Date(values.endTime) },
-            helper,
-          );
+          handleSubmit({ ...values, startTime: new Date(values.startTime), endTime: new Date(values.endTime) }, helper);
         }}
       >
-        {({ values, errors, isSubmitting }: FormikProps<ListNFTAuctionFormValues>) => (
+        {({ values, errors, isSubmitting, setFieldValue }: FormikProps<ListNFTAuctionFormValues>) => (
           <Form>
             <div className="flex items-center justify-between bg-gray-20 py-3 px-5 gap-3">
               <label htmlFor="price" className="flex-shrink-0 text-gray-80 font-bold text-xs uppercase ">
@@ -66,9 +65,12 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialPrice }: List
                 </div>
               </label>
               <div className="w-32 sm:w-52 uppercase">
-                <Field
-                  name="startTime"
-                  type="datetime-local"
+                <ReactDatePicker
+                  selected={values.startTime}
+                  onChange={date => setFieldValue('startTime', date)}
+                  timeInputLabel="Time:"
+                  dateFormat="MM/dd/yyyy h:mm aa"
+                  showTimeInput
                   className="p-3 text-sm font-bold bg-gray-30 text-gray-200 focus:outline-none focus:ring-transparent placeholder-gray-60 placeholder-semibold rounded-md border-2 border-gray-80 w-full"
                 />
                 {<div className="text-red-500 text-sm lowercase">{errors.startTime}</div>}
@@ -87,9 +89,12 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialPrice }: List
                 </div>
               </label>
               <div className="w-32 sm:w-52 uppercase">
-                <Field
-                  name="endTime"
-                  type="datetime-local"
+                <ReactDatePicker
+                  selected={values.endTime}
+                  onChange={date => setFieldValue('endTime', date)}
+                  timeInputLabel="Time:"
+                  dateFormat="MM/dd/yyyy h:mm aa"
+                  showTimeInput
                   className="p-3 text-sm font-bold bg-gray-30 text-gray-200 focus:outline-none focus:ring-transparent placeholder-gray-60 placeholder-semibold rounded-md border-2 border-gray-80 w-full"
                 />
                 {<div className="text-red-500 text-sm lowercase">{errors.endTime}</div>}
@@ -114,13 +119,7 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialPrice }: List
             </div>
             <div className="flex p-4">
               <MaxGasFee />
-              <Button
-                type="submit"
-                variant="list-nft"
-                onClick={() => console.log(values)}
-                loading={isSubmitting}
-                disabled={isSubmitting}
-              >
+              <Button type="submit" variant="list-nft" loading={isSubmitting} disabled={isSubmitting}>
                 <div className="px-4 font-bold">{submitLabel}</div>
               </Button>
             </div>

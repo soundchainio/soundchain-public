@@ -1,7 +1,6 @@
 import { WalletSelector } from 'components/WalletSelector';
 import { Matic } from 'icons/Matic';
 import React from 'react';
-import { Timer } from './PlaceBid';
 
 interface BuyNowProps {
   price: string;
@@ -14,11 +13,9 @@ export const BuyNow = ({ price, ownerAddressAccount, startTime }: BuyNowProps) =
 
   return (
     <>
-      {!hasStarted && <Timer title="starting in" time={startTime} />}
       {hasStarted && (
         <div className="mb-2">
-          <WalletSelector className="mb-10" ownerAddressAccount={ownerAddressAccount} />
-
+          <WalletSelector ownerAddressAccount={ownerAddressAccount} />
           <div className="flex p-5 bg-gray-20 text-gray-80">
             <p className="flex items-center flex-shrink-0 justify-start font-bold text-xs md-text-sm uppercase">
               soundchain fees (2.5%)

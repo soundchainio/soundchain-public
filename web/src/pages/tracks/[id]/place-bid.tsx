@@ -108,6 +108,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     'ether',
   );
   const hasStarted = (auctionItem.auctionItem?.startingTime ?? 0) <= new Date().getTime() / 1000;
+  const hasEnded = new Date().getTime() > (auctionItem.auctionItem?.endingTime ?? 0);
 
   const handlePlaceBid = () => {
     if (!web3 || !auctionItem.auctionItem?.tokenId || !auctionItem.auctionItem?.owner || !account) {
@@ -152,7 +153,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
       {haveBided?.haveBided.bided && !isHighestBidder && (
         <div className="text-red-500 font-bold p-4 text-center">You have been outbid!</div>
       )}
-      {bidAmount >= 0 && hasStarted && (
+      {bidAmount >= 0 && hasStarted && !hasEnded && (
         <div className="flex p-4">
           <div className="flex-1 font-black text-xs">
             <div className="flex items-center gap-2 text-white">

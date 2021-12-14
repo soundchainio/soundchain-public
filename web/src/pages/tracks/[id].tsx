@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { BackButton } from 'components/Buttons/BackButton';
 import { Description } from 'components/details-NFT/Description';
 import { HandleNFT } from 'components/details-NFT/HandleNFT';
@@ -5,11 +6,13 @@ import { MintingData } from 'components/details-NFT/MintingData';
 import { TrackInfo } from 'components/details-NFT/TrackInfo';
 import { Layout } from 'components/Layout';
 import SEO from 'components/SEO';
+import { TimeCounter } from 'components/TimeCounter';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
+import { Matic } from 'icons/Matic';
 import { cacheFor, createApolloClient } from 'lib/apollo';
 import {
   PendingRequest,
@@ -75,22 +78,64 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const { isTokenOwner, getRoyalties, getHighestBid } = useBlockchain();
   const [isOwner, setIsOwner] = useState<boolean>(false);
   const [royalties, setRoyalties] = useState<number>();
-  const [refetchTrack, { data: trackData }] = useTrackLazyQuery({ fetchPolicy: 'network-only' });
   const [track, setTrack] = useState<TrackQuery['track']>(initialState);
   const [highestBid, setHighestBid] = useState<HighestBid>({} as HighestBid);
+  const [isLoadingOwner, setLoadingOwner] = useState(true);
+
+  const [refetchTrack, { data: trackData }] = useTrackLazyQuery({ fetchPolicy: 'network-only' });
+  const [fetchCountBids, { data: countBids }] = useCountBidsLazyQuery();
+  const [fetchHaveBided, { data: haveBided }] = useHaveBidedLazyQuery();
+  const [fetchListingItem, { data: listingPayload, loading: loadingListingItem }] = useListingItemLazyQuery({
+    fetchPolicy: 'network-only',
+  });
+  const [profile, { data: profileInfo }] = useProfileLazyQuery({
+    variables: { id: track.artistProfileId ?? '' },
+    ssr: false,
+  });
+  const [userByWallet, { data: ownerProfile }] = useUserByWalletLazyQuery({
+    variables: { walletAddress: track.nftData?.owner ?? '' },
+    ssr: false,
+  });
 
   const nftData = track.nftData;
   const mintingPending = nftData?.pendingRequest === PendingRequest.Mint;
   const isProcessing = nftData?.pendingRequest != PendingRequest.None;
   const tokenId = nftData?.tokenId;
   const canList = (me?.profile.verified && nftData?.minter === account) || nftData?.minter != account;
+  const isBuyNow = !!listingPayload?.listingItem.pricePerItem ?? false;
+  const isAuction = !!listingPayload?.listingItem.reservePrice ?? false;
 
-  const [fetchCountBids, { data: countBids }] = useCountBidsLazyQuery();
-  const [fetchHaveBided, { data: haveBided }] = useHaveBidedLazyQuery();
+  let price;
+  if (isAuction && highestBid.bid === '0') {
+    price = web3?.utils.fromWei(
+      listingPayload?.listingItem.reservePrice?.toLocaleString('fullwide', { useGrouping: false }) ?? '0',
+      'ether',
+    );
+  } else if (isAuction) {
+    price = web3?.utils.fromWei(highestBid.bid ?? '0', 'ether');
+  } else {
+    price = web3?.utils.fromWei(
+      listingPayload?.listingItem.pricePerItem?.toLocaleString('fullwide', { useGrouping: false }) ?? '0',
+      'ether',
+    );
+  }
 
-  const [fetchListingItem, { data: listingPayload, loading }] = useListingItemLazyQuery({
-    fetchPolicy: 'network-only',
-  });
+  const auctionIsOver = (listingPayload?.listingItem.endingTime || 0) < Math.floor(Date.now() / 1000);
+  const canComplete = auctionIsOver && highestBid.bidder?.toLowerCase() === account?.toLowerCase();
+  const isHighestBidder = highestBid.bidder?.toLowerCase() === account?.toLowerCase();
+  const startingDate = listingPayload?.listingItem.startingTime
+    ? new Date(listingPayload.listingItem.startingTime * 1000)
+    : undefined;
+  const endingDate = listingPayload?.listingItem.endingTime
+    ? new Date(listingPayload.listingItem.endingTime * 1000)
+    : undefined;
+  const futureSale = startingDate ? startingDate.getTime() > new Date().getTime() : false;
+  const loading = loadingListingItem || isLoadingOwner;
+
+  const topNovaBarProps: TopNavBarProps = {
+    leftButton: <BackButton />,
+    title: 'NFT Details',
+  };
 
   useEffect(() => {
     if (track.nftData?.tokenId) {
@@ -100,16 +145,6 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
       });
     }
   }, [track, fetchCountBids, fetchListingItem]);
-
-  const [profile, { data: profileInfo }] = useProfileLazyQuery({
-    variables: { id: track.artistProfileId ?? '' },
-    ssr: false,
-  });
-
-  const [userByWallet, { data: ownerProfile }] = useUserByWalletLazyQuery({
-    variables: { walletAddress: track.nftData?.owner ?? '' },
-    ssr: false,
-  });
 
   useEffect(() => {
     if (track.artistProfileId) {
@@ -124,14 +159,12 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   }, [nftData?.owner, userByWallet]);
 
   useEffect(() => {
-    const fetchIsOwner = async () => {
-      if (!account || !web3 || tokenId === null || tokenId === undefined) {
-        return;
-      }
-      const isTokenOwnerRes = await isTokenOwner(web3, tokenId, account);
-      setIsOwner(isTokenOwnerRes);
-    };
-    fetchIsOwner();
+    if (!account || !web3 || tokenId === null || tokenId === undefined) {
+      return;
+    }
+    isTokenOwner(web3, tokenId, account)
+      .then(result => setIsOwner(result))
+      .finally(() => setLoadingOwner(false));
   }, [account, web3, tokenId, isTokenOwner]);
 
   useEffect(() => {
@@ -162,39 +195,11 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
     }
   }, [trackData]);
 
-  const isAuction = !!listingPayload?.listingItem.reservePrice ?? false;
-
   useEffect(() => {
     if (isAuction && account && listingPayload?.listingItem.id) {
       fetchHaveBided({ variables: { auctionId: listingPayload.listingItem.id, bidder: account } });
     }
   }, [fetchHaveBided, isAuction, listingPayload?.listingItem.id, account]);
-
-  const isBuyNow = !!listingPayload?.listingItem.pricePerItem ?? false;
-  let price;
-  if (isAuction && highestBid.bid === '0') {
-    price = web3?.utils.fromWei(
-      listingPayload?.listingItem.reservePrice?.toLocaleString('fullwide', { useGrouping: false }) ?? '0',
-      'ether',
-    );
-  } else if (isAuction) {
-    price = web3?.utils.fromWei(highestBid.bid ?? '0', 'ether');
-  } else {
-    price = web3?.utils.fromWei(
-      listingPayload?.listingItem.pricePerItem?.toLocaleString('fullwide', { useGrouping: false }) ?? '0',
-      'ether',
-    );
-  }
-
-  const auctionIsOver = (listingPayload?.listingItem.endingTime || 0) < Math.floor(Date.now() / 1000);
-  const canComplete = auctionIsOver && highestBid.bidder?.toLowerCase() === account?.toLowerCase();
-  const isHighestBidder = highestBid.bidder?.toLowerCase() === account?.toLowerCase();
-  const endingDate = new Date((listingPayload?.listingItem.endingTime || 0) * 1000);
-
-  const topNovaBarProps: TopNavBarProps = {
-    leftButton: <BackButton />,
-    title: 'NFT Details',
-  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -222,6 +227,55 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
           <Track track={track} />
           <Description description={track.description || ''} />
         </div>
+        {isBuyNow && price && (
+          <div className="bg-[#112011]">
+            <div className="flex justify-between items-center px-4 py-3">
+              <div className="text-sm font-bold text-white">BUY NOW PRICE</div>
+              <div className="text-md flex items-center font-bold gap-1">
+                <Matic />
+                <span className="text-white">{price}</span>
+                <span className="text-xxs text-gray-80">MATIC</span>
+              </div>
+            </div>
+            {futureSale && (
+              <div className="flex justify-between items-center px-4 py-3">
+                <div className="text-sm font-bold text-white flex-shrink-0">SALE STARTS</div>
+                <div className="text-md flex items-center text-right font-bold gap-1">
+                  <Timer date={startingDate!} />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        {isAuction && (
+          <div className="bg-[#111920]">
+            <div className="flex justify-between items-center px-4 py-3">
+              <div className="text-sm font-bold text-white">CURRENT PRICE</div>
+              <div className="text-md flex items-center font-bold gap-1">
+                <Matic />
+                <span className="text-white">{price}</span>
+                <span className="text-xxs text-gray-80">MATIC</span>
+                <span className="text-[#22CAFF] text-xxs">[{countBids?.countBids.numberOfBids ?? 0} bids]</span>
+              </div>
+            </div>
+            {futureSale && (
+              <div className="flex justify-between items-center px-4 py-3">
+                <div className="text-sm font-bold text-white flex-shrink-0">SALE STARTS</div>
+                <div className="text-md flex items-center text-right font-bold gap-1">
+                  <Timer date={startingDate!} />
+                </div>
+              </div>
+            )}
+            {endingDate && !futureSale && (
+              <div className="flex justify-between items-center px-4 py-3">
+                <div className="text-sm font-bold text-white flex-shrink-0">TIME REMAINING</div>
+                <div className="text-md flex items-center text-right font-bold gap-1">
+                  <Timer date={endingDate} />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
         <TrackInfo
           trackTitle={track.title}
           albumTitle={track.album}
@@ -268,6 +322,7 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
               canComplete={canComplete}
               auctionIsOver={auctionIsOver}
               countBids={countBids?.countBids.numberOfBids ?? 0}
+              startingDate={startingDate}
               endingDate={endingDate}
             />
           </>
@@ -276,3 +331,32 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
     </>
   );
 }
+
+export const Timer = ({ date }: { date: Date }) => {
+  return (
+    <TimeCounter date={date}>
+      {(days, hours, minutes, seconds) => (
+        <div className="text-white">
+          {days !== 0 && (
+            <>
+              {days} <span className="text-gray-80">days </span>
+            </>
+          )}
+          {hours !== 0 && (
+            <>
+              {hours} <span className="text-gray-80">hours </span>
+            </>
+          )}
+          {minutes !== 0 && (
+            <>
+              {minutes} <span className="text-gray-80">minutes </span>
+            </>
+          )}
+          <>
+            {seconds} <span className="text-gray-80">seconds </span>
+          </>
+        </div>
+      )}
+    </TimeCounter>
+  );
+};

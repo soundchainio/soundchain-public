@@ -43,6 +43,7 @@ export const PlaceBid = ({
 
   const currentBid = highestBid === '0' ? reservePrice : (parseFloat(highestBid) / 1e18).toFixed(6);
   const hasStarted = startTime <= new Date().getTime() / 1000;
+  const hasEnded = new Date().getTime() > endingTime;
 
   return (
     <div className="mb-2">

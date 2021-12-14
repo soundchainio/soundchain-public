@@ -92,9 +92,15 @@ export default function AuctionPage({ track }: TrackPageProps) {
     if (nftData?.tokenId === null || nftData?.tokenId === undefined || !account || !web3) {
       return;
     }
+    console.log({ price });
+    console.log({ startTime: startTime.getTime() });
+    console.log({ endtime: endTime.getTime() });
     const weiPrice = web3?.utils.toWei(price.toString(), 'ether') || '0';
-    const startTimestamp = startTime.getTime() / 1000;
-    const endTimestamp = endTime.getTime() / 1000;
+    const startTimestamp = Math.ceil(startTime.getTime() / 1000);
+    const endTimestamp = Math.ceil(endTime.getTime() / 1000);
+    console.log({ weiPrice });
+    console.log({ startTimestamp });
+    console.log({ endTimestamp });
     if (isApproved) {
       const onTransactionHash = async () => {
         await trackUpdate({

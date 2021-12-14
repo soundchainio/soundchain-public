@@ -1,8 +1,7 @@
-import { Button } from 'components/Button';
+import React from 'react';
 import { BackButton } from 'components/Buttons/BackButton';
-import { ListNFTBuyNow } from 'components/details-NFT/ListNFTBuyNow';
+import { ListNFTBuyNow, ListNFTBuyNowFormValues } from 'components/details-NFT/ListNFTBuyNow';
 import { Layout } from 'components/Layout';
-import MaxGasFee from 'components/MaxGasFee';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import { useModalDispatch } from 'contexts/providers/modal';
@@ -10,11 +9,10 @@ import useBlockchain from 'hooks/useBlockchain';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { cacheFor } from 'lib/apollo';
-import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemLazyQuery, useUpdateTrackMutation } from 'lib/graphql';
+import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemQuery, useUpdateTrackMutation } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
-import { useEffect, useState } from 'react';
 import { SaleType } from 'types/SaleType';
 
 export interface TrackPageProps {
@@ -51,23 +49,15 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
   const { dispatchShowRemoveListingModal } = useModalDispatch();
   const [trackUpdate] = useUpdateTrackMutation();
   const { account, web3 } = useWalletContext();
-  const [loading, setLoading] = useState(false);
-  const [newPrice, setNewPrice] = useState(0);
-  const [startTime, setStartTime] = useState<Date | null>();
-
   const me = useMe();
 
   const nftData = track.nftData;
   const tokenId = nftData?.tokenId ?? -1;
 
-  const [getBuyNowItem, { data: listingPayload }] = useBuyNowItemLazyQuery({
+  const { data: listingPayload } = useBuyNowItemQuery({
     variables: { tokenId },
     fetchPolicy: 'network-only',
   });
-
-  useEffect(() => {
-    getBuyNowItem();
-  }, [getBuyNowItem]);
 
   if (!listingPayload) {
     return null;
@@ -76,16 +66,20 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
   const ownerAddressAccount = listingPayload.buyNowItem?.buyNowItem?.owner.toLowerCase();
   const isOwner = ownerAddressAccount === account?.toLowerCase();
   const isForSale = !!listingPayload.buyNowItem?.buyNowItem?.pricePerItem ?? false;
-  const price = web3?.utils.fromWei(
-    listingPayload.buyNowItem?.buyNowItem?.pricePerItem.toLocaleString('fullwide', { useGrouping: false }) || '0',
-    'ether',
-  );
+  const price =
+    web3?.utils.fromWei(
+      listingPayload.buyNowItem?.buyNowItem?.pricePerItem.toLocaleString('fullwide', { useGrouping: false }) || '0',
+      'ether',
+    ) ?? '0';
 
-  const handleUpdate = () => {
-    if (!web3 || !listingPayload.buyNowItem?.buyNowItem?.tokenId || !newPrice || !account || !startTime) {
+  const startingDate = listingPayload.buyNowItem?.buyNowItem?.startingTime
+    ? new Date(listingPayload.buyNowItem.buyNowItem.startingTime * 1000)
+    : undefined;
+
+  const handleUpdate = ({ price: newPrice, startTime }: ListNFTBuyNowFormValues) => {
+    if (!web3 || !listingPayload.buyNowItem?.buyNowItem?.tokenId || !newPrice || !account) {
       return;
     }
-    setLoading(true);
     const weiPrice = web3?.utils.toWei(newPrice.toString(), 'ether') || '0';
     const startTimestamp = startTime.getTime() / 1000;
 
@@ -153,19 +147,12 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       <div className="m-4">
         <Track track={track} />
       </div>
-      {price && (
-        <ListNFTBuyNow
-          onSetPrice={setNewPrice}
-          initialPrice={parseFloat(price)}
-          onSetStartTime={time => setStartTime(time)}
-        />
-      )}
-      <div className="flex p-4">
-        <MaxGasFee />
-        <Button variant="edit-listing" onClick={handleUpdate} loading={loading}>
-          <div className="px-4">EDIT LISTING</div>
-        </Button>
-      </div>
+
+      <ListNFTBuyNow
+        submitLabel="EDIT LISTING"
+        handleSubmit={handleUpdate}
+        initialValues={{ price: parseFloat(price), startTime: startingDate }}
+      />
     </Layout>
   );
 }

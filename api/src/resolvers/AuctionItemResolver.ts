@@ -45,7 +45,7 @@ export class AuctionItemResolver {
 
   @Query(() => CountBidsPayload)
   async countBids(@Ctx() { auctionItemService }: Context, @Arg('tokenId') tokenId: number): Promise<CountBidsPayload> {
-    const count = await auctionItemService.countBids(tokenId);
+    const count = (await auctionItemService.countBids(tokenId)) || { numberOfBids: 0 };
     return count;
   }
 

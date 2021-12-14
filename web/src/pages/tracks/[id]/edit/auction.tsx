@@ -8,17 +8,11 @@ import useBlockchain from 'hooks/useBlockchain';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { cacheFor } from 'lib/apollo';
-import {
-  PendingRequest,
-  TrackDocument,
-  TrackQuery,
-  useAuctionItemLazyQuery,
-  useUpdateTrackMutation,
-} from 'lib/graphql';
+import { PendingRequest, TrackDocument, TrackQuery, useAuctionItemQuery, useUpdateTrackMutation } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { SaleType } from 'types/SaleType';
 
 export interface TrackPageProps {
@@ -60,13 +54,9 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
   const nftData = track.nftData;
   const tokenId = nftData?.tokenId ?? -1;
 
-  const [getAuctionItem, { data: listingPayload }] = useAuctionItemLazyQuery({
+  const { data: listingPayload } = useAuctionItemQuery({
     variables: { tokenId },
   });
-
-  useEffect(() => {
-    getAuctionItem();
-  }, [getAuctionItem]);
 
   if (!listingPayload) {
     return null;
@@ -75,6 +65,17 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
   const ownerAddressAccount = listingPayload.auctionItem?.auctionItem?.owner.toLowerCase();
   const isOwner = ownerAddressAccount === account?.toLowerCase();
   const isForSale = !!listingPayload.auctionItem?.auctionItem?.reservePrice ?? false;
+  const startPrice =
+    web3?.utils.fromWei(
+      listingPayload.auctionItem.auctionItem?.reservePrice.toLocaleString('fullwide', { useGrouping: false }) || '0',
+      'ether',
+    ) ?? '0';
+  const startingTime = listingPayload.auctionItem.auctionItem?.startingTime
+    ? new Date(listingPayload.auctionItem.auctionItem?.startingTime * 1000)
+    : undefined;
+  const endingTime = listingPayload.auctionItem.auctionItem?.endingTime
+    ? new Date(listingPayload.auctionItem.auctionItem?.endingTime * 1000)
+    : undefined;
 
   const handleUpdate = ({ price, startTime, endTime }: ListNFTAuctionFormValues) => {
     if (!web3 || !listingPayload.auctionItem?.auctionItem?.tokenId || !account) {
@@ -144,7 +145,11 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       <div className="m-4">
         <Track track={track} />
       </div>
-      <ListNFTAuction handleSubmit={handleUpdate} submitLabel="UPDATE LISTING" />
+      <ListNFTAuction
+        handleSubmit={handleUpdate}
+        submitLabel="UPDATE LISTING"
+        initialValues={{ price: parseFloat(startPrice), startTime: startingTime, endTime: endingTime }}
+      />
     </Layout>
   );
 }

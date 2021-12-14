@@ -7,6 +7,7 @@ export class ListingItemResolver {
   @Query(() => ListingItem)
   async listingItem(@Ctx() { listingItemService }: Context, @Arg('tokenId') tokenId: number): Promise<ListingItem> {
     const listingItem = await listingItemService.getListingItem(tokenId);
+    console.log({ listingItem });
     return listingItem;
   }
 }
