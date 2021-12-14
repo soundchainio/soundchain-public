@@ -1,9 +1,10 @@
-import { getModelForClass, prop } from '@typegoose/typegoose';
+import { getModelForClass, index, prop } from '@typegoose/typegoose';
 import { ObjectId } from 'mongodb';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { DefaultWallet } from '../types/DefaultWallet';
 import { Role } from '../types/Role';
 import { Model } from './Model';
+@index({ handle: 'text' })
 @ObjectType()
 export class User extends Model {
   @Field(() => ID, { name: 'id' })

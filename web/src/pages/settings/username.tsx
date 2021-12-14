@@ -9,6 +9,7 @@ import { useUpdateHandleMutation } from 'lib/graphql';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React from 'react';
+import { formatValidationErrors } from 'utils/errorHelpers';
 import { handleRegex } from 'utils/Validation';
 import * as yup from 'yup';
 
@@ -42,9 +43,8 @@ export default function SettingsUsernamePage() {
       await updateHandle({ variables: { input: { handle: handle as string } } });
       router.push('/settings');
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        setErrors({ handle: error.message });
-      }
+      const formatted = formatValidationErrors<FormValues>(error.graphQLErrors[0]);
+      setErrors(formatted);
     }
   };
 
