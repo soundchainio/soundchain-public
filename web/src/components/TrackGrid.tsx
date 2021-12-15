@@ -89,7 +89,13 @@ export const TrackGrid = ({ track }: TrackProps) => {
               </div>
             </div>
             <div className="flex items-center">
-              <button className="bg-white rounded-full w-6 h-6 flex items-center" onClick={() => play(song)}>
+              <button
+                className="bg-white rounded-full w-6 h-6 flex items-center"
+                onClick={e => {
+                  play(song);
+                  e.stopPropagation();
+                }}
+              >
                 {isPlaying ? <Pause className="text-white m-auto scale-125" /> : <Play className="text-white m-auto" />}
               </button>
             </div>

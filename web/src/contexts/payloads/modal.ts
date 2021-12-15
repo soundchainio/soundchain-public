@@ -1,4 +1,4 @@
-import { ReactionType } from 'lib/graphql';
+import { Genre, ReactionType, SaleType as SaleTypeGraphQl } from 'lib/graphql';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 import { SaleType } from 'types/SaleType';
 
@@ -63,6 +63,12 @@ export interface ShowTransferConfirmationPayload {
   show: boolean;
 }
 
+export interface ShowMarketplaceFilterPayload {
+  show: boolean;
+  genres: Genre[];
+  filterSaleType: SaleTypeGraphQl;
+}
+
 export interface SetRecipientWalletAddress {
   address: string;
 }
@@ -86,4 +92,5 @@ export type ModalPayload =
   | SetRecipientWalletAddress
   | SetAmountToTransfer
   | ShowRemoveListing
-  | ShowApprove;
+  | ShowApprove
+  | ShowMarketplaceFilterPayload;

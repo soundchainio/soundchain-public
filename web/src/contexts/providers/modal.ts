@@ -1,6 +1,6 @@
 import { ModalActionTypes } from 'contexts/actions/modal';
 import { initialModalState, ModalState } from 'contexts/reducers/modal';
-import { ReactionType } from 'lib/graphql';
+import { Genre, ReactionType, SaleType as SaleTypeGraphQl } from 'lib/graphql';
 import { useContext } from 'react';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 import { SaleType } from 'types/SaleType';
@@ -54,5 +54,10 @@ export const useModalDispatch = () => {
       dispatch({ type: ModalActionTypes.SHOW_APPROVE, payload: { show, type } }),
     dispatchShowRemoveListingModal: (show: boolean, tokenId: number, trackId: string, saleType: SaleType) =>
       dispatch({ type: ModalActionTypes.SHOW_REMOVE_LISTING, payload: { show, tokenId, trackId, saleType } }),
+    dispatchShowFilterMarketplaceModal: (
+      show: boolean,
+      genres: Genre[] | undefined,
+      filterSaleType: SaleTypeGraphQl | undefined,
+    ) => dispatch({ type: ModalActionTypes.SHOW_FILTER_MARKETPLACE, payload: { show, genres, filterSaleType } }),
   };
 };

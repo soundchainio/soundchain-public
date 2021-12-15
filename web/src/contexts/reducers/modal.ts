@@ -2,22 +2,23 @@ import { Action } from 'contexts/actions';
 import { ModalActionTypes } from 'contexts/actions/modal';
 import {
   SetAmountToTransfer,
-  SetEditPostIdPayload,
   SetEditCommentIdPayload,
+  SetEditPostIdPayload,
   SetRecipientWalletAddress,
   SetRepostIdPayload,
   ShowApprove,
   ShowAudioPlayerPayload,
   ShowAuthorActionsPayload,
-  ShowCreatePayload,
-  ShowNewPostPayload,
   ShowCommentModalPayload,
+  ShowCreatePayload,
+  ShowMarketplaceFilterPayload,
+  ShowNewPostPayload,
   ShowReactionsPayload,
   ShowRemoveListing,
   ShowTransferConfirmationPayload,
   ShowUnderDevelopmentPayload,
 } from 'contexts/payloads/modal';
-import { ReactionType } from 'lib/graphql';
+import { Genre, ReactionType, SaleType as SaleTypeGraphQl } from 'lib/graphql';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 import { SaleType } from 'types/SaleType';
 
@@ -50,6 +51,9 @@ export interface ModalState {
   amountToTransfer?: string;
   type?: SaleType;
   saleType?: SaleType;
+  showMarketplaceFilter: boolean;
+  genres?: Genre[];
+  filterSaleType?: SaleTypeGraphQl;
 }
 
 export const initialModalState = {
@@ -78,6 +82,9 @@ export const initialModalState = {
   walletRecipient: undefined,
   amountToTransfer: undefined,
   type: undefined,
+  showMarketplaceFilter: false,
+  genres: undefined,
+  filterSaleType: undefined,
 };
 
 export const modalReducer = (state: ModalState, action: Action) => {
@@ -186,6 +193,13 @@ export const modalReducer = (state: ModalState, action: Action) => {
       return {
         ...state,
         walletRecipient: (action.payload as SetRecipientWalletAddress).address,
+      };
+    case ModalActionTypes.SHOW_FILTER_MARKETPLACE:
+      return {
+        ...state,
+        showMarketplaceFilter: (action.payload as ShowMarketplaceFilterPayload).show,
+        genres: (action.payload as ShowMarketplaceFilterPayload).genres,
+        filterSaleType: (action.payload as ShowMarketplaceFilterPayload).filterSaleType,
       };
     default:
       return state;
