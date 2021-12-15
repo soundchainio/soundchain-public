@@ -125,9 +125,25 @@ export const Marketplace = () => {
         </select>
       </div>
       <div className="flex flex-wrap p-4 gap-2">
-        {saleType && <Badge label={saleType} onDelete={() => setSaleType(undefined)} />}
+        {saleType && (
+          <Badge
+            label={saleType}
+            onDelete={() => {
+              dispatchShowFilterMarketplaceModal(false, genres, undefined);
+              setSaleType(undefined);
+            }}
+          />
+        )}
         {genres?.map(genre => (
-          <Badge key={genre} label={genre} onDelete={() => setGenres(genres.filter(it => it !== genre))} />
+          <Badge
+            key={genre}
+            label={genre}
+            onDelete={() => {
+              const newGenres = genres.filter(it => it !== genre);
+              dispatchShowFilterMarketplaceModal(false, newGenres, saleType);
+              setGenres(newGenres);
+            }}
+          />
         ))}
       </div>
       {!data || loading ? (
