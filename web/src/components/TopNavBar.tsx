@@ -51,7 +51,9 @@ export const TopNavBar = ({
           ) : (
             <>
               <TopNavBarButton icon={Menu} label="Menu" onClick={() => setSideMenuOpen && setSideMenuOpen(true)} />
-              <TopNavBarButton icon={Profile} label="Profile" path={`/profiles/${me?.handle}`} color="pink-blue" />
+              {me && (
+                <TopNavBarButton icon={Profile} label="Profile" path={`/profiles/${me.handle}`} color="pink-blue" />
+              )}
             </>
           )}
         </div>
