@@ -113,8 +113,12 @@ export class TrackService extends ModelService<typeof Track> {
     return track;
   }
 
-  async deleteTrack(id: string): Promise<Track> {
-    return await this.model.deleteOne({ _id: id }).exec();
+  async deleteTrack(id: string, profileId: string): Promise<Track> {
+    return await this.model.findOneAndUpdate({ _id: id, profileId }, { deleted: true });
+  }
+
+  async deleteTrackByAdmin(id: string): Promise<Track> {
+    return await this.model.findOneAndUpdate({ _id: id }, { deleted: true });
   }
 
   async deleteTrackOnError(id: string): Promise<Track> {

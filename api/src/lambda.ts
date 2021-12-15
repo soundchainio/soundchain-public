@@ -157,6 +157,9 @@ export const watcher: Handler = async () => {
                   pendingRequest: PendingRequest.None,
                 },
               });
+            } else if (returnValues.to === zeroAddress) {
+              const track = await context.trackService.getTrackByTokenId(parseInt(returnValues.tokenId));
+              await context.trackService.deleteTrackByAdmin(track._id);
             } else {
               await context.trackService.updateOwnerByTokenId(parseInt(returnValues.tokenId), returnValues.to);
             }

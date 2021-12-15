@@ -54,6 +54,8 @@ export const useModalDispatch = () => {
       dispatch({ type: ModalActionTypes.SHOW_APPROVE, payload: { show, type } }),
     dispatchShowRemoveListingModal: (show: boolean, tokenId: number, trackId: string, saleType: SaleType) =>
       dispatch({ type: ModalActionTypes.SHOW_REMOVE_LISTING, payload: { show, tokenId, trackId, saleType } }),
+    dispatchShowConfirmDeleteNFTModal: (show: boolean, trackId: string, burn: boolean) =>
+      dispatch({ type: ModalActionTypes.SHOW_CONFIRM_DELETE_NFT, payload: { show, trackId, burn } }),
     dispatchShowFilterMarketplaceModal: (
       show: boolean,
       genres: Genre[] | undefined,

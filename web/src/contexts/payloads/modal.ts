@@ -77,6 +77,12 @@ export interface SetAmountToTransfer {
   amount: string;
 }
 
+export interface ShowConfirmDeleteNFT {
+  show: boolean;
+  trackId?: string;
+  burn: boolean;
+}
+
 export type ModalPayload =
   | ShowNewPostPayload
   | ShowCommentModalPayload
@@ -93,4 +99,5 @@ export type ModalPayload =
   | SetAmountToTransfer
   | ShowRemoveListing
   | ShowApprove
+  | ShowConfirmDeleteNFT
   | ShowMarketplaceFilterPayload;

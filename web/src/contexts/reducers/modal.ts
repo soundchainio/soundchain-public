@@ -10,6 +10,7 @@ import {
   ShowAudioPlayerPayload,
   ShowAuthorActionsPayload,
   ShowCommentModalPayload,
+  ShowConfirmDeleteNFT,
   ShowCreatePayload,
   ShowMarketplaceFilterPayload,
   ShowNewPostPayload,
@@ -51,6 +52,8 @@ export interface ModalState {
   amountToTransfer?: string;
   type?: SaleType;
   saleType?: SaleType;
+  showConfirmDeleteNFT: boolean;
+  burn?: boolean;
   showMarketplaceFilter: boolean;
   genres?: Genre[];
   filterSaleType?: SaleTypeGraphQl;
@@ -82,6 +85,8 @@ export const initialModalState = {
   walletRecipient: undefined,
   amountToTransfer: undefined,
   type: undefined,
+  burn: false,
+  showConfirmDeleteNFT: false,
   showMarketplaceFilter: false,
   genres: undefined,
   filterSaleType: undefined,
@@ -193,6 +198,14 @@ export const modalReducer = (state: ModalState, action: Action) => {
       return {
         ...state,
         walletRecipient: (action.payload as SetRecipientWalletAddress).address,
+      };
+    case ModalActionTypes.SHOW_CONFIRM_DELETE_NFT:
+      return {
+        ...state,
+        showConfirmDeleteNFT: (action.payload as ShowConfirmDeleteNFT).show,
+        anyModalOpened: (action.payload as ShowConfirmDeleteNFT).show,
+        trackId: (action.payload as ShowConfirmDeleteNFT).trackId,
+        burn: (action.payload as ShowConfirmDeleteNFT).burn,
       };
     case ModalActionTypes.SHOW_FILTER_MARKETPLACE:
       return {

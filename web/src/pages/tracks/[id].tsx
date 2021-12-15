@@ -7,13 +7,16 @@ import { Layout } from 'components/Layout';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
+import { useModalDispatch } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
+import { Ellipsis } from 'icons/Ellipsis';
 import { cacheFor, createApolloClient } from 'lib/apollo';
 import {
   PendingRequest,
   Profile,
+  Role,
   TrackDocument,
   TrackQuery,
   useCountBidsLazyQuery,
@@ -26,6 +29,7 @@ import {
 import { GetServerSideProps } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
+import { AuthorActionsType } from 'types/AuthorActionsType';
 import { HighestBid } from './[id]/complete-auction';
 
 export interface TrackPageProps {
@@ -51,7 +55,7 @@ export const getServerSideProps: GetServerSideProps<TrackPageProps, TrackPagePar
     context,
   });
 
-  if (error) {
+  if (error || data.track.deleted) {
     return { notFound: true };
   }
 
@@ -91,6 +95,8 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const [fetchListingItem, { data: listingPayload, loading }] = useListingItemLazyQuery({
     fetchPolicy: 'network-only',
   });
+
+  const { dispatchShowAuthorActionsModal } = useModalDispatch();
 
   useEffect(() => {
     if (track.nftData?.tokenId) {
@@ -191,9 +197,17 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const isHighestBidder = highestBid.bidder?.toLowerCase() === account?.toLowerCase();
   const endingDate = new Date((listingPayload?.listingItem.endingTime || 0) * 1000);
 
+  const onEllipsisClick = () => {
+    dispatchShowAuthorActionsModal(true, AuthorActionsType.NFT, track.id, true);
+  };
+
   const topNovaBarProps: TopNavBarProps = {
     leftButton: <BackButton />,
     title: 'NFT Details',
+    rightButton:
+      isOwner || me?.roles.includes(Role.Admin) ? (
+        <Ellipsis className="cursor-pointer" onClick={onEllipsisClick} />
+      ) : undefined,
   };
 
   useEffect(() => {
