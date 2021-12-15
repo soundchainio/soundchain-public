@@ -1,7 +1,7 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
-import { Field, ID, ObjectType } from 'type-graphql';
+import { Field, ID, InputType, ObjectType } from 'type-graphql';
 import { Model } from './Model';
-
+@InputType('ListingItemInput')
 @ObjectType()
 export class ListingItem extends Model {
   @Field(() => ID, { name: 'id' })

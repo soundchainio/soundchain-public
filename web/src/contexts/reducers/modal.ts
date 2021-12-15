@@ -2,23 +2,24 @@ import { Action } from 'contexts/actions';
 import { ModalActionTypes } from 'contexts/actions/modal';
 import {
   SetAmountToTransfer,
-  SetEditPostIdPayload,
   SetEditCommentIdPayload,
+  SetEditPostIdPayload,
   SetRecipientWalletAddress,
   SetRepostIdPayload,
   ShowApprove,
   ShowAudioPlayerPayload,
   ShowAuthorActionsPayload,
+  ShowCommentModalPayload,
   ShowConfirmDeleteNFT,
   ShowCreatePayload,
+  ShowMarketplaceFilterPayload,
   ShowNewPostPayload,
-  ShowCommentModalPayload,
   ShowReactionsPayload,
   ShowRemoveListing,
   ShowTransferConfirmationPayload,
   ShowUnderDevelopmentPayload,
 } from 'contexts/payloads/modal';
-import { ReactionType } from 'lib/graphql';
+import { Genre, ReactionType, SaleType as SaleTypeGraphQl } from 'lib/graphql';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 import { SaleType } from 'types/SaleType';
 
@@ -53,6 +54,9 @@ export interface ModalState {
   saleType?: SaleType;
   showConfirmDeleteNFT: boolean;
   burn?: boolean;
+  showMarketplaceFilter: boolean;
+  genres?: Genre[];
+  filterSaleType?: SaleTypeGraphQl;
 }
 
 export const initialModalState = {
@@ -83,6 +87,9 @@ export const initialModalState = {
   type: undefined,
   burn: false,
   showConfirmDeleteNFT: false,
+  showMarketplaceFilter: false,
+  genres: undefined,
+  filterSaleType: undefined,
 };
 
 export const modalReducer = (state: ModalState, action: Action) => {
@@ -199,7 +206,14 @@ export const modalReducer = (state: ModalState, action: Action) => {
         anyModalOpened: (action.payload as ShowConfirmDeleteNFT).show,
         trackId: (action.payload as ShowConfirmDeleteNFT).trackId,
         burn: (action.payload as ShowConfirmDeleteNFT).burn,
-      }
+      };
+    case ModalActionTypes.SHOW_FILTER_MARKETPLACE:
+      return {
+        ...state,
+        showMarketplaceFilter: (action.payload as ShowMarketplaceFilterPayload).show,
+        genres: (action.payload as ShowMarketplaceFilterPayload).genres,
+        filterSaleType: (action.payload as ShowMarketplaceFilterPayload).filterSaleType,
+      };
     default:
       return state;
   }

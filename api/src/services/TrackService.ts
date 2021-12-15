@@ -11,6 +11,7 @@ import { Track, TrackModel } from '../models/Track';
 import { TrackWithListingItem } from '../models/TrackWithListingItem';
 import { Context } from '../types/Context';
 import { FilterTrackInput } from '../types/FilterTrackInput';
+import { FilterTrackMarketplace } from '../types/FilterTrackMarketplace';
 import { NFTData } from '../types/NFTData';
 import { PageInput } from '../types/PageInput';
 import { PendingRequest } from '../types/PendingRequest';
@@ -240,7 +241,11 @@ export class TrackService extends ModelService<typeof Track> {
     return 0;
   }
 
-  getListingItems(sort?: SortListingItemInput, page?: PageInput): Promise<PaginateResult<TrackWithListingItem>> {
+  getListingItems(
+    filter?: FilterTrackMarketplace,
+    sort?: SortListingItemInput,
+    page?: PageInput,
+  ): Promise<PaginateResult<TrackWithListingItem>> {
     const aggregation = [
       {
         $lookup: {
@@ -308,9 +313,34 @@ export class TrackService extends ModelService<typeof Track> {
               },
             ],
           },
+          'listingItem.saleType': {
+            $cond: {
+              if: {
+                $ne: [
+                  {
+                    $type: '$listingItem.reservePrice',
+                  },
+                  'missing',
+                ],
+              },
+              then: 'auction',
+              else: 'buy_now',
+            },
+          },
         },
       },
     ];
-    return this.paginatePipelineAggregated({ aggregation, sort, page });
+    let dotNotationFilter;
+    if (filter) {
+      const filterClone = JSON.parse(JSON.stringify(filter));
+      delete filterClone.genres;
+      dotNotationFilter = filter.listingItem && dot.dot(filterClone);
+    }
+    return this.paginatePipelineAggregated({
+      aggregation,
+      filter: filter ? { ...(filter.genres && { genres: filter.genres }), ...dotNotationFilter } : {},
+      sort,
+      page,
+    });
   }
 }

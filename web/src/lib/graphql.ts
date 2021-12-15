@@ -335,6 +335,11 @@ export type FilterTrackInput = {
   nftData?: Maybe<NftDataInput>;
 };
 
+export type FilterTrackMarketplace = {
+  genres?: Maybe<Array<Genre>>;
+  listingItem?: Maybe<ListingItemInput>;
+};
+
 export type Follow = {
   __typename?: 'Follow';
   id: Scalars['ID'];
@@ -435,6 +440,10 @@ export type ListingItemConnection = {
   __typename?: 'ListingItemConnection';
   pageInfo: PageInfo;
   nodes: Array<TrackWithListingItem>;
+};
+
+export type ListingItemInput = {
+  saleType?: Maybe<SaleType>;
 };
 
 export type ListingItemWithPrice = {
@@ -1195,6 +1204,7 @@ export type QueryFavoriteTracksArgs = {
 export type QueryListingItemsArgs = {
   page?: Maybe<PageInput>;
   sort?: Maybe<SortListingItemInput>;
+  filter?: Maybe<FilterTrackMarketplace>;
 };
 
 
@@ -1280,6 +1290,11 @@ export enum Role {
   Admin = 'ADMIN',
   User = 'USER',
   TeamMember = 'TEAM_MEMBER'
+}
+
+export enum SaleType {
+  Auction = 'AUCTION',
+  BuyNow = 'BUY_NOW'
 }
 
 export enum SellType {
@@ -2152,6 +2167,7 @@ export type ListingItemViewComponentFieldsFragment = (
 );
 
 export type ListingItemsQueryVariables = Exact<{
+  filter?: Maybe<FilterTrackMarketplace>;
   sort?: Maybe<SortListingItemInput>;
   page?: Maybe<PageInput>;
 }>;
@@ -4638,8 +4654,8 @@ export type ListingItemQueryHookResult = ReturnType<typeof useListingItemQuery>;
 export type ListingItemLazyQueryHookResult = ReturnType<typeof useListingItemLazyQuery>;
 export type ListingItemQueryResult = Apollo.QueryResult<ListingItemQuery, ListingItemQueryVariables>;
 export const ListingItemsDocument = gql`
-    query ListingItems($sort: SortListingItemInput, $page: PageInput) {
-  listingItems(sort: $sort, page: $page) {
+    query ListingItems($filter: FilterTrackMarketplace, $sort: SortListingItemInput, $page: PageInput) {
+  listingItems(filter: $filter, sort: $sort, page: $page) {
     nodes {
       ...ListingItemComponentFields
     }
@@ -4664,6 +4680,7 @@ export const ListingItemsDocument = gql`
  * @example
  * const { data, loading, error } = useListingItemsQuery({
  *   variables: {
+ *      filter: // value for 'filter'
  *      sort: // value for 'sort'
  *      page: // value for 'page'
  *   },

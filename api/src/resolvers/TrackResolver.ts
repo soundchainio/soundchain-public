@@ -11,6 +11,7 @@ import { CreateTrackPayload } from '../types/CreateTrackPayload';
 import { DeleteTrackInput } from '../types/DeleteTrackInput';
 import { DeleteTrackPayload } from '../types/DeleteTrackPayload';
 import { FilterTrackInput } from '../types/FilterTrackInput';
+import { FilterTrackMarketplace } from '../types/FilterTrackMarketplace';
 import { ListingItemConnection } from '../types/ListingItemConnection';
 import { PageInput } from '../types/PageInput';
 import { Role } from '../types/Role';
@@ -152,9 +153,10 @@ export class TrackResolver {
   @Query(() => ListingItemConnection)
   listingItems(
     @Ctx() { trackService }: Context,
+    @Arg('filter', { nullable: true }) filter?: FilterTrackMarketplace,
     @Arg('sort', { nullable: true }) sort?: SortListingItemInput,
     @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<ListingItemConnection> {
-    return trackService.getListingItems(sort, page);
+    return trackService.getListingItems(filter, sort, page);
   }
 }

@@ -1,18 +1,19 @@
 import classNames from 'classnames';
+import { useModalState } from 'contexts/providers/modal';
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar';
 import { ReactNode, useEffect, useState } from 'react';
 import { AuthorActionsModal } from './AuthorActionsModal';
+import { CommentModal } from './CommentModal';
 import { ApproveModal } from './modals/ApproveModal';
 import { ConfirmDeleteNFTModal } from './modals/ConfirmDeleteNFTModal';
+import { FilterModalMarketplace } from './modals/FilterMarketplaceModal';
 import { PostModal } from './PostModal';
-import { CommentModal } from './CommentModal';
 import { ReactionsModal } from './ReactionsModal';
 import { RemoveListingConfirmationModal } from './RemoveListingConfirmationModal';
 import { SideMenu } from './SideMenu';
 import { TopNavBar, TopNavBarProps } from './TopNavBar';
 import { TransferConfirmationModal } from './TransferConfirmationModal';
 import { UnderDevelopmentModal } from './UnderDevelopmentModal';
-import { useModalState } from 'contexts/providers/modal';
 
 interface LayoutProps {
   children: ReactNode;
@@ -50,6 +51,7 @@ export const Layout = ({ children, hideBottomNavBar, topNavBarProps, className }
         <ConfirmDeleteNFTModal />
         <ApproveModal />
         <RemoveListingConfirmationModal />
+        <FilterModalMarketplace />
       </div>
     </div>
   );
