@@ -26,7 +26,7 @@ function Link({ label, value, to }: LinkProps) {
           <span className="block text-gray-50 text-xs font-bold uppercase"> {label} </span>
           <span className="block text-white font-bold mt-1"> {value} </span>
         </div>
-        <RightArrow className="scale-150" />
+        <RightArrow />
       </a>
     </NextLink>
   );

@@ -16,7 +16,7 @@ interface FormValues {
   email: string;
 }
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
-  email: yup.string().required('Please enter your email address'),
+  email: yup.string().email('Please enter a valid email address').required('Please enter your email address'),
 });
 
 export const LoginForm = () => {
