@@ -61,7 +61,7 @@ export default function SettingsUsernamePage() {
         <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={onSubmit}>
           <Form className="flex flex-1 flex-col space-y-6">
             <div>
-              <InputField label="Username" type="text" name="handle" placeholder="Username" />
+              <InputField label="Username" type="text" name="handle" placeholder="Username" maxLength={10} />
             </div>
             <p className="text-gray-50 flex-grow">
               Usernames can only have letters and numbers and can be a max of 10 characters.
