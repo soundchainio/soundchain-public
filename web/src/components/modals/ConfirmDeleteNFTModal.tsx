@@ -89,8 +89,18 @@ export const ConfirmDeleteNFTModal = () => {
     }
   };
 
+  const handleDeleteOnly = async () => {
+    if (trackId) {
+      setLoading(true);
+      await deleteTrack({
+        variables: { trackId: trackId },
+      });
+      router.push('/');
+    }
+  };
+
   const handleSubmit = () => {
-    if (burn) handleBurn();
+    burn ? handleBurn() : handleDeleteOnly();
   };
 
   return (
@@ -109,7 +119,7 @@ export const ConfirmDeleteNFTModal = () => {
           <div className="flex flex-col h-full justify-around">
             <div className="px-4 text-sm text-gray-80 font-bold text-center">
               <p className="flex flex-wrap items-end justify-center text-center py-6">
-                <span className="leading-tight">Are you sure you want to burn this NFT?</span>
+                <span className="leading-tight">Are you sure you want to {burn ? 'burn' : 'delete'} this NFT?</span>
               </p>
               <p>This action cannot be undone.</p>
             </div>
@@ -118,26 +128,28 @@ export const ConfirmDeleteNFTModal = () => {
               {/* to do add a loader while !track */}
             </div>
           </div>
-          <div className="flex flex-col w-full">
-            <div className="flex w-full bg-gray-30">
-              <div className="flex-1 flex items-center justify-start text-gray-CC font-bold text-xs uppercase px-4 py-3">
-                Gas Fees
-              </div>
-              <div className="flex flex-wrap items-center justify-center uppercase px-4 py-3">
-                <span className="my-auto">
-                  <Matic />
-                </span>
-                <span className="mx-1 text-white font-bold text-md leading-tight">{maxGasFee}</span>
-                <div className="items-end">
-                  <span className="text-gray-80 font-black text-xxs leading-tight">matic</span>
+          {burn && (
+            <div className="flex flex-col w-full">
+              <div className="flex w-full bg-gray-30">
+                <div className="flex-1 flex items-center justify-start text-gray-CC font-bold text-xs uppercase px-4 py-3">
+                  Gas Fees
+                </div>
+                <div className="flex flex-wrap items-center justify-center uppercase px-4 py-3">
+                  <span className="my-auto">
+                    <Matic />
+                  </span>
+                  <span className="mx-1 text-white font-bold text-md leading-tight">{maxGasFee}</span>
+                  <div className="items-end">
+                    <span className="text-gray-80 font-black text-xxs leading-tight">matic</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
         <div>
           <Button variant="approve" type="button" loading={loading} onClick={handleSubmit} disabled={disabled}>
-            Burn NFT
+            {burn ? 'Burn NFT' : 'Delete NFT'}
           </Button>
         </div>
       </div>

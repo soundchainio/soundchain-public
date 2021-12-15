@@ -16,6 +16,7 @@ import { cacheFor, createApolloClient } from 'lib/apollo';
 import {
   PendingRequest,
   Profile,
+  Role,
   TrackDocument,
   TrackQuery,
   useCountBidsLazyQuery,
@@ -203,7 +204,10 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const topNovaBarProps: TopNavBarProps = {
     leftButton: <BackButton />,
     title: 'NFT Details',
-    rightButton: isOwner ? <Ellipsis className="cursor-pointer" onClick={onEllipsisClick} /> : undefined,
+    rightButton:
+      isOwner || me?.roles.includes(Role.Admin) ? (
+        <Ellipsis className="cursor-pointer" onClick={onEllipsisClick} />
+      ) : undefined,
   };
 
   useEffect(() => {

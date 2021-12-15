@@ -1,8 +1,15 @@
 import classNames from 'classnames';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { useMe } from 'hooks/useMe';
-import { CommentsDocument, PostsDocument, useDeleteCommentMutation, useDeletePostMutation } from 'lib/graphql';
+import {
+  CommentsDocument,
+  PostsDocument,
+  useDeleteCommentMutation,
+  useDeletePostMutation,
+  useTrackLazyQuery,
+} from 'lib/graphql';
 import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 import { Delete as DeleteButton } from './Buttons/Delete';
 import { Edit as EditButton } from './Buttons/Edit';
@@ -13,6 +20,7 @@ const baseClasses =
 
 export const AuthorActionsModal = () => {
   const me = useMe();
+  const [burning, setBurning] = useState(false);
   const { showAuthorActions, authorActionsId, authorActionsType, showOnlyDeleteOption } = useModalState();
   const {
     dispatchShowAuthorActionsModal,
@@ -23,6 +31,8 @@ export const AuthorActionsModal = () => {
     dispatchShowConfirmDeleteNFTModal,
   } = useModalDispatch();
   const router = useRouter();
+
+  const [getTrack, { data: track }] = useTrackLazyQuery();
 
   const [deleteComment] = useDeleteCommentMutation({
     refetchQueries: [CommentsDocument],
@@ -56,10 +66,18 @@ export const AuthorActionsModal = () => {
     }
   };
 
-  const onDeleteNFT = () => {
-    onOutsideClick();
-    dispatchShowConfirmDeleteNFTModal(true, authorActionsId, true); // todo when it's an admin and not the owner of the nft, burn = false
+  const onDeleteNFT = async () => {
+    setBurning(true);
+    await getTrack({ variables: { id: authorActionsId } });
   };
+
+  useEffect(() => {
+    if (track && burning) {
+      const shouldBurn = me?.profile.id === track?.track.profileId;
+      dispatchShowConfirmDeleteNFTModal(true, track.track.id, shouldBurn);
+      setBurning(false);
+    }
+  }, [track, burning]);
 
   const onDelete = async () => {
     switch (authorActionsType) {
