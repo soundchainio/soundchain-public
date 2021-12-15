@@ -17,7 +17,7 @@ export const Avatar = ({ profile, pixels = 30, linkToProfile = true, ...props }:
 
   return (
     <NextLink href={`/profiles/${profile.userHandle}`} passHref>
-      <a aria-label={profile.displayName}>
+      <a className="flex-shrink-0" aria-label={profile.displayName}>
         <Content profile={profile} pixels={pixels} {...props} />
       </a>
     </NextLink>
@@ -26,7 +26,7 @@ export const Avatar = ({ profile, pixels = 30, linkToProfile = true, ...props }:
 
 const Content = ({ profile, pixels = 30, ...props }: AvatarProps) => {
   return (
-    <div {...props}>
+    <div className="flex-shrink-0" {...props}>
       <Image
         alt="Profile picture"
         src={profile.profilePicture || '/default-pictures/profile/red.png'}
