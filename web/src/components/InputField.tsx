@@ -11,8 +11,8 @@ interface InputFieldProps extends React.ComponentPropsWithoutRef<'input'> {
   symbol?: string;
 }
 
-const commonInputClasses = `relative appearance-none block w-full p-3 rounded-md border-2 bg-gray-30 border-gray-80 text-gray-200 cursor-text`;
-const validInputClasses = `${commonInputClasses} border-gray-80`;
+const commonInputClasses = `relative appearance-none block w-full p-3 rounded-md border bg-gray-1A border-gray-30 text-gray-200 cursor-text`;
+const validInputClasses = `${commonInputClasses} border-gray-30`;
 const errorInputClasses = `${commonInputClasses} border-red-500`;
 
 export const InputField = ({ label, icon: Icon, ...props }: InputFieldProps) => {
@@ -25,12 +25,12 @@ export const InputField = ({ label, icon: Icon, ...props }: InputFieldProps) => 
         onClick={() => inputRef.current?.focus()}
       >
         {label && (
-          <Label className="block font-bold text-sm uppercase cursor-auto" htmlFor={props.name}>
+          <Label className="block font-bold uppercase cursor-auto" textSize="xs" htmlFor={props.name}>
             {label}
           </Label>
         )}
         <input
-          className="text-sm font-bold bg-gray-30 w-full p-0 text-gray-200 border-none focus:outline-none focus:ring-transparent placeholder-gray-60 placeholder-semibold"
+          className="text-sm font-bold bg-gray-1A w-full p-0 text-gray-200 border-none focus:outline-none focus:ring-transparent placeholder-gray-50 placeholder-semibold"
           id={props.name}
           {...field}
           {...props}

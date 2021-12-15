@@ -46,7 +46,7 @@ export const FavoriteGenresForm = ({
     <>
       <div className="flex-grow flex">
         <div className="flex flex-col">
-          <Label>
+          <Label grayScale="80">
             What are your favorite genres? {favoriteGenres.length ? `(${favoriteGenres.length} Selected)` : ''}
           </Label>
           <div className="pb-6 space-y-2">
