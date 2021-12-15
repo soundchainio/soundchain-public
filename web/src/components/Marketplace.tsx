@@ -85,7 +85,7 @@ export const Marketplace = () => {
           after: data?.listingItems.pageInfo.endCursor,
         },
         sort: { field, order },
-        filter: { ...(genres ? { genres } : {}), ...(saleType ? { listingItem: { saleType } } : {}) },
+        filter: buildMarketplaceFilter(genres, saleType),
       },
     });
   };
