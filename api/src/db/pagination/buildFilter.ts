@@ -14,7 +14,7 @@ export function buildFilter<T extends typeof Model>(field: FilterQuery<T>): Prom
         });
       });
     } else {
-      filter[key] = { $eq: values };
+      filter[key] = values;
     }
   }
   return filter;

@@ -109,8 +109,9 @@ export async function paginatePipelineAggregated<T extends typeof Model>(
   const filterQuery = buildFilter(filter);
   const cursorFilter = buildCursorFilter(field, ascending, before, after, inclusive);
   const querySort = buildQuerySort(field, ascending);
+
   const results = await collection
-    .aggregate([...aggregation, { $match: cursorFilter }, { $match: filterQuery }])
+    .aggregate([...aggregation, { $match: filterQuery }, { $match: cursorFilter }])
     .sort(querySort)
     .limit(limit + 1)
     .exec();

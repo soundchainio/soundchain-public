@@ -5,11 +5,10 @@ interface BadgeProps extends React.ComponentPropsWithoutRef<'span'> {
   label: string;
   selected?: boolean;
   onClick?: () => void;
-  hasDelete?: boolean;
   onDelete?: () => void;
 }
 
-export const Badge = ({ label, selected, onClick, className, hasDelete, onDelete, ...rest }: BadgeProps) => (
+export const Badge = ({ label, selected, onClick, className, onDelete, ...rest }: BadgeProps) => (
   <span
     className={classNames(
       className,
@@ -21,6 +20,6 @@ export const Badge = ({ label, selected, onClick, className, hasDelete, onDelete
     {...rest}
   >
     {label}
-    {hasDelete ? <Close className="ml-2 cursor-pointer" onClick={onDelete} /> : undefined}
+    {onDelete && <Close className="ml-2 cursor-pointer" onClick={onDelete} />}
   </span>
 );

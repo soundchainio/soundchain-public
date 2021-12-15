@@ -57,10 +57,7 @@ export const Marketplace = () => {
         first: pageSize,
       },
       sort: { field, order },
-      filter: {
-        ...(genresFromModal?.length ? { genres: genresFromModal } : {}),
-        ...(filterSaleType ? { listingItem: { saleType: filterSaleType } } : {}),
-      },
+      filter: buildMarketplaceFilter(genresFromModal, filterSaleType),
     });
   }, [sorting, genresFromModal, filterSaleType]);
 
@@ -70,10 +67,7 @@ export const Marketplace = () => {
         first: pageSize,
       },
       sort: { field, order },
-      filter: {
-        ...(genres?.length ? { genres } : {}),
-        ...(saleType ? { listingItem: { saleType: saleType } } : {}),
-      },
+      filter: buildMarketplaceFilter(genres, saleType),
     });
   }, [sorting, genres, saleType]);
 
@@ -131,9 +125,9 @@ export const Marketplace = () => {
         </select>
       </div>
       <div className="flex flex-wrap p-4 gap-2">
-        {saleType && <Badge label={saleType} hasDelete onDelete={() => setSaleType(undefined)} />}
+        {saleType && <Badge label={saleType} onDelete={() => setSaleType(undefined)} />}
         {genres?.map(genre => (
-          <Badge key={genre} label={genre} hasDelete onDelete={() => setGenres(genres.filter(it => it !== genre))} />
+          <Badge key={genre} label={genre} onDelete={() => setGenres(genres.filter(it => it !== genre))} />
         ))}
       </div>
       {!data || loading ? (
@@ -177,4 +171,11 @@ const Tracks = ({ isGrid, tracks }: TracksProps) => {
       )}
     </>
   );
+};
+
+const buildMarketplaceFilter = (genres: Genre[] | undefined, saleType: SaleType | undefined) => {
+  return {
+    ...(genres?.length && { genres }),
+    ...(saleType && { listingItem: { saleType } }),
+  };
 };
