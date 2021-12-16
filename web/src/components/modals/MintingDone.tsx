@@ -1,8 +1,10 @@
+import { Button } from 'components/Button';
 import { MiniAudioPlayer } from 'components/MiniAudioPlayer';
 import { Anchor } from 'icons/Anchor';
 import { Polygon } from 'icons/Polygon';
 import { CreateTrackMutation } from 'lib/graphql';
 import React from 'react';
+import NextLink from 'next/link';
 
 interface MintingDoneProps {
   track: CreateTrackMutation['createTrack']['track'];
@@ -34,6 +36,11 @@ export const MintingDone = ({ track, transactionHash }: MintingDoneProps) => {
       >
         <div style={{ color: '#808080' }}>Congrats,</div>
         <div>you created an NFT!</div>
+        <NextLink href={`/tracks/${track.id}`}>
+          <Button className="text-sm mt-6 w-1/3 rounded" variant="rainbow">
+            NFT Details
+          </Button>
+        </NextLink>
       </div>
       <div className="flex gap-4 items-center text-xs text-white py-3 px-4" style={{ backgroundColor: '#151515' }}>
         <div className="flex items-center whitespace-nowrap font-bold">
