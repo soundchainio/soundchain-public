@@ -144,10 +144,14 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
             ))}
           </div>
 
-          <WalletSelector className="mt-4 py-3" />
+          <div>
+            <WalletSelector />
+            <div className="px-4 py-3 bg-gray-20">
+              <MaxGasFee />
+            </div>
+          </div>
 
           <div className="pl-4 pr-4 pb-4 flex items-center mt-4">
-            <MaxGasFee />
             <div className="flex-1">
               {enoughFunds && !uploadingArt && (
                 <Button type="submit" variant="rainbow">

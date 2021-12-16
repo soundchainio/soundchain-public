@@ -108,24 +108,18 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const isProcessing = nftData?.pendingRequest != PendingRequest.None;
   const tokenId = nftData?.tokenId;
   const canList = (me?.profile.verified && nftData?.minter === account) || nftData?.minter != account;
-  const isBuyNow = !!listingPayload?.listingItem?.pricePerItem ?? false;
-  const isAuction = !!listingPayload?.listingItem?.reservePrice ?? false;
+  const isBuyNow = Boolean(listingPayload?.listingItem?.pricePerItem);
+  const isAuction = Boolean(listingPayload?.listingItem?.reservePrice);
   const bidCount = countBids?.countBids.numberOfBids ?? 0;
 
-  let price;
-  if (isAuction && highestBid.bid === '0') {
-    price = web3?.utils.fromWei(
-      listingPayload?.listingItem?.reservePrice?.toLocaleString('fullwide', { useGrouping: false }) ?? '0',
-      'ether',
-    );
-  } else if (isAuction) {
-    price = web3?.utils.fromWei(highestBid.bid ?? '0', 'ether');
-  } else {
-    price = web3?.utils.fromWei(
-      listingPayload?.listingItem?.pricePerItem?.toLocaleString('fullwide', { useGrouping: false }) ?? '0',
-      'ether',
-    );
+  const { reservePrice, pricePerItem } = listingPayload?.listingItem || {};
+
+  let priceValue = pricePerItem?.toLocaleString('fullwide', { useGrouping: false });
+  if (isAuction) {
+    priceValue =
+      highestBid.bid === '0' ? reservePrice?.toLocaleString('fullwide', { useGrouping: false }) : highestBid.bid;
   }
+  const price = web3?.utils.fromWei(priceValue ?? '0', 'ether');
 
   const auctionIsOver = (listingPayload?.listingItem?.endingTime || 0) < Math.floor(Date.now() / 1000);
   const canComplete = auctionIsOver && highestBid.bidder?.toLowerCase() === account?.toLowerCase();
