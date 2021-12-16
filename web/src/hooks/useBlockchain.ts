@@ -41,12 +41,20 @@ const useBlockchain = () => {
   }, []);
 
   const burnNftToken = useCallback(
-    (web3: Web3, tokenId: number, from: string) => {
+    (
+      web3: Web3,
+      tokenId: number,
+      from: string,
+      onConfirmation: (confirmationNumber: number, receipt: TransactionReceipt) => void,
+    ) => {
       const contract = new web3.eth.Contract(
         soundchainContract.abi as AbiItem[],
         nftAddress,
       ) as unknown as Soundchain721;
-      return beforeSending(web3, async () => await contract.methods.burn(tokenId).send({ from, gas }));
+      return beforeSending(
+        web3,
+        async () => await contract.methods.burn(tokenId).send({ from, gas }).on('confirmation', onConfirmation),
+      );
     },
     [beforeSending],
   );

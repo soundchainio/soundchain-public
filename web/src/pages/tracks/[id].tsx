@@ -10,14 +10,17 @@ import SEO from 'components/SEO';
 import { TimeCounter } from 'components/TimeCounter';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
+import { useModalDispatch } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Matic } from 'icons/Matic';
+import { Ellipsis } from 'icons/Ellipsis';
 import { cacheFor, createApolloClient } from 'lib/apollo';
 import {
   PendingRequest,
   Profile,
+  Role,
   TrackDocument,
   TrackQuery,
   useCountBidsLazyQuery,
@@ -31,6 +34,7 @@ import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
+import { AuthorActionsType } from 'types/AuthorActionsType';
 import { HighestBid } from './[id]/complete-auction';
 
 export interface TrackPageProps {
@@ -56,7 +60,7 @@ export const getServerSideProps: GetServerSideProps<TrackPageProps, TrackPagePar
     context,
   });
 
-  if (error) {
+  if (error || data.track.deleted) {
     return { notFound: true };
   }
 
@@ -84,6 +88,7 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const [track, setTrack] = useState<TrackQuery['track']>(initialState);
   const [highestBid, setHighestBid] = useState<HighestBid>({} as HighestBid);
   const [isLoadingOwner, setLoadingOwner] = useState(true);
+  const { dispatchShowAuthorActionsModal } = useModalDispatch();
 
   const [refetchTrack, { data: trackData }] = useTrackLazyQuery({
     fetchPolicy: 'network-only',
@@ -137,6 +142,13 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const topNavBarProps: TopNavBarProps = {
     leftButton: <BackButton />,
     title: 'NFT Details',
+    rightButton:
+      isOwner || me?.roles.includes(Role.Admin) ? (
+        <Ellipsis
+          className="cursor-pointer"
+          onClick={() => dispatchShowAuthorActionsModal(true, AuthorActionsType.NFT, track.id, true)}
+        />
+      ) : undefined,
   };
 
   useEffect(() => {

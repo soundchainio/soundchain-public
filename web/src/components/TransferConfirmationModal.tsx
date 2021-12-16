@@ -92,7 +92,7 @@ export const TransferConfirmationModal = () => {
                 </p>
                 <p>This transaction cannot be undone.</p>
               </div>
-              <div className="flex flex-col w-full space-y-6 py-6">
+              <div className="flex flex-col space-y-6 py-6">
                 <div className="space-y-2">
                   <div className="px-4">
                     <Label className="uppercase font-bold" textSize="xs">
@@ -116,35 +116,35 @@ export const TransferConfirmationModal = () => {
                   <Account account={walletRecipient} defaultWallet={true} />
                 </div>
               </div>
-            </div>
-            <div className="flex flex-col w-full">
-              <div className="flex w-full bg-gray-30">
-                <div className="flex-1 flex items-center justify-start text-gray-CC font-bold text-xs uppercase px-4 py-3">
-                  Gas Fees
-                </div>
-                <div className="flex flex-wrap items-center justify-center uppercase px-4 py-3">
-                  <span className="my-auto">
-                    <Matic />
-                  </span>
-                  <span className="mx-1 text-white font-bold text-md leading-tight">{maxGasFee}</span>
-                  <div className="items-end">
-                    <span className="text-gray-80 font-black text-xxs leading-tight">matic</span>
+              <div className="flex flex-col">
+                <div className="flex w-full bg-gray-30">
+                  <div className="flex-1 flex items-center justify-start text-gray-CC font-bold text-xs uppercase px-4 py-3">
+                    Gas Fees
+                  </div>
+                  <div className="flex flex-wrap items-center justify-center uppercase px-4 py-3">
+                    <span className="my-auto">
+                      <Matic />
+                    </span>
+                    <span className="mx-1 text-white font-bold text-md leading-tight">{maxGasFee}</span>
+                    <div className="items-end">
+                      <span className="text-gray-80 font-black text-xxs leading-tight">matic</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="flex w-full bg-gray-20">
-                <div className="flex-1 flex items-center justify-start text-gray-CC font-bold text-xs uppercase px-4 py-3">
-                  Total
-                </div>
-                <div className="flex flex-wrap items-center justify-center uppercase px-4 py-3">
-                  <span className="my-auto">
-                    <Matic />
-                  </span>
-                  <span className="mx-1 text-white font-bold text-md leading-tight">
-                    {Number(maxGasFee || '0') + Number(amountToTransfer || '0')}
-                  </span>
-                  <div className="items-end">
-                    <span className="text-gray-80 font-black text-xxs leading-tight">matic</span>
+                <div className="flex bg-gray-20">
+                  <div className="flex-1 flex items-center justify-start text-gray-CC font-bold text-xs uppercase px-4 py-3">
+                    Total
+                  </div>
+                  <div className="flex flex-wrap items-center justify-center uppercase px-4 py-3">
+                    <span className="my-auto">
+                      <Matic />
+                    </span>
+                    <span className="mx-1 text-white font-bold text-md leading-tight">
+                      {Number(maxGasFee || '0') + Number(amountToTransfer || '0')}
+                    </span>
+                    <div className="items-end">
+                      <span className="text-gray-80 font-black text-xxs leading-tight">matic</span>
+                    </div>
                   </div>
                 </div>
               </div>

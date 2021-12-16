@@ -1,12 +1,14 @@
 import classNames from 'classnames';
+import { Close } from 'icons/Close';
 
 interface BadgeProps extends React.ComponentPropsWithoutRef<'span'> {
   label: string;
   selected?: boolean;
   onClick?: () => void;
+  onDelete?: () => void;
 }
 
-export const Badge = ({ label, selected, onClick, className, ...rest }: BadgeProps) => (
+export const Badge = ({ label, selected, onClick, className, onDelete, ...rest }: BadgeProps) => (
   <span
     className={classNames(
       className,
@@ -18,5 +20,6 @@ export const Badge = ({ label, selected, onClick, className, ...rest }: BadgePro
     {...rest}
   >
     {label}
+    {onDelete && <Close className="ml-2 cursor-pointer" onClick={onDelete} />}
   </span>
 );
