@@ -1,8 +1,10 @@
+import { Button } from 'components/Button';
 import { MiniAudioPlayer } from 'components/MiniAudioPlayer';
 import { Anchor } from 'icons/Anchor';
 import { Polygon } from 'icons/Polygon';
 import { CreateTrackMutation } from 'lib/graphql';
 import React from 'react';
+import { useRouter } from 'next/router';
 
 interface MintingDoneProps {
   track: CreateTrackMutation['createTrack']['track'];
@@ -10,6 +12,8 @@ interface MintingDoneProps {
 }
 
 export const MintingDone = ({ track, transactionHash }: MintingDoneProps) => {
+  const router = useRouter();
+
   return (
     <div className="h-full w-full" style={{ backgroundColor: '#101010' }}>
       <div className="p-4">
@@ -34,6 +38,14 @@ export const MintingDone = ({ track, transactionHash }: MintingDoneProps) => {
       >
         <div style={{ color: '#808080' }}>Congrats,</div>
         <div>you created an NFT!</div>
+        <Button
+          className="text-sm mt-6 w-1/3 rounded"
+          type="button"
+          variant="rainbow"
+          onClick={() => router.push(`/tracks/${track.id}`)}
+        >
+          NFT Details
+        </Button>
       </div>
       <div className="flex gap-4 items-center text-xs text-white py-3 px-4" style={{ backgroundColor: '#151515' }}>
         <div className="flex items-center whitespace-nowrap font-bold">
