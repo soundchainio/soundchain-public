@@ -153,7 +153,7 @@ const ListedAction = ({ href, price, action, variant, countBids, startingDate, e
           <span className="text-xs text-gray-80">MATIC</span>
         </div>
       </div>
-      {futureSale && (
+      {futureSale && startingDate && (
         <div className="flex flex-col text-xs items-center px-1">
           <Timer date={startingDate} />
         </div>
