@@ -1,12 +1,20 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { Avatar } from 'components/Avatar';
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
-import { PlaceBid } from 'components/details-NFT/PlaceBid';
+import { InputField } from 'components/InputField';
 import { Layout } from 'components/Layout';
+import MaxGasFee from 'components/MaxGasFee';
+import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
+import { WalletSelector } from 'components/WalletSelector';
+import { Form, Formik } from 'formik';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
+import { Auction } from 'icons/Auction';
 import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
 import {
@@ -17,11 +25,14 @@ import {
   useCountBidsQuery,
   useHaveBidedLazyQuery,
   useMaticUsdQuery,
+  useUserByWalletLazyQuery,
 } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 import { currency } from 'utils/format';
+import { Timer } from '../[id]';
+import { HighestBid } from './complete-auction';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -29,6 +40,10 @@ export interface TrackPageProps {
 
 interface TrackPageParams extends ParsedUrlQuery {
   id: string;
+}
+
+interface FormValues {
+  bidAmount: number;
 }
 
 export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(async (context, apolloClient) => {
@@ -43,7 +58,6 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
     variables: { id: trackId },
     context,
   });
-
   if (error) {
     return { notFound: true };
   }
@@ -52,24 +66,23 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 });
 
 export default function PlaceBidPage({ track }: TrackPageProps) {
+  const me = useMe();
   const { placeBid, getHighestBid } = useBlockchain();
   const { account, web3 } = useWalletContext();
   const { data: maticQuery } = useMaticUsdQuery();
   const [loading, setLoading] = useState(false);
-  const [bidAmount, setBidAmount] = useState(0);
-  const [highestBid, setHighestBid] = useState('0');
-  const [isHighestBidder, setIsHighestBidder] = useState(false);
-  const me = useMe();
+  const [highestBid, setHighestBid] = useState<HighestBid>();
 
   const tokenId = track.nftData?.tokenId ?? -1;
 
   const { data: { auctionItem } = {} } = useAuctionItemQuery({
     variables: { tokenId },
   });
-
   const [fetchHaveBided, { data: haveBided, refetch: refetchHaveBided }] = useHaveBidedLazyQuery({
     fetchPolicy: 'network-only',
   });
+  const { data: countBids, refetch: refetchCountBids } = useCountBidsQuery({ variables: { tokenId } });
+  const [fetchHighestBidder, { data: highestBidderData }] = useUserByWalletLazyQuery();
 
   useEffect(() => {
     if (account && auctionItem?.auctionItem?.id) {
@@ -77,16 +90,13 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     }
   }, [fetchHaveBided, auctionItem?.auctionItem?.id, account]);
 
-  const { data: countBids, refetch: refetchCountBids } = useCountBidsQuery({ variables: { tokenId } });
-
   useEffect(() => {
     if (!web3) {
       return;
     }
     const fetchHighestBid = async () => {
       const { _bid, _bidder } = await getHighestBid(web3, tokenId);
-      setIsHighestBidder(_bidder.toLowerCase() === account?.toLowerCase());
-      setHighestBid(_bid);
+      setHighestBid({ bid: _bid, bidder: _bidder });
       refetchCountBids();
     };
     fetchHighestBid();
@@ -97,19 +107,53 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     return () => clearInterval(interval);
   }, [tokenId, track.id, web3, getHighestBid, account, refetchCountBids]);
 
-  if (!auctionItem) {
+  useEffect(() => {
+    if (highestBid) {
+      fetchHighestBidder({
+        variables: {
+          walletAddress: highestBid.bidder,
+        },
+      });
+    }
+  }, [highestBid, fetchHighestBidder]);
+
+  if (!auctionItem || !web3) {
     return null;
   }
 
   const isOwner = auctionItem.auctionItem?.owner.toLowerCase() === account?.toLowerCase();
   const isForSale = !!auctionItem.auctionItem?.reservePrice ?? false;
-  const reservePrice = web3?.utils.fromWei(
-    auctionItem.auctionItem?.reservePrice.toLocaleString('fullwide', { useGrouping: false }) ?? '0',
-    'ether',
-  );
   const hasStarted = (auctionItem.auctionItem?.startingTime ?? 0) <= new Date().getTime() / 1000;
+  const hasEnded = new Date().getTime() / 1000 > (auctionItem.auctionItem?.endingTime ?? 0);
+  const startingDate = auctionItem.auctionItem?.startingTime
+    ? new Date(auctionItem.auctionItem.startingTime * 1000)
+    : undefined;
+  const endingDate = auctionItem.auctionItem?.endingTime
+    ? new Date(auctionItem.auctionItem.endingTime * 1000)
+    : undefined;
+  const futureSale = startingDate ? startingDate.getTime() > new Date().getTime() : false;
+  const isHighestBidder = highestBid ? highestBid.bidder.toLowerCase() === account?.toLowerCase() : undefined;
+  const auctionIsOver = (auctionItem.auctionItem?.endingTime || 0) < Math.floor(Date.now() / 1000);
+  const bidCount = countBids?.countBids.numberOfBids ?? 0;
+  let price: string;
+  if (!highestBid || highestBid?.bid === '0') {
+    price = web3.utils.fromWei(
+      auctionItem.auctionItem?.reservePrice?.toLocaleString('fullwide', { useGrouping: false }) ?? '0',
+      'ether',
+    );
+  } else {
+    price = web3.utils.fromWei(highestBid.bid, 'ether');
+  }
+  const minBid = parseFloat(price) * 1.015;
+  const validate = ({ bidAmount }: FormValues) => {
+    const errors: any = {};
+    if (bidAmount < minBid) {
+      errors.bidAmount = `must be at least ${minBid}`;
+    }
+    return errors;
+  };
 
-  const handlePlaceBid = () => {
+  const handlePlaceBid = ({ bidAmount }: FormValues) => {
     if (!web3 || !auctionItem.auctionItem?.tokenId || !auctionItem.auctionItem?.owner || !account) {
       return;
     }
@@ -136,44 +180,118 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
       <div className="m-4">
         <Track track={track} />
       </div>
-      {reservePrice && account && (
-        <PlaceBid
-          highestBid={highestBid}
-          reservePrice={reservePrice}
-          bidAmount={bidAmount}
-          onSetBidAmount={amount => setBidAmount(amount)}
-          ownerAddressAccount={account}
-          startTime={auctionItem.auctionItem?.startingTime ?? 0}
-          endingTime={auctionItem.auctionItem?.endingTime ?? 0}
-          countBids={countBids?.countBids.numberOfBids ?? 0}
-        />
-      )}
       {isHighestBidder && <div className="text-green-500 font-bold p-4 text-center">You have the highest bid!</div>}
-      {haveBided?.haveBided.bided && !isHighestBidder && (
+      {haveBided?.haveBided.bided && isHighestBidder !== undefined && !isHighestBidder && (
         <div className="text-red-500 font-bold p-4 text-center">You have been outbid!</div>
       )}
-      {bidAmount >= 0 && hasStarted && (
-        <div className="flex p-4">
-          <div className="flex-1 font-black text-xs">
-            <div className="flex items-center gap-2 text-white">
-              <Matic />
-              <div className="text-white">{bidAmount}</div>MATIC
+      <div className="bg-[#111920]">
+        {futureSale && (
+          <div className="flex justify-between items-center px-4 py-3">
+            <div className="text-sm font-bold text-white flex-shrink-0">SALE STARTS</div>
+            <div className="text-md flex items-center text-right font-bold gap-1">
+              <Timer date={startingDate!} reloadOnEnd />
             </div>
-            {maticQuery?.maticUsd && (
-              <span className="text-xs text-gray-50 font-bold">
-                {`${currency(bidAmount * parseFloat(maticQuery?.maticUsd))} USD`}
-              </span>
-            )}
           </div>
-          <Button
-            variant="buy-nft"
-            onClick={handlePlaceBid}
-            loading={loading}
-            disabled={bidAmount <= parseFloat(reservePrice || '0') || bidAmount <= parseFloat(highestBid) * 1.015}
-          >
-            <div className="px-4">CONFIRM BID</div>
-          </Button>
+        )}
+        {endingDate && !futureSale && (
+          <div className="flex justify-between items-center px-4 py-3">
+            <div className="text-sm font-bold text-white flex-shrink-0">TIME REMAINING</div>
+            <div className="text-md flex items-center text-right font-bold gap-1">
+              <Timer date={endingDate} endedMessage="Auction Ended" reloadOnEnd />
+            </div>
+          </div>
+        )}
+        <div className="flex justify-between items-center px-4 py-3">
+          <div className="text-sm font-bold text-white">{auctionIsOver ? 'FINAL PRICE' : 'CURRENT PRICE'}</div>
+          <div className="text-md flex items-center font-bold gap-1">
+            <Matic />
+            <span className="text-white">{price}</span>
+            <span className="text-xxs text-gray-80">MATIC</span>
+            <span className="text-[#22CAFF] text-xxs">[{bidCount} bids]</span>
+          </div>
         </div>
+        {highestBidderData?.getUserByWallet && (
+          <div className="text-white flex justify-between items-center px-4 py-3">
+            <div className="text-sm font-bold">HIGHEST BIDDER</div>
+            <div className="flex items-center gap-2">
+              <Avatar
+                profile={{
+                  profilePicture: highestBidderData?.getUserByWallet.profile.profilePicture,
+                  userHandle: highestBidderData?.getUserByWallet.profile.userHandle,
+                }}
+                pixels={30}
+                linkToProfile
+              />
+              <div className="flex flex-col ">
+                <div className="text-sm font-bold">{highestBidderData?.getUserByWallet.profile.displayName}</div>
+                <div className="text-xxs text-gray-CC font-bold">
+                  @{highestBidderData?.getUserByWallet.profile.userHandle}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {isOwner && bidCount === 0 && auctionIsOver && (
+          <div className="text-white flex justify-between items-center px-4 py-3">
+            <div className="text-sm font-bold">RESULT</div>
+            <div className="text-md flex items-center font-bold gap-1">Auction ended with no bids</div>
+          </div>
+        )}
+      </div>
+      {hasStarted && !hasEnded && (
+        <Formik<FormValues>
+          initialValues={{ bidAmount: minBid }}
+          onSubmit={handlePlaceBid}
+          enableReinitialize
+          validate={validate}
+        >
+          {({ values: { bidAmount } }) => (
+            <Form>
+              <div className="flex">
+                <label
+                  htmlFor="bidAmount"
+                  className="flex items-center justify-start w-full bg-gray-20 text-gray-80 font-bold text-xs md-text-sm  py-3 pl-5"
+                >
+                  <div className="flex flex-col mr-3 gap-1">
+                    <div className="flex gap-2">
+                      <Auction className="h-4 w-4" purple={false} />
+                      <p className="uppercase">bid amount</p>
+                    </div>
+                    <p className="font-medium" style={{ fontSize: 10 }}>
+                      Must be at least 1% of current bid price. Enter{' '}
+                      <span className="text-white font-bold cursor-pointer">{minBid.toFixed(6)}</span> MATIC or more.
+                    </p>
+                  </div>
+                </label>
+                <div className="flex flex-wrap items-center w-1/2 justify-end bg-gray-20 uppercase py-3 pr-5">
+                  <div>
+                    <InputField name="bidAmount" type="number" icon={Matic} step="any" />
+                  </div>
+                </div>
+              </div>
+              <WalletSelector ownerAddressAccount={account} />
+              <div className="py-3 px-4 bg-gray-20">
+                <MaxGasFee />
+              </div>
+              <PlayerAwareBottomBar>
+                <div className="flex-1 font-black text-xs">
+                  <div className="flex items-center gap-2 text-white">
+                    <Matic />
+                    <div className="text-white">{bidAmount}</div>MATIC
+                  </div>
+                  {maticQuery?.maticUsd && (
+                    <span className="text-xs text-gray-50 font-bold">
+                      {`${currency(bidAmount * parseFloat(maticQuery?.maticUsd))} USD`}
+                    </span>
+                  )}
+                </div>
+                <Button type="submit" variant="buy-nft" loading={loading}>
+                  <div className="px-4">CONFIRM BID</div>
+                </Button>
+              </PlayerAwareBottomBar>
+            </Form>
+          )}
+        </Formik>
       )}
     </Layout>
   );

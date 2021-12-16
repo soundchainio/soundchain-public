@@ -10,7 +10,7 @@ export const AuctionEnded = ({ highestBid }: AuctionEndedProps) => {
   const winningBid = (parseFloat(highestBid.bid) / 1e18).toFixed(6);
 
   return (
-    <div className="mb-2">
+    <div>
       <div className="flex flex-col m-8 gap-2">
         <div className="flex gap-1 justify-center">
           <CheckmarkFilled />
@@ -45,11 +45,13 @@ export const AuctionEnded = ({ highestBid }: AuctionEndedProps) => {
         <p className="flex items-center flex-shrink-0 justify-start font-bold text-xs md-text-sm uppercase">
           SoundChain Fee (2.5%)
         </p>
-        <p className="flex items-center justify-end w-full uppercase">
+        <p className="flex items-center justify-end w-full uppercase gap-1">
           <span className="my-auto">
             <Matic />
           </span>
-          <span className="mx-1 text-white font-bold text-md leading-tight">{parseFloat(winningBid) * 0.025}</span>
+          <span className="text-white font-bold text-md leading-tight">
+            {(parseFloat(winningBid) * 0.025).toFixed(6)}
+          </span>
           <span className="items-end font-bold text-xs leading-tight">matic</span>
         </p>
       </div>
