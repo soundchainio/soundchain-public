@@ -94,12 +94,22 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
     fetchPolicy: 'network-only',
     nextFetchPolicy: 'network-only',
   });
-  const [fetchCountBids, { data: countBids }] = useCountBidsLazyQuery();
-  const [fetchHaveBided, { data: haveBided }] = useHaveBidedLazyQuery();
+  const [fetchCountBids, { data: countBids }] = useCountBidsLazyQuery({
+    fetchPolicy: 'network-only',
+    nextFetchPolicy: 'network-only',
+  });
+  const [fetchHaveBided, { data: haveBided }] = useHaveBidedLazyQuery({
+    fetchPolicy: 'network-only',
+    nextFetchPolicy: 'network-only',
+  });
   const [fetchListingItem, { data: listingPayload, loading: loadingListingItem }] = useListingItemLazyQuery({
     fetchPolicy: 'network-only',
+    nextFetchPolicy: 'network-only',
   });
-  const [fetchHighestBidder, { data: highestBidderData }] = useUserByWalletLazyQuery();
+  const [fetchHighestBidder, { data: highestBidderData }] = useUserByWalletLazyQuery({
+    fetchPolicy: 'network-only',
+    nextFetchPolicy: 'network-only',
+  });
   const [profile, { data: profileInfo }] = useProfileLazyQuery();
   const [userByWallet, { data: ownerProfile }] = useUserByWalletLazyQuery();
 
