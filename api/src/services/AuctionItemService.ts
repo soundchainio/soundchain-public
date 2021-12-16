@@ -128,4 +128,9 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
     const bid = await BidModel.findOne({ auctionId, bidder });
     return !!bid;
   }
+
+  async processAuctions(): Promise<void> {
+    const now = Math.floor(new Date().getTime() / 1000);
+    await this.model.updateMany({ valid: true, endingTime: { $lte: now } }, { $set: { valid: false } });
+  }
 }
