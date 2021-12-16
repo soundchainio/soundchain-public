@@ -1,10 +1,10 @@
 import classNames from 'classnames';
-import Link from 'next/link';
-import { IconProps } from 'icons/types/IconProps';
-import { Label } from './Label';
 import { SVGGradientColor } from 'icons/gradients';
-import { useEffect, useState } from 'react';
+import { IconProps } from 'icons/types/IconProps';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
+import { Label } from './Label';
 
 interface RefreshButtonProps {
   onClick?: () => void;
@@ -46,7 +46,7 @@ export const TopNavBarButton = ({ onClick, icon: Icon, label, className, path, c
   }
 
   return (
-    <div
+    <button
       className={classNames(className, 'flex flex-col items-center cursor-pointer focus:ring-2 focus:ring-blue-600')}
       onClick={onClick}
     >
@@ -54,6 +54,6 @@ export const TopNavBarButton = ({ onClick, icon: Icon, label, className, path, c
       <Label textSize="xs" className="pt-1 font-semibold">
         {label}
       </Label>
-    </div>
+    </button>
   );
 };
