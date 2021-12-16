@@ -103,7 +103,7 @@ export const TopNavBar = ({
       {RightButton && !midRightButton && (
         <div className="flex flex-1 md:flex-none justify-end pr-4 items-center">{RightButton}</div>
       )}
-      {midRightButton && <div className="flex flex-1 justify-left pl-20 items-center">{midRightButton}</div>}
+      {midRightButton && <div className="flex flex-1 justify-left pl-28 items-center">{midRightButton}</div>}
     </div>
   );
 };
