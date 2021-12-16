@@ -2,6 +2,7 @@
 import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
 import MaxGasFee from 'components/MaxGasFee';
+import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import { Matic } from 'icons/Matic';
 import ReactDatePicker from 'react-datepicker';
@@ -32,7 +33,7 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: Lis
   const defaultValues: ListNFTAuctionFormValues = {
     price: initialValues?.price || 0,
     startTime: initialValues?.startTime || new Date(new Date().getTime() + 10 * 1000 * 60),
-    endTime: initialValues?.startTime || new Date(new Date().getTime() + 20 * 1000 * 60),
+    endTime: initialValues?.endTime || new Date(new Date().getTime() + 20 * 1000 * 60),
   };
 
   return (
@@ -51,7 +52,7 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: Lis
               <label htmlFor="price" className="flex-shrink-0 text-gray-80 font-bold text-xs uppercase ">
                 auction start price
               </label>
-              <div className="w-32 sm:w-52">
+              <div className="w-44 uppercase flex-shrink-0">
                 <InputField name="price" type="number" icon={Matic} value={values.price} step="any" />
               </div>
             </div>
@@ -64,7 +65,7 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: Lis
                   </p>
                 </div>
               </label>
-              <div className="w-32 sm:w-52 uppercase">
+              <div className="w-44 uppercase flex-shrink-0">
                 <ReactDatePicker
                   selected={values.startTime}
                   onChange={date => setFieldValue('startTime', date)}
@@ -88,7 +89,7 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: Lis
                   </p>
                 </div>
               </label>
-              <div className="w-32 sm:w-52 uppercase">
+              <div className="w-44 uppercase flex-shrink-0">
                 <ReactDatePicker
                   selected={values.endTime}
                   onChange={date => setFieldValue('endTime', date)}
@@ -100,29 +101,23 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: Lis
                 {<div className="text-red-500 text-sm lowercase">{errors.endTime}</div>}
               </div>
             </div>
-            <p className="text-gray-80 text-sm text-center py-3 px-5">
+            <p className="text-gray-80 text-sm text-center py-6 px-5">
               Soundchain transaction fee and Polygon gas fees will be applied to buyer during checkout.
             </p>
-            <div className="flex py-3 px-5">
-              <div className="flex items-center justify-start text-gray-80 font-bold text-xs md-text-sm uppercase">
-                Total
-              </div>
-              <div className="flex flex-wrap items-center justify-end w-full uppercase">
-                <span className="my-auto">
-                  <Matic />
-                </span>
-                <span className="mx-1 text-gray-80 font-bold text-md leading-tight">{values.price}</span>
-                <div className="items-end">
-                  <span className="text-gray-80 font-bold text-xs leading-tight">matic</span>
-                </div>
-              </div>
-            </div>
-            <div className="flex p-4">
+            <div className="py-3 px-5 bg-gray-20">
               <MaxGasFee />
-              <Button type="submit" variant="list-nft" loading={isSubmitting} disabled={isSubmitting}>
+            </div>
+            <PlayerAwareBottomBar>
+              <Button
+                className="ml-auto"
+                type="submit"
+                variant="list-nft"
+                loading={isSubmitting}
+                disabled={isSubmitting}
+              >
                 <div className="px-4 font-bold">{submitLabel}</div>
               </Button>
-            </div>
+            </PlayerAwareBottomBar>
           </Form>
         )}
       </Formik>

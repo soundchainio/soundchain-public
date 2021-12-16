@@ -192,14 +192,7 @@ const useBlockchain = () => {
   );
 
   const sendMatic = useCallback(
-    (
-      web3: Web3,
-      to: string,
-      from: string,
-      amount: string,
-      onTransactionHash: (hash: string) => void,
-      onReceipt: (receipt: TransactionReceipt) => void,
-    ) => {
+    (web3: Web3, to: string, from: string, amount: string, onReceipt: (receipt: TransactionReceipt) => void) => {
       const amountWei = web3.utils.toWei(amount);
       beforeSending(web3, () =>
         web3.eth
@@ -208,7 +201,6 @@ const useBlockchain = () => {
             to: to,
             value: amountWei,
           })
-          .on('transactionHash', onTransactionHash)
           .on('receipt', onReceipt),
       );
     },

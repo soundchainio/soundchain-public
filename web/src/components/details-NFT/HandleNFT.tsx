@@ -1,7 +1,6 @@
-import classNames from 'classnames';
 import { Button, ButtonVariant } from 'components/Button';
+import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { TimeCounter } from 'components/TimeCounter';
-import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { CheckmarkFilled } from 'icons/CheckmarkFilled';
 import { Matic } from 'icons/Matic';
 import NextLink from 'next/link';
@@ -58,7 +57,13 @@ export const HandleNFT = ({
     }
     if (isAuction && (auctionIsOver || countBids > 0)) {
       return (
-        <AuctionDetails auctionIsOver={auctionIsOver} countBids={countBids} endingDate={endingDate} price={price} />
+        <AuctionDetails
+          auctionIsOver={auctionIsOver}
+          countBids={countBids}
+          endingDate={endingDate}
+          price={price}
+          cancelHref={`${router.asPath}/cancel-auction`}
+        />
       );
     }
     return (
@@ -85,6 +90,7 @@ export const HandleNFT = ({
         <ListedAction
           href={`${router.asPath}/place-bid`}
           countBids={countBids}
+          startingDate={startingDate}
           endingDate={endingDate}
           price={price}
           action="PLACE BID"
@@ -112,14 +118,8 @@ interface ListingActionProps {
 }
 
 const ListingAction = ({ href, action, children }: React.PropsWithChildren<ListingActionProps>) => {
-  const { currentSong } = useAudioPlayerContext();
   return (
-    <div
-      className={classNames(
-        'bg-black text-white flex items-center py-3 px-4 fixed right-0 md:left-64 left-0',
-        currentSong.src ? 'bottom-36 md:bottom-16' : 'bottom-20 md:bottom-0',
-      )}
-    >
+    <PlayerAwareBottomBar>
       <div className="flex items-center flex-1 gap-2 text-sm font-bold pl-4">{children}</div>
       <div className="flex-1 flex items-center justify-end">
         <NextLink href={href}>
@@ -128,7 +128,7 @@ const ListingAction = ({ href, action, children }: React.PropsWithChildren<Listi
           </Button>
         </NextLink>
       </div>
-    </div>
+    </PlayerAwareBottomBar>
   );
 };
 
@@ -143,15 +143,9 @@ interface ListedActionProps {
 }
 
 const ListedAction = ({ href, price, action, variant, countBids, startingDate, endingDate }: ListedActionProps) => {
-  const { currentSong } = useAudioPlayerContext();
   const futureSale = startingDate && startingDate.getTime() > new Date().getTime();
   return (
-    <div
-      className={classNames(
-        'bg-black text-white flex items-center py-3 px-4 fixed right-0 md:left-64 left-0',
-        currentSong.src ? 'bottom-36 md:bottom-16' : 'bottom-20 md:bottom-0',
-      )}
-    >
+    <PlayerAwareBottomBar>
       <div className="flex flex-col flex-1">
         <div className="text-md flex items-center font-bold gap-1">
           <Matic />
@@ -161,14 +155,12 @@ const ListedAction = ({ href, price, action, variant, countBids, startingDate, e
       </div>
       {futureSale && (
         <div className="flex flex-col text-xs items-center px-1">
-          <div className="font-bold">Sale starts</div>
           <Timer date={startingDate} />
         </div>
       )}
       {endingDate && !futureSale && (
         <div className="flex flex-col text-xs items-center px-1">
-          <div className="font-bold">Sale ends</div>
-          {countBids != 0 && <span className="text-blue-400 font-bold">({countBids} bids)</span>}
+          {countBids != 0 && <span className="text-blue-400 font-bold">[{countBids} bids]</span>}
           <Timer date={endingDate} />
         </div>
       )}
@@ -177,18 +169,19 @@ const ListedAction = ({ href, price, action, variant, countBids, startingDate, e
           <Button variant={variant}>{action}</Button>
         </NextLink>
       </div>
-    </div>
+    </PlayerAwareBottomBar>
   );
 };
 
 interface AuctionDetailsProps {
+  cancelHref: string;
   auctionIsOver: boolean;
   price: string | undefined | null;
   countBids?: number;
   endingDate?: Date;
 }
 
-const AuctionDetails = ({ auctionIsOver, price, countBids, endingDate }: AuctionDetailsProps) => {
+const AuctionDetails = ({ auctionIsOver, price, countBids, endingDate, cancelHref }: AuctionDetailsProps) => {
   return (
     <div className="w-full bg-black text-white flex items-center py-3 px-4">
       <div className="flex flex-col flex-1">
@@ -199,8 +192,14 @@ const AuctionDetails = ({ auctionIsOver, price, countBids, endingDate }: Auction
         </div>
       </div>
       <div className="text-center">
-        {auctionIsOver && countBids === 0 && <div className="uppercase font-bold">Auction ended with no bids</div>}
-        {countBids != 0 && <div className="text-xs font-bold text-blue-400">({countBids} bids)</div>}
+        {auctionIsOver && countBids === 0 && (
+          <div className="flex-1 flex items-center justify-end">
+            <NextLink href={cancelHref}>
+              <Button variant="edit-listing">CANCEL AUCTION</Button>
+            </NextLink>
+          </div>
+        )}
+        {countBids != 0 && <div className="text-xs font-bold text-blue-400">[{countBids} bids]</div>}
         {endingDate && (
           <div className="flex flex-col text-xs items-center ">
             <Timer date={endingDate} />
@@ -212,8 +211,16 @@ const AuctionDetails = ({ auctionIsOver, price, countBids, endingDate }: Auction
 };
 
 const Timer = ({ date }: { date: Date }) => {
+  const router = useRouter();
   return (
-    <TimeCounter date={date}>
+    <TimeCounter
+      date={date}
+      onEndTimer={() => {
+        if (date.getTime() > new Date().getTime()) {
+          router.reload();
+        }
+      }}
+    >
       {(days, hours, minutes) => (
         <div>
           {days !== 0 && (

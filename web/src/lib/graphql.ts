@@ -828,6 +828,7 @@ export enum PendingRequest {
   UpdateListing = 'UpdateListing',
   PlaceBid = 'PlaceBid',
   CompleteAuction = 'CompleteAuction',
+  CancelAuction = 'CancelAuction',
   None = 'None'
 }
 
@@ -976,7 +977,7 @@ export type Query = {
   feed: FeedConnection;
   followers: FollowConnection;
   following: FollowConnection;
-  listingItem: ListingItem;
+  listingItem: Maybe<ListingItem>;
   message: Message;
   notifications: NotificationConnection;
   notification: Notification;
@@ -2109,10 +2110,10 @@ export type ListingItemQueryVariables = Exact<{
 
 export type ListingItemQuery = (
   { __typename?: 'Query' }
-  & { listingItem: (
+  & { listingItem: Maybe<(
     { __typename?: 'ListingItem' }
     & ListingItemViewComponentFieldsFragment
-  ) }
+  )> }
 );
 
 export type ListingItemComponentFieldsFragment = (

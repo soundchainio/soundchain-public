@@ -72,7 +72,6 @@ export const RemoveListingConfirmationModal = () => {
         ? cancelListing(web3, tokenId, account, onTransactionHash)
         : cancelAuction(web3, tokenId, account, onTransactionHash);
     } catch (e) {
-      console.log(e);
       setLoading(false);
       alert('We had some trouble, please try again later!');
     }

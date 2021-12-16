@@ -218,9 +218,9 @@ export class TrackService extends ModelService<typeof Track> {
 
   async saleType(tokenId: number): Promise<string> {
     const listing = await this.context.listingItemService.getListingItem(tokenId);
-    if (listing.endingTime) {
+    if (listing?.endingTime) {
       return 'auction';
-    } else if (listing.pricePerItem) {
+    } else if (listing?.pricePerItem) {
       return 'buy now';
     }
     return '';
@@ -228,9 +228,9 @@ export class TrackService extends ModelService<typeof Track> {
 
   async price(tokenId: number): Promise<number> {
     const listing = await this.context.listingItemService.getListingItem(tokenId);
-    if (listing.reservePrice) {
+    if (listing?.reservePrice) {
       return (await this.context.auctionItemService.getHighestBid(listing._id)) || listing.reservePrice;
-    } else if (listing.pricePerItem) {
+    } else if (listing?.pricePerItem) {
       return listing.pricePerItem;
     }
     return 0;

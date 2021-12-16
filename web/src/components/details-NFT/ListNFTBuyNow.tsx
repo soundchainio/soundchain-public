@@ -1,6 +1,7 @@
 import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
 import MaxGasFee from 'components/MaxGasFee';
+import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import { Matic } from 'icons/Matic';
 import React from 'react';
@@ -45,27 +46,26 @@ export const ListNFTBuyNow = ({ initialValues, submitLabel, handleSubmit }: List
         }}
       >
         {({ values, errors, isSubmitting, setFieldValue }: FormikProps<ListNFTBuyNowFormValues>) => {
-          console.log(values);
           return (
             <Form>
-              <div className="flex items-center justify-between bg-gray-20 py-3 px-5 gap-3">
+              <div className="flex items-center justify-between bg-gray-15 py-3 px-5 gap-3">
                 <label htmlFor="price" className="flex-shrink-0 text-gray-80 font-bold text-xs uppercase ">
                   List price
                 </label>
-                <div className="w-32 sm:w-52">
+                <div className="w-44">
                   <InputField name="price" type="number" icon={Matic} value={values.price} step="any" />
                 </div>
               </div>
-              <div className="flex items-center justify-between bg-gray-20 py-3 px-5">
+              <div className="flex items-center justify-between bg-gray-15 py-3 px-5">
                 <label htmlFor="startTime" className="flex items-center justify-start text-gray-80 font-bold text-xs">
-                  <div className="flex flex-col mr-3">
+                  <div className="flex flex-col">
                     <p className="uppercase">start time</p>
                     <p className="font-medium" style={{ fontSize: 10 }}>
                       Set a date/time for the sale to start.
                     </p>
                   </div>
                 </label>
-                <div className="w-32 sm:w-52 uppercase">
+                <div className="w-44 uppercase flex-shrink-0">
                   <ReactDatePicker
                     selected={values.startTime}
                     onChange={date => setFieldValue('startTime', date)}
@@ -77,29 +77,23 @@ export const ListNFTBuyNow = ({ initialValues, submitLabel, handleSubmit }: List
                   {<div className="text-red-500 text-sm lowercase">{errors.startTime}</div>}
                 </div>
               </div>
-              <p className="mx-6 text-gray-80 text-sm py-2 text-center">
+              <p className="mx-6 text-gray-80 text-sm py-4 text-center">
                 Soundchain transaction fee and Gas fees will be applied to buyer during checkout.
               </p>
-              <div className="flex">
-                <div className="flex items-center justify-start bg-gray-20 text-gray-80 font-bold text-xs md-text-sm uppercase py-3 pl-5">
-                  Total
-                </div>
-                <div className="flex flex-wrap items-center justify-end w-full bg-gray-20 uppercase py-3 pr-5">
-                  <span className="my-auto">
-                    <Matic />
-                  </span>
-                  <span className="mx-1 text-white font-bold text-md leading-tight">{values.price}</span>
-                  <div className="items-end">
-                    <span className="text-gray-80 font-bold text-xs leading-tight">matic</span>
-                  </div>
-                </div>
-              </div>
-              <div className="flex p-4">
+              <div className="bg-gray-15 py-3 px-5">
                 <MaxGasFee />
-                <Button variant="list-nft" disabled={isSubmitting} loading={isSubmitting} type="submit">
+              </div>
+              <PlayerAwareBottomBar>
+                <Button
+                  className="ml-auto"
+                  variant="list-nft"
+                  disabled={isSubmitting}
+                  loading={isSubmitting}
+                  type="submit"
+                >
                   <div className="px-4 font-bold">{submitLabel}</div>
                 </Button>
-              </div>
+              </PlayerAwareBottomBar>
             </Form>
           );
         }}

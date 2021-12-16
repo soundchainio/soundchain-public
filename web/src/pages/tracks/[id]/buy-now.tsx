@@ -1,12 +1,11 @@
-import classNames from 'classnames';
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { BuyNow } from 'components/details-NFT/BuyNow';
 import { Layout } from 'components/Layout';
 import MaxGasFee from 'components/MaxGasFee';
+import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
-import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
@@ -54,7 +53,6 @@ export default function BuyNowPage({ track }: TrackPageProps) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const me = useMe();
-  const { currentSong } = useAudioPlayerContext();
 
   const nftData = track.nftData;
   const tokenId = nftData?.tokenId ?? -1;
@@ -143,24 +141,19 @@ export default function BuyNowPage({ track }: TrackPageProps) {
           <div className="flex justify-between items-center px-4 py-3">
             <div className="text-sm font-bold text-white flex-shrink-0">SALE STARTS</div>
             <div className="text-md flex items-center text-right font-bold gap-1">
-              <Timer date={new Date(startTime * 1000)} />
+              <Timer date={new Date(startTime * 1000)} reloadOnEnd />
             </div>
           </div>
         )}
       </div>
       {price && account && <BuyNow price={price} ownerAddressAccount={account} startTime={startTime} />}
       {hasStarted && (
-        <div
-          className={classNames(
-            'bg-black text-white flex items-center py-3 px-4 fixed right-0 md:left-64 left-0',
-            currentSong.src ? 'bottom-36 md:bottom-16' : 'bottom-20 md:bottom-0',
-          )}
-        >
+        <PlayerAwareBottomBar>
           <MaxGasFee />
           <Button variant="buy-nft" onClick={handleBuy} loading={loading}>
             <div className="px-4">BUY NFT</div>
           </Button>
-        </div>
+        </PlayerAwareBottomBar>
       )}
     </Layout>
   );
