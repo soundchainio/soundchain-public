@@ -25,6 +25,7 @@ export const getServerSideProps: GetServerSideProps<HomePageProps> = async conte
 
 export default function HomePage({ me }: HomePageProps) {
   const topNavBarProps: TopNavBarProps = {
+    title: 'Marketplace',
     rightButton: me ? <InboxButton /> : undefined,
   };
 

@@ -10,8 +10,8 @@ interface TextareaFieldProps {
   rows?: number;
 }
 
-const commonInputClasses = `appearance-none block w-full p-3 rounded-md border-2 border-gray-80 bg-gray-30 text-gray-200 cursor-text`;
-const validInputClasses = `${commonInputClasses} border-gray-80`;
+const commonInputClasses = `appearance-none block w-full p-3 rounded-md border-2 border-gray-30 bg-gray-1A text-gray-200 cursor-text`;
+const validInputClasses = `${commonInputClasses} border-gray-30`;
 const errorInputClasses = `${commonInputClasses} border-red-500`;
 
 export const TextareaField = ({ label, icon: Icon, maxLength, rows = 4, ...props }: TextareaFieldProps) => {
@@ -26,7 +26,7 @@ export const TextareaField = ({ label, icon: Icon, maxLength, rows = 4, ...props
         )}
         <textarea
           maxLength={maxLength}
-          className="font-bold text-sm bg-gray-30 w-full p-0 text-gray-200 border-none focus:outline-none focus:ring-transparent placeholder-gray-60 placeholder-semibold resize-none"
+          className="font-bold text-sm bg-gray-1A w-full p-0 text-gray-200 border-none focus:outline-none focus:ring-transparent placeholder-gray-50 placeholder-semibold resize-none"
           id={props.name}
           {...field}
           {...props}

@@ -34,7 +34,7 @@ export default function HomePage({ me }: HomePageProps) {
       <Head>
         <title>Soundchain</title>
         <meta name="description" content="Soundchain" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicons/favicon.ico" />
       </Head>
       <SEO title="Soundchain" description="Connecting people to music" canonicalUrl="/" />
       <Layout topNavBarProps={topNavBarProps}>

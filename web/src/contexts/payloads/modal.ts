@@ -1,4 +1,4 @@
-import { ReactionType } from 'lib/graphql';
+import { Genre, ReactionType, SaleType as SaleTypeGraphQl } from 'lib/graphql';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 import { SaleType } from 'types/SaleType';
 
@@ -63,12 +63,24 @@ export interface ShowTransferConfirmationPayload {
   show: boolean;
 }
 
+export interface ShowMarketplaceFilterPayload {
+  show: boolean;
+  genres: Genre[];
+  filterSaleType: SaleTypeGraphQl;
+}
+
 export interface SetRecipientWalletAddress {
   address: string;
 }
 
 export interface SetAmountToTransfer {
   amount: string;
+}
+
+export interface ShowConfirmDeleteNFT {
+  show: boolean;
+  trackId?: string;
+  burn: boolean;
 }
 
 export type ModalPayload =
@@ -86,4 +98,6 @@ export type ModalPayload =
   | SetRecipientWalletAddress
   | SetAmountToTransfer
   | ShowRemoveListing
-  | ShowApprove;
+  | ShowApprove
+  | ShowConfirmDeleteNFT
+  | ShowMarketplaceFilterPayload;

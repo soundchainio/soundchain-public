@@ -49,7 +49,7 @@ export const MusicianTypesForm = ({
   return (
     <>
       <div className="flex flex-col flex-grow">
-        <Label>What type of musician you are? {types.length ? `(${types.length} Selected)` : ''}</Label>
+        <Label grayScale="80">What type of musician you are? {types.length ? `(${types.length} Selected)` : ''}</Label>
         <div className="pb-6 space-y-2">
           {musicianTypes.map(({ label, key }) => (
             <Badge

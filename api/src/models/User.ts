@@ -17,7 +17,7 @@ export class User extends Model {
   email: string;
 
   @Field()
-  @prop({ required: true })
+  @prop({ required: true, unique: true })
   handle: string;
 
   @Field({ nullable: true })

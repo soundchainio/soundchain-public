@@ -19,9 +19,9 @@ export default function BioPage() {
       <Head>
         <title>Soundchain - Bio</title>
         <meta name="description" content="Bio" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicons/favicon.ico" />
       </Head>
-      <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
+      <div className="min-h-full flex flex-col px-6 lg:px-8 py-6">
         <BioForm
           afterSubmit={() => router.push('/settings')}
           submitText="SAVE"

@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useState } from 'react';
+import { createContext, ReactNode, useCallback, useContext, useState } from 'react';
 
 type Song = {
   src: string;
@@ -47,57 +47,69 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
 
   const RESTART_TOLERANCE_TIME = 2; //2 seconds
 
-  const play = (song: Song) => {
-    if (currentSong.trackId !== song.trackId) {
-      setProgressStateFromSlider(0);
-      setIsPlaying(true);
-      setCurrentSong(song);
-    } else {
-      togglePlay();
-    }
-  };
+  const togglePlay = useCallback(() => {
+    setIsPlaying(isPlaying => !isPlaying);
+  }, []);
 
-  const isCurrentSong = (trackId: string) => {
-    return trackId === currentSong?.trackId;
-  };
-
-  const isCurrentlyPlaying = (trackId: string) => {
-    return isPlaying && isCurrentSong(trackId);
-  };
-
-  const togglePlay = () => {
-    setIsPlaying(!isPlaying);
-  };
-
-  const setPlayingState = (state: boolean) => {
-    setIsPlaying(state);
-  };
-
-  const setProgressState = (value: number) => {
+  const setProgressState = useCallback((value: number) => {
     setProgress(value);
-  };
+  }, []);
 
-  const setProgressStateFromSlider = (value: number | null) => {
+  const setProgressStateFromSlider = useCallback((value: number | null) => {
     setProgressFromSlider(value);
     if (value || value === 0) {
       setProgress(value);
     }
-  };
+  }, []);
 
-  const setDurationState = (value: number) => {
+  const setPlayingState = useCallback((state: boolean) => {
+    setIsPlaying(state);
+  }, []);
+
+  const setDurationState = useCallback((value: number) => {
     setDuration(value);
-  };
+  }, []);
 
-  const playlistState = (list: Song[], index: number) => {
-    setPlaylist(list);
-    setCurrentPlaylistIndex(index);
-    play(list[index]);
-  };
+  const play = useCallback(
+    (song: Song) => {
+      if (currentSong.trackId !== song.trackId) {
+        setProgressStateFromSlider(0);
+        setIsPlaying(true);
+        setCurrentSong(song);
+      } else {
+        togglePlay();
+      }
+    },
+    [currentSong, togglePlay, setProgressStateFromSlider],
+  );
+
+  const isCurrentSong = useCallback(
+    (trackId: string) => {
+      return trackId === currentSong?.trackId;
+    },
+    [currentSong],
+  );
+
+  const isCurrentlyPlaying = useCallback(
+    (trackId: string) => {
+      return isPlaying && isCurrentSong(trackId);
+    },
+    [isCurrentSong, isPlaying],
+  );
+
+  const playlistState = useCallback(
+    (list: Song[], index: number) => {
+      setPlaylist(list);
+      setCurrentPlaylistIndex(index);
+      play(list[index]);
+    },
+    [play],
+  );
 
   const hasPrevious = currentPlaylistIndex > 0;
   const hasNext = currentPlaylistIndex + 1 < playlist.length;
 
-  function playPrevious() {
+  const playPrevious = useCallback(() => {
     if (hasPrevious && progress < RESTART_TOLERANCE_TIME) {
       const previousIndex = currentPlaylistIndex - 1;
       setCurrentPlaylistIndex(previousIndex);
@@ -105,15 +117,15 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
     } else {
       setProgressStateFromSlider(0);
     }
-  }
+  }, [currentPlaylistIndex, hasPrevious, play, playlist, progress, setProgressStateFromSlider]);
 
-  function playNext() {
+  const playNext = useCallback(() => {
     if (hasNext) {
       const nextIndex = currentPlaylistIndex + 1;
       setCurrentPlaylistIndex(nextIndex);
       play(playlist[nextIndex]);
     }
-  }
+  }, [currentPlaylistIndex, hasNext, play, playlist]);
 
   return (
     <AudioPlayerContext.Provider

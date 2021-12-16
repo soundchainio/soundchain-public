@@ -335,6 +335,11 @@ export type FilterTrackInput = {
   nftData?: Maybe<NftDataInput>;
 };
 
+export type FilterTrackMarketplace = {
+  genres?: Maybe<Array<Genre>>;
+  listingItem?: Maybe<ListingItemInput>;
+};
+
 export type Follow = {
   __typename?: 'Follow';
   id: Scalars['ID'];
@@ -435,6 +440,10 @@ export type ListingItemConnection = {
   __typename?: 'ListingItemConnection';
   pageInfo: PageInfo;
   nodes: Array<TrackWithListingItem>;
+};
+
+export type ListingItemInput = {
+  saleType?: Maybe<SaleType>;
 };
 
 export type ListingItemWithPrice = {
@@ -543,6 +552,7 @@ export type Mutation = {
   createTrack: CreateTrackPayload;
   updateTrack: UpdateTrackPayload;
   deleteTrackOnError: UpdateTrackPayload;
+  deleteTrack: Track;
   toggleFavorite: ToggleFavoritePayload;
   register: AuthPayload;
   login: AuthPayload;
@@ -693,6 +703,11 @@ export type MutationDeleteTrackOnErrorArgs = {
 };
 
 
+export type MutationDeleteTrackArgs = {
+  trackId: Scalars['String'];
+};
+
+
 export type MutationToggleFavoriteArgs = {
   trackId: Scalars['String'];
 };
@@ -828,6 +843,7 @@ export enum PendingRequest {
   UpdateListing = 'UpdateListing',
   PlaceBid = 'PlaceBid',
   CompleteAuction = 'CompleteAuction',
+  CancelAuction = 'CancelAuction',
   None = 'None'
 }
 
@@ -976,7 +992,7 @@ export type Query = {
   feed: FeedConnection;
   followers: FollowConnection;
   following: FollowConnection;
-  listingItem: ListingItem;
+  listingItem: Maybe<ListingItem>;
   message: Message;
   notifications: NotificationConnection;
   notification: Notification;
@@ -1189,6 +1205,7 @@ export type QueryFavoriteTracksArgs = {
 export type QueryListingItemsArgs = {
   page?: Maybe<PageInput>;
   sort?: Maybe<SortListingItemInput>;
+  filter?: Maybe<FilterTrackMarketplace>;
 };
 
 
@@ -1274,6 +1291,11 @@ export enum Role {
   Admin = 'ADMIN',
   User = 'USER',
   TeamMember = 'TEAM_MEMBER'
+}
+
+export enum SaleType {
+  Auction = 'AUCTION',
+  BuyNow = 'BUY_NOW'
 }
 
 export enum SellType {
@@ -1864,6 +1886,19 @@ export type DeletePostMutation = (
   ) }
 );
 
+export type DeleteTrackMutationVariables = Exact<{
+  trackId: Scalars['String'];
+}>;
+
+
+export type DeleteTrackMutation = (
+  { __typename?: 'Mutation' }
+  & { deleteTrack: (
+    { __typename?: 'Track' }
+    & TrackComponentFieldsFragment
+  ) }
+);
+
 export type DeleteTrackOnErrorMutationVariables = Exact<{
   input: DeleteTrackInput;
 }>;
@@ -2109,10 +2144,10 @@ export type ListingItemQueryVariables = Exact<{
 
 export type ListingItemQuery = (
   { __typename?: 'Query' }
-  & { listingItem: (
+  & { listingItem: Maybe<(
     { __typename?: 'ListingItem' }
     & ListingItemViewComponentFieldsFragment
-  ) }
+  )> }
 );
 
 export type ListingItemComponentFieldsFragment = (
@@ -2133,6 +2168,7 @@ export type ListingItemViewComponentFieldsFragment = (
 );
 
 export type ListingItemsQueryVariables = Exact<{
+  filter?: Maybe<FilterTrackMarketplace>;
   sort?: Maybe<SortListingItemInput>;
   page?: Maybe<PageInput>;
 }>;
@@ -4082,6 +4118,39 @@ export function useDeletePostMutation(baseOptions?: Apollo.MutationHookOptions<D
 export type DeletePostMutationHookResult = ReturnType<typeof useDeletePostMutation>;
 export type DeletePostMutationResult = Apollo.MutationResult<DeletePostMutation>;
 export type DeletePostMutationOptions = Apollo.BaseMutationOptions<DeletePostMutation, DeletePostMutationVariables>;
+export const DeleteTrackDocument = gql`
+    mutation deleteTrack($trackId: String!) {
+  deleteTrack(trackId: $trackId) {
+    ...TrackComponentFields
+  }
+}
+    ${TrackComponentFieldsFragmentDoc}`;
+export type DeleteTrackMutationFn = Apollo.MutationFunction<DeleteTrackMutation, DeleteTrackMutationVariables>;
+
+/**
+ * __useDeleteTrackMutation__
+ *
+ * To run a mutation, you first call `useDeleteTrackMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteTrackMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteTrackMutation, { data, loading, error }] = useDeleteTrackMutation({
+ *   variables: {
+ *      trackId: // value for 'trackId'
+ *   },
+ * });
+ */
+export function useDeleteTrackMutation(baseOptions?: Apollo.MutationHookOptions<DeleteTrackMutation, DeleteTrackMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteTrackMutation, DeleteTrackMutationVariables>(DeleteTrackDocument, options);
+      }
+export type DeleteTrackMutationHookResult = ReturnType<typeof useDeleteTrackMutation>;
+export type DeleteTrackMutationResult = Apollo.MutationResult<DeleteTrackMutation>;
+export type DeleteTrackMutationOptions = Apollo.BaseMutationOptions<DeleteTrackMutation, DeleteTrackMutationVariables>;
 export const DeleteTrackOnErrorDocument = gql`
     mutation deleteTrackOnError($input: DeleteTrackInput!) {
   deleteTrackOnError(input: $input) {
@@ -4586,8 +4655,8 @@ export type ListingItemQueryHookResult = ReturnType<typeof useListingItemQuery>;
 export type ListingItemLazyQueryHookResult = ReturnType<typeof useListingItemLazyQuery>;
 export type ListingItemQueryResult = Apollo.QueryResult<ListingItemQuery, ListingItemQueryVariables>;
 export const ListingItemsDocument = gql`
-    query ListingItems($sort: SortListingItemInput, $page: PageInput) {
-  listingItems(sort: $sort, page: $page) {
+    query ListingItems($filter: FilterTrackMarketplace, $sort: SortListingItemInput, $page: PageInput) {
+  listingItems(filter: $filter, sort: $sort, page: $page) {
     nodes {
       ...ListingItemComponentFields
     }
@@ -4612,6 +4681,7 @@ export const ListingItemsDocument = gql`
  * @example
  * const { data, loading, error } = useListingItemsQuery({
  *   variables: {
+ *      filter: // value for 'filter'
  *      sort: // value for 'sort'
  *      page: // value for 'page'
  *   },

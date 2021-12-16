@@ -3,19 +3,14 @@ import { BackButton } from 'components/Buttons/BackButton';
 import { AuctionEnded } from 'components/details-NFT/AuctionEnded';
 import { Layout } from 'components/Layout';
 import MaxGasFee from 'components/MaxGasFee';
+import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { cacheFor } from 'lib/apollo';
-import {
-  PendingRequest,
-  TrackDocument,
-  TrackQuery,
-  useAuctionItemLazyQuery,
-  useUpdateTrackMutation,
-} from 'lib/graphql';
+import { PendingRequest, TrackDocument, TrackQuery, useAuctionItemQuery, useUpdateTrackMutation } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
@@ -65,13 +60,9 @@ export default function CompleteAuctionPage({ track }: TrackPageProps) {
 
   const tokenId = track.nftData?.tokenId ?? -1;
 
-  const [getAuctionItem, { data: auctionItem }] = useAuctionItemLazyQuery({
+  const { data: auctionItem } = useAuctionItemQuery({
     variables: { tokenId },
   });
-
-  useEffect(() => {
-    getAuctionItem();
-  }, [getAuctionItem]);
 
   useEffect(() => {
     const fetchHighestBid = async () => {
@@ -126,12 +117,14 @@ export default function CompleteAuctionPage({ track }: TrackPageProps) {
         <Track track={track} />
       </div>
       <AuctionEnded highestBid={highestBid} />
-      <div className="flex p-4">
+      <div className="p-5 bg-gray-15">
         <MaxGasFee />
-        <Button variant="buy-nft" onClick={handleClaim} loading={loading}>
-          <div className="px-4">CLAIM NFT</div>
-        </Button>
       </div>
+      <PlayerAwareBottomBar>
+        <Button className="ml-auto" variant="buy-nft" onClick={handleClaim} loading={loading}>
+          <div className="px-4">COMPLETE</div>
+        </Button>
+      </PlayerAwareBottomBar>
     </Layout>
   );
 }

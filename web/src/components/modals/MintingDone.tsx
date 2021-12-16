@@ -2,7 +2,6 @@ import { MiniAudioPlayer } from 'components/MiniAudioPlayer';
 import { Anchor } from 'icons/Anchor';
 import { Polygon } from 'icons/Polygon';
 import { CreateTrackMutation } from 'lib/graphql';
-import Image from 'next/image';
 import React from 'react';
 
 interface MintingDoneProps {
@@ -35,19 +34,6 @@ export const MintingDone = ({ track, transactionHash }: MintingDoneProps) => {
       >
         <div style={{ color: '#808080' }}>Congrats,</div>
         <div>you created an NFT!</div>
-      </div>
-      <div className="flex">
-        <div className="uppercase mr-auto text-xs font-bold py-3 px-4" style={{ color: '#CCCCCC' }}>
-          Mining Status
-        </div>
-        <div
-          className="flex gap-2 items-center py-3 px-4 text-white font-bold text-xs"
-          style={{ backgroundColor: '#252525' }}
-        >
-          <>
-            <Image width={16} height={16} priority src="/loading.gif" alt="" /> In progress...
-          </>
-        </div>
       </div>
       <div className="flex gap-4 items-center text-xs text-white py-3 px-4" style={{ backgroundColor: '#151515' }}>
         <div className="flex items-center whitespace-nowrap font-bold">

@@ -11,8 +11,10 @@ import { CreateTrackPayload } from '../types/CreateTrackPayload';
 import { DeleteTrackInput } from '../types/DeleteTrackInput';
 import { DeleteTrackPayload } from '../types/DeleteTrackPayload';
 import { FilterTrackInput } from '../types/FilterTrackInput';
+import { FilterTrackMarketplace } from '../types/FilterTrackMarketplace';
 import { ListingItemConnection } from '../types/ListingItemConnection';
 import { PageInput } from '../types/PageInput';
+import { Role } from '../types/Role';
 import { SortListingItemInput } from '../types/SortListingItemInput';
 import { SortTrackInput } from '../types/SortTrackInput';
 import { ToggleFavoritePayload } from '../types/ToggleFavoritePayload';
@@ -106,6 +108,24 @@ export class TrackResolver {
     return { track };
   }
 
+  @Mutation(() => Track)
+  @Authorized()
+  async deleteTrack(
+    @Ctx() { trackService }: Context,
+    @CurrentUser() { profileId, roles }: User,
+    @Arg('trackId') trackId: string,
+  ): Promise<Track> {
+    const isAdmin = roles.includes(Role.ADMIN) || roles.includes(Role.TEAM_MEMBER);
+
+    if (isAdmin) {
+      const track = await trackService.deleteTrackByAdmin(trackId);
+      return track;
+    }
+
+    const track = await trackService.deleteTrack(trackId, profileId);
+    return track;
+  }
+
   @Mutation(() => ToggleFavoritePayload)
   @Authorized()
   async toggleFavorite(
@@ -133,9 +153,10 @@ export class TrackResolver {
   @Query(() => ListingItemConnection)
   listingItems(
     @Ctx() { trackService }: Context,
+    @Arg('filter', { nullable: true }) filter?: FilterTrackMarketplace,
     @Arg('sort', { nullable: true }) sort?: SortListingItemInput,
     @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<ListingItemConnection> {
-    return trackService.getListingItems(sort, page);
+    return trackService.getListingItems(filter, sort, page);
   }
 }

@@ -118,7 +118,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
         },
       },
     ]);
-    return count[0];
+    return count.length ? count[0] : { numberOfBids: 0 };
   }
 
   async haveBided(auctionId: string, bidder: string): Promise<boolean> {

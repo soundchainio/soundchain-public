@@ -141,6 +141,12 @@ html {
   color: transparent;
 }
 
+.pink-blue-gradient-text {
+  background: linear-gradient(#fe5252 20%, #3f91dd 80%);
+  background-clip: text;
+  color: transparent;
+}
+
 .bg-blue-gradient {
   background: linear-gradient(90deg, #3b5bb1 0%, #6fa1ff 100%);
 }
@@ -189,6 +195,17 @@ html {
 @media only screen and (max-height: 615px) {
   #mobile-logo {
     display: none;
+  }
+}
+
+@media only screen and (max-width: 600px) {
+  ::-webkit-scrollbar {
+    display: none;
+    width: 0;
+  }
+  body {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
   }
 }
 

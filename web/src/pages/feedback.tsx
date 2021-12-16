@@ -20,11 +20,12 @@ export default function FeedbackPage() {
       <Head>
         <title>Soundchain / Feedback</title>
         <meta name="description" content="Feedback" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicons/favicon.ico" />
       </Head>
       <iframe
         src="https://docs.google.com/forms/d/e/1FAIpQLScmoMksAwl26GABnutNksgWOlfDGvfZbGeEqAiaSqIHo5sI9g/viewform?embedded=true"
         className="h-full w-full"
+        title="Feedback form"
       />
     </Layout>
   );

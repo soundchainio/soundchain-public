@@ -6,7 +6,7 @@ import Head from 'next/head';
 
 const topNavBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
-  showLoginSignUpButton: false
+  showLoginSignUpButton: false,
 };
 export default function LoginPage() {
   return (
@@ -14,7 +14,7 @@ export default function LoginPage() {
       <Head>
         <title>Soundchain - Login</title>
         <meta name="description" content="Soundchain" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicons/favicon.ico" />
       </Head>
       <LoginForm />
     </AuthLayout>
