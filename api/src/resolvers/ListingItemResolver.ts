@@ -5,7 +5,10 @@ import { Context } from '../types/Context';
 @Resolver()
 export class ListingItemResolver {
   @Query(() => ListingItem, { nullable: true })
-  async listingItem(@Ctx() { listingItemService }: Context, @Arg('tokenId') tokenId: number): Promise<ListingItem> {
-    return await listingItemService.getListingItem(tokenId);
+  async listingItem(
+    @Ctx() { listingItemService }: Context,
+    @Arg('tokenId') tokenId: number,
+  ): Promise<ListingItem | void> {
+    return listingItemService.getListingItem(tokenId);
   }
 }

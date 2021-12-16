@@ -40,13 +40,12 @@ export class AuctionItemResolver {
     @Ctx() { auctionItemService }: Context,
     @Arg('tokenId') tokenId: number,
   ): Promise<CreateAuctionItemData> {
-    return await auctionItemService.setNotValid(tokenId);
+    return auctionItemService.setNotValid(tokenId);
   }
 
   @Query(() => CountBidsPayload)
   async countBids(@Ctx() { auctionItemService }: Context, @Arg('tokenId') tokenId: number): Promise<CountBidsPayload> {
-    const count = (await auctionItemService.countBids(tokenId)) || { numberOfBids: 0 };
-    return count;
+    return auctionItemService.countBids(tokenId);
   }
 
   @Query(() => Bided)

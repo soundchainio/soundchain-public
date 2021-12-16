@@ -223,22 +223,22 @@ export class TrackService extends ModelService<typeof Track> {
 
   async saleType(tokenId: number): Promise<string> {
     const listing = await this.context.listingItemService.getListingItem(tokenId);
-    if (listing?.endingTime) {
-      return 'auction';
-    } else if (listing?.pricePerItem) {
-      return 'buy now';
+    if (!listing) {
+      return '';
     }
-    return '';
+    const { endingTime, pricePerItem } = listing;
+    return (endingTime && 'auction') || (pricePerItem && 'buy now') || '';
   }
 
   async price(tokenId: number): Promise<number> {
     const listing = await this.context.listingItemService.getListingItem(tokenId);
-    if (listing?.reservePrice) {
-      return (await this.context.auctionItemService.getHighestBid(listing._id)) || listing.reservePrice;
-    } else if (listing?.pricePerItem) {
-      return listing.pricePerItem;
+    if (!listing) {
+      return 0;
     }
-    return 0;
+    const { reservePrice, pricePerItem } = listing;
+    return reservePrice
+      ? (await this.context.auctionItemService.getHighestBid(listing._id)) || reservePrice
+      : pricePerItem;
   }
 
   getListingItems(

@@ -2,7 +2,6 @@ import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { BuyNow } from 'components/details-NFT/BuyNow';
 import { Layout } from 'components/Layout';
-import MaxGasFee from 'components/MaxGasFee';
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
@@ -149,8 +148,7 @@ export default function BuyNowPage({ track }: TrackPageProps) {
       {price && account && <BuyNow price={price} ownerAddressAccount={account} startTime={startTime} />}
       {hasStarted && (
         <PlayerAwareBottomBar>
-          <MaxGasFee />
-          <Button variant="buy-nft" onClick={handleBuy} loading={loading}>
+          <Button className="ml-auto" variant="buy-nft" onClick={handleBuy} loading={loading}>
             <div className="px-4">BUY NFT</div>
           </Button>
         </PlayerAwareBottomBar>

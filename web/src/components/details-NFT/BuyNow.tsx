@@ -1,3 +1,4 @@
+import MaxGasFee from 'components/MaxGasFee';
 import { WalletSelector } from 'components/WalletSelector';
 import { Matic } from 'icons/Matic';
 import React from 'react';
@@ -30,17 +31,8 @@ export const BuyNow = ({ price, ownerAddressAccount, startTime }: BuyNowProps) =
               <span className="items-end font-bold text-xs leading-tight">matic</span>
             </p>
           </div>
-          <div className="flex p-5 bg-gray-15 text-gray-80">
-            <p className="flex items-center flex-shrink-0 justify-start font-bold text-xs md-text-sm uppercase">
-              Total
-            </p>
-            <p className="flex items-center justify-end w-full uppercase">
-              <span className="my-auto">
-                <Matic />
-              </span>
-              <span className="mx-1 text-white font-bold text-md leading-tight">{price}</span>
-              <span className="items-end font-bold text-xs leading-tight">matic</span>
-            </p>
+          <div className="py-3 px-4 bg-gray-20">
+            <MaxGasFee />
           </div>
         </div>
       )}

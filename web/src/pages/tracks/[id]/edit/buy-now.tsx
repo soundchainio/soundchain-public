@@ -147,7 +147,6 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       <div className="m-4">
         <Track track={track} />
       </div>
-
       <ListNFTBuyNow
         submitLabel="EDIT LISTING"
         handleSubmit={handleUpdate}

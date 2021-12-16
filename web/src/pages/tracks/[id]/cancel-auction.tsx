@@ -115,9 +115,11 @@ export default function CompleteAuctionPage({ track, auctionItem }: TrackPagePro
       <div className="m-4">
         <Track track={track} />
       </div>
-      <PlayerAwareBottomBar>
+      <div className="px-4 py-3">
         <MaxGasFee />
-        <Button variant="buy-nft" onClick={() => handleCancel()} loading={loading}>
+      </div>
+      <PlayerAwareBottomBar>
+        <Button className="ml-auto" variant="buy-nft" onClick={() => handleCancel()} loading={loading}>
           <div className="px-4">CANCEL AUCTION</div>
         </Button>
       </PlayerAwareBottomBar>
