@@ -15,7 +15,7 @@ export const ChatItem = ({
   chatItem: {
     id,
     message,
-    profile: { displayName, profilePicture, verified, teamMember },
+    profile: { displayName, profilePicture, verified, teamMember, userHandle },
     createdAt,
     unread,
   },
@@ -27,7 +27,7 @@ export const ChatItem = ({
           <div className="flex w-2 self-center items-center mr-2">
             <div className={classNames('w-[6px] h-[6px] rounded-full', unread && 'bg-purple-gradient')}></div>
           </div>
-          <Avatar className="flex w-[40px]" profile={{ profilePicture: profilePicture }} pixels={40} />
+          <Avatar className="flex w-[40px]" profile={{ profilePicture, userHandle }} pixels={40} />
           <div className="flex w-9/12 flex-col pl-4">
             <DisplayName name={displayName} verified={verified} teamMember={teamMember} />
             <div className="text-gray-80 flex text-sm whitespace-nowrap">
