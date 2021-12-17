@@ -1,6 +1,6 @@
 import { Button, ButtonProps } from 'components/Button';
 import { InputField } from 'components/InputField';
-import { Form, Formik } from 'formik';
+import { Form, Formik, FormikProps } from 'formik';
 import { useMe } from 'hooks/useMe';
 import { useUpdateSocialMediasMutation } from 'lib/graphql';
 import * as yup from 'yup';
@@ -25,6 +25,16 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   soundcloud: yup.string().label('Soundcloud'),
 });
 
+const regex = /(?:^https?:\/\/(?:www\.)?[\w]+\.com)\/([\w-]+)/;
+const normalize = (value: string) => {
+  const match = value.match(regex);
+  if (match) {
+    return match[1];
+  }
+
+  return value.replace(/[^a-zA-Z0-9-_]/g, '');
+};
+
 export const SocialLinksForm = ({ afterSubmit, submitText, submitProps }: SocialLinksFormProps) => {
   const me = useMe();
   const initialFormValues: FormValues = {
@@ -42,25 +52,47 @@ export const SocialLinksForm = ({ afterSubmit, submitText, submitProps }: Social
 
   return (
     <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
-      <Form className="flex flex-1 flex-col space-y-6 social-links">
-        <div className="flex items-center">
-          <InputField label="facebook.com/" type="text" name="facebook" />
-        </div>
-        <div className="flex items-center">
-          <InputField label="instagram.com/" type="text" name="instagram" />
-        </div>
-        <div className="flex items-center">
-          <InputField label="twitter.com/" type="text" name="twitter" />
-        </div>
-        <div className="flex items-center">
-          <InputField label="soundcloud.com/" type="text" name="soundcloud" />
-        </div>
-        <div className="flex flex-col">
-          <Button type="submit" disabled={loading} variant="outline" className="h-12" {...submitProps}>
-            {submitText}
-          </Button>
-        </div>
-      </Form>
+      {({ setFieldValue }: FormikProps<FormValues>) => (
+        <Form className="flex flex-1 flex-col space-y-6 social-links">
+          <div className="flex items-center">
+            <InputField
+              label="facebook.com/"
+              type="text"
+              name="facebook"
+              onChange={e => setFieldValue('facebook', normalize(e.target.value))}
+            />
+          </div>
+          <div className="flex items-center">
+            <InputField
+              label="instagram.com/"
+              type="text"
+              name="instagram"
+              onChange={e => setFieldValue('instagram', normalize(e.target.value))}
+            />
+          </div>
+          <div className="flex items-center">
+            <InputField
+              label="twitter.com/"
+              type="text"
+              name="twitter"
+              onChange={e => setFieldValue('twitter', normalize(e.target.value))}
+            />
+          </div>
+          <div className="flex items-center">
+            <InputField
+              label="soundcloud.com/"
+              type="text"
+              name="soundcloud"
+              onChange={e => setFieldValue('soundcloud', normalize(e.target.value))}
+            />
+          </div>
+          <div className="flex flex-col">
+            <Button type="submit" disabled={loading} variant="outline" className="h-12" {...submitProps}>
+              {submitText}
+            </Button>
+          </div>
+        </Form>
+      )}
     </Formik>
   );
 };
