@@ -44,7 +44,7 @@ export default function NamePage() {
         <meta name="description" content="Edit Name" />
         <link rel="icon" href="/favicons/favicon.ico" />
       </Head>
-      <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
+      <div className="min-h-full flex flex-col px-6 lg:px-8 py-6">
         <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={onSubmit}>
           <Form className="flex flex-1 flex-col space-y-6">
             <div>

@@ -1,8 +1,6 @@
-import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
-import { ListNFTBuyNow } from 'components/details-NFT/ListNFTBuyNow';
+import { ListNFTBuyNow, ListNFTBuyNowFormValues } from 'components/details-NFT/ListNFTBuyNow';
 import { Layout } from 'components/Layout';
-import MaxGasFee from 'components/MaxGasFee';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import { useModalDispatch } from 'contexts/providers/modal';
@@ -52,11 +50,8 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
   const [trackUpdate] = useUpdateTrackMutation();
   const { account, web3 } = useWalletContext();
   const { dispatchShowApproveModal } = useModalDispatch();
-  const [loading, setLoading] = useState(false);
-  const [price, setPrice] = useState(0);
   const [isOwner, setIsOwner] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
-  const [startTime, setStartTime] = useState<Date | null>();
 
   const nftData = track.nftData;
   const tokenId = track.nftData?.tokenId ?? -1;
@@ -93,13 +88,12 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
 
   const isForSale = !!buyNowItem?.buyNowItem?.buyNowItem?.pricePerItem ?? false;
 
-  const handleList = () => {
-    if (nftData?.tokenId === null || nftData?.tokenId === undefined || !account || !web3 || !startTime) {
+  const handleList = ({ price, startTime }: ListNFTBuyNowFormValues) => {
+    if (nftData?.tokenId === null || nftData?.tokenId === undefined || !account || !web3) {
       return;
     }
-    setLoading(true);
     const weiPrice = web3?.utils.toWei(price.toString(), 'ether') || '0';
-    const startTimestamp = startTime.getTime() / 1000;
+    const startTimestamp = Math.ceil(startTime.getTime() / 1000);
 
     if (isApproved) {
       const onTransactionHash = async () => {
@@ -135,13 +129,7 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
       <div className="m-4">
         <Track track={track} />
       </div>
-      <ListNFTBuyNow onSetPrice={price => setPrice(price)} onSetStartTime={time => setStartTime(time)} />
-      <div className="flex p-4">
-        <MaxGasFee />
-        <Button variant="list-nft" disabled={price <= 0} onClick={handleList} loading={loading}>
-          <div className="px-4 font-bold">LIST NFT</div>
-        </Button>
-      </div>
+      <ListNFTBuyNow handleSubmit={handleList} submitLabel="LIST NFT" />
     </Layout>
   );
 }

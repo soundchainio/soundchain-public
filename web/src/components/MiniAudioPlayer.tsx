@@ -92,7 +92,7 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
             <span>{playbackCount || 0}</span>
             <HeartFilled />
             <span>{favoriteCount || 0}</span>
-            {saleType !== '' && (
+            {saleType && saleType !== '' && (
               <>
                 <div className="ml-auto text-white font-bold">{price / 1e18}</div>
                 <Matic />

@@ -2,18 +2,20 @@ import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { BuyNow } from 'components/details-NFT/BuyNow';
 import { Layout } from 'components/Layout';
-import MaxGasFee from 'components/MaxGasFee';
+import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
+import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
 import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemLazyQuery, useUpdateTrackMutation } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
+import { Timer } from '../[id]';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -73,7 +75,8 @@ export default function BuyNowPage({ track }: TrackPageProps) {
     listingPayload.buyNowItem?.buyNowItem?.pricePerItem.toLocaleString('fullwide', { useGrouping: false }) || '0',
     'ether',
   );
-  const hasStarted = (listingPayload.buyNowItem?.buyNowItem?.startingTime ?? 0) <= new Date().getTime() / 1000;
+  const startTime = listingPayload.buyNowItem?.buyNowItem?.startingTime ?? 0;
+  const hasStarted = startTime <= new Date().getTime() / 1000;
 
   const handleBuy = () => {
     if (
@@ -110,7 +113,7 @@ export default function BuyNowPage({ track }: TrackPageProps) {
     setLoading(true);
   };
 
-  const topNovaBarProps: TopNavBarProps = {
+  const topNavBarProps: TopNavBarProps = {
     leftButton: <BackButton />,
     title: 'Confirm Purchase',
   };
@@ -120,24 +123,35 @@ export default function BuyNowPage({ track }: TrackPageProps) {
   }
 
   return (
-    <Layout topNavBarProps={topNovaBarProps}>
+    <Layout topNavBarProps={topNavBarProps}>
       <div className="m-4">
         <Track track={track} />
       </div>
-      {price && account && (
-        <BuyNow
-          price={price}
-          ownerAddressAccount={account}
-          startTime={listingPayload.buyNowItem?.buyNowItem?.startingTime ?? 0}
-        />
-      )}
+      <div className="bg-[#112011]">
+        <div className="flex justify-between items-center px-4 py-3">
+          <div className="text-sm font-bold text-white">BUY NOW PRICE</div>
+          <div className="text-md flex items-center font-bold gap-1">
+            <Matic />
+            <span className="text-white">{price}</span>
+            <span className="text-xxs text-gray-80">MATIC</span>
+          </div>
+        </div>
+        {!hasStarted && (
+          <div className="flex justify-between items-center px-4 py-3">
+            <div className="text-sm font-bold text-white flex-shrink-0">SALE STARTS</div>
+            <div className="text-md flex items-center text-right font-bold gap-1">
+              <Timer date={new Date(startTime * 1000)} reloadOnEnd />
+            </div>
+          </div>
+        )}
+      </div>
+      {price && account && <BuyNow price={price} ownerAddressAccount={account} startTime={startTime} />}
       {hasStarted && (
-        <div className="flex p-4">
-          <MaxGasFee />
-          <Button variant="buy-nft" onClick={handleBuy} loading={loading}>
+        <PlayerAwareBottomBar>
+          <Button className="ml-auto" variant="buy-nft" onClick={handleBuy} loading={loading}>
             <div className="px-4">BUY NFT</div>
           </Button>
-        </div>
+        </PlayerAwareBottomBar>
       )}
     </Layout>
   );

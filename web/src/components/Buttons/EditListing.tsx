@@ -4,7 +4,7 @@ export const EditListingButton = ({ className, type = 'button', children, loadin
   return (
     <div className={className}>
       <button
-        className="m:px-4 p-2 font-bold text-white text-xs bg-opacity-60 bg-yellow-gradient border-yellow-300 border-2 px-6 w-full"
+        className="md:px-4 p-2 font-bold text-white text-xs bg-opacity-60 bg-yellow-gradient border-yellow-300 border-2 w-full"
         type={type}
         {...rest}
       >

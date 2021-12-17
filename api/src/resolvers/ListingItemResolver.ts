@@ -4,9 +4,11 @@ import { Context } from '../types/Context';
 
 @Resolver()
 export class ListingItemResolver {
-  @Query(() => ListingItem)
-  async listingItem(@Ctx() { listingItemService }: Context, @Arg('tokenId') tokenId: number): Promise<ListingItem> {
-    const listingItem = await listingItemService.getListingItem(tokenId);
-    return listingItem;
+  @Query(() => ListingItem, { nullable: true })
+  async listingItem(
+    @Ctx() { listingItemService }: Context,
+    @Arg('tokenId') tokenId: number,
+  ): Promise<ListingItem | void> {
+    return listingItemService.getListingItem(tokenId);
   }
 }

@@ -1,7 +1,18 @@
+import { useModalDispatch, useModalState } from 'contexts/providers/modal';
+import { Filter } from 'icons/Filter';
 import { GridView } from 'icons/GridView';
 import { ListView } from 'icons/ListView';
-import { SortListingItemField, SortOrder, TrackQuery, TrackWithListingItem, useListingItemsQuery } from 'lib/graphql';
+import {
+  Genre,
+  SaleType,
+  SortListingItemField,
+  SortOrder,
+  TrackQuery,
+  TrackWithListingItem,
+  useListingItemsQuery,
+} from 'lib/graphql';
 import React, { useEffect, useState } from 'react';
+import { Badge } from './Badge';
 import { InfiniteLoader } from './InfiniteLoader';
 import { PostSkeleton } from './PostSkeleton';
 import { Track } from './Track';
@@ -23,13 +34,32 @@ const SelectToApolloQuery: Record<SortListingItem, { field: SortListingItemField
 
 export const Marketplace = () => {
   const pageSize = 10;
+  const { dispatchShowFilterMarketplaceModal } = useModalDispatch();
+  const { genres: genresFromModal, filterSaleType } = useModalState();
   const [isGrid, setIsGrid] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
+  const [genres, setGenres] = useState<Genre[] | undefined>(undefined);
+  const [saleType, setSaleType] = useState<SaleType | undefined>(undefined);
   const [sorting, setSorting] = useState<SortListingItem>(SortListingItem.PriceAsc);
   const { field, order } = SelectToApolloQuery[sorting];
   const { data, refetch, fetchMore, loading } = useListingItemsQuery({
-    variables: { page: { first: pageSize }, sort: { field, order } },
+    variables: {
+      page: { first: pageSize },
+      sort: { field, order },
+    },
   });
+
+  useEffect(() => {
+    if (genresFromModal) setGenres(genresFromModal);
+    if (filterSaleType) setSaleType(filterSaleType);
+    refetch({
+      page: {
+        first: pageSize,
+      },
+      sort: { field, order },
+      filter: buildMarketplaceFilter(genresFromModal, filterSaleType),
+    });
+  }, [sorting, genresFromModal, filterSaleType]);
 
   useEffect(() => {
     refetch({
@@ -37,11 +67,12 @@ export const Marketplace = () => {
         first: pageSize,
       },
       sort: { field, order },
+      filter: buildMarketplaceFilter(genres, saleType),
     });
-  }, [sorting]);
+  }, [sorting, genres, saleType]);
 
   useEffect(() => {
-    if (!totalCount && data) {
+    if (data) {
       setTotalCount(data.listingItems.pageInfo.totalCount);
     }
   }, [data?.listingItems.pageInfo.totalCount, totalCount, data]);
@@ -54,6 +85,7 @@ export const Marketplace = () => {
           after: data?.listingItems.pageInfo.endCursor,
         },
         sort: { field, order },
+        filter: buildMarketplaceFilter(genres, saleType),
       },
     });
   };
@@ -70,8 +102,13 @@ export const Marketplace = () => {
       </div>
       <div className="flex gap-2 bg-black p-4 justify-center items-center">
         <div className="flex flex-1 items-center">
-          {/* <Filter /> */}
-          {/* <span className="text-white text-xs font-bold pl-1">Filter</span> */}
+          <div
+            className="flex cursor-pointer"
+            onClick={() => dispatchShowFilterMarketplaceModal(true, genres, saleType)}
+          >
+            <Filter />
+            <span className="text-white text-xs font-bold pl-1">Filter</span>
+          </div>
         </div>
         <span className="text-gray-80 text-xs font-bold">Sort By</span>
         <select
@@ -86,6 +123,28 @@ export const Marketplace = () => {
           <option value={SortListingItem.PlaybackCount}>Most listened</option>
           <option value={SortListingItem.CreatedAt}>Newest</option>
         </select>
+      </div>
+      <div className="flex flex-wrap p-4 gap-2">
+        {saleType && (
+          <Badge
+            label={saleType}
+            onDelete={() => {
+              dispatchShowFilterMarketplaceModal(false, genres, undefined);
+              setSaleType(undefined);
+            }}
+          />
+        )}
+        {genres?.map(genre => (
+          <Badge
+            key={genre}
+            label={genre}
+            onDelete={() => {
+              const newGenres = genres.filter(it => it !== genre);
+              dispatchShowFilterMarketplaceModal(false, newGenres, saleType);
+              setGenres(newGenres);
+            }}
+          />
+        ))}
       </div>
       {!data || loading ? (
         <div className="space-y-2">
@@ -128,4 +187,11 @@ const Tracks = ({ isGrid, tracks }: TracksProps) => {
       )}
     </>
   );
+};
+
+const buildMarketplaceFilter = (genres: Genre[] | undefined, saleType: SaleType | undefined) => {
+  return {
+    ...(genres?.length && { genres }),
+    ...(saleType && { listingItem: { saleType } }),
+  };
 };

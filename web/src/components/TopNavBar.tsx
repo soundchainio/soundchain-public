@@ -51,7 +51,9 @@ export const TopNavBar = ({
           ) : (
             <>
               <TopNavBarButton icon={Menu} label="Menu" onClick={() => setSideMenuOpen && setSideMenuOpen(true)} />
-              <TopNavBarButton icon={Profile} label="Profile" path={`/profiles/${me?.handle}`} color="pink-blue" />
+              {me && (
+                <TopNavBarButton icon={Profile} label="Profile" path={`/profiles/${me.handle}`} color="pink-blue" />
+              )}
             </>
           )}
         </div>
@@ -106,6 +108,7 @@ export const TopNavBar = ({
       {midRightButton && (
         <div className="flex flex-1 justify-left pl-20 items-center flex-shrink-0">{midRightButton}</div>
       )}
+      {midRightButton && <div className="flex flex-1 justify-left pl-28 items-center">{midRightButton}</div>}
     </div>
   );
 };

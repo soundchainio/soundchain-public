@@ -1,0 +1,5 @@
+mutation deleteTrack($trackId: String!) {
+  deleteTrack(trackId: $trackId) {
+    ...TrackComponentFields
+  }
+}

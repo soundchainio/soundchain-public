@@ -1,6 +1,5 @@
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
-import { AuctionEnded } from 'components/details-NFT/AuctionEnded';
 import { Layout } from 'components/Layout';
 import MaxGasFee from 'components/MaxGasFee';
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
@@ -10,19 +9,22 @@ import useBlockchain from 'hooks/useBlockchain';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { cacheFor } from 'lib/apollo';
-import { PendingRequest, TrackDocument, TrackQuery, useAuctionItemQuery, useUpdateTrackMutation } from 'lib/graphql';
+import {
+  AuctionItemDocument,
+  AuctionItemQuery,
+  PendingRequest,
+  TrackDocument,
+  TrackQuery,
+  useUpdateTrackMutation,
+} from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
-}
-
-export interface HighestBid {
-  bid: string;
-  bidder: string;
+  auctionItem: AuctionItemQuery['auctionItem']['auctionItem'];
 }
 
 interface TrackPageParams extends ParsedUrlQuery {
@@ -36,53 +38,50 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
     return { notFound: true };
   }
 
-  const { data, error } = await apolloClient.query({
+  const { data, error } = await apolloClient.query<TrackQuery>({
     query: TrackDocument,
     variables: { id: trackId },
     context,
   });
 
-  if (error) {
+  const tokenId = data.track.nftData?.tokenId;
+
+  if (error || !tokenId) {
     return { notFound: true };
   }
 
-  return cacheFor(CompleteAuctionPage, { track: data.track }, context, apolloClient);
+  const { data: auction, error: auctionError } = await apolloClient.query<AuctionItemQuery>({
+    query: AuctionItemDocument,
+    variables: { tokenId },
+    context,
+  });
+
+  if (auctionError || !auction.auctionItem) {
+    return { notFound: true };
+  }
+
+  return cacheFor(
+    CompleteAuctionPage,
+    { track: data.track, auctionItem: auction.auctionItem.auctionItem },
+    context,
+    apolloClient,
+  );
 });
 
-export default function CompleteAuctionPage({ track }: TrackPageProps) {
-  const { resultAuction, getHighestBid } = useBlockchain();
+export default function CompleteAuctionPage({ track, auctionItem }: TrackPageProps) {
+  const { cancelAuction } = useBlockchain();
   const { account, web3 } = useWalletContext();
   const [trackUpdate] = useUpdateTrackMutation();
   const [loading, setLoading] = useState(false);
-  const [highestBid, setHighestBid] = useState<HighestBid>({} as HighestBid);
   const me = useMe();
   const router = useRouter();
-
-  const tokenId = track.nftData?.tokenId ?? -1;
-
-  const { data: auctionItem } = useAuctionItemQuery({
-    variables: { tokenId },
-  });
-
-  useEffect(() => {
-    const fetchHighestBid = async () => {
-      if (!web3 || !tokenId || !getHighestBid || highestBid.bidder) {
-        return;
-      }
-      const { _bid, _bidder } = await getHighestBid(web3, tokenId);
-      setHighestBid({ bid: _bid, bidder: _bidder });
-    };
-    fetchHighestBid();
-  }, [tokenId, web3, getHighestBid, highestBid.bidder]);
 
   if (!auctionItem) {
     return null;
   }
 
-  const saleEnded = (auctionItem.auctionItem?.auctionItem?.endingTime || 0) < Math.floor(Date.now() / 1000);
-
-  const handleClaim = () => {
-    if (!web3 || !auctionItem.auctionItem?.auctionItem?.tokenId || !account) {
+  const handleCancel = () => {
+    if (!web3 || !account) {
       return;
     }
     const onTransactionHash = async () => {
@@ -91,23 +90,23 @@ export default function CompleteAuctionPage({ track }: TrackPageProps) {
           input: {
             trackId: track.id,
             nftData: {
-              pendingRequest: PendingRequest.CompleteAuction,
+              pendingRequest: PendingRequest.CancelAuction,
             },
           },
         },
       });
-      router.push(router.asPath.replace('complete-auction', ''));
+      router.back();
     };
-    resultAuction(web3, tokenId, account, onTransactionHash);
+    cancelAuction(web3, auctionItem.tokenId, account, onTransactionHash);
     setLoading(true);
   };
 
   const topNovaBarProps: TopNavBarProps = {
     leftButton: <BackButton />,
-    title: 'Complete Auction',
+    title: 'Cancel Auction',
   };
 
-  if (account !== highestBid.bidder || !saleEnded || !me || track.nftData?.pendingRequest != PendingRequest.None) {
+  if (!me || track.nftData?.pendingRequest != PendingRequest.None) {
     return null;
   }
 
@@ -116,13 +115,12 @@ export default function CompleteAuctionPage({ track }: TrackPageProps) {
       <div className="m-4">
         <Track track={track} />
       </div>
-      <AuctionEnded highestBid={highestBid} />
-      <div className="p-5 bg-gray-15">
+      <div className="px-4 py-3">
         <MaxGasFee />
       </div>
       <PlayerAwareBottomBar>
-        <Button className="ml-auto" variant="buy-nft" onClick={handleClaim} loading={loading}>
-          <div className="px-4">COMPLETE</div>
+        <Button className="ml-auto" variant="buy-nft" onClick={() => handleCancel()} loading={loading}>
+          <div className="px-4">CANCEL AUCTION</div>
         </Button>
       </PlayerAwareBottomBar>
     </Layout>

@@ -42,6 +42,7 @@ export function ImageUpload({
 
   useEffect(() => {
     initialValue && upload([initialValue]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialValue]);
 
   return (

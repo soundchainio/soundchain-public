@@ -26,7 +26,7 @@ export const Avatar = ({ profile, pixels = 30, linkToProfile = true, ...props }:
 
 const Content = ({ profile, pixels = 30, ...props }: AvatarProps) => {
   return (
-    <div className="flex-shrink-0" {...props}>
+    <div className="flex items-center flex-shrink-0" {...props}>
       <Image
         alt="Profile picture"
         src={profile.profilePicture || '/default-pictures/profile/red.png'}

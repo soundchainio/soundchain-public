@@ -11,6 +11,7 @@ import { Track, TrackModel } from '../models/Track';
 import { TrackWithListingItem } from '../models/TrackWithListingItem';
 import { Context } from '../types/Context';
 import { FilterTrackInput } from '../types/FilterTrackInput';
+import { FilterTrackMarketplace } from '../types/FilterTrackMarketplace';
 import { NFTData } from '../types/NFTData';
 import { PageInput } from '../types/PageInput';
 import { PendingRequest } from '../types/PendingRequest';
@@ -112,8 +113,12 @@ export class TrackService extends ModelService<typeof Track> {
     return track;
   }
 
-  async deleteTrack(id: string): Promise<Track> {
-    return await this.model.deleteOne({ _id: id }).exec();
+  async deleteTrack(id: string, profileId: string): Promise<Track> {
+    return await this.model.findOneAndUpdate({ _id: id, profileId }, { deleted: true });
+  }
+
+  async deleteTrackByAdmin(id: string): Promise<Track> {
+    return await this.model.findOneAndUpdate({ _id: id }, { deleted: true });
   }
 
   async deleteTrackOnError(id: string): Promise<Track> {
@@ -218,25 +223,29 @@ export class TrackService extends ModelService<typeof Track> {
 
   async saleType(tokenId: number): Promise<string> {
     const listing = await this.context.listingItemService.getListingItem(tokenId);
-    if (listing.endingTime) {
-      return 'auction';
-    } else if (listing.pricePerItem) {
-      return 'buy now';
+    if (!listing) {
+      return '';
     }
-    return '';
+    const { endingTime, pricePerItem } = listing;
+    return (endingTime && 'auction') || (pricePerItem && 'buy now') || '';
   }
 
   async price(tokenId: number): Promise<number> {
     const listing = await this.context.listingItemService.getListingItem(tokenId);
-    if (listing.reservePrice) {
-      return (await this.context.auctionItemService.getHighestBid(listing._id)) || listing.reservePrice;
-    } else if (listing.pricePerItem) {
-      return listing.pricePerItem;
+    if (!listing) {
+      return 0;
     }
-    return 0;
+    const { reservePrice, pricePerItem } = listing;
+    return reservePrice
+      ? (await this.context.auctionItemService.getHighestBid(listing._id)) || reservePrice
+      : pricePerItem;
   }
 
-  getListingItems(sort?: SortListingItemInput, page?: PageInput): Promise<PaginateResult<TrackWithListingItem>> {
+  getListingItems(
+    filter?: FilterTrackMarketplace,
+    sort?: SortListingItemInput,
+    page?: PageInput,
+  ): Promise<PaginateResult<TrackWithListingItem>> {
     const aggregation = [
       {
         $lookup: {
@@ -304,9 +313,34 @@ export class TrackService extends ModelService<typeof Track> {
               },
             ],
           },
+          'listingItem.saleType': {
+            $cond: {
+              if: {
+                $ne: [
+                  {
+                    $type: '$listingItem.reservePrice',
+                  },
+                  'missing',
+                ],
+              },
+              then: 'auction',
+              else: 'buy_now',
+            },
+          },
         },
       },
     ];
-    return this.paginatePipelineAggregated({ aggregation, sort, page });
+    let dotNotationFilter;
+    if (filter) {
+      const filterClone = JSON.parse(JSON.stringify(filter));
+      delete filterClone.genres;
+      dotNotationFilter = filter.listingItem && dot.dot(filterClone);
+    }
+    return this.paginatePipelineAggregated({
+      aggregation,
+      filter: filter ? { ...(filter.genres && { genres: filter.genres }), ...dotNotationFilter } : {},
+      sort,
+      page,
+    });
   }
 }

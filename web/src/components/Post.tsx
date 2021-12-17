@@ -86,7 +86,7 @@ export const Post = ({ post }: PostProps) => {
             />
           ))}
         {post.repostId && <RepostPreview postId={post.repostId} />}
-        {post.track && (
+        {post.track && !post.track.deleted && (
           <MiniAudioPlayer
             song={{
               src: post.track.playbackUrl,
@@ -102,6 +102,7 @@ export const Post = ({ post }: PostProps) => {
             }}
           />
         )}
+        {post.track && post.track.deleted && <NotAvailableMessage type="track" />}
         <PostStats
           totalReactions={post.totalReactions}
           topReactions={post.topReactions}
