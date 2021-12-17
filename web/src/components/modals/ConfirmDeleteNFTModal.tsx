@@ -69,6 +69,7 @@ export const ConfirmDeleteNFTModal = () => {
       deleteTrack({
         variables: { trackId: track.id },
       });
+      handleClose();
       router.push('/');
     }
   };
@@ -89,12 +90,13 @@ export const ConfirmDeleteNFTModal = () => {
     }
   };
 
-  const handleDeleteOnly = async () => {
+  const handleDeleteOnly = () => {
     if (trackId) {
       setLoading(true);
-      await deleteTrack({
+      deleteTrack({
         variables: { trackId: trackId },
       });
+      handleClose();
       router.push('/');
     }
   };
