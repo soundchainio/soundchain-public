@@ -131,6 +131,24 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
 
   async processAuctions(): Promise<void> {
     const now = Math.floor(new Date().getTime() / 1000);
+    const auctionsEnded = await this.model.find({ valid: true, endingTime: { $lte: now } });
+    await Promise.all(auctionsEnded.map(auction => this.notifyWinner(auction)));
     await this.model.updateMany({ valid: true, endingTime: { $lte: now } }, { $set: { valid: false } });
+  }
+
+  private async notifyWinner({ _id, highestBid, tokenId }: AuctionItem): Promise<void> {
+    const [highestBidModel, track] = await Promise.all([
+      BidModel.findOne({ auctionId: _id, amount: highestBid }),
+      this.context.trackService.getTrackByTokenId(tokenId),
+    ]);
+    const buyerProfile = await this.context.userService.getUserByWallet(highestBidModel.bidder);
+    await this.context.notificationService.notifyWonAuction(
+      track._id,
+      highestBid,
+      track.artist,
+      track.artworkUrl,
+      track.title,
+      buyerProfile.profileId,
+    );
   }
 }

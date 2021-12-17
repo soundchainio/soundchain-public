@@ -3,14 +3,15 @@ import { ObjectId } from 'mongodb';
 import { Field } from 'type-graphql';
 import { CommentNotificationMetadata } from '../types/CommentNotificationMetadata';
 import { DeletedCommentNotificationMetadata } from '../types/DeletedCommentNotificationMetadata';
+import { DeletedPostNotificationMetadata } from '../types/DeletedPostNotificationMetadata';
 import { FollowerNotificationMetadata } from '../types/FollowerNotificationMetadata';
 import { NewPostNotificationMetadata } from '../types/NewPostNotificationMetadata';
-import { DeletedPostNotificationMetadata } from '../types/DeletedPostNotificationMetadata';
 import { NewVerificationRequestNotificationMetadata } from '../types/NewVerificationRequestNotificationMetadata';
 import { NFTSoldNotificationMetadata } from '../types/NFTSoldNotificationMetadata';
 import { NotificationType } from '../types/NotificationType';
 import { ReactionNotificationMetadata } from '../types/ReactionNotificationMetadata';
 import { VerificationRequestNotificationMetadata } from '../types/VerificationRequestNotificationMetadata';
+import { WonAuctionNotificationMetadata } from '../types/WonAuctionNotificationMetadata';
 import { Model } from './Model';
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
 export class Notification extends Model {
@@ -30,7 +31,8 @@ export class Notification extends Model {
     | DeletedPostNotificationMetadata
     | NFTSoldNotificationMetadata
     | VerificationRequestNotificationMetadata
-    | NewVerificationRequestNotificationMetadata;
+    | NewVerificationRequestNotificationMetadata
+    | WonAuctionNotificationMetadata;
 
   @Field(() => Date)
   createdAt: Date;

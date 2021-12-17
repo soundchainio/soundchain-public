@@ -1,5 +1,7 @@
 import {
   CommentNotification,
+  DeletedCommentNotification,
+  DeletedPostNotification,
   FollowerNotification,
   NewPostNotification,
   NewVerificationRequestNotification,
@@ -8,11 +10,12 @@ import {
   ReactionNotification,
   useNotificationQuery,
   VerificationRequestNotification,
-  DeletedPostNotification,
-  DeletedCommentNotification,
+  WonAuctionNotification,
 } from 'lib/graphql';
 import React from 'react';
 import { CommentNotificationItem } from './CommentNotificationItem';
+import { DeletedCommentNotificationItem } from './DeletedCommentNotificationItem';
+import { DeletedPostNotificationItem } from './DeletedPostNotificationItem';
 import { FollowerNotificationItem } from './FollowerNotificationItem';
 import { NewPostNotificationItem } from './NewPostNotificationItem';
 import { NewVerificationRequestNotificationItem } from './NewVerificationRequestNotificationItem';
@@ -20,8 +23,7 @@ import { NFTSoldNotificationItem } from './NFTSoldNotificationItem';
 import { NotificationSkeleton } from './NotificationSkeleton';
 import { ReactionNotificationItem } from './ReactionNotificationItem';
 import { VerificationRequestNotificationItem } from './VerificationRequestNotificationItem';
-import { DeletedPostNotificationItem } from './DeletedPostNotificationItem';
-import { DeletedCommentNotificationItem } from './DeletedCommentNotificationItem';
+import { WonAuctionNotificationItem } from './WonAuctionNotificationItem';
 
 interface NotificationProps {
   notificationId: string;
@@ -71,6 +73,9 @@ export const Notification = ({ notificationId, index }: NotificationProps) => {
     }
     case NotificationType.DeletedComment: {
       return <DeletedCommentNotificationItem notification={notification as DeletedCommentNotification} index={index} />;
+    }
+    case NotificationType.WonAuction: {
+      return <WonAuctionNotificationItem notification={notification as WonAuctionNotification} index={index} />;
     }
     default: {
       return null;

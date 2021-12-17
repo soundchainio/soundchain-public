@@ -9,20 +9,22 @@ import { NFTSoldNotification } from './NFTSoldNotification';
 import { NotificationType } from './NotificationType';
 import { ReactionNotification } from './ReactionNotification';
 import { VerificationRequestNotification } from './VerificationRequestNotification';
+import { WonAuctionNotification } from './WonAuctionNotification';
 
 export const NotificationUnion = createUnionType({
   name: 'Notification',
   types: () =>
     [
       CommentNotification,
-      ReactionNotification,
+      DeletedCommentNotification,
+      DeletedPostNotification,
       FollowerNotification,
       NewPostNotification,
-      NFTSoldNotification,
-      VerificationRequestNotification,
       NewVerificationRequestNotification,
-      DeletedPostNotification,
-      DeletedCommentNotification
+      NFTSoldNotification,
+      ReactionNotification,
+      VerificationRequestNotification,
+      WonAuctionNotification,
     ] as const,
   resolveType: value => {
     if (value.type === NotificationType.Comment) {
@@ -51,6 +53,9 @@ export const NotificationUnion = createUnionType({
     }
     if (value.type === NotificationType.DeletedComment) {
       return DeletedCommentNotification;
+    }
+    if (value.type === NotificationType.WonAuction) {
+      return WonAuctionNotification;
     }
     return undefined;
   },

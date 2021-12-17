@@ -8,14 +8,15 @@ import { Profile, ProfileModel } from '../models/Profile';
 import { Reaction } from '../models/Reaction';
 import { CommentNotificationMetadata } from '../types/CommentNotificationMetadata';
 import { Context } from '../types/Context';
+import { DeletedPostNotificationMetadata } from '../types/DeletedPostNotificationMetadata';
 import { FinishBuyNowItemInput } from '../types/FinishBuyNowItemInput';
 import { NewPostNotificationMetadata } from '../types/NewPostNotificationMetadata';
 import { NewVerificationRequestNotificationMetadata } from '../types/NewVerificationRequestNotificationMetadata';
-import { DeletedPostNotificationMetadata } from '../types/DeletedPostNotificationMetadata';
 import { NotificationType } from '../types/NotificationType';
 import { NotificationUnion } from '../types/NotificationUnion';
 import { PageInput } from '../types/PageInput';
 import { SortNotificationInput } from '../types/SortNotificationInput';
+import { WonAuctionNotificationMetadata } from '../types/WonAuctionNotificationMetadata';
 import { ModelService } from './ModelService';
 
 interface CommentNotificationParams {
@@ -205,7 +206,7 @@ export class NotificationService extends ModelService<typeof Notification> {
   }
 
   async notifyPostDeletedByAdmin(post: Post): Promise<void> {
-    const { profileId } = post
+    const { profileId } = post;
     const authorProfile = await this.context.profileService.getProfile(profileId);
     const metadata: DeletedPostNotificationMetadata = {
       authorName: authorProfile.displayName,
@@ -215,7 +216,7 @@ export class NotificationService extends ModelService<typeof Notification> {
       postLink: post.mediaLink,
       trackId: post.trackId,
     };
-    const notification = new NotificationModel({ type: NotificationType.DeletedPost, profileId, metadata })
+    const notification = new NotificationModel({ type: NotificationType.DeletedPost, profileId, metadata });
     await notification.save();
     await this.incrementNotificationCount(profileId);
   }
@@ -240,5 +241,29 @@ export class NotificationService extends ModelService<typeof Notification> {
     });
     await notification.save();
     await this.incrementNotificationCount(authorProfileId);
+  }
+
+  async notifyWonAuction(
+    trackId: string,
+    price: number,
+    artist: string,
+    artworkUrl: string,
+    trackName: string,
+    buyerProfileId: string,
+  ): Promise<void> {
+    const metadata: WonAuctionNotificationMetadata = {
+      trackId,
+      price,
+      artist,
+      artworkUrl,
+      trackName,
+    };
+    const notification = new NotificationModel({
+      type: NotificationType.WonAuction,
+      profileId: buyerProfileId,
+      metadata,
+    });
+    await notification.save();
+    await this.incrementNotificationCount(buyerProfileId);
   }
 }
