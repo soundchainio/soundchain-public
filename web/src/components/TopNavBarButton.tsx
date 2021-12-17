@@ -46,7 +46,7 @@ export const TopNavBarButton = ({ onClick, icon: Icon, label, className, path, c
   }
 
   return (
-    <button
+    <div
       className={classNames(className, 'flex flex-col items-center cursor-pointer focus:ring-2 focus:ring-blue-600')}
       onClick={onClick}
     >
@@ -54,6 +54,6 @@ export const TopNavBarButton = ({ onClick, icon: Icon, label, className, path, c
       <Label textSize="xs" className="pt-1 font-semibold">
         {label}
       </Label>
-    </button>
+    </div>
   );
 };
