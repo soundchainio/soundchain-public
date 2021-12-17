@@ -21,8 +21,13 @@ export const ReactionItem = ({ reaction: { type, profile }, onClick }: FollowIte
       <div className="items-center self-center content-center">
         <Avatar pixels={40} className="flex" profile={profile} />
       </div>
-      <div className="text-white flex justify-between w-full text-sm">
-        <DisplayName name={profile.displayName} verified={profile.verified} teamMember={profile.teamMember} />
+      <div className="text-white flex justify-between w-full text-sm gap-4">
+        <DisplayName
+          name={profile.displayName}
+          verified={profile.verified}
+          teamMember={profile.teamMember}
+          className="min-w-0"
+        />
         <div className="flex w-16 text-center items-center justify-end">
           <ReactionEmoji name={type.toUpperCase() as ReactionType} className="w-4 h-4" />
         </div>
