@@ -1,6 +1,6 @@
 import { Avatar } from 'components/Avatar';
 import { ManageRequestCardSkeleton } from 'components/ManageRequestCardSkeleton';
-import { RightArrow } from 'icons/RightArrow';
+import { CircleRightArrow } from 'icons/CircleRightArrow';
 import { ProfileVerificationRequestComponentFieldsFragment, useProfileQuery } from 'lib/graphql';
 import NextLink from 'next/link';
 import { DisplayName } from './DisplayName';
@@ -16,22 +16,25 @@ export const ManageRequestCard = ({ request }: ManageRequestCardProps) => {
   if (!request || !profile) return null;
 
   return (
-    <div className="flex flex-col text-white cursor-pointer">
+    <div className="flex flex-col text-white odd:bg-gray-20 even:bg-gray-25">
       <NextLink href={`/manage-requests/${request.id}`}>
-        <div className="relative flex items-center bg-gray-20 p-4">
-          <Avatar profile={profile.profile} pixels={40} className="rounded-full min-w-max flex items-center" />
-          <div className="mx-4">
-            <DisplayName
-              name={profile.profile.displayName}
-              verified={profile.profile.verified}
-              teamMember={profile.profile.teamMember}
-            />
-            <p className="text-gray-80 text-sm">@{profile.profile.userHandle}</p>
+        <a className="p-4">
+          <div className="flex flex-row gap-2 items-center text-sm">
+            <Avatar pixels={30} className="flex" profile={profile.profile} />
+            <div className="flex flex-col min-w-0">
+              <DisplayName
+                name={profile.profile.displayName}
+                verified={profile.profile.verified}
+                teamMember={profile.profile.teamMember}
+                className="min-w-0"
+              />
+              <p className="text-gray-80 text-xs">@{profile.profile.userHandle}</p>
+            </div>
+            <div className="ml-auto">
+              <CircleRightArrow />
+            </div>
           </div>
-          <div className="flex-1 flex justify-end">
-            <RightArrow className="w-5 h-5" />
-          </div>
-        </div>
+        </a>
       </NextLink>
     </div>
   );
