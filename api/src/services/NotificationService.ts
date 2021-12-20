@@ -6,6 +6,7 @@ import { Notification, NotificationModel } from '../models/Notification';
 import { Post } from '../models/Post';
 import { Profile, ProfileModel } from '../models/Profile';
 import { Reaction } from '../models/Reaction';
+import { Track } from '../models/Track';
 import { AuctionIsEndingNotificationMetadata } from '../types/AuctionIsEndingNotificationMetadata';
 import { CommentNotificationMetadata } from '../types/CommentNotificationMetadata';
 import { Context } from '../types/Context';
@@ -25,6 +26,14 @@ interface CommentNotificationParams {
   post: Post;
   authorProfileId: string;
 }
+
+interface WonAuctionParams {
+  track: Track;
+  price: number;
+  buyerProfileId: string;
+}
+
+type AuctionIsEndingParams = Omit<WonAuctionParams, 'price'>;
 
 export class NotificationService extends ModelService<typeof Notification> {
   constructor(context: Context) {
@@ -244,14 +253,8 @@ export class NotificationService extends ModelService<typeof Notification> {
     await this.incrementNotificationCount(authorProfileId);
   }
 
-  async notifyWonAuction(
-    trackId: string,
-    price: number,
-    artist: string,
-    artworkUrl: string,
-    trackName: string,
-    buyerProfileId: string,
-  ): Promise<void> {
+  async notifyWonAuction({ track, price, buyerProfileId }: WonAuctionParams): Promise<void> {
+    const { _id: trackId, artist, artworkUrl, title: trackName } = track;
     const metadata: WonAuctionNotificationMetadata = {
       trackId,
       price,
@@ -268,13 +271,8 @@ export class NotificationService extends ModelService<typeof Notification> {
     await this.incrementNotificationCount(buyerProfileId);
   }
 
-  async notifyAuctionIsEnding(
-    trackId: string,
-    trackName: string,
-    buyerProfileId: string,
-    artist: string,
-    artworkUrl: string,
-  ): Promise<void> {
+  async notifyAuctionIsEnding({ track, buyerProfileId }: AuctionIsEndingParams): Promise<void> {
+    const { _id: trackId, artist, artworkUrl, title: trackName } = track;
     const metadata: AuctionIsEndingNotificationMetadata = {
       trackId,
       trackName,

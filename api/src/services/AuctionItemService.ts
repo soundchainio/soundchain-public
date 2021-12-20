@@ -136,21 +136,22 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
 
   async processAuctions(): Promise<void> {
     const now = getNow();
-    const auctionsEnded = await this.model.find({ valid: true, endingTime: { $lte: now } });
-    const auctionsEndingInOneHour = await this.fetchAuctionsEndingInOneHour(now);
-    await Promise.all(
-      auctionsEndingInOneHour.map(({ bids }) => {
+    const [auctionsEnded, auctionsEndingInOneHour] = await Promise.all([
+      this.model.find({ valid: true, endingTime: { $lte: now } }),
+      this.fetchAuctionsEndingInOneHour(now),
+    ]);
+    await Promise.all([
+      ...auctionsEndingInOneHour.map(({ bids }) => {
         bids.map(async bid => {
-          await Promise.all([this.notifyAuctionIsEnding(bid), this.setBidIsNotified(bid._id)]);
+          Promise.all([this.notifyAuctionIsEnding(bid), this.setBidIsNotified(bid._id)]);
         });
       }),
-    );
-
-    await Promise.all(auctionsEnded.map(auction => this.notifyWinner(auction)));
+      ...auctionsEnded.map(this.notifyWinner),
+    ]);
   }
 
   private async setBidIsNotified(bidId: string) {
-    await BidModel.findOneAndUpdate({ _id: bidId }, { notifiedEndingInOneHour: true });
+    BidModel.findOneAndUpdate({ _id: bidId }, { notifiedEndingInOneHour: true });
   }
 
   private async notifyWinner({ _id, highestBid, tokenId }: AuctionItem): Promise<void> {
@@ -159,14 +160,11 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       this.context.trackService.getTrackByTokenId(tokenId),
     ]);
     const buyerProfile = await this.context.userService.getUserByWallet(highestBidModel.bidder);
-    await this.context.notificationService.notifyWonAuction(
-      track._id,
-      highestBid,
-      track.artist,
-      track.artworkUrl,
-      track.title,
-      buyerProfile.profileId,
-    );
+    await this.context.notificationService.notifyWonAuction({
+      track,
+      price: highestBid,
+      buyerProfileId: buyerProfile.profileId,
+    });
   }
 
   private async notifyAuctionIsEnding({ tokenId, bidder }: Bid): Promise<void> {
@@ -174,13 +172,10 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       this.context.userService.getUserByWallet(bidder),
       this.context.trackService.getTrackByTokenId(tokenId),
     ]);
-    await this.context.notificationService.notifyAuctionIsEnding(
-      track._id,
-      track.title,
-      user.profileId,
-      track.artist,
-      track.artworkUrl,
-    );
+    await this.context.notificationService.notifyAuctionIsEnding({
+      track,
+      buyerProfileId: user.profileId,
+    });
   }
 
   private async fetchAuctionsEndingInOneHour(now: number): Promise<AuctionWithBids[]> {
