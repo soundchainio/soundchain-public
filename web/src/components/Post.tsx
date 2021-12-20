@@ -43,8 +43,8 @@ export const Post = ({ post }: PostProps) => {
       <div className="p-4 bg-gray-20 break-words">
         <div className="flex items-center">
           <Avatar profile={post.profile} pixels={34} className="flex items-center justify-center" />
-          <div className="flex items-center ml-2 min-w-0">
-            <div className="flex flex-1 flex-col min-w-0">
+          <div className="flex items-center ml-2 flex-1 justify-between min-w-0">
+            <div className="flex flex-col min-w-0">
               <NextLink href={`/profiles/${post.profile.userHandle}`}>
                 <DisplayName
                   name={post.profile.displayName}
@@ -59,7 +59,7 @@ export const Post = ({ post }: PostProps) => {
                 small
               />
             </div>
-            <div className="w-14">
+            <div className="w-14 flex-shrink-0">
               {canEdit && <Ellipsis className="pr-4 pl-4 w-full h-3 cursor-pointer" onClick={onEllipsisClick} />}
             </div>
           </div>
