@@ -31,7 +31,6 @@ export const RepostPreview = ({ postId }: RepostPreviewProps) => {
             <div className="flex items-center">
               <Avatar className="mr-4" profile={post.profile} />
               <DisplayName
-                className="min-w-0"
                 name={post.profile.displayName}
                 verified={post.profile.verified}
                 teamMember={post.profile.teamMember}

@@ -26,7 +26,6 @@ export const ManageRequestCard = ({ request }: ManageRequestCardProps) => {
                 name={profile.profile.displayName}
                 verified={profile.profile.verified}
                 teamMember={profile.profile.teamMember}
-                className="min-w-0"
               />
               <p className="text-gray-80 text-xs">@{profile.profile.userHandle}</p>
             </div>

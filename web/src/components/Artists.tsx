@@ -49,7 +49,7 @@ export const Artists = ({ searchTerm }: ArtistsPageProps) => {
           <Link href={`/profiles/${followedArtists.userHandle}`} passHref>
             <div className="flex flex-row space-x-2 items-center cursor-pointer text-sm">
               <Avatar pixels={40} className="flex" profile={followedArtists} />
-              <DisplayName name={followedArtists.displayName} verified={followedArtists.verified} className="min-w-0" />
+              <DisplayName name={followedArtists.displayName} verified={followedArtists.verified} />
               <div className="flex-1 justify-end flex">
                 <RightArrow />
               </div>
