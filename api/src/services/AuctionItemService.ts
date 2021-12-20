@@ -2,6 +2,7 @@ import { AuctionItem, AuctionItemModel } from '../models/AuctionItem';
 import { Bid, BidModel } from '../models/Bid';
 import { Context } from '../types/Context';
 import { SellType } from '../types/NFTSoldNotificationMetadata';
+import { getNow } from '../utils/Time';
 import { ModelService } from './ModelService';
 
 interface NewAuctionItem {
@@ -134,7 +135,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
   }
 
   async processAuctions(): Promise<void> {
-    const now = Math.floor(new Date().getTime() / 1000);
+    const now = getNow();
     const auctionsEnded = await this.model.find({ valid: true, endingTime: { $lte: now } });
     const auctionsEndingInOneHour = await this.fetchAuctionsEndingInOneHour(now);
     await Promise.all(
@@ -146,7 +147,6 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
     );
 
     await Promise.all(auctionsEnded.map(auction => this.notifyWinner(auction)));
-    await this.model.updateMany({ valid: true, endingTime: { $lte: now } }, { $set: { valid: false } });
   }
 
   private async setBidIsNotified(bidId: string) {
