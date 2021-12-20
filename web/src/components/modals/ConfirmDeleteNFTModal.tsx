@@ -1,6 +1,7 @@
 import { Button } from 'components/Button';
 import { Modal } from 'components/Modal';
 import { Track as TrackComponent } from 'components/Track';
+import { TrackListItemSkeleton } from 'components/TrackListItemSkeleton';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMagicContext } from 'hooks/useMagicContext';
@@ -16,7 +17,7 @@ export const ConfirmDeleteNFTModal = () => {
   const [loading, setLoading] = useState(false);
   const [track, setTrack] = useState<TrackQuery['track']>();
   const { web3, account, balance } = useMagicContext();
-  const [deleteTrack] = useDeleteTrackMutation({ refetchQueries: ['Posts', 'Tracks'] });
+  const [deleteTrack] = useDeleteTrackMutation({ refetchQueries: ['Posts', 'Tracks', 'Track'] });
   const { burnNftToken } = useBlockchain();
   const [disabled, setDisabled] = useState(true);
   const router = useRouter();
@@ -69,7 +70,6 @@ export const ConfirmDeleteNFTModal = () => {
       deleteTrack({
         variables: { trackId: track.id },
       });
-      handleClose();
       router.push('/');
     }
   };
@@ -127,7 +127,7 @@ export const ConfirmDeleteNFTModal = () => {
             </div>
             <div className="flex flex-col w-full space-y-6 py-6">
               {track && <TrackComponent track={track} />}
-              {/* to do add a loader while !track */}
+              {!track && <TrackListItemSkeleton />}
             </div>
           </div>
           {burn && (
