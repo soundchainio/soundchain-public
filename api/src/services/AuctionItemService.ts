@@ -142,16 +142,14 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
     ]);
     await Promise.all([
       ...auctionsEndingInOneHour.map(({ bids }) => {
-        bids.map(async bid => {
-          Promise.all([this.notifyAuctionIsEnding(bid), this.setBidIsNotified(bid._id)]);
-        });
+        bids.map(bid => Promise.all([this.notifyAuctionIsEnding(bid), this.setBidIsNotified(bid._id)]));
       }),
-      ...auctionsEnded.map(this.notifyWinner),
+      ...auctionsEnded.map(auction => this.notifyWinner(auction)),
     ]);
   }
 
   private async setBidIsNotified(bidId: string) {
-    BidModel.findOneAndUpdate({ _id: bidId }, { notifiedEndingInOneHour: true });
+    await BidModel.findOneAndUpdate({ _id: bidId }, { notifiedEndingInOneHour: true });
   }
 
   private async notifyWinner({ _id, highestBid, tokenId }: AuctionItem): Promise<void> {
