@@ -1678,7 +1678,7 @@ export type ChatsQuery = (
       & Pick<Chat, 'id' | 'message' | 'unread' | 'createdAt'>
       & { profile: (
         { __typename?: 'Profile' }
-        & Pick<Profile, 'displayName' | 'profilePicture' | 'verified' | 'teamMember'>
+        & Pick<Profile, 'displayName' | 'profilePicture' | 'verified' | 'teamMember' | 'userHandle'>
       ) }
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
@@ -2242,7 +2242,7 @@ export type MessageComponentFieldsFragment = (
   & Pick<Message, 'id' | 'message' | 'fromId' | 'toId' | 'createdAt'>
   & { fromProfile: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified'>
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle'>
   ) }
 );
 
@@ -3229,6 +3229,7 @@ export const MessageComponentFieldsFragmentDoc = gql`
     displayName
     profilePicture
     verified
+    userHandle
   }
 }
     `;
@@ -3644,6 +3645,7 @@ export const ChatsDocument = gql`
         profilePicture
         verified
         teamMember
+        userHandle
       }
       message
       unread
