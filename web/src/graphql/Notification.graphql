@@ -30,5 +30,8 @@ query Notification($id: String!) {
     ... on WonAuctionNotification {
       ...WonAuctionNotificationFields
     }
+    ... on AuctionIsEndingNotification {
+      ...AuctionIsEndingNotificationFields
+    }
   }
 }

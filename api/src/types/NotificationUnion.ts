@@ -1,4 +1,5 @@
 import { createUnionType } from 'type-graphql';
+import { AuctionIsEndingNotification } from './AuctionIsEndingNotification';
 import { CommentNotification } from './CommentNotification';
 import { DeletedCommentNotification } from './DeletedCommentNotification';
 import { DeletedPostNotification } from './DeletedPostNotification';
@@ -15,6 +16,7 @@ export const NotificationUnion = createUnionType({
   name: 'Notification',
   types: () =>
     [
+      AuctionIsEndingNotification,
       CommentNotification,
       DeletedCommentNotification,
       DeletedPostNotification,
@@ -56,6 +58,9 @@ export const NotificationUnion = createUnionType({
     }
     if (value.type === NotificationType.WonAuction) {
       return WonAuctionNotification;
+    }
+    if (value.type === NotificationType.AuctionIsEnding) {
+      return AuctionIsEndingNotification;
     }
     return undefined;
   },

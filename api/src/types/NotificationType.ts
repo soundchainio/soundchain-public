@@ -1,6 +1,7 @@
 import { registerEnumType } from 'type-graphql';
 
 enum NotificationType {
+  AuctionIsEnding = 'AuctionIsEnding',
   Comment = 'Comment',
   DeletedComment = 'DeletedComment',
   DeletedPost = 'DeletedPost',

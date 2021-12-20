@@ -6,6 +6,7 @@ import { Notification, NotificationModel } from '../models/Notification';
 import { Post } from '../models/Post';
 import { Profile, ProfileModel } from '../models/Profile';
 import { Reaction } from '../models/Reaction';
+import { AuctionIsEndingNotificationMetadata } from '../types/AuctionIsEndingNotificationMetadata';
 import { CommentNotificationMetadata } from '../types/CommentNotificationMetadata';
 import { Context } from '../types/Context';
 import { DeletedPostNotificationMetadata } from '../types/DeletedPostNotificationMetadata';
@@ -260,6 +261,20 @@ export class NotificationService extends ModelService<typeof Notification> {
     };
     const notification = new NotificationModel({
       type: NotificationType.WonAuction,
+      profileId: buyerProfileId,
+      metadata,
+    });
+    await notification.save();
+    await this.incrementNotificationCount(buyerProfileId);
+  }
+
+  async notifyAuctionIsEnding(trackId: string, trackName: string, buyerProfileId: string): Promise<void> {
+    const metadata: AuctionIsEndingNotificationMetadata = {
+      trackId,
+      trackName,
+    };
+    const notification = new NotificationModel({
+      type: NotificationType.AuctionIsEnding,
       profileId: buyerProfileId,
       metadata,
     });

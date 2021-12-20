@@ -1,0 +1,7 @@
+fragment AuctionIsEndingNotificationFields on AuctionIsEndingNotification {
+  id
+  type
+  createdAt
+  trackId
+  trackName
+}

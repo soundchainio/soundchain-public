@@ -28,6 +28,16 @@ export type AddCommentPayload = {
   comment: Comment;
 };
 
+export type AuctionIsEndingNotification = {
+  __typename?: 'AuctionIsEndingNotification';
+  type: NotificationType;
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  id: Scalars['String'];
+  trackId: Scalars['String'];
+  trackName: Scalars['String'];
+};
+
 export type AuctionItem = {
   __typename?: 'AuctionItem';
   id: Scalars['ID'];
@@ -798,7 +808,7 @@ export type NewVerificationRequestNotification = {
   verificationRequestId: Scalars['String'];
 };
 
-export type Notification = CommentNotification | DeletedCommentNotification | DeletedPostNotification | FollowerNotification | NewPostNotification | NewVerificationRequestNotification | NftSoldNotification | ReactionNotification | VerificationRequestNotification | WonAuctionNotification;
+export type Notification = AuctionIsEndingNotification | CommentNotification | DeletedCommentNotification | DeletedPostNotification | FollowerNotification | NewPostNotification | NewVerificationRequestNotification | NftSoldNotification | ReactionNotification | VerificationRequestNotification | WonAuctionNotification;
 
 export type NotificationConnection = {
   __typename?: 'NotificationConnection';
@@ -807,6 +817,7 @@ export type NotificationConnection = {
 };
 
 export enum NotificationType {
+  AuctionIsEnding = 'AuctionIsEnding',
   Comment = 'Comment',
   DeletedComment = 'DeletedComment',
   DeletedPost = 'DeletedPost',
@@ -1600,6 +1611,11 @@ export type AddCommentMutation = (
   ) }
 );
 
+export type AuctionIsEndingNotificationFieldsFragment = (
+  { __typename?: 'AuctionIsEndingNotification' }
+  & Pick<AuctionIsEndingNotification, 'id' | 'type' | 'createdAt' | 'trackId' | 'trackName'>
+);
+
 export type AuctionItemQueryVariables = Exact<{
   tokenId: Scalars['Float'];
 }>;
@@ -2300,6 +2316,9 @@ export type NotificationQueryVariables = Exact<{
 export type NotificationQuery = (
   { __typename?: 'Query' }
   & { notification: (
+    { __typename?: 'AuctionIsEndingNotification' }
+    & AuctionIsEndingNotificationFieldsFragment
+  ) | (
     { __typename?: 'CommentNotification' }
     & CommentNotificationFieldsFragment
   ) | (
@@ -2353,6 +2372,9 @@ export type NotificationsQuery = (
   & { notifications: (
     { __typename?: 'NotificationConnection' }
     & { nodes: Array<(
+      { __typename?: 'AuctionIsEndingNotification' }
+      & AuctionIsEndingNotificationFieldsFragment
+    ) | (
       { __typename?: 'CommentNotification' }
       & CommentNotificationFieldsFragment
     ) | (
@@ -3113,6 +3135,15 @@ export type WonAuctionNotificationFieldsFragment = (
   & Pick<WonAuctionNotification, 'id' | 'type' | 'createdAt' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price'>
 );
 
+export const AuctionIsEndingNotificationFieldsFragmentDoc = gql`
+    fragment AuctionIsEndingNotificationFields on AuctionIsEndingNotification {
+  id
+  type
+  createdAt
+  trackId
+  trackName
+}
+    `;
 export const CommentComponentFieldsFragmentDoc = gql`
     fragment CommentComponentFields on Comment {
   id
@@ -4948,6 +4979,9 @@ export const NotificationDocument = gql`
     ... on WonAuctionNotification {
       ...WonAuctionNotificationFields
     }
+    ... on AuctionIsEndingNotification {
+      ...AuctionIsEndingNotificationFields
+    }
   }
 }
     ${CommentNotificationFieldsFragmentDoc}
@@ -4959,7 +4993,8 @@ ${VerificationRequestNotificationFieldsFragmentDoc}
 ${NewVerificationRequestNotificationFieldsFragmentDoc}
 ${DeletedPostNotificationFieldsFragmentDoc}
 ${DeletedCommentNotificationFieldsFragmentDoc}
-${WonAuctionNotificationFieldsFragmentDoc}`;
+${WonAuctionNotificationFieldsFragmentDoc}
+${AuctionIsEndingNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationQuery__
@@ -5057,6 +5092,9 @@ export const NotificationsDocument = gql`
       ... on WonAuctionNotification {
         ...WonAuctionNotificationFields
       }
+      ... on AuctionIsEndingNotification {
+        ...AuctionIsEndingNotificationFields
+      }
     }
   }
 }
@@ -5069,7 +5107,8 @@ ${VerificationRequestNotificationFieldsFragmentDoc}
 ${NewVerificationRequestNotificationFieldsFragmentDoc}
 ${DeletedPostNotificationFieldsFragmentDoc}
 ${DeletedCommentNotificationFieldsFragmentDoc}
-${WonAuctionNotificationFieldsFragmentDoc}`;
+${WonAuctionNotificationFieldsFragmentDoc}
+${AuctionIsEndingNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationsQuery__

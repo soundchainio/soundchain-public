@@ -31,6 +31,9 @@ query Notifications($sort: SortNotificationInput) {
       ... on WonAuctionNotification {
         ...WonAuctionNotificationFields
       }
+      ... on AuctionIsEndingNotification {
+        ...AuctionIsEndingNotificationFields
+      }
     }
   }
 }

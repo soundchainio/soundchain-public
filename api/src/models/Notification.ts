@@ -1,6 +1,7 @@
 import { getModelForClass, modelOptions, prop, Severity } from '@typegoose/typegoose';
 import { ObjectId } from 'mongodb';
 import { Field } from 'type-graphql';
+import { AuctionIsEndingNotification } from '../types/AuctionIsEndingNotification';
 import { CommentNotificationMetadata } from '../types/CommentNotificationMetadata';
 import { DeletedCommentNotificationMetadata } from '../types/DeletedCommentNotificationMetadata';
 import { DeletedPostNotificationMetadata } from '../types/DeletedPostNotificationMetadata';
@@ -23,6 +24,7 @@ export class Notification extends Model {
 
   @prop({ required: true })
   metadata:
+    | AuctionIsEndingNotification
     | CommentNotificationMetadata
     | DeletedCommentNotificationMetadata
     | FollowerNotificationMetadata
