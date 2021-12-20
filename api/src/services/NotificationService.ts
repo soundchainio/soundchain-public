@@ -268,10 +268,18 @@ export class NotificationService extends ModelService<typeof Notification> {
     await this.incrementNotificationCount(buyerProfileId);
   }
 
-  async notifyAuctionIsEnding(trackId: string, trackName: string, buyerProfileId: string): Promise<void> {
+  async notifyAuctionIsEnding(
+    trackId: string,
+    trackName: string,
+    buyerProfileId: string,
+    artist: string,
+    artworkUrl: string,
+  ): Promise<void> {
     const metadata: AuctionIsEndingNotificationMetadata = {
       trackId,
       trackName,
+      artist,
+      artworkUrl,
     };
     const notification = new NotificationModel({
       type: NotificationType.AuctionIsEnding,

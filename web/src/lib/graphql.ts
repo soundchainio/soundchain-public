@@ -36,6 +36,8 @@ export type AuctionIsEndingNotification = {
   id: Scalars['String'];
   trackId: Scalars['String'];
   trackName: Scalars['String'];
+  artist: Scalars['String'];
+  artworkUrl: Scalars['String'];
 };
 
 export type AuctionItem = {
@@ -1613,7 +1615,7 @@ export type AddCommentMutation = (
 
 export type AuctionIsEndingNotificationFieldsFragment = (
   { __typename?: 'AuctionIsEndingNotification' }
-  & Pick<AuctionIsEndingNotification, 'id' | 'type' | 'createdAt' | 'trackId' | 'trackName'>
+  & Pick<AuctionIsEndingNotification, 'id' | 'type' | 'createdAt' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl'>
 );
 
 export type AuctionItemQueryVariables = Exact<{
@@ -3142,6 +3144,8 @@ export const AuctionIsEndingNotificationFieldsFragmentDoc = gql`
   createdAt
   trackId
   trackName
+  artist
+  artworkUrl
 }
     `;
 export const CommentComponentFieldsFragmentDoc = gql`

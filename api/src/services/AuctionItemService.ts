@@ -174,7 +174,13 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       this.context.userService.getUserByWallet(bidder),
       this.context.trackService.getTrackByTokenId(tokenId),
     ]);
-    await this.context.notificationService.notifyAuctionIsEnding(track._id, track.title, user.profileId);
+    await this.context.notificationService.notifyAuctionIsEnding(
+      track._id,
+      track.title,
+      user.profileId,
+      track.artist,
+      track.artworkUrl,
+    );
   }
 
   private async fetchAuctionsEndingInOneHour(now: number): Promise<AuctionWithBids[]> {

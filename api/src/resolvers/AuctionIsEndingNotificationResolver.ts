@@ -21,4 +21,16 @@ export class AuctionIsEndingNotificationResolver {
     const { trackName } = metadata as AuctionIsEndingNotificationMetadata;
     return trackName;
   }
+
+  @FieldResolver(() => String)
+  artist(@Root() { metadata }: Notification): string {
+    const { artist } = metadata as AuctionIsEndingNotificationMetadata;
+    return artist;
+  }
+
+  @FieldResolver(() => String)
+  artworkUrl(@Root() { metadata }: Notification): string {
+    const { artworkUrl } = metadata as AuctionIsEndingNotificationMetadata;
+    return artworkUrl;
+  }
 }
