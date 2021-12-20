@@ -1,4 +1,5 @@
 import {
+  AuctionIsEndingNotification,
   CommentNotification,
   DeletedCommentNotification,
   DeletedPostNotification,
@@ -13,6 +14,7 @@ import {
   WonAuctionNotification,
 } from 'lib/graphql';
 import React from 'react';
+import { AuctionIsEndingNotificationItem } from './AuctionIsEndingNotificationItem';
 import { CommentNotificationItem } from './CommentNotificationItem';
 import { DeletedCommentNotificationItem } from './DeletedCommentNotificationItem';
 import { DeletedPostNotificationItem } from './DeletedPostNotificationItem';
@@ -76,6 +78,11 @@ export const Notification = ({ notificationId, index }: NotificationProps) => {
     }
     case NotificationType.WonAuction: {
       return <WonAuctionNotificationItem notification={notification as WonAuctionNotification} index={index} />;
+    }
+    case NotificationType.AuctionIsEnding: {
+      return (
+        <AuctionIsEndingNotificationItem notification={notification as AuctionIsEndingNotification} index={index} />
+      );
     }
     default: {
       return null;
