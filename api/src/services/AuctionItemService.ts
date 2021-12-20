@@ -1,5 +1,5 @@
 import { AuctionItem, AuctionItemModel } from '../models/AuctionItem';
-import { BidModel } from '../models/Bid';
+import { Bid, BidModel } from '../models/Bid';
 import { Context } from '../types/Context';
 import { SellType } from '../types/NFTSoldNotificationMetadata';
 import { ModelService } from './ModelService';
@@ -15,6 +15,10 @@ interface NewAuctionItem {
 
 interface CountBids {
   numberOfBids: number;
+}
+
+interface AuctionWithBids extends AuctionItem {
+  bids: Bid[];
 }
 
 export class AuctionItemService extends ModelService<typeof AuctionItem> {
@@ -132,8 +136,21 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
   async processAuctions(): Promise<void> {
     const now = Math.floor(new Date().getTime() / 1000);
     const auctionsEnded = await this.model.find({ valid: true, endingTime: { $lte: now } });
+    const auctionsEndingInOneHour = await this.fetchAuctionsEndingInOneHour(now);
+    await Promise.all(
+      auctionsEndingInOneHour.map(({ bids }) => {
+        bids.map(async bid => {
+          await Promise.all([this.notifyAuctionIsEnding(bid), this.setBidIsNotified(bid._id)]);
+        });
+      }),
+    );
+
     await Promise.all(auctionsEnded.map(auction => this.notifyWinner(auction)));
     await this.model.updateMany({ valid: true, endingTime: { $lte: now } }, { $set: { valid: false } });
+  }
+
+  private async setBidIsNotified(bidId: string) {
+    await BidModel.findOneAndUpdate({ _id: bidId }, { notifiedEndingInOneHour: true });
   }
 
   private async notifyWinner({ _id, highestBid, tokenId }: AuctionItem): Promise<void> {
@@ -150,5 +167,67 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       track.title,
       buyerProfile.profileId,
     );
+  }
+
+  private async notifyAuctionIsEnding({ tokenId, bidder }: Bid): Promise<void> {
+    const [user, track] = await Promise.all([
+      this.context.userService.getUserByWallet(bidder),
+      this.context.trackService.getTrackByTokenId(tokenId),
+    ]);
+    await this.context.notificationService.notifyAuctionIsEnding(track._id, track.title, user.profileId);
+  }
+
+  private async fetchAuctionsEndingInOneHour(now: number): Promise<AuctionWithBids[]> {
+    const oneHourInSecs = 60 * 60;
+
+    return await this.model.aggregate<AuctionWithBids>([
+      {
+        $match: {
+          $expr: {
+            $and: [
+              {
+                valid: true,
+              },
+              {
+                $gte: [
+                  '$endingTime',
+                  {
+                    $subtract: [now, oneHourInSecs],
+                  },
+                ],
+              },
+              {
+                $lte: ['$endingTime', now],
+              },
+            ],
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: 'bids',
+          as: 'bids',
+          let: {
+            auctionId: '$_id',
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ['$auctionId', '$$auctionId'],
+                    },
+                    {
+                      $eq: ['$notifiedEndingInOneHour', false],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+        },
+      },
+    ]);
   }
 }
