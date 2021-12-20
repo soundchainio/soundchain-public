@@ -1,10 +1,10 @@
 import classNames from 'classnames';
-import Link from 'next/link';
-import { IconProps } from 'icons/types/IconProps';
-import { Label } from './Label';
 import { SVGGradientColor } from 'icons/gradients';
-import { useEffect, useState } from 'react';
+import { IconProps } from 'icons/types/IconProps';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
+import { Label } from './Label';
 
 interface RefreshButtonProps {
   onClick?: () => void;
