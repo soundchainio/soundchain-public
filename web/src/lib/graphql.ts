@@ -572,6 +572,7 @@ export type Mutation = {
   updateHandle: UpdateHandlePayload;
   updateDefaultWallet: UpdateDefaultWalletPayload;
   updateMetaMaskAddresses: UpdateDefaultWalletPayload;
+  updateOTPSecret: UpdateOtpSecretPayload;
 };
 
 
@@ -748,6 +749,11 @@ export type MutationUpdateDefaultWalletArgs = {
 
 export type MutationUpdateMetaMaskAddressesArgs = {
   input: UpdateWalletInput;
+};
+
+
+export type MutationUpdateOtpSecretArgs = {
+  input: UpdateOtpSecretInput;
 };
 
 export type NftDataInput = {
@@ -1508,6 +1514,15 @@ export type UpdateHandlePayload = {
   user: User;
 };
 
+export type UpdateOtpSecretInput = {
+  otpSecret: Scalars['String'];
+};
+
+export type UpdateOtpSecretPayload = {
+  __typename?: 'UpdateOTPSecretPayload';
+  user: User;
+};
+
 export type UpdatePostInput = {
   postId: Scalars['String'];
   body: Scalars['String'];
@@ -1567,6 +1582,7 @@ export type User = {
   defaultWallet: DefaultWallet;
   isApprovedOnMarketplace: Scalars['Boolean'];
   roles: Array<Role>;
+  otpSecret: Maybe<Scalars['String']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   profile: Profile;
@@ -2249,7 +2265,7 @@ export type MeQuery = (
   { __typename?: 'Query' }
   & { me: Maybe<(
     { __typename?: 'User' }
-    & Pick<User, 'id' | 'handle' | 'email' | 'magicWalletAddress' | 'defaultWallet' | 'isApprovedOnMarketplace' | 'roles'>
+    & Pick<User, 'id' | 'handle' | 'email' | 'magicWalletAddress' | 'defaultWallet' | 'isApprovedOnMarketplace' | 'roles' | 'otpSecret'>
     & { profile: (
       { __typename?: 'Profile' }
       & ProfileComponentFieldsFragment
@@ -2961,6 +2977,22 @@ export type UpdateMusicianTypeMutation = (
     & { profile: (
       { __typename?: 'Profile' }
       & Pick<Profile, 'id' | 'musicianTypes'>
+    ) }
+  ) }
+);
+
+export type UpdateOtpSecretMutationVariables = Exact<{
+  input: UpdateOtpSecretInput;
+}>;
+
+
+export type UpdateOtpSecretMutation = (
+  { __typename?: 'Mutation' }
+  & { updateOTPSecret: (
+    { __typename?: 'UpdateOTPSecretPayload' }
+    & { user: (
+      { __typename?: 'User' }
+      & Pick<User, 'id' | 'otpSecret'>
     ) }
   ) }
 );
@@ -4848,6 +4880,7 @@ export const MeDocument = gql`
     defaultWallet
     isApprovedOnMarketplace
     roles
+    otpSecret
     profile {
       ...ProfileComponentFields
     }
@@ -6412,6 +6445,42 @@ export function useUpdateMusicianTypeMutation(baseOptions?: Apollo.MutationHookO
 export type UpdateMusicianTypeMutationHookResult = ReturnType<typeof useUpdateMusicianTypeMutation>;
 export type UpdateMusicianTypeMutationResult = Apollo.MutationResult<UpdateMusicianTypeMutation>;
 export type UpdateMusicianTypeMutationOptions = Apollo.BaseMutationOptions<UpdateMusicianTypeMutation, UpdateMusicianTypeMutationVariables>;
+export const UpdateOtpSecretDocument = gql`
+    mutation UpdateOTPSecret($input: UpdateOTPSecretInput!) {
+  updateOTPSecret(input: $input) {
+    user {
+      id
+      otpSecret
+    }
+  }
+}
+    `;
+export type UpdateOtpSecretMutationFn = Apollo.MutationFunction<UpdateOtpSecretMutation, UpdateOtpSecretMutationVariables>;
+
+/**
+ * __useUpdateOtpSecretMutation__
+ *
+ * To run a mutation, you first call `useUpdateOtpSecretMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateOtpSecretMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateOtpSecretMutation, { data, loading, error }] = useUpdateOtpSecretMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateOtpSecretMutation(baseOptions?: Apollo.MutationHookOptions<UpdateOtpSecretMutation, UpdateOtpSecretMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateOtpSecretMutation, UpdateOtpSecretMutationVariables>(UpdateOtpSecretDocument, options);
+      }
+export type UpdateOtpSecretMutationHookResult = ReturnType<typeof useUpdateOtpSecretMutation>;
+export type UpdateOtpSecretMutationResult = Apollo.MutationResult<UpdateOtpSecretMutation>;
+export type UpdateOtpSecretMutationOptions = Apollo.BaseMutationOptions<UpdateOtpSecretMutation, UpdateOtpSecretMutationVariables>;
 export const UpdatePostDocument = gql`
     mutation UpdatePost($input: UpdatePostInput!) {
   updatePost(input: $input) {

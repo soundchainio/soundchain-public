@@ -32,6 +32,20 @@ function Link({ label, value, to }: LinkProps) {
   );
 }
 
+function OTPLink({ label, value, to, secret }: LinkProps & { secret: string }) {
+  return (
+    <NextLink href={`/settings${to}`}>
+      <a className="w-full px-4 py-2 flex items-center justify-center">
+        <div className="flex-1">
+          <span className="block text-gray-50 text-xs font-bold uppercase"> {label} </span>
+          <span className={`${secret ? 'text-green-700' : 'text-red-700'} block font-bold mt-1`}> {value} </span>
+        </div>
+        <RightArrow />
+      </a>
+    </NextLink>
+  );
+}
+
 function FakeLink({ label, value }: LinkProps) {
   return (
     <div>
@@ -101,6 +115,12 @@ export default function SettingsPage() {
           <Link to="/musician-type" label="Musician Type(s)" value={musicianTypes || 'Not selected'} />
           <Link to="/favorite-genres" label="Favorite Genre(s)" value={genres || 'Not selected'} />
           <Link to="/social-links" label="Social Link(s)" value={'Click to view your social links' || 'Not selected'} />
+          <OTPLink
+            to="/security"
+            label="2FA Security"
+            secret={me.otpSecret || ''}
+            value={me.otpSecret ? 'Enabled' : 'Disabled'}
+          />
         </div>
       </div>
     </Layout>
