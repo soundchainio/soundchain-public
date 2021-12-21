@@ -79,6 +79,7 @@ export default function CompleteAuctionPage({ track }: TrackPageProps) {
     return null;
   }
 
+  const isOwner = auctionItem.auctionItem.auctionItem?.owner.toLowerCase() === account?.toLowerCase();
   const saleEnded = (auctionItem.auctionItem?.auctionItem?.endingTime || 0) < Math.floor(Date.now() / 1000);
 
   const handleClaim = () => {
@@ -107,7 +108,12 @@ export default function CompleteAuctionPage({ track }: TrackPageProps) {
     title: 'Complete Auction',
   };
 
-  if (account !== highestBid.bidder || !saleEnded || !me || track.nftData?.pendingRequest != PendingRequest.None) {
+  if (
+    (account !== highestBid.bidder && !isOwner) ||
+    !saleEnded ||
+    !me ||
+    track.nftData?.pendingRequest != PendingRequest.None
+  ) {
     return null;
   }
 
@@ -116,7 +122,7 @@ export default function CompleteAuctionPage({ track }: TrackPageProps) {
       <div className="m-4">
         <Track track={track} />
       </div>
-      <AuctionEnded highestBid={highestBid} />
+      <AuctionEnded highestBid={highestBid} isOwner={isOwner} />
       <div className="p-5 bg-gray-15">
         <MaxGasFee />
       </div>

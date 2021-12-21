@@ -14,8 +14,8 @@ import { useModalDispatch } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
-import { Matic } from 'icons/Matic';
 import { Ellipsis } from 'icons/Ellipsis';
+import { Matic } from 'icons/Matic';
 import { cacheFor, createApolloClient } from 'lib/apollo';
 import {
   PendingRequest,
@@ -132,7 +132,10 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const price = web3?.utils.fromWei(priceValue ?? '0', 'ether');
 
   const auctionIsOver = (listingPayload?.listingItem?.endingTime || 0) < Math.floor(Date.now() / 1000);
-  const canComplete = auctionIsOver && highestBid.bidder?.toLowerCase() === account?.toLowerCase();
+  const canComplete =
+    auctionIsOver &&
+    (highestBid.bidder?.toLowerCase() === account?.toLowerCase() ||
+      account?.toLowerCase() === listingPayload?.listingItem?.owner?.toLowerCase());
   const isHighestBidder = highestBid.bidder ? highestBid.bidder.toLowerCase() === account?.toLowerCase() : undefined;
   const startingDate = listingPayload?.listingItem?.startingTime
     ? new Date(listingPayload.listingItem.startingTime * 1000)
