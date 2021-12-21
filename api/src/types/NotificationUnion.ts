@@ -1,4 +1,5 @@
 import { createUnionType } from 'type-graphql';
+import { AuctionIsEndingNotification } from './AuctionIsEndingNotification';
 import { CommentNotification } from './CommentNotification';
 import { DeletedCommentNotification } from './DeletedCommentNotification';
 import { DeletedPostNotification } from './DeletedPostNotification';
@@ -9,20 +10,23 @@ import { NFTSoldNotification } from './NFTSoldNotification';
 import { NotificationType } from './NotificationType';
 import { ReactionNotification } from './ReactionNotification';
 import { VerificationRequestNotification } from './VerificationRequestNotification';
+import { WonAuctionNotification } from './WonAuctionNotification';
 
 export const NotificationUnion = createUnionType({
   name: 'Notification',
   types: () =>
     [
+      AuctionIsEndingNotification,
       CommentNotification,
-      ReactionNotification,
+      DeletedCommentNotification,
+      DeletedPostNotification,
       FollowerNotification,
       NewPostNotification,
-      NFTSoldNotification,
-      VerificationRequestNotification,
       NewVerificationRequestNotification,
-      DeletedPostNotification,
-      DeletedCommentNotification
+      NFTSoldNotification,
+      ReactionNotification,
+      VerificationRequestNotification,
+      WonAuctionNotification,
     ] as const,
   resolveType: value => {
     if (value.type === NotificationType.Comment) {
@@ -51,6 +55,12 @@ export const NotificationUnion = createUnionType({
     }
     if (value.type === NotificationType.DeletedComment) {
       return DeletedCommentNotification;
+    }
+    if (value.type === NotificationType.WonAuction) {
+      return WonAuctionNotification;
+    }
+    if (value.type === NotificationType.AuctionIsEnding) {
+      return AuctionIsEndingNotification;
     }
     return undefined;
   },
