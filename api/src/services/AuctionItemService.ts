@@ -195,9 +195,6 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
                   },
                 ],
               },
-              {
-                $lte: ['$endingTime', now],
-              },
             ],
           },
         },

@@ -277,7 +277,7 @@ export class TrackService extends ModelService<typeof Track> {
                     $eq: ['$$item.valid', true],
                   },
                   {
-                    $lte: ['$$item.endingTime', now],
+                    $gte: ['$$item.endingTime', now],
                   },
                 ],
               },
@@ -291,9 +291,6 @@ export class TrackService extends ModelService<typeof Track> {
                 $and: [
                   {
                     $eq: ['$$item.valid', true],
-                  },
-                  {
-                    $lte: ['$$item.endingTime', now],
                   },
                 ],
               },

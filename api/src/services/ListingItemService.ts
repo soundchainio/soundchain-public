@@ -16,7 +16,7 @@ export class ListingItemService extends Service {
     const now = getNow();
     // we cant have lookup with uncorrelated queries, see https://docs.aws.amazon.com/documentdb/latest/developerguide/functional-differences.html#functional-differences.lookup
     const auctionItem = (
-      await AuctionItemModel.findOne({ tokenId, valid: true, endingTime: { $lte: now } })
+      await AuctionItemModel.findOne({ tokenId, valid: true, endingTime: { $gte: now } })
     )?.toObject();
     const buyNowItem = (await BuyNowItemModel.findOne({ tokenId, valid: true }))?.toObject();
     return auctionItem || buyNowItem;
