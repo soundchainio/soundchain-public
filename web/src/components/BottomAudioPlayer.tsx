@@ -108,23 +108,23 @@ export const BottomAudioPlayer = () => {
 
   return (
     <div className="bg-black py-2 flex flex-col gap-2">
-      <div className="flex px-2">
+      <div className="flex px-2 justify-between">
         <button
-          className="flex flex-1 items-center gap-2 cursor-pointer"
+          className="flex items-center gap-2 flex-1 min-w-0"
           aria-label="Open audio player controls"
           onClick={() => dispatchShowAudioPlayerModal(true)}
         >
-          <div className="h-10 w-10 bg-gray-80 relative flex items-center">
+          <div className="h-10 w-10 bg-gray-80 relative flex items-center flex-shrink-0">
             <Asset src={currentSong.art} sizes="2.5rem" />
           </div>
-          <div className="text-white text-xs flex flex-col flex-1 items-start">
-            <h2 className="font-black">{currentSong.title || 'Unknown title'}</h2>
-            <p className="font-medium">{currentSong.artist || 'Unknown artist'}</p>
+          <div className="text-white text-xs flex flex-col items-start min-w-0">
+            <h2 className="font-black truncate w-full">{currentSong.title || 'Unknown title'}</h2>
+            <p className="font-medium truncate">{currentSong.artist || 'Unknown artist'}</p>
           </div>
         </button>
         <button
           aria-label={isPlaying ? 'Pause' : 'Play'}
-          className="h-10 w-11 flex items-center justify-center hover:scale-125 duration-75"
+          className="h-10 w-11 flex items-center justify-center flex-shrink-0 hover:scale-125 duration-75"
           onClick={togglePlay}
         >
           {isPlaying ? <Pause /> : <Play />}

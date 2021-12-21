@@ -19,7 +19,7 @@ export const Comment = ({ commentId }: CommentProps) => {
   const me = useMe();
   const { dispatchShowAuthorActionsModal } = useModalDispatch();
   const comment = data?.comment;
-  const isAuthor = comment?.profile.id == me?.profile.id
+  const isAuthor = comment?.profile.id == me?.profile.id;
   const canEdit = isAuthor || me?.roles?.includes(Role.Admin) || me?.roles?.includes(Role.TeamMember);
 
   const onEllipsisClick = () => {
@@ -35,9 +35,9 @@ export const Comment = ({ commentId }: CommentProps) => {
   return (
     <div className="flex flex-row space-x-3">
       <Avatar profile={comment.profile} className="mt-4" />
-      <div className="flex-1 py-4 px-4 bg-gray-20 rounded-xl">
-        <div className="flex items-center">
-          <div className="flex-1 flex flex-col">
+      <div className="flex-1 py-4 px-4 bg-gray-20 rounded-xl min-w-0">
+        <div className="flex items-center min-w-0">
+          <div className="flex-1 flex flex-col min-w-0">
             <NextLink href={`/profiles/${comment.profile.userHandle}`}>
               <DisplayName
                 name={comment.profile.displayName}

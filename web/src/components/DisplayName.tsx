@@ -14,7 +14,7 @@ interface DisplayNameProps {
 export const DisplayName = forwardRef<any, DisplayNameProps>(
   ({ name, verified, teamMember, className, ...props }, ref) => {
     return (
-      <div className={classNames('flex gap-1 items-baseline', className)} ref={ref}>
+      <div className={classNames('flex gap-1 items-baseline min-w-0', className)} ref={ref}>
         <span {...props} className="text-white font-semibold truncate">
           {name}
         </span>

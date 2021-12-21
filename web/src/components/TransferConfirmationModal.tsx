@@ -46,10 +46,6 @@ export const TransferConfirmationModal = () => {
     if (hasEnoughFunds()) {
       try {
         setLoading(true);
-        const onTransactionHash = (hash: string) => {
-          console.log(hash);
-        };
-
         const onReceipt = () => {
           alert('Transaction completed!');
           setLoading(false);
@@ -58,10 +54,9 @@ export const TransferConfirmationModal = () => {
           router.push('/wallet');
         };
         if (account && walletRecipient && amountToTransfer) {
-          sendMatic(web3, walletRecipient, account, amountToTransfer, onTransactionHash, onReceipt);
+          sendMatic(web3, walletRecipient, account, amountToTransfer, onReceipt);
         }
       } catch (e) {
-        console.log(e);
         setLoading(false);
         alert('We had some trouble, please try again later!');
       }

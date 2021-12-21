@@ -28,6 +28,18 @@ export type AddCommentPayload = {
   comment: Comment;
 };
 
+export type AuctionIsEndingNotification = {
+  __typename?: 'AuctionIsEndingNotification';
+  type: NotificationType;
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  id: Scalars['String'];
+  trackId: Scalars['String'];
+  trackName: Scalars['String'];
+  artist: Scalars['String'];
+  artworkUrl: Scalars['String'];
+};
+
 export type AuctionItem = {
   __typename?: 'AuctionItem';
   id: Scalars['ID'];
@@ -516,7 +528,8 @@ export enum MusicianType {
   BeatMaker = 'BEAT_MAKER',
   Dj = 'DJ',
   Engineer = 'ENGINEER',
-  Instrumentalist = 'INSTRUMENTALIST'
+  Instrumentalist = 'INSTRUMENTALIST',
+  NotAnArtist = 'NOT_AN_ARTIST'
 }
 
 export type Mutation = {
@@ -798,7 +811,7 @@ export type NewVerificationRequestNotification = {
   verificationRequestId: Scalars['String'];
 };
 
-export type Notification = CommentNotification | ReactionNotification | FollowerNotification | NewPostNotification | NftSoldNotification | VerificationRequestNotification | NewVerificationRequestNotification | DeletedPostNotification | DeletedCommentNotification;
+export type Notification = AuctionIsEndingNotification | CommentNotification | DeletedCommentNotification | DeletedPostNotification | FollowerNotification | NewPostNotification | NewVerificationRequestNotification | NftSoldNotification | ReactionNotification | VerificationRequestNotification | WonAuctionNotification;
 
 export type NotificationConnection = {
   __typename?: 'NotificationConnection';
@@ -807,15 +820,17 @@ export type NotificationConnection = {
 };
 
 export enum NotificationType {
+  AuctionIsEnding = 'AuctionIsEnding',
   Comment = 'Comment',
-  Reaction = 'Reaction',
+  DeletedComment = 'DeletedComment',
+  DeletedPost = 'DeletedPost',
   Follower = 'Follower',
   NewPost = 'NewPost',
-  NftSold = 'NFTSold',
-  VerificationRequestUpdate = 'VerificationRequestUpdate',
   NewVerificationRequest = 'NewVerificationRequest',
-  DeletedPost = 'DeletedPost',
-  DeletedComment = 'DeletedComment'
+  NftSold = 'NFTSold',
+  Reaction = 'Reaction',
+  VerificationRequestUpdate = 'VerificationRequestUpdate',
+  WonAuction = 'WonAuction'
 }
 
 export type PageInfo = {
@@ -843,6 +858,7 @@ export enum PendingRequest {
   UpdateListing = 'UpdateListing',
   PlaceBid = 'PlaceBid',
   CompleteAuction = 'CompleteAuction',
+  CancelAuction = 'CancelAuction',
   None = 'None'
 }
 
@@ -991,7 +1007,7 @@ export type Query = {
   feed: FeedConnection;
   followers: FollowConnection;
   following: FollowConnection;
-  listingItem: ListingItem;
+  listingItem: Maybe<ListingItem>;
   message: Message;
   notifications: NotificationConnection;
   notification: Notification;
@@ -1565,6 +1581,19 @@ export type VerificationRequestNotification = {
   body: Scalars['String'];
 };
 
+export type WonAuctionNotification = {
+  __typename?: 'WonAuctionNotification';
+  type: NotificationType;
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  id: Scalars['String'];
+  trackId: Scalars['String'];
+  trackName: Scalars['String'];
+  artist: Scalars['String'];
+  artworkUrl: Scalars['String'];
+  price: Scalars['Float'];
+};
+
 export type AddCommentMutationVariables = Exact<{
   input: AddCommentInput;
 }>;
@@ -1583,6 +1612,11 @@ export type AddCommentMutation = (
       & CommentComponentFieldsFragment
     ) }
   ) }
+);
+
+export type AuctionIsEndingNotificationFieldsFragment = (
+  { __typename?: 'AuctionIsEndingNotification' }
+  & Pick<AuctionIsEndingNotification, 'id' | 'type' | 'createdAt' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl'>
 );
 
 export type AuctionItemQueryVariables = Exact<{
@@ -1677,7 +1711,7 @@ export type ChatsQuery = (
       & Pick<Chat, 'id' | 'message' | 'unread' | 'createdAt'>
       & { profile: (
         { __typename?: 'Profile' }
-        & Pick<Profile, 'displayName' | 'profilePicture' | 'verified' | 'teamMember'>
+        & Pick<Profile, 'displayName' | 'profilePicture' | 'verified' | 'teamMember' | 'userHandle'>
       ) }
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
@@ -2143,10 +2177,10 @@ export type ListingItemQueryVariables = Exact<{
 
 export type ListingItemQuery = (
   { __typename?: 'Query' }
-  & { listingItem: (
+  & { listingItem: Maybe<(
     { __typename?: 'ListingItem' }
     & ListingItemViewComponentFieldsFragment
-  ) }
+  )> }
 );
 
 export type ListingItemComponentFieldsFragment = (
@@ -2241,7 +2275,7 @@ export type MessageComponentFieldsFragment = (
   & Pick<Message, 'id' | 'message' | 'fromId' | 'toId' | 'createdAt'>
   & { fromProfile: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified'>
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle'>
   ) }
 );
 
@@ -2285,11 +2319,17 @@ export type NotificationQueryVariables = Exact<{
 export type NotificationQuery = (
   { __typename?: 'Query' }
   & { notification: (
+    { __typename?: 'AuctionIsEndingNotification' }
+    & AuctionIsEndingNotificationFieldsFragment
+  ) | (
     { __typename?: 'CommentNotification' }
     & CommentNotificationFieldsFragment
   ) | (
-    { __typename?: 'ReactionNotification' }
-    & ReactionNotificationFieldsFragment
+    { __typename?: 'DeletedCommentNotification' }
+    & DeletedCommentNotificationFieldsFragment
+  ) | (
+    { __typename?: 'DeletedPostNotification' }
+    & DeletedPostNotificationFieldsFragment
   ) | (
     { __typename?: 'FollowerNotification' }
     & FollowerNotificationFieldsFragment
@@ -2297,20 +2337,20 @@ export type NotificationQuery = (
     { __typename?: 'NewPostNotification' }
     & NewPostNotificationFieldsFragment
   ) | (
+    { __typename?: 'NewVerificationRequestNotification' }
+    & NewVerificationRequestNotificationFieldsFragment
+  ) | (
     { __typename?: 'NFTSoldNotification' }
     & NftSoldNotificationFieldsFragment
+  ) | (
+    { __typename?: 'ReactionNotification' }
+    & ReactionNotificationFieldsFragment
   ) | (
     { __typename?: 'VerificationRequestNotification' }
     & VerificationRequestNotificationFieldsFragment
   ) | (
-    { __typename?: 'NewVerificationRequestNotification' }
-    & NewVerificationRequestNotificationFieldsFragment
-  ) | (
-    { __typename?: 'DeletedPostNotification' }
-    & DeletedPostNotificationFieldsFragment
-  ) | (
-    { __typename?: 'DeletedCommentNotification' }
-    & DeletedCommentNotificationFieldsFragment
+    { __typename?: 'WonAuctionNotification' }
+    & WonAuctionNotificationFieldsFragment
   ) }
 );
 
@@ -2335,11 +2375,17 @@ export type NotificationsQuery = (
   & { notifications: (
     { __typename?: 'NotificationConnection' }
     & { nodes: Array<(
+      { __typename?: 'AuctionIsEndingNotification' }
+      & AuctionIsEndingNotificationFieldsFragment
+    ) | (
       { __typename?: 'CommentNotification' }
       & CommentNotificationFieldsFragment
     ) | (
-      { __typename?: 'ReactionNotification' }
-      & ReactionNotificationFieldsFragment
+      { __typename?: 'DeletedCommentNotification' }
+      & DeletedCommentNotificationFieldsFragment
+    ) | (
+      { __typename?: 'DeletedPostNotification' }
+      & DeletedPostNotificationFieldsFragment
     ) | (
       { __typename?: 'FollowerNotification' }
       & FollowerNotificationFieldsFragment
@@ -2347,20 +2393,20 @@ export type NotificationsQuery = (
       { __typename?: 'NewPostNotification' }
       & NewPostNotificationFieldsFragment
     ) | (
+      { __typename?: 'NewVerificationRequestNotification' }
+      & NewVerificationRequestNotificationFieldsFragment
+    ) | (
       { __typename?: 'NFTSoldNotification' }
       & NftSoldNotificationFieldsFragment
+    ) | (
+      { __typename?: 'ReactionNotification' }
+      & ReactionNotificationFieldsFragment
     ) | (
       { __typename?: 'VerificationRequestNotification' }
       & VerificationRequestNotificationFieldsFragment
     ) | (
-      { __typename?: 'NewVerificationRequestNotification' }
-      & NewVerificationRequestNotificationFieldsFragment
-    ) | (
-      { __typename?: 'DeletedPostNotification' }
-      & DeletedPostNotificationFieldsFragment
-    ) | (
-      { __typename?: 'DeletedCommentNotification' }
-      & DeletedCommentNotificationFieldsFragment
+      { __typename?: 'WonAuctionNotification' }
+      & WonAuctionNotificationFieldsFragment
     )> }
   ) }
 );
@@ -3087,6 +3133,22 @@ export type VerificationRequestNotificationFieldsFragment = (
   & Pick<VerificationRequestNotification, 'id' | 'type' | 'body' | 'createdAt'>
 );
 
+export type WonAuctionNotificationFieldsFragment = (
+  { __typename?: 'WonAuctionNotification' }
+  & Pick<WonAuctionNotification, 'id' | 'type' | 'createdAt' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price'>
+);
+
+export const AuctionIsEndingNotificationFieldsFragmentDoc = gql`
+    fragment AuctionIsEndingNotificationFields on AuctionIsEndingNotification {
+  id
+  type
+  createdAt
+  trackId
+  trackName
+  artist
+  artworkUrl
+}
+    `;
 export const CommentComponentFieldsFragmentDoc = gql`
     fragment CommentComponentFields on Comment {
   id
@@ -3228,6 +3290,7 @@ export const MessageComponentFieldsFragmentDoc = gql`
     displayName
     profilePicture
     verified
+    userHandle
   }
 }
     `;
@@ -3394,6 +3457,18 @@ export const VerificationRequestNotificationFieldsFragmentDoc = gql`
   type
   body
   createdAt
+}
+    `;
+export const WonAuctionNotificationFieldsFragmentDoc = gql`
+    fragment WonAuctionNotificationFields on WonAuctionNotification {
+  id
+  type
+  createdAt
+  trackId
+  trackName
+  artist
+  artworkUrl
+  price
 }
     `;
 export const AddCommentDocument = gql`
@@ -3643,6 +3718,7 @@ export const ChatsDocument = gql`
         profilePicture
         verified
         teamMember
+        userHandle
       }
       message
       unread
@@ -4905,6 +4981,12 @@ export const NotificationDocument = gql`
     ... on DeletedCommentNotification {
       ...DeletedCommentNotificationFields
     }
+    ... on WonAuctionNotification {
+      ...WonAuctionNotificationFields
+    }
+    ... on AuctionIsEndingNotification {
+      ...AuctionIsEndingNotificationFields
+    }
   }
 }
     ${CommentNotificationFieldsFragmentDoc}
@@ -4915,7 +4997,9 @@ ${NftSoldNotificationFieldsFragmentDoc}
 ${VerificationRequestNotificationFieldsFragmentDoc}
 ${NewVerificationRequestNotificationFieldsFragmentDoc}
 ${DeletedPostNotificationFieldsFragmentDoc}
-${DeletedCommentNotificationFieldsFragmentDoc}`;
+${DeletedCommentNotificationFieldsFragmentDoc}
+${WonAuctionNotificationFieldsFragmentDoc}
+${AuctionIsEndingNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationQuery__
@@ -5010,6 +5094,12 @@ export const NotificationsDocument = gql`
       ... on DeletedCommentNotification {
         ...DeletedCommentNotificationFields
       }
+      ... on WonAuctionNotification {
+        ...WonAuctionNotificationFields
+      }
+      ... on AuctionIsEndingNotification {
+        ...AuctionIsEndingNotificationFields
+      }
     }
   }
 }
@@ -5021,7 +5111,9 @@ ${NftSoldNotificationFieldsFragmentDoc}
 ${VerificationRequestNotificationFieldsFragmentDoc}
 ${NewVerificationRequestNotificationFieldsFragmentDoc}
 ${DeletedPostNotificationFieldsFragmentDoc}
-${DeletedCommentNotificationFieldsFragmentDoc}`;
+${DeletedCommentNotificationFieldsFragmentDoc}
+${WonAuctionNotificationFieldsFragmentDoc}
+${AuctionIsEndingNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationsQuery__

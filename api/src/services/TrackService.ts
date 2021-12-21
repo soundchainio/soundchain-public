@@ -17,6 +17,7 @@ import { PageInput } from '../types/PageInput';
 import { PendingRequest } from '../types/PendingRequest';
 import { SortListingItemInput } from '../types/SortListingItemInput';
 import { SortTrackInput } from '../types/SortTrackInput';
+import { getNow } from '../utils/Time';
 import { ModelService } from './ModelService';
 
 export interface FavoriteCount {
@@ -222,23 +223,23 @@ export class TrackService extends ModelService<typeof Track> {
   }
 
   async saleType(tokenId: number): Promise<string> {
-    const listing = await this.context.listingItemService.getListingItem(tokenId);
-    if (listing.endingTime) {
-      return 'auction';
-    } else if (listing.pricePerItem) {
-      return 'buy now';
+    const listing = await this.context.listingItemService.getActiveListingItem(tokenId);
+    if (!listing) {
+      return '';
     }
-    return '';
+    const { endingTime, pricePerItem } = listing;
+    return (endingTime && 'auction') || (pricePerItem && 'buy now') || '';
   }
 
   async price(tokenId: number): Promise<number> {
-    const listing = await this.context.listingItemService.getListingItem(tokenId);
-    if (listing.reservePrice) {
-      return (await this.context.auctionItemService.getHighestBid(listing._id)) || listing.reservePrice;
-    } else if (listing.pricePerItem) {
-      return listing.pricePerItem;
+    const listing = await this.context.listingItemService.getActiveListingItem(tokenId);
+    if (!listing) {
+      return 0;
     }
-    return 0;
+    const { reservePrice, pricePerItem } = listing;
+    return reservePrice
+      ? (await this.context.auctionItemService.getHighestBid(listing._id)) || reservePrice
+      : pricePerItem;
   }
 
   getListingItems(
@@ -246,6 +247,7 @@ export class TrackService extends ModelService<typeof Track> {
     sort?: SortListingItemInput,
     page?: PageInput,
   ): Promise<PaginateResult<TrackWithListingItem>> {
+    const now = getNow();
     const aggregation = [
       {
         $lookup: {
@@ -270,7 +272,14 @@ export class TrackService extends ModelService<typeof Track> {
               input: '$auctionitem',
               as: 'item',
               cond: {
-                $eq: ['$$item.valid', true],
+                $and: [
+                  {
+                    $eq: ['$$item.valid', true],
+                  },
+                  {
+                    $gte: ['$$item.endingTime', now],
+                  },
+                ],
               },
             },
           },
@@ -279,7 +288,11 @@ export class TrackService extends ModelService<typeof Track> {
               input: '$buynowitem',
               as: 'item',
               cond: {
-                $eq: ['$$item.valid', true],
+                $and: [
+                  {
+                    $eq: ['$$item.valid', true],
+                  },
+                ],
               },
             },
           },

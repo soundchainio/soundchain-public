@@ -10,6 +10,7 @@ enum MusicianType {
   DJ = 'DJ',
   ENGINEER = 'Engineer',
   INSTRUMENTALIST = 'Instrumentalist',
+  NOT_AN_ARTIST = 'Not an Artist',
 }
 
 registerEnumType(MusicianType, {

@@ -25,6 +25,10 @@ export class Bid extends Model {
   amount: number;
 
   @Field()
+  @prop({ type: Boolean, required: true, default: false })
+  notifiedEndingInOneHour: boolean;
+
+  @Field()
   @prop({ type: ObjectId, required: true })
   auctionId: string;
 

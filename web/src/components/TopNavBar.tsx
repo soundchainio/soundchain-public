@@ -51,18 +51,20 @@ export const TopNavBar = ({
           ) : (
             <>
               <TopNavBarButton icon={Menu} label="Menu" onClick={() => setSideMenuOpen && setSideMenuOpen(true)} />
-              <TopNavBarButton icon={Profile} label="Profile" path={`/profiles/${me?.handle}`} color="pink-blue" />
+              {me && (
+                <TopNavBarButton icon={Profile} label="Profile" path={`/profiles/${me.handle}`} color="pink-blue" />
+              )}
             </>
           )}
         </div>
       </button>
       {me && !midRightButton ? (
         <>
-          <div className="md:hidden flex-2 flex-grow-basis flex items-center justify-center md:items-stretch md:justify-start">
+          <div className="md:hidden flex-2 flex-grow-basis flex items-center justify-center md:items-stretch md:justify-start truncate">
             <div className="flex-shrink-0 flex items-center">
               {title ? (
                 <div className="flex flex-col">
-                  <Title navTitle className="text-sm text-center md:text-left">
+                  <Title navTitle className="text-sm text-center md:text-left truncate">
                     {title}
                   </Title>
                   {Subtitle}
@@ -75,7 +77,7 @@ export const TopNavBar = ({
           <div className="hidden w-full md:flex flex-2 items-center justify-center md:items-stretch md:justify-start">
             <div className="flex items-center w-full">
               {title ? (
-                <Title navTitle className="text-sm text-center md:text-left md:pl-4">
+                <Title navTitle className="text-sm text-center md:text-left md:pl-4 truncate">
                   {title}
                 </Title>
               ) : (
@@ -101,9 +103,12 @@ export const TopNavBar = ({
         )
       )}
       {RightButton && !midRightButton && (
-        <div className="flex flex-1 md:flex-none justify-end pr-4 items-center">{RightButton}</div>
+        <div className="flex flex-1 md:flex-none justify-end pr-4 items-center flex-shrink-0">{RightButton}</div>
       )}
-      {midRightButton && <div className="flex flex-1 justify-left pl-20 items-center">{midRightButton}</div>}
+      {midRightButton && (
+        <div className="flex flex-1 justify-left pl-20 items-center flex-shrink-0">{midRightButton}</div>
+      )}
+      {midRightButton && <div className="flex flex-1 justify-left pl-28 items-center">{midRightButton}</div>}
     </div>
   );
 };

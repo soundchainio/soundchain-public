@@ -1,15 +1,17 @@
 import { registerEnumType } from 'type-graphql';
 
 enum NotificationType {
+  AuctionIsEnding = 'AuctionIsEnding',
   Comment = 'Comment',
-  Reaction = 'Reaction',
+  DeletedComment = 'DeletedComment',
+  DeletedPost = 'DeletedPost',
   Follower = 'Follower',
   NewPost = 'NewPost',
-  NFTSold = 'NFTSold',
-  VerificationRequestUpdate = 'VerificationRequestUpdate',
   NewVerificationRequest = 'NewVerificationRequest',
-  DeletedPost = 'DeletedPost',
-  DeletedComment = 'DeletedComment'
+  NFTSold = 'NFTSold',
+  Reaction = 'Reaction',
+  VerificationRequestUpdate = 'VerificationRequestUpdate',
+  WonAuction = 'WonAuction',
 }
 
 registerEnumType(NotificationType, {

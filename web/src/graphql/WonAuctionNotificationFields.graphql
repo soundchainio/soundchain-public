@@ -1,0 +1,10 @@
+fragment WonAuctionNotificationFields on WonAuctionNotification {
+  id
+  type
+  createdAt
+  trackId
+  trackName
+  artist
+  artworkUrl
+  price
+}

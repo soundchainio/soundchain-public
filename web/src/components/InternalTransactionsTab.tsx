@@ -49,9 +49,9 @@ export const InternalTransactionsTab = ({ address }: InternalTransactionsTabProp
 
   return (
     <ol className="flex flex-col text-white">
-      {result.map((item, idx) => {
+      {result.map(item => {
         return (
-          <li key={item.hash} className={idx % 2 ? 'bg-gray-15' : 'bg-gray-20'}>
+          <li key={item.hash} className="odd:bg-gray-15 even:bg-gray-20">
             <InternalTransaction transaction={item} maticUsdValue={maticUsd?.maticUsd} />
           </li>
         );
