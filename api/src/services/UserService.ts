@@ -62,6 +62,14 @@ export class UserService extends ModelService<typeof User> {
     return updatedUser;
   }
 
+  async updateOTPSecret({ _id, otpSecret }: Pick<User, '_id' | 'otpSecret'>): Promise<User> {
+    const updatedUser = await UserModel.findByIdAndUpdate(_id, { otpSecret }, { new: true });
+    if (!updatedUser) {
+      throw new Error(`Could not update the profile with id: ${_id}`);
+    }
+    return updatedUser;
+  }
+
   async getUserByWallet(walletAddress: string): Promise<User> {
     const user = await this.model.findOne({
       $or: [{ magicWalletAddress: walletAddress }, { metaMaskWalletAddressees: { $in: [walletAddress] } }],

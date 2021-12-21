@@ -43,6 +43,10 @@ export class User extends Model {
   @prop({ type: [String], enum: Role, default: [Role.USER] })
   roles: string[];
 
+  @Field({ nullable: true })
+  @prop({ required: false })
+  otpSecret: string;
+
   @Field(() => Date)
   createdAt: Date;
 

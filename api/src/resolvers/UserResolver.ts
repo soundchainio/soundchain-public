@@ -13,6 +13,8 @@ import { UpdateDefaultWalletInput } from '../types/UpdateDefaultWalletInput';
 import { UpdateDefaultWalletPayload } from '../types/UpdateDefaultWalletPayload';
 import { UpdateHandleInput } from '../types/UpdateHandleInput';
 import { UpdateHandlePayload } from '../types/UpdateHandlePayload';
+import { UpdateOTPSecretInput } from '../types/UpdateOTPSecretInput';
+import { UpdateOTPSecretPayload } from '../types/UpdateOTPSecretPayload';
 import { UpdateWalletInput } from '../types/UpdateWalletInput';
 
 @Resolver(User)
@@ -92,6 +94,17 @@ export class UserResolver {
     @CurrentUser() { _id }: User,
   ): Promise<UpdateHandlePayload> {
     const user = await userService.updateMetaMaskAddresses(_id, wallet);
+    return { user };
+  }
+
+  @Mutation(() => UpdateOTPSecretPayload)
+  @Authorized()
+  async updateOTPSecret(
+    @Ctx() { userService }: Context,
+    @Arg('input') { otpSecret }: UpdateOTPSecretInput,
+    @CurrentUser() { _id }: User,
+  ): Promise<UpdateHandlePayload> {
+    const user = await userService.updateOTPSecret({ _id, otpSecret });
     return { user };
   }
 
