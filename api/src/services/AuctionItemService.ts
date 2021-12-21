@@ -1,5 +1,6 @@
 import { AuctionItem, AuctionItemModel } from '../models/AuctionItem';
 import { Bid, BidModel } from '../models/Bid';
+import { TrackModel } from '../models/Track';
 import { Context } from '../types/Context';
 import { SellType } from '../types/NFTSoldNotificationMetadata';
 import { getNow } from '../utils/Time';
@@ -137,7 +138,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
   async processAuctions(): Promise<void> {
     const now = getNow();
     const [auctionsEnded, auctionsEndingInOneHour] = await Promise.all([
-      this.model.find({ valid: true, endingTime: { $lte: now } }),
+      this.pendingNotificationsEndedAuctions(),
       this.fetchAuctionsEndingInOneHour(now),
     ]);
     await Promise.all([
@@ -174,6 +175,80 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       track,
       buyerProfileId: user.profileId,
     });
+  }
+
+  private async pendingNotificationsEndedAuctions(): Promise<AuctionItem[]> {
+    return await TrackModel.aggregate<AuctionItem>([
+      {
+        $lookup: {
+          from: 'auctionitems',
+          localField: 'nftData.tokenId',
+          foreignField: 'tokenId',
+          as: 'auctionitem',
+        },
+      },
+      {
+        $addFields: {
+          auctionitem: {
+            $filter: {
+              input: '$auctionitem',
+              as: 'item',
+              cond: {
+                $and: [
+                  {
+                    $eq: ['$$item.valid', true],
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+      {
+        $unwind: {
+          path: '$auctionitem',
+        },
+      },
+      {
+        $lookup: {
+          from: 'notifications',
+          let: {
+            trackId: '$_id',
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ['$metadata.trackId', '$$trackId'],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: 'notification',
+        },
+      },
+      {
+        $match: {
+          $expr: {
+            $eq: [
+              {
+                $size: '$notification',
+              },
+              0,
+            ],
+          },
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: '$auctionitem',
+        },
+      },
+    ]);
   }
 
   private async fetchAuctionsEndingInOneHour(now: number): Promise<AuctionWithBids[]> {
