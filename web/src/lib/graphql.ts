@@ -516,7 +516,8 @@ export enum MusicianType {
   BeatMaker = 'BEAT_MAKER',
   Dj = 'DJ',
   Engineer = 'ENGINEER',
-  Instrumentalist = 'INSTRUMENTALIST'
+  Instrumentalist = 'INSTRUMENTALIST',
+  NotAnArtist = 'NOT_AN_ARTIST'
 }
 
 export type Mutation = {
