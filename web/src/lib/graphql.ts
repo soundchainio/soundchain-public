@@ -516,7 +516,8 @@ export enum MusicianType {
   BeatMaker = 'BEAT_MAKER',
   Dj = 'DJ',
   Engineer = 'ENGINEER',
-  Instrumentalist = 'INSTRUMENTALIST'
+  Instrumentalist = 'INSTRUMENTALIST',
+  NotAnArtist = 'NOT_AN_ARTIST'
 }
 
 export type Mutation = {
@@ -1678,7 +1679,7 @@ export type ChatsQuery = (
       & Pick<Chat, 'id' | 'message' | 'unread' | 'createdAt'>
       & { profile: (
         { __typename?: 'Profile' }
-        & Pick<Profile, 'displayName' | 'profilePicture' | 'verified' | 'teamMember'>
+        & Pick<Profile, 'displayName' | 'profilePicture' | 'verified' | 'teamMember' | 'userHandle'>
       ) }
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
@@ -2242,7 +2243,7 @@ export type MessageComponentFieldsFragment = (
   & Pick<Message, 'id' | 'message' | 'fromId' | 'toId' | 'createdAt'>
   & { fromProfile: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified'>
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle'>
   ) }
 );
 
@@ -3229,6 +3230,7 @@ export const MessageComponentFieldsFragmentDoc = gql`
     displayName
     profilePicture
     verified
+    userHandle
   }
 }
     `;
@@ -3644,6 +3646,7 @@ export const ChatsDocument = gql`
         profilePicture
         verified
         teamMember
+        userHandle
       }
       message
       unread
