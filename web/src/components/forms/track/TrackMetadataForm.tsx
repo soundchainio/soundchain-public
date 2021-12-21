@@ -26,11 +26,11 @@ export interface FormValues {
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
-  title: yup.string().required(),
-  description: yup.string().required(),
+  title: yup.string().max(100).required(),
+  description: yup.string().max(500).required(),
   artist: yup.string(),
-  album: yup.string(),
-  copyright: yup.string(),
+  album: yup.string().max(100),
+  copyright: yup.string().max(100),
   releaseYear: yup.number(),
   genres: yup.array(),
   artworkUrl: yup.string(),
@@ -112,19 +112,19 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
               </span>
             </div>
             <div className="flex flex-col flex-1 gap-2">
-              <InputField name="title" type="text" label="TRACK TITLE" />
+              <InputField name="title" type="text" label="TRACK TITLE" maxLength={100} />
               <InputField name="artist" type="text" label="ARTIST" disabled />
             </div>
           </div>
           <div className="px-4">
-            <TextareaField rows={3} name="description" label="DESCRIPTION" />
+            <TextareaField rows={3} name="description" label="DESCRIPTION" maxLength={500} />
           </div>
           <div className="px-4">
-            <InputField name="album" type="text" label="ALBUM" />
+            <InputField name="album" type="text" label="ALBUM" maxLength={100} />
           </div>
           <div className="px-4 flex gap-4 w-full">
             <InputField name="releaseYear" type="number" label="RELEASE YEAR" />
-            <InputField name="copyright" type="text" label="COPYRIGHT" />
+            <InputField name="copyright" type="text" label="COPYRIGHT" maxLength={100} />
           </div>
           <div className="px-4">
             <InputField name="royalty" type="number" label="ROYALTY %" />
