@@ -408,3 +408,12 @@ export const playbackCount: Handler = async () => {
     console.log('Finished');
   }
 };
+
+export const processAuctions: Handler = async () => {
+  await mongoose.connect(config.db.url, config.db.options);
+
+  const user = await UserModel.findOne({ handle: '_system' });
+  const context = new Context({ sub: user._id });
+
+  await context.auctionItemService.processAuctions();
+};

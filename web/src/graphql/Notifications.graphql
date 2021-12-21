@@ -28,6 +28,12 @@ query Notifications($sort: SortNotificationInput) {
       ... on DeletedCommentNotification {
         ...DeletedCommentNotificationFields
       }
+      ... on WonAuctionNotification {
+        ...WonAuctionNotificationFields
+      }
+      ... on AuctionIsEndingNotification {
+        ...AuctionIsEndingNotificationFields
+      }
     }
   }
 }
