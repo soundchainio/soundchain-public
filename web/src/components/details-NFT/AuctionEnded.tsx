@@ -15,9 +15,7 @@ export const AuctionEnded = ({ highestBid, isOwner }: AuctionEndedProps) => {
       <div className="flex flex-col m-8 gap-2">
         <div className="flex gap-1 justify-center">
           <CheckmarkFilled />
-          <p className="text-green-500 text-xs font-bold uppercase">
-            congrats, you {isOwner ? 'sold' : 'won'} this NFT!
-          </p>
+          <p className="text-green-600 text-xs font-bold">Congrats, you {isOwner ? 'sold' : 'won'} this NFT!</p>
         </div>
       </div>
       <div className="flex p-5 text-gray-80">

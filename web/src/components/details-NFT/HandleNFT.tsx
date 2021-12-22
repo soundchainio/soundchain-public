@@ -100,12 +100,7 @@ export const HandleNFT = ({
     }
     if (canComplete && isAuction) {
       return (
-        <ListedAction
-          href={`${router.asPath}/complete-auction`}
-          price={price}
-          action="COMPLETE AUCTION"
-          variant="buy-nft"
-        />
+        <ListedAction href={`${router.asPath}/complete-auction`} price={price} action="COMPLETE" variant="buy-nft" />
       );
     }
   }
@@ -207,9 +202,7 @@ const AuctionDetails = ({
             </NextLink>
           </div>
         )}
-        {countBids != 0 && (
-          <ListedAction href={completeHref} price={price} action="COMPLETE AUCTION" variant="buy-nft" />
-        )}
+        {countBids != 0 && <ListedAction href={completeHref} price={price} action="COMPLETE" variant="buy-nft" />}
         {endingDate && (
           <div className="flex flex-col text-xs items-center ">
             <Timer date={endingDate} />
