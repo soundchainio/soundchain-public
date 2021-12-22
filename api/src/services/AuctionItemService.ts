@@ -158,9 +158,6 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       BidModel.findOne({ auctionId: _id, amount: highestBid }),
       this.context.trackService.getTrackByTokenId(tokenId),
     ]);
-    if (!highestBidModel) {
-      return;
-    }
     const buyerProfile = await this.context.userService.getUserByWallet(highestBidModel.bidder);
     await this.context.notificationService.notifyWonAuction({
       track,
@@ -210,6 +207,28 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       {
         $unwind: {
           path: '$auctionitem',
+        },
+      },
+      {
+        $lookup: {
+          from: 'bids',
+          localField: 'auctionitem._id',
+          foreignField: 'auctionId',
+          as: 'bids',
+        },
+      },
+      {
+        $addFields: {
+          bidCount: {
+            $size: '$bids',
+          },
+        },
+      },
+      {
+        $match: {
+          bidCount: {
+            $gt: 0,
+          },
         },
       },
       {
