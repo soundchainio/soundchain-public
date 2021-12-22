@@ -5,7 +5,9 @@ import { useMe } from 'hooks/useMe';
 import { useUpdateOtpSecretMutation } from 'lib/graphql';
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import * as yup from 'yup';
-
+import { Copy2 as Copy } from 'icons/Copy2';
+import { Locker as LockerIcon } from 'icons/Locker';
+import { toast } from 'react-toastify';
 import qrcode from 'qrcode';
 import { authenticator } from 'otplib';
 
@@ -28,7 +30,6 @@ const service = 'Soundchain';
 export const SecurityForm = ({ afterSubmit, submitText, submitProps }: SecurityFormProps) => {
   const [token, setToken] = useState<string>('');
   const [secret, setSecret] = useState<string>('');
-  const [isValid, setIsValid] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isEnabled, setIsEnabled] = useState(false);
   const me = useMe();
@@ -48,13 +49,9 @@ export const SecurityForm = ({ afterSubmit, submitText, submitProps }: SecurityF
     qrcode.toCanvas(canvasRef.current, otpAuth, error => error && console.error(error));
   }, [me, secret, isEnabled]);
 
-  const onVerify = useCallback(() => {
-    if (!token) {
-      return;
-    }
-
+  const handleValidate = useCallback(() => {
     const isValid = authenticator.verify({ token, secret });
-    setIsValid(isValid);
+    isValid ? toast.success('Valid code') : toast.error('Invalid code');
     setToken('');
   }, [secret, token]);
 
@@ -63,8 +60,6 @@ export const SecurityForm = ({ afterSubmit, submitText, submitProps }: SecurityF
   const handleOPTChange = (e: React.ChangeEvent<HTMLInputElement>) => setToken(e.target.value);
 
   const onSubmit = async ({ isEnabled }: FormValues) => {
-    console.log('submit', { secret, isEnabled });
-
     await updateOTPSecret({ variables: { input: { otpSecret: isEnabled ? secret : '' } } });
 
     afterSubmit();
@@ -83,8 +78,9 @@ export const SecurityForm = ({ afterSubmit, submitText, submitProps }: SecurityF
     >
       {({ values: { isEnabled }, handleChange }) => (
         <Form className="flex flex-1 flex-col">
-          <label className="text-white">
+          <Label textSize="base">
             <Field
+              className="mr-2"
               type="checkbox"
               name="isEnabled"
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -93,21 +89,52 @@ export const SecurityForm = ({ afterSubmit, submitText, submitProps }: SecurityF
               }}
             />
             Enable 2FA
-          </label>
-          <div className="flex-grow space-y-8">
+          </Label>
+          <div className="flex-grow mt-4">
             <div className={`flex flex-col ${isEnabled ? '' : 'hidden'}`}>
-              <Label textSize="base">SCAN QR CODE:</Label>
+              <Label textSize="base">SCAN CODE OR ENTER KEY</Label>
+              <span className="text-gray-60 text-xs my-2">
+                Scan the code below with your authenticator app to add this account.
+              </span>
 
-              <canvas ref={canvasRef} />
+              <canvas className="self-center my-4" ref={canvasRef} />
 
-              <p className="text-white">{me?.otpSecret || secret}</p>
-              <p className="text-white">Test the code: </p>
+              <span className="text-gray-60 text-xs my-2">
+                Some autherticator apps also allow you to type in the text version instead.
+              </span>
+              <div className="flex flex-row text-xxs bg-gray-1A w-full pl-2 pr-3 py-2 items-center justify-between">
+                <div className="flex flex-row items-center w-10/12 justify-start">
+                  <LockerIcon />
+                  <span className="text-gray-80 md-text-sm font-bold mx-1 truncate w-full">{secret}</span>
+                </div>
+                <button
+                  className="flex flex-row gap-1 items-center border-2 border-gray-30 border-opacity-75 rounded p-1"
+                  onClick={() => {
+                    navigator.clipboard.writeText(secret);
+                    toast('Copied to clipboard');
+                  }}
+                  type="button"
+                >
+                  <Copy />
+                  <span className="text-gray-80 uppercase leading-none">copy</span>
+                </button>
+              </div>
 
-              <input type="text" onChange={handleOPTChange} value={token} />
-              <Button variant="rainbow" onClick={onVerify}>
-                VERIFY
-              </Button>
-              <p className={`${isValid ? 'text-green-500' : 'text-red-500'} `}>{isValid ? 'VALID' : 'INVALID'}</p>
+              <div className="mt-12">
+                <Label className="text-white mb-4">To validate the secret, enter the 6-digit code from the app</Label>
+                <div className="mt-2 flex justify-center gap-4">
+                  <Field
+                    className="w-48 px-4 tracking-[1em]"
+                    onChange={handleOPTChange}
+                    value={token}
+                    maxLength={6}
+                    placeholder="______"
+                  />
+                  <Button variant="edit-listing" onClick={handleValidate} disabled={!token}>
+                    VALIDATE
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
           <div className="flex flex-col">
