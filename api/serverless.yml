@@ -33,6 +33,10 @@ functions:
     handler: src/lambda.playbackCount
     events:
       - schedule: cron(0 15 * * ? *)
+  processAuctions:
+    handler: src/lambda.processAuctions
+    events:
+      - schedule: rate(5 minutes)
   mint:
     handler: src/lambda.mint
     timeout: 120
