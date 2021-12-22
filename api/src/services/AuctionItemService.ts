@@ -212,35 +212,21 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       {
         $lookup: {
           from: 'notifications',
-          let: {
-            trackId: '$_id',
-          },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    {
-                      $eq: ['$metadata.trackId', '$$trackId'],
-                    },
-                  ],
-                },
-              },
-            },
-          ],
+          localField: '_id',
+          foreignField: 'metadata.trackId',
           as: 'notification',
         },
       },
       {
-        $match: {
-          $expr: {
-            $eq: [
-              {
-                $size: '$notification',
-              },
-              0,
-            ],
+        $addFields: {
+          notificationCount: {
+            $size: '$notification',
           },
+        },
+      },
+      {
+        $match: {
+          notificationCount: 0,
         },
       },
       {
@@ -256,47 +242,58 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
 
     return await this.model.aggregate<AuctionWithBids>([
       {
-        $match: {
-          $expr: {
-            $and: [
+        $addFields: {
+          endingTimeInOneHour: {
+            $gte: [
+              '$endingTime',
               {
-                valid: true,
-              },
-              {
-                $gte: [
-                  '$endingTime',
-                  {
-                    $subtract: [now, oneHourInSecs],
-                  },
-                ],
+                $subtract: [now, oneHourInSecs],
               },
             ],
           },
         },
       },
       {
+        $match: {
+          valid: true,
+          endingTimeInOneHour: true,
+        },
+      },
+      {
         $lookup: {
           from: 'bids',
+          localField: '_id',
+          foreignField: 'auctionId',
           as: 'bids',
-          let: {
-            auctionId: '$_id',
-          },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    {
-                      $eq: ['$auctionId', '$$auctionId'],
-                    },
-                    {
-                      $eq: ['$notifiedEndingInOneHour', false],
-                    },
-                  ],
-                },
+        },
+      },
+      {
+        $addFields: {
+          bids: {
+            $filter: {
+              input: '$bids',
+              as: 'item',
+              cond: {
+                $and: [
+                  {
+                    $eq: ['$$item.notifiedEndingInOneHour', false],
+                  },
+                ],
               },
             },
-          ],
+          },
+        },
+      },
+      {
+        $addFields: {
+          bidCount: {
+            $size: '$bids',
+          },
+        },
+      },
+      {
+        $match: {
+          bidCount: { $gt: 0 },
         },
       },
     ]);
