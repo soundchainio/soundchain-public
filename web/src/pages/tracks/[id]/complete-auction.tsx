@@ -15,6 +15,7 @@ import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
+import { compareWallets } from 'utils/Wallet';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -79,7 +80,7 @@ export default function CompleteAuctionPage({ track }: TrackPageProps) {
     return null;
   }
 
-  const isOwner = auctionItem.auctionItem.auctionItem?.owner.toLowerCase() === account?.toLowerCase();
+  const isOwner = compareWallets(auctionItem.auctionItem.auctionItem?.owner, account);
   const saleEnded = (auctionItem.auctionItem?.auctionItem?.endingTime || 0) < Math.floor(Date.now() / 1000);
 
   const handleClaim = () => {

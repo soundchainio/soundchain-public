@@ -14,6 +14,7 @@ import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import React from 'react';
 import { SaleType } from 'types/SaleType';
+import { compareWallets } from 'utils/Wallet';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -62,8 +63,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
     return null;
   }
 
-  const ownerAddressAccount = listingPayload.auctionItem?.auctionItem?.owner.toLowerCase();
-  const isOwner = ownerAddressAccount === account?.toLowerCase();
+  const isOwner = compareWallets(listingPayload.auctionItem?.auctionItem?.owner, account);
   const isForSale = !!listingPayload.auctionItem?.auctionItem?.reservePrice ?? false;
   const startPrice =
     web3?.utils.fromWei(

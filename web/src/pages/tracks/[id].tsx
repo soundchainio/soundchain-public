@@ -28,13 +28,14 @@ import {
   useListingItemLazyQuery,
   useProfileLazyQuery,
   useTrackLazyQuery,
-  useUserByWalletLazyQuery,
+  useUserByWalletLazyQuery
 } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 import { AuthorActionsType } from 'types/AuthorActionsType';
+import { compareWallets } from 'utils/Wallet';
 import { HighestBid } from './[id]/complete-auction';
 
 export interface TrackPageProps {
@@ -133,10 +134,9 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
 
   const auctionIsOver = (listingPayload?.listingItem?.endingTime || 0) < Math.floor(Date.now() / 1000);
   const canComplete =
-    auctionIsOver &&
-    (highestBid.bidder?.toLowerCase() === account?.toLowerCase() ||
-      account?.toLowerCase() === listingPayload?.listingItem?.owner?.toLowerCase());
-  const isHighestBidder = highestBid.bidder ? highestBid.bidder.toLowerCase() === account?.toLowerCase() : undefined;
+    (auctionIsOver && compareWallets(highestBid.bidder, account)) ||
+    compareWallets(account, listingPayload?.listingItem?.owner);
+  const isHighestBidder = highestBid.bidder ? compareWallets(highestBid.bidder, account) : undefined;
   const startingDate = listingPayload?.listingItem?.startingTime
     ? new Date(listingPayload.listingItem.startingTime * 1000)
     : undefined;

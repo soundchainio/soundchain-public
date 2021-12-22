@@ -6,6 +6,7 @@ import { Matic } from 'icons/Matic';
 import { MetaMask } from 'icons/MetaMask';
 import { DefaultWallet, useUpdateDefaultWalletMutation } from 'lib/graphql';
 import React, { useCallback, useState } from 'react';
+import { compareWallets } from 'utils/Wallet';
 
 interface WalletSelectorProps {
   className?: string | undefined;
@@ -30,7 +31,7 @@ export const WalletSelector = ({ className, ownerAddressAccount }: WalletSelecto
   const isSoundChainSelected = selectedWallet === DefaultWallet.Soundchain;
   const balance = (isSoundChainSelected ? magicBalance : metamaskBalance) || 0;
 
-  if (magicAccount?.toLowerCase() === ownerAddressAccount && metamaskAccount?.toLowerCase() === ownerAddressAccount) {
+  if (compareWallets(magicAccount, ownerAddressAccount) && compareWallets(metamaskAccount, ownerAddressAccount)) {
     return null;
   }
 
