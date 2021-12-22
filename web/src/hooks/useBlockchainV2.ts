@@ -34,10 +34,8 @@ class BlockchainFunction<Type> {
   }
 
   protected beforeSending = async (web3: Web3, method: () => unknown) => {
-    if ((web3.currentProvider as SDKBase['rpcProvider']).isMagic) {
-      if (!(await magic.user.isLoggedIn()) && this.me) {
-        await magic.auth.loginWithMagicLink({ email: this.me.email });
-      }
+    if ((web3.currentProvider as SDKBase['rpcProvider']).isMagic && !(await magic.user.isLoggedIn()) && this.me) {
+      await magic.auth.loginWithMagicLink({ email: this.me.email });
     }
     return method();
   };

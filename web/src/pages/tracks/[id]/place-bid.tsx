@@ -164,12 +164,11 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
 
     placeBid(tokenId, account, amount)
       .onReceipt(() => {
-        setLoading(false);
         if (refetchHaveBided) refetchHaveBided();
         refetchCountBids();
       })
       .onError(() => {
-        toast('You may have been outbid. Please try again', { autoClose: 5 * 1000 });
+        toast.warn('You may have been outbid. Please try again', { autoClose: 5 * 1000 });
       })
       .finally(() => setLoading(false))
       .execute(web3);
