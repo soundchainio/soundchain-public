@@ -211,6 +211,28 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       },
       {
         $lookup: {
+          from: 'bids',
+          localField: 'auctionitem._id',
+          foreignField: 'auctionId',
+          as: 'bids',
+        },
+      },
+      {
+        $addFields: {
+          bidCount: {
+            $size: '$bids',
+          },
+        },
+      },
+      {
+        $match: {
+          bidCount: {
+            $gt: 0,
+          },
+        },
+      },
+      {
+        $lookup: {
           from: 'notifications',
           localField: '_id',
           foreignField: 'metadata.trackId',
