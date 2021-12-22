@@ -54,19 +54,7 @@ export default function BuyMaticPage() {
         <p className="flex items-center justify-center">
           {MaticSign} on the {PolygonSign} chain.
         </p>
-        <a
-          href="https://macncheese.finance/matic-polygon-mainnet-faucet.php"
-          target="_blank"
-          rel="noreferrer"
-          aria-label={`Claim free 0.001 Matic on Mac&Cheese Finance`}
-        >
-          <div className="flex flex-col space-y-2 items-center rounded-lg p-6 bg-black border-2 border-gray-40 text-center my-4">
-            <div className="flex items-center text-gray-200">{MacNCheeseSign} Finance</div>
-            <div className="flex items-center font-bold">
-              Claim <span className="text-white mx-2">FREE</span> .001 {MaticSign}
-            </div>
-          </div>
-        </a>
+        <PolygonFaucetLink />
         <p className="text-center my-10 font-bold">
           If you live in the United States, the following exchanges support buying Matic.
         </p>
@@ -103,3 +91,35 @@ export default function BuyMaticPage() {
     </Layout>
   );
 }
+
+export const MacChesseLink = () => (
+  <a
+    href="https://macncheese.finance/matic-polygon-mainnet-faucet.php"
+    target="_blank"
+    rel="noreferrer"
+    aria-label={`Claim free 0.001 Matic on Mac&Cheese Finance`}
+  >
+    <div className="flex flex-col space-y-2 items-center rounded-lg p-6 bg-black border-2 border-gray-40 text-center my-4">
+      <div className="flex items-center text-gray-200">{MacNCheeseSign} Finance</div>
+      <div className="flex items-center font-bold">
+        Claim <span className="text-white mx-2">FREE</span> .001 {MaticSign}
+      </div>
+    </div>
+  </a>
+);
+
+export const PolygonFaucetLink = () => (
+  <a
+    href="https://faucet.polygon.technology/"
+    target="_blank"
+    rel="noreferrer"
+    aria-label={`Claim free 0.1 Matic on Polygon Faucet`}
+  >
+    <div className="flex flex-col space-y-2 items-center rounded-lg p-6 bg-black border-2 border-gray-40 text-center my-4">
+      <div className="flex items-center text-gray-200">{PolygonSign} Faucet</div>
+      <div className="flex items-center font-bold">
+        Claim <span className="text-white mx-2">FREE</span> 0.1 {MaticSign}
+      </div>
+    </div>
+  </a>
+);

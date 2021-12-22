@@ -14,8 +14,8 @@ import { useModalDispatch } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
-import { Matic } from 'icons/Matic';
 import { Ellipsis } from 'icons/Ellipsis';
+import { Matic } from 'icons/Matic';
 import { cacheFor, createApolloClient } from 'lib/apollo';
 import {
   PendingRequest,
@@ -28,13 +28,14 @@ import {
   useListingItemLazyQuery,
   useProfileLazyQuery,
   useTrackLazyQuery,
-  useUserByWalletLazyQuery,
+  useUserByWalletLazyQuery
 } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 import { AuthorActionsType } from 'types/AuthorActionsType';
+import { compareWallets } from 'utils/Wallet';
 import { HighestBid } from './[id]/complete-auction';
 
 export interface TrackPageProps {
@@ -132,8 +133,10 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const price = web3?.utils.fromWei(priceValue ?? '0', 'ether');
 
   const auctionIsOver = (listingPayload?.listingItem?.endingTime || 0) < Math.floor(Date.now() / 1000);
-  const canComplete = auctionIsOver && highestBid.bidder?.toLowerCase() === account?.toLowerCase();
-  const isHighestBidder = highestBid.bidder ? highestBid.bidder.toLowerCase() === account?.toLowerCase() : undefined;
+  const canComplete =
+    (auctionIsOver && compareWallets(highestBid.bidder, account)) ||
+    compareWallets(account, listingPayload?.listingItem?.owner);
+  const isHighestBidder = highestBid.bidder ? compareWallets(highestBid.bidder, account) : undefined;
   const startingDate = listingPayload?.listingItem?.startingTime
     ? new Date(listingPayload.listingItem.startingTime * 1000)
     : undefined;

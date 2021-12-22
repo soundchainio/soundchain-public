@@ -4,9 +4,10 @@ import { HighestBid } from 'pages/tracks/[id]/complete-auction';
 
 interface AuctionEndedProps {
   highestBid: HighestBid;
+  isOwner: boolean;
 }
 
-export const AuctionEnded = ({ highestBid }: AuctionEndedProps) => {
+export const AuctionEnded = ({ highestBid, isOwner }: AuctionEndedProps) => {
   const winningBid = (parseFloat(highestBid.bid) / 1e18).toFixed(6);
 
   return (
@@ -14,12 +15,8 @@ export const AuctionEnded = ({ highestBid }: AuctionEndedProps) => {
       <div className="flex flex-col m-8 gap-2">
         <div className="flex gap-1 justify-center">
           <CheckmarkFilled />
-          <p className="text-white text-xs uppercase">congrats, you won this NFT! </p>
+          <p className="text-green-600 text-xs font-bold">Congrats, you {isOwner ? 'sold' : 'won'} this NFT!</p>
         </div>
-        <p className="text-gray-80 text-xs text-center">
-          To get set up for selling on SoundChain for the first time, you must approve the SoundChain marketplace smart
-          contracts to move your NFT. This is only required once and includes a small gas fee.
-        </p>
       </div>
       <div className="flex p-5 text-gray-80">
         <p className="flex items-center flex-shrink-0 justify-start font-bold text-xs md-text-sm uppercase">

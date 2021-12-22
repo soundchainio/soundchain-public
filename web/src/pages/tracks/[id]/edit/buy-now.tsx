@@ -1,4 +1,3 @@
-import React from 'react';
 import { BackButton } from 'components/Buttons/BackButton';
 import { ListNFTBuyNow, ListNFTBuyNowFormValues } from 'components/details-NFT/ListNFTBuyNow';
 import { Layout } from 'components/Layout';
@@ -13,7 +12,9 @@ import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemQuery, useUpdat
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
+import React from 'react';
 import { SaleType } from 'types/SaleType';
+import { compareWallets } from 'utils/Wallet';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -63,8 +64,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
     return null;
   }
 
-  const ownerAddressAccount = listingPayload.buyNowItem?.buyNowItem?.owner.toLowerCase();
-  const isOwner = ownerAddressAccount === account?.toLowerCase();
+  const isOwner = compareWallets(listingPayload.buyNowItem?.buyNowItem?.owner, account);
   const isForSale = !!listingPayload.buyNowItem?.buyNowItem?.pricePerItem ?? false;
   const price =
     web3?.utils.fromWei(

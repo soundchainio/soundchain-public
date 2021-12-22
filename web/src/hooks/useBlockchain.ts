@@ -41,19 +41,14 @@ const useBlockchain = () => {
   }, []);
 
   const burnNftToken = useCallback(
-    (
-      web3: Web3,
-      tokenId: number,
-      from: string,
-      onConfirmation: (confirmationNumber: number, receipt: TransactionReceipt) => void,
-    ) => {
+    (web3: Web3, tokenId: number, from: string, onConfirmation: () => void) => {
       const contract = new web3.eth.Contract(
         soundchainContract.abi as AbiItem[],
         nftAddress,
       ) as unknown as Soundchain721;
       return beforeSending(
         web3,
-        async () => await contract.methods.burn(tokenId).send({ from, gas }).on('confirmation', onConfirmation),
+        async () => await contract.methods.burn(tokenId).send({ from, gas }).on('receipt', onConfirmation),
       );
     },
     [beforeSending],
@@ -311,19 +306,6 @@ const useBlockchain = () => {
     [beforeSending],
   );
 
-  const placeBid = useCallback(
-    (web3: Web3, tokenId: number, from: string, value: string, onReceipt: (receipt: TransactionReceipt) => void) => {
-      const auctionContract = new web3.eth.Contract(
-        soundchainAuction.abi as AbiItem[],
-        auctionAddress,
-      ) as unknown as SoundchainAuction;
-      beforeSending(web3, () => {
-        auctionContract.methods.placeBid(nftAddress, tokenId).send({ from, gas, value }).on('receipt', onReceipt);
-      });
-    },
-    [beforeSending],
-  );
-
   const resultAuction = useCallback(
     (web3: Web3, tokenId: number, from: string, onReceipt: (receipt: TransactionReceipt) => void) => {
       const auctionContract = new web3.eth.Contract(
@@ -399,7 +381,6 @@ const useBlockchain = () => {
     isTokenOwner,
     listItem,
     mintNftToken,
-    placeBid,
     resultAuction,
     sendMatic,
     transferNftToken,

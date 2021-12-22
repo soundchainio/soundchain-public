@@ -31,8 +31,11 @@ import { protectPage } from 'lib/protectPage';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 import { currency } from 'utils/format';
+import { compareWallets } from 'utils/Wallet';
 import { Timer } from '../[id]';
 import { HighestBid } from './complete-auction';
+import { toast } from 'react-toastify';
+import useBlockchainV2 from 'hooks/useBlockchainV2';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -67,7 +70,8 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 
 export default function PlaceBidPage({ track }: TrackPageProps) {
   const me = useMe();
-  const { placeBid, getHighestBid } = useBlockchain();
+  const { getHighestBid } = useBlockchain();
+  const { placeBid } = useBlockchainV2();
   const { account, web3 } = useWalletContext();
   const { data: maticQuery } = useMaticUsdQuery();
   const [loading, setLoading] = useState(false);
@@ -121,7 +125,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     return null;
   }
 
-  const isOwner = auctionItem.auctionItem?.owner.toLowerCase() === account?.toLowerCase();
+  const isOwner = compareWallets(auctionItem.auctionItem?.owner, account);
   const isForSale = !!auctionItem.auctionItem?.reservePrice ?? false;
   const hasStarted = (auctionItem.auctionItem?.startingTime ?? 0) <= new Date().getTime() / 1000;
   const hasEnded = new Date().getTime() / 1000 > (auctionItem.auctionItem?.endingTime ?? 0);
@@ -132,7 +136,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     ? new Date(auctionItem.auctionItem.endingTime * 1000)
     : undefined;
   const futureSale = startingDate ? startingDate.getTime() > new Date().getTime() : false;
-  const isHighestBidder = highestBid ? highestBid.bidder.toLowerCase() === account?.toLowerCase() : undefined;
+  const isHighestBidder = highestBid ? compareWallets(highestBid.bidder, account) : undefined;
   const auctionIsOver = (auctionItem.auctionItem?.endingTime || 0) < Math.floor(Date.now() / 1000);
   const bidCount = countBids?.countBids.numberOfBids ?? 0;
   let price: string;
@@ -158,11 +162,18 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
       return;
     }
     const amount = (bidAmount * 1e18).toString();
-    placeBid(web3, tokenId, account, amount, () => {
-      setLoading(false);
-      if (refetchHaveBided) refetchHaveBided();
-      refetchCountBids();
-    });
+
+    placeBid(tokenId, account, amount)
+      .onReceipt(() => {
+        if (refetchHaveBided) refetchHaveBided();
+        refetchCountBids();
+      })
+      .onError(() => {
+        toast.warn('You may have been outbid. Please try again', { autoClose: 5 * 1000 });
+      })
+      .finally(() => setLoading(false))
+      .execute(web3);
+
     setLoading(true);
   };
 

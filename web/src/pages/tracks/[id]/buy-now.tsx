@@ -15,6 +15,7 @@ import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
+import { compareWallets } from 'utils/Wallet';
 import { Timer } from '../[id]';
 
 export interface TrackPageProps {
@@ -69,7 +70,7 @@ export default function BuyNowPage({ track }: TrackPageProps) {
     return null;
   }
 
-  const isOwner = listingPayload.buyNowItem?.buyNowItem?.owner.toLowerCase() === account?.toLowerCase();
+  const isOwner = compareWallets(listingPayload.buyNowItem?.buyNowItem?.owner, account);
   const isForSale = !!listingPayload.buyNowItem?.buyNowItem?.pricePerItem ?? false;
   const price = web3?.utils.fromWei(
     listingPayload.buyNowItem?.buyNowItem?.pricePerItem.toLocaleString('fullwide', { useGrouping: false }) || '0',

@@ -33,7 +33,6 @@ export const HandleNFT = ({
   endingDate,
 }: HandleNFTProps) => {
   const router = useRouter();
-
   if (isOwner) {
     if (!canList) {
       return (
@@ -63,6 +62,7 @@ export const HandleNFT = ({
           endingDate={endingDate}
           price={price}
           cancelHref={`${router.asPath}/cancel-auction`}
+          completeHref={`${router.asPath}/complete-auction`}
         />
       );
     }
@@ -100,12 +100,7 @@ export const HandleNFT = ({
     }
     if (canComplete && isAuction) {
       return (
-        <ListedAction
-          href={`${router.asPath}/complete-auction`}
-          price={price}
-          action="COMPLETE AUCTION"
-          variant="buy-nft"
-        />
+        <ListedAction href={`${router.asPath}/complete-auction`} price={price} action="COMPLETE" variant="buy-nft" />
       );
     }
   }
@@ -179,9 +174,17 @@ interface AuctionDetailsProps {
   price: string | undefined | null;
   countBids?: number;
   endingDate?: Date;
+  completeHref: string;
 }
 
-const AuctionDetails = ({ auctionIsOver, price, countBids, endingDate, cancelHref }: AuctionDetailsProps) => {
+const AuctionDetails = ({
+  auctionIsOver,
+  price,
+  countBids,
+  endingDate,
+  cancelHref,
+  completeHref,
+}: AuctionDetailsProps) => {
   return (
     <div className="w-full bg-black text-white flex items-center py-3 px-4">
       <div className="flex flex-col flex-1">
@@ -199,7 +202,7 @@ const AuctionDetails = ({ auctionIsOver, price, countBids, endingDate, cancelHre
             </NextLink>
           </div>
         )}
-        {countBids != 0 && <div className="text-xs font-bold text-blue-400">[{countBids} bids]</div>}
+        {countBids != 0 && <ListedAction href={completeHref} price={price} action="COMPLETE" variant="buy-nft" />}
         {endingDate && (
           <div className="flex flex-col text-xs items-center ">
             <Timer date={endingDate} />
