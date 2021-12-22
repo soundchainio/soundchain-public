@@ -33,6 +33,8 @@ import { useEffect, useState } from 'react';
 import { currency } from 'utils/format';
 import { Timer } from '../[id]';
 import { HighestBid } from './complete-auction';
+import { toast } from 'react-toastify';
+import useBlockchainV2 from 'hooks/useBlockchainV2';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -67,7 +69,8 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 
 export default function PlaceBidPage({ track }: TrackPageProps) {
   const me = useMe();
-  const { placeBid, getHighestBid } = useBlockchain();
+  const { getHighestBid } = useBlockchain();
+  const { placeBid } = useBlockchainV2();
   const { account, web3 } = useWalletContext();
   const { data: maticQuery } = useMaticUsdQuery();
   const [loading, setLoading] = useState(false);
@@ -158,11 +161,19 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
       return;
     }
     const amount = (bidAmount * 1e18).toString();
-    placeBid(web3, tokenId, account, amount, () => {
-      setLoading(false);
-      if (refetchHaveBided) refetchHaveBided();
-      refetchCountBids();
-    });
+
+    placeBid(tokenId, account, amount)
+      .onReceipt(() => {
+        setLoading(false);
+        if (refetchHaveBided) refetchHaveBided();
+        refetchCountBids();
+      })
+      .onError(() => {
+        toast('You may have been outbid. Please try again', { autoClose: 5 * 1000 });
+      })
+      .finally(() => setLoading(false))
+      .execute(web3);
+
     setLoading(true);
   };
 
