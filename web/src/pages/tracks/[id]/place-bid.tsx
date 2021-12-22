@@ -31,6 +31,7 @@ import { protectPage } from 'lib/protectPage';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 import { currency } from 'utils/format';
+import { compareWallets } from 'utils/Wallet';
 import { Timer } from '../[id]';
 import { HighestBid } from './complete-auction';
 import { toast } from 'react-toastify';
@@ -124,7 +125,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     return null;
   }
 
-  const isOwner = auctionItem.auctionItem?.owner.toLowerCase() === account?.toLowerCase();
+  const isOwner = compareWallets(auctionItem.auctionItem?.owner, account);
   const isForSale = !!auctionItem.auctionItem?.reservePrice ?? false;
   const hasStarted = (auctionItem.auctionItem?.startingTime ?? 0) <= new Date().getTime() / 1000;
   const hasEnded = new Date().getTime() / 1000 > (auctionItem.auctionItem?.endingTime ?? 0);
@@ -135,7 +136,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     ? new Date(auctionItem.auctionItem.endingTime * 1000)
     : undefined;
   const futureSale = startingDate ? startingDate.getTime() > new Date().getTime() : false;
-  const isHighestBidder = highestBid ? highestBid.bidder.toLowerCase() === account?.toLowerCase() : undefined;
+  const isHighestBidder = highestBid ? compareWallets(highestBid.bidder, account) : undefined;
   const auctionIsOver = (auctionItem.auctionItem?.endingTime || 0) < Math.floor(Date.now() / 1000);
   const bidCount = countBids?.countBids.numberOfBids ?? 0;
   let price: string;
