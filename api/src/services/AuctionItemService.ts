@@ -138,7 +138,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
   async processAuctions(): Promise<void> {
     const now = getNow();
     const [auctionsEnded, auctionsEndingInOneHour] = await Promise.all([
-      this.pendingNotificationsEndedAuctions(),
+      this.pendingNotificationsEndedAuctions(now),
       this.fetchAuctionsEndingInOneHour(now),
     ]);
     await Promise.all([
@@ -177,7 +177,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
     });
   }
 
-  private async pendingNotificationsEndedAuctions(): Promise<AuctionItem[]> {
+  private async pendingNotificationsEndedAuctions(now: number): Promise<AuctionItem[]> {
     return await TrackModel.aggregate<AuctionItem>([
       {
         $lookup: {
@@ -197,6 +197,9 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
                 $and: [
                   {
                     $eq: ['$$item.valid', true],
+                  },
+                  {
+                    $lte: ['$$item.endingTime', now],
                   },
                 ],
               },
