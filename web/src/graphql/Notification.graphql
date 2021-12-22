@@ -27,5 +27,11 @@ query Notification($id: String!) {
     ... on DeletedCommentNotification {
       ...DeletedCommentNotificationFields
     }
+    ... on WonAuctionNotification {
+      ...WonAuctionNotificationFields
+    }
+    ... on AuctionIsEndingNotification {
+      ...AuctionIsEndingNotificationFields
+    }
   }
 }

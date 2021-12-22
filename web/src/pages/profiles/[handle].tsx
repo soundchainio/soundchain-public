@@ -141,7 +141,7 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
             </div>
           </div>
           <div className="flex flex-row mt-4">
-            <div>
+            <div className="min-w-0">
               <DisplayName name={displayName} verified={verified} teamMember={teamMember} />
               <p className="text-gray-80 text-sm">@{userHandle}</p>
               <p className="text-gray-80 py-2 text-sm">{bio}</p>

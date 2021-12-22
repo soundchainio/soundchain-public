@@ -1,3 +1,4 @@
+import { AuctionIsEndingNotificationResolver } from './AuctionIsEndingNotificationResolver';
 import { AuctionItemResolver } from './AuctionItemResolver';
 import { BuyNowItemResolver } from './BuyNowItemResolver';
 import { ChatResolver } from './ChatResolver';
@@ -27,14 +28,17 @@ import { TrackResolver } from './TrackResolver';
 import { UploadResolver } from './UploadResolver';
 import { UserResolver } from './UserResolver';
 import { VerificationRequestNotificationResolver } from './VerificationRequestNotificationResolver';
+import { WonAuctionNotificationResolver } from './WonAuctionNotificationResolver';
 
 export const resolvers = [
+  AuctionIsEndingNotificationResolver,
   AuctionItemResolver,
   BuyNowItemResolver,
   ChatResolver,
   CommentNotificationResolver,
-  DeletedCommentNotificationResolver,
   CommentResolver,
+  DeletedCommentNotificationResolver,
+  DeletedPostNotificationResolver,
   ExploreResolver,
   FeedResolver,
   FollowerNotificationResolver,
@@ -43,7 +47,7 @@ export const resolvers = [
   MessageResolver,
   MintingRequestResolver,
   NewPostNotificationResolver,
-  DeletedPostNotificationResolver,
+  NewVerificationRequestNotificationResolver,
   NFTSoldNotificationResolver,
   NotificationResolver,
   PinningResolver,
@@ -57,5 +61,5 @@ export const resolvers = [
   UploadResolver,
   UserResolver,
   VerificationRequestNotificationResolver,
-  NewVerificationRequestNotificationResolver,
+  WonAuctionNotificationResolver,
 ] as const;
