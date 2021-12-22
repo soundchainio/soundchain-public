@@ -158,6 +158,9 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       BidModel.findOne({ auctionId: _id, amount: highestBid }),
       this.context.trackService.getTrackByTokenId(tokenId),
     ]);
+    if (!highestBidModel) {
+      return;
+    }
     const buyerProfile = await this.context.userService.getUserByWallet(highestBidModel.bidder);
     await this.context.notificationService.notifyWonAuction({
       track,
