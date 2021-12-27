@@ -117,7 +117,7 @@ export default function SettingsPage() {
           <Link to="/social-links" label="Social Link(s)" value={'Click to view your social links' || 'Not selected'} />
           <OTPLink
             to="/security"
-            label="2FA Security"
+            label="Two-factor Security"
             secret={me.otpSecret || ''}
             value={me.otpSecret ? 'Enabled' : 'Disabled'}
           />

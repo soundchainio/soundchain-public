@@ -88,7 +88,7 @@ export const SecurityForm = ({ afterSubmit, submitText, submitProps }: SecurityF
                 handleChange(e);
               }}
             />
-            Enable 2FA
+            Enable Two-Factor
           </Label>
           <div className="flex-grow mt-4">
             <div className={`flex flex-col ${isEnabled ? '' : 'hidden'}`}>

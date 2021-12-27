@@ -7,7 +7,7 @@ import { useRouter } from 'next/router';
 import React from 'react';
 
 const topNavBarProps: TopNavBarProps = {
-  title: '2FA Security',
+  title: 'Two-factor Security',
   leftButton: <BackButton />,
 };
 
