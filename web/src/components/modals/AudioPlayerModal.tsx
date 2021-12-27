@@ -49,7 +49,8 @@ export const AudioPlayerModal = () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Listen to this SoundChain track:  ${currentSong.title} - ${currentSong.artist}`,
+          title: `SoundChain`,
+          text: `Listen to this SoundChain track:  ${currentSong.title} - ${currentSong.artist}`,
           url,
         });
       } catch (error) {
