@@ -47,6 +47,10 @@ export class User extends Model {
   @prop({ required: false })
   otpSecret: string;
 
+  @Field({ nullable: true })
+  @prop({ required: false })
+  otpRecoveryPhrase: string;
+
   @Field(() => Date)
   createdAt: Date;
 

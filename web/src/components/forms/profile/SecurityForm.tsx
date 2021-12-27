@@ -1,8 +1,9 @@
+import * as bip39 from 'bip39';
 import { Button, ButtonProps } from 'components/Button';
 import { Label } from 'components/Label';
 import { Field, Form, Formik } from 'formik';
 import { useMe } from 'hooks/useMe';
-import { useUpdateOtpSecretMutation } from 'lib/graphql';
+import { useUpdateOtpMutation } from 'lib/graphql';
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import * as yup from 'yup';
 import { Copy2 as Copy } from 'icons/Copy2';
@@ -33,7 +34,10 @@ export const SecurityForm = ({ afterSubmit, submitText, submitProps }: SecurityF
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isEnabled, setIsEnabled] = useState(false);
   const me = useMe();
-  const [updateOTPSecret, { loading }] = useUpdateOtpSecretMutation();
+  const [updateOTP, { loading }] = useUpdateOtpMutation();
+
+  const mnemonic = bip39.generateMnemonic();
+  // console.log(bip39.validateMnemonic(mnemonic));
 
   useEffect(() => {
     setIsEnabled(Boolean(me?.otpSecret));
@@ -60,7 +64,9 @@ export const SecurityForm = ({ afterSubmit, submitText, submitProps }: SecurityF
   const handleOPTChange = (e: React.ChangeEvent<HTMLInputElement>) => setToken(e.target.value);
 
   const onSubmit = async ({ isEnabled }: FormValues) => {
-    await updateOTPSecret({ variables: { input: { otpSecret: isEnabled ? secret : '' } } });
+    await updateOTP({
+      variables: { input: { otpSecret: isEnabled ? secret : '', otpRecoveryPhrase: mnemonic } },
+    });
 
     afterSubmit();
   };

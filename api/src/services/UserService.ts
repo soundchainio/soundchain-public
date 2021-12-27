@@ -62,8 +62,12 @@ export class UserService extends ModelService<typeof User> {
     return updatedUser;
   }
 
-  async updateOTPSecret({ _id, otpSecret }: Pick<User, '_id' | 'otpSecret'>): Promise<User> {
-    const updatedUser = await UserModel.findByIdAndUpdate(_id, { otpSecret }, { new: true });
+  async updateOTP({
+    _id,
+    otpSecret,
+    otpRecoveryPhrase,
+  }: Pick<User, '_id' | 'otpSecret' | 'otpRecoveryPhrase'>): Promise<User> {
+    const updatedUser = await UserModel.findByIdAndUpdate(_id, { otpSecret, otpRecoveryPhrase }, { new: true });
     if (!updatedUser) {
       throw new Error(`Could not update the profile with id: ${_id}`);
     }
