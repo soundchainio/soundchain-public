@@ -49,8 +49,8 @@ export const ReactionsModal = () => {
     <Modal
       show={show}
       title={getTitle()}
-      rightButton={
-        <div className="flex justify-end mr-6">
+      leftButton={
+        <div className="flex justify-start ml-6">
           <button aria-label="Close" className="w-10 h-10 flex justify-center items-center" onClick={onClose}>
             <DownArrow />
           </button>
