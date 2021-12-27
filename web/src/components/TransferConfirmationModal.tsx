@@ -1,18 +1,28 @@
 import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { Form, Formik } from 'formik';
+import { InputField } from 'components/InputField';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { useMaxGasFee } from 'hooks/useMaxGasFee';
+import { useMe } from 'hooks/useMe';
 import { Logo } from 'icons/Logo';
 import { Matic } from 'icons/Matic';
 import router from 'next/router';
 import React, { useState } from 'react';
+import { toast } from 'react-toastify';
 import { Button } from './Button';
 import { Label } from './Label';
 import { Account, Wallet } from './Wallet';
+import { authenticator } from 'otplib';
+import * as yup from 'yup';
+
+interface FormValues {
+  token: string;
+}
 
 export const TransferConfirmationModal = () => {
+  const me = useMe();
   const { showTransferConfirmation, walletRecipient, amountToTransfer } = useModalState();
   const { dispatchShowTransferConfirmationModal } = useModalDispatch();
   const [loading, setLoading] = useState(false);
@@ -30,10 +40,12 @@ export const TransferConfirmationModal = () => {
   };
 
   const initialValues = {
-    recipient: '',
-    amount: '0.00',
-    totalGasFee: '',
+    token: '',
   };
+
+  const validationSchema = yup.object().shape({
+    token: me?.otpSecret ? yup.string().required('Two-Factor token is required') : yup.string(),
+  });
 
   const hasEnoughFunds = () => {
     if (balance && maxGasFee && amountToTransfer) {
@@ -42,12 +54,20 @@ export const TransferConfirmationModal = () => {
     return false;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = ({ token }: FormValues) => {
+    if (token) {
+      const isValid = authenticator.verify({ token, secret: me?.otpSecret || '' });
+      if (!isValid) {
+        toast.error('Invalid token code');
+        return;
+      }
+    }
+
     if (hasEnoughFunds()) {
       try {
         setLoading(true);
         const onReceipt = () => {
-          alert('Transaction completed!');
+          toast.success('Transaction completed!');
           setLoading(false);
           handleClose();
           refetchBalance();
@@ -58,10 +78,12 @@ export const TransferConfirmationModal = () => {
         }
       } catch (e) {
         setLoading(false);
-        alert('We had some trouble, please try again later!');
+        toast.error('We had some trouble, please try again later!');
       }
     } else {
-      alert("Uh-oh, it seems you don't have enough funds for this transaction. Please select an appropriate amount");
+      toast.error(
+        "Uh-oh, it seems you don't have enough funds for this transaction. Please select an appropriate amount",
+      );
       handleClose();
     }
   };
@@ -77,7 +99,7 @@ export const TransferConfirmationModal = () => {
         </div>
       }
     >
-      <Formik initialValues={initialValues} onSubmit={handleSubmit}>
+      <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
         <Form className="flex flex-col w-full h-full justify-between" autoComplete="off">
           <div className="flex flex-col mb-auto space-y-6 h-full justify-between">
             <div className="flex flex-col h-full justify-around">
@@ -92,6 +114,7 @@ export const TransferConfirmationModal = () => {
                 </p>
                 <p>This transaction cannot be undone.</p>
               </div>
+              {me?.otpSecret && <InputField label="Two-Factor token" name="token" type="text" maxLength={6} />}
               <div className="flex flex-col space-y-6 py-6">
                 <div className="space-y-2">
                   <div className="px-4">
