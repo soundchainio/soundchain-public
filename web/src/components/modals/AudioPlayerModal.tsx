@@ -7,6 +7,7 @@ import { DownArrow } from 'icons/DownArrow';
 import { Forward } from 'icons/ForwardButton';
 import { HeartBorder } from 'icons/HeartBorder';
 import { HeartFull } from 'icons/HeartFull';
+import { Info } from 'icons/Info';
 import { Pause } from 'icons/PauseBottomAudioPlayer';
 import { Play } from 'icons/PlayBottomAudioPlayer';
 import { Rewind } from 'icons/RewindButton';
@@ -83,17 +84,20 @@ export const AudioPlayerModal = () => {
             </div>
           </div>
           <div className="flex justify-between mt-7 mb-4 w-full cursor-pointer">
-            <div className="flex w-full">
+            <div className="flex w-full gap-4">
               <NextLink href={`/tracks/${currentSong.trackId}`}>
-                <div className="flex flex-col flex-1 gap-1">
-                  <h2 className="font-black">{currentSong.title || 'Unknown title'}</h2>
+                <a className="flex flex-col flex-1 gap-1 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <h2 className="font-black truncate">{currentSong.title || 'Unknown title'}</h2>
+                    <Info className="flex-shrink-0" />
+                  </div>
                   <h3 className="font-medium">{currentSong.artist || 'Unknown artist'}</h3>
-                </div>
+                </a>
               </NextLink>
-              <div className="flex items-center pl-4" onClick={handleFavorite}>
+              <button className="flex items-center" onClick={handleFavorite}>
                 {isFavorite && <HeartFull />}
                 {!isFavorite && <HeartBorder />}
-              </div>
+              </button>
             </div>
           </div>
           <Slider className="audio-player" min={0} max={duration} value={progress} onChange={onSliderChange} />
