@@ -11,10 +11,12 @@ import { Info } from 'icons/Info';
 import { Pause } from 'icons/PauseBottomAudioPlayer';
 import { Play } from 'icons/PlayBottomAudioPlayer';
 import { Rewind } from 'icons/RewindButton';
+import { Share } from 'icons/Share';
 import { TrackDocument, useToggleFavoriteMutation } from 'lib/graphql';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import { remainingTime, timeFromSecs } from 'utils/calculateTime';
 
 export const AudioPlayerModal = () => {
@@ -42,6 +44,19 @@ export const AudioPlayerModal = () => {
     dispatchShowAudioPlayerModal(false);
   };
 
+  const handleSharing = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({ url: `${window.location.origin}/tracks/${currentSong.trackId}` });
+      } catch (error) {
+        console.error(`Error on sharing track: ${error}`);
+      }
+    } else {
+      await navigator.clipboard.writeText(`${window.location.origin}/tracks/${currentSong.trackId}`);
+      toast('URL copied to clipboard');
+    }
+  };
+
   const onSliderChange = (value: number) => {
     setProgressStateFromSlider(value);
   };
@@ -67,10 +82,21 @@ export const AudioPlayerModal = () => {
     <Modal
       show={isOpen}
       title={'Now Playing'}
-      rightButton={
+      leftButton={
         <div className="flex justify-end mr-6">
           <button aria-label="Close" className="w-10 h-10 flex justify-center items-center" onClick={handleClose}>
             <DownArrow />
+          </button>
+        </div>
+      }
+      rightButton={
+        <div className="flex justify-end mr-6">
+          <button
+            className="flex justify-center items-center gap-1 text-gray-80 text-xs font-black border-gray-80 border-2 rounded py-1 px-2"
+            onClick={handleSharing}
+          >
+            <Share />
+            Share
           </button>
         </div>
       }
