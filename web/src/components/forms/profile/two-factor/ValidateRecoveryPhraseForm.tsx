@@ -1,13 +1,51 @@
-import { Label } from 'components/Label';
+import { useFormikContext } from 'formik';
 import { InputField } from 'components/InputField';
+import React, { useState } from 'react';
+import { Badge } from 'components/Badge';
+
+type FormValues = {
+  recoveryPhrase: string;
+};
+
+const shuffle = (array: string[]) => array.sort(() => (Math.random() > 0.5 ? 1 : -1));
 
 export const ValidateRecoveryPhraseForm = () => {
+  const {
+    values: { recoveryPhrase },
+    setFieldValue,
+  } = useFormikContext<FormValues>();
+  const [words, setWords] = useState(shuffle(recoveryPhrase.split(' ')));
+  const [phrase, setPhrase] = useState<string[]>([]);
+
+  const handleAdd = (word: string) => {
+    const updatedPhrase = [...phrase, word];
+    setPhrase(updatedPhrase);
+    setFieldValue('recoveryPhraseInput', updatedPhrase.join(' '));
+    setWords(words => words.filter(w => w !== word));
+  };
+
+  const handleClear = () => {
+    setFieldValue('recoveryPhraseInput', '');
+    setWords(shuffle(recoveryPhrase.split(' ')));
+    setPhrase([]);
+  };
+
   return (
     <div className="flex flex-col flex-grow">
-      <Label className="text-white mb-4">
-        To validate the recovery phrase, enter the 12 words in the correct order
-      </Label>
-      <InputField type="text" name="recoveryPhraseInput" label="Recovery Phrase" />
+      <p className="text-gray-80 mb-4">To validate the recovery phrase, enter the 12 words in the correct order</p>
+
+      <div className="relative">
+        <InputField type="text" multiple name="recoveryPhraseInput" label="Recovery Phrase" value={phrase.join(' ')} />
+        <button className="text-gray-60 absolute right-3 top-3 text-xs" onClick={handleClear}>
+          CLEAR
+        </button>
+      </div>
+
+      <div className="flex flex-wrap gap-3 mt-8">
+        {words.map(word => (
+          <Badge key={word} label={word} onClick={() => handleAdd(word)} />
+        ))}
+      </div>
     </div>
   );
 };
