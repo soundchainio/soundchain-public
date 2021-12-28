@@ -30,7 +30,7 @@ export const getServerSideProps: GetServerSideProps<PostPageProps, PostPageParam
 
   const apolloClient = createApolloClient(context);
 
-  const { data, error } = await apolloClient.query({
+  const { error } = await apolloClient.query({
     query: PostDocument,
     variables: { id: postId },
     context,

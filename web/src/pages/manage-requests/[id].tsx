@@ -42,7 +42,7 @@ export const getServerSideProps = protectPage<RequestPageProps, RequestPageParam
     return { notFound: true };
   }
 
-  const { error } = await apolloClient.query({
+  const { data, error } = await apolloClient.query({
     query: ProfileVerificationRequestDocument,
     variables: { id: requestId },
     context,
