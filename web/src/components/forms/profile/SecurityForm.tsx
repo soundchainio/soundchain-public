@@ -1,155 +1,134 @@
 import * as bip39 from 'bip39';
 import { Button, ButtonProps } from 'components/Button';
-import { Label } from 'components/Label';
-import { Field, Form, Formik } from 'formik';
+import { Form, Formik } from 'formik';
 import { useMe } from 'hooks/useMe';
 import { useUpdateOtpMutation } from 'lib/graphql';
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import * as yup from 'yup';
-import { Copy2 as Copy } from 'icons/Copy2';
-import { Locker as LockerIcon } from 'icons/Locker';
 import { toast } from 'react-toastify';
-import qrcode from 'qrcode';
 import { authenticator } from 'otplib';
+import { ScanCodeForm } from './two-factor/ScanCodeForm';
+import { ValidateCodeForm } from './two-factor/ValidateCodeForm';
+import { RecoveryPhraseForm } from './two-factor/RecoveryPhraseForm';
+import { ValidateRecoveryPhraseForm } from './two-factor/ValidateRecoveryPhraseForm';
 
 interface SecurityFormProps {
   afterSubmit: () => void;
   submitProps?: ButtonProps;
-  submitText: string;
 }
 
 interface FormValues {
-  isEnabled?: boolean | undefined;
+  token?: string;
+  secret: string;
+  recoveryPhrase: string;
+  recoveryPhraseInput?: string;
 }
 
-const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
-  isEnabled: yup.boolean().required(),
-});
+const validationSchema: Array<yup.AnySchema> = [
+  yup.object(),
+  yup.object().shape({
+    token: yup.string().required('6-digit code is required'),
+    secret: yup.string().required(),
+  }),
+  yup.object(),
+  yup.object().shape({
+    recoveryPhrase: yup.string().required(),
+    recoveryPhraseInput: yup.string().required('Recovery Phrase is required'),
+  }),
+];
 
-const service = 'Soundchain';
+const steps = ['Scan Code', 'Validate code', 'Recovery Phrase', 'Validate Recovery Phrase'];
 
-export const SecurityForm = ({ afterSubmit, submitText, submitProps }: SecurityFormProps) => {
-  const [token, setToken] = useState<string>('');
-  const [secret, setSecret] = useState<string>('');
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isEnabled, setIsEnabled] = useState(false);
-  const me = useMe();
+export const SecurityForm = ({ afterSubmit }: SecurityFormProps) => {
   const [updateOTP, { loading }] = useUpdateOtpMutation();
+  const [activeStep, setActiveStep] = useState(0);
+  const isLastStep = activeStep === steps.length - 1;
+  const me = useMe();
 
-  const mnemonic = bip39.generateMnemonic();
-  // console.log(bip39.validateMnemonic(mnemonic));
-
-  useEffect(() => {
-    setIsEnabled(Boolean(me?.otpSecret));
-    setSecret(me?.otpSecret || authenticator.generateSecret());
-  }, [me?.otpSecret]);
-
-  useEffect(() => {
-    if (!me || !isEnabled) {
-      return;
-    }
-
-    const otpAuth = authenticator.keyuri(me?.email, service, secret);
-    qrcode.toCanvas(canvasRef.current, otpAuth, error => error && console.error(error));
-  }, [me, secret, isEnabled]);
-
-  const handleValidate = useCallback(() => {
-    const isValid = authenticator.verify({ token, secret });
-    isValid ? toast.success('Valid code') : toast.error('Invalid code');
-    setToken('');
-  }, [secret, token]);
+  const recoveryPhrase = bip39.generateMnemonic();
+  const secret = authenticator.generateSecret();
 
   if (!me) return null;
 
-  const handleOPTChange = (e: React.ChangeEvent<HTMLInputElement>) => setToken(e.target.value);
+  const handleSubmit = (values: FormValues) => {
+    if (activeStep === 1) {
+      const { token = '', secret } = values;
+      const isValid = authenticator.verify({ token, secret });
+      if (!isValid) {
+        toast.error('Invalid code');
+        return;
+      }
+    }
 
-  const onSubmit = async ({ isEnabled }: FormValues) => {
+    if (activeStep === 3) {
+      const { recoveryPhraseInput = '', recoveryPhrase } = values;
+      if (recoveryPhraseInput !== recoveryPhrase) {
+        toast.error('Invalid recovery phrase');
+        return;
+      }
+    }
+
+    if (isLastStep) {
+      submitForm(values);
+    } else {
+      setActiveStep(activeStep + 1);
+    }
+  };
+
+  const handleBack = () => setActiveStep(activeStep - 1);
+
+  const submitForm = async ({ secret, recoveryPhrase }: FormValues) => {
     await updateOTP({
-      variables: { input: { otpSecret: isEnabled ? secret : '', otpRecoveryPhrase: mnemonic } },
+      variables: { input: { otpSecret: secret, otpRecoveryPhrase: recoveryPhrase } },
     });
 
     afterSubmit();
   };
 
   const initialFormValues: FormValues = {
-    isEnabled,
+    secret,
+    recoveryPhrase,
+    token: '',
+    recoveryPhraseInput: '',
+  };
+
+  const renderForm = (step: number) => {
+    switch (step) {
+      case 0:
+        return <ScanCodeForm />;
+      case 1:
+        return <ValidateCodeForm />;
+      case 2:
+        return <RecoveryPhraseForm />;
+      case 3:
+        return <ValidateRecoveryPhraseForm />;
+      default:
+        return <div>Not Found</div>;
+    }
   };
 
   return (
-    <Formik
-      initialValues={initialFormValues}
-      validationSchema={validationSchema}
-      onSubmit={onSubmit}
-      enableReinitialize
-    >
-      {({ values: { isEnabled }, handleChange }) => (
-        <Form className="flex flex-1 flex-col">
-          <Label textSize="base">
-            <Field
-              className="mr-2"
-              type="checkbox"
-              name="isEnabled"
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                setIsEnabled(e.target.checked);
-                handleChange(e);
-              }}
-            />
-            Enable Two-Factor
-          </Label>
-          <div className="flex-grow mt-4">
-            <div className={`flex flex-col ${isEnabled ? '' : 'hidden'}`}>
-              <Label textSize="base">SCAN CODE OR ENTER KEY</Label>
-              <span className="text-gray-60 text-xs my-2">
-                Scan the code below with your authenticator app to add this account.
-              </span>
+    <Formik initialValues={initialFormValues} validationSchema={validationSchema[activeStep]} onSubmit={handleSubmit}>
+      <Form className="flex flex-1 flex-col">
+        {renderForm(activeStep)}
 
-              <canvas className="self-center my-4" ref={canvasRef} />
-
-              <span className="text-gray-60 text-xs my-2">
-                Some autherticator apps also allow you to type in the text version instead.
-              </span>
-              <div className="flex flex-row text-xxs bg-gray-1A w-full pl-2 pr-3 py-2 items-center justify-between">
-                <div className="flex flex-row items-center w-10/12 justify-start">
-                  <LockerIcon />
-                  <span className="text-gray-80 md-text-sm font-bold mx-1 truncate w-full">{secret}</span>
-                </div>
-                <button
-                  className="flex flex-row gap-1 items-center border-2 border-gray-30 border-opacity-75 rounded p-1"
-                  onClick={() => {
-                    navigator.clipboard.writeText(secret);
-                    toast('Copied to clipboard');
-                  }}
-                  type="button"
-                >
-                  <Copy />
-                  <span className="text-gray-80 uppercase leading-none">copy</span>
-                </button>
-              </div>
-
-              <div className="mt-12">
-                <Label className="text-white mb-4">To validate the secret, enter the 6-digit code from the app</Label>
-                <div className="mt-2 flex justify-center gap-4">
-                  <Field
-                    className="w-48 px-4 tracking-[1em]"
-                    onChange={handleOPTChange}
-                    value={token}
-                    maxLength={6}
-                    placeholder="______"
-                  />
-                  <Button variant="edit-listing" onClick={handleValidate} disabled={!token}>
-                    VALIDATE
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-col">
-            <Button type="submit" disabled={loading} variant="outline" className="h-12 mt-4" {...submitProps}>
-              {submitText}
+        <div className="flex justify-between gap-8">
+          {activeStep > 0 && activeStep < steps.length - 1 && (
+            <Button variant="outline" onClick={handleBack} className="w-full h-12 mt-4" borderColor="bg-pink-gradient">
+              BACK
             </Button>
-          </div>
-        </Form>
-      )}
+          )}
+          <Button
+            type="submit"
+            disabled={loading}
+            variant="outline"
+            className="w-full h-12 mt-4"
+            borderColor={`bg-${isLastStep ? 'green' : 'blue'}-gradient`}
+          >
+            {isLastStep ? 'SAVE' : 'NEXT'}
+          </Button>
+        </div>
+      </Form>
     </Formik>
   );
 };

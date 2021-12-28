@@ -13,7 +13,7 @@ const topNavBarProps: TopNavBarProps = {
 };
 
 const RecoveryForm = () => {
-  return <div>two-factor enabled - add 6-dig pin to edit</div>;
+  return <div className="text-white">use your Recovery Phrase to disable</div>;
 };
 
 export default function CoverPicturePage() {
@@ -31,7 +31,6 @@ export default function CoverPicturePage() {
         {!me?.otpSecret ? (
           <SecurityForm
             afterSubmit={() => router.push('/settings')}
-            submitText="SAVE"
             submitProps={{ borderColor: 'bg-green-gradient' }}
           />
         ) : (
