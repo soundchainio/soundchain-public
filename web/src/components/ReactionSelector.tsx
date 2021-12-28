@@ -35,9 +35,15 @@ export const ReactionSelector = ({ postId, myReaction, opened, setOpened }: Reac
     if (type === myReaction) {
       await retractReaction({ variables: { input: { postId } } });
     } else if (myReaction) {
-      await changeReaction({ variables: { input: { postId, type } } });
+      await changeReaction({
+        variables: { input: { postId, type } },
+        refetchQueries: ['Post'],
+      });
     } else {
-      await reactToPost({ variables: { input: { postId, type } } });
+      await reactToPost({
+        variables: { input: { postId, type } },
+        refetchQueries: ['Post'],
+      });
     }
 
     setOpened(false);
