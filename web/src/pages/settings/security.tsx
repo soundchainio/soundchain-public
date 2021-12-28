@@ -1,24 +1,23 @@
+import React from 'react';
+import Head from 'next/head';
+import { useRouter } from 'next/router';
+import { useMe } from 'hooks/useMe';
 import { BackButton } from 'components/Buttons/BackButton';
+import { DisableRecoveryForm } from 'components/forms/profile/DisableSecurityForm';
 import { SecurityForm } from 'components/forms/profile/SecurityForm';
 import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
-import { useMe } from 'hooks/useMe';
-import Head from 'next/head';
-import { useRouter } from 'next/router';
-import React from 'react';
 
 const topNavBarProps: TopNavBarProps = {
   title: 'Two-factor Security',
   leftButton: <BackButton />,
 };
 
-const RecoveryForm = () => {
-  return <div className="text-white">use your Recovery Phrase to disable</div>;
-};
-
 export default function CoverPicturePage() {
   const router = useRouter();
   const me = useMe();
+
+  const handleAfterSubmit = () => router.push('/settings');
 
   return (
     <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
@@ -29,12 +28,9 @@ export default function CoverPicturePage() {
       </Head>
       <div className="min-h-full flex flex-col px-6 lg:px-8 py-6">
         {!me?.otpSecret ? (
-          <SecurityForm
-            afterSubmit={() => router.push('/settings')}
-            submitProps={{ borderColor: 'bg-green-gradient' }}
-          />
+          <SecurityForm afterSubmit={handleAfterSubmit} />
         ) : (
-          <RecoveryForm />
+          <DisableRecoveryForm afterSubmit={handleAfterSubmit} />
         )}
       </div>
     </Layout>

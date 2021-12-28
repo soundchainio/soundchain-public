@@ -51,27 +51,30 @@ export const SecurityForm = ({ afterSubmit }: SecurityFormProps) => {
   if (!me) return null;
 
   const handleSubmit = (values: FormValues) => {
-    if (activeStep === 1) {
-      const { token = '', secret } = values;
-      const isValid = authenticator.verify({ token, secret });
-      if (!isValid) {
-        toast.error('Invalid code');
+    switch (activeStep) {
+      case 1: {
+        const { token = '', secret } = values;
+        const isValid = authenticator.verify({ token, secret });
+        if (!isValid) {
+          toast.error('Invalid code');
+          return;
+        }
+        setActiveStep(activeStep + 1);
         return;
       }
-    }
-
-    if (activeStep === 3) {
-      const { recoveryPhraseInput = '', recoveryPhrase } = values;
-      if (recoveryPhraseInput !== recoveryPhrase) {
-        toast.error('Invalid recovery phrase');
+      case 3: {
+        const { recoveryPhraseInput = '', recoveryPhrase } = values;
+        if (recoveryPhraseInput !== recoveryPhrase) {
+          toast.error('Invalid recovery phrase');
+          return;
+        }
+        submitForm(values);
         return;
       }
-    }
-
-    if (isLastStep) {
-      submitForm(values);
-    } else {
-      setActiveStep(activeStep + 1);
+      case 0:
+      case 2:
+      default:
+        setActiveStep(activeStep + 1);
     }
   };
 
@@ -103,7 +106,7 @@ export const SecurityForm = ({ afterSubmit }: SecurityFormProps) => {
       case 3:
         return <ValidateRecoveryPhraseForm />;
       default:
-        return <div>Not Found</div>;
+        return null;
     }
   };
 
