@@ -7,13 +7,16 @@ import { DownArrow } from 'icons/DownArrow';
 import { Forward } from 'icons/ForwardButton';
 import { HeartBorder } from 'icons/HeartBorder';
 import { HeartFull } from 'icons/HeartFull';
+import { Info } from 'icons/Info';
 import { Pause } from 'icons/PauseBottomAudioPlayer';
 import { Play } from 'icons/PlayBottomAudioPlayer';
 import { Rewind } from 'icons/RewindButton';
+import { Share } from 'icons/Share';
 import { TrackDocument, useToggleFavoriteMutation } from 'lib/graphql';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import { remainingTime, timeFromSecs } from 'utils/calculateTime';
 
 export const AudioPlayerModal = () => {
@@ -41,6 +44,21 @@ export const AudioPlayerModal = () => {
     dispatchShowAudioPlayerModal(false);
   };
 
+  const handleSharing = async () => {
+    const url = `${window.location.origin}/tracks/${currentSong.trackId}`;
+
+    try {
+      await navigator.share({
+        title: `SoundChain`,
+        text: `Listen to this SoundChain track:  ${currentSong.title} - ${currentSong.artist}`,
+        url,
+      });
+    } catch {
+      await navigator.clipboard.writeText(url);
+      toast('URL copied to clipboard');
+    }
+  };
+
   const onSliderChange = (value: number) => {
     setProgressStateFromSlider(value);
   };
@@ -66,10 +84,21 @@ export const AudioPlayerModal = () => {
     <Modal
       show={isOpen}
       title={'Now Playing'}
-      rightButton={
-        <div className="flex justify-end mr-6">
+      leftButton={
+        <div className="flex justify-start ml-6">
           <button aria-label="Close" className="w-10 h-10 flex justify-center items-center" onClick={handleClose}>
             <DownArrow />
+          </button>
+        </div>
+      }
+      rightButton={
+        <div className="flex justify-end mr-6">
+          <button
+            className="flex justify-center items-center gap-1 text-gray-80 text-xs font-black border-gray-80 border-2 rounded py-1 px-2"
+            onClick={handleSharing}
+          >
+            <Share />
+            Share
           </button>
         </div>
       }
@@ -83,17 +112,20 @@ export const AudioPlayerModal = () => {
             </div>
           </div>
           <div className="flex justify-between mt-7 mb-4 w-full cursor-pointer">
-            <div className="flex w-full">
+            <div className="flex w-full gap-4">
               <NextLink href={`/tracks/${currentSong.trackId}`}>
-                <div className="flex flex-col flex-1 gap-1">
-                  <h2 className="font-black">{currentSong.title || 'Unknown title'}</h2>
+                <a className="flex flex-col flex-1 gap-1 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <h2 className="font-black truncate">{currentSong.title || 'Unknown title'}</h2>
+                    <Info className="flex-shrink-0" />
+                  </div>
                   <h3 className="font-medium">{currentSong.artist || 'Unknown artist'}</h3>
-                </div>
+                </a>
               </NextLink>
-              <div className="flex items-center pl-4" onClick={handleFavorite}>
+              <button className="flex items-center" onClick={handleFavorite}>
                 {isFavorite && <HeartFull />}
                 {!isFavorite && <HeartBorder />}
-              </div>
+              </button>
             </div>
           </div>
           <Slider className="audio-player" min={0} max={duration} value={progress} onChange={onSliderChange} />
