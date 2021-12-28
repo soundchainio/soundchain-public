@@ -46,17 +46,14 @@ export const AudioPlayerModal = () => {
 
   const handleSharing = async () => {
     const url = `${window.location.origin}/tracks/${currentSong.trackId}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `SoundChain`,
-          text: `Listen to this SoundChain track:  ${currentSong.title} - ${currentSong.artist}`,
-          url,
-        });
-      } catch (error) {
-        console.error(`Error on sharing track: ${error}`);
-      }
-    } else {
+
+    try {
+      await navigator.share({
+        title: `SoundChain`,
+        text: `Listen to this SoundChain track:  ${currentSong.title} - ${currentSong.artist}`,
+        url,
+      });
+    } catch {
       await navigator.clipboard.writeText(url);
       toast('URL copied to clipboard');
     }
