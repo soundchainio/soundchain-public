@@ -2,8 +2,7 @@ import React from 'react';
 import { Form, Formik } from 'formik';
 import * as yup from 'yup';
 import { toast } from 'react-toastify';
-import { useMe } from 'hooks/useMe';
-import { useUpdateOtpMutation } from 'lib/graphql';
+import { useUpdateOtpMutation, useValidateOtpRecoveryPhraseMutation } from 'lib/graphql';
 import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
 
@@ -24,12 +23,16 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
 });
 
 export const DisableRecoveryForm = ({ afterSubmit }: Props) => {
-  const me = useMe();
   const [updateOTP, { loading }] = useUpdateOtpMutation();
+  const [validateOtpRecoveryPhrase] = useValidateOtpRecoveryPhraseMutation();
 
   const handleSubmit = async (values: FormValues) => {
     const { recoveryPhrase } = values;
-    if (me?.otpRecoveryPhrase !== recoveryPhrase) {
+    const isRecoveryPhraseValid = await validateOtpRecoveryPhrase({
+      variables: { input: { otpRecoveryPhrase: recoveryPhrase } },
+    });
+
+    if (!isRecoveryPhraseValid.data?.validateOTPRecoveryPhrase) {
       toast.error('Invalid recovery phrase');
       return;
     }
@@ -54,9 +57,9 @@ export const DisableRecoveryForm = ({ afterSubmit }: Props) => {
           disabled={loading}
           variant="outline"
           className="w-full h-12 mt-4"
-          borderColor="bg-green-gradient"
+          borderColor="bg-pink-gradient"
         >
-          SAVE
+          DISABLE
         </Button>
       </Form>
     </Formik>

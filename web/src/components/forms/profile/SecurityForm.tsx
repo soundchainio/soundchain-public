@@ -54,7 +54,7 @@ export const SecurityForm = ({ afterSubmit }: SecurityFormProps) => {
     switch (activeStep) {
       case 1: {
         const { token = '', secret } = values;
-        const isValid = authenticator.verify({ token: `${token}`, secret });
+        const isValid = authenticator.verify({ token, secret });
         if (!isValid) {
           toast.error('Invalid code');
           return;

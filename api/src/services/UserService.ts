@@ -1,3 +1,4 @@
+import bcrypt from 'bcrypt';
 import { ObjectId } from 'mongodb';
 import { User, UserModel } from '../models/User';
 import { Context } from '../types/Context';
@@ -6,6 +7,7 @@ import { Role } from '../types/Role';
 import { validateUniqueIdentifiers } from '../utils/Validation';
 import { ModelService } from './ModelService';
 
+const SALT_ROUNDS = 10;
 export class UserService extends ModelService<typeof User> {
   constructor(context: Context) {
     super(context, UserModel);
@@ -67,11 +69,29 @@ export class UserService extends ModelService<typeof User> {
     otpSecret,
     otpRecoveryPhrase,
   }: Pick<User, '_id' | 'otpSecret' | 'otpRecoveryPhrase'>): Promise<User> {
-    const updatedUser = await UserModel.findByIdAndUpdate(_id, { otpSecret, otpRecoveryPhrase }, { new: true });
+    const encrypted = otpRecoveryPhrase ? await bcrypt.hash(otpRecoveryPhrase, SALT_ROUNDS) : '';
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      _id,
+      { otpSecret, otpRecoveryPhrase: encrypted },
+      { new: true },
+    );
     if (!updatedUser) {
       throw new Error(`Could not update the profile with id: ${_id}`);
     }
     return updatedUser;
+  }
+
+  async validateOTPRecoveryPhrase({
+    _id,
+    otpRecoveryPhrase,
+  }: Pick<User, '_id' | 'otpRecoveryPhrase'>): Promise<boolean> {
+    const user = await UserModel.findById(_id);
+
+    if (!user) {
+      return false;
+    }
+
+    return bcrypt.compare(otpRecoveryPhrase, user.otpRecoveryPhrase);
   }
 
   async getUserByWallet(walletAddress: string): Promise<User> {
