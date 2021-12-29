@@ -11,7 +11,7 @@ export default function ProfilePicturePage() {
   const router = useRouter();
 
   const onClose = () => {
-    router.push('/');
+    router.push('/marketplace');
   };
 
   const topNavBarProps: TopNavBarProps = {

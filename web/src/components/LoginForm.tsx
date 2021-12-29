@@ -30,7 +30,7 @@ export const LoginForm = () => {
 
   useEffect(() => {
     if (me) {
-      router.push(router.query.callbackUrl?.toString() ?? '/');
+      router.push(router.query.callbackUrl?.toString() ?? '/marketplace');
     }
   }, [me, router]);
 

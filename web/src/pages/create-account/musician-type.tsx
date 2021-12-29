@@ -14,7 +14,7 @@ export default function MusicianTypePage() {
   const topNavBarProps: TopNavBarProps = {
     title: 'Musician Type',
     leftButton: <BackButton />,
-    rightButton: <Badge label="Skip" onClick={() => router.push('/')} selected={false} />,
+    rightButton: <Badge label="Skip" onClick={() => router.push('/marketplace')} selected={false} />,
     subtitle: <StepProgressBar steps={6} currentStep={4} />,
   };
 

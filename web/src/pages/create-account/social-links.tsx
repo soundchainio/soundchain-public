@@ -14,7 +14,7 @@ export default function SocialLinksPage() {
   const topNavBarProps: TopNavBarProps = {
     title: 'Social Links',
     leftButton: <BackButton />,
-    rightButton: <Badge label="Skip" onClick={() => router.push('/')} selected={false} />,
+    rightButton: <Badge label="Skip" onClick={() => router.push('/marketplace')} selected={false} />,
     subtitle: <StepProgressBar steps={6} currentStep={6} />,
   };
 
@@ -27,7 +27,7 @@ export default function SocialLinksPage() {
       </Head>
       <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
         <SocialLinksForm
-          afterSubmit={() => router.push('/')}
+          afterSubmit={() => router.push('/marketplace')}
           submitText="SAVE"
           submitProps={{ borderColor: 'bg-green-gradient' }}
         />
