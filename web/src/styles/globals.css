@@ -70,6 +70,12 @@ html {
   #bottom-nav-bar > div {
     padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
   }
+
+  @layer utilities {
+    .pb-safe {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+  }
 }
 
 .bg-yellow-gradient {

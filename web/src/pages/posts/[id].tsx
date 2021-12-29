@@ -9,12 +9,12 @@ import { Post } from 'components/Post';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useMe } from 'hooks/useMe';
 import { cacheFor, createApolloClient } from 'lib/apollo';
-import { PostDocument, PostQuery } from 'lib/graphql';
+import { PostDocument, usePostQuery } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 
 export interface PostPageProps {
-  post: PostQuery['post'];
+  postId: string;
 }
 
 interface PostPageParams extends ParsedUrlQuery {
@@ -30,7 +30,7 @@ export const getServerSideProps: GetServerSideProps<PostPageProps, PostPageParam
 
   const apolloClient = createApolloClient(context);
 
-  const { data, error } = await apolloClient.query({
+  const { error } = await apolloClient.query({
     query: PostDocument,
     variables: { id: postId },
     context,
@@ -40,12 +40,17 @@ export const getServerSideProps: GetServerSideProps<PostPageProps, PostPageParam
     return { notFound: true };
   }
 
-  return cacheFor(PostPage, { post: data.post }, context, apolloClient);
+  return cacheFor(PostPage, { postId }, context, apolloClient);
 };
 
-export default function PostPage({ post }: PostPageProps) {
+export default function PostPage({ postId }: PostPageProps) {
+  const { data } = usePostQuery({ variables: { id: postId } });
+
   const me = useMe();
-  const deleted = post.deleted;
+
+  if (!data?.post) return null;
+
+  const deleted = data.post.deleted;
 
   const topNovaBarProps: TopNavBarProps = {
     leftButton: <BackButton />,
@@ -58,12 +63,12 @@ export default function PostPage({ post }: PostPageProps) {
         <NotAvailableMessage type="post" />
       ) : (
         <div>
-          <Post post={post} />
+          <Post post={data.post} />
           <div className="pb-12">
-            <Comments postId={post.id} />
+            <Comments postId={data.post.id} />
           </div>
           <BottomSheet>
-            <NewCommentForm postId={post.id} />
+            <NewCommentForm postId={data.post.id} />
           </BottomSheet>
         </div>
       )}
