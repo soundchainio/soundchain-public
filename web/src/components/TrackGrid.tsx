@@ -3,9 +3,10 @@ import { HeartFilled } from 'icons/HeartFilled';
 import { Matic } from 'icons/Matic';
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
-import { ListingItemWithPrice, Maybe, TrackWithListingItem } from 'lib/graphql';
+import { ListingItemWithPrice, Maybe, TrackWithListingItem, useMaticUsdQuery } from 'lib/graphql';
 import NextLink from 'next/link';
 import React, { useEffect, useState } from 'react';
+import { currency } from 'utils/format';
 import Asset from './Asset';
 import { BadgeTrack } from './BadgeTrack';
 
@@ -40,6 +41,7 @@ export const TrackGrid = ({ track }: TrackProps) => {
   const { art, artist, title, trackId, playbackCount, favoriteCount } = song;
   const { play, isCurrentSong, isCurrentlyPlaying } = useAudioPlayerContext();
   const [isPlaying, setIsPlaying] = useState(false);
+  const { data: maticUsd } = useMaticUsdQuery();
 
   useEffect(() => {
     setIsPlaying(isCurrentlyPlaying(trackId));
@@ -74,12 +76,15 @@ export const TrackGrid = ({ track }: TrackProps) => {
                 {saleType && saleType !== '' && (
                   <>
                     <div className="text-white font-bold text-xxs">{price / 1e18}</div>
-                    <div className="flex items-center justify-center flex-shrink-0 h-full">
+                    <div className="flex items-center justify-center flex-shrink-0">
                       <Matic height="12" width="12" />
                     </div>
                     <BadgeTrack auction={saleType === 'auction'} label={saleType.toUpperCase()}></BadgeTrack>
                   </>
                 )}
+              </div>
+              <div className="text-gray-80 text-xxs">
+                {maticUsd && price && `${currency((price / 1e18) * parseFloat(maticUsd.maticUsd))}`}
               </div>
               <div className="text-gray-80 text-xs flex gap-1 items-center pt-1">
                 <Play fill="#808080" />
