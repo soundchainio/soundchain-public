@@ -6,7 +6,6 @@ import { useMe } from 'hooks/useMe';
 import { useUpdateOtpMutation } from 'lib/graphql';
 import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
-import { Label } from 'components/Label';
 
 interface Props {
   afterSubmit: () => void;
@@ -46,7 +45,7 @@ export const DisableRecoveryForm = ({ afterSubmit }: Props) => {
     <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
       <Form className="flex flex-1 flex-col">
         <div className="flex-grow">
-          <Label textSize="base">Enter your Recovery Phrase to disable the Two-Factor</Label>
+          <p className="text-gray-80">Enter your Recovery Phrase to disable the Two-Factor</p>
           <InputField type="text" name="recoveryPhrase" label="Recovery Phrase" />
         </div>
 
