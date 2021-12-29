@@ -1,10 +1,13 @@
+import * as yup from 'yup';
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { BuyNow } from 'components/details-NFT/BuyNow';
+import { InputField } from 'components/InputField';
 import { Layout } from 'components/Layout';
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
+import { Form, Formik } from 'formik';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
@@ -17,6 +20,8 @@ import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 import { compareWallets } from 'utils/Wallet';
 import { Timer } from '../[id]';
+import { authenticator } from 'otplib';
+import { toast } from 'react-toastify';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -24,6 +29,10 @@ export interface TrackPageProps {
 
 interface TrackPageParams extends ParsedUrlQuery {
   id: string;
+}
+
+interface FormValues {
+  token: string;
 }
 
 export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(async (context, apolloClient) => {
@@ -79,7 +88,15 @@ export default function BuyNowPage({ track }: TrackPageProps) {
   const startTime = listingPayload.buyNowItem?.buyNowItem?.startingTime ?? 0;
   const hasStarted = startTime <= new Date().getTime() / 1000;
 
-  const handleBuy = () => {
+  const handleSubmit = ({ token }: FormValues) => {
+    if (token) {
+      const isValid = authenticator.verify({ token, secret: me?.otpSecret || '' });
+      if (!isValid) {
+        toast.error('Invalid token code');
+        return;
+      }
+    }
+
     if (
       !web3 ||
       !listingPayload.buyNowItem?.buyNowItem?.tokenId ||
@@ -123,37 +140,61 @@ export default function BuyNowPage({ track }: TrackPageProps) {
     return null;
   }
 
+  const initialValues = {
+    token: '',
+  };
+
+  const validationSchema = yup.object().shape({
+    token: me?.otpSecret ? yup.string().required('Two-Factor token is required') : yup.string(),
+  });
+
   return (
     <Layout topNavBarProps={topNavBarProps}>
-      <div className="m-4">
-        <Track track={track} />
-      </div>
-      <div className="bg-[#112011]">
-        <div className="flex justify-between items-center px-4 py-3">
-          <div className="text-sm font-bold text-white">BUY NOW PRICE</div>
-          <div className="text-md flex items-center font-bold gap-1">
-            <Matic />
-            <span className="text-white">{price}</span>
-            <span className="text-xxs text-gray-80">MATIC</span>
+      <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
+        <Form autoComplete="off">
+          <div className="m-4">
+            <Track track={track} />
           </div>
-        </div>
-        {!hasStarted && (
-          <div className="flex justify-between items-center px-4 py-3">
-            <div className="text-sm font-bold text-white flex-shrink-0">SALE STARTS</div>
-            <div className="text-md flex items-center text-right font-bold gap-1">
-              <Timer date={new Date(startTime * 1000)} reloadOnEnd />
+          <div className="bg-[#112011]">
+            <div className="flex justify-between items-center px-4 py-3">
+              <div className="text-sm font-bold text-white">BUY NOW PRICE</div>
+              <div className="text-md flex items-center font-bold gap-1">
+                <Matic />
+                <span className="text-white">{price}</span>
+                <span className="text-xxs text-gray-80">MATIC</span>
+              </div>
             </div>
+            {!hasStarted && (
+              <div className="flex justify-between items-center px-4 py-3">
+                <div className="text-sm font-bold text-white flex-shrink-0">SALE STARTS</div>
+                <div className="text-md flex items-center text-right font-bold gap-1">
+                  <Timer date={new Date(startTime * 1000)} reloadOnEnd />
+                </div>
+              </div>
+            )}
           </div>
-        )}
-      </div>
-      {price && account && <BuyNow price={price} ownerAddressAccount={account} startTime={startTime} />}
-      {hasStarted && (
-        <PlayerAwareBottomBar>
-          <Button className="ml-auto" variant="buy-nft" onClick={handleBuy} loading={loading}>
-            <div className="px-4">BUY NFT</div>
-          </Button>
-        </PlayerAwareBottomBar>
-      )}
+          {price && account && <BuyNow price={price} ownerAddressAccount={account} startTime={startTime} />}
+
+          {me?.otpSecret && (
+            <InputField
+              label="Two-Factor token"
+              name="token"
+              type="text"
+              maxLength={6}
+              pattern="[0-9]*"
+              inputMode="numeric"
+            />
+          )}
+
+          {hasStarted && (
+            <PlayerAwareBottomBar>
+              <Button type="submit" className="ml-auto" variant="buy-nft" loading={loading}>
+                <div className="px-4">BUY NFT</div>
+              </Button>
+            </PlayerAwareBottomBar>
+          )}
+        </Form>
+      </Formik>
     </Layout>
   );
 }
