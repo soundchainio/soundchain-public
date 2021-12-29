@@ -114,7 +114,16 @@ export const TransferConfirmationModal = () => {
                 </p>
                 <p>This transaction cannot be undone.</p>
               </div>
-              {me?.otpSecret && <InputField label="Two-Factor token" name="token" type="text" maxLength={6} />}
+              {me?.otpSecret && (
+                <InputField
+                  label="Two-Factor token"
+                  name="token"
+                  type="text"
+                  maxLength={6}
+                  pattern="[0-9]*"
+                  inputMode="numeric"
+                />
+              )}
               <div className="flex flex-col space-y-6 py-6">
                 <div className="space-y-2">
                   <div className="px-4">

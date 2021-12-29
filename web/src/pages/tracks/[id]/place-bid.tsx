@@ -306,7 +306,16 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
                 <MaxGasFee />
               </div>
 
-              {me?.otpSecret && <InputField label="Two-Factor token" name="token" type="text" maxLength={6} />}
+              {me?.otpSecret && (
+                <InputField
+                  label="Two-Factor token"
+                  name="token"
+                  type="text"
+                  maxLength={6}
+                  pattern="[0-9]*"
+                  inputMode="numeric"
+                />
+              )}
 
               <PlayerAwareBottomBar>
                 <div className="flex-1 font-black text-xs">

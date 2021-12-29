@@ -175,7 +175,16 @@ export default function BuyNowPage({ track }: TrackPageProps) {
           </div>
           {price && account && <BuyNow price={price} ownerAddressAccount={account} startTime={startTime} />}
 
-          {me?.otpSecret && <InputField label="Two-Factor token" name="token" type="text" maxLength={6} />}
+          {me?.otpSecret && (
+            <InputField
+              label="Two-Factor token"
+              name="token"
+              type="text"
+              maxLength={6}
+              pattern="[0-9]*"
+              inputMode="numeric"
+            />
+          )}
 
           {hasStarted && (
             <PlayerAwareBottomBar>
