@@ -5,9 +5,11 @@ import { Info } from 'icons/Info';
 import { Matic } from 'icons/Matic';
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
+import { useMaticUsdQuery } from 'lib/graphql';
 import NextLink from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { remainingTime, timeFromSecs } from 'utils/calculateTime';
+import { currency } from 'utils/format';
 import Asset from './Asset';
 import { BadgeTrack } from './BadgeTrack';
 
@@ -34,6 +36,7 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
     useAudioPlayerContext();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isSameSong, setIsSameSong] = useState(false);
+  const { data: maticUsd } = useMaticUsdQuery();
 
   useEffect(() => {
     setIsPlaying(isCurrentlyPlaying(trackId));
@@ -95,7 +98,8 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
             {saleType && saleType !== '' && (
               <>
                 <div className="ml-auto text-white font-bold">{price / 1e18}</div>
-                <Matic />
+                <Matic /> <span className="text-xl"> ≃ </span>
+                {maticUsd && `${currency((price / 1e18) * parseFloat(maticUsd.maticUsd))}`}
               </>
             )}
           </div>

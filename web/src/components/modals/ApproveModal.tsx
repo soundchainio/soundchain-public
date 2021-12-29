@@ -9,9 +9,11 @@ import { ApproveMarketplace } from 'icons/ApproveMarketplace';
 import { Auction } from 'icons/Auction';
 import { CheckmarkFilled } from 'icons/CheckmarkFilled';
 import { Matic } from 'icons/Matic';
+import { useMaticUsdQuery } from 'lib/graphql';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import { SaleType } from 'types/SaleType';
+import { currency } from 'utils/format';
 
 export const ApproveModal = () => {
   const { account, web3 } = useWalletContext();
@@ -20,6 +22,7 @@ export const ApproveModal = () => {
   const { approveMarketplace, approveAuction } = useBlockchain();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const { data: maticUsd } = useMaticUsdQuery();
 
   const maxGasFee = useMaxGasFee(showApprove);
 
@@ -93,7 +96,10 @@ export const ApproveModal = () => {
               <span className="my-auto">
                 <Matic />
               </span>
-              <span className="text-gray-80 font-black text-xxs leading-tight">matic</span>
+              <span className="text-xl text-gray-80"> ≃ </span>
+              <span className="text-base text-gray-80 font-normal">
+                {maticUsd && maxGasFee && `${currency(parseFloat(maxGasFee) * parseFloat(maticUsd.maticUsd))}`}
+              </span>
             </div>
           </div>
           <div className="flex justify-around p-6 gap-6">

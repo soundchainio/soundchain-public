@@ -37,7 +37,7 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: Lis
   };
 
   return (
-    <div className="mb-2">
+    <div className="mb-2 pb-16">
       <Formik
         initialValues={defaultValues}
         enableReinitialize
