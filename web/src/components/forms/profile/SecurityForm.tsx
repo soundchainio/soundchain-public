@@ -2,7 +2,7 @@ import * as bip39 from 'bip39';
 import { Button, ButtonProps } from 'components/Button';
 import { Form, Formik } from 'formik';
 import { useMe } from 'hooks/useMe';
-import { useUpdateOtpMutation } from 'lib/graphql';
+import { MeDocument, useUpdateOtpMutation } from 'lib/graphql';
 import React, { useState } from 'react';
 import * as yup from 'yup';
 import { toast } from 'react-toastify';
@@ -83,6 +83,7 @@ export const SecurityForm = ({ afterSubmit }: SecurityFormProps) => {
   const submitForm = async ({ secret, recoveryPhrase }: FormValues) => {
     await updateOTP({
       variables: { input: { otpSecret: secret, otpRecoveryPhrase: recoveryPhrase } },
+      refetchQueries: [MeDocument],
     });
 
     afterSubmit();
