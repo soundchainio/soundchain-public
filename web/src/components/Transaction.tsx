@@ -1,4 +1,5 @@
 import { Matic } from 'icons/Matic';
+import { network } from 'lib/blockchainNetworks';
 import { PolygonscanResultObj } from 'lib/graphql';
 import { transactionDataMap } from 'types/TransactionType';
 import { currency } from 'utils/format';
@@ -21,7 +22,7 @@ export const Transaction = ({ transaction, maticUsdValue }: TransactionProps) =>
 
   return (
     <a
-      href={`https://mumbai.polygonscan.com/tx/${transaction.hash}`}
+      href={`${network.blockExplorer}/tx/${transaction.hash}`}
       target="_blank"
       rel="noreferrer"
       className="flex items-center p-4 gap-2"

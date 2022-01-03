@@ -1,5 +1,5 @@
 import { Button } from 'components/Button';
-import { testNetwork } from 'lib/blockchainNetworks';
+import { network } from 'lib/blockchainNetworks';
 import { DefaultWallet, useUpdateDefaultWalletMutation } from 'lib/graphql';
 import React, { createContext, ReactNode, useContext } from 'react';
 import Web3 from 'web3';
@@ -47,7 +47,7 @@ const WalletProvider = ({ children }: WalletProviderProps) => {
           </Button>
         </>
       );
-    } else if (chainId !== testNetwork.id) {
+    } else if (chainId !== network.id) {
       Content = (
         <>
           <div>Ops! It seems you may be connected to another network</div>
