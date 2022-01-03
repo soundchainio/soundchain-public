@@ -95,8 +95,9 @@ export class UserService extends ModelService<typeof User> {
   }
 
   async getUserByWallet(walletAddress: string): Promise<User> {
+    const walletLowerCase = walletAddress.toLowerCase();
     const user = await this.model.findOne({
-      $or: [{ magicWalletAddress: walletAddress }, { metaMaskWalletAddressees: { $in: [walletAddress] } }],
+      $or: [{ magicWalletAddress: walletLowerCase }, { metaMaskWalletAddressees: { $in: [walletLowerCase] } }],
     });
     return user;
   }
