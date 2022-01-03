@@ -9,7 +9,6 @@ import { ApproveMarketplace } from 'icons/ApproveMarketplace';
 import { Auction } from 'icons/Auction';
 import { CheckmarkFilled } from 'icons/CheckmarkFilled';
 import { Matic } from 'icons/Matic';
-import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import { SaleType } from 'types/SaleType';
 
@@ -18,7 +17,6 @@ export const ApproveModal = () => {
   const { showApprove, type } = useModalState();
   const { dispatchShowApproveModal } = useModalDispatch();
   const { approveMarketplace, approveAuction } = useBlockchain();
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   const maxGasFee = useMaxGasFee(showApprove);
@@ -42,7 +40,6 @@ export const ApproveModal = () => {
   const onReceipt = () => {
     setLoading(false);
     dispatchShowApproveModal(false, SaleType.CLOSE);
-    router.reload();
   };
 
   const icon = () => {

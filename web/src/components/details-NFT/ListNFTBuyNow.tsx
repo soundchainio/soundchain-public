@@ -27,9 +27,10 @@ interface ListNFTProps {
   initialValues?: Partial<ListNFTBuyNowFormValues>;
   submitLabel: string;
   handleSubmit: (values: ListNFTBuyNowFormValues, formikHelpers: FormikHelpers<ListNFTBuyNowFormValues>) => void;
+  isApproved: boolean;
 }
 
-export const ListNFTBuyNow = ({ initialValues, submitLabel, handleSubmit }: ListNFTProps) => {
+export const ListNFTBuyNow = ({ initialValues, submitLabel, handleSubmit, isApproved }: ListNFTProps) => {
   const defaultValues = {
     price: initialValues?.price || 0,
     royalty: initialValues?.royalty || 0,
@@ -87,8 +88,8 @@ export const ListNFTBuyNow = ({ initialValues, submitLabel, handleSubmit }: List
                 <Button
                   className="ml-auto"
                   variant="list-nft"
-                  disabled={isSubmitting}
-                  loading={isSubmitting}
+                  disabled={isApproved && isSubmitting}
+                  loading={isApproved && isSubmitting}
                   type="submit"
                 >
                   <div className="px-4 font-bold">{submitLabel}</div>
