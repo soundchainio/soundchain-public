@@ -134,7 +134,7 @@ export default function AuctionPage({ track }: TrackPageProps) {
       <div className="m-4">
         <Track track={track} />
       </div>
-      <ListNFTAuction handleSubmit={handleList} submitLabel="LIST NFT" isApproved={isApproved} />
+      <ListNFTAuction handleSubmit={handleList} submitLabel="LIST NFT" />
     </Layout>
   );
 }

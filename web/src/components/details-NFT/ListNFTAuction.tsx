@@ -27,10 +27,9 @@ interface ListNFTProps {
   submitLabel: string;
   handleSubmit: (values: ListNFTAuctionFormValues, formikHelpers: FormikHelpers<ListNFTAuctionFormValues>) => void;
   initialValues?: Partial<ListNFTAuctionFormValues>;
-  isApproved: boolean;
 }
 
-export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues, isApproved }: ListNFTProps) => {
+export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: ListNFTProps) => {
   const defaultValues: ListNFTAuctionFormValues = {
     price: initialValues?.price || 0,
     startTime: initialValues?.startTime || new Date(new Date().getTime() + 10 * 1000 * 60),
@@ -113,8 +112,8 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues, isApp
                 className="ml-auto"
                 type="submit"
                 variant="list-nft"
-                loading={isApproved && isSubmitting}
-                disabled={isApproved && isSubmitting}
+                loading={isSubmitting}
+                disabled={isSubmitting}
               >
                 <div className="px-4 font-bold">{submitLabel}</div>
               </Button>
