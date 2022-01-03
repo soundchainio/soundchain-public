@@ -5,6 +5,7 @@ import { Polygon } from 'icons/Polygon';
 import { CreateTrackMutation } from 'lib/graphql';
 import React from 'react';
 import NextLink from 'next/link';
+import { network } from 'lib/blockchainNetworks';
 
 interface MintingDoneProps {
   track: CreateTrackMutation['createTrack']['track'];
@@ -52,7 +53,7 @@ export const MintingDone = ({ track, transactionHash }: MintingDoneProps) => {
           <a
             className="truncate font-black "
             style={{ fontSize: '9px', lineHeight: '9px', borderBottom: '1px solid gray', color: '#808080' }}
-            href={`https://mumbai.polygonscan.com/tx/${transactionHash}`}
+            href={`${network.blockExplorer}/tx/${transactionHash}`}
             rel="noreferrer"
             target="_blank"
           >

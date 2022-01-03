@@ -16,11 +16,13 @@ export const mainNetwork: BlockchainNetwork = {
   blockExplorer: 'https://polygonscan.com/',
 };
 
-export const testNetwork: BlockchainNetwork = {
+export const testnetNetwork: BlockchainNetwork = {
   name: 'Matic Mumbai',
   rpc: 'https://rpc-mumbai.maticvigil.com',
   id: 80001,
   idHex: '0x13881',
   symbol: 'MATIC',
-  blockExplorer: 'https://explorer-mumbai.maticvigil.com',
+  blockExplorer: 'https://mumbai.polygonscan.com',
 };
+
+export const network: BlockchainNetwork = process.env.VERCEL_ENV !== 'production' ? testnetNetwork : mainNetwork;
