@@ -116,8 +116,8 @@ export default function AuctionPage({ track }: TrackPageProps) {
       createAuction(web3, nftData.tokenId, weiPrice, startTimestamp, endTimestamp, account, onTransactionHash);
     } else {
       me ? dispatchShowApproveModal(true, SaleType.AUCTION) : router.push('/login');
+      helper.setSubmitting(false);
     }
-    helper.setSubmitting(false);
   };
 
   const topNovaBarProps: TopNavBarProps = {

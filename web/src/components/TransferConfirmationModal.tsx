@@ -1,21 +1,21 @@
+import { InputField } from 'components/InputField';
 import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { Form, Formik } from 'formik';
-import { InputField } from 'components/InputField';
 import useBlockchain from 'hooks/useBlockchain';
-import { useMagicContext } from 'hooks/useMagicContext';
 import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { useMe } from 'hooks/useMe';
+import { useWalletContext } from 'hooks/useWalletContext';
 import { Logo } from 'icons/Logo';
 import { Matic } from 'icons/Matic';
 import router from 'next/router';
+import { authenticator } from 'otplib';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
+import * as yup from 'yup';
 import { Button } from './Button';
 import { Label } from './Label';
 import { Account, Wallet } from './Wallet';
-import { authenticator } from 'otplib';
-import * as yup from 'yup';
 
 interface FormValues {
   token: string;
@@ -27,7 +27,7 @@ export const TransferConfirmationModal = () => {
   const { dispatchShowTransferConfirmationModal } = useModalDispatch();
   const [loading, setLoading] = useState(false);
   const { sendMatic } = useBlockchain();
-  const { web3, account, balance, refetchBalance } = useMagicContext();
+  const { web3, account, balance, refetchBalance } = useWalletContext();
 
   const maxGasFee = useMaxGasFee(showTransferConfirmation);
 
@@ -63,7 +63,7 @@ export const TransferConfirmationModal = () => {
       }
     }
 
-    if (hasEnoughFunds()) {
+    if (hasEnoughFunds() && web3 && refetchBalance) {
       try {
         setLoading(true);
         const onReceipt = () => {
@@ -133,7 +133,7 @@ export const TransferConfirmationModal = () => {
                   </div>
                   <Wallet
                     account={account}
-                    icon={() => <Logo id="soundchain-wallet" height="20" width="20" />}
+                    icon={() => <Logo id="soundchain-wallet" height="20" width="20" />} // TODO SHOULD BE DYNAMIC
                     title="SoundChain Wallet"
                     correctNetwork={true}
                     defaultWallet={true}

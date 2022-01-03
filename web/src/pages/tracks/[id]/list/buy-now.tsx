@@ -117,8 +117,8 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
       listItem(web3, nftData.tokenId, account, weiPrice, startTimestamp, onTransactionHash);
     } else {
       me ? dispatchShowApproveModal(true, SaleType.MARKETPLACE) : router.push('/login');
+      helper.setSubmitting(false);
     }
-    helper.setSubmitting(false);
   };
 
   const topNovaBarProps: TopNavBarProps = {

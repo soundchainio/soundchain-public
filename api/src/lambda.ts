@@ -76,7 +76,7 @@ export const watcher: Handler = async () => {
           try {
             const { owner, nft, tokenId, pricePerItem, startingTime } = (event as ItemListed).returnValues;
             const [user, listedBefore] = await Promise.all([
-              context.userService.getUserByWallet(owner),
+              context.userService.getUserByWallet(owner.toLowerCase()),
               context.listingItemService.wasListedBefore(parseInt(tokenId)),
             ]);
             const profile = await context.profileService.getProfile(user.profileId);
@@ -181,7 +181,7 @@ export const watcher: Handler = async () => {
               event as unknown as AuctionCreated
             ).returnValues;
             const [user, listedBefore] = await Promise.all([
-              context.userService.getUserByWallet(owner),
+              context.userService.getUserByWallet(owner.toLowerCase()),
               context.listingItemService.wasListedBefore(parseInt(tokenId)),
             ]);
             const profile = await context.profileService.getProfile(user.profileId);
