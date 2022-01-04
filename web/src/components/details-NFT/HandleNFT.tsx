@@ -3,9 +3,11 @@ import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { TimeCounter } from 'components/TimeCounter';
 import { CheckmarkFilled } from 'icons/CheckmarkFilled';
 import { Matic } from 'icons/Matic';
+import { useMaticUsdQuery } from 'lib/graphql';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import React from 'react';
+import { currency } from 'utils/format';
 
 interface HandleNFTProps {
   isOwner: boolean;
@@ -139,13 +141,18 @@ interface ListedActionProps {
 
 const ListedAction = ({ href, price, action, variant, countBids, startingDate, endingDate }: ListedActionProps) => {
   const futureSale = startingDate && startingDate.getTime() > new Date().getTime();
+  const { data: maticUsd } = useMaticUsdQuery();
+
   return (
     <PlayerAwareBottomBar>
       <div className="flex flex-col flex-1">
         <div className="text-md flex items-center font-bold gap-1">
-          <Matic />
           <span>{price}</span>
-          <span className="text-xs text-gray-80">MATIC</span>
+          <Matic />
+          <span className="text-xl text-gray-80"> {maticUsd && price && '≃'} </span>
+          <span className="text-gray-80 font-normal">
+            {maticUsd && price && `${currency(parseFloat(price) * parseFloat(maticUsd.maticUsd))}`}
+          </span>
         </div>
       </div>
       {futureSale && startingDate && (
