@@ -16,7 +16,7 @@ export default function MaxGasFee() {
       <div className="flex items-center gap-1 font-bold">
         <div className="text-white text-base">{maxGasFee}</div>
         <Matic />
-        <span className="text-xl text-gray-80"> ≃ </span>
+        <span className="text-xl text-gray-80"> {maticUsd && maxGasFee && '≃'}</span>
         <span className="text-base text-gray-80 font-normal">
           {maticUsd && maxGasFee && `${currency(parseFloat(maxGasFee) * parseFloat(maticUsd.maticUsd))}`}
         </span>

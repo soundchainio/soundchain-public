@@ -96,7 +96,7 @@ export const ApproveModal = () => {
               <span className="my-auto">
                 <Matic />
               </span>
-              <span className="text-xl text-gray-80"> ≃ </span>
+              <span className="text-xl text-gray-80"> {maticUsd && maxGasFee && '≃'} </span>
               <span className="text-base text-gray-80 font-normal">
                 {maticUsd && maxGasFee && `${currency(parseFloat(maxGasFee) * parseFloat(maticUsd.maticUsd))}`}
               </span>

@@ -149,7 +149,7 @@ const ListedAction = ({ href, price, action, variant, countBids, startingDate, e
         <div className="text-md flex items-center font-bold gap-1">
           <span>{price}</span>
           <Matic />
-          <span className="text-xl text-gray-80"> ≃ </span>
+          <span className="text-xl text-gray-80"> {maticUsd && price && '≃'} </span>
           <span className="text-gray-80 font-normal">
             {maticUsd && price && `${currency(parseFloat(price) * parseFloat(maticUsd.maticUsd))}`}
           </span>

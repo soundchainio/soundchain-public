@@ -276,7 +276,7 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
               <div className="text-md flex items-center font-bold gap-1">
                 <span className="text-white">{price}</span>
                 <Matic />
-                <span className="text-xl text-gray-80"> ≃ </span>
+                <span className="text-xl text-gray-80"> {maticUsd && '≃'} </span>
                 <span className="text-gray-80 font-normal">
                   {maticUsd && `${currency(parseFloat(price) * parseFloat(maticUsd.maticUsd))}`}
                 </span>
@@ -315,7 +315,7 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
               <div className="text-md flex items-center font-bold gap-1">
                 <span className="text-white">{price}</span>
                 <Matic />
-                <span className="text-xl text-gray-80"> ≃ </span>
+                <span className="text-xl text-gray-80"> {maticUsd && price && '≃'} </span>
                 <span className="text-gray-80 font-normal">
                   {maticUsd && price && `${currency(parseFloat(price) * parseFloat(maticUsd.maticUsd))}`}
                 </span>
