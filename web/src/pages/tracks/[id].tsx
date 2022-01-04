@@ -28,7 +28,7 @@ import {
   useListingItemLazyQuery,
   useProfileLazyQuery,
   useTrackLazyQuery,
-  useUserByWalletLazyQuery
+  useUserByWalletLazyQuery,
 } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
