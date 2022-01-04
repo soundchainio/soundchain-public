@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
+import * as yup from 'yup';
 import { Avatar } from 'components/Avatar';
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
@@ -36,6 +37,7 @@ import { Timer } from '../[id]';
 import { HighestBid } from './complete-auction';
 import { toast } from 'react-toastify';
 import useBlockchainV2 from 'hooks/useBlockchainV2';
+import { authenticator } from 'otplib';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -47,6 +49,7 @@ interface TrackPageParams extends ParsedUrlQuery {
 
 interface FormValues {
   bidAmount: number;
+  token: string;
 }
 
 export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(async (context, apolloClient) => {
@@ -157,7 +160,15 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     return errors;
   };
 
-  const handlePlaceBid = ({ bidAmount }: FormValues) => {
+  const handlePlaceBid = ({ bidAmount, token }: FormValues) => {
+    if (token) {
+      const isValid = authenticator.verify({ token, secret: me?.otpSecret || '' });
+      if (!isValid) {
+        toast.error('Invalid token code');
+        return;
+      }
+    }
+
     if (!web3 || !auctionItem.auctionItem?.tokenId || !auctionItem.auctionItem?.owner || !account) {
       return;
     }
@@ -185,6 +196,15 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
   if (!isForSale || isOwner || !me || track.nftData?.pendingRequest != PendingRequest.None) {
     return null;
   }
+
+  const initialValues = {
+    bidAmount: minBid,
+    token: '',
+  };
+
+  const validationSchema = yup.object().shape({
+    token: me?.otpSecret ? yup.string().required('Two-Factor token is required') : yup.string(),
+  });
 
   return (
     <Layout topNavBarProps={topNovaBarProps}>
@@ -251,10 +271,11 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
       </div>
       {hasStarted && !hasEnded && (
         <Formik<FormValues>
-          initialValues={{ bidAmount: minBid }}
+          initialValues={initialValues}
           onSubmit={handlePlaceBid}
           enableReinitialize
           validate={validate}
+          validationSchema={validationSchema}
         >
           {({ values: { bidAmount } }) => (
             <Form>
@@ -284,6 +305,18 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
               <div className="py-3 px-4 bg-gray-20">
                 <MaxGasFee />
               </div>
+
+              {me?.otpSecret && (
+                <InputField
+                  label="Two-Factor token"
+                  name="token"
+                  type="text"
+                  maxLength={6}
+                  pattern="[0-9]*"
+                  inputMode="numeric"
+                />
+              )}
+
               <PlayerAwareBottomBar>
                 <div className="flex-1 font-black text-xs">
                   <div className="flex items-center gap-2 text-white">

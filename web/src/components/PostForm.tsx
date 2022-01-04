@@ -96,7 +96,7 @@ export const PostForm = ({ ...props }: PostFormProps) => {
       onSubmit={onSubmit}
     >
       {({ values, setFieldValue }) => (
-        <Form className="flex flex-col h-full">
+        <Form className="flex flex-col h-full pb-safe">
           <div className="flex items-center rounded-tl-3xl rounded-tr-3xl bg-gray-20">
             <div
               className="p-2 text-gray-400 font-bold flex-1 text-center"

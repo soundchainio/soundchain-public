@@ -4,7 +4,7 @@ import { InstanceWithExtensions, MagicSDKExtensionsOption, SDKBase } from '@magi
 import { OAuthExtension } from '@magic-ext/oauth';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import Web3 from 'web3';
-import { testNetwork } from '../lib/blockchainNetworks';
+import { network } from '../lib/blockchainNetworks';
 import { useMe } from './useMe';
 
 const magicPublicKey = process.env.NEXT_PUBLIC_MAGIC_KEY || '';
@@ -28,8 +28,8 @@ const createMagic = (magicPublicKey: string) => {
   return typeof window != 'undefined'
     ? new Magic(magicPublicKey, {
         network: {
-          rpcUrl: testNetwork.rpc,
-          chainId: testNetwork.id,
+          rpcUrl: network.rpc,
+          chainId: network.id,
         },
         extensions: [new OAuthExtension()],
       })
@@ -39,7 +39,12 @@ const createMagic = (magicPublicKey: string) => {
 export const magic = createMagic(magicPublicKey)!;
 
 // Create Web3 instance
-const createWeb3 = (magic: false | InstanceWithExtensions<SDKBase, MagicSDKExtensionsOption<string>> | InstanceWithExtensions<SDKBase, OAuthExtension[]>) => {
+const createWeb3 = (
+  magic:
+    | false
+    | InstanceWithExtensions<SDKBase, MagicSDKExtensionsOption<string>>
+    | InstanceWithExtensions<SDKBase, OAuthExtension[]>,
+) => {
   return magic ? new Web3(magic.rpcProvider) : null;
 };
 
@@ -51,12 +56,12 @@ export function MagicProvider({ children }: MagicProviderProps) {
   const [balance, setBalance] = useState<string>();
 
   const refetchBalance = () => {
-    if(account) {
+    if (account) {
       web3.eth.getBalance(account).then(balance => {
         setBalance(Number(web3.utils.fromWei(balance, 'ether')).toFixed(6));
       });
     }
-  }
+  };
 
   useEffect(() => {
     if (me && me.magicWalletAddress && web3) {
@@ -67,7 +72,9 @@ export function MagicProvider({ children }: MagicProviderProps) {
     }
   }, [me]);
 
-  return <MagicContext.Provider value={{ magic, web3, account, balance, refetchBalance }}>{children}</MagicContext.Provider>;
+  return (
+    <MagicContext.Provider value={{ magic, web3, account, balance, refetchBalance }}>{children}</MagicContext.Provider>
+  );
 }
 
 export const useMagicContext = () => useContext(MagicContext);

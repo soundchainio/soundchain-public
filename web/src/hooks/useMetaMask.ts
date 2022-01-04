@@ -1,5 +1,5 @@
 import MetaMaskOnboarding from '@metamask/onboarding';
-import { testNetwork } from 'lib/blockchainNetworks';
+import { network } from 'lib/blockchainNetworks';
 import { useUpdateMetaMaskAddressesMutation } from 'lib/graphql';
 import { useEffect, useRef, useState } from 'react';
 import Web3 from 'web3';
@@ -72,15 +72,15 @@ export const useMetaMask = () => {
         method: 'wallet_addEthereumChain',
         params: [
           {
-            chainId: testNetwork.idHex, // A 0x-prefixed hexadecimal string
-            chainName: testNetwork.name,
+            chainId: network.idHex, // A 0x-prefixed hexadecimal string
+            chainName: network.name,
             nativeCurrency: {
-              name: testNetwork.name,
-              symbol: testNetwork.symbol, // 2-6 characters long
+              name: network.name,
+              symbol: network.symbol, // 2-6 characters long
               decimals: 18,
             },
-            rpcUrls: [testNetwork.rpc],
-            blockExplorerUrls: [testNetwork.blockExplorer],
+            rpcUrls: [network.rpc],
+            blockExplorerUrls: [network.blockExplorer],
           },
         ],
       });

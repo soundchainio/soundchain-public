@@ -20,7 +20,6 @@ export const ApproveModal = () => {
   const { showApprove, type } = useModalState();
   const { dispatchShowApproveModal } = useModalDispatch();
   const { approveMarketplace, approveAuction } = useBlockchain();
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const { data: maticUsd } = useMaticUsdQuery();
 
@@ -45,7 +44,6 @@ export const ApproveModal = () => {
   const onReceipt = () => {
     setLoading(false);
     dispatchShowApproveModal(false, SaleType.CLOSE);
-    router.reload();
   };
 
   const icon = () => {

@@ -1,8 +1,8 @@
 import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
-import { useMagicContext } from 'hooks/useMagicContext';
 import { useMaxGasFee } from 'hooks/useMaxGasFee';
+import { useWalletContext } from 'hooks/useWalletContext';
 import { Logo } from 'icons/Logo';
 import { Matic } from 'icons/Matic';
 import { PendingRequest, useUpdateTrackMutation } from 'lib/graphql';
@@ -20,7 +20,7 @@ export const RemoveListingConfirmationModal = () => {
   const [trackUpdate] = useUpdateTrackMutation();
   const { dispatchShowRemoveListingModal } = useModalDispatch();
   const { cancelListing, cancelAuction } = useBlockchain();
-  const { web3, account, balance } = useMagicContext();
+  const { web3, account, balance } = useWalletContext();
   const maxGasFee = useMaxGasFee(showRemoveListing);
   const [loading, setLoading] = useState(false);
 
@@ -50,7 +50,7 @@ export const RemoveListingConfirmationModal = () => {
 
     try {
       setLoading(true);
-      if (!account) return;
+      if (!account || !web3) return;
       const onTransactionHash = async () => {
         await trackUpdate({
           variables: {
@@ -106,7 +106,7 @@ export const RemoveListingConfirmationModal = () => {
                 </div>
                 <Wallet
                   account={account}
-                  icon={() => <Logo id="soundchain-wallet" height="20" width="20" />}
+                  icon={() => <Logo id="soundchain-wallet" height="20" width="20" />} //TODO SHOULD BE DYNAMIC
                   title="SoundChain Wallet"
                   correctNetwork={true}
                   defaultWallet={true}
