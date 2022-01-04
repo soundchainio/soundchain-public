@@ -8,4 +8,5 @@ export const config = {
   marketplaceAddress: process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS,
   muxData: process.env.NEXT_PUBLIC_MUX_DATA,
   polygonscan: process.env.NEXT_PUBLIC_POLYGONSCAN,
+  redirectUrlPostLogin: process.env.NEXT_PUBLIC_REDIRECT_URL_POST_LOGIN,
 };

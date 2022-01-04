@@ -156,11 +156,15 @@ export const CreateModal = () => {
       const artistId = me.id;
       const artistProfileId = me.profile.id;
 
-      setMintingState('Writing data to ID3Tag ');
-      const taggedFile = await saveID3Tag(values, file);
+      let asset = file;
+      if (file.type === 'audio/mpeg') {
+        // only to MP3 files
+        setMintingState('Writing data to ID3Tag ');
+        asset = await saveID3Tag(values, file);
+      }
 
       setMintingState('Uploading track file');
-      const assetUrl = await upload([taggedFile]);
+      const assetUrl = await upload([asset]);
       const artUrl = artworkUrl;
 
       try {

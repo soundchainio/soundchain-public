@@ -37,10 +37,9 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: Lis
   };
 
   return (
-    <div className="mb-2">
+    <div className="mb-2 pb-16">
       <Formik
         initialValues={defaultValues}
-        enableReinitialize
         validationSchema={validationSchema}
         onSubmit={(values, helper) => {
           handleSubmit({ ...values, startTime: new Date(values.startTime), endTime: new Date(values.endTime) }, helper);

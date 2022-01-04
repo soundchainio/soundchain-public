@@ -3,7 +3,8 @@ import { ListNFTAuction, ListNFTAuctionFormValues } from 'components/details-NFT
 import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
-import { useModalDispatch } from 'contexts/providers/modal';
+import { useModalDispatch, useModalState } from 'contexts/providers/modal';
+import { FormikHelpers } from 'formik';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
@@ -49,6 +50,7 @@ export default function AuctionPage({ track }: TrackPageProps) {
   const me = useMe();
   const [trackUpdate] = useUpdateTrackMutation();
   const { account, web3 } = useWalletContext();
+  const { showApprove } = useModalState();
   const { dispatchShowApproveModal } = useModalDispatch();
   const [isOwner, setIsOwner] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
@@ -79,16 +81,18 @@ export default function AuctionPage({ track }: TrackPageProps) {
   useEffect(() => {
     const fetchIsApproved = async () => {
       if (!web3 || !checkIsApproved || !account) return;
-
       const is = await checkIsApproved(web3, account);
       setIsApproved(is);
     };
     fetchIsApproved();
-  }, [account, web3, checkIsApproved]);
+  }, [account, web3, checkIsApproved, showApprove]);
 
   const isForSale = !!buyNowItem?.buyNowItem?.buyNowItem?.pricePerItem ?? false;
 
-  const handleList = ({ price, startTime, endTime }: ListNFTAuctionFormValues) => {
+  const handleList = (
+    { price, startTime, endTime }: ListNFTAuctionFormValues,
+    helper: FormikHelpers<ListNFTAuctionFormValues>,
+  ) => {
     if (nftData?.tokenId === null || nftData?.tokenId === undefined || !account || !web3) {
       return;
     }
@@ -112,6 +116,7 @@ export default function AuctionPage({ track }: TrackPageProps) {
       createAuction(web3, nftData.tokenId, weiPrice, startTimestamp, endTimestamp, account, onTransactionHash);
     } else {
       me ? dispatchShowApproveModal(true, SaleType.AUCTION) : router.push('/login');
+      helper.setSubmitting(false);
     }
   };
 

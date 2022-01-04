@@ -83,6 +83,11 @@ export interface ShowConfirmDeleteNFT {
   burn: boolean;
 }
 
+export interface ShowBidsHistory {
+  show: boolean;
+  auctionId: string;
+}
+
 export type ModalPayload =
   | ShowNewPostPayload
   | ShowCommentModalPayload
@@ -100,4 +105,5 @@ export type ModalPayload =
   | ShowRemoveListing
   | ShowApprove
   | ShowConfirmDeleteNFT
-  | ShowMarketplaceFilterPayload;
+  | ShowMarketplaceFilterPayload
+  | ShowBidsHistory;

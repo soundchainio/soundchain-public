@@ -5,6 +5,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { AuthorActionsModal } from './AuthorActionsModal';
 import { CommentModal } from './CommentModal';
 import { ApproveModal } from './modals/ApproveModal';
+import { BidsHistoryModal } from './modals/BidsHistoryModal';
 import { ConfirmDeleteNFTModal } from './modals/ConfirmDeleteNFTModal';
 import { FilterModalMarketplace } from './modals/FilterMarketplaceModal';
 import { PostModal } from './PostModal';
@@ -52,6 +53,7 @@ export const Layout = ({ children, hideBottomNavBar, topNavBarProps, className }
         <ApproveModal />
         <RemoveListingConfirmationModal />
         <FilterModalMarketplace />
+        <BidsHistoryModal />
       </div>
     </div>
   );

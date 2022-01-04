@@ -26,6 +26,7 @@ import {
   useCountBidsLazyQuery,
   useHaveBidedLazyQuery,
   useListingItemLazyQuery,
+  useMaticUsdQuery,
   useProfileLazyQuery,
   useTrackLazyQuery,
   useUserByWalletLazyQuery
@@ -35,6 +36,7 @@ import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 import { AuthorActionsType } from 'types/AuthorActionsType';
+import { currency } from 'utils/format';
 import { compareWallets } from 'utils/Wallet';
 import { HighestBid } from './[id]/complete-auction';
 
@@ -89,7 +91,8 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const [track, setTrack] = useState<TrackQuery['track']>(initialState);
   const [highestBid, setHighestBid] = useState<HighestBid>({} as HighestBid);
   const [isLoadingOwner, setLoadingOwner] = useState(true);
-  const { dispatchShowAuthorActionsModal } = useModalDispatch();
+  const { data: maticUsd } = useMaticUsdQuery();
+  const { dispatchShowAuthorActionsModal, dispatchShowBidsHistory } = useModalDispatch();
 
   const [refetchTrack, { data: trackData }] = useTrackLazyQuery({
     fetchPolicy: 'network-only',
@@ -123,7 +126,7 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const isAuction = Boolean(listingPayload?.listingItem?.reservePrice);
   const bidCount = countBids?.countBids.numberOfBids ?? 0;
 
-  const { reservePrice, pricePerItem } = listingPayload?.listingItem || {};
+  const { reservePrice, pricePerItem, id } = listingPayload?.listingItem || {};
 
   let priceValue = pricePerItem?.toLocaleString('fullwide', { useGrouping: false });
   if (isAuction) {
@@ -271,9 +274,12 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
             <div className="flex justify-between items-center px-4 py-3">
               <div className="text-sm font-bold text-white">BUY NOW PRICE</div>
               <div className="text-md flex items-center font-bold gap-1">
-                <Matic />
                 <span className="text-white">{price}</span>
-                <span className="text-xxs text-gray-80">MATIC</span>
+                <Matic />
+                <span className="text-xl text-gray-80"> {maticUsd && '≃'} </span>
+                <span className="text-gray-80 font-normal">
+                  {maticUsd && `${currency(parseFloat(price) * parseFloat(maticUsd.maticUsd))}`}
+                </span>
               </div>
             </div>
             {futureSale && (
@@ -307,10 +313,18 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
             <div className="flex justify-between items-center px-4 py-3">
               <div className="text-sm font-bold text-white">{auctionIsOver ? 'FINAL PRICE' : 'CURRENT PRICE'}</div>
               <div className="text-md flex items-center font-bold gap-1">
-                <Matic />
                 <span className="text-white">{price}</span>
-                <span className="text-xxs text-gray-80">MATIC</span>
-                <span className="text-[#22CAFF] text-xxs">[{bidCount} bids]</span>
+                <Matic />
+                <span className="text-xl text-gray-80"> {maticUsd && price && '≃'} </span>
+                <span className="text-gray-80 font-normal">
+                  {maticUsd && price && `${currency(parseFloat(price) * parseFloat(maticUsd.maticUsd))}`}
+                </span>
+                <span
+                  className="text-[#22CAFF] text-xxs cursor-pointer"
+                  onClick={() => dispatchShowBidsHistory(true, id || '')}
+                >
+                  [{bidCount} bids]
+                </span>
               </div>
             </div>
             {highestBidderData?.getUserByWallet && (
@@ -383,6 +397,7 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
             countBids={bidCount}
             startingDate={startingDate}
             endingDate={endingDate}
+            auctionId={id || ''}
           />
         ) : null}
       </Layout>

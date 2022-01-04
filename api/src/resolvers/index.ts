@@ -1,5 +1,6 @@
 import { AuctionIsEndingNotificationResolver } from './AuctionIsEndingNotificationResolver';
 import { AuctionItemResolver } from './AuctionItemResolver';
+import { BidResolver } from './BidResolver';
 import { BuyNowItemResolver } from './BuyNowItemResolver';
 import { ChatResolver } from './ChatResolver';
 import { CommentNotificationResolver } from './CommentNotificationResolver';
@@ -33,6 +34,7 @@ import { WonAuctionNotificationResolver } from './WonAuctionNotificationResolver
 export const resolvers = [
   AuctionIsEndingNotificationResolver,
   AuctionItemResolver,
+  BidResolver,
   BuyNowItemResolver,
   ChatResolver,
   CommentNotificationResolver,
