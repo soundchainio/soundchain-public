@@ -29,7 +29,7 @@ import {
   useMaticUsdQuery,
   useProfileLazyQuery,
   useTrackLazyQuery,
-  useUserByWalletLazyQuery,
+  useUserByWalletLazyQuery
 } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
@@ -321,7 +321,7 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
                 </span>
                 <span
                   className="text-[#22CAFF] text-xxs cursor-pointer"
-                  onClick={() => dispatchShowBidsHistory(true, id)}
+                  onClick={() => dispatchShowBidsHistory(true, id || '')}
                 >
                   [{bidCount} bids]
                 </span>
@@ -397,7 +397,7 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
             countBids={bidCount}
             startingDate={startingDate}
             endingDate={endingDate}
-            auctionId={id}
+            auctionId={id || ''}
           />
         ) : null}
       </Layout>

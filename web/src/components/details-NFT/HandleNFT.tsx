@@ -41,7 +41,7 @@ export const HandleNFT = ({
   if (isOwner) {
     if (!canList) {
       return (
-        <ListingAction href={`/get-verified`} action="GET VERIFIED">
+        <ListingAction href={`/get-verified`} action="GET VERIFIED" auctionId={auctionId}>
           You must be verified in order to sell NFT’s.
         </ListingAction>
       );
@@ -56,6 +56,7 @@ export const HandleNFT = ({
           endingDate={endingDate}
           action="EDIT LISTING"
           variant="edit-listing"
+          auctionId={auctionId}
         />
       );
     }
@@ -68,11 +69,12 @@ export const HandleNFT = ({
           price={price}
           cancelHref={`${router.asPath}/cancel-auction`}
           completeHref={`${router.asPath}/complete-auction`}
+          auctionId={auctionId}
         />
       );
     }
     return (
-      <ListingAction href={`${router.asPath}/list`} action="LIST NFT">
+      <ListingAction href={`${router.asPath}/list`} action="LIST NFT" auctionId={auctionId}>
         <CheckmarkFilled />
         You own this NFT
       </ListingAction>
@@ -137,12 +139,22 @@ interface ListedActionProps {
   price: string | undefined | null;
   action: string;
   variant: ButtonVariant;
+  auctionId: string;
   countBids?: number;
   startingDate?: Date;
   endingDate?: Date;
 }
 
-const ListedAction = ({ href, price, action, variant, countBids, startingDate, endingDate }: ListedActionProps) => {
+const ListedAction = ({
+  href,
+  price,
+  action,
+  variant,
+  countBids,
+  startingDate,
+  endingDate,
+  auctionId,
+}: ListedActionProps) => {
   const futureSale = startingDate && startingDate.getTime() > new Date().getTime();
   const { data: maticUsd } = useMaticUsdQuery();
 
@@ -167,7 +179,7 @@ const ListedAction = ({ href, price, action, variant, countBids, startingDate, e
       {endingDate && !futureSale && (
         <div className="flex flex-col text-xs items-center px-1">
           {countBids != 0 && (
-            <span className="text-blue-400 font-bold" onClick={() => dispatchShowBidsHistory(true)}>
+            <span className="text-blue-400 font-bold" onClick={() => dispatchShowBidsHistory(true, auctionId)}>
               [{countBids} bids]
             </span>
           )}
@@ -190,6 +202,7 @@ interface AuctionDetailsProps {
   countBids?: number;
   endingDate?: Date;
   completeHref: string;
+  auctionId: string;
 }
 
 const AuctionDetails = ({
@@ -199,6 +212,7 @@ const AuctionDetails = ({
   endingDate,
   cancelHref,
   completeHref,
+  auctionId,
 }: AuctionDetailsProps) => {
   return (
     <div className="w-full bg-black text-white flex items-center py-3 px-4">
@@ -217,7 +231,9 @@ const AuctionDetails = ({
             </NextLink>
           </div>
         )}
-        {countBids != 0 && <ListedAction href={completeHref} price={price} action="COMPLETE" variant="buy-nft" />}
+        {countBids != 0 && (
+          <ListedAction href={completeHref} price={price} action="COMPLETE" variant="buy-nft" auctionId={auctionId} />
+        )}
         {endingDate && (
           <div className="flex flex-col text-xs items-center ">
             <Timer date={endingDate} />

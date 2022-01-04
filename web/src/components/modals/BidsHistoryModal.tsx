@@ -2,13 +2,14 @@ import { Avatar } from 'components/Avatar';
 import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { Matic } from 'icons/Matic';
-import { useBidsWithInfoQuery } from 'lib/graphql';
+import { useBidsWithInfoQuery, useMaticUsdQuery } from 'lib/graphql';
 import React from 'react';
+import { currency } from 'utils/format';
 
 export const BidsHistoryModal = () => {
   const { showBidsHistory, auctionId } = useModalState();
   const { dispatchShowBidsHistory } = useModalDispatch();
-
+  const { data: maticUsd } = useMaticUsdQuery();
   const { data } = useBidsWithInfoQuery({ variables: { auctionId: auctionId || '' } });
   const bids = data?.bidsWithInfo.bids;
 
@@ -50,7 +51,9 @@ export const BidsHistoryModal = () => {
                   <span className="text-xxs self-end text-gray-80">MATIC</span>
                 </div>
                 <div className="flex justify-end">
-                  <span className="text-gray-50 font-bold text-xxs">$49 USD</span>
+                  <span className="text-gray-50 font-bold text-xxs">
+                    {maticUsd && `${currency((item.amount / 1e18) * parseFloat(maticUsd.maticUsd))}`}
+                  </span>
                 </div>
               </div>
             </div>
