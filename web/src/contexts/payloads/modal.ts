@@ -85,6 +85,7 @@ export interface ShowConfirmDeleteNFT {
 
 export interface ShowBidsHistory {
   show: boolean;
+  auctionId: string;
 }
 
 export type ModalPayload =

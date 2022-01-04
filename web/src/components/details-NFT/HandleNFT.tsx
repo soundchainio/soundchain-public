@@ -21,6 +21,7 @@ interface HandleNFTProps {
   countBids: number;
   startingDate?: Date;
   endingDate?: Date;
+  auctionId: string;
 }
 
 export const HandleNFT = ({
@@ -34,6 +35,7 @@ export const HandleNFT = ({
   countBids,
   startingDate,
   endingDate,
+  auctionId,
 }: HandleNFTProps) => {
   const router = useRouter();
   if (isOwner) {

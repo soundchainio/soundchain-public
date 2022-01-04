@@ -61,7 +61,7 @@ export const useModalDispatch = () => {
       genres: Genre[] | undefined,
       filterSaleType: SaleTypeGraphQl | undefined,
     ) => dispatch({ type: ModalActionTypes.SHOW_FILTER_MARKETPLACE, payload: { show, genres, filterSaleType } }),
-    dispatchShowBidsHistory: (show: boolean) =>
-      dispatch({ type: ModalActionTypes.SHOW_BIDS_HISTORY, payload: { show } }),
+    dispatchShowBidsHistory: (show: boolean, auctionId: string) =>
+      dispatch({ type: ModalActionTypes.SHOW_BIDS_HISTORY, payload: { show, auctionId } }),
   };
 };

@@ -40,19 +40,6 @@ export class BidService extends ModelService<typeof Bid> {
       },
       {
         $lookup: {
-          from: 'users',
-          localField: 'userId',
-          foreignField: '_id',
-          as: 'user',
-        },
-      },
-      {
-        $unwind: {
-          path: '$user',
-        },
-      },
-      {
-        $lookup: {
           from: 'profiles',
           localField: 'profileId',
           foreignField: '_id',

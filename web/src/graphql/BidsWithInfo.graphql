@@ -1,16 +1,14 @@
-query BidsWithINfo($auctionId: String!) {
+query BidsWithInfo($auctionId: String!) {
   bidsWithInfo(auctionId: $auctionId) {
     bids {
       amount
       userId
       profileId
       createdAt
-      user {
-        handle
-      }
       profile {
         profilePicture
         displayName
+        userHandle
       }
     }
   }

@@ -59,6 +59,7 @@ export interface ModalState {
   showMarketplaceFilter: boolean;
   genres?: Genre[];
   filterSaleType?: SaleTypeGraphQl;
+  auctionId?: string;
 }
 
 export const initialModalState = {
@@ -93,6 +94,7 @@ export const initialModalState = {
   showMarketplaceFilter: false,
   genres: undefined,
   filterSaleType: undefined,
+  auctionId: undefined,
 };
 
 export const modalReducer = (state: ModalState, action: Action) => {
@@ -221,6 +223,7 @@ export const modalReducer = (state: ModalState, action: Action) => {
       return {
         ...state,
         showBidsHistory: (action.payload as ShowBidsHistory).show,
+        auctionId: (action.payload as ShowBidsHistory).auctionId,
       };
     default:
       return state;
