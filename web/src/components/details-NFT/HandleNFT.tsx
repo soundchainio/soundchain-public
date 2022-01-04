@@ -1,6 +1,7 @@
 import { Button, ButtonVariant } from 'components/Button';
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { TimeCounter } from 'components/TimeCounter';
+import { useModalDispatch } from 'contexts/providers/modal';
 import { CheckmarkFilled } from 'icons/CheckmarkFilled';
 import { Matic } from 'icons/Matic';
 import { useMaticUsdQuery } from 'lib/graphql';
@@ -143,6 +144,7 @@ const ListedAction = ({ href, price, action, variant, countBids, startingDate, e
   const futureSale = startingDate && startingDate.getTime() > new Date().getTime();
   const { data: maticUsd } = useMaticUsdQuery();
 
+  const { dispatchShowBidsHistory } = useModalDispatch();
   return (
     <PlayerAwareBottomBar>
       <div className="flex flex-col flex-1">
@@ -162,7 +164,11 @@ const ListedAction = ({ href, price, action, variant, countBids, startingDate, e
       )}
       {endingDate && !futureSale && (
         <div className="flex flex-col text-xs items-center px-1">
-          {countBids != 0 && <span className="text-blue-400 font-bold">[{countBids} bids]</span>}
+          {countBids != 0 && (
+            <span className="text-blue-400 font-bold" onClick={() => dispatchShowBidsHistory(true)}>
+              [{countBids} bids]
+            </span>
+          )}
           <Timer date={endingDate} />
         </div>
       )}

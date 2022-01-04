@@ -91,8 +91,8 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const [track, setTrack] = useState<TrackQuery['track']>(initialState);
   const [highestBid, setHighestBid] = useState<HighestBid>({} as HighestBid);
   const [isLoadingOwner, setLoadingOwner] = useState(true);
-  const { dispatchShowAuthorActionsModal } = useModalDispatch();
   const { data: maticUsd } = useMaticUsdQuery();
+  const { dispatchShowAuthorActionsModal, dispatchShowBidsHistory } = useModalDispatch();
 
   const [refetchTrack, { data: trackData }] = useTrackLazyQuery({
     fetchPolicy: 'network-only',
@@ -319,7 +319,9 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
                 <span className="text-gray-80 font-normal">
                   {maticUsd && price && `${currency(parseFloat(price) * parseFloat(maticUsd.maticUsd))}`}
                 </span>
-                <span className="text-[#22CAFF] text-xxs">[{bidCount} bids]</span>
+                <span className="text-[#22CAFF] text-xxs cursor-pointer" onClick={() => dispatchShowBidsHistory(true)}>
+                  [{bidCount} bids]
+                </span>
               </div>
             </div>
             {highestBidderData?.getUserByWallet && (
