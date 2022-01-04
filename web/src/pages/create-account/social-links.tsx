@@ -4,6 +4,7 @@ import { SocialLinksForm } from 'components/forms/profile/SocialLinksForm';
 import { Layout } from 'components/Layout';
 import { StepProgressBar } from 'components/StepProgressBar';
 import { TopNavBarProps } from 'components/TopNavBar';
+import { config } from 'config';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React from 'react';
@@ -14,7 +15,7 @@ export default function SocialLinksPage() {
   const topNavBarProps: TopNavBarProps = {
     title: 'Social Links',
     leftButton: <BackButton />,
-    rightButton: <Badge label="Skip" onClick={() => router.push('/marketplace')} selected={false} />,
+    rightButton: <Badge label="Skip" onClick={() => router.push(`${config.redirectUrlPostLogin}`)} selected={false} />,
     subtitle: <StepProgressBar steps={6} currentStep={6} />,
   };
 
@@ -27,7 +28,7 @@ export default function SocialLinksPage() {
       </Head>
       <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
         <SocialLinksForm
-          afterSubmit={() => router.push('/marketplace')}
+          afterSubmit={() => router.push(`${config.redirectUrlPostLogin}`)}
           submitText="SAVE"
           submitProps={{ borderColor: 'bg-green-gradient' }}
         />

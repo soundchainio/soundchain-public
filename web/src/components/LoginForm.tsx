@@ -30,7 +30,7 @@ export const LoginForm = () => {
 
   useEffect(() => {
     if (me) {
-      router.push(router.query.callbackUrl?.toString() ?? '/marketplace');
+      router.push(router.query.callbackUrl?.toString() ?? `${config.redirectUrlPostLogin}`);
     }
   }, [me, router]);
 

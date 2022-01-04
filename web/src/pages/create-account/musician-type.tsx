@@ -4,6 +4,7 @@ import { MusicianTypesForm } from 'components/forms/profile/MusicianTypesForm';
 import { Layout } from 'components/Layout';
 import { StepProgressBar } from 'components/StepProgressBar';
 import { TopNavBarProps } from 'components/TopNavBar';
+import { config } from 'config';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React from 'react';
@@ -14,7 +15,7 @@ export default function MusicianTypePage() {
   const topNavBarProps: TopNavBarProps = {
     title: 'Musician Type',
     leftButton: <BackButton />,
-    rightButton: <Badge label="Skip" onClick={() => router.push('/marketplace')} selected={false} />,
+    rightButton: <Badge label="Skip" onClick={() => router.push(`${config.redirectUrlPostLogin}`)} selected={false} />,
     subtitle: <StepProgressBar steps={6} currentStep={4} />,
   };
 
