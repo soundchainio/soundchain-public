@@ -9,6 +9,7 @@ import {
   ShowApprove,
   ShowAudioPlayerPayload,
   ShowAuthorActionsPayload,
+  ShowBidsHistory,
   ShowCommentModalPayload,
   ShowConfirmDeleteNFT,
   ShowCreatePayload,
@@ -39,6 +40,7 @@ export interface ModalState {
   showAudioPlayer: boolean;
   showApprove: boolean;
   showRemoveListing: boolean;
+  showBidsHistory: boolean;
   tokenId?: number;
   trackId?: string;
   reactions: {
@@ -75,6 +77,7 @@ export const initialModalState = {
   showAudioPlayer: false,
   showApprove: false,
   showRemoveListing: false,
+  showBidsHistory: false,
   reactions: {
     show: false,
     postId: undefined,
@@ -213,6 +216,11 @@ export const modalReducer = (state: ModalState, action: Action) => {
         showMarketplaceFilter: (action.payload as ShowMarketplaceFilterPayload).show,
         genres: (action.payload as ShowMarketplaceFilterPayload).genres,
         filterSaleType: (action.payload as ShowMarketplaceFilterPayload).filterSaleType,
+      };
+    case ModalActionTypes.SHOW_BIDS_HISTORY:
+      return {
+        ...state,
+        showBidsHistory: (action.payload as ShowBidsHistory).show,
       };
     default:
       return state;
