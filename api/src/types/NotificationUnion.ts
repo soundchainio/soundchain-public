@@ -8,6 +8,7 @@ import { NewPostNotification } from './NewPostNotification';
 import { NewVerificationRequestNotification } from './NewVerificationRequestNotification';
 import { NFTSoldNotification } from './NFTSoldNotification';
 import { NotificationType } from './NotificationType';
+import { OutbidNotification } from './OutbidAuctionNotification';
 import { ReactionNotification } from './ReactionNotification';
 import { VerificationRequestNotification } from './VerificationRequestNotification';
 import { WonAuctionNotification } from './WonAuctionNotification';
@@ -24,6 +25,7 @@ export const NotificationUnion = createUnionType({
       NewPostNotification,
       NewVerificationRequestNotification,
       NFTSoldNotification,
+      OutbidNotification,
       ReactionNotification,
       VerificationRequestNotification,
       WonAuctionNotification,
@@ -61,6 +63,9 @@ export const NotificationUnion = createUnionType({
     }
     if (value.type === NotificationType.AuctionIsEnding) {
       return AuctionIsEndingNotification;
+    }
+    if (value.type === NotificationType.Outbid) {
+      return OutbidNotification;
     }
     return undefined;
   },

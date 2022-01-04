@@ -8,6 +8,7 @@ import {
   NewVerificationRequestNotification,
   NftSoldNotification,
   NotificationType,
+  OutbidNotification,
   ReactionNotification,
   useNotificationQuery,
   VerificationRequestNotification,
@@ -23,6 +24,7 @@ import { NewPostNotificationItem } from './NewPostNotificationItem';
 import { NewVerificationRequestNotificationItem } from './NewVerificationRequestNotificationItem';
 import { NFTSoldNotificationItem } from './NFTSoldNotificationItem';
 import { NotificationSkeleton } from './NotificationSkeleton';
+import { OutbidNotificationItem } from './OutbidNotificationItem';
 import { ReactionNotificationItem } from './ReactionNotificationItem';
 import { VerificationRequestNotificationItem } from './VerificationRequestNotificationItem';
 import { WonAuctionNotificationItem } from './WonAuctionNotificationItem';
@@ -83,6 +85,9 @@ export const Notification = ({ notificationId, index }: NotificationProps) => {
       return (
         <AuctionIsEndingNotificationItem notification={notification as AuctionIsEndingNotification} index={index} />
       );
+    }
+    case NotificationType.Outbid: {
+      return <OutbidNotificationItem notification={notification as OutbidNotification} index={index} />;
     }
     default: {
       return null;

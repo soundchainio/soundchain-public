@@ -16,6 +16,7 @@ import { NewPostNotificationMetadata } from '../types/NewPostNotificationMetadat
 import { NewVerificationRequestNotificationMetadata } from '../types/NewVerificationRequestNotificationMetadata';
 import { NotificationType } from '../types/NotificationType';
 import { NotificationUnion } from '../types/NotificationUnion';
+import { OutbidNotificationMetadata } from '../types/OutbidNotificationMetadata';
 import { PageInput } from '../types/PageInput';
 import { SortNotificationInput } from '../types/SortNotificationInput';
 import { WonAuctionNotificationMetadata } from '../types/WonAuctionNotificationMetadata';
@@ -27,13 +28,13 @@ interface CommentNotificationParams {
   authorProfileId: string;
 }
 
-interface WonAuctionParams {
+interface AuctionParams {
   track: Track;
   price: number;
   buyerProfileId: string;
 }
 
-type AuctionIsEndingParams = Omit<WonAuctionParams, 'price'>;
+type AuctionIsEndingParams = Omit<AuctionParams, 'price'>;
 
 export class NotificationService extends ModelService<typeof Notification> {
   constructor(context: Context) {
@@ -253,7 +254,7 @@ export class NotificationService extends ModelService<typeof Notification> {
     await this.incrementNotificationCount(authorProfileId);
   }
 
-  async notifyWonAuction({ track, price, buyerProfileId }: WonAuctionParams): Promise<void> {
+  async notifyWonAuction({ track, price, buyerProfileId }: AuctionParams): Promise<void> {
     const { _id: trackId, artist, artworkUrl, title: trackName } = track;
     const metadata: WonAuctionNotificationMetadata = {
       trackId,
@@ -281,6 +282,24 @@ export class NotificationService extends ModelService<typeof Notification> {
     };
     const notification = new NotificationModel({
       type: NotificationType.AuctionIsEnding,
+      profileId: buyerProfileId,
+      metadata,
+    });
+    await notification.save();
+    await this.incrementNotificationCount(buyerProfileId);
+  }
+
+  async notifyOutbid({ track, buyerProfileId, price }: AuctionParams): Promise<void> {
+    const { _id: trackId, artist, artworkUrl, title: trackName } = track;
+    const metadata: OutbidNotificationMetadata = {
+      trackId,
+      trackName,
+      artist,
+      artworkUrl,
+      price,
+    };
+    const notification = new NotificationModel({
+      type: NotificationType.Outbid,
       profileId: buyerProfileId,
       metadata,
     });

@@ -9,6 +9,7 @@ enum NotificationType {
   NewPost = 'NewPost',
   NewVerificationRequest = 'NewVerificationRequest',
   NFTSold = 'NFTSold',
+  Outbid = 'Outbid',
   Reaction = 'Reaction',
   VerificationRequestUpdate = 'VerificationRequestUpdate',
   WonAuction = 'WonAuction',

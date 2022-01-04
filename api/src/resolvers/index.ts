@@ -18,6 +18,7 @@ import { NewPostNotificationResolver } from './NewPostNotificationResolver';
 import { NewVerificationRequestNotificationResolver } from './NewVerificationRequestNotificationResolver';
 import { NFTSoldNotificationResolver } from './NFTSoldNotificationResolver';
 import { NotificationResolver } from './NotificationResolver';
+import { OutbidNotificationResolver } from './OutbidNotificationResolver';
 import { PinningResolver } from './PinningResolver';
 import { PolygonscanResolver } from './PolygonResolver';
 import { PostResolver } from './PostResolver';
@@ -52,6 +53,7 @@ export const resolvers = [
   NewVerificationRequestNotificationResolver,
   NFTSoldNotificationResolver,
   NotificationResolver,
+  OutbidNotificationResolver,
   PinningResolver,
   PolygonscanResolver,
   PostResolver,

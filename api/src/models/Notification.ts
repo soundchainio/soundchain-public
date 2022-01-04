@@ -10,6 +10,7 @@ import { NewPostNotificationMetadata } from '../types/NewPostNotificationMetadat
 import { NewVerificationRequestNotificationMetadata } from '../types/NewVerificationRequestNotificationMetadata';
 import { NFTSoldNotificationMetadata } from '../types/NFTSoldNotificationMetadata';
 import { NotificationType } from '../types/NotificationType';
+import { OutbidNotification } from '../types/OutbidAuctionNotification';
 import { ReactionNotificationMetadata } from '../types/ReactionNotificationMetadata';
 import { VerificationRequestNotificationMetadata } from '../types/VerificationRequestNotificationMetadata';
 import { WonAuctionNotificationMetadata } from '../types/WonAuctionNotificationMetadata';
@@ -27,13 +28,14 @@ export class Notification extends Model {
     | AuctionIsEndingNotification
     | CommentNotificationMetadata
     | DeletedCommentNotificationMetadata
-    | FollowerNotificationMetadata
-    | ReactionNotificationMetadata
-    | NewPostNotificationMetadata
     | DeletedPostNotificationMetadata
-    | NFTSoldNotificationMetadata
-    | VerificationRequestNotificationMetadata
+    | FollowerNotificationMetadata
+    | NewPostNotificationMetadata
     | NewVerificationRequestNotificationMetadata
+    | NFTSoldNotificationMetadata
+    | OutbidNotification
+    | ReactionNotificationMetadata
+    | VerificationRequestNotificationMetadata
     | WonAuctionNotificationMetadata;
 
   @Field(() => Date)

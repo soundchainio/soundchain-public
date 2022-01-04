@@ -54,4 +54,9 @@ export class BidService extends ModelService<typeof Bid> {
     ]);
     return bids;
   }
+
+  async getHighestBid(auctionId: string): Promise<Bid | undefined> {
+    const [highestBid] = await this.model.find({ auctionId }).sort({ amount: -1 }).limit(1);
+    return highestBid;
+  }
 }
