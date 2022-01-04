@@ -13,7 +13,10 @@ import { UpdateDefaultWalletInput } from '../types/UpdateDefaultWalletInput';
 import { UpdateDefaultWalletPayload } from '../types/UpdateDefaultWalletPayload';
 import { UpdateHandleInput } from '../types/UpdateHandleInput';
 import { UpdateHandlePayload } from '../types/UpdateHandlePayload';
+import { UpdateOTPInput } from '../types/UpdateOTPInput';
+import { UpdateOTPPayload } from '../types/UpdateOTPPayload';
 import { UpdateWalletInput } from '../types/UpdateWalletInput';
+import { ValidateOTPRecoveryPhraseInput } from '../types/ValidateOTPRecoveryPhraseInput';
 
 @Resolver(User)
 export class UserResolver {
@@ -93,6 +96,27 @@ export class UserResolver {
   ): Promise<UpdateHandlePayload> {
     const user = await userService.updateMetaMaskAddresses(_id, wallet);
     return { user };
+  }
+
+  @Mutation(() => UpdateOTPPayload)
+  @Authorized()
+  async updateOTP(
+    @Ctx() { userService }: Context,
+    @Arg('input') { otpSecret, otpRecoveryPhrase }: UpdateOTPInput,
+    @CurrentUser() { _id }: User,
+  ): Promise<UpdateHandlePayload> {
+    const user = await userService.updateOTP({ _id, otpSecret, otpRecoveryPhrase });
+    return { user };
+  }
+
+  @Mutation(() => Boolean)
+  @Authorized()
+  async validateOTPRecoveryPhrase(
+    @Ctx() { userService }: Context,
+    @Arg('input') { otpRecoveryPhrase }: ValidateOTPRecoveryPhraseInput,
+    @CurrentUser() { _id }: User,
+  ): Promise<boolean> {
+    return userService.validateOTPRecoveryPhrase({ _id, otpRecoveryPhrase });
   }
 
   @Query(() => User, { nullable: true })

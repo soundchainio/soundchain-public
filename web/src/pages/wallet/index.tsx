@@ -16,7 +16,7 @@ import { CreditCard } from 'icons/CreditCard';
 import { Logo } from 'icons/Logo';
 import { Matic } from 'icons/Matic';
 import { MetaMask } from 'icons/MetaMask';
-import { testNetwork } from 'lib/blockchainNetworks';
+import { network } from 'lib/blockchainNetworks';
 import { DefaultWallet, useMaticUsdQuery, useUpdateDefaultWalletMutation } from 'lib/graphql';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -74,7 +74,7 @@ export default function WalletPage() {
   }, [account]);
 
   useEffect(() => {
-    if (chainId !== testNetwork.id) {
+    if (chainId !== network.id) {
       setCorrectNetwork(false);
     } else {
       setCorrectNetwork(true);
