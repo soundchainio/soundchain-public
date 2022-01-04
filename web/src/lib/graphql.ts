@@ -70,6 +70,26 @@ export type Bided = {
   bided: Maybe<Scalars['Boolean']>;
 };
 
+export type BidsWithInfo = {
+  __typename?: 'BidsWithInfo';
+  id: Scalars['ID'];
+  nft: Scalars['String'];
+  tokenId: Scalars['Float'];
+  bidder: Scalars['String'];
+  amount: Scalars['Float'];
+  notifiedEndingInOneHour: Scalars['Boolean'];
+  auctionId: Scalars['String'];
+  profileId: Scalars['String'];
+  userId: Scalars['String'];
+  createdAt: Scalars['DateTime'];
+  profile: Profile;
+};
+
+export type BidsWithInfoPayload = {
+  __typename?: 'BidsWithInfoPayload';
+  bids: Maybe<Array<BidsWithInfo>>;
+};
+
 export type BuyNowItem = {
   __typename?: 'BuyNowItem';
   id: Scalars['ID'];
@@ -1008,6 +1028,7 @@ export type Query = {
   auctionItem: AuctionItemPayload;
   countBids: CountBidsPayload;
   haveBided: Bided;
+  bidsWithInfo: BidsWithInfoPayload;
   buyNowItem: BuyNowPayload;
   chats: ChatConnection;
   chatHistory: MessageConnection;
@@ -1060,6 +1081,11 @@ export type QueryCountBidsArgs = {
 
 export type QueryHaveBidedArgs = {
   bidder: Scalars['String'];
+  auctionId: Scalars['String'];
+};
+
+
+export type QueryBidsWithInfoArgs = {
   auctionId: Scalars['String'];
 };
 
@@ -1671,6 +1697,26 @@ export type BandcampLinkQueryVariables = Exact<{
 export type BandcampLinkQuery = (
   { __typename?: 'Query' }
   & Pick<Query, 'bandcampLink'>
+);
+
+export type BidsWithInfoQueryVariables = Exact<{
+  auctionId: Scalars['String'];
+}>;
+
+
+export type BidsWithInfoQuery = (
+  { __typename?: 'Query' }
+  & { bidsWithInfo: (
+    { __typename?: 'BidsWithInfoPayload' }
+    & { bids: Maybe<Array<(
+      { __typename?: 'BidsWithInfo' }
+      & Pick<BidsWithInfo, 'amount' | 'userId' | 'profileId' | 'createdAt'>
+      & { profile: (
+        { __typename?: 'Profile' }
+        & Pick<Profile, 'profilePicture' | 'displayName' | 'userHandle'>
+      ) }
+    )>> }
+  ) }
 );
 
 export type BuyNowItemQueryVariables = Exact<{
@@ -3640,6 +3686,51 @@ export function useBandcampLinkLazyQuery(baseOptions?: Apollo.LazyQueryHookOptio
 export type BandcampLinkQueryHookResult = ReturnType<typeof useBandcampLinkQuery>;
 export type BandcampLinkLazyQueryHookResult = ReturnType<typeof useBandcampLinkLazyQuery>;
 export type BandcampLinkQueryResult = Apollo.QueryResult<BandcampLinkQuery, BandcampLinkQueryVariables>;
+export const BidsWithInfoDocument = gql`
+    query BidsWithInfo($auctionId: String!) {
+  bidsWithInfo(auctionId: $auctionId) {
+    bids {
+      amount
+      userId
+      profileId
+      createdAt
+      profile {
+        profilePicture
+        displayName
+        userHandle
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useBidsWithInfoQuery__
+ *
+ * To run a query within a React component, call `useBidsWithInfoQuery` and pass it any options that fit your needs.
+ * When your component renders, `useBidsWithInfoQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useBidsWithInfoQuery({
+ *   variables: {
+ *      auctionId: // value for 'auctionId'
+ *   },
+ * });
+ */
+export function useBidsWithInfoQuery(baseOptions: Apollo.QueryHookOptions<BidsWithInfoQuery, BidsWithInfoQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<BidsWithInfoQuery, BidsWithInfoQueryVariables>(BidsWithInfoDocument, options);
+      }
+export function useBidsWithInfoLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<BidsWithInfoQuery, BidsWithInfoQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<BidsWithInfoQuery, BidsWithInfoQueryVariables>(BidsWithInfoDocument, options);
+        }
+export type BidsWithInfoQueryHookResult = ReturnType<typeof useBidsWithInfoQuery>;
+export type BidsWithInfoLazyQueryHookResult = ReturnType<typeof useBidsWithInfoLazyQuery>;
+export type BidsWithInfoQueryResult = Apollo.QueryResult<BidsWithInfoQuery, BidsWithInfoQueryVariables>;
 export const BuyNowItemDocument = gql`
     query BuyNowItem($tokenId: Float!) {
   buyNowItem(tokenId: $tokenId) {

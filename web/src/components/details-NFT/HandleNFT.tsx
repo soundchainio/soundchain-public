@@ -1,6 +1,7 @@
 import { Button, ButtonVariant } from 'components/Button';
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { TimeCounter } from 'components/TimeCounter';
+import { useModalDispatch } from 'contexts/providers/modal';
 import { CheckmarkFilled } from 'icons/CheckmarkFilled';
 import { Matic } from 'icons/Matic';
 import { useMaticUsdQuery } from 'lib/graphql';
@@ -20,6 +21,7 @@ interface HandleNFTProps {
   countBids: number;
   startingDate?: Date;
   endingDate?: Date;
+  auctionId: string;
 }
 
 export const HandleNFT = ({
@@ -33,6 +35,7 @@ export const HandleNFT = ({
   countBids,
   startingDate,
   endingDate,
+  auctionId,
 }: HandleNFTProps) => {
   const router = useRouter();
   if (isOwner) {
@@ -53,6 +56,7 @@ export const HandleNFT = ({
           endingDate={endingDate}
           action="EDIT LISTING"
           variant="edit-listing"
+          auctionId={auctionId}
         />
       );
     }
@@ -65,6 +69,7 @@ export const HandleNFT = ({
           price={price}
           cancelHref={`${router.asPath}/cancel-auction`}
           completeHref={`${router.asPath}/complete-auction`}
+          auctionId={auctionId}
         />
       );
     }
@@ -137,12 +142,23 @@ interface ListedActionProps {
   countBids?: number;
   startingDate?: Date;
   endingDate?: Date;
+  auctionId?: string;
 }
 
-const ListedAction = ({ href, price, action, variant, countBids, startingDate, endingDate }: ListedActionProps) => {
+const ListedAction = ({
+  href,
+  price,
+  action,
+  variant,
+  countBids,
+  startingDate,
+  endingDate,
+  auctionId,
+}: ListedActionProps) => {
   const futureSale = startingDate && startingDate.getTime() > new Date().getTime();
   const { data: maticUsd } = useMaticUsdQuery();
 
+  const { dispatchShowBidsHistory } = useModalDispatch();
   return (
     <PlayerAwareBottomBar>
       <div className="flex flex-col flex-1">
@@ -162,7 +178,11 @@ const ListedAction = ({ href, price, action, variant, countBids, startingDate, e
       )}
       {endingDate && !futureSale && (
         <div className="flex flex-col text-xs items-center px-1">
-          {countBids != 0 && <span className="text-blue-400 font-bold">[{countBids} bids]</span>}
+          {countBids != 0 && (
+            <span className="text-blue-400 font-bold" onClick={() => dispatchShowBidsHistory(true, auctionId || '')}>
+              [{countBids} bids]
+            </span>
+          )}
           <Timer date={endingDate} />
         </div>
       )}
@@ -182,6 +202,7 @@ interface AuctionDetailsProps {
   countBids?: number;
   endingDate?: Date;
   completeHref: string;
+  auctionId: string;
 }
 
 const AuctionDetails = ({
@@ -191,6 +212,7 @@ const AuctionDetails = ({
   endingDate,
   cancelHref,
   completeHref,
+  auctionId,
 }: AuctionDetailsProps) => {
   return (
     <div className="w-full bg-black text-white flex items-center py-3 px-4">
@@ -209,7 +231,9 @@ const AuctionDetails = ({
             </NextLink>
           </div>
         )}
-        {countBids != 0 && <ListedAction href={completeHref} price={price} action="COMPLETE" variant="buy-nft" />}
+        {countBids != 0 && (
+          <ListedAction href={completeHref} price={price} action="COMPLETE" variant="buy-nft" auctionId={auctionId} />
+        )}
         {endingDate && (
           <div className="flex flex-col text-xs items-center ">
             <Timer date={endingDate} />

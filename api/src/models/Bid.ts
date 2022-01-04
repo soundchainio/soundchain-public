@@ -32,6 +32,14 @@ export class Bid extends Model {
   @prop({ type: ObjectId, required: true })
   auctionId: string;
 
+  @Field()
+  @prop({ type: ObjectId })
+  profileId: string;
+
+  @Field()
+  @prop({ type: ObjectId })
+  userId: string;
+
   @Field(() => Date)
   createdAt: Date;
 }

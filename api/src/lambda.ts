@@ -210,13 +210,18 @@ export const watcher: Handler = async () => {
         {
           try {
             const { nftAddress, tokenId, bidder, bid } = (event as unknown as BidPlaced).returnValues;
-            const auction = await context.auctionItemService.updateAuctionItem(parseInt(tokenId), {
-              highestBid: parseInt(bid),
-            });
+            const [user, auction] = await Promise.all([
+              context.userService.getUserByWallet(bidder),
+              context.auctionItemService.updateAuctionItem(parseInt(tokenId), {
+                highestBid: parseInt(bid),
+              }),
+            ]);
             await context.bidService.createBid({
               nft: nftAddress,
               tokenId: parseInt(tokenId),
               bidder,
+              userId: user._id,
+              profileId: user.profileId,
               amount: parseInt(bid),
               auctionId: auction._id,
             });

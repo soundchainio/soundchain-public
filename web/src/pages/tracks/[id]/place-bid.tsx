@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import * as yup from 'yup';
 import { Avatar } from 'components/Avatar';
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
@@ -11,8 +10,10 @@ import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import { WalletSelector } from 'components/WalletSelector';
+import { useModalDispatch } from 'contexts/providers/modal';
 import { Form, Formik } from 'formik';
 import useBlockchain from 'hooks/useBlockchain';
+import useBlockchainV2 from 'hooks/useBlockchainV2';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Auction } from 'icons/Auction';
@@ -29,15 +30,15 @@ import {
   useUserByWalletLazyQuery,
 } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
+import { authenticator } from 'otplib';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import { currency } from 'utils/format';
 import { compareWallets } from 'utils/Wallet';
+import * as yup from 'yup';
 import { Timer } from '../[id]';
 import { HighestBid } from './complete-auction';
-import { toast } from 'react-toastify';
-import useBlockchainV2 from 'hooks/useBlockchainV2';
-import { authenticator } from 'otplib';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -77,6 +78,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
   const { placeBid } = useBlockchainV2();
   const { account, web3 } = useWalletContext();
   const { data: maticQuery } = useMaticUsdQuery();
+  const { dispatchShowBidsHistory } = useModalDispatch();
   const [loading, setLoading] = useState(false);
   const [highestBid, setHighestBid] = useState<HighestBid>();
 
@@ -238,7 +240,12 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
             <Matic />
             <span className="text-white">{price}</span>
             <span className="text-xxs text-gray-80">MATIC</span>
-            <span className="text-[#22CAFF] text-xxs">[{bidCount} bids]</span>
+            <span
+              className="text-[#22CAFF] text-xxs cursor-pointer"
+              onClick={() => dispatchShowBidsHistory(true, auctionItem?.auctionItem?.id || '')}
+            >
+              [{bidCount} bids]
+            </span>
           </div>
         </div>
         {highestBidderData?.getUserByWallet && (

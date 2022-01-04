@@ -1,0 +1,15 @@
+query BidsWithInfo($auctionId: String!) {
+  bidsWithInfo(auctionId: $auctionId) {
+    bids {
+      amount
+      userId
+      profileId
+      createdAt
+      profile {
+        profilePicture
+        displayName
+        userHandle
+      }
+    }
+  }
+}

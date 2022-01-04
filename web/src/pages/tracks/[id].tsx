@@ -29,7 +29,7 @@ import {
   useMaticUsdQuery,
   useProfileLazyQuery,
   useTrackLazyQuery,
-  useUserByWalletLazyQuery,
+  useUserByWalletLazyQuery
 } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
@@ -91,8 +91,8 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const [track, setTrack] = useState<TrackQuery['track']>(initialState);
   const [highestBid, setHighestBid] = useState<HighestBid>({} as HighestBid);
   const [isLoadingOwner, setLoadingOwner] = useState(true);
-  const { dispatchShowAuthorActionsModal } = useModalDispatch();
   const { data: maticUsd } = useMaticUsdQuery();
+  const { dispatchShowAuthorActionsModal, dispatchShowBidsHistory } = useModalDispatch();
 
   const [refetchTrack, { data: trackData }] = useTrackLazyQuery({
     fetchPolicy: 'network-only',
@@ -126,7 +126,7 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const isAuction = Boolean(listingPayload?.listingItem?.reservePrice);
   const bidCount = countBids?.countBids.numberOfBids ?? 0;
 
-  const { reservePrice, pricePerItem } = listingPayload?.listingItem || {};
+  const { reservePrice, pricePerItem, id } = listingPayload?.listingItem || {};
 
   let priceValue = pricePerItem?.toLocaleString('fullwide', { useGrouping: false });
   if (isAuction) {
@@ -319,7 +319,12 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
                 <span className="text-gray-80 font-normal">
                   {maticUsd && price && `${currency(parseFloat(price) * parseFloat(maticUsd.maticUsd))}`}
                 </span>
-                <span className="text-[#22CAFF] text-xxs">[{bidCount} bids]</span>
+                <span
+                  className="text-[#22CAFF] text-xxs cursor-pointer"
+                  onClick={() => dispatchShowBidsHistory(true, id || '')}
+                >
+                  [{bidCount} bids]
+                </span>
               </div>
             </div>
             {highestBidderData?.getUserByWallet && (
@@ -392,6 +397,7 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
             countBids={bidCount}
             startingDate={startingDate}
             endingDate={endingDate}
+            auctionId={id || ''}
           />
         ) : null}
       </Layout>
