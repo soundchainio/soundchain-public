@@ -572,6 +572,8 @@ export type Mutation = {
   updateHandle: UpdateHandlePayload;
   updateDefaultWallet: UpdateDefaultWalletPayload;
   updateMetaMaskAddresses: UpdateDefaultWalletPayload;
+  updateOTP: UpdateOtpPayload;
+  validateOTPRecoveryPhrase: Scalars['Boolean'];
 };
 
 
@@ -748,6 +750,16 @@ export type MutationUpdateDefaultWalletArgs = {
 
 export type MutationUpdateMetaMaskAddressesArgs = {
   input: UpdateWalletInput;
+};
+
+
+export type MutationUpdateOtpArgs = {
+  input: UpdateOtpInput;
+};
+
+
+export type MutationValidateOtpRecoveryPhraseArgs = {
+  input: ValidateOtpRecoveryPhraseInput;
 };
 
 export type NftDataInput = {
@@ -1508,6 +1520,16 @@ export type UpdateHandlePayload = {
   user: User;
 };
 
+export type UpdateOtpInput = {
+  otpSecret: Scalars['String'];
+  otpRecoveryPhrase: Scalars['String'];
+};
+
+export type UpdateOtpPayload = {
+  __typename?: 'UpdateOTPPayload';
+  user: User;
+};
+
 export type UpdatePostInput = {
   postId: Scalars['String'];
   body: Scalars['String'];
@@ -1567,9 +1589,15 @@ export type User = {
   defaultWallet: DefaultWallet;
   isApprovedOnMarketplace: Scalars['Boolean'];
   roles: Array<Role>;
+  otpSecret: Maybe<Scalars['String']>;
+  otpRecoveryPhrase: Maybe<Scalars['String']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   profile: Profile;
+};
+
+export type ValidateOtpRecoveryPhraseInput = {
+  otpRecoveryPhrase: Scalars['String'];
 };
 
 export type VerificationRequestNotification = {
@@ -2249,7 +2277,7 @@ export type MeQuery = (
   { __typename?: 'Query' }
   & { me: Maybe<(
     { __typename?: 'User' }
-    & Pick<User, 'id' | 'handle' | 'email' | 'magicWalletAddress' | 'defaultWallet' | 'isApprovedOnMarketplace' | 'roles'>
+    & Pick<User, 'id' | 'handle' | 'email' | 'magicWalletAddress' | 'defaultWallet' | 'isApprovedOnMarketplace' | 'roles' | 'otpSecret'>
     & { profile: (
       { __typename?: 'Profile' }
       & ProfileComponentFieldsFragment
@@ -2965,6 +2993,22 @@ export type UpdateMusicianTypeMutation = (
   ) }
 );
 
+export type UpdateOtpMutationVariables = Exact<{
+  input: UpdateOtpInput;
+}>;
+
+
+export type UpdateOtpMutation = (
+  { __typename?: 'Mutation' }
+  & { updateOTP: (
+    { __typename?: 'UpdateOTPPayload' }
+    & { user: (
+      { __typename?: 'User' }
+      & Pick<User, 'id' | 'otpSecret' | 'otpRecoveryPhrase'>
+    ) }
+  ) }
+);
+
 export type UpdatePostMutationVariables = Exact<{
   input: UpdatePostInput;
 }>;
@@ -3126,6 +3170,16 @@ export type UserByWalletQuery = (
       & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'userHandle' | 'followerCount' | 'followingCount'>
     ) }
   )> }
+);
+
+export type ValidateOtpRecoveryPhraseMutationVariables = Exact<{
+  input: ValidateOtpRecoveryPhraseInput;
+}>;
+
+
+export type ValidateOtpRecoveryPhraseMutation = (
+  { __typename?: 'Mutation' }
+  & Pick<Mutation, 'validateOTPRecoveryPhrase'>
 );
 
 export type VerificationRequestNotificationFieldsFragment = (
@@ -4848,6 +4902,7 @@ export const MeDocument = gql`
     defaultWallet
     isApprovedOnMarketplace
     roles
+    otpSecret
     profile {
       ...ProfileComponentFields
     }
@@ -6412,6 +6467,43 @@ export function useUpdateMusicianTypeMutation(baseOptions?: Apollo.MutationHookO
 export type UpdateMusicianTypeMutationHookResult = ReturnType<typeof useUpdateMusicianTypeMutation>;
 export type UpdateMusicianTypeMutationResult = Apollo.MutationResult<UpdateMusicianTypeMutation>;
 export type UpdateMusicianTypeMutationOptions = Apollo.BaseMutationOptions<UpdateMusicianTypeMutation, UpdateMusicianTypeMutationVariables>;
+export const UpdateOtpDocument = gql`
+    mutation UpdateOTP($input: UpdateOTPInput!) {
+  updateOTP(input: $input) {
+    user {
+      id
+      otpSecret
+      otpRecoveryPhrase
+    }
+  }
+}
+    `;
+export type UpdateOtpMutationFn = Apollo.MutationFunction<UpdateOtpMutation, UpdateOtpMutationVariables>;
+
+/**
+ * __useUpdateOtpMutation__
+ *
+ * To run a mutation, you first call `useUpdateOtpMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateOtpMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateOtpMutation, { data, loading, error }] = useUpdateOtpMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateOtpMutation(baseOptions?: Apollo.MutationHookOptions<UpdateOtpMutation, UpdateOtpMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateOtpMutation, UpdateOtpMutationVariables>(UpdateOtpDocument, options);
+      }
+export type UpdateOtpMutationHookResult = ReturnType<typeof useUpdateOtpMutation>;
+export type UpdateOtpMutationResult = Apollo.MutationResult<UpdateOtpMutation>;
+export type UpdateOtpMutationOptions = Apollo.BaseMutationOptions<UpdateOtpMutation, UpdateOtpMutationVariables>;
 export const UpdatePostDocument = gql`
     mutation UpdatePost($input: UpdatePostInput!) {
   updatePost(input: $input) {
@@ -6784,3 +6876,34 @@ export function useUserByWalletLazyQuery(baseOptions?: Apollo.LazyQueryHookOptio
 export type UserByWalletQueryHookResult = ReturnType<typeof useUserByWalletQuery>;
 export type UserByWalletLazyQueryHookResult = ReturnType<typeof useUserByWalletLazyQuery>;
 export type UserByWalletQueryResult = Apollo.QueryResult<UserByWalletQuery, UserByWalletQueryVariables>;
+export const ValidateOtpRecoveryPhraseDocument = gql`
+    mutation ValidateOTPRecoveryPhrase($input: ValidateOTPRecoveryPhraseInput!) {
+  validateOTPRecoveryPhrase(input: $input)
+}
+    `;
+export type ValidateOtpRecoveryPhraseMutationFn = Apollo.MutationFunction<ValidateOtpRecoveryPhraseMutation, ValidateOtpRecoveryPhraseMutationVariables>;
+
+/**
+ * __useValidateOtpRecoveryPhraseMutation__
+ *
+ * To run a mutation, you first call `useValidateOtpRecoveryPhraseMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useValidateOtpRecoveryPhraseMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [validateOtpRecoveryPhraseMutation, { data, loading, error }] = useValidateOtpRecoveryPhraseMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useValidateOtpRecoveryPhraseMutation(baseOptions?: Apollo.MutationHookOptions<ValidateOtpRecoveryPhraseMutation, ValidateOtpRecoveryPhraseMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ValidateOtpRecoveryPhraseMutation, ValidateOtpRecoveryPhraseMutationVariables>(ValidateOtpRecoveryPhraseDocument, options);
+      }
+export type ValidateOtpRecoveryPhraseMutationHookResult = ReturnType<typeof useValidateOtpRecoveryPhraseMutation>;
+export type ValidateOtpRecoveryPhraseMutationResult = Apollo.MutationResult<ValidateOtpRecoveryPhraseMutation>;
+export type ValidateOtpRecoveryPhraseMutationOptions = Apollo.BaseMutationOptions<ValidateOtpRecoveryPhraseMutation, ValidateOtpRecoveryPhraseMutationVariables>;

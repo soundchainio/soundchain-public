@@ -9,6 +9,7 @@ import { Moonpay } from 'icons/Moonpay';
 import { Navigate } from 'icons/Navigate';
 import { OkCoin } from 'icons/OkCoin';
 import { Polygon } from 'icons/Polygon';
+import { network } from 'lib/blockchainNetworks';
 import Head from 'next/head';
 import Image from 'next/image';
 import React from 'react';
@@ -54,7 +55,7 @@ export default function BuyMaticPage() {
         <p className="flex items-center justify-center">
           {MaticSign} on the {PolygonSign} chain.
         </p>
-        <PolygonFaucetLink />
+        {network.id === 137 ? <MacChesseLink /> : <PolygonFaucetLink />}
         <p className="text-center my-10 font-bold">
           If you live in the United States, the following exchanges support buying Matic.
         </p>

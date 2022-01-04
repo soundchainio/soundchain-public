@@ -10,7 +10,6 @@ import { Auction } from 'icons/Auction';
 import { CheckmarkFilled } from 'icons/CheckmarkFilled';
 import { Matic } from 'icons/Matic';
 import { useMaticUsdQuery } from 'lib/graphql';
-import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import { SaleType } from 'types/SaleType';
 import { currency } from 'utils/format';
@@ -20,7 +19,6 @@ export const ApproveModal = () => {
   const { showApprove, type } = useModalState();
   const { dispatchShowApproveModal } = useModalDispatch();
   const { approveMarketplace, approveAuction } = useBlockchain();
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const { data: maticUsd } = useMaticUsdQuery();
 
@@ -45,7 +43,6 @@ export const ApproveModal = () => {
   const onReceipt = () => {
     setLoading(false);
     dispatchShowApproveModal(false, SaleType.CLOSE);
-    router.reload();
   };
 
   const icon = () => {

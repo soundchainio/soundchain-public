@@ -3,6 +3,7 @@ import { ProfilePictureForm } from 'components/forms/profile/ProfilePictureForm'
 import { Layout } from 'components/Layout';
 import { StepProgressBar } from 'components/StepProgressBar';
 import { TopNavBarProps } from 'components/TopNavBar';
+import { config } from 'config';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React from 'react';
@@ -11,7 +12,7 @@ export default function ProfilePicturePage() {
   const router = useRouter();
 
   const onClose = () => {
-    router.push('/');
+    router.push(`${config.redirectUrlPostLogin}`);
   };
 
   const topNavBarProps: TopNavBarProps = {

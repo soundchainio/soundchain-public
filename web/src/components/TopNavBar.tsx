@@ -106,7 +106,7 @@ export const TopNavBar = ({
         <div className="flex flex-1 md:flex-none justify-end pr-4 items-center flex-shrink-0">{RightButton}</div>
       )}
       {midRightButton && (
-        <div className="flex flex-1 justify-left pl-20 items-center flex-shrink-0">{midRightButton}</div>
+        <div className="flex flex-1 justify-left pl-28 items-center flex-shrink-0">{midRightButton}</div>
       )}
     </div>
   );

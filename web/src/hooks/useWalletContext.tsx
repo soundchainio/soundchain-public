@@ -1,5 +1,5 @@
 import { Button } from 'components/Button';
-import { testNetwork } from 'lib/blockchainNetworks';
+import { network } from 'lib/blockchainNetworks';
 import { DefaultWallet, useUpdateDefaultWalletMutation } from 'lib/graphql';
 import React, { createContext, ReactNode, useContext } from 'react';
 import Web3 from 'web3';
@@ -11,6 +11,7 @@ interface WalletContextData {
   web3?: Web3;
   account?: string;
   balance?: string;
+  refetchBalance?: () => void;
 }
 
 const WalletContext = createContext<WalletContextData>({});
@@ -22,8 +23,13 @@ interface WalletProviderProps {
 const WalletProvider = ({ children }: WalletProviderProps) => {
   const me = useMe();
   const [updateDefaultWallet] = useUpdateDefaultWalletMutation();
-  const { account, balance, chainId, addMumbaiTestnet, connect, web3 } = useMetaMask();
-  const { account: magicAccount, balance: magicBalance, web3: magicWeb3 } = useMagicContext();
+  const { account, balance, chainId, addMumbaiTestnet, connect, web3, refetchBalance } = useMetaMask();
+  const {
+    account: magicAccount,
+    balance: magicBalance,
+    web3: magicWeb3,
+    refetchBalance: magicRefetchBalance,
+  } = useMagicContext();
 
   let context: WalletContextData = {};
 
@@ -32,6 +38,7 @@ const WalletProvider = ({ children }: WalletProviderProps) => {
       account: magicAccount,
       balance: magicBalance,
       web3: magicWeb3,
+      refetchBalance: magicRefetchBalance,
     };
   }
 
@@ -47,7 +54,7 @@ const WalletProvider = ({ children }: WalletProviderProps) => {
           </Button>
         </>
       );
-    } else if (chainId !== testNetwork.id) {
+    } else if (chainId !== network.id) {
       Content = (
         <>
           <div>Ops! It seems you may be connected to another network</div>
@@ -62,6 +69,7 @@ const WalletProvider = ({ children }: WalletProviderProps) => {
       account,
       balance,
       web3,
+      refetchBalance,
     };
   }
 

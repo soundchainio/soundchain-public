@@ -7,6 +7,7 @@ import { useCallback } from 'react';
 import { Soundchain721 } from 'types/web3-v1-contracts/Soundchain721';
 import { SoundchainAuction } from 'types/web3-v1-contracts/SoundchainAuction';
 import { SoundchainMarketplace } from 'types/web3-v1-contracts/SoundchainMarketplace';
+import { compareWallets } from 'utils/Wallet';
 import Web3 from 'web3';
 import { TransactionReceipt } from 'web3-core/types';
 import { AbiItem } from 'web3-utils';
@@ -216,7 +217,7 @@ const useBlockchain = () => {
       nftAddress,
     ) as unknown as Soundchain721;
     const ownerOf = await nftContract.methods.ownerOf(tokenId).call();
-    return ownerOf == from;
+    return compareWallets(ownerOf, from);
   }, []);
 
   const getRoyalties = useCallback(async (web3: Web3, tokenId: number) => {

@@ -1,8 +1,5 @@
 import '01/../reflect-metadata';
-import {
-  ApolloServerPluginLandingPageGraphQLPlayground,
-  ApolloServerPluginLandingPageProductionDefault,
-} from 'apollo-server-core';
+import { ApolloServerPluginLandingPageDisabled } from 'apollo-server-core';
 import cors from 'cors';
 import * as dotenv from 'dotenv-flow';
 import fs from 'fs';
@@ -66,12 +63,7 @@ assertEnvVar('SENDGRID_RESET_PASSWORD_TEMPLATE', SENDGRID_RESET_PASSWORD_TEMPLAT
 
 export const config = {
   apollo: {
-    plugins: [
-      NODE_ENV === 'production'
-        ? ApolloServerPluginLandingPageProductionDefault()
-        : ApolloServerPluginLandingPageGraphQLPlayground(),
-      NODE_ENV === ('production' || 'staging') ? SentryReportError : {},
-    ],
+    plugins: [ApolloServerPluginLandingPageDisabled(), SentryReportError],
     context(context: ExpressContext | LambdaContext): Context {
       return new Context('req' in context ? context.req.user : context.express.req.user);
     },
