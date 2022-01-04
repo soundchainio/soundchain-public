@@ -41,7 +41,7 @@ export const HandleNFT = ({
   if (isOwner) {
     if (!canList) {
       return (
-        <ListingAction href={`/get-verified`} action="GET VERIFIED" auctionId={auctionId}>
+        <ListingAction href={`/get-verified`} action="GET VERIFIED">
           You must be verified in order to sell NFT’s.
         </ListingAction>
       );
@@ -74,7 +74,7 @@ export const HandleNFT = ({
       );
     }
     return (
-      <ListingAction href={`${router.asPath}/list`} action="LIST NFT" auctionId={auctionId}>
+      <ListingAction href={`${router.asPath}/list`} action="LIST NFT">
         <CheckmarkFilled />
         You own this NFT
       </ListingAction>
@@ -139,10 +139,10 @@ interface ListedActionProps {
   price: string | undefined | null;
   action: string;
   variant: ButtonVariant;
-  auctionId: string;
   countBids?: number;
   startingDate?: Date;
   endingDate?: Date;
+  auctionId?: string;
 }
 
 const ListedAction = ({
@@ -179,7 +179,7 @@ const ListedAction = ({
       {endingDate && !futureSale && (
         <div className="flex flex-col text-xs items-center px-1">
           {countBids != 0 && (
-            <span className="text-blue-400 font-bold" onClick={() => dispatchShowBidsHistory(true, auctionId)}>
+            <span className="text-blue-400 font-bold" onClick={() => dispatchShowBidsHistory(true, auctionId || '')}>
               [{countBids} bids]
             </span>
           )}
