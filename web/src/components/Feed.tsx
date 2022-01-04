@@ -9,7 +9,7 @@ interface FeedProps {
 
 export const Feed = ({ pageSize }: FeedProps) => {
   pageSize = pageSize ?? 10;
-  const { data, fetchMore } = useFeedQuery({ variables: { page: { first: pageSize } } });
+  const { data, fetchMore } = useFeedQuery({ variables: { page: { first: pageSize } }, ssr: false });
   if (!data) {
     return (
       <div className="space-y-2">
