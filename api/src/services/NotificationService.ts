@@ -251,60 +251,22 @@ export class NotificationService extends ModelService<typeof Notification> {
   }
 
   async notifyWonAuction({ track, price, profileId }: AuctionParams): Promise<void> {
-    const { _id: trackId, artist, artworkUrl, title: trackName } = track;
-    const metadata: TrackWithPriceMetadata = {
-      trackId,
-      price,
-      artist,
-      artworkUrl,
-      trackName,
-    };
-    const notification = new NotificationModel({
-      type: NotificationType.WonAuction,
-      profileId,
-      metadata,
-    });
-    await notification.save();
-    await this.incrementNotificationCount(profileId);
+    this.notifyTrack({ track, profileId, price }, NotificationType.WonAuction);
   }
 
   async notifyAuctionIsEnding({ track, profileId, price }: AuctionParams): Promise<void> {
-    const { _id: trackId, artist, artworkUrl, title: trackName } = track;
-    const metadata: TrackWithPriceMetadata = {
-      trackId,
-      trackName,
-      artist,
-      artworkUrl,
-      price,
-    };
-    const notification = new NotificationModel({
-      type: NotificationType.AuctionIsEnding,
-      profileId,
-      metadata,
-    });
-    await notification.save();
-    await this.incrementNotificationCount(profileId);
+    this.notifyTrack({ track, profileId, price }, NotificationType.AuctionIsEnding);
   }
 
   async notifyOutbid({ track, profileId, price }: AuctionParams): Promise<void> {
-    const { _id: trackId, artist, artworkUrl, title: trackName } = track;
-    const metadata: TrackWithPriceMetadata = {
-      trackId,
-      trackName,
-      artist,
-      artworkUrl,
-      price,
-    };
-    const notification = new NotificationModel({
-      type: NotificationType.Outbid,
-      profileId,
-      metadata,
-    });
-    await notification.save();
-    await this.incrementNotificationCount(profileId);
+    this.notifyTrack({ track, profileId, price }, NotificationType.Outbid);
   }
 
   async notifyNewBid({ track, profileId, price }: AuctionParams): Promise<void> {
+    this.notifyTrack({ track, profileId, price }, NotificationType.NewBid);
+  }
+
+  private async notifyTrack({ track, profileId, price }: AuctionParams, type: NotificationType): Promise<void> {
     const { _id: trackId, artist, artworkUrl, title: trackName } = track;
     const metadata: TrackWithPriceMetadata = {
       trackId,
@@ -314,7 +276,7 @@ export class NotificationService extends ModelService<typeof Notification> {
       price,
     };
     const notification = new NotificationModel({
-      type: NotificationType.NewBid,
+      type,
       profileId,
       metadata,
     });
