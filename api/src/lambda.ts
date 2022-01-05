@@ -221,7 +221,7 @@ export const watcher: Handler = async () => {
                 highestBid: parseInt(bid),
               }),
             ]);
-            await Promise.all([
+            const auctionPromises: Promise<unknown>[] = [
               context.bidService.createBid({
                 nft: nftAddress,
                 tokenId: tokenIdAsNumber,
@@ -236,13 +236,17 @@ export const watcher: Handler = async () => {
                 profileId: seller.profileId,
                 price: parseInt(bid),
               }),
-            ]);
-            if (!outBided) continue;
-            await context.notificationService.notifyOutbid({
-              track,
-              profileId: outBided.profileId,
-              price: parseInt(bid),
-            });
+            ];
+            if (outBided) {
+              auctionPromises.push(
+                context.notificationService.notifyOutbid({
+                  track,
+                  profileId: outBided.profileId,
+                  price: parseInt(bid),
+                }),
+              );
+            }
+            await Promise.all(auctionPromises);
           } catch (error) {
             console.error(error);
           }
