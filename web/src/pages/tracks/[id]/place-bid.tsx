@@ -34,7 +34,7 @@ import { authenticator } from 'otplib';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import { currency } from 'utils/format';
+import { currency, fixedDecimals } from 'utils/format';
 import { compareWallets } from 'utils/Wallet';
 import * as yup from 'yup';
 import { Timer } from '../[id]';
@@ -153,7 +153,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
   } else {
     price = web3.utils.fromWei(highestBid.bid, 'ether');
   }
-  const minBid = parseFloat(price) * 1.015;
+  const minBid = fixedDecimals(parseFloat(price) * 1.015);
   const validate = ({ bidAmount }: FormValues) => {
     const errors: any = {};
     if (bidAmount < minBid) {
@@ -298,7 +298,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
                     </div>
                     <p className="font-medium" style={{ fontSize: 10 }}>
                       Must be at least 1% of current bid price. Enter{' '}
-                      <span className="text-white font-bold cursor-pointer">{minBid.toFixed(6)}</span> MATIC or more.
+                      <span className="text-white font-bold cursor-pointer">{minBid}</span> MATIC or more.
                     </p>
                   </div>
                 </label>
