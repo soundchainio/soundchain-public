@@ -5,6 +5,7 @@ enum Role {
   ADMIN = 'ADMIN',
   USER = 'USER',
   TEAM_MEMBER = 'TEAM_MEMBER',
+  SOUNDCHAIN_ACCOUNT = 'SOUNDCHAIN_ACCOUNT',
 }
 
 registerEnumType(Role, {
