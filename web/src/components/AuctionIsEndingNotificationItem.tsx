@@ -7,13 +7,14 @@ interface NotificationProps {
 }
 
 export const AuctionIsEndingNotificationItem = ({
-  notification: { createdAt, trackId, trackName, artworkUrl, artist },
+  notification: { createdAt, price, trackId, trackName, artworkUrl, artist },
   index,
 }: NotificationProps) => {
   const title = 'The auction is ending in one hour, make sure you are winning!';
   return (
     <TrackNotification
       createdAt={createdAt}
+      price={price}
       trackId={trackId}
       trackName={trackName}
       artist={artist}

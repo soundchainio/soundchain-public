@@ -3,5 +3,5 @@ export interface TrackWithPriceMetadata {
   trackId: string;
   artist: string;
   artworkUrl: string;
-  price?: number;
+  price: number;
 }

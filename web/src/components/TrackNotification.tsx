@@ -10,7 +10,7 @@ interface NotificationProps {
   artworkUrl: string;
   createdAt: string;
   index: number;
-  price?: number;
+  price: number;
   title: JSX.Element | string;
   trackId: string;
   trackName: string;
@@ -41,11 +41,9 @@ export const TrackNotification = ({
             <div className="text-white font-bold text-xs">{trackName}</div>
             <div className="text-gray-80 font-bold text-xs">{artist}</div>
           </div>
-          {price && (
-            <div className="flex gap-2 text-white font-bold text-xs ml-auto">
-              <Matic /> {price / 1e18} MATIC
-            </div>
-          )}
+          <div className="flex gap-2 text-white font-bold text-xs ml-auto">
+            <Matic /> {price / 1e18} MATIC
+          </div>
         </div>
       </NextLink>
     </div>
