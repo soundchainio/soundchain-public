@@ -31,10 +31,10 @@ export class AuthService extends Service {
   }
 
   async getUserFromCredentials(username: string): Promise<User | undefined> {
-    return await UserModel.findOne({ email: username });
+    return UserModel.findOne({ email: username });
   }
 
   async getSoundChainUser(): Promise<User | undefined> {
-    return await UserModel.findOne({ roles: Role.SOUNDCHAIN_ACCOUNT });
+    return UserModel.findOne({ roles: Role.SOUNDCHAIN_ACCOUNT });
   }
 }
