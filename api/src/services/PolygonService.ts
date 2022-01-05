@@ -1,5 +1,5 @@
 import { config } from '../config';
-import { polygonScanApi, polygonScanTestNetApi } from '../polygonApi';
+import { polygonScanApi } from '../polygonApi';
 import { PageInput } from '../types/PageInput';
 import { Service } from './Service';
 
@@ -50,9 +50,9 @@ export class PolygonscanService extends Service {
   ): Promise<{ result: PolygonscanResultInterface[]; nextPage: string }> {
     const offset = page.first;
     const pageRequest = (page.after && parseInt(page.after)) ?? 1;
-    const url = `?apikey=${config.minting.polygonScan}&module=account&action=txlist&address=${wallet}&startblock=1&endblock=99999999&page=${pageRequest}&offset=${offset}&sort=desc`;
+    const url = `?apikey=${config.minting.polygonScan}&module=account&action=txlist&address=${wallet}&page=${pageRequest}&offset=${offset}&sort=desc`;
 
-    const { data } = await polygonScanTestNetApi.get<PolygonscanResponse>(url);
+    const { data } = await polygonScanApi.get<PolygonscanResponse>(url);
 
     let nextPage: string;
     if (data.result.length) {
@@ -68,9 +68,9 @@ export class PolygonscanService extends Service {
   ): Promise<{ result: PolygonscanResultInterface[]; nextPage: string }> {
     const offset = page.first;
     const pageRequest = (page.after && parseInt(page.after)) ?? 1;
-    const url = `?apikey=${config.minting.polygonScan}&module=account&action=txlistinternal&address=${wallet}&startblock=1&endblock=99999999&page=${pageRequest}&offset=${offset}&sort=desc`;
+    const url = `?apikey=${config.minting.polygonScan}&module=account&action=txlistinternal&address=${wallet}&page=${pageRequest}&offset=${offset}&sort=desc`;
 
-    const { data } = await polygonScanTestNetApi.get<PolygonscanResponse>(url);
+    const { data } = await polygonScanApi.get<PolygonscanResponse>(url);
 
     let nextPage: string;
     if (data.result.length === offset) {
