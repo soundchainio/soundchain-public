@@ -34,38 +34,40 @@ export const TrackListItem = ({ song, index, handleOnPlayClicked }: TrackProps) 
   const isPlaying = isCurrentlyPlaying && isCurrentlyPlaying(trackId);
 
   return (
-    <NextLink href={`/tracks/${trackId}`}>
-      <li
-        className={`flex items-center gap-2 px-4 py-2 transition duration-300 hover:bg-gray-25 ${
-          isPlaying ? 'font-black' : 'font-semibold'
-        } text-white text-xs`}
-      >
-        <p className="w-6 text-right flex-shrink-0">{index}</p>
-        <div className="h-10 w-10 relative flex items-center bg-gray-80 flex-shrink-0">
-          <Asset src={art} sizes="2.5rem" />
-        </div>
-        <div className="min-w-0">
-          <p className="truncate">{title}</p>
-          <div className="flex items-center gap-1">
-            {playbackCount && (
-              <>
-                <Play fill={'#808080'} width={7} height={8} />
-                <p className="text-xxs text-gray-80">{playbackCount}</p>
-              </>
-            )}
+    <li
+      className={`flex items-center justify-between gap-2 px-4 py-2 transition duration-300 hover:bg-gray-25 ${
+        isPlaying ? 'font-black' : 'font-semibold'
+      } text-white text-xs`}
+    >
+      <NextLink href={`/tracks/${trackId}`}>
+        <a className="flex items-center flex-1 gap-2 min-w-0">
+          <p className="w-6 text-right flex-shrink-0">{index}</p>
+          <div className="h-10 w-10 relative flex items-center bg-gray-80 flex-shrink-0">
+            <Asset src={art} sizes="2.5rem" />
           </div>
-        </div>
-        <button
-          className="h-10 w-10 flex items-center justify-center ml-auto hover:scale-125 duration-75 flex-shrink-0"
-          aria-label={isPlaying ? 'Pause' : 'Play'}
-          onClick={e => {
-            e.stopPropagation();
-            handleOnPlayClicked(song);
-          }}
-        >
-          {isPlaying ? <Pause /> : <Play />}
-        </button>
-      </li>
-    </NextLink>
+          <div className="min-w-0">
+            <p className="truncate">{title}</p>
+            <div className="flex items-center gap-1">
+              {playbackCount && (
+                <>
+                  <Play fill={'#808080'} width={7} height={8} />
+                  <p className="text-xxs text-gray-80">{playbackCount}</p>
+                </>
+              )}
+            </div>
+          </div>
+        </a>
+      </NextLink>
+      <button
+        className="h-10 w-10 flex items-center justify-center hover:scale-125 duration-75 flex-shrink-0"
+        aria-label={isPlaying ? 'Pause' : 'Play'}
+        onClick={e => {
+          e.stopPropagation();
+          handleOnPlayClicked(song);
+        }}
+      >
+        {isPlaying ? <Pause /> : <Play />}
+      </button>
+    </li>
   );
 };
