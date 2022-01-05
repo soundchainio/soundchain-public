@@ -10,7 +10,7 @@ import useBlockchain from 'hooks/useBlockchain';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { CheckmarkFilled } from 'icons/CheckmarkFilled';
-import { Matic } from 'icons/Matic';
+import { Matic } from 'components/Matic';
 import { cacheFor } from 'lib/apollo';
 import { PendingRequest, TrackDocument, TrackQuery, useAuctionItemQuery, useUpdateTrackMutation } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
@@ -136,12 +136,8 @@ export default function CompleteAuctionPage({ track }: TrackPageProps) {
               <p className="flex items-center flex-shrink-0 justify-start font-bold text-xs md-text-sm uppercase">
                 winning bid
               </p>
-              <p className="flex items-center justify-end w-full uppercase">
-                <span className="my-auto">
-                  <Matic />
-                </span>
-                <span className="mx-1 text-white font-bold text-md leading-tight">{winningBid}</span>
-                <span className="items-end font-bold text-xs leading-tight">matic</span>
+              <p className="flex items-center justify-end w-full">
+                <Matic value={winningBid} />
               </p>
             </div>
             <div className="flex p-5 text-gray-80 bg-[#111920]">

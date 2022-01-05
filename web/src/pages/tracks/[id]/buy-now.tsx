@@ -11,7 +11,6 @@ import { Form, Formik } from 'formik';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
-import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
 import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemLazyQuery, useUpdateTrackMutation } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
@@ -24,6 +23,7 @@ import { authenticator } from 'otplib';
 import { toast } from 'react-toastify';
 import { Locker } from 'icons/Locker';
 import { TotalPrice } from 'components/TotalPrice';
+import { Matic } from 'components/Matic';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -162,11 +162,7 @@ export default function BuyNowPage({ track }: TrackPageProps) {
               <div className="bg-[#112011]">
                 <div className="flex justify-between items-center px-4 py-3">
                   <div className="text-sm font-bold text-white">BUY NOW PRICE</div>
-                  <div className="text-md flex items-center font-bold gap-1">
-                    <Matic />
-                    <span className="text-white">{price}</span>
-                    <span className="text-xxs text-gray-80">MATIC</span>
-                  </div>
+                  <Matic value={price} />
                 </div>
               </div>
               {!hasStarted && (
