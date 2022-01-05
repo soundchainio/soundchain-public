@@ -4,6 +4,7 @@ import { CommentNotification } from './CommentNotification';
 import { DeletedCommentNotification } from './DeletedCommentNotification';
 import { DeletedPostNotification } from './DeletedPostNotification';
 import { FollowerNotification } from './FollowerNotification';
+import { NewBidNotification } from './NewBidNotification';
 import { NewPostNotification } from './NewPostNotification';
 import { NewVerificationRequestNotification } from './NewVerificationRequestNotification';
 import { NFTSoldNotification } from './NFTSoldNotification';
@@ -22,6 +23,7 @@ export const NotificationUnion = createUnionType({
       DeletedCommentNotification,
       DeletedPostNotification,
       FollowerNotification,
+      NewBidNotification,
       NewPostNotification,
       NewVerificationRequestNotification,
       NFTSoldNotification,
@@ -66,6 +68,9 @@ export const NotificationUnion = createUnionType({
     }
     if (value.type === NotificationType.Outbid) {
       return OutbidNotification;
+    }
+    if (value.type === NotificationType.NewBid) {
+      return NewBidNotification;
     }
     return undefined;
   },

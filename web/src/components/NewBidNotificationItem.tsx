@@ -1,17 +1,17 @@
 import classNames from 'classnames';
 import { Matic } from 'icons/Matic';
-import { OutbidNotification } from 'lib/graphql';
+import { NewBidNotification } from 'lib/graphql';
 import NextLink from 'next/link';
 import React from 'react';
 import Asset from './Asset';
 import { Timestamp } from './Timestamp';
 
 interface NotificationProps {
-  notification: OutbidNotification;
+  notification: NewBidNotification;
   index: number;
 }
 
-export const OutbidNotificationItem = ({
+export const NewBidNotificationItem = ({
   notification: { createdAt, price, trackId, trackName, artist, artworkUrl },
   index,
 }: NotificationProps) => {
@@ -19,7 +19,7 @@ export const OutbidNotificationItem = ({
     <div className={classNames('cursor-pointer flex flex-col p-4', index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20')}>
       <div className="break-words flex flex-col">
         <div className="text-gray-100 text-sm items-center w-full inline-block">
-          You have been outbid! You have to bid higher!
+          Your auction got a new bid! Check it out!
         </div>
         <Timestamp small datetime={createdAt} className="text-sm" />
       </div>

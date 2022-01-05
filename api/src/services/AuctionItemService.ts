@@ -162,7 +162,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
     await this.context.notificationService.notifyWonAuction({
       track,
       price: highestBid,
-      buyerProfileId: buyerProfile.profileId,
+      profileId: buyerProfile.profileId,
     });
   }
 
@@ -173,7 +173,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
     ]);
     await this.context.notificationService.notifyAuctionIsEnding({
       track,
-      buyerProfileId: user.profileId,
+      profileId: user.profileId,
     });
   }
 

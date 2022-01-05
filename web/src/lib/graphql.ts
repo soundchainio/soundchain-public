@@ -820,6 +820,19 @@ export type NftSoldNotification = {
   sellType: SellType;
 };
 
+export type NewBidNotification = {
+  __typename?: 'NewBidNotification';
+  type: NotificationType;
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
+  id: Scalars['String'];
+  trackId: Scalars['String'];
+  trackName: Scalars['String'];
+  artist: Scalars['String'];
+  artworkUrl: Scalars['String'];
+  price: Scalars['Float'];
+};
+
 export type NewPostNotification = {
   __typename?: 'NewPostNotification';
   type: NotificationType;
@@ -843,7 +856,7 @@ export type NewVerificationRequestNotification = {
   verificationRequestId: Scalars['String'];
 };
 
-export type Notification = AuctionIsEndingNotification | CommentNotification | DeletedCommentNotification | DeletedPostNotification | FollowerNotification | NewPostNotification | NewVerificationRequestNotification | NftSoldNotification | OutbidNotification | ReactionNotification | VerificationRequestNotification | WonAuctionNotification;
+export type Notification = AuctionIsEndingNotification | CommentNotification | DeletedCommentNotification | DeletedPostNotification | FollowerNotification | NewBidNotification | NewPostNotification | NewVerificationRequestNotification | NftSoldNotification | OutbidNotification | ReactionNotification | VerificationRequestNotification | WonAuctionNotification;
 
 export type NotificationConnection = {
   __typename?: 'NotificationConnection';
@@ -857,6 +870,7 @@ export enum NotificationType {
   DeletedComment = 'DeletedComment',
   DeletedPost = 'DeletedPost',
   Follower = 'Follower',
+  NewBid = 'NewBid',
   NewPost = 'NewPost',
   NewVerificationRequest = 'NewVerificationRequest',
   NftSold = 'NFTSold',
@@ -2386,6 +2400,11 @@ export type NftSoldNotificationFieldsFragment = (
   & Pick<NftSoldNotification, 'id' | 'type' | 'createdAt' | 'buyerName' | 'buyerPicture' | 'buyerProfileId' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price' | 'sellType'>
 );
 
+export type NewBidNotificationFieldsFragment = (
+  { __typename?: 'NewBidNotification' }
+  & Pick<NewBidNotification, 'id' | 'type' | 'createdAt' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price'>
+);
+
 export type NewPostNotificationFieldsFragment = (
   { __typename?: 'NewPostNotification' }
   & Pick<NewPostNotification, 'id' | 'type' | 'authorName' | 'authorPicture' | 'body' | 'link' | 'previewBody' | 'previewLink' | 'createdAt'>
@@ -2422,6 +2441,9 @@ export type NotificationQuery = (
   ) | (
     { __typename?: 'FollowerNotification' }
     & FollowerNotificationFieldsFragment
+  ) | (
+    { __typename?: 'NewBidNotification' }
+    & NewBidNotificationFieldsFragment
   ) | (
     { __typename?: 'NewPostNotification' }
     & NewPostNotificationFieldsFragment
@@ -2481,6 +2503,9 @@ export type NotificationsQuery = (
     ) | (
       { __typename?: 'FollowerNotification' }
       & FollowerNotificationFieldsFragment
+    ) | (
+      { __typename?: 'NewBidNotification' }
+      & NewBidNotificationFieldsFragment
     ) | (
       { __typename?: 'NewPostNotification' }
       & NewPostNotificationFieldsFragment
@@ -3434,6 +3459,18 @@ export const NftSoldNotificationFieldsFragmentDoc = gql`
   artworkUrl
   price
   sellType
+}
+    `;
+export const NewBidNotificationFieldsFragmentDoc = gql`
+    fragment NewBidNotificationFields on NewBidNotification {
+  id
+  type
+  createdAt
+  trackId
+  trackName
+  artist
+  artworkUrl
+  price
 }
     `;
 export const NewPostNotificationFieldsFragmentDoc = gql`
@@ -5174,6 +5211,9 @@ export const NotificationDocument = gql`
     ... on OutbidNotification {
       ...OutbidNotificationFields
     }
+    ... on NewBidNotification {
+      ...NewBidNotificationFields
+    }
   }
 }
     ${CommentNotificationFieldsFragmentDoc}
@@ -5187,7 +5227,8 @@ ${DeletedPostNotificationFieldsFragmentDoc}
 ${DeletedCommentNotificationFieldsFragmentDoc}
 ${WonAuctionNotificationFieldsFragmentDoc}
 ${AuctionIsEndingNotificationFieldsFragmentDoc}
-${OutbidNotificationFieldsFragmentDoc}`;
+${OutbidNotificationFieldsFragmentDoc}
+${NewBidNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationQuery__
@@ -5291,6 +5332,9 @@ export const NotificationsDocument = gql`
       ... on OutbidNotification {
         ...OutbidNotificationFields
       }
+      ... on NewBidNotification {
+        ...NewBidNotificationFields
+      }
     }
   }
 }
@@ -5305,7 +5349,8 @@ ${DeletedPostNotificationFieldsFragmentDoc}
 ${DeletedCommentNotificationFieldsFragmentDoc}
 ${WonAuctionNotificationFieldsFragmentDoc}
 ${AuctionIsEndingNotificationFieldsFragmentDoc}
-${OutbidNotificationFieldsFragmentDoc}`;
+${OutbidNotificationFieldsFragmentDoc}
+${NewBidNotificationFieldsFragmentDoc}`;
 
 /**
  * __useNotificationsQuery__

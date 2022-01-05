@@ -6,6 +6,7 @@ import { CommentNotificationMetadata } from '../types/CommentNotificationMetadat
 import { DeletedCommentNotificationMetadata } from '../types/DeletedCommentNotificationMetadata';
 import { DeletedPostNotificationMetadata } from '../types/DeletedPostNotificationMetadata';
 import { FollowerNotificationMetadata } from '../types/FollowerNotificationMetadata';
+import { NewBidNotification } from '../types/NewBidNotification';
 import { NewPostNotificationMetadata } from '../types/NewPostNotificationMetadata';
 import { NewVerificationRequestNotificationMetadata } from '../types/NewVerificationRequestNotificationMetadata';
 import { NFTSoldNotificationMetadata } from '../types/NFTSoldNotificationMetadata';
@@ -30,6 +31,7 @@ export class Notification extends Model {
     | DeletedCommentNotificationMetadata
     | DeletedPostNotificationMetadata
     | FollowerNotificationMetadata
+    | NewBidNotification
     | NewPostNotificationMetadata
     | NewVerificationRequestNotificationMetadata
     | NFTSoldNotificationMetadata

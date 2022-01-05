@@ -6,6 +6,7 @@ enum NotificationType {
   DeletedComment = 'DeletedComment',
   DeletedPost = 'DeletedPost',
   Follower = 'Follower',
+  NewBid = 'NewBid',
   NewPost = 'NewPost',
   NewVerificationRequest = 'NewVerificationRequest',
   NFTSold = 'NFTSold',

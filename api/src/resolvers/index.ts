@@ -14,6 +14,7 @@ import { FollowResolver } from './FollowResolver';
 import { ListingItemResolver } from './ListingItemResolver';
 import { MessageResolver } from './MessageResolver';
 import { MintingRequestResolver } from './MintingRequestResolver';
+import { NewBidNotificationResolver } from './NewBidNotificationResolver';
 import { NewPostNotificationResolver } from './NewPostNotificationResolver';
 import { NewVerificationRequestNotificationResolver } from './NewVerificationRequestNotificationResolver';
 import { NFTSoldNotificationResolver } from './NFTSoldNotificationResolver';
@@ -49,6 +50,7 @@ export const resolvers = [
   ListingItemResolver,
   MessageResolver,
   MintingRequestResolver,
+  NewBidNotificationResolver,
   NewPostNotificationResolver,
   NewVerificationRequestNotificationResolver,
   NFTSoldNotificationResolver,

@@ -36,5 +36,8 @@ query Notification($id: String!) {
     ... on OutbidNotification {
       ...OutbidNotificationFields
     }
+    ... on NewBidNotification {
+      ...NewBidNotificationFields
+    }
   }
 }

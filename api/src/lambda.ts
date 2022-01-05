@@ -212,27 +212,35 @@ export const watcher: Handler = async () => {
             const { nftAddress, tokenId, bidder, bid } = (event as unknown as BidPlaced).returnValues;
             const tokenIdAsNumber = parseInt(tokenId);
             const auction = await context.auctionItemService.findAuctionItem(tokenIdAsNumber);
-            const [outBided, track, user] = await Promise.all([
+            const [outBided, track, user, seller] = await Promise.all([
               context.bidService.getHighestBid(auction._id),
               context.trackService.getTrackByTokenId(tokenIdAsNumber),
               context.userService.getUserByWallet(bidder),
+              context.userService.getUserByWallet(auction.owner),
               context.auctionItemService.updateAuctionItem(tokenIdAsNumber, {
                 highestBid: parseInt(bid),
               }),
             ]);
-            await context.bidService.createBid({
-              nft: nftAddress,
-              tokenId: tokenIdAsNumber,
-              bidder,
-              userId: user._id,
-              profileId: user.profileId,
-              amount: parseInt(bid),
-              auctionId: auction._id,
-            });
+            await Promise.all([
+              context.bidService.createBid({
+                nft: nftAddress,
+                tokenId: tokenIdAsNumber,
+                bidder,
+                userId: user._id,
+                profileId: user.profileId,
+                amount: parseInt(bid),
+                auctionId: auction._id,
+              }),
+              context.notificationService.notifyNewBid({
+                track,
+                profileId: seller.profileId,
+                price: parseInt(bid),
+              }),
+            ]);
             if (!outBided) continue;
             await context.notificationService.notifyOutbid({
               track,
-              buyerProfileId: outBided.profileId,
+              profileId: outBided.profileId,
               price: parseInt(bid),
             });
           } catch (error) {

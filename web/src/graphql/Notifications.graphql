@@ -37,6 +37,9 @@ query Notifications($sort: SortNotificationInput) {
       ... on OutbidNotification {
         ...OutbidNotificationFields
       }
+      ... on NewBidNotification {
+        ...NewBidNotificationFields
+      }
     }
   }
 }
