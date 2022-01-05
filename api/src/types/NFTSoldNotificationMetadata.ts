@@ -1,14 +1,10 @@
 import { registerEnumType } from 'type-graphql';
+import { TrackWithPriceMetadata } from './TrackWithPriceMetadata';
 
-export interface NFTSoldNotificationMetadata {
+export interface NFTSoldNotificationMetadata extends TrackWithPriceMetadata {
   buyerName: string;
   buyerPicture: string | undefined;
   buyerProfileId: string;
-  trackName: string;
-  artist: string;
-  artworkUrl: string;
-  trackId: string;
-  price: number;
   sellType: SellType;
 }
 

@@ -1,20 +1,17 @@
 import { getModelForClass, modelOptions, prop, Severity } from '@typegoose/typegoose';
 import { ObjectId } from 'mongodb';
 import { Field } from 'type-graphql';
-import { AuctionIsEndingNotification } from '../types/AuctionIsEndingNotification';
 import { CommentNotificationMetadata } from '../types/CommentNotificationMetadata';
 import { DeletedCommentNotificationMetadata } from '../types/DeletedCommentNotificationMetadata';
 import { DeletedPostNotificationMetadata } from '../types/DeletedPostNotificationMetadata';
 import { FollowerNotificationMetadata } from '../types/FollowerNotificationMetadata';
-import { NewBidNotification } from '../types/NewBidNotification';
 import { NewPostNotificationMetadata } from '../types/NewPostNotificationMetadata';
 import { NewVerificationRequestNotificationMetadata } from '../types/NewVerificationRequestNotificationMetadata';
 import { NFTSoldNotificationMetadata } from '../types/NFTSoldNotificationMetadata';
 import { NotificationType } from '../types/NotificationType';
-import { OutbidNotification } from '../types/OutbidAuctionNotification';
 import { ReactionNotificationMetadata } from '../types/ReactionNotificationMetadata';
+import { TrackWithPriceMetadata } from '../types/TrackWithPriceMetadata';
 import { VerificationRequestNotificationMetadata } from '../types/VerificationRequestNotificationMetadata';
-import { WonAuctionNotificationMetadata } from '../types/WonAuctionNotificationMetadata';
 import { Model } from './Model';
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
 export class Notification extends Model {
@@ -26,19 +23,16 @@ export class Notification extends Model {
 
   @prop({ required: true })
   metadata:
-    | AuctionIsEndingNotification
     | CommentNotificationMetadata
     | DeletedCommentNotificationMetadata
     | DeletedPostNotificationMetadata
     | FollowerNotificationMetadata
-    | NewBidNotification
     | NewPostNotificationMetadata
     | NewVerificationRequestNotificationMetadata
     | NFTSoldNotificationMetadata
-    | OutbidNotification
     | ReactionNotificationMetadata
     | VerificationRequestNotificationMetadata
-    | WonAuctionNotificationMetadata;
+    | TrackWithPriceMetadata;
 
   @Field(() => Date)
   createdAt: Date;

@@ -7,20 +7,17 @@ import { Post } from '../models/Post';
 import { Profile, ProfileModel } from '../models/Profile';
 import { Reaction } from '../models/Reaction';
 import { Track } from '../models/Track';
-import { AuctionIsEndingNotificationMetadata } from '../types/AuctionIsEndingNotificationMetadata';
 import { CommentNotificationMetadata } from '../types/CommentNotificationMetadata';
 import { Context } from '../types/Context';
 import { DeletedPostNotificationMetadata } from '../types/DeletedPostNotificationMetadata';
 import { FinishBuyNowItemInput } from '../types/FinishBuyNowItemInput';
-import { NewBidNotificationMetadata } from '../types/NewBidNotificationMetadata';
 import { NewPostNotificationMetadata } from '../types/NewPostNotificationMetadata';
 import { NewVerificationRequestNotificationMetadata } from '../types/NewVerificationRequestNotificationMetadata';
 import { NotificationType } from '../types/NotificationType';
 import { NotificationUnion } from '../types/NotificationUnion';
-import { OutbidNotificationMetadata } from '../types/OutbidNotificationMetadata';
 import { PageInput } from '../types/PageInput';
 import { SortNotificationInput } from '../types/SortNotificationInput';
-import { WonAuctionNotificationMetadata } from '../types/WonAuctionNotificationMetadata';
+import { TrackWithPriceMetadata } from '../types/TrackWithPriceMetadata';
 import { ModelService } from './ModelService';
 
 interface CommentNotificationParams {
@@ -34,8 +31,6 @@ interface AuctionParams {
   price: number;
   profileId: string;
 }
-
-type AuctionIsEndingParams = Omit<AuctionParams, 'price'>;
 
 export class NotificationService extends ModelService<typeof Notification> {
   constructor(context: Context) {
@@ -257,7 +252,7 @@ export class NotificationService extends ModelService<typeof Notification> {
 
   async notifyWonAuction({ track, price, profileId }: AuctionParams): Promise<void> {
     const { _id: trackId, artist, artworkUrl, title: trackName } = track;
-    const metadata: WonAuctionNotificationMetadata = {
+    const metadata: TrackWithPriceMetadata = {
       trackId,
       price,
       artist,
@@ -273,13 +268,14 @@ export class NotificationService extends ModelService<typeof Notification> {
     await this.incrementNotificationCount(profileId);
   }
 
-  async notifyAuctionIsEnding({ track, profileId }: AuctionIsEndingParams): Promise<void> {
+  async notifyAuctionIsEnding({ track, profileId, price }: AuctionParams): Promise<void> {
     const { _id: trackId, artist, artworkUrl, title: trackName } = track;
-    const metadata: AuctionIsEndingNotificationMetadata = {
+    const metadata: TrackWithPriceMetadata = {
       trackId,
       trackName,
       artist,
       artworkUrl,
+      price,
     };
     const notification = new NotificationModel({
       type: NotificationType.AuctionIsEnding,
@@ -292,7 +288,7 @@ export class NotificationService extends ModelService<typeof Notification> {
 
   async notifyOutbid({ track, profileId, price }: AuctionParams): Promise<void> {
     const { _id: trackId, artist, artworkUrl, title: trackName } = track;
-    const metadata: OutbidNotificationMetadata = {
+    const metadata: TrackWithPriceMetadata = {
       trackId,
       trackName,
       artist,
@@ -310,7 +306,7 @@ export class NotificationService extends ModelService<typeof Notification> {
 
   async notifyNewBid({ track, profileId, price }: AuctionParams): Promise<void> {
     const { _id: trackId, artist, artworkUrl, title: trackName } = track;
-    const metadata: NewBidNotificationMetadata = {
+    const metadata: TrackWithPriceMetadata = {
       trackId,
       trackName,
       artist,

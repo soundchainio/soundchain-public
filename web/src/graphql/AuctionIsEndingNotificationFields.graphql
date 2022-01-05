@@ -6,4 +6,5 @@ fragment AuctionIsEndingNotificationFields on AuctionIsEndingNotification {
   trackName
   artist
   artworkUrl
+  price
 }

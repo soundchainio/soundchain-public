@@ -166,7 +166,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
     });
   }
 
-  private async notifyAuctionIsEnding({ tokenId, bidder }: Bid): Promise<void> {
+  private async notifyAuctionIsEnding({ tokenId, bidder, amount }: Bid): Promise<void> {
     const [user, track] = await Promise.all([
       this.context.userService.getUserByWallet(bidder),
       this.context.trackService.getTrackByTokenId(tokenId),
@@ -174,6 +174,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
     await this.context.notificationService.notifyAuctionIsEnding({
       track,
       profileId: user.profileId,
+      price: amount,
     });
   }
 
