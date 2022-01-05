@@ -211,13 +211,15 @@ export default function BuyNowPage({ track }: TrackPageProps) {
 
             {hasStarted && (
               <PlayerAwareBottomBar>
-                {price && (
+                {price && maticUsd && (
                   <div className="font-bold">
                     <p className="text-white">
                       <Matic className="inline" /> {`${totalPrice(parseFloat(price))} `}
                       <span className="text-xxs text-gray-80">MATIC</span>
                     </p>
-                    <p className="text-sm text-gray-60">{`${currency(totalPrice(parseFloat(price)))}`}</p>
+                    <p className="text-sm text-gray-60">{`${currency(
+                      totalPrice(parseFloat(price) * parseFloat(maticUsd.maticUsd)),
+                    )}`}</p>
                   </div>
                 )}
                 <Button type="submit" className="ml-auto" variant="buy-nft" loading={loading}>
