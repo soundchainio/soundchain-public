@@ -13,14 +13,7 @@ import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
-import {
-  PendingRequest,
-  TrackDocument,
-  TrackQuery,
-  useBuyNowItemLazyQuery,
-  useMaticUsdQuery,
-  useUpdateTrackMutation,
-} from 'lib/graphql';
+import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemLazyQuery, useUpdateTrackMutation } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
@@ -29,9 +22,8 @@ import { compareWallets } from 'utils/Wallet';
 import { Timer } from '../[id]';
 import { authenticator } from 'otplib';
 import { toast } from 'react-toastify';
-import { useMaxGasFee } from 'hooks/useMaxGasFee';
-import { currency } from 'utils/format';
 import { Locker } from 'icons/Locker';
+import { TotalPrice } from 'components/TotalPrice';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -67,8 +59,6 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 
 export default function BuyNowPage({ track }: TrackPageProps) {
   const { buyItem } = useBlockchain();
-  const maxGasFee = useMaxGasFee();
-  const { data: maticUsd } = useMaticUsdQuery();
   const { account, web3 } = useWalletContext();
   const [trackUpdate] = useUpdateTrackMutation();
   const [loading, setLoading] = useState(false);
@@ -160,16 +150,6 @@ export default function BuyNowPage({ track }: TrackPageProps) {
     token: me?.otpSecret ? yup.string().required('Two-Factor token is required') : yup.string(),
   });
 
-  const totalPrice = (price: number): number => {
-    if (!price || !maxGasFee) {
-      return 0;
-    }
-
-    const soundchainFee = price * 0.025;
-
-    return price + soundchainFee + parseFloat(maxGasFee);
-  };
-
   return (
     <Layout topNavBarProps={topNavBarProps}>
       <div className="min-h-full flex flex-col">
@@ -214,17 +194,7 @@ export default function BuyNowPage({ track }: TrackPageProps) {
 
             {hasStarted && (
               <PlayerAwareBottomBar>
-                {price && maticUsd && (
-                  <div className="font-bold">
-                    <p className="text-white">
-                      <Matic className="inline" /> {`${totalPrice(parseFloat(price))} `}
-                      <span className="text-xxs text-gray-80">MATIC</span>
-                    </p>
-                    <p className="text-sm text-gray-60">{`${currency(
-                      totalPrice(parseFloat(price) * parseFloat(maticUsd.maticUsd)),
-                    )}`}</p>
-                  </div>
-                )}
+                <TotalPrice price={price} />
                 <Button type="submit" className="ml-auto" variant="buy-nft" loading={loading}>
                   <div className="px-4">CONFIRM</div>
                 </Button>

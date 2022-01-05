@@ -1,3 +1,4 @@
+import { config } from 'config';
 import { Matic } from 'icons/Matic';
 import { Soundchain } from 'icons/Soundchain';
 
@@ -9,7 +10,7 @@ export const SoundchainFee = ({ price }: Props) => {
   return (
     <div className="flex text-gray-80">
       <p className="flex items-center flex-shrink-0 justify-start font-bold text-xs md-text-sm uppercase">
-        <Soundchain className="mr-2" /> soundchain fees (2.5%)
+        <Soundchain className="mr-2" /> soundchain fee included ({config.soundchainFee * 100}%)
       </p>
       <p className="flex items-center justify-end w-full uppercase">
         <span className="my-auto">

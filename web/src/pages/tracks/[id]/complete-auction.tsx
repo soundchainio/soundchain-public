@@ -2,13 +2,15 @@ import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { AuctionEnded } from 'components/details-NFT/AuctionEnded';
 import { Layout } from 'components/Layout';
-import MaxGasFee from 'components/MaxGasFee';
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { TopNavBarProps } from 'components/TopNavBar';
+import { TotalPrice } from 'components/TotalPrice';
 import { Track } from 'components/Track';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
+import { CheckmarkFilled } from 'icons/CheckmarkFilled';
+import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
 import { PendingRequest, TrackDocument, TrackQuery, useAuctionItemQuery, useUpdateTrackMutation } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
@@ -58,7 +60,6 @@ export default function CompleteAuctionPage({ track }: TrackPageProps) {
   const [highestBid, setHighestBid] = useState<HighestBid>({} as HighestBid);
   const me = useMe();
   const router = useRouter();
-
   const tokenId = track.nftData?.tokenId ?? -1;
 
   const { data: auctionItem } = useAuctionItemQuery({
@@ -118,20 +119,50 @@ export default function CompleteAuctionPage({ track }: TrackPageProps) {
     return null;
   }
 
+  const winningBid = (parseFloat(highestBid.bid) / 1e18).toFixed(6);
+
   return (
     <Layout topNavBarProps={topNovaBarProps}>
-      <div className="m-4">
-        <Track track={track} />
+      <div className="min-h-full flex flex-col">
+        <div className="flex flex-1 flex-col justify-between">
+          <div>
+            <div className="m-4">
+              <Track track={track} />
+            </div>
+            <p className="m-8 text-center text-green-600 text-xs font-bold">
+              <CheckmarkFilled className="inline" /> Congrats, you {isOwner ? 'sold' : 'won'} this NFT!
+            </p>
+            <div className="flex p-5 text-gray-80 bg-[#111920]">
+              <p className="flex items-center flex-shrink-0 justify-start font-bold text-xs md-text-sm uppercase">
+                winning bid
+              </p>
+              <p className="flex items-center justify-end w-full uppercase">
+                <span className="my-auto">
+                  <Matic />
+                </span>
+                <span className="mx-1 text-white font-bold text-md leading-tight">{winningBid}</span>
+                <span className="items-end font-bold text-xs leading-tight">matic</span>
+              </p>
+            </div>
+            <div className="flex p-5 text-gray-80 bg-[#111920]">
+              <p className="flex items-center flex-shrink-0 justify-start font-bold text-xs md-text-sm uppercase">
+                time reaming
+              </p>
+              <p className="flex items-center w-full justify-end">
+                <span className="mx-1 text-red-500 font-bold text-xs leading-tight uppercase">auction ended</span>
+              </p>
+            </div>
+          </div>
+
+          <AuctionEnded highestBid={highestBid} />
+        </div>
+        <PlayerAwareBottomBar>
+          <TotalPrice price={winningBid} />
+          <Button className="ml-auto" variant="buy-nft" onClick={handleClaim} loading={loading}>
+            <div className="px-4">COMPLETE</div>
+          </Button>
+        </PlayerAwareBottomBar>
       </div>
-      <AuctionEnded highestBid={highestBid} isOwner={isOwner} />
-      <div className="p-5 bg-gray-15">
-        <MaxGasFee />
-      </div>
-      <PlayerAwareBottomBar>
-        <Button className="ml-auto" variant="buy-nft" onClick={handleClaim} loading={loading}>
-          <div className="px-4">COMPLETE</div>
-        </Button>
-      </PlayerAwareBottomBar>
     </Layout>
   );
 }

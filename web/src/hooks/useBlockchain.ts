@@ -20,6 +20,7 @@ const marketplaceAddress = config.marketplaceAddress as string;
 const auctionAddress = config.auctionAddress as string;
 
 export const gas = 1200000;
+export const applySoundchainFee = (price: number) => (price * (1 + config.soundchainFee)).toFixed();
 
 const useBlockchain = () => {
   const me = useMe();
@@ -101,11 +102,12 @@ const useBlockchain = () => {
         soundchainMarketplace.abi as AbiItem[],
         marketplaceAddress,
       ) as unknown as SoundchainMarketplace;
+      const totalPrice = applySoundchainFee(parseInt(price));
       return beforeSending(
         web3,
         async () =>
           await contract.methods
-            .listItem(nftAddress, tokenId, 1, price, startingTime)
+            .listItem(nftAddress, tokenId, 1, totalPrice, startingTime)
             .send({ from, gas })
             .on('transactionHash', onTransactionHash),
       );
@@ -144,11 +146,12 @@ const useBlockchain = () => {
         soundchainMarketplace.abi as AbiItem[],
         marketplaceAddress,
       ) as unknown as SoundchainMarketplace;
+      const totalPrice = applySoundchainFee(parseInt(price));
       return beforeSending(
         web3,
         async () =>
           await contract.methods
-            .updateListing(nftAddress, tokenId, price, startingTime)
+            .updateListing(nftAddress, tokenId, totalPrice, startingTime)
             .send({ from, gas })
             .on('transactionHash', onTransactionHash),
       );
@@ -284,9 +287,11 @@ const useBlockchain = () => {
         soundchainAuction.abi as AbiItem[],
         auctionAddress,
       ) as unknown as SoundchainAuction;
+      const totalPrice = applySoundchainFee(parseInt(reservePrice));
+      console.log('createAuction totalPrice', totalPrice);
       beforeSending(web3, () => {
         auctionContract.methods
-          .createAuction(nftAddress, tokenId, reservePrice, startTime, endTime)
+          .createAuction(nftAddress, tokenId, totalPrice, startTime, endTime)
           .send({ from, gas })
           .on('receipt', onReceipt);
       });
@@ -334,9 +339,10 @@ const useBlockchain = () => {
         soundchainAuction.abi as AbiItem[],
         auctionAddress,
       ) as unknown as SoundchainAuction;
+      const totalPrice = applySoundchainFee(parseInt(reservePrice));
       beforeSending(web3, () => {
         auctionContract.methods
-          .updateAuction(nftAddress, tokenId, reservePrice, startTime, endTime)
+          .updateAuction(nftAddress, tokenId, totalPrice, startTime, endTime)
           .send({ from, gas })
           .on('receipt', onReceipt);
       });
