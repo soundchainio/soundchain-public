@@ -31,6 +31,7 @@ import { authenticator } from 'otplib';
 import { toast } from 'react-toastify';
 import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { currency } from 'utils/format';
+import { Locker } from 'icons/Locker';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -199,9 +200,11 @@ export default function BuyNowPage({ track }: TrackPageProps) {
             </div>
 
             {me?.otpSecret && (
-              <div className="p-4">
-                <p className="text-gray-60 text-center">Two-factor validation</p>
-                <div className="w-80 m-auto">
+              <div className="flex px-4 py-3 items-center uppercase bg-gray-20">
+                <p className="text-gray-80 w-full font-bold text-xs">
+                  <Locker className="h-4 w-4 inline mr-2" fill="#303030" /> Two-factor validation
+                </p>
+                <div className="w-1/2">
                   <InputField name="token" type="text" maxLength={6} pattern="[0-9]*" inputMode="numeric" />
                 </div>
               </div>
