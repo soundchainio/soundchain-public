@@ -246,12 +246,12 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
                   <Matic />
                   <span className="text-white">{price}</span>
                   <span className="text-xxs text-gray-80">MATIC</span>
-                  <span
-                    className="text-[#22CAFF] text-xxs cursor-pointer"
+                  <button
+                    className="text-[#22CAFF] text-xxs cursor-pointer font-bold"
                     onClick={() => dispatchShowBidsHistory(true, auctionItem?.auctionItem?.id || '')}
                   >
                     [{bidCount} bids]
-                  </span>
+                  </button>
                 </div>
               </div>
               {highestBidderData?.getUserByWallet && (
