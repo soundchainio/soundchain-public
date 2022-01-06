@@ -1,4 +1,4 @@
-fragment AuctionIsEndingNotificationFields on AuctionIsEndingNotification {
+fragment NewBidNotificationFields on NewBidNotification {
   id
   type
   createdAt

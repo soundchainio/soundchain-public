@@ -1,6 +1,7 @@
 import MaxGasFee from 'components/MaxGasFee';
+import { SoundchainFee } from 'components/SoundchainFee';
 import { WalletSelector } from 'components/WalletSelector';
-import { Matic } from 'icons/Matic';
+
 import React from 'react';
 
 interface BuyNowProps {
@@ -12,30 +13,18 @@ interface BuyNowProps {
 export const BuyNow = ({ price, ownerAddressAccount, startTime }: BuyNowProps) => {
   const hasStarted = startTime <= new Date().getTime() / 1000;
 
+  if (!hasStarted) {
+    return null;
+  }
+
   return (
-    <>
-      {hasStarted && (
-        <div className="mb-2">
-          <WalletSelector ownerAddressAccount={ownerAddressAccount} />
-          <div className="flex p-5 bg-gray-20 text-gray-80">
-            <p className="flex items-center flex-shrink-0 justify-start font-bold text-xs md-text-sm uppercase">
-              soundchain fees (2.5%)
-            </p>
-            <p className="flex items-center justify-end w-full uppercase">
-              <span className="my-auto">
-                <Matic />
-              </span>
-              <span className="mx-1 text-white font-bold text-md leading-tight">
-                {(parseFloat(price) * 0.025).toFixed(6)}
-              </span>
-              <span className="items-end font-bold text-xs leading-tight">matic</span>
-            </p>
-          </div>
-          <div className="py-3 px-4 bg-gray-20">
-            <MaxGasFee />
-          </div>
-        </div>
-      )}
-    </>
+    <div className="mb-16">
+      <WalletSelector className="bg-gray-10 py-2" ownerAddressAccount={ownerAddressAccount} />
+
+      <div className="flex flex-col gap-4 px-4 py-6 bg-gray-20">
+        <SoundchainFee price={price} />
+        <MaxGasFee />
+      </div>
+    </div>
   );
 };

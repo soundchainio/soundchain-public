@@ -7,7 +7,6 @@ import { Post } from '../models/Post';
 import { Profile, ProfileModel } from '../models/Profile';
 import { Reaction } from '../models/Reaction';
 import { Track } from '../models/Track';
-import { AuctionIsEndingNotificationMetadata } from '../types/AuctionIsEndingNotificationMetadata';
 import { CommentNotificationMetadata } from '../types/CommentNotificationMetadata';
 import { Context } from '../types/Context';
 import { DeletedPostNotificationMetadata } from '../types/DeletedPostNotificationMetadata';
@@ -18,7 +17,7 @@ import { NotificationType } from '../types/NotificationType';
 import { NotificationUnion } from '../types/NotificationUnion';
 import { PageInput } from '../types/PageInput';
 import { SortNotificationInput } from '../types/SortNotificationInput';
-import { WonAuctionNotificationMetadata } from '../types/WonAuctionNotificationMetadata';
+import { TrackWithPriceMetadata } from '../types/TrackWithPriceMetadata';
 import { ModelService } from './ModelService';
 
 interface CommentNotificationParams {
@@ -27,13 +26,11 @@ interface CommentNotificationParams {
   authorProfileId: string;
 }
 
-interface WonAuctionParams {
+interface AuctionParams {
   track: Track;
   price: number;
-  buyerProfileId: string;
+  profileId: string;
 }
-
-type AuctionIsEndingParams = Omit<WonAuctionParams, 'price'>;
 
 export class NotificationService extends ModelService<typeof Notification> {
   constructor(context: Context) {
@@ -253,38 +250,37 @@ export class NotificationService extends ModelService<typeof Notification> {
     await this.incrementNotificationCount(authorProfileId);
   }
 
-  async notifyWonAuction({ track, price, buyerProfileId }: WonAuctionParams): Promise<void> {
-    const { _id: trackId, artist, artworkUrl, title: trackName } = track;
-    const metadata: WonAuctionNotificationMetadata = {
-      trackId,
-      price,
-      artist,
-      artworkUrl,
-      trackName,
-    };
-    const notification = new NotificationModel({
-      type: NotificationType.WonAuction,
-      profileId: buyerProfileId,
-      metadata,
-    });
-    await notification.save();
-    await this.incrementNotificationCount(buyerProfileId);
+  async notifyWonAuction({ track, price, profileId }: AuctionParams): Promise<void> {
+    this.notifyTrack({ track, profileId, price }, NotificationType.WonAuction);
   }
 
-  async notifyAuctionIsEnding({ track, buyerProfileId }: AuctionIsEndingParams): Promise<void> {
+  async notifyAuctionIsEnding({ track, profileId, price }: AuctionParams): Promise<void> {
+    this.notifyTrack({ track, profileId, price }, NotificationType.AuctionIsEnding);
+  }
+
+  async notifyOutbid({ track, profileId, price }: AuctionParams): Promise<void> {
+    this.notifyTrack({ track, profileId, price }, NotificationType.Outbid);
+  }
+
+  async notifyNewBid({ track, profileId, price }: AuctionParams): Promise<void> {
+    this.notifyTrack({ track, profileId, price }, NotificationType.NewBid);
+  }
+
+  private async notifyTrack({ track, profileId, price }: AuctionParams, type: NotificationType): Promise<void> {
     const { _id: trackId, artist, artworkUrl, title: trackName } = track;
-    const metadata: AuctionIsEndingNotificationMetadata = {
+    const metadata: TrackWithPriceMetadata = {
       trackId,
       trackName,
       artist,
       artworkUrl,
+      price,
     };
     const notification = new NotificationModel({
-      type: NotificationType.AuctionIsEnding,
-      profileId: buyerProfileId,
+      type,
+      profileId,
       metadata,
     });
     await notification.save();
-    await this.incrementNotificationCount(buyerProfileId);
+    await this.incrementNotificationCount(profileId);
   }
 }

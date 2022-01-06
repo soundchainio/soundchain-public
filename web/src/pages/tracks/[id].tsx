@@ -38,7 +38,7 @@ import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 import { AuthorActionsType } from 'types/AuthorActionsType';
-import { currency } from 'utils/format';
+import { currency, fixedDecimals } from 'utils/format';
 import { compareWallets } from 'utils/Wallet';
 import { HighestBid } from './[id]/complete-auction';
 
@@ -139,8 +139,8 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
 
   const auctionIsOver = (listingPayload?.listingItem?.endingTime || 0) < Math.floor(Date.now() / 1000);
   const canComplete =
-    (auctionIsOver && compareWallets(highestBid.bidder, account)) ||
-    compareWallets(account, listingPayload?.listingItem?.owner);
+    auctionIsOver &&
+    (compareWallets(highestBid.bidder, account) || compareWallets(account, listingPayload?.listingItem?.owner));
   const isHighestBidder = highestBid.bidder ? compareWallets(highestBid.bidder, account) : undefined;
   const startingDate = listingPayload?.listingItem?.startingTime
     ? new Date(listingPayload.listingItem.startingTime * 1000)
@@ -320,7 +320,7 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
             <div className="flex justify-between items-center px-4 py-3">
               <div className="text-sm font-bold text-white">{auctionIsOver ? 'FINAL PRICE' : 'CURRENT PRICE'}</div>
               <div className="text-md flex items-center font-bold gap-1">
-                <span className="text-white">{price}</span>
+                <span className="text-white">{fixedDecimals(price || '')}</span>
                 <Matic />
                 <span className="text-xl text-gray-80"> {maticUsd && price && '≃'} </span>
                 <span className="text-gray-80 font-normal">

@@ -162,18 +162,19 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
     await this.context.notificationService.notifyWonAuction({
       track,
       price: highestBid,
-      buyerProfileId: buyerProfile.profileId,
+      profileId: buyerProfile.profileId,
     });
   }
 
-  private async notifyAuctionIsEnding({ tokenId, bidder }: Bid): Promise<void> {
+  private async notifyAuctionIsEnding({ tokenId, bidder, amount }: Bid): Promise<void> {
     const [user, track] = await Promise.all([
       this.context.userService.getUserByWallet(bidder),
       this.context.trackService.getTrackByTokenId(tokenId),
     ]);
     await this.context.notificationService.notifyAuctionIsEnding({
       track,
-      buyerProfileId: user.profileId,
+      profileId: user.profileId,
+      price: amount,
     });
   }
 

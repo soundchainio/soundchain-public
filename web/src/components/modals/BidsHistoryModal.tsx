@@ -1,7 +1,7 @@
 import { Avatar } from 'components/Avatar';
 import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
-import { Matic } from 'icons/Matic';
+import { Matic } from 'components/Matic';
 import { useBidsWithInfoQuery, useMaticUsdQuery } from 'lib/graphql';
 import React from 'react';
 import { currency } from 'utils/format';
@@ -45,11 +45,7 @@ export const BidsHistoryModal = () => {
                 </div>
               </div>
               <div className="flex flex-col">
-                <div className="flex flex-row items-center gap-1 font-bold">
-                  <Matic />
-                  <span className="pl-1 text-white">{item.amount / 1e18}</span>
-                  <span className="text-xxs self-end text-gray-80">MATIC</span>
-                </div>
+                <Matic value={item.amount / 1e18} />
                 <div className="flex justify-end">
                   <span className="text-gray-50 font-bold text-xxs">
                     {maticUsd && `${currency((item.amount / 1e18) * parseFloat(maticUsd.maticUsd))}`}

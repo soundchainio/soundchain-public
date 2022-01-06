@@ -11,7 +11,6 @@ import { Form, Formik } from 'formik';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
-import { Matic } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
 import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemLazyQuery, useUpdateTrackMutation } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
@@ -22,6 +21,9 @@ import { compareWallets } from 'utils/Wallet';
 import { Timer } from '../[id]';
 import { authenticator } from 'otplib';
 import { toast } from 'react-toastify';
+import { Locker } from 'icons/Locker';
+import { TotalPrice } from 'components/TotalPrice';
+import { Matic } from 'components/Matic';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -150,51 +152,53 @@ export default function BuyNowPage({ track }: TrackPageProps) {
 
   return (
     <Layout topNavBarProps={topNavBarProps}>
-      <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
-        <Form autoComplete="off">
-          <div className="m-4">
-            <Track track={track} />
-          </div>
-          <div className="bg-[#112011]">
-            <div className="flex justify-between items-center px-4 py-3">
-              <div className="text-sm font-bold text-white">BUY NOW PRICE</div>
-              <div className="text-md flex items-center font-bold gap-1">
-                <Matic />
-                <span className="text-white">{price}</span>
-                <span className="text-xxs text-gray-80">MATIC</span>
+      <div className="min-h-full flex flex-col">
+        <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
+          <Form autoComplete="off" className="flex flex-1 flex-col justify-between">
+            <div>
+              <div className="m-4">
+                <Track track={track} />
               </div>
+              <div className="bg-[#112011]">
+                <div className="flex justify-between items-center px-4 py-3">
+                  <div className="text-sm font-bold text-white">BUY NOW PRICE</div>
+                  <Matic value={price} />
+                </div>
+              </div>
+              {!hasStarted && (
+                <div className="flex justify-between items-center px-4 py-3">
+                  <div className="text-sm font-bold text-white flex-shrink-0">SALE STARTS</div>
+                  <div className="text-md flex items-center text-right font-bold gap-1">
+                    <Timer date={new Date(startTime * 1000)} reloadOnEnd />
+                  </div>
+                </div>
+              )}
             </div>
-            {!hasStarted && (
-              <div className="flex justify-between items-center px-4 py-3">
-                <div className="text-sm font-bold text-white flex-shrink-0">SALE STARTS</div>
-                <div className="text-md flex items-center text-right font-bold gap-1">
-                  <Timer date={new Date(startTime * 1000)} reloadOnEnd />
+
+            {me?.otpSecret && (
+              <div className="flex px-4 py-3 items-center uppercase bg-gray-20">
+                <p className="text-gray-80 w-full font-bold text-xs">
+                  <Locker className="h-4 w-4 inline mr-2" fill="#303030" /> Two-factor validation
+                </p>
+                <div className="w-1/2">
+                  <InputField name="token" type="text" maxLength={6} pattern="[0-9]*" inputMode="numeric" />
                 </div>
               </div>
             )}
-          </div>
-          {price && account && <BuyNow price={price} ownerAddressAccount={account} startTime={startTime} />}
 
-          {me?.otpSecret && (
-            <InputField
-              label="Two-Factor token"
-              name="token"
-              type="text"
-              maxLength={6}
-              pattern="[0-9]*"
-              inputMode="numeric"
-            />
-          )}
+            {price && account && <BuyNow price={price} ownerAddressAccount={account} startTime={startTime} />}
 
-          {hasStarted && (
-            <PlayerAwareBottomBar>
-              <Button type="submit" className="ml-auto" variant="buy-nft" loading={loading}>
-                <div className="px-4">BUY NFT</div>
-              </Button>
-            </PlayerAwareBottomBar>
-          )}
-        </Form>
-      </Formik>
+            {hasStarted && (
+              <PlayerAwareBottomBar>
+                <TotalPrice price={price} />
+                <Button type="submit" className="ml-auto" variant="buy-nft" loading={loading}>
+                  <div className="px-4">CONFIRM</div>
+                </Button>
+              </PlayerAwareBottomBar>
+            )}
+          </Form>
+        </Formik>
+      </div>
     </Layout>
   );
 }

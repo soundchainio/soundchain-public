@@ -9,4 +9,5 @@ export const config = {
   muxData: process.env.NEXT_PUBLIC_MUX_DATA,
   polygonscan: process.env.NEXT_PUBLIC_POLYGONSCAN,
   redirectUrlPostLogin: process.env.NEXT_PUBLIC_REDIRECT_URL_POST_LOGIN,
+  soundchainFee: parseFloat(process.env.NEXT_PUBLIC_SOUNDCHAIN_FEE || '0.0195'),
 };
