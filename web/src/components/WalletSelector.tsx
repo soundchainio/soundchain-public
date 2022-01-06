@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
 import useMetaMask from 'hooks/useMetaMask';
@@ -36,8 +37,8 @@ export const WalletSelector = ({ className, ownerAddressAccount }: WalletSelecto
   }
 
   return (
-    <div className={className}>
-      <div className="flex items-center w-full p-4 color bg-gray-20 justify-between">
+    <div className={classNames('bg-gray-20', className)}>
+      <div className="flex items-center w-full p-4 color justify-between">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2 text-xs text-white font-bold">WALLET</div>
           <div className="flex flex-row items-center gap-1 font-black text-xxs text-gray-80">

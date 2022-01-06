@@ -139,8 +139,8 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
 
   const auctionIsOver = (listingPayload?.listingItem?.endingTime || 0) < Math.floor(Date.now() / 1000);
   const canComplete =
-    (auctionIsOver && compareWallets(highestBid.bidder, account)) ||
-    compareWallets(account, listingPayload?.listingItem?.owner);
+    auctionIsOver &&
+    (compareWallets(highestBid.bidder, account) || compareWallets(account, listingPayload?.listingItem?.owner));
   const isHighestBidder = highestBid.bidder ? compareWallets(highestBid.bidder, account) : undefined;
   const startingDate = listingPayload?.listingItem?.startingTime
     ? new Date(listingPayload.listingItem.startingTime * 1000)

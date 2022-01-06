@@ -18,6 +18,7 @@ import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Auction } from 'icons/Auction';
 import { Matic } from 'icons/Matic';
+import { Locker } from 'icons/Locker';
 import { cacheFor } from 'lib/apollo';
 import {
   PendingRequest,
@@ -210,140 +211,139 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
 
   return (
     <Layout topNavBarProps={topNovaBarProps}>
-      <div className="m-4">
-        <Track track={track} />
-      </div>
-      {isHighestBidder && <div className="text-green-500 font-bold p-4 text-center">You have the highest bid!</div>}
-      {haveBided?.haveBided.bided && isHighestBidder !== undefined && !isHighestBidder && (
-        <div className="text-red-500 font-bold p-4 text-center">You have been outbid!</div>
-      )}
-      <div className="bg-[#111920]">
-        {futureSale && (
-          <div className="flex justify-between items-center px-4 py-3">
-            <div className="text-sm font-bold text-white flex-shrink-0">SALE STARTS</div>
-            <div className="text-md flex items-center text-right font-bold gap-1">
-              <Timer date={startingDate!} reloadOnEnd />
+      <div className="min-h-full flex flex-col">
+        <div className="flex flex-1 flex-col justify-between">
+          <div>
+            <div className="m-4">
+              <Track track={track} />
             </div>
-          </div>
-        )}
-        {endingDate && !futureSale && (
-          <div className="flex justify-between items-center px-4 py-3">
-            <div className="text-sm font-bold text-white flex-shrink-0">TIME REMAINING</div>
-            <div className="text-md flex items-center text-right font-bold gap-1">
-              <Timer date={endingDate} endedMessage="Auction Ended" reloadOnEnd />
-            </div>
-          </div>
-        )}
-        <div className="flex justify-between items-center px-4 py-3">
-          <div className="text-sm font-bold text-white">{auctionIsOver ? 'FINAL PRICE' : 'CURRENT PRICE'}</div>
-          <div className="text-md flex items-center font-bold gap-1">
-            <Matic />
-            <span className="text-white">{price}</span>
-            <span className="text-xxs text-gray-80">MATIC</span>
-            <span
-              className="text-[#22CAFF] text-xxs cursor-pointer"
-              onClick={() => dispatchShowBidsHistory(true, auctionItem?.auctionItem?.id || '')}
-            >
-              [{bidCount} bids]
-            </span>
-          </div>
-        </div>
-        {highestBidderData?.getUserByWallet && (
-          <div className="text-white flex justify-between items-center px-4 py-3">
-            <div className="text-sm font-bold">HIGHEST BIDDER</div>
-            <div className="flex items-center gap-2">
-              <Avatar
-                profile={{
-                  profilePicture: highestBidderData?.getUserByWallet.profile.profilePicture,
-                  userHandle: highestBidderData?.getUserByWallet.profile.userHandle,
-                }}
-                pixels={30}
-                linkToProfile
-              />
-              <div className="flex flex-col ">
-                <div className="text-sm font-bold">{highestBidderData?.getUserByWallet.profile.displayName}</div>
-                <div className="text-xxs text-gray-CC font-bold">
-                  @{highestBidderData?.getUserByWallet.profile.userHandle}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        {isOwner && bidCount === 0 && auctionIsOver && (
-          <div className="text-white flex justify-between items-center px-4 py-3">
-            <div className="text-sm font-bold">RESULT</div>
-            <div className="text-md flex items-center font-bold gap-1">Auction ended with no bids</div>
-          </div>
-        )}
-      </div>
-      {hasStarted && !hasEnded && (
-        <Formik<FormValues>
-          initialValues={initialValues}
-          onSubmit={handlePlaceBid}
-          enableReinitialize
-          validate={validate}
-          validationSchema={validationSchema}
-        >
-          {({ values: { bidAmount } }) => (
-            <Form>
-              <div className="flex">
-                <label
-                  htmlFor="bidAmount"
-                  className="flex items-center justify-start w-full bg-gray-20 text-gray-80 font-bold text-xs md-text-sm  py-3 pl-5"
-                >
-                  <div className="flex flex-col mr-3 gap-1">
-                    <div className="flex gap-2">
-                      <Auction className="h-4 w-4" purple={false} />
-                      <p className="uppercase">bid amount</p>
-                    </div>
-                    <p className="font-medium" style={{ fontSize: 10 }}>
-                      Must be at least 1% of current bid price. Enter{' '}
-                      <span className="text-white font-bold cursor-pointer">{minBid}</span> MATIC or more.
-                    </p>
-                  </div>
-                </label>
-                <div className="flex flex-wrap items-center w-1/2 justify-end bg-gray-20 uppercase py-3 pr-5">
-                  <div>
-                    <InputField name="bidAmount" type="number" icon={Matic} step="any" />
+            {isHighestBidder && (
+              <div className="text-green-500 font-bold p-4 text-center">You have the highest bid!</div>
+            )}
+            {haveBided?.haveBided.bided && isHighestBidder !== undefined && !isHighestBidder && (
+              <div className="text-red-500 font-bold p-4 text-center">You have been outbid!</div>
+            )}
+            <div className="bg-[#111920]">
+              {futureSale && (
+                <div className="flex justify-between items-center px-4 py-3">
+                  <div className="text-sm font-bold text-white flex-shrink-0">SALE STARTS</div>
+                  <div className="text-md flex items-center text-right font-bold gap-1">
+                    <Timer date={startingDate!} reloadOnEnd />
                   </div>
                 </div>
-              </div>
-              <WalletSelector ownerAddressAccount={account} />
-              <div className="py-3 px-4 bg-gray-20">
-                <MaxGasFee />
-              </div>
-
-              {me?.otpSecret && (
-                <InputField
-                  label="Two-Factor token"
-                  name="token"
-                  type="text"
-                  maxLength={6}
-                  pattern="[0-9]*"
-                  inputMode="numeric"
-                />
               )}
-
-              <PlayerAwareBottomBar>
-                <div className="flex-1 font-black text-xs">
-                  <div className="flex items-center gap-2 text-white">
-                    <Matic />
-                    <div className="text-white">{bidAmount}</div>MATIC
+              {endingDate && !futureSale && (
+                <div className="flex justify-between items-center px-4 py-3">
+                  <div className="text-sm font-bold text-white flex-shrink-0">TIME REMAINING</div>
+                  <div className="text-md flex items-center text-right font-bold gap-1">
+                    <Timer date={endingDate} endedMessage="Auction Ended" reloadOnEnd />
                   </div>
-                  {maticQuery?.maticUsd && (
-                    <span className="text-xs text-gray-50 font-bold">
-                      {`${currency(bidAmount * parseFloat(maticQuery?.maticUsd))} USD`}
-                    </span>
-                  )}
                 </div>
-                <Button type="submit" variant="buy-nft" loading={loading}>
-                  <div className="px-4">CONFIRM BID</div>
-                </Button>
-              </PlayerAwareBottomBar>
-            </Form>
+              )}
+              <div className="flex justify-between items-center px-4 py-3">
+                <div className="text-sm font-bold text-white">{auctionIsOver ? 'FINAL PRICE' : 'CURRENT PRICE'}</div>
+                <div className="text-md flex items-center font-bold gap-1">
+                  <Matic />
+                  <span className="text-white">{price}</span>
+                  <span className="text-xxs text-gray-80">MATIC</span>
+                  <button
+                    className="text-[#22CAFF] text-xxs cursor-pointer font-bold"
+                    onClick={() => dispatchShowBidsHistory(true, auctionItem?.auctionItem?.id || '')}
+                  >
+                    [{bidCount} bids]
+                  </button>
+                </div>
+              </div>
+              {highestBidderData?.getUserByWallet && (
+                <div className="text-white flex justify-between items-center px-4 py-3">
+                  <div className="text-sm font-bold">HIGHEST BIDDER</div>
+                  <div className="flex items-center gap-2">
+                    <Avatar
+                      profile={{
+                        profilePicture: highestBidderData?.getUserByWallet.profile.profilePicture,
+                        userHandle: highestBidderData?.getUserByWallet.profile.userHandle,
+                      }}
+                      pixels={30}
+                      linkToProfile
+                    />
+                    <div className="flex flex-col ">
+                      <div className="text-sm font-bold">{highestBidderData?.getUserByWallet.profile.displayName}</div>
+                      <div className="text-xxs text-gray-CC font-bold">
+                        @{highestBidderData?.getUserByWallet.profile.userHandle}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {isOwner && bidCount === 0 && auctionIsOver && (
+                <div className="text-white flex justify-between items-center px-4 py-3">
+                  <div className="text-sm font-bold">RESULT</div>
+                  <div className="text-md flex items-center font-bold gap-1">Auction ended with no bids</div>
+                </div>
+              )}
+            </div>
+          </div>
+          {hasStarted && !hasEnded && (
+            <Formik<FormValues>
+              initialValues={initialValues}
+              onSubmit={handlePlaceBid}
+              enableReinitialize
+              validate={validate}
+              validationSchema={validationSchema}
+            >
+              {({ values: { bidAmount } }) => (
+                <Form className="mb-16 bg-gray-20">
+                  <div className="flex p-4 items-center uppercase">
+                    <label htmlFor="bidAmount" className="w-full text-gray-80 font-bold text-xs md-text-sm">
+                      <p>
+                        <Auction className="h-4 w-4 inline mr-2" purple={false} /> bid amount
+                      </p>
+                      <p className="font-medium mt-1 text-xxs">
+                        Must be at least 1% of current bid price. Enter{' '}
+                        <span className="text-white font-bold cursor-pointer">{minBid}</span> MATIC or more.
+                      </p>
+                    </label>
+                    <div className="w-1/2">
+                      <InputField name="bidAmount" type="number" icon={Matic} step="any" />
+                    </div>
+                  </div>
+                  {me?.otpSecret && (
+                    <div className="flex p-4 items-center uppercase">
+                      <p className="text-gray-80 w-full font-bold text-xs">
+                        <Locker className="h-4 w-4 inline mr-2" fill="#303030" /> Two-factor validation
+                      </p>
+                      <div className="w-1/2">
+                        <InputField name="token" type="text" maxLength={6} pattern="[0-9]*" inputMode="numeric" />
+                      </div>
+                    </div>
+                  )}
+                  <WalletSelector ownerAddressAccount={account} />
+                  <div className="py-3 px-4">
+                    <MaxGasFee />
+                  </div>
+
+                  <PlayerAwareBottomBar>
+                    <div className="flex-1 font-black text-xs">
+                      <div className="flex items-center gap-2 text-white">
+                        <Matic />
+                        <div className="text-white">{bidAmount}</div>MATIC
+                      </div>
+                      {maticQuery?.maticUsd && (
+                        <span className="text-xs text-gray-50 font-bold">
+                          {`${currency(bidAmount * parseFloat(maticQuery?.maticUsd))} USD`}
+                        </span>
+                      )}
+                    </div>
+                    <Button type="submit" variant="buy-nft" loading={loading}>
+                      <div className="px-4">CONFIRM BID</div>
+                    </Button>
+                  </PlayerAwareBottomBar>
+                </Form>
+              )}
+            </Formik>
           )}
-        </Formik>
-      )}
+        </div>
+      </div>
     </Layout>
   );
 }
