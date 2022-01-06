@@ -17,7 +17,7 @@ import useBlockchain from 'hooks/useBlockchain';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Ellipsis } from 'icons/Ellipsis';
-import { Matic } from 'icons/Matic';
+import { Matic } from 'components/Matic';
 import { cacheFor, createApolloClient } from 'lib/apollo';
 import {
   PendingRequest,
@@ -28,7 +28,6 @@ import {
   useCountBidsLazyQuery,
   useHaveBidedLazyQuery,
   useListingItemLazyQuery,
-  useMaticUsdQuery,
   useProfileLazyQuery,
   useTrackLazyQuery,
   useUserByWalletLazyQuery,
@@ -38,7 +37,6 @@ import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 import { AuthorActionsType } from 'types/AuthorActionsType';
-import { currency, fixedDecimals } from 'utils/format';
 import { compareWallets } from 'utils/Wallet';
 import { HighestBid } from './[id]/complete-auction';
 
@@ -93,7 +91,6 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const [track, setTrack] = useState<TrackQuery['track']>(initialState);
   const [highestBid, setHighestBid] = useState<HighestBid>({} as HighestBid);
   const [isLoadingOwner, setLoadingOwner] = useState(true);
-  const { data: maticUsd } = useMaticUsdQuery();
   const { dispatchShowAuthorActionsModal, dispatchShowBidsHistory } = useModalDispatch();
 
   const [refetchTrack, { data: trackData }] = useTrackLazyQuery({
@@ -280,14 +277,7 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
           <div className="bg-[#112011]">
             <div className="flex justify-between items-center px-4 py-3">
               <div className="text-sm font-bold text-white">BUY NOW PRICE</div>
-              <div className="text-md flex items-center font-bold gap-1">
-                <span className="text-white">{price}</span>
-                <Matic />
-                <span className="text-xl text-gray-80"> {maticUsd && '≃'} </span>
-                <span className="text-gray-80 font-normal">
-                  {maticUsd && `${currency(parseFloat(price) * parseFloat(maticUsd.maticUsd))}`}
-                </span>
-              </div>
+              <Matic value={price} variant="currency-inline" />
             </div>
             {futureSale && (
               <div className="flex justify-between items-center px-4 py-3">
@@ -319,13 +309,8 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
             )}
             <div className="flex justify-between items-center px-4 py-3">
               <div className="text-sm font-bold text-white">{auctionIsOver ? 'FINAL PRICE' : 'CURRENT PRICE'}</div>
-              <div className="text-md flex items-center font-bold gap-1">
-                <span className="text-white">{fixedDecimals(price || '')}</span>
-                <Matic />
-                <span className="text-xl text-gray-80"> {maticUsd && price && '≃'} </span>
-                <span className="text-gray-80 font-normal">
-                  {maticUsd && price && `${currency(parseFloat(price) * parseFloat(maticUsd.maticUsd))}`}
-                </span>
+              <div className="flex items-center font-bold gap-1">
+                <Matic value={price} variant="currency-inline" />
                 <span
                   className="text-[#22CAFF] text-xxs cursor-pointer"
                   onClick={() => dispatchShowBidsHistory(true, id || '')}

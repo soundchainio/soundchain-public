@@ -7,7 +7,7 @@ import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Logo } from 'icons/Logo';
-import { Matic } from 'icons/Matic';
+import { Matic } from 'components/Matic';
 import router from 'next/router';
 import { authenticator } from 'otplib';
 import React, { useState } from 'react';
@@ -16,6 +16,7 @@ import * as yup from 'yup';
 import { Button } from './Button';
 import { Label } from './Label';
 import { Account, Wallet } from './Wallet';
+import MaxGasFee from './MaxGasFee';
 
 interface FormValues {
   token: string;
@@ -104,13 +105,8 @@ export const TransferConfirmationModal = () => {
           <div className="flex flex-col mb-auto space-y-6 h-full justify-between">
             <div className="flex flex-col h-full justify-around">
               <div className="px-4 text-sm text-gray-80 font-bold text-center">
-                <p className="flex flex-wrap items-end justify-center text-center py-6">
-                  <span className="leading-tight">Are you sure you want to send</span>
-                  <span className="my-auto mx-1">
-                    <Matic />
-                  </span>
-                  <span className="mx-1 text-white text-md leading-tight">{amountToTransfer}</span>
-                  <span className="text-gray-80 font-bold text-xxs uppercase leading-tight">matic</span>
+                <p className="text-center py-6">
+                  Are you sure you want to send <Matic value={amountToTransfer} />
                 </p>
                 <p>This transaction cannot be undone.</p>
               </div>
@@ -148,36 +144,15 @@ export const TransferConfirmationModal = () => {
                   <Account account={walletRecipient} defaultWallet={true} />
                 </div>
               </div>
-              <div className="flex flex-col">
-                <div className="flex w-full bg-gray-30">
-                  <div className="flex-1 flex items-center justify-start text-gray-CC font-bold text-xs uppercase px-4 py-3">
-                    Gas Fees
-                  </div>
-                  <div className="flex flex-wrap items-center justify-center uppercase px-4 py-3">
-                    <span className="my-auto">
-                      <Matic />
-                    </span>
-                    <span className="mx-1 text-white font-bold text-md leading-tight">{maxGasFee}</span>
-                    <div className="items-end">
-                      <span className="text-gray-80 font-black text-xxs leading-tight">matic</span>
-                    </div>
-                  </div>
+              <div className="flex flex-col bg-gray-20">
+                <div className="flex flex-col p-4">
+                  <MaxGasFee />
                 </div>
-                <div className="flex bg-gray-20">
-                  <div className="flex-1 flex items-center justify-start text-gray-CC font-bold text-xs uppercase px-4 py-3">
+                <div className="flex p-4">
+                  <div className="flex-1 flex items-center justify-start text-gray-CC font-bold text-xs uppercase">
                     Total
                   </div>
-                  <div className="flex flex-wrap items-center justify-center uppercase px-4 py-3">
-                    <span className="my-auto">
-                      <Matic />
-                    </span>
-                    <span className="mx-1 text-white font-bold text-md leading-tight">
-                      {Number(maxGasFee || '0') + Number(amountToTransfer || '0')}
-                    </span>
-                    <div className="items-end">
-                      <span className="text-gray-80 font-black text-xxs leading-tight">matic</span>
-                    </div>
-                  </div>
+                  <Matic value={Number(maxGasFee || '0') + Number(amountToTransfer || '0')} variant="currency-inline" />
                 </div>
               </div>
             </div>

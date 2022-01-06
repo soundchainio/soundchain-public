@@ -3,7 +3,7 @@ import { useMagicContext } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
 import useMetaMask from 'hooks/useMetaMask';
 import { Logo } from 'icons/Logo';
-import { Matic } from 'icons/Matic';
+import { Matic } from 'components/Matic';
 import { MetaMask } from 'icons/MetaMask';
 import { DefaultWallet, useUpdateDefaultWalletMutation } from 'lib/graphql';
 import React, { useCallback, useState } from 'react';
@@ -43,13 +43,7 @@ export const WalletSelector = ({ className, ownerAddressAccount }: WalletSelecto
           <div className="flex items-center gap-2 text-xs text-white font-bold">WALLET</div>
           <div className="flex flex-row items-center gap-1 font-black text-xxs text-gray-80">
             <span>Balance:</span>
-            <div className="flex justify-center items-center gap-1">
-              <Matic />
-              <p>
-                <strong className="text-white text-xs">{`${balance}`}</strong>
-                MATIC
-              </p>
-            </div>
+            <Matic value={balance} />
           </div>
         </div>
 

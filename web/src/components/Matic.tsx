@@ -1,17 +1,44 @@
+import classNames from 'classnames';
 import { Matic as MaticIcon } from 'icons/Matic';
-import { fixedDecimals } from 'utils/format';
+import { useMaticUsdQuery } from 'lib/graphql';
+import { currency, fixedDecimals } from 'utils/format';
 
 interface Props {
   value?: string | number;
+  className?: string;
+  variant?: 'currency' | 'currency-inline';
 }
 
-export const Matic = ({ value = '' }: Props) => {
-  return (
-    <div className="text-md flex items-baseline font-bold gap-1">
-      <span className="text-white">
-        <MaticIcon className="inline" /> {fixedDecimals(value)}
-      </span>
-      <span className="text-xs text-gray-80">MATIC</span>
-    </div>
-  );
+export const Matic = ({ value = '', className, variant }: Props) => {
+  const { data: maticUsd } = useMaticUsdQuery();
+  const currencyValue = currency(parseFloat(value.toString()) * parseFloat(maticUsd?.maticUsd || ''));
+
+  switch (variant) {
+    case 'currency':
+      return (
+        <div className={classNames('font-bold', className)}>
+          <p className="text-white">
+            <MaticIcon className="inline" /> {fixedDecimals(value)} <span className="text-xs text-gray-80">MATIC</span>
+          </p>
+          <p className="text-sm text-gray-60">{`${currencyValue}`}</p>
+        </div>
+      );
+    case 'currency-inline':
+      return (
+        <div className={classNames('font-bold', className)}>
+          <p className="text-white">
+            {fixedDecimals(value)} <MaticIcon className="inline" />{' '}
+            <span className="text-gray-80 font-normal">{maticUsd && `≃ ${currencyValue}`}</span>
+          </p>
+        </div>
+      );
+    default:
+      return (
+        <div className={classNames('font-bold', className)}>
+          <p className="text-white">
+            <MaticIcon className="inline" /> {fixedDecimals(value)} <span className="text-xs text-gray-80">MATIC</span>
+          </p>
+        </div>
+      );
+  }
 };
