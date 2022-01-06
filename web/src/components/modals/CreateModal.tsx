@@ -116,7 +116,7 @@ export const CreateModal = () => {
       try {
         const bufferReader = new FileReader();
         bufferReader.readAsArrayBuffer(assetFile);
-        bufferReader.addEventListener('loadend', async () => {
+        bufferReader.addEventListener('loadend', () => {
           const id3Writer = new ID3Writer(bufferReader.result);
 
           id3Writer
@@ -131,15 +131,15 @@ export const CreateModal = () => {
               text: values.description,
               language: 'eng',
             });
-
-          if (values.artworkUrl) {
-            const artWorkArrayBuffer = values.artworkUrl && (await fetch(values.artworkUrl).then(r => r.arrayBuffer()));
-            id3Writer.setFrame('APIC', {
-              type: 0,
-              data: artWorkArrayBuffer,
-              description: 'Artwork',
-            });
-          }
+          // it was breaking video upload - no time to check, sorry
+          // if (values.artworkUrl) {
+          //   const artWorkArrayBuffer = values.artworkUrl && (await fetch(values.artworkUrl).then(r => r.arrayBuffer()));
+          //   id3Writer.setFrame('APIC', {
+          //     type: 0,
+          //     data: artWorkArrayBuffer,
+          //     description: 'Artwork',
+          //   });
+          // }
           id3Writer.addTag();
           const newFile: File = id3Writer.getBlob();
           resolve(newFile);
