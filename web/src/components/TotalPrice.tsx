@@ -1,7 +1,7 @@
 import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { Matic } from 'icons/Matic';
 import { useMaticUsdQuery } from 'lib/graphql';
-import { currency } from 'utils/format';
+import { currency, fixedDecimals } from 'utils/format';
 
 export const TotalPrice = ({ price }: { price?: string }) => {
   const maxGasFee = useMaxGasFee();
@@ -12,7 +12,7 @@ export const TotalPrice = ({ price }: { price?: string }) => {
       return 0;
     }
 
-    return price + parseFloat(maxGasFee);
+    return fixedDecimals(price + parseFloat(maxGasFee));
   };
 
   if (!price || !maticUsd) {
