@@ -4,10 +4,12 @@ import {
   DeletedCommentNotification,
   DeletedPostNotification,
   FollowerNotification,
+  NewBidNotification,
   NewPostNotification,
   NewVerificationRequestNotification,
   NftSoldNotification,
   NotificationType,
+  OutbidNotification,
   ReactionNotification,
   useNotificationQuery,
   VerificationRequestNotification,
@@ -19,10 +21,12 @@ import { CommentNotificationItem } from './CommentNotificationItem';
 import { DeletedCommentNotificationItem } from './DeletedCommentNotificationItem';
 import { DeletedPostNotificationItem } from './DeletedPostNotificationItem';
 import { FollowerNotificationItem } from './FollowerNotificationItem';
+import { NewBidNotificationItem } from './NewBidNotificationItem';
 import { NewPostNotificationItem } from './NewPostNotificationItem';
 import { NewVerificationRequestNotificationItem } from './NewVerificationRequestNotificationItem';
 import { NFTSoldNotificationItem } from './NFTSoldNotificationItem';
 import { NotificationSkeleton } from './NotificationSkeleton';
+import { OutbidNotificationItem } from './OutbidNotificationItem';
 import { ReactionNotificationItem } from './ReactionNotificationItem';
 import { VerificationRequestNotificationItem } from './VerificationRequestNotificationItem';
 import { WonAuctionNotificationItem } from './WonAuctionNotificationItem';
@@ -83,6 +87,12 @@ export const Notification = ({ notificationId, index }: NotificationProps) => {
       return (
         <AuctionIsEndingNotificationItem notification={notification as AuctionIsEndingNotification} index={index} />
       );
+    }
+    case NotificationType.Outbid: {
+      return <OutbidNotificationItem notification={notification as OutbidNotification} index={index} />;
+    }
+    case NotificationType.NewBid: {
+      return <NewBidNotificationItem notification={notification as NewBidNotification} index={index} />;
     }
     default: {
       return null;

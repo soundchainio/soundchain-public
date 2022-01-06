@@ -1,4 +1,4 @@
-export interface WonAuctionNotificationMetadata {
+export interface TrackWithPriceMetadata {
   trackName: string;
   trackId: string;
   artist: string;

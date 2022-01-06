@@ -1,20 +1,16 @@
-import { WonAuctionNotification } from 'lib/graphql';
+import { NewBidNotification } from 'lib/graphql';
 import { TrackNotification } from './TrackNotification';
 
 interface NotificationProps {
-  notification: WonAuctionNotification;
+  notification: NewBidNotification;
   index: number;
 }
 
-export const WonAuctionNotificationItem = ({
+export const NewBidNotificationItem = ({
   notification: { createdAt, price, trackId, trackName, artist, artworkUrl },
   index,
 }: NotificationProps) => {
-  const title = (
-    <div>
-      <span className="font-semibold">You</span> won the auction! Please complete the auction to get your NFT!
-    </div>
-  );
+  const title = 'Your auction got a new bid! Check it out!';
   return (
     <TrackNotification
       createdAt={createdAt}
