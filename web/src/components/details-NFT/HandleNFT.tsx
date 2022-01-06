@@ -70,6 +70,7 @@ export const HandleNFT = ({
           cancelHref={`${router.asPath}/cancel-auction`}
           completeHref={`${router.asPath}/complete-auction`}
           auctionId={auctionId}
+          canComplete={canComplete}
         />
       );
     }
@@ -204,6 +205,7 @@ interface AuctionDetailsProps {
   endingDate?: Date;
   completeHref: string;
   auctionId: string;
+  canComplete: boolean;
 }
 
 const AuctionDetails = ({
@@ -214,6 +216,7 @@ const AuctionDetails = ({
   cancelHref,
   completeHref,
   auctionId,
+  canComplete,
 }: AuctionDetailsProps) => {
   return (
     <div className="w-full bg-black text-white flex items-center py-3 px-4">
@@ -232,7 +235,7 @@ const AuctionDetails = ({
             </NextLink>
           </div>
         )}
-        {countBids != 0 && (
+        {canComplete && countBids != 0 && (
           <ListedAction href={completeHref} price={price} action="COMPLETE" variant="buy-nft" auctionId={auctionId} />
         )}
         {endingDate && (

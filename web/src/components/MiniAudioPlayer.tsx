@@ -9,7 +9,7 @@ import { useMaticUsdQuery } from 'lib/graphql';
 import NextLink from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { remainingTime, timeFromSecs } from 'utils/calculateTime';
-import { currency } from 'utils/format';
+import { currency, fixedDecimals } from 'utils/format';
 import Asset from './Asset';
 import { BadgeTrack } from './BadgeTrack';
 
@@ -99,7 +99,7 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
             <span>{favoriteCount || 0}</span>
             {saleType && saleType !== '' && (
               <>
-                <div className="ml-auto text-white font-bold">{price / 1e18}</div>
+                <div className="ml-auto text-white font-bold">{fixedDecimals(price / 1e18)}</div>
                 <Matic /> <span className="text-xl"> ≃ </span>
                 {maticUsd && `${currency((price / 1e18) * parseFloat(maticUsd.maticUsd))}`}
               </>
