@@ -288,7 +288,6 @@ const useBlockchain = () => {
         auctionAddress,
       ) as unknown as SoundchainAuction;
       const totalPrice = applySoundchainFee(parseInt(reservePrice));
-      console.log('createAuction totalPrice', totalPrice);
       beforeSending(web3, () => {
         auctionContract.methods
           .createAuction(nftAddress, tokenId, totalPrice, startTime, endTime)
