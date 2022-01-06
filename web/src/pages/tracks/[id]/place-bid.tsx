@@ -244,7 +244,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
                 <div className="text-sm font-bold text-white">{auctionIsOver ? 'FINAL PRICE' : 'CURRENT PRICE'}</div>
                 <div className="text-md flex items-center font-bold gap-1">
                   <Matic />
-                  <span className="text-white">{price}</span>
+                  <span className="text-white">{fixedDecimals(price || '')}</span>
                   <span className="text-xxs text-gray-80">MATIC</span>
                   <button
                     className="text-[#22CAFF] text-xxs cursor-pointer font-bold"

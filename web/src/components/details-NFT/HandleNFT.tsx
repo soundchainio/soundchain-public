@@ -8,7 +8,7 @@ import { useMaticUsdQuery } from 'lib/graphql';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import React from 'react';
-import { currency } from 'utils/format';
+import { currency, fixedDecimals } from 'utils/format';
 
 interface HandleNFTProps {
   isOwner: boolean;
@@ -102,6 +102,7 @@ export const HandleNFT = ({
           price={price}
           action="PLACE BID"
           variant="buy-nft"
+          auctionId={auctionId}
         />
       );
     }
@@ -163,7 +164,7 @@ const ListedAction = ({
     <PlayerAwareBottomBar>
       <div className="flex flex-col flex-1">
         <div className="text-md flex items-center font-bold gap-1">
-          <span>{price}</span>
+          <span>{fixedDecimals(price || '')}</span>
           <Matic />
           <span className="text-xl text-gray-80"> {maticUsd && price && '≃'} </span>
           <span className="text-gray-80 font-normal">
