@@ -9,7 +9,7 @@ export const mainNetwork: BlockchainNetwork = {
 };
 
 export const testnetNetwork: BlockchainNetwork = {
-  name: 'Matic Mumbai',
+  name: 'Mumbai Testnet',
   api: 'https://api-testnet.polygonscan.com/api',
 };
 

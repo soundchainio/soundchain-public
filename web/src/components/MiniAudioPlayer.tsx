@@ -69,25 +69,27 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
               </button>
             </div>
             <NextLink href={`/tracks/${trackId}`}>
-              <div className="flex w-full cursor-pointer gap-1 truncate">
-                <div className="truncate">
-                  <div className="text-white font-black text-xs w-full truncate">
-                    <div className="truncate" title={title || ''}>
-                      {title ? title : 'Unknown Title'}
+              <a className="w-full">
+                <div className="flex w-full cursor-pointer gap-1 truncate">
+                  <div className="truncate">
+                    <div className="text-white font-black text-xs w-full truncate">
+                      <div className="truncate" title={title || ''}>
+                        {title ? title : 'Unknown Title'}
+                      </div>
                     </div>
+                    {artist && <div className="text-gray-80 text-xs font-black">{artist}</div>}
                   </div>
-                  {artist && <div className="text-gray-80 text-xs font-black">{artist}</div>}
-                </div>
-                <div className="flex flex-1"></div>
-                {saleType && saleType !== '' && (
-                  <div className="h-1/3">
-                    <BadgeTrack auction={saleType === 'auction'} label={saleType.toUpperCase()}></BadgeTrack>
+                  <div className="flex flex-1"></div>
+                  {saleType && saleType !== '' && (
+                    <div className="h-1/3">
+                      <BadgeTrack auction={saleType === 'auction'} label={saleType.toUpperCase()}></BadgeTrack>
+                    </div>
+                  )}
+                  <div className="self-center">
+                    <Info />
                   </div>
-                )}
-                <div className="self-center">
-                  <Info />
                 </div>
-              </div>
+              </a>
             </NextLink>
           </div>
           <div className="text-gray-80 text-xs flex gap-1 items-center pt-1">
