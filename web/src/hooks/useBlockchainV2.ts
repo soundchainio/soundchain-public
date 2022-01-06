@@ -67,7 +67,7 @@ class PlaceBid extends BlockchainFunction<PlaceBidParams> {
     await this.beforeSending(web3, () => {
       auctionContract.methods
         .placeBid(nftAddress, this.params.tokenId)
-        .send({ from: this.params.from, gas, value: this.params.value })
+        .send({ from: this.params.from, gas, value: parseInt(this.params.value) })
         .on('receipt', receipt => {
           this.receipt = receipt;
           this.onReceiptFunction && this.onReceiptFunction(receipt);
