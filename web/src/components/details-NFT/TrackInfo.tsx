@@ -76,7 +76,7 @@ export const TrackInfo = ({
       </div>
       <div className="flex items-center font-bold">
         <div className="w-2/4 uppercase text-sm pl-4 py-3">Genres</div>
-        <div className="text-center w-2/4 text-sm pr-4 py-3">
+        <div className="text-center w-2/4 text-sm pr-4 py-3 space-x-1 space-y-1">
           {genres?.map(genre => (
             <Badge key={genre} label={getGenreLabelByKey(genre) || genre} />
           ))}

@@ -1,4 +1,5 @@
 import { Polygon } from 'icons/Polygon';
+import { network } from 'lib/blockchainNetworks';
 
 export const ConnectedNetwork = () => {
   return (
@@ -7,7 +8,7 @@ export const ConnectedNetwork = () => {
         Network:
       </span>
       <Polygon />
-      <span className="text-white mr-2">Polygon</span>
+      <span className="text-white mr-2">{network.name}</span>
     </div>
   );
 };
