@@ -1343,7 +1343,8 @@ export enum Role {
   System = 'SYSTEM',
   Admin = 'ADMIN',
   User = 'USER',
-  TeamMember = 'TEAM_MEMBER'
+  TeamMember = 'TEAM_MEMBER',
+  SoundchainAccount = 'SOUNDCHAIN_ACCOUNT'
 }
 
 export enum SaleType {

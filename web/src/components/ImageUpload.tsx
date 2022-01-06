@@ -17,7 +17,7 @@ export interface ImageUploadProps extends Omit<React.ComponentPropsWithoutRef<'d
   initialValue?: File;
 }
 
-const defaultMaxFileSize = 1024 * 1024 * 30; // 30Mb
+const defaultMaxFileSize = 1024 * 1024 * 60; // 60Mb temporary bump as Frank request
 const acceptedMimeTypes = [...videoMimeTypes, ...imageMimeTypes];
 
 export function ImageUpload({

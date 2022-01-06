@@ -1,6 +1,7 @@
 import Slider from '@reach/slider';
 import Asset from 'components/Asset';
 import { Modal } from 'components/Modal';
+import { TrackShareButton } from 'components/TrackShareButton';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { DownArrow } from 'icons/DownArrow';
@@ -11,12 +12,10 @@ import { Info } from 'icons/Info';
 import { Pause } from 'icons/PauseBottomAudioPlayer';
 import { Play } from 'icons/PlayBottomAudioPlayer';
 import { Rewind } from 'icons/RewindButton';
-import { Share } from 'icons/Share';
 import { TrackDocument, useToggleFavoriteMutation } from 'lib/graphql';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
 import { remainingTime, timeFromSecs } from 'utils/calculateTime';
 
 export const AudioPlayerModal = () => {
@@ -42,21 +41,6 @@ export const AudioPlayerModal = () => {
 
   const handleClose = () => {
     dispatchShowAudioPlayerModal(false);
-  };
-
-  const handleSharing = async () => {
-    const url = `${window.location.origin}/tracks/${currentSong.trackId}`;
-
-    try {
-      await navigator.share({
-        title: `SoundChain`,
-        text: `Listen to this SoundChain track:  ${currentSong.title} - ${currentSong.artist}`,
-        url,
-      });
-    } catch {
-      await navigator.clipboard.writeText(url);
-      toast('URL copied to clipboard');
-    }
   };
 
   const onSliderChange = (value: number) => {
@@ -92,14 +76,8 @@ export const AudioPlayerModal = () => {
         </div>
       }
       rightButton={
-        <div className="flex justify-end mr-6">
-          <button
-            className="flex justify-center items-center gap-1 text-gray-80 text-xs font-black border-gray-80 border-2 rounded py-1 px-2"
-            onClick={handleSharing}
-          >
-            <Share />
-            Share
-          </button>
+        <div className="mr-6">
+          <TrackShareButton trackId={currentSong.trackId} title={currentSong.title} artist={currentSong.artist} />
         </div>
       }
       onClose={handleClose}

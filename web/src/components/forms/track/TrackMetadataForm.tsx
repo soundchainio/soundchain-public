@@ -100,16 +100,17 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
       {({ setFieldValue, values }) => (
         <Form className="flex flex-col gap-4 h-full">
           <div className="flex items-center px-4">
-            <div className="h-30 w-30 mr-2 flex flex-col items-center">
+            <div className="h-30 w-30 mr-2 flex flex-col items-center text-gray-80">
               <ImageUpload
                 artwork={true}
                 onChange={val => onArtworkUpload(val, setFieldValue)}
                 onUpload={setUploadingArt}
                 initialValue={initialValues?.artworkFile}
               />
-              <span className="text-gray-80 underline text-xs mt-2 font-bold">
+              <span className="underline text-xs mt-2 font-bold">
                 {uploadingArt ? 'UPLOADING...' : 'CHANGE ARTWORK'}
               </span>
+              <span className="font-semibold text-[9px]">(Max: 60mb)</span>
             </div>
             <div className="flex flex-col flex-1 gap-2">
               <InputField name="title" type="text" label="TRACK TITLE" maxLength={100} />

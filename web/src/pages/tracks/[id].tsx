@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
+
 import { Avatar } from 'components/Avatar';
 import { BackButton } from 'components/Buttons/BackButton';
 import { Description } from 'components/details-NFT/Description';
@@ -10,6 +11,7 @@ import SEO from 'components/SEO';
 import { TimeCounter } from 'components/TimeCounter';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
+import { TrackShareButton } from 'components/TrackShareButton';
 import { useModalDispatch } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMe } from 'hooks/useMe';
@@ -29,7 +31,7 @@ import {
   useMaticUsdQuery,
   useProfileLazyQuery,
   useTrackLazyQuery,
-  useUserByWalletLazyQuery
+  useUserByWalletLazyQuery,
 } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
@@ -152,13 +154,18 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const topNavBarProps: TopNavBarProps = {
     leftButton: <BackButton />,
     title: 'NFT Details',
-    rightButton:
-      isOwner || me?.roles.includes(Role.Admin) ? (
-        <Ellipsis
-          className="cursor-pointer"
-          onClick={() => dispatchShowAuthorActionsModal(true, AuthorActionsType.NFT, track.id, true)}
-        />
-      ) : undefined,
+    rightButton: (
+      <div className="flex gap-2 items-center">
+        <TrackShareButton trackId={track.id} artist={track.artist} title={track.title} />
+        {(isOwner || me?.roles.includes(Role.Admin)) && (
+          <Ellipsis
+            fill="#808080"
+            className="cursor-pointer"
+            onClick={() => dispatchShowAuthorActionsModal(true, AuthorActionsType.NFT, track.id, true)}
+          />
+        )}
+      </div>
+    ),
   };
 
   useEffect(() => {
