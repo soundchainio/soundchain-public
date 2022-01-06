@@ -142,8 +142,8 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       this.fetchAuctionsEndingInOneHour(now),
     ]);
     await Promise.all([
-      ...auctionsEndingInOneHour.map(({ bids }) => {
-        bids.map(bid => Promise.all([this.notifyAuctionIsEnding(bid), this.setBidIsNotified(bid._id)]));
+      ...auctionsEndingInOneHour.map(({ bids, _id }) => {
+        bids.map(bid => Promise.all([this.notifyAuctionIsEnding(bid, _id), this.setBidIsNotified(bid._id)]));
       }),
       ...auctionsEnded.map(auction => this.notifyAuctionIsOver(auction)),
     ]);
@@ -167,10 +167,11 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       price: highestBid,
       buyerProfileId: buyerUser.profileId,
       sellerProfileId: sellerUser.profileId,
+      auctionId: _id,
     });
   }
 
-  private async notifyAuctionIsEnding({ tokenId, bidder, amount }: Bid): Promise<void> {
+  private async notifyAuctionIsEnding({ tokenId, bidder, amount }: Bid, auctionId: string): Promise<void> {
     const [user, track] = await Promise.all([
       this.context.userService.getUserByWallet(bidder),
       this.context.trackService.getTrackByTokenId(tokenId),
@@ -179,6 +180,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       track,
       profileId: user.profileId,
       price: amount,
+      auctionId,
     });
   }
 
@@ -242,8 +244,8 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       {
         $lookup: {
           from: 'notifications',
-          localField: '_id',
-          foreignField: 'metadata.trackId',
+          localField: 'auctionItem._id',
+          foreignField: 'metadata.auctionId',
           as: 'notification',
         },
       },
