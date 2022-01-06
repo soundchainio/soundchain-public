@@ -1,9 +1,10 @@
 import { Button, ButtonVariant } from 'components/Button';
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { TimeCounter } from 'components/TimeCounter';
+import { Matic } from 'components/Matic';
 import { useModalDispatch } from 'contexts/providers/modal';
 import { CheckmarkFilled } from 'icons/CheckmarkFilled';
-import { Matic } from 'icons/Matic';
+import { Matic as MaticIcon } from 'icons/Matic';
 import { useMaticUsdQuery } from 'lib/graphql';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
@@ -166,7 +167,7 @@ const ListedAction = ({
       <div className="flex flex-col flex-1">
         <div className="text-md flex items-center font-bold gap-1">
           <span>{fixedDecimals(price || '')}</span>
-          <Matic />
+          <MaticIcon />
           <span className="text-xl text-gray-80"> {maticUsd && price && '≃'} </span>
           <span className="text-gray-80 font-normal">
             {maticUsd && price && `${currency(parseFloat(price) * parseFloat(maticUsd.maticUsd))}`}
@@ -221,11 +222,7 @@ const AuctionDetails = ({
   return (
     <div className="w-full bg-black text-white flex items-center py-3 px-4">
       <div className="flex flex-col flex-1">
-        <div className="text-md flex items-center font-bold gap-1">
-          <Matic />
-          <span>{price}</span>
-          <span className="text-xs text-gray-80">MATIC</span>
-        </div>
+        <Matic value={price || ''} />
       </div>
       <div className="text-center">
         {auctionIsOver && countBids === 0 && (
