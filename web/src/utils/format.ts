@@ -5,7 +5,7 @@ export const currency = (value: number) => {
 export const fixedDecimals = (value: number | string) => {
   const s = value.toString();
   if (!s || isNaN(parseFloat(s))) {
-    throw new Error(`${value} is not a number`);
+    return 0;
   }
   const [integerPart, decimals] = s.split('.');
   const n = parseFloat(s);
