@@ -110,7 +110,7 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
               <span className="underline text-xs mt-2 font-bold">
                 {uploadingArt ? 'UPLOADING...' : 'CHANGE ARTWORK'}
               </span>
-              <span className="font-semibold text-[9px]">(Max: 30mb)</span>
+              <span className="font-semibold text-[9px]">(Max: 60mb)</span>
             </div>
             <div className="flex flex-col flex-1 gap-2">
               <InputField name="title" type="text" label="TRACK TITLE" maxLength={100} />
