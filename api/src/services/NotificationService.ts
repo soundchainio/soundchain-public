@@ -286,11 +286,16 @@ export class NotificationService extends ModelService<typeof Notification> {
     sellerProfileId,
     auctionId,
   }: AuctionIsOverParams): Promise<void> {
-    this.notifyWonAuction({ track, price, profileId: buyerProfileId, auctionId });
-    this.notifyAuctionEnded({ track, price, profileId: sellerProfileId, auctionId });
+    Promise.all([
+      this.notifyWonAuction({ track, price, profileId: buyerProfileId, auctionId }),
+      this.notifyAuctionEnded({ track, price, profileId: sellerProfileId, auctionId }),
+    ]);
   }
 
-  private async notifyTrack({ track, profileId, price }: AuctionParams, type: NotificationType): Promise<void> {
+  private async notifyTrack(
+    { track, profileId, price, auctionId }: AuctionParams,
+    type: NotificationType,
+  ): Promise<void> {
     const { _id: trackId, artist, artworkUrl, title: trackName } = track;
     const metadata: TrackWithPriceMetadata = {
       trackId,
