@@ -66,7 +66,7 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
               </button>
             </div>
             <NextLink href={`/tracks/${trackId}`}>
-              <a className="w-full">
+              <a className="w-full truncate">
                 <div className="flex w-full cursor-pointer gap-1 truncate">
                   <div className="truncate">
                     <div className="text-white font-black text-xs w-full truncate">
@@ -82,7 +82,7 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
                       <BadgeTrack auction={saleType === 'auction'} label={saleType.toUpperCase()}></BadgeTrack>
                     </div>
                   )}
-                  <div className="self-center">
+                  <div className="self-center flex-shrink-0">
                     <Info />
                   </div>
                 </div>
