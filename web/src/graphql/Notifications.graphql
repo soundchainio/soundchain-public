@@ -40,6 +40,9 @@ query Notifications($sort: SortNotificationInput) {
       ... on NewBidNotification {
         ...NewBidNotificationFields
       }
+      ... on AuctionEndedNotification {
+        ...AuctionEndedNotificationFields
+      }
     }
   }
 }

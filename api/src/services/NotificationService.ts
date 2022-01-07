@@ -32,6 +32,13 @@ interface AuctionParams {
   profileId: string;
 }
 
+interface AuctionIsOverParams {
+  track: Track;
+  price: number;
+  buyerProfileId: string;
+  sellerProfileId: string;
+}
+
 export class NotificationService extends ModelService<typeof Notification> {
   constructor(context: Context) {
     super(context, NotificationModel);
@@ -264,6 +271,15 @@ export class NotificationService extends ModelService<typeof Notification> {
 
   async notifyNewBid({ track, profileId, price }: AuctionParams): Promise<void> {
     this.notifyTrack({ track, profileId, price }, NotificationType.NewBid);
+  }
+
+  async notifyAuctionEnded({ track, profileId, price }: AuctionParams): Promise<void> {
+    this.notifyTrack({ track, profileId, price }, NotificationType.AuctionEnded);
+  }
+
+  async notifyAuctionIsOver({ track, price, buyerProfileId, sellerProfileId }: AuctionIsOverParams): Promise<void> {
+    this.notifyWonAuction({ track, price, profileId: buyerProfileId });
+    this.notifyAuctionEnded({ track, price, profileId: sellerProfileId });
   }
 
   private async notifyTrack({ track, profileId, price }: AuctionParams, type: NotificationType): Promise<void> {

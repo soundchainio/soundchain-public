@@ -6,6 +6,7 @@ import { CurrentRequestStatus } from 'components/CurrentRequestStatus';
 import { DenyReasonModal } from 'components/DenyReasonModal';
 import { DisplayName } from 'components/DisplayName';
 import { Layout } from 'components/Layout';
+import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useMe } from 'hooks/useMe';
 import { Bandcamp } from 'icons/Bandcamp';
@@ -97,58 +98,62 @@ export default function RequestPage({ data }: RequestPageProps) {
     setShowReason(true);
   };
 
+  console.log(router.asPath);
   return (
-    <Layout topNavBarProps={topNovaBarProps}>
-      <div className="flex flex-col justify-between h-full">
-        <div>
-          <NextLink href={`/profiles/${data.profileId}`}>
-            <div className="flex flex-col text-white cursor-pointer">
-              <div className="relative flex items-center p-4">
-                <Avatar profile={profile.profile} pixels={40} className="rounded-full min-w-max flex items-center" />
-                <div className="mx-4">
-                  <DisplayName
-                    name={profile.profile.displayName}
-                    verified={profile.profile.verified}
-                    teamMember={profile.profile.teamMember}
-                  />
-                  <p className="text-gray-80 text-sm">@{profile.profile.userHandle}</p>
+    <>
+      <SEO title="Soundchain - Manage Request" canonicalUrl={router.asPath} description="Soundchain Manage Request" />
+      <Layout topNavBarProps={topNovaBarProps}>
+        <div className="flex flex-col justify-between h-full">
+          <div>
+            <NextLink href={`/profiles/${data.profileId}`}>
+              <div className="flex flex-col text-white cursor-pointer">
+                <div className="relative flex items-center p-4">
+                  <Avatar profile={profile.profile} pixels={40} className="rounded-full min-w-max flex items-center" />
+                  <div className="mx-4">
+                    <DisplayName
+                      name={profile.profile.displayName}
+                      verified={profile.profile.verified}
+                      teamMember={profile.profile.teamMember}
+                    />
+                    <p className="text-gray-80 text-sm">@{profile.profile.userHandle}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </NextLink>
-          <CurrentRequestStatus reason={data.reason || ''} status={data.status as ManageRequestTab} />
-          {sourceList.map(src => (
-            <div key={src.name} className="flex items-center my-8 text-white">
-              <div className="flex flex-col items-center justify-center  text-xs px-2">
-                <div className="w-20 flex flex-col text-xs items-center">{src.icon}</div>
-                {src.name}
+            </NextLink>
+            <CurrentRequestStatus reason={data.reason || ''} status={data.status as ManageRequestTab} />
+            {sourceList.map(src => (
+              <div key={src.name} className="flex items-center my-8 text-white">
+                <div className="flex flex-col items-center justify-center  text-xs px-2">
+                  <div className="w-20 flex flex-col text-xs items-center">{src.icon}</div>
+                  {src.name}
+                </div>
+                <a
+                  href={normalizeURL(src.link)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-400 underline"
+                >
+                  {src.link}
+                </a>
               </div>
-              <a
-                href={normalizeURL(src.link)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-blue-400 underline"
-              >
-                {src.link}
-              </a>
-            </div>
-          ))}
+            ))}
+          </div>
+          <div className="flex gap-4 px-4 md:px-0 items-center my-5 mt-auto">
+            {data.status !== ManageRequestTab.DENIED && (
+              <DeleteButton onClick={handleDeny} className="h-12 w-full text-white text-sm">
+                {data.status === ManageRequestTab.APPROVED ? 'REMOVE VERIFICATION' : 'DENY'}
+              </DeleteButton>
+            )}
+            {data.status !== ManageRequestTab.APPROVED && (
+              <Button variant="outline" borderColor="bg-green-gradient" className="h-12 w-full" onClick={handleApprove}>
+                APPROVE
+              </Button>
+            )}
+          </div>
         </div>
-        <div className="flex gap-4 px-4 md:px-0 items-center my-5 mt-auto">
-          {data.status !== ManageRequestTab.DENIED && (
-            <DeleteButton onClick={handleDeny} className="h-12 w-full text-white text-sm">
-              {data.status === ManageRequestTab.APPROVED ? 'REMOVE VERIFICATION' : 'DENY'}
-            </DeleteButton>
-          )}
-          {data.status !== ManageRequestTab.APPROVED && (
-            <Button variant="outline" borderColor="bg-green-gradient" className="h-12 w-full" onClick={handleApprove}>
-              APPROVE
-            </Button>
-          )}
-        </div>
-      </div>
-      <DenyReasonModal showReason={showReason} setShowReason={setShowReason} requestId={data.id} />
-    </Layout>
+        <DenyReasonModal showReason={showReason} setShowReason={setShowReason} requestId={data.id} />
+      </Layout>
+    </>
   );
 }
 

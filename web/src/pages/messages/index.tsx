@@ -4,7 +4,7 @@ import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { cacheFor } from 'lib/apollo';
 import { protectPage } from 'lib/protectPage';
-import Head from 'next/head';
+import SEO from '../../components/SEO';
 
 export const getServerSideProps = protectPage((context, apolloClient) => {
   return cacheFor(MessagesPage, {}, context, apolloClient);
@@ -16,13 +16,11 @@ export default function MessagesPage() {
   };
 
   return (
-    <Layout topNavBarProps={topNavBarProps}>
-      <Head>
-        <title>Soundchain / Inbox</title>
-        <meta name="description" content="Inbox" />
-        <link rel="icon" href="/favicons/favicon.ico" />
-      </Head>
-      <Inbox />
-    </Layout>
+    <>
+      <SEO title="Soundchain - Inbox" canonicalUrl="/messages" description="Soundchain Inbox" />
+      <Layout topNavBarProps={topNavBarProps}>
+        <Inbox />
+      </Layout>
+    </>
   );
 }

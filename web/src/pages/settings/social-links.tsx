@@ -1,8 +1,8 @@
 import { BackButton } from 'components/Buttons/BackButton';
 import { SocialLinksForm } from 'components/forms/profile/SocialLinksForm';
 import { Layout } from 'components/Layout';
+import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
-import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React from 'react';
 
@@ -16,11 +16,11 @@ export default function SocialLinksPage() {
 
   return (
     <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
-      <Head>
-        <title>Soundchain - Social Links</title>
-        <meta name="description" content="Social Links" />
-        <link rel="icon" href="/favicons/favicon.ico" />
-      </Head>
+      <SEO
+        title="Soundchain - Social Links"
+        canonicalUrl="/settings/social-links/"
+        description="Soundchain Social Links"
+      />
       <div className="min-h-full flex flex-col px-6 lg:px-8 py-6">
         <SocialLinksForm
           afterSubmit={() => router.push('/settings')}

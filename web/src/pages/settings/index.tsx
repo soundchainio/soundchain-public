@@ -2,10 +2,10 @@ import { Avatar } from 'components/Avatar';
 import { BackButton } from 'components/Buttons/BackButton';
 import { Label } from 'components/Label';
 import { Layout } from 'components/Layout';
+import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useMe } from 'hooks/useMe';
 import { RightArrow } from 'icons/RightArrow';
-import Head from 'next/head';
 import Image from 'next/image';
 import NextLink from 'next/link';
 import { getGenreLabelByKey } from 'utils/Genres';
@@ -75,11 +75,7 @@ export default function SettingsPage() {
 
   return (
     <Layout topNavBarProps={topNovaBarProps}>
-      <Head>
-        <title>Soundchain - Account Settings</title>
-        <meta name="description" content="Account Settings" />
-        <link rel="icon" href="/favicons/favicon.ico" />
-      </Head>
+      <SEO title="Soundchain - Account Settings" canonicalUrl="/settings/" description="Soundchain Account Settings" />
       <div className="flex flex-col gap-8 mt-8">
         <div className="flex flex-row px-4">
           <NextLink href="/settings/profile-picture">

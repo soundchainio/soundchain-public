@@ -1,11 +1,11 @@
 import { Layout } from 'components/Layout';
 import { ManageRequestTabs } from 'components/ManageRequestsTabs';
 import { RequestsList } from 'components/RequestsList';
+import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { cacheFor } from 'lib/apollo';
 import { Role } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
-import Head from 'next/head';
 import { useState } from 'react';
 import { ManageRequestTab } from 'types/ManageRequestTabType';
 
@@ -26,16 +26,14 @@ export default function ManageRequests() {
   };
 
   return (
-    <Layout topNavBarProps={topNavBarProps}>
-      <Head>
-        <title>Soundchain / Get Verified</title>
-        <meta name="description" content="Get Verified" />
-        <link rel="icon" href="/favicons/favicon.ico" />
-      </Head>
-      <div className="pt-2 bg-black">
-        <ManageRequestTabs selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
-        <RequestsList status={selectedTab} />
-      </div>
-    </Layout>
+    <>
+      <SEO title="Soundchain - Get Verified" canonicalUrl="/manage-requests/" description="Soundchain Get Verified" />
+      <Layout topNavBarProps={topNavBarProps}>
+        <div className="pt-2 bg-black">
+          <ManageRequestTabs selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
+          <RequestsList status={selectedTab} />
+        </div>
+      </Layout>
+    </>
   );
 }

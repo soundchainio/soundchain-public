@@ -3,6 +3,7 @@ import { RefreshButton } from 'components/Buttons/RefreshButton';
 import { Chat } from 'components/Chat';
 import { ChatLayout } from 'components/ChatLayout';
 import { NewMessageForm } from 'components/NewMessageForm';
+import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useMountedState } from 'hooks/useMountedState';
 import { cacheFor } from 'lib/apollo';
@@ -13,7 +14,7 @@ import {
   ProfileDisplayNameDocument,
   ProfileDisplayNameQuery,
   SendMessageMutation,
-  useChatHistoryQuery
+  useChatHistoryQuery,
 } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { animateScroll as scroll } from 'react-scroll';
@@ -89,9 +90,12 @@ export default function ChatPage({ recipientName, profileId }: PostPageProps) {
   };
 
   return (
-    <ChatLayout topNavBarProps={topNavBarProps}>
-      <Chat messages={messages} pageInfo={pageInfo} onFetchMore={onFetchMore} loading={loading} />
-      <NewMessageForm profileId={profileId} onNewMessage={onNewMessage} />
-    </ChatLayout>
+    <>
+      <SEO title="Soundchain - Message" canonicalUrl={`/messages/${profileId}`} description="Soundchain Message" />
+      <ChatLayout topNavBarProps={topNavBarProps}>
+        <Chat messages={messages} pageInfo={pageInfo} onFetchMore={onFetchMore} loading={loading} />
+        <NewMessageForm profileId={profileId} onNewMessage={onNewMessage} />
+      </ChatLayout>
+    </>
   );
 }

@@ -1,6 +1,7 @@
 import { BackButton } from 'components/Buttons/BackButton';
 import { BioForm } from 'components/forms/profile/BioForm';
 import { Layout } from 'components/Layout';
+import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
@@ -16,10 +17,10 @@ export default function BioPage() {
 
   return (
     <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
+      <SEO title="Soundchain - Bio" canonicalUrl="/settings/bio" description="Soundchain Bio" />
       <Head>
         <title>Soundchain - Bio</title>
         <meta name="description" content="Bio" />
-        <link rel="icon" href="/favicons/favicon.ico" />
       </Head>
       <div className="min-h-full flex flex-col px-6 lg:px-8 py-6">
         <BioForm

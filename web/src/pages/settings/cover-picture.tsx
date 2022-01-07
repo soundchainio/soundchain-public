@@ -1,8 +1,8 @@
 import { BackButton } from 'components/Buttons/BackButton';
 import { CoverPictureForm } from 'components/forms/profile/CoverPictureForm';
 import { Layout } from 'components/Layout';
+import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
-import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React from 'react';
 
@@ -16,11 +16,11 @@ export default function CoverPicturePage() {
 
   return (
     <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
-      <Head>
-        <title>Soundchain - Cover Picture</title>
-        <meta name="description" content="Cover Picture" />
-        <link rel="icon" href="/favicons/favicon.ico" />
-      </Head>
+      <SEO
+        title="Soundchain - Cover Picture"
+        canonicalUrl="/settings/cover-picture"
+        description="Soundchain Cover Picture"
+      />
       <div className="min-h-full flex flex-col px-6 lg:px-8 py-6">
         <CoverPictureForm
           afterSubmit={() => router.push('/settings')}
