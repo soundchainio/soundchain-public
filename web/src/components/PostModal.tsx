@@ -71,10 +71,6 @@ export const PostModal = () => {
   }, [editPostId]);
 
   useEffect(() => {
-    console.log('trackId: ', trackId);
-  }, [trackId]);
-
-  useEffect(() => {
     const delayDebounce = setTimeout(async () => {
       if (bodyValue.length) {
         const link = await getNormalizedLink(bodyValue);
