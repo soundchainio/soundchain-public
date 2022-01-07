@@ -16,7 +16,6 @@ import {
   useRemoveProfileVerificationRequestMutation,
 } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
-import Head from 'next/head';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { ManageRequestTab } from 'types/ManageRequestTabType';
@@ -70,11 +69,6 @@ export default function GetVerified() {
         description="Request your profile verification"
         canonicalUrl="/get-verified/"
       />
-      <Head>
-        <title>Soundchain / Get Verified</title>
-        <meta name="description" content="Get Verified" />
-        <link rel="icon" href="/favicons/favicon.ico" />
-      </Head>
       <div className="text-white font-bold text-center w-full px-4 py-10 flex items-center justify-center">
         Receive a blue checkmark <Verified className="ml-4 scale-150" />
       </div>

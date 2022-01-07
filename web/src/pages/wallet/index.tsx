@@ -18,7 +18,6 @@ import { Matic } from 'icons/Matic';
 import { MetaMask } from 'icons/MetaMask';
 import { network } from 'lib/blockchainNetworks';
 import { DefaultWallet, useMaticUsdQuery, useUpdateDefaultWalletMutation } from 'lib/graphql';
-import Head from 'next/head';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { currency } from 'utils/format';
@@ -144,11 +143,6 @@ export default function WalletPage() {
     <>
       <SEO title="Soundchain - Wallet" description="Soundchain Wallet" canonicalUrl="/wallet/" />
       <Layout topNavBarProps={topNavBarProps}>
-        <Head>
-          <title>Soundchain - Wallet</title>
-          <meta name="description" content="Wallet" />
-          <link rel="icon" href="/favicons/favicon.ico" />
-        </Head>
         <div className="h-full flex flex-col">
           <WalletHeader />
           {isMetamaskSelected && (!connectedToMetaMask || !correctNetwork) ? (
