@@ -10,9 +10,15 @@ module.exports = {
       socialMedias: {},
       favoriteGenres: [],
       musicianTypes: [],
+      followerCount: 0,
+      followingCount: 0,
+      unreadNotificationCount: 0,
+      unreadMessageCount: 0,
+      verified: true,
       displayName: 'SoundChain',
       createdAt: new Date(),
       updatedAt: new Date(),
+      __v: 0,
     });
 
     await db.collection('users').insertOne({
