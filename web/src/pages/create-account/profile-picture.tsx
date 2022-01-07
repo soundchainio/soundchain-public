@@ -1,10 +1,10 @@
 import { Badge } from 'components/Badge';
 import { ProfilePictureForm } from 'components/forms/profile/ProfilePictureForm';
 import { Layout } from 'components/Layout';
+import SEO from 'components/SEO';
 import { StepProgressBar } from 'components/StepProgressBar';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { config } from 'config';
-import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React from 'react';
 
@@ -27,19 +27,21 @@ export default function ProfilePicturePage() {
   };
 
   return (
-    <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
-      <Head>
-        <title>Soundchain - Profile Picture</title>
-        <meta name="description" content="Profile Picture" />
-        <link rel="icon" href="/favicons/favicon.ico" />
-      </Head>
-      <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
-        <ProfilePictureForm
-          afterSubmit={() => router.push('/create-account/cover-picture')}
-          submitText="NEXT"
-          submitProps={{ borderColor: 'bg-blue-gradient' }}
-        />
-      </div>
-    </Layout>
+    <>
+      <SEO
+        title="Soundchain - Profile Picture"
+        canonicalUrl="/create-account/profile-picture"
+        description="Soundchain Profile Picture"
+      />
+      <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
+        <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
+          <ProfilePictureForm
+            afterSubmit={() => router.push('/create-account/cover-picture')}
+            submitText="NEXT"
+            submitProps={{ borderColor: 'bg-blue-gradient' }}
+          />
+        </div>
+      </Layout>
+    </>
   );
 }

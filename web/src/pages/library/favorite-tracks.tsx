@@ -2,8 +2,8 @@ import { BackButton } from 'components/Buttons/BackButton';
 import { FavoriteTracks } from 'components/FavoriteTracks';
 import { Layout } from 'components/Layout';
 import { SearchLibrary } from 'components/SearchLibrary';
+import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
-import Head from 'next/head';
 import React, { useState } from 'react';
 
 const topNavBarProps: TopNavBarProps = {
@@ -15,14 +15,16 @@ export default function FavoriteTracksPage() {
   const [searchTerm, setSearchTerm] = useState<string>('');
 
   return (
-    <Layout topNavBarProps={topNavBarProps}>
-      <Head>
-        <title>Soundchain - Favorite Tracks</title>
-        <meta name="description" content="Favorite Tracks" />
-        <link rel="icon" href="/favicons/favicon.ico" />
-      </Head>
-      <SearchLibrary placeholder="Search tracks..." setSearchTerm={setSearchTerm} />
-      <FavoriteTracks searchTerm={searchTerm} />
-    </Layout>
+    <>
+      <SEO
+        title="Soundchain - Favorite Tracks"
+        canonicalUrl="/library/favorite-tracks/"
+        description="Soundchain Favorite Tracks"
+      />
+      <Layout topNavBarProps={topNavBarProps}>
+        <SearchLibrary placeholder="Search tracks..." setSearchTerm={setSearchTerm} />
+        <FavoriteTracks searchTerm={searchTerm} />
+      </Layout>
+    </>
   );
 }

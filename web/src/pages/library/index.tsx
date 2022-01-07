@@ -1,13 +1,13 @@
 import { InboxButton } from 'components/Buttons/InboxButton';
 import { Layout } from 'components/Layout';
 import { MenuLink } from 'components/MenuLink';
+import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Artist } from 'icons/Artist';
 import { Heart } from 'icons/Heart';
 import { cacheFor } from 'lib/apollo';
-import { protectPage } from 'lib/protectPage';
 import { MeDocument, MeQuery } from 'lib/graphql';
-import Head from 'next/head';
+import { protectPage } from 'lib/protectPage';
 import React from 'react';
 
 interface HomePageProps {
@@ -30,14 +30,12 @@ export default function LibraryPage({ me }: HomePageProps) {
   };
 
   return (
-    <Layout topNavBarProps={topNavBarProps}>
-      <Head>
-        <title>Soundchain - Library</title>
-        <meta name="description" content="Library" />
-        <link rel="icon" href="/favicons/favicon.ico" />
-      </Head>
-      <MenuLink icon={Heart} label="Favorite Tracks" href="/library/favorite-tracks" />
-      <MenuLink icon={Artist} label="Artists" href="/library/artists" />
-    </Layout>
+    <>
+      <SEO title="Soundchain - Library" canonicalUrl="/library/" description="Soundchain Library" />
+      <Layout topNavBarProps={topNavBarProps}>
+        <MenuLink icon={Heart} label="Favorite Tracks" href="/library/favorite-tracks" />
+        <MenuLink icon={Artist} label="Artists" href="/library/artists" />
+      </Layout>
+    </>
   );
 }

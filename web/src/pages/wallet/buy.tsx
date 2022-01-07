@@ -1,5 +1,6 @@
 import { BackButton } from 'components/Buttons/BackButton';
 import { Layout } from 'components/Layout';
+import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useMe } from 'hooks/useMe';
 import { MacNCheese } from 'icons/MacNCheese';
@@ -10,7 +11,6 @@ import { Navigate } from 'icons/Navigate';
 import { OkCoin } from 'icons/OkCoin';
 import { Polygon } from 'icons/Polygon';
 import { network } from 'lib/blockchainNetworks';
-import Head from 'next/head';
 import Image from 'next/image';
 import React from 'react';
 
@@ -43,11 +43,11 @@ export default function BuyMaticPage() {
 
   return (
     <Layout topNavBarProps={topNovaBarProps}>
-      <Head>
-        <title>Soundchain - Wallet</title>
-        <meta name="description" content="Wallet" />
-        <link rel="icon" href="/favicons/favicon.ico" />
-      </Head>
+      <SEO
+        title="Soundchain - Wallet Buy Funds"
+        description="Soundchain Wallet Buy Funds"
+        canonicalUrl="/wallet/buy/"
+      />
       <div className="px-8 py-4 text-gray-80 text-xs">
         <p className="text-center m-4 font-bold">
           In order to mint or purchase {"NFT's"} on SoundChain, you must have:

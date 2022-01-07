@@ -21,6 +21,7 @@ import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useState } from 'react';
+import SEO from '../../../components/SEO';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -111,18 +112,26 @@ export default function CompleteAuctionPage({ track, auctionItem }: TrackPagePro
   }
 
   return (
-    <Layout topNavBarProps={topNovaBarProps}>
-      <div className="m-4">
-        <Track track={track} />
-      </div>
-      <div className="px-4 py-3">
-        <MaxGasFee />
-      </div>
-      <PlayerAwareBottomBar>
-        <Button className="ml-auto" variant="buy-nft" onClick={() => handleCancel()} loading={loading}>
-          <div className="px-4">CANCEL AUCTION</div>
-        </Button>
-      </PlayerAwareBottomBar>
-    </Layout>
+    <>
+      <SEO
+        title={`Soundchain - Cancel auction of Track - ${track.title}`}
+        description={track.artist || 'on Soundchain'}
+        canonicalUrl={`/tracks/${track.id}/cancel-auction/`}
+        image={track.artworkUrl}
+      />
+      <Layout topNavBarProps={topNovaBarProps}>
+        <div className="m-4">
+          <Track track={track} />
+        </div>
+        <div className="px-4 py-3">
+          <MaxGasFee />
+        </div>
+        <PlayerAwareBottomBar>
+          <Button className="ml-auto" variant="buy-nft" onClick={() => handleCancel()} loading={loading}>
+            <div className="px-4">CANCEL AUCTION</div>
+          </Button>
+        </PlayerAwareBottomBar>
+      </Layout>
+    </>
   );
 }

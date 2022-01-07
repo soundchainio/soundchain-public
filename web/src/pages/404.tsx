@@ -12,7 +12,7 @@ export default function Page404() {
   return (
     <Layout topNavBarProps={topNavBarProps}>
       <Head>
-        <title>Soundchain / Explore</title>
+        <title>Soundchain - Not Found</title>
         <meta name="description" content="Explore" />
         <link rel="icon" href="/favicons/favicon.ico" />
       </Head>

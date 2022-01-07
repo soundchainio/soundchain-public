@@ -15,6 +15,7 @@ import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 import { SaleType } from 'types/SaleType';
+import SEO from '../../../../components/SEO';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -130,11 +131,18 @@ export default function AuctionPage({ track }: TrackPageProps) {
   }
 
   return (
-    <Layout topNavBarProps={topNovaBarProps}>
-      <div className="m-4">
-        <Track track={track} />
-      </div>
-      <ListNFTAuction handleSubmit={handleList} submitLabel="LIST NFT" />
-    </Layout>
+    <>
+      <SEO
+        title={`Soundchain - List track`}
+        description={'List your track as an auction item on Soundchain'}
+        canonicalUrl={router.asPath}
+      />
+      <Layout topNavBarProps={topNovaBarProps}>
+        <div className="m-4">
+          <Track track={track} />
+        </div>
+        <ListNFTAuction handleSubmit={handleList} submitLabel="LIST NFT" />
+      </Layout>
+    </>
   );
 }

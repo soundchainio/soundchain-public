@@ -3,6 +3,7 @@ import { InboxButton } from 'components/Buttons/InboxButton';
 import { CopyLink } from 'components/CopyLink';
 import { Layout } from 'components/Layout';
 import { FormValues, RequestVerificationForm } from 'components/RequestVerificationForm';
+import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { format as formatTimestamp } from 'date-fns';
 import { useMe } from 'hooks/useMe';
@@ -15,7 +16,6 @@ import {
   useRemoveProfileVerificationRequestMutation,
 } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
-import Head from 'next/head';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { ManageRequestTab } from 'types/ManageRequestTabType';
@@ -64,11 +64,11 @@ export default function GetVerified() {
 
   return (
     <Layout topNavBarProps={topNavBarProps}>
-      <Head>
-        <title>Soundchain / Get Verified</title>
-        <meta name="description" content="Get Verified" />
-        <link rel="icon" href="/favicons/favicon.ico" />
-      </Head>
+      <SEO
+        title="Soundchain - Get Verified"
+        description="Request your profile verification"
+        canonicalUrl="/get-verified/"
+      />
       <div className="text-white font-bold text-center w-full px-4 py-10 flex items-center justify-center">
         Receive a blue checkmark <Verified className="ml-4 scale-150" />
       </div>

@@ -18,6 +18,7 @@ import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 import { compareWallets } from 'utils/Wallet';
+import SEO from '../../../components/SEO';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -122,43 +123,51 @@ export default function CompleteAuctionPage({ track }: TrackPageProps) {
   const winningBid = (parseFloat(highestBid.bid) / 1e18).toFixed(6);
 
   return (
-    <Layout topNavBarProps={topNovaBarProps}>
-      <div className="min-h-full flex flex-col">
-        <div className="flex flex-1 flex-col justify-between">
-          <div>
-            <div className="m-4">
-              <Track track={track} />
+    <>
+      <SEO
+        title={`Soundchain - Complete auction of Track - ${track.title}`}
+        description={track.artist || 'on Soundchain'}
+        canonicalUrl={`/tracks/${track.id}/complete-auction/`}
+        image={track.artworkUrl}
+      />
+      <Layout topNavBarProps={topNovaBarProps}>
+        <div className="min-h-full flex flex-col">
+          <div className="flex flex-1 flex-col justify-between">
+            <div>
+              <div className="m-4">
+                <Track track={track} />
+              </div>
+              <p className="m-8 text-center text-green-600 text-xs font-bold">
+                <CheckmarkFilled className="inline" /> Congrats, you {isOwner ? 'sold' : 'won'} this NFT!
+              </p>
+              <div className="flex p-5 text-gray-80 bg-[#111920]">
+                <p className="flex items-center flex-shrink-0 justify-start font-bold text-xs md-text-sm uppercase">
+                  winning bid
+                </p>
+                <p className="flex items-center justify-end w-full">
+                  <Matic value={winningBid} />
+                </p>
+              </div>
+              <div className="flex p-5 text-gray-80 bg-[#111920]">
+                <p className="flex items-center flex-shrink-0 justify-start font-bold text-xs md-text-sm uppercase">
+                  time reaming
+                </p>
+                <p className="flex items-center w-full justify-end">
+                  <span className="mx-1 text-red-500 font-bold text-xs leading-tight uppercase">auction ended</span>
+                </p>
+              </div>
             </div>
-            <p className="m-8 text-center text-green-600 text-xs font-bold">
-              <CheckmarkFilled className="inline" /> Congrats, you {isOwner ? 'sold' : 'won'} this NFT!
-            </p>
-            <div className="flex p-5 text-gray-80 bg-[#111920]">
-              <p className="flex items-center flex-shrink-0 justify-start font-bold text-xs md-text-sm uppercase">
-                winning bid
-              </p>
-              <p className="flex items-center justify-end w-full">
-                <Matic value={winningBid} />
-              </p>
-            </div>
-            <div className="flex p-5 text-gray-80 bg-[#111920]">
-              <p className="flex items-center flex-shrink-0 justify-start font-bold text-xs md-text-sm uppercase">
-                time reaming
-              </p>
-              <p className="flex items-center w-full justify-end">
-                <span className="mx-1 text-red-500 font-bold text-xs leading-tight uppercase">auction ended</span>
-              </p>
-            </div>
-          </div>
 
-          <AuctionEnded highestBid={highestBid} />
+            <AuctionEnded highestBid={highestBid} />
+          </div>
+          <PlayerAwareBottomBar>
+            <TotalPrice price={winningBid} />
+            <Button className="ml-auto" variant="buy-nft" onClick={handleClaim} loading={loading}>
+              <div className="px-4">COMPLETE</div>
+            </Button>
+          </PlayerAwareBottomBar>
         </div>
-        <PlayerAwareBottomBar>
-          <TotalPrice price={winningBid} />
-          <Button className="ml-auto" variant="buy-nft" onClick={handleClaim} loading={loading}>
-            <div className="px-4">COMPLETE</div>
-          </Button>
-        </PlayerAwareBottomBar>
-      </div>
-    </Layout>
+      </Layout>
+    </>
   );
 }

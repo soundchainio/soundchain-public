@@ -7,7 +7,6 @@ import { TopNavBarProps } from 'components/TopNavBar';
 import { cacheFor, createApolloClient } from 'lib/apollo';
 import { MeDocument, MeQuery } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
-import Head from 'next/head';
 
 interface HomePageProps {
   me?: MeQuery['me'];
@@ -31,11 +30,6 @@ export default function HomePage({ me }: HomePageProps) {
 
   return (
     <>
-      <Head>
-        <title>Soundchain</title>
-        <meta name="description" content="Soundchain" />
-        <link rel="icon" href="/favicons/favicon.ico" />
-      </Head>
       <SEO title="Soundchain" description="Connecting people to music" canonicalUrl="/" />
       <Layout topNavBarProps={topNavBarProps}>
         <div className="pt-3">{me ? <Feed /> : <Posts />}</div>

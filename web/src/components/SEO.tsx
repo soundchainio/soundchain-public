@@ -12,7 +12,7 @@ export interface SEOProps {
 export default function SEO({
   title,
   description,
-  image = `${config.domainUrl}/default-pictures/album-artwork.png`,
+  image = `${config.domainUrl}/soundchain-meta-logo.png`,
   canonicalUrl,
 }: SEOProps) {
   const metaImage = image?.startsWith('/') ? `${config.domainUrl}${image}` : image;
