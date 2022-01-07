@@ -39,5 +39,8 @@ query Notification($id: String!) {
     ... on NewBidNotification {
       ...NewBidNotificationFields
     }
+    ... on AuctionEndedNotification {
+      ...AuctionEndedNotificationFields
+    }
   }
 }
