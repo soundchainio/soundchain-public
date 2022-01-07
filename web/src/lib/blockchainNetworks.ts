@@ -17,7 +17,7 @@ export const mainNetwork: BlockchainNetwork = {
 };
 
 export const testnetNetwork: BlockchainNetwork = {
-  name: 'Matic Mumbai',
+  name: 'Mumbai Testnet',
   rpc: 'https://rpc-mumbai.maticvigil.com',
   id: 80001,
   idHex: '0x13881',

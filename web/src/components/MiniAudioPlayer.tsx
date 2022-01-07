@@ -2,14 +2,12 @@ import Slider from '@reach/slider';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { HeartFilled } from 'icons/HeartFilled';
 import { Info } from 'icons/Info';
-import { Matic } from 'icons/Matic';
+import { Matic } from 'components/Matic';
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
-import { useMaticUsdQuery } from 'lib/graphql';
 import NextLink from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { remainingTime, timeFromSecs } from 'utils/calculateTime';
-import { currency } from 'utils/format';
 import Asset from './Asset';
 import { BadgeTrack } from './BadgeTrack';
 
@@ -36,7 +34,6 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
     useAudioPlayerContext();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isSameSong, setIsSameSong] = useState(false);
-  const { data: maticUsd } = useMaticUsdQuery();
 
   useEffect(() => {
     setIsPlaying(isCurrentlyPlaying(trackId));
@@ -69,25 +66,27 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
               </button>
             </div>
             <NextLink href={`/tracks/${trackId}`}>
-              <div className="flex w-full cursor-pointer gap-1 truncate">
-                <div className="truncate">
-                  <div className="text-white font-black text-xs w-full truncate">
-                    <div className="truncate" title={title || ''}>
-                      {title ? title : 'Unknown Title'}
+              <a className="w-full truncate">
+                <div className="flex w-full cursor-pointer gap-1 truncate">
+                  <div className="truncate">
+                    <div className="text-white font-black text-xs w-full truncate">
+                      <div className="truncate" title={title || ''}>
+                        {title ? title : 'Unknown Title'}
+                      </div>
                     </div>
+                    {artist && <div className="text-gray-80 text-xs font-black">{artist}</div>}
                   </div>
-                  {artist && <div className="text-gray-80 text-xs font-black">{artist}</div>}
-                </div>
-                <div className="flex flex-1"></div>
-                {saleType && saleType !== '' && (
-                  <div className="h-1/3">
-                    <BadgeTrack auction={saleType === 'auction'} label={saleType.toUpperCase()}></BadgeTrack>
+                  <div className="flex flex-1"></div>
+                  {saleType && saleType !== '' && (
+                    <div className="h-1/3">
+                      <BadgeTrack auction={saleType === 'auction'} label={saleType.toUpperCase()}></BadgeTrack>
+                    </div>
+                  )}
+                  <div className="self-center flex-shrink-0">
+                    <Info />
                   </div>
-                )}
-                <div className="self-center">
-                  <Info />
                 </div>
-              </div>
+              </a>
             </NextLink>
           </div>
           <div className="text-gray-80 text-xs flex gap-1 items-center pt-1">
@@ -96,11 +95,7 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
             <HeartFilled />
             <span>{favoriteCount || 0}</span>
             {saleType && saleType !== '' && (
-              <>
-                <div className="ml-auto text-white font-bold">{price / 1e18}</div>
-                <Matic /> <span className="text-xl"> ≃ </span>
-                {maticUsd && `${currency((price / 1e18) * parseFloat(maticUsd.maticUsd))}`}
-              </>
+              <Matic className="ml-auto" value={price / 1e18} variant="currency-inline" />
             )}
           </div>
           <div className="text-white flex flex-col mt-2">

@@ -13,7 +13,7 @@ export const SoundchainFee = ({ price }: Props) => {
         <Soundchain className="mr-2" /> soundchain fee included ({config.soundchainFee * 100}%)
       </p>
       <div className="flex justify-end w-full">
-        <Matic value={(parseFloat(price) * config.soundchainFee).toFixed(6)} />
+        <Matic value={parseFloat(price) * config.soundchainFee} variant="currency-inline" />
       </div>
     </div>
   );

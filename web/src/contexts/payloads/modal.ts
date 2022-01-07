@@ -4,6 +4,7 @@ import { SaleType } from 'types/SaleType';
 
 export interface ShowNewPostPayload {
   show: boolean;
+  trackId?: string;
 }
 
 export interface ShowCommentModalPayload {
