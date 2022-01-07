@@ -1,5 +1,7 @@
 export const currency = (value: number) => {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumSignificantDigits: 1 }).format(
+    value,
+  );
 };
 
 export const fixedDecimals = (value: number | string) => {

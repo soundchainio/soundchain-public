@@ -1,5 +1,6 @@
 import classNames from 'classnames';
-import { Matic } from 'icons/Matic';
+import { Matic } from 'components/Matic';
+import { Matic as MaticIcon } from 'icons/Matic';
 import { NftSoldNotification, SellType } from 'lib/graphql';
 import NextLink from 'next/link';
 import React from 'react';
@@ -22,7 +23,7 @@ export const NFTSoldNotificationItem = ({
         <div className="flex items-center pr-4 min-w-[50px]">
           <Avatar profile={{ profilePicture: buyerPicture }} linkToProfile={false} pixels={40} />
           <div className="relative">
-            <Matic className="absolute -right-1" />
+            <MaticIcon className="absolute -right-1" />
           </div>
         </div>
         <div>
@@ -48,9 +49,7 @@ export const NFTSoldNotificationItem = ({
             <div className="text-white font-bold text-xs">{trackName}</div>
             <div className="text-gray-80 font-bold text-xs">{artist}</div>
           </div>
-          <div className="flex gap-2 text-white font-bold text-xs ml-auto">
-            <Matic /> {price / 1e18} MATIC
-          </div>
+          <Matic className="ml-auto" value={price / 1e18} />
         </div>
       </NextLink>
     </div>
