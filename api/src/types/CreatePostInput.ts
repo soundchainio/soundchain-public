@@ -13,4 +13,8 @@ export class CreatePostInput {
   @Field({ nullable: true })
   @IsOptional()
   mediaLink?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  trackId?: string;
 }

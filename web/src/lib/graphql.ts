@@ -229,6 +229,7 @@ export type CreateMintingRequestInput = {
 export type CreatePostInput = {
   body: Scalars['String'];
   mediaLink?: Maybe<Scalars['String']>;
+  trackId?: Maybe<Scalars['String']>;
 };
 
 export type CreatePostPayload = {
