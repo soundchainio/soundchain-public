@@ -4,7 +4,6 @@ import useBlockchain from 'hooks/useBlockchain';
 import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
-import { Matic } from 'icons/Matic';
 import { PendingRequest, useUpdateTrackMutation } from 'lib/graphql';
 import router from 'next/router';
 import { useState } from 'react';
@@ -13,6 +12,7 @@ import { Button } from './Button';
 import { ConnectedNetwork } from './ConnectedNetwork';
 import { CopyWalletAddress } from './CopyWalletAddress';
 import { Label } from './Label';
+import MaxGasFee from './MaxGasFee';
 import { WalletSelected } from './WalletSelected';
 
 const marketplaceAddress = process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS || '';
@@ -123,21 +123,8 @@ export const RemoveListingConfirmationModal = () => {
               </div>
             </div>
           </div>
-          <div className="flex flex-col w-full">
-            <div className="flex w-full bg-gray-30">
-              <div className="flex-1 flex items-center justify-start text-gray-CC font-bold text-xs uppercase px-4 py-3">
-                Gas Fees
-              </div>
-              <div className="flex flex-wrap items-center justify-center uppercase px-4 py-3">
-                <span className="my-auto">
-                  <Matic />
-                </span>
-                <span className="mx-1 text-white font-bold text-md leading-tight">{maxGasFee}</span>
-                <div className="items-end">
-                  <span className="text-gray-80 font-black text-xxs leading-tight">matic</span>
-                </div>
-              </div>
-            </div>
+          <div className="flex flex-col p-4 bg-gray-20">
+            <MaxGasFee />
           </div>
         </div>
         <div>

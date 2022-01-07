@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { Matic } from 'icons/Matic';
+import { Matic } from 'components/Matic';
 import NextLink from 'next/link';
 import React from 'react';
 import Asset from './Asset';
@@ -41,9 +41,7 @@ export const TrackNotification = ({
             <div className="text-white font-bold text-xs">{trackName}</div>
             <div className="text-gray-80 font-bold text-xs">{artist}</div>
           </div>
-          <div className="flex gap-2 text-white font-bold text-xs ml-auto">
-            <Matic /> {price / 1e18} MATIC
-          </div>
+          <Matic className="ml-auto" value={price / 1e18} />
         </div>
       </NextLink>
     </div>

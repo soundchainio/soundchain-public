@@ -2,14 +2,12 @@ import Slider from '@reach/slider';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { HeartFilled } from 'icons/HeartFilled';
 import { Info } from 'icons/Info';
-import { Matic } from 'icons/Matic';
+import { Matic } from 'components/Matic';
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
-import { useMaticUsdQuery } from 'lib/graphql';
 import NextLink from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { remainingTime, timeFromSecs } from 'utils/calculateTime';
-import { currency } from 'utils/format';
 import Asset from './Asset';
 import { BadgeTrack } from './BadgeTrack';
 
@@ -36,7 +34,6 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
     useAudioPlayerContext();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isSameSong, setIsSameSong] = useState(false);
-  const { data: maticUsd } = useMaticUsdQuery();
 
   useEffect(() => {
     setIsPlaying(isCurrentlyPlaying(trackId));
@@ -98,11 +95,7 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
             <HeartFilled />
             <span>{favoriteCount || 0}</span>
             {saleType && saleType !== '' && (
-              <>
-                <div className="ml-auto text-white font-bold">{price / 1e18}</div>
-                <Matic /> <span className="text-xl"> ≃ </span>
-                {maticUsd && `${currency((price / 1e18) * parseFloat(maticUsd.maticUsd))}`}
-              </>
+              <Matic className="ml-auto" value={price / 1e18} variant="currency-inline" />
             )}
           </div>
           <div className="text-white flex flex-col mt-2">

@@ -1,5 +1,5 @@
 import { useMaxGasFee } from 'hooks/useMaxGasFee';
-import { Matic } from 'icons/Matic';
+import { Matic } from 'components/Matic';
 import { useMaticUsdQuery } from 'lib/graphql';
 import { currency, fixedDecimals } from 'utils/format';
 
@@ -21,11 +21,8 @@ export const TotalPrice = ({ price }: { price?: string }) => {
 
   return (
     <div className="font-bold">
-      <p className="text-white">
-        <Matic className="inline" /> {`${totalPrice(parseFloat(price))} `}
-        <span className="text-xxs text-gray-80">MATIC</span>
-      </p>
-      <p className="text-sm text-gray-60">{`${currency(
+      <Matic value={totalPrice(parseFloat(price))} />
+      <p className="text-sm text-gray-60 font-normal">{`${currency(
         totalPrice(parseFloat(price) * parseFloat(maticUsd.maticUsd)),
       )}`}</p>
     </div>
