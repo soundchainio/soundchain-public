@@ -10,7 +10,7 @@ type Props = {
 };
 
 export const TrackShareButton = ({ trackId, title, artist }: Props) => {
-  const { dispatchShowPostModal } = useModalDispatch();
+  const { dispatchShowPostModal, dispatchShowAudioPlayerModal } = useModalDispatch();
 
   const handleSharing = async () => {
     const url = `${window.location.origin}/tracks/${trackId}`;
@@ -28,6 +28,7 @@ export const TrackShareButton = ({ trackId, title, artist }: Props) => {
   };
 
   const handlePost = () => {
+    dispatchShowAudioPlayerModal(false);
     dispatchShowPostModal(true, trackId);
   };
 
