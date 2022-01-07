@@ -1,14 +1,13 @@
-import * as yup from 'yup';
-import { Form, Formik } from 'formik';
-import React, { useState, useEffect } from 'react';
 import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
+import { Matic } from 'components/Matic';
+import { Form, Formik } from 'formik';
 import useBlockchain, { gas } from 'hooks/useBlockchain';
-import { useMe } from 'hooks/useMe';
 import { useMagicContext } from 'hooks/useMagicContext';
-import { Matic } from 'icons/Matic';
-import { currency } from 'utils/format';
-import { useMaticUsdQuery } from 'lib/graphql';
+import { useMe } from 'hooks/useMe';
+import { Matic as MaticIcon } from 'icons/Matic';
+import React, { useEffect, useState } from 'react';
+import * as yup from 'yup';
 
 export interface FormValues {
   recipient: string;
@@ -36,7 +35,6 @@ interface Props {
 export const TransferForm = ({ handleSubmit }: Props) => {
   const me = useMe();
   const { web3, balance } = useMagicContext();
-  const { data } = useMaticUsdQuery();
   const { getCurrentGasPrice } = useBlockchain();
   const [gasPrice, setGasPrice] = useState<string>('');
 
@@ -47,10 +45,6 @@ export const TransferForm = ({ handleSubmit }: Props) => {
       }
     };
     gasCheck();
-    const interval = setInterval(() => {
-      gasCheck();
-    }, 5 * 1000);
-    return () => clearInterval(interval);
   }, [web3, getCurrentGasPrice]);
 
   if (!me) return null;
@@ -89,7 +83,7 @@ export const TransferForm = ({ handleSubmit }: Props) => {
                 placeholder="00.00"
                 min="0"
                 step="0.000000000000000001"
-                icon={Matic}
+                icon={MaticIcon}
               />
             </div>
             <div>
@@ -116,20 +110,7 @@ export const TransferForm = ({ handleSubmit }: Props) => {
           </div>
         </div>
         <div className="flex bg-black justify-between p-5">
-          <div>
-            <div className="flex items-center">
-              <Matic />
-              <span className="mx-2 text-gray-CC font-bold text-md leading-tight">{balance}</span>
-              <div className="items-end">
-                <span className="text-gray-80 font-bold text-xs leading-tight uppercase">matic</span>
-              </div>
-            </div>
-            {data && (
-              <span className="text-xs text-gray-50 font-bold">
-                {`${currency(+(balance || 0) * parseFloat(data.maticUsd))} USD`}
-              </span>
-            )}
-          </div>
+          <Matic value={balance} variant="currency" />
           <div className="w-6/12">
             <Button className="p-1" type="submit" variant="orange">
               SEND TOKENS

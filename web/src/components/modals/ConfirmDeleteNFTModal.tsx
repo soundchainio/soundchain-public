@@ -1,4 +1,5 @@
 import { Button } from 'components/Button';
+import MaxGasFee from 'components/MaxGasFee';
 import { Modal } from 'components/Modal';
 import { Track as TrackComponent } from 'components/Track';
 import { TrackListItemSkeleton } from 'components/TrackListItemSkeleton';
@@ -6,7 +7,6 @@ import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { useMaxGasFee } from 'hooks/useMaxGasFee';
-import { Matic } from 'icons/Matic';
 import { TrackQuery, useDeleteTrackMutation, useTrackLazyQuery } from 'lib/graphql';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
@@ -131,29 +131,14 @@ export const ConfirmDeleteNFTModal = () => {
             </div>
           </div>
           {burn && (
-            <div className="flex flex-col w-full">
-              <div className="flex w-full bg-gray-30">
-                <div className="flex-1 flex items-center justify-start text-gray-CC font-bold text-xs uppercase px-4 py-3">
-                  Gas Fees
-                </div>
-                <div className="flex flex-wrap items-center justify-center uppercase px-4 py-3">
-                  <span className="my-auto">
-                    <Matic />
-                  </span>
-                  <span className="mx-1 text-white font-bold text-md leading-tight">{maxGasFee}</span>
-                  <div className="items-end">
-                    <span className="text-gray-80 font-black text-xxs leading-tight">matic</span>
-                  </div>
-                </div>
-              </div>
+            <div className="flex flex-col p-4 bg-gray-20">
+              <MaxGasFee />
             </div>
           )}
         </div>
-        <div>
-          <Button variant="approve" type="button" loading={loading} onClick={handleSubmit} disabled={disabled}>
-            {burn ? 'Burn NFT' : 'Delete NFT'}
-          </Button>
-        </div>
+        <Button variant="approve" type="button" loading={loading} onClick={handleSubmit} disabled={disabled}>
+          {burn ? 'Burn NFT' : 'Delete NFT'}
+        </Button>
       </div>
     </Modal>
   );

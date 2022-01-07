@@ -104,6 +104,7 @@ export const modalReducer = (state: ModalState, action: Action) => {
         ...state,
         showNewPost: (action.payload as ShowNewPostPayload).show,
         anyModalOpened: (action.payload as ShowNewPostPayload).show,
+        trackId: (action.payload as ShowNewPostPayload).trackId,
       };
     case ModalActionTypes.SHOW_COMMENT_MODAL:
       return {

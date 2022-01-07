@@ -145,7 +145,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       ...auctionsEndingInOneHour.map(({ bids }) => {
         bids.map(bid => Promise.all([this.notifyAuctionIsEnding(bid), this.setBidIsNotified(bid._id)]));
       }),
-      ...auctionsEnded.map(auction => this.notifyWinner(auction)),
+      ...auctionsEnded.map(auction => this.notifyAuctionIsOver(auction)),
     ]);
   }
 
@@ -153,16 +153,20 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
     await BidModel.findOneAndUpdate({ _id: bidId }, { notifiedEndingInOneHour: true });
   }
 
-  private async notifyWinner({ _id, highestBid, tokenId }: AuctionItem): Promise<void> {
+  private async notifyAuctionIsOver({ _id, highestBid, tokenId, owner }: AuctionItem): Promise<void> {
     const [highestBidModel, track] = await Promise.all([
       BidModel.findOne({ auctionId: _id, amount: highestBid }),
       this.context.trackService.getTrackByTokenId(tokenId),
     ]);
-    const buyerProfile = await this.context.userService.getUserByWallet(highestBidModel.bidder);
-    await this.context.notificationService.notifyWonAuction({
+    const [buyerUser, sellerUser] = await Promise.all([
+      this.context.userService.getUserByWallet(highestBidModel.bidder),
+      this.context.userService.getUserByWallet(owner),
+    ]);
+    await this.context.notificationService.notifyAuctionIsOver({
       track,
       price: highestBid,
-      profileId: buyerProfile.profileId,
+      buyerProfileId: buyerUser.profileId,
+      sellerProfileId: sellerUser.profileId,
     });
   }
 

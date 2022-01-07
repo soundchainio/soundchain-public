@@ -6,6 +6,7 @@ import { BackButton } from 'components/Buttons/BackButton';
 import { InputField } from 'components/InputField';
 import { Layout } from 'components/Layout';
 import MaxGasFee from 'components/MaxGasFee';
+import { Matic } from 'components/Matic';
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
@@ -17,7 +18,7 @@ import useBlockchainV2 from 'hooks/useBlockchainV2';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Auction } from 'icons/Auction';
-import { Matic } from 'icons/Matic';
+import { Matic as MaticIcon } from 'icons/Matic';
 import { Locker } from 'icons/Locker';
 import { cacheFor } from 'lib/apollo';
 import {
@@ -251,9 +252,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
                 <div className="flex justify-between items-center px-4 py-3">
                   <div className="text-sm font-bold text-white">{auctionIsOver ? 'FINAL PRICE' : 'CURRENT PRICE'}</div>
                   <div className="text-md flex items-center font-bold gap-1">
-                    <Matic />
-                    <span className="text-white">{fixedDecimals(price || '')}</span>
-                    <span className="text-xxs text-gray-80">MATIC</span>
+                    <Matic value={price} variant="currency-inline" />
                     <button
                       className="text-[#22CAFF] text-xxs cursor-pointer font-bold"
                       onClick={() => dispatchShowBidsHistory(true, auctionItem?.auctionItem?.id || '')}
@@ -314,7 +313,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
                         </p>
                       </label>
                       <div className="w-1/2">
-                        <InputField name="bidAmount" type="number" icon={Matic} step="any" />
+                        <InputField name="bidAmount" type="number" icon={MaticIcon} step="any" />
                       </div>
                     </div>
                     {me?.otpSecret && (
@@ -334,10 +333,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
 
                     <PlayerAwareBottomBar>
                       <div className="flex-1 font-black text-xs">
-                        <div className="flex items-center gap-2 text-white">
-                          <Matic />
-                          <div className="text-white">{bidAmount}</div>MATIC
-                        </div>
+                        <Matic value={price} />
                         {maticQuery?.maticUsd && (
                           <span className="text-xs text-gray-50 font-bold">
                             {`${currency(bidAmount * parseFloat(maticQuery?.maticUsd))} USD`}
