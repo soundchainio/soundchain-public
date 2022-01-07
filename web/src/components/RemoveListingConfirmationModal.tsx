@@ -108,7 +108,7 @@ export const RemoveListingConfirmationModal = () => {
                   </Label>
                 </div>
                 <div className="flex flex-col items-center px-3 gap-2">
-                  {me?.defaultWallet && <WalletSelected wallet={me?.defaultWallet} />}
+                  <WalletSelected wallet={me?.defaultWallet} />
                   <ConnectedNetwork />
                 </div>
                 {account && <CopyWalletAddress walletAddress={account} />}

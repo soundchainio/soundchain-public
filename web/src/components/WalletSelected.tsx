@@ -2,8 +2,10 @@ import { Logo } from 'icons/Logo';
 import { MetaMask } from 'icons/MetaMask';
 import { DefaultWallet } from 'lib/graphql';
 
-export const WalletSelected = ({ wallet }: { wallet: DefaultWallet }) => {
+export const WalletSelected = ({ wallet }: { wallet?: DefaultWallet }) => {
   const isSoundChainWallet = wallet === DefaultWallet.Soundchain;
+
+  if (!wallet) return null;
 
   return (
     <div className="text-white">

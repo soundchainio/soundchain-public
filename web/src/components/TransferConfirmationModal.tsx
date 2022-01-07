@@ -130,7 +130,7 @@ export const TransferConfirmationModal = () => {
                     </Label>
                   </div>
                   <div className="flex flex-col items-center px-3 gap-2">
-                    {me?.defaultWallet && <WalletSelected wallet={DefaultWallet.Soundchain} />}
+                    <WalletSelected wallet={DefaultWallet.Soundchain} />
                     <ConnectedNetwork />
                   </div>
                   {account && <CopyWalletAddress walletAddress={account} />}
