@@ -1,13 +1,13 @@
-import * as yup from 'yup';
-import { Form, Formik } from 'formik';
-import React, { useState, useEffect } from 'react';
 import { Button } from 'components/Button';
-import { Matic } from 'components/Matic';
 import { InputField } from 'components/InputField';
+import { Matic } from 'components/Matic';
+import { Form, Formik } from 'formik';
 import useBlockchain, { gas } from 'hooks/useBlockchain';
-import { useMe } from 'hooks/useMe';
 import { useMagicContext } from 'hooks/useMagicContext';
+import { useMe } from 'hooks/useMe';
 import { Matic as MaticIcon } from 'icons/Matic';
+import React, { useEffect, useState } from 'react';
+import * as yup from 'yup';
 
 export interface FormValues {
   recipient: string;
@@ -45,10 +45,6 @@ export const TransferForm = ({ handleSubmit }: Props) => {
       }
     };
     gasCheck();
-    const interval = setInterval(() => {
-      gasCheck();
-    }, 5 * 1000);
-    return () => clearInterval(interval);
   }, [web3, getCurrentGasPrice]);
 
   if (!me) return null;
