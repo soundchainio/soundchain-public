@@ -2,20 +2,23 @@ import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
 import { useMaxGasFee } from 'hooks/useMaxGasFee';
+import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
-import { Logo } from 'icons/Logo';
 import { Matic } from 'icons/Matic';
 import { PendingRequest, useUpdateTrackMutation } from 'lib/graphql';
 import router from 'next/router';
 import { useState } from 'react';
 import { SaleType } from 'types/SaleType';
 import { Button } from './Button';
+import { ConnectedNetwork } from './ConnectedNetwork';
+import { CopyWalletAddress } from './CopyWalletAddress';
 import { Label } from './Label';
-import { Account, Wallet } from './Wallet';
+import { WalletSelected } from './WalletSelected';
 
 const marketplaceAddress = process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS || '';
 
 export const RemoveListingConfirmationModal = () => {
+  const me = useMe();
   const { showRemoveListing, trackId, tokenId, saleType } = useModalState();
   const [trackUpdate] = useUpdateTrackMutation();
   const { dispatchShowRemoveListingModal } = useModalDispatch();
@@ -101,24 +104,22 @@ export const RemoveListingConfirmationModal = () => {
               <div className="space-y-2">
                 <div className="px-4">
                   <Label className="uppercase font-bold" textSize="xs">
-                    FROM:{' '}
+                    FROM:
                   </Label>
                 </div>
-                <Wallet
-                  account={account}
-                  icon={() => <Logo id="soundchain-wallet" height="20" width="20" />} //TODO SHOULD BE DYNAMIC
-                  title="SoundChain Wallet"
-                  correctNetwork={true}
-                  defaultWallet={true}
-                />
+                <div className="flex flex-col items-center px-3 gap-2">
+                  {me?.defaultWallet && <WalletSelected wallet={me?.defaultWallet} />}
+                  <ConnectedNetwork />
+                </div>
+                {account && <CopyWalletAddress walletAddress={account} />}
               </div>
               <div className="space-y-2">
                 <div className="px-4">
                   <Label className="uppercase font-bold" textSize="xs">
-                    TO MARKETPLACE:{' '}
+                    MARKETPLACE:
                   </Label>
                 </div>
-                <Account account={marketplaceAddress} defaultWallet={true} />
+                <CopyWalletAddress walletAddress={marketplaceAddress} />
               </div>
             </div>
           </div>

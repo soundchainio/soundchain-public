@@ -6,16 +6,18 @@ import useBlockchain from 'hooks/useBlockchain';
 import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
-import { Logo } from 'icons/Logo';
 import { Matic } from 'icons/Matic';
+import { DefaultWallet } from 'lib/graphql';
 import router from 'next/router';
 import { authenticator } from 'otplib';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import * as yup from 'yup';
 import { Button } from './Button';
+import { ConnectedNetwork } from './ConnectedNetwork';
+import { CopyWalletAddress } from './CopyWalletAddress';
 import { Label } from './Label';
-import { Account, Wallet } from './Wallet';
+import { WalletSelected } from './WalletSelected';
 
 interface FormValues {
   token: string;
@@ -128,24 +130,22 @@ export const TransferConfirmationModal = () => {
                 <div className="space-y-2">
                   <div className="px-4">
                     <Label className="uppercase font-bold" textSize="xs">
-                      FROM:{' '}
+                      FROM:
                     </Label>
                   </div>
-                  <Wallet
-                    account={account}
-                    icon={() => <Logo id="soundchain-wallet" height="20" width="20" />} // TODO SHOULD BE DYNAMIC
-                    title="SoundChain Wallet"
-                    correctNetwork={true}
-                    defaultWallet={true}
-                  />
+                  <div className="flex flex-col items-center px-3 gap-2">
+                    {me?.defaultWallet && <WalletSelected wallet={DefaultWallet.Soundchain} />}
+                    <ConnectedNetwork />
+                  </div>
+                  {account && <CopyWalletAddress walletAddress={account} />}
                 </div>
                 <div className="space-y-2">
                   <div className="px-4">
                     <Label className="uppercase font-bold" textSize="xs">
-                      TO:{' '}
+                      TO:
                     </Label>
                   </div>
-                  <Account account={walletRecipient} defaultWallet={true} />
+                  {walletRecipient && <CopyWalletAddress walletAddress={walletRecipient} />}
                 </div>
               </div>
               <div className="flex flex-col">
