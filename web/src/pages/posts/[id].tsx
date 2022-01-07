@@ -6,6 +6,7 @@ import { Layout } from 'components/Layout';
 import { NewCommentForm } from 'components/NewCommentForm';
 import { NotAvailableMessage } from 'components/NotAvailableMessage';
 import { Post } from 'components/Post';
+import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useMe } from 'hooks/useMe';
 import { cacheFor, createApolloClient } from 'lib/apollo';
@@ -58,20 +59,27 @@ export default function PostPage({ postId }: PostPageProps) {
   };
 
   return (
-    <Layout topNavBarProps={topNovaBarProps}>
-      {deleted ? (
-        <NotAvailableMessage type="post" />
-      ) : (
-        <div>
-          <Post post={data.post} />
-          <div className="pb-12">
-            <Comments postId={data.post.id} />
+    <>
+      <SEO
+        title="Soundchain - Post"
+        canonicalUrl={`/posts/${postId}/`}
+        description={data.post.body || 'Soundchain Post Details'}
+      />
+      <Layout topNavBarProps={topNovaBarProps}>
+        {deleted ? (
+          <NotAvailableMessage type="post" />
+        ) : (
+          <div>
+            <Post post={data.post} />
+            <div className="pb-12">
+              <Comments postId={data.post.id} />
+            </div>
+            <BottomSheet>
+              <NewCommentForm postId={data.post.id} />
+            </BottomSheet>
           </div>
-          <BottomSheet>
-            <NewCommentForm postId={data.post.id} />
-          </BottomSheet>
-        </div>
-      )}
-    </Layout>
+        )}
+      </Layout>
+    </>
   );
 }

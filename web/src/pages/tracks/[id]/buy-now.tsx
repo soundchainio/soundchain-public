@@ -24,6 +24,7 @@ import { toast } from 'react-toastify';
 import { Locker } from 'icons/Locker';
 import { TotalPrice } from 'components/TotalPrice';
 import { Matic } from 'components/Matic';
+import SEO from 'components/SEO';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -151,54 +152,62 @@ export default function BuyNowPage({ track }: TrackPageProps) {
   });
 
   return (
-    <Layout topNavBarProps={topNavBarProps}>
-      <div className="min-h-full flex flex-col">
-        <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
-          <Form autoComplete="off" className="flex flex-1 flex-col justify-between">
-            <div>
-              <div className="m-4">
-                <Track track={track} />
-              </div>
-              <div className="bg-[#112011]">
-                <div className="flex justify-between items-center px-4 py-3">
-                  <div className="text-sm font-bold text-white">BUY NOW PRICE</div>
-                  <Matic value={price} />
+    <>
+      <SEO
+        title={`Soundchain - Buy Track - ${track.title}`}
+        description={track.artist || 'on Soundchain'}
+        canonicalUrl={`/tracks/${track.id}/buy-now/`}
+        image={track.artworkUrl}
+      />
+      <Layout topNavBarProps={topNavBarProps}>
+        <div className="min-h-full flex flex-col">
+          <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
+            <Form autoComplete="off" className="flex flex-1 flex-col justify-between">
+              <div>
+                <div className="m-4">
+                  <Track track={track} />
                 </div>
+                <div className="bg-[#112011]">
+                  <div className="flex justify-between items-center px-4 py-3">
+                    <div className="text-sm font-bold text-white">BUY NOW PRICE</div>
+                    <Matic value={price} />
+                  </div>
+                </div>
+                {!hasStarted && (
+                  <div className="flex justify-between items-center px-4 py-3">
+                    <div className="text-sm font-bold text-white flex-shrink-0">SALE STARTS</div>
+                    <div className="text-md flex items-center text-right font-bold gap-1">
+                      <Timer date={new Date(startTime * 1000)} reloadOnEnd />
+                    </div>
+                  </div>
+                )}
               </div>
-              {!hasStarted && (
-                <div className="flex justify-between items-center px-4 py-3">
-                  <div className="text-sm font-bold text-white flex-shrink-0">SALE STARTS</div>
-                  <div className="text-md flex items-center text-right font-bold gap-1">
-                    <Timer date={new Date(startTime * 1000)} reloadOnEnd />
+
+              {me?.otpSecret && (
+                <div className="flex px-4 py-3 items-center uppercase bg-gray-20">
+                  <p className="text-gray-80 w-full font-bold text-xs">
+                    <Locker className="h-4 w-4 inline mr-2" fill="#303030" /> Two-factor validation
+                  </p>
+                  <div className="w-1/2">
+                    <InputField name="token" type="text" maxLength={6} pattern="[0-9]*" inputMode="numeric" />
                   </div>
                 </div>
               )}
-            </div>
 
-            {me?.otpSecret && (
-              <div className="flex px-4 py-3 items-center uppercase bg-gray-20">
-                <p className="text-gray-80 w-full font-bold text-xs">
-                  <Locker className="h-4 w-4 inline mr-2" fill="#303030" /> Two-factor validation
-                </p>
-                <div className="w-1/2">
-                  <InputField name="token" type="text" maxLength={6} pattern="[0-9]*" inputMode="numeric" />
-                </div>
-              </div>
-            )}
+              {price && account && <BuyNow price={price} ownerAddressAccount={account} startTime={startTime} />}
 
-            {price && account && <BuyNow price={price} ownerAddressAccount={account} startTime={startTime} />}
-
-            {hasStarted && (
-              <PlayerAwareBottomBar>
-                <TotalPrice price={price} />
-                <Button type="submit" className="ml-auto" variant="buy-nft" loading={loading}>
-                  <div className="px-4">CONFIRM</div>
-                </Button>
-              </PlayerAwareBottomBar>
-            )}
-          </Form>
-        </Formik>
-      </div>
-    </Layout>
+              {hasStarted && (
+                <PlayerAwareBottomBar>
+                  <TotalPrice price={price} />
+                  <Button type="submit" className="ml-auto" variant="buy-nft" loading={loading}>
+                    <div className="px-4">CONFIRM</div>
+                  </Button>
+                </PlayerAwareBottomBar>
+              )}
+            </Form>
+          </Formik>
+        </div>
+      </Layout>
+    </>
   );
 }

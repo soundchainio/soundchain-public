@@ -22,6 +22,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { currency } from 'utils/format';
+import SEO from '../../components/SEO';
 
 const topNavBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
@@ -140,65 +141,68 @@ export default function WalletPage() {
   };
 
   return (
-    <Layout topNavBarProps={topNavBarProps}>
-      <Head>
-        <title>Soundchain - Wallet</title>
-        <meta name="description" content="Wallet" />
-        <link rel="icon" href="/favicons/favicon.ico" />
-      </Head>
-      <div className="h-full flex flex-col">
-        <WalletHeader />
-        {isMetamaskSelected && (!connectedToMetaMask || !correctNetwork) ? (
-          !connectedToMetaMask ? (
-            <div className="flex justify-center items-center h-full">
-              <MetaMaskButton caption="Connect Metamask" handleOnClick={connect} />
-            </div>
-          ) : (
-            !correctNetwork && (
-              <div className="flex flex-col gap-4 justify-center items-center h-full px-4">
-                <p className="text-white text-center">It seems you might not be connected to Mumbai Testnet.</p>
-                <MetaMaskButton caption="Connect to Mumbai Testnet" handleOnClick={addMumbaiTestnet} />
+    <>
+      <SEO title="Soundchain - Wallet" description="Soundchain Wallet" canonicalUrl="/wallet/" />
+      <Layout topNavBarProps={topNavBarProps}>
+        <Head>
+          <title>Soundchain - Wallet</title>
+          <meta name="description" content="Wallet" />
+          <link rel="icon" href="/favicons/favicon.ico" />
+        </Head>
+        <div className="h-full flex flex-col">
+          <WalletHeader />
+          {isMetamaskSelected && (!connectedToMetaMask || !correctNetwork) ? (
+            !connectedToMetaMask ? (
+              <div className="flex justify-center items-center h-full">
+                <MetaMaskButton caption="Connect Metamask" handleOnClick={connect} />
               </div>
+            ) : (
+              !correctNetwork && (
+                <div className="flex flex-col gap-4 justify-center items-center h-full px-4">
+                  <p className="text-white text-center">It seems you might not be connected to Mumbai Testnet.</p>
+                  <MetaMaskButton caption="Connect to Mumbai Testnet" handleOnClick={addMumbaiTestnet} />
+                </div>
+              )
             )
-          )
-        ) : (
-          <>
-            <div className="flex flex-col gap-4 justify-center items-center p-4">
-              {getAccount && <Jazzicon address={getAccount} size={54} />}
-              <ConnectedNetwork />
-              {getAccount && <CopyWalletAddress walletAddress={getAccount} />}
-              <div className="flex flex-col items-center gap-1">
-                <Matic height="30" width="30" />
-                {getBalance ? (
-                  <>
-                    <p className="text-blue-400 font-bold text-xs uppercase mt-2">
-                      <span className="text-white font-bold text-2xl">{getBalanceFormatted}</span>
-                      {` matic`}
-                    </p>
-                    {data?.maticUsd && (
-                      <span className="text-xs text-gray-50 font-bold">
-                        {`${currency(getBalanceFormatted * parseFloat(data?.maticUsd))} USD`}
-                      </span>
-                    )}
-                  </>
-                ) : (
-                  <LoaderAnimation />
-                )}
+          ) : (
+            <>
+              <div className="flex flex-col gap-4 justify-center items-center p-4">
+                {getAccount && <Jazzicon address={getAccount} size={54} />}
+                <ConnectedNetwork />
+                {getAccount && <CopyWalletAddress walletAddress={getAccount} />}
+                <div className="flex flex-col items-center gap-1">
+                  <Matic height="30" width="30" />
+                  {getBalance ? (
+                    <>
+                      <p className="text-blue-400 font-bold text-xs uppercase mt-2">
+                        <span className="text-white font-bold text-2xl">{getBalanceFormatted}</span>
+                        {` matic`}
+                      </p>
+                      {data?.maticUsd && (
+                        <span className="text-xs text-gray-50 font-bold">
+                          {`${currency(getBalanceFormatted * parseFloat(data?.maticUsd))} USD`}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <LoaderAnimation />
+                  )}
+                </div>
+                <div className="flex gap-5 mt-4">
+                  <WalletButton title="Activity" icon={Activity} href={`/wallet/${getAccount}/history`} />
+                  <WalletButton title="Receive" icon={ArrowDown} href={`/wallet/${getAccount}/receive`} />
+                  <WalletButton title="Buy" icon={CreditCard} href="/wallet/buy" />
+                  {isSoundChainSelected && <WalletButton title="Send" icon={ArrowUpRight} href="/wallet/transfer" />}
+                </div>
               </div>
-              <div className="flex gap-5 mt-4">
-                <WalletButton title="Activity" icon={Activity} href={`/wallet/${getAccount}/history`} />
-                <WalletButton title="Receive" icon={ArrowDown} href={`/wallet/${getAccount}/receive`} />
-                <WalletButton title="Buy" icon={CreditCard} href="/wallet/buy" />
-                {isSoundChainSelected && <WalletButton title="Send" icon={ArrowUpRight} href="/wallet/transfer" />}
+              <div className="p-3 mt-3">
+                <span className="text-gray-80 font-bold">Owned NFT’s</span>
               </div>
-            </div>
-            <div className="p-3 mt-3">
-              <span className="text-gray-80 font-bold">Owned NFT’s</span>
-            </div>
-            {getAccount && <OwnedNfts owner={getAccount} />}
-          </>
-        )}
-      </div>
-    </Layout>
+              {getAccount && <OwnedNfts owner={getAccount} />}
+            </>
+          )}
+        </div>
+      </Layout>
+    </>
   );
 }

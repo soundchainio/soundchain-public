@@ -1,6 +1,7 @@
 import { BackButton } from 'components/Buttons/BackButton';
 import { ListNFTBuyNow, ListNFTBuyNowFormValues } from 'components/details-NFT/ListNFTBuyNow';
 import { Layout } from 'components/Layout';
+import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import { useModalDispatch } from 'contexts/providers/modal';
@@ -143,15 +144,18 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
   }
 
   return (
-    <Layout topNavBarProps={topNovaBarProps}>
-      <div className="m-4">
-        <Track track={track} />
-      </div>
-      <ListNFTBuyNow
-        submitLabel="EDIT LISTING"
-        handleSubmit={handleUpdate}
-        initialValues={{ price: parseFloat(price), startTime: startingDate }}
-      />
-    </Layout>
+    <>
+      <SEO title={`Soundchain - Edit Listing`} description={'Edit Buy Now Listing'} canonicalUrl={router.asPath} />
+      <Layout topNavBarProps={topNovaBarProps}>
+        <div className="m-4">
+          <Track track={track} />
+        </div>
+        <ListNFTBuyNow
+          submitLabel="EDIT LISTING"
+          handleSubmit={handleUpdate}
+          initialValues={{ price: parseFloat(price), startTime: startingDate }}
+        />
+      </Layout>
+    </>
   );
 }

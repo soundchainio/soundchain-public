@@ -258,7 +258,7 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   return (
     <>
       <SEO
-        title={`Track - ${track.title}`}
+        title={`Soundchain - Track - ${track.title}`}
         description={track.artist || 'on Soundchain'}
         canonicalUrl={`/tracks/${track.id}`}
         image={track.artworkUrl}

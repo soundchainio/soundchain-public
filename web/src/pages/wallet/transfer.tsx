@@ -1,10 +1,10 @@
 import { BackButton } from 'components/Buttons/BackButton';
 import { FormValues, TransferForm } from 'components/forms/transfer/TransferForm';
 import { Layout } from 'components/Layout';
+import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useModalDispatch } from 'contexts/providers/modal';
 import { useMe } from 'hooks/useMe';
-import Head from 'next/head';
 import React from 'react';
 import { precision } from 'utils/getPrecision';
 
@@ -29,11 +29,11 @@ export default function TransferPage() {
 
   return (
     <Layout topNavBarProps={topNovaBarProps}>
-      <Head>
-        <title>Soundchain - Wallet</title>
-        <meta name="description" content="Wallet" />
-        <link rel="icon" href="/favicons/favicon.ico" />
-      </Head>
+      <SEO
+        title="Soundchain - Wallet Funds Transfer"
+        description="Soundchain Wallet Funds Transfer"
+        canonicalUrl="/wallet/transfer/"
+      />
       <TransferForm handleSubmit={handleSubmit}></TransferForm>
     </Layout>
   );

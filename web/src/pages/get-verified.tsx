@@ -3,6 +3,7 @@ import { InboxButton } from 'components/Buttons/InboxButton';
 import { CopyLink } from 'components/CopyLink';
 import { Layout } from 'components/Layout';
 import { FormValues, RequestVerificationForm } from 'components/RequestVerificationForm';
+import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { format as formatTimestamp } from 'date-fns';
 import { useMe } from 'hooks/useMe';
@@ -64,6 +65,11 @@ export default function GetVerified() {
 
   return (
     <Layout topNavBarProps={topNavBarProps}>
+      <SEO
+        title="Soundchain - Get Verified"
+        description="Request your profile verification"
+        canonicalUrl="/get-verified/"
+      />
       <Head>
         <title>Soundchain / Get Verified</title>
         <meta name="description" content="Get Verified" />

@@ -2,6 +2,7 @@ import { Badge } from 'components/Badge';
 import { BackButton } from 'components/Buttons/BackButton';
 import { BioForm } from 'components/forms/profile/BioForm';
 import { Layout } from 'components/Layout';
+import SEO from 'components/SEO';
 import { StepProgressBar } from 'components/StepProgressBar';
 import { TopNavBarProps } from 'components/TopNavBar';
 import Head from 'next/head';
@@ -19,19 +20,22 @@ export default function BioPage() {
   };
 
   return (
-    <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
-      <Head>
-        <title>Soundchain - Bio</title>
-        <meta name="description" content="Bio" />
-        <link rel="icon" href="/favicons/favicon.ico" />
-      </Head>
-      <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
-        <BioForm
-          afterSubmit={() => router.push('/create-account/social-links')}
-          submitText="SAVE"
-          submitProps={{ borderColor: 'bg-blue-gradient' }}
-        />
-      </div>
-    </Layout>
+    <>
+      <SEO title="Soundchain - Bio" canonicalUrl="/create-account/bio" description="Soundchain Bio" />
+      <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
+        <Head>
+          <title>Soundchain - Bio</title>
+          <meta name="description" content="Bio" />
+          <link rel="icon" href="/favicons/favicon.ico" />
+        </Head>
+        <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
+          <BioForm
+            afterSubmit={() => router.push('/create-account/social-links')}
+            submitText="SAVE"
+            submitProps={{ borderColor: 'bg-blue-gradient' }}
+          />
+        </div>
+      </Layout>
+    </>
   );
 }

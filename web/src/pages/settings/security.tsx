@@ -1,12 +1,12 @@
-import React from 'react';
-import Head from 'next/head';
-import { useRouter } from 'next/router';
-import { useMe } from 'hooks/useMe';
 import { BackButton } from 'components/Buttons/BackButton';
 import { DisableRecoveryForm } from 'components/forms/profile/DisableSecurityForm';
 import { SecurityForm } from 'components/forms/profile/SecurityForm';
 import { Layout } from 'components/Layout';
+import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
+import { useMe } from 'hooks/useMe';
+import { useRouter } from 'next/router';
+import React from 'react';
 
 const topNavBarProps: TopNavBarProps = {
   title: 'Two-factor Security',
@@ -21,11 +21,7 @@ export default function CoverPicturePage() {
 
   return (
     <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
-      <Head>
-        <title>Soundchain - Security</title>
-        <meta name="description" content="Security" />
-        <link rel="icon" href="/favicons/favicon.ico" />
-      </Head>
+      <SEO title="Soundchain - Security" canonicalUrl="/settings/security/" description="Soundchain Security" />
       <div className="min-h-full flex flex-col px-6 lg:px-8 py-6">
         {!me?.otpSecret ? (
           <SecurityForm afterSubmit={handleAfterSubmit} />

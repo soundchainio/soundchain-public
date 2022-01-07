@@ -31,6 +31,7 @@ export default function HomePage({ me }: HomePageProps) {
 
   return (
     <>
+      <SEO title="Soundchain - Marketplace" canonicalUrl="/marketplace" description="Soundchain NFT Marketplace" />
       <Head>
         <title>Soundchain</title>
         <meta name="description" content="Soundchain" />
