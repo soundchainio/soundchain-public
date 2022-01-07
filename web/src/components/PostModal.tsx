@@ -34,7 +34,7 @@ export const PostModal = () => {
   const [postLink, setPostLink] = useState('');
   const [bodyValue, setBodyValue] = useState('');
 
-  const { showNewPost, repostId, editPostId } = useModalState();
+  const { showNewPost, repostId, editPostId, trackId } = useModalState();
   const { dispatchShowPostModal, dispatchSetRepostId, dispatchSetEditPostId } = useModalDispatch();
 
   const [getPost, { data: editingPost }] = usePostLazyQuery({
@@ -44,7 +44,7 @@ export const PostModal = () => {
   const initialValues = { body: editingPost?.post.body || '' };
 
   const clearState = () => {
-    dispatchShowPostModal(false);
+    dispatchShowPostModal(false, undefined);
     setPostLink('');
     dispatchSetRepostId(undefined);
     dispatchSetEditPostId(undefined);
@@ -140,6 +140,7 @@ export const PostModal = () => {
           setOriginalLink={setOriginalLink}
           setPostLink={setPostLink}
           setBodyValue={setBodyValue}
+          trackId={trackId}
         />
       </div>
     </ModalsPortal>

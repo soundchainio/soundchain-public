@@ -102,10 +102,10 @@ export class PostResolver {
   @Authorized()
   async createPost(
     @Ctx() { postService }: Context,
-    @Arg('input') { body, mediaLink }: CreatePostInput,
+    @Arg('input') { body, mediaLink, trackId }: CreatePostInput,
     @CurrentUser() { profileId }: User,
   ): Promise<CreatePostPayload> {
-    const post = await postService.createPost({ profileId, body, mediaLink });
+    const post = await postService.createPost({ profileId, body, mediaLink, trackId });
     return { post };
   }
 

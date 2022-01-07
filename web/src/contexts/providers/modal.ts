@@ -21,7 +21,8 @@ export const useModalDispatch = () => {
       dispatch({ type: ModalActionTypes.SET_EDIT_POST_ID, payload: { editPostId } }),
     dispatchSetEditCommentId: (editCommentId?: string) =>
       dispatch({ type: ModalActionTypes.SET_EDIT_COMMENT_ID, payload: { editCommentId } }),
-    dispatchShowPostModal: (show: boolean) => dispatch({ type: ModalActionTypes.SHOW_NEW_POST, payload: { show } }),
+    dispatchShowPostModal: (show: boolean, trackId?: string) =>
+      dispatch({ type: ModalActionTypes.SHOW_NEW_POST, payload: { show, trackId } }),
     dispatchShowCommentModal: (show: boolean) =>
       dispatch({ type: ModalActionTypes.SHOW_COMMENT_MODAL, payload: { show } }),
     dispatchShowUnderDevelopmentModal: (show: boolean) =>

@@ -5,12 +5,14 @@ import {
   UpdatePostInput,
   useCreatePostMutation,
   useCreateRepostMutation,
+  useTrackLazyQuery,
   useUpdatePostMutation,
 } from 'lib/graphql';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { PostFormType } from 'types/PostFormType';
 import * as yup from 'yup';
 import { Button } from './Button';
+import { MiniAudioPlayer } from './MiniAudioPlayer';
 import { PostBar } from './PostBar';
 import { PostBodyField } from './PostBodyField';
 import { setMaxInputLength } from './PostModal';
@@ -30,6 +32,7 @@ interface PostFormProps {
   setOriginalLink: (val: string) => void;
   setPostLink: (val: string) => void;
   setBodyValue: (val: string) => void;
+  trackId?: string;
 }
 
 export interface FormValues {
@@ -49,7 +52,12 @@ export const PostForm = ({ ...props }: PostFormProps) => {
   const [createPost] = useCreatePostMutation({ refetchQueries: ['Posts', 'Feed'] });
   const [createRepost] = useCreateRepostMutation({ refetchQueries: ['Posts', 'Feed'] });
   const [editPost] = useUpdatePostMutation();
+  const [getTrack, { data: track }] = useTrackLazyQuery();
   const { repostId, editPostId } = useModalState();
+
+  useEffect(() => {
+    if (props.trackId) getTrack({ variables: { id: props.trackId } });
+  }, [props.trackId]);
 
   const onEmojiPickerClick = () => {
     setEmojiPickerVisible(!isEmojiPickerVisible);
@@ -74,6 +82,10 @@ export const PostForm = ({ ...props }: PostFormProps) => {
 
         if (props.postLink?.length) {
           newPostParams.mediaLink = props.postLink;
+        }
+
+        if (props.trackId) {
+          newPostParams.trackId = props.trackId;
         }
 
         await createPost({ variables: { input: newPostParams } });
@@ -128,6 +140,22 @@ export const PostForm = ({ ...props }: PostFormProps) => {
             <div className="p-4 bg-gray-20">
               <RepostPreview postId={repostId as string} />
             </div>
+          )}
+          {props.trackId && track && PostFormType.NEW && (
+            <MiniAudioPlayer
+              song={{
+                src: track.track.playbackUrl,
+                trackId: track.track.id,
+                art: track.track.artworkUrl,
+                title: track.track.title,
+                artist: track.track.artist,
+                isFavorite: track.track.isFavorite,
+                playbackCount: track.track.playbackCountFormatted,
+                favoriteCount: track.track.favoriteCount,
+                saleType: track.track.saleType,
+                price: track.track.price,
+              }}
+            />
           )}
           {props.postLink && props.type !== PostFormType.REPOST && (
             <iframe
