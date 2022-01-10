@@ -25,9 +25,5 @@ module.exports = {
     await db
       .collection('profiles')
       .update({ displayName: 'SoundChain', verified: { $exists: false } }, { $set: { verified: true } });
-
-    await db
-      .collection('profiles')
-      .update({ displayName: 'SoundChain', __v: { $exists: false } }, { $set: { __v: 0 } });
   },
 };

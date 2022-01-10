@@ -18,7 +18,6 @@ module.exports = {
       displayName: 'SoundChain',
       createdAt: new Date(),
       updatedAt: new Date(),
-      __v: 0,
     });
 
     await db.collection('users').insertOne({
