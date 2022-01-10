@@ -15,6 +15,7 @@ import { ParsedUrlQuery } from 'querystring';
 import React from 'react';
 import { SaleType } from 'types/SaleType';
 import { compareWallets } from 'utils/Wallet';
+import SEO from '../../../../components/SEO';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -141,15 +142,18 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
   }
 
   return (
-    <Layout topNavBarProps={topNovaBarProps}>
-      <div className="m-4">
-        <Track track={track} />
-      </div>
-      <ListNFTAuction
-        handleSubmit={handleUpdate}
-        submitLabel="UPDATE LISTING"
-        initialValues={{ price: parseFloat(startPrice), startTime: startingTime, endTime: endingTime }}
-      />
-    </Layout>
+    <>
+      <SEO title={`Soundchain - Edit Listing`} description={'Edit Auction Listing'} canonicalUrl={router.asPath} />
+      <Layout topNavBarProps={topNovaBarProps}>
+        <div className="m-4">
+          <Track track={track} />
+        </div>
+        <ListNFTAuction
+          handleSubmit={handleUpdate}
+          submitLabel="UPDATE LISTING"
+          initialValues={{ price: parseFloat(startPrice), startTime: startingTime, endTime: endingTime }}
+        />
+      </Layout>
+    </>
   );
 }

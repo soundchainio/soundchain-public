@@ -30,6 +30,15 @@ interface AuctionParams {
   track: Track;
   price: number;
   profileId: string;
+  auctionId: string;
+}
+
+interface AuctionIsOverParams {
+  track: Track;
+  price: number;
+  buyerProfileId: string;
+  sellerProfileId: string;
+  auctionId: string;
 }
 
 export class NotificationService extends ModelService<typeof Notification> {
@@ -250,23 +259,43 @@ export class NotificationService extends ModelService<typeof Notification> {
     await this.incrementNotificationCount(authorProfileId);
   }
 
-  async notifyWonAuction({ track, price, profileId }: AuctionParams): Promise<void> {
-    this.notifyTrack({ track, profileId, price }, NotificationType.WonAuction);
+  async notifyWonAuction({ track, price, profileId, auctionId }: AuctionParams): Promise<void> {
+    this.notifyTrack({ track, profileId, price, auctionId }, NotificationType.WonAuction);
   }
 
-  async notifyAuctionIsEnding({ track, profileId, price }: AuctionParams): Promise<void> {
-    this.notifyTrack({ track, profileId, price }, NotificationType.AuctionIsEnding);
+  async notifyAuctionIsEnding({ track, profileId, price, auctionId }: AuctionParams): Promise<void> {
+    this.notifyTrack({ track, profileId, price, auctionId }, NotificationType.AuctionIsEnding);
   }
 
-  async notifyOutbid({ track, profileId, price }: AuctionParams): Promise<void> {
-    this.notifyTrack({ track, profileId, price }, NotificationType.Outbid);
+  async notifyOutbid({ track, profileId, price, auctionId }: AuctionParams): Promise<void> {
+    this.notifyTrack({ track, profileId, price, auctionId }, NotificationType.Outbid);
   }
 
-  async notifyNewBid({ track, profileId, price }: AuctionParams): Promise<void> {
-    this.notifyTrack({ track, profileId, price }, NotificationType.NewBid);
+  async notifyNewBid({ track, profileId, price, auctionId }: AuctionParams): Promise<void> {
+    this.notifyTrack({ track, profileId, price, auctionId }, NotificationType.NewBid);
   }
 
-  private async notifyTrack({ track, profileId, price }: AuctionParams, type: NotificationType): Promise<void> {
+  async notifyAuctionEnded({ track, profileId, price, auctionId }: AuctionParams): Promise<void> {
+    this.notifyTrack({ track, profileId, price, auctionId }, NotificationType.AuctionEnded);
+  }
+
+  async notifyAuctionIsOver({
+    track,
+    price,
+    buyerProfileId,
+    sellerProfileId,
+    auctionId,
+  }: AuctionIsOverParams): Promise<void> {
+    Promise.all([
+      this.notifyWonAuction({ track, price, profileId: buyerProfileId, auctionId }),
+      this.notifyAuctionEnded({ track, price, profileId: sellerProfileId, auctionId }),
+    ]);
+  }
+
+  private async notifyTrack(
+    { track, profileId, price, auctionId }: AuctionParams,
+    type: NotificationType,
+  ): Promise<void> {
     const { _id: trackId, artist, artworkUrl, title: trackName } = track;
     const metadata: TrackWithPriceMetadata = {
       trackId,
@@ -274,6 +303,7 @@ export class NotificationService extends ModelService<typeof Notification> {
       artist,
       artworkUrl,
       price,
+      auctionId,
     };
     const notification = new NotificationModel({
       type,

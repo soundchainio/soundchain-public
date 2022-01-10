@@ -39,6 +39,12 @@ export function createTrackResolver<T>(objectTypeCls: ClassType<T>) {
       const { price } = metadata as TrackWithPriceMetadata;
       return price;
     }
+
+    @FieldResolver(() => String)
+    auctionId(@Root() { metadata }: Notification): string {
+      const { auctionId } = metadata as TrackWithPriceMetadata;
+      return auctionId;
+    }
   }
   return TrackWithPriceResolver;
 }

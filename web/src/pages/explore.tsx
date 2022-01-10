@@ -1,10 +1,10 @@
 import { Explore } from 'components/Explore';
 import { ExploreSearchBar } from 'components/ExploreSearchBar';
 import { Layout } from 'components/Layout';
+import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { cacheFor } from 'lib/apollo';
 import { protectPage } from 'lib/protectPage';
-import Head from 'next/head';
 import { useState } from 'react';
 
 export const getServerSideProps = protectPage((context, apolloClient) => {
@@ -20,11 +20,7 @@ export default function ExplorePage() {
 
   return (
     <Layout topNavBarProps={topNavBarProps}>
-      <Head>
-        <title>Soundchain / Explore</title>
-        <meta name="description" content="Explore" />
-        <link rel="icon" href="/favicons/favicon.ico" />
-      </Head>
+      <SEO title="Soundchain - Explore" description="Explore Soundchain" canonicalUrl="/explore/" />
       <Explore searchTerm={searchTerm} />
     </Layout>
   );

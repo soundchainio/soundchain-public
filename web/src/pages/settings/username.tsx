@@ -1,12 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { InputField } from 'components/InputField';
 import { Layout } from 'components/Layout';
+import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Form, Formik, FormikHelpers } from 'formik';
 import { useMe } from 'hooks/useMe';
 import { useUpdateHandleMutation } from 'lib/graphql';
-import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React from 'react';
 import { formatValidationErrors } from 'utils/errorHelpers';
@@ -42,7 +43,7 @@ export default function SettingsUsernamePage() {
     try {
       await updateHandle({ variables: { input: { handle: handle as string } } });
       router.push('/settings');
-    } catch (error) {
+    } catch (error: any) {
       const formatted = formatValidationErrors<FormValues>(error.graphQLErrors[0]);
       setErrors(formatted);
     }
@@ -52,11 +53,11 @@ export default function SettingsUsernamePage() {
 
   return (
     <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
-      <Head>
-        <title>Soundchain - Name Settings</title>
-        <meta name="description" content="Name Settings" />
-        <link rel="icon" href="/favicons/favicon.ico" />
-      </Head>
+      <SEO
+        title="Soundchain - Name Settings"
+        canonicalUrl="/settings/username/"
+        description="Soundchain Name Settings"
+      />
       <div className="min-h-full flex flex-col px-6 lg:px-8 py-6">
         <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={onSubmit}>
           <Form className="flex flex-1 flex-col space-y-6">

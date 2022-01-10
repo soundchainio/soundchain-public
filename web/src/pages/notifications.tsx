@@ -1,11 +1,11 @@
 import { ClearAllNotificationsButton } from 'components/ClearAllNotificationsButton';
 import { Layout } from 'components/Layout';
 import { Notifications } from 'components/Notifications';
+import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { cacheFor } from 'lib/apollo';
 import { useResetNotificationCountMutation } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
-import Head from 'next/head';
 import { useEffect } from 'react';
 
 export const getServerSideProps = protectPage((context, apolloClient) => {
@@ -25,11 +25,7 @@ export default function UserNotifications() {
 
   return (
     <Layout topNavBarProps={topNavBarProps}>
-      <Head>
-        <title>Soundchain / Alerts</title>
-        <meta name="description" content="Alerts" />
-        <link rel="icon" href="/favicons/favicon.ico" />
-      </Head>
+      <SEO title="Soundchain - Alerts" description="Soundchain Alerts" canonicalUrl="/notifications/" />
       <Notifications />
     </Layout>
   );

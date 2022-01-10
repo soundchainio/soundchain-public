@@ -1,8 +1,8 @@
 import { AuthLayout } from 'components/AuthLayout';
 import { BackButton } from 'components/Buttons/BackButton';
 import { LoginForm } from 'components/LoginForm';
+import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
-import Head from 'next/head';
 
 const topNavBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
@@ -11,11 +11,7 @@ const topNavBarProps: TopNavBarProps = {
 export default function LoginPage() {
   return (
     <AuthLayout topNavBarProps={topNavBarProps}>
-      <Head>
-        <title>Soundchain - Login</title>
-        <meta name="description" content="Soundchain" />
-        <link rel="icon" href="/favicons/favicon.ico" />
-      </Head>
+      <SEO title="Soundchain - Login" description="Log in to Soundchain" canonicalUrl="/login/" />
       <LoginForm />
     </AuthLayout>
   );

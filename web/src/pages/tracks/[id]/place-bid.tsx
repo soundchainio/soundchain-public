@@ -5,8 +5,8 @@ import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { InputField } from 'components/InputField';
 import { Layout } from 'components/Layout';
-import MaxGasFee from 'components/MaxGasFee';
 import { Matic } from 'components/Matic';
+import MaxGasFee from 'components/MaxGasFee';
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
@@ -18,8 +18,8 @@ import useBlockchainV2 from 'hooks/useBlockchainV2';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Auction } from 'icons/Auction';
-import { Matic as MaticIcon } from 'icons/Matic';
 import { Locker } from 'icons/Locker';
+import { Matic as MaticIcon } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
 import {
   PendingRequest,
@@ -38,6 +38,7 @@ import { toast } from 'react-toastify';
 import { fixedDecimals } from 'utils/format';
 import { compareWallets } from 'utils/Wallet';
 import * as yup from 'yup';
+import SEO from '../../../components/SEO';
 import { Timer } from '../[id]';
 import { HighestBid } from './complete-auction';
 
@@ -209,128 +210,138 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
   });
 
   return (
-    <Layout topNavBarProps={topNovaBarProps}>
-      <div className="min-h-full flex flex-col">
-        <div className="flex flex-1 flex-col justify-between">
-          <div>
-            <div className="m-4">
-              <Track track={track} />
-            </div>
-            {isHighestBidder && (
-              <div className="text-green-500 font-bold p-4 text-center">You have the highest bid!</div>
-            )}
-            {haveBided?.haveBided.bided && isHighestBidder !== undefined && !isHighestBidder && (
-              <div className="text-red-500 font-bold p-4 text-center">You have been outbid!</div>
-            )}
-            <div className="bg-[#111920]">
-              {futureSale && (
-                <div className="flex justify-between items-center px-4 py-3">
-                  <div className="text-sm font-bold text-white flex-shrink-0">SALE STARTS</div>
-                  <div className="text-md flex items-center text-right font-bold gap-1">
-                    <Timer date={startingDate!} reloadOnEnd />
-                  </div>
-                </div>
-              )}
-              {endingDate && !futureSale && (
-                <div className="flex justify-between items-center px-4 py-3">
-                  <div className="text-sm font-bold text-white flex-shrink-0">TIME REMAINING</div>
-                  <div className="text-md flex items-center text-right font-bold gap-1">
-                    <Timer date={endingDate} endedMessage="Auction Ended" reloadOnEnd />
-                  </div>
-                </div>
-              )}
-              <div className="flex justify-between items-center px-4 py-3">
-                <div className="text-sm font-bold text-white">{auctionIsOver ? 'FINAL PRICE' : 'CURRENT PRICE'}</div>
-                <div className="text-md flex items-center font-bold gap-1">
-                  <Matic value={price} variant="currency-inline" />
-                  <button
-                    className="text-[#22CAFF] text-xxs cursor-pointer font-bold"
-                    onClick={() => dispatchShowBidsHistory(true, auctionItem?.auctionItem?.id || '')}
-                  >
-                    [{bidCount} bids]
-                  </button>
-                </div>
+    <>
+      <SEO
+        title={`Soundchain - Place a Bid on Track - ${track.title}`}
+        description={track.artist || 'on Soundchain'}
+        canonicalUrl={`/tracks/${track.id}/place-bid/`}
+        image={track.artworkUrl}
+      />
+      <Layout topNavBarProps={topNovaBarProps}>
+        <div className="min-h-full flex flex-col">
+          <div className="flex flex-1 flex-col justify-between">
+            <div>
+              <div className="m-4">
+                <Track track={track} />
               </div>
-              {highestBidderData?.getUserByWallet && (
-                <div className="text-white flex justify-between items-center px-4 py-3">
-                  <div className="text-sm font-bold">HIGHEST BIDDER</div>
-                  <div className="flex items-center gap-2">
-                    <Avatar
-                      profile={{
-                        profilePicture: highestBidderData?.getUserByWallet.profile.profilePicture,
-                        userHandle: highestBidderData?.getUserByWallet.profile.userHandle,
-                      }}
-                      pixels={30}
-                      linkToProfile
-                    />
-                    <div className="flex flex-col ">
-                      <div className="text-sm font-bold">{highestBidderData?.getUserByWallet.profile.displayName}</div>
-                      <div className="text-xxs text-gray-CC font-bold">
-                        @{highestBidderData?.getUserByWallet.profile.userHandle}
+              {isHighestBidder && (
+                <div className="text-green-500 font-bold p-4 text-center">You have the highest bid!</div>
+              )}
+              {haveBided?.haveBided.bided && isHighestBidder !== undefined && !isHighestBidder && (
+                <div className="text-red-500 font-bold p-4 text-center">You have been outbid!</div>
+              )}
+              <div className="bg-[#111920]">
+                {futureSale && (
+                  <div className="flex justify-between items-center px-4 py-3">
+                    <div className="text-sm font-bold text-white flex-shrink-0">SALE STARTS</div>
+                    <div className="text-md flex items-center text-right font-bold gap-1">
+                      <Timer date={startingDate!} reloadOnEnd />
+                    </div>
+                  </div>
+                )}
+                {endingDate && !futureSale && (
+                  <div className="flex justify-between items-center px-4 py-3">
+                    <div className="text-sm font-bold text-white flex-shrink-0">TIME REMAINING</div>
+                    <div className="text-md flex items-center text-right font-bold gap-1">
+                      <Timer date={endingDate} endedMessage="Auction Ended" reloadOnEnd />
+                    </div>
+                  </div>
+                )}
+                <div className="flex justify-between items-center px-4 py-3">
+                  <div className="text-sm font-bold text-white">{auctionIsOver ? 'FINAL PRICE' : 'CURRENT PRICE'}</div>
+                  <div className="text-md flex items-center font-bold gap-1">
+                    <Matic value={price} variant="currency-inline" />
+                    <button
+                      className="text-[#22CAFF] text-xxs cursor-pointer font-bold"
+                      onClick={() => dispatchShowBidsHistory(true, auctionItem?.auctionItem?.id || '')}
+                    >
+                      [{bidCount} bids]
+                    </button>
+                  </div>
+                </div>
+                {highestBidderData?.getUserByWallet && (
+                  <div className="text-white flex justify-between items-center px-4 py-3">
+                    <div className="text-sm font-bold">HIGHEST BIDDER</div>
+                    <div className="flex items-center gap-2">
+                      <Avatar
+                        profile={{
+                          profilePicture: highestBidderData?.getUserByWallet.profile.profilePicture,
+                          userHandle: highestBidderData?.getUserByWallet.profile.userHandle,
+                        }}
+                        pixels={30}
+                        linkToProfile
+                      />
+                      <div className="flex flex-col ">
+                        <div className="text-sm font-bold">
+                          {highestBidderData?.getUserByWallet.profile.displayName}
+                        </div>
+                        <div className="text-xxs text-gray-CC font-bold">
+                          @{highestBidderData?.getUserByWallet.profile.userHandle}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
-              {isOwner && bidCount === 0 && auctionIsOver && (
-                <div className="text-white flex justify-between items-center px-4 py-3">
-                  <div className="text-sm font-bold">RESULT</div>
-                  <div className="text-md flex items-center font-bold gap-1">Auction ended with no bids</div>
-                </div>
-              )}
+                )}
+                {isOwner && bidCount === 0 && auctionIsOver && (
+                  <div className="text-white flex justify-between items-center px-4 py-3">
+                    <div className="text-sm font-bold">RESULT</div>
+                    <div className="text-md flex items-center font-bold gap-1">Auction ended with no bids</div>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-          {hasStarted && !hasEnded && (
-            <Formik<FormValues>
-              initialValues={initialValues}
-              onSubmit={handlePlaceBid}
-              enableReinitialize
-              validate={validate}
-              validationSchema={validationSchema}
-            >
-              {({ values: { bidAmount } }) => (
-                <Form className="mb-16 bg-gray-20">
-                  <div className="flex p-4 items-center uppercase">
-                    <label htmlFor="bidAmount" className="w-full text-gray-80 font-bold text-xs md-text-sm">
-                      <p>
-                        <Auction className="h-4 w-4 inline mr-2" purple={false} /> bid amount
-                      </p>
-                      <p className="font-medium mt-1 text-xxs">
-                        Must be at least 1% of current bid price. Enter{' '}
-                        <span className="text-white font-bold cursor-pointer">{minBid}</span> MATIC or more.
-                      </p>
-                    </label>
-                    <div className="w-1/2">
-                      <InputField name="bidAmount" type="number" icon={MaticIcon} step="any" />
-                    </div>
-                  </div>
-                  {me?.otpSecret && (
+            {hasStarted && !hasEnded && (
+              <Formik<FormValues>
+                initialValues={initialValues}
+                onSubmit={handlePlaceBid}
+                enableReinitialize
+                validate={validate}
+                validationSchema={validationSchema}
+              >
+                {({ values: { bidAmount } }) => (
+                  <Form className="mb-16 bg-gray-20">
                     <div className="flex p-4 items-center uppercase">
-                      <p className="text-gray-80 w-full font-bold text-xs">
-                        <Locker className="h-4 w-4 inline mr-2" fill="#303030" /> Two-factor validation
-                      </p>
+                      <label htmlFor="bidAmount" className="w-full text-gray-80 font-bold text-xs md-text-sm">
+                        <p>
+                          <Auction className="h-4 w-4 inline mr-2" purple={false} /> bid amount
+                        </p>
+                        <p className="font-medium mt-1 text-xxs">
+                          Must be at least 1% of current bid price. Enter{' '}
+                          <span className="text-white font-bold cursor-pointer">{minBid}</span> MATIC or more.
+                        </p>
+                      </label>
                       <div className="w-1/2">
-                        <InputField name="token" type="text" maxLength={6} pattern="[0-9]*" inputMode="numeric" />
+                        <InputField name="bidAmount" type="number" icon={MaticIcon} step="any" />
                       </div>
                     </div>
-                  )}
-                  <WalletSelector ownerAddressAccount={account} />
-                  <div className="py-3 px-4">
-                    <MaxGasFee />
-                  </div>
+                    {me?.otpSecret && (
+                      <div className="flex p-4 items-center uppercase">
+                        <p className="text-gray-80 w-full font-bold text-xs">
+                          <Locker className="h-4 w-4 inline mr-2" fill="#303030" /> Two-factor validation
+                        </p>
+                        <div className="w-1/2">
+                          <InputField name="token" type="text" maxLength={6} pattern="[0-9]*" inputMode="numeric" />
+                        </div>
+                      </div>
+                    )}
+                    <WalletSelector ownerAddressAccount={account} />
+                    <div className="py-3 px-4">
+                      <MaxGasFee />
+                    </div>
 
-                  <PlayerAwareBottomBar>
-                    <Matic className="flex-1" value={bidAmount} variant="currency" />
-                    <Button type="submit" variant="buy-nft" loading={loading}>
-                      <div className="px-4">CONFIRM BID</div>
-                    </Button>
-                  </PlayerAwareBottomBar>
-                </Form>
-              )}
-            </Formik>
-          )}
+                    <PlayerAwareBottomBar>
+                      <Matic className="flex-1" value={bidAmount} variant="currency" />
+                      <Button type="submit" variant="buy-nft" loading={loading}>
+                        <div className="px-4">CONFIRM BID</div>
+                      </Button>
+                    </PlayerAwareBottomBar>
+                  </Form>
+                )}
+              </Formik>
+            )}
+          </div>
         </div>
-      </div>
-    </Layout>
+      </Layout>
+    </>
   );
 }

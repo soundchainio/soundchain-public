@@ -1,14 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { AuthLayout } from 'components/AuthLayout';
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { InputField } from 'components/InputField';
+import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Form, Formik, FormikHelpers } from 'formik';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { setJwt } from 'lib/apollo';
 import { useRegisterMutation } from 'lib/graphql';
 import { useRouter } from 'next/dist/client/router';
-import Head from 'next/head';
 import { useEffect, useState } from 'react';
 import { formatValidationErrors } from 'utils/errorHelpers';
 import { handleRegex } from 'utils/Validation';
@@ -53,7 +54,7 @@ export default function CreateAccountPage() {
       const { data } = await register({ variables: { input: { token, ...values } } });
       setJwt(data?.register.jwt);
       router.push(router.query.callbackUrl?.toString() ?? '/create-account/profile-picture');
-    } catch (error) {
+    } catch (error: any) {
       const formatted = formatValidationErrors<FormValues>(error.graphQLErrors[0]);
       setErrors(formatted);
     }
@@ -80,27 +81,29 @@ export default function CreateAccountPage() {
   }
 
   return (
-    <AuthLayout topNavBarProps={topNavBarProps}>
-      <Head>
-        <title>Soundchain - Create Account</title>
-        <meta name="description" content="Soundchain" />
-        <link rel="icon" href="/favicons/favicon.ico" />
-      </Head>
-      <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
-        <Form className="flex flex-col flex-1" autoComplete="off">
-          <div className="flex flex-col mb-auto space-y-6">
-            <div className="space-y-3">
-              <InputField label="Name" type="text" name="displayName" />
+    <>
+      <SEO
+        title="Soundchain - Create Account"
+        canonicalUrl="/create-account/"
+        description="Soundchain Create Account"
+      />
+      <AuthLayout topNavBarProps={topNavBarProps}>
+        <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
+          <Form className="flex flex-col flex-1" autoComplete="off">
+            <div className="flex flex-col mb-auto space-y-6">
+              <div className="space-y-3">
+                <InputField label="Name" type="text" name="displayName" />
+              </div>
+              <div className="space-y-3">
+                <InputField label="Enter username. (Only letters and numbers allowed)" type="text" name="handle" />
+              </div>
             </div>
-            <div className="space-y-3">
-              <InputField label="Enter username. (Only letters and numbers allowed)" type="text" name="handle" />
-            </div>
-          </div>
-          <Button type="submit" loading={loading} disabled={loading}>
-            CREATE ACCOUNT
-          </Button>
-        </Form>
-      </Formik>
-    </AuthLayout>
+            <Button type="submit" loading={loading} disabled={loading}>
+              CREATE ACCOUNT
+            </Button>
+          </Form>
+        </Formik>
+      </AuthLayout>
+    </>
   );
 }

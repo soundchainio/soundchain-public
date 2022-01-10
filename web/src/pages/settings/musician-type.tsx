@@ -1,8 +1,8 @@
 import { BackButton } from 'components/Buttons/BackButton';
 import { MusicianTypesForm } from 'components/forms/profile/MusicianTypesForm';
 import { Layout } from 'components/Layout';
+import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
-import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React from 'react';
 
@@ -16,11 +16,11 @@ export default function MusicianTypePage() {
 
   return (
     <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
-      <Head>
-        <title>Soundchain - Musician Type</title>
-        <meta name="description" content="Musician Type" />
-        <link rel="icon" href="/favicons/favicon.ico" />
-      </Head>
+      <SEO
+        title="Soundchain - Musician Type"
+        canonicalUrl="/settings/musician-type/"
+        description="Soundchain Musician Type"
+      />
       <div className="min-h-full flex flex-col px-6 lg:px-8 py-6">
         <div className="flex flex-1 flex-col space-y-6">
           <MusicianTypesForm
