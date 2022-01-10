@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { SDKBase } from '@magic-sdk/provider';
 import { config } from 'config';
 import { magic } from 'hooks/useMagicContext';
