@@ -5,8 +5,8 @@ import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { InputField } from 'components/InputField';
 import { Layout } from 'components/Layout';
-import MaxGasFee from 'components/MaxGasFee';
 import { Matic } from 'components/Matic';
+import MaxGasFee from 'components/MaxGasFee';
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
@@ -18,8 +18,8 @@ import useBlockchainV2 from 'hooks/useBlockchainV2';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Auction } from 'icons/Auction';
-import { Matic as MaticIcon } from 'icons/Matic';
 import { Locker } from 'icons/Locker';
+import { Matic as MaticIcon } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
 import {
   PendingRequest,
@@ -28,7 +28,6 @@ import {
   useAuctionItemQuery,
   useCountBidsQuery,
   useHaveBidedLazyQuery,
-  useMaticUsdQuery,
   useUserByWalletLazyQuery,
 } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
@@ -36,12 +35,12 @@ import { authenticator } from 'otplib';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import { currency, fixedDecimals } from 'utils/format';
+import { fixedDecimals } from 'utils/format';
 import { compareWallets } from 'utils/Wallet';
 import * as yup from 'yup';
+import SEO from '../../../components/SEO';
 import { Timer } from '../[id]';
 import { HighestBid } from './complete-auction';
-import SEO from '../../../components/SEO';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -80,7 +79,6 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
   const { getHighestBid } = useBlockchain();
   const { placeBid } = useBlockchainV2();
   const { account, web3 } = useWalletContext();
-  const { data: maticQuery } = useMaticUsdQuery();
   const { dispatchShowBidsHistory } = useModalDispatch();
   const [loading, setLoading] = useState(false);
   const [highestBid, setHighestBid] = useState<HighestBid>();
@@ -332,14 +330,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
                     </div>
 
                     <PlayerAwareBottomBar>
-                      <div className="flex-1 font-black text-xs">
-                        <Matic value={price} />
-                        {maticQuery?.maticUsd && (
-                          <span className="text-xs text-gray-50 font-bold">
-                            {`${currency(bidAmount * parseFloat(maticQuery?.maticUsd))} USD`}
-                          </span>
-                        )}
-                      </div>
+                      <Matic className="flex-1" value={bidAmount} variant="currency" />
                       <Button type="submit" variant="buy-nft" loading={loading}>
                         <div className="px-4">CONFIRM BID</div>
                       </Button>

@@ -104,13 +104,15 @@ export const TransferConfirmationModal = () => {
     >
       <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
         <Form className="flex flex-col w-full h-full justify-between" autoComplete="off">
-          <div className="flex flex-col mb-auto space-y-6 h-full justify-between">
+          <div className="flex flex-col mb-auto h-full justify-between">
             <div className="flex flex-col h-full justify-around">
               <div className="px-4 text-sm text-gray-80 font-bold text-center">
-                <p className="text-center py-6">
-                  Are you sure you want to send <Matic value={amountToTransfer} />
-                </p>
-                <p>This transaction cannot be undone.</p>
+                <p className="text-center">Are you sure you want to send</p>
+                <span className="flex items-center justify-center">
+                  <Matic value={amountToTransfer} />
+                  <span>?</span>
+                </span>
+                <p className="pt-6">This transaction cannot be undone.</p>
               </div>
               {me?.otpSecret && (
                 <InputField
