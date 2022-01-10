@@ -4,4 +4,5 @@ export interface TrackWithPriceMetadata {
   artist: string;
   artworkUrl: string;
   price: number;
+  auctionId: string;
 }
