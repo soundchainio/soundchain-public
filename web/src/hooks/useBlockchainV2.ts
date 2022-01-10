@@ -6,14 +6,16 @@ import { useMe } from 'hooks/useMe';
 import { MeQuery } from 'lib/graphql';
 import { useCallback } from 'react';
 import { SoundchainAuction } from 'types/web3-v1-contracts/SoundchainAuction';
+import { SoundchainMarketplace } from 'types/web3-v1-contracts/SoundchainMarketplace';
 import Web3 from 'web3';
 import { TransactionReceipt } from 'web3-core/types';
 import { AbiItem } from 'web3-utils';
 import soundchainAuction from '../contract/Auction.sol/SoundchainAuction.json';
+import soundchainMarketplace from '../contract/Marketplace.sol/SoundchainMarketplace.json';
 
 const nftAddress = config.contractAddress as string;
+const marketplaceAddress = config.marketplaceAddress as string;
 const auctionAddress = config.auctionAddress as string;
-
 export const gas = 1200000;
 
 interface PlaceBidParams {
@@ -78,6 +80,34 @@ class PlaceBid extends BlockchainFunction<PlaceBidParams> {
     return this.receipt;
   };
 }
+interface BuyItemParams {
+  tokenId: number;
+  from: string;
+  owner: string;
+  value: string;
+}
+class BuyItem extends BlockchainFunction<BuyItemParams> {
+  receipt?: TransactionReceipt;
+  execute = async (web3: Web3) => {
+    const contract = new web3.eth.Contract(
+      soundchainMarketplace.abi as AbiItem[],
+      marketplaceAddress,
+    ) as unknown as SoundchainMarketplace;
+
+    await this.beforeSending(web3, () => {
+      contract.methods
+        .buyItem(nftAddress, this.params.tokenId, this.params.owner)
+        .send({ from: this.params.from, gas, value: parseInt(this.params.value) })
+        .on('receipt', receipt => {
+          this.receipt = receipt;
+          this.onReceiptFunction && this.onReceiptFunction(receipt);
+        })
+        .catch(this.onErrorFunction)
+        .finally(this.finallyFunction);
+    });
+    return this.receipt;
+  };
+}
 
 const useBlockchainV2 = () => {
   const me = useMe();
@@ -89,8 +119,16 @@ const useBlockchainV2 = () => {
     [me],
   );
 
+  const buyItem = useCallback(
+    (tokenId: number, from: string, owner: string, value: string) => {
+      return new BuyItem({ tokenId, from, owner, value }, me);
+    },
+    [me],
+  );
+
   return {
     placeBid,
+    buyItem,
   };
 };
 
