@@ -1,5 +1,6 @@
 import { InboxBadge } from 'components/InboxBadge';
 import { NotificationBadge } from 'components/NotificationBadge';
+import { config } from 'config';
 import { useMe } from 'hooks/useMe';
 import { Bell } from 'icons/Bell';
 import { Inbox } from 'icons/Inbox';
@@ -11,7 +12,7 @@ export const InboxButton = () => {
 
   return (
     <div className="flex items-end">
-      <div className="relative md:mt-2 mr-2">
+      <div className={`relative ${config.mobileBreakpoint}:mt-2 mr-2`}>
         <NavBarButton
           label="Alerts"
           path={me ? '/notifications' : '/login'}
@@ -20,7 +21,7 @@ export const InboxButton = () => {
           color="purple"
         />
       </div>
-      <div className="relative md:mt-2">
+      <div className={`relative ${config.mobileBreakpoint}:mt-2`}>
         <NavBarButton
           label="Inbox"
           path={me ? '/messages' : '/login'}

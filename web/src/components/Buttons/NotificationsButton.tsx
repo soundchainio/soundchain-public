@@ -5,7 +5,7 @@ import { NavBarButton } from './NavBarButton';
 
 export const InboxButton = () => {
   return (
-    <div className="relative md:mt-2">
+    <div className="relative">
       <InboxBadge />
       <NavBarButton label="Inbox" path="/messages" icon={Inbox} color="yellow" />
     </div>
