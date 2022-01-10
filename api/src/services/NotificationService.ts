@@ -36,7 +36,7 @@ interface AuctionParams {
 interface AuctionIsOverParams {
   track: Track;
   price: number;
-  buyerProfileId: string;
+  buyerProfileId?: string | undefined;
   sellerProfileId: string;
   auctionId: string;
 }
@@ -286,10 +286,11 @@ export class NotificationService extends ModelService<typeof Notification> {
     sellerProfileId,
     auctionId,
   }: AuctionIsOverParams): Promise<void> {
-    Promise.all([
-      this.notifyWonAuction({ track, price, profileId: buyerProfileId, auctionId }),
-      this.notifyAuctionEnded({ track, price, profileId: sellerProfileId, auctionId }),
-    ]);
+    const promises = [this.notifyAuctionEnded({ track, price, profileId: sellerProfileId, auctionId })];
+    if (buyerProfileId) {
+      promises.push(this.notifyWonAuction({ track, price, profileId: buyerProfileId, auctionId }));
+    }
+    await Promise.all(promises);
   }
 
   private async notifyTrack(

@@ -164,15 +164,16 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       BidModel.findOne({ auctionId: _id, amount: highestBid }),
       this.context.trackService.getTrackByTokenId(tokenId),
     ]);
-    const [buyerUser, sellerUser] = await Promise.all([
-      this.context.userService.getUserByWallet(highestBidModel.bidder),
-      this.context.userService.getUserByWallet(owner),
-    ]);
+    const promises = [this.context.userService.getUserByWallet(owner)];
+    if (highestBidModel?.bidder) {
+      promises.push(this.context.userService.getUserByWallet(highestBidModel.bidder));
+    }
+    const [sellerUser, buyerUser] = await Promise.all(promises);
     await this.context.notificationService.notifyAuctionIsOver({
       track,
       price: highestBid,
-      buyerProfileId: buyerUser.profileId,
       sellerProfileId: sellerUser.profileId,
+      buyerProfileId: buyerUser?.profileId,
       auctionId: _id,
     });
   }
@@ -237,13 +238,6 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
         $addFields: {
           bidCount: {
             $size: '$bids',
-          },
-        },
-      },
-      {
-        $match: {
-          bidCount: {
-            $gt: 0,
           },
         },
       },
