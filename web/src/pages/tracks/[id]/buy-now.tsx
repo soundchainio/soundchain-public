@@ -136,9 +136,7 @@ export default function BuyNowPage({ track }: TrackPageProps) {
       listingPayload.buyNowItem?.buyNowItem?.pricePerItem.toString(),
     )
       .onReceipt(onReceipt)
-      .onError(() =>
-        toast.warn("Uh-oh, it seems you don't have enough funds for this transaction", { autoClose: 5 * 1000 }),
-      )
+      .onError(cause => toast.warn(cause.message, { autoClose: 6 * 1000 }))
       .finally(() => setLoading(false))
       .execute(web3);
   };
