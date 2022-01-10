@@ -25,20 +25,17 @@ export const Matic = ({ value = '', className, variant }: Props) => {
       );
     case 'currency-inline':
       return (
-        <div className={classNames('font-bold', className)}>
-          <p className="text-white">
-            {fixedDecimals(value)} <MaticIcon className="inline" />{' '}
-            <span className="text-gray-80 font-normal">{maticUsd && `≃ ${currencyValue}`}</span>
-          </p>
-        </div>
+        <p className={classNames('text-white font-bold inline-flex items-center gap-1', className)}>
+          {fixedDecimals(value)}
+          <MaticIcon className="inline" />
+          <span className="text-gray-80 font-normal">{maticUsd && `≃ ${currencyValue}`}</span>
+        </p>
       );
     default:
       return (
-        <div className={classNames('font-bold', className)}>
-          <p className="text-white">
-            <MaticIcon className="inline" /> {fixedDecimals(value)} <span className="text-xs text-gray-80">MATIC</span>
-          </p>
-        </div>
+        <p className={classNames('font-bold text-white inline-flex items-center gap-1', className)}>
+          <MaticIcon className="inline" /> {fixedDecimals(value)} <span className="text-xs text-gray-80">MATIC</span>
+        </p>
       );
   }
 };

@@ -3,6 +3,7 @@ import { Bid, BidModel } from '../models/Bid';
 import { TrackModel } from '../models/Track';
 import { Context } from '../types/Context';
 import { SellType } from '../types/NFTSoldNotificationMetadata';
+import { NotificationType } from '../types/NotificationType';
 import { getNow } from '../utils/Time';
 import { ModelService } from './ModelService';
 
@@ -142,10 +143,15 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       this.fetchAuctionsEndingInOneHour(now),
     ]);
     await Promise.all([
-      ...auctionsEndingInOneHour.map(({ bids }) => {
-        bids.map(bid => Promise.all([this.notifyAuctionIsEnding(bid), this.setBidIsNotified(bid._id)]));
-      }),
       ...auctionsEnded.map(auction => this.notifyAuctionIsOver(auction)),
+      ...auctionsEndingInOneHour.map(({ bids, _id }) => {
+        const bidsWithoutDuplicate = bids.filter(
+          (v, i, a) => a.findIndex(t => t.profileId.toString() === v.profileId.toString()) === i,
+        );
+        bidsWithoutDuplicate.map(bid =>
+          Promise.all([this.notifyAuctionIsEnding(bid, _id), this.setBidIsNotified(bid._id)]),
+        );
+      }),
     ]);
   }
 
@@ -167,10 +173,11 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       price: highestBid,
       buyerProfileId: buyerUser.profileId,
       sellerProfileId: sellerUser.profileId,
+      auctionId: _id,
     });
   }
 
-  private async notifyAuctionIsEnding({ tokenId, bidder, amount }: Bid): Promise<void> {
+  private async notifyAuctionIsEnding({ tokenId, bidder, amount }: Bid, auctionId: string): Promise<void> {
     const [user, track] = await Promise.all([
       this.context.userService.getUserByWallet(bidder),
       this.context.trackService.getTrackByTokenId(tokenId),
@@ -179,6 +186,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       track,
       profileId: user.profileId,
       price: amount,
+      auctionId,
     });
   }
 
@@ -242,9 +250,29 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       {
         $lookup: {
           from: 'notifications',
-          localField: '_id',
-          foreignField: 'metadata.trackId',
+          localField: 'auctionitem._id',
+          foreignField: 'metadata.auctionId',
           as: 'notification',
+        },
+      },
+      {
+        $addFields: {
+          notification: {
+            $filter: {
+              input: '$notification',
+              as: 'item',
+              cond: {
+                $and: [
+                  {
+                    $eq: ['$$item.type', NotificationType.AuctionEnded],
+                  },
+                  {
+                    $eq: ['$$item.metadata.auctionId', '$auctionitem._id'],
+                  },
+                ],
+              },
+            },
+          },
         },
       },
       {
@@ -299,14 +327,39 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       },
       {
         $addFields: {
-          bids: {
+          bidCount: {
+            $size: '$bids',
+          },
+        },
+      },
+      {
+        $match: {
+          bidCount: {
+            $gt: 0,
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: 'notifications',
+          localField: '_id',
+          foreignField: 'metadata.auctionId',
+          as: 'notification',
+        },
+      },
+      {
+        $addFields: {
+          notification: {
             $filter: {
-              input: '$bids',
+              input: '$notification',
               as: 'item',
               cond: {
                 $and: [
                   {
-                    $eq: ['$$item.notifiedEndingInOneHour', false],
+                    $eq: ['$$item.type', NotificationType.AuctionIsEnding],
+                  },
+                  {
+                    $eq: ['$$item.metadata.auctionId', '$_id'],
                   },
                 ],
               },
@@ -316,14 +369,14 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       },
       {
         $addFields: {
-          bidCount: {
-            $size: '$bids',
+          notificationCount: {
+            $size: '$notification',
           },
         },
       },
       {
         $match: {
-          bidCount: { $gt: 0 },
+          notificationCount: 0,
         },
       },
     ]);

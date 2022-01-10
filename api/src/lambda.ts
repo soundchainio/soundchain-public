@@ -235,6 +235,7 @@ export const watcher: Handler = async () => {
                 track,
                 profileId: seller.profileId,
                 price: parseInt(bid),
+                auctionId: auction._id,
               }),
             ];
             if (outBided) {
@@ -243,6 +244,7 @@ export const watcher: Handler = async () => {
                   track,
                   profileId: outBided.profileId,
                   price: parseInt(bid),
+                  auctionId: auction._id,
                 }),
               );
             }
