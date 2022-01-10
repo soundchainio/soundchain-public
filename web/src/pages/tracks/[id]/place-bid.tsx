@@ -28,7 +28,6 @@ import {
   useAuctionItemQuery,
   useCountBidsQuery,
   useHaveBidedLazyQuery,
-  useMaticUsdQuery,
   useUserByWalletLazyQuery,
 } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
@@ -36,7 +35,7 @@ import { authenticator } from 'otplib';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import { currency, fixedDecimals } from 'utils/format';
+import { fixedDecimals } from 'utils/format';
 import { compareWallets } from 'utils/Wallet';
 import * as yup from 'yup';
 import { Timer } from '../[id]';
@@ -79,7 +78,6 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
   const { getHighestBid } = useBlockchain();
   const { placeBid } = useBlockchainV2();
   const { account, web3 } = useWalletContext();
-  const { data: maticQuery } = useMaticUsdQuery();
   const { dispatchShowBidsHistory } = useModalDispatch();
   const [loading, setLoading] = useState(false);
   const [highestBid, setHighestBid] = useState<HighestBid>();
@@ -322,14 +320,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
                   </div>
 
                   <PlayerAwareBottomBar>
-                    <div className="flex-1 font-black text-xs">
-                      <Matic value={price} />
-                      {maticQuery?.maticUsd && (
-                        <span className="text-xs text-gray-50 font-bold">
-                          {`${currency(bidAmount * parseFloat(maticQuery?.maticUsd))} USD`}
-                        </span>
-                      )}
-                    </div>
+                    <Matic className="flex-1" value={bidAmount} variant="currency" />
                     <Button type="submit" variant="buy-nft" loading={loading}>
                       <div className="px-4">CONFIRM BID</div>
                     </Button>
