@@ -53,11 +53,19 @@ export class BuyNowService extends ModelService<typeof BuyNowItem> {
       this.context.userService.getUserByWallet(buyerWaller),
       this.context.trackService.getTrackByTokenId(parseInt(tokenId)),
     ]);
+    if (!sellerUser) {
+      await Promise.all([
+        this.context.buyNowItemService.setNotValid(parseInt(tokenId)),
+        this.context.trackService.setPendingNone(parseInt(tokenId)),
+      ]);
+      return;
+    }
+    const profileId = buyerUser?.profileId || '';
     await Promise.all([
-      this.context.trackService.updateTrack(track._id, { profileId: buyerUser.profileId }),
+      this.context.trackService.updateTrack(track._id, { profileId }),
       this.context.notificationService.notifyNFTSold({
         sellerProfileId: sellerUser.profileId,
-        buyerProfileId: buyerUser.profileId,
+        buyerProfileId: buyerUser?.profileId,
         price,
         trackId: track._id,
         trackName: track.title,

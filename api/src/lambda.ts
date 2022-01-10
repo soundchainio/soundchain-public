@@ -79,6 +79,9 @@ export const watcher: Handler = async () => {
               context.userService.getUserByWallet(owner),
               context.listingItemService.wasListedBefore(parseInt(tokenId)),
             ]);
+            if (!user) {
+              continue;
+            }
             const profile = await context.profileService.getProfile(user.profileId);
             if (!profile.verified && !listedBefore) {
               context.trackService.setPendingNone(parseInt(tokenId));
@@ -184,6 +187,9 @@ export const watcher: Handler = async () => {
               context.userService.getUserByWallet(owner),
               context.listingItemService.wasListedBefore(parseInt(tokenId)),
             ]);
+            if (!user) {
+              continue;
+            }
             const profile = await context.profileService.getProfile(user.profileId);
             if (!profile.verified && !listedBefore) {
               context.trackService.setPendingNone(parseInt(tokenId));
@@ -221,6 +227,9 @@ export const watcher: Handler = async () => {
                 highestBid: parseInt(bid),
               }),
             ]);
+            if (!user || !seller) {
+              continue;
+            }
             const auctionPromises: Promise<unknown>[] = [
               context.bidService.createBid({
                 nft: nftAddress,

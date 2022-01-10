@@ -37,7 +37,7 @@ interface AuctionIsOverParams {
   track: Track;
   price: number;
   buyerProfileId?: string | undefined;
-  sellerProfileId: string;
+  sellerProfileId?: string | undefined;
   auctionId: string;
 }
 
@@ -115,9 +115,13 @@ export class NotificationService extends ModelService<typeof Notification> {
     trackName,
     sellType,
   }: Omit<FinishBuyNowItemInput, 'tokenId'>): Promise<void> {
-    const { displayName: buyerName, profilePicture: buyerPicture } = await this.context.profileService.getProfile(
-      buyerProfileId,
-    );
+    let buyerName,
+      buyerPicture = '';
+    if (buyerProfileId) {
+      const profile = await this.context.profileService.getProfile(buyerProfileId);
+      buyerName = profile.displayName;
+      buyerPicture = profile.profilePicture;
+    }
     const notification = new NotificationModel({
       type: NotificationType.NFTSold,
       profileId: sellerProfileId,
@@ -286,7 +290,10 @@ export class NotificationService extends ModelService<typeof Notification> {
     sellerProfileId,
     auctionId,
   }: AuctionIsOverParams): Promise<void> {
-    const promises = [this.notifyAuctionEnded({ track, price, profileId: sellerProfileId, auctionId })];
+    const promises = [];
+    if (sellerProfileId) {
+      promises.push(this.notifyAuctionEnded({ track, price, profileId: sellerProfileId, auctionId }));
+    }
     if (buyerProfileId) {
       promises.push(this.notifyWonAuction({ track, price, profileId: buyerProfileId, auctionId }));
     }
