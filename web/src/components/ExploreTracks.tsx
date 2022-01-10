@@ -16,6 +16,7 @@ export const ExploreTracks = ({ searchTerm }: ExplorePageProps) => {
   const firstPage: PageInput = { first: pageSize };
   const { data, loading, fetchMore } = useExploreTracksQuery({
     variables: { search: searchTerm, page: firstPage },
+    fetchPolicy: 'network-only',
   });
   const { playlistState } = useAudioPlayerContext();
 
