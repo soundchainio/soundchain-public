@@ -25,7 +25,7 @@ export interface FavoriteCount {
 }
 
 type RecursivePartial<T> = {
-  [P in keyof T]?: RecursivePartial<T[P]>;
+  [P in keyof T]?: T[P] extends Date ? T[P] : RecursivePartial<T[P]>;
 };
 
 type bulkType = {
@@ -220,6 +220,19 @@ export class TrackService extends ModelService<typeof Track> {
       },
     ]);
     return favTrack.length ? favTrack[0].count : 0;
+  }
+
+  async resetPending(): Promise<void> {
+    const nowMinusOneHour = new Date();
+    nowMinusOneHour.setHours(nowMinusOneHour.getHours() - 1);
+
+    return this.model.updateMany(
+      {
+        'nftData.pendingRequest': { $ne: PendingRequest.None },
+        'nftData.pendingTime': { $lte: nowMinusOneHour },
+      },
+      { 'nftData.pendingRequest': PendingRequest.None },
+    );
   }
 
   async saleType(tokenId: number): Promise<string> {

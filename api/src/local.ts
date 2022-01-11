@@ -4,7 +4,7 @@ import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
 import mongoose from 'mongoose';
 import { config } from './config';
-import { processAuctions, watcher } from './lambda';
+import { processAuctions, processPending, watcher } from './lambda';
 import { Context } from './types/Context';
 
 async function bootstrap() {
@@ -26,6 +26,7 @@ async function bootstrap() {
   await new Promise<void>(resolve => app.listen({ port: config.express.port }, resolve));
   setInterval(() => watcher({}, undefined, null), 10 * 1000);
   setInterval(() => processAuctions({}, undefined, null), 10 * 1000);
+  setInterval(() => processPending({}, undefined, null), 10 * 1000);
   // setInterval(() => playbackCount({}, undefined, null), 60 * 1000);
 
   console.log(`🚀 Server ready at http://localhost:${config.express.port}${server.graphqlPath}`);

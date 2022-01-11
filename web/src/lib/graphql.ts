@@ -39,6 +39,7 @@ export type AuctionEndedNotification = {
   artist: Scalars['String'];
   artworkUrl: Scalars['String'];
   price: Scalars['Float'];
+  auctionId: Scalars['String'];
 };
 
 export type AuctionIsEndingNotification = {
@@ -52,6 +53,7 @@ export type AuctionIsEndingNotification = {
   artist: Scalars['String'];
   artworkUrl: Scalars['String'];
   price: Scalars['Float'];
+  auctionId: Scalars['String'];
 };
 
 export type AuctionItem = {
@@ -91,7 +93,6 @@ export type BidsWithInfo = {
   tokenId: Scalars['Float'];
   bidder: Scalars['String'];
   amount: Scalars['Float'];
-  notifiedEndingInOneHour: Scalars['Boolean'];
   auctionId: Scalars['String'];
   profileId: Scalars['String'];
   userId: Scalars['String'];
@@ -800,6 +801,7 @@ export type MutationValidateOtpRecoveryPhraseArgs = {
 export type NftDataInput = {
   transactionHash?: Maybe<Scalars['String']>;
   pendingRequest?: Maybe<PendingRequest>;
+  pendingTime: Scalars['DateTime'];
   ipfsCid?: Maybe<Scalars['String']>;
   tokenId?: Maybe<Scalars['Float']>;
   contract?: Maybe<Scalars['String']>;
@@ -811,6 +813,7 @@ export type NftDataType = {
   __typename?: 'NFTDataType';
   transactionHash: Maybe<Scalars['String']>;
   pendingRequest: Maybe<PendingRequest>;
+  pendingTime: Scalars['DateTime'];
   ipfsCid: Maybe<Scalars['String']>;
   tokenId: Maybe<Scalars['Float']>;
   contract: Maybe<Scalars['String']>;
@@ -846,6 +849,7 @@ export type NewBidNotification = {
   artist: Scalars['String'];
   artworkUrl: Scalars['String'];
   price: Scalars['Float'];
+  auctionId: Scalars['String'];
 };
 
 export type NewPostNotification = {
@@ -907,6 +911,7 @@ export type OutbidNotification = {
   artist: Scalars['String'];
   artworkUrl: Scalars['String'];
   price: Scalars['Float'];
+  auctionId: Scalars['String'];
 };
 
 export type PageInfo = {
@@ -1691,6 +1696,7 @@ export type WonAuctionNotification = {
   artist: Scalars['String'];
   artworkUrl: Scalars['String'];
   price: Scalars['Float'];
+  auctionId: Scalars['String'];
 };
 
 export type AddCommentMutationVariables = Exact<{

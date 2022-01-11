@@ -455,3 +455,12 @@ export const processAuctions: Handler = async () => {
 
   await context.auctionItemService.processAuctions();
 };
+
+export const processPending: Handler = async () => {
+  await mongoose.connect(config.db.url, config.db.options);
+
+  const user = await UserModel.findOne({ handle: '_system' });
+  const context = new Context({ sub: user._id });
+
+  await context.trackService.resetPending();
+};
