@@ -19,6 +19,7 @@ export const OwnedNfts = ({ owner }: OwnedNftsProps) => {
       sort: { field: SortTrackField.CreatedAt, order: SortOrder.Desc },
       page: { first: pageSize },
     },
+    fetchPolicy: 'network-only',
   });
 
   if (!data) {
