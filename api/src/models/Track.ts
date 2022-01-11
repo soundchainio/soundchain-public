@@ -12,7 +12,7 @@ export class Track extends Model {
   readonly _id: string;
 
   @Field()
-  @prop({ type: ObjectId, required: true })
+  @prop({ type: ObjectId })
   profileId: string;
 
   @Field({ nullable: true })
