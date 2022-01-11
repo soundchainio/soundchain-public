@@ -64,7 +64,7 @@ export function MagicProvider({ children }: MagicProviderProps) {
   };
 
   useEffect(() => {
-    if (me && me.magicWalletAddress && web3) {
+    if (me && web3) {
       web3.eth
         .getAccounts()
         .then(([account]) => {

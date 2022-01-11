@@ -56,24 +56,6 @@ const useBlockchain = () => {
     [beforeSending],
   );
 
-  const approveMarketplace = useCallback(
-    (web3: Web3, from: string, onReceipt: (receipt: TransactionReceipt) => void) => {
-      const contract = new web3.eth.Contract(
-        soundchainContract.abi as AbiItem[],
-        nftAddress,
-      ) as unknown as Soundchain721;
-      return beforeSending(
-        web3,
-        async () =>
-          await contract.methods
-            .setApprovalForAll(marketplaceAddress, true)
-            .send({ from, gas })
-            .on('receipt', onReceipt),
-      );
-    },
-    [beforeSending],
-  );
-
   const approveAuction = useCallback(
     (web3: Web3, from: string, onReceipt: (receipt: TransactionReceipt) => void) => {
       const contract = new web3.eth.Contract(
@@ -153,31 +135,6 @@ const useBlockchain = () => {
           await contract.methods
             .updateListing(nftAddress, tokenId, totalPrice, startingTime)
             .send({ from, gas })
-            .on('transactionHash', onTransactionHash),
-      );
-    },
-    [beforeSending],
-  );
-
-  const buyItem = useCallback(
-    (
-      web3: Web3,
-      tokenId: number,
-      from: string,
-      owner: string,
-      value: string,
-      onTransactionHash: (hash: string) => void,
-    ) => {
-      const contract = new web3.eth.Contract(
-        soundchainMarketplace.abi as AbiItem[],
-        marketplaceAddress,
-      ) as unknown as SoundchainMarketplace;
-      return beforeSending(
-        web3,
-        async () =>
-          await contract.methods
-            .buyItem(nftAddress, tokenId, owner)
-            .send({ from, gas, value })
             .on('transactionHash', onTransactionHash),
       );
     },
@@ -371,9 +328,7 @@ const useBlockchain = () => {
 
   return {
     approveAuction,
-    approveMarketplace,
     burnNftToken,
-    buyItem,
     cancelAuction,
     cancelListing,
     createAuction,
