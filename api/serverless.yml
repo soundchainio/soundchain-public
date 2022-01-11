@@ -41,17 +41,6 @@ functions:
     handler: src/lambda.processPending
     events:
       - schedule: rate(30 minutes)
-  mint:
-    handler: src/lambda.mint
-    timeout: 120
-    reservedConcurrency: 1
-    events:
-      - sqs:
-          batchSize: 1
-          arn:
-            Fn::GetAtt:
-              - MintingQueue
-              - Arn
 
 custom:
   db:
