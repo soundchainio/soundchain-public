@@ -31,7 +31,7 @@ export const NavBar = () => {
           <NavBarButton label="Create" icon={NewPost} onClick={handleCreateClick} />
         )}
         <NavBarButton label="Library" path={me ? '/library' : '/login'} icon={Library} color="purple" />
-        <NavBarButton label="Market" icon={MarketplaceNavBar} color="purple" path={'/marketplace'} />
+        <NavBarButton label="Market" icon={MarketplaceNavBar} color="purple-green" path={'/marketplace'} />
       </div>
     </nav>
   );

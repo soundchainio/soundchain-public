@@ -24,14 +24,32 @@ export const BottomNavBar = () => {
       <div className="w-full">
         <div className="w-full flex items-end">
           <NavBarButton label="Home" path="/" icon={Home} color="yellow" />
-          <NavBarButton label="Explore" path={me ? '/explore' : '/login'} icon={Search} color="green" />
+          <NavBarButton
+            id="nav-explore-"
+            label="Explore"
+            path={me ? '/explore' : '/login'}
+            icon={Search}
+            color="green"
+          />
           {isMinting ? (
             <NavBarButton label="Minting..." nyanCat={true} onClick={handleCreateClick} />
           ) : (
             <NavBarButton label="Create" icon={NewPost} onClick={handleCreateClick} />
           )}
-          <NavBarButton label="Library" path={me ? '/library' : '/login'} icon={Library} color="purple" />
-          <NavBarButton label="Market" icon={MarketplaceNavBar} color="purple-green" path={'/marketplace'} />
+          <NavBarButton
+            id="nav-library-"
+            label="Library"
+            path={me ? '/library' : '/login'}
+            icon={Library}
+            color="purple"
+          />
+          <NavBarButton
+            id="nav-market-"
+            label="Market"
+            icon={MarketplaceNavBar}
+            color="purple-green"
+            path={'/marketplace'}
+          />
         </div>
       </div>
     </nav>

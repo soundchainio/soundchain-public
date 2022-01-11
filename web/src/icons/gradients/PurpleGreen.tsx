@@ -1,8 +1,10 @@
-export const PurpleGreenGradient = () => {
+import { IconProps } from 'icons/types/IconProps';
+
+export const PurpleGreenGradient = ({ id }: IconProps) => {
   return (
     <defs>
       <linearGradient
-        id="purple-green-gradient"
+        id={`${id}purple-green-gradient`}
         x1="10.35"
         x2="9.964"
         y1="9.936"
