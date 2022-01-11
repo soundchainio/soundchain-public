@@ -1,7 +1,7 @@
 import { Button, ButtonVariant } from 'components/Button';
+import { Matic } from 'components/Matic';
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { TimeCounter } from 'components/TimeCounter';
-import { Matic } from 'components/Matic';
 import { useModalDispatch } from 'contexts/providers/modal';
 import { CheckmarkFilled } from 'icons/CheckmarkFilled';
 import { Matic as MaticIcon } from 'icons/Matic';
