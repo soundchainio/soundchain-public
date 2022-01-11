@@ -4,7 +4,9 @@ import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
 import mongoose from 'mongoose';
 import { config } from './config';
-import { processAuctions, processPending, watcher } from './lambda';
+import { blockchainWatcher } from './lambda/blockchainWatcher';
+import { processAuctions } from './lambda/processAuctions';
+import { processPending } from './lambda/processPending';
 import { Context } from './types/Context';
 
 async function bootstrap() {
@@ -24,7 +26,7 @@ async function bootstrap() {
   server.applyMiddleware({ app });
 
   await new Promise<void>(resolve => app.listen({ port: config.express.port }, resolve));
-  setInterval(() => watcher({}, undefined, null), 10 * 1000);
+  setInterval(() => blockchainWatcher({}, undefined, null), 10 * 1000);
   setInterval(() => processAuctions({}, undefined, null), 10 * 1000);
   setInterval(() => processPending({}, undefined, null), 10 * 1000);
   // setInterval(() => playbackCount({}, undefined, null), 60 * 1000);

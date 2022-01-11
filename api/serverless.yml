@@ -12,7 +12,7 @@ package:
 
 functions:
   graphql:
-    handler: src/lambda.handler
+    handler: src/lambda/handler.handler
     timeout: 20
     events:
       - http:
@@ -26,19 +26,19 @@ functions:
   migrate:
     handler: src/db/migrate.handler
   watcher:
-    handler: src/lambda.watcher
+    handler: src/lambda/blockchainWatcher.blockchainWatcher
     events:
       - schedule: rate(1 minute)
   playbackCount:
-    handler: src/lambda.playbackCount
+    handler: src/lambda/playbackCount.playbackCount
     events:
       - schedule: cron(0 15 * * ? *)
   processAuctions:
-    handler: src/lambda.processAuctions
+    handler: src/lambda/processAuctions.processAuctions
     events:
       - schedule: rate(5 minutes)
   processPending:
-    handler: src/lambda.processPending
+    handler: src/lambda/processPending.processPending
     events:
       - schedule: rate(30 minutes)
 

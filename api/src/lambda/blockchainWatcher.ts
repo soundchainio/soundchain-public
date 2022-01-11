@@ -1,7 +1,5 @@
 import { mongoose } from '@typegoose/typegoose';
-import { ApolloServer } from 'apollo-server-lambda';
 import type { Handler } from 'aws-lambda';
-import express from 'express';
 import Web3 from 'web3';
 import { AbiItem } from 'web3-utils';
 import {
@@ -10,38 +8,20 @@ import {
   AuctionResulted,
   BidPlaced,
   UpdateAuction,
-} from '../types/web3-v1-contracts/SoundchainAuction';
-import { ItemUpdated } from '../types/web3-v1-contracts/SoundchainMarketplace';
-import { config } from './config';
-import SoundchainCollectible from './contract/Soundchain721.json';
-import SoundchainAuction from './contract/SoundchainAuction.json';
-import SoundchainMarketplace from './contract/SoundchainMarketplace.json';
-import { UserModel } from './models/User';
-import muxDataApi from './muxDataApi';
-import { ItemCanceled, ItemListed, ItemSold, Transfer } from './types/BlockchainEvents';
-import { Context } from './types/Context';
-import { MuxDataInputValue, MuxServerData } from './types/MuxData';
-import { PendingRequest } from './types/PendingRequest';
-
-export const handler: Handler = async (...args) => {
-  await mongoose.connect(config.db.url, config.db.options);
-
-  const server = new ApolloServer(config.apollo);
-  const apolloHandler = server.createHandler({
-    expressAppFromMiddleware(middleware) {
-      const app = express();
-      app.use(config.express.middlewares);
-      app.use(middleware);
-      return app;
-    },
-  });
-
-  return apolloHandler(...args);
-};
+} from '../../types/web3-v1-contracts/SoundchainAuction';
+import { ItemUpdated } from '../../types/web3-v1-contracts/SoundchainMarketplace';
+import { config } from '../config';
+import SoundchainCollectible from '../contract/Soundchain721.json';
+import SoundchainAuction from '../contract/SoundchainAuction.json';
+import SoundchainMarketplace from '../contract/SoundchainMarketplace.json';
+import { UserModel } from '../models/User';
+import { ItemCanceled, ItemListed, ItemSold, Transfer } from '../types/BlockchainEvents';
+import { Context } from '../types/Context';
+import { PendingRequest } from '../types/PendingRequest';
 
 const zeroAddress = '0x0000000000000000000000000000000000000000';
 
-export const watcher: Handler = async () => {
+export const blockchainWatcher: Handler = async () => {
   await mongoose.connect(config.db.url, config.db.options);
   const web3 = new Web3(config.minting.alchemyKey);
 
@@ -306,99 +286,4 @@ export const watcher: Handler = async () => {
     }
   }
   await context.blockTrackerService.updateCurrentBlocknumber(toBlock + 1);
-};
-
-export const playbackCount: Handler = async () => {
-  const intervalGapInMinutes = 60 * 24; // 24 hours
-  const nowTimestampInSeconds = Math.round(Date.now() / 1000);
-  const initialTimestampInSeconds = nowTimestampInSeconds - intervalGapInMinutes * 60;
-
-  await mongoose.connect(config.db.url, config.db.options);
-
-  const user = await UserModel.findOne({ handle: '_system' });
-  const context = new Context({ sub: user._id });
-
-  let url: string;
-  const fetch = async (pageSize: number, currentPage: number): Promise<MuxDataInputValue> => {
-    try {
-      url = `/metrics/unique_viewers/breakdown?group_by=video_id&limit=${pageSize}&page=${currentPage}&timeframe[]=${initialTimestampInSeconds}&timeframe[]=${nowTimestampInSeconds}&order_by=field&order_direction=asc`;
-      const { data } = await muxDataApi.get<MuxServerData>(url);
-
-      const values = data.data.map(video => ({ trackId: video.field, amount: video.views }));
-      return { totalCount: data.total_row_count, values };
-    } catch (error) {
-      console.error(error);
-      context.logErrorService.createLogError(
-        'Lambda function: playbackCount - Error fetching Mux Data',
-        `URL: ${url} Error: ${error}`,
-      );
-    }
-  };
-
-  const update = async (inputValue: MuxDataInputValue, url: string): Promise<number> => {
-    try {
-      return await context.trackService.incrementPlaybackCount(inputValue.values);
-    } catch (error) {
-      console.error(error);
-      context.logErrorService.createLogError(
-        'Lambda function: playbackCount - Error updating track',
-        `URL: ${url} Error: ${error}`,
-      );
-    }
-  };
-
-  try {
-    console.log('Starting');
-
-    let currentPage = 1;
-    const pageSize = 10000;
-
-    const inputValues = await fetch(pageSize, currentPage);
-    const totalCount = inputValues.totalCount;
-    const totalPages = Math.ceil(totalCount / pageSize);
-
-    if (!totalCount) {
-      console.log(`${totalCount} tracks fetched`);
-      return;
-    }
-
-    console.log(`Page size: ${pageSize} - Mux data fetched: ${totalCount} tracks to be updated...`);
-    const tracksUpdated = await update(inputValues, url);
-    console.log(
-      `Page: ${currentPage}/${totalPages} - Tracks on page: ${inputValues.values.length} - Tracks updated: ${tracksUpdated}`,
-    );
-
-    if (totalPages > currentPage) {
-      for (currentPage = 2; currentPage <= totalPages; currentPage++) {
-        const inputValues = await fetch(pageSize, currentPage);
-        const tracksUpdated = await update(inputValues, url);
-        console.log(
-          `Page: ${currentPage}/${totalPages} - Tracks on page: ${inputValues.values.length} - Tracks updated: ${tracksUpdated}`,
-        );
-      }
-    }
-  } catch (e) {
-    console.error('Execution error, please check AWS logs', e);
-    process.exit(1);
-  } finally {
-    console.log('Finished');
-  }
-};
-
-export const processAuctions: Handler = async () => {
-  await mongoose.connect(config.db.url, config.db.options);
-
-  const user = await UserModel.findOne({ handle: '_system' });
-  const context = new Context({ sub: user._id });
-
-  await context.auctionItemService.processAuctions();
-};
-
-export const processPending: Handler = async () => {
-  await mongoose.connect(config.db.url, config.db.options);
-
-  const user = await UserModel.findOne({ handle: '_system' });
-  const context = new Context({ sub: user._id });
-
-  await context.trackService.resetPending();
 };
