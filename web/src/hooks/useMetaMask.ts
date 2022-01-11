@@ -3,8 +3,10 @@ import { network } from 'lib/blockchainNetworks';
 import { useUpdateMetaMaskAddressesMutation } from 'lib/graphql';
 import { useEffect, useRef, useState } from 'react';
 import Web3 from 'web3';
+import { useMe } from './useMe';
 
 export const useMetaMask = () => {
+  const me = useMe();
   const [updateWallet] = useUpdateMetaMaskAddressesMutation();
   const [web3, setWeb3] = useState<Web3>();
   const [account, setAccount] = useState<string>();
@@ -24,7 +26,7 @@ export const useMetaMask = () => {
 
   useEffect(() => {
     const onSetAccount = async (newAccount: string) => {
-      if (newAccount) {
+      if (newAccount && me) {
         await updateWallet({ variables: { input: { wallet: newAccount } } });
       }
       setAccount(newAccount);
@@ -39,7 +41,7 @@ export const useMetaMask = () => {
       window.ethereum.on('accountsChanged', ([newAccount]: string[]) => onSetAccount(newAccount));
       window.ethereum.on('chainChanged', () => window.location.reload());
     }
-  }, [updateWallet]);
+  }, [me, updateWallet]);
 
   useEffect(() => {
     if (MetaMaskOnboarding.isMetaMaskInstalled()) {

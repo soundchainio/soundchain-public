@@ -75,6 +75,10 @@ html {
     .pb-safe {
       padding-bottom: env(safe-area-inset-bottom);
     }
+
+    .mb-safe {
+      margin-bottom: env(safe-area-inset-bottom);
+    }
   }
 }
 
