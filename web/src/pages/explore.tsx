@@ -1,27 +1,27 @@
+import { InboxButton } from 'components/Buttons/InboxButton';
 import { Explore } from 'components/Explore';
-import { ExploreSearchBar } from 'components/ExploreSearchBar';
 import { Layout } from 'components/Layout';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
+import { useMe } from 'hooks/useMe';
 import { cacheFor } from 'lib/apollo';
 import { protectPage } from 'lib/protectPage';
-import { useState } from 'react';
 
 export const getServerSideProps = protectPage((context, apolloClient) => {
   return cacheFor(ExplorePage, {}, context, apolloClient);
 });
 
 export default function ExplorePage() {
-  const [searchTerm, setSearchTerm] = useState<string>('');
-
+  const me = useMe();
   const topNavBarProps: TopNavBarProps = {
-    midRightButton: <ExploreSearchBar setSearchTerm={setSearchTerm} />,
+    title: 'Explore',
+    rightButton: me ? <InboxButton /> : undefined,
   };
 
   return (
     <Layout topNavBarProps={topNavBarProps}>
       <SEO title="Soundchain - Explore" description="Explore Soundchain" canonicalUrl="/explore/" />
-      <Explore searchTerm={searchTerm} />
+      <Explore />
     </Layout>
   );
 }
