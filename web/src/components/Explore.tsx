@@ -11,7 +11,7 @@ export const Explore = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
 
   return (
-    <div className="pt-2 bg-black">
+    <div className="bg-black">
       <ExploreSearchBar setSearchTerm={setSearchTerm} />
       <ExploreTabs selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
       {selectedTab === ExploreTab.ALL && <ExploreAll setSelectedTab={setSelectedTab} searchTerm={searchTerm} />}
