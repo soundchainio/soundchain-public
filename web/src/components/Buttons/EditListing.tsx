@@ -1,10 +1,11 @@
 import { ButtonProps } from 'components/Button';
+import { config } from 'config';
 
 export const EditListingButton = ({ className, type = 'button', children, loading, ...rest }: ButtonProps) => {
   return (
     <div className={className}>
       <button
-        className="md:px-4 p-2 font-bold text-white text-xs bg-opacity-60 bg-yellow-gradient border-yellow-300 border-2 w-full"
+        className={`${config.mobileBreakpoint}:px-4 p-2 font-bold text-white text-xs bg-opacity-60 bg-yellow-gradient border-yellow-300 border-2 w-full`}
         type={type}
         {...rest}
       >

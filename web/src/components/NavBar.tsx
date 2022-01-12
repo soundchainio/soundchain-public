@@ -1,3 +1,4 @@
+import { config } from 'config';
 import { useModalDispatch } from 'contexts/providers/modal';
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar';
 import { useMe } from 'hooks/useMe';
@@ -21,7 +22,9 @@ export const NavBar = () => {
   };
 
   return (
-    <nav className="bg-black md:bg-gray-30 h-16 flex items-center inset-x-0 shadow-2xl md:w-full">
+    <nav
+      className={`bg-black ${config.mobileBreakpoint}:bg-gray-30 h-16 flex items-center inset-x-0 shadow-2xl ${config.mobileBreakpoint}:w-full`}
+    >
       <div className="w-full flex justify-center gap-14">
         <NavBarButton label="Home" path="/" icon={Home} color="yellow" id="top" />
         <NavBarButton id="top-explore-" label="Explore" path={me ? '/explore' : '/login'} icon={Search} color="green" />

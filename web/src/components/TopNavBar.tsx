@@ -1,4 +1,5 @@
 import classNames from 'classnames';
+import { config } from 'config';
 import { useMe } from 'hooks/useMe';
 import { Logo } from 'icons/Logo';
 import { Menu } from 'icons/Menu';
@@ -37,11 +38,11 @@ export const TopNavBar = ({
   };
 
   return (
-    <div className="relative z-10 flex-shrink-0 flex h-16 bg-black md:bg-gray-30 shadow">
+    <div className={`relative z-10 flex-shrink-0 flex h-16 bg-black ${config.mobileBreakpoint}:bg-gray-30 shadow`}>
       <button
         type="button"
         className={classNames(
-          'text-gray-80 md:hidden items-center h-full pl-4 flex-grow-basis-0',
+          `text-gray-80 ${config.mobileBreakpoint}:hidden items-center h-full pl-4 flex-grow-basis-0`,
           me && !RightButton && 'absolute left-0 justify-center',
           (RightButton || midRightButton) && 'flex-1',
         )}
@@ -61,11 +62,13 @@ export const TopNavBar = ({
       </button>
       {me && !midRightButton ? (
         <>
-          <div className="md:hidden flex-2 flex-grow-basis flex items-center justify-center md:items-stretch md:justify-start truncate">
+          <div
+            className={`${config.mobileBreakpoint}:hidden flex-2 flex-grow-basis flex items-center justify-center ${config.mobileBreakpoint}:items-stretch ${config.mobileBreakpoint}:justify-start truncate`}
+          >
             <div className="flex-shrink-0 flex items-center">
               {title ? (
                 <div className="flex flex-col">
-                  <Title navTitle className="text-sm text-center md:text-left truncate">
+                  <Title navTitle className={`text-sm text-center ${config.mobileBreakpoint}:text-left truncate`}>
                     {title}
                   </Title>
                   {Subtitle}
@@ -79,7 +82,9 @@ export const TopNavBar = ({
               )}
             </div>
           </div>
-          <div className="hidden w-full md:flex flex-2 items-center justify-center md:items-stretch md:justify-start">
+          <div
+            className={`hidden w-full ${config.mobileBreakpoint}:flex flex-2 items-center justify-center ${config.mobileBreakpoint}:items-stretch ${config.mobileBreakpoint}:justify-start`}
+          >
             <div className="flex items-center w-full">
               <NavBar />
             </div>
@@ -102,7 +107,9 @@ export const TopNavBar = ({
         )
       )}
       {RightButton && !midRightButton && (
-        <div className="flex flex-1 md:flex-none justify-end pr-4 items-center flex-shrink-0">{RightButton}</div>
+        <div className={`flex flex-1 ${config.mobileBreakpoint}:flex-none justify-end pr-4 items-center flex-shrink-0`}>
+          {RightButton}
+        </div>
       )}
       {midRightButton && (
         <div className="flex flex-1 justify-left pl-28 items-center flex-shrink-0">{midRightButton}</div>
