@@ -1,5 +1,6 @@
 import classNames from 'classnames';
 import { InfiniteLoader } from 'components/InfiniteLoader';
+import { NoResultFound } from 'components/NoResultFound';
 import { TrackListItem } from 'components/TrackListItem';
 import { TrackListItemSkeleton } from 'components/TrackListItemSkeleton';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
@@ -22,7 +23,7 @@ interface TracksProps extends React.ComponentPropsWithoutRef<'div'> {
 export const Tracks = ({ className, profileId, pageSize = 10 }: TracksProps) => {
   const { playlistState } = useAudioPlayerContext();
 
-  const { data, fetchMore } = useTracksQuery({
+  const { data, loading, fetchMore } = useTracksQuery({
     variables: {
       filter: { profileId: profileId as string },
       sort: { field: SortTrackField.CreatedAt, order: SortOrder.Desc },
@@ -30,7 +31,7 @@ export const Tracks = ({ className, profileId, pageSize = 10 }: TracksProps) => 
     },
   });
 
-  if (!data) {
+  if (loading) {
     return (
       <div className="space-y-2">
         <TrackListItemSkeleton />
@@ -38,6 +39,10 @@ export const Tracks = ({ className, profileId, pageSize = 10 }: TracksProps) => 
         <TrackListItemSkeleton />
       </div>
     );
+  }
+
+  if (!data?.tracks.nodes.length) {
+    return <NoResultFound type="tracks" />;
   }
 
   const { nodes, pageInfo } = data.tracks;

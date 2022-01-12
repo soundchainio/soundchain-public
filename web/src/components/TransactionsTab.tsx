@@ -4,6 +4,7 @@ import { TransactionItemSkeleton } from 'components/TransactionItemSkeleton';
 import { useMaticUsdQuery, usePolygonscanQuery } from 'lib/graphql';
 import React from 'react';
 import { EmptyTransactionList } from './EmptyTransactionList';
+import { NoResultFound } from './NoResultFound';
 
 interface TransactionsTabProps {
   address: string;
@@ -13,14 +14,14 @@ export const TransactionsTab = ({ address }: TransactionsTabProps) => {
   const { data: maticUsd } = useMaticUsdQuery();
 
   const pageSize = 50;
-  const { data, fetchMore } = usePolygonscanQuery({
+  const { data, loading, fetchMore } = usePolygonscanQuery({
     variables: {
       wallet: address,
       page: { first: pageSize },
     },
   });
 
-  if (!data) {
+  if (loading) {
     return (
       <div className="space-y-2">
         <TransactionItemSkeleton />
@@ -28,6 +29,10 @@ export const TransactionsTab = ({ address }: TransactionsTabProps) => {
         <TransactionItemSkeleton />
       </div>
     );
+  }
+
+  if (!data) {
+    return <NoResultFound type="transactions" />;
   }
 
   const { result, nextPage } = data.getTransactionHistory;
