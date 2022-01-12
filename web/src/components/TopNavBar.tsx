@@ -3,6 +3,7 @@ import { useMe } from 'hooks/useMe';
 import { Logo } from 'icons/Logo';
 import { Menu } from 'icons/Menu';
 import { Profile } from 'icons/Profile';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Button } from './Button';
 import { NavBar } from './NavBar';
@@ -70,7 +71,11 @@ export const TopNavBar = ({
                   {Subtitle}
                 </div>
               ) : (
-                <Logo className="block h-8 w-auto" />
+                <Link href="/" passHref>
+                  <a aria-label="Home">
+                    <Logo className="block h-8 w-auto" />
+                  </a>
+                </Link>
               )}
             </div>
           </div>
