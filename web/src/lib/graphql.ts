@@ -801,7 +801,7 @@ export type MutationValidateOtpRecoveryPhraseArgs = {
 export type NftDataInput = {
   transactionHash?: Maybe<Scalars['String']>;
   pendingRequest?: Maybe<PendingRequest>;
-  pendingTime: Scalars['DateTime'];
+  pendingTime?: Maybe<Scalars['DateTime']>;
   ipfsCid?: Maybe<Scalars['String']>;
   tokenId?: Maybe<Scalars['Float']>;
   contract?: Maybe<Scalars['String']>;
@@ -813,7 +813,7 @@ export type NftDataType = {
   __typename?: 'NFTDataType';
   transactionHash: Maybe<Scalars['String']>;
   pendingRequest: Maybe<PendingRequest>;
-  pendingTime: Scalars['DateTime'];
+  pendingTime: Maybe<Scalars['DateTime']>;
   ipfsCid: Maybe<Scalars['String']>;
   tokenId: Maybe<Scalars['Float']>;
   contract: Maybe<Scalars['String']>;
@@ -2318,7 +2318,7 @@ export type ListingItemComponentFieldsFragment = (
   & Pick<TrackWithListingItem, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'saleType' | 'price'>
   & { nftData: Maybe<(
     { __typename?: 'NFTDataType' }
-    & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner'>
+    & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner' | 'pendingTime'>
   )>, listingItem: Maybe<(
     { __typename?: 'ListingItemWithPrice' }
     & Pick<ListingItemWithPrice, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'startingTime' | 'endingTime' | 'reservePrice' | 'createdAt' | 'updatedAt' | 'priceToShow'>
@@ -3445,6 +3445,7 @@ export const ListingItemComponentFieldsFragmentDoc = gql`
     ipfsCid
     pendingRequest
     owner
+    pendingTime
   }
   listingItem {
     id
