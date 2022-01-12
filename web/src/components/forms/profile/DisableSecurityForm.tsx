@@ -2,9 +2,10 @@ import React from 'react';
 import { Form, Formik } from 'formik';
 import * as yup from 'yup';
 import { toast } from 'react-toastify';
-import { MeDocument, useUpdateOtpMutation, useValidateOtpRecoveryPhraseMutation } from 'lib/graphql';
+import { useUpdateOtpMutation, useValidateOtpRecoveryPhraseMutation } from 'lib/graphql';
 import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
+import { updateOTPCache } from 'lib/apollo/cache/updateOTPCache';
 
 interface Props {
   afterSubmit: () => void;
@@ -39,7 +40,7 @@ export const DisableRecoveryForm = ({ afterSubmit }: Props) => {
 
     await updateOTP({
       variables: { input: { otpSecret: '', otpRecoveryPhrase: '' } },
-      refetchQueries: [MeDocument],
+      update: updateOTPCache,
     });
 
     afterSubmit();

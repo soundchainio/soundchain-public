@@ -2,7 +2,7 @@ import * as bip39 from 'bip39';
 import { Button, ButtonProps } from 'components/Button';
 import { Form, Formik } from 'formik';
 import { useMe } from 'hooks/useMe';
-import { MeDocument, useUpdateOtpMutation } from 'lib/graphql';
+import { useUpdateOtpMutation } from 'lib/graphql';
 import React, { useState } from 'react';
 import * as yup from 'yup';
 import { toast } from 'react-toastify';
@@ -11,6 +11,7 @@ import { ScanCodeForm } from './two-factor/ScanCodeForm';
 import { ValidateCodeForm } from './two-factor/ValidateCodeForm';
 import { RecoveryPhraseForm } from './two-factor/RecoveryPhraseForm';
 import { ValidateRecoveryPhraseForm } from './two-factor/ValidateRecoveryPhraseForm';
+import { updateOTPCache } from 'lib/apollo/cache/updateOTPCache';
 
 interface SecurityFormProps {
   afterSubmit: () => void;
@@ -83,7 +84,7 @@ export const SecurityForm = ({ afterSubmit }: SecurityFormProps) => {
   const submitForm = async ({ secret, recoveryPhrase }: FormValues) => {
     await updateOTP({
       variables: { input: { otpSecret: secret, otpRecoveryPhrase: recoveryPhrase } },
-      refetchQueries: [MeDocument],
+      update: updateOTPCache,
     });
 
     afterSubmit();
