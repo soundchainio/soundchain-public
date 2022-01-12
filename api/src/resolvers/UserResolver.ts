@@ -54,7 +54,7 @@ export class UserResolver {
 
     const user = await authService.getUserFromCredentials(magicUser.email);
 
-    if (!user.magicWalletAddress) {
+    if (magicUser.publicAddress !== user.magicWalletAddress) {
       userService.updateMagicWallet(user._id, magicUser.publicAddress);
     }
 
