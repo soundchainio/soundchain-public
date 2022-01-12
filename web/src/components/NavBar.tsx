@@ -24,14 +24,26 @@ export const NavBar = () => {
     <nav className="bg-black md:bg-gray-30 h-16 flex items-center inset-x-0 shadow-2xl md:w-full">
       <div className="w-full flex justify-center gap-14">
         <NavBarButton label="Home" path="/" icon={Home} color="yellow" id="top" />
-        <NavBarButton label="Explore" path={me ? '/explore' : '/login'} icon={Search} color="green" />
+        <NavBarButton id="top-explore-" label="Explore" path={me ? '/explore' : '/login'} icon={Search} color="green" />
         {isMinting ? (
           <NavBarButton label="Minting..." nyanCat={true} onClick={handleCreateClick} />
         ) : (
           <NavBarButton label="Create" icon={NewPost} onClick={handleCreateClick} />
         )}
-        <NavBarButton label="Library" path={me ? '/library' : '/login'} icon={Library} color="purple" />
-        <NavBarButton label="Market" icon={MarketplaceNavBar} color="purple-green" path={'/marketplace'} />
+        <NavBarButton
+          id="top-library-"
+          label="Library"
+          path={me ? '/library' : '/login'}
+          icon={Library}
+          color="purple"
+        />
+        <NavBarButton
+          id="top-marketplace-"
+          label="Market"
+          icon={MarketplaceNavBar}
+          color="purple-green"
+          path={'/marketplace'}
+        />
       </div>
     </nav>
   );
