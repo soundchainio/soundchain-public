@@ -88,7 +88,11 @@ export class TrackService extends ModelService<typeof Track> {
     );
 
     if (!track) {
-      const trackPending = new PendingTrackModel({ transactionHash, tokenId: newNftData.tokenId });
+      const trackPending = new PendingTrackModel({
+        transactionHash,
+        tokenId: newNftData.tokenId,
+        contract: newNftData.contract,
+      });
       await trackPending.save();
       return;
     }
