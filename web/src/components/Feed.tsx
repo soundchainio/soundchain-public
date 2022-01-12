@@ -1,6 +1,7 @@
 import { Post } from 'components/Post';
 import { useFeedQuery } from 'lib/graphql';
 import { InfiniteLoader } from './InfiniteLoader';
+import { NoResultFound } from './NoResultFound';
 import { PostSkeleton } from './PostSkeleton';
 
 interface FeedProps {
@@ -9,8 +10,8 @@ interface FeedProps {
 
 export const Feed = ({ pageSize }: FeedProps) => {
   pageSize = pageSize ?? 10;
-  const { data, fetchMore } = useFeedQuery({ variables: { page: { first: pageSize } }, ssr: false });
-  if (!data) {
+  const { data, loading, fetchMore } = useFeedQuery({ variables: { page: { first: pageSize } }, ssr: false });
+  if (loading) {
     return (
       <div className="space-y-2">
         <PostSkeleton />
@@ -18,6 +19,10 @@ export const Feed = ({ pageSize }: FeedProps) => {
         <PostSkeleton />
       </div>
     );
+  }
+
+  if (!data) {
+    return <NoResultFound type="posts" />;
   }
 
   const { nodes, pageInfo } = data.feed;

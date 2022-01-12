@@ -36,7 +36,7 @@ export const ExploreTracks = ({ searchTerm }: ExplorePageProps) => {
     }
   };
 
-  if (!data || loading)
+  if (loading) {
     return (
       <>
         <TrackListItemSkeleton />
@@ -44,6 +44,11 @@ export const ExploreTracks = ({ searchTerm }: ExplorePageProps) => {
         <TrackListItemSkeleton />
       </>
     );
+  }
+
+  if (!data) {
+    return <NoResultFound type="tracks" />;
+  }
 
   const { nodes: tracks, pageInfo } = data?.exploreTracks;
 

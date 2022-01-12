@@ -14,6 +14,7 @@ import {
 import React, { useEffect, useState } from 'react';
 import { Badge } from './Badge';
 import { InfiniteLoader } from './InfiniteLoader';
+import { NoResultFound } from './NoResultFound';
 import { PostSkeleton } from './PostSkeleton';
 import { Track } from './Track';
 import { TrackGrid } from './TrackGrid';
@@ -146,12 +147,14 @@ export const Marketplace = () => {
           />
         ))}
       </div>
-      {!data || loading ? (
+      {loading ? (
         <div className="space-y-2">
           <PostSkeleton />
           <PostSkeleton />
           <PostSkeleton />
         </div>
+      ) : !data ? (
+        <NoResultFound type="items" />
       ) : (
         <Tracks isGrid={isGrid} tracks={data.listingItems.nodes} />
       )}

@@ -2,6 +2,7 @@ import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { SortOrder, SortTrackField, useTracksQuery } from 'lib/graphql';
 import React from 'react';
 import { InfiniteLoader } from './InfiniteLoader';
+import { NoResultFound } from './NoResultFound';
 import { Song, TrackListItem } from './TrackListItem';
 import { TrackListItemSkeleton } from './TrackListItemSkeleton';
 
@@ -9,14 +10,14 @@ export const TopTracks = () => {
   const { playlistState } = useAudioPlayerContext();
 
   const pageSize = 10;
-  const { data, fetchMore } = useTracksQuery({
+  const { data, loading, fetchMore } = useTracksQuery({
     variables: {
       sort: { field: SortTrackField.PlaybackCount, order: SortOrder.Desc },
       page: { first: pageSize, last: 100 },
     },
   });
 
-  if (!data) {
+  if (loading) {
     return (
       <div className="space-y-2">
         <TrackListItemSkeleton />
@@ -24,6 +25,10 @@ export const TopTracks = () => {
         <TrackListItemSkeleton />
       </div>
     );
+  }
+
+  if (!data) {
+    return <NoResultFound type="tracks" />;
   }
 
   const { nodes, pageInfo } = data.tracks;
