@@ -14,7 +14,6 @@ import { JwtService, JwtUser } from '../services/JwtService';
 import { ListingItemService } from '../services/ListingItemService';
 import { LogErrorService } from '../services/LogErrorService';
 import { MessageService } from '../services/MessageService';
-import { MintingRequestService } from '../services/MintingRequestService';
 import { MuxService } from '../services/MuxService';
 import { NotificationService } from '../services/NotificationService';
 import { PinningService } from '../services/PinningService';
@@ -42,7 +41,6 @@ export class Context {
   jwtService = new JwtService(this);
   logErrorService = new LogErrorService(this);
   messageService = new MessageService(this);
-  mintingRequestService = new MintingRequestService(this);
   muxService = new MuxService(this);
   notificationService = new NotificationService(this);
   pinningService = new PinningService(this);
