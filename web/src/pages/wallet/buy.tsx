@@ -10,9 +10,20 @@ import { Moonpay } from 'icons/Moonpay';
 import { Navigate } from 'icons/Navigate';
 import { OkCoin } from 'icons/OkCoin';
 import { Polygon } from 'icons/Polygon';
+import { cacheFor } from 'lib/apollo';
 import { network } from 'lib/blockchainNetworks';
+import { protectPage } from 'lib/protectPage';
 import Image from 'next/image';
 import React from 'react';
+
+export const getServerSideProps = protectPage(async (context, apolloClient) => {
+  try {
+    if (!context.user) return { notFound: true };
+    return await cacheFor(BuyMaticPage, {}, context, apolloClient);
+  } catch (error) {
+    return { notFound: true };
+  }
+});
 
 const topNovaBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
