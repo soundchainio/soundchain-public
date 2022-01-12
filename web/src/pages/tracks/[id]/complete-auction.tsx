@@ -2,6 +2,7 @@ import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { AuctionEnded } from 'components/details-NFT/AuctionEnded';
 import { Layout } from 'components/Layout';
+import { Matic } from 'components/Matic';
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { TotalPrice } from 'components/TotalPrice';
@@ -10,7 +11,6 @@ import useBlockchain from 'hooks/useBlockchain';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { CheckmarkFilled } from 'icons/CheckmarkFilled';
-import { Matic } from 'components/Matic';
 import { cacheFor } from 'lib/apollo';
 import { PendingRequest, TrackDocument, TrackQuery, useAuctionItemQuery, useUpdateTrackMutation } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
@@ -96,6 +96,7 @@ export default function CompleteAuctionPage({ track }: TrackPageProps) {
             trackId: track.id,
             nftData: {
               pendingRequest: PendingRequest.CompleteAuction,
+              pendingTime: new Date().toISOString(),
             },
           },
         },

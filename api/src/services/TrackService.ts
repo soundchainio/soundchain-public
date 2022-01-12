@@ -6,6 +6,7 @@ import { NotFoundError } from '../errors/NotFoundError';
 import { FavoriteProfileTrack, FavoriteProfileTrackModel } from '../models/FavoriteProfileTrack';
 import { FeedItemModel } from '../models/FeedItem';
 import { NotificationModel } from '../models/Notification';
+import { PendingTrackModel } from '../models/PendingTrack';
 import { PostModel } from '../models/Post';
 import { Track, TrackModel } from '../models/Track';
 import { TrackWithListingItem } from '../models/TrackWithListingItem';
@@ -25,7 +26,7 @@ export interface FavoriteCount {
 }
 
 type RecursivePartial<T> = {
-  [P in keyof T]?: RecursivePartial<T[P]>;
+  [P in keyof T]?: T[P] extends Date ? T[P] : RecursivePartial<T[P]>;
 };
 
 type bulkType = {
@@ -91,7 +92,13 @@ export class TrackService extends ModelService<typeof Track> {
     );
 
     if (!track) {
-      throw new NotFoundError('Track', transactionHash);
+      const trackPending = new PendingTrackModel({
+        transactionHash,
+        tokenId: newNftData.tokenId,
+        contract: newNftData.contract,
+      });
+      await trackPending.save();
+      return;
     }
     return this.updateNftData(track, newNftData);
   }
@@ -116,6 +123,17 @@ export class TrackService extends ModelService<typeof Track> {
     }
 
     return track;
+  }
+
+  private updateNftDataByTransactionHash(transactionHash: string, nftData: Partial<NFTData>) {
+    return this.model.updateOne(
+      { 'nftData.transactionHash': transactionHash },
+      {
+        'nftData.tokenId': nftData.tokenId,
+        'nftData.contract': nftData.contract,
+        'nftData.pendingRequest': PendingRequest.None,
+      },
+    );
   }
 
   async deleteTrack(id: string, profileId: string): Promise<Track> {
@@ -358,6 +376,33 @@ export class TrackService extends ModelService<typeof Track> {
       filter: filter ? { ...(filter.genres && { genres: filter.genres }), ...dotNotationFilter, deleted: false } : {},
       sort,
       page,
+    });
+  }
+
+  async resetPending(): Promise<void> {
+    const nowMinusOneHour = new Date();
+    nowMinusOneHour.setHours(nowMinusOneHour.getHours() - 1);
+
+    return this.model.updateMany(
+      {
+        'nftData.pendingRequest': { $ne: PendingRequest.None },
+        'nftData.pendingTime': { $lte: nowMinusOneHour },
+      },
+      { 'nftData.pendingRequest': PendingRequest.None },
+    );
+  }
+
+  async processPendingTrack(): Promise<void> {
+    const pendingTracks = await PendingTrackModel.find({ processed: false });
+    pendingTracks.forEach(async ({ transactionHash, tokenId, contract, _id }) => {
+      const updatedTrack = await this.updateNftDataByTransactionHash(transactionHash, {
+        tokenId,
+        contract,
+      });
+      if (!updatedTrack) {
+        return;
+      }
+      await PendingTrackModel.updateOne({ _id }, { processed: true });
     });
   }
 }

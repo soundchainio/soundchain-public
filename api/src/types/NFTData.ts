@@ -14,6 +14,10 @@ export class NFTData {
   @prop({ type: String, enum: PendingRequest, default: PendingRequest.None })
   pendingRequest: PendingRequest;
 
+  @Field(() => Date, { nullable: true })
+  @prop()
+  pendingTime: Date;
+
   @Field({ nullable: true })
   @prop()
   ipfsCid: string;

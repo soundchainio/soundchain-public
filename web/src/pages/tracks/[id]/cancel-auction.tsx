@@ -92,6 +92,7 @@ export default function CompleteAuctionPage({ track, auctionItem }: TrackPagePro
             trackId: track.id,
             nftData: {
               pendingRequest: PendingRequest.CancelAuction,
+              pendingTime: new Date().toISOString(),
             },
           },
         },

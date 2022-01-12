@@ -12,7 +12,7 @@ package:
 
 functions:
   graphql:
-    handler: src/lambda.handler
+    handler: src/lambda/handler.handler
     timeout: 20
     events:
       - http:
@@ -26,28 +26,21 @@ functions:
   migrate:
     handler: src/db/migrate.handler
   watcher:
-    handler: src/lambda.watcher
+    handler: src/lambda/blockchainWatcher.blockchainWatcher
     events:
       - schedule: rate(1 minute)
   playbackCount:
-    handler: src/lambda.playbackCount
+    handler: src/lambda/playbackCount.playbackCount
     events:
       - schedule: cron(0 15 * * ? *)
   processAuctions:
-    handler: src/lambda.processAuctions
+    handler: src/lambda/processAuctions.processAuctions
     events:
       - schedule: rate(5 minutes)
-  mint:
-    handler: src/lambda.mint
-    timeout: 120
-    reservedConcurrency: 1
+  processPending:
+    handler: src/lambda/processPending.processPending
     events:
-      - sqs:
-          batchSize: 1
-          arn:
-            Fn::GetAtt:
-              - MintingQueue
-              - Arn
+      - schedule: rate(30 minutes)
 
 custom:
   db:
@@ -76,8 +69,6 @@ custom:
       - '-'
       - - Ref: 'AWS::StackName'
         - 'uploads'
-  sqs:
-    url: !Ref MintingQueue
 
 provider:
   name: aws
@@ -114,7 +105,6 @@ provider:
     AUCTION_ADDRESS: ${env:AUCTION_ADDRESS}
     PINATA_API_KEY: ${env:PINATA_API_KEY}
     PINATA_API_SECRET: ${env:PINATA_API_SECRET}
-    SQS_URL: ${self:custom.sqs.url}
     MUX_TOKEN_ID: ${env:MUX_TOKEN_ID}
     MUX_TOKEN_SECRET: ${env:MUX_TOKEN_SECRET}
     SENTRY_URL: ${env:SENTRY_URL}
@@ -408,44 +398,3 @@ resources:
             - AllowedHeaders: ['*']
               AllowedMethods: [GET, PUT]
               AllowedOrigins: ['*']
-    MintingQueue:
-      Type: AWS::SQS::Queue
-      Properties:
-        ContentBasedDeduplication: true
-        FifoQueue: true
-        MessageRetentionPeriod: 1209600
-        QueueName:
-          Fn::Sub: MintingQueue-${AWS::StackName}.fifo
-        VisibilityTimeout: 125
-        RedrivePolicy:
-          deadLetterTargetArn:
-            Fn::GetAtt:
-              - 'MintingDeadLetterQueue'
-              - 'Arn'
-          maxReceiveCount: 5
-    MintingQueuePolicy:
-      Type: AWS::SQS::QueuePolicy
-      Properties:
-        Queues:
-          - !Ref MintingQueue
-        PolicyDocument:
-          Statement:
-            - Action:
-                - 'SQS:SendMessage'
-                - 'SQS:ReceiveMessage'
-              Effect: 'Allow'
-              Resource:
-                Fn::GetAtt:
-                  - 'MintingQueue'
-                  - 'Arn'
-              Principal:
-                AWS:
-                  - '*'
-    MintingDeadLetterQueue:
-      Type: AWS::SQS::Queue
-      Properties:
-        ContentBasedDeduplication: true
-        FifoQueue: true
-        MessageRetentionPeriod: 1209600
-        QueueName:
-          Fn::Sub: MintingDeadLetterQueue-${AWS::StackName}.fifo

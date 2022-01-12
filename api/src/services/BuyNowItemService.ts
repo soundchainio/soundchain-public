@@ -65,7 +65,7 @@ export class BuyNowService extends ModelService<typeof BuyNowItem> {
       this.context.trackService.updateTrack(track._id, { profileId }),
       this.context.notificationService.notifyNFTSold({
         sellerProfileId: sellerUser.profileId,
-        buyerProfileId: buyerUser?.profileId,
+        buyerProfileId: profileId,
         price,
         trackId: track._id,
         trackName: track.title,
