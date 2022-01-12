@@ -48,7 +48,11 @@ export class TrackService extends ModelService<typeof Track> {
   getTracks(filter?: FilterTrackInput, sort?: SortTrackInput, page?: PageInput): Promise<PaginateResult<Track>> {
     const defaultFilter = { title: { $exists: true }, deleted: false };
     const dotNotationFilter = filter && dot.dot(filter);
-    return this.paginate({ filter: { ...defaultFilter, ...dotNotationFilter }, sort, page });
+    const owner = filter?.nftData?.owner && {
+      'nftData.owner': { $regex: `^${filter.nftData.owner}$`, $options: 'i' },
+    };
+
+    return this.paginate({ filter: { ...defaultFilter, ...dotNotationFilter, ...owner }, sort, page });
   }
 
   getTrack(id: string): Promise<Track> {
