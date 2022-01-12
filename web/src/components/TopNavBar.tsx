@@ -19,6 +19,7 @@ export interface TopNavBarProps {
   title?: string;
   subtitle?: JSX.Element;
   midRightButton?: JSX.Element;
+  isLogin?: boolean;
 }
 
 export const TopNavBar = ({
@@ -29,6 +30,7 @@ export const TopNavBar = ({
   showLoginSignUpButton = true,
   setSideMenuOpen,
   midRightButton,
+  isLogin,
 }: TopNavBarProps) => {
   const router = useRouter();
   const me = useMe();
@@ -36,6 +38,8 @@ export const TopNavBar = ({
   const onLogin = () => {
     router.push('/login');
   };
+
+  if (isLogin) return null;
 
   return (
     <div className={`relative z-10 flex-shrink-0 flex h-16 bg-black ${config.mobileBreakpoint}:bg-gray-30 shadow`}>
