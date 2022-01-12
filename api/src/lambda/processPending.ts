@@ -10,5 +10,5 @@ export const processPending: Handler = async () => {
   const user = await UserModel.findOne({ handle: '_system' });
   const context = new Context({ sub: user._id });
 
-  await context.trackService.resetPending();
+  await Promise.all([context.trackService.resetPending(), context.trackService.processPendingTrack()]);
 };

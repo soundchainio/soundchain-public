@@ -96,7 +96,7 @@ export default function CompleteAuctionPage({ track }: TrackPageProps) {
             trackId: track.id,
             nftData: {
               pendingRequest: PendingRequest.CompleteAuction,
-              pendingTime: new Date(),
+              pendingTime: new Date().toISOString(),
             },
           },
         },
