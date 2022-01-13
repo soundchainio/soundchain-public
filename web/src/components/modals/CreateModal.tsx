@@ -234,6 +234,7 @@ export const CreateModal = () => {
                   ipfsCid: metadataPinResult?.pinJsonToIPFS.cid,
                   pendingRequest: PendingRequest.Mint,
                   owner: account,
+                  pendingTime: new Date().toISOString(),
                 },
               },
             },

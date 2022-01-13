@@ -61,6 +61,7 @@ export const RemoveListingConfirmationModal = () => {
             trackId: trackId,
             nftData: {
               pendingRequest: PendingRequest.CancelListing,
+              pendingTime: new Date().toISOString(),
             },
           },
         },

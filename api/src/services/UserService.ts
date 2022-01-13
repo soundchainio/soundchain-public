@@ -94,7 +94,7 @@ export class UserService extends ModelService<typeof User> {
     return bcrypt.compare(otpRecoveryPhrase, user.otpRecoveryPhrase);
   }
 
-  async getUserByWallet(walletAddress: string): Promise<User> {
+  async getUserByWallet(walletAddress: string): Promise<User | null> {
     const user = await this.model.findOne({
       $or: [
         { magicWalletAddress: { $regex: `^${walletAddress}$`, $options: 'i' } },

@@ -111,6 +111,7 @@ export default function AuctionPage({ track }: TrackPageProps) {
               trackId: track.id,
               nftData: {
                 pendingRequest: PendingRequest.List,
+                pendingTime: new Date().toISOString(),
               },
             },
           },

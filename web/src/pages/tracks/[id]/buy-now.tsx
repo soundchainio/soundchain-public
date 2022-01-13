@@ -121,6 +121,7 @@ export default function BuyNowPage({ track }: TrackPageProps) {
             trackId: track.id,
             nftData: {
               pendingRequest: PendingRequest.Buy,
+              pendingTime: new Date().toISOString(),
             },
           },
         },

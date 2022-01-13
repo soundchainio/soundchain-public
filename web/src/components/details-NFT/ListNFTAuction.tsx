@@ -3,6 +3,7 @@ import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
 import MaxGasFee from 'components/MaxGasFee';
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
+import { config } from 'config';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import { Matic } from 'icons/Matic';
 import ReactDatePicker from 'react-datepicker';
@@ -79,7 +80,7 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: Lis
             <div className="flex items-center justify-between bg-gray-20 py-3 px-5">
               <label
                 htmlFor="endTime"
-                className="flex items-center justify-start  text-gray-80 font-bold text-xs md:text-sm "
+                className={`flex items-center justify-start  text-gray-80 font-bold text-xs ${config.mobileBreakpoint}:text-sm `}
               >
                 <div className="flex flex-col mr-3">
                   <p className="uppercase">end time</p>

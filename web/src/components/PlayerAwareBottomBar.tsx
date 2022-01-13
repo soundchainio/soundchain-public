@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
 import classNames from 'classnames';
+import { config } from 'config';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import React from 'react';
 
@@ -10,8 +11,10 @@ const PlayerAwareBottomBar = ({ children }: React.PropsWithChildren<PlayerAwareB
   return (
     <div
       className={classNames(
-        'bg-black text-white flex items-center py-3 px-4 fixed right-0 md:left-64 left-0',
-        currentSong?.src ? 'bottom-36 md:bottom-16' : 'bottom-20 md:bottom-0',
+        `bg-black text-white flex items-center py-3 px-4 fixed right-0 ${config.mobileBreakpoint}:left-64 left-0 mb-safe`,
+        currentSong?.src
+          ? `bottom-36 ${config.mobileBreakpoint}:bottom-16`
+          : `bottom-20 ${config.mobileBreakpoint}:bottom-0`,
       )}
     >
       {children}

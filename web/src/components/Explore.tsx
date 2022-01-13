@@ -1,19 +1,18 @@
 import { ExploreAll } from 'components/ExploreAll';
+import { ExploreSearchBar } from 'components/ExploreSearchBar';
 import { ExploreTabs } from 'components/ExploreTabs';
 import { ExploreTracks } from 'components/ExploreTracks';
 import { ExploreUsers } from 'components/ExploreUsers';
 import React, { useState } from 'react';
 import { ExploreTab } from 'types/ExploreTabType';
 
-interface ExplorePageProps {
-  searchTerm?: string;
-}
-
-export const Explore = ({ searchTerm }: ExplorePageProps) => {
+export const Explore = () => {
   const [selectedTab, setSelectedTab] = useState<ExploreTab>(ExploreTab.ALL);
+  const [searchTerm, setSearchTerm] = useState<string>('');
 
   return (
-    <div className="pt-2 bg-black">
+    <div className="bg-black">
+      <ExploreSearchBar setSearchTerm={setSearchTerm} />
       <ExploreTabs selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
       {selectedTab === ExploreTab.ALL && <ExploreAll setSelectedTab={setSelectedTab} searchTerm={searchTerm} />}
       {selectedTab === ExploreTab.USERS && <ExploreUsers searchTerm={searchTerm} />}
