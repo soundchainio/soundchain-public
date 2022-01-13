@@ -2,20 +2,21 @@ import { Button } from 'components/Button';
 import MaxGasFee from 'components/MaxGasFee';
 import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
-import useBlockchain from 'hooks/useBlockchain';
+import useBlockchainV2 from 'hooks/useBlockchainV2';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { ApproveBuyNow } from 'icons/ApproveBuyNow';
 import { ApproveMarketplace } from 'icons/ApproveMarketplace';
 import { Auction } from 'icons/Auction';
 import { CheckmarkFilled } from 'icons/CheckmarkFilled';
 import React, { useState } from 'react';
+import { toast } from 'react-toastify';
 import { SaleType } from 'types/SaleType';
 
 export const ApproveModal = () => {
   const { account, web3 } = useWalletContext();
   const { showApprove, type } = useModalState();
   const { dispatchShowApproveModal } = useModalDispatch();
-  const { approveMarketplace, approveAuction } = useBlockchain();
+  const { approveMarketplace, approveAuction } = useBlockchainV2();
   const [loading, setLoading] = useState(false);
 
   const handleClose = () => {
@@ -26,17 +27,25 @@ export const ApproveModal = () => {
     if (!web3 || !account) {
       return;
     }
-    setLoading(true);
-    if (type === SaleType.AUCTION) {
-      approveAuction(web3, account, onReceipt);
-    } else if (type === SaleType.MARKETPLACE) {
-      approveMarketplace(web3, account, onReceipt);
-    }
-  };
+    const onReceipt = () => {
+      setLoading(false);
+      dispatchShowApproveModal(false, SaleType.CLOSE);
+    };
 
-  const onReceipt = () => {
-    setLoading(false);
-    dispatchShowApproveModal(false, SaleType.CLOSE);
+    setLoading(true);
+
+    const approve =
+      type === SaleType.AUCTION
+        ? approveAuction(account)
+        : type === SaleType.MARKETPLACE
+        ? approveMarketplace(account)
+        : null;
+
+    approve
+      ?.onReceipt(onReceipt)
+      .onError(cause => toast.error(cause.message))
+      .finally(() => setLoading(false))
+      .execute(web3);
   };
 
   const icon =

@@ -109,8 +109,8 @@ export default function BuyNowPage({ track }: TrackPageProps) {
       return;
     }
 
-    if (parseFloat(balance || '0') < listingPayload.buyNowItem.buyNowItem.pricePerItem) {
-      toast.warn("Uh-oh, it seems you don't have enough funds for this transaction", { autoClose: 5 * 1000 });
+    if (listingPayload.buyNowItem.buyNowItem.pricePerItem >= parseFloat(balance || '0')) {
+      toast.warn("Uh-oh, it seems you don't have enough funds for this transaction");
       return;
     }
 
@@ -136,7 +136,7 @@ export default function BuyNowPage({ track }: TrackPageProps) {
       listingPayload.buyNowItem?.buyNowItem?.pricePerItem.toString(),
     )
       .onReceipt(onReceipt)
-      .onError(cause => toast.warn(cause.message, { autoClose: 6 * 1000 }))
+      .onError(cause => toast.error(cause.message))
       .finally(() => setLoading(false))
       .execute(web3);
   };

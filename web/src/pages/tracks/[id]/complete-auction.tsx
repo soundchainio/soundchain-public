@@ -19,6 +19,8 @@ import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 import { compareWallets } from 'utils/Wallet';
 import SEO from '../../../components/SEO';
+import useBlockchainV2 from 'hooks/useBlockchainV2';
+import { toast } from 'react-toastify';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -54,7 +56,8 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 });
 
 export default function CompleteAuctionPage({ track }: TrackPageProps) {
-  const { resultAuction, getHighestBid } = useBlockchain();
+  const { getHighestBid } = useBlockchain();
+  const { resultAuction } = useBlockchainV2();
   const { account, web3 } = useWalletContext();
   const [trackUpdate] = useUpdateTrackMutation();
   const [loading, setLoading] = useState(false);
@@ -89,7 +92,7 @@ export default function CompleteAuctionPage({ track }: TrackPageProps) {
     if (!web3 || !auctionItem.auctionItem?.auctionItem?.tokenId || !account) {
       return;
     }
-    const onTransactionHash = async () => {
+    const onReceipt = async () => {
       await trackUpdate({
         variables: {
           input: {
@@ -102,8 +105,12 @@ export default function CompleteAuctionPage({ track }: TrackPageProps) {
       });
       router.push(router.asPath.replace('complete-auction', ''));
     };
-    resultAuction(web3, tokenId, account, onTransactionHash);
     setLoading(true);
+    resultAuction(tokenId, account)
+      .onReceipt(onReceipt)
+      .onError(cause => toast.error(cause.message))
+      .finally(() => setLoading(false))
+      .execute(web3);
   };
 
   const topNovaBarProps: TopNavBarProps = {

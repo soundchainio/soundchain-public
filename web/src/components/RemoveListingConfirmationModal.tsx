@@ -1,12 +1,13 @@
 import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
-import useBlockchain from 'hooks/useBlockchain';
+import useBlockchainV2 from 'hooks/useBlockchainV2';
 import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { PendingRequest, useUpdateTrackMutation } from 'lib/graphql';
 import router from 'next/router';
 import { useState } from 'react';
+import { toast } from 'react-toastify';
 import { SaleType } from 'types/SaleType';
 import { Button } from './Button';
 import { ConnectedNetwork } from './ConnectedNetwork';
@@ -22,7 +23,7 @@ export const RemoveListingConfirmationModal = () => {
   const { showRemoveListing, trackId, tokenId, saleType } = useModalState();
   const [trackUpdate] = useUpdateTrackMutation();
   const { dispatchShowRemoveListingModal } = useModalDispatch();
-  const { cancelListing, cancelAuction } = useBlockchain();
+  const { cancelListing, cancelAuction } = useBlockchainV2();
   const { web3, account, balance } = useWalletContext();
   const maxGasFee = useMaxGasFee(showRemoveListing);
   const [loading, setLoading] = useState(false);
@@ -51,33 +52,33 @@ export const RemoveListingConfirmationModal = () => {
       return;
     }
 
-    try {
-      setLoading(true);
-      if (!account || !web3) return;
-      const onTransactionHash = async () => {
-        await trackUpdate({
-          variables: {
-            input: {
-              trackId: trackId,
-              nftData: {
-                pendingRequest: PendingRequest.CancelListing,
-              },
+    setLoading(true);
+    if (!account || !web3) return;
+    const onReceipt = async () => {
+      await trackUpdate({
+        variables: {
+          input: {
+            trackId: trackId,
+            nftData: {
+              pendingRequest: PendingRequest.CancelListing,
             },
           },
-        });
+        },
+      });
 
-        dispatchShowRemoveListingModal(false, 0, '', SaleType.CLOSE);
-        saleType === SaleType.MARKETPLACE
-          ? router.push(router.asPath.replace('edit/buy-now', ''))
-          : router.push(router.asPath.replace('edit/auction', ''));
-      };
+      dispatchShowRemoveListingModal(false, 0, '', SaleType.CLOSE);
       saleType === SaleType.MARKETPLACE
-        ? cancelListing(web3, tokenId, account, onTransactionHash)
-        : cancelAuction(web3, tokenId, account, onTransactionHash);
-    } catch (e) {
-      setLoading(false);
-      alert('We had some trouble, please try again later!');
-    }
+        ? router.push(router.asPath.replace('edit/buy-now', ''))
+        : router.push(router.asPath.replace('edit/auction', ''));
+    };
+    const cancel =
+      saleType === SaleType.MARKETPLACE ? cancelListing(tokenId, account) : cancelAuction(tokenId, account);
+
+    cancel
+      .onReceipt(() => onReceipt)
+      .onError(cause => toast.error(cause.message))
+      .finally(() => setLoading(false))
+      .execute(web3);
   };
 
   return (

@@ -5,7 +5,7 @@ import MaxGasFee from 'components/MaxGasFee';
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
-import useBlockchain from 'hooks/useBlockchain';
+import useBlockchainV2 from 'hooks/useBlockchainV2';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { cacheFor } from 'lib/apollo';
@@ -21,6 +21,7 @@ import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useState } from 'react';
+import { toast } from 'react-toastify';
 import SEO from '../../../components/SEO';
 
 export interface TrackPageProps {
@@ -70,7 +71,7 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 });
 
 export default function CompleteAuctionPage({ track, auctionItem }: TrackPageProps) {
-  const { cancelAuction } = useBlockchain();
+  const { cancelAuction } = useBlockchainV2();
   const { account, web3 } = useWalletContext();
   const [trackUpdate] = useUpdateTrackMutation();
   const [loading, setLoading] = useState(false);
@@ -85,7 +86,7 @@ export default function CompleteAuctionPage({ track, auctionItem }: TrackPagePro
     if (!web3 || !account) {
       return;
     }
-    const onTransactionHash = async () => {
+    const onReceipt = async () => {
       await trackUpdate({
         variables: {
           input: {
@@ -98,8 +99,13 @@ export default function CompleteAuctionPage({ track, auctionItem }: TrackPagePro
       });
       router.back();
     };
-    cancelAuction(web3, auctionItem.tokenId, account, onTransactionHash);
     setLoading(true);
+
+    cancelAuction(auctionItem.tokenId, account)
+      .onReceipt(() => onReceipt)
+      .onError(cause => toast.error(cause))
+      .finally(() => setLoading(false))
+      .execute(web3);
   };
 
   const topNovaBarProps: TopNavBarProps = {

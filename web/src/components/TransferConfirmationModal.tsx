@@ -3,7 +3,7 @@ import { Matic } from 'components/Matic';
 import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { Form, Formik } from 'formik';
-import useBlockchain from 'hooks/useBlockchain';
+import useBlockchainV2 from 'hooks/useBlockchainV2';
 import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
@@ -29,7 +29,7 @@ export const TransferConfirmationModal = () => {
   const { showTransferConfirmation, walletRecipient, amountToTransfer } = useModalState();
   const { dispatchShowTransferConfirmationModal } = useModalDispatch();
   const [loading, setLoading] = useState(false);
-  const { sendMatic } = useBlockchain();
+  const { sendMatic } = useBlockchainV2();
   const { web3, account, balance, refetchBalance } = useWalletContext();
 
   const maxGasFee = useMaxGasFee(showTransferConfirmation);
@@ -67,21 +67,20 @@ export const TransferConfirmationModal = () => {
     }
 
     if (hasEnoughFunds() && web3 && refetchBalance) {
-      try {
-        setLoading(true);
-        const onReceipt = () => {
-          toast.success('Transaction completed!');
-          setLoading(false);
-          handleClose();
-          refetchBalance();
-          router.push('/wallet');
-        };
-        if (account && walletRecipient && amountToTransfer) {
-          sendMatic(web3, walletRecipient, account, amountToTransfer, onReceipt);
-        }
-      } catch (e) {
+      setLoading(true);
+      const onReceipt = () => {
+        toast.success('Transaction completed!');
         setLoading(false);
-        toast.error('We had some trouble, please try again later!');
+        handleClose();
+        refetchBalance();
+        router.push('/wallet');
+      };
+      if (account && walletRecipient && amountToTransfer) {
+        sendMatic(walletRecipient, account, amountToTransfer)
+          .onReceipt(onReceipt)
+          .onError(() => toast.error('We had some trouble, please try again later!'))
+          .finally(() => setLoading(false))
+          .execute(web3);
       }
     } else {
       toast.error(
