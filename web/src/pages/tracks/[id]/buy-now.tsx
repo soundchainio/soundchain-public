@@ -108,8 +108,11 @@ export default function BuyNowPage({ track }: TrackPageProps) {
     ) {
       return;
     }
-
-    if (listingPayload.buyNowItem.buyNowItem.pricePerItem >= parseFloat(balance || '0')) {
+    const price = web3.utils.fromWei(
+      listingPayload.buyNowItem.buyNowItem.pricePerItem.toLocaleString('fullwide', { useGrouping: false }) ?? '0',
+      'ether',
+    );
+    if (parseFloat(price) >= parseFloat(balance || '0')) {
       toast.warn("Uh-oh, it seems you don't have enough funds for this transaction");
       return;
     }
