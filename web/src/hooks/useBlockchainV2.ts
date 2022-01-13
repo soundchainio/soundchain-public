@@ -46,7 +46,7 @@ class BlockchainFunction<Type> {
     this.params = params;
   }
 
-  protected _execute = async (lambda: () => PromiEvent<TransactionReceipt>) => {
+  protected async _execute(lambda: () => PromiEvent<TransactionReceipt>) {
     const { me } = this;
     if ((this.web3?.currentProvider as SDKBase['rpcProvider']).isMagic && !(await magic.user.isLoggedIn()) && me) {
       await magic.auth.loginWithMagicLink({ email: me.email });
@@ -58,22 +58,22 @@ class BlockchainFunction<Type> {
       })
       .catch(this.onErrorFunction)
       .finally(this.finallyFunction);
-  };
+  }
 
-  onReceipt = (handler: (receipt: TransactionReceipt) => void) => {
+  onReceipt(handler: (receipt: TransactionReceipt) => void) {
     this.onReceiptFunction = handler;
     return this;
-  };
+  }
 
-  onError = (handler: (cause: Error) => void) => {
+  onError(handler: (cause: Error) => void) {
     this.onErrorFunction = handler;
     return this;
-  };
+  }
 
-  finally = (handler: () => void) => {
+  finally(handler: () => void) {
     this.finallyFunction = handler;
     return this;
-  };
+  }
 }
 interface PlaceBidParams extends DefaultParam {
   tokenId: number;
@@ -298,6 +298,7 @@ const useBlockchainV2 = () => {
 
   const placeBid = useCallback(
     (tokenId: number, from: string, value: string) => {
+      console.log('before returning function', me);
       return new PlaceBid(me, { from, value, tokenId });
     },
     [me],
