@@ -9,17 +9,26 @@ import {
   BidPlaced,
   UpdateAuction,
 } from '../../types/web3-v1-contracts/SoundchainAuction';
-import { ItemUpdated } from '../../types/web3-v1-contracts/SoundchainMarketplace';
+import { ItemCanceled, ItemListed, ItemSold, ItemUpdated } from '../../types/web3-v1-contracts/SoundchainMarketplace';
 import { config } from '../config';
 import SoundchainCollectible from '../contract/Soundchain721.json';
 import SoundchainAuction from '../contract/SoundchainAuction.json';
 import SoundchainMarketplace from '../contract/SoundchainMarketplace.json';
 import { UserModel } from '../models/User';
-import { EventData, ItemCanceled, ItemListed, ItemSold, Transfer } from '../types/BlockchainEvents';
+import { EventData } from '../types/BlockchainEvents';
 import { Context } from '../types/Context';
-import { PendingRequest } from '../types/PendingRequest';
-
-const zeroAddress = '0x0000000000000000000000000000000000000000';
+import {
+  auctionCanceled,
+  auctionCreated,
+  auctionResulted,
+  bidPlaced,
+  itemCanceled,
+  itemListed,
+  itemSold,
+  itemUpdated,
+  transfer,
+  updateAuction,
+} from './processEvents';
 
 export const blockchainWatcher: Handler = async () => {
   await mongoose.connect(config.db.url, config.db.options);
@@ -69,74 +78,22 @@ const processMarketplaceEvents = async (events: EventData[], context: Context) =
     switch (event.event) {
       case 'ItemListed':
         {
-          try {
-            const { owner, nft, tokenId, pricePerItem, startingTime } = (event as ItemListed).returnValues;
-            const [user, listedBefore] = await Promise.all([
-              context.userService.getUserByWallet(owner),
-              context.listingItemService.wasListedBefore(parseInt(tokenId)),
-            ]);
-            if (!user) {
-              continue;
-            }
-            const profile = await context.profileService.getProfile(user.profileId);
-            if (!profile.verified && !listedBefore) {
-              context.trackService.setPendingNone(parseInt(tokenId));
-              continue;
-            }
-            await Promise.all([
-              context.buyNowItemService.createBuyNowItem({
-                owner,
-                nft,
-                tokenId: parseInt(tokenId),
-                pricePerItem: parseInt(pricePerItem),
-                startingTime: parseInt(startingTime),
-              }),
-              context.trackService.setPendingNone(parseInt(tokenId)),
-            ]);
-          } catch (error) {
-            console.error(error);
-          }
-          console.log('ItemListed');
+          await itemListed((event as unknown as ItemListed).returnValues, context);
         }
         break;
       case 'ItemSold':
         {
-          try {
-            const { tokenId, seller, buyer, pricePerItem } = (event as ItemSold).returnValues;
-            await context.buyNowItemService.finishListing(tokenId, seller, buyer, parseInt(pricePerItem));
-          } catch (error) {
-            console.error(error);
-          }
-          console.log('ItemSold');
+          await itemSold((event as unknown as ItemSold).returnValues, context);
         }
         break;
       case 'ItemUpdated':
         {
-          try {
-            const { tokenId, newPrice, startingTime } = (event as unknown as ItemUpdated).returnValues;
-            await Promise.all([
-              context.buyNowItemService.updateBuyNowItem(parseInt(tokenId), {
-                pricePerItem: parseInt(newPrice),
-                startingTime: parseInt(startingTime),
-              }),
-              context.trackService.setPendingNone(parseInt(tokenId)),
-            ]);
-          } catch (error) {
-            console.error(error);
-          }
-          console.log('ItemUpdated');
+          await itemUpdated((event as unknown as ItemUpdated).returnValues, context);
         }
         break;
       case 'ItemCanceled':
         {
-          try {
-            const { tokenId } = (event as ItemCanceled).returnValues;
-            await context.buyNowItemService.setNotValid(parseInt(tokenId));
-            await context.trackService.setPendingNone(parseInt(tokenId));
-          } catch (error) {
-            console.error(error);
-          }
-          console.log('ItemCanceled');
+          await itemCanceled((event as unknown as ItemCanceled).returnValues, context);
         }
         break;
     }
@@ -148,26 +105,7 @@ const processNFTEvents = async (events: EventData[], context: Context) => {
     switch (event.event) {
       case 'Transfer':
         {
-          try {
-            const { transactionHash, address, returnValues } = event as Transfer;
-            if (returnValues.from === zeroAddress) {
-              await context.trackService.updateTrackByTransactionHash(transactionHash, {
-                nftData: {
-                  tokenId: parseInt(returnValues.tokenId),
-                  contract: address,
-                  pendingRequest: PendingRequest.None,
-                },
-              });
-            } else if (returnValues.to === zeroAddress) {
-              const track = await context.trackService.getTrackByTokenId(parseInt(returnValues.tokenId));
-              await context.trackService.deleteTrackByAdmin(track._id);
-            } else {
-              await context.trackService.updateOwnerByTokenId(parseInt(returnValues.tokenId), returnValues.to);
-            }
-          } catch (error) {
-            console.error(error);
-          }
-          console.log('Transfer');
+          await transfer(event, context);
         }
         break;
     }
@@ -179,132 +117,27 @@ const processAuctionEvents = async (events: EventData[], context: Context) => {
     switch (event.event) {
       case 'AuctionCreated':
         {
-          try {
-            const { nftAddress, tokenId, owner, reservePrice, startTimestamp, endTimestamp } = (
-              event as unknown as AuctionCreated
-            ).returnValues;
-            const [user, listedBefore] = await Promise.all([
-              context.userService.getUserByWallet(owner),
-              context.listingItemService.wasListedBefore(parseInt(tokenId)),
-            ]);
-            if (!user) {
-              continue;
-            }
-            const profile = await context.profileService.getProfile(user.profileId);
-            if (!profile.verified && !listedBefore) {
-              context.trackService.setPendingNone(parseInt(tokenId));
-              continue;
-            }
-            await Promise.all([
-              context.auctionItemService.createAuctionItem({
-                owner,
-                nft: nftAddress,
-                tokenId: parseInt(tokenId),
-                startingTime: parseInt(startTimestamp),
-                endingTime: parseInt(endTimestamp),
-                reservePrice: parseInt(reservePrice),
-              }),
-              context.trackService.setPendingNone(parseInt(tokenId)),
-            ]);
-          } catch (error) {
-            console.error(error);
-          }
-          console.log('AuctionCreated');
+          await auctionCreated((event as unknown as AuctionCreated).returnValues, context);
         }
         break;
       case 'BidPlaced':
         {
-          try {
-            const { nftAddress, tokenId, bidder, bid } = (event as unknown as BidPlaced).returnValues;
-            const tokenIdAsNumber = parseInt(tokenId);
-            const auction = await context.auctionItemService.findAuctionItem(tokenIdAsNumber);
-            const [outBided, track, user, seller] = await Promise.all([
-              context.bidService.getHighestBid(auction._id),
-              context.trackService.getTrackByTokenId(tokenIdAsNumber),
-              context.userService.getUserByWallet(bidder),
-              context.userService.getUserByWallet(auction.owner),
-              context.auctionItemService.updateAuctionItem(tokenIdAsNumber, {
-                highestBid: parseInt(bid),
-              }),
-            ]);
-            if (!user || !seller) {
-              continue;
-            }
-            const auctionPromises: Promise<unknown>[] = [
-              context.bidService.createBid({
-                nft: nftAddress,
-                tokenId: tokenIdAsNumber,
-                bidder,
-                userId: user._id,
-                profileId: user.profileId,
-                amount: parseInt(bid),
-                auctionId: auction._id,
-              }),
-              context.notificationService.notifyNewBid({
-                track,
-                profileId: seller.profileId,
-                price: parseInt(bid),
-                auctionId: auction._id,
-              }),
-            ];
-            if (outBided) {
-              auctionPromises.push(
-                context.notificationService.notifyOutbid({
-                  track,
-                  profileId: outBided.profileId,
-                  price: parseInt(bid),
-                  auctionId: auction._id,
-                }),
-              );
-            }
-            await Promise.all(auctionPromises);
-          } catch (error) {
-            console.error(error);
-          }
-          console.log('BidPlaced');
+          await bidPlaced((event as unknown as BidPlaced).returnValues, context);
         }
         break;
       case 'AuctionResulted':
         {
-          try {
-            const { tokenId, winner, oldOwner, winningBid } = (event as unknown as AuctionResulted).returnValues;
-            await context.auctionItemService.finishListing(tokenId, oldOwner, winner, parseInt(winningBid));
-          } catch (error) {
-            console.error(error);
-          }
-          console.log('AuctionResulted');
+          await auctionResulted((event as unknown as AuctionResulted).returnValues, context);
         }
         break;
       case 'AuctionCancelled':
         {
-          try {
-            const { tokenId } = (event as unknown as AuctionCancelled).returnValues;
-            await Promise.all([
-              context.auctionItemService.setNotValid(parseInt(tokenId)),
-              context.trackService.setPendingNone(parseInt(tokenId)),
-            ]);
-          } catch (error) {
-            console.error(error);
-          }
-          console.log('AuctionCancelled');
+          await auctionCanceled((event as unknown as AuctionCancelled).returnValues, context);
         }
         break;
       case 'UpdateAuction':
         {
-          try {
-            const { tokenId, reservePrice, startTime, endTime } = (event as unknown as UpdateAuction).returnValues;
-            await Promise.all([
-              context.auctionItemService.updateAuctionItem(parseInt(tokenId), {
-                reservePrice: parseInt(reservePrice),
-                startingTime: parseInt(startTime),
-                endingTime: parseInt(endTime),
-              }),
-              context.trackService.setPendingNone(parseInt(tokenId)),
-            ]);
-          } catch (error) {
-            console.error(error);
-          }
-          console.log('UpdateAuction');
+          await updateAuction((event as unknown as UpdateAuction).returnValues, context);
         }
         break;
     }
