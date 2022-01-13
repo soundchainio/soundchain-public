@@ -29,6 +29,7 @@ fragment ListingItemComponentFields on TrackWithListingItem {
     ipfsCid
     pendingRequest
     owner
+    pendingTime
   }
   listingItem {
     id

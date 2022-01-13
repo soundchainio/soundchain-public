@@ -5,8 +5,19 @@ import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useModalDispatch } from 'contexts/providers/modal';
 import { useMe } from 'hooks/useMe';
+import { cacheFor } from 'lib/apollo';
+import { protectPage } from 'lib/protectPage';
 import React from 'react';
 import { precision } from 'utils/getPrecision';
+
+export const getServerSideProps = protectPage(async (context, apolloClient) => {
+  try {
+    if (!context.user) return { notFound: true };
+    return await cacheFor(TransferPage, {}, context, apolloClient);
+  } catch (error) {
+    return { notFound: true };
+  }
+});
 
 const topNovaBarProps: TopNavBarProps = {
   leftButton: <BackButton />,

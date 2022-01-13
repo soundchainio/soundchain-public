@@ -2,6 +2,7 @@ import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { AuctionEnded } from 'components/details-NFT/AuctionEnded';
 import { Layout } from 'components/Layout';
+import { Matic } from 'components/Matic';
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { TotalPrice } from 'components/TotalPrice';
@@ -10,7 +11,6 @@ import useBlockchain from 'hooks/useBlockchain';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { CheckmarkFilled } from 'icons/CheckmarkFilled';
-import { Matic } from 'components/Matic';
 import { cacheFor } from 'lib/apollo';
 import { PendingRequest, TrackDocument, TrackQuery, useAuctionItemQuery, useUpdateTrackMutation } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
@@ -19,6 +19,8 @@ import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 import { compareWallets } from 'utils/Wallet';
 import SEO from '../../../components/SEO';
+import useBlockchainV2 from 'hooks/useBlockchainV2';
+import { toast } from 'react-toastify';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -54,7 +56,8 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 });
 
 export default function CompleteAuctionPage({ track }: TrackPageProps) {
-  const { resultAuction, getHighestBid } = useBlockchain();
+  const { getHighestBid } = useBlockchain();
+  const { resultAuction } = useBlockchainV2();
   const { account, web3 } = useWalletContext();
   const [trackUpdate] = useUpdateTrackMutation();
   const [loading, setLoading] = useState(false);
@@ -89,21 +92,26 @@ export default function CompleteAuctionPage({ track }: TrackPageProps) {
     if (!web3 || !auctionItem.auctionItem?.auctionItem?.tokenId || !account) {
       return;
     }
-    const onTransactionHash = async () => {
+    const onReceipt = async () => {
       await trackUpdate({
         variables: {
           input: {
             trackId: track.id,
             nftData: {
               pendingRequest: PendingRequest.CompleteAuction,
+              pendingTime: new Date().toISOString(),
             },
           },
         },
       });
       router.push(router.asPath.replace('complete-auction', ''));
     };
-    resultAuction(web3, tokenId, account, onTransactionHash);
     setLoading(true);
+    resultAuction(tokenId, account)
+      .onReceipt(onReceipt)
+      .onError(cause => toast.error(cause.message))
+      .finally(() => setLoading(false))
+      .execute(web3);
   };
 
   const topNovaBarProps: TopNavBarProps = {

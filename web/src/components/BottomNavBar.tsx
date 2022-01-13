@@ -1,3 +1,4 @@
+import { config } from 'config';
 import { useModalDispatch } from 'contexts/providers/modal';
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar';
 import { useMe } from 'hooks/useMe';
@@ -20,18 +21,39 @@ export const BottomNavBar = () => {
   };
 
   return (
-    <nav id="bottom-nav-bar" className="bg-black md:bg-gray-30 py-3 flex items-center inset-x-0 shadow-2xl md:w-full">
+    <nav
+      id="bottom-nav-bar"
+      className={`bg-black ${config.mobileBreakpoint}:bg-gray-30 py-3 flex items-center inset-x-0 shadow-2xl ${config.mobileBreakpoint}:w-full`}
+    >
       <div className="w-full">
         <div className="w-full flex items-end">
           <NavBarButton label="Home" path="/" icon={Home} color="yellow" />
-          <NavBarButton label="Explore" path={me ? '/explore' : '/login'} icon={Search} color="green" />
+          <NavBarButton
+            id="nav-explore-"
+            label="Explore"
+            path={me ? '/explore' : '/login'}
+            icon={Search}
+            color="green"
+          />
           {isMinting ? (
             <NavBarButton label="Minting..." nyanCat={true} onClick={handleCreateClick} />
           ) : (
             <NavBarButton label="Create" icon={NewPost} onClick={handleCreateClick} />
           )}
-          <NavBarButton label="Library" path={me ? '/library' : '/login'} icon={Library} color="purple" />
-          <NavBarButton label="Market" icon={MarketplaceNavBar} color="purple-green" path={'/marketplace'} />
+          <NavBarButton
+            id="nav-library-"
+            label="Library"
+            path={me ? '/library' : '/login'}
+            icon={Library}
+            color="purple"
+          />
+          <NavBarButton
+            id="nav-market-"
+            label="Market"
+            icon={MarketplaceNavBar}
+            color="purple-green"
+            path={'/marketplace'}
+          />
         </div>
       </div>
     </nav>

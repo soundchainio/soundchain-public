@@ -64,11 +64,16 @@ export function MagicProvider({ children }: MagicProviderProps) {
   };
 
   useEffect(() => {
-    if (me && me.magicWalletAddress && web3) {
-      setAccount(me.magicWalletAddress);
-      web3.eth.getBalance(me.magicWalletAddress).then(balance => {
-        setBalance(Number(web3.utils.fromWei(balance, 'ether')).toFixed(6));
-      });
+    if (me && web3) {
+      web3.eth
+        .getAccounts()
+        .then(([account]) => {
+          setAccount(account);
+          return web3.eth.getBalance(account);
+        })
+        .then(balance => {
+          setBalance(Number(web3.utils.fromWei(balance, 'ether')).toFixed(6));
+        });
     }
   }, [me]);
 

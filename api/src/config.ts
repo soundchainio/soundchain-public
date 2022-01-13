@@ -33,7 +33,6 @@ export const {
   SENDGRID_API_KEY,
   UPLOADS_BUCKET_REGION,
   UPLOADS_BUCKET_NAME,
-  SQS_URL,
   WALLET_PUBLIC_KEY,
   WALLET_PRIVATE_KEY,
   ALCHEMY_API_KEY,
@@ -121,7 +120,6 @@ export const config = {
     nftAddress: NFT_ADDRESS,
     auctionAddress: AUCTION_ADDRESS,
     alchemyKey: ALCHEMY_API_KEY,
-    sqsUrl: SQS_URL,
     polygonScan: POLYGON_SCAN_API_KEY,
   },
   mux: {

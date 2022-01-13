@@ -8,6 +8,7 @@ import { DisplayName } from 'components/DisplayName';
 import { Layout } from 'components/Layout';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
+import { config } from 'config';
 import { useMe } from 'hooks/useMe';
 import { Bandcamp } from 'icons/Bandcamp';
 import { Soundcloud } from 'icons/Soundcloud';
@@ -98,7 +99,6 @@ export default function RequestPage({ data }: RequestPageProps) {
     setShowReason(true);
   };
 
-  console.log(router.asPath);
   return (
     <>
       <SEO title="Soundchain - Manage Request" canonicalUrl={router.asPath} description="Soundchain Manage Request" />
@@ -138,7 +138,7 @@ export default function RequestPage({ data }: RequestPageProps) {
               </div>
             ))}
           </div>
-          <div className="flex gap-4 px-4 md:px-0 items-center my-5 mt-auto">
+          <div className={`flex gap-4 px-4 ${config.mobileBreakpoint}:px-0 items-center my-5 mt-auto`}>
             {data.status !== ManageRequestTab.DENIED && (
               <DeleteButton onClick={handleDeny} className="h-12 w-full text-white text-sm">
                 {data.status === ManageRequestTab.APPROVED ? 'REMOVE VERIFICATION' : 'DENY'}

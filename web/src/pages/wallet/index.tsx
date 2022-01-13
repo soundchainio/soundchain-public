@@ -16,8 +16,10 @@ import { CreditCard } from 'icons/CreditCard';
 import { Logo } from 'icons/Logo';
 import { Matic } from 'icons/Matic';
 import { MetaMask } from 'icons/MetaMask';
+import { cacheFor } from 'lib/apollo';
 import { network } from 'lib/blockchainNetworks';
 import { DefaultWallet, useMaticUsdQuery, useUpdateDefaultWalletMutation } from 'lib/graphql';
+import { protectPage } from 'lib/protectPage';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { currency } from 'utils/format';
@@ -34,6 +36,16 @@ interface WalletButtonProps {
   icon: (props: React.SVGProps<SVGSVGElement>) => JSX.Element;
   handleOnClick?: () => void;
 }
+
+export const getServerSideProps = protectPage(async (context, apolloClient) => {
+  try {
+    if (!context.user) return { notFound: true };
+    return await cacheFor(WalletPage, {}, context, apolloClient);
+  } catch (error) {
+    return { notFound: true };
+  }
+});
+
 const WalletButton = ({ href, title, icon: Icon }: WalletButtonProps) => {
   return (
     <Link href={href}>

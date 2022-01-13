@@ -85,6 +85,9 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       this.context.userService.getUserByWallet(buyerWaller),
       this.context.trackService.getTrackByTokenId(parseInt(tokenId)),
     ]);
+    if (!sellerUser || !buyerUser) {
+      return;
+    }
     await Promise.all([
       this.context.trackService.updateTrack(track._id, { profileId: buyerUser.profileId }),
       this.context.notificationService.notifyNFTSold({
@@ -172,7 +175,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
     await this.context.notificationService.notifyAuctionIsOver({
       track,
       price: highestBid,
-      sellerProfileId: sellerUser.profileId,
+      sellerProfileId: sellerUser?.profileId,
       buyerProfileId: buyerUser?.profileId,
       auctionId: _id,
     });

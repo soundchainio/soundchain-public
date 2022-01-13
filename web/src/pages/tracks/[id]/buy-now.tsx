@@ -1,30 +1,30 @@
-import * as yup from 'yup';
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { BuyNow } from 'components/details-NFT/BuyNow';
 import { InputField } from 'components/InputField';
 import { Layout } from 'components/Layout';
+import { Matic } from 'components/Matic';
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
+import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
+import { TotalPrice } from 'components/TotalPrice';
 import { Track } from 'components/Track';
 import { Form, Formik } from 'formik';
-import useBlockchain from 'hooks/useBlockchain';
+import useBlockchainV2 from 'hooks/useBlockchainV2';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
+import { Locker } from 'icons/Locker';
 import { cacheFor } from 'lib/apollo';
 import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemLazyQuery, useUpdateTrackMutation } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
+import { authenticator } from 'otplib';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
-import { compareWallets } from 'utils/Wallet';
-import { Timer } from '../[id]';
-import { authenticator } from 'otplib';
 import { toast } from 'react-toastify';
-import { Locker } from 'icons/Locker';
-import { TotalPrice } from 'components/TotalPrice';
-import { Matic } from 'components/Matic';
-import SEO from 'components/SEO';
+import { compareWallets } from 'utils/Wallet';
+import * as yup from 'yup';
+import { Timer } from '../[id]';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -59,8 +59,8 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 });
 
 export default function BuyNowPage({ track }: TrackPageProps) {
-  const { buyItem } = useBlockchain();
-  const { account, web3 } = useWalletContext();
+  const { buyItem } = useBlockchainV2();
+  const { account, web3, balance } = useWalletContext();
   const [trackUpdate] = useUpdateTrackMutation();
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -109,13 +109,19 @@ export default function BuyNowPage({ track }: TrackPageProps) {
       return;
     }
 
-    const onTransactionHash = async () => {
+    if (listingPayload.buyNowItem.buyNowItem.pricePerItem >= parseFloat(balance || '0')) {
+      toast.warn("Uh-oh, it seems you don't have enough funds for this transaction");
+      return;
+    }
+
+    const onReceipt = async () => {
       await trackUpdate({
         variables: {
           input: {
             trackId: track.id,
             nftData: {
               pendingRequest: PendingRequest.Buy,
+              pendingTime: new Date().toISOString(),
             },
           },
         },
@@ -123,15 +129,17 @@ export default function BuyNowPage({ track }: TrackPageProps) {
       router.push(router.asPath.replace('buy-now', ''));
     };
 
+    setLoading(true);
     buyItem(
-      web3,
       listingPayload.buyNowItem?.buyNowItem?.tokenId,
       account,
       listingPayload.buyNowItem?.buyNowItem?.owner,
       listingPayload.buyNowItem?.buyNowItem?.pricePerItem.toString(),
-      onTransactionHash,
-    );
-    setLoading(true);
+    )
+      .onReceipt(onReceipt)
+      .onError(cause => toast.error(cause.message))
+      .finally(() => setLoading(false))
+      .execute(web3);
   };
 
   const topNavBarProps: TopNavBarProps = {

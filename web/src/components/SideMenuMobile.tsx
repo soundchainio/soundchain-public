@@ -1,4 +1,5 @@
 import { Dialog, Transition } from '@headlessui/react';
+import { config } from 'config';
 import { Fragment, useRef } from 'react';
 import { SideMenuContent } from './SideMenuContent';
 
@@ -11,7 +12,12 @@ export const SideMenuMobile = ({ setOpen, isOpen }: SideMenuMobileProps) => {
   const ref = useRef(null);
   return (
     <Transition.Root show={isOpen} as={Fragment}>
-      <Dialog as="div" className="fixed inset-0 flex z-40 md:hidden" onClose={setOpen} initialFocus={ref}>
+      <Dialog
+        as="div"
+        className={`fixed inset-0 flex z-40 ${config.mobileBreakpoint}:hidden`}
+        onClose={setOpen}
+        initialFocus={ref}
+      >
         <Transition.Child
           as={Fragment}
           enter="transition-opacity ease-linear duration-300"

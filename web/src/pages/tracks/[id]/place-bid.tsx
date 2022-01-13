@@ -78,7 +78,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
   const me = useMe();
   const { getHighestBid } = useBlockchain();
   const { placeBid } = useBlockchainV2();
-  const { account, web3 } = useWalletContext();
+  const { account, web3, balance } = useWalletContext();
   const { dispatchShowBidsHistory } = useModalDispatch();
   const [loading, setLoading] = useState(false);
   const [highestBid, setHighestBid] = useState<HighestBid>();
@@ -177,13 +177,19 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     }
     const amount = (bidAmount * 1e18).toString();
 
+    if (bidAmount >= parseInt(balance || '0')) {
+      toast.warn("Uh-oh, it seems you don't have enough funds for this transaction");
+      return;
+    }
+
     placeBid(tokenId, account, amount)
       .onReceipt(() => {
+        toast.success('Bid placed!');
         if (refetchHaveBided) refetchHaveBided();
         refetchCountBids();
       })
       .onError(() => {
-        toast.warn('You may have been outbid. Please try again', { autoClose: 5 * 1000 });
+        toast.warn('You may have been outbid. Please try again');
       })
       .finally(() => setLoading(false))
       .execute(web3);

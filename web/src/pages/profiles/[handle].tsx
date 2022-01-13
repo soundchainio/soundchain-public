@@ -98,7 +98,6 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
   } = profile;
 
   const topNovaBarProps: TopNavBarProps = {
-    title: 'Profile',
     rightButton: me ? <InboxButton /> : undefined,
   };
 

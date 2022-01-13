@@ -1,5 +1,6 @@
 import { AudioPlayer } from 'components/AudioPlayer';
 import { JellyButton } from 'components/Buttons/JellyButton';
+import { config } from 'config';
 import { MusicFile } from 'icons/MusicFile';
 import { Upload as UploadIcon } from 'icons/Upload';
 import { audioMimeTypes } from 'lib/mimeTypes';
@@ -39,11 +40,13 @@ export const TrackUploader = ({ onFileChange, art }: TrackUploaderProps) => {
 
   if (file && preview) {
     return (
-      <div className="flex flex-col items-center bg-black text-gray-30 border-gray-50 border-2 border-dashed rounded-md gap-0 md:gap-4 md:flex-row">
+      <div
+        className={`flex flex-col items-center bg-black text-gray-30 border-gray-50 border-2 border-dashed rounded-md gap-0 ${config.mobileBreakpoint}:gap-4 ${config.mobileBreakpoint}:flex-row`}
+      >
         <div className="mr-auto w-full">
           <AudioPlayer title={file.name} src={preview} art={art} />
         </div>
-        <div className="flex mb-4 md:mb-0 mr-4 flex-col justify-center flex-shrink-0" {...getRootProps()}>
+        <div className="flex mr-4 flex-col justify-center flex-shrink-0" {...getRootProps()}>
           <JellyButton flavor="blueberry" icon={<UploadIcon color="blue" id="blue-gradient" />} className="text-xs">
             Choose File
           </JellyButton>

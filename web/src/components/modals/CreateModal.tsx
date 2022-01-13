@@ -5,7 +5,7 @@ import { FormValues, InitialValues, TrackMetadataForm } from 'components/forms/t
 import { TrackUploader } from 'components/forms/track/TrackUploader';
 import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
-import useBlockchain from 'hooks/useBlockchain';
+import useBlockchainV2 from 'hooks/useBlockchainV2';
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar';
 import { useMe } from 'hooks/useMe';
 import { useUpload } from 'hooks/useUpload';
@@ -51,7 +51,7 @@ export const CreateModal = () => {
   const [pinToIPFS] = usePinToIpfsMutation();
   const [pinJsonToIPFS] = usePinJsonToIpfsMutation();
 
-  const { mintNftToken } = useBlockchain();
+  const { mintNftToken } = useBlockchainV2();
   const [transactionHash, setTransactionHash] = useState<string>();
   const [mintingState, setMintingState] = useState<string>();
   const [mintError, setMintError] = useState<boolean>(false);
@@ -234,6 +234,7 @@ export const CreateModal = () => {
                   ipfsCid: metadataPinResult?.pinJsonToIPFS.cid,
                   pendingRequest: PendingRequest.Mint,
                   owner: account,
+                  pendingTime: new Date().toISOString(),
                 },
               },
             },
@@ -254,15 +255,10 @@ export const CreateModal = () => {
         };
 
         setMintingState('Minting NFT');
-        mintNftToken(
-          web3,
-          `ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`,
-          account,
-          account,
-          royalty,
-          onTransactionHash,
-          onError,
-        );
+        mintNftToken(`ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`, account, account, royalty)
+          .onReceipt(receipt => onTransactionHash(receipt.transactionHash))
+          .onError(onError)
+          .execute(web3);
       } catch {
         setTransactionHash(undefined);
         setMintingState('There was an error while minting your NFT');
