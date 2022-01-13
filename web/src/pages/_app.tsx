@@ -87,7 +87,6 @@ function SoundchainApp({ Component, pageProps }: AppProps) {
                       position="top-right"
                       autoClose={5 * 1000}
                       closeButton={false}
-                      hideProgressBar
                       closeOnClick
                       toastStyle={{ backgroundColor: '#202020', color: 'white', textAlign: 'center' }}
                     />
