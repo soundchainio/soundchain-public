@@ -85,7 +85,7 @@ function SoundchainApp({ Component, pageProps }: AppProps) {
                     <AudioPlayerModal />
                     <ToastContainer
                       position="top-right"
-                      autoClose={2 * 1000}
+                      autoClose={5 * 1000}
                       closeButton={false}
                       hideProgressBar
                       closeOnClick

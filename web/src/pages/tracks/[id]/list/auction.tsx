@@ -6,6 +6,7 @@ import { Track } from 'components/Track';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { FormikHelpers } from 'formik';
 import useBlockchain from 'hooks/useBlockchain';
+import useBlockchainV2 from 'hooks/useBlockchainV2';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { cacheFor } from 'lib/apollo';
@@ -14,6 +15,7 @@ import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import { SaleType } from 'types/SaleType';
 import SEO from '../../../../components/SEO';
 
@@ -46,7 +48,8 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 });
 
 export default function AuctionPage({ track }: TrackPageProps) {
-  const { createAuction, isTokenOwner, isApprovedAuction: checkIsApproved } = useBlockchain();
+  const { isTokenOwner, isApprovedAuction: checkIsApproved } = useBlockchain();
+  const { createAuction } = useBlockchainV2();
   const router = useRouter();
   const me = useMe();
   const [trackUpdate] = useUpdateTrackMutation();
@@ -101,7 +104,7 @@ export default function AuctionPage({ track }: TrackPageProps) {
     const startTimestamp = Math.ceil(startTime.getTime() / 1000);
     const endTimestamp = Math.ceil(endTime.getTime() / 1000);
     if (isApproved) {
-      const onTransactionHash = async () => {
+      const onReceive = async () => {
         await trackUpdate({
           variables: {
             input: {
@@ -115,7 +118,10 @@ export default function AuctionPage({ track }: TrackPageProps) {
         });
         router.push(router.asPath.replace('/list/auction', ''));
       };
-      createAuction(web3, nftData.tokenId, weiPrice, startTimestamp, endTimestamp, account, onTransactionHash);
+      createAuction(nftData.tokenId, weiPrice, startTimestamp, endTimestamp, account)
+        .onReceipt(() => onReceive)
+        .onError(cause => toast.error(cause.message))
+        .execute(web3);
     } else {
       me ? dispatchShowApproveModal(true, SaleType.AUCTION) : router.push('/login');
       helper.setSubmitting(false);

@@ -99,7 +99,6 @@ export default function RequestPage({ data }: RequestPageProps) {
     setShowReason(true);
   };
 
-  console.log(router.asPath);
   return (
     <>
       <SEO title="Soundchain - Manage Request" canonicalUrl={router.asPath} description="Soundchain Manage Request" />

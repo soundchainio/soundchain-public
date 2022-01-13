@@ -4,7 +4,7 @@ import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import { useModalDispatch } from 'contexts/providers/modal';
-import useBlockchain from 'hooks/useBlockchain';
+import useBlockchainV2 from 'hooks/useBlockchainV2';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { cacheFor } from 'lib/apollo';
@@ -13,6 +13,7 @@ import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import React from 'react';
+import { toast } from 'react-toastify';
 import { SaleType } from 'types/SaleType';
 import { compareWallets } from 'utils/Wallet';
 import SEO from '../../../../components/SEO';
@@ -47,7 +48,7 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 
 export default function EditBuyNowPage({ track }: TrackPageProps) {
   const router = useRouter();
-  const { updateAuction } = useBlockchain();
+  const { updateAuction } = useBlockchainV2();
   const { dispatchShowRemoveListingModal } = useModalDispatch();
   const [trackUpdate] = useUpdateTrackMutation();
   const { account, web3 } = useWalletContext();
@@ -86,7 +87,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
     const startTimestamp = startTime.getTime() / 1000;
     const endTimestamp = endTime.getTime() / 1000;
 
-    const onTransactionHash = () => {
+    const onTransactionReceipt = () => {
       trackUpdate({
         variables: {
           input: {
@@ -100,15 +101,10 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       router.back();
     };
 
-    updateAuction(
-      web3,
-      listingPayload.auctionItem?.auctionItem?.tokenId,
-      account,
-      weiPrice,
-      startTimestamp,
-      endTimestamp,
-      onTransactionHash,
-    );
+    updateAuction(listingPayload.auctionItem?.auctionItem?.tokenId, weiPrice, startTimestamp, endTimestamp, account)
+      .onReceipt(onTransactionReceipt)
+      .onError(cause => toast.error(cause.message))
+      .execute(web3);
   };
 
   const handleRemove = () => {

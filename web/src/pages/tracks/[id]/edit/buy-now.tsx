@@ -5,7 +5,7 @@ import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import { useModalDispatch } from 'contexts/providers/modal';
-import useBlockchain from 'hooks/useBlockchain';
+import useBlockchainV2 from 'hooks/useBlockchainV2';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { cacheFor } from 'lib/apollo';
@@ -14,6 +14,7 @@ import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import React from 'react';
+import { toast } from 'react-toastify';
 import { SaleType } from 'types/SaleType';
 import { compareWallets } from 'utils/Wallet';
 
@@ -47,7 +48,7 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 
 export default function EditBuyNowPage({ track }: TrackPageProps) {
   const router = useRouter();
-  const { updateListing } = useBlockchain();
+  const { updateListing } = useBlockchainV2();
   const { dispatchShowRemoveListingModal } = useModalDispatch();
   const [trackUpdate] = useUpdateTrackMutation();
   const { account, web3 } = useWalletContext();
@@ -84,7 +85,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
     const weiPrice = web3?.utils.toWei(newPrice.toString(), 'ether') || '0';
     const startTimestamp = startTime.getTime() / 1000;
 
-    const onTransactionHash = () => {
+    const onReceipt = () => {
       trackUpdate({
         variables: {
           input: {
@@ -98,14 +99,10 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       router.back();
     };
 
-    updateListing(
-      web3,
-      listingPayload.buyNowItem?.buyNowItem?.tokenId,
-      account,
-      weiPrice,
-      startTimestamp,
-      onTransactionHash,
-    );
+    updateListing(listingPayload.buyNowItem?.buyNowItem?.tokenId, account, weiPrice, startTimestamp)
+      .onReceipt(onReceipt)
+      .onError(cause => toast.error(cause.message))
+      .execute(web3);
   };
 
   const handleRemove = () => {

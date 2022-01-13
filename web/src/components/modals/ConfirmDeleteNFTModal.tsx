@@ -4,12 +4,13 @@ import { Modal } from 'components/Modal';
 import { Track as TrackComponent } from 'components/Track';
 import { TrackListItemSkeleton } from 'components/TrackListItemSkeleton';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
-import useBlockchain from 'hooks/useBlockchain';
+import useBlockchainV2 from 'hooks/useBlockchainV2';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { TrackQuery, useDeleteTrackMutation, useTrackLazyQuery } from 'lib/graphql';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 
 export const ConfirmDeleteNFTModal = () => {
   const { showConfirmDeleteNFT, trackId, burn } = useModalState();
@@ -18,7 +19,7 @@ export const ConfirmDeleteNFTModal = () => {
   const [track, setTrack] = useState<TrackQuery['track']>();
   const { web3, account, balance } = useMagicContext();
   const [deleteTrack] = useDeleteTrackMutation({ refetchQueries: ['Posts', 'Tracks', 'Track'] });
-  const { burnNftToken } = useBlockchain();
+  const { burnNftToken } = useBlockchainV2();
   const [disabled, setDisabled] = useState(true);
   const router = useRouter();
 
@@ -77,13 +78,12 @@ export const ConfirmDeleteNFTModal = () => {
   const handleBurn = () => {
     const tokenId = track?.nftData?.tokenId;
     if (hasEnoughFunds() && tokenId && account) {
-      try {
-        setLoading(true);
-        burnNftToken(web3, tokenId, account, onBurnConfirmation);
-      } catch (e) {
-        setLoading(false);
-        alert('We had some trouble, please try again later!');
-      }
+      setLoading(true);
+      burnNftToken(tokenId, account)
+        .onReceipt(onBurnConfirmation)
+        .onError(cause => toast.error(cause.message))
+        .finally(() => setLoading(false))
+        .execute(web3);
     } else {
       alert("Uh-oh, it seems you don't have enough funds to pay for the gas fee of this operation");
       handleClose();
