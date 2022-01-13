@@ -104,7 +104,7 @@ export default function CompleteAuctionPage({ track, auctionItem }: TrackPagePro
 
     cancelAuction(auctionItem.tokenId, account)
       .onReceipt(() => onReceipt)
-      .onError(cause => toast.error(cause))
+      .onError(cause => toast.error(cause.message))
       .finally(() => setLoading(false))
       .execute(web3);
   };
