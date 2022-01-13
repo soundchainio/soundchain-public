@@ -34,22 +34,6 @@ export const LoginForm = () => {
     }
   }, [me, router]);
 
-  const handleOAuthCallback = async () => {
-    setLoggingIn(true);
-    try {
-      let result;
-      if (magic.oauth) {
-        result = await magic.oauth.getRedirectResult();
-      }
-      if (result) {
-        const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
-        setJwt(loginResult.data?.login.jwt);
-      }
-    } catch (error) {
-      router.push('/create-account');
-    }
-  };
-
   const handleGoogleLogin = async () => {
     await magic.oauth.loginWithRedirect({
       provider: 'google',
@@ -59,10 +43,15 @@ export const LoginForm = () => {
   };
 
   useEffect(() => {
-    if (magic && magicParam) {
-      handleOAuthCallback();
+    if (magic && magicParam && magic.oauth) {
+      setLoggingIn(true);
+      magic.oauth
+        .getRedirectResult()
+        .then(result => login({ variables: { input: { token: result.magic.idToken } } }))
+        .then(result => setJwt(result.data?.login.jwt))
+        .catch(() => router.push('/create-account'));
     }
-  }, [magic, magicParam]);
+  }, [magic, magicParam, login, router]);
 
   async function handleSubmit(values: FormValues) {
     try {
