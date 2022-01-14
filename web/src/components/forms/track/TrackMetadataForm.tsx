@@ -6,8 +6,8 @@ import MaxGasFee from 'components/MaxGasFee';
 import { TextareaField } from 'components/TextareaField';
 import { WalletSelector } from 'components/WalletSelector';
 import { Form, Formik } from 'formik';
-import { useMagicContext } from 'hooks/useMagicContext';
 import { useMaxGasFee } from 'hooks/useMaxGasFee';
+import { useWalletContext } from 'hooks/useWalletContext';
 import { Genre } from 'lib/graphql';
 import React, { useEffect, useState } from 'react';
 import { GenreLabel, genres } from 'utils/Genres';
@@ -47,7 +47,7 @@ interface Props {
 }
 
 export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
-  const { balance } = useMagicContext();
+  const { balance } = useWalletContext();
   const maxGasFee = useMaxGasFee();
   const [enoughFunds, setEnoughFunds] = useState<boolean>();
   const [uploadingArt, setUploadingArt] = useState<boolean>();
