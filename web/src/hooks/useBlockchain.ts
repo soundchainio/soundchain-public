@@ -67,7 +67,7 @@ const useBlockchain = () => {
     const gasPriceWei = await web3.eth.getGasPrice();
     const gasPrice = parseInt(web3.utils.fromWei(gasPriceWei, 'Gwei'));
     const maxFeeWei = gasPrice * gas;
-    return web3.utils.fromWei(maxFeeWei.toString(), 'Gwei');
+    return web3.utils.fromWei(maxFeeWei.toLocaleString('fullwide', { useGrouping: false }), 'Gwei');
   }, []);
 
   const getCurrentGasPrice = useCallback(async (web3: Web3) => {

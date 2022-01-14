@@ -101,7 +101,7 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
     if (nftData?.tokenId === null || nftData?.tokenId === undefined || !account || !web3) {
       return;
     }
-    const weiPrice = web3?.utils.toWei(price.toString(), 'ether') || '0';
+    const weiPrice = web3?.utils.toWei(price.toLocaleString('fullwide', { useGrouping: false }), 'ether') || '0';
     const startTimestamp = Math.ceil(startTime.getTime() / 1000);
 
     if (isApproved) {
