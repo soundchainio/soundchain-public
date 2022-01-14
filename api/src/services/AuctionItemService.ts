@@ -174,7 +174,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
     const [sellerUser, buyerUser] = await Promise.all(promises);
     await this.context.notificationService.notifyAuctionIsOver({
       track,
-      price: highestBid,
+      price: highestBid || 0,
       sellerProfileId: sellerUser?.profileId,
       buyerProfileId: buyerUser?.profileId,
       auctionId: _id,
