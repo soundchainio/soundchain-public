@@ -28,7 +28,8 @@ const marketplaceContract = (web3: Web3) =>
 const nftContract = (web3: Web3) =>
   new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress) as unknown as Soundchain721;
 
-const applySoundchainFee = (price: number) => (price * (1 + config.soundchainFee)).toFixed();
+const applySoundchainFee = (price: number) =>
+  (price * (1 + config.soundchainFee)).toLocaleString('fullwide', { useGrouping: false });
 interface DefaultParam {
   from: string;
 }
@@ -46,7 +47,7 @@ class BlockchainFunction<Type> {
     this.params = params;
   }
 
-  protected _execute = async (lambda: () => PromiEvent<TransactionReceipt>) => {
+  protected async _execute(lambda: () => PromiEvent<TransactionReceipt>) {
     const { me } = this;
     if ((this.web3?.currentProvider as SDKBase['rpcProvider']).isMagic && !(await magic.user.isLoggedIn()) && me) {
       await magic.auth.loginWithMagicLink({ email: me.email });
@@ -56,24 +57,34 @@ class BlockchainFunction<Type> {
         this.receipt = receipt;
         this.onReceiptFunction && this.onReceiptFunction(receipt);
       })
-      .catch(this.onErrorFunction)
+      .catch(cause => {
+        if (this.onErrorFunction) {
+          const error = Object.keys(cause).includes('receipt')
+            ? new Error(
+                `Transaction reverted by the Blockchain.\r\n
+                Please check the transaction on your wallet activity page for more details.`,
+              )
+            : cause;
+          this.onErrorFunction(error);
+        }
+      })
       .finally(this.finallyFunction);
-  };
+  }
 
-  onReceipt = (handler: (receipt: TransactionReceipt) => void) => {
+  onReceipt(handler: (receipt: TransactionReceipt) => void) {
     this.onReceiptFunction = handler;
     return this;
-  };
+  }
 
-  onError = (handler: (cause: Error) => void) => {
+  onError(handler: (cause: Error) => void) {
     this.onErrorFunction = handler;
     return this;
-  };
+  }
 
-  finally = (handler: () => void) => {
+  finally(handler: () => void) {
     this.finallyFunction = handler;
     return this;
-  };
+  }
 }
 interface PlaceBidParams extends DefaultParam {
   tokenId: number;
@@ -84,11 +95,7 @@ class PlaceBid extends BlockchainFunction<PlaceBidParams> {
     const { from, value, tokenId } = this.params;
     this.web3 = web3;
 
-    await this._execute(() =>
-      auctionContract(web3)
-        .methods.placeBid(nftAddress, tokenId)
-        .send({ from, gas, value: parseInt(value) }),
-    );
+    await this._execute(() => auctionContract(web3).methods.placeBid(nftAddress, tokenId).send({ from, gas, value }));
     return this.receipt;
   };
 }
@@ -103,9 +110,7 @@ class BuyItem extends BlockchainFunction<BuyItemParams> {
     this.web3 = web3;
 
     await this._execute(() =>
-      marketplaceContract(web3)
-        .methods.buyItem(nftAddress, tokenId, owner)
-        .send({ from, gas, value: parseInt(value) }),
+      marketplaceContract(web3).methods.buyItem(nftAddress, tokenId, owner).send({ from, gas, value }),
     );
 
     return this.receipt;

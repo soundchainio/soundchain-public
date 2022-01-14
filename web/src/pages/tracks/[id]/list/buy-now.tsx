@@ -122,6 +122,7 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
       listItem(nftData.tokenId, account, weiPrice, startTimestamp)
         .onReceipt(onReceipt)
         .onError(cause => toast.error(cause.message))
+        .finally(() => helper.setSubmitting(false))
         .execute(web3);
     } else {
       me ? dispatchShowApproveModal(true, SaleType.MARKETPLACE) : router.push('/login');
