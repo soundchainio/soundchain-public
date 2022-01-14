@@ -16,7 +16,7 @@ import { SubscribeButton } from 'components/SubscribeButton';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useMe } from 'hooks/useMe';
 import { cacheFor, createApolloClient } from 'lib/apollo';
-import { ProfileByHandleDocument, ProfileQuery } from 'lib/graphql';
+import { ProfileByHandleDocument, useProfileByHandleQuery } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
@@ -25,7 +25,7 @@ import { FollowModalType } from 'types/FollowModalType';
 import { ProfileTab } from 'types/ProfileTabType';
 
 export interface ProfilePageProps {
-  profile: ProfileQuery['profile'];
+  handle: string;
 }
 
 interface ProfilePageParams extends ParsedUrlQuery {
@@ -47,16 +47,17 @@ export const getServerSideProps: GetServerSideProps<ProfilePageProps, ProfilePag
     context,
   });
 
-  if (error) {
+  if (!data || error) {
     return { notFound: true };
   }
 
-  return cacheFor(ProfilePage, { profile: data.profileByHandle }, context, apolloClient);
+  return cacheFor(ProfilePage, { handle }, context, apolloClient);
 };
 
-export default function ProfilePage({ profile }: ProfilePageProps) {
+export default function ProfilePage({ handle }: ProfilePageProps) {
   const router = useRouter();
   const me = useMe();
+  const { data: profile } = useProfileByHandleQuery({ variables: { handle } });
 
   const [showModal, setShowModal] = useState(false);
   const [followModalType, setFollowModalType] = useState<FollowModalType>();
@@ -80,7 +81,11 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
     setShowModal(false);
   };
 
-  const profileId = profile.id;
+  if (!profile) {
+    return null;
+  }
+
+  const profileId = profile.profileByHandle.id;
 
   const {
     coverPicture,
@@ -95,7 +100,7 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
     verified,
     teamMember,
     profilePicture,
-  } = profile;
+  } = profile.profileByHandle;
 
   const topNovaBarProps: TopNavBarProps = {
     rightButton: me ? <InboxButton /> : undefined,
@@ -113,7 +118,7 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
         <div className="h-[125px] relative">
           <ProfileCover coverPicture={coverPicture || ''} className="h-[125px]" />
           <Avatar
-            profile={profile}
+            profile={profile.profileByHandle}
             pixels={80}
             className="absolute left-4 bottom-0 transform translate-y-2/3 border-gray-10 border-4 rounded-full"
           />
@@ -136,7 +141,7 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
             </div>
             <div className="flex flex-row space-x-2">
               <SubscribeButton profileId={profileId} isSubscriber={isSubscriber} />
-              <FollowButton followedId={profileId} isFollowed={isFollowed} />
+              <FollowButton followedHandle={userHandle} followedId={profileId} isFollowed={isFollowed} showIcon />
             </div>
           </div>
           <div className="flex flex-row mt-4">
