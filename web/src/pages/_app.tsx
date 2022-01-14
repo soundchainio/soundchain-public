@@ -84,11 +84,9 @@ function SoundchainApp({ Component, pageProps }: AppProps) {
                     <CreateModal />
                     <AudioPlayerModal />
                     <ToastContainer
-                      position="top-right"
-                      autoClose={5 * 1000}
-                      closeButton={false}
-                      closeOnClick
-                      toastStyle={{ backgroundColor: '#202020', color: 'white', textAlign: 'center' }}
+                      position="top-center"
+                      autoClose={6 * 1000}
+                      toastStyle={{ backgroundColor: '#202020', color: 'white', fontSize: '12x', textAlign: 'center' }}
                     />
                   </div>
                 </HideBottomNavBarProvider>
