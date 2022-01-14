@@ -77,7 +77,7 @@ export const ConfirmDeleteNFTModal = () => {
 
   const handleBurn = () => {
     const tokenId = track?.nftData?.tokenId;
-    if (hasEnoughFunds() && tokenId && account) {
+    if (hasEnoughFunds() && tokenId && account && web3) {
       setLoading(true);
       burnNftToken(tokenId, account)
         .onReceipt(onBurnConfirmation)
