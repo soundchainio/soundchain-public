@@ -1,3 +1,4 @@
+import { ExclamationCircleIcon } from '@heroicons/react/solid';
 import { Matic } from 'icons/Matic';
 import { network } from 'lib/blockchainNetworks';
 import { PolygonscanResultObj } from 'lib/graphql';
@@ -9,8 +10,14 @@ interface TransactionProps {
   maticUsdValue?: string;
 }
 
+const ErrorIcon = () => {
+  return <ExclamationCircleIcon width={20} height={20} color="red" />;
+};
+
 export const Transaction = ({ transaction, maticUsdValue }: TransactionProps) => {
-  const Icon = transaction.method && transactionDataMap[transaction.method]?.icon;
+  const isError = transaction.isError === '1';
+  const Icon = isError ? ErrorIcon : transaction.method && transactionDataMap[transaction.method]?.icon;
+  console.log(transaction);
 
   const transactionValue = parseInt(transaction.value) / 1e18;
   const gasFee = (parseInt(transaction.gasUsed) * parseInt(transaction.gasPrice)) / 1e18;
@@ -36,7 +43,7 @@ export const Transaction = ({ transaction, maticUsdValue }: TransactionProps) =>
       </div>
       <div className="ml-auto">
         <p className="text-white text-sm font-bold flex items-center gap-1">
-          {getValueInMaticField}
+          {getValueInMaticField.toLocaleString('fullwide', { useGrouping: false })}
           <Matic height="10" width="10" />
           <span className="text-gray-80 text-xxs font-bold uppercase"> Matic</span>
         </p>

@@ -121,6 +121,7 @@ export default function AuctionPage({ track }: TrackPageProps) {
       createAuction(nftData.tokenId, weiPrice, startTimestamp, endTimestamp, account)
         .onReceipt(() => onReceive)
         .onError(cause => toast.error(cause.message))
+        .finally(() => helper.setSubmitting(false))
         .execute(web3);
     } else {
       me ? dispatchShowApproveModal(true, SaleType.AUCTION) : router.push('/login');
