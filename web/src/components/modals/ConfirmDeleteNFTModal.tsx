@@ -5,8 +5,8 @@ import { Track as TrackComponent } from 'components/Track';
 import { TrackListItemSkeleton } from 'components/TrackListItemSkeleton';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import useBlockchainV2 from 'hooks/useBlockchainV2';
-import { useMagicContext } from 'hooks/useMagicContext';
 import { useMaxGasFee } from 'hooks/useMaxGasFee';
+import { useWalletContext } from 'hooks/useWalletContext';
 import { TrackQuery, useDeleteTrackMutation, useTrackLazyQuery } from 'lib/graphql';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
@@ -17,7 +17,7 @@ export const ConfirmDeleteNFTModal = () => {
   const { dispatchShowConfirmDeleteNFTModal } = useModalDispatch();
   const [loading, setLoading] = useState(false);
   const [track, setTrack] = useState<TrackQuery['track']>();
-  const { web3, account, balance } = useMagicContext();
+  const { web3, account, balance } = useWalletContext();
   const [deleteTrack] = useDeleteTrackMutation({ refetchQueries: ['Posts', 'Tracks', 'Track'] });
   const { burnNftToken } = useBlockchainV2();
   const [disabled, setDisabled] = useState(true);
