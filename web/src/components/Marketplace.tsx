@@ -13,6 +13,7 @@ import {
 } from 'lib/graphql';
 import React, { useEffect, useState } from 'react';
 import { Badge } from './Badge';
+import { GridSkeleton } from './GridSkeleton';
 import { InfiniteLoader } from './InfiniteLoader';
 import { NoResultFound } from './NoResultFound';
 import { PostSkeleton } from './PostSkeleton';
@@ -148,11 +149,20 @@ export const Marketplace = () => {
         ))}
       </div>
       {loading ? (
-        <div className="space-y-2">
-          <PostSkeleton />
-          <PostSkeleton />
-          <PostSkeleton />
-        </div>
+        isGrid ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 p-4 justify-center">
+            <GridSkeleton />
+            <GridSkeleton />
+            <GridSkeleton />
+            <GridSkeleton />
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <PostSkeleton />
+            <PostSkeleton />
+            <PostSkeleton />
+          </div>
+        )
       ) : !data ? (
         <NoResultFound type="items" />
       ) : (

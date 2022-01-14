@@ -70,39 +70,39 @@ export const TrackGrid = ({ track }: TrackProps) => {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex flex-col flex-1 truncate">
+          <div className="flex flex-col flex-1 truncate">
+            {saleType && saleType !== '' && (
               <div className="flex items-center gap-1">
-                {saleType && saleType !== '' && (
-                  <>
-                    <div className="text-white font-bold text-xxs">{price / 1e18}</div>
-                    <div className="flex items-center justify-center flex-shrink-0">
-                      <Matic height="12" width="12" />
-                    </div>
-                    <BadgeTrack auction={saleType === 'auction'} label={saleType.toUpperCase()}></BadgeTrack>
-                  </>
-                )}
+                <div className="flex flex-1 items-start">
+                  <div className="text-white font-bold text-sm mr-1">{price / 1e18}</div>
+                  <Matic height="18" width="18" className="" />
+                </div>
+                <BadgeTrack auction={saleType === 'auction'} label={saleType.toUpperCase()}></BadgeTrack>
               </div>
-              <div className="text-gray-80 text-xxs">
-                {maticUsd && price && `${currency((price / 1e18) * parseFloat(maticUsd.maticUsd))}`}
-              </div>
-              <div className="text-gray-80 text-xs flex gap-1 items-center pt-1">
-                <Play fill="#808080" />
-                <span>{playbackCount || 0}</span>
-                <HeartFilled />
-                <span>{favoriteCount || 0}</span>
-              </div>
+            )}
+            <div className="text-gray-80 text-xs">
+              {maticUsd && price && `${currency((price / 1e18) * parseFloat(maticUsd.maticUsd))}`}
             </div>
-            <div className="flex items-center">
-              <button
-                className="bg-white rounded-full w-6 h-6 flex items-center"
-                onClick={e => {
-                  play(song);
-                  e.stopPropagation();
-                }}
-              >
-                {isPlaying ? <Pause className="text-white m-auto scale-125" /> : <Play className="text-white m-auto" />}
-              </button>
+            <div className="text-gray-80 text-xs flex gap-1 items-center pt-1">
+              <Play fill="#808080" />
+              <span>{playbackCount || 0}</span>
+              <HeartFilled />
+              <span className="flex-1">{favoriteCount || 0}</span>
+              <div className="flex items-center">
+                <button
+                  className="bg-white rounded-full w-6 h-6 flex items-center"
+                  onClick={e => {
+                    play(song);
+                    e.stopPropagation();
+                  }}
+                >
+                  {isPlaying ? (
+                    <Pause className="text-white m-auto scale-125" />
+                  ) : (
+                    <Play className="text-white m-auto" />
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
