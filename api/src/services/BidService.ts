@@ -51,6 +51,11 @@ export class BidService extends ModelService<typeof Bid> {
           path: '$profile',
         },
       },
+      {
+        $sort: {
+          amount: -1,
+        },
+      },
     ]);
     return bids;
   }
