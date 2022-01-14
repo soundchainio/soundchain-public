@@ -1,6 +1,8 @@
 import { IconComponent } from 'icons/types/IconComponent';
 import { forwardRef } from 'react';
+import { ApproveButton } from './Buttons/ApproveButton';
 import { BuyNFTButton } from './Buttons/BuyNFT';
+import { CancelButton } from './Buttons/CancelButton';
 import { ClearButton } from './Buttons/Clear';
 import { EditListingButton } from './Buttons/EditListing';
 import { GreenGradient } from './Buttons/GreenGradient';
@@ -11,8 +13,6 @@ import { OutlineRoundedButton } from './Buttons/OutlineRounded';
 import { RainbowButton } from './Buttons/Rainbow';
 import { RainbowRounded } from './Buttons/RainbowRounded';
 import { RainbowXSButton } from './Buttons/RainbowXS';
-import { ApproveButton } from './Buttons/ApproveButton';
-import { CancelButton } from './Buttons/CancelButton';
 
 export type ButtonVariant =
   | 'rainbow'
@@ -31,7 +31,7 @@ export type ButtonVariant =
 
 export interface ButtonProps extends React.ComponentPropsWithRef<'button'> {
   variant?: ButtonVariant;
-  icon?: IconComponent;
+  icon?: IconComponent | null;
   loading?: boolean;
   bgColor?: string;
   borderColor?: string;
@@ -53,7 +53,7 @@ export const buttonByVariant: Record<ButtonVariant, (props: ButtonProps) => JSX.
   orange: OrangeButton,
   'edit-listing': EditListingButton,
   approve: ApproveButton,
-  cancel: CancelButton, 
+  cancel: CancelButton,
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({ variant = 'rainbow', ...props }, ref) => {

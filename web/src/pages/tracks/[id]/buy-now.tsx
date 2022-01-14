@@ -137,7 +137,7 @@ export default function BuyNowPage({ track }: TrackPageProps) {
       listingPayload.buyNowItem?.buyNowItem?.tokenId,
       account,
       listingPayload.buyNowItem?.buyNowItem?.owner,
-      listingPayload.buyNowItem?.buyNowItem?.pricePerItem.toString(),
+      listingPayload.buyNowItem?.buyNowItem?.pricePerItem.toLocaleString('fullwide', { useGrouping: false }),
     )
       .onReceipt(onReceipt)
       .onError(cause => toast.error(cause.message))

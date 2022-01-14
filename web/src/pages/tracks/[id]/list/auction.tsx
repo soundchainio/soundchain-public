@@ -100,7 +100,7 @@ export default function AuctionPage({ track }: TrackPageProps) {
     if (nftData?.tokenId === null || nftData?.tokenId === undefined || !account || !web3) {
       return;
     }
-    const weiPrice = web3?.utils.toWei(price.toString(), 'ether') || '0';
+    const weiPrice = web3?.utils.toWei(price.toLocaleString('fullwide', { useGrouping: false }), 'ether') || '0';
     const startTimestamp = Math.ceil(startTime.getTime() / 1000);
     const endTimestamp = Math.ceil(endTime.getTime() / 1000);
     if (isApproved) {
@@ -119,7 +119,7 @@ export default function AuctionPage({ track }: TrackPageProps) {
         router.push(router.asPath.replace('/list/auction', ''));
       };
       createAuction(nftData.tokenId, weiPrice, startTimestamp, endTimestamp, account)
-        .onReceipt(() => onReceive)
+        .onReceipt(onReceive)
         .onError(cause => toast.error(cause.message))
         .finally(() => helper.setSubmitting(false))
         .execute(web3);

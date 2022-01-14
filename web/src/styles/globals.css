@@ -200,6 +200,10 @@ html {
   flex-basis: 0;
 }
 
+.m-0 {
+  margin: 0 !important;
+}
+
 @layer utilities {
   .placeholder-semibold::placeholder {
     @apply font-semibold;
