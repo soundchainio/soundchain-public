@@ -175,7 +175,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     if (!web3 || !auctionItem.auctionItem?.tokenId || !auctionItem.auctionItem?.owner || !account) {
       return;
     }
-    const amount = (bidAmount * 1e18).toString();
+    const amount = (bidAmount * 1e18).toLocaleString('fullwide', { useGrouping: false });
 
     if (bidAmount >= parseInt(balance || '0')) {
       toast.warn("Uh-oh, it seems you don't have enough funds for this transaction");

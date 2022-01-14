@@ -26,7 +26,7 @@ export const Matic = ({ value = '', className, variant }: Props) => {
     case 'currency-inline':
       return (
         <p className={classNames('text-white font-bold inline-flex items-center gap-1', className)}>
-          {fixedDecimals(value)}
+          {value}
           <MaticIcon className="inline" />
           <span className="text-gray-80 font-normal">{maticUsd && `≃ ${currencyValue}`}</span>
         </p>

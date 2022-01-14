@@ -17,7 +17,6 @@ const ErrorIcon = () => {
 export const Transaction = ({ transaction, maticUsdValue }: TransactionProps) => {
   const isError = transaction.isError === '1';
   const Icon = isError ? ErrorIcon : transaction.method && transactionDataMap[transaction.method]?.icon;
-  console.log(transaction);
 
   const transactionValue = parseInt(transaction.value) / 1e18;
   const gasFee = (parseInt(transaction.gasUsed) * parseInt(transaction.gasPrice)) / 1e18;
