@@ -48,7 +48,7 @@ export const FollowButton = ({ followedId, isFollowed }: FollowButtonProps) => {
       bgColor={isFollowed ? 'bg-green-gradient' : undefined}
       className="w-[85px] bg-gray-10 text-sm"
       textColor={isFollowed ? 'text-white' : 'green-gradient-text'}
-      icon={() => <Checkmark color={!isFollowed ? 'green' : undefined} />}
+      icon={() => <Checkmark id="profile-follow-" color={!isFollowed ? 'green' : undefined} />}
     >
       {isFollowed ? 'Following' : 'Follow'}
     </Button>
