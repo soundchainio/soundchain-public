@@ -19,7 +19,7 @@ export const FollowButton = ({ followedId, isFollowed, showIcon, followedHandle 
   const [unfollowProfile, { loading: unfollowLoading }] = useUnfollowProfileMutation();
   const router = useRouter();
   const me = useMe();
-  const opts = { variables: { input: { followedId } }, refetchQueries: ['ProfileByHandle'] };
+  const opts = { variables: { input: { followedId } }, refetchQueries: ['ProfileByHandle', 'Followers', 'Following'] };
 
   const handleClick = async () => {
     if (followLoading || unfollowLoading) {
