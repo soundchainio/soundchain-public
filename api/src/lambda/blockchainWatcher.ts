@@ -2,6 +2,7 @@ import { mongoose } from '@typegoose/typegoose';
 import type { Handler } from 'aws-lambda';
 import Web3 from 'web3';
 import { AbiItem } from 'web3-utils';
+import { Transfer } from '../../types/web3-v1-contracts/Soundchain721';
 import {
   AuctionCancelled,
   AuctionCreated,
@@ -10,7 +11,6 @@ import {
   UpdateAuction,
 } from '../../types/web3-v1-contracts/SoundchainAuction';
 import { ItemCanceled, ItemListed, ItemSold, ItemUpdated } from '../../types/web3-v1-contracts/SoundchainMarketplace';
-import { Transfer } from '../../types/web3-v1-contracts/Soundchain721';
 import { config } from '../config';
 import SoundchainCollectible from '../contract/Soundchain721.json';
 import SoundchainAuction from '../contract/SoundchainAuction.json';
@@ -18,7 +18,7 @@ import SoundchainMarketplace from '../contract/SoundchainMarketplace.json';
 import { UserModel } from '../models/User';
 import { EventData } from '../types/BlockchainEvents';
 import { Context } from '../types/Context';
-import { itemEvents, nftEvents, auctionEvents } from './processEvents';
+import { auctionEvents, itemEvents, nftEvents } from './processEvents';
 
 export const blockchainWatcher: Handler = async () => {
   await mongoose.connect(config.db.url, config.db.options);
@@ -30,15 +30,13 @@ export const blockchainWatcher: Handler = async () => {
     processMarketplaceEvents(marketplaceEvents, context),
     processNFTEvents(nftEvents, context),
     processAuctionEvents(auctionEvents, context),
+    context.blockTrackerService.updateCurrentBlocknumber(toBlock + 1),
   ]);
-
-  await context.blockTrackerService.updateCurrentBlocknumber(toBlock + 1);
 };
 
 const getContext = async () => {
   const user = await UserModel.findOne({ handle: '_system' });
-  const context = new Context({ sub: user._id });
-  return context;
+  return new Context({ sub: user._id });
 };
 
 const getAllEvents = async (context: Context) => {
@@ -57,9 +55,11 @@ const getAllEvents = async (context: Context) => {
 
   const blocks = { fromBlock, toBlock };
 
-  const marketplaceEvents = await marketplaceContract.getPastEvents('allEvents', blocks);
-  const nftEvents = await nftContract.getPastEvents('allEvents', blocks);
-  const auctionEvents = await auctionContract.getPastEvents('allEvents', blocks);
+  const [marketplaceEvents, nftEvents, auctionEvents] = await Promise.all([
+    marketplaceContract.getPastEvents('allEvents', blocks),
+    nftContract.getPastEvents('allEvents', blocks),
+    auctionContract.getPastEvents('allEvents', blocks),
+  ]);
   return { marketplaceEvents, nftEvents, auctionEvents, toBlock };
 };
 
