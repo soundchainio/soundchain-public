@@ -1,14 +1,34 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Transfer } from '../../types/web3-v1-contracts/Soundchain721';
+import {
+  AuctionCancelled,
+  AuctionCreated,
+  AuctionResulted,
+  BidPlaced,
+  UpdateAuction,
+} from '../../types/web3-v1-contracts/SoundchainAuction';
+import { ItemCanceled, ItemListed, ItemSold, ItemUpdated } from '../../types/web3-v1-contracts/SoundchainMarketplace';
 import { FailedEventModel } from '../models/FailedEvent';
 import { Context } from '../types/Context';
 import { PendingRequest } from '../types/PendingRequest';
 
 const zeroAddress = '0x0000000000000000000000000000000000000000';
 
-function _execute(f: (event: any, context: Context) => Promise<void>) {
-  return async function (this: any, ...args: [event: any, context: Context]) {
-    const a: [event: any, context: Context] = [...args];
+type ReturnTypes =
+  | AuctionCancelled['returnValues']
+  | AuctionCreated['returnValues']
+  | AuctionResulted['returnValues']
+  | BidPlaced['returnValues']
+  | UpdateAuction['returnValues']
+  | ItemCanceled['returnValues']
+  | ItemListed['returnValues']
+  | ItemSold['returnValues']
+  | ItemUpdated['returnValues']
+  | Transfer;
+
+function _execute<T extends ReturnTypes>(f: (returnValues: T, context: Context) => Promise<void>) {
+  return async function (this: any, ...args: [returnValues: T, context: Context]) {
+    const a: [returnValues: T, context: Context] = [...args];
     try {
       await f.apply(this, a);
     } catch (e: any) {
@@ -18,7 +38,7 @@ function _execute(f: (event: any, context: Context) => Promise<void>) {
   };
 }
 
-export const processItemListed = async (returnValues: any, context: Context): Promise<void> => {
+const processItemListed = async (returnValues: ItemListed['returnValues'], context: Context): Promise<void> => {
   const { owner, nft, tokenId, pricePerItem, startingTime } = returnValues;
   const [user, listedBefore] = await Promise.all([
     context.userService.getUserByWallet(owner),
@@ -44,16 +64,14 @@ export const processItemListed = async (returnValues: any, context: Context): Pr
   ]);
   console.log('ItemListed');
 };
-export const itemListed = _execute(processItemListed);
 
-export const processItemSold = async (returnValues: any, context: Context): Promise<void> => {
+const processItemSold = async (returnValues: ItemSold['returnValues'], context: Context): Promise<void> => {
   const { tokenId, seller, buyer, pricePerItem } = returnValues;
   await context.buyNowItemService.finishListing(tokenId, seller, buyer, parseInt(pricePerItem));
   console.log('ItemSold');
 };
-export const itemSold = _execute(processItemSold);
 
-export const processItemUpdated = async (returnValues: any, context: Context): Promise<void> => {
+const processItemUpdated = async (returnValues: ItemUpdated['returnValues'], context: Context): Promise<void> => {
   const { tokenId, newPrice, startingTime } = returnValues;
   await Promise.all([
     context.buyNowItemService.updateBuyNowItem(parseInt(tokenId), {
@@ -64,18 +82,16 @@ export const processItemUpdated = async (returnValues: any, context: Context): P
   ]);
   console.log('ItemUpdated');
 };
-export const itemUpdated = _execute(processItemUpdated);
 
-export const processItemCanceled = async (returnValues: any, context: Context): Promise<void> => {
+const processItemCanceled = async (returnValues: ItemCanceled['returnValues'], context: Context): Promise<void> => {
   const { tokenId } = returnValues;
   await context.buyNowItemService.setNotValid(parseInt(tokenId));
   await context.trackService.setPendingNone(parseInt(tokenId));
   console.log('ItemCanceled');
 };
-export const itemCanceled = _execute(processItemCanceled);
 
-const processTransfer = async (event: any, context: Context): Promise<void> => {
-  const { transactionHash, address, returnValues } = event as unknown as Transfer;
+const processTransfer = async (event: Transfer, context: Context): Promise<void> => {
+  const { transactionHash, address, returnValues } = event;
   if (returnValues.from === zeroAddress) {
     await context.trackService.updateTrackByTransactionHash(transactionHash, {
       nftData: {
@@ -92,9 +108,8 @@ const processTransfer = async (event: any, context: Context): Promise<void> => {
   }
   console.log('Transfer');
 };
-export const transfer = _execute(processTransfer);
 
-export const processAuctionCreated = async (returnValues: any, context: Context): Promise<void> => {
+const processAuctionCreated = async (returnValues: AuctionCreated['returnValues'], context: Context): Promise<void> => {
   const { nftAddress, tokenId, owner, reservePrice, startTimestamp, endTimestamp } = returnValues;
   const [user, listedBefore] = await Promise.all([
     context.userService.getUserByWallet(owner),
@@ -121,9 +136,8 @@ export const processAuctionCreated = async (returnValues: any, context: Context)
   ]);
   console.log('AuctionCreated');
 };
-export const auctionCreated = _execute(processAuctionCreated);
 
-export const processBidPlaced = async (returnValues: any, context: Context): Promise<void> => {
+const processBidPlaced = async (returnValues: BidPlaced['returnValues'], context: Context): Promise<void> => {
   const { nftAddress, tokenId, bidder, bid } = returnValues;
   const tokenIdAsNumber = parseInt(tokenId);
   const auction = await context.auctionItemService.findAuctionItem(tokenIdAsNumber);
@@ -169,16 +183,20 @@ export const processBidPlaced = async (returnValues: any, context: Context): Pro
   await Promise.all(auctionPromises);
   console.log('BidPlaced');
 };
-export const bidPlaced = _execute(processBidPlaced);
 
-export const processAuctionResulted = async (returnValues: any, context: Context): Promise<void> => {
+const processAuctionResulted = async (
+  returnValues: AuctionResulted['returnValues'],
+  context: Context,
+): Promise<void> => {
   const { tokenId, winner, oldOwner, winningBid } = returnValues;
   await context.auctionItemService.finishListing(tokenId, oldOwner, winner, parseInt(winningBid));
   console.log('AuctionResulted');
 };
-export const auctionResulted = _execute(processAuctionResulted);
 
-export const processAuctionCanceled = async (returnValues: any, context: Context): Promise<void> => {
+const processAuctionCanceled = async (
+  returnValues: AuctionCancelled['returnValues'],
+  context: Context,
+): Promise<void> => {
   const { tokenId } = returnValues;
   await Promise.all([
     context.auctionItemService.setNotValid(parseInt(tokenId)),
@@ -186,9 +204,8 @@ export const processAuctionCanceled = async (returnValues: any, context: Context
   ]);
   console.log('AuctionCancelled');
 };
-export const auctionCanceled = _execute(processAuctionCanceled);
 
-export const processUpdateAuction = async (returnValues: any, context: Context): Promise<void> => {
+const processUpdateAuction = async (returnValues: UpdateAuction['returnValues'], context: Context): Promise<void> => {
   const { tokenId, reservePrice, startTime, endTime } = returnValues;
   await Promise.all([
     context.auctionItemService.updateAuctionItem(parseInt(tokenId), {
@@ -200,4 +217,22 @@ export const processUpdateAuction = async (returnValues: any, context: Context):
   ]);
   console.log('UpdateAuction');
 };
-export const updateAuction = _execute(processUpdateAuction);
+
+export const itemEvents = {
+  listed: _execute(processItemListed),
+  sold: _execute(processItemSold),
+  updated: _execute(processItemUpdated),
+  canceled: _execute(processItemCanceled),
+};
+
+export const nftEvents = {
+  transfer: _execute(processTransfer),
+};
+
+export const auctionEvents = {
+  created: _execute(processAuctionCreated),
+  bidPlaced: _execute(processBidPlaced),
+  resulted: _execute(processAuctionResulted),
+  canceled: _execute(processAuctionCanceled),
+  update: _execute(processUpdateAuction),
+};
