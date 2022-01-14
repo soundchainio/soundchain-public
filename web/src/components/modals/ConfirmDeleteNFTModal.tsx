@@ -18,7 +18,7 @@ export const ConfirmDeleteNFTModal = () => {
   const [loading, setLoading] = useState(false);
   const [track, setTrack] = useState<TrackQuery['track']>();
   const { web3, account, balance } = useWalletContext();
-  const [deleteTrack] = useDeleteTrackMutation({ refetchQueries: ['Posts', 'Tracks', 'Track'] });
+  const [deleteTrack] = useDeleteTrackMutation({ refetchQueries: ['Posts', 'Tracks', 'Track', 'ExploreTracks'] });
   const { burnNftToken } = useBlockchainV2();
   const [disabled, setDisabled] = useState(true);
   const router = useRouter();
