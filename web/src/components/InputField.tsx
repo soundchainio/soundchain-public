@@ -9,13 +9,14 @@ interface InputFieldProps extends React.ComponentPropsWithoutRef<'input'> {
   placeholder?: string;
   icon?: (props: React.ComponentProps<'svg'>) => JSX.Element;
   symbol?: string;
+  alignTextCenter?: boolean;
 }
 
-const commonInputClasses = `relative appearance-none block w-full p-3 rounded-md border bg-gray-1A border-gray-30 text-gray-200 cursor-text`;
+const commonInputClasses = `relative appearance-none block w-full p-[10px] rounded border bg-gray-1A border-gray-30 text-gray-200 cursor-text`;
 const validInputClasses = `${commonInputClasses} border-gray-30`;
 const errorInputClasses = `${commonInputClasses} border-red-500`;
 
-export const InputField = ({ label, icon: Icon, ...props }: InputFieldProps) => {
+export const InputField = ({ label, icon: Icon, alignTextCenter, ...props }: InputFieldProps) => {
   const [field, meta] = useField(props);
   const inputRef = createRef<HTMLInputElement>();
   return (
@@ -26,12 +27,14 @@ export const InputField = ({ label, icon: Icon, ...props }: InputFieldProps) => 
           onClick={() => inputRef.current?.focus()}
         >
           {label && (
-            <Label className="block font-bold uppercase cursor-auto" textSize="xs" htmlFor={props.name}>
+            <Label className="block font-bold uppercase cursor-auto rounded" textSize="xxs" htmlFor={props.name}>
               {label}
             </Label>
           )}
           <input
-            className="text-sm font-bold bg-gray-1A w-full p-0 text-gray-200 border-none focus:outline-none focus:ring-transparent placeholder-gray-50 placeholder-semibold"
+            className={`text-sm font-bold bg-gray-1A w-full p-0 text-gray-200 border-none focus:outline-none focus:ring-transparent placeholder-gray-50 placeholder-semibold ${
+              alignTextCenter && 'text-center'
+            }`}
             id={props.name}
             {...field}
             {...props}
