@@ -1,6 +1,8 @@
-import { Genre, ReactionType, SaleType as SaleTypeGraphQl } from 'lib/graphql';
+import { ReactionType } from 'lib/graphql';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 import { SaleType } from 'types/SaleType';
+import { GenreLabel } from 'utils/Genres';
+import { SaleTypeLabel } from 'utils/SaleTypeLabel';
 
 export interface ShowNewPostPayload {
   show: boolean;
@@ -66,8 +68,8 @@ export interface ShowTransferConfirmationPayload {
 
 export interface ShowMarketplaceFilterPayload {
   show: boolean;
-  genres: Genre[];
-  filterSaleType: SaleTypeGraphQl;
+  genres: GenreLabel[];
+  filterSaleType: SaleTypeLabel;
 }
 
 export interface SetRecipientWalletAddress {

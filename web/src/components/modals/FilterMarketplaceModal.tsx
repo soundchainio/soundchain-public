@@ -4,12 +4,12 @@ import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { Form, Formik } from 'formik';
 import { DownArrow } from 'icons/DownArrow';
-import { Genre, SaleType } from 'lib/graphql';
 import { GenreLabel, genres } from 'utils/Genres';
+import { SaleTypeLabel, saleTypes } from 'utils/SaleTypeLabel';
 
 export interface FormValues {
-  genres?: Genre[];
-  saleType?: SaleType;
+  genres?: GenreLabel[];
+  saleType?: SaleTypeLabel;
 }
 
 export const FilterModalMarketplace = () => {
@@ -21,9 +21,9 @@ export const FilterModalMarketplace = () => {
   };
 
   const handleGenreClick = (
-    setFieldValue: (field: string, value: Genre[]) => void,
-    newValue: Genre,
-    currentValues?: Genre[],
+    setFieldValue: (field: string, value: GenreLabel[]) => void,
+    newValue: GenreLabel,
+    currentValues?: GenreLabel[],
   ) => {
     if (!currentValues) {
       setFieldValue('genres', [newValue]);
@@ -64,27 +64,25 @@ export const FilterModalMarketplace = () => {
             <div className="flex-1 flex flex-col gap-2">
               <span className="text-white text-xs font-bold">Sale type</span>
               <div className="flex gap-3 mb-6">
-                <Badge
-                  label="Buy now"
-                  selected={values.saleType ? values.saleType.includes(SaleType.BuyNow) : false}
-                  onClick={() => setFieldValue('saleType', SaleType.BuyNow)}
-                />
-                <Badge
-                  label="Auction"
-                  selected={values.saleType ? values.saleType.includes(SaleType.Auction) : false}
-                  onClick={() => setFieldValue('saleType', SaleType.Auction)}
-                />
+                {saleTypes.map(sale => (
+                  <Badge
+                    key={sale.key}
+                    label={sale.label}
+                    selected={values.saleType ? values.saleType === sale : false}
+                    onClick={() => setFieldValue('saleType', sale)}
+                  />
+                ))}
               </div>
               <span className="text-white text-xs font-bold">
                 Select Genres {values.genres && `(${values.genres.length} Selected)`}
               </span>
               <div className="flex flex-wrap gap-2">
-                {genres.map(({ label, key }: GenreLabel) => (
+                {genres.map((genre: GenreLabel) => (
                   <Badge
-                    key={key}
-                    label={label}
-                    selected={values.genres ? values.genres.includes(key) : false}
-                    onClick={() => handleGenreClick(setFieldValue, key, values.genres)}
+                    key={genre.key}
+                    label={genre.label}
+                    selected={values.genres ? values.genres.includes(genre) : false}
+                    onClick={() => handleGenreClick(setFieldValue, genre, values.genres)}
                   />
                 ))}
               </div>
