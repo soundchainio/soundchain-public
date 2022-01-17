@@ -12,7 +12,7 @@ export interface ImageUploadProps extends Omit<React.ComponentPropsWithoutRef<'d
   maxNumberOfFiles?: number;
   maxFileSize?: number;
   value?: string;
-  rounded?: boolean;
+  rounded?: 'rounded-full' | 'rounded-lg' | 'rounded-none';
   artwork?: boolean;
   initialValue?: File;
 }
@@ -28,7 +28,7 @@ export function ImageUpload({
   onChange,
   onUpload,
   children,
-  rounded,
+  rounded = 'rounded-lg',
   initialValue,
   artwork = false,
   ...rest
@@ -57,7 +57,8 @@ export function ImageUpload({
         <div
           className={classNames(
             'relative flex items-center justify-center bg-gray-30 border-gray-80 border-2',
-            thumbnail && rounded ? 'rounded-full' : 'rounded-lg',
+            thumbnail,
+            rounded,
             artwork ? 'w-24 h-24' : '',
             className,
           )}
@@ -70,7 +71,7 @@ export function ImageUpload({
               <video src={thumbnail} loop muted autoPlay controls={false} className="w-full h-full" />
             ) : (
               <Image
-                className={classNames('object-cover', rounded ? 'rounded-full' : 'rounded-lg')}
+                className={classNames('object-cover', rounded)}
                 src={thumbnail}
                 alt="Upload preview"
                 layout="fill"
