@@ -3,8 +3,8 @@ import { Button } from 'components/Button';
 import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { Form, Formik } from 'formik';
+import { DownArrow } from 'icons/DownArrow';
 import { Genre, SaleType } from 'lib/graphql';
-import { useEffect, useState } from 'react';
 import { GenreLabel, genres } from 'utils/Genres';
 
 export interface FormValues {
@@ -15,13 +15,10 @@ export interface FormValues {
 export const FilterModalMarketplace = () => {
   const { showMarketplaceFilter, genres: genresModalState, filterSaleType } = useModalState();
   const { dispatchShowFilterMarketplaceModal } = useModalDispatch();
-  const [saleType, setSaleType] = useState<SaleType | undefined>(filterSaleType);
 
   const handleClose = (values: FormValues) => {
-    dispatchShowFilterMarketplaceModal(false, values.genres, saleType);
+    dispatchShowFilterMarketplaceModal(false, values.genres, values.saleType);
   };
-
-  useEffect(() => setSaleType(filterSaleType), [filterSaleType]);
 
   const handleGenreClick = (
     setFieldValue: (field: string, value: Genre[]) => void,
@@ -40,10 +37,27 @@ export const FilterModalMarketplace = () => {
   };
 
   return (
-    <Modal show={showMarketplaceFilter} title={'Filter'} onClose={() => handleClose}>
+    <Modal
+      show={showMarketplaceFilter}
+      title={'Filter'}
+      leftButton={
+        <div className="flex justify-start ml-6">
+          <button
+            aria-label="Close"
+            className="w-10 h-10 flex justify-center items-center"
+            onClick={() => handleClose({ genres: genresModalState, saleType: filterSaleType })}
+          >
+            <DownArrow />
+          </button>
+        </div>
+      }
+      onClose={() => handleClose({ genres: genresModalState, saleType: filterSaleType })}
+    >
       <Formik<FormValues>
         initialValues={{ genres: genresModalState, saleType: filterSaleType }}
-        onSubmit={values => handleClose(values)}
+        onSubmit={values => {
+          handleClose(values);
+        }}
       >
         {({ setFieldValue, values }) => (
           <Form className="flex flex-col bg-gray-10 h-full gap-2 p-4">
@@ -51,14 +65,14 @@ export const FilterModalMarketplace = () => {
               <span className="text-white text-xs font-bold">Sale type</span>
               <div className="flex gap-3 mb-6">
                 <Badge
-                  label={'Buy now'}
-                  selected={saleType === SaleType.BuyNow}
-                  onClick={() => setSaleType(SaleType.BuyNow)}
+                  label="Buy now"
+                  selected={values.saleType ? values.saleType.includes(SaleType.BuyNow) : false}
+                  onClick={() => setFieldValue('saleType', SaleType.BuyNow)}
                 />
                 <Badge
-                  label={'Auction'}
-                  selected={saleType === SaleType.Auction}
-                  onClick={() => setSaleType(SaleType.Auction)}
+                  label="Auction"
+                  selected={values.saleType ? values.saleType.includes(SaleType.Auction) : false}
+                  onClick={() => setFieldValue('saleType', SaleType.Auction)}
                 />
               </div>
               <span className="text-white text-xs font-bold">
@@ -79,7 +93,7 @@ export const FilterModalMarketplace = () => {
               <Button
                 className="w-full"
                 variant="cancel"
-                onClick={() => dispatchShowFilterMarketplaceModal(false, genresModalState, filterSaleType)}
+                onClick={() => handleClose({ genres: genresModalState, saleType: filterSaleType })}
               >
                 Cancel
               </Button>
