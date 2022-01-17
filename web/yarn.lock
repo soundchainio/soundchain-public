@@ -9104,6 +9104,11 @@ react-is@^16.7.0, react-is@^16.8.1:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.13.1.tgz#789729a4dc36de2999dc156dd6c1d9c18cea56a4"
   integrity sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==
 
+react-link-text@^0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/react-link-text/-/react-link-text-0.4.0.tgz#7ea0500b8c8bc45dd27147a2f4bdc6f57cd6024b"
+  integrity sha512-EYYz/BlEOIv49qg58UF5LMBCDfpPVWk5BtU8o2JgU8kSq9UAl6vMjbcJNWQxW7D5x4+s63aVEiSWLUP4MYM//A==
+
 react-onclickoutside@^6.12.0:
   version "6.12.1"
   resolved "https://registry.yarnpkg.com/react-onclickoutside/-/react-onclickoutside-6.12.1.tgz#92dddd28f55e483a1838c5c2930e051168c1e96b"
