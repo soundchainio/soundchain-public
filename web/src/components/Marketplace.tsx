@@ -93,18 +93,22 @@ export const Marketplace = () => {
           <span className="text-white text-sm font-bold">{`${totalCount} `} </span>
           <span className="text-gray-80 text-sm">Tracks</span>
         </div>
-        <ListView color={isGrid ? undefined : 'rainbow'} onClick={() => setIsGrid(false)} />
-        <GridView color={isGrid ? 'rainbow' : undefined} onClick={() => setIsGrid(true)} />
+        <button aria-label="List view">
+          <ListView color={isGrid ? undefined : 'rainbow'} onClick={() => setIsGrid(false)} />
+        </button>
+        <button aria-label="Grid view">
+          <GridView color={isGrid ? 'rainbow' : undefined} onClick={() => setIsGrid(true)} />
+        </button>
       </div>
       <div className="flex gap-2 bg-black p-4 justify-center items-center">
         <div className="flex flex-1 items-center">
-          <div
-            className="flex cursor-pointer"
+          <button
+            className="flex items-center justify-center p-2"
             onClick={() => dispatchShowFilterMarketplaceModal(true, genres, saleType)}
           >
             <Filter />
             <span className="text-white text-xs font-bold pl-1">Filter</span>
-          </div>
+          </button>
         </div>
         <label htmlFor="sortBy" className="text-gray-80 text-xs font-bold">
           Sort By
