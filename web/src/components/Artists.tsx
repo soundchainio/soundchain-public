@@ -43,7 +43,7 @@ export const Artists = ({ searchTerm }: ArtistsPageProps) => {
   }
 
   return (
-    <div className="bg-gray-25 h-full">
+    <div className="bg-gray-25">
       {data?.followedArtists.nodes.map(followedArtists => (
         <div key={followedArtists.id} className="space-y-6 px-4 py-3">
           <Link href={`/profiles/${followedArtists.userHandle}`} passHref>
