@@ -7,7 +7,13 @@ import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import useBlockchainV2 from 'hooks/useBlockchainV2';
 import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { useWalletContext } from 'hooks/useWalletContext';
-import { TrackQuery, useDeleteTrackMutation, useTrackLazyQuery } from 'lib/graphql';
+import {
+  ExploreTracksDocument,
+  TrackQuery,
+  ExploreTracksQuery,
+  useDeleteTrackMutation,
+  useTrackLazyQuery,
+} from 'lib/graphql';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
@@ -18,7 +24,37 @@ export const ConfirmDeleteNFTModal = () => {
   const [loading, setLoading] = useState(false);
   const [track, setTrack] = useState<TrackQuery['track']>();
   const { web3, account, balance } = useWalletContext();
-  const [deleteTrack] = useDeleteTrackMutation({ refetchQueries: ['Posts', 'Tracks', 'Track', 'ExploreTracks'] });
+  const [deleteTrack] = useDeleteTrackMutation({
+    update: (cache, { data }) => {
+      if (!data?.deleteTrack) {
+        return;
+      }
+
+      const identify = cache.identify(data.deleteTrack);
+      cache.evict({ id: identify });
+
+      const cachedData = cache.readQuery<ExploreTracksQuery>({
+        query: ExploreTracksDocument,
+        variables: { search: '' },
+      });
+
+      if (!cachedData) {
+        return;
+      }
+
+      cache.writeQuery({
+        query: ExploreTracksDocument,
+        variables: { search: '' },
+        overwrite: true,
+        data: {
+          exploreTracks: {
+            ...cachedData.exploreTracks,
+            nodes: cachedData.exploreTracks.nodes.filter(({ id }) => id !== data?.deleteTrack.id),
+          },
+        },
+      });
+    },
+  });
   const { burnNftToken } = useBlockchainV2();
   const [disabled, setDisabled] = useState(true);
   const router = useRouter();

@@ -238,7 +238,7 @@ export const CreateModal = () => {
                 },
               },
             },
-            refetchQueries: [FeedDocument, 'Posts', 'Tracks'],
+            refetchQueries: [FeedDocument, 'Posts', 'Tracks', 'ExploreTracks'],
           });
           const track = data?.createTrack.track;
 
