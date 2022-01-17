@@ -112,7 +112,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     fetchHighestBid();
     const interval = setInterval(() => {
       fetchHighestBid();
-    }, 10 * 1000);
+    }, 6 * 1000);
 
     return () => clearInterval(interval);
   }, [tokenId, track.id, web3, getHighestBid, account, refetchCountBids]);
