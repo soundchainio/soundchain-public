@@ -1,5 +1,5 @@
-import { Avatar } from 'components/Avatar';
 import { Badge } from 'components/Badge';
+import { ProfileWithAvatar } from 'components/ProfileWithAvatar';
 import { Genre, Profile } from 'lib/graphql';
 import { getGenreLabelByKey } from 'utils/Genres';
 
@@ -28,17 +28,7 @@ export const TrackInfo = ({
     <div className="w-full text-white">
       <div className="flex items-center text-xxs px-4 py-3">
         <div className="w-1/6 uppercase text-xs text-gray-CC font-bold mr-1">Artist</div>
-        <div className="flex w-3/6 gap-2">
-          <Avatar
-            profile={{ profilePicture: artistProfile?.profilePicture, userHandle: artistProfile?.userHandle }}
-            pixels={30}
-            linkToProfile
-          />
-          <div className="flex flex-col ">
-            <div className="text-sm font-bold">{artistProfile?.displayName}</div>
-            <div className="text-xxs text-gray-CC font-bold">@{artistProfile?.userHandle}</div>
-          </div>
-        </div>
+        <div className="w-3/6">{artistProfile && <ProfileWithAvatar profile={artistProfile} />}</div>
         <div className="flex flex-col w-1/6">
           <div className="text-center text-sm font-bold">{artistProfile?.followerCount}</div>
           <div className="text-center text-gray-CC font-bold">Followers</div>

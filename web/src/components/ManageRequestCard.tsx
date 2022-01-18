@@ -1,9 +1,8 @@
-import { Avatar } from 'components/Avatar';
 import { ManageRequestCardSkeleton } from 'components/ManageRequestCardSkeleton';
 import { CircleRightArrow } from 'icons/CircleRightArrow';
 import { ProfileVerificationRequestComponentFieldsFragment, useProfileQuery } from 'lib/graphql';
 import NextLink from 'next/link';
-import { DisplayName } from './DisplayName';
+import { ProfileWithAvatar } from './ProfileWithAvatar';
 
 interface ManageRequestCardProps {
   request: ProfileVerificationRequestComponentFieldsFragment;
@@ -20,15 +19,7 @@ export const ManageRequestCard = ({ request }: ManageRequestCardProps) => {
       <NextLink href={`/manage-requests/${request.id}`}>
         <a className="p-4">
           <div className="flex flex-row gap-2 items-center text-sm">
-            <Avatar pixels={30} className="flex" profile={profile.profile} />
-            <div className="flex flex-col min-w-0">
-              <DisplayName
-                name={profile.profile.displayName}
-                verified={profile.profile.verified}
-                teamMember={profile.profile.teamMember}
-              />
-              <p className="text-gray-80 text-xs">@{profile.profile.userHandle}</p>
-            </div>
+            <ProfileWithAvatar profile={profile.profile} />
             <div className="ml-auto">
               <CircleRightArrow />
             </div>
