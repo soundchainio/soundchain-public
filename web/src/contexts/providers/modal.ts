@@ -1,9 +1,11 @@
 import { ModalActionTypes } from 'contexts/actions/modal';
 import { initialModalState, ModalState } from 'contexts/reducers/modal';
-import { Genre, ReactionType, SaleType as SaleTypeGraphQl } from 'lib/graphql';
+import { ReactionType } from 'lib/graphql';
 import { useContext } from 'react';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 import { SaleType } from 'types/SaleType';
+import { GenreLabel } from 'utils/Genres';
+import { SaleTypeLabel } from 'utils/SaleTypeLabel';
 import { store } from '..';
 
 export const useModalState = (): ModalState => {
@@ -59,8 +61,8 @@ export const useModalDispatch = () => {
       dispatch({ type: ModalActionTypes.SHOW_CONFIRM_DELETE_NFT, payload: { show, trackId, burn } }),
     dispatchShowFilterMarketplaceModal: (
       show: boolean,
-      genres: Genre[] | undefined,
-      filterSaleType: SaleTypeGraphQl | undefined,
+      genres: GenreLabel[] | undefined,
+      filterSaleType: SaleTypeLabel | undefined,
     ) => dispatch({ type: ModalActionTypes.SHOW_FILTER_MARKETPLACE, payload: { show, genres, filterSaleType } }),
     dispatchShowBidsHistory: (show: boolean, auctionId: string) =>
       dispatch({ type: ModalActionTypes.SHOW_BIDS_HISTORY, payload: { show, auctionId } }),

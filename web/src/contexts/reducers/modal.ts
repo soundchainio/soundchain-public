@@ -20,9 +20,11 @@ import {
   ShowTransferConfirmationPayload,
   ShowUnderDevelopmentPayload,
 } from 'contexts/payloads/modal';
-import { Genre, ReactionType, SaleType as SaleTypeGraphQl } from 'lib/graphql';
+import { ReactionType } from 'lib/graphql';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 import { SaleType } from 'types/SaleType';
+import { GenreLabel } from 'utils/Genres';
+import { SaleTypeLabel } from 'utils/SaleTypeLabel';
 
 export interface ModalState {
   showNewPost: boolean;
@@ -57,8 +59,8 @@ export interface ModalState {
   showConfirmDeleteNFT: boolean;
   burn?: boolean;
   showMarketplaceFilter: boolean;
-  genres?: Genre[];
-  filterSaleType?: SaleTypeGraphQl;
+  genres?: GenreLabel[];
+  filterSaleType?: SaleTypeLabel;
   auctionId?: string;
 }
 
