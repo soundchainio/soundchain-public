@@ -28,8 +28,8 @@ const marketplaceContract = (web3: Web3) =>
 const nftContract = (web3: Web3) =>
   new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress) as unknown as Soundchain721;
 
-const applySoundchainFee = (price: number) =>
-  (price * (1 + config.soundchainFee)).toLocaleString('fullwide', { useGrouping: false });
+const applySoundchainFee = (price: number) => (price * (1 + config.soundchainFee)).toFixed();
+
 interface DefaultParam {
   from: string;
 }
