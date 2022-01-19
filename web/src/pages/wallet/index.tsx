@@ -192,11 +192,11 @@ export default function WalletPage() {
                   <Matic height="30" width="30" />
                   {getBalance ? (
                     <>
-                      <p className="text-blue-400 font-bold text-xs uppercase mt-2">
+                      <div className="text-blue-400 font-bold text-xs uppercase mt-2">
                         <span className="text-white font-bold text-2xl">{getBalanceFormatted}</span>
                         {` matic`}
                         <RefreshButton onClick={refreshBalance} className="absolute right-0 top-1/2 text-center" />
-                      </p>
+                      </div>
                       {data?.maticUsd && (
                         <span className="text-xs text-gray-50 font-bold">
                           {`${currency(getBalanceFormatted * parseFloat(data?.maticUsd))} USD`}
