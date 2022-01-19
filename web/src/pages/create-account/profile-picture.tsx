@@ -22,8 +22,8 @@ export default function ProfilePicturePage() {
         Cancel
       </div>
     ),
-    rightButton: <Badge label="Skip" onClick={onClose} selected={false} />,
-    subtitle: <StepProgressBar steps={6} currentStep={1} />,
+    rightButton: <Badge label="Skip" onClick={() => router.push('/create-account/cover-picture')} selected={false} />,
+    subtitle: <StepProgressBar steps={7} currentStep={1} />,
   };
 
   return (

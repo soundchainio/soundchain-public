@@ -13,7 +13,7 @@ const topNavBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
 };
 
-export default function CoverPicturePage() {
+export default function SecurityPage() {
   const router = useRouter();
   const me = useMe();
 

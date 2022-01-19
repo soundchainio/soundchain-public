@@ -16,7 +16,7 @@ export default function BioPage() {
     title: 'Bio',
     leftButton: <BackButton />,
     rightButton: <Badge label="Skip" onClick={() => router.push('/create-account/social-links')} selected={false} />,
-    subtitle: <StepProgressBar steps={6} currentStep={5} />,
+    subtitle: <StepProgressBar steps={7} currentStep={5} />,
   };
 
   return (
