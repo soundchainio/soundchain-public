@@ -62,7 +62,8 @@ export const NavBarButton = ({
         )}
         <span
           className={classNames(
-            'text-gray-50 text-xs font-semibold',
+            !path ? 'text-white' : 'text-gray-50',
+            'text-xs font-semibold',
             !nyanCat && 'mt-2',
             isActive && `${color}-gradient-text`,
           )}
