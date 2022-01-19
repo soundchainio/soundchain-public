@@ -1,4 +1,5 @@
 import { BackButton } from 'components/Buttons/BackButton';
+import { RefreshButton } from 'components/Buttons/RefreshButton';
 import { ConnectedNetwork } from 'components/ConnectedNetwork';
 import { CopyWalletAddress } from 'components/CopyWalletAddress';
 import { Jazzicon } from 'components/Jazzicon';
@@ -62,8 +63,15 @@ const WalletButton = ({ href, title, icon: Icon }: WalletButtonProps) => {
 export default function WalletPage() {
   const me = useMe();
   const { data } = useMaticUsdQuery();
-  const { account, balance, connect, chainId, addMumbaiTestnet } = useMetaMask();
-  const { account: magicAccount, balance: magicBalance } = useMagicContext();
+  const {
+    account,
+    balance,
+    connect,
+    chainId,
+    addMumbaiTestnet,
+    refetchBalance: refetchMetamaskBalance,
+  } = useMetaMask();
+  const { account: magicAccount, balance: magicBalance, refetchBalance: refetchMagicBalance } = useMagicContext();
   const [updateDefaultWallet] = useUpdateDefaultWalletMutation();
 
   const [selectedWallet, setSelectedWallet] = useState(DefaultWallet.Soundchain);
@@ -92,6 +100,10 @@ export default function WalletPage() {
       setCorrectNetwork(true);
     }
   }, [chainId]);
+
+  const refreshBalance = () => {
+    isSoundChainSelected ? refetchMagicBalance() : refetchMetamaskBalance();
+  };
 
   const WalletHeader = () => {
     return (
@@ -176,13 +188,14 @@ export default function WalletPage() {
                 {getAccount && <Jazzicon address={getAccount} size={54} />}
                 <ConnectedNetwork />
                 {getAccount && <CopyWalletAddress walletAddress={getAccount} />}
-                <div className="flex flex-col items-center gap-1">
+                <div className="flex flex-col items-center gap-1 relative w-full">
                   <Matic height="30" width="30" />
                   {getBalance ? (
                     <>
                       <p className="text-blue-400 font-bold text-xs uppercase mt-2">
                         <span className="text-white font-bold text-2xl">{getBalanceFormatted}</span>
                         {` matic`}
+                        <RefreshButton onClick={refreshBalance} className="absolute right-0 top-1/2 text-center" />
                       </p>
                       {data?.maticUsd && (
                         <span className="text-xs text-gray-50 font-bold">
