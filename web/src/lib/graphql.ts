@@ -1079,6 +1079,7 @@ export type Query = {
   posts: PostConnection;
   reactions: ReactionConnection;
   bandcampLink: Scalars['String'];
+  getOriginalPostFromTrack: Post;
   myProfile: Profile;
   profile: Profile;
   profileByHandle: Profile;
@@ -1232,6 +1233,11 @@ export type QueryReactionsArgs = {
 
 export type QueryBandcampLinkArgs = {
   url: Scalars['String'];
+};
+
+
+export type QueryGetOriginalPostFromTrackArgs = {
+  trackId: Scalars['String'];
 };
 
 
@@ -2246,6 +2252,19 @@ export type FollowingQuery = (
       { __typename?: 'PageInfo' }
       & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
     ) }
+  ) }
+);
+
+export type GetOriginalPostFromTrackQueryVariables = Exact<{
+  trackId: Scalars['String'];
+}>;
+
+
+export type GetOriginalPostFromTrackQuery = (
+  { __typename?: 'Query' }
+  & { getOriginalPostFromTrack: (
+    { __typename?: 'Post' }
+    & PostComponentFieldsFragment
   ) }
 );
 
@@ -4859,6 +4878,41 @@ export function useFollowingLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
 export type FollowingQueryHookResult = ReturnType<typeof useFollowingQuery>;
 export type FollowingLazyQueryHookResult = ReturnType<typeof useFollowingLazyQuery>;
 export type FollowingQueryResult = Apollo.QueryResult<FollowingQuery, FollowingQueryVariables>;
+export const GetOriginalPostFromTrackDocument = gql`
+    query GetOriginalPostFromTrack($trackId: String!) {
+  getOriginalPostFromTrack(trackId: $trackId) {
+    ...PostComponentFields
+  }
+}
+    ${PostComponentFieldsFragmentDoc}`;
+
+/**
+ * __useGetOriginalPostFromTrackQuery__
+ *
+ * To run a query within a React component, call `useGetOriginalPostFromTrackQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetOriginalPostFromTrackQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetOriginalPostFromTrackQuery({
+ *   variables: {
+ *      trackId: // value for 'trackId'
+ *   },
+ * });
+ */
+export function useGetOriginalPostFromTrackQuery(baseOptions: Apollo.QueryHookOptions<GetOriginalPostFromTrackQuery, GetOriginalPostFromTrackQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetOriginalPostFromTrackQuery, GetOriginalPostFromTrackQueryVariables>(GetOriginalPostFromTrackDocument, options);
+      }
+export function useGetOriginalPostFromTrackLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetOriginalPostFromTrackQuery, GetOriginalPostFromTrackQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetOriginalPostFromTrackQuery, GetOriginalPostFromTrackQueryVariables>(GetOriginalPostFromTrackDocument, options);
+        }
+export type GetOriginalPostFromTrackQueryHookResult = ReturnType<typeof useGetOriginalPostFromTrackQuery>;
+export type GetOriginalPostFromTrackLazyQueryHookResult = ReturnType<typeof useGetOriginalPostFromTrackLazyQuery>;
+export type GetOriginalPostFromTrackQueryResult = Apollo.QueryResult<GetOriginalPostFromTrackQuery, GetOriginalPostFromTrackQueryVariables>;
 export const HaveBidedDocument = gql`
     query HaveBided($auctionId: String!, $bidder: String!) {
   haveBided(auctionId: $auctionId, bidder: $bidder) {
