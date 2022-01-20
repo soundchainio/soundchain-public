@@ -37,9 +37,11 @@ fragment ListingItemComponentFields on TrackWithListingItem {
     nft
     tokenId
     pricePerItem
+    pricePerItemToShow
     startingTime
     endingTime
     reservePrice
+    reservePriceToShow
     createdAt
     updatedAt
     priceToShow

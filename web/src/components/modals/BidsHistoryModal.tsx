@@ -51,10 +51,10 @@ export const BidsHistoryModal = () => {
                 </div>
               </div>
               <div className="flex flex-col">
-                <Matic value={item.amount / 1e18} />
+                <Matic value={item.amountToShow} />
                 <div className="flex justify-end">
                   <span className="text-gray-50 font-bold text-xxs">
-                    {maticUsd && `${currency((item.amount / 1e18) * parseFloat(maticUsd.maticUsd))}`}
+                    {maticUsd && `${currency(item.amountToShow * parseFloat(maticUsd.maticUsd))}`}
                   </span>
                 </div>
               </div>

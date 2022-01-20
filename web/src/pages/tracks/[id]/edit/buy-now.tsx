@@ -5,6 +5,7 @@ import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import { useModalDispatch } from 'contexts/providers/modal';
+import { FormikHelpers } from 'formik';
 import useBlockchainV2 from 'hooks/useBlockchainV2';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
@@ -17,6 +18,7 @@ import React from 'react';
 import { toast } from 'react-toastify';
 import { SaleType } from 'types/SaleType';
 import { compareWallets } from 'utils/Wallet';
+import Web3 from 'web3';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -68,21 +70,20 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
 
   const isOwner = compareWallets(listingPayload.buyNowItem?.buyNowItem?.owner, account);
   const isForSale = !!listingPayload.buyNowItem?.buyNowItem?.pricePerItem ?? false;
-  const price =
-    web3?.utils.fromWei(
-      listingPayload.buyNowItem?.buyNowItem?.pricePerItem.toLocaleString('fullwide', { useGrouping: false }) || '0',
-      'ether',
-    ) ?? '0';
+  const price = listingPayload.buyNowItem?.buyNowItem?.pricePerItemToShow;
 
   const startingDate = listingPayload.buyNowItem?.buyNowItem?.startingTime
     ? new Date(listingPayload.buyNowItem.buyNowItem.startingTime * 1000)
     : undefined;
 
-  const handleUpdate = ({ price: newPrice, startTime }: ListNFTBuyNowFormValues) => {
+  const handleUpdate = (
+    { price: newPrice, startTime }: ListNFTBuyNowFormValues,
+    helper: FormikHelpers<ListNFTBuyNowFormValues>,
+  ) => {
     if (!web3 || !listingPayload.buyNowItem?.buyNowItem?.tokenId || !newPrice || !account) {
       return;
     }
-    const weiPrice = web3?.utils.toWei(newPrice.toLocaleString('fullwide', { useGrouping: false }), 'ether') || '0';
+    const weiPrice = Web3.utils.toWei(newPrice.toLocaleString('fullwide', { useGrouping: false }), 'ether');
     const startTimestamp = startTime.getTime() / 1000;
 
     const onReceipt = () => {
@@ -102,6 +103,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
     updateListing(listingPayload.buyNowItem?.buyNowItem?.tokenId, account, weiPrice, startTimestamp)
       .onReceipt(onReceipt)
       .onError(cause => toast.error(cause.message))
+      .finally(() => helper.setSubmitting(false))
       .execute(web3);
   };
 
@@ -150,7 +152,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
         <ListNFTBuyNow
           submitLabel="EDIT LISTING"
           handleSubmit={handleUpdate}
-          initialValues={{ price: parseFloat(price), startTime: startingDate }}
+          initialValues={{ price, startTime: startingDate }}
         />
       </Layout>
     </>

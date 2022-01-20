@@ -1,7 +1,7 @@
 import { Matic } from 'icons/Matic';
 import { network } from 'lib/blockchainNetworks';
 import { PolygonscanResultObj } from 'lib/graphql';
-import { currency } from 'utils/format';
+import { currency, priceToShow } from 'utils/format';
 
 interface InternalTransactionProps {
   transaction: Partial<PolygonscanResultObj>;
@@ -22,13 +22,13 @@ export const InternalTransaction = ({ transaction, maticUsdValue }: InternalTran
       </div>
       <div className="ml-auto">
         <p className="text-white text-sm font-bold flex items-center gap-1">
-          {transaction.value && parseFloat(transaction.value) / 1e18}
+          {transaction.value && priceToShow(transaction.value)}
           <Matic height="10" width="10" />
           <span className="text-gray-80 text-xxs font-bold uppercase"> Matic</span>
         </p>
         {maticUsdValue && transaction.value && (
           <p className="text-gray-50 text-xxs font-bold text-right">
-            {`${currency((parseFloat(transaction.value) / 1e18) * parseFloat(maticUsdValue))} USD`}
+            {`${currency(priceToShow(transaction.value) * parseFloat(maticUsdValue))} USD`}
           </p>
         )}
       </div>

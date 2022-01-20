@@ -49,7 +49,7 @@ export const NFTSoldNotificationItem = ({
             <div className="text-white font-bold text-xs">{trackName}</div>
             <div className="text-gray-80 font-bold text-xs">{artist}</div>
           </div>
-          <Matic className="ml-auto" value={price / 1e18} />
+          <Matic className="ml-auto" value={price} />
         </div>
       </NextLink>
     </div>

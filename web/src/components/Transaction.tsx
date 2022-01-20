@@ -3,7 +3,7 @@ import { Matic } from 'icons/Matic';
 import { network } from 'lib/blockchainNetworks';
 import { PolygonscanResultObj } from 'lib/graphql';
 import { transactionDataMap } from 'types/TransactionType';
-import { currency } from 'utils/format';
+import { currency, priceToShow } from 'utils/format';
 
 interface TransactionProps {
   transaction: PolygonscanResultObj;
@@ -18,8 +18,8 @@ export const Transaction = ({ transaction, maticUsdValue }: TransactionProps) =>
   const isError = transaction.isError === '1';
   const Icon = isError ? ErrorIcon : transaction.method && transactionDataMap[transaction.method]?.icon;
 
-  const transactionValue = parseInt(transaction.value) / 1e18;
-  const gasFee = (parseInt(transaction.gasUsed) * parseInt(transaction.gasPrice)) / 1e18;
+  const transactionValue = priceToShow(transaction.value);
+  const gasFee = priceToShow(transaction.gasUsed) * priceToShow(transaction.gasPrice);
 
   const getValueInMaticField = transactionValue > 0 ? transactionValue : gasFee;
   const getValueInDollar = maticUsdValue && getValueInMaticField * parseFloat(maticUsdValue);
