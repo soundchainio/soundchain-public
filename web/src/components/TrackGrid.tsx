@@ -74,14 +74,14 @@ export const TrackGrid = ({ track }: TrackProps) => {
             {saleType && saleType !== '' && (
               <div className="flex items-center gap-1">
                 <div className="flex flex-1 items-start">
-                  <div className="text-white font-bold text-sm mr-1">{price / 1e18}</div>
+                  <div className="text-white font-bold text-sm mr-1">{price}</div>
                   <Matic height="18" width="18" className="" />
                 </div>
                 <BadgeTrack auction={saleType === 'auction'} label={saleType.toUpperCase()}></BadgeTrack>
               </div>
             )}
             <div className="text-gray-80 text-xs">
-              {maticUsd && price && `${currency((price / 1e18) * parseFloat(maticUsd.maticUsd))}`}
+              {maticUsd && price && `${currency(price * parseFloat(maticUsd.maticUsd))}`}
             </div>
             <div className="text-gray-80 text-xs flex gap-1 items-center pt-1">
               <Play fill="#808080" />

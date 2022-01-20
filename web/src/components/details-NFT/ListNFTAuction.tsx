@@ -3,6 +3,7 @@ import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
 import MaxGasFee from 'components/MaxGasFee';
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
+import { SoundchainFee } from 'components/SoundchainFee';
 import { config } from 'config';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import { Matic } from 'icons/Matic';
@@ -101,8 +102,11 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: Lis
                 {<div className="text-red-500 text-sm lowercase">{errors.endTime}</div>}
               </div>
             </div>
+            <div className="bg-gray-20 py-3 px-5">
+              <SoundchainFee price={values.price.toString()} />
+            </div>
             <p className="text-gray-80 text-sm text-center py-6 px-5">
-              Soundchain transaction fee and Polygon gas fees will be applied to buyer during checkout.
+              Soundchain transaction fee will be applied to the listing price.
             </p>
             <div className="py-3 px-5 bg-gray-20">
               <MaxGasFee />

@@ -10,13 +10,14 @@ export class BuyNowItemResolver {
   @Authorized()
   async createBuyNowItem(
     @Ctx() { buyNowItemService }: Context,
-    @Arg('input') { owner, nft, tokenId, pricePerItem, startingTime }: CreateBuyNowItemData,
+    @Arg('input') { owner, nft, tokenId, pricePerItem, startingTime, pricePerItemToShow }: CreateBuyNowItemData,
   ): Promise<CreateBuyNowItemData> {
     const buyNowItem = await buyNowItemService.createBuyNowItem({
       owner,
       nft,
       tokenId,
       pricePerItem,
+      pricePerItemToShow,
       startingTime,
     });
     return buyNowItem;

@@ -94,9 +94,7 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
             <span>{playbackCount || 0}</span>
             <HeartFilled />
             <span>{favoriteCount || 0}</span>
-            {saleType && saleType !== '' && (
-              <Matic className="ml-auto" value={price / 1e18} variant="currency-inline" />
-            )}
+            {saleType && saleType !== '' && <Matic className="ml-auto" value={price} variant="currency-inline" />}
           </div>
           <div className="text-white flex flex-col mt-2">
             {isSameSong ? (

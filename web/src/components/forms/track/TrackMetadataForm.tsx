@@ -34,7 +34,7 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   releaseYear: yup.number(),
   genres: yup.array(),
   artworkUrl: yup.string(),
-  royalty: yup.number().min(0).max(100).required(),
+  royalty: yup.number().integer().min(0).max(100).required(),
 });
 
 export interface InitialValues extends Omit<Partial<FormValues>, 'artworkUrl'> {
@@ -128,7 +128,7 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
             <InputField name="copyright" type="text" label="COPYRIGHT" maxLength={100} />
           </div>
           <div className="px-4">
-            <InputField name="royalty" type="number" label="ROYALTY %" />
+            <InputField name="royalty" type="number" label="ROYALTY %" step={1} />
           </div>
           <div className="text-gray-80 font-bold px-4">
             Select Genres {values.genres && `(${values.genres.length} Selected)`}
