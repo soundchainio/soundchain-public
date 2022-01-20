@@ -4,7 +4,6 @@ import { useMe } from 'hooks/useMe';
 import { ReactionEmoji } from 'icons/ReactionEmoji';
 import { delayFocus } from 'lib/delayFocus';
 import { ReactionType } from 'lib/graphql';
-import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import { isMobile } from 'utils/IsMobile';
@@ -42,12 +41,20 @@ export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
   };
 
   const focusCommentTextarea = () => {
-    delayFocus('textarea');
+    if (!router.asPath.includes('/posts/')) {
+      router.push(`/posts/${postId}#openComment`);
+    } else {
+      delayFocus('#commentField');
+    }
   };
 
   useEffect(() => {
     const origin = window.location.origin;
     setPostLink(`${origin}/posts/${postId}`);
+
+    if (router.asPath.includes('#openComment')) {
+      delayFocus('#commentField');
+    }
   }, []);
 
   return (
@@ -65,12 +72,10 @@ export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
         setOpened={setReactionSelectorOpened}
       />
       <div className={commonClasses}>
-        <NextLink href={`/posts/${postId}`}>
-          <a className="flex items-center cursor-pointer" onClick={focusCommentTextarea}>
-            <ChatAltIcon className="h-4 w-4 mr-1" />
-            Comment
-          </a>
-        </NextLink>
+        <a className="flex items-center cursor-pointer" onClick={focusCommentTextarea}>
+          <ChatAltIcon className="h-4 w-4 mr-1" />
+          Comment
+        </a>
       </div>
       <div className={commonClasses}>
         <div className="flex items-center cursor-pointer" onClick={onRepostClick}>
