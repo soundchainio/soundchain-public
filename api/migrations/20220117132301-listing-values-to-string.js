@@ -43,7 +43,7 @@ module.exports = {
   },
 };
 
-const getPriceToShow = wei => fixedDecimals(Web3.utils.fromWei(Web3.utils.toBN(wei), 'ether'));
+const getPriceToShow = wei => fixedDecimals(Web3.utils.fromWei(wei, 'ether'));
 
 const fixedDecimals = value => {
   const s = value.toString();
