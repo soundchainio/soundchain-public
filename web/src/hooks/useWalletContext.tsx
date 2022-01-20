@@ -23,7 +23,7 @@ interface WalletProviderProps {
 const WalletProvider = ({ children }: WalletProviderProps) => {
   const me = useMe();
   const [updateDefaultWallet] = useUpdateDefaultWalletMutation();
-  const { account, balance, chainId, addMumbaiTestnet, connect, web3, refetchBalance } = useMetaMask();
+  const { account, balance, chainId, addMumbaiTestnet, connect, web3, refetchBalance, loading } = useMetaMask();
   const {
     account: magicAccount,
     balance: magicBalance,
@@ -44,7 +44,7 @@ const WalletProvider = ({ children }: WalletProviderProps) => {
 
   let Content;
 
-  if (me?.defaultWallet === DefaultWallet.MetaMask) {
+  if (!loading && me?.defaultWallet === DefaultWallet.MetaMask) {
     if (!account) {
       Content = (
         <>

@@ -2,16 +2,10 @@ import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { Filter } from 'icons/Filter';
 import { GridView } from 'icons/GridView';
 import { ListView } from 'icons/ListView';
-import {
-  Genre,
-  SaleType,
-  SortListingItemField,
-  SortOrder,
-  TrackQuery,
-  TrackWithListingItem,
-  useListingItemsQuery,
-} from 'lib/graphql';
+import { SortListingItemField, SortOrder, TrackQuery, TrackWithListingItem, useListingItemsQuery } from 'lib/graphql';
 import React, { useEffect, useState } from 'react';
+import { GenreLabel } from 'utils/Genres';
+import { SaleTypeLabel } from 'utils/SaleTypeLabel';
 import { Badge } from './Badge';
 import { GridSkeleton } from './GridSkeleton';
 import { InfiniteLoader } from './InfiniteLoader';
@@ -40,8 +34,8 @@ export const Marketplace = () => {
   const { genres: genresFromModal, filterSaleType } = useModalState();
   const [isGrid, setIsGrid] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
-  const [genres, setGenres] = useState<Genre[] | undefined>(undefined);
-  const [saleType, setSaleType] = useState<SaleType | undefined>(undefined);
+  const [genres, setGenres] = useState<GenreLabel[] | undefined>(undefined);
+  const [saleType, setSaleType] = useState<SaleTypeLabel | undefined>(undefined);
   const [sorting, setSorting] = useState<SortListingItem>(SortListingItem.PriceAsc);
   const { field, order } = SelectToApolloQuery[sorting];
   const { data, refetch, fetchMore, loading } = useListingItemsQuery({
@@ -99,24 +93,30 @@ export const Marketplace = () => {
           <span className="text-white text-sm font-bold">{`${totalCount} `} </span>
           <span className="text-gray-80 text-sm">Tracks</span>
         </div>
-        <ListView color={isGrid ? undefined : 'rainbow'} onClick={() => setIsGrid(false)} />
-        <GridView color={isGrid ? 'rainbow' : undefined} onClick={() => setIsGrid(true)} />
+        <button aria-label="List view">
+          <ListView color={isGrid ? undefined : 'rainbow'} onClick={() => setIsGrid(false)} />
+        </button>
+        <button aria-label="Grid view">
+          <GridView color={isGrid ? 'rainbow' : undefined} onClick={() => setIsGrid(true)} />
+        </button>
       </div>
       <div className="flex gap-2 bg-black p-4 justify-center items-center">
         <div className="flex flex-1 items-center">
-          <div
-            className="flex cursor-pointer"
+          <button
+            className="flex items-center justify-center p-2"
             onClick={() => dispatchShowFilterMarketplaceModal(true, genres, saleType)}
           >
             <Filter />
             <span className="text-white text-xs font-bold pl-1">Filter</span>
-          </div>
+          </button>
         </div>
-        <span className="text-gray-80 text-xs font-bold">Sort By</span>
+        <label htmlFor="sortBy" className="text-gray-80 text-xs font-bold">
+          Sort By
+        </label>
         <select
           className="bg-gray-25 text-gray-80 font-bold text-xs rounded-lg border-0"
-          name="Wallet"
-          id="wallet"
+          name="Sort by"
+          id="sortBy"
           value={sorting}
           onChange={e => setSorting(e.target.value as SortListingItem)}
         >
@@ -129,7 +129,7 @@ export const Marketplace = () => {
       <div className="flex flex-wrap p-4 gap-2">
         {saleType && (
           <Badge
-            label={saleType}
+            label={saleType.label}
             onDelete={() => {
               dispatchShowFilterMarketplaceModal(false, genres, undefined);
               setSaleType(undefined);
@@ -138,8 +138,8 @@ export const Marketplace = () => {
         )}
         {genres?.map(genre => (
           <Badge
-            key={genre}
-            label={genre}
+            key={genre.key}
+            label={genre.label}
             onDelete={() => {
               const newGenres = genres.filter(it => it !== genre);
               dispatchShowFilterMarketplaceModal(false, newGenres, saleType);
@@ -202,9 +202,9 @@ const Tracks = ({ isGrid, tracks }: TracksProps) => {
   );
 };
 
-const buildMarketplaceFilter = (genres: Genre[] | undefined, saleType: SaleType | undefined) => {
+const buildMarketplaceFilter = (genres: GenreLabel[] | undefined, saleType: SaleTypeLabel | undefined) => {
   return {
-    ...(genres?.length && { genres }),
-    ...(saleType && { listingItem: { saleType } }),
+    ...(genres?.length && { genres: genres.map(genre => genre.key) }),
+    ...(saleType && { listingItem: { saleType: saleType.key } }),
   };
 };

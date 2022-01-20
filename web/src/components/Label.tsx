@@ -4,7 +4,7 @@ import { ReactNode } from 'react';
 interface LabelProps extends React.ComponentPropsWithoutRef<'label'> {
   htmlFor?: string;
   children: ReactNode;
-  textSize?: 'xs' | 'sm' | 'base';
+  textSize?: 'xxs' | 'xs' | 'sm' | 'base';
   grayScale?: '60' | '80';
 }
 

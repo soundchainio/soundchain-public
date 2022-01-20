@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
-import { Avatar } from 'components/Avatar';
 import { BackButton } from 'components/Buttons/BackButton';
 import { Description } from 'components/details-NFT/Description';
 import { HandleNFT } from 'components/details-NFT/HandleNFT';
@@ -18,6 +17,7 @@ import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Ellipsis } from 'icons/Ellipsis';
 import { Matic } from 'components/Matic';
+import { ProfileWithAvatar } from 'components/ProfileWithAvatar';
 import { cacheFor, createApolloClient } from 'lib/apollo';
 import {
   PendingRequest,
@@ -322,22 +322,7 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
             {highestBidderData?.getUserByWallet && (
               <div className="text-white flex justify-between items-center px-4 py-3">
                 <div className="text-sm font-bold">HIGHEST BIDDER</div>
-                <div className="flex items-center gap-2">
-                  <Avatar
-                    profile={{
-                      profilePicture: highestBidderData?.getUserByWallet.profile.profilePicture,
-                      userHandle: highestBidderData?.getUserByWallet.profile.userHandle,
-                    }}
-                    pixels={30}
-                    linkToProfile
-                  />
-                  <div className="flex flex-col ">
-                    <div className="text-sm font-bold">{highestBidderData?.getUserByWallet.profile.displayName}</div>
-                    <div className="text-xxs text-gray-CC font-bold">
-                      @{highestBidderData?.getUserByWallet.profile.userHandle}
-                    </div>
-                  </div>
-                </div>
+                <ProfileWithAvatar profile={highestBidderData.getUserByWallet.profile} />
               </div>
             )}
             {isOwner && bidCount === 0 && auctionIsOver && (

@@ -177,7 +177,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     }
     const amount = (bidAmount * 1e18).toLocaleString('fullwide', { useGrouping: false });
 
-    if (bidAmount >= parseInt(balance || '0')) {
+    if (bidAmount >= parseFloat(balance || '0')) {
       toast.warn("Uh-oh, it seems you don't have enough funds for this transaction");
       return;
     }

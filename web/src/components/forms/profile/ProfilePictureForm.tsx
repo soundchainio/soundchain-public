@@ -86,7 +86,7 @@ export const ProfilePictureForm = ({ afterSubmit, submitText, submitProps }: Pro
                   name="profilePicture"
                   className={`${loading || profilePicture ? 'self-center w-24 h-24' : ''} cursor-pointer mt-8`}
                   onUpload={onUpload}
-                  rounded
+                  rounded="rounded-full"
                 >
                   Upload Profile Photo
                 </ImageUploadField>

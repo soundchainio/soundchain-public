@@ -9,9 +9,11 @@ export const useMetaMask = () => {
   const me = useMe();
   const [updateWallet] = useUpdateMetaMaskAddressesMutation();
   const [web3, setWeb3] = useState<Web3>();
+  const [loadingAccount, setLoadingAccount] = useState<boolean>(true);
   const [account, setAccount] = useState<string>();
   const [balance, setBalance] = useState<string>();
   const [chainId, setChainId] = useState<number>();
+  const [loadingChain, setLoadingChain] = useState<boolean>(true);
   const onboarding = useRef<MetaMaskOnboarding>();
 
   useEffect(() => {
@@ -30,6 +32,7 @@ export const useMetaMask = () => {
         await updateWallet({ variables: { input: { wallet: newAccount } } });
       }
       setAccount(newAccount);
+      setLoadingAccount(false);
     };
 
     if (MetaMaskOnboarding.isMetaMaskInstalled()) {
@@ -52,6 +55,7 @@ export const useMetaMask = () => {
         });
         window.ethereum.request({ method: 'eth_chainId' }).then((chainId: string) => {
           setChainId(parseInt(chainId, 16));
+          setLoadingChain(false);
         });
       } else {
         setAccount(undefined);
@@ -94,6 +98,7 @@ export const useMetaMask = () => {
   const onSetAccount = async (newAccount: string) => {
     await updateWallet({ variables: { input: { wallet: newAccount } } });
     setAccount(newAccount);
+    setLoadingAccount(false);
   };
 
   const connect = () => {
@@ -106,7 +111,9 @@ export const useMetaMask = () => {
     }
   };
 
-  return { connect, addMumbaiTestnet, account, balance, chainId, web3, refetchBalance };
+  const loading = loadingAccount || loadingChain;
+
+  return { connect, addMumbaiTestnet, account, balance, chainId, web3, refetchBalance, loading };
 };
 
 export default useMetaMask;

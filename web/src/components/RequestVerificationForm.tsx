@@ -13,11 +13,27 @@ export interface FormValues {
   bandcamp?: string;
 }
 
-const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
-  soundcloud: yup.string(),
-  youtube: yup.string(),
-  bandcamp: yup.string(),
-});
+const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape(
+  {
+    soundcloud: yup.string().when(['youtube', 'bandcamp'], {
+      is: (youtube: string, bandcamp: string) => !youtube && !bandcamp,
+      then: yup.string().required('At least one of the fields are required'),
+    }),
+    youtube: yup.string().when(['soundcloud', 'bandcamp'], {
+      is: (soundcloud: string, bandcamp: string) => !soundcloud && !bandcamp,
+      then: yup.string().required('At least one of the fields are required'),
+    }),
+    bandcamp: yup.string().when(['soundcloud', 'youtube'], {
+      is: (soundcloud: string, youtube: string) => !soundcloud && !youtube,
+      then: yup.string().required('At least one of the fields are required'),
+    }),
+  },
+  [
+    ['soundcloud', 'youtube'],
+    ['soundcloud', 'bandcamp'],
+    ['youtube', 'bandcamp'],
+  ],
+);
 
 interface Props {
   handleSubmit: (values: FormValues) => void;
@@ -48,12 +64,17 @@ export const RequestVerificationForm = ({ handleSubmit, loading }: Props) => {
         <div className="flex flex-col flex-1 gap-6 mt-2">
           {sourceList.map(src => (
             <div key={src.name} className="flex items-center gap-2">
-              <div className="flex flex-col items-center justify-center  text-xs">
+              <label htmlFor={`id_${src.fieldName}`} className="flex flex-col items-center justify-center  text-xs">
                 <div className="w-20 flex flex-col text-xs items-center">{src.icon}</div>
                 {src.name}
-              </div>
+              </label>
               <div className="flex-1">
-                <InputField name={src.fieldName} type="text" placeholder={`${src.name} Link`} />
+                <InputField
+                  id={`id_${src.fieldName}`}
+                  name={src.fieldName}
+                  type="text"
+                  placeholder={`${src.name} Link`}
+                />
               </div>
             </div>
           ))}

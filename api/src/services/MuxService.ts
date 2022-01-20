@@ -13,6 +13,7 @@ export class MuxService {
   async create(assetUrl: string, trackId: string): Promise<Asset> {
     const asset = await this.muxClient.Video.Assets.create({
       input: assetUrl,
+      normalize_audio: true,
       playback_policy: 'public',
       passthrough: trackId,
       test: process.env.NODE_ENV === 'development',
@@ -24,6 +25,7 @@ export class MuxService {
     const { url, id } = await this.muxClient.Video.Uploads.create({
       cors_origin: config.web.url,
       new_asset_settings: {
+        normalize_audio: true,
         playback_policy: 'public',
         passthrough: trackId,
         test: process.env.NODE_ENV === 'development',

@@ -46,7 +46,7 @@ export const TrackUploader = ({ onFileChange, art }: TrackUploaderProps) => {
         <div className="mr-auto w-full">
           <AudioPlayer title={file.name} src={preview} art={art} />
         </div>
-        <div className="flex mr-4 flex-col justify-center flex-shrink-0" {...getRootProps()}>
+        <div className="flex mb-4 mr-4 flex-col justify-center flex-shrink-0" {...getRootProps()}>
           <JellyButton flavor="blueberry" icon={<UploadIcon color="blue" id="blue-gradient" />} className="text-xs">
             Choose File
           </JellyButton>

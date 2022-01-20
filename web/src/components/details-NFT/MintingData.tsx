@@ -1,4 +1,4 @@
-import { Avatar } from 'components/Avatar';
+import { ProfileWithAvatar } from 'components/ProfileWithAvatar';
 import { config } from 'config';
 import { ChainLink } from 'icons/ChainLink';
 import { Pinata } from 'icons/Pinata';
@@ -55,17 +55,7 @@ export const MintingData = ({ ipfsCid, transactionHash, ownerProfile }: MintingD
       </div>
       <div className="flex items-center text-xxs text-white px-4 py-3 pb-20">
         <div className="w-1/6 uppercase text-xs text-gray-CC font-bold mr-1">Owner</div>
-        <div className="flex w-3/6 gap-2">
-          <Avatar
-            profile={{ profilePicture: ownerProfile?.profilePicture, id: ownerProfile?.id }}
-            pixels={30}
-            linkToProfile
-          />
-          <div className="flex flex-col">
-            <div className="text-sm font-bold">{ownerProfile?.displayName}</div>
-            <div className="text-xxs text-gray-CC font-bold">@{ownerProfile?.userHandle}</div>
-          </div>
-        </div>
+        <div className="w-3/6">{ownerProfile && <ProfileWithAvatar profile={ownerProfile} />}</div>
         <div className="flex flex-col w-1/6">
           <div className="text-center text-sm font-bold">{ownerProfile?.followerCount}</div>
           <div className="text-center text-gray-CC font-bold">Followers</div>
