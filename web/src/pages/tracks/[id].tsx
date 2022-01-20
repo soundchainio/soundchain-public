@@ -16,6 +16,8 @@ import useBlockchain from 'hooks/useBlockchain';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Ellipsis } from 'icons/Ellipsis';
+import { HeartBorder } from 'icons/HeartBorder';
+import { HeartFull } from 'icons/HeartFull';
 import { Matic } from 'components/Matic';
 import { ProfileWithAvatar } from 'components/ProfileWithAvatar';
 import { cacheFor, createApolloClient } from 'lib/apollo';
@@ -26,13 +28,16 @@ import {
   TrackDocument,
   TrackQuery,
   useCountBidsLazyQuery,
+  useGetOriginalPostFromTrackQuery,
   useHaveBidedLazyQuery,
   useListingItemLazyQuery,
   useProfileLazyQuery,
+  useToggleFavoriteMutation,
   useTrackLazyQuery,
   useUserByWalletLazyQuery,
 } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
+import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
@@ -40,6 +45,7 @@ import { AuthorActionsType } from 'types/AuthorActionsType';
 import { compareWallets } from 'utils/Wallet';
 import { HighestBid } from './[id]/complete-auction';
 import { priceToShow } from 'utils/format';
+import { ReactionEmoji } from 'icons/ReactionEmoji';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -93,6 +99,15 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const [highestBid, setHighestBid] = useState<HighestBid>({} as HighestBid);
   const [isLoadingOwner, setLoadingOwner] = useState(true);
   const { dispatchShowAuthorActionsModal, dispatchShowBidsHistory } = useModalDispatch();
+  const [isFavorite, setIsFavorite] = useState(track.isFavorite);
+  const [toggleFavorite] = useToggleFavoriteMutation();
+  const { data: originalPostData } = useGetOriginalPostFromTrackQuery({
+    variables: {
+      trackId: track.id,
+    },
+    skip: !track.id,
+  });
+  const post = originalPostData?.getOriginalPostFromTrack;
 
   const [refetchTrack, { data: trackData }] = useTrackLazyQuery({
     fetchPolicy: 'network-only',
@@ -250,6 +265,11 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
     return () => clearInterval(interval);
   }, [isProcessing, refetchTrack, fetchListingItem, tokenId, track.id]);
 
+  const handleFavorite = async () => {
+    await toggleFavorite({ variables: { trackId: track.id }, refetchQueries: [TrackDocument] });
+    setIsFavorite(!isFavorite);
+  };
+
   return (
     <>
       <SEO
@@ -261,6 +281,35 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
       <Layout topNavBarProps={topNavBarProps}>
         <div className="p-3 flex flex-col gap-5">
           <Track track={track} />
+          <div className="flex justify-between">
+            {post && !post.deleted ? (
+              <NextLink href={`/posts/${post.id}`}>
+                <a className="flex gap-8 items-center">
+                  <div className="text-white font-bold border-blue-400 border-2 px-4 py-1 bg-blue-700 bg-opacity-50 rounded">
+                    View Post
+                  </div>
+                  <p className="text-gray-400 flex items-center gap-1">
+                    <span className="text-white font-bold flex items-center gap-1">
+                      {post.topReactions.map(name => (
+                        <ReactionEmoji key={name} name={name} className="w-4 h-4" />
+                      ))}
+                      {post.totalReactions}
+                    </span>{' '}
+                    reactions
+                  </p>
+                  <p className="text-gray-400">
+                    <span className="text-white font-bold">{post.commentCount}</span> comments
+                  </p>
+                </a>
+              </NextLink>
+            ) : (
+              <p className="text-gray-80">Original post does not exist.</p>
+            )}
+            <button className="flex items-center" onClick={handleFavorite}>
+              {isFavorite && <HeartFull />}
+              {!isFavorite && <HeartBorder />}
+            </button>
+          </div>
           {isAuction && !auctionIsOver && isHighestBidder && (
             <div className="text-green-500 font-bold p-2 text-center">You have the highest bid!</div>
           )}

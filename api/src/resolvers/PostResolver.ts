@@ -196,4 +196,9 @@ export class PostResolver {
   bandcampLink(@Ctx() { embedService }: Context, @Arg('url') url: string): Promise<string> {
     return embedService.bandcampLink(url);
   }
+
+  @Query(() => Post)
+  async getOriginalPostFromTrack(@Ctx() { postService }: Context, @Arg('trackId') trackId: string): Promise<Post> {
+    return postService.getOriginalFromTrack(trackId);
+  }
 }
