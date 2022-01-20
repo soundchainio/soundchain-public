@@ -11,7 +11,8 @@ interface NewAuctionItem {
   owner: string;
   nft: string;
   tokenId: number;
-  reservePrice: number;
+  reservePrice: string;
+  reservePriceToShow: number;
   startingTime: number;
   endingTime: number;
 }
@@ -59,7 +60,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
         $group: {
           _id: null,
           highestBid: {
-            $max: '$amount',
+            $max: '$amountToShow',
           },
         },
       },
@@ -162,7 +163,14 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
     await BidModel.findOneAndUpdate({ _id: bidId }, { notifiedEndingInOneHour: true });
   }
 
-  private async notifyAuctionIsOver({ _id, highestBid, tokenId, owner }: AuctionItem): Promise<void> {
+  private async notifyAuctionIsOver({
+    _id,
+    highestBid,
+    highestBidToShow,
+    reservePriceToShow,
+    tokenId,
+    owner,
+  }: AuctionItem): Promise<void> {
     const [highestBidModel, track] = await Promise.all([
       BidModel.findOne({ auctionId: _id, amount: highestBid }),
       this.context.trackService.getTrackByTokenId(tokenId),
@@ -174,14 +182,14 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
     const [sellerUser, buyerUser] = await Promise.all(promises);
     await this.context.notificationService.notifyAuctionIsOver({
       track,
-      price: highestBid || 0,
+      price: highestBidToShow || reservePriceToShow,
       sellerProfileId: sellerUser?.profileId,
       buyerProfileId: buyerUser?.profileId,
       auctionId: _id,
     });
   }
 
-  private async notifyAuctionIsEnding({ tokenId, bidder, amount }: Bid, auctionId: string): Promise<void> {
+  private async notifyAuctionIsEnding({ tokenId, bidder, amountToShow }: Bid, auctionId: string): Promise<void> {
     const [user, track] = await Promise.all([
       this.context.userService.getUserByWallet(bidder),
       this.context.trackService.getTrackByTokenId(tokenId),
@@ -189,7 +197,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
     await this.context.notificationService.notifyAuctionIsEnding({
       track,
       profileId: user.profileId,
-      price: amount,
+      price: amountToShow,
       auctionId,
     });
   }

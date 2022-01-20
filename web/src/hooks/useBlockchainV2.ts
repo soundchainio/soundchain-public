@@ -28,8 +28,6 @@ const marketplaceContract = (web3: Web3) =>
 const nftContract = (web3: Web3) =>
   new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress) as unknown as Soundchain721;
 
-const applySoundchainFee = (price: number) => (price * (1 + config.soundchainFee)).toFixed();
-
 interface DefaultParam {
   from: string;
 }
@@ -179,7 +177,7 @@ interface CreateAuctionParams extends TokenParams {
 class CreateAuction extends BlockchainFunction<CreateAuctionParams> {
   execute = async (web3: Web3) => {
     const { from, tokenId, reservePrice, startTime, endTime } = this.params;
-    const totalPrice = applySoundchainFee(parseInt(reservePrice));
+    const totalPrice = Web3.utils.toBN(reservePrice).muln(1 + config.soundchainFee);
     this.web3 = web3;
 
     await this._execute(() =>
@@ -194,7 +192,7 @@ class CreateAuction extends BlockchainFunction<CreateAuctionParams> {
 class UpdateAuction extends BlockchainFunction<CreateAuctionParams> {
   execute = async (web3: Web3) => {
     const { from, tokenId, reservePrice, startTime, endTime } = this.params;
-    const totalPrice = applySoundchainFee(parseInt(reservePrice));
+    const totalPrice = Web3.utils.toBN(reservePrice).muln(1 + config.soundchainFee);
     this.web3 = web3;
 
     await this._execute(() =>
@@ -223,7 +221,7 @@ interface ListItemParams extends TokenParams {
 class ListItem extends BlockchainFunction<ListItemParams> {
   execute = async (web3: Web3) => {
     const { from, tokenId, price, startTime } = this.params;
-    const totalPrice = applySoundchainFee(parseInt(price));
+    const totalPrice = Web3.utils.toBN(price).muln(1 + config.soundchainFee);
     this.web3 = web3;
 
     await this._execute(() =>
@@ -236,7 +234,7 @@ class ListItem extends BlockchainFunction<ListItemParams> {
 class UpdateListing extends BlockchainFunction<ListItemParams> {
   execute = async (web3: Web3) => {
     const { from, tokenId, price, startTime } = this.params;
-    const totalPrice = applySoundchainFee(parseInt(price));
+    const totalPrice = Web3.utils.toBN(price).muln(1 + config.soundchainFee);
     this.web3 = web3;
 
     await this._execute(() =>

@@ -21,13 +21,14 @@ import { compareWallets } from 'utils/Wallet';
 import SEO from '../../../components/SEO';
 import useBlockchainV2 from 'hooks/useBlockchainV2';
 import { toast } from 'react-toastify';
+import { priceToShow } from 'utils/format';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
 }
 
 export interface HighestBid {
-  bid: string;
+  bid: number;
   bidder: string;
 }
 
@@ -76,7 +77,7 @@ export default function CompleteAuctionPage({ track }: TrackPageProps) {
         return;
       }
       const { _bid, _bidder } = await getHighestBid(web3, tokenId);
-      setHighestBid({ bid: _bid, bidder: _bidder });
+      setHighestBid({ bid: priceToShow(_bid), bidder: _bidder });
     };
     fetchHighestBid();
   }, [tokenId, web3, getHighestBid, highestBid.bidder]);
@@ -128,7 +129,7 @@ export default function CompleteAuctionPage({ track }: TrackPageProps) {
     return null;
   }
 
-  const winningBid = (parseFloat(highestBid.bid) / 1e18).toFixed(6);
+  const winningBid = highestBid.bid;
 
   return (
     <>

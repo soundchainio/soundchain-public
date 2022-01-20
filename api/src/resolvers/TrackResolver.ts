@@ -41,7 +41,7 @@ export class TrackResolver {
 
   @FieldResolver(() => Number)
   price(@Ctx() { trackService }: Context, @Root() { nftData }: Track): Promise<number> {
-    return trackService.price(nftData.tokenId);
+    return trackService.priceToShow(nftData.tokenId);
   }
 
   @FieldResolver(() => String)

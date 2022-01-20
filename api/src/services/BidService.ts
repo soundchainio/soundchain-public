@@ -9,7 +9,8 @@ interface BidInterface {
   nft: string;
   tokenId: number;
   bidder: string;
-  amount: number;
+  amount: string;
+  amountToShow: number;
   auctionId: string;
   profileId: string;
   userId: string;
@@ -53,7 +54,7 @@ export class BidService extends ModelService<typeof Bid> {
       },
       {
         $sort: {
-          amount: -1,
+          amountToShow: -1,
         },
       },
     ]);

@@ -21,8 +21,12 @@ export class Bid extends Model {
   bidder: string;
 
   @Field()
-  @prop({ type: Number, required: true })
-  amount: number;
+  @prop({ type: String, required: true })
+  amount: string;
+
+  @Field()
+  @prop({ type: String, required: true })
+  amountToShow: number;
 
   @Field()
   @prop({ type: ObjectId, required: true })

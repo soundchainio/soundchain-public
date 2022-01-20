@@ -39,6 +39,7 @@ import { useEffect, useState } from 'react';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 import { compareWallets } from 'utils/Wallet';
 import { HighestBid } from './[id]/complete-auction';
+import { priceToShow } from 'utils/format';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -125,15 +126,12 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const isAuction = Boolean(listingPayload?.listingItem?.reservePrice);
   const bidCount = countBids?.countBids.numberOfBids ?? 0;
 
-  const { reservePrice, pricePerItem, id } = listingPayload?.listingItem || {};
+  const { reservePriceToShow, pricePerItemToShow, id } = listingPayload?.listingItem ?? {};
 
-  let priceValue = pricePerItem?.toLocaleString('fullwide', { useGrouping: false });
+  let price = pricePerItemToShow || 0;
   if (isAuction) {
-    priceValue =
-      highestBid.bid === '0' ? reservePrice?.toLocaleString('fullwide', { useGrouping: false }) : highestBid.bid;
+    price = highestBid.bid === 0 ? reservePriceToShow || 0 : 0;
   }
-  const price = web3?.utils.fromWei(priceValue ?? '0', 'ether');
-
   const auctionIsOver = (listingPayload?.listingItem?.endingTime || 0) < Math.floor(Date.now() / 1000);
   const canComplete =
     auctionIsOver &&
@@ -212,7 +210,7 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
         return;
       }
       const { _bid, _bidder } = await getHighestBid(web3, tokenId);
-      setHighestBid({ bid: _bid, bidder: _bidder });
+      setHighestBid({ bid: priceToShow(_bid || '0'), bidder: _bidder });
     };
     fetchHighestBid();
   }, [tokenId, web3, getHighestBid, highestBid.bidder]);

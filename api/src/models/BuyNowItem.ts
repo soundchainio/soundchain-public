@@ -24,8 +24,12 @@ export class BuyNowItem extends Model {
   startingTime: number;
 
   @Field()
+  @prop({ type: String, required: true })
+  pricePerItem: string;
+
+  @Field()
   @prop({ type: Number, required: true })
-  pricePerItem: number;
+  pricePerItemToShow: number;
 
   @Field(() => Date)
   createdAt: Date;

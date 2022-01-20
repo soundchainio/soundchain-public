@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import Web3 from 'web3';
 import { Transfer } from '../../types/web3-v1-contracts/Soundchain721';
 import {
   AuctionCancelled,
@@ -11,6 +12,7 @@ import { ItemCanceled, ItemListed, ItemSold, ItemUpdated } from '../../types/web
 import { FailedEventModel } from '../models/FailedEvent';
 import { Context } from '../types/Context';
 import { PendingRequest } from '../types/PendingRequest';
+import { fixedDecimals } from '../utils/format';
 
 const zeroAddress = '0x0000000000000000000000000000000000000000';
 
@@ -57,7 +59,8 @@ const processItemListed = async (returnValues: ItemListed['returnValues'], conte
       owner,
       nft,
       tokenId: parseInt(tokenId),
-      pricePerItem: parseInt(pricePerItem),
+      pricePerItem: pricePerItem,
+      pricePerItemToShow: getPriceToShow(pricePerItem),
       startingTime: parseInt(startingTime),
     }),
     context.trackService.setPendingNone(parseInt(tokenId)),
@@ -67,7 +70,7 @@ const processItemListed = async (returnValues: ItemListed['returnValues'], conte
 
 const processItemSold = async (returnValues: ItemSold['returnValues'], context: Context): Promise<void> => {
   const { tokenId, seller, buyer, pricePerItem } = returnValues;
-  await context.buyNowItemService.finishListing(tokenId, seller, buyer, parseInt(pricePerItem));
+  await context.buyNowItemService.finishListing(tokenId, seller, buyer, getPriceToShow(pricePerItem));
   console.log('ItemSold');
 };
 
@@ -75,7 +78,8 @@ const processItemUpdated = async (returnValues: ItemUpdated['returnValues'], con
   const { tokenId, newPrice, startingTime } = returnValues;
   await Promise.all([
     context.buyNowItemService.updateBuyNowItem(parseInt(tokenId), {
-      pricePerItem: parseInt(newPrice),
+      pricePerItem: newPrice,
+      pricePerItemToShow: getPriceToShow(newPrice),
       startingTime: parseInt(startingTime),
     }),
     context.trackService.setPendingNone(parseInt(tokenId)),
@@ -130,7 +134,8 @@ const processAuctionCreated = async (returnValues: AuctionCreated['returnValues'
       tokenId: parseInt(tokenId),
       startingTime: parseInt(startTimestamp),
       endingTime: parseInt(endTimestamp),
-      reservePrice: parseInt(reservePrice),
+      reservePrice: reservePrice,
+      reservePriceToShow: getPriceToShow(reservePrice),
     }),
     context.trackService.setPendingNone(parseInt(tokenId)),
   ]);
@@ -147,7 +152,8 @@ const processBidPlaced = async (returnValues: BidPlaced['returnValues'], context
     context.userService.getUserByWallet(bidder),
     context.userService.getUserByWallet(auction.owner),
     context.auctionItemService.updateAuctionItem(tokenIdAsNumber, {
-      highestBid: parseInt(bid),
+      highestBid: bid,
+      highestBidToShow: getPriceToShow(bid),
     }),
   ]);
   if (!user || !seller) {
@@ -160,13 +166,14 @@ const processBidPlaced = async (returnValues: BidPlaced['returnValues'], context
       bidder,
       userId: user._id,
       profileId: user.profileId,
-      amount: parseInt(bid),
+      amount: bid,
+      amountToShow: getPriceToShow(bid),
       auctionId: auction._id,
     }),
     context.notificationService.notifyNewBid({
       track,
       profileId: seller.profileId,
-      price: parseInt(bid),
+      price: getPriceToShow(bid),
       auctionId: auction._id,
     }),
   ];
@@ -175,7 +182,7 @@ const processBidPlaced = async (returnValues: BidPlaced['returnValues'], context
       context.notificationService.notifyOutbid({
         track,
         profileId: outBided.profileId,
-        price: parseInt(bid),
+        price: getPriceToShow(bid),
         auctionId: auction._id,
       }),
     );
@@ -189,7 +196,7 @@ const processAuctionResulted = async (
   context: Context,
 ): Promise<void> => {
   const { tokenId, winner, oldOwner, winningBid } = returnValues;
-  await context.auctionItemService.finishListing(tokenId, oldOwner, winner, parseInt(winningBid));
+  await context.auctionItemService.finishListing(tokenId, oldOwner, winner, getPriceToShow(winningBid));
   console.log('AuctionResulted');
 };
 
@@ -209,7 +216,8 @@ const processUpdateAuction = async (returnValues: UpdateAuction['returnValues'],
   const { tokenId, reservePrice, startTime, endTime } = returnValues;
   await Promise.all([
     context.auctionItemService.updateAuctionItem(parseInt(tokenId), {
-      reservePrice: parseInt(reservePrice),
+      reservePrice: reservePrice,
+      reservePriceToShow: getPriceToShow(reservePrice),
       startingTime: parseInt(startTime),
       endingTime: parseInt(endTime),
     }),
@@ -217,6 +225,8 @@ const processUpdateAuction = async (returnValues: UpdateAuction['returnValues'],
   ]);
   console.log('UpdateAuction');
 };
+
+const getPriceToShow = (wei: string) => fixedDecimals(Web3.utils.fromWei(wei, 'ether'));
 
 export const itemEvents = {
   listed: _execute(processItemListed),

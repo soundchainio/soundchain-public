@@ -253,15 +253,15 @@ export class TrackService extends ModelService<typeof Track> {
     return (endingTime && 'auction') || (pricePerItem && 'buy now') || '';
   }
 
-  async price(tokenId: number): Promise<number> {
+  async priceToShow(tokenId: number): Promise<number> {
     const listing = await this.context.listingItemService.getActiveListingItem(tokenId);
     if (!listing) {
       return 0;
     }
-    const { reservePrice, pricePerItem } = listing;
-    return reservePrice
-      ? (await this.context.auctionItemService.getHighestBid(listing._id)) || reservePrice
-      : pricePerItem;
+    const { pricePerItemToShow, reservePriceToShow } = listing;
+    return reservePriceToShow
+      ? (await this.context.auctionItemService.getHighestBid(listing._id)) || reservePriceToShow
+      : pricePerItemToShow;
   }
 
   getListingItems(
@@ -342,9 +342,9 @@ export class TrackService extends ModelService<typeof Track> {
         $addFields: {
           'listingItem.priceToShow': {
             $ifNull: [
-              '$listingItem.highestBid',
+              '$listingItem.highestBidToShow',
               {
-                $ifNull: ['$listingItem.reservePrice', '$listingItem.pricePerItem'],
+                $ifNull: ['$listingItem.reservePriceToShow', '$listingItem.pricePerItemToShow'],
               },
             ],
           },

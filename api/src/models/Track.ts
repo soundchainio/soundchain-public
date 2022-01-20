@@ -73,9 +73,6 @@ export class Track extends Model {
   favoriteCount: number;
 
   @prop()
-  price: number;
-
-  @prop()
   saleType: string;
 
   @Field()
