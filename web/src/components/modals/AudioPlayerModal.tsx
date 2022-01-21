@@ -1,7 +1,6 @@
 import { ViewListIcon, VolumeOffIcon, VolumeUpIcon } from '@heroicons/react/solid';
 import Slider from '@reach/slider';
 import Asset from 'components/Asset';
-import { Button } from 'components/Button';
 import { Modal } from 'components/Modal';
 import { TrackListItem } from 'components/TrackListItem';
 import { TrackShareButton } from 'components/TrackShareButton';
