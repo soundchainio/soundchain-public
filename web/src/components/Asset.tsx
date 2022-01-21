@@ -1,6 +1,6 @@
-import { useMimeTypeLazyQuery } from 'lib/graphql';
+import { useMimeTypeQuery } from 'lib/graphql';
 import Image from 'next/image';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
 interface AssetProps {
   src?: string | null;
@@ -8,19 +8,12 @@ interface AssetProps {
 }
 
 const Asset = ({ src, sizes }: AssetProps) => {
-  const [mimeType, setMimeType] = useState<string>();
-
-  const [getMimeType, { data }] = useMimeTypeLazyQuery({
+  const { data } = useMimeTypeQuery({
     variables: { url: src as string },
+    skip: !src,
   });
 
-  useEffect(() => {
-    if (data) setMimeType(data.mimeType.value);
-  }, [data]);
-
-  useEffect(() => {
-    if (src) getMimeType();
-  }, [src]);
+  const mimeType = data?.mimeType.value;
 
   if (src && !mimeType) return null;
 
