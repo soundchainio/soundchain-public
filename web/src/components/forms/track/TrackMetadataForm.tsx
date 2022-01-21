@@ -2,12 +2,12 @@ import { Badge } from 'components/Badge';
 import { Button } from 'components/Button';
 import { ImageUpload } from 'components/ImageUpload';
 import { InputField } from 'components/InputField';
-import MaxGasFee from 'components/MaxGasFee';
+import { Matic } from 'components/Matic';
 import { TextareaField } from 'components/TextareaField';
 import { WalletSelector } from 'components/WalletSelector';
 import { Form, Formik } from 'formik';
-import { useMagicContext } from 'hooks/useMagicContext';
 import { useMaxGasFee } from 'hooks/useMaxGasFee';
+import { useWalletContext } from 'hooks/useWalletContext';
 import { Genre } from 'lib/graphql';
 import React, { useEffect, useState } from 'react';
 import { GenreLabel, genres } from 'utils/Genres';
@@ -34,7 +34,7 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   releaseYear: yup.number(),
   genres: yup.array(),
   artworkUrl: yup.string(),
-  royalty: yup.number().min(0).max(100).required(),
+  royalty: yup.number().integer().min(0).max(100).required(),
 });
 
 export interface InitialValues extends Omit<Partial<FormValues>, 'artworkUrl'> {
@@ -47,7 +47,7 @@ interface Props {
 }
 
 export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
-  const { balance } = useMagicContext();
+  const { balance } = useWalletContext();
   const maxGasFee = useMaxGasFee();
   const [enoughFunds, setEnoughFunds] = useState<boolean>();
   const [uploadingArt, setUploadingArt] = useState<boolean>();
@@ -106,8 +106,10 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
                 onChange={val => onArtworkUpload(val, setFieldValue)}
                 onUpload={setUploadingArt}
                 initialValue={initialValues?.artworkFile}
+                className="border-0"
+                rounded="rounded-none"
               />
-              <span className="underline text-xs mt-2 font-bold">
+              <span className="underline text-xxs mt-2 font-bold">
                 {uploadingArt ? 'UPLOADING...' : 'CHANGE ARTWORK'}
               </span>
               <span className="font-semibold text-[9px]">(Max: 60mb)</span>
@@ -127,9 +129,6 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
             <InputField name="releaseYear" type="number" label="RELEASE YEAR" />
             <InputField name="copyright" type="text" label="COPYRIGHT" maxLength={100} />
           </div>
-          <div className="px-4">
-            <InputField name="royalty" type="number" label="ROYALTY %" />
-          </div>
           <div className="text-gray-80 font-bold px-4">
             Select Genres {values.genres && `(${values.genres.length} Selected)`}
           </div>
@@ -146,18 +145,29 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
           </div>
 
           <div>
-            <WalletSelector />
-            <div className="px-4 py-3 bg-gray-20">
-              <MaxGasFee />
+            <div className="bg-gray-20 text-gray-80 flex justify-between p-4">
+              <label htmlFor="royalty" className="flex flex-col">
+                <span className="text-[11px] uppercase font-bold">Royalty %</span>
+                <span className="text-[9px]">
+                  Setting a royalty % will allow you to earn a cut on all secondary sales.
+                </span>
+              </label>
+              <div>
+                <InputField name="royalty" type="number" symbol="%" alignTextCenter step={1} />
+              </div>
             </div>
+            <WalletSelector />
           </div>
 
           <div className="pl-4 pr-4 pb-4 flex items-center mt-4">
             <div className="flex-1">
               {enoughFunds && !uploadingArt && (
-                <Button type="submit" variant="rainbow">
-                  MINT NFT
-                </Button>
+                <div className="flex gap-2">
+                  <Matic value={maxGasFee} variant="currency" className="flex-1" />
+                  <Button type="submit" variant="outline" borderColor="bg-purple-gradient" className="w-full flex-1">
+                    MINT NFT
+                  </Button>
+                </div>
               )}
               {uploadingArt && (
                 <div className="flex-1">

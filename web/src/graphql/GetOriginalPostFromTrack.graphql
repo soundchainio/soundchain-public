@@ -1,0 +1,5 @@
+query GetOriginalPostFromTrack($trackId: String!) {
+  getOriginalPostFromTrack(trackId: $trackId) {
+    ...PostComponentFields
+  }
+}

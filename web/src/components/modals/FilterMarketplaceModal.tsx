@@ -3,30 +3,27 @@ import { Button } from 'components/Button';
 import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { Form, Formik } from 'formik';
-import { Genre, SaleType } from 'lib/graphql';
-import { useEffect, useState } from 'react';
+import { DownArrow } from 'icons/DownArrow';
 import { GenreLabel, genres } from 'utils/Genres';
+import { SaleTypeLabel, saleTypes } from 'utils/SaleTypeLabel';
 
 export interface FormValues {
-  genres?: Genre[];
-  saleType?: SaleType;
+  genres?: GenreLabel[];
+  saleType?: SaleTypeLabel;
 }
 
 export const FilterModalMarketplace = () => {
   const { showMarketplaceFilter, genres: genresModalState, filterSaleType } = useModalState();
   const { dispatchShowFilterMarketplaceModal } = useModalDispatch();
-  const [saleType, setSaleType] = useState<SaleType | undefined>(filterSaleType);
 
   const handleClose = (values: FormValues) => {
-    dispatchShowFilterMarketplaceModal(false, values.genres, saleType);
+    dispatchShowFilterMarketplaceModal(false, values.genres, values.saleType);
   };
 
-  useEffect(() => setSaleType(filterSaleType), [filterSaleType]);
-
   const handleGenreClick = (
-    setFieldValue: (field: string, value: Genre[]) => void,
-    newValue: Genre,
-    currentValues?: Genre[],
+    setFieldValue: (field: string, value: GenreLabel[]) => void,
+    newValue: GenreLabel,
+    currentValues?: GenreLabel[],
   ) => {
     if (!currentValues) {
       setFieldValue('genres', [newValue]);
@@ -40,37 +37,52 @@ export const FilterModalMarketplace = () => {
   };
 
   return (
-    <Modal show={showMarketplaceFilter} title={'Filter'} onClose={() => handleClose}>
+    <Modal
+      show={showMarketplaceFilter}
+      title={'Filter'}
+      leftButton={
+        <div className="flex justify-start ml-6">
+          <button
+            aria-label="Close"
+            className="w-10 h-10 flex justify-center items-center"
+            onClick={() => handleClose({ genres: genresModalState, saleType: filterSaleType })}
+          >
+            <DownArrow />
+          </button>
+        </div>
+      }
+      onClose={() => handleClose({ genres: genresModalState, saleType: filterSaleType })}
+    >
       <Formik<FormValues>
         initialValues={{ genres: genresModalState, saleType: filterSaleType }}
-        onSubmit={values => handleClose(values)}
+        onSubmit={values => {
+          handleClose(values);
+        }}
       >
         {({ setFieldValue, values }) => (
           <Form className="flex flex-col bg-gray-10 h-full gap-2 p-4">
             <div className="flex-1 flex flex-col gap-2">
               <span className="text-white text-xs font-bold">Sale type</span>
               <div className="flex gap-3 mb-6">
-                <Badge
-                  label={'Buy now'}
-                  selected={saleType === SaleType.BuyNow}
-                  onClick={() => setSaleType(SaleType.BuyNow)}
-                />
-                <Badge
-                  label={'Auction'}
-                  selected={saleType === SaleType.Auction}
-                  onClick={() => setSaleType(SaleType.Auction)}
-                />
+                {saleTypes.map(sale => (
+                  <Badge
+                    key={sale.key}
+                    label={sale.label}
+                    selected={values.saleType ? values.saleType === sale : false}
+                    onClick={() => setFieldValue('saleType', sale)}
+                  />
+                ))}
               </div>
               <span className="text-white text-xs font-bold">
                 Select Genres {values.genres && `(${values.genres.length} Selected)`}
               </span>
               <div className="flex flex-wrap gap-2">
-                {genres.map(({ label, key }: GenreLabel) => (
+                {genres.map((genre: GenreLabel) => (
                   <Badge
-                    key={key}
-                    label={label}
-                    selected={values.genres ? values.genres.includes(key) : false}
-                    onClick={() => handleGenreClick(setFieldValue, key, values.genres)}
+                    key={genre.key}
+                    label={genre.label}
+                    selected={values.genres ? values.genres.includes(genre) : false}
+                    onClick={() => handleGenreClick(setFieldValue, genre, values.genres)}
                   />
                 ))}
               </div>
@@ -79,7 +91,7 @@ export const FilterModalMarketplace = () => {
               <Button
                 className="w-full"
                 variant="cancel"
-                onClick={() => dispatchShowFilterMarketplaceModal(false, genresModalState, filterSaleType)}
+                onClick={() => handleClose({ genres: genresModalState, saleType: filterSaleType })}
               >
                 Cancel
               </Button>

@@ -84,10 +84,7 @@ export default function BuyNowPage({ track }: TrackPageProps) {
 
   const isOwner = compareWallets(listingPayload.buyNowItem?.buyNowItem?.owner, account);
   const isForSale = !!listingPayload.buyNowItem?.buyNowItem?.pricePerItem ?? false;
-  const price = web3?.utils.fromWei(
-    listingPayload.buyNowItem?.buyNowItem?.pricePerItem.toLocaleString('fullwide', { useGrouping: false }) || '0',
-    'ether',
-  );
+  const priceToShow = listingPayload.buyNowItem.buyNowItem?.pricePerItemToShow ?? 0;
   const startTime = listingPayload.buyNowItem?.buyNowItem?.startingTime ?? 0;
   const hasStarted = startTime <= new Date().getTime() / 1000;
 
@@ -108,11 +105,8 @@ export default function BuyNowPage({ track }: TrackPageProps) {
     ) {
       return;
     }
-    const price = web3.utils.fromWei(
-      listingPayload.buyNowItem.buyNowItem.pricePerItem.toLocaleString('fullwide', { useGrouping: false }) ?? '0',
-      'ether',
-    );
-    if (parseFloat(price) >= parseFloat(balance || '0')) {
+
+    if (priceToShow >= parseFloat(balance || '0')) {
       toast.warn("Uh-oh, it seems you don't have enough funds for this transaction");
       return;
     }
@@ -137,7 +131,7 @@ export default function BuyNowPage({ track }: TrackPageProps) {
       listingPayload.buyNowItem?.buyNowItem?.tokenId,
       account,
       listingPayload.buyNowItem?.buyNowItem?.owner,
-      listingPayload.buyNowItem?.buyNowItem?.pricePerItem.toLocaleString('fullwide', { useGrouping: false }),
+      listingPayload.buyNowItem?.buyNowItem?.pricePerItem,
     )
       .onReceipt(onReceipt)
       .onError(cause => toast.error(cause.message))
@@ -181,7 +175,7 @@ export default function BuyNowPage({ track }: TrackPageProps) {
                 <div className="bg-[#112011]">
                   <div className="flex justify-between items-center px-4 py-3">
                     <div className="text-sm font-bold text-white">BUY NOW PRICE</div>
-                    <Matic value={price} />
+                    <Matic value={priceToShow} />
                   </div>
                 </div>
                 {!hasStarted && (
@@ -204,12 +198,12 @@ export default function BuyNowPage({ track }: TrackPageProps) {
                   </div>
                 </div>
               )}
-
-              {price && account && <BuyNow price={price} ownerAddressAccount={account} startTime={startTime} />}
-
+              {priceToShow && account && (
+                <BuyNow price={priceToShow} ownerAddressAccount={account} startTime={startTime} />
+              )}
               {hasStarted && (
                 <PlayerAwareBottomBar>
-                  <TotalPrice price={price} />
+                  <TotalPrice price={priceToShow} />
                   <Button type="submit" className="ml-auto" variant="buy-nft" loading={loading}>
                     <div className="px-4">CONFIRM</div>
                   </Button>

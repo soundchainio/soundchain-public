@@ -23,12 +23,20 @@ export class ListingItem extends Model {
   endingTime: number;
 
   @Field({ nullable: true })
-  @prop({ type: Number })
-  reservePrice: number;
+  @prop({ type: String })
+  reservePrice: string;
 
   @Field({ nullable: true })
   @prop({ type: Number })
-  pricePerItem: number;
+  reservePriceToShow: number;
+
+  @Field({ nullable: true })
+  @prop({ type: String })
+  pricePerItem: string;
+
+  @Field({ nullable: true })
+  @prop({ type: Number })
+  pricePerItemToShow: number;
 
   @Field(() => Date)
   createdAt: Date;

@@ -1,17 +1,23 @@
 import { Avatar } from 'components/Avatar';
+import { Matic } from 'components/Matic';
 import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
-import { Matic } from 'components/Matic';
-import { useBidsWithInfoQuery, useMaticUsdQuery } from 'lib/graphql';
-import React from 'react';
+import { useBidsWithInfoLazyQuery, useMaticUsdQuery } from 'lib/graphql';
+import { useEffect } from 'react';
 import { currency } from 'utils/format';
 
 export const BidsHistoryModal = () => {
   const { showBidsHistory, auctionId } = useModalState();
   const { dispatchShowBidsHistory } = useModalDispatch();
   const { data: maticUsd } = useMaticUsdQuery();
-  const { data } = useBidsWithInfoQuery({ variables: { auctionId: auctionId || '' } });
+  const [fetch, { data }] = useBidsWithInfoLazyQuery({ fetchPolicy: 'no-cache' });
   const bids = data?.bidsWithInfo.bids;
+
+  useEffect(() => {
+    if (auctionId) {
+      fetch({ variables: { auctionId } });
+    }
+  }, [auctionId, fetch]);
 
   const handleClose = () => {
     dispatchShowBidsHistory(false, '');
@@ -45,10 +51,10 @@ export const BidsHistoryModal = () => {
                 </div>
               </div>
               <div className="flex flex-col">
-                <Matic value={item.amount / 1e18} />
+                <Matic value={item.amountToShow} />
                 <div className="flex justify-end">
                   <span className="text-gray-50 font-bold text-xxs">
-                    {maticUsd && `${currency((item.amount / 1e18) * parseFloat(maticUsd.maticUsd))}`}
+                    {maticUsd && `${currency(item.amountToShow * parseFloat(maticUsd.maticUsd))}`}
                   </span>
                 </div>
               </div>

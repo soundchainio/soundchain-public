@@ -14,7 +14,7 @@ import { currency, fixedDecimals } from 'utils/format';
 interface HandleNFTProps {
   isOwner: boolean;
   canList: boolean;
-  price: string | undefined | null;
+  price: number;
   isAuction: boolean;
   isBuyNow: boolean;
   canComplete: boolean;
@@ -139,7 +139,7 @@ const ListingAction = ({ href, action, children }: React.PropsWithChildren<Listi
 
 interface ListedActionProps {
   href: string;
-  price: string | undefined | null;
+  price: number;
   action: string;
   variant: ButtonVariant;
   countBids?: number;
@@ -170,7 +170,7 @@ const ListedAction = ({
           <MaticIcon />
           <span className="text-xl text-gray-80"> {maticUsd && price && '≃'} </span>
           <span className="text-gray-80 font-normal">
-            {maticUsd && price && `${currency(parseFloat(price) * parseFloat(maticUsd.maticUsd))}`}
+            {maticUsd && price && `${currency(price * parseFloat(maticUsd.maticUsd))}`}
           </span>
         </div>
       </div>
@@ -201,7 +201,7 @@ const ListedAction = ({
 interface AuctionDetailsProps {
   cancelHref: string;
   auctionIsOver: boolean;
-  price: string | undefined | null;
+  price: number;
   countBids?: number;
   endingDate?: Date;
   completeHref: string;

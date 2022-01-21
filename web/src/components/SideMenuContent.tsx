@@ -119,11 +119,7 @@ export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => 
               badgeNumber={pendingRequestsBadgeNumber?.pendingRequestsBadgeNumber}
             />
           ) : (
-            <MenuLink
-              icon={Verified}
-              label={me.profile.verified ? 'Verified Account' : 'Get Verified'}
-              href={me.profile.verified ? '#' : '/get-verified'}
-            />
+            !me.profile.verified && <MenuLink icon={Verified} label="Get Verified" href="/get-verified" />
           )}
 
           <MenuLink icon={Settings} label="Account Settings" href="/settings" />

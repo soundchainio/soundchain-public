@@ -4,6 +4,7 @@ import { Ellipsis } from 'icons/Ellipsis';
 import { PostQuery, Role } from 'lib/graphql';
 import NextLink from 'next/link';
 import React from 'react';
+import { AddLinks } from 'react-link-text';
 import ReactPlayer from 'react-player';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 import { hasLazyLoadWithThumbnailSupport } from 'utils/NormalizeEmbedLinks';
@@ -30,6 +31,10 @@ export const Post = ({ post }: PostProps) => {
   const isAuthor = post?.profile.id == me?.profile.id;
   const canEdit = isAuthor || me?.roles?.includes(Role.Admin) || me?.roles?.includes(Role.TeamMember);
 
+  const addLinksOptions = {
+    className: 'underline text-blue-400',
+  };
+
   const onEllipsisClick = () => {
     dispatchShowAuthorActionsModal(true, AuthorActionsType.POST, post.id, !isAuthor);
   };
@@ -46,11 +51,13 @@ export const Post = ({ post }: PostProps) => {
           <div className="flex items-center ml-2 flex-1 justify-between min-w-0">
             <div className="flex flex-col min-w-0">
               <NextLink href={`/profiles/${post.profile.userHandle}`}>
-                <DisplayName
-                  name={post.profile.displayName}
-                  verified={post.profile.verified}
-                  teamMember={post.profile.teamMember}
-                />
+                <a>
+                  <DisplayName
+                    name={post.profile.displayName}
+                    verified={post.profile.verified}
+                    teamMember={post.profile.teamMember}
+                  />
+                </a>
               </NextLink>
               <Timestamp
                 datetime={post.createdAt}
@@ -64,7 +71,9 @@ export const Post = ({ post }: PostProps) => {
             </div>
           </div>
         </div>
-        <pre className="mt-4 text-gray-100 break-words whitespace-pre-wrap">{post.body}</pre>
+        <AddLinks options={addLinksOptions}>
+          <pre className="mt-4 text-gray-100 break-words whitespace-pre-wrap">{post.body}</pre>
+        </AddLinks>
         {post.mediaLink &&
           (hasLazyLoadWithThumbnailSupport(post.mediaLink) ? (
             <ReactPlayer

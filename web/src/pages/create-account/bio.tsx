@@ -1,4 +1,3 @@
-import { Badge } from 'components/Badge';
 import { BackButton } from 'components/Buttons/BackButton';
 import { BioForm } from 'components/forms/profile/BioForm';
 import { Layout } from 'components/Layout';
@@ -8,6 +7,7 @@ import { TopNavBarProps } from 'components/TopNavBar';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React from 'react';
+import { steps, SkipButton } from 'utils/createAccountUtils';
 
 export default function BioPage() {
   const router = useRouter();
@@ -15,8 +15,8 @@ export default function BioPage() {
   const topNavBarProps: TopNavBarProps = {
     title: 'Bio',
     leftButton: <BackButton />,
-    rightButton: <Badge label="Skip" onClick={() => router.push('/create-account/social-links')} selected={false} />,
-    subtitle: <StepProgressBar steps={6} currentStep={5} />,
+    rightButton: <SkipButton href="/create-account/social-links" />,
+    subtitle: <StepProgressBar steps={steps} currentStep={5} />,
   };
 
   return (

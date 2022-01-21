@@ -1,3 +1,5 @@
+import Web3 from 'web3';
+
 export const currency = (value: number) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -20,3 +22,5 @@ export const fixedDecimals = (value: number | string) => {
 
   return n;
 };
+
+export const priceToShow = (wei: string) => fixedDecimals(Web3.utils.fromWei(wei, 'ether'));

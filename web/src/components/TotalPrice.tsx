@@ -3,7 +3,7 @@ import { Matic } from 'components/Matic';
 import { useMaticUsdQuery } from 'lib/graphql';
 import { currency, fixedDecimals } from 'utils/format';
 
-export const TotalPrice = ({ price }: { price?: string }) => {
+export const TotalPrice = ({ price }: { price?: number }) => {
   const maxGasFee = useMaxGasFee();
   const { data: maticUsd } = useMaticUsdQuery();
 
@@ -21,9 +21,9 @@ export const TotalPrice = ({ price }: { price?: string }) => {
 
   return (
     <div className="font-bold">
-      <Matic value={totalPrice(parseFloat(price))} />
+      <Matic value={totalPrice(price)} />
       <p className="text-sm text-gray-60 font-normal">{`${currency(
-        totalPrice(parseFloat(price) * parseFloat(maticUsd.maticUsd)),
+        totalPrice(price * parseFloat(maticUsd.maticUsd)),
       )}`}</p>
     </div>
   );

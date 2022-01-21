@@ -35,8 +35,9 @@ import { authenticator } from 'otplib';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import { fixedDecimals } from 'utils/format';
+import { fixedDecimals, priceToShow } from 'utils/format';
 import { compareWallets } from 'utils/Wallet';
+import Web3 from 'web3';
 import * as yup from 'yup';
 import SEO from '../../../components/SEO';
 import { Timer } from '../[id]';
@@ -106,13 +107,13 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     }
     const fetchHighestBid = async () => {
       const { _bid, _bidder } = await getHighestBid(web3, tokenId);
-      setHighestBid({ bid: _bid, bidder: _bidder });
+      setHighestBid({ bid: priceToShow(_bid), bidder: _bidder });
       refetchCountBids();
     };
     fetchHighestBid();
     const interval = setInterval(() => {
       fetchHighestBid();
-    }, 10 * 1000);
+    }, 6 * 1000);
 
     return () => clearInterval(interval);
   }, [tokenId, track.id, web3, getHighestBid, account, refetchCountBids]);
@@ -145,16 +146,13 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
   const isHighestBidder = highestBid ? compareWallets(highestBid.bidder, account) : undefined;
   const auctionIsOver = (auctionItem.auctionItem?.endingTime || 0) < Math.floor(Date.now() / 1000);
   const bidCount = countBids?.countBids.numberOfBids ?? 0;
-  let price: string;
-  if (!highestBid || highestBid?.bid === '0') {
-    price = web3.utils.fromWei(
-      auctionItem.auctionItem?.reservePrice?.toLocaleString('fullwide', { useGrouping: false }) ?? '0',
-      'ether',
-    );
+  let price: number;
+  if (!highestBid || highestBid?.bid === 0) {
+    price = auctionItem.auctionItem?.reservePriceToShow ?? 0;
   } else {
-    price = web3.utils.fromWei(highestBid.bid, 'ether');
+    price = highestBid.bid;
   }
-  const minBid = fixedDecimals(parseFloat(price) * 1.015);
+  const minBid = fixedDecimals(price * 1.015);
   const validate = ({ bidAmount }: FormValues) => {
     const errors: any = {};
     if (bidAmount < minBid) {
@@ -175,9 +173,9 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     if (!web3 || !auctionItem.auctionItem?.tokenId || !auctionItem.auctionItem?.owner || !account) {
       return;
     }
-    const amount = (bidAmount * 1e18).toLocaleString('fullwide', { useGrouping: false });
+    const amount = Web3.utils.toWei(bidAmount.toLocaleString('fullwide', { useGrouping: false }));
 
-    if (bidAmount >= parseInt(balance || '0')) {
+    if (bidAmount >= parseFloat(balance || '0')) {
       toast.warn("Uh-oh, it seems you don't have enough funds for this transaction");
       return;
     }

@@ -22,6 +22,9 @@ export const FlexareaField = ({ ...props }: FlexareaFieldProps) => {
     <TextareaAutosize
       {...field}
       onHeightChange={handleHeightChange}
+      maxRows={10}
+      id={props.id}
+      placeholder={props.placeholder}
       className={classNames(commonClasses, roundedFull ? 'rounded-full' : 'rounded-xl')}
     />
   );

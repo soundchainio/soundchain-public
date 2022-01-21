@@ -1,8 +1,0 @@
-mutation createMintingRequest($input: CreateMintingRequestInput!) {
-  createMintingRequest(input: $input) {
-    mintingRequest {
-      id
-      transactionId
-    }
-  }
-}

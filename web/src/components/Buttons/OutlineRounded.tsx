@@ -28,7 +28,7 @@ export const OutlineRoundedButton = ({
             <Icon />
           </div>
         )}
-        <span className={classNames(textColor, 'capitalize pr-1 font-semibold')}>{children}</span>
+        <span className={classNames(textColor, 'capitalize font-semibold')}>{children}</span>
       </button>
     </div>
   );

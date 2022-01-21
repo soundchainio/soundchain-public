@@ -5,7 +5,7 @@ import { WalletSelector } from 'components/WalletSelector';
 import React from 'react';
 
 interface BuyNowProps {
-  price: string;
+  price: number;
   ownerAddressAccount: string;
   startTime: number;
 }

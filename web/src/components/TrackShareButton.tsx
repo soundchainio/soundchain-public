@@ -36,21 +36,17 @@ export const TrackShareButton = ({ trackId, title, artist }: Props) => {
     <div className="relative">
       <Menu>
         <Menu.Button>
-          <button className="flex justify-center items-center gap-1 text-gray-80 text-xs font-black border-gray-80 border-2 rounded py-1 px-2">
+          <div className="flex justify-center items-center gap-1 text-gray-80 text-xs font-black border-gray-80 border-2 rounded py-1 px-2">
             <Share />
             Share
-          </button>
+          </div>
         </Menu.Button>
         <Menu.Items className="absolute z-40 bg-gray-20 text-white w-48 flex flex-col right-0 rounded-lg shadow-lg">
-          <Menu.Item>
-            <button onClick={handleSharing} className="w-full text-left p-5">
-              Share URL
-            </button>
+          <Menu.Item onClick={handleSharing}>
+            <div className="w-full text-left p-5">Share URL</div>
           </Menu.Item>
-          <Menu.Item>
-            <button onClick={handlePost} className="w-full text-left p-5">
-              Share as Post
-            </button>
+          <Menu.Item onClick={handlePost}>
+            <div className="w-full text-left p-5">Share as Post</div>
           </Menu.Item>
         </Menu.Items>
       </Menu>

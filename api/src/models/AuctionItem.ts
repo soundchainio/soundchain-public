@@ -28,8 +28,12 @@ export class AuctionItem extends Model {
   endingTime: number;
 
   @Field()
+  @prop({ type: String, required: true })
+  reservePrice: string;
+
+  @Field()
   @prop({ type: Number, required: true })
-  reservePrice: number;
+  reservePriceToShow: number;
 
   @Field(() => Date)
   createdAt: Date;
@@ -42,8 +46,12 @@ export class AuctionItem extends Model {
   valid: boolean;
 
   @Field()
+  @prop({ type: String })
+  highestBid: string;
+
+  @Field()
   @prop({ type: Number })
-  highestBid: number;
+  highestBidToShow: number;
 }
 
 export const AuctionItemModel = getModelForClass(AuctionItem);

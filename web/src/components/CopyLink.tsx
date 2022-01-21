@@ -10,10 +10,7 @@ export const CopyLink = ({ link }: CopyLinkProps) => {
   const [copyText, setCopyText] = useState('Copy');
 
   const handleCopy = () => {
-    const input = document.getElementById(link) as HTMLInputElement;
-    input.focus();
-    input.select();
-    document.execCommand('copy');
+    navigator.clipboard.writeText(link);
     setCopyText('Copied!');
     setTimeout(() => {
       setCopyText('Copy');
@@ -22,9 +19,9 @@ export const CopyLink = ({ link }: CopyLinkProps) => {
 
   return (
     <div className="flex flex-row space-x-2 px-4 items-center cursor-pointer py-2 bg-gray-20">
-      <ChainLink className="scale-150" />
+      <ChainLink className="scale-150 flex-shrink-0" />
       <input
-        className="w-full py-1 ml-4 mr-4 text-xs text-gray-80 bg-gray-20 focus:border-transparent border-transparent focus:outline-none no-bg-selection"
+        className="w-full py-1 ml-4 mr-4 text-xs text-gray-80 bg-gray-20 focus:border-transparent border-transparent focus:outline-none no-bg-selection truncate"
         id={link}
         value={link}
         readOnly

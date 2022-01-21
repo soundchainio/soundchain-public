@@ -64,11 +64,13 @@ export type AuctionItem = {
   tokenId: Scalars['Float'];
   startingTime: Scalars['Float'];
   endingTime: Scalars['Float'];
-  reservePrice: Scalars['Float'];
+  reservePrice: Scalars['String'];
+  reservePriceToShow: Scalars['Float'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   valid: Scalars['Boolean'];
-  highestBid: Scalars['Float'];
+  highestBid: Scalars['String'];
+  highestBidToShow: Scalars['Float'];
 };
 
 export type AuctionItemPayload = {
@@ -92,7 +94,8 @@ export type BidsWithInfo = {
   nft: Scalars['String'];
   tokenId: Scalars['Float'];
   bidder: Scalars['String'];
-  amount: Scalars['Float'];
+  amount: Scalars['String'];
+  amountToShow: Scalars['Float'];
   auctionId: Scalars['String'];
   profileId: Scalars['String'];
   userId: Scalars['String'];
@@ -112,7 +115,8 @@ export type BuyNowItem = {
   nft: Scalars['String'];
   tokenId: Scalars['Float'];
   startingTime: Scalars['Float'];
-  pricePerItem: Scalars['Float'];
+  pricePerItem: Scalars['String'];
+  pricePerItemToShow: Scalars['Float'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   valid: Scalars['Boolean'];
@@ -199,7 +203,8 @@ export type CreateAuctionItemInput = {
   tokenId: Scalars['Float'];
   startingTime: Scalars['Float'];
   endingTime: Scalars['Float'];
-  reservePrice: Scalars['Float'];
+  reservePrice: Scalars['String'];
+  reservePriceToShow: Scalars['Float'];
 };
 
 export type CreateAuctionItemType = {
@@ -210,7 +215,8 @@ export type CreateAuctionItemType = {
   tokenId: Scalars['Float'];
   startingTime: Scalars['Float'];
   endingTime: Scalars['Float'];
-  reservePrice: Scalars['Float'];
+  reservePrice: Scalars['String'];
+  reservePriceToShow: Scalars['Float'];
 };
 
 export type CreateBuyNowItemInput = {
@@ -218,7 +224,8 @@ export type CreateBuyNowItemInput = {
   owner: Scalars['String'];
   nft: Scalars['String'];
   tokenId: Scalars['Float'];
-  pricePerItem: Scalars['Float'];
+  pricePerItem: Scalars['String'];
+  pricePerItemToShow: Scalars['Float'];
   startingTime: Scalars['Float'];
 };
 
@@ -228,16 +235,9 @@ export type CreateBuyNowItemType = {
   owner: Scalars['String'];
   nft: Scalars['String'];
   tokenId: Scalars['Float'];
-  pricePerItem: Scalars['Float'];
+  pricePerItem: Scalars['String'];
+  pricePerItemToShow: Scalars['Float'];
   startingTime: Scalars['Float'];
-};
-
-export type CreateMintingRequestInput = {
-  to: Scalars['String'];
-  name: Scalars['String'];
-  description: Scalars['String'];
-  assetUrl: Scalars['String'];
-  artUrl?: Maybe<Scalars['String']>;
 };
 
 export type CreatePostInput = {
@@ -478,8 +478,10 @@ export type ListingItem = {
   tokenId: Maybe<Scalars['Float']>;
   startingTime: Maybe<Scalars['Float']>;
   endingTime: Maybe<Scalars['Float']>;
-  reservePrice: Maybe<Scalars['Float']>;
-  pricePerItem: Maybe<Scalars['Float']>;
+  reservePrice: Maybe<Scalars['String']>;
+  reservePriceToShow: Maybe<Scalars['Float']>;
+  pricePerItem: Maybe<Scalars['String']>;
+  pricePerItemToShow: Maybe<Scalars['Float']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
 };
@@ -502,8 +504,10 @@ export type ListingItemWithPrice = {
   tokenId: Maybe<Scalars['Float']>;
   startingTime: Maybe<Scalars['Float']>;
   endingTime: Maybe<Scalars['Float']>;
-  reservePrice: Maybe<Scalars['Float']>;
-  pricePerItem: Maybe<Scalars['Float']>;
+  reservePrice: Maybe<Scalars['String']>;
+  reservePriceToShow: Maybe<Scalars['Float']>;
+  pricePerItem: Maybe<Scalars['String']>;
+  pricePerItemToShow: Maybe<Scalars['Float']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   priceToShow: Maybe<Scalars['Float']>;
@@ -536,25 +540,6 @@ export type MimeType = {
   value: Scalars['String'];
 };
 
-export type MintingRequest = {
-  __typename?: 'MintingRequest';
-  id: Scalars['ID'];
-  to: Scalars['String'];
-  name: Scalars['String'];
-  description: Scalars['String'];
-  assetKey: Scalars['String'];
-  artKey: Maybe<Scalars['String']>;
-  minted: Maybe<Scalars['Boolean']>;
-  transactionId: Maybe<Scalars['Boolean']>;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-};
-
-export type MintingRequestPayload = {
-  __typename?: 'MintingRequestPayload';
-  mintingRequest: MintingRequest;
-};
-
 export enum MusicianType {
   Singer = 'SINGER',
   Drummer = 'DRUMMER',
@@ -578,7 +563,6 @@ export type Mutation = {
   deleteComment: DeleteCommentPayload;
   sendMessage: SendMessagePayload;
   resetUnreadMessageCount: Profile;
-  createMintingRequest: MintingRequestPayload;
   resetNotificationCount: Profile;
   clearNotifications: ClearNotificationsPayload;
   pinToIPFS: PinningPayload;
@@ -645,11 +629,6 @@ export type MutationDeleteCommentArgs = {
 
 export type MutationSendMessageArgs = {
   input: SendMessageInput;
-};
-
-
-export type MutationCreateMintingRequestArgs = {
-  input: CreateMintingRequestInput;
 };
 
 
@@ -1100,6 +1079,7 @@ export type Query = {
   posts: PostConnection;
   reactions: ReactionConnection;
   bandcampLink: Scalars['String'];
+  getOriginalPostFromTrack: Post;
   myProfile: Profile;
   profile: Profile;
   profileByHandle: Profile;
@@ -1253,6 +1233,11 @@ export type QueryReactionsArgs = {
 
 export type QueryBandcampLinkArgs = {
   url: Scalars['String'];
+};
+
+
+export type QueryGetOriginalPostFromTrackArgs = {
+  trackId: Scalars['String'];
 };
 
 
@@ -1740,7 +1725,7 @@ export type AuctionItemQuery = (
     { __typename?: 'AuctionItemPayload' }
     & { auctionItem: Maybe<(
       { __typename?: 'AuctionItem' }
-      & Pick<AuctionItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'startingTime' | 'endingTime' | 'reservePrice'>
+      & Pick<AuctionItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow'>
     )> }
   ) }
 );
@@ -1766,7 +1751,7 @@ export type BidsWithInfoQuery = (
     { __typename?: 'BidsWithInfoPayload' }
     & { bids: Maybe<Array<(
       { __typename?: 'BidsWithInfo' }
-      & Pick<BidsWithInfo, 'amount' | 'userId' | 'profileId' | 'createdAt'>
+      & Pick<BidsWithInfo, 'amount' | 'amountToShow' | 'userId' | 'profileId' | 'createdAt'>
       & { profile: (
         { __typename?: 'Profile' }
         & Pick<Profile, 'profilePicture' | 'displayName' | 'userHandle'>
@@ -1786,7 +1771,7 @@ export type BuyNowItemQuery = (
     { __typename?: 'BuyNowPayload' }
     & { buyNowItem: Maybe<(
       { __typename?: 'BuyNowItem' }
-      & Pick<BuyNowItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'startingTime'>
+      & Pick<BuyNowItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'pricePerItemToShow' | 'startingTime'>
     )> }
   ) }
 );
@@ -1931,22 +1916,6 @@ export type CreateBuyNowItemMutation = (
   & { createBuyNowItem: (
     { __typename?: 'CreateBuyNowItemType' }
     & Pick<CreateBuyNowItemType, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'startingTime'>
-  ) }
-);
-
-export type CreateMintingRequestMutationVariables = Exact<{
-  input: CreateMintingRequestInput;
-}>;
-
-
-export type CreateMintingRequestMutation = (
-  { __typename?: 'Mutation' }
-  & { createMintingRequest: (
-    { __typename?: 'MintingRequestPayload' }
-    & { mintingRequest: (
-      { __typename?: 'MintingRequest' }
-      & Pick<MintingRequest, 'id' | 'transactionId'>
-    ) }
   ) }
 );
 
@@ -2286,6 +2255,19 @@ export type FollowingQuery = (
   ) }
 );
 
+export type GetOriginalPostFromTrackQueryVariables = Exact<{
+  trackId: Scalars['String'];
+}>;
+
+
+export type GetOriginalPostFromTrackQuery = (
+  { __typename?: 'Query' }
+  & { getOriginalPostFromTrack: (
+    { __typename?: 'Post' }
+    & PostComponentFieldsFragment
+  ) }
+);
+
 export type HaveBidedQueryVariables = Exact<{
   auctionId: Scalars['String'];
   bidder: Scalars['String'];
@@ -2321,13 +2303,13 @@ export type ListingItemComponentFieldsFragment = (
     & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner' | 'pendingTime'>
   )>, listingItem: Maybe<(
     { __typename?: 'ListingItemWithPrice' }
-    & Pick<ListingItemWithPrice, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'startingTime' | 'endingTime' | 'reservePrice' | 'createdAt' | 'updatedAt' | 'priceToShow'>
+    & Pick<ListingItemWithPrice, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'pricePerItemToShow' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow' | 'createdAt' | 'updatedAt' | 'priceToShow'>
   )> }
 );
 
 export type ListingItemViewComponentFieldsFragment = (
   { __typename?: 'ListingItem' }
-  & Pick<ListingItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'startingTime' | 'endingTime' | 'reservePrice' | 'createdAt' | 'updatedAt'>
+  & Pick<ListingItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'pricePerItemToShow' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow' | 'createdAt' | 'updatedAt'>
 );
 
 export type ListingItemsQueryVariables = Exact<{
@@ -3453,9 +3435,11 @@ export const ListingItemComponentFieldsFragmentDoc = gql`
     nft
     tokenId
     pricePerItem
+    pricePerItemToShow
     startingTime
     endingTime
     reservePrice
+    reservePriceToShow
     createdAt
     updatedAt
     priceToShow
@@ -3469,9 +3453,11 @@ export const ListingItemViewComponentFieldsFragmentDoc = gql`
   nft
   tokenId
   pricePerItem
+  pricePerItemToShow
   startingTime
   endingTime
   reservePrice
+  reservePriceToShow
   createdAt
   updatedAt
 }
@@ -3743,6 +3729,7 @@ export const AuctionItemDocument = gql`
       startingTime
       endingTime
       reservePrice
+      reservePriceToShow
     }
   }
 }
@@ -3813,6 +3800,7 @@ export const BidsWithInfoDocument = gql`
   bidsWithInfo(auctionId: $auctionId) {
     bids {
       amount
+      amountToShow
       userId
       profileId
       createdAt
@@ -3862,6 +3850,7 @@ export const BuyNowItemDocument = gql`
       nft
       tokenId
       pricePerItem
+      pricePerItemToShow
       startingTime
     }
   }
@@ -4210,42 +4199,6 @@ export function useCreateBuyNowItemMutation(baseOptions?: Apollo.MutationHookOpt
 export type CreateBuyNowItemMutationHookResult = ReturnType<typeof useCreateBuyNowItemMutation>;
 export type CreateBuyNowItemMutationResult = Apollo.MutationResult<CreateBuyNowItemMutation>;
 export type CreateBuyNowItemMutationOptions = Apollo.BaseMutationOptions<CreateBuyNowItemMutation, CreateBuyNowItemMutationVariables>;
-export const CreateMintingRequestDocument = gql`
-    mutation createMintingRequest($input: CreateMintingRequestInput!) {
-  createMintingRequest(input: $input) {
-    mintingRequest {
-      id
-      transactionId
-    }
-  }
-}
-    `;
-export type CreateMintingRequestMutationFn = Apollo.MutationFunction<CreateMintingRequestMutation, CreateMintingRequestMutationVariables>;
-
-/**
- * __useCreateMintingRequestMutation__
- *
- * To run a mutation, you first call `useCreateMintingRequestMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useCreateMintingRequestMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [createMintingRequestMutation, { data, loading, error }] = useCreateMintingRequestMutation({
- *   variables: {
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useCreateMintingRequestMutation(baseOptions?: Apollo.MutationHookOptions<CreateMintingRequestMutation, CreateMintingRequestMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateMintingRequestMutation, CreateMintingRequestMutationVariables>(CreateMintingRequestDocument, options);
-      }
-export type CreateMintingRequestMutationHookResult = ReturnType<typeof useCreateMintingRequestMutation>;
-export type CreateMintingRequestMutationResult = Apollo.MutationResult<CreateMintingRequestMutation>;
-export type CreateMintingRequestMutationOptions = Apollo.BaseMutationOptions<CreateMintingRequestMutation, CreateMintingRequestMutationVariables>;
 export const CreatePostDocument = gql`
     mutation CreatePost($input: CreatePostInput!) {
   createPost(input: $input) {
@@ -4925,6 +4878,41 @@ export function useFollowingLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
 export type FollowingQueryHookResult = ReturnType<typeof useFollowingQuery>;
 export type FollowingLazyQueryHookResult = ReturnType<typeof useFollowingLazyQuery>;
 export type FollowingQueryResult = Apollo.QueryResult<FollowingQuery, FollowingQueryVariables>;
+export const GetOriginalPostFromTrackDocument = gql`
+    query GetOriginalPostFromTrack($trackId: String!) {
+  getOriginalPostFromTrack(trackId: $trackId) {
+    ...PostComponentFields
+  }
+}
+    ${PostComponentFieldsFragmentDoc}`;
+
+/**
+ * __useGetOriginalPostFromTrackQuery__
+ *
+ * To run a query within a React component, call `useGetOriginalPostFromTrackQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetOriginalPostFromTrackQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetOriginalPostFromTrackQuery({
+ *   variables: {
+ *      trackId: // value for 'trackId'
+ *   },
+ * });
+ */
+export function useGetOriginalPostFromTrackQuery(baseOptions: Apollo.QueryHookOptions<GetOriginalPostFromTrackQuery, GetOriginalPostFromTrackQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetOriginalPostFromTrackQuery, GetOriginalPostFromTrackQueryVariables>(GetOriginalPostFromTrackDocument, options);
+      }
+export function useGetOriginalPostFromTrackLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetOriginalPostFromTrackQuery, GetOriginalPostFromTrackQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetOriginalPostFromTrackQuery, GetOriginalPostFromTrackQueryVariables>(GetOriginalPostFromTrackDocument, options);
+        }
+export type GetOriginalPostFromTrackQueryHookResult = ReturnType<typeof useGetOriginalPostFromTrackQuery>;
+export type GetOriginalPostFromTrackLazyQueryHookResult = ReturnType<typeof useGetOriginalPostFromTrackLazyQuery>;
+export type GetOriginalPostFromTrackQueryResult = Apollo.QueryResult<GetOriginalPostFromTrackQuery, GetOriginalPostFromTrackQueryVariables>;
 export const HaveBidedDocument = gql`
     query HaveBided($auctionId: String!, $bidder: String!) {
   haveBided(auctionId: $auctionId, bidder: $bidder) {

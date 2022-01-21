@@ -18,7 +18,10 @@ export class CreateBuyNowItemData {
   tokenId: number;
 
   @Field()
-  pricePerItem: number;
+  pricePerItem: string;
+
+  @Field()
+  pricePerItemToShow: number;
 
   @Field()
   startingTime: number;

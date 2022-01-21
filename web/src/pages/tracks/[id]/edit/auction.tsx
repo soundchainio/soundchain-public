@@ -67,11 +67,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
 
   const isOwner = compareWallets(listingPayload.auctionItem?.auctionItem?.owner, account);
   const isForSale = !!listingPayload.auctionItem?.auctionItem?.reservePrice ?? false;
-  const startPrice =
-    web3?.utils.fromWei(
-      listingPayload.auctionItem.auctionItem?.reservePrice.toLocaleString('fullwide', { useGrouping: false }) || '0',
-      'ether',
-    ) ?? '0';
+  const startPrice = listingPayload.auctionItem.auctionItem?.reservePriceToShow;
   const startingTime = listingPayload.auctionItem.auctionItem?.startingTime
     ? new Date(listingPayload.auctionItem.auctionItem?.startingTime * 1000)
     : undefined;
@@ -147,7 +143,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
         <ListNFTAuction
           handleSubmit={handleUpdate}
           submitLabel="UPDATE LISTING"
-          initialValues={{ price: parseFloat(startPrice), startTime: startingTime, endTime: endingTime }}
+          initialValues={{ price: startPrice, startTime: startingTime, endTime: endingTime }}
         />
       </Layout>
     </>
