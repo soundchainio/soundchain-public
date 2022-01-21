@@ -16,11 +16,17 @@ export const TrackShareButton = ({ trackId, title, artist }: Props) => {
     const url = `${window.location.origin}/tracks/${trackId}`;
 
     try {
-      await navigator.share({
-        title: `SoundChain`,
-        text: `Listen to this SoundChain track: ${title} - ${artist}`,
-        url,
-      });
+      await navigator
+        .share({
+          title: `SoundChain`,
+          text: `Listen to this SoundChain track: ${title} - ${artist}`,
+          url,
+        })
+        .catch(error => {
+          if (!error.toString().includes('AbortError')) {
+            toast('URL copied to clipboard');
+          }
+        });
     } catch {
       await navigator.clipboard.writeText(url);
       toast('URL copied to clipboard');

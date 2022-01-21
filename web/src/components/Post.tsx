@@ -59,16 +59,20 @@ export const Post = ({ post }: PostProps) => {
                   />
                 </a>
               </NextLink>
-              <Timestamp
-                datetime={post.createdAt}
-                edited={post.createdAt !== post.updatedAt || false}
-                className="flex-1 text-left"
-                small
-              />
+              <NextLink href={`/posts/${post.id}`}>
+                <a className="leading-4">
+                  <Timestamp
+                    datetime={post.createdAt}
+                    edited={post.createdAt !== post.updatedAt || false}
+                    className="flex-1 text-left"
+                    small
+                  />
+                </a>
+              </NextLink>
             </div>
-            <div className="w-14 flex-shrink-0">
-              {canEdit && <Ellipsis className="pr-4 pl-4 w-full h-3 cursor-pointer" onClick={onEllipsisClick} />}
-            </div>
+            <button className="w-14 h-7 flex-shrink-0" onClick={onEllipsisClick}>
+              {canEdit && <Ellipsis className="pr-4 pl-4 w-full h-3" />}
+            </button>
           </div>
         </div>
         <AddLinks options={addLinksOptions}>
