@@ -1,4 +1,3 @@
-import { Badge } from 'components/Badge';
 import { BackButton } from 'components/Buttons/BackButton';
 import { CoverPictureForm } from 'components/forms/profile/CoverPictureForm';
 import { Layout } from 'components/Layout';
@@ -8,6 +7,7 @@ import { TopNavBarProps } from 'components/TopNavBar';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React from 'react';
+import { steps, SkipButton } from 'utils/createAccountUtils';
 
 export default function CoverPicturePage() {
   const router = useRouter();
@@ -15,8 +15,8 @@ export default function CoverPicturePage() {
   const topNavBarProps: TopNavBarProps = {
     title: 'Cover Photo',
     leftButton: <BackButton />,
-    rightButton: <Badge label="Skip" onClick={() => router.push('/create-account/favorite-genres')} selected={false} />,
-    subtitle: <StepProgressBar steps={7} currentStep={2} />,
+    rightButton: <SkipButton href="/create-account/favorite-genres" />,
+    subtitle: <StepProgressBar steps={steps} currentStep={2} />,
   };
 
   return (

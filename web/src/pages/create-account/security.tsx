@@ -1,4 +1,3 @@
-import { Badge } from 'components/Badge';
 import { BackButton } from 'components/Buttons/BackButton';
 import { SecurityForm } from 'components/forms/profile/SecurityForm';
 import { Layout } from 'components/Layout';
@@ -8,6 +7,7 @@ import { TopNavBarProps } from 'components/TopNavBar';
 import { config } from 'config';
 import { useRouter } from 'next/router';
 import React from 'react';
+import { SkipButton, steps } from 'utils/createAccountUtils';
 
 export default function SecurityPage() {
   const router = useRouter();
@@ -15,8 +15,8 @@ export default function SecurityPage() {
   const topNavBarProps: TopNavBarProps = {
     title: 'Two-factor Security',
     leftButton: <BackButton />,
-    rightButton: <Badge label="Skip" onClick={() => router.push(`${config.redirectUrlPostLogin}`)} selected={false} />,
-    subtitle: <StepProgressBar steps={7} currentStep={7} />,
+    rightButton: <SkipButton href={`${config.redirectUrlPostLogin}`} />,
+    subtitle: <StepProgressBar steps={steps} currentStep={7} />,
   };
 
   return (

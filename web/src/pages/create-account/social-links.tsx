@@ -1,4 +1,3 @@
-import { Badge } from 'components/Badge';
 import { BackButton } from 'components/Buttons/BackButton';
 import { SocialLinksForm } from 'components/forms/profile/SocialLinksForm';
 import { Layout } from 'components/Layout';
@@ -7,6 +6,7 @@ import { StepProgressBar } from 'components/StepProgressBar';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useRouter } from 'next/router';
 import React from 'react';
+import { SkipButton, steps } from 'utils/createAccountUtils';
 
 export default function SocialLinksPage() {
   const router = useRouter();
@@ -14,8 +14,8 @@ export default function SocialLinksPage() {
   const topNavBarProps: TopNavBarProps = {
     title: 'Social Links',
     leftButton: <BackButton />,
-    rightButton: <Badge label="Skip" onClick={() => router.push('/create-account/security')} selected={false} />,
-    subtitle: <StepProgressBar steps={7} currentStep={6} />,
+    rightButton: <SkipButton href="/create-account/security" />,
+    subtitle: <StepProgressBar steps={steps} currentStep={6} />,
   };
 
   return (

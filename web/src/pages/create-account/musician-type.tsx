@@ -1,4 +1,3 @@
-import { Badge } from 'components/Badge';
 import { BackButton } from 'components/Buttons/BackButton';
 import { MusicianTypesForm } from 'components/forms/profile/MusicianTypesForm';
 import { Layout } from 'components/Layout';
@@ -7,6 +6,7 @@ import { StepProgressBar } from 'components/StepProgressBar';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useRouter } from 'next/router';
 import React from 'react';
+import { steps, SkipButton } from 'utils/createAccountUtils';
 
 export default function MusicianTypePage() {
   const router = useRouter();
@@ -14,8 +14,8 @@ export default function MusicianTypePage() {
   const topNavBarProps: TopNavBarProps = {
     title: 'Musician Type',
     leftButton: <BackButton />,
-    rightButton: <Badge label="Skip" onClick={() => router.push('/create-account/bio')} selected={false} />,
-    subtitle: <StepProgressBar steps={7} currentStep={4} />,
+    rightButton: <SkipButton href="/create-account/bio" />,
+    subtitle: <StepProgressBar steps={steps} currentStep={4} />,
   };
 
   return (

@@ -1,4 +1,3 @@
-import { Badge } from 'components/Badge';
 import { BackButton } from 'components/Buttons/BackButton';
 import { FavoriteGenresForm } from 'components/forms/profile/FavoriteGenresForm';
 import { Layout } from 'components/Layout';
@@ -8,6 +7,7 @@ import { TopNavBarProps } from 'components/TopNavBar';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React from 'react';
+import { steps, SkipButton } from 'utils/createAccountUtils';
 
 export default function FavoriteGenresPage() {
   const router = useRouter();
@@ -15,8 +15,8 @@ export default function FavoriteGenresPage() {
   const topNavBarProps: TopNavBarProps = {
     title: 'Favorite Genres',
     leftButton: <BackButton />,
-    rightButton: <Badge label="Skip" onClick={() => router.push('/create-account/musician-type')} selected={false} />,
-    subtitle: <StepProgressBar steps={7} currentStep={3} />,
+    rightButton: <SkipButton href="/create-account/musician-type" />,
+    subtitle: <StepProgressBar steps={steps} currentStep={3} />,
   };
 
   return (
