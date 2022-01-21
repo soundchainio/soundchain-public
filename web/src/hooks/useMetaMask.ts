@@ -13,11 +13,8 @@ export const useMetaMask = () => {
   const [account, setAccount] = useState<string>();
   const [balance, setBalance] = useState<string>();
   const [chainId, setChainId] = useState<number>();
-<<<<<<< HEAD
   const [isRefetchingBalance, setIsRefetchingBalance] = useState<boolean>(false);
-=======
   const [loadingChain, setLoadingChain] = useState<boolean>(true);
->>>>>>> 6bdc387b20b5451defd4ac6e245f6b3e96157b39
   const onboarding = useRef<MetaMaskOnboarding>();
 
   useEffect(() => {
@@ -117,13 +114,9 @@ export const useMetaMask = () => {
     }
   };
 
-<<<<<<< HEAD
-  return { connect, addMumbaiTestnet, account, balance, chainId, web3, refetchBalance, isRefetchingBalance };
-=======
   const loading = loadingAccount || loadingChain;
 
-  return { connect, addMumbaiTestnet, account, balance, chainId, web3, refetchBalance, loading };
->>>>>>> 6bdc387b20b5451defd4ac6e245f6b3e96157b39
+  return { connect, addMumbaiTestnet, account, balance, chainId, web3, refetchBalance, isRefetchingBalance, loading };
 };
 
 export default useMetaMask;
