@@ -145,7 +145,7 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
 
   let price = pricePerItemToShow || 0;
   if (isAuction) {
-    price = highestBid.bid === 0 ? reservePriceToShow || 0 : 0;
+    price = highestBid.bid || reservePriceToShow || 0;
   }
   const auctionIsOver = (listingPayload?.listingItem?.endingTime || 0) < Math.floor(Date.now() / 1000);
   const canComplete =
