@@ -13,6 +13,7 @@ export const useMetaMask = () => {
   const [account, setAccount] = useState<string>();
   const [balance, setBalance] = useState<string>();
   const [chainId, setChainId] = useState<number>();
+  const [isRefetchingBalance, setIsRefetchingBalance] = useState<boolean>(false);
   const [loadingChain, setLoadingChain] = useState<boolean>(true);
   const onboarding = useRef<MetaMaskOnboarding>();
 
@@ -66,8 +67,10 @@ export const useMetaMask = () => {
 
   const refetchBalance = () => {
     if (web3 && account) {
+      setIsRefetchingBalance(true);
       web3.eth.getBalance(account).then(balance => {
         setBalance(web3.utils.fromWei(balance, 'ether'));
+        setIsRefetchingBalance(false);
       });
     }
   };
@@ -113,7 +116,7 @@ export const useMetaMask = () => {
 
   const loading = loadingAccount || loadingChain;
 
-  return { connect, addMumbaiTestnet, account, balance, chainId, web3, refetchBalance, loading };
+  return { connect, addMumbaiTestnet, account, balance, chainId, web3, refetchBalance, isRefetchingBalance, loading };
 };
 
 export default useMetaMask;

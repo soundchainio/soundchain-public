@@ -79,7 +79,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
     if (!web3 || !listingPayload.auctionItem?.auctionItem?.tokenId || !account) {
       return;
     }
-    const weiPrice = web3?.utils.toWei(price.toLocaleString('fullwide', { useGrouping: false }), 'ether') || '0';
+    const weiPrice = web3?.utils.toWei(price.toString(), 'ether') || '0';
     const startTimestamp = startTime.getTime() / 1000;
     const endTimestamp = endTime.getTime() / 1000;
 

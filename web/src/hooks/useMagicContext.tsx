@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { Magic } from 'magic-sdk';
-import { InstanceWithExtensions, MagicSDKExtensionsOption, SDKBase } from '@magic-sdk/provider';
 import { OAuthExtension } from '@magic-ext/oauth';
+import { InstanceWithExtensions, MagicSDKExtensionsOption, SDKBase } from '@magic-sdk/provider';
+import { Magic } from 'magic-sdk';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import Web3 from 'web3';
 import { network } from '../lib/blockchainNetworks';
@@ -15,6 +15,7 @@ interface MagicContextData {
   account: string | undefined;
   balance: string | undefined;
   refetchBalance: () => void;
+  isRefetchingBalance: boolean;
 }
 
 const MagicContext = createContext<MagicContextData>({} as MagicContextData);
@@ -54,11 +55,14 @@ export function MagicProvider({ children }: MagicProviderProps) {
   const me = useMe();
   const [account, setAccount] = useState<string>();
   const [balance, setBalance] = useState<string>();
+  const [isRefetchingBalance, setIsRefetchingBalance] = useState<boolean>(false);
 
   const refetchBalance = () => {
     if (account) {
+      setIsRefetchingBalance(true);
       web3.eth.getBalance(account).then(balance => {
         setBalance(Number(web3.utils.fromWei(balance, 'ether')).toFixed(6));
+        setIsRefetchingBalance(false);
       });
     }
   };
@@ -78,7 +82,9 @@ export function MagicProvider({ children }: MagicProviderProps) {
   }, [me]);
 
   return (
-    <MagicContext.Provider value={{ magic, web3, account, balance, refetchBalance }}>{children}</MagicContext.Provider>
+    <MagicContext.Provider value={{ magic, web3, account, balance, refetchBalance, isRefetchingBalance }}>
+      {children}
+    </MagicContext.Provider>
   );
 }
 
