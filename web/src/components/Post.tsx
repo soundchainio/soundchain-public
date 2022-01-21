@@ -60,7 +60,7 @@ export const Post = ({ post }: PostProps) => {
                 </a>
               </NextLink>
               <NextLink href={`/posts/${post.id}`}>
-                <a className="leading-4">
+                <a className="leading-4" style={{ width: 'fit-content' }}>
                   <Timestamp
                     datetime={post.createdAt}
                     edited={post.createdAt !== post.updatedAt || false}
