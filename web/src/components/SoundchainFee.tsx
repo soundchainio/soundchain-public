@@ -1,9 +1,10 @@
 import { config } from 'config';
 import { Matic } from 'components/Matic';
 import { Soundchain } from 'icons/Soundchain';
+import { fixedDecimals } from 'utils/format';
 
 interface Props {
-  price: string;
+  price: number;
 }
 
 export const SoundchainFee = ({ price }: Props) => {
@@ -13,7 +14,7 @@ export const SoundchainFee = ({ price }: Props) => {
         <Soundchain className="mr-2" /> soundchain fee ({config.soundchainFee * 100}%)
       </p>
       <div className="flex justify-end w-full">
-        <Matic value={parseFloat(price) * config.soundchainFee} variant="currency-inline" />
+        <Matic value={fixedDecimals(price * config.soundchainFee)} variant="currency-inline" />
       </div>
     </div>
   );

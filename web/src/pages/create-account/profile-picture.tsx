@@ -1,4 +1,3 @@
-import { Badge } from 'components/Badge';
 import { ProfilePictureForm } from 'components/forms/profile/ProfilePictureForm';
 import { Layout } from 'components/Layout';
 import SEO from 'components/SEO';
@@ -7,6 +6,7 @@ import { TopNavBarProps } from 'components/TopNavBar';
 import { config } from 'config';
 import { useRouter } from 'next/router';
 import React from 'react';
+import { steps, SkipButton } from 'utils/createAccountUtils';
 
 export default function ProfilePicturePage() {
   const router = useRouter();
@@ -22,8 +22,8 @@ export default function ProfilePicturePage() {
         Cancel
       </div>
     ),
-    rightButton: <Badge label="Skip" onClick={onClose} selected={false} />,
-    subtitle: <StepProgressBar steps={6} currentStep={1} />,
+    rightButton: <SkipButton href="/create-account/cover-picture" />,
+    subtitle: <StepProgressBar steps={steps} currentStep={1} />,
   };
 
   return (

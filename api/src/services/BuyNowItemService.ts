@@ -7,7 +7,8 @@ interface NewBuyNowItem {
   owner: string;
   nft: string;
   tokenId: number;
-  pricePerItem: number;
+  pricePerItem: string;
+  pricePerItemToShow: number;
   startingTime: number;
 }
 

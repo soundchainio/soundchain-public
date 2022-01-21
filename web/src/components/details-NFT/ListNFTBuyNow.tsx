@@ -2,6 +2,7 @@ import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
 import MaxGasFee from 'components/MaxGasFee';
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
+import { SoundchainFee } from 'components/SoundchainFee';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import { Matic } from 'icons/Matic';
 import React from 'react';
@@ -77,8 +78,11 @@ export const ListNFTBuyNow = ({ initialValues, submitLabel, handleSubmit }: List
                   {<div className="text-red-500 text-sm lowercase">{errors.startTime}</div>}
                 </div>
               </div>
+              <div className="bg-gray-15 py-3 px-5">
+                <SoundchainFee price={values.price} />
+              </div>
               <p className="mx-6 text-gray-80 text-sm py-4 text-center">
-                Soundchain transaction fee and Gas fees will be applied to buyer during checkout.
+                Soundchain transaction fee will be applied to the listing price.
               </p>
               <div className="bg-gray-15 py-3 px-5">
                 <MaxGasFee />

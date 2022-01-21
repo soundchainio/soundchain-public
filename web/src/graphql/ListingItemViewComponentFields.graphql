@@ -4,9 +4,11 @@ fragment ListingItemViewComponentFields on ListingItem {
   nft
   tokenId
   pricePerItem
+  pricePerItemToShow
   startingTime
   endingTime
   reservePrice
+  reservePriceToShow
   createdAt
   updatedAt
 }

@@ -150,7 +150,7 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
         <div className="m-4">
           <Track track={track} />
         </div>
-        <ListNFTBuyNow handleSubmit={handleList} submitLabel="LIST NFT" />
+        <ListNFTBuyNow handleSubmit={handleList} submitLabel={isApproved ? 'LIST NFT' : 'APPROVE MARKETPLACE'} />
       </Layout>
     </>
   );

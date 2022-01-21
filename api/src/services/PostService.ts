@@ -68,7 +68,7 @@ export class PostService extends ModelService<typeof Post> {
     this.context.feedService.deleteItemsByPostId(params.postId);
     const deletedPost = await PostModel.findOneAndUpdate({ _id: params.postId }, { deleted: true }, { new: true });
     this.context.notificationService.notifyPostDeletedByAdmin(deletedPost);
-    return deletedPost; 
+    return deletedPost;
   }
 
   async updatePost(params: UpdatePostParams): Promise<Post> {
@@ -140,5 +140,9 @@ export class PostService extends ModelService<typeof Post> {
 
   countReposts(postId: string): Promise<number> {
     return PostModel.countDocuments({ repostId: postId }).exec();
+  }
+
+  async getOriginalFromTrack(trackId: string): Promise<Post> {
+    return this.model.findOne({ trackId }).sort({ createdAt: 1 }).exec();
   }
 }

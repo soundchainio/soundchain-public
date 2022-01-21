@@ -34,7 +34,7 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   releaseYear: yup.number(),
   genres: yup.array(),
   artworkUrl: yup.string(),
-  royalty: yup.number().min(0).max(100).required(),
+  royalty: yup.number().integer().min(0).max(100).required(),
 });
 
 export interface InitialValues extends Omit<Partial<FormValues>, 'artworkUrl'> {
@@ -153,7 +153,7 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
                 </span>
               </label>
               <div>
-                <InputField name="royalty" type="number" symbol="%" alignTextCenter />
+                <InputField name="royalty" type="number" symbol="%" alignTextCenter step={1} />
               </div>
             </div>
             <WalletSelector />
