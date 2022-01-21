@@ -70,8 +70,14 @@ export default function WalletPage() {
     chainId,
     addMumbaiTestnet,
     refetchBalance: refetchMetamaskBalance,
+    isRefetchingBalance: isRefetchingMetamaskBalance,
   } = useMetaMask();
-  const { account: magicAccount, balance: magicBalance, refetchBalance: refetchMagicBalance } = useMagicContext();
+  const {
+    account: magicAccount,
+    balance: magicBalance,
+    refetchBalance: refetchMagicBalance,
+    isRefetchingBalance: isRefetchingMagicBalance,
+  } = useMagicContext();
   const [updateDefaultWallet] = useUpdateDefaultWalletMutation();
 
   const [selectedWallet, setSelectedWallet] = useState(DefaultWallet.Soundchain);
@@ -80,6 +86,7 @@ export default function WalletPage() {
 
   const isSoundChainSelected = selectedWallet === DefaultWallet.Soundchain;
   const isMetamaskSelected = selectedWallet === DefaultWallet.MetaMask;
+  const isRefetchingBalance = isRefetchingMagicBalance || isRefetchingMetamaskBalance;
 
   const getAccount = isSoundChainSelected ? magicAccount : account;
   const getBalance = isSoundChainSelected ? magicBalance : balance;
@@ -195,7 +202,11 @@ export default function WalletPage() {
                       <div className="text-blue-400 font-bold text-xs uppercase mt-2">
                         <span className="text-white font-bold text-2xl">{getBalanceFormatted}</span>
                         {` matic`}
-                        <RefreshButton onClick={refreshBalance} className="absolute right-0 top-1/2 text-center" />
+                        <RefreshButton
+                          onClick={refreshBalance}
+                          label={isRefetchingBalance ? 'Refreshing...' : 'Refresh'}
+                          className="absolute right-0 top-1/2 text-center w-24"
+                        />
                       </div>
                       {data?.maticUsd && (
                         <span className="text-xs text-gray-50 font-bold">
