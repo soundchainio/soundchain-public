@@ -173,7 +173,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     if (!web3 || !auctionItem.auctionItem?.tokenId || !auctionItem.auctionItem?.owner || !account) {
       return;
     }
-    const amount = Web3.utils.toWei(bidAmount.toLocaleString('fullwide', { useGrouping: false }));
+    const amount = Web3.utils.toWei(bidAmount.toString());
 
     if (bidAmount >= parseFloat(balance || '0')) {
       toast.warn("Uh-oh, it seems you don't have enough funds for this transaction");
