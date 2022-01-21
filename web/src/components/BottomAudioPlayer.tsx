@@ -62,7 +62,7 @@ export const BottomAudioPlayer = () => {
         hls.destroy();
       }
     };
-  }, [currentSong, me]);
+  }, [currentSong, me?.id]);
 
   useEffect(() => {
     if (!audioRef.current) {
