@@ -22,7 +22,7 @@ interface TrackProps {
     trackId: string;
     artist?: string | null;
     art?: string | null;
-    playbackCount: string;
+    playbackCount?: string;
     isFavorite?: boolean | null;
   };
   handleOnPlayClicked: (song: Song) => void;
@@ -47,14 +47,12 @@ export const TrackListItem = ({ song, index, handleOnPlayClicked }: TrackProps) 
           </div>
           <div className="min-w-0">
             <p className="truncate">{title}</p>
-            <div className="flex items-center gap-1">
-              {playbackCount && (
-                <>
-                  <Play fill={'#808080'} width={7} height={8} />
-                  <p className="text-xxs text-gray-80">{playbackCount}</p>
-                </>
-              )}
-            </div>
+            {playbackCount && (
+              <div className="flex items-center gap-1">
+                <Play fill={'#808080'} width={7} height={8} />
+                <p className="text-xxs text-gray-80">{playbackCount}</p>
+              </div>
+            )}
           </div>
         </a>
       </NextLink>

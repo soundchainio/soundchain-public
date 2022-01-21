@@ -1,6 +1,9 @@
+import { ViewListIcon, VolumeOffIcon, VolumeUpIcon } from '@heroicons/react/solid';
 import Slider from '@reach/slider';
 import Asset from 'components/Asset';
+import { Button } from 'components/Button';
 import { Modal } from 'components/Modal';
+import { TrackListItem } from 'components/TrackListItem';
 import { TrackShareButton } from 'components/TrackShareButton';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
@@ -29,13 +32,18 @@ export const AudioPlayerModal = () => {
     duration,
     progress,
     hasNext,
+    volume,
+    playlist,
     togglePlay,
     setProgressStateFromSlider,
+    setVolume,
     playPrevious,
     playNext,
+    jumpTo,
   } = useAudioPlayerContext();
   const [showTotalPlaybackDuration, setShowTotalPlaybackDuration] = useState(true);
   const [isFavorite, setIsFavorite] = useState(currentSong.isFavorite);
+  const [isPlaylistOpen, setIsPlaylistOpen] = useState(false);
 
   const isOpen = modalState.showAudioPlayer;
 
@@ -84,27 +92,41 @@ export const AudioPlayerModal = () => {
     >
       <div className="flex flex-col h-full justify-center items-center text-white">
         <div className="w-full sm:max-w-xs px-8 sm:px-0">
-          <div className="flex justify-center">
-            <div className="relative w-3/4 max-h-80 sm:w-full after:block after:pb-full flex bg-gray-80 rounded-lg overflow-hidden">
-              <Asset src={currentSong.art} />
+          <div className={isPlaylistOpen ? 'flex items-center gap-4' : 'block'}>
+            <div className="flex justify-center">
+              <div
+                className={
+                  isPlaylistOpen
+                    ? 'relative w-10 h-10 rounded-lg overflow-hidden'
+                    : 'relative w-3/4 max-h-80 sm:w-full after:block after:pb-full flex bg-gray-80 rounded-lg overflow-hidden'
+                }
+              >
+                <Asset src={currentSong.art} />
+              </div>
+            </div>
+            <div className="flex justify-between my-4 w-full">
+              <div className="flex w-full gap-4">
+                <NextLink href={`/tracks/${currentSong.trackId}`}>
+                  <a className="flex flex-col flex-1 min-w-0">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <h2 className="font-black truncate">{currentSong.title || 'Unknown title'}</h2>
+                      <Info className="flex-shrink-0" />
+                    </div>
+                    <h3 className="font-medium">{currentSong.artist || 'Unknown artist'}</h3>
+                  </a>
+                </NextLink>
+                <button className="flex items-center" onClick={handleFavorite}>
+                  {isFavorite && <HeartFull />}
+                  {!isFavorite && <HeartBorder />}
+                </button>
+              </div>
             </div>
           </div>
-          <div className="flex justify-between mt-7 mb-4 w-full cursor-pointer">
-            <div className="flex w-full gap-4">
-              <NextLink href={`/tracks/${currentSong.trackId}`}>
-                <a className="flex flex-col flex-1 gap-1 min-w-0">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <h2 className="font-black truncate">{currentSong.title || 'Unknown title'}</h2>
-                    <Info className="flex-shrink-0" />
-                  </div>
-                  <h3 className="font-medium">{currentSong.artist || 'Unknown artist'}</h3>
-                </a>
-              </NextLink>
-              <button className="flex items-center" onClick={handleFavorite}>
-                {isFavorite && <HeartFull />}
-                {!isFavorite && <HeartBorder />}
-              </button>
-            </div>
+          <div className={isPlaylistOpen ? 'visible mb-5 max-h-56 overflow-y-auto' : 'hidden'}>
+            <div className="sticky">Playlist</div>
+            {playlist.map((song, idx) => (
+              <TrackListItem index={idx + 1} key={song.trackId} song={song} handleOnPlayClicked={() => jumpTo(idx)} />
+            ))}
           </div>
           <Slider className="audio-player" min={0} max={duration} value={progress} onChange={onSliderChange} />
           <div className="flex justify-between mt-2 text-xs text-gray-80 cursor-default">
@@ -135,6 +157,25 @@ export const AudioPlayerModal = () => {
               disabled={!hasNext}
             >
               <Forward className={`${hasNext && 'hover:fill-current'} active:text-gray-80`} />
+            </button>
+          </div>
+          <div className="flex items-center gap-4 pt-8">
+            <VolumeOffIcon width={16} viewBox="-8 0 20 20" />
+            <div className="flex-1">
+              <Slider
+                className="volume-slider"
+                min={0}
+                max={1}
+                value={volume}
+                onChange={value => setVolume(value)}
+                step={0.1}
+              />
+            </div>
+            <VolumeUpIcon width={16} />
+          </div>
+          <div className="py-4 flex justify-center">
+            <button className="w-5" onClick={() => setIsPlaylistOpen(isOpen => !isOpen)}>
+              <ViewListIcon />
             </button>
           </div>
         </div>
