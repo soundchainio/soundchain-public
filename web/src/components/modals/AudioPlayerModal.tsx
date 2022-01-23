@@ -87,7 +87,7 @@ export const AudioPlayerModal = () => {
       <div className="flex flex-col h-full items-center text-white">
         <div className="w-full h-full sm:max-w-xs px-8 sm:px-0">
           <div style={{ display: 'grid', height: '80vh', gridTemplateRows: '75% 25%' }}>
-            <div className={`flex flex-col ${isPlaylistOpen ? 'justify-start' : 'justify-end'}`}>
+            <div className={`flex flex-col truncate ${isPlaylistOpen ? 'justify-start' : 'justify-end'}`}>
               <div className={isPlaylistOpen ? 'flex items-center gap-4' : 'block'}>
                 <div className="flex justify-center">
                   <div
@@ -100,7 +100,7 @@ export const AudioPlayerModal = () => {
                     <Asset src={currentSong.art} />
                   </div>
                 </div>
-                <div className="flex justify-between my-4 w-full">
+                <div className="flex justify-between my-4 w-full min-w-0">
                   <div className="flex w-full gap-4">
                     <NextLink href={`/tracks/${currentSong.trackId}`}>
                       <a className="flex flex-col flex-1 min-w-0">
