@@ -83,8 +83,6 @@ export const BottomAudioPlayer = () => {
     }
   }, [progressFromSlider, setProgressStateFromSlider]);
 
-  audioRef.current?.volume;
-
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = volume;
