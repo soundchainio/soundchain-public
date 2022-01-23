@@ -16,7 +16,7 @@ export const ProfileWithAvatar = ({ profile }: Props) => {
   const { userHandle, displayName, verified, teamMember } = profile;
 
   return (
-    <div className="flex gap-2 items-center font-bold">
+    <div className="flex gap-2 items-center font-bold truncate">
       <Avatar profile={profile} pixels={30} />
       <NextLink href={`/profiles/${userHandle}`} passHref>
         <a className="truncate" aria-label={displayName}>

@@ -321,14 +321,14 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
         </div>
         {isBuyNow && price && (
           <div className="bg-[#112011]">
-            <div className="flex justify-between items-center px-4 py-3">
-              <div className="text-sm font-bold text-white">BUY NOW PRICE</div>
+            <div className="flex justify-between items-center px-4 py-3 gap-3">
+              <div className="text-xs font-bold text-gray-80">BUY NOW PRICE</div>
               <Matic value={price} variant="currency-inline" className="text-xs" />
             </div>
             {futureSale && (
-              <div className="flex justify-between items-center px-4 py-3">
-                <div className="text-sm font-bold text-white flex-shrink-0">SALE STARTS</div>
-                <div className="text-md flex items-center text-right font-bold gap-1">
+              <div className="flex justify-between items-center px-4 py-3 gap-3">
+                <div className="text-xs font-bold text-gray-80 flex-shrink-0">SALE STARTS</div>
+                <div className="text-xs flex items-center text-right font-bold gap-1">
                   <Timer date={startingDate!} reloadOnEnd />
                 </div>
               </div>
@@ -338,7 +338,7 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
         {isAuction && (
           <div className="bg-[#111920]">
             {futureSale && (
-              <div className="flex justify-between items-center px-4 py-3">
+              <div className="flex justify-between items-center px-4 py-3 gap-3">
                 <div className="text-xs font-bold text-gray-80 flex-shrink-0">SALE STARTS</div>
                 <div className="text-xs flex items-center text-right font-bold gap-1">
                   <Timer date={startingDate!} reloadOnEnd />
@@ -347,7 +347,7 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
             )}
             {endingDate && !futureSale && (
               <div className="flex justify-between items-center px-4 py-3 gap-3">
-                <div className="text-xs font-bold text-gray-80  flex-shrink-0">TIME REMAINING</div>
+                <div className="text-xs font-bold text-gray-80 flex-shrink-0">TIME REMAINING</div>
                 <div className="text-xs flex items-center text-right font-bold gap-1">
                   <Timer date={endingDate} endedMessage="Auction Ended" />
                 </div>
@@ -357,24 +357,21 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
               <div className="text-xs font-bold text-gray-80 ">{auctionIsOver ? 'FINAL PRICE' : 'CURRENT PRICE'}</div>
               <div className="flex items-center font-bold gap-1">
                 <Matic value={price} variant="currency-inline" className="text-xs" />
-                <span
-                  className="text-[#22CAFF] text-xxs cursor-pointer"
-                  onClick={() => dispatchShowBidsHistory(true, id || '')}
-                >
+                <button className="text-[#22CAFF] text-xxs" onClick={() => dispatchShowBidsHistory(true, id || '')}>
                   [{bidCount} bids]
-                </span>
+                </button>
               </div>
             </div>
             {highestBidderData?.getUserByWallet && (
-              <div className="text-white flex justify-between items-center px-4 py-3">
-                <div className="text-sm font-bold">HIGHEST BIDDER</div>
+              <div className="text-gray-80 flex justify-between items-center px-4 py-3 gap-3">
+                <div className="text-xs font-bold">HIGHEST BIDDER</div>
                 <ProfileWithAvatar profile={highestBidderData.getUserByWallet.profile} />
               </div>
             )}
             {isOwner && bidCount === 0 && auctionIsOver && (
-              <div className="text-white flex justify-between items-center px-4 py-3">
-                <div className="text-sm font-bold">RESULT</div>
-                <div className="text-md flex items-center font-bold gap-1">Auction ended with no bids</div>
+              <div className="text-white flex justify-between items-center px-4 py-3 gap-3">
+                <div className="text-xs font-bold">RESULT</div>
+                <div className="text-xs flex items-center font-bold gap-1">Auction ended with no bids</div>
               </div>
             )}
           </div>

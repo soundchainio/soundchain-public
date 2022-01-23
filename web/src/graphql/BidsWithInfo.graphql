@@ -10,6 +10,8 @@ query BidsWithInfo($auctionId: String!) {
         profilePicture
         displayName
         userHandle
+        verified
+        teamMember
       }
     }
   }

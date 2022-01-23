@@ -1754,7 +1754,7 @@ export type BidsWithInfoQuery = (
       & Pick<BidsWithInfo, 'amount' | 'amountToShow' | 'userId' | 'profileId' | 'createdAt'>
       & { profile: (
         { __typename?: 'Profile' }
-        & Pick<Profile, 'profilePicture' | 'displayName' | 'userHandle'>
+        & Pick<Profile, 'profilePicture' | 'displayName' | 'userHandle' | 'verified' | 'teamMember'>
       ) }
     )>> }
   ) }
@@ -3808,6 +3808,8 @@ export const BidsWithInfoDocument = gql`
         profilePicture
         displayName
         userHandle
+        verified
+        teamMember
       }
     }
   }
