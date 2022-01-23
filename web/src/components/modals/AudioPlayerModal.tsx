@@ -82,11 +82,6 @@ export const AudioPlayerModal = () => {
           </button>
         </div>
       }
-      rightButton={
-        <div className="mr-6">
-          <TrackShareButton trackId={currentSong.trackId} title={currentSong.title} artist={currentSong.artist} />
-        </div>
-      }
       onClose={handleClose}
     >
       <div className="flex flex-col h-full justify-center items-center text-white">
@@ -121,11 +116,20 @@ export const AudioPlayerModal = () => {
               </div>
             </div>
           </div>
-          <div className={isPlaylistOpen ? 'visible mb-5 max-h-56 overflow-y-auto' : 'hidden'}>
-            <div className="sticky">Playlist</div>
-            {playlist.map((song, idx) => (
-              <TrackListItem index={idx + 1} key={song.trackId} song={song} handleOnPlayClicked={() => jumpTo(idx)} />
-            ))}
+          <div className={isPlaylistOpen ? 'visible mb-5' : 'hidden'}>
+            <div>Playlist</div>
+            <div className="max-h-56 overflow-y-auto">
+              {playlist.map((song, idx) => (
+                <div key={song.trackId} className="md:pr-2">
+                  <TrackListItem
+                    variant="playlist"
+                    index={idx + 1}
+                    song={song}
+                    handleOnPlayClicked={() => jumpTo(idx)}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
           <Slider className="audio-player" min={0} max={duration} value={progress} onChange={onSliderChange} />
           <div className="flex justify-between mt-2 text-xs text-gray-80 cursor-default">
@@ -134,31 +138,42 @@ export const AudioPlayerModal = () => {
               {showTotalPlaybackDuration ? timeFromSecs(duration || 0) : remainingTime(progress, duration || 0)}
             </div>
           </div>
-          <div className="flex justify-center mt-8 gap-6">
-            <button
-              className={'rounded-full w-12 h-12 flex justify-center items-center'}
-              aria-label="Previous track"
-              onClick={playPrevious}
-            >
-              <Rewind className={'hover:fill-current active:text-gray-80'} />
-            </button>
-            <button
-              className="bg-white rounded-full w-12 h-12 flex justify-center items-center hover:scale-110 active:scale-100"
-              aria-label={isPlaying ? 'Pause' : 'Play'}
-              onClick={togglePlay}
-            >
-              {isPlaying ? <Pause fill="black" /> : <Play fill="black" />}
-            </button>
-            <button
-              className={`${!hasNext && 'cursor-default'} rounded-full w-12 h-12 flex justify-center items-center`}
-              aria-label="Next track"
-              onClick={playNext}
-              disabled={!hasNext}
-            >
-              <Forward className={`${hasNext && 'hover:fill-current'} active:text-gray-80`} />
+          <div className="flex justify-between items-center mt-8">
+            <TrackShareButton
+              trackId={currentSong.trackId}
+              title={currentSong.title}
+              artist={currentSong.artist}
+              position="top-right"
+            />
+            <div className="flex justify-center gap-4">
+              <button
+                className={'rounded-full w-12 h-12 flex justify-center items-center'}
+                aria-label="Previous track"
+                onClick={playPrevious}
+              >
+                <Rewind className={'hover:fill-current active:text-gray-80'} />
+              </button>
+              <button
+                className="bg-white rounded-full w-12 h-12 flex justify-center items-center hover:scale-110 active:scale-100"
+                aria-label={isPlaying ? 'Pause' : 'Play'}
+                onClick={togglePlay}
+              >
+                {isPlaying ? <Pause fill="black" /> : <Play fill="black" />}
+              </button>
+              <button
+                className={`${!hasNext && 'cursor-default'} rounded-full w-12 h-12 flex justify-center items-center`}
+                aria-label="Next track"
+                onClick={playNext}
+                disabled={!hasNext}
+              >
+                <Forward className={`${hasNext && 'hover:fill-current'} active:text-gray-80`} />
+              </button>
+            </div>
+            <button className="w-5 text-gray-80" onClick={() => setIsPlaylistOpen(isOpen => !isOpen)}>
+              <ViewListIcon />
             </button>
           </div>
-          <div className="flex items-center gap-4 pt-8">
+          <div className="hidden md:flex items-center gap-4 pt-8">
             <VolumeOffIcon width={16} viewBox="-8 0 20 20" />
             <div className="flex-1">
               <Slider
@@ -172,11 +187,7 @@ export const AudioPlayerModal = () => {
             </div>
             <VolumeUpIcon width={16} />
           </div>
-          <div className="py-4 flex justify-center">
-            <button className="w-5" onClick={() => setIsPlaylistOpen(isOpen => !isOpen)}>
-              <ViewListIcon />
-            </button>
-          </div>
+          <div className="py-4 flex justify-center"></div>
         </div>
       </div>
     </Modal>
