@@ -8,6 +8,8 @@ query UserByWallet($walletAddress: String!) {
       userHandle
       followerCount
       followingCount
+      verified
+      teamMember
     }
   }
 }

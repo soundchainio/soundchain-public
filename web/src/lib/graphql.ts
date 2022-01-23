@@ -3279,7 +3279,7 @@ export type UserByWalletQuery = (
     & Pick<User, 'id'>
     & { profile: (
       { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'userHandle' | 'followerCount' | 'followingCount'>
+      & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'userHandle' | 'followerCount' | 'followingCount' | 'verified' | 'teamMember'>
     ) }
   )> }
 );
@@ -7069,6 +7069,8 @@ export const UserByWalletDocument = gql`
       userHandle
       followerCount
       followingCount
+      verified
+      teamMember
     }
   }
 }
