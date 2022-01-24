@@ -127,6 +127,16 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
     }
   }, [currentPlaylistIndex, hasNext, play, playlist]);
 
+  const shuffle = useCallback(() => {
+    const previousPlayed = playlist.slice(0, currentPlaylistIndex);
+    const newShuffledPlaylist = playlist.slice(currentPlaylistIndex);
+    for (let i = newShuffledPlaylist.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newShuffledPlaylist[i], newShuffledPlaylist[j]] = [newShuffledPlaylist[j], newShuffledPlaylist[i]];
+    }
+    setPlaylist([...previousPlayed, ...newShuffledPlaylist]);
+  }, [play]);
+
   return (
     <AudioPlayerContext.Provider
       value={{
