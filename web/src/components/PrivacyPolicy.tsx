@@ -1,6 +1,6 @@
 export const PrivacyPolicy = () => {
   return (
-    <div className="text-white">
+    <div className="text-white p-6">
       <h1>PRIVACY POLICY</h1>
       <p>
         <span>
