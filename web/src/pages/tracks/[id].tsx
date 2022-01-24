@@ -164,7 +164,7 @@ export default function TrackPage({ track }: TrackPageProps) {
     leftButton: <BackButton />,
     title: 'NFT Details',
     rightButton: (
-      <div className="flex gap-2 items-center">
+      <div className="flex gap-3 items-center">
         <TrackShareButton trackId={track.id} artist={track.artist} title={track.title} />
         {(isOwner || me?.roles.includes(Role.Admin)) && (
           <Ellipsis

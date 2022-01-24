@@ -22,6 +22,7 @@ import React from 'react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import 'styles/audio-player.css';
+import 'styles/volume-slider.css';
 import 'styles/bottom-audio-player.css';
 import 'styles/globals.css';
 import 'styles/loading-ring.css';

@@ -1,15 +1,16 @@
 import { Menu } from '@headlessui/react';
+import { ShareIcon } from '@heroicons/react/outline';
 import { useModalDispatch } from 'contexts/providers/modal';
-import { Share } from 'icons/Share';
 import { toast } from 'react-toastify';
 
 type Props = {
   trackId: string;
   title?: string | null;
   artist?: string | null;
+  position?: 'top-right';
 };
 
-export const TrackShareButton = ({ trackId, title, artist }: Props) => {
+export const TrackShareButton = ({ trackId, title, artist, position }: Props) => {
   const { dispatchShowPostModal, dispatchShowAudioPlayerModal } = useModalDispatch();
 
   const handleSharing = async () => {
@@ -39,15 +40,18 @@ export const TrackShareButton = ({ trackId, title, artist }: Props) => {
   };
 
   return (
-    <div className="relative">
+    <div className="relative flex items-center">
       <Menu>
-        <Menu.Button>
-          <div className="flex justify-center items-center gap-1 text-gray-80 text-xs font-black border-gray-80 border-2 rounded py-1 px-2">
-            <Share />
-            Share
+        <Menu.Button aria-label="Share">
+          <div className="flex items-center text-gray-80">
+            <ShareIcon width={20} height={20} />
           </div>
         </Menu.Button>
-        <Menu.Items className="absolute z-40 bg-gray-20 text-white w-48 flex flex-col right-0 rounded-lg shadow-lg">
+        <Menu.Items
+          className={`absolute ${getPosition(
+            position,
+          )} z-40 bg-gray-20 text-white w-48 flex flex-col rounded-lg shadow-lg`}
+        >
           <Menu.Item onClick={handleSharing}>
             <div className="w-full text-left p-5">Share URL</div>
           </Menu.Item>
@@ -58,4 +62,13 @@ export const TrackShareButton = ({ trackId, title, artist }: Props) => {
       </Menu>
     </div>
   );
+};
+
+const getPosition = (position: Props['position']) => {
+  switch (position) {
+    case 'top-right':
+      return 'bottom-5 left-5';
+    default:
+      return 'top-8 right-0';
+  }
 };

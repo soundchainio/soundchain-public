@@ -22,44 +22,39 @@ interface TrackProps {
     trackId: string;
     artist?: string | null;
     art?: string | null;
-    playbackCount: string;
+    playbackCount?: string;
     isFavorite?: boolean | null;
   };
+  variant?: 'playlist';
   handleOnPlayClicked: (song: Song) => void;
 }
 
-export const TrackListItem = ({ song, index, handleOnPlayClicked }: TrackProps) => {
+export const TrackListItem = ({ song, index, variant, handleOnPlayClicked }: TrackProps) => {
   const { trackId, art, title, playbackCount } = song;
   const { isCurrentlyPlaying } = useAudioPlayerContext();
   const isPlaying = isCurrentlyPlaying && isCurrentlyPlaying(trackId);
 
   return (
-    <li
-      className={`flex items-center justify-between gap-2 px-4 py-2 transition duration-300 hover:bg-gray-25 ${
-        isPlaying ? 'font-black' : 'font-semibold'
-      } text-white text-xs`}
-    >
+    <li className={`${lineStyle(variant)} ${isPlaying ? 'font-black' : 'font-semibold'}`}>
       <NextLink href={`/tracks/${trackId}`}>
         <a className="flex items-center flex-1 gap-2 min-w-0">
-          <p className="w-6 text-right flex-shrink-0">{index}</p>
+          <p className={indexStyle(variant)}>{index}</p>
           <div className="h-10 w-10 relative flex items-center bg-gray-80 flex-shrink-0">
             <Asset src={art} sizes="2.5rem" />
           </div>
           <div className="min-w-0">
             <p className="truncate">{title}</p>
-            <div className="flex items-center gap-1">
-              {playbackCount && (
-                <>
-                  <Play fill={'#808080'} width={7} height={8} />
-                  <p className="text-xxs text-gray-80">{playbackCount}</p>
-                </>
-              )}
-            </div>
+            {playbackCount && (
+              <div className="flex items-center gap-1">
+                <Play fill={'#808080'} width={7} height={8} />
+                <p className="text-xxs text-gray-80">{playbackCount}</p>
+              </div>
+            )}
           </div>
         </a>
       </NextLink>
       <button
-        className="h-10 w-10 flex items-center justify-center hover:scale-125 duration-75 flex-shrink-0"
+        className={buttonStyle(variant)}
         aria-label={isPlaying ? 'Pause' : 'Play'}
         onClick={e => {
           e.stopPropagation();
@@ -70,4 +65,35 @@ export const TrackListItem = ({ song, index, handleOnPlayClicked }: TrackProps) 
       </button>
     </li>
   );
+};
+
+const lineStyle = (variant: TrackProps['variant']) => {
+  const common =
+    'flex items-center justify-between gap-2 py-2 transition duration-300 hover:bg-gray-25  text-white text-xs';
+  switch (variant) {
+    case 'playlist':
+      return `${common} px-1 sm:pr-2 sm:pl-1`;
+    default:
+      return `${common} px-4`;
+  }
+};
+
+const indexStyle = (variant: TrackProps['variant']) => {
+  const common = 'flex-shrink-0';
+  switch (variant) {
+    case 'playlist':
+      return `${common} w-3 text-left`;
+    default:
+      return `${common} w-6 text-right`;
+  }
+};
+
+const buttonStyle = (variant: TrackProps['variant']) => {
+  const common = 'h-10 w-10 flex items-center hover:scale-125 duration-75 flex-shrink-0';
+  switch (variant) {
+    case 'playlist':
+      return `${common} justify-end`;
+    default:
+      return `${common} justify-center`;
+  }
 };

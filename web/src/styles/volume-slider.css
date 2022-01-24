@@ -1,0 +1,26 @@
+.volume-slider[data-reach-slider-input][data-orientation='horizontal'] {
+  height: 2px;
+  cursor: pointer;
+}
+
+.volume-slider [data-reach-slider-range] {
+  /* background: linear-gradient(90deg, #26d1a8 0%, #ac4efd 25%, #fed503 75%, #fe5540 100%); */
+  background: white;
+}
+
+.volume-slider [data-reach-slider-track] {
+  background: #202020;
+}
+
+.volume-slider [data-reach-slider-handle] {
+  opacity: 1;
+  width: 10px;
+  height: 10px;
+  background: white;
+  border-radius: 50%;
+}
+
+.volume-slider [data-reach-slider-track][data-orientation='horizontal']:before {
+  height: 1rem;
+  top: calc(-0.3rem - 1px);
+}
