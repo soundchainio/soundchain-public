@@ -1,6 +1,5 @@
 import { FollowModal } from 'components/FollowersModal';
 import { Number } from 'components/Number';
-import { useModalDispatch } from 'contexts/providers/modal';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
 import { Feedback } from 'icons/Feedback';
@@ -17,6 +16,7 @@ import { Wallet } from 'icons/Wallet';
 import { setJwt } from 'lib/apollo';
 import { Role, usePendingRequestsBadgeNumberQuery } from 'lib/graphql';
 import Link from 'next/link';
+import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { FollowModalType } from 'types/FollowModalType';
@@ -27,14 +27,12 @@ import { MenuLink } from './MenuLink';
 
 interface SideMenuContentProps {
   isMobile?: boolean;
-  setOpen: (open: boolean) => void;
 }
 
-export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => {
+export const SideMenuContent = ({ isMobile }: SideMenuContentProps) => {
   const { data: pendingRequestsBadgeNumber } = usePendingRequestsBadgeNumberQuery();
   const me = useMe();
   const router = useRouter();
-  const { dispatchShowUnderDevelopmentModal } = useModalDispatch();
   const { magic } = useMagicContext();
 
   const [showModal, setShowModal] = useState(false);
@@ -44,11 +42,6 @@ export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => 
     await magic.user.logout();
     setJwt();
     router.reload();
-  };
-
-  const onPrivacyClick = () => {
-    dispatchShowUnderDevelopmentModal(true);
-    setOpen(false);
   };
 
   const onFollowers = () => {
@@ -126,12 +119,14 @@ export const SideMenuContent = ({ isMobile, setOpen }: SideMenuContentProps) => 
           <MenuItem icon={Logout} label="Logout" onClick={onLogout} />
         </div>
       )}
-      <div className="flex-shrink-0 flex p-4" onClick={onPrivacyClick}>
-        <div className="flex flex-row space-x-2 items-center h-10 justify-between text-gray-CC px-4 w-full">
-          <div className="flex">PRIVACY POLICY</div>
-          <div className="flex">V0</div>
-        </div>
-      </div>
+      <NextLink href="/privacy-policy">
+        <a className="flex-shrink-0 flex p-4">
+          <div className="flex flex-row space-x-2 items-center h-10 justify-between text-gray-CC px-4 w-full">
+            <div className="flex">PRIVACY POLICY</div>
+            <div className="flex">V0</div>
+          </div>
+        </a>
+      </NextLink>
       <div className="flex-shrink-0 flex">
         <div className="flex flex-row space-x-2 items-center h-10 justify-between px-10 w-full">
           <Reddit />
