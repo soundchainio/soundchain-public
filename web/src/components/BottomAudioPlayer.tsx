@@ -20,6 +20,7 @@ export const BottomAudioPlayer = () => {
     progress,
     progressFromSlider,
     hasNext,
+    volume,
     togglePlay,
     playNext,
     setPlayingState,
@@ -81,6 +82,12 @@ export const BottomAudioPlayer = () => {
       setProgressStateFromSlider(null);
     }
   }, [progressFromSlider, setProgressStateFromSlider]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+    }
+  }, [volume]);
 
   function handleTimeUpdate() {
     if (audioRef?.current?.currentTime) {

@@ -4,22 +4,21 @@ import { useMe } from 'hooks/useMe';
 import { ReactionEmoji } from 'icons/ReactionEmoji';
 import { delayFocus } from 'lib/delayFocus';
 import { ReactionType } from 'lib/graphql';
+import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
-import { isMobile } from 'utils/IsMobile';
+import { toast } from 'react-toastify';
 import { ReactionSelector } from './ReactionSelector';
-import { SharePostLink } from './SharePostLink';
 
 interface PostActionsProps {
   postId: string;
   myReaction: ReactionType | null;
 }
 
-const commonClasses = 'text-white text-sm text-gray-80 text-center font-bold flex-1 flex justify-center px-1';
+const commonClasses = 'text-white text-sm text-gray-80 text-center flex-1 flex justify-center px-1';
 
 export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
   const [reactionSelectorOpened, setReactionSelectorOpened] = useState(false);
-  const [shareOpened, setShareOpened] = useState(false);
   const { dispatchSetRepostId, dispatchShowPostModal } = useModalDispatch();
   const [postLink, setPostLink] = useState('');
   const me = useMe();
@@ -37,14 +36,21 @@ export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
   };
 
   const onShareClick = () => {
-    isMobile() ? (navigator.share ? navigator.share({ url: postLink }) : setShareOpened(true)) : setShareOpened(true);
-  };
-
-  const focusCommentTextarea = () => {
-    if (!router.asPath.includes('/posts/')) {
-      router.push(`/posts/${postId}#openComment`);
-    } else {
-      delayFocus('#commentField');
+    try {
+      navigator
+        .share({
+          title: `SoundChain`,
+          text: `Check out this publication on SoundChain!`,
+          url: postLink,
+        })
+        .catch(error => {
+          if (!error.toString().includes('AbortError')) {
+            toast('URL copied to clipboard');
+          }
+        });
+    } catch (err) {
+      navigator.clipboard.writeText(postLink);
+      toast('URL copied to clipboard');
     }
   };
 
@@ -60,10 +66,10 @@ export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
   return (
     <div className="bg-gray-25 px-0 py-2 flex items-center relative overflow-hidden">
       <div className={commonClasses}>
-        <div className="flex items-center cursor-pointer space-x-1" onClick={handleLikeButton}>
+        <button className="flex items-center font-bold space-x-1" onClick={handleLikeButton}>
           {myReaction ? <ReactionEmoji name={myReaction} className="w-4 h-4" /> : <ThumbUpIcon className="h-4 w-4" />}
           <span className={myReaction ? 'text-[#62AAFF]' : ''}>Like</span>
-        </div>
+        </button>
       </div>
       <ReactionSelector
         postId={postId}
@@ -72,24 +78,25 @@ export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
         setOpened={setReactionSelectorOpened}
       />
       <div className={commonClasses}>
-        <a className="flex items-center cursor-pointer" onClick={focusCommentTextarea}>
-          <ChatAltIcon className="h-4 w-4 mr-1" />
-          Comment
-        </a>
+        <NextLink href={`/posts/${postId}#openComment`}>
+          <a className="flex items-center font-bold">
+            <ChatAltIcon className="h-4 w-4 mr-1" />
+            Comment
+          </a>
+        </NextLink>
       </div>
       <div className={commonClasses}>
-        <div className="flex items-center cursor-pointer" onClick={onRepostClick}>
+        <button className="flex items-center font-bold" onClick={onRepostClick}>
           <RefreshIcon className="h-4 w-4 mr-1" />
           Repost
-        </div>
+        </button>
       </div>
       <div className={commonClasses}>
-        <div className="flex items-center cursor-pointer" onClick={onShareClick}>
+        <button className="flex items-center font-bold" onClick={onShareClick}>
           <ShareIcon className="h-4 w-4 mr-1" />
           Share
-        </div>
+        </button>
       </div>
-      <SharePostLink opened={shareOpened} setOpened={setShareOpened} link={postLink} postId={postId} />
     </div>
   );
 };

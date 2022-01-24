@@ -165,7 +165,7 @@ const ListedAction = ({
   return (
     <PlayerAwareBottomBar>
       <div className="flex flex-col flex-1">
-        <div className="text-md flex items-center font-bold gap-1">
+        <div className="text-sm flex items-center font-bold gap-1">
           <span>{fixedDecimals(price || '')}</span>
           <MaticIcon />
           <span className="text-xl text-gray-80"> {maticUsd && price && '≃'} </span>
@@ -260,17 +260,17 @@ const Timer = ({ date }: { date: Date }) => {
         <div>
           {days !== 0 && (
             <>
-              {days} <span className="text-gray-80">days </span>
+              {days} <span className="text-gray-80">d </span>
             </>
           )}
           {hours !== 0 && (
             <>
-              {hours} <span className="text-gray-80">hours </span>
+              {hours} <span className="text-gray-80">h </span>
             </>
           )}
           {minutes !== 0 && (
             <>
-              {minutes} <span className="text-gray-80">minutes </span>
+              {minutes} <span className="text-gray-80">min </span>
             </>
           )}
         </div>

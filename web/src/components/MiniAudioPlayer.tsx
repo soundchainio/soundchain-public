@@ -1,8 +1,8 @@
 import Slider from '@reach/slider';
+import { Matic } from 'components/Matic';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { HeartFilled } from 'icons/HeartFilled';
 import { Info } from 'icons/Info';
-import { Matic } from 'components/Matic';
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
 import NextLink from 'next/link';
@@ -67,7 +67,7 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
             </div>
             <NextLink href={`/tracks/${trackId}`}>
               <a className="w-full truncate">
-                <div className="flex w-full cursor-pointer gap-1 truncate">
+                <div className="flex w-full cursor-pointer truncate items-start">
                   <div className="truncate">
                     <div className="text-white font-black text-xs w-full truncate">
                       <div className="truncate" title={title || ''}>
@@ -76,14 +76,14 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
                     </div>
                     {artist && <div className="text-gray-80 text-xs font-black">{artist}</div>}
                   </div>
-                  <div className="flex flex-1"></div>
-                  {saleType && saleType !== '' && (
-                    <div className="h-1/3">
+                  <div className="flex flex-1" />
+                  <div className="flex items-center gap-1">
+                    {saleType && saleType !== '' && (
                       <BadgeTrack auction={saleType === 'auction'} label={saleType.toUpperCase()}></BadgeTrack>
+                    )}
+                    <div className="flex-shrink-0">
+                      <Info />
                     </div>
-                  )}
-                  <div className="self-center flex-shrink-0">
-                    <Info />
                   </div>
                 </div>
               </a>
