@@ -40,7 +40,7 @@ export const SideMenuMobile = ({ setOpen, isOpen }: SideMenuMobileProps) => {
         >
           <div className="relative flex-1 flex flex-col max-w-xs w-full pt-5 pb-4 bg-gray-15">
             <div className="flex-shrink-0 flex items-center"></div>
-            <SideMenuContent isMobile setOpen={setOpen} />
+            <SideMenuContent isMobile />
           </div>
         </Transition.Child>
         <div className="flex-shrink-0 w-14" aria-hidden="true" ref={ref}></div>

@@ -81,7 +81,7 @@ export const ListNFTBuyNow = ({ initialValues, submitLabel, handleSubmit }: List
               <div className="bg-gray-15 py-3 px-5">
                 <SoundchainFee price={values.price} />
               </div>
-              <p className="mx-6 text-gray-80 text-sm py-4 text-center">
+              <p className="mx-6 text-gray-80 font-bold text-xs py-4 text-center">
                 Soundchain transaction fee will be applied to the listing price.
               </p>
               <div className="bg-gray-15 py-3 px-5">
