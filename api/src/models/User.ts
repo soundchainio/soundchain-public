@@ -1,6 +1,7 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
 import { ObjectId } from 'mongodb';
 import { Field, ID, ObjectType } from 'type-graphql';
+import { AuthMethod } from '../types/AuthMethod';
 import { DefaultWallet } from '../types/DefaultWallet';
 import { Role } from '../types/Role';
 import { Model } from './Model';
@@ -31,6 +32,10 @@ export class User extends Model {
   @Field(() => DefaultWallet)
   @prop({ type: String, enum: DefaultWallet, default: DefaultWallet.Soundchain })
   defaultWallet: DefaultWallet;
+
+  @Field(() => AuthMethod)
+  @prop({ type: String, enum: AuthMethod })
+  authMethod: AuthMethod;
 
   @prop({ required: false })
   emailVerificationToken?: string;
