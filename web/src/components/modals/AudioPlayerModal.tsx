@@ -1,4 +1,4 @@
-import { ViewListIcon, VolumeOffIcon, VolumeUpIcon } from '@heroicons/react/solid';
+import { VolumeOffIcon, VolumeUpIcon } from '@heroicons/react/solid';
 import Slider from '@reach/slider';
 import Asset from 'components/Asset';
 import { Modal } from 'components/Modal';
@@ -13,6 +13,7 @@ import { HeartFull } from 'icons/HeartFull';
 import { Info } from 'icons/Info';
 import { Pause } from 'icons/PauseBottomAudioPlayer';
 import { Play } from 'icons/PlayBottomAudioPlayer';
+import { Playlists } from 'icons/Playlists';
 import { Rewind } from 'icons/RewindButton';
 import { TrackDocument, useToggleFavoriteMutation } from 'lib/graphql';
 import NextLink from 'next/link';
@@ -176,7 +177,7 @@ export const AudioPlayerModal = () => {
                   </button>
                 </div>
                 <button className="w-5 text-gray-80" onClick={() => setIsPlaylistOpen(isOpen => !isOpen)}>
-                  <ViewListIcon />
+                  <Playlists fillColor="#808080" />
                 </button>
               </div>
               <div className="hidden md:flex items-center gap-4 pt-8">
