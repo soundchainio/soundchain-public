@@ -48,8 +48,8 @@ export const TrackGrid = ({ track }: TrackProps) => {
   }, [isCurrentSong, isCurrentlyPlaying, setIsPlaying, trackId]);
 
   return (
-    <div className="p-0.5 rounded-xl bg-rainbow-gradient relative">
-      <div className="bg-black rounded-lg items-center">
+    <div className="p-0.5 rounded-lg bg-rainbow-gradient relative">
+      <div className="bg-black rounded-md items-center">
         <NextLink href={`/tracks/${trackId}`}>
           <a>
             <div className="p-4">

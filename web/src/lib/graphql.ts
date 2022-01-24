@@ -1754,7 +1754,7 @@ export type BidsWithInfoQuery = (
       & Pick<BidsWithInfo, 'amount' | 'amountToShow' | 'userId' | 'profileId' | 'createdAt'>
       & { profile: (
         { __typename?: 'Profile' }
-        & Pick<Profile, 'profilePicture' | 'displayName' | 'userHandle'>
+        & Pick<Profile, 'profilePicture' | 'displayName' | 'userHandle' | 'verified' | 'teamMember'>
       ) }
     )>> }
   ) }
@@ -3279,7 +3279,7 @@ export type UserByWalletQuery = (
     & Pick<User, 'id'>
     & { profile: (
       { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'userHandle' | 'followerCount' | 'followingCount'>
+      & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'userHandle' | 'followerCount' | 'followingCount' | 'verified' | 'teamMember'>
     ) }
   )> }
 );
@@ -3808,6 +3808,8 @@ export const BidsWithInfoDocument = gql`
         profilePicture
         displayName
         userHandle
+        verified
+        teamMember
       }
     }
   }
@@ -7069,6 +7071,8 @@ export const UserByWalletDocument = gql`
       userHandle
       followerCount
       followingCount
+      verified
+      teamMember
     }
   }
 }

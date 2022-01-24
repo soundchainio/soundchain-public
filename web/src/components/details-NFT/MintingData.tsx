@@ -16,7 +16,7 @@ export const MintingData = ({ ipfsCid, transactionHash, ownerProfile }: MintingD
   return (
     <>
       <div className="flex items-center font-bold bg-gray-10">
-        <div className="flex-shrink-0 text-white flex gap-2 items-center w-56 pl-4 py-3 text-sm">
+        <div className="flex-shrink-0 text-gray-CC flex gap-2 items-center w-2/4 pl-4 py-3 text-xs">
           <Pinata />
           Pinata IPFS
         </div>
@@ -27,7 +27,7 @@ export const MintingData = ({ ipfsCid, transactionHash, ownerProfile }: MintingD
           <a
             href={`${config.ipfsGateway}${ipfsCid}`}
             target="_blank"
-            className="text-sm overflow-ellipsis overflow-hidden text-gray-80 cursor-pointer"
+            className="text-sm overflow-ellipsis overflow-hidden text-gray-80 text-xxs"
             rel="noreferrer"
           >
             {ipfsCid}
@@ -35,9 +35,9 @@ export const MintingData = ({ ipfsCid, transactionHash, ownerProfile }: MintingD
         </div>
       </div>
       <div className="flex items-center font-bold">
-        <div className="flex-shrink-0 text-white flex gap-2 items-center w-56 pl-4 py-3 text-sm">
+        <div className="flex-shrink-0 text-gray-CC flex gap-2 items-center w-2/4 pl-4 py-3 text-xs">
           <Token />
-          Transaction Hash
+          Token ID
         </div>
         <div className="flex items-center text-sm overflow-hidden pr-4 py-3">
           <div className="ml-2">
@@ -46,7 +46,7 @@ export const MintingData = ({ ipfsCid, transactionHash, ownerProfile }: MintingD
           <a
             href={`${config.polygonscan}tx/${transactionHash}`}
             target="_blank"
-            className="text-sm overflow-ellipsis overflow-hidden text-gray-80 cursor-pointer"
+            className="text-xxs overflow-ellipsis overflow-hidden text-gray-80"
             rel="noreferrer"
           >
             {transactionHash}
