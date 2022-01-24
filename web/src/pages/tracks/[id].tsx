@@ -89,13 +89,12 @@ const pendingRequestMapping: Record<PendingRequest, string> = {
   CancelAuction: 'cancel auction',
 };
 
-export default function TrackPage({ track: initialState }: TrackPageProps) {
+export default function TrackPage({ track }: TrackPageProps) {
   const me = useMe();
   const { account, web3 } = useWalletContext();
   const { isTokenOwner, getRoyalties, getHighestBid } = useBlockchain();
   const [isOwner, setIsOwner] = useState<boolean>(false);
   const [royalties, setRoyalties] = useState<number>();
-  const [track, setTrack] = useState<TrackQuery['track']>(initialState);
   const [highestBid, setHighestBid] = useState<HighestBid>({} as HighestBid);
   const [isLoadingOwner, setLoadingOwner] = useState(true);
   const { dispatchShowAuthorActionsModal, dispatchShowBidsHistory } = useModalDispatch();
@@ -132,7 +131,7 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
   const [profile, { data: profileInfo }] = useProfileLazyQuery();
   const [userByWallet, { data: ownerProfile }] = useUserByWalletLazyQuery();
 
-  const nftData = track.nftData;
+  const nftData = trackData?.track.nftData || track.nftData;
   const mintingPending = nftData?.pendingRequest === PendingRequest.Mint;
   const isProcessing = nftData?.pendingRequest != PendingRequest.None;
   const tokenId = nftData?.tokenId;
@@ -239,12 +238,6 @@ export default function TrackPage({ track: initialState }: TrackPageProps) {
       });
     }
   }, [highestBid.bidder, fetchHighestBidder]);
-
-  useEffect(() => {
-    if (trackData) {
-      setTrack(trackData.track);
-    }
-  }, [trackData]);
 
   useEffect(() => {
     if (isAuction && account && listingPayload?.listingItem?.id) {
