@@ -43,6 +43,7 @@ export const Marketplace = () => {
       page: { first: pageSize },
       sort: { field, order },
     },
+    ssr: false,
   });
 
   useEffect(() => {
