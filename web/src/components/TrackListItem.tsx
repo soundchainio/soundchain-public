@@ -68,28 +68,32 @@ export const TrackListItem = ({ song, index, variant, handleOnPlayClicked }: Tra
 };
 
 const lineStyle = (variant: TrackProps['variant']) => {
+  const common =
+    'flex items-center justify-between gap-2 py-2 transition duration-300 hover:bg-gray-25  text-white text-xs';
   switch (variant) {
     case 'playlist':
-      return 'flex items-center justify-between gap-2 px-1 py-2 transition duration-300 hover:bg-gray-25  text-white text-xs';
+      return `${common} px-1 sm:pr-2 sm:pl-1`;
     default:
-      return `flex items-center justify-between gap-2 px-4 py-2 transition duration-300 hover:bg-gray-25 text-white text-xs`;
+      return `${common} px-4`;
   }
 };
 
 const indexStyle = (variant: TrackProps['variant']) => {
+  const common = 'flex-shrink-0';
   switch (variant) {
     case 'playlist':
-      return 'w-3 text-left flex-shrink-0';
+      return `${common} w-3 text-left`;
     default:
-      return 'w-6 text-right flex-shrink-0';
+      return `${common} w-6 text-right`;
   }
 };
 
 const buttonStyle = (variant: TrackProps['variant']) => {
+  const common = 'h-10 w-10 flex items-center hover:scale-125 duration-75 flex-shrink-0';
   switch (variant) {
     case 'playlist':
-      return 'h-10 w-10 flex items-center justify-end hover:scale-125 duration-75 flex-shrink-0';
+      return `${common} justify-end`;
     default:
-      return 'h-10 w-10 flex items-center justify-center hover:scale-125 duration-75 flex-shrink-0';
+      return `${common} justify-center`;
   }
 };
