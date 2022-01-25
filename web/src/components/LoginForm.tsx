@@ -1,7 +1,12 @@
 import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
 import { Form, Formik } from 'formik';
+import { Checkbox } from 'icons/Checkbox';
+import { CheckboxFilled } from 'icons/CheckboxFilled';
+import Link from 'next/link';
+import { useState } from 'react';
 import * as yup from 'yup';
+
 export interface FormValues {
   email: string;
 }
@@ -15,6 +20,12 @@ interface LoginFormProps {
 }
 
 export const LoginForm = ({ handleMagicLogin, showTerms = true }: LoginFormProps) => {
+  const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
+
+  const toggleTerms = () => {
+    setTermsAccepted(!termsAccepted);
+  };
+
   return (
     <Formik initialValues={{ email: '' }} validationSchema={validationSchema} onSubmit={handleMagicLogin}>
       {({ isSubmitting }) => (
@@ -24,8 +35,26 @@ export const LoginForm = ({ handleMagicLogin, showTerms = true }: LoginFormProps
           </div>
           <div>
             {showTerms && (
-              <div className="text-center text-xs text-white font-thin">
-                By clicking “Login”, you agree to SoundChain’s <br /> Terms &amp; Conditions and Privacy Policy.
+              <div className="text-center text-xs text-white font-thin flex items-start">
+                <button onClick={toggleTerms} className="px-2 relative">
+                  <span className="after:absolute after:-inset-2">
+                    {termsAccepted ? <CheckboxFilled /> : <Checkbox />}
+                  </span>
+                </button>
+                <div className="relative">
+                  <span onClick={toggleTerms}>I agree to the SoundChain’s</span>
+                  <Link href={`/terms-and-conditions`} passHref>
+                    <a className="text-white underline px-2 relative">
+                      <span className="after:absolute after:-inset-1">Terms &amp; Conditions</span>
+                    </a>
+                  </Link>
+                  and
+                  <Link href={`/privacy-policy`} passHref>
+                    <a className="text-white underline px-2 relative">
+                      <span className="after:absolute after:-inset-1">Privacy Policy.</span>
+                    </a>
+                  </Link>
+                </div>
               </div>
             )}
             <Button type="submit" disabled={isSubmitting} loading={isSubmitting} className="w-full mt-6">
