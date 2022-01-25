@@ -7,9 +7,12 @@ import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Form, Formik, FormikHelpers } from 'formik';
 import { useMagicContext } from 'hooks/useMagicContext';
+import { Checkbox } from 'icons/Checkbox';
+import { CheckboxFilled } from 'icons/CheckboxFilled';
 import { setJwt } from 'lib/apollo';
 import { useRegisterMutation } from 'lib/graphql';
 import { useRouter } from 'next/dist/client/router';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { formatValidationErrors } from 'utils/errorHelpers';
 import { handleRegex } from 'utils/Validation';
@@ -30,6 +33,7 @@ export default function CreateAccountPage() {
   const [register, { loading }] = useRegisterMutation();
   const [email, setEmail] = useState<string>('');
   const [token, setToken] = useState<string>('');
+  const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
 
   useEffect(() => {
     async function isLoggedInMagic() {
@@ -48,6 +52,10 @@ export default function CreateAccountPage() {
     }
     isLoggedInMagic();
   }, []);
+
+  const toggleTerms = () => {
+    setTermsAccepted(!termsAccepted);
+  };
 
   const handleSubmit = async (values: FormValues, { setErrors }: FormikHelpers<FormValues>) => {
     try {
@@ -98,7 +106,34 @@ export default function CreateAccountPage() {
                 <InputField label="Enter username. (Only letters and numbers allowed)" type="text" name="handle" />
               </div>
             </div>
-            <Button type="submit" loading={loading} disabled={loading}>
+            <div className="text-center text-xs text-white font-thin flex items-start mb-6">
+              <button onClick={toggleTerms} className="px-2 relative">
+                <span className="after:absolute after:-inset-2">
+                  {termsAccepted ? <CheckboxFilled /> : <Checkbox />}
+                </span>
+              </button>
+              <div className="relative">
+                <span onClick={toggleTerms}>I agree to the SoundChain’s</span>
+                <Link href={`/terms-and-conditions`} passHref>
+                  <a className="text-white underline px-2 relative">
+                    <span className="after:absolute after:-inset-1">Terms &amp; Conditions</span>
+                  </a>
+                </Link>
+                and
+                <Link href={`/privacy-policy`} passHref>
+                  <a className="text-white underline px-2 relative">
+                    <span className="after:absolute after:-inset-1">Privacy Policy.</span>
+                  </a>
+                </Link>
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              className={'transition ' + (termsAccepted ? 'opacity-100' : 'opacity-50')}
+              loading={loading}
+              disabled={loading || !termsAccepted}
+            >
               CREATE ACCOUNT
             </Button>
           </Form>
