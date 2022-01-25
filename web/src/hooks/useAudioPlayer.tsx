@@ -70,21 +70,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
   }, [volume]);
 
   useEffect(() => {
-    if (isShuffleOn) {
-      setOriginalPlaylist([...playlist]);
-      const shuffledPlaylist = [...playlist];
-      const currentSongInPlaylist = shuffledPlaylist.splice(currentPlaylistIndex, 1);
-      /* Randomize array in-place using Durstenfeld shuffle algorithm */
-      for (let i = shuffledPlaylist.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffledPlaylist[i], shuffledPlaylist[j]] = [shuffledPlaylist[j], shuffledPlaylist[i]];
-      }
-      setCurrentPlaylistIndex(0);
-      setPlaylist([...currentSongInPlaylist, ...shuffledPlaylist]);
-    } else {
-      setCurrentPlaylistIndex(originalPlaylist.findIndex(song => song.trackId === currentSong.trackId));
-      setPlaylist([...originalPlaylist]);
-    }
+    isShuffleOn ? shuffle() : unShuffle();
   }, [isShuffleOn]);
 
   const togglePlay = useCallback(() => {
@@ -181,6 +167,36 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
   const toggleShuffle = useCallback(() => {
     setIsShuffleOn(!isShuffleOn);
   }, [isShuffleOn]);
+
+  const shuffle = useCallback(() => {
+    /* Copy the current state of the queue before shuffling */
+    setOriginalPlaylist([...playlist]);
+
+    const shuffledPlaylist = [...playlist];
+
+    /* Remove the current song of the upcoming shuffled playlist. */
+    const currentSongInPlaylist = shuffledPlaylist.splice(currentPlaylistIndex, 1);
+
+    /* Randomize array in-place using Durstenfeld shuffle algorithm */
+    for (let i = shuffledPlaylist.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffledPlaylist[i], shuffledPlaylist[j]] = [shuffledPlaylist[j], shuffledPlaylist[i]];
+    }
+
+    /* Set current song as first on the queue -> index = 0 */
+    setCurrentPlaylistIndex(0);
+
+    /* Add current song as first element and then add the rest of the shuffled songs */
+    setPlaylist([...currentSongInPlaylist, ...shuffledPlaylist]);
+  }, [currentPlaylistIndex, playlist]);
+
+  const unShuffle = useCallback(() => {
+    /* Give back the current song its index on the original playlist */
+    setCurrentPlaylistIndex(originalPlaylist.findIndex(song => song.trackId === currentSong.trackId));
+
+    /* Unshuffle the queue using the original playlist value */
+    setPlaylist([...originalPlaylist]);
+  }, [currentSong.trackId, originalPlaylist]);
 
   return (
     <AudioPlayerContext.Provider
