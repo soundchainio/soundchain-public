@@ -22,16 +22,17 @@ import React from 'react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import 'styles/audio-player.css';
-import 'styles/volume-slider.css';
 import 'styles/bottom-audio-player.css';
 import 'styles/globals.css';
 import 'styles/loading-ring.css';
 import 'styles/nprogress.css';
+import 'styles/volume-slider.css';
 
 Sentry.init({
   dsn: 'https://43ff4c65582f427a8bf2dc33efd1c2fa@o1011186.ingest.sentry.io/5977714',
   integrations: [new Integrations.BrowserTracing()],
   tracesSampleRate: 1.0,
+  environment: `${process.env.VERCEL_ENV}`,
 });
 
 NProgress.configure({
