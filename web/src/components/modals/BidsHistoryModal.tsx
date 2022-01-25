@@ -40,7 +40,7 @@ export const BidsHistoryModal = () => {
           <li key={item.amount} className="odd:bg-gray-15 even:bg-gray-20 px-4 py-1">
             <span className="text-gray-50 font-bold text-xxs">{new Date(item.createdAt).toLocaleString()}</span>
             <div className="flex flex-row gap-2">
-              <ProfileWithAvatar profile={item.profile} />
+              <ProfileWithAvatar profile={item.profile} className="flex-1" />
               <div className="flex-shrink-0">
                 <Matic value={item.amountToShow} variant="currency" className="text-xs" />
               </div>

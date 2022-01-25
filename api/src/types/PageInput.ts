@@ -12,7 +12,7 @@ export class PageInput {
   after?: string;
 
   @Min(1)
-  @Max(100)
+  @Max(25)
   @Field(() => Int, { nullable: true })
   last?: number;
 
