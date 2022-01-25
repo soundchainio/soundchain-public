@@ -78,6 +78,11 @@ export type AuctionItemPayload = {
   auctionItem: Maybe<AuctionItem>;
 };
 
+export enum AuthMethod {
+  MagicLink = 'magicLink',
+  Google = 'google'
+}
+
 export type AuthPayload = {
   __typename?: 'AuthPayload';
   jwt: Scalars['String'];
@@ -1648,6 +1653,7 @@ export type User = {
   magicWalletAddress: Maybe<Scalars['String']>;
   metaMaskWalletAddressees: Maybe<Array<Scalars['String']>>;
   defaultWallet: DefaultWallet;
+  authMethod: AuthMethod;
   isApprovedOnMarketplace: Scalars['Boolean'];
   roles: Array<Role>;
   otpSecret: Maybe<Scalars['String']>;
