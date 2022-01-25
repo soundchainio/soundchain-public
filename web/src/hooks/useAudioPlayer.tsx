@@ -32,6 +32,7 @@ interface AudioPlayerContextData {
   playPrevious: () => void;
   playNext: () => void;
   jumpTo: (index: number) => void;
+  shuffle: () => void;
 }
 
 const localStorageVolumeKey = 'SOUNDCHAIN_VOLUME';
@@ -155,6 +156,16 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
     [play, playlist],
   );
 
+  const shuffle = useCallback(() => {
+    const newShuffledPlaylist = [...playlist];
+    const currentSongInPlaylist = newShuffledPlaylist.splice(currentPlaylistIndex, 1);
+    for (let i = newShuffledPlaylist.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newShuffledPlaylist[i], newShuffledPlaylist[j]] = [newShuffledPlaylist[j], newShuffledPlaylist[i]];
+    }
+    setPlaylist([...newShuffledPlaylist, ...currentSongInPlaylist]);
+  }, [currentPlaylistIndex, playlist]);
+
   return (
     <AudioPlayerContext.Provider
       value={{
@@ -180,6 +191,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
         playPrevious,
         playNext,
         jumpTo,
+        shuffle,
       }}
     >
       {children}
