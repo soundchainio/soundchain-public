@@ -27,7 +27,7 @@ export const OwnedNfts = ({ owner, refreshing }: OwnedNftsProps) => {
     if (refreshing) {
       refetch();
     }
-  }, [refreshing]);
+  }, [refreshing, refetch]);
 
   if (loading) {
     return (

@@ -95,7 +95,7 @@ export default function WalletPage() {
     leftButton: <BackButton />,
     title: 'Wallet',
     rightButton: (
-      <RefreshButton onClick={refreshData} label={'Refresh'} className="text-center" refreshing={isRefetchingBalance} />
+      <RefreshButton onClick={refreshData} label="Refresh" className="text-center" refreshing={isRefetchingBalance} />
     ),
   };
 
