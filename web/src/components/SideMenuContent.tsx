@@ -123,7 +123,6 @@ export const SideMenuContent = ({ isMobile }: SideMenuContentProps) => {
         <span>V0</span>
       </div>
       <div className="flex-shrink-0 flex flex-row justify-between items-center h-10 mx-8">
-        {/* <Reddit /> */}
         <a
           aria-label="SoundChain Twitter account"
           href="https://twitter.com/Soundchain_io"
@@ -142,7 +141,6 @@ export const SideMenuContent = ({ isMobile }: SideMenuContentProps) => {
         >
           <Discord />
         </a>
-        {/* <FacebookSquare/> */}
         <a
           aria-label="SoundChain Instagram account"
           href="https://www.instagram.com/soundchain.io/"
