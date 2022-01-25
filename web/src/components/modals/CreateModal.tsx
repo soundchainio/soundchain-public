@@ -12,8 +12,10 @@ import { useUpload } from 'hooks/useUpload';
 import { useWalletContext } from 'hooks/useWalletContext';
 import {
   CreateTrackMutation,
+  ExploreTracksDocument,
   FeedDocument,
   PendingRequest,
+  PostsDocument,
   TracksDocument,
   TracksQuery,
   useCreateTrackMutation,
@@ -264,7 +266,7 @@ export const CreateModal = () => {
                 },
               });
             },
-            refetchQueries: [FeedDocument, 'Posts', 'ExploreTracks'],
+            refetchQueries: [FeedDocument, PostsDocument, ExploreTracksDocument],
           });
           const track = data?.createTrack.track;
 
