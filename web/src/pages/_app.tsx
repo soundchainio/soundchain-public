@@ -32,7 +32,7 @@ Sentry.init({
   dsn: 'https://43ff4c65582f427a8bf2dc33efd1c2fa@o1011186.ingest.sentry.io/5977714',
   integrations: [new Integrations.BrowserTracing()],
   tracesSampleRate: 1.0,
-  environment: `${process.env.VERCEL_ENV}`,
+  environment: `${process.env.NEXT_PUBLIC_VERCEL_ENV}`,
 });
 
 NProgress.configure({
