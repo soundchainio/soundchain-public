@@ -104,7 +104,13 @@ export const SideMenuContent = ({ isMobile }: SideMenuContentProps) => {
       {me && (
         <div>
           <MenuLink icon={Wallet} label="Wallet" href="/wallet" />
-          <MenuLink icon={Document} label="Docs" target="_blank" href="https://soundchain.gitbook.io/soundchain/" />
+          <MenuLink
+            icon={Document}
+            label="Docs"
+            target="_blank"
+            rel="noreferrer"
+            href="https://soundchain.gitbook.io/soundchain/"
+          />
           <MenuLink icon={Feedback} label="Leave Feedback" href="/feedback" />
           {me.roles.includes(Role.Admin) ? (
             <MenuLink
