@@ -2,6 +2,7 @@ import { FollowModal } from 'components/FollowersModal';
 import { Number } from 'components/Number';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
+import { Document } from 'icons/Document';
 import { Feedback } from 'icons/Feedback';
 import { Logo } from 'icons/Logo';
 import { Logout } from 'icons/Logout';
@@ -103,6 +104,7 @@ export const SideMenuContent = ({ isMobile }: SideMenuContentProps) => {
       {me && (
         <div>
           <MenuLink icon={Wallet} label="Wallet" href="/wallet" />
+          <MenuLink icon={Document} label="Docs" target="_blank" href="https://soundchain.gitbook.io/soundchain/" />
           <MenuLink icon={Feedback} label="Leave Feedback" href="/feedback" />
           {me.roles.includes(Role.Admin) ? (
             <MenuLink
