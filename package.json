@@ -4,13 +4,13 @@
   "license": "MIT",
   "scripts": {
     "bootstrap": "lerna bootstrap && husky install",
+    "seed": "cd api && yarn seed",
     "dev": "lerna run --parallel dev",
     "codegen": "lerna run --parallel codegen",
     "lint-staged": "lerna run --parallel lint-staged"
   },
   "devDependencies": {
-    "@types/yup": "^0.29.13",
     "husky": "^7.0.1",
-    "lerna": "^3.22.1"
+    "lerna": "^4.0.0"
   }
 }

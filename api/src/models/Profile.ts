@@ -1,10 +1,14 @@
-import { getModelForClass, prop } from '@typegoose/typegoose';
+import { getModelForClass, modelOptions, prop, Severity } from '@typegoose/typegoose';
+import { sample } from 'lodash';
 import { Field, ID, ObjectType } from 'type-graphql';
-import Model from './Model';
-import SocialMedia from './SocialMedia';
+import { Genre } from '../types/Genres';
+import { MusicianType } from '../types/MusicianTypes';
+import { SocialMedias } from '../types/SocialMedias';
+import { Model } from './Model';
 
+@modelOptions({ options: { allowMixed: Severity.ALLOW } })
 @ObjectType()
-export default class Profile extends Model {
+export class Profile extends Model {
   @Field(() => ID, { name: 'id' })
   readonly _id: string;
 
@@ -13,16 +17,48 @@ export default class Profile extends Model {
   displayName: string;
 
   @Field({ nullable: true })
-  @prop({ required: false })
-  profilePicture?: string;
+  @prop({ required: true, default: randomDefaultProfilePicture() })
+  profilePicture: string;
+
+  @Field({ nullable: true })
+  @prop({ required: true, default: randomDefaultCoverPicture() })
+  coverPicture: string;
+
+  @Field(() => SocialMedias)
+  @prop({ required: true, default: {} })
+  socialMedias: SocialMedias;
+
+  @Field(() => [Genre], { nullable: true })
+  @prop({ required: true, type: [String], enum: Genre })
+  favoriteGenres: Genre[];
+
+  @Field(() => [MusicianType], { nullable: true })
+  @prop({ required: true, type: [String], enum: MusicianType })
+  musicianTypes: MusicianType[];
 
   @Field({ nullable: true })
   @prop({ required: false })
-  coverPicture?: string;
+  bio?: string;
 
-  @Field(() => [SocialMedia])
-  @prop({ required: true, default: [] })
-  socialMediaLinks: SocialMedia[];
+  @Field(() => Number)
+  @prop({ required: true, default: 0 })
+  followerCount: number;
+
+  @Field(() => Number)
+  @prop({ required: true, default: 0 })
+  followingCount: number;
+
+  @Field(() => Number)
+  @prop({ required: true, default: 0 })
+  unreadNotificationCount: number;
+
+  @Field(() => Number)
+  @prop({ required: true, default: 0 })
+  unreadMessageCount: number;
+
+  @Field({ nullable: true })
+  @prop({ required: true, default: false })
+  verified: boolean;
 
   @Field(() => Date)
   createdAt: Date;
@@ -32,3 +68,27 @@ export default class Profile extends Model {
 }
 
 export const ProfileModel = getModelForClass(Profile);
+
+function randomDefaultProfilePicture() {
+  return sample([
+    '/default-pictures/profile/red.png',
+    '/default-pictures/profile/orange.png',
+    '/default-pictures/profile/yellow.png',
+    '/default-pictures/profile/green.png',
+    '/default-pictures/profile/teal.png',
+    '/default-pictures/profile/blue.png',
+    '/default-pictures/profile/purple.png',
+    '/default-pictures/profile/pink.png',
+  ]);
+}
+
+function randomDefaultCoverPicture() {
+  return sample([
+    '/default-pictures/cover/birds.jpeg',
+    '/default-pictures/cover/cells.jpeg',
+    '/default-pictures/cover/fog.jpeg',
+    '/default-pictures/cover/net.jpeg',
+    '/default-pictures/cover/rings.jpeg',
+    '/default-pictures/cover/waves.jpeg',
+  ]);
+}

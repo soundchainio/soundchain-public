@@ -1,0 +1,30 @@
+interface BlockchainNetwork {
+  name: string;
+  rpc: string;
+  id: number;
+  idHex: string;
+  symbol: string;
+  blockExplorer: string;
+}
+
+export const mainNetwork: BlockchainNetwork = {
+  name: 'Polygon Mainnet',
+  rpc: 'https://rpc-mainnet.maticvigil.com/',
+  id: 137,
+  idHex: '0x89',
+  symbol: 'MATIC',
+  blockExplorer: 'https://polygonscan.com/',
+};
+
+export const testnetNetwork: BlockchainNetwork = {
+  name: 'Mumbai Testnet',
+  rpc: 'https://rpc-mumbai.maticvigil.com',
+  id: 80001,
+  idHex: '0x13881',
+  symbol: 'MATIC',
+  blockExplorer: 'https://mumbai.polygonscan.com',
+};
+
+export const network: BlockchainNetwork = process.env.VERCEL_ENV !== 'production' ? testnetNetwork : mainNetwork;
+
+export const isMainNetwork = network.id === mainNetwork.id;

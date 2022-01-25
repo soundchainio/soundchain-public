@@ -1,0 +1,3 @@
+query BandcampLink($url: String!) {
+  bandcampLink(url: $url)
+}

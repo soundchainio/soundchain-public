@@ -1,0 +1,7 @@
+mutation deleteTrackOnError($input: DeleteTrackInput!) {
+  deleteTrackOnError(input: $input) {
+    track {
+      ...TrackComponentFields
+    }
+  }
+}

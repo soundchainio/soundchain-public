@@ -1,60 +1,54 @@
-import { UserInputError } from 'apollo-server-express';
-import { compare } from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { ProfileModel } from '../models/Profile';
-import User, { UserModel } from '../models/User';
-import { EmailService } from './EmailService';
+import { User, UserModel } from '../models/User';
+import { AuthMethod } from '../types/AuthMethod';
+import { Role } from '../types/Role';
+import { validateUniqueIdentifiers } from '../utils/Validation';
+import { Service } from './Service';
 
-export default class AuthService {
-  static async register(email: string, handle: string, password: string, displayName: string): Promise<User> {
-    const existingUser = await UserModel.findOne({ $or: [{ email }, { handle }] });
-
-    if (existingUser) {
-      throw new UserInputError(`${existingUser.email === email ? email : handle} is in use`);
-    }
+export class AuthService extends Service {
+  async register(
+    email: string,
+    handle: string,
+    displayName: string,
+    magicWalletAddress: string,
+    oauthProvider: string,
+  ): Promise<User> {
+    await validateUniqueIdentifiers({ handle });
 
     const profile = new ProfileModel({ displayName });
     await profile.save();
+    await this.context.feedService.seedNewProfileFeed(profile.id);
 
     const emailVerificationToken = uuidv4();
-    const user = new UserModel({ email, handle, password, profileId: profile._id, emailVerificationToken });
+    const user = new UserModel({
+      email,
+      handle,
+      profileId: profile._id,
+      emailVerificationToken,
+      magicWalletAddress,
+      authMethod: oauthProvider || AuthMethod.magicLink,
+    });
+
+    const soundChainUser = await this.getSoundChainUser();
 
     try {
       await user.save();
+      await this.context.profileService.followProfile(profile._id, soundChainUser.profileId);
     } catch (err) {
       ProfileModel.deleteOne({ _id: profile.id });
-      throw new Error(`Error while creating user: ${err.message}`);
-    }
-
-    try {
-      await EmailService.sendEmailVerification(email, displayName, emailVerificationToken);
-    } catch (err) {
-      ProfileModel.deleteOne({ _id: profile.id });
-      UserModel.deleteOne({ _id: user.id });
-      throw new Error(`Error while sending email verification: ${err.message}`);
+      await this.context.profileService.unfollowProfile(profile._id, soundChainUser.profileId);
+      throw new Error(`Error while creating user: ${err}`);
     }
 
     return user;
   }
 
-  static async getUserFromCredentials(username: string, password: string): Promise<User | undefined> {
-    const user = await UserModel.findOne({ $or: [{ email: username }, { handle: username }] });
-
-    if (user && (await compare(password, user.password))) {
-      return user;
-    }
+  async getUserFromCredentials(username: string): Promise<User[] | undefined> {
+    return UserModel.find({ email: username });
   }
 
-  static async verifyUserEmail(emailVerificationToken: string): Promise<User> {
-    const user = await UserModel.findOneAndUpdate(
-      { emailVerificationToken },
-      { verified: true, $unset: { emailVerificationToken: 1 } },
-      { new: true },
-    );
-
-    if (!user) {
-      throw new UserInputError('Cannot verify user email token');
-    }
-    return user;
+  async getSoundChainUser(): Promise<User | undefined> {
+    return UserModel.findOne({ roles: Role.SOUNDCHAIN_ACCOUNT });
   }
 }

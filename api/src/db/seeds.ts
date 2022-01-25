@@ -1,13 +1,27 @@
 import Faker from 'faker';
+import { random, range, sample, sampleSize } from 'lodash';
 import mongoose from 'mongoose';
-import { ProfileModel } from '../models/Profile';
-import { UserModel } from '../models/User';
+import { Comment, CommentModel } from '../models/Comment';
+import { FeedItemModel } from '../models/FeedItem';
+import { Follow, FollowModel } from '../models/Follow';
+import { Post, PostModel } from '../models/Post';
+import { Profile, ProfileModel } from '../models/Profile';
+import { Reaction, ReactionModel } from '../models/Reaction';
+import { User, UserModel } from '../models/User';
+import { ReactionType } from '../types/ReactionType';
 
 const { DATABASE_URL = 'mongodb://localhost:27017' } = process.env;
 const dbOpts = {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 };
+
+const profiles: Profile[] = [];
+const users: User[] = [];
+const posts: Post[] = [];
+const comments: Comment[] = [];
+const follows: Follow[] = [];
+const reactions: Reaction[] = [];
 
 async function seedDb() {
   await dropDb();
@@ -17,23 +31,66 @@ async function seedDb() {
 
   console.log('Seeding user profiles...');
 
-  const profiles = [];
-  const users = [];
-
   for (let i = 0; i < 100; i++) {
     const profile = FakeProfile();
     profiles.push(profile);
-    users.push(FakeUser({ profileId: profile.id }));
+    users.push(FakeUser({ profileId: profile._id }));
+  }
+
+  for (const profile of profiles) {
+    const followedId = profile._id;
+    const numFollowers = random(0, 100);
+    sampleSize(profiles, numFollowers).forEach(profile => {
+      profile.followingCount++;
+      follows.push(new FollowModel({ followedId, followerId: profile._id }));
+    });
+    profile.followerCount = numFollowers;
   }
 
   await ProfileModel.insertMany(profiles);
   await UserModel.insertMany(users);
+  await FollowModel.insertMany(follows);
 
   console.log('User profiles seeded!');
+
+  for (let i = 0; i < 100; i++) {
+    const profile = sample(profiles);
+    const post = FakePost({ profileId: profile?._id });
+
+    range(0, random(0, 5)).forEach(() => {
+      const profile = sample(profiles);
+      comments.push(FakeComment({ postId: post.id, profileId: profile?._id }));
+    });
+
+    range(0, random(0, 20)).forEach(() => {
+      const profile = sample(profiles);
+      const reaction = FakeReaction({ postId: post.id, profileId: profile?._id });
+
+      reactions.push(reaction);
+      post.reactionStats[reaction.type]++;
+    });
+
+    posts.push(post);
+  }
+
+  await PostModel.insertMany(posts);
+  await CommentModel.insertMany(comments);
+  await ReactionModel.insertMany(reactions);
+
+  console.log('Posts + comments seeded!');
+
+  await seedDeveloper({ displayName: 'Mason Seale', email: 'mason.seale@ae.studio', password: 'SEED_PASSWORD_REDACTED' });
+
+  console.log('Developers seeded!');
 
   console.log('Success!');
 
   process.exit(0);
+}
+
+async function dropDb() {
+  const conn = await mongoose.createConnection(DATABASE_URL, dbOpts);
+  return conn.dropDatabase();
 }
 
 function FakeProfile(attrs = {}) {
@@ -41,11 +98,12 @@ function FakeProfile(attrs = {}) {
     displayName: Faker.name.findName(),
     profilePicture: Faker.internet.avatar(),
     coverPicture: Faker.image.abstract(),
-    socialMediaLinks: [
-      { name: 'twitter', link: `https://twitter.com/${Faker.internet.userName()}` },
-      { name: 'instagram', link: `https://instagram.com/${Faker.internet.userName()}` },
-      { name: 'facebook', link: `https://facebook.com/${Faker.internet.userName()}` },
-    ],
+    socialMedias: {
+      twitter: Faker.internet.userName(),
+      facebook: Faker.internet.userName(),
+      instagram: Faker.internet.userName(),
+      soundcloud: Faker.internet.userName(),
+    },
     ...attrs,
   });
 }
@@ -59,9 +117,67 @@ function FakeUser(attrs = {}) {
   });
 }
 
-async function dropDb() {
-  const conn = await mongoose.createConnection(DATABASE_URL, dbOpts);
-  return conn.dropDatabase();
+function FakePost(attrs = {}) {
+  return new PostModel({
+    body: Faker.lorem.paragraph(),
+    ...attrs,
+  });
+}
+
+function FakeComment(attrs = {}) {
+  return new CommentModel({
+    body: Faker.lorem.paragraph(),
+    ...attrs,
+  });
+}
+
+async function seedDeveloper({
+  displayName,
+  email,
+  password,
+}: {
+  displayName: string;
+  email: string;
+  password: string;
+}) {
+  const devProfile = FakeProfile({ displayName });
+  await devProfile.save();
+  const user = FakeUser({
+    email,
+    handle: Faker.internet.userName(),
+    password,
+    profileId: devProfile.id,
+  });
+  await user.save();
+
+  const follows = sampleSize(profiles, 50).map(
+    profile => new FollowModel({ followerId: devProfile.id, followedId: profile._id }),
+  );
+
+  await FollowModel.insertMany(follows);
+
+  const followedIds = follows.map(({ followedId }) => followedId);
+  const feedPosts = posts.filter(({ profileId }) => followedIds.includes(profileId));
+  const feedItems = feedPosts.map(
+    post => new FeedItemModel({ profileId: devProfile._id, postId: post._id, postedAt: post.createdAt }),
+  );
+
+  await FeedItemModel.insertMany(feedItems);
+}
+
+function FakeReaction(attrs = {}) {
+  const typeOptions = [
+    ReactionType.HEART,
+    ReactionType.HORNS,
+    ReactionType.HAPPY,
+    ReactionType.SAD,
+    ReactionType.SUNGLASSES,
+  ];
+
+  return new ReactionModel({
+    type: sample(typeOptions),
+    ...attrs,
+  });
 }
 
 seedDb();

@@ -1,0 +1,7 @@
+mutation CreateProfileVerificationRequest($input: CreateProfileVerificationRequestInput!) {
+  createProfileVerificationRequest(input: $input) {
+    profileVerificationRequest {
+      ...ProfileVerificationRequestComponentFields
+    }
+  }
+}

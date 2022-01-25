@@ -1,0 +1,13 @@
+query BuyNowItem($tokenId: Float!) {
+  buyNowItem(tokenId: $tokenId) {
+    buyNowItem {
+      id
+      owner
+      nft
+      tokenId
+      pricePerItem
+      pricePerItemToShow
+      startingTime
+    }
+  }
+}

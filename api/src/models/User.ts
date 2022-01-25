@@ -1,28 +1,16 @@
-import { getModelForClass, pre, prop } from '@typegoose/typegoose';
-import { hash } from 'bcryptjs';
+import { getModelForClass, prop } from '@typegoose/typegoose';
+import { ObjectId } from 'mongodb';
 import { Field, ID, ObjectType } from 'type-graphql';
-import Model from './Model';
-
-const saltWorkFactor = 10;
-
-@pre<User>('save', async function (done) {
-  if (!this.isModified('password')) {
-    return done();
-  }
-
-  try {
-    this.password = await hash(this.password, saltWorkFactor);
-    done();
-  } catch (error) {
-    done(error);
-  }
-})
+import { AuthMethod } from '../types/AuthMethod';
+import { DefaultWallet } from '../types/DefaultWallet';
+import { Role } from '../types/Role';
+import { Model } from './Model';
 @ObjectType()
-export default class User extends Model {
+export class User extends Model {
   @Field(() => ID, { name: 'id' })
   readonly _id: string;
 
-  @prop({ required: true })
+  @prop({ type: ObjectId, required: true })
   profileId: string;
 
   @Field()
@@ -30,18 +18,43 @@ export default class User extends Model {
   email: string;
 
   @Field()
-  @prop({ required: true })
+  @prop({ required: true, unique: true })
   handle: string;
 
-  @prop({ required: true })
-  password: string;
+  @Field({ nullable: true })
+  @prop({ required: false })
+  magicWalletAddress: string;
+
+  @Field(() => [String], { nullable: true })
+  @prop({ type: [String], required: false })
+  metaMaskWalletAddressees: string[];
+
+  @Field(() => DefaultWallet)
+  @prop({ type: String, enum: DefaultWallet, default: DefaultWallet.Soundchain })
+  defaultWallet: DefaultWallet;
+
+  @Field(() => AuthMethod)
+  @prop({ type: String, enum: AuthMethod })
+  authMethod: AuthMethod;
 
   @prop({ required: false })
-  emailVerificationToken: string;
+  emailVerificationToken?: string;
 
   @Field()
-  @prop({ required: true, default: false })
-  verified: boolean;
+  @prop({ default: false })
+  isApprovedOnMarketplace: boolean;
+
+  @Field(() => [Role])
+  @prop({ type: [String], enum: Role, default: [Role.USER] })
+  roles: string[];
+
+  @Field({ nullable: true })
+  @prop({ required: false })
+  otpSecret: string;
+
+  @Field({ nullable: true })
+  @prop({ required: false })
+  otpRecoveryPhrase: string;
 
   @Field(() => Date)
   createdAt: Date;

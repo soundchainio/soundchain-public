@@ -1,0 +1,19 @@
+query Reactions($postId: String!, $page: PageInput) {
+  reactions(postId: $postId, page: $page) {
+    nodes {
+      id
+      type
+      profile {
+        id
+        displayName
+        profilePicture
+        verified
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+      totalCount
+    }
+  }
+}

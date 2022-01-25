@@ -8,10 +8,12 @@ plugins:
 package:
   include:
     - src/db/rds-combined-ca-bundle.pem
+    - migrations
 
 functions:
   graphql:
-    handler: src/lambda.handler
+    handler: src/lambda/handler.handler
+    timeout: 20
     events:
       - http:
           path: /
@@ -21,6 +23,24 @@ functions:
           path: /
           method: get
           cors: true
+  migrate:
+    handler: src/db/migrate.handler
+  watcher:
+    handler: src/lambda/blockchainWatcher.blockchainWatcher
+    events:
+      - schedule: rate(1 minute)
+  playbackCount:
+    handler: src/lambda/playbackCount.playbackCount
+    events:
+      - schedule: cron(0 15 * * ? *)
+  processAuctions:
+    handler: src/lambda/processAuctions.processAuctions
+    events:
+      - schedule: rate(5 minutes)
+  processPending:
+    handler: src/lambda/processPending.processPending
+    events:
+      - schedule: rate(30 minutes)
 
 custom:
   db:
@@ -44,20 +64,22 @@ custom:
         - ${self:custom.db.host}
         - ':'
         - ${self:custom.db.port}
+  uploadsBucket:
+    name: !Join
+      - '-'
+      - - Ref: 'AWS::StackName'
+        - 'uploads'
 
 provider:
   name: aws
   region: us-east-1
   runtime: nodejs14.x
-  profile: soundchain
   lambdaHashingVersion: 20201221
   vpc:
     securityGroupIds:
       - Ref: VPCEndpointSecurityGroup
       - Ref: DocumentDBSecurityGroup
     subnetIds:
-      - Ref: PublicSubnetOne
-      - Ref: PublicSubnetTwo
       - Ref: PrivateSubnetOne
       - Ref: PrivateSubnetTwo
   environment:
@@ -72,6 +94,39 @@ provider:
     SENDGRID_API_KEY: ${env:SENDGRID_API_KEY}
     SENDGRID_SENDER_EMAIL: ${env:SENDGRID_SENDER_EMAIL}
     SENDGRID_VERIFICATION_TEMPLATE: ${env:SENDGRID_VERIFICATION_TEMPLATE}
+    SENDGRID_RESET_PASSWORD_TEMPLATE: ${env:SENDGRID_RESET_PASSWORD_TEMPLATE}
+    UPLOADS_BUCKET_REGION: ${self:provider.region}
+    UPLOADS_BUCKET_NAME: ${self:custom.uploadsBucket.name}
+    WALLET_PUBLIC_KEY: ${env:WALLET_PUBLIC_KEY}
+    WALLET_PRIVATE_KEY: ${env:WALLET_PRIVATE_KEY}
+    ALCHEMY_API_KEY: ${env:ALCHEMY_API_KEY}
+    MARKETPLACE_ADDRESS: ${env:MARKETPLACE_ADDRESS}
+    NFT_ADDRESS: ${env:NFT_ADDRESS}
+    AUCTION_ADDRESS: ${env:AUCTION_ADDRESS}
+    PINATA_API_KEY: ${env:PINATA_API_KEY}
+    PINATA_API_SECRET: ${env:PINATA_API_SECRET}
+    MUX_TOKEN_ID: ${env:MUX_TOKEN_ID}
+    MUX_TOKEN_SECRET: ${env:MUX_TOKEN_SECRET}
+    SENTRY_URL: ${env:SENTRY_URL}
+    MAGIC_PRIVATE_KEY: ${env:MAGIC_PRIVATE_KEY}
+    MUX_DATA_ID: ${env:MUX_DATA_ID}
+    MUX_DATA_SECRET: ${env:MUX_DATA_SECRET}
+    POLYGON_SCAN_API_KEY: ${env:POLYGON_SCAN_API_KEY}
+
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:GetObject
+            - s3:PutObjectAcl
+          Resource:
+            - !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - ${self:custom.uploadsBucket.name}
+                - /*
 
 resources:
   Mappings:
@@ -297,6 +352,22 @@ resources:
         SubnetIds:
           - Ref: PrivateSubnetOne
           - Ref: PrivateSubnetTwo
+    S3Endpoint:
+      Type: 'AWS::EC2::VPCEndpoint'
+      Properties:
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action: '*'
+              Resource: '*'
+        RouteTableIds:
+          - !Ref PublicRouteTable
+          - !Ref PrivateRouteTableOne
+          - !Ref PrivateRouteTableTwo
+        ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
+        VpcId: !Ref VPC
     DBCluster:
       Type: AWS::DocDB::DBCluster
       DeletionPolicy: Delete
@@ -318,3 +389,12 @@ resources:
           Ref: DBCluster
         DBInstanceClass: db.t3.medium
       DependsOn: DBCluster
+    UploadBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.uploadsBucket.name}
+        CorsConfiguration:
+          CorsRules:
+            - AllowedHeaders: ['*']
+              AllowedMethods: [GET, PUT]
+              AllowedOrigins: ['*']

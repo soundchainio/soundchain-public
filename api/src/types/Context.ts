@@ -1,7 +1,63 @@
-import User from '../models/User';
-import { JwtUser } from '../services/JwtService';
+import { User } from '../models/User';
+import { AuctionItemService } from '../services/AuctionItemService';
+import { AuthService } from '../services/AuthService';
+import { BidService } from '../services/BidService';
+import { BlockTrackerService } from '../services/BlockTrackerService';
+import { BuyNowService } from '../services/BuyNowItemService';
+import { CommentService } from '../services/CommentService';
+import { EmailService } from '../services/EmailService';
+import { EmbedService } from '../services/EmbedService';
+import { ExploreService } from '../services/ExploreService';
+import { FeedService } from '../services/FeedService';
+import { FollowService } from '../services/FollowService';
+import { JwtService, JwtUser } from '../services/JwtService';
+import { ListingItemService } from '../services/ListingItemService';
+import { LogErrorService } from '../services/LogErrorService';
+import { MessageService } from '../services/MessageService';
+import { MuxService } from '../services/MuxService';
+import { NotificationService } from '../services/NotificationService';
+import { PinningService } from '../services/PinningService';
+import { PolygonscanService } from '../services/PolygonService';
+import { PostService } from '../services/PostService';
+import { ProfileService } from '../services/ProfileService';
+import { ProfileVerificationRequestService } from '../services/ProfileVerificationRequestService';
+import { ReactionService } from '../services/ReactionService';
+import { SubscriptionService } from '../services/SubscriptionService';
+import { TrackService } from '../services/TrackService';
+import { UploadService } from '../services/UploadService';
+import { UserService } from '../services/UserService';
 
-export default interface Context {
-  jwtUser?: JwtUser;
+export class Context {
+  auctionItemService = new AuctionItemService(this);
+  authService = new AuthService(this);
+  blockTrackerService = new BlockTrackerService(this);
+  buyNowItemService = new BuyNowService(this);
+  commentService = new CommentService(this);
+  emailService = new EmailService(this);
+  embedService = new EmbedService(this);
+  exploreService = new ExploreService(this);
+  feedService = new FeedService(this);
+  followService = new FollowService(this);
+  jwtService = new JwtService(this);
+  logErrorService = new LogErrorService(this);
+  messageService = new MessageService(this);
+  muxService = new MuxService(this);
+  notificationService = new NotificationService(this);
+  pinningService = new PinningService(this);
+  polygonscanService = new PolygonscanService(this);
+  postService = new PostService(this);
+  profileService = new ProfileService(this);
+  profileVerificationRequestService = new ProfileVerificationRequestService(this);
+  reactionService = new ReactionService(this);
+  subscriptionService = new SubscriptionService(this);
+  trackService = new TrackService(this);
+  uploadService = new UploadService(this);
+  userService = new UserService(this);
+  bidService = new BidService(this);
+  listingItemService = new ListingItemService(this);
   user?: Promise<User>;
+
+  constructor(jwtUser?: JwtUser) {
+    this.user = jwtUser && this.userService.getUser(jwtUser.sub);
+  }
 }

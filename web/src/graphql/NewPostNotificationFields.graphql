@@ -1,0 +1,15 @@
+fragment NewPostNotificationFields on NewPostNotification {
+  id
+  type
+  authorName
+  authorPicture
+  body
+  link
+  previewBody
+  previewLink
+  createdAt
+  track {
+    title
+    playbackUrl
+  }
+}

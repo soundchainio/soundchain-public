@@ -1,0 +1,92 @@
+import { getModelForClass, prop } from '@typegoose/typegoose';
+import { ObjectId } from 'mongodb';
+import { Field, ID, ObjectType } from 'type-graphql';
+import { Genre } from '../types/Genres';
+import { MuxAsset } from '../types/MuxAsset';
+import { NFTData } from '../types/NFTData';
+import { Model } from './Model';
+
+@ObjectType()
+export class Track extends Model {
+  @Field(() => ID, { name: 'id' })
+  readonly _id: string;
+
+  @Field()
+  @prop({ type: ObjectId })
+  profileId: string;
+
+  @Field({ nullable: true })
+  @prop()
+  title: string;
+
+  @Field({ nullable: true })
+  @prop()
+  description: string;
+
+  @Field()
+  @prop({ required: true })
+  assetUrl: string;
+
+  @Field({ nullable: true })
+  @prop()
+  artworkUrl: string;
+
+  @Field({ nullable: true })
+  @prop()
+  artist: string;
+
+  @Field({ nullable: true })
+  @prop()
+  artistId: string;
+
+  @Field({ nullable: true })
+  @prop()
+  artistProfileId: string;
+
+  @Field({ nullable: true })
+  @prop()
+  album: string;
+
+  @Field({ nullable: true })
+  @prop()
+  copyright: string;
+
+  @Field({ nullable: true })
+  @prop()
+  releaseYear: number;
+
+  @Field(() => [Genre], { nullable: true })
+  @prop({ type: [String], enum: Genre })
+  genres: Genre[];
+
+  @Field(() => NFTData, { nullable: true })
+  @prop()
+  nftData: NFTData;
+
+  @prop()
+  muxAsset: MuxAsset;
+
+  @prop({ default: 0 })
+  playbackCount: number;
+
+  @prop()
+  favoriteCount: number;
+
+  @prop()
+  saleType: string;
+
+  @Field()
+  playbackCountFormatted: string;
+
+  @Field({ nullable: true })
+  @prop({ default: false })
+  deleted?: boolean;
+
+  @Field(() => Date)
+  createdAt: Date;
+
+  @Field(() => Date)
+  updatedAt: Date;
+}
+
+export const TrackModel = getModelForClass(Track);

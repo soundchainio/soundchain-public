@@ -1,0 +1,26 @@
+fragment ProfileComponentFields on Profile {
+  id
+  displayName
+  profilePicture
+  coverPicture
+  socialMedias {
+    facebook
+    instagram
+    soundcloud
+    twitter
+  }
+  favoriteGenres
+  musicianTypes
+  bio
+  followerCount
+  followingCount
+  userHandle
+  isFollowed
+  isSubscriber
+  unreadNotificationCount
+  unreadMessageCount
+  verified
+  teamMember
+  createdAt
+  updatedAt
+}

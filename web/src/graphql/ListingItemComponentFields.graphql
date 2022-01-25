@@ -1,0 +1,49 @@
+fragment ListingItemComponentFields on TrackWithListingItem {
+  id
+  profileId
+  title
+  assetUrl
+  artworkUrl
+  description
+  artist
+  artistId
+  artistProfileId
+  album
+  releaseYear
+  copyright
+  genres
+  playbackUrl
+  createdAt
+  updatedAt
+  deleted
+  playbackCountFormatted
+  isFavorite
+  favoriteCount
+  saleType
+  price
+  nftData {
+    transactionHash
+    tokenId
+    contract
+    minter
+    ipfsCid
+    pendingRequest
+    owner
+    pendingTime
+  }
+  listingItem {
+    id
+    owner
+    nft
+    tokenId
+    pricePerItem
+    pricePerItemToShow
+    startingTime
+    endingTime
+    reservePrice
+    reservePriceToShow
+    createdAt
+    updatedAt
+    priceToShow
+  }
+}

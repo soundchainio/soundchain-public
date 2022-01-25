@@ -1,0 +1,5 @@
+query ProfileVerificationRequest($id: String, $profileId: String) {
+  profileVerificationRequest(id: $id, profileId: $profileId) {
+    ...ProfileVerificationRequestComponentFields
+  }
+}

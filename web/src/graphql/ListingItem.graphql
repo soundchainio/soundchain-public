@@ -1,0 +1,5 @@
+query ListingItem($tokenId: Float!) {
+  listingItem(tokenId: $tokenId) {
+    ...ListingItemViewComponentFields
+  }
+}

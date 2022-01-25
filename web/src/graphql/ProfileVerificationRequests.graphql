@@ -1,0 +1,11 @@
+query ProfileVerificationRequests($status: String, $page: PageInput) {
+  profileVerificationRequests(status: $status, page: $page) {
+    nodes {
+      ...ProfileVerificationRequestComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

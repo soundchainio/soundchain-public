@@ -1,7 +1,0 @@
-query HomePage {
-  books {
-    id
-    title
-    createdAt
-  }
-}

@@ -1,0 +1,34 @@
+import { getModelForClass, prop } from '@typegoose/typegoose';
+import { Field, ID, ObjectType } from 'type-graphql';
+import { Model } from './Model';
+import { ObjectId } from 'mongodb';
+
+@ObjectType()
+export class Message extends Model {
+  @Field(() => ID, { name: 'id' })
+  readonly _id: string;
+
+  @Field()
+  @prop({ type: ObjectId, required: true })
+  fromId: string;
+
+  @Field()
+  @prop({ type: ObjectId, required: true })
+  toId: string;
+
+  @Field()
+  @prop({ required: true })
+  message: string;
+
+  @Field(() => Date, { nullable: true })
+  @prop({ required: false })
+  readAt?: Date;
+
+  @Field(() => Date)
+  createdAt: Date;
+
+  @Field(() => Date)
+  updatedAt: Date;
+}
+
+export const MessageModel = getModelForClass(Message);

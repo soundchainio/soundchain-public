@@ -2,9 +2,14 @@ query Me {
   me {
     id
     handle
+    email
+    magicWalletAddress
+    defaultWallet
+    isApprovedOnMarketplace
+    roles
+    otpSecret
     profile {
-      id
-      displayName
+      ...ProfileComponentFields
     }
   }
 }

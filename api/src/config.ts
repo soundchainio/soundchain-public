@@ -1,16 +1,14 @@
 import '01/../reflect-metadata';
-import {
-  ApolloServerPluginLandingPageGraphQLPlayground,
-  ApolloServerPluginLandingPageProductionDefault,
-} from 'apollo-server-core';
+import { ApolloServerPluginLandingPageDisabled } from 'apollo-server-core';
+import cors from 'cors';
 import * as dotenv from 'dotenv-flow';
 import fs from 'fs';
 import { buildSchemaSync } from 'type-graphql';
 import { TypegooseMiddleware } from './middlewares/typegoose-middleware';
-import resolvers from './resolvers';
-import JwtService, { JwtUser } from './services/JwtService';
-import { UserService } from './services/UserService';
-import Context from './types/Context';
+import { resolvers } from './resolvers';
+import { JwtService, JwtUser } from './services/JwtService';
+import { Context } from './types/Context';
+import { SentryReportError } from './utils/SentryReportError';
 
 dotenv.config();
 
@@ -22,15 +20,33 @@ interface LambdaContext {
   express: ExpressContext;
 }
 
-const {
+export const {
   NODE_ENV,
   PORT = 4000,
   DATABASE_URL = 'mongodb://localhost:27017',
   DATABASE_SSL_PATH,
   WEB_APP_URL = 'http://localhost:3000',
   SENDGRID_SENDER_EMAIL,
+  SENTRY_URL,
   SENDGRID_VERIFICATION_TEMPLATE,
+  SENDGRID_RESET_PASSWORD_TEMPLATE,
   SENDGRID_API_KEY,
+  UPLOADS_BUCKET_REGION,
+  UPLOADS_BUCKET_NAME,
+  WALLET_PUBLIC_KEY,
+  WALLET_PRIVATE_KEY,
+  ALCHEMY_API_KEY,
+  PINATA_API_KEY,
+  PINATA_API_SECRET,
+  MUX_TOKEN_ID,
+  MUX_TOKEN_SECRET,
+  MAGIC_PRIVATE_KEY,
+  MARKETPLACE_ADDRESS,
+  NFT_ADDRESS,
+  MUX_DATA_ID,
+  MUX_DATA_SECRET,
+  POLYGON_SCAN_API_KEY,
+  AUCTION_ADDRESS,
 } = process.env;
 
 function assertEnvVar(name: string, value: string | undefined): asserts value {
@@ -42,23 +58,32 @@ function assertEnvVar(name: string, value: string | undefined): asserts value {
 assertEnvVar('SENDGRID_SENDER_EMAIL', SENDGRID_SENDER_EMAIL);
 assertEnvVar('SENDGRID_VERIFICATION_TEMPLATE', SENDGRID_VERIFICATION_TEMPLATE);
 assertEnvVar('SENDGRID_API_KEY', SENDGRID_API_KEY);
+assertEnvVar('SENDGRID_RESET_PASSWORD_TEMPLATE', SENDGRID_RESET_PASSWORD_TEMPLATE);
 
 export const config = {
   apollo: {
-    plugins: [
-      NODE_ENV === 'production'
-        ? ApolloServerPluginLandingPageProductionDefault()
-        : ApolloServerPluginLandingPageGraphQLPlayground(),
-    ],
+    plugins: [ApolloServerPluginLandingPageDisabled(), SentryReportError],
     context(context: ExpressContext | LambdaContext): Context {
-      const jwtUser = 'req' in context ? context.req.user : context.express.req.user;
-      return { jwtUser, user: jwtUser && UserService.getUser(jwtUser.sub) };
+      return new Context('req' in context ? context.req.user : context.express.req.user);
     },
     schema: buildSchemaSync({
       resolvers,
       globalMiddlewares: [TypegooseMiddleware],
-      authChecker: ({ context }) => Boolean(context.jwtUser),
+      authChecker: async ({ context }, roles) => {
+        const user = await context.user;
+        if (roles.length === 0) {
+          return Boolean(user);
+        }
+        if (user.roles.some((role: string) => roles.includes(role))) {
+          return true;
+        }
+        return false;
+      },
     }),
+  },
+  uploads: {
+    region: UPLOADS_BUCKET_REGION,
+    bucket: UPLOADS_BUCKET_NAME,
   },
   db: {
     url: DATABASE_URL,
@@ -67,21 +92,48 @@ export const config = {
       useUnifiedTopology: true,
       useFindAndModify: false,
       ssl: Boolean(DATABASE_SSL_PATH),
-      sslCA: DATABASE_SSL_PATH && fs.readFileSync(`${__dirname}/${DATABASE_SSL_PATH}`),
+      sslCA: DATABASE_SSL_PATH && fs.readFileSync(`${__dirname}/${DATABASE_SSL_PATH}`).toString(),
+      retryWrites: false,
     },
   },
   express: {
     port: PORT,
-    middlewares: [JwtService.middleware],
+    middlewares: [cors({ credentials: true }), JwtService.middleware],
   },
   sendgrid: {
     apiKey: SENDGRID_API_KEY,
     sender: SENDGRID_SENDER_EMAIL,
     templates: {
       userEmailVerification: SENDGRID_VERIFICATION_TEMPLATE,
+      passwordReset: SENDGRID_RESET_PASSWORD_TEMPLATE,
     },
   },
   web: {
     url: WEB_APP_URL,
+  },
+  minting: {
+    pinataKey: PINATA_API_KEY,
+    pinataSecret: PINATA_API_SECRET,
+    walletPrivateKey: WALLET_PRIVATE_KEY,
+    walletPublicKey: WALLET_PUBLIC_KEY,
+    marketplaceAddress: MARKETPLACE_ADDRESS,
+    nftAddress: NFT_ADDRESS,
+    auctionAddress: AUCTION_ADDRESS,
+    alchemyKey: ALCHEMY_API_KEY,
+    polygonScan: POLYGON_SCAN_API_KEY,
+  },
+  mux: {
+    tokenId: MUX_TOKEN_ID,
+    tokenSecret: MUX_TOKEN_SECRET,
+  },
+  muxData: {
+    tokenId: MUX_DATA_ID,
+    tokenSecret: MUX_DATA_SECRET,
+  },
+  sentry: {
+    url: SENTRY_URL,
+  },
+  magicLink: {
+    secretKey: MAGIC_PRIVATE_KEY,
   },
 };

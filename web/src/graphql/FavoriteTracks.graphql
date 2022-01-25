@@ -1,0 +1,11 @@
+query FavoriteTracks($search: String, $sort: SortTrackInput, $page: PageInput) {
+  favoriteTracks(search: $search, sort: $sort, page: $page) {
+    nodes {
+      ...TrackComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

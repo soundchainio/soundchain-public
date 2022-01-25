@@ -1,58 +1,135 @@
-import { UserInputError } from 'apollo-server-express';
-import { Arg, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
-import Profile from '../models/Profile';
-import User from '../models/User';
-import AuthService from '../services/AuthService';
-import JwtService from '../services/JwtService';
-import { ProfileService } from '../services/ProfileService';
-import Context from '../types/Context';
-import AuthPayload from './types/AuthPayload';
-import LoginInput from './types/LoginInput';
-import { RegisterInput } from './types/RegisterInput';
-import { VerifyUserEmailInput } from './types/VerifyUserEmailInput';
-import { VerifyUserEmailPayload } from './types/VerifyUserEmailPayload';
+import { Magic } from '@magic-sdk/admin';
+import { AuthenticationError, UserInputError } from 'apollo-server-express';
+import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
+import { config } from '../config';
+import { CurrentUser } from '../decorators/current-user';
+import { Profile } from '../models/Profile';
+import { User } from '../models/User';
+import { AuthMethod } from '../types/AuthMethod';
+import { AuthPayload } from '../types/AuthPayload';
+import { Context } from '../types/Context';
+import { LoginInput } from '../types/LoginInput';
+import { RegisterInput } from '../types/RegisterInput';
+import { UpdateDefaultWalletInput } from '../types/UpdateDefaultWalletInput';
+import { UpdateDefaultWalletPayload } from '../types/UpdateDefaultWalletPayload';
+import { UpdateHandleInput } from '../types/UpdateHandleInput';
+import { UpdateHandlePayload } from '../types/UpdateHandlePayload';
+import { UpdateOTPInput } from '../types/UpdateOTPInput';
+import { UpdateOTPPayload } from '../types/UpdateOTPPayload';
+import { UpdateWalletInput } from '../types/UpdateWalletInput';
+import { ValidateOTPRecoveryPhraseInput } from '../types/ValidateOTPRecoveryPhraseInput';
 
 @Resolver(User)
 export class UserResolver {
   @FieldResolver(() => Profile)
-  async profile(@Root() user: User): Promise<Profile> {
-    return ProfileService.getProfile(user.profileId);
+  async profile(@Ctx() { profileService }: Context, @Root() user: User): Promise<Profile> {
+    return profileService.getProfile(user.profileId);
   }
 
   @Query(() => User, { nullable: true })
-  async me(@Ctx() context: Context): Promise<User | undefined> {
-    return context.user;
+  async me(@CurrentUser() user?: User): Promise<User | undefined> {
+    return user;
   }
 
   @Mutation(() => AuthPayload)
   async register(
-    @Arg('input')
-    { email, handle, password, displayName }: RegisterInput,
+    @Ctx() { authService, jwtService }: Context,
+    @Arg('input') { token, handle, displayName }: RegisterInput,
   ): Promise<AuthPayload> {
-    const user = await AuthService.register(email, handle, password, displayName);
-    return { jwt: JwtService.create(user) };
+    const magic = new Magic(config.magicLink.secretKey);
+    const did = magic.utils.parseAuthorizationHeader(`Bearer ${token}`);
+    const magicUser = await magic.users.getMetadataByToken(did);
+
+    const user = await authService.register(
+      magicUser.email,
+      handle,
+      displayName,
+      magicUser.publicAddress,
+      magicUser.oauthProvider,
+    );
+    return { jwt: jwtService.create(user) };
   }
 
   @Mutation(() => AuthPayload)
-  async login(
-    @Arg('input')
-    { username, password }: LoginInput,
-  ): Promise<AuthPayload> {
-    const user = await AuthService.getUserFromCredentials(username, password);
+  async login(@Ctx() { authService, jwtService }: Context, @Arg('input') { token }: LoginInput): Promise<AuthPayload> {
+    const magic = new Magic(config.magicLink.secretKey);
+    const did = magic.utils.parseAuthorizationHeader(`Bearer ${token}`);
+    const magicUser = await magic.users.getMetadataByToken(did);
+    const users = await authService.getUserFromCredentials(magicUser.email);
 
-    if (!user) {
+    if (!users?.length) {
+      //no user for credentials
       throw new UserInputError('Invalid credentials');
     }
 
-    return { jwt: JwtService.create(user) };
+    const authMethod = magicUser.oauthProvider || AuthMethod.magicLink;
+    const user = users.find(u => u.authMethod === authMethod);
+
+    if (!user) {
+      //account exists with different auth method, warn user
+      throw new AuthenticationError('already exists', { with: users.map(u => u.authMethod) });
+    }
+    //account exists for current auth method, create session
+    return { jwt: jwtService.create(user) };
   }
 
-  @Mutation(() => VerifyUserEmailPayload)
-  async verifyUserEmail(
-    @Arg('input')
-    { token }: VerifyUserEmailInput,
-  ): Promise<VerifyUserEmailPayload> {
-    const user = await AuthService.verifyUserEmail(token);
+  @Mutation(() => UpdateHandlePayload)
+  @Authorized()
+  async updateHandle(
+    @Ctx() { userService }: Context,
+    @Arg('input') { handle }: UpdateHandleInput,
+    @CurrentUser() { _id }: User,
+  ): Promise<UpdateHandlePayload> {
+    const user = await userService.updateHandle(_id, handle);
     return { user };
+  }
+
+  @Mutation(() => UpdateDefaultWalletPayload)
+  @Authorized()
+  async updateDefaultWallet(
+    @Ctx() { userService }: Context,
+    @Arg('input') { defaultWallet }: UpdateDefaultWalletInput,
+    @CurrentUser() { _id }: User,
+  ): Promise<UpdateHandlePayload> {
+    const user = await userService.updateDefaultWallet(_id, defaultWallet);
+    return { user };
+  }
+
+  @Mutation(() => UpdateDefaultWalletPayload)
+  @Authorized()
+  async updateMetaMaskAddresses(
+    @Ctx() { userService }: Context,
+    @Arg('input') { wallet }: UpdateWalletInput,
+    @CurrentUser() { _id }: User,
+  ): Promise<UpdateHandlePayload> {
+    const user = await userService.updateMetaMaskAddresses(_id, wallet);
+    return { user };
+  }
+
+  @Mutation(() => UpdateOTPPayload)
+  @Authorized()
+  async updateOTP(
+    @Ctx() { userService }: Context,
+    @Arg('input') { otpSecret, otpRecoveryPhrase }: UpdateOTPInput,
+    @CurrentUser() { _id }: User,
+  ): Promise<UpdateHandlePayload> {
+    const user = await userService.updateOTP({ _id, otpSecret, otpRecoveryPhrase });
+    return { user };
+  }
+
+  @Mutation(() => Boolean)
+  @Authorized()
+  async validateOTPRecoveryPhrase(
+    @Ctx() { userService }: Context,
+    @Arg('input') { otpRecoveryPhrase }: ValidateOTPRecoveryPhraseInput,
+    @CurrentUser() { _id }: User,
+  ): Promise<boolean> {
+    return userService.validateOTPRecoveryPhrase({ _id, otpRecoveryPhrase });
+  }
+
+  @Query(() => User, { nullable: true })
+  async getUserByWallet(@Ctx() { userService }: Context, @Arg('walletAddress') walletAddress: string): Promise<User> {
+    const user = await userService.getUserByWallet(walletAddress);
+    return user;
   }
 }

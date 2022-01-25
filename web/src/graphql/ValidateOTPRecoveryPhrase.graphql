@@ -1,0 +1,3 @@
+mutation ValidateOTPRecoveryPhrase($input: ValidateOTPRecoveryPhraseInput!) {
+  validateOTPRecoveryPhrase(input: $input)
+}

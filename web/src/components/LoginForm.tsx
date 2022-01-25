@@ -1,58 +1,39 @@
-import { ErrorMessage, Field, Form, Formik } from 'formik';
-import { useRouter } from 'next/dist/client/router';
-import { useEffect } from 'react';
+import { Button } from 'components/Button';
+import { InputField } from 'components/InputField';
+import { Form, Formik } from 'formik';
 import * as yup from 'yup';
-import useMe from '../hooks/useMe';
-import { setJwt } from '../lib/apollo';
-import { useLoginMutation } from '../lib/graphql';
-
-interface FormValues {
-  username: string;
-  password: string;
+export interface FormValues {
+  email: string;
 }
-
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
-  username: yup.string().required(),
-  password: yup.string().required(),
+  email: yup.string().email('Please enter a valid email address').required('Please enter your email address'),
 });
 
-export const LoginForm = () => {
-  const [login, { loading, error }] = useLoginMutation();
-  const me = useMe();
-  const router = useRouter();
+interface LoginFormProps {
+  handleMagicLogin: (values: FormValues) => void;
+  showTerms?: boolean;
+}
 
-  useEffect(() => {
-    if (me) {
-      router.push(router.query.callbackUrl?.toString() ?? '/');
-    }
-  }, [me, router]);
-
-  async function handleSubmit(values: FormValues) {
-    try {
-      const result = await login({ variables: { input: values } });
-      setJwt(result.data?.login.jwt);
-    } catch (error) {
-      // handled by error state
-    }
-  }
-
+export const LoginForm = ({ handleMagicLogin, showTerms = true }: LoginFormProps) => {
   return (
-    <Formik initialValues={{ username: '', password: '' }} validationSchema={validationSchema} onSubmit={handleSubmit}>
-      <Form className="flex flex-col items-center space-y-6">
-        <div>
-          <Field type="text" name="username" />
-          <ErrorMessage name="username" component="div" />
-        </div>
-        <div>
-          <Field type="password" name="password" />
-          <ErrorMessage name="password" component="div" />
-        </div>
-        {error && <p>{error.message}</p>}
-        <a href="#">Forgot password?</a>
-        <button type="submit" disabled={loading} className="p-3 border-2 w-full">
-          Login
-        </button>
-      </Form>
+    <Formik initialValues={{ email: '' }} validationSchema={validationSchema} onSubmit={handleMagicLogin}>
+      {({ isSubmitting }) => (
+        <Form className="flex flex-1 flex-col justify-between">
+          <div>
+            <InputField placeholder="Email address" type="email" name="email" />
+          </div>
+          <div>
+            {showTerms && (
+              <div className="text-center text-xs text-white font-thin">
+                By clicking “Login”, you agree to SoundChain’s <br /> Terms &amp; Conditions and Privacy Policy.
+              </div>
+            )}
+            <Button type="submit" disabled={isSubmitting} loading={isSubmitting} className="w-full mt-6">
+              Login
+            </Button>
+          </div>
+        </Form>
+      )}
     </Formik>
   );
 };

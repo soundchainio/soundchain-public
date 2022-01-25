@@ -1,0 +1,90 @@
+import { config } from 'config';
+import { useCallback } from 'react';
+import { Soundchain721 } from 'types/web3-v1-contracts/Soundchain721';
+import { SoundchainAuction } from 'types/web3-v1-contracts/SoundchainAuction';
+import { compareWallets } from 'utils/Wallet';
+import Web3 from 'web3';
+import { AbiItem } from 'web3-utils';
+import soundchainAuction from '../contract/Auction.sol/SoundchainAuction.json';
+import soundchainContract from '../contract/Soundchain721.sol/Soundchain721.json';
+
+const nftAddress = config.contractAddress as string;
+const marketplaceAddress = config.marketplaceAddress as string;
+const auctionAddress = config.auctionAddress as string;
+
+export const gas = 1200000;
+export const applySoundchainFee = (price: number) => (price * (1 + config.soundchainFee)).toFixed();
+
+const useBlockchain = () => {
+  const getIpfsAssetUrl = useCallback((uri: string) => {
+    const [protocol, urn] = uri.split('//');
+    return protocol === 'ipfs:' ? config.ipfsGateway + urn : uri;
+  }, []);
+
+  const isTokenOwner = useCallback(async (web3: Web3, tokenId: number, from: string) => {
+    const nftContract = new web3.eth.Contract(
+      soundchainContract.abi as AbiItem[],
+      nftAddress,
+    ) as unknown as Soundchain721;
+    const ownerOf = await nftContract.methods.ownerOf(tokenId).call();
+    return compareWallets(ownerOf, from);
+  }, []);
+
+  const getRoyalties = useCallback(async (web3: Web3, tokenId: number) => {
+    const nftContract = new web3.eth.Contract(
+      soundchainContract.abi as AbiItem[],
+      nftAddress,
+    ) as unknown as Soundchain721;
+    const royalties = await nftContract.methods.royaltyPercentage(tokenId).call();
+    return parseFloat(royalties);
+  }, []);
+
+  const isApprovedMarketplace = useCallback(async (web3: Web3, from: string) => {
+    const nftContract = new web3.eth.Contract(
+      soundchainContract.abi as AbiItem[],
+      nftAddress,
+    ) as unknown as Soundchain721;
+    return await nftContract.methods.isApprovedForAll(from, marketplaceAddress).call();
+  }, []);
+
+  const isApprovedAuction = useCallback(async (web3: Web3, from: string) => {
+    const nftContract = new web3.eth.Contract(
+      soundchainContract.abi as AbiItem[],
+      nftAddress,
+    ) as unknown as Soundchain721;
+    return await nftContract.methods.isApprovedForAll(from, auctionAddress).call();
+  }, []);
+
+  const getHighestBid = useCallback(async (web3: Web3, tokenId: number) => {
+    const auctionContract = new web3.eth.Contract(
+      soundchainAuction.abi as AbiItem[],
+      auctionAddress,
+    ) as unknown as SoundchainAuction;
+    return await auctionContract.methods.getHighestBidder(nftAddress, tokenId).call();
+  }, []);
+
+  const getMaxGasFee = useCallback(async (web3: Web3) => {
+    const gasPriceWei = await web3.eth.getGasPrice();
+    const gasPrice = parseInt(web3.utils.fromWei(gasPriceWei, 'Gwei'));
+    const maxFeeWei = gasPrice * gas;
+    return web3.utils.fromWei(maxFeeWei.toLocaleString('fullwide', { useGrouping: false }), 'Gwei');
+  }, []);
+
+  const getCurrentGasPrice = useCallback(async (web3: Web3) => {
+    const gasPriceWei = await web3.eth.getGasPrice();
+    return web3.utils.fromWei(gasPriceWei, 'ether');
+  }, []);
+
+  return {
+    getCurrentGasPrice,
+    getHighestBid,
+    getIpfsAssetUrl,
+    getMaxGasFee,
+    getRoyalties,
+    isApprovedAuction,
+    isApprovedMarketplace,
+    isTokenOwner,
+  };
+};
+
+export default useBlockchain;

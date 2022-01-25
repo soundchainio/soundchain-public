@@ -1,0 +1,25 @@
+fragment PostComponentFields on Post {
+  id
+  body
+  mediaLink
+  repostId
+  createdAt
+  updatedAt
+  commentCount
+  repostCount
+  totalReactions
+  topReactions(top: 2)
+  myReaction
+  deleted
+  profile {
+    id
+    displayName
+    profilePicture
+    verified
+    teamMember
+    userHandle
+  }
+  track {
+    ...TrackComponentFields
+  }
+}

@@ -1,0 +1,48 @@
+query Notifications($sort: SortNotificationInput) {
+  notifications(sort: $sort) {
+    nodes {
+      ... on CommentNotification {
+        ...CommentNotificationFields
+      }
+      ... on ReactionNotification {
+        ...ReactionNotificationFields
+      }
+      ... on FollowerNotification {
+        ...FollowerNotificationFields
+      }
+      ... on NewPostNotification {
+        ...NewPostNotificationFields
+      }
+      ... on NFTSoldNotification {
+        ...NFTSoldNotificationFields
+      }
+      ... on VerificationRequestNotification {
+        ...VerificationRequestNotificationFields
+      }
+      ... on NewVerificationRequestNotification {
+        ...NewVerificationRequestNotificationFields
+      }
+      ... on DeletedPostNotification {
+        ...DeletedPostNotificationFields
+      }
+      ... on DeletedCommentNotification {
+        ...DeletedCommentNotificationFields
+      }
+      ... on WonAuctionNotification {
+        ...WonAuctionNotificationFields
+      }
+      ... on AuctionIsEndingNotification {
+        ...AuctionIsEndingNotificationFields
+      }
+      ... on OutbidNotification {
+        ...OutbidNotificationFields
+      }
+      ... on NewBidNotification {
+        ...NewBidNotificationFields
+      }
+      ... on AuctionEndedNotification {
+        ...AuctionEndedNotificationFields
+      }
+    }
+  }
+}

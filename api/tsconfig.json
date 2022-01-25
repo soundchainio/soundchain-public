@@ -5,6 +5,8 @@
     "lib": ["es2018", "esnext.asynciterable"],
     "strict": true,
     "strictPropertyInitialization": false,
+    "strictNullChecks": false,
+    "resolveJsonModule": true,
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
@@ -14,6 +16,8 @@
     "sourceMap": true,
     "moduleResolution": "node",
     "outDir": ".build",
-    "rootDir": "./"
-  }
+    "typeRoots": ["./typings", "./node_modules/@typings"]
+  },
+  "include": ["**/*.ts", "migrate-mongo-config.js"],
+  "exclude": ["node_modules", "typings"]
 }

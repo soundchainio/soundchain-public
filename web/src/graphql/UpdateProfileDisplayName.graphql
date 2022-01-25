@@ -1,0 +1,8 @@
+mutation updateProfileDisplayName($input: UpdateProfileInput!) {
+  updateProfile(input: $input) {
+    profile {
+      id
+      displayName
+    }
+  }
+}

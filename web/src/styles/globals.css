@@ -1,3 +1,262 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@font-face {
+  font-family: 'Metropolis';
+  font-style: normal;
+  font-weight: 400;
+  src: url('/fonts/Metropolis-Regular.otf') format('opentype');
+}
+
+@font-face {
+  font-family: 'Metropolis';
+  font-style: normal;
+  font-weight: 500;
+  src: url('/fonts/Metropolis-Medium.otf') format('opentype');
+}
+
+@font-face {
+  font-family: 'Metropolis';
+  font-style: normal;
+  font-weight: 600;
+  src: url('/fonts/Metropolis-SemiBold.otf') format('opentype');
+}
+
+@font-face {
+  font-family: 'Metropolis';
+  font-style: normal;
+  font-weight: 700;
+  src: url('/fonts/Metropolis-Bold.otf') format('opentype');
+}
+
+@font-face {
+  font-family: 'Metropolis';
+  font-style: normal;
+  font-weight: 800;
+  src: url('/fonts/Metropolis-ExtraBold.otf') format('opentype');
+}
+
+@font-face {
+  font-family: 'Metropolis';
+  font-style: normal;
+  font-weight: 900;
+  src: url('/fonts/Metropolis-Black.otf') format('opentype');
+}
+
+body,
+pre {
+  font-family: 'Metropolis';
+}
+
+body,
+html {
+  height: 100%;
+  background-color: rgba(16, 16, 16);
+
+  --color-thumb: gray;
+  --color-track: rgba(16, 16, 16);
+
+  /* Official styles (Firefox) */
+  scrollbar-color: var(--color-thumb) var(--color-track);
+  scrollbar-width: thin;
+}
+
+/* Vendor prefix for other browsers */
+::-webkit-scrollbar {
+  background-color: var(--color-track);
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-thumb);
+}
+
+@media only screen and (max-width: 600px) {
+  ::-webkit-scrollbar {
+    display: none;
+    width: 0;
+  }
+  body {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+}
+
+#__next {
+  height: 100%;
+}
+
+:root {
+  --toastify-color-progress-light: linear-gradient(90deg, #26d1a8 0%, #ac4efd 25%, #fed503 75%, #fe5540 100%);
+}
+
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  #bottom-nav-bar {
+    padding-top: max(0.75rem, env(safe-area-inset-bottom));
+  }
+  #bottom-nav-bar > div {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+
+  @layer utilities {
+    .pb-safe {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .mb-safe {
+      margin-bottom: env(safe-area-inset-bottom);
+    }
+  }
+}
+
+.bg-yellow-gradient {
+  background: linear-gradient(76.4deg, rgba(177, 159, 59, 0.2) 8.28%, rgba(255, 241, 111, 0.2) 83.02%);
+}
+
+.bg-yellow-red-gradient {
+  background: linear-gradient(
+    222.93deg,
+    rgb(254 85 63 / 75%) 22.11%,
+    rgb(252 174 27 / 75%) 49.25%,
+    rgb(254 214 3 / 75%) 61.45%
+  );
+}
+
+.bg-purple-gradient {
+  background: linear-gradient(76.4deg, #ab4eff 8.28%, #f1419e 83.02%);
+}
+
+.bg-rainbow-gradient {
+  background: linear-gradient(90deg, #26d1a8 0%, #ac4efd 25%, #fed503 75%, #fe5540 100%);
+}
+
+.rainbox-text {
+  background: linear-gradient(90deg, #26d1a8 0%, #ac4efd 25%, #fed503 75%, #fe5540 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.green-yellow-gradient-text {
+  background: linear-gradient(90deg, #68d18d 0%, #42f07f 25%, #9eee1d 75%, #ffd604 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.green-gradient-text {
+  background: linear-gradient(90deg, #278e31 0%, #52b23b 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.yellow-gradient-text {
+  background: linear-gradient(90deg, #fe5540 0%, #fcae1b 69%, #fed603 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.purple-gradient-text {
+  background: linear-gradient(90deg, #ab4eff 0%, #f1419e 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.purple-green-gradient-text {
+  background: linear-gradient(90deg, #ab4eff 0%, #84ff82 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.green-blue-gradient-text {
+  background: linear-gradient(90deg, #84ff82 0%, #4870ff 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.purple-green-yellow-gradient-text {
+  background: linear-gradient(90deg, #3fdd8a 0%, #a252fe 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.pink-blue-gradient-text {
+  background: linear-gradient(#fe5252 20%, #3f91dd 80%);
+  background-clip: text;
+  color: transparent;
+}
+
+.bg-blue-gradient {
+  background: linear-gradient(90deg, #3b5bb1 0%, #6fa1ff 100%);
+}
+
+.bg-light-blue-gradient {
+  background: linear-gradient(76.4deg, #87d5ed 8.28%, #9be8f7 83.02%);
+}
+
+.bg-light-green-gradient {
+  background: linear-gradient(76.4deg, #98dd9f 8.28%, #afe2a3 83.02%);
+}
+
+.bg-green-gradient {
+  background: linear-gradient(90deg, #278e31 0%, #52b23b 100%);
+}
+
+.bg-pink-gradient {
+  background: linear-gradient(76.4deg, #ff9192 8.28%, #ff989e 83.02%);
+}
+
+.blue-gradient-text {
+  background: linear-gradient(90deg, #3b5bb1 0%, #6fa1ff 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.no-bg-selection::selection {
+  background: transparent;
+}
+
+.text-shadow {
+  text-shadow: 0px 2px 2px rgba(0, 0, 0, 0.25);
+}
+
+.flex-grow-basis {
+  flex-grow: 1;
+  flex-basis: 0;
+}
+
+.m-0 {
+  margin: 0 !important;
+}
+
+.Toastify__close-button svg {
+  fill: white;
+}
+
+@layer utilities {
+  .placeholder-semibold::placeholder {
+    @apply font-semibold;
+  }
+}
+
+@media only screen and (max-height: 615px) {
+  #mobile-logo {
+    display: none;
+  }
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+
+input[type='number'] {
+  -moz-appearance: textfield; /* Firefox */
+}
+
+.social-links div,
+.social-links div input {
+  width: 100%;
+}

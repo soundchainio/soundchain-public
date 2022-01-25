@@ -1,0 +1,64 @@
+name: Deploy Staging API
+
+on:
+  push:
+    branches:
+      - staging
+    paths:
+      - 'api/**'
+
+jobs:
+  deploy-api:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [14.x]
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm i -g serverless
+      - run: yarn
+      - run: serverless deploy -s ${GITHUB_REF#refs/heads/}
+        env:
+          NODE_ENV: staging
+          BRANCH: ${GITHUB_REF#refs/heads/}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD_STAGING }}
+          DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME_STAGING }}
+          JWT_NAMESPACE: ${{ secrets.JWT_NAMESPACE_STAGING }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET_STAGING }}
+          SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY_STAGING }}
+          SENDGRID_SENDER_EMAIL: ${{ secrets.SENDGRID_SENDER_EMAIL_STAGING }}
+          SENDGRID_VERIFICATION_TEMPLATE: ${{ secrets.SENDGRID_VERIFICATION_TEMPLATE_STAGING }}
+          SENDGRID_RESET_PASSWORD_TEMPLATE: ${{ secrets.SENDGRID_RESET_PASSWORD_TEMPLATE_STAGING }}
+          WEB_APP_URL: ${{ secrets.WEB_APP_URL_STAGING }}
+          CONTRACT_ADDRESS: ${{ secrets.CONTRACT_ADDRESS_STAGING }}
+          WALLET_PUBLIC_KEY: ${{ secrets.WALLET_PUBLIC_KEY_STAGING }}
+          WALLET_PRIVATE_KEY: ${{ secrets.WALLET_PRIVATE_KEY_STAGING }}
+          ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY_STAGING }}
+          MARKETPLACE_ADDRESS: ${{ secrets.MARKETPLACE_ADDRESS_STAGING }}
+          NFT_ADDRESS: ${{ secrets.NFT_ADDRESS_STAGING }}
+          AUCTION_ADDRESS: ${{ secrets.AUCTION_ADDRESS_STAGING }}
+          PINATA_API_KEY: ${{ secrets.PINATA_API_KEY_STAGING }}
+          PINATA_API_SECRET: ${{ secrets.PINATA_API_SECRET_STAGING }}
+          MUX_TOKEN_ID: ${{ secrets.MUX_TOKEN_ID_STAGING }}
+          MUX_TOKEN_SECRET: ${{ secrets.MUX_TOKEN_SECRET_STAGING }}
+          SENTRY_URL: ${{ secrets.SENTRY_URL }}
+          MAGIC_PRIVATE_KEY: ${{ secrets.MAGIC_PRIVATE_KEY_STAGING }}
+          MUX_DATA_ID: ${{ secrets.MUX_DATA_ID_STAGING }}
+          MUX_DATA_SECRET: ${{ secrets.MUX_DATA_SECRET_STAGING }}
+          POLYGON_SCAN_API_KEY: ${{ secrets.POLYGON_SCAN_API_KEY_STAGING }}
+      - name: Trigger migrate lambda function
+        run: |
+          aws lambda invoke --function-name soundchain-api-staging-migrate response.json
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-1
