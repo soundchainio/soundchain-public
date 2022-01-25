@@ -1,10 +1,11 @@
 import { Magic } from '@magic-sdk/admin';
-import { UserInputError } from 'apollo-server-express';
+import { AuthenticationError, UserInputError } from 'apollo-server-express';
 import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
 import { config } from '../config';
 import { CurrentUser } from '../decorators/current-user';
 import { Profile } from '../models/Profile';
 import { User } from '../models/User';
+import { AuthMethod } from '../types/AuthMethod';
 import { AuthPayload } from '../types/AuthPayload';
 import { Context } from '../types/Context';
 import { LoginInput } from '../types/LoginInput';
@@ -39,29 +40,36 @@ export class UserResolver {
     const did = magic.utils.parseAuthorizationHeader(`Bearer ${token}`);
     const magicUser = await magic.users.getMetadataByToken(did);
 
-    const user = await authService.register(magicUser.email, handle, displayName, magicUser.publicAddress);
+    const user = await authService.register(
+      magicUser.email,
+      handle,
+      displayName,
+      magicUser.publicAddress,
+      magicUser.oauthProvider,
+    );
     return { jwt: jwtService.create(user) };
   }
 
   @Mutation(() => AuthPayload)
-  async login(
-    @Ctx() { authService, jwtService, userService }: Context,
-    @Arg('input') { token }: LoginInput,
-  ): Promise<AuthPayload> {
+  async login(@Ctx() { authService, jwtService }: Context, @Arg('input') { token }: LoginInput): Promise<AuthPayload> {
     const magic = new Magic(config.magicLink.secretKey);
     const did = magic.utils.parseAuthorizationHeader(`Bearer ${token}`);
     const magicUser = await magic.users.getMetadataByToken(did);
+    const users = await authService.getUserFromCredentials(magicUser.email);
 
-    const user = await authService.getUserFromCredentials(magicUser.email);
-
-    if (magicUser.publicAddress !== user.magicWalletAddress) {
-      userService.updateMagicWallet(user._id, magicUser.publicAddress);
-    }
-
-    if (!user) {
+    if (!users?.length) {
+      //no user for credentials
       throw new UserInputError('Invalid credentials');
     }
 
+    const authMethod = magicUser.oauthProvider || AuthMethod.magicLink;
+    const user = users.find(u => u.authMethod === authMethod);
+
+    if (!user) {
+      //account exists with different auth method, warn user
+      throw new AuthenticationError('already exists', { with: users.map(u => u.authMethod) });
+    }
+    //account exists for current auth method, create session
     return { jwt: jwtService.create(user) };
   }
 

@@ -10,10 +10,12 @@ export const TopTracks = () => {
   const { playlistState } = useAudioPlayerContext();
 
   const pageSize = 10;
+  const maxSizeTopTracks = 100;
+
   const { data, loading, fetchMore } = useTracksQuery({
     variables: {
       sort: { field: SortTrackField.PlaybackCount, order: SortOrder.Desc },
-      page: { first: pageSize, last: 100 },
+      page: { first: pageSize },
     },
   });
 
@@ -77,7 +79,9 @@ export const TopTracks = () => {
           handleOnPlayClicked={() => handleOnPlayClicked(index)}
         />
       ))}
-      {pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading Tracks" />}
+      {pageInfo.hasNextPage && nodes.length < maxSizeTopTracks && (
+        <InfiniteLoader loadMore={loadMore} loadingMessage="Loading Tracks" />
+      )}
     </ol>
   );
 };
