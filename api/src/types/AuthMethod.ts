@@ -1,8 +1,8 @@
 import { registerEnumType } from 'type-graphql';
 
 enum AuthMethod {
-  MagicLink = 'MagicLink',
-  Google = 'Google',
+  magicLink = 'magicLink',
+  google = 'google',
 }
 
 registerEnumType(AuthMethod, {
