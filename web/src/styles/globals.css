@@ -53,6 +53,32 @@ body,
 html {
   height: 100%;
   background-color: rgba(16, 16, 16);
+
+  --color-thumb: gray;
+  --color-track: rgba(16, 16, 16);
+
+  /* Official styles (Firefox) */
+  scrollbar-color: var(--color-thumb) var(--color-track);
+  scrollbar-width: thin;
+}
+
+/* Vendor prefix for other browsers */
+::-webkit-scrollbar {
+  background-color: var(--color-track);
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-thumb);
+}
+
+@media only screen and (max-width: 600px) {
+  ::-webkit-scrollbar {
+    display: none;
+    width: 0;
+  }
+  body {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
 }
 
 #__next {
@@ -217,17 +243,6 @@ html {
 @media only screen and (max-height: 615px) {
   #mobile-logo {
     display: none;
-  }
-}
-
-@media only screen and (max-width: 600px) {
-  ::-webkit-scrollbar {
-    display: none;
-    width: 0;
-  }
-  body {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
   }
 }
 

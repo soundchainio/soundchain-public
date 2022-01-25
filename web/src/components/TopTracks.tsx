@@ -44,7 +44,7 @@ export const TopTracks = () => {
     });
   };
 
-  const handleOnPlayClicked = (song: Song, index: number) => {
+  const handleOnPlayClicked = (index: number) => {
     const list = nodes.map(
       node =>
         ({
@@ -74,7 +74,7 @@ export const TopTracks = () => {
             playbackCount: song.playbackCountFormatted,
             isFavorite: song.isFavorite,
           }}
-          handleOnPlayClicked={song => handleOnPlayClicked(song, index)}
+          handleOnPlayClicked={() => handleOnPlayClicked(index)}
         />
       ))}
       {pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading Tracks" />}

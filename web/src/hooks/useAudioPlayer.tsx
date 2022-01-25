@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useCallback, useContext, useState } from 'react';
+import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 
 type Song = {
   src: string;
@@ -17,6 +17,8 @@ interface AudioPlayerContextData {
   progressFromSlider: number | null;
   hasNext: boolean;
   hasPrevious: boolean;
+  playlist: Song[];
+  volume: number;
   play: (song: Song) => void;
   isCurrentSong: (trackId: string) => boolean;
   isCurrentlyPlaying: (trackId: string) => boolean;
@@ -25,10 +27,14 @@ interface AudioPlayerContextData {
   setProgressState: (value: number) => void;
   setDurationState: (value: number) => void;
   setProgressStateFromSlider: (value: number | null) => void;
+  setVolume: (value: number) => void;
   playlistState: (list: Song[], index: number) => void;
   playPrevious: () => void;
   playNext: () => void;
+  jumpTo: (index: number) => void;
 }
+
+const localStorageVolumeKey = 'SOUNDCHAIN_VOLUME';
 
 const AudioPlayerContext = createContext<AudioPlayerContextData>({} as AudioPlayerContextData);
 
@@ -40,12 +46,24 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
   const [progress, setProgress] = useState<number>(0);
   const [progressFromSlider, setProgressFromSlider] = useState<number | null>(null);
   const [duration, setDuration] = useState<number>(0);
+  const [volume, setVolume] = useState(0.5); // goes from 0 to 1
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSong, setCurrentSong] = useState<Song>({} as Song);
   const [playlist, setPlaylist] = useState<Song[]>([]);
   const [currentPlaylistIndex, setCurrentPlaylistIndex] = useState(0);
 
   const RESTART_TOLERANCE_TIME = 2; //2 seconds
+
+  useEffect(() => {
+    const volume = localStorage.getItem(localStorageVolumeKey);
+    if (volume != null) {
+      setVolume(parseFloat(volume));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(localStorageVolumeKey, volume.toString());
+  }, [volume]);
 
   const togglePlay = useCallback(() => {
     setIsPlaying(isPlaying => !isPlaying);
@@ -127,15 +145,15 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
     }
   }, [currentPlaylistIndex, hasNext, play, playlist]);
 
-  const shuffle = useCallback(() => {
-    const previousPlayed = playlist.slice(0, currentPlaylistIndex);
-    const newShuffledPlaylist = playlist.slice(currentPlaylistIndex);
-    for (let i = newShuffledPlaylist.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [newShuffledPlaylist[i], newShuffledPlaylist[j]] = [newShuffledPlaylist[j], newShuffledPlaylist[i]];
-    }
-    setPlaylist([...previousPlayed, ...newShuffledPlaylist]);
-  }, [play]);
+  const jumpTo = useCallback(
+    (index: number) => {
+      if (playlist.length > index + 1) {
+        setCurrentPlaylistIndex(index);
+        play(playlist[index]);
+      }
+    },
+    [play, playlist],
+  );
 
   return (
     <AudioPlayerContext.Provider
@@ -147,6 +165,8 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
         duration,
         hasNext,
         hasPrevious,
+        playlist,
+        volume,
         play,
         isCurrentSong,
         isCurrentlyPlaying,
@@ -155,9 +175,11 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
         setProgressState,
         setDurationState,
         setProgressStateFromSlider,
+        setVolume,
         playlistState,
         playPrevious,
         playNext,
+        jumpTo,
       }}
     >
       {children}

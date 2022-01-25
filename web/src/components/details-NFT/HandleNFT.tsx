@@ -4,12 +4,9 @@ import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { TimeCounter } from 'components/TimeCounter';
 import { useModalDispatch } from 'contexts/providers/modal';
 import { CheckmarkFilled } from 'icons/CheckmarkFilled';
-import { Matic as MaticIcon } from 'icons/Matic';
-import { useMaticUsdQuery } from 'lib/graphql';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import React from 'react';
-import { currency, fixedDecimals } from 'utils/format';
 
 interface HandleNFTProps {
   isOwner: boolean;
@@ -159,19 +156,13 @@ const ListedAction = ({
   auctionId,
 }: ListedActionProps) => {
   const futureSale = startingDate && startingDate.getTime() > new Date().getTime();
-  const { data: maticUsd } = useMaticUsdQuery();
 
   const { dispatchShowBidsHistory } = useModalDispatch();
   return (
     <PlayerAwareBottomBar>
       <div className="flex flex-col flex-1">
-        <div className="text-md flex items-center font-bold gap-1">
-          <span>{fixedDecimals(price || '')}</span>
-          <MaticIcon />
-          <span className="text-xl text-gray-80"> {maticUsd && price && '≃'} </span>
-          <span className="text-gray-80 font-normal">
-            {maticUsd && price && `${currency(price * parseFloat(maticUsd.maticUsd))}`}
-          </span>
+        <div className="text-sm flex items-center font-bold gap-1">
+          <Matic value={price} variant="currency" />
         </div>
       </div>
       {futureSale && startingDate && (
@@ -222,7 +213,7 @@ const AuctionDetails = ({
   return (
     <div className="w-full bg-black text-white flex items-center py-3 px-4">
       <div className="flex flex-col flex-1">
-        <Matic value={price || ''} />
+        <Matic value={price} variant="currency" />
       </div>
       <div className="text-center">
         {auctionIsOver && countBids === 0 && (
@@ -260,17 +251,17 @@ const Timer = ({ date }: { date: Date }) => {
         <div>
           {days !== 0 && (
             <>
-              {days} <span className="text-gray-80">days </span>
+              {days} <span className="text-gray-80">d </span>
             </>
           )}
           {hours !== 0 && (
             <>
-              {hours} <span className="text-gray-80">hours </span>
+              {hours} <span className="text-gray-80">h </span>
             </>
           )}
           {minutes !== 0 && (
             <>
-              {minutes} <span className="text-gray-80">minutes </span>
+              {minutes} <span className="text-gray-80">min </span>
             </>
           )}
         </div>

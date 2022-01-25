@@ -43,6 +43,7 @@ export const Marketplace = () => {
       page: { first: pageSize },
       sort: { field, order },
     },
+    ssr: false,
   });
 
   useEffect(() => {
@@ -55,7 +56,7 @@ export const Marketplace = () => {
       sort: { field, order },
       filter: buildMarketplaceFilter(genresFromModal, filterSaleType),
     });
-  }, [sorting, genresFromModal, filterSaleType]);
+  }, [sorting, genresFromModal, filterSaleType, refetch, field, order]);
 
   useEffect(() => {
     refetch({
@@ -65,7 +66,7 @@ export const Marketplace = () => {
       sort: { field, order },
       filter: buildMarketplaceFilter(genres, saleType),
     });
-  }, [sorting, genres, saleType]);
+  }, [sorting, genres, saleType, refetch, field, order]);
 
   useEffect(() => {
     if (data) {

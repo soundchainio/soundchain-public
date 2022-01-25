@@ -1,3 +1,4 @@
+import { LogoBase64 } from 'components/LogoBase64';
 import { useMimeTypeQuery } from 'lib/graphql';
 import Image from 'next/image';
 import React from 'react';
@@ -27,6 +28,7 @@ const Asset = ({ src, sizes }: AssetProps) => {
         playsInline
         disablePictureInPicture
         disableRemotePlayback
+        poster="/animations/bg-video.gif"
         className="w-full object-cover"
         style={{ height: 'inherit' }}
       />
@@ -36,6 +38,8 @@ const Asset = ({ src, sizes }: AssetProps) => {
   return (
     <Image
       src={src || '/default-pictures/album-artwork.png'}
+      placeholder="blur"
+      blurDataURL={LogoBase64}
       alt=""
       layout="fill"
       className="m-auto object-cover"

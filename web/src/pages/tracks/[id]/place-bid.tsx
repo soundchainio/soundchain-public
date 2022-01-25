@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { Avatar } from 'components/Avatar';
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { InputField } from 'components/InputField';
@@ -8,6 +7,7 @@ import { Layout } from 'components/Layout';
 import { Matic } from 'components/Matic';
 import MaxGasFee from 'components/MaxGasFee';
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
+import { ProfileWithAvatar } from 'components/ProfileWithAvatar';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import { WalletSelector } from 'components/WalletSelector';
@@ -173,7 +173,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     if (!web3 || !auctionItem.auctionItem?.tokenId || !auctionItem.auctionItem?.owner || !account) {
       return;
     }
-    const amount = Web3.utils.toWei(bidAmount.toLocaleString('fullwide', { useGrouping: false }));
+    const amount = Web3.utils.toWei(bidAmount.toString());
 
     if (bidAmount >= parseFloat(balance || '0')) {
       toast.warn("Uh-oh, it seems you don't have enough funds for this transaction");
@@ -213,6 +213,8 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     token: me?.otpSecret ? yup.string().required('Two-Factor token is required') : yup.string(),
   });
 
+  console.log({ highestBidderData });
+
   return (
     <>
       <SEO
@@ -236,25 +238,27 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
               )}
               <div className="bg-[#111920]">
                 {futureSale && (
-                  <div className="flex justify-between items-center px-4 py-3">
-                    <div className="text-sm font-bold text-white flex-shrink-0">SALE STARTS</div>
-                    <div className="text-md flex items-center text-right font-bold gap-1">
+                  <div className="flex justify-between items-center px-4 py-3 gap-3">
+                    <div className="text-xs font-bold text-gray-80 flex-shrink-0">SALE STARTS</div>
+                    <div className="text-xs flex items-center text-right font-bold gap-1">
                       <Timer date={startingDate!} reloadOnEnd />
                     </div>
                   </div>
                 )}
                 {endingDate && !futureSale && (
-                  <div className="flex justify-between items-center px-4 py-3">
-                    <div className="text-sm font-bold text-white flex-shrink-0">TIME REMAINING</div>
-                    <div className="text-md flex items-center text-right font-bold gap-1">
+                  <div className="flex justify-between items-center px-4 py-3 gap-3">
+                    <div className="text-xs font-bold text-gray-80  flex-shrink-0">TIME REMAINING</div>
+                    <div className="text-xs flex items-center text-right font-bold gap-1">
                       <Timer date={endingDate} endedMessage="Auction Ended" reloadOnEnd />
                     </div>
                   </div>
                 )}
-                <div className="flex justify-between items-center px-4 py-3">
-                  <div className="text-sm font-bold text-white">{auctionIsOver ? 'FINAL PRICE' : 'CURRENT PRICE'}</div>
-                  <div className="text-md flex items-center font-bold gap-1">
-                    <Matic value={price} variant="currency-inline" />
+                <div className="flex justify-between items-center px-4 py-3 gap-3">
+                  <div className="text-xs font-bold text-gray-80 ">
+                    {auctionIsOver ? 'FINAL PRICE' : 'CURRENT PRICE'}
+                  </div>
+                  <div className="flex items-center font-bold gap-1">
+                    <Matic value={price} variant="currency-inline" className="text-xs" />
                     <button
                       className="text-[#22CAFF] text-xxs cursor-pointer font-bold"
                       onClick={() => dispatchShowBidsHistory(true, auctionItem?.auctionItem?.id || '')}
@@ -264,25 +268,10 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
                   </div>
                 </div>
                 {highestBidderData?.getUserByWallet && (
-                  <div className="text-white flex justify-between items-center px-4 py-3">
-                    <div className="text-sm font-bold">HIGHEST BIDDER</div>
-                    <div className="flex items-center gap-2">
-                      <Avatar
-                        profile={{
-                          profilePicture: highestBidderData?.getUserByWallet.profile.profilePicture,
-                          userHandle: highestBidderData?.getUserByWallet.profile.userHandle,
-                        }}
-                        pixels={30}
-                        linkToProfile
-                      />
-                      <div className="flex flex-col ">
-                        <div className="text-sm font-bold">
-                          {highestBidderData?.getUserByWallet.profile.displayName}
-                        </div>
-                        <div className="text-xxs text-gray-CC font-bold">
-                          @{highestBidderData?.getUserByWallet.profile.userHandle}
-                        </div>
-                      </div>
+                  <div className="text-white flex justify-between items-center px-4 py-3 gap-3">
+                    <div className="text-xs text-gray-80 font-bold">HIGHEST BIDDER</div>
+                    <div className="flex items-center gap-2 min-w-0 truncate">
+                      <ProfileWithAvatar profile={highestBidderData?.getUserByWallet.profile} />
                     </div>
                   </div>
                 )}

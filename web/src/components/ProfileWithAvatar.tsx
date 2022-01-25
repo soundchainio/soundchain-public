@@ -1,14 +1,16 @@
-import React from 'react';
-import NextLink from 'next/link';
+import classNames from 'classnames';
 import { Profile } from 'lib/graphql';
+import NextLink from 'next/link';
+import React from 'react';
 import { Avatar } from './Avatar';
 import { DisplayName } from './DisplayName';
 
 interface Props {
   profile: Partial<Profile>;
+  className?: string;
 }
 
-export const ProfileWithAvatar = ({ profile }: Props) => {
+export const ProfileWithAvatar = ({ profile, className }: Props) => {
   if (!profile) {
     return null;
   }
@@ -16,16 +18,11 @@ export const ProfileWithAvatar = ({ profile }: Props) => {
   const { userHandle, displayName, verified, teamMember } = profile;
 
   return (
-    <div className="flex gap-2 items-center truncate">
+    <div className={classNames('flex gap-2 items-center font-bold truncate', className)}>
       <Avatar profile={profile} pixels={30} />
       <NextLink href={`/profiles/${userHandle}`} passHref>
-        <a className="font-bold" aria-label={displayName}>
-          <DisplayName
-            className="w-full text-sm truncate"
-            name={displayName || ''}
-            verified={verified}
-            teamMember={teamMember}
-          />
+        <a className="truncate" aria-label={displayName}>
+          <DisplayName className="text-sm" name={displayName || ''} verified={verified} teamMember={teamMember} />
           <p className="text-xxs text-gray-CC">@{userHandle}</p>
         </a>
       </NextLink>
