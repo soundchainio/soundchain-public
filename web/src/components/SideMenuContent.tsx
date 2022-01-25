@@ -7,16 +7,13 @@ import { Logo } from 'icons/Logo';
 import { Logout } from 'icons/Logout';
 import { Settings } from 'icons/Settings';
 import { Discord } from 'icons/social/Discord';
-import { FacebookSquare } from 'icons/social/FacebookSquare';
 import { InstagramSquare } from 'icons/social/InstagramSquare';
-import { Reddit } from 'icons/social/Reddit';
 import { TwitterSquare } from 'icons/social/TwitterSquare';
 import { Verified } from 'icons/Verified';
 import { Wallet } from 'icons/Wallet';
 import { setJwt } from 'lib/apollo';
 import { Role, usePendingRequestsBadgeNumberQuery } from 'lib/graphql';
-import Link from 'next/link';
-import NextLink from 'next/link';
+import { default as Link, default as NextLink } from 'next/link';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { FollowModalType } from 'types/FollowModalType';
@@ -119,22 +116,42 @@ export const SideMenuContent = ({ isMobile }: SideMenuContentProps) => {
           <MenuItem icon={Logout} label="Logout" onClick={onLogout} />
         </div>
       )}
-      <NextLink href="/privacy-policy">
-        <a className="flex-shrink-0 flex p-4">
-          <div className="flex flex-row space-x-2 items-center h-10 justify-between text-gray-CC px-4 w-full">
-            <div className="flex">PRIVACY POLICY</div>
-            <div className="flex">V0</div>
-          </div>
-        </a>
-      </NextLink>
-      <div className="flex-shrink-0 flex">
-        <div className="flex flex-row space-x-2 items-center h-10 justify-between px-10 w-full">
-          <Reddit />
+      <div className="flex-shrink-0 flex items-center justify-between h-10 my-4 mx-8 text-gray-CC">
+        <NextLink href="/privacy-policy">
+          <a>PRIVACY POLICY</a>
+        </NextLink>
+        <span>V0</span>
+      </div>
+      <div className="flex-shrink-0 flex flex-row justify-between items-center h-10 mx-8">
+        {/* <Reddit /> */}
+        <a
+          aria-label="SoundChain Twitter account"
+          href="https://twitter.com/Soundchain_io"
+          target="_blank"
+          rel="noreferrer"
+          className="flex justify-center items-center h-8 w-8"
+        >
           <TwitterSquare />
+        </a>
+        <a
+          aria-label="SoundChain Discord account"
+          href="https://discord.gg/C8wKknym"
+          target="_blank"
+          rel="noreferrer"
+          className="flex justify-center items-center h-8 w-8"
+        >
           <Discord />
-          <FacebookSquare />
+        </a>
+        {/* <FacebookSquare/> */}
+        <a
+          aria-label="SoundChain Instagram account"
+          href="https://www.instagram.com/soundchain.io/"
+          target="_blank"
+          rel="noreferrer"
+          className="flex justify-center items-center h-8 w-8"
+        >
           <InstagramSquare />
-        </div>
+        </a>
       </div>
       {me && (
         <FollowModal
