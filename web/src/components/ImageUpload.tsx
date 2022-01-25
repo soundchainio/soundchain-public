@@ -78,7 +78,7 @@ export function ImageUpload({
               />
             )
           ) : (
-            <div className="flex flex-row p-4 text-center text-white text-sm font-semibold">
+            <div className="flex flex-row gap-1 items-baseline justify-center p-4 text-white text-sm font-semibold">
               <Upload />
               {children}
             </div>
