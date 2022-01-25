@@ -42,10 +42,8 @@ export const TrackShareButton = ({ trackId, title, artist, position }: Props) =>
   return (
     <div className="relative flex items-center">
       <Menu>
-        <Menu.Button aria-label="Share">
-          <div className="flex items-center text-gray-80">
-            <ShareIcon width={20} height={20} />
-          </div>
+        <Menu.Button aria-label="Share" className="w-10 h-10 flex items-center justify-center text-gray-80">
+          <ShareIcon width={20} height={20} />
         </Menu.Button>
         <Menu.Items
           className={`absolute ${getPosition(

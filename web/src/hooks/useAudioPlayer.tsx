@@ -11,6 +11,7 @@ type Song = {
 
 interface AudioPlayerContextData {
   isPlaying: boolean;
+  isShuffleOn: boolean;
   currentSong: Song;
   duration: number;
   progress: number;
@@ -32,7 +33,7 @@ interface AudioPlayerContextData {
   playPrevious: () => void;
   playNext: () => void;
   jumpTo: (index: number) => void;
-  shuffle: () => void;
+  toggleShuffle: () => void;
 }
 
 const localStorageVolumeKey = 'SOUNDCHAIN_VOLUME';
@@ -49,7 +50,9 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
   const [duration, setDuration] = useState<number>(0);
   const [volume, setVolume] = useState(0.5); // goes from 0 to 1
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isShuffleOn, setIsShuffleOn] = useState(false);
   const [currentSong, setCurrentSong] = useState<Song>({} as Song);
+  const [originalPlaylist, setOriginalPlaylist] = useState<Song[]>([]);
   const [playlist, setPlaylist] = useState<Song[]>([]);
   const [currentPlaylistIndex, setCurrentPlaylistIndex] = useState(0);
 
@@ -65,6 +68,24 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
   useEffect(() => {
     localStorage.setItem(localStorageVolumeKey, volume.toString());
   }, [volume]);
+
+  useEffect(() => {
+    if (isShuffleOn) {
+      setOriginalPlaylist([...playlist]);
+      const shuffledPlaylist = [...playlist];
+      const currentSongInPlaylist = shuffledPlaylist.splice(currentPlaylistIndex, 1);
+      /* Randomize array in-place using Durstenfeld shuffle algorithm */
+      for (let i = shuffledPlaylist.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledPlaylist[i], shuffledPlaylist[j]] = [shuffledPlaylist[j], shuffledPlaylist[i]];
+      }
+      setCurrentPlaylistIndex(0);
+      setPlaylist([...currentSongInPlaylist, ...shuffledPlaylist]);
+    } else {
+      setCurrentPlaylistIndex(originalPlaylist.findIndex(song => song.trackId === currentSong.trackId));
+      setPlaylist([...originalPlaylist]);
+    }
+  }, [isShuffleOn]);
 
   const togglePlay = useCallback(() => {
     setIsPlaying(isPlaying => !isPlaying);
@@ -118,6 +139,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
 
   const playlistState = useCallback(
     (list: Song[], index: number) => {
+      setIsShuffleOn(false);
       setPlaylist(list);
       setCurrentPlaylistIndex(index);
       play(list[index]);
@@ -156,20 +178,15 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
     [play, playlist],
   );
 
-  const shuffle = useCallback(() => {
-    const newShuffledPlaylist = [...playlist];
-    const currentSongInPlaylist = newShuffledPlaylist.splice(currentPlaylistIndex, 1);
-    for (let i = newShuffledPlaylist.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [newShuffledPlaylist[i], newShuffledPlaylist[j]] = [newShuffledPlaylist[j], newShuffledPlaylist[i]];
-    }
-    setPlaylist([...newShuffledPlaylist, ...currentSongInPlaylist]);
-  }, [currentPlaylistIndex, playlist]);
+  const toggleShuffle = useCallback(() => {
+    setIsShuffleOn(!isShuffleOn);
+  }, [isShuffleOn]);
 
   return (
     <AudioPlayerContext.Provider
       value={{
         isPlaying,
+        isShuffleOn,
         currentSong,
         progress,
         progressFromSlider,
@@ -191,7 +208,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
         playPrevious,
         playNext,
         jumpTo,
-        shuffle,
+        toggleShuffle,
       }}
     >
       {children}
