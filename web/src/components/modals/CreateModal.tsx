@@ -12,8 +12,12 @@ import { useUpload } from 'hooks/useUpload';
 import { useWalletContext } from 'hooks/useWalletContext';
 import {
   CreateTrackMutation,
+  ExploreTracksDocument,
   FeedDocument,
   PendingRequest,
+  PostsDocument,
+  TracksDocument,
+  TracksQuery,
   useCreateTrackMutation,
   usePinJsonToIpfsMutation,
   usePinToIpfsMutation,
@@ -238,7 +242,31 @@ export const CreateModal = () => {
                 },
               },
             },
-            refetchQueries: [FeedDocument, 'Posts', 'Tracks', 'ExploreTracks'],
+            update: (cache, { data: createTrackData }) => {
+              const variables = { filter: { nftData: { owner: account } } };
+
+              const cachedData = cache.readQuery<TracksQuery>({
+                query: TracksDocument,
+                variables,
+              });
+
+              if (!cachedData) {
+                return;
+              }
+
+              cache.writeQuery({
+                query: TracksDocument,
+                variables,
+                overwrite: true,
+                data: {
+                  tracks: {
+                    ...cachedData.tracks,
+                    nodes: [createTrackData?.createTrack.track, ...cachedData.tracks.nodes],
+                  },
+                },
+              });
+            },
+            refetchQueries: [FeedDocument, PostsDocument, ExploreTracksDocument],
           });
           const track = data?.createTrack.track;
 

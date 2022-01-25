@@ -1,6 +1,6 @@
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { SortOrder, SortTrackField, useTracksQuery } from 'lib/graphql';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { InfiniteLoader } from './InfiniteLoader';
 import { NoResultFound } from './NoResultFound';
 import { Song, TrackListItem } from './TrackListItem';
@@ -8,19 +8,26 @@ import { TrackListItemSkeleton } from './TrackListItemSkeleton';
 
 interface OwnedNftsProps {
   owner: string;
+  refreshing?: boolean;
 }
 
-export const OwnedNfts = ({ owner }: OwnedNftsProps) => {
+export const OwnedNfts = ({ owner, refreshing }: OwnedNftsProps) => {
   const { playlistState } = useAudioPlayerContext();
 
   const pageSize = 10;
-  const { data, loading, fetchMore } = useTracksQuery({
+  const { data, loading, fetchMore, refetch } = useTracksQuery({
     variables: {
       filter: { nftData: { owner } },
       sort: { field: SortTrackField.CreatedAt, order: SortOrder.Desc },
       page: { first: pageSize },
     },
   });
+
+  useEffect(() => {
+    if (refreshing) {
+      refetch();
+    }
+  }, [refreshing, refetch]);
 
   if (loading) {
     return (
