@@ -109,7 +109,7 @@ export default function CreateAccountPage() {
                 type="checkbox"
                 id="termsCheckbox"
                 className="h-5 w-5 focus:ring-0 border-2 border-green-500 bg-black text-green-500 rounded"
-                onChange={() => toggleTerms()}
+                onChange={toggleTerms}
               />
               <div className="relative">
                 <label htmlFor="termsCheckbox">I agree to the SoundChain’s</label>
