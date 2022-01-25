@@ -25,6 +25,7 @@ export const testnetNetwork: BlockchainNetwork = {
   blockExplorer: 'https://mumbai.polygonscan.com',
 };
 
-export const network: BlockchainNetwork = process.env.VERCEL_ENV !== 'production' ? testnetNetwork : mainNetwork;
+export const network: BlockchainNetwork =
+  process.env.NEXT_PUBLIC_VERCEL_ENV !== 'production' ? testnetNetwork : mainNetwork;
 
 export const isMainNetwork = network.id === mainNetwork.id;
