@@ -1,10 +1,10 @@
+import classNames from 'classnames';
 import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
 import { Form, Formik } from 'formik';
 import { Checkbox } from 'icons/Checkbox';
 import { CheckboxFilled } from 'icons/CheckboxFilled';
 import Link from 'next/link';
-import { useState } from 'react';
 import * as yup from 'yup';
 
 export interface FormValues {
@@ -17,11 +17,11 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
 interface LoginFormProps {
   handleMagicLogin: (values: FormValues) => void;
   showTerms?: boolean;
+  termsAccepted: boolean;
+  setTermsAccepted: (val: boolean) => void;
 }
 
-export const LoginForm = ({ handleMagicLogin, showTerms = true }: LoginFormProps) => {
-  const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
-
+export const LoginForm = ({ handleMagicLogin, termsAccepted, setTermsAccepted, showTerms = true }: LoginFormProps) => {
   const toggleTerms = () => {
     setTermsAccepted(!termsAccepted);
   };
@@ -57,7 +57,12 @@ export const LoginForm = ({ handleMagicLogin, showTerms = true }: LoginFormProps
                 </div>
               </div>
             )}
-            <Button type="submit" disabled={isSubmitting} loading={isSubmitting} className="w-full mt-6">
+            <Button
+              type="submit"
+              disabled={isSubmitting || !termsAccepted}
+              loading={isSubmitting}
+              className={classNames('w-full mt-6 transition', !termsAccepted ? 'opacity-50' : '')}
+            >
               Login
             </Button>
           </div>

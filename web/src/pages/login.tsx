@@ -17,6 +17,7 @@ import { AuthMethod, useLoginMutation } from 'lib/graphql';
 import { useRouter } from 'next/dist/client/router';
 import NextLink from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 
 export default function LoginPage() {
   const [login] = useLoginMutation();
@@ -26,6 +27,7 @@ export default function LoginPage() {
   const router = useRouter();
   const magicParam = router.query.magic_credential?.toString();
   const [authMethod, setAuthMethod] = useState<AuthMethod[]>();
+  const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
 
   const handleError = useCallback(
     (error: Error) => {
@@ -46,6 +48,11 @@ export default function LoginPage() {
   }, [me, router]);
 
   const handleGoogleLogin = async () => {
+    if (!termsAccepted) {
+      toast.info('You must agree to our Terms & Conditions and Privacy Policy.');
+      return;
+    }
+
     await magic.oauth.loginWithRedirect({
       provider: 'google',
       redirectURI: `${config.domainUrl}/login`,
@@ -123,7 +130,12 @@ export default function LoginPage() {
         {authMethod.includes(AuthMethod.Google) && <GoogleButton />}
         {authMethod.includes(AuthMethod.MagicLink) && (
           <div>
-            <LoginForm handleMagicLogin={handleSubmit} showTerms={false} />
+            <LoginForm
+              termsAccepted={termsAccepted}
+              setTermsAccepted={setTermsAccepted}
+              handleMagicLogin={handleSubmit}
+              showTerms={false}
+            />
           </div>
         )}
         <div className="h-full flex flex-col justify-between">
@@ -152,7 +164,7 @@ export default function LoginPage() {
       </div>
       <GoogleButton />
       <div className="text-gray-50 text-sm font-bold text-center py-7">OR</div>
-      <LoginForm handleMagicLogin={handleSubmit} />
+      <LoginForm termsAccepted={termsAccepted} setTermsAccepted={setTermsAccepted} handleMagicLogin={handleSubmit} />
     </AuthLayout>
   );
 }
