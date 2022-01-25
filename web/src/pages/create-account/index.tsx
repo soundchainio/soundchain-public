@@ -7,8 +7,6 @@ import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Form, Formik, FormikHelpers } from 'formik';
 import { useMagicContext } from 'hooks/useMagicContext';
-import { Checkbox } from 'icons/Checkbox';
-import { CheckboxFilled } from 'icons/CheckboxFilled';
 import { setJwt } from 'lib/apollo';
 import { useRegisterMutation } from 'lib/graphql';
 import { useRouter } from 'next/dist/client/router';
@@ -107,13 +105,14 @@ export default function CreateAccountPage() {
               </div>
             </div>
             <div className="text-center text-xs text-white font-thin flex items-start mb-6">
-              <button onClick={toggleTerms} className="px-2 relative">
-                <span className="after:absolute after:-inset-2">
-                  {termsAccepted ? <CheckboxFilled /> : <Checkbox />}
-                </span>
-              </button>
+              <input
+                type="checkbox"
+                id="termsCheckbox"
+                className="h-5 w-5 focus:ring-0 border-2 border-green-500 bg-black text-green-500 rounded"
+                onChange={() => toggleTerms()}
+              />
               <div className="relative">
-                <span onClick={toggleTerms}>I agree to the SoundChain’s</span>
+                <label htmlFor="termsCheckbox">I agree to the SoundChain’s</label>
                 <Link href={`/terms-and-conditions`} passHref>
                   <a className="text-white underline px-2 relative">
                     <span className="after:absolute after:-inset-1">Terms &amp; Conditions</span>

@@ -22,11 +22,9 @@ export const LoginForm = ({ handleMagicLogin }: LoginFormProps) => {
           <div>
             <InputField placeholder="Email address" type="email" name="email" />
           </div>
-          <div>
-            <Button type="submit" disabled={isSubmitting} loading={isSubmitting} className="w-full mt-6 transition">
-              Login
-            </Button>
-          </div>
+          <Button type="submit" disabled={isSubmitting} loading={isSubmitting} className="w-full mt-6 transition">
+            Login
+          </Button>
         </Form>
       )}
     </Formik>
