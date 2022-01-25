@@ -26,11 +26,6 @@ import React, { useEffect, useState } from 'react';
 import { currency } from 'utils/format';
 import SEO from '../../components/SEO';
 
-const topNavBarProps: TopNavBarProps = {
-  leftButton: <BackButton />,
-  title: 'Wallet',
-};
-
 interface WalletButtonProps {
   href: string;
   title: string;
@@ -92,6 +87,18 @@ export default function WalletPage() {
   const getBalance = isSoundChainSelected ? magicBalance : balance;
   const getBalanceFormatted = parseFloat(getBalance ?? '0');
 
+  const refreshData = () => {
+    isSoundChainSelected ? refetchMagicBalance() : refetchMetamaskBalance();
+  };
+
+  const topNavBarProps: TopNavBarProps = {
+    leftButton: <BackButton />,
+    title: 'Wallet',
+    rightButton: (
+      <RefreshButton onClick={refreshData} label={'Refresh'} className="text-center" refreshing={isRefetchingBalance} />
+    ),
+  };
+
   useEffect(() => {
     if (!account) {
       setConnectedToMetaMask(false);
@@ -107,10 +114,6 @@ export default function WalletPage() {
       setCorrectNetwork(true);
     }
   }, [chainId]);
-
-  const refreshBalance = () => {
-    isSoundChainSelected ? refetchMagicBalance() : refetchMetamaskBalance();
-  };
 
   const WalletHeader = () => {
     return (
@@ -202,11 +205,6 @@ export default function WalletPage() {
                       <div className="text-blue-400 font-bold text-xs uppercase mt-2">
                         <span className="text-white font-bold text-2xl">{getBalanceFormatted}</span>
                         {` matic`}
-                        <RefreshButton
-                          onClick={refreshBalance}
-                          label={isRefetchingBalance ? 'Refreshing...' : 'Refresh'}
-                          className="absolute right-0 top-1/2 text-center w-24"
-                        />
                       </div>
                       {data?.maticUsd && (
                         <span className="text-xs text-gray-50 font-bold">
@@ -228,7 +226,7 @@ export default function WalletPage() {
               <div className="p-3 mt-3">
                 <span className="text-gray-80 font-bold">Owned NFT’s</span>
               </div>
-              {getAccount && <OwnedNfts owner={getAccount} />}
+              {getAccount && <OwnedNfts refresh={isRefetchingBalance} owner={getAccount} />}
             </>
           )}
         </div>
