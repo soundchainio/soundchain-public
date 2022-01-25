@@ -8,10 +8,10 @@ import { TrackListItemSkeleton } from './TrackListItemSkeleton';
 
 interface OwnedNftsProps {
   owner: string;
-  refresh?: boolean;
+  refreshing?: boolean;
 }
 
-export const OwnedNfts = ({ owner, refresh }: OwnedNftsProps) => {
+export const OwnedNfts = ({ owner, refreshing }: OwnedNftsProps) => {
   const { playlistState } = useAudioPlayerContext();
 
   const pageSize = 10;
@@ -24,10 +24,10 @@ export const OwnedNfts = ({ owner, refresh }: OwnedNftsProps) => {
   });
 
   useEffect(() => {
-    if (refresh) {
+    if (refreshing) {
       refetch();
     }
-  }, [refresh]);
+  }, [refreshing]);
 
   if (loading) {
     return (

@@ -226,7 +226,7 @@ export default function WalletPage() {
               <div className="p-3 mt-3">
                 <span className="text-gray-80 font-bold">Owned NFT’s</span>
               </div>
-              {getAccount && <OwnedNfts refresh={isRefetchingBalance} owner={getAccount} />}
+              {getAccount && <OwnedNfts refreshing={isRefetchingBalance} owner={getAccount} />}
             </>
           )}
         </div>
