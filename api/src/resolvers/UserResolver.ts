@@ -57,7 +57,7 @@ export class UserResolver {
     const magicUser = await magic.users.getMetadataByToken(did);
     const users = await authService.getUserFromCredentials(magicUser.email);
 
-    if (!users || users.length === 0) {
+    if (!users?.length) {
       //no user for credentials
       throw new UserInputError('Invalid credentials');
     }
