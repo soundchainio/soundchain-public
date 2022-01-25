@@ -30,12 +30,7 @@ export const TopNavBarButton = ({ onClick, icon: Icon, label, className, path, c
   if (path) {
     return (
       <Link href={path} passHref>
-        <a
-          className={classNames(
-            className,
-            'flex flex-col items-center cursor-pointer focus:ring-2 focus:ring-blue-600',
-          )}
-        >
+        <a className={classNames(className, 'flex flex-col items-center cursor-pointer')}>
           <Icon color={isActive ? color : undefined} />
           <Label textSize="xs" className={classNames(isActive && `${color}-gradient-text`, 'pt-1 font-semibold')}>
             {label}
@@ -46,10 +41,7 @@ export const TopNavBarButton = ({ onClick, icon: Icon, label, className, path, c
   }
 
   return (
-    <div
-      className={classNames(className, 'flex flex-col items-center cursor-pointer focus:ring-2 focus:ring-blue-600')}
-      onClick={onClick}
-    >
+    <div className={classNames(className, 'flex flex-col items-center cursor-pointer')} onClick={onClick}>
       <Icon />
       <Label textSize="xs" className="pt-1 font-semibold">
         {label}
