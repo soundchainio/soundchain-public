@@ -71,14 +71,10 @@ export const FavoriteTracks = ({ searchTerm }: FavoriteTracksProps) => {
     );
   }
 
-  const onRefresh = async () => {
-    await refetch();
-  };
-
   const { nodes, pageInfo } = data.favoriteTracks;
 
   return (
-    <PullToRefresh onRefresh={onRefresh} className="h-auto">
+    <PullToRefresh onRefresh={refetch} className="h-auto">
       <ol className={classNames('space-y-1')}>
         {nodes.map((song, index) => (
           <TrackListItem

@@ -39,12 +39,8 @@ export const Feed = ({ pageSize }: FeedProps) => {
     });
   };
 
-  const onRefresh = async () => {
-    await refetch();
-  };
-
   return (
-    <PullToRefresh onRefresh={onRefresh}>
+    <PullToRefresh onRefresh={refetch}>
       <div className="space-y-2">
         {nodes.map(feedItem => (
           <Post key={feedItem.post.id} post={feedItem.post} />

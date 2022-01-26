@@ -32,12 +32,8 @@ export const Posts = ({ className, profileId }: PostsProps) => {
     return <NoResultFound type="posts" />;
   }
 
-  const onRefresh = async () => {
-    await refetch();
-  };
-
   return (
-    <PullToRefresh onRefresh={onRefresh} className="h-auto">
+    <PullToRefresh onRefresh={refetch} className="h-auto">
       <div className={classNames('space-y-2', className)}>
         {data.posts.nodes.map(post => (
           <Post key={post.id} post={post} />

@@ -89,11 +89,7 @@ export default function WalletPage() {
   const getBalanceFormatted = parseFloat(getBalance ?? '0');
 
   const refreshData = async () => {
-    if (isSoundChainSelected) {
-      await refetchMagicBalance();
-    } else {
-      await refetchMetamaskBalance();
-    }
+    isSoundChainSelected ? await refetchMagicBalance() : await refetchMetamaskBalance();
   };
 
   const topNavBarProps: TopNavBarProps = {

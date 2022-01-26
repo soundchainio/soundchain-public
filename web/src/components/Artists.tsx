@@ -5,7 +5,7 @@ import { useMe } from 'hooks/useMe';
 import { RightArrow } from 'icons/RightArrow';
 import { useFollowedArtistsLazyQuery } from 'lib/graphql';
 import Link from 'next/link';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import PullToRefresh from 'react-simple-pull-to-refresh';
 import { NoResultFound } from './NoResultFound';
 import { ProfileListItemSkeleton } from './ProfileListItemSkeleton';
@@ -17,6 +17,8 @@ interface ArtistsPageProps {
 export const Artists = ({ searchTerm }: ArtistsPageProps) => {
   const me = useMe();
   const [artists, { data, loading, fetchMore: fetchMoreArtists, refetch }] = useFollowedArtistsLazyQuery();
+
+  const onRefresh = useCallback(async () => refetch && (await refetch()), [refetch]);
 
   const onLoadMore = () => {
     if (fetchMoreArtists)
@@ -42,12 +44,6 @@ export const Artists = ({ searchTerm }: ArtistsPageProps) => {
       </div>
     );
   }
-
-  const onRefresh = async () => {
-    if (refetch) {
-      await refetch();
-    }
-  };
 
   return (
     <PullToRefresh onRefresh={onRefresh} className="h-auto">

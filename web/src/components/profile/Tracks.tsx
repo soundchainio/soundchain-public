@@ -74,12 +74,8 @@ export const Tracks = ({ className, profileId, pageSize = 10 }: TracksProps) => 
     playlistState(list, index);
   };
 
-  const onRefresh = async () => {
-    await refetch();
-  };
-
   return (
-    <PullToRefresh onRefresh={onRefresh} className="h-auto">
+    <PullToRefresh onRefresh={refetch} className="h-auto">
       <ol className={classNames('space-y-1', className)}>
         {nodes.map((song, index) => (
           <TrackListItem
