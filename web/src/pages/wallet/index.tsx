@@ -235,7 +235,7 @@ export default function WalletPage() {
                 {getAccount && <OwnedNfts refreshing={isRefetchingBalance} owner={getAccount} />}
               </>
             )}
-          </div>{' '}
+          </div>
         </PullToRefresh>
       </Layout>
     </>
