@@ -65,10 +65,10 @@ export const useMetaMask = () => {
     }
   }, [account, web3]);
 
-  const refetchBalance = () => {
+  const refetchBalance = async () => {
     if (web3 && account) {
       setIsRefetchingBalance(true);
-      web3.eth.getBalance(account).then(balance => {
+      await web3.eth.getBalance(account).then(balance => {
         setBalance(web3.utils.fromWei(balance, 'ether'));
         setIsRefetchingBalance(false);
       });

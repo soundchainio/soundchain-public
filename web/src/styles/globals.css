@@ -234,6 +234,10 @@ html {
   fill: white;
 }
 
+.h-auto {
+  height: auto !important;
+}
+
 @layer utilities {
   .placeholder-semibold::placeholder {
     @apply font-semibold;

@@ -4,6 +4,7 @@ import { GridView } from 'icons/GridView';
 import { ListView } from 'icons/ListView';
 import { SortListingItemField, SortOrder, TrackQuery, TrackWithListingItem, useListingItemsQuery } from 'lib/graphql';
 import React, { useEffect, useState } from 'react';
+import PullToRefresh from 'react-simple-pull-to-refresh';
 import { GenreLabel } from 'utils/Genres';
 import { SaleTypeLabel } from 'utils/SaleTypeLabel';
 import { Badge } from './Badge';
@@ -87,6 +88,10 @@ export const Marketplace = () => {
     });
   };
 
+  const onRefresh = async () => {
+    await refetch();
+  };
+
   return (
     <div>
       <div className="flex gap-2 bg-gray-15 p-4 justify-center items-center">
@@ -167,7 +172,9 @@ export const Marketplace = () => {
       ) : !data ? (
         <NoResultFound type="items" />
       ) : (
-        <Tracks isGrid={isGrid} tracks={data.listingItems.nodes} />
+        <PullToRefresh onRefresh={onRefresh} className="h-auto">
+          <Tracks isGrid={isGrid} tracks={data.listingItems.nodes} />
+        </PullToRefresh>
       )}
 
       {data?.listingItems.pageInfo.hasNextPage && (
