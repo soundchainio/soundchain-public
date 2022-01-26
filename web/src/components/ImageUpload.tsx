@@ -31,7 +31,7 @@ export function ImageUpload({
   rounded = 'rounded-lg',
   initialValue,
   artwork = false,
-  accept,
+  accept = imageMimeTypes,
   ...rest
 }: ImageUploadProps) {
   const { preview, fileType, uploading, upload } = useUpload(value, onChange);
@@ -47,13 +47,7 @@ export function ImageUpload({
   }, [initialValue]);
 
   return (
-    <Dropzone
-      maxFiles={maxNumberOfFiles}
-      maxSize={maxFileSize}
-      accept={accept || imageMimeTypes}
-      onDrop={upload}
-      disabled={uploading}
-    >
+    <Dropzone maxFiles={maxNumberOfFiles} maxSize={maxFileSize} accept={accept} onDrop={upload} disabled={uploading}>
       {({ getRootProps, getInputProps }) => (
         <div
           className={classNames(
