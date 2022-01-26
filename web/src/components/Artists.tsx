@@ -6,6 +6,7 @@ import { RightArrow } from 'icons/RightArrow';
 import { useFollowedArtistsLazyQuery } from 'lib/graphql';
 import Link from 'next/link';
 import { useEffect } from 'react';
+import PullToRefresh from 'react-simple-pull-to-refresh';
 import { NoResultFound } from './NoResultFound';
 import { ProfileListItemSkeleton } from './ProfileListItemSkeleton';
 
@@ -15,7 +16,7 @@ interface ArtistsPageProps {
 
 export const Artists = ({ searchTerm }: ArtistsPageProps) => {
   const me = useMe();
-  const [artists, { data, loading, fetchMore: fetchMoreArtists }] = useFollowedArtistsLazyQuery();
+  const [artists, { data, loading, fetchMore: fetchMoreArtists, refetch }] = useFollowedArtistsLazyQuery();
 
   const onLoadMore = () => {
     if (fetchMoreArtists)
@@ -42,25 +43,33 @@ export const Artists = ({ searchTerm }: ArtistsPageProps) => {
     );
   }
 
+  const onRefresh = async () => {
+    if (refetch) {
+      await refetch();
+    }
+  };
+
   return (
-    <div className="bg-gray-25">
-      {data?.followedArtists.nodes.map(followedArtists => (
-        <div key={followedArtists.id} className="space-y-6 px-4 py-3">
-          <Link href={`/profiles/${followedArtists.userHandle}`} passHref>
-            <div className="flex flex-row space-x-2 items-center cursor-pointer text-sm">
-              <Avatar pixels={40} className="flex" profile={followedArtists} />
-              <DisplayName name={followedArtists.displayName} verified={followedArtists.verified} />
-              <div className="flex-1 justify-end flex">
-                <RightArrow />
+    <PullToRefresh onRefresh={onRefresh} className="h-auto">
+      <div className="bg-gray-25">
+        {data?.followedArtists.nodes.map(followedArtists => (
+          <div key={followedArtists.id} className="space-y-6 px-4 py-3">
+            <Link href={`/profiles/${followedArtists.userHandle}`} passHref>
+              <div className="flex flex-row space-x-2 items-center cursor-pointer text-sm">
+                <Avatar pixels={40} className="flex" profile={followedArtists} />
+                <DisplayName name={followedArtists.displayName} verified={followedArtists.verified} />
+                <div className="flex-1 justify-end flex">
+                  <RightArrow />
+                </div>
               </div>
-            </div>
-          </Link>
-        </div>
-      ))}
-      {data?.followedArtists.nodes.length === 0 && !loading && <NoResultFound type="Artists" />}
-      {data?.followedArtists.pageInfo.hasNextPage && (
-        <InfiniteLoader loadMore={onLoadMore} loadingMessage="Loading Artists" />
-      )}
-    </div>
+            </Link>
+          </div>
+        ))}
+        {data?.followedArtists.nodes.length === 0 && !loading && <NoResultFound type="Artists" />}
+        {data?.followedArtists.pageInfo.hasNextPage && (
+          <InfiniteLoader loadMore={onLoadMore} loadingMessage="Loading Artists" />
+        )}
+      </div>
+    </PullToRefresh>
   );
 };

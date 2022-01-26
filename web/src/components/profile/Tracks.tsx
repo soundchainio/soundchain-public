@@ -6,6 +6,7 @@ import { TrackListItemSkeleton } from 'components/TrackListItemSkeleton';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { SortOrder, SortTrackField, useTracksQuery } from 'lib/graphql';
 import React from 'react';
+import PullToRefresh from 'react-simple-pull-to-refresh';
 
 type Song = {
   src: string;
@@ -23,7 +24,7 @@ interface TracksProps extends React.ComponentPropsWithoutRef<'div'> {
 export const Tracks = ({ className, profileId, pageSize = 10 }: TracksProps) => {
   const { playlistState } = useAudioPlayerContext();
 
-  const { data, loading, fetchMore } = useTracksQuery({
+  const { data, loading, fetchMore, refetch } = useTracksQuery({
     variables: {
       filter: { profileId: profileId as string },
       sort: { field: SortTrackField.CreatedAt, order: SortOrder.Desc },
@@ -73,25 +74,31 @@ export const Tracks = ({ className, profileId, pageSize = 10 }: TracksProps) => 
     playlistState(list, index);
   };
 
+  const onRefresh = async () => {
+    await refetch();
+  };
+
   return (
-    <ol className={classNames('space-y-1', className)}>
-      {nodes.map((song, index) => (
-        <TrackListItem
-          key={song.id}
-          index={index + 1}
-          song={{
-            trackId: song.id,
-            src: song.playbackUrl,
-            art: song.artworkUrl,
-            title: song.title,
-            artist: song.artist,
-            playbackCount: song.playbackCountFormatted,
-            isFavorite: song.isFavorite,
-          }}
-          handleOnPlayClicked={song => handleOnPlayClicked(song, index)}
-        />
-      ))}
-      {pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading Tracks" />}
-    </ol>
+    <PullToRefresh onRefresh={onRefresh} className="h-auto">
+      <ol className={classNames('space-y-1', className)}>
+        {nodes.map((song, index) => (
+          <TrackListItem
+            key={song.id}
+            index={index + 1}
+            song={{
+              trackId: song.id,
+              src: song.playbackUrl,
+              art: song.artworkUrl,
+              title: song.title,
+              artist: song.artist,
+              playbackCount: song.playbackCountFormatted,
+              isFavorite: song.isFavorite,
+            }}
+            handleOnPlayClicked={song => handleOnPlayClicked(song, index)}
+          />
+        ))}
+        {pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading Tracks" />}
+      </ol>
+    </PullToRefresh>
   );
 };

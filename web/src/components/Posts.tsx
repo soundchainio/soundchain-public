@@ -37,7 +37,7 @@ export const Posts = ({ className, profileId }: PostsProps) => {
   };
 
   return (
-    <PullToRefresh onRefresh={onRefresh}>
+    <PullToRefresh onRefresh={onRefresh} className="h-auto">
       <div className={classNames('space-y-2', className)}>
         {data.posts.nodes.map(post => (
           <Post key={post.id} post={post} />
