@@ -288,7 +288,10 @@ export const CreateModal = () => {
         console.log(`ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`);
         mintNftToken(`ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`, account, account, royalty)
           .onReceipt(receipt => onTransactionHash(receipt.transactionHash))
-          .onError(onError)
+          .onError(cause => {
+            console.log({ cause });
+            onError();
+          })
           .execute(web3);
       } catch {
         setTransactionHash(undefined);
