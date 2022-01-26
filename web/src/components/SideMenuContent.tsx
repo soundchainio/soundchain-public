@@ -1,5 +1,6 @@
 import { FollowModal } from 'components/FollowersModal';
 import { Number } from 'components/Number';
+import { config } from 'config';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
 import { Document } from 'icons/Document';
@@ -129,7 +130,7 @@ export const SideMenuContent = ({ isMobile }: SideMenuContentProps) => {
         <NextLink href="/privacy-policy">
           <a>PRIVACY POLICY</a>
         </NextLink>
-        <span>V1</span>
+        <span>v {config.appVersion}</span>
       </div>
       <div className="flex-shrink-0 flex flex-row justify-between items-center h-10 mx-8">
         <SocialTag
