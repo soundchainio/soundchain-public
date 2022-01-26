@@ -35,7 +35,7 @@ export const NewMessageForm = ({ profileId, onNewMessage }: NewMessageFormProps)
   };
 
   return (
-    <div className="fixed bottom-0 right-0 left-0 z-50">
+    <div className="fixed bottom-20 right-0 left-0 z-50">
       <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
         {({ isSubmitting, isValid, dirty }: FormikProps<FormValues>) => (
           <Form>
