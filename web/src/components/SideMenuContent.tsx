@@ -21,6 +21,7 @@ import { Avatar } from './Avatar';
 import { DisplayName } from './DisplayName';
 import { MenuItem } from './MenuItem';
 import { MenuLink } from './MenuLink';
+import { SocialTag } from './SocialTag';
 
 interface SideMenuContentProps {
   isMobile?: boolean;
@@ -123,33 +124,17 @@ export const SideMenuContent = ({ isMobile }: SideMenuContentProps) => {
         <span>V0</span>
       </div>
       <div className="flex-shrink-0 flex flex-row justify-between items-center h-10 mx-8">
-        <a
-          aria-label="SoundChain Twitter account"
-          href="https://twitter.com/Soundchain_io"
-          target="_blank"
-          rel="noreferrer"
-          className="flex justify-center items-center h-8 w-8"
-        >
-          <TwitterSquare />
-        </a>
-        <a
-          aria-label="SoundChain Discord account"
-          href="https://discord.gg/C8wKknym"
-          target="_blank"
-          rel="noreferrer"
-          className="flex justify-center items-center h-8 w-8"
-        >
-          <Discord />
-        </a>
-        <a
-          aria-label="SoundChain Instagram account"
-          href="https://www.instagram.com/soundchain.io/"
-          target="_blank"
-          rel="noreferrer"
-          className="flex justify-center items-center h-8 w-8"
-        >
-          <InstagramSquare />
-        </a>
+        <SocialTag
+          ariaLabel="SoundChain Twitter account"
+          url="https://twitter.com/Soundchain_io"
+          icon={TwitterSquare}
+        />
+        <SocialTag ariaLabel="SoundChain Discord account" url="https://discord.gg/C8wKknym" icon={Discord} />
+        <SocialTag
+          ariaLabel="SoundChain Instagram account"
+          url="https://www.instagram.com/soundchain.io/"
+          icon={InstagramSquare}
+        />
       </div>
       {me && (
         <FollowModal
