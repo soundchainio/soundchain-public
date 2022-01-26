@@ -129,7 +129,7 @@ export const SideMenuContent = ({ isMobile }: SideMenuContentProps) => {
         <NextLink href="/privacy-policy">
           <a>PRIVACY POLICY</a>
         </NextLink>
-        <span>V0</span>
+        <span>V1</span>
       </div>
       <div className="flex-shrink-0 flex flex-row justify-between items-center h-10 mx-8">
         <SocialTag
