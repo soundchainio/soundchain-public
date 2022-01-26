@@ -15,6 +15,7 @@ import { Pause } from 'icons/PauseBottomAudioPlayer';
 import { Play } from 'icons/PlayBottomAudioPlayer';
 import { Playlists } from 'icons/Playlists';
 import { Rewind } from 'icons/RewindButton';
+import { Shuffle } from 'icons/Shuffle';
 import { TrackDocument, useToggleFavoriteMutation } from 'lib/graphql';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
@@ -29,6 +30,7 @@ export const AudioPlayerModal = () => {
   const {
     currentSong,
     isPlaying,
+    isShuffleOn,
     duration,
     progress,
     hasNext,
@@ -40,6 +42,7 @@ export const AudioPlayerModal = () => {
     playPrevious,
     playNext,
     jumpTo,
+    toggleShuffle,
   } = useAudioPlayerContext();
   const [showTotalPlaybackDuration, setShowTotalPlaybackDuration] = useState(true);
   const [isFavorite, setIsFavorite] = useState(currentSong.isFavorite);
@@ -83,6 +86,11 @@ export const AudioPlayerModal = () => {
           </button>
         </div>
       }
+      rightButton={
+        <div className="flex justify-end mr-6">
+          <TrackShareButton trackId={currentSong.trackId} title={currentSong.title} artist={currentSong.artist} />
+        </div>
+      }
       onClose={handleClose}
     >
       <div className="flex flex-col h-full items-center text-white">
@@ -120,7 +128,7 @@ export const AudioPlayerModal = () => {
                 </div>
               </div>
               <div className={isPlaylistOpen ? 'visible mb-5 overflow-y-auto' : 'hidden'}>
-                <div>Playlist</div>
+                <h2 className="text-sm font-bold">Playlist</h2>
                 <div className="overflow-y-auto">
                   {playlist.map((song, idx) => (
                     <div key={song.trackId} className="sm:pr-2">
@@ -144,12 +152,17 @@ export const AudioPlayerModal = () => {
                 </div>
               </div>
               <div className="flex justify-between items-center mt-8">
-                <TrackShareButton
-                  trackId={currentSong.trackId}
-                  title={currentSong.title}
-                  artist={currentSong.artist}
-                  position="top-right"
-                />
+                <button
+                  aria-label={isShuffleOn ? 'Shuffle off' : 'Shuffle on'}
+                  className="rounded-full w-10 h-10 flex justify-center items-center "
+                  onClick={toggleShuffle}
+                >
+                  <Shuffle
+                    width={16}
+                    stroke={isShuffleOn ? 'white' : '#808080'}
+                    className={isShuffleOn ? 'drop-shadow-white' : ''}
+                  />
+                </button>
                 <div className="flex justify-center gap-4">
                   <button
                     className={'rounded-full w-12 h-12 flex justify-center items-center'}
@@ -176,7 +189,11 @@ export const AudioPlayerModal = () => {
                     <Forward className={`${hasNext && 'hover:fill-current'} active:text-gray-80`} />
                   </button>
                 </div>
-                <button className="w-5 text-gray-80" onClick={() => setIsPlaylistOpen(isOpen => !isOpen)}>
+                <button
+                  aria-label="Playlist"
+                  className="rounded-full w-10 h-10 flex justify-center items-center text-gray-80"
+                  onClick={() => setIsPlaylistOpen(isOpen => !isOpen)}
+                >
                   <Playlists fillColor="#808080" />
                 </button>
               </div>
