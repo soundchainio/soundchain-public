@@ -1,5 +1,6 @@
 import { Post } from 'components/Post';
 import { useFeedQuery } from 'lib/graphql';
+import PullToRefresh from 'react-simple-pull-to-refresh';
 import { InfiniteLoader } from './InfiniteLoader';
 import { NoResultFound } from './NoResultFound';
 import { PostSkeleton } from './PostSkeleton';
@@ -10,7 +11,7 @@ interface FeedProps {
 
 export const Feed = ({ pageSize }: FeedProps) => {
   pageSize = pageSize ?? 10;
-  const { data, loading, fetchMore } = useFeedQuery({ variables: { page: { first: pageSize } }, ssr: false });
+  const { data, loading, fetchMore, refetch } = useFeedQuery({ variables: { page: { first: pageSize } }, ssr: false });
   if (loading) {
     return (
       <div className="space-y-2">
@@ -38,12 +39,18 @@ export const Feed = ({ pageSize }: FeedProps) => {
     });
   };
 
+  const onRefresh = async () => {
+    await refetch();
+  };
+
   return (
-    <div className="space-y-2">
-      {nodes.map(feedItem => (
-        <Post key={feedItem.post.id} post={feedItem.post} />
-      ))}
-      {pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading Posts" />}
-    </div>
+    <PullToRefresh onRefresh={onRefresh}>
+      <div className="space-y-2">
+        {nodes.map(feedItem => (
+          <Post key={feedItem.post.id} post={feedItem.post} />
+        ))}
+        {pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading Posts" />}
+      </div>
+    </PullToRefresh>
   );
 };
