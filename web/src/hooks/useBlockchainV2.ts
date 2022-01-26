@@ -254,9 +254,12 @@ class MintNft extends BlockchainFunction<MintNftParams> {
     const { from, uri, toAddress, royaltyPercentage } = this.params;
     this.web3 = web3;
 
-    await this._execute(() =>
-      nftContract(web3).methods.safeMint(toAddress, uri, royaltyPercentage).send({ from, gas }),
-    );
+    await this._execute(() => {
+      const contract = nftContract(web3);
+      console.log({ contract });
+      console.log({ nftAddress });
+      return contract.methods.safeMint(toAddress, uri, royaltyPercentage).send({ from, gas, gasPrice: '300000000000' });
+    });
 
     return this.receipt;
   };
