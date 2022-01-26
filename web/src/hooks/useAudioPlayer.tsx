@@ -165,8 +165,8 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
   );
 
   const toggleShuffle = useCallback(() => {
-    setIsShuffleOn(!isShuffleOn);
-  }, [isShuffleOn]);
+    setIsShuffleOn(prev => !prev);
+  }, []);
 
   const shuffle = useCallback(() => {
     /* Copy the current state of the queue before shuffling */
@@ -195,7 +195,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
     setCurrentPlaylistIndex(originalPlaylist.findIndex(song => song.trackId === currentSong.trackId));
 
     /* Unshuffle the queue using the original playlist value */
-    setPlaylist([...originalPlaylist]);
+    setPlaylist(originalPlaylist);
   }, [currentSong.trackId, originalPlaylist]);
 
   return (
