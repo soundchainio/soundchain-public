@@ -213,8 +213,6 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     token: me?.otpSecret ? yup.string().required('Two-Factor token is required') : yup.string(),
   });
 
-  console.log({ highestBidderData });
-
   return (
     <>
       <SEO
