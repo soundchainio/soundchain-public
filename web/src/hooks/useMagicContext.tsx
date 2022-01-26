@@ -14,7 +14,7 @@ interface MagicContextData {
   web3: Web3;
   account: string | undefined;
   balance: string | undefined;
-  refetchBalance: () => void;
+  refetchBalance: () => Promise<void>;
   isRefetchingBalance: boolean;
 }
 
@@ -57,10 +57,10 @@ export function MagicProvider({ children }: MagicProviderProps) {
   const [balance, setBalance] = useState<string>();
   const [isRefetchingBalance, setIsRefetchingBalance] = useState<boolean>(false);
 
-  const refetchBalance = () => {
+  const refetchBalance = async () => {
     if (account) {
       setIsRefetchingBalance(true);
-      web3.eth.getBalance(account).then(balance => {
+      await web3.eth.getBalance(account).then(balance => {
         setBalance(Number(web3.utils.fromWei(balance, 'ether')).toFixed(6));
         setIsRefetchingBalance(false);
       });
