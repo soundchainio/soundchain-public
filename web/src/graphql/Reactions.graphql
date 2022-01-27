@@ -5,6 +5,7 @@ query Reactions($postId: String!, $page: PageInput) {
       type
       profile {
         id
+        userHandle
         displayName
         profilePicture
         verified

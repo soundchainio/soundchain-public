@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import { useUpload } from 'hooks/useUpload';
 import { Upload } from 'icons/Upload';
-import { imageMimeTypes, videoMimeTypes } from 'lib/mimeTypes';
+import { imageMimeTypes } from 'lib/mimeTypes';
 import Image from 'next/image';
 import { useEffect } from 'react';
 import Dropzone from 'react-dropzone';
@@ -12,13 +12,13 @@ export interface ImageUploadProps extends Omit<React.ComponentPropsWithoutRef<'d
   maxNumberOfFiles?: number;
   maxFileSize?: number;
   value?: string;
+  accept?: string[];
   rounded?: 'rounded-full' | 'rounded-lg' | 'rounded-none';
   artwork?: boolean;
   initialValue?: File;
 }
 
 const defaultMaxFileSize = 1024 * 1024 * 60; // 60Mb temporary bump as Frank request
-const acceptedMimeTypes = [...videoMimeTypes, ...imageMimeTypes];
 
 export function ImageUpload({
   className,
@@ -31,6 +31,7 @@ export function ImageUpload({
   rounded = 'rounded-lg',
   initialValue,
   artwork = false,
+  accept = imageMimeTypes,
   ...rest
 }: ImageUploadProps) {
   const { preview, fileType, uploading, upload } = useUpload(value, onChange);
@@ -46,13 +47,7 @@ export function ImageUpload({
   }, [initialValue]);
 
   return (
-    <Dropzone
-      maxFiles={maxNumberOfFiles}
-      maxSize={maxFileSize}
-      accept={acceptedMimeTypes}
-      onDrop={upload}
-      disabled={uploading}
-    >
+    <Dropzone maxFiles={maxNumberOfFiles} maxSize={maxFileSize} accept={accept} onDrop={upload} disabled={uploading}>
       {({ getRootProps, getInputProps }) => (
         <div
           className={classNames(
@@ -78,7 +73,7 @@ export function ImageUpload({
               />
             )
           ) : (
-            <div className="flex flex-row p-4 text-center text-white text-sm font-semibold">
+            <div className="flex flex-row gap-1 items-baseline justify-center p-4 text-white text-sm font-semibold">
               <Upload />
               {children}
             </div>

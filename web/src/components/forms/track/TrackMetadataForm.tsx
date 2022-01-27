@@ -9,6 +9,7 @@ import { Form, Formik } from 'formik';
 import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Genre } from 'lib/graphql';
+import { imageMimeTypes, videoMimeTypes } from 'lib/mimeTypes';
 import React, { useEffect, useState } from 'react';
 import { GenreLabel, genres } from 'utils/Genres';
 import * as yup from 'yup';
@@ -108,6 +109,7 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
                 initialValue={initialValues?.artworkFile}
                 className="border-0"
                 rounded="rounded-none"
+                accept={[...imageMimeTypes, ...videoMimeTypes]}
               />
               <span className="underline text-xxs mt-2 font-bold">
                 {uploadingArt ? 'UPLOADING...' : 'CHANGE ARTWORK'}

@@ -70,9 +70,11 @@ export const Post = ({ post }: PostProps) => {
                 </a>
               </NextLink>
             </div>
-            <button className="w-14 h-7 flex-shrink-0" onClick={onEllipsisClick}>
-              {canEdit && <Ellipsis className="pr-4 pl-4 w-full h-3" />}
-            </button>
+            {canEdit && (
+              <button aria-label="More options" className="w-14 h-7 flex-shrink-0" onClick={onEllipsisClick}>
+                <Ellipsis className="pr-4 pl-4 w-full h-3" />
+              </button>
+            )}
           </div>
         </div>
         <AddLinks options={addLinksOptions}>

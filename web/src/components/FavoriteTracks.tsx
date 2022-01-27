@@ -4,8 +4,10 @@ import { TrackListItem } from 'components/TrackListItem';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { SortOrder, SortTrackField, useFavoriteTracksQuery } from 'lib/graphql';
 import React from 'react';
+import PullToRefresh from 'react-simple-pull-to-refresh';
 import { NoResultFound } from './NoResultFound';
 import { TrackListItemSkeleton } from './TrackListItemSkeleton';
+
 interface FavoriteTracksProps {
   searchTerm?: string;
 }
@@ -23,7 +25,7 @@ const pageSize = 15;
 export const FavoriteTracks = ({ searchTerm }: FavoriteTracksProps) => {
   const { playlistState } = useAudioPlayerContext();
 
-  const { data, loading, fetchMore } = useFavoriteTracksQuery({
+  const { data, loading, fetchMore, refetch } = useFavoriteTracksQuery({
     variables: {
       search: searchTerm,
       sort: { field: SortTrackField.CreatedAt, order: SortOrder.Desc },
@@ -68,10 +70,11 @@ export const FavoriteTracks = ({ searchTerm }: FavoriteTracksProps) => {
       </div>
     );
   }
+
   const { nodes, pageInfo } = data.favoriteTracks;
 
   return (
-    <>
+    <PullToRefresh onRefresh={refetch} className="h-auto">
       <ol className={classNames('space-y-1')}>
         {nodes.map((song, index) => (
           <TrackListItem
@@ -92,6 +95,6 @@ export const FavoriteTracks = ({ searchTerm }: FavoriteTracksProps) => {
         {nodes.length === 0 && !loading && <NoResultFound type="Favorite Tracks" />}
         {pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading favorite tracks" />}
       </ol>
-    </>
+    </PullToRefresh>
   );
 };
