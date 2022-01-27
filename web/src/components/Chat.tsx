@@ -52,7 +52,7 @@ export const Chat = ({ messages, pageInfo, onFetchMore, loading }: ChatProps) =>
       {!loading && renderLoader && pageInfo.hasNextPage && (
         <InfiniteLoader loadMore={onFetchMore} loadingMessage="Loading messages" />
       )}
-      <div className="flex flex-col m-3 space-y-4">
+      <div className="flex flex-col m-3 mb-6 space-y-4">
         {messages.map(({ id }, index) => (
           <Message key={id} messageId={id} nextMessage={messages[index + 1] as MessageItem} />
         ))}

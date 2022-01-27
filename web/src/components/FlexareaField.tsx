@@ -26,6 +26,7 @@ export const FlexareaField = ({ ...props }: FlexareaFieldProps) => {
       id={props.id}
       placeholder={props.placeholder}
       className={classNames(commonClasses, roundedFull ? 'rounded-full' : 'rounded-xl')}
+      maxLength={props.maxLength}
     />
   );
 };
