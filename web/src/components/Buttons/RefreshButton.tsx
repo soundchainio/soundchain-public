@@ -1,4 +1,3 @@
-import { Label } from 'components/Label';
 import { Refresh } from 'icons/Refresh';
 
 interface RefreshButtonProps {
@@ -10,13 +9,11 @@ interface RefreshButtonProps {
 
 export const RefreshButton = ({ onClick, label, className, refreshing }: RefreshButtonProps) => {
   return (
-    <button className={`${className} flex flex-col items-center cursor-pointer`} onClick={onClick}>
+    <button className={`${className} flex flex-col items-center`} onClick={onClick}>
       <span className={refreshing ? 'animate-spin' : ''}>
         <Refresh />
       </span>
-      <Label textSize="xs" className="pt-1 font-semibold">
-        {label || 'Refresh'}
-      </Label>
+      <span className="text-gray-60 pt-1 font-semibold text-xs">{label || 'Refresh'}</span>
     </button>
   );
 };
