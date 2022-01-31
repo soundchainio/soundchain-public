@@ -1,8 +1,9 @@
+/* eslint-disable react/display-name */
 import { Song, TrackListItem } from 'components/TrackListItem';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { PageInput, useExploreTracksQuery } from 'lib/graphql';
-import React from 'react';
-import { FixedSizeList as List } from 'react-window';
+import React, { memo } from 'react';
+import { areEqual, FixedSizeList as List } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import InfiniteLoader from 'react-window-infinite-loader';
 import { NoResultFound } from './NoResultFound';
@@ -92,26 +93,29 @@ export const ExploreTracks = ({ searchTerm }: ExplorePageProps) => {
                   itemSize={56}
                   itemData={tracks}
                 >
-                  {({ data, index, style }) => (
-                    <div style={style}>
-                      {!isItemLoaded(index) ? (
-                        <LoaderAnimation loadingMessage="Loading..." />
-                      ) : (
-                        <TrackListItem
-                          song={{
-                            trackId: data[index].id,
-                            src: data[index].playbackUrl,
-                            art: data[index].artworkUrl,
-                            title: data[index].title,
-                            artist: data[index].artist,
-                            playbackCount: data[index].playbackCountFormatted,
-                            isFavorite: data[index].isFavorite,
-                          }}
-                          index={index + 1}
-                          handleOnPlayClicked={song => handleOnPlayClicked(song, index)}
-                        />
-                      )}
-                    </div>
+                  {memo(
+                    ({ data, index, style }) => (
+                      <div style={style}>
+                        {!isItemLoaded(index) ? (
+                          <LoaderAnimation loadingMessage="Loading..." />
+                        ) : (
+                          <TrackListItem
+                            song={{
+                              trackId: data[index].id,
+                              src: data[index].playbackUrl,
+                              art: data[index].artworkUrl,
+                              title: data[index].title,
+                              artist: data[index].artist,
+                              playbackCount: data[index].playbackCountFormatted,
+                              isFavorite: data[index].isFavorite,
+                            }}
+                            index={index + 1}
+                            handleOnPlayClicked={song => handleOnPlayClicked(song, index)}
+                          />
+                        )}
+                      </div>
+                    ),
+                    areEqual,
                   )}
                 </List>
               )}

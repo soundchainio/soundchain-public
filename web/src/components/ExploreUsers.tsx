@@ -1,7 +1,8 @@
+/* eslint-disable react/display-name */
 import { ProfileListItem } from 'components/ProfileListItem';
 import { PageInput, useExploreUsersQuery } from 'lib/graphql';
-import React from 'react';
-import { FixedSizeList as List } from 'react-window';
+import React, { memo } from 'react';
+import { FixedSizeList as List, areEqual } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import InfiniteLoader from 'react-window-infinite-loader';
 import { NoResultFound } from './NoResultFound';
@@ -64,14 +65,17 @@ export const ExploreUsers = ({ searchTerm }: ExplorePageProps) => {
                   itemSize={64}
                   itemData={profiles}
                 >
-                  {({ data, index, style }) => (
-                    <div style={style}>
-                      {!isItemLoaded(index) ? (
-                        <LoaderAnimation loadingMessage="Loading..." />
-                      ) : (
-                        <ProfileListItem key={data[index].id} profile={data[index]} />
-                      )}
-                    </div>
+                  {memo(
+                    ({ data, index, style }) => (
+                      <div style={style}>
+                        {!isItemLoaded(index) ? (
+                          <LoaderAnimation loadingMessage="Loading..." />
+                        ) : (
+                          <ProfileListItem key={data[index].id} profile={data[index]} />
+                        )}
+                      </div>
+                    ),
+                    areEqual,
                   )}
                 </List>
               )}
