@@ -2,9 +2,12 @@ import { Song, TrackListItem } from 'components/TrackListItem';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { PageInput, useExploreTracksQuery } from 'lib/graphql';
 import React from 'react';
-import { InfiniteLoader } from './InfiniteLoader';
+import { FixedSizeList as List } from 'react-window';
+import AutoSizer from 'react-virtualized-auto-sizer';
+import InfiniteLoader from 'react-window-infinite-loader';
 import { NoResultFound } from './NoResultFound';
 import { TrackListItemSkeleton } from './TrackListItemSkeleton';
+import { LoaderAnimation } from './LoaderAnimation';
 
 interface ExplorePageProps {
   searchTerm?: string;
@@ -51,7 +54,7 @@ export const ExploreTracks = ({ searchTerm }: ExplorePageProps) => {
 
   const { nodes: tracks, pageInfo } = data?.exploreTracks;
 
-  const loadNext = () => {
+  const loadMore = () => {
     fetchMore({
       variables: {
         search: searchTerm,
@@ -64,30 +67,60 @@ export const ExploreTracks = ({ searchTerm }: ExplorePageProps) => {
     });
   };
 
+  const loadMoreItems = loading ? () => null : loadMore;
+  const isItemLoaded = (index: number) => !pageInfo.hasNextPage || index < tracks.length;
+  const tracksCount = pageInfo.hasNextPage ? tracks.length + 1 : tracks.length;
+
   return (
-    <div className="bg-gray-10">
-      {tracks.length > 0 ? (
-        tracks?.map((track, index) => (
-          <div key={track.id} className="text-white">
-            <TrackListItem
-              song={{
-                trackId: track.id,
-                src: track.playbackUrl,
-                art: track.artworkUrl,
-                title: track.title,
-                artist: track.artist,
-                playbackCount: track.playbackCountFormatted,
-                isFavorite: track.isFavorite,
-              }}
-              index={index + 1}
-              handleOnPlayClicked={song => handleOnPlayClicked(song, index)}
-            />
-          </div>
-        ))
+    <div className="bg-gray-10 h-[calc(100%-120px)]">
+      {tracks.length ? (
+        <AutoSizer>
+          {({ height, width }) => (
+            <InfiniteLoader
+              threshold={10}
+              isItemLoaded={isItemLoaded}
+              itemCount={tracksCount}
+              loadMoreItems={loadMoreItems}
+            >
+              {({ onItemsRendered, ref }) => (
+                <List
+                  height={height}
+                  width={width}
+                  onItemsRendered={onItemsRendered}
+                  ref={ref}
+                  itemCount={tracksCount}
+                  itemSize={56}
+                  itemData={tracks}
+                >
+                  {({ data, index, style }) => (
+                    <div style={style}>
+                      {!isItemLoaded(index) ? (
+                        <LoaderAnimation loadingMessage="Loading..." />
+                      ) : (
+                        <TrackListItem
+                          song={{
+                            trackId: data[index].id,
+                            src: data[index].playbackUrl,
+                            art: data[index].artworkUrl,
+                            title: data[index].title,
+                            artist: data[index].artist,
+                            playbackCount: data[index].playbackCountFormatted,
+                            isFavorite: data[index].isFavorite,
+                          }}
+                          index={index + 1}
+                          handleOnPlayClicked={song => handleOnPlayClicked(song, index)}
+                        />
+                      )}
+                    </div>
+                  )}
+                </List>
+              )}
+            </InfiniteLoader>
+          )}
+        </AutoSizer>
       ) : (
         <NoResultFound type="Tracks" />
       )}
-      {pageInfo.hasNextPage && <InfiniteLoader loadMore={loadNext} loadingMessage="Loading Tracks" />}
     </div>
   );
 };
