@@ -7,6 +7,8 @@ import { SendMessageMutation, useSendMessageMutation } from '../lib/graphql';
 import { Avatar } from './Avatar';
 import { FlexareaField } from './FlexareaField';
 
+const messageMaxLength = 160;
+
 export interface NewMessageFormProps {
   profileId: string;
   onNewMessage: (message: SendMessageMutation) => void;
@@ -17,7 +19,7 @@ interface FormValues {
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
-  body: yup.string().required().max(160),
+  body: yup.string().required().max(messageMaxLength),
 });
 
 const initialValues: FormValues = { body: '' };
@@ -41,7 +43,7 @@ export const NewMessageForm = ({ profileId, onNewMessage }: NewMessageFormProps)
           <Form>
             <div className="flex flex-row items-start space-x-3 p-3 py-5 bg-gray-25">
               {me && <Avatar className="flex self-center" profile={me.profile} linkToProfile={false} />}
-              <FlexareaField name="body" placeholder="Write a message..." />
+              <FlexareaField name="body" placeholder="Write a message..." maxLength={messageMaxLength} />
               <button type="submit" disabled={isSubmitting} className="pt-1">
                 <Send color={dirty && isValid ? 'green-blue' : undefined} />
               </button>

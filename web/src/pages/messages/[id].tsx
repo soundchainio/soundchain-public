@@ -86,7 +86,7 @@ export default function ChatPage({ recipientName, profileId }: PostPageProps) {
   const topNavBarProps: TopNavBarProps = {
     title: recipientName,
     leftButton: <BackButton scroll={false} />,
-    rightButton: <RefreshButton onClick={onRefresh} />,
+    rightButton: <RefreshButton onClick={onRefresh} refreshing={loading} />,
   };
 
   return (
