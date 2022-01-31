@@ -73,16 +73,11 @@ export const ExploreTracks = ({ searchTerm }: ExplorePageProps) => {
   const tracksCount = pageInfo.hasNextPage ? tracks.length + 1 : tracks.length;
 
   return (
-    <div className="bg-gray-10 h-[calc(100%-120px)]">
+    <div className="bg-gray-10 h-[calc(100%-106px)]">
       {tracks.length ? (
         <AutoSizer>
           {({ height, width }) => (
-            <InfiniteLoader
-              threshold={10}
-              isItemLoaded={isItemLoaded}
-              itemCount={tracksCount}
-              loadMoreItems={loadMoreItems}
-            >
+            <InfiniteLoader isItemLoaded={isItemLoaded} itemCount={tracksCount} loadMoreItems={loadMoreItems}>
               {({ onItemsRendered, ref }) => (
                 <List
                   height={height}
