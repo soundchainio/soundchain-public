@@ -8,6 +8,9 @@ module.exports = {
       fontSize: {
         xxs: '0.625rem',
       },
+      dropShadow: {
+        white: ['0px 0px 5px rgb(255,255,255)', '0px 0px 1px rgb(255,255,255)'],
+      },
       flex: {
         2: '2 2 0%',
       },
@@ -35,7 +38,7 @@ module.exports = {
         green: {
           27: '#278E3140',
           52: '#52B23B40',
-        }
+        },
       },
     },
   },

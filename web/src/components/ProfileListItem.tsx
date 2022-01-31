@@ -15,7 +15,7 @@ export const ProfileListItem = ({ profile }: ProfileListItemProps) => {
   return (
     <div className="relative flex items-center bg-gray-20 px-3 py-2 rounded-lg gap-3">
       <NextLink href={`/profiles/${profile.userHandle}`}>
-        <div className="relative flex items-center bg-gray-20 rounded-lg gap-3 flex-1 overflow-hidden">
+        <a className="relative flex items-center bg-gray-20 rounded-lg gap-3 flex-1 overflow-hidden">
           <Avatar
             linkToProfile={false}
             profile={profile}
@@ -31,7 +31,7 @@ export const ProfileListItem = ({ profile }: ProfileListItemProps) => {
             />
             <p className="text-gray-80 text-xs font-semibold">{`@${profile.userHandle}`}</p>
           </div>
-        </div>
+        </a>
       </NextLink>
       <div>
         <FollowButton followedHandle={profile.userHandle} followedId={profile.id} isFollowed={profile.isFollowed} />

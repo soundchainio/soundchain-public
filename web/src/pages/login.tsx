@@ -121,11 +121,7 @@ export default function LoginPage() {
           If you wish to login to an existing account, you must login using the same login method you used previously:
         </div>
         {authMethod.includes(AuthMethod.Google) && <GoogleButton />}
-        {authMethod.includes(AuthMethod.MagicLink) && (
-          <div>
-            <LoginForm handleMagicLogin={handleSubmit} showTerms={false} />
-          </div>
-        )}
+        {authMethod.includes(AuthMethod.MagicLink) && <LoginForm handleMagicLogin={handleSubmit} />}
         <div className="h-full flex flex-col justify-between">
           <div className="text-white text-center text-sm py-4">
             Alternatively, you may continue by creating a new account with the same email.

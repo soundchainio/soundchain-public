@@ -73,7 +73,7 @@ export const NavBarButton = ({
       </>
     );
   };
-  const className = `flex flex-col flex-1 ${config.mobileBreakpoint}:flex-none items-center justify-center align-middle cursor-pointer focus:ring-2 focus:ring-blue-600`;
+  const className = `flex flex-col flex-1 ${config.mobileBreakpoint}:flex-none items-center justify-center align-middle cursor-pointer`;
 
   if (path) {
     return (

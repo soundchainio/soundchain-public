@@ -173,9 +173,9 @@ const ListedAction = ({
       {endingDate && !futureSale && (
         <div className="flex flex-col text-xs items-center px-1">
           {countBids != 0 && (
-            <span className="text-blue-400 font-bold" onClick={() => dispatchShowBidsHistory(true, auctionId || '')}>
+            <button className="text-blue-400 font-bold" onClick={() => dispatchShowBidsHistory(true, auctionId || '')}>
               [{countBids} bids]
-            </span>
+            </button>
           )}
           <Timer date={endingDate} />
         </div>

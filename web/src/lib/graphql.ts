@@ -2792,7 +2792,7 @@ export type ReactionsQuery = (
       & Pick<Reaction, 'id' | 'type'>
       & { profile: (
         { __typename?: 'Profile' }
-        & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified'>
+        & Pick<Profile, 'id' | 'userHandle' | 'displayName' | 'profilePicture' | 'verified'>
       ) }
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
@@ -5939,6 +5939,7 @@ export const ReactionsDocument = gql`
       type
       profile {
         id
+        userHandle
         displayName
         profilePicture
         verified

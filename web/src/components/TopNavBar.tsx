@@ -43,15 +43,14 @@ export const TopNavBar = ({
 
   return (
     <div className={`relative z-10 flex-shrink-0 flex h-16 bg-black ${config.mobileBreakpoint}:bg-gray-30 shadow`}>
-      <button
-        type="button"
+      <div
         className={classNames(
           `text-gray-80 ${config.mobileBreakpoint}:hidden items-center h-full pl-4 flex-grow-basis-0`,
           me && !RightButton && 'absolute left-0 justify-center',
           (RightButton || midRightButton) && 'flex-1',
         )}
       >
-        <div className="flex flex-1 justify-start gap-2">
+        <div className="h-full flex flex-1 items-center justify-start gap-2">
           {LeftButton ? (
             LeftButton
           ) : (
@@ -63,7 +62,7 @@ export const TopNavBar = ({
             </>
           )}
         </div>
-      </button>
+      </div>
       {me && !midRightButton ? (
         <>
           <div
