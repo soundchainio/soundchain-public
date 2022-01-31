@@ -7,6 +7,7 @@
   font-style: normal;
   font-weight: 400;
   src: url('/fonts/Metropolis-Regular.otf') format('opentype');
+  font-display: swap;
 }
 
 @font-face {
@@ -14,6 +15,7 @@
   font-style: normal;
   font-weight: 500;
   src: url('/fonts/Metropolis-Medium.otf') format('opentype');
+  font-display: swap;
 }
 
 @font-face {
@@ -21,6 +23,7 @@
   font-style: normal;
   font-weight: 600;
   src: url('/fonts/Metropolis-SemiBold.otf') format('opentype');
+  font-display: swap;
 }
 
 @font-face {
@@ -28,6 +31,7 @@
   font-style: normal;
   font-weight: 700;
   src: url('/fonts/Metropolis-Bold.otf') format('opentype');
+  font-display: swap;
 }
 
 @font-face {
@@ -35,6 +39,7 @@
   font-style: normal;
   font-weight: 800;
   src: url('/fonts/Metropolis-ExtraBold.otf') format('opentype');
+  font-display: swap;
 }
 
 @font-face {
@@ -42,6 +47,7 @@
   font-style: normal;
   font-weight: 900;
   src: url('/fonts/Metropolis-Black.otf') format('opentype');
+  font-display: swap;
 }
 
 body,
