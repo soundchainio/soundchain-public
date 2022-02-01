@@ -2655,6 +2655,7 @@ export type PostComponentFieldsFragment = (
 export type PostsQueryVariables = Exact<{
   filter?: Maybe<FilterPostInput>;
   sort?: Maybe<SortPostInput>;
+  page?: Maybe<PageInput>;
 }>;
 
 
@@ -2665,7 +2666,10 @@ export type PostsQuery = (
     & { nodes: Array<(
       { __typename?: 'Post' }
       & PostComponentFieldsFragment
-    )> }
+    )>, pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
+    ) }
   ) }
 );
 
@@ -5672,10 +5676,14 @@ export type PostQueryHookResult = ReturnType<typeof usePostQuery>;
 export type PostLazyQueryHookResult = ReturnType<typeof usePostLazyQuery>;
 export type PostQueryResult = Apollo.QueryResult<PostQuery, PostQueryVariables>;
 export const PostsDocument = gql`
-    query Posts($filter: FilterPostInput, $sort: SortPostInput) {
-  posts(filter: $filter, sort: $sort) {
+    query Posts($filter: FilterPostInput, $sort: SortPostInput, $page: PageInput) {
+  posts(filter: $filter, sort: $sort, page: $page) {
     nodes {
       ...PostComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
     }
   }
 }
@@ -5695,6 +5703,7 @@ export const PostsDocument = gql`
  *   variables: {
  *      filter: // value for 'filter'
  *      sort: // value for 'sort'
+ *      page: // value for 'page'
  *   },
  * });
  */

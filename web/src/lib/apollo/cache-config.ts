@@ -8,6 +8,8 @@ import {
   FollowedArtistsConnection,
   ListingItemConnection,
   PolygonscanResult,
+  Post,
+  PostConnection,
   TrackConnection,
 } from 'lib/graphql';
 
@@ -83,6 +85,33 @@ export const cacheConfig: InMemoryCacheConfig = {
           },
 
           read(existing): FeedConnection | void {
+            if (existing) {
+              return {
+                pageInfo: { ...existing.pageInfo },
+                nodes: Object.values(existing.nodes),
+              };
+            }
+          },
+        },
+        posts: {
+          keyArgs: false,
+          merge(existing, incoming, { readField }): PostConnection {
+            const nodes = existing ? { ...existing.nodes } : {};
+
+            incoming.nodes.forEach((node: Post) => {
+              const key = readField('id', node);
+              nodes[key as string] = node;
+            });
+
+            return {
+              pageInfo: {
+                ...incoming.pageInfo,
+              },
+              nodes,
+            };
+          },
+
+          read(existing): PostConnection | void {
             if (existing) {
               return {
                 pageInfo: { ...existing.pageInfo },
