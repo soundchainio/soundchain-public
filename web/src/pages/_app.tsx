@@ -17,6 +17,7 @@ import { ApolloProvider } from 'lib/apollo';
 import type { AppProps } from 'next/app';
 import Head from 'next/head';
 import Router from 'next/router';
+import Script from 'next/script';
 import NProgress from 'nprogress';
 import React from 'react';
 import { ToastContainer } from 'react-toastify';
@@ -52,11 +53,13 @@ function SoundchainApp({ Component, pageProps }: AppProps) {
         <meta name="theme-color" content="#000000" />
         <Favicons />
         <link rel="manifest" href="/manifest.json"></link>
-        <script
+        <Script
           async
+          strategy="afterInteractive"
           src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_ANALYTICS_ID}`}
-        ></script>
-        <script
+        />
+        <Script
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               window.dataLayer = window.dataLayer || [];

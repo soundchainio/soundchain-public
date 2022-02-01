@@ -1,7 +1,11 @@
-query Posts($filter: FilterPostInput, $sort: SortPostInput) {
-  posts(filter: $filter, sort: $sort) {
+query Posts($filter: FilterPostInput, $sort: SortPostInput, $page: PageInput) {
+  posts(filter: $filter, sort: $sort, page: $page) {
     nodes {
       ...PostComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
     }
   }
 }
