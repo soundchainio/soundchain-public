@@ -21,7 +21,7 @@ export default function SecurityPage() {
 
   return (
     <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
-      <SEO title="Soundchain - Security" canonicalUrl="/settings/security/" description="Soundchain Security" />
+      <SEO title="Security | SoundChain" canonicalUrl="/settings/security/" description="SoundChain Security" />
       <div className="min-h-full flex flex-col px-6 lg:px-8 py-6">
         {!me?.otpSecret ? (
           <SecurityForm afterSubmit={handleAfterSubmit} />

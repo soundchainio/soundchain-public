@@ -19,8 +19,8 @@ export default function TopTracksPage() {
   return (
     <Layout topNavBarProps={topNavBarProps}>
       <SEO
-        title="Soundchain - Top 100 Tracks"
-        description="Check out Soundchain Top 100 tracks"
+        title="Top 100 Tracks | SoundChain"
+        description="Check the SoundChain Top 100 tracks"
         canonicalUrl="/top-tracks/"
       />
       <div className="flex flex-col justify-center items-center px-11 py-7">

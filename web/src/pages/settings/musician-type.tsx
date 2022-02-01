@@ -17,9 +17,9 @@ export default function MusicianTypePage() {
   return (
     <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
       <SEO
-        title="Soundchain - Musician Type"
+        title="Musician Type | SoundChain"
         canonicalUrl="/settings/musician-type/"
-        description="Soundchain Musician Type"
+        description="SoundChain Musician Type"
       />
       <div className="min-h-full flex flex-col px-6 lg:px-8 py-6">
         <div className="flex flex-1 flex-col space-y-6">

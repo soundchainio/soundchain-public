@@ -53,8 +53,8 @@ export default function HistoryPage({ address }: HistoryPageProps) {
   return (
     <>
       <SEO
-        title="Soundchain - Wallet History"
-        description="Soundchain Wallet History"
+        title="Wallet History | SoundChain"
+        description="SoundChain Wallet History"
         canonicalUrl={`/wallet/${address}/history/`}
       />
       <Layout topNavBarProps={topNavBarProps}>

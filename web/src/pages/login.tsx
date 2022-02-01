@@ -110,7 +110,7 @@ export default function LoginPage() {
           showLoginSignUpButton: false,
         }}
       >
-        <SEO title="Soundchain - Login" description="Login warning" canonicalUrl="/login/" />
+        <SEO title="Login | SoundChain" description="Login warning" canonicalUrl="/login/" />
         <div className="flex justify-center pt-32 pb-6">
           <UserWarning />
         </div>
@@ -142,7 +142,7 @@ export default function LoginPage() {
         isLogin: true,
       }}
     >
-      <SEO title="Soundchain - Login" description="Log in to Soundchain" canonicalUrl="/login/" />
+      <SEO title="Login | SoundChain" description="Log in to SoundChain" canonicalUrl="/login/" />
       <div className="h-36 mb-2 flex items-center justify-center">
         <LogoAndText />
       </div>

@@ -109,8 +109,8 @@ export default function ProfilePage({ handle }: ProfilePageProps) {
   return (
     <>
       <SEO
-        title={`Profile - ${displayName}`}
-        description={bio || 'my Soundchain profile'}
+        title={`${displayName} | SoundChain`}
+        description={`${bio != null ? `${bio} - ` : ''}Join SoundChain to connnect with ${displayName}.`}
         canonicalUrl={`/profiles/${userHandle}`}
         image={profilePicture}
       />
