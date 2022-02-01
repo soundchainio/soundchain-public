@@ -1,4 +1,3 @@
-import { LogoBase64 } from 'components/LogoBase64';
 import { useMimeTypeQuery } from 'lib/graphql';
 import Image from 'next/image';
 import React from 'react';
@@ -36,16 +35,16 @@ const Asset = ({ src, sizes }: AssetProps) => {
   }
 
   return (
-    <Image
-      src={src || '/default-pictures/album-artwork.png'}
-      placeholder="blur"
-      blurDataURL={LogoBase64}
-      alt=""
-      layout="fill"
-      className="m-auto object-cover"
-      priority
-      sizes={sizes}
-    />
+    <div className="h-full w-full animate-wave bg-wave-size bg-gradient-to-r from-black to-gray-70 via-gray-40 bg-opacity-80">
+      <Image
+        src={src || '/default-pictures/album-artwork.png'}
+        alt=""
+        layout="fill"
+        className="m-auto object-cover"
+        priority
+        sizes={sizes}
+      />
+    </div>
   );
 };
 

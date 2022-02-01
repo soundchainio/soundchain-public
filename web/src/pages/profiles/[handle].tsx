@@ -16,7 +16,7 @@ import { SubscribeButton } from 'components/SubscribeButton';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useMe } from 'hooks/useMe';
 import { cacheFor, createApolloClient } from 'lib/apollo';
-import { ProfileByHandleDocument, useProfileByHandleQuery } from 'lib/graphql';
+import { ProfileByHandleDocument, ProfileByHandleQuery } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
@@ -25,7 +25,7 @@ import { FollowModalType } from 'types/FollowModalType';
 import { ProfileTab } from 'types/ProfileTabType';
 
 export interface ProfilePageProps {
-  handle: string;
+  profile: ProfileByHandleQuery['profileByHandle'];
 }
 
 interface ProfilePageParams extends ParsedUrlQuery {
@@ -51,13 +51,12 @@ export const getServerSideProps: GetServerSideProps<ProfilePageProps, ProfilePag
     return { notFound: true };
   }
 
-  return cacheFor(ProfilePage, { handle }, context, apolloClient);
+  return cacheFor(ProfilePage, { profile: data.profileByHandle }, context, apolloClient);
 };
 
-export default function ProfilePage({ handle }: ProfilePageProps) {
+export default function ProfilePage({ profile }: ProfilePageProps) {
   const router = useRouter();
   const me = useMe();
-  const { data: profile } = useProfileByHandleQuery({ variables: { handle } });
 
   const [showModal, setShowModal] = useState(false);
   const [followModalType, setFollowModalType] = useState<FollowModalType>();
@@ -85,7 +84,7 @@ export default function ProfilePage({ handle }: ProfilePageProps) {
     return null;
   }
 
-  const profileId = profile.profileByHandle.id;
+  const profileId = profile.id;
 
   const {
     coverPicture,
@@ -100,7 +99,7 @@ export default function ProfilePage({ handle }: ProfilePageProps) {
     verified,
     teamMember,
     profilePicture,
-  } = profile.profileByHandle;
+  } = profile;
 
   const topNovaBarProps: TopNavBarProps = {
     rightButton: me ? <InboxButton /> : undefined,
@@ -118,7 +117,7 @@ export default function ProfilePage({ handle }: ProfilePageProps) {
         <div className="h-[125px] relative">
           <ProfileCover coverPicture={coverPicture || ''} className="h-[125px]" />
           <Avatar
-            profile={profile.profileByHandle}
+            profile={profile}
             pixels={80}
             className="absolute left-4 bottom-0 transform translate-y-2/3 border-gray-10 border-4 rounded-full"
           />
