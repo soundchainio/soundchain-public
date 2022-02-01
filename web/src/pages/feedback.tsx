@@ -17,7 +17,11 @@ export default function FeedbackPage() {
 
   return (
     <Layout topNavBarProps={topNavBarProps} className="mb-0 h-full w-full">
-      <SEO title="Soundchain - Feedback" description="Give your feedback" canonicalUrl="/feedback/" />
+      <SEO
+        title="Feedback | SoundChain"
+        description="Submit your feedback to SoundChain team"
+        canonicalUrl="/feedback/"
+      />
       <iframe
         src="https://docs.google.com/forms/d/e/1FAIpQLScmoMksAwl26GABnutNksgWOlfDGvfZbGeEqAiaSqIHo5sI9g/viewform?embedded=true"
         className="h-full w-full"

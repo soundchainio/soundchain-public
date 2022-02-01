@@ -20,7 +20,11 @@ export default function ExplorePage() {
 
   return (
     <Layout topNavBarProps={topNavBarProps}>
-      <SEO title="Soundchain - Explore" description="Explore Soundchain" canonicalUrl="/explore/" />
+      <SEO
+        title="Explore | SoundChain"
+        description="Explore your favorite artists and tracks on SoundChain"
+        canonicalUrl="/explore/"
+      />
       <Explore />
     </Layout>
   );

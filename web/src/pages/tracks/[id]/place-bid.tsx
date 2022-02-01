@@ -216,8 +216,8 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
   return (
     <>
       <SEO
-        title={`Soundchain - Place a Bid on Track - ${track.title}`}
-        description={track.artist || 'on Soundchain'}
+        title={`Place bid | SoundChain`}
+        description={`Place a bid on ${track.title} - song by ${track.artist}`}
         canonicalUrl={`/tracks/${track.id}/place-bid/`}
         image={track.artworkUrl}
       />

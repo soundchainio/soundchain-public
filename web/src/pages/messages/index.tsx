@@ -17,7 +17,7 @@ export default function MessagesPage() {
 
   return (
     <>
-      <SEO title="Soundchain - Inbox" canonicalUrl="/messages" description="Soundchain Inbox" />
+      <SEO title="Inbox | SoundChain" canonicalUrl="/messages" description="SoundChain Inbox" />
       <Layout topNavBarProps={topNavBarProps}>
         <Inbox />
       </Layout>

@@ -142,8 +142,8 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
   return (
     <>
       <SEO
-        title={`Soundchain - List track`}
-        description={'List your track as a buy now item on Soundchain'}
+        title={`List track | SoundChain`}
+        description={'List your track as a buy now item on SoundChain'}
         canonicalUrl={router.asPath}
       />
       <Layout topNavBarProps={topNovaBarProps}>

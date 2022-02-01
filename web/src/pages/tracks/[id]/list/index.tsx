@@ -19,8 +19,8 @@ export default function ListPage() {
   return (
     <>
       <SEO
-        title={`Soundchain - List track`}
-        description={'List your track on Soundchain'}
+        title={`List track | SoundChain`}
+        description={'List your track on SoundChain'}
         canonicalUrl={router.asPath}
       />
       <Layout topNavBarProps={topNovaBarProps}>

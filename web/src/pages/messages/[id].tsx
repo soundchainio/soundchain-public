@@ -91,7 +91,7 @@ export default function ChatPage({ recipientName, profileId }: PostPageProps) {
 
   return (
     <>
-      <SEO title="Soundchain - Message" canonicalUrl={`/messages/${profileId}`} description="Soundchain Message" />
+      <SEO title="Message | SoundChain" canonicalUrl={`/messages/${profileId}`} description="SoundChain Message" />
       <ChatLayout topNavBarProps={topNavBarProps}>
         <Chat messages={messages} pageInfo={pageInfo} onFetchMore={onFetchMore} loading={loading} />
         <NewMessageForm profileId={profileId} onNewMessage={onNewMessage} />

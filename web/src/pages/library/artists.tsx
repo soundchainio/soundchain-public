@@ -4,7 +4,6 @@ import { Layout } from 'components/Layout';
 import { SearchLibrary } from 'components/SearchLibrary';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
-import Head from 'next/head';
 import React, { useState } from 'react';
 
 const topNavBarProps: TopNavBarProps = {
@@ -17,13 +16,8 @@ export default function ArtistsPage() {
 
   return (
     <>
-      <SEO title="Soundchain - Artists" canonicalUrl="/library/artists" description="Soundchain Artists" />
+      <SEO title="Artists | SoundChain" canonicalUrl="/library/artists" description="SoundChain Artists" />
       <Layout topNavBarProps={topNavBarProps}>
-        <Head>
-          <title>Soundchain - Artists</title>
-          <meta name="description" content="Artists" />
-          <link rel="icon" href="/favicons/favicon.ico" />
-        </Head>
         <SearchLibrary placeholder="Search artists..." setSearchTerm={setSearchTerm} />
         <Artists searchTerm={searchTerm} />
       </Layout>

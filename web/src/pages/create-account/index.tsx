@@ -89,9 +89,9 @@ export default function CreateAccountPage() {
   return (
     <>
       <SEO
-        title="Soundchain - Create Account"
+        title="Create Account | SoundChain"
         canonicalUrl="/create-account/"
-        description="Soundchain Create Account"
+        description="Create your account on SoundChain"
       />
       <AuthLayout topNavBarProps={topNavBarProps}>
         <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>

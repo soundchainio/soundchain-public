@@ -29,9 +29,9 @@ export default function ProfilePicturePage() {
   return (
     <>
       <SEO
-        title="Soundchain - Profile Picture"
+        title="Profile Picture | SoundChain"
         canonicalUrl="/create-account/profile-picture"
-        description="Soundchain Profile Picture"
+        description="SoundChain Profile Picture"
       />
       <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
         <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">

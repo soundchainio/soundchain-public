@@ -176,7 +176,7 @@ export default function WalletPage() {
 
   return (
     <>
-      <SEO title="Soundchain - Wallet" description="Soundchain Wallet" canonicalUrl="/wallet/" />
+      <SEO title="Wallet - SoundChain" description="SoundChain Wallet" canonicalUrl="/wallet/" />
       <Layout topNavBarProps={topNavBarProps}>
         <PullToRefresh onRefresh={refreshData} className="h-auto">
           <div className="h-full flex flex-col">

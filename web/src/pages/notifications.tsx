@@ -25,7 +25,7 @@ export default function UserNotifications() {
 
   return (
     <Layout topNavBarProps={topNavBarProps}>
-      <SEO title="Soundchain - Alerts" description="Soundchain Alerts" canonicalUrl="/notifications/" />
+      <SEO title="Alerts | SoundChain" description="Check your alerts on SoundChain" canonicalUrl="/notifications/" />
       <Notifications />
     </Layout>
   );

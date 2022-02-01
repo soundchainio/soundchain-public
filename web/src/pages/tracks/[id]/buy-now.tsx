@@ -159,8 +159,8 @@ export default function BuyNowPage({ track }: TrackPageProps) {
   return (
     <>
       <SEO
-        title={`Soundchain - Buy Track - ${track.title}`}
-        description={track.artist || 'on Soundchain'}
+        title={`Buy now | SoundChain`}
+        description={`Buy now ${track.title} - song by ${track.artist}.`}
         canonicalUrl={`/tracks/${track.id}/buy-now/`}
         image={track.artworkUrl}
       />

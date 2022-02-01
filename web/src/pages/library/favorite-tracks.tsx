@@ -17,9 +17,9 @@ export default function FavoriteTracksPage() {
   return (
     <>
       <SEO
-        title="Soundchain - Favorite Tracks"
+        title="Favorite Tracks | SoundChain"
         canonicalUrl="/library/favorite-tracks/"
-        description="Soundchain Favorite Tracks"
+        description="Your SoundChain favorite tracks"
       />
       <Layout topNavBarProps={topNavBarProps}>
         <SearchLibrary placeholder="Search tracks..." setSearchTerm={setSearchTerm} />

@@ -39,7 +39,7 @@ export default function NamePage() {
 
   return (
     <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
-      <SEO title="Soundchain - Edit Name" canonicalUrl="/settings/name/" description="Soundchain Edit Name" />
+      <SEO title="Edit Name | SoundChain" canonicalUrl="/settings/name/" description="SoundChain Edit Name" />
       <div className="min-h-full flex flex-col px-6 lg:px-8 py-6">
         <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={onSubmit}>
           <Form className="flex flex-1 flex-col space-y-6">
