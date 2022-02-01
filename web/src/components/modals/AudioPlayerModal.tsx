@@ -103,7 +103,7 @@ export const AudioPlayerModal = () => {
                     className={
                       isPlaylistOpen
                         ? 'relative w-10 h-10 rounded-lg overflow-hidden'
-                        : 'relative w-full max-h-80 sm:w-full after:block after:pb-full flex bg-gray-80 rounded-lg overflow-hidden'
+                        : 'relative w-3/4 max-h-80 sm:w-full after:block after:pb-full flex bg-gray-80 rounded-lg overflow-hidden'
                     }
                   >
                     <Asset src={currentSong.art} />
