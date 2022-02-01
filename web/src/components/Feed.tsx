@@ -60,13 +60,13 @@ export const Feed = ({ pageSize }: FeedProps) => {
 
   const loadMoreItems = loading ? () => null : loadMore;
   const isItemLoaded = (index: number) => !pageInfo.hasNextPage || index < nodes.length;
-  const tracksCount = pageInfo.hasNextPage ? nodes.length + 1 : nodes.length;
+  const feedCount = pageInfo.hasNextPage ? nodes.length + 1 : nodes.length;
 
   return (
     <PullToRefresh onRefresh={refetch}>
       <AutoSizer>
         {({ height, width }) => (
-          <InfiniteLoader isItemLoaded={isItemLoaded} itemCount={tracksCount} loadMoreItems={loadMoreItems}>
+          <InfiniteLoader isItemLoaded={isItemLoaded} itemCount={feedCount} loadMoreItems={loadMoreItems}>
             {({ onItemsRendered, ref }) => (
               <List
                 height={height}
@@ -76,7 +76,7 @@ export const Feed = ({ pageSize }: FeedProps) => {
                   typeof ref === 'function' && ref(list);
                   listRef.current = list;
                 }}
-                itemCount={tracksCount}
+                itemCount={feedCount}
                 itemSize={getSize}
                 itemData={nodes}
               >
