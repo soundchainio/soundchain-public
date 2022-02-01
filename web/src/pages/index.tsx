@@ -32,7 +32,7 @@ export default function HomePage({ me }: HomePageProps) {
     <>
       <SEO title="SoundChain" description="Connecting people to music" canonicalUrl="/" />
       <Layout topNavBarProps={topNavBarProps}>
-        <div className="pt-3">{me ? <Feed /> : <Posts />}</div>
+        <div className="pt-3 h-full">{me ? <Feed /> : <Posts />}</div>
       </Layout>
     </>
   );
