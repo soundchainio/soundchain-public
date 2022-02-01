@@ -76,7 +76,7 @@ export const RemoveListingConfirmationModal = () => {
       saleType === SaleType.MARKETPLACE ? cancelListing(tokenId, account) : cancelAuction(tokenId, account);
 
     cancel
-      .onReceipt(() => onReceipt)
+      .onReceipt(onReceipt)
       .onError(cause => toast.error(cause.message))
       .finally(() => setLoading(false))
       .execute(web3);
