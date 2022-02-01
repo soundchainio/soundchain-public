@@ -1302,6 +1302,7 @@ export type QueryListingItemsArgs = {
 
 
 export type QueryUploadUrlArgs = {
+  fileExtension: Scalars['String'];
   fileType: Scalars['String'];
 };
 
@@ -3262,6 +3263,7 @@ export type UpdateMetaMaskAddressesMutation = (
 
 export type UploadUrlQueryVariables = Exact<{
   fileType: Scalars['String'];
+  fileExtension: Scalars['String'];
 }>;
 
 
@@ -7031,8 +7033,8 @@ export type UpdateMetaMaskAddressesMutationHookResult = ReturnType<typeof useUpd
 export type UpdateMetaMaskAddressesMutationResult = Apollo.MutationResult<UpdateMetaMaskAddressesMutation>;
 export type UpdateMetaMaskAddressesMutationOptions = Apollo.BaseMutationOptions<UpdateMetaMaskAddressesMutation, UpdateMetaMaskAddressesMutationVariables>;
 export const UploadUrlDocument = gql`
-    query UploadUrl($fileType: String!) {
-  uploadUrl(fileType: $fileType) {
+    query UploadUrl($fileType: String!, $fileExtension: String!) {
+  uploadUrl(fileType: $fileType, fileExtension: $fileExtension) {
     uploadUrl
     fileName
     readUrl
@@ -7053,6 +7055,7 @@ export const UploadUrlDocument = gql`
  * const { data, loading, error } = useUploadUrlQuery({
  *   variables: {
  *      fileType: // value for 'fileType'
+ *      fileExtension: // value for 'fileExtension'
  *   },
  * });
  */

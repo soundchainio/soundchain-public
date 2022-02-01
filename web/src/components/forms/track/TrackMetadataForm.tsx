@@ -22,7 +22,7 @@ export interface FormValues {
   copyright?: string;
   releaseYear?: number;
   genres?: Genre[];
-  artworkUrl?: string;
+  artworkFile?: File | null;
   royalty: number;
 }
 
@@ -34,7 +34,7 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   copyright: yup.string().max(100),
   releaseYear: yup.number(),
   genres: yup.array(),
-  artworkUrl: yup.string(),
+  artworkFile: yup.mixed(),
   royalty: yup.number().integer().min(0).max(100).required(),
 });
 
@@ -61,7 +61,7 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
     copyright: initialValues?.copyright || '',
     releaseYear: initialValues?.releaseYear || new Date().getFullYear(),
     genres: initialValues?.genres || [],
-    artworkUrl: '',
+    artworkFile: undefined,
     royalty: 0,
   };
 
@@ -114,7 +114,7 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
               <span className="underline text-xxs mt-2 font-bold">
                 {uploadingArt ? 'UPLOADING...' : 'CHANGE ARTWORK'}
               </span>
-              <span className="font-semibold text-[9px]">(Max: 60mb)</span>
+              <span className="font-semibold text-[9px]">(Max: 30mb)</span>
             </div>
             <div className="flex flex-col flex-1 gap-2">
               <InputField name="title" type="text" label="TRACK TITLE" maxLength={100} />

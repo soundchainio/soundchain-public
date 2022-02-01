@@ -134,7 +134,8 @@ export const CreateModal = () => {
               description: 'Track description made by the author',
               text: values.description,
               language: 'eng',
-            });
+            }).set;
+
           // it was breaking video upload - no time to check, sorry
           // if (values.artworkUrl) {
           //   const artWorkArrayBuffer = values.artworkUrl && (await fetch(values.artworkUrl).then(r => r.arrayBuffer()));
@@ -145,7 +146,7 @@ export const CreateModal = () => {
           //   });
           // }
           id3Writer.addTag();
-          const newFile: File = id3Writer.getBlob();
+          const newFile: File = new File([id3Writer.getBlob()], assetFile.name, { type: assetFile.type });
           resolve(newFile);
         });
       } catch (error) {
@@ -156,7 +157,17 @@ export const CreateModal = () => {
 
   const handleSubmit = async (values: FormValues) => {
     if (file && web3 && account && me) {
-      const { title, artworkUrl, description, artist, album, genres, releaseYear, copyright, royalty } = values;
+      const {
+        title,
+        artworkFile: artworkUrl,
+        description,
+        artist,
+        album,
+        genres,
+        releaseYear,
+        copyright,
+        royalty,
+      } = values;
       const artistId = me.id;
       const artistProfileId = me.profile.id;
 
@@ -166,7 +177,6 @@ export const CreateModal = () => {
         setMintingState('Writing data to ID3Tag ');
         asset = await saveID3Tag(values, file);
       }
-
       setMintingState('Uploading track file');
       const assetUrl = await upload([asset]);
       const artUrl = artworkUrl;

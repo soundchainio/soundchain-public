@@ -8,8 +8,12 @@ import { UploadUrl } from '../types/UploadUrl';
 export class UploadResolver {
   @Query(() => UploadUrl)
   @Authorized()
-  uploadUrl(@Ctx() { uploadService }: Context, @Arg('fileType') fileType: string): Promise<UploadUrl> {
-    return uploadService.generateUploadUrl(fileType);
+  uploadUrl(
+    @Ctx() { uploadService }: Context,
+    @Arg('fileType') fileType: string,
+    @Arg('fileExtension') fileExtension: string,
+  ): Promise<UploadUrl> {
+    return uploadService.generateUploadUrl(fileType, fileExtension);
   }
 
   @Query(() => MimeType)

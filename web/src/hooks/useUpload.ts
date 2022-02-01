@@ -1,13 +1,13 @@
 import axios from 'axios';
 import { apolloClient } from 'lib/apollo';
 import { UploadUrlDocument, UploadUrlQuery } from 'lib/graphql';
-import { useCallback } from 'react';
-import { useMountedState } from './useMountedState';
+import { useCallback, useState } from 'react';
 
 export const useUpload = (value?: string, onChange?: (value: string) => void) => {
-  const [uploading, setUploading] = useMountedState(false);
-  const [preview, setPreview] = useMountedState<string | undefined>(value);
-  const [fileType, setFileType] = useMountedState<string>('');
+  const [uploading, setUploading] = useState(false);
+  const [preview, setPreview] = useState<string | undefined>(value);
+  const [fileType, setFileType] = useState<string>('');
+  const [fileExtension, setFileExtension] = useState<string>('');
 
   const upload = useCallback(
     async ([file]: File[]) => {
@@ -16,9 +16,15 @@ export const useUpload = (value?: string, onChange?: (value: string) => void) =>
       setPreview(objectUrl);
       setFileType(file.type);
 
+      const fileExt = file.name.split('.').pop();
+      if (!fileExt) {
+        throw Error('Could not detect file extension!');
+      }
+      setFileExtension(fileExt);
+
       const { data } = await apolloClient.query<UploadUrlQuery>({
         query: UploadUrlDocument,
-        variables: { fileType: file.type },
+        variables: { fileType: file.type, fileExtension: fileExt },
         fetchPolicy: 'no-cache',
       });
 
@@ -35,8 +41,8 @@ export const useUpload = (value?: string, onChange?: (value: string) => void) =>
 
       return readUrl;
     },
-    [onChange, setPreview, setUploading, setFileType],
+    [onChange, setPreview, setUploading, setFileType, setFileExtension],
   );
 
-  return { preview, fileType, uploading, upload };
+  return { preview, fileType, fileExtension, uploading, upload };
 };

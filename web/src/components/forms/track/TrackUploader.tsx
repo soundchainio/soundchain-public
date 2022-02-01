@@ -25,6 +25,10 @@ export const TrackUploader = ({ onFileChange, art }: TrackUploaderProps) => {
       alert(`${fileRejections[0].file.name} not supported!`);
       return;
     }
+    if (!file.name.split('.').pop()) {
+      alert(`Could not detect file extension!`);
+      return;
+    }
 
     const reader = new FileReader();
     reader.readAsDataURL(file);

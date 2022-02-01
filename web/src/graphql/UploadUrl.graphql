@@ -1,5 +1,5 @@
-query UploadUrl($fileType: String!) {
-  uploadUrl(fileType: $fileType) {
+query UploadUrl($fileType: String!, $fileExtension: String!) {
+  uploadUrl(fileType: $fileType, fileExtension: $fileExtension) {
     uploadUrl
     fileName
     readUrl
