@@ -30,7 +30,7 @@ const SelectToApolloQuery: Record<SortListingItem, { field: SortListingItemField
 };
 
 export const Marketplace = () => {
-  const pageSize = 10;
+  const pageSize = 15;
   const { dispatchShowFilterMarketplaceModal } = useModalDispatch();
   const { genres: genresFromModal, filterSaleType } = useModalState();
   const [isGrid, setIsGrid] = useState(true);
@@ -43,21 +43,14 @@ export const Marketplace = () => {
     variables: {
       page: { first: pageSize },
       sort: { field, order },
+      filter: {},
     },
     ssr: false,
   });
 
-  useEffect(() => {
-    if (genresFromModal) setGenres(genresFromModal);
-    if (filterSaleType) setSaleType(filterSaleType);
-    refetch({
-      page: {
-        first: pageSize,
-      },
-      sort: { field, order },
-      filter: buildMarketplaceFilter(genresFromModal, filterSaleType),
-    });
-  }, [sorting, genresFromModal, filterSaleType, refetch, field, order]);
+  useEffect(() => genresFromModal && setGenres(genresFromModal), [genresFromModal]);
+  useEffect(() => filterSaleType && setSaleType(filterSaleType), [filterSaleType]);
+  useEffect(() => setTotalCount(data?.listingItems.pageInfo.totalCount || 0), [data]);
 
   useEffect(() => {
     refetch({
@@ -67,15 +60,9 @@ export const Marketplace = () => {
       sort: { field, order },
       filter: buildMarketplaceFilter(genres, saleType),
     });
-  }, [sorting, genres, saleType, refetch, field, order]);
+  }, [genres, saleType, refetch, field, order]);
 
-  useEffect(() => {
-    if (data) {
-      setTotalCount(data.listingItems.pageInfo.totalCount);
-    }
-  }, [data?.listingItems.pageInfo.totalCount, totalCount, data]);
-
-  const loadMore = () => {
+  const loadMore = () =>
     fetchMore({
       variables: {
         page: {
@@ -86,11 +73,6 @@ export const Marketplace = () => {
         filter: buildMarketplaceFilter(genres, saleType),
       },
     });
-  };
-
-  const onRefresh = async () => {
-    await refetch();
-  };
 
   return (
     <div>
@@ -172,11 +154,10 @@ export const Marketplace = () => {
       ) : !data ? (
         <NoResultFound type="items" />
       ) : (
-        <PullToRefresh onRefresh={onRefresh} className="h-auto">
+        <PullToRefresh onRefresh={refetch} className="h-auto">
           <Tracks isGrid={isGrid} tracks={data.listingItems.nodes} />
         </PullToRefresh>
       )}
-
       {data?.listingItems.pageInfo.hasNextPage && (
         <InfiniteLoader loadMore={loadMore} loadingMessage="Loading Marketplace" />
       )}
