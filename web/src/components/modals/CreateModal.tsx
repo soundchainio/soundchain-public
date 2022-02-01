@@ -45,6 +45,7 @@ export const CreateModal = () => {
 
   const [file, setFile] = useState<File>();
   const [preview, setPreview] = useState<string>();
+  const [artworkPreview, setArtworkPreview] = useState<string>();
 
   const [newTrack, setNewTrack] = useState<CreateTrackMutation['createTrack']['track']>();
 
@@ -75,6 +76,13 @@ export const CreateModal = () => {
           type,
         });
         artworkFile = new File([blob], 'artwork', { type });
+
+        const reader = new FileReader();
+        reader.readAsDataURL(artworkFile);
+
+        reader.addEventListener('loadend', () => {
+          setArtworkPreview(reader.result as string);
+        });
       }
 
       let initialGenres;
@@ -84,7 +92,6 @@ export const CreateModal = () => {
 
       setInitialValues({
         title: fileMetadata?.title,
-        artist: me?.handle,
         description: fileMetadata?.comment && fileMetadata.comment[0],
         album: fileMetadata?.album,
         releaseYear: fileMetadata?.year,
@@ -125,7 +132,7 @@ export const CreateModal = () => {
 
           id3Writer
             .setFrame('TIT2', values.title)
-            .setFrame('TPE1', [values.artist])
+            .setFrame('TPE1', [me?.handle])
             .setFrame('TALB', values.album)
             .setFrame('TYER', values.releaseYear)
             .setFrame('TCON', values.genres)
@@ -157,17 +164,8 @@ export const CreateModal = () => {
 
   const handleSubmit = async (values: FormValues) => {
     if (file && web3 && account && me) {
-      const {
-        title,
-        artworkFile: artworkUrl,
-        description,
-        artist,
-        album,
-        genres,
-        releaseYear,
-        copyright,
-        royalty,
-      } = values;
+      const { title, artworkFile, description, album, genres, releaseYear, copyright, royalty } = values;
+      const artist = me.handle;
       const artistId = me.id;
       const artistProfileId = me.profile.id;
 
@@ -179,7 +177,6 @@ export const CreateModal = () => {
       }
       setMintingState('Uploading track file');
       const assetUrl = await upload([asset]);
-      const artUrl = artworkUrl;
 
       try {
         const assetKey = assetUrl.substring(assetUrl.lastIndexOf('/') + 1);
@@ -203,8 +200,12 @@ export const CreateModal = () => {
           genres,
         };
 
-        if (artUrl) {
-          const artPin = artUrl.substring(artUrl.lastIndexOf('/') + 1);
+        let artworkUrl: string;
+        if (artworkFile) {
+          setMintingState('Uploading track file');
+          const artworkUrl = await upload([artworkFile]);
+
+          const artPin = artworkUrl.substring(artworkUrl.lastIndexOf('/') + 1);
           setMintingState('Pinning artwork to IPFS');
           const { data: artPinResult } = await pinToIPFS({
             variables: {
@@ -356,7 +357,7 @@ export const CreateModal = () => {
       ) : (
         <>
           <div className="px-4 py-4">
-            <TrackUploader onFileChange={handleFileDrop} />
+            <TrackUploader onFileChange={handleFileDrop} art={artworkPreview} />
           </div>
           {file && preview && <TrackMetadataForm handleSubmit={handleSubmit} initialValues={initialValues} />}
           {mintingState && (
