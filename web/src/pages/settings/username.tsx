@@ -9,6 +9,7 @@ import { Form, Formik, FormikHelpers } from 'formik';
 import { useMe } from 'hooks/useMe';
 import { useUpdateHandleMutation } from 'lib/graphql';
 import { useRouter } from 'next/router';
+import { HANDLE_MAX_CHARS } from 'pages/create-account';
 import React from 'react';
 import { formatValidationErrors } from 'utils/errorHelpers';
 import { handleRegex } from 'utils/Validation';
@@ -22,7 +23,7 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   handle: yup
     .string()
     .min(1)
-    .max(32)
+    .max(HANDLE_MAX_CHARS)
     .matches(handleRegex, 'Invalid characters. Only letters and numbers are accepted.')
     .required()
     .label('Username'),
@@ -62,10 +63,16 @@ export default function SettingsUsernamePage() {
         <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={onSubmit}>
           <Form className="flex flex-1 flex-col space-y-6">
             <div>
-              <InputField label="Username" type="text" name="handle" placeholder="Username" maxLength={10} />
+              <InputField
+                label="Username"
+                type="text"
+                name="handle"
+                placeholder="Username"
+                maxLength={HANDLE_MAX_CHARS}
+              />
             </div>
             <p className="text-gray-50 flex-grow">
-              Usernames can only have letters and numbers and can be a max of 10 characters.
+              Usernames can only have letters and numbers and can be a max of {HANDLE_MAX_CHARS} characters.
             </p>
             <div className="flex flex-col">
               <Button
