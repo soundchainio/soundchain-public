@@ -23,7 +23,7 @@ export const TrackUploader = ({ onFileChange, art }: TrackUploaderProps) => {
 
   function onDrop<T extends File>([file]: T[], fileRejections: FileRejection[]) {
     if (fileRejections.length > 0) {
-      toast.error(fileRejections[0].errors[0].message);
+      toast.error(fileRejections[0].errors[0].message.replace(`${maxSize.toString()} bytes`, '30mb'));
       return;
     }
     setPreview(URL.createObjectURL(file));
@@ -53,10 +53,10 @@ export const TrackUploader = ({ onFileChange, art }: TrackUploaderProps) => {
 
   return (
     <div {...getRootProps()} className={containerClasses}>
-      <div className="mr-auto w-full">
+      <div className="mr-auto w-full text-gray-80">
         <MusicFile />
-        <p className="font-bold text-[12px] mt-1">Upload music...</p>
-        <p className="font-semibold text-[9px]">WAV,MP3,AIFF,FLAC,OGA (Max: 30mb)</p>
+        <p className="font-bold text-xs mt-1">Upload music...</p>
+        <p className="font-semibold text-xxs">WAV,MP3,AIFF,FLAC,OGA (Max: 30mb)</p>
       </div>
       <div className="flex flex-col justify-center flex-shrink-0">
         <JellyButton flavor="blueberry" icon={<UploadIcon color="blue" id="blue-gradient" />} className="text-xs">
