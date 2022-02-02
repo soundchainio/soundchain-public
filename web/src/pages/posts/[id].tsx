@@ -61,9 +61,9 @@ export default function PostPage({ post }: PostPageProps) {
 
   const title = track ? `${track.title} - song by ${track.artist} | SoundChain` : 'Post | SoundChain';
   const description = track
-    ? `${post.body} -  Listen to ${track.title} on SoundChain. ${track.artist}. ${track.album || 'Song'}. ${
-        track.releaseYear != null ? `${track.releaseYear}.` : ''
-      }`
+    ? `${!post.body ? '' : `${post.body} - `}Listen to ${track.title} on SoundChain. ${track.artist}. ${
+        track.album || 'Song'
+      }. ${!track.releaseYear ? '' : `${track.releaseYear}.`}`
     : post.body || 'Check this post on SoundChain';
 
   return (
