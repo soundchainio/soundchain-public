@@ -57,7 +57,7 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
     copyright: initialValues?.copyright || '',
     releaseYear: initialValues?.releaseYear || new Date().getFullYear(),
     genres: initialValues?.genres || [],
-    artworkFile: null,
+    artworkFile: initialValues?.artworkFile || null,
     royalty: 0,
   };
 
@@ -91,11 +91,14 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
       onSubmit={handleSubmit}
     >
       {({ setFieldValue, values }) => {
-        console.log(values.artworkFile);
         return (
           <Form className="flex flex-col gap-4 h-full">
             <div className="flex gap-4 px-4">
-              <ArtworkUploader name="artworkFile" />
+              <ArtworkUploader
+                name="artworkFile"
+                initialValue={initialValues?.artworkFile}
+                onFileChange={file => setFieldValue('artworkFile', file)}
+              />
               <div className="flex flex-col flex-1 gap-2">
                 <InputField name="title" type="text" label="TRACK TITLE" maxLength={100} />
                 <InputField name="album" type="text" label="ALBUM" maxLength={100} />

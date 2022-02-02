@@ -8,14 +8,15 @@ interface AssetProps {
 }
 
 const Asset = ({ src, sizes }: AssetProps) => {
+  const isLocalFile = src?.startsWith('blob:');
   const { data } = useMimeTypeQuery({
     variables: { url: src as string },
-    skip: !src,
+    skip: !src || isLocalFile,
   });
 
   const mimeType = data?.mimeType.value;
 
-  if (src && !mimeType) return null;
+  if (src && !mimeType && !isLocalFile) return null;
 
   if (src && mimeType?.startsWith('video')) {
     return (
@@ -35,7 +36,7 @@ const Asset = ({ src, sizes }: AssetProps) => {
   }
 
   return (
-    <div className="h-full w-full animate-wave bg-wave-size bg-gradient-to-r from-black to-gray-70 via-gray-40 bg-opacity-80">
+    <div className="relative h-full w-full animate-wave bg-wave-size bg-gradient-to-r from-black to-gray-70 via-gray-40 bg-opacity-80">
       <Image
         src={src || '/default-pictures/album-artwork.png'}
         alt=""

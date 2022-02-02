@@ -1,39 +1,40 @@
 import { CameraIcon } from '@heroicons/react/solid';
 import { imageMimeTypes, videoMimeTypes } from 'lib/mimeTypes';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FileRejection, useDropzone } from 'react-dropzone';
 
 export interface ArtworkUploaderProps {
   name: string;
-  onFileChange?: (file: File) => void;
+  initialValue?: File;
+  onFileChange: (file: File) => void;
 }
 
 const maxSize = 1024 * 1024 * 30; // 30Mb
 
-export const ArtworkUploader = ({ name, onFileChange }: ArtworkUploaderProps) => {
+export const ArtworkUploader = ({ name, initialValue, onFileChange }: ArtworkUploaderProps) => {
   const [file, setFile] = useState<File>();
   const [preview, setPreview] = useState<string>();
 
   function onDrop<T extends File>([file]: T[], fileRejections: FileRejection[]) {
     if (fileRejections.length > 0) {
-      alert(`${fileRejections[0].file.name} not supported!`);
+      alert(fileRejections[0].errors[0].message);
       return;
     }
-    if (!file.name.split('.').pop()) {
-      alert(`Could not detect file extension!`);
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-
-    reader.addEventListener('loadend', () => {
-      setPreview(reader.result as string);
-      setFile(file);
-      onFileChange && onFileChange(file);
-    });
+    setPreview(URL.createObjectURL(file));
+    setFile(file);
+    onFileChange(file);
   }
+
+  useEffect(() => {
+    if (initialValue) {
+      onDrop([initialValue], []);
+    } else {
+      setFile(undefined);
+      setPreview(undefined);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialValue]);
 
   const { getRootProps, getInputProps } = useDropzone({
     maxFiles: 1,
@@ -63,7 +64,7 @@ export const ArtworkUploader = ({ name, onFileChange }: ArtworkUploaderProps) =>
           playsInline
           disablePictureInPicture
           disableRemotePlayback
-          className="w-full h-full"
+          className="w-[100px] h-[100px] object-cover"
         />
       )}
       {preview && !isVideo && (

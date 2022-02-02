@@ -14,9 +14,9 @@ export class UploadService {
     this.s3Client = new S3Client({ region: config.uploads.region });
   }
 
-  async generateUploadUrl(fileType: string, fileExtension: string): Promise<UploadUrl> {
+  async generateUploadUrl(fileType: string): Promise<UploadUrl> {
     const imageId = uuidv4();
-    const fileName = `${imageId}.${fileExtension}`;
+    const fileName = imageId;
     const bucketParams: PutObjectCommandInput = {
       Bucket: config.uploads.bucket,
       Key: fileName,

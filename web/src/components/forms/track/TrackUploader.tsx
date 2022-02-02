@@ -22,22 +22,12 @@ export const TrackUploader = ({ onFileChange, art }: TrackUploaderProps) => {
 
   function onDrop<T extends File>([file]: T[], fileRejections: FileRejection[]) {
     if (fileRejections.length > 0) {
-      alert(`${fileRejections[0].file.name} not supported!`);
+      alert(fileRejections[0].errors[0].message);
       return;
     }
-    if (!file.name.split('.').pop()) {
-      alert(`Could not detect file extension!`);
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-
-    reader.addEventListener('loadend', () => {
-      setPreview(reader.result as string);
-      setFile(file);
-      onFileChange(file);
-    });
+    setPreview(URL.createObjectURL(file));
+    setFile(file);
+    onFileChange(file);
   }
 
   const { getRootProps, getInputProps } = useDropzone({ maxFiles: 1, maxSize, accept: audioMimeTypes, onDrop });

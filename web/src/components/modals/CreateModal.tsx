@@ -22,6 +22,7 @@ import {
   usePinJsonToIpfsMutation,
   usePinToIpfsMutation,
 } from 'lib/graphql';
+import { imageMimeTypes } from 'lib/mimeTypes';
 import * as musicMetadata from 'music-metadata-browser';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
@@ -65,6 +66,7 @@ export const CreateModal = () => {
 
   useEffect(() => {
     handleClose();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [asPath]);
 
   const handleFileDrop = (file: File) => {
@@ -76,13 +78,7 @@ export const CreateModal = () => {
           type,
         });
         artworkFile = new File([blob], 'artwork', { type });
-
-        const reader = new FileReader();
-        reader.readAsDataURL(artworkFile);
-
-        reader.addEventListener('loadend', () => {
-          setArtworkPreview(reader.result as string);
-        });
+        setArtworkPreview(URL.createObjectURL(artworkFile));
       }
 
       let initialGenres;
@@ -100,14 +96,9 @@ export const CreateModal = () => {
         copyright: fileMetadata?.license,
       });
     });
-
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-
-    reader.addEventListener('loadend', () => {
-      setPreview(reader.result as string);
-      setFile(file);
-    });
+    setPreview(URL.createObjectURL(file));
+    setArtworkPreview(undefined);
+    setFile(file);
   };
 
   const isOpen = modalState.showCreate;
@@ -127,7 +118,7 @@ export const CreateModal = () => {
       try {
         const bufferReader = new FileReader();
         bufferReader.readAsArrayBuffer(assetFile);
-        bufferReader.addEventListener('loadend', () => {
+        bufferReader.addEventListener('loadend', async () => {
           const id3Writer = new ID3Writer(bufferReader.result);
 
           id3Writer
@@ -143,15 +134,14 @@ export const CreateModal = () => {
               language: 'eng',
             }).set;
 
-          // it was breaking video upload - no time to check, sorry
-          // if (values.artworkUrl) {
-          //   const artWorkArrayBuffer = values.artworkUrl && (await fetch(values.artworkUrl).then(r => r.arrayBuffer()));
-          //   id3Writer.setFrame('APIC', {
-          //     type: 0,
-          //     data: artWorkArrayBuffer,
-          //     description: 'Artwork',
-          //   });
-          // }
+          if (values.artworkFile && imageMimeTypes.includes(values.artworkFile.type)) {
+            const artWorkArrayBuffer = await values.artworkFile.arrayBuffer();
+            id3Writer.setFrame('APIC', {
+              type: 0,
+              data: artWorkArrayBuffer,
+              description: 'Artwork',
+            });
+          }
           id3Writer.addTag();
           const newFile: File = new File([id3Writer.getBlob()], assetFile.name, { type: assetFile.type });
           resolve(newFile);
@@ -203,7 +193,7 @@ export const CreateModal = () => {
         let artworkUrl: string;
         if (artworkFile) {
           setMintingState('Uploading track file');
-          const artworkUrl = await upload([artworkFile]);
+          artworkUrl = await upload([artworkFile]);
 
           const artPin = artworkUrl.substring(artworkUrl.lastIndexOf('/') + 1);
           setMintingState('Pinning artwork to IPFS');

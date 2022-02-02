@@ -7,7 +7,6 @@ export const useUpload = (value?: string, onChange?: (value: string) => void) =>
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | undefined>(value);
   const [fileType, setFileType] = useState<string>('');
-  const [fileExtension, setFileExtension] = useState<string>('');
 
   const upload = useCallback(
     async ([file]: File[]) => {
@@ -16,15 +15,9 @@ export const useUpload = (value?: string, onChange?: (value: string) => void) =>
       setPreview(objectUrl);
       setFileType(file.type);
 
-      const fileExt = file.name.split('.').pop();
-      if (!fileExt) {
-        throw Error('Could not detect file extension!');
-      }
-      setFileExtension(fileExt);
-
       const { data } = await apolloClient.query<UploadUrlQuery>({
         query: UploadUrlDocument,
-        variables: { fileType: file.type, fileExtension: fileExt },
+        variables: { fileType: file.type },
         fetchPolicy: 'no-cache',
       });
 
@@ -41,8 +34,8 @@ export const useUpload = (value?: string, onChange?: (value: string) => void) =>
 
       return readUrl;
     },
-    [onChange, setPreview, setUploading, setFileType, setFileExtension],
+    [onChange, setPreview, setUploading, setFileType],
   );
 
-  return { preview, fileType, fileExtension, uploading, upload };
+  return { preview, fileType, uploading, upload };
 };
