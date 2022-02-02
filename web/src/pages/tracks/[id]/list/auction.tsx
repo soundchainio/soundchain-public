@@ -141,8 +141,8 @@ export default function AuctionPage({ track }: TrackPageProps) {
   return (
     <>
       <SEO
-        title={`Soundchain - List track`}
-        description={'List your track as an auction item on Soundchain'}
+        title={`List track | SoundChain`}
+        description={'List your track as an auction item on SoundChain'}
         canonicalUrl={router.asPath}
       />
       <Layout topNavBarProps={topNovaBarProps}>

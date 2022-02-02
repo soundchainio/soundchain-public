@@ -17,9 +17,9 @@ export default function CoverPicturePage() {
   return (
     <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
       <SEO
-        title="Soundchain - Cover Picture"
+        title="Cover Picture | SoundChain"
         canonicalUrl="/settings/cover-picture"
-        description="Soundchain Cover Picture"
+        description="SoundChain Cover Picture"
       />
       <div className="min-h-full flex flex-col px-6 lg:px-8 py-6">
         <CoverPictureForm

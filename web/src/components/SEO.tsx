@@ -22,7 +22,7 @@ export default function SEO({
         <>
           <title>{title}</title>
           <meta property="og:title" content={title} />
-          <meta property="og:site" content="Soundchain" />
+          <meta property="og:site" content="SoundChain" />
           <meta property="twitter:title" content={title} />
         </>
       )}

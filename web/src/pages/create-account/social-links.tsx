@@ -21,9 +21,9 @@ export default function SocialLinksPage() {
   return (
     <>
       <SEO
-        title="Soundchain - Social Links"
+        title="Social Links | SoundChain"
         canonicalUrl="/create-account/social-links"
-        description="Soundchain Social Links"
+        description="SoundChain Social Links"
       />
       <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
         <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">

@@ -302,6 +302,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
 
   private async fetchAuctionsEndingInOneHour(now: number): Promise<AuctionWithBids[]> {
     const oneHourInSecs = 60 * 60;
+    const nowInSecs = now / 1000;
 
     return await this.model.aggregate<AuctionWithBids>([
       {
@@ -310,7 +311,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
             $gte: [
               '$endingTime',
               {
-                $subtract: [now, oneHourInSecs],
+                $subtract: [nowInSecs, oneHourInSecs],
               },
             ],
           },

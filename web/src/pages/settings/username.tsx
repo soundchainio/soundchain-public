@@ -54,9 +54,9 @@ export default function SettingsUsernamePage() {
   return (
     <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
       <SEO
-        title="Soundchain - Name Settings"
+        title="Name Settings | SoundChain"
         canonicalUrl="/settings/username/"
-        description="Soundchain Name Settings"
+        description="SoundChain Name Settings"
       />
       <div className="min-h-full flex flex-col px-6 lg:px-8 py-6">
         <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={onSubmit}>

@@ -56,8 +56,8 @@ export default function ReceivePage({ address }: ReceivePageProps) {
   return (
     <>
       <SEO
-        title="Soundchain - Wallet Receive Funds"
-        description="Soundchain Wallet Receive Funds"
+        title="Wallet Receive Funds | SoundChain"
+        description="Receive funds on your SoundChain wallet"
         canonicalUrl={`/wallet/${address}/receive/`}
       />
       <Layout topNavBarProps={topNavBarProps}>

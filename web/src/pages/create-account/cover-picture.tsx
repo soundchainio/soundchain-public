@@ -4,10 +4,9 @@ import { Layout } from 'components/Layout';
 import SEO from 'components/SEO';
 import { StepProgressBar } from 'components/StepProgressBar';
 import { TopNavBarProps } from 'components/TopNavBar';
-import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React from 'react';
-import { steps, SkipButton } from 'utils/createAccountUtils';
+import { SkipButton, steps } from 'utils/createAccountUtils';
 
 export default function CoverPicturePage() {
   const router = useRouter();
@@ -22,16 +21,11 @@ export default function CoverPicturePage() {
   return (
     <>
       <SEO
-        title="Soundchain - Cover Picture"
+        title="Cover Picture | SoundChain"
         canonicalUrl="/create-account/cover-picture"
-        description="Soundchain Cover Picture"
+        description="SoundChain Cover Picture"
       />
       <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
-        <Head>
-          <title>Soundchain - Cover Picture</title>
-          <meta name="description" content="Cover Picture" />
-          <link rel="icon" href="/favicons/favicon.ico" />
-        </Head>
         <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
           <CoverPictureForm
             afterSubmit={() => router.push('/create-account/favorite-genres')}

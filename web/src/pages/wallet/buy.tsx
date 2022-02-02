@@ -49,8 +49,8 @@ export default function BuyMaticPage() {
   return (
     <Layout topNavBarProps={topNovaBarProps}>
       <SEO
-        title="Soundchain - Wallet Buy Funds"
-        description="Soundchain Wallet Buy Funds"
+        title="Wallet Buy Funds | SoundChain"
+        description="Buy funds on your SoundChain wallet"
         canonicalUrl="/wallet/buy/"
       />
       <div className="px-8 py-4 text-gray-80 text-xs">

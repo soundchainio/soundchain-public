@@ -30,7 +30,11 @@ export default function HomePage({ me }: HomePageProps) {
 
   return (
     <>
-      <SEO title="Soundchain - Marketplace" canonicalUrl="/marketplace" description="Soundchain NFT Marketplace" />
+      <SEO
+        title="Marketplace | SoundChain"
+        canonicalUrl="/marketplace"
+        description="Discover unique tracks on SoundChain NFT Marketplace"
+      />
       <Layout topNavBarProps={topNavBarProps}>
         <Marketplace />
       </Layout>

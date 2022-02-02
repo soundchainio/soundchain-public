@@ -65,7 +65,7 @@ export default function GetVerified() {
   return (
     <Layout topNavBarProps={topNavBarProps}>
       <SEO
-        title="Soundchain - Get Verified"
+        title="Get Verified | SoundChain"
         description="Request your profile verification"
         canonicalUrl="/get-verified/"
       />

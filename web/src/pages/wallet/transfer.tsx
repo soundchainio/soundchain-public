@@ -41,8 +41,8 @@ export default function TransferPage() {
   return (
     <Layout topNavBarProps={topNovaBarProps}>
       <SEO
-        title="Soundchain - Wallet Funds Transfer"
-        description="Soundchain Wallet Funds Transfer"
+        title="Wallet Funds Transfer | SoundChain"
+        description="Transfer funds on your SoundChain wallet"
         canonicalUrl="/wallet/transfer/"
       />
       <TransferForm handleSubmit={handleSubmit}></TransferForm>

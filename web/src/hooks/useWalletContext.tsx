@@ -79,7 +79,7 @@ const WalletProvider = ({ children }: WalletProviderProps) => {
       {Content && (
         <div className="fixed top-0 left-0 h-full w-full flex flex-col items-center gap-4 justify-center z-50 bg-gray-30 bg-opacity-95 text-center text-white font-bold">
           {Content}
-          <div>or you can select your Soundchain Wallet</div>
+          <div>or you can select your SoundChain Wallet</div>
           <Button
             variant="rainbow-xs"
             onClick={() =>
@@ -92,7 +92,7 @@ const WalletProvider = ({ children }: WalletProviderProps) => {
               })
             }
           >
-            Select Soundchain Wallet
+            Select SoundChain Wallet
           </Button>
         </div>
       )}

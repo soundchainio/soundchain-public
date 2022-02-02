@@ -263,14 +263,14 @@ export default function TrackPage({ track }: TrackPageProps) {
     setIsFavorite(!isFavorite);
   };
 
+  const title = `${track.title} - song by ${track.artist} | SoundChain`;
+  const description = `Listen to ${track.title} on SoundChain. ${track.artist}. ${track.album || 'Song'}. ${
+    track.releaseYear != null ? `${track.releaseYear}.` : ''
+  }`;
+
   return (
     <>
-      <SEO
-        title={`Soundchain - Track - ${track.title}`}
-        description={track.artist || 'on Soundchain'}
-        canonicalUrl={`/tracks/${track.id}`}
-        image={track.artworkUrl}
-      />
+      <SEO title={title} description={description} canonicalUrl={`/tracks/${track.id}`} image={track.artworkUrl} />
       <Layout topNavBarProps={topNavBarProps}>
         <div className="p-3 flex flex-col gap-5">
           <Track track={track} />

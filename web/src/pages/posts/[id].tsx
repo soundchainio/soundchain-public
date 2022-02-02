@@ -10,12 +10,12 @@ import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useMe } from 'hooks/useMe';
 import { cacheFor, createApolloClient } from 'lib/apollo';
-import { PostDocument, usePostQuery } from 'lib/graphql';
+import { PostDocument, PostQuery, usePostQuery } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 
 export interface PostPageProps {
-  postId: string;
+  post: PostQuery['post'];
 }
 
 interface PostPageParams extends ParsedUrlQuery {
@@ -31,7 +31,7 @@ export const getServerSideProps: GetServerSideProps<PostPageProps, PostPageParam
 
   const apolloClient = createApolloClient(context);
 
-  const { error } = await apolloClient.query({
+  const { error, data } = await apolloClient.query({
     query: PostDocument,
     variables: { id: postId },
     context,
@@ -41,41 +41,45 @@ export const getServerSideProps: GetServerSideProps<PostPageProps, PostPageParam
     return { notFound: true };
   }
 
-  return cacheFor(PostPage, { postId }, context, apolloClient);
+  return cacheFor(PostPage, { post: data.post }, context, apolloClient);
 };
 
-export default function PostPage({ postId }: PostPageProps) {
-  const { data } = usePostQuery({ variables: { id: postId } });
+export default function PostPage({ post }: PostPageProps) {
+  const { data: repostData } = usePostQuery({ variables: { id: post.repostId || '' }, skip: !post.repostId });
 
   const me = useMe();
 
-  if (!data?.post) return null;
-
-  const deleted = data.post.deleted;
+  const deleted = post.deleted;
 
   const topNovaBarProps: TopNavBarProps = {
     leftButton: <BackButton />,
     rightButton: me ? <InboxButton /> : undefined,
   };
 
+  const repost = repostData?.post;
+  const track = post.track || repost?.track;
+
+  const title = track ? `${track.title} - song by ${track.artist} | SoundChain` : 'Post | SoundChain';
+  const description = track
+    ? `${!post.body ? '' : `${post.body} - `}Listen to ${track.title} on SoundChain. ${track.artist}. ${
+        track.album || 'Song'
+      }. ${!track.releaseYear ? '' : `${track.releaseYear}.`}`
+    : post.body || 'Check this post on SoundChain';
+
   return (
     <>
-      <SEO
-        title="Soundchain - Post"
-        canonicalUrl={`/posts/${postId}/`}
-        description={data.post.body || 'Soundchain Post Details'}
-      />
+      <SEO title={title} canonicalUrl={`/posts/${post.id}/`} description={description} image={track?.artworkUrl} />
       <Layout topNavBarProps={topNovaBarProps}>
         {deleted ? (
           <NotAvailableMessage type="post" />
         ) : (
           <div>
-            <Post post={data.post} />
+            <Post post={post} />
             <div className="pb-12">
-              <Comments postId={data.post.id} />
+              <Comments postId={post.id} />
             </div>
             <BottomSheet>
-              <NewCommentForm postId={data.post.id} />
+              <NewCommentForm postId={post.id} />
             </BottomSheet>
           </div>
         )}

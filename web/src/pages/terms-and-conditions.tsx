@@ -6,8 +6,8 @@ export default function TermsAndConditionsPage() {
   return (
     <Layout>
       <SEO
-        title="Soundchain - Terms and Conditions"
-        description="Soundchain Terms and Conditions"
+        title="Terms and Conditions | SoundChain"
+        description="SoundChain Terms and Conditions"
         canonicalUrl="/terms-and-conditions/"
       />
       <TermsAndConditions />

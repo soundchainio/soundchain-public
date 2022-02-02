@@ -10,7 +10,7 @@ interface TextareaFieldProps {
   rows?: number;
 }
 
-const commonInputClasses = `appearance-none block w-full p-3 rounded-md border-2 border-gray-30 bg-gray-1A text-gray-200 cursor-text`;
+const commonInputClasses = `appearance-none block w-full p-3 rounded-md border border-gray-30 bg-gray-1A text-gray-200 cursor-text`;
 const validInputClasses = `${commonInputClasses} border-gray-30`;
 const errorInputClasses = `${commonInputClasses} border-red-500`;
 
@@ -20,13 +20,13 @@ export const TextareaField = ({ label, icon: Icon, maxLength, rows = 4, ...props
     <div className="flex flex-col gap-2">
       <div className={meta.touched && meta.error ? errorInputClasses : validInputClasses}>
         {label && (
-          <Label className="font-bold text-sm block cursor-text" htmlFor={props.name}>
+          <Label className="font-bold block cursor-text uppercase" htmlFor={props.name} textSize="xxs">
             {label}
           </Label>
         )}
         <textarea
           maxLength={maxLength}
-          className="font-bold text-sm bg-gray-1A w-full p-0 text-gray-200 border-none focus:outline-none focus:ring-transparent placeholder-gray-50 placeholder-semibold resize-none"
+          className="font-bold text-xs bg-gray-1A w-full p-0 text-gray-200 border-none focus:outline-none focus:ring-transparent placeholder-gray-50 placeholder-semibold resize-none"
           id={props.name}
           {...field}
           {...props}

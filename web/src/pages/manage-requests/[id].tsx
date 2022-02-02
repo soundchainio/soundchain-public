@@ -101,7 +101,7 @@ export default function RequestPage({ data }: RequestPageProps) {
 
   return (
     <>
-      <SEO title="Soundchain - Manage Request" canonicalUrl={router.asPath} description="Soundchain Manage Request" />
+      <SEO title="Manage Request | SoundChain" canonicalUrl={router.asPath} description="SoundChain Manage Request" />
       <Layout topNavBarProps={topNovaBarProps}>
         <div className="flex flex-col justify-between h-full">
           <div>

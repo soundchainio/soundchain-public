@@ -19,9 +19,9 @@ export default function EditFavoriteGenresPage() {
   return (
     <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
       <SEO
-        title="Soundchain - Favorite Genres"
+        title="Favorite Genres | SoundChain"
         canonicalUrl="/settings/cover-picture"
-        description="Soundchain Favorite Genres"
+        description="SoundChain Favorite Genres"
       />
       <div className="min-h-full flex flex-col px-6 lg:px-8 py-6">
         <div className="flex flex-1 flex-col space-y-6">
