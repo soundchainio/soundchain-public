@@ -3,6 +3,7 @@ import { imageMimeTypes, videoMimeTypes } from 'lib/mimeTypes';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { FileRejection, useDropzone } from 'react-dropzone';
+import { toast } from 'react-toastify';
 
 export interface ArtworkUploaderProps {
   name: string;
@@ -18,7 +19,7 @@ export const ArtworkUploader = ({ name, initialValue, onFileChange }: ArtworkUpl
 
   function onDrop<T extends File>([file]: T[], fileRejections: FileRejection[]) {
     if (fileRejections.length > 0) {
-      alert(fileRejections[0].errors[0].message);
+      toast.error(fileRejections[0].errors[0].message);
       return;
     }
     setPreview(URL.createObjectURL(file));
@@ -47,33 +48,41 @@ export const ArtworkUploader = ({ name, initialValue, onFileChange }: ArtworkUpl
 
   return (
     <div className="flex flex-col cursor-pointer" {...getRootProps()}>
-      {!preview && (
-        <div className="relative flex border border-gray-35 rounded overflow-hidden">
-          <Image src="/soundchain-app-icon.png" alt="Upload preview" width={100} height={100} objectFit="fill" />
-          <div className="absolute w-full h-full flex items-center justify-center text-white bg-gray-10 bg-opacity-60">
-            <CameraIcon width={30} />
-          </div>
-        </div>
-      )}
-      {preview && isVideo && (
-        <video
-          src={preview}
-          loop
-          muted
-          autoPlay
-          playsInline
-          disablePictureInPicture
-          disableRemotePlayback
-          className="w-[100px] h-[100px] object-cover"
-        />
-      )}
-      {preview && !isVideo && (
-        <div className="relative flex">
-          <Image src={preview} alt="Upload preview" width={100} height={100} objectFit="cover" />
-        </div>
-      )}
+      <Preview preview={preview} isVideo={isVideo} />
       <div className="text-gray-80 text-center font-semibold text-xxs leading-4">CHANGE ARTWORK</div>
       <input name={name} {...getInputProps()} />
+    </div>
+  );
+};
+
+const Preview = ({ preview, isVideo }: { preview: string | undefined; isVideo: boolean | undefined }) => {
+  if (!preview) {
+    return (
+      <div className="relative flex border border-gray-35 rounded overflow-hidden">
+        <Image src="/soundchain-app-icon.png" alt="Upload preview" width={100} height={100} objectFit="fill" />
+        <div className="absolute w-full h-full flex items-center justify-center text-white bg-gray-10 bg-opacity-60">
+          <CameraIcon width={30} />
+        </div>
+      </div>
+    );
+  }
+  if (isVideo) {
+    return (
+      <video
+        src={preview}
+        loop
+        muted
+        autoPlay
+        playsInline
+        disablePictureInPicture
+        disableRemotePlayback
+        className="w-[100px] h-[100px] object-cover"
+      />
+    );
+  }
+  return (
+    <div className="relative flex">
+      <Image src={preview} alt="Upload preview" width={100} height={100} objectFit="cover" />
     </div>
   );
 };

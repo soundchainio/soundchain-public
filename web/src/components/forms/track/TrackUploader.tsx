@@ -6,6 +6,7 @@ import { Upload as UploadIcon } from 'icons/Upload';
 import { audioMimeTypes } from 'lib/mimeTypes';
 import { useState } from 'react';
 import { FileRejection, useDropzone } from 'react-dropzone';
+import { toast } from 'react-toastify';
 
 export interface TrackUploaderProps {
   onFileChange: (file: File) => void;
@@ -22,7 +23,7 @@ export const TrackUploader = ({ onFileChange, art }: TrackUploaderProps) => {
 
   function onDrop<T extends File>([file]: T[], fileRejections: FileRejection[]) {
     if (fileRejections.length > 0) {
-      alert(fileRejections[0].errors[0].message);
+      toast.error(fileRejections[0].errors[0].message);
       return;
     }
     setPreview(URL.createObjectURL(file));

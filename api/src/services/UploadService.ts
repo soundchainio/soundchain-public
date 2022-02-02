@@ -15,8 +15,7 @@ export class UploadService {
   }
 
   async generateUploadUrl(fileType: string): Promise<UploadUrl> {
-    const imageId = uuidv4();
-    const fileName = imageId;
+    const fileName = uuidv4();
     const bucketParams: PutObjectCommandInput = {
       Bucket: config.uploads.bucket,
       Key: fileName,
