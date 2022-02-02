@@ -121,8 +121,8 @@ export default function CompleteAuctionPage({ track, auctionItem }: TrackPagePro
   return (
     <>
       <SEO
-        title={`Soundchain - Cancel auction of Track - ${track.title}`}
-        description={track.artist || 'on Soundchain'}
+        title={`Cancel auction | SoundChain`}
+        description={`Cancel auction of ${track.title} - song by ${track.artist}.`}
         canonicalUrl={`/tracks/${track.id}/cancel-auction/`}
         image={track.artworkUrl}
       />

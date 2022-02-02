@@ -4,6 +4,7 @@ import { GridView } from 'icons/GridView';
 import { ListView } from 'icons/ListView';
 import { SortListingItemField, SortOrder, TrackQuery, TrackWithListingItem, useListingItemsQuery } from 'lib/graphql';
 import React, { useEffect, useState } from 'react';
+import PullToRefresh from 'react-simple-pull-to-refresh';
 import { GenreLabel } from 'utils/Genres';
 import { SaleTypeLabel } from 'utils/SaleTypeLabel';
 import { Badge } from './Badge';
@@ -29,7 +30,7 @@ const SelectToApolloQuery: Record<SortListingItem, { field: SortListingItemField
 };
 
 export const Marketplace = () => {
-  const pageSize = 10;
+  const pageSize = 15;
   const { dispatchShowFilterMarketplaceModal } = useModalDispatch();
   const { genres: genresFromModal, filterSaleType } = useModalState();
   const [isGrid, setIsGrid] = useState(true);
@@ -42,21 +43,14 @@ export const Marketplace = () => {
     variables: {
       page: { first: pageSize },
       sort: { field, order },
+      filter: {},
     },
     ssr: false,
   });
 
-  useEffect(() => {
-    if (genresFromModal) setGenres(genresFromModal);
-    if (filterSaleType) setSaleType(filterSaleType);
-    refetch({
-      page: {
-        first: pageSize,
-      },
-      sort: { field, order },
-      filter: buildMarketplaceFilter(genresFromModal, filterSaleType),
-    });
-  }, [sorting, genresFromModal, filterSaleType, refetch, field, order]);
+  useEffect(() => genresFromModal && setGenres(genresFromModal), [genresFromModal]);
+  useEffect(() => filterSaleType && setSaleType(filterSaleType), [filterSaleType]);
+  useEffect(() => setTotalCount(data?.listingItems.pageInfo.totalCount || 0), [data]);
 
   useEffect(() => {
     refetch({
@@ -66,15 +60,9 @@ export const Marketplace = () => {
       sort: { field, order },
       filter: buildMarketplaceFilter(genres, saleType),
     });
-  }, [sorting, genres, saleType, refetch, field, order]);
+  }, [genres, saleType, refetch, field, order]);
 
-  useEffect(() => {
-    if (data) {
-      setTotalCount(data.listingItems.pageInfo.totalCount);
-    }
-  }, [data?.listingItems.pageInfo.totalCount, totalCount, data]);
-
-  const loadMore = () => {
+  const loadMore = () =>
     fetchMore({
       variables: {
         page: {
@@ -85,7 +73,6 @@ export const Marketplace = () => {
         filter: buildMarketplaceFilter(genres, saleType),
       },
     });
-  };
 
   return (
     <div>
@@ -167,9 +154,10 @@ export const Marketplace = () => {
       ) : !data ? (
         <NoResultFound type="items" />
       ) : (
-        <Tracks isGrid={isGrid} tracks={data.listingItems.nodes} />
+        <PullToRefresh onRefresh={refetch} className="h-auto">
+          <Tracks isGrid={isGrid} tracks={data.listingItems.nodes} />
+        </PullToRefresh>
       )}
-
       {data?.listingItems.pageInfo.hasNextPage && (
         <InfiniteLoader loadMore={loadMore} loadingMessage="Loading Marketplace" />
       )}

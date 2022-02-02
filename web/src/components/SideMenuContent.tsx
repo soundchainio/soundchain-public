@@ -1,22 +1,21 @@
 import { FollowModal } from 'components/FollowersModal';
 import { Number } from 'components/Number';
+import { config } from 'config';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
+import { Document } from 'icons/Document';
 import { Feedback } from 'icons/Feedback';
 import { Logo } from 'icons/Logo';
 import { Logout } from 'icons/Logout';
 import { Settings } from 'icons/Settings';
 import { Discord } from 'icons/social/Discord';
-import { FacebookSquare } from 'icons/social/FacebookSquare';
 import { InstagramSquare } from 'icons/social/InstagramSquare';
-import { Reddit } from 'icons/social/Reddit';
 import { TwitterSquare } from 'icons/social/TwitterSquare';
 import { Verified } from 'icons/Verified';
 import { Wallet } from 'icons/Wallet';
 import { setJwt } from 'lib/apollo';
 import { Role, usePendingRequestsBadgeNumberQuery } from 'lib/graphql';
-import Link from 'next/link';
-import NextLink from 'next/link';
+import { default as Link, default as NextLink } from 'next/link';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { FollowModalType } from 'types/FollowModalType';
@@ -24,6 +23,7 @@ import { Avatar } from './Avatar';
 import { DisplayName } from './DisplayName';
 import { MenuItem } from './MenuItem';
 import { MenuLink } from './MenuLink';
+import { SocialTag } from './SocialTag';
 
 interface SideMenuContentProps {
   isMobile?: boolean;
@@ -103,6 +103,13 @@ export const SideMenuContent = ({ isMobile }: SideMenuContentProps) => {
       {me && (
         <div>
           <MenuLink icon={Wallet} label="Wallet" href="/wallet" />
+          <MenuLink
+            icon={Document}
+            label="Docs"
+            target="_blank"
+            rel="noreferrer"
+            href="https://soundchain.gitbook.io/soundchain/"
+          />
           <MenuLink icon={Feedback} label="Leave Feedback" href="/feedback" />
           {me.roles.includes(Role.Admin) ? (
             <MenuLink
@@ -119,22 +126,24 @@ export const SideMenuContent = ({ isMobile }: SideMenuContentProps) => {
           <MenuItem icon={Logout} label="Logout" onClick={onLogout} />
         </div>
       )}
-      <NextLink href="/privacy-policy">
-        <a className="flex-shrink-0 flex p-4">
-          <div className="flex flex-row space-x-2 items-center h-10 justify-between text-gray-CC px-4 w-full">
-            <div className="flex">PRIVACY POLICY</div>
-            <div className="flex">V0</div>
-          </div>
-        </a>
-      </NextLink>
-      <div className="flex-shrink-0 flex">
-        <div className="flex flex-row space-x-2 items-center h-10 justify-between px-10 w-full">
-          <Reddit />
-          <TwitterSquare />
-          <Discord />
-          <FacebookSquare />
-          <InstagramSquare />
-        </div>
+      <div className="flex-shrink-0 flex items-center justify-between h-10 my-4 mx-8 text-gray-CC">
+        <NextLink href="/privacy-policy">
+          <a>PRIVACY POLICY</a>
+        </NextLink>
+        <span>v {config.appVersion}</span>
+      </div>
+      <div className="flex-shrink-0 flex flex-row justify-between items-center h-10 mx-8">
+        <SocialTag
+          ariaLabel="SoundChain Twitter account"
+          url="https://twitter.com/Soundchain_io"
+          icon={TwitterSquare}
+        />
+        <SocialTag ariaLabel="SoundChain Discord account" url="https://discord.gg/maCHnxbbSz" icon={Discord} />
+        <SocialTag
+          ariaLabel="SoundChain Instagram account"
+          url="https://www.instagram.com/soundchain.io/"
+          icon={InstagramSquare}
+        />
       </div>
       {me && (
         <FollowModal

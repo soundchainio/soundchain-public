@@ -110,7 +110,7 @@ export default function LoginPage() {
           showLoginSignUpButton: false,
         }}
       >
-        <SEO title="Soundchain - Login" description="Login warning" canonicalUrl="/login/" />
+        <SEO title="Login | SoundChain" description="Login warning" canonicalUrl="/login/" />
         <div className="flex justify-center pt-32 pb-6">
           <UserWarning />
         </div>
@@ -121,11 +121,7 @@ export default function LoginPage() {
           If you wish to login to an existing account, you must login using the same login method you used previously:
         </div>
         {authMethod.includes(AuthMethod.Google) && <GoogleButton />}
-        {authMethod.includes(AuthMethod.MagicLink) && (
-          <div>
-            <LoginForm handleMagicLogin={handleSubmit} showTerms={false} />
-          </div>
-        )}
+        {authMethod.includes(AuthMethod.MagicLink) && <LoginForm handleMagicLogin={handleSubmit} />}
         <div className="h-full flex flex-col justify-between">
           <div className="text-white text-center text-sm py-4">
             Alternatively, you may continue by creating a new account with the same email.
@@ -146,7 +142,7 @@ export default function LoginPage() {
         isLogin: true,
       }}
     >
-      <SEO title="Soundchain - Login" description="Log in to Soundchain" canonicalUrl="/login/" />
+      <SEO title="Login | SoundChain" description="Log in to SoundChain" canonicalUrl="/login/" />
       <div className="h-36 mb-2 flex items-center justify-center">
         <LogoAndText />
       </div>

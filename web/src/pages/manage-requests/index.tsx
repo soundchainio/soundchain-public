@@ -27,7 +27,7 @@ export default function ManageRequests() {
 
   return (
     <>
-      <SEO title="Soundchain - Get Verified" canonicalUrl="/manage-requests/" description="Soundchain Get Verified" />
+      <SEO title="Get Verified | Soundchain" canonicalUrl="/manage-requests/" description="Soundchain Get Verified" />
       <Layout topNavBarProps={topNavBarProps}>
         <div className="pt-2 bg-black">
           <ManageRequestTabs selectedTab={selectedTab} setSelectedTab={setSelectedTab} />

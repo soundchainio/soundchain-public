@@ -4,7 +4,6 @@ import { IconProps } from 'icons/types/IconProps';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { Label } from './Label';
 
 interface RefreshButtonProps {
   onClick?: () => void;
@@ -30,30 +29,20 @@ export const TopNavBarButton = ({ onClick, icon: Icon, label, className, path, c
   if (path) {
     return (
       <Link href={path} passHref>
-        <a
-          className={classNames(
-            className,
-            'flex flex-col items-center cursor-pointer focus:ring-2 focus:ring-blue-600',
-          )}
-        >
+        <a className={classNames(className, 'flex flex-col items-center')}>
           <Icon color={isActive ? color : undefined} />
-          <Label textSize="xs" className={classNames(isActive && `${color}-gradient-text`, 'pt-1 font-semibold')}>
+          <span className={`${isActive && `${color}-gradient-text`} pt-1 font-semibold text-gray-60 text-xs`}>
             {label}
-          </Label>
+          </span>
         </a>
       </Link>
     );
   }
 
   return (
-    <div
-      className={classNames(className, 'flex flex-col items-center cursor-pointer focus:ring-2 focus:ring-blue-600')}
-      onClick={onClick}
-    >
+    <button type="button" className={classNames(className, 'flex flex-col items-center')} onClick={onClick}>
       <Icon />
-      <Label textSize="xs" className="pt-1 font-semibold">
-        {label}
-      </Label>
-    </div>
+      <span className="text-gray-60 pt-1 font-semibold text-xs">{label}</span>
+    </button>
   );
 };

@@ -6,8 +6,8 @@ export default function PrivacyPolicyPage() {
   return (
     <Layout>
       <SEO
-        title="Soundchain - Privacy Policy"
-        description="Soundchain Privacy Policy"
+        title="Privacy Policy | SoundChain"
+        description="SoundChain Privacy Policy"
         canonicalUrl="/privacy-policy/"
       />
       <PrivacyPolicy />

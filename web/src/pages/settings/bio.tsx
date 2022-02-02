@@ -3,7 +3,6 @@ import { BioForm } from 'components/forms/profile/BioForm';
 import { Layout } from 'components/Layout';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
-import Head from 'next/head';
 import { useRouter } from 'next/router';
 import React from 'react';
 
@@ -17,11 +16,7 @@ export default function BioPage() {
 
   return (
     <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
-      <SEO title="Soundchain - Bio" canonicalUrl="/settings/bio" description="Soundchain Bio" />
-      <Head>
-        <title>Soundchain - Bio</title>
-        <meta name="description" content="Bio" />
-      </Head>
+      <SEO title="Bio | SoundChain" canonicalUrl="/settings/bio" description="SoundChain Bio" />
       <div className="min-h-full flex flex-col px-6 lg:px-8 py-6">
         <BioForm
           afterSubmit={() => router.push('/settings')}

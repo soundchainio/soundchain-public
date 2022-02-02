@@ -106,7 +106,7 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: Lis
               <SoundchainFee price={values.price} />
             </div>
             <p className="text-gray-80 text-sm text-center py-6 px-5">
-              Soundchain transaction fee will be applied to the listing price.
+              SoundChain transaction fee will be applied to the listing price.
             </p>
             <div className="py-3 px-5 bg-gray-20">
               <MaxGasFee />

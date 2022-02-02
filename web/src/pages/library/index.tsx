@@ -31,7 +31,7 @@ export default function LibraryPage({ me }: HomePageProps) {
 
   return (
     <>
-      <SEO title="Soundchain - Library" canonicalUrl="/library/" description="Soundchain Library" />
+      <SEO title="Library | SoundChain" canonicalUrl="/library/" description="SoundChain Library" />
       <Layout topNavBarProps={topNavBarProps}>
         <MenuLink icon={Heart} label="Favorite Tracks" href="/library/favorite-tracks" />
         <MenuLink icon={Artist} label="Artists" href="/library/artists" />

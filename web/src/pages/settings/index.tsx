@@ -75,7 +75,7 @@ export default function SettingsPage() {
 
   return (
     <Layout topNavBarProps={topNovaBarProps}>
-      <SEO title="Soundchain - Account Settings" canonicalUrl="/settings/" description="Soundchain Account Settings" />
+      <SEO title="Account Settings | SoundChain" canonicalUrl="/settings/" description="SoundChain Account Settings" />
       <div className="flex flex-col gap-8 mt-8">
         <div className="flex flex-row px-4">
           <NextLink href="/settings/profile-picture">

@@ -22,6 +22,7 @@ import {
   usePinJsonToIpfsMutation,
   usePinToIpfsMutation,
 } from 'lib/graphql';
+import { imageMimeTypes } from 'lib/mimeTypes';
 import * as musicMetadata from 'music-metadata-browser';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
@@ -45,6 +46,7 @@ export const CreateModal = () => {
 
   const [file, setFile] = useState<File>();
   const [preview, setPreview] = useState<string>();
+  const [artworkPreview, setArtworkPreview] = useState<string>();
 
   const [newTrack, setNewTrack] = useState<CreateTrackMutation['createTrack']['track']>();
 
@@ -64,6 +66,7 @@ export const CreateModal = () => {
 
   useEffect(() => {
     handleClose();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [asPath]);
 
   const handleFileDrop = (file: File) => {
@@ -75,6 +78,7 @@ export const CreateModal = () => {
           type,
         });
         artworkFile = new File([blob], 'artwork', { type });
+        setArtworkPreview(URL.createObjectURL(artworkFile));
       }
 
       let initialGenres;
@@ -84,7 +88,6 @@ export const CreateModal = () => {
 
       setInitialValues({
         title: fileMetadata?.title,
-        artist: me?.handle,
         description: fileMetadata?.comment && fileMetadata.comment[0],
         album: fileMetadata?.album,
         releaseYear: fileMetadata?.year,
@@ -93,14 +96,9 @@ export const CreateModal = () => {
         copyright: fileMetadata?.license,
       });
     });
-
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-
-    reader.addEventListener('loadend', () => {
-      setPreview(reader.result as string);
-      setFile(file);
-    });
+    setPreview(URL.createObjectURL(file));
+    setArtworkPreview(undefined);
+    setFile(file);
   };
 
   const isOpen = modalState.showCreate;
@@ -120,12 +118,12 @@ export const CreateModal = () => {
       try {
         const bufferReader = new FileReader();
         bufferReader.readAsArrayBuffer(assetFile);
-        bufferReader.addEventListener('loadend', () => {
+        bufferReader.addEventListener('loadend', async () => {
           const id3Writer = new ID3Writer(bufferReader.result);
 
           id3Writer
             .setFrame('TIT2', values.title)
-            .setFrame('TPE1', [values.artist])
+            .setFrame('TPE1', [me?.handle])
             .setFrame('TALB', values.album)
             .setFrame('TYER', values.releaseYear)
             .setFrame('TCON', values.genres)
@@ -134,18 +132,18 @@ export const CreateModal = () => {
               description: 'Track description made by the author',
               text: values.description,
               language: 'eng',
+            }).set;
+
+          if (values.artworkFile && imageMimeTypes.includes(values.artworkFile.type)) {
+            const artWorkArrayBuffer = await values.artworkFile.arrayBuffer();
+            id3Writer.setFrame('APIC', {
+              type: 0,
+              data: artWorkArrayBuffer,
+              description: 'Artwork',
             });
-          // it was breaking video upload - no time to check, sorry
-          // if (values.artworkUrl) {
-          //   const artWorkArrayBuffer = values.artworkUrl && (await fetch(values.artworkUrl).then(r => r.arrayBuffer()));
-          //   id3Writer.setFrame('APIC', {
-          //     type: 0,
-          //     data: artWorkArrayBuffer,
-          //     description: 'Artwork',
-          //   });
-          // }
+          }
           id3Writer.addTag();
-          const newFile: File = id3Writer.getBlob();
+          const newFile: File = new File([id3Writer.getBlob()], assetFile.name, { type: assetFile.type });
           resolve(newFile);
         });
       } catch (error) {
@@ -156,7 +154,8 @@ export const CreateModal = () => {
 
   const handleSubmit = async (values: FormValues) => {
     if (file && web3 && account && me) {
-      const { title, artworkUrl, description, artist, album, genres, releaseYear, copyright, royalty } = values;
+      const { title, artworkFile, description, album, genres, releaseYear, copyright, royalty } = values;
+      const artist = me.handle;
       const artistId = me.id;
       const artistProfileId = me.profile.id;
 
@@ -166,10 +165,8 @@ export const CreateModal = () => {
         setMintingState('Writing data to ID3Tag ');
         asset = await saveID3Tag(values, file);
       }
-
       setMintingState('Uploading track file');
       const assetUrl = await upload([asset]);
-      const artUrl = artworkUrl;
 
       try {
         const assetKey = assetUrl.substring(assetUrl.lastIndexOf('/') + 1);
@@ -193,8 +190,12 @@ export const CreateModal = () => {
           genres,
         };
 
-        if (artUrl) {
-          const artPin = artUrl.substring(artUrl.lastIndexOf('/') + 1);
+        let artworkUrl: string;
+        if (artworkFile) {
+          setMintingState('Uploading track file');
+          artworkUrl = await upload([artworkFile]);
+
+          const artPin = artworkUrl.substring(artworkUrl.lastIndexOf('/') + 1);
           setMintingState('Pinning artwork to IPFS');
           const { data: artPinResult } = await pinToIPFS({
             variables: {
@@ -346,7 +347,7 @@ export const CreateModal = () => {
       ) : (
         <>
           <div className="px-4 py-4">
-            <TrackUploader onFileChange={handleFileDrop} />
+            <TrackUploader onFileChange={handleFileDrop} art={artworkPreview} />
           </div>
           {file && preview && <TrackMetadataForm handleSubmit={handleSubmit} initialValues={initialValues} />}
           {mintingState && (

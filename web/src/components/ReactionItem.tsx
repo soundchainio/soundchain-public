@@ -1,5 +1,6 @@
 import { ReactionEmoji } from 'icons/ReactionEmoji';
 import { Reaction, ReactionType } from 'lib/graphql';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Avatar } from './Avatar';
 import { DisplayName } from './DisplayName';
@@ -17,15 +18,15 @@ export const ReactionItem = ({ reaction: { type, profile }, onClick }: FollowIte
   };
 
   return (
-    <div className="flex flex-row space-x-2 items-center px-4 py-3" onClick={onReactionClick}>
-      <div className="items-center self-center content-center">
-        <Avatar pixels={40} className="flex" profile={profile} />
-      </div>
-      <div className="text-white flex justify-between w-full text-sm gap-4">
-        <DisplayName name={profile.displayName} verified={profile.verified} teamMember={profile.teamMember} />
-        <div className="flex w-16 text-center items-center justify-end">
-          <ReactionEmoji name={type.toUpperCase() as ReactionType} className="w-4 h-4" />
-        </div>
+    <div className="flex flex-row justify-between space-x-2 items-center px-4 py-3" onClick={onReactionClick}>
+      <Link href={`/profiles/${profile.userHandle}`} passHref>
+        <a className="flex flex-row gap-2 items-center text-sm truncate">
+          <Avatar pixels={40} className="flex" profile={profile} />
+          <DisplayName name={profile.displayName} verified={profile.verified} teamMember={profile.teamMember} />
+        </a>
+      </Link>
+      <div className="flex items-center justify-center">
+        <ReactionEmoji name={type.toUpperCase() as ReactionType} className="w-4 h-4" />
       </div>
     </div>
   );

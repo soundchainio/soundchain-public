@@ -54,7 +54,7 @@ export const TrackListItem = ({ song, index, variant, handleOnPlayClicked }: Tra
         </a>
       </NextLink>
       <button
-        className={buttonStyle(variant)}
+        className="h-10 w-10 flex items-center hover:scale-125 duration-75 flex-shrink-0 justify-center"
         aria-label={isPlaying ? 'Pause' : 'Play'}
         onClick={e => {
           e.stopPropagation();
@@ -85,15 +85,5 @@ const indexStyle = (variant: TrackProps['variant']) => {
       return `${common} w-3 text-left`;
     default:
       return `${common} w-6 text-right`;
-  }
-};
-
-const buttonStyle = (variant: TrackProps['variant']) => {
-  const common = 'h-10 w-10 flex items-center hover:scale-125 duration-75 flex-shrink-0';
-  switch (variant) {
-    case 'playlist':
-      return `${common} justify-end`;
-    default:
-      return `${common} justify-center`;
   }
 };

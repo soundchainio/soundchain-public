@@ -10,6 +10,7 @@ import { useMagicContext } from 'hooks/useMagicContext';
 import { setJwt } from 'lib/apollo';
 import { useRegisterMutation } from 'lib/graphql';
 import { useRouter } from 'next/dist/client/router';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { formatValidationErrors } from 'utils/errorHelpers';
 import { handleRegex } from 'utils/Validation';
@@ -30,6 +31,7 @@ export default function CreateAccountPage() {
   const [register, { loading }] = useRegisterMutation();
   const [email, setEmail] = useState<string>('');
   const [token, setToken] = useState<string>('');
+  const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
 
   useEffect(() => {
     async function isLoggedInMagic() {
@@ -48,6 +50,10 @@ export default function CreateAccountPage() {
     }
     isLoggedInMagic();
   }, []);
+
+  const toggleTerms = () => {
+    setTermsAccepted(!termsAccepted);
+  };
 
   const handleSubmit = async (values: FormValues, { setErrors }: FormikHelpers<FormValues>) => {
     try {
@@ -83,9 +89,9 @@ export default function CreateAccountPage() {
   return (
     <>
       <SEO
-        title="Soundchain - Create Account"
+        title="Create Account | SoundChain"
         canonicalUrl="/create-account/"
-        description="Soundchain Create Account"
+        description="Create your account on SoundChain"
       />
       <AuthLayout topNavBarProps={topNavBarProps}>
         <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
@@ -98,7 +104,35 @@ export default function CreateAccountPage() {
                 <InputField label="Enter username. (Only letters and numbers allowed)" type="text" name="handle" />
               </div>
             </div>
-            <Button type="submit" loading={loading} disabled={loading}>
+            <div className="text-center text-xs text-white font-thin flex items-start mb-6">
+              <input
+                type="checkbox"
+                id="termsCheckbox"
+                className="h-5 w-5 focus:ring-0 border-2 border-green-500 bg-black text-green-500 rounded"
+                onChange={toggleTerms}
+              />
+              <div className="relative">
+                <label htmlFor="termsCheckbox">I agree to the SoundChain’s</label>
+                <Link href={`/terms-and-conditions`} passHref>
+                  <a className="text-white underline px-2 relative">
+                    <span className="after:absolute after:-inset-1">Terms &amp; Conditions</span>
+                  </a>
+                </Link>
+                and
+                <Link href={`/privacy-policy`} passHref>
+                  <a className="text-white underline px-2 relative">
+                    <span className="after:absolute after:-inset-1">Privacy Policy.</span>
+                  </a>
+                </Link>
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              className={'transition ' + (termsAccepted ? 'opacity-100' : 'opacity-50')}
+              loading={loading}
+              disabled={loading || !termsAccepted}
+            >
               CREATE ACCOUNT
             </Button>
           </Form>

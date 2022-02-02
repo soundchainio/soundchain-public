@@ -1,6 +1,7 @@
-import { Menu } from '@headlessui/react';
+import { Menu, Transition } from '@headlessui/react';
 import { ShareIcon } from '@heroicons/react/outline';
 import { useModalDispatch } from 'contexts/providers/modal';
+import { Fragment } from 'react';
 import { toast } from 'react-toastify';
 
 type Props = {
@@ -42,23 +43,45 @@ export const TrackShareButton = ({ trackId, title, artist, position }: Props) =>
   return (
     <div className="relative flex items-center">
       <Menu>
-        <Menu.Button aria-label="Share">
-          <div className="flex items-center text-gray-80">
-            <ShareIcon width={20} height={20} />
-          </div>
+        <Menu.Button aria-label="Share" className="w-10 h-10 flex items-center justify-center text-gray-80">
+          <ShareIcon width={18} height={18} />
         </Menu.Button>
-        <Menu.Items
-          className={`absolute ${getPosition(
-            position,
-          )} z-40 bg-gray-20 text-white w-48 flex flex-col rounded-lg shadow-lg`}
+        <Transition
+          as={Fragment}
+          enter="transition ease-out duration-100"
+          enterFrom="transform opacity-0 scale-95"
+          enterTo="transform opacity-100 scale-100"
+          leave="transition ease-in duration-75"
+          leaveFrom="transform opacity-100 scale-100"
+          leaveTo="transform opacity-0 scale-95"
         >
-          <Menu.Item onClick={handleSharing}>
-            <div className="w-full text-left p-5">Share URL</div>
-          </Menu.Item>
-          <Menu.Item onClick={handlePost}>
-            <div className="w-full text-left p-5">Share as Post</div>
-          </Menu.Item>
-        </Menu.Items>
+          <Menu.Items
+            className={`absolute ${getPosition(
+              position,
+            )} z-40 bg-gray-20 text-white w-32 flex flex-col rounded-lg shadow-lg`}
+          >
+            <Menu.Item>
+              {({ active }) => (
+                <button
+                  className={`w-full text-left font-semibold text-xs px-5 py-4 ${active && 'bg-gray-40 rounded-md'}`}
+                  onClick={handleSharing}
+                >
+                  Share URL
+                </button>
+              )}
+            </Menu.Item>
+            <Menu.Item>
+              {({ active }) => (
+                <button
+                  className={`w-full text-left font-semibold text-xs px-5 py-4 ${active && 'bg-gray-40 rounded-md'}`}
+                  onClick={handlePost}
+                >
+                  Share as Post
+                </button>
+              )}
+            </Menu.Item>
+          </Menu.Items>
+        </Transition>
       </Menu>
     </div>
   );

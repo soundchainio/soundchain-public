@@ -135,7 +135,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
 
   return (
     <>
-      <SEO title={`Soundchain - Edit Listing`} description={'Edit Auction Listing'} canonicalUrl={router.asPath} />
+      <SEO title="Edit Listing | SoundChain" description="Edit Auction Listing" canonicalUrl={router.asPath} />
       <Layout topNavBarProps={topNovaBarProps}>
         <div className="m-4">
           <Track track={track} />

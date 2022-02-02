@@ -41,14 +41,16 @@ export const Message = ({ messageId, nextMessage }: MessageProps) => {
         )}
         <div className="flex flex-col w-full">
           <div
+            style={{ width: 'fit-content' }}
             className={classNames(
               'flex py-1 px-4 w-full rounded-t-xl',
-              isMyMessage ? 'rounded-bl-xl bg-purple-gradient' : 'rounded-br-xl bg-gray-20',
+              isMyMessage ? 'rounded-bl-xl bg-purple-gradient self-end' : 'rounded-br-xl bg-gray-20',
             )}
           >
             <pre
+              style={{ overflowWrap: 'anywhere' }}
               className={classNames(
-                'text-white font-thin tracking-wide text-sm whitespace-pre-wrap w-full p-2',
+                'text-white font-thin tracking-wide text-sm whitespace-pre-wrap w-full py-2',
                 isMyMessage && 'text-right',
               )}
             >

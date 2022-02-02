@@ -6,13 +6,19 @@ interface MenuLinkProps {
   icon?: (props: IconProps) => JSX.Element;
   label: string;
   href: string;
+  target?: string;
+  rel?: string;
   badgeNumber?: number;
 }
 
-export const MenuLink = ({ icon: Icon, label, href, badgeNumber }: MenuLinkProps) => {
+export const MenuLink = ({ icon: Icon, label, href, badgeNumber, target, rel }: MenuLinkProps) => {
   return (
     <Link href={href} passHref>
-      <a className="flex-shrink-0 flex bg-gray-25 px-4 py-2 border-t-2 last:border-b-2 border-gray-30 items-center space-x-2 h-12 w-full relative">
+      <a
+        rel={rel}
+        target={target}
+        className="flex-shrink-0 flex bg-gray-25 px-4 py-2 border-t-2 last:border-b-2 border-gray-30 items-center space-x-2 h-12 w-full relative"
+      >
         {Icon && <Icon fill="gray" />}
         <BadgeGeneral number={badgeNumber} />
         <div className="text-gray-CC font-bold">{label}</div>

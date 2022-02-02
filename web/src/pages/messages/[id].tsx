@@ -86,12 +86,12 @@ export default function ChatPage({ recipientName, profileId }: PostPageProps) {
   const topNavBarProps: TopNavBarProps = {
     title: recipientName,
     leftButton: <BackButton scroll={false} />,
-    rightButton: <RefreshButton onClick={onRefresh} />,
+    rightButton: <RefreshButton onClick={onRefresh} refreshing={loading} />,
   };
 
   return (
     <>
-      <SEO title="Soundchain - Message" canonicalUrl={`/messages/${profileId}`} description="Soundchain Message" />
+      <SEO title="Message | SoundChain" canonicalUrl={`/messages/${profileId}`} description="SoundChain Message" />
       <ChatLayout topNavBarProps={topNavBarProps}>
         <Chat messages={messages} pageInfo={pageInfo} onFetchMore={onFetchMore} loading={loading} />
         <NewMessageForm profileId={profileId} onNewMessage={onNewMessage} />

@@ -1,0 +1,16 @@
+import { Layout } from 'components/Layout';
+import SEO from 'components/SEO';
+import { TermsAndConditions } from 'components/TermsAndConditions';
+
+export default function TermsAndConditionsPage() {
+  return (
+    <Layout>
+      <SEO
+        title="Terms and Conditions | SoundChain"
+        description="SoundChain Terms and Conditions"
+        canonicalUrl="/terms-and-conditions/"
+      />
+      <TermsAndConditions />
+    </Layout>
+  );
+}
