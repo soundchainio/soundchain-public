@@ -25,6 +25,8 @@ const topNavBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
 };
 
+export const HANDLE_MAX_CHARS = 24;
+
 export default function CreateAccountPage() {
   const router = useRouter();
   const { magic } = useMagicContext();
@@ -71,7 +73,7 @@ export default function CreateAccountPage() {
     handle: yup
       .string()
       .min(1)
-      .max(32)
+      .max(HANDLE_MAX_CHARS)
       .matches(handleRegex, 'Invalid characters. Only letters and numbers are accepted.')
       .required()
       .label('Username'),
@@ -101,7 +103,12 @@ export default function CreateAccountPage() {
                 <InputField label="Name" type="text" name="displayName" />
               </div>
               <div className="space-y-3">
-                <InputField label="Enter username. (Only letters and numbers allowed)" type="text" name="handle" />
+                <InputField
+                  label={`Enter username. (Only letters and numbers allowed. Max of ${HANDLE_MAX_CHARS} characters)`}
+                  type="text"
+                  name="handle"
+                  maxLength={HANDLE_MAX_CHARS}
+                />
               </div>
             </div>
             <div className="text-center text-xs text-white font-thin flex items-start mb-6">
