@@ -19,7 +19,7 @@ export const ArtworkUploader = ({ name, initialValue, onFileChange }: ArtworkUpl
 
   function onDrop<T extends File>([file]: T[], fileRejections: FileRejection[]) {
     if (fileRejections.length > 0) {
-      toast.error(fileRejections[0].errors[0].message);
+      toast.error(fileRejections[0].errors[0].message.replace(`${maxSize.toString()} bytes`, '30mb'));
       return;
     }
     setPreview(URL.createObjectURL(file));
