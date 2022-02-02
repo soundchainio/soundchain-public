@@ -51,7 +51,7 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: Song) => {
     if (audioRef.current) {
       const audio = audioRef.current;
 
-      if (src.startsWith('data:audio/') || audio.canPlayType('application/vnd.apple.mpegurl')) {
+      if (src.startsWith('blob:') || audio.canPlayType('application/vnd.apple.mpegurl')) {
         audio.src = src;
       } else if (Hls.isSupported()) {
         hls = new Hls();

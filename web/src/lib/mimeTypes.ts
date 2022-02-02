@@ -200,7 +200,6 @@ export const videoMimeTypes = [
   'video/mp2p',
   'video/mp2t',
   'video/mp4',
-  'video/quicktime',
   'video/mp4v-es',
   'video/mpeg',
   'video/mpeg4-generic',
