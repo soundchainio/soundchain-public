@@ -111,7 +111,7 @@ export default function CreateAccountPage() {
                 />
               </div>
             </div>
-            <div className="text-center text-xs text-white font-thin flex items-start mb-6">
+            <div className="text-center text-xs text-white font-thin flex gap-4 items-start sm:items-center mb-6">
               <input
                 type="checkbox"
                 id="termsCheckbox"
