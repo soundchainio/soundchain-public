@@ -39,7 +39,7 @@ export const ExploreAll = ({ searchTerm, setSelectedTab }: ExplorePageProps) => 
   };
 
   return (
-    <div className="bg-gray-10">
+    <div className="bg-gray-10 overflow-auto h-[calc(100%-96px)]">
       <div className="px-4 py-6">
         <ExploreTopTracksBanner />
       </div>
