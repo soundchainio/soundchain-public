@@ -2,17 +2,18 @@ import { BottomSheet } from 'components/BottomSheet';
 import { BackButton } from 'components/Buttons/BackButton';
 import { InboxButton } from 'components/Buttons/InboxButton';
 import { Comments } from 'components/Comments';
-import { Layout } from 'components/Layout';
 import { NewCommentForm } from 'components/NewCommentForm';
 import { NotAvailableMessage } from 'components/NotAvailableMessage';
 import { Post } from 'components/Post';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
+import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMe } from 'hooks/useMe';
 import { cacheFor, createApolloClient } from 'lib/apollo';
 import { PostDocument, PostQuery, usePostQuery } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
 import { ParsedUrlQuery } from 'querystring';
+import { useEffect } from 'react';
 
 export interface PostPageProps {
   post: PostQuery['post'];
@@ -46,12 +47,12 @@ export const getServerSideProps: GetServerSideProps<PostPageProps, PostPageParam
 
 export default function PostPage({ post }: PostPageProps) {
   const { data: repostData } = usePostQuery({ variables: { id: post.repostId || '' }, skip: !post.repostId });
-
+  const { setTopNavBarProps } = useLayoutContext();
   const me = useMe();
 
   const deleted = post.deleted;
 
-  const topNovaBarProps: TopNavBarProps = {
+  const topNavBarProps: TopNavBarProps = {
     leftButton: <BackButton />,
     rightButton: me ? <InboxButton /> : undefined,
   };
@@ -66,24 +67,26 @@ export default function PostPage({ post }: PostPageProps) {
       }`
     : post.body || 'Check this post on SoundChain';
 
+  useEffect(() => {
+    setTopNavBarProps(topNavBarProps);
+  }, [setTopNavBarProps]);
+
   return (
     <>
       <SEO title={title} canonicalUrl={`/posts/${post.id}/`} description={description} image={track?.artworkUrl} />
-      <Layout topNavBarProps={topNovaBarProps}>
-        {deleted ? (
-          <NotAvailableMessage type="post" />
-        ) : (
-          <div>
-            <Post post={post} />
-            <div className="pb-12">
-              <Comments postId={post.id} />
-            </div>
-            <BottomSheet>
-              <NewCommentForm postId={post.id} />
-            </BottomSheet>
+      {deleted ? (
+        <NotAvailableMessage type="post" />
+      ) : (
+        <div>
+          <Post post={post} />
+          <div className="pb-12">
+            <Comments postId={post.id} />
           </div>
-        )}
-      </Layout>
+          <BottomSheet>
+            <NewCommentForm postId={post.id} />
+          </BottomSheet>
+        </div>
+      )}
     </>
   );
 }

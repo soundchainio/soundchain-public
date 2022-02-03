@@ -1,20 +1,30 @@
 import classNames from 'classnames';
+import { BottomNavBarWrapper } from 'components/BottomNavBarWrapper';
 import { useModalState } from 'contexts/providers/modal';
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar';
+import { useLayoutContext } from 'hooks/useLayoutContext';
+import dynamic from 'next/dynamic';
+import { useRouter } from 'next/router';
 import { ReactNode, useEffect, useState } from 'react';
-import { AuthorActionsModal } from './AuthorActionsModal';
-import { CommentModal } from './CommentModal';
-import { ApproveModal } from './modals/ApproveModal';
-import { BidsHistoryModal } from './modals/BidsHistoryModal';
-import { ConfirmDeleteNFTModal } from './modals/ConfirmDeleteNFTModal';
-import { FilterModalMarketplace } from './modals/FilterMarketplaceModal';
-import { PostModal } from './PostModal';
-import { ReactionsModal } from './ReactionsModal';
-import { RemoveListingConfirmationModal } from './RemoveListingConfirmationModal';
-import { SideMenu } from './SideMenu';
+import { ToastContainer } from 'react-toastify';
 import { TopNavBar, TopNavBarProps } from './TopNavBar';
-import { TransferConfirmationModal } from './TransferConfirmationModal';
-import { UnderDevelopmentModal } from './UnderDevelopmentModal';
+
+const SideMenu = dynamic(import('./SideMenu'));
+const PostModal = dynamic(import('./PostModal'));
+const ReactionsModal = dynamic(import('./ReactionsModal'));
+const CommentModal = dynamic(import('./CommentModal'));
+const AuthorActionsModal = dynamic(import('./AuthorActionsModal'));
+const ApproveModal = dynamic(import('./modals/ApproveModal'));
+const BidsHistoryModal = dynamic(import('./modals/BidsHistoryModal'));
+const ConfirmDeleteNFTModal = dynamic(import('./modals/ConfirmDeleteNFTModal'));
+const FilterModalMarketplace = dynamic(import('./modals/FilterMarketplaceModal'));
+const RemoveListingConfirmationModal = dynamic(import('./RemoveListingConfirmationModal'));
+const TransferConfirmationModal = dynamic(import('./TransferConfirmationModal'));
+const UnderDevelopmentModal = dynamic(import('./UnderDevelopmentModal'));
+
+const BottomAudioPlayer = dynamic(import('components/BottomAudioPlayer'));
+const AudioPlayerModal = dynamic(import('components/modals/AudioPlayerModal'));
+const CreateModal = dynamic(import('components/modals/CreateModal'));
 
 interface LayoutProps {
   children: ReactNode;
@@ -23,38 +33,73 @@ interface LayoutProps {
   className?: string;
 }
 
-export const Layout = ({ children, hideBottomNavBar, topNavBarProps, className }: LayoutProps) => {
+export const Layout = ({ children, className }: LayoutProps) => {
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
   const { setHideBottomNavBarState } = useHideBottomNavBar();
   const { showCommentModal } = useModalState();
+  const { hideBottomNavBar, isAuthLayout, topNavBarProps } = useLayoutContext();
+  const { asPath } = useRouter();
+
+  useEffect(() => {
+    setSideMenuOpen(false);
+  }, [asPath]);
 
   useEffect(() => {
     setHideBottomNavBarState(!!hideBottomNavBar);
   }, [hideBottomNavBar, setHideBottomNavBarState]);
 
+  if (isAuthLayout) {
+    return (
+      <div className="h-full flex flex-col bg-gray-20 pb-6">
+        <TopNavBar {...topNavBarProps} />
+        <div className="flex flex-1 flex-col sm:mx-auto sm:w-full sm:max-w-lg bg-gray-20 px-6 lg:px-8 pt-6">
+          {children}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="h-full flex-1 flex overflow-hidden">
-      <SideMenu isOpen={sideMenuOpen} setOpen={setSideMenuOpen} />
-      <div className="flex flex-col w-0 flex-1 overflow-hidden">
-        <TopNavBar setSideMenuOpen={setSideMenuOpen} {...topNavBarProps} />
-        <div id="top-sheet"></div>
-        <main id="main" className="flex-1 relative overflow-y-auto focus:outline-none bg-gray-10">
-          <div className={classNames('max-w-7xl mx-auto h-full', className)}>{children}</div>
-        </main>
+    <div className="h-full flex flex-col">
+      <div className="flex-1 max-h-full overflow-y-auto">
+        <div className="h-full flex-1 flex overflow-hidden">
+          <SideMenu isOpen={sideMenuOpen} setOpen={setSideMenuOpen} />
+          <div className="flex flex-col w-0 flex-1 overflow-hidden">
+            <TopNavBar setSideMenuOpen={setSideMenuOpen} {...topNavBarProps} />
+            <div id="top-sheet"></div>
+            <main id="main" className="flex-1 relative overflow-y-auto focus:outline-none bg-gray-10">
+              <div className={classNames('max-w-7xl mx-auto h-full', className)}>{children}</div>
+            </main>
+          </div>
+          <div id="modals" className="absolute z-20 w-full">
+            <UnderDevelopmentModal />
+            <PostModal />
+            {showCommentModal && <CommentModal />}
+            <AuthorActionsModal />
+            <ReactionsModal />
+            <TransferConfirmationModal />
+            <ConfirmDeleteNFTModal />
+            <ApproveModal />
+            <RemoveListingConfirmationModal />
+            <FilterModalMarketplace />
+            <BidsHistoryModal />
+            <CreateModal />
+            <AudioPlayerModal />
+          </div>
+        </div>
       </div>
-      <div id="modals" className="absolute z-20 w-full">
-        <UnderDevelopmentModal />
-        <PostModal />
-        {showCommentModal && <CommentModal />}
-        <AuthorActionsModal />
-        <ReactionsModal />
-        <TransferConfirmationModal />
-        <ConfirmDeleteNFTModal />
-        <ApproveModal />
-        <RemoveListingConfirmationModal />
-        <FilterModalMarketplace />
-        <BidsHistoryModal />
-      </div>
+      <BottomAudioPlayer />
+      <BottomNavBarWrapper />
+      <ToastContainer
+        position="top-center"
+        autoClose={6 * 1000}
+        toastStyle={{
+          backgroundColor: '#202020',
+          color: 'white',
+          fontSize: '12x',
+          textAlign: 'center',
+        }}
+      />
     </div>
   );
 };

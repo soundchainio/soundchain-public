@@ -1,10 +1,10 @@
 import { BackButton } from 'components/Buttons/BackButton';
 import { ProfilePictureForm } from 'components/forms/profile/ProfilePictureForm';
-import { Layout } from 'components/Layout';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
+import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useRouter } from 'next/router';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 const topNavBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
@@ -12,9 +12,15 @@ const topNavBarProps: TopNavBarProps = {
 
 export default function ProfilePicturePage() {
   const router = useRouter();
+  const { setTopNavBarProps, setHideBottomNavBar } = useLayoutContext();
+
+  useEffect(() => {
+    setTopNavBarProps(topNavBarProps);
+    setHideBottomNavBar(true);
+  }, [setHideBottomNavBar, setTopNavBarProps]);
 
   return (
-    <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
+    <>
       <SEO
         title="Profile Picture | SoundChain"
         canonicalUrl="/settings/profile-picture/"
@@ -27,6 +33,6 @@ export default function ProfilePicturePage() {
           submitProps={{ borderColor: 'bg-green-gradient' }}
         />
       </div>
-    </Layout>
+    </>
   );
 }

@@ -122,3 +122,5 @@ export const AuthorActionsModal = () => {
     </ModalsPortal>
   );
 };
+
+export default AuthorActionsModal;

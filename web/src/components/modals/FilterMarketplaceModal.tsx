@@ -105,3 +105,4 @@ export const FilterModalMarketplace = () => {
     </Modal>
   );
 };
+export default FilterModalMarketplace;

@@ -76,3 +76,5 @@ export const ReactionsModal = () => {
     </Modal>
   );
 };
+
+export default ReactionsModal;

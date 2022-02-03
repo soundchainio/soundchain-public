@@ -1,16 +1,18 @@
 import { BackButton } from 'components/Buttons/BackButton';
-import { Layout } from 'components/Layout';
-import { TopNavBarProps } from 'components/TopNavBar';
+import { useLayoutContext } from 'hooks/useLayoutContext';
 import { Sad } from 'icons/emoji/Sad';
 import Head from 'next/head';
+import { useEffect } from 'react';
+
 export default function Page404() {
-  const topNavBarProps: TopNavBarProps = {
-    leftButton: <BackButton />,
-    title: '404 Error',
-  };
+  const { setTopNavBarProps } = useLayoutContext();
+
+  useEffect(() => {
+    setTopNavBarProps({ leftButton: <BackButton />, title: '404 Error' });
+  }, [setTopNavBarProps]);
 
   return (
-    <Layout topNavBarProps={topNavBarProps}>
+    <>
       <Head>
         <title>Not Found | SoundChain</title>
         <meta name="description" content="This page  does not exist." />
@@ -21,6 +23,6 @@ export default function Page404() {
         <h1 className="text-xl text-white font-bold">404 Error</h1>
         <h3 className="text-lg text-gray-500 font-bold">This page does not exist.</h3>
       </div>
-    </Layout>
+    </>
   );
 }

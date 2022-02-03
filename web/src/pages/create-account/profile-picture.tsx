@@ -1,15 +1,16 @@
 import { ProfilePictureForm } from 'components/forms/profile/ProfilePictureForm';
-import { Layout } from 'components/Layout';
 import SEO from 'components/SEO';
 import { StepProgressBar } from 'components/StepProgressBar';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { config } from 'config';
+import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useRouter } from 'next/router';
-import React from 'react';
-import { steps, SkipButton } from 'utils/createAccountUtils';
+import React, { useEffect } from 'react';
+import { SkipButton, steps } from 'utils/createAccountUtils';
 
 export default function ProfilePicturePage() {
   const router = useRouter();
+  const { setTopNavBarProps, setHideBottomNavBar } = useLayoutContext();
 
   const onClose = () => {
     router.push(`${config.redirectUrlPostLogin}`);
@@ -26,6 +27,11 @@ export default function ProfilePicturePage() {
     subtitle: <StepProgressBar steps={steps} currentStep={1} />,
   };
 
+  useEffect(() => {
+    setTopNavBarProps(topNavBarProps);
+    setHideBottomNavBar(true);
+  }, [setHideBottomNavBar, setTopNavBarProps]);
+
   return (
     <>
       <SEO
@@ -33,15 +39,13 @@ export default function ProfilePicturePage() {
         canonicalUrl="/create-account/profile-picture"
         description="SoundChain Profile Picture"
       />
-      <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
-        <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
-          <ProfilePictureForm
-            afterSubmit={() => router.push('/create-account/cover-picture')}
-            submitText="NEXT"
-            submitProps={{ borderColor: 'bg-blue-gradient' }}
-          />
-        </div>
-      </Layout>
+      <div className="min-h-full flex flex-col px-6 lg:px-8 bg-gray-20 py-6">
+        <ProfilePictureForm
+          afterSubmit={() => router.push('/create-account/cover-picture')}
+          submitText="NEXT"
+          submitProps={{ borderColor: 'bg-blue-gradient' }}
+        />
+      </div>
     </>
   );
 }

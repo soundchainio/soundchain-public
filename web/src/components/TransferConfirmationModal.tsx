@@ -168,3 +168,5 @@ export const TransferConfirmationModal = () => {
     </Modal>
   );
 };
+
+export default TransferConfirmationModal;

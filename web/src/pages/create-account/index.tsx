@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { AuthLayout } from 'components/AuthLayout';
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { InputField } from 'components/InputField';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Form, Formik, FormikHelpers } from 'formik';
+import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { setJwt } from 'lib/apollo';
 import { useRegisterMutation } from 'lib/graphql';
@@ -32,6 +32,12 @@ export default function CreateAccountPage() {
   const [email, setEmail] = useState<string>('');
   const [token, setToken] = useState<string>('');
   const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
+  const { setTopNavBarProps, setIsAuthLayout } = useLayoutContext();
+
+  useEffect(() => {
+    setTopNavBarProps(topNavBarProps);
+    setIsAuthLayout(true);
+  }, [setTopNavBarProps, setIsAuthLayout]);
 
   useEffect(() => {
     async function isLoggedInMagic() {
@@ -93,51 +99,49 @@ export default function CreateAccountPage() {
         canonicalUrl="/create-account/"
         description="Create your account on SoundChain"
       />
-      <AuthLayout topNavBarProps={topNavBarProps}>
-        <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
-          <Form className="flex flex-col flex-1" autoComplete="off">
-            <div className="flex flex-col mb-auto space-y-6">
-              <div className="space-y-3">
-                <InputField label="Name" type="text" name="displayName" />
-              </div>
-              <div className="space-y-3">
-                <InputField label="Enter username. (Only letters and numbers allowed)" type="text" name="handle" />
-              </div>
+      <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
+        <Form className="flex flex-col flex-1" autoComplete="off">
+          <div className="flex flex-col mb-auto space-y-6">
+            <div className="space-y-3">
+              <InputField label="Name" type="text" name="displayName" />
             </div>
-            <div className="text-center text-xs text-white font-thin flex items-start mb-6">
-              <input
-                type="checkbox"
-                id="termsCheckbox"
-                className="h-5 w-5 focus:ring-0 border-2 border-green-500 bg-black text-green-500 rounded"
-                onChange={toggleTerms}
-              />
-              <div className="relative">
-                <label htmlFor="termsCheckbox">I agree to the SoundChain’s</label>
-                <Link href={`/terms-and-conditions`} passHref>
-                  <a className="text-white underline px-2 relative">
-                    <span className="after:absolute after:-inset-1">Terms &amp; Conditions</span>
-                  </a>
-                </Link>
-                and
-                <Link href={`/privacy-policy`} passHref>
-                  <a className="text-white underline px-2 relative">
-                    <span className="after:absolute after:-inset-1">Privacy Policy.</span>
-                  </a>
-                </Link>
-              </div>
+            <div className="space-y-3">
+              <InputField label="Enter username. (Only letters and numbers allowed)" type="text" name="handle" />
             </div>
+          </div>
+          <div className="text-center text-xs text-white font-thin flex items-start mb-6">
+            <input
+              type="checkbox"
+              id="termsCheckbox"
+              className="h-5 w-5 focus:ring-0 border-2 border-green-500 bg-black text-green-500 rounded"
+              onChange={toggleTerms}
+            />
+            <div className="relative">
+              <label htmlFor="termsCheckbox">I agree to the SoundChain’s</label>
+              <Link href={`/terms-and-conditions`} passHref>
+                <a className="text-white underline px-2 relative">
+                  <span className="after:absolute after:-inset-1">Terms &amp; Conditions</span>
+                </a>
+              </Link>
+              and
+              <Link href={`/privacy-policy`} passHref>
+                <a className="text-white underline px-2 relative">
+                  <span className="after:absolute after:-inset-1">Privacy Policy.</span>
+                </a>
+              </Link>
+            </div>
+          </div>
 
-            <Button
-              type="submit"
-              className={'transition ' + (termsAccepted ? 'opacity-100' : 'opacity-50')}
-              loading={loading}
-              disabled={loading || !termsAccepted}
-            >
-              CREATE ACCOUNT
-            </Button>
-          </Form>
-        </Formik>
-      </AuthLayout>
+          <Button
+            type="submit"
+            className={'transition ' + (termsAccepted ? 'opacity-100' : 'opacity-50')}
+            loading={loading}
+            disabled={loading || !termsAccepted}
+          >
+            CREATE ACCOUNT
+          </Button>
+        </Form>
+      </Formik>
     </>
   );
 }

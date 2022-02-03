@@ -218,3 +218,5 @@ export const AudioPlayerModal = () => {
     </Modal>
   );
 };
+
+export default AudioPlayerModal;

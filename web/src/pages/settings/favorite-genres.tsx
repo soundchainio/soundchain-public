@@ -1,23 +1,29 @@
 import { BackButton } from 'components/Buttons/BackButton';
 import { FavoriteGenresForm } from 'components/forms/profile/FavoriteGenresForm';
-import { Layout } from 'components/Layout';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
+import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMe } from 'hooks/useMe';
 import { useRouter } from 'next/router';
-import React from 'react';
+import React, { useEffect } from 'react';
+
+const topNavBarProps: TopNavBarProps = {
+  title: 'Favorite Genres',
+  leftButton: <BackButton />,
+};
 
 export default function EditFavoriteGenresPage() {
   const me = useMe();
   const router = useRouter();
+  const { setTopNavBarProps, setHideBottomNavBar } = useLayoutContext();
 
-  const topNavBarProps: TopNavBarProps = {
-    title: 'Favorite Genres',
-    leftButton: <BackButton />,
-  };
+  useEffect(() => {
+    setTopNavBarProps(topNavBarProps);
+    setHideBottomNavBar(true);
+  }, [setHideBottomNavBar, setTopNavBarProps]);
 
   return (
-    <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
+    <>
       <SEO
         title="Favorite Genres | SoundChain"
         canonicalUrl="/settings/cover-picture"
@@ -33,6 +39,6 @@ export default function EditFavoriteGenresPage() {
           />
         </div>
       </div>
-    </Layout>
+    </>
   );
 }

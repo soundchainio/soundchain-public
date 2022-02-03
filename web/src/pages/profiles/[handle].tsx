@@ -3,7 +3,6 @@ import { InboxButton } from 'components/Buttons/InboxButton';
 import { DisplayName } from 'components/DisplayName';
 import { FollowButton } from 'components/FollowButton';
 import { FollowModal } from 'components/FollowersModal';
-import { Layout } from 'components/Layout';
 import { MessageButton } from 'components/MessageButton';
 import { Number } from 'components/Number';
 import { Posts } from 'components/Posts';
@@ -14,6 +13,7 @@ import SEO from 'components/SEO';
 import { SocialMediaLink } from 'components/SocialMediaLink';
 import { SubscribeButton } from 'components/SubscribeButton';
 import { TopNavBarProps } from 'components/TopNavBar';
+import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMe } from 'hooks/useMe';
 import { cacheFor, createApolloClient } from 'lib/apollo';
 import { ProfileByHandleDocument, ProfileByHandleQuery } from 'lib/graphql';
@@ -57,10 +57,19 @@ export const getServerSideProps: GetServerSideProps<ProfilePageProps, ProfilePag
 export default function ProfilePage({ profile }: ProfilePageProps) {
   const router = useRouter();
   const me = useMe();
+  const { setTopNavBarProps } = useLayoutContext();
 
   const [showModal, setShowModal] = useState(false);
   const [followModalType, setFollowModalType] = useState<FollowModalType>();
   const [selectedTab, setSelectedTab] = useState<ProfileTab>(ProfileTab.POSTS);
+
+  const topNavBarProps: TopNavBarProps = {
+    rightButton: me ? <InboxButton /> : undefined,
+  };
+
+  useEffect(() => {
+    setTopNavBarProps(topNavBarProps);
+  }, [setTopNavBarProps]);
 
   useEffect(() => {
     setShowModal(false);
@@ -101,10 +110,6 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
     profilePicture,
   } = profile;
 
-  const topNovaBarProps: TopNavBarProps = {
-    rightButton: me ? <InboxButton /> : undefined,
-  };
-
   return (
     <>
       <SEO
@@ -113,7 +118,7 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
         canonicalUrl={`/profiles/${userHandle}`}
         image={profilePicture}
       />
-      <Layout topNavBarProps={topNovaBarProps}>
+      <>
         <div className="h-[125px] relative">
           <ProfileCover coverPicture={coverPicture || ''} className="h-[125px]" />
           <Avatar
@@ -172,7 +177,7 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
           modalType={followModalType as FollowModalType}
           onClose={onCloseModal}
         />
-      </Layout>
+      </>
     </>
   );
 }

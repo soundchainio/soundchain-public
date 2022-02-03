@@ -1,12 +1,12 @@
 import { BackButton } from 'components/Buttons/BackButton';
 import { ListNFTAuction, ListNFTAuctionFormValues } from 'components/details-NFT/ListNFTAuction';
-import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { FormikHelpers } from 'formik';
 import useBlockchain from 'hooks/useBlockchain';
 import useBlockchainV2 from 'hooks/useBlockchainV2';
+import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { cacheFor } from 'lib/apollo';
@@ -26,6 +26,11 @@ export interface TrackPageProps {
 interface TrackPageParams extends ParsedUrlQuery {
   id: string;
 }
+
+const topNavBarProps: TopNavBarProps = {
+  leftButton: <BackButton />,
+  title: 'List for Auction',
+};
 
 export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(async (context, apolloClient) => {
   const trackId = context.params?.id;
@@ -58,6 +63,7 @@ export default function AuctionPage({ track }: TrackPageProps) {
   const { dispatchShowApproveModal } = useModalDispatch();
   const [isOwner, setIsOwner] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
+  const { setTopNavBarProps } = useLayoutContext();
 
   const nftData = track.nftData;
   const tokenId = nftData?.tokenId ?? -1;
@@ -66,6 +72,10 @@ export default function AuctionPage({ track }: TrackPageProps) {
   const [getBuyNowItem, { data: buyNowItem }] = useBuyNowItemLazyQuery({
     variables: { tokenId },
   });
+
+  useEffect(() => {
+    setTopNavBarProps(topNavBarProps);
+  }, [setTopNavBarProps]);
 
   useEffect(() => {
     const fetchIsOwner = async () => {
@@ -129,11 +139,6 @@ export default function AuctionPage({ track }: TrackPageProps) {
     }
   };
 
-  const topNovaBarProps: TopNavBarProps = {
-    leftButton: <BackButton />,
-    title: 'List for Auction',
-  };
-
   if (!isOwner || isForSale || nftData?.pendingRequest != PendingRequest.None || !canList) {
     return null;
   }
@@ -145,12 +150,10 @@ export default function AuctionPage({ track }: TrackPageProps) {
         description={'List your track as an auction item on SoundChain'}
         canonicalUrl={router.asPath}
       />
-      <Layout topNavBarProps={topNovaBarProps}>
-        <div className="m-4">
-          <Track track={track} />
-        </div>
-        <ListNFTAuction handleSubmit={handleList} submitLabel={isApproved ? 'LIST NFT' : 'APPROVE MARKETPLACE'} />
-      </Layout>
+      <div className="m-4">
+        <Track track={track} />
+      </div>
+      <ListNFTAuction handleSubmit={handleList} submitLabel={isApproved ? 'LIST NFT' : 'APPROVE MARKETPLACE'} />
     </>
   );
 }

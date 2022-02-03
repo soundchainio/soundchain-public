@@ -1,11 +1,12 @@
 import { InboxButton } from 'components/Buttons/InboxButton';
-import { Layout } from 'components/Layout';
 import { Marketplace } from 'components/Marketplace';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
+import { useLayoutContext } from 'hooks/useLayoutContext';
 import { cacheFor, createApolloClient } from 'lib/apollo';
 import { MeDocument, MeQuery } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
+import { useEffect } from 'react';
 
 interface HomePageProps {
   me?: MeQuery['me'];
@@ -23,10 +24,16 @@ export const getServerSideProps: GetServerSideProps<HomePageProps> = async conte
 };
 
 export default function HomePage({ me }: HomePageProps) {
+  const { setTopNavBarProps } = useLayoutContext();
+
   const topNavBarProps: TopNavBarProps = {
     title: 'Marketplace',
     rightButton: me ? <InboxButton /> : undefined,
   };
+
+  useEffect(() => {
+    setTopNavBarProps(topNavBarProps);
+  }, [setTopNavBarProps]);
 
   return (
     <>
@@ -35,9 +42,7 @@ export default function HomePage({ me }: HomePageProps) {
         canonicalUrl="/marketplace"
         description="Discover unique tracks on SoundChain NFT Marketplace"
       />
-      <Layout topNavBarProps={topNavBarProps}>
-        <Marketplace />
-      </Layout>
+      <Marketplace />
     </>
   );
 }

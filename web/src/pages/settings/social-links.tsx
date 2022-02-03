@@ -1,10 +1,10 @@
 import { BackButton } from 'components/Buttons/BackButton';
 import { SocialLinksForm } from 'components/forms/profile/SocialLinksForm';
-import { Layout } from 'components/Layout';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
+import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useRouter } from 'next/router';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 const topNavBarProps: TopNavBarProps = {
   title: 'Social Links',
@@ -13,9 +13,15 @@ const topNavBarProps: TopNavBarProps = {
 
 export default function SocialLinksPage() {
   const router = useRouter();
+  const { setTopNavBarProps, setHideBottomNavBar } = useLayoutContext();
+
+  useEffect(() => {
+    setTopNavBarProps(topNavBarProps);
+    setHideBottomNavBar(true);
+  }, [setHideBottomNavBar, setTopNavBarProps]);
 
   return (
-    <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
+    <>
       <SEO
         title="Social Links | SoundChain"
         canonicalUrl="/settings/social-links/"
@@ -28,6 +34,6 @@ export default function SocialLinksPage() {
           submitProps={{ borderColor: 'bg-green-gradient' }}
         />
       </div>
-    </Layout>
+    </>
   );
 }

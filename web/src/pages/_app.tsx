@@ -2,25 +2,21 @@ import '@reach/dialog/styles.css';
 import '@reach/slider/styles.css';
 import * as Sentry from '@sentry/react';
 import { Integrations } from '@sentry/tracing';
-import { BottomAudioPlayer } from 'components/BottomAudioPlayer';
-import { BottomNavBarWrapper } from 'components/BottomNavBarWrapper';
 import { CheckBodyScroll } from 'components/CheckBodyScroll';
 import { Favicons } from 'components/Favicons';
-import { AudioPlayerModal } from 'components/modals/AudioPlayerModal';
-import { CreateModal } from 'components/modals/CreateModal';
+import { Layout } from 'components/Layout';
 import { StateProvider } from 'contexts';
 import { AudioPlayerProvider } from 'hooks/useAudioPlayer';
 import { HideBottomNavBarProvider } from 'hooks/useHideBottomNavBar';
-import MagicProvider from 'hooks/useMagicContext';
-import WalletProvider from 'hooks/useWalletContext';
+import { LayoutContextProvider } from 'hooks/useLayoutContext';
 import { ApolloProvider } from 'lib/apollo';
 import type { AppProps } from 'next/app';
+import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import Router from 'next/router';
 import Script from 'next/script';
 import NProgress from 'nprogress';
 import React from 'react';
-import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import 'styles/audio-player.css';
 import 'styles/bottom-audio-player.css';
@@ -28,6 +24,9 @@ import 'styles/globals.css';
 import 'styles/loading-ring.css';
 import 'styles/nprogress.css';
 import 'styles/volume-slider.css';
+
+const WalletProvider = dynamic(import('hooks/useWalletContext'));
+const MagicProvider = dynamic(import('hooks/useMagicContext'));
 
 Sentry.init({
   dsn: 'https://43ff4c65582f427a8bf2dc33efd1c2fa@o1011186.ingest.sentry.io/5977714',
@@ -76,21 +75,12 @@ function SoundchainApp({ Component, pageProps }: AppProps) {
             <WalletProvider>
               <AudioPlayerProvider>
                 <HideBottomNavBarProvider>
-                  <CheckBodyScroll />
-                  <div className="h-full flex flex-col">
-                    <div className="flex-1 max-h-full overflow-y-auto">
+                  <LayoutContextProvider>
+                    <CheckBodyScroll />
+                    <Layout>
                       <Component {...pageProps} />
-                    </div>
-                    <BottomAudioPlayer />
-                    <BottomNavBarWrapper />
-                    <CreateModal />
-                    <AudioPlayerModal />
-                    <ToastContainer
-                      position="top-center"
-                      autoClose={6 * 1000}
-                      toastStyle={{ backgroundColor: '#202020', color: 'white', fontSize: '12x', textAlign: 'center' }}
-                    />
-                  </div>
+                    </Layout>
+                  </LayoutContextProvider>
                 </HideBottomNavBarProvider>
               </AudioPlayerProvider>
             </WalletProvider>
