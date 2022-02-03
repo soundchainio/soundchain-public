@@ -37,7 +37,7 @@ export const Marketplace = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [genres, setGenres] = useState<GenreLabel[] | undefined>(undefined);
   const [saleType, setSaleType] = useState<SaleTypeLabel | undefined>(undefined);
-  const [sorting, setSorting] = useState<SortListingItem>(SortListingItem.PriceAsc);
+  const [sorting, setSorting] = useState<SortListingItem>(SortListingItem.CreatedAt);
   const { field, order } = SelectToApolloQuery[sorting];
   const { data, refetch, fetchMore, loading } = useListingItemsQuery({
     variables: {
