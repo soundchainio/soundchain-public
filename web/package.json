@@ -8,6 +8,7 @@
     "lint": "next lint",
     "lint-staged": "lint-staged",
     "build": "next build",
+    "postbuild": "next-sitemap",
     "start": "next start",
     "test": "jest"
   },
@@ -106,6 +107,7 @@
     "graphql-tag": "^2.12.6",
     "jest": "^27.4.7",
     "lint-staged": "^11.0.1",
+    "next-sitemap": "^2.1.8",
     "postcss": "^8.3.5",
     "prettier": "^2.5.1",
     "tailwindcss": "^2.2.4",
