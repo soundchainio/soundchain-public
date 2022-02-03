@@ -13,7 +13,7 @@ import { cacheFor, createApolloClient } from 'lib/apollo';
 import { PostDocument, PostQuery, usePostQuery } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
 import { ParsedUrlQuery } from 'querystring';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 
 export interface PostPageProps {
   post: PostQuery['post'];
@@ -52,10 +52,13 @@ export default function PostPage({ post }: PostPageProps) {
 
   const deleted = post.deleted;
 
-  const topNavBarProps: TopNavBarProps = {
-    leftButton: <BackButton />,
-    rightButton: me ? <InboxButton /> : undefined,
-  };
+  const topNavBarProps: TopNavBarProps = useMemo(
+    () => ({
+      leftButton: <BackButton />,
+      rightButton: me ? <InboxButton /> : undefined,
+    }),
+    [me],
+  );
 
   const repost = repostData?.post;
   const track = post.track || repost?.track;
@@ -69,7 +72,7 @@ export default function PostPage({ post }: PostPageProps) {
 
   useEffect(() => {
     setTopNavBarProps(topNavBarProps);
-  }, [setTopNavBarProps]);
+  }, [setTopNavBarProps, topNavBarProps]);
 
   return (
     <>

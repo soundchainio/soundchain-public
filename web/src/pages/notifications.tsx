@@ -12,6 +12,10 @@ export const getServerSideProps = protectPage((context, apolloClient) => {
   return cacheFor(UserNotifications, {}, context, apolloClient);
 });
 
+const topNavBarProps: TopNavBarProps = {
+  rightButton: <ClearAllNotificationsButton />,
+};
+
 export default function UserNotifications() {
   const [resetNotificationCount] = useResetNotificationCountMutation();
   const { setTopNavBarProps } = useLayoutContext();
@@ -23,10 +27,6 @@ export default function UserNotifications() {
   useEffect(() => {
     resetNotificationCount();
   }, [resetNotificationCount]);
-
-  const topNavBarProps: TopNavBarProps = {
-    rightButton: <ClearAllNotificationsButton />,
-  };
 
   return (
     <>

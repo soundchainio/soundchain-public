@@ -20,7 +20,7 @@ import { ProfileByHandleDocument, ProfileByHandleQuery } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FollowModalType } from 'types/FollowModalType';
 import { ProfileTab } from 'types/ProfileTabType';
 
@@ -63,13 +63,16 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
   const [followModalType, setFollowModalType] = useState<FollowModalType>();
   const [selectedTab, setSelectedTab] = useState<ProfileTab>(ProfileTab.POSTS);
 
-  const topNavBarProps: TopNavBarProps = {
-    rightButton: me ? <InboxButton /> : undefined,
-  };
+  const topNavBarProps: TopNavBarProps = useMemo(
+    () => ({
+      rightButton: me ? <InboxButton /> : undefined,
+    }),
+    [me],
+  );
 
   useEffect(() => {
     setTopNavBarProps(topNavBarProps);
-  }, [setTopNavBarProps]);
+  }, [setTopNavBarProps, topNavBarProps]);
 
   useEffect(() => {
     setShowModal(false);

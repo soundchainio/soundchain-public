@@ -6,7 +6,7 @@ import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMe } from 'hooks/useMe';
 import { cacheFor } from 'lib/apollo';
 import { protectPage } from 'lib/protectPage';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 
 export const getServerSideProps = protectPage((context, apolloClient) => {
   return cacheFor(ExplorePage, {}, context, apolloClient);
@@ -16,14 +16,17 @@ export default function ExplorePage() {
   const me = useMe();
   const { setTopNavBarProps } = useLayoutContext();
 
-  const topNavBarProps: TopNavBarProps = {
-    title: 'Explore',
-    rightButton: me ? <InboxButton /> : undefined,
-  };
+  const topNavBarProps: TopNavBarProps = useMemo(
+    () => ({
+      title: 'Explore',
+      rightButton: me ? <InboxButton /> : undefined,
+    }),
+    [me],
+  );
 
   useEffect(() => {
     setTopNavBarProps(topNavBarProps);
-  }, [setTopNavBarProps]);
+  }, [setTopNavBarProps, topNavBarProps]);
 
   return (
     <>

@@ -8,7 +8,7 @@ import { Heart } from 'icons/Heart';
 import { cacheFor } from 'lib/apollo';
 import { MeDocument, MeQuery } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 interface HomePageProps {
   me?: MeQuery['me'];
@@ -26,14 +26,17 @@ export const getServerSideProps = protectPage(async (context, apolloClient) => {
 export default function LibraryPage({ me }: HomePageProps) {
   const { setTopNavBarProps } = useLayoutContext();
 
-  const topNavBarProps: TopNavBarProps = {
-    title: 'Library',
-    rightButton: me ? <InboxButton /> : undefined,
-  };
+  const topNavBarProps: TopNavBarProps = useMemo(
+    () => ({
+      title: 'Library',
+      rightButton: me ? <InboxButton /> : undefined,
+    }),
+    [me],
+  );
 
   useEffect(() => {
     setTopNavBarProps(topNavBarProps);
-  }, [setTopNavBarProps]);
+  }, [setTopNavBarProps, topNavBarProps]);
 
   return (
     <>

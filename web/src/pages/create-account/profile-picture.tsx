@@ -5,32 +5,36 @@ import { TopNavBarProps } from 'components/TopNavBar';
 import { config } from 'config';
 import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useRouter } from 'next/router';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { SkipButton, steps } from 'utils/createAccountUtils';
 
 export default function ProfilePicturePage() {
   const router = useRouter();
   const { setTopNavBarProps, setHideBottomNavBar } = useLayoutContext();
 
-  const onClose = () => {
-    router.push(`${config.redirectUrlPostLogin}`);
-  };
-
-  const topNavBarProps: TopNavBarProps = {
-    title: 'Profile Picture',
-    leftButton: (
-      <div className="text-gray-400 font-bold flex-1 text-left" onClick={onClose}>
-        Cancel
-      </div>
-    ),
-    rightButton: <SkipButton href="/create-account/cover-picture" />,
-    subtitle: <StepProgressBar steps={steps} currentStep={1} />,
-  };
+  const topNavBarProps: TopNavBarProps = useMemo(
+    () => ({
+      title: 'Profile Picture',
+      leftButton: (
+        <div
+          className="text-gray-400 font-bold flex-1 text-left"
+          onClick={() => {
+            router.push(`${config.redirectUrlPostLogin}`);
+          }}
+        >
+          Cancel
+        </div>
+      ),
+      rightButton: <SkipButton href="/create-account/cover-picture" />,
+      subtitle: <StepProgressBar steps={steps} currentStep={1} />,
+    }),
+    [router],
+  );
 
   useEffect(() => {
     setTopNavBarProps(topNavBarProps);
     setHideBottomNavBar(true);
-  }, [setHideBottomNavBar, setTopNavBarProps]);
+  }, [setHideBottomNavBar, setTopNavBarProps, topNavBarProps]);
 
   return (
     <>

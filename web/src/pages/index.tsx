@@ -7,7 +7,7 @@ import { useLayoutContext } from 'hooks/useLayoutContext';
 import { cacheFor, createApolloClient } from 'lib/apollo';
 import { MeDocument, MeQuery } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 
 interface HomePageProps {
   me?: MeQuery['me'];
@@ -27,13 +27,16 @@ export const getServerSideProps: GetServerSideProps<HomePageProps> = async conte
 export default function HomePage({ me }: HomePageProps) {
   const { setTopNavBarProps } = useLayoutContext();
 
-  const topNavBarProps: TopNavBarProps = {
-    rightButton: me ? <InboxButton /> : undefined,
-  };
+  const topNavBarProps: TopNavBarProps = useMemo(
+    () => ({
+      rightButton: me ? <InboxButton /> : undefined,
+    }),
+    [me],
+  );
 
   useEffect(() => {
     setTopNavBarProps(topNavBarProps);
-  }, [setTopNavBarProps]);
+  }, [setTopNavBarProps, topNavBarProps]);
 
   return (
     <>

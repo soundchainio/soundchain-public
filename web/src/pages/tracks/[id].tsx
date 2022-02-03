@@ -41,7 +41,7 @@ import { GetServerSideProps } from 'next';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 import { priceToShow } from 'utils/format';
 import { compareWallets } from 'utils/Wallet';
@@ -161,26 +161,29 @@ export default function TrackPage({ track }: TrackPageProps) {
   const futureSale = startingDate ? startingDate.getTime() > new Date().getTime() : false;
   const loading = loadingListingItem || isLoadingOwner;
 
-  const topNavBarProps: TopNavBarProps = {
-    leftButton: <BackButton />,
-    title: 'NFT Details',
-    rightButton: (
-      <div className="flex gap-3 items-center">
-        <TrackShareButton trackId={track.id} artist={track.artist} title={track.title} />
-        {(isOwner || me?.roles.includes(Role.Admin)) && (
-          <Ellipsis
-            fill="#808080"
-            className="cursor-pointer"
-            onClick={() => dispatchShowAuthorActionsModal(true, AuthorActionsType.NFT, track.id, true)}
-          />
-        )}
-      </div>
-    ),
-  };
+  const topNavBarProps: TopNavBarProps = useMemo(
+    () => ({
+      leftButton: <BackButton />,
+      title: 'NFT Details',
+      rightButton: (
+        <div className="flex gap-3 items-center">
+          <TrackShareButton trackId={track.id} artist={track.artist} title={track.title} />
+          {(isOwner || me?.roles.includes(Role.Admin)) && (
+            <Ellipsis
+              fill="#808080"
+              className="cursor-pointer"
+              onClick={() => dispatchShowAuthorActionsModal(true, AuthorActionsType.NFT, track.id, true)}
+            />
+          )}
+        </div>
+      ),
+    }),
+    [dispatchShowAuthorActionsModal, isOwner, me?.roles, track.artist, track.id, track.title],
+  );
 
   useEffect(() => {
     setTopNavBarProps(topNavBarProps);
-  }, [setTopNavBarProps]);
+  }, [setTopNavBarProps, topNavBarProps]);
 
   useEffect(() => {
     if (track.nftData?.tokenId) {
