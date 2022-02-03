@@ -1,13 +1,12 @@
 import axios from 'axios';
 import { apolloClient } from 'lib/apollo';
 import { UploadUrlDocument, UploadUrlQuery } from 'lib/graphql';
-import { useCallback } from 'react';
-import { useMountedState } from './useMountedState';
+import { useCallback, useState } from 'react';
 
 export const useUpload = (value?: string, onChange?: (value: string) => void) => {
-  const [uploading, setUploading] = useMountedState(false);
-  const [preview, setPreview] = useMountedState<string | undefined>(value);
-  const [fileType, setFileType] = useMountedState<string>('');
+  const [uploading, setUploading] = useState(false);
+  const [preview, setPreview] = useState<string | undefined>(value);
+  const [fileType, setFileType] = useState<string>('');
 
   const upload = useCallback(
     async ([file]: File[]) => {

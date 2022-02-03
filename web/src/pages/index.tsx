@@ -41,7 +41,7 @@ export default function HomePage({ me }: HomePageProps) {
   return (
     <>
       <SEO title="SoundChain" description="Connecting people to music" canonicalUrl="/" />
-      <div className="pt-3">{me ? <Feed /> : <Posts />}</div>
+      <div className="pt-3 h-full">{me ? <Feed /> : <Posts />}</div>
     </>
   );
 }

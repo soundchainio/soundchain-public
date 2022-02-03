@@ -6,6 +6,7 @@ import { Upload as UploadIcon } from 'icons/Upload';
 import { audioMimeTypes } from 'lib/mimeTypes';
 import { useState } from 'react';
 import { FileRejection, useDropzone } from 'react-dropzone';
+import { toast } from 'react-toastify';
 
 export interface TrackUploaderProps {
   onFileChange: (file: File) => void;
@@ -22,18 +23,12 @@ export const TrackUploader = ({ onFileChange, art }: TrackUploaderProps) => {
 
   function onDrop<T extends File>([file]: T[], fileRejections: FileRejection[]) {
     if (fileRejections.length > 0) {
-      alert(`${fileRejections[0].file.name} not supported!`);
+      toast.error(fileRejections[0].errors[0].message.replace(`${maxSize.toString()} bytes`, '30mb'));
       return;
     }
-
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-
-    reader.addEventListener('loadend', () => {
-      setPreview(reader.result as string);
-      setFile(file);
-      onFileChange(file);
-    });
+    setPreview(URL.createObjectURL(file));
+    setFile(file);
+    onFileChange(file);
   }
 
   const { getRootProps, getInputProps } = useDropzone({ maxFiles: 1, maxSize, accept: audioMimeTypes, onDrop });
@@ -58,10 +53,10 @@ export const TrackUploader = ({ onFileChange, art }: TrackUploaderProps) => {
 
   return (
     <div {...getRootProps()} className={containerClasses}>
-      <div className="mr-auto w-full">
+      <div className="mr-auto w-full text-gray-80">
         <MusicFile />
-        <p className="font-bold text-[12px] mt-1">Upload music...</p>
-        <p className="font-semibold text-[9px]">WAV,MP3,AIFF,FLAC,OGA (Max: 30mb)</p>
+        <p className="font-bold text-xs mt-1">Upload music...</p>
+        <p className="font-semibold text-xxs">WAV,MP3,AIFF,FLAC,OGA (Max: 30mb)</p>
       </div>
       <div className="flex flex-col justify-center flex-shrink-0">
         <JellyButton flavor="blueberry" icon={<UploadIcon color="blue" id="blue-gradient" />} className="text-xs">

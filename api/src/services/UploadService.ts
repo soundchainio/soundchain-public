@@ -5,7 +5,7 @@ import { config } from '../config';
 import { Context } from '../types/Context';
 import { UploadUrl } from '../types/UploadUrl';
 
-const FIVE_MINUTES = 1000 * 60 * 5;
+const TEN_MINUTES = 1000 * 60 * 10;
 
 export class UploadService {
   s3Client: S3Client;
@@ -15,9 +15,7 @@ export class UploadService {
   }
 
   async generateUploadUrl(fileType: string): Promise<UploadUrl> {
-    const imageId = uuidv4();
-    const extension = fileType.split('/')[1];
-    const fileName = `${imageId}.${extension}`;
+    const fileName = uuidv4();
     const bucketParams: PutObjectCommandInput = {
       Bucket: config.uploads.bucket,
       Key: fileName,
@@ -26,7 +24,7 @@ export class UploadService {
     };
     const command = new PutObjectCommand(bucketParams);
     const uploadUrl = await getSignedUrl(this.s3Client, command, {
-      expiresIn: FIVE_MINUTES,
+      expiresIn: TEN_MINUTES,
     });
     return {
       uploadUrl,

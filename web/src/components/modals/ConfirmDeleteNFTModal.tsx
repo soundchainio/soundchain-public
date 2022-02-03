@@ -121,7 +121,7 @@ export const ConfirmDeleteNFTModal = () => {
         .finally(() => setLoading(false))
         .execute(web3);
     } else {
-      alert("Uh-oh, it seems you don't have enough funds to pay for the gas fee of this operation");
+      toast.warn("Uh-oh, it seems you don't have enough funds to pay for the gas fee of this operation");
       handleClose();
     }
   };

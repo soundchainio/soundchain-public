@@ -94,7 +94,7 @@ export const cacheConfig: InMemoryCacheConfig = {
           },
         },
         posts: {
-          keyArgs: false,
+          keyArgs: ['filter'],
           merge(existing, incoming, { readField }): PostConnection {
             const nodes = existing ? { ...existing.nodes } : {};
 
@@ -110,7 +110,6 @@ export const cacheConfig: InMemoryCacheConfig = {
               nodes,
             };
           },
-
           read(existing): PostConnection | void {
             if (existing) {
               return {

@@ -10,7 +10,6 @@ import { PolygonscanResult, PolygonscanResultObj } from '../types/PolygonscanRes
 @Resolver()
 export class PolygonscanResolver {
   @Query(() => String)
-  @Authorized()
   async maticUsd(@Ctx() { polygonscanService }: Context): Promise<string> {
     return await polygonscanService.getMaticUsd();
   }
