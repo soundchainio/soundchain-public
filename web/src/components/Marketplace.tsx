@@ -32,7 +32,7 @@ export const Marketplace = () => {
   const [isGrid, setIsGrid] = useState(true);
   const [genres, setGenres] = useState<GenreLabel[] | undefined>(undefined);
   const [saleType, setSaleType] = useState<SaleTypeLabel | undefined>(undefined);
-  const [sorting, setSorting] = useState<SortListingItem>(SortListingItem.PriceAsc);
+  const [sorting, setSorting] = useState<SortListingItem>(SortListingItem.CreatedAt);
   const { data, refetch, fetchMore, loading } = useListingItemsQuery({
     variables: {
       page: { first: pageSize },
