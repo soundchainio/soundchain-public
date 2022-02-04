@@ -11,7 +11,7 @@ import { SkipButton, steps } from 'utils/createAccountUtils';
 
 export default function ProfilePicturePage() {
   const router = useRouter();
-  const { setTopNavBarProps, setHideBottomNavBar } = useLayoutContext();
+  const { setTopNavBarProps, setHideBottomNavBar, setIsAuthLayout } = useLayoutContext();
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
@@ -30,7 +30,8 @@ export default function ProfilePicturePage() {
   useEffect(() => {
     setTopNavBarProps(topNavBarProps);
     setHideBottomNavBar(true);
-  }, [setHideBottomNavBar, setTopNavBarProps, topNavBarProps]);
+    setIsAuthLayout(false);
+  }, [setHideBottomNavBar, setIsAuthLayout, setTopNavBarProps, topNavBarProps]);
 
   return (
     <>
