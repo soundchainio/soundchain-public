@@ -8,6 +8,7 @@ import { MarketplaceNavBar } from 'icons/MarketplaceNavBar';
 import { NewPost } from 'icons/NewPost';
 import { Search } from 'icons/Search';
 import { useRouter } from 'next/router';
+import { useEffect } from 'react';
 import { NavBarButton } from './Buttons/NavBarButton';
 
 export const BottomNavBar = () => {
@@ -19,6 +20,17 @@ export const BottomNavBar = () => {
   const handleCreateClick = () => {
     me ? dispatchShowCreateModal(true) : router.push('/login');
   };
+
+  useEffect(() => {
+    if (process.browser) {
+      window.onbeforeunload = e => {
+        if (isMinting) {
+          return 'You are minting a NFT, you should not leave SoundChain!';
+        }
+        e.preventDefault();
+      };
+    }
+  }, [isMinting]);
 
   return (
     <nav
