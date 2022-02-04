@@ -310,24 +310,24 @@ export const CreateModal = () => {
 
   const tabs = (
     <div className="flex bg-gray-10 rounded-lg">
-      <div
+      <button
         onClick={() => setTab(Tabs.NFT)}
         className={classNames(
           'flex-1 rounded-lg font-bold text-sm py-1.5',
-          tab === Tabs.NFT ? 'text-white bg-gray-30' : 'text-gray-80 cursor-pointer',
+          tab === Tabs.NFT ? 'text-white bg-gray-30' : 'text-gray-80',
         )}
       >
         Mint NFT
-      </div>
-      <div
+      </button>
+      <button
         onClick={handlePostTabClick}
         className={classNames(
           'flex-1 rounded-lg font-bold text-sm py-1.5',
-          tab === Tabs.POST ? 'text-white bg-gray-30' : 'text-gray-80 cursor-pointer',
+          tab === Tabs.POST ? 'text-white bg-gray-30' : 'text-gray-80',
         )}
       >
         Post
-      </div>
+      </button>
     </div>
   );
 

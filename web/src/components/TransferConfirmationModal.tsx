@@ -96,9 +96,9 @@ export const TransferConfirmationModal = () => {
       title="Confirm Transaction"
       onClose={handleClose}
       leftButton={
-        <div className="p-2 text-gray-400 font-bold flex-1 text-center text-sm" onClick={handleCancel}>
+        <button className="p-2 text-gray-400 font-bold flex-1 text-center text-sm" onClick={handleCancel}>
           Cancel
-        </div>
+        </button>
       }
     >
       <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
