@@ -181,7 +181,7 @@ const ListedAction = ({
         </div>
       )}
       <div className="flex-1 flex items-center justify-end">
-        <NextLink href={href}>
+        <NextLink href={href} replace>
           <Button variant={variant}>{action}</Button>
         </NextLink>
       </div>

@@ -116,7 +116,7 @@ export default function CompleteAuctionPage({ track }: TrackPageProps) {
           },
         },
       });
-      router.push(router.asPath.replace('complete-auction', ''));
+      router.replace(router.asPath.replace('complete-auction', ''));
     };
     setLoading(true);
     resultAuction(tokenId, account)
