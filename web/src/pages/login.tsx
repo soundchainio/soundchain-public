@@ -56,9 +56,10 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (me) {
+      setIsAuthLayout(false);
       router.push(router.query.callbackUrl?.toString() ?? `${config.redirectUrlPostLogin}`);
     }
-  }, [me, router]);
+  }, [me, router, setIsAuthLayout]);
 
   const handleGoogleLogin = async () => {
     await magic.oauth.loginWithRedirect({
