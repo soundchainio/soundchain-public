@@ -96,16 +96,16 @@ export const ProfilePictureForm = ({ afterSubmit, submitText, submitProps }: Pro
               <Label textSize="base">Default Profile Photos:</Label>
               <div className="grid grid-cols-4 gap-4">
                 {defaultProfilePictures.map(picture => (
-                  <div
+                  <button
                     key={picture}
                     className={classNames(
-                      'flex justify-center justify-self-center rounded-full w-[60px] h-[60px] cursor-pointer',
+                      'flex justify-center justify-self-center rounded-full w-[60px] h-[60px]',
                       defaultPicture === picture && 'ring-4 ring-white',
                     )}
                     onClick={() => setDefaultPicture(picture)}
                   >
                     <Image alt="Default profile picture" src={picture} width={60} height={60} />
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>

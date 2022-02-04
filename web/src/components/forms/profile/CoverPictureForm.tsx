@@ -93,10 +93,10 @@ export const CoverPictureForm = ({ afterSubmit, submitText, submitProps }: Cover
               <Label textSize="base">DEFAULT COVER PHOTOS:</Label>
               <div className="flex flex-col space-y-4">
                 {defaultCoverPictures.map(picture => (
-                  <div
+                  <button
                     key={picture}
                     className={classNames(
-                      'relative flex justify-center justify-self-center rounded-full w-full h-[150px] p-2 cursor-pointer',
+                      'relative flex justify-center justify-self-center w-full h-[150px] p-2',
                       defaultPicture === picture && 'rounded-xl border-2',
                     )}
                     onClick={() => setDefaultPicture(picture)}
@@ -110,7 +110,7 @@ export const CoverPictureForm = ({ afterSubmit, submitText, submitProps }: Cover
                         className="rounded-lg"
                       />
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>

@@ -75,10 +75,10 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
   };
 
   const RemoveListing = (
-    <div className="flex-shrink-0 flex items-center cursor-pointer">
-      <h2 className="text-sm text-red-400 font-bold" onClick={handleRemove}>
+    <div className="flex-shrink-0 flex items-center">
+      <button className="text-sm text-red-400 font-bold" onClick={handleRemove}>
         Remove Listing
-      </h2>
+      </button>
     </div>
   );
 
