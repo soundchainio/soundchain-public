@@ -179,7 +179,7 @@ export default function WalletPage() {
   return (
     <>
       <SEO title="Wallet - SoundChain" description="SoundChain Wallet" canonicalUrl="/wallet/" />
-      <PullToRefresh onRefresh={refreshData} className="h-auto">
+      <PullToRefresh onRefresh={refreshData} className="h-full">
         <div className="h-full flex flex-col">
           <WalletHeader />
           {isMetamaskSelected && (!connectedToMetaMask || !correctNetwork) ? (
