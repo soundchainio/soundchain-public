@@ -1,10 +1,10 @@
 import { BackButton } from 'components/Buttons/BackButton';
 import { CoverPictureForm } from 'components/forms/profile/CoverPictureForm';
-import { Layout } from 'components/Layout';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
+import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useRouter } from 'next/router';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 const topNavBarProps: TopNavBarProps = {
   title: 'Cover Picture',
@@ -13,9 +13,15 @@ const topNavBarProps: TopNavBarProps = {
 
 export default function CoverPicturePage() {
   const router = useRouter();
+  const { setTopNavBarProps, setHideBottomNavBar } = useLayoutContext();
+
+  useEffect(() => {
+    setTopNavBarProps(topNavBarProps);
+    setHideBottomNavBar(true);
+  }, [setHideBottomNavBar, setTopNavBarProps]);
 
   return (
-    <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
+    <>
       <SEO
         title="Cover Picture | SoundChain"
         canonicalUrl="/settings/cover-picture"
@@ -28,6 +34,6 @@ export default function CoverPicturePage() {
           submitProps={{ borderColor: 'bg-green-gradient' }}
         />
       </div>
-    </Layout>
+    </>
   );
 }

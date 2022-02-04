@@ -1,10 +1,10 @@
 import { BackButton } from 'components/Buttons/BackButton';
 import { MusicianTypesForm } from 'components/forms/profile/MusicianTypesForm';
-import { Layout } from 'components/Layout';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
+import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useRouter } from 'next/router';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 const topNavBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
@@ -13,9 +13,15 @@ const topNavBarProps: TopNavBarProps = {
 
 export default function MusicianTypePage() {
   const router = useRouter();
+  const { setTopNavBarProps, setHideBottomNavBar } = useLayoutContext();
+
+  useEffect(() => {
+    setTopNavBarProps(topNavBarProps);
+    setHideBottomNavBar(true);
+  }, [setHideBottomNavBar, setTopNavBarProps]);
 
   return (
-    <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
+    <>
       <SEO
         title="Musician Type | SoundChain"
         canonicalUrl="/settings/musician-type/"
@@ -30,6 +36,6 @@ export default function MusicianTypePage() {
           />
         </div>
       </div>
-    </Layout>
+    </>
   );
 }

@@ -138,3 +138,5 @@ export const RemoveListingConfirmationModal = () => {
     </Modal>
   );
 };
+
+export default RemoveListingConfirmationModal;

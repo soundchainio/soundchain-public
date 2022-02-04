@@ -1,11 +1,11 @@
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
-import { Layout } from 'components/Layout';
 import MaxGasFee from 'components/MaxGasFee';
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import useBlockchainV2 from 'hooks/useBlockchainV2';
+import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { cacheFor } from 'lib/apollo';
@@ -20,7 +20,7 @@ import {
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import SEO from '../../../components/SEO';
 
@@ -70,6 +70,11 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
   );
 });
 
+const topNavBarProps: TopNavBarProps = {
+  leftButton: <BackButton />,
+  title: 'Cancel Auction',
+};
+
 export default function CompleteAuctionPage({ track, auctionItem }: TrackPageProps) {
   const { cancelAuction } = useBlockchainV2();
   const { account, web3 } = useWalletContext();
@@ -77,6 +82,11 @@ export default function CompleteAuctionPage({ track, auctionItem }: TrackPagePro
   const [loading, setLoading] = useState(false);
   const me = useMe();
   const router = useRouter();
+  const { setTopNavBarProps } = useLayoutContext();
+
+  useEffect(() => {
+    setTopNavBarProps(topNavBarProps);
+  }, [setTopNavBarProps]);
 
   if (!auctionItem) {
     return null;
@@ -109,11 +119,6 @@ export default function CompleteAuctionPage({ track, auctionItem }: TrackPagePro
       .execute(web3);
   };
 
-  const topNovaBarProps: TopNavBarProps = {
-    leftButton: <BackButton />,
-    title: 'Cancel Auction',
-  };
-
   if (!me || track.nftData?.pendingRequest != PendingRequest.None) {
     return null;
   }
@@ -126,19 +131,17 @@ export default function CompleteAuctionPage({ track, auctionItem }: TrackPagePro
         canonicalUrl={`/tracks/${track.id}/cancel-auction/`}
         image={track.artworkUrl}
       />
-      <Layout topNavBarProps={topNovaBarProps}>
-        <div className="m-4">
-          <Track track={track} />
-        </div>
-        <div className="px-4 py-3">
-          <MaxGasFee />
-        </div>
-        <PlayerAwareBottomBar>
-          <Button className="ml-auto" variant="buy-nft" onClick={() => handleCancel()} loading={loading}>
-            <div className="px-4">CANCEL AUCTION</div>
-          </Button>
-        </PlayerAwareBottomBar>
-      </Layout>
+      <div className="m-4">
+        <Track track={track} />
+      </div>
+      <div className="px-4 py-3">
+        <MaxGasFee />
+      </div>
+      <PlayerAwareBottomBar>
+        <Button className="ml-auto" variant="buy-nft" onClick={() => handleCancel()} loading={loading}>
+          <div className="px-4">CANCEL AUCTION</div>
+        </Button>
+      </PlayerAwareBottomBar>
     </>
   );
 }

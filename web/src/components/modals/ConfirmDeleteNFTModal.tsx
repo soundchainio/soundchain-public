@@ -9,8 +9,8 @@ import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { useWalletContext } from 'hooks/useWalletContext';
 import {
   ExploreTracksDocument,
-  TrackQuery,
   ExploreTracksQuery,
+  TrackQuery,
   useDeleteTrackMutation,
   useTrackLazyQuery,
 } from 'lib/graphql';
@@ -179,3 +179,4 @@ export const ConfirmDeleteNFTModal = () => {
     </Modal>
   );
 };
+export default ConfirmDeleteNFTModal;

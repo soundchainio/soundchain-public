@@ -1,14 +1,14 @@
 import { InboxButton } from 'components/Buttons/InboxButton';
-import { Layout } from 'components/Layout';
 import { MenuLink } from 'components/MenuLink';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
+import { useLayoutContext } from 'hooks/useLayoutContext';
 import { Artist } from 'icons/Artist';
 import { Heart } from 'icons/Heart';
 import { cacheFor } from 'lib/apollo';
 import { MeDocument, MeQuery } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
-import React from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 interface HomePageProps {
   me?: MeQuery['me'];
@@ -24,18 +24,25 @@ export const getServerSideProps = protectPage(async (context, apolloClient) => {
 });
 
 export default function LibraryPage({ me }: HomePageProps) {
-  const topNavBarProps: TopNavBarProps = {
-    title: 'Library',
-    rightButton: me ? <InboxButton /> : undefined,
-  };
+  const { setTopNavBarProps } = useLayoutContext();
+
+  const topNavBarProps: TopNavBarProps = useMemo(
+    () => ({
+      title: 'Library',
+      rightButton: me ? <InboxButton /> : undefined,
+    }),
+    [me],
+  );
+
+  useEffect(() => {
+    setTopNavBarProps(topNavBarProps);
+  }, [setTopNavBarProps, topNavBarProps]);
 
   return (
     <>
       <SEO title="Library | SoundChain" canonicalUrl="/library/" description="SoundChain Library" />
-      <Layout topNavBarProps={topNavBarProps}>
-        <MenuLink icon={Heart} label="Favorite Tracks" href="/library/favorite-tracks" />
-        <MenuLink icon={Artist} label="Artists" href="/library/artists" />
-      </Layout>
+      <MenuLink icon={Heart} label="Favorite Tracks" href="/library/favorite-tracks" />
+      <MenuLink icon={Artist} label="Artists" href="/library/artists" />
     </>
   );
 }

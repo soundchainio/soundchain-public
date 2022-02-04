@@ -1,12 +1,12 @@
 import { BackButton } from 'components/Buttons/BackButton';
 import { ListNFTBuyNow, ListNFTBuyNowFormValues } from 'components/details-NFT/ListNFTBuyNow';
-import { Layout } from 'components/Layout';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import { useModalDispatch } from 'contexts/providers/modal';
 import { FormikHelpers } from 'formik';
 import useBlockchainV2 from 'hooks/useBlockchainV2';
+import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { cacheFor } from 'lib/apollo';
@@ -14,7 +14,7 @@ import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemQuery, useUpdat
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { SaleType } from 'types/SaleType';
 import { compareWallets } from 'utils/Wallet';
@@ -54,6 +54,8 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
   const { dispatchShowRemoveListingModal } = useModalDispatch();
   const [trackUpdate] = useUpdateTrackMutation();
   const { account, web3 } = useWalletContext();
+  const { setTopNavBarProps } = useLayoutContext();
+
   const me = useMe();
 
   const nftData = track.nftData;
@@ -63,6 +65,41 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
     variables: { tokenId },
     fetchPolicy: 'network-only',
   });
+
+  const handleRemove = () => {
+    if (
+      !web3 ||
+      !listingPayload?.buyNowItem?.buyNowItem?.tokenId ||
+      !account ||
+      nftData?.pendingRequest != PendingRequest.None
+    ) {
+      return;
+    }
+    dispatchShowRemoveListingModal(
+      true,
+      listingPayload?.buyNowItem?.buyNowItem?.tokenId,
+      track.id,
+      SaleType.MARKETPLACE,
+    );
+  };
+
+  const RemoveListing = (
+    <div className="flex-shrink-0 flex items-center cursor-pointer">
+      <h2 className="text-sm text-red-400 font-bold" onClick={handleRemove}>
+        Remove Listing
+      </h2>
+    </div>
+  );
+
+  const topNavBarProps: TopNavBarProps = {
+    leftButton: <BackButton />,
+    title: 'Edit Listing',
+    rightButton: RemoveListing,
+  };
+
+  useEffect(() => {
+    setTopNavBarProps(topNavBarProps);
+  }, [setTopNavBarProps]);
 
   if (!listingPayload) {
     return null;
@@ -107,37 +144,6 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       .execute(web3);
   };
 
-  const handleRemove = () => {
-    if (
-      !web3 ||
-      !listingPayload.buyNowItem?.buyNowItem?.tokenId ||
-      !account ||
-      nftData?.pendingRequest != PendingRequest.None
-    ) {
-      return;
-    }
-    dispatchShowRemoveListingModal(
-      true,
-      listingPayload.buyNowItem?.buyNowItem?.tokenId,
-      track.id,
-      SaleType.MARKETPLACE,
-    );
-  };
-
-  const RemoveListing = (
-    <div className="flex-shrink-0 flex items-center cursor-pointer">
-      <h2 className="text-sm text-red-400 font-bold" onClick={handleRemove}>
-        Remove Listing
-      </h2>
-    </div>
-  );
-
-  const topNovaBarProps: TopNavBarProps = {
-    leftButton: <BackButton />,
-    title: 'Edit Listing',
-    rightButton: RemoveListing,
-  };
-
   if (!isForSale || !isOwner || !me || !track || nftData?.pendingRequest != PendingRequest.None) {
     return null;
   }
@@ -145,16 +151,14 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
   return (
     <>
       <SEO title={`Edit Listing | SoundChain`} description={'Edit Buy now listing'} canonicalUrl={router.asPath} />
-      <Layout topNavBarProps={topNovaBarProps}>
-        <div className="m-4">
-          <Track track={track} />
-        </div>
-        <ListNFTBuyNow
-          submitLabel="EDIT LISTING"
-          handleSubmit={handleUpdate}
-          initialValues={{ price, startTime: startingDate }}
-        />
-      </Layout>
+      <div className="m-4">
+        <Track track={track} />
+      </div>
+      <ListNFTBuyNow
+        submitLabel="EDIT LISTING"
+        handleSubmit={handleUpdate}
+        initialValues={{ price, startTime: startingDate }}
+      />
     </>
   );
 }

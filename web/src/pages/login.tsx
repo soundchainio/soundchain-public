@@ -1,11 +1,11 @@
 import { isApolloError } from '@apollo/client';
-import { AuthLayout } from 'components/AuthLayout';
 import { Button } from 'components/Button';
 import { LoaderAnimation } from 'components/LoaderAnimation';
 import { FormValues, LoginForm } from 'components/LoginForm';
 import SEO from 'components/SEO';
 import { TopNavBarButton } from 'components/TopNavBarButton';
 import { config } from 'config';
+import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
 import { Google } from 'icons/Google';
@@ -16,7 +16,7 @@ import { setJwt } from 'lib/apollo';
 import { AuthMethod, useLoginMutation } from 'lib/graphql';
 import { useRouter } from 'next/dist/client/router';
 import NextLink from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 export default function LoginPage() {
   const [login] = useLoginMutation();
@@ -26,6 +26,16 @@ export default function LoginPage() {
   const router = useRouter();
   const magicParam = router.query.magic_credential?.toString();
   const [authMethod, setAuthMethod] = useState<AuthMethod[]>();
+  const { setTopNavBarProps, setIsAuthLayout } = useLayoutContext();
+
+  const topNavBarProps = useMemo(
+    () => ({
+      isLogin: false,
+      leftButton: <TopNavBarButton onClick={() => setAuthMethod(undefined)} label="Back" icon={LeftArrow} />,
+      showLoginSignUpButton: false,
+    }),
+    [],
+  );
 
   const handleError = useCallback(
     (error: Error) => {
@@ -38,6 +48,11 @@ export default function LoginPage() {
     },
     [router],
   );
+
+  useEffect(() => {
+    setTopNavBarProps(authMethod ? topNavBarProps : { isLogin: true });
+    setIsAuthLayout(true);
+  }, [setTopNavBarProps, setIsAuthLayout, authMethod, topNavBarProps]);
 
   useEffect(() => {
     if (me) {
@@ -103,13 +118,7 @@ export default function LoginPage() {
 
   if (authMethod) {
     return (
-      <AuthLayout
-        topNavBarProps={{
-          isLogin: false,
-          leftButton: <TopNavBarButton onClick={() => setAuthMethod(undefined)} label="Back" icon={LeftArrow} />,
-          showLoginSignUpButton: false,
-        }}
-      >
+      <>
         <SEO title="Login | SoundChain" description="Login warning" canonicalUrl="/login/" />
         <div className="flex justify-center pt-32 pb-6">
           <UserWarning />
@@ -132,16 +141,12 @@ export default function LoginPage() {
             </Button>
           </NextLink>
         </div>
-      </AuthLayout>
+      </>
     );
   }
 
   return (
-    <AuthLayout
-      topNavBarProps={{
-        isLogin: true,
-      }}
-    >
+    <>
       <SEO title="Login | SoundChain" description="Log in to SoundChain" canonicalUrl="/login/" />
       <div className="h-36 mb-2 flex items-center justify-center">
         <LogoAndText />
@@ -149,6 +154,6 @@ export default function LoginPage() {
       <GoogleButton />
       <div className="text-gray-50 text-sm font-bold text-center py-7">OR</div>
       <LoginForm handleMagicLogin={handleSubmit} />
-    </AuthLayout>
+    </>
   );
 }

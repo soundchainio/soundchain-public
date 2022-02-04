@@ -1,12 +1,13 @@
 import { InboxButton } from 'components/Buttons/InboxButton';
 import { Feed } from 'components/Feed';
-import { Layout } from 'components/Layout';
 import { Posts } from 'components/Posts';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
+import { useLayoutContext } from 'hooks/useLayoutContext';
 import { cacheFor, createApolloClient } from 'lib/apollo';
 import { MeDocument, MeQuery } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
+import { useEffect, useMemo } from 'react';
 
 interface HomePageProps {
   me?: MeQuery['me'];
@@ -24,16 +25,23 @@ export const getServerSideProps: GetServerSideProps<HomePageProps> = async conte
 };
 
 export default function HomePage({ me }: HomePageProps) {
-  const topNavBarProps: TopNavBarProps = {
-    rightButton: me ? <InboxButton /> : undefined,
-  };
+  const { setTopNavBarProps } = useLayoutContext();
+
+  const topNavBarProps: TopNavBarProps = useMemo(
+    () => ({
+      rightButton: me ? <InboxButton /> : undefined,
+    }),
+    [me],
+  );
+
+  useEffect(() => {
+    setTopNavBarProps(topNavBarProps);
+  }, [setTopNavBarProps, topNavBarProps]);
 
   return (
     <>
       <SEO title="SoundChain" description="Connecting people to music" canonicalUrl="/" />
-      <Layout topNavBarProps={topNavBarProps}>
-        <div className="pt-3 h-full">{me ? <Feed /> : <Posts />}</div>
-      </Layout>
+      <div className="pt-3 h-full">{me ? <Feed /> : <Posts />}</div>
     </>
   );
 }

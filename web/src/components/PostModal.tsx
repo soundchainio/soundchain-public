@@ -146,3 +146,5 @@ export const PostModal = () => {
     </ModalsPortal>
   );
 };
+
+export default PostModal;

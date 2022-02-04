@@ -372,3 +372,5 @@ export const CreateModal = () => {
     </Modal>
   );
 };
+
+export default CreateModal;

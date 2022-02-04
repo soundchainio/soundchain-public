@@ -5,7 +5,6 @@ import { Description } from 'components/details-NFT/Description';
 import { HandleNFT } from 'components/details-NFT/HandleNFT';
 import { MintingData } from 'components/details-NFT/MintingData';
 import { TrackInfo } from 'components/details-NFT/TrackInfo';
-import { Layout } from 'components/Layout';
 import { Matic } from 'components/Matic';
 import { ProfileWithAvatar } from 'components/ProfileWithAvatar';
 import SEO from 'components/SEO';
@@ -15,6 +14,7 @@ import { Track } from 'components/Track';
 import { TrackShareButton } from 'components/TrackShareButton';
 import { useModalDispatch } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
+import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Ellipsis } from 'icons/Ellipsis';
@@ -41,7 +41,7 @@ import { GetServerSideProps } from 'next';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 import { priceToShow } from 'utils/format';
 import { compareWallets } from 'utils/Wallet';
@@ -130,6 +130,7 @@ export default function TrackPage({ track }: TrackPageProps) {
   });
   const [profile, { data: profileInfo }] = useProfileLazyQuery();
   const [userByWallet, { data: ownerProfile }] = useUserByWalletLazyQuery();
+  const { setTopNavBarProps } = useLayoutContext();
 
   const nftData = trackData?.track.nftData || track.nftData;
   const mintingPending = nftData?.pendingRequest === PendingRequest.Mint;
@@ -160,22 +161,29 @@ export default function TrackPage({ track }: TrackPageProps) {
   const futureSale = startingDate ? startingDate.getTime() > new Date().getTime() : false;
   const loading = loadingListingItem || isLoadingOwner;
 
-  const topNavBarProps: TopNavBarProps = {
-    leftButton: <BackButton />,
-    title: 'NFT Details',
-    rightButton: (
-      <div className="flex gap-3 items-center">
-        <TrackShareButton trackId={track.id} artist={track.artist} title={track.title} />
-        {(isOwner || me?.roles.includes(Role.Admin)) && (
-          <Ellipsis
-            fill="#808080"
-            className="cursor-pointer"
-            onClick={() => dispatchShowAuthorActionsModal(true, AuthorActionsType.NFT, track.id, true)}
-          />
-        )}
-      </div>
-    ),
-  };
+  const topNavBarProps: TopNavBarProps = useMemo(
+    () => ({
+      leftButton: <BackButton />,
+      title: 'NFT Details',
+      rightButton: (
+        <div className="flex gap-3 items-center">
+          <TrackShareButton trackId={track.id} artist={track.artist} title={track.title} />
+          {(isOwner || me?.roles.includes(Role.Admin)) && (
+            <Ellipsis
+              fill="#808080"
+              className="cursor-pointer"
+              onClick={() => dispatchShowAuthorActionsModal(true, AuthorActionsType.NFT, track.id, true)}
+            />
+          )}
+        </div>
+      ),
+    }),
+    [dispatchShowAuthorActionsModal, isOwner, me?.roles, track.artist, track.id, track.title],
+  );
+
+  useEffect(() => {
+    setTopNavBarProps(topNavBarProps);
+  }, [setTopNavBarProps, topNavBarProps]);
 
   useEffect(() => {
     if (track.nftData?.tokenId) {
@@ -271,150 +279,148 @@ export default function TrackPage({ track }: TrackPageProps) {
   return (
     <>
       <SEO title={title} description={description} canonicalUrl={`/tracks/${track.id}`} image={track.artworkUrl} />
-      <Layout topNavBarProps={topNavBarProps}>
-        <div className="p-3 flex flex-col gap-5">
-          <Track track={track} />
-          <div className="flex justify-between gap-2">
-            {post && !post.deleted ? (
-              <NextLink href={`/posts/${post.id}`}>
-                <a className="flex items-center gap-3">
-                  <div className="text-white text-sm font-bold border-blue-400 border-2 px-4 py-1 bg-blue-700 bg-opacity-50 rounded">
-                    View Post
-                  </div>
-                  <p className="text-gray-400 text-sm flex items-center gap-1">
-                    <span className="text-white font-bold flex items-center gap-1">
-                      {post.topReactions.map(name => (
-                        <ReactionEmoji key={name} name={name} className="w-4 h-4" />
-                      ))}
-                      {post.totalReactions}
-                    </span>{' '}
-                    reactions
-                  </p>
-                  <p className="text-gray-400 text-sm">
-                    <span className="text-white font-bold">{post.commentCount}</span> comments
-                  </p>
-                </a>
-              </NextLink>
-            ) : (
-              <p className="text-gray-80">Original post does not exist.</p>
-            )}
-            <button aria-label="Favorite" className="flex items-center" onClick={handleFavorite}>
-              {isFavorite && <HeartFull />}
-              {!isFavorite && <HeartBorder />}
-            </button>
-          </div>
-          {isAuction && !auctionIsOver && isHighestBidder && (
-            <div className="text-green-500 font-bold p-2 text-center">You have the highest bid!</div>
+      <div className="p-3 flex flex-col gap-5">
+        <Track track={track} />
+        <div className="flex justify-between gap-2">
+          {post && !post.deleted ? (
+            <NextLink href={`/posts/${post.id}`}>
+              <a className="flex items-center gap-3">
+                <div className="text-white text-sm font-bold border-blue-400 border-2 px-4 py-1 bg-blue-700 bg-opacity-50 rounded">
+                  View Post
+                </div>
+                <p className="text-gray-400 text-sm flex items-center gap-1">
+                  <span className="text-white font-bold flex items-center gap-1">
+                    {post.topReactions.map(name => (
+                      <ReactionEmoji key={name} name={name} className="w-4 h-4" />
+                    ))}
+                    {post.totalReactions}
+                  </span>{' '}
+                  reactions
+                </p>
+                <p className="text-gray-400 text-sm">
+                  <span className="text-white font-bold">{post.commentCount}</span> comments
+                </p>
+              </a>
+            </NextLink>
+          ) : (
+            <p className="text-gray-80">Original post does not exist.</p>
           )}
-          {isAuction &&
-            !auctionIsOver &&
-            haveBided?.haveBided.bided &&
-            isHighestBidder !== undefined &&
-            !isHighestBidder && <div className="text-red-500 font-bold p-2 text-center">You have been outbid!</div>}
+          <button aria-label="Favorite" className="flex items-center" onClick={handleFavorite}>
+            {isFavorite && <HeartFull />}
+            {!isFavorite && <HeartBorder />}
+          </button>
         </div>
-        {isBuyNow && price && (
-          <div className="bg-[#112011]">
+        {isAuction && !auctionIsOver && isHighestBidder && (
+          <div className="text-green-500 font-bold p-2 text-center">You have the highest bid!</div>
+        )}
+        {isAuction &&
+          !auctionIsOver &&
+          haveBided?.haveBided.bided &&
+          isHighestBidder !== undefined &&
+          !isHighestBidder && <div className="text-red-500 font-bold p-2 text-center">You have been outbid!</div>}
+      </div>
+      {isBuyNow && price && (
+        <div className="bg-[#112011]">
+          <div className="flex justify-between items-center px-4 py-3 gap-3">
+            <div className="text-xs font-bold text-gray-80">BUY NOW PRICE</div>
+            <Matic value={price} variant="currency-inline" className="text-xs" />
+          </div>
+          {futureSale && (
             <div className="flex justify-between items-center px-4 py-3 gap-3">
-              <div className="text-xs font-bold text-gray-80">BUY NOW PRICE</div>
+              <div className="text-xs font-bold text-gray-80 flex-shrink-0">SALE STARTS</div>
+              <div className="text-xs flex items-center text-right font-bold gap-1">
+                <Timer date={startingDate!} reloadOnEnd />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+      {isAuction && (
+        <div className="bg-[#111920]">
+          {futureSale && (
+            <div className="flex justify-between items-center px-4 py-3 gap-3">
+              <div className="text-xs font-bold text-gray-80 flex-shrink-0">SALE STARTS</div>
+              <div className="text-xs flex items-center text-right font-bold gap-1">
+                <Timer date={startingDate!} reloadOnEnd />
+              </div>
+            </div>
+          )}
+          {endingDate && !futureSale && (
+            <div className="flex justify-between items-center px-4 py-3 gap-3">
+              <div className="text-xs font-bold text-gray-80 flex-shrink-0">TIME REMAINING</div>
+              <div className="text-xs flex items-center text-right font-bold gap-1">
+                <Timer date={endingDate} endedMessage="Auction Ended" />
+              </div>
+            </div>
+          )}
+          <div className="flex justify-between items-center px-4 py-3 gap-3">
+            <div className="text-xs font-bold text-gray-80 ">{auctionIsOver ? 'FINAL PRICE' : 'CURRENT PRICE'}</div>
+            <div className="flex items-center font-bold gap-1">
               <Matic value={price} variant="currency-inline" className="text-xs" />
+              <button className="text-[#22CAFF] text-xxs" onClick={() => dispatchShowBidsHistory(true, id || '')}>
+                [{bidCount} bids]
+              </button>
             </div>
-            {futureSale && (
-              <div className="flex justify-between items-center px-4 py-3 gap-3">
-                <div className="text-xs font-bold text-gray-80 flex-shrink-0">SALE STARTS</div>
-                <div className="text-xs flex items-center text-right font-bold gap-1">
-                  <Timer date={startingDate!} reloadOnEnd />
-                </div>
-              </div>
-            )}
           </div>
-        )}
-        {isAuction && (
-          <div className="bg-[#111920]">
-            {futureSale && (
-              <div className="flex justify-between items-center px-4 py-3 gap-3">
-                <div className="text-xs font-bold text-gray-80 flex-shrink-0">SALE STARTS</div>
-                <div className="text-xs flex items-center text-right font-bold gap-1">
-                  <Timer date={startingDate!} reloadOnEnd />
-                </div>
-              </div>
-            )}
-            {endingDate && !futureSale && (
-              <div className="flex justify-between items-center px-4 py-3 gap-3">
-                <div className="text-xs font-bold text-gray-80 flex-shrink-0">TIME REMAINING</div>
-                <div className="text-xs flex items-center text-right font-bold gap-1">
-                  <Timer date={endingDate} endedMessage="Auction Ended" />
-                </div>
-              </div>
-            )}
-            <div className="flex justify-between items-center px-4 py-3 gap-3">
-              <div className="text-xs font-bold text-gray-80 ">{auctionIsOver ? 'FINAL PRICE' : 'CURRENT PRICE'}</div>
-              <div className="flex items-center font-bold gap-1">
-                <Matic value={price} variant="currency-inline" className="text-xs" />
-                <button className="text-[#22CAFF] text-xxs" onClick={() => dispatchShowBidsHistory(true, id || '')}>
-                  [{bidCount} bids]
-                </button>
-              </div>
+          {highestBidderData?.getUserByWallet && (
+            <div className="text-gray-80 flex justify-between items-center px-4 py-3 gap-3">
+              <div className="text-xs font-bold">HIGHEST BIDDER</div>
+              <ProfileWithAvatar profile={highestBidderData.getUserByWallet.profile} />
             </div>
-            {highestBidderData?.getUserByWallet && (
-              <div className="text-gray-80 flex justify-between items-center px-4 py-3 gap-3">
-                <div className="text-xs font-bold">HIGHEST BIDDER</div>
-                <ProfileWithAvatar profile={highestBidderData.getUserByWallet.profile} />
-              </div>
-            )}
-            {isOwner && bidCount === 0 && auctionIsOver && (
-              <div className="text-white flex justify-between items-center px-4 py-3 gap-3">
-                <div className="text-xs font-bold">RESULT</div>
-                <div className="text-xs flex items-center font-bold gap-1">Auction ended with no bids</div>
-              </div>
-            )}
-          </div>
-        )}
-        <Description description={track.description || ''} className="p-4" />
-        <TrackInfo
-          trackTitle={track.title}
-          albumTitle={track.album}
-          releaseYear={track.releaseYear}
-          genres={track.genres}
-          copyright={track.copyright}
-          mintingPending={mintingPending}
-          artistProfile={profileInfo?.profile}
-          royalties={royalties}
+          )}
+          {isOwner && bidCount === 0 && auctionIsOver && (
+            <div className="text-white flex justify-between items-center px-4 py-3 gap-3">
+              <div className="text-xs font-bold">RESULT</div>
+              <div className="text-xs flex items-center font-bold gap-1">Auction ended with no bids</div>
+            </div>
+          )}
+        </div>
+      )}
+      <Description description={track.description || ''} className="p-4" />
+      <TrackInfo
+        trackTitle={track.title}
+        albumTitle={track.album}
+        releaseYear={track.releaseYear}
+        genres={track.genres}
+        copyright={track.copyright}
+        mintingPending={mintingPending}
+        artistProfile={profileInfo?.profile}
+        royalties={royalties}
+      />
+      {nftData && (
+        <MintingData
+          transactionHash={nftData.transactionHash}
+          ipfsCid={nftData.ipfsCid}
+          ownerProfile={ownerProfile?.getUserByWallet?.profile as Partial<Profile>}
         />
-        {nftData && (
-          <MintingData
-            transactionHash={nftData.transactionHash}
-            ipfsCid={nftData.ipfsCid}
-            ownerProfile={ownerProfile?.getUserByWallet?.profile as Partial<Profile>}
-          />
-        )}
-        {isProcessing && !mintingPending && nftData?.pendingRequest ? (
-          <div className=" flex justify-center items-center p-3">
-            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" />
-            <div className="text-white text-sm pl-3 font-bold">
-              Processing {pendingRequestMapping[nftData.pendingRequest]}
-            </div>
+      )}
+      {isProcessing && !mintingPending && nftData?.pendingRequest ? (
+        <div className=" flex justify-center items-center p-3">
+          <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" />
+          <div className="text-white text-sm pl-3 font-bold">
+            Processing {pendingRequestMapping[nftData.pendingRequest]}
           </div>
-        ) : loading ? (
-          <div className=" flex justify-center items-center">
-            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" />
-            <div className="text-white text-sm pl-3 font-bold">Loading</div>
-          </div>
-        ) : me ? (
-          <HandleNFT
-            canList={canList}
-            price={price}
-            isOwner={isOwner}
-            isBuyNow={isBuyNow}
-            isAuction={isAuction}
-            canComplete={canComplete}
-            auctionIsOver={auctionIsOver}
-            countBids={bidCount}
-            startingDate={startingDate}
-            endingDate={endingDate}
-            auctionId={id || ''}
-          />
-        ) : null}
-      </Layout>
+        </div>
+      ) : loading ? (
+        <div className=" flex justify-center items-center">
+          <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" />
+          <div className="text-white text-sm pl-3 font-bold">Loading</div>
+        </div>
+      ) : me ? (
+        <HandleNFT
+          canList={canList}
+          price={price}
+          isOwner={isOwner}
+          isBuyNow={isBuyNow}
+          isAuction={isAuction}
+          canComplete={canComplete}
+          auctionIsOver={auctionIsOver}
+          countBids={bidCount}
+          startingDate={startingDate}
+          endingDate={endingDate}
+          auctionId={id || ''}
+        />
+      ) : null}
     </>
   );
 }
