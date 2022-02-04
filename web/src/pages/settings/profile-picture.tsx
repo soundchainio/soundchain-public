@@ -17,6 +17,10 @@ export default function ProfilePicturePage() {
   useEffect(() => {
     setTopNavBarProps(topNavBarProps);
     setHideBottomNavBar(true);
+
+    return () => {
+      setHideBottomNavBar(false);
+    };
   }, [setHideBottomNavBar, setTopNavBarProps]);
 
   return (
