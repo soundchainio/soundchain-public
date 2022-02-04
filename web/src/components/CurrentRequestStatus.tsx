@@ -2,7 +2,7 @@ import { ManageRequestTab } from 'types/ManageRequestTabType';
 
 interface CurrentRequestStatusProps {
   status: ManageRequestTab;
-  reason?: string
+  reason?: string;
 }
 
 export const CurrentRequestStatus = ({ status, reason }: CurrentRequestStatusProps) => {
@@ -21,7 +21,7 @@ export const CurrentRequestStatus = ({ status, reason }: CurrentRequestStatusPro
   }
 
   return (
-    <div className="flex flex-col space-y-2 px-4 cursor-pointer py-2 bg-gray-20 text-white">
+    <div className="flex flex-col space-y-2 px-4 py-2 bg-gray-20 text-white">
       <div>
         Current status: <span className={classes}>{status}</span>
       </div>
