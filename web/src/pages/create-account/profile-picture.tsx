@@ -4,6 +4,7 @@ import { StepProgressBar } from 'components/StepProgressBar';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { config } from 'config';
 import { useLayoutContext } from 'hooks/useLayoutContext';
+import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useMemo } from 'react';
 import { SkipButton, steps } from 'utils/createAccountUtils';
@@ -16,19 +17,14 @@ export default function ProfilePicturePage() {
     () => ({
       title: 'Profile Picture',
       leftButton: (
-        <div
-          className="text-gray-400 font-bold flex-1 text-left"
-          onClick={() => {
-            router.push(`${config.redirectUrlPostLogin}`);
-          }}
-        >
-          Cancel
-        </div>
+        <NextLink href={config.redirectUrlPostLogin}>
+          <a className="text-gray-400 font-bold flex-1 text-left">Cancel</a>
+        </NextLink>
       ),
       rightButton: <SkipButton href="/create-account/cover-picture" />,
       subtitle: <StepProgressBar steps={steps} currentStep={1} />,
     }),
-    [router],
+    [],
   );
 
   useEffect(() => {
