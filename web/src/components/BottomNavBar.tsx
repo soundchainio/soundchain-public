@@ -25,7 +25,7 @@ export const BottomNavBar = () => {
     if (process.browser) {
       window.onbeforeunload = e => {
         if (isMinting) {
-          return 'You are minting a NFT, you should not leave SoundChain!';
+          return 'You are minting an NFT. You should not leave SoundChain!';
         }
         e.preventDefault();
       };
