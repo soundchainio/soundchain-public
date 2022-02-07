@@ -12,7 +12,7 @@ import { PendingRequest, TrackDocument, TrackQuery, useAuctionItemQuery, useUpda
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { SaleType } from 'types/SaleType';
 import { compareWallets } from 'utils/Wallet';
@@ -62,7 +62,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
     variables: { tokenId },
   });
 
-  const handleRemove = () => {
+  const handleRemove = useCallback(() => {
     if (
       !web3 ||
       !listingPayload?.auctionItem?.auctionItem?.tokenId ||
@@ -72,23 +72,36 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       return;
     }
     dispatchShowRemoveListingModal(true, listingPayload.auctionItem?.auctionItem?.tokenId, track.id, SaleType.AUCTION);
-  };
+  }, [
+    account,
+    dispatchShowRemoveListingModal,
+    listingPayload?.auctionItem?.auctionItem?.tokenId,
+    nftData?.pendingRequest,
+    track.id,
+    web3,
+  ]);
 
-  const RemoveListing = (
-    <button className="text-sm text-red-400 font-bold" onClick={handleRemove}>
-      Remove Listing
-    </button>
+  const RemoveListing = useMemo(
+    () => (
+      <button className="text-sm text-red-400 font-bold" onClick={handleRemove}>
+        Remove Listing
+      </button>
+    ),
+    [handleRemove],
   );
 
-  const topNavBarProps: TopNavBarProps = {
-    leftButton: <BackButton />,
-    title: 'Edit Listing',
-    rightButton: RemoveListing,
-  };
+  const topNavBarProps: TopNavBarProps = useMemo(
+    () => ({
+      leftButton: <BackButton />,
+      title: 'Edit Listing',
+      rightButton: RemoveListing,
+    }),
+    [RemoveListing],
+  );
 
   useEffect(() => {
     setTopNavBarProps(topNavBarProps);
-  }, [setTopNavBarProps]);
+  }, [setTopNavBarProps, topNavBarProps]);
 
   if (!listingPayload) {
     return null;
@@ -123,7 +136,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
           },
         },
       });
-      router.back();
+      router.replace(router.asPath.replace('edit/auction', ''));
     };
 
     updateAuction(listingPayload.auctionItem?.auctionItem?.tokenId, weiPrice, startTimestamp, endTimestamp, account)

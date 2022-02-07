@@ -124,7 +124,7 @@ const ListingAction = ({ href, action, children }: React.PropsWithChildren<Listi
     <PlayerAwareBottomBar>
       <div className="flex items-center flex-1 gap-2 text-sm font-bold pl-4">{children}</div>
       <div className="flex-1 flex items-center justify-end">
-        <NextLink href={href}>
+        <NextLink href={href} replace>
           <Button variant="list-nft">
             <div className="px-4 font-bold">{action}</div>
           </Button>
@@ -218,7 +218,7 @@ const AuctionDetails = ({
       <div className="text-center">
         {auctionIsOver && countBids === 0 && (
           <div className="flex-1 flex items-center justify-end">
-            <NextLink href={cancelHref}>
+            <NextLink href={cancelHref} replace>
               <Button variant="edit-listing">CANCEL AUCTION</Button>
             </NextLink>
           </div>
