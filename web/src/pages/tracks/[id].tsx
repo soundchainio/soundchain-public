@@ -171,9 +171,11 @@ export default function TrackPage({ track }: TrackPageProps) {
           {(isOwner || me?.roles.includes(Role.Admin)) && (
             <button
               type="button"
+              aria-label="More options"
+              className="w-10 h-10 flex items-center justify-center"
               onClick={() => dispatchShowAuthorActionsModal(true, AuthorActionsType.NFT, track.id, true)}
             >
-              <Ellipsis fill="#808080" className="cursor-pointer" />
+              <Ellipsis fill="#808080" />
             </button>
           )}
         </div>
