@@ -127,7 +127,7 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
             },
           },
         });
-        router.push(router.asPath.replace('/list/buy-now', ''));
+        router.replace(router.asPath.replace('/list/buy-now', ''));
       };
       listItem(nftData.tokenId, account, weiPrice, startTimestamp)
         .onReceipt(onReceipt)

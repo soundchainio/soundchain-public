@@ -86,7 +86,8 @@ export default function CompleteAuctionPage({ track, auctionItem }: TrackPagePro
 
   useEffect(() => {
     setTopNavBarProps(topNavBarProps);
-  }, [setTopNavBarProps]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!auctionItem) {
     return null;
@@ -108,7 +109,7 @@ export default function CompleteAuctionPage({ track, auctionItem }: TrackPagePro
           },
         },
       });
-      router.back();
+      router.replace(router.asPath.replace('cancel-auction', ''));
     };
     setLoading(true);
 

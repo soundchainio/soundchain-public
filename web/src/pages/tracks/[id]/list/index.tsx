@@ -40,7 +40,7 @@ export default function ListPage() {
               With a fixed-price Buy It Now listing, a buyer knows the exact price they need to pay for your NFT and can
               complete their purchase immediately. There is no bidding on fixed-price listings.
             </p>
-            <NextLink href={`${router.asPath}/buy-now`}>
+            <NextLink href={`${router.asPath}/buy-now`} replace>
               <Button variant="outline" borderColor="bg-green-gradient" className="h-10 w-1/2">
                 BUY NOW LISTING
               </Button>
@@ -58,7 +58,7 @@ export default function ListPage() {
               Interested buyers will place bids and when the auction ends, your NFT is sold to the highest bidder as
               long as it meets the reserve price.
             </p>
-            <NextLink href={`${router.asPath}/auction`}>
+            <NextLink href={`${router.asPath}/auction`} replace>
               <Button variant="outline" borderColor="bg-purple-gradient" className="h-10 w-1/2">
                 AUCTION LISTING
               </Button>

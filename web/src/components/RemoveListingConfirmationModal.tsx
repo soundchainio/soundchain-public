@@ -69,8 +69,8 @@ export const RemoveListingConfirmationModal = () => {
 
       dispatchShowRemoveListingModal(false, 0, '', SaleType.CLOSE);
       saleType === SaleType.MARKETPLACE
-        ? router.push(router.asPath.replace('edit/buy-now', ''))
-        : router.push(router.asPath.replace('edit/auction', ''));
+        ? router.replace(router.asPath.replace('edit/buy-now', ''))
+        : router.replace(router.asPath.replace('edit/auction', ''));
     };
     const cancel =
       saleType === SaleType.MARKETPLACE ? cancelListing(tokenId, account) : cancelAuction(tokenId, account);

@@ -126,7 +126,7 @@ export default function AuctionPage({ track }: TrackPageProps) {
             },
           },
         });
-        router.push(router.asPath.replace('/list/auction', ''));
+        router.replace(router.asPath.replace('/list/auction', ''));
       };
       createAuction(nftData.tokenId, weiPrice, startTimestamp, endTimestamp, account)
         .onReceipt(onReceive)

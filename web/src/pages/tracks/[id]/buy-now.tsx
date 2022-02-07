@@ -133,7 +133,7 @@ export default function BuyNowPage({ track }: TrackPageProps) {
           },
         },
       });
-      router.push(router.asPath.replace('buy-now', ''));
+      router.replace(router.asPath.replace('buy-now', ''));
     };
 
     setLoading(true);
