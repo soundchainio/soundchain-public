@@ -100,7 +100,7 @@ export default function WalletPage() {
         <RefreshButton onClick={refreshData} label="Refresh" className="text-center" refreshing={isRefetchingBalance} />
       ),
     });
-  }, [setHideBottomNavBar, setTopNavBarProps]);
+  }, [setHideBottomNavBar, setTopNavBarProps, isRefetchingBalance]);
 
   useEffect(() => {
     if (!account) {
