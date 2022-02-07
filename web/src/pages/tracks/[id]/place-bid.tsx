@@ -103,7 +103,8 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
 
   useEffect(() => {
     setTopNavBarProps(topNavBarProps);
-  }, [setTopNavBarProps]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (account && auctionItem?.auctionItem?.id) {

@@ -80,7 +80,8 @@ export default function CompleteAuctionPage({ track }: TrackPageProps) {
 
   useEffect(() => {
     setTopNavBarProps(topNavBarProps);
-  }, [setTopNavBarProps]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const fetchHighestBid = async () => {

@@ -183,7 +183,8 @@ export default function TrackPage({ track }: TrackPageProps) {
 
   useEffect(() => {
     setTopNavBarProps(topNavBarProps);
-  }, [setTopNavBarProps, topNavBarProps]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (track.nftData?.tokenId) {

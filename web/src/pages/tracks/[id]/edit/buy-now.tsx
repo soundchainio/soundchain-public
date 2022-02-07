@@ -110,6 +110,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
 
   useEffect(() => {
     setTopNavBarProps(topNavBarProps);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!listingPayload) {
