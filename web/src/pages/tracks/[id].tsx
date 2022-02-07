@@ -169,11 +169,14 @@ export default function TrackPage({ track }: TrackPageProps) {
         <div className="flex gap-3 items-center">
           <TrackShareButton trackId={track.id} artist={track.artist} title={track.title} />
           {(isOwner || me?.roles.includes(Role.Admin)) && (
-            <Ellipsis
-              fill="#808080"
-              className="cursor-pointer"
+            <button
+              type="button"
+              aria-label="More options"
+              className="w-10 h-10 flex items-center justify-center"
               onClick={() => dispatchShowAuthorActionsModal(true, AuthorActionsType.NFT, track.id, true)}
-            />
+            >
+              <Ellipsis fill="#808080" />
+            </button>
           )}
         </div>
       ),
