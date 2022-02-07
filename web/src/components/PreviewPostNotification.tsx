@@ -10,12 +10,12 @@ export const PreviewPostNotification = ({ postId }: PreviewPostNotificationProps
   const { data } = usePostQuery({ variables: { id: postId } });
   const post = data?.post;
 
-  if (!post) {
+  if (!post || !post.body) {
     return null;
   }
 
   return (
-    <div className="w-full p-4 bg-gray-30 rounded-xl">
+    <div className="flex mt-4 w-full p-4 bg-gray-30 rounded-xl">
       <NextLink href={`/posts/${post.id}`}>
         <div>
           <pre className="text-gray-100 text-sm whitespace-pre-wrap">{post.body}</pre>
