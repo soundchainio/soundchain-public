@@ -109,8 +109,8 @@ export default function RequestPage({ data }: RequestPageProps) {
       <SEO title="Manage Request | SoundChain" canonicalUrl={router.asPath} description="SoundChain Manage Request" />
       <div className="flex flex-col justify-between h-full">
         <div>
-          <NextLink href={`/profiles/${profile.profile.userHandle}`}>
-            <div className="flex flex-col text-white cursor-pointer">
+          <NextLink href={`/profiles/${data.profileId}`} passHref>
+            <a className="flex flex-col text-white cursor-pointer">
               <div className="relative flex items-center p-4">
                 <Avatar profile={profile.profile} pixels={40} className="rounded-full min-w-max flex items-center" />
                 <div className="mx-4">
@@ -122,7 +122,7 @@ export default function RequestPage({ data }: RequestPageProps) {
                   <p className="text-gray-80 text-sm">@{profile.profile.userHandle}</p>
                 </div>
               </div>
-            </div>
+            </a>
           </NextLink>
           <CurrentRequestStatus reason={data.reason || ''} status={data.status as ManageRequestTab} />
           {sourceList.map(src => (

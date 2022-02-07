@@ -39,6 +39,10 @@ export default function NamePage() {
   useEffect(() => {
     setTopNavBarProps(topNavBarProps);
     setHideBottomNavBar(true);
+
+    return () => {
+      setHideBottomNavBar(false);
+    };
   }, [setHideBottomNavBar, setTopNavBarProps]);
 
   if (!me) return null;

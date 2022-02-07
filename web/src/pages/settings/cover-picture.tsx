@@ -18,6 +18,10 @@ export default function CoverPicturePage() {
   useEffect(() => {
     setTopNavBarProps(topNavBarProps);
     setHideBottomNavBar(true);
+
+    return () => {
+      setHideBottomNavBar(false);
+    };
   }, [setHideBottomNavBar, setTopNavBarProps]);
 
   return (
