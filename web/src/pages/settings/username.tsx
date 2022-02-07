@@ -45,6 +45,10 @@ export default function SettingsUsernamePage() {
   useEffect(() => {
     setTopNavBarProps(topNavBarProps);
     setHideBottomNavBar(true);
+
+    return () => {
+      setHideBottomNavBar(false);
+    };
   }, [setHideBottomNavBar, setTopNavBarProps]);
 
   const onSubmit = async ({ handle }: FormValues, { setErrors }: FormikHelpers<FormValues>) => {

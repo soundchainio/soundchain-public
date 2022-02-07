@@ -18,6 +18,10 @@ export default function MusicianTypePage() {
   useEffect(() => {
     setTopNavBarProps(topNavBarProps);
     setHideBottomNavBar(true);
+
+    return () => {
+      setHideBottomNavBar(false);
+    };
   }, [setHideBottomNavBar, setTopNavBarProps]);
 
   return (
