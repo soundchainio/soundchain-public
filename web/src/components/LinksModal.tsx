@@ -48,9 +48,9 @@ export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type, post
       <div className={classNames(baseClasses, show ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0')}>
         <div className="flex flex-col h-full bg-gray-20">
           <div className="flex items-center rounded-tl-3xl rounded-tr-3xl bg-gray-30">
-            <div className="p-2 text-gray-400 font-bold flex-1 text-center" onClick={onClose}>
+            <button className="p-2 text-gray-400 font-bold flex-1 text-center" onClick={onClose}>
               Cancel
-            </div>
+            </button>
             <div className="flex-1 text-center text-white font-bold">Embed</div>
             <div className="flex-1 text-center m-2">
               <Button
