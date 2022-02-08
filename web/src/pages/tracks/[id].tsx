@@ -181,13 +181,13 @@ export default function TrackPage({ track }: TrackPageProps) {
         </div>
       ),
     }),
-    [dispatchShowAuthorActionsModal, isOwner, me?.roles, track.artist, track.id, track.title],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isOwner, me?.roles, track.artist, track.id, track.title],
   );
 
   useEffect(() => {
     setTopNavBarProps(topNavBarProps);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [setTopNavBarProps, topNavBarProps]);
 
   useEffect(() => {
     if (track.nftData?.tokenId) {
