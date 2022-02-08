@@ -32,7 +32,7 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   copyright: yup.string().max(100),
   releaseYear: yup.number(),
   genres: yup.array(),
-  artworkFile: yup.mixed(),
+  artworkFile: yup.mixed().required(),
   royalty: yup.number().integer().min(0).max(100).required(),
 });
 
@@ -90,12 +90,13 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
       validationSchema={validationSchema}
       onSubmit={handleSubmit}
     >
-      {({ setFieldValue, values }) => {
+      {({ setFieldValue, values, errors }) => {
         return (
           <Form className="flex flex-col gap-4 h-full">
             <div className="flex gap-4 px-4">
               <ArtworkUploader
                 name="artworkFile"
+                error={errors.artworkFile}
                 initialValue={initialValues?.artworkFile}
                 onFileChange={file => setFieldValue('artworkFile', file)}
               />

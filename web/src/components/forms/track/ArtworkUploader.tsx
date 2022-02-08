@@ -7,13 +7,14 @@ import { toast } from 'react-toastify';
 
 export interface ArtworkUploaderProps {
   name: string;
+  error?: string;
   initialValue?: File;
   onFileChange: (file: File) => void;
 }
 
 const maxSize = 1024 * 1024 * 30; // 30Mb
 
-export const ArtworkUploader = ({ name, initialValue, onFileChange }: ArtworkUploaderProps) => {
+export const ArtworkUploader = ({ name, initialValue, onFileChange, error }: ArtworkUploaderProps) => {
   const [file, setFile] = useState<File>();
   const [preview, setPreview] = useState<string>();
 
@@ -48,17 +49,24 @@ export const ArtworkUploader = ({ name, initialValue, onFileChange }: ArtworkUpl
 
   return (
     <div className="flex flex-col cursor-pointer" {...getRootProps()}>
-      <Preview preview={preview} isVideo={isVideo} />
+      <Preview preview={preview} isVideo={isVideo} error={error} />
+      {error && <span className="text-red-500 text-xxs text-center w-24">{error}</span>}
       <div className="text-gray-80 text-center font-semibold text-xxs leading-4">CHANGE ARTWORK</div>
       <input name={name} {...getInputProps()} />
     </div>
   );
 };
 
-const Preview = ({ preview, isVideo }: { preview: string | undefined; isVideo: boolean | undefined }) => {
+interface PreviewProps {
+  preview: string | undefined;
+  isVideo: boolean | undefined;
+  error?: string;
+}
+
+const Preview = ({ preview, isVideo, error }: PreviewProps) => {
   if (!preview) {
     return (
-      <div className="relative flex border border-gray-35 rounded overflow-hidden">
+      <div className={`relative flex border rounded overflow-hidden ${error ? 'border-red-500' : 'border-gray-35'}`}>
         <Image src="/soundchain-app-icon.png" alt="Upload preview" width={100} height={100} objectFit="fill" />
         <div className="absolute w-full h-full flex items-center justify-center text-white bg-gray-10 bg-opacity-60">
           <CameraIcon width={30} />
