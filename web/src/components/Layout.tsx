@@ -45,7 +45,7 @@ export const Layout = ({ children, className }: LayoutProps) => {
   }, [asPath]);
 
   useEffect(() => {
-    setHideBottomNavBarState(!!hideBottomNavBar);
+    setHideBottomNavBarState(Boolean(hideBottomNavBar));
   }, [hideBottomNavBar, setHideBottomNavBarState]);
 
   if (isAuthLayout) {
