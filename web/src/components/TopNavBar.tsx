@@ -70,9 +70,9 @@ export const TopNavBar = ({
           <div
             className={`${config.mobileBreakpoint}:hidden flex-2 flex-grow-basis flex items-center justify-center ${config.mobileBreakpoint}:items-stretch ${config.mobileBreakpoint}:justify-start truncate`}
           >
-            <div className="flex-shrink-0 flex items-center">
+            <div className="flex-shrink-0 flex items-center w-full justify-center">
               {title ? (
-                <div className="flex flex-col">
+                <div className="flex flex-col w-full">
                   <Title navTitle className={`text-sm text-center ${config.mobileBreakpoint}:text-left truncate`}>
                     {title}
                   </Title>
