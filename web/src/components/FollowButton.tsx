@@ -1,10 +1,17 @@
+import { ApolloCache, FetchResult } from '@apollo/client';
 import { Button } from 'components/Button';
-import { ConfirmationDialog } from 'components/modals/ConfirmationDialog';
 import { useMe } from 'hooks/useMe';
 import { Checkmark } from 'icons/Checkmark';
-import { useFollowProfileMutation, useUnfollowProfileMutation } from 'lib/graphql';
+import {
+  ProfileByHandleDocument,
+  ProfileByHandleQuery,
+  ProfileByHandleQueryVariables,
+  useFollowProfileMutation,
+  User,
+  useUnfollowProfileMutation,
+} from 'lib/graphql';
 import { useRouter } from 'next/router';
-import React, { useState } from 'react';
+import React from 'react';
 
 interface FollowButtonProps {
   followedId: string;
@@ -13,13 +20,34 @@ interface FollowButtonProps {
   followedHandle: string;
 }
 
+function updateCache(variables: ProfileByHandleQueryVariables) {
+  return (cache: ApolloCache<User>, { data }: FetchResult) => {
+    const cachedData = cache.readQuery<ProfileByHandleQuery>({
+      query: ProfileByHandleDocument,
+      variables,
+    });
+
+    const incoming = data?.followProfile?.followedProfile || data?.unfollowProfile?.unfollowedProfile;
+
+    cache.writeQuery({
+      query: ProfileByHandleDocument,
+      variables,
+      data: {
+        profileByHandle: {
+          ...cachedData?.profileByHandle,
+          isFollowed: incoming?.isFollowed || cachedData?.profileByHandle.isFollowed,
+          followerCount: incoming?.followerCount || cachedData?.profileByHandle.followerCount,
+        },
+      },
+    });
+  };
+}
+
 export const FollowButton = ({ followedId, isFollowed, showIcon, followedHandle }: FollowButtonProps) => {
-  const [followProfile, { loading: followLoading }] = useFollowProfileMutation();
-  const [showDialog, setShowDialog] = useState(false);
-  const [unfollowProfile, { loading: unfollowLoading }] = useUnfollowProfileMutation();
-  const router = useRouter();
   const me = useMe();
-  const opts = { variables: { input: { followedId } }, refetchQueries: ['ProfileByHandle', 'Followers', 'Following'] };
+  const router = useRouter();
+  const [followProfile, { loading: followLoading }] = useFollowProfileMutation();
+  const [unfollowProfile, { loading: unfollowLoading }] = useUnfollowProfileMutation();
 
   const handleClick = async () => {
     if (followLoading || unfollowLoading) {
@@ -31,11 +59,13 @@ export const FollowButton = ({ followedId, isFollowed, showIcon, followedHandle 
       return;
     }
 
-    if (!isFollowed) {
-      await followProfile(opts);
-    } else {
-      setShowDialog(true);
-    }
+    const toogle = isFollowed ? unfollowProfile : followProfile;
+
+    await toogle({
+      variables: { input: { followedId } },
+      update: updateCache({ handle: followedHandle }),
+    });
+
     router.replace(router.asPath);
   };
 
@@ -43,35 +73,19 @@ export const FollowButton = ({ followedId, isFollowed, showIcon, followedHandle 
     return null;
   }
 
-  const handleUnfollowConfirmation = async () => {
-    await unfollowProfile(opts);
-    setShowDialog(false);
-  };
-
   const icon = showIcon ? () => <Checkmark color={!isFollowed ? 'green' : undefined} /> : null;
 
   return (
-    <>
-      <Button
-        onClick={handleClick}
-        variant="outline-rounded"
-        borderColor="bg-green-gradient"
-        bgColor={isFollowed ? 'bg-green-gradient' : undefined}
-        className="w-[85px] py-1 bg-gray-10 text-sm"
-        textColor={isFollowed ? 'text-white' : 'green-gradient-text'}
-        icon={icon}
-      >
-        {isFollowed ? 'Following' : 'Follow'}
-      </Button>
-      <ConfirmationDialog
-        onConfirm={handleUnfollowConfirmation}
-        confirmText={'Unfollow'}
-        cancelText={'Cancel'}
-        title={'Unfollow @' + followedHandle + '?'}
-        description={'Their posts will no longer show up in your home feed. You still can view their profile.'}
-        showDialog={showDialog}
-        setShowDialog={setShowDialog}
-      />
-    </>
+    <Button
+      onClick={handleClick}
+      variant="outline-rounded"
+      borderColor="bg-green-gradient"
+      bgColor={isFollowed ? 'bg-green-gradient' : undefined}
+      className="w-[85px] py-1 bg-gray-10 text-sm"
+      textColor={isFollowed ? 'text-white' : 'green-gradient-text'}
+      icon={icon}
+    >
+      {isFollowed ? 'Following' : 'Follow'}
+    </Button>
   );
 };

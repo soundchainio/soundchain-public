@@ -271,7 +271,7 @@ export default function TrackPage({ track }: TrackPageProps) {
   }, [isProcessing, refetchTrack, fetchListingItem, tokenId, track.id]);
 
   const handleFavorite = async () => {
-    await toggleFavorite({ variables: { trackId: track.id }, refetchQueries: [TrackDocument] });
+    await toggleFavorite({ variables: { trackId: track.id }, refetchQueries: ['FavoriteTracks'] });
     setIsFavorite(!isFavorite);
   };
 

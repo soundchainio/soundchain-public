@@ -43,7 +43,7 @@ export const getServerSideProps: GetServerSideProps<ProfilePageProps, ProfilePag
 
   const { data, error } = await apolloClient.query({
     query: ProfileByHandleDocument,
-    variables: { handle: handle },
+    variables: { handle },
     context,
   });
 
