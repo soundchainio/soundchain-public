@@ -9,8 +9,8 @@ import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { useWalletContext } from 'hooks/useWalletContext';
 import {
   ExploreTracksDocument,
-  TrackQuery,
   ExploreTracksQuery,
+  TrackQuery,
   useDeleteTrackMutation,
   useTrackLazyQuery,
 } from 'lib/graphql';
@@ -147,9 +147,9 @@ export const ConfirmDeleteNFTModal = () => {
       title="Confirm Transaction"
       onClose={handleClose}
       leftButton={
-        <div className="p-2 text-gray-400 font-bold flex-1 text-center text-sm" onClick={handleCancel}>
+        <button className="p-2 text-gray-400 font-bold flex-1 text-center text-sm" onClick={handleCancel}>
           Cancel
-        </div>
+        </button>
       }
     >
       <div className="flex flex-col w-full h-full justify-between">
@@ -179,3 +179,4 @@ export const ConfirmDeleteNFTModal = () => {
     </Modal>
   );
 };
+export default ConfirmDeleteNFTModal;

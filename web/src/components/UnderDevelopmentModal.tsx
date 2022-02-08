@@ -35,3 +35,4 @@ export const UnderDevelopmentModal = () => {
     </ModalsPortal>
   );
 };
+export default UnderDevelopmentModal;

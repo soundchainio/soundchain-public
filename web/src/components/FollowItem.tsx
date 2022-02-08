@@ -11,7 +11,7 @@ export const FollowItem = ({ profile }: FollowItemProps) => {
   return (
     <Link href={`/profiles/${profile.userHandle}`} passHref>
       <a className="flex flex-row space-x-2 items-center text-sm">
-        <Avatar pixels={40} className="flex" profile={profile} />
+        <Avatar linkToProfile={false} pixels={40} className="flex" profile={profile} />
         <DisplayName name={profile.displayName} verified={profile.verified} teamMember={profile.teamMember} />
       </a>
     </Link>

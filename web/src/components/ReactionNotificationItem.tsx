@@ -39,9 +39,7 @@ export const ReactionNotificationItem = ({
             <Timestamp small datetime={createdAt} className="text-sm" />
           </div>
         </div>
-        <div className="flex mt-4">
-          <PreviewPostNotification postId={postId} />
-        </div>
+        <PreviewPostNotification postId={postId} />
       </div>
     </NextLink>
   );

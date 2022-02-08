@@ -1,13 +1,14 @@
 import { Avatar } from 'components/Avatar';
 import { BackButton } from 'components/Buttons/BackButton';
 import { Label } from 'components/Label';
-import { Layout } from 'components/Layout';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
+import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMe } from 'hooks/useMe';
 import { RightArrow } from 'icons/RightArrow';
 import Image from 'next/image';
 import NextLink from 'next/link';
+import { useEffect } from 'react';
 import { getGenreLabelByKey } from 'utils/Genres';
 import { getMusicianTypeLabelByKey } from 'utils/MusicianTypes';
 
@@ -59,13 +60,18 @@ function FakeLink({ label, value }: LinkProps) {
   );
 }
 
-const topNovaBarProps: TopNavBarProps = {
+const topNavBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
   title: 'Account Settings',
 };
 
 export default function SettingsPage() {
   const me = useMe();
+  const { setTopNavBarProps } = useLayoutContext();
+
+  useEffect(() => {
+    setTopNavBarProps(topNavBarProps);
+  }, [setTopNavBarProps]);
 
   if (!me) return null;
 
@@ -74,20 +80,20 @@ export default function SettingsPage() {
   const musicianTypes = me.profile?.musicianTypes?.map(getMusicianTypeLabelByKey).join(', ');
 
   return (
-    <Layout topNavBarProps={topNovaBarProps}>
+    <>
       <SEO title="Account Settings | SoundChain" canonicalUrl="/settings/" description="SoundChain Account Settings" />
       <div className="flex flex-col gap-8 mt-8">
         <div className="flex flex-row px-4">
-          <NextLink href="/settings/profile-picture">
-            <div className="flex flex-col w-5/12 self-center justify-center items-center space-y-2 cursor-pointer">
+          <NextLink href="/settings/profile-picture" passHref>
+            <a className="flex flex-col w-5/12 self-center justify-center items-center space-y-2 cursor-pointer">
               <Avatar profile={me.profile} pixels={80} className="h-[80px]" linkToProfile={false} />
               <Label textSize="xs" className="text-center underline">
                 Change Profile Photo
               </Label>
-            </div>
+            </a>
           </NextLink>
-          <NextLink href="/settings/cover-picture">
-            <div className="flex flex-col w-7/12 space-y-2 cursor-pointer">
+          <NextLink href="/settings/cover-picture" passHref>
+            <a className="flex flex-col w-7/12 space-y-2 cursor-pointer">
               <div className="relative h-[80px]">
                 <Image
                   src={me.profile.coverPicture || '/default-pictures/cover/fog.jpeg'}
@@ -100,7 +106,7 @@ export default function SettingsPage() {
               <Label textSize="xs" className="text-center underline">
                 Change Cover Photo
               </Label>
-            </div>
+            </a>
           </NextLink>
         </div>
         <div className="bg-gray-15 grid">
@@ -119,6 +125,6 @@ export default function SettingsPage() {
           />
         </div>
       </div>
-    </Layout>
+    </>
   );
 }

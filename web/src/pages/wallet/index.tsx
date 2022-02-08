@@ -3,10 +3,9 @@ import { RefreshButton } from 'components/Buttons/RefreshButton';
 import { ConnectedNetwork } from 'components/ConnectedNetwork';
 import { CopyWalletAddress } from 'components/CopyWalletAddress';
 import { Jazzicon } from 'components/Jazzicon';
-import { Layout } from 'components/Layout';
 import { LoaderAnimation } from 'components/LoaderAnimation';
 import { OwnedNfts } from 'components/OwnedNfts';
-import { TopNavBarProps } from 'components/TopNavBar';
+import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
 import useMetaMask from 'hooks/useMetaMask';
@@ -74,6 +73,7 @@ export default function WalletPage() {
     refetchBalance: refetchMagicBalance,
     isRefetchingBalance: isRefetchingMagicBalance,
   } = useMagicContext();
+  const { setTopNavBarProps, setHideBottomNavBar } = useLayoutContext();
   const [updateDefaultWallet] = useUpdateDefaultWalletMutation();
 
   const [selectedWallet, setSelectedWallet] = useState(DefaultWallet.Soundchain);
@@ -92,13 +92,15 @@ export default function WalletPage() {
     isSoundChainSelected ? await refetchMagicBalance() : await refetchMetamaskBalance();
   };
 
-  const topNavBarProps: TopNavBarProps = {
-    leftButton: <BackButton />,
-    title: 'Wallet',
-    rightButton: (
-      <RefreshButton onClick={refreshData} label="Refresh" className="text-center" refreshing={isRefetchingBalance} />
-    ),
-  };
+  useEffect(() => {
+    setTopNavBarProps({
+      leftButton: <BackButton />,
+      title: 'Wallet',
+      rightButton: (
+        <RefreshButton onClick={refreshData} label="Refresh" className="text-center" refreshing={isRefetchingBalance} />
+      ),
+    });
+  }, [setHideBottomNavBar, setTopNavBarProps, isRefetchingBalance]);
 
   useEffect(() => {
     if (!account) {
@@ -177,63 +179,61 @@ export default function WalletPage() {
   return (
     <>
       <SEO title="Wallet - SoundChain" description="SoundChain Wallet" canonicalUrl="/wallet/" />
-      <Layout topNavBarProps={topNavBarProps}>
-        <PullToRefresh onRefresh={refreshData} className="h-auto">
-          <div className="h-full flex flex-col">
-            <WalletHeader />
-            {isMetamaskSelected && (!connectedToMetaMask || !correctNetwork) ? (
-              !connectedToMetaMask ? (
-                <div className="flex justify-center items-center h-full">
-                  <MetaMaskButton caption="Connect Metamask" handleOnClick={connect} />
-                </div>
-              ) : (
-                !correctNetwork && (
-                  <div className="flex flex-col gap-4 justify-center items-center h-full px-4">
-                    <p className="text-white text-center">It seems you might not be connected to Mumbai Testnet.</p>
-                    <MetaMaskButton caption="Connect to Mumbai Testnet" handleOnClick={addMumbaiTestnet} />
-                  </div>
-                )
-              )
+      <PullToRefresh onRefresh={refreshData} className="h-full">
+        <div className="h-full flex flex-col">
+          <WalletHeader />
+          {isMetamaskSelected && (!connectedToMetaMask || !correctNetwork) ? (
+            !connectedToMetaMask ? (
+              <div className="flex justify-center items-center h-full">
+                <MetaMaskButton caption="Connect Metamask" handleOnClick={connect} />
+              </div>
             ) : (
-              <>
-                <div className="flex flex-col gap-4 justify-center items-center p-4">
-                  {getAccount && <Jazzicon address={getAccount} size={54} />}
-                  <ConnectedNetwork />
-                  {getAccount && <CopyWalletAddress walletAddress={getAccount} />}
-                  <div className="flex flex-col items-center gap-1 relative w-full">
-                    <Matic height="30" width="30" />
-                    {getBalance ? (
-                      <>
-                        <div className="text-blue-400 font-bold text-xs uppercase mt-2">
-                          <span className="text-white font-bold text-2xl">{getBalanceFormatted}</span>
-                          {` matic`}
-                        </div>
-                        {data?.maticUsd && (
-                          <span className="text-xs text-gray-50 font-bold">
-                            {`${currency(getBalanceFormatted * parseFloat(data?.maticUsd))} USD`}
-                          </span>
-                        )}
-                      </>
-                    ) : (
-                      <LoaderAnimation />
-                    )}
-                  </div>
-                  <div className="flex gap-5 mt-4">
-                    <WalletButton title="Activity" icon={Activity} href={`/wallet/${getAccount}/history`} />
-                    <WalletButton title="Receive" icon={ArrowDown} href={`/wallet/${getAccount}/receive`} />
-                    <WalletButton title="Buy" icon={CreditCard} href="/wallet/buy" />
-                    {isSoundChainSelected && <WalletButton title="Send" icon={ArrowUpRight} href="/wallet/transfer" />}
-                  </div>
+              !correctNetwork && (
+                <div className="flex flex-col gap-4 justify-center items-center h-full px-4">
+                  <p className="text-white text-center">It seems you might not be connected to Mumbai Testnet.</p>
+                  <MetaMaskButton caption="Connect to Mumbai Testnet" handleOnClick={addMumbaiTestnet} />
                 </div>
-                <div className="p-3 mt-3">
-                  <span className="text-gray-80 font-bold">Owned NFT’s</span>
+              )
+            )
+          ) : (
+            <>
+              <div className="flex flex-col gap-4 justify-center items-center p-4">
+                {getAccount && <Jazzicon address={getAccount} size={54} />}
+                <ConnectedNetwork />
+                {getAccount && <CopyWalletAddress walletAddress={getAccount} />}
+                <div className="flex flex-col items-center gap-1 relative w-full">
+                  <Matic height="30" width="30" />
+                  {getBalance ? (
+                    <>
+                      <div className="text-blue-400 font-bold text-xs uppercase mt-2">
+                        <span className="text-white font-bold text-2xl">{getBalanceFormatted}</span>
+                        {` matic`}
+                      </div>
+                      {data?.maticUsd && (
+                        <span className="text-xs text-gray-50 font-bold">
+                          {`${currency(getBalanceFormatted * parseFloat(data?.maticUsd))} USD`}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <LoaderAnimation />
+                  )}
                 </div>
-                {getAccount && <OwnedNfts refreshing={isRefetchingBalance} owner={getAccount} />}
-              </>
-            )}
-          </div>
-        </PullToRefresh>
-      </Layout>
+                <div className="flex gap-5 mt-4">
+                  <WalletButton title="Activity" icon={Activity} href={`/wallet/${getAccount}/history`} />
+                  <WalletButton title="Receive" icon={ArrowDown} href={`/wallet/${getAccount}/receive`} />
+                  <WalletButton title="Buy" icon={CreditCard} href="/wallet/buy" />
+                  {isSoundChainSelected && <WalletButton title="Send" icon={ArrowUpRight} href="/wallet/transfer" />}
+                </div>
+              </div>
+              <div className="p-3 mt-3">
+                <span className="text-gray-80 font-bold">Owned NFT’s</span>
+              </div>
+              {getAccount && <OwnedNfts refreshing={isRefetchingBalance} owner={getAccount} />}
+            </>
+          )}
+        </div>
+      </PullToRefresh>
     </>
   );
 }

@@ -14,7 +14,7 @@ export const ChatLayout = ({ children, topNavBarProps }: LayoutMenuProps) => {
           <TopNavBar {...topNavBarProps} />
         </div>
         <main className="flex-1 relative focus:outline-none bg-gray-10">
-          <div id="main" className="max-w-7xl mx-auto pt-16 pb-14">
+          <div id="main" className="max-w-7xl mx-auto pt-8 pb-14">
             {children}
           </div>
         </main>

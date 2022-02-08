@@ -1,10 +1,10 @@
 import { Artists } from 'components/Artists';
 import { BackButton } from 'components/Buttons/BackButton';
-import { Layout } from 'components/Layout';
 import { SearchLibrary } from 'components/SearchLibrary';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
-import React, { useState } from 'react';
+import { useLayoutContext } from 'hooks/useLayoutContext';
+import React, { useEffect, useState } from 'react';
 
 const topNavBarProps: TopNavBarProps = {
   title: 'Artists',
@@ -13,14 +13,17 @@ const topNavBarProps: TopNavBarProps = {
 
 export default function ArtistsPage() {
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const { setTopNavBarProps } = useLayoutContext();
+
+  useEffect(() => {
+    setTopNavBarProps(topNavBarProps);
+  }, [setTopNavBarProps]);
 
   return (
     <>
       <SEO title="Artists | SoundChain" canonicalUrl="/library/artists" description="SoundChain Artists" />
-      <Layout topNavBarProps={topNavBarProps}>
-        <SearchLibrary placeholder="Search artists..." setSearchTerm={setSearchTerm} />
-        <Artists searchTerm={searchTerm} />
-      </Layout>
+      <SearchLibrary placeholder="Search artists..." setSearchTerm={setSearchTerm} />
+      <Artists searchTerm={searchTerm} />
     </>
   );
 }

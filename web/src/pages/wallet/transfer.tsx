@@ -1,13 +1,13 @@
 import { BackButton } from 'components/Buttons/BackButton';
 import { FormValues, TransferForm } from 'components/forms/transfer/TransferForm';
-import { Layout } from 'components/Layout';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useModalDispatch } from 'contexts/providers/modal';
+import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMe } from 'hooks/useMe';
 import { cacheFor } from 'lib/apollo';
 import { protectPage } from 'lib/protectPage';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { precision } from 'utils/getPrecision';
 
 export const getServerSideProps = protectPage(async (context, apolloClient) => {
@@ -19,13 +19,19 @@ export const getServerSideProps = protectPage(async (context, apolloClient) => {
   }
 });
 
-const topNovaBarProps: TopNavBarProps = {
+const topNovBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
   title: 'Send Tokens',
 };
 
 export default function TransferPage() {
   const me = useMe();
+  const { setTopNavBarProps } = useLayoutContext();
+
+  useEffect(() => {
+    setTopNavBarProps(topNovBarProps);
+  }, [setTopNavBarProps]);
+
   const { dispatchShowTransferConfirmationModal, dispatchSetRecipientWalletAddress, dispatchSetAmountToTransfer } =
     useModalDispatch();
   if (!me) return null;
@@ -39,13 +45,13 @@ export default function TransferPage() {
   };
 
   return (
-    <Layout topNavBarProps={topNovaBarProps}>
+    <>
       <SEO
         title="Wallet Funds Transfer | SoundChain"
         description="Transfer funds on your SoundChain wallet"
         canonicalUrl="/wallet/transfer/"
       />
       <TransferForm handleSubmit={handleSubmit}></TransferForm>
-    </Layout>
+    </>
   );
 }

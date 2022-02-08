@@ -25,15 +25,15 @@ export interface FormValues {
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
-  title: yup.string().max(100).required(),
-  description: yup.string().max(500).required(),
+  title: yup.string().max(100).required('Title is a required field'),
+  description: yup.string().max(500).required('Description is a required field'),
   artist: yup.string(),
   album: yup.string().max(100),
   copyright: yup.string().max(100),
   releaseYear: yup.number(),
   genres: yup.array(),
-  artworkFile: yup.mixed(),
-  royalty: yup.number().integer().min(0).max(100).required(),
+  artworkFile: yup.mixed().required('Artwork is required'),
+  royalty: yup.number().integer().min(0).max(100).required('Royalty is a required field'),
 });
 
 export interface InitialValues extends Omit<Partial<FormValues>, 'artworkUrl'> {
@@ -90,12 +90,13 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
       validationSchema={validationSchema}
       onSubmit={handleSubmit}
     >
-      {({ setFieldValue, values }) => {
+      {({ setFieldValue, values, errors }) => {
         return (
           <Form className="flex flex-col gap-4 h-full">
             <div className="flex gap-4 px-4">
               <ArtworkUploader
                 name="artworkFile"
+                error={errors.artworkFile}
                 initialValue={initialValues?.artworkFile}
                 onFileChange={file => setFieldValue('artworkFile', file)}
               />

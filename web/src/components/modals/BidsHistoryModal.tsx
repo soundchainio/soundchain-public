@@ -51,3 +51,4 @@ export const BidsHistoryModal = () => {
     </Modal>
   );
 };
+export default BidsHistoryModal;

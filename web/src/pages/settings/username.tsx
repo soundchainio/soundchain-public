@@ -2,15 +2,15 @@
 import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { InputField } from 'components/InputField';
-import { Layout } from 'components/Layout';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Form, Formik, FormikHelpers } from 'formik';
+import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMe } from 'hooks/useMe';
 import { useUpdateHandleMutation } from 'lib/graphql';
 import { useRouter } from 'next/router';
 import { HANDLE_MAX_CHARS } from 'pages/create-account';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { formatValidationErrors } from 'utils/errorHelpers';
 import { handleRegex } from 'utils/Validation';
 import * as yup from 'yup';
@@ -37,8 +37,19 @@ const topNavBarProps: TopNavBarProps = {
 export default function SettingsUsernamePage() {
   const me = useMe();
   const router = useRouter();
+  const { setTopNavBarProps, setHideBottomNavBar } = useLayoutContext();
+
   const initialFormValues: FormValues = { handle: me?.handle };
   const [updateHandle, { loading }] = useUpdateHandleMutation();
+
+  useEffect(() => {
+    setTopNavBarProps(topNavBarProps);
+    setHideBottomNavBar(true);
+
+    return () => {
+      setHideBottomNavBar(false);
+    };
+  }, [setHideBottomNavBar, setTopNavBarProps]);
 
   const onSubmit = async ({ handle }: FormValues, { setErrors }: FormikHelpers<FormValues>) => {
     try {
@@ -53,7 +64,7 @@ export default function SettingsUsernamePage() {
   if (!me) return null;
 
   return (
-    <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
+    <>
       <SEO
         title="Name Settings | SoundChain"
         canonicalUrl="/settings/username/"
@@ -88,6 +99,6 @@ export default function SettingsUsernamePage() {
           </Form>
         </Formik>
       </div>
-    </Layout>
+    </>
   );
 }

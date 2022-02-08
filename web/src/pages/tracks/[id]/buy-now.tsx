@@ -2,7 +2,6 @@ import { Button } from 'components/Button';
 import { BackButton } from 'components/Buttons/BackButton';
 import { BuyNow } from 'components/details-NFT/BuyNow';
 import { InputField } from 'components/InputField';
-import { Layout } from 'components/Layout';
 import { Matic } from 'components/Matic';
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import SEO from 'components/SEO';
@@ -11,6 +10,7 @@ import { TotalPrice } from 'components/TotalPrice';
 import { Track } from 'components/Track';
 import { Form, Formik } from 'formik';
 import useBlockchainV2 from 'hooks/useBlockchainV2';
+import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Locker } from 'icons/Locker';
@@ -58,6 +58,11 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
   return cacheFor(BuyNowPage, { track: data.track }, context, apolloClient);
 });
 
+const topNavBarProps: TopNavBarProps = {
+  leftButton: <BackButton />,
+  title: 'Confirm Purchase',
+};
+
 export default function BuyNowPage({ track }: TrackPageProps) {
   const { buyItem } = useBlockchainV2();
   const { account, web3, balance } = useWalletContext();
@@ -65,6 +70,7 @@ export default function BuyNowPage({ track }: TrackPageProps) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const me = useMe();
+  const { setTopNavBarProps } = useLayoutContext();
 
   const nftData = track.nftData;
   const tokenId = nftData?.tokenId ?? -1;
@@ -73,6 +79,10 @@ export default function BuyNowPage({ track }: TrackPageProps) {
     variables: { tokenId },
     fetchPolicy: 'network-only',
   });
+
+  useEffect(() => {
+    setTopNavBarProps(topNavBarProps);
+  }, [setTopNavBarProps]);
 
   useEffect(() => {
     getBuyNowItem();
@@ -123,7 +133,7 @@ export default function BuyNowPage({ track }: TrackPageProps) {
           },
         },
       });
-      router.push(router.asPath.replace('buy-now', ''));
+      router.replace(router.asPath.replace('buy-now', ''));
     };
 
     setLoading(true);
@@ -137,11 +147,6 @@ export default function BuyNowPage({ track }: TrackPageProps) {
       .onError(cause => toast.error(cause.message))
       .finally(() => setLoading(false))
       .execute(web3);
-  };
-
-  const topNavBarProps: TopNavBarProps = {
-    leftButton: <BackButton />,
-    title: 'Confirm Purchase',
   };
 
   if (!isForSale || isOwner || !me || nftData?.pendingRequest != PendingRequest.None) {
@@ -164,55 +169,53 @@ export default function BuyNowPage({ track }: TrackPageProps) {
         canonicalUrl={`/tracks/${track.id}/buy-now/`}
         image={track.artworkUrl}
       />
-      <Layout topNavBarProps={topNavBarProps}>
-        <div className="min-h-full flex flex-col">
-          <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
-            <Form autoComplete="off" className="flex flex-1 flex-col justify-between">
-              <div>
-                <div className="m-4">
-                  <Track track={track} />
-                </div>
-                <div className="bg-[#112011]">
-                  <div className="flex justify-between items-center px-4 py-3">
-                    <div className="text-sm font-bold text-white">BUY NOW PRICE</div>
-                    <Matic value={priceToShow} />
-                  </div>
-                </div>
-                {!hasStarted && (
-                  <div className="flex justify-between items-center px-4 py-3">
-                    <div className="text-sm font-bold text-white flex-shrink-0">SALE STARTS</div>
-                    <div className="text-md flex items-center text-right font-bold gap-1">
-                      <Timer date={new Date(startTime * 1000)} reloadOnEnd />
-                    </div>
-                  </div>
-                )}
+      <div className="min-h-full flex flex-col">
+        <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
+          <Form autoComplete="off" className="flex flex-1 flex-col justify-between">
+            <div>
+              <div className="m-4">
+                <Track track={track} />
               </div>
-
-              {me?.otpSecret && (
-                <div className="flex px-4 py-3 items-center uppercase bg-gray-20">
-                  <p className="text-gray-80 w-full font-bold text-xs">
-                    <Locker className="h-4 w-4 inline mr-2" fill="#303030" /> Two-factor validation
-                  </p>
-                  <div className="w-1/2">
-                    <InputField name="token" type="text" maxLength={6} pattern="[0-9]*" inputMode="numeric" />
+              <div className="bg-[#112011]">
+                <div className="flex justify-between items-center px-4 py-3">
+                  <div className="text-sm font-bold text-white">BUY NOW PRICE</div>
+                  <Matic value={priceToShow} />
+                </div>
+              </div>
+              {!hasStarted && (
+                <div className="flex justify-between items-center px-4 py-3">
+                  <div className="text-sm font-bold text-white flex-shrink-0">SALE STARTS</div>
+                  <div className="text-md flex items-center text-right font-bold gap-1">
+                    <Timer date={new Date(startTime * 1000)} reloadOnEnd />
                   </div>
                 </div>
               )}
-              {priceToShow && account && (
-                <BuyNow price={priceToShow} ownerAddressAccount={account} startTime={startTime} />
-              )}
-              {hasStarted && (
-                <PlayerAwareBottomBar>
-                  <TotalPrice price={priceToShow} />
-                  <Button type="submit" className="ml-auto" variant="buy-nft" loading={loading}>
-                    <div className="px-4">CONFIRM</div>
-                  </Button>
-                </PlayerAwareBottomBar>
-              )}
-            </Form>
-          </Formik>
-        </div>
-      </Layout>
+            </div>
+
+            {me?.otpSecret && (
+              <div className="flex px-4 py-3 items-center uppercase bg-gray-20">
+                <p className="text-gray-80 w-full font-bold text-xs">
+                  <Locker className="h-4 w-4 inline mr-2" fill="#303030" /> Two-factor validation
+                </p>
+                <div className="w-1/2">
+                  <InputField name="token" type="text" maxLength={6} pattern="[0-9]*" inputMode="numeric" />
+                </div>
+              </div>
+            )}
+            {priceToShow && account && (
+              <BuyNow price={priceToShow} ownerAddressAccount={account} startTime={startTime} />
+            )}
+            {hasStarted && (
+              <PlayerAwareBottomBar>
+                <TotalPrice price={priceToShow} />
+                <Button type="submit" className="ml-auto" variant="buy-nft" loading={loading}>
+                  <div className="px-4">CONFIRM</div>
+                </Button>
+              </PlayerAwareBottomBar>
+            )}
+          </Form>
+        </Formik>
+      </div>
     </>
   );
 }

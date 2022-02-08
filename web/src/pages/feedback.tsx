@@ -1,22 +1,29 @@
 import { BackButton } from 'components/Buttons/BackButton';
-import { Layout } from 'components/Layout';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
+import { useLayoutContext } from 'hooks/useLayoutContext';
 import { cacheFor } from 'lib/apollo';
 import { protectPage } from 'lib/protectPage';
+import { useEffect } from 'react';
 
 export const getServerSideProps = protectPage((context, apolloClient) => {
   return cacheFor(FeedbackPage, {}, context, apolloClient);
 });
 
+const topNavBarProps: TopNavBarProps = {
+  leftButton: <BackButton />,
+  title: 'Leave Feedback',
+};
+
 export default function FeedbackPage() {
-  const topNavBarProps: TopNavBarProps = {
-    leftButton: <BackButton />,
-    title: 'Leave Feedback',
-  };
+  const { setTopNavBarProps } = useLayoutContext();
+
+  useEffect(() => {
+    setTopNavBarProps(topNavBarProps);
+  }, [setTopNavBarProps]);
 
   return (
-    <Layout topNavBarProps={topNavBarProps} className="mb-0 h-full w-full">
+    <>
       <SEO
         title="Feedback | SoundChain"
         description="Submit your feedback to SoundChain team"
@@ -27,6 +34,6 @@ export default function FeedbackPage() {
         className="h-full w-full"
         title="Feedback form"
       />
-    </Layout>
+    </>
   );
 }

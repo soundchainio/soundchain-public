@@ -1,6 +1,7 @@
 import { FollowModal } from 'components/FollowersModal';
 import { Number } from 'components/Number';
 import { config } from 'config';
+import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
 import { Document } from 'icons/Document';
@@ -18,6 +19,7 @@ import { Role, usePendingRequestsBadgeNumberQuery } from 'lib/graphql';
 import { default as Link, default as NextLink } from 'next/link';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
+import { toast } from 'react-toastify';
 import { FollowModalType } from 'types/FollowModalType';
 import { Avatar } from './Avatar';
 import { DisplayName } from './DisplayName';
@@ -34,11 +36,17 @@ export const SideMenuContent = ({ isMobile }: SideMenuContentProps) => {
   const me = useMe();
   const router = useRouter();
   const { magic } = useMagicContext();
+  const { isMinting } = useHideBottomNavBar();
 
   const [showModal, setShowModal] = useState(false);
   const [followModalType, setFollowModalType] = useState<FollowModalType>();
 
   const onLogout = async () => {
+    if (isMinting) {
+      toast.error(`You can't logout while minting an NFT.`);
+      return false;
+    }
+
     await magic.user.logout();
     setJwt();
     router.reload();

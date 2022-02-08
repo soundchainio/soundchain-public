@@ -95,3 +95,4 @@ export const ApproveModal = () => {
     </Modal>
   );
 };
+export default ApproveModal;
