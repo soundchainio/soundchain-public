@@ -25,15 +25,15 @@ export interface FormValues {
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
-  title: yup.string().max(100).required(),
-  description: yup.string().max(500).required(),
+  title: yup.string().max(100).required('Title is a required field'),
+  description: yup.string().max(500).required('Description is a required field'),
   artist: yup.string(),
   album: yup.string().max(100),
   copyright: yup.string().max(100),
   releaseYear: yup.number(),
   genres: yup.array(),
-  artworkFile: yup.mixed().required(),
-  royalty: yup.number().integer().min(0).max(100).required(),
+  artworkFile: yup.mixed().required('Artwork is required'),
+  royalty: yup.number().integer().min(0).max(100).required('Royalty is a required field'),
 });
 
 export interface InitialValues extends Omit<Partial<FormValues>, 'artworkUrl'> {
