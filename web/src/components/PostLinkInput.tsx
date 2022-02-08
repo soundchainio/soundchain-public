@@ -70,6 +70,7 @@ export const PostLinkInput = ({ type, setLink, link, setPostLink }: PostLinkInpu
       <div className="flex-1 flex flex-col">
         <input
           type="text"
+          aria-label={`Enter ${mediaProviderOptions[type].name} link`}
           placeholder={`Enter ${mediaProviderOptions[type].name} link`}
           className="bg-gray-30 border-gray-700 p-2 text-sm focus:outline-none focus:ring-0 disabled:opacity-50"
           onChange={e => onChange(e.target.value)}
@@ -81,7 +82,7 @@ export const PostLinkInput = ({ type, setLink, link, setPostLink }: PostLinkInpu
           <span className="absolute top-2 left-0 text-xs">({mediaProviderOptions[type].example})</span>
         </div>
       </div>
-      <button className="w-16" onClick={onClear}>
+      <button className="w-16" onClick={onClear} aria-label="Close">
         <XCircleIcon className="w-6 m-auto" />
       </button>
     </div>
