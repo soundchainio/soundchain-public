@@ -41,6 +41,8 @@ export const TopNavBar = ({
 
   if (isLogin) return null;
 
+  const isLoginPage = router.pathname === '/login';
+
   return (
     <div className={`relative z-10 flex-shrink-0 flex h-16 bg-black ${config.mobileBreakpoint}:bg-gray-30 shadow`}>
       <div
@@ -94,11 +96,12 @@ export const TopNavBar = ({
           </div>
         </>
       ) : (
+        !isLoginPage &&
         showLoginSignUpButton &&
         !midRightButton && (
           <div className="flex-2 flex items-center justify-start ml-4 space-x-2 ">
             <Button
-              variant={router.pathname === '/login' ? 'rainbow-xs' : 'outline'}
+              variant="outline"
               onClick={onLogin}
               className="w-32 h-8 bg-opacity-70"
               borderColor="bg-gray-40"
