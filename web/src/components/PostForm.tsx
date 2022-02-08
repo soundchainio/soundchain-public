@@ -110,12 +110,12 @@ export const PostForm = ({ ...props }: PostFormProps) => {
       {({ values, setFieldValue }) => (
         <Form className="flex flex-col h-full pb-safe">
           <div className="flex items-center rounded-tl-3xl rounded-tr-3xl bg-gray-20">
-            <div
+            <button
               className="p-2 text-gray-400 font-bold flex-1 text-center"
               onClick={() => props.onCancel(setFieldValue)}
             >
               Cancel
-            </div>
+            </button>
             <div className="flex-1 text-center text-white font-bold">
               {props.type === PostFormType.REPOST && 'Repost'}
               {props.type === PostFormType.EDIT && 'Edit Post'}
