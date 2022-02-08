@@ -81,37 +81,25 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       track.id,
       SaleType.MARKETPLACE,
     );
-  }, [
-    account,
-    dispatchShowRemoveListingModal,
-    listingPayload?.buyNowItem?.buyNowItem?.tokenId,
-    nftData?.pendingRequest,
-    track.id,
-    web3,
-  ]);
-
-  const RemoveListing = useMemo(
-    () => (
-      <button className="text-sm text-red-400 font-bold" onClick={handleRemove}>
-        Remove Listing
-      </button>
-    ),
-    [handleRemove],
-  );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [account, listingPayload?.buyNowItem?.buyNowItem?.tokenId, nftData?.pendingRequest, track.id, web3]);
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
       leftButton: <BackButton />,
       title: 'Edit Listing',
-      rightButton: RemoveListing,
+      rightButton: (
+        <button className="text-sm text-red-400 font-bold" onClick={handleRemove}>
+          Remove Listing
+        </button>
+      ),
     }),
-    [RemoveListing],
+    [handleRemove],
   );
 
   useEffect(() => {
     setTopNavBarProps(topNavBarProps);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [setTopNavBarProps, topNavBarProps]);
 
   if (!listingPayload) {
     return null;

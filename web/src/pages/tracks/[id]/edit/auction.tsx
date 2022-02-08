@@ -72,14 +72,8 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       return;
     }
     dispatchShowRemoveListingModal(true, listingPayload.auctionItem?.auctionItem?.tokenId, track.id, SaleType.AUCTION);
-  }, [
-    account,
-    dispatchShowRemoveListingModal,
-    listingPayload?.auctionItem?.auctionItem?.tokenId,
-    nftData?.pendingRequest,
-    track.id,
-    web3,
-  ]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [account, listingPayload?.auctionItem?.auctionItem?.tokenId, nftData?.pendingRequest, track.id, web3]);
 
   const RemoveListing = useMemo(
     () => (
@@ -101,8 +95,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
 
   useEffect(() => {
     setTopNavBarProps(topNavBarProps);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [setTopNavBarProps, topNavBarProps]);
 
   if (!listingPayload) {
     return null;
