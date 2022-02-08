@@ -7,6 +7,7 @@ import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useMountedState } from 'hooks/useMountedState';
 import { cacheFor } from 'lib/apollo';
+import { delayFocus } from 'lib/delayFocus';
 import {
   ChatHistoryQuery,
   Message,
@@ -17,6 +18,7 @@ import {
   useChatHistoryQuery,
 } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
+import { useEffect } from 'react';
 import { animateScroll as scroll } from 'react-scroll';
 
 export interface PostPageProps {
@@ -49,6 +51,10 @@ export default function ChatPage({ recipientName, profileId }: PostPageProps) {
     hasPreviousPage: false,
     totalCount: 0,
   });
+
+  useEffect(() => {
+    delayFocus('#newMessageInput');
+  }, []);
 
   const setNewMessages = (data: ChatHistoryQuery, refetch: boolean) => {
     if (refetch) setMessages([...data.chatHistory.nodes] as Message[]);
