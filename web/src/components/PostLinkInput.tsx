@@ -24,7 +24,7 @@ const mediaProviderOptions = {
   [MediaProvider.SOUNDCLOUD]: {
     name: 'SoundCloud',
     example: 'https://soundcloud.com/artist/music',
-    logo: <Soundcloud />,
+    logo: <Soundcloud color="#FF7A00" className="scale-150" />,
   },
   [MediaProvider.YOUTUBE]: { name: 'Youtube', example: 'https://www.youtube.com/watch?v=Ks2Gsdie', logo: <Youtube /> },
   [MediaProvider.VIMEO]: { name: 'Vimeo', example: 'https://vimeo.com/12345', logo: <Vimeo /> },
