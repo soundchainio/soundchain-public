@@ -22,8 +22,13 @@ export const ChatItem = ({
 }: FollowerNotificationProps) => {
   return (
     <NextLink href={`/messages/${id}`}>
-      <a className={classNames('flex flex-col py-4 pl-2 pr-4', unread ? 'odd:bg-gray-25 bg-gray-20' : 'bg-gray-15')}>
-        <div className="flex items-center flex-row">
+      <a
+        className={classNames(
+          'w-full flex flex-col py-4 pl-2 pr-4',
+          unread ? 'odd:bg-gray-25 bg-gray-20' : 'bg-gray-15',
+        )}
+      >
+        <div className="flex items-center">
           <div className="flex w-2 self-center items-center mr-2">
             <div className={classNames('w-[6px] h-[6px] rounded-full', unread && 'bg-purple-gradient')}></div>
           </div>
@@ -33,7 +38,7 @@ export const ChatItem = ({
             profile={{ profilePicture, userHandle }}
             pixels={40}
           />
-          <div className="flex flex-1 flex-col pl-4">
+          <div className="flex-1 px-4 truncate">
             <DisplayName name={displayName} verified={verified} teamMember={teamMember} />
             <div className="text-gray-80 flex text-sm whitespace-nowrap">
               <div className="truncate">{`${message}`}</div>&nbsp;<div className="text-gray-40">•</div>
