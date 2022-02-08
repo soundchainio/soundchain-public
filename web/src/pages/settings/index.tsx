@@ -84,16 +84,16 @@ export default function SettingsPage() {
       <SEO title="Account Settings | SoundChain" canonicalUrl="/settings/" description="SoundChain Account Settings" />
       <div className="flex flex-col gap-8 mt-8">
         <div className="flex flex-row px-4">
-          <NextLink href="/settings/profile-picture">
-            <div className="flex flex-col w-5/12 self-center justify-center items-center space-y-2 cursor-pointer">
+          <NextLink href="/settings/profile-picture" passHref>
+            <a className="flex flex-col w-5/12 self-center justify-center items-center space-y-2 cursor-pointer">
               <Avatar profile={me.profile} pixels={80} className="h-[80px]" linkToProfile={false} />
               <Label textSize="xs" className="text-center underline">
                 Change Profile Photo
               </Label>
-            </div>
+            </a>
           </NextLink>
-          <NextLink href="/settings/cover-picture">
-            <div className="flex flex-col w-7/12 space-y-2 cursor-pointer">
+          <NextLink href="/settings/cover-picture" passHref>
+            <a className="flex flex-col w-7/12 space-y-2 cursor-pointer">
               <div className="relative h-[80px]">
                 <Image
                   src={me.profile.coverPicture || '/default-pictures/cover/fog.jpeg'}
@@ -106,7 +106,7 @@ export default function SettingsPage() {
               <Label textSize="xs" className="text-center underline">
                 Change Cover Photo
               </Label>
-            </div>
+            </a>
           </NextLink>
         </div>
         <div className="bg-gray-15 grid">
