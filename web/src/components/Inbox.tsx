@@ -3,12 +3,17 @@ import React from 'react';
 import { ChatItem } from './ChatItem';
 import { ChatSkeleton } from './ChatSkeleton';
 import { InfiniteLoader } from './InfiniteLoader';
+import { NoResultFound } from './NoResultFound';
 
 export const Inbox = () => {
-  const { data, fetchMore } = useChatsQuery();
+  const { data, loading, fetchMore } = useChatsQuery();
+
+  if (loading) {
+    return <ChatSkeleton />;
+  }
 
   if (!data) {
-    return <ChatSkeleton />;
+    return <NoResultFound type="messages" />;
   }
 
   const { nodes: chats, pageInfo } = data.chats;
