@@ -160,6 +160,7 @@ export default function TrackPage({ track }: TrackPageProps) {
     : undefined;
   const futureSale = startingDate ? startingDate.getTime() > new Date().getTime() : false;
   const loading = loadingListingItem || isLoadingOwner;
+  const router = useRouter();
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
@@ -271,8 +272,12 @@ export default function TrackPage({ track }: TrackPageProps) {
   }, [isProcessing, refetchTrack, fetchListingItem, tokenId, track.id]);
 
   const handleFavorite = async () => {
-    await toggleFavorite({ variables: { trackId: track.id }, refetchQueries: ['FavoriteTracks'] });
-    setIsFavorite(!isFavorite);
+    if (me?.profile.id) {
+      await toggleFavorite({ variables: { trackId: track.id }, refetchQueries: ['FavoriteTracks'] });
+      setIsFavorite(!isFavorite);
+    } else {
+      router.push('/login');
+    }
   };
 
   const title = `${track.title} - song by ${track.artist} | SoundChain`;
