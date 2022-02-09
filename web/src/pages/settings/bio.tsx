@@ -1,10 +1,10 @@
 import { BackButton } from 'components/Buttons/BackButton';
 import { BioForm } from 'components/forms/profile/BioForm';
-import { Layout } from 'components/Layout';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
+import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useRouter } from 'next/router';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 const topNavBarProps: TopNavBarProps = {
   title: 'Bio',
@@ -13,9 +13,19 @@ const topNavBarProps: TopNavBarProps = {
 
 export default function BioPage() {
   const router = useRouter();
+  const { setTopNavBarProps, setHideBottomNavBar } = useLayoutContext();
+
+  useEffect(() => {
+    setTopNavBarProps(topNavBarProps);
+    setHideBottomNavBar(true);
+
+    return () => {
+      setHideBottomNavBar(false);
+    };
+  }, [setHideBottomNavBar, setTopNavBarProps]);
 
   return (
-    <Layout topNavBarProps={topNavBarProps} hideBottomNavBar>
+    <>
       <SEO title="Bio | SoundChain" canonicalUrl="/settings/bio" description="SoundChain Bio" />
       <div className="min-h-full flex flex-col px-6 lg:px-8 py-6">
         <BioForm
@@ -24,6 +34,6 @@ export default function BioPage() {
           submitProps={{ borderColor: 'bg-green-gradient' }}
         />
       </div>
-    </Layout>
+    </>
   );
 }

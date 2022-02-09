@@ -58,12 +58,20 @@ export const PostBar = ({
       </div>
       {!isRepost && (
         <>
-          <div className="text-center w-16 cursor-pointer" onClick={onAddMusicClick}>
+          <button
+            className="text-center w-16 cursor-pointer"
+            aria-label="Embed a song to your post"
+            onClick={onAddMusicClick}
+          >
             <MusicNoteIcon className="text-gray-400 w-5 m-auto" />
-          </div>
-          <div className="text-center w-16 cursor-pointer" onClick={onAddVideoClick}>
+          </button>
+          <button
+            className="text-center w-16 cursor-pointer"
+            aria-label="Embed a video to your post"
+            onClick={onAddVideoClick}
+          >
             <VideoCameraIcon className="text-gray-400 w-5 m-auto" />
-          </div>
+          </button>
         </>
       )}
       {showNewPost && !isRepost && (

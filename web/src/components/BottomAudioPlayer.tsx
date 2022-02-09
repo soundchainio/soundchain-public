@@ -150,3 +150,5 @@ export const BottomAudioPlayer = () => {
     </div>
   );
 };
+
+export default BottomAudioPlayer;

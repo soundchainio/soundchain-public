@@ -102,20 +102,22 @@ export const Post = ({ post }: PostProps) => {
           ))}
         {post.repostId && <RepostPreview postId={post.repostId} />}
         {post.track && !post.track.deleted && (
-          <MiniAudioPlayer
-            song={{
-              src: post.track.playbackUrl,
-              trackId: post.track.id,
-              art: post.track.artworkUrl,
-              title: post.track.title,
-              artist: post.track.artist,
-              isFavorite: post.track.isFavorite,
-              playbackCount: post.track.playbackCountFormatted,
-              favoriteCount: post.track.favoriteCount,
-              saleType: post.track.saleType,
-              price: post.track.price,
-            }}
-          />
+          <div className="mt-4 w-full">
+            <MiniAudioPlayer
+              song={{
+                src: post.track.playbackUrl,
+                trackId: post.track.id,
+                art: post.track.artworkUrl,
+                title: post.track.title,
+                artist: post.track.artist,
+                isFavorite: post.track.isFavorite,
+                playbackCount: post.track.playbackCountFormatted,
+                favoriteCount: post.track.favoriteCount,
+                saleType: post.track.saleType,
+                price: post.track.price,
+              }}
+            />
+          </div>
         )}
         {post.track && post.track.deleted && <NotAvailableMessage type="track" />}
         <PostStats

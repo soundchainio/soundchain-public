@@ -1,7 +1,7 @@
 import { BackButton } from 'components/Buttons/BackButton';
-import { Layout } from 'components/Layout';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
+import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMe } from 'hooks/useMe';
 import { Matic } from 'icons/Matic';
 import { MexcGlobal } from 'icons/MexcGlobal';
@@ -14,7 +14,7 @@ import { cacheFor } from 'lib/apollo';
 import { isMainNetwork } from 'lib/blockchainNetworks';
 import { protectPage } from 'lib/protectPage';
 import Image from 'next/image';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 export const getServerSideProps = protectPage(async (context, apolloClient) => {
   try {
@@ -25,7 +25,7 @@ export const getServerSideProps = protectPage(async (context, apolloClient) => {
   }
 });
 
-const topNovaBarProps: TopNavBarProps = {
+const topNovBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
   title: 'Buy Matic',
 };
@@ -44,10 +44,16 @@ const PolygonSign = (
 
 export default function BuyMaticPage() {
   const me = useMe();
+  const { setTopNavBarProps } = useLayoutContext();
+
+  useEffect(() => {
+    setTopNavBarProps(topNovBarProps);
+  }, [setTopNavBarProps]);
+
   if (!me) return null;
 
   return (
-    <Layout topNavBarProps={topNovaBarProps}>
+    <>
       <SEO
         title="Wallet Buy Funds | SoundChain"
         description="Buy funds on your SoundChain wallet"
@@ -90,7 +96,7 @@ export default function BuyMaticPage() {
           <p>Deposit and withdraw between the Ethereum and Polygon networks.</p>
         </a>
       </div>
-    </Layout>
+    </>
   );
 }
 

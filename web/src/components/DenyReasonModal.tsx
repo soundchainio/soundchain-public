@@ -16,11 +16,11 @@ interface DenyReasonModalProps {
 }
 
 interface FormValues {
-  reason?: string;
+  reason: string;
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
-  reason: yup.string(),
+  reason: yup.string().required(),
 });
 
 export const DenyReasonModal = ({ requestId, showReason, setShowReason }: DenyReasonModalProps) => {

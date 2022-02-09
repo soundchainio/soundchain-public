@@ -1,23 +1,29 @@
 import { BackButton } from 'components/Buttons/BackButton';
-import { Layout } from 'components/Layout';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { TopTracks } from 'components/TopTracks';
+import { useLayoutContext } from 'hooks/useLayoutContext';
 import { cacheFor } from 'lib/apollo';
 import { protectPage } from 'lib/protectPage';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 export const getServerSideProps = protectPage((context, apolloClient) => {
   return cacheFor(TopTracksPage, {}, context, apolloClient);
 });
 
+const topNavBarProps: TopNavBarProps = {
+  leftButton: <BackButton />,
+};
+
 export default function TopTracksPage() {
-  const topNavBarProps: TopNavBarProps = {
-    leftButton: <BackButton />,
-  };
+  const { setTopNavBarProps } = useLayoutContext();
+
+  useEffect(() => {
+    setTopNavBarProps(topNavBarProps);
+  }, [setTopNavBarProps]);
 
   return (
-    <Layout topNavBarProps={topNavBarProps}>
+    <>
       <SEO
         title="Top 100 Tracks | SoundChain"
         description="Check the SoundChain Top 100 tracks"
@@ -30,6 +36,6 @@ export default function TopTracksPage() {
         </h2>
       </div>
       <TopTracks />
-    </Layout>
+    </>
   );
 }

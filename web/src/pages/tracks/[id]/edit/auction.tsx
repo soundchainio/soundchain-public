@@ -1,10 +1,10 @@
 import { BackButton } from 'components/Buttons/BackButton';
 import { ListNFTAuction, ListNFTAuctionFormValues } from 'components/details-NFT/ListNFTAuction';
-import { Layout } from 'components/Layout';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import { useModalDispatch } from 'contexts/providers/modal';
 import useBlockchainV2 from 'hooks/useBlockchainV2';
+import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { cacheFor } from 'lib/apollo';
@@ -12,7 +12,7 @@ import { PendingRequest, TrackDocument, TrackQuery, useAuctionItemQuery, useUpda
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
-import React from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { SaleType } from 'types/SaleType';
 import { compareWallets } from 'utils/Wallet';
@@ -52,6 +52,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
   const { dispatchShowRemoveListingModal } = useModalDispatch();
   const [trackUpdate] = useUpdateTrackMutation();
   const { account, web3 } = useWalletContext();
+  const { setTopNavBarProps } = useLayoutContext();
   const me = useMe();
 
   const nftData = track.nftData;
@@ -60,6 +61,41 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
   const { data: listingPayload } = useAuctionItemQuery({
     variables: { tokenId },
   });
+
+  const handleRemove = useCallback(() => {
+    if (
+      !web3 ||
+      !listingPayload?.auctionItem?.auctionItem?.tokenId ||
+      !account ||
+      nftData?.pendingRequest != PendingRequest.None
+    ) {
+      return;
+    }
+    dispatchShowRemoveListingModal(true, listingPayload.auctionItem?.auctionItem?.tokenId, track.id, SaleType.AUCTION);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [account, listingPayload?.auctionItem?.auctionItem?.tokenId, nftData?.pendingRequest, track.id, web3]);
+
+  const RemoveListing = useMemo(
+    () => (
+      <button className="text-sm text-red-400 font-bold" onClick={handleRemove}>
+        Remove Listing
+      </button>
+    ),
+    [handleRemove],
+  );
+
+  const topNavBarProps: TopNavBarProps = useMemo(
+    () => ({
+      leftButton: <BackButton />,
+      title: 'Edit Listing',
+      rightButton: RemoveListing,
+    }),
+    [RemoveListing],
+  );
+
+  useEffect(() => {
+    setTopNavBarProps(topNavBarProps);
+  }, [setTopNavBarProps, topNavBarProps]);
 
   if (!listingPayload) {
     return null;
@@ -94,39 +130,13 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
           },
         },
       });
-      router.back();
+      router.replace(router.asPath.replace('edit/auction', ''));
     };
 
     updateAuction(listingPayload.auctionItem?.auctionItem?.tokenId, weiPrice, startTimestamp, endTimestamp, account)
       .onReceipt(onTransactionReceipt)
       .onError(cause => toast.error(cause.message))
       .execute(web3);
-  };
-
-  const handleRemove = () => {
-    if (
-      !web3 ||
-      !listingPayload.auctionItem?.auctionItem?.tokenId ||
-      !account ||
-      nftData?.pendingRequest != PendingRequest.None
-    ) {
-      return;
-    }
-    dispatchShowRemoveListingModal(true, listingPayload.auctionItem?.auctionItem?.tokenId, track.id, SaleType.AUCTION);
-  };
-
-  const RemoveListing = (
-    <div className="flex-shrink-0 flex items-center cursor-pointer">
-      <h2 className="text-sm text-red-400 font-bold" onClick={handleRemove}>
-        Remove Listing
-      </h2>
-    </div>
-  );
-
-  const topNovaBarProps: TopNavBarProps = {
-    leftButton: <BackButton />,
-    title: 'Edit Listing',
-    rightButton: RemoveListing,
   };
 
   if (!isForSale || !isOwner || !me || !track || nftData?.pendingRequest != PendingRequest.None) {
@@ -136,16 +146,14 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
   return (
     <>
       <SEO title="Edit Listing | SoundChain" description="Edit Auction Listing" canonicalUrl={router.asPath} />
-      <Layout topNavBarProps={topNovaBarProps}>
-        <div className="m-4">
-          <Track track={track} />
-        </div>
-        <ListNFTAuction
-          handleSubmit={handleUpdate}
-          submitLabel="UPDATE LISTING"
-          initialValues={{ price: startPrice, startTime: startingTime, endTime: endingTime }}
-        />
-      </Layout>
+      <div className="m-4">
+        <Track track={track} />
+      </div>
+      <ListNFTAuction
+        handleSubmit={handleUpdate}
+        submitLabel="UPDATE LISTING"
+        initialValues={{ price: startPrice, startTime: startingTime, endTime: endingTime }}
+      />
     </>
   );
 }

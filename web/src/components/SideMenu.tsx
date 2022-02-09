@@ -17,3 +17,4 @@ export const SideMenu = ({ isOpen, setOpen }: SideMenuMobileProps) => {
     </>
   );
 };
+export default SideMenu;

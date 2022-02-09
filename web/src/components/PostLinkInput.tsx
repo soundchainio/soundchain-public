@@ -1,9 +1,9 @@
 import { XCircleIcon } from '@heroicons/react/outline';
+import { Bandcamp } from 'icons/Bandcamp';
 import { Soundcloud } from 'icons/Soundcloud';
 import { Spotify } from 'icons/Spotify';
 import { Vimeo } from 'icons/Vimeo';
 import { Youtube } from 'icons/Youtube';
-import { Bandcamp } from 'icons/Bandcamp';
 import React, { useEffect, useState } from 'react';
 import { MediaProvider } from 'types/MediaProvider';
 
@@ -24,11 +24,15 @@ const mediaProviderOptions = {
   [MediaProvider.SOUNDCLOUD]: {
     name: 'SoundCloud',
     example: 'https://soundcloud.com/artist/music',
-    logo: <Soundcloud />,
+    logo: <Soundcloud color="#FF7A00" className="scale-150" />,
   },
   [MediaProvider.YOUTUBE]: { name: 'Youtube', example: 'https://www.youtube.com/watch?v=Ks2Gsdie', logo: <Youtube /> },
   [MediaProvider.VIMEO]: { name: 'Vimeo', example: 'https://vimeo.com/12345', logo: <Vimeo /> },
-  [MediaProvider.BANDCAMP]: { name: 'Bandcamp', example: 'https://colleengreen.bandcamp.com/album/cool', logo: <Bandcamp /> },
+  [MediaProvider.BANDCAMP]: {
+    name: 'Bandcamp',
+    example: 'https://colleengreen.bandcamp.com/album/cool',
+    logo: <Bandcamp />,
+  },
 };
 
 export const PostLinkInput = ({ type, setLink, link, setPostLink }: PostLinkInputProps) => {
@@ -62,12 +66,11 @@ export const PostLinkInput = ({ type, setLink, link, setPostLink }: PostLinkInpu
 
   return (
     <div className="text-gray-400 flex items-center mt-4 mb-10">
-      <div className="w-20 flex flex-col text-xs items-center">
-        {mediaProviderOptions[type].logo}
-      </div>
+      <div className="w-20 flex flex-col text-xs items-center">{mediaProviderOptions[type].logo}</div>
       <div className="flex-1 flex flex-col">
         <input
           type="text"
+          aria-label={`Enter ${mediaProviderOptions[type].name} link`}
           placeholder={`Enter ${mediaProviderOptions[type].name} link`}
           className="bg-gray-30 border-gray-700 p-2 text-sm focus:outline-none focus:ring-0 disabled:opacity-50"
           onChange={e => onChange(e.target.value)}
@@ -79,9 +82,9 @@ export const PostLinkInput = ({ type, setLink, link, setPostLink }: PostLinkInpu
           <span className="absolute top-2 left-0 text-xs">({mediaProviderOptions[type].example})</span>
         </div>
       </div>
-      <div className="w-16" onClick={onClear}>
+      <button className="w-16" onClick={onClear} aria-label="Close">
         <XCircleIcon className="w-6 m-auto" />
-      </div>
+      </button>
     </div>
   );
 };
