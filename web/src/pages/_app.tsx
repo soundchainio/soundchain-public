@@ -47,7 +47,7 @@ function SoundchainApp({ Component, pageProps }: AppProps) {
     <>
       <Head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
         <meta name="theme-color" content="#000000" />
         <link rel="icon" href="/favicons/favicon.ico" />
         <link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png" />

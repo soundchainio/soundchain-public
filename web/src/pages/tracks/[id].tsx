@@ -160,6 +160,7 @@ export default function TrackPage({ track }: TrackPageProps) {
     : undefined;
   const futureSale = startingDate ? startingDate.getTime() > new Date().getTime() : false;
   const loading = loadingListingItem || isLoadingOwner;
+  const router = useRouter();
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
@@ -271,8 +272,12 @@ export default function TrackPage({ track }: TrackPageProps) {
   }, [isProcessing, refetchTrack, fetchListingItem, tokenId, track.id]);
 
   const handleFavorite = async () => {
-    await toggleFavorite({ variables: { trackId: track.id }, refetchQueries: ['FavoriteTracks'] });
-    setIsFavorite(!isFavorite);
+    if (me?.profile.id) {
+      await toggleFavorite({ variables: { trackId: track.id }, refetchQueries: ['FavoriteTracks'] });
+      setIsFavorite(!isFavorite);
+    } else {
+      router.push('/login');
+    }
   };
 
   const title = `${track.title} - song by ${track.artist} | SoundChain`;
@@ -390,6 +395,7 @@ export default function TrackPage({ track }: TrackPageProps) {
         mintingPending={mintingPending}
         artistProfile={profileInfo?.profile}
         royalties={royalties}
+        me={me}
       />
       {nftData && (
         <MintingData
@@ -398,33 +404,34 @@ export default function TrackPage({ track }: TrackPageProps) {
           ownerProfile={ownerProfile?.getUserByWallet?.profile as Partial<Profile>}
         />
       )}
-      {isProcessing && !mintingPending && nftData?.pendingRequest ? (
-        <div className=" flex justify-center items-center p-3">
-          <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" />
-          <div className="text-white text-sm pl-3 font-bold">
-            Processing {pendingRequestMapping[nftData.pendingRequest]}
+      {me &&
+        (isProcessing && !mintingPending && nftData?.pendingRequest ? (
+          <div className=" flex justify-center items-center p-3">
+            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" />
+            <div className="text-white text-sm pl-3 font-bold">
+              Processing {pendingRequestMapping[nftData.pendingRequest]}
+            </div>
           </div>
-        </div>
-      ) : loading ? (
-        <div className=" flex justify-center items-center">
-          <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" />
-          <div className="text-white text-sm pl-3 font-bold">Loading</div>
-        </div>
-      ) : me ? (
-        <HandleNFT
-          canList={canList}
-          price={price}
-          isOwner={isOwner}
-          isBuyNow={isBuyNow}
-          isAuction={isAuction}
-          canComplete={canComplete}
-          auctionIsOver={auctionIsOver}
-          countBids={bidCount}
-          startingDate={startingDate}
-          endingDate={endingDate}
-          auctionId={id || ''}
-        />
-      ) : null}
+        ) : loading ? (
+          <div className=" flex justify-center items-center">
+            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" />
+            <div className="text-white text-sm pl-3 font-bold">Loading</div>
+          </div>
+        ) : (
+          <HandleNFT
+            canList={canList}
+            price={price}
+            isOwner={isOwner}
+            isBuyNow={isBuyNow}
+            isAuction={isAuction}
+            canComplete={canComplete}
+            auctionIsOver={auctionIsOver}
+            countBids={bidCount}
+            startingDate={startingDate}
+            endingDate={endingDate}
+            auctionId={id || ''}
+          />
+        ))}
     </>
   );
 }

@@ -9,7 +9,15 @@ fragment NewPostNotificationFields on NewPostNotification {
   previewLink
   createdAt
   track {
+    id
     title
     playbackUrl
+    artworkUrl
+    artist
+    isFavorite
+    playbackCountFormatted
+    favoriteCount
+    saleType
+    price
   }
 }

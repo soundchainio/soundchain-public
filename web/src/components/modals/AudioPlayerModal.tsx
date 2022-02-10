@@ -6,6 +6,7 @@ import { TrackListItem } from 'components/TrackListItem';
 import { TrackShareButton } from 'components/TrackShareButton';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
+import { useMe } from 'hooks/useMe';
 import { DownArrow } from 'icons/DownArrow';
 import { Forward } from 'icons/ForwardButton';
 import { HeartBorder } from 'icons/HeartBorder';
@@ -23,7 +24,7 @@ import { useEffect, useState } from 'react';
 import { remainingTime, timeFromSecs } from 'utils/calculateTime';
 
 export const AudioPlayerModal = () => {
-  const { asPath } = useRouter();
+  const router = useRouter();
   const modalState = useModalState();
   const [toggleFavorite] = useToggleFavoriteMutation();
   const { dispatchShowAudioPlayerModal } = useModalDispatch();
@@ -47,6 +48,7 @@ export const AudioPlayerModal = () => {
   const [showTotalPlaybackDuration, setShowTotalPlaybackDuration] = useState(true);
   const [isFavorite, setIsFavorite] = useState(currentSong.isFavorite);
   const [isPlaylistOpen, setIsPlaylistOpen] = useState(false);
+  const me = useMe();
 
   const isOpen = modalState.showAudioPlayer;
 
@@ -63,13 +65,17 @@ export const AudioPlayerModal = () => {
   };
 
   const handleFavorite = async () => {
-    await toggleFavorite({ variables: { trackId: currentSong.trackId }, refetchQueries: [TrackDocument] });
-    setIsFavorite(!isFavorite);
+    if (me?.profile.id) {
+      await toggleFavorite({ variables: { trackId: currentSong.trackId }, refetchQueries: [TrackDocument] });
+      setIsFavorite(!isFavorite);
+    } else {
+      router.push('/login');
+    }
   };
 
   useEffect(() => {
     handleClose();
-  }, [asPath]);
+  }, [router.asPath]);
 
   useEffect(() => {
     setIsFavorite(currentSong.isFavorite);

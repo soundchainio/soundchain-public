@@ -31,7 +31,13 @@ export const TrackUploader = ({ onFileChange, art }: TrackUploaderProps) => {
     onFileChange(file);
   }
 
-  const { getRootProps, getInputProps } = useDropzone({ maxFiles: 1, maxSize, accept: audioMimeTypes, onDrop });
+  const { getRootProps, getInputProps } = useDropzone({
+    maxFiles: 1,
+    multiple: false,
+    maxSize,
+    accept: audioMimeTypes,
+    onDrop,
+  });
 
   if (file && preview) {
     return (

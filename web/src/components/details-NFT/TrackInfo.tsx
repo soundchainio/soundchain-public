@@ -1,6 +1,6 @@
 import { Badge } from 'components/Badge';
 import { ProfileWithAvatar } from 'components/ProfileWithAvatar';
-import { Genre, Profile } from 'lib/graphql';
+import { Genre, MeQuery, Profile } from 'lib/graphql';
 import { getGenreLabelByKey } from 'utils/Genres';
 
 interface TrackInfoProps {
@@ -12,6 +12,7 @@ interface TrackInfoProps {
   mintingPending?: boolean;
   artistProfile: Profile | undefined;
   royalties?: number;
+  me?: MeQuery['me'];
 }
 
 export const TrackInfo = ({
@@ -23,6 +24,7 @@ export const TrackInfo = ({
   mintingPending,
   artistProfile,
   royalties,
+  me,
 }: TrackInfoProps) => {
   return (
     <div className="w-full text-white">
@@ -38,16 +40,18 @@ export const TrackInfo = ({
           <div className="text-center text-gray-CC font-bold">Following</div>
         </div>
       </div>
-      <div className="flex items-center font-bold">
-        <div className="w-2/4 uppercase text-xs text-gray-CC pl-4 py-3 bg-gray-20">Artist Royalty %</div>
-        <div className="flex justify-center text-center w-2/4 text-xs bg-gray-30 pr-4 py-3 pl-1">
-          {royalties === undefined ? (
-            <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white" />
-          ) : (
-            `${royalties}%`
-          )}
+      {me && (
+        <div className="flex items-center font-bold">
+          <div className="w-2/4 uppercase text-xs text-gray-CC pl-4 py-3 bg-gray-20">Artist Royalty %</div>
+          <div className="flex justify-center text-center w-2/4 text-xs bg-gray-30 pr-4 py-3 pl-1">
+            {royalties === undefined ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white" />
+            ) : (
+              `${royalties}%`
+            )}
+          </div>
         </div>
-      </div>
+      )}
       <div className="flex items-center font-bold">
         <div className="w-2/4 uppercase text-xs text-gray-CC pl-4 py-3 bg-gray-20">Track Title</div>
         <div className="text-center w-2/4 text-xs bg-gray-30 pr-4 py-3 pl-1 truncate">{trackTitle || '-'}</div>
