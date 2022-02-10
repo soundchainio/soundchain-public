@@ -2425,7 +2425,7 @@ export type NewPostNotificationFieldsFragment = (
   & Pick<NewPostNotification, 'id' | 'type' | 'authorName' | 'authorPicture' | 'body' | 'link' | 'previewBody' | 'previewLink' | 'createdAt'>
   & { track: Maybe<(
     { __typename?: 'Track' }
-    & Pick<Track, 'title' | 'playbackUrl'>
+    & Pick<Track, 'id' | 'title' | 'playbackUrl' | 'artworkUrl' | 'artist' | 'isFavorite' | 'playbackCountFormatted' | 'favoriteCount' | 'saleType' | 'price'>
   )> }
 );
 
@@ -3528,8 +3528,16 @@ export const NewPostNotificationFieldsFragmentDoc = gql`
   previewLink
   createdAt
   track {
+    id
     title
     playbackUrl
+    artworkUrl
+    artist
+    isFavorite
+    playbackCountFormatted
+    favoriteCount
+    saleType
+    price
   }
 }
     `;

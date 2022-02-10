@@ -20,7 +20,7 @@ export interface FormValues {
 }
 
 const postSchema: yup.SchemaOf<FormValues> = yup.object().shape({
-  body: yup.string().required(),
+  body: yup.string().required().max(160),
 });
 
 const defaultInitialValues = { body: '' };
@@ -51,7 +51,7 @@ export const CommentForm = ({ afterSubmit, initialValues, onCancel }: CommentFor
       validationSchema={postSchema}
       onSubmit={onSubmit}
     >
-      {({ setFieldValue }) => (
+      {({ setFieldValue, isValid }) => (
         <Form className="flex flex-col h-full">
           <div className="flex items-center rounded-tl-3xl rounded-tr-3xl bg-gray-20">
             <div className="p-2 text-gray-400 font-bold flex-1 text-center" onClick={() => onCancel(setFieldValue)}>
@@ -60,13 +60,13 @@ export const CommentForm = ({ afterSubmit, initialValues, onCancel }: CommentFor
             <div className="flex-1 text-center text-white font-bold">Edit Comment</div>
             <div className="flex-1 text-center m-2">
               <div className="ml-6">
-                <Button className="bg-gray-30 text-sm " type="submit" variant="rainbow-rounded">
+                <Button className="bg-gray-30 text-sm " type="submit" disabled={!isValid} variant="rainbow-rounded">
                   Save
                 </Button>
               </div>
             </div>
           </div>
-          <PostBodyField name="body" placeholder="What's happening?" />
+          <PostBodyField name="body" placeholder="What's happening?" maxLength={160} />
         </Form>
       )}
     </Formik>

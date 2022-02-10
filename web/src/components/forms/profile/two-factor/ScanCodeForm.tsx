@@ -38,7 +38,7 @@ export const ScanCodeForm = () => {
       <canvas className="self-center my-4" ref={canvasRef} />
 
       <span className="text-gray-60 text-xs my-2">
-        Some autherticator apps also allow you to type in the text version instead.
+        Some authenticator apps also allow you to type in the text version instead.
       </span>
 
       <CopyText text={secret} />

@@ -40,6 +40,7 @@ export const ArtworkUploader = ({ name, initialValue, onFileChange, error }: Art
 
   const { getRootProps, getInputProps } = useDropzone({
     maxFiles: 1,
+    multiple: false,
     maxSize,
     accept: [...imageMimeTypes, ...videoMimeTypes],
     onDrop,

@@ -47,7 +47,14 @@ export function ImageUpload({
   }, [initialValue]);
 
   return (
-    <Dropzone maxFiles={maxNumberOfFiles} maxSize={maxFileSize} accept={accept} onDrop={upload} disabled={uploading}>
+    <Dropzone
+      maxFiles={maxNumberOfFiles}
+      multiple={false}
+      maxSize={maxFileSize}
+      accept={accept}
+      onDrop={upload}
+      disabled={uploading}
+    >
       {({ getRootProps, getInputProps }) => (
         <div
           className={classNames(
