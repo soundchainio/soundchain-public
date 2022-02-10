@@ -57,7 +57,7 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
         <Form>
           <div className="flex flex-row items-start space-x-3 p-3 bg-gray-25">
             <Avatar profile={me.profile} linkToProfile={false} />
-            <FlexareaField id="commentField" name="body" placeholder="Write a comment..." />
+            <FlexareaField id="commentField" name="body" maxLength={160} placeholder="Write a comment..." />
             <button type="submit" disabled={isSubmitting} className="pt-1">
               <Send color={dirty && isValid ? 'green-blue' : undefined} />
             </button>
