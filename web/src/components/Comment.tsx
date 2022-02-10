@@ -51,7 +51,9 @@ export const Comment = ({ commentId }: CommentProps) => {
             {canEdit && <Ellipsis className="pr-2 pl-2 w-full h-3 cursor-pointer" onClick={onEllipsisClick} />}
           </div>
         </div>
-        <pre className="text-white font-thin tracking-wide text-sm whitespace-pre-wrap mt-1">{comment.body}</pre>
+        <pre className="text-white font-thin tracking-wide text-sm break-words whitespace-pre-wrap mt-1">
+          {comment.body}
+        </pre>
       </div>
     </div>
   );
