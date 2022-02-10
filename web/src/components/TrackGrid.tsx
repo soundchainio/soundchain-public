@@ -74,7 +74,7 @@ export const TrackGrid = ({ track }: TrackProps) => {
               </div>
               <div className="flex flex-col flex-1 truncate">
                 {saleType && saleType !== '' && (
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 flex-wrap">
                     <div className="flex flex-1 items-start">
                       <div className="text-white font-bold text-sm mr-1">{price}</div>
                       <Matic height="18" width="18" className="" />
