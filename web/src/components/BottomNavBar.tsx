@@ -39,7 +39,7 @@ export const BottomNavBar = () => {
     >
       <div className="w-full">
         <div className="w-full flex items-end">
-          <NavBarButton label="Home" path="/" icon={Home} color="yellow" />
+          <NavBarButton label="Home" path="/home" icon={Home} color="yellow" />
           <NavBarButton
             id="nav-explore-"
             label="Explore"
