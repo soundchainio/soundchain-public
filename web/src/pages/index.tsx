@@ -7,7 +7,7 @@ export default function Index() {
   const me = useMe();
 
   useEffect(() => {
-    router.push(me ? '/marketplace' : '/marketplace');
+    router.push('/marketplace');
   }, [me]);
 
   return null;
