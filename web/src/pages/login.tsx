@@ -17,6 +17,7 @@ import { AuthMethod, useLoginMutation } from 'lib/graphql';
 import { useRouter } from 'next/dist/client/router';
 import NextLink from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import Cookies from 'js-cookie';
 
 export default function LoginPage() {
   const [login] = useLoginMutation();
@@ -74,9 +75,15 @@ export default function LoginPage() {
       setLoggingIn(true);
       magic.oauth
         .getRedirectResult()
-        .then(result => login({ variables: { input: { token: result.magic.idToken } } }))
+        .then(result => {
+          return login({ variables: { input: { token: result.magic.idToken } } });
+        })
         .then(result => setJwt(result.data?.login.jwt))
-        .catch(handleError);
+        .catch(error => {
+          const tokenCookie = Cookies.get('token');
+          if (!tokenCookie) return handleError(error);
+          console.warn(error);
+        });
     }
   }, [magic, magicParam, login, handleError]);
 
