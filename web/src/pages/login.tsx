@@ -65,8 +65,8 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     await magic.oauth.loginWithRedirect({
       provider: 'google',
-      redirectURI: `${config.domainUrl}/login`,
-      scope: ['openid', 'https://www.googleapis.com/auth/userinfo.email'],
+      redirectURI: `${config.domainUrl}/loginCallback`,
+      // scope: ['openid', 'https://www.googleapis.com/auth/userinfo.email'],
     });
   };
 
