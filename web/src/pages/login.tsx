@@ -71,25 +71,29 @@ export default function LoginPage() {
   };
 
   useEffect(() => {
-    if (magic && magicParam && magic.oauth) {
+    async function doLogin() {
       setLoggingIn(true);
-      magic.oauth
-        .getRedirectResult()
-        .then(result => {
-          return login({ variables: { input: { token: result.magic.idToken } } });
-        })
-        .then(result => setJwt(result.data?.login.jwt))
-        .catch(error => {
-          const tokenCookie = Cookies.get('token');
-          if (!tokenCookie) return handleError(error);
-          console.warn(error);
-        });
+
+      try {
+        const redirectRes = await magic.oauth.getRedirectResult();
+        const loginRes = await login({ variables: { input: { token: redirectRes?.magic?.idToken } } });
+        const jwt = loginRes.data?.login?.jwt;
+        setJwt(jwt);
+      } catch (error) {
+        console.log('Login error: ', error);
+        const tokenCookie = Cookies.get('token');
+        if (!tokenCookie) return handleError(error);
+      } finally {
+        setLoggingIn(false);
+      }
     }
+    if (magicParam && magic && magic.oauth) doLogin();
   }, [magic, magicParam, login, handleError]);
 
   async function handleSubmit(values: FormValues) {
     try {
       magic.preload();
+
       const token = await magic.auth.loginWithMagicLink({
         email: values.email,
       });
