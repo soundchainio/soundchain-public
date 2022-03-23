@@ -8,7 +8,7 @@
 - `cp api/.env.sample api/.env.local`
 - `cp web/.env.sample web/.env.local`
 
-(If lerna doesn't work)
+(If Lerna doesn't work)
 ```
 cd api
 yarn
