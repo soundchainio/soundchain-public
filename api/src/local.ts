@@ -1,4 +1,4 @@
-// import * as Sentry from '@sentry/node';
+import * as Sentry from '@sentry/node';
 import { ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
@@ -10,11 +10,11 @@ import { processPending } from './lambda/processPending';
 import { Context } from './types/Context';
 
 async function bootstrap() {
-  // Sentry.init({
-  //   dsn: config.sentry.url,
-  //   tracesSampleRate: 1.0,
-  //   environment: NODE_ENV,
-  // });
+  Sentry.init({
+    dsn: config.sentry.url,
+    tracesSampleRate: 1.0,
+    environment: NODE_ENV,
+  });
 
   await mongoose.connect(config.db.url, config.db.options);
 

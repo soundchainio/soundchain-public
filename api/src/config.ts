@@ -23,7 +23,7 @@ interface LambdaContext {
 export const {
   NODE_ENV,
   PORT = 4000,
-  DATABASE_URL = 'mongodb://127.0.0.1:27017',
+  DATABASE_URL = 'mongodb://localhost:27017',
   DATABASE_SSL_PATH,
   WEB_APP_URL = 'http://localhost:3000',
   SENDGRID_SENDER_EMAIL,

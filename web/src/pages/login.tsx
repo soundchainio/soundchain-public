@@ -80,7 +80,7 @@ export default function LoginPage() {
         const jwt = loginRes.data?.login?.jwt;
         setJwt(jwt);
       } catch (error) {
-        return handleError(error);
+        handleError(error);
       } finally {
         setLoggingIn(false);
       }
