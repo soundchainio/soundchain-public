@@ -40,7 +40,7 @@ const BlankPage: NextPage<iCallback> = ({ apiKey }) => {
 };
 
 export function getStaticProps() {
-  const apiKey = process.env.NEXT_IANS_GOOGLE_API_KEY ?? '';
+  const apiKey = process.env.NEXT_PUBLIC_MAGIC_KEY ?? '';
 
   return {
     props: {

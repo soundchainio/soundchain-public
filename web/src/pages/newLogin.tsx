@@ -43,7 +43,7 @@ const NewLoginPage: NextPage<iHome> = ({ apiKey }) => {
 };
 
 export function getStaticProps() {
-  const apiKey = process.env.NEXT_IANS_GOOGLE_API_KEY ?? '';
+  const apiKey = process.env.NEXT_PUBLIC_MAGIC_KEY ?? '';
   console.log('apiKey :>> ', apiKey);
 
   return {
