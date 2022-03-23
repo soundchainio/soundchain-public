@@ -2,24 +2,15 @@ import type { NextPage } from 'next';
 import { Magic } from 'magic-sdk';
 import { OAuthExtension } from '@magic-ext/oauth';
 import { InstanceWithExtensions, SDKBase } from '@magic-sdk/provider';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { setJwt } from 'lib/apollo';
 import Cookies from 'js-cookie';
 import { useLoginMutation } from 'lib/graphql';
 import { useMe } from 'hooks/useMe';
 import { useRouter } from 'next/dist/client/router';
 import { config } from 'config';
-
-const renderProfile = profile => {
-  const user = profile?.oauth?.userInfo ?? null;
-  return (
-    <div>
-      <p>Name: {user?.name}</p>
-      <p>Email: {user?.email}</p>
-    </div>
-  );
-};
-
+import { LoaderAnimation } from 'components/LoaderAnimation';
+import { isApolloError } from '@apollo/client';
 interface iCallback {
   apiKey: string;
 }
@@ -31,31 +22,31 @@ const LoginCallbackPage: NextPage<iCallback> = ({ apiKey }) => {
   const me = useMe();
   const router = useRouter();
 
+  const handleError = useCallback(
+    (error: Error) => {
+      router.push('/create-account');
+    },
+    [router],
+  );
+
   useEffect(() => {
     async function doLogin() {
       let result;
       try {
         result = await magic?.oauth.getRedirectResult();
-        console.log('result :>> ', result);
         setProfile(result);
-      } catch (error) {
-        console.log('Error in getRedirectResult: ', error);
-      }
+      } catch (error) {}
 
       if (result && result.magic?.idToken) {
         const token = result.magic.idToken;
-        console.log('token :>> ', token);
 
-        // try {
-        const loginRes = await login({ variables: { input: { token } } });
-        const jwt = loginRes.data?.login?.jwt;
-        console.log('jwt :>> ', jwt);
-        setJwt(jwt);
-        // } catch (error) {
-        //   console.log('Login error: ', error);
-        //   const tokenCookie = Cookies.get('token');
-        //   console.log('tokenCookie :>> ', tokenCookie);
-        // }
+        try {
+          const loginRes = await login({ variables: { input: { token } } });
+          const jwt = loginRes.data?.login?.jwt;
+          setJwt(jwt);
+        } catch (error) {
+          handleError(error);
+        }
       }
     }
     if (!magic) {
@@ -65,25 +56,20 @@ const LoginCallbackPage: NextPage<iCallback> = ({ apiKey }) => {
     }
 
     if (!profile) {
-      console.log('logging in');
       doLogin();
     }
   }, [magic, profile]);
 
   useEffect(() => {
     if (me) {
-      console.log('Is me, redirecting');
       router.push(router.query.callbackUrl?.toString() ?? `${config.redirectUrlPostLogin}`);
     }
   }, [me, router]);
 
   return (
-    <div>
-      <main style={{ color: 'white' }}>
-        <h3>Magic Oauth Prototype</h3>
-        <br />
-        {profile ? renderProfile(profile) : 'Loading profile...'}
-      </main>
+    <div className="flex items-center justify-center w-full h-full text-center font-bold sm:px-4 py-3">
+      <LoaderAnimation ring />
+      <span className="text-white">Logging in</span>
     </div>
   );
 };

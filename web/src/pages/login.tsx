@@ -51,14 +51,12 @@ export default function LoginPage() {
   );
 
   useEffect(() => {
-    console.log('authMethod :>> ', authMethod);
     setTopNavBarProps(authMethod ? topNavBarProps : { isLogin: true });
     setIsAuthLayout(true);
   }, [setTopNavBarProps, setIsAuthLayout, authMethod, topNavBarProps]);
 
   useEffect(() => {
     if (me) {
-      console.log('Is me, redirecting');
       setIsAuthLayout(false);
       router.push(router.query.callbackUrl?.toString() ?? `${config.redirectUrlPostLogin}`);
     }
@@ -82,9 +80,7 @@ export default function LoginPage() {
         const jwt = loginRes.data?.login?.jwt;
         setJwt(jwt);
       } catch (error) {
-        console.log('Login error: ', error);
-        const tokenCookie = Cookies.get('token');
-        if (!tokenCookie) return handleError(error);
+        return handleError(error);
       } finally {
         setLoggingIn(false);
       }
@@ -103,8 +99,6 @@ export default function LoginPage() {
       if (!token) {
         throw new Error('Error connecting Magic');
       }
-
-      console.log('token :>> ', token);
 
       const result = await login({ variables: { input: { token } } });
       setJwt(result.data?.login.jwt);
