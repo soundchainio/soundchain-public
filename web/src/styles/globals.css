@@ -50,6 +50,46 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'Rubik';
+  font-style: normal;
+  font-weight: 300;
+  src: url('/fonts/Rubik-Light.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Rubik';
+  font-style: normal;
+  font-weight: 400;
+  src: url('/fonts/Rubik-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Rubik';
+  font-style: normal;
+  font-weight: 500;
+  src: url('/fonts/Rubik-Medium.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Rubik';
+  font-style: normal;
+  font-weight: 600;
+  src: url('/fonts/Rubik-SemiBold.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Rubik';
+  font-style: normal;
+  font-weight: 800;
+  src: url('/fonts/Rubik-ExtraBold.ttf') format('truetype');
+  font-display: swap;
+}
+
 body,
 pre {
   font-family: 'Metropolis';
@@ -173,6 +213,12 @@ html {
 
 .purple-green-gradient-text {
   background: linear-gradient(90deg, #ab4eff 0%, #84ff82 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.purple-blue-gradient-text {
+  background: linear-gradient(129.55deg, #FF8282 -12.7%, #4870FF 92.4%);
   background-clip: text;
   color: transparent;
 }

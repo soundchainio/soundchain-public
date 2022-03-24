@@ -5,9 +5,11 @@ interface LayoutContextData {
   topNavBarProps?: TopNavBarProps;
   hideBottomNavBar?: boolean;
   isAuthLayout?: boolean;
+  isLandingLayout?: boolean;
   setHideBottomNavBar: (value: boolean) => void;
   setTopNavBarProps: (value: TopNavBarProps) => void;
   setIsAuthLayout: (value: boolean) => void;
+  setIsLandingLayout: (value: boolean) => void;
 }
 
 const LayoutContext = createContext<LayoutContextData>({} as LayoutContextData);
@@ -19,6 +21,7 @@ interface LayoutContextProviderProps {
 export function LayoutContextProvider({ children }: LayoutContextProviderProps) {
   const [hideBottomNavBar, setHideBottomNavBar] = useState(false);
   const [isAuthLayout, setIsAuthLayout] = useState(false);
+  const [isLandingLayout, setIsLandingLayout] = useState(false);
   const [topNavBarProps, setTopNavBarProps] = useState<TopNavBarProps>({});
 
   return (
@@ -27,9 +30,11 @@ export function LayoutContextProvider({ children }: LayoutContextProviderProps) 
         topNavBarProps,
         hideBottomNavBar,
         isAuthLayout,
+        isLandingLayout,
         setHideBottomNavBar,
         setTopNavBarProps,
         setIsAuthLayout,
+        setIsLandingLayout,
       }}
     >
       {children}
