@@ -366,8 +366,9 @@ export class TrackService extends ModelService<typeof Track> {
       },
     ];
     let dotNotationFilter;
-    if (filter) {
-      const filterClone = JSON.parse(JSON.stringify(filter));
+    if (filter && (filter.genres || filter.listingItem)) {
+      const jsonStr = JSON.stringify(filter);
+      const filterClone = JSON.parse(jsonStr);
       delete filterClone.genres;
       dotNotationFilter = filter.listingItem && dot.dot(filterClone);
     }
