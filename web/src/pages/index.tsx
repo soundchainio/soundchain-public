@@ -16,7 +16,7 @@ interface ProductCharacteristicsProps {
 }
 
 interface FormValues {
-  email: string
+  email: string;
 }
 
 const ProductCharacteristics = ({ title, content }: ProductCharacteristicsProps) => {
@@ -54,7 +54,7 @@ export default function Index() {
       <SEO title="SoundChain" description="SoundChain" canonicalUrl="/" />
       <main className="flex flex-col items-center justify-center gap-20 md:gap-30 py-36 md:py-52 font-rubik text-white w-full">
         <section className="flex flex-col items-center justify-center pb-20">
-          <OgunLogo className="h-28 w-80 md:h-[213px] md:w-[845px] " />
+          <OgunLogo className="w-full" />
           <h2 className="text-center text-3xl md:text-5x1 font-extrabold pt-14">
             Giving the power <span className="green-blue-gradient-text">back to the artists</span>
           </h2>
@@ -64,10 +64,14 @@ export default function Index() {
           </p>
           {account ? (
             <span className="font-bold w-full flex flex-col max-w-md">
-              <span className='text-center text-lg'>So we can let you know when the airdrop is live</span>
-              <Formik initialValues={{ email: '', number: undefined }} validationSchema={validationSchema} onSubmit={() => undefined}>
+              <span className="text-center text-lg">So we can let you know when the airdrop is live</span>
+              <Formik
+                initialValues={{ email: '', number: undefined }}
+                validationSchema={validationSchema}
+                onSubmit={() => undefined}
+              >
                 <Form className="flex flex-1 flex-col justify-between">
-                  <div className='flex flex-col gap-3 pt-4'>
+                  <div className="flex flex-col gap-3 pt-4">
                     <InputField placeholder="Email address" type="email" name="email" />
                   </div>
                   <Button type="submit" className="w-full mt-6 transition">
@@ -77,7 +81,9 @@ export default function Index() {
               </Formik>
             </span>
           ) : (
-            <Button variant="rainbow" onClick={() => setAccount('test')}>CONNECT YOUR WALLET</Button>
+            <Button variant="rainbow" onClick={() => setAccount('test')}>
+              CONNECT YOUR WALLET
+            </Button>
           )}
         </section>
 
@@ -151,18 +157,20 @@ export default function Index() {
           </span>
         </section>
 
-        <section className="block lg:hidden pt-12">
-          <Image height={767} width={382} src="/mobile-roadmap.png" alt="roadmap" />
+        <section className="block lg:hidden w-full">
+          <div className="relative h-[800px]">
+            <Image layout="fill" objectFit="contain" quality={100} src="/mobile-roadmap.png" alt="roadmap" />
+          </div>
         </section>
 
-        <section className="hidden lg:block relative pt-24">
-          <div className="relative">
-            <Image height={500} width={1719} src="/roadmap.png" alt="roadmap" />
+        <section className="hidden lg:block pt-24 w-full right-0">
+          <div className="relative -mr-40 h-[600px]">
+            <Image layout="fill" objectFit="contain" quality={100} src="/roadmap.png" alt="roadmap" />
           </div>
         </section>
 
         <section className="flex flex-col items-center justify-center">
-          <div className="grid grid-cols-1 gap-8 md:pt-12  gap-x-32 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-8 md:pt-12 gap-x-32 md:grid-cols-2">
             <ProductCharacteristics
               title="Ways to earn"
               content="Staking, liquidity pools, trading rewards, and airdrops all designed to spread the love."

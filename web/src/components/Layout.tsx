@@ -62,10 +62,10 @@ export const Layout = ({ children, className }: LayoutProps) => {
 
   if (isLandingLayout) {
     return (
-      <div className="flex h-full flex-col pb-6 bg-black">
+      <div className="flex flex-col bg-black">
         <Header />
-        <div className="flex flex-1 flex-col  md:w-full px-6 lg:px-8 pt-6 bg-black">{children}</div>
-        <footer className="bg-rainbow-gradient w-full flex justify-center items-center h-24 z-10 bottom-0 py-2 md:text-lg">
+        <div className="flex flex-1 flex-col px-6 lg:px-8 pt-6 bg-black overflow-x-hidden">{children}</div>
+        <footer className="bg-rainbow-gradient w-full flex justify-center items-center py-2 md:text-lg text-center">
           2022 SoundChain, all rights reserved
         </footer>
       </div>
