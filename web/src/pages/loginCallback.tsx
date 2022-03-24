@@ -4,38 +4,35 @@ import { OAuthExtension } from '@magic-ext/oauth';
 import { InstanceWithExtensions, SDKBase } from '@magic-sdk/provider';
 import { useState, useEffect, useCallback } from 'react';
 import { setJwt } from 'lib/apollo';
-import Cookies from 'js-cookie';
 import { useLoginMutation } from 'lib/graphql';
 import { useMe } from 'hooks/useMe';
 import { useRouter } from 'next/dist/client/router';
 import { config } from 'config';
 import { LoaderAnimation } from 'components/LoaderAnimation';
-import { isApolloError } from '@apollo/client';
 interface iCallback {
   apiKey: string;
 }
 
 const LoginCallbackPage: NextPage<iCallback> = ({ apiKey }) => {
-  const magic: InstanceWithExtensions<SDKBase, OAuthExtension[]> | null = null;
-  const [profile, setProfile] = useState(null);
+  let magic: InstanceWithExtensions<SDKBase, OAuthExtension[]> | null = null;
+  const [isLoaded, setIsLoaded] = useState(false);
   const [login] = useLoginMutation();
   const me = useMe();
   const router = useRouter();
 
-  const handleError = useCallback(
-    (error: Error) => {
-      router.push('/create-account');
-    },
-    [router],
-  );
+  const handleError = useCallback(() => {
+    router.push('/create-account');
+  }, [router]);
 
   useEffect(() => {
     async function doLogin() {
       let result;
       try {
         result = await magic?.oauth.getRedirectResult();
-        setProfile(result);
-      } catch (error) {}
+        if (result) setIsLoaded(true);
+      } catch (error) {
+        handleError();
+      }
 
       if (result && result.magic?.idToken) {
         const token = result.magic.idToken;
@@ -45,7 +42,7 @@ const LoginCallbackPage: NextPage<iCallback> = ({ apiKey }) => {
           const jwt = loginRes.data?.login?.jwt;
           setJwt(jwt);
         } catch (error) {
-          handleError(error);
+          handleError();
         }
       }
     }
@@ -55,10 +52,10 @@ const LoginCallbackPage: NextPage<iCallback> = ({ apiKey }) => {
       });
     }
 
-    if (!profile) {
+    if (isLoaded) {
       doLogin();
     }
-  }, [magic, profile]);
+  }, [magic, isLoaded]);
 
   useEffect(() => {
     if (me) {

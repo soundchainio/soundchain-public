@@ -17,7 +17,6 @@ import { AuthMethod, useLoginMutation } from 'lib/graphql';
 import { useRouter } from 'next/dist/client/router';
 import NextLink from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import Cookies from 'js-cookie';
 
 export default function LoginPage() {
   const [login] = useLoginMutation();
@@ -80,7 +79,7 @@ export default function LoginPage() {
         const jwt = loginRes.data?.login?.jwt;
         setJwt(jwt);
       } catch (error) {
-        handleError(error);
+        handleError(error as Error);
       } finally {
         setLoggingIn(false);
       }
