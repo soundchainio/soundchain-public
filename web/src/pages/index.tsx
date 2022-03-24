@@ -1,14 +1,22 @@
 import { Button } from 'components/Button';
+import { InputField } from 'components/InputField';
 import SEO from 'components/SEO';
+import { Form, Formik } from 'formik';
 import { useLayoutContext } from 'hooks/useLayoutContext';
 import { Checked } from 'icons/Checked';
 import { OgunLogo } from 'icons/OgunLogo';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import * as yup from 'yup';
 
 interface ProductCharacteristicsProps {
   title: string;
   content: string;
   iconColor?: string;
+}
+
+interface FormValues {
+  email: string
 }
 
 const ProductCharacteristics = ({ title, content }: ProductCharacteristicsProps) => {
@@ -25,6 +33,9 @@ const ProductCharacteristics = ({ title, content }: ProductCharacteristicsProps)
   );
 };
 
+const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
+  email: yup.string().email('Please enter a valid email address').required('Please enter your email address'),
+});
 
 export default function Index() {
   const { setIsLandingLayout } = useLayoutContext();
@@ -41,31 +52,39 @@ export default function Index() {
   return (
     <>
       <SEO title="SoundChain" description="SoundChain" canonicalUrl="/" />
-      <main className="flex flex-col items-center justify-center gap-40 py-36 md:py-52 font-rubik text-white w-full">
+      <main className="flex flex-col items-center justify-center gap-20 md:gap-30 py-36 md:py-52 font-rubik text-white w-full">
         <section className="flex flex-col items-center justify-center pb-20">
-            <OgunLogo className='h-28 w-80 md:h-[213px] md:w-[845px] '/>
-          <h2 className="text-center text-4xl md:text-5x1 font-extrabold pt-14">
+          <OgunLogo className="h-28 w-80 md:h-[213px] md:w-[845px] " />
+          <h2 className="text-center text-3xl md:text-5x1 font-extrabold pt-14">
             Giving the power <span className="green-blue-gradient-text">back to the artists</span>
           </h2>
-          <p className="text-2xl text-center py-14">
+          <p className="text-xl text-center py-14">
             Our native ER-20 token that lets our users take <br className="hidden md:block" /> part in shaping the
             platform&#39;s future.
           </p>
           {account ? (
-            <span className="font-bold">
-              Connected with {account.substring(0, 5)}...{account.substring(account.length - 4)}
+            <span className="font-bold w-full flex flex-col max-w-md">
+              <span className='text-center text-lg'>So we can let you know when the airdrop is live</span>
+              <Formik initialValues={{ email: '', number: undefined }} validationSchema={validationSchema} onSubmit={() => undefined}>
+                <Form className="flex flex-1 flex-col justify-between">
+                  <div className='flex flex-col gap-3 pt-4'>
+                    <InputField placeholder="Email address" type="email" name="email" />
+                  </div>
+                  <Button type="submit" className="w-full mt-6 transition">
+                    ENTER
+                  </Button>
+                </Form>
+              </Formik>
             </span>
           ) : (
-            <Button variant="rainbow">
-              CONNECT YOUR WALLET
-            </Button>
+            <Button variant="rainbow" onClick={() => setAccount('test')}>CONNECT YOUR WALLET</Button>
           )}
         </section>
 
-        <section className="w-full">
+        <section className="w-full pb-14  md:pb-32">
           <span className="grid grid-cols-2">
-            <span className="col-span-2 md:col-span-1 flex md:justify-end pb-14 md:pb-0 md:-mb-4 md:-mr-24">
-              <h1 className="text-left  text-4xl md:text-5xl font-extrabold text-white">
+            <span className="col-span-2 md:col-span-1 flex justify-start md:justify-end pb-14 md:pb-0 md:-mb-6 md:-mr-24">
+              <h1 className="text-left  text-4xl md:text-6xl font-extrabold text-white">
                 {`Earn OGUN `}
                 <span className="green-blue-gradient-text">
                   just <br />
@@ -78,18 +97,18 @@ export default function Index() {
             <span />
             <span className="col-span-2 md:col-span-1">
               <hr className="bg-rainbow-gradient h-px border-0" />
-              <p className="font-light col-span-2 md:col-span-1 text-4xl text-left pt-14 max-w-md">
+              <p className="font-light col-span-2 md:col-span-1 text-2xl md:text-4xl text-left pt-14 max-w-md">
                 Users can earn additional OGUN just by buying and selling NFT&#39;s on the SoundChain Marketplace
               </p>
             </span>
           </span>
         </section>
 
-        <section className="w-full">
+        <section className="w-full pb-14 md:pb-32">
           <span className="grid grid-cols-2">
             <span />
-            <span className="col-span-2 md:col-span-1 flex md:justify-start pb-14 md:pb-0 md:-mb-16 md:ml-14">
-              <h1 className="text-right text-4xl md:text-5xl font-extrabold">
+            <span className="col-span-2 md:col-span-1 flex justify-end md:justify-start pb-14 md:pb-0 md:-mb-24 md:ml-14">
+              <h1 className="text-right text-4xl md:text-6xl font-extrabold">
                 OGUN lets <br />
                 your{' '}
                 <span className="yellow-gradient-text">
@@ -101,7 +120,7 @@ export default function Index() {
             <hr className="bg-rainbow-gradient h-px border-0 col-span-2 md:col-span-1" />
             <span />
             <span className="col-span-2 md:col-span-1 flex justify-end">
-              <p className="font-light text-4xl text-right pt-14 max-w-md">
+              <p className="font-light text-2xl md:text-4xl text-right pt-14 max-w-md">
                 Any OGUN staked within the platform gives you a voice to shape the future of the platform
               </p>
             </span>
@@ -110,8 +129,8 @@ export default function Index() {
 
         <section className="w-full">
           <span className="grid grid-cols-2">
-            <span className="col-span-2 md:col-span-1 flex justify-end pb-14 md:pb-0 md:-mb-10 md:-mr-20">
-              <h1 className="text-left  text-4xl md:text-5xl font-extrabold">
+            <span className="col-span-2 md:col-span-1 flex justify-start md:justify-end pb-14 md:pb-0 md:-mb-10 md:-mr-20">
+              <h1 className="text-left  text-4xl md:text-6xl font-extrabold">
                 See your benefits
                 <span className="purple-blue-gradient-text">
                   <br />
@@ -124,7 +143,7 @@ export default function Index() {
             <span />
             <span className="col-span-2 md:col-span-1">
               <hr className="bg-rainbow-gradient h-px border-0" />
-              <p className="font-light col-span-2 md:col-span-1 text-4xl text-left pt-14 max-w-md">
+              <p className="font-light col-span-2 md:col-span-1 text-2xl md:text-4xl text-left pt-14 max-w-md">
                 Special supporter badges, priotization on the Explore page, and the ability to tip artists - OGUN is
                 built right into the SoundChain platform
               </p>
@@ -132,11 +151,18 @@ export default function Index() {
           </span>
         </section>
 
-        <section className="flex justify-end -mr-10 w-full">
+        <section className="block lg:hidden pt-12">
+          <Image height={767} width={382} src="/mobile-roadmap.png" alt="roadmap" />
+        </section>
+
+        <section className="hidden lg:block relative pt-24">
+          <div className="relative">
+            <Image height={500} width={1719} src="/roadmap.png" alt="roadmap" />
+          </div>
         </section>
 
         <section className="flex flex-col items-center justify-center">
-          <div className="grid grid-cols-1 gap-8 pt-4 md:pt-12 gap-x-32 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-8 md:pt-12  gap-x-32 md:grid-cols-2">
             <ProductCharacteristics
               title="Ways to earn"
               content="Staking, liquidity pools, trading rewards, and airdrops all designed to spread the love."
