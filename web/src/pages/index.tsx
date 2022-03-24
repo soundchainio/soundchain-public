@@ -5,6 +5,7 @@ import { Form, Formik } from 'formik';
 import { useLayoutContext } from 'hooks/useLayoutContext';
 import { Checked } from 'icons/Checked';
 import { OgunLogo } from 'icons/OgunLogo';
+import { useCreateWhitelistEntryMutation } from 'lib/graphql';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import * as yup from 'yup';
@@ -40,6 +41,7 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
 export default function Index() {
   const { setIsLandingLayout } = useLayoutContext();
   const [account, setAccount] = useState<string>();
+  const [createWhitelistEntry] = useCreateWhitelistEntryMutation();
 
   useEffect(() => {
     setIsLandingLayout(true);
@@ -48,6 +50,12 @@ export default function Index() {
       setIsLandingLayout(false);
     };
   }, [setIsLandingLayout]);
+
+  const handleCreateWhitelistEntry = async () => {
+    await createWhitelistEntry({
+      variables: { input: { walletAddress: 'walletTest2', emailAddress: 'emailTest2' } },
+    })
+  }
 
   return (
     <>
@@ -66,9 +74,9 @@ export default function Index() {
             <span className="font-bold w-full flex flex-col max-w-md">
               <span className="text-center text-lg">So we can let you know when the airdrop is live</span>
               <Formik
-                initialValues={{ email: '', number: undefined }}
+                initialValues={{ email: '' }}
                 validationSchema={validationSchema}
-                onSubmit={() => undefined}
+                onSubmit={handleCreateWhitelistEntry}
               >
                 <Form className="flex flex-1 flex-col justify-between">
                   <div className="flex flex-col gap-3 pt-4">

@@ -31,6 +31,7 @@ import { TrackResolver } from './TrackResolver';
 import { UploadResolver } from './UploadResolver';
 import { UserResolver } from './UserResolver';
 import { VerificationRequestNotificationResolver } from './VerificationRequestNotificationResolver';
+import { WhitelistEntryResolver } from './WhitelistEntryResolver';
 import { WonAuctionNotificationResolver } from './WonAuctionNotificationResolver';
 
 export const resolvers = [
@@ -68,4 +69,5 @@ export const resolvers = [
   UserResolver,
   VerificationRequestNotificationResolver,
   WonAuctionNotificationResolver,
+  WhitelistEntryResolver,
 ] as const;
