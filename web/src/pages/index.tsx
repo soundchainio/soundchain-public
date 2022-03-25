@@ -45,6 +45,7 @@ export default function Index() {
   const [account, setAccount] = useState<string>();
   const [createWhitelistEntry] = useCreateWhitelistEntryMutation();
   const [added, setAdded] = useState(false);
+  const [closeModal, setCloseModal] = useState<boolean>(true);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const provider: any = new WalletConnectProvider({
@@ -66,6 +67,7 @@ export default function Index() {
       const accounts  = await web3.eth?.getAccounts();
       if (accounts) setAccount(accounts[0]); // get the primary account
     } catch (error) {
+      setCloseModal(!closeModal);
       console.warn('warn: ', error);
     }
   }
