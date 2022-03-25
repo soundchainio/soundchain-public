@@ -42,6 +42,7 @@ export default function Index() {
   const { setIsLandingLayout } = useLayoutContext();
   const [account, setAccount] = useState<string>();
   const [createWhitelistEntry] = useCreateWhitelistEntryMutation();
+  const [added, setAdded] = useState(false);
 
   useEffect(() => {
     setIsLandingLayout(true);
@@ -53,9 +54,10 @@ export default function Index() {
 
   const handleCreateWhitelistEntry = async () => {
     await createWhitelistEntry({
-      variables: { input: { walletAddress: 'walletTest2', emailAddress: 'emailTest2' } },
-    })
-  }
+      variables: { input: { walletAddress: 'walletTest3', emailAddress: 'emailTest3' } },
+    });
+    setAdded(true);
+  };
 
   return (
     <>
@@ -71,27 +73,36 @@ export default function Index() {
             platform&#39;s future.
           </p>
           {account ? (
-            <span className="font-bold w-full flex flex-col max-w-md">
-              <span className="text-center text-lg">So we can let you know when the airdrop is live</span>
-              <Formik
-                initialValues={{ email: '' }}
-                validationSchema={validationSchema}
-                onSubmit={handleCreateWhitelistEntry}
-              >
-                <Form className="flex flex-1 flex-col justify-between">
-                  <div className="flex flex-col gap-3 pt-4">
-                    <InputField placeholder="Email address" type="email" name="email" />
-                  </div>
-                  <Button type="submit" className="w-full mt-6 transition">
-                    ENTER
-                  </Button>
-                </Form>
-              </Formik>
+            <span className="font-bold w-full flex flex-col max-w-md text-xl">
+              {added ? (
+                <span className="yellow-gradient-text text-center text-2xl md:text-3xl">ADDED</span>
+              ) : (
+                <>
+                  <span className="text-center text-lg">So we can let you know when the airdrop is live</span>
+                  <Formik
+                    initialValues={{ email: '' }}
+                    validationSchema={validationSchema}
+                    onSubmit={handleCreateWhitelistEntry}
+                  >
+                    <Form className="flex flex-1 flex-col justify-between">
+                      <div className="flex flex-col gap-3 pt-4">
+                        <InputField placeholder="Email address" type="email" name="email" />
+                      </div>
+                      <Button type="submit" className="w-full mt-6">
+                        ENTER
+                      </Button>
+                    </Form>
+                  </Formik>
+                </>
+              )}
             </span>
           ) : (
-            <Button variant="rainbow" onClick={() => setAccount('test')}>
-              CONNECT YOUR WALLET
-            </Button>
+            <div className="flex flex-col items-center gap-3">
+              <Button variant="rainbow" onClick={() => setAccount('test')}>
+                <span className='font-medium px-6'>CONNECT YOUR WALLET</span>
+              </Button>
+              <span className="text-sm md:text-base font-thin">Join the airdrop whitelist</span>
+            </div>
           )}
         </section>
 
