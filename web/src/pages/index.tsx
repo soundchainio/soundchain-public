@@ -43,26 +43,25 @@ export default function Index() {
   const { setIsLandingLayout } = useLayoutContext();
   const [account, setAccount] = useState<string>();
 
-  // const provider = new WalletConnectProvider.default({
-  //   rpc: {
-  //     1: "https://cloudflare-eth.com/", // https://ethereumnodes.com/
-  //     137: "https://polygon-rpc.com/", // https://docs.polygon.technology/docs/develop/network-details/network/
-  //     // ...
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const provider:any = new WalletConnectProvider({
+    rpc: {
+      1: "https://cloudflare-eth.com/", // https://ethereumnodes.com/
+      137: "https://polygon-rpc.com/", // https://docs.polygon.technology/docs/develop/network-details/network/
+      // ...
 
-  //   },
-  //   // bridge: 'https://bridge.walletconnect.org',
-  // });
-
-  const provider = new WalletConnectProvider({
-    infuraId: "27e484dcd9e3efcfd25a83a78777cdf1", // Required
+    },
   });
+
+  // const provider  = new WalletConnectProvider({
+  //   infuraId: "27e484dcd9e3efcfd25a83a78777cdf1", // Required
+  // });
 
   const connectWC = async () => {
     await provider.enable();
 
     //  Create Web3 instance
     const web3 = new Web3(provider);
-    // window.w3 = web3;
 
     const accounts  = await web3.eth.getAccounts(); // get all connected accounts
     setAccount(accounts[0]); // get the primary account
