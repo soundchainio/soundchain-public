@@ -64,25 +64,33 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     await magic.oauth.loginWithRedirect({
       provider: 'google',
-      redirectURI: `${config.domainUrl}/login`,
-      scope: ['openid', 'https://www.googleapis.com/auth/userinfo.email'],
+      redirectURI: `${config.domainUrl}/loginCallback`,
+      // scope: ['openid', 'https://www.googleapis.com/auth/userinfo.email'],
     });
   };
 
   useEffect(() => {
-    if (magic && magicParam && magic.oauth) {
+    async function doLogin() {
       setLoggingIn(true);
-      magic.oauth
-        .getRedirectResult()
-        .then(result => login({ variables: { input: { token: result.magic.idToken } } }))
-        .then(result => setJwt(result.data?.login.jwt))
-        .catch(handleError);
+
+      try {
+        const redirectRes = await magic.oauth.getRedirectResult();
+        const loginRes = await login({ variables: { input: { token: redirectRes?.magic?.idToken } } });
+        const jwt = loginRes.data?.login?.jwt;
+        setJwt(jwt);
+      } catch (error) {
+        handleError(error as Error);
+      } finally {
+        setLoggingIn(false);
+      }
     }
+    if (magicParam && magic && magic.oauth) doLogin();
   }, [magic, magicParam, login, handleError]);
 
   async function handleSubmit(values: FormValues) {
     try {
       magic.preload();
+
       const token = await magic.auth.loginWithMagicLink({
         email: values.email,
       });

@@ -6,6 +6,7 @@ import { Form, Formik } from 'formik';
 import { useLayoutContext } from 'hooks/useLayoutContext';
 import { Checked } from 'icons/Checked';
 import { OgunLogo } from 'icons/OgunLogo';
+import { useCreateWhitelistEntryMutation } from 'lib/graphql';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import Web3 from "web3";
@@ -42,6 +43,8 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
 export default function Index() {
   const { setIsLandingLayout } = useLayoutContext();
   const [account, setAccount] = useState<string>();
+  const [createWhitelistEntry] = useCreateWhitelistEntryMutation();
+  const [added, setAdded] = useState(false);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const provider:any = new WalletConnectProvider({
@@ -81,6 +84,15 @@ export default function Index() {
     };
   }, [setIsLandingLayout]);
 
+  const handleCreateWhitelistEntry = async (values: FormValues) => {
+    if(account){
+      await createWhitelistEntry({
+        variables: { input: { walletAddress: account, emailAddress: values.email } },
+      });
+      setAdded(true);
+    }
+  };
+
   return (
     <>
       <SEO title="SoundChain" description="SoundChain" canonicalUrl="/" />
@@ -95,27 +107,36 @@ export default function Index() {
             platform&#39;s future.
           </p>
           {account ? (
-            <span className="font-bold w-full flex flex-col max-w-md">
-              <span className="text-center text-lg">{account}So we can let you know when the airdrop is live</span>
-              <Formik
-                initialValues={{ email: '', number: undefined }}
-                validationSchema={validationSchema}
-                onSubmit={() => undefined}
-              >
-                <Form className="flex flex-1 flex-col justify-between">
-                  <div className="flex flex-col gap-3 pt-4">
-                    <InputField placeholder="Email address" type="email" name="email" />
-                  </div>
-                  <Button type="submit" className="w-full mt-6 transition">
-                    ENTER
-                  </Button>
-                </Form>
-              </Formik>
+            <span className="font-bold w-full flex flex-col max-w-md text-xl">
+              {added ? (
+                <span className="yellow-gradient-text-break text-center text-2xl md:text-3xl">ADDED</span>
+              ) : (
+                <>
+                  <span className="text-center text-lg">So we can let you know when the airdrop is live</span>
+                  <Formik
+                    initialValues={{ email: '' }}
+                    validationSchema={validationSchema}
+                    onSubmit={handleCreateWhitelistEntry}
+                  >
+                    <Form className="flex flex-1 flex-col justify-between">
+                      <div className="flex flex-col gap-3 pt-4">
+                        <InputField placeholder="Email address" type="email" name="email" />
+                      </div>
+                      <Button type="submit" className="w-full mt-6">
+                        ENTER
+                      </Button>
+                    </Form>
+                  </Formik>
+                </>
+              )}
             </span>
           ) : (
-            <Button variant="rainbow" onClick={connectWC}>
-              CONNECT YOUR WALLET
-            </Button>
+            <div className="flex flex-col items-center gap-3">
+              <Button variant="rainbow" onClick={connectWC}>
+                <span className='font-medium px-6'>CONNECT YOUR WALLET</span>
+              </Button>
+              <span className="text-sm md:text-base font-thin">Join the airdrop whitelist</span>
+            </div>
           )}
         </section>
 
