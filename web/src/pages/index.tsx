@@ -58,14 +58,14 @@ export default function Index() {
   // });
 
   const connectWC = async () => {
-    await provider.enable();
-
-    //  Create Web3 instance
-    const web3 = new Web3(provider);
-
-    const accounts  = await web3.eth.getAccounts(); // get all connected accounts
-    setAccount(accounts[0]); // get the primary account
-    console.log('WALLET: ', accounts[0]);
+    try{
+      await provider.enable();
+      const web3 = new Web3(provider);
+      const accounts  = await web3.eth?.getAccounts(); 
+      if (accounts) setAccount(accounts[0]); // get the primary account
+    } catch (error) {
+      console.warn('warn: ', error);
+    }
   }
 
   // const disconnect = async () => {
