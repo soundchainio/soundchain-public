@@ -1,3 +1,4 @@
+import WalletConnectProvider from "@walletconnect/web3-provider";
 import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
 import SEO from 'components/SEO';
@@ -7,6 +8,7 @@ import { Checked } from 'icons/Checked';
 import { OgunLogo } from 'icons/OgunLogo';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import Web3 from "web3";
 import * as yup from 'yup';
 
 interface ProductCharacteristicsProps {
@@ -41,6 +43,37 @@ export default function Index() {
   const { setIsLandingLayout } = useLayoutContext();
   const [account, setAccount] = useState<string>();
 
+  // const provider = new WalletConnectProvider.default({
+  //   rpc: {
+  //     1: "https://cloudflare-eth.com/", // https://ethereumnodes.com/
+  //     137: "https://polygon-rpc.com/", // https://docs.polygon.technology/docs/develop/network-details/network/
+  //     // ...
+
+  //   },
+  //   // bridge: 'https://bridge.walletconnect.org',
+  // });
+
+  const provider = new WalletConnectProvider({
+    infuraId: "27e484dcd9e3efcfd25a83a78777cdf1", // Required
+  });
+
+  const connectWC = async () => {
+    await provider.enable();
+
+    //  Create Web3 instance
+    const web3 = new Web3(provider);
+    // window.w3 = web3;
+
+    const accounts  = await web3.eth.getAccounts(); // get all connected accounts
+    setAccount(accounts[0]); // get the primary account
+    console.log('WALLET: ', accounts[0]);
+  }
+
+  // const disconnect = async () => {
+  //   // Close provider session
+  //   await provider.disconnect()
+  // }
+
   useEffect(() => {
     setIsLandingLayout(true);
 
@@ -64,7 +97,7 @@ export default function Index() {
           </p>
           {account ? (
             <span className="font-bold w-full flex flex-col max-w-md">
-              <span className="text-center text-lg">So we can let you know when the airdrop is live</span>
+              <span className="text-center text-lg">{account}So we can let you know when the airdrop is live</span>
               <Formik
                 initialValues={{ email: '', number: undefined }}
                 validationSchema={validationSchema}
@@ -81,7 +114,7 @@ export default function Index() {
               </Formik>
             </span>
           ) : (
-            <Button variant="rainbow" onClick={() => setAccount('test')}>
+            <Button variant="rainbow" onClick={connectWC}>
               CONNECT YOUR WALLET
             </Button>
           )}
