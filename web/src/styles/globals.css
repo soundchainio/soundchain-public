@@ -205,6 +205,14 @@ html {
   color: transparent;
 }
 
+.yellow-gradient-text-break {
+  background: linear-gradient(90deg, #fe5540 0%, #fcae1b 69%, #fed603 100%);
+  background-clip: text;
+  color: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
 .purple-gradient-text {
   background: linear-gradient(90deg, #ab4eff 0%, #f1419e 100%);
   background-clip: text;
@@ -217,16 +225,26 @@ html {
   color: transparent;
 }
 
-.purple-blue-gradient-text {
+.purple-blue-gradient-text-break {
   background: linear-gradient(129.55deg, #FF8282 -12.7%, #4870FF 92.4%);
   background-clip: text;
   color: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 
 .green-blue-gradient-text {
   background: linear-gradient(90deg, #84ff82 0%, #4870ff 100%);
   background-clip: text;
   color: transparent;
+}
+
+.green-blue-gradient-text-break {
+  background: linear-gradient(90deg, #84ff82 0%, #4870ff 100%);
+  background-clip: text;
+  color: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 
 .purple-green-yellow-gradient-text {

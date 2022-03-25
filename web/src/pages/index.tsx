@@ -88,7 +88,7 @@ export default function Index() {
         <section className="flex flex-col items-center justify-center pb-20">
           <OgunLogo className="w-full" />
           <h2 className="text-center text-3xl md:text-5x1 font-extrabold pt-14">
-            Giving the power <span className="green-blue-gradient-text">back to the artists</span>
+            Giving the power <span className="green-blue-gradient-text-break">back to the artists</span>
           </h2>
           <p className="text-xl text-center py-14">
             Our native ER-20 token that lets our users take <br className="hidden md:block" /> part in shaping the
@@ -124,7 +124,7 @@ export default function Index() {
             <span className="col-span-2 md:col-span-1 flex justify-start md:justify-end pb-14 md:pb-0 md:-mb-6 md:-mr-24">
               <h1 className="text-left  text-4xl md:text-6xl font-extrabold text-white">
                 {`Earn OGUN `}
-                <span className="green-blue-gradient-text">
+                <span className="green-blue-gradient-text-break">
                   just <br />
                   by using the <br />
                   platform
@@ -149,7 +149,7 @@ export default function Index() {
               <h1 className="text-right text-4xl md:text-6xl font-extrabold">
                 OGUN lets <br />
                 your{' '}
-                <span className="yellow-gradient-text">
+                <span className="yellow-gradient-text-break">
                   voice be
                   <br /> heard
                 </span>
@@ -170,7 +170,7 @@ export default function Index() {
             <span className="col-span-2 md:col-span-1 flex justify-start md:justify-end pb-14 md:pb-0 md:-mb-10 md:-mr-20">
               <h1 className="text-left  text-4xl md:text-6xl font-extrabold">
                 See your benefits
-                <span className="purple-blue-gradient-text">
+                <span className="purple-blue-gradient-text-break">
                   <br />
                   Right on <br />
                   SoundChain
