@@ -1,4 +1,4 @@
-import WalletConnectProvider from "@walletconnect/web3-provider";
+import WalletConnectProvider from '@walletconnect/web3-provider';
 import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
 import SEO from 'components/SEO';
@@ -9,7 +9,7 @@ import { OgunLogo } from 'icons/OgunLogo';
 import { useCreateWhitelistEntryMutation } from 'lib/graphql';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import Web3 from "web3";
+import Web3 from 'web3';
 import * as yup from 'yup';
 
 interface ProductCharacteristicsProps {
@@ -47,12 +47,11 @@ export default function Index() {
   const [added, setAdded] = useState(false);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const provider:any = new WalletConnectProvider({
+  const provider: any = new WalletConnectProvider({
     rpc: {
-      1: "https://cloudflare-eth.com/", // https://ethereumnodes.com/
-      137: "https://polygon-rpc.com/", // https://docs.polygon.technology/docs/develop/network-details/network/
+      1: 'https://cloudflare-eth.com/', // https://ethereumnodes.com/
+      137: 'https://polygon-rpc.com/', // https://docs.polygon.technology/docs/develop/network-details/network/
       // ...
-
     },
   });
 
@@ -66,10 +65,10 @@ export default function Index() {
     //  Create Web3 instance
     const web3 = new Web3(provider);
 
-    const accounts  = await web3.eth.getAccounts(); // get all connected accounts
+    const accounts = await web3.eth.getAccounts(); // get all connected accounts
     setAccount(accounts[0]); // get the primary account
     console.log('WALLET: ', accounts[0]);
-  }
+  };
 
   // const disconnect = async () => {
   //   // Close provider session
@@ -85,7 +84,7 @@ export default function Index() {
   }, [setIsLandingLayout]);
 
   const handleCreateWhitelistEntry = async (values: FormValues) => {
-    if(account){
+    if (account) {
       await createWhitelistEntry({
         variables: { input: { walletAddress: account, emailAddress: values.email } },
       });
@@ -112,6 +111,9 @@ export default function Index() {
                 <span className="yellow-gradient-text-break text-center text-2xl md:text-3xl">ADDED</span>
               ) : (
                 <>
+                  <span className="text-center text-lg">
+                    Connected to {account.substring(0, 5)}…{account.substring(account.length - 4)}
+                  </span>
                   <span className="text-center text-lg">So we can let you know when the airdrop is live</span>
                   <Formik
                     initialValues={{ email: '' }}
@@ -133,7 +135,7 @@ export default function Index() {
           ) : (
             <div className="flex flex-col items-center gap-3">
               <Button variant="rainbow" onClick={connectWC}>
-                <span className='font-medium px-6'>CONNECT YOUR WALLET</span>
+                <span className="font-medium px-6">CONNECT YOUR WALLET</span>
               </Button>
               <span className="text-sm md:text-base font-thin">Join the airdrop whitelist</span>
             </div>
