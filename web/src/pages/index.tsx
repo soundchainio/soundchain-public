@@ -42,7 +42,7 @@ export default function Index() {
   const { setIsLandingLayout } = useLayoutContext();
   const [account, setAccount] = useState<string>();
   const [createWhitelistEntry] = useCreateWhitelistEntryMutation();
-  const [added, setAdded] = useState(false)
+  const [added, setAdded] = useState(false);
 
   useEffect(() => {
     setIsLandingLayout(true);
@@ -56,7 +56,7 @@ export default function Index() {
     await createWhitelistEntry({
       variables: { input: { walletAddress: 'walletTest3', emailAddress: 'emailTest3' } },
     });
-    setAdded(true)
+    setAdded(true);
   };
 
   return (
@@ -75,7 +75,7 @@ export default function Index() {
           {account ? (
             <span className="font-bold w-full flex flex-col max-w-md text-xl">
               {added ? (
-                <span className='yellow-gradient-text text-center text-2xl md:text-3xl'>ADDED</span>
+                <span className="yellow-gradient-text text-center text-2xl md:text-3xl">ADDED</span>
               ) : (
                 <>
                   <span className="text-center text-lg">So we can let you know when the airdrop is live</span>
@@ -88,7 +88,7 @@ export default function Index() {
                       <div className="flex flex-col gap-3 pt-4">
                         <InputField placeholder="Email address" type="email" name="email" />
                       </div>
-                      <Button type="submit" className="w-full mt-6 transition">
+                      <Button type="submit" className="w-full mt-6">
                         ENTER
                       </Button>
                     </Form>
@@ -97,12 +97,12 @@ export default function Index() {
               )}
             </span>
           ) : (
-            <div className='flex flex-col items-center gap-3'>
-            <Button variant="rainbow" onClick={() => setAccount('test')}>
-              CONNECT YOUR WALLET
-            </Button>
-            <span className='text-sm md:text-base'>Join the airdrop whitelist</span>
-              </div>
+            <div className="flex flex-col items-center gap-3">
+              <Button variant="rainbow" onClick={() => setAccount('test')}>
+                <span className='font-medium px-6'>CONNECT YOUR WALLET</span>
+              </Button>
+              <span className="text-sm md:text-base font-thin">Join the airdrop whitelist</span>
+            </div>
           )}
         </section>
 
