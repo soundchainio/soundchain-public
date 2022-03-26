@@ -18,7 +18,7 @@ export const NavBar = () => {
   const { isMinting } = useHideBottomNavBar();
 
   const handleCreateClick = () => {
-    me ? dispatchShowCreateModal(true) : router.push('/login');
+    //me ? dispatchShowCreateModal(true) : router.push('/login');
   };
 
   return (
