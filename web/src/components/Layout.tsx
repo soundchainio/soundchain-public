@@ -7,6 +7,7 @@ import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 import { ReactNode, useEffect, useState } from 'react';
 import { ToastContainer } from 'react-toastify';
+import { Header } from './Header';
 import { TopNavBar, TopNavBarProps } from './TopNavBar';
 
 const SideMenu = dynamic(import('./SideMenu'));
@@ -37,7 +38,7 @@ export const Layout = ({ children, className }: LayoutProps) => {
   const [sideMenuOpen, setSideMenuOpen] = useState(false);
   const { setHideBottomNavBarState } = useHideBottomNavBar();
   const { showCommentModal } = useModalState();
-  const { hideBottomNavBar, isAuthLayout, topNavBarProps } = useLayoutContext();
+  const { hideBottomNavBar, isAuthLayout, topNavBarProps, isLandingLayout } = useLayoutContext();
   const { asPath } = useRouter();
 
   useEffect(() => {
@@ -55,6 +56,18 @@ export const Layout = ({ children, className }: LayoutProps) => {
         <div className="flex flex-1 flex-col sm:mx-auto sm:w-full sm:max-w-lg bg-gray-20 px-6 lg:px-8 pt-6">
           {children}
         </div>
+      </div>
+    );
+  }
+
+  if (isLandingLayout) {
+    return (
+      <div className="flex flex-col bg-black">
+        <Header />
+        <div className="flex flex-1 flex-col px-6 lg:px-8 pt-6 bg-black overflow-x-hidden">{children}</div>
+        <footer className="bg-rainbow-gradient w-full flex justify-center items-center py-2 md:text-lg text-center">
+          2022 SoundChain, all rights reserved
+        </footer>
       </div>
     );
   }
