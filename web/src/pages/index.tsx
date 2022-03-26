@@ -60,15 +60,15 @@ export default function Index() {
   // });
 
   const connectWC = async () => {
-    try{
+    try {
       await provider.enable();
       const web3 = new Web3(provider);
-      const accounts  = await web3.eth?.getAccounts();
+      const accounts = await web3.eth?.getAccounts();
       if (accounts) setAccount(accounts[0]); // get the primary account
     } catch (error) {
       console.warn('warn: ', error);
     }
-  }
+  };
 
   // const disconnect = async () => {
   //   // Close provider session
@@ -84,11 +84,15 @@ export default function Index() {
   }, [setIsLandingLayout]);
 
   const handleCreateWhitelistEntry = async (values: FormValues) => {
-    if (account) {
-      await createWhitelistEntry({
-        variables: { input: { walletAddress: account, emailAddress: values.email } },
-      });
-      setAdded(true);
+    try {
+      if (account) {
+        await createWhitelistEntry({
+          variables: { input: { walletAddress: account, emailAddress: values.email } },
+        });
+        setAdded(true);
+      }
+    } catch (error) {
+      console.warn('warn: ', error);
     }
   };
 
