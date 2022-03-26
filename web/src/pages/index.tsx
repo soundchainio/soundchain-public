@@ -56,10 +56,6 @@ export default function Index() {
     },
   });
 
-  // const provider  = new WalletConnectProvider({
-  //   infuraId: "27e484dcd9e3efcfd25a83a78777cdf1", // Required
-  // });
-
   const connectWC = async () => {
     try{
       await provider.enable();
@@ -71,11 +67,6 @@ export default function Index() {
       console.warn('warn: ', error);
     }
   }
-
-  // const disconnect = async () => {
-  //   // Close provider session
-  //   await provider.disconnect()
-  // }
 
   useEffect(() => {
     setIsLandingLayout(true);
