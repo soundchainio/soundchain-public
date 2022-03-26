@@ -1,3 +1,4 @@
+import WalletConnectProvider from '@walletconnect/web3-provider';
 import { Button } from 'components/Button';
 import { InputField } from 'components/InputField';
 import SEO from 'components/SEO';
@@ -8,6 +9,7 @@ import { OgunLogo } from 'icons/OgunLogo';
 import { useCreateWhitelistEntryMutation } from 'lib/graphql';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import Web3 from 'web3';
 import * as yup from 'yup';
 
 interface ProductCharacteristicsProps {
@@ -43,6 +45,28 @@ export default function Index() {
   const [account, setAccount] = useState<string>();
   const [createWhitelistEntry] = useCreateWhitelistEntryMutation();
   const [added, setAdded] = useState(false);
+  const [closeModal, setCloseModal] = useState<boolean>(true);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const provider: any = new WalletConnectProvider({
+    rpc: {
+      1: 'https://cloudflare-eth.com/', // https://ethereumnodes.com/
+      137: 'https://polygon-rpc.com/', // https://docs.polygon.technology/docs/develop/network-details/network/
+      // ...
+    },
+  });
+
+  const connectWC = async () => {
+    try {
+      await provider.enable();
+      const web3 = new Web3(provider);
+      const accounts = await web3.eth?.getAccounts();
+      if (accounts) setAccount(accounts[0]); // get the primary account
+    } catch (error) {
+      setCloseModal(!closeModal);
+      console.warn('warn: ', error);
+    }
+  };
 
   useEffect(() => {
     setIsLandingLayout(true);
@@ -52,11 +76,17 @@ export default function Index() {
     };
   }, [setIsLandingLayout]);
 
-  const handleCreateWhitelistEntry = async () => {
-    await createWhitelistEntry({
-      variables: { input: { walletAddress: 'walletTest3', emailAddress: 'emailTest3' } },
-    });
-    setAdded(true);
+  const handleCreateWhitelistEntry = async (values: FormValues) => {
+    try {
+      if (account) {
+        await createWhitelistEntry({
+          variables: { input: { walletAddress: account, emailAddress: values.email } },
+        });
+        setAdded(true);
+      }
+    } catch (error) {
+      console.warn('warn: ', error);
+    }
   };
 
   return (
@@ -66,7 +96,7 @@ export default function Index() {
         <section className="flex flex-col items-center justify-center pb-20">
           <OgunLogo className="w-full" />
           <h2 className="text-center text-3xl md:text-5x1 font-extrabold pt-14">
-            Giving the power <span className="green-blue-gradient-text">back to the artists</span>
+            Giving the power <span className="green-blue-gradient-text-break">back to the artists</span>
           </h2>
           <p className="text-xl text-center py-14">
             Our native ER-20 token that lets our users take <br className="hidden md:block" /> part in shaping the
@@ -75,9 +105,12 @@ export default function Index() {
           {account ? (
             <span className="font-bold w-full flex flex-col max-w-md text-xl">
               {added ? (
-                <span className="yellow-gradient-text text-center text-2xl md:text-3xl">ADDED</span>
+                <span className="yellow-gradient-text-break text-center text-2xl md:text-3xl">ADDED</span>
               ) : (
                 <>
+                  <span className="text-center text-lg">
+                    Connected to {account.substring(0, 5)}…{account.substring(account.length - 4)}
+                  </span>
                   <span className="text-center text-lg">So we can let you know when the airdrop is live</span>
                   <Formik
                     initialValues={{ email: '' }}
@@ -98,8 +131,8 @@ export default function Index() {
             </span>
           ) : (
             <div className="flex flex-col items-center gap-3">
-              <Button variant="rainbow" onClick={() => setAccount('test')}>
-                <span className='font-medium px-6'>CONNECT YOUR WALLET</span>
+              <Button variant="rainbow" onClick={connectWC}>
+                <span className="font-medium px-6">CONNECT YOUR WALLET</span>
               </Button>
               <span className="text-sm md:text-base font-thin">Join the airdrop whitelist</span>
             </div>
@@ -111,7 +144,7 @@ export default function Index() {
             <span className="col-span-2 md:col-span-1 flex justify-start md:justify-end pb-14 md:pb-0 md:-mb-6 md:-mr-24">
               <h1 className="text-left  text-4xl md:text-6xl font-extrabold text-white">
                 {`Earn OGUN `}
-                <span className="green-blue-gradient-text">
+                <span className="green-blue-gradient-text-break">
                   just <br />
                   by using the <br />
                   platform
@@ -136,7 +169,7 @@ export default function Index() {
               <h1 className="text-right text-4xl md:text-6xl font-extrabold">
                 OGUN lets <br />
                 your{' '}
-                <span className="yellow-gradient-text">
+                <span className="yellow-gradient-text-break">
                   voice be
                   <br /> heard
                 </span>
@@ -157,7 +190,7 @@ export default function Index() {
             <span className="col-span-2 md:col-span-1 flex justify-start md:justify-end pb-14 md:pb-0 md:-mb-10 md:-mr-20">
               <h1 className="text-left  text-4xl md:text-6xl font-extrabold">
                 See your benefits
-                <span className="purple-blue-gradient-text">
+                <span className="purple-blue-gradient-text-break">
                   <br />
                   Right on <br />
                   SoundChain
