@@ -296,6 +296,16 @@ export type CreateTrackPayload = {
   track: Track;
 };
 
+export type CreateWhitelistEntryInput = {
+  walletAddress: Scalars['String'];
+  emailAddress: Scalars['String'];
+};
+
+export type CreateWhitelistEntryPayload = {
+  __typename?: 'CreateWhitelistEntryPayload';
+  whitelistEntry: WhitelistEntry;
+};
+
 
 export enum DefaultWallet {
   Soundchain = 'Soundchain',
@@ -599,6 +609,7 @@ export type Mutation = {
   updateMetaMaskAddresses: UpdateDefaultWalletPayload;
   updateOTP: UpdateOtpPayload;
   validateOTPRecoveryPhrase: Scalars['Boolean'];
+  createWhitelistEntry: CreateWhitelistEntryPayload;
 };
 
 
@@ -780,6 +791,11 @@ export type MutationUpdateOtpArgs = {
 
 export type MutationValidateOtpRecoveryPhraseArgs = {
   input: ValidateOtpRecoveryPhraseInput;
+};
+
+
+export type MutationCreateWhitelistEntryArgs = {
+  input: CreateWhitelistEntryInput;
 };
 
 export type NftDataInput = {
@@ -1676,6 +1692,13 @@ export type VerificationRequestNotification = {
   body: Scalars['String'];
 };
 
+export type WhitelistEntry = {
+  __typename?: 'WhitelistEntry';
+  id: Scalars['ID'];
+  walletAddress: Scalars['String'];
+  emailAddress: Scalars['String'];
+};
+
 export type WonAuctionNotification = {
   __typename?: 'WonAuctionNotification';
   type: NotificationType;
@@ -1988,6 +2011,22 @@ export type CreateTrackMutation = (
     & { track: (
       { __typename?: 'Track' }
       & TrackComponentFieldsFragment
+    ) }
+  ) }
+);
+
+export type CreateWhitelistEntryMutationVariables = Exact<{
+  input: CreateWhitelistEntryInput;
+}>;
+
+
+export type CreateWhitelistEntryMutation = (
+  { __typename?: 'Mutation' }
+  & { createWhitelistEntry: (
+    { __typename?: 'CreateWhitelistEntryPayload' }
+    & { whitelistEntry: (
+      { __typename?: 'WhitelistEntry' }
+      & Pick<WhitelistEntry, 'id'>
     ) }
   ) }
 );
@@ -4363,6 +4402,41 @@ export function useCreateTrackMutation(baseOptions?: Apollo.MutationHookOptions<
 export type CreateTrackMutationHookResult = ReturnType<typeof useCreateTrackMutation>;
 export type CreateTrackMutationResult = Apollo.MutationResult<CreateTrackMutation>;
 export type CreateTrackMutationOptions = Apollo.BaseMutationOptions<CreateTrackMutation, CreateTrackMutationVariables>;
+export const CreateWhitelistEntryDocument = gql`
+    mutation CreateWhitelistEntry($input: CreateWhitelistEntryInput!) {
+  createWhitelistEntry(input: $input) {
+    whitelistEntry {
+      id
+    }
+  }
+}
+    `;
+export type CreateWhitelistEntryMutationFn = Apollo.MutationFunction<CreateWhitelistEntryMutation, CreateWhitelistEntryMutationVariables>;
+
+/**
+ * __useCreateWhitelistEntryMutation__
+ *
+ * To run a mutation, you first call `useCreateWhitelistEntryMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateWhitelistEntryMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createWhitelistEntryMutation, { data, loading, error }] = useCreateWhitelistEntryMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateWhitelistEntryMutation(baseOptions?: Apollo.MutationHookOptions<CreateWhitelistEntryMutation, CreateWhitelistEntryMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateWhitelistEntryMutation, CreateWhitelistEntryMutationVariables>(CreateWhitelistEntryDocument, options);
+      }
+export type CreateWhitelistEntryMutationHookResult = ReturnType<typeof useCreateWhitelistEntryMutation>;
+export type CreateWhitelistEntryMutationResult = Apollo.MutationResult<CreateWhitelistEntryMutation>;
+export type CreateWhitelistEntryMutationOptions = Apollo.BaseMutationOptions<CreateWhitelistEntryMutation, CreateWhitelistEntryMutationVariables>;
 export const DeleteCommentDocument = gql`
     mutation DeleteComment($input: DeleteCommentInput!) {
   deleteComment(input: $input) {

@@ -8,6 +8,9 @@ module.exports = {
       fontSize: {
         xxs: '0.625rem',
       },
+      fontFamily: {
+        rubik: ['Rubik'],
+      },
       dropShadow: {
         white: ['0px 0px 5px rgb(255,255,255)', '0px 0px 1px rgb(255,255,255)'],
       },

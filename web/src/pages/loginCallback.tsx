@@ -1,14 +1,14 @@
-import type { NextPage } from 'next';
-import { Magic } from 'magic-sdk';
 import { OAuthExtension } from '@magic-ext/oauth';
 import { InstanceWithExtensions, SDKBase } from '@magic-sdk/provider';
-import { useState, useEffect, useCallback } from 'react';
+import { LoaderAnimation } from 'components/LoaderAnimation';
+import { config } from 'config';
+import { useMe } from 'hooks/useMe';
 import { setJwt } from 'lib/apollo';
 import { useLoginMutation } from 'lib/graphql';
-import { useMe } from 'hooks/useMe';
+import { Magic } from 'magic-sdk';
+import type { NextPage } from 'next';
 import { useRouter } from 'next/dist/client/router';
-import { config } from 'config';
-import { LoaderAnimation } from 'components/LoaderAnimation';
+import { useCallback, useEffect, useState } from 'react';
 interface iCallback {
   apiKey: string;
 }
@@ -52,7 +52,7 @@ const LoginCallbackPage: NextPage<iCallback> = ({ apiKey }) => {
       });
     }
 
-    if (isLoaded) {
+    if (!isLoaded) {
       doLogin();
     }
   }, [magic, isLoaded]);
