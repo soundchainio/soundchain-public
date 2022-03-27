@@ -36,10 +36,10 @@ export const TopNavBar = ({
   const me = useMe();
 
   const onLogin = () => {
-    //router.push('/login');
+    router.push('/login');
   };
 
-  //if (isLogin) return null;
+  if (isLogin) return null;
 
   const isLoginPage = router.pathname === '/login';
 

@@ -7,35 +7,23 @@ import { Matic } from 'icons/Matic';
 import { MexcGlobal } from 'icons/MexcGlobal';
 import { Moonpay } from 'icons/Moonpay';
 import { Navigate } from 'icons/Navigate';
-import { Binance } from 'icons/Binance';
-import { CryptoDotCom } from 'icons/cryptodotcom';
 import { OkCoin } from 'icons/OkCoin';
 import { Polygon } from 'icons/Polygon';
 import { Ramp } from 'icons/Ramp';
-import { cacheFor, createApolloClient } from 'lib/apollo';
+import { cacheFor } from 'lib/apollo';
 import { isMainNetwork } from 'lib/blockchainNetworks';
-import { MeDocument, MeQuery } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
-import { GetServerSideProps } from 'next';
 import Image from 'next/image';
-import HomePage from 'pages/home';
 import React, { useEffect } from 'react';
 
-
-interface HomePageProps {
-  me?: MeQuery['me'];
-}
-
-export const getServerSideProps: GetServerSideProps<HomePageProps> = async context => {
-  const apolloClient = createApolloClient(context);
-
-  const { data } = await apolloClient.query({
-    query: MeDocument,
-    context,
-  });
-
-  return cacheFor(HomePage, { me: data.me }, context, apolloClient);
-};
+export const getServerSideProps = protectPage(async (context, apolloClient) => {
+  try {
+    if (!context.user) return { notFound: true };
+    return await cacheFor(BuyMaticPage, {}, context, apolloClient);
+  } catch (error) {
+    return { notFound: true };
+  }
+});
 
 const topNovBarProps: TopNavBarProps = {
   leftButton: <BackButton />,
@@ -55,14 +43,14 @@ const PolygonSign = (
 );
 
 export default function BuyMaticPage() {
-  //const me = useMe();
+  const me = useMe();
   const { setTopNavBarProps } = useLayoutContext();
 
   useEffect(() => {
     setTopNavBarProps(topNovBarProps);
   }, [setTopNavBarProps]);
 
-  //if (!me) return null;
+  if (!me) return null;
 
   return (
     <>
@@ -78,17 +66,11 @@ export default function BuyMaticPage() {
         <p className="flex items-center justify-center">
           {MaticSign} on the {PolygonSign} chain.
         </p>
-        {!isMainNetwork ? <MainnetLinks /> : <PolygonFaucetLink />}
+        {isMainNetwork ? <MainnetLinks /> : <PolygonFaucetLink />}
         <p className="text-center my-10 font-bold">
           If you live in the United States, the following exchanges support buying Matic.
         </p>
         <div className="flex items-center justify-center space-x-4 my-10">
-          <a href="https://www.binance.us/" rel="noreferrer" target="_blank">
-            <Binance />
-          </a>
-          <a href="https://crypto.com/" rel="noreferrer" target="_blank">
-            <CryptoDotCom />
-          </a>
           <a href="https://www.okcoin.com/" rel="noreferrer" target="_blank">
             <OkCoin />
           </a>

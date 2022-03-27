@@ -25,13 +25,13 @@ export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
   const router = useRouter();
 
   const onRepostClick = () => {
-    //if (!me) return router.push('/login');
+    if (!me) return router.push('/login');
     dispatchSetRepostId(postId);
     dispatchShowPostModal(true);
   };
 
   const handleLikeButton = () => {
-    //if (!me) return router.push('/login');
+    if (!me) return router.push('/login');
     setReactionSelectorOpened(!reactionSelectorOpened);
   };
 
