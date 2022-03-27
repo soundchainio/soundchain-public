@@ -99,7 +99,7 @@ export default function Index() {
             Giving the power <span className="green-blue-gradient-text-break">back to the artists</span>
           </h2>
           <p className="text-xl text-center py-14">
-            Our native ER-20 token that lets our users take <br className="hidden md:block" /> part in shaping the
+            Our native ERC-20 token that lets our users take <br className="hidden md:block" /> part in shaping the
             platform&#39;s future.
           </p>
           {account ? (
