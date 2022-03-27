@@ -7,6 +7,8 @@ import { Matic } from 'icons/Matic';
 import { MexcGlobal } from 'icons/MexcGlobal';
 import { Moonpay } from 'icons/Moonpay';
 import { Navigate } from 'icons/Navigate';
+import { Binance } from 'icons/Binance';
+import { CryptoDotCom } from 'icons/CryptoDotCom';
 import { OkCoin } from 'icons/OkCoin';
 import { Polygon } from 'icons/Polygon';
 import { Ramp } from 'icons/Ramp';
@@ -71,6 +73,12 @@ export default function BuyMaticPage() {
           If you live in the United States, the following exchanges support buying Matic.
         </p>
         <div className="flex items-center justify-center space-x-4 my-10">
+          <a href="https://www.binance.us/" rel="noreferrer" target="_blank">
+            <Binance />
+          </a>
+          <a href="https://crypto.com/us/app" rel="noreferrer" target="_blank">
+            <CryptoDotCom />
+          </a>
           <a href="https://www.okcoin.com/" rel="noreferrer" target="_blank">
             <OkCoin />
           </a>
