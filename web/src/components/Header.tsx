@@ -13,7 +13,7 @@ export const Header = () => {
           <span className="text-white font-extrabold hidden md:block">SoundChain</span>
         </div>
         <Button className='h-12 w-96' variant="rainbow" onClick={() => router.push('/marketplace')}>
-            CONTINUE TO SOUNDCHAIN
+            SOUNDCHAIN COMMUNITY
           </Button>
       </div>
     </header>

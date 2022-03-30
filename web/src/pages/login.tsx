@@ -42,7 +42,8 @@ export default function LoginPage() {
       if (isApolloError(error) && error.message === 'already exists') {
         setLoggingIn(false);
         setAuthMethod(error.graphQLErrors.find(err => err.extensions.with)?.extensions.with);
-      } else {
+      }
+      else if(error.message !== 'Cannot destructure property \'verifier\' of \'JSON.parse(...)\' as it is null.'){
         router.push('/create-account');
       }
     },
