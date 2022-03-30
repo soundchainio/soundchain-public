@@ -43,8 +43,7 @@ export default function LoginPage() {
         setLoggingIn(false);
         setAuthMethod(error.graphQLErrors.find(err => err.extensions.with)?.extensions.with);
       }
-      if(error.message === 'Cannot destructure property \'verifier\' of \'JSON.parse(...)\' as it is null.'){}
-       else {
+      else if(error.message !== 'Cannot destructure property \'verifier\' of \'JSON.parse(...)\' as it is null.'){
         router.push('/create-account');
       }
     },
