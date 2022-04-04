@@ -42,9 +42,10 @@ export default function LoginPage() {
       if (isApolloError(error) && error.message === 'already exists') {
         setLoggingIn(false);
         setAuthMethod(error.graphQLErrors.find(err => err.extensions.with)?.extensions.with);
-      }
-      else if(error.message !== 'Cannot destructure property \'verifier\' of \'JSON.parse(...)\' as it is null.'){
+      } else if (error.message.toLowerCase().includes('invalid credentials')) {
         router.push('/create-account');
+      } else {
+        console.warn('warn: ', error);
       }
     },
     [router],
