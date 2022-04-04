@@ -3,21 +3,21 @@ import { Field, ID, ObjectType } from 'type-graphql';
 import { Model } from './Model';
 
 @ObjectType()
-export class WhitelistEntry extends Model {
+export class AudioHolder extends Model {
   @Field(() => ID, { name: 'id' })
   readonly _id: string;
 
   @Field({ nullable: false })
   @prop({ required: true })
-  walletAddress?: string;
+  walletAddress: string;
 
   @Field({ nullable: false })
   @prop({ required: true })
-  emailAddress?: string;
+  amount: string;
 
   @Field({ nullable: true })
   @prop({ default: false })
   ogunClaimed?: boolean;
 }
 
-export const WhitelistEntryModel = getModelForClass(WhitelistEntry);
+export const AudioHolderModel = getModelForClass(AudioHolder);

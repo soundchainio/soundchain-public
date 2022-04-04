@@ -1,0 +1,7 @@
+mutation UpdateOgunClaimedAudioHolder($input: UpdateOgunClaimedInput!) {
+  updateOgunClaimedAudioHolder(input: $input) {
+    audioHolder{
+      id
+    }
+  }
+}
