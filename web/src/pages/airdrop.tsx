@@ -27,7 +27,6 @@ export default function AirdropPage() {
   const [isFinished, setIsFinished] = useState<boolean>(false);
   const minimunAudioToken = new Decimal('10');
 
-
   //correct amount at mobile
 
   useEffect(() => {
@@ -48,6 +47,7 @@ export default function AirdropPage() {
   const isOgunClaimedWhitelist = Boolean(whitelistEntry?.whitelistEntryByWallet.ogunClaimed);
   const isOgunClaimedAudioHolder = Boolean(audioHolder?.audioHolderByWallet?.ogunClaimed);
   const audioBalance = new Decimal(audioHolder?.audioHolderByWallet?.amount || '0');
+  const audioBalanceSize = audioBalance.toString().length
 
   const isClaimed =
     (whitelistEntry && isOgunClaimedWhitelist && !audioHolder) ||
@@ -64,7 +64,7 @@ export default function AirdropPage() {
   });
 
   const connectWC = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       await provider.enable();
       const web3 = new Web3(provider);
@@ -74,7 +74,7 @@ export default function AirdropPage() {
       setCloseModal(!closeModal);
       console.warn('warn: ', error);
     }
-    setLoading(false)
+    setLoading(false);
   };
 
   const handleClainOgun = async () => {
@@ -120,10 +120,16 @@ export default function AirdropPage() {
         <h2 className="text-2xl md:text-4xl text-center font-light">
           Based on how much AUDIO you own, you are able to claim this much OGUN
         </h2>
-        <h2 className="text-2xl md:text-4xl text-center font-medium flex items-center whitespace-pre-wrap">
-          {audioBalance.toString()} <span className="purple-blue-gradient-text-break">$AUDIO</span>
+
+        <h2 className="text-2xl md:text-4xl text-center font-medium flex items-center flex-col md:flex-row whitespace-pre-wrap">
+          <span>
+          {audioBalanceSize < 8 ? audioBalance.toString() : audioBalance.toString().substring(0,8) + '...'}{' '}
+          <span className="purple-blue-gradient-text-break">$AUDIO</span>
+          </span>
           <span className="grow m-1 w-12  border-b border-white" />
+          <span>
           50 <span className="green-blue-gradient-text-break">OGUN</span>
+          </span>
         </h2>
         <h2 className="text-xl md:text-4xl text-center font-light">
           Also for joining the whitelist:{' '}
@@ -235,11 +241,18 @@ export default function AirdropPage() {
           <FinishedState />
         ) : isClaimed ? (
           <ClaimedState />
-        ) : audioBalance.gte(minimunAudioToken) && whitelistEntry && !isOgunClaimedAudioHolder && !isOgunClaimedWhitelist ? (
+        ) : audioBalance.gte(minimunAudioToken) &&
+          whitelistEntry &&
+          !isOgunClaimedAudioHolder &&
+          !isOgunClaimedWhitelist ? (
           <AudioWhitelistState />
-        ) : (audioBalance.lt(minimunAudioToken) || isOgunClaimedAudioHolder) && whitelistEntry && !isOgunClaimedWhitelist ? (
+        ) : (audioBalance.lt(minimunAudioToken) || isOgunClaimedAudioHolder) &&
+          whitelistEntry &&
+          !isOgunClaimedWhitelist ? (
           <WhitelistState />
-        ) : audioBalance.gte(minimunAudioToken) && !isOgunClaimedAudioHolder && (!whitelistEntry || isOgunClaimedWhitelist)? (
+        ) : audioBalance.gte(minimunAudioToken) &&
+          !isOgunClaimedAudioHolder &&
+          (!whitelistEntry || isOgunClaimedWhitelist) ? (
           <AudioState />
         ) : (
           <WithoutAudioState />
