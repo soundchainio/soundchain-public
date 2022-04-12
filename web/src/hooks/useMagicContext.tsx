@@ -46,7 +46,7 @@ const createWeb3 = (
     | InstanceWithExtensions<SDKBase, MagicSDKExtensionsOption<string>>
     | InstanceWithExtensions<SDKBase, OAuthExtension[]>,
 ) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  //  eslint-disable-next-line @typescript-eslint/no-explicit-any
   return magic ? new Web3(magic.rpcProvider as any) : null;
 };
 
