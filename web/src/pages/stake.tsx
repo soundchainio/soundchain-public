@@ -1,11 +1,16 @@
 import WalletConnectProvider from '@walletconnect/web3-provider';
 import { Button } from 'components/Button';
+import { config } from 'config';
 import { Form, Formik } from 'formik';
 import { useLayoutContext } from 'hooks/useLayoutContext';
+import useMetaMask from 'hooks/useMetaMask';
 import { CirclePlusFilled } from 'icons/CirclePlusFilled';
 import { Logo } from 'icons/Logo';
 import { useEffect, useState } from 'react';
 import Web3 from 'web3';
+import { AbiItem } from 'web3-utils';
+import SoundchainOGUN20 from '../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json';
+import StakingRewards from '../contract/StakingRewards.sol/StakingRewards.json';
 
 interface FormValues {
   token: string;
@@ -14,11 +19,36 @@ interface FormValues {
 
 type Selected = 'Stake' | 'Unstake';
 
+
+const OGUNAddress = config.OGUNAddress as string;
+const tokenStakeContractAddress = config.tokenStakeContractAddress as string;
+const tokenContract = (web3: Web3) =>
+  new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], OGUNAddress);// as unknown as Contract;
+const tokenStakeContract = (web3: Web3) =>
+  new web3.eth.Contract(StakingRewards.abi as AbiItem[], tokenStakeContractAddress);// as unknown as Contract;
+
 export default function Stake() {
+  const {
+    account: metamaskAccount,
+    balance: metamaskBalance,
+    // connect,
+    // chainId,
+    // addMumbaiTestnet,
+    // refetchBalance: refetchMetamaskBalance,
+    // isRefetchingBalance: isRefetchingMetamaskBalance,
+    web3,
+  } = useMetaMask();
   const { setIsLandingLayout } = useLayoutContext();
   const [account, setAccount] = useState<string>();
+  const [OGUNBalance, setOGUNBalance] = useState<string>();
   const [closeModal, setCloseModal] = useState<boolean>(true);
   const [selected, setSelected] = useState<Selected>('Stake');
+  const [web3API, setWeb3API] = useState<Web3>();
+  const [formattedOGUNBalance, setFormattedOGUNBalance] = useState<string>();
+
+
+  // const formattedOGUNBalance = parseFloat(OGUNbalance ?? '0');
+  // const formattedOGUNBalance = web3 ?? web3?.utils?.fromWei(OGUNbalance);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const provider: any = new WalletConnectProvider({
@@ -37,17 +67,38 @@ export default function Stake() {
     };
   }, [setIsLandingLayout]);
 
+
+  useEffect(() => {
+    const getStakeBalance = async () => {
+      if (account && web3) {
+        console.log('Get Stake Balance account && web3API');
+        const currentBalance = await tokenContract(web3).methods.balanceOf(account).call();
+        const formattedBalance = web3.utils.fromWei(currentBalance ?? '0');
+        debugger
+        setOGUNBalance(currentBalance);
+        setFormattedOGUNBalance(formattedBalance);
+      }
+    }
+    getStakeBalance();
+  }, [account]);
+
   const connectWC = async () => {
     try {
       await provider.enable();
-      const web3 = new Web3(provider);
-      const accounts = await web3.eth?.getAccounts();
+      const web3CW = new Web3(provider);
+      const accounts = await web3CW.eth?.getAccounts();
+      setWeb3API(web3CW);
       if (accounts) setAccount(accounts[0]); // get the primary account
     } catch (error) {
       setCloseModal(!closeModal);
       console.warn('warn: ', error);
     }
   };
+
+  const disconnectWC = async () => {
+    await provider.disconnect();
+    console.log('Discconect');
+  }
 
   const ConnectAccountState = () => {
     return (
@@ -86,7 +137,7 @@ export default function Stake() {
             <Button variant="rainbow" className="w-5/6">
               <span className="font-medium ">BUY OGUNS</span>
             </Button>
-            <button className="flex items-center gap-x-2 justify-center whitespace-nowrap bg-transparent border-transparent">
+            <button className="flex items-center gap-x-2 justify-center whitespace-nowrap bg-transparent border-transparent" onClick={disconnectWC}>
               <span className="font-medium pl-2">Add wallet</span>
               <CirclePlusFilled />
             </button>
@@ -147,7 +198,7 @@ export default function Stake() {
             <div className="flex flex-col gap-y-1 w-full text-xs text-white text-opacity-60">
               <span className="flex justify-between">
                 <text>OGUN in wallet:</text>
-                <text>0.0</text>
+                <text>{formattedOGUNBalance}</text>
               </span>
               <span className="flex justify-between">
                 <text>Your stake:</text>
