@@ -42,8 +42,10 @@ export default function LoginPage() {
       if (isApolloError(error) && error.message === 'already exists') {
         setLoggingIn(false);
         setAuthMethod(error.graphQLErrors.find(err => err.extensions.with)?.extensions.with);
-      } else {
+      } else if (error.message.toLowerCase().includes('invalid credentials')) {
         router.push('/create-account');
+      } else {
+        console.warn('warn: ', error);
       }
     },
     [router],
@@ -64,33 +66,25 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     await magic.oauth.loginWithRedirect({
       provider: 'google',
-      redirectURI: `${config.domainUrl}/loginCallback`,
-      // scope: ['openid', 'https://www.googleapis.com/auth/userinfo.email'],
+      redirectURI: `${config.domainUrl}/login`,
+      scope: ['openid', 'https://www.googleapis.com/auth/userinfo.email'],
     });
   };
 
   useEffect(() => {
-    async function doLogin() {
+    if (magic && magicParam && magic.oauth) {
       setLoggingIn(true);
-
-      try {
-        const redirectRes = await magic.oauth.getRedirectResult();
-        const loginRes = await login({ variables: { input: { token: redirectRes?.magic?.idToken } } });
-        const jwt = loginRes.data?.login?.jwt;
-        setJwt(jwt);
-      } catch (error) {
-        handleError(error as Error);
-      } finally {
-        setLoggingIn(false);
-      }
+      magic.oauth
+        .getRedirectResult()
+        .then(result => login({ variables: { input: { token: result.magic.idToken } } }))
+        .then(result => setJwt(result.data?.login.jwt))
+        .catch(handleError);
     }
-    if (magicParam && magic && magic.oauth) doLogin();
   }, [magic, magicParam, login, handleError]);
 
   async function handleSubmit(values: FormValues) {
     try {
       magic.preload();
-
       const token = await magic.auth.loginWithMagicLink({
         email: values.email,
       });

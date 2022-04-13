@@ -3,23 +3,9 @@
 ## Setup
 
 - `yarn`
-- `brew install lerna`
 - `yarn bootstrap`
 - `cp api/.env.sample api/.env.local`
 - `cp web/.env.sample web/.env.local`
-
-(If Lerna doesn't work)
-```
-cd api
-yarn
-yarn dev
-```
-
-```
-cd web
-yarn
-yarn dev
-```
 
 ## Develop
 

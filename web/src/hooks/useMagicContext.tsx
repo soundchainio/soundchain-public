@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { Magic } from 'magic-sdk';
 import { OAuthExtension } from '@magic-ext/oauth';
 import { InstanceWithExtensions, MagicSDKExtensionsOption, SDKBase } from '@magic-sdk/provider';
+import { Magic } from 'magic-sdk';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import Web3 from 'web3';
 import { network } from '../lib/blockchainNetworks';
@@ -46,7 +46,8 @@ const createWeb3 = (
     | InstanceWithExtensions<SDKBase, MagicSDKExtensionsOption<string>>
     | InstanceWithExtensions<SDKBase, OAuthExtension[]>,
 ) => {
-  return magic ? new Web3(magic.rpcProvider) : null;
+  //  eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return magic ? new Web3(magic.rpcProvider as any) : null;
 };
 
 const web3: Web3 = createWeb3(magic)!;
