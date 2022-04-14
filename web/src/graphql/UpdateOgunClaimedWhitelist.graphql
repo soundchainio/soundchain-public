@@ -1,0 +1,7 @@
+mutation UpdateOgunClaimedWhitelist($input: UpdateOgunClaimedInput!) {
+  updateOgunClaimedWhitelist(input: $input) {
+    whitelistEntry{
+      id
+    }
+  }
+}

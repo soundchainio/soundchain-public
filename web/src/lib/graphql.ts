@@ -78,6 +78,14 @@ export type AuctionItemPayload = {
   auctionItem: Maybe<AuctionItem>;
 };
 
+export type AudioHolder = {
+  __typename?: 'AudioHolder';
+  id: Scalars['ID'];
+  walletAddress: Scalars['String'];
+  amount: Scalars['String'];
+  ogunClaimed: Maybe<Scalars['Boolean']>;
+};
+
 export enum AuthMethod {
   MagicLink = 'magicLink',
   Google = 'google'
@@ -572,6 +580,7 @@ export type Mutation = {
   __typename?: 'Mutation';
   createAuctionItem: CreateAuctionItemType;
   setNotValid: CreateBuyNowItemType;
+  updateOgunClaimedAudioHolder: UpdateOgunClaimedAudioHolderPayload;
   createBuyNowItem: CreateBuyNowItemType;
   addComment: AddCommentPayload;
   updateComment: UpdateCommentPayload;
@@ -610,6 +619,7 @@ export type Mutation = {
   updateOTP: UpdateOtpPayload;
   validateOTPRecoveryPhrase: Scalars['Boolean'];
   createWhitelistEntry: CreateWhitelistEntryPayload;
+  updateOgunClaimedWhitelist: UpdateWhitelistEntryPayload;
 };
 
 
@@ -620,6 +630,11 @@ export type MutationCreateAuctionItemArgs = {
 
 export type MutationSetNotValidArgs = {
   tokenId: Scalars['Float'];
+};
+
+
+export type MutationUpdateOgunClaimedAudioHolderArgs = {
+  input: UpdateOgunClaimedInput;
 };
 
 
@@ -796,6 +811,11 @@ export type MutationValidateOtpRecoveryPhraseArgs = {
 
 export type MutationCreateWhitelistEntryArgs = {
   input: CreateWhitelistEntryInput;
+};
+
+
+export type MutationUpdateOgunClaimedWhitelistArgs = {
+  input: UpdateOgunClaimedInput;
 };
 
 export type NftDataInput = {
@@ -1077,6 +1097,7 @@ export type Query = {
   auctionItem: AuctionItemPayload;
   countBids: CountBidsPayload;
   haveBided: Bided;
+  audioHolderByWallet: AudioHolder;
   bidsWithInfo: BidsWithInfoPayload;
   buyNowItem: BuyNowPayload;
   chats: ChatConnection;
@@ -1116,6 +1137,7 @@ export type Query = {
   mimeType: MimeType;
   me: Maybe<User>;
   getUserByWallet: Maybe<User>;
+  whitelistEntryByWallet: WhitelistEntry;
 };
 
 
@@ -1132,6 +1154,11 @@ export type QueryCountBidsArgs = {
 export type QueryHaveBidedArgs = {
   bidder: Scalars['String'];
   auctionId: Scalars['String'];
+};
+
+
+export type QueryAudioHolderByWalletArgs = {
+  walletAdress: Scalars['String'];
 };
 
 
@@ -1329,6 +1356,11 @@ export type QueryMimeTypeArgs = {
 
 export type QueryGetUserByWalletArgs = {
   walletAddress: Scalars['String'];
+};
+
+
+export type QueryWhitelistEntryByWalletArgs = {
+  walletAdress: Scalars['String'];
 };
 
 export type ReactToPostInput = {
@@ -1612,6 +1644,16 @@ export type UpdateOtpPayload = {
   user: User;
 };
 
+export type UpdateOgunClaimedAudioHolderPayload = {
+  __typename?: 'UpdateOgunClaimedAudioHolderPayload';
+  audioHolder: AudioHolder;
+};
+
+export type UpdateOgunClaimedInput = {
+  id: Scalars['String'];
+  ogunClaimed: Scalars['Boolean'];
+};
+
 export type UpdatePostInput = {
   postId: Scalars['String'];
   body: Scalars['String'];
@@ -1652,6 +1694,11 @@ export type UpdateTrackPayload = {
 
 export type UpdateWalletInput = {
   wallet: Scalars['String'];
+};
+
+export type UpdateWhitelistEntryPayload = {
+  __typename?: 'UpdateWhitelistEntryPayload';
+  whitelistEntry: WhitelistEntry;
 };
 
 export type UploadUrl = {
@@ -1697,6 +1744,7 @@ export type WhitelistEntry = {
   id: Scalars['ID'];
   walletAddress: Scalars['String'];
   emailAddress: Scalars['String'];
+  ogunClaimed: Maybe<Scalars['Boolean']>;
 };
 
 export type WonAuctionNotification = {
@@ -1756,6 +1804,19 @@ export type AuctionItemQuery = (
       { __typename?: 'AuctionItem' }
       & Pick<AuctionItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow'>
     )> }
+  ) }
+);
+
+export type AudioHolderByWalletQueryVariables = Exact<{
+  walletAdress: Scalars['String'];
+}>;
+
+
+export type AudioHolderByWalletQuery = (
+  { __typename?: 'Query' }
+  & { audioHolderByWallet: (
+    { __typename?: 'AudioHolder' }
+    & Pick<AudioHolder, 'id' | 'amount' | 'ogunClaimed'>
   ) }
 );
 
@@ -3170,6 +3231,38 @@ export type UpdateOtpMutation = (
   ) }
 );
 
+export type UpdateOgunClaimedAudioHolderMutationVariables = Exact<{
+  input: UpdateOgunClaimedInput;
+}>;
+
+
+export type UpdateOgunClaimedAudioHolderMutation = (
+  { __typename?: 'Mutation' }
+  & { updateOgunClaimedAudioHolder: (
+    { __typename?: 'UpdateOgunClaimedAudioHolderPayload' }
+    & { audioHolder: (
+      { __typename?: 'AudioHolder' }
+      & Pick<AudioHolder, 'id'>
+    ) }
+  ) }
+);
+
+export type UpdateOgunClaimedWhitelistMutationVariables = Exact<{
+  input: UpdateOgunClaimedInput;
+}>;
+
+
+export type UpdateOgunClaimedWhitelistMutation = (
+  { __typename?: 'Mutation' }
+  & { updateOgunClaimedWhitelist: (
+    { __typename?: 'UpdateWhitelistEntryPayload' }
+    & { whitelistEntry: (
+      { __typename?: 'WhitelistEntry' }
+      & Pick<WhitelistEntry, 'id'>
+    ) }
+  ) }
+);
+
 export type UpdatePostMutationVariables = Exact<{
   input: UpdatePostInput;
 }>;
@@ -3346,6 +3439,19 @@ export type ValidateOtpRecoveryPhraseMutation = (
 export type VerificationRequestNotificationFieldsFragment = (
   { __typename?: 'VerificationRequestNotification' }
   & Pick<VerificationRequestNotification, 'id' | 'type' | 'body' | 'createdAt'>
+);
+
+export type WhitelistEntryByWalletQueryVariables = Exact<{
+  walletAdress: Scalars['String'];
+}>;
+
+
+export type WhitelistEntryByWalletQuery = (
+  { __typename?: 'Query' }
+  & { whitelistEntryByWallet: (
+    { __typename?: 'WhitelistEntry' }
+    & Pick<WhitelistEntry, 'id' | 'ogunClaimed'>
+  ) }
 );
 
 export type WonAuctionNotificationFieldsFragment = (
@@ -3819,6 +3925,43 @@ export function useAuctionItemLazyQuery(baseOptions?: Apollo.LazyQueryHookOption
 export type AuctionItemQueryHookResult = ReturnType<typeof useAuctionItemQuery>;
 export type AuctionItemLazyQueryHookResult = ReturnType<typeof useAuctionItemLazyQuery>;
 export type AuctionItemQueryResult = Apollo.QueryResult<AuctionItemQuery, AuctionItemQueryVariables>;
+export const AudioHolderByWalletDocument = gql`
+    query AudioHolderByWallet($walletAdress: String!) {
+  audioHolderByWallet(walletAdress: $walletAdress) {
+    id
+    amount
+    ogunClaimed
+  }
+}
+    `;
+
+/**
+ * __useAudioHolderByWalletQuery__
+ *
+ * To run a query within a React component, call `useAudioHolderByWalletQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAudioHolderByWalletQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAudioHolderByWalletQuery({
+ *   variables: {
+ *      walletAdress: // value for 'walletAdress'
+ *   },
+ * });
+ */
+export function useAudioHolderByWalletQuery(baseOptions: Apollo.QueryHookOptions<AudioHolderByWalletQuery, AudioHolderByWalletQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<AudioHolderByWalletQuery, AudioHolderByWalletQueryVariables>(AudioHolderByWalletDocument, options);
+      }
+export function useAudioHolderByWalletLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<AudioHolderByWalletQuery, AudioHolderByWalletQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<AudioHolderByWalletQuery, AudioHolderByWalletQueryVariables>(AudioHolderByWalletDocument, options);
+        }
+export type AudioHolderByWalletQueryHookResult = ReturnType<typeof useAudioHolderByWalletQuery>;
+export type AudioHolderByWalletLazyQueryHookResult = ReturnType<typeof useAudioHolderByWalletLazyQuery>;
+export type AudioHolderByWalletQueryResult = Apollo.QueryResult<AudioHolderByWalletQuery, AudioHolderByWalletQueryVariables>;
 export const BandcampLinkDocument = gql`
     query BandcampLink($url: String!) {
   bandcampLink(url: $url)
@@ -6829,6 +6972,76 @@ export function useUpdateOtpMutation(baseOptions?: Apollo.MutationHookOptions<Up
 export type UpdateOtpMutationHookResult = ReturnType<typeof useUpdateOtpMutation>;
 export type UpdateOtpMutationResult = Apollo.MutationResult<UpdateOtpMutation>;
 export type UpdateOtpMutationOptions = Apollo.BaseMutationOptions<UpdateOtpMutation, UpdateOtpMutationVariables>;
+export const UpdateOgunClaimedAudioHolderDocument = gql`
+    mutation UpdateOgunClaimedAudioHolder($input: UpdateOgunClaimedInput!) {
+  updateOgunClaimedAudioHolder(input: $input) {
+    audioHolder {
+      id
+    }
+  }
+}
+    `;
+export type UpdateOgunClaimedAudioHolderMutationFn = Apollo.MutationFunction<UpdateOgunClaimedAudioHolderMutation, UpdateOgunClaimedAudioHolderMutationVariables>;
+
+/**
+ * __useUpdateOgunClaimedAudioHolderMutation__
+ *
+ * To run a mutation, you first call `useUpdateOgunClaimedAudioHolderMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateOgunClaimedAudioHolderMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateOgunClaimedAudioHolderMutation, { data, loading, error }] = useUpdateOgunClaimedAudioHolderMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateOgunClaimedAudioHolderMutation(baseOptions?: Apollo.MutationHookOptions<UpdateOgunClaimedAudioHolderMutation, UpdateOgunClaimedAudioHolderMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateOgunClaimedAudioHolderMutation, UpdateOgunClaimedAudioHolderMutationVariables>(UpdateOgunClaimedAudioHolderDocument, options);
+      }
+export type UpdateOgunClaimedAudioHolderMutationHookResult = ReturnType<typeof useUpdateOgunClaimedAudioHolderMutation>;
+export type UpdateOgunClaimedAudioHolderMutationResult = Apollo.MutationResult<UpdateOgunClaimedAudioHolderMutation>;
+export type UpdateOgunClaimedAudioHolderMutationOptions = Apollo.BaseMutationOptions<UpdateOgunClaimedAudioHolderMutation, UpdateOgunClaimedAudioHolderMutationVariables>;
+export const UpdateOgunClaimedWhitelistDocument = gql`
+    mutation UpdateOgunClaimedWhitelist($input: UpdateOgunClaimedInput!) {
+  updateOgunClaimedWhitelist(input: $input) {
+    whitelistEntry {
+      id
+    }
+  }
+}
+    `;
+export type UpdateOgunClaimedWhitelistMutationFn = Apollo.MutationFunction<UpdateOgunClaimedWhitelistMutation, UpdateOgunClaimedWhitelistMutationVariables>;
+
+/**
+ * __useUpdateOgunClaimedWhitelistMutation__
+ *
+ * To run a mutation, you first call `useUpdateOgunClaimedWhitelistMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateOgunClaimedWhitelistMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateOgunClaimedWhitelistMutation, { data, loading, error }] = useUpdateOgunClaimedWhitelistMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateOgunClaimedWhitelistMutation(baseOptions?: Apollo.MutationHookOptions<UpdateOgunClaimedWhitelistMutation, UpdateOgunClaimedWhitelistMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateOgunClaimedWhitelistMutation, UpdateOgunClaimedWhitelistMutationVariables>(UpdateOgunClaimedWhitelistDocument, options);
+      }
+export type UpdateOgunClaimedWhitelistMutationHookResult = ReturnType<typeof useUpdateOgunClaimedWhitelistMutation>;
+export type UpdateOgunClaimedWhitelistMutationResult = Apollo.MutationResult<UpdateOgunClaimedWhitelistMutation>;
+export type UpdateOgunClaimedWhitelistMutationOptions = Apollo.BaseMutationOptions<UpdateOgunClaimedWhitelistMutation, UpdateOgunClaimedWhitelistMutationVariables>;
 export const UpdatePostDocument = gql`
     mutation UpdatePost($input: UpdatePostInput!) {
   updatePost(input: $input) {
@@ -7234,3 +7447,39 @@ export function useValidateOtpRecoveryPhraseMutation(baseOptions?: Apollo.Mutati
 export type ValidateOtpRecoveryPhraseMutationHookResult = ReturnType<typeof useValidateOtpRecoveryPhraseMutation>;
 export type ValidateOtpRecoveryPhraseMutationResult = Apollo.MutationResult<ValidateOtpRecoveryPhraseMutation>;
 export type ValidateOtpRecoveryPhraseMutationOptions = Apollo.BaseMutationOptions<ValidateOtpRecoveryPhraseMutation, ValidateOtpRecoveryPhraseMutationVariables>;
+export const WhitelistEntryByWalletDocument = gql`
+    query WhitelistEntryByWallet($walletAdress: String!) {
+  whitelistEntryByWallet(walletAdress: $walletAdress) {
+    id
+    ogunClaimed
+  }
+}
+    `;
+
+/**
+ * __useWhitelistEntryByWalletQuery__
+ *
+ * To run a query within a React component, call `useWhitelistEntryByWalletQuery` and pass it any options that fit your needs.
+ * When your component renders, `useWhitelistEntryByWalletQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useWhitelistEntryByWalletQuery({
+ *   variables: {
+ *      walletAdress: // value for 'walletAdress'
+ *   },
+ * });
+ */
+export function useWhitelistEntryByWalletQuery(baseOptions: Apollo.QueryHookOptions<WhitelistEntryByWalletQuery, WhitelistEntryByWalletQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<WhitelistEntryByWalletQuery, WhitelistEntryByWalletQueryVariables>(WhitelistEntryByWalletDocument, options);
+      }
+export function useWhitelistEntryByWalletLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<WhitelistEntryByWalletQuery, WhitelistEntryByWalletQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<WhitelistEntryByWalletQuery, WhitelistEntryByWalletQueryVariables>(WhitelistEntryByWalletDocument, options);
+        }
+export type WhitelistEntryByWalletQueryHookResult = ReturnType<typeof useWhitelistEntryByWalletQuery>;
+export type WhitelistEntryByWalletLazyQueryHookResult = ReturnType<typeof useWhitelistEntryByWalletLazyQuery>;
+export type WhitelistEntryByWalletQueryResult = Apollo.QueryResult<WhitelistEntryByWalletQuery, WhitelistEntryByWalletQueryVariables>;

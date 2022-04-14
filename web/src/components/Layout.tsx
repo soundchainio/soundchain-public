@@ -62,9 +62,9 @@ export const Layout = ({ children, className }: LayoutProps) => {
 
   if (isLandingLayout) {
     return (
-      <div className="flex flex-col bg-black">
+      <div className="flex flex-col h-full bg-black">
         <Header />
-        <div className="flex flex-1 flex-col px-6 lg:px-8 pt-6 bg-black overflow-x-hidden">{children}</div>
+        <div className="flex-auto px-6 lg:px-8 bg-black">{children}</div>
         <footer className="bg-rainbow-gradient w-full flex justify-center items-center py-2 md:text-lg text-center">
           2022 SoundChain, all rights reserved
         </footer>
