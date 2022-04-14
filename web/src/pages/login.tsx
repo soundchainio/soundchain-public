@@ -88,8 +88,8 @@ export default function LoginPage() {
 
   async function handleSubmit(values: FormValues) {
     try {
-      magic.preload();
       setLoggingIn(true);
+      magic.preload();
       const token = await magic.auth.loginWithMagicLink({
         email: values.email,
       });
