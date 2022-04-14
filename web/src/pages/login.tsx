@@ -7,13 +7,12 @@ import { TopNavBarButton } from 'components/TopNavBarButton';
 import { config } from 'config';
 import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMagicContext } from 'hooks/useMagicContext';
-import { useMe } from 'hooks/useMe';
 import { Google } from 'icons/Google';
 import { LeftArrow } from 'icons/LeftArrow';
 import { LogoAndText } from 'icons/LogoAndText';
 import { UserWarning } from 'icons/UserWarning';
-import { setJwt } from 'lib/apollo';
-import { AuthMethod, useLoginMutation } from 'lib/graphql';
+import { getJwt, setJwt } from 'lib/apollo';
+import { AuthMethod, useLoginMutation, useMeQuery } from 'lib/graphql';
 import { useRouter } from 'next/dist/client/router';
 import NextLink from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -21,7 +20,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 export default function LoginPage() {
   const [login] = useLoginMutation();
   const [loggingIn, setLoggingIn] = useState(false);
-  const me = useMe();
+  const { data, loading: loadingMe } = useMeQuery();
+  const me = data?.me
   const { magic } = useMagicContext();
   const router = useRouter();
   const magicParam = router.query.magic_credential?.toString();
@@ -45,6 +45,7 @@ export default function LoginPage() {
       } else if (error.message.toLowerCase().includes('invalid credentials')) {
         router.push('/create-account');
       } else {
+        setLoggingIn(false);
         console.warn('warn: ', error);
       }
     },
@@ -72,18 +73,22 @@ export default function LoginPage() {
   };
 
   useEffect(() => {
-    if (magic && magicParam && magic.oauth) {
-      setLoggingIn(true);
-      magic.oauth
-        .getRedirectResult()
-        .then(result => login({ variables: { input: { token: result.magic.idToken } } }))
-        .then(result => setJwt(result.data?.login.jwt))
-        .catch(handleError);
+    async function magicGoogle() {
+      if (magic && magicParam && magic.oauth && !(await getJwt() )) {
+        setLoggingIn(true);
+        magic.oauth
+          .getRedirectResult()
+          .then(result => login({ variables: { input: { token: result.magic.idToken } } }))
+          .then(result => setJwt(result.data?.login.jwt))
+          .catch(handleError);
+      }
     }
+    magicGoogle()
   }, [magic, magicParam, login, handleError]);
 
   async function handleSubmit(values: FormValues) {
     try {
+      setLoggingIn(true);
       magic.preload();
       const token = await magic.auth.loginWithMagicLink({
         email: values.email,
@@ -109,6 +114,14 @@ export default function LoginPage() {
       <span>Login with Google</span>
     </button>
   );
+
+  if (loadingMe || me) {
+    return (
+      <div className="flex items-center justify-center w-full h-full text-center font-bold sm:px-4 py-3">
+        <LoaderAnimation ring />
+      </div>
+    );
+  }
 
   if (loggingIn) {
     return (

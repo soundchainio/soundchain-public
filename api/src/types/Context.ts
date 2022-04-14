@@ -1,5 +1,6 @@
 import { User } from '../models/User';
 import { AuctionItemService } from '../services/AuctionItemService';
+import { AudioHolderService } from '../services/AudioHolderService';
 import { AuthService } from '../services/AuthService';
 import { BidService } from '../services/BidService';
 import { BlockTrackerService } from '../services/BlockTrackerService';
@@ -58,6 +59,7 @@ export class Context {
   listingItemService = new ListingItemService(this);
   user?: Promise<User>;
   whitelistEntryService = new WhitelistEntryService(this);
+  audioHolderService = new AudioHolderService(this)
 
   constructor(jwtUser?: JwtUser) {
     this.user = jwtUser && this.userService.getUser(jwtUser.sub);
