@@ -42,6 +42,7 @@ export const TopNavBar = ({
   if (isLogin) return null;
 
   const isLoginPage = router.pathname === '/login';
+  const isCreateAccount = router.pathname === '/create-account';
 
   return (
     <div className={`relative z-10 flex-shrink-0 flex h-16 bg-black ${config.mobileBreakpoint}:bg-gray-30 shadow`}>
@@ -97,6 +98,7 @@ export const TopNavBar = ({
         </>
       ) : (
         !isLoginPage &&
+        !isCreateAccount && 
         showLoginSignUpButton &&
         !midRightButton && (
           <div className="flex-2 flex items-center justify-start ml-4 space-x-2 ">
