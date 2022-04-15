@@ -32,7 +32,6 @@ export default function LoginPage() {
     () => ({
       isLogin: false,
       leftButton: <TopNavBarButton onClick={() => setAuthMethod(undefined)} label="Back" icon={LeftArrow} />,
-      showLoginSignUpButton: false,
     }),
     [],
   );
