@@ -1,11 +1,13 @@
 import classNames from 'classnames';
 import { config } from 'config';
-import { useMe } from 'hooks/useMe';
 import { Logo } from 'icons/Logo';
 import { Menu } from 'icons/Menu';
 import { Profile } from 'icons/Profile';
+import { getJwt } from 'lib/apollo';
+import { useMeQuery } from 'lib/graphql';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { useEffect } from 'react';
 import { Button } from './Button';
 import { NavBar } from './NavBar';
 import { Title } from './Title';
@@ -15,7 +17,6 @@ export interface TopNavBarProps {
   setSideMenuOpen?: (open: boolean) => void;
   leftButton?: JSX.Element;
   rightButton?: JSX.Element;
-  showLoginSignUpButton?: boolean;
   title?: string;
   subtitle?: JSX.Element;
   midRightButton?: JSX.Element;
@@ -27,13 +28,22 @@ export const TopNavBar = ({
   rightButton: RightButton,
   leftButton: LeftButton,
   subtitle: Subtitle,
-  showLoginSignUpButton = true,
   setSideMenuOpen,
   midRightButton,
   isLogin,
 }: TopNavBarProps) => {
   const router = useRouter();
-  const me = useMe();
+  const { data, loading: loadingMe, refetch } = useMeQuery()
+  const me = data?.me;
+
+  useEffect(() => {
+    async function checkLogin() {
+      if (!me && !loadingMe && await getJwt()){
+        await refetch()
+      }
+    }
+    checkLogin()
+  }, [me, loadingMe, refetch])
 
   const onLogin = () => {
     router.push('/login');
@@ -42,6 +52,7 @@ export const TopNavBar = ({
   if (isLogin) return null;
 
   const isLoginPage = router.pathname === '/login';
+  const isCreateAccount = router.pathname === '/create-account';
 
   return (
     <div className={`relative z-10 flex-shrink-0 flex h-16 bg-black ${config.mobileBreakpoint}:bg-gray-30 shadow`}>
@@ -97,7 +108,8 @@ export const TopNavBar = ({
         </>
       ) : (
         !isLoginPage &&
-        showLoginSignUpButton &&
+        !isCreateAccount && 
+        !me &&
         !midRightButton && (
           <div className="flex-2 flex items-center justify-start ml-4 space-x-2 ">
             <Button
@@ -107,7 +119,7 @@ export const TopNavBar = ({
               borderColor="bg-gray-40"
               bgColor="bg-black"
             >
-              Login in / Sign up
+              Login / Sign up
             </Button>
           </div>
         )

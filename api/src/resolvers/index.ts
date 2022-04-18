@@ -1,6 +1,7 @@
 import { AuctionEndedNotificationResolver } from './AuctionEndedNotificationResolver';
 import { AuctionIsEndingNotificationResolver } from './AuctionIsEndingNotificationResolver';
 import { AuctionItemResolver } from './AuctionItemResolver';
+import { AudioHolderResolver } from './AudioHolderResolver';
 import { BidResolver } from './BidResolver';
 import { BuyNowItemResolver } from './BuyNowItemResolver';
 import { ChatResolver } from './ChatResolver';
@@ -70,4 +71,5 @@ export const resolvers = [
   VerificationRequestNotificationResolver,
   WonAuctionNotificationResolver,
   WhitelistEntryResolver,
+  AudioHolderResolver,
 ] as const;

@@ -26,7 +26,7 @@ const httpLink = createHttpLink({ uri: config.apiUrl ?? 'http://localhost:4000/g
 
 export function createApolloClient(context?: GetServerSidePropsContext) {
   const authLink = setContext(() => {
-    const currentJwt = context?.req.cookies[jwtKey] || jwt;
+    const currentJwt = context?.req.cookies[jwtKey] || getJwt();
     return currentJwt ? { headers: { authorization: `Bearer ${currentJwt}` } } : {};
   });
 
@@ -40,16 +40,23 @@ export function createApolloClient(context?: GetServerSidePropsContext) {
 
 export const apolloClient = createApolloClient();
 
-export function setJwt(newJwt?: string) {
+export function getJwt() {
+  if (isBrowser) {
+    return Cookies.get(jwtKey);
+  }
+  return jwt;
+}
+
+export async function setJwt(newJwt?: string) {
   jwt = newJwt;
   if (isBrowser) {
     if (jwt) {
-      Cookies.set(jwtKey, jwt, { secure: !isSafari });
+      Cookies.set(jwtKey, jwt, { sameSite: 'Lax', secure: !isSafari });
     } else {
       Cookies.remove(jwtKey);
-      apolloClient.clearStore();
+      await apolloClient.clearStore();
     }
-    apolloClient.resetStore();
+    await apolloClient.resetStore();
   }
 }
 
