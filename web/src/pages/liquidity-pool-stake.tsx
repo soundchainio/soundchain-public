@@ -78,6 +78,9 @@ export default function LPStake() {
 
   const getStakeBalance = async (web3: Web3) => {
     try {
+      console.log('getStakeBalance');
+      web3.eth.getBlockNumber()
+          .then(console.log);
       const currentBalance = await lpStakeContract(web3).methods.getLastCalculatedBalanceOf(account).call();
       const formattedLPBalance = web3.utils.fromWei(currentBalance[0] ?? '0');
       const formattedRewardsBalance = web3.utils.fromWei(currentBalance[1] ?? '0');
@@ -100,6 +103,9 @@ export default function LPStake() {
         setTransactionState('Approving transaction...');
         await tokenContract(web3).methods.approve(lpStakeContractAddress, weiAmount).send({from:account});
         setTransactionState('Staking OGUN/MATIC...');
+        console.log('stake');
+        web3.eth.getBlockNumber()
+          .then(console.log);
         await lpStakeContract(web3).methods.stake(weiAmount).send({from:account});
         setTransactionState(undefined);
       } catch (cause) {
