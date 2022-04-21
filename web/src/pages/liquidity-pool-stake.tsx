@@ -81,18 +81,68 @@ export default function LPStake() {
       console.log('getStakeBalance');
       web3.eth.getBlockNumber()
           .then(console.log);
-      const currentBalance = await lpStakeContract(web3).methods.getLastCalculatedBalanceOf(account).call();
+      const currentBalance = await lpStakeContract(web3).methods.getBalanceOf(account).call();
       const formattedLPBalance = web3.utils.fromWei(currentBalance[0] ?? '0');
       const formattedRewardsBalance = web3.utils.fromWei(currentBalance[1] ?? '0');
       setStakeBalance(formattedLPBalance);
       setRewardsBalance(formattedRewardsBalance);
-      // const OGUNAddress = await lpStakeContract(web3).methods.OGUNToken().call();
-      // console.log('Contract Stake OGUN Address: ', OGUNAddress);
+      // let slotValue = await web3.eth.getStorageAt('0x48244eb8cD262085b7eFaf036d868770E84F2c29', 0);
+      // console.log('slotValue index 0: ', slotValue);
+      // console.log('DEC:' + web3.utils.toDecimal(slotValue));
+
+      // slotValue = await web3.eth.getStorageAt('0x48244eb8cD262085b7eFaf036d868770E84F2c29', 1);
+      // console.log('slotValue index 1: ', slotValue);
+      // console.log('DEC:' + web3.utils.toDecimal(slotValue));
+
+      // // console.log('DEC:' + web3.utils.hexToNumberString(slotValue));
+      // slotValue = await web3.eth.getStorageAt('0x48244eb8cD262085b7eFaf036d868770E84F2c29', 2);
+      // console.log('slotValue index 2: ', slotValue);
+      // // // console.log('DEC:' + web3.utils.toDecimal(slotValue));
+      // console.log('BIGnum:' + web3.utils.hexToNumberString(slotValue));
+      // slotValue = await web3.eth.getStorageAt('0x48244eb8cD262085b7eFaf036d868770E84F2c29', 3);
+      // console.log('slotValue index 3: ', slotValue);
+      // // // console.log('DEC:' + web3.utils.toDecimal(slotValue));
+      // console.log('BIGnum:' + web3.utils.hexToNumberString(slotValue));
+
+      // slotValue = await web3.eth.getStorageAt('0x48244eb8cD262085b7eFaf036d868770E84F2c29', 4);
+      // console.log('slotValue index 4: ', slotValue);
+      // // // console.log('DEC:' + web3.utils.toDecimal(slotValue));
+      // console.log('BIGnum:' + web3.utils.hexToNumberString(slotValue));
+
+      // slotValue = await web3.eth.getStorageAt('0x48244eb8cD262085b7eFaf036d868770E84F2c29', 5);
+      // console.log('slotValue index 5: ', slotValue);
+      // // // console.log('DEC:' + web3.utils.toDecimal(slotValue));
+      // console.log('BIGnum:' + web3.utils.hexToNumberString(slotValue));
+
+      // slotValue = await web3.eth.getStorageAt('0x48244eb8cD262085b7eFaf036d868770E84F2c29', 6);
+      // console.log('slotValue index 6: ', slotValue);
+      // // // console.log('DEC:' + web3.utils.toDecimal(slotValue));
+      // console.log('BIGnum:' + web3.utils.hexToNumberString(slotValue));
+      // slotValue = await web3.eth.getStorageAt('0x48244eb8cD262085b7eFaf036d868770E84F2c29', 31);
+      // console.log('slotValue index 31: ', slotValue);
+      // // // console.log('DEC:' + web3.utils.toDecimal(slotValue));
+      // console.log('BIGnum:' + web3.utils.hexToNumberString(slotValue));
+
+
+
+
+      // const contractAddress = '0x48244eb8cD262085b7eFaf036d868770E84F2c29'
+      // for (let index = 2; index < 4; index++){
+      // // console.log(`[${index}]` + 
+      //   const data = await web3.eth.getStorageAt(contractAddress, index);
+      //   console.log('slotValue index '+index+': ', data);
+      //   console.log('DEC:' + web3.utils.hexToNumber(data));
+
+      // }
+      
+      // const _totalUsersRewards = await lpStakeContract(web3).methods._totalUsersRewards().call();
+      // console.log('Contract _totalUsersRewards: ', _totalUsersRewards);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (cause: any) {
-      const error = JSON.parse(cause.toString().slice(31).trim());
-      if (error.message === 'execution reverted: address hasn\'t stake any tokens yet') return;
-      console.warn(error.message);
+      console.log('Error from reading private variables: ', cause);
+      // const error = JSON.parse(cause.toString().slice(31).trim());
+      // if (error.message === 'execution reverted: address hasn\'t stake any tokens yet') return;
+      // console.warn(error.message);
     }
   }
 
@@ -117,6 +167,9 @@ export default function LPStake() {
   const unstake = async () => {
     if (account && web3) {
       setTransactionState('Unstaking OGUN/MATIC...');
+      console.log('unstake');
+      web3.eth.getBlockNumber()
+          .then(console.log);
       await lpStakeContract(web3).methods.withdraw().send({from:account});
       setTransactionState(undefined);
     }
