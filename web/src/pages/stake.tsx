@@ -81,28 +81,43 @@ export default function Stake() {
       setStakeBalance(formattedBalance);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (cause: any) {
-      const error = JSON.parse(cause.toString().slice(31).trim());
-      if (error.message === 'execution reverted: address hasn\'t stake any tokens yet') return;
-      console.warn(error.message);
+      if (cause.toString().includes('address hasn\'t stake any tokens yet')) {
+        setStakeBalance('0');
+        return;
+      };
+      console.log(cause);
     }
   }
 
   const stake = async (values: FormValues) => {
-    if (account && web3) {
-      const weiAmount = web3.utils.toWei(values.amount.toString());
-      setTransactionState('Approving transaction...');
-      await tokenContract(web3).methods.approve(tokenStakeContractAddress, weiAmount).send({from:account});
-      setTransactionState('Staking OGUN...');
-      await tokenStakeContract(web3).methods.stake(weiAmount).send({from:account});
-      setTransactionState(undefined);
+    if (account && web3 && values.amount > 0) {
+      try{
+        const weiAmount = web3.utils.toWei(values.amount.toString());
+        setTransactionState('Approving transaction...');
+        await tokenContract(web3).methods.approve(tokenStakeContractAddress, weiAmount).send({from:account});
+        setTransactionState('Staking OGUN...');
+        await tokenStakeContract(web3).methods.stake(weiAmount).send({from:account});
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (cause: any) {
+        console.log('Stake Error: ', cause);
+      } finally {
+        setTransactionState(undefined);
+      }
     }
   }
 
   const unstake = async () => {
+    if (stakeBalance === '0') return;
     if (account && web3) {
-      setTransactionState('Unstaking OGUN...');
-      await tokenStakeContract(web3).methods.withdraw().send({from:account});
-      setTransactionState(undefined);
+      try{
+        setTransactionState('Unstaking OGUN...');
+        await tokenStakeContract(web3).methods.withdraw().send({from:account});
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (cause: any) {
+        console.log('Stake Error: ', cause);
+      } finally {
+        setTransactionState(undefined);
+      }
     }
   }
 
