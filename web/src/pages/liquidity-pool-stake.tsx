@@ -3,7 +3,7 @@ import { config } from 'config';
 import { Form, Formik } from 'formik';
 import { useLayoutContext } from 'hooks/useLayoutContext';
 import useMetaMask from 'hooks/useMetaMask';
-// import { CirclePlusFilled } from 'icons/CirclePlusFilled';
+import { CirclePlusFilled } from 'icons/CirclePlusFilled';
 import { Logo } from 'icons/Logo';
 import { Matic } from 'icons/Matic';
 import { useEffect, useState } from 'react';
@@ -12,6 +12,7 @@ import { Contract } from "web3-eth-contract";
 import { AbiItem } from 'web3-utils';
 import LiquidityPoolRewards from '../contract/LiquidityPoolRewards.sol/LiquidityPoolRewards.json';
 import LPToken from '../contract/LPToken.sol/LPToken.json';
+import SoundchainOGUN20 from '../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json';
 
 interface FormValues {
   token: string;
@@ -21,8 +22,11 @@ interface FormValues {
 type Selected = 'Stake' | 'Unstake';
 
 
+const OGUNAddress = config.OGUNAddress as string;
 const lpTokenAddress = config.lpTokenAddress as string;
 const lpStakeContractAddress = config.lpStakeContractAddress as string;
+const OGUNContract = (web3: Web3) =>
+  new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], OGUNAddress) as unknown as Contract;
 const tokenContract = (web3: Web3) =>
   new web3.eth.Contract(LPToken.abi as AbiItem[], lpTokenAddress) as unknown as Contract;
 const lpStakeContract = (web3: Web3) =>
@@ -36,6 +40,7 @@ export default function LPStake() {
   const [account, setAccount] = useState<string>();
   const [rewardsBalance, setRewardsBalance] = useState<string>('0');
   const [stakeBalance, setStakeBalance] = useState<string>('0');
+  const [OGUNBalance, setOGUNBalance] = useState<string>('0');
   const [lpBalance, setLpBalance] = useState<string>('0');
   const [selected, setSelected] = useState<Selected>('Stake');
   const [transactionState, setTransactionState]= useState<string>();
@@ -76,6 +81,12 @@ export default function LPStake() {
     setLpBalance(formattedBalance);
   }
 
+  const getOGUNBalance = async (web3: Web3) => {
+    const currentBalance = await OGUNContract(web3).methods.balanceOf(account).call();
+    const formattedBalance = web3.utils.fromWei(currentBalance ?? '0');
+    setOGUNBalance(formattedBalance);
+  }
+
   const getStakeBalance = async (web3: Web3) => {
     try {
       const currentBalance = await lpStakeContract(web3).methods.getBalanceOf(account).call();
@@ -90,7 +101,7 @@ export default function LPStake() {
         setRewardsBalance('0');
         return;
       };
-      console.warn(cause);
+      console.log(cause);
     }
   }
 
@@ -138,6 +149,7 @@ export default function LPStake() {
     if (account && web3 && !transactionState) {
       getLPBalance(web3);
       getStakeBalance(web3);
+      getOGUNBalance(web3);
     }
   }, [account, transactionState]);
 
@@ -180,7 +192,7 @@ export default function LPStake() {
             </Button>
             <button className="flex items-center gap-x-2 justify-center whitespace-nowrap bg-transparent border-transparent">
               <span className="font-medium pl-2">Add wallet</span>
-              {/* <CirclePlusFilled /> */}
+              <CirclePlusFilled />
             </button>
           </div>
         </div>
@@ -261,6 +273,10 @@ export default function LPStake() {
               <span className="flex justify-between">
                 <text>OGUN/MATIC in wallet:</text>
                 <text>{lpBalance}</text>
+              </span>
+              <span className="flex justify-between">
+                <text>OGUN in wallet:</text>
+                <text>{OGUNBalance}</text>
               </span>
               <span className="flex justify-between">
                 <text>Your stake:</text>
