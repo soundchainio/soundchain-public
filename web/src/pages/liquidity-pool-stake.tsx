@@ -5,6 +5,7 @@ import { useLayoutContext } from 'hooks/useLayoutContext';
 import useMetaMask from 'hooks/useMetaMask';
 // import { CirclePlusFilled } from 'icons/CirclePlusFilled';
 import { Logo } from 'icons/Logo';
+import { Matic } from 'icons/Matic';
 import { useEffect, useState } from 'react';
 import Web3 from 'web3';
 import { Contract } from "web3-eth-contract";
@@ -73,76 +74,23 @@ export default function LPStake() {
     const currentBalance = await tokenContract(web3).methods.balanceOf(account).call();
     const formattedBalance = web3.utils.fromWei(currentBalance ?? '0');
     setLpBalance(formattedBalance);
-    // console.log('LP Contract address in LP stake contract: ', await lpStakeContract(web3).methods.lpToken().call());
   }
 
   const getStakeBalance = async (web3: Web3) => {
     try {
-      console.log('getStakeBalance');
-      web3.eth.getBlockNumber()
-          .then(console.log);
       const currentBalance = await lpStakeContract(web3).methods.getBalanceOf(account).call();
       const formattedLPBalance = web3.utils.fromWei(currentBalance[0] ?? '0');
       const formattedRewardsBalance = web3.utils.fromWei(currentBalance[1] ?? '0');
       setStakeBalance(formattedLPBalance);
       setRewardsBalance(formattedRewardsBalance);
-      // let slotValue = await web3.eth.getStorageAt('0x48244eb8cD262085b7eFaf036d868770E84F2c29', 0);
-      // console.log('slotValue index 0: ', slotValue);
-      // console.log('DEC:' + web3.utils.toDecimal(slotValue));
-
-      // slotValue = await web3.eth.getStorageAt('0x48244eb8cD262085b7eFaf036d868770E84F2c29', 1);
-      // console.log('slotValue index 1: ', slotValue);
-      // console.log('DEC:' + web3.utils.toDecimal(slotValue));
-
-      // // console.log('DEC:' + web3.utils.hexToNumberString(slotValue));
-      // slotValue = await web3.eth.getStorageAt('0x48244eb8cD262085b7eFaf036d868770E84F2c29', 2);
-      // console.log('slotValue index 2: ', slotValue);
-      // // // console.log('DEC:' + web3.utils.toDecimal(slotValue));
-      // console.log('BIGnum:' + web3.utils.hexToNumberString(slotValue));
-      // slotValue = await web3.eth.getStorageAt('0x48244eb8cD262085b7eFaf036d868770E84F2c29', 3);
-      // console.log('slotValue index 3: ', slotValue);
-      // // // console.log('DEC:' + web3.utils.toDecimal(slotValue));
-      // console.log('BIGnum:' + web3.utils.hexToNumberString(slotValue));
-
-      // slotValue = await web3.eth.getStorageAt('0x48244eb8cD262085b7eFaf036d868770E84F2c29', 4);
-      // console.log('slotValue index 4: ', slotValue);
-      // // // console.log('DEC:' + web3.utils.toDecimal(slotValue));
-      // console.log('BIGnum:' + web3.utils.hexToNumberString(slotValue));
-
-      // slotValue = await web3.eth.getStorageAt('0x48244eb8cD262085b7eFaf036d868770E84F2c29', 5);
-      // console.log('slotValue index 5: ', slotValue);
-      // // // console.log('DEC:' + web3.utils.toDecimal(slotValue));
-      // console.log('BIGnum:' + web3.utils.hexToNumberString(slotValue));
-
-      // slotValue = await web3.eth.getStorageAt('0x48244eb8cD262085b7eFaf036d868770E84F2c29', 6);
-      // console.log('slotValue index 6: ', slotValue);
-      // // // console.log('DEC:' + web3.utils.toDecimal(slotValue));
-      // console.log('BIGnum:' + web3.utils.hexToNumberString(slotValue));
-      // slotValue = await web3.eth.getStorageAt('0x48244eb8cD262085b7eFaf036d868770E84F2c29', 31);
-      // console.log('slotValue index 31: ', slotValue);
-      // // // console.log('DEC:' + web3.utils.toDecimal(slotValue));
-      // console.log('BIGnum:' + web3.utils.hexToNumberString(slotValue));
-
-
-
-
-      // const contractAddress = '0x48244eb8cD262085b7eFaf036d868770E84F2c29'
-      // for (let index = 2; index < 4; index++){
-      // // console.log(`[${index}]` + 
-      //   const data = await web3.eth.getStorageAt(contractAddress, index);
-      //   console.log('slotValue index '+index+': ', data);
-      //   console.log('DEC:' + web3.utils.hexToNumber(data));
-
-      // }
-      
-      // const _totalUsersRewards = await lpStakeContract(web3).methods._totalUsersRewards().call();
-      // console.log('Contract _totalUsersRewards: ', _totalUsersRewards);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (cause: any) {
-      console.log('Error from reading private variables: ', cause);
-      // const error = JSON.parse(cause.toString().slice(31).trim());
-      // if (error.message === 'execution reverted: address hasn\'t stake any tokens yet') return;
-      // console.warn(error.message);
+      if (cause.toString().includes('address hasn\'t stake any tokens yet')) {
+        setRewardsBalance('0');
+        setRewardsBalance('0');
+        return;
+      };
+      console.warn(cause);
     }
   }
 
@@ -153,25 +101,28 @@ export default function LPStake() {
         setTransactionState('Approving transaction...');
         await tokenContract(web3).methods.approve(lpStakeContractAddress, weiAmount).send({from:account});
         setTransactionState('Staking OGUN/MATIC...');
-        console.log('stake');
-        web3.eth.getBlockNumber()
-          .then(console.log);
         await lpStakeContract(web3).methods.stake(weiAmount).send({from:account});
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (cause: any) {
+        console.log('Stake Error: ', cause);
+      } finally {
         setTransactionState(undefined);
-      } catch (cause) {
-        console.log('stake Error => :', cause);
       }
     }
   }
 
   const unstake = async () => {
+    if (stakeBalance === '0') return;
     if (account && web3) {
-      setTransactionState('Unstaking OGUN/MATIC...');
-      console.log('unstake');
-      web3.eth.getBlockNumber()
-          .then(console.log);
-      await lpStakeContract(web3).methods.withdraw().send({from:account});
-      setTransactionState(undefined);
+      try {
+        setTransactionState('Unstaking OGUN/MATIC...');
+        await lpStakeContract(web3).methods.withdraw().send({from:account});
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (cause: any) {
+        console.log('Unstake Error: ', cause);
+      } finally {
+        setTransactionState(undefined);
+      }
     }
   }
 
@@ -279,10 +230,11 @@ export default function LPStake() {
                         name="Wallet"
                         id="wallet"
                       >
-                        <option value={1}>OGUN</option>
+                        <option value={1}>OGUN/MATIC</option>
                       </select>
                       <span className="absolute top-3 left-2 pointer-events-none">
-                        <Logo id="soundchain-wallet" height="16" width="16" />
+                        <Logo id="soundchain-wallet" height="8" width="8" />
+                        <Matic id="matic-wallet" height="8" width="8"/>
                       </span>
                     </div>
                     <input
