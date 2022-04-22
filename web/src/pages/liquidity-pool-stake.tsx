@@ -57,8 +57,6 @@ export default function LPStake() {
         } catch (error) {
           console.warn(error);
         }
-      } else if (window?.web3) {
-        provider = window?.web3.currenProvider;
       } else if (!process.env.production) {
         provider = new Web3.providers.HttpProvider('https://rpc-mumbai.matic.today');
       }
