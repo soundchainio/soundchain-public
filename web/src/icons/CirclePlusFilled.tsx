@@ -9,4 +9,4 @@ export const CirclePlusFilled = (props: React.SVGProps<SVGSVGElement>) => {
         />
       </svg>
     );
-  }; 
+  };
