@@ -1,0 +1,7 @@
+query AudioHolderByWallet($walletAdress: String!) {
+  audioHolderByWallet(walletAdress: $walletAdress) {
+    id
+    amount
+    ogunClaimed
+  }
+}

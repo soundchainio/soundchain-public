@@ -5,6 +5,7 @@ export const config = {
   domainUrl: process.env.NEXT_PUBLIC_DOMAIN_URL,
   ipfsGateway: process.env.NEXT_PUBLIC_IPFS_GATEWAY,
   lpStakeContractAddress: process.env.NEXT_PUBLIC_LP_STAKE_CONTRACT_ADDRESS,
+  lpTokenAddress: process.env.NEXT_PUBLIC_LP_TOKEN_ADRESS,
   magicKey: process.env.NEXT_PUBLIC_MAGIC_KEY,
   marketplaceAddress: process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS,
   muxData: process.env.NEXT_PUBLIC_MUX_DATA,
@@ -15,4 +16,5 @@ export const config = {
   tokenStakeContractAddress: process.env.NEXT_PUBLIC_TOKEN_STAKE_CONTRACT_ADDRESS,
   appVersion: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
   mobileBreakpoint: 'xxl',
+  airdropStatus: process.env.NEXT_PUBLIC_AIRDROP_STATUS === 'true'
 };
