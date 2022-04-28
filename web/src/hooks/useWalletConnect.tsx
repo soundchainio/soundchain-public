@@ -13,7 +13,7 @@ export const useWalletConnect = () => {
       //  Create WalletConnect Provider
       const walletProvider = new WalletConnectProvider({
         rpc: {
-          1: 'https://mainnet.infura.io/v3/',//TODO: moved to config & check for rpcs in project
+          // 1: 'https://mainnet.infura.io/v3/',//TODO: moved to config & check for rpcs in project
           80001: 'https://rpc-mumbai.matic.today',
         },
       });
