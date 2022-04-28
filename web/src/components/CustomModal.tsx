@@ -10,10 +10,8 @@ interface ModalProps {
 export function CustomModal({ children, show, onClose }: ModalProps) {
   if (!show) return null;
 
-  const handleOnBackDropClick = (e) => {
-    //e: React.MouseEvent
-    if (e.target.id === "backdrop") onClose && onClose();
-    
+  const handleOnBackDropClick = (e: React.MouseEvent) => {
+    if (e.currentTarget.id === "backdrop") onClose && onClose();
   };
 
   return (
