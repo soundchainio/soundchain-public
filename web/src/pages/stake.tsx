@@ -1,14 +1,19 @@
 import { Button } from 'components/Button';
+import { WalletButton } from 'components/Buttons/WalletButton';
 import { config } from 'config';
 import { Form, Formik } from 'formik';
 import { useLayoutContext } from 'hooks/useLayoutContext';
 import useMetaMask from 'hooks/useMetaMask';
+import { useWalletConnect } from 'hooks/useWalletConnect';
 import { CirclePlusFilled } from 'icons/CirclePlusFilled';
 import { Logo } from 'icons/Logo';
+import { MetaMask } from 'icons/MetaMask';
+import { WalletConnect } from 'icons/WalletConnect';
 import { useEffect, useState } from 'react';
 import Web3 from 'web3';
 import { Contract } from "web3-eth-contract";
 import { AbiItem } from 'web3-utils';
+import { CustomModal } from '../components/CustomModal';
 import SoundchainOGUN20 from '../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json';
 import StakingRewards from '../contract/StakingRewards.sol/StakingRewards.json';
 
@@ -28,6 +33,7 @@ const tokenStakeContract = (web3: Web3) =>
   new web3.eth.Contract(StakingRewards.abi as AbiItem[], tokenStakeContractAddress)as unknown as Contract;
 
 export default function Stake() {
+  const { connect: wcConnect, disconnect: wcDisconnect, account: walletconnectAccount } = useWalletConnect();
   const {
     web3,
   } = useMetaMask();
@@ -37,8 +43,26 @@ export default function Stake() {
   const [stakeBalance, setStakeBalance] = useState<string>('0');
   const [selected, setSelected] = useState<Selected>('Stake');
   const [transactionState, setTransactionState]= useState<string>();
+  const [showModal, setShowModal] = useState(false);
 
-  const connectWC = () => {
+  useEffect(()=> {
+    const loadAccount = () => {
+      // const accounts = await wcWeb3.eth.getAccounts();
+      setAccount(walletconnectAccount);
+      debugger
+    }
+    if (walletconnectAccount) {
+      loadAccount();
+    }
+  }, [walletconnectAccount])
+
+  useEffect(()=> {
+    return () => {
+      wcDisconnect();
+    }
+  }, []);
+
+  const connectMetaMask = () => {
     // Metamask Wallet;
     const loadProvider = async () => {
       let provider = null;
@@ -64,7 +88,16 @@ export default function Stake() {
     }
 
     (!web3) ? loadProvider() : loadMetaMaskProvider(web3);
+
+    setShowModal(false);
+  }
+  const connectWC = () => {
+    wcConnect();
   };
+
+  const addWallet = () => {
+    wcDisconnect();
+  }
 
   const getOGUNBalance = async (web3: Web3) => {
     const currentBalance = await tokenContract(web3).methods.balanceOf(account).call();
@@ -152,12 +185,27 @@ export default function Stake() {
           <div className="flex flex-col md:flex-row items-center justify-center md:justify-between bg-gray-30 h-36 md:h-28 px-9 py-3 gap-y-3">
             <span>Connect Wallet to Stake</span>
             <Button variant="orange">
-              <span className="font-medium" onClick={connectWC}>
+              <span className="font-medium" onClick={()=> setShowModal(true)}>
                 CONNECT WALLET
               </span>
             </Button>
           </div>
         </div>
+        <CustomModal show={showModal} onClose={()=>setShowModal(false)}>
+          <div className="bg-white w-96 p-6 rounded">
+            <h1 className="font-bold text-2xl text-blue-500">
+            CONNECT WALLET
+            </h1>
+            <p className="py-1 text-gray-500">
+            Connect with one of our available wallet providers
+            </p>
+            <div className="my-4 space-y-3">
+              <WalletButton caption="Metamask" icon={MetaMask} handleOnClick={connectMetaMask} />
+              <WalletButton caption="WalletConnect" icon={WalletConnect} handleOnClick={connectWC} />
+            </div>
+          
+          </div>
+        </CustomModal>
       </>
     );
   };
@@ -171,7 +219,10 @@ export default function Stake() {
             <Button variant="rainbow" className="w-5/6">
               <span className="font-medium ">BUY OGUNS</span>
             </Button>
-            <button className="flex items-center gap-x-2 justify-center whitespace-nowrap bg-transparent border-transparent">
+            <button 
+              className="flex items-center gap-x-2 justify-center whitespace-nowrap bg-transparent border-transparent"
+              onClick={addWallet}
+            >
               <span className="font-medium pl-2">Add wallet</span>
               <CirclePlusFilled />
             </button>
