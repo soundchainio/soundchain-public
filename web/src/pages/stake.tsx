@@ -201,10 +201,7 @@ export default function Stake() {
     return (
       <>
         <div className="max-w-3xl flex flex-col items-center justify-center gap-y-6">
-          <h1 className="text-center text-2xl md:text-5xl font-extrabold">
-            Stake OGUN, earn up to <br />
-            <span className="green-blue-gradient-text-break">213% APR</span>
-          </h1>
+          <StakeTitle/>
           <Button variant="rainbow" className="w-5/6">
             <span className="font-medium ">BUY OGUNS</span>
           </Button>
@@ -249,28 +246,25 @@ export default function Stake() {
       </div>
     )
   }
+  const StakeTitle = () => {
+    return (
+      <>
+        <h1 className="text-center text-2xl md:text-5xl font-extrabold">We’re giving away</h1>
+        <h1 className="text-center text-2xl md:text-5xl font-extrabold">
+          <span className="green-blue-diagonal-gradient-text-break">
+            2,000,000 OGUN
+          </span> 
+          &nbsp;today
+        </h1>
+      </>
+    )
+  }
 
   const StakeState = () => {
     return (
       <>
-        <ToastContainer
-          position="top-center"
-          autoClose={6 * 1000}
-          toastStyle={{
-            backgroundColor: '#202020',
-            color: 'white',
-            fontSize: '12x',
-            textAlign: 'center',
-          }}
-        />
         <div className="max-w-3xl flex flex-col items-center justify-center gap-y-6">
-          <h1 className="text-center text-2xl md:text-5xl font-extrabold">We’re giving away</h1>
-          <h1 className="text-center text-2xl md:text-5xl font-extrabold">
-            <span className="green-blue-diagonal-gradient-text-break">
-              2,000,000 OGUN
-            </span> 
-            &nbsp;today
-          </h1>
+          <StakeTitle/>
           <div className="flex gap-x-3">
             <Button variant="rainbow" className="w-5/6">
               <span className="font-medium ">BUY OGUNS</span>
@@ -377,6 +371,16 @@ export default function Stake() {
   return (
     <main className="flex flex-col gap-y-20 md:gap-y-32 items-center font-rubik text-white h-full py-32">
       {account ? <StakeState /> : <ConnectAccountState />}
+      <ToastContainer
+        position="top-center"
+        autoClose={6 * 1000}
+        toastStyle={{
+          backgroundColor: '#202020',
+          color: 'white',
+          fontSize: '12x',
+          textAlign: 'center',
+        }}
+      />
       <CustomModal show={showModal} onClose={()=>setShowModal(false)}>
           <div className="bg-white w-96 p-6 rounded">
             <h1 className="font-bold text-2xl text-blue-500">
