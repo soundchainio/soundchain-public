@@ -426,7 +426,7 @@ export default function Stake() {
   };
 
   return (
-    <main className="flex flex-col gap-y-20 md:gap-y-32 items-center font-rubik text-white h-full py-32">
+    <main className="flex flex-col gap-y-20 md:gap-y-32 items-center font-rubik text-white h-full pt-32">
       {account ? <StakeState /> : <ConnectAccountState />}
       <ToastContainer
           position="top-center"
