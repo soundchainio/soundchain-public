@@ -1,4 +1,5 @@
 import WalletConnectProvider from "@walletconnect/web3-provider";
+import { mainNetwork, testnetNetwork } from 'lib/blockchainNetworks';
 import { useEffect, useState } from 'react';
 import Web3 from 'web3';
 // type IWeb3Provider = typeof IWeb3Provider;
@@ -13,10 +14,11 @@ export const useWalletConnect = () => {
       //  Create WalletConnect Provider
       const walletProvider = new WalletConnectProvider({
         rpc: {
-          // 1: 'https://mainnet.infura.io/v3/',//TODO: moved to config & check for rpcs in project
-          80001: 'https://rpc-mumbai.matic.today',
+          1: mainNetwork.rpc,
+          80001: testnetNetwork.rpc,
         },
       });
+      walletProvider.updateRpcUrl(80001);
       setProvider(walletProvider);
     }
     if (provider) {
@@ -34,6 +36,7 @@ export const useWalletConnect = () => {
     if (provider){
       //  Enable session (triggers QR Code modal)
       await provider.enable();
+      provider.updateRpcUrl(80001);
 
       //  eslint-disable-next-line @typescript-eslint/no-explicit-any
       const newWeb3 = new Web3(provider as any);
