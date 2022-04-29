@@ -69,7 +69,7 @@ export const Marketplace = () => {
   };
 
   return (
-    <div className="h-full overflow-y-scroll overflow-x-hidden">
+    <>
       <MarketplaceFilterWrapper
         totalCount={data?.listingItems.pageInfo.totalCount}
         isGrid={isGrid}
@@ -98,7 +98,7 @@ export const Marketplace = () => {
           refetch={refetch}
         />
       )}
-    </div>
+    </>
   );
 };
 
@@ -134,6 +134,7 @@ const ListView = ({ tracks, loading, hasNextPage, loadMore }: ViewProps) => {
                   height={height}
                   width={width}
                   onItemsRendered={onItemsRendered}
+                  className="no-scrollbars"
                   ref={ref}
                   itemCount={tracksCount}
                   itemSize={124 + 4}
@@ -175,7 +176,7 @@ const GridView = ({ tracks, loading, refetch, hasNextPage, loadMore }: ViewProps
         <NoResultFound type="items" />
       ) : (
         <PullToRefresh onRefresh={refetch} className="h-auto">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 p-4 justify-center">
+          <div className="marketplace-grid my-4">
             {tracks.map(track => (
               <TrackGrid key={track.id} track={track} />
             ))}

@@ -81,7 +81,7 @@ export const Layout = ({ children, className }: LayoutProps) => {
             <TopNavBar setSideMenuOpen={setSideMenuOpen} {...topNavBarProps} />
             <div id="top-sheet"></div>
             <main id="main" className="flex-1 relative overflow-y-auto focus:outline-none bg-gray-10">
-              <div className={classNames('max-w-7xl mx-auto h-full', className)}>{children}</div>
+              <div className={classNames('h-full', className)}>{children}</div>
             </main>
           </div>
           <div id="modals" className="absolute z-20 w-full">

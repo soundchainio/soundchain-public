@@ -2,7 +2,6 @@ import Slider from '@reach/slider';
 import { Matic } from 'components/Matic';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { HeartFilled } from 'icons/HeartFilled';
-import { Info } from 'icons/Info';
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
 import NextLink from 'next/link';
@@ -30,8 +29,10 @@ interface MiniAudioPlayerProps {
 
 export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
   const { art, artist, title, trackId, playbackCount, favoriteCount, saleType, price } = song;
+
   const { duration, progress, play, isCurrentSong, isCurrentlyPlaying, setProgressStateFromSlider } =
     useAudioPlayerContext();
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [isSameSong, setIsSameSong] = useState(false);
 
@@ -45,7 +46,11 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
   };
 
   return (
-    <div className="bg-black rounded-lg p-4 items-center">
+    <div
+      className={`bg-black m-4 rounded-lg p-4 items-center transparent-border-1px ${
+        isPlaying ? 'gradient-track-box' : 'bg-black'
+      } hover:gradient-track-box`}
+    >
       <div className="flex items-center gap-3">
         <div className="h-20 w-20 relative flex items-center">
           <Asset src={art} sizes="5rem" />
@@ -81,9 +86,6 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
                     {saleType && saleType !== '' && (
                       <BadgeTrack auction={saleType === 'auction'} label={saleType.toUpperCase()}></BadgeTrack>
                     )}
-                    <div className="flex-shrink-0">
-                      <Info />
-                    </div>
                   </div>
                 </div>
               </a>
