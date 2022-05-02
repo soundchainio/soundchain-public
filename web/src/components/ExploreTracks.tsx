@@ -1,22 +1,21 @@
-import { Song, TrackListItem } from 'components/TrackListItem';
-import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
-import { ExploreTracksQuery, PageInput, useExploreTracksQuery } from 'lib/graphql';
-import React, { memo } from 'react';
+import { ExploreTracksQuery, PageInput, TrackQuery, useExploreTracksQuery } from 'lib/graphql';
+import React, { memo, useState } from 'react';
 import { areEqual, FixedSizeList as List, ListChildComponentProps } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import InfiniteLoader from 'react-window-infinite-loader';
 import { NoResultFound } from './NoResultFound';
 import { TrackListItemSkeleton } from './TrackListItemSkeleton';
 import { LoaderAnimation } from './LoaderAnimation';
-
-interface ExplorePageProps {
-  searchTerm?: string;
-}
+import { Track } from './Track';
+import { ExploreSearchBar } from './ExploreSearchBar';
 
 const pageSize = 15;
 
-export const ExploreTracks = ({ searchTerm }: ExplorePageProps) => {
+export const ExploreTracks = () => {
   const firstPage: PageInput = { first: pageSize };
+
+  const [searchTerm, setSearchTerm] = useState('');
+
   const { data, loading, fetchMore } = useExploreTracksQuery({
     variables: { search: searchTerm, page: firstPage },
   });
@@ -56,6 +55,7 @@ export const ExploreTracks = ({ searchTerm }: ExplorePageProps) => {
 
   return (
     <div className="bg-gray-10 h-[calc(100%-106px)]">
+      <ExploreSearchBar setSearchTerm={setSearchTerm} />
       {tracks.length ? (
         <AutoSizer>
           {({ height, width }) => (
@@ -67,7 +67,7 @@ export const ExploreTracks = ({ searchTerm }: ExplorePageProps) => {
                   onItemsRendered={onItemsRendered}
                   ref={ref}
                   itemCount={tracksCount}
-                  itemSize={56}
+                  itemSize={130}
                   itemData={tracks}
                 >
                   {props => <Data currentResult={data.exploreTracks} {...props} />}
@@ -89,43 +89,14 @@ interface DataProps extends ListChildComponentProps<ExploreTracksQuery['exploreT
 
 const Data = memo(function Data({ data, index, style, currentResult }: DataProps) {
   const { nodes: tracks, pageInfo } = currentResult;
-  const { playlistState } = useAudioPlayerContext();
   const isItemLoaded = (index: number) => !pageInfo.hasNextPage || index < tracks.length;
-
-  const handleOnPlayClicked = (_song: Song, index: number) => {
-    if (tracks) {
-      const list = tracks.map(
-        track =>
-          ({
-            trackId: track.id,
-            src: track.playbackUrl,
-            art: track.artworkUrl,
-            title: track.title,
-            artist: track.artist,
-          } as Song),
-      );
-      playlistState(list, index);
-    }
-  };
 
   return (
     <div style={style}>
       {!isItemLoaded(index) ? (
         <LoaderAnimation loadingMessage="Loading..." />
       ) : (
-        <TrackListItem
-          song={{
-            trackId: data[index].id,
-            src: data[index].playbackUrl,
-            art: data[index].artworkUrl,
-            title: data[index].title,
-            artist: data[index].artist,
-            playbackCount: data[index].playbackCountFormatted,
-            isFavorite: data[index].isFavorite,
-          }}
-          index={index + 1}
-          handleOnPlayClicked={song => handleOnPlayClicked(song, index)}
-        />
+        <Track key={data[index].id} track={data[index] as TrackQuery['track']} hideBadgeAndPrice />
       )}
     </div>
   );

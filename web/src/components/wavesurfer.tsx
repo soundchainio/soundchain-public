@@ -1,10 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useRef, useState } from 'react';
 import WaveSurfer from 'wavesurfer.js';
 import * as WaveformCursorPlugin from 'wavesurfer.js/dist/plugin/wavesurfer.cursor';
 interface Props {
   url: string;
-  onClick: () => void;
   isPlaying: boolean;
   setProgressStateFromSlider: (value: number) => void;
   setIsReady: (params: boolean) => void;
@@ -29,7 +29,8 @@ const WavesurferComponent = (props: Props) => {
   const currentTime = wavesurfer?.current?.getCurrentTime();
 
   const buildWaveformGradient = () => {
-    const gradient = document.createElement('canvas').getContext('2d').createLinearGradient(0, 224, 224, 224);
+    const doc = document as unknown as any;
+    const gradient = doc.createElement('canvas').getContext('2d').createLinearGradient(0, 224, 224, 224);
     gradient.addColorStop(0, '#26D1A8');
     gradient.addColorStop(0.25, '#AC4EFD');
     gradient.addColorStop(0.4948, '#F1419E');

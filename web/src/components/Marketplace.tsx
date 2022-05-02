@@ -1,12 +1,8 @@
 /* eslint-disable react/display-name */
-import { ApolloQueryResult } from '@apollo/client';
 import { useModalState } from 'contexts/providers/modal';
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting';
-import { ListingItemsQuery, TrackQuery, TrackWithListingItem, useListingItemsQuery } from 'lib/graphql';
-import React, { useEffect, useState, memo } from 'react';
-import { areEqual, FixedSizeList as List } from 'react-window';
-import AutoSizer from 'react-virtualized-auto-sizer';
-import InfiniteLoader from 'react-window-infinite-loader';
+import { ListingItemsQuery, TrackWithListingItem, useListingItemsQuery } from 'lib/graphql';
+import React, { useEffect, useState } from 'react';
 import PullToRefresh from 'react-simple-pull-to-refresh';
 import { GenreLabel } from 'utils/Genres';
 import { SaleTypeLabel } from 'utils/SaleTypeLabel';
@@ -14,10 +10,9 @@ import { GridSkeleton } from './GridSkeleton';
 import { InfiniteLoader as InfiniteLoaderLegacy } from './InfiniteLoader';
 import { MarketplaceFilterWrapper } from './MarketplaceFilterWrapper';
 import { NoResultFound } from './NoResultFound';
-import { PostSkeleton } from './PostSkeleton';
-import { Track } from './Track';
 import { TrackGrid } from './TrackGrid';
-import { LoaderAnimation } from './LoaderAnimation';
+import { ListView } from 'components/ListView';
+import { ApolloQueryResult } from '@apollo/client';
 
 const buildMarketplaceFilter = (genres: GenreLabel[] | undefined, saleType: SaleTypeLabel | undefined) => {
   return {
@@ -33,6 +28,7 @@ export const Marketplace = () => {
   const [genres, setGenres] = useState<GenreLabel[] | undefined>(undefined);
   const [saleType, setSaleType] = useState<SaleTypeLabel | undefined>(undefined);
   const [sorting, setSorting] = useState<SortListingItem>(SortListingItem.CreatedAt);
+
   const { data, refetch, fetchMore, loading } = useListingItemsQuery({
     variables: {
       page: { first: pageSize },
@@ -109,58 +105,6 @@ interface ViewProps {
   hasNextPage?: boolean;
   tracks?: TrackWithListingItem[];
 }
-
-const ListView = ({ tracks, loading, hasNextPage, loadMore }: ViewProps) => {
-  const loadMoreItems = loading ? () => null : loadMore;
-  const isItemLoaded = (index: number) => !hasNextPage || index < (tracks?.length || 0);
-  const tracksCount = hasNextPage ? (tracks?.length || 0) + 1 : tracks?.length || 0;
-
-  return (
-    <>
-      {loading ? (
-        <div className="space-y-2">
-          <PostSkeleton />
-          <PostSkeleton />
-          <PostSkeleton />
-        </div>
-      ) : !tracks ? (
-        <NoResultFound type="items" />
-      ) : (
-        <AutoSizer>
-          {({ height, width }) => (
-            <InfiniteLoader isItemLoaded={isItemLoaded} itemCount={tracksCount} loadMoreItems={loadMoreItems}>
-              {({ onItemsRendered, ref }) => (
-                <List
-                  height={height}
-                  width={width}
-                  onItemsRendered={onItemsRendered}
-                  className="no-scrollbars"
-                  ref={ref}
-                  itemCount={tracksCount}
-                  itemSize={124 + 4}
-                  itemData={tracks}
-                >
-                  {memo(
-                    ({ data, index, style }) => (
-                      <div style={style}>
-                        {!isItemLoaded(index) ? (
-                          <LoaderAnimation loadingMessage="Loading..." />
-                        ) : (
-                          <Track key={data[index].id} track={data[index] as TrackQuery['track']} />
-                        )}
-                      </div>
-                    ),
-                    areEqual,
-                  )}
-                </List>
-              )}
-            </InfiniteLoader>
-          )}
-        </AutoSizer>
-      )}
-    </>
-  );
-};
 
 const GridView = ({ tracks, loading, refetch, hasNextPage, loadMore }: ViewProps) => {
   return (

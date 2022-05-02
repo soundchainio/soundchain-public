@@ -11,7 +11,9 @@ import { currency } from 'utils/format';
 import Asset from './Asset';
 import { LoaderAnimation } from 'components/LoaderAnimation';
 
-const WavesurferComponent = dynamic(() => import('./wavesurfer'), { ssr: false });
+const WavesurferComponent = dynamic(() => import('./wavesurfer'), {
+  ssr: false,
+});
 interface TrackProps {
   track: TrackWithListingItem;
   coverPhotoUrl?: string;

@@ -10,7 +10,7 @@ import { ToastContainer } from 'react-toastify';
 import { Header } from './Header';
 import { TopNavBar, TopNavBarProps } from './TopNavBar';
 
-const SideMenu = dynamic(import('./SideMenu'));
+const SideMenu = dynamic(() => import('./SideMenu'));
 const PostModal = dynamic(import('./PostModal'));
 const ReactionsModal = dynamic(import('./ReactionsModal'));
 const CommentModal = dynamic(import('./CommentModal'));

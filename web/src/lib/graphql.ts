@@ -4793,16 +4793,21 @@ export const ExploreTracksDocument = gql`
  * });
  */
 export function useExploreTracksQuery(baseOptions?: Apollo.QueryHookOptions<ExploreTracksQuery, ExploreTracksQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<ExploreTracksQuery, ExploreTracksQueryVariables>(ExploreTracksDocument, options);
-      }
+  const options = {...defaultOptions, ...baseOptions}
+  return Apollo.useQuery<ExploreTracksQuery, ExploreTracksQueryVariables>(ExploreTracksDocument, options);
+}
+
 export function useExploreTracksLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ExploreTracksQuery, ExploreTracksQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<ExploreTracksQuery, ExploreTracksQueryVariables>(ExploreTracksDocument, options);
-        }
+  const options = {...defaultOptions, ...baseOptions}
+  return Apollo.useLazyQuery<ExploreTracksQuery, ExploreTracksQueryVariables>(ExploreTracksDocument, options);
+}
+
 export type ExploreTracksQueryHookResult = ReturnType<typeof useExploreTracksQuery>;
+
 export type ExploreTracksLazyQueryHookResult = ReturnType<typeof useExploreTracksLazyQuery>;
+
 export type ExploreTracksQueryResult = Apollo.QueryResult<ExploreTracksQuery, ExploreTracksQueryVariables>;
+
 export const ExploreUsersDocument = gql`
     query ExploreUsers($search: String, $page: PageInput) {
   exploreUsers(search: $search, page: $page) {
@@ -4815,7 +4820,7 @@ export const ExploreUsersDocument = gql`
     }
   }
 }
-    ${ProfileComponentFieldsFragmentDoc}`;
+${ProfileComponentFieldsFragmentDoc}`;
 
 /**
  * __useExploreUsersQuery__

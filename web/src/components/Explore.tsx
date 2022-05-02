@@ -12,11 +12,10 @@ export const Explore = () => {
 
   return (
     <div className="bg-black h-full overflow-hidden">
-      <ExploreSearchBar setSearchTerm={setSearchTerm} />
-      <ExploreTabs selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
-      {selectedTab === ExploreTab.ALL && <ExploreAll setSelectedTab={setSelectedTab} searchTerm={searchTerm} />}
-      {selectedTab === ExploreTab.USERS && <ExploreUsers searchTerm={searchTerm} />}
-      {selectedTab === ExploreTab.TRACKS && <ExploreTracks searchTerm={searchTerm} />}
-    </div>
+    <ExploreTabs selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
+    {selectedTab === ExploreTab.ALL && <ExploreAll setSelectedTab={setSelectedTab} />}
+    {selectedTab === ExploreTab.USERS && <ExploreUsers />}
+    {selectedTab === ExploreTab.TRACKS && <ExploreTracks />}
+  </div>
   );
 };

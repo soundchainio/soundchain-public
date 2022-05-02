@@ -1,22 +1,22 @@
 /* eslint-disable react/display-name */
 import { ProfileListItem } from 'components/ProfileListItem';
 import { PageInput, useExploreUsersQuery } from 'lib/graphql';
-import React, { memo } from 'react';
+import React, { memo, useState } from 'react';
 import { FixedSizeList as List, areEqual } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import InfiniteLoader from 'react-window-infinite-loader';
 import { NoResultFound } from './NoResultFound';
 import { ProfileListItemSkeleton } from './ProfileListItemSkeleton';
 import { LoaderAnimation } from './LoaderAnimation';
-
-interface ExplorePageProps {
-  searchTerm?: string;
-}
+import { ExploreSearchBar } from './ExploreSearchBar';
 
 const pageSize = 15;
 
-export const ExploreUsers = ({ searchTerm }: ExplorePageProps) => {
+export const ExploreUsers = () => {
   const firstPage: PageInput = { first: pageSize };
+  
+  const [searchTerm, setSearchTerm] = useState('');
+
   const { data, loading, fetchMore } = useExploreUsersQuery({
     variables: { search: searchTerm, page: firstPage },
   });
@@ -51,6 +51,7 @@ export const ExploreUsers = ({ searchTerm }: ExplorePageProps) => {
 
   return (
     <div className="bg-gray-10 p-4 h-[calc(100%-96px)]">
+      <ExploreSearchBar setSearchTerm={setSearchTerm} />
       {profiles.length ? (
         <AutoSizer>
           {({ height, width }) => (

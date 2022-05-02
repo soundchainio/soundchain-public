@@ -5,5 +5,7 @@ module.exports = {
     '@typescript-eslint/no-unused-vars': 'error',
     '@typescript-eslint/no-explicit-any': 'error',
     'require-await': 'error',
+    'react-hooks/exhaustive-deps': 'off',
+    '@typescript-eslint/no-non-null-assertion': 'off',
   },
 };
