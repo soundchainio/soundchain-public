@@ -2,7 +2,6 @@ import Slider from '@reach/slider';
 import { Matic } from 'components/Matic';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { HeartFilled } from 'icons/HeartFilled';
-import { Info } from 'icons/Info';
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
 import NextLink from 'next/link';
@@ -26,12 +25,16 @@ interface Song {
 
 interface MiniAudioPlayerProps {
   song: Song;
+  hideBadgeAndPrice?: boolean;
 }
 
-export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
-  const { art, artist, title, trackId, playbackCount, favoriteCount, saleType, price } = song;
+export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
+  const { art, artist, title, trackId, playbackCount, favoriteCount, saleType, price } = props.song;
+  const { hideBadgeAndPrice, song } = props;
+  
   const { duration, progress, play, isCurrentSong, isCurrentlyPlaying, setProgressStateFromSlider } =
     useAudioPlayerContext();
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [isSameSong, setIsSameSong] = useState(false);
 
@@ -44,14 +47,30 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
     setProgressStateFromSlider(value);
   };
 
+  const RenderTrackCounters = () => (
+    <div className="text-gray-80 text-xs flex gap-1 items-center pt-1">
+      <Play fill="#808080" />
+      <span>{playbackCount || 0}</span>
+      <HeartFilled />
+      <span>{favoriteCount || 0}</span>
+      {saleType && saleType !== '' && !hideBadgeAndPrice && (
+        <Matic className="ml-auto" value={price} variant="currency-inline" />
+      )}
+    </div>
+  )
+
   return (
-    <div className="bg-black rounded-lg p-4 items-center">
+    <div
+      className={`bg-black m-4 rounded-lg p-4 items-center transparent-border-1px ${
+        isPlaying ? 'gradient-track-box' : 'bg-black'
+      } hover:gradient-track-box`}
+    >
       <div className="flex items-center gap-3">
         <div className="h-20 w-20 relative flex items-center">
           <Asset src={art} sizes="5rem" />
         </div>
         <div className="flex flex-col flex-1 truncate">
-          <div className="flex gap-2">
+          <div className={`flex gap-2 ${hideBadgeAndPrice && 'mb-[10px]'}`}>
             <div className="flex items-center">
               <button
                 className="bg-white rounded-full w-8 h-8 flex items-center"
@@ -78,24 +97,20 @@ export const MiniAudioPlayer = ({ song }: MiniAudioPlayerProps) => {
                   </div>
                   <div className="flex flex-1" />
                   <div className="flex items-center gap-1">
-                    {saleType && saleType !== '' && (
+                    {saleType && saleType !== '' && !hideBadgeAndPrice && (
                       <BadgeTrack auction={saleType === 'auction'} label={saleType.toUpperCase()}></BadgeTrack>
                     )}
-                    <div className="flex-shrink-0">
-                      <Info />
-                    </div>
+                    {hideBadgeAndPrice && (
+                      <RenderTrackCounters />
+                    )}
                   </div>
                 </div>
               </a>
             </NextLink>
           </div>
-          <div className="text-gray-80 text-xs flex gap-1 items-center pt-1">
-            <Play fill="#808080" />
-            <span>{playbackCount || 0}</span>
-            <HeartFilled />
-            <span>{favoriteCount || 0}</span>
-            {saleType && saleType !== '' && <Matic className="ml-auto" value={price} variant="currency-inline" />}
-          </div>
+          {!hideBadgeAndPrice && (
+            <RenderTrackCounters />
+          )}
           <div className="text-white flex flex-col mt-2">
             {isSameSong ? (
               <>
