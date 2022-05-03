@@ -10,10 +10,10 @@ export const Explore = () => {
 
   return (
     <div className="bg-black h-full overflow-hidden">
-    <ExploreTabs selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
-    {selectedTab === ExploreTab.ALL && <ExploreAll setSelectedTab={setSelectedTab} />}
-    {selectedTab === ExploreTab.USERS && <ExploreUsers />}
-    {selectedTab === ExploreTab.TRACKS && <ExploreTracks />}
-  </div>
+      <ExploreTabs selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
+      {selectedTab === ExploreTab.ALL && <ExploreAll setSelectedTab={setSelectedTab} />}
+      {selectedTab === ExploreTab.USERS && <ExploreUsers />}
+      {selectedTab === ExploreTab.TRACKS && <ExploreTracks />}
+    </div>
   );
 };

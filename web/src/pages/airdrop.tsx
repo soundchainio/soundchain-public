@@ -8,7 +8,7 @@ import {
   useAudioHolderByWalletLazyQuery,
   useUpdateOgunClaimedAudioHolderMutation,
   useUpdateOgunClaimedWhitelistMutation,
-  useWhitelistEntryByWalletLazyQuery
+  useWhitelistEntryByWalletLazyQuery,
 } from 'lib/graphql';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
