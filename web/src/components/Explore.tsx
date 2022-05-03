@@ -1,5 +1,4 @@
 import { ExploreAll } from 'components/ExploreAll';
-import { ExploreSearchBar } from 'components/ExploreSearchBar';
 import { ExploreTabs } from 'components/ExploreTabs';
 import { ExploreTracks } from 'components/ExploreTracks';
 import { ExploreUsers } from 'components/ExploreUsers';
@@ -8,7 +7,6 @@ import { ExploreTab } from 'types/ExploreTabType';
 
 export const Explore = () => {
   const [selectedTab, setSelectedTab] = useState<ExploreTab>(ExploreTab.ALL);
-  const [searchTerm, setSearchTerm] = useState<string>('');
 
   return (
     <div className="bg-black h-full overflow-hidden">

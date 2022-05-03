@@ -1,130 +1,89 @@
-import { NoResultFound } from 'components/NoResultFound';
-import { ProfileListItem } from 'components/ProfileListItem';
-import { Subtitle } from 'components/Subtitle';
-import { Song, TrackListItem } from 'components/TrackListItem';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
-import { RightArrow } from 'icons/RightArrow';
-import { useExploreQuery } from 'lib/graphql';
-import React, { useState } from 'react';
-import { ExploreTab } from 'types/ExploreTabType';
-import { ExploreSearchBar } from './ExploreSearchBar';
-import { ExploreTopTracksBanner } from './ExploreTopTracksBanner';
-import { ProfileListItemSkeleton } from './ProfileListItemSkeleton';
-import { TrackListItemSkeleton } from './TrackListItemSkeleton';
+import { Pause } from 'icons/PauseBottomAudioPlayer';
+import { Play } from 'icons/PlayBottomAudioPlayer';
+import NextLink from 'next/link';
+import React from 'react';
+import Asset from './Asset';
 
-interface ExplorePageProps {
-  searchTerm?: string;
-  setSelectedTab: (tab: ExploreTab) => void;
+export type Song = {
+  src: string;
+  title?: string | null;
+  trackId: string;
+  artist?: string | null;
+  art?: string | null;
+  isFavorite?: boolean | null;
+};
+
+interface TrackProps {
+  index: number;
+  song: {
+    src: string;
+    title?: string | null;
+    trackId: string;
+    artist?: string | null;
+    art?: string | null;
+    playbackCount?: string;
+    isFavorite?: boolean | null;
+  };
+  variant?: 'playlist';
+  handleOnPlayClicked: (song: Song) => void;
 }
 
-export const ExploreAll = ({ setSelectedTab }: ExplorePageProps) => {
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const { data, loading } = useExploreQuery({ variables: { search: searchTerm }, fetchPolicy: 'network-only' });
-
-  const profiles = data?.explore.profiles;
-  
-  const tracks = data?.explore.tracks;
-  
-  const { playlistState } = useAudioPlayerContext();
-
-  const handleOnPlayClicked = (song: Song, index: number) => {
-    if (tracks) {
-      const list = tracks.map(
-        track =>
-          ({
-            trackId: track.id,
-            src: track.playbackUrl,
-            art: track.artworkUrl,
-            title: track.title,
-            artist: track.artist,
-          } as Song),
-      );
-      playlistState(list, index);
-    }
-  };
+export const TrackListItem = ({ song, index, variant, handleOnPlayClicked }: TrackProps) => {
+  const { trackId, art, title, playbackCount } = song;
+  const { isCurrentlyPlaying } = useAudioPlayerContext();
+  const isPlaying = isCurrentlyPlaying && isCurrentlyPlaying(trackId);
 
   return (
-    <div className="bg-gray-10 overflow-auto h-[calc(100%-96px)]">
-            <ExploreSearchBar setSearchTerm={setSearchTerm} />
-      <div className="px-4 py-6">
-        <ExploreTopTracksBanner />
-      </div>
-      <div className="flex items-center w-full px-4">
-        <div className="flex flex-1 items-center text-white font-bold text-sm">
-          <Subtitle size="sm" className="font-bold">
-            {`Users (${data?.explore.totalProfiles || '0'})`}
-          </Subtitle>
-        </div>
-        <button
-          className="text-gray-80 font-extrabold text-xs flex gap-2 items-center"
-          onClick={() => setSelectedTab(ExploreTab.USERS)}
-        >
-          VIEW ALL
-          <RightArrow width={6} height={10} />
-        </button>
-      </div>
-      {loading && (
-        <div className="m-4">
-          <ProfileListItemSkeleton />
-          <ProfileListItemSkeleton />
-          <ProfileListItemSkeleton />
-        </div>
-      )}
-      {data && !loading && data?.explore.totalProfiles > 0 ? (
-        <div className="px-5 py-3 space-y-3">
-          {profiles?.map(profile => (
-            <div key={profile.id} className="text-white">
-              <ProfileListItem profile={profile} />
-            </div>
-          ))}
-        </div>
-      ) : (
-        <>{!loading && <NoResultFound type="Users" />}</>
-      )}
-      <div className="flex items-center w-full px-4 py-2">
-        <div className="flex flex-1 items-center text-white font-bold">
-          <Subtitle size="sm" className="font-bold">
-            {`Tracks (${data?.explore.totalTracks || '0'})`}
-          </Subtitle>
-        </div>
-        <button
-          className="text-gray-80 font-extrabold text-xs flex gap-2 items-center"
-          onClick={() => setSelectedTab(ExploreTab.TRACKS)}
-        >
-          VIEW ALL
-          <RightArrow width={6} height={10} />
-        </button>
-      </div>
-      {loading && (
-        <>
-          <TrackListItemSkeleton />
-          <TrackListItemSkeleton />
-          <TrackListItemSkeleton />
-        </>
-      )}
-      {data && !loading && data.explore.totalTracks > 0 ? (
-        <div className="py-3">
-          {tracks?.map((track, index) => (
-            <TrackListItem
-              key={track.id}
-              song={{
-                trackId: track.id,
-                src: track.playbackUrl,
-                art: track.artworkUrl,
-                title: track.title,
-                artist: track.artist,
-                playbackCount: track.playbackCountFormatted,
-                isFavorite: track.isFavorite,
-              }}
-              index={index + 1}
-              handleOnPlayClicked={song => handleOnPlayClicked(song, index)}
-            />
-          ))}
-        </div>
-      ) : (
-        <>{!loading && <NoResultFound type="Tracks" />} </>
-      )}
-    </div>
+    <li className={`${lineStyle(variant)} ${isPlaying ? 'font-black' : 'font-semibold'}`}>
+      <NextLink href={`/tracks/${trackId}`}>
+        <a className="flex items-center flex-1 gap-2 min-w-0">
+          <p className={indexStyle(variant)}>{index}</p>
+          <div className="h-10 w-10 relative flex items-center bg-gray-80 flex-shrink-0">
+            <Asset src={art} sizes="2.5rem" />
+          </div>
+          <div className="min-w-0">
+            <p className="truncate">{title}</p>
+            {playbackCount && (
+              <div className="flex items-center gap-1">
+                <Play fill={'#808080'} width={7} height={8} />
+                <p className="text-xxs text-gray-80">{playbackCount}</p>
+              </div>
+            )}
+          </div>
+        </a>
+      </NextLink>
+      <button
+        className="h-10 w-10 flex items-center hover:scale-125 duration-75 flex-shrink-0 justify-center"
+        aria-label={isPlaying ? 'Pause' : 'Play'}
+        onClick={e => {
+          e.stopPropagation();
+          handleOnPlayClicked(song);
+        }}
+      >
+        {isPlaying ? <Pause /> : <Play />}
+      </button>
+    </li>
   );
+};
+
+const lineStyle = (variant: TrackProps['variant']) => {
+  const common =
+    'flex items-center justify-between gap-2 py-2 transition duration-300 hover:bg-gray-25  text-white text-xs';
+  switch (variant) {
+    case 'playlist':
+      return `${common} px-1 sm:pr-2 sm:pl-1`;
+    default:
+      return `${common} px-4`;
+  }
+};
+
+const indexStyle = (variant: TrackProps['variant']) => {
+  const common = 'flex-shrink-0';
+  switch (variant) {
+    case 'playlist':
+      return `${common} w-3 text-left`;
+    default:
+      return `${common} w-6 text-right`;
+  }
 };
