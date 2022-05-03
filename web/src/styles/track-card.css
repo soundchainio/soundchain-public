@@ -1,0 +1,83 @@
+@tailwind utilities;
+
+@layer utilities {
+    .transparent-border-1px {
+        border: solid 1px transparent;
+    }
+    
+    .gradient-track-box {
+        min-width: 250px;
+        position: relative;
+        color: #FFF;
+        background: #000;
+        background-clip: padding-box;
+        border: solid 1px transparent;
+        border-radius: 8px;
+    }
+
+    .gradient-track-box:after {
+        content: '';
+        position: absolute;
+        top: 0; 
+        right: 0; 
+        bottom: 0; 
+        left: 0;
+        z-index: -1;
+        margin: -1px;
+        border-radius: inherit;
+        opacity: 60%;
+        background: linear-gradient(87.71deg, #26D1A8 0%, #AC4EFD 25%, #F1419E 49.48%, #FED503 72.4%, #FE5540 100%);
+    }
+
+    .gradient-select-hover {
+        position: relative;
+        color: #FFF;
+        background-clip: padding-box;
+        border: solid 1px transparent;
+        border-radius: 8px;
+    }
+
+    .gradient-select-hover:after {
+        content: '';
+        position: absolute;
+        top: 0; 
+        right: 0; 
+        bottom: 0; 
+        left: 0;
+        z-index: -1;
+        margin: -1px;
+        border-radius: inherit;
+        opacity: 60%;
+        background: linear-gradient(87.71deg, #26D1A8 0%, #AC4EFD 25%, #F1419E 49.48%, #FED503 72.4%, #FE5540 100%);
+    }
+
+    .black-track-box {
+        min-width: 250px;
+        color: #FFF;
+        background: #000;
+        border: solid 1px transparent;
+    }
+
+    .auction-gradient {
+        background: linear-gradient(76.4deg, #3B5BB1 8.28%, #6FA1FF 83.02%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .auction-font-size {
+        font-size: 0.625rem;
+    }
+
+    .marketplace-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, 250px);
+        justify-items: center;
+        justify-content: center;
+        grid-auto-flow: row;
+        align-items: center;
+        grid-row-gap: 20px;
+        grid-column-gap: 20px;
+    }
+
+}
+

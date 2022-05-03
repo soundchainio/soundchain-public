@@ -6,15 +6,19 @@ import { MiniAudioPlayer } from './MiniAudioPlayer';
 interface TrackProps {
   track: TrackQuery['track'];
   coverPhotoUrl?: string;
+  hideBadgeAndPrice?: boolean;
 }
 
-export const Track = ({ track, coverPhotoUrl }: TrackProps) => {
+export const Track = (props: TrackProps) => {
+  const { track, coverPhotoUrl, hideBadgeAndPrice } = props;
+
   if (track.deleted) {
     return <NotAvailableMessage type="track" />;
   }
 
   return (
     <MiniAudioPlayer
+      hideBadgeAndPrice={hideBadgeAndPrice}
       song={{
         src: track.playbackUrl,
         trackId: track.id,
