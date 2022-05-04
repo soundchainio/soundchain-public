@@ -23,6 +23,7 @@ import 'styles/globals.css';
 import 'styles/loading-ring.css';
 import 'styles/nprogress.css';
 import 'styles/volume-slider.css';
+import 'styles/track-card.css';
 
 const WalletProvider = dynamic(import('hooks/useWalletContext'));
 const MagicProvider = dynamic(import('hooks/useMagicContext'));

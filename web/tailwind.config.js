@@ -1,7 +1,5 @@
 module.exports = {
-  mode: 'jit',
-  purge: ['./src/**/*.{ts,tsx}'],
-  darkMode: false, // or 'media' or 'class'
+  content: ['./src/**/*.{ts,tsx}'],
   plugins: [require('@tailwindcss/forms'), require('@tailwindcss/line-clamp')],
   theme: {
     extend: {
@@ -62,11 +60,6 @@ module.exports = {
       animation: {
         wave: 'wave 5s linear infinite',
       },
-    },
-  },
-  variants: {
-    extend: {
-      borderWidth: ['last', 'odd'],
     },
   },
 };
