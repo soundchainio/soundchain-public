@@ -58,13 +58,7 @@
         border: solid 1px transparent;
     }
 
-    .auction-gradient {
-        background: linear-gradient(76.4deg, #3B5BB1 8.28%, #6FA1FF 83.02%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-
-    .auction-font-size {
+    .sale-type-font-size {
         font-size: 0.625rem;
     }
 
