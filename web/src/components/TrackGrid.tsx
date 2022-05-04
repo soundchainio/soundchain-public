@@ -92,7 +92,7 @@ export const TrackGrid = ({ track }: TrackProps) => {
               <div className="mr-1.5 font-semibold">{price}</div>
               <Matic height="20" width="23" className="" />
             </div>
-            <div className={(saleType == 'auction' ? 'auction-gradient' : 'buy-now-gradient') + ' sale-type-font-size text-xs font-bold'}>{saleType.toUpperCase()}</div>
+            <div className={`${saleType === 'auction' ? 'auction-gradient' : 'buy-now-gradient'} sale-type-font-size text-xs font-bold`}>{saleType.toUpperCase()}</div>
           </div>
         )}
 
