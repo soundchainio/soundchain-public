@@ -253,6 +253,14 @@ html {
   box-decoration-break: clone;
 }
 
+.green-blue-diagonal-gradient-text-break {
+  background: linear-gradient(150deg, #84ff82 0%, #4870ff 100%);
+  background-clip: text;
+  color: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
 .purple-green-yellow-gradient-text {
   background: linear-gradient(90deg, #3fdd8a 0%, #a252fe 100%);
   background-clip: text;
