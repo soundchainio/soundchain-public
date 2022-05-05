@@ -92,7 +92,13 @@ export const TrackGrid = ({ track }: TrackProps) => {
               <div className="mr-1.5 font-semibold">{price}</div>
               <Matic height="20" width="23" className="" />
             </div>
-            <div className={`${saleType === 'auction' ? 'auction-gradient' : 'buy-now-gradient'} sale-type-font-size text-xs font-bold`}>{saleType.toUpperCase()}</div>
+            <div
+              className={`${
+                saleType === 'auction' ? 'auction-gradient' : 'buy-now-gradient'
+              } sale-type-font-size text-xs font-bold`}
+            >
+              {saleType.toUpperCase()}
+            </div>
           </div>
         )}
 
@@ -109,13 +115,9 @@ export const TrackGrid = ({ track }: TrackProps) => {
           <span className="flex-1">{favoriteCount || 0}</span>
         </div>
 
-        {!isReady ? (
-          <LoaderAnimation ring />
-        ) : (
-          <button className="bg-white rounded-full w-6 h-6 flex items-center" onClick={() => play(song)}>
-            {isPlaying ? <Pause className="text-white m-auto scale-125" /> : <Play className="text-white m-auto" />}
-          </button>
-        )}
+        <button className="bg-white rounded-full w-6 h-6 flex items-center" onClick={() => play(song)}>
+          {isPlaying ? <Pause className="text-white m-auto scale-125" /> : <Play className="text-white m-auto" />}
+        </button>
       </div>
     </div>
   );

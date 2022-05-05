@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import WaveSurfer from 'wavesurfer.js';
 import * as WaveformCursorPlugin from 'wavesurfer.js/dist/plugin/wavesurfer.cursor';
+import { getRandomPeakFileData } from './peaks';
 interface Props {
   url: string;
   isPlaying: boolean;
@@ -56,6 +57,7 @@ const WavesurferComponent = (props: Props) => {
       hideScrollbar: true,
       waveColor: '#1C1B1B',
       barGap: 3,
+      normalize: true,
       cursorColor: 'transparent',
       plugins: [
         WaveformCursorPlugin.create({
@@ -71,7 +73,9 @@ const WavesurferComponent = (props: Props) => {
       ],
     });
 
-    wavesurfer?.current?.load(url);
+    const peakData = getRandomPeakFileData();
+
+    wavesurfer?.current?.load(url, peakData);
 
     if (!wavesurfer) return;
 
