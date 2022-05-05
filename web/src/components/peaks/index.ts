@@ -1,0 +1,1 @@
+export { getRandomPeakFileData } from './getRandomPeakFileData';

@@ -9,7 +9,6 @@ import NextLink from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { currency } from 'utils/format';
 import Asset from './Asset';
-import { LoaderAnimation } from 'components/LoaderAnimation';
 
 const WavesurferComponent = dynamic(() => import('./wavesurfer'), {
   ssr: false,
@@ -48,8 +47,6 @@ export const TrackGrid = ({ track }: TrackProps) => {
 
   const [isPlaying, setIsPlaying] = useState(false);
 
-  const [isReady, setIsReady] = useState(false);
-
   const { data: maticUsd } = useMaticUsdQuery();
 
   useEffect(() => {
@@ -79,7 +76,6 @@ export const TrackGrid = ({ track }: TrackProps) => {
         </a>
       </NextLink>
       <WavesurferComponent
-        setIsReady={setIsReady}
         url={song.url}
         isPlaying={isPlaying}
         setProgressStateFromSlider={setProgressStateFromSlider}
@@ -92,10 +88,15 @@ export const TrackGrid = ({ track }: TrackProps) => {
               <div className="mr-1.5 font-semibold">{price}</div>
               <Matic height="20" width="23" className="" />
             </div>
-            <div className={`${saleType === 'auction' ? 'auction-gradient' : 'buy-now-gradient'} sale-type-font-size text-xs font-bold`}>{saleType.toUpperCase()}</div>
+            <div
+              className={`${
+                saleType === 'auction' ? 'auction-gradient' : 'buy-now-gradient'
+              } sale-type-font-size text-xs font-bold`}
+            >
+              {saleType.toUpperCase()}
+            </div>
           </div>
         )}
-
         <div className="text-gray-80 text-xs ml-3 mt-0.5 font-semibold">
           {maticUsd && price && `${currency(price * parseFloat(maticUsd.maticUsd))}`}
         </div>
@@ -109,13 +110,9 @@ export const TrackGrid = ({ track }: TrackProps) => {
           <span className="flex-1">{favoriteCount || 0}</span>
         </div>
 
-        {!isReady ? (
-          <LoaderAnimation ring />
-        ) : (
-          <button className="bg-white rounded-full w-6 h-6 flex items-center" onClick={() => play(song)}>
-            {isPlaying ? <Pause className="text-white m-auto scale-125" /> : <Play className="text-white m-auto" />}
-          </button>
-        )}
+        <button className="bg-white rounded-full w-6 h-6 flex items-center" onClick={() => play(song)}>
+          {isPlaying ? <Pause className="text-white m-auto scale-125" /> : <Play className="text-white m-auto" />}
+        </button>
       </div>
     </div>
   );
