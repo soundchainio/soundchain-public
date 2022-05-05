@@ -5260,13 +5260,15 @@ export const ListingItemsDocument = gql`
  * });
  */
 export function useListingItemsQuery(baseOptions?: Apollo.QueryHookOptions<ListingItemsQuery, ListingItemsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<ListingItemsQuery, ListingItemsQueryVariables>(ListingItemsDocument, options);
-      }
+  const options = {...defaultOptions, ...baseOptions}
+  return Apollo.useQuery<ListingItemsQuery, ListingItemsQueryVariables>(ListingItemsDocument, options);
+}
+
 export function useListingItemsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ListingItemsQuery, ListingItemsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<ListingItemsQuery, ListingItemsQueryVariables>(ListingItemsDocument, options);
-        }
+  const options = {...defaultOptions, ...baseOptions}
+  return Apollo.useLazyQuery<ListingItemsQuery, ListingItemsQueryVariables>(ListingItemsDocument, options);
+}
+
 export type ListingItemsQueryHookResult = ReturnType<typeof useListingItemsQuery>;
 export type ListingItemsLazyQueryHookResult = ReturnType<typeof useListingItemsLazyQuery>;
 export type ListingItemsQueryResult = Apollo.QueryResult<ListingItemsQuery, ListingItemsQueryVariables>;
