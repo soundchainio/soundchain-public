@@ -97,7 +97,6 @@ export const TrackGrid = ({ track }: TrackProps) => {
             </div>
           </div>
         )}
-
         <div className="text-gray-80 text-xs ml-3 mt-0.5 font-semibold">
           {maticUsd && price && `${currency(price * parseFloat(maticUsd.maticUsd))}`}
         </div>
