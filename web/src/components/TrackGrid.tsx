@@ -9,7 +9,6 @@ import NextLink from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { currency } from 'utils/format';
 import Asset from './Asset';
-import { LoaderAnimation } from 'components/LoaderAnimation';
 
 const WavesurferComponent = dynamic(() => import('./wavesurfer'), {
   ssr: false,
@@ -48,8 +47,6 @@ export const TrackGrid = ({ track }: TrackProps) => {
 
   const [isPlaying, setIsPlaying] = useState(false);
 
-  const [isReady, setIsReady] = useState(false);
-
   const { data: maticUsd } = useMaticUsdQuery();
 
   useEffect(() => {
@@ -79,7 +76,6 @@ export const TrackGrid = ({ track }: TrackProps) => {
         </a>
       </NextLink>
       <WavesurferComponent
-        setIsReady={setIsReady}
         url={song.url}
         isPlaying={isPlaying}
         setProgressStateFromSlider={setProgressStateFromSlider}
