@@ -8,6 +8,7 @@ interface Props {
   url: string;
   isPlaying: boolean;
   setProgressStateFromSlider: (value: number) => void;
+  setIsReady: (params: boolean) => void;
   progress: number;
 }
 
@@ -18,7 +19,7 @@ type ModWaveSurfer = WaveSurfer & {
 type ModHtmlAudioElement = HTMLAudioElement & ModWaveSurfer;
 
 const WavesurferComponent = (props: Props) => {
-  const { url, isPlaying, setProgressStateFromSlider, progress, ...rest } = props;
+  const { url, isPlaying, setProgressStateFromSlider, progress, setIsReady, ...rest } = props;
 
   const wavesurfer = useRef<ModHtmlAudioElement | null>(null);
   const waveformRef = useRef<HTMLDivElement | null>(null);
@@ -48,7 +49,7 @@ const WavesurferComponent = (props: Props) => {
     wavesurfer.current = modedWaveSurfer.create({
       barWidth: 3,
       container: waveformRef.current,
-      backend: 'WebAudio',
+      backend: 'MediaElement',
       height: 30,
       barRadius: 3,
       responsive: true,
@@ -93,6 +94,24 @@ const WavesurferComponent = (props: Props) => {
 
     setSaveCurrentTime(Math.floor(currentTime));
   });
+
+  const attachReadyEvent = () => {
+    wavesurfer.current?.on('ready', function () {
+      setIsReady(true);
+    });
+  };
+
+  const unAttachReadyEvent = () => {
+    wavesurfer.current?.un('ready', function () {
+      setIsReady(false);
+    });
+  };
+
+  useEffect(() => {
+    attachReadyEvent();
+
+    return () => unAttachReadyEvent();
+  }, []);
 
   return (
     <>
