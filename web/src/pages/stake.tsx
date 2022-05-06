@@ -1,14 +1,21 @@
 import { Button } from 'components/Button';
+import { WalletButton } from 'components/Buttons/WalletButton';
 import { config } from 'config';
 import { Form, Formik } from 'formik';
 import { useLayoutContext } from 'hooks/useLayoutContext';
 import useMetaMask from 'hooks/useMetaMask';
+import { useWalletConnect } from 'hooks/useWalletConnect';
 import { CirclePlusFilled } from 'icons/CirclePlusFilled';
 import { Logo } from 'icons/Logo';
+import { MetaMask } from 'icons/MetaMask';
+import { WalletConnect } from 'icons/WalletConnect';
+import { testnetNetwork } from 'lib/blockchainNetworks';
 import { useEffect, useState } from 'react';
+import { toast, ToastContainer } from 'react-toastify';
 import Web3 from 'web3';
 import { Contract } from "web3-eth-contract";
 import { AbiItem } from 'web3-utils';
+import { CustomModal } from '../components/CustomModal';
 import SoundchainOGUN20 from '../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json';
 import StakingRewards from '../contract/StakingRewards.sol/StakingRewards.json';
 
@@ -19,7 +26,6 @@ interface FormValues {
 
 type Selected = 'Stake' | 'Unstake';
 
-
 const OGUNAddress = config.OGUNAddress as string;
 const tokenStakeContractAddress = config.tokenStakeContractAddress as string;
 const tokenContract = (web3: Web3) =>
@@ -28,17 +34,43 @@ const tokenStakeContract = (web3: Web3) =>
   new web3.eth.Contract(StakingRewards.abi as AbiItem[], tokenStakeContractAddress)as unknown as Contract;
 
 export default function Stake() {
+  const { 
+    connect: wcConnect, 
+    disconnect: wcDisconnect, 
+    account: walletconnectAccount,
+    web3: wcWeb3
+  } = useWalletConnect();
   const {
-    web3,
+    web3: metamaskWeb3,
   } = useMetaMask();
   const { setIsLandingLayout } = useLayoutContext();
   const [account, setAccount] = useState<string>();
-  const [OGUNBalance, setOGUNBalance] = useState<string>();
+  const [OGUNBalance, setOGUNBalance] = useState<string>('0');
   const [stakeBalance, setStakeBalance] = useState<string>('0');
   const [selected, setSelected] = useState<Selected>('Stake');
   const [transactionState, setTransactionState]= useState<string>();
+  const [showModal, setShowModal] = useState(false);
+  const [closeWcModal, setCloseWcModal] = useState(false);
+  const [showDescription, setShowDescription] = useState(false);
+  const [web3, setWeb3] = useState<Web3>();
+  
+  useEffect(()=> {
+    const loadAccount = () => {
+      setAccount(walletconnectAccount);
+      setWeb3(wcWeb3);
+    }
+    if (walletconnectAccount && wcWeb3) {
+      loadAccount();
+    }
+  }, [walletconnectAccount, wcWeb3]);
 
-  const connectWC = () => {
+  useEffect(()=> {
+    return () => {
+      wcDisconnect();
+    }
+  },[])
+
+  const connectMetaMask = () => {
     // Metamask Wallet;
     const loadProvider = async () => {
       let provider = null;
@@ -51,7 +83,7 @@ export default function Stake() {
           console.warn(error);
         }
       } else if (!process.env.production) {
-        provider = new Web3.providers.HttpProvider('https://rpc-mumbai.matic.today');
+        provider = new Web3.providers.HttpProvider(testnetNetwork.rpc);
       }
       const web3API = new Web3(provider);
       const accounts = await web3API.eth.getAccounts();
@@ -64,7 +96,30 @@ export default function Stake() {
     }
 
     (!web3) ? loadProvider() : loadMetaMaskProvider(web3);
+
+    setShowModal(false);
+    setWeb3(metamaskWeb3);
+  }
+  
+  const connectWC = async () => {
+    try {
+      await wcConnect();
+    } catch (error) {
+      console.warn('warn: ', error);
+    } finally {
+      setCloseWcModal(!closeWcModal);
+    }
   };
+
+  const addWallet = async () => {
+    try {
+      await wcDisconnect();
+    } catch (error) {
+      console.warn('warn: ', error);
+    } finally {
+      setShowModal(true);
+    }
+  }
 
   const getOGUNBalance = async (web3: Web3) => {
     const currentBalance = await tokenContract(web3).methods.balanceOf(account).call();
@@ -88,7 +143,15 @@ export default function Stake() {
   }
 
   const stake = async (values: FormValues) => {
-    if (account && web3 && values.amount > 0) {
+    if (values.amount <= 0) {
+      toast('The amount to stake has to be higher than 0.');
+      return;
+    }
+    if (values.amount > +OGUNBalance) {
+      toast('You can\'t stake an mount higher than your current LP balance.');
+      return;
+    }
+    if (account && web3 && values.amount > 0 && values.amount <= +OGUNBalance) {
       try{
         const weiAmount = web3.utils.toWei(values.amount.toString());
         setTransactionState('Approving transaction...');
@@ -118,7 +181,7 @@ export default function Stake() {
       }
     }
   }
-
+  
   useEffect(() => {
     setIsLandingLayout(true);
 
@@ -138,10 +201,7 @@ export default function Stake() {
     return (
       <>
         <div className="max-w-3xl flex flex-col items-center justify-center gap-y-6">
-          <h1 className="text-center text-2xl md:text-5xl font-extrabold">
-            Stake OGUN, earn up to <br />
-            <span className="green-blue-gradient-text-break">213% APR</span>
-          </h1>
+          <StakeTitle/>
           <Button variant="rainbow" className="w-5/6">
             <span className="font-medium ">BUY OGUNS</span>
           </Button>
@@ -152,7 +212,7 @@ export default function Stake() {
           <div className="flex flex-col md:flex-row items-center justify-center md:justify-between bg-gray-30 h-36 md:h-28 px-9 py-3 gap-y-3">
             <span>Connect Wallet to Stake</span>
             <Button variant="orange">
-              <span className="font-medium" onClick={connectWC}>
+              <span className="font-medium" onClick={()=> setShowModal(true)}>
                 CONNECT WALLET
               </span>
             </Button>
@@ -162,25 +222,61 @@ export default function Stake() {
     );
   };
 
+  const StakeDescription = () => {
+    return (
+      <div className="flex flex-col w-full items-center justify-center md:justify-between">
+        <p> 
+          We give away a certain amount of OGUN per block in the blockchain.
+          This amount divided amongst everyone who is staked and what you get is based on what you put in. The percentage of the total amount staked is the percentage you earn out of all the staking rewards.
+        </p>
+        <br/>
+        <p>
+          We’ve broken the staking rewards up into phases, to really reward early adopters while giving out a lot of OGUN to everyone staking down the line. This is about how much it breaks down to per day
+        </p>
+        <br/>
+        <p className='-ml-16 md:-ml-6'>
+          Phase 1 (30 days): <span className="green-blue-diagonal-gradient-text-break">2,000,000&nbsp;</span> OGUN per day &nbsp;&nbsp;   (Current Phase)
+          <br/>
+          Phase 2 (60 days): <span className="green-blue-diagonal-gradient-text-break">833,333&nbsp;</span> OGUN per day
+          <br/>
+          Phase 3 (150 days): <span className="green-blue-diagonal-gradient-text-break">312,500&nbsp;</span> OGUN per day
+          <br/>
+          Phase 4 (120 days): <span className="green-blue-diagonal-gradient-text-break">250,000&nbsp;</span> OGUN per day
+        </p>
+      </div>
+    )
+  }
+  const StakeTitle = () => {
+    return (
+      <>
+        <h1 className="text-center text-2xl md:text-5xl font-extrabold">We’re giving away</h1>
+        <h1 className="text-center text-2xl md:text-5xl font-extrabold">
+          <span className="green-blue-diagonal-gradient-text-break">
+            2,000,000 OGUN
+          </span> 
+          &nbsp;today
+        </h1>
+      </>
+    )
+  }
+
   const StakeState = () => {
     return (
       <>
         <div className="max-w-3xl flex flex-col items-center justify-center gap-y-6">
-          <h1 className="text-center text-2xl md:text-5xl font-extrabold">Stake OGUN</h1>
+          <StakeTitle/>
           <div className="flex gap-x-3">
             <Button variant="rainbow" className="w-5/6">
               <span className="font-medium ">BUY OGUNS</span>
             </Button>
-            <button className="flex items-center gap-x-2 justify-center whitespace-nowrap bg-transparent border-transparent">
-              <span className="font-medium pl-2">Add wallet</span>
+            <button className="flex items-center gap-x-2 justify-center whitespace-nowrap bg-transparent border-transparent" onClick={addWallet}>
+              <span className="font-medium pl-2">Change Wallet</span>
               <CirclePlusFilled />
             </button>
           </div>
         </div>
 
-        
-
-        <div className=" flex flex-grow flex-col w-full md:w-auto">
+        <div className=" flex flex-grow flex-col w-full md:md:w-[30rem]">
           {transactionState && (
             <div className="flex items-center bg-blue-500 text-white text-sm font-bold px-4 py-3" role="alert">
               <svg className="fill-current w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M12.432 0c1.34 0 2.01.912 2.01 1.957 0 1.305-1.164 2.512-2.679 2.512-1.269 0-2.009-.75-1.974-1.99C9.789 1.436 10.67 0 12.432 0zM8.309 20c-1.058 0-1.833-.652-1.093-3.524l1.214-5.092c.211-.814.246-1.141 0-1.141-.317 0-1.689.562-2.502 1.117l-.528-.88c2.572-2.186 5.531-3.467 6.801-3.467 1.057 0 1.233 1.273.705 3.23l-1.391 5.352c-.246.945-.141 1.271.106 1.271.317 0 1.357-.392 2.379-1.207l.6.814C12.098 19.02 9.365 20 8.309 20z"/></svg>
@@ -260,14 +356,45 @@ export default function Stake() {
               </span>
             </div>
           </div>
+
+          <div className="flex flex-col items-center justify-center md:justify-between gap-y-8 w-full py-3 md:py-9">
+            <button className='border-b-2 border-white' onClick={()=> setShowDescription(!showDescription)}>
+                Find out how it works
+            </button>
+            {showDescription && <StakeDescription/>}
+          </div>
         </div>
       </>
     );
   };
 
   return (
-    <main className="flex flex-col gap-y-20 md:gap-y-32 items-center md:pb-80 font-rubik text-white h-full py-32">
+    <main className="flex flex-col gap-y-20 md:gap-y-32 items-center font-rubik text-white h-full pt-32">
       {account ? <StakeState /> : <ConnectAccountState />}
+      <ToastContainer
+        position="top-center"
+        autoClose={6 * 1000}
+        toastStyle={{
+          backgroundColor: '#202020',
+          color: 'white',
+          fontSize: '12x',
+          textAlign: 'center',
+        }}
+      />
+      <CustomModal show={showModal} onClose={()=>setShowModal(false)}>
+          <div className="bg-white w-96 p-6 rounded">
+            <h1 className="font-bold text-2xl text-blue-500">
+            CONNECT WALLET
+            </h1>
+            <p className="py-1 text-gray-500">
+            Connect with one of our available wallet providers
+            </p>
+            <div className="my-4 space-y-3">
+              <WalletButton caption="Metamask" icon={MetaMask} handleOnClick={connectMetaMask} />
+              <WalletButton caption="WalletConnect" icon={WalletConnect} handleOnClick={connectWC} />
+            </div>
+          </div>
+        </CustomModal>
     </main>
   );
 }
