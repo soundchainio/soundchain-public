@@ -9,6 +9,7 @@ import NextLink from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { currency } from 'utils/format';
 import Asset from './Asset';
+import { LoaderAnimation } from 'components/LoaderAnimation';
 
 const WavesurferComponent = dynamic(() => import('./wavesurfer'), {
   ssr: false,
@@ -46,6 +47,7 @@ export const TrackGrid = ({ track }: TrackProps) => {
   const { play, isCurrentSong, isCurrentlyPlaying, setProgressStateFromSlider, progress } = useAudioPlayerContext();
 
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isReady, setIsReady] = useState(false);
 
   const { data: maticUsd } = useMaticUsdQuery();
 
@@ -76,6 +78,7 @@ export const TrackGrid = ({ track }: TrackProps) => {
         </a>
       </NextLink>
       <WavesurferComponent
+        setIsReady={setIsReady}
         url={song.url}
         isPlaying={isPlaying}
         setProgressStateFromSlider={setProgressStateFromSlider}
@@ -110,9 +113,13 @@ export const TrackGrid = ({ track }: TrackProps) => {
           <span className="flex-1">{favoriteCount || 0}</span>
         </div>
 
-        <button className="bg-white rounded-full w-6 h-6 flex items-center" onClick={() => play(song)}>
-          {isPlaying ? <Pause className="text-white m-auto scale-125" /> : <Play className="text-white m-auto" />}
-        </button>
+        {!isReady ? (
+          <LoaderAnimation ring />
+        ) : (
+          <button className="bg-white rounded-full w-6 h-6 flex items-center" onClick={() => play(song)}>
+            {isPlaying ? <Pause className="text-white m-auto scale-125" /> : <Play className="text-white m-auto" />}
+          </button>
+        )}
       </div>
     </div>
   );
