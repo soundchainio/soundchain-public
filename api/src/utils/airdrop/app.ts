@@ -44,6 +44,6 @@ function extractFromCsv(data:string, decimals:number): Record<string, string> {
   const airdrop : Record<string, string> = extractFromCsv(data?.toString(), 18);
 
   // Initialize and call generator
-  const generator = new Generator(airdrop);
+  const generator = new Generator(airdrop); // Initialize generator
   await generator.process(); //this calls the main function at generator.ts
 })();
