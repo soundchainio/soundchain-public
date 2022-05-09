@@ -45,5 +45,5 @@ function extractFromCsv(data:string, decimals:number): Record<string, string> {
 
   // Initialize and call generator
   const generator = new Generator(airdrop);
-  await generator.process();
+  await generator.process(); //this calls the main function at generator.ts
 })();
