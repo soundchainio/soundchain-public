@@ -39,7 +39,7 @@ function extractFromCsv(data:string, decimals:number): Record<string, string> {
 
 (async () => {
 
-  const dirPath = dataPath; //path.join(__dirname, '../../token-holders.csv');
+  const dirPath = dataPath;
   const data = await fs.readFile(dirPath, 'utf8');
   const airdrop : Record<string, string> = extractFromCsv(data?.toString(), 18);
 
