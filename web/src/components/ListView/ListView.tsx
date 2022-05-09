@@ -1,6 +1,6 @@
 /* eslint-disable react/display-name */
 import { ApolloQueryResult } from '@apollo/client';
-import { ListingItemsQuery, TrackQuery, TrackWithListingItem } from 'lib/graphql';
+import { ListingItemsQuery, TrackQuery, TrackWithListingItem, ExploreTracksQuery, Track } from 'lib/graphql';
 import React, { memo } from 'react';
 import { areEqual, FixedSizeList as List } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
@@ -13,9 +13,9 @@ import { Track } from 'components/Track';
 interface ViewProps {
   loading: boolean;
   loadMore: () => void;
-  refetch: () => Promise<ApolloQueryResult<ListingItemsQuery>>;
+  refetch: () => Promise<ApolloQueryResult<ListingItemsQuery | ExploreTracksQuery>>;
   hasNextPage?: boolean;
-  tracks?: TrackWithListingItem[];
+  tracks?: TrackWithListingItem[] | Track[];
 }
 
 export const ListView = ({ tracks, loading, hasNextPage, loadMore }: ViewProps) => {

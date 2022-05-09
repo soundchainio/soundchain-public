@@ -3,7 +3,7 @@ import { HeartFilled } from 'icons/HeartFilled';
 import { Matic } from 'icons/Matic';
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
-import { ListingItemWithPrice, Maybe, TrackWithListingItem, useMaticUsdQuery } from 'lib/graphql';
+import { ListingItemWithPrice, Maybe, TrackWithListingItem, useMaticUsdQuery, Track } from 'lib/graphql';
 import dynamic from 'next/dynamic';
 import NextLink from 'next/link';
 import React, { useEffect, useState } from 'react';
@@ -15,7 +15,7 @@ const WavesurferComponent = dynamic(() => import('./wavesurfer'), {
   ssr: false,
 });
 interface TrackProps {
-  track: TrackWithListingItem;
+  track: TrackWithListingItem | Track;
   coverPhotoUrl?: string;
 }
 

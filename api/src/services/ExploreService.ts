@@ -4,6 +4,7 @@ import { Track } from '../models/Track';
 import { Context } from '../types/Context';
 import { ExplorePayload } from '../types/ExplorePayload';
 import { PageInput } from '../types/PageInput';
+import { SortExploreTracks } from '../types/SortExploreTracks';
 import { SortOrder } from '../types/SortOrder';
 import { Service } from './Service';
 
@@ -18,11 +19,11 @@ export class ExploreService extends Service {
     return { profiles: profiles.list, totalProfiles: profiles.total, tracks: tracks.list, totalTracks: tracks.total };
   }
 
-  getExploreTracks(search: string, page?: PageInput): Promise<PaginateResult<Track>> {
+  getExploreTracks(sort: SortExploreTracks, search: string, page?: PageInput): Promise<PaginateResult<Track>> {
     const regex = new RegExp(search, 'i');
     return this.context.trackService.paginate({
       filter: { $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }], deleted: false },
-      sort: { field: 'createdAt', order: SortOrder.DESC },
+      sort,
       page,
     });
   }

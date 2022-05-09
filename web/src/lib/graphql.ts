@@ -1200,6 +1200,7 @@ export type QueryExploreArgs = {
 
 
 export type QueryExploreTracksArgs = {
+  sort?: Maybe<SortExploreTracks>;
   page?: Maybe<PageInput>;
   search?: Maybe<Scalars['String']>;
 };
@@ -1468,6 +1469,15 @@ export type SocialMediasInput = {
   soundcloud?: Maybe<Scalars['String']>;
   twitter?: Maybe<Scalars['String']>;
 };
+
+export type SortExploreTracks = {
+  field: SortExploreTracksField;
+  order?: Maybe<SortOrder>;
+};
+
+export enum SortExploreTracksField {
+  CreatedAt = 'CREATED_AT'
+}
 
 export enum SortListingItemField {
   PlaybackCount = 'PLAYBACK_COUNT',
@@ -2188,6 +2198,7 @@ export type ExploreQuery = (
 );
 
 export type ExploreTracksQueryVariables = Exact<{
+  sort?: Maybe<SortExploreTracks>;
   search?: Maybe<Scalars['String']>;
   page?: Maybe<PageInput>;
 }>;
@@ -2202,7 +2213,7 @@ export type ExploreTracksQuery = (
       & TrackComponentFieldsFragment
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
     ) }
   ) }
 );
@@ -4762,14 +4773,15 @@ export type ExploreQueryHookResult = ReturnType<typeof useExploreQuery>;
 export type ExploreLazyQueryHookResult = ReturnType<typeof useExploreLazyQuery>;
 export type ExploreQueryResult = Apollo.QueryResult<ExploreQuery, ExploreQueryVariables>;
 export const ExploreTracksDocument = gql`
-    query ExploreTracks($search: String, $page: PageInput) {
-  exploreTracks(search: $search, page: $page) {
+    query ExploreTracks($sort: SortExploreTracks, $search: String, $page: PageInput) {
+  exploreTracks(sort: $sort, search: $search, page: $page) {
     nodes {
       ...TrackComponentFields
     }
     pageInfo {
       hasNextPage
       endCursor
+      totalCount
     }
   }
 }
@@ -4787,27 +4799,23 @@ export const ExploreTracksDocument = gql`
  * @example
  * const { data, loading, error } = useExploreTracksQuery({
  *   variables: {
+ *      sort: // value for 'sort'
  *      search: // value for 'search'
  *      page: // value for 'page'
  *   },
  * });
  */
 export function useExploreTracksQuery(baseOptions?: Apollo.QueryHookOptions<ExploreTracksQuery, ExploreTracksQueryVariables>) {
-  const options = {...defaultOptions, ...baseOptions}
-  return Apollo.useQuery<ExploreTracksQuery, ExploreTracksQueryVariables>(ExploreTracksDocument, options);
-}
-
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ExploreTracksQuery, ExploreTracksQueryVariables>(ExploreTracksDocument, options);
+      }
 export function useExploreTracksLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ExploreTracksQuery, ExploreTracksQueryVariables>) {
-  const options = {...defaultOptions, ...baseOptions}
-  return Apollo.useLazyQuery<ExploreTracksQuery, ExploreTracksQueryVariables>(ExploreTracksDocument, options);
-}
-
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ExploreTracksQuery, ExploreTracksQueryVariables>(ExploreTracksDocument, options);
+        }
 export type ExploreTracksQueryHookResult = ReturnType<typeof useExploreTracksQuery>;
-
 export type ExploreTracksLazyQueryHookResult = ReturnType<typeof useExploreTracksLazyQuery>;
-
 export type ExploreTracksQueryResult = Apollo.QueryResult<ExploreTracksQuery, ExploreTracksQueryVariables>;
-
 export const ExploreUsersDocument = gql`
     query ExploreUsers($search: String, $page: PageInput) {
   exploreUsers(search: $search, page: $page) {
@@ -4820,7 +4828,7 @@ export const ExploreUsersDocument = gql`
     }
   }
 }
-${ProfileComponentFieldsFragmentDoc}`;
+    ${ProfileComponentFieldsFragmentDoc}`;
 
 /**
  * __useExploreUsersQuery__
@@ -5260,15 +5268,13 @@ export const ListingItemsDocument = gql`
  * });
  */
 export function useListingItemsQuery(baseOptions?: Apollo.QueryHookOptions<ListingItemsQuery, ListingItemsQueryVariables>) {
-  const options = {...defaultOptions, ...baseOptions}
-  return Apollo.useQuery<ListingItemsQuery, ListingItemsQueryVariables>(ListingItemsDocument, options);
-}
-
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ListingItemsQuery, ListingItemsQueryVariables>(ListingItemsDocument, options);
+      }
 export function useListingItemsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ListingItemsQuery, ListingItemsQueryVariables>) {
-  const options = {...defaultOptions, ...baseOptions}
-  return Apollo.useLazyQuery<ListingItemsQuery, ListingItemsQueryVariables>(ListingItemsDocument, options);
-}
-
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ListingItemsQuery, ListingItemsQueryVariables>(ListingItemsDocument, options);
+        }
 export type ListingItemsQueryHookResult = ReturnType<typeof useListingItemsQuery>;
 export type ListingItemsLazyQueryHookResult = ReturnType<typeof useListingItemsLazyQuery>;
 export type ListingItemsQueryResult = Apollo.QueryResult<ListingItemsQuery, ListingItemsQueryVariables>;

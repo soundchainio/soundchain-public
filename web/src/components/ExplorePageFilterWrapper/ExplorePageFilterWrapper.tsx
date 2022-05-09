@@ -5,8 +5,6 @@ import { GridView as GridViewIcon } from 'icons/GridView';
 import { ListView as ListViewIcon } from 'icons/ListView';
 import { SortListingItem } from 'lib/apollo/sorting';
 import React, { Dispatch, memo, SetStateAction } from 'react';
-import { GenreLabel } from 'utils/Genres';
-import { SaleTypeLabel } from 'utils/SaleTypeLabel';
 import { Badge } from '../Badge';
 import { FilterComponent } from '../Filter/Filter';
 import { ExploreTab } from 'types/ExploreTabType';
@@ -15,31 +13,15 @@ import { ExploreTabs } from 'components/ExploreTabs';
 type FilterWrapperProps = {
   totalCount?: number;
   isGrid?: boolean;
-  genres?: GenreLabel[];
-  saleType?: SaleTypeLabel;
   sorting: SortListingItem;
   setSorting: Dispatch<SetStateAction<SortListingItem>>;
-  setSaleType: Dispatch<SetStateAction<SaleTypeLabel | undefined>>;
-  setGenres: Dispatch<SetStateAction<GenreLabel[] | undefined>>;
   setIsGrid: Dispatch<SetStateAction<boolean>>;
   selectedTab: ExploreTab;
   setSelectedTab: Dispatch<SetStateAction<ExploreTab>>;
 };
 
 export const ExplorePageFilterWrapper = memo((props: FilterWrapperProps) => {
-  const {
-    genres,
-    saleType,
-    sorting,
-    setSorting,
-    setSaleType,
-    setGenres,
-    isGrid,
-    setIsGrid,
-    totalCount = 0,
-    selectedTab,
-    setSelectedTab,
-  } = props;
+  const { sorting, setSorting, isGrid, setIsGrid, totalCount = 0, selectedTab, setSelectedTab } = props;
 
   const { dispatchShowFilterMarketplaceModal } = useModalDispatch();
 
