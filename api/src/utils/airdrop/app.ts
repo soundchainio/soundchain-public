@@ -41,7 +41,7 @@ function extractFromCsv(data:string, decimals:number): Record<string, string> {
 
   const dirPath = dataPath;
   const data = await fs.readFile(dirPath, 'utf8');
-  const airdrop : Record<string, string> = extractFromCsv(data?.toString(), 18);
+  const airdrop : Record<string, string> = extractFromCsv(data?.toString(), 18); //Extract data from csv stored in dataPath
 
   // Initialize and call generator
   const generator = new Generator(airdrop); // Initialize generator
