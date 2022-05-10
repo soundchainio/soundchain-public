@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:quick": "next dev",
     "codegen": "graphql-codegen --config codegen.yml",
     "lint": "next lint",
     "lint-staged": "lint-staged",
