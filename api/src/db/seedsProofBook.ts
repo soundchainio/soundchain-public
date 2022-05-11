@@ -24,18 +24,12 @@ async function seedDb() {
   const root:string = proofBookJson.root;
   const proofs:ProofBookItem[] = proofBookJson.proofBook;
 
-  // console.log(root);
-  // console.log(proofs);
-
   const proofsBook:ProofBookItem[] = [];
 
   proofs.forEach(proof => {
     const item = new ProofBookItemModel({root: root, address: proof.address, value: proof.value, merkleProof: proof.merkleProof});
     proofsBook.push(item);
-    // console.log(root);
   });
-
-  // console.log(proofsBook[0]);
 
   await ProofBookItemModel.insertMany(proofsBook);
 
