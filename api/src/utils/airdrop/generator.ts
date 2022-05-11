@@ -34,7 +34,6 @@ export default class Generator {
   constructor(airdrop: Record<string, string>) {
     // For each airdrop entry
     for (const [address, tokens] of Object.entries(airdrop)) {
-      // console.log(parseUnits(tokens.toString(), decimals).toString());
       // Push:
       this.recipients.push({
         // Checksum address
@@ -102,8 +101,6 @@ export default class Generator {
       });
     }
 
-    // console.log(this.proofBook);
-
     // Collect and save merkle tree + root
     await fs.writeFileSync(
       // Output to merkle.json
@@ -116,9 +113,9 @@ export default class Generator {
     );
 
     await fs.writeFileSync(
-      // Output to merkle.json
+      // Output to proofBook.json
       proofBookOutputPath,
-      // Root + full tree
+      // Root + full book
       JSON.stringify({
         root: merkleRoot,
         proofBook: this.proofBook
