@@ -6,6 +6,7 @@
     "dev": "docker-compose up -d && yarn migrate && nodemon -w 'src/**' -e 'ts,json' -x ts-node src/local.ts",
     "lint-staged": "lint-staged",
     "seed": "ts-node src/db/seeds.ts",
+    "seedProof": "ts-node src/db/seedsProofBook.ts",
     "migrate:create": "sh -c 'ts-node node_modules/migrate-mongo/bin/migrate-mongo create $0 -f migrate-mongo-config.ts' ",
     "migrate:status": "ts-node node_modules/migrate-mongo/bin/migrate-mongo status -f migrate-mongo-config.ts",
     "migrate:down": "ts-node node_modules/migrate-mongo/bin/migrate-mongo down -f migrate-mongo-config.ts && npm run migrate:status",
