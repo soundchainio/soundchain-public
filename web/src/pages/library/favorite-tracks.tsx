@@ -5,6 +5,8 @@ import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useLayoutContext } from 'hooks/useLayoutContext';
 import React, { useEffect, useState } from 'react';
+import PageFilterWrapper from '../../components/PageFilterWrapper/PageFilterWrapper';
+import { SortListingItem } from '../../lib/apollo/sorting';
 
 const topNavBarProps: TopNavBarProps = {
   title: 'Favorite Tracks',
@@ -13,6 +15,10 @@ const topNavBarProps: TopNavBarProps = {
 
 export default function FavoriteTracksPage() {
   const [searchTerm, setSearchTerm] = useState<string>('');
+
+  const [isGrid, setIsGrid] = useState(true);
+  const [sorting, setSorting] = useState<SortListingItem>(SortListingItem.CreatedAt);
+
   const { setTopNavBarProps } = useLayoutContext();
 
   useEffect(() => {
@@ -26,8 +32,14 @@ export default function FavoriteTracksPage() {
         canonicalUrl="/library/favorite-tracks/"
         description="Your SoundChain favorite tracks"
       />
+      <PageFilterWrapper
+        label='Favorite Tracks'
+        sorting={sorting}
+        setSorting={setSorting}
+        setIsGrid={setIsGrid}
+        isGrid={isGrid} />
       <SearchLibrary placeholder="Search tracks..." setSearchTerm={setSearchTerm} />
-      <FavoriteTracks searchTerm={searchTerm} />
+      <FavoriteTracks isGrid={isGrid} searchTerm={searchTerm} />
     </>
   );
 }

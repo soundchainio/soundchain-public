@@ -56,7 +56,7 @@ export const TrackGrid = ({ track }: TrackProps) => {
   }, [isCurrentSong, isCurrentlyPlaying, setIsPlaying, trackId]);
 
   return (
-    <div className={`${isPlaying ? 'gradient-track-box' : 'black-track-box'} rounded-lg hover:gradient-track-box`}>
+    <div className={`${isPlaying ? 'gradient-track-box' : 'black-track-box'} max-w-[250px] rounded-lg hover:gradient-track-box flex flex-col`}>
       <NextLink href={`/tracks/${trackId}`}>
         <a>
           <div className="h-32 w-full rounded-t-lg overflow-hidden">
@@ -68,7 +68,7 @@ export const TrackGrid = ({ track }: TrackProps) => {
       <NextLink href={`/tracks/${trackId}`}>
         <a>
           <div className="flex items-center flex-col contente-center my-3 decoration-gray-80">
-            <div className="font-bold text-sm" title={title || ''}>
+            <div className="font-bold text-sm overflow-hidden text-ellipsis max-w-[248px]" title={title || ''}>
               {title ? title : 'Unknown Title'}
             </div>
             <div className="font-bold text-gray-80 text-sm" title={artist || ''}>

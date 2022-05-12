@@ -2,7 +2,7 @@ module.exports = {
   async up(db) {
     await db.collection('blocktrackers').insertOne({
       _id: undefined,
-      blockNumber: 26277785,
+      blockNumber: 26296381,
     });
   },
 };

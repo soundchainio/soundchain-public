@@ -2,14 +2,16 @@ import classNames from 'classnames';
 import { InfiniteLoader } from 'components/InfiniteLoader';
 import { TrackListItem } from 'components/TrackListItem';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
-import { SortOrder, SortTrackField, useFavoriteTracksQuery } from 'lib/graphql';
+import { SortOrder, SortTrackField, Track, useFavoriteTracksQuery } from 'lib/graphql';
 import React from 'react';
 import PullToRefresh from 'react-simple-pull-to-refresh';
 import { NoResultFound } from './NoResultFound';
 import { TrackListItemSkeleton } from './TrackListItemSkeleton';
+import { GridView } from './GridView';
 
 interface FavoriteTracksProps {
   searchTerm?: string;
+  isGrid?: boolean;
 }
 
 type Song = {
@@ -22,7 +24,7 @@ type Song = {
 
 const pageSize = 15;
 
-export const FavoriteTracks = ({ searchTerm }: FavoriteTracksProps) => {
+export const FavoriteTracks = ({ searchTerm, isGrid }: FavoriteTracksProps) => {
   const { playlistState } = useAudioPlayerContext();
 
   const { data, loading, fetchMore, refetch } = useFavoriteTracksQuery({
@@ -74,27 +76,40 @@ export const FavoriteTracks = ({ searchTerm }: FavoriteTracksProps) => {
   const { nodes, pageInfo } = data.favoriteTracks;
 
   return (
-    <PullToRefresh onRefresh={refetch} className="h-auto">
-      <ol className={classNames('space-y-1')}>
-        {nodes.map((song, index) => (
-          <TrackListItem
-            key={song.id}
-            index={index + 1}
-            song={{
-              trackId: song.id,
-              src: song.playbackUrl,
-              art: song.artworkUrl,
-              title: song.title,
-              artist: song.artist,
-              playbackCount: song.playbackCountFormatted,
-              isFavorite: song.isFavorite,
-            }}
-            handleOnPlayClicked={song => handleOnPlayClicked(song, index)}
-          />
-        ))}
-        {nodes.length === 0 && !loading && <NoResultFound type="Favorite Tracks" />}
-        {pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading favorite tracks" />}
-      </ol>
-    </PullToRefresh>
+    <>
+      {isGrid ? (
+        <GridView
+          loading={loading}
+          hasNextPage={data?.favoriteTracks.pageInfo.hasNextPage}
+          loadMore={loadMore}
+          tracks={data?.favoriteTracks.nodes as Track[]}
+          refetch={refetch}
+        />
+      ) : (
+        <PullToRefresh onRefresh={refetch} className='h-auto'>
+
+          <ol className={classNames('space-y-1')}>
+            {nodes.map((song, index) => (
+              <TrackListItem
+                key={song.id}
+                index={index + 1}
+                song={{
+                  trackId: song.id,
+                  src: song.playbackUrl,
+                  art: song.artworkUrl,
+                  title: song.title,
+                  artist: song.artist,
+                  playbackCount: song.playbackCountFormatted,
+                  isFavorite: song.isFavorite,
+                }}
+                handleOnPlayClicked={song => handleOnPlayClicked(song, index)}
+              />
+            ))}
+            {nodes.length === 0 && !loading && <NoResultFound type='Favorite Tracks' />}
+            {pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage='Loading favorite tracks' />}
+          </ol>
+        </PullToRefresh>
+      )}
+    </>
   );
 };
