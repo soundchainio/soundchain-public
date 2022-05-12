@@ -39,8 +39,12 @@ async function seedDb() {
 }
 
 async function dropDb() {
-  const conn = await mongoose.createConnection(DATABASE_URL, dbOpts);
-  return conn.dropDatabase();
+  try {
+    const conn = await mongoose.createConnection(DATABASE_URL, dbOpts);
+    await conn.dropCollection("proofbookitems"); // dropDatabase();
+  } catch (error) {
+    console.log(error);
+  }
 }
 
 seedDb();
