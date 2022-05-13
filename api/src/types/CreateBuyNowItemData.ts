@@ -23,6 +23,19 @@ export class CreateBuyNowItemData {
   @Field()
   pricePerItemToShow: number;
 
+
+  @Field()
+  OGUNPricePerItem: string;
+
+  @Field()
+  OGUNPricePerItemToShow: number;
+
+  @Field()
+  acceptsMATIC: boolean;
+
+  @Field()
+  acceptsOGUN: boolean;
+
   @Field()
   startingTime: number;
 }
