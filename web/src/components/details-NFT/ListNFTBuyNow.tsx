@@ -53,7 +53,7 @@ export const ListNFTBuyNow = ({ initialValues, submitLabel, handleSubmit }: List
       <Formik
         initialValues={defaultValues}
         validationSchema={validationSchema}
-        onSubmit={(values, helper) => {
+        onSubmit={(values, helper:FormikHelpers<ListNFTBuyNowFormValues>) => {
           handleSubmit({ ...values, startTime: new Date(values.startTime) }, helper);
         }}
       >
@@ -98,7 +98,7 @@ export const ListNFTBuyNow = ({ initialValues, submitLabel, handleSubmit }: List
                 </div>
               </div>
               <div className="bg-gray-15 py-3 px-5">
-                <SoundchainFee price={values.price} />
+                <SoundchainFee price={values.price ?? 0} />
               </div>
               <p className="mx-6 text-gray-80 font-bold text-xs py-4 text-center">
                 SoundChain transaction fee will be applied to the listing price.
