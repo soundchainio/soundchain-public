@@ -6,9 +6,10 @@ import { MeQuery } from 'lib/graphql';
 import { useCallback } from 'react';
 import { Soundchain721 } from 'types/web3-v1-contracts/Soundchain721';
 import { SoundchainAuction } from 'types/web3-v1-contracts/SoundchainAuction';
-import { SoundchainMarketplace } from 'types/web3-v1-contracts/SoundchainMarketplace';
+// import { SoundchainMarketplace } from 'types/web3-v1-contracts/SoundchainMarketplace';
 import Web3 from 'web3';
 import { PromiEvent, TransactionReceipt } from 'web3-core/types';
+import { Contract } from "web3-eth-contract";
 import { AbiItem } from 'web3-utils';
 import soundchainAuction from '../contract/Auction.sol/SoundchainAuction.json';
 import soundchainMarketplace from '../contract/Marketplace.sol/SoundchainMarketplace.json';
@@ -24,7 +25,7 @@ const auctionContract = (web3: Web3) =>
   new web3.eth.Contract(soundchainAuction.abi as AbiItem[], auctionAddress) as unknown as SoundchainAuction;
 
 const marketplaceContract = (web3: Web3) =>
-  new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress) as unknown as SoundchainMarketplace;
+  new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress) as Contract;
 
 const nftContract = (web3: Web3) =>
   new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress) as unknown as Soundchain721;
@@ -228,17 +229,21 @@ class ResultAuction extends BlockchainFunction<TokenParams> {
 }
 interface ListItemParams extends TokenParams {
   price: string;
+  priceOGUN: string;
   startTime: number;
 }
 class ListItem extends BlockchainFunction<ListItemParams> {
   execute = async (web3: Web3) => {
-    const { from, tokenId, price, startTime } = this.params;
+    const { from, tokenId, price, priceOGUN, startTime } = this.params;
     const totalPrice = Web3.utils.toBN(price).muln(1 + config.soundchainFee);
+    const totalOGUNPrice = Web3.utils.toBN(priceOGUN).muln(1 + config.soundchainFee);
     this.web3 = web3;
+    const acceptsMATIC = +price > 0;
+    const acceptsOGUN = +priceOGUN > 0;
 
     await this._execute(gasPrice =>
       marketplaceContract(web3)
-        .methods.listItem(nftAddress, tokenId, 1, totalPrice, startTime)
+        .methods.listItem(nftAddress, tokenId, 1, totalPrice, totalOGUNPrice, acceptsMATIC, acceptsOGUN, startTime)
         .send({ from, gas, gasPrice }),
     );
 
@@ -247,13 +252,16 @@ class ListItem extends BlockchainFunction<ListItemParams> {
 }
 class UpdateListing extends BlockchainFunction<ListItemParams> {
   execute = async (web3: Web3) => {
-    const { from, tokenId, price, startTime } = this.params;
+    const { from, tokenId, price, priceOGUN, startTime } = this.params;
     const totalPrice = Web3.utils.toBN(price).muln(1 + config.soundchainFee);
+    const totalOGUNPrice = Web3.utils.toBN(priceOGUN).muln(1 + config.soundchainFee);
     this.web3 = web3;
+    const acceptsMATIC = +price > 0;
+    const acceptsOGUN = +priceOGUN > 0;
 
     await this._execute(gasPrice =>
       marketplaceContract(web3)
-        .methods.updateListing(nftAddress, tokenId, totalPrice, startTime)
+        .methods.updateListing(nftAddress, tokenId, totalPrice, totalOGUNPrice, acceptsMATIC, acceptsOGUN, startTime)
         .send({ from, gas, gasPrice }),
     );
 
@@ -380,14 +388,14 @@ const useBlockchainV2 = () => {
     [me],
   );
   const listItem = useCallback(
-    (tokenId: number, from: string, price: string, startTime: number) => {
-      return new ListItem(me, { from, tokenId, price, startTime });
+    (tokenId: number, from: string, price: string, priceOGUN: string, startTime: number) => {
+      return new ListItem(me, { from, tokenId, price, priceOGUN, startTime });
     },
     [me],
   );
   const updateListing = useCallback(
-    (tokenId: number, from: string, price: string, startTime: number) => {
-      return new UpdateListing(me, { from, tokenId, price, startTime });
+    (tokenId: number, from: string, price: string, priceOGUN: string, startTime: number) => {
+      return new UpdateListing(me, { from, tokenId, price, priceOGUN, startTime });
     },
     [me],
   );

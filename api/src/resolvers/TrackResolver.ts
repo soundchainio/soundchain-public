@@ -6,7 +6,7 @@ import { Track } from '../models/Track';
 import { User } from '../models/User';
 import { FavoriteCount } from '../services/TrackService';
 import { Context } from '../types/Context';
-import { CreateTrackInput as CreateTrackInput } from '../types/CreateTrackInput';
+import { CreateTrackInput } from '../types/CreateTrackInput';
 import { CreateTrackPayload } from '../types/CreateTrackPayload';
 import { DeleteTrackInput } from '../types/DeleteTrackInput';
 import { DeleteTrackPayload } from '../types/DeleteTrackPayload';
@@ -63,6 +63,12 @@ export class TrackResolver {
 
   @Query(() => Track)
   track(@Ctx() { trackService }: Context, @Arg('id') id: string): Promise<Track> {
+    console.log("Track Resolver: ", id);
+    const trackFinder = async () => {
+      const track = await trackService.getTrack(id);
+      console.log("Track Resolver track: ", track);
+    }
+    trackFinder();
     return trackService.getTrack(id);
   }
 

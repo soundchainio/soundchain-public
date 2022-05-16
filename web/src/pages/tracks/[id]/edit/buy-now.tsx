@@ -114,13 +114,14 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
     : undefined;
 
   const handleUpdate = (
-    { price: newPrice, startTime }: ListNFTBuyNowFormValues,
+    { price: newPrice, priceOGUN: newPriceOGUN, startTime }: ListNFTBuyNowFormValues,
     helper: FormikHelpers<ListNFTBuyNowFormValues>,
   ) => {
     if (!web3 || !listingPayload.buyNowItem?.buyNowItem?.tokenId || !newPrice || !account) {
       return;
     }
     const weiPrice = Web3.utils.toWei(newPrice.toString(), 'ether');
+    const weiPriceOGUN = newPriceOGUN ? web3?.utils.toWei(newPriceOGUN.toString(), 'ether') : '0';
     const startTimestamp = startTime.getTime() / 1000;
 
     const onReceipt = () => {
@@ -137,7 +138,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       router.replace(router.asPath.replace('/edit/buy-now', ''));
     };
 
-    updateListing(listingPayload.buyNowItem?.buyNowItem?.tokenId, account, weiPrice, startTimestamp)
+    updateListing(listingPayload.buyNowItem?.buyNowItem?.tokenId, account, weiPrice, weiPriceOGUN, startTimestamp)
       .onReceipt(onReceipt)
       .onError(cause => toast.error(cause.message))
       .finally(() => helper.setSubmitting(false))

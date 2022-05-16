@@ -46,7 +46,7 @@ export const HandleNFT = ({
     }
     if (isBuyNow || (isAuction && !auctionIsOver && countBids === 0)) {
       return (
-        <ListedAction
+        <ListedAction 
           href={isBuyNow ? `${router.asPath}/edit/buy-now` : `${router.asPath}/edit/auction`}
           price={price}
           countBids={countBids}
@@ -158,6 +158,14 @@ const ListedAction = ({
   const futureSale = startingDate && startingDate.getTime() > new Date().getTime();
 
   const { dispatchShowBidsHistory } = useModalDispatch();
+
+  // <ListedAction
+  //         href={`${router.asPath}/buy-now`}
+  //         price={price}
+  //         action="BUY NFT"
+  //         variant="buy-nft"
+  //         startingDate={startingDate}
+  //       />
   return (
     <PlayerAwareBottomBar>
       <div className="flex flex-col flex-1">

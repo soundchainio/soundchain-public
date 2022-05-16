@@ -11,13 +11,23 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { date, number, object, SchemaOf } from 'yup';
 
 export interface ListNFTBuyNowFormValues {
-  price: number;
+  price?: number;
+  priceOGUN?: number;
   royalty: number;
   startTime: Date;
 }
 
 const validationSchema: SchemaOf<ListNFTBuyNowFormValues> = object().shape({
-  price: number().min(0.000001).required(),
+  price: number().required(),
+  priceOGUN: number().required(),
+  // price: number().when('priceOGUN', {
+  //   is: (value: number) => value === 0,
+  //   then: number().min(0.000001).required(),
+  // }),
+  // priceOGUN: number().when('price', {
+  //   is: (value: number) => value === 0,
+  //   then: number().min(0.000001).required(),
+  // }),
   royalty: number().max(100).min(0).required(),
   startTime: date()
     .min(new Date(new Date().getTime() + 10 * 1000 * 60), 'The start time should be at least ten minutes from now')
@@ -33,6 +43,7 @@ interface ListNFTProps {
 export const ListNFTBuyNow = ({ initialValues, submitLabel, handleSubmit }: ListNFTProps) => {
   const defaultValues = {
     price: initialValues?.price || 0,
+    priceOGUN: initialValues?.priceOGUN || 0,
     royalty: initialValues?.royalty || 0,
     startTime: initialValues?.startTime || new Date(new Date().getTime() + 10 * 1000 * 60),
   };
@@ -51,10 +62,18 @@ export const ListNFTBuyNow = ({ initialValues, submitLabel, handleSubmit }: List
             <Form>
               <div className="flex items-center justify-between bg-gray-15 py-3 px-5 gap-3">
                 <label htmlFor="price" className="flex-shrink-0 text-gray-80 font-bold text-xs uppercase ">
-                  List price
+                  MATIC List price
                 </label>
                 <div className="w-44">
                   <InputField name="price" type="number" icon={Matic} value={values.price} step="any" />
+                </div>
+              </div>
+              <div className="flex items-center justify-between bg-gray-15 py-3 px-5 gap-3">
+                <label htmlFor="price" className="flex-shrink-0 text-gray-80 font-bold text-xs uppercase ">
+                  OGUN List price
+                </label>
+                <div className="w-44">
+                  <InputField name="price" type="number" icon={Matic} value={values.priceOGUN} step="any" />
                 </div>
               </div>
               <div className="flex items-center justify-between bg-gray-15 py-3 px-5">

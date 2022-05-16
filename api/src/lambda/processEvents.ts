@@ -6,7 +6,7 @@ import {
   AuctionCreated,
   AuctionResulted,
   BidPlaced,
-  UpdateAuction,
+  UpdateAuction
 } from '../../types/web3-v1-contracts/SoundchainAuction';
 import { ItemCanceled, ItemListed, ItemSold, ItemUpdated } from '../../types/web3-v1-contracts/SoundchainMarketplace';
 import { FailedEventModel } from '../models/FailedEvent';
@@ -41,7 +41,7 @@ function _execute<T extends ReturnTypes>(f: (returnValues: T, context: Context) 
 }
 
 const processItemListed = async (returnValues: ItemListed['returnValues'], context: Context): Promise<void> => {
-  const { owner, nft, tokenId, pricePerItem, startingTime } = returnValues;
+  const { owner, nft, tokenId, pricePerItem, OGUNPricePerItem, acceptsMATIC, acceptsOGUN, startingTime } = returnValues;
   const [user, listedBefore] = await Promise.all([
     context.userService.getUserByWallet(owner),
     context.listingItemService.wasListedBefore(parseInt(tokenId)),
@@ -61,6 +61,10 @@ const processItemListed = async (returnValues: ItemListed['returnValues'], conte
       tokenId: parseInt(tokenId),
       pricePerItem: pricePerItem,
       pricePerItemToShow: getPriceToShow(pricePerItem),
+      OGUNPricePerItem: OGUNPricePerItem,
+      OGUNPricePerItemToShow: getPriceToShow(OGUNPricePerItem),
+      acceptsMATIC: acceptsMATIC,
+      acceptsOGUN: acceptsOGUN,
       startingTime: parseInt(startingTime),
     }),
     context.trackService.setPendingNone(parseInt(tokenId)),
@@ -75,11 +79,15 @@ const processItemSold = async (returnValues: ItemSold['returnValues'], context: 
 };
 
 const processItemUpdated = async (returnValues: ItemUpdated['returnValues'], context: Context): Promise<void> => {
-  const { tokenId, newPrice, startingTime } = returnValues;
+  const { tokenId, newPrice, newOGUNPrice, acceptsMATIC, acceptsOGUN, startingTime } = returnValues;
   await Promise.all([
     context.buyNowItemService.updateBuyNowItem(parseInt(tokenId), {
       pricePerItem: newPrice,
       pricePerItemToShow: getPriceToShow(newPrice),
+      OGUNPricePerItem: newOGUNPrice,
+      OGUNPricePerItemToShow: getPriceToShow(newOGUNPrice),
+      acceptsMATIC,
+      acceptsOGUN,
       startingTime: parseInt(startingTime),
     }),
     context.trackService.setPendingNone(parseInt(tokenId)),
@@ -114,7 +122,7 @@ const processTransfer = async (event: Transfer, context: Context): Promise<void>
 };
 
 const processAuctionCreated = async (returnValues: AuctionCreated['returnValues'], context: Context): Promise<void> => {
-  const { nftAddress, tokenId, owner, reservePrice, startTimestamp, endTimestamp } = returnValues;
+  const { nftAddress, tokenId, owner, reservePrice, isPaymentOGUN, startTimestamp, endTimestamp } = returnValues;
   const [user, listedBefore] = await Promise.all([
     context.userService.getUserByWallet(owner),
     context.listingItemService.wasListedBefore(parseInt(tokenId)),
@@ -136,6 +144,7 @@ const processAuctionCreated = async (returnValues: AuctionCreated['returnValues'
       endingTime: parseInt(endTimestamp),
       reservePrice: reservePrice,
       reservePriceToShow: getPriceToShow(reservePrice),
+      isPaymentOGUN,
     }),
     context.trackService.setPendingNone(parseInt(tokenId)),
   ]);

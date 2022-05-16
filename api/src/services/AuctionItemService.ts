@@ -13,6 +13,7 @@ interface NewAuctionItem {
   tokenId: number;
   reservePrice: string;
   reservePriceToShow: number;
+  isPaymentOGUN:  boolean,
   startingTime: number;
   endingTime: number;
 }
