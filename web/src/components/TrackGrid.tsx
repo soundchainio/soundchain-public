@@ -3,7 +3,7 @@ import { HeartFilled } from 'icons/HeartFilled';
 import { Matic } from 'icons/Matic';
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
-import { ListingItemWithPrice, Maybe, TrackWithListingItem, useMaticUsdQuery, Track } from 'lib/graphql';
+import { ListingItemWithPrice, Maybe, Track, TrackWithListingItem, useMaticUsdQuery } from 'lib/graphql';
 import dynamic from 'next/dynamic';
 import NextLink from 'next/link';
 import React, { useEffect, useState } from 'react';
@@ -40,7 +40,13 @@ export const TrackGrid = ({ track }: TrackProps) => {
     favoriteCount: track.favoriteCount,
     url: track.assetUrl,
   };
-  const { listingItem } = track;
+
+  let listingItem: Maybe<ListingItemWithPrice> = null;
+
+  if (track.__typename !== 'TrackWithListingItem') {
+    listingItem = (track as TrackWithListingItem).listingItem;
+  }
+
   const saleType = getSaleType(listingItem);
   const price = listingItem?.priceToShow ?? 0;
   const { art, artist, title, trackId, playbackCount, favoriteCount } = song;

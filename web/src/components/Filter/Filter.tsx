@@ -6,7 +6,7 @@ import { MdKeyboardArrowDown } from 'react-icons/md';
 interface Props {
   sorting: SortListingItem;
   setSorting: Dispatch<SetStateAction<SortListingItem>>;
-  options: Option[]
+  options?: Option[]
 }
 
 type Option = { value: string; name: string };

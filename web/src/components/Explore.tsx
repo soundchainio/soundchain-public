@@ -3,8 +3,8 @@ import { ExploreUsers } from 'components/ExploreUsers';
 import React, { useEffect, useState } from 'react';
 import { ExploreTab } from 'types/ExploreTabType';
 import { ExplorePageFilterWrapper } from 'components/ExplorePageFilterWrapper';
-import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting';
-import { useExploreTracksQuery } from 'lib/graphql';
+import { SelectToApolloQuery, SortListingItem, SortListingParam } from 'lib/apollo/sorting';
+import { SortExploreTracksField, Track, useExploreTracksQuery } from 'lib/graphql';
 import { ListView } from 'components/ListView';
 import { GridView } from 'components/GridView';
 
@@ -19,7 +19,7 @@ export const Explore = () => {
   const { data, refetch, fetchMore, loading } = useExploreTracksQuery({
     variables: {
       page: { first: pageSize },
-      sort: SelectToApolloQuery[sorting],
+      sort: SelectToApolloQuery[sorting] as unknown as SortListingParam<SortExploreTracksField>,
     },
     ssr: false,
   });
@@ -29,7 +29,7 @@ export const Explore = () => {
       page: {
         first: pageSize,
       },
-      sort: SelectToApolloQuery[sorting],
+      sort: SelectToApolloQuery[sorting] as unknown as SortListingParam<SortExploreTracksField>,
     });
   }, [refetch, sorting]);
 
@@ -64,7 +64,7 @@ export const Explore = () => {
           loading={loading}
           hasNextPage={data?.exploreTracks.pageInfo.hasNextPage}
           loadMore={loadMore}
-          tracks={data?.exploreTracks.nodes}
+          tracks={data?.exploreTracks.nodes as Track[]}
           refetch={refetch}
         />
       ) : (
@@ -72,7 +72,7 @@ export const Explore = () => {
           loading={loading}
           hasNextPage={data?.exploreTracks.pageInfo.hasNextPage}
           loadMore={loadMore}
-          tracks={data?.exploreTracks.nodes}
+          tracks={data?.exploreTracks.nodes as Track[]}
           refetch={refetch}
         />
       )}

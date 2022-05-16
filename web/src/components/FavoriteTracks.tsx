@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import { InfiniteLoader } from 'components/InfiniteLoader';
 import { TrackListItem } from 'components/TrackListItem';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
-import { SortOrder, SortTrackField, SortTrackInput, Track, useFavoriteTracksQuery } from 'lib/graphql';
+import { SortTrackInput, Track, useFavoriteTracksQuery } from 'lib/graphql';
 import React, { useEffect } from 'react';
 import PullToRefresh from 'react-simple-pull-to-refresh';
 import { NoResultFound } from './NoResultFound';
@@ -35,7 +35,7 @@ export const FavoriteTracks = ({ searchTerm, isGrid, sorting }: FavoriteTracksPr
       sort: SelectToApolloQuery[sorting] as unknown as SortTrackInput,
       page: { first: pageSize },
     },
-  }, []);
+  });
 
   useEffect(() => {
     refetch({
