@@ -46,7 +46,7 @@ export const Explore = () => {
   };
 
   return (
-    <div className="bg-black h-full overflow-hidden">
+    <div className="bg-black h-full overflow-x-hidden md:px-2">
       <ExplorePageFilterWrapper
         totalCount={data?.exploreTracks.pageInfo.totalCount}
         isGrid={isGrid}

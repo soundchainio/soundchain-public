@@ -39,7 +39,7 @@ export default function FavoriteTracksPage() {
         setIsGrid={setIsGrid}
         isGrid={isGrid} />
       <SearchLibrary placeholder="Search tracks..." setSearchTerm={setSearchTerm} />
-      <FavoriteTracks isGrid={isGrid} searchTerm={searchTerm} />
+      <FavoriteTracks sorting={sorting} isGrid={isGrid} searchTerm={searchTerm} />
     </>
   );
 }

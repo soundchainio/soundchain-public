@@ -2,16 +2,18 @@ import classNames from 'classnames';
 import { InfiniteLoader } from 'components/InfiniteLoader';
 import { TrackListItem } from 'components/TrackListItem';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
-import { SortOrder, SortTrackField, Track, useFavoriteTracksQuery } from 'lib/graphql';
-import React from 'react';
+import { SortOrder, SortTrackField, SortTrackInput, Track, useFavoriteTracksQuery } from 'lib/graphql';
+import React, { useEffect } from 'react';
 import PullToRefresh from 'react-simple-pull-to-refresh';
 import { NoResultFound } from './NoResultFound';
 import { TrackListItemSkeleton } from './TrackListItemSkeleton';
 import { GridView } from './GridView';
+import { SelectToApolloQuery, SortListingItem } from '../lib/apollo/sorting';
 
 interface FavoriteTracksProps {
   searchTerm?: string;
   isGrid?: boolean;
+  sorting: SortListingItem;
 }
 
 type Song = {
@@ -24,22 +26,32 @@ type Song = {
 
 const pageSize = 15;
 
-export const FavoriteTracks = ({ searchTerm, isGrid }: FavoriteTracksProps) => {
+export const FavoriteTracks = ({ searchTerm, isGrid, sorting }: FavoriteTracksProps) => {
   const { playlistState } = useAudioPlayerContext();
 
   const { data, loading, fetchMore, refetch } = useFavoriteTracksQuery({
     variables: {
       search: searchTerm,
-      sort: { field: SortTrackField.CreatedAt, order: SortOrder.Desc },
+      sort: SelectToApolloQuery[sorting] as unknown as SortTrackInput,
       page: { first: pageSize },
     },
-  });
+  }, []);
+
+  useEffect(() => {
+    refetch({
+      page: {
+        first: pageSize,
+      },
+      sort: SelectToApolloQuery[sorting] as unknown as SortTrackInput,
+    });
+  }, [ refetch, pageSize, sorting]);
+
 
   const loadMore = () => {
     fetchMore({
       variables: {
         search: searchTerm,
-        sort: { field: SortTrackField.CreatedAt, order: SortOrder.Desc },
+        sort: SelectToApolloQuery[sorting] as unknown as SortTrackInput,
         page: {
           first: pageSize,
           after: pageInfo.endCursor,

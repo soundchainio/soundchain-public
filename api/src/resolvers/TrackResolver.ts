@@ -157,6 +157,7 @@ export class TrackResolver {
     @Arg('sort', { nullable: true }) sort?: SortListingItemInput,
     @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<ListingItemConnection> {
+    console.log(`listing items`, {sort, page})
     return trackService.getListingItems(filter, sort, page);
   }
 }

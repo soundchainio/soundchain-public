@@ -1,4 +1,4 @@
-import { PaginateResult } from '../db/pagination/paginate';
+import { PaginateResult, PaginateSortParams } from '../db/pagination/paginate';
 import { Profile } from '../models/Profile';
 import { Track } from '../models/Track';
 import { Context } from '../types/Context';
@@ -19,11 +19,14 @@ export class ExploreService extends Service {
     return { profiles: profiles.list, totalProfiles: profiles.total, tracks: tracks.list, totalTracks: tracks.total };
   }
 
-  getExploreTracks(sort: SortExploreTracks, search: string, page?: PageInput): Promise<PaginateResult<Track>> {
+  getExploreTracks(sort: PaginateSortParams<typeof Track>, search: string, page?: PageInput): Promise<PaginateResult<Track>> {
     const regex = new RegExp(search, 'i');
     return this.context.trackService.paginate({
       filter: { $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }], deleted: false },
-      sort,
+      sort: {
+        field: sort.field,
+        order: sort.order
+      },
       page,
     });
   }

@@ -4,15 +4,13 @@ import { useModalDispatch } from 'contexts/providers/modal';
 import { GridView as GridViewIcon } from 'icons/GridView';
 import { ListView as ListViewIcon } from 'icons/ListView';
 import { SortListingItem } from 'lib/apollo/sorting';
-import React, {Dispatch, memo, SetStateAction, useState} from 'react';
+import React, { Dispatch, memo, SetStateAction, useState } from 'react';
 import { Badge } from '../Badge';
 import { FilterComponent } from '../Filter/Filter';
 import { ExploreTab } from 'types/ExploreTabType';
 import { ExploreTabs } from 'components/ExploreTabs';
-import {SaleTypeLabel, saleTypes} from "../../utils/SaleTypeLabel";
-import {SaleType} from "../../types/SaleType";
-import {Genre} from "../../lib/graphql";
-import {GenreLabel} from "../../utils/Genres";
+import { SaleTypeLabel, saleTypes } from '../../utils/SaleTypeLabel';
+import { GenreLabel } from '../../utils/Genres';
 
 export type FilterWrapperProps = {
   totalCount?: number;
@@ -26,27 +24,32 @@ export type FilterWrapperProps = {
 
 export const ExplorePageFilterWrapper = memo((props: FilterWrapperProps) => {
   const { sorting, setSorting, isGrid, setIsGrid, totalCount = 0, selectedTab, setSelectedTab } = props;
-  const [saleType, setSaleType] = useState<SaleTypeLabel | undefined>(saleTypes[0])
-  const [genres, setGenres] = useState<GenreLabel[]>([])
+  const [saleType, setSaleType] = useState<SaleTypeLabel | undefined>(saleTypes[0]);
+  const [genres, setGenres] = useState<GenreLabel[]>([]);
 
   const { dispatchShowFilterMarketplaceModal } = useModalDispatch();
 
+  console.log(sorting);
+
   return (
-    <div className="w-full">
-      <div className="flex gap-2 w-full bg-gray-15 p-4 justify-center items-center">
-        <h3 className="text-slate-200">Explore</h3>
+    <div className='w-full'>
+      <div className='flex gap-2 w-full bg-gray-15 p-4 justify-center items-center'>
+        <h3 className='text-slate-200'>Explore</h3>
         <ExploreTabs selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
-        <div className="flex-1">
-          <span className="text-white text-sm font-bold">{`${totalCount} `} </span>
-          <span className="text-gray-80 text-sm">Tracks</span>
+        <div className='flex-1'>
+          <span className='text-white text-sm font-bold'>{`${totalCount} `} </span>
+          <span className='text-gray-80 text-sm'>Tracks</span>
         </div>
 
-        <FilterComponent sorting={sorting} setSorting={setSorting} />
+        <FilterComponent options={[
+          { value: SortListingItem.PlaybackCount, name: 'Most listened' },
+          { value: SortListingItem.CreatedAt, name: 'Newest' },
+        ]} sorting={sorting} setSorting={setSorting} />
 
-        <button aria-label="List view">
+        <button aria-label='List view'>
           <ListViewIcon color={isGrid ? undefined : 'rainbow'} onClick={() => setIsGrid(false)} />
         </button>
-        <button aria-label="Grid view">
+        <button aria-label='Grid view'>
           <GridViewIcon color={isGrid ? 'rainbow' : undefined} onClick={() => setIsGrid(true)} />
         </button>
       </div>

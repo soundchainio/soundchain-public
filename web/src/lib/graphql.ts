@@ -1476,7 +1476,8 @@ export type SortExploreTracks = {
 };
 
 export enum SortExploreTracksField {
-  CreatedAt = 'CREATED_AT'
+  CreatedAt = 'CREATED_AT',
+  PlaybackCount = 'PLAYBACK_COUNT'
 }
 
 export enum SortListingItemField {
@@ -2239,8 +2240,8 @@ export type ExploreUsersQuery = (
 );
 
 export type FavoriteTracksQueryVariables = Exact<{
-  search?: Maybe<Scalars['String']>;
   sort?: Maybe<SortTrackInput>;
+  search?: Maybe<Scalars['String']>;
   page?: Maybe<PageInput>;
 }>;
 
@@ -2254,7 +2255,7 @@ export type FavoriteTracksQuery = (
       & TrackComponentFieldsFragment
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
     ) }
   ) }
 );
@@ -4859,14 +4860,15 @@ export type ExploreUsersQueryHookResult = ReturnType<typeof useExploreUsersQuery
 export type ExploreUsersLazyQueryHookResult = ReturnType<typeof useExploreUsersLazyQuery>;
 export type ExploreUsersQueryResult = Apollo.QueryResult<ExploreUsersQuery, ExploreUsersQueryVariables>;
 export const FavoriteTracksDocument = gql`
-    query FavoriteTracks($search: String, $sort: SortTrackInput, $page: PageInput) {
-  favoriteTracks(search: $search, sort: $sort, page: $page) {
+    query FavoriteTracks($sort: SortTrackInput, $search: String, $page: PageInput) {
+  favoriteTracks(sort: $sort, search: $search, page: $page) {
     nodes {
       ...TrackComponentFields
     }
     pageInfo {
       hasNextPage
       endCursor
+      totalCount
     }
   }
 }
@@ -4884,8 +4886,8 @@ export const FavoriteTracksDocument = gql`
  * @example
  * const { data, loading, error } = useFavoriteTracksQuery({
  *   variables: {
- *      search: // value for 'search'
  *      sort: // value for 'sort'
+ *      search: // value for 'search'
  *      page: // value for 'page'
  *   },
  * });
