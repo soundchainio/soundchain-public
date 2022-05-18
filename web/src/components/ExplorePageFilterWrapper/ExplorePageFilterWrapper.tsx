@@ -25,20 +25,17 @@ export type FilterWrapperProps = {
 export const ExplorePageFilterWrapper = memo((props: FilterWrapperProps) => {
   const { sorting, setSorting, isGrid, setIsGrid, totalCount = 0, selectedTab, setSelectedTab } = props;
   const [saleType, setSaleType] = useState<SaleTypeLabel | undefined>(saleTypes[0]);
-  const [genres, setGenres] = useState<GenreLabel[]>([]);
 
   const { dispatchShowFilterMarketplaceModal } = useModalDispatch();
 
-  console.log(sorting);
-
   return (
     <div className='w-full'>
-      <div className='flex gap-2 w-full bg-gray-15 p-4 justify-center items-center'>
-        <h3 className='text-slate-200'>Explore</h3>
-        <ExploreTabs selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
+      <div className='flex flex-row relative w-full bg-gray-15 p-4 justify-center items-center'>
+        <h3 className='text-slate-200 hidden md:flex font-semibold'>Explore</h3>
         <div className='flex-1'>
-          <span className='text-white text-sm font-bold'>{`${totalCount} `} </span>
-          <span className='text-gray-80 text-sm'>Tracks</span>
+          <div className='lg:absolute inset-0 flex items-center justify-center'>
+            <ExploreTabs selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
+          </div>
         </div>
 
         <FilterComponent options={[
@@ -46,38 +43,15 @@ export const ExplorePageFilterWrapper = memo((props: FilterWrapperProps) => {
           { value: SortListingItem.CreatedAt, name: 'Newest' },
         ]} sorting={sorting} setSorting={setSorting} />
 
-        <button aria-label='List view'>
-          <ListViewIcon color={isGrid ? undefined : 'rainbow'} onClick={() => setIsGrid(false)} />
-        </button>
-        <button aria-label='Grid view'>
-          <GridViewIcon color={isGrid ? 'rainbow' : undefined} onClick={() => setIsGrid(true)} />
-        </button>
-      </div>
-
-      {(saleType || Boolean(genres?.length)) && (
-        <div className="flex flex-wrap p-4 gap-2">
-          {saleType && (
-            <Badge
-              label={saleType.label}
-              onDelete={() => {
-                dispatchShowFilterMarketplaceModal(false, genres, undefined);
-                setSaleType(undefined);
-              }}
-            />
-          )}
-          {genres?.map(genre => (
-            <Badge
-              key={genre.key}
-              label={genre.label}
-              onDelete={() => {
-                const newGenres = genres.filter(it => it !== genre);
-                dispatchShowFilterMarketplaceModal(false, newGenres, saleType);
-                setGenres(newGenres);
-              }}
-            />
-          ))}
+        <div className='flex gap-2'>
+          <button aria-label='List view'>
+            <ListViewIcon color={isGrid ? undefined : 'rainbow'} onClick={() => setIsGrid(false)} />
+          </button>
+          <button aria-label='Grid view'>
+            <GridViewIcon color={isGrid ? 'rainbow' : undefined} onClick={() => setIsGrid(true)} />
+          </button>
         </div>
-      )}
+      </div>
     </div>
   );
 });
