@@ -1,16 +1,12 @@
 /* eslint-disable react/display-name */
 
-import { useModalDispatch } from 'contexts/providers/modal';
 import { GridView as GridViewIcon } from 'icons/GridView';
 import { ListView as ListViewIcon } from 'icons/ListView';
 import { SortListingItem } from 'lib/apollo/sorting';
-import React, { Dispatch, memo, SetStateAction, useState } from 'react';
-import { Badge } from '../Badge';
+import React, { Dispatch, memo, SetStateAction } from 'react';
 import { FilterComponent } from '../Filter/Filter';
 import { ExploreTab } from 'types/ExploreTabType';
 import { ExploreTabs } from 'components/ExploreTabs';
-import { SaleTypeLabel, saleTypes } from '../../utils/SaleTypeLabel';
-import { GenreLabel } from '../../utils/Genres';
 
 export type FilterWrapperProps = {
   totalCount?: number;
@@ -23,10 +19,7 @@ export type FilterWrapperProps = {
 };
 
 export const ExplorePageFilterWrapper = memo((props: FilterWrapperProps) => {
-  const { sorting, setSorting, isGrid, setIsGrid, totalCount = 0, selectedTab, setSelectedTab } = props;
-  const [saleType, setSaleType] = useState<SaleTypeLabel | undefined>(saleTypes[0]);
-
-  const { dispatchShowFilterMarketplaceModal } = useModalDispatch();
+  const { sorting, setSorting, isGrid, setIsGrid, selectedTab, setSelectedTab } = props;
 
   return (
     <div className='w-full'>
