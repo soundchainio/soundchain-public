@@ -61,6 +61,8 @@ export const TrackGrid = ({ track }: TrackProps) => {
     setIsPlaying(isCurrentlyPlaying(trackId));
   }, [isCurrentSong, isCurrentlyPlaying, setIsPlaying, trackId]);
 
+  console.log({maticUsd, price })
+
   return (
     <div className={`${isPlaying ? 'gradient-track-box' : 'black-track-box'} max-w-[250px] rounded-lg hover:gradient-track-box flex flex-col`}>
       <NextLink href={`/tracks/${trackId}`}>
@@ -106,19 +108,14 @@ export const TrackGrid = ({ track }: TrackProps) => {
             </div>
           </div>
         )}
-        <div className="text-gray-80 text-xs ml-3 mt-0.5 font-semibold">
-          {maticUsd && price && `${currency(price * parseFloat(maticUsd.maticUsd))}`}
-        </div>
+        {price > 0 && (
+          <div className="text-gray-80 text-xs ml-3 mt-0.5 font-semibold">
+            {maticUsd && maticUsd.maticUsd && price && `${currency(price * parseFloat(maticUsd.maticUsd))}`}
+          </div>
+        )}
       </div>
 
       <div className="flex items-center justify-between m-3">
-        <div className="text-gray-80 text-xs flex gap-1 items-center pt-1 font-medium">
-          <Play fill="#808080" />
-          <span>{playbackCount || 0}</span>
-          <HeartFilled />
-          <span className="flex-1">{favoriteCount || 0}</span>
-        </div>
-
         {!isReady ? (
           <LoaderAnimation ring />
         ) : (
@@ -126,6 +123,13 @@ export const TrackGrid = ({ track }: TrackProps) => {
             {isPlaying ? <Pause className="text-white m-auto scale-125" /> : <Play className="text-white m-auto" />}
           </button>
         )}
+
+        <div className="text-gray-80 text-xs flex gap-1 items-center pt-1 font-medium">
+          <Play fill="#808080" />
+          <span>{playbackCount || 0}</span>
+          <HeartFilled />
+          <span className="flex-1">{favoriteCount || 0}</span>
+        </div>
       </div>
     </div>
   );

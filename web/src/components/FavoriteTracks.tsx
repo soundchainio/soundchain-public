@@ -1,14 +1,14 @@
 import classNames from 'classnames';
 import { InfiniteLoader } from 'components/InfiniteLoader';
-import { TrackListItem } from 'components/TrackListItem';
-import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
-import { SortTrackInput, Track, useFavoriteTracksQuery } from 'lib/graphql';
+import { SortTrackInput, Track, TrackQuery, useFavoriteTracksQuery } from 'lib/graphql';
 import React, { useEffect } from 'react';
 import PullToRefresh from 'react-simple-pull-to-refresh';
 import { NoResultFound } from './NoResultFound';
 import { TrackListItemSkeleton } from './TrackListItemSkeleton';
 import { GridView } from './GridView';
 import { SelectToApolloQuery, SortListingItem } from '../lib/apollo/sorting';
+import { Track as TrackItem } from 'components/Track';
+
 
 interface FavoriteTracksProps {
   searchTerm?: string;
@@ -16,6 +16,7 @@ interface FavoriteTracksProps {
   sorting: SortListingItem;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type Song = {
   src: string;
   title?: string | null;
@@ -27,7 +28,6 @@ type Song = {
 const pageSize = 15;
 
 export const FavoriteTracks = ({ searchTerm, isGrid, sorting }: FavoriteTracksProps) => {
-  const { playlistState } = useAudioPlayerContext();
 
   const { data, loading, fetchMore, refetch } = useFavoriteTracksQuery({
     variables: {
@@ -60,21 +60,6 @@ export const FavoriteTracks = ({ searchTerm, isGrid, sorting }: FavoriteTracksPr
     });
   };
 
-  const handleOnPlayClicked = (song: Song, index: number) => {
-    const list = nodes.map(
-      node =>
-        ({
-          trackId: node.id,
-          src: node.playbackUrl,
-          art: node.artworkUrl,
-          title: node.title,
-          artist: node.artist,
-          isFavorite: node.isFavorite,
-        } as Song),
-    );
-    playlistState(list, index);
-  };
-
   if (loading || !data) {
     return (
       <div>
@@ -101,7 +86,14 @@ export const FavoriteTracks = ({ searchTerm, isGrid, sorting }: FavoriteTracksPr
         <PullToRefresh onRefresh={refetch} className='h-auto'>
 
           <ol className={classNames('space-y-1')}>
-            {nodes.map((song, index) => (
+            {nodes.map((song) => (
+              <TrackItem
+                hideBadgeAndPrice={true}
+                key={song.id}
+                track={song as TrackQuery['track']}
+              />
+            ))}
+            {/*{nodes.map((song, index) => (
               <TrackListItem
                 key={song.id}
                 index={index + 1}
@@ -116,7 +108,7 @@ export const FavoriteTracks = ({ searchTerm, isGrid, sorting }: FavoriteTracksPr
                 }}
                 handleOnPlayClicked={song => handleOnPlayClicked(song, index)}
               />
-            ))}
+            ))}*/}
             {nodes.length === 0 && !loading && <NoResultFound type='Favorite Tracks' />}
             {pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage='Loading favorite tracks' />}
           </ol>

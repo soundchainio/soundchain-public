@@ -25,8 +25,8 @@ export const ExplorePageFilterWrapper = memo((props: FilterWrapperProps) => {
     <div className='w-full'>
       <div className='flex flex-row relative w-full bg-gray-15 p-4 justify-center items-center'>
         <h3 className='text-slate-200 hidden md:flex font-semibold'>Explore</h3>
-        <div className='flex-1'>
-          <div className='lg:absolute inset-0 flex items-center justify-center'>
+        <div className='flex-1 isolate'>
+          <div className='lg:absolute z-0 inset-0 flex items-center justify-center'>
             <ExploreTabs selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
           </div>
         </div>
@@ -36,7 +36,7 @@ export const ExplorePageFilterWrapper = memo((props: FilterWrapperProps) => {
           { value: SortListingItem.CreatedAt, name: 'Newest' },
         ]} sorting={sorting} setSorting={setSorting} />
 
-        <div className='flex gap-2'>
+        <div className='flex gap-2 z-10'>
           <button aria-label='List view'>
             <ListViewIcon color={isGrid ? undefined : 'rainbow'} onClick={() => setIsGrid(false)} />
           </button>
