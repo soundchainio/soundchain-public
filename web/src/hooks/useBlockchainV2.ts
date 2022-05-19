@@ -106,15 +106,22 @@ interface BuyItemParams extends DefaultParam {
   tokenId: number;
   owner: string;
   value: string;
+  isPaymentOGUN: boolean;
 }
 class BuyItem extends BlockchainFunction<BuyItemParams> {
   execute = async (web3: Web3) => {
-    const { owner, value, tokenId, from } = this.params;
+    const { owner, value, tokenId, isPaymentOGUN, from } = this.params;
     this.web3 = web3;
 
-    await this._execute(gasPrice =>
-      marketplaceContract(web3).methods.buyItem(nftAddress, tokenId, owner).send({ from, gas, value, gasPrice }),
-    );
+    if (isPaymentOGUN) {
+      await this._execute(gasPrice =>
+        marketplaceContract(web3).methods.buyItem(nftAddress, tokenId, owner, isPaymentOGUN).send({ from, gas, gasPrice }),
+      );
+    } else {
+      await this._execute(gasPrice =>
+        marketplaceContract(web3).methods.buyItem(nftAddress, tokenId, owner, isPaymentOGUN).send({ from, gas, value, gasPrice }),
+      );
+    }
 
     return this.receipt;
   };
@@ -334,8 +341,8 @@ const useBlockchainV2 = () => {
     [me],
   );
   const buyItem = useCallback(
-    (tokenId: number, from: string, owner: string, value: string) => {
-      return new BuyItem(me, { tokenId, from, owner, value });
+    (tokenId: number, from: string, owner: string, isPaymentOGUN:boolean, value: string) => {
+      return new BuyItem(me, { tokenId, from, owner, isPaymentOGUN, value });
     },
     [me],
   );

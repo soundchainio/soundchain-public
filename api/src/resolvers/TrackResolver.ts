@@ -63,12 +63,6 @@ export class TrackResolver {
 
   @Query(() => Track)
   track(@Ctx() { trackService }: Context, @Arg('id') id: string): Promise<Track> {
-    console.log("Track Resolver: ", id);
-    const trackFinder = async () => {
-      const track = await trackService.getTrack(id);
-      console.log("Track Resolver track: ", track);
-    }
-    trackFinder();
     return trackService.getTrack(id);
   }
 

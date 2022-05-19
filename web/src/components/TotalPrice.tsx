@@ -1,9 +1,15 @@
-import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { Matic } from 'components/Matic';
+import { Ogun } from 'components/Ogun';
+import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { useMaticUsdQuery } from 'lib/graphql';
 import { currency, fixedDecimals } from 'utils/format';
 
-export const TotalPrice = ({ price }: { price?: number }) => {
+interface TotalPriceProps {
+  price?: number;
+  isPaymentOGUN?: boolean;
+}
+
+export const TotalPrice = ({ price, isPaymentOGUN }: TotalPriceProps) => {
   const maxGasFee = useMaxGasFee();
   const { data: maticUsd } = useMaticUsdQuery();
 
@@ -21,7 +27,11 @@ export const TotalPrice = ({ price }: { price?: number }) => {
 
   return (
     <div className="font-bold">
-      <Matic value={totalPrice(price)} />
+      { isPaymentOGUN ? (
+        <Ogun value={totalPrice(price)} />
+      ) : (
+        <Matic value={totalPrice(price)} />
+      )}
       <p className="text-sm text-gray-60 font-normal">{`${currency(
         totalPrice(price * parseFloat(maticUsd.maticUsd)),
       )}`}</p>

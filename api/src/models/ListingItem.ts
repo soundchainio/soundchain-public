@@ -38,6 +38,22 @@ export class ListingItem extends Model {
   @prop({ type: Number })
   pricePerItemToShow: number;
 
+  @Field({ nullable: true })
+  @prop({ type: String })
+  OGUNPricePerItem: string;
+
+  @Field({ nullable: true })
+  @prop({ type: Number })
+  OGUNPricePerItemToShow: number;
+
+  @Field({ nullable: true })
+  @prop({ type: Boolean })
+  acceptsMATIC: boolean;
+
+  @Field({ nullable: true })
+  @prop({ type: Boolean })
+  acceptsOGUN: boolean;
+
   @Field(() => Date)
   createdAt: Date;
 

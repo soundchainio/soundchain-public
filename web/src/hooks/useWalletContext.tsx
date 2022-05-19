@@ -11,6 +11,7 @@ interface WalletContextData {
   web3?: Web3;
   account?: string;
   balance?: string;
+  OGUNBalance?: string;
   refetchBalance?: () => void;
 }
 

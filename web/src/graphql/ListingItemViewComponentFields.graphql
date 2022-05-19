@@ -5,6 +5,8 @@ fragment ListingItemViewComponentFields on ListingItem {
   tokenId
   pricePerItem
   pricePerItemToShow
+  OGUNPricePerItem
+  OGUNPricePerItemToShow
   startingTime
   endingTime
   reservePrice

@@ -6,6 +6,7 @@ import { HandleNFT } from 'components/details-NFT/HandleNFT';
 import { MintingData } from 'components/details-NFT/MintingData';
 import { TrackInfo } from 'components/details-NFT/TrackInfo';
 import { Matic } from 'components/Matic';
+import { Ogun } from 'components/Ogun';
 import { ProfileWithAvatar } from 'components/ProfileWithAvatar';
 import SEO from 'components/SEO';
 import { TimeCounter } from 'components/TimeCounter';
@@ -35,7 +36,7 @@ import {
   useProfileLazyQuery,
   useToggleFavoriteMutation,
   useTrackLazyQuery,
-  useUserByWalletLazyQuery,
+  useUserByWalletLazyQuery
 } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
 import NextLink from 'next/link';
@@ -137,13 +138,14 @@ export default function TrackPage({ track }: TrackPageProps) {
   const isProcessing = nftData?.pendingRequest != PendingRequest.None;
   const tokenId = nftData?.tokenId;
   const canList = (me?.profile.verified && nftData?.minter === account) || nftData?.minter != account;
-  const isBuyNow = Boolean(listingPayload?.listingItem?.pricePerItem);
+  const isBuyNow = (Boolean(listingPayload?.listingItem?.pricePerItem) || Boolean(listingPayload?.listingItem?.pricePerItem));
   const isAuction = Boolean(listingPayload?.listingItem?.reservePrice);
   const bidCount = countBids?.countBids.numberOfBids ?? 0;
 
-  const { reservePriceToShow, pricePerItemToShow, id } = listingPayload?.listingItem ?? {};
+  const { reservePriceToShow, pricePerItemToShow, OGUNPricePerItemToShow, id } = listingPayload?.listingItem ?? {};
 
   let price = pricePerItemToShow || 0;
+  const OGUNprice = OGUNPricePerItemToShow || 0;
   if (isAuction || bidCount) {
     price = highestBid.bid || reservePriceToShow || 0;
   }
@@ -331,8 +333,12 @@ export default function TrackPage({ track }: TrackPageProps) {
       {isBuyNow && price && (
         <div className="bg-[#112011]">
           <div className="flex justify-between items-center px-4 py-3 gap-3">
-            <div className="text-xs font-bold text-gray-80">BUY NOW PRICE</div>
+            <div className="text-xs font-bold text-gray-80">MATIC BUY NOW PRICE</div>
             <Matic value={price} variant="currency-inline" className="text-xs" />
+          </div>
+          <div className="flex justify-between items-center px-4 py-3 gap-3">
+            <div className="text-xs font-bold text-gray-80">OGUN BUY NOW PRICE</div>
+            <Ogun value={OGUNprice} variant="currency-inline" className="text-xs" />
           </div>
           {futureSale && (
             <div className="flex justify-between items-center px-4 py-3 gap-3">
@@ -421,6 +427,7 @@ export default function TrackPage({ track }: TrackPageProps) {
           <HandleNFT
             canList={canList}
             price={price}
+            OGUNprice={OGUNprice}
             isOwner={isOwner}
             isBuyNow={isBuyNow}
             isAuction={isAuction}

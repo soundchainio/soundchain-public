@@ -4,6 +4,7 @@ import MaxGasFee from 'components/MaxGasFee';
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { SoundchainFee } from 'components/SoundchainFee';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
+import { Logo } from 'icons/Logo';
 import { Matic } from 'icons/Matic';
 import React from 'react';
 import ReactDatePicker from 'react-datepicker';
@@ -11,8 +12,8 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { date, number, object, SchemaOf } from 'yup';
 
 export interface ListNFTBuyNowFormValues {
-  price?: number;
-  priceOGUN?: number;
+  price: number;
+  priceOGUN: number;
   royalty: number;
   startTime: Date;
 }
@@ -20,14 +21,6 @@ export interface ListNFTBuyNowFormValues {
 const validationSchema: SchemaOf<ListNFTBuyNowFormValues> = object().shape({
   price: number().required(),
   priceOGUN: number().required(),
-  // price: number().when('priceOGUN', {
-  //   is: (value: number) => value === 0,
-  //   then: number().min(0.000001).required(),
-  // }),
-  // priceOGUN: number().when('price', {
-  //   is: (value: number) => value === 0,
-  //   then: number().min(0.000001).required(),
-  // }),
   royalty: number().max(100).min(0).required(),
   startTime: date()
     .min(new Date(new Date().getTime() + 10 * 1000 * 60), 'The start time should be at least ten minutes from now')
@@ -69,11 +62,11 @@ export const ListNFTBuyNow = ({ initialValues, submitLabel, handleSubmit }: List
                 </div>
               </div>
               <div className="flex items-center justify-between bg-gray-15 py-3 px-5 gap-3">
-                <label htmlFor="price" className="flex-shrink-0 text-gray-80 font-bold text-xs uppercase ">
+                <label htmlFor="priceOGUN" className="flex-shrink-0 text-gray-80 font-bold text-xs uppercase ">
                   OGUN List price
                 </label>
                 <div className="w-44">
-                  <InputField name="price" type="number" icon={Matic} value={values.priceOGUN} step="any" />
+                  <InputField name="priceOGUN" type="number" icon={Logo} value={values.priceOGUN} step="any" />
                 </div>
               </div>
               <div className="flex items-center justify-between bg-gray-15 py-3 px-5">
@@ -98,7 +91,7 @@ export const ListNFTBuyNow = ({ initialValues, submitLabel, handleSubmit }: List
                 </div>
               </div>
               <div className="bg-gray-15 py-3 px-5">
-                <SoundchainFee price={values.price ?? 0} />
+                <SoundchainFee price={values.price ?? 0} priceOGUN={values.priceOGUN ?? 0}/>
               </div>
               <p className="mx-6 text-gray-80 font-bold text-xs py-4 text-center">
                 SoundChain transaction fee will be applied to the listing price.

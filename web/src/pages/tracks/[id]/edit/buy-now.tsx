@@ -108,6 +108,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
   const isOwner = compareWallets(listingPayload.buyNowItem?.buyNowItem?.owner, account);
   const isForSale = !!listingPayload.buyNowItem?.buyNowItem?.pricePerItem ?? false;
   const price = listingPayload.buyNowItem?.buyNowItem?.pricePerItemToShow;
+  const OGUNprice = listingPayload.buyNowItem?.buyNowItem?.OGUNPricePerItemToShow;
 
   const startingDate = listingPayload.buyNowItem?.buyNowItem?.startingTime
     ? new Date(listingPayload.buyNowItem.buyNowItem.startingTime * 1000)
@@ -158,7 +159,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       <ListNFTBuyNow
         submitLabel="EDIT LISTING"
         handleSubmit={handleUpdate}
-        initialValues={{ price, startTime: startingDate }}
+        initialValues={{ price, priceOGUN: OGUNprice,  startTime: startingDate }}
       />
     </>
   );

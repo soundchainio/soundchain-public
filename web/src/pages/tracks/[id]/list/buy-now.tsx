@@ -15,7 +15,7 @@ import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 import { SaleType } from 'types/SaleType';
 import SEO from '../../../../components/SEO';
 
@@ -53,7 +53,6 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 });
 
 export default function ListBuyNowPage({ track }: TrackPageProps) {
-  console.log("track list: ", track);
   const { isTokenOwner, isApprovedMarketplace: checkIsApproved } = useBlockchain();
   const { listItem } = useBlockchainV2();
   const router = useRouter();
@@ -75,30 +74,25 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
   });
 
   useEffect(() => {
-    console.log('setTopNavBarProps: ');
     setTopNavBarProps(topNavBarProps);
   }, [setTopNavBarProps]);
 
   useEffect(() => {
     const fetchIsOwner = async () => {
       if (!account || !web3 || nftData?.tokenId === null || nftData?.tokenId === undefined || !isTokenOwner) {
-        console.log('return??????: ');
         return;
       }
       const isTokenOwnerRes = await isTokenOwner(web3, nftData.tokenId, account);
       setIsOwner(isTokenOwnerRes);
     };
-    console.log('fetchIsOwner??????: ');
     fetchIsOwner();
   }, [account, web3, nftData, isTokenOwner]);
 
   useEffect(() => {
-    console.log('getBuyNowItem: ');
     getBuyNowItem();
   }, [getBuyNowItem]);
 
   useEffect(() => {
-    console.log('fetchIsApproved: ');
     const fetchIsApproved = async () => {
       if (!web3 || !checkIsApproved || !account) return;
 
@@ -108,13 +102,18 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
     fetchIsApproved();
   }, [account, web3, checkIsApproved, showApprove]);
 
-  const isForSale = !!buyNowItem?.buyNowItem?.buyNowItem?.pricePerItem ?? false;
+  const isForSale = (!!buyNowItem?.buyNowItem?.buyNowItem?.pricePerItem || !!buyNowItem?.buyNowItem?.buyNowItem?.OGUNPricePerItem) ?? false;
 
   const handleList = (
     { price, priceOGUN, startTime }: ListNFTBuyNowFormValues,
     helper: FormikHelpers<ListNFTBuyNowFormValues>,
   ) => {
     if (nftData?.tokenId === null || nftData?.tokenId === undefined || !account || !web3) {
+      return;
+    }
+
+    if(price <= 0 && priceOGUN <= 0){
+      toast('NFT needs a price higher than 0 on OGUN or MATIC.');
       return;
     }
     const weiPrice = price ? web3?.utils.toWei(price.toString(), 'ether') : '0';
@@ -148,10 +147,6 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
   };
 
   if (!isOwner || isForSale || nftData?.pendingRequest != PendingRequest.None || !canList) {
-    console.log('null??????: ',isOwner);
-    console.log('isForSale??????: ',isForSale);
-    console.log('nftData?.pendingRequest??????: ',nftData?.pendingRequest);
-    console.log('canList?????: ',canList);
     return null;
   }
 
@@ -166,6 +161,16 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
         <Track track={track} />
       </div>
       <ListNFTBuyNow handleSubmit={handleList} submitLabel={isApproved ? 'LIST NFT' : 'APPROVE MARKETPLACE'} />
+      <ToastContainer
+        position="top-center"
+        autoClose={6 * 1000}
+        toastStyle={{
+          backgroundColor: '#202020',
+          color: 'white',
+          fontSize: '12x',
+          textAlign: 'center',
+        }}
+      />
     </>
   );
 }
