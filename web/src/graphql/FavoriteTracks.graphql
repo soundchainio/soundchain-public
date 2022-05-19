@@ -1,11 +1,12 @@
-query FavoriteTracks($search: String, $sort: SortTrackInput, $page: PageInput) {
-  favoriteTracks(search: $search, sort: $sort, page: $page) {
+query FavoriteTracks($sort: SortTrackInput,$search: String, $page: PageInput) {
+  favoriteTracks(sort: $sort, search: $search, page: $page) {
     nodes {
       ...TrackComponentFields
     }
     pageInfo {
       hasNextPage
       endCursor
+      totalCount
     }
   }
 }

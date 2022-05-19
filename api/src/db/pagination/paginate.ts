@@ -9,12 +9,14 @@ import { buildFilter } from './buildFilter';
 import { buildQuerySort } from './buildQuerySort';
 import { prepareResult } from './prepareResult';
 
-export interface PaginateParams<T extends typeof Model> {
+export interface PaginateSortParams<T extends typeof Model> {
+  field: keyof InstanceType<T>;
+  order?: SortOrder;
+}
+
+export interface PaginateParams<T extends typeof Model, S extends PaginateSortParams<T> = PaginateSortParams<T>> {
   filter?: FilterQuery<T>;
-  sort?: {
-    field: keyof InstanceType<T>;
-    order?: SortOrder;
-  };
+  sort?: S;
   page?: {
     first?: number;
     after?: string;
@@ -24,6 +26,7 @@ export interface PaginateParams<T extends typeof Model> {
   };
   group?: FilterQuery<T>;
 }
+
 export interface PaginateParamsAggregated<T extends typeof Model> {
   filter?: FilterQuery<T>;
   sort?: {
@@ -102,6 +105,7 @@ export async function paginatePipelineAggregated<T extends typeof Model>(
 ): Promise<PaginateResult<InstanceType<T>>> {
   const { filter = {}, sort = { field: 'createdAt' }, page = {}, aggregation } = params;
   const { field, order = SortOrder.ASC } = sort;
+  console.log(`agregate sort`, sort)
   const { first = 25, after, last, before, inclusive } = page;
   const ascending = (order === SortOrder.ASC) !== Boolean(last || before);
   const limit = last ?? first;

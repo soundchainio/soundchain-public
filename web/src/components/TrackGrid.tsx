@@ -3,7 +3,7 @@ import { HeartFilled } from 'icons/HeartFilled';
 import { Matic } from 'icons/Matic';
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
-import { ListingItemWithPrice, Maybe, TrackWithListingItem, useMaticUsdQuery } from 'lib/graphql';
+import { ListingItemWithPrice, Maybe, Track, TrackWithListingItem, useMaticUsdQuery } from 'lib/graphql';
 import dynamic from 'next/dynamic';
 import NextLink from 'next/link';
 import React, { useEffect, useState } from 'react';
@@ -15,7 +15,7 @@ const WavesurferComponent = dynamic(() => import('./wavesurfer'), {
   ssr: false,
 });
 interface TrackProps {
-  track: TrackWithListingItem;
+  track: TrackWithListingItem | Track;
   coverPhotoUrl?: string;
 }
 
@@ -40,7 +40,13 @@ export const TrackGrid = ({ track }: TrackProps) => {
     favoriteCount: track.favoriteCount,
     url: track.assetUrl,
   };
-  const { listingItem } = track;
+
+  let listingItem: Maybe<ListingItemWithPrice> = null;
+
+  if (track.__typename !== 'TrackWithListingItem') {
+    listingItem = (track as TrackWithListingItem).listingItem;
+  }
+
   const saleType = getSaleType(listingItem);
   const price = listingItem?.priceToShow ?? 0;
   const { art, artist, title, trackId, playbackCount, favoriteCount } = song;
@@ -55,8 +61,10 @@ export const TrackGrid = ({ track }: TrackProps) => {
     setIsPlaying(isCurrentlyPlaying(trackId));
   }, [isCurrentSong, isCurrentlyPlaying, setIsPlaying, trackId]);
 
+  console.log({maticUsd, price })
+
   return (
-    <div className={`${isPlaying ? 'gradient-track-box' : 'black-track-box'} rounded-lg hover:gradient-track-box`}>
+    <div className={`${isPlaying ? 'gradient-track-box' : 'black-track-box'} max-w-[250px] rounded-lg hover:gradient-track-box flex flex-col`}>
       <NextLink href={`/tracks/${trackId}`}>
         <a>
           <div className="h-32 w-full rounded-t-lg overflow-hidden">
@@ -68,7 +76,7 @@ export const TrackGrid = ({ track }: TrackProps) => {
       <NextLink href={`/tracks/${trackId}`}>
         <a>
           <div className="flex items-center flex-col contente-center my-3 decoration-gray-80">
-            <div className="font-bold text-sm" title={title || ''}>
+            <div className="font-bold text-sm overflow-hidden text-ellipsis max-w-[248px]" title={title || ''}>
               {title ? title : 'Unknown Title'}
             </div>
             <div className="font-bold text-gray-80 text-sm" title={artist || ''}>
@@ -100,19 +108,14 @@ export const TrackGrid = ({ track }: TrackProps) => {
             </div>
           </div>
         )}
-        <div className="text-gray-80 text-xs ml-3 mt-0.5 font-semibold">
-          {maticUsd && price && `${currency(price * parseFloat(maticUsd.maticUsd))}`}
-        </div>
+        {price > 0 && (
+          <div className="text-gray-80 text-xs ml-3 mt-0.5 font-semibold">
+            {maticUsd && maticUsd.maticUsd && price && `${currency(price * parseFloat(maticUsd.maticUsd))}`}
+          </div>
+        )}
       </div>
 
       <div className="flex items-center justify-between m-3">
-        <div className="text-gray-80 text-xs flex gap-1 items-center pt-1 font-medium">
-          <Play fill="#808080" />
-          <span>{playbackCount || 0}</span>
-          <HeartFilled />
-          <span className="flex-1">{favoriteCount || 0}</span>
-        </div>
-
         {!isReady ? (
           <LoaderAnimation ring />
         ) : (
@@ -120,6 +123,13 @@ export const TrackGrid = ({ track }: TrackProps) => {
             {isPlaying ? <Pause className="text-white m-auto scale-125" /> : <Play className="text-white m-auto" />}
           </button>
         )}
+
+        <div className="text-gray-80 text-xs flex gap-1 items-center pt-1 font-medium">
+          <Play fill="#808080" />
+          <span>{playbackCount || 0}</span>
+          <HeartFilled />
+          <span className="flex-1">{favoriteCount || 0}</span>
+        </div>
       </div>
     </div>
   );

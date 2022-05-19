@@ -7,7 +7,9 @@ export enum SortListingItem {
   CreatedAt = 'CreatedAt',
 }
 
-export const SelectToApolloQuery: Record<SortListingItem, { field: SortListingItemField; order: SortOrder }> = {
+export type SortListingParam<T = SortListingItemField> = { field: T; order: SortOrder };
+
+export const SelectToApolloQuery: Record<SortListingItem, SortListingParam> = {
   [SortListingItem.PriceAsc]: { field: SortListingItemField.Price, order: SortOrder.Asc },
   [SortListingItem.PriceDesc]: { field: SortListingItemField.Price, order: SortOrder.Desc },
   [SortListingItem.PlaybackCount]: { field: SortListingItemField.PlaybackCount, order: SortOrder.Desc },
