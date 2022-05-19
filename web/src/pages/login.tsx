@@ -11,7 +11,7 @@ import { Google } from 'icons/Google';
 import { LeftArrow } from 'icons/LeftArrow';
 import { LogoAndText } from 'icons/LogoAndText';
 import { UserWarning } from 'icons/UserWarning';
-import { getJwt, setJwt } from 'lib/apollo';
+import { setJwt } from 'lib/apollo';
 import { AuthMethod, useLoginMutation, useMeQuery } from 'lib/graphql';
 import { useRouter } from 'next/dist/client/router';
 import NextLink from 'next/link';
@@ -21,7 +21,7 @@ export default function LoginPage() {
   const [login] = useLoginMutation();
   const [loggingIn, setLoggingIn] = useState(false);
   const { data, loading: loadingMe } = useMeQuery();
-  const me = data?.me
+  const me = data?.me;
   const { magic } = useMagicContext();
   const router = useRouter();
   const magicParam = router.query.magic_credential?.toString();
@@ -72,8 +72,8 @@ export default function LoginPage() {
   };
 
   useEffect(() => {
-    async function magicGoogle() {
-      if (magic && magicParam && magic.oauth && !(await getJwt() )) {
+    function magicGoogle() {
+      if (magic && magicParam && magic.oauth) {
         setLoggingIn(true);
         magic.oauth
           .getRedirectResult()
@@ -82,7 +82,7 @@ export default function LoginPage() {
           .catch(handleError);
       }
     }
-    magicGoogle()
+    magicGoogle();
   }, [magic, magicParam, login, handleError]);
 
   async function handleSubmit(values: FormValues) {

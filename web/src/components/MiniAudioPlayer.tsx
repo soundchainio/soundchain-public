@@ -48,7 +48,7 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
   };
 
   const RenderTrackCounters = () => (
-    <div className="text-gray-80 text-xs flex gap-1 items-center pt-1">
+    <div className="text-gray-80 text-xs flex gap-1 items-center px-2">
       <Play fill="#808080" />
       <span>{playbackCount || 0}</span>
       <HeartFilled />
@@ -87,11 +87,14 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
             <NextLink href={`/tracks/${trackId}`}>
               <a className="w-full truncate">
                 <div className="flex w-full cursor-pointer truncate items-start">
-                  <div className="truncate">
-                    <div className="text-white font-black text-xs w-full truncate">
-                      <div className="truncate" title={title || ''}>
+                  <div className="truncate w-full">
+                    <div className="text-white flex justify-between font-black text-xs w-full truncate">
+                      <div className="truncate flex-1" title={title || ''}>
                         {title ? title : 'Unknown Title'}
                       </div>
+
+
+                      <RenderTrackCounters />
                     </div>
                     {artist && <div className="text-gray-80 text-xs font-black">{artist}</div>}
                   </div>
@@ -100,17 +103,11 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
                     {saleType && saleType !== '' && !hideBadgeAndPrice && (
                       <BadgeTrack auction={saleType === 'auction'} label={saleType.toUpperCase()}></BadgeTrack>
                     )}
-                    {hideBadgeAndPrice && (
-                      <RenderTrackCounters />
-                    )}
                   </div>
                 </div>
               </a>
             </NextLink>
           </div>
-          {!hideBadgeAndPrice && (
-            <RenderTrackCounters />
-          )}
           <div className="text-white flex flex-col mt-2">
             {isSameSong ? (
               <>
