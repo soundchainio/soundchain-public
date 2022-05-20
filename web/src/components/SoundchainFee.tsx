@@ -11,7 +11,6 @@ interface Props {
 }
 
 export const SoundchainFee = ({ price, priceOGUN, isPaymentOGUN }: Props) => {
-  console.log("isPaymentOGUN FEE:", isPaymentOGUN);
   return (
     <>
     {isPaymentOGUN === undefined ? (

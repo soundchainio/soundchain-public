@@ -524,6 +524,7 @@ export type ListingItem = {
   OGUNPricePerItemToShow: Maybe<Scalars['Float']>;
   acceptsMATIC: Maybe<Scalars['Boolean']>;
   acceptsOGUN: Maybe<Scalars['Boolean']>;
+  isPaymentOGUN: Maybe<Scalars['Boolean']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
 };
@@ -554,6 +555,7 @@ export type ListingItemWithPrice = {
   OGUNPricePerItemToShow: Maybe<Scalars['Float']>;
   acceptsMATIC: Maybe<Scalars['Boolean']>;
   acceptsOGUN: Maybe<Scalars['Boolean']>;
+  isPaymentOGUN: Maybe<Scalars['Boolean']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   priceToShow: Maybe<Scalars['Float']>;
@@ -2432,13 +2434,13 @@ export type ListingItemComponentFieldsFragment = (
     & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner' | 'pendingTime'>
   )>, listingItem: Maybe<(
     { __typename?: 'ListingItemWithPrice' }
-    & Pick<ListingItemWithPrice, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'pricePerItemToShow' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow' | 'createdAt' | 'updatedAt' | 'priceToShow'>
+    & Pick<ListingItemWithPrice, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'pricePerItemToShow' | 'OGUNPricePerItem' | 'OGUNPricePerItemToShow' | 'isPaymentOGUN' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow' | 'createdAt' | 'updatedAt' | 'priceToShow'>
   )> }
 );
 
 export type ListingItemViewComponentFieldsFragment = (
   { __typename?: 'ListingItem' }
-  & Pick<ListingItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'pricePerItemToShow' | 'OGUNPricePerItem' | 'OGUNPricePerItemToShow' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow' | 'createdAt' | 'updatedAt'>
+  & Pick<ListingItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'pricePerItemToShow' | 'OGUNPricePerItem' | 'OGUNPricePerItemToShow' | 'isPaymentOGUN' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow' | 'createdAt' | 'updatedAt'>
 );
 
 export type ListingItemsQueryVariables = Exact<{
@@ -3614,6 +3616,9 @@ export const ListingItemComponentFieldsFragmentDoc = gql`
     tokenId
     pricePerItem
     pricePerItemToShow
+    OGUNPricePerItem
+    OGUNPricePerItemToShow
+    isPaymentOGUN
     startingTime
     endingTime
     reservePrice
@@ -3634,6 +3639,7 @@ export const ListingItemViewComponentFieldsFragmentDoc = gql`
   pricePerItemToShow
   OGUNPricePerItem
   OGUNPricePerItemToShow
+  isPaymentOGUN
   startingTime
   endingTime
   reservePrice

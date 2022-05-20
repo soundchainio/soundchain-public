@@ -141,6 +141,7 @@ export default function TrackPage({ track }: TrackPageProps) {
   const isBuyNow = (Boolean(listingPayload?.listingItem?.pricePerItem) || Boolean(listingPayload?.listingItem?.pricePerItem));
   const isAuction = Boolean(listingPayload?.listingItem?.reservePrice);
   const bidCount = countBids?.countBids.numberOfBids ?? 0;
+  const isPaymentOGUN = Boolean(listingPayload?.listingItem?.isPaymentOGUN);
 
   const { reservePriceToShow, pricePerItemToShow, OGUNPricePerItemToShow, id } = listingPayload?.listingItem ?? {};
 
@@ -371,7 +372,11 @@ export default function TrackPage({ track }: TrackPageProps) {
           <div className="flex justify-between items-center px-4 py-3 gap-3">
             <div className="text-xs font-bold text-gray-80 ">{auctionIsOver ? 'FINAL PRICE' : 'CURRENT PRICE'}</div>
             <div className="flex items-center font-bold gap-1">
-              <Matic value={price} variant="currency-inline" className="text-xs" />
+              {isPaymentOGUN ? (
+                <Ogun value={price} variant="currency-inline" className="text-xs" />
+              ):(
+                <Matic value={price} variant="currency-inline" className="text-xs" />
+              )}
               <button className="text-[#22CAFF] text-xxs" onClick={() => dispatchShowBidsHistory(true, id || '')}>
                 [{bidCount} bids]
               </button>
@@ -437,6 +442,7 @@ export default function TrackPage({ track }: TrackPageProps) {
             startingDate={startingDate}
             endingDate={endingDate}
             auctionId={id || ''}
+            isPaymentOGUN={isPaymentOGUN || false}
           />
         ))}
     </>

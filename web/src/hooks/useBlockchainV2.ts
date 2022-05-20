@@ -6,10 +6,9 @@ import { MeQuery } from 'lib/graphql';
 import { useCallback } from 'react';
 import { Soundchain721 } from 'types/web3-v1-contracts/Soundchain721';
 import { SoundchainAuction } from 'types/web3-v1-contracts/SoundchainAuction';
-// import { SoundchainMarketplace } from 'types/web3-v1-contracts/SoundchainMarketplace';
+import { SoundchainMarketplace } from 'types/web3-v1-contracts/SoundchainMarketplace';
 import Web3 from 'web3';
 import { PromiEvent, TransactionReceipt } from 'web3-core/types';
-import { Contract } from "web3-eth-contract";
 import { AbiItem } from 'web3-utils';
 import soundchainAuction from '../contract/Auction.sol/SoundchainAuction.json';
 import soundchainMarketplace from '../contract/Marketplace.sol/SoundchainMarketplace.json';
@@ -25,7 +24,7 @@ const auctionContract = (web3: Web3) =>
   new web3.eth.Contract(soundchainAuction.abi as AbiItem[], auctionAddress) as unknown as SoundchainAuction;
 
 const marketplaceContract = (web3: Web3) =>
-  new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress) as Contract;
+  new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress) as unknown as SoundchainMarketplace;
 
 const nftContract = (web3: Web3) =>
   new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress) as unknown as Soundchain721;
@@ -90,15 +89,22 @@ class BlockchainFunction<Type> {
 interface PlaceBidParams extends DefaultParam {
   tokenId: number;
   value: string;
+  isPaymentOGUN: boolean;
 }
 class PlaceBid extends BlockchainFunction<PlaceBidParams> {
   execute = async (web3: Web3) => {
-    const { from, value, tokenId } = this.params;
+    const { from, value, tokenId, isPaymentOGUN } = this.params;
     this.web3 = web3;
 
-    await this._execute(gasPrice =>
-      auctionContract(web3).methods.placeBid(nftAddress, tokenId).send({ from, gas, value, gasPrice }),
-    );
+    if (isPaymentOGUN) {
+      await this._execute(gasPrice =>
+        auctionContract(web3).methods.placeBid(nftAddress, tokenId, isPaymentOGUN, value).send({ from, gas, gasPrice }),
+      );
+    } else {
+      await this._execute(gasPrice =>
+        auctionContract(web3).methods.placeBid(nftAddress, tokenId, isPaymentOGUN, value).send({ from, gas, value, gasPrice }),
+      );
+    }
     return this.receipt;
   };
 }
@@ -189,18 +195,19 @@ class CancelListing extends BlockchainFunction<TokenParams> {
 }
 interface CreateAuctionParams extends TokenParams {
   reservePrice: string;
+  isPaymentOGUN: boolean;
   startTime: number;
   endTime: number;
 }
 class CreateAuction extends BlockchainFunction<CreateAuctionParams> {
   execute = async (web3: Web3) => {
-    const { from, tokenId, reservePrice, startTime, endTime } = this.params;
+    const { from, tokenId, reservePrice, isPaymentOGUN, startTime, endTime } = this.params;
     const totalPrice = Web3.utils.toBN(reservePrice).muln(1 + config.soundchainFee);
     this.web3 = web3;
 
     await this._execute(gasPrice =>
       auctionContract(web3)
-        .methods.createAuction(nftAddress, tokenId, totalPrice, startTime, endTime)
+        .methods.createAuction(nftAddress, tokenId, totalPrice, isPaymentOGUN, startTime, endTime)
         .send({ from, gas, gasPrice }),
     );
 
@@ -209,13 +216,13 @@ class CreateAuction extends BlockchainFunction<CreateAuctionParams> {
 }
 class UpdateAuction extends BlockchainFunction<CreateAuctionParams> {
   execute = async (web3: Web3) => {
-    const { from, tokenId, reservePrice, startTime, endTime } = this.params;
+    const { from, tokenId, reservePrice, isPaymentOGUN, startTime, endTime } = this.params;
     const totalPrice = Web3.utils.toBN(reservePrice).muln(1 + config.soundchainFee);
     this.web3 = web3;
 
     await this._execute(gasPrice =>
       auctionContract(web3)
-        .methods.updateAuction(nftAddress, tokenId, totalPrice, startTime, endTime)
+        .methods.updateAuction(nftAddress, tokenId, totalPrice, isPaymentOGUN, startTime, endTime)
         .send({ from, gas, gasPrice }),
     );
 
@@ -335,8 +342,8 @@ const useBlockchainV2 = () => {
   const me = useMe();
 
   const placeBid = useCallback(
-    (tokenId: number, from: string, value: string) => {
-      return new PlaceBid(me, { from, value, tokenId });
+    (tokenId: number, from: string, value: string, isPaymentOGUN:boolean) => {
+      return new PlaceBid(me, { from, value, tokenId, isPaymentOGUN });
     },
     [me],
   );
@@ -377,14 +384,14 @@ const useBlockchainV2 = () => {
     [me],
   );
   const createAuction = useCallback(
-    (tokenId: number, reservePrice: string, startTime: number, endTime: number, from: string) => {
-      return new CreateAuction(me, { from, tokenId, reservePrice, startTime, endTime });
+    (tokenId: number, reservePrice: string, startTime: number, endTime: number, from: string, isPaymentOGUN:boolean) => {
+      return new CreateAuction(me, { from, tokenId, reservePrice, isPaymentOGUN, startTime, endTime });
     },
     [me],
   );
   const updateAuction = useCallback(
-    (tokenId: number, reservePrice: string, startTime: number, endTime: number, from: string) => {
-      return new UpdateAuction(me, { from, tokenId, reservePrice, startTime, endTime });
+    (tokenId: number, reservePrice: string, startTime: number, endTime: number, from: string, isPaymentOGUN:boolean) => {
+      return new UpdateAuction(me, { from, tokenId, reservePrice, isPaymentOGUN, startTime, endTime });
     },
     [me],
   );

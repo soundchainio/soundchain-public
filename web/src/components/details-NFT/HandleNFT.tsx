@@ -22,6 +22,8 @@ interface HandleNFTProps {
   startingDate?: Date;
   endingDate?: Date;
   auctionId: string;
+  wasCancel?: boolean;
+  isPaymentOGUN?: boolean;
 }
 
 export const HandleNFT = ({
@@ -37,6 +39,8 @@ export const HandleNFT = ({
   startingDate,
   endingDate,
   auctionId,
+  wasCancel,
+  isPaymentOGUN,
 }: HandleNFTProps) => {
   const router = useRouter();
   if (isOwner) {
@@ -63,7 +67,7 @@ export const HandleNFT = ({
         />
       );
     }
-    if (isAuction && (auctionIsOver || countBids > 0)) {
+    if (isAuction && (auctionIsOver || countBids > 0) && !wasCancel) {
       return (
         <AuctionDetails
           auctionIsOver={auctionIsOver}
@@ -136,6 +140,7 @@ export const HandleNFT = ({
           action="PLACE BID"
           variant="buy-nft"
           auctionId={auctionId}
+          isPaymentOGUN={isPaymentOGUN}
         />
       );
     }
@@ -180,6 +185,7 @@ interface ListedActionProps {
   startingDate?: Date;
   endingDate?: Date;
   auctionId?: string;
+  isPaymentOGUN?: boolean;
 }
 
 const ListedAction = ({
@@ -193,17 +199,29 @@ const ListedAction = ({
   startingDate,
   endingDate,
   auctionId,
+  isPaymentOGUN,
 }: ListedActionProps) => {
   const futureSale = startingDate && startingDate.getTime() > new Date().getTime();
 
   const { dispatchShowBidsHistory } = useModalDispatch();
-
   return (
     <PlayerAwareBottomBar>
       <div className="flex flex-col flex-1">
         <div className="text-sm flex items-center font-bold gap-1">
-          {!!price && <Matic value={price} variant="currency" />}
-          {!!(OGUNprice) && <Ogun value={OGUNprice ?? 0} variant="currency" />}
+          {!!auctionId ? (
+            <>
+            {!!isPaymentOGUN ? (
+              <Ogun value={OGUNprice ?? 0} variant="currency" />
+            ) : (
+              <Matic value={price} variant="currency" />
+            )}
+            </>
+          ):(
+            <>
+            {!!price && <Matic value={price} variant="currency" />}
+            {!!(OGUNprice) && <Ogun value={OGUNprice ?? 0} variant="currency" />}
+            </>
+          )}
         </div>
       </div>
       {futureSale && startingDate && (
@@ -222,14 +240,22 @@ const ListedAction = ({
         </div>
       )}
       <div className="flex-1 flex items-center justify-end">
-        <NextLink href={{pathname:href, query: {isPaymentOGUN:false}}} replace>
+      {!!auctionId ? (
+        <NextLink href={{pathname:href, query: {isPaymentOGUN: !!isPaymentOGUN}}} replace>
           <Button variant={variant}>{action}</Button>
         </NextLink>
-        {secondAction  && (
-          <NextLink href={{pathname:href, query: {isPaymentOGUN:true}}} replace>
-            <Button variant={variant}>{secondAction}</Button>
+      ):(
+        <>
+          <NextLink href={{pathname:href, query: {isPaymentOGUN:false}}} replace>
+            <Button variant={variant}>{action}</Button>
           </NextLink>
-        )}
+          {secondAction  && (
+            <NextLink href={{pathname:href, query: {isPaymentOGUN:true}}} replace>
+              <Button variant={variant}>{secondAction}</Button>
+            </NextLink>
+          )}
+        </>
+      )}
       </div>
     </PlayerAwareBottomBar>
   );
@@ -244,6 +270,7 @@ interface AuctionDetailsProps {
   completeHref: string;
   auctionId: string;
   canComplete: boolean;
+  isPaymentOGUN?: boolean;
 }
 
 const AuctionDetails = ({
@@ -255,11 +282,16 @@ const AuctionDetails = ({
   completeHref,
   auctionId,
   canComplete,
+  isPaymentOGUN,
 }: AuctionDetailsProps) => {
   return (
     <div className="w-full bg-black text-white flex items-center py-3 px-4">
       <div className="flex flex-col flex-1">
-        <Matic value={price} variant="currency" />
+        {isPaymentOGUN ? (
+          <Ogun value={price} variant="currency" />
+        ):(
+          <Matic value={price} variant="currency" />
+        )}
       </div>
       <div className="text-center">
         {auctionIsOver && countBids === 0 && (

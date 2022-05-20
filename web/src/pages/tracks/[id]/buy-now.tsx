@@ -51,7 +51,6 @@ interface FormValues {
 
 
 const marketplaceAddress = config.marketplaceAddress as string;
-// const auctionAddress = config.auctionAddress as string;
 const OGUNAddress = config.OGUNAddress as string;
 const tokenContract = (web3: Web3) =>
   new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], OGUNAddress) as unknown as Contract;
@@ -91,8 +90,6 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
   const router = useRouter();
   const me = useMe();
   const { setTopNavBarProps } = useLayoutContext();
-
-  console.log("isPaymentOGUN: ", isPaymentOGUN);
 
   const nftData = track.nftData;
   const tokenId = nftData?.tokenId ?? -1;
