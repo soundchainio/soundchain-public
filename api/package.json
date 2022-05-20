@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "docker-compose up -d && yarn migrate && nodemon -w 'src/**' -e 'ts,json' -x ts-node src/local.ts",
+    "dev:quick": "yarn migrate && nodemon -w 'src/**' -e 'ts,json' -x ts-node src/local.ts",
     "lint-staged": "lint-staged",
     "seed": "ts-node src/db/seeds.ts",
     "migrate:create": "sh -c 'ts-node node_modules/migrate-mongo/bin/migrate-mongo create $0 -f migrate-mongo-config.ts' ",

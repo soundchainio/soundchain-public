@@ -6,6 +6,7 @@
     "bootstrap": "lerna bootstrap && husky install",
     "seed": "cd api && yarn seed",
     "dev": "lerna run --parallel dev",
+    "dev:quick": "lerna run --parallel dev:quick",
     "codegen": "lerna run --parallel codegen",
     "lint-staged": "lerna run --parallel lint-staged"
   },

@@ -10,6 +10,7 @@ import {
   PaginateParamsAggregated,
   paginatePipelineAggregated,
   PaginateResult,
+  PaginateSortParams,
 } from '../db/pagination/paginate';
 import { NotFoundError } from '../errors/NotFoundError';
 import { Model } from '../models/Model';
@@ -63,7 +64,7 @@ export class ModelService<T extends typeof Model, KeyComponents = string> extend
     return Boolean(entity);
   }
 
-  async paginate(params: PaginateParams<T> = {}): Promise<PaginateResult<InstanceType<T>>> {
+  async paginate<S extends PaginateSortParams<T> = PaginateSortParams<T>>(params: PaginateParams<T, S> = {}): Promise<PaginateResult<InstanceType<T>>> {
     return paginate(this.model, params);
   }
 

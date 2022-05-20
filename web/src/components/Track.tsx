@@ -1,10 +1,10 @@
 import { NotAvailableMessage } from 'components/NotAvailableMessage';
-import { TrackQuery } from 'lib/graphql';
+import { TrackQuery, Track as TheTrack } from 'lib/graphql';
 import React from 'react';
 import { MiniAudioPlayer } from './MiniAudioPlayer';
 
 interface TrackProps {
-  track: TrackQuery['track'];
+  track: TrackQuery['track'] | TheTrack;
   coverPhotoUrl?: string;
   hideBadgeAndPrice?: boolean;
 }
