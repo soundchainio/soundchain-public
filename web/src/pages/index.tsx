@@ -6,10 +6,6 @@ export default function Index() {
   return (
     <>
       <SEO title='SoundChain' description='SoundChain' canonicalUrl='/' />
-
-      <div className='h-screen w-screen overflow-x-hidden bg-sky-400'>
-        <div className='text-white'>Howdy</div>
-      </div>
     </>
   );
 }
