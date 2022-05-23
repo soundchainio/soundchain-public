@@ -1,14 +1,21 @@
 import SEO from 'components/SEO';
+import type { ReactElement } from 'react';
+import LandingPageLayout from '../components/LandingPage/layout';
 
 export default function Index() {
   return (
-    <div>
+    <>
       <SEO title='SoundChain' description='SoundChain' canonicalUrl='/' />
-      <main
-        className='flex flex-col items-center justify-center gap-20 md:gap-30 py-36 md:py-52 font-rubik text-white w-full'>
 
-        Hello World
-      </main>
-    </div>
+      <div className='h-screen w-screen overflow-x-hidden bg-sky-400'>
+        <div className='text-white'>Howdy</div>
+      </div>
+    </>
   );
 }
+
+Index.getLayout = (page: ReactElement) => (
+  <LandingPageLayout>
+    {page}
+  </LandingPageLayout>
+);
