@@ -15,6 +15,7 @@ export const OutlineButton = ({
       <button
         className={classNames(
           commonClasses,
+
           'text-white text-xs h-full bg-opacity-75 font-semibold',
           bgColor ? bgColor : 'bg-gray-10',
         )}
