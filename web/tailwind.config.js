@@ -1,8 +1,12 @@
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const defaultTheme = require('tailwindcss/defaultTheme')
+
 const measures = {
   '6/10': '60%',
   '7/10': '70%',
   '8/10': '80%',
   '9/10': '90%',
+  '15/16': '93.75%'
 };
 
 module.exports = {
@@ -11,6 +15,8 @@ module.exports = {
   theme: {
     extend: {
       screens: {
+        ...defaultTheme.screens,
+        '2k': { raw: '(min-width: 2000px)' },
         vsm: { raw: '(min-height: 600px)' },
         vmd: { raw: '(min-height: 800px)' },
         vlg: { raw: '(min-height: 900px)' },
@@ -32,6 +38,12 @@ module.exports = {
       maxHeight: {
         ...measures,
       },
+      minWidth: {
+        ...measures,
+      },
+      maxWidth: {
+        ...measures,
+      },
       dropShadow: {
         white: ['0px 0px 5px rgb(255,255,255)', '0px 0px 1px rgb(255,255,255)'],
       },
@@ -50,6 +62,8 @@ module.exports = {
         'gradient-radial-to-tl': 'radial-gradient(115% 90% at 100% 100%, var(--tw-gradient-stops))',
         'gradient-radial-to-br': 'radial-gradient(90% 115% at 0% 0%, var(--tw-gradient-stops))',
         'gradient-radial-to-bl': 'radial-gradient(90% 115% at 100% 0%, var(--tw-gradient-stops))',
+        'greenish': 'linear-gradient(180deg, 0% 48.44% 100%, var(--tw-gradient-stops))',
+        'landing-card': 'linear-gradient(89.78deg, 30.49% 208.35%, var(--tw-gradient-stops))',
       },
       colors: {
         gray: {
