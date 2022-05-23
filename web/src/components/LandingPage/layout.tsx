@@ -157,13 +157,13 @@ function Section2() {
               <div className='flex flex-col'>
                 <div className='text-center'>
                   <div>Our native ER-20 token that lets our users take part in</div>
-                  <div>shaping the platform's future.</div>
+                  <div>shaping the {`platform's`} future.</div>
                 </div>
 
                 <div className='grid grid-cols-3'>
                   <div className='col-span-1'>
                     <span>Simple to use</span>
-                    <span>You shouldn't need to lawyer up over the banger you just made</span>
+                    <span>You {`shouldn't`} need to lawyer up over the banger you just made</span>
                   </div>
                   <div className='col-span-1'>
                     <span>full ownership</span>
@@ -220,6 +220,8 @@ export default function LandingPageLayout({ children }: LayoutProps) {
       <Section2 />
       <Section3 />
       <Section4 />
+
+      {children}
     </div>
   );
 }
