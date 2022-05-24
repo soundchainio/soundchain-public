@@ -2,9 +2,9 @@ import { Logo } from '../../icons/Logo';
 import Image from 'next/image';
 import { Button } from '../Button';
 
-export function Section1() {
+export function HeroSectionDiscover() {
   return (
-    <div className='bg-slate-900 relative flex flex-col'>
+    <div className='bg-[#131313] relative flex flex-col'>
       <header className='h-14'>
         <nav className='flex container mx-auto items-center text-white h-full'>
           <div className='flex items-center gap-4'>
@@ -41,6 +41,8 @@ export function Section1() {
                   />
                   <div
                     className='absolute inset-0 from-transparent via-transparent to-black bg-gradient-radial h-full mix-blend-multiply' />
+                  <div
+                    className='absolute inset-0 from-transparent via-transparent to-black bg-gradient-to-b h-full mix-blend-multiply' />
                 </div>
                 <div className='container mx-auto h-full'>
                   <div
