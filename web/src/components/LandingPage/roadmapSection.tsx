@@ -1,4 +1,4 @@
-import { twd } from '../utils/tw';
+import { twd } from '../utils/twd';
 import { ArrowRightIcon } from '@heroicons/react/solid';
 import { Disclosure } from '@headlessui/react';
 import { Button } from '../Button';
@@ -8,11 +8,11 @@ from-[#FED503] to-[#FE5540]`);
 
 const OrngText = orngBash.span;
 
-export function Section5() {
+export function RoadmapSection() {
   return (
     <div className='relative'>
       <div className='max-w-7xl lg:max-w-full
-       min-h-[500px] vsm:min-h-[600px] vmd:min-h-[750px] vlg:min-h-[900px] vxl:min-h-[1100px] v2xl:min-h-[1400px]
+       min-h-[500px] vsm:min-h-[600px]
               max-h-screen flex flex-col'>
         <div className='mx-auto h-full flex-1'>
           <div className='relative flex flex-col items-start h-full sm:py-24 lg:py-32'>

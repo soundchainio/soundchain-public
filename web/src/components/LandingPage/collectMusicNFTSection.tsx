@@ -1,4 +1,4 @@
-import { twd } from '../utils/tw';
+import { twd } from '../utils/twd';
 import Image from 'next/image';
 
 const orngBash = twd(`text-transparent bg-clip-text bg-gradient-to-b 
@@ -7,7 +7,7 @@ from-[#FED503] to-[#FE5540]`);
 const OrngText = orngBash.span;
 const OrngCol = orngBash(`flex flex-col bg-none bg-[#FED503]`).div;
 
-export function Section4() {
+export function CollectMusicNFTSection() {
   return (
     <div className='relative'>
       <div className='max-w-7xl lg:max-w-full mx-auto sm:px-6 lg:px-0 min-h-[500px]

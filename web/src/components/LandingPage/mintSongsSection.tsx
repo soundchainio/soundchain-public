@@ -1,4 +1,4 @@
-import { twd } from '../utils/tw';
+import { twd } from '../utils/twd';
 
 const greenishBase = twd(`text-transparent bg-clip-text bg-gradient-to-b 
 from-[#26D1A8] via-[#77F744] to-[#FED503]`);
@@ -7,9 +7,9 @@ const GreenishText = greenishBase.span;
 const GreenishCol = greenishBase(`flex flex-col`).div;
 const GreenishBorder = greenishBase(`absolute -left-4 h-full w-1 bg-clip-border`).div;
 
-export function Section2() {
+export function MintSongsSection() {
   return (
-    <div className='relative'>
+    <div className='relative z-10'>
       <div className='max-w-7xl lg:max-w-full mx-auto sm:px-6 lg:px-0 min-h-[500px]
              vsm:min-h-[600px] vmd:min-h-[750px] vlg:min-h-[900px] vxl:min-h-[1100px] v2xl:min-h-[1400px]
               max-h-screen flex flex-col'>

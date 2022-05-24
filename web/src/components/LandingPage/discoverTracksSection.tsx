@@ -1,4 +1,4 @@
-import { twd } from '../utils/tw';
+import { twd } from '../utils/twd';
 
 const blueishBase = twd(`text-transparent bg-clip-text bg-gradient-to-b 
 from-[#26D1A8] to-[#AC4EFD]`);
@@ -6,7 +6,7 @@ from-[#26D1A8] to-[#AC4EFD]`);
 const GreenishText = blueishBase.span;
 const BlueishCol = blueishBase(`flex flex-col bg-none bg-[#6FA1FF]`).div;
 
-export function Section3() {
+export function DiscoverTracksSection() {
   return (
     <div className='relative'>
       <div className='max-w-7xl lg:max-w-full mx-auto sm:px-6 lg:px-0 min-h-[500px]
