@@ -3,9 +3,11 @@ import path from "path"; // Path routing
 import Generator from "./generator"; // Generator
 import { logger } from "./logger"; // Logging
 import { parseUnits } from "ethers/lib/utils"; // Ethers utils
+import {tokenHoldersFileName, whitelistFileName, rewardAmount, decimalsPlaces} from "./config.json"; // config file
 
 // Config file path
-const dataPath: string = path.join(__dirname, "./token-holders.csv");
+const dataPath: string = path.join(__dirname, `./${tokenHoldersFileName}`);
+const whitelistPath: string = path.join(__dirname, `./${whitelistFileName}`);
 
 /**
  * Throws error and exists process
@@ -27,9 +29,16 @@ function extractFromCsv(data:string, decimals:number): Record<string, string> {
       const addr: string = String(holder[0]).replace("\"", "").replace("\"", "");
       const wallet: string = addr as keyof typeof airdropHolders;
 
-      const rawAmount: string = String(holder[1]).replace("\"", "").replace("\"", ""); 
-      const amount = Number(rawAmount).toFixed(decimals).toString();
-      const totalTokens = parseUnits(amount, decimals).toString();
+      let totalTokens = "0";
+
+      if(rewardAmount) {
+        const amount = Number(rewardAmount).toFixed(decimals).toString();
+        totalTokens = parseUnits(amount, decimals).toString();
+      } else {
+        const rawAmount: string = String(holder[1]).replace("\"", "").replace("\"", ""); 
+        const amount = Number(rawAmount).toFixed(decimals).toString();
+        totalTokens = parseUnits(amount, decimals).toString();
+      }
 
       airdropHolders[wallet] = totalTokens;
   });
@@ -38,12 +47,18 @@ function extractFromCsv(data:string, decimals:number): Record<string, string> {
 }
 
 (async () => {
+  // Read config file
+  const data = await fs.readFile(dataPath, 'utf8');
+  const whitelistData = await fs.readFile(whitelistPath, 'utf8');
 
-  const dirPath = dataPath;
-  const data = await fs.readFile(dirPath, 'utf8');
-  const airdrop : Record<string, string> = extractFromCsv(data?.toString(), 18); //Extract data from csv stored in dataPath
+  const configDecimals:number = decimalsPlaces || 18;
+
+  const airdrop : Record<string, string> = extractFromCsv(data?.toString(), configDecimals); //Extract data from csv stored in dataPath
+  const whitelist : Record<string, string> = extractFromCsv(whitelistData?.toString(), configDecimals); //Extract data from csv stored in dataPath
+
+  const fullList = {...airdrop, ...whitelist};
 
   // Initialize and call generator
-  const generator = new Generator(airdrop); // Initialize generator
+  const generator = new Generator(fullList); // Initialize generator
   await generator.process(); //this calls the main function at generator.ts
 })();
