@@ -46,7 +46,7 @@ export function DiscoverTracksSection() {
                       </div>
                     </div>
                   </div>
-                  <div className={`mx:auto max-w-[360px] sm:w-[400px] md:w-[700px] flex flex-col items-start
+                  <div className={`mx:auto w-[360px] sm:w-[400px] md:w-[700px] flex flex-col items-start
                   pt-[23rem] sm:pt-10 sm:h-[360px] sm:pl-10 relative rounded-xl bg-gradient-to-t sm:bg-gradient-to-r from-slate-900/75 to-transparent`}>
                     <div className='flex items-center gap-4 2xl:ml-10 w-full justify-center sm:justify-start'>
                       <span>created</span>
