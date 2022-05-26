@@ -2,14 +2,8 @@ import { twd } from '../utils/twd';
 import { ArrowRightIcon } from '@heroicons/react/solid';
 import { Disclosure, Transition } from '@headlessui/react';
 import { Button } from '../Button';
-import { useSpring } from '@react-spring/web';
 import { ReactElement } from 'react';
 import Link from 'next/link';
-
-const orngBash = twd(`text-transparent bg-clip-text bg-gradient-to-b 
-from-[#FED503] to-[#FE5540]`);
-
-const OrngText = orngBash.span;
 
 const RoadmapStepTitle = twd(`font-bold text-lg sm:text-3xl md:text-6xl uppercase`).h2;
 const RoadmapStepStatus = twd(`font-semibold  text-sm sm:text-lg md:text-xl`).span;
@@ -51,8 +45,6 @@ function RoadmapStep({ title, status, children, styles }: RoadmapStepProps) {
 }
 
 export function RoadmapSection() {
-  const firstPanelProps = useSpring({ to: { opacity: 1 }, from: { opacity: 0 } });
-
   return (
     <div className='relative'>
       <div className='max-w-7xl lg:max-w-full

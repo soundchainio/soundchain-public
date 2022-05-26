@@ -4,7 +4,6 @@ import { MintSongsSection } from './mintSongsSection';
 import { DiscoverTracksSection } from './discoverTracksSection';
 import { CollectMusicNFTSection } from './collectMusicNFTSection';
 import { RoadmapSection } from './roadmapSection';
-import Image from 'next/image';
 
 export interface LayoutProps {
   children: ReactNode | undefined;

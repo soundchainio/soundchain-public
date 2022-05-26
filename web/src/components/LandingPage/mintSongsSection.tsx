@@ -5,7 +5,6 @@ const greenishBase = twd(`text-transparent bg-clip-text bg-gradient-to-b
 from-[#26D1A8] via-[#77F744] to-[#FED503]`);
 
 const GreenishText = greenishBase.span;
-const GreenishCol = greenishBase(`flex flex-col`).div;
 const GreenishBorder = greenishBase(`absolute -left-4 h-full w-1 bg-clip-border`).div;
 
 const SectionWrapper = twd(`max-w-7xl lg:max-w-full mx-auto sm:px-6 lg:px-0 max-h-screen flex flex-col sm:pt-20`).div
