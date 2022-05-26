@@ -67,6 +67,7 @@ export default function AirdropPage() {
     setLoading(true);
     try {
       await provider.enable();
+      
       const web3 = new Web3(provider);
       const accounts = await web3.eth?.getAccounts();
       if (accounts) setAccount(accounts[0]); // get the primary account
@@ -104,7 +105,7 @@ export default function AirdropPage() {
             Connect your <span className="green-blue-gradient-text-break">wallet</span>
           </h1>
           <h2 className="text-xl md:text-4xl text-center pt-6 font-light">
-            Lorem ipsum dolor sit amet, consectetur <br /> adipiscing elit, sed do eiusmod tempor
+          If you are an existing SoundChain user,<br/>joined the whitelist, or had any AUDIO when<br/>we took a snapshop on June 20, connect<br/>your wallet to claim <span className="yellow-gradient-text font-bold">5,000 OGUN</span> 
           </h2>
         </div>
         <Button variant="rainbow" className="w-5/6" onClick={connectWC}>
