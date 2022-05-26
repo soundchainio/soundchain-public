@@ -30,12 +30,12 @@ function RoadmapStep({ title, status, children, styles }: RoadmapStepProps) {
         <ArrowRightIcon className='w-6 h-6 ml-4' />
       </RoadmapButton>
       <Transition
-        enter='transition duration-100 ease-out'
-        enterFrom='transform scale-95 opacity-0'
-        enterTo='transform scale-100 opacity-100'
-        leave='transition duration-75 ease-out'
-        leaveFrom='transform scale-100 opacity-100'
-        leaveTo='transform scale-95 opacity-0'>
+        enter='transition duration-500 ease-out delay-150'
+        enterFrom='transform scale-y-0 translate-y-[100%] opacity-0'
+        enterTo='transform scale-y-100 translate-y-0 opacity-100'
+        leave='transition duration-300 ease-out delay-150'
+        leaveFrom='transform scale-y-100 translate-y-0 -translate-x-0 opacity-100'
+        leaveTo='transform scale-y-0 translate-y-0 -translate-x-[100%] opacity-0'>
         <RoadmapPanel className={` ${styles?.panel}`}>
           {children}
         </RoadmapPanel>
