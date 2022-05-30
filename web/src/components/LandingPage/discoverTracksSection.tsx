@@ -4,7 +4,7 @@ import Image from 'next/image';
 const blueishBase = twd(`text-transparent bg-clip-text bg-gradient-to-b 
 from-[#26D1A8] to-[#AC4EFD]`);
 
-const GreenishText = blueishBase.span;
+const BlueishText = blueishBase.span;
 const BlueishCol = blueishBase(`flex flex-col bg-none bg-[#6FA1FF]`).div;
 
 const SectionWrapper = twd(`max-w-7xl lg:max-w-full mx-auto sm:px-6 mt-56 sm:mt-0 max-h-screen flex flex-col lg:px-0`).div;
@@ -18,7 +18,6 @@ export function DiscoverTracksSection() {
           <Image
             className='object-contain md:object-cover z-0'
             src='/landing-page/second-section-bg.png'
-            alt='Man looking at music editing software on a studio'
             layout='fill'
           />
 
@@ -34,7 +33,7 @@ export function DiscoverTracksSection() {
           <div className='container mx-auto h-full flex-1 xl:px-40'>
             <div className='relative flex flex-col items-start h-full pl-4 py-16 md:pl-6 md:py-24 lg:py-32 lg:pl-8'>
               <div className='text-center w-full flex flex-col relative'>
-                <GreenishText className='text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold'>discover</GreenishText>
+                <BlueishText className='text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold'>discover</BlueishText>
                 <span className='text-3xl'>high fi tracks</span>
               </div>
               <div className='mt-20 flex w-full'>
@@ -79,7 +78,6 @@ export function DiscoverTracksSection() {
           <Image
             className='object-contain sm:object-cover z-0'
             src='/landing-page/third-section-bg.png'
-            alt='Man looking at music editing equipment on a studio'
             layout='fill'
           />
 

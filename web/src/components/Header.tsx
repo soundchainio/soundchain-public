@@ -1,6 +1,7 @@
 import { Logo } from 'icons/Logo';
-import { useRouter } from 'next/router';
 import { Button } from './Button';
+import React from 'react';
+import { useRouter } from 'next/router';
 
 interface NavItemProps {
   text: string;
@@ -25,7 +26,6 @@ export const NavItem = ({ text, link }: NavItemProps) => {
 };
 
 export const Header = () => {
-  const router = useRouter();
 
   return (
     <header className="h-20">
@@ -38,8 +38,14 @@ export const Header = () => {
           <NavItem text="Tokenomics" link="/ogun" />
           <NavItem text="Airdrop" />
           <NavItem text="Stake" />
-          <Button className="h-12 w-96" variant="rainbow" onClick={() => router.push('/marketplace')}>
-            CONTINUE TO SOUNDCHAIN
+          <Button
+            as={'a'}
+            href='/marketplace'
+            variant='rainbow'
+            className=''>
+            <span className='font-medium px-6 uppercase text-center'>
+              CONTINUE TO SOUNDCHAIN
+            </span>
           </Button>
         </nav>
       </div>
