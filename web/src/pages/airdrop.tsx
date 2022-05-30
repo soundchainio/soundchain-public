@@ -40,9 +40,9 @@ export default function AirdropPage() {
   const [closeModal, setCloseModal] = useState<boolean>(true);
   const [isFinished, setIsFinished] = useState<boolean>(false);
   const [web3, setWeb3] = useState<Web3>();
-  const minimunAudioToken = new Decimal('10');
+  // const minimunAudioToken = new Decimal('10');
 
-  const OGUNAddress = config.OGUNAddress as string;
+  const OGUNAddress = "0xC54133351E57F58e3eB14efD8809e9aaEdfEE8C8"
   const claimOgunContract = (web3: Web3) =>
     new web3.eth.Contract(MerkleClaimERC20 as AbiItem[], OGUNAddress) as unknown as Contract;
 
@@ -321,22 +321,9 @@ export default function AirdropPage() {
             <FinishedState />
           ) : isClaimed ? (
             <ClaimedState />
-          ) : audioBalance.gte(minimunAudioToken) &&
-            whitelistEntry &&
-            !isOgunClaimedAudioHolder &&
-            !isOgunClaimedWhitelist ? (
-            <AudioWhitelistState />
-          ) : (audioBalance.lt(minimunAudioToken) || isOgunClaimedAudioHolder) &&
-            whitelistEntry &&
-            !isOgunClaimedWhitelist ? (
-            <WhitelistState />
-          ) : audioBalance.gte(minimunAudioToken) &&
-            !isOgunClaimedAudioHolder &&
-            (!whitelistEntry || isOgunClaimedWhitelist) ? (
-            <AudioState />
-          ) : (
-            <WithoutAudioState />
-          )}
+          ) :
+          <WhitelistState />
+          }
         </div>
       </main>
     </>
