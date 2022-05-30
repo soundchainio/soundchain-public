@@ -4,25 +4,24 @@ import { Button } from './Button';
 
 interface NavItemProps {
   text: string;
-  currentPage: string;
+  link?: string;
 }
 
-export const NavItem = ({ text }: NavItemProps) => {
+export const NavItem = ({ text, link }: NavItemProps) => {
   const router = useRouter();
-  const currentPage = router.pathname.replace("/", "");
+  const currentPage = router.pathname.replace('/', '');
   const underline = currentPage.toLowerCase() === text.toLowerCase();
 
-  return underline ? 
-    (<div className="flex flex-col items-center">
-        <div 
-          className='flex items-center justify-center p-2'>{text}
-        </div>
-      <div className="bg-green-blue-gradient w-5/6 pb-1"/>
-    </div>)
-    :
-    (<a href={"/" + text.toLowerCase()}>
-      <div className='flex items-center justify-center p-2'>{text}</div>
-     </a>)
+  return underline ? (
+    <div className="flex flex-col items-center">
+      <div className="flex items-center justify-center p-2">{text}</div>
+      <div className="bg-green-blue-gradient w-5/6 pb-1" />
+    </div>
+  ) : (
+    <a href={link ? link : '/' + text.toLowerCase()}>
+      <div className="flex items-center justify-center p-2">{text}</div>
+    </a>
+  );
 };
 
 export const Header = () => {
@@ -36,7 +35,7 @@ export const Header = () => {
           <span className="hidden font-extrabold text-white md:block">SoundChain</span>
         </div>
         <nav className="flex items-center justify-evenly gap-3 text-white">
-          <NavItem text="Tokenomics" />
+          <NavItem text="Tokenomics" link="/ogun" />
           <NavItem text="Airdrop" />
           <NavItem text="Stake" />
           <Button className="h-12 w-96" variant="rainbow" onClick={() => router.push('/marketplace')}>

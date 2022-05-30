@@ -7,11 +7,12 @@ export class ProofBookItem extends Model {
   @Field(() => ID, { name: 'id' })
   readonly _id: string;
 
+  @Field()
   @prop({ required: true })
   root: string;
 
   @Field()
-  @prop({ required: true })
+  @prop({ required: true, unique: true })
   address: string;
 
   @Field()

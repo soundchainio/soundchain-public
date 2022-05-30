@@ -22,6 +22,7 @@ import { PolygonscanService } from '../services/PolygonService';
 import { PostService } from '../services/PostService';
 import { ProfileService } from '../services/ProfileService';
 import { ProfileVerificationRequestService } from '../services/ProfileVerificationRequestService';
+import { ProofBookService } from '../services/ProofBookService';
 import { ReactionService } from '../services/ReactionService';
 import { SubscriptionService } from '../services/SubscriptionService';
 import { TrackService } from '../services/TrackService';
@@ -49,6 +50,7 @@ export class Context {
   polygonscanService = new PolygonscanService(this);
   postService = new PostService(this);
   profileService = new ProfileService(this);
+  proofBookService = new ProofBookService(this);
   profileVerificationRequestService = new ProfileVerificationRequestService(this);
   reactionService = new ReactionService(this);
   subscriptionService = new SubscriptionService(this);

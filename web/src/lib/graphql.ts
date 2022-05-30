@@ -1092,6 +1092,15 @@ export type ProfileVerificationRequestPayload = {
   profileVerificationRequest: ProfileVerificationRequest;
 };
 
+export type ProofBookItem = {
+  __typename?: 'ProofBookItem';
+  id: Scalars['ID'];
+  root: Scalars['String'];
+  address: Scalars['String'];
+  value: Scalars['String'];
+  merkleProof: Array<Scalars['String']>;
+};
+
 export type Query = {
   __typename?: 'Query';
   auctionItem: AuctionItemPayload;
@@ -1137,6 +1146,7 @@ export type Query = {
   mimeType: MimeType;
   me: Maybe<User>;
   getUserByWallet: Maybe<User>;
+  getProofBookByWallet: Maybe<ProofBookItem>;
   whitelistEntryByWallet: WhitelistEntry;
 };
 
@@ -1356,6 +1366,11 @@ export type QueryMimeTypeArgs = {
 
 
 export type QueryGetUserByWalletArgs = {
+  walletAddress: Scalars['String'];
+};
+
+
+export type QueryGetProofBookByWalletArgs = {
   walletAddress: Scalars['String'];
 };
 
@@ -2870,6 +2885,19 @@ export type ProfileVerificationRequestsQuery = (
       & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
     ) }
   ) }
+);
+
+export type ProofBookByWalletQueryVariables = Exact<{
+  walletAddress: Scalars['String'];
+}>;
+
+
+export type ProofBookByWalletQuery = (
+  { __typename?: 'Query' }
+  & { getProofBookByWallet: Maybe<(
+    { __typename?: 'ProofBookItem' }
+    & Pick<ProofBookItem, 'root' | 'address' | 'value' | 'merkleProof'>
+  )> }
 );
 
 export type ReactToPostMutationVariables = Exact<{
@@ -6142,6 +6170,44 @@ export function useProfileVerificationRequestsLazyQuery(baseOptions?: Apollo.Laz
 export type ProfileVerificationRequestsQueryHookResult = ReturnType<typeof useProfileVerificationRequestsQuery>;
 export type ProfileVerificationRequestsLazyQueryHookResult = ReturnType<typeof useProfileVerificationRequestsLazyQuery>;
 export type ProfileVerificationRequestsQueryResult = Apollo.QueryResult<ProfileVerificationRequestsQuery, ProfileVerificationRequestsQueryVariables>;
+export const ProofBookByWalletDocument = gql`
+    query ProofBookByWallet($walletAddress: String!) {
+  getProofBookByWallet(walletAddress: $walletAddress) {
+    root
+    address
+    value
+    merkleProof
+  }
+}
+    `;
+
+/**
+ * __useProofBookByWalletQuery__
+ *
+ * To run a query within a React component, call `useProofBookByWalletQuery` and pass it any options that fit your needs.
+ * When your component renders, `useProofBookByWalletQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useProofBookByWalletQuery({
+ *   variables: {
+ *      walletAddress: // value for 'walletAddress'
+ *   },
+ * });
+ */
+export function useProofBookByWalletQuery(baseOptions: Apollo.QueryHookOptions<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>(ProofBookByWalletDocument, options);
+      }
+export function useProofBookByWalletLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>(ProofBookByWalletDocument, options);
+        }
+export type ProofBookByWalletQueryHookResult = ReturnType<typeof useProofBookByWalletQuery>;
+export type ProofBookByWalletLazyQueryHookResult = ReturnType<typeof useProofBookByWalletLazyQuery>;
+export type ProofBookByWalletQueryResult = Apollo.QueryResult<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>;
 export const ReactToPostDocument = gql`
     mutation ReactToPost($input: ReactToPostInput!) {
   reactToPost(input: $input) {
