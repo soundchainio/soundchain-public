@@ -18,7 +18,6 @@ export function MintSongsSection() {
           <Image
             className='object-cover z-30 max-h-[300px] w-full object-cover'
             src='/landing-page/wave-bg.svg'
-            alt='Wave background'
             layout='responsive'
             width='1511px'
             height='387px'

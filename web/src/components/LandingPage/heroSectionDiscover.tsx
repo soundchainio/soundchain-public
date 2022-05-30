@@ -1,8 +1,8 @@
-import { Logo } from '../../icons/Logo';
 import Image from 'next/image';
 import { Button } from '../Button';
 import { twd } from '../utils/twd';
-import Link from 'next/link';
+import LandingPageHeader from './header';
+import React from 'react';
 
 const AnimatedBar = twd(`absolute ml-2 sm:ml-0 -left-4 transition-all h-5/10 sm:h-6/10
 w-full sm:w-2 sm:group-hover:w-full bg-gradient-to-r group-hover:rounded-r-lg z-0`).span;
@@ -15,29 +15,7 @@ const SectionWrapper = twd(`max-w-7xl lg:max-w-full mx-auto max-h-screen flex fl
 export function HeroSectionDiscover() {
   return (
     <div className='bg-[#131313] relative flex flex-col'>
-      <header className='h-14'>
-        <nav className='flex container mx-auto items-center text-white h-full'>
-          <div className='flex items-center gap-4'>
-            <Logo className='block h-8 w-auto' />
-            <Link href='/'>
-              <span className='text-slate-50 text-lg font-semibold'>SoundChain</span>
-            </Link>
-          </div>
-          <div className='flex-1' />
-          <ul className='flex gap-4'>
-            <li className='font-semibold text-md text-slate-400 hover:text-slate-200 cursor-pointer'>
-              <Link href='#roadmap'>
-                <span>Roadmap</span>
-              </Link>
-            </li>
-            <li className='font-semibold text-md text-slate-400 hover:text-slate-200 cursor-pointer'>
-              <Link href='/ogun' target='_blank'>
-                OGUN Token
-              </Link>
-            </li>
-          </ul>
-        </nav>
-      </header>
+      <LandingPageHeader />
 
       <main>
         <div>
@@ -50,7 +28,6 @@ export function HeroSectionDiscover() {
                   <Image
                     className='h-full w-full aspect-video relative object-cover'
                     src='/landing-page/hero-bg.png'
-                    alt='People working on laptops'
                     layout='fill'
                   />
                   <div
@@ -72,7 +49,7 @@ export function HeroSectionDiscover() {
                           The music
                         </DiscoverFeatureTitle>
 
-                        <span className='flex-1'></span>
+                        <span className='flex-1'/>
                         <span
                           className='z-10 h-full hidden sm:inline-block capitalize transition-all flex items-center text-white font-semibold opacity-0 group-hover:opacity-100 -translate-x-10'>
                           Find your tribe
@@ -86,7 +63,7 @@ export function HeroSectionDiscover() {
                         </DiscoverFeatureTitle>
 
 
-                        <span className='flex-1'></span>
+                        <span className='flex-1' />
                         <span
                           className='z-10 h-full capitalize hidden sm:inline-block transition-all flex items-center text-white font-semibold opacity-0 group-hover:opacity-100 -translate-x-10'>
                           Build your tribe
@@ -100,7 +77,7 @@ export function HeroSectionDiscover() {
                         </DiscoverFeatureTitle>
 
 
-                        <span className='flex-1'></span>
+                        <span className='flex-1' />
                         <span
                           className='z-10 h-full capitalize hidden sm:inline-block transition-all flex items-center text-white font-semibold opacity-0 group-hover:opacity-100 -translate-x-10'>
                           Unleash your music
@@ -110,22 +87,23 @@ export function HeroSectionDiscover() {
                     </div>
                     <div className='mt-10 w-full px-10 sm:px-0 sm:flex sm:justify-start'>
                       <div className='space-y-4 sm:space-y-0 sm:inline-grid sm:grid-cols-2 sm:gap-5'>
-                        <Link href='/login'>
-                          <Button
-                            variant='rainbow'
-                            className='rounded-lg'>
-                            <span className='font-medium px-6 uppercase'>Join community for free</span>
-                          </Button>
-                        </Link>
+                        <Button
+                          as={'a'}
+                          href='/login'
+                          variant='rainbow'
+                          className='rounded-lg'>
+                          <span className='font-medium px-6 uppercase text-center'>Join community for free</span>
+                        </Button>
 
-                        <Link href='/ogun'>
-                          <Button
-                            variant='outline'
-                            bgColor='bg-black/40 py-3 hover:bg-slate-900/70'
-                            className='rounded-lg border-2'>
-                            <span className='px-6 uppercase font-bold font-medium'>Learn about the token</span>
-                          </Button>
-                        </Link>
+                        <Button
+                          as={'a'}
+                          href='/ogun'
+                          variant='outline'
+                          bgColor='bg-black/40 py-3 hover:bg-slate-900/70'
+                          className='rounded-lg border-2'>
+                            <span
+                              className='px-6 uppercase font-bold font-medium text-center'>Learn about the token</span>
+                        </Button>
 
                       </div>
                     </div>

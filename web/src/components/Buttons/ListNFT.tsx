@@ -1,7 +1,14 @@
-import { ButtonProps } from 'components/Button';
+import { ButtonVariantProps } from 'components/Button';
 import { config } from 'config';
 
-export const ListNFTButton = ({ className, type = 'button', children, loading, disabled, ...rest }: ButtonProps) => {
+export const ListNFTButton = ({
+                                className,
+                                type = 'button',
+                                children,
+                                loading,
+                                disabled,
+                                ...rest
+                              }: ButtonVariantProps) => {
   return (
     <div className={className}>
       <button
