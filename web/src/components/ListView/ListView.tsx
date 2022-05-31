@@ -1,6 +1,6 @@
 /* eslint-disable react/display-name */
 import { ApolloQueryResult } from '@apollo/client';
-import { ListingItemsQuery, TrackQuery, TrackWithListingItem } from 'lib/graphql';
+import { ExploreTracksQuery, ListingItemsQuery, Track, TrackQuery, TrackWithListingItem } from 'lib/graphql';
 import React, { memo } from 'react';
 import { areEqual, FixedSizeList as List } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
@@ -8,17 +8,18 @@ import InfiniteLoader from 'react-window-infinite-loader';
 import { PostSkeleton } from 'components/PostSkeleton';
 import { NoResultFound } from 'components/NoResultFound';
 import { LoaderAnimation } from 'components/LoaderAnimation';
-import { Track } from 'components/Track';
+import { Track as TrackItem } from 'components/Track';
 
 interface ViewProps {
   loading: boolean;
   loadMore: () => void;
-  refetch: () => Promise<ApolloQueryResult<ListingItemsQuery>>;
+  refetch: () => Promise<ApolloQueryResult<ListingItemsQuery | ExploreTracksQuery>>;
   hasNextPage?: boolean;
-  tracks?: TrackWithListingItem[];
+  tracks?: TrackWithListingItem[] | Track[];
+  displaySaleBadge?: boolean;
 }
 
-export const ListView = ({ tracks, loading, hasNextPage, loadMore }: ViewProps) => {
+export const ListView = ({ tracks, loading, hasNextPage, loadMore, displaySaleBadge }: ViewProps) => {
   const loadMoreItems = loading ? () => null : loadMore;
   const isItemLoaded = (index: number) => !hasNextPage || index < (tracks?.length || 0);
   const tracksCount = hasNextPage ? (tracks?.length || 0) + 1 : tracks?.length || 0;
@@ -26,7 +27,7 @@ export const ListView = ({ tracks, loading, hasNextPage, loadMore }: ViewProps) 
   return (
     <>
       {loading ? (
-        <div className="space-y-2">
+        <div className='space-y-2'>
           <PostSkeleton />
           <PostSkeleton />
           <PostSkeleton />
@@ -54,7 +55,11 @@ export const ListView = ({ tracks, loading, hasNextPage, loadMore }: ViewProps) 
                         {!isItemLoaded(index) ? (
                           <LoaderAnimation loadingMessage="Loading..." />
                         ) : (
-                          <Track key={data[index].id} track={data[index] as TrackQuery['track']} />
+                          <TrackItem
+                            hideBadgeAndPrice={displaySaleBadge}
+                            key={data[index].id}
+                            track={data[index] as TrackQuery['track']}
+                          />
                         )}
                       </div>
                     ),

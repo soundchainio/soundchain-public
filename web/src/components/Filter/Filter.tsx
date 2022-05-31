@@ -6,21 +6,22 @@ import { MdKeyboardArrowDown } from 'react-icons/md';
 interface Props {
   sorting: SortListingItem;
   setSorting: Dispatch<SetStateAction<SortListingItem>>;
+  options?: Option[]
 }
 
 type Option = { value: string; name: string };
 
+const defaultOptions = [
+  { value: SortListingItem.PriceAsc, name: 'Least expensive' },
+  { value: SortListingItem.PriceDesc, name: 'Most expensive' },
+  { value: SortListingItem.PlaybackCount, name: 'Most listened' },
+  { value: SortListingItem.CreatedAt, name: 'Newest' },
+]
+
 export const FilterComponent = (props: Props) => {
-  const { sorting, setSorting } = props;
+  const { sorting, setSorting, options = defaultOptions } = props;
 
   const [selected, setSelected] = useState<Option | null>(null);
-
-  const options = [
-    { value: SortListingItem.PriceAsc, name: 'Least expensive' },
-    { value: SortListingItem.PriceDesc, name: 'Most expensive' },
-    { value: SortListingItem.PlaybackCount, name: 'Most listened' },
-    { value: SortListingItem.CreatedAt, name: 'Newest' },
-  ];
 
   const handleSetValueOnRender = () => {
     if (selected || !sorting) return;
@@ -43,8 +44,8 @@ export const FilterComponent = (props: Props) => {
 
   return (
     <div className="flex items-center mr-4">
-      <label className="text-white mr-4 font-bold">Sort By:</label>
-      <div className="w-[180px]  z-10">
+      <label className="text-white mr-4 font-bold hidden md:inline-block">Sort By:</label>
+      <div className="w-[180px]  z-10 hidden md:flex">
         <Listbox value={selected} onChange={setSelected}>
           <div className="relative">
             <Listbox.Button

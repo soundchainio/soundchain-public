@@ -1,18 +1,13 @@
 /* eslint-disable react/display-name */
 import { useModalState } from 'contexts/providers/modal';
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting';
-import { ListingItemsQuery, TrackWithListingItem, useListingItemsQuery } from 'lib/graphql';
+import { useListingItemsQuery } from 'lib/graphql';
 import React, { useEffect, useState } from 'react';
-import PullToRefresh from 'react-simple-pull-to-refresh';
 import { GenreLabel } from 'utils/Genres';
 import { SaleTypeLabel } from 'utils/SaleTypeLabel';
-import { GridSkeleton } from './GridSkeleton';
-import { InfiniteLoader as InfiniteLoaderLegacy } from './InfiniteLoader';
 import { MarketplaceFilterWrapper } from './MarketplaceFilterWrapper';
-import { NoResultFound } from './NoResultFound';
-import { TrackGrid } from './TrackGrid';
 import { ListView } from 'components/ListView';
-import { ApolloQueryResult } from '@apollo/client';
+import { GridView } from 'components/GridView';
 
 const buildMarketplaceFilter = (genres: GenreLabel[] | undefined, saleType: SaleTypeLabel | undefined) => {
   return {
@@ -94,40 +89,6 @@ export const Marketplace = () => {
           refetch={refetch}
         />
       )}
-    </>
-  );
-};
-
-interface ViewProps {
-  loading: boolean;
-  loadMore: () => void;
-  refetch: () => Promise<ApolloQueryResult<ListingItemsQuery>>;
-  hasNextPage?: boolean;
-  tracks?: TrackWithListingItem[];
-}
-
-const GridView = ({ tracks, loading, refetch, hasNextPage, loadMore }: ViewProps) => {
-  return (
-    <>
-      {loading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 p-4 justify-center">
-          <GridSkeleton />
-          <GridSkeleton />
-          <GridSkeleton />
-          <GridSkeleton />
-        </div>
-      ) : !tracks ? (
-        <NoResultFound type="items" />
-      ) : (
-        <PullToRefresh onRefresh={refetch} className="h-auto">
-          <div className="marketplace-grid my-4">
-            {tracks.map(track => (
-              <TrackGrid key={track.id} track={track} />
-            ))}
-          </div>
-        </PullToRefresh>
-      )}
-      {hasNextPage && <InfiniteLoaderLegacy loadMore={loadMore} loadingMessage="Loading Marketplace" />}
     </>
   );
 };
