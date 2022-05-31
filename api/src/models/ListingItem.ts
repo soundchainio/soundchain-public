@@ -54,6 +54,10 @@ export class ListingItem extends Model {
   @prop({ type: Boolean })
   acceptsOGUN: boolean;
 
+  @Field({ nullable: true })
+  @prop({ type: Boolean })
+  isPaymentOGUN: boolean;
+
   @Field(() => Date)
   createdAt: Date;
 
