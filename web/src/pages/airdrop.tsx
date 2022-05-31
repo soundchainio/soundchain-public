@@ -124,7 +124,6 @@ export default function AirdropPage() {
 
   const handleClaimOgun = () => {
     const result = callOgunContract();
-    console.log(result);
     result.onReceipt(() => {
       setIsFinished(true);
     }).onError((cause: Error) => {
@@ -145,9 +144,6 @@ export default function AirdropPage() {
     // const root = proofBook?.getProofBookByWallet?.root;
     const value = proofBook?.getProofBookByWallet?.value;
     const proof = proofBook?.getProofBookByWallet?.merkleProof;
-    console.log('ADDRESS: ', address);
-    console.log('VALUE: ', value);
-    console.log('PROOF: ', proof);
     // const contract = claimOgunContract(web3 as Web3);
     // contract.handleRevert = true;
     // try {
