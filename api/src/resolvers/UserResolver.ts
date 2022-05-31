@@ -4,6 +4,7 @@ import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } 
 import { config } from '../config';
 import { CurrentUser } from '../decorators/current-user';
 import { Profile } from '../models/Profile';
+import { ProofBookItem } from '../models/ProofBookItem';
 import { User } from '../models/User';
 import { AuthMethod } from '../types/AuthMethod';
 import { AuthPayload } from '../types/AuthPayload';
@@ -132,4 +133,11 @@ export class UserResolver {
     const user = await userService.getUserByWallet(walletAddress);
     return user;
   }
+
+  @Query(() => ProofBookItem, { nullable: true })
+  async getProofBookByWallet(@Ctx() { proofBookService }: Context, @Arg('walletAddress') walletAddress: string): Promise<ProofBookItem> {
+    const proofBook = await proofBookService.getUserProofBook(walletAddress);
+    return proofBook;
+  }
+
 }

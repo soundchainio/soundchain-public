@@ -196,6 +196,12 @@ export interface SoundchainAuction extends BaseContract {
       _tokenId: number | string | BN
     ): PayableTransactionObject<void>;
 
+    claim(
+      _to: string,
+      _amount: number,
+      _proof: string[]
+    ): PayableTransactionObject<Object>
+
     platformFee(): NonPayableTransactionObject<string>;
 
     platformFeeRecipient(): NonPayableTransactionObject<string>;

@@ -239,6 +239,10 @@ html {
   box-decoration-break: clone;
 }
 
+.bg-green-blue-gradient {
+  background: linear-gradient(90deg, #84ff82 0%, #4870ff 100%);
+}
+
 .green-blue-gradient-text {
   background: linear-gradient(90deg, #84ff82 0%, #4870ff 100%);
   background-clip: text;

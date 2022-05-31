@@ -9,6 +9,7 @@ export const config = {
   magicKey: process.env.NEXT_PUBLIC_MAGIC_KEY,
   marketplaceAddress: process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS,
   muxData: process.env.NEXT_PUBLIC_MUX_DATA,
+  claimOgunAddress: process.env.NEXT_PUBLIC_OGUN_ADDRESS,
   OGUNAddress: process.env.NEXT_PUBLIC_OGUN_ADRESS,
   polygonscan: process.env.NEXT_PUBLIC_POLYGONSCAN,
   redirectUrlPostLogin: process.env.NEXT_PUBLIC_REDIRECT_URL_POST_LOGIN || '/marketplace',
