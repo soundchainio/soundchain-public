@@ -28,4 +28,7 @@ export class CreateAuctionItemData {
 
   @Field()
   reservePriceToShow: number;
+
+  @Field()
+  isPaymentOGUN: boolean;
 }

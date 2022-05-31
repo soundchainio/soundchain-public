@@ -6,15 +6,18 @@ import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { SoundchainFee } from 'components/SoundchainFee';
 import { config } from 'config';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
+import { Logo } from 'icons/Logo';
 import { Matic } from 'icons/Matic';
+import { useState } from 'react';
 import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { date, number, object, ref, SchemaOf } from 'yup';
+import { boolean, date, number, object, ref, SchemaOf } from 'yup';
 
 export interface ListNFTAuctionFormValues {
   price: number;
   startTime: Date;
   endTime: Date;
+  isPaymentOGUN: boolean;
 }
 
 const validationSchema: SchemaOf<ListNFTAuctionFormValues> = object().shape({
@@ -23,6 +26,7 @@ const validationSchema: SchemaOf<ListNFTAuctionFormValues> = object().shape({
     .min(new Date(new Date().getTime() + 10 * 1000 * 60), 'The start time should be at least ten minutes from now')
     .required(), // current  date + 5 minutes
   endTime: date().min(ref('startTime'), "End time can't be before start time").required(),
+  isPaymentOGUN: boolean().required(),
 });
 
 interface ListNFTProps {
@@ -32,10 +36,12 @@ interface ListNFTProps {
 }
 
 export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: ListNFTProps) => {
+  const [isPaymentOGUN, setIsPaymentOGUN] = useState(false);
   const defaultValues: ListNFTAuctionFormValues = {
     price: initialValues?.price || 0,
     startTime: initialValues?.startTime || new Date(new Date().getTime() + 10 * 1000 * 60),
     endTime: initialValues?.endTime || new Date(new Date().getTime() + 20 * 1000 * 60),
+    isPaymentOGUN: initialValues?.isPaymentOGUN || false,
   };
 
   return (
@@ -44,7 +50,7 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: Lis
         initialValues={defaultValues}
         validationSchema={validationSchema}
         onSubmit={(values, helper) => {
-          handleSubmit({ ...values, startTime: new Date(values.startTime), endTime: new Date(values.endTime) }, helper);
+          handleSubmit({ ...values, startTime: new Date(values.startTime), endTime: new Date(values.endTime), isPaymentOGUN }, helper);
         }}
       >
         {({ values, errors, isSubmitting, setFieldValue }: FormikProps<ListNFTAuctionFormValues>) => (
@@ -54,7 +60,37 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: Lis
                 auction start price
               </label>
               <div className="w-44 uppercase flex-shrink-0">
-                <InputField name="price" type="number" icon={Matic} value={values.price} step="any" />
+                <InputField name="price" type="number" icon={isPaymentOGUN ? Logo : Matic} value={values.price} step="any" />
+              </div>
+            </div>
+            <div className="flex items-center justify-between bg-gray-20 py-3 px-5 gap-3">
+              <label htmlFor="price" className="flex-shrink-0 text-gray-80 font-bold text-xs uppercase ">
+                Token for payment
+              </label>
+              <div className="w-44 uppercase flex-shrink-0">
+                <div className="relative">
+                  <select
+                    className="w-full bg-gray-25 text-gray-80 font-bold text-xs rounded-lg border-0 pl-8"
+                    name="Wallet"
+                    id="wallet"
+                    onChange={e =>
+                      setIsPaymentOGUN(
+                        e.target.value === "OGUN"
+                      )
+                    }
+                    value={isPaymentOGUN ? "OGUN" : "MATIC"}
+                  >
+                    <option value="OGUN">OGUN</option>
+                    <option value="MATIC">MATIC</option>
+                  </select>
+                  <span className="absolute top-2 left-2 pointer-events-none">
+                    {isPaymentOGUN ? (
+                      <Logo id="soundchain-wallet" height="16" width="16" />
+                    ) : (
+                      <Matic height="16" width="16" />
+                    )}
+                  </span>
+                </div>
               </div>
             </div>
             <div className="flex items-center justify-between bg-gray-20 py-3 px-5">
@@ -103,7 +139,7 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: Lis
               </div>
             </div>
             <div className="bg-gray-20 py-3 px-5">
-              <SoundchainFee price={values.price} />
+              <SoundchainFee price={values.price} priceOGUN={values.price} />
             </div>
             <p className="text-gray-80 text-sm text-center py-6 px-5">
               SoundChain transaction fee will be applied to the listing price.

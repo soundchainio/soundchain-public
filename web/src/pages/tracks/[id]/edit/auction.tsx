@@ -133,7 +133,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       router.replace(router.asPath.replace('edit/auction', ''));
     };
 
-    updateAuction(listingPayload.auctionItem?.auctionItem?.tokenId, weiPrice, startTimestamp, endTimestamp, account)
+    updateAuction(listingPayload.auctionItem?.auctionItem?.tokenId, weiPrice, startTimestamp, endTimestamp, account, false)
       .onReceipt(onTransactionReceipt)
       .onError(cause => toast.error(cause.message))
       .execute(web3);

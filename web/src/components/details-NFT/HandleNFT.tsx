@@ -1,5 +1,6 @@
 import { Button, ButtonVariant } from 'components/Button';
 import { Matic } from 'components/Matic';
+import { Ogun } from 'components/Ogun';
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { TimeCounter } from 'components/TimeCounter';
 import { useModalDispatch } from 'contexts/providers/modal';
@@ -12,6 +13,7 @@ interface HandleNFTProps {
   isOwner: boolean;
   canList: boolean;
   price: number;
+  OGUNprice: number;
   isAuction: boolean;
   isBuyNow: boolean;
   canComplete: boolean;
@@ -20,11 +22,14 @@ interface HandleNFTProps {
   startingDate?: Date;
   endingDate?: Date;
   auctionId: string;
+  wasCancel?: boolean;
+  isPaymentOGUN?: boolean;
 }
 
 export const HandleNFT = ({
   isOwner,
   price,
+  OGUNprice,
   canList,
   isAuction,
   isBuyNow,
@@ -34,6 +39,8 @@ export const HandleNFT = ({
   startingDate,
   endingDate,
   auctionId,
+  wasCancel,
+  isPaymentOGUN,
 }: HandleNFTProps) => {
   const router = useRouter();
   if (isOwner) {
@@ -46,19 +53,21 @@ export const HandleNFT = ({
     }
     if (isBuyNow || (isAuction && !auctionIsOver && countBids === 0)) {
       return (
-        <ListedAction
+        <ListedAction 
           href={isBuyNow ? `${router.asPath}/edit/buy-now` : `${router.asPath}/edit/auction`}
           price={price}
+          OGUNprice={OGUNprice}
           countBids={countBids}
           startingDate={startingDate}
           endingDate={endingDate}
           action="EDIT LISTING"
           variant="edit-listing"
           auctionId={auctionId}
+          isOwner={isOwner}
         />
       );
     }
-    if (isAuction && (auctionIsOver || countBids > 0)) {
+    if (isAuction && (auctionIsOver || countBids > 0) && !wasCancel) {
       return (
         <AuctionDetails
           auctionIsOver={auctionIsOver}
@@ -80,11 +89,39 @@ export const HandleNFT = ({
     );
     // not the owner
   } else {
+    if (OGUNprice && price && isBuyNow) {
+      return (
+        <>
+          <ListedAction
+            href={`${router.asPath}/buy-now`}
+            price={price}
+            OGUNprice={OGUNprice}
+            action="BUY NFT WITH MATIC"
+            secondAction="BUY NFT WITH OGUN"
+            variant="buy-nft"
+            startingDate={startingDate}
+          />
+        </>
+      );
+    }
+    if (OGUNprice && isBuyNow) {
+      return (
+        <ListedAction
+          href={`${router.asPath}/buy-now`}
+          price={price}
+          OGUNprice={OGUNprice}
+          action="BUY NFT WITH OGUN"
+          variant="buy-nft"
+          startingDate={startingDate}
+        />
+      );
+    }
     if (price && isBuyNow) {
       return (
         <ListedAction
           href={`${router.asPath}/buy-now`}
           price={price}
+          OGUNprice={OGUNprice}
           action="BUY NFT"
           variant="buy-nft"
           startingDate={startingDate}
@@ -99,15 +136,17 @@ export const HandleNFT = ({
           startingDate={startingDate}
           endingDate={endingDate}
           price={price}
+          OGUNprice={OGUNprice}
           action="PLACE BID"
           variant="buy-nft"
           auctionId={auctionId}
+          isPaymentOGUN={isPaymentOGUN}
         />
       );
     }
     if (canComplete && isAuction) {
       return (
-        <ListedAction href={`${router.asPath}/complete-auction`} price={price} action="COMPLETE" variant="buy-nft" />
+        <ListedAction href={`${router.asPath}/complete-auction`} price={price} OGUNprice={OGUNprice} action="COMPLETE" variant="buy-nft" />
       );
     }
   }
@@ -135,25 +174,32 @@ const ListingAction = ({ href, action, children }: React.PropsWithChildren<Listi
 };
 
 interface ListedActionProps {
+  isOwner?: boolean;
   href: string;
   price: number;
+  OGUNprice: number;
   action: string;
+  secondAction?: string;
   variant: ButtonVariant;
   countBids?: number;
   startingDate?: Date;
   endingDate?: Date;
   auctionId?: string;
+  isPaymentOGUN?: boolean;
 }
 
 const ListedAction = ({
   href,
   price,
+  OGUNprice,
   action,
+  secondAction,
   variant,
   countBids,
   startingDate,
   endingDate,
   auctionId,
+  isPaymentOGUN,
 }: ListedActionProps) => {
   const futureSale = startingDate && startingDate.getTime() > new Date().getTime();
 
@@ -162,7 +208,20 @@ const ListedAction = ({
     <PlayerAwareBottomBar>
       <div className="flex flex-col flex-1">
         <div className="text-sm flex items-center font-bold gap-1">
-          <Matic value={price} variant="currency" />
+          {!!auctionId ? (
+            <>
+            {!!isPaymentOGUN ? (
+              <Ogun value={OGUNprice ?? 0} variant="currency" />
+            ) : (
+              <Matic value={price} variant="currency" />
+            )}
+            </>
+          ):(
+            <>
+            {!!price && <Matic value={price} variant="currency" />}
+            {!!(OGUNprice) && <Ogun value={OGUNprice ?? 0} variant="currency" />}
+            </>
+          )}
         </div>
       </div>
       {futureSale && startingDate && (
@@ -181,9 +240,22 @@ const ListedAction = ({
         </div>
       )}
       <div className="flex-1 flex items-center justify-end">
-        <NextLink href={href} replace>
+      {!!auctionId ? (
+        <NextLink href={{pathname:href, query: {isPaymentOGUN: !!isPaymentOGUN}}} replace>
           <Button variant={variant}>{action}</Button>
         </NextLink>
+      ):(
+        <>
+          <NextLink href={{pathname:href, query: {isPaymentOGUN:false}}} replace>
+            <Button variant={variant}>{action}</Button>
+          </NextLink>
+          {secondAction  && (
+            <NextLink href={{pathname:href, query: {isPaymentOGUN:true}}} replace>
+              <Button variant={variant}>{secondAction}</Button>
+            </NextLink>
+          )}
+        </>
+      )}
       </div>
     </PlayerAwareBottomBar>
   );
@@ -198,6 +270,7 @@ interface AuctionDetailsProps {
   completeHref: string;
   auctionId: string;
   canComplete: boolean;
+  isPaymentOGUN?: boolean;
 }
 
 const AuctionDetails = ({
@@ -209,11 +282,16 @@ const AuctionDetails = ({
   completeHref,
   auctionId,
   canComplete,
+  isPaymentOGUN,
 }: AuctionDetailsProps) => {
   return (
     <div className="w-full bg-black text-white flex items-center py-3 px-4">
       <div className="flex flex-col flex-1">
-        <Matic value={price} variant="currency" />
+        {isPaymentOGUN ? (
+          <Ogun value={price} variant="currency" />
+        ):(
+          <Matic value={price} variant="currency" />
+        )}
       </div>
       <div className="text-center">
         {auctionIsOver && countBids === 0 && (
@@ -224,7 +302,7 @@ const AuctionDetails = ({
           </div>
         )}
         {canComplete && countBids != 0 && (
-          <ListedAction href={completeHref} price={price} action="COMPLETE" variant="buy-nft" auctionId={auctionId} />
+          <ListedAction href={completeHref} price={price} OGUNprice={price} action="COMPLETE" variant="buy-nft" auctionId={auctionId} />
         )}
         {endingDate && (
           <div className="flex flex-col text-xs items-center ">

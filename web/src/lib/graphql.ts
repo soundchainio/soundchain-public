@@ -66,6 +66,7 @@ export type AuctionItem = {
   endingTime: Scalars['Float'];
   reservePrice: Scalars['String'];
   reservePriceToShow: Scalars['Float'];
+  isPaymentOGUN: Scalars['Boolean'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   valid: Scalars['Boolean'];
@@ -130,6 +131,10 @@ export type BuyNowItem = {
   startingTime: Scalars['Float'];
   pricePerItem: Scalars['String'];
   pricePerItemToShow: Scalars['Float'];
+  OGUNPricePerItem: Scalars['String'];
+  OGUNPricePerItemToShow: Scalars['Float'];
+  acceptsMATIC: Scalars['Boolean'];
+  acceptsOGUN: Scalars['Boolean'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   valid: Scalars['Boolean'];
@@ -218,6 +223,7 @@ export type CreateAuctionItemInput = {
   endingTime: Scalars['Float'];
   reservePrice: Scalars['String'];
   reservePriceToShow: Scalars['Float'];
+  isPaymentOGUN: Scalars['Boolean'];
 };
 
 export type CreateAuctionItemType = {
@@ -230,6 +236,7 @@ export type CreateAuctionItemType = {
   endingTime: Scalars['Float'];
   reservePrice: Scalars['String'];
   reservePriceToShow: Scalars['Float'];
+  isPaymentOGUN: Scalars['Boolean'];
 };
 
 export type CreateBuyNowItemInput = {
@@ -239,6 +246,10 @@ export type CreateBuyNowItemInput = {
   tokenId: Scalars['Float'];
   pricePerItem: Scalars['String'];
   pricePerItemToShow: Scalars['Float'];
+  OGUNPricePerItem: Scalars['String'];
+  OGUNPricePerItemToShow: Scalars['Float'];
+  acceptsMATIC: Scalars['Boolean'];
+  acceptsOGUN: Scalars['Boolean'];
   startingTime: Scalars['Float'];
 };
 
@@ -250,6 +261,10 @@ export type CreateBuyNowItemType = {
   tokenId: Scalars['Float'];
   pricePerItem: Scalars['String'];
   pricePerItemToShow: Scalars['Float'];
+  OGUNPricePerItem: Scalars['String'];
+  OGUNPricePerItemToShow: Scalars['Float'];
+  acceptsMATIC: Scalars['Boolean'];
+  acceptsOGUN: Scalars['Boolean'];
   startingTime: Scalars['Float'];
 };
 
@@ -505,6 +520,11 @@ export type ListingItem = {
   reservePriceToShow: Maybe<Scalars['Float']>;
   pricePerItem: Maybe<Scalars['String']>;
   pricePerItemToShow: Maybe<Scalars['Float']>;
+  OGUNPricePerItem: Maybe<Scalars['String']>;
+  OGUNPricePerItemToShow: Maybe<Scalars['Float']>;
+  acceptsMATIC: Maybe<Scalars['Boolean']>;
+  acceptsOGUN: Maybe<Scalars['Boolean']>;
+  isPaymentOGUN: Maybe<Scalars['Boolean']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
 };
@@ -531,6 +551,11 @@ export type ListingItemWithPrice = {
   reservePriceToShow: Maybe<Scalars['Float']>;
   pricePerItem: Maybe<Scalars['String']>;
   pricePerItemToShow: Maybe<Scalars['Float']>;
+  OGUNPricePerItem: Maybe<Scalars['String']>;
+  OGUNPricePerItemToShow: Maybe<Scalars['Float']>;
+  acceptsMATIC: Maybe<Scalars['Boolean']>;
+  acceptsOGUN: Maybe<Scalars['Boolean']>;
+  isPaymentOGUN: Maybe<Scalars['Boolean']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   priceToShow: Maybe<Scalars['Float']>;
@@ -1887,7 +1912,7 @@ export type BuyNowItemQuery = (
     { __typename?: 'BuyNowPayload' }
     & { buyNowItem: Maybe<(
       { __typename?: 'BuyNowItem' }
-      & Pick<BuyNowItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'pricePerItemToShow' | 'startingTime'>
+      & Pick<BuyNowItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'pricePerItemToShow' | 'OGUNPricePerItem' | 'OGUNPricePerItemToShow' | 'acceptsMATIC' | 'acceptsOGUN' | 'startingTime'>
     )> }
   ) }
 );
@@ -2436,13 +2461,13 @@ export type ListingItemComponentFieldsFragment = (
     & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner' | 'pendingTime'>
   )>, listingItem: Maybe<(
     { __typename?: 'ListingItemWithPrice' }
-    & Pick<ListingItemWithPrice, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'pricePerItemToShow' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow' | 'createdAt' | 'updatedAt' | 'priceToShow'>
+    & Pick<ListingItemWithPrice, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'pricePerItemToShow' | 'OGUNPricePerItem' | 'OGUNPricePerItemToShow' | 'acceptsMATIC' | 'acceptsOGUN' | 'isPaymentOGUN' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow' | 'createdAt' | 'updatedAt' | 'priceToShow'>
   )> }
 );
 
 export type ListingItemViewComponentFieldsFragment = (
   { __typename?: 'ListingItem' }
-  & Pick<ListingItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'pricePerItemToShow' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow' | 'createdAt' | 'updatedAt'>
+  & Pick<ListingItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'pricePerItemToShow' | 'OGUNPricePerItem' | 'OGUNPricePerItemToShow' | 'acceptsMATIC' | 'acceptsOGUN' | 'isPaymentOGUN' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow' | 'createdAt' | 'updatedAt'>
 );
 
 export type ListingItemsQueryVariables = Exact<{
@@ -3631,6 +3656,9 @@ export const ListingItemComponentFieldsFragmentDoc = gql`
     tokenId
     pricePerItem
     pricePerItemToShow
+    OGUNPricePerItem
+    OGUNPricePerItemToShow
+    isPaymentOGUN
     startingTime
     endingTime
     reservePrice
@@ -3649,6 +3677,9 @@ export const ListingItemViewComponentFieldsFragmentDoc = gql`
   tokenId
   pricePerItem
   pricePerItemToShow
+  OGUNPricePerItem
+  OGUNPricePerItemToShow
+  isPaymentOGUN
   startingTime
   endingTime
   reservePrice
@@ -4093,6 +4124,10 @@ export const BuyNowItemDocument = gql`
       tokenId
       pricePerItem
       pricePerItemToShow
+      OGUNPricePerItem
+      OGUNPricePerItemToShow
+      acceptsMATIC
+      acceptsOGUN
       startingTime
     }
   }

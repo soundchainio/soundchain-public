@@ -5,11 +5,13 @@ import { BackButton } from 'components/Buttons/BackButton';
 import { InputField } from 'components/InputField';
 import { Matic } from 'components/Matic';
 import MaxGasFee from 'components/MaxGasFee';
+import { Ogun } from 'components/Ogun';
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { ProfileWithAvatar } from 'components/ProfileWithAvatar';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import { WalletSelector } from 'components/WalletSelector';
+import { config } from 'config';
 import { useModalDispatch } from 'contexts/providers/modal';
 import { Form, Formik } from 'formik';
 import useBlockchain from 'hooks/useBlockchain';
@@ -19,6 +21,7 @@ import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Auction } from 'icons/Auction';
 import { Locker } from 'icons/Locker';
+import { Logo } from 'icons/Logo';
 import { Matic as MaticIcon } from 'icons/Matic';
 import { cacheFor } from 'lib/apollo';
 import {
@@ -28,7 +31,7 @@ import {
   useAuctionItemQuery,
   useCountBidsQuery,
   useHaveBidedLazyQuery,
-  useUserByWalletLazyQuery,
+  useUserByWalletLazyQuery
 } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { authenticator } from 'otplib';
@@ -38,13 +41,21 @@ import { toast } from 'react-toastify';
 import { fixedDecimals, priceToShow } from 'utils/format';
 import { compareWallets } from 'utils/Wallet';
 import Web3 from 'web3';
+import { Contract } from "web3-eth-contract";
+import { AbiItem } from 'web3-utils';
 import * as yup from 'yup';
 import SEO from '../../../components/SEO';
+import SoundchainOGUN20 from '../../../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json';
 import { Timer } from '../[id]';
 import { HighestBid } from './complete-auction';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
+}
+
+interface AuctionTrackProps {
+  track: TrackQuery['track'];
+  isPaymentOGUN: boolean;
 }
 
 interface TrackPageParams extends ParsedUrlQuery {
@@ -61,8 +72,15 @@ const topNavBarProps: TopNavBarProps = {
   title: 'Place Bid',
 };
 
-export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(async (context, apolloClient) => {
+const auctionAddress = config.auctionAddress as string;
+const OGUNAddress = config.OGUNAddress as string;
+const tokenContract = (web3: Web3) =>
+  new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], OGUNAddress) as unknown as Contract;
+
+
+export const getServerSideProps = protectPage<AuctionTrackProps, TrackPageParams>(async (context, apolloClient) => {
   const trackId = context.params?.id;
+  const isPaymentOGUN = context.query?.isPaymentOGUN;
 
   if (!trackId) {
     return { notFound: true };
@@ -77,10 +95,10 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
     return { notFound: true };
   }
 
-  return cacheFor(PlaceBidPage, { track: data.track }, context, apolloClient);
+  return cacheFor(PlaceBidPage, { track: data.track, isPaymentOGUN: isPaymentOGUN === 'true' }, context, apolloClient);
 });
 
-export default function PlaceBidPage({ track }: TrackPageProps) {
+export default function PlaceBidPage({ track, isPaymentOGUN }: AuctionTrackProps) {
   const me = useMe();
   const { getHighestBid } = useBlockchain();
   const { placeBid } = useBlockchainV2();
@@ -89,8 +107,15 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
   const [loading, setLoading] = useState(false);
   const [highestBid, setHighestBid] = useState<HighestBid>();
   const { setTopNavBarProps } = useLayoutContext();
+  const [OGUNBalance, setOGUNBalance] = useState<string>('0');
 
   const tokenId = track.nftData?.tokenId ?? -1;
+
+  const getOGUNBalance = async (web3: Web3) => {
+    const currentBalance = await tokenContract(web3).methods.balanceOf(account).call();
+    const formattedBalance = web3.utils.fromWei(currentBalance ?? '0');
+    setOGUNBalance(formattedBalance);
+  }
 
   const { data: { auctionItem } = {} } = useAuctionItemQuery({
     variables: { tokenId },
@@ -139,6 +164,12 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     }
   }, [highestBid, fetchHighestBidder]);
 
+  useEffect(() => {
+    if (account && web3 && isPaymentOGUN) {
+      getOGUNBalance(web3);
+    }
+  }, [account, web3]);
+
   if (!auctionItem || !web3) {
     return null;
   }
@@ -186,12 +217,24 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     }
     const amount = Web3.utils.toWei(bidAmount.toString());
 
-    if (bidAmount >= parseFloat(balance || '0')) {
-      toast.warn("Uh-oh, it seems you don't have enough funds for this transaction");
-      return;
+    const checkBalance = (balance:string) => {
+      if (bidAmount >= parseFloat(balance || '0')) {
+        toast.warn("Uh-oh, it seems you don't have enough funds for this transaction");
+        return;
+      }
     }
 
-    placeBid(tokenId, account, amount)
+    const approveOGUNTransferFrom = async (amount?: number) => {
+      if (amount) {
+        await tokenContract(web3).methods.approve(auctionAddress, amount.toString()).send({from:account});
+      }
+    }
+
+    isPaymentOGUN ? checkBalance(OGUNBalance) : checkBalance(balance ?? '0');
+
+    isPaymentOGUN && approveOGUNTransferFrom(+amount); 
+    
+    placeBid(tokenId, account, amount, isPaymentOGUN)
       .onReceipt(() => {
         toast.success('Bid placed!');
         if (refetchHaveBided) refetchHaveBided();
@@ -259,7 +302,11 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
               <div className="flex justify-between items-center px-4 py-3 gap-3">
                 <div className="text-xs font-bold text-gray-80 ">{auctionIsOver ? 'FINAL PRICE' : 'CURRENT PRICE'}</div>
                 <div className="flex items-center font-bold gap-1">
-                  <Matic value={price} variant="currency-inline" className="text-xs" />
+                  {isPaymentOGUN ? (
+                    <Ogun value={price} variant="currency-inline" className="text-xs" />
+                  ) : (
+                    <Matic value={price} variant="currency-inline" className="text-xs" />
+                  )}
                   <button
                     className="text-[#22CAFF] text-xxs cursor-pointer font-bold"
                     onClick={() => dispatchShowBidsHistory(true, auctionItem?.auctionItem?.id || '')}
@@ -301,11 +348,11 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
                       </p>
                       <p className="font-medium mt-1 text-xxs">
                         Must be at least 1% of current bid price. Enter{' '}
-                        <span className="text-white font-bold cursor-pointer">{minBid}</span> MATIC or more.
+                        <span className="text-white font-bold cursor-pointer">{minBid}</span> {isPaymentOGUN ? ("OGUN"):("MATIC")} or more.
                       </p>
                     </label>
                     <div className="w-1/2">
-                      <InputField name="bidAmount" type="number" icon={MaticIcon} step="any" />
+                      <InputField name="bidAmount" type="number" icon={isPaymentOGUN ? Logo : MaticIcon} step="any" />
                     </div>
                   </div>
                   {me?.otpSecret && (
@@ -324,7 +371,11 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
                   </div>
 
                   <PlayerAwareBottomBar>
-                    <Matic className="flex-1" value={bidAmount} variant="currency" />
+                    {isPaymentOGUN ? (
+                      <Ogun className="flex-1" value={bidAmount} variant="currency" />
+                    ):(
+                      <Matic className="flex-1" value={bidAmount} variant="currency" />
+                    )}
                     <Button type="submit" variant="buy-nft" loading={loading}>
                       <div className="px-4">CONFIRM BID</div>
                     </Button>

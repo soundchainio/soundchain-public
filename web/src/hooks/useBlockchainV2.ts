@@ -95,15 +95,22 @@ class BlockchainFunction<Type> {
 interface PlaceBidParams extends DefaultParam {
   tokenId: number;
   value: string;
+  isPaymentOGUN: boolean;
 }
 class PlaceBid extends BlockchainFunction<PlaceBidParams> {
   execute = async (web3: Web3) => {
-    const { from, value, tokenId } = this.params;
+    const { from, value, tokenId, isPaymentOGUN } = this.params;
     this.web3 = web3;
 
-    await this._execute(gasPrice =>
-      auctionContract(web3).methods.placeBid(nftAddress, tokenId).send({ from, gas, value, gasPrice }),
-    );
+    if (isPaymentOGUN) {
+      await this._execute(gasPrice =>
+        auctionContract(web3).methods.placeBid(nftAddress, tokenId, isPaymentOGUN, value).send({ from, gas, gasPrice }),
+      );
+    } else {
+      await this._execute(gasPrice =>
+        auctionContract(web3).methods.placeBid(nftAddress, tokenId, isPaymentOGUN, value).send({ from, gas, value, gasPrice }),
+      );
+    }
     return this.receipt;
   };
 }
@@ -126,15 +133,22 @@ interface BuyItemParams extends DefaultParam {
   tokenId: number;
   owner: string;
   value: string;
+  isPaymentOGUN: boolean;
 }
 class BuyItem extends BlockchainFunction<BuyItemParams> {
   execute = async (web3: Web3) => {
-    const { owner, value, tokenId, from } = this.params;
+    const { owner, value, tokenId, isPaymentOGUN, from } = this.params;
     this.web3 = web3;
 
-    await this._execute(gasPrice =>
-      marketplaceContract(web3).methods.buyItem(nftAddress, tokenId, owner).send({ from, gas, value, gasPrice }),
-    );
+    if (isPaymentOGUN) {
+      await this._execute(gasPrice =>
+        marketplaceContract(web3).methods.buyItem(nftAddress, tokenId, owner, isPaymentOGUN).send({ from, gas, gasPrice }),
+      );
+    } else {
+      await this._execute(gasPrice =>
+        marketplaceContract(web3).methods.buyItem(nftAddress, tokenId, owner, isPaymentOGUN).send({ from, gas, value, gasPrice }),
+      );
+    }
 
     return this.receipt;
   };
@@ -202,18 +216,19 @@ class CancelListing extends BlockchainFunction<TokenParams> {
 }
 interface CreateAuctionParams extends TokenParams {
   reservePrice: string;
+  isPaymentOGUN: boolean;
   startTime: number;
   endTime: number;
 }
 class CreateAuction extends BlockchainFunction<CreateAuctionParams> {
   execute = async (web3: Web3) => {
-    const { from, tokenId, reservePrice, startTime, endTime } = this.params;
+    const { from, tokenId, reservePrice, isPaymentOGUN, startTime, endTime } = this.params;
     const totalPrice = Web3.utils.toBN(reservePrice).muln(1 + config.soundchainFee);
     this.web3 = web3;
 
     await this._execute(gasPrice =>
       auctionContract(web3)
-        .methods.createAuction(nftAddress, tokenId, totalPrice, startTime, endTime)
+        .methods.createAuction(nftAddress, tokenId, totalPrice, isPaymentOGUN, startTime, endTime)
         .send({ from, gas, gasPrice }),
     );
 
@@ -222,13 +237,13 @@ class CreateAuction extends BlockchainFunction<CreateAuctionParams> {
 }
 class UpdateAuction extends BlockchainFunction<CreateAuctionParams> {
   execute = async (web3: Web3) => {
-    const { from, tokenId, reservePrice, startTime, endTime } = this.params;
+    const { from, tokenId, reservePrice, isPaymentOGUN, startTime, endTime } = this.params;
     const totalPrice = Web3.utils.toBN(reservePrice).muln(1 + config.soundchainFee);
     this.web3 = web3;
 
     await this._execute(gasPrice =>
       auctionContract(web3)
-        .methods.updateAuction(nftAddress, tokenId, totalPrice, startTime, endTime)
+        .methods.updateAuction(nftAddress, tokenId, totalPrice, isPaymentOGUN, startTime, endTime)
         .send({ from, gas, gasPrice }),
     );
 
@@ -249,17 +264,21 @@ class ResultAuction extends BlockchainFunction<TokenParams> {
 }
 interface ListItemParams extends TokenParams {
   price: string;
+  priceOGUN: string;
   startTime: number;
 }
 class ListItem extends BlockchainFunction<ListItemParams> {
   execute = async (web3: Web3) => {
-    const { from, tokenId, price, startTime } = this.params;
+    const { from, tokenId, price, priceOGUN, startTime } = this.params;
     const totalPrice = Web3.utils.toBN(price).muln(1 + config.soundchainFee);
+    const totalOGUNPrice = Web3.utils.toBN(priceOGUN).muln(1 + config.soundchainFee);
     this.web3 = web3;
+    const acceptsMATIC = +price > 0;
+    const acceptsOGUN = +priceOGUN > 0;
 
     await this._execute(gasPrice =>
       marketplaceContract(web3)
-        .methods.listItem(nftAddress, tokenId, 1, totalPrice, startTime)
+        .methods.listItem(nftAddress, tokenId, 1, totalPrice, totalOGUNPrice, acceptsMATIC, acceptsOGUN, startTime)
         .send({ from, gas, gasPrice }),
     );
 
@@ -268,13 +287,16 @@ class ListItem extends BlockchainFunction<ListItemParams> {
 }
 class UpdateListing extends BlockchainFunction<ListItemParams> {
   execute = async (web3: Web3) => {
-    const { from, tokenId, price, startTime } = this.params;
+    const { from, tokenId, price, priceOGUN, startTime } = this.params;
     const totalPrice = Web3.utils.toBN(price).muln(1 + config.soundchainFee);
+    const totalOGUNPrice = Web3.utils.toBN(priceOGUN).muln(1 + config.soundchainFee);
     this.web3 = web3;
+    const acceptsMATIC = +price > 0;
+    const acceptsOGUN = +priceOGUN > 0;
 
     await this._execute(gasPrice =>
       marketplaceContract(web3)
-        .methods.updateListing(nftAddress, tokenId, totalPrice, startTime)
+        .methods.updateListing(nftAddress, tokenId, totalPrice, totalOGUNPrice, acceptsMATIC, acceptsOGUN, startTime)
         .send({ from, gas, gasPrice }),
     );
 
@@ -341,8 +363,8 @@ const useBlockchainV2 = () => {
   const me = useMe();
 
   const placeBid = useCallback(
-    (tokenId: number, from: string, value: string) => {
-      return new PlaceBid(me, { from, value, tokenId });
+    (tokenId: number, from: string, value: string, isPaymentOGUN:boolean) => {
+      return new PlaceBid(me, { from, value, tokenId, isPaymentOGUN });
     },
     [me],
   );
@@ -353,8 +375,8 @@ const useBlockchainV2 = () => {
     [me],
   );
   const buyItem = useCallback(
-    (tokenId: number, from: string, owner: string, value: string) => {
-      return new BuyItem(me, { tokenId, from, owner, value });
+    (tokenId: number, from: string, owner: string, isPaymentOGUN:boolean, value: string) => {
+      return new BuyItem(me, { tokenId, from, owner, isPaymentOGUN, value });
     },
     [me],
   );
@@ -389,14 +411,14 @@ const useBlockchainV2 = () => {
     [me],
   );
   const createAuction = useCallback(
-    (tokenId: number, reservePrice: string, startTime: number, endTime: number, from: string) => {
-      return new CreateAuction(me, { from, tokenId, reservePrice, startTime, endTime });
+    (tokenId: number, reservePrice: string, startTime: number, endTime: number, from: string, isPaymentOGUN:boolean) => {
+      return new CreateAuction(me, { from, tokenId, reservePrice, isPaymentOGUN, startTime, endTime });
     },
     [me],
   );
   const updateAuction = useCallback(
-    (tokenId: number, reservePrice: string, startTime: number, endTime: number, from: string) => {
-      return new UpdateAuction(me, { from, tokenId, reservePrice, startTime, endTime });
+    (tokenId: number, reservePrice: string, startTime: number, endTime: number, from: string, isPaymentOGUN:boolean) => {
+      return new UpdateAuction(me, { from, tokenId, reservePrice, isPaymentOGUN, startTime, endTime });
     },
     [me],
   );
@@ -407,14 +429,14 @@ const useBlockchainV2 = () => {
     [me],
   );
   const listItem = useCallback(
-    (tokenId: number, from: string, price: string, startTime: number) => {
-      return new ListItem(me, { from, tokenId, price, startTime });
+    (tokenId: number, from: string, price: string, priceOGUN: string, startTime: number) => {
+      return new ListItem(me, { from, tokenId, price, priceOGUN, startTime });
     },
     [me],
   );
   const updateListing = useCallback(
-    (tokenId: number, from: string, price: string, startTime: number) => {
-      return new UpdateListing(me, { from, tokenId, price, startTime });
+    (tokenId: number, from: string, price: string, priceOGUN: string, startTime: number) => {
+      return new UpdateListing(me, { from, tokenId, price, priceOGUN, startTime });
     },
     [me],
   );

@@ -38,6 +38,9 @@ fragment ListingItemComponentFields on TrackWithListingItem {
     tokenId
     pricePerItem
     pricePerItemToShow
+    OGUNPricePerItem
+    OGUNPricePerItemToShow
+    isPaymentOGUN
     startingTime
     endingTime
     reservePrice

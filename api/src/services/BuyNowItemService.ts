@@ -9,6 +9,10 @@ interface NewBuyNowItem {
   tokenId: number;
   pricePerItem: string;
   pricePerItemToShow: number;
+  OGUNPricePerItem: string;
+  OGUNPricePerItemToShow: number;
+  acceptsMATIC: boolean;
+  acceptsOGUN: boolean;
   startingTime: number;
 }
 

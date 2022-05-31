@@ -32,14 +32,16 @@ export type AuctionCreated = ContractEventLog<{
   tokenId: string;
   owner: string;
   reservePrice: string;
+  isPaymentOGUN: boolean;
   startTimestamp: string;
   endTimestamp: string;
   0: string;
   1: string;
   2: string;
   3: string;
-  4: string;
+  4: boolean;
   5: string;
+  6: string;
 }>;
 export type AuctionResulted = ContractEventLog<{
   oldOwner: string;
@@ -87,13 +89,15 @@ export type UpdateAuction = ContractEventLog<{
   nftAddress: string;
   tokenId: string;
   reservePrice: string;
+  isPaymentOGUN: boolean;
   startTime: string;
   endTime: string;
   0: string;
   1: string;
   2: string;
-  3: string;
+  3: boolean;
   4: string;
+  5: string;
 }>;
 export type UpdateMinBidIncrement = ContractEventLog<{
   minBidIncrement: string;
@@ -116,20 +120,24 @@ export interface SoundchainAuction extends BaseContract {
   ): SoundchainAuction;
   clone(): SoundchainAuction;
   methods: {
+    OGUNToken(): NonPayableTransactionObject<string>;
+
     auctions(
       arg0: string,
       arg1: number | string | BN
     ): NonPayableTransactionObject<{
       owner: string;
       reservePrice: string;
+      isPaymentOGUN: boolean;
       startTime: string;
       endTime: string;
       resulted: boolean;
       0: string;
       1: string;
-      2: string;
+      2: boolean;
       3: string;
-      4: boolean;
+      4: string;
+      5: boolean;
     }>;
 
     cancelAuction(
@@ -141,6 +149,7 @@ export interface SoundchainAuction extends BaseContract {
       _nftAddress: string,
       _tokenId: number | string | BN,
       _reservePrice: number | string | BN,
+      _isPaymentOGUN: boolean,
       _startTimestamp: number | string | BN,
       _endTimestamp: number | string | BN
     ): NonPayableTransactionObject<void>;
@@ -151,14 +160,16 @@ export interface SoundchainAuction extends BaseContract {
     ): NonPayableTransactionObject<{
       _owner: string;
       _reservePrice: string;
+      _isPaymentOGUN: boolean;
       _startTime: string;
       _endTime: string;
       _resulted: boolean;
       0: string;
       1: string;
-      2: string;
+      2: boolean;
       3: string;
-      4: boolean;
+      4: string;
+      5: boolean;
     }>;
 
     getHighestBidder(
@@ -193,7 +204,9 @@ export interface SoundchainAuction extends BaseContract {
 
     placeBid(
       _nftAddress: string,
-      _tokenId: number | string | BN
+      _tokenId: number | string | BN,
+      _isPaymentOGUN: boolean,
+      _bidAmount: number | string | BN
     ): PayableTransactionObject<void>;
 
     claim(
@@ -221,6 +234,7 @@ export interface SoundchainAuction extends BaseContract {
       _nftAddress: string,
       _tokenId: number | string | BN,
       _reservePrice: number | string | BN,
+      _isPaymentOGUN: boolean,
       _startTime: number | string | BN,
       _endTime: number | string | BN
     ): NonPayableTransactionObject<void>;

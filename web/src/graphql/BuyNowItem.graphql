@@ -7,6 +7,10 @@ query BuyNowItem($tokenId: Float!) {
       tokenId
       pricePerItem
       pricePerItemToShow
+      OGUNPricePerItem
+      OGUNPricePerItemToShow
+      acceptsMATIC
+      acceptsOGUN
       startingTime
     }
   }

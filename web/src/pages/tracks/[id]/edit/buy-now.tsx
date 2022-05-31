@@ -108,19 +108,21 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
   const isOwner = compareWallets(listingPayload.buyNowItem?.buyNowItem?.owner, account);
   const isForSale = !!listingPayload.buyNowItem?.buyNowItem?.pricePerItem ?? false;
   const price = listingPayload.buyNowItem?.buyNowItem?.pricePerItemToShow;
+  const OGUNprice = listingPayload.buyNowItem?.buyNowItem?.OGUNPricePerItemToShow;
 
   const startingDate = listingPayload.buyNowItem?.buyNowItem?.startingTime
     ? new Date(listingPayload.buyNowItem.buyNowItem.startingTime * 1000)
     : undefined;
 
   const handleUpdate = (
-    { price: newPrice, startTime }: ListNFTBuyNowFormValues,
+    { price: newPrice, priceOGUN: newPriceOGUN, startTime }: ListNFTBuyNowFormValues,
     helper: FormikHelpers<ListNFTBuyNowFormValues>,
   ) => {
     if (!web3 || !listingPayload.buyNowItem?.buyNowItem?.tokenId || !newPrice || !account) {
       return;
     }
     const weiPrice = Web3.utils.toWei(newPrice.toString(), 'ether');
+    const weiPriceOGUN = newPriceOGUN ? web3?.utils.toWei(newPriceOGUN.toString(), 'ether') : '0';
     const startTimestamp = startTime.getTime() / 1000;
 
     const onReceipt = () => {
@@ -137,7 +139,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       router.replace(router.asPath.replace('/edit/buy-now', ''));
     };
 
-    updateListing(listingPayload.buyNowItem?.buyNowItem?.tokenId, account, weiPrice, startTimestamp)
+    updateListing(listingPayload.buyNowItem?.buyNowItem?.tokenId, account, weiPrice, weiPriceOGUN, startTimestamp)
       .onReceipt(onReceipt)
       .onError(cause => toast.error(cause.message))
       .finally(() => helper.setSubmitting(false))
@@ -157,7 +159,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       <ListNFTBuyNow
         submitLabel="EDIT LISTING"
         handleSubmit={handleUpdate}
-        initialValues={{ price, startTime: startingDate }}
+        initialValues={{ price, priceOGUN: OGUNprice,  startTime: startingDate }}
       />
     </>
   );

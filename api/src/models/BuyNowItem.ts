@@ -31,6 +31,22 @@ export class BuyNowItem extends Model {
   @prop({ type: Number, required: true })
   pricePerItemToShow: number;
 
+  @Field()
+  @prop({ type: String, required: true })
+  OGUNPricePerItem: string;
+
+  @Field()
+  @prop({ type: Number, required: true })
+  OGUNPricePerItemToShow: number;
+
+  @Field()
+  @prop({ type: Boolean, required: true })
+  acceptsMATIC: boolean;
+
+  @Field()
+  @prop({ type: Boolean, required: true })
+  acceptsOGUN: boolean;
+
   @Field(() => Date)
   createdAt: Date;
 
