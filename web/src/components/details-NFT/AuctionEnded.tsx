@@ -9,7 +9,7 @@ interface AuctionEndedProps {
 
 export const AuctionEnded = ({ highestBid }: AuctionEndedProps) => (
   <div className="mb-16 flex flex-col gap-4 px-4 py-6 bg-gray-20">
-    <SoundchainFee price={highestBid.bid} />
+    <SoundchainFee price={highestBid.bid} priceOGUN={0} />
     <MaxGasFee />
   </div>
 );
