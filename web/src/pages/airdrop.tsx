@@ -8,21 +8,18 @@ import { MetaMask } from 'icons/MetaMask';
 import useMetaMask from 'hooks/useMetaMask';
 import { WalletConnect } from 'icons/WalletConnect';
 import { testnetNetwork } from 'lib/blockchainNetworks';
-import MerkleClaimERC20 from '../contract/MerkleClaimERC20/MerkleClaimERC20.json';
-import Decimal from 'decimal.js';
+import { toast, ToastContainer } from 'react-toastify';
 import { useLayoutContext } from 'hooks/useLayoutContext';
 import { CustomModal } from '../components/CustomModal';
 import {
   useAudioHolderByWalletLazyQuery,
-  useUpdateOgunClaimedWhitelistMutation,
   useWhitelistEntryByWalletLazyQuery,
   useProofBookByWalletLazyQuery,
 } from 'lib/graphql';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import Web3 from 'web3';
-import { AbiItem } from 'web3-utils';
-import { Contract } from 'web3-eth-contract';
+import useBlockchainV2 from '../hooks/useBlockchainV2';
 
 export default function AirdropPage() {
   const { setIsLandingLayout } = useLayoutContext();
@@ -33,7 +30,6 @@ export default function AirdropPage() {
   });
   const { web3: metamaskWeb3 } = useMetaMask();
   const [audioHolderByWallet, { data: audioHolder }] = useAudioHolderByWalletLazyQuery();
-  const [updateOgunClaimedWhitelist] = useUpdateOgunClaimedWhitelistMutation();
   const [account, setAccount] = useState<string>();
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState<boolean>(false);
@@ -41,10 +37,7 @@ export default function AirdropPage() {
   const [isFinished, setIsFinished] = useState<boolean>(false);
   const [web3, setWeb3] = useState<Web3>();
   // const minimunAudioToken = new Decimal('10');
-
-  const OGUNAddress = "0xC54133351E57F58e3eB14efD8809e9aaEdfEE8C8"
-  const claimOgunContract = (web3: Web3) =>
-    new web3.eth.Contract(MerkleClaimERC20 as AbiItem[], OGUNAddress) as unknown as Contract;
+  const { claimOgun } = useBlockchainV2();
 
   //correct amount at mobile
 
@@ -66,8 +59,8 @@ export default function AirdropPage() {
 
   const isOgunClaimedWhitelist = Boolean(whitelistEntry?.whitelistEntryByWallet.ogunClaimed);
   const isOgunClaimedAudioHolder = Boolean(audioHolder?.audioHolderByWallet?.ogunClaimed);
-  const audioBalance = new Decimal(audioHolder?.audioHolderByWallet?.amount || '0');
-  const audioBalanceSize = audioBalance.toString().length;
+  // const audioBalance = new Decimal(audioHolder?.audioHolderByWallet?.amount || '0');
+  // const audioBalanceSize = audioBalance.toString().length;
 
   const isClaimed =
     (whitelistEntry && isOgunClaimedWhitelist && !audioHolder) ||
@@ -129,28 +122,42 @@ export default function AirdropPage() {
     setWeb3(metamaskWeb3);
   };
 
-  const handleClaimOgun = async () => {
-    const result = await callOgunContract();
+  const handleClaimOgun = () => {
+    const result = callOgunContract();
     console.log(result);
-    try {
-      if (result && whitelistEntry && !isOgunClaimedWhitelist) {
-        await updateOgunClaimedWhitelist({
-          variables: { input: { id: whitelistEntry?.whitelistEntryByWallet.id, ogunClaimed: true } },
-        });
-      }
-
+    result.onReceipt(() => {
       setIsFinished(true);
-    } catch (error) {
-      console.warn('warn: ', error);
-    }
+    }).onError((cause: Error) => {
+      console.log(cause);
+      toast.error('There was an error while trying to claim. Please, try again later.');
+    }).finally(() => {
+      setLoading(false);
+    }).execute(web3 as Web3);
+      //   await updateOgunClaimedWhitelist({
+      //     variables: { input: { id: whitelistEntry?.whitelistEntryByWallet.id, ogunClaimed: true } },
+      //   });
+      // }
+    
   };
 
-  const callOgunContract = async () => {
+  const callOgunContract = () => {
     const address = proofBook?.getProofBookByWallet?.address;
     // const root = proofBook?.getProofBookByWallet?.root;
     const value = proofBook?.getProofBookByWallet?.value;
     const proof = proofBook?.getProofBookByWallet?.merkleProof;
-    return await claimOgunContract(web3 as Web3).methods.claim(address, value, proof);
+    console.log('ADDRESS: ', address);
+    console.log('VALUE: ', value);
+    console.log('PROOF: ', proof);
+    // const contract = claimOgunContract(web3 as Web3);
+    // contract.handleRevert = true;
+    // try {
+    // const claimOgun = await contract.methods.claim(address, value, proof).send();
+    // return claimOgun;
+    // } catch (error) {
+    //   console.log(error);
+    //   return undefined;
+    // }
+    return claimOgun(address as string, address as string, value as string, proof as string[]);
   };
 
   const ConnectAccountState = () => {
@@ -187,44 +194,54 @@ export default function AirdropPage() {
     );
   };
 
-  const AudioWhitelistState = () => {
-    return (
-      <>
-        <h2 className="text-center text-2xl font-light md:text-4xl">
-          Based on how much AUDIO you own, you are able to claim this much OGUN
-        </h2>
+  // const AudioWhitelistState = () => {
+  //   return (
+  //     <>
+  //       <h2 className="text-center text-2xl font-light md:text-4xl">
+  //         Based on how much AUDIO you own, you are able to claim this much OGUN
+  //       </h2>
 
-        <h2 className="flex flex-col items-center whitespace-pre-wrap text-center text-2xl font-medium md:flex-row md:text-4xl">
-          <span>
-            {audioBalanceSize < 8 ? audioBalance.toString() : audioBalance.toString().substring(0, 8) + '...'}{' '}
-            <span className="purple-blue-gradient-text-break">$AUDIO</span>
-          </span>
-          <span className="m-1 w-12 grow  border-b border-white" />
-          <span>
-            50 <span className="green-blue-gradient-text-break">OGUN</span>
-          </span>
-        </h2>
-        <h2 className="text-center text-xl font-light md:text-4xl">
-          Also for joining the whitelist:{' '}
-          <span className="font-medium">
-            {' '}
-            50 <span className="green-blue-gradient-text-break">OGUN</span>
-          </span>
-        </h2>
-        <Button variant="rainbow" className="w-5/6" onClick={handleClaimOgun}>
-          <span className="font-medium ">CLAIM</span>
-        </Button>
-      </>
-    );
-  };
+  //       <h2 className="flex flex-col items-center whitespace-pre-wrap text-center text-2xl font-medium md:flex-row md:text-4xl">
+  //         <span>
+  //           {audioBalanceSize < 8 ? audioBalance.toString() : audioBalance.toString().substring(0, 8) + '...'}{' '}
+  //           <span className="purple-blue-gradient-text-break">$AUDIO</span>
+  //         </span>
+  //         <span className="m-1 w-12 grow  border-b border-white" />
+  //         <span>
+  //           50 <span className="green-blue-gradient-text-break">OGUN</span>
+  //         </span>
+  //       </h2>
+  //       <h2 className="text-center text-xl font-light md:text-4xl">
+  //         Also for joining the whitelist:{' '}
+  //         <span className="font-medium">
+  //           {' '}
+  //           50 <span className="green-blue-gradient-text-break">OGUN</span>
+  //         </span>
+  //       </h2>
+  //       <Button variant="rainbow" className="w-5/6" onClick={handleClaimOgun}>
+  //         <span className="font-medium ">CLAIM</span>
+  //       </Button>
+  //     </>
+  //   );
+  // };
 
   const WhitelistState = () => {
     return (
       <>
-        <h2 className="text-center text-2xl font-light md:text-4xl">Thanks for joining the Whitelist</h2>
-        <h2 className="text-center text-2xl font-medium md:text-4xl">
-          50 <span className="green-blue-gradient-text-break">OGUN</span>
-        </h2>
+        <div>
+          <h1 className="text-center text-2xl font-extrabold md:text-5xl">
+            Connect your <span className="green-blue-gradient-text-break">wallet</span>
+          </h1>
+          <h2 className="pt-6 text-center text-xl font-light md:text-4xl">
+            If you are an existing SoundChain user,
+            <br />
+            joined the whitelist, or had any AUDIO when
+            <br />
+            we took a snapshop on June 20, connect
+            <br />
+            your wallet to claim <span className="yellow-gradient-text font-bold">5,000 OGUN</span>
+          </h2>
+        </div>
         <Button variant="rainbow" className="w-5/6" onClick={handleClaimOgun}>
           <span className="font-medium ">CLAIM</span>
         </Button>
@@ -232,28 +249,28 @@ export default function AirdropPage() {
     );
   };
 
-  const AudioState = () => {
-    return (
-      <>
-        <h2 className="text-center text-2xl font-light md:text-4xl">
-          Based on how much AUDIO you own, you are able to claim this much OGUN
-        </h2>
-        <h2 className="flex flex-col items-center whitespace-pre-wrap text-center text-2xl font-medium md:flex-row md:text-4xl">
-          <span>
-            {audioBalanceSize < 8 ? audioBalance.toString() : audioBalance.toString().substring(0, 8) + '...'}{' '}
-            <span className="purple-blue-gradient-text-break">$AUDIO</span>
-          </span>
-          <span className="m-1 w-12 grow  border-b border-white" />
-          <span>
-            50 <span className="green-blue-gradient-text-break">OGUN</span>
-          </span>
-        </h2>
-        <Button variant="rainbow" className="w-5/6">
-          <span className="font-medium ">CLAIM</span>
-        </Button>
-      </>
-    );
-  };
+  // const AudioState = () => {
+  //   return (
+  //     <>
+  //       <h2 className="text-center text-2xl font-light md:text-4xl">
+  //         Based on how much AUDIO you own, you are able to claim this much OGUN
+  //       </h2>
+  //       <h2 className="flex flex-col items-center whitespace-pre-wrap text-center text-2xl font-medium md:flex-row md:text-4xl">
+  //         <span>
+  //           {audioBalanceSize < 8 ? audioBalance.toString() : audioBalance.toString().substring(0, 8) + '...'}{' '}
+  //           <span className="purple-blue-gradient-text-break">$AUDIO</span>
+  //         </span>
+  //         <span className="m-1 w-12 grow  border-b border-white" />
+  //         <span>
+  //           50 <span className="green-blue-gradient-text-break">OGUN</span>
+  //         </span>
+  //       </h2>
+  //       <Button variant="rainbow" className="w-5/6">
+  //         <span className="font-medium ">CLAIM</span>
+  //       </Button>
+  //     </>
+  //   );
+  // };
 
   const WithoutAudioState = () => {
     return (
@@ -286,9 +303,11 @@ export default function AirdropPage() {
         <h2 className="text-center text-2xl font-light md:text-4xl">
           Thanks for claiming your <span className="green-blue-gradient-text-break">OGUN</span>
         </h2>
+        <Link href="/marketplace" passHref={true}>
         <Button variant="rainbow" className="w-5/6">
           <span className="font-medium ">SoundChain Community</span>
         </Button>
+        </Link>
       </>
     );
   };
@@ -308,6 +327,16 @@ export default function AirdropPage() {
 
   return (
     <>
+    <ToastContainer
+          position="top-center"
+          autoClose={6 * 1000}
+          toastStyle={{
+            backgroundColor: '#202020',
+            color: 'white',
+            fontSize: '12x',
+            textAlign: 'center',
+          }}
+        />
       <SEO title="Airdrop" canonicalUrl="/airdrop" description="Collect your Ogun tokens" />
       <main className="flex h-full w-full items-center justify-center py-32 font-rubik text-white">
         <div className="flex max-w-3xl flex-col items-center justify-center gap-y-12 pb-0 md:pb-40">
@@ -321,8 +350,10 @@ export default function AirdropPage() {
             <FinishedState />
           ) : isClaimed ? (
             <ClaimedState />
-          ) :
+          ) : proofBook?.getProofBookByWallet?.address ? (
           <WhitelistState />
+          ) :
+          <WithoutAudioState />
           }
         </div>
       </main>

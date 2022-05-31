@@ -10,18 +10,24 @@ import { SoundchainMarketplace } from 'types/web3-v1-contracts/SoundchainMarketp
 import Web3 from 'web3';
 import { PromiEvent, TransactionReceipt } from 'web3-core/types';
 import { AbiItem } from 'web3-utils';
+import AirdropClaim from '../contract/MerkleClaimERC20/MerkleClaimERC20.json';
 import soundchainAuction from '../contract/Auction.sol/SoundchainAuction.json';
 import soundchainMarketplace from '../contract/Marketplace.sol/SoundchainMarketplace.json';
 import soundchainContract from '../contract/Soundchain721.sol/Soundchain721.json';
+import { Contract } from 'web3-eth-contract';
 
 const nftAddress = config.contractAddress as string;
 const marketplaceAddress = config.marketplaceAddress as string;
 const auctionAddress = config.auctionAddress as string;
+const claimOgunAddress = config.claimOgunAddress as string;
 export const gas = 1200000;
 const fallbackGasPrice = '300000000000';
 
 const auctionContract = (web3: Web3) =>
   new web3.eth.Contract(soundchainAuction.abi as AbiItem[], auctionAddress) as unknown as SoundchainAuction;
+
+const claimOgunContract = (web3: Web3) =>
+  new web3.eth.Contract(AirdropClaim.abi as AbiItem[], claimOgunAddress) as unknown as Contract;
 
 const marketplaceContract = (web3: Web3) =>
   new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress) as unknown as SoundchainMarketplace;
@@ -61,9 +67,9 @@ class BlockchainFunction<Type> {
         if (this.onErrorFunction) {
           const error = Object.keys(cause).includes('receipt')
             ? new Error(
-                `Transaction reverted by the Blockchain.\r\n
+              `Transaction reverted by the Blockchain.\r\n
                 Please check the transaction on your wallet activity page for more details.`,
-              )
+            )
             : cause;
           this.onErrorFunction(error);
         }
@@ -97,6 +103,21 @@ class PlaceBid extends BlockchainFunction<PlaceBidParams> {
 
     await this._execute(gasPrice =>
       auctionContract(web3).methods.placeBid(nftAddress, tokenId).send({ from, gas, value, gasPrice }),
+    );
+    return this.receipt;
+  };
+}
+interface ClaimOgunParams extends DefaultParam {
+  address: string;
+  value: string;
+  proof: string[];
+}
+class ClaimOgun extends BlockchainFunction<ClaimOgunParams> {
+  execute = async (web3: Web3) => {
+    const { from, address, value, proof } = this.params;
+    this.web3 = web3;
+    await this._execute(gasPrice =>
+      claimOgunContract(web3).methods.claim(address, value, proof).send({ from, gas, gasPrice }),
     );
     return this.receipt;
   };
@@ -325,6 +346,12 @@ const useBlockchainV2 = () => {
     },
     [me],
   );
+  const claimOgun = useCallback(
+    (from: string, address: string, value: string, proof: string[]) => {
+      return new ClaimOgun(me, { from, address, value, proof });
+    },
+    [me],
+  );
   const buyItem = useCallback(
     (tokenId: number, from: string, owner: string, value: string) => {
       return new BuyItem(me, { tokenId, from, owner, value });
@@ -412,6 +439,7 @@ const useBlockchainV2 = () => {
 
   return {
     placeBid,
+    claimOgun,
     buyItem,
     approveMarketplace,
     approveAuction,
