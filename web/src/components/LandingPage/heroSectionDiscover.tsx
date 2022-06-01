@@ -26,6 +26,7 @@ export function HeroSectionDiscover() {
               <div className='relative h-full flex-1'>
                 <div className='absolute inset-0 h-full pointer-events-none flex justify-start'>
                   <Image
+                    alt=''
                     className='h-full w-full aspect-video relative object-cover'
                     src='/landing-page/hero-bg.png'
                     layout='fill'

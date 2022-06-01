@@ -16,6 +16,7 @@ export function MintSongsSection() {
       <div className='relative'>
         <div className='absolute pointer-events-none top-40 sm:top-32 z-10 h-[500px] w-full'>
           <Image
+            alt=''
             className='object-cover z-30 max-h-[300px] w-full object-cover'
             src='/landing-page/wave-bg.svg'
             layout='responsive'
