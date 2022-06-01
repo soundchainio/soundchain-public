@@ -16,6 +16,7 @@ export function DiscoverTracksSection() {
         <div
           className='absolute pointer-events-none aspect-video z-0 max-w-[600px] md:max-w-full md:w-full inset-0 h-[830px] -top-[200px] sm:-top-[400px]'>
           <Image
+            alt=''
             className='object-contain md:object-cover z-0'
             src='/landing-page/second-section-bg.png'
             layout='fill'
@@ -62,8 +63,15 @@ export function DiscoverTracksSection() {
                   </span>
                   </div>
 
-                  <div className='absolute pointer-events-none left-0 right-0 -top-[4rem] mx-auto sm:left-auto max-w-[190px] sm:-right-20  sm:-top-10'>
-                    <Image src='/landing-page/timeline-preview.png' className='w-full' width='300px' height='600px' />
+                  <div
+                    className='absolute pointer-events-none left-0 right-0 -top-[4rem] mx-auto sm:left-auto max-w-[190px] sm:-right-20  sm:-top-10'>
+                    <Image
+                      alt=''
+                      src='/landing-page/timeline-preview.png'
+                      className='w-full'
+                      width='300px'
+                      height='600px'
+                    />
                   </div>
                 </div>
               </div>
@@ -76,6 +84,7 @@ export function DiscoverTracksSection() {
         <div
           className='absolute pointer-events-none aspect-video z-0 max-w-[600px] sm:max-w-full sm:w-full inset-0 h-[830px] -top-[300px] sm:-top-[400px]'>
           <Image
+            alt=''
             className='object-contain sm:object-cover z-0'
             src='/landing-page/third-section-bg.png'
             layout='fill'

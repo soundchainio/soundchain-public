@@ -31,6 +31,7 @@ export function CollectMusicNFTSection() {
               </div>
               <div className='max-w-[300px] -ml-10 md:ml-0 md:max-w-[584px]'>
                 <Image
+                  alt=''
                   layout='intrinsic'
                   width='584px'
                   height='544px'
