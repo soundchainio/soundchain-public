@@ -9,11 +9,12 @@ import { Matic } from 'icons/Matic';
 import React, { useState } from 'react';
 import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { date, number, object, SchemaOf } from 'yup';
+import { date, string, number, object, SchemaOf } from 'yup';
 import { CurrencyType } from '../../types/CurrenctyType';
 
 export interface ListNFTBuyNowFormValues {
   salePrice: number;
+  selectedCurrency: string;
   royalty: number;
   startTime: Date;
 }
@@ -21,6 +22,7 @@ export interface ListNFTBuyNowFormValues {
 const validationSchema: SchemaOf<ListNFTBuyNowFormValues> = object().shape({
   salePrice: number().required('Price is a required field'),
   royalty: number().max(100).min(0).required(),
+  selectedCurrency: string().required(),
   startTime: date()
     .min(new Date(new Date().getTime() + 10 * 1000 * 60), 'The start time should be at least ten minutes from now')
     .required(),
@@ -36,9 +38,10 @@ export const ListNFTBuyNow = ({ initialValues, submitLabel, handleSubmit }: List
   const defaultValues = {
     salePrice: initialValues?.salePrice || 0,
     royalty: initialValues?.royalty || 0,
+    selectedCurrency: 'OGUN',
     startTime: initialValues?.startTime || new Date(new Date().getTime() + 10 * 1000 * 60),
   };
-  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyType>('MATIC');
+  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyType>('OGUN');
 
   const isMatic = selectedCurrency === 'MATIC';
 
@@ -48,7 +51,7 @@ export const ListNFTBuyNow = ({ initialValues, submitLabel, handleSubmit }: List
         initialValues={defaultValues}
         validationSchema={validationSchema}
         onSubmit={(values, helper: FormikHelpers<ListNFTBuyNowFormValues>) => {
-          handleSubmit({ ...values, startTime: new Date(values.startTime) }, helper);
+          handleSubmit({ ...values, selectedCurrency, startTime: new Date(values.startTime) }, helper);
         }}
       >
         {({ values, errors, isSubmitting, setFieldValue }: FormikProps<ListNFTBuyNowFormValues>) => {
@@ -62,8 +65,11 @@ export const ListNFTBuyNow = ({ initialValues, submitLabel, handleSubmit }: List
                 </div>
                 <div className="mt-1 mb-3 flex h-16 w-full items-center justify-center gap-3">
                   <div
-                    className="flex h-full w-2/5 flex-col 
-                    items-center justify-center rounded-sm border-2 border-[#FDEE6E] bg-gray-15"
+                    className={
+                      'flex h-full w-2/5 flex-col ' +
+                      'items-center justify-center rounded-sm border-2 bg-gray-15 ' +
+                      (isMatic ? 'border-gray-30' : 'border-[#FDEE6E]')
+                    }
                     onClick={() => {
                       setSelectedCurrency('OGUN');
                     }}
@@ -77,8 +83,11 @@ export const ListNFTBuyNow = ({ initialValues, submitLabel, handleSubmit }: List
                     </div>
                   </div>
                   <div
-                    className="flex h-full w-2/5 flex-col items-center justify-center 
-                    rounded-sm border-2 border-gray-30 bg-gray-15"
+                    className={
+                      'flex h-full w-2/5 flex-col items-center justify-center ' +
+                      'rounded-sm border-2 bg-gray-15 ' +
+                      (isMatic ? 'border-[#2BBDF7]' : 'border-gray-30')
+                    }
                     onClick={() => {
                       setSelectedCurrency('MATIC');
                     }}

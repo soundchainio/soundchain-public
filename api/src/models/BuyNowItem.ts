@@ -19,6 +19,10 @@ export class BuyNowItem extends Model {
   @prop({ required: true })
   tokenId: number;
 
+  @Field({ nullable: true })
+  @prop({ type: String })
+  selectedCurrency: string;
+
   @Field()
   @prop({ required: true })
   startingTime: number;

@@ -27,6 +27,10 @@ export class ListingItem extends Model {
   reservePrice: string;
 
   @Field({ nullable: true })
+  @prop({ type: String })
+  selectedCurrency: string;
+
+  @Field({ nullable: true })
   @prop({ type: Number })
   reservePriceToShow: number;
 

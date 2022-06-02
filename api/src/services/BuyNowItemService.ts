@@ -7,6 +7,7 @@ interface NewBuyNowItem {
   owner: string;
   nft: string;
   tokenId: number;
+  selectedCurrency?: string;
   pricePerItem: string;
   pricePerItemToShow: number;
   OGUNPricePerItem: string;

@@ -128,6 +128,7 @@ export type BuyNowItem = {
   owner: Scalars['String'];
   nft: Scalars['String'];
   tokenId: Scalars['Float'];
+  selectedCurrency: Maybe<Scalars['String']>;
   startingTime: Scalars['Float'];
   pricePerItem: Scalars['String'];
   pricePerItemToShow: Scalars['Float'];
@@ -245,6 +246,7 @@ export type CreateBuyNowItemInput = {
   nft: Scalars['String'];
   tokenId: Scalars['Float'];
   pricePerItem: Scalars['String'];
+  selectedCurrency: Scalars['String'];
   pricePerItemToShow: Scalars['Float'];
   OGUNPricePerItem: Scalars['String'];
   OGUNPricePerItemToShow: Scalars['Float'];
@@ -260,6 +262,7 @@ export type CreateBuyNowItemType = {
   nft: Scalars['String'];
   tokenId: Scalars['Float'];
   pricePerItem: Scalars['String'];
+  selectedCurrency: Scalars['String'];
   pricePerItemToShow: Scalars['Float'];
   OGUNPricePerItem: Scalars['String'];
   OGUNPricePerItemToShow: Scalars['Float'];
@@ -517,6 +520,7 @@ export type ListingItem = {
   startingTime: Maybe<Scalars['Float']>;
   endingTime: Maybe<Scalars['Float']>;
   reservePrice: Maybe<Scalars['String']>;
+  selectedCurrency: Maybe<Scalars['String']>;
   reservePriceToShow: Maybe<Scalars['Float']>;
   pricePerItem: Maybe<Scalars['String']>;
   pricePerItemToShow: Maybe<Scalars['Float']>;
@@ -548,6 +552,7 @@ export type ListingItemWithPrice = {
   startingTime: Maybe<Scalars['Float']>;
   endingTime: Maybe<Scalars['Float']>;
   reservePrice: Maybe<Scalars['String']>;
+  selectedCurrency: Maybe<Scalars['String']>;
   reservePriceToShow: Maybe<Scalars['Float']>;
   pricePerItem: Maybe<Scalars['String']>;
   pricePerItemToShow: Maybe<Scalars['Float']>;
@@ -1912,7 +1917,7 @@ export type BuyNowItemQuery = (
     { __typename?: 'BuyNowPayload' }
     & { buyNowItem: Maybe<(
       { __typename?: 'BuyNowItem' }
-      & Pick<BuyNowItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'pricePerItemToShow' | 'OGUNPricePerItem' | 'OGUNPricePerItemToShow' | 'acceptsMATIC' | 'acceptsOGUN' | 'startingTime'>
+      & Pick<BuyNowItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'selectedCurrency' | 'pricePerItemToShow' | 'OGUNPricePerItem' | 'OGUNPricePerItemToShow' | 'acceptsMATIC' | 'acceptsOGUN' | 'startingTime'>
     )> }
   ) }
 );
@@ -2461,13 +2466,13 @@ export type ListingItemComponentFieldsFragment = (
     & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner' | 'pendingTime'>
   )>, listingItem: Maybe<(
     { __typename?: 'ListingItemWithPrice' }
-    & Pick<ListingItemWithPrice, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'pricePerItemToShow' | 'OGUNPricePerItem' | 'OGUNPricePerItemToShow' | 'acceptsMATIC' | 'acceptsOGUN' | 'isPaymentOGUN' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow' | 'createdAt' | 'updatedAt' | 'priceToShow'>
+    & Pick<ListingItemWithPrice, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'pricePerItemToShow' | 'OGUNPricePerItem' | 'OGUNPricePerItemToShow' | 'isPaymentOGUN' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow' | 'createdAt' | 'updatedAt' | 'priceToShow'>
   )> }
 );
 
 export type ListingItemViewComponentFieldsFragment = (
   { __typename?: 'ListingItem' }
-  & Pick<ListingItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'pricePerItemToShow' | 'OGUNPricePerItem' | 'OGUNPricePerItemToShow' | 'acceptsMATIC' | 'acceptsOGUN' | 'isPaymentOGUN' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow' | 'createdAt' | 'updatedAt'>
+  & Pick<ListingItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'pricePerItemToShow' | 'OGUNPricePerItem' | 'OGUNPricePerItemToShow' | 'isPaymentOGUN' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow' | 'createdAt' | 'updatedAt'>
 );
 
 export type ListingItemsQueryVariables = Exact<{
@@ -4123,6 +4128,7 @@ export const BuyNowItemDocument = gql`
       nft
       tokenId
       pricePerItem
+      selectedCurrency
       pricePerItemToShow
       OGUNPricePerItem
       OGUNPricePerItemToShow
