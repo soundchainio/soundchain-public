@@ -10,6 +10,8 @@ import React, { useEffect, useState } from 'react';
 import { currency } from 'utils/format';
 import Asset from './Asset';
 import { LoaderAnimation } from 'components/LoaderAnimation';
+import { CurrencyType } from '../types/CurrenctyType';
+import { OgunLogo } from '../icons/OgunLogo';
 
 const WavesurferComponent = dynamic(() => import('./wavesurfer'), {
   ssr: false,
@@ -43,12 +45,14 @@ export const TrackGrid = ({ track }: TrackProps) => {
 
   let listingItem: Maybe<ListingItemWithPrice> = null;
 
-  if (track.__typename !== 'TrackWithListingItem') {
+  if (track.__typename === 'TrackWithListingItem') {
     listingItem = (track as TrackWithListingItem).listingItem;
   }
 
+  const selectedCurrency: CurrencyType = "OGUN";
   const saleType = getSaleType(listingItem);
   const price = listingItem?.priceToShow ?? 0;
+  const OGUNPrice = listingItem?.OGUNPricePerItemToShow ?? 0;
   const { art, artist, title, trackId, playbackCount, favoriteCount } = song;
   const { play, isCurrentSong, isCurrentlyPlaying, setProgressStateFromSlider, progress } = useAudioPlayerContext();
 
@@ -61,7 +65,7 @@ export const TrackGrid = ({ track }: TrackProps) => {
     setIsPlaying(isCurrentlyPlaying(trackId));
   }, [isCurrentSong, isCurrentlyPlaying, setIsPlaying, trackId]);
 
-  console.log({maticUsd, price })
+  console.log(JSON.stringify({maticUsd, price }))
 
   return (
     <div className={`${isPlaying ? 'gradient-track-box' : 'black-track-box'} max-w-[250px] rounded-lg hover:gradient-track-box flex flex-col`}>
@@ -96,8 +100,12 @@ export const TrackGrid = ({ track }: TrackProps) => {
         {saleType && (
           <div className="flex items-center justify-between mt-3 mx-3">
             <div className="flex items-center">
-              <div className="mr-1.5 font-semibold">{price}</div>
-              <Matic height="20" width="23" className="" />
+              <div className="mr-1.5 font-semibold">{selectedCurrency === "MATIC" ? price : OGUNPrice}</div>
+              {selectedCurrency === "MATIC" ?
+              (<Matic height="20" width="23" className="" />)
+              :
+              (<OgunLogo height="20" width="23" className="" />)
+              }
             </div>
             <div
               className={`${
@@ -110,7 +118,12 @@ export const TrackGrid = ({ track }: TrackProps) => {
         )}
         {price > 0 && (
           <div className="text-gray-80 text-xs ml-3 mt-0.5 font-semibold">
-            {maticUsd && maticUsd.maticUsd && price && `${currency(price * parseFloat(maticUsd.maticUsd))}`}
+            {
+            selectedCurrency === "MATIC" ?
+            maticUsd && maticUsd.maticUsd && price && `${currency(price * parseFloat(maticUsd.maticUsd))}`
+            :
+            <></>
+            }
           </div>
         )}
       </div>
@@ -125,6 +138,7 @@ export const TrackGrid = ({ track }: TrackProps) => {
         )}
 
         <div className="text-gray-80 text-xs flex gap-1 items-center pt-1 font-medium">
+
           <Play fill="#808080" />
           <span>{playbackCount || 0}</span>
           <HeartFilled />
