@@ -12,6 +12,7 @@ import Asset from './Asset';
 import { LoaderAnimation } from 'components/LoaderAnimation';
 import { CurrencyType } from '../types/CurrenctyType';
 import { OgunLogo } from '../icons/OgunLogo';
+import { Logo } from '../icons/Logo';
 
 const WavesurferComponent = dynamic(() => import('./wavesurfer'), {
   ssr: false,
@@ -104,7 +105,7 @@ export const TrackGrid = ({ track }: TrackProps) => {
               {selectedCurrency === "MATIC" ?
               (<Matic height="20" width="23" className="" />)
               :
-              (<OgunLogo height="20" width="23" className="" />)
+              (<Logo height="20" width="23" className="" />)
               }
             </div>
             <div

@@ -6,11 +6,10 @@ import { fixedDecimals } from 'utils/format';
 
 interface Props {
   price: number;
-  priceOGUN: number;
   isPaymentOGUN?: boolean;
 }
 
-export const SoundchainFee = ({ price, priceOGUN, isPaymentOGUN }: Props) => {
+export const SoundchainFee = ({ price, isPaymentOGUN }: Props) => {
   return (
     <>
     {isPaymentOGUN === undefined ? (
@@ -28,7 +27,7 @@ export const SoundchainFee = ({ price, priceOGUN, isPaymentOGUN }: Props) => {
             <Soundchain className="mr-2" /> OGUN SoundChain fee ({config.soundchainFee * 100}%)
           </p>
           <div className="flex justify-end w-full">
-            <Ogun value={fixedDecimals(priceOGUN * config.soundchainFee)} variant="currency-inline" />
+            <Ogun value={fixedDecimals(price * config.soundchainFee)} variant="currency-inline" />
           </div>
         </div>
       </>
@@ -40,7 +39,7 @@ export const SoundchainFee = ({ price, priceOGUN, isPaymentOGUN }: Props) => {
             <Soundchain className="mr-2" /> OGUN SoundChain fee ({config.soundchainFee * 100}%)
           </p>
           <div className="flex justify-end w-full">
-            <Ogun value={fixedDecimals(priceOGUN * config.soundchainFee)} variant="currency-inline" />
+            <Ogun value={fixedDecimals(price * config.soundchainFee)} variant="currency-inline" />
           </div>
         </div>
         ):(

@@ -6,21 +6,20 @@ import { SoundchainFee } from 'components/SoundchainFee';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
 import { Logo } from 'icons/Logo';
 import { Matic } from 'icons/Matic';
-import React from 'react';
+import React, { useState } from 'react';
 import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { date, number, object, SchemaOf } from 'yup';
+import { CurrencyType } from '../../types/CurrenctyType';
 
 export interface ListNFTBuyNowFormValues {
-  price: number;
-  priceOGUN: number;
+  salePrice: number;
   royalty: number;
   startTime: Date;
 }
 
 const validationSchema: SchemaOf<ListNFTBuyNowFormValues> = object().shape({
-  price: number().required(),
-  priceOGUN: number().required(),
+  salePrice: number().required('Price is a required field'),
   royalty: number().max(100).min(0).required(),
   startTime: date()
     .min(new Date(new Date().getTime() + 10 * 1000 * 60), 'The start time should be at least ten minutes from now')
@@ -35,42 +34,78 @@ interface ListNFTProps {
 
 export const ListNFTBuyNow = ({ initialValues, submitLabel, handleSubmit }: ListNFTProps) => {
   const defaultValues = {
-    price: initialValues?.price || 0,
-    priceOGUN: initialValues?.priceOGUN || 0,
+    salePrice: initialValues?.salePrice || 0,
     royalty: initialValues?.royalty || 0,
     startTime: initialValues?.startTime || new Date(new Date().getTime() + 10 * 1000 * 60),
   };
+  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyType>('MATIC');
+
+  const isMatic = selectedCurrency === 'MATIC';
 
   return (
     <div className="mb-2">
       <Formik
         initialValues={defaultValues}
         validationSchema={validationSchema}
-        onSubmit={(values, helper:FormikHelpers<ListNFTBuyNowFormValues>) => {
+        onSubmit={(values, helper: FormikHelpers<ListNFTBuyNowFormValues>) => {
           handleSubmit({ ...values, startTime: new Date(values.startTime) }, helper);
         }}
       >
         {({ values, errors, isSubmitting, setFieldValue }: FormikProps<ListNFTBuyNowFormValues>) => {
           return (
             <Form>
-              <div className="flex items-center justify-between bg-gray-15 py-3 px-5 gap-3">
-                <label htmlFor="price" className="flex-shrink-0 text-gray-80 font-bold text-xs uppercase ">
-                  MATIC List price
-                </label>
-                <div className="w-44">
-                  <InputField name="price" type="number" icon={Matic} value={values.price} step="any" />
+              <div className="flex flex-col items-center justify-between gap-2">
+                <div className="flex items-center justify-center gap-3 py-3 px-5">
+                  <label htmlFor="price" className="flex-shrink-0 text-xs font-bold text-gray-80 ">
+                    What currency do you want to list your NFT in?
+                  </label>
+                </div>
+                <div className="mt-1 mb-3 flex h-16 w-full items-center justify-center gap-3">
+                  <div
+                    className="flex h-full w-2/5 flex-col 
+                    items-center justify-center rounded-sm border-2 border-[#FDEE6E] bg-gray-15"
+                    onClick={() => {
+                      setSelectedCurrency('OGUN');
+                    }}
+                  >
+                    <div>
+                      <Logo height="15" width="18" fill="yellow" className="inline-block" />
+                      <span className="ml-1 inline-block font-bold text-white">OGUN</span>
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-80">+10% Reward</p>
+                    </div>
+                  </div>
+                  <div
+                    className="flex h-full w-2/5 flex-col items-center justify-center 
+                    rounded-sm border-2 border-gray-30 bg-gray-15"
+                    onClick={() => {
+                      setSelectedCurrency('MATIC');
+                    }}
+                  >
+                    <div>
+                      <Matic height="15" width="18" fill="yellow" className="inline-block" />
+                      <span className="ml-1 inline-block font-bold text-gray-80">MATIC</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center justify-between bg-gray-15 py-3 px-5 gap-3">
-                <label htmlFor="priceOGUN" className="flex-shrink-0 text-gray-80 font-bold text-xs uppercase ">
-                  OGUN List price
+              <div className="flex items-center justify-between gap-3 bg-gray-15 py-3 px-5">
+                <label htmlFor="priceOGUN" className="flex-shrink-0 text-xs font-bold uppercase text-gray-80 ">
+                  SALE PRICE
                 </label>
                 <div className="w-44">
-                  <InputField name="priceOGUN" type="number" icon={Logo} value={values.priceOGUN} step="any" />
+                  <InputField
+                    name="salePrice"
+                    type="number"
+                    icon={isMatic ? Matic : Logo}
+                    value={values.salePrice}
+                    step="any"
+                  />
                 </div>
               </div>
               <div className="flex items-center justify-between bg-gray-15 py-3 px-5">
-                <label htmlFor="startTime" className="flex items-center justify-start text-gray-80 font-bold text-xs">
+                <label htmlFor="startTime" className="flex items-center justify-start text-xs font-bold text-gray-80">
                   <div className="flex flex-col">
                     <p className="uppercase">start time</p>
                     <p className="font-medium" style={{ fontSize: 10 }}>
@@ -78,22 +113,22 @@ export const ListNFTBuyNow = ({ initialValues, submitLabel, handleSubmit }: List
                     </p>
                   </div>
                 </label>
-                <div className="w-44 uppercase flex-shrink-0">
+                <div className="w-44 flex-shrink-0 uppercase">
                   <ReactDatePicker
                     selected={values.startTime}
                     onChange={date => setFieldValue('startTime', date)}
                     timeInputLabel="Time:"
                     dateFormat="MM/dd/yyyy h:mm aa"
                     showTimeInput
-                    className="p-3 text-sm font-bold bg-gray-30 text-gray-200 focus:outline-none focus:ring-transparent placeholder-gray-60 placeholder-semibold rounded-md border-2 border-gray-80 w-full"
+                    className="placeholder-semibold w-full rounded-md border-2 border-gray-80 bg-gray-30 p-3 text-sm font-bold text-gray-200 placeholder-gray-60 focus:outline-none focus:ring-transparent"
                   />
-                  {<div className="text-red-500 text-sm lowercase">{errors.startTime}</div>}
+                  {<div className="text-sm lowercase text-red-500">{errors.startTime}</div>}
                 </div>
               </div>
               <div className="bg-gray-15 py-3 px-5">
-                <SoundchainFee price={values.price ?? 0} priceOGUN={values.priceOGUN ?? 0}/>
+                <SoundchainFee isPaymentOGUN={!isMatic} price={values.salePrice ?? 0} />
               </div>
-              <p className="mx-6 text-gray-80 font-bold text-xs py-4 text-center">
+              <p className="mx-6 py-4 text-center text-xs font-bold text-gray-80">
                 SoundChain transaction fee will be applied to the listing price.
               </p>
               <div className="bg-gray-15 py-3 px-5">
