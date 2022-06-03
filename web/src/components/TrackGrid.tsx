@@ -11,7 +11,6 @@ import { currency } from 'utils/format';
 import Asset from './Asset';
 import { LoaderAnimation } from 'components/LoaderAnimation';
 import { CurrencyType } from '../types/CurrenctyType';
-import { OgunLogo } from '../icons/OgunLogo';
 import { Logo } from '../icons/Logo';
 
 const WavesurferComponent = dynamic(() => import('./wavesurfer'), {

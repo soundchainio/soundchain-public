@@ -137,16 +137,11 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
         });
         router.replace(router.asPath.replace('/list/buy-now', ''));
       };
-      console.log(nftData.tokenId);
-      console.log(account);
-      console.log(weiPrice);
-      console.log(weiPriceOGUN);
-      console.log(startTimestamp);
-      // listItem(nftData.tokenId, account, weiPrice, weiPriceOGUN, startTimestamp)
-      //   .onReceipt(onReceipt)
-      //   .onError(cause => toast.error(cause.message))
-      //   .finally(() => helper.setSubmitting(false))
-      //   .execute(web3);
+      listItem(nftData.tokenId, account, weiPrice, weiPriceOGUN, startTimestamp)
+        .onReceipt(onReceipt)
+        .onError(cause => toast.error(cause.message))
+        .finally(() => helper.setSubmitting(false))
+        .execute(web3);
     } else {
       me ? dispatchShowApproveModal(true, SaleType.MARKETPLACE) : router.push('/login');
       helper.setSubmitting(false);

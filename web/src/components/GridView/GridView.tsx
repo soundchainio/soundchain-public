@@ -18,7 +18,7 @@ export const GridView = ({ tracks, loading, refetch, hasNextPage, loadMore }: Vi
   return (
     <>
       {loading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 p-4 justify-center">
+        <div className="grid grid-cols-2 justify-center gap-2 p-4 sm:grid-cols-3 lg:grid-cols-4">
           <GridSkeleton />
           <GridSkeleton />
           <GridSkeleton />
