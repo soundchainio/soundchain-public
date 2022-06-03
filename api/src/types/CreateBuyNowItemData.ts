@@ -21,6 +21,9 @@ export class CreateBuyNowItemData {
   pricePerItem: string;
 
   @Field()
+  selectedCurrency: string;
+
+  @Field()
   pricePerItemToShow: number;
 
 

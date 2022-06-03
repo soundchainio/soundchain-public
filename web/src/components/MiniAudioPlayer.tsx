@@ -31,7 +31,7 @@ interface MiniAudioPlayerProps {
 export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
   const { art, artist, title, trackId, playbackCount, favoriteCount, saleType, price } = props.song;
   const { hideBadgeAndPrice, song } = props;
-  
+
   const { duration, progress, play, isCurrentSong, isCurrentlyPlaying, setProgressStateFromSlider } =
     useAudioPlayerContext();
 
@@ -48,55 +48,54 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
   };
 
   const RenderTrackCounters = () => (
-    <div className="text-gray-80 text-xs flex gap-1 items-center px-2">
+    <div className="flex items-center gap-1 px-2 text-xs text-gray-80">
       <Play fill="#808080" />
       <span>{playbackCount || 0}</span>
       <HeartFilled />
       <span>{favoriteCount || 0}</span>
-      {saleType && saleType !== '' && !hideBadgeAndPrice && (
+      {saleType && saleType !== '' && !hideBadgeAndPrice && !!price && (
         <Matic className="ml-auto" value={price} variant="currency-inline" />
       )}
     </div>
-  )
+  );
 
   return (
     <div
-      className={`bg-black m-4 rounded-lg p-4 items-center transparent-border-1px ${
+      className={`transparent-border-1px m-4 items-center rounded-lg bg-black p-4 ${
         isPlaying ? 'gradient-track-box' : 'bg-black'
       } hover:gradient-track-box`}
     >
       <div className="flex items-center gap-3">
-        <div className="h-20 w-20 relative flex items-center">
+        <div className="relative flex h-20 w-20 items-center">
           <Asset src={art} sizes="5rem" />
         </div>
-        <div className="flex flex-col flex-1 truncate">
+        <div className="flex flex-1 flex-col truncate">
           <div className={`flex gap-2 ${hideBadgeAndPrice && 'mb-[10px]'}`}>
             <div className="flex items-center">
               <button
-                className="bg-white rounded-full w-8 h-8 flex items-center"
+                className="flex h-8 w-8 items-center rounded-full bg-white"
                 onClick={() => play(song)}
                 aria-label={isPlaying ? 'Pause' : 'Play'}
               >
                 {isPlaying ? (
-                  <Pause className="text-white m-auto scale-125" />
+                  <Pause className="m-auto scale-125 text-white" />
                 ) : (
-                  <Play className="text-white m-auto scale-125" />
+                  <Play className="m-auto scale-125 text-white" />
                 )}
               </button>
             </div>
             <NextLink href={`/tracks/${trackId}`}>
               <a className="w-full truncate">
-                <div className="flex w-full cursor-pointer truncate items-start">
-                  <div className="truncate w-full">
-                    <div className="text-white flex justify-between font-black text-xs w-full truncate">
-                      <div className="truncate flex-1" title={title || ''}>
+                <div className="flex w-full cursor-pointer items-start truncate">
+                  <div className="w-full truncate">
+                    <div className="flex w-full justify-between truncate text-xs font-black text-white">
+                      <div className="flex-1 truncate" title={title || ''}>
                         {title ? title : 'Unknown Title'}
                       </div>
 
-
                       <RenderTrackCounters />
                     </div>
-                    {artist && <div className="text-gray-80 text-xs font-black">{artist}</div>}
+                    {artist && <div className="text-xs font-black text-gray-80">{artist}</div>}
                   </div>
                   <div className="flex flex-1" />
                   <div className="flex items-center gap-1">
@@ -108,7 +107,7 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
               </a>
             </NextLink>
           </div>
-          <div className="text-white flex flex-col mt-2">
+          <div className="mt-2 flex flex-col text-white">
             {isSameSong ? (
               <>
                 <Slider
@@ -118,7 +117,7 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
                   value={progress}
                   onChange={onSliderChange}
                 />
-                <div className="flex mt-2 text-xs text-gray-80">
+                <div className="mt-2 flex text-xs text-gray-80">
                   <div className="flex-1">{timeFromSecs(progress || 0)}</div>
                   <div className="flex-1 text-right">{remainingTime(progress, duration || 0)} </div>
                 </div>
@@ -126,7 +125,7 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
             ) : (
               <>
                 <Slider className="audio-player ml-1" min={0} max={1} value={0} disabled />
-                <div className="flex mt-2 text-xs text-gray-80">
+                <div className="mt-2 flex text-xs text-gray-80">
                   <div className="flex-1">0:00</div>
                   <div className="flex-1 text-right" />
                 </div>

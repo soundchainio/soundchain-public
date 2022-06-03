@@ -89,7 +89,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       leftButton: <BackButton />,
       title: 'Edit Listing',
       rightButton: (
-        <button className="text-sm text-red-400 font-bold" onClick={handleRemove}>
+        <button className="text-sm font-bold text-red-400" onClick={handleRemove}>
           Remove Listing
         </button>
       ),
@@ -115,14 +115,14 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
     : undefined;
 
   const handleUpdate = (
-    { price: newPrice, priceOGUN: newPriceOGUN, startTime }: ListNFTBuyNowFormValues,
+    { salePrice, selectedCurrency, startTime }: ListNFTBuyNowFormValues,
     helper: FormikHelpers<ListNFTBuyNowFormValues>,
   ) => {
-    if (!web3 || !listingPayload.buyNowItem?.buyNowItem?.tokenId || !newPrice || !account) {
+    if (!web3 || !listingPayload.buyNowItem?.buyNowItem?.tokenId || !salePrice || !account) {
       return;
     }
-    const weiPrice = Web3.utils.toWei(newPrice.toString(), 'ether');
-    const weiPriceOGUN = newPriceOGUN ? web3?.utils.toWei(newPriceOGUN.toString(), 'ether') : '0';
+    const weiPrice = selectedCurrency === 'MATIC' ? Web3.utils.toWei(salePrice.toString(), 'ether') : '0';
+    const weiPriceOGUN = selectedCurrency === 'MATIC' ? web3?.utils.toWei(salePrice.toString(), 'ether') : '0';
     const startTimestamp = startTime.getTime() / 1000;
 
     const onReceipt = () => {
@@ -159,7 +159,11 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       <ListNFTBuyNow
         submitLabel="EDIT LISTING"
         handleSubmit={handleUpdate}
-        initialValues={{ price, priceOGUN: OGUNprice,  startTime: startingDate }}
+        initialValues={{
+          salePrice: price ? price : OGUNprice,
+          selectedCurrency: price ? 'MATIC' : 'OGUN',
+          startTime: startingDate,
+        }}
       />
     </>
   );

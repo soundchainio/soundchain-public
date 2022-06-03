@@ -102,22 +102,24 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
     fetchIsApproved();
   }, [account, web3, checkIsApproved, showApprove]);
 
-  const isForSale = (!!buyNowItem?.buyNowItem?.buyNowItem?.pricePerItem || !!buyNowItem?.buyNowItem?.buyNowItem?.OGUNPricePerItem) ?? false;
+  const isForSale =
+    (!!buyNowItem?.buyNowItem?.buyNowItem?.pricePerItem || !!buyNowItem?.buyNowItem?.buyNowItem?.OGUNPricePerItem) ??
+    false;
 
   const handleList = (
-    { price, priceOGUN, startTime }: ListNFTBuyNowFormValues,
+    { salePrice, selectedCurrency, startTime }: ListNFTBuyNowFormValues,
     helper: FormikHelpers<ListNFTBuyNowFormValues>,
   ) => {
     if (nftData?.tokenId === null || nftData?.tokenId === undefined || !account || !web3) {
       return;
     }
 
-    if(price <= 0 && priceOGUN <= 0){
+    if (salePrice <= 0) {
       toast('NFT needs a price higher than 0 on OGUN or MATIC.');
       return;
     }
-    const weiPrice = price ? web3?.utils.toWei(price.toString(), 'ether') : '0';
-    const weiPriceOGUN = priceOGUN ? web3?.utils.toWei(priceOGUN.toString(), 'ether') : '0';
+    const weiPrice = selectedCurrency === 'MATIC' ? web3?.utils.toWei(salePrice.toString(), 'ether') : '0';
+    const weiPriceOGUN = selectedCurrency === 'OGUN' ? web3?.utils.toWei(salePrice.toString(), 'ether') : '0';
     const startTimestamp = Math.ceil(startTime.getTime() / 1000);
 
     if (isApproved) {
