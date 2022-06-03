@@ -6,6 +6,7 @@ import { HandleNFT } from 'components/details-NFT/HandleNFT';
 import { MintingData } from 'components/details-NFT/MintingData';
 import { TrackInfo } from 'components/details-NFT/TrackInfo';
 import { Matic } from 'components/Matic';
+import { Ogun } from 'components/Ogun';
 import { ProfileWithAvatar } from 'components/ProfileWithAvatar';
 import SEO from 'components/SEO';
 import { TimeCounter } from 'components/TimeCounter';
@@ -137,13 +138,16 @@ export default function TrackPage({ track }: TrackPageProps) {
   const isProcessing = nftData?.pendingRequest != PendingRequest.None;
   const tokenId = nftData?.tokenId;
   const canList = (me?.profile.verified && nftData?.minter === account) || nftData?.minter != account;
-  const isBuyNow = Boolean(listingPayload?.listingItem?.pricePerItem);
+  const isBuyNow =
+    Boolean(listingPayload?.listingItem?.pricePerItem) || Boolean(listingPayload?.listingItem?.pricePerItem);
   const isAuction = Boolean(listingPayload?.listingItem?.reservePrice);
   const bidCount = countBids?.countBids.numberOfBids ?? 0;
+  const isPaymentOGUN = Boolean(listingPayload?.listingItem?.isPaymentOGUN);
 
-  const { reservePriceToShow, pricePerItemToShow, id } = listingPayload?.listingItem ?? {};
+  const { reservePriceToShow, pricePerItemToShow, OGUNPricePerItemToShow, id } = listingPayload?.listingItem ?? {};
 
   let price = pricePerItemToShow || 0;
+  const OGUNprice = OGUNPricePerItemToShow || 0;
   if (isAuction || bidCount) {
     price = highestBid.bid || reservePriceToShow || 0;
   }
@@ -167,13 +171,13 @@ export default function TrackPage({ track }: TrackPageProps) {
       leftButton: <BackButton />,
       title: 'NFT Details',
       rightButton: (
-        <div className="flex gap-3 items-center">
+        <div className="flex items-center gap-3">
           <TrackShareButton trackId={track.id} artist={track.artist} title={track.title} />
           {(isOwner || me?.roles.includes(Role.Admin)) && (
             <button
               type="button"
               aria-label="More options"
-              className="w-10 h-10 flex items-center justify-center"
+              className="flex h-10 w-10 items-center justify-center"
               onClick={() => dispatchShowAuthorActionsModal(true, AuthorActionsType.NFT, track.id, true)}
             >
               <Ellipsis fill="#808080" />
@@ -288,26 +292,26 @@ export default function TrackPage({ track }: TrackPageProps) {
   return (
     <>
       <SEO title={title} description={description} canonicalUrl={`/tracks/${track.id}`} image={track.artworkUrl} />
-      <div className="p-3 flex flex-col gap-5">
+      <div className="flex flex-col gap-5 p-3">
         <Track track={track} />
         <div className="flex justify-between gap-2">
           {post && !post.deleted ? (
             <NextLink href={`/posts/${post.id}`}>
               <a className="flex items-center gap-3">
-                <div className="text-white text-sm font-bold border-blue-400 border-2 px-4 py-1 bg-blue-700 bg-opacity-50 rounded">
+                <div className="rounded border-2 border-blue-400 bg-blue-700 bg-opacity-50 px-4 py-1 text-sm font-bold text-white">
                   View Post
                 </div>
-                <p className="text-gray-400 text-sm flex items-center gap-1">
-                  <span className="text-white font-bold flex items-center gap-1">
+                <p className="flex items-center gap-1 text-sm text-gray-400">
+                  <span className="flex items-center gap-1 font-bold text-white">
                     {post.topReactions.map(name => (
-                      <ReactionEmoji key={name} name={name} className="w-4 h-4" />
+                      <ReactionEmoji key={name} name={name} className="h-4 w-4" />
                     ))}
                     {post.totalReactions}
                   </span>{' '}
                   reactions
                 </p>
-                <p className="text-gray-400 text-sm">
-                  <span className="text-white font-bold">{post.commentCount}</span> comments
+                <p className="text-sm text-gray-400">
+                  <span className="font-bold text-white">{post.commentCount}</span> comments
                 </p>
               </a>
             </NextLink>
@@ -320,24 +324,32 @@ export default function TrackPage({ track }: TrackPageProps) {
           </button>
         </div>
         {isAuction && !auctionIsOver && isHighestBidder && (
-          <div className="text-green-500 font-bold p-2 text-center">You have the highest bid!</div>
+          <div className="p-2 text-center font-bold text-green-500">You have the highest bid!</div>
         )}
         {isAuction &&
           !auctionIsOver &&
           haveBided?.haveBided.bided &&
           isHighestBidder !== undefined &&
-          !isHighestBidder && <div className="text-red-500 font-bold p-2 text-center">You have been outbid!</div>}
+          !isHighestBidder && <div className="p-2 text-center font-bold text-red-500">You have been outbid!</div>}
       </div>
-      {isBuyNow && price && (
+      {isBuyNow && (
         <div className="bg-[#112011]">
-          <div className="flex justify-between items-center px-4 py-3 gap-3">
-            <div className="text-xs font-bold text-gray-80">BUY NOW PRICE</div>
-            <Matic value={price} variant="currency-inline" className="text-xs" />
-          </div>
+          {!!price && (
+            <div className="flex items-center justify-between gap-3 px-4 py-3">
+              <div className="text-xs font-bold text-gray-80">MATIC BUY NOW PRICE</div>
+              <Matic value={price} variant="currency-inline" className="text-xs" />
+            </div>
+          )}
+          {!!OGUNprice && (
+            <div className="flex items-center justify-between gap-3 px-4 py-3">
+              <div className="text-xs font-bold text-gray-80">OGUN BUY NOW PRICE</div>
+              <Ogun value={OGUNprice} variant="currency-inline" className="text-xs" showBonus />
+            </div>
+          )}
           {futureSale && (
-            <div className="flex justify-between items-center px-4 py-3 gap-3">
-              <div className="text-xs font-bold text-gray-80 flex-shrink-0">SALE STARTS</div>
-              <div className="text-xs flex items-center text-right font-bold gap-1">
+            <div className="flex items-center justify-between gap-3 px-4 py-3">
+              <div className="flex-shrink-0 text-xs font-bold text-gray-80">SALE STARTS</div>
+              <div className="flex items-center gap-1 text-right text-xs font-bold">
                 <Timer date={startingDate!} reloadOnEnd />
               </div>
             </div>
@@ -347,40 +359,44 @@ export default function TrackPage({ track }: TrackPageProps) {
       {isAuction && (
         <div className="bg-[#111920]">
           {futureSale && (
-            <div className="flex justify-between items-center px-4 py-3 gap-3">
-              <div className="text-xs font-bold text-gray-80 flex-shrink-0">SALE STARTS</div>
-              <div className="text-xs flex items-center text-right font-bold gap-1">
+            <div className="flex items-center justify-between gap-3 px-4 py-3">
+              <div className="flex-shrink-0 text-xs font-bold text-gray-80">SALE STARTS</div>
+              <div className="flex items-center gap-1 text-right text-xs font-bold">
                 <Timer date={startingDate!} reloadOnEnd />
               </div>
             </div>
           )}
           {endingDate && !futureSale && (
-            <div className="flex justify-between items-center px-4 py-3 gap-3">
-              <div className="text-xs font-bold text-gray-80 flex-shrink-0">TIME REMAINING</div>
-              <div className="text-xs flex items-center text-right font-bold gap-1">
+            <div className="flex items-center justify-between gap-3 px-4 py-3">
+              <div className="flex-shrink-0 text-xs font-bold text-gray-80">TIME REMAINING</div>
+              <div className="flex items-center gap-1 text-right text-xs font-bold">
                 <Timer date={endingDate} endedMessage="Auction Ended" />
               </div>
             </div>
           )}
-          <div className="flex justify-between items-center px-4 py-3 gap-3">
+          <div className="flex items-center justify-between gap-3 px-4 py-3">
             <div className="text-xs font-bold text-gray-80 ">{auctionIsOver ? 'FINAL PRICE' : 'CURRENT PRICE'}</div>
-            <div className="flex items-center font-bold gap-1">
-              <Matic value={price} variant="currency-inline" className="text-xs" />
-              <button className="text-[#22CAFF] text-xxs" onClick={() => dispatchShowBidsHistory(true, id || '')}>
+            <div className="flex items-center gap-1 font-bold">
+              {isPaymentOGUN ? (
+                <Ogun value={price} variant="currency-inline" className="text-xs" />
+              ) : (
+                <Matic value={price} variant="currency-inline" className="text-xs" />
+              )}
+              <button className="text-xxs text-[#22CAFF]" onClick={() => dispatchShowBidsHistory(true, id || '')}>
                 [{bidCount} bids]
               </button>
             </div>
           </div>
           {highestBidderData?.getUserByWallet && (
-            <div className="text-gray-80 flex justify-between items-center px-4 py-3 gap-3">
+            <div className="flex items-center justify-between gap-3 px-4 py-3 text-gray-80">
               <div className="text-xs font-bold">HIGHEST BIDDER</div>
               <ProfileWithAvatar profile={highestBidderData.getUserByWallet.profile} />
             </div>
           )}
           {isOwner && bidCount === 0 && auctionIsOver && (
-            <div className="text-white flex justify-between items-center px-4 py-3 gap-3">
+            <div className="flex items-center justify-between gap-3 px-4 py-3 text-white">
               <div className="text-xs font-bold">RESULT</div>
-              <div className="text-xs flex items-center font-bold gap-1">Auction ended with no bids</div>
+              <div className="flex items-center gap-1 text-xs font-bold">Auction ended with no bids</div>
             </div>
           )}
         </div>
@@ -406,21 +422,22 @@ export default function TrackPage({ track }: TrackPageProps) {
       )}
       {me &&
         (isProcessing && !mintingPending && nftData?.pendingRequest ? (
-          <div className=" flex justify-center items-center p-3">
-            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" />
-            <div className="text-white text-sm pl-3 font-bold">
+          <div className=" flex items-center justify-center p-3">
+            <div className="h-5 w-5 animate-spin rounded-full border-t-2 border-white" />
+            <div className="pl-3 text-sm font-bold text-white">
               Processing {pendingRequestMapping[nftData.pendingRequest]}
             </div>
           </div>
         ) : loading ? (
-          <div className=" flex justify-center items-center">
-            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white" />
-            <div className="text-white text-sm pl-3 font-bold">Loading</div>
+          <div className=" flex items-center justify-center">
+            <div className="h-5 w-5 animate-spin rounded-full border-t-2 border-white" />
+            <div className="pl-3 text-sm font-bold text-white">Loading</div>
           </div>
         ) : (
           <HandleNFT
             canList={canList}
             price={price}
+            OGUNprice={OGUNprice}
             isOwner={isOwner}
             isBuyNow={isBuyNow}
             isAuction={isAuction}
@@ -430,6 +447,7 @@ export default function TrackPage({ track }: TrackPageProps) {
             startingDate={startingDate}
             endingDate={endingDate}
             auctionId={id || ''}
+            isPaymentOGUN={isPaymentOGUN || false}
           />
         ))}
     </>

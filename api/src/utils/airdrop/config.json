@@ -1,0 +1,6 @@
+{
+  "tokenHoldersFileName": "token-holders.csv",
+  "whitelistFileName": "whitelist.csv",
+  "rewardAmount": "3000",
+  "decimalsPlaces": 18
+}

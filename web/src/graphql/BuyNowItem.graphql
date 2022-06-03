@@ -6,7 +6,12 @@ query BuyNowItem($tokenId: Float!) {
       nft
       tokenId
       pricePerItem
+      selectedCurrency
       pricePerItemToShow
+      OGUNPricePerItem
+      OGUNPricePerItemToShow
+      acceptsMATIC
+      acceptsOGUN
       startingTime
     }
   }

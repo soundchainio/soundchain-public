@@ -3,16 +3,11 @@
 /* eslint-disable */
 
 import BN from "bn.js";
-import { ContractOptions } from "web3-eth-contract";
-import { EventLog } from "web3-core";
 import { EventEmitter } from "events";
+import { EventLog } from "web3-core";
+import { ContractOptions } from "web3-eth-contract";
 import {
-  Callback,
-  PayableTransactionObject,
-  NonPayableTransactionObject,
-  BlockType,
-  ContractEventLog,
-  BaseContract,
+  BaseContract, BlockType, Callback, ContractEventLog, NonPayableTransactionObject, PayableTransactionObject
 } from "./types";
 
 export interface EventOptions {
@@ -35,6 +30,9 @@ export type ItemListed = ContractEventLog<{
   tokenId: string;
   quantity: string;
   pricePerItem: string;
+  OGUNPricePerItem: string;
+  acceptsMATIC: boolean;
+  acceptsOGUN: boolean;
   startingTime: string;
   0: string;
   1: string;
@@ -42,6 +40,9 @@ export type ItemListed = ContractEventLog<{
   3: string;
   4: string;
   5: string;
+  6: boolean;
+  7: boolean;
+  8: string;
 }>;
 export type ItemSold = ContractEventLog<{
   seller: string;
@@ -50,24 +51,32 @@ export type ItemSold = ContractEventLog<{
   tokenId: string;
   quantity: string;
   pricePerItem: string;
+  isPaymentOGUN: boolean;
   0: string;
   1: string;
   2: string;
   3: string;
   4: string;
   5: string;
+  6: boolean;
 }>;
 export type ItemUpdated = ContractEventLog<{
   owner: string;
   nft: string;
   tokenId: string;
   newPrice: string;
+  newOGUNPrice: string;
+  acceptsMATIC: boolean;
+  acceptsOGUN: boolean;
   startingTime: string;
   0: string;
   1: string;
   2: string;
   3: string;
   4: string;
+  5: boolean;
+  6: boolean;
+  7: string;
 }>;
 export type OwnershipTransferred = ContractEventLog<{
   previousOwner: string;
@@ -92,10 +101,13 @@ export interface SoundchainMarketplace extends BaseContract {
   ): SoundchainMarketplace;
   clone(): SoundchainMarketplace;
   methods: {
+    OGUNToken(): NonPayableTransactionObject<string>;
+
     buyItem(
       _nftAddress: string,
       _tokenId: number | string | BN,
-      _owner: string
+      _owner: string,
+      _isPaymentOGUN: boolean
     ): PayableTransactionObject<void>;
 
     cancelListing(
@@ -110,6 +122,9 @@ export interface SoundchainMarketplace extends BaseContract {
       _tokenId: number | string | BN,
       _quantity: number | string | BN,
       _pricePerItem: number | string | BN,
+      _OGUNPricePerItem: number | string | BN,
+      _acceptsMATIC: boolean,
+      _acceptsOGUN: boolean,
       _startingTime: number | string | BN
     ): NonPayableTransactionObject<void>;
 
@@ -120,10 +135,16 @@ export interface SoundchainMarketplace extends BaseContract {
     ): NonPayableTransactionObject<{
       quantity: string;
       pricePerItem: string;
+      OGUNPricePerItem: string;
+      acceptsMATIC: boolean;
+      acceptsOGUN: boolean;
       startingTime: string;
       0: string;
       1: string;
       2: string;
+      3: boolean;
+      4: boolean;
+      5: string;
     }>;
 
     owner(): NonPayableTransactionObject<string>;
@@ -138,6 +159,9 @@ export interface SoundchainMarketplace extends BaseContract {
       _nftAddress: string,
       _tokenId: number | string | BN,
       _newPrice: number | string | BN,
+      _newOGUNPrice: number | string | BN,
+      _acceptsMATIC: boolean,
+      _acceptsOGUN: boolean,
       _startingTime: number | string | BN
     ): NonPayableTransactionObject<void>;
 

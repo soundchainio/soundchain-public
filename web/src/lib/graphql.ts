@@ -66,6 +66,7 @@ export type AuctionItem = {
   endingTime: Scalars['Float'];
   reservePrice: Scalars['String'];
   reservePriceToShow: Scalars['Float'];
+  isPaymentOGUN: Scalars['Boolean'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   valid: Scalars['Boolean'];
@@ -127,9 +128,14 @@ export type BuyNowItem = {
   owner: Scalars['String'];
   nft: Scalars['String'];
   tokenId: Scalars['Float'];
+  selectedCurrency: Maybe<Scalars['String']>;
   startingTime: Scalars['Float'];
   pricePerItem: Scalars['String'];
   pricePerItemToShow: Scalars['Float'];
+  OGUNPricePerItem: Scalars['String'];
+  OGUNPricePerItemToShow: Scalars['Float'];
+  acceptsMATIC: Scalars['Boolean'];
+  acceptsOGUN: Scalars['Boolean'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   valid: Scalars['Boolean'];
@@ -218,6 +224,7 @@ export type CreateAuctionItemInput = {
   endingTime: Scalars['Float'];
   reservePrice: Scalars['String'];
   reservePriceToShow: Scalars['Float'];
+  isPaymentOGUN: Scalars['Boolean'];
 };
 
 export type CreateAuctionItemType = {
@@ -230,6 +237,7 @@ export type CreateAuctionItemType = {
   endingTime: Scalars['Float'];
   reservePrice: Scalars['String'];
   reservePriceToShow: Scalars['Float'];
+  isPaymentOGUN: Scalars['Boolean'];
 };
 
 export type CreateBuyNowItemInput = {
@@ -238,7 +246,12 @@ export type CreateBuyNowItemInput = {
   nft: Scalars['String'];
   tokenId: Scalars['Float'];
   pricePerItem: Scalars['String'];
+  selectedCurrency: Scalars['String'];
   pricePerItemToShow: Scalars['Float'];
+  OGUNPricePerItem: Scalars['String'];
+  OGUNPricePerItemToShow: Scalars['Float'];
+  acceptsMATIC: Scalars['Boolean'];
+  acceptsOGUN: Scalars['Boolean'];
   startingTime: Scalars['Float'];
 };
 
@@ -249,7 +262,12 @@ export type CreateBuyNowItemType = {
   nft: Scalars['String'];
   tokenId: Scalars['Float'];
   pricePerItem: Scalars['String'];
+  selectedCurrency: Scalars['String'];
   pricePerItemToShow: Scalars['Float'];
+  OGUNPricePerItem: Scalars['String'];
+  OGUNPricePerItemToShow: Scalars['Float'];
+  acceptsMATIC: Scalars['Boolean'];
+  acceptsOGUN: Scalars['Boolean'];
   startingTime: Scalars['Float'];
 };
 
@@ -502,9 +520,15 @@ export type ListingItem = {
   startingTime: Maybe<Scalars['Float']>;
   endingTime: Maybe<Scalars['Float']>;
   reservePrice: Maybe<Scalars['String']>;
+  selectedCurrency: Maybe<Scalars['String']>;
   reservePriceToShow: Maybe<Scalars['Float']>;
   pricePerItem: Maybe<Scalars['String']>;
   pricePerItemToShow: Maybe<Scalars['Float']>;
+  OGUNPricePerItem: Maybe<Scalars['String']>;
+  OGUNPricePerItemToShow: Maybe<Scalars['Float']>;
+  acceptsMATIC: Maybe<Scalars['Boolean']>;
+  acceptsOGUN: Maybe<Scalars['Boolean']>;
+  isPaymentOGUN: Maybe<Scalars['Boolean']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
 };
@@ -528,9 +552,15 @@ export type ListingItemWithPrice = {
   startingTime: Maybe<Scalars['Float']>;
   endingTime: Maybe<Scalars['Float']>;
   reservePrice: Maybe<Scalars['String']>;
+  selectedCurrency: Maybe<Scalars['String']>;
   reservePriceToShow: Maybe<Scalars['Float']>;
   pricePerItem: Maybe<Scalars['String']>;
   pricePerItemToShow: Maybe<Scalars['Float']>;
+  OGUNPricePerItem: Maybe<Scalars['String']>;
+  OGUNPricePerItemToShow: Maybe<Scalars['Float']>;
+  acceptsMATIC: Maybe<Scalars['Boolean']>;
+  acceptsOGUN: Maybe<Scalars['Boolean']>;
+  isPaymentOGUN: Maybe<Scalars['Boolean']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   priceToShow: Maybe<Scalars['Float']>;
@@ -1092,6 +1122,15 @@ export type ProfileVerificationRequestPayload = {
   profileVerificationRequest: ProfileVerificationRequest;
 };
 
+export type ProofBookItem = {
+  __typename?: 'ProofBookItem';
+  id: Scalars['ID'];
+  root: Scalars['String'];
+  address: Scalars['String'];
+  value: Scalars['String'];
+  merkleProof: Array<Scalars['String']>;
+};
+
 export type Query = {
   __typename?: 'Query';
   auctionItem: AuctionItemPayload;
@@ -1137,6 +1176,7 @@ export type Query = {
   mimeType: MimeType;
   me: Maybe<User>;
   getUserByWallet: Maybe<User>;
+  getProofBookByWallet: Maybe<ProofBookItem>;
   whitelistEntryByWallet: WhitelistEntry;
 };
 
@@ -1356,6 +1396,11 @@ export type QueryMimeTypeArgs = {
 
 
 export type QueryGetUserByWalletArgs = {
+  walletAddress: Scalars['String'];
+};
+
+
+export type QueryGetProofBookByWalletArgs = {
   walletAddress: Scalars['String'];
 };
 
@@ -1872,7 +1917,7 @@ export type BuyNowItemQuery = (
     { __typename?: 'BuyNowPayload' }
     & { buyNowItem: Maybe<(
       { __typename?: 'BuyNowItem' }
-      & Pick<BuyNowItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'pricePerItemToShow' | 'startingTime'>
+      & Pick<BuyNowItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'selectedCurrency' | 'pricePerItemToShow' | 'OGUNPricePerItem' | 'OGUNPricePerItemToShow' | 'acceptsMATIC' | 'acceptsOGUN' | 'startingTime'>
     )> }
   ) }
 );
@@ -2421,13 +2466,13 @@ export type ListingItemComponentFieldsFragment = (
     & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner' | 'pendingTime'>
   )>, listingItem: Maybe<(
     { __typename?: 'ListingItemWithPrice' }
-    & Pick<ListingItemWithPrice, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'pricePerItemToShow' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow' | 'createdAt' | 'updatedAt' | 'priceToShow'>
+    & Pick<ListingItemWithPrice, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'pricePerItemToShow' | 'OGUNPricePerItem' | 'OGUNPricePerItemToShow' | 'isPaymentOGUN' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow' | 'createdAt' | 'updatedAt' | 'priceToShow'>
   )> }
 );
 
 export type ListingItemViewComponentFieldsFragment = (
   { __typename?: 'ListingItem' }
-  & Pick<ListingItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'pricePerItemToShow' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow' | 'createdAt' | 'updatedAt'>
+  & Pick<ListingItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'pricePerItemToShow' | 'OGUNPricePerItem' | 'OGUNPricePerItemToShow' | 'isPaymentOGUN' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow' | 'createdAt' | 'updatedAt'>
 );
 
 export type ListingItemsQueryVariables = Exact<{
@@ -2870,6 +2915,19 @@ export type ProfileVerificationRequestsQuery = (
       & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
     ) }
   ) }
+);
+
+export type ProofBookByWalletQueryVariables = Exact<{
+  walletAddress: Scalars['String'];
+}>;
+
+
+export type ProofBookByWalletQuery = (
+  { __typename?: 'Query' }
+  & { getProofBookByWallet: Maybe<(
+    { __typename?: 'ProofBookItem' }
+    & Pick<ProofBookItem, 'root' | 'address' | 'value' | 'merkleProof'>
+  )> }
 );
 
 export type ReactToPostMutationVariables = Exact<{
@@ -3603,6 +3661,9 @@ export const ListingItemComponentFieldsFragmentDoc = gql`
     tokenId
     pricePerItem
     pricePerItemToShow
+    OGUNPricePerItem
+    OGUNPricePerItemToShow
+    isPaymentOGUN
     startingTime
     endingTime
     reservePrice
@@ -3621,6 +3682,9 @@ export const ListingItemViewComponentFieldsFragmentDoc = gql`
   tokenId
   pricePerItem
   pricePerItemToShow
+  OGUNPricePerItem
+  OGUNPricePerItemToShow
+  isPaymentOGUN
   startingTime
   endingTime
   reservePrice
@@ -4064,7 +4128,12 @@ export const BuyNowItemDocument = gql`
       nft
       tokenId
       pricePerItem
+      selectedCurrency
       pricePerItemToShow
+      OGUNPricePerItem
+      OGUNPricePerItemToShow
+      acceptsMATIC
+      acceptsOGUN
       startingTime
     }
   }
@@ -6142,6 +6211,44 @@ export function useProfileVerificationRequestsLazyQuery(baseOptions?: Apollo.Laz
 export type ProfileVerificationRequestsQueryHookResult = ReturnType<typeof useProfileVerificationRequestsQuery>;
 export type ProfileVerificationRequestsLazyQueryHookResult = ReturnType<typeof useProfileVerificationRequestsLazyQuery>;
 export type ProfileVerificationRequestsQueryResult = Apollo.QueryResult<ProfileVerificationRequestsQuery, ProfileVerificationRequestsQueryVariables>;
+export const ProofBookByWalletDocument = gql`
+    query ProofBookByWallet($walletAddress: String!) {
+  getProofBookByWallet(walletAddress: $walletAddress) {
+    root
+    address
+    value
+    merkleProof
+  }
+}
+    `;
+
+/**
+ * __useProofBookByWalletQuery__
+ *
+ * To run a query within a React component, call `useProofBookByWalletQuery` and pass it any options that fit your needs.
+ * When your component renders, `useProofBookByWalletQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useProofBookByWalletQuery({
+ *   variables: {
+ *      walletAddress: // value for 'walletAddress'
+ *   },
+ * });
+ */
+export function useProofBookByWalletQuery(baseOptions: Apollo.QueryHookOptions<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>(ProofBookByWalletDocument, options);
+      }
+export function useProofBookByWalletLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>(ProofBookByWalletDocument, options);
+        }
+export type ProofBookByWalletQueryHookResult = ReturnType<typeof useProofBookByWalletQuery>;
+export type ProofBookByWalletLazyQueryHookResult = ReturnType<typeof useProofBookByWalletLazyQuery>;
+export type ProofBookByWalletQueryResult = Apollo.QueryResult<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>;
 export const ReactToPostDocument = gql`
     mutation ReactToPost($input: ReactToPostInput!) {
   reactToPost(input: $input) {

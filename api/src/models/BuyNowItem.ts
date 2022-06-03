@@ -19,6 +19,10 @@ export class BuyNowItem extends Model {
   @prop({ required: true })
   tokenId: number;
 
+  @Field({ nullable: true })
+  @prop({ type: String })
+  selectedCurrency: string;
+
   @Field()
   @prop({ required: true })
   startingTime: number;
@@ -30,6 +34,22 @@ export class BuyNowItem extends Model {
   @Field()
   @prop({ type: Number, required: true })
   pricePerItemToShow: number;
+
+  @Field()
+  @prop({ type: String, required: true })
+  OGUNPricePerItem: string;
+
+  @Field()
+  @prop({ type: Number, required: true })
+  OGUNPricePerItemToShow: number;
+
+  @Field()
+  @prop({ type: Boolean, required: true })
+  acceptsMATIC: boolean;
+
+  @Field()
+  @prop({ type: Boolean, required: true })
+  acceptsOGUN: boolean;
 
   @Field(() => Date)
   createdAt: Date;

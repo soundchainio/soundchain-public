@@ -100,11 +100,11 @@ html {
   height: 100%;
   background-color: rgba(16, 16, 16);
 
-  --color-thumb: #4D4D4D;
+  --color-thumb: #4d4d4d;
   --color-track: #292929;
 
   /* Official styles (Firefox) */
-  scrollbar-color: #4D4D4D #292929;
+  scrollbar-color: #4d4d4d #292929;
   scrollbar-width: thin;
 
   overscroll-behavior-y: contain;
@@ -118,7 +118,7 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #4D4D4D;
+  background-color: #4d4d4d;
   border-radius: 20px;
   width: 6px;
   height: 132px;
@@ -232,11 +232,15 @@ html {
 }
 
 .purple-blue-gradient-text-break {
-  background: linear-gradient(129.55deg, #FF8282 -12.7%, #4870FF 92.4%);
+  background: linear-gradient(129.55deg, #ff8282 -12.7%, #4870ff 92.4%);
   background-clip: text;
   color: transparent;
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
+}
+
+.bg-green-blue-gradient {
+  background: linear-gradient(90deg, #84ff82 0%, #4870ff 100%);
 }
 
 .green-blue-gradient-text {
@@ -351,20 +355,19 @@ input[type='number'] {
   width: 100%;
 }
 
-
 .buy-now-gradient {
-  background: linear-gradient(76.4deg, #B19F3B 8.28%, #FFF16F 83.02%);
+  background: linear-gradient(76.4deg, #b19f3b 8.28%, #fff16f 83.02%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .auction-gradient {
-    background: linear-gradient(76.4deg, #3B5BB1 8.28%, #6FA1FF 83.02%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+  background: linear-gradient(76.4deg, #3b5bb1 8.28%, #6fa1ff 83.02%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-.no-scrollbars{
+.no-scrollbars {
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
 
@@ -381,14 +384,22 @@ input[type='number'] {
   }
 }
 
-.no-scrollbars::-webkit-scrollbar { 
-  display: none;  /* Safari and Chrome */
+.no-scrollbars::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
 }
 
 .darkGreyBackgroundColor {
-  background-color: #1C1C1C;
+  background-color: #1c1c1c;
 }
 
 .grey80BackgroundColor {
   background-color: #505050;
+}
+
+.ogun-yellow {
+  color: linear-gradient(76.4deg, #b19f3b 8.28%, #fff16f 83.02%);
+}
+
+.ogun-bg {
+  background: linear-gradient(76.4deg, #b19f3b 8.28%, #fff16f 83.02%);
 }

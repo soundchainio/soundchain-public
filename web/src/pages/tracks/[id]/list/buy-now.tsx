@@ -15,7 +15,7 @@ import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
 import { useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 import { SaleType } from 'types/SaleType';
 import SEO from '../../../../components/SEO';
 
@@ -102,16 +102,24 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
     fetchIsApproved();
   }, [account, web3, checkIsApproved, showApprove]);
 
-  const isForSale = !!buyNowItem?.buyNowItem?.buyNowItem?.pricePerItem ?? false;
+  const isForSale =
+    (!!buyNowItem?.buyNowItem?.buyNowItem?.pricePerItem || !!buyNowItem?.buyNowItem?.buyNowItem?.OGUNPricePerItem) ??
+    false;
 
   const handleList = (
-    { price, startTime }: ListNFTBuyNowFormValues,
+    { salePrice, selectedCurrency, startTime }: ListNFTBuyNowFormValues,
     helper: FormikHelpers<ListNFTBuyNowFormValues>,
   ) => {
     if (nftData?.tokenId === null || nftData?.tokenId === undefined || !account || !web3) {
       return;
     }
-    const weiPrice = web3?.utils.toWei(price.toString(), 'ether') || '0';
+
+    if (salePrice <= 0) {
+      toast('NFT needs a price higher than 0 on OGUN or MATIC.');
+      return;
+    }
+    const weiPrice = selectedCurrency === 'MATIC' ? web3?.utils.toWei(salePrice.toString(), 'ether') : '0';
+    const weiPriceOGUN = selectedCurrency === 'OGUN' ? web3?.utils.toWei(salePrice.toString(), 'ether') : '0';
     const startTimestamp = Math.ceil(startTime.getTime() / 1000);
 
     if (isApproved) {
@@ -129,7 +137,7 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
         });
         router.replace(router.asPath.replace('/list/buy-now', ''));
       };
-      listItem(nftData.tokenId, account, weiPrice, startTimestamp)
+      listItem(nftData.tokenId, account, weiPrice, weiPriceOGUN, startTimestamp)
         .onReceipt(onReceipt)
         .onError(cause => toast.error(cause.message))
         .finally(() => helper.setSubmitting(false))
@@ -155,6 +163,16 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
         <Track track={track} />
       </div>
       <ListNFTBuyNow handleSubmit={handleList} submitLabel={isApproved ? 'LIST NFT' : 'APPROVE MARKETPLACE'} />
+      <ToastContainer
+        position="top-center"
+        autoClose={6 * 1000}
+        toastStyle={{
+          backgroundColor: '#202020',
+          color: 'white',
+          fontSize: '12x',
+          textAlign: 'center',
+        }}
+      />
     </>
   );
 }

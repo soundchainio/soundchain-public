@@ -47,7 +47,7 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 
   if (error) {
     return { notFound: true };
-  }
+  } 
 
   return cacheFor(AuctionPage, { track: data.track }, context, apolloClient);
 });
@@ -104,7 +104,7 @@ export default function AuctionPage({ track }: TrackPageProps) {
   const isForSale = !!buyNowItem?.buyNowItem?.buyNowItem?.pricePerItem ?? false;
 
   const handleList = (
-    { price, startTime, endTime }: ListNFTAuctionFormValues,
+    { price, startTime, endTime, isPaymentOGUN }: ListNFTAuctionFormValues,
     helper: FormikHelpers<ListNFTAuctionFormValues>,
   ) => {
     if (nftData?.tokenId === null || nftData?.tokenId === undefined || !account || !web3) {
@@ -128,7 +128,7 @@ export default function AuctionPage({ track }: TrackPageProps) {
         });
         router.replace(router.asPath.replace('/list/auction', ''));
       };
-      createAuction(nftData.tokenId, weiPrice, startTimestamp, endTimestamp, account)
+      createAuction(nftData.tokenId, weiPrice, startTimestamp, endTimestamp, account, isPaymentOGUN)
         .onReceipt(onReceive)
         .onError(cause => toast.error(cause.message))
         .finally(() => helper.setSubmitting(false))
