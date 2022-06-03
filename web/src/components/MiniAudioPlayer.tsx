@@ -53,7 +53,7 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
       <span>{playbackCount || 0}</span>
       <HeartFilled />
       <span>{favoriteCount || 0}</span>
-      {saleType && saleType !== '' && !hideBadgeAndPrice && (
+      {saleType && saleType !== '' && !hideBadgeAndPrice && !!price && (
         <Matic className="ml-auto" value={price} variant="currency-inline" />
       )}
     </div>
