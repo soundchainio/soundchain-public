@@ -399,3 +399,7 @@ input[type='number'] {
 .ogun-yellow {
   color: linear-gradient(76.4deg, #b19f3b 8.28%, #fff16f 83.02%);
 }
+
+.ogun-bg {
+  background: linear-gradient(76.4deg, #b19f3b 8.28%, #fff16f 83.02%);
+}
