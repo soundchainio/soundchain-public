@@ -4,7 +4,7 @@ import { twd } from '../utils/twd';
 import LandingPageHeader from './header';
 import React from 'react';
 
-const AnimatedBar = twd(`absolute ml-2 sm:ml-0 -left-4 transition-all h-5/10 sm:h-6/10
+const AnimatedBar = twd(`absolute sm:ml-0 md:-left-4 transition-all h-5/10 sm:h-6/10
 w-full sm:w-2 sm:group-hover:w-full bg-gradient-to-r group-hover:rounded-r-lg z-0`).span;
 
 const DiscoverFeatureTitle = twd(`w-full sm:w-8/10 text-4xl uppercase align-middle text-white font-extrabold z-10 text-center
@@ -43,7 +43,7 @@ export function HeroSectionDiscover() {
                       <span
                         className='block text-white uppercase text-center sm:text-left'>Discover soundchain.io</span>
                     </h1>
-                    <div className='mt-6 w-full px-10 sm:px-0 text-xl text-indigo-200'>
+                    <div className='mt-6 w-full md:px-10 sm:px-0 text-xl text-indigo-200'>
                       <div className='flex items-center relative isolate group cursor-pointer'>
                         <AnimatedBar className={` from-[#FED503] to-[#FE5540]`} />
                         <DiscoverFeatureTitle>
@@ -86,14 +86,14 @@ export function HeroSectionDiscover() {
                       </div>
 
                     </div>
-                    <div className='mt-10 w-full px-10 sm:px-0 sm:flex sm:justify-start'>
+                    <div className='mt-10 w-full md:px-10 lg:px-0 sm:flex sm:justify-start'>
                       <div className='space-y-4 sm:space-y-0 sm:inline-grid sm:grid-cols-2 sm:gap-5'>
                         <Button
                           as={'a'}
                           href='/login'
                           variant='rainbow'
-                          className='rounded-lg'>
-                          <span className='font-medium px-6 uppercase text-center'>Join community for free</span>
+                          className='rounded-lg font-medium uppercase text-center text-sm md:text-md'>
+                          Join community for free
                         </Button>
 
                         <Button
@@ -101,9 +101,8 @@ export function HeroSectionDiscover() {
                           href='/ogun'
                           variant='outline'
                           bgColor='bg-black/40 py-3 hover:bg-slate-900/70'
-                          className='rounded-lg border-2'>
-                            <span
-                              className='px-6 uppercase font-bold font-medium text-center'>Learn about the token</span>
+                          className='rounded-lg border-2 uppercase font-bold font-medium text-center'>
+                          Learn about the token
                         </Button>
 
                       </div>
