@@ -12,10 +12,12 @@ import { ExploreSearchBar } from './ExploreSearchBar';
 
 const pageSize = 15;
 
-export const ExploreUsers = () => {
+export interface ExploreUsersProps {
+  searchTerm: string
+}
+
+export const ExploreUsersListView = ({searchTerm}: ExploreUsersProps) => {
   const firstPage: PageInput = { first: pageSize };
-  
-  const [searchTerm, setSearchTerm] = useState('');
 
   const { data, loading, fetchMore } = useExploreUsersQuery({
     variables: { search: searchTerm, page: firstPage },
@@ -50,8 +52,7 @@ export const ExploreUsers = () => {
   const usersCount = pageInfo.hasNextPage ? profiles.length + 1 : profiles.length;
 
   return (
-    <div className="bg-gray-10 p-4 h-[calc(100%-96px)]">
-      <ExploreSearchBar setSearchTerm={setSearchTerm} />
+    <div className="bg-gray-10 px-1 md:p-4 h-[calc(100%-96px)]">
       {profiles.length ? (
         <AutoSizer>
           {({ height, width }) => (
@@ -62,8 +63,9 @@ export const ExploreUsers = () => {
                   width={width}
                   onItemsRendered={onItemsRendered}
                   ref={ref}
+                  className='mx-auto'
                   itemCount={usersCount}
-                  itemSize={64}
+                  itemSize={140}
                   itemData={profiles}
                 >
                   {memo(
