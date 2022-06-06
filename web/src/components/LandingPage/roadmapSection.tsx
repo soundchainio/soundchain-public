@@ -1,14 +1,58 @@
 import { twd } from '../utils/twd';
 import { ArrowRightIcon } from '@heroicons/react/solid';
-import { Disclosure } from '@headlessui/react';
+import { Disclosure, Transition } from '@headlessui/react';
 import { Button } from '../Button';
+import { useSpring } from '@react-spring/web';
+import { ReactElement } from 'react';
+import Link from 'next/link';
 
 const orngBash = twd(`text-transparent bg-clip-text bg-gradient-to-b 
 from-[#FED503] to-[#FE5540]`);
 
 const OrngText = orngBash.span;
 
+const RoadmapStepTitle = twd(`font-bold text-lg sm:text-3xl md:text-6xl uppercase`).h2;
+const RoadmapStepStatus = twd(`font-semibold  text-sm sm:text-lg md:text-xl`).span;
+const RoadmapButton = twd(`flex items-center py-4 px-2 md:px-10 text-black bg-[#FE5540]`).as(Disclosure.Button);
+const RoadmapPanel = twd(`border-x-4 py-4 px-4 border-[#FE5540]`).as(Disclosure.Panel);
+
+type RoadmapFragments = 'button' | 'status' | 'panel' | 'title';
+
+interface RoadmapStepProps {
+  title: string;
+  status: string;
+  children: string | ReactElement;
+
+  styles: Partial<Record<RoadmapFragments, string>>;
+}
+
+function RoadmapStep({ title, status, children, styles }: RoadmapStepProps) {
+  return (
+    <Disclosure>
+      <RoadmapButton className={`${styles?.button}`}>
+        <RoadmapStepTitle className={styles?.title}>{title}</RoadmapStepTitle>
+        <div className='flex-1' />
+        <RoadmapStepStatus className={styles?.status}>{status}</RoadmapStepStatus>
+        <ArrowRightIcon className='w-6 h-6 ml-4' />
+      </RoadmapButton>
+      <Transition
+        enter='transition duration-100 ease-out'
+        enterFrom='transform scale-95 opacity-0'
+        enterTo='transform scale-100 opacity-100'
+        leave='transition duration-75 ease-out'
+        leaveFrom='transform scale-100 opacity-100'
+        leaveTo='transform scale-95 opacity-0'>
+        <RoadmapPanel className={` ${styles?.panel}`}>
+          {children}
+        </RoadmapPanel>
+      </Transition>
+    </Disclosure>
+  );
+}
+
 export function RoadmapSection() {
+  const firstPanelProps = useSpring({ to: { opacity: 1 }, from: { opacity: 0 } });
+
   return (
     <div className='relative'>
       <div className='max-w-7xl lg:max-w-full
@@ -16,50 +60,46 @@ export function RoadmapSection() {
               max-h-screen flex flex-col'>
         <div className='mx-auto h-full flex-1'>
           <div className='relative flex flex-col items-start h-full sm:py-24 lg:py-32'>
-            <div className='text-center w-full flex flex-col relative'>
-              <OrngText className='text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold'>What is next?</OrngText>
+            <div className='text-center w-full flex flex-col relative' id='roadmap'>
+              <h1 className='text-4xl text-white md:text-5xl lg:text-6xl xl:text-7xl font-bold'>What is next?</h1>
             </div>
-            <div className='mt-20 flex flex-col w-full max-w-15/16 md:max-w-full w-screen mx-auto pr-2 md:max-w-screen 2k:max-w-[1200px]'>
-              <Disclosure>
-                <Disclosure.Button className='flex items-center py-4 px-10 text-black bg-[#FE5540]'>
-                  <h2 className='font-bold text-6xl uppercase'>UI/UX updates</h2>
-                  <div className='flex-1' />
-                  <span className='font-semibold text-xl'>In progress</span>
-                  <ArrowRightIcon className='w-6 h-6 ml-4' />
-                </Disclosure.Button>
-                <Disclosure.Panel className='border-[#FE5540] border-x-4 py-4 px-4'>
-                  some intel about UI/UX
-                </Disclosure.Panel>
-              </Disclosure>
-              <Disclosure>
-                <Disclosure.Button className='flex items-center py-4 px-10 text-black bg-[#FED503]'>
-                  <h2 className='font-bold text-6xl uppercase'>Token Launch</h2>
-                  <div className='flex-1' />
-                  <span className='font-semibold text-xl'>Jun 21, 2022</span>
-                  <ArrowRightIcon className='w-6 h-6 ml-4' />
-                </Disclosure.Button>
-                <Disclosure.Panel className='border-[#FED503] border-x-4 py-4 px-4'>
-                  some intel about the token launch
-                </Disclosure.Panel>
-              </Disclosure>
-              <Disclosure>
-                <Disclosure.Button className='flex items-center py-4 px-10 text-black bg-[#AC4EFD]'>
-                  <h2 className='font-bold text-6xl uppercase'>Multi-Edition NFTs</h2>
-                  <div className='flex-1' />
-                  <span className='font-semibold text-xl'>July/August</span>
-                  <ArrowRightIcon className='w-6 h-6 ml-4' />
-                </Disclosure.Button>
-                <Disclosure.Panel className='border-[#AC4EFD] border-4 py-4 px-4'>
-                  some intel about the multi-edition nfts
-                </Disclosure.Panel>
-              </Disclosure>
+            <div
+              className='mt-20 flex flex-col w-full max-w-15/16 md:max-w-full w-screen mx-auto sm:pr-2 md:max-w-screen 2k:max-w-[1200px]'>
+              <RoadmapStep title='UI/UX updates' status='In progress' styles={{
+                button: 'bg-[#FE5540]',
+                panel: `border-[#FE5540]`,
+              }}>
+                We’re improving the UI/UX of the whole platform, focusing on high traffic areas of the site as well
+                as improvements to shared components. There’s also a conscious focus on improving the desktop experience
+                as well. The changes include improvements to the marketplace page, the track listing pages, the users
+                page, the music player, and the general layout of the site
+              </RoadmapStep>
+              <RoadmapStep title='Token Launch' status='Jun 21, 2022' styles={{
+                button: 'bg-[#FED503]',
+                panel: `border-[#FED503]`,
+              }}>
+                Token launch, complete with Airdrop, Staking, and Liquidity pool rewards. Also launching with tight
+                platform integration to let you buy and sell with OGUN, with extra trading rewards if you do
+              </RoadmapStep>
+
+              <RoadmapStep
+                title='Multi-Edition NFTs'
+                status='July/August'
+                styles={{
+                  button: 'bg-[#AC4EFD]',
+                  panel: `border-[#AC4EFD] border-b-2`,
+                }}>
+
+                Giving you the ability to mint and sell multiple editions of your NFTs. Be able to sell multiple
+                copies of your track
+              </RoadmapStep>
             </div>
             <div className='mt-10 flex justify-center w-full'>
-              <Button variant='rainbow' className='rounded-lg' onClick={() => {
-                alert('viewing full roadmap');
-              }}>
-                <span className='font-medium px-6 uppercase'>See full roadmap</span>
-              </Button>
+              <Link href='/roadmap'>
+                <Button variant='rainbow' className='rounded-lg'>
+                  <span className='font-medium px-6 uppercase'>See full roadmap</span>
+                </Button>
+              </Link>
             </div>
           </div>
         </div>

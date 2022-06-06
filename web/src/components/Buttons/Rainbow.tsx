@@ -3,7 +3,7 @@ import { ButtonProps, commonClasses } from 'components/Button';
 
 export const RainbowButton = ({ className, type = 'button', icon: Icon, children, loading, ...rest }: ButtonProps) => {
   return (
-    <div className={classNames(className, 'p-0.5 bg-rainbow-gradient')}>
+    <div className={classNames(className, 'p-0.5 bg-rainbow-gradient hover:bg-rainbow-gradient-dark')}>
       <button
         className={`${commonClasses} ${className} sm:px-4 py-3 font-extrabold text-white uppercase bg-opacity-60 bg-black ${
           rest.disabled ? 'cursor-not-allowed' : ''

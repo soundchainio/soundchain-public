@@ -2,6 +2,12 @@
 const defaultTheme = require('tailwindcss/defaultTheme')
 
 const measures = {
+  'third': '30%',
+  '1/3': '30%',
+  'quarter': '40%',
+  '1/4': '40%',
+  'half': '50%',
+  '5/10': '50%',
   '6/10': '60%',
   '7/10': '70%',
   '8/10': '80%',
@@ -44,6 +50,12 @@ module.exports = {
       maxWidth: {
         ...measures,
       },
+      width: {
+        ...measures,
+      },
+      height: {
+        ...measures,
+      },
       dropShadow: {
         white: ['0px 0px 5px rgb(255,255,255)', '0px 0px 1px rgb(255,255,255)'],
       },
@@ -64,6 +76,8 @@ module.exports = {
         'gradient-radial-to-bl': 'radial-gradient(90% 115% at 100% 0%, var(--tw-gradient-stops))',
         'greenish': 'linear-gradient(180deg, 0% 48.44% 100%, var(--tw-gradient-stops))',
         'landing-card': 'linear-gradient(89.78deg, 30.49% 208.35%, var(--tw-gradient-stops))',
+        'rainbow-gradient': 'linear-gradient(90deg, #26d1a8 0%, #ac4efd 25%, #fed503 75%, #fe5540 100%)',
+        'rainbow-gradient-dark': 'linear-gradient(90deg, #1ea686 0%, #8a3fcc 25%, #ccaa02 75%, #cc4533 100%)'
       },
       colors: {
         gray: {

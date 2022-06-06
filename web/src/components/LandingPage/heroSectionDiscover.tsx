@@ -1,6 +1,16 @@
 import { Logo } from '../../icons/Logo';
 import Image from 'next/image';
 import { Button } from '../Button';
+import { twd } from '../utils/twd';
+import Link from 'next/link';
+
+const AnimatedBar = twd(`absolute ml-2 sm:ml-0 -left-4 transition-all h-5/10 sm:h-6/10
+w-full sm:w-2 sm:group-hover:w-full bg-gradient-to-r group-hover:rounded-r-lg z-0`).span;
+
+const DiscoverFeatureTitle = twd(`w-full sm:w-8/10 text-4xl uppercase align-middle text-white font-extrabold z-10 text-center
+sm:text-6xl lg:text-8xl sm:text-left`).span;
+
+const SectionWrapper = twd(`max-w-7xl lg:max-w-full mx-auto max-h-screen flex flex-col lg:px-0`).div;
 
 export function HeroSectionDiscover() {
   return (
@@ -9,15 +19,21 @@ export function HeroSectionDiscover() {
         <nav className='flex container mx-auto items-center text-white h-full'>
           <div className='flex items-center gap-4'>
             <Logo className='block h-8 w-auto' />
-            <span className='text-slate-50 text-lg font-semibold'>SoundChain</span>
+            <Link href='/'>
+              <span className='text-slate-50 text-lg font-semibold'>SoundChain</span>
+            </Link>
           </div>
           <div className='flex-1' />
           <ul className='flex gap-4'>
             <li className='font-semibold text-md text-slate-400 hover:text-slate-200 cursor-pointer'>
-              Roadmap
+              <Link href='#roadmap'>
+                <span>Roadmap</span>
+              </Link>
             </li>
             <li className='font-semibold text-md text-slate-400 hover:text-slate-200 cursor-pointer'>
-              OGUN Token
+              <Link href='/ogun' target='_blank'>
+                OGUN Token
+              </Link>
             </li>
           </ul>
         </nav>
@@ -28,13 +44,11 @@ export function HeroSectionDiscover() {
           {/* Hero card */}
           <div className='relative'>
             <div className='absolute inset-x-0 bottom-0 h-full' />
-            <div className={`max-w-7xl lg:max-w-full mx-auto sm:px-6 lg:px-0 min-h-[500px]
-             vsm:min-h-[600px] vmd:min-h-[750px] vlg:min-h-[900px] vxl:min-h-[1100px] v2xl:min-h-[1400px]
-              max-h-screen flex flex-col`}>
+            <SectionWrapper>
               <div className='relative h-full flex-1'>
-                <div className='absolute inset-0 h-full'>
+                <div className='absolute inset-0 h-full pointer-events-none flex justify-start'>
                   <Image
-                    className='h-full w-full aspect-video object-cover'
+                    className='h-full w-full aspect-video relative object-cover'
                     src='/landing-page/hero-bg.png'
                     alt='People working on laptops'
                     layout='fill'
@@ -44,82 +58,81 @@ export function HeroSectionDiscover() {
                   <div
                     className='absolute inset-0 from-transparent via-transparent to-black bg-gradient-to-b h-full mix-blend-multiply' />
                 </div>
-                <div className='container mx-auto h-full'>
+                <div className='container mx-auto h-full px-10 md:px-0'>
                   <div
                     className='relative flex flex-col items-start h-full pl-4 py-16 sm:pl-6 sm:py-24 lg:py-32 lg:pl-8'>
-                    <h1 className='text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl'>
-                      <span className='block text-white uppercase'>Discover soundchain.io</span>
+                    <h1 className='font-extrabold tracking-tight text-2xl sm:text-5xl lg:text-6xl w-full'>
+                      <span
+                        className='block text-white uppercase text-center sm:text-left'>Discover soundchain.io</span>
                     </h1>
-                    <div className='mt-6 w-full text-xl text-indigo-200'>
+                    <div className='mt-6 w-full px-10 sm:px-0 text-xl text-indigo-200'>
                       <div className='flex items-center relative isolate group cursor-pointer'>
-                        <div
-                          className={`absolute -left-4 w-2 group-hover:w-full
-                            transition-all h-6/10 bg-gradient-to-r from-[#FED503] to-[#FE5540] group-hover:rounded-r-lg z-0`} />
-                        <span
-                          className='text-5xl uppercase align-middle text-white sm:text-6xl lg:text-8xl font-extrabold z-10'>
-                            The music
-                          </span>
+                        <AnimatedBar className={` from-[#FED503] to-[#FE5540]`} />
+                        <DiscoverFeatureTitle>
+                          The music
+                        </DiscoverFeatureTitle>
 
                         <span className='flex-1'></span>
                         <span
-                          className='z-10 h-full capitalize transition-all flex items-center text-white font-semibold opacity-0 group-hover:opacity-100 -translate-x-10'>
+                          className='z-10 h-full hidden sm:inline-block capitalize transition-all flex items-center text-white font-semibold opacity-0 group-hover:opacity-100 -translate-x-10'>
                           Find your tribe
                         </span>
                       </div>
                       <div className='flex items-center relative isolate group cursor-pointer'>
-                        <div
-                          className={`absolute -left-4 w-2 group-hover:w-full
-                            transition-all h-6/10 bg-gradient-to-r from-[#F1419E] to-[#AC4EFD] group-hover:rounded-r-lg z-0`} />
-                        <span
-                          className='text-5xl uppercase align-middle text-white sm:text-6xl lg:text-8xl font-extrabold z-10'>
-                            Community
-                          </span>
+                        <AnimatedBar
+                          className={` from-[#F1419E] to-[#AC4EFD]`} />
+                        <DiscoverFeatureTitle>
+                          Community
+                        </DiscoverFeatureTitle>
 
 
                         <span className='flex-1'></span>
                         <span
-                          className='z-10 h-full capitalize transition-all flex items-center text-white font-semibold opacity-0 group-hover:opacity-100 -translate-x-10'>
+                          className='z-10 h-full capitalize hidden sm:inline-block transition-all flex items-center text-white font-semibold opacity-0 group-hover:opacity-100 -translate-x-10'>
                           Build your tribe
                         </span>
                       </div>
                       <div className='flex items-center relative isolate group cursor-pointer'>
-                        <div
-                          className={`absolute -left-4 w-2 group-hover:w-full
-                            transition-all h-6/10 bg-gradient-to-r from-[#26D1A8] to-[#AC4EFD] group-hover:rounded-r-lg z-0`} />
-                        <span
-                          className='text-5xl uppercase align-middle text-white sm:text-6xl lg:text-8xl font-extrabold z-10'>
-                            Platform
-                          </span>
+                        <AnimatedBar
+                          className={`from-[#26D1A8] to-[#AC4EFD]`} />
+                        <DiscoverFeatureTitle>
+                          Platform
+                        </DiscoverFeatureTitle>
 
 
                         <span className='flex-1'></span>
                         <span
-                          className='z-10 h-full capitalize transition-all flex items-center text-white font-semibold opacity-0 group-hover:opacity-100 -translate-x-10'>
+                          className='z-10 h-full capitalize hidden sm:inline-block transition-all flex items-center text-white font-semibold opacity-0 group-hover:opacity-100 -translate-x-10'>
                           Unleash your music
                         </span>
                       </div>
 
                     </div>
-                    <div className='mt-10 w-full sm:flex sm:justify-start'>
+                    <div className='mt-10 w-full px-10 sm:px-0 sm:flex sm:justify-start'>
                       <div className='space-y-4 sm:space-y-0 sm:inline-grid sm:grid-cols-2 sm:gap-5'>
-                        <Button variant='rainbow' className='rounded-lg' onClick={() => {
-                          alert('joining community');
-                        }}>
-                          <span className='font-medium px-6 uppercase'>Join community for free</span>
-                        </Button>
-                        <Button variant='outline' bgColor='bg-black/40 hover:bg-black/70'
-                                className='rounded-lg border-2' onClick={() => {
-                          alert('learning about token');
-                        }}>
-                          <span className='px-6 uppercase font-bold'>Learn about the token</span>
-                        </Button>
+                        <Link href='/login'>
+                          <Button
+                            variant='rainbow'
+                            className='rounded-lg'>
+                            <span className='font-medium px-6 uppercase'>Join community for free</span>
+                          </Button>
+                        </Link>
+
+                        <Link href='/ogun'>
+                          <Button
+                            variant='outline'
+                            bgColor='bg-black/40 py-3 hover:bg-slate-900/70'
+                            className='rounded-lg border-2'>
+                            <span className='px-6 uppercase font-bold font-medium'>Learn about the token</span>
+                          </Button>
+                        </Link>
 
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </SectionWrapper>
           </div>
         </div>
       </main>
