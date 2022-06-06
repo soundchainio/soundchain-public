@@ -8,20 +8,13 @@ import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { useMe } from 'hooks/useMe';
 import { DownArrow } from 'icons/DownArrow';
-import { Forward } from 'icons/ForwardButton';
 import { HeartBorder } from 'icons/HeartBorder';
 import { HeartFull } from 'icons/HeartFull';
 import { Info } from 'icons/Info';
-import { Pause } from 'icons/PauseBottomAudioPlayer';
-import { Play } from 'icons/PlayBottomAudioPlayer';
-import { Playlists } from 'icons/Playlists';
-import { Rewind } from 'icons/RewindButton';
-import { Shuffle } from 'icons/Shuffle';
 import { TrackDocument, useToggleFavoriteMutation } from 'lib/graphql';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { remainingTime, timeFromSecs } from 'utils/calculateTime';
 
 export const AudioPlayerModal = () => {
   const router = useRouter();
@@ -30,38 +23,18 @@ export const AudioPlayerModal = () => {
   const { dispatchShowAudioPlayerModal } = useModalDispatch();
   const {
     currentSong,
-    isPlaying,
-    isShuffleOn,
-    duration,
-    progress,
-    hasNext,
     volume,
     playlist,
-    togglePlay,
-    setProgressStateFromSlider,
     setVolume,
-    playPrevious,
-    playNext,
     jumpTo,
-    toggleShuffle,
   } = useAudioPlayerContext();
-  const [showTotalPlaybackDuration, setShowTotalPlaybackDuration] = useState(true);
   const [isFavorite, setIsFavorite] = useState(currentSong.isFavorite);
-  const [isPlaylistOpen, setIsPlaylistOpen] = useState(false);
   const me = useMe();
 
   const isOpen = modalState.showAudioPlayer;
 
   const handleClose = () => {
     dispatchShowAudioPlayerModal(false);
-  };
-
-  const onSliderChange = (value: number) => {
-    setProgressStateFromSlider(value);
-  };
-
-  const onPlaybackDurationClick = () => {
-    setShowTotalPlaybackDuration(!showTotalPlaybackDuration);
   };
 
   const handleFavorite = async () => {
@@ -102,16 +75,10 @@ export const AudioPlayerModal = () => {
       <div className="flex flex-col h-full items-center text-white">
         <div className="w-full h-full sm:max-w-xs px-8 sm:px-0">
           <div style={{ display: 'grid', height: '80vh', gridTemplateRows: '75% 25%' }}>
-            <div className={`flex flex-col truncate ${isPlaylistOpen ? 'justify-start' : 'justify-end'}`}>
-              <div className={isPlaylistOpen ? 'flex items-center gap-4' : 'block'}>
+            <div className="flex flex-col truncate justify-start">
+              <div className='flex items-center gap-4'>
                 <div className="flex justify-center">
-                  <div
-                    className={
-                      isPlaylistOpen
-                        ? 'relative w-10 h-10 rounded-lg overflow-hidden'
-                        : 'relative w-3/4 max-h-80 sm:w-full after:block after:pb-full flex bg-gray-80 rounded-lg overflow-hidden'
-                    }
-                  >
+                  <div className='relative w-10 h-10 rounded-lg overflow-hidden'>
                     <Asset src={currentSong.art} />
                   </div>
                 </div>
@@ -133,7 +100,7 @@ export const AudioPlayerModal = () => {
                   </div>
                 </div>
               </div>
-              <div className={isPlaylistOpen ? 'visible mb-5 overflow-y-auto' : 'hidden'}>
+              <div className='visible mb-5 overflow-y-auto'>
                 <h2 className="text-sm font-bold">Playlist</h2>
                 <div className="overflow-y-auto">
                   {playlist.map((song, idx) => (
@@ -149,74 +116,19 @@ export const AudioPlayerModal = () => {
                 </div>
               </div>
             </div>
-            <div>
-              <Slider className="audio-player" min={0} max={duration} value={progress} onChange={onSliderChange} />
-              <div className="flex justify-between mt-2 text-xs text-gray-80 cursor-default">
-                <div>{timeFromSecs(progress || 0)}</div>
-                <div onClick={onPlaybackDurationClick}>
-                  {showTotalPlaybackDuration ? timeFromSecs(duration || 0) : remainingTime(progress, duration || 0)}
-                </div>
+            <div className="hidden md:flex items-center gap-4 pt-8">
+              <VolumeOffIcon width={16} viewBox="-8 0 20 20" />
+              <div className="flex-1">
+                <Slider
+                  className="volume-slider"
+                  min={0}
+                  max={1}
+                  value={volume}
+                  onChange={value => setVolume(value)}
+                  step={0.1}
+                />
               </div>
-              <div className="flex justify-between items-center mt-8">
-                <button
-                  aria-label={isShuffleOn ? 'Shuffle off' : 'Shuffle on'}
-                  className="rounded-full w-10 h-10 flex justify-center items-center "
-                  onClick={toggleShuffle}
-                >
-                  <Shuffle
-                    width={16}
-                    stroke={isShuffleOn ? 'white' : '#808080'}
-                    className={isShuffleOn ? 'drop-shadow-white' : ''}
-                  />
-                </button>
-                <div className="flex justify-center gap-4">
-                  <button
-                    className={'rounded-full w-12 h-12 flex justify-center items-center'}
-                    aria-label="Previous track"
-                    onClick={playPrevious}
-                  >
-                    <Rewind className={'hover:fill-current active:text-gray-80'} />
-                  </button>
-                  <button
-                    className="bg-white rounded-full w-12 h-12 flex justify-center items-center hover:scale-110 active:scale-100"
-                    aria-label={isPlaying ? 'Pause' : 'Play'}
-                    onClick={togglePlay}
-                  >
-                    {isPlaying ? <Pause fill="black" /> : <Play fill="black" />}
-                  </button>
-                  <button
-                    className={`${
-                      !hasNext && 'cursor-default'
-                    } rounded-full w-12 h-12 flex justify-center items-center`}
-                    aria-label="Next track"
-                    onClick={playNext}
-                    disabled={!hasNext}
-                  >
-                    <Forward className={`${hasNext && 'hover:fill-current'} active:text-gray-80`} />
-                  </button>
-                </div>
-                <button
-                  aria-label="Playlist"
-                  className="rounded-full w-10 h-10 flex justify-center items-center text-gray-80"
-                  onClick={() => setIsPlaylistOpen(isOpen => !isOpen)}
-                >
-                  <Playlists fillColor="#808080" />
-                </button>
-              </div>
-              <div className="hidden md:flex items-center gap-4 pt-8">
-                <VolumeOffIcon width={16} viewBox="-8 0 20 20" />
-                <div className="flex-1">
-                  <Slider
-                    className="volume-slider"
-                    min={0}
-                    max={1}
-                    value={volume}
-                    onChange={value => setVolume(value)}
-                    step={0.1}
-                  />
-                </div>
-                <VolumeUpIcon width={16} />
-              </div>
+              <VolumeUpIcon width={16} />
             </div>
           </div>
         </div>

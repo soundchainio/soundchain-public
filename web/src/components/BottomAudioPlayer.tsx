@@ -12,13 +12,16 @@ import { Play } from 'icons/PlayBottomAudioPlayer';
 import { Playlists } from 'icons/Playlists';
 import { Rewind } from 'icons/RewindButton';
 import { Shuffle } from 'icons/Shuffle';
+import { TrackDocument, useToggleFavoriteMutation } from 'lib/graphql';
 import mux from 'mux-embed';
+import { useRouter } from 'next/router';
 import { useEffect, useRef, useState } from 'react';
 import { timeFromSecs } from 'utils/calculateTime';
 import Asset from './Asset';
 
 export const BottomAudioPlayer = () => {
   const me = useMe();
+  const router = useRouter();
   const audioRef = useRef<HTMLAudioElement>(null);
   const {
     currentSong,
@@ -32,6 +35,7 @@ export const BottomAudioPlayer = () => {
     togglePlay,
     playNext,
     playPrevious,
+    toggleShuffle,
     setPlayingState,
     setDurationState,
     setProgressState,
@@ -39,6 +43,7 @@ export const BottomAudioPlayer = () => {
   } = useAudioPlayerContext();
   const { dispatchShowAudioPlayerModal } = useModalDispatch();
   const [isFavorite, setIsFavorite] = useState(currentSong.isFavorite);
+  const [toggleFavorite] = useToggleFavoriteMutation();
 
 
   useEffect(() => {
@@ -120,6 +125,15 @@ export const BottomAudioPlayer = () => {
     }
   }
 
+  const handleFavorite = async () => {
+    if (me?.profile.id) {
+      await toggleFavorite({ variables: { trackId: currentSong.trackId }, refetchQueries: [TrackDocument] });
+      setIsFavorite(!isFavorite);
+    } else {
+      router.push('/login');
+    }
+  };
+
   if (!currentSong.src) {
     return null;
   }
@@ -137,16 +151,18 @@ export const BottomAudioPlayer = () => {
           </div>
           <div className='flex items-center w-full justify-between'>
             <div className='flex gap-3 flex-1 my-1'>
-              <button className="flex items-center justify-center h-5 w-5">
-                {isFavorite && <HeartFull />}
+              <button className="rounded-full w-5 h-5 flex items-center justify-center" onClick={handleFavorite}>
+                {isFavorite && <HeartFull height={14} width={14} />}
                 {!isFavorite && <HeartBorder stroke='white' height={14} width={14} preserveAspectRatio='none' viewBox='0 0 24 24' />}
               </button>
               <button
                 aria-label={isShuffleOn ? 'Shuffle off' : 'Shuffle on'}
                 className="rounded-full w-5 h-5 flex justify-center items-center"
+                onClick={toggleShuffle}
               >
                 <Shuffle
                   width={14}
+                  height={14}
                   stroke={isShuffleOn ? 'white' : '#808080'}
                   className={isShuffleOn ? 'drop-shadow-white' : ''}
                 />
@@ -182,6 +198,7 @@ export const BottomAudioPlayer = () => {
               <button
                 aria-label="Playlist"
                 className="rounded-full w-5 h-5 flex justify-center items-center text-gray-80"
+                onClick={() => dispatchShowAudioPlayerModal(true)}
               >
                 <Playlists fillColor="white" />
               </button>
