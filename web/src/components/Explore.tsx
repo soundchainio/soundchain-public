@@ -1,5 +1,5 @@
 import { ExploreAll } from 'components/ExploreAll';
-import { ExploreUsers } from 'components/ExploreUsers';
+import { ExploreUsersListView } from 'components/ExploreUsersListView';
 import React, { useEffect, useState } from 'react';
 import { ExploreTab } from 'types/ExploreTabType';
 import { ExplorePageFilterWrapper } from 'components/ExplorePageFilterWrapper';
@@ -8,10 +8,13 @@ import { SortExploreTracksField, Track, useExploreTracksQuery } from 'lib/graphq
 import { ListView } from 'components/ListView';
 import { GridView } from 'components/GridView';
 import { ExploreSearchBar } from './ExploreSearchBar';
+import { ExploreUsersGridView } from './ExploreUsersGridView';
 
 export const Explore = () => {
-  const [selectedTab, setSelectedTab] = useState<ExploreTab>(ExploreTab.ALL);
-  const [search, setSearch] = useState('')
+  // TODO: Change this default state back to ExploreTab.ALL
+  const [selectedTab, setSelectedTab] = useState<ExploreTab>(ExploreTab.USERS);
+  const [search, setSearch] = useState('');
+  // TODO: change this default state isGrid back to true
   const [isGrid, setIsGrid] = useState(true);
   const [sorting, setSorting] = useState<SortListingItem>(SortListingItem.CreatedAt);
 
@@ -63,10 +66,16 @@ export const Explore = () => {
       />
 
       {selectedTab === ExploreTab.ALL && <ExploreAll setSelectedTab={setSelectedTab} />}
-      {selectedTab === ExploreTab.USERS && <ExploreUsers />}
+      {selectedTab === ExploreTab.USERS && (
+        <>
+          <ExploreSearchBar setSearchTerm={searchTerm => setSearch(searchTerm)} />
+
+          {isGrid ? <ExploreUsersGridView searchTerm={search} /> : <ExploreUsersListView searchTerm={search} />}
+        </>
+      )}
       {selectedTab === ExploreTab.TRACKS && (
         <>
-          <ExploreSearchBar setSearchTerm={searchTerm => setSearch(searchTerm)}/>
+          <ExploreSearchBar setSearchTerm={searchTerm => setSearch(searchTerm)} />
           {isGrid ? (
             <GridView
               loading={loading}

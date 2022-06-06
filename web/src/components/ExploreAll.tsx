@@ -65,7 +65,7 @@ export const ExploreAll = ({ searchTerm, setSelectedTab }: ExplorePageProps) => 
         </div>
       )}
       {data && !loading && data?.explore.totalProfiles > 0 ? (
-        <div className="px-5 py-3 space-y-3">
+        <div className="px-2 md:px-5 py-3 space-y-3">
           {profiles?.map(profile => (
             <div key={profile.id} className="text-white">
               <ProfileListItem profile={profile} />
