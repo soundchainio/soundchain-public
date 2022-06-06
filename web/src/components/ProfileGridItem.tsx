@@ -89,6 +89,8 @@ export const ProfileGridItem = ({ profile }: ProfileListItemProps) => {
                 </span>
               </div>
 
+              <div className='flex-1'/>
+
               <div className='flex justify-end gap-3 text-xs md:text-sm items-center py-2 px-2'>
                 <div className='text-gray-80 flex gap-1'>
                   <PlayIcon className='h-4 w-4' />
