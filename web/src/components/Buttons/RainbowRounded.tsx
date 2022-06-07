@@ -1,7 +1,7 @@
 import classNames from 'classnames';
-import { ButtonProps, commonClasses } from 'components/Button';
+import { ButtonVariantProps, commonClasses } from 'components/Button';
 
-export const RainbowRounded = ({ className, type = 'button', icon: Icon, children, ...rest }: ButtonProps) => {
+export const RainbowRounded = ({ className, type = 'button', icon: Icon, children, ...rest }: ButtonVariantProps) => {
   return (
     <div className={'p-0.5 rounded-3xl bg-rainbow-gradient'}>
       <button
@@ -9,8 +9,8 @@ export const RainbowRounded = ({ className, type = 'button', icon: Icon, childre
         type={type}
         {...rest}
       >
-        {Icon && <Icon className="mr-1 h-5 w-5" />}
-        <span className="capitalize rainbox-text">{children}</span>
+        {Icon && <Icon className='mr-1 h-5 w-5' />}
+        <span className='capitalize rainbox-text'>{children}</span>
       </button>
     </div>
   );
