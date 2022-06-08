@@ -1,7 +1,14 @@
 import classNames from 'classnames';
-import { ButtonProps, commonClasses} from 'components/Button';
+import { ButtonVariantProps, commonClasses } from 'components/Button';
 
-export const OrangeButton = ({ className, type = 'button', icon: Icon, children, loading, ...rest }: ButtonProps) => {
+export const OrangeButton = ({
+                               className,
+                               type = 'button',
+                               icon: Icon,
+                               children,
+                               loading,
+                               ...rest
+                             }: ButtonVariantProps) => {
   return (
     <div className={classNames(className, 'p-0.5 bg-yellow-600 border-yellow-600')}>
       <button
@@ -11,7 +18,7 @@ export const OrangeButton = ({ className, type = 'button', icon: Icon, children,
         type={type}
         {...rest}
       >
-        {Icon && <Icon className="mr-1 h-5 w-5" />}
+        {Icon && <Icon className='mr-1 h-5 w-5' />}
         {loading ? (
           <div className=" flex justify-center items-center">
             <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white"></div>

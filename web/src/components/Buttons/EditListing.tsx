@@ -1,7 +1,7 @@
-import { ButtonProps } from 'components/Button';
+import { ButtonVariantProps } from 'components/Button';
 import { config } from 'config';
 
-export const EditListingButton = ({ className, type = 'button', children, loading, ...rest }: ButtonProps) => {
+export const EditListingButton = ({ className, type = 'button', children, loading, ...rest }: ButtonVariantProps) => {
   return (
     <div className={className}>
       <button
@@ -10,8 +10,8 @@ export const EditListingButton = ({ className, type = 'button', children, loadin
         {...rest}
       >
         {loading ? (
-          <div className="flex justify-center items-center px-6">
-            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white"></div>
+          <div className='flex justify-center items-center px-6'>
+            <div className='animate-spin rounded-full h-5 w-5 border-t-2 border-white'></div>
           </div>
         ) : (
           <span>{children}</span>

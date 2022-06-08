@@ -1,7 +1,7 @@
 import classNames from 'classnames';
-import { ButtonProps, commonClasses } from 'components/Button';
+import { ButtonVariantProps, commonClasses } from 'components/Button';
 
-export const GreenGradient = ({ className, type = 'button', icon: Icon, children, ...rest }: ButtonProps) => {
+export const GreenGradient = ({ className, type = 'button', icon: Icon, children, ...rest }: ButtonVariantProps) => {
   return (
     <div>
       <button
@@ -9,8 +9,8 @@ export const GreenGradient = ({ className, type = 'button', icon: Icon, children
         type={type}
         {...rest}
       >
-        {Icon && <Icon className="mr-1 h-5 w-5" />}
-        <span className="green-yellow-gradient-text">{children}</span>
+        {Icon && <Icon className='mr-1 h-5 w-5' />}
+        <span className='green-yellow-gradient-text'>{children}</span>
       </button>
     </div>
   );
