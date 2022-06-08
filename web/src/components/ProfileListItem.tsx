@@ -3,7 +3,7 @@ import { ProfileListItemSkeleton } from 'components/ProfileListItemSkeleton';
 import { Profile } from 'lib/graphql';
 import NextLink from 'next/link';
 import { DisplayName } from './DisplayName';
-import { BellIcon, CheckCircleIcon, HeartIcon, MailIcon, PlayIcon } from '@heroicons/react/solid';
+import { BellIcon, CheckCircleIcon, MailIcon } from '@heroicons/react/solid';
 import { twd } from './utils/twd';
 
 interface ProfileListItemProps {
@@ -35,7 +35,7 @@ export const ProfileListItem = ({ profile }: ProfileListItemProps) => {
                   pixels={76}
                   className='rounded-full h-[59px] md:h-[76px] w-[59px] md:w-[76px] flex-shrink-0 border-2 border-gray-10'
                 />
-                <div className='min-w-0 flex-1 flex flex-col items-start md:ml-4'>
+                <div className='min-w-0 md:flex-1 flex flex-col items-start -ml-3 md:ml-4 scale-90 md:scale-100'>
                   <div className='flex gap-2 md:gap-3'>
                     <div className='flex flex-col'>
                       <DisplayName
@@ -79,18 +79,8 @@ export const ProfileListItem = ({ profile }: ProfileListItemProps) => {
                 </div>
               </a>
             </NextLink>
-            <div className='bg-black rounded-r-lg flex flex-col py-4 gap-6 md:px-3 relative items-end'>
-              <div className='h-1 relative md:hidden'/>
-              <div className='absolute top-2 right-6 md:top-0 right:0 md:relative flex flex-row gap-3 text-xs md:text-sm'>
-                <div className='text-gray-80 flex gap-1'>
-                  <PlayIcon className='h-4 w-4' />
-                  <span>8,395,826</span>
-                </div>
-                <div className='text-gray-80 flex gap-1'>
-                  <HeartIcon className='h-4 w-4' />
-                  <span>86,359</span>
-                </div>
-              </div>
+            <div className='bg-black rounded-r-lg flex flex-col py-4 gap-6 md:px-3 relative items-end -ml-2 md:ml-0'>
+              <div className='flex-1' />
 
               <div className='flex flex-col md:flex-row md:gap-3'>
                 <button className={`flex items-center px-2 py-1 gap-2 text-white 
