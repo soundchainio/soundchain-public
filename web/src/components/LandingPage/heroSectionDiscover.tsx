@@ -90,7 +90,7 @@ export function HeroSectionDiscover() {
                       <div className='space-y-4 sm:space-y-0 sm:inline-grid sm:grid-cols-2 sm:gap-5'>
                         <Button
                           as={'a'}
-                          href='/login'
+                          href='/marketplace'
                           variant='rainbow'
                           className='rounded-lg font-medium uppercase text-center text-sm md:text-md'>
                           Join community for free
