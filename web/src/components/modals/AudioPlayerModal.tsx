@@ -1,5 +1,3 @@
-import { VolumeOffIcon, VolumeUpIcon } from '@heroicons/react/solid';
-import Slider from '@reach/slider';
 import Asset from 'components/Asset';
 import { Modal } from 'components/Modal';
 import { TrackListItem } from 'components/TrackListItem';
@@ -23,9 +21,7 @@ export const AudioPlayerModal = () => {
   const { dispatchShowAudioPlayerModal } = useModalDispatch();
   const {
     currentSong,
-    volume,
     playlist,
-    setVolume,
     jumpTo,
   } = useAudioPlayerContext();
   const [isFavorite, setIsFavorite] = useState(currentSong.isFavorite);
@@ -74,61 +70,45 @@ export const AudioPlayerModal = () => {
     >
       <div className="flex flex-col h-full items-center text-white">
         <div className="w-full h-full sm:max-w-xs px-8 sm:px-0">
-          <div style={{ display: 'grid', height: '80vh', gridTemplateRows: '75% 25%' }}>
-            <div className="flex flex-col truncate justify-start">
-              <div className='flex items-center gap-4'>
-                <div className="flex justify-center">
-                  <div className='relative w-10 h-10 rounded-lg overflow-hidden'>
-                    <Asset src={currentSong.art} />
-                  </div>
-                </div>
-                <div className="flex justify-between my-4 w-full min-w-0">
-                  <div className="flex w-full gap-4">
-                    <NextLink href={`/tracks/${currentSong.trackId}`}>
-                      <a className="flex flex-col flex-1 min-w-0">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <h2 className="font-black truncate">{currentSong.title || 'Unknown title'}</h2>
-                          <Info className="flex-shrink-0" />
-                        </div>
-                        <h3 className="font-medium">{currentSong.artist || 'Unknown artist'}</h3>
-                      </a>
-                    </NextLink>
-                    <button className="flex items-center" onClick={handleFavorite}>
-                      {isFavorite && <HeartFull />}
-                      {!isFavorite && <HeartBorder />}
-                    </button>
-                  </div>
+          <div className="flex flex-col truncate justify-start">
+            <div className='flex items-center gap-4'>
+              <div className="flex justify-center">
+                <div className='relative w-10 h-10 rounded-lg overflow-hidden'>
+                  <Asset src={currentSong.art} />
                 </div>
               </div>
-              <div className='visible mb-5 overflow-y-auto'>
-                <h2 className="text-sm font-bold">Playlist</h2>
-                <div className="overflow-y-auto">
-                  {playlist.map((song, idx) => (
-                    <div key={song.trackId} className="sm:pr-2">
-                      <TrackListItem
-                        variant="playlist"
-                        index={idx + 1}
-                        song={song}
-                        handleOnPlayClicked={() => jumpTo(idx)}
-                      />
-                    </div>
-                  ))}
+              <div className="flex justify-between my-4 w-full min-w-0">
+                <div className="flex w-full gap-4">
+                  <NextLink href={`/tracks/${currentSong.trackId}`}>
+                    <a className="flex flex-col flex-1 min-w-0">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <h2 className="font-black truncate">{currentSong.title || 'Unknown title'}</h2>
+                        <Info className="flex-shrink-0" />
+                      </div>
+                      <h3 className="font-medium">{currentSong.artist || 'Unknown artist'}</h3>
+                    </a>
+                  </NextLink>
+                  <button className="flex items-center" onClick={handleFavorite}>
+                    {isFavorite && <HeartFull />}
+                    {!isFavorite && <HeartBorder />}
+                  </button>
                 </div>
               </div>
             </div>
-            <div className="hidden md:flex items-center gap-4 pt-8">
-              <VolumeOffIcon width={16} viewBox="-8 0 20 20" />
-              <div className="flex-1">
-                <Slider
-                  className="volume-slider"
-                  min={0}
-                  max={1}
-                  value={volume}
-                  onChange={value => setVolume(value)}
-                  step={0.1}
-                />
+            <div className='visible mb-5 overflow-y-auto'>
+              <h2 className="text-sm font-bold">Playlist</h2>
+              <div className="overflow-y-auto">
+                {playlist.map((song, idx) => (
+                  <div key={song.trackId} className="sm:pr-2">
+                    <TrackListItem
+                      variant="playlist"
+                      index={idx + 1}
+                      song={song}
+                      handleOnPlayClicked={() => jumpTo(idx)}
+                    />
+                  </div>
+                ))}
               </div>
-              <VolumeUpIcon width={16} />
             </div>
           </div>
         </div>
