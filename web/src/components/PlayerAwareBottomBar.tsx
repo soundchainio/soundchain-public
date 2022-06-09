@@ -12,9 +12,7 @@ const PlayerAwareBottomBar = ({ children }: React.PropsWithChildren<PlayerAwareB
     <div
       className={classNames(
         `bg-black text-white flex items-center py-3 px-4 fixed right-0 ${config.mobileBreakpoint}:left-64 left-0 mb-safe`,
-        currentSong?.src
-          ? `bottom-36 ${config.mobileBreakpoint}:bottom-16`
-          : `bottom-20 ${config.mobileBreakpoint}:bottom-0`,
+        currentSong?.src ? `bottom-[170px]` : `bottom-20 `,
       )}
     >
       {children}
