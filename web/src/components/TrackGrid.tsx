@@ -1,3 +1,4 @@
+import { LoaderAnimation } from 'components/LoaderAnimation';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { HeartFilled } from 'icons/HeartFilled';
 import { Matic } from 'icons/Matic';
@@ -8,10 +9,9 @@ import dynamic from 'next/dynamic';
 import NextLink from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { currency } from 'utils/format';
-import Asset from './Asset';
-import { LoaderAnimation } from 'components/LoaderAnimation';
-import { CurrencyType } from '../types/CurrenctyType';
 import { Logo } from '../icons/Logo';
+import { CurrencyType } from '../types/CurrenctyType';
+import Asset from './Asset';
 
 const WavesurferComponent = dynamic(() => import('./wavesurfer'), {
   ssr: false,
@@ -64,8 +64,6 @@ export const TrackGrid = ({ track }: TrackProps) => {
   useEffect(() => {
     setIsPlaying(isCurrentlyPlaying(trackId));
   }, [isCurrentSong, isCurrentlyPlaying, setIsPlaying, trackId]);
-
-  console.log(JSON.stringify({ maticUsd, price }));
 
   return (
     <div
