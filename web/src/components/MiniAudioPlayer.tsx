@@ -100,7 +100,7 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
                   <div className="flex flex-1" />
                   <div className="flex items-center gap-1">
                     {saleType && saleType !== '' && !hideBadgeAndPrice && (
-                      <BadgeTrack auction={saleType === 'auction'} label={saleType.toUpperCase()}></BadgeTrack>
+                      <BadgeTrack label={saleType.toUpperCase()}></BadgeTrack>
                     )}
                   </div>
                 </div>
