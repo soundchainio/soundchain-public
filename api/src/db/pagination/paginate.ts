@@ -105,7 +105,6 @@ export async function paginatePipelineAggregated<T extends typeof Model>(
 ): Promise<PaginateResult<InstanceType<T>>> {
   const { filter = {}, sort = { field: 'createdAt' }, page = {}, aggregation } = params;
   const { field, order = SortOrder.ASC } = sort;
-  console.log(`agregate sort`, sort)
   const { first = 25, after, last, before, inclusive } = page;
   const ascending = (order === SortOrder.ASC) !== Boolean(last || before);
   const limit = last ?? first;
