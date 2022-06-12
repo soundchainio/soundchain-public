@@ -49,6 +49,8 @@ export const useModalDispatch = () => {
       dispatch({ type: ModalActionTypes.SHOW_AUDIO_PLAYER, payload: { show } }),
     dispatchShowTransferConfirmationModal: (show: boolean) =>
       dispatch({ type: ModalActionTypes.SHOW_TRANSFER_CONFIRMATION, payload: { show } }),
+    dispatchShowOgunTransferConfirmationModal: (show: boolean) =>
+      dispatch({ type: ModalActionTypes.SHOW_OGUN_TRANSFER_CONFIRMATION, payload: { show } }),
     dispatchSetRecipientWalletAddress: (address: string) =>
       dispatch({ type: ModalActionTypes.SET_RECIPIENT_WALLET_ADDRESS, payload: { address } }),
     dispatchSetAmountToTransfer: (amount: string) =>

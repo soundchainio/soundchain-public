@@ -18,6 +18,7 @@ import {
   ShowReactionsPayload,
   ShowRemoveListing,
   ShowTransferConfirmationPayload,
+  ShowOgunTransferConfirmationPayload,
   ShowUnderDevelopmentPayload,
 } from 'contexts/payloads/modal';
 import { ReactionType } from 'lib/graphql';
@@ -52,6 +53,7 @@ export interface ModalState {
     top?: ReactionType[];
   };
   showTransferConfirmation: boolean;
+  showOgunTransferConfirmation: boolean,
   walletRecipient?: string;
   amountToTransfer?: string;
   type?: SaleType;
@@ -88,6 +90,7 @@ export const initialModalState = {
     total: undefined,
   },
   showTransferConfirmation: false,
+  showOgunTransferConfirmation: false,
   walletRecipient: undefined,
   amountToTransfer: undefined,
   type: undefined,
@@ -196,6 +199,12 @@ export const modalReducer = (state: ModalState, action: Action) => {
         ...state,
         showTransferConfirmation: (action.payload as ShowTransferConfirmationPayload).show,
         anyModalOpened: (action.payload as ShowTransferConfirmationPayload).show,
+      };
+    case ModalActionTypes.SHOW_OGUN_TRANSFER_CONFIRMATION:
+      return {
+        ...state,
+        showOgunTransferConfirmation: (action.payload as ShowOgunTransferConfirmationPayload).show,
+        anyModalOpened: (action.payload as ShowOgunTransferConfirmationPayload).show,
       };
     case ModalActionTypes.SET_AMOUNT_TO_TRANSFER:
       return {

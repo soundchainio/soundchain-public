@@ -14,6 +14,7 @@ import AirdropClaim from '../contract/MerkleClaimERC20/MerkleClaimERC20.json';
 import soundchainAuction from '../contract/Auction.sol/SoundchainAuction.json';
 import soundchainMarketplace from '../contract/Marketplace.sol/SoundchainMarketplace.json';
 import soundchainContract from '../contract/Soundchain721.sol/Soundchain721.json';
+import SoundchainOGUN20 from '../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json';
 import { Contract } from 'web3-eth-contract';
 
 const nftAddress = config.contractAddress as string;
@@ -344,6 +345,36 @@ class SendMatic extends BlockchainFunction<SendMaticParams> {
   };
 }
 
+interface SendOgunParams extends DefaultParam {
+  to: string;
+  amount: string;
+}
+class SendOgun extends BlockchainFunction<SendOgunParams> {
+  execute = async (web3: Web3) => {
+    const { from, to, amount } = this.params;
+    const amountWei = web3.utils.toWei(amount);
+    console.log('amountWei', amountWei);
+    this.web3 = web3;
+    const tokenAddress = config.OGUNAddress;
+    const contract = new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], tokenAddress);
+
+    const data = await contract.methods.transfer(to, amountWei).encodeABI();
+
+    await this._execute(gasPrice =>
+      web3.eth.sendTransaction({
+        from: from,
+        to: tokenAddress,
+        value: "0x00",
+        gas,
+        gasPrice,
+        data: data
+      }),
+    );
+      console.log('RECEIPT', this.receipt);
+    return this.receipt;
+  };
+}
+
 interface TransferNftTokenParams extends TokenParams {
   to: string;
 }
@@ -452,6 +483,12 @@ const useBlockchainV2 = () => {
     },
     [me],
   );
+  const sendOgun = useCallback(
+    (to: string, from: string, amount: string) => {
+      return new SendOgun(me, { from, to, amount });
+    },
+    [me],
+  );
   const transferNftToken = useCallback(
     (tokenId: number, from: string, to: string) => {
       return new TransferNftToken(me, { from, to, tokenId });
@@ -475,6 +512,7 @@ const useBlockchainV2 = () => {
     mintNftToken,
     resultAuction,
     sendMatic,
+    sendOgun,
     transferNftToken,
   };
 };

@@ -234,7 +234,7 @@ export default function Stake() {
           We’ve broken the staking rewards up into phases, to really reward early adopters while giving out a lot of OGUN to everyone staking down the line. This is about how much it breaks down to per day
         </p>
         <br/>
-        <p className='-ml-16 md:-ml-6'>
+        <p>
           Phase 1 (30 days): <span className="green-blue-diagonal-gradient-text-break">2,000,000&nbsp;</span> OGUN per day &nbsp;&nbsp;   (Current Phase)
           <br/>
           Phase 2 (60 days): <span className="green-blue-diagonal-gradient-text-break">833,333&nbsp;</span> OGUN per day
