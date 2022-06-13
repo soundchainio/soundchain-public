@@ -57,6 +57,7 @@ export const HandleNFT = ({
           href={isBuyNow ? `${router.asPath}/edit/buy-now` : `${router.asPath}/edit/auction`}
           price={price}
           OGUNprice={OGUNprice}
+          isPaymentOGUN={isPaymentOGUN}
           countBids={countBids}
           startingDate={startingDate}
           endingDate={endingDate}
@@ -96,6 +97,7 @@ export const HandleNFT = ({
             href={`${router.asPath}/buy-now`}
             price={price}
             OGUNprice={OGUNprice}
+            isPaymentOGUN={isPaymentOGUN}
             action="BUY NFT WITH MATIC"
             secondAction="BUY NFT WITH OGUN"
             variant="buy-nft"
@@ -110,6 +112,7 @@ export const HandleNFT = ({
           href={`${router.asPath}/buy-now`}
           price={price}
           OGUNprice={OGUNprice}
+          isPaymentOGUN={isPaymentOGUN}
           action="BUY NFT WITH OGUN"
           variant="buy-nft"
           startingDate={startingDate}
@@ -246,11 +249,11 @@ const ListedAction = ({
         </NextLink>
       ):(
         <>
-          <NextLink href={{pathname:href, query: {isPaymentOGUN:false}}} replace>
+          <NextLink href={{pathname:href, query: {isPaymentOGUN:!!isPaymentOGUN}}} replace>
             <Button variant={variant}>{action}</Button>
           </NextLink>
           {secondAction  && (
-            <NextLink href={{pathname:href, query: {isPaymentOGUN:true}}} replace>
+            <NextLink href={{pathname:href, query: {isPaymentOGUN:!!isPaymentOGUN}}} replace>
               <Button variant={variant}>{secondAction}</Button>
             </NextLink>
           )}
@@ -302,7 +305,7 @@ const AuctionDetails = ({
           </div>
         )}
         {canComplete && countBids != 0 && (
-          <ListedAction href={completeHref} price={price} OGUNprice={price} action="COMPLETE" variant="buy-nft" auctionId={auctionId} />
+          <ListedAction href={completeHref} isPaymentOGUN={isPaymentOGUN} price={price} OGUNprice={price} action="COMPLETE" variant="buy-nft" auctionId={auctionId} />
         )}
         {endingDate && (
           <div className="flex flex-col text-xs items-center ">

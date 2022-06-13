@@ -142,7 +142,7 @@ export default function TrackPage({ track }: TrackPageProps) {
     Boolean(listingPayload?.listingItem?.pricePerItem) || Boolean(listingPayload?.listingItem?.pricePerItem);
   const isAuction = Boolean(listingPayload?.listingItem?.reservePrice);
   const bidCount = countBids?.countBids.numberOfBids ?? 0;
-  const isPaymentOGUN = Boolean(listingPayload?.listingItem?.isPaymentOGUN);
+  const isPaymentOGUN = Boolean(listingPayload?.listingItem?.OGUNPricePerItemToShow != 0);
 
   const { reservePriceToShow, pricePerItemToShow, OGUNPricePerItemToShow, id } = listingPayload?.listingItem ?? {};
 
