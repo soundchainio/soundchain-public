@@ -73,7 +73,7 @@ export const TrackGrid = ({ track }: TrackProps) => {
     >
       <NextLink href={`/tracks/${trackId}`}>
         <a>
-          <div className="h-32 w-full overflow-hidden rounded-t-lg">
+          <div className="h-32 w-full overflow-hidden rounded-t-xl">
             <Asset src={art} />
           </div>
         </a>

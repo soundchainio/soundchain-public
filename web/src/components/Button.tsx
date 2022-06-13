@@ -33,6 +33,7 @@ export type ButtonVariant =
 export interface ButtonProps extends React.ComponentPropsWithRef<'button'> {
   as?: string | React.FC;
   variant?: ButtonVariant;
+  buttonClassName?: string
   icon?: IconComponent | null;
   loading?: boolean;
   bgColor?: string;
