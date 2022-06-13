@@ -122,7 +122,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       return;
     }
     const weiPrice = selectedCurrency === 'MATIC' ? Web3.utils.toWei(salePrice.toString(), 'ether') : '0';
-    const weiPriceOGUN = selectedCurrency === 'MATIC' ? web3?.utils.toWei(salePrice.toString(), 'ether') : '0';
+    const weiPriceOGUN = selectedCurrency === 'OGUN' ? web3?.utils.toWei(salePrice.toString(), 'ether') : '0';
     const startTimestamp = startTime.getTime() / 1000;
 
     const onReceipt = () => {

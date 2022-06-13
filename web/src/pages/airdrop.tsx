@@ -178,7 +178,7 @@ export default function AirdropPage() {
             <br />
             joined the whitelist, or had any AUDIO when
             <br />
-            we took a snapshop on June 20, connect
+            we took a snapshot on June 20, connect
             <br />
             your wallet to claim <span className="yellow-gradient-text font-bold">5,000 OGUN</span>
           </h2>
@@ -233,7 +233,7 @@ export default function AirdropPage() {
             <br />
             joined the whitelist, or had any AUDIO when
             <br />
-            we took a snapshop on June 20, connect
+            we took a snapshot on June 20, connect
             <br />
             your wallet to claim <span className="yellow-gradient-text font-bold">5,000 OGUN</span>
           </h2>

@@ -45,13 +45,13 @@ export function MintSongsSection() {
                 </div>
 
                 <div className='text-center text-white md:hidden'>
-                  <div>Our native ER-20 token that lets our users take part in</div>
+                  <div>Our native ERC-20 token that lets our users take part in</div>
                   <div>shaping the {`platform's`} future.</div>
                 </div>
 
                 <div className='flex flex-col'>
                   <div className='text-center text-white hidden md:inline-block'>
-                    <div>Our native ER-20 token that lets our users take part in</div>
+                    <div>Our native ERC-20 token that lets our users take part in</div>
                     <div>shaping the {`platform's`} future.</div>
                   </div>
 
