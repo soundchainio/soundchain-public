@@ -14,32 +14,32 @@ export const roadmapSteps: RoadmapStep[] = [
     areas of the site as well as improvements to shared components. There’s also a conscious
     focus on improving the desktop experience as well. The changes include improvements to
     the marketplace page, the track listing pages, the users page, the music player, and
-    the general layout of the site`,
+    the general layout of the site.`,
   },
   {
     "title": "Multi-edition NFTs",
     "status": "In Progress",
-    "description": "Giving you the ability to mint and sell multiple editions of your NFTs. Be able to sell multiple copies of your track"
+    "description": "Giving you the ability to mint and sell multiple editions of your NFTs. Be able to sell multiple copies of your track."
   },
   {
     "title": "Token Launch",
     "status": "Jun 21, 2022",
-    "description": "Token launch, complete with Airdrop, Staking, and Liquidity pool rewards. Also launching with tight platform integration to let you buy and sell with OGUN, with extra trading rewards if you do"
+    "description": "Token launch, complete with Airdrop, Staking, and Liquidity pool rewards. Also launching with tight platform integration to let you buy and sell with OGUN, with extra trading rewards if you do."
   },
   {
     "title": "Ethereum",
     "status": "July/August",
-    "description": "Adding the ability to mint and sell your tracks on the Ethereum blockchain"
+    "description": "Adding the ability to mint and sell your tracks on the Ethereum blockchain."
   },
   {
     "title": "Ogun Styling",
     "status": "Late Summer",
-    "description": "Adding some spice to the platform, we'll be creating a variety of ways to spiff up your profile. Badges, special profile picture frames, and other visual flair will be available to be obtained with OGUN, and we'll be putting it right back into the economy of the token to recharge rewards or benefit holders"
+    "description": "OGUN adds extra spice to the platform. we're creating a variety of ways to enhance your profile. Badges, special profile picture frames,and visual flair will be available to be obtained with OGUN, and we're putting it right back into the economy of the token to recharge rewards or benefit holders."
   },
   {
     "title": "Art NFTs",
     "status": "Fall",
-    "description": "Music has always been tied closely to visual art, and we want to support the whole system. We'll be adding the ability to mint and sell your art as NFTs, and to make it really fit into the SoundChain ways, we'll focus on the ties between a track and its album art. Holders of your art NFTs will be able to automatically select it as their album art when uploading their own tracks, and each NFT minted this way will point right back to you, the artist"
+    "description": "Music is closely tied to visual art. SoundChain is excited to support the web3 ecosystem! We’re adding the ability to mint and sell your art as NFTs. This feature really fits into the SoundChain ways. We’ll focus on the ties between a track and its album art. Holders of your art NFTs will be able to automatically select it as their album art when uploading their own tracks, and each NFT minted this way will point right back to you, the artist."
   },
   {
     "title": "Governance",
@@ -54,27 +54,27 @@ export const roadmapSteps: RoadmapStep[] = [
   {
     "title": "Mobile App",
     "status": "",
-    "description": "To really improve the mobile experience, there's nothing better than having an app for it. Through this, we can truly customize your experience without relying on whatever limits we have with mobile browsers"
+    "description": "To improve your mobile experience we’re created an app for artists. With our robust capabilities, you, the artist, can truly customize your experience and message without the usual mobile browser limitations."
   },
   {
     "title": "Sell Your Royalties",
     "status": "",
-    "description": "To give you more power over your own content, we'll start to offer the ability to tokenize your royalties for NFT secondary sales. You'll be able to sell fractions of the royalty rights as their own NFTs that would get you that part of the money generated from secondary sales"
+    "description": "We’re offering you more power and control  over your content. With SoundChain you will have the ability to tokenize your royalties for NFT secondary sales. You’ll be able to sell fractions of your royalty rights as their own NFT’s , while generating money from those secondary sales."
   },
   {
     "title": "OGUN Marketing",
     "status": "",
-    "description": "Need some help spreading the good word? We can help with that. You'll be able to start accessing premium spots on the platform where we'll feature your music for all to see. You'll be able to market your tracks right on SoundChain for OGUN, which, like what we earn from OGUN Styling, will go right back into the token economy to provide more rewards or to boost the economy"
+    "description": "Need help sharing your message? We can help with that! The SoundChain platform provides access to premium spots that feature your music for the world to see. Marketing your tracks on SoundChain for OGUN builds an economic community. As a community, earnings from OGUN styling returns back into the token economy and builds even more rewards while boosting the entire economy."
   },
   {
     "title": "MUX Live Streaming",
     "status": "",
-    "description": "We'll be adding in MUX's live streaming capabilities as a new way to really connect with your fans. It'll be easy to broadcast and to watch/listen, and maybe OGUN will be involved somehow"
+    "description": "We’re adding MUX’s live streaming capabilities as a new way to truly connect with your fans and followers. Here, you will find straightforward broadcasting where you can watch, listen, and share with the world."
   },
   {
     "title": "DAW",
     "status": "",
-    "description": "We're here for the music, and else could really represent our beliefs besides giving you a way to make some. Not only are we working with some of the best musicians, but we ourselves love to make music, so we know what goes into a good DAW. We want to build one right into the platform that will let you mint and sell right there. We also intend to take this feature into schools to give kids a way to make music for themselves"
+    "description": "We’re here for the music and we believe in the power of music! Our community is built on love by musicians, artists and creatives. We understand our craft and the work necessary to create a good DAW. We intent to build one piece by piece into the SoundChain platform. This will allow you to mint and sell on the spot. We will also carry our message and passion into the school system. Allowing people from of all walks of life, all ages, all genre’s the ability to make music for themselves.  Music made by musicians…Art made by artists. This is SoundChain."
   }
 ];
 
