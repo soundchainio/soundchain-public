@@ -92,7 +92,8 @@ export function HeroSectionDiscover() {
                           as={'a'}
                           href='/login'
                           variant='rainbow'
-                          className='rounded-lg font-medium uppercase text-center text-sm md:text-md'>
+                          className='rounded-lg'
+                          buttonClassName='rounded-lg font-medium uppercase text-center text-sm md:text-md'>
                           Join community for free
                         </Button>
 
