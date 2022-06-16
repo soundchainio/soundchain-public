@@ -57,7 +57,7 @@ export const ProfileGridItem = ({ profile }: ProfileListItemProps) => {
                   </div>
                 </div>
 
-                <div className='md:px-2 py-2 md:py-4 -ml-4'>
+                <div className='md:px-2 py-2 md:py-4 -ml-4 md:-ml-2'>
                   <div className='scale-95'>
                     <SubscribeButton profileId={profile.id} isSubscriber={profile.isSubscriber} />
                   </div>
