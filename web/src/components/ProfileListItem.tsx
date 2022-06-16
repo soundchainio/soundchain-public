@@ -5,6 +5,9 @@ import NextLink from 'next/link';
 import { DisplayName } from './DisplayName';
 import { BellIcon, CheckCircleIcon, MailIcon } from '@heroicons/react/solid';
 import { twd } from './utils/twd';
+import {SubscribeButton} from "./SubscribeButton";
+import {MessageButton} from "./MessageButton";
+import {FollowButton} from "./FollowButton";
 
 interface ProfileListItemProps {
   profile: Profile;
@@ -18,8 +21,6 @@ const BlueGradientText = BlueGradient.span;
 export const ProfileListItem = ({ profile }: ProfileListItemProps) => {
   if (!profile) return <ProfileListItemSkeleton />;
 
-  console.log(profile);
-
   return (
     <div className='relative px-1'>
       <div className='relative flex items-center bg-black rounded-lg gap-3 md:mx-4'>
@@ -28,7 +29,7 @@ export const ProfileListItem = ({ profile }: ProfileListItemProps) => {
           <div className='flex w-full'>
             <NextLink href={`/profiles/${profile.userHandle}`}>
               <a
-                className='relative flex items-center bg-black pl-3 py-4 rounded-l-lg gap-3 justify-around flex-1'>
+                className='relative flex items-center bg-black pl-3 py-4 rounded-l-lg gap-3 justify-start md:justify-around flex-1'>
                 <Avatar
                   linkToProfile={false}
                   profile={profile}
@@ -46,10 +47,14 @@ export const ProfileListItem = ({ profile }: ProfileListItemProps) => {
                       />
                       <p className='text-gray-80 text-[10px] font-semibold'>{`@${profile.userHandle}`}</p>
                     </div>
-                    <button className={`bg-gradient-to-r from-[#7A278E] to-[#AC6AFF] 
+                    <div>
+                      <SubscribeButton profileId={profile.id} isSubscriber={profile.isSubscriber} />
+                    </div>
+
+                    {/*<button className={`bg-gradient-to-r from-[#7A278E] to-[#AC6AFF]
               text-white rounded-full w-8 h-8 inline-flex items-center justify-center`}>
                       <BellIcon className='w-4 h-4' />
-                    </button>
+                    </button>*/}
                   </div>
 
                   <div className='relative mt-3'>
@@ -83,21 +88,16 @@ export const ProfileListItem = ({ profile }: ProfileListItemProps) => {
               <div className='flex-1' />
 
               <div className='flex flex-col md:flex-row md:gap-3'>
-                <button className={`flex items-center px-2 py-1 gap-2 text-white 
-            rounded-full bg-gradient-to-r from-[#278E31] hover:from-[#1b6423] hover:to-[#408a2e] to-[#52B23B] 
-            scale-75 md:scale-100`}>
-                  <CheckCircleIcon className='h-4 w-4' />
-                  <span>{profile.isFollowed ? 'Following' : 'Follow'}</span>
-                </button>
+                <div className='scale-95 md:scale-100'>
+                  <FollowButton
+                      followedId={profile.id}
+                      isFollowed={profile.isFollowed}
+                      followedHandle={profile.userHandle}
+                  />
+                </div>
 
-                <div className={`px-0.5 py-0.5 text-white rounded-full
-             bg-gradient-to-r from-[#3B5BB1] to-[#6FA1FF] group scale-75 md:scale-100`}>
-                  <button
-                    className={`rounded-full py-1 px-2 bg-black flex items-center gap-2 hover:bg-gradient-to-r 
-                  from-[#3B5BB1] to-[#6FA1FF]`}>
-                    <MailIcon className='h-4 w-4' />
-                    <BlueGradientText>Message</BlueGradientText>
-                  </button>
+                <div className='scale-95 md:scale-100'>
+                  <MessageButton profileId={profile.id} />
                 </div>
               </div>
             </div>

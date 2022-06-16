@@ -10,7 +10,7 @@ export const roadmapSteps: RoadmapStep[] = [
   {
     title: 'UI/UX updates',
     status: 'In Progress',
-    description: `We’re improving the UI/UX of the whole platform, focusing on high traffic 
+    description: `We’re improving the UI/UX of the whole platform, focusing on high traffic
     areas of the site as well as improvements to shared components. There’s also a conscious
     focus on improving the desktop experience as well. The changes include improvements to
     the marketplace page, the track listing pages, the users page, the music player, and
@@ -23,8 +23,8 @@ export const roadmapSteps: RoadmapStep[] = [
   },
   {
     "title": "Token Launch",
-    "status": "Jun 21, 2022",
-    "description": "Token launch, complete with Airdrop, Staking, and Liquidity pool rewards. Also launching with tight platform integration to let you buy and sell with OGUN, with extra trading rewards if you do"
+    "status": "In Progress",
+    "description": "Token launch, complete with Airdrop, Staking, and Liquidity pool rewards. Also launching with tight platform integration to let you buy and sell with OGUN, with extra trading rewards if you do."
   },
   {
     "title": "Ethereum",
