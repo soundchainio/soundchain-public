@@ -8,6 +8,7 @@ import InfiniteLoader from 'react-window-infinite-loader';
 import { NoResultFound } from './NoResultFound';
 import { ProfileListItemSkeleton } from './ProfileListItemSkeleton';
 import { LoaderAnimation } from './LoaderAnimation';
+import useMediaQuery from "../hooks/useMediaQuery";
 
 const pageSize = 15;
 
@@ -15,12 +16,15 @@ export interface ExploreUsersProps {
   searchTerm: string
 }
 
+
+
 export const ExploreUsersListView = ({searchTerm}: ExploreUsersProps) => {
   const firstPage: PageInput = { first: pageSize };
 
   const { data, loading, fetchMore } = useExploreUsersQuery({
     variables: { search: searchTerm, page: firstPage },
   });
+  const isMobile = useMediaQuery('(max-width: 640px)')
 
   if (!data || loading)
     return (
@@ -55,34 +59,34 @@ export const ExploreUsersListView = ({searchTerm}: ExploreUsersProps) => {
       {profiles.length ? (
         <AutoSizer>
           {({ height, width }) => (
-            <InfiniteLoader isItemLoaded={isItemLoaded} itemCount={usersCount} loadMoreItems={loadMoreItems}>
-              {({ onItemsRendered, ref }) => (
-                <List
-                  height={height}
-                  width={width}
-                  onItemsRendered={onItemsRendered}
-                  ref={ref}
-                  className='mx-auto'
-                  itemCount={usersCount}
-                  itemSize={140}
-                  itemData={profiles}
-                >
-                  {memo(
-                    ({ data, index, style }) => (
-                      <div style={style}>
-                        {!isItemLoaded(index) ? (
-                          <LoaderAnimation loadingMessage="Loading..." />
-                        ) : (
-                          <ProfileListItem key={data[index].id} profile={data[index]} />
-                        )}
-                      </div>
-                    ),
-                    areEqual,
-                  )}
-                </List>
+                  <InfiniteLoader isItemLoaded={isItemLoaded} itemCount={usersCount} loadMoreItems={loadMoreItems}>
+                    {({onItemsRendered, ref}) => (
+                        <List
+                            height={height}
+                            width={width}
+                            onItemsRendered={onItemsRendered}
+                            ref={ref}
+                            className='mx-auto'
+                            itemCount={usersCount}
+                            itemSize={isMobile ? 120 : 150}
+                            itemData={profiles}
+                        >
+                          {memo(
+                              ({data, index, style}) => (
+                                  <div style={style}>
+                                    {!isItemLoaded(index) ? (
+                                        <LoaderAnimation loadingMessage="Loading..."/>
+                                    ) : (
+                                        <ProfileListItem key={data[index].id} profile={data[index]}/>
+                                    )}
+                                  </div>
+                              ),
+                              areEqual,
+                          )}
+                        </List>
+                    )}
+                  </InfiniteLoader>
               )}
-            </InfiniteLoader>
-          )}
         </AutoSizer>
       ) : (
         <NoResultFound type="Users" />
