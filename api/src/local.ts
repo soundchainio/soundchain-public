@@ -27,8 +27,8 @@ async function bootstrap() {
   server.applyMiddleware({ app });
 
   await new Promise<void>(resolve => app.listen({ port: config.express.port }, resolve));
-  setInterval(() => blockchainWatcher({}, undefined, null), 10 * 1000);
-  setInterval(() => processAuctions({}, undefined, null), 10 * 1000);
+  // setInterval(() => blockchainWatcher({}, undefined, null), 10 * 1000);
+  // setInterval(() => processAuctions({}, undefined, null), 10 * 1000);
   setInterval(() => processPending({}, undefined, null), 10 * 1000);
   // setInterval(() => playbackCount({}, undefined, null), 60 * 1000);
 

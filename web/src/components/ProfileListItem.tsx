@@ -3,8 +3,6 @@ import { ProfileListItemSkeleton } from 'components/ProfileListItemSkeleton';
 import { Profile } from 'lib/graphql';
 import NextLink from 'next/link';
 import { DisplayName } from './DisplayName';
-import { BellIcon, CheckCircleIcon, MailIcon } from '@heroicons/react/solid';
-import { twd } from './utils/twd';
 import {SubscribeButton} from "./SubscribeButton";
 import {MessageButton} from "./MessageButton";
 import {FollowButton} from "./FollowButton";
@@ -12,11 +10,6 @@ import {FollowButton} from "./FollowButton";
 interface ProfileListItemProps {
   profile: Profile;
 }
-
-const BlueGradient = twd(`text-transparent bg-clip-text bg-gradient-to-r 
-from-[#3B5BB1] to-[#6FA1FF] font-semibold group-hover:text-white bg-transparent`);
-
-const BlueGradientText = BlueGradient.span;
 
 export const ProfileListItem = ({ profile }: ProfileListItemProps) => {
   if (!profile) return <ProfileListItemSkeleton />;
@@ -60,24 +53,24 @@ export const ProfileListItem = ({ profile }: ProfileListItemProps) => {
                   <div className='relative mt-3'>
                     <div className='flex items-center justify-center gap-2 md:gap-3'>
                       <div className='flex flex-col items-center justify-center'>
-                        <span className='text-white text-[10px] md:text-md font-bold'>
+                        <span className='text-white text-[10px] sm:text-[14px] md:text-md lg:text-lg font-bold'>
                           {profile.followerCount || 0}
                         </span>
-                        <span className='text-gray-80 text-[10px] md:text-sm font-semibold'>Followers</span>
+                        <span className='text-gray-80 text-[10px] sm:text-[14px] md:text-sm lg:text-md font-semibold'>Followers</span>
                       </div>
                       <div className='flex flex-col items-center justify-center'>
-                        <span className='text-white text-[10px] md:text-md font-bold'>
+                        <span className='text-white text-[10px] sm:text-[14px] md:text-md lg:text-lg font-bold'>
                           {profile.followingCount || 0}
                         </span>
-                        <span className='text-gray-80 text-[10px] md:text-sm font-semibold'>Following</span>
+                        <span className='text-gray-80 text-[10px] sm:text-[14px] md:text-sm lg:text-md font-semibold'>Following</span>
                       </div>
                       <div className='flex flex-col items-center justify-center'>
-                        <span className='text-white text-[10px] md:text-md font-bold'>48</span>
-                        <span className='text-gray-80 text-[10px] md:text-sm font-semibold'>Posts</span>
+                        <span className='text-white text-[10px] sm:text-[14px] md:text-md lg:text-lg font-bold'>48</span>
+                        <span className='text-gray-80 text-[10px] sm:text-[14px] md:text-sm lg:text-md font-semibold'>Posts</span>
                       </div>
                       <div className='flex flex-col items-center justify-center'>
-                        <span className='text-white text-[10px] md:text-md font-bold'>12</span>
-                        <span className='text-gray-80 text-[10px] md:text-sm font-semibold'>Tracks</span>
+                        <span className='text-white text-[10px] sm:text-[14px] md:text-md lg:text-lg font-bold'>12</span>
+                        <span className='text-gray-80 text-[10px] sm:text-[14px] md:text-sm lg:text-md font-semibold'>Tracks</span>
                       </div>
                     </div>
                   </div>
@@ -87,7 +80,7 @@ export const ProfileListItem = ({ profile }: ProfileListItemProps) => {
             <div className='bg-black rounded-r-lg flex flex-col py-4 gap-6 md:px-3 relative items-end -ml-2 md:ml-0'>
               <div className='flex-1' />
 
-              <div className='flex flex-col md:flex-row md:gap-3'>
+              <div className='flex flex-col md:flex-row md:gap-3 gap-1'>
                 <div className='scale-95 md:scale-100'>
                   <FollowButton
                       followedId={profile.id}
