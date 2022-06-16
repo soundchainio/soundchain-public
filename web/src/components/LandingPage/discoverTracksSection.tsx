@@ -12,7 +12,7 @@ const SectionWrapper = twd(`max-w-7xl lg:max-w-full mx-auto sm:px-6 mt-56 sm:mt-
 export function DiscoverTracksSection() {
   return (
     <>
-      <div className='relative h-2'>
+      <div className='relative h-2 md:py-10 lg:py-0'>
         <div
           className='absolute pointer-events-none aspect-video z-0 max-w-[600px] md:max-w-full md:w-full inset-0 h-[830px] -top-[200px] sm:-top-[400px]'>
           <Image
@@ -29,8 +29,8 @@ export function DiscoverTracksSection() {
         </div>
       </div>
 
-      <div className='relative z-20 sm:pt-64 sm:pb-64 md:pt-96 md:pb-20'>
-        <SectionWrapper className='mt-20 md:mt-0'>
+      <div className='relative z-20'>
+        <SectionWrapper className='md:mt-0'>
           <div className='container mx-auto h-full flex-1 xl:px-40'>
             <div className='relative flex flex-col items-start h-full pl-4 py-16 md:pl-6 sm:py-24 md:py-32 md:pl-8'>
               <div className='text-center w-full flex flex-col relative mt-20 lg:mt-0'>

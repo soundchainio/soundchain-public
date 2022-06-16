@@ -7,7 +7,7 @@ export default function Index() {
     <>
       <SEO title='SoundChain' description='SoundChain' canonicalUrl='/' />
 
-      <footer className='bg-[#131313] text-[#505050] w-full'>
+      <footer className='bg-[#131313] text-[#505050] w-full mt-4 md:mt-10 lg:mt-0'>
         <div className='h-[60px] container mx-auto flex items-center justify-center'>
           <span className='font-bold'>SoundChain. {new Date().getFullYear()} - MADE BY AE.STUDIO</span>
         </div>

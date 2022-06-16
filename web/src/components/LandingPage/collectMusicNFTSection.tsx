@@ -11,7 +11,7 @@ const SectionWrapper = twd(`max-w-7xl lg:max-w-full mx-auto sm:px-6 mt-56 sm:mt-
 
 export function CollectMusicNFTSection() {
   return (
-    <div className='relative'>
+    <div className='relative md:pt-10 lg:pt-0'>
       <SectionWrapper className=''>
         <div className='container mx-auto h-full flex-1 xl:px-40'>
           <div className='relative flex flex-col items-start h-full md:pl-4 py-16 md:pl-6 md:py-24 lg:py-32 lg:pl-8'>
@@ -22,12 +22,12 @@ export function CollectMusicNFTSection() {
             <div className='mt-20 flex flex-col-reverse md:flex-row items-center w-full'>
 
               <div className='mt-10 flex flex-col min-w-[400px] items-center'>
-                <span className='text-white font-semibold text-center md:text-left text-2xl md:text-3xl'>Full ownership over how</span>
-                <OrngCol className='text-7xl uppercase'>
+                <span className='text-white font-semibold text-center md:text-left text-2xl md:text-3xl w-full'>Full ownership over how</span>
+                <OrngCol className='text-7xl uppercase w-full'>
                   <span>your</span>
                   <span>art</span>
                 </OrngCol>
-                <span className='text-white font-semibold text-center md:text-left text-3xl'>is used</span>
+                <span className='text-white font-semibold text-center md:text-left text-3xl w-full'>is used</span>
               </div>
               <div className='max-w-[300px] -ml-10 md:ml-0 md:max-w-[584px]'>
                 <Image
