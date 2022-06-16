@@ -86,6 +86,7 @@ export const ProfileGridItem = ({ profile }: ProfileListItemProps) => {
                       followedId={profile.id}
                       isFollowed={profile.isFollowed}
                       followedHandle={profile.userHandle}
+                      showIcon
                     />
                   </div>
                 </div>

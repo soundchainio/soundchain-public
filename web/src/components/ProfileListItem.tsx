@@ -36,9 +36,9 @@ export const ProfileListItem = ({ profile }: ProfileListItemProps) => {
                         name={profile.displayName}
                         verified={profile.verified}
                         teamMember={profile.teamMember}
-                        className='text-[11px] max-w-[300px]'
+                        className='text-[11px] sm:text-sm md:text-md lg:text-lg max-w-[300px]'
                       />
-                      <p className='text-gray-80 text-[10px] font-semibold'>{`@${profile.userHandle}`}</p>
+                      <p className='text-gray-80 text-[10px] sm:text-xs md:text-sm font-semibold'>{`@${profile.userHandle}`}</p>
                     </div>
                     <div>
                       <SubscribeButton profileId={profile.id} isSubscriber={profile.isSubscriber} />
@@ -80,16 +80,17 @@ export const ProfileListItem = ({ profile }: ProfileListItemProps) => {
             <div className='bg-black rounded-r-lg flex flex-col py-4 gap-6 md:px-3 relative items-end -ml-2 md:ml-0'>
               <div className='flex-1' />
 
-              <div className='flex flex-col md:flex-row md:gap-3 gap-1'>
-                <div className='scale-95 md:scale-100'>
+              <div className='flex flex-col md:flex-row md:gap-3 gap-1 pr-3'>
+                <div className='scale-95 md:scale-100 w-full flex items-center justify-end'>
                   <FollowButton
                       followedId={profile.id}
                       isFollowed={profile.isFollowed}
                       followedHandle={profile.userHandle}
+                      showIcon
                   />
                 </div>
 
-                <div className='scale-95 md:scale-100'>
+                <div className='scale-95 md:scale-100 w-full flex items-center justify-end'>
                   <MessageButton profileId={profile.id} />
                 </div>
               </div>
