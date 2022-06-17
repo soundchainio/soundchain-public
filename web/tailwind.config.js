@@ -102,6 +102,15 @@ module.exports = {
       backgroundSize: {
         'wave-size': '600% 600%',
       },
+      gridTemplateColumns: {
+        'auto-fit': 'repeat(auto-fit, minmax(0, 1fr))',
+        'auto-fill': 'repeat(auto-fill, minmax(0, 1fr))',
+      },
+      gridTemplateRows: {
+        'auto-fit': 'repeat(auto-fit, minmax(0, 1fr))',
+        'auto-fill': 'repeat(auto-fill, minmax(0, 1fr))',
+
+      },
       keyframes: {
         wave: {
           '0%': {

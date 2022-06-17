@@ -18,7 +18,12 @@ export function RoadmapSection() {
               <RoadmapStepList steps={roadmapSteps.slice(0, 3)} />
             </div>
             <div className='mt-10 flex justify-center w-full'>
-              <Button href='/roadmap' as='a' variant='rainbow' className='rounded-lg'>
+              <Button
+                  href='/roadmap'
+                  as='a'
+                  variant='rainbow'
+                  className='rounded-lg'
+                  buttonClassName='rounded-lg text-center'>
                 <span className='font-medium px-6 uppercase'>See full roadmap</span>
               </Button>
             </div>

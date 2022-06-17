@@ -23,7 +23,7 @@ export const roadmapSteps: RoadmapStep[] = [
   },
   {
     "title": "Token Launch",
-    "status": "Jun 21, 2022",
+    "status": "In Progress",
     "description": "Token launch, complete with Airdrop, Staking, and Liquidity pool rewards. Also launching with tight platform integration to let you buy and sell with OGUN, with extra trading rewards if you do."
   },
   {

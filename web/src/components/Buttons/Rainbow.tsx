@@ -4,6 +4,7 @@ import React from 'react';
 
 export const RainbowButton = ({
                                 className,
+                                buttonClassName,
                                 Component,
                                 type = 'button',
                                 icon: Icon,
@@ -14,7 +15,7 @@ export const RainbowButton = ({
   return (
     <div className={classNames(className, 'p-0.5 bg-rainbow-gradient hover:bg-rainbow-gradient-dark')}>
       <Component
-        className={`${commonClasses} ${className} sm:px-4 py-3 font-extrabold text-white uppercase bg-opacity-60 bg-black ${
+        className={`${commonClasses} ${buttonClassName} sm:px-4 py-3 font-extrabold text-white uppercase bg-opacity-60 bg-black ${
           rest.disabled ? 'cursor-not-allowed' : ''
         }`}
         type={type}

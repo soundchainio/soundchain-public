@@ -1,9 +1,11 @@
 import { Avatar } from 'components/Avatar';
-import { FollowButton } from 'components/FollowButton';
 import { ProfileListItemSkeleton } from 'components/ProfileListItemSkeleton';
 import { Profile } from 'lib/graphql';
 import NextLink from 'next/link';
 import { DisplayName } from './DisplayName';
+import {SubscribeButton} from "./SubscribeButton";
+import {MessageButton} from "./MessageButton";
+import {FollowButton} from "./FollowButton";
 
 interface ProfileListItemProps {
   profile: Profile;
@@ -13,28 +15,88 @@ export const ProfileListItem = ({ profile }: ProfileListItemProps) => {
   if (!profile) return <ProfileListItemSkeleton />;
 
   return (
-    <div className="relative flex items-center bg-gray-20 px-3 py-2 rounded-lg gap-3">
-      <NextLink href={`/profiles/${profile.userHandle}`}>
-        <a className="relative flex items-center bg-gray-20 rounded-lg gap-3 flex-1 overflow-hidden">
-          <Avatar
-            linkToProfile={false}
-            profile={profile}
-            pixels={40}
-            className="rounded-full h-[40px] w-[40px] flex-shrink-0"
-          />
-          <div className="min-w-0 flex-1">
-            <DisplayName
-              name={profile.displayName}
-              verified={profile.verified}
-              teamMember={profile.teamMember}
-              className="text-sm"
-            />
-            <p className="text-gray-80 text-xs font-semibold">{`@${profile.userHandle}`}</p>
+    <div className='relative px-1'>
+      <div className='relative flex items-center bg-black rounded-lg gap-3 md:mx-4'>
+        <div
+          className='p-0.5 bg-transparent hover:bg-rainbow-gradient rounded-lg flex-1 flex flex-col items-center justify-center'>
+          <div className='flex w-full'>
+            <NextLink href={`/profiles/${profile.userHandle}`}>
+              <a
+                className='relative flex items-center bg-black pl-3 py-4 rounded-l-lg gap-3 justify-start md:justify-around flex-1'>
+                <Avatar
+                  linkToProfile={false}
+                  profile={profile}
+                  pixels={76}
+                  className='rounded-full h-[59px] md:h-[76px] w-[59px] md:w-[76px] flex-shrink-0 border-2 border-gray-10'
+                />
+                <div className='min-w-0 md:flex-1 flex flex-col items-start -ml-3 md:ml-4 scale-90 md:scale-100'>
+                  <div className='flex gap-2 md:gap-3'>
+                    <div className='flex flex-col'>
+                      <DisplayName
+                        name={profile.displayName}
+                        verified={profile.verified}
+                        teamMember={profile.teamMember}
+                        className='text-[11px] sm:text-sm md:text-md lg:text-lg max-w-[300px]'
+                      />
+                      <p className='text-gray-80 text-[10px] sm:text-xs md:text-sm font-semibold'>{`@${profile.userHandle}`}</p>
+                    </div>
+                    <div>
+                      <SubscribeButton profileId={profile.id} isSubscriber={profile.isSubscriber} />
+                    </div>
+
+                    {/*<button className={`bg-gradient-to-r from-[#7A278E] to-[#AC6AFF]
+              text-white rounded-full w-8 h-8 inline-flex items-center justify-center`}>
+                      <BellIcon className='w-4 h-4' />
+                    </button>*/}
+                  </div>
+
+                  <div className='relative mt-3'>
+                    <div className='flex items-center justify-center gap-2 md:gap-3'>
+                      <div className='flex flex-col items-center justify-center'>
+                        <span className='text-white text-[10px] sm:text-[14px] md:text-md lg:text-lg font-bold'>
+                          {profile.followerCount || 0}
+                        </span>
+                        <span className='text-gray-80 text-[10px] sm:text-[14px] md:text-sm lg:text-md font-semibold'>Followers</span>
+                      </div>
+                      <div className='flex flex-col items-center justify-center'>
+                        <span className='text-white text-[10px] sm:text-[14px] md:text-md lg:text-lg font-bold'>
+                          {profile.followingCount || 0}
+                        </span>
+                        <span className='text-gray-80 text-[10px] sm:text-[14px] md:text-sm lg:text-md font-semibold'>Following</span>
+                      </div>
+                      <div className='flex flex-col items-center justify-center'>
+                        <span className='text-white text-[10px] sm:text-[14px] md:text-md lg:text-lg font-bold'>48</span>
+                        <span className='text-gray-80 text-[10px] sm:text-[14px] md:text-sm lg:text-md font-semibold'>Posts</span>
+                      </div>
+                      <div className='flex flex-col items-center justify-center'>
+                        <span className='text-white text-[10px] sm:text-[14px] md:text-md lg:text-lg font-bold'>12</span>
+                        <span className='text-gray-80 text-[10px] sm:text-[14px] md:text-sm lg:text-md font-semibold'>Tracks</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </a>
+            </NextLink>
+            <div className='bg-black rounded-r-lg flex flex-col py-4 gap-6 md:px-3 relative items-end -ml-2 md:ml-0'>
+              <div className='flex-1' />
+
+              <div className='flex flex-col md:flex-row md:gap-3 gap-1 pr-3'>
+                <div className='scale-95 md:scale-100 w-full flex items-center justify-end'>
+                  <FollowButton
+                      followedId={profile.id}
+                      isFollowed={profile.isFollowed}
+                      followedHandle={profile.userHandle}
+                      showIcon
+                  />
+                </div>
+
+                <div className='scale-95 md:scale-100 w-full flex items-center justify-end'>
+                  <MessageButton profileId={profile.id} />
+                </div>
+              </div>
+            </div>
           </div>
-        </a>
-      </NextLink>
-      <div>
-        <FollowButton followedHandle={profile.userHandle} followedId={profile.id} isFollowed={profile.isFollowed} />
+        </div>
       </div>
     </div>
   );
