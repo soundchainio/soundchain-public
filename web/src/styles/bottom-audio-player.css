@@ -1,21 +1,32 @@
 .bottom-audio-player[data-reach-slider-input][data-orientation='horizontal'] {
   height: 2px;
+  cursor: pointer;
+
+  @media (min-width: 768px) {
+    height: 4px;
+   }
 }
-.bottom-audio-player[data-reach-slider-input][data-disabled] {
-  opacity: initial;
-  pointer-events: none;
+
+.bottom-audio-player[data-reach-slider-input][data-orientation='horizontal']:hover [data-reach-slider-handle] {
+  opacity: revert;
 }
+
 .bottom-audio-player [data-reach-slider-range] {
   background: linear-gradient(90deg, #26d1a8 0%, #ac4efd 25%, #fed503 75%, #fe5540 100%);
 }
+
 .bottom-audio-player [data-reach-slider-track] {
   background: #202020;
 }
+
 .bottom-audio-player [data-reach-slider-handle] {
-  opacity: 0;
+  width: 10px;
+  height: 10px;
   background: white;
+  border-radius: 50%;
 }
+
 .bottom-audio-player [data-reach-slider-track][data-orientation='horizontal']:before {
-  height: 0.5rem;
-  top: calc(-0.15rem - 1px);
+  height: 1rem;
+  top: calc(-0.3rem - 1px);
 }
