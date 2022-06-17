@@ -1,5 +1,9 @@
+import { Dialog, Transition } from '@headlessui/react';
+import { MenuIcon } from '@heroicons/react/solid';
 import { Logo } from 'icons/Logo';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
+import React, { useState } from 'react';
 import { Button } from './Button';
 
 interface NavItemProps {
@@ -18,34 +22,76 @@ export const NavItem = ({ text, link }: NavItemProps) => {
       <div className="bg-green-blue-gradient w-5/6 pb-1" />
     </div>
   ) : (
-    <a href={link ? link : '/' + text.toLowerCase()}>
+    <a href={link ? link : '/' + text.toLowerCase()} className="hidden md:inline-block">
       <div className="flex items-center justify-center p-2">{text}</div>
     </a>
   );
 };
 
+function HeaderDrawer({ open, close }: { open: boolean; close: () => void }) {
+  return (
+    <Transition show={open} as={React.Fragment}>
+      <Dialog onClose={close} className="relative z-50">
+        <div className="fixed inset-0 flex items-center justify-end bg-black/50 p-0">
+          <Transition.Child
+            as={React.Fragment}
+            enter="transition duration-200 ease-out"
+            enterFrom="transform translate-x-[100%]"
+            enterTo="transform translate-x-0 opacity-100"
+            leave="transition duration-100 ease-out"
+            leaveFrom="transform translate-x-0 opacity-100"
+            leaveTo="transform translate-x-[100%]"
+          >
+            <Dialog.Panel className="h-screen w-full max-w-[300px] rounded bg-[#131313]">
+              <Dialog.Description className="p-4">
+                <ul className="flex flex-col gap-4">
+                  <li className="text-md cursor-pointer font-semibold text-slate-400 hover:text-slate-200">
+                    <Link href="https://soundchain.gitbook.io/soundchain/token/ogun">
+                      <a>Tokenomics</a>
+                    </Link>
+                  </li>
+                </ul>
+              </Dialog.Description>
+            </Dialog.Panel>
+          </Transition.Child>
+        </div>
+      </Dialog>
+    </Transition>
+  );
+}
+
 export const Header = () => {
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
-    <header className="h-20">
-      <div className="my-0 flex h-20 w-full items-center justify-between px-6 pt-4 lg:px-10">
-        <div className="flex items-center">
-          <Logo className="h-[50px]" />
-          <span className="hidden font-extrabold text-white md:block">SoundChain</span>
+    <>
+      <header className="h-20">
+        <div className="my-0 flex h-20 w-full items-center justify-between px-6 pt-4 lg:px-10">
+          <div className="flex items-center">
+            <Logo className="h-[50px]" />
+            <span className="hidden font-extrabold text-white md:block">SoundChain</span>
+          </div>
+          <nav className="flex items-center justify-evenly gap-3 text-white">
+            <NavItem text="Tokenomics" link="/ogun" />
+            <div className="scale-95">
+              <Button
+                as={'a'}
+                href="/marketplace"
+                variant="rainbow"
+                buttonClassName="font-medium text-sm px-2 uppercase text-center"
+              >
+                CONTINUE TO SOUNDCHAIN
+              </Button>
+            </div>
+
+            <button onClick={() => setDrawerOpen(true)} className="px-2 outline-0 focus:outline-0 active:outline-0">
+              <MenuIcon className="h-6 w-6 text-white md:hidden" />
+            </button>
+          </nav>
         </div>
-        <nav className="flex items-center justify-evenly gap-3 text-white">
-          <NavItem text="Tokenomics" link="/ogun" />
-          <Button
-            as={'a'}
-            href='/marketplace'
-            variant='rainbow'
-            className=''>
-            <span className='font-medium px-6 uppercase text-center'>
-              CONTINUE TO SOUNDCHAIN
-            </span>
-          </Button>
-        </nav>
-      </div>
-    </header>
+      </header>
+
+      <HeaderDrawer open={drawerOpen} close={() => setDrawerOpen(false)} />
+    </>
   );
 };
