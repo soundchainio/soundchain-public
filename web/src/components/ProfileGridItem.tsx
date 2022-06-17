@@ -94,7 +94,7 @@ export const ProfileGridItem = ({ profile }: ProfileListItemProps) => {
 
               <div className='flex-col px-2 mt-2'>
               <span className='max-w-full text-wrap text-gray-80 text-sm'>
-                {profile.bio || 'no bio yet.'}
+                {profile.bio || ''}
               </span>
               </div>
             </div>
