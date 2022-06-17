@@ -35,8 +35,6 @@ export const Header = () => {
         </div>
         <nav className="flex items-center justify-evenly gap-3 text-white">
           <NavItem text="Tokenomics" link="/ogun" />
-          <NavItem text="Airdrop" />
-          <NavItem text="Stake" />
           <Button
             as={'a'}
             href='/marketplace'

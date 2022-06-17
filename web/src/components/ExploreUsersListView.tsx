@@ -68,7 +68,7 @@ export const ExploreUsersListView = ({searchTerm}: ExploreUsersProps) => {
                             ref={ref}
                             className='mx-auto'
                             itemCount={usersCount}
-                            itemSize={isMobile ? 120 : 150}
+                            itemSize={isMobile ? 135 : 150}
                             itemData={profiles}
                         >
                           {memo(

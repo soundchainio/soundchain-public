@@ -15,8 +15,8 @@ export const ProfileListItem = ({ profile }: ProfileListItemProps) => {
   if (!profile) return <ProfileListItemSkeleton />;
 
   return (
-    <div className='relative px-1'>
-      <div className='relative flex items-center bg-black rounded-lg gap-3 md:mx-4'>
+    <div className='relative px-1 py-3'>
+      <div className='relative flex items-center bg-black rounded-lg gap-3 md:mx-4 h-[120px] sm:h-[140px]'>
         <div
           className='p-0.5 bg-transparent hover:bg-rainbow-gradient rounded-lg flex-1 flex flex-col items-center justify-center'>
           <div className='flex w-full'>
@@ -36,41 +36,28 @@ export const ProfileListItem = ({ profile }: ProfileListItemProps) => {
                         name={profile.displayName}
                         verified={profile.verified}
                         teamMember={profile.teamMember}
-                        className='text-[11px] sm:text-sm md:text-md lg:text-lg max-w-[300px]'
+                        className='text-md md:text-md lg:text-lg max-w-[300px]'
                       />
-                      <p className='text-gray-80 text-[10px] sm:text-xs md:text-sm font-semibold'>{`@${profile.userHandle}`}</p>
+                      <p className='text-gray-80 text-sm  md:text-sm font-semibold'>{`@${profile.userHandle}`}</p>
                     </div>
                     <div>
                       <SubscribeButton profileId={profile.id} isSubscriber={profile.isSubscriber} />
                     </div>
-
-                    {/*<button className={`bg-gradient-to-r from-[#7A278E] to-[#AC6AFF]
-              text-white rounded-full w-8 h-8 inline-flex items-center justify-center`}>
-                      <BellIcon className='w-4 h-4' />
-                    </button>*/}
                   </div>
 
                   <div className='relative mt-3'>
                     <div className='flex items-center justify-center gap-2 md:gap-3'>
                       <div className='flex flex-col items-center justify-center'>
-                        <span className='text-white text-[10px] sm:text-[14px] md:text-md lg:text-lg font-bold'>
+                        <span className='text-white text-sm md:text-md lg:text-lg font-bold'>
                           {profile.followerCount || 0}
                         </span>
-                        <span className='text-gray-80 text-[10px] sm:text-[14px] md:text-sm lg:text-md font-semibold'>Followers</span>
+                        <span className='text-gray-80 text-xs md:text-sm lg:text-md font-semibold'>Followers</span>
                       </div>
                       <div className='flex flex-col items-center justify-center'>
-                        <span className='text-white text-[10px] sm:text-[14px] md:text-md lg:text-lg font-bold'>
+                        <span className='text-white text-sm md:text-md lg:text-lg font-bold'>
                           {profile.followingCount || 0}
                         </span>
-                        <span className='text-gray-80 text-[10px] sm:text-[14px] md:text-sm lg:text-md font-semibold'>Following</span>
-                      </div>
-                      <div className='flex flex-col items-center justify-center'>
-                        <span className='text-white text-[10px] sm:text-[14px] md:text-md lg:text-lg font-bold'>48</span>
-                        <span className='text-gray-80 text-[10px] sm:text-[14px] md:text-sm lg:text-md font-semibold'>Posts</span>
-                      </div>
-                      <div className='flex flex-col items-center justify-center'>
-                        <span className='text-white text-[10px] sm:text-[14px] md:text-md lg:text-lg font-bold'>12</span>
-                        <span className='text-gray-80 text-[10px] sm:text-[14px] md:text-sm lg:text-md font-semibold'>Tracks</span>
+                        <span className='text-gray-80 text-xs md:text-sm lg:text-md font-semibold'>Following</span>
                       </div>
                     </div>
                   </div>
