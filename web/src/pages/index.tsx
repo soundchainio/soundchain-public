@@ -25,7 +25,7 @@ export default function Index() {
               <YoutubeBW width={22} height={22} />
             </a>
             <a href='https://discord.gg/rDxev3QSGg' target="_blank" rel="noreferrer">
-              <Discord width={18} height={18} />
+              <Discord fill={'#505050'} width={18} height={18} />
             </a>
           </div>
         </div>
