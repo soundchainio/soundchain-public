@@ -43,7 +43,7 @@ function HeaderDrawer({ open, close }: { open: boolean; close: () => void }) {
             leaveTo="transform translate-x-[100%]"
           >
             <Dialog.Panel className="h-screen w-full max-w-[300px] rounded bg-[#131313]">
-              <Dialog.Description className="p-4">
+              <div className="p-4">
                 <ul className="flex flex-col gap-4">
                   <li className="text-md cursor-pointer font-semibold text-slate-400 hover:text-slate-200">
                     <Link href="https://soundchain.gitbook.io/soundchain/token/ogun">
@@ -51,7 +51,7 @@ function HeaderDrawer({ open, close }: { open: boolean; close: () => void }) {
                     </Link>
                   </li>
                 </ul>
-              </Dialog.Description>
+              </div>
             </Dialog.Panel>
           </Transition.Child>
         </div>
