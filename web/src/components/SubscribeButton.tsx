@@ -2,14 +2,14 @@ import { useMe } from 'hooks/useMe';
 import { SubscribeBell } from 'icons/SubscribeBell';
 import { useSubscribeToProfileMutation, useUnsubscribeFromProfileMutation } from 'lib/graphql';
 import { useRouter } from 'next/router';
-import React from 'react';
 
 interface SubscribeButtonProps {
   profileId: string;
   isSubscriber: boolean;
+  small?: boolean;
 }
 
-export const SubscribeButton = ({ profileId, isSubscriber }: SubscribeButtonProps) => {
+export const SubscribeButton = ({ profileId, isSubscriber, small = false }: SubscribeButtonProps) => {
   const [subscribeProfile, { loading: subscribeLoading }] = useSubscribeToProfileMutation();
   const [unsubscribeProfile, { loading: unsubscribeLoading }] = useUnsubscribeFromProfileMutation();
   const router = useRouter();
@@ -40,7 +40,7 @@ export const SubscribeButton = ({ profileId, isSubscriber }: SubscribeButtonProp
   }
 
   return (
-    <button onClick={handleClick} className="w-[35px] h-[35px]">
+    <button onClick={handleClick} className={`flex-shrink-0 ${small === false ? 'h-9 w-9' : 'h-5 w-5'}`}>
       <SubscribeBell isSubscriber={isSubscriber} />
     </button>
   );
