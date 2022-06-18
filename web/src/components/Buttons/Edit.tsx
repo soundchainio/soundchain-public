@@ -8,7 +8,7 @@ const editClasses =
 export const Edit = ({ className, type = 'button', children, ...rest }: ButtonProps) => {
   return (
     <button className={classNames(editClasses, className)} type={type} {...rest}>
-      <Pencil className="mr-2 h-4 w-4" />
+      <Pencil className='mr-2 h-4 w-4' />
       <span>{children}</span>
     </button>
   );

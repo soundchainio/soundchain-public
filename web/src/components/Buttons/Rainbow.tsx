@@ -1,11 +1,23 @@
 import classNames from 'classnames';
-import { ButtonProps, commonClasses } from 'components/Button';
+import { ButtonVariantProps, commonClasses } from 'components/Button';
+import React from 'react';
 
-export const RainbowButton = ({ className, type = 'button', icon: Icon, children, loading, ...rest }: ButtonProps) => {
+export const RainbowButton = ({
+  className,
+  buttonClassName,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  borderColor,
+  Component,
+  type = 'button',
+  icon: Icon,
+  children,
+  loading,
+  ...rest
+}: ButtonVariantProps) => {
   return (
-    <div className={classNames(className, 'p-0.5 bg-rainbow-gradient')}>
-      <button
-        className={`${commonClasses} sm:px-4 py-3 font-extrabold text-white uppercase bg-opacity-60 bg-black ${
+    <div className={classNames(className, 'bg-rainbow-gradient p-0.5 hover:bg-rainbow-gradient-dark')}>
+      <Component
+        className={`${commonClasses} ${buttonClassName} bg-black bg-opacity-60 py-3 font-extrabold uppercase text-white sm:px-4 ${
           rest.disabled ? 'cursor-not-allowed' : ''
         }`}
         type={type}
@@ -13,13 +25,13 @@ export const RainbowButton = ({ className, type = 'button', icon: Icon, children
       >
         {Icon && <Icon className="mr-1 h-5 w-5" />}
         {loading ? (
-          <div className=" flex justify-center items-center">
-            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white"></div>
+          <div className=" flex items-center justify-center">
+            <div className="h-5 w-5 animate-spin rounded-full border-t-2 border-white"></div>
           </div>
         ) : (
           <span>{children}</span>
         )}
-      </button>
+      </Component>
     </div>
   );
 };

@@ -1,3 +1,4 @@
+import { LoaderAnimation } from 'components/LoaderAnimation';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { HeartFilled } from 'icons/HeartFilled';
 import { Matic } from 'icons/Matic';
@@ -6,10 +7,9 @@ import { Play } from 'icons/Play';
 import { ListingItemWithPrice, Maybe, Track, TrackWithListingItem, useMaticUsdQuery } from 'lib/graphql';
 import dynamic from 'next/dynamic';
 import NextLink from 'next/link';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { currency } from 'utils/format';
 import Asset from './Asset';
-import { LoaderAnimation } from 'components/LoaderAnimation';
 
 const WavesurferComponent = dynamic(() => import('./wavesurfer'), {
   ssr: false,
@@ -67,7 +67,7 @@ export const TrackGrid = ({ track }: TrackProps) => {
     <div className={`${isPlaying ? 'gradient-track-box' : 'black-track-box'} max-w-[250px] rounded-lg hover:gradient-track-box flex flex-col`}>
       <NextLink href={`/tracks/${trackId}`}>
         <a>
-          <div className="h-32 w-full rounded-t-lg overflow-hidden">
+          <div className="h-32 w-full overflow-hidden rounded-t-xl">
             <Asset src={art} />
           </div>
         </a>

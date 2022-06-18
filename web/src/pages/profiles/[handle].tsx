@@ -122,28 +122,28 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
         image={profilePicture}
       />
       <>
-        <div className="h-[125px] relative">
+        <div className="relative h-[125px]">
           <ProfileCover coverPicture={coverPicture || ''} className="h-[125px]" />
           <Avatar
             profile={profile}
             pixels={80}
-            className="absolute left-4 bottom-0 transform translate-y-2/3 border-gray-10 border-4 rounded-full"
+            className="absolute left-4 bottom-0 translate-y-2/3 transform rounded-full border-4 border-gray-10"
           />
         </div>
         <div className="p-4">
           <div className="flex items-center space-x-2">
-            <div className="flex-1 pl-[86px] flex space-x-2">
-              <button className="text-center text-sm cursor-pointer" onClick={onFollowers}>
+            <div className="flex flex-1 space-x-2 pl-[86px]">
+              <button className="cursor-pointer text-center text-sm" onClick={onFollowers}>
                 <p className="font-semibold text-white">
                   <Number value={followerCount} />
                 </p>
-                <p className="text-gray-80 text-xs">Followers</p>
+                <p className="text-xs text-gray-80">Followers</p>
               </button>
-              <button className="text-center text-sm cursor-pointer mr-2" onClick={onFollowing}>
+              <button className="mr-2 cursor-pointer text-center text-sm" onClick={onFollowing}>
                 <p className="font-semibold text-white">
                   <Number value={followingCount} />
                 </p>
-                <p className="text-gray-80 text-xs">Following</p>
+                <p className="text-xs text-gray-80">Following</p>
               </button>
             </div>
             <div className="flex flex-row space-x-2">
@@ -151,16 +151,16 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
               <FollowButton followedHandle={userHandle} followedId={profileId} isFollowed={isFollowed} showIcon />
             </div>
           </div>
-          <div className="flex flex-row mt-4">
+          <div className="mt-4 flex flex-row gap-2">
             <div className="min-w-0">
               <DisplayName name={displayName} verified={verified} teamMember={teamMember} />
-              <p className="text-gray-80 text-sm">@{userHandle}</p>
-              <p className="text-gray-80 py-2 text-sm">{bio}</p>
+              <p className="text-sm text-gray-80">@{userHandle}</p>
+              <p className="py-2 text-sm text-gray-80">{bio}</p>
             </div>
             <MessageButton profileId={profileId} />
           </div>
 
-          <div className="flex space-x-4 mt-2">
+          <div className="mt-2 flex space-x-4">
             {socialMedias.facebook && <SocialMediaLink company="facebook" handle={socialMedias.facebook} />}
             {socialMedias.instagram && <SocialMediaLink company="instagram" handle={socialMedias.instagram} />}
             {socialMedias.twitter && <SocialMediaLink company="twitter" handle={socialMedias.twitter} />}
