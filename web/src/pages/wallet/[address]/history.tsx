@@ -7,12 +7,12 @@ import { TopNavBarProps } from 'components/TopNavBar';
 import { TransactionsTab } from 'components/TransactionsTab';
 import { useLayoutContext } from 'hooks/useLayoutContext';
 import { cacheFor } from 'lib/apollo';
-import { UserByWalletDocument } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { ParsedUrlQuery } from 'querystring';
 import React, { useEffect, useState } from 'react';
 import { HistoryTab } from 'types/HistoryTabType';
 import SEO from '../../../components/SEO';
+import { User } from 'lib/graphql';
 
 export interface HistoryPageProps {
   address: string;
@@ -22,20 +22,16 @@ interface HistoryPageParams extends ParsedUrlQuery {
   address: string;
 }
 
+// eslint-disable-next-line require-await
 export const getServerSideProps = protectPage<HistoryPageProps, HistoryPageParams>(async (context, apolloClient) => {
   const address = context.params?.address;
+  const { magicWalletAddress, metaMaskWalletAddressees } = context.user as User;
+  const wallets = [
+    magicWalletAddress,
+    ...(metaMaskWalletAddressees as string[]),
+  ];
 
-  if (!address) {
-    return { notFound: true };
-  }
-
-  const { data } = await apolloClient.query({
-    query: UserByWalletDocument,
-    variables: { walletAddress: address },
-    context,
-  });
-
-  if (!data.getUserByWallet) {
+  if (!address || !wallets.includes(address)) {
     return { notFound: true };
   }
 

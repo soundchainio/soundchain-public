@@ -4,6 +4,7 @@ query Me {
     handle
     email
     magicWalletAddress
+    metaMaskWalletAddressees
     defaultWallet
     isApprovedOnMarketplace
     roles

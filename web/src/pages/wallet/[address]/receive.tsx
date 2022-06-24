@@ -6,7 +6,7 @@ import { useLayoutContext } from 'hooks/useLayoutContext';
 import { Copy2 as Copy } from 'icons/Copy2';
 import { Polygon } from 'icons/Polygon';
 import { cacheFor } from 'lib/apollo';
-import { UserByWalletDocument } from 'lib/graphql';
+import { User } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import QRCode from 'qrcode';
 import { ParsedUrlQuery } from 'querystring';
@@ -21,20 +21,16 @@ interface ReceivePageParams extends ParsedUrlQuery {
   address: string;
 }
 
+// eslint-disable-next-line require-await
 export const getServerSideProps = protectPage<ReceivePageProps, ReceivePageParams>(async (context, apolloClient) => {
   const address = context.params?.address;
+  const { magicWalletAddress, metaMaskWalletAddressees } = context.user as User;
+  const wallets = [
+    magicWalletAddress,
+    ...(metaMaskWalletAddressees as string[]),
+  ];
 
-  if (!address) {
-    return { notFound: true };
-  }
-
-  const { data } = await apolloClient.query({
-    query: UserByWalletDocument,
-    variables: { walletAddress: address },
-    context,
-  });
-
-  if (!data.getUserByWallet) {
+  if (!address || !wallets.includes(address)) {
     return { notFound: true };
   }
 
