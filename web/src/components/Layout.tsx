@@ -22,7 +22,7 @@ const FilterModalMarketplace = dynamic(import('./modals/FilterMarketplaceModal')
 const RemoveListingConfirmationModal = dynamic(import('./RemoveListingConfirmationModal'));
 const TransferConfirmationModal = dynamic(import('./TransferConfirmationModal'));
 const UnderDevelopmentModal = dynamic(import('./UnderDevelopmentModal'));
-
+const NftTransferConfirmationModal = dynamic(import('./modals/NftTransferConfirmationModal'));
 const BottomAudioPlayer = dynamic(import('components/BottomAudioPlayer'));
 const AudioPlayerModal = dynamic(import('components/modals/AudioPlayerModal'));
 const CreateModal = dynamic(import('components/modals/CreateModal'));
@@ -98,6 +98,7 @@ export const Layout = ({ children, className }: LayoutProps) => {
             <BidsHistoryModal />
             <CreateModal />
             <AudioPlayerModal />
+            <NftTransferConfirmationModal/>
           </div>
         </div>
       </div>

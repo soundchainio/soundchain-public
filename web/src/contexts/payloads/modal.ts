@@ -9,6 +9,17 @@ export interface ShowNewPostPayload {
   trackId?: string;
 }
 
+export interface ShowTransferNftConfirmationPayload {
+  show: boolean
+  trackId?: string
+  artworkUrl?: string
+  artist?: string
+  tokenId?: number
+  walletRecipient?: string
+  title?: string
+  refetch?: () => void
+}
+
 export interface ShowCommentModalPayload {
   show: boolean;
 }
@@ -109,4 +120,5 @@ export type ModalPayload =
   | ShowApprove
   | ShowConfirmDeleteNFT
   | ShowMarketplaceFilterPayload
-  | ShowBidsHistory;
+  | ShowBidsHistory
+  | ShowTransferNftConfirmationPayload;

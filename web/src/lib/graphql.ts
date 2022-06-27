@@ -2479,7 +2479,7 @@ export type MeQuery = (
   { __typename?: 'Query' }
   & { me: Maybe<(
     { __typename?: 'User' }
-    & Pick<User, 'id' | 'handle' | 'email' | 'magicWalletAddress' | 'defaultWallet' | 'isApprovedOnMarketplace' | 'roles' | 'otpSecret'>
+    & Pick<User, 'id' | 'handle' | 'email' | 'magicWalletAddress' | 'metaMaskWalletAddressees' | 'defaultWallet' | 'isApprovedOnMarketplace' | 'roles' | 'otpSecret'>
     & { profile: (
       { __typename?: 'Profile' }
       & ProfileComponentFieldsFragment
@@ -5352,6 +5352,7 @@ export const MeDocument = gql`
     handle
     email
     magicWalletAddress
+    metaMaskWalletAddressees
     defaultWallet
     isApprovedOnMarketplace
     roles

@@ -19,8 +19,9 @@ import {
   ShowRemoveListing,
   ShowTransferConfirmationPayload,
   ShowUnderDevelopmentPayload,
+  ShowTransferNftConfirmationPayload
 } from 'contexts/payloads/modal';
-import { ReactionType } from 'lib/graphql';
+import { ReactionType, TracksQuery  } from 'lib/graphql';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 import { SaleType } from 'types/SaleType';
 import { GenreLabel } from 'utils/Genres';
@@ -62,6 +63,9 @@ export interface ModalState {
   genres?: GenreLabel[];
   filterSaleType?: SaleTypeLabel;
   auctionId?: string;
+  showTransferNftConfirmation: boolean
+  track?: TracksQuery['tracks']
+  refetch?: () => void
 }
 
 export const initialModalState = {
@@ -97,6 +101,7 @@ export const initialModalState = {
   genres: undefined,
   filterSaleType: undefined,
   auctionId: undefined,
+  showTransferNftConfirmation: false
 };
 
 export const modalReducer = (state: ModalState, action: Action) => {
@@ -227,6 +232,19 @@ export const modalReducer = (state: ModalState, action: Action) => {
         ...state,
         showBidsHistory: (action.payload as ShowBidsHistory).show,
         auctionId: (action.payload as ShowBidsHistory).auctionId,
+      };
+    case ModalActionTypes.SHOW_TRANSFER_NFT_CONFIRMATION:
+      const payload =  (action.payload as ShowTransferNftConfirmationPayload)
+      return {
+        ...state,
+        showTransferNftConfirmation: payload.show,
+        trackId: payload.trackId,
+        walletRecipient: (action.payload as ShowTransferNftConfirmationPayload).walletRecipient,
+        artworkUrl: payload.artworkUrl,
+        tokenId: payload.tokenId,
+        artist: payload.artist,
+        title: payload.title,
+        refetch: payload.refetch
       };
     default:
       return state;
