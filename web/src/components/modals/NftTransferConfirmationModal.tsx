@@ -3,21 +3,21 @@ import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import useBlockchainV2 from 'hooks/useBlockchainV2';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
+import Image from 'next/image';
 import { useRouter } from 'next/router';
-import React, { useEffect, useState } from 'react';
-import Asset from '../Asset';
+import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import { ShowTransferNftConfirmationPayload } from '../../contexts/payloads/modal';
-import { Matic } from '../Matic';
-import { Label } from '../Label';
-import { WalletSelected } from '../WalletSelected';
+import { useMaxGasFee } from '../../hooks/useMaxGasFee';
 import { DefaultWallet } from '../../lib/graphql';
+import Asset from '../Asset';
+import { Button } from '../Button';
 import { ConnectedNetwork } from '../ConnectedNetwork';
 import { CopyWalletAddress } from '../CopyWalletAddress';
+import { Label } from '../Label';
+import { Matic } from '../Matic';
 import MaxGasFee from '../MaxGasFee';
-import { useMaxGasFee } from '../../hooks/useMaxGasFee';
-import { Button } from '../Button';
-import { toast } from 'react-toastify';
-import Image from 'next/image';
+import { WalletSelected } from '../WalletSelected';
 
 export const NftTransferConfirmationModal = () => {
   const modalState = useModalState();
@@ -66,11 +66,6 @@ export const NftTransferConfirmationModal = () => {
   };
 
   const onTransfer = () => {
-    console.log({
-      tokenId,
-      walletRecipient,
-      account
-    })
     if (!tokenId || !walletRecipient || !account) return;
 
     setLoading(true)
