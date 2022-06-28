@@ -136,4 +136,7 @@ export const config = {
   magicLink: {
     secretKey: MAGIC_PRIVATE_KEY,
   },
+  env: {
+    isProduction: process.env.NODE_ENV === 'production'
+  }
 };
