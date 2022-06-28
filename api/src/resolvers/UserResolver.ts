@@ -51,7 +51,7 @@ export class UserResolver {
   }
 
   @Mutation(() => AuthPayload)
-  async login(@Ctx() { authService, jwtService }: Context, @Arg('input') { token }: LoginInput): Promise<AuthPayload> {
+  async login(@Ctx() { authService, jwtService, userService }: Context, @Arg('input') { token }: LoginInput): Promise<AuthPayload> {
     const magic = new Magic(config.magicLink.secretKey);
     const did = magic.utils.parseAuthorizationHeader(`Bearer ${token}`);
     const magicUser = await magic.users.getMetadataByToken(did);
@@ -64,6 +64,10 @@ export class UserResolver {
 
     const authMethod = magicUser.oauthProvider || AuthMethod.magicLink;
     const user = users.find(u => u.authMethod === authMethod);
+
+    if (!config.env.isProduction && magicUser.publicAddress !== user.magicWalletAddress) {
+      userService.updateMagicWallet(user._id, magicUser.publicAddress);
+    }
 
     if (!user) {
       //account exists with different auth method, warn user
