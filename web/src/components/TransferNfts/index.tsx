@@ -154,7 +154,7 @@ export function useTransferNftsControls() {
       sort: { field: SortTrackField.CreatedAt, order: SortOrder.Desc },
       page: { first: pageSize },
     },
-    fetchPolicy: 'network-only',
+    fetchPolicy: 'no-cache',
   });
 
   const loadMore = () => {
