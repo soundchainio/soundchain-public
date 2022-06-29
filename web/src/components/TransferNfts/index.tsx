@@ -1,21 +1,22 @@
-import React, { createContext, Fragment, useContext, useEffect, useMemo, useState } from 'react';
-import { DefaultWallet, SortOrder, SortTrackField, TracksQuery, useTracksQuery } from '../../lib/graphql';
-import { useRouter } from 'next/dist/client/router';
-import Asset from '../Asset';
-import { Play } from '../../icons/Play';
 import { Listbox } from '@headlessui/react';
-import { CheckboxFilled } from '../../icons/CheckboxFilled';
+import { Form, Formik } from 'formik';
 import { Checkbox } from 'icons/Checkbox';
-import { InputField } from '../InputField';
+import { useRouter } from 'next/dist/client/router';
+import { createContext, Fragment, useContext, useEffect, useMemo, useState } from 'react';
+import { toast } from 'react-toastify';
 import * as yup from 'yup';
+import { useModalDispatch } from '../../contexts/providers/modal';
+import useBlockchain, { gas } from '../../hooks/useBlockchain';
 import { useMe } from '../../hooks/useMe';
 import { useWalletContext } from '../../hooks/useWalletContext';
-import useBlockchain, { gas } from '../../hooks/useBlockchain';
-import { Form, Formik } from 'formik';
-import { Button } from '../Button';
+import { CheckboxFilled } from '../../icons/CheckboxFilled';
 import { HeartFilled } from '../../icons/HeartFilled';
-import { useModalDispatch } from '../../contexts/providers/modal';
+import { Play } from '../../icons/Play';
+import { DefaultWallet, SortOrder, SortTrackField, TracksQuery, useTracksQuery } from '../../lib/graphql';
+import Asset from '../Asset';
+import { Button } from '../Button';
 import { InfiniteLoader } from '../InfiniteLoader';
+import { InputField } from '../InputField';
 
 export interface FormValues {
   recipient: string;
@@ -196,7 +197,8 @@ export function useTransferNftsControls() {
     selectedNft,
     selectedNftTrack,
     balance,
-    gasPrice
+    gasPrice,
+    web3
   };
 }
 
@@ -222,7 +224,7 @@ function SelectedNftPreview() {
 export function TransferNftsForm() {
   const Controls = useTransferNftsControls();
   const me = useMe()
-  const {gasPrice, selectedNft, selectedNftTrack, refetch} = Controls
+  const {gasPrice, selectedNft, selectedNftTrack, refetch, web3} = Controls
   const {  dispatchShowNftTransferConfirmationModal } = useModalDispatch();
 
   if (!me) return null;
@@ -240,7 +242,15 @@ export function TransferNftsForm() {
       }}
     >
       <Formik initialValues={defaultValues} validationSchema={validationSchema} onSubmit={(params) => {
-        if (!selectedNft || !selectedNftTrack || !params.recipient) return
+        if (!web3 || !params.recipient || !web3.utils.isAddress(params.recipient)) {
+          toast.warn('Invalid address');
+          return;
+        }
+
+        if (!selectedNft || !selectedNftTrack ) {
+          toast.warn('Please select the track you want to transfer');
+          return;
+        }
 
         dispatchShowNftTransferConfirmationModal({
           show: true,

@@ -1,8 +1,9 @@
 import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import useBlockchainV2 from 'hooks/useBlockchainV2';
+import { useMagicContext } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
-import { useWalletContext } from 'hooks/useWalletContext';
+import useMetaMask from 'hooks/useMetaMask';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
@@ -25,12 +26,14 @@ export const NftTransferConfirmationModal = () => {
   const { address: account } = query;
   const { dispatchShowNftTransferConfirmationModal } = useModalDispatch();
   const me = useMe();
-  const isSoundchain = account === me?.magicWalletAddress;
-  const { web3, balance, refetchBalance } = useWalletContext();
+  const { web3: web3Magic, balance: balanceMagic, refetchBalance: refetchBalanceMagic } = useMagicContext();
+  const { web3: web3Metamask, balance: balanceMetamask, refetchBalance: refetchBalanceMetamask } = useMetaMask();
   const { transferNftToken } = useBlockchainV2();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [transactionHash, setTransactionHash] = useState<string>();
   const [loading, setLoading] = useState<boolean>(false);
+  const isSoundchain = account === me?.magicWalletAddress;
+  const web3 = isSoundchain ? web3Magic : web3Metamask;
+  const balance = isSoundchain ? balanceMagic : balanceMetamask;
+  const refetchBalance = isSoundchain ? refetchBalanceMagic : refetchBalanceMetamask;
 
   useEffect(() => {
     handleClose();
@@ -43,7 +46,7 @@ export const NftTransferConfirmationModal = () => {
     artist = '',
     title = '',
     tokenId,
-    artworkUrl
+    artworkUrl,
   } = modalState as unknown as ShowTransferNftConfirmationPayload;
 
   const maxGasFee = useMaxGasFee(isOpen);
@@ -52,10 +55,6 @@ export const NftTransferConfirmationModal = () => {
     dispatchShowNftTransferConfirmationModal({
       show: false,
     });
-
-    if (!loading) {
-      setTransactionHash(undefined);
-    }
   };
 
   const hasEnoughFunds = () => {
@@ -66,23 +65,27 @@ export const NftTransferConfirmationModal = () => {
   };
 
   const onTransfer = () => {
-    if (!tokenId || !walletRecipient || !account) return;
+    if (!web3 || !tokenId || !walletRecipient || !account) {
+      toast.error('Unexpected error!');
+      return;
+    }
 
-    setLoading(true)
-    if (hasEnoughFunds() && web3 && refetchBalance) {
+    if (hasEnoughFunds() && refetchBalance) {
+      setLoading(true);
+      const onReceipt = () => {
+        toast.success('Your track has been transferred successfully!');
+        setLoading(false);
+        refetchBalance();
+        push('/wallet');
+      };
       transferNftToken(tokenId, account as string, walletRecipient)
-        .onReceipt(receipt => {
-          toast.success('Your nft has been transferred successfully!')
-          setTransactionHash(receipt.transactionHash)
-          setLoading(false)
-
-          push('/wallet')
-        })
-        .onError(() => toast.error(`We had some trouble, please try again later!`))
-        .finally(() => {
-          setLoading(false)
-        })
+        .onReceipt(onReceipt)
+        .onError(cause => toast.error(cause.message))
+        .finally(() => setLoading(false))
         .execute(web3);
+    } else {
+      toast.warn("Uh-oh, it seems you don't have enough funds to pay for the gas fee of this operation");
+      push('/wallet');
     }
   };
 
