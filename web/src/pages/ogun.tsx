@@ -99,8 +99,12 @@ export default function OgunPage() {
             Giving the power <span className="green-blue-gradient-text-break">back to the artists</span>
           </h2>
           <p className="text-xl text-center py-14">
-            Our native ERC-20 token that lets our users take <br className="hidden md:block" /> part in shaping the
-            platform&#39;s future.
+            Our native ERC-20 token that lets our users take <br className="hidden md:block" />
+            part in shaping the platform&#39;s  future. <br className="hidden md:block" />
+            We’re working on some exciting features to launch  alongside the token.<br className="hidden md:block" />
+            We expect to launch these new features and OGUN  the end of July.<br className="hidden md:block" />
+            Look out for updates on progress and launch dates these coming weeks.<br className="hidden md:block" />
+            Thank you to the entire SoundChain family for your continued support and patience.
           </p>
           {account ? (
             <span className="font-bold w-full flex flex-col max-w-md text-xl">
