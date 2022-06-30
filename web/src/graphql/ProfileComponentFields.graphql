@@ -21,6 +21,7 @@ fragment ProfileComponentFields on Profile {
   unreadMessageCount
   verified
   teamMember
+  magicWalletAddress
   createdAt
   updatedAt
 }

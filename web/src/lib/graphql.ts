@@ -1053,6 +1053,7 @@ export type Profile = {
   unreadNotificationCount: Scalars['Float'];
   unreadMessageCount: Scalars['Float'];
   verified: Maybe<Scalars['Boolean']>;
+  magicWalletAddress: Maybe<Scalars['String']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   userHandle: Scalars['String'];
@@ -2813,7 +2814,7 @@ export type ProfileByHandleQuery = (
 
 export type ProfileComponentFieldsFragment = (
   { __typename?: 'Profile' }
-  & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'favoriteGenres' | 'musicianTypes' | 'bio' | 'followerCount' | 'followingCount' | 'userHandle' | 'isFollowed' | 'isSubscriber' | 'unreadNotificationCount' | 'unreadMessageCount' | 'verified' | 'teamMember' | 'createdAt' | 'updatedAt'>
+  & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'favoriteGenres' | 'musicianTypes' | 'bio' | 'followerCount' | 'followingCount' | 'userHandle' | 'isFollowed' | 'isSubscriber' | 'unreadNotificationCount' | 'unreadMessageCount' | 'verified' | 'teamMember' | 'magicWalletAddress' | 'createdAt' | 'updatedAt'>
   & { socialMedias: (
     { __typename?: 'SocialMedias' }
     & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
@@ -3804,6 +3805,7 @@ export const ProfileComponentFieldsFragmentDoc = gql`
   unreadMessageCount
   verified
   teamMember
+  magicWalletAddress
   createdAt
   updatedAt
 }
