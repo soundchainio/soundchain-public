@@ -17,7 +17,6 @@ import soundchainContract from '../contract/Soundchain721.sol/Soundchain721.json
 const nftAddress = config.contractAddress as string;
 const marketplaceAddress = config.marketplaceAddress as string;
 const auctionAddress = config.auctionAddress as string;
-export const gas = 1200000;
 const fallbackGasPrice = '300000000000';
 
 const auctionContract = (web3: Web3) =>
@@ -46,12 +45,13 @@ class BlockchainFunction<Type> {
     this.params = params;
   }
 
-  protected async _execute(lambda: (gasPrice: string) => PromiEvent<TransactionReceipt>) {
+  protected async _execute(lambda: (gasPrice: string | number) => PromiEvent<TransactionReceipt>) {
     const { me } = this;
     if ((this.web3?.currentProvider as SDKBase['rpcProvider']).isMagic && !(await magic.user.isLoggedIn()) && me) {
       await magic.auth.loginWithMagicLink({ email: me.email });
     }
-    const gasPrice = (await this.web3?.eth.getGasPrice()) ?? fallbackGasPrice;
+    const gasPriceString = await this.web3?.eth.getGasPrice();
+    const gasPrice = Math.floor(Number(gasPriceString) * 1.5) ?? fallbackGasPrice;
     lambda(gasPrice)
       .on('receipt', receipt => {
         this.receipt = receipt;
@@ -95,9 +95,10 @@ class PlaceBid extends BlockchainFunction<PlaceBidParams> {
     const { from, value, tokenId } = this.params;
     this.web3 = web3;
 
-    await this._execute(gasPrice =>
-      auctionContract(web3).methods.placeBid(nftAddress, tokenId).send({ from, gas, value, gasPrice }),
-    );
+    const transactionObject = auctionContract(web3).methods.placeBid(nftAddress, tokenId);
+    const gas = await transactionObject.estimateGas({ from });
+
+    await this._execute(gasPrice => transactionObject.send({ from, gas, value, gasPrice }));
     return this.receipt;
   };
 }
@@ -111,9 +112,10 @@ class BuyItem extends BlockchainFunction<BuyItemParams> {
     const { owner, value, tokenId, from } = this.params;
     this.web3 = web3;
 
-    await this._execute(gasPrice =>
-      marketplaceContract(web3).methods.buyItem(nftAddress, tokenId, owner).send({ from, gas, value, gasPrice }),
-    );
+    const transactionObject = marketplaceContract(web3).methods.buyItem(nftAddress, tokenId, owner);
+    const gas = await transactionObject.estimateGas({ from });
+
+    await this._execute(gasPrice => transactionObject.send({ from, gas, value, gasPrice }));
 
     return this.receipt;
   };
@@ -123,9 +125,10 @@ class ApproveMarketplace extends BlockchainFunction<DefaultParam> {
     const { from } = this.params;
     this.web3 = web3;
 
-    await this._execute(gasPrice =>
-      nftContract(web3).methods.setApprovalForAll(marketplaceAddress, true).send({ from, gas, gasPrice }),
-    );
+    const transactionObject = nftContract(web3).methods.setApprovalForAll(marketplaceAddress, true);
+    const gas = await transactionObject.estimateGas({ from });
+
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }));
 
     return this.receipt;
   };
@@ -135,9 +138,10 @@ class ApproveAuction extends BlockchainFunction<DefaultParam> {
     const { from } = this.params;
     this.web3 = web3;
 
-    await this._execute(gasPrice =>
-      nftContract(web3).methods.setApprovalForAll(auctionAddress, true).send({ from, gas, gasPrice }),
-    );
+    const transactionObject = nftContract(web3).methods.setApprovalForAll(auctionAddress, true);
+    const gas = await transactionObject.estimateGas({ from });
+
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }));
 
     return this.receipt;
   };
@@ -150,7 +154,10 @@ class BurnNft extends BlockchainFunction<TokenParams> {
     const { from, tokenId } = this.params;
     this.web3 = web3;
 
-    await this._execute(gasPrice => nftContract(web3).methods.burn(tokenId).send({ from, gas, gasPrice }));
+    const transactionObject = nftContract(web3).methods.burn(tokenId);
+    const gas = await transactionObject.estimateGas({ from });
+
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }));
 
     return this.receipt;
   };
@@ -160,9 +167,10 @@ class CancelAuction extends BlockchainFunction<TokenParams> {
     const { from, tokenId } = this.params;
     this.web3 = web3;
 
-    await this._execute(gasPrice =>
-      auctionContract(web3).methods.cancelAuction(nftAddress, tokenId).send({ from, gas, gasPrice }),
-    );
+    const transactionObject = auctionContract(web3).methods.cancelAuction(nftAddress, tokenId);
+    const gas = await transactionObject.estimateGas({ from });
+
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }));
 
     return this.receipt;
   };
@@ -172,9 +180,10 @@ class CancelListing extends BlockchainFunction<TokenParams> {
     const { from, tokenId } = this.params;
     this.web3 = web3;
 
-    await this._execute(gasPrice =>
-      marketplaceContract(web3).methods.cancelListing(nftAddress, tokenId).send({ from, gas, gasPrice }),
-    );
+    const transactionObject = marketplaceContract(web3).methods.cancelListing(nftAddress, tokenId);
+    const gas = await transactionObject.estimateGas({ from });
+
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }));
 
     return this.receipt;
   };
@@ -190,11 +199,16 @@ class CreateAuction extends BlockchainFunction<CreateAuctionParams> {
     const totalPrice = Web3.utils.toBN(reservePrice).muln(1 + config.soundchainFee);
     this.web3 = web3;
 
-    await this._execute(gasPrice =>
-      auctionContract(web3)
-        .methods.createAuction(nftAddress, tokenId, totalPrice, startTime, endTime)
-        .send({ from, gas, gasPrice }),
+    const transactionObject = auctionContract(web3).methods.createAuction(
+      nftAddress,
+      tokenId,
+      totalPrice,
+      startTime,
+      endTime,
     );
+    const gas = await transactionObject.estimateGas({ from });
+
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }));
 
     return this.receipt;
   };
@@ -205,11 +219,16 @@ class UpdateAuction extends BlockchainFunction<CreateAuctionParams> {
     const totalPrice = Web3.utils.toBN(reservePrice).muln(1 + config.soundchainFee);
     this.web3 = web3;
 
-    await this._execute(gasPrice =>
-      auctionContract(web3)
-        .methods.updateAuction(nftAddress, tokenId, totalPrice, startTime, endTime)
-        .send({ from, gas, gasPrice }),
+    const transactionObject = auctionContract(web3).methods.updateAuction(
+      nftAddress,
+      tokenId,
+      totalPrice,
+      startTime,
+      endTime,
     );
+    const gas = await transactionObject.estimateGas({ from });
+
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }));
 
     return this.receipt;
   };
@@ -218,6 +237,9 @@ class ResultAuction extends BlockchainFunction<TokenParams> {
   execute = async (web3: Web3) => {
     const { from, tokenId } = this.params;
     this.web3 = web3;
+
+    const transactionObject = auctionContract(web3).methods.resultAuction(nftAddress, tokenId);
+    const gas = await transactionObject.estimateGas({ from });
 
     await this._execute(gasPrice =>
       auctionContract(web3).methods.resultAuction(nftAddress, tokenId).send({ from, gas, gasPrice }),
@@ -236,11 +258,10 @@ class ListItem extends BlockchainFunction<ListItemParams> {
     const totalPrice = Web3.utils.toBN(price).muln(1 + config.soundchainFee);
     this.web3 = web3;
 
-    await this._execute(gasPrice =>
-      marketplaceContract(web3)
-        .methods.listItem(nftAddress, tokenId, 1, totalPrice, startTime)
-        .send({ from, gas, gasPrice }),
-    );
+    const transactionObject = marketplaceContract(web3).methods.listItem(nftAddress, tokenId, 1, totalPrice, startTime);
+    const gas = await transactionObject.estimateGas({ from });
+
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }));
 
     return this.receipt;
   };
@@ -251,11 +272,15 @@ class UpdateListing extends BlockchainFunction<ListItemParams> {
     const totalPrice = Web3.utils.toBN(price).muln(1 + config.soundchainFee);
     this.web3 = web3;
 
-    await this._execute(gasPrice =>
-      marketplaceContract(web3)
-        .methods.updateListing(nftAddress, tokenId, totalPrice, startTime)
-        .send({ from, gas, gasPrice }),
+    const transactionObject = marketplaceContract(web3).methods.updateListing(
+      nftAddress,
+      tokenId,
+      totalPrice,
+      startTime,
     );
+    const gas = await transactionObject.estimateGas({ from });
+
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }));
 
     return this.receipt;
   };
@@ -269,10 +294,10 @@ class MintNft extends BlockchainFunction<MintNftParams> {
   execute = async (web3: Web3) => {
     const { from, uri, toAddress, royaltyPercentage } = this.params;
     this.web3 = web3;
+    const transactionObject = nftContract(web3).methods.safeMint(toAddress, uri, royaltyPercentage);
+    const gas = await transactionObject.estimateGas({ from });
 
-    await this._execute(gasPrice =>
-      nftContract(web3).methods.safeMint(toAddress, uri, royaltyPercentage).send({ from, gas, gasPrice }),
-    );
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }));
 
     return this.receipt;
   };
@@ -286,6 +311,7 @@ class SendMatic extends BlockchainFunction<SendMaticParams> {
     const { from, to, amount } = this.params;
     const amountWei = web3.utils.toWei(amount);
     this.web3 = web3;
+    const gas = 1200000;
 
     await this._execute(gasPrice =>
       web3.eth.sendTransaction({
@@ -308,10 +334,12 @@ class TransferNftToken extends BlockchainFunction<TransferNftTokenParams> {
   execute = async (web3: Web3) => {
     const { from, to, tokenId } = this.params;
     this.web3 = web3;
+    const transactionObject = nftContract(web3).methods.transferFrom(from, to, tokenId);
+    const gas = await transactionObject.estimateGas({ from });
 
-    await this._execute(gasPrice =>
-      nftContract(web3).methods.transferFrom(from, to, tokenId).send({ from, gas, gasPrice }),
-    );
+    await this._execute(gasPrice => {
+      return transactionObject.send({ from, gas, gasPrice });
+    });
 
     return this.receipt;
   };
