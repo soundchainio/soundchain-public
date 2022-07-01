@@ -4,14 +4,13 @@ import Clip from '../icons/Clip';
 import { toast } from 'react-toastify';
 
 interface WalletAddressButtonProps {
-  profileId: string;
   address: string | null;
 }
 
-export const WalletAddressButton = ({ profileId, address }: WalletAddressButtonProps) => {
+export const WalletAddressButton = ({ address }: WalletAddressButtonProps) => {
   const me = useMe();
 
-  if (!me || !address || me?.profile.id === profileId) {
+  if (!me || !address) {
     return null;
   }
 

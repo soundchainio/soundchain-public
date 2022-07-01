@@ -2,7 +2,7 @@ import { Listbox } from '@headlessui/react';
 import { Form, Formik } from 'formik';
 import { Checkbox } from 'icons/Checkbox';
 import { useRouter } from 'next/dist/client/router';
-import { createContext, Fragment, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, Fragment, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import * as yup from 'yup';
 import { useModalDispatch } from '../../contexts/providers/modal';
@@ -17,6 +17,10 @@ import Asset from '../Asset';
 import { Button } from '../Button';
 import { InfiniteLoader } from '../InfiniteLoader';
 import { InputField } from '../InputField';
+import { Badge } from '../Badge';
+import { useLayoutContext } from '../../hooks/useLayoutContext';
+import { BackButton } from '../Buttons/BackButton';
+import { RefreshButton } from '../Buttons/RefreshButton';
 
 export interface FormValues {
   recipient: string;
@@ -39,18 +43,18 @@ interface TransferNftContextData {
   setSelectedWallet: (wallet: DefaultWallet) => void;
   tracks?: TracksQuery['tracks'];
   selectedNftTrack?: {
-    id: string
-    title: string
-    artworkUrl: string
-    tokenId?: number
-    artist: string
-  }
+    id: string;
+    title: string;
+    artworkUrl: string;
+    tokenId?: number;
+    artist: string;
+  };
   loadMore: () => void;
   refetch: () => void;
   setSelectedNft: (newSelectedNft: string) => void;
   selectedNft: string;
-  balance?: string
-  gasPrice?: string
+  balance?: string;
+  gasPrice?: string;
 }
 
 const TransferNftContext = createContext<TransferNftContextData>({} as TransferNftContextData);
@@ -79,7 +83,7 @@ function NftItemCheckbox({ active }: { active: boolean }) {
 
 function SelectNFTsField() {
   const { tracks, selectedNft, setSelectedNft, loadMore } = useTransferNftCtx();
-  const pageInfo = tracks?.pageInfo
+  const pageInfo = tracks?.pageInfo;
 
   return (
     <div className="flex flex-col">
@@ -87,7 +91,7 @@ function SelectNFTsField() {
       <Listbox value={selectedNft} onChange={setSelectedNft}>
         <Listbox.Options static className="space-y-1 text-white">
           {tracks?.nodes.map((track, index) => (
-            <Listbox.Option key={track.id} value={track.id} as={Fragment}>
+            <Listbox.Option key={track.id} value={track.id} as={Fragment} disabled={!track.nftData?.tokenId}>
               {({ selected }) => (
                 <li
                   className={`flex cursor-pointer items-center rounded-lg px-2  py-2 ${selected ? 'bg-gray-30' : ''}`}
@@ -98,7 +102,7 @@ function SelectNFTsField() {
                   </div>
                   <div className="flex flex-col pl-3">
                     <div className="max-w-[170px] sm:max-w-[250px]">
-                      <h3 className={'font-semibold truncate overflow-ellipsis'}>{track.title}</h3>
+                      <h3 className={'truncate overflow-ellipsis font-semibold'}>{track.title}</h3>
                     </div>
 
                     <div className="flex gap-3">
@@ -116,7 +120,11 @@ function SelectNFTsField() {
 
                   <div className="flex-1" />
 
-                  <NftItemCheckbox active={selected} />
+                  {track.nftData?.tokenId ? (
+                    <NftItemCheckbox active={selected} />
+                  ) : (
+                    <Badge label="Pending"/>
+                  )}
                 </li>
               )}
             </Listbox.Option>
@@ -147,16 +155,30 @@ export function useTransferNftsControls() {
     gasCheck();
   }, [web3, getCurrentGasPrice]);
 
-
   const pageSize = 10;
   const { data, loading, fetchMore, refetch } = useTracksQuery({
     variables: {
-      filter: { nftData: { owner: address as string } },
+      filter: {
+        nftData: {
+          owner: address as string
+        },
+      },
       sort: { field: SortTrackField.CreatedAt, order: SortOrder.Desc },
       page: { first: pageSize },
     },
-    fetchPolicy: 'no-cache',
   });
+
+  const { setTopNavBarProps } = useLayoutContext();
+
+  useEffect(() => {
+    setTopNavBarProps({
+      leftButton: <BackButton />,
+      title: 'Transfer NFT',
+      rightButton: (
+        <RefreshButton onClick={() => refetch()} label="Refresh" className="text-center" refreshing={loading} />
+      ),
+    })
+  }, [setTopNavBarProps, loading, refetch])
 
   const loadMore = () => {
     fetchMore({
@@ -170,9 +192,9 @@ export function useTransferNftsControls() {
   };
 
   const selectedNftTrack = useMemo(() => {
-    if (!selectedNft) return undefined
+    if (!selectedNft) return undefined;
 
-    const track = data?.tracks?.nodes.find(track => track.id === selectedNft)
+    const track = data?.tracks?.nodes.find(track => track.id === selectedNft);
 
     if (track) {
       return {
@@ -180,11 +202,10 @@ export function useTransferNftsControls() {
         artworkUrl: track.artworkUrl,
         artist: track.artist,
         tokenId: track.nftData?.tokenId,
-        title: track.title
-      } as TransferNftContextData['selectedNftTrack']
+        title: track.title,
+      } as TransferNftContextData['selectedNftTrack'];
     }
-  }, [selectedNft, data])
-
+  }, [selectedNft, data]);
 
   return {
     selectedWallet,
@@ -198,12 +219,12 @@ export function useTransferNftsControls() {
     selectedNftTrack,
     balance,
     gasPrice,
-    web3
+    web3,
   };
 }
 
 function SelectedNftPreview() {
-  const {selectedNftTrack} = useTransferNftCtx()
+  const { selectedNftTrack } = useTransferNftCtx();
   return (
     <div className={'flex items-center space-x-2'}>
       {selectedNftTrack && (
@@ -211,21 +232,21 @@ function SelectedNftPreview() {
           <div className="relative flex h-10 w-10 flex-shrink-0 items-center bg-gray-80">
             <Asset src={selectedNftTrack.artworkUrl} sizes="5rem" />
           </div>
-          <div className="max-w-[110px] sm:max-w-[250px] flex flex-col">
-            <h3 className={'font-semibold text-white truncate overflow-ellipsis text-xs'}>{selectedNftTrack.title}</h3>
+          <div className="flex max-w-[110px] flex-col sm:max-w-[250px]">
+            <h3 className={'truncate overflow-ellipsis text-xs font-semibold text-white'}>{selectedNftTrack.title}</h3>
             <span className={'text-xs text-gray-80'}>{selectedNftTrack.artist}</span>
           </div>
         </>
       )}
     </div>
-  )
+  );
 }
 
 export function TransferNftsForm() {
   const Controls = useTransferNftsControls();
-  const me = useMe()
-  const {gasPrice, selectedNft, selectedNftTrack, refetch, web3} = Controls
-  const {  dispatchShowNftTransferConfirmationModal } = useModalDispatch();
+  const me = useMe();
+  const { gasPrice, selectedNft, selectedNftTrack, refetch, web3 } = Controls;
+  const { dispatchShowNftTransferConfirmationModal } = useModalDispatch();
 
   if (!me) return null;
 
@@ -241,40 +262,40 @@ export function TransferNftsForm() {
         ...Controls,
       }}
     >
-      <Formik initialValues={defaultValues} validationSchema={validationSchema} onSubmit={(params) => {
-        if (!web3 || !params.recipient || !web3.utils.isAddress(params.recipient)) {
-          toast.warn('Invalid address');
-          return;
-        }
+      <Formik
+        initialValues={defaultValues}
+        validationSchema={validationSchema}
+        onSubmit={params => {
+          if (!web3 || !params.recipient || !web3.utils.isAddress(params.recipient.trim())) {
+            toast.warn('Invalid address');
+            return;
+          }
 
-        if (!selectedNft || !selectedNftTrack ) {
-          toast.warn('Please select the track you want to transfer');
-          return;
-        }
+          if (!selectedNft || !selectedNftTrack) {
+            toast.warn('Please select the track you want to transfer');
+            return;
+          }
 
-        dispatchShowNftTransferConfirmationModal({
-          show: true,
-          trackId: selectedNft,
-          walletRecipient: params.recipient,
-          tokenId: selectedNftTrack.tokenId,
-          artworkUrl: selectedNftTrack.artworkUrl,
-          title: selectedNftTrack.title,
-          artist: selectedNftTrack.artist,
-          refetch
-        })
-      }}>
+          dispatchShowNftTransferConfirmationModal({
+            show: true,
+            trackId: selectedNft,
+            walletRecipient: params.recipient.trim(),
+            tokenId: selectedNftTrack.tokenId,
+            artworkUrl: selectedNftTrack.artworkUrl,
+            title: selectedNftTrack.title,
+            artist: selectedNftTrack.artist,
+            refetch,
+          });
+        }}
+      >
         <Form className="container mx-auto flex h-full flex-col gap-3 py-6 px-2 text-gray-80">
           <WalletAddressField />
           <SelectNFTsField />
 
           <div className="fixed bottom-0 left-0 z-20 flex w-full justify-between bg-black p-5">
-            <SelectedNftPreview/>
+            <SelectedNftPreview />
             <div className="w-6/12 md:w-3/12">
-              <Button
-                className="p-1"
-                type="submit"
-                variant="orange"
-              >
+              <Button className="p-1" type="submit" variant="orange">
                 Transfer NFT
               </Button>
             </div>
