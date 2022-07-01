@@ -41,7 +41,9 @@ export class ProfileService extends ModelService<typeof Profile> {
       },
       {
         $replaceRoot: {
-          newRoot: '$profile',
+          newRoot: {
+            $mergeObjects: ['$profile', { magicWalletAddress: '$$ROOT.magicWalletAddress' }],
+          },
         },
       },
     ]);

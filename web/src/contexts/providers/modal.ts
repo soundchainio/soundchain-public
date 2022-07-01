@@ -6,6 +6,7 @@ import { AuthorActionsType } from 'types/AuthorActionsType';
 import { SaleType } from 'types/SaleType';
 import { GenreLabel } from 'utils/Genres';
 import { SaleTypeLabel } from 'utils/SaleTypeLabel';
+import { ShowTransferNftConfirmationPayload } from '../payloads/modal';
 import { store } from '..';
 
 export const useModalState = (): ModalState => {
@@ -66,5 +67,28 @@ export const useModalDispatch = () => {
     ) => dispatch({ type: ModalActionTypes.SHOW_FILTER_MARKETPLACE, payload: { show, genres, filterSaleType } }),
     dispatchShowBidsHistory: (show: boolean, auctionId: string) =>
       dispatch({ type: ModalActionTypes.SHOW_BIDS_HISTORY, payload: { show, auctionId } }),
+    dispatchShowNftTransferConfirmationModal: ({
+      show,
+      title,
+      trackId,
+      artist,
+      tokenId,
+      artworkUrl,
+      walletRecipient,
+      refetch
+    }: ShowTransferNftConfirmationPayload) =>
+      dispatch({
+        type: ModalActionTypes.SHOW_TRANSFER_NFT_CONFIRMATION,
+        payload: {
+          show,
+          trackId,
+          tokenId,
+          artist,
+          artworkUrl,
+          walletRecipient,
+          title,
+          refetch
+        },
+      }),
   };
 };

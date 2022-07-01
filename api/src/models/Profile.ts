@@ -60,6 +60,9 @@ export class Profile extends Model {
   @prop({ required: true, default: false })
   verified: boolean;
 
+  @Field({ nullable: true })
+  magicWalletAddress?: string;
+
   @Field(() => Date)
   createdAt: Date;
 

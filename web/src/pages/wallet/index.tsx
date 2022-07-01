@@ -226,8 +226,11 @@ export default function WalletPage() {
                   {isSoundChainSelected && <WalletButton title="Send" icon={ArrowUpRight} href="/wallet/transfer" />}
                 </div>
               </div>
-              <div className="p-3 mt-3">
+              <div className="p-3 mt-3 flex justify-between items-center">
                 <span className="text-gray-80 font-bold">Owned NFT’s</span>
+                <Link href={`/wallet/${getAccount}/transfer`}>
+                  <a className='px-3 py-2 rounded-lg bg-black border border-neutral-500 text-neutral-500 font-semibold'>Transfer NFT’s</a>
+                </Link>
               </div>
               {getAccount && <OwnedNfts refreshing={isRefetchingBalance} owner={getAccount} />}
             </>
