@@ -159,7 +159,7 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
               <p className="text-sm text-gray-80">@{userHandle}</p>
               <p className="py-2 text-sm text-gray-80">{bio}</p>
             </div>
-            <WalletAddressButton profileId={profileId} address={magicWalletAddress}/>
+            <WalletAddressButton address={magicWalletAddress}/>
             <MessageButton profileId={profileId} />
           </div>
 
