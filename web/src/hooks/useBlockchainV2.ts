@@ -7,12 +7,14 @@ import { useCallback } from 'react';
 import { Soundchain721 } from 'types/web3-v1-contracts/Soundchain721';
 import { SoundchainAuction } from 'types/web3-v1-contracts/SoundchainAuction';
 import { SoundchainMarketplace } from 'types/web3-v1-contracts/SoundchainMarketplace';
+import { Soundchain721Editions } from 'types/web3-v2-contracts/Soundchain721Editions';
 import Web3 from 'web3';
 import { PromiEvent, TransactionReceipt } from 'web3-core/types';
 import { AbiItem } from 'web3-utils';
 import soundchainAuction from '../contract/Auction.sol/SoundchainAuction.json';
 import soundchainMarketplace from '../contract/Marketplace.sol/SoundchainMarketplace.json';
 import soundchainContract from '../contract/Soundchain721.sol/Soundchain721.json';
+import soundchainContractEditions from '../contract/Soundchain721Editions.sol/Soundchain721Editions.json';
 
 const nftAddress = config.contractAddress as string;
 const marketplaceAddress = config.marketplaceAddress as string;
@@ -27,6 +29,9 @@ const marketplaceContract = (web3: Web3) =>
 
 const nftContract = (web3: Web3) =>
   new web3.eth.Contract(soundchainContract.abi as AbiItem[], nftAddress) as unknown as Soundchain721;
+
+const nftContractEditions = (web3: Web3) =>
+  new web3.eth.Contract(soundchainContractEditions.abi as AbiItem[], nftAddress) as unknown as Soundchain721Editions;
 
 interface DefaultParam {
   from: string;
@@ -289,12 +294,18 @@ interface MintNftParams extends DefaultParam {
   uri: string;
   toAddress: string;
   royaltyPercentage: number;
+  editionQuantity: number;
 }
 class MintNft extends BlockchainFunction<MintNftParams> {
   execute = async (web3: Web3) => {
-    const { from, uri, toAddress, royaltyPercentage } = this.params;
+    const { from, uri, toAddress, royaltyPercentage, editionQuantity } = this.params;
     this.web3 = web3;
-    const transactionObject = nftContract(web3).methods.safeMint(toAddress, uri, royaltyPercentage);
+    const transactionObject = nftContractEditions(web3).methods.createEditionWithNFTs(
+      editionQuantity,
+      toAddress,
+      uri,
+      royaltyPercentage,
+    );
     const gas = await transactionObject.estimateGas({ from });
 
     await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }));
@@ -420,8 +431,8 @@ const useBlockchainV2 = () => {
     [me],
   );
   const mintNftToken = useCallback(
-    (uri: string, from: string, toAddress: string, royaltyPercentage: number) => {
-      return new MintNft(me, { from, uri, toAddress, royaltyPercentage });
+    (uri: string, from: string, toAddress: string, royaltyPercentage: number, editionQuantity: number) => {
+      return new MintNft(me, { from, uri, toAddress, royaltyPercentage, editionQuantity });
     },
     [me],
   );

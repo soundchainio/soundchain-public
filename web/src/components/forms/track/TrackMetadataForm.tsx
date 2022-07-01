@@ -8,12 +8,13 @@ import { Form, Formik } from 'formik';
 import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Genre } from 'lib/graphql';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { GenreLabel, genres } from 'utils/Genres';
 import * as yup from 'yup';
 import { ArtworkUploader } from './ArtworkUploader';
 
 export interface FormValues {
+  editionQuantity: number;
   title: string;
   description: string;
   album?: string;
@@ -25,6 +26,7 @@ export interface FormValues {
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
+  editionQuantity: yup.number().label('# of Editions').min(1).max(100).required('# of Editions is a required field'),
   title: yup.string().max(100).required('Title is a required field'),
   description: yup.string().max(500).required('Description is a required field'),
   artist: yup.string(),
@@ -51,6 +53,7 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
   const [enoughFunds, setEnoughFunds] = useState<boolean>();
 
   const defaultValues: FormValues = {
+    editionQuantity: initialValues?.editionQuantity || 1,
     title: initialValues?.title || '',
     description: initialValues?.description || '',
     album: initialValues?.album || '',
@@ -92,7 +95,15 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
     >
       {({ setFieldValue, values, errors }) => {
         return (
-          <Form className="flex flex-col gap-4 h-full">
+          <Form className="flex h-full flex-col gap-4">
+            <div className="flex items-center gap-2 px-4">
+              <p className="max-w-5/10 text-xxs font-bold leading-tight text-gray-80">
+                Enter the number of NFT editions to mint. This cannot be changed after minting.
+              </p>
+              <div className="flex w-full flex-col">
+                <InputField name="editionQuantity" type="number" label="# OF EDITIONS" />
+              </div>
+            </div>
             <div className="flex gap-4 px-4">
               <ArtworkUploader
                 name="artworkFile"
@@ -100,7 +111,7 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
                 initialValue={initialValues?.artworkFile}
                 onFileChange={file => setFieldValue('artworkFile', file)}
               />
-              <div className="flex flex-col flex-1 gap-2">
+              <div className="flex flex-1 flex-col gap-2">
                 <InputField name="title" type="text" label="TRACK TITLE" maxLength={100} />
                 <InputField name="album" type="text" label="ALBUM" maxLength={100} />
               </div>
@@ -108,14 +119,14 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
             <div className="px-4">
               <TextareaField rows={3} name="description" label="DESCRIPTION" maxLength={500} />
             </div>
-            <div className="px-4 flex gap-4 w-full">
+            <div className="flex w-full gap-4 px-4">
               <InputField name="releaseYear" type="number" label="RELEASE YEAR" />
               <InputField name="copyright" type="text" label="COPYRIGHT" maxLength={100} />
             </div>
-            <div className="text-gray-80 font-bold px-4">
+            <div className="px-4 font-bold text-gray-80">
               Select Genres {values.genres && `(${values.genres.length} Selected)`}
             </div>
-            <div className="px-4 flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 px-4">
               {genres.map(({ label, key }: GenreLabel) => (
                 <Badge
                   key={key}
@@ -126,9 +137,9 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
               ))}
             </div>
             <div>
-              <div className="bg-gray-20 text-gray-80 flex justify-between p-4 gap-2">
+              <div className="flex justify-between gap-2 bg-gray-20 p-4 text-gray-80">
                 <label htmlFor="royalty">
-                  <div className="text-[11px] uppercase font-bold">Royalty %</div>
+                  <div className="text-[11px] font-bold uppercase">Royalty %</div>
                   <div className="text-[9px]">
                     Setting a royalty % will allow you to earn a cut on all secondary sales.
                   </div>
@@ -140,7 +151,7 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
               <WalletSelector />
             </div>
 
-            <div className="pl-4 pr-4 pb-4 flex items-center mt-4">
+            <div className="mt-4 flex items-center pl-4 pr-4 pb-4">
               <div className="flex-1">
                 {enoughFunds && (
                   <div className="flex gap-2">
@@ -151,7 +162,7 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
                   </div>
                 )}
                 {!enoughFunds && (
-                  <div className="text-white text-right text-sm font-bold">
+                  <div className="text-right text-sm font-bold text-white">
                     {`It seems like you might have not enough funds `}
                     <span className="whitespace-nowrap">:(</span>
                   </div>
