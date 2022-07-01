@@ -1,26 +1,27 @@
 import { Listbox } from '@headlessui/react';
 import { Form, Formik } from 'formik';
+import { useMagicContext } from 'hooks/useMagicContext';
+import { useMetaMask } from 'hooks/useMetaMask';
 import { Checkbox } from 'icons/Checkbox';
 import { useRouter } from 'next/dist/client/router';
-import React, { createContext, Fragment, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, Fragment, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import * as yup from 'yup';
 import { useModalDispatch } from '../../contexts/providers/modal';
 import useBlockchain, { gas } from '../../hooks/useBlockchain';
+import { useLayoutContext } from '../../hooks/useLayoutContext';
 import { useMe } from '../../hooks/useMe';
-import { useWalletContext } from '../../hooks/useWalletContext';
 import { CheckboxFilled } from '../../icons/CheckboxFilled';
 import { HeartFilled } from '../../icons/HeartFilled';
 import { Play } from '../../icons/Play';
 import { DefaultWallet, SortOrder, SortTrackField, TracksQuery, useTracksQuery } from '../../lib/graphql';
 import Asset from '../Asset';
-import { Button } from '../Button';
-import { InfiniteLoader } from '../InfiniteLoader';
-import { InputField } from '../InputField';
 import { Badge } from '../Badge';
-import { useLayoutContext } from '../../hooks/useLayoutContext';
+import { Button } from '../Button';
 import { BackButton } from '../Buttons/BackButton';
 import { RefreshButton } from '../Buttons/RefreshButton';
+import { InfiniteLoader } from '../InfiniteLoader';
+import { InputField } from '../InputField';
 
 export interface FormValues {
   recipient: string;
@@ -142,7 +143,12 @@ export function useTransferNftsControls() {
   const [selectedNft, setSelectedNft] = useState('');
   const router = useRouter();
   const { address } = router.query;
-  const { web3, balance } = useWalletContext();
+  const me = useMe();
+  const { web3: web3Magic, balance: balanceMagic } = useMagicContext();
+  const { web3: web3Metamask, balance: balanceMetamask } = useMetaMask();
+  const isSoundchain = address === me?.magicWalletAddress;
+  const web3 = isSoundchain ? web3Magic : web3Metamask;
+  const balance = isSoundchain ? balanceMagic : balanceMetamask;
   const { getCurrentGasPrice } = useBlockchain();
   const [gasPrice, setGasPrice] = useState<string>('');
 
