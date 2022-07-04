@@ -218,64 +218,67 @@ export const CreateModal = () => {
           },
         });
 
-        const onTransactionHash = async (hash: string) => {
+        const onTransactionHash = async (transactionHash: string) => {
           setMintingState('Creating your track');
-          const { data } = await createTrack({
-            variables: {
-              input: {
-                assetUrl,
-                title,
-                album,
-                artist,
-                artistId,
-                artworkUrl,
-                description,
-                genres,
-                releaseYear,
-                artistProfileId,
-                copyright,
-                nftData: {
-                  transactionHash: hash,
-                  minter: account,
-                  ipfsCid: metadataPinResult?.pinJsonToIPFS.cid,
-                  pendingRequest: PendingRequest.Mint,
-                  owner: account,
-                  pendingTime: new Date().toISOString(),
-                },
-              },
-            },
-            update: (cache, { data: createTrackData }) => {
-              const variables = { filter: { nftData: { owner: account } } };
 
-              const cachedData = cache.readQuery<TracksQuery>({
-                query: TracksDocument,
-                variables,
-              });
-
-              if (!cachedData) {
-                return;
-              }
-
-              cache.writeQuery({
-                query: TracksDocument,
-                variables,
-                overwrite: true,
-                data: {
-                  tracks: {
-                    ...cachedData.tracks,
-                    nodes: [createTrackData?.createTrack.track, ...cachedData.tracks.nodes],
+          for (let index = 0; index < values.editionQuantity; index++) {
+            const { data } = await createTrack({
+              variables: {
+                input: {
+                  assetUrl,
+                  title,
+                  album,
+                  artist,
+                  artistId,
+                  artworkUrl,
+                  description,
+                  genres,
+                  releaseYear,
+                  artistProfileId,
+                  copyright,
+                  nftData: {
+                    transactionHash: transactionHash,
+                    minter: account,
+                    ipfsCid: metadataPinResult?.pinJsonToIPFS.cid,
+                    pendingRequest: PendingRequest.Mint,
+                    owner: account,
+                    pendingTime: new Date().toISOString(),
                   },
                 },
-              });
-            },
-            refetchQueries: [FeedDocument, PostsDocument, ExploreTracksDocument],
-          });
-          const track = data?.createTrack.track;
+              },
+              update: (cache, { data: createTrackData }) => {
+                const variables = { filter: { nftData: { owner: account } } };
 
-          setNewTrack(track);
+                const cachedData = cache.readQuery<TracksQuery>({
+                  query: TracksDocument,
+                  variables,
+                });
+
+                if (!cachedData) {
+                  return;
+                }
+
+                cache.writeQuery({
+                  query: TracksDocument,
+                  variables,
+                  overwrite: true,
+                  data: {
+                    tracks: {
+                      ...cachedData.tracks,
+                      nodes: [createTrackData?.createTrack.track, ...cachedData.tracks.nodes],
+                    },
+                  },
+                });
+              },
+              refetchQueries: [FeedDocument, PostsDocument, ExploreTracksDocument],
+            });
+            const track = data?.createTrack.track;
+
+            setNewTrack(track);
+          }
           dispatchShowCreateModal(true);
           setMintingState(undefined);
-          setTransactionHash(hash);
+          setTransactionHash(transactionHash);
         };
 
         const onError = () => {

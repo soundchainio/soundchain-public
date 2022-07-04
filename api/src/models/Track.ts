@@ -79,6 +79,10 @@ export class Track extends Model {
   playbackCountFormatted: string;
 
   @Field({ nullable: true })
+  @prop({ type: ObjectId })
+  trackEditionId: string;
+
+  @Field({ nullable: true })
   @prop({ default: false })
   deleted?: boolean;
 

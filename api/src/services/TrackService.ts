@@ -81,26 +81,32 @@ export class TrackService extends ModelService<typeof Track> {
     return track;
   }
 
-  async updateTrackByTransactionHash(transactionHash: string, changes: RecursivePartial<Track>): Promise<Track> {
+  async updateTrackByTransactionHash(transactionHash: string, changes: RecursivePartial<Track>): Promise<void> {
     const { nftData: newNftData, ...data } = changes;
 
-    const track = await this.model.findOneAndUpdate(
+    const track = await this.model.updateOne(
       {
         'nftData.transactionHash': transactionHash,
+        'nftData.tokenId': { $exists: false },
       },
-      data,
+      {
+        $set: {
+          ...data,
+          'nftData.tokenId': newNftData.tokenId,
+          'nftData.contract': newNftData.contract,
+          'nftData.pendingRequest': newNftData.pendingRequest,
+        },
+      },
     );
 
-    if (!track) {
+    if (track.nModified === 0) {
       const trackPending = new PendingTrackModel({
         transactionHash,
         tokenId: newNftData.tokenId,
         contract: newNftData.contract,
       });
       await trackPending.save();
-      return;
     }
-    return this.updateNftData(track, newNftData);
   }
 
   async updateTrack(id: string, changes: RecursivePartial<Track>): Promise<Track> {
@@ -114,12 +120,16 @@ export class TrackService extends ModelService<typeof Track> {
     return this.updateNftData(track, newNftData);
   }
 
-  private updateNftData(track: DocumentType<Track>, newNftData?: Partial<NFTData>) {
+  async updateTracksByTransactionHash(transactionHash: string, changes: RecursivePartial<Track>): Promise<number> {
+    return await this.model.updateMany({ 'nftData.transactionHash': transactionHash }, { ...changes });
+  }
+
+  private async updateNftData(track: DocumentType<Track>, newNftData?: Partial<NFTData>) {
     if (newNftData) {
       const trackAsData = track.toObject();
       const nftData = trackAsData.nftData;
       track.nftData = { ...nftData, ...newNftData };
-      track.save();
+      await track.save();
     }
 
     return track;
@@ -361,6 +371,35 @@ export class TrackService extends ModelService<typeof Track> {
               then: 'auction',
               else: 'buy_now',
             },
+          },
+        },
+      },
+      {
+        $group: {
+          _id: '$nftData.transactionHash',
+          lowestPrice: {
+            $min: '$listingItem.pricePerItem',
+          },
+          totalPlaybackCount: {
+            $sum: '$playbackCount',
+          },
+          detail: {
+            $first: '$$ROOT',
+          },
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: {
+            $mergeObjects: [
+              '$detail',
+              {
+                lowestPrice: '$lowestPrice',
+              },
+              {
+                totalPlaybackCount: '$totalPlaybackCount',
+              },
+            ],
           },
         },
       },

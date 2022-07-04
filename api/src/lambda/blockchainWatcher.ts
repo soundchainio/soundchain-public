@@ -11,8 +11,9 @@ import {
   UpdateAuction,
 } from '../../types/web3-v1-contracts/SoundchainAuction';
 import { ItemCanceled, ItemListed, ItemSold, ItemUpdated } from '../../types/web3-v1-contracts/SoundchainMarketplace';
+import { EditionCreated } from '../../types/web3-v2-contracts/Soundchain721Editions';
 import { config } from '../config';
-import SoundchainCollectible from '../contract/Soundchain721.json';
+import SoundchainCollectibleEdtions from '../contract/Soundchain721Editions.json';
 import SoundchainAuction from '../contract/SoundchainAuction.json';
 import SoundchainMarketplace from '../contract/SoundchainMarketplace.json';
 import { UserModel } from '../models/User';
@@ -22,9 +23,17 @@ import { auctionEvents, itemEvents, nftEvents } from './processEvents';
 
 export const blockchainWatcher: Handler = async () => {
   await mongoose.connect(config.db.url, config.db.options);
+  const web3 = new Web3(config.minting.alchemyKey);
   const context = await getContext();
 
-  const { marketplaceEvents, nftEvents, auctionEvents, toBlock } = await getAllEvents(context);
+  const fromBlock = await context.blockTrackerService.getCurrentBlockNumber();
+  const toBlock = await web3.eth.getBlockNumber();
+
+  if (fromBlock >= toBlock) {
+    return;
+  }
+
+  const { marketplaceEvents, nftEvents, auctionEvents } = await getAllEvents(web3, fromBlock, toBlock);
 
   await Promise.all([
     processMarketplaceEvents(marketplaceEvents, context),
@@ -39,28 +48,26 @@ const getContext = async () => {
   return new Context({ sub: user._id });
 };
 
-const getAllEvents = async (context: Context) => {
-  const web3 = new Web3(config.minting.alchemyKey);
-
+const getAllEvents = async (web3: Web3, fromBlock: number, toBlock: number) => {
   const marketplaceContract = new web3.eth.Contract(
     SoundchainMarketplace.abi as AbiItem[],
     config.minting.marketplaceAddress,
   );
 
-  const auctionContract = new web3.eth.Contract(SoundchainAuction.abi as AbiItem[], config.minting.auctionAddress);
-  const nftContract = new web3.eth.Contract(SoundchainCollectible.abi as AbiItem[], config.minting.nftAddress);
-
-  const fromBlock = await context.blockTrackerService.getCurrentBlockNumber();
-  const toBlock = await web3.eth.getBlockNumber();
-
   const blocks = { fromBlock, toBlock };
+  const auctionContract = new web3.eth.Contract(SoundchainAuction.abi as AbiItem[], config.minting.auctionAddress);
+  const nftContract = new web3.eth.Contract(SoundchainCollectibleEdtions.abi as AbiItem[], config.minting.nftAddress);
 
-  const [marketplaceEvents, nftEvents, auctionEvents] = await Promise.all([
-    marketplaceContract.getPastEvents('allEvents', blocks),
-    nftContract.getPastEvents('allEvents', blocks),
-    auctionContract.getPastEvents('allEvents', blocks),
-  ]);
-  return { marketplaceEvents, nftEvents, auctionEvents, toBlock };
+  try {
+    const [marketplaceEvents, nftEvents, auctionEvents] = await Promise.all([
+      marketplaceContract.getPastEvents('allEvents', blocks),
+      nftContract.getPastEvents('allEvents', blocks),
+      auctionContract.getPastEvents('allEvents', blocks),
+    ]);
+    return { marketplaceEvents, nftEvents, auctionEvents };
+  } catch (error) {
+    console.error(`From block: ${fromBlock}\nTo block: ${toBlock}\n${error}`);
+  }
 };
 
 const processMarketplaceEvents = async (events: EventData[], context: Context) => {
@@ -96,6 +103,11 @@ const processNFTEvents = async (events: EventData[], context: Context) => {
       case 'Transfer':
         {
           await nftEvents.transfer(event as unknown as Transfer, context);
+        }
+        break;
+      case 'EditionCreated':
+        {
+          await nftEvents.editionCreated(event as unknown as EditionCreated, context);
         }
         break;
     }
