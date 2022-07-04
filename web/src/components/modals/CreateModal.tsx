@@ -289,7 +289,7 @@ export const CreateModal = () => {
 
         setMintingState('Minting NFT');
         mintNftToken(`ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`, account, account, royalty, editionQuantity)
-          .onReceipt(receipt => onTransactionHash(receipt.transactionHash))
+          .onTransactionHash(transactionHash => onTransactionHash(transactionHash))
           .onError(onError)
           .execute(web3);
       } catch {

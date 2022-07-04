@@ -40,7 +40,9 @@ class BlockchainFunction<Type> {
   protected params: Type;
   protected me: MeQuery['me'] | undefined;
   protected web3?: Web3;
+  protected transactionHash?: string;
   protected receipt?: TransactionReceipt;
+  protected onTransactionHashFunction?: (transactionHash: string) => void;
   protected onReceiptFunction?: (receipt: TransactionReceipt) => void;
   protected onErrorFunction?: (cause: Error) => void;
   protected finallyFunction?: () => void;
@@ -58,6 +60,10 @@ class BlockchainFunction<Type> {
     const gasPriceString = await this.web3?.eth.getGasPrice();
     const gasPrice = Math.floor(Number(gasPriceString) * 1.5) ?? fallbackGasPrice;
     lambda(gasPrice)
+      .on('transactionHash', transactionHash => {
+        this.transactionHash = transactionHash;
+        this.onTransactionHashFunction && this.onTransactionHashFunction(transactionHash);
+      })
       .on('receipt', receipt => {
         this.receipt = receipt;
         this.onReceiptFunction && this.onReceiptFunction(receipt);
@@ -74,6 +80,11 @@ class BlockchainFunction<Type> {
         }
       })
       .finally(this.finallyFunction);
+  }
+
+  onTransactionHash(handler: (transactionHash: string) => void) {
+    this.onTransactionHashFunction = handler;
+    return this;
   }
 
   onReceipt(handler: (receipt: TransactionReceipt) => void) {
