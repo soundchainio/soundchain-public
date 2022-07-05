@@ -1,0 +1,9 @@
+fragment TrackEditionComponentFields on TrackEditionWithTrackItem {
+  id
+  transactionHash
+  editionId
+  editionSize
+  track {
+    ...TrackComponentFields
+  }
+}

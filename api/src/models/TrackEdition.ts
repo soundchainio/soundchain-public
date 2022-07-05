@@ -7,12 +7,15 @@ export class TrackEdition extends Model {
   @Field(() => ID, { name: 'id' })
   readonly _id: string;
 
+  @Field()
   @prop()
   transactionHash: string;
 
+  @Field()
   @prop()
   editionId: number;
 
+  @Field()
   @prop()
   editionSize: number;
 

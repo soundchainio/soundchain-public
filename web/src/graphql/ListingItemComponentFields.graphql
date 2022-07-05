@@ -21,6 +21,7 @@ fragment ListingItemComponentFields on TrackWithListingItem {
   favoriteCount
   saleType
   price
+  trackEditionId
   nftData {
     transactionHash
     tokenId
