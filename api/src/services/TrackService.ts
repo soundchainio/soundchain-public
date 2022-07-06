@@ -60,19 +60,6 @@ export class TrackService extends ModelService<typeof Track> {
     return this.findOrFail(id);
   }
 
-  async searchTracks(search: string): Promise<{ list: Track[]; total: number }> {
-    const regex = new RegExp(search, 'i');
-    const list = await this.model
-      .find({ deleted: false, $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }] })
-      .sort({ createdAt: -1 })
-      .limit(5);
-    const total = await this.model
-      .find({ deleted: false, $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }] })
-      .countDocuments()
-      .exec();
-    return { list, total };
-  }
-
   async createTrack(profileId: string, data: Partial<Track>): Promise<Track> {
     const track = new this.model({ profileId, ...data });
     const asset = await this.context.muxService.create(data.assetUrl, track._id);
@@ -200,17 +187,25 @@ export class TrackService extends ModelService<typeof Track> {
     return await this.updateTrack(id, { nftData: { owner } });
   }
 
-  async isFavorite(trackId: string, profileId: string): Promise<boolean> {
-    const hasRecord = await FavoriteProfileTrackModel.findOne({ trackId, profileId });
-    return hasRecord ? true : false;
+  async isFavorite(trackId: string, profileId: string, trackEditionId?: string): Promise<boolean> {
+    if (trackEditionId) {
+      return await FavoriteProfileTrackModel.exists({ trackEditionId, profileId });
+    }
+    return await FavoriteProfileTrackModel.exists({ trackId, profileId });
   }
 
   async toggleFavorite(trackId: string, profileId: string): Promise<FavoriteProfileTrack> {
-    const favTrack = await FavoriteProfileTrackModel.findOne({ trackId, profileId });
+    const track = await this.model.findOne({ _id: trackId });
+
+    const findParams = track.trackEditionId ?
+      { trackEditionId: track.trackEditionId, profileId } :
+      { trackId, profileId };
+
+    const favTrack = await FavoriteProfileTrackModel.findOne(findParams);
     if (favTrack?.id) {
-      return await FavoriteProfileTrackModel.findOneAndDelete({ trackId, profileId });
+      return await FavoriteProfileTrackModel.findOneAndDelete(findParams);
     } else {
-      const favorite = new FavoriteProfileTrackModel({ profileId, trackId });
+      const favorite = new FavoriteProfileTrackModel({ profileId, trackId, trackEditionId: track.trackEditionId });
       await favorite.save();
       return favorite;
     }
@@ -235,12 +230,20 @@ export class TrackService extends ModelService<typeof Track> {
     });
   }
 
-  async favoriteCount(trackId: string): Promise<FavoriteCount> {
+  async favoriteCount(trackId: string, trackEditionId?: string): Promise<FavoriteCount> {
+    const ors: any[] = [
+      { trackId: trackId.toString() }
+    ]
+
+    if (trackEditionId) {
+      ors.push({ trackEditionId: trackEditionId.toString() })
+    }
+
     const favTrack = await FavoriteProfileTrackModel.aggregate([
       {
         $match: {
-          trackId: trackId.toString(),
-        },
+          $or: ors
+        }
       },
       {
         $count: 'trackId',
