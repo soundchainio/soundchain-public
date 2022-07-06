@@ -54,8 +54,8 @@ export const useModalDispatch = () => {
       dispatch({ type: ModalActionTypes.SET_RECIPIENT_WALLET_ADDRESS, payload: { address } }),
     dispatchSetAmountToTransfer: (amount: string) =>
       dispatch({ type: ModalActionTypes.SET_AMOUNT_TO_TRANSFER, payload: { amount } }),
-    dispatchShowApproveModal: (show: boolean, type: SaleType) =>
-      dispatch({ type: ModalActionTypes.SHOW_APPROVE, payload: { show, type } }),
+    dispatchShowApproveModal: (show: boolean, type: SaleType, nftContractAddress?: string | null) =>
+      dispatch({ type: ModalActionTypes.SHOW_APPROVE, payload: { show, type, nftContractAddress } }),
     dispatchShowRemoveListingModal: (show: boolean, tokenId: number, trackId: string, saleType: SaleType) =>
       dispatch({ type: ModalActionTypes.SHOW_REMOVE_LISTING, payload: { show, tokenId, trackId, saleType } }),
     dispatchShowConfirmDeleteNFTModal: (show: boolean, trackId: string, burn: boolean) =>
@@ -67,28 +67,10 @@ export const useModalDispatch = () => {
     ) => dispatch({ type: ModalActionTypes.SHOW_FILTER_MARKETPLACE, payload: { show, genres, filterSaleType } }),
     dispatchShowBidsHistory: (show: boolean, auctionId: string) =>
       dispatch({ type: ModalActionTypes.SHOW_BIDS_HISTORY, payload: { show, auctionId } }),
-    dispatchShowNftTransferConfirmationModal: ({
-      show,
-      title,
-      trackId,
-      artist,
-      tokenId,
-      artworkUrl,
-      walletRecipient,
-      refetch
-    }: ShowTransferNftConfirmationPayload) =>
+    dispatchShowNftTransferConfirmationModal: (payload: ShowTransferNftConfirmationPayload) =>
       dispatch({
         type: ModalActionTypes.SHOW_TRANSFER_NFT_CONFIRMATION,
-        payload: {
-          show,
-          trackId,
-          tokenId,
-          artist,
-          artworkUrl,
-          walletRecipient,
-          title,
-          refetch
-        },
+        payload,
       }),
   };
 };

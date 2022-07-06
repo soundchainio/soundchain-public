@@ -117,7 +117,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
       return;
     }
     const fetchHighestBid = async () => {
-      const { _bid, _bidder } = await getHighestBid(web3, tokenId);
+      const { _bid, _bidder } = await getHighestBid(web3, tokenId, { nft: track.nftData?.contract });
       setHighestBid({ bid: priceToShow(_bid), bidder: _bidder });
       refetchCountBids();
     };
@@ -127,7 +127,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     }, 6 * 1000);
 
     return () => clearInterval(interval);
-  }, [tokenId, track.id, web3, getHighestBid, account, refetchCountBids]);
+  }, [tokenId, track, web3, getHighestBid, account, refetchCountBids]);
 
   useEffect(() => {
     if (highestBid) {

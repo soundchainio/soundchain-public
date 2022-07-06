@@ -215,32 +215,32 @@ export default function TrackPage({ track }: TrackPageProps) {
     if (!account || !web3 || tokenId === null || tokenId === undefined) {
       return;
     }
-    isTokenOwner(web3, tokenId, account)
+    isTokenOwner(web3, tokenId, account, { nft: nftData?.contract })
       .then(result => setIsOwner(result))
       .finally(() => setLoadingOwner(false));
-  }, [account, web3, tokenId, isTokenOwner]);
+  }, [account, web3, tokenId, isTokenOwner, nftData]);
 
   useEffect(() => {
     const fetchRoyalties = async () => {
       if (!account || !web3 || tokenId === null || tokenId === undefined || royalties != undefined) {
         return;
       }
-      const royaltiesFromBlockchain = await getRoyalties(web3, tokenId);
+      const royaltiesFromBlockchain = await getRoyalties(web3, tokenId, { nft: nftData?.contract });
       setRoyalties(royaltiesFromBlockchain);
     };
     fetchRoyalties();
-  }, [account, web3, tokenId, getRoyalties, royalties]);
+  }, [account, web3, tokenId, getRoyalties, royalties, nftData]);
 
   useEffect(() => {
     const fetchHighestBid = async () => {
       if (!web3 || !tokenId || !getHighestBid || highestBid.bidder != undefined) {
         return;
       }
-      const { _bid, _bidder } = await getHighestBid(web3, tokenId);
+      const { _bid, _bidder } = await getHighestBid(web3, tokenId, { nft: nftData?.contract });
       setHighestBid({ bid: priceToShow(_bid || '0'), bidder: _bidder });
     };
     fetchHighestBid();
-  }, [tokenId, web3, getHighestBid, highestBid.bidder]);
+  }, [tokenId, web3, getHighestBid, highestBid.bidder, nftData]);
 
   useEffect(() => {
     if (highestBid.bidder) {
