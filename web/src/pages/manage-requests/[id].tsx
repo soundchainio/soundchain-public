@@ -58,7 +58,6 @@ export const getServerSideProps = protectPage<RequestPageProps, RequestPageParam
 });
 
 const topNavBarProps: TopNavBarProps = {
-
   title: 'Verification Request',
 };
 

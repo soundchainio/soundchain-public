@@ -70,7 +70,6 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 });
 
 const topNavBarProps: TopNavBarProps = {
-
   title: 'Cancel Auction',
 };
 

@@ -10,7 +10,6 @@ import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 
 const topNavBarProps: TopNavBarProps = {
-
   title: 'Select Listing Type',
 };
 

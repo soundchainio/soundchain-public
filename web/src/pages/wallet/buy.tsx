@@ -27,7 +27,6 @@ export const getServerSideProps = protectPage(async (context, apolloClient) => {
 });
 
 const topNovBarProps: TopNavBarProps = {
-
   title: 'Buy Matic',
 };
 

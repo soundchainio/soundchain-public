@@ -27,7 +27,6 @@ interface TrackPageParams extends ParsedUrlQuery {
 }
 
 const topNavBarProps: TopNavBarProps = {
-
   title: 'List for Sale',
 };
 

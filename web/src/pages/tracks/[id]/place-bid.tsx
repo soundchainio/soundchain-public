@@ -56,7 +56,6 @@ interface FormValues {
 }
 
 const topNavBarProps: TopNavBarProps = {
-
   title: 'Place Bid',
 };
 

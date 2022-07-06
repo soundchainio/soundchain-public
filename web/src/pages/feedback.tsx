@@ -10,7 +10,6 @@ export const getServerSideProps = protectPage((context, apolloClient) => {
 });
 
 const topNavBarProps: TopNavBarProps = {
-
   title: 'Leave Feedback',
 };
 

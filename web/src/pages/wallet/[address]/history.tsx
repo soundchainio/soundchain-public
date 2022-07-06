@@ -38,7 +38,6 @@ export const getServerSideProps = protectPage<HistoryPageProps, HistoryPageParam
 });
 
 const topNavBarProps: TopNavBarProps = {
-
   title: 'History',
 };
 

@@ -60,7 +60,6 @@ function FakeLink({ label, value }: LinkProps) {
 }
 
 const topNavBarProps: TopNavBarProps = {
-
   title: 'Account Settings',
 };
 
