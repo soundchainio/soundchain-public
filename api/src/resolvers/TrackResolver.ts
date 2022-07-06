@@ -35,8 +35,8 @@ export class TrackResolver {
   }
 
   @FieldResolver(() => Number)
-  favoriteCount(@Ctx() { trackService }: Context, @Root() { _id: trackId }: Track): Promise<FavoriteCount> {
-    return trackService.favoriteCount(trackId);
+  favoriteCount(@Ctx() { trackService }: Context, @Root() { _id: trackId, trackEditionId }: Track): Promise<FavoriteCount> {
+    return trackService.favoriteCount(trackId, trackEditionId);
   }
 
   @FieldResolver(() => Number)
@@ -52,13 +52,13 @@ export class TrackResolver {
   @FieldResolver(() => Boolean)
   isFavorite(
     @Ctx() { trackService }: Context,
-    @Root() { _id: trackId }: Track,
+    @Root() { _id: trackId, trackEditionId }: Track,
     @CurrentUser() user?: User,
   ): Promise<boolean> {
     if (!user) {
       return Promise.resolve(false);
     }
-    return trackService.isFavorite(trackId, user.profileId);
+    return trackService.isFavorite(trackId, user.profileId, trackEditionId);
   }
 
   @Query(() => Track)

@@ -4,7 +4,6 @@ import { Track } from '../models/Track';
 import { Context } from '../types/Context';
 import { ExplorePayload } from '../types/ExplorePayload';
 import { PageInput } from '../types/PageInput';
-import { SortExploreTracks } from '../types/SortExploreTracks';
 import { SortOrder } from '../types/SortOrder';
 import { Service } from './Service';
 
@@ -15,20 +14,32 @@ export class ExploreService extends Service {
 
   async getExplore(search?: string): Promise<ExplorePayload> {
     const profiles = await this.context.profileService.searchProfiles(search);
-    const tracks = await this.context.trackService.searchTracks(search);
-    return { profiles: profiles.list, totalProfiles: profiles.total, tracks: tracks.list, totalTracks: tracks.total };
+    const aggregationParams = this.getTrackAggregationParams(search)
+    const tracks = await this.context.trackService.paginatePipelineAggregated({
+      ...aggregationParams,
+      sort: {
+        field: 'createdAt',
+        order: SortOrder.DESC
+      },
+      page: {
+        first: 5
+      },
+    });
+    return { profiles: profiles.list, totalProfiles: profiles.total, tracks: tracks.nodes, totalTracks: tracks.pageInfo.totalCount };
   }
 
-  getExploreTracks(sort: PaginateSortParams<typeof Track>, search: string, page?: PageInput): Promise<PaginateResult<Track>> {
-    const regex = new RegExp(search, 'i');
-    return this.context.trackService.paginate({
-      filter: { $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }], deleted: false },
+  async getExploreTracks(sort: PaginateSortParams<typeof Track>, search: string, page?: PageInput): Promise<PaginateResult<Track>> {
+    const aggregationParams = this.getTrackAggregationParams(search)
+    const result = await this.context.trackService.paginatePipelineAggregated({
+      ...aggregationParams,
       sort: {
         field: sort.field,
         order: sort.order
       },
       page,
     });
+
+    return result
   }
 
   getExploreUsers(search: string, page?: PageInput): Promise<PaginateResult<Profile>> {
@@ -37,5 +48,37 @@ export class ExploreService extends Service {
       sort: { field: 'createdAt', order: SortOrder.DESC },
       page,
     });
+  }
+
+  private getTrackAggregationParams(search: string) {
+    const regex = new RegExp(search, 'i');
+    return {
+      aggregation: [
+        { $match: { $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }], deleted: false }},
+        {
+          $group: {
+            _id: {
+              $ifNull: ['$trackEditionId', '$_id']
+            },
+            sumPlaybackCount: { $sum: '$playbackCount' },
+            sumFavoriteCount: { $sum: '$favoriteCount' },
+            first: { $first: '$$ROOT' }
+          },
+        },
+        {
+          $replaceRoot: {
+            newRoot: {
+              $mergeObjects: [
+                '$first',
+                { 
+                  playbackCount: '$sumPlaybackCount',
+                  favoriteCount: '$sumFavoriteCount'
+                },
+              ]
+            }
+          }
+        }
+      ]
+    }
   }
 }
