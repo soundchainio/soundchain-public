@@ -13,7 +13,8 @@ import {
 import { ItemCanceled, ItemListed, ItemSold, ItemUpdated } from '../../types/web3-v1-contracts/SoundchainMarketplace';
 import { EditionCreated } from '../../types/web3-v2-contracts/Soundchain721Editions';
 import { config } from '../config';
-import SoundchainCollectibleEdtions from '../contract/Soundchain721Editions.json';
+import SoundchainCollectible from '../contract/Soundchain721.json';
+import SoundchainCollectibleEditions from '../contract/Soundchain721Editions.json';
 import SoundchainAuction from '../contract/SoundchainAuction.json';
 import SoundchainMarketplace from '../contract/SoundchainMarketplace.json';
 import { UserModel } from '../models/User';
@@ -56,15 +57,17 @@ const getAllEvents = async (web3: Web3, fromBlock: number, toBlock: number) => {
 
   const blocks = { fromBlock, toBlock };
   const auctionContract = new web3.eth.Contract(SoundchainAuction.abi as AbiItem[], config.minting.auctionAddress);
-  const nftContract = new web3.eth.Contract(SoundchainCollectibleEdtions.abi as AbiItem[], config.minting.nftAddress);
+  const nftContract = new web3.eth.Contract(SoundchainCollectible.abi as AbiItem[], config.minting.nftAddress);
+  const nftEditionsContract = new web3.eth.Contract(SoundchainCollectibleEditions.abi as AbiItem[], config.minting.nftMultipleEditionAddress);
 
   try {
-    const [marketplaceEvents, nftEvents, auctionEvents] = await Promise.all([
+    const [marketplaceEvents, nftEvents, nftEditionsEvents, auctionEvents] = await Promise.all([
       marketplaceContract.getPastEvents('allEvents', blocks),
       nftContract.getPastEvents('allEvents', blocks),
+      nftEditionsContract.getPastEvents('allEvents', blocks),
       auctionContract.getPastEvents('allEvents', blocks),
     ]);
-    return { marketplaceEvents, nftEvents, auctionEvents };
+    return { marketplaceEvents, nftEvents: [...nftEvents, ...nftEditionsEvents], auctionEvents };
   } catch (error) {
     console.error(`From block: ${fromBlock}\nTo block: ${toBlock}\n${error}`);
   }
