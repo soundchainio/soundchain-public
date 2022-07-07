@@ -22,6 +22,7 @@ fragment ListingItemComponentFields on TrackWithListingItem {
   saleType
   price
   trackEditionId
+  editionSize
   nftData {
     transactionHash
     tokenId
