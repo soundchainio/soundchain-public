@@ -187,25 +187,36 @@ export class TrackService extends ModelService<typeof Track> {
     return await this.updateTrack(id, { nftData: { owner } });
   }
 
-  async isFavorite(trackId: string, profileId: string, trackEditionId?: string): Promise<boolean> {
-    if (trackEditionId) {
-      return await FavoriteProfileTrackModel.exists({ trackEditionId, profileId });
-    }
-    return await FavoriteProfileTrackModel.exists({ trackId, profileId });
+  async isFavorite(trackId: string, profileId: string, trackTransactionHash: string): Promise<boolean> {
+    return await FavoriteProfileTrackModel.exists({ 
+      $or: [
+        { trackId },
+        { trackTransactionHash },
+      ],
+      profileId 
+    });
   }
 
   async toggleFavorite(trackId: string, profileId: string): Promise<FavoriteProfileTrack> {
     const track = await this.model.findOne({ _id: trackId });
 
-    const findParams = track.trackEditionId ?
-      { trackEditionId: track.trackEditionId, profileId } :
-      { trackId, profileId };
+    const findParams = {
+      $or: [
+        { trackId },
+        { trackTransactionHash: track.nftData.transactionHash },
+      ],
+      profileId,
+    };
 
     const favTrack = await FavoriteProfileTrackModel.findOne(findParams);
     if (favTrack?.id) {
       return await FavoriteProfileTrackModel.findOneAndDelete(findParams);
     } else {
-      const favorite = new FavoriteProfileTrackModel({ profileId, trackId, trackEditionId: track.trackEditionId });
+      const favorite = new FavoriteProfileTrackModel({ 
+        profileId, 
+        trackId, 
+        trackTransactionHash: track.nftData.transactionHash
+      });
       await favorite.save();
       return favorite;
     }
@@ -230,19 +241,14 @@ export class TrackService extends ModelService<typeof Track> {
     });
   }
 
-  async favoriteCount(trackId: string, trackEditionId?: string): Promise<FavoriteCount> {
-    const ors: any[] = [
-      { trackId: trackId.toString() }
-    ]
-
-    if (trackEditionId) {
-      ors.push({ trackEditionId: trackEditionId.toString() })
-    }
-
+  async favoriteCount(trackId: string, trackTransactionHash: string): Promise<FavoriteCount> {
     const favTrack = await FavoriteProfileTrackModel.aggregate([
       {
         $match: {
-          $or: ors
+          $or: [
+            { trackId: trackId.toString() },
+            { trackTransactionHash: trackTransactionHash.toString() },
+          ]
         }
       },
       {
