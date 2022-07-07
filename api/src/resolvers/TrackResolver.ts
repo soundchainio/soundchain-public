@@ -29,14 +29,20 @@ export class TrackResolver {
     return muxAsset ? `https://stream.mux.com/${muxAsset.playbackId}.m3u8` : '';
   }
 
+  @FieldResolver(() => Number)
+  playbackCount(@Ctx() { trackService }: Context, @Root() { _id: trackId, nftData }: Track): Promise<number> {
+    return trackService.playbackCount(trackId, nftData.transactionHash);
+  }
+
   @FieldResolver(() => String)
-  playbackCountFormatted(@Root() { playbackCount }: Track): string {
+  async playbackCountFormatted(@Ctx() { trackService }: Context, @Root() { _id: trackId, nftData }: Track): Promise<string> {
+    const playbackCount = await trackService.playbackCount(trackId, nftData.transactionHash);
     return playbackCount ? new Intl.NumberFormat('en-US').format(playbackCount) : '';
   }
 
   @FieldResolver(() => Number)
-  favoriteCount(@Ctx() { trackService }: Context, @Root() { _id: trackId, trackEditionId }: Track): Promise<FavoriteCount> {
-    return trackService.favoriteCount(trackId, trackEditionId);
+  favoriteCount(@Ctx() { trackService }: Context, @Root() { _id: trackId, nftData }: Track): Promise<FavoriteCount> {
+    return trackService.favoriteCount(trackId, nftData.transactionHash);
   }
 
   @FieldResolver(() => Number)
@@ -52,13 +58,13 @@ export class TrackResolver {
   @FieldResolver(() => Boolean)
   isFavorite(
     @Ctx() { trackService }: Context,
-    @Root() { _id: trackId, trackEditionId }: Track,
+    @Root() { _id: trackId, nftData }: Track,
     @CurrentUser() user?: User,
   ): Promise<boolean> {
     if (!user) {
       return Promise.resolve(false);
     }
-    return trackService.isFavorite(trackId, user.profileId, trackEditionId);
+    return trackService.isFavorite(trackId, user.profileId, nftData.transactionHash);
   }
 
   @Query(() => Track)
