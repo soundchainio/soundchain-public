@@ -263,6 +263,34 @@ export class TrackService extends ModelService<typeof Track> {
     return favTrack.length ? favTrack[0].count : 0;
   }
 
+  async playbackCount(trackId: string, trackTransactionHash: string): Promise<number> {
+    const trackQuery = await this.model.aggregate([
+      {
+        $match: {
+          $or: [
+            { trackId: trackId.toString() },
+            { 'nftData.transactionHash': trackTransactionHash.toString() },
+          ]
+        }
+      },
+      {
+        $group: {
+          _id: '$nftData.transactionHash',
+          totalPlaybackCount: {
+            $sum: '$playbackCount',
+          }
+        }
+      },
+      {
+        $project: {
+          sum: '$totalPlaybackCount',
+        },
+      },
+    ]);
+
+    return trackQuery.length ? trackQuery[0].sum : 0;
+  }
+
   async saleType(tokenId: number): Promise<string> {
     const listing = await this.context.listingItemService.getActiveListingItem(tokenId);
     if (!listing) {

@@ -29,8 +29,14 @@ export class TrackResolver {
     return muxAsset ? `https://stream.mux.com/${muxAsset.playbackId}.m3u8` : '';
   }
 
+  @FieldResolver(() => Number)
+  playbackCount(@Ctx() { trackService }: Context, @Root() { _id: trackId, nftData }: Track): Promise<number> {
+    return trackService.playbackCount(trackId, nftData.transactionHash);
+  }
+
   @FieldResolver(() => String)
-  playbackCountFormatted(@Root() { playbackCount }: Track): string {
+  async playbackCountFormatted(@Ctx() { trackService }: Context, @Root() { _id: trackId, nftData }: Track): Promise<string> {
+    const playbackCount = await trackService.playbackCount(trackId, nftData.transactionHash);
     return playbackCount ? new Intl.NumberFormat('en-US').format(playbackCount) : '';
   }
 
