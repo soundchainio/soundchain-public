@@ -7,11 +7,17 @@ import { useMagicContext } from './useMagicContext';
 import { useMe } from './useMe';
 import useMetaMask from './useMetaMask';
 
-interface WalletContextData {
+interface WalletData {
   web3?: Web3;
   account?: string;
   balance?: string;
   refetchBalance?: () => void;
+}
+
+interface WalletContextData {
+  defaultWallet?: WalletData;
+  soundchainWallet?: WalletData;
+  metaMaskWallet?: WalletData;
 }
 
 const WalletContext = createContext<WalletContextData>({});
@@ -31,10 +37,10 @@ const WalletProvider = ({ children }: WalletProviderProps) => {
     refetchBalance: magicRefetchBalance,
   } = useMagicContext();
 
-  let context: WalletContextData = {};
+  let defaultWallet: WalletData = {};
 
   if (me?.defaultWallet === DefaultWallet.Soundchain) {
-    context = {
+    defaultWallet = {
       account: magicAccount,
       balance: magicBalance,
       web3: magicWeb3,
@@ -65,13 +71,29 @@ const WalletProvider = ({ children }: WalletProviderProps) => {
       );
     }
 
-    context = {
+    defaultWallet = {
       account,
       balance,
       web3,
       refetchBalance,
     };
   }
+
+  const context: WalletContextData = {
+    defaultWallet,
+    soundchainWallet: {
+      account: magicAccount,
+      balance: magicBalance,
+      web3: magicWeb3,
+      refetchBalance: magicRefetchBalance,
+    },
+    metaMaskWallet: {
+      account,
+      balance,
+      web3,
+      refetchBalance,
+    }
+  };
 
   return (
     <WalletContext.Provider value={context}>
@@ -100,6 +122,16 @@ const WalletProvider = ({ children }: WalletProviderProps) => {
   );
 };
 
-export const useWalletContext = () => useContext(WalletContext);
+type WalletSelection = 'Default' | DefaultWallet;
+const walletSelectionMap: Record<WalletSelection, keyof WalletContextData> = {
+  Default: 'defaultWallet',
+  Soundchain: 'soundchainWallet',
+  MetaMask: 'metaMaskWallet',
+}
+
+export const useWalletContext = (wallet: WalletSelection = 'Default'): WalletData => {
+  const context = useContext(WalletContext)
+  return context[walletSelectionMap[wallet]] || {};
+};
 
 export default WalletProvider;

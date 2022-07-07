@@ -8,6 +8,7 @@ import { MetaMask } from 'icons/MetaMask';
 import { DefaultWallet, useUpdateDefaultWalletMutation } from 'lib/graphql';
 import React, { useCallback, useState } from 'react';
 import { compareWallets } from 'utils/Wallet';
+import { useWalletContext } from 'hooks/useWalletContext';
 
 interface WalletSelectorProps {
   className?: string | undefined;
@@ -16,10 +17,11 @@ interface WalletSelectorProps {
 
 export const WalletSelector = ({ className, ownerAddressAccount }: WalletSelectorProps) => {
   const me = useMe();
-  const { account: metamaskAccount, balance: metamaskBalance } = useMetaMask();
-  const { account: magicAccount, balance: magicBalance } = useMagicContext();
+  const { account: metamaskAccount } = useMetaMask();
+  const { account: magicAccount } = useMagicContext();
   const [updateDefaultWallet] = useUpdateDefaultWalletMutation();
   const [selectedWallet, setSelectedWallet] = useState<DefaultWallet>(me?.defaultWallet || DefaultWallet.Soundchain);
+  const { balance } = useWalletContext(selectedWallet);
 
   const onChange = useCallback(
     ({ target: { value } }) => {
@@ -30,7 +32,6 @@ export const WalletSelector = ({ className, ownerAddressAccount }: WalletSelecto
   );
 
   const isSoundChainSelected = selectedWallet === DefaultWallet.Soundchain;
-  const balance = (isSoundChainSelected ? magicBalance : metamaskBalance) || 0;
 
   if (compareWallets(magicAccount, ownerAddressAccount) && compareWallets(metamaskAccount, ownerAddressAccount)) {
     return null;
