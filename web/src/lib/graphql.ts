@@ -1577,6 +1577,7 @@ export type Track = {
   price: Scalars['Float'];
   saleType: Scalars['String'];
   isFavorite: Scalars['Boolean'];
+  editionSize: Scalars['Float'];
 };
 
 export type TrackConnection = {
@@ -1611,6 +1612,7 @@ export type TrackWithListingItem = {
   price: Scalars['Float'];
   saleType: Scalars['String'];
   isFavorite: Scalars['Boolean'];
+  editionSize: Scalars['Float'];
   listingItem: Maybe<ListingItemWithPrice>;
 };
 
@@ -3096,7 +3098,7 @@ export type TrackQuery = (
 
 export type TrackComponentFieldsFragment = (
   { __typename?: 'Track' }
-  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'saleType' | 'price' | 'trackEditionId'>
+  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'saleType' | 'price' | 'trackEditionId' | 'editionSize'>
   & { nftData: Maybe<(
     { __typename?: 'NFTDataType' }
     & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner'>
@@ -3780,6 +3782,7 @@ export const TrackComponentFieldsFragmentDoc = gql`
   saleType
   price
   trackEditionId
+  editionSize
   nftData {
     transactionHash
     tokenId

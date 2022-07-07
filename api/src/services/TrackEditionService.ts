@@ -12,4 +12,9 @@ export class TrackEditionService extends ModelService<typeof TrackEdition> {
     await trackEdition.save();
     return trackEdition;
   }
+
+  async getEditionSize(id: string): Promise<number> {
+    const trackEdition = await this.findOrFail(id);
+    return trackEdition.editionSize;
+  }
 }

@@ -38,7 +38,7 @@ export const getServerSideProps: GetServerSideProps<TrackPageProps, TrackPagePar
 };
 
 export default function TrackPage({ track }: TrackPageProps) {
-  if (track.trackEditionId) {
+  if (track.editionSize > 1) {
     return <MultipleTrackPage track={track} />;
   }
   return <SingleTrackPage track={track} />;

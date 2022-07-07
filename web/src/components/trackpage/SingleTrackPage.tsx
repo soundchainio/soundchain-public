@@ -3,6 +3,7 @@ import { Description } from 'components/details-NFT/Description';
 import { HandleNFT } from 'components/details-NFT/HandleNFT';
 import { MintingData } from 'components/details-NFT/MintingData';
 import { TrackInfo } from 'components/details-NFT/TrackInfo';
+import { ViewPost } from 'components/details-NFT/ViewPost';
 import { Matic } from 'components/Matic';
 import { ProfileWithAvatar } from 'components/ProfileWithAvatar';
 import SEO from 'components/SEO';
@@ -16,24 +17,18 @@ import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Ellipsis } from 'icons/Ellipsis';
-import { HeartBorder } from 'icons/HeartBorder';
-import { HeartFull } from 'icons/HeartFull';
-import { ReactionEmoji } from 'icons/ReactionEmoji';
 import {
   PendingRequest,
   Profile,
   Role,
   TrackQuery,
   useCountBidsLazyQuery,
-  useGetOriginalPostFromTrackQuery,
   useHaveBidedLazyQuery,
   useListingItemLazyQuery,
   useProfileLazyQuery,
-  useToggleFavoriteMutation,
   useTrackLazyQuery,
   useUserByWalletLazyQuery,
 } from 'lib/graphql';
-import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { HighestBid } from 'pages/tracks/[id]/complete-auction';
 import { useEffect, useMemo, useState } from 'react';
@@ -66,15 +61,6 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
   const [highestBid, setHighestBid] = useState<HighestBid>({} as HighestBid);
   const [isLoadingOwner, setLoadingOwner] = useState(true);
   const { dispatchShowAuthorActionsModal, dispatchShowBidsHistory } = useModalDispatch();
-  const [isFavorite, setIsFavorite] = useState(track.isFavorite);
-  const [toggleFavorite] = useToggleFavoriteMutation();
-  const { data: originalPostData } = useGetOriginalPostFromTrackQuery({
-    variables: {
-      trackId: track.id,
-    },
-    skip: !track.id,
-  });
-  const post = originalPostData?.getOriginalPostFromTrack;
 
   const [refetchTrack, { data: trackData }] = useTrackLazyQuery({
     fetchPolicy: 'network-only',
@@ -128,7 +114,6 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
     : undefined;
   const futureSale = startingDate ? startingDate.getTime() > new Date().getTime() : false;
   const loading = loadingListingItem || isLoadingOwner;
-  const router = useRouter();
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
@@ -239,15 +224,6 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
     return () => clearInterval(interval);
   }, [isProcessing, refetchTrack, fetchListingItem, tokenId, track.id]);
 
-  const handleFavorite = async () => {
-    if (me?.profile.id) {
-      await toggleFavorite({ variables: { trackId: track.id }, refetchQueries: ['FavoriteTracks'] });
-      setIsFavorite(!isFavorite);
-    } else {
-      router.push('/login');
-    }
-  };
-
   const title = `${track.title} - song by ${track.artist} | SoundChain`;
   const description = `Listen to ${track.title} on SoundChain. ${track.artist}. ${track.album || 'Song'}. ${
     track.releaseYear != null ? `${track.releaseYear}.` : ''
@@ -258,35 +234,7 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
       <SEO title={title} description={description} canonicalUrl={`/tracks/${track.id}`} image={track.artworkUrl} />
       <div className="flex flex-col gap-5 p-3">
         <Track track={track} />
-        <div className="flex justify-between gap-2">
-          {post && !post.deleted ? (
-            <NextLink href={`/posts/${post.id}`}>
-              <a className="flex items-center gap-3">
-                <div className="rounded border-2 border-blue-400 bg-blue-700 bg-opacity-50 px-4 py-1 text-sm font-bold text-white">
-                  View Post
-                </div>
-                <p className="flex items-center gap-1 text-sm text-gray-400">
-                  <span className="flex items-center gap-1 font-bold text-white">
-                    {post.topReactions.map(name => (
-                      <ReactionEmoji key={name} name={name} className="h-4 w-4" />
-                    ))}
-                    {post.totalReactions}
-                  </span>{' '}
-                  reactions
-                </p>
-                <p className="text-sm text-gray-400">
-                  <span className="font-bold text-white">{post.commentCount}</span> comments
-                </p>
-              </a>
-            </NextLink>
-          ) : (
-            <p className="text-gray-80">Original post does not exist.</p>
-          )}
-          <button aria-label="Favorite" className="flex items-center" onClick={handleFavorite}>
-            {isFavorite && <HeartFull />}
-            {!isFavorite && <HeartBorder />}
-          </button>
-        </div>
+        <ViewPost trackId={track.id} isFavorited={track.isFavorite} />
         {isAuction && !auctionIsOver && isHighestBidder && (
           <div className="p-2 text-center font-bold text-green-500">You have the highest bid!</div>
         )}

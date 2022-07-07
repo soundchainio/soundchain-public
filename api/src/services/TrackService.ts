@@ -493,4 +493,24 @@ export class TrackService extends ModelService<typeof Track> {
       await PendingTrackModel.updateOne({ _id }, { processed: true });
     });
   }
+
+  async getEditionSizeByGroupingTracks(trackTransactionHash: string): Promise<number> {
+    const aggregate = [
+      {
+        $match: {
+          'nftData.transactionHash': trackTransactionHash,
+        },
+      },
+      {
+        $group: {
+          _id: '$nftData.transactionHash',
+          count: {
+            $sum: 1,
+          },
+        },
+      },
+    ];
+    const countQuery = await this.model.aggregate(aggregate);
+    return countQuery.length ? countQuery[0].count : 1;
+  }
 }

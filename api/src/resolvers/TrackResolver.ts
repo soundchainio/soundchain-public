@@ -62,6 +62,16 @@ export class TrackResolver {
     return trackService.isFavorite(trackId, user.profileId, trackEditionId);
   }
 
+  @FieldResolver(() => Number)
+  editionSize(
+    @Ctx() { trackService, trackEditionService }: Context,
+    @Root() { trackEditionId, nftData }: Track,
+  ): Promise<number> {
+    return trackEditionId
+      ? trackEditionService.getEditionSize(trackEditionId)
+      : trackService.getEditionSizeByGroupingTracks(nftData.transactionHash);
+  }
+
   @Query(() => Track)
   track(@Ctx() { trackService }: Context, @Arg('id') id: string): Promise<Track> {
     return trackService.getTrack(id);
