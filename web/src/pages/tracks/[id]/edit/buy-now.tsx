@@ -14,7 +14,7 @@ import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemQuery, useUpdat
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { SaleType } from 'types/SaleType';
 import { compareWallets } from 'utils/Wallet';
@@ -80,6 +80,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       listingPayload?.buyNowItem?.buyNowItem?.tokenId,
       track.id,
       SaleType.MARKETPLACE,
+      nftData?.contract
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account, listingPayload?.buyNowItem?.buyNowItem?.tokenId, nftData?.pendingRequest, track.id, web3]);

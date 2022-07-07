@@ -61,7 +61,7 @@ export interface ShowCreatePayload {
 export interface ShowApprove {
   show: boolean;
   type: SaleType;
-  nftContractAddress: string | null
+  nftContractAddress?: string | null
 }
 
 export interface ShowRemoveListing {
@@ -69,6 +69,7 @@ export interface ShowRemoveListing {
   tokenId: number;
   trackId: string;
   saleType: SaleType;
+  nftContractAddress?: string | null
 }
 
 export interface ShowAudioPlayerPayload {
