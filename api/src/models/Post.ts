@@ -30,6 +30,9 @@ export class Post extends Model {
   @prop({ required: false })
   trackId?: string;
 
+  @prop({ required: false })
+  trackTransactionHash?: string;
+
   @Field({ nullable: true })
   @prop({ default: false })
   deleted?: boolean;

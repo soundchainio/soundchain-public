@@ -84,7 +84,6 @@ export class TrackResolver {
     @Arg('input') input: CreateTrackInput,
   ): Promise<CreateTrackPayload> {
     const track = await trackService.createTrack(profileId, input);
-    await postService.createPost({ profileId, trackId: track._id });
     return { track };
   }
 
