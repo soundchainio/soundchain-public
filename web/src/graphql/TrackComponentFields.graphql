@@ -21,6 +21,7 @@ fragment TrackComponentFields on Track {
   favoriteCount
   saleType
   price
+  trackEditionId
   nftData {
     transactionHash
     tokenId

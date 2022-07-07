@@ -11,6 +11,7 @@ import { PostModel } from '../models/Post';
 import { Track, TrackModel } from '../models/Track';
 import { TrackWithListingItem } from '../models/TrackWithListingItem';
 import { Context } from '../types/Context';
+import { FilterBuyNowItemInput } from '../types/FilterBuyNowItemInput';
 import { FilterTrackInput } from '../types/FilterTrackInput';
 import { FilterTrackMarketplace } from '../types/FilterTrackMarketplace';
 import { NFTData } from '../types/NFTData';
@@ -416,6 +417,51 @@ export class TrackService extends ModelService<typeof Track> {
     return this.paginatePipelineAggregated({
       aggregation,
       filter: filter ? { ...(filter.genres && { genres: filter.genres }), ...dotNotationFilter, deleted: false } : {},
+      sort,
+      page,
+    });
+  }
+
+  getBuyNowlistingItems(
+    filter?: FilterBuyNowItemInput,
+    sort?: SortListingItemInput,
+    page?: PageInput,
+  ): Promise<PaginateResult<TrackWithListingItem>> {
+    const aggregation = [
+      {
+        $lookup: {
+          from: 'buynowitems',
+          localField: 'nftData.tokenId',
+          foreignField: 'tokenId',
+          as: 'listingItem',
+        },
+      },
+      {
+        $addFields: {
+          listingItem: {
+            $filter: {
+              input: '$listingItem',
+              as: 'item',
+              cond: {
+                $and: [
+                  {
+                    $eq: ['$$item.valid', true],
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+      {
+        $unwind: {
+          path: '$listingItem',
+        },
+      },
+    ];
+    return this.paginatePipelineAggregated({
+      aggregation,
+      filter: { deleted: false, trackEditionId: new ObjectId(filter.trackEdition) },
       sort,
       page,
     });
