@@ -142,6 +142,7 @@ export default function BuyNowPage({ track }: TrackPageProps) {
       account,
       listingPayload.buyNowItem?.buyNowItem?.owner,
       listingPayload.buyNowItem?.buyNowItem?.pricePerItem,
+      { nft: track.nftData?.contract }
     )
       .onReceipt(onReceipt)
       .onError(cause => toast.error(cause.message))

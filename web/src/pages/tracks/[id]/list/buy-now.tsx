@@ -82,7 +82,7 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
       if (!account || !web3 || nftData?.tokenId === null || nftData?.tokenId === undefined || !isTokenOwner) {
         return;
       }
-      const isTokenOwnerRes = await isTokenOwner(web3, nftData.tokenId, account);
+      const isTokenOwnerRes = await isTokenOwner(web3, nftData.tokenId, account, { nft: nftData.contract });
       setIsOwner(isTokenOwnerRes);
     };
     fetchIsOwner();
@@ -96,11 +96,11 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
     const fetchIsApproved = async () => {
       if (!web3 || !checkIsApproved || !account) return;
 
-      const is = await checkIsApproved(web3, account);
+      const is = await checkIsApproved(web3, account, { nft: nftData?.contract });
       setIsApproved(is);
     };
     fetchIsApproved();
-  }, [account, web3, checkIsApproved, showApprove]);
+  }, [account, web3, checkIsApproved, showApprove, nftData]);
 
   const isForSale = !!buyNowItem?.buyNowItem?.buyNowItem?.pricePerItem ?? false;
 
@@ -129,13 +129,13 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
         });
         router.replace(router.asPath.replace('/list/buy-now', ''));
       };
-      listItem(nftData.tokenId, account, weiPrice, startTimestamp)
+      listItem(nftData.tokenId, account, weiPrice, startTimestamp, { nft: nftData.contract })
         .onReceipt(onReceipt)
         .onError(cause => toast.error(cause.message))
         .finally(() => helper.setSubmitting(false))
         .execute(web3);
     } else {
-      me ? dispatchShowApproveModal(true, SaleType.MARKETPLACE) : router.push('/login');
+      me ? dispatchShowApproveModal(true, SaleType.MARKETPLACE, nftData.contract) : router.push('/login');
       helper.setSubmitting(false);
     }
   };

@@ -17,6 +17,7 @@ export interface ShowTransferNftConfirmationPayload {
   tokenId?: number
   walletRecipient?: string
   title?: string
+  contractAddress?: string
   refetch?: () => void
 }
 
@@ -60,6 +61,7 @@ export interface ShowCreatePayload {
 export interface ShowApprove {
   show: boolean;
   type: SaleType;
+  nftContractAddress: string | null
 }
 
 export interface ShowRemoveListing {

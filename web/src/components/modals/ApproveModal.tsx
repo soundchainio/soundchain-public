@@ -14,11 +14,11 @@ import { SaleType } from 'types/SaleType';
 
 export const ApproveModal = () => {
   const { account, web3 } = useWalletContext();
-  const { showApprove, type } = useModalState();
+  const { showApprove, type, nftContractAddress } = useModalState();
   const { dispatchShowApproveModal } = useModalDispatch();
   const { approveMarketplace, approveAuction } = useBlockchainV2();
   const [loading, setLoading] = useState(false);
-
+  
   const handleClose = () => {
     dispatchShowApproveModal(false, SaleType.CLOSE);
   };
@@ -36,9 +36,9 @@ export const ApproveModal = () => {
 
     const approve =
       type === SaleType.AUCTION
-        ? approveAuction(account)
+        ? approveAuction(account, { nft: nftContractAddress })
         : type === SaleType.MARKETPLACE
-        ? approveMarketplace(account)
+        ? approveMarketplace(account, { nft: nftContractAddress })
         : null;
 
     approve

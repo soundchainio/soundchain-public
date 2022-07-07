@@ -137,7 +137,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       router.replace(router.asPath.replace('/edit/buy-now', ''));
     };
 
-    updateListing(listingPayload.buyNowItem?.buyNowItem?.tokenId, account, weiPrice, startTimestamp)
+    updateListing(listingPayload.buyNowItem?.buyNowItem?.tokenId, account, weiPrice, startTimestamp, { nft: nftData?.contract })
       .onReceipt(onReceipt)
       .onError(cause => toast.error(cause.message))
       .finally(() => helper.setSubmitting(false))

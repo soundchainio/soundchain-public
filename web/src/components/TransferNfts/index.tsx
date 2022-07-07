@@ -44,6 +44,7 @@ interface TransferNftContextData {
     artworkUrl: string
     tokenId?: number
     artist: string
+    contractAddress: string
   }
   loadMore: () => void;
   refetch: () => void;
@@ -180,7 +181,8 @@ export function useTransferNftsControls() {
         artworkUrl: track.artworkUrl,
         artist: track.artist,
         tokenId: track.nftData?.tokenId,
-        title: track.title
+        title: track.title,
+        contractAddress: track.nftData?.contract
       } as TransferNftContextData['selectedNftTrack']
     }
   }, [selectedNft, data])
@@ -224,7 +226,7 @@ function SelectedNftPreview() {
 export function TransferNftsForm() {
   const Controls = useTransferNftsControls();
   const me = useMe()
-  const {gasPrice, selectedNft, selectedNftTrack, refetch, web3} = Controls
+  const {gasPrice, selectedNft, selectedNftTrack, web3, refetch } = Controls
   const {  dispatchShowNftTransferConfirmationModal } = useModalDispatch();
 
   if (!me) return null;
@@ -260,6 +262,7 @@ export function TransferNftsForm() {
           artworkUrl: selectedNftTrack.artworkUrl,
           title: selectedNftTrack.title,
           artist: selectedNftTrack.artist,
+          contractAddress: selectedNftTrack.contractAddress,
           refetch
         })
       }}>
