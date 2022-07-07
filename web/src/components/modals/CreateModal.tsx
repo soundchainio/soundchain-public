@@ -18,6 +18,7 @@ import {
   PostsDocument,
   TracksDocument,
   TracksQuery,
+  useCreatePostMutation,
   useCreateTrackMutation,
   usePinJsonToIpfsMutation,
   usePinToIpfsMutation,
@@ -51,6 +52,7 @@ export const CreateModal = () => {
   const [newTrack, setNewTrack] = useState<CreateTrackMutation['createTrack']['track']>();
 
   const { upload } = useUpload();
+  const [createPost] = useCreatePostMutation()
   const [createTrack] = useCreateTrackMutation();
 
   const { web3, account } = useWalletContext();
@@ -220,6 +222,7 @@ export const CreateModal = () => {
 
         const onTransactionHash = async (transactionHash: string) => {
           setMintingState('Creating your track');
+          let trackPost
 
           for (let index = 0; index < values.editionQuantity; index++) {
             const { data } = await createTrack({
@@ -272,9 +275,20 @@ export const CreateModal = () => {
               },
               refetchQueries: [FeedDocument, PostsDocument, ExploreTracksDocument],
             });
-            const track = data?.createTrack.track;
+            trackPost = data?.createTrack.track;
+          }
 
-            setNewTrack(track);
+          setNewTrack(trackPost);
+          if (trackPost) {
+            await createPost({
+              variables: {
+                input: {
+                  trackId: trackPost.id as string,
+                  trackTransactionHash: transactionHash,
+                  body: ''
+                }
+              }
+            })
           }
           dispatchShowCreateModal(true);
           setMintingState(undefined);

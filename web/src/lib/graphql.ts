@@ -257,6 +257,7 @@ export type CreatePostInput = {
   body: Scalars['String'];
   mediaLink?: Maybe<Scalars['String']>;
   trackId?: Maybe<Scalars['String']>;
+  trackTransactionHash?: Maybe<Scalars['String']>;
 };
 
 export type CreatePostPayload = {
