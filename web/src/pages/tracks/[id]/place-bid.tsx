@@ -9,6 +9,7 @@ import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { ProfileWithAvatar } from 'components/ProfileWithAvatar';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
+import { Timer } from 'components/trackpage/SingleTrackPage';
 import { WalletSelector } from 'components/WalletSelector';
 import { useModalDispatch } from 'contexts/providers/modal';
 import { Form, Formik } from 'formik';
@@ -28,7 +29,7 @@ import {
   useAuctionItemQuery,
   useCountBidsQuery,
   useHaveBidedLazyQuery,
-  useUserByWalletLazyQuery,
+  useUserByWalletLazyQuery
 } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { authenticator } from 'otplib';
@@ -40,7 +41,6 @@ import { compareWallets } from 'utils/Wallet';
 import Web3 from 'web3';
 import * as yup from 'yup';
 import SEO from '../../../components/SEO';
-import { Timer } from '../[id]';
 import { HighestBid } from './complete-auction';
 
 export interface TrackPageProps {
