@@ -67,6 +67,7 @@ export const NftTransferConfirmationModal = () => {
 
   const onTransfer = () => {
     if (!web3 || !tokenId || !walletRecipient || !account) {
+      console.error({ web3, tokenId, walletRecipient, account });
       toast.error('Unexpected error!');
       return;
     }
@@ -163,15 +164,9 @@ export const NftTransferConfirmationModal = () => {
       </div>
 
       {loading && (
-        <div className="absolute top-0 left-0 flex flex-col items-center justify-center h-full w-full bg-gray-20 bg-opacity-80">
-          <Image
-            height={200}
-            width={200}
-            src={'/nyan-cat-rainbow.gif' }
-            alt="Loading"
-            priority
-          />
-          <div className="font-bold text-lg text-white text-center mt-4">Transfering nft...</div>
+        <div className="absolute top-0 left-0 flex h-full w-full flex-col items-center justify-center bg-gray-20 bg-opacity-80">
+          <Image height={200} width={200} src={'/nyan-cat-rainbow.gif'} alt="Loading" priority />
+          <div className="mt-4 text-center text-lg font-bold text-white">Transfering nft...</div>
         </div>
       )}
     </Modal>

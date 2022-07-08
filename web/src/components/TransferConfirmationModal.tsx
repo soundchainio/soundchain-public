@@ -4,13 +4,13 @@ import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { Form, Formik } from 'formik';
 import useBlockchainV2 from 'hooks/useBlockchainV2';
+import { useMagicContext } from 'hooks/useMagicContext';
 import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { useMe } from 'hooks/useMe';
-import { useWalletContext } from 'hooks/useWalletContext';
 import { DefaultWallet } from 'lib/graphql';
 import router from 'next/router';
 import { authenticator } from 'otplib';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'react-toastify';
 import * as yup from 'yup';
 import { Button } from './Button';
@@ -30,7 +30,7 @@ export const TransferConfirmationModal = () => {
   const { dispatchShowTransferConfirmationModal } = useModalDispatch();
   const [loading, setLoading] = useState(false);
   const { sendMatic } = useBlockchainV2();
-  const { web3, account, balance, refetchBalance } = useWalletContext();
+  const { web3, account, balance, refetchBalance } = useMagicContext();
 
   const maxGasFee = useMaxGasFee(showTransferConfirmation);
 

@@ -3,10 +3,10 @@ import { InputField } from 'components/InputField';
 import { Matic } from 'components/Matic';
 import { Form, Formik } from 'formik';
 import useBlockchain, { gas } from 'hooks/useBlockchain';
+import { useMagicContext } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
-import { useWalletContext } from 'hooks/useWalletContext';
 import { Matic as MaticIcon } from 'icons/Matic';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import * as yup from 'yup';
 
 export interface FormValues {
@@ -34,7 +34,7 @@ interface Props {
 
 export const TransferForm = ({ handleSubmit }: Props) => {
   const me = useMe();
-  const { web3, balance } = useWalletContext();
+  const { web3, balance } = useMagicContext();
   const { getCurrentGasPrice } = useBlockchain();
   const [gasPrice, setGasPrice] = useState<string>('');
 
