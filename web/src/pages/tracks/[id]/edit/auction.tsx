@@ -71,7 +71,13 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
     ) {
       return;
     }
-    dispatchShowRemoveListingModal(true, listingPayload.auctionItem?.auctionItem?.tokenId, track.id, SaleType.AUCTION, nftData?.contract);
+    dispatchShowRemoveListingModal(
+      true, 
+      listingPayload.auctionItem?.auctionItem?.tokenId, 
+      track.id, 
+      SaleType.AUCTION, 
+      { nft: nftData.contract }
+    );
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account, listingPayload?.auctionItem?.auctionItem?.tokenId, nftData?.pendingRequest, track.id, web3]);
 

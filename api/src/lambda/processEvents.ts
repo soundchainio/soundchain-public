@@ -24,7 +24,7 @@ type ReturnTypes =
   | BidPlaced['returnValues']
   | UpdateAuction['returnValues']
   | ItemCanceled['returnValues']
-  | ItemListed['returnValues']
+  | ItemListed
   | ItemSold['returnValues']
   | ItemUpdated['returnValues']
   | Transfer
@@ -42,7 +42,8 @@ function _execute<T extends ReturnTypes>(f: (returnValues: T, context: Context) 
   };
 }
 
-const processItemListed = async (returnValues: ItemListed['returnValues'], context: Context): Promise<void> => {
+const processItemListed = async (event: ItemListed, context: Context): Promise<void> => {
+  const { returnValues, address } = event
   const { owner, nft, tokenId, pricePerItem, startingTime } = returnValues;
   const [user, listedBefore] = await Promise.all([
     context.userService.getUserByWallet(owner),
@@ -60,6 +61,7 @@ const processItemListed = async (returnValues: ItemListed['returnValues'], conte
     context.buyNowItemService.createBuyNowItem({
       owner,
       nft,
+      contract: address,
       tokenId: parseInt(tokenId),
       pricePerItem: pricePerItem,
       pricePerItemToShow: getPriceToShow(pricePerItem),

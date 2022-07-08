@@ -80,7 +80,10 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       listingPayload?.buyNowItem?.buyNowItem?.tokenId,
       track.id,
       SaleType.MARKETPLACE,
-      nftData?.contract
+      {
+        nft: nftData.contract,
+        marketplace: listingPayload?.buyNowItem?.buyNowItem?.contract,
+      }
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account, listingPayload?.buyNowItem?.buyNowItem?.tokenId, nftData?.pendingRequest, track.id, web3]);
@@ -138,7 +141,13 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       router.replace(router.asPath.replace('/edit/buy-now', ''));
     };
 
-    updateListing(listingPayload.buyNowItem?.buyNowItem?.tokenId, account, weiPrice, startTimestamp, { nft: nftData?.contract })
+    updateListing(
+      listingPayload.buyNowItem?.buyNowItem?.tokenId, 
+      account, 
+      weiPrice, 
+      startTimestamp, 
+      { nft: nftData?.contract, marketplace: listingPayload.buyNowItem?.buyNowItem.contract }
+    )
       .onReceipt(onReceipt)
       .onError(cause => toast.error(cause.message))
       .finally(() => helper.setSubmitting(false))

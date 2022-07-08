@@ -19,6 +19,7 @@ fragment TrackComponentFields on Track {
   playbackCountFormatted
   isFavorite
   favoriteCount
+  playbackCount
   saleType
   price
   trackEditionId
@@ -31,5 +32,15 @@ fragment TrackComponentFields on Track {
     ipfsCid
     pendingRequest
     owner
+    pendingTime
+  }
+  trackEdition {
+    id
+    editionId
+    transactionHash
+    editionId
+    editionSize
+    createdAt
+    updatedAt
   }
 }

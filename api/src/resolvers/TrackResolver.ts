@@ -3,6 +3,7 @@ import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } 
 import { CurrentUser } from '../decorators/current-user';
 import { FavoriteProfileTrackModel } from '../models/FavoriteProfileTrack';
 import { Track } from '../models/Track';
+import { TrackEdition } from '../models/TrackEdition';
 import { User } from '../models/User';
 import { FavoriteCount } from '../services/TrackService';
 import { Context } from '../types/Context';
@@ -76,6 +77,16 @@ export class TrackResolver {
     return trackEditionId
       ? trackEditionService.getEditionSize(trackEditionId)
       : trackService.getEditionSizeByGroupingTracks(nftData.transactionHash);
+  }
+
+  @FieldResolver(() => TrackEdition)
+  trackEdition(
+    @Ctx() { trackEditionService }: Context,
+    @Root() { trackEditionId }: Track,
+  ): Promise<TrackEdition> {
+    return trackEditionId
+      ? trackEditionService.findOrFail(trackEditionId)
+      : null;
   }
 
   @Query(() => Track)
