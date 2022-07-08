@@ -8,7 +8,7 @@ import { ApproveBuyNow } from 'icons/ApproveBuyNow';
 import { ApproveMarketplace } from 'icons/ApproveMarketplace';
 import { Auction } from 'icons/Auction';
 import { CheckmarkFilled } from 'icons/CheckmarkFilled';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { SaleType } from 'types/SaleType';
 
@@ -18,9 +18,9 @@ export const ApproveModal = () => {
   const { dispatchShowApproveModal } = useModalDispatch();
   const { approveMarketplace, approveAuction } = useBlockchainV2();
   const [loading, setLoading] = useState(false);
-  
+
   const handleClose = () => {
-    dispatchShowApproveModal(false, SaleType.CLOSE);
+    dispatchShowApproveModal(false, SaleType.CLOSE, '');
   };
 
   const setApprove = () => {
@@ -29,7 +29,7 @@ export const ApproveModal = () => {
     }
     const onReceipt = () => {
       setLoading(false);
-      dispatchShowApproveModal(false, SaleType.CLOSE);
+      dispatchShowApproveModal(false, SaleType.CLOSE, '');
     };
 
     setLoading(true);

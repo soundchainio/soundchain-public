@@ -12,7 +12,7 @@ import { PendingRequest, TrackDocument, TrackQuery, useAuctionItemQuery, useUpda
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { SaleType } from 'types/SaleType';
 import { compareWallets } from 'utils/Wallet';
@@ -71,7 +71,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
     ) {
       return;
     }
-    dispatchShowRemoveListingModal(true, listingPayload.auctionItem?.auctionItem?.tokenId, track.id, SaleType.AUCTION);
+    dispatchShowRemoveListingModal(true, listingPayload.auctionItem?.auctionItem?.tokenId, track.id, SaleType.AUCTION, nftData?.contract);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account, listingPayload?.auctionItem?.auctionItem?.tokenId, nftData?.pendingRequest, track.id, web3]);
 
@@ -134,11 +134,11 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
     };
 
     updateAuction(
-      listingPayload.auctionItem?.auctionItem?.tokenId, 
-      weiPrice, 
-      startTimestamp, 
-      endTimestamp, 
-      account, 
+      listingPayload.auctionItem?.auctionItem?.tokenId,
+      weiPrice,
+      startTimestamp,
+      endTimestamp,
+      account,
       { nft: nftData?.contract }
     )
       .onReceipt(onTransactionReceipt)

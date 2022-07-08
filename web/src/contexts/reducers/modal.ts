@@ -17,11 +17,9 @@ import {
   ShowNewPostPayload,
   ShowReactionsPayload,
   ShowRemoveListing,
-  ShowTransferConfirmationPayload,
-  ShowUnderDevelopmentPayload,
-  ShowTransferNftConfirmationPayload
+  ShowTransferConfirmationPayload, ShowTransferNftConfirmationPayload, ShowUnderDevelopmentPayload
 } from 'contexts/payloads/modal';
-import { ReactionType, TracksQuery  } from 'lib/graphql';
+import { ReactionType, TracksQuery } from 'lib/graphql';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 import { SaleType } from 'types/SaleType';
 import { GenreLabel } from 'utils/Genres';
@@ -57,7 +55,7 @@ export interface ModalState {
   amountToTransfer?: string;
   type?: SaleType;
   saleType?: SaleType;
-  nftContractAddress?: string;
+  nftContractAddress?: string | null;
   showConfirmDeleteNFT: boolean;
   burn?: boolean;
   showMarketplaceFilter: boolean;
@@ -191,6 +189,7 @@ export const modalReducer = (state: ModalState, action: Action) => {
         trackId: (action.payload as ShowRemoveListing).trackId,
         saleType: (action.payload as ShowRemoveListing).saleType,
         anyModalOpened: (action.payload as ShowRemoveListing).show,
+        nftContractAddress: (action.payload as ShowRemoveListing).nftContractAddress,
       };
     case ModalActionTypes.SHOW_AUDIO_PLAYER:
       return {
