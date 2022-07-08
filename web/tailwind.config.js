@@ -1,18 +1,18 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const defaultTheme = require('tailwindcss/defaultTheme')
+const defaultTheme = require('tailwindcss/defaultTheme');
 
 const measures = {
-  'third': '30%',
+  third: '30%',
   '1/3': '30%',
-  'quarter': '40%',
+  quarter: '40%',
   '1/4': '40%',
-  'half': '50%',
+  half: '50%',
   '5/10': '50%',
   '6/10': '60%',
   '7/10': '70%',
   '8/10': '80%',
   '9/10': '90%',
-  '15/16': '93.75%'
+  '15/16': '93.75%',
 };
 
 module.exports = {
@@ -74,15 +74,16 @@ module.exports = {
         'gradient-radial-to-tl': 'radial-gradient(115% 90% at 100% 100%, var(--tw-gradient-stops))',
         'gradient-radial-to-br': 'radial-gradient(90% 115% at 0% 0%, var(--tw-gradient-stops))',
         'gradient-radial-to-bl': 'radial-gradient(90% 115% at 100% 0%, var(--tw-gradient-stops))',
-        'greenish': 'linear-gradient(180deg, 0% 48.44% 100%, var(--tw-gradient-stops))',
+        greenish: 'linear-gradient(180deg, 0% 48.44% 100%, var(--tw-gradient-stops))',
         'landing-card': 'linear-gradient(89.78deg, 30.49% 208.35%, var(--tw-gradient-stops))',
         'rainbow-gradient': 'linear-gradient(90deg, #26d1a8 0%, #ac4efd 25%, #fed503 75%, #fe5540 100%)',
-        'rainbow-gradient-dark': 'linear-gradient(90deg, #1ea686 0%, #8a3fcc 25%, #ccaa02 75%, #cc4533 100%)'
+        'rainbow-gradient-dark': 'linear-gradient(90deg, #1ea686 0%, #8a3fcc 25%, #ccaa02 75%, #cc4533 100%)',
       },
       colors: {
         gray: {
           10: '#101010',
           15: '#151515',
+          17: '#171717',
           20: '#202020',
           25: '#252525',
           30: '#303030',
@@ -109,7 +110,6 @@ module.exports = {
       gridTemplateRows: {
         'auto-fit': 'repeat(auto-fit, minmax(0, 1fr))',
         'auto-fill': 'repeat(auto-fill, minmax(0, 1fr))',
-
       },
       keyframes: {
         wave: {
