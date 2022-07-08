@@ -20,6 +20,7 @@ interface HandleNFTProps {
   startingDate?: Date;
   endingDate?: Date;
   auctionId: string;
+  multipleEdition?: boolean;
 }
 
 export const HandleNFT = ({
@@ -34,6 +35,7 @@ export const HandleNFT = ({
   startingDate,
   endingDate,
   auctionId,
+  multipleEdition = false
 }: HandleNFTProps) => {
   const router = useRouter();
   if (isOwner) {
@@ -80,7 +82,7 @@ export const HandleNFT = ({
     );
     // not the owner
   } else {
-    if (price && isBuyNow) {
+    if (price && isBuyNow && !multipleEdition) {
       return (
         <ListedAction
           href={`${router.asPath}/buy-now`}

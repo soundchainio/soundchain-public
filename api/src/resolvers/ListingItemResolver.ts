@@ -2,6 +2,7 @@ import { Arg, Ctx, FieldResolver, Query, Resolver, Root } from 'type-graphql';
 import { config } from '../config';
 import { ListingItem } from '../models/ListingItem';
 import { Context } from '../types/Context';
+import { FilterListingItemInput } from '../types/FilterListingItemInput';
 
 @Resolver(ListingItem)
 export class ListingItemResolver {
@@ -15,8 +16,8 @@ export class ListingItemResolver {
   @Query(() => ListingItem, { nullable: true })
   async listingItem(
     @Ctx() { listingItemService }: Context,
-    @Arg('tokenId') tokenId: number,
+    @Arg('input') { tokenId, contractAddress }: FilterListingItemInput,
   ): Promise<ListingItem | void> {
-    return listingItemService.getListingItem(tokenId);
+    return listingItemService.getListingItem(tokenId, contractAddress);
   }
 }

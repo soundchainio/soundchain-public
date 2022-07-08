@@ -7,17 +7,17 @@ import { useCallback } from 'react';
 import { Soundchain721 } from 'types/web3-v1-contracts/Soundchain721';
 import { SoundchainAuction } from 'types/web3-v1-contracts/SoundchainAuction';
 import { SoundchainMarketplace } from 'types/web3-v1-contracts/SoundchainMarketplace';
-import { SoundchainMarketplaceEditions } from 'types/web3-v2-contracts/SoundchainMarketplaceEditions';
+import { PayableTransactionObject } from 'types/web3-v1-contracts/types';
 import { Soundchain721Editions } from 'types/web3-v2-contracts/Soundchain721Editions';
+import { SoundchainMarketplaceEditions } from 'types/web3-v2-contracts/SoundchainMarketplaceEditions';
 import Web3 from 'web3';
 import { PromiEvent, TransactionReceipt } from 'web3-core/types';
 import { AbiItem } from 'web3-utils';
 import soundchainAuction from '../contract/Auction.sol/SoundchainAuction.json';
-import soundchainMarketplaceEditions from '../contract/v2/SoundchainMarketplaceEditions.json';
 import soundchainMarketplace from '../contract/Marketplace.sol/SoundchainMarketplace.json';
 import soundchainContract from '../contract/Soundchain721.sol/Soundchain721.json';
 import soundchainContractEditions from '../contract/Soundchain721Editions.sol/Soundchain721Editions.json';
-import { PayableTransactionObject } from 'types/web3-v1-contracts/types';
+import soundchainMarketplaceEditions from '../contract/v2/SoundchainMarketplaceEditions.json';
 
 const nftAddress = config.web3.contractsV2.contractAddress as string;
 const marketplaceAddress = config.web3.contractsV1.marketplaceAddress as string;
@@ -151,19 +151,19 @@ class BuyItem extends BlockchainFunction<BuyItemParams> {
     if (marketplaceContractAddress === marketplaceEditionsAddress) {
       transactionObject = marketplaceEditionsContract(web3).methods.buyItem(
         contractAddresses?.nft || nftAddress,
-        tokenId, 
+        tokenId,
         owner,
         false,
       );
     } else {
       transactionObject = marketplaceContract(web3).methods.buyItem(
         contractAddresses?.nft || nftAddress,
-        tokenId, 
+        tokenId,
         owner,
       );
 
     }
-    const gas = await transactionObject.estimateGas({ from });
+    const gas = await transactionObject.estimateGas({ from, value });
 
     await this._execute(gasPrice => transactionObject.send({ from, gas, value, gasPrice }));
 
@@ -306,7 +306,7 @@ class ResultAuction extends BlockchainFunction<TokenParams> {
     this.web3 = web3;
 
     const transactionObject = auctionContract(web3).methods.resultAuction(
-      contractAddresses?.nft || nftAddress, 
+      contractAddresses?.nft || nftAddress,
       tokenId
     );
     const gas = await transactionObject.estimateGas({ from });
@@ -327,7 +327,7 @@ class ListItem extends BlockchainFunction<ListItemParams> {
     const { contractAddresses, from, tokenId, price, startTime } = this.params;
     const totalPrice = Web3.utils.toBN(price).muln(1 + config.soundchainFee);
     this.web3 = web3;
-    
+
     const marketplaceContractAddress = contractAddresses?.marketplace || marketplaceEditionsAddress
 
     let transactionObject: PayableTransactionObject<void>;
@@ -345,10 +345,10 @@ class ListItem extends BlockchainFunction<ListItemParams> {
       );
     } else {
       transactionObject = marketplaceContract(web3).methods.listItem(
-        contractAddresses?.nft || nftAddress, 
-        tokenId, 
-        1, 
-        totalPrice, 
+        contractAddresses?.nft || nftAddress,
+        tokenId,
+        1,
+        totalPrice,
         startTime
       );
     }
@@ -456,11 +456,11 @@ class ListEdition extends BlockchainFunction<ListEditionParams> {
     this.web3 = web3;
 
     const transactionObject = marketplaceEditionsContract(web3).methods.listEdition(
-      contractAddresses?.nft || nftAddress, 
+      contractAddresses?.nft || nftAddress,
       editionNumber,
-      totalPrice, 
-      0, 
-      true, 
+      totalPrice,
+      0,
+      true,
       false,
       startTime
     );
@@ -481,7 +481,7 @@ class CancelEditionListing extends BlockchainFunction<CancelEditionListingParams
     this.web3 = web3;
 
     const transactionObject = marketplaceEditionsContract(web3).methods.cancelEditionListing(
-      contractAddresses?.nft || nftAddress, 
+      contractAddresses?.nft || nftAddress,
       editionNumber,
     );
     const gas = await transactionObject.estimateGas({ from });

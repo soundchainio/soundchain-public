@@ -49,7 +49,11 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
   const { getRoyalties } = useBlockchain();
   const { loading: isLoadingOwner, isOwner } = useTokenOwner(track.nftData?.tokenId, track.nftData?.contract);
 
-  const { data, fetchMore, loading: loadingListingItem } = useBuyNowListingItemsQuery({
+  const {
+    data,
+    fetchMore,
+    loading: loadingListingItem,
+  } = useBuyNowListingItemsQuery({
     variables: {
       page: { first: 10 },
       sort: SelectToApolloQuery[SortListingItem.CreatedAt],
@@ -65,7 +69,7 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
   const nftData = track.nftData;
   const tokenId = nftData?.tokenId;
 
-  const firstListingItem =  data?.buyNowListingItems?.nodes?.[0]?.listingItem
+  const firstListingItem = data?.buyNowListingItems?.nodes?.[0]?.listingItem;
 
   const mintingPending = nftData?.pendingRequest === PendingRequest.Mint;
   const isProcessing = nftData?.pendingRequest != PendingRequest.None;
@@ -75,14 +79,9 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
   const price = firstListingItem?.pricePerItemToShow || 0;
   const auctionIsOver = (firstListingItem?.endingTime || 0) < Math.floor(Date.now() / 1000);
   const canComplete = compareWallets(account, firstListingItem?.owner);
-  const startingDate = firstListingItem?.startingTime
-    ? new Date(firstListingItem?.startingTime * 1000)
-    : undefined;
-  const endingDate = firstListingItem?.endingTime
-    ? new Date(firstListingItem?.endingTime * 1000)
-    : undefined;
+  const startingDate = firstListingItem?.startingTime ? new Date(firstListingItem?.startingTime * 1000) : undefined;
+  const endingDate = firstListingItem?.endingTime ? new Date(firstListingItem?.endingTime * 1000) : undefined;
   const loading = loadingListingItem || isLoadingOwner;
-
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
@@ -135,60 +134,62 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
   return (
     <>
       <SEO title={title} description={description} canonicalUrl={`/tracks/${track.id}`} image={track.artworkUrl} />
-      <div className="flex flex-col gap-5 p-3">
-        <Track track={track} />
-        <ViewPost trackId={track.id} isFavorited={track.isFavorite} />
+      <div className="pb-20">
+        <div className="flex flex-col gap-5 p-3">
+          <Track track={track} />
+          <ViewPost trackId={track.id} isFavorited={track.isFavorite} />
+        </div>
+        <dl className="flex items-center justify-between gap-3 px-4 py-3">
+          <dt className="text-xs font-bold uppercase text-white"># of Editions</dt>
+          <dd className="flex items-center justify-between gap-2 text-xs font-black text-gray-80">
+            <Cards />
+            {track.editionSize}
+          </dd>
+        </dl>
+        <Description description={track.description || ''} className="p-4" />
+        <TrackInfo
+          trackTitle={track.title}
+          albumTitle={track.album}
+          releaseYear={track.releaseYear}
+          genres={track.genres}
+          copyright={track.copyright}
+          artistProfile={profileInfo?.profile}
+          royalties={royalties}
+          me={me}
+        />
+        <div>{nftData && <MintingData transactionHash={nftData.transactionHash} ipfsCid={nftData.ipfsCid} />}</div>
+        <section>
+          <h3 className="flex items-center gap-2 px-4 py-4 font-bold text-gray-80">
+            <PriceTag fill="#808080" />
+            <p>Listings</p>
+          </h3>
+          {!loadingListingItem && (
+            <>
+              <div className="flex h-8 items-center bg-gray-20 px-4 py-2 text-xs font-black text-white">
+                <p className="min-w-[140px]">Price</p>
+                <p>From</p>
+              </div>
+              {nodes?.length ? (
+                <ol className="text-white">
+                  {nodes?.map(item => (
+                    <BuyNowEditionListItem
+                      key={item.id}
+                      price={item.listingItem?.pricePerItemToShow || 0}
+                      owner={item.nftData?.owner || ''}
+                      trackId={item.id}
+                      tokenId={item.nftData?.tokenId || 0}
+                      contractAddress={item.nftData?.contract || ''}
+                    />
+                  ))}
+                  {pageInfo?.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading Tracks" />}
+                </ol>
+              ) : (
+                <NoResultFound />
+              )}
+            </>
+          )}
+        </section>
       </div>
-      <dl className="flex items-center justify-between gap-3 px-4 py-3">
-        <dt className="text-xs font-bold uppercase text-white"># of Editions</dt>
-        <dd className="flex items-center justify-between gap-2 text-xs font-black text-gray-80">
-          <Cards />
-          {track.editionSize}
-        </dd>
-      </dl>
-      <Description description={track.description || ''} className="p-4" />
-      <TrackInfo
-        trackTitle={track.title}
-        albumTitle={track.album}
-        releaseYear={track.releaseYear}
-        genres={track.genres}
-        copyright={track.copyright}
-        artistProfile={profileInfo?.profile}
-        royalties={royalties}
-        me={me}
-      />
-      <div>{nftData && <MintingData transactionHash={nftData.transactionHash} ipfsCid={nftData.ipfsCid} />}</div>
-      <section>
-        <h3 className="flex items-center gap-2 px-4 py-4 font-bold text-gray-80">
-          <PriceTag fill="#808080" />
-          <p>Listings</p>
-        </h3>
-        {!loadingListingItem && (
-          <>
-            <div className="flex h-8 items-center bg-gray-20 px-4 py-2 text-xs font-black text-white">
-              <p className="min-w-[140px]">Price</p>
-              <p>From</p>
-            </div>
-            {nodes?.length ? (
-              <ol className="text-white">
-                {nodes?.map(item => (
-                  <BuyNowEditionListItem
-                    key={item.id}
-                    price={item.listingItem?.pricePerItemToShow || 0}
-                    owner={item.nftData?.owner || ''}
-                    trackId={item.id}
-                    tokenId={item.nftData?.tokenId || 0}
-                    contractAddress={item.nftData?.contract || ''}
-                  />
-                ))}
-                {pageInfo?.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading Tracks" />}
-              </ol>
-            ) : (
-              <NoResultFound />
-            )}
-          </>
-        )}
-      </section>
       {me &&
         (isProcessing && !mintingPending && nftData?.pendingRequest ? (
           <div className=" flex items-center justify-center p-3">
@@ -215,9 +216,9 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
             startingDate={startingDate}
             endingDate={endingDate}
             auctionId={''}
+            multipleEdition={true}
           />
-        ))
-      }
+        ))}
     </>
   );
 };
