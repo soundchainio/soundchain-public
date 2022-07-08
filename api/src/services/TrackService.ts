@@ -42,6 +42,7 @@ type bulkType = {
     };
   };
 };
+
 export class TrackService extends ModelService<typeof Track> {
   constructor(context: Context) {
     super(context, TrackModel);
@@ -67,6 +68,17 @@ export class TrackService extends ModelService<typeof Track> {
     track.muxAsset = { id: asset.id, playbackId: asset.playback_ids[0].id };
     await track.save();
     return track;
+  }
+
+  async createMultipleTracks(profileId: string, data: { track: Partial<Track>; amount: number }): Promise<Track[]> {
+    return await Promise.all(
+      Array(data.amount)
+        .fill(null)
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        .map(_ => {
+          return this.createTrack(profileId, data.track);
+        }),
+    );
   }
 
   async updateTrackByTransactionHash(transactionHash: string, changes: RecursivePartial<Track>): Promise<void> {
@@ -190,11 +202,8 @@ export class TrackService extends ModelService<typeof Track> {
 
   async isFavorite(trackId: string, profileId: string, trackTransactionHash: string): Promise<boolean> {
     return await FavoriteProfileTrackModel.exists({
-      $or: [
-        { trackId },
-        { trackTransactionHash },
-      ],
-      profileId
+      $or: [{ trackId }, { trackTransactionHash }],
+      profileId,
     });
   }
 
@@ -202,10 +211,7 @@ export class TrackService extends ModelService<typeof Track> {
     const track = await this.model.findOne({ _id: trackId });
 
     const findParams = {
-      $or: [
-        { trackId },
-        { trackTransactionHash: track.nftData.transactionHash },
-      ],
+      $or: [{ trackId }, { trackTransactionHash: track.nftData.transactionHash }],
       profileId,
     };
 
@@ -216,7 +222,7 @@ export class TrackService extends ModelService<typeof Track> {
       const favorite = new FavoriteProfileTrackModel({
         profileId,
         trackId,
-        trackTransactionHash: track.nftData.transactionHash
+        trackTransactionHash: track.nftData.transactionHash,
       });
       await favorite.save();
       return favorite;
@@ -246,11 +252,8 @@ export class TrackService extends ModelService<typeof Track> {
     const favTrack = await FavoriteProfileTrackModel.aggregate([
       {
         $match: {
-          $or: [
-            { trackId: trackId.toString() },
-            { trackTransactionHash: trackTransactionHash.toString() },
-          ]
-        }
+          $or: [{ trackId: trackId.toString() }, { trackTransactionHash: trackTransactionHash.toString() }],
+        },
       },
       {
         $count: 'trackId',
@@ -268,19 +271,16 @@ export class TrackService extends ModelService<typeof Track> {
     const trackQuery = await this.model.aggregate([
       {
         $match: {
-          $or: [
-            { trackId: trackId.toString() },
-            { 'nftData.transactionHash': trackTransactionHash.toString() },
-          ]
-        }
+          $or: [{ trackId: trackId.toString() }, { 'nftData.transactionHash': trackTransactionHash.toString() }],
+        },
       },
       {
         $group: {
           _id: '$nftData.transactionHash',
           totalPlaybackCount: {
             $sum: '$playbackCount',
-          }
-        }
+          },
+        },
       },
       {
         $project: {
@@ -331,14 +331,11 @@ export class TrackService extends ModelService<typeof Track> {
             {
               $match: {
                 $expr: {
-                  $and: [
-                    { $eq: ['$tokenId', '$$tokenId'] },
-                    { $eq: ['$nft', '$$contract'] }
-                  ],
-                }
-              }
-            }
-          ]
+                  $and: [{ $eq: ['$tokenId', '$$tokenId'] }, { $eq: ['$nft', '$$contract'] }],
+                },
+              },
+            },
+          ],
         },
       },
       {
@@ -353,14 +350,11 @@ export class TrackService extends ModelService<typeof Track> {
             {
               $match: {
                 $expr: {
-                  $and: [
-                    { $eq: ['$tokenId', '$$tokenId'] },
-                    { $eq: ['$nft', '$$contract'] }
-                  ],
-                }
-              }
-            }
-          ]
+                  $and: [{ $eq: ['$tokenId', '$$tokenId'] }, { $eq: ['$nft', '$$contract'] }],
+                },
+              },
+            },
+          ],
         },
       },
       {
@@ -502,14 +496,11 @@ export class TrackService extends ModelService<typeof Track> {
             {
               $match: {
                 $expr: {
-                  $and: [
-                    { $eq: ['$tokenId', '$$tokenId'] },
-                    { $eq: ['$nft', '$$contract'] }
-                  ],
-                }
-              }
-            }
-          ]
+                  $and: [{ $eq: ['$tokenId', '$$tokenId'] }, { $eq: ['$nft', '$$contract'] }],
+                },
+              },
+            },
+          ],
         },
       },
       {
