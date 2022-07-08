@@ -15,9 +15,10 @@ import {
   ExploreTracksDocument,
   FeedDocument,
   PendingRequest,
-  PostsDocument, Track,
+  PostsDocument,
   TracksDocument,
-  TracksQuery, useCreateMultipleTracksMutation,
+  TracksQuery,
+  useCreateTrackMutation,
   usePinJsonToIpfsMutation,
   usePinToIpfsMutation,
 } from 'lib/graphql';
@@ -25,7 +26,7 @@ import { imageMimeTypes } from 'lib/mimeTypes';
 import * as musicMetadata from 'music-metadata-browser';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Metadata } from 'types/NftTypes';
 import { genres } from 'utils/Genres';
 import { MintingDone } from './MintingDone';
@@ -50,7 +51,7 @@ export const CreateModal = () => {
   const [newTrack, setNewTrack] = useState<CreateTrackMutation['createTrack']['track']>();
 
   const { upload } = useUpload();
-  const [createMultipleTracks] = useCreateMultipleTracksMutation()
+  const [createTrack] = useCreateTrackMutation();
 
   const { web3, account } = useWalletContext();
   const [pinToIPFS] = usePinToIpfsMutation();
@@ -153,8 +154,7 @@ export const CreateModal = () => {
 
   const handleSubmit = async (values: FormValues) => {
     if (file && web3 && account && me) {
-      const { title, artworkFile, description, album, genres, releaseYear, copyright, royalty, editionQuantity } =
-        values;
+      const { title, artworkFile, description, album, genres, releaseYear, copyright, royalty } = values;
       const artist = me.handle;
       const artistId = me.id;
       const artistProfileId = me.profile.id;
@@ -217,39 +217,33 @@ export const CreateModal = () => {
           },
         });
 
-        const onTransactionHash = async (transactionHash: string) => {
+        const onTransactionHash = async (hash: string) => {
           setMintingState('Creating your track');
-          await createMultipleTracks({
+          const { data } = await createTrack({
             variables: {
               input: {
-                amount: values.editionQuantity,
-                track: {
-                  assetUrl,
-                  title,
-                  album,
-                  artist,
-                  artistId,
-                  artworkUrl,
-                  description,
-                  genres,
-                  releaseYear,
-                  artistProfileId,
-                  copyright,
-                  nftData: {
-                    transactionHash: transactionHash,
-                    minter: account,
-                    ipfsCid: metadataPinResult?.pinJsonToIPFS.cid,
-                    pendingRequest: PendingRequest.Mint,
-                    owner: account,
-                    pendingTime: new Date().toISOString(),
-                  },
-                }
-              }
+                assetUrl,
+                title,
+                album,
+                artist,
+                artistId,
+                artworkUrl,
+                description,
+                genres,
+                releaseYear,
+                artistProfileId,
+                copyright,
+                nftData: {
+                  transactionHash: hash,
+                  minter: account,
+                  ipfsCid: metadataPinResult?.pinJsonToIPFS.cid,
+                  pendingRequest: PendingRequest.Mint,
+                  owner: account,
+                  pendingTime: new Date().toISOString(),
+                },
+              },
             },
-
-            update: (cache, { data: createMultipleTracksData }) => {
-              setNewTrack(createMultipleTracksData?.createMultipleTracks.firstTrack)
-
+            update: (cache, { data: createTrackData }) => {
               const variables = { filter: { nftData: { owner: account } } };
 
               const cachedData = cache.readQuery<TracksQuery>({
@@ -261,11 +255,6 @@ export const CreateModal = () => {
                 return;
               }
 
-              const newTracks = createMultipleTracksData?.createMultipleTracks.trackIds.map((trackId) => ({
-                ...createMultipleTracksData?.createMultipleTracks.firstTrack,
-                id: trackId,
-              } as Track)) || []
-
               cache.writeQuery({
                 query: TracksDocument,
                 variables,
@@ -273,16 +262,19 @@ export const CreateModal = () => {
                 data: {
                   tracks: {
                     ...cachedData.tracks,
-                    nodes: [...newTracks, ...cachedData.tracks.nodes],
+                    nodes: [createTrackData?.createTrack.track, ...cachedData.tracks.nodes],
                   },
                 },
               });
             },
             refetchQueries: [FeedDocument, PostsDocument, ExploreTracksDocument],
-          })
+          });
+          const track = data?.createTrack.track;
+
+          setNewTrack(track);
           dispatchShowCreateModal(true);
           setMintingState(undefined);
-          setTransactionHash(transactionHash);
+          setTransactionHash(hash);
         };
 
         const onError = () => {
@@ -292,8 +284,8 @@ export const CreateModal = () => {
         };
 
         setMintingState('Minting NFT');
-        mintNftToken(`ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`, account, account, royalty, editionQuantity)
-          .onTransactionHash(transactionHash => onTransactionHash(transactionHash))
+        mintNftToken(`ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`, account, account, royalty)
+          .onReceipt(receipt => onTransactionHash(receipt.transactionHash))
           .onError(onError)
           .execute(web3);
       } catch {
@@ -317,12 +309,12 @@ export const CreateModal = () => {
   }, [mintingState, setIsMintingState]);
 
   const tabs = (
-    <div className="flex rounded-lg bg-gray-10">
+    <div className="flex bg-gray-10 rounded-lg">
       <button
         onClick={() => setTab(Tabs.NFT)}
         className={classNames(
-          'flex-1 rounded-lg py-1.5 text-sm font-bold',
-          tab === Tabs.NFT ? 'bg-gray-30 text-white' : 'text-gray-80',
+          'flex-1 rounded-lg font-bold text-sm py-1.5',
+          tab === Tabs.NFT ? 'text-white bg-gray-30' : 'text-gray-80',
         )}
       >
         Mint NFT
@@ -330,8 +322,8 @@ export const CreateModal = () => {
       <button
         onClick={handlePostTabClick}
         className={classNames(
-          'flex-1 rounded-lg py-1.5 text-sm font-bold',
-          tab === Tabs.POST ? 'bg-gray-30 text-white' : 'text-gray-80',
+          'flex-1 rounded-lg font-bold text-sm py-1.5',
+          tab === Tabs.POST ? 'text-white bg-gray-30' : 'text-gray-80',
         )}
       >
         Post
@@ -345,7 +337,7 @@ export const CreateModal = () => {
       title={tabs}
       onClose={handleClose}
       leftButton={
-        <button className="w-full flex-1 p-2 text-center text-sm font-bold text-gray-400" onClick={handleClose}>
+        <button className="p-2 w-full text-gray-400 font-bold flex-1 text-center text-sm" onClick={handleClose}>
           Close
         </button>
       }
@@ -359,7 +351,7 @@ export const CreateModal = () => {
           </div>
           {file && preview && <TrackMetadataForm handleSubmit={handleSubmit} initialValues={initialValues} />}
           {mintingState && (
-            <div className="absolute top-0 left-0 flex h-full w-full flex-col items-center justify-center bg-gray-20 bg-opacity-80">
+            <div className="absolute top-0 left-0 flex flex-col items-center justify-center h-full w-full bg-gray-20 bg-opacity-80">
               <Image
                 height={200}
                 width={200}
@@ -367,7 +359,7 @@ export const CreateModal = () => {
                 alt="Loading"
                 priority
               />
-              <div className="mt-4 text-center text-lg font-bold text-white">{mintingState}</div>
+              <div className="font-bold text-lg text-white text-center mt-4">{mintingState}</div>
               {mintError && (
                 <Button variant="rainbow-xs" onClick={onCloseError} className="mt-4">
                   CANCEL

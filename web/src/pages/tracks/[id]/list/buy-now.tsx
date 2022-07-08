@@ -54,7 +54,7 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 
 export default function ListBuyNowPage({ track }: TrackPageProps) {
   const { isTokenOwner, isApprovedMarketplace: checkIsApproved } = useBlockchain();
-  const { listItem, listEdition } = useBlockchainV2();
+  const { listItem } = useBlockchainV2();
   const router = useRouter();
   const me = useMe();
   const [trackUpdate] = useUpdateTrackMutation();
@@ -82,7 +82,7 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
       if (!account || !web3 || nftData?.tokenId === null || nftData?.tokenId === undefined || !isTokenOwner) {
         return;
       }
-      const isTokenOwnerRes = await isTokenOwner(web3, nftData.tokenId, account, { nft: nftData.contract });
+      const isTokenOwnerRes = await isTokenOwner(web3, nftData.tokenId, account);
       setIsOwner(isTokenOwnerRes);
     };
     fetchIsOwner();
@@ -96,94 +96,46 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
     const fetchIsApproved = async () => {
       if (!web3 || !checkIsApproved || !account) return;
 
-      const is = await checkIsApproved(web3, account, { nft: nftData?.contract });
+      const is = await checkIsApproved(web3, account);
       setIsApproved(is);
     };
     fetchIsApproved();
-  }, [account, web3, checkIsApproved, showApprove, nftData]);
+  }, [account, web3, checkIsApproved, showApprove]);
 
   const isForSale = !!buyNowItem?.buyNowItem?.buyNowItem?.pricePerItem ?? false;
 
-  const isEditionListing = track.editionSize > 1 && nftData?.minter === account;
-  const listLabel = isEditionListing ? 'LIST EDITION' : 'LIST NFT';
-
-  const handleListEdition = (
-    { price, startTime }: ListNFTBuyNowFormValues,
-    helper: FormikHelpers<ListNFTBuyNowFormValues>,
-  ) => {
-    if (nftData?.tokenId === null || nftData?.tokenId === undefined || !account || !web3 || !track.trackEdition) {
-      return;
-    }
-    const weiPrice = web3?.utils.toWei(price.toString(), 'ether') || '0';
-    const startTimestamp = Math.ceil(startTime.getTime() / 1000);
-
-    const onReceipt = async () => {
-      await trackUpdate({
-        variables: {
-          input: {
-            trackId: track.id,
-            nftData: {
-              pendingRequest: PendingRequest.List,
-              pendingTime: new Date().toISOString(),
-            },
-          },
-        },
-      });
-      router.replace(router.asPath.replace('/list/buy-now', ''));
-    };
-    listEdition(track.trackEdition.editionId, account, weiPrice, startTimestamp, { nft: nftData.contract })
-      .onReceipt(onReceipt)
-      .onError(cause => toast.error(cause.message))
-      .finally(() => helper.setSubmitting(false))
-      .execute(web3);
-  };
-
-  const handleListSingleNft = (
-    { price, startTime }: ListNFTBuyNowFormValues,
-    helper: FormikHelpers<ListNFTBuyNowFormValues>,
-  ) => {
-    if (nftData?.tokenId === null || nftData?.tokenId === undefined || !account || !web3) {
-      return;
-    }
-    const weiPrice = web3?.utils.toWei(price.toString(), 'ether') || '0';
-    const startTimestamp = Math.ceil(startTime.getTime() / 1000);
-
-    const onReceipt = async () => {
-      await trackUpdate({
-        variables: {
-          input: {
-            trackId: track.id,
-            nftData: {
-              pendingRequest: PendingRequest.List,
-              pendingTime: new Date().toISOString(),
-            },
-          },
-        },
-      });
-      router.replace(router.asPath.replace('/list/buy-now', ''));
-    };
-    listItem(nftData.tokenId, account, weiPrice, startTimestamp, { nft: nftData.contract })
-      .onReceipt(onReceipt)
-      .onError(cause => toast.error(cause.message))
-      .finally(() => helper.setSubmitting(false))
-      .execute(web3);
-  };
-
   const handleList = (
-    values: ListNFTBuyNowFormValues,
+    { price, startTime }: ListNFTBuyNowFormValues,
     helper: FormikHelpers<ListNFTBuyNowFormValues>,
   ) => {
     if (nftData?.tokenId === null || nftData?.tokenId === undefined || !account || !web3) {
       return;
     }
+    const weiPrice = web3?.utils.toWei(price.toString(), 'ether') || '0';
+    const startTimestamp = Math.ceil(startTime.getTime() / 1000);
+
     if (isApproved) {
-      if (isEditionListing) {
-        handleListEdition(values, helper);
-      } else {
-        handleListSingleNft(values, helper);
-      }
+      const onReceipt = async () => {
+        await trackUpdate({
+          variables: {
+            input: {
+              trackId: track.id,
+              nftData: {
+                pendingRequest: PendingRequest.List,
+                pendingTime: new Date().toISOString(),
+              },
+            },
+          },
+        });
+        router.replace(router.asPath.replace('/list/buy-now', ''));
+      };
+      listItem(nftData.tokenId, account, weiPrice, startTimestamp)
+        .onReceipt(onReceipt)
+        .onError(cause => toast.error(cause.message))
+        .finally(() => helper.setSubmitting(false))
+        .execute(web3);
     } else {
-      me ? dispatchShowApproveModal(true, SaleType.MARKETPLACE, nftData.contract) : router.push('/login');
+      me ? dispatchShowApproveModal(true, SaleType.MARKETPLACE) : router.push('/login');
       helper.setSubmitting(false);
     }
   };
@@ -202,7 +154,7 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
       <div className="m-4">
         <Track track={track} />
       </div>
-      <ListNFTBuyNow handleSubmit={handleList} submitLabel={isApproved ? listLabel : 'APPROVE MARKETPLACE'} />
+      <ListNFTBuyNow handleSubmit={handleList} submitLabel={isApproved ? 'LIST NFT' : 'APPROVE MARKETPLACE'} />
     </>
   );
 }

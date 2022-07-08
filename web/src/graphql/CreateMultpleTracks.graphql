@@ -1,8 +1,0 @@
-mutation CreateMultipleTracks($input: CreateMultipleTracksInput!) {
-  createMultipleTracks(input: $input) {
-    trackIds,
-    firstTrack {
-      ...TrackComponentFields
-    }
-  }
-}

@@ -115,7 +115,7 @@ export const ConfirmDeleteNFTModal = () => {
     const tokenId = track?.nftData?.tokenId;
     if (hasEnoughFunds() && tokenId && account && web3) {
       setLoading(true);
-      burnNftToken(tokenId, account, { nft: track.nftData?.contract})
+      burnNftToken(tokenId, account)
         .onReceipt(onBurnConfirmation)
         .onError(cause => toast.error(cause.message))
         .finally(() => setLoading(false))

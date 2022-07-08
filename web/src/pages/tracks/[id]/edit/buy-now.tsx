@@ -14,7 +14,7 @@ import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemQuery, useUpdat
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
-import { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { SaleType } from 'types/SaleType';
 import { compareWallets } from 'utils/Wallet';
@@ -80,10 +80,6 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       listingPayload?.buyNowItem?.buyNowItem?.tokenId,
       track.id,
       SaleType.MARKETPLACE,
-      {
-        nft: nftData.contract,
-        marketplace: listingPayload?.buyNowItem?.buyNowItem?.contract,
-      }
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account, listingPayload?.buyNowItem?.buyNowItem?.tokenId, nftData?.pendingRequest, track.id, web3]);
@@ -141,13 +137,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       router.replace(router.asPath.replace('/edit/buy-now', ''));
     };
 
-    updateListing(
-      listingPayload.buyNowItem?.buyNowItem?.tokenId, 
-      account, 
-      weiPrice, 
-      startTimestamp, 
-      { nft: nftData?.contract, marketplace: listingPayload.buyNowItem?.buyNowItem.contract }
-    )
+    updateListing(listingPayload.buyNowItem?.buyNowItem?.tokenId, account, weiPrice, startTimestamp)
       .onReceipt(onReceipt)
       .onError(cause => toast.error(cause.message))
       .finally(() => helper.setSubmitting(false))

@@ -49,7 +49,6 @@ interface TransferNftContextData {
     artworkUrl: string;
     tokenId?: number;
     artist: string;
-    contractAddress: string
   };
   loadMore: () => void;
   refetch: () => void;
@@ -210,7 +209,6 @@ export function useTransferNftsControls() {
         artist: track.artist,
         tokenId: track.nftData?.tokenId,
         title: track.title,
-        contractAddress: track.nftData?.contract
       } as TransferNftContextData['selectedNftTrack'];
     }
   }, [selectedNft, data]);
@@ -292,7 +290,6 @@ export function TransferNftsForm() {
             artworkUrl: selectedNftTrack.artworkUrl,
             title: selectedNftTrack.title,
             artist: selectedNftTrack.artist,
-            contractAddress: selectedNftTrack.contractAddress,
             refetch,
           });
         }}

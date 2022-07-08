@@ -47,7 +47,6 @@ export const NftTransferConfirmationModal = () => {
     title = '',
     tokenId,
     artworkUrl,
-    contractAddress,
   } = modalState as unknown as ShowTransferNftConfirmationPayload;
 
   const maxGasFee = useMaxGasFee(isOpen);
@@ -80,7 +79,7 @@ export const NftTransferConfirmationModal = () => {
         refetchBalance();
         push('/wallet');
       };
-      transferNftToken(tokenId, account as string, walletRecipient, { nft: contractAddress })
+      transferNftToken(tokenId, account as string, walletRecipient)
         .onReceipt(onReceipt)
         .onError(cause => toast.error(cause.message))
         .finally(() => setLoading(false))
