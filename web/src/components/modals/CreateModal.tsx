@@ -18,8 +18,6 @@ import {
   PostsDocument, Track,
   TracksDocument,
   TracksQuery, useCreateMultipleTracksMutation,
-  useCreatePostMutation,
-  useCreateTrackMutation,
   usePinJsonToIpfsMutation,
   usePinToIpfsMutation,
 } from 'lib/graphql';
