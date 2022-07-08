@@ -15,6 +15,7 @@ import { useModalDispatch } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
 import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMe } from 'hooks/useMe';
+import { useTokenOwner } from 'hooks/useTokenOwner';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Ellipsis } from 'icons/Ellipsis';
 import {
@@ -55,12 +56,11 @@ const pendingRequestMapping: Record<PendingRequest, string> = {
 export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
   const me = useMe();
   const { account, web3 } = useWalletContext();
-  const { isTokenOwner, getRoyalties, getHighestBid } = useBlockchain();
-  const [isOwner, setIsOwner] = useState<boolean>(false);
+  const { getRoyalties, getHighestBid } = useBlockchain();
   const [royalties, setRoyalties] = useState<number>();
   const [highestBid, setHighestBid] = useState<HighestBid>({} as HighestBid);
-  const [isLoadingOwner, setLoadingOwner] = useState(true);
   const { dispatchShowAuthorActionsModal, dispatchShowBidsHistory } = useModalDispatch();
+  const { loading: isLoadingOwner, isOwner } = useTokenOwner(track.nftData?.tokenId, track.nftData?.contract);
 
   const [refetchTrack, { data: trackData }] = useTrackLazyQuery({
     fetchPolicy: 'network-only',
@@ -163,15 +163,6 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
       userByWallet({ variables: { walletAddress: nftData.owner } });
     }
   }, [nftData?.owner, userByWallet]);
-
-  useEffect(() => {
-    if (!account || !web3 || tokenId === null || tokenId === undefined) {
-      return;
-    }
-    isTokenOwner(web3, tokenId, account, { nft: nftData?.contract })
-      .then(result => setIsOwner(result))
-      .finally(() => setLoadingOwner(false));
-  }, [account, web3, tokenId, isTokenOwner, nftData]);
 
   useEffect(() => {
     const fetchRoyalties = async () => {

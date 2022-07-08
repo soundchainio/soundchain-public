@@ -9,9 +9,9 @@ import soundchainAuction from '../contract/Auction.sol/SoundchainAuction.json';
 import soundchainContract from '../contract/Soundchain721.sol/Soundchain721.json';
 import { ContractAddresses } from './useBlockchainV2';
 
-const nftAddress = config.contractAddress as string;
-const marketplaceAddress = config.marketplaceAddress as string;
-const auctionAddress = config.auctionAddress as string;
+const nftAddress = config.web3.contractsV2.contractAddress as string;
+const marketplaceEditionsAddress = config.web3.contractsV2.marketplaceAddress as string;
+const auctionAddress = config.web3.contractsV1.auctionAddress as string;
 
 export const gas = 1200000;
 export const applySoundchainFee = (price: number) => (price * (1 + config.soundchainFee)).toFixed();
@@ -45,7 +45,7 @@ const useBlockchain = () => {
       soundchainContract.abi as AbiItem[],
       contractAddresses.nft || nftAddress,
     ) as unknown as Soundchain721;
-    return await nftContract.methods.isApprovedForAll(from, marketplaceAddress).call();
+    return await nftContract.methods.isApprovedForAll(from, marketplaceEditionsAddress).call();
   }, []);
 
   const isApprovedAuction = useCallback(async (web3: Web3, from: string, contractAddresses: ContractAddresses) => {

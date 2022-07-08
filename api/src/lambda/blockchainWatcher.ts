@@ -14,9 +14,10 @@ import { ItemCanceled, ItemListed, ItemSold, ItemUpdated } from '../../types/web
 import { EditionCreated } from '../../types/web3-v2-contracts/Soundchain721Editions';
 import { config } from '../config';
 import SoundchainCollectible from '../contract/Soundchain721.json';
-import SoundchainCollectibleEditions from '../contract/Soundchain721Editions.json';
+import SoundchainCollectibleEditions from '../contract/v2/Soundchain721Editions.json';
 import SoundchainAuction from '../contract/SoundchainAuction.json';
 import SoundchainMarketplace from '../contract/SoundchainMarketplace.json';
+import SoundchainMarketplaceEditions from '../contract/v2/SoundchainMarketplaceEditions.json';
 import { UserModel } from '../models/User';
 import { EventData } from '../types/BlockchainEvents';
 import { Context } from '../types/Context';
@@ -52,22 +53,34 @@ const getContext = async () => {
 const getAllEvents = async (web3: Web3, fromBlock: number, toBlock: number) => {
   const marketplaceContract = new web3.eth.Contract(
     SoundchainMarketplace.abi as AbiItem[],
-    config.minting.marketplaceAddress,
+    config.minting.contractsV1.marketplaceAddress,
+  );
+  const marketplaceMultipleEditionContract = new web3.eth.Contract(
+    SoundchainMarketplaceEditions.abi as AbiItem[],
+    config.minting.contractsV2.marketplaceMultipleEditionAddress,
   );
 
   const blocks = { fromBlock, toBlock };
-  const auctionContract = new web3.eth.Contract(SoundchainAuction.abi as AbiItem[], config.minting.auctionAddress);
-  const nftContract = new web3.eth.Contract(SoundchainCollectible.abi as AbiItem[], config.minting.nftAddress);
-  const nftEditionsContract = new web3.eth.Contract(SoundchainCollectibleEditions.abi as AbiItem[], config.minting.nftMultipleEditionAddress);
+  const auctionContract = new web3.eth.Contract(SoundchainAuction.abi as AbiItem[], config.minting.contractsV1.auctionAddress);
+  const nftContract = new web3.eth.Contract(SoundchainCollectible.abi as AbiItem[], config.minting.contractsV1.nftAddress);
+  const nftEditionsContract = new web3.eth.Contract(
+    SoundchainCollectibleEditions.abi as AbiItem[], 
+    config.minting.contractsV2.nftMultipleEditionAddress
+  );
 
   try {
-    const [marketplaceEvents, nftEvents, nftEditionsEvents, auctionEvents] = await Promise.all([
+    const [marketplaceEvents, marketplaceEditionsEvents, nftEvents, nftEditionsEvents, auctionEvents] = await Promise.all([
       marketplaceContract.getPastEvents('allEvents', blocks),
+      marketplaceMultipleEditionContract.getPastEvents('allEvents', blocks),
       nftContract.getPastEvents('allEvents', blocks),
       nftEditionsContract.getPastEvents('allEvents', blocks),
       auctionContract.getPastEvents('allEvents', blocks),
     ]);
-    return { marketplaceEvents, nftEvents: [...nftEvents, ...nftEditionsEvents], auctionEvents };
+    return { 
+      marketplaceEvents: [...marketplaceEvents, ...marketplaceEditionsEvents], 
+      nftEvents: [...nftEvents, ...nftEditionsEvents], 
+      auctionEvents 
+    };
   } catch (error) {
     console.error(`From block: ${fromBlock}\nTo block: ${toBlock}\n${error}`);
   }
@@ -78,7 +91,7 @@ const processMarketplaceEvents = async (events: EventData[], context: Context) =
     switch (event.event) {
       case 'ItemListed':
         {
-          await itemEvents.listed((event as unknown as ItemListed).returnValues, context);
+          await itemEvents.listed((event as unknown as ItemListed), context);
         }
         break;
       case 'ItemSold':

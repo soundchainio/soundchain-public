@@ -322,17 +322,45 @@ export class TrackService extends ModelService<typeof Track> {
       {
         $lookup: {
           from: 'buynowitems',
-          localField: 'nftData.tokenId',
-          foreignField: 'tokenId',
           as: 'buynowitem',
+          let: { 
+            tokenId: '$nftData.tokenId',
+            contract: '$nftData.contract',
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$tokenId', '$$tokenId'] },
+                    { $eq: ['$nft', '$$contract'] }
+                  ],
+                }
+              }
+            }
+          ]
         },
       },
       {
         $lookup: {
           from: 'auctionitems',
-          localField: 'nftData.tokenId',
-          foreignField: 'tokenId',
           as: 'auctionitem',
+          let: { 
+            tokenId: '$nftData.tokenId',
+            contract: '$nftData.contract',
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$tokenId', '$$tokenId'] },
+                    { $eq: ['$nft', '$$contract'] }
+                  ],
+                }
+              }
+            }
+          ]
         },
       },
       {
@@ -465,9 +493,23 @@ export class TrackService extends ModelService<typeof Track> {
       {
         $lookup: {
           from: 'buynowitems',
-          localField: 'nftData.tokenId',
-          foreignField: 'tokenId',
           as: 'listingItem',
+          let: { 
+            tokenId: '$nftData.tokenId',
+            contract: '$nftData.contract',
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$tokenId', '$$tokenId'] },
+                    { $eq: ['$nft', '$$contract'] }
+                  ],
+                }
+              }
+            }
+          ]
         },
       },
       {
