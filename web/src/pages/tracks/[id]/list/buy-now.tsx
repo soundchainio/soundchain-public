@@ -54,7 +54,7 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 
 export default function ListBuyNowPage({ track }: TrackPageProps) {
   const { isTokenOwner, isApprovedMarketplace: checkIsApproved } = useBlockchain();
-  const { listItem } = useBlockchainV2();
+  const { listItem, listEdition } = useBlockchainV2();
   const router = useRouter();
   const me = useMe();
   const [trackUpdate] = useUpdateTrackMutation();
@@ -104,7 +104,41 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
 
   const isForSale = !!buyNowItem?.buyNowItem?.buyNowItem?.pricePerItem ?? false;
 
-  const handleList = (
+  const isEditionListing = track.editionSize > 1 && nftData?.minter === account;
+  const listLabel = isEditionListing ? 'LIST EDITION' : 'LIST NFT';
+
+  const handleListEdition = (
+    { price, startTime }: ListNFTBuyNowFormValues,
+    helper: FormikHelpers<ListNFTBuyNowFormValues>,
+  ) => {
+    if (nftData?.tokenId === null || nftData?.tokenId === undefined || !account || !web3 || !track.trackEdition) {
+      return;
+    }
+    const weiPrice = web3?.utils.toWei(price.toString(), 'ether') || '0';
+    const startTimestamp = Math.ceil(startTime.getTime() / 1000);
+
+    const onReceipt = async () => {
+      await trackUpdate({
+        variables: {
+          input: {
+            trackId: track.id,
+            nftData: {
+              pendingRequest: PendingRequest.List,
+              pendingTime: new Date().toISOString(),
+            },
+          },
+        },
+      });
+      router.replace(router.asPath.replace('/list/buy-now', ''));
+    };
+    listEdition(track.trackEdition.editionId, account, weiPrice, startTimestamp, { nft: nftData.contract })
+      .onReceipt(onReceipt)
+      .onError(cause => toast.error(cause.message))
+      .finally(() => helper.setSubmitting(false))
+      .execute(web3);
+  };
+
+  const handleListSingleNft = (
     { price, startTime }: ListNFTBuyNowFormValues,
     helper: FormikHelpers<ListNFTBuyNowFormValues>,
   ) => {
@@ -114,26 +148,40 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
     const weiPrice = web3?.utils.toWei(price.toString(), 'ether') || '0';
     const startTimestamp = Math.ceil(startTime.getTime() / 1000);
 
-    if (isApproved) {
-      const onReceipt = async () => {
-        await trackUpdate({
-          variables: {
-            input: {
-              trackId: track.id,
-              nftData: {
-                pendingRequest: PendingRequest.List,
-                pendingTime: new Date().toISOString(),
-              },
+    const onReceipt = async () => {
+      await trackUpdate({
+        variables: {
+          input: {
+            trackId: track.id,
+            nftData: {
+              pendingRequest: PendingRequest.List,
+              pendingTime: new Date().toISOString(),
             },
           },
-        });
-        router.replace(router.asPath.replace('/list/buy-now', ''));
-      };
-      listItem(nftData.tokenId, account, weiPrice, startTimestamp, { nft: nftData.contract })
-        .onReceipt(onReceipt)
-        .onError(cause => toast.error(cause.message))
-        .finally(() => helper.setSubmitting(false))
-        .execute(web3);
+        },
+      });
+      router.replace(router.asPath.replace('/list/buy-now', ''));
+    };
+    listItem(nftData.tokenId, account, weiPrice, startTimestamp, { nft: nftData.contract })
+      .onReceipt(onReceipt)
+      .onError(cause => toast.error(cause.message))
+      .finally(() => helper.setSubmitting(false))
+      .execute(web3);
+  };
+
+  const handleList = (
+    values: ListNFTBuyNowFormValues,
+    helper: FormikHelpers<ListNFTBuyNowFormValues>,
+  ) => {
+    if (nftData?.tokenId === null || nftData?.tokenId === undefined || !account || !web3) {
+      return;
+    }
+    if (isApproved) {
+      if (isEditionListing) {
+        handleListEdition(values, helper);
+      } else {
+        handleListSingleNft(values, helper);
+      }
     } else {
       me ? dispatchShowApproveModal(true, SaleType.MARKETPLACE, nftData.contract) : router.push('/login');
       helper.setSubmitting(false);
@@ -154,7 +202,7 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
       <div className="m-4">
         <Track track={track} />
       </div>
-      <ListNFTBuyNow handleSubmit={handleList} submitLabel={isApproved ? 'LIST NFT' : 'APPROVE MARKETPLACE'} />
+      <ListNFTBuyNow handleSubmit={handleList} submitLabel={isApproved ? listLabel : 'APPROVE MARKETPLACE'} />
     </>
   );
 }

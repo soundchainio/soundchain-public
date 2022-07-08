@@ -1,3 +1,4 @@
+import { ContractAddresses } from 'hooks/useBlockchainV2';
 import { ReactionType } from 'lib/graphql';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 import { SaleType } from 'types/SaleType';
@@ -69,7 +70,7 @@ export interface ShowRemoveListing {
   tokenId: number;
   trackId: string;
   saleType: SaleType;
-  nftContractAddress?: string | null
+  contractAddresses?: ContractAddresses
 }
 
 export interface ShowAudioPlayerPayload {
