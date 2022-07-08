@@ -253,6 +253,17 @@ export type CreateBuyNowItemType = {
   startingTime: Scalars['Float'];
 };
 
+export type CreateMultipleTracksInput = {
+  amount: Scalars['Float'];
+  track: CreateTrackInput;
+};
+
+export type CreateMultipleTracksPayload = {
+  __typename?: 'CreateMultipleTracksPayload';
+  firstTrack: Track;
+  trackIds: Array<Scalars['String']>;
+};
+
 export type CreatePostInput = {
   body: Scalars['String'];
   mediaLink?: Maybe<Scalars['String']>;
@@ -612,6 +623,7 @@ export type Mutation = {
   updateProfileVerificationRequest: ProfileVerificationRequestPayload;
   removeProfileVerificationRequest: ProfileVerificationRequestPayload;
   createTrack: CreateTrackPayload;
+  createMultipleTracks: CreateMultipleTracksPayload;
   updateTrack: UpdateTrackPayload;
   deleteTrackOnError: UpdateTrackPayload;
   deleteTrack: Track;
@@ -756,6 +768,11 @@ export type MutationRemoveProfileVerificationRequestArgs = {
 
 export type MutationCreateTrackArgs = {
   input: CreateTrackInput;
+};
+
+
+export type MutationCreateMultipleTracksArgs = {
+  input: CreateMultipleTracksInput;
 };
 
 
@@ -1574,6 +1591,7 @@ export type Track = {
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   playbackUrl: Scalars['String'];
+  playbackCount: Scalars['Float'];
   favoriteCount: Scalars['Float'];
   price: Scalars['Float'];
   saleType: Scalars['String'];
@@ -1609,6 +1627,7 @@ export type TrackWithListingItem = {
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   playbackUrl: Scalars['String'];
+  playbackCount: Scalars['Float'];
   favoriteCount: Scalars['Float'];
   price: Scalars['Float'];
   saleType: Scalars['String'];
@@ -2056,6 +2075,23 @@ export type CreateBuyNowItemMutation = (
   & { createBuyNowItem: (
     { __typename?: 'CreateBuyNowItemType' }
     & Pick<CreateBuyNowItemType, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'startingTime'>
+  ) }
+);
+
+export type CreateMultipleTracksMutationVariables = Exact<{
+  input: CreateMultipleTracksInput;
+}>;
+
+
+export type CreateMultipleTracksMutation = (
+  { __typename?: 'Mutation' }
+  & { createMultipleTracks: (
+    { __typename?: 'CreateMultipleTracksPayload' }
+    & Pick<CreateMultipleTracksPayload, 'trackIds'>
+    & { firstTrack: (
+      { __typename?: 'Track' }
+      & TrackComponentFieldsFragment
+    ) }
   ) }
 );
 
@@ -4501,6 +4537,42 @@ export function useCreateBuyNowItemMutation(baseOptions?: Apollo.MutationHookOpt
 export type CreateBuyNowItemMutationHookResult = ReturnType<typeof useCreateBuyNowItemMutation>;
 export type CreateBuyNowItemMutationResult = Apollo.MutationResult<CreateBuyNowItemMutation>;
 export type CreateBuyNowItemMutationOptions = Apollo.BaseMutationOptions<CreateBuyNowItemMutation, CreateBuyNowItemMutationVariables>;
+export const CreateMultipleTracksDocument = gql`
+    mutation CreateMultipleTracks($input: CreateMultipleTracksInput!) {
+  createMultipleTracks(input: $input) {
+    trackIds
+    firstTrack {
+      ...TrackComponentFields
+    }
+  }
+}
+    ${TrackComponentFieldsFragmentDoc}`;
+export type CreateMultipleTracksMutationFn = Apollo.MutationFunction<CreateMultipleTracksMutation, CreateMultipleTracksMutationVariables>;
+
+/**
+ * __useCreateMultipleTracksMutation__
+ *
+ * To run a mutation, you first call `useCreateMultipleTracksMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateMultipleTracksMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createMultipleTracksMutation, { data, loading, error }] = useCreateMultipleTracksMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateMultipleTracksMutation(baseOptions?: Apollo.MutationHookOptions<CreateMultipleTracksMutation, CreateMultipleTracksMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateMultipleTracksMutation, CreateMultipleTracksMutationVariables>(CreateMultipleTracksDocument, options);
+      }
+export type CreateMultipleTracksMutationHookResult = ReturnType<typeof useCreateMultipleTracksMutation>;
+export type CreateMultipleTracksMutationResult = Apollo.MutationResult<CreateMultipleTracksMutation>;
+export type CreateMultipleTracksMutationOptions = Apollo.BaseMutationOptions<CreateMultipleTracksMutation, CreateMultipleTracksMutationVariables>;
 export const CreatePostDocument = gql`
     mutation CreatePost($input: CreatePostInput!) {
   createPost(input: $input) {

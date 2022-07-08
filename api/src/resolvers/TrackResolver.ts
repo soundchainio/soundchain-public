@@ -22,6 +22,8 @@ import { ToggleFavoritePayload } from '../types/ToggleFavoritePayload';
 import { TrackConnection } from '../types/TrackConnection';
 import { UpdateTrackInput } from '../types/UpdateTrackInput';
 import { UpdateTrackPayload } from '../types/UpdateTrackPayload';
+import { CreateMultipleTracksPayload } from '../types/CreateMultipleTracksPayload';
+import { CreateMultipleTracksInput } from '../types/CreateMultipleTracksInput';
 
 @Resolver(Track)
 export class TrackResolver {
@@ -36,7 +38,10 @@ export class TrackResolver {
   }
 
   @FieldResolver(() => String)
-  async playbackCountFormatted(@Ctx() { trackService }: Context, @Root() { _id: trackId, nftData }: Track): Promise<string> {
+  async playbackCountFormatted(
+    @Ctx() { trackService }: Context,
+    @Root() { _id: trackId, nftData }: Track,
+  ): Promise<string> {
     const playbackCount = await trackService.playbackCount(trackId, nftData.transactionHash);
     return playbackCount ? new Intl.NumberFormat('en-US').format(playbackCount) : '';
   }
@@ -96,12 +101,31 @@ export class TrackResolver {
   @Mutation(() => CreateTrackPayload)
   @Authorized()
   async createTrack(
-    @Ctx() { trackService, postService }: Context,
+    @Ctx() { trackService }: Context,
     @CurrentUser() { profileId }: User,
     @Arg('input') input: CreateTrackInput,
   ): Promise<CreateTrackPayload> {
     const track = await trackService.createTrack(profileId, input);
     return { track };
+  }
+
+  @Mutation(() => CreateMultipleTracksPayload)
+  @Authorized()
+  async createMultipleTracks(
+    @Ctx() { trackService, postService }: Context,
+    @CurrentUser() { profileId }: User,
+    @Arg('input') input: CreateMultipleTracksInput,
+  ): Promise<CreateMultipleTracksPayload> {
+    const [track, ...otherTracks] = await trackService.createMultipleTracks(profileId, input);
+    await postService.createPost({
+      profileId,
+      trackId: track._id,
+      trackTransactionHash: track?.nftData?.transactionHash,
+    });
+    return {
+      firstTrack: track,
+      trackIds: [track._id, ...otherTracks.map(track => track._id)],
+    };
   }
 
   @Mutation(() => UpdateTrackPayload)

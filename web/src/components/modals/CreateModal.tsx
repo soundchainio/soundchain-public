@@ -15,9 +15,9 @@ import {
   ExploreTracksDocument,
   FeedDocument,
   PendingRequest,
-  PostsDocument,
+  PostsDocument, Track,
   TracksDocument,
-  TracksQuery,
+  TracksQuery, useCreateMultipleTracksMutation,
   useCreatePostMutation,
   useCreateTrackMutation,
   usePinJsonToIpfsMutation,
@@ -52,8 +52,7 @@ export const CreateModal = () => {
   const [newTrack, setNewTrack] = useState<CreateTrackMutation['createTrack']['track']>();
 
   const { upload } = useUpload();
-  const [createPost] = useCreatePostMutation()
-  const [createTrack] = useCreateTrackMutation();
+  const [createMultipleTracks] = useCreateMultipleTracksMutation()
 
   const { web3, account } = useWalletContext();
   const [pinToIPFS] = usePinToIpfsMutation();
@@ -222,12 +221,11 @@ export const CreateModal = () => {
 
         const onTransactionHash = async (transactionHash: string) => {
           setMintingState('Creating your track');
-          let trackPost
-
-          for (let index = 0; index < values.editionQuantity; index++) {
-            const { data } = await createTrack({
-              variables: {
-                input: {
+          await createMultipleTracks({
+            variables: {
+              input: {
+                amount: values.editionQuantity,
+                track: {
                   assetUrl,
                   title,
                   album,
@@ -247,49 +245,43 @@ export const CreateModal = () => {
                     owner: account,
                     pendingTime: new Date().toISOString(),
                   },
-                },
-              },
-              update: (cache, { data: createTrackData }) => {
-                const variables = { filter: { nftData: { owner: account } } };
-
-                const cachedData = cache.readQuery<TracksQuery>({
-                  query: TracksDocument,
-                  variables,
-                });
-
-                if (!cachedData) {
-                  return;
-                }
-
-                cache.writeQuery({
-                  query: TracksDocument,
-                  variables,
-                  overwrite: true,
-                  data: {
-                    tracks: {
-                      ...cachedData.tracks,
-                      nodes: [createTrackData?.createTrack.track, ...cachedData.tracks.nodes],
-                    },
-                  },
-                });
-              },
-              refetchQueries: [FeedDocument, PostsDocument, ExploreTracksDocument],
-            });
-            trackPost = data?.createTrack.track;
-          }
-
-          setNewTrack(trackPost);
-          if (trackPost) {
-            await createPost({
-              variables: {
-                input: {
-                  trackId: trackPost.id as string,
-                  trackTransactionHash: transactionHash,
-                  body: ''
                 }
               }
-            })
-          }
+            },
+
+            update: (cache, { data: createMultipleTracksData }) => {
+              setNewTrack(createMultipleTracksData?.createMultipleTracks.firstTrack)
+
+              const variables = { filter: { nftData: { owner: account } } };
+
+              const cachedData = cache.readQuery<TracksQuery>({
+                query: TracksDocument,
+                variables,
+              });
+
+              if (!cachedData) {
+                return;
+              }
+
+              const newTracks = createMultipleTracksData?.createMultipleTracks.trackIds.map((trackId) => ({
+                ...createMultipleTracksData?.createMultipleTracks.firstTrack,
+                id: trackId,
+              } as Track)) || []
+
+              cache.writeQuery({
+                query: TracksDocument,
+                variables,
+                overwrite: true,
+                data: {
+                  tracks: {
+                    ...cachedData.tracks,
+                    nodes: [...newTracks, ...cachedData.tracks.nodes],
+                  },
+                },
+              });
+            },
+            refetchQueries: [FeedDocument, PostsDocument, ExploreTracksDocument],
+          })
           dispatchShowCreateModal(true);
           setMintingState(undefined);
           setTransactionHash(transactionHash);
