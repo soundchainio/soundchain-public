@@ -11,6 +11,7 @@ import { PostModel } from '../models/Post';
 import { Track, TrackModel } from '../models/Track';
 import { TrackWithListingItem } from '../models/TrackWithListingItem';
 import { Context } from '../types/Context';
+import { FilterBuyNowItemInput } from '../types/FilterBuyNowItemInput';
 import { FilterTrackInput } from '../types/FilterTrackInput';
 import { FilterTrackMarketplace } from '../types/FilterTrackMarketplace';
 import { NFTData } from '../types/NFTData';
@@ -455,6 +456,51 @@ export class TrackService extends ModelService<typeof Track> {
     });
   }
 
+  getBuyNowlistingItems(
+    filter?: FilterBuyNowItemInput,
+    sort?: SortListingItemInput,
+    page?: PageInput,
+  ): Promise<PaginateResult<TrackWithListingItem>> {
+    const aggregation = [
+      {
+        $lookup: {
+          from: 'buynowitems',
+          localField: 'nftData.tokenId',
+          foreignField: 'tokenId',
+          as: 'listingItem',
+        },
+      },
+      {
+        $addFields: {
+          listingItem: {
+            $filter: {
+              input: '$listingItem',
+              as: 'item',
+              cond: {
+                $and: [
+                  {
+                    $eq: ['$$item.valid', true],
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+      {
+        $unwind: {
+          path: '$listingItem',
+        },
+      },
+    ];
+    return this.paginatePipelineAggregated({
+      aggregation,
+      filter: { deleted: false, trackEditionId: new ObjectId(filter.trackEdition) },
+      sort,
+      page,
+    });
+  }
+
   async resetPending(): Promise<void> {
     const nowMinusOneHour = new Date();
     nowMinusOneHour.setHours(nowMinusOneHour.getHours() - 1);
@@ -480,5 +526,25 @@ export class TrackService extends ModelService<typeof Track> {
       }
       await PendingTrackModel.updateOne({ _id }, { processed: true });
     });
+  }
+
+  async getEditionSizeByGroupingTracks(trackTransactionHash: string): Promise<number> {
+    const aggregate = [
+      {
+        $match: {
+          'nftData.transactionHash': trackTransactionHash,
+        },
+      },
+      {
+        $group: {
+          _id: '$nftData.transactionHash',
+          count: {
+            $sum: 1,
+          },
+        },
+      },
+    ];
+    const countQuery = await this.model.aggregate(aggregate);
+    return countQuery.length ? countQuery[0].count : 1;
   }
 }

@@ -398,6 +398,10 @@ export type FeedItem = {
   post: Post;
 };
 
+export type FilterBuyNowItemInput = {
+  trackEdition: Scalars['String'];
+};
+
 export type FilterPostInput = {
   profileId?: Maybe<Scalars['String']>;
 };
@@ -1131,11 +1135,11 @@ export type Query = {
   profileVerificationRequest: ProfileVerificationRequest;
   profileVerificationRequests: ProfileVerificationRequestConnection;
   pendingRequestsBadgeNumber: Scalars['Float'];
-  trackEdition: TrackEditionWithTrackItem;
   track: Track;
   tracks: TrackConnection;
   favoriteTracks: TrackConnection;
   listingItems: ListingItemConnection;
+  buyNowListingItems: ListingItemConnection;
   uploadUrl: UploadUrl;
   mimeType: MimeType;
   me: Maybe<User>;
@@ -1322,11 +1326,6 @@ export type QueryProfileVerificationRequestsArgs = {
 };
 
 
-export type QueryTrackEditionArgs = {
-  id: Scalars['String'];
-};
-
-
 export type QueryTrackArgs = {
   id: Scalars['String'];
 };
@@ -1350,6 +1349,13 @@ export type QueryListingItemsArgs = {
   page?: Maybe<PageInput>;
   sort?: Maybe<SortListingItemInput>;
   filter?: Maybe<FilterTrackMarketplace>;
+};
+
+
+export type QueryBuyNowListingItemsArgs = {
+  page?: Maybe<PageInput>;
+  sort?: Maybe<SortListingItemInput>;
+  filter?: Maybe<FilterBuyNowItemInput>;
 };
 
 
@@ -1572,23 +1578,13 @@ export type Track = {
   price: Scalars['Float'];
   saleType: Scalars['String'];
   isFavorite: Scalars['Boolean'];
+  editionSize: Scalars['Float'];
 };
 
 export type TrackConnection = {
   __typename?: 'TrackConnection';
   pageInfo: PageInfo;
   nodes: Array<Track>;
-};
-
-export type TrackEditionWithTrackItem = {
-  __typename?: 'TrackEditionWithTrackItem';
-  id: Scalars['ID'];
-  transactionHash: Scalars['String'];
-  editionId: Scalars['Float'];
-  editionSize: Scalars['Float'];
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  track: Track;
 };
 
 export type TrackWithListingItem = {
@@ -1617,6 +1613,7 @@ export type TrackWithListingItem = {
   price: Scalars['Float'];
   saleType: Scalars['String'];
   isFavorite: Scalars['Boolean'];
+  editionSize: Scalars['Float'];
   listingItem: Maybe<ListingItemWithPrice>;
 };
 
@@ -1895,6 +1892,27 @@ export type BuyNowItemQuery = (
       { __typename?: 'BuyNowItem' }
       & Pick<BuyNowItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'pricePerItemToShow' | 'startingTime'>
     )> }
+  ) }
+);
+
+export type BuyNowListingItemsQueryVariables = Exact<{
+  filter?: Maybe<FilterBuyNowItemInput>;
+  sort?: Maybe<SortListingItemInput>;
+  page?: Maybe<PageInput>;
+}>;
+
+
+export type BuyNowListingItemsQuery = (
+  { __typename?: 'Query' }
+  & { buyNowListingItems: (
+    { __typename?: 'ListingItemConnection' }
+    & { nodes: Array<(
+      { __typename?: 'TrackWithListingItem' }
+      & ListingItemComponentFieldsFragment
+    )>, pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
+    ) }
   ) }
 );
 
@@ -2436,7 +2454,7 @@ export type ListingItemQuery = (
 
 export type ListingItemComponentFieldsFragment = (
   { __typename?: 'TrackWithListingItem' }
-  & Pick<TrackWithListingItem, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'saleType' | 'price' | 'trackEditionId'>
+  & Pick<TrackWithListingItem, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'saleType' | 'price' | 'trackEditionId' | 'editionSize'>
   & { nftData: Maybe<(
     { __typename?: 'NFTDataType' }
     & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner' | 'pendingTime'>
@@ -3081,33 +3099,11 @@ export type TrackQuery = (
 
 export type TrackComponentFieldsFragment = (
   { __typename?: 'Track' }
-  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'saleType' | 'price'>
+  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'saleType' | 'price' | 'trackEditionId' | 'editionSize'>
   & { nftData: Maybe<(
     { __typename?: 'NFTDataType' }
     & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner'>
   )> }
-);
-
-export type TrackEditionQueryVariables = Exact<{
-  id: Scalars['String'];
-}>;
-
-
-export type TrackEditionQuery = (
-  { __typename?: 'Query' }
-  & { trackEdition: (
-    { __typename?: 'TrackEditionWithTrackItem' }
-    & TrackEditionComponentFieldsFragment
-  ) }
-);
-
-export type TrackEditionComponentFieldsFragment = (
-  { __typename?: 'TrackEditionWithTrackItem' }
-  & Pick<TrackEditionWithTrackItem, 'id' | 'transactionHash' | 'editionId' | 'editionSize'>
-  & { track: (
-    { __typename?: 'Track' }
-    & TrackComponentFieldsFragment
-  ) }
 );
 
 export type TracksQueryVariables = Exact<{
@@ -3630,6 +3626,7 @@ export const ListingItemComponentFieldsFragmentDoc = gql`
   saleType
   price
   trackEditionId
+  editionSize
   nftData {
     transactionHash
     tokenId
@@ -3786,6 +3783,8 @@ export const TrackComponentFieldsFragmentDoc = gql`
   favoriteCount
   saleType
   price
+  trackEditionId
+  editionSize
   nftData {
     transactionHash
     tokenId
@@ -3879,17 +3878,6 @@ export const ReactionNotificationFieldsFragmentDoc = gql`
   postId
 }
     `;
-export const TrackEditionComponentFieldsFragmentDoc = gql`
-    fragment TrackEditionComponentFields on TrackEditionWithTrackItem {
-  id
-  transactionHash
-  editionId
-  editionSize
-  track {
-    ...TrackComponentFields
-  }
-}
-    ${TrackComponentFieldsFragmentDoc}`;
 export const VerificationRequestNotificationFieldsFragmentDoc = gql`
     fragment VerificationRequestNotificationFields on VerificationRequestNotification {
   id
@@ -4154,6 +4142,50 @@ export function useBuyNowItemLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions
 export type BuyNowItemQueryHookResult = ReturnType<typeof useBuyNowItemQuery>;
 export type BuyNowItemLazyQueryHookResult = ReturnType<typeof useBuyNowItemLazyQuery>;
 export type BuyNowItemQueryResult = Apollo.QueryResult<BuyNowItemQuery, BuyNowItemQueryVariables>;
+export const BuyNowListingItemsDocument = gql`
+    query BuyNowListingItems($filter: FilterBuyNowItemInput, $sort: SortListingItemInput, $page: PageInput) {
+  buyNowListingItems(filter: $filter, sort: $sort, page: $page) {
+    nodes {
+      ...ListingItemComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+      totalCount
+    }
+  }
+}
+    ${ListingItemComponentFieldsFragmentDoc}`;
+
+/**
+ * __useBuyNowListingItemsQuery__
+ *
+ * To run a query within a React component, call `useBuyNowListingItemsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useBuyNowListingItemsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useBuyNowListingItemsQuery({
+ *   variables: {
+ *      filter: // value for 'filter'
+ *      sort: // value for 'sort'
+ *      page: // value for 'page'
+ *   },
+ * });
+ */
+export function useBuyNowListingItemsQuery(baseOptions?: Apollo.QueryHookOptions<BuyNowListingItemsQuery, BuyNowListingItemsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<BuyNowListingItemsQuery, BuyNowListingItemsQueryVariables>(BuyNowListingItemsDocument, options);
+      }
+export function useBuyNowListingItemsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<BuyNowListingItemsQuery, BuyNowListingItemsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<BuyNowListingItemsQuery, BuyNowListingItemsQueryVariables>(BuyNowListingItemsDocument, options);
+        }
+export type BuyNowListingItemsQueryHookResult = ReturnType<typeof useBuyNowListingItemsQuery>;
+export type BuyNowListingItemsLazyQueryHookResult = ReturnType<typeof useBuyNowListingItemsLazyQuery>;
+export type BuyNowListingItemsQueryResult = Apollo.QueryResult<BuyNowListingItemsQuery, BuyNowListingItemsQueryVariables>;
 export const ChangeReactionDocument = gql`
     mutation ChangeReaction($input: ChangeReactionInput!) {
   changeReaction(input: $input) {
@@ -6641,41 +6673,6 @@ export function useTrackLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Trac
 export type TrackQueryHookResult = ReturnType<typeof useTrackQuery>;
 export type TrackLazyQueryHookResult = ReturnType<typeof useTrackLazyQuery>;
 export type TrackQueryResult = Apollo.QueryResult<TrackQuery, TrackQueryVariables>;
-export const TrackEditionDocument = gql`
-    query TrackEdition($id: String!) {
-  trackEdition(id: $id) {
-    ...TrackEditionComponentFields
-  }
-}
-    ${TrackEditionComponentFieldsFragmentDoc}`;
-
-/**
- * __useTrackEditionQuery__
- *
- * To run a query within a React component, call `useTrackEditionQuery` and pass it any options that fit your needs.
- * When your component renders, `useTrackEditionQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useTrackEditionQuery({
- *   variables: {
- *      id: // value for 'id'
- *   },
- * });
- */
-export function useTrackEditionQuery(baseOptions: Apollo.QueryHookOptions<TrackEditionQuery, TrackEditionQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<TrackEditionQuery, TrackEditionQueryVariables>(TrackEditionDocument, options);
-      }
-export function useTrackEditionLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TrackEditionQuery, TrackEditionQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<TrackEditionQuery, TrackEditionQueryVariables>(TrackEditionDocument, options);
-        }
-export type TrackEditionQueryHookResult = ReturnType<typeof useTrackEditionQuery>;
-export type TrackEditionLazyQueryHookResult = ReturnType<typeof useTrackEditionLazyQuery>;
-export type TrackEditionQueryResult = Apollo.QueryResult<TrackEditionQuery, TrackEditionQueryVariables>;
 export const TracksDocument = gql`
     query Tracks($filter: FilterTrackInput, $sort: SortTrackInput, $page: PageInput) {
   tracks(filter: $filter, sort: $sort, page: $page) {

@@ -6,10 +6,11 @@ import { Track } from '../models/Track';
 import { User } from '../models/User';
 import { FavoriteCount } from '../services/TrackService';
 import { Context } from '../types/Context';
-import { CreateTrackInput as CreateTrackInput } from '../types/CreateTrackInput';
+import { CreateTrackInput } from '../types/CreateTrackInput';
 import { CreateTrackPayload } from '../types/CreateTrackPayload';
 import { DeleteTrackInput } from '../types/DeleteTrackInput';
 import { DeleteTrackPayload } from '../types/DeleteTrackPayload';
+import { FilterBuyNowItemInput } from '../types/FilterBuyNowItemInput';
 import { FilterTrackInput } from '../types/FilterTrackInput';
 import { FilterTrackMarketplace } from '../types/FilterTrackMarketplace';
 import { ListingItemConnection } from '../types/ListingItemConnection';
@@ -65,6 +66,16 @@ export class TrackResolver {
       return Promise.resolve(false);
     }
     return trackService.isFavorite(trackId, user.profileId, nftData.transactionHash);
+  }
+
+  @FieldResolver(() => Number)
+  editionSize(
+    @Ctx() { trackService, trackEditionService }: Context,
+    @Root() { trackEditionId, nftData }: Track,
+  ): Promise<number> {
+    return trackEditionId
+      ? trackEditionService.getEditionSize(trackEditionId)
+      : trackService.getEditionSizeByGroupingTracks(nftData.transactionHash);
   }
 
   @Query(() => Track)
@@ -163,5 +174,15 @@ export class TrackResolver {
     @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<ListingItemConnection> {
     return trackService.getListingItems(filter, sort, page);
+  }
+
+  @Query(() => ListingItemConnection)
+  buyNowListingItems(
+    @Ctx() { trackService }: Context,
+    @Arg('filter', { nullable: true }) filter?: FilterBuyNowItemInput,
+    @Arg('sort', { nullable: true }) sort?: SortListingItemInput,
+    @Arg('page', { nullable: true }) page?: PageInput,
+  ): Promise<ListingItemConnection> {
+    return trackService.getBuyNowlistingItems(filter, sort, page);
   }
 }
