@@ -404,6 +404,11 @@ export type FilterBuyNowItemInput = {
   trackEdition: Scalars['String'];
 };
 
+export type FilterListingItemInput = {
+  tokenId: Scalars['Float'];
+  contractAddress: Scalars['String'];
+};
+
 export type FilterPostInput = {
   profileId?: Maybe<Scalars['String']>;
 };
@@ -1241,7 +1246,7 @@ export type QueryFollowingArgs = {
 
 
 export type QueryListingItemArgs = {
-  tokenId: Scalars['Float'];
+  input: FilterListingItemInput;
 };
 
 
@@ -2462,7 +2467,7 @@ export type HaveBidedQuery = (
 );
 
 export type ListingItemQueryVariables = Exact<{
-  tokenId: Scalars['Float'];
+  input: FilterListingItemInput;
 }>;
 
 
@@ -5340,8 +5345,8 @@ export type HaveBidedQueryHookResult = ReturnType<typeof useHaveBidedQuery>;
 export type HaveBidedLazyQueryHookResult = ReturnType<typeof useHaveBidedLazyQuery>;
 export type HaveBidedQueryResult = Apollo.QueryResult<HaveBidedQuery, HaveBidedQueryVariables>;
 export const ListingItemDocument = gql`
-    query ListingItem($tokenId: Float!) {
-  listingItem(tokenId: $tokenId) {
+    query ListingItem($input: FilterListingItemInput!) {
+  listingItem(input: $input) {
     ...ListingItemViewComponentFields
   }
 }
@@ -5359,7 +5364,7 @@ export const ListingItemDocument = gql`
  * @example
  * const { data, loading, error } = useListingItemQuery({
  *   variables: {
- *      tokenId: // value for 'tokenId'
+ *      input: // value for 'input'
  *   },
  * });
  */

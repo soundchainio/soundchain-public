@@ -54,12 +54,12 @@ export class TrackResolver {
 
   @FieldResolver(() => Number)
   price(@Ctx() { trackService }: Context, @Root() { nftData }: Track): Promise<number> {
-    return trackService.priceToShow(nftData.tokenId);
+    return trackService.priceToShow(nftData.tokenId, nftData.contract);
   }
 
   @FieldResolver(() => String)
   saleType(@Ctx() { trackService }: Context, @Root() { nftData }: Track): Promise<string> {
-    return trackService.saleType(nftData.tokenId);
+    return trackService.saleType(nftData.tokenId, nftData.contract);
   }
 
   @FieldResolver(() => Boolean)

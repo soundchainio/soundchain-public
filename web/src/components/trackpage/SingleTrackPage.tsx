@@ -90,6 +90,7 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
   const mintingPending = nftData?.pendingRequest === PendingRequest.Mint;
   const isProcessing = nftData?.pendingRequest != PendingRequest.None;
   const tokenId = nftData?.tokenId;
+  const contractAddress = nftData?.contract;
   const canList = (me?.profile.verified && nftData?.minter === account) || nftData?.minter != account;
   const isBuyNow = Boolean(listingPayload?.listingItem?.pricePerItem);
   const isAuction = Boolean(listingPayload?.listingItem?.reservePrice);
@@ -144,13 +145,13 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
   }, [setTopNavBarProps, topNavBarProps]);
 
   useEffect(() => {
-    if (track.nftData?.tokenId) {
-      fetchCountBids({ variables: { tokenId: track.nftData.tokenId } });
+    if (tokenId && contractAddress) {
+      fetchCountBids({ variables: { tokenId } });
       fetchListingItem({
-        variables: { tokenId: track.nftData.tokenId },
+        variables: { input: { tokenId, contractAddress } },
       });
     }
-  }, [track, fetchCountBids, fetchListingItem]);
+  }, [track, fetchCountBids, fetchListingItem, tokenId, contractAddress]);
 
   useEffect(() => {
     if (track.artistProfileId) {
@@ -206,14 +207,14 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
     const interval = setInterval(() => {
       if (isProcessing) {
         refetchTrack({ variables: { id: track.id } });
-        if (tokenId) {
-          fetchListingItem({ variables: { tokenId } });
+        if (tokenId && contractAddress) {
+          fetchListingItem({ variables: { input: { tokenId, contractAddress } } });
         }
       }
     }, 10 * 1000);
 
     return () => clearInterval(interval);
-  }, [isProcessing, refetchTrack, fetchListingItem, tokenId, track.id]);
+  }, [isProcessing, refetchTrack, fetchListingItem, tokenId, track.id, contractAddress]);
 
   const title = `${track.title} - song by ${track.artist} | SoundChain`;
   const description = `Listen to ${track.title} on SoundChain. ${track.artist}. ${track.album || 'Song'}. ${

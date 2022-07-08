@@ -292,8 +292,8 @@ export class TrackService extends ModelService<typeof Track> {
     return trackQuery.length ? trackQuery[0].sum : 0;
   }
 
-  async saleType(tokenId: number): Promise<string> {
-    const listing = await this.context.listingItemService.getActiveListingItem(tokenId);
+  async saleType(tokenId: number, contractAddress: string): Promise<string> {
+    const listing = await this.context.listingItemService.getActiveListingItem(tokenId, contractAddress);
     if (!listing) {
       return '';
     }
@@ -301,8 +301,8 @@ export class TrackService extends ModelService<typeof Track> {
     return (endingTime && 'auction') || (pricePerItem && 'buy now') || '';
   }
 
-  async priceToShow(tokenId: number): Promise<number> {
-    const listing = await this.context.listingItemService.getActiveListingItem(tokenId);
+  async priceToShow(tokenId: number, contractAddress: string): Promise<number> {
+    const listing = await this.context.listingItemService.getActiveListingItem(tokenId, contractAddress);
     if (!listing) {
       return 0;
     }
@@ -323,7 +323,7 @@ export class TrackService extends ModelService<typeof Track> {
         $lookup: {
           from: 'buynowitems',
           as: 'buynowitem',
-          let: { 
+          let: {
             tokenId: '$nftData.tokenId',
             contract: '$nftData.contract',
           },
@@ -331,21 +331,18 @@ export class TrackService extends ModelService<typeof Track> {
             {
               $match: {
                 $expr: {
-                  $and: [
-                    { $eq: ['$tokenId', '$$tokenId'] },
-                    { $eq: ['$nft', '$$contract'] }
-                  ],
-                }
-              }
-            }
-          ]
+                  $and: [{ $eq: ['$tokenId', '$$tokenId'] }, { $eq: ['$nft', '$$contract'] }],
+                },
+              },
+            },
+          ],
         },
       },
       {
         $lookup: {
           from: 'auctionitems',
           as: 'auctionitem',
-          let: { 
+          let: {
             tokenId: '$nftData.tokenId',
             contract: '$nftData.contract',
           },
@@ -353,14 +350,11 @@ export class TrackService extends ModelService<typeof Track> {
             {
               $match: {
                 $expr: {
-                  $and: [
-                    { $eq: ['$tokenId', '$$tokenId'] },
-                    { $eq: ['$nft', '$$contract'] }
-                  ],
-                }
-              }
-            }
-          ]
+                  $and: [{ $eq: ['$tokenId', '$$tokenId'] }, { $eq: ['$nft', '$$contract'] }],
+                },
+              },
+            },
+          ],
         },
       },
       {
@@ -494,7 +488,7 @@ export class TrackService extends ModelService<typeof Track> {
         $lookup: {
           from: 'buynowitems',
           as: 'listingItem',
-          let: { 
+          let: {
             tokenId: '$nftData.tokenId',
             contract: '$nftData.contract',
           },
@@ -502,14 +496,11 @@ export class TrackService extends ModelService<typeof Track> {
             {
               $match: {
                 $expr: {
-                  $and: [
-                    { $eq: ['$tokenId', '$$tokenId'] },
-                    { $eq: ['$nft', '$$contract'] }
-                  ],
-                }
-              }
-            }
-          ]
+                  $and: [{ $eq: ['$tokenId', '$$tokenId'] }, { $eq: ['$nft', '$$contract'] }],
+                },
+              },
+            },
+          ],
         },
       },
       {
