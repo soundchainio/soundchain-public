@@ -3,15 +3,13 @@ import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } 
 import { CurrentUser } from '../decorators/current-user';
 import { FavoriteProfileTrackModel } from '../models/FavoriteProfileTrack';
 import { Track } from '../models/Track';
-import { TrackEdition } from '../models/TrackEdition';
 import { User } from '../models/User';
 import { FavoriteCount } from '../services/TrackService';
 import { Context } from '../types/Context';
-import { CreateTrackInput } from '../types/CreateTrackInput';
+import { CreateTrackInput as CreateTrackInput } from '../types/CreateTrackInput';
 import { CreateTrackPayload } from '../types/CreateTrackPayload';
 import { DeleteTrackInput } from '../types/DeleteTrackInput';
 import { DeleteTrackPayload } from '../types/DeleteTrackPayload';
-import { FilterBuyNowItemInput } from '../types/FilterBuyNowItemInput';
 import { FilterTrackInput } from '../types/FilterTrackInput';
 import { FilterTrackMarketplace } from '../types/FilterTrackMarketplace';
 import { ListingItemConnection } from '../types/ListingItemConnection';
@@ -23,8 +21,6 @@ import { ToggleFavoritePayload } from '../types/ToggleFavoritePayload';
 import { TrackConnection } from '../types/TrackConnection';
 import { UpdateTrackInput } from '../types/UpdateTrackInput';
 import { UpdateTrackPayload } from '../types/UpdateTrackPayload';
-import { CreateMultipleTracksPayload } from '../types/CreateMultipleTracksPayload';
-import { CreateMultipleTracksInput } from '../types/CreateMultipleTracksInput';
 
 @Resolver(Track)
 export class TrackResolver {
@@ -33,65 +29,36 @@ export class TrackResolver {
     return muxAsset ? `https://stream.mux.com/${muxAsset.playbackId}.m3u8` : '';
   }
 
-  @FieldResolver(() => Number)
-  playbackCount(@Ctx() { trackService }: Context, @Root() { _id: trackId, nftData }: Track): Promise<number> {
-    return trackService.playbackCount(trackId, nftData.transactionHash);
-  }
-
   @FieldResolver(() => String)
-  async playbackCountFormatted(
-    @Ctx() { trackService }: Context,
-    @Root() { _id: trackId, nftData }: Track,
-  ): Promise<string> {
-    const playbackCount = await trackService.playbackCount(trackId, nftData.transactionHash);
+  playbackCountFormatted(@Root() { playbackCount }: Track): string {
     return playbackCount ? new Intl.NumberFormat('en-US').format(playbackCount) : '';
   }
 
   @FieldResolver(() => Number)
-  favoriteCount(@Ctx() { trackService }: Context, @Root() { _id: trackId, nftData }: Track): Promise<FavoriteCount> {
-    return trackService.favoriteCount(trackId, nftData.transactionHash);
+  favoriteCount(@Ctx() { trackService }: Context, @Root() { _id: trackId }: Track): Promise<FavoriteCount> {
+    return trackService.favoriteCount(trackId);
   }
 
   @FieldResolver(() => Number)
   price(@Ctx() { trackService }: Context, @Root() { nftData }: Track): Promise<number> {
-    return trackService.priceToShow(nftData.tokenId, nftData.contract);
+    return trackService.priceToShow(nftData.tokenId);
   }
 
   @FieldResolver(() => String)
   saleType(@Ctx() { trackService }: Context, @Root() { nftData }: Track): Promise<string> {
-    return trackService.saleType(nftData.tokenId, nftData.contract);
+    return trackService.saleType(nftData.tokenId);
   }
 
   @FieldResolver(() => Boolean)
   isFavorite(
     @Ctx() { trackService }: Context,
-    @Root() { _id: trackId, nftData }: Track,
+    @Root() { _id: trackId }: Track,
     @CurrentUser() user?: User,
   ): Promise<boolean> {
     if (!user) {
       return Promise.resolve(false);
     }
-    return trackService.isFavorite(trackId, user.profileId, nftData.transactionHash);
-  }
-
-  @FieldResolver(() => Number)
-  editionSize(
-    @Ctx() { trackService, trackEditionService }: Context,
-    @Root() { trackEditionId, nftData }: Track,
-  ): Promise<number> {
-    return trackEditionId
-      ? trackEditionService.getEditionSize(trackEditionId)
-      : trackService.getEditionSizeByGroupingTracks(nftData.transactionHash);
-  }
-
-  @FieldResolver(() => TrackEdition)
-  trackEdition(
-    @Ctx() { trackEditionService }: Context,
-    @Root() { trackEditionId }: Track,
-  ): Promise<TrackEdition> {
-    return trackEditionId
-      ? trackEditionService.findOrFail(trackEditionId)
-      : null;
+    return trackService.isFavorite(trackId, user.profileId);
   }
 
   @Query(() => Track)
@@ -112,31 +79,13 @@ export class TrackResolver {
   @Mutation(() => CreateTrackPayload)
   @Authorized()
   async createTrack(
-    @Ctx() { trackService }: Context,
+    @Ctx() { trackService, postService }: Context,
     @CurrentUser() { profileId }: User,
     @Arg('input') input: CreateTrackInput,
   ): Promise<CreateTrackPayload> {
     const track = await trackService.createTrack(profileId, input);
+    await postService.createPost({ profileId, trackId: track._id });
     return { track };
-  }
-
-  @Mutation(() => CreateMultipleTracksPayload)
-  @Authorized()
-  async createMultipleTracks(
-    @Ctx() { trackService, postService }: Context,
-    @CurrentUser() { profileId }: User,
-    @Arg('input') input: CreateMultipleTracksInput,
-  ): Promise<CreateMultipleTracksPayload> {
-    const [track, ...otherTracks] = await trackService.createMultipleTracks(profileId, input);
-    await postService.createPost({
-      profileId,
-      trackId: track._id,
-      trackTransactionHash: track?.nftData?.transactionHash,
-    });
-    return {
-      firstTrack: track,
-      trackIds: [track._id, ...otherTracks.map(track => track._id)],
-    };
   }
 
   @Mutation(() => UpdateTrackPayload)
@@ -209,15 +158,5 @@ export class TrackResolver {
     @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<ListingItemConnection> {
     return trackService.getListingItems(filter, sort, page);
-  }
-
-  @Query(() => ListingItemConnection)
-  buyNowListingItems(
-    @Ctx() { trackService }: Context,
-    @Arg('filter', { nullable: true }) filter?: FilterBuyNowItemInput,
-    @Arg('sort', { nullable: true }) sort?: SortListingItemInput,
-    @Arg('page', { nullable: true }) page?: PageInput,
-  ): Promise<ListingItemConnection> {
-    return trackService.getBuyNowlistingItems(filter, sort, page);
   }
 }

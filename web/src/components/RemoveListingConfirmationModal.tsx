@@ -20,7 +20,7 @@ const marketplaceAddress = process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS || '';
 
 export const RemoveListingConfirmationModal = () => {
   const me = useMe();
-  const { showRemoveListing, trackId, tokenId, saleType, contractAddresses } = useModalState();
+  const { showRemoveListing, trackId, tokenId, saleType } = useModalState();
   const [trackUpdate] = useUpdateTrackMutation();
   const { dispatchShowRemoveListingModal } = useModalDispatch();
   const { cancelListing, cancelAuction } = useBlockchainV2();
@@ -29,7 +29,7 @@ export const RemoveListingConfirmationModal = () => {
   const [loading, setLoading] = useState(false);
 
   const handleClose = () => {
-    dispatchShowRemoveListingModal(false, 0, '', SaleType.CLOSE, {});
+    dispatchShowRemoveListingModal(false, 0, '', SaleType.CLOSE);
   };
 
   const handleCancel = () => {
@@ -67,15 +67,13 @@ export const RemoveListingConfirmationModal = () => {
         },
       });
 
-      dispatchShowRemoveListingModal(false, 0, '', SaleType.CLOSE, {});
+      dispatchShowRemoveListingModal(false, 0, '', SaleType.CLOSE);
       saleType === SaleType.MARKETPLACE
         ? router.replace(router.asPath.replace('edit/buy-now', ''))
         : router.replace(router.asPath.replace('edit/auction', ''));
     };
     const cancel =
-      saleType === SaleType.MARKETPLACE ? 
-        cancelListing(tokenId, account, contractAddresses) : 
-        cancelAuction(tokenId, account, contractAddresses);
+      saleType === SaleType.MARKETPLACE ? cancelListing(tokenId, account) : cancelAuction(tokenId, account);
 
     cancel
       .onReceipt(onReceipt)

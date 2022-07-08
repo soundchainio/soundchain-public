@@ -20,10 +20,6 @@ export class BuyNowItem extends Model {
   tokenId: number;
 
   @Field()
-  @prop({ required: false })
-  contract: string;
-
-  @Field()
   @prop({ required: true })
   startingTime: number;
 

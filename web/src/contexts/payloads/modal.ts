@@ -1,4 +1,3 @@
-import { ContractAddresses } from 'hooks/useBlockchainV2';
 import { ReactionType } from 'lib/graphql';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 import { SaleType } from 'types/SaleType';
@@ -18,7 +17,6 @@ export interface ShowTransferNftConfirmationPayload {
   tokenId?: number
   walletRecipient?: string
   title?: string
-  contractAddress?: string
   refetch?: () => void
 }
 
@@ -62,7 +60,6 @@ export interface ShowCreatePayload {
 export interface ShowApprove {
   show: boolean;
   type: SaleType;
-  nftContractAddress?: string | null
 }
 
 export interface ShowRemoveListing {
@@ -70,7 +67,6 @@ export interface ShowRemoveListing {
   tokenId: number;
   trackId: string;
   saleType: SaleType;
-  contractAddresses?: ContractAddresses
 }
 
 export interface ShowAudioPlayerPayload {

@@ -8,7 +8,6 @@ import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { TotalPrice } from 'components/TotalPrice';
 import { Track } from 'components/Track';
-import { Timer } from 'components/trackpage/SingleTrackPage';
 import { Form, Formik } from 'formik';
 import useBlockchainV2 from 'hooks/useBlockchainV2';
 import { useLayoutContext } from 'hooks/useLayoutContext';
@@ -25,6 +24,7 @@ import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { compareWallets } from 'utils/Wallet';
 import * as yup from 'yup';
+import { Timer } from '../[id]';
 
 export interface TrackPageProps {
   track: TrackQuery['track'];
@@ -142,7 +142,6 @@ export default function BuyNowPage({ track }: TrackPageProps) {
       account,
       listingPayload.buyNowItem?.buyNowItem?.owner,
       listingPayload.buyNowItem?.buyNowItem?.pricePerItem,
-      { nft: track.nftData?.contract, marketplace: listingPayload.buyNowItem.buyNowItem.contract }
     )
       .onReceipt(onReceipt)
       .onError(cause => toast.error(cause.message))

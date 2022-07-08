@@ -5,7 +5,6 @@ import { TopNavBarProps } from 'components/TopNavBar';
 import { useLayoutContext } from 'hooks/useLayoutContext';
 import { Auction } from 'icons/Auction';
 import { CheckmarkFilled } from 'icons/CheckmarkFilled';
-import { useTrackQuery } from 'lib/graphql';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
@@ -19,19 +18,9 @@ export default function ListPage() {
   const router = useRouter();
   const { setTopNavBarProps } = useLayoutContext();
 
-  const { data, loading } = useTrackQuery({
-    variables: {
-      id: router.query.id as string,
-    }
-  })
-
   useEffect(() => {
     setTopNavBarProps(topNavBarProps);
   }, [setTopNavBarProps]);
-
-  if (loading) {
-    return null;
-  }
 
   return (
     <>
@@ -58,28 +47,24 @@ export default function ListPage() {
             </NextLink>
           </div>
         </div>
-        {
-          data?.track.editionSize === 1 && (
-            <div>
-              <div className="flex flex-col bg-black border-2 border-gray-700 rounded m-3 p-4 gap-4">
-                <div className="flex flex-row gap-2">
-                  <Auction className="h-6 w-6" purple />
-                  <p className="text-white font-bold text-sm">Auction</p>
-                </div>
-                <p className="text-white text-xs">
-                  When you list an NFT for sale in an auction, you choose a starting price, time limit, and a reserve price.
-                  Interested buyers will place bids and when the auction ends, your NFT is sold to the highest bidder as
-                  long as it meets the reserve price.
-                </p>
-                <NextLink href={`${router.asPath}/auction`} replace>
-                  <Button variant="outline" borderColor="bg-purple-gradient" className="h-10 w-1/2">
-                    AUCTION LISTING
-                  </Button>
-                </NextLink>
-              </div>
+        <div>
+          <div className="flex flex-col bg-black border-2 border-gray-700 rounded m-3 p-4 gap-4">
+            <div className="flex flex-row gap-2">
+              <Auction className="h-6 w-6" purple />
+              <p className="text-white font-bold text-sm">Auction</p>
             </div>
-          )
-        }
+            <p className="text-white text-xs">
+              When you list an NFT for sale in an auction, you choose a starting price, time limit, and a reserve price.
+              Interested buyers will place bids and when the auction ends, your NFT is sold to the highest bidder as
+              long as it meets the reserve price.
+            </p>
+            <NextLink href={`${router.asPath}/auction`} replace>
+              <Button variant="outline" borderColor="bg-purple-gradient" className="h-10 w-1/2">
+                AUCTION LISTING
+              </Button>
+            </NextLink>
+          </div>
+        </div>
       </div>
     </>
   );

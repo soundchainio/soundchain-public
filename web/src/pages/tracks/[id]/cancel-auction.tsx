@@ -113,7 +113,7 @@ export default function CompleteAuctionPage({ track, auctionItem }: TrackPagePro
     };
     setLoading(true);
 
-    cancelAuction(auctionItem.tokenId, account, { nft: track.nftData?.contract })
+    cancelAuction(auctionItem.tokenId, account)
       .onReceipt(() => onReceipt)
       .onError(cause => toast.error(cause.message))
       .finally(() => setLoading(false))

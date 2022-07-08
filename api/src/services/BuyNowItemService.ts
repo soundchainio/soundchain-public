@@ -10,7 +10,6 @@ interface NewBuyNowItem {
   pricePerItem: string;
   pricePerItemToShow: number;
   startingTime: number;
-  contract: string;
 }
 
 export class BuyNowService extends ModelService<typeof BuyNowItem> {

@@ -5,7 +5,6 @@ query BuyNowItem($tokenId: Float!) {
       owner
       nft
       tokenId
-      contract
       pricePerItem
       pricePerItemToShow
       startingTime

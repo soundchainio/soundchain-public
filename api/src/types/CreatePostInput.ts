@@ -17,8 +17,4 @@ export class CreatePostInput {
   @Field({ nullable: true })
   @IsOptional()
   trackId?: string;
-
-  @Field({ nullable: true })
-  @IsOptional()
-  trackTransactionHash?: string;
 }
