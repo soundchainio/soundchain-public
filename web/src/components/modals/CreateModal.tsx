@@ -19,7 +19,7 @@ import {
   TracksDocument,
   TracksQuery, useCreateMultipleTracksMutation,
   usePinJsonToIpfsMutation,
-  usePinToIpfsMutation,
+  usePinToIpfsMutation
 } from 'lib/graphql';
 import { imageMimeTypes } from 'lib/mimeTypes';
 import * as musicMetadata from 'music-metadata-browser';
@@ -285,7 +285,8 @@ export const CreateModal = () => {
           setTransactionHash(transactionHash);
         };
 
-        const onError = () => {
+        const onError = (cause: Error) => {
+          console.error('Error on minting', cause);
           setTransactionHash(undefined);
           setMintingState('There was an error while minting your NFT');
           setMintError(true);
@@ -296,7 +297,8 @@ export const CreateModal = () => {
           .onTransactionHash(transactionHash => onTransactionHash(transactionHash))
           .onError(onError)
           .execute(web3);
-      } catch {
+      } catch (e) {
+        console.error(e);
         setTransactionHash(undefined);
         setMintingState('There was an error while minting your NFT');
         setMintError(true);
