@@ -127,6 +127,7 @@ export type BuyNowItem = {
   owner: Scalars['String'];
   nft: Scalars['String'];
   tokenId: Scalars['Float'];
+  contract: Scalars['String'];
   startingTime: Scalars['Float'];
   pricePerItem: Scalars['String'];
   pricePerItemToShow: Scalars['Float'];
@@ -232,16 +233,6 @@ export type CreateAuctionItemType = {
   reservePriceToShow: Scalars['Float'];
 };
 
-export type CreateBuyNowItemInput = {
-  id?: Maybe<Scalars['String']>;
-  owner: Scalars['String'];
-  nft: Scalars['String'];
-  tokenId: Scalars['Float'];
-  pricePerItem: Scalars['String'];
-  pricePerItemToShow: Scalars['Float'];
-  startingTime: Scalars['Float'];
-};
-
 export type CreateBuyNowItemType = {
   __typename?: 'CreateBuyNowItemType';
   id: Maybe<Scalars['String']>;
@@ -253,10 +244,22 @@ export type CreateBuyNowItemType = {
   startingTime: Scalars['Float'];
 };
 
+export type CreateMultipleTracksInput = {
+  amount: Scalars['Float'];
+  track: CreateTrackInput;
+};
+
+export type CreateMultipleTracksPayload = {
+  __typename?: 'CreateMultipleTracksPayload';
+  firstTrack: Track;
+  trackIds: Array<Scalars['String']>;
+};
+
 export type CreatePostInput = {
   body: Scalars['String'];
   mediaLink?: Maybe<Scalars['String']>;
   trackId?: Maybe<Scalars['String']>;
+  trackTransactionHash?: Maybe<Scalars['String']>;
 };
 
 export type CreatePostPayload = {
@@ -397,6 +400,15 @@ export type FeedItem = {
   post: Post;
 };
 
+export type FilterBuyNowItemInput = {
+  trackEdition: Scalars['String'];
+};
+
+export type FilterListingItemInput = {
+  tokenId: Scalars['Float'];
+  contractAddress: Scalars['String'];
+};
+
 export type FilterPostInput = {
   profileId?: Maybe<Scalars['String']>;
 };
@@ -502,6 +514,7 @@ export type ListingItem = {
   owner: Maybe<Scalars['String']>;
   nft: Maybe<Scalars['String']>;
   tokenId: Maybe<Scalars['Float']>;
+  contract: Scalars['String'];
   startingTime: Maybe<Scalars['Float']>;
   endingTime: Maybe<Scalars['Float']>;
   reservePrice: Maybe<Scalars['String']>;
@@ -528,6 +541,7 @@ export type ListingItemWithPrice = {
   owner: Maybe<Scalars['String']>;
   nft: Maybe<Scalars['String']>;
   tokenId: Maybe<Scalars['Float']>;
+  contract: Scalars['String'];
   startingTime: Maybe<Scalars['Float']>;
   endingTime: Maybe<Scalars['Float']>;
   reservePrice: Maybe<Scalars['String']>;
@@ -584,7 +598,6 @@ export type Mutation = {
   createAuctionItem: CreateAuctionItemType;
   setNotValid: CreateBuyNowItemType;
   updateOgunClaimedAudioHolder: UpdateOgunClaimedAudioHolderPayload;
-  createBuyNowItem: CreateBuyNowItemType;
   addComment: AddCommentPayload;
   updateComment: UpdateCommentPayload;
   deleteComment: DeleteCommentPayload;
@@ -610,6 +623,7 @@ export type Mutation = {
   updateProfileVerificationRequest: ProfileVerificationRequestPayload;
   removeProfileVerificationRequest: ProfileVerificationRequestPayload;
   createTrack: CreateTrackPayload;
+  createMultipleTracks: CreateMultipleTracksPayload;
   updateTrack: UpdateTrackPayload;
   deleteTrackOnError: UpdateTrackPayload;
   deleteTrack: Track;
@@ -638,11 +652,6 @@ export type MutationSetNotValidArgs = {
 
 export type MutationUpdateOgunClaimedAudioHolderArgs = {
   input: UpdateOgunClaimedInput;
-};
-
-
-export type MutationCreateBuyNowItemArgs = {
-  input: CreateBuyNowItemInput;
 };
 
 
@@ -754,6 +763,11 @@ export type MutationRemoveProfileVerificationRequestArgs = {
 
 export type MutationCreateTrackArgs = {
   input: CreateTrackInput;
+};
+
+
+export type MutationCreateMultipleTracksArgs = {
+  input: CreateMultipleTracksInput;
 };
 
 
@@ -1137,6 +1151,7 @@ export type Query = {
   tracks: TrackConnection;
   favoriteTracks: TrackConnection;
   listingItems: ListingItemConnection;
+  buyNowListingItems: ListingItemConnection;
   uploadUrl: UploadUrl;
   mimeType: MimeType;
   me: Maybe<User>;
@@ -1234,7 +1249,7 @@ export type QueryFollowingArgs = {
 
 
 export type QueryListingItemArgs = {
-  tokenId: Scalars['Float'];
+  input: FilterListingItemInput;
 };
 
 
@@ -1346,6 +1361,13 @@ export type QueryListingItemsArgs = {
   page?: Maybe<PageInput>;
   sort?: Maybe<SortListingItemInput>;
   filter?: Maybe<FilterTrackMarketplace>;
+};
+
+
+export type QueryBuyNowListingItemsArgs = {
+  page?: Maybe<PageInput>;
+  sort?: Maybe<SortListingItemInput>;
+  filter?: Maybe<FilterBuyNowItemInput>;
 };
 
 
@@ -1559,20 +1581,34 @@ export type Track = {
   genres: Maybe<Array<Genre>>;
   nftData: Maybe<NftDataType>;
   playbackCountFormatted: Scalars['String'];
+  trackEditionId: Maybe<Scalars['String']>;
+  trackEdition: Maybe<TrackEdition>;
   deleted: Maybe<Scalars['Boolean']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   playbackUrl: Scalars['String'];
+  playbackCount: Scalars['Float'];
   favoriteCount: Scalars['Float'];
   price: Scalars['Float'];
   saleType: Scalars['String'];
   isFavorite: Scalars['Boolean'];
+  editionSize: Scalars['Float'];
 };
 
 export type TrackConnection = {
   __typename?: 'TrackConnection';
   pageInfo: PageInfo;
   nodes: Array<Track>;
+};
+
+export type TrackEdition = {
+  __typename?: 'TrackEdition';
+  id: Scalars['ID'];
+  transactionHash: Scalars['String'];
+  editionId: Scalars['Float'];
+  editionSize: Scalars['Float'];
+  createdAt: Scalars['DateTime'];
+  updatedAt: Scalars['DateTime'];
 };
 
 export type TrackWithListingItem = {
@@ -1592,14 +1628,18 @@ export type TrackWithListingItem = {
   genres: Maybe<Array<Genre>>;
   nftData: Maybe<NftDataType>;
   playbackCountFormatted: Scalars['String'];
+  trackEditionId: Maybe<Scalars['String']>;
+  trackEdition: Maybe<TrackEdition>;
   deleted: Maybe<Scalars['Boolean']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   playbackUrl: Scalars['String'];
+  playbackCount: Scalars['Float'];
   favoriteCount: Scalars['Float'];
   price: Scalars['Float'];
   saleType: Scalars['String'];
   isFavorite: Scalars['Boolean'];
+  editionSize: Scalars['Float'];
   listingItem: Maybe<ListingItemWithPrice>;
 };
 
@@ -1876,8 +1916,29 @@ export type BuyNowItemQuery = (
     { __typename?: 'BuyNowPayload' }
     & { buyNowItem: Maybe<(
       { __typename?: 'BuyNowItem' }
-      & Pick<BuyNowItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'pricePerItemToShow' | 'startingTime'>
+      & Pick<BuyNowItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'contract' | 'pricePerItem' | 'pricePerItemToShow' | 'startingTime'>
     )> }
+  ) }
+);
+
+export type BuyNowListingItemsQueryVariables = Exact<{
+  filter?: Maybe<FilterBuyNowItemInput>;
+  sort?: Maybe<SortListingItemInput>;
+  page?: Maybe<PageInput>;
+}>;
+
+
+export type BuyNowListingItemsQuery = (
+  { __typename?: 'Query' }
+  & { buyNowListingItems: (
+    { __typename?: 'ListingItemConnection' }
+    & { nodes: Array<(
+      { __typename?: 'TrackWithListingItem' }
+      & ListingItemComponentFieldsFragment
+    )>, pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
+    ) }
   ) }
 );
 
@@ -2011,16 +2072,20 @@ export type CountBidsQuery = (
   ) }
 );
 
-export type CreateBuyNowItemMutationVariables = Exact<{
-  input: CreateBuyNowItemInput;
+export type CreateMultipleTracksMutationVariables = Exact<{
+  input: CreateMultipleTracksInput;
 }>;
 
 
-export type CreateBuyNowItemMutation = (
+export type CreateMultipleTracksMutation = (
   { __typename?: 'Mutation' }
-  & { createBuyNowItem: (
-    { __typename?: 'CreateBuyNowItemType' }
-    & Pick<CreateBuyNowItemType, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'startingTime'>
+  & { createMultipleTracks: (
+    { __typename?: 'CreateMultipleTracksPayload' }
+    & Pick<CreateMultipleTracksPayload, 'trackIds'>
+    & { firstTrack: (
+      { __typename?: 'Track' }
+      & TrackComponentFieldsFragment
+    ) }
   ) }
 );
 
@@ -2405,7 +2470,7 @@ export type HaveBidedQuery = (
 );
 
 export type ListingItemQueryVariables = Exact<{
-  tokenId: Scalars['Float'];
+  input: FilterListingItemInput;
 }>;
 
 
@@ -2419,19 +2484,22 @@ export type ListingItemQuery = (
 
 export type ListingItemComponentFieldsFragment = (
   { __typename?: 'TrackWithListingItem' }
-  & Pick<TrackWithListingItem, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'saleType' | 'price'>
+  & Pick<TrackWithListingItem, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'playbackCount' | 'saleType' | 'price' | 'trackEditionId' | 'editionSize'>
   & { nftData: Maybe<(
     { __typename?: 'NFTDataType' }
     & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner' | 'pendingTime'>
+  )>, trackEdition: Maybe<(
+    { __typename?: 'TrackEdition' }
+    & Pick<TrackEdition, 'id' | 'editionId' | 'transactionHash' | 'editionSize' | 'createdAt' | 'updatedAt'>
   )>, listingItem: Maybe<(
     { __typename?: 'ListingItemWithPrice' }
-    & Pick<ListingItemWithPrice, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'pricePerItemToShow' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow' | 'createdAt' | 'updatedAt' | 'priceToShow'>
+    & Pick<ListingItemWithPrice, 'id' | 'owner' | 'nft' | 'tokenId' | 'contract' | 'pricePerItem' | 'pricePerItemToShow' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow' | 'createdAt' | 'updatedAt' | 'priceToShow'>
   )> }
 );
 
 export type ListingItemViewComponentFieldsFragment = (
   { __typename?: 'ListingItem' }
-  & Pick<ListingItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'pricePerItemToShow' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow' | 'createdAt' | 'updatedAt'>
+  & Pick<ListingItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'contract' | 'pricePerItem' | 'pricePerItemToShow' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow' | 'createdAt' | 'updatedAt'>
 );
 
 export type ListingItemsQueryVariables = Exact<{
@@ -3064,10 +3132,13 @@ export type TrackQuery = (
 
 export type TrackComponentFieldsFragment = (
   { __typename?: 'Track' }
-  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'saleType' | 'price'>
+  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'playbackCount' | 'saleType' | 'price' | 'trackEditionId' | 'editionSize'>
   & { nftData: Maybe<(
     { __typename?: 'NFTDataType' }
-    & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner'>
+    & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner' | 'pendingTime'>
+  )>, trackEdition: Maybe<(
+    { __typename?: 'TrackEdition' }
+    & Pick<TrackEdition, 'id' | 'editionId' | 'transactionHash' | 'editionSize' | 'createdAt' | 'updatedAt'>
   )> }
 );
 
@@ -3588,8 +3659,11 @@ export const ListingItemComponentFieldsFragmentDoc = gql`
   playbackCountFormatted
   isFavorite
   favoriteCount
+  playbackCount
   saleType
   price
+  trackEditionId
+  editionSize
   nftData {
     transactionHash
     tokenId
@@ -3600,11 +3674,21 @@ export const ListingItemComponentFieldsFragmentDoc = gql`
     owner
     pendingTime
   }
+  trackEdition {
+    id
+    editionId
+    transactionHash
+    editionId
+    editionSize
+    createdAt
+    updatedAt
+  }
   listingItem {
     id
     owner
     nft
     tokenId
+    contract
     pricePerItem
     pricePerItemToShow
     startingTime
@@ -3623,6 +3707,7 @@ export const ListingItemViewComponentFieldsFragmentDoc = gql`
   owner
   nft
   tokenId
+  contract
   pricePerItem
   pricePerItemToShow
   startingTime
@@ -3744,8 +3829,11 @@ export const TrackComponentFieldsFragmentDoc = gql`
   playbackCountFormatted
   isFavorite
   favoriteCount
+  playbackCount
   saleType
   price
+  trackEditionId
+  editionSize
   nftData {
     transactionHash
     tokenId
@@ -3754,6 +3842,16 @@ export const TrackComponentFieldsFragmentDoc = gql`
     ipfsCid
     pendingRequest
     owner
+    pendingTime
+  }
+  trackEdition {
+    id
+    editionId
+    transactionHash
+    editionId
+    editionSize
+    createdAt
+    updatedAt
   }
 }
     `;
@@ -4068,6 +4166,7 @@ export const BuyNowItemDocument = gql`
       owner
       nft
       tokenId
+      contract
       pricePerItem
       pricePerItemToShow
       startingTime
@@ -4103,6 +4202,50 @@ export function useBuyNowItemLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions
 export type BuyNowItemQueryHookResult = ReturnType<typeof useBuyNowItemQuery>;
 export type BuyNowItemLazyQueryHookResult = ReturnType<typeof useBuyNowItemLazyQuery>;
 export type BuyNowItemQueryResult = Apollo.QueryResult<BuyNowItemQuery, BuyNowItemQueryVariables>;
+export const BuyNowListingItemsDocument = gql`
+    query BuyNowListingItems($filter: FilterBuyNowItemInput, $sort: SortListingItemInput, $page: PageInput) {
+  buyNowListingItems(filter: $filter, sort: $sort, page: $page) {
+    nodes {
+      ...ListingItemComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+      totalCount
+    }
+  }
+}
+    ${ListingItemComponentFieldsFragmentDoc}`;
+
+/**
+ * __useBuyNowListingItemsQuery__
+ *
+ * To run a query within a React component, call `useBuyNowListingItemsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useBuyNowListingItemsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useBuyNowListingItemsQuery({
+ *   variables: {
+ *      filter: // value for 'filter'
+ *      sort: // value for 'sort'
+ *      page: // value for 'page'
+ *   },
+ * });
+ */
+export function useBuyNowListingItemsQuery(baseOptions?: Apollo.QueryHookOptions<BuyNowListingItemsQuery, BuyNowListingItemsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<BuyNowListingItemsQuery, BuyNowListingItemsQueryVariables>(BuyNowListingItemsDocument, options);
+      }
+export function useBuyNowListingItemsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<BuyNowListingItemsQuery, BuyNowListingItemsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<BuyNowListingItemsQuery, BuyNowListingItemsQueryVariables>(BuyNowListingItemsDocument, options);
+        }
+export type BuyNowListingItemsQueryHookResult = ReturnType<typeof useBuyNowListingItemsQuery>;
+export type BuyNowListingItemsLazyQueryHookResult = ReturnType<typeof useBuyNowListingItemsLazyQuery>;
+export type BuyNowListingItemsQueryResult = Apollo.QueryResult<BuyNowListingItemsQuery, BuyNowListingItemsQueryVariables>;
 export const ChangeReactionDocument = gql`
     mutation ChangeReaction($input: ChangeReactionInput!) {
   changeReaction(input: $input) {
@@ -4380,44 +4523,42 @@ export function useCountBidsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
 export type CountBidsQueryHookResult = ReturnType<typeof useCountBidsQuery>;
 export type CountBidsLazyQueryHookResult = ReturnType<typeof useCountBidsLazyQuery>;
 export type CountBidsQueryResult = Apollo.QueryResult<CountBidsQuery, CountBidsQueryVariables>;
-export const CreateBuyNowItemDocument = gql`
-    mutation CreateBuyNowItem($input: CreateBuyNowItemInput!) {
-  createBuyNowItem(input: $input) {
-    id
-    owner
-    nft
-    tokenId
-    pricePerItem
-    startingTime
+export const CreateMultipleTracksDocument = gql`
+    mutation CreateMultipleTracks($input: CreateMultipleTracksInput!) {
+  createMultipleTracks(input: $input) {
+    trackIds
+    firstTrack {
+      ...TrackComponentFields
+    }
   }
 }
-    `;
-export type CreateBuyNowItemMutationFn = Apollo.MutationFunction<CreateBuyNowItemMutation, CreateBuyNowItemMutationVariables>;
+    ${TrackComponentFieldsFragmentDoc}`;
+export type CreateMultipleTracksMutationFn = Apollo.MutationFunction<CreateMultipleTracksMutation, CreateMultipleTracksMutationVariables>;
 
 /**
- * __useCreateBuyNowItemMutation__
+ * __useCreateMultipleTracksMutation__
  *
- * To run a mutation, you first call `useCreateBuyNowItemMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useCreateBuyNowItemMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useCreateMultipleTracksMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateMultipleTracksMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [createBuyNowItemMutation, { data, loading, error }] = useCreateBuyNowItemMutation({
+ * const [createMultipleTracksMutation, { data, loading, error }] = useCreateMultipleTracksMutation({
  *   variables: {
  *      input: // value for 'input'
  *   },
  * });
  */
-export function useCreateBuyNowItemMutation(baseOptions?: Apollo.MutationHookOptions<CreateBuyNowItemMutation, CreateBuyNowItemMutationVariables>) {
+export function useCreateMultipleTracksMutation(baseOptions?: Apollo.MutationHookOptions<CreateMultipleTracksMutation, CreateMultipleTracksMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateBuyNowItemMutation, CreateBuyNowItemMutationVariables>(CreateBuyNowItemDocument, options);
+        return Apollo.useMutation<CreateMultipleTracksMutation, CreateMultipleTracksMutationVariables>(CreateMultipleTracksDocument, options);
       }
-export type CreateBuyNowItemMutationHookResult = ReturnType<typeof useCreateBuyNowItemMutation>;
-export type CreateBuyNowItemMutationResult = Apollo.MutationResult<CreateBuyNowItemMutation>;
-export type CreateBuyNowItemMutationOptions = Apollo.BaseMutationOptions<CreateBuyNowItemMutation, CreateBuyNowItemMutationVariables>;
+export type CreateMultipleTracksMutationHookResult = ReturnType<typeof useCreateMultipleTracksMutation>;
+export type CreateMultipleTracksMutationResult = Apollo.MutationResult<CreateMultipleTracksMutation>;
+export type CreateMultipleTracksMutationOptions = Apollo.BaseMutationOptions<CreateMultipleTracksMutation, CreateMultipleTracksMutationVariables>;
 export const CreatePostDocument = gql`
     mutation CreatePost($input: CreatePostInput!) {
   createPost(input: $input) {
@@ -5207,8 +5348,8 @@ export type HaveBidedQueryHookResult = ReturnType<typeof useHaveBidedQuery>;
 export type HaveBidedLazyQueryHookResult = ReturnType<typeof useHaveBidedLazyQuery>;
 export type HaveBidedQueryResult = Apollo.QueryResult<HaveBidedQuery, HaveBidedQueryVariables>;
 export const ListingItemDocument = gql`
-    query ListingItem($tokenId: Float!) {
-  listingItem(tokenId: $tokenId) {
+    query ListingItem($input: FilterListingItemInput!) {
+  listingItem(input: $input) {
     ...ListingItemViewComponentFields
   }
 }
@@ -5226,7 +5367,7 @@ export const ListingItemDocument = gql`
  * @example
  * const { data, loading, error } = useListingItemQuery({
  *   variables: {
- *      tokenId: // value for 'tokenId'
+ *      input: // value for 'input'
  *   },
  * });
  */

@@ -61,10 +61,12 @@ export const TrackGrid = ({ track }: TrackProps) => {
     setIsPlaying(isCurrentlyPlaying(trackId));
   }, [isCurrentSong, isCurrentlyPlaying, setIsPlaying, trackId]);
 
-  console.log({maticUsd, price })
-
   return (
-    <div className={`${isPlaying ? 'gradient-track-box' : 'black-track-box'} max-w-[250px] rounded-lg hover:gradient-track-box flex flex-col`}>
+    <div
+      className={`${
+        isPlaying ? 'gradient-track-box' : 'black-track-box'
+      } hover:gradient-track-box flex max-w-[250px] flex-col rounded-lg`}
+    >
       <NextLink href={`/tracks/${trackId}`}>
         <a>
           <div className="h-32 w-full overflow-hidden rounded-t-xl">
@@ -75,11 +77,11 @@ export const TrackGrid = ({ track }: TrackProps) => {
 
       <NextLink href={`/tracks/${trackId}`}>
         <a>
-          <div className="flex items-center flex-col contente-center my-3 decoration-gray-80">
-            <div className="font-bold text-sm overflow-hidden text-ellipsis max-w-[248px]" title={title || ''}>
+          <div className="contente-center my-3 flex flex-col items-center decoration-gray-80">
+            <div className="max-w-[248px] overflow-hidden text-ellipsis text-sm font-bold" title={title || ''}>
               {title ? title : 'Unknown Title'}
             </div>
-            <div className="font-bold text-gray-80 text-sm" title={artist || ''}>
+            <div className="text-sm font-bold text-gray-80" title={artist || ''}>
               {artist ? artist : 'Unknown'}
             </div>
           </div>
@@ -94,7 +96,7 @@ export const TrackGrid = ({ track }: TrackProps) => {
       />
       <div>
         {saleType && (
-          <div className="flex items-center justify-between mt-3 mx-3">
+          <div className="mx-3 mt-3 flex items-center justify-between">
             <div className="flex items-center">
               <div className="mr-1.5 font-semibold">{price}</div>
               <Matic height="20" width="23" className="" />
@@ -109,22 +111,22 @@ export const TrackGrid = ({ track }: TrackProps) => {
           </div>
         )}
         {price > 0 && (
-          <div className="text-gray-80 text-xs ml-3 mt-0.5 font-semibold">
+          <div className="ml-3 mt-0.5 text-xs font-semibold text-gray-80">
             {maticUsd && maticUsd.maticUsd && price && `${currency(price * parseFloat(maticUsd.maticUsd))}`}
           </div>
         )}
       </div>
 
-      <div className="flex items-center justify-between m-3">
+      <div className="m-3 flex items-center justify-between">
         {!isReady ? (
           <LoaderAnimation ring />
         ) : (
-          <button className="bg-white rounded-full w-6 h-6 flex items-center" onClick={() => play(song)}>
-            {isPlaying ? <Pause className="text-white m-auto scale-125" /> : <Play className="text-white m-auto" />}
+          <button className="flex h-6 w-6 items-center rounded-full bg-white" onClick={() => play(song)}>
+            {isPlaying ? <Pause className="m-auto scale-125 text-white" /> : <Play className="m-auto text-white" />}
           </button>
         )}
 
-        <div className="text-gray-80 text-xs flex gap-1 items-center pt-1 font-medium">
+        <div className="flex items-center gap-1 pt-1 text-xs font-medium text-gray-80">
           <Play fill="#808080" />
           <span>{playbackCount || 0}</span>
           <HeartFilled />

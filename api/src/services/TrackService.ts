@@ -11,6 +11,7 @@ import { PostModel } from '../models/Post';
 import { Track, TrackModel } from '../models/Track';
 import { TrackWithListingItem } from '../models/TrackWithListingItem';
 import { Context } from '../types/Context';
+import { FilterBuyNowItemInput } from '../types/FilterBuyNowItemInput';
 import { FilterTrackInput } from '../types/FilterTrackInput';
 import { FilterTrackMarketplace } from '../types/FilterTrackMarketplace';
 import { NFTData } from '../types/NFTData';
@@ -41,6 +42,7 @@ type bulkType = {
     };
   };
 };
+
 export class TrackService extends ModelService<typeof Track> {
   constructor(context: Context) {
     super(context, TrackModel);
@@ -60,19 +62,6 @@ export class TrackService extends ModelService<typeof Track> {
     return this.findOrFail(id);
   }
 
-  async searchTracks(search: string): Promise<{ list: Track[]; total: number }> {
-    const regex = new RegExp(search, 'i');
-    const list = await this.model
-      .find({ deleted: false, $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }] })
-      .sort({ createdAt: -1 })
-      .limit(5);
-    const total = await this.model
-      .find({ deleted: false, $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }] })
-      .countDocuments()
-      .exec();
-    return { list, total };
-  }
-
   async createTrack(profileId: string, data: Partial<Track>): Promise<Track> {
     const track = new this.model({ profileId, ...data });
     const asset = await this.context.muxService.create(data.assetUrl, track._id);
@@ -81,26 +70,43 @@ export class TrackService extends ModelService<typeof Track> {
     return track;
   }
 
-  async updateTrackByTransactionHash(transactionHash: string, changes: RecursivePartial<Track>): Promise<Track> {
+  async createMultipleTracks(profileId: string, data: { track: Partial<Track>; amount: number }): Promise<Track[]> {
+    return await Promise.all(
+      Array(data.amount)
+        .fill(null)
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        .map(_ => {
+          return this.createTrack(profileId, data.track);
+        }),
+    );
+  }
+
+  async updateTrackByTransactionHash(transactionHash: string, changes: RecursivePartial<Track>): Promise<void> {
     const { nftData: newNftData, ...data } = changes;
 
-    const track = await this.model.findOneAndUpdate(
+    const track = await this.model.updateOne(
       {
         'nftData.transactionHash': transactionHash,
+        'nftData.tokenId': { $exists: false },
       },
-      data,
+      {
+        $set: {
+          ...data,
+          'nftData.tokenId': newNftData.tokenId,
+          'nftData.contract': newNftData.contract,
+          'nftData.pendingRequest': newNftData.pendingRequest,
+        },
+      },
     );
 
-    if (!track) {
+    if (track.nModified === 0) {
       const trackPending = new PendingTrackModel({
         transactionHash,
         tokenId: newNftData.tokenId,
         contract: newNftData.contract,
       });
       await trackPending.save();
-      return;
     }
-    return this.updateNftData(track, newNftData);
   }
 
   async updateTrack(id: string, changes: RecursivePartial<Track>): Promise<Track> {
@@ -114,12 +120,16 @@ export class TrackService extends ModelService<typeof Track> {
     return this.updateNftData(track, newNftData);
   }
 
-  private updateNftData(track: DocumentType<Track>, newNftData?: Partial<NFTData>) {
+  async updateTracksByTransactionHash(transactionHash: string, changes: RecursivePartial<Track>): Promise<number> {
+    return await this.model.updateMany({ 'nftData.transactionHash': transactionHash }, { ...changes });
+  }
+
+  private async updateNftData(track: DocumentType<Track>, newNftData?: Partial<NFTData>) {
     if (newNftData) {
       const trackAsData = track.toObject();
       const nftData = trackAsData.nftData;
       track.nftData = { ...nftData, ...newNftData };
-      track.save();
+      await track.save();
     }
 
     return track;
@@ -190,17 +200,30 @@ export class TrackService extends ModelService<typeof Track> {
     return await this.updateTrack(id, { nftData: { owner } });
   }
 
-  async isFavorite(trackId: string, profileId: string): Promise<boolean> {
-    const hasRecord = await FavoriteProfileTrackModel.findOne({ trackId, profileId });
-    return hasRecord ? true : false;
+  async isFavorite(trackId: string, profileId: string, trackTransactionHash: string): Promise<boolean> {
+    return await FavoriteProfileTrackModel.exists({
+      $or: [{ trackId }, { trackTransactionHash }],
+      profileId,
+    });
   }
 
   async toggleFavorite(trackId: string, profileId: string): Promise<FavoriteProfileTrack> {
-    const favTrack = await FavoriteProfileTrackModel.findOne({ trackId, profileId });
+    const track = await this.model.findOne({ _id: trackId });
+
+    const findParams = {
+      $or: [{ trackId }, { trackTransactionHash: track.nftData.transactionHash }],
+      profileId,
+    };
+
+    const favTrack = await FavoriteProfileTrackModel.findOne(findParams);
     if (favTrack?.id) {
-      return await FavoriteProfileTrackModel.findOneAndDelete({ trackId, profileId });
+      return await FavoriteProfileTrackModel.findOneAndDelete(findParams);
     } else {
-      const favorite = new FavoriteProfileTrackModel({ profileId, trackId });
+      const favorite = new FavoriteProfileTrackModel({
+        profileId,
+        trackId,
+        trackTransactionHash: track.nftData.transactionHash,
+      });
       await favorite.save();
       return favorite;
     }
@@ -225,11 +248,11 @@ export class TrackService extends ModelService<typeof Track> {
     });
   }
 
-  async favoriteCount(trackId: string): Promise<FavoriteCount> {
+  async favoriteCount(trackId: string, trackTransactionHash: string): Promise<FavoriteCount> {
     const favTrack = await FavoriteProfileTrackModel.aggregate([
       {
         $match: {
-          trackId: trackId.toString(),
+          $or: [{ trackId: trackId.toString() }, { trackTransactionHash: trackTransactionHash.toString() }],
         },
       },
       {
@@ -244,8 +267,33 @@ export class TrackService extends ModelService<typeof Track> {
     return favTrack.length ? favTrack[0].count : 0;
   }
 
-  async saleType(tokenId: number): Promise<string> {
-    const listing = await this.context.listingItemService.getActiveListingItem(tokenId);
+  async playbackCount(trackId: string, trackTransactionHash: string): Promise<number> {
+    const trackQuery = await this.model.aggregate([
+      {
+        $match: {
+          $or: [{ trackId: trackId.toString() }, { 'nftData.transactionHash': trackTransactionHash.toString() }],
+        },
+      },
+      {
+        $group: {
+          _id: '$nftData.transactionHash',
+          totalPlaybackCount: {
+            $sum: '$playbackCount',
+          },
+        },
+      },
+      {
+        $project: {
+          sum: '$totalPlaybackCount',
+        },
+      },
+    ]);
+
+    return trackQuery.length ? trackQuery[0].sum : 0;
+  }
+
+  async saleType(tokenId: number, contractAddress: string): Promise<string> {
+    const listing = await this.context.listingItemService.getActiveListingItem(tokenId, contractAddress);
     if (!listing) {
       return '';
     }
@@ -253,8 +301,8 @@ export class TrackService extends ModelService<typeof Track> {
     return (endingTime && 'auction') || (pricePerItem && 'buy now') || '';
   }
 
-  async priceToShow(tokenId: number): Promise<number> {
-    const listing = await this.context.listingItemService.getActiveListingItem(tokenId);
+  async priceToShow(tokenId: number, contractAddress: string): Promise<number> {
+    const listing = await this.context.listingItemService.getActiveListingItem(tokenId, contractAddress);
     if (!listing) {
       return 0;
     }
@@ -280,11 +328,37 @@ export class TrackService extends ModelService<typeof Track> {
         },
       },
       {
+        $addFields: {
+          buynowitem: {
+            $filter: {
+              input: '$buynowitem',
+              as: 'item',
+              cond: {
+                $eq: ['$$item.nft', '$nftData.contract'],
+              },
+            },
+          },
+        },
+      },
+      {
         $lookup: {
           from: 'auctionitems',
           localField: 'nftData.tokenId',
           foreignField: 'tokenId',
           as: 'auctionitem',
+        },
+      },
+      {
+        $addFields: {
+          auctionitem: {
+            $filter: {
+              input: '$auctionitem',
+              as: 'item',
+              cond: {
+                $eq: ['$$item.nft', '$nftData.contract'],
+              },
+            },
+          },
         },
       },
       {
@@ -364,6 +438,35 @@ export class TrackService extends ModelService<typeof Track> {
           },
         },
       },
+      {
+        $group: {
+          _id: '$nftData.transactionHash',
+          lowestPrice: {
+            $min: '$listingItem.pricePerItem',
+          },
+          totalPlaybackCount: {
+            $sum: '$playbackCount',
+          },
+          detail: {
+            $first: '$$ROOT',
+          },
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: {
+            $mergeObjects: [
+              '$detail',
+              {
+                lowestPrice: '$lowestPrice',
+              },
+              {
+                totalPlaybackCount: '$totalPlaybackCount',
+              },
+            ],
+          },
+        },
+      },
     ];
     let dotNotationFilter;
     if (filter) {
@@ -374,6 +477,64 @@ export class TrackService extends ModelService<typeof Track> {
     return this.paginatePipelineAggregated({
       aggregation,
       filter: filter ? { ...(filter.genres && { genres: filter.genres }), ...dotNotationFilter, deleted: false } : {},
+      sort,
+      page,
+    });
+  }
+
+  getBuyNowlistingItems(
+    filter?: FilterBuyNowItemInput,
+    sort?: SortListingItemInput,
+    page?: PageInput,
+  ): Promise<PaginateResult<TrackWithListingItem>> {
+    const aggregation = [
+      {
+        $lookup: {
+          from: 'buynowitems',
+          localField: 'nftData.tokenId',
+          foreignField: 'tokenId',
+          as: 'listingItem',
+        },
+      },
+      {
+        $addFields: {
+          listingItem: {
+            $filter: {
+              input: '$listingItem',
+              as: 'item',
+              cond: {
+                $eq: ['$$item.nft', '$nftData.contract'],
+              },
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          listingItem: {
+            $filter: {
+              input: '$listingItem',
+              as: 'item',
+              cond: {
+                $and: [
+                  {
+                    $eq: ['$$item.valid', true],
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+      {
+        $unwind: {
+          path: '$listingItem',
+        },
+      },
+    ];
+    return this.paginatePipelineAggregated({
+      aggregation,
+      filter: { deleted: false, trackEditionId: new ObjectId(filter.trackEdition) },
       sort,
       page,
     });
@@ -404,5 +565,25 @@ export class TrackService extends ModelService<typeof Track> {
       }
       await PendingTrackModel.updateOne({ _id }, { processed: true });
     });
+  }
+
+  async getEditionSizeByGroupingTracks(trackTransactionHash: string): Promise<number> {
+    const aggregate = [
+      {
+        $match: {
+          'nftData.transactionHash': trackTransactionHash,
+        },
+      },
+      {
+        $group: {
+          _id: '$nftData.transactionHash',
+          count: {
+            $sum: 1,
+          },
+        },
+      },
+    ];
+    const countQuery = await this.model.aggregate(aggregate);
+    return countQuery.length ? countQuery[0].count : 1;
   }
 }

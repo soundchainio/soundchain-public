@@ -17,11 +17,10 @@ import {
   ShowNewPostPayload,
   ShowReactionsPayload,
   ShowRemoveListing,
-  ShowTransferConfirmationPayload,
-  ShowUnderDevelopmentPayload,
-  ShowTransferNftConfirmationPayload
+  ShowTransferConfirmationPayload, ShowTransferNftConfirmationPayload, ShowUnderDevelopmentPayload
 } from 'contexts/payloads/modal';
-import { ReactionType, TracksQuery  } from 'lib/graphql';
+import { ContractAddresses } from 'hooks/useBlockchainV2';
+import { ReactionType, TracksQuery } from 'lib/graphql';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 import { SaleType } from 'types/SaleType';
 import { GenreLabel } from 'utils/Genres';
@@ -57,6 +56,8 @@ export interface ModalState {
   amountToTransfer?: string;
   type?: SaleType;
   saleType?: SaleType;
+  nftContractAddress?: string | null;
+  contractAddresses?: ContractAddresses
   showConfirmDeleteNFT: boolean;
   burn?: boolean;
   showMarketplaceFilter: boolean;
@@ -179,6 +180,7 @@ export const modalReducer = (state: ModalState, action: Action) => {
         ...state,
         showApprove: (action.payload as ShowApprove).show,
         type: (action.payload as ShowApprove).type,
+        nftContractAddress: (action.payload as ShowApprove).nftContractAddress,
         anyModalOpened: (action.payload as ShowApprove).show,
       };
     case ModalActionTypes.SHOW_REMOVE_LISTING:
@@ -189,6 +191,7 @@ export const modalReducer = (state: ModalState, action: Action) => {
         trackId: (action.payload as ShowRemoveListing).trackId,
         saleType: (action.payload as ShowRemoveListing).saleType,
         anyModalOpened: (action.payload as ShowRemoveListing).show,
+        contractAddresses: (action.payload as ShowRemoveListing).contractAddresses,
       };
     case ModalActionTypes.SHOW_AUDIO_PLAYER:
       return {
@@ -235,16 +238,11 @@ export const modalReducer = (state: ModalState, action: Action) => {
       };
     case ModalActionTypes.SHOW_TRANSFER_NFT_CONFIRMATION:
       const payload =  (action.payload as ShowTransferNftConfirmationPayload)
+      const { show, ...rest} = payload
       return {
         ...state,
-        showTransferNftConfirmation: payload.show,
-        trackId: payload.trackId,
-        walletRecipient: (action.payload as ShowTransferNftConfirmationPayload).walletRecipient,
-        artworkUrl: payload.artworkUrl,
-        tokenId: payload.tokenId,
-        artist: payload.artist,
-        title: payload.title,
-        refetch: payload.refetch
+        showTransferNftConfirmation: show,
+        ...rest
       };
     default:
       return state;
