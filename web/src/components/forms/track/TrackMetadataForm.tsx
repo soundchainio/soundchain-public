@@ -26,7 +26,7 @@ export interface FormValues {
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
-  editionQuantity: yup.number().label('# of Editions').min(1).max(50).required('# of Editions is a required field'),
+  editionQuantity: yup.number().label('# of Editions').min(1).max(1000).required('# of Editions is a required field'),
   title: yup.string().max(100).required('Title is a required field'),
   description: yup.string().max(500).required('Description is a required field'),
   artist: yup.string(),

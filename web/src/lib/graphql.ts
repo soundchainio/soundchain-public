@@ -245,7 +245,7 @@ export type CreateBuyNowItemType = {
 };
 
 export type CreateMultipleTracksInput = {
-  amount: Scalars['Float'];
+  amount: Scalars['Int'];
   track: CreateTrackInput;
 };
 
