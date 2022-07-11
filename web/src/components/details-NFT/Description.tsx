@@ -8,10 +8,10 @@ interface DescriptionProps {
 export const Description = ({ description, className }: DescriptionProps) => {
   return (
     <div className={className}>
-      <Subtitle className="font-bold" size="xs">
+      <Subtitle className="font-bold text-gray-CC" size="xs">
         DESCRIPTION
       </Subtitle>
-      <p className="text-gray-80 text-xs py-2 font-bold">{description}</p>
+      <p className="py-2 text-xs font-medium text-gray-80">{description}</p>
     </div>
   );
 };
