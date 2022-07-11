@@ -19,7 +19,7 @@ import { useWalletContext } from 'hooks/useWalletContext';
 import { Cards } from 'icons/Cards';
 import { PriceTag } from 'icons/PriceTag';
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting';
-import { PendingRequest, TrackQuery, useBuyNowListingItemsQuery, useProfileLazyQuery } from 'lib/graphql';
+import { PendingRequest, TrackQuery, useBuyNowListingItemsQuery, useProfileLazyQuery, useTrackLazyQuery } from 'lib/graphql';
 import { useEffect, useMemo, useState } from 'react';
 import { compareWallets } from 'utils/Wallet';
 
@@ -49,10 +49,16 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
   const { getRoyalties } = useBlockchain();
   const { loading: isLoadingOwner, isOwner } = useTokenOwner(track.nftData?.tokenId, track.nftData?.contract);
 
+  const [refetchTrack, { data: trackData }] = useTrackLazyQuery({
+    fetchPolicy: 'network-only',
+    nextFetchPolicy: 'network-only',
+  });
+
   const {
     data,
     fetchMore,
     loading: loadingListingItem,
+    refetch: refetchListingItem,
   } = useBuyNowListingItemsQuery({
     variables: {
       page: { first: 10 },
@@ -66,7 +72,7 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
   const description = `Listen to ${track.title} on SoundChain. ${track.artist}. ${track.album || 'Song'}. ${
     track.releaseYear != null ? `${track.releaseYear}.` : ''
   }`;
-  const nftData = track.nftData;
+  const nftData = trackData?.track?.nftData || track.nftData;
   const tokenId = nftData?.tokenId;
 
   const firstListingItem = data?.buyNowListingItems?.nodes?.[0]?.listingItem;
@@ -116,6 +122,19 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
       profile({ variables: { id: track.artistProfileId } });
     }
   }, [track.artistProfileId, profile]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (isProcessing) {
+        refetchTrack({ variables: { id: track.id } });
+        if (tokenId) {
+          refetchListingItem();
+        }
+      }
+    }, 10 * 1000);
+
+    return () => clearInterval(interval);
+  }, [isProcessing, refetchTrack, refetchListingItem, tokenId, track.id]);
 
   const nodes = data?.buyNowListingItems.nodes;
   const pageInfo = data?.buyNowListingItems.pageInfo;
