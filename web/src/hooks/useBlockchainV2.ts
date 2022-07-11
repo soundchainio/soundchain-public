@@ -128,7 +128,7 @@ class PlaceBid extends BlockchainFunction<PlaceBidParams> {
       contractAddresses?.nft || nftAddress,
       tokenId
     );
-    const gas = await transactionObject.estimateGas({ from });
+    const gas = await transactionObject.estimateGas({ from, value });
 
     await this._execute(gasPrice => transactionObject.send({ from, gas, value, gasPrice }));
     return this.receipt;
