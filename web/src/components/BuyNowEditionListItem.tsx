@@ -28,8 +28,6 @@ export const BuyNowEditionListItem = ({
 
   useEffect(() => {
     if (!account || !web3 || tokenId === null || tokenId === undefined) {
-      console.log({ tokenId, contractAddress, account, web3 });
-
       return;
     }
     isTokenOwner(web3, tokenId, account, { nft: contractAddress })
