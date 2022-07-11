@@ -322,39 +322,43 @@ export class TrackService extends ModelService<typeof Track> {
       {
         $lookup: {
           from: 'buynowitems',
+          localField: 'nftData.tokenId',
+          foreignField: 'tokenId',
           as: 'buynowitem',
-          let: {
-            tokenId: '$nftData.tokenId',
-            contract: '$nftData.contract',
-          },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [{ $eq: ['$tokenId', '$$tokenId'] }, { $eq: ['$nft', '$$contract'] }],
-                },
+        },
+      },
+      {
+        $addFields: {
+          buynowitem: {
+            $filter: {
+              input: '$buynowitem',
+              as: 'item',
+              cond: {
+                $eq: ['$$item.nft', '$nftData.contract'],
               },
             },
-          ],
+          },
         },
       },
       {
         $lookup: {
           from: 'auctionitems',
+          localField: 'nftData.tokenId',
+          foreignField: 'tokenId',
           as: 'auctionitem',
-          let: {
-            tokenId: '$nftData.tokenId',
-            contract: '$nftData.contract',
-          },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [{ $eq: ['$tokenId', '$$tokenId'] }, { $eq: ['$nft', '$$contract'] }],
-                },
+        },
+      },
+      {
+        $addFields: {
+          auctionitem: {
+            $filter: {
+              input: '$auctionitem',
+              as: 'item',
+              cond: {
+                $eq: ['$$item.nft', '$nftData.contract'],
               },
             },
-          ],
+          },
         },
       },
       {
@@ -487,20 +491,22 @@ export class TrackService extends ModelService<typeof Track> {
       {
         $lookup: {
           from: 'buynowitems',
+          localField: 'nftData.tokenId',
+          foreignField: 'tokenId',
           as: 'listingItem',
-          let: {
-            tokenId: '$nftData.tokenId',
-            contract: '$nftData.contract',
-          },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [{ $eq: ['$tokenId', '$$tokenId'] }, { $eq: ['$nft', '$$contract'] }],
-                },
+        },
+      },
+      {
+        $addFields: {
+          listingItem: {
+            $filter: {
+              input: '$listingItem',
+              as: 'item',
+              cond: {
+                $eq: ['$$item.nft', '$nftData.contract'],
               },
             },
-          ],
+          },
         },
       },
       {
