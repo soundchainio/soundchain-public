@@ -3,6 +3,7 @@ import { BuyNowItemModel } from '../models/BuyNowItem';
 import { ListingItem } from '../models/ListingItem';
 import { getNow } from '../utils/Time';
 import { Service } from './Service';
+import { TrackModel } from '../models/Track';
 
 export class ListingItemService extends Service {
   async getListingItem(tokenId: number, contractAddress: string): Promise<ListingItem | void> {
@@ -27,5 +28,22 @@ export class ListingItemService extends Service {
     const auctionItem = (await AuctionItemModel.findOne({ tokenId, nft: contractAddress }))?.toObject();
     const buyNowItem = (await BuyNowItemModel.findOne({ tokenId, nft: contractAddress }))?.toObject();
     return !!auctionItem || !!buyNowItem;
+  }
+
+  async getCheapestListingItem(transactionHash: string): Promise<ListingItem> {
+    const transactionNfts = (await TrackModel.find({
+      nftData: {
+        transactionHash,
+      },
+    }));
+
+    const buyNowItem = await BuyNowItemModel.findOne({
+      tokenId: {
+        $in: transactionNfts.map(nft => nft.nftData.tokenId),
+      },
+    }).sort({
+      pricePerItemToShow: 1,
+    });
+    return buyNowItem?.toObject();
   }
 }

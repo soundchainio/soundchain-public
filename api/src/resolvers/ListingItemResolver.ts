@@ -20,4 +20,12 @@ export class ListingItemResolver {
   ): Promise<ListingItem | void> {
     return listingItemService.getListingItem(tokenId, contractAddress);
   }
+
+  @Query(() => ListingItem, {nullable: true})
+  async cheapestListingItem(
+    @Ctx() {listingItemService}: Context,
+    @Arg('transactionHash') transactionHash: string
+  ): Promise<ListingItem | void> {
+    return listingItemService.getCheapestListingItem(transactionHash)
+  }
 }

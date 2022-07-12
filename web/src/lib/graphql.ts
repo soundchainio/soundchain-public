@@ -1112,6 +1112,7 @@ export type Query = {
   followers: FollowConnection;
   following: FollowConnection;
   listingItem: Maybe<ListingItem>;
+  cheapestListingItem: Maybe<ListingItem>;
   message: Message;
   notifications: NotificationConnection;
   notification: Notification;
@@ -1233,6 +1234,11 @@ export type QueryFollowingArgs = {
 
 export type QueryListingItemArgs = {
   input: FilterListingItemInput;
+};
+
+
+export type QueryCheapestListingItemArgs = {
+  transactionHash: Scalars['String'];
 };
 
 
@@ -1982,6 +1988,19 @@ export type ChatsQuery = (
       & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
     ) }
   ) }
+);
+
+export type CheapestListingItemQueryVariables = Exact<{
+  transactionHash: Scalars['String'];
+}>;
+
+
+export type CheapestListingItemQuery = (
+  { __typename?: 'Query' }
+  & { cheapestListingItem: Maybe<(
+    { __typename?: 'ListingItem' }
+    & ListingItemViewComponentFieldsFragment
+  )> }
 );
 
 export type ClearNotificationsMutationVariables = Exact<{ [key: string]: never; }>;
@@ -4347,6 +4366,41 @@ export function useChatsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Chat
 export type ChatsQueryHookResult = ReturnType<typeof useChatsQuery>;
 export type ChatsLazyQueryHookResult = ReturnType<typeof useChatsLazyQuery>;
 export type ChatsQueryResult = Apollo.QueryResult<ChatsQuery, ChatsQueryVariables>;
+export const CheapestListingItemDocument = gql`
+    query CheapestListingItem($transactionHash: String!) {
+  cheapestListingItem(transactionHash: $transactionHash) {
+    ...ListingItemViewComponentFields
+  }
+}
+    ${ListingItemViewComponentFieldsFragmentDoc}`;
+
+/**
+ * __useCheapestListingItemQuery__
+ *
+ * To run a query within a React component, call `useCheapestListingItemQuery` and pass it any options that fit your needs.
+ * When your component renders, `useCheapestListingItemQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useCheapestListingItemQuery({
+ *   variables: {
+ *      transactionHash: // value for 'transactionHash'
+ *   },
+ * });
+ */
+export function useCheapestListingItemQuery(baseOptions: Apollo.QueryHookOptions<CheapestListingItemQuery, CheapestListingItemQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<CheapestListingItemQuery, CheapestListingItemQueryVariables>(CheapestListingItemDocument, options);
+      }
+export function useCheapestListingItemLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<CheapestListingItemQuery, CheapestListingItemQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<CheapestListingItemQuery, CheapestListingItemQueryVariables>(CheapestListingItemDocument, options);
+        }
+export type CheapestListingItemQueryHookResult = ReturnType<typeof useCheapestListingItemQuery>;
+export type CheapestListingItemLazyQueryHookResult = ReturnType<typeof useCheapestListingItemLazyQuery>;
+export type CheapestListingItemQueryResult = Apollo.QueryResult<CheapestListingItemQuery, CheapestListingItemQueryVariables>;
 export const ClearNotificationsDocument = gql`
     mutation ClearNotifications {
   clearNotifications {
