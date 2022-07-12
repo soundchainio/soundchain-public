@@ -22,10 +22,10 @@ export class ListingItemService extends Service {
     return auctionItem || buyNowItem;
   }
 
-  async wasListedBefore(tokenId: number): Promise<boolean> {
+  async wasListedBefore(tokenId: number, contractAddress: string): Promise<boolean> {
     // we cant have lookup with uncorrelated queries, see https://docs.aws.amazon.com/documentdb/latest/developerguide/functional-differences.html#functional-differences.lookup
-    const auctionItem = (await AuctionItemModel.findOne({ tokenId }))?.toObject();
-    const buyNowItem = (await BuyNowItemModel.findOne({ tokenId }))?.toObject();
+    const auctionItem = (await AuctionItemModel.findOne({ tokenId, nft: contractAddress }))?.toObject();
+    const buyNowItem = (await BuyNowItemModel.findOne({ tokenId, nft: contractAddress }))?.toObject();
     return !!auctionItem || !!buyNowItem;
   }
 }

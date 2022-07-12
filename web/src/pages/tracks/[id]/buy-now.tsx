@@ -74,9 +74,10 @@ export default function BuyNowPage({ track }: TrackPageProps) {
 
   const nftData = track.nftData;
   const tokenId = nftData?.tokenId ?? -1;
+  const contractAddress = nftData?.contract ?? "";
 
   const [getBuyNowItem, { data: listingPayload }] = useBuyNowItemLazyQuery({
-    variables: { tokenId },
+    variables: { input: { tokenId, contractAddress} },
     fetchPolicy: 'network-only',
   });
 

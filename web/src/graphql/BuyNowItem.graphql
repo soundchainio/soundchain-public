@@ -1,5 +1,5 @@
-query BuyNowItem($tokenId: Float!) {
-  buyNowItem(tokenId: $tokenId) {
+query BuyNowItem($input: FilterListingItemInput!) {
+  buyNowItem(input: $input) {
     buyNowItem {
       id
       owner
