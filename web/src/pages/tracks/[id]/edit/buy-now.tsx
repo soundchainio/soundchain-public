@@ -60,9 +60,10 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
 
   const nftData = track.nftData;
   const tokenId = nftData?.tokenId ?? -1;
+  const contractAddress = nftData?.contract ?? "";
 
   const { data: listingPayload } = useBuyNowItemQuery({
-    variables: { tokenId },
+    variables: { input: { tokenId, contractAddress} },
     fetchPolicy: 'network-only',
   });
 
@@ -142,10 +143,10 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
     };
 
     updateListing(
-      listingPayload.buyNowItem?.buyNowItem?.tokenId, 
-      account, 
-      weiPrice, 
-      startTimestamp, 
+      listingPayload.buyNowItem?.buyNowItem?.tokenId,
+      account,
+      weiPrice,
+      startTimestamp,
       { nft: nftData?.contract, marketplace: listingPayload.buyNowItem?.buyNowItem.contract }
     )
       .onReceipt(onReceipt)

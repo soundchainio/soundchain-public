@@ -233,17 +233,6 @@ export type CreateAuctionItemType = {
   reservePriceToShow: Scalars['Float'];
 };
 
-export type CreateBuyNowItemType = {
-  __typename?: 'CreateBuyNowItemType';
-  id: Maybe<Scalars['String']>;
-  owner: Scalars['String'];
-  nft: Scalars['String'];
-  tokenId: Scalars['Float'];
-  pricePerItem: Scalars['String'];
-  pricePerItemToShow: Scalars['Float'];
-  startingTime: Scalars['Float'];
-};
-
 export type CreateMultipleTracksInput = {
   amount: Scalars['Float'];
   track: CreateTrackInput;
@@ -596,7 +585,6 @@ export enum MusicianType {
 export type Mutation = {
   __typename?: 'Mutation';
   createAuctionItem: CreateAuctionItemType;
-  setNotValid: CreateBuyNowItemType;
   updateOgunClaimedAudioHolder: UpdateOgunClaimedAudioHolderPayload;
   addComment: AddCommentPayload;
   updateComment: UpdateCommentPayload;
@@ -642,11 +630,6 @@ export type Mutation = {
 
 export type MutationCreateAuctionItemArgs = {
   input: CreateAuctionItemInput;
-};
-
-
-export type MutationSetNotValidArgs = {
-  tokenId: Scalars['Float'];
 };
 
 
@@ -1187,7 +1170,7 @@ export type QueryBidsWithInfoArgs = {
 
 
 export type QueryBuyNowItemArgs = {
-  tokenId: Scalars['Float'];
+  input: FilterListingItemInput;
 };
 
 
@@ -1906,7 +1889,7 @@ export type BidsWithInfoQuery = (
 );
 
 export type BuyNowItemQueryVariables = Exact<{
-  tokenId: Scalars['Float'];
+  input: FilterListingItemInput;
 }>;
 
 
@@ -3072,19 +3055,6 @@ export type SendMessageMutation = (
   ) }
 );
 
-export type SetNotValidMutationVariables = Exact<{
-  tokenId: Scalars['Float'];
-}>;
-
-
-export type SetNotValidMutation = (
-  { __typename?: 'Mutation' }
-  & { setNotValid: (
-    { __typename?: 'CreateBuyNowItemType' }
-    & Pick<CreateBuyNowItemType, 'id' | 'owner' | 'nft' | 'tokenId' | 'pricePerItem' | 'startingTime'>
-  ) }
-);
-
 export type SubscribeToProfileMutationVariables = Exact<{
   input: SubscribeToProfileInput;
 }>;
@@ -4159,8 +4129,8 @@ export type BidsWithInfoQueryHookResult = ReturnType<typeof useBidsWithInfoQuery
 export type BidsWithInfoLazyQueryHookResult = ReturnType<typeof useBidsWithInfoLazyQuery>;
 export type BidsWithInfoQueryResult = Apollo.QueryResult<BidsWithInfoQuery, BidsWithInfoQueryVariables>;
 export const BuyNowItemDocument = gql`
-    query BuyNowItem($tokenId: Float!) {
-  buyNowItem(tokenId: $tokenId) {
+    query BuyNowItem($input: FilterListingItemInput!) {
+  buyNowItem(input: $input) {
     buyNowItem {
       id
       owner
@@ -4187,7 +4157,7 @@ export const BuyNowItemDocument = gql`
  * @example
  * const { data, loading, error } = useBuyNowItemQuery({
  *   variables: {
- *      tokenId: // value for 'tokenId'
+ *      input: // value for 'input'
  *   },
  * });
  */
@@ -6585,44 +6555,6 @@ export function useSendMessageMutation(baseOptions?: Apollo.MutationHookOptions<
 export type SendMessageMutationHookResult = ReturnType<typeof useSendMessageMutation>;
 export type SendMessageMutationResult = Apollo.MutationResult<SendMessageMutation>;
 export type SendMessageMutationOptions = Apollo.BaseMutationOptions<SendMessageMutation, SendMessageMutationVariables>;
-export const SetNotValidDocument = gql`
-    mutation SetNotValid($tokenId: Float!) {
-  setNotValid(tokenId: $tokenId) {
-    id
-    owner
-    nft
-    tokenId
-    pricePerItem
-    startingTime
-  }
-}
-    `;
-export type SetNotValidMutationFn = Apollo.MutationFunction<SetNotValidMutation, SetNotValidMutationVariables>;
-
-/**
- * __useSetNotValidMutation__
- *
- * To run a mutation, you first call `useSetNotValidMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useSetNotValidMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [setNotValidMutation, { data, loading, error }] = useSetNotValidMutation({
- *   variables: {
- *      tokenId: // value for 'tokenId'
- *   },
- * });
- */
-export function useSetNotValidMutation(baseOptions?: Apollo.MutationHookOptions<SetNotValidMutation, SetNotValidMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<SetNotValidMutation, SetNotValidMutationVariables>(SetNotValidDocument, options);
-      }
-export type SetNotValidMutationHookResult = ReturnType<typeof useSetNotValidMutation>;
-export type SetNotValidMutationResult = Apollo.MutationResult<SetNotValidMutation>;
-export type SetNotValidMutationOptions = Apollo.BaseMutationOptions<SetNotValidMutation, SetNotValidMutationVariables>;
 export const SubscribeToProfileDocument = gql`
     mutation SubscribeToProfile($input: SubscribeToProfileInput!) {
   subscribeToProfile(input: $input) {

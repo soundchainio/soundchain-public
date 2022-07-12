@@ -184,19 +184,19 @@ export class TrackService extends ModelService<typeof Track> {
     return result.modifiedCount;
   }
 
-  async setPendingNone(tokenId: number): Promise<Track> {
+  async setPendingNone(tokenId: number, contractAddress: string): Promise<Track> {
     return await this.model.findOneAndUpdate(
-      { 'nftData.tokenId': tokenId },
+      { 'nftData.tokenId': tokenId, 'nftData.contract': contractAddress },
       { 'nftData.pendingRequest': PendingRequest.None },
     );
   }
 
-  async getTrackByTokenId(tokenId: number): Promise<Track> {
-    return await this.model.findOne({ 'nftData.tokenId': tokenId });
+  async getTrackByTokenId(tokenId: number, contractAddress: string): Promise<Track> {
+    return await this.model.findOne({ 'nftData.tokenId': tokenId, 'nftData.contract': contractAddress });
   }
 
-  async updateOwnerByTokenId(tokenId: number, owner: string): Promise<Track> {
-    const { id } = await this.model.findOne({ 'nftData.tokenId': tokenId });
+  async updateOwnerByTokenId(tokenId: number, owner: string, contractAddress: string): Promise<Track> {
+    const { id } = await this.model.findOne({ 'nftData.tokenId': tokenId, 'nftData.contract': contractAddress });
     return await this.updateTrack(id, { nftData: { owner } });
   }
 

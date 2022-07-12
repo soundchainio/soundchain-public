@@ -67,10 +67,11 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
 
   const nftData = track.nftData;
   const tokenId = track.nftData?.tokenId ?? -1;
+  const contractAddress = track.nftData?.contract ?? "" ;
   const canList = (me?.profile.verified && nftData?.minter === account) || nftData?.minter != account;
 
   const [getBuyNowItem, { data: buyNowItem }] = useBuyNowItemLazyQuery({
-    variables: { tokenId },
+    variables: { input: { tokenId, contractAddress } },
   });
 
   useEffect(() => {
