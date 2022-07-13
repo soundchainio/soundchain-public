@@ -3,6 +3,7 @@ import { BuyNowItemModel } from '../models/BuyNowItem';
 import { ListingItem } from '../models/ListingItem';
 import { getNow } from '../utils/Time';
 import { Service } from './Service';
+import { TrackModel } from '../models/Track';
 
 export class ListingItemService extends Service {
   async getListingItem(tokenId: number, contractAddress: string): Promise<ListingItem | void> {
@@ -27,5 +28,45 @@ export class ListingItemService extends Service {
     const auctionItem = (await AuctionItemModel.findOne({ tokenId, nft: contractAddress }))?.toObject();
     const buyNowItem = (await BuyNowItemModel.findOne({ tokenId, nft: contractAddress }))?.toObject();
     return !!auctionItem || !!buyNowItem;
+  }
+
+  async getCheapestListingItem(transactionHash: string): Promise<string | null> {
+    const transactionNfts = (await TrackModel.aggregate([
+      {
+        '$match': {
+          'nftData.transactionHash': transactionHash,
+        },
+      },
+      {
+        '$lookup': {
+          'from': 'buynowitems',
+          'localField': 'nftData.tokenId',
+          'foreignField': 'tokenId',
+          'as': 'listingItem',
+        },
+      },
+      {
+        '$sort': {
+          'listingItem.pricePerItemToShow': 1,
+        },
+      },
+      {
+        '$limit': 1,
+      },
+      {
+        '$replaceRoot': {
+          'newRoot': {
+            '$first': '$listingItem',
+          },
+        },
+      },
+      {
+        '$project': {
+          'price': '$pricePerItemToShow'
+        }
+      }
+    ]));
+
+    return transactionNfts.length ? String(transactionNfts[0]?.price) : null;
   }
 }
