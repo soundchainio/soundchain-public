@@ -2,13 +2,12 @@ import { Button } from 'components/Button';
 import { MiniAudioPlayer } from 'components/MiniAudioPlayer';
 import { Anchor } from 'icons/Anchor';
 import { Polygon } from 'icons/Polygon';
-import { CreateTrackMutation } from 'lib/graphql';
-import React from 'react';
-import NextLink from 'next/link';
 import { network } from 'lib/blockchainNetworks';
+import { CreateMultipleTracksMutation } from 'lib/graphql';
+import NextLink from 'next/link';
 
 interface MintingDoneProps {
-  track: CreateTrackMutation['createTrack']['track'];
+  track: CreateMultipleTracksMutation['createMultipleTracks']['firstTrack'];
   transactionHash: string;
 }
 

@@ -7,8 +7,8 @@ import { TrackEdition } from '../models/TrackEdition';
 import { User } from '../models/User';
 import { FavoriteCount } from '../services/TrackService';
 import { Context } from '../types/Context';
-import { CreateTrackInput } from '../types/CreateTrackInput';
-import { CreateTrackPayload } from '../types/CreateTrackPayload';
+import { CreateMultipleTracksInput } from '../types/CreateMultipleTracksInput';
+import { CreateMultipleTracksPayload } from '../types/CreateMultipleTracksPayload';
 import { DeleteTrackInput } from '../types/DeleteTrackInput';
 import { DeleteTrackPayload } from '../types/DeleteTrackPayload';
 import { FilterBuyNowItemInput } from '../types/FilterBuyNowItemInput';
@@ -23,8 +23,6 @@ import { ToggleFavoritePayload } from '../types/ToggleFavoritePayload';
 import { TrackConnection } from '../types/TrackConnection';
 import { UpdateTrackInput } from '../types/UpdateTrackInput';
 import { UpdateTrackPayload } from '../types/UpdateTrackPayload';
-import { CreateMultipleTracksPayload } from '../types/CreateMultipleTracksPayload';
-import { CreateMultipleTracksInput } from '../types/CreateMultipleTracksInput';
 
 @Resolver(Track)
 export class TrackResolver {
@@ -107,17 +105,6 @@ export class TrackResolver {
     @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<TrackConnection> {
     return trackService.getTracks(filter, sort, page);
-  }
-
-  @Mutation(() => CreateTrackPayload)
-  @Authorized()
-  async createTrack(
-    @Ctx() { trackService }: Context,
-    @CurrentUser() { profileId }: User,
-    @Arg('input') input: CreateTrackInput,
-  ): Promise<CreateTrackPayload> {
-    const track = await trackService.createTrack(profileId, input);
-    return { track };
   }
 
   @Mutation(() => CreateMultipleTracksPayload)
