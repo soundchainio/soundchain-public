@@ -19,9 +19,17 @@ import { useWalletContext } from 'hooks/useWalletContext';
 import { Cards } from 'icons/Cards';
 import { PriceTag } from 'icons/PriceTag';
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting';
-import { PendingRequest, TrackQuery, useBuyNowListingItemsQuery, useProfileLazyQuery, useTrackLazyQuery } from 'lib/graphql';
+import {
+  PendingRequest,
+  TrackQuery,
+  useBuyNowListingItemsQuery,
+  useCheapestListingItemLazyQuery,
+  useProfileLazyQuery,
+  useTrackLazyQuery,
+} from 'lib/graphql';
 import { useEffect, useMemo, useState } from 'react';
 import { compareWallets } from 'utils/Wallet';
+import { Matic } from '../Matic';
 
 interface MultipleTrackPageProps {
   track: TrackQuery['track'];
@@ -54,6 +62,26 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
     nextFetchPolicy: 'network-only',
   });
 
+  const nftData = trackData?.track?.nftData || track.nftData;
+
+
+  const [fetchCheapestListingItem, {data: cheapestListingItem}] = useCheapestListingItemLazyQuery({
+    fetchPolicy: 'network-only',
+    nextFetchPolicy: 'network-only',
+  })
+
+  const buyNowPrice = cheapestListingItem?.cheapestListingItem
+
+  useEffect(() => {
+    if (nftData?.transactionHash) {
+      fetchCheapestListingItem({
+        variables: {
+          transactionHash: nftData.transactionHash
+        }
+      })
+    }
+  }, [fetchCheapestListingItem, nftData])
+
   const {
     data,
     fetchMore,
@@ -72,7 +100,6 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
   const description = `Listen to ${track.title} on SoundChain. ${track.artist}. ${track.album || 'Song'}. ${
     track.releaseYear != null ? `${track.releaseYear}.` : ''
   }`;
-  const nftData = trackData?.track?.nftData || track.nftData;
   const tokenId = nftData?.tokenId;
 
   const firstListingItem = data?.buyNowListingItems?.nodes?.[0]?.listingItem;
@@ -165,6 +192,14 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
             {track.editionSize}
           </dd>
         </dl>
+        {buyNowPrice && (
+          <div className="bg-[#112011]">
+            <div className="flex items-center justify-between gap-3 px-4 py-3">
+              <div className="text-xs font-bold text-gray-80">BUY NOW PRICE</div>
+              <Matic value={buyNowPrice} variant="currency-inline" className="text-xs" />
+            </div>
+          </div>
+        )}
         <Description description={track.description || ''} className="p-4" />
         <TrackInfo
           trackTitle={track.title}

@@ -21,11 +21,11 @@ export class ListingItemResolver {
     return listingItemService.getListingItem(tokenId, contractAddress);
   }
 
-  @Query(() => ListingItem, {nullable: true})
+  @Query(() => String, {nullable: true})
   async cheapestListingItem(
     @Ctx() {listingItemService}: Context,
     @Arg('transactionHash') transactionHash: string
-  ): Promise<ListingItem | void> {
+  ): Promise<string | void> {
     return listingItemService.getCheapestListingItem(transactionHash)
   }
 }

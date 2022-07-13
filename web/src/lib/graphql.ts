@@ -1112,7 +1112,7 @@ export type Query = {
   followers: FollowConnection;
   following: FollowConnection;
   listingItem: Maybe<ListingItem>;
-  cheapestListingItem: Maybe<ListingItem>;
+  cheapestListingItem: Maybe<Scalars['String']>;
   message: Message;
   notifications: NotificationConnection;
   notification: Notification;
@@ -1997,10 +1997,7 @@ export type CheapestListingItemQueryVariables = Exact<{
 
 export type CheapestListingItemQuery = (
   { __typename?: 'Query' }
-  & { cheapestListingItem: Maybe<(
-    { __typename?: 'ListingItem' }
-    & ListingItemViewComponentFieldsFragment
-  )> }
+  & Pick<Query, 'cheapestListingItem'>
 );
 
 export type ClearNotificationsMutationVariables = Exact<{ [key: string]: never; }>;
@@ -4368,11 +4365,9 @@ export type ChatsLazyQueryHookResult = ReturnType<typeof useChatsLazyQuery>;
 export type ChatsQueryResult = Apollo.QueryResult<ChatsQuery, ChatsQueryVariables>;
 export const CheapestListingItemDocument = gql`
     query CheapestListingItem($transactionHash: String!) {
-  cheapestListingItem(transactionHash: $transactionHash) {
-    ...ListingItemViewComponentFields
-  }
+  cheapestListingItem(transactionHash: $transactionHash)
 }
-    ${ListingItemViewComponentFieldsFragmentDoc}`;
+    `;
 
 /**
  * __useCheapestListingItemQuery__

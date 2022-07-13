@@ -30,20 +30,43 @@ export class ListingItemService extends Service {
     return !!auctionItem || !!buyNowItem;
   }
 
-  async getCheapestListingItem(transactionHash: string): Promise<ListingItem> {
-    const transactionNfts = (await TrackModel.find({
-      nftData: {
-        transactionHash,
+  async getCheapestListingItem(transactionHash: string): Promise<string | null> {
+    const transactionNfts = (await TrackModel.aggregate([
+      {
+        '$match': {
+          'nftData.transactionHash': transactionHash,
+        },
       },
-    }));
+      {
+        '$lookup': {
+          'from': 'buynowitems',
+          'localField': 'nftData.tokenId',
+          'foreignField': 'tokenId',
+          'as': 'listingItem',
+        },
+      },
+      {
+        '$sort': {
+          'listingItem.pricePerItemToShow': 1,
+        },
+      },
+      {
+        '$limit': 1,
+      },
+      {
+        '$replaceRoot': {
+          'newRoot': {
+            '$first': '$listingItem',
+          },
+        },
+      },
+      {
+        '$project': {
+          'price': '$pricePerItemToShow'
+        }
+      }
+    ]));
 
-    const buyNowItem = await BuyNowItemModel.findOne({
-      tokenId: {
-        $in: transactionNfts.map(nft => nft.nftData.tokenId),
-      },
-    }).sort({
-      pricePerItemToShow: 1,
-    });
-    return buyNowItem?.toObject();
+    return transactionNfts.length ? String(transactionNfts[0]?.price) : null;
   }
 }
