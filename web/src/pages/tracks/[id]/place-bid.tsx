@@ -91,6 +91,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
   const { setTopNavBarProps } = useLayoutContext();
 
   const tokenId = track.nftData?.tokenId ?? -1;
+  const contractAddress = track.nftData?.contract ?? "";
 
   const { data: { auctionItem } = {} } = useAuctionItemQuery({
     variables: { tokenId },
@@ -191,7 +192,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
       return;
     }
 
-    placeBid(tokenId, account, amount)
+    placeBid(tokenId, account, amount, { nft: contractAddress })
       .onReceipt(() => {
         toast.success('Bid placed!');
         if (refetchHaveBided) refetchHaveBided();

@@ -1,3 +1,4 @@
+import { Asset } from '@mux/mux-node';
 import { DocumentType, mongoose } from '@typegoose/typegoose';
 import dot from 'dot-object';
 import { ObjectId } from 'mongodb';
@@ -63,21 +64,21 @@ export class TrackService extends ModelService<typeof Track> {
     return this.findOrFail(id);
   }
 
-  async createTrack(profileId: string, data: Partial<Track>): Promise<Track> {
+  async createTrack(profileId: string, data: Partial<Track>, asset: Asset): Promise<Track> {
     const track = new this.model({ profileId, ...data });
-    const asset = await this.context.muxService.create(data.assetUrl, track._id);
     track.muxAsset = { id: asset.id, playbackId: asset.playback_ids[0].id };
     await track.save();
     return track;
   }
 
   async createMultipleTracks(profileId: string, data: { track: Partial<Track>; amount: number }): Promise<Track[]> {
+    const asset = await this.context.muxService.create(data.track.assetUrl, data.track._id);
     return await Promise.all(
       Array(data.amount)
         .fill(null)
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         .map(_ => {
-          return this.createTrack(profileId, data.track);
+          return this.createTrack(profileId, data.track, asset);
         }),
     );
   }
@@ -475,9 +476,6 @@ export class TrackService extends ModelService<typeof Track> {
           lowestPrice: {
             $min: '$listingItem.pricePerItem',
           },
-          totalPlaybackCount: {
-            $sum: '$playbackCount',
-          },
           detail: {
             $first: '$$ROOT',
           },
@@ -490,9 +488,6 @@ export class TrackService extends ModelService<typeof Track> {
               '$detail',
               {
                 lowestPrice: '$lowestPrice',
-              },
-              {
-                totalPlaybackCount: '$totalPlaybackCount',
               },
             ],
           },

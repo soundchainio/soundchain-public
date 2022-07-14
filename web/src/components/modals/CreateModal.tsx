@@ -11,7 +11,7 @@ import { useMe } from 'hooks/useMe';
 import { useUpload } from 'hooks/useUpload';
 import { useWalletContext } from 'hooks/useWalletContext';
 import {
-  CreateTrackMutation,
+  CreateMultipleTracksMutation,
   ExploreTracksDocument,
   FeedDocument,
   PendingRequest,
@@ -47,7 +47,7 @@ export const CreateModal = () => {
   const [preview, setPreview] = useState<string>();
   const [artworkPreview, setArtworkPreview] = useState<string>();
 
-  const [newTrack, setNewTrack] = useState<CreateTrackMutation['createTrack']['track']>();
+  const [newTrack, setNewTrack] = useState<CreateMultipleTracksMutation['createMultipleTracks']['firstTrack']>();
 
   const { upload } = useUpload();
   const [createMultipleTracks] = useCreateMultipleTracksMutation()
@@ -294,7 +294,7 @@ export const CreateModal = () => {
 
         setMintingState('Minting NFT');
         mintNftToken(`ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`, account, account, royalty, editionQuantity)
-          .onTransactionHash(transactionHash => onTransactionHash(transactionHash))
+          .onReceipt(receipt => onTransactionHash(receipt.transactionHash))
           .onError(onError)
           .execute(web3);
       } catch (e) {

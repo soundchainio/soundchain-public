@@ -291,11 +291,6 @@ export type CreateTrackInput = {
   nftData?: Maybe<NftDataInput>;
 };
 
-export type CreateTrackPayload = {
-  __typename?: 'CreateTrackPayload';
-  track: Track;
-};
-
 export type CreateWhitelistEntryInput = {
   walletAddress: Scalars['String'];
   emailAddress: Scalars['String'];
@@ -618,7 +613,6 @@ export type Mutation = {
   createProfileVerificationRequest: ProfileVerificationRequestPayload;
   updateProfileVerificationRequest: ProfileVerificationRequestPayload;
   removeProfileVerificationRequest: ProfileVerificationRequestPayload;
-  createTrack: CreateTrackPayload;
   createMultipleTracks: CreateMultipleTracksPayload;
   updateTrack: UpdateTrackPayload;
   updateEditionOwnedTracks: UpdateEditionOwnedTracksPayload;
@@ -750,11 +744,6 @@ export type MutationUpdateProfileVerificationRequestArgs = {
 
 export type MutationRemoveProfileVerificationRequestArgs = {
   id: Scalars['String'];
-};
-
-
-export type MutationCreateTrackArgs = {
-  input: CreateTrackInput;
 };
 
 
@@ -2165,22 +2154,6 @@ export type CreateRepostMutation = (
     ), originalPost: (
       { __typename?: 'Post' }
       & Pick<Post, 'id' | 'repostCount'>
-    ) }
-  ) }
-);
-
-export type CreateTrackMutationVariables = Exact<{
-  input: CreateTrackInput;
-}>;
-
-
-export type CreateTrackMutation = (
-  { __typename?: 'Mutation' }
-  & { createTrack: (
-    { __typename?: 'CreateTrackPayload' }
-    & { track: (
-      { __typename?: 'Track' }
-      & TrackComponentFieldsFragment
     ) }
   ) }
 );
@@ -4782,41 +4755,6 @@ export function useCreateRepostMutation(baseOptions?: Apollo.MutationHookOptions
 export type CreateRepostMutationHookResult = ReturnType<typeof useCreateRepostMutation>;
 export type CreateRepostMutationResult = Apollo.MutationResult<CreateRepostMutation>;
 export type CreateRepostMutationOptions = Apollo.BaseMutationOptions<CreateRepostMutation, CreateRepostMutationVariables>;
-export const CreateTrackDocument = gql`
-    mutation CreateTrack($input: CreateTrackInput!) {
-  createTrack(input: $input) {
-    track {
-      ...TrackComponentFields
-    }
-  }
-}
-    ${TrackComponentFieldsFragmentDoc}`;
-export type CreateTrackMutationFn = Apollo.MutationFunction<CreateTrackMutation, CreateTrackMutationVariables>;
-
-/**
- * __useCreateTrackMutation__
- *
- * To run a mutation, you first call `useCreateTrackMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useCreateTrackMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [createTrackMutation, { data, loading, error }] = useCreateTrackMutation({
- *   variables: {
- *      input: // value for 'input'
- *   },
- * });
- */
-export function useCreateTrackMutation(baseOptions?: Apollo.MutationHookOptions<CreateTrackMutation, CreateTrackMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateTrackMutation, CreateTrackMutationVariables>(CreateTrackDocument, options);
-      }
-export type CreateTrackMutationHookResult = ReturnType<typeof useCreateTrackMutation>;
-export type CreateTrackMutationResult = Apollo.MutationResult<CreateTrackMutation>;
-export type CreateTrackMutationOptions = Apollo.BaseMutationOptions<CreateTrackMutation, CreateTrackMutationVariables>;
 export const CreateWhitelistEntryDocument = gql`
     mutation CreateWhitelistEntry($input: CreateWhitelistEntryInput!) {
   createWhitelistEntry(input: $input) {

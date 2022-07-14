@@ -1,7 +1,0 @@
-mutation CreateTrack($input: CreateTrackInput!) {
-  createTrack(input: $input) {
-    track {
-      ...TrackComponentFields
-    }
-  }
-}
