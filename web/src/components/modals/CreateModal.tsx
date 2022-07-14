@@ -11,7 +11,7 @@ import { useMe } from 'hooks/useMe';
 import { useUpload } from 'hooks/useUpload';
 import { useWalletContext } from 'hooks/useWalletContext';
 import {
-  CreateTrackMutation,
+  CreateMultipleTracksMutation,
   ExploreTracksDocument,
   FeedDocument,
   PendingRequest,
@@ -49,7 +49,7 @@ export const CreateModal = () => {
   const [preview, setPreview] = useState<string>();
   const [artworkPreview, setArtworkPreview] = useState<string>();
 
-  const [newTrack, setNewTrack] = useState<CreateTrackMutation['createTrack']['track']>();
+  const [newTrack, setNewTrack] = useState<CreateMultipleTracksMutation['createMultipleTracks']['firstTrack']>();
 
   const { upload } = useUpload();
   const [createMultipleTracks] = useCreateMultipleTracksMutation();
@@ -182,14 +182,32 @@ export const CreateModal = () => {
           },
         });
 
+        const metadataAttributes: Metadata['attributes'] = [
+          { trait_type: 'Artist', value: artist },
+        ]
+
+        if (album) {
+          metadataAttributes.push({ trait_type: 'Album', value: album });
+        }
+
+        if (releaseYear) {
+          metadataAttributes.push({ trait_type: 'Release Year', value: releaseYear.toString() });
+        }
+
+        if (genres) {
+          metadataAttributes.push({ trait_type: 'Genre', value: genres.join(', ') });
+        }
+
         const metadata: Metadata = {
           description,
           name: title,
           asset: `ipfs://${assetPinResult?.pinToIPFS.cid}`,
+          animation_url: `ipfs://${assetPinResult?.pinToIPFS.cid}`,
           album,
           artist,
           releaseYear,
           genres,
+          attributes: metadataAttributes
         };
 
         let artworkUrl: string;
@@ -208,6 +226,7 @@ export const CreateModal = () => {
             },
           });
           metadata.art = `ipfs://${artPinResult?.pinToIPFS.cid}`;
+          metadata.image = `ipfs://${artPinResult?.pinToIPFS.cid}`;
         }
 
         const { data: metadataPinResult } = await pinJsonToIPFS({
@@ -301,7 +320,7 @@ export const CreateModal = () => {
 
         setMintingState('Minting NFT');
         mintNftToken(`ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`, account, account, royalty, editionQuantity)
-          .onTransactionHash(transactionHash => onTransactionHash(transactionHash))
+          .onReceipt(receipt => onTransactionHash(receipt.transactionHash))
           .onError(onError)
           .execute(web3);
       } catch (e) {

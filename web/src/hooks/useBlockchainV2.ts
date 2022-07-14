@@ -513,8 +513,8 @@ const useBlockchainV2 = () => {
   const me = useMe();
 
   const placeBid = useCallback(
-    (tokenId: number, from: string, value: string) => {
-      return new PlaceBid(me, { from, value, tokenId });
+    (tokenId: number, from: string, value: string, contractAddresses: ContractAddresses) => {
+      return new PlaceBid(me, { from, value, tokenId, contractAddresses });
     },
     [me],
   );
