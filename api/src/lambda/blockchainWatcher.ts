@@ -22,6 +22,7 @@ import { UserModel } from '../models/User';
 import { EventData } from '../types/BlockchainEvents';
 import { Context } from '../types/Context';
 import { auctionEvents, itemEvents, nftEvents } from './processEvents';
+import { EditionCanceled, EditionListed } from '../../types/web3-v2-contracts/SoundchainMarketplaceEditions';
 
 export const blockchainWatcher: Handler = async () => {
   await mongoose.connect(config.db.url, config.db.options);
@@ -107,6 +108,16 @@ const processMarketplaceEvents = async (events: EventData[], context: Context) =
       case 'ItemCanceled':
         {
           await itemEvents.canceled((event as unknown as ItemCanceled).returnValues, context);
+        }
+        break;
+      case 'EditionListed':
+        {
+          await itemEvents.editionListed((event as unknown as EditionListed), context);
+        }
+        break;
+      case 'EditionCanceled':
+        {
+          await itemEvents.editionCanceled((event as unknown as EditionCanceled), context);
         }
         break;
     }

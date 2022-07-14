@@ -35,12 +35,6 @@ fragment TrackComponentFields on Track {
     pendingTime
   }
   trackEdition {
-    id
-    editionId
-    transactionHash
-    editionId
-    editionSize
-    createdAt
-    updatedAt
+    ...TrackEditionFields
   }
 }

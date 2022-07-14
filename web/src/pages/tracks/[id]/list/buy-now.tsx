@@ -10,7 +10,7 @@ import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { cacheFor } from 'lib/apollo';
-import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemLazyQuery, useUpdateTrackMutation } from 'lib/graphql';
+import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemLazyQuery, useUpdateAllOwnedTracksMutation, useUpdateTrackMutation } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
@@ -58,6 +58,7 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
   const router = useRouter();
   const me = useMe();
   const [trackUpdate] = useUpdateTrackMutation();
+  const [ownedTracksUpdate] = useUpdateAllOwnedTracksMutation();
   const { account, web3 } = useWalletContext();
   const { showApprove } = useModalState();
   const { dispatchShowApproveModal } = useModalDispatch();
@@ -105,7 +106,8 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
 
   const isForSale = !!buyNowItem?.buyNowItem?.buyNowItem?.pricePerItem ?? false;
 
-  const isEditionListing = track.editionSize > 1 && nftData?.minter === account;
+  const { edition } = router.query;
+  const isEditionListing = Boolean(edition);
   const listLabel = isEditionListing ? 'LIST EDITION' : 'LIST NFT';
 
   const handleListEdition = (
@@ -119,10 +121,11 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
     const startTimestamp = Math.ceil(startTime.getTime() / 1000);
 
     const onReceipt = async () => {
-      await trackUpdate({
+      await ownedTracksUpdate({
         variables: {
           input: {
-            trackId: track.id,
+            trackEditionId: track.trackEdition!.id,
+            owner: account,
             nftData: {
               pendingRequest: PendingRequest.List,
               pendingTime: new Date().toISOString(),
@@ -130,7 +133,8 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
           },
         },
       });
-      router.replace(router.asPath.replace('/list/buy-now', ''));
+      router.replace(router.asPath.replace('/list/buy-now?edition=true', ''));
+        
     };
     listEdition(track.trackEdition.editionId, account, weiPrice, startTimestamp, { nft: nftData.contract })
       .onReceipt(onReceipt)

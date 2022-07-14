@@ -76,16 +76,16 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
     ) {
       return;
     }
-    dispatchShowRemoveListingModal(
-      true,
-      listingPayload?.buyNowItem?.buyNowItem?.tokenId,
-      track.id,
-      SaleType.MARKETPLACE,
-      {
+    dispatchShowRemoveListingModal({
+      show: true,
+      tokenId: listingPayload?.buyNowItem?.buyNowItem?.tokenId,
+      trackId: track.id,
+      saleType: SaleType.MARKETPLACE,
+      contractAddresses: {
         nft: nftData.contract,
         marketplace: listingPayload?.buyNowItem?.buyNowItem?.contract,
       }
-    );
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account, listingPayload?.buyNowItem?.buyNowItem?.tokenId, nftData?.pendingRequest, track.id, web3]);
 

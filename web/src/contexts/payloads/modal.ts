@@ -67,10 +67,12 @@ export interface ShowApprove {
 
 export interface ShowRemoveListing {
   show: boolean;
-  tokenId: number;
-  trackId: string;
+  tokenId?: number;
+  trackId?: string;
+  editionId?: number;
   saleType: SaleType;
   contractAddresses?: ContractAddresses
+  trackEditionId?: string;
 }
 
 export interface ShowAudioPlayerPayload {

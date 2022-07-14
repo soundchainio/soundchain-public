@@ -21,6 +21,18 @@ export interface EventOptions {
   topics?: string[];
 }
 
+export type EditionCanceled = ContractEventLog<{
+  nft: string;
+  editionId: string;
+  0: string;
+  1: string;
+}>;
+export type EditionListed = ContractEventLog<{
+  nft: string;
+  editionId: string;
+  0: string;
+  1: string;
+}>;
 export type ItemCanceled = ContractEventLog<{
   owner: string;
   nft: string;
@@ -213,6 +225,18 @@ export interface SoundchainMarketplaceEditions extends BaseContract {
     withdraw(destination: string): NonPayableTransactionObject<void>;
   };
   events: {
+    EditionCanceled(cb?: Callback<EditionCanceled>): EventEmitter;
+    EditionCanceled(
+      options?: EventOptions,
+      cb?: Callback<EditionCanceled>
+    ): EventEmitter;
+
+    EditionListed(cb?: Callback<EditionListed>): EventEmitter;
+    EditionListed(
+      options?: EventOptions,
+      cb?: Callback<EditionListed>
+    ): EventEmitter;
+
     ItemCanceled(cb?: Callback<ItemCanceled>): EventEmitter;
     ItemCanceled(
       options?: EventOptions,
@@ -253,6 +277,20 @@ export interface SoundchainMarketplaceEditions extends BaseContract {
 
     allEvents(options?: EventOptions, cb?: Callback<EventLog>): EventEmitter;
   };
+
+  once(event: "EditionCanceled", cb: Callback<EditionCanceled>): void;
+  once(
+    event: "EditionCanceled",
+    options: EventOptions,
+    cb: Callback<EditionCanceled>
+  ): void;
+
+  once(event: "EditionListed", cb: Callback<EditionListed>): void;
+  once(
+    event: "EditionListed",
+    options: EventOptions,
+    cb: Callback<EditionListed>
+  ): void;
 
   once(event: "ItemCanceled", cb: Callback<ItemCanceled>): void;
   once(

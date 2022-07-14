@@ -1,10 +1,10 @@
 import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
-import useBlockchainV2 from 'hooks/useBlockchainV2';
+import useBlockchainV2, { ContractAddresses } from 'hooks/useBlockchainV2';
 import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
-import { PendingRequest, useUpdateTrackMutation } from 'lib/graphql';
+import { PendingRequest, useUpdateAllOwnedTracksMutation, useUpdateTrackMutation } from 'lib/graphql';
 import router from 'next/router';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
@@ -20,16 +20,17 @@ const marketplaceAddress = process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS || '';
 
 export const RemoveListingConfirmationModal = () => {
   const me = useMe();
-  const { showRemoveListing, trackId, tokenId, saleType, contractAddresses } = useModalState();
+  const { showRemoveListing, trackId, tokenId, editionId, trackEditionId, saleType, contractAddresses } = useModalState();
   const [trackUpdate] = useUpdateTrackMutation();
+  const [ownedTracksUpdate] = useUpdateAllOwnedTracksMutation();
   const { dispatchShowRemoveListingModal } = useModalDispatch();
-  const { cancelListing, cancelAuction } = useBlockchainV2();
+  const { cancelListing, cancelAuction, cancelEditionListing } = useBlockchainV2();
   const { web3, account, balance } = useWalletContext();
   const maxGasFee = useMaxGasFee(showRemoveListing);
   const [loading, setLoading] = useState(false);
 
   const handleClose = () => {
-    dispatchShowRemoveListingModal(false, 0, '', SaleType.CLOSE, {});
+    dispatchShowRemoveListingModal({show: false, tokenId: 0, trackId: '', saleType: SaleType.CLOSE, contractAddresses: {}});
   };
 
   const handleCancel = () => {
@@ -43,22 +44,39 @@ export const RemoveListingConfirmationModal = () => {
     return false;
   };
 
-  const handleSubmit = () => {
-    if (!tokenId || !trackId) return;
-
-    if (!hasEnoughFunds()) {
-      alert("Uh-oh, it seems you don't have enough funds for this transaction. Please select an appropriate amount");
-      handleClose();
-      return;
+  const getCancelationHandler = (account: string, tokenId?: number, editionId?: number, contractAddresses?: ContractAddresses) => {
+    if (editionId) {
+      if (!trackEditionId) return;
+      return cancelEditionListing(editionId, account, contractAddresses);
     }
 
-    setLoading(true);
-    if (!account || !web3) return;
-    const onReceipt = async () => {
+    if (!tokenId || !trackId) return;
+
+    if (saleType === SaleType.AUCTION) {
+      return cancelAuction(tokenId, account, contractAddresses);
+    }
+    return cancelListing(tokenId, account, contractAddresses);
+  }
+
+  const onReceipt = async () => {
+    if (editionId && trackEditionId) {
+      await ownedTracksUpdate({
+        variables: {
+          input: {
+            trackEditionId,
+            owner: account!,
+            nftData: {
+              pendingRequest: PendingRequest.CancelListing,
+              pendingTime: new Date().toISOString(),
+            },
+          }
+        }
+      })
+    } else {
       await trackUpdate({
         variables: {
           input: {
-            trackId: trackId,
+            trackId: trackId!,
             nftData: {
               pendingRequest: PendingRequest.CancelListing,
               pendingTime: new Date().toISOString(),
@@ -66,18 +84,30 @@ export const RemoveListingConfirmationModal = () => {
           },
         },
       });
+    }
 
-      dispatchShowRemoveListingModal(false, 0, '', SaleType.CLOSE, {});
-      saleType === SaleType.MARKETPLACE
-        ? router.replace(router.asPath.replace('edit/buy-now', ''))
-        : router.replace(router.asPath.replace('edit/auction', ''));
-    };
-    const cancel =
-      saleType === SaleType.MARKETPLACE ? 
-        cancelListing(tokenId, account, contractAddresses) : 
-        cancelAuction(tokenId, account, contractAddresses);
+    handleClose();
+    if (editionId) return;
 
-    cancel
+    saleType === SaleType.MARKETPLACE
+      ? router.replace(router.asPath.replace('edit/buy-now', ''))
+      : router.replace(router.asPath.replace('edit/auction', ''));
+  };
+
+  const handleSubmit = () => {
+    if (!account || !web3) return;
+    const cancelationHandler = getCancelationHandler(account, tokenId, editionId, contractAddresses)
+    if (!cancelationHandler) return;
+
+    if (!hasEnoughFunds()) {
+      alert("Uh-oh, it seems you don't have enough funds for this transaction. Please select an appropriate amount");
+      handleClose();
+      return;
+    }
+
+    setLoading(true);    
+
+    cancelationHandler
       .onReceipt(onReceipt)
       .onError(cause => toast.error(cause.message))
       .finally(() => setLoading(false))

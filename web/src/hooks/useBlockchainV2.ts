@@ -28,11 +28,11 @@ const fallbackGasPrice = '300000000000';
 const auctionContract = (web3: Web3) =>
   new web3.eth.Contract(soundchainAuction.abi as AbiItem[], auctionAddress) as unknown as SoundchainAuction;
 
-const marketplaceContract = (web3: Web3) =>
-  new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], marketplaceAddress) as unknown as SoundchainMarketplace;
+const marketplaceContract = (web3: Web3, contractAddress?: string) =>
+  new web3.eth.Contract(soundchainMarketplace.abi as AbiItem[], contractAddress || marketplaceAddress) as unknown as SoundchainMarketplace;
 
-const marketplaceEditionsContract = (web3: Web3) =>
-  new web3.eth.Contract(soundchainMarketplaceEditions.abi as AbiItem[], marketplaceEditionsAddress) as unknown as SoundchainMarketplaceEditions;
+const marketplaceEditionsContract = (web3: Web3, contractAddress?: string | null) =>
+  new web3.eth.Contract(soundchainMarketplaceEditions.abi as AbiItem[], contractAddress || marketplaceEditionsAddress) as unknown as SoundchainMarketplaceEditions;
 
 const nftContract = (web3: Web3, contractAddress?: string | null) =>
   new web3.eth.Contract(soundchainContract.abi as AbiItem[], contractAddress || nftAddress) as unknown as Soundchain721;
@@ -156,7 +156,7 @@ class BuyItem extends BlockchainFunction<BuyItemParams> {
         false,
       );
     } else {
-      transactionObject = marketplaceContract(web3).methods.buyItem(
+      transactionObject = marketplaceContract(web3, marketplaceContractAddress).methods.buyItem(
         contractAddresses?.nft || nftAddress,
         tokenId,
         owner,
@@ -243,7 +243,7 @@ class CancelListing extends BlockchainFunction<TokenParams> {
         tokenId
       );
     } else {
-      transactionObject = marketplaceContract(web3).methods.cancelListing(
+      transactionObject = marketplaceContract(web3, marketplaceContractAddress).methods.cancelListing(
         contractAddresses?.nft || nftAddress,
         tokenId
       );
@@ -344,7 +344,7 @@ class ListItem extends BlockchainFunction<ListItemParams> {
         startTime,
       );
     } else {
-      transactionObject = marketplaceContract(web3).methods.listItem(
+      transactionObject = marketplaceContract(web3, marketplaceContractAddress).methods.listItem(
         contractAddresses?.nft || nftAddress,
         tokenId,
         1,
@@ -381,7 +381,7 @@ class UpdateListing extends BlockchainFunction<ListItemParams> {
         startTime,
       );
     } else {
-      transactionObject = marketplaceContract(web3).methods.updateListing(
+      transactionObject = marketplaceContract(web3, marketplaceContractAddress).methods.updateListing(
         contractAddresses?.nft || nftAddress,
         tokenId,
         totalPrice,
@@ -610,7 +610,7 @@ const useBlockchainV2 = () => {
   );
 
   const cancelEditionListing = useCallback(
-    (editionNumber: number, from: string, contractAddresses: ContractAddresses) => {
+    (editionNumber: number, from: string, contractAddresses?: ContractAddresses) => {
       return new CancelEditionListing(me, { editionNumber, from, contractAddresses });
     },
     [me],

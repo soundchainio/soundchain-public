@@ -1,6 +1,5 @@
 import { ModalActionTypes } from 'contexts/actions/modal';
 import { initialModalState, ModalState } from 'contexts/reducers/modal';
-import { ContractAddresses } from 'hooks/useBlockchainV2';
 import { ReactionType } from 'lib/graphql';
 import { useContext } from 'react';
 import { AuthorActionsType } from 'types/AuthorActionsType';
@@ -8,7 +7,7 @@ import { SaleType } from 'types/SaleType';
 import { GenreLabel } from 'utils/Genres';
 import { SaleTypeLabel } from 'utils/SaleTypeLabel';
 import { store } from '..';
-import { ShowTransferNftConfirmationPayload } from '../payloads/modal';
+import { ShowRemoveListing, ShowTransferNftConfirmationPayload } from '../payloads/modal';
 
 export const useModalState = (): ModalState => {
   const { state } = useContext(store);
@@ -57,8 +56,12 @@ export const useModalDispatch = () => {
       dispatch({ type: ModalActionTypes.SET_AMOUNT_TO_TRANSFER, payload: { amount } }),
     dispatchShowApproveModal: (show: boolean, type: SaleType, nftContractAddress?: string | null) =>
       dispatch({ type: ModalActionTypes.SHOW_APPROVE, payload: { show, type, nftContractAddress } }),
-    dispatchShowRemoveListingModal: (show: boolean, tokenId: number, trackId: string, saleType: SaleType, contractAddresses?: ContractAddresses) =>
-      dispatch({ type: ModalActionTypes.SHOW_REMOVE_LISTING, payload: { show, tokenId, trackId, saleType, contractAddresses } }),
+    dispatchShowRemoveListingModal: (payload: ShowRemoveListing) =>
+      dispatch({ type: ModalActionTypes.SHOW_REMOVE_LISTING, payload: {
+        ...payload,
+        contractAddresses: payload.contractAddresses || {},
+        editionId: payload.editionId || undefined,
+      } }),
     dispatchShowConfirmDeleteNFTModal: (show: boolean, trackId: string, burn: boolean) =>
       dispatch({ type: ModalActionTypes.SHOW_CONFIRM_DELETE_NFT, payload: { show, trackId, burn } }),
     dispatchShowFilterMarketplaceModal: (

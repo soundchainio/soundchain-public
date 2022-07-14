@@ -1,0 +1,3 @@
+query CheapestListingItem($transactionHash: String!) {
+  cheapestListingItem(transactionHash: $transactionHash)
+}

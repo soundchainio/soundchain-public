@@ -2,6 +2,7 @@ import { ObjectId } from 'mongodb';
 import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
 import { CurrentUser } from '../decorators/current-user';
 import { FavoriteProfileTrackModel } from '../models/FavoriteProfileTrack';
+import { ListingItem } from '../models/ListingItem';
 import { Track } from '../models/Track';
 import { TrackEdition } from '../models/TrackEdition';
 import { User } from '../models/User';
@@ -21,6 +22,8 @@ import { SortListingItemInput } from '../types/SortListingItemInput';
 import { SortTrackInput } from '../types/SortTrackInput';
 import { ToggleFavoritePayload } from '../types/ToggleFavoritePayload';
 import { TrackConnection } from '../types/TrackConnection';
+import { UpdateEditionOwnedTracksInput } from '../types/UpdateEditionOwnedTracksInput';
+import { UpdateEditionOwnedTracksPayload } from '../types/UpdateEditionOwnedTracksPayload';
 import { UpdateTrackInput } from '../types/UpdateTrackInput';
 import { UpdateTrackPayload } from '../types/UpdateTrackPayload';
 
@@ -92,6 +95,17 @@ export class TrackResolver {
       : null;
   }
 
+  @FieldResolver(() => ListingItem, { nullable: true })
+  async listingItem(
+    @Ctx() { listingItemService }: Context,
+    @Root() { nftData }: Track,
+  ): Promise<ListingItem | void> {
+    if (!nftData.tokenId || !nftData.contract) {
+      return;
+    }
+    return listingItemService.getListingItem(nftData.tokenId, nftData.contract);
+  }
+
   @Query(() => Track)
   track(@Ctx() { trackService }: Context, @Arg('id') id: string): Promise<Track> {
     return trackService.getTrack(id);
@@ -134,6 +148,16 @@ export class TrackResolver {
   ): Promise<UpdateTrackPayload> {
     const track = await trackService.updateTrack(trackId, changes);
     return { track };
+  }
+
+  @Mutation(() => UpdateEditionOwnedTracksPayload)
+  @Authorized()
+  async updateEditionOwnedTracks(
+    @Ctx() {  trackService }: Context,
+    @Arg('input') { trackEditionId, owner, ...changes }: UpdateEditionOwnedTracksInput,
+  ): Promise<UpdateEditionOwnedTracksPayload> {
+    const tracks = await trackService.updateEditionOwnedTracks(trackEditionId, owner, changes);
+    return { tracks };
   }
 
   @Mutation(() => UpdateTrackPayload)
