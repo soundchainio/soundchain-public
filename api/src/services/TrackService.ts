@@ -71,10 +71,10 @@ export class TrackService extends ModelService<typeof Track> {
     return track;
   }
 
-  async createMultipleTracks(profileId: string, data: { track: Partial<Track>; editionSize: number }): Promise<Track[]> {
+  async createMultipleTracks(profileId: string, data: { track: Partial<Track>; batchSize: number }): Promise<Track[]> {
     const asset = await this.context.muxService.create(data.track.assetUrl, data.track._id);
     return await Promise.all(
-      Array(data.editionSize)
+      Array(data.batchSize)
         .fill(null)
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         .map(_ => {

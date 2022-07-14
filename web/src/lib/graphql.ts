@@ -234,8 +234,7 @@ export type CreateAuctionItemType = {
 };
 
 export type CreateMultipleTracksInput = {
-  editionId: Scalars['String'];
-  editionSize: Scalars['Int'];
+  batchSize: Scalars['Float'];
   track: CreateTrackInput;
 };
 
@@ -299,6 +298,7 @@ export type CreateTrackInput = {
   releaseYear?: Maybe<Scalars['Float']>;
   copyright?: Maybe<Scalars['String']>;
   genres?: Maybe<Array<Genre>>;
+  trackEditionId: Scalars['String'];
   nftData?: Maybe<NftDataInput>;
 };
 

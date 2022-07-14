@@ -20,6 +20,7 @@ import {
   TracksDocument,
   TracksQuery,
   useCreateMultipleTracksMutation,
+  useCreateTrackEditionMutation,
   usePinJsonToIpfsMutation,
   usePinToIpfsMutation
 } from 'lib/graphql';
@@ -28,9 +29,14 @@ import * as musicMetadata from 'music-metadata-browser';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import { EventData } from 'types/BlockchainEvents';
 import { Metadata } from 'types/NftTypes';
+import { EditionCreated } from 'types/web3-v2-contracts/Soundchain721Editions';
 import { genres } from 'utils/Genres';
+import { TransactionReceipt } from 'web3-core/types';
 import { MintingDone } from './MintingDone';
+
+const BATCH_SIZE = 150
 
 enum Tabs {
   NFT = 'NFT',
@@ -53,12 +59,13 @@ export const CreateModal = () => {
 
   const { upload } = useUpload();
   const [createMultipleTracks] = useCreateMultipleTracksMutation();
+  const [createTrackEdition] = useCreateTrackEditionMutation();
 
   const { web3, account } = useWalletContext();
   const [pinToIPFS] = usePinToIpfsMutation();
   const [pinJsonToIPFS] = usePinJsonToIpfsMutation();
 
-  const { mintNftToken } = useBlockchainV2();
+  const { createEdition, mintNftTokensToEdition } = useBlockchainV2();
   const [transactionHash, setTransactionHash] = useState<string>();
   const [mintingState, setMintingState] = useState<string>();
   const [mintError, setMintError] = useState<boolean>(false);
@@ -238,13 +245,19 @@ export const CreateModal = () => {
           },
         });
 
-        const onTransactionHash = async (transactionHash: string) => {
+        const onError = (cause: Error) => {
+          console.error('Error on minting', cause);
+          setTransactionHash(undefined);
+          setMintingState('There was an error while minting your NFT');
+          setMintError(true);
+        };
+
+        const onMintingTracks = async (transactionHash: string, trackEditionId: string) => {
           setMintingState('Creating your track');
           await createMultipleTracks({
             variables: {
               input: {
-                editionId: "",
-                editionSize: values.editionQuantity,
+                batchSize: 150,
                 track: {
                   assetUrl,
                   title,
@@ -257,6 +270,7 @@ export const CreateModal = () => {
                   releaseYear,
                   artistProfileId,
                   copyright,
+                  trackEditionId,
                   nftData: {
                     transactionHash: transactionHash,
                     minter: account,
@@ -311,16 +325,42 @@ export const CreateModal = () => {
           setTransactionHash(transactionHash);
         };
 
-        const onError = (cause: Error) => {
-          console.error('Error on minting', cause);
-          setTransactionHash(undefined);
-          setMintingState('There was an error while minting your NFT');
-          setMintError(true);
+        const onCreateEdition = async (receipt: TransactionReceipt) => {
+          if(!receipt.status){
+            throw new Error();
+          }
+
+          setMintingState('Creating your Edition');
+
+          const events = receipt.events as unknown as EventData[]
+          const editionCreated = (events.find(event => event.event === "EditionCreated") as unknown as EditionCreated).returnValues
+          const editionNumber = Number(editionCreated)
+
+          const { data } = await createTrackEdition({
+            variables: { input: { transactionHash: receipt.transactionHash, editionSize: values.editionQuantity } },
+          });
+          const trackEditionId = data?.createTrackEdition.trackEdition.id;
+
+          if (!trackEditionId) {
+            throw new Error();
+          }
+
+          setMintingState('Minting NFT');
+
+          let quantityLeft = values.editionQuantity
+          for (let index = 0; index < values.editionQuantity; index += BATCH_SIZE) {
+            const quantity = quantityLeft >= BATCH_SIZE ? BATCH_SIZE : quantityLeft
+            mintNftTokensToEdition(`ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`, account, account, editionNumber, quantity)
+            .onReceipt(receipt => onMintingTracks(receipt.transactionHash, trackEditionId))
+            .onError(onError)
+            .execute(web3);
+            quantityLeft = quantityLeft - BATCH_SIZE
+          }
         };
 
-        setMintingState('Minting NFT');
-        mintNftToken(`ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`, account, account, royalty, editionQuantity)
-          .onReceipt(receipt => onTransactionHash(receipt.transactionHash))
+        setMintingState('Minting Edition');
+        createEdition(account, account, royalty, editionQuantity)
+          .onReceipt(receipt => onCreateEdition(receipt))
           .onError(onError)
           .execute(web3);
       } catch (e) {

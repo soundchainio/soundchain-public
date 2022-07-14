@@ -128,12 +128,9 @@ export class TrackResolver {
     @CurrentUser() { profileId }: User,
     @Arg('input') input: CreateMultipleTracksInput,
   ): Promise<CreateMultipleTracksPayload> {
-    const trackModel = input.track as Track;
-    trackModel.trackEditionId = input.editionId;
-
     const [track, ...otherTracks] = await trackService.createMultipleTracks(profileId, {
-      editionSize: input.editionSize,
-      track: trackModel,
+      batchSize: input.batchSize,
+      track: input.track,
     });
     await postService.createPost({
       profileId,

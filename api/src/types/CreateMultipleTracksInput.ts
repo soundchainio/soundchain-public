@@ -1,16 +1,10 @@
-import { Max, Min } from 'class-validator';
-import { Field, InputType, Int } from 'type-graphql';
+import { Field, InputType } from 'type-graphql';
 import { CreateTrackInput } from './CreateTrackInput';
 
 @InputType()
 export class CreateMultipleTracksInput {
   @Field()
-  editionId: string;
-
-  @Min(1)
-  @Max(1000)
-  @Field(() => Int)
-  editionSize: number;
+  batchSize: number;
 
   @Field()
   track: CreateTrackInput;

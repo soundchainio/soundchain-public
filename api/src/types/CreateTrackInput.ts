@@ -37,6 +37,9 @@ export class CreateTrackInput {
   @Field(() => [Genre], { nullable: true })
   genres: Genre[];
 
+  @Field()
+  trackEditionId: string;
+
   @Field(() => NFTData, { nullable: true })
   nftData: NFTData;
 }

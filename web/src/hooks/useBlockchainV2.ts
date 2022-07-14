@@ -444,6 +444,55 @@ class SendMatic extends BlockchainFunction<SendMaticParams> {
   };
 }
 
+interface MintNftTokensToEditionParams extends DefaultParam {
+  uri: string;
+  toAddress: string;
+  editionNumber: number;
+  quantity: number;
+}
+class MintNftTokensToEdition extends BlockchainFunction<MintNftTokensToEditionParams> {
+  execute = async (web3: Web3) => {
+    const { from, uri, toAddress, editionNumber, quantity } = this.params;
+
+    this.web3 = web3;
+
+    const transactionObject = nftContractEditions(web3).methods.safeMintToEditionQuantity(
+      toAddress,
+      uri,
+      editionNumber,
+      quantity
+    )
+    const gas = await transactionObject.estimateGas({ from });
+
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }));
+
+    return this.receipt;
+  };
+}
+
+interface CreateEditionParams extends DefaultParam {
+  editionQuantity: number;
+  toAddress: string;
+  royaltyPercentage: number;
+}
+class CreateEdition extends BlockchainFunction<CreateEditionParams> {
+  execute = async (web3: Web3) => {
+    const { from, editionQuantity, toAddress, royaltyPercentage } = this.params;
+    this.web3 = web3;
+
+    const transactionObject = nftContractEditions(web3).methods.createEdition(
+      editionQuantity,
+      toAddress,
+      royaltyPercentage,
+    );
+    const gas = await transactionObject.estimateGas({ from });
+
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }));
+
+    return this.receipt;
+  };
+}
+
 interface ListEditionParams extends DefaultParam {
   editionNumber: number;
   price: string;
@@ -602,6 +651,18 @@ const useBlockchainV2 = () => {
     },
     [me],
   );
+  const mintNftTokensToEdition = useCallback(
+    (uri: string, from: string, toAddress: string, editionNumber: number, quantity: number) => {
+      return new MintNftTokensToEdition(me, { from, toAddress, uri, editionNumber, quantity });
+    },
+    [me],
+  );
+  const createEdition = useCallback(
+    (from: string, toAddress: string, royaltyPercentage: number, editionQuantity: number) => {
+      return new CreateEdition(me, { editionQuantity, from, royaltyPercentage, toAddress });
+    },
+    [me],
+  );
   const listEdition = useCallback(
     (editionNumber: number, from: string, price: string, startTime: number, contractAddresses: ContractAddresses) => {
       return new ListEdition(me, { editionNumber, from, price, startTime, contractAddresses });
@@ -632,6 +693,8 @@ const useBlockchainV2 = () => {
     resultAuction,
     sendMatic,
     transferNftToken,
+    mintNftTokensToEdition,
+    createEdition,
     listEdition,
     cancelEditionListing
   };
