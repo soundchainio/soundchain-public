@@ -36,7 +36,7 @@ export interface ModalState {
   editionId?: number;
   showAuthorActions: boolean;
   authorActionsType?: AuthorActionsType;
-  authorActionsId: string | null;
+  authorActionsId: string;
   showOnlyDeleteOption?: boolean;
   showUnderDevelopment: boolean;
   showCreate: boolean;

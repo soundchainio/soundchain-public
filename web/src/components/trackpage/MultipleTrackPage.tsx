@@ -23,7 +23,6 @@ import { PriceTag } from 'icons/PriceTag';
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting';
 import { BuyNowListingItemsQuery, BuyNowListingItemsQueryVariables, OwnedTracksQuery, PendingRequest, TrackQuery, useBuyNowListingItemsQuery, useCheapestListingItemLazyQuery, useOwnedTracksQuery, useProfileLazyQuery, useTrackLazyQuery } from 'lib/graphql';
 import { useEffect, useMemo, useState } from 'react';
-import { compareWallets } from 'utils/Wallet';
 import { Matic } from '../Matic';
 import { isPendingRequest } from 'utils/isPendingRequest';
 

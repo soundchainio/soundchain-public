@@ -11,5 +11,8 @@ fragment TrackEditionFields on TrackEdition {
   updatedAt
   editionData {
     pendingRequest
+    pendingTime
+    transactionHash
+    contract
   }
 }

@@ -1,6 +1,5 @@
 import { ModalActionTypes } from 'contexts/actions/modal';
 import { initialModalState, ModalState } from 'contexts/reducers/modal';
-import { ContractAddresses } from 'hooks/useBlockchainV2';
 import { ReactionType } from 'lib/graphql';
 import { useContext } from 'react';
 import { AuthorActionsType } from 'types/AuthorActionsType';
