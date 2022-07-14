@@ -25,6 +25,9 @@ import { UpdateTrackInput } from '../types/UpdateTrackInput';
 import { UpdateTrackPayload } from '../types/UpdateTrackPayload';
 import { CreateMultipleTracksPayload } from '../types/CreateMultipleTracksPayload';
 import { CreateMultipleTracksInput } from '../types/CreateMultipleTracksInput';
+import { UpdateEditionOwnedTracksPayload } from '../types/UpdateEditionOwnedTracksPayload';
+import { UpdateEditionOwnedTracksInput } from '../types/UpdateEditionOwnedTracksInput';
+import { ListingItem } from '../models/ListingItem';
 
 @Resolver(Track)
 export class TrackResolver {
@@ -94,6 +97,17 @@ export class TrackResolver {
       : null;
   }
 
+  @FieldResolver(() => ListingItem, { nullable: true })
+  async listingItem(
+    @Ctx() { listingItemService }: Context,
+    @Root() { nftData }: Track,
+  ): Promise<ListingItem | void> {
+    if (!nftData.tokenId || !nftData.contract) {
+      return;
+    }
+    return listingItemService.getListingItem(nftData.tokenId, nftData.contract);
+  }
+
   @Query(() => Track)
   track(@Ctx() { trackService }: Context, @Arg('id') id: string): Promise<Track> {
     return trackService.getTrack(id);
@@ -147,6 +161,16 @@ export class TrackResolver {
   ): Promise<UpdateTrackPayload> {
     const track = await trackService.updateTrack(trackId, changes);
     return { track };
+  }
+
+  @Mutation(() => UpdateEditionOwnedTracksPayload)
+  @Authorized()
+  async updateEditionOwnedTracks(
+    @Ctx() {  trackService }: Context,
+    @Arg('input') { trackEditionId, owner, ...changes }: UpdateEditionOwnedTracksInput,
+  ): Promise<UpdateEditionOwnedTracksPayload> {
+    const tracks = await trackService.updateEditionOwnedTracks(trackEditionId, owner, changes);
+    return { tracks };
   }
 
   @Mutation(() => UpdateTrackPayload)

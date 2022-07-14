@@ -1,10 +1,14 @@
 import { ButtonVariantProps } from 'components/Button';
 import { config } from 'config';
 
-export const EditListingButton = ({ className, type = 'button', children, loading, ...rest }: ButtonVariantProps) => {
+export const EditListingButton = ({ 
+  className, type = 'button', 
+  Component,
+  children, loading, ...rest 
+}: ButtonVariantProps) => {
   return (
     <div className={className}>
-      <button
+      <Component
         className={`${config.mobileBreakpoint}:px-4 p-2 font-bold text-white text-xs bg-opacity-60 bg-yellow-gradient border-yellow-300 border-2 w-full`}
         type={type}
         {...rest}
@@ -16,7 +20,7 @@ export const EditListingButton = ({ className, type = 'button', children, loadin
         ) : (
           <span>{children}</span>
         )}
-      </button>
+      </Component>
     </div>
   );
 };

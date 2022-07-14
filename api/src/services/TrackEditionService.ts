@@ -1,5 +1,6 @@
 import { TrackEdition, TrackEditionModel } from '../models/TrackEdition';
 import { Context } from '../types/Context';
+import { PendingRequest } from '../types/PendingRequest';
 import { ModelService } from './ModelService';
 
 export class TrackEditionService extends ModelService<typeof TrackEdition> {
@@ -16,5 +17,36 @@ export class TrackEditionService extends ModelService<typeof TrackEdition> {
   async getEditionSize(id: string): Promise<number> {
     const trackEdition = await this.findOrFail(id);
     return trackEdition.editionSize;
+  }
+
+  async markEditionListed(editionId: number, nft: string, marketplace: string): Promise<void> {
+    await this.model.updateOne(
+      { editionId, contract: nft },
+      { listed: true, marketplace }
+    );
+  }
+
+  async markEditionUnlisted(editionId: number, nft: string): Promise<void> {
+    await this.model.updateOne(
+      { editionId, contract: nft },
+      { 
+        listed: false, 
+        marketplace: null,
+        $set: {
+          'editionData.pendingRequest': PendingRequest.None,
+          'editionData.pendingTime': null,
+        }
+      }
+    );
+  }
+
+  async resetPending(beforeTime: Date): Promise<void> {
+    return this.model.updateMany(
+      {
+        'editionData.pendingRequest': { $ne: PendingRequest.None },
+        'editionData.pendingTime': { $lte: beforeTime },
+      },
+      { 'editionData.pendingRequest': PendingRequest.None },
+    );
   }
 }

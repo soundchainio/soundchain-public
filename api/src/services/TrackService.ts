@@ -9,6 +9,7 @@ import { NotificationModel } from '../models/Notification';
 import { PendingTrackModel } from '../models/PendingTrack';
 import { PostModel } from '../models/Post';
 import { Track, TrackModel } from '../models/Track';
+import { TrackEdition, TrackEditionModel } from '../models/TrackEdition';
 import { TrackWithListingItem } from '../models/TrackWithListingItem';
 import { Context } from '../types/Context';
 import { FilterBuyNowItemInput } from '../types/FilterBuyNowItemInput';
@@ -118,6 +119,36 @@ export class TrackService extends ModelService<typeof Track> {
       throw new NotFoundError('Track', id);
     }
     return this.updateNftData(track, newNftData);
+  }
+
+  async updateEditionOwnedTracks(trackEditionId: string, owner: string, changes: RecursivePartial<Track>): Promise<Track[]> {
+    const { nftData: newNftData, ...data } = changes;
+
+    await TrackEditionModel.updateOne({ _id: trackEditionId }, 
+      { 
+        $set: { 
+          'editinoData.pendingRequest': newNftData.pendingRequest,
+          'editionData.pendingTime': newNftData.pendingTime,
+        }
+      }
+    );
+    
+    await this.model.updateMany(
+      { 'nftData.owner': owner, trackEditionId: trackEditionId },
+      {
+        ...data,
+        $set: Object.keys(newNftData).reduce((acc, key) => {
+          acc[`nftData.${key}`] = (newNftData as any)[key];
+          return acc;
+        }, {} as any)
+      },
+      { new: true },
+    )
+
+    return await this.model.find({
+      'nftData.owner': owner,
+      trackEditionId: trackEditionId,
+    })
   }
 
   async updateTracksByTransactionHash(transactionHash: string, changes: RecursivePartial<Track>): Promise<number> {
@@ -540,14 +571,11 @@ export class TrackService extends ModelService<typeof Track> {
     });
   }
 
-  async resetPending(): Promise<void> {
-    const nowMinusOneHour = new Date();
-    nowMinusOneHour.setHours(nowMinusOneHour.getHours() - 1);
-
+  async resetPending(beforeTime: Date): Promise<void> {
     return this.model.updateMany(
       {
         'nftData.pendingRequest': { $ne: PendingRequest.None },
-        'nftData.pendingTime': { $lte: nowMinusOneHour },
+        'nftData.pendingTime': { $lte: beforeTime },
       },
       { 'nftData.pendingRequest': PendingRequest.None },
     );

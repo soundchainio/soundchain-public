@@ -1,35 +1,30 @@
+import { ObservableQuery } from '@apollo/client';
 import { BackButton } from 'components/Buttons/BackButton';
 import { BuyNowEditionListItem } from 'components/BuyNowEditionListItem';
 import { Description } from 'components/details-NFT/Description';
-import { HandleNFT } from 'components/details-NFT/HandleNFT';
+import { HandleMultipleEditionNFT } from 'components/details-NFT/HandleMultipleEditionNFT';
 import { MintingData } from 'components/details-NFT/MintingData';
 import { TrackInfo } from 'components/details-NFT/TrackInfo';
 import { ViewPost } from 'components/details-NFT/ViewPost';
 import { InfiniteLoader } from 'components/InfiniteLoader';
 import { NoResultFound } from 'components/NoResultFound';
+import { OwnedEditionListItem } from 'components/OwnedEditionListItem';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import { TrackShareButton } from 'components/TrackShareButton';
+import { useModalState } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
 import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMe } from 'hooks/useMe';
-import { useTokenOwner } from 'hooks/useTokenOwner';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Cards } from 'icons/Cards';
 import { PriceTag } from 'icons/PriceTag';
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting';
-import {
-  PendingRequest,
-  TrackQuery,
-  useBuyNowListingItemsQuery,
-  useCheapestListingItemLazyQuery,
-  useProfileLazyQuery,
-  useTrackLazyQuery,
-} from 'lib/graphql';
+import { BuyNowListingItemsQuery, BuyNowListingItemsQueryVariables, OwnedTracksQuery, PendingRequest, TrackQuery, useBuyNowListingItemsQuery, useCheapestListingItemLazyQuery, useOwnedTracksQuery, useProfileLazyQuery, useTrackLazyQuery } from 'lib/graphql';
 import { useEffect, useMemo, useState } from 'react';
-import { compareWallets } from 'utils/Wallet';
 import { Matic } from '../Matic';
+import { isPendingRequest } from 'utils/isPendingRequest';
 
 interface MultipleTrackPageProps {
   track: TrackQuery['track'];
@@ -52,10 +47,10 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
   const { account, web3 } = useWalletContext();
   const [profile, { data: profileInfo }] = useProfileLazyQuery();
 
+  const { showRemoveListing } = useModalState();
   const { setTopNavBarProps } = useLayoutContext();
   const [royalties, setRoyalties] = useState<number>();
   const { getRoyalties } = useBlockchain();
-  const { loading: isLoadingOwner, isOwner } = useTokenOwner(track.nftData?.tokenId, track.nftData?.contract);
 
   const [refetchTrack, { data: trackData }] = useTrackLazyQuery({
     fetchPolicy: 'network-only',
@@ -100,21 +95,20 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
   const description = `Listen to ${track.title} on SoundChain. ${track.artist}. ${track.album || 'Song'}. ${
     track.releaseYear != null ? `${track.releaseYear}.` : ''
   }`;
+  const editionData = trackData?.track.trackEdition?.editionData || track.trackEdition?.editionData
   const tokenId = nftData?.tokenId;
 
   const firstListingItem = data?.buyNowListingItems?.nodes?.[0]?.listingItem;
 
   const mintingPending = nftData?.pendingRequest === PendingRequest.Mint;
-  const isProcessing = nftData?.pendingRequest != PendingRequest.None;
+  const isProcessing = isPendingRequest(nftData?.pendingRequest) || isPendingRequest(editionData?.pendingRequest);
   const canList = (me?.profile.verified && nftData?.minter === account) || nftData?.minter != account;
   const isBuyNow = Boolean(firstListingItem?.pricePerItem);
 
   const price = firstListingItem?.pricePerItemToShow || 0;
-  const auctionIsOver = (firstListingItem?.endingTime || 0) < Math.floor(Date.now() / 1000);
-  const canComplete = compareWallets(account, firstListingItem?.owner);
   const startingDate = firstListingItem?.startingTime ? new Date(firstListingItem?.startingTime * 1000) : undefined;
   const endingDate = firstListingItem?.endingTime ? new Date(firstListingItem?.endingTime * 1000) : undefined;
-  const loading = loadingListingItem || isLoadingOwner;
+  const loading = loadingListingItem;
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
@@ -128,6 +122,24 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
     }),
     [track.artist, track.id, track.title],
   );
+
+  const {
+    data: ownedTracksData,
+    loading: ownedTracksLoading,
+    refetch: ownedTracksRefetch,
+  } = useOwnedTracksQuery({
+    variables: {
+      page: { first: 10 },
+      filter: { 
+        nftData: {
+          transactionHash: nftData?.transactionHash,
+          owner: account,
+        }
+      },
+    },
+    skip: !nftData?.transactionHash,
+    ssr: false,
+  });
 
   useEffect(() => {
     setTopNavBarProps(topNavBarProps);
@@ -152,30 +164,17 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      if (isProcessing) {
+      if (isProcessing || !showRemoveListing) {
         refetchTrack({ variables: { id: track.id } });
         if (tokenId) {
           refetchListingItem();
+          ownedTracksRefetch();
         }
       }
     }, 10 * 1000);
 
     return () => clearInterval(interval);
-  }, [isProcessing, refetchTrack, refetchListingItem, tokenId, track.id]);
-
-  const nodes = data?.buyNowListingItems.nodes;
-  const pageInfo = data?.buyNowListingItems.pageInfo;
-
-  const loadMore = () => {
-    fetchMore({
-      variables: {
-        page: {
-          first: 10,
-          after: pageInfo?.endCursor,
-        },
-      },
-    });
-  };
+  }, [isProcessing, refetchTrack, refetchListingItem, ownedTracksRefetch, tokenId, track.id, showRemoveListing]);
 
   return (
     <>
@@ -212,44 +211,22 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
           me={me}
         />
         <div>{nftData && <MintingData transactionHash={nftData.transactionHash} ipfsCid={nftData.ipfsCid} />}</div>
-        <section>
-          <h3 className="flex items-center gap-2 px-4 py-4 font-bold text-gray-80">
-            <PriceTag fill="#808080" />
-            <p>Listings</p>
-          </h3>
-          {!loadingListingItem && (
-            <>
-              <div className="flex h-8 items-center bg-gray-20 px-4 py-2 text-xs font-black text-white">
-                <p className="min-w-[140px]">Price</p>
-                <p>From</p>
-              </div>
-              {nodes?.length ? (
-                <ol className="text-white">
-                  {nodes?.map(item => (
-                    <BuyNowEditionListItem
-                      key={item.id}
-                      price={item.listingItem?.pricePerItemToShow || 0}
-                      owner={item.nftData?.owner || ''}
-                      trackId={item.id}
-                      tokenId={item.nftData?.tokenId || 0}
-                      contractAddress={item.nftData?.contract || ''}
-                    />
-                  ))}
-                  {pageInfo?.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading Tracks" />}
-                </ol>
-              ) : (
-                <NoResultFound />
-              )}
-            </>
-          )}
-        </section>
+        <OwnedList data={ownedTracksData} loading={ownedTracksLoading} />
+        <Listings data={data} loading={loadingListingItem} fetchMore={fetchMore} />
       </div>
       {me &&
-        (isProcessing && !mintingPending && nftData?.pendingRequest ? (
+        (isPendingRequest(nftData?.pendingRequest) && !mintingPending && nftData?.pendingRequest ? (
           <div className=" flex items-center justify-center p-3">
             <div className="h-5 w-5 animate-spin rounded-full border-t-2 border-white" />
             <div className="pl-3 text-sm font-bold text-white">
               Processing {pendingRequestMapping[nftData.pendingRequest]}
+            </div>
+          </div>
+        ) : isPendingRequest(editionData?.pendingRequest) && !mintingPending && editionData?.pendingRequest ? (
+          <div className=" flex items-center justify-center p-3">
+            <div className="h-5 w-5 animate-spin rounded-full border-t-2 border-white" />
+            <div className="pl-3 text-sm font-bold text-white">
+              Processing {pendingRequestMapping[editionData.pendingRequest]}
             </div>
           </div>
         ) : loading ? (
@@ -258,21 +235,129 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
             <div className="pl-3 text-sm font-bold text-white">Loading</div>
           </div>
         ) : (
-          <HandleNFT
+          <HandleMultipleEditionNFT
             canList={canList}
             price={price}
-            isOwner={isOwner}
+            isMinter={track.nftData?.minter === account}
             isBuyNow={isBuyNow}
-            isAuction={false}
-            canComplete={canComplete}
-            auctionIsOver={auctionIsOver}
-            countBids={0}
             startingDate={startingDate}
             endingDate={endingDate}
-            auctionId={''}
-            multipleEdition={true}
+            trackEditionId={track.trackEdition?.id}
+            editionId={track.trackEdition?.editionId}
+            isEditionListed={track.trackEdition?.listed}
+            contractAddresses={{
+              nft: nftData?.contract,
+              marketplace: track.trackEdition?.marketplace,
+            }}
           />
         ))}
     </>
   );
 };
+
+interface ListingsProps {
+  loading: boolean;
+  data?: BuyNowListingItemsQuery;
+  fetchMore: ObservableQuery<BuyNowListingItemsQuery, BuyNowListingItemsQueryVariables>['fetchMore'];
+}
+
+function Listings(props: ListingsProps) {
+  const { data, loading, fetchMore } = props;
+
+  const nodes = data?.buyNowListingItems.nodes;
+  const pageInfo = data?.buyNowListingItems.pageInfo;
+
+  const loadMore = () => {
+    fetchMore({
+      variables: {
+        page: {
+          first: 10,
+          after: pageInfo?.endCursor,
+        },
+      },
+    });
+  };
+
+  return (
+    <section>
+      <h3 className="flex items-center gap-2 px-4 py-4 font-bold text-gray-80">
+        <PriceTag fill="#808080" />
+        <p>Listings</p>
+      </h3>
+      {!loading && (
+        <>
+          <div className="flex h-8 items-center bg-gray-20 px-4 py-2 text-xs font-black text-white">
+            <p className="min-w-[140px]">Price</p>
+            <p>From</p>
+          </div>
+          {nodes?.length ? (
+            <ol className="text-white">
+              {nodes?.map(item => (
+                <BuyNowEditionListItem
+                  key={item.id}
+                  price={item.listingItem?.pricePerItemToShow || 0}
+                  owner={item.nftData?.owner || ''}
+                  trackId={item.id}
+                  tokenId={item.nftData?.tokenId || 0}
+                  contractAddress={item.nftData?.contract || ''}
+                  isProcessing={
+                    isPendingRequest(item.nftData?.pendingRequest) || isPendingRequest(item.trackEdition?.editionData?.pendingRequest)
+                  }
+                />
+              ))}
+              {pageInfo?.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading Tracks" />}
+            </ol>
+          ) : (
+            <NoResultFound />
+          )}
+        </>
+      )}
+    </section>
+  )
+}
+
+interface OwnedListProps {
+  loading: boolean;
+  data?: OwnedTracksQuery;
+}
+
+function OwnedList(props: OwnedListProps) {
+  const { data, loading } = props;
+
+  const nodes = data?.tracks.nodes;
+  const pageInfo = data?.tracks.pageInfo;
+
+  return (
+    <section>
+      <h3 className="flex items-center gap-2 px-4 pt-4 font-bold text-gray-80">
+        <PriceTag fill="#808080" />
+        <p>Owned (total: {pageInfo?.totalCount})</p>
+      </h3>
+      <div className='text-gray-80 text-xs pl-10 pr-4 pt-1 pb-4'>Showing first 10 tokens</div>
+      {!loading && (
+        <>
+          <div className="flex h-8 items-center bg-gray-20 px-4 py-2 text-xs font-black text-white">
+            <p className="min-w-[140px]">ID</p>
+          </div>
+          {nodes?.length ? (
+            <ol className="text-white">
+              {nodes?.map(item => (
+                <OwnedEditionListItem
+                  key={item.id}
+                  trackId={item.id}
+                  tokenId={item.nftData?.tokenId || 0}
+                  listingItem={item.listingItem}
+                  isProcessing={
+                    isPendingRequest(item.nftData?.pendingRequest) || isPendingRequest(item.trackEdition?.editionData?.pendingRequest)
+                  }
+                />
+              ))}
+            </ol>
+          ) : (
+            <NoResultFound />
+          )}
+        </>
+      )}
+    </section>
+  )
+}

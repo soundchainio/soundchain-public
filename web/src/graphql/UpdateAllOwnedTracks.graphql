@@ -1,0 +1,13 @@
+mutation updateAllOwnedTracks($input: UpdateEditionOwnedTracksInput!) {
+  updateEditionOwnedTracks(input: $input) {
+    tracks {
+      id
+      nftData {
+        pendingRequest
+      }
+      trackEdition {
+        ...TrackEditionFields
+      }
+    }
+  }
+}

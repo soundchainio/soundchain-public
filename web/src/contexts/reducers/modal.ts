@@ -33,6 +33,7 @@ export interface ModalState {
   repostId?: string;
   editPostId?: string;
   editCommentId?: string;
+  editionId?: number;
   showAuthorActions: boolean;
   authorActionsType?: AuthorActionsType;
   authorActionsId: string;
@@ -45,6 +46,7 @@ export interface ModalState {
   showBidsHistory: boolean;
   tokenId?: number;
   trackId?: string;
+  trackEditionId?: string;
   reactions: {
     show: boolean;
     postId?: string;
@@ -191,7 +193,9 @@ export const modalReducer = (state: ModalState, action: Action) => {
         trackId: (action.payload as ShowRemoveListing).trackId,
         saleType: (action.payload as ShowRemoveListing).saleType,
         anyModalOpened: (action.payload as ShowRemoveListing).show,
+        editionId: (action.payload as ShowRemoveListing).editionId,
         contractAddresses: (action.payload as ShowRemoveListing).contractAddresses,
+        trackEditionId: (action.payload as ShowRemoveListing).trackEditionId,
       };
     case ModalActionTypes.SHOW_AUDIO_PLAYER:
       return {
