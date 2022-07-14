@@ -95,7 +95,9 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
   const description = `Listen to ${track.title} on SoundChain. ${track.artist}. ${track.album || 'Song'}. ${
     track.releaseYear != null ? `${track.releaseYear}.` : ''
   }`;
-  const editionData = trackData?.track.trackEdition?.editionData || track.trackEdition?.editionData
+
+  const trackEdition = trackData?.track.trackEdition || track.trackEdition;
+  const editionData = trackEdition?.editionData
   const tokenId = nftData?.tokenId;
 
   const firstListingItem = data?.buyNowListingItems?.nodes?.[0]?.listingItem;
@@ -166,10 +168,8 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
     const interval = setInterval(() => {
       if (isProcessing || !showRemoveListing) {
         refetchTrack({ variables: { id: track.id } });
-        if (tokenId) {
-          refetchListingItem();
-          ownedTracksRefetch();
-        }
+        refetchListingItem();
+        ownedTracksRefetch();
       }
     }, 10 * 1000);
 
@@ -242,12 +242,12 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
             isBuyNow={isBuyNow}
             startingDate={startingDate}
             endingDate={endingDate}
-            trackEditionId={track.trackEdition?.id}
-            editionId={track.trackEdition?.editionId}
-            isEditionListed={track.trackEdition?.listed}
+            trackEditionId={trackEdition?.id}
+            editionId={trackEdition?.editionId}
+            isEditionListed={trackEdition?.listed}
             contractAddresses={{
               nft: nftData?.contract,
-              marketplace: track.trackEdition?.marketplace,
+              marketplace: trackEdition?.marketplace,
             }}
           />
         ))}
