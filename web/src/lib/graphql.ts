@@ -279,6 +279,7 @@ export type CreateRepostPayload = {
 export type CreateTrackInput = {
   title: Scalars['String'];
   description?: Maybe<Scalars['String']>;
+  utilityInfo?: Maybe<Scalars['String']>;
   assetUrl: Scalars['String'];
   artworkUrl?: Maybe<Scalars['String']>;
   artist?: Maybe<Scalars['String']>;
@@ -1573,6 +1574,7 @@ export type Track = {
   profileId: Scalars['String'];
   title: Maybe<Scalars['String']>;
   description: Maybe<Scalars['String']>;
+  utilityInfo: Maybe<Scalars['String']>;
   assetUrl: Scalars['String'];
   artworkUrl: Maybe<Scalars['String']>;
   artist: Maybe<Scalars['String']>;
@@ -1625,6 +1627,7 @@ export type TrackWithListingItem = {
   profileId: Scalars['String'];
   title: Maybe<Scalars['String']>;
   description: Maybe<Scalars['String']>;
+  utilityInfo: Maybe<Scalars['String']>;
   assetUrl: Scalars['String'];
   artworkUrl: Maybe<Scalars['String']>;
   artist: Maybe<Scalars['String']>;
@@ -2513,7 +2516,7 @@ export type ListingItemQuery = (
 
 export type ListingItemComponentFieldsFragment = (
   { __typename?: 'TrackWithListingItem' }
-  & Pick<TrackWithListingItem, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'playbackCount' | 'saleType' | 'price' | 'trackEditionId' | 'editionSize'>
+  & Pick<TrackWithListingItem, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'utilityInfo' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'playbackCount' | 'saleType' | 'price' | 'trackEditionId' | 'editionSize'>
   & { nftData: Maybe<(
     { __typename?: 'NFTDataType' }
     & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner' | 'pendingTime'>
@@ -3173,7 +3176,7 @@ export type TrackQuery = (
 
 export type TrackComponentFieldsFragment = (
   { __typename?: 'Track' }
-  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'playbackCount' | 'saleType' | 'price' | 'trackEditionId' | 'editionSize'>
+  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'utilityInfo' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'playbackCount' | 'saleType' | 'price' | 'trackEditionId' | 'editionSize'>
   & { nftData: Maybe<(
     { __typename?: 'NFTDataType' }
     & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner' | 'pendingTime'>
@@ -3738,6 +3741,7 @@ export const ListingItemComponentFieldsFragmentDoc = gql`
   assetUrl
   artworkUrl
   description
+  utilityInfo
   artist
   artistId
   artistProfileId
@@ -3902,6 +3906,7 @@ export const TrackComponentFieldsFragmentDoc = gql`
   assetUrl
   artworkUrl
   description
+  utilityInfo
   artist
   artistId
   artistProfileId

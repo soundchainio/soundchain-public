@@ -17,6 +17,7 @@ export interface FormValues {
   editionQuantity: number;
   title: string;
   description: string;
+  utilityInfo?: string;
   album?: string;
   copyright?: string;
   releaseYear?: number;
@@ -29,6 +30,7 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   editionQuantity: yup.number().label('# of Editions').min(1).max(1000).required('# of Editions is a required field'),
   title: yup.string().max(100).required('Title is a required field'),
   description: yup.string().max(500).required('Description is a required field'),
+  utilityInfo: yup.string().max(10000),
   artist: yup.string(),
   album: yup.string().max(100),
   copyright: yup.string().max(100),
@@ -56,6 +58,7 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
     editionQuantity: initialValues?.editionQuantity || 1,
     title: initialValues?.title || '',
     description: initialValues?.description || '',
+    utilityInfo: initialValues?.utilityInfo || '',
     album: initialValues?.album || '',
     copyright: initialValues?.copyright || '',
     releaseYear: initialValues?.releaseYear || new Date().getFullYear(),
@@ -122,6 +125,9 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
             <div className="flex w-full gap-4 px-4">
               <InputField name="releaseYear" type="number" label="RELEASE YEAR" />
               <InputField name="copyright" type="text" label="COPYRIGHT" maxLength={100} />
+            </div>
+            <div className='px-4'>
+              <TextareaField rows={3} name="utilityInfo" label="UTILITY" maxLength={500} />
             </div>
             <div className="px-4 font-bold text-gray-80">
               Select Genres {values.genres && `(${values.genres.length} Selected)`}

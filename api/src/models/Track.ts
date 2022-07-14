@@ -24,6 +24,10 @@ export class Track extends Model {
   @prop()
   description: string;
 
+  @Field({ nullable: true })
+  @prop()
+  utilityInfo?: string;
+
   @Field()
   @prop({ required: true })
   assetUrl: string;

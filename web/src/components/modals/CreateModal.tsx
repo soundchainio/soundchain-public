@@ -153,7 +153,7 @@ export const CreateModal = () => {
 
   const handleSubmit = async (values: FormValues) => {
     if (file && web3 && account && me) {
-      const { title, artworkFile, description, album, genres, releaseYear, copyright, royalty, editionQuantity } =
+      const { title, artworkFile, description, utilityInfo, album, genres, releaseYear, copyright, royalty, editionQuantity } =
         values;
       const artist = me.handle;
       const artistId = me.id;
@@ -231,6 +231,7 @@ export const CreateModal = () => {
                   artistId,
                   artworkUrl,
                   description,
+                  utilityInfo,
                   genres,
                   releaseYear,
                   artistProfileId,
