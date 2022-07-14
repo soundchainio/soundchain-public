@@ -180,14 +180,32 @@ export const CreateModal = () => {
           },
         });
 
+        const metadataAttributes: Metadata['attributes'] = [
+          { trait_type: 'Artist', value: artist },
+        ]
+
+        if (album) {
+          metadataAttributes.push({ trait_type: 'Album', value: album });
+        }
+
+        if (releaseYear) {
+          metadataAttributes.push({ trait_type: 'Release Year', value: releaseYear.toString() });
+        }
+
+        if (genres) {
+          metadataAttributes.push({ trait_type: 'Genre', value: genres.join(', ') });
+        }
+
         const metadata: Metadata = {
           description,
           name: title,
           asset: `ipfs://${assetPinResult?.pinToIPFS.cid}`,
+          animation_url: `ipfs://${assetPinResult?.pinToIPFS.cid}`,
           album,
           artist,
           releaseYear,
           genres,
+          attributes: metadataAttributes
         };
 
         let artworkUrl: string;
@@ -206,6 +224,7 @@ export const CreateModal = () => {
             },
           });
           metadata.art = `ipfs://${artPinResult?.pinToIPFS.cid}`;
+          metadata.image = `ipfs://${artPinResult?.pinToIPFS.cid}`;
         }
 
         const { data: metadataPinResult } = await pinJsonToIPFS({
