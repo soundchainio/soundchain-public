@@ -1,0 +1,15 @@
+fragment TrackEditionFields on TrackEdition {
+  id
+  editionId
+  transactionHash
+  contract
+  listed
+  marketplace
+  editionId
+  editionSize
+  createdAt
+  updatedAt
+  editionData {
+    pendingRequest
+  }
+}

@@ -10,6 +10,7 @@ import {
 } from '../../types/web3-v1-contracts/SoundchainAuction';
 import { ItemCanceled, ItemListed, ItemSold, ItemUpdated } from '../../types/web3-v1-contracts/SoundchainMarketplace';
 import { EditionCreated } from '../../types/web3-v2-contracts/Soundchain721Editions';
+import { EditionCanceled, EditionListed } from '../../types/web3-v2-contracts/SoundchainMarketplaceEditions';
 import { FailedEventModel } from '../models/FailedEvent';
 import { Context } from '../types/Context';
 import { PendingRequest } from '../types/PendingRequest';
@@ -28,7 +29,9 @@ type ReturnTypes =
   | ItemSold['returnValues']
   | ItemUpdated['returnValues']
   | Transfer
-  | EditionCreated;
+  | EditionCreated
+  | EditionListed
+  | EditionCanceled;
 
 function _execute<T extends ReturnTypes>(f: (returnValues: T, context: Context) => Promise<void>) {
   return async function (this: any, ...args: [returnValues: T, context: Context]) {
@@ -98,6 +101,20 @@ const processItemCanceled = async (returnValues: ItemCanceled['returnValues'], c
   console.log('ItemCanceled');
 };
 
+const processEditionListed = async (event: EditionListed, context: Context): Promise<void> => {
+  const { returnValues, address } = event;
+  const { editionId, nft } = returnValues;
+  await context.trackEditionService.markEditionListed(parseInt(editionId), nft, address);
+  console.log('EditionListed');
+};
+
+const processEditionCanceled = async (event: EditionCanceled, context: Context): Promise<void> => {
+  const { returnValues} = event;
+  const { editionId, nft } = returnValues;
+  await context.trackEditionService.markEditionUnlisted(parseInt(editionId), nft);
+  console.log('EditionCanceled');
+};
+
 const processTransfer = async (event: Transfer, context: Context): Promise<void> => {
   const { transactionHash, address, returnValues } = event;
   if (returnValues.from === zeroAddress) {
@@ -118,12 +135,18 @@ const processTransfer = async (event: Transfer, context: Context): Promise<void>
 };
 
 const processEditionCreated = async (event: EditionCreated, context: Context): Promise<void> => {
-  const { transactionHash, returnValues } = event;
+  const { transactionHash, returnValues, address } = event;
 
   const trackEdition = await context.trackEditionService.createTrackEdition({
     transactionHash,
     editionId: Number(returnValues.editionNumber),
     editionSize: Number(returnValues.quantity),
+    contract: address,
+    editionData: {
+      pendingRequest: PendingRequest.None,
+      transactionHash,
+      contract: address,
+    }
   });
   await context.trackService.updateTracksByTransactionHash(transactionHash, { trackEditionId: trackEdition._id });
 
@@ -250,6 +273,8 @@ export const itemEvents = {
   sold: _execute(processItemSold),
   updated: _execute(processItemUpdated),
   canceled: _execute(processItemCanceled),
+  editionListed: _execute(processEditionListed),
+  editionCanceled: _execute(processEditionCanceled),
 };
 
 export const nftEvents = {

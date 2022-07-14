@@ -35,13 +35,7 @@ fragment ListingItemComponentFields on TrackWithListingItem {
     pendingTime
   }
   trackEdition {
-    id
-    editionId
-    transactionHash
-    editionId
-    editionSize
-    createdAt
-    updatedAt
+    ...TrackEditionFields
   }
   listingItem {
     id
