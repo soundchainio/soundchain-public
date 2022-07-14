@@ -234,7 +234,8 @@ export type CreateAuctionItemType = {
 };
 
 export type CreateMultipleTracksInput = {
-  amount: Scalars['Int'];
+  editionId: Scalars['String'];
+  editionSize: Scalars['Int'];
   track: CreateTrackInput;
 };
 
@@ -274,6 +275,16 @@ export type CreateRepostPayload = {
   __typename?: 'CreateRepostPayload';
   post: Post;
   originalPost: Post;
+};
+
+export type CreateTrackEditionInput = {
+  transactionHash: Scalars['String'];
+  editionSize: Scalars['Int'];
+};
+
+export type CreateTrackEditionPayload = {
+  __typename?: 'CreateTrackEditionPayload';
+  trackEdition: TrackEdition;
 };
 
 export type CreateTrackInput = {
@@ -367,6 +378,7 @@ export type EditionDataType = {
   pendingRequest: Maybe<PendingRequest>;
   pendingTime: Maybe<Scalars['DateTime']>;
   contract: Maybe<Scalars['String']>;
+  owner: Maybe<Scalars['String']>;
 };
 
 export type ExplorePayload = {
@@ -618,6 +630,7 @@ export type Mutation = {
   createProfileVerificationRequest: ProfileVerificationRequestPayload;
   updateProfileVerificationRequest: ProfileVerificationRequestPayload;
   removeProfileVerificationRequest: ProfileVerificationRequestPayload;
+  createTrackEdition: CreateTrackEditionPayload;
   createTrack: CreateTrackPayload;
   createMultipleTracks: CreateMultipleTracksPayload;
   updateTrack: UpdateTrackPayload;
@@ -750,6 +763,11 @@ export type MutationUpdateProfileVerificationRequestArgs = {
 
 export type MutationRemoveProfileVerificationRequestArgs = {
   id: Scalars['String'];
+};
+
+
+export type MutationCreateTrackEditionArgs = {
+  input: CreateTrackEditionInput;
 };
 
 
@@ -2185,6 +2203,22 @@ export type CreateTrackMutation = (
   ) }
 );
 
+export type CreateTrackEditionMutationVariables = Exact<{
+  input: CreateTrackEditionInput;
+}>;
+
+
+export type CreateTrackEditionMutation = (
+  { __typename?: 'Mutation' }
+  & { createTrackEdition: (
+    { __typename?: 'CreateTrackEditionPayload' }
+    & { trackEdition: (
+      { __typename?: 'TrackEdition' }
+      & Pick<TrackEdition, 'id'>
+    ) }
+  ) }
+);
+
 export type CreateWhitelistEntryMutationVariables = Exact<{
   input: CreateWhitelistEntryInput;
 }>;
@@ -3188,7 +3222,7 @@ export type TrackEditionFieldsFragment = (
   & Pick<TrackEdition, 'id' | 'editionId' | 'transactionHash' | 'contract' | 'listed' | 'marketplace' | 'editionSize' | 'createdAt' | 'updatedAt'>
   & { editionData: Maybe<(
     { __typename?: 'EditionDataType' }
-    & Pick<EditionDataType, 'pendingRequest' | 'pendingTime' | 'transactionHash' | 'contract'>
+    & Pick<EditionDataType, 'pendingRequest' | 'pendingTime' | 'transactionHash' | 'contract' | 'owner'>
   )> }
 );
 
@@ -3727,6 +3761,7 @@ export const TrackEditionFieldsFragmentDoc = gql`
     pendingTime
     transactionHash
     contract
+    owner
   }
 }
     `;
@@ -4817,6 +4852,41 @@ export function useCreateTrackMutation(baseOptions?: Apollo.MutationHookOptions<
 export type CreateTrackMutationHookResult = ReturnType<typeof useCreateTrackMutation>;
 export type CreateTrackMutationResult = Apollo.MutationResult<CreateTrackMutation>;
 export type CreateTrackMutationOptions = Apollo.BaseMutationOptions<CreateTrackMutation, CreateTrackMutationVariables>;
+export const CreateTrackEditionDocument = gql`
+    mutation CreateTrackEdition($input: CreateTrackEditionInput!) {
+  createTrackEdition(input: $input) {
+    trackEdition {
+      id
+    }
+  }
+}
+    `;
+export type CreateTrackEditionMutationFn = Apollo.MutationFunction<CreateTrackEditionMutation, CreateTrackEditionMutationVariables>;
+
+/**
+ * __useCreateTrackEditionMutation__
+ *
+ * To run a mutation, you first call `useCreateTrackEditionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateTrackEditionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createTrackEditionMutation, { data, loading, error }] = useCreateTrackEditionMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateTrackEditionMutation(baseOptions?: Apollo.MutationHookOptions<CreateTrackEditionMutation, CreateTrackEditionMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateTrackEditionMutation, CreateTrackEditionMutationVariables>(CreateTrackEditionDocument, options);
+      }
+export type CreateTrackEditionMutationHookResult = ReturnType<typeof useCreateTrackEditionMutation>;
+export type CreateTrackEditionMutationResult = Apollo.MutationResult<CreateTrackEditionMutation>;
+export type CreateTrackEditionMutationOptions = Apollo.BaseMutationOptions<CreateTrackEditionMutation, CreateTrackEditionMutationVariables>;
 export const CreateWhitelistEntryDocument = gql`
     mutation CreateWhitelistEntry($input: CreateWhitelistEntryInput!) {
   createWhitelistEntry(input: $input) {

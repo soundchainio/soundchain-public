@@ -2,11 +2,14 @@ import { ObjectId } from 'mongodb';
 import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
 import { CurrentUser } from '../decorators/current-user';
 import { FavoriteProfileTrackModel } from '../models/FavoriteProfileTrack';
+import { ListingItem } from '../models/ListingItem';
 import { Track } from '../models/Track';
 import { TrackEdition } from '../models/TrackEdition';
 import { User } from '../models/User';
 import { FavoriteCount } from '../services/TrackService';
 import { Context } from '../types/Context';
+import { CreateMultipleTracksInput } from '../types/CreateMultipleTracksInput';
+import { CreateMultipleTracksPayload } from '../types/CreateMultipleTracksPayload';
 import { CreateTrackInput } from '../types/CreateTrackInput';
 import { CreateTrackPayload } from '../types/CreateTrackPayload';
 import { DeleteTrackInput } from '../types/DeleteTrackInput';
@@ -21,13 +24,10 @@ import { SortListingItemInput } from '../types/SortListingItemInput';
 import { SortTrackInput } from '../types/SortTrackInput';
 import { ToggleFavoritePayload } from '../types/ToggleFavoritePayload';
 import { TrackConnection } from '../types/TrackConnection';
+import { UpdateEditionOwnedTracksInput } from '../types/UpdateEditionOwnedTracksInput';
+import { UpdateEditionOwnedTracksPayload } from '../types/UpdateEditionOwnedTracksPayload';
 import { UpdateTrackInput } from '../types/UpdateTrackInput';
 import { UpdateTrackPayload } from '../types/UpdateTrackPayload';
-import { CreateMultipleTracksPayload } from '../types/CreateMultipleTracksPayload';
-import { CreateMultipleTracksInput } from '../types/CreateMultipleTracksInput';
-import { UpdateEditionOwnedTracksPayload } from '../types/UpdateEditionOwnedTracksPayload';
-import { UpdateEditionOwnedTracksInput } from '../types/UpdateEditionOwnedTracksInput';
-import { ListingItem } from '../models/ListingItem';
 
 @Resolver(Track)
 export class TrackResolver {
@@ -141,7 +141,13 @@ export class TrackResolver {
     @CurrentUser() { profileId }: User,
     @Arg('input') input: CreateMultipleTracksInput,
   ): Promise<CreateMultipleTracksPayload> {
-    const [track, ...otherTracks] = await trackService.createMultipleTracks(profileId, input);
+    const trackModel = input.track as Track;
+    trackModel.trackEditionId = input.editionId;
+
+    const [track, ...otherTracks] = await trackService.createMultipleTracks(profileId, {
+      editionSize: input.editionSize,
+      track: trackModel,
+    });
     await postService.createPost({
       profileId,
       trackId: track._id,
@@ -166,7 +172,7 @@ export class TrackResolver {
   @Mutation(() => UpdateEditionOwnedTracksPayload)
   @Authorized()
   async updateEditionOwnedTracks(
-    @Ctx() {  trackService }: Context,
+    @Ctx() { trackService }: Context,
     @Arg('input') { trackEditionId, owner, ...changes }: UpdateEditionOwnedTracksInput,
   ): Promise<UpdateEditionOwnedTracksPayload> {
     const tracks = await trackService.updateEditionOwnedTracks(trackEditionId, owner, changes);

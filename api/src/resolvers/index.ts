@@ -28,6 +28,7 @@ import { ProfileResolver } from './ProfileResolver';
 import { ProfileVerificationRequestResolver } from './ProfileVerificationRequestResolver';
 import { ReactionNotificationResolver } from './ReactionNotificationResolver';
 import { ReactionResolver } from './ReactionResolver';
+import { TrackEditionResolver } from './TrackEditionResolver';
 import { TrackResolver } from './TrackResolver';
 import { UploadResolver } from './UploadResolver';
 import { UserResolver } from './UserResolver';
@@ -72,4 +73,5 @@ export const resolvers = [
   WonAuctionNotificationResolver,
   WhitelistEntryResolver,
   AudioHolderResolver,
+  TrackEditionResolver,
 ] as const;

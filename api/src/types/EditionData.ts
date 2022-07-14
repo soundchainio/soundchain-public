@@ -21,4 +21,8 @@ export class EditionData {
   @Field({ nullable: true })
   @prop()
   contract: string;
+
+  @Field({ nullable: true })
+  @prop()
+  owner: string;
 }

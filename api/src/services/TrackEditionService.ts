@@ -3,6 +3,10 @@ import { Context } from '../types/Context';
 import { PendingRequest } from '../types/PendingRequest';
 import { ModelService } from './ModelService';
 
+type RecursivePartial<T> = {
+  [P in keyof T]?: T[P] extends Date ? T[P] : RecursivePartial<T[P]>;
+};
+
 export class TrackEditionService extends ModelService<typeof TrackEdition> {
   constructor(context: Context) {
     super(context, TrackEditionModel);
@@ -29,8 +33,8 @@ export class TrackEditionService extends ModelService<typeof TrackEdition> {
   async markEditionUnlisted(editionId: number, nft: string): Promise<void> {
     await this.model.updateOne(
       { editionId, contract: nft },
-      { 
-        listed: false, 
+      {
+        listed: false,
         marketplace: null,
         $set: {
           'editionData.pendingRequest': PendingRequest.None,
@@ -48,5 +52,12 @@ export class TrackEditionService extends ModelService<typeof TrackEdition> {
       },
       { 'editionData.pendingRequest': PendingRequest.None },
     );
+  }
+
+  async updateTrackEditionByTransactionHash(
+    transactionHash: string,
+    changes: RecursivePartial<TrackEdition>,
+  ): Promise<void> {
+    await this.model.updateOne({ transactionHash: transactionHash }, { ...changes });
   }
 }

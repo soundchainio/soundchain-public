@@ -9,7 +9,7 @@ import { NotificationModel } from '../models/Notification';
 import { PendingTrackModel } from '../models/PendingTrack';
 import { PostModel } from '../models/Post';
 import { Track, TrackModel } from '../models/Track';
-import { TrackEdition, TrackEditionModel } from '../models/TrackEdition';
+import { TrackEditionModel } from '../models/TrackEdition';
 import { TrackWithListingItem } from '../models/TrackWithListingItem';
 import { Context } from '../types/Context';
 import { FilterBuyNowItemInput } from '../types/FilterBuyNowItemInput';
@@ -71,9 +71,12 @@ export class TrackService extends ModelService<typeof Track> {
     return track;
   }
 
-  async createMultipleTracks(profileId: string, data: { track: Partial<Track>; amount: number }): Promise<Track[]> {
+  async createMultipleTracks(
+    profileId: string,
+    data: { track: Partial<Track>; editionSize: number },
+  ): Promise<Track[]> {
     return await Promise.all(
-      Array(data.amount)
+      Array(data.editionSize)
         .fill(null)
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         .map(_ => {
@@ -124,15 +127,15 @@ export class TrackService extends ModelService<typeof Track> {
   async updateEditionOwnedTracks(trackEditionId: string, owner: string, changes: RecursivePartial<Track>): Promise<Track[]> {
     const { nftData: newNftData, ...data } = changes;
 
-    await TrackEditionModel.updateOne({ _id: trackEditionId }, 
-      { 
-        $set: { 
+    await TrackEditionModel.updateOne({ _id: trackEditionId },
+      {
+        $set: {
           'editinoData.pendingRequest': newNftData.pendingRequest,
           'editionData.pendingTime': newNftData.pendingTime,
         }
       }
     );
-    
+
     await this.model.updateMany(
       { 'nftData.owner': owner, trackEditionId: trackEditionId },
       {

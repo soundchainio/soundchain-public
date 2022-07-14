@@ -1,17 +1,13 @@
 import { Max, Min } from 'class-validator';
 import { Field, InputType, Int } from 'type-graphql';
-import { CreateTrackInput } from './CreateTrackInput';
 
 @InputType()
-export class CreateMultipleTracksInput {
+export class CreateTrackEditionInput {
   @Field()
-  editionId: string;
+  transactionHash: string;
 
   @Min(1)
   @Max(1000)
   @Field(() => Int)
   editionSize: number;
-
-  @Field()
-  track: CreateTrackInput;
 }

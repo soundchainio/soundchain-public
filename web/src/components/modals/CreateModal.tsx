@@ -15,9 +15,11 @@ import {
   ExploreTracksDocument,
   FeedDocument,
   PendingRequest,
-  PostsDocument, Track,
+  PostsDocument,
+  Track,
   TracksDocument,
-  TracksQuery, useCreateMultipleTracksMutation,
+  TracksQuery,
+  useCreateMultipleTracksMutation,
   usePinJsonToIpfsMutation,
   usePinToIpfsMutation
 } from 'lib/graphql';
@@ -50,7 +52,7 @@ export const CreateModal = () => {
   const [newTrack, setNewTrack] = useState<CreateTrackMutation['createTrack']['track']>();
 
   const { upload } = useUpload();
-  const [createMultipleTracks] = useCreateMultipleTracksMutation()
+  const [createMultipleTracks] = useCreateMultipleTracksMutation();
 
   const { web3, account } = useWalletContext();
   const [pinToIPFS] = usePinToIpfsMutation();
@@ -222,7 +224,8 @@ export const CreateModal = () => {
           await createMultipleTracks({
             variables: {
               input: {
-                amount: values.editionQuantity,
+                editionId: "",
+                editionSize: values.editionQuantity,
                 track: {
                   assetUrl,
                   title,
@@ -243,12 +246,12 @@ export const CreateModal = () => {
                     owner: account,
                     pendingTime: new Date().toISOString(),
                   },
-                }
-              }
+                },
+              },
             },
 
             update: (cache, { data: createMultipleTracksData }) => {
-              setNewTrack(createMultipleTracksData?.createMultipleTracks.firstTrack)
+              setNewTrack(createMultipleTracksData?.createMultipleTracks.firstTrack);
 
               const variables = { filter: { nftData: { owner: account } } };
 
@@ -261,10 +264,14 @@ export const CreateModal = () => {
                 return;
               }
 
-              const newTracks = createMultipleTracksData?.createMultipleTracks.trackIds.map((trackId) => ({
-                ...createMultipleTracksData?.createMultipleTracks.firstTrack,
-                id: trackId,
-              } as Track)) || []
+              const newTracks =
+                createMultipleTracksData?.createMultipleTracks.trackIds.map(
+                  trackId =>
+                    ({
+                      ...createMultipleTracksData?.createMultipleTracks.firstTrack,
+                      id: trackId,
+                    } as Track),
+                ) || [];
 
               cache.writeQuery({
                 query: TracksDocument,
@@ -279,7 +286,7 @@ export const CreateModal = () => {
               });
             },
             refetchQueries: [FeedDocument, PostsDocument, ExploreTracksDocument],
-          })
+          });
           dispatchShowCreateModal(true);
           setMintingState(undefined);
           setTransactionHash(transactionHash);
