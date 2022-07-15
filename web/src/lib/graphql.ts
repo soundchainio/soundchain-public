@@ -248,7 +248,7 @@ export type CreatePostInput = {
   body: Scalars['String'];
   mediaLink?: Maybe<Scalars['String']>;
   trackId?: Maybe<Scalars['String']>;
-  trackTransactionHash?: Maybe<Scalars['String']>;
+  trackEditionId?: Maybe<Scalars['String']>;
 };
 
 export type CreatePostPayload = {
@@ -278,6 +278,7 @@ export type CreateRepostPayload = {
 
 export type CreateTrackEditionInput = {
   transactionHash: Scalars['String'];
+  editionId: Scalars['Float'];
   editionSize: Scalars['Int'];
 };
 

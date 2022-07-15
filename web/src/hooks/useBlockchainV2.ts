@@ -461,9 +461,18 @@ class MintNftTokensToEdition extends BlockchainFunction<MintNftTokensToEditionPa
       toAddress,
       uri,
       editionNumber,
-      quantity
-    )
-    const gas = await transactionObject.estimateGas({ from });
+      quantity,
+    );
+
+    let gas = 0;
+    while (!gas) {
+      try {
+        gas = await transactionObject.estimateGas({ from });
+      } catch {
+        setTimeout(() => console.log('Retrying estimate gas'), 1000);
+      }
+    }
+    console.log('Gas estimated: ' + gas);
 
     await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice, nonce }));
 

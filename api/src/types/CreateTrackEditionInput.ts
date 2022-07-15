@@ -6,6 +6,9 @@ export class CreateTrackEditionInput {
   @Field()
   transactionHash: string;
 
+  @Field()
+  editionId: number;
+
   @Min(1)
   @Max(1000)
   @Field(() => Int)
