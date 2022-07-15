@@ -34,7 +34,7 @@ import { Metadata } from 'types/NftTypes';
 import { genres } from 'utils/Genres';
 import { MintingDone } from './MintingDone';
 
-const BATCH_SIZE = 150;
+const BATCH_SIZE = 120;
 
 enum Tabs {
   NFT = 'NFT',
