@@ -124,6 +124,16 @@ export class TrackResolver {
     return trackService.getTracks(filter, sort, page);
   }
 
+  @Query(() => TrackConnection)
+  groupedTracks(
+    @Ctx() { trackService }: Context,
+    @Arg('filter', { nullable: true }) filter?: FilterTrackInput,
+    @Arg('sort', { nullable: true }) sort?: SortTrackInput,
+    @Arg('page', { nullable: true }) page?: PageInput,
+  ): Promise<TrackConnection> {
+    return trackService.getGroupedTracks(filter, sort, page);
+  }
+
   @Mutation(() => CreateMultipleTracksPayload)
   @Authorized()
   async createMultipleTracks(

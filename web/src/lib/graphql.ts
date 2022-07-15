@@ -1157,6 +1157,7 @@ export type Query = {
   pendingRequestsBadgeNumber: Scalars['Float'];
   track: Track;
   tracks: TrackConnection;
+  groupedTracks: TrackConnection;
   favoriteTracks: TrackConnection;
   listingItems: ListingItemConnection;
   buyNowListingItems: ListingItemConnection;
@@ -1357,6 +1358,13 @@ export type QueryTrackArgs = {
 
 
 export type QueryTracksArgs = {
+  page?: Maybe<PageInput>;
+  sort?: Maybe<SortTrackInput>;
+  filter?: Maybe<FilterTrackInput>;
+};
+
+
+export type QueryGroupedTracksArgs = {
   page?: Maybe<PageInput>;
   sort?: Maybe<SortTrackInput>;
   filter?: Maybe<FilterTrackInput>;
@@ -2493,6 +2501,27 @@ export type GetOriginalPostFromTrackQuery = (
   & { getOriginalPostFromTrack: (
     { __typename?: 'Post' }
     & PostComponentFieldsFragment
+  ) }
+);
+
+export type GroupedTracksQueryVariables = Exact<{
+  filter?: Maybe<FilterTrackInput>;
+  sort?: Maybe<SortTrackInput>;
+  page?: Maybe<PageInput>;
+}>;
+
+
+export type GroupedTracksQuery = (
+  { __typename?: 'Query' }
+  & { groupedTracks: (
+    { __typename?: 'TrackConnection' }
+    & { nodes: Array<(
+      { __typename?: 'Track' }
+      & TrackComponentFieldsFragment
+    )>, pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
+    ) }
   ) }
 );
 
@@ -5440,6 +5469,50 @@ export function useGetOriginalPostFromTrackLazyQuery(baseOptions?: Apollo.LazyQu
 export type GetOriginalPostFromTrackQueryHookResult = ReturnType<typeof useGetOriginalPostFromTrackQuery>;
 export type GetOriginalPostFromTrackLazyQueryHookResult = ReturnType<typeof useGetOriginalPostFromTrackLazyQuery>;
 export type GetOriginalPostFromTrackQueryResult = Apollo.QueryResult<GetOriginalPostFromTrackQuery, GetOriginalPostFromTrackQueryVariables>;
+export const GroupedTracksDocument = gql`
+    query GroupedTracks($filter: FilterTrackInput, $sort: SortTrackInput, $page: PageInput) {
+  groupedTracks(filter: $filter, sort: $sort, page: $page) {
+    nodes {
+      ...TrackComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+      totalCount
+    }
+  }
+}
+    ${TrackComponentFieldsFragmentDoc}`;
+
+/**
+ * __useGroupedTracksQuery__
+ *
+ * To run a query within a React component, call `useGroupedTracksQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGroupedTracksQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGroupedTracksQuery({
+ *   variables: {
+ *      filter: // value for 'filter'
+ *      sort: // value for 'sort'
+ *      page: // value for 'page'
+ *   },
+ * });
+ */
+export function useGroupedTracksQuery(baseOptions?: Apollo.QueryHookOptions<GroupedTracksQuery, GroupedTracksQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GroupedTracksQuery, GroupedTracksQueryVariables>(GroupedTracksDocument, options);
+      }
+export function useGroupedTracksLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GroupedTracksQuery, GroupedTracksQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GroupedTracksQuery, GroupedTracksQueryVariables>(GroupedTracksDocument, options);
+        }
+export type GroupedTracksQueryHookResult = ReturnType<typeof useGroupedTracksQuery>;
+export type GroupedTracksLazyQueryHookResult = ReturnType<typeof useGroupedTracksLazyQuery>;
+export type GroupedTracksQueryResult = Apollo.QueryResult<GroupedTracksQuery, GroupedTracksQueryVariables>;
 export const HaveBidedDocument = gql`
     query HaveBided($auctionId: String!, $bidder: String!) {
   haveBided(auctionId: $auctionId, bidder: $bidder) {

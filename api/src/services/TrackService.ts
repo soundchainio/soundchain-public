@@ -60,6 +60,47 @@ export class TrackService extends ModelService<typeof Track> {
     return this.paginate({ filter: { ...defaultFilter, ...dotNotationFilter, ...owner }, sort, page });
   }
 
+  getGroupedTracks(filter?: FilterTrackInput, sort?: SortTrackInput, page?: PageInput): Promise<PaginateResult<Track>> {
+    const defaultFilter = { title: { $exists: true }, deleted: false };
+    const dotNotationFilter = filter && dot.dot(filter);
+    const owner = filter?.nftData?.owner && {
+      'nftData.owner': { $regex: `^${filter.nftData.owner}$`, $options: 'i' },
+    };
+    return this.paginatePipelineAggregated({
+      aggregation: [
+        { $match: { ...defaultFilter, ...dotNotationFilter, ...owner } },
+        {
+          $group: {
+            _id: {
+              $ifNull: [
+                '$trackEditionId',
+                '$trackId',
+              ]
+            },
+            sumPlaybackCount: { $sum: '$playbackCount' },
+            sumFavoriteCount: { $sum: '$favoriteCount' },
+            first: { $first: '$$ROOT' }
+          },
+        },
+        {
+          $replaceRoot: {
+            newRoot: {
+              $mergeObjects: [
+                '$first',
+                { 
+                  playbackCount: '$sumPlaybackCount',
+                  favoriteCount: '$sumFavoriteCount'
+                },
+              ]
+            }
+          }
+        }
+      ],
+      sort,
+      page,
+    })
+  }
+
   getTrack(id: string): Promise<Track> {
     return this.findOrFail(id);
   }
