@@ -66,6 +66,15 @@ export class TrackService extends ModelService<typeof Track> {
     const owner = filter?.nftData?.owner && {
       'nftData.owner': { $regex: `^${filter.nftData.owner}$`, $options: 'i' },
     };
+
+    if (dotNotationFilter['trackEditionId']) {
+      dotNotationFilter['trackEditionId'] = new ObjectId(dotNotationFilter['trackEditionId']);
+    }
+
+    if (dotNotationFilter['profileId']) {
+      dotNotationFilter['profileId'] = new ObjectId(dotNotationFilter['profileId']);
+    }
+
     return this.paginatePipelineAggregated({
       aggregation: [
         { $match: { ...defaultFilter, ...dotNotationFilter, ...owner } },
