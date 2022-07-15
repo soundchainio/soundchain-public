@@ -52,10 +52,8 @@ export class TrackResolver {
   }
 
   @FieldResolver(() => Number)
-  favoriteCount(@Ctx() { trackService }: Context, @Root() { _id: trackId, trackEditionId, favoriteCount }: Track): Promise<FavoriteCount> {
-    return trackEditionId ?
-      trackService.favoriteCount(trackId, trackEditionId) :
-      Promise.resolve({ count: favoriteCount });
+  favoriteCount(@Ctx() { trackService }: Context, @Root() { _id: trackId, trackEditionId }: Track): Promise<FavoriteCount> {
+    return trackService.favoriteCount(trackId, trackEditionId);
   }
 
   @FieldResolver(() => Number)
