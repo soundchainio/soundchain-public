@@ -213,7 +213,7 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
           me={me}
         />
         <div>{nftData && editionData && <MintingData transactionHash={editionData.transactionHash} ipfsCid={nftData.ipfsCid} />}</div>
-        <OwnedList data={ownedTracksData} loading={ownedTracksLoading} />
+        <OwnedList data={ownedTracksData} loading={ownedTracksLoading} canList={canList} />
         <Listings data={data} loading={loadingListingItem} fetchMore={fetchMore} />
       </div>
       {me &&
@@ -320,11 +320,12 @@ function Listings(props: ListingsProps) {
 
 interface OwnedListProps {
   loading: boolean;
+  canList: boolean;
   data?: OwnedTracksQuery;
 }
 
 function OwnedList(props: OwnedListProps) {
-  const { data, loading } = props;
+  const { data, canList, loading } = props;
 
   const nodes = data?.tracks.nodes;
   const pageInfo = data?.tracks.pageInfo;
@@ -346,6 +347,7 @@ function OwnedList(props: OwnedListProps) {
               {nodes?.map(item => (
                 <OwnedEditionListItem
                   key={item.id}
+                  canList={canList}
                   trackId={item.id}
                   tokenId={item.nftData?.tokenId || 0}
                   listingItem={item.listingItem}
