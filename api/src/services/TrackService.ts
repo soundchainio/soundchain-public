@@ -114,6 +114,21 @@ export class TrackService extends ModelService<typeof Track> {
     return this.findOrFail(id);
   }
 
+  async getTrackFromEdition(id: string, trackEditionId?: string): Promise<Track> {
+    const ors: any[] = [{ _id: id }];
+    if (trackEditionId) {
+      ors.push({ trackEditionId: new ObjectId(trackEditionId) });
+    }
+
+    const entity = await this.model.findOne({ $or: ors });
+
+    if (!entity) {
+      throw new NotFoundError('Track', id);
+    }
+
+    return entity;
+  }
+
   async createTrack(profileId: string, data: Partial<Track>, asset: Asset): Promise<Track> {
     const track = new this.model({ profileId, ...data });
     track.muxAsset = { id: asset.id, playbackId: asset.playback_ids[0].id };

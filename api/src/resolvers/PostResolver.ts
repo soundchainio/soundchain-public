@@ -78,9 +78,9 @@ export class PostResolver {
   }
 
   @FieldResolver(() => Track, { nullable: true })
-  async track(@Ctx() { trackService }: Context, @Root() { trackId }: Post): Promise<Track | null> {
+  async track(@Ctx() { trackService }: Context, @Root() { trackId, trackEditionId }: Post): Promise<Track | null> {
     if (!trackId) return null;
-    return trackService.getTrack(trackId);
+    return trackService.getTrackFromEdition(trackId, trackEditionId);
   }
 
   @Query(() => Post)
