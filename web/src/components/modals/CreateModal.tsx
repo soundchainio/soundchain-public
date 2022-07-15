@@ -29,9 +29,7 @@ import * as musicMetadata from 'music-metadata-browser';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { EventData } from 'types/BlockchainEvents';
 import { Metadata } from 'types/NftTypes';
-import { EditionCreated } from 'types/web3-v2-contracts/Soundchain721Editions';
 import { genres } from 'utils/Genres';
 import { TransactionReceipt } from 'web3-core/types';
 import { MintingDone } from './MintingDone';
@@ -252,12 +250,12 @@ export const CreateModal = () => {
           setMintError(true);
         };
 
-        const onMintingTracks = async (transactionHash: string, trackEditionId: string) => {
+        const onMintingTracks = async (transactionHash: string, trackEditionId: string, quantity: number) => {
           setMintingState('Creating your track');
           await createMultipleTracks({
             variables: {
               input: {
-                batchSize: 150,
+                batchSize: quantity,
                 track: {
                   assetUrl,
                   title,
@@ -320,10 +318,9 @@ export const CreateModal = () => {
             },
             refetchQueries: [FeedDocument, PostsDocument, ExploreTracksDocument],
           });
-          dispatchShowCreateModal(true);
-          setMintingState(undefined);
-          setTransactionHash(transactionHash);
         };
+
+        let nonce = await web3?.eth.getTransactionCount(account)
 
         const onCreateEdition = async (receipt: TransactionReceipt) => {
           if(!receipt.status){
@@ -332,9 +329,8 @@ export const CreateModal = () => {
 
           setMintingState('Creating your Edition');
 
-          const events = receipt.events as unknown as EventData[]
-          const editionCreated = (events.find(event => event.event === "EditionCreated") as unknown as EditionCreated).returnValues
-          const editionNumber = Number(editionCreated)
+          const editionCreated = receipt.events?.["EditionCreated"]
+          const editionNumber = Number(editionCreated?.returnValues.editionNumber)
 
           const { data } = await createTrackEdition({
             variables: { input: { transactionHash: receipt.transactionHash, editionSize: values.editionQuantity } },
@@ -349,17 +345,23 @@ export const CreateModal = () => {
 
           let quantityLeft = values.editionQuantity
           for (let index = 0; index < values.editionQuantity; index += BATCH_SIZE) {
-            const quantity = quantityLeft >= BATCH_SIZE ? BATCH_SIZE : quantityLeft
-            mintNftTokensToEdition(`ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`, account, account, editionNumber, quantity)
-            .onReceipt(receipt => onMintingTracks(receipt.transactionHash, trackEditionId))
+            nonce++
+            const quantity = quantityLeft <= BATCH_SIZE ? quantityLeft : BATCH_SIZE
+
+            mintNftTokensToEdition(`ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`, account, account, editionNumber, quantity, nonce)
+            .onReceipt(receipt => onMintingTracks(receipt.transactionHash, trackEditionId, quantity))
             .onError(onError)
             .execute(web3);
             quantityLeft = quantityLeft - BATCH_SIZE
           }
+
+          dispatchShowCreateModal(true);
+          setMintingState(undefined);
+          setTransactionHash(transactionHash);
         };
 
         setMintingState('Minting Edition');
-        createEdition(account, account, royalty, editionQuantity)
+        createEdition(account, account, royalty, editionQuantity, nonce)
           .onReceipt(receipt => onCreateEdition(receipt))
           .onError(onError)
           .execute(web3);

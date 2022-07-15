@@ -449,10 +449,11 @@ interface MintNftTokensToEditionParams extends DefaultParam {
   toAddress: string;
   editionNumber: number;
   quantity: number;
+  nonce: number;
 }
 class MintNftTokensToEdition extends BlockchainFunction<MintNftTokensToEditionParams> {
   execute = async (web3: Web3) => {
-    const { from, uri, toAddress, editionNumber, quantity } = this.params;
+    const { from, uri, toAddress, editionNumber, quantity, nonce } = this.params;
 
     this.web3 = web3;
 
@@ -464,7 +465,7 @@ class MintNftTokensToEdition extends BlockchainFunction<MintNftTokensToEditionPa
     )
     const gas = await transactionObject.estimateGas({ from });
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }));
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice, nonce }));
 
     return this.receipt;
   };
@@ -474,10 +475,11 @@ interface CreateEditionParams extends DefaultParam {
   editionQuantity: number;
   toAddress: string;
   royaltyPercentage: number;
+  nonce: number;
 }
 class CreateEdition extends BlockchainFunction<CreateEditionParams> {
   execute = async (web3: Web3) => {
-    const { from, editionQuantity, toAddress, royaltyPercentage } = this.params;
+    const { from, editionQuantity, toAddress, royaltyPercentage, nonce } = this.params;
     this.web3 = web3;
 
     const transactionObject = nftContractEditions(web3).methods.createEdition(
@@ -487,7 +489,7 @@ class CreateEdition extends BlockchainFunction<CreateEditionParams> {
     );
     const gas = await transactionObject.estimateGas({ from });
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }));
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice, nonce }));
 
     return this.receipt;
   };
@@ -652,14 +654,14 @@ const useBlockchainV2 = () => {
     [me],
   );
   const mintNftTokensToEdition = useCallback(
-    (uri: string, from: string, toAddress: string, editionNumber: number, quantity: number) => {
-      return new MintNftTokensToEdition(me, { from, toAddress, uri, editionNumber, quantity });
+    (uri: string, from: string, toAddress: string, editionNumber: number, quantity: number, nonce: number) => {
+      return new MintNftTokensToEdition(me, { from, toAddress, uri, editionNumber, quantity, nonce });
     },
     [me],
   );
   const createEdition = useCallback(
-    (from: string, toAddress: string, royaltyPercentage: number, editionQuantity: number) => {
-      return new CreateEdition(me, { editionQuantity, from, royaltyPercentage, toAddress });
+    (from: string, toAddress: string, royaltyPercentage: number, editionQuantity: number, nonce: number) => {
+      return new CreateEdition(me, { editionQuantity, from, royaltyPercentage, toAddress, nonce });
     },
     [me],
   );
