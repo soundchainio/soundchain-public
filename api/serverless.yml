@@ -42,14 +42,6 @@ functions:
     handler: src/lambda/processPending.processPending
     events:
       - schedule: rate(30 minutes)
-  contractMetadata:
-    handler: src/lambda/contractMetadata.contractMetadata
-    timeout: 10
-    events:
-      - http:
-          path: /contractMetadata
-          method: get
-          cors: true
 
 custom:
   db:
