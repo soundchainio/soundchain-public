@@ -31,7 +31,7 @@ export class Post extends Model {
   trackId?: string;
 
   @prop({ required: false })
-  trackTransactionHash?: string;
+  trackEditionId?: string;
 
   @Field({ nullable: true })
   @prop({ default: false })

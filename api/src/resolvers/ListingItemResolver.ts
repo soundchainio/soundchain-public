@@ -24,8 +24,8 @@ export class ListingItemResolver {
   @Query(() => String, {nullable: true})
   async cheapestListingItem(
     @Ctx() {listingItemService}: Context,
-    @Arg('transactionHash') transactionHash: string
+    @Arg('trackEditionId') trackEditionId: string
   ): Promise<string | void> {
-    return listingItemService.getCheapestListingItem(transactionHash)
+    return listingItemService.getCheapestListingItem(trackEditionId)
   }
 }

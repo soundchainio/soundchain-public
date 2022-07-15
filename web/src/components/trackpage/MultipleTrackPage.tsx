@@ -68,14 +68,14 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
   const buyNowPrice = cheapestListingItem?.cheapestListingItem
 
   useEffect(() => {
-    if (nftData?.transactionHash) {
+    if (track.trackEditionId) {
       fetchCheapestListingItem({
         variables: {
-          transactionHash: nftData.transactionHash
+          trackEditionId: track.trackEditionId,
         }
       })
     }
-  }, [fetchCheapestListingItem, nftData])
+  }, [fetchCheapestListingItem, track.trackEditionId])
 
   const {
     data,
@@ -131,13 +131,13 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
     variables: {
       page: { first: 10 },
       filter: { 
+        trackEditionId: track.trackEditionId,
         nftData: {
-          transactionHash: nftData?.transactionHash,
           owner: account,
         }
       },
     },
-    skip: !nftData?.transactionHash,
+    skip: !track.trackEditionId,
     ssr: false,
   });
 

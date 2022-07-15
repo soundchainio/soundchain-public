@@ -30,11 +30,11 @@ export class ListingItemService extends Service {
     return !!auctionItem || !!buyNowItem;
   }
 
-  async getCheapestListingItem(transactionHash: string): Promise<string | null> {
+  async getCheapestListingItem(trackEditionId: string): Promise<string | null> {
     const transactionNfts = (await TrackModel.aggregate([
       {
         '$match': {
-          'nftData.transactionHash': transactionHash,
+          'trackEditionId': trackEditionId,
         },
       },
       {

@@ -20,5 +20,5 @@ export class CreatePostInput {
 
   @Field({ nullable: true })
   @IsOptional()
-  trackTransactionHash?: string;
+  trackEditionId?: string;
 }

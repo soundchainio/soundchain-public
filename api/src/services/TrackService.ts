@@ -152,10 +152,6 @@ export class TrackService extends ModelService<typeof Track> {
     })
   }
 
-  async updateTracksByTransactionHash(transactionHash: string, changes: RecursivePartial<Track>): Promise<number> {
-    return await this.model.updateMany({ 'nftData.transactionHash': transactionHash }, { ...changes });
-  }
-
   private async updateNftData(track: DocumentType<Track>, newNftData?: Partial<NFTData>) {
     if (newNftData) {
       const trackAsData = track.toObject();
@@ -232,9 +228,13 @@ export class TrackService extends ModelService<typeof Track> {
     return await this.updateTrack(id, { nftData: { owner } });
   }
 
-  async isFavorite(trackId: string, profileId: string, trackTransactionHash: string): Promise<boolean> {
+  async isFavorite(trackId: string, profileId: string, trackEditionId: string): Promise<boolean> {
+    const ors: any[] =  [{ trackId }];
+    if (trackEditionId) {
+      ors.push({ trackEditionId });
+    }
     return await FavoriteProfileTrackModel.exists({
-      $or: [{ trackId }, { trackTransactionHash }],
+      $or: ors,
       profileId,
     });
   }
@@ -242,8 +242,13 @@ export class TrackService extends ModelService<typeof Track> {
   async toggleFavorite(trackId: string, profileId: string): Promise<FavoriteProfileTrack> {
     const track = await this.model.findOne({ _id: trackId });
 
+    const ors: any[] =  [{ trackId }];
+    if (track.trackEditionId) {
+      ors.push({ trackEditionId: track.trackEditionId });
+    }
+
     const findParams = {
-      $or: [{ trackId }, { trackTransactionHash: track.nftData.transactionHash }],
+      $or: ors,
       profileId,
     };
 
@@ -254,7 +259,7 @@ export class TrackService extends ModelService<typeof Track> {
       const favorite = new FavoriteProfileTrackModel({
         profileId,
         trackId,
-        trackTransactionHash: track.nftData.transactionHash,
+        trackEditionId: track.trackEditionId,
       });
       await favorite.save();
       return favorite;
@@ -280,11 +285,16 @@ export class TrackService extends ModelService<typeof Track> {
     });
   }
 
-  async favoriteCount(trackId: string, trackTransactionHash: string): Promise<FavoriteCount> {
+  async favoriteCount(trackId: string, trackEditionId: string): Promise<FavoriteCount> {
+    const ors: any[] =  [{ trackId: trackId.toString() }];
+    if (trackEditionId) {
+      ors.push({ trackEditionId: trackEditionId.toString() });
+    }
+
     const favTrack = await FavoriteProfileTrackModel.aggregate([
       {
         $match: {
-          $or: [{ trackId: trackId.toString() }, { trackTransactionHash: trackTransactionHash.toString() }],
+          $or: ors,
         },
       },
       {
@@ -299,16 +309,26 @@ export class TrackService extends ModelService<typeof Track> {
     return favTrack.length ? favTrack[0].count : 0;
   }
 
-  async playbackCount(trackId: string, trackTransactionHash: string): Promise<number> {
+  async playbackCount(trackId: string, trackEditionId: string): Promise<number> {
+    const ors: any[] =  [{ trackId: trackId.toString() }];
+    if (trackEditionId) {
+      ors.push({ trackEditionId: trackEditionId.toString() });
+    }
+
     const trackQuery = await this.model.aggregate([
       {
         $match: {
-          $or: [{ trackId: trackId.toString() }, { 'nftData.transactionHash': trackTransactionHash.toString() }],
+          $or: ors,
         },
       },
       {
         $group: {
-          _id: '$nftData.transactionHash',
+          _id: {
+            $ifNull: [
+              '$trackEditionId',
+              '$trackId',
+            ]
+          },
           totalPlaybackCount: {
             $sum: '$playbackCount',
           },
@@ -472,7 +492,12 @@ export class TrackService extends ModelService<typeof Track> {
       },
       {
         $group: {
-          _id: '$nftData.transactionHash',
+          _id: {
+            $ifNull: [
+              '$trackEditionId',
+              '$trackId',
+            ]
+          },
           lowestPrice: {
             $min: '$listingItem.pricePerItem',
           },
@@ -588,25 +613,5 @@ export class TrackService extends ModelService<typeof Track> {
       }
       await PendingTrackModel.updateOne({ _id }, { processed: true });
     });
-  }
-
-  async getEditionSizeByGroupingTracks(trackTransactionHash: string): Promise<number> {
-    const aggregate = [
-      {
-        $match: {
-          'nftData.transactionHash': trackTransactionHash,
-        },
-      },
-      {
-        $group: {
-          _id: '$nftData.transactionHash',
-          count: {
-            $sum: 1,
-          },
-        },
-      },
-    ];
-    const countQuery = await this.model.aggregate(aggregate);
-    return countQuery.length ? countQuery[0].count : 1;
   }
 }
