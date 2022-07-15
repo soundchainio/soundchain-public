@@ -5,6 +5,7 @@ fragment ListingItemComponentFields on TrackWithListingItem {
   assetUrl
   artworkUrl
   description
+  utilityInfo
   artist
   artistId
   artistProfileId
