@@ -2,11 +2,18 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import BN from 'bn.js';
-import { EventEmitter } from 'events';
-import { EventLog } from 'web3-core';
-import { ContractOptions } from 'web3-eth-contract';
-import { BaseContract, BlockType, Callback, ContractEventLog, NonPayableTransactionObject } from './types';
+import BN from "bn.js";
+import { ContractOptions } from "web3-eth-contract";
+import { EventLog } from "web3-core";
+import { EventEmitter } from "events";
+import {
+  Callback,
+  PayableTransactionObject,
+  NonPayableTransactionObject,
+  BlockType,
+  ContractEventLog,
+  BaseContract,
+} from "./types";
 
 export interface EventOptions {
   filter?: object;
@@ -30,11 +37,23 @@ export type ApprovalForAll = ContractEventLog<{
   1: string;
   2: boolean;
 }>;
+export type ConsecutiveTransfer = ContractEventLog<{
+  fromTokenId: string;
+  toTokenId: string;
+  from: string;
+  to: string;
+  0: string;
+  1: string;
+  2: string;
+  3: string;
+}>;
 export type EditionCreated = ContractEventLog<{
   quantity: string;
   editionNumber: string;
+  owner: string;
   0: string;
   1: string;
+  2: string;
 }>;
 export type OwnershipTransferred = ContractEventLog<{
   previousOwner: string;
@@ -52,38 +71,64 @@ export type Transfer = ContractEventLog<{
 }>;
 
 export interface Soundchain721Editions extends BaseContract {
-  constructor(jsonInterface: any[], address?: string, options?: ContractOptions): Soundchain721Editions;
+  constructor(
+    jsonInterface: any[],
+    address?: string,
+    options?: ContractOptions
+  ): Soundchain721Editions;
   clone(): Soundchain721Editions;
   methods: {
-    approve(to: string, tokenId: number | string | BN): NonPayableTransactionObject<void>;
+    approve(
+      to: string,
+      tokenId: number | string | BN
+    ): NonPayableTransactionObject<void>;
 
     balanceOf(owner: string): NonPayableTransactionObject<string>;
 
     burn(tokenId: number | string | BN): NonPayableTransactionObject<void>;
 
-    createEdition(quantity: number | string | BN): NonPayableTransactionObject<string>;
+    contractURI(): NonPayableTransactionObject<string>;
+
+    createEdition(
+      editionQuantity: number | string | BN,
+      to: string,
+      _royaltyPercentage: number | string | BN
+    ): NonPayableTransactionObject<string>;
 
     createEditionWithNFTs(
       editionQuantity: number | string | BN,
       to: string,
       _tokenURI: string,
-      _royaltyPercentage: number | string | BN,
+      _royaltyPercentage: number | string | BN
     ): NonPayableTransactionObject<string>;
 
     editions(arg0: number | string | BN): NonPayableTransactionObject<{
       quantity: string;
       numSold: string;
       numRemaining: string;
+      owner: string;
+      royaltyReceiver: string;
+      royaltyPercentage: string;
       0: string;
       1: string;
       2: string;
+      3: string;
+      4: string;
+      5: string;
     }>;
 
-    getApproved(tokenId: number | string | BN): NonPayableTransactionObject<string>;
+    getApproved(
+      tokenId: number | string | BN
+    ): NonPayableTransactionObject<string>;
 
-    getTokenIdsOfEdition(editionNumber: number | string | BN): NonPayableTransactionObject<string[]>;
+    getTokenIdsOfEdition(
+      editionNumber: number | string | BN
+    ): NonPayableTransactionObject<string[]>;
 
-    isApprovedForAll(owner: string, operator: string): NonPayableTransactionObject<boolean>;
+    isApprovedForAll(
+      owner: string,
+      operator: string
+    ): NonPayableTransactionObject<boolean>;
 
     name(): NonPayableTransactionObject<string>;
 
@@ -95,7 +140,7 @@ export interface Soundchain721Editions extends BaseContract {
 
     royaltyInfo(
       tokenId: number | string | BN,
-      _salePrice: number | string | BN,
+      _salePrice: number | string | BN
     ): NonPayableTransactionObject<{
       receiver: string;
       royaltyAmount: string;
@@ -103,53 +148,72 @@ export interface Soundchain721Editions extends BaseContract {
       1: string;
     }>;
 
-    royaltyPercentage(arg0: number | string | BN): NonPayableTransactionObject<string>;
+    royaltyPercentage(
+      arg0: number | string | BN
+    ): NonPayableTransactionObject<string>;
 
-    royaltyReceivers(arg0: number | string | BN): NonPayableTransactionObject<string>;
+    royaltyReceivers(
+      arg0: number | string | BN
+    ): NonPayableTransactionObject<string>;
 
     safeMint(
       to: string,
       _tokenURI: string,
-      _royaltyPercentage: number | string | BN,
+      _royaltyPercentage: number | string | BN
     ): NonPayableTransactionObject<void>;
 
     safeMintToEdition(
       to: string,
       _tokenURI: string,
-      _royaltyPercentage: number | string | BN,
+      editionNumber: number | string | BN
+    ): NonPayableTransactionObject<void>;
+
+    safeMintToEditionQuantity(
+      to: string,
+      _tokenURI: string,
       editionNumber: number | string | BN,
+      quantity: number | string | BN
     ): NonPayableTransactionObject<void>;
 
-    'safeTransferFrom(address,address,uint256)'(
+    "safeTransferFrom(address,address,uint256)"(
+      from: string,
+      to: string,
+      tokenId: number | string | BN
+    ): NonPayableTransactionObject<void>;
+
+    "safeTransferFrom(address,address,uint256,bytes)"(
       from: string,
       to: string,
       tokenId: number | string | BN,
+      _data: string | number[]
     ): NonPayableTransactionObject<void>;
 
-    'safeTransferFrom(address,address,uint256,bytes)'(
-      from: string,
-      to: string,
-      tokenId: number | string | BN,
-      _data: string | number[],
+    setApprovalForAll(
+      operator: string,
+      approved: boolean
     ): NonPayableTransactionObject<void>;
 
-    setApprovalForAll(operator: string, approved: boolean): NonPayableTransactionObject<void>;
-
-    supportsInterface(interfaceId: string | number[]): NonPayableTransactionObject<boolean>;
+    supportsInterface(
+      interfaceId: string | number[]
+    ): NonPayableTransactionObject<boolean>;
 
     symbol(): NonPayableTransactionObject<string>;
 
-    tokenByIndex(index: number | string | BN): NonPayableTransactionObject<string>;
+    tokenToEdition(
+      arg0: number | string | BN
+    ): NonPayableTransactionObject<string>;
 
-    tokenOfOwnerByIndex(owner: string, index: number | string | BN): NonPayableTransactionObject<string>;
-
-    tokenToEdition(arg0: number | string | BN): NonPayableTransactionObject<string>;
-
-    tokenURI(tokenId: number | string | BN): NonPayableTransactionObject<string>;
+    tokenURI(
+      tokenId: number | string | BN
+    ): NonPayableTransactionObject<string>;
 
     totalSupply(): NonPayableTransactionObject<string>;
 
-    transferFrom(from: string, to: string, tokenId: number | string | BN): NonPayableTransactionObject<void>;
+    transferFrom(
+      from: string,
+      to: string,
+      tokenId: number | string | BN
+    ): NonPayableTransactionObject<void>;
 
     transferOwnership(newOwner: string): NonPayableTransactionObject<void>;
   };
@@ -158,13 +222,28 @@ export interface Soundchain721Editions extends BaseContract {
     Approval(options?: EventOptions, cb?: Callback<Approval>): EventEmitter;
 
     ApprovalForAll(cb?: Callback<ApprovalForAll>): EventEmitter;
-    ApprovalForAll(options?: EventOptions, cb?: Callback<ApprovalForAll>): EventEmitter;
+    ApprovalForAll(
+      options?: EventOptions,
+      cb?: Callback<ApprovalForAll>
+    ): EventEmitter;
+
+    ConsecutiveTransfer(cb?: Callback<ConsecutiveTransfer>): EventEmitter;
+    ConsecutiveTransfer(
+      options?: EventOptions,
+      cb?: Callback<ConsecutiveTransfer>
+    ): EventEmitter;
 
     EditionCreated(cb?: Callback<EditionCreated>): EventEmitter;
-    EditionCreated(options?: EventOptions, cb?: Callback<EditionCreated>): EventEmitter;
+    EditionCreated(
+      options?: EventOptions,
+      cb?: Callback<EditionCreated>
+    ): EventEmitter;
 
     OwnershipTransferred(cb?: Callback<OwnershipTransferred>): EventEmitter;
-    OwnershipTransferred(options?: EventOptions, cb?: Callback<OwnershipTransferred>): EventEmitter;
+    OwnershipTransferred(
+      options?: EventOptions,
+      cb?: Callback<OwnershipTransferred>
+    ): EventEmitter;
 
     Transfer(cb?: Callback<Transfer>): EventEmitter;
     Transfer(options?: EventOptions, cb?: Callback<Transfer>): EventEmitter;
@@ -172,18 +251,37 @@ export interface Soundchain721Editions extends BaseContract {
     allEvents(options?: EventOptions, cb?: Callback<EventLog>): EventEmitter;
   };
 
-  once(event: 'Approval', cb: Callback<Approval>): void;
-  once(event: 'Approval', options: EventOptions, cb: Callback<Approval>): void;
+  once(event: "Approval", cb: Callback<Approval>): void;
+  once(event: "Approval", options: EventOptions, cb: Callback<Approval>): void;
 
-  once(event: 'ApprovalForAll', cb: Callback<ApprovalForAll>): void;
-  once(event: 'ApprovalForAll', options: EventOptions, cb: Callback<ApprovalForAll>): void;
+  once(event: "ApprovalForAll", cb: Callback<ApprovalForAll>): void;
+  once(
+    event: "ApprovalForAll",
+    options: EventOptions,
+    cb: Callback<ApprovalForAll>
+  ): void;
 
-  once(event: 'EditionCreated', cb: Callback<EditionCreated>): void;
-  once(event: 'EditionCreated', options: EventOptions, cb: Callback<EditionCreated>): void;
+  once(event: "ConsecutiveTransfer", cb: Callback<ConsecutiveTransfer>): void;
+  once(
+    event: "ConsecutiveTransfer",
+    options: EventOptions,
+    cb: Callback<ConsecutiveTransfer>
+  ): void;
 
-  once(event: 'OwnershipTransferred', cb: Callback<OwnershipTransferred>): void;
-  once(event: 'OwnershipTransferred', options: EventOptions, cb: Callback<OwnershipTransferred>): void;
+  once(event: "EditionCreated", cb: Callback<EditionCreated>): void;
+  once(
+    event: "EditionCreated",
+    options: EventOptions,
+    cb: Callback<EditionCreated>
+  ): void;
 
-  once(event: 'Transfer', cb: Callback<Transfer>): void;
-  once(event: 'Transfer', options: EventOptions, cb: Callback<Transfer>): void;
+  once(event: "OwnershipTransferred", cb: Callback<OwnershipTransferred>): void;
+  once(
+    event: "OwnershipTransferred",
+    options: EventOptions,
+    cb: Callback<OwnershipTransferred>
+  ): void;
+
+  once(event: "Transfer", cb: Callback<Transfer>): void;
+  once(event: "Transfer", options: EventOptions, cb: Callback<Transfer>): void;
 }

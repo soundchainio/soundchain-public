@@ -234,7 +234,7 @@ export type CreateAuctionItemType = {
 };
 
 export type CreateMultipleTracksInput = {
-  amount: Scalars['Int'];
+  batchSize: Scalars['Float'];
   track: CreateTrackInput;
 };
 
@@ -248,7 +248,7 @@ export type CreatePostInput = {
   body: Scalars['String'];
   mediaLink?: Maybe<Scalars['String']>;
   trackId?: Maybe<Scalars['String']>;
-  trackTransactionHash?: Maybe<Scalars['String']>;
+  trackEditionId?: Maybe<Scalars['String']>;
 };
 
 export type CreatePostPayload = {
@@ -276,6 +276,18 @@ export type CreateRepostPayload = {
   originalPost: Post;
 };
 
+export type CreateTrackEditionInput = {
+  transactionHash: Scalars['String'];
+  editionId: Scalars['Float'];
+  editionSize: Scalars['Int'];
+  editionData?: Maybe<EditionDataInput>;
+};
+
+export type CreateTrackEditionPayload = {
+  __typename?: 'CreateTrackEditionPayload';
+  trackEdition: TrackEdition;
+};
+
 export type CreateTrackInput = {
   title: Scalars['String'];
   description?: Maybe<Scalars['String']>;
@@ -289,6 +301,7 @@ export type CreateTrackInput = {
   releaseYear?: Maybe<Scalars['Float']>;
   copyright?: Maybe<Scalars['String']>;
   genres?: Maybe<Array<Genre>>;
+  trackEditionId: Scalars['String'];
   nftData?: Maybe<NftDataInput>;
 };
 
@@ -357,12 +370,21 @@ export type DeletedPostNotification = {
   track: Maybe<Track>;
 };
 
+export type EditionDataInput = {
+  transactionHash?: Maybe<Scalars['String']>;
+  pendingRequest?: Maybe<PendingRequest>;
+  pendingTime?: Maybe<Scalars['DateTime']>;
+  contract?: Maybe<Scalars['String']>;
+  owner?: Maybe<Scalars['String']>;
+};
+
 export type EditionDataType = {
   __typename?: 'EditionDataType';
   transactionHash: Maybe<Scalars['String']>;
   pendingRequest: Maybe<PendingRequest>;
   pendingTime: Maybe<Scalars['DateTime']>;
   contract: Maybe<Scalars['String']>;
+  owner: Maybe<Scalars['String']>;
 };
 
 export type ExplorePayload = {
@@ -408,6 +430,7 @@ export type FilterPostInput = {
 
 export type FilterTrackInput = {
   profileId?: Maybe<Scalars['String']>;
+  trackEditionId?: Maybe<Scalars['String']>;
   nftData?: Maybe<NftDataInput>;
 };
 
@@ -614,6 +637,7 @@ export type Mutation = {
   createProfileVerificationRequest: ProfileVerificationRequestPayload;
   updateProfileVerificationRequest: ProfileVerificationRequestPayload;
   removeProfileVerificationRequest: ProfileVerificationRequestPayload;
+  createTrackEdition: CreateTrackEditionPayload;
   createMultipleTracks: CreateMultipleTracksPayload;
   updateTrack: UpdateTrackPayload;
   updateEditionOwnedTracks: UpdateEditionOwnedTracksPayload;
@@ -745,6 +769,11 @@ export type MutationUpdateProfileVerificationRequestArgs = {
 
 export type MutationRemoveProfileVerificationRequestArgs = {
   id: Scalars['String'];
+};
+
+
+export type MutationCreateTrackEditionArgs = {
+  input: CreateTrackEditionInput;
 };
 
 
@@ -1137,6 +1166,7 @@ export type Query = {
   pendingRequestsBadgeNumber: Scalars['Float'];
   track: Track;
   tracks: TrackConnection;
+  groupedTracks: TrackConnection;
   favoriteTracks: TrackConnection;
   listingItems: ListingItemConnection;
   buyNowListingItems: ListingItemConnection;
@@ -1242,7 +1272,7 @@ export type QueryListingItemArgs = {
 
 
 export type QueryCheapestListingItemArgs = {
-  transactionHash: Scalars['String'];
+  trackEditionId: Scalars['String'];
 };
 
 
@@ -1337,6 +1367,13 @@ export type QueryTrackArgs = {
 
 
 export type QueryTracksArgs = {
+  page?: Maybe<PageInput>;
+  sort?: Maybe<SortTrackInput>;
+  filter?: Maybe<FilterTrackInput>;
+};
+
+
+export type QueryGroupedTracksArgs = {
   page?: Maybe<PageInput>;
   sort?: Maybe<SortTrackInput>;
   filter?: Maybe<FilterTrackInput>;
@@ -2013,7 +2050,7 @@ export type ChatsQuery = (
 );
 
 export type CheapestListingItemQueryVariables = Exact<{
-  transactionHash: Scalars['String'];
+  trackEditionId: Scalars['String'];
 }>;
 
 
@@ -2157,6 +2194,22 @@ export type CreateRepostMutation = (
     ), originalPost: (
       { __typename?: 'Post' }
       & Pick<Post, 'id' | 'repostCount'>
+    ) }
+  ) }
+);
+
+export type CreateTrackEditionMutationVariables = Exact<{
+  input: CreateTrackEditionInput;
+}>;
+
+
+export type CreateTrackEditionMutation = (
+  { __typename?: 'Mutation' }
+  & { createTrackEdition: (
+    { __typename?: 'CreateTrackEditionPayload' }
+    & { trackEdition: (
+      { __typename?: 'TrackEdition' }
+      & Pick<TrackEdition, 'id'>
     ) }
   ) }
 );
@@ -2457,6 +2510,27 @@ export type GetOriginalPostFromTrackQuery = (
   & { getOriginalPostFromTrack: (
     { __typename?: 'Post' }
     & PostComponentFieldsFragment
+  ) }
+);
+
+export type GroupedTracksQueryVariables = Exact<{
+  filter?: Maybe<FilterTrackInput>;
+  sort?: Maybe<SortTrackInput>;
+  page?: Maybe<PageInput>;
+}>;
+
+
+export type GroupedTracksQuery = (
+  { __typename?: 'Query' }
+  & { groupedTracks: (
+    { __typename?: 'TrackConnection' }
+    & { nodes: Array<(
+      { __typename?: 'Track' }
+      & TrackComponentFieldsFragment
+    )>, pageInfo: (
+      { __typename?: 'PageInfo' }
+      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
+    ) }
   ) }
 );
 
@@ -3164,7 +3238,7 @@ export type TrackEditionFieldsFragment = (
   & Pick<TrackEdition, 'id' | 'editionId' | 'transactionHash' | 'contract' | 'listed' | 'marketplace' | 'editionSize' | 'createdAt' | 'updatedAt'>
   & { editionData: Maybe<(
     { __typename?: 'EditionDataType' }
-    & Pick<EditionDataType, 'pendingRequest' | 'pendingTime' | 'transactionHash' | 'contract'>
+    & Pick<EditionDataType, 'pendingRequest' | 'pendingTime' | 'transactionHash' | 'contract' | 'owner'>
   )> }
 );
 
@@ -3703,6 +3777,7 @@ export const TrackEditionFieldsFragmentDoc = gql`
     pendingTime
     transactionHash
     contract
+    owner
   }
 }
     `;
@@ -4437,8 +4512,8 @@ export type ChatsQueryHookResult = ReturnType<typeof useChatsQuery>;
 export type ChatsLazyQueryHookResult = ReturnType<typeof useChatsLazyQuery>;
 export type ChatsQueryResult = Apollo.QueryResult<ChatsQuery, ChatsQueryVariables>;
 export const CheapestListingItemDocument = gql`
-    query CheapestListingItem($transactionHash: String!) {
-  cheapestListingItem(transactionHash: $transactionHash)
+    query CheapestListingItem($trackEditionId: String!) {
+  cheapestListingItem(trackEditionId: $trackEditionId)
 }
     `;
 
@@ -4454,7 +4529,7 @@ export const CheapestListingItemDocument = gql`
  * @example
  * const { data, loading, error } = useCheapestListingItemQuery({
  *   variables: {
- *      transactionHash: // value for 'transactionHash'
+ *      trackEditionId: // value for 'trackEditionId'
  *   },
  * });
  */
@@ -4760,6 +4835,41 @@ export function useCreateRepostMutation(baseOptions?: Apollo.MutationHookOptions
 export type CreateRepostMutationHookResult = ReturnType<typeof useCreateRepostMutation>;
 export type CreateRepostMutationResult = Apollo.MutationResult<CreateRepostMutation>;
 export type CreateRepostMutationOptions = Apollo.BaseMutationOptions<CreateRepostMutation, CreateRepostMutationVariables>;
+export const CreateTrackEditionDocument = gql`
+    mutation CreateTrackEdition($input: CreateTrackEditionInput!) {
+  createTrackEdition(input: $input) {
+    trackEdition {
+      id
+    }
+  }
+}
+    `;
+export type CreateTrackEditionMutationFn = Apollo.MutationFunction<CreateTrackEditionMutation, CreateTrackEditionMutationVariables>;
+
+/**
+ * __useCreateTrackEditionMutation__
+ *
+ * To run a mutation, you first call `useCreateTrackEditionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateTrackEditionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createTrackEditionMutation, { data, loading, error }] = useCreateTrackEditionMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateTrackEditionMutation(baseOptions?: Apollo.MutationHookOptions<CreateTrackEditionMutation, CreateTrackEditionMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateTrackEditionMutation, CreateTrackEditionMutationVariables>(CreateTrackEditionDocument, options);
+      }
+export type CreateTrackEditionMutationHookResult = ReturnType<typeof useCreateTrackEditionMutation>;
+export type CreateTrackEditionMutationResult = Apollo.MutationResult<CreateTrackEditionMutation>;
+export type CreateTrackEditionMutationOptions = Apollo.BaseMutationOptions<CreateTrackEditionMutation, CreateTrackEditionMutationVariables>;
 export const CreateWhitelistEntryDocument = gql`
     mutation CreateWhitelistEntry($input: CreateWhitelistEntryInput!) {
   createWhitelistEntry(input: $input) {
@@ -5368,6 +5478,50 @@ export function useGetOriginalPostFromTrackLazyQuery(baseOptions?: Apollo.LazyQu
 export type GetOriginalPostFromTrackQueryHookResult = ReturnType<typeof useGetOriginalPostFromTrackQuery>;
 export type GetOriginalPostFromTrackLazyQueryHookResult = ReturnType<typeof useGetOriginalPostFromTrackLazyQuery>;
 export type GetOriginalPostFromTrackQueryResult = Apollo.QueryResult<GetOriginalPostFromTrackQuery, GetOriginalPostFromTrackQueryVariables>;
+export const GroupedTracksDocument = gql`
+    query GroupedTracks($filter: FilterTrackInput, $sort: SortTrackInput, $page: PageInput) {
+  groupedTracks(filter: $filter, sort: $sort, page: $page) {
+    nodes {
+      ...TrackComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+      totalCount
+    }
+  }
+}
+    ${TrackComponentFieldsFragmentDoc}`;
+
+/**
+ * __useGroupedTracksQuery__
+ *
+ * To run a query within a React component, call `useGroupedTracksQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGroupedTracksQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGroupedTracksQuery({
+ *   variables: {
+ *      filter: // value for 'filter'
+ *      sort: // value for 'sort'
+ *      page: // value for 'page'
+ *   },
+ * });
+ */
+export function useGroupedTracksQuery(baseOptions?: Apollo.QueryHookOptions<GroupedTracksQuery, GroupedTracksQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GroupedTracksQuery, GroupedTracksQueryVariables>(GroupedTracksDocument, options);
+      }
+export function useGroupedTracksLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GroupedTracksQuery, GroupedTracksQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GroupedTracksQuery, GroupedTracksQueryVariables>(GroupedTracksDocument, options);
+        }
+export type GroupedTracksQueryHookResult = ReturnType<typeof useGroupedTracksQuery>;
+export type GroupedTracksLazyQueryHookResult = ReturnType<typeof useGroupedTracksLazyQuery>;
+export type GroupedTracksQueryResult = Apollo.QueryResult<GroupedTracksQuery, GroupedTracksQueryVariables>;
 export const HaveBidedDocument = gql`
     query HaveBided($auctionId: String!, $bidder: String!) {
   haveBided(auctionId: $auctionId, bidder: $bidder) {

@@ -15,11 +15,15 @@ import {
   ExploreTracksDocument,
   FeedDocument,
   PendingRequest,
-  PostsDocument, Track,
+  PostsDocument,
+  Track,
+  TrackComponentFieldsFragment,
   TracksDocument,
-  TracksQuery, useCreateMultipleTracksMutation,
+  TracksQuery,
+  useCreateMultipleTracksMutation,
+  useCreateTrackEditionMutation,
   usePinJsonToIpfsMutation,
-  usePinToIpfsMutation
+  usePinToIpfsMutation,
 } from 'lib/graphql';
 import { imageMimeTypes } from 'lib/mimeTypes';
 import * as musicMetadata from 'music-metadata-browser';
@@ -29,6 +33,8 @@ import { useEffect, useState } from 'react';
 import { Metadata } from 'types/NftTypes';
 import { genres } from 'utils/Genres';
 import { MintingDone } from './MintingDone';
+
+const BATCH_SIZE = 120;
 
 enum Tabs {
   NFT = 'NFT',
@@ -50,13 +56,14 @@ export const CreateModal = () => {
   const [newTrack, setNewTrack] = useState<CreateMultipleTracksMutation['createMultipleTracks']['firstTrack']>();
 
   const { upload } = useUpload();
-  const [createMultipleTracks] = useCreateMultipleTracksMutation()
+  const [createMultipleTracks] = useCreateMultipleTracksMutation();
+  const [createTrackEdition] = useCreateTrackEditionMutation();
 
   const { web3, account } = useWalletContext();
   const [pinToIPFS] = usePinToIpfsMutation();
   const [pinJsonToIPFS] = usePinJsonToIpfsMutation();
 
-  const { mintNftToken } = useBlockchainV2();
+  const { createEdition, mintNftTokensToEdition } = useBlockchainV2();
   const [transactionHash, setTransactionHash] = useState<string>();
   const [mintingState, setMintingState] = useState<string>();
   const [mintError, setMintError] = useState<boolean>(false);
@@ -153,8 +160,18 @@ export const CreateModal = () => {
 
   const handleSubmit = async (values: FormValues) => {
     if (file && web3 && account && me) {
-      const { title, artworkFile, description, utilityInfo, album, genres, releaseYear, copyright, royalty, editionQuantity } =
-        values;
+      const {
+        title,
+        artworkFile,
+        description,
+        utilityInfo,
+        album,
+        genres,
+        releaseYear,
+        copyright,
+        royalty,
+        editionQuantity,
+      } = values;
       const artist = me.handle;
       const artistId = me.id;
       const artistProfileId = me.profile.id;
@@ -180,9 +197,7 @@ export const CreateModal = () => {
           },
         });
 
-        const metadataAttributes: Metadata['attributes'] = [
-          { trait_type: 'Artist', value: artist },
-        ]
+        const metadataAttributes: Metadata['attributes'] = [{ trait_type: 'Artist', value: artist }];
 
         if (album) {
           metadataAttributes.push({ trait_type: 'Album', value: album });
@@ -205,7 +220,7 @@ export const CreateModal = () => {
           artist,
           releaseYear,
           genres,
-          attributes: metadataAttributes
+          attributes: metadataAttributes,
         };
 
         let artworkUrl: string;
@@ -236,75 +251,6 @@ export const CreateModal = () => {
           },
         });
 
-        const onTransactionHash = async (transactionHash: string) => {
-          setMintingState('Creating your track');
-          await createMultipleTracks({
-            variables: {
-              input: {
-                amount: values.editionQuantity,
-                track: {
-                  assetUrl,
-                  title,
-                  album,
-                  artist,
-                  artistId,
-                  artworkUrl,
-                  description,
-                  utilityInfo,
-                  genres,
-                  releaseYear,
-                  artistProfileId,
-                  copyright,
-                  nftData: {
-                    transactionHash: transactionHash,
-                    minter: account,
-                    ipfsCid: metadataPinResult?.pinJsonToIPFS.cid,
-                    pendingRequest: PendingRequest.Mint,
-                    owner: account,
-                    pendingTime: new Date().toISOString(),
-                  },
-                }
-              }
-            },
-
-            update: (cache, { data: createMultipleTracksData }) => {
-              setNewTrack(createMultipleTracksData?.createMultipleTracks.firstTrack)
-
-              const variables = { filter: { nftData: { owner: account } } };
-
-              const cachedData = cache.readQuery<TracksQuery>({
-                query: TracksDocument,
-                variables,
-              });
-
-              if (!cachedData) {
-                return;
-              }
-
-              const newTracks = createMultipleTracksData?.createMultipleTracks.trackIds.map((trackId) => ({
-                ...createMultipleTracksData?.createMultipleTracks.firstTrack,
-                id: trackId,
-              } as Track)) || []
-
-              cache.writeQuery({
-                query: TracksDocument,
-                variables,
-                overwrite: true,
-                data: {
-                  tracks: {
-                    ...cachedData.tracks,
-                    nodes: [...newTracks, ...cachedData.tracks.nodes],
-                  },
-                },
-              });
-            },
-            refetchQueries: [FeedDocument, PostsDocument, ExploreTracksDocument],
-          })
-          dispatchShowCreateModal(true);
-          setMintingState(undefined);
-          setTransactionHash(transactionHash);
-        };
-
         const onError = (cause: Error) => {
           console.error('Error on minting', cause);
           setTransactionHash(undefined);
@@ -312,11 +258,152 @@ export const CreateModal = () => {
           setMintError(true);
         };
 
-        setMintingState('Minting NFT');
-        mintNftToken(`ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`, account, account, royalty, editionQuantity)
-          .onReceipt(receipt => onTransactionHash(receipt.transactionHash))
-          .onError(onError)
-          .execute(web3);
+        let nonce = await web3?.eth.getTransactionCount(account);
+
+        const createAndMintEdition = (): Promise<Array<string>> => {
+          return new Promise((resolve, reject) => {
+            createEdition(account, account, royalty, editionQuantity, nonce)
+              .onReceipt(async receipt => {
+                if (!receipt.status) {
+                  reject('FAIL');
+                }
+                setMintingState('Creating your Edition');
+                const editionCreated = receipt.events?.['EditionCreated'];
+                const { data } = await createTrackEdition({
+                  variables: {
+                    input: {
+                      editionId: Number(editionCreated?.returnValues.editionNumber),
+                      transactionHash: receipt.transactionHash,
+                      editionSize: values.editionQuantity,
+                      editionData: {
+                        pendingRequest: PendingRequest.Mint,
+                        pendingTime: new Date().toISOString(),
+                        owner: account,
+                        transactionHash: receipt.transactionHash,
+                      }
+                    },
+                  },
+                });
+                const trackEditionId = data?.createTrackEdition.trackEdition.id;
+                resolve([editionCreated?.returnValues.editionNumber, trackEditionId, receipt.transactionHash]);
+              })
+              .onError(cause => {
+                onError(cause);
+                reject(cause);
+              })
+              .execute(web3);
+          });
+        };
+
+        const createAndMintTracks = (
+          quantity: number,
+          editionNumber: string,
+        ): Promise<TrackComponentFieldsFragment | undefined> => {
+          return new Promise((resolve, reject) => {
+            mintNftTokensToEdition(
+              `ipfs://${metadataPinResult?.pinJsonToIPFS.cid}`,
+              account,
+              account,
+              Number(editionNumber),
+              quantity,
+              nonce,
+            )
+              .onReceipt(async receipt => {
+                setMintingState('Creating your track');
+                const { data } = await createMultipleTracks({
+                  variables: {
+                    input: {
+                      batchSize: quantity,
+                      track: {
+                        assetUrl,
+                        title,
+                        album,
+                        artist,
+                        artistId,
+                        artworkUrl,
+                        description,
+                        genres,
+                        releaseYear,
+                        artistProfileId,
+                        copyright,
+                        trackEditionId,
+                        utilityInfo,
+                        nftData: {
+                          transactionHash: receipt.transactionHash,
+                          minter: account,
+                          ipfsCid: metadataPinResult?.pinJsonToIPFS.cid,
+                          pendingRequest: PendingRequest.Mint,
+                          owner: account,
+                          pendingTime: new Date().toISOString(),
+                        },
+                      },
+                    },
+                  },
+
+                  update: (cache, { data: createMultipleTracksData }) => {
+                    const variables = { filter: { nftData: { owner: account } } };
+
+                    const cachedData = cache.readQuery<TracksQuery>({
+                      query: TracksDocument,
+                      variables,
+                    });
+
+                    if (!cachedData) {
+                      return;
+                    }
+
+                    const newTracks =
+                      createMultipleTracksData?.createMultipleTracks.trackIds.map(
+                        trackId =>
+                          ({
+                            ...createMultipleTracksData?.createMultipleTracks.firstTrack,
+                            id: trackId,
+                          } as Track),
+                      ) || [];
+
+                    cache.writeQuery({
+                      query: TracksDocument,
+                      variables,
+                      overwrite: true,
+                      data: {
+                        tracks: {
+                          ...cachedData.tracks,
+                          nodes: [...newTracks, ...cachedData.tracks.nodes],
+                        },
+                      },
+                    });
+                  },
+                  refetchQueries: [FeedDocument, PostsDocument, ExploreTracksDocument],
+                });
+                resolve(data?.createMultipleTracks.firstTrack);
+              })
+              .onError(cause => {
+                onError(cause);
+                reject(cause);
+              })
+              .execute(web3);
+          });
+        };
+
+        setMintingState('Minting Edition');
+
+        const [editionNumber, trackEditionId, trackEditionTransactionHash] = await createAndMintEdition();
+
+        let quantityLeft = values.editionQuantity;
+        const promises = [];
+        for (let index = 0; index < values.editionQuantity; index += BATCH_SIZE) {
+          nonce++;
+          const quantity = quantityLeft <= BATCH_SIZE ? quantityLeft : BATCH_SIZE;
+          promises.push(createAndMintTracks(quantity, editionNumber));
+          setMintingState('Minting NFT');
+
+          quantityLeft = quantityLeft - BATCH_SIZE;
+        }
+        const [firstTrack] = await Promise.all(promises);
+        setNewTrack(firstTrack);
+        dispatchShowCreateModal(true);
+        setMintingState(undefined);
+        setTransactionHash(trackEditionTransactionHash);
       } catch (e) {
         console.error(e);
         setTransactionHash(undefined);

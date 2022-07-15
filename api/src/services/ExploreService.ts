@@ -57,7 +57,12 @@ export class ExploreService extends Service {
         { $match: { $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }], deleted: false }},
         {
           $group: {
-            _id: '$nftData.transactionHash',
+            _id: {
+              $ifNull: [
+                '$trackEditionId',
+                '$trackId',
+              ]
+            },
             sumPlaybackCount: { $sum: '$playbackCount' },
             sumFavoriteCount: { $sum: '$favoriteCount' },
             first: { $first: '$$ROOT' }

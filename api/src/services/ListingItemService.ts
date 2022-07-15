@@ -4,6 +4,7 @@ import { ListingItem } from '../models/ListingItem';
 import { getNow } from '../utils/Time';
 import { Service } from './Service';
 import { TrackModel } from '../models/Track';
+import { ObjectId } from 'mongodb';
 
 export class ListingItemService extends Service {
   async getListingItem(tokenId: number, contractAddress: string): Promise<ListingItem | void> {
@@ -30,11 +31,11 @@ export class ListingItemService extends Service {
     return !!auctionItem || !!buyNowItem;
   }
 
-  async getCheapestListingItem(transactionHash: string): Promise<string | null> {
+  async getCheapestListingItem(trackEditionId: string): Promise<string | null> {
     const transactionNfts = (await TrackModel.aggregate([
       {
         '$match': {
-          'nftData.transactionHash': transactionHash,
+          'trackEditionId': new ObjectId(trackEditionId),
         },
       },
       {
@@ -43,6 +44,26 @@ export class ListingItemService extends Service {
           'localField': 'nftData.tokenId',
           'foreignField': 'tokenId',
           'as': 'listingItem',
+        },
+      },
+      {
+        $addFields: {
+          listingItem: {
+            $filter: {
+              input: '$listingItem',
+              as: 'item',
+              cond: {
+                $and: [
+                  {
+                    $eq: ['$$item.nft', '$nftData.contract'],
+                  },
+                  {
+                    $eq: ['$$item.valid', true],
+                  },
+                ],
+              },
+            },
+          },
         },
       },
       {

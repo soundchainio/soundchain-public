@@ -69,14 +69,14 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
   const buyNowPrice = cheapestListingItem?.cheapestListingItem
 
   useEffect(() => {
-    if (nftData?.transactionHash) {
+    if (track.trackEditionId) {
       fetchCheapestListingItem({
         variables: {
-          transactionHash: nftData.transactionHash
+          trackEditionId: track.trackEditionId,
         }
       })
     }
-  }, [fetchCheapestListingItem, nftData])
+  }, [fetchCheapestListingItem, track.trackEditionId])
 
   const {
     data,
@@ -134,13 +134,13 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
     variables: {
       page: { first: 10 },
       filter: { 
+        trackEditionId: track.trackEditionId,
         nftData: {
-          transactionHash: nftData?.transactionHash,
           owner: account,
         }
       },
     },
-    skip: !nftData?.transactionHash,
+    skip: !track.trackEditionId,
     ssr: false,
   });
 
@@ -212,7 +212,7 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
           royalties={royalties}
           me={me}
         />
-        <div>{nftData && <MintingData transactionHash={nftData.transactionHash} ipfsCid={nftData.ipfsCid} />}</div>
+        <div>{nftData && editionData && <MintingData transactionHash={editionData.transactionHash} ipfsCid={nftData.ipfsCid} />}</div>
         <OwnedList data={ownedTracksData} loading={ownedTracksLoading} />
         <Listings data={data} loading={loadingListingItem} fetchMore={fetchMore} />
       </div>
@@ -333,7 +333,7 @@ function OwnedList(props: OwnedListProps) {
     <section>
       <h3 className="flex items-center gap-2 px-4 pt-4 font-bold text-gray-80">
         <PriceTag fill="#808080" />
-        <p>Owned (total: {pageInfo?.totalCount})</p>
+        <p>Owned {pageInfo?.totalCount && <>(total: {pageInfo?.totalCount})</>}</p>
       </h3>
       <div className='text-gray-80 text-xs pl-10 pr-4 pt-1 pb-4'>Showing first 10 tokens</div>
       {!loading && (

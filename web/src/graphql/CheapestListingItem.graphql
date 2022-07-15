@@ -1,3 +1,3 @@
-query CheapestListingItem($transactionHash: String!) {
-  cheapestListingItem(transactionHash: $transactionHash)
+query CheapestListingItem($trackEditionId: String!) {
+  cheapestListingItem(trackEditionId: $trackEditionId)
 }

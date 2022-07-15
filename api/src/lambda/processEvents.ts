@@ -109,7 +109,7 @@ const processEditionListed = async (event: EditionListed, context: Context): Pro
 };
 
 const processEditionCanceled = async (event: EditionCanceled, context: Context): Promise<void> => {
-  const { returnValues} = event;
+  const { returnValues } = event;
   const { editionId, nft } = returnValues;
   await context.trackEditionService.markEditionUnlisted(parseInt(editionId), nft);
   console.log('EditionCanceled');
@@ -137,18 +137,16 @@ const processTransfer = async (event: Transfer, context: Context): Promise<void>
 const processEditionCreated = async (event: EditionCreated, context: Context): Promise<void> => {
   const { transactionHash, returnValues, address } = event;
 
-  const trackEdition = await context.trackEditionService.createTrackEdition({
-    transactionHash,
+  await context.trackEditionService.updateTrackEditionByTransactionHash(transactionHash, {
     editionId: Number(returnValues.editionNumber),
-    editionSize: Number(returnValues.quantity),
     contract: address,
     editionData: {
       pendingRequest: PendingRequest.None,
       transactionHash,
       contract: address,
-    }
+      owner: returnValues.owner,
+    },
   });
-  await context.trackService.updateTracksByTransactionHash(transactionHash, { trackEditionId: trackEdition._id });
 
   console.log('EditionCreated');
 };

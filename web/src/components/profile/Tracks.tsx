@@ -4,7 +4,7 @@ import { NoResultFound } from 'components/NoResultFound';
 import { TrackListItem } from 'components/TrackListItem';
 import { TrackListItemSkeleton } from 'components/TrackListItemSkeleton';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
-import { SortOrder, SortTrackField, useTracksQuery } from 'lib/graphql';
+import { SortOrder, SortTrackField, useGroupedTracksQuery } from 'lib/graphql';
 import React from 'react';
 import PullToRefresh from 'react-simple-pull-to-refresh';
 
@@ -24,7 +24,7 @@ interface TracksProps extends React.ComponentPropsWithoutRef<'div'> {
 export const Tracks = ({ className, profileId, pageSize = 10 }: TracksProps) => {
   const { playlistState } = useAudioPlayerContext();
 
-  const { data, loading, fetchMore, refetch } = useTracksQuery({
+  const { data, loading, fetchMore, refetch } = useGroupedTracksQuery({
     variables: {
       filter: { profileId: profileId as string },
       sort: { field: SortTrackField.CreatedAt, order: SortOrder.Desc },
@@ -42,11 +42,11 @@ export const Tracks = ({ className, profileId, pageSize = 10 }: TracksProps) => 
     );
   }
 
-  if (!data?.tracks.nodes.length) {
+  if (!data?.groupedTracks.nodes.length) {
     return <NoResultFound type="tracks" />;
   }
 
-  const { nodes, pageInfo } = data.tracks;
+  const { nodes, pageInfo } = data.groupedTracks;
 
   const loadMore = () => {
     fetchMore({
