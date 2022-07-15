@@ -4,7 +4,7 @@ import { NoResultFound } from 'components/NoResultFound';
 import { TrackListItem } from 'components/TrackListItem';
 import { TrackListItemSkeleton } from 'components/TrackListItemSkeleton';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
-import { SortOrder, SortTrackField, useGroupedTracksQuery, useTracksQuery } from 'lib/graphql';
+import { SortOrder, SortTrackField, useGroupedTracksQuery } from 'lib/graphql';
 import React from 'react';
 import PullToRefresh from 'react-simple-pull-to-refresh';
 
