@@ -275,6 +275,12 @@ export const CreateModal = () => {
                       editionId: Number(editionCreated?.returnValues.editionNumber),
                       transactionHash: receipt.transactionHash,
                       editionSize: values.editionQuantity,
+                      editionData: {
+                        pendingRequest: PendingRequest.Mint,
+                        pendingTime: new Date().toISOString(),
+                        owner: account,
+                        transactionHash: receipt.transactionHash,
+                      }
                     },
                   },
                 });

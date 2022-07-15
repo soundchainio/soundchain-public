@@ -280,6 +280,7 @@ export type CreateTrackEditionInput = {
   transactionHash: Scalars['String'];
   editionId: Scalars['Float'];
   editionSize: Scalars['Int'];
+  editionData?: Maybe<EditionDataInput>;
 };
 
 export type CreateTrackEditionPayload = {
@@ -367,6 +368,14 @@ export type DeletedPostNotification = {
   previewLink: Maybe<Scalars['String']>;
   link: Scalars['String'];
   track: Maybe<Track>;
+};
+
+export type EditionDataInput = {
+  transactionHash?: Maybe<Scalars['String']>;
+  pendingRequest?: Maybe<PendingRequest>;
+  pendingTime?: Maybe<Scalars['DateTime']>;
+  contract?: Maybe<Scalars['String']>;
+  owner?: Maybe<Scalars['String']>;
 };
 
 export type EditionDataType = {
