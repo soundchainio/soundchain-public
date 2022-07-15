@@ -1,6 +1,6 @@
 import type { Handler } from 'aws-lambda';
 
-export const contractMetadata: Handler = async (...args) => {
+export const contractMetadata: Handler = async () => {
   return {
     name: "SoundChain",
     description: "SoundChain is a decentralized music platform that allows users to share their music with the world.",
