@@ -5,6 +5,7 @@ fragment TrackComponentFields on Track {
   assetUrl
   artworkUrl
   description
+  utilityInfo
   artist
   artistId
   artistProfileId

@@ -25,6 +25,7 @@ import { BuyNowListingItemsQuery, BuyNowListingItemsQueryVariables, OwnedTracksQ
 import { useEffect, useMemo, useState } from 'react';
 import { Matic } from '../Matic';
 import { isPendingRequest } from 'utils/isPendingRequest';
+import { UtilityInfo } from '../details-NFT/UtilityInfo';
 
 interface MultipleTrackPageProps {
   track: TrackQuery['track'];
@@ -95,7 +96,9 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
   const description = `Listen to ${track.title} on SoundChain. ${track.artist}. ${track.album || 'Song'}. ${
     track.releaseYear != null ? `${track.releaseYear}.` : ''
   }`;
-  const editionData = trackData?.track.trackEdition?.editionData || track.trackEdition?.editionData
+
+  const trackEdition = trackData?.track.trackEdition || track.trackEdition;
+  const editionData = trackEdition?.editionData
   const tokenId = nftData?.tokenId;
 
   const firstListingItem = data?.buyNowListingItems?.nodes?.[0]?.listingItem;
@@ -166,10 +169,8 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
     const interval = setInterval(() => {
       if (isProcessing || !showRemoveListing) {
         refetchTrack({ variables: { id: track.id } });
-        if (tokenId) {
-          refetchListingItem();
-          ownedTracksRefetch();
-        }
+        refetchListingItem();
+        ownedTracksRefetch();
       }
     }, 10 * 1000);
 
@@ -200,6 +201,7 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
           </div>
         )}
         <Description description={track.description || ''} className="p-4" />
+        <UtilityInfo content={track.utilityInfo || ''} className="px-4 py-2" />
         <TrackInfo
           trackTitle={track.title}
           albumTitle={track.album}
@@ -242,12 +244,12 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
             isBuyNow={isBuyNow}
             startingDate={startingDate}
             endingDate={endingDate}
-            trackEditionId={track.trackEdition?.id}
-            editionId={track.trackEdition?.editionId}
-            isEditionListed={track.trackEdition?.listed}
+            trackEditionId={trackEdition?.id}
+            editionId={trackEdition?.editionId}
+            isEditionListed={trackEdition?.listed}
             contractAddresses={{
               nft: nftData?.contract,
-              marketplace: track.trackEdition?.marketplace,
+              marketplace: trackEdition?.marketplace,
             }}
           />
         ))}

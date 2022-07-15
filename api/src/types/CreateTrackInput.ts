@@ -10,6 +10,9 @@ export class CreateTrackInput {
   @Field({ nullable: true })
   description: string;
 
+  @Field({ nullable: true })
+  utilityInfo: string;
+
   @Field()
   assetUrl: string;
 

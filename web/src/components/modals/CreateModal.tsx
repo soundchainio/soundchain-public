@@ -160,8 +160,18 @@ export const CreateModal = () => {
 
   const handleSubmit = async (values: FormValues) => {
     if (file && web3 && account && me) {
-      const { title, artworkFile, description, album, genres, releaseYear, copyright, royalty, editionQuantity } =
-        values;
+      const {
+        title,
+        artworkFile,
+        description,
+        utilityInfo,
+        album,
+        genres,
+        releaseYear,
+        copyright,
+        royalty,
+        editionQuantity,
+      } = values;
       const artist = me.handle;
       const artistId = me.id;
       const artistProfileId = me.profile.id;
@@ -311,6 +321,7 @@ export const CreateModal = () => {
                         artistProfileId,
                         copyright,
                         trackEditionId,
+                        utilityInfo,
                         nftData: {
                           transactionHash: receipt.transactionHash,
                           minter: account,
