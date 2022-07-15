@@ -103,7 +103,7 @@ export class TrackResolver {
     @Ctx() { listingItemService }: Context,
     @Root() { nftData }: Track,
   ): Promise<ListingItem | void> {
-    if (!nftData.tokenId || !nftData.contract) {
+    if (typeof nftData.tokenId !== 'number' || !nftData.contract) {
       return;
     }
     return listingItemService.getListingItem(nftData.tokenId, nftData.contract);

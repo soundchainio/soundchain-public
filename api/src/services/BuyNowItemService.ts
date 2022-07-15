@@ -43,7 +43,7 @@ export class BuyNowService extends ModelService<typeof BuyNowItem> {
   }
 
   async setNotValid(tokenId: number, contractAddress: string): Promise<BuyNowItem> {
-    const buyNowItem = await this.model.findOne({ tokenId, nft: contractAddress }).sort({ createdAt: -1 }).exec();
+    const buyNowItem = await this.model.findOne({ tokenId, nft: contractAddress, valid: true }).sort({ createdAt: -1 }).exec();
     buyNowItem.valid = false;
     buyNowItem.save();
     return buyNowItem;
