@@ -35,22 +35,27 @@ export class TrackResolver {
   }
 
   @FieldResolver(() => Number)
-  playbackCount(@Ctx() { trackService }: Context, @Root() { _id: trackId, nftData }: Track): Promise<number> {
-    return trackService.playbackCount(trackId, nftData.transactionHash);
+  playbackCount(@Ctx() { trackService }: Context, @Root() { _id: trackId, trackEditionId, playbackCount }: Track): Promise<number> {
+    if (trackEditionId) {
+      return trackService.playbackCount(trackId, trackEditionId);
+    }
+    return Promise.resolve(playbackCount)
   }
 
   @FieldResolver(() => String)
   async playbackCountFormatted(
     @Ctx() { trackService }: Context,
-    @Root() { _id: trackId, nftData }: Track,
+    @Root() { _id: trackId, trackEditionId, playbackCount }: Track,
   ): Promise<string> {
-    const playbackCount = await trackService.playbackCount(trackId, nftData.transactionHash);
-    return playbackCount ? new Intl.NumberFormat('en-US').format(playbackCount) : '';
+    const playbackCountToUse = trackEditionId ? await trackService.playbackCount(trackId, trackEditionId) : playbackCount;
+    return playbackCountToUse ? new Intl.NumberFormat('en-US').format(playbackCountToUse) : '';
   }
 
   @FieldResolver(() => Number)
-  favoriteCount(@Ctx() { trackService }: Context, @Root() { _id: trackId, nftData }: Track): Promise<FavoriteCount> {
-    return trackService.favoriteCount(trackId, nftData.transactionHash);
+  favoriteCount(@Ctx() { trackService }: Context, @Root() { _id: trackId, trackEditionId, favoriteCount }: Track): Promise<FavoriteCount> {
+    return trackEditionId ?
+      trackService.favoriteCount(trackId, trackEditionId) :
+      Promise.resolve({ count: favoriteCount });
   }
 
   @FieldResolver(() => Number)
@@ -66,23 +71,23 @@ export class TrackResolver {
   @FieldResolver(() => Boolean)
   isFavorite(
     @Ctx() { trackService }: Context,
-    @Root() { _id: trackId, nftData }: Track,
+    @Root() { _id: trackId, trackEditionId }: Track,
     @CurrentUser() user?: User,
   ): Promise<boolean> {
     if (!user) {
       return Promise.resolve(false);
     }
-    return trackService.isFavorite(trackId, user.profileId, nftData.transactionHash);
+    return trackService.isFavorite(trackId, user.profileId, trackEditionId);
   }
 
   @FieldResolver(() => Number)
   editionSize(
-    @Ctx() { trackService, trackEditionService }: Context,
-    @Root() { trackEditionId, nftData }: Track,
+    @Ctx() { trackEditionService }: Context,
+    @Root() { trackEditionId }: Track,
   ): Promise<number> {
     return trackEditionId
       ? trackEditionService.getEditionSize(trackEditionId)
-      : trackService.getEditionSizeByGroupingTracks(nftData.transactionHash);
+      : Promise.resolve(0);
   }
 
   @FieldResolver(() => TrackEdition)
@@ -135,7 +140,7 @@ export class TrackResolver {
     await postService.createPost({
       profileId,
       trackId: track._id,
-      trackTransactionHash: track?.nftData?.transactionHash,
+      trackEditionId: track.trackEditionId,
     });
     return {
       firstTrack: track,

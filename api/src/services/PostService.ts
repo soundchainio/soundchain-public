@@ -13,7 +13,7 @@ interface NewPostParams {
   body?: string;
   mediaLink?: string;
   trackId?: string;
-  trackTransactionHash?: string;
+  trackEditionId?: string;
 }
 
 interface RepostParams {
@@ -145,8 +145,15 @@ export class PostService extends ModelService<typeof Post> {
 
   async getOriginalFromTrack(trackId: string): Promise<Post> {
     const track = await this.context.trackService.getTrack(trackId);
+
+    const ors: any[] = [{ trackId }]
+
+    if (track.trackEditionId) {
+      ors.push({ trackEditionId: track.trackEditionId });
+    }
+
     return this.model
-      .findOne({ $or: [{ trackId }, { trackTransactionHash: track?.nftData?.transactionHash }] })
+      .findOne({ $or: ors })
       .sort({ createdAt: 1 })
       .exec();
   }

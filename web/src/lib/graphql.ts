@@ -419,6 +419,7 @@ export type FilterPostInput = {
 
 export type FilterTrackInput = {
   profileId?: Maybe<Scalars['String']>;
+  trackEditionId?: Maybe<Scalars['String']>;
   nftData?: Maybe<NftDataInput>;
 };
 
@@ -1259,7 +1260,7 @@ export type QueryListingItemArgs = {
 
 
 export type QueryCheapestListingItemArgs = {
-  transactionHash: Scalars['String'];
+  trackEditionId: Scalars['String'];
 };
 
 
@@ -2028,7 +2029,7 @@ export type ChatsQuery = (
 );
 
 export type CheapestListingItemQueryVariables = Exact<{
-  transactionHash: Scalars['String'];
+  trackEditionId: Scalars['String'];
 }>;
 
 
@@ -4467,8 +4468,8 @@ export type ChatsQueryHookResult = ReturnType<typeof useChatsQuery>;
 export type ChatsLazyQueryHookResult = ReturnType<typeof useChatsLazyQuery>;
 export type ChatsQueryResult = Apollo.QueryResult<ChatsQuery, ChatsQueryVariables>;
 export const CheapestListingItemDocument = gql`
-    query CheapestListingItem($transactionHash: String!) {
-  cheapestListingItem(transactionHash: $transactionHash)
+    query CheapestListingItem($trackEditionId: String!) {
+  cheapestListingItem(trackEditionId: $trackEditionId)
 }
     `;
 
@@ -4484,7 +4485,7 @@ export const CheapestListingItemDocument = gql`
  * @example
  * const { data, loading, error } = useCheapestListingItemQuery({
  *   variables: {
- *      transactionHash: // value for 'transactionHash'
+ *      trackEditionId: // value for 'trackEditionId'
  *   },
  * });
  */
