@@ -688,6 +688,14 @@ const useBlockchainV2 = () => {
     [me],
   );
 
+  const getEditionRoyalties = useCallback(
+    async(web3: Web3, editionId: number) => {
+      const royalties = await (await nftContractEditions(web3).methods.editions(editionId).call()).royaltyPercentage;
+      return parseFloat(royalties);
+    },
+    [me],
+  );
+
   return {
     placeBid,
     buyItem,
@@ -707,7 +715,8 @@ const useBlockchainV2 = () => {
     mintNftTokensToEdition,
     createEdition,
     listEdition,
-    cancelEditionListing
+    cancelEditionListing,
+    getEditionRoyalties
   };
 };
 

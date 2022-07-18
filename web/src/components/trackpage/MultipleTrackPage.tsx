@@ -14,18 +14,30 @@ import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import { TrackShareButton } from 'components/TrackShareButton';
 import { useModalState } from 'contexts/providers/modal';
-import useBlockchain from 'hooks/useBlockchain';
 import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Cards } from 'icons/Cards';
 import { PriceTag } from 'icons/PriceTag';
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting';
-import { BuyNowListingItemsQuery, BuyNowListingItemsQueryVariables, OwnedTracksQuery, PendingRequest, TrackQuery, useBuyNowListingItemsQuery, useCheapestListingItemLazyQuery, useOwnedTracksQuery, useProfileLazyQuery, useTrackLazyQuery } from 'lib/graphql';
+import {
+  BuyNowListingItemsQuery,
+  BuyNowListingItemsQueryVariables,
+  OwnedTracksQuery,
+  PendingRequest,
+  TrackEdition,
+  TrackQuery,
+  useBuyNowListingItemsQuery,
+  useCheapestListingItemLazyQuery,
+  useOwnedTracksQuery,
+  useProfileLazyQuery,
+  useTrackLazyQuery,
+} from 'lib/graphql';
 import { useEffect, useMemo, useState } from 'react';
 import { Matic } from '../Matic';
 import { isPendingRequest } from 'utils/isPendingRequest';
 import { UtilityInfo } from '../details-NFT/UtilityInfo';
+import useBlockchainV2 from '../../hooks/useBlockchainV2';
 
 interface MultipleTrackPageProps {
   track: TrackQuery['track'];
@@ -51,7 +63,7 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
   const { showRemoveListing } = useModalState();
   const { setTopNavBarProps } = useLayoutContext();
   const [royalties, setRoyalties] = useState<number>();
-  const { getRoyalties } = useBlockchain();
+  const {getEditionRoyalties} = useBlockchainV2()
 
   const [refetchTrack, { data: trackData }] = useTrackLazyQuery({
     fetchPolicy: 'network-only',
@@ -101,6 +113,7 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
   const editionData = trackEdition?.editionData
   const tokenId = nftData?.tokenId;
 
+
   const firstListingItem = data?.buyNowListingItems?.nodes?.[0]?.listingItem;
 
   const mintingPending = nftData?.pendingRequest === PendingRequest.Mint;
@@ -148,16 +161,17 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
     setTopNavBarProps(topNavBarProps);
   }, [setTopNavBarProps, topNavBarProps]);
 
+  const {editionId} = track.trackEdition as TrackEdition
   useEffect(() => {
     const fetchRoyalties = async () => {
-      if (!account || !web3 || tokenId === null || tokenId === undefined || royalties != undefined) {
+      if (!account || !web3 || tokenId === null || editionId === undefined || royalties != undefined) {
         return;
       }
-      const royaltiesFromBlockchain = await getRoyalties(web3, tokenId, { nft: nftData?.contract });
+      const royaltiesFromBlockchain = await getEditionRoyalties(web3, editionId);
       setRoyalties(royaltiesFromBlockchain);
     };
     fetchRoyalties();
-  }, [account, web3, tokenId, getRoyalties, royalties, nftData?.contract]);
+  }, [account, web3, editionId, getEditionRoyalties, royalties, nftData?.contract]);
 
   useEffect(() => {
     if (track.artistProfileId) {
