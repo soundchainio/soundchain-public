@@ -693,7 +693,7 @@ const useBlockchainV2 = () => {
       const royalties = await (await nftContractEditions(web3).methods.editions(editionId).call()).royaltyPercentage;
       return parseFloat(royalties);
     },
-    [me],
+    [],
   );
 
   return {

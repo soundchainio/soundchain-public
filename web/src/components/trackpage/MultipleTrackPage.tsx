@@ -63,7 +63,7 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
   const { showRemoveListing } = useModalState();
   const { setTopNavBarProps } = useLayoutContext();
   const [royalties, setRoyalties] = useState<number>();
-  const {getEditionRoyalties} = useBlockchainV2()
+  const { getEditionRoyalties } = useBlockchainV2()
 
   const [refetchTrack, { data: trackData }] = useTrackLazyQuery({
     fetchPolicy: 'network-only',
