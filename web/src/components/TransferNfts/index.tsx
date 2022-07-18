@@ -179,7 +179,6 @@ export function useTransferNftsControls() {
 
   useEffect(() => {
     setTopNavBarProps({
-      leftButton: <BackButton />,
       title: 'Transfer NFT',
       rightButton: (
         <RefreshButton onClick={() => refetch()} label="Refresh" className="text-center" refreshing={loading} />

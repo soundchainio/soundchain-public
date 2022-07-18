@@ -128,7 +128,6 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
-      leftButton: <BackButton />,
       title: 'NFT Details',
       rightButton: (
         <div className="flex items-center gap-3">

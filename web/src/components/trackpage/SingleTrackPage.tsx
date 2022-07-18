@@ -118,7 +118,6 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
-      leftButton: <BackButton />,
       title: 'NFT Details',
       rightButton: (
         <div className="flex items-center gap-3">
