@@ -1,3 +1,4 @@
+import { BATCH_SIZE } from 'components/modals/CreateModal';
 import { config } from 'config';
 import { useCallback } from 'react';
 import { Soundchain721 } from 'types/web3-v1-contracts/Soundchain721';
@@ -7,11 +8,15 @@ import Web3 from 'web3';
 import { AbiItem } from 'web3-utils';
 import soundchainAuction from '../contract/Auction.sol/SoundchainAuction.json';
 import soundchainContract from '../contract/Soundchain721.sol/Soundchain721.json';
-import { ContractAddresses } from './useBlockchainV2';
+import { ContractAddresses, gasPriceMultiplier } from './useBlockchainV2';
 
 const nftAddress = config.web3.contractsV2.contractAddress as string;
 const marketplaceEditionsAddress = config.web3.contractsV2.marketplaceAddress as string;
 const auctionAddress = config.web3.contractsV1.auctionAddress as string;
+
+const createEditionGasCost = 130000
+const baseMintGasCost = 63538
+const mintUnitGasCost = 117000
 
 export const gas = 1200000;
 export const applySoundchainFee = (price: number) => (price * (1 + config.soundchainFee)).toFixed();
@@ -71,6 +76,24 @@ const useBlockchain = () => {
     return web3.utils.fromWei(maxFeeWei.toLocaleString('fullwide', { useGrouping: false }), 'Gwei');
   }, []);
 
+  const getEstimatedMintFee = useCallback(async (web3: Web3, editionSize: number) => {
+    const gasPriceWei = await web3.eth.getGasPrice();
+    const gasPrice = parseInt(web3.utils.fromWei(gasPriceWei, 'Gwei'));
+
+    let cost = createEditionGasCost;
+
+    let quantityLeft = editionSize;
+    for (let index = 0; index < editionSize; index += BATCH_SIZE) {
+      const quantity = quantityLeft <= BATCH_SIZE ? quantityLeft : BATCH_SIZE;
+      cost += baseMintGasCost + (quantity * mintUnitGasCost);
+      
+      quantityLeft = quantityLeft - BATCH_SIZE;
+    }
+
+    const maxFeeWei = (gasPrice * gasPriceMultiplier) * cost;
+    return web3.utils.fromWei(maxFeeWei.toLocaleString('fullwide', { useGrouping: false }), 'Gwei');
+  }, []);
+
   const getCurrentGasPrice = useCallback(async (web3: Web3) => {
     const gasPriceWei = await web3.eth.getGasPrice();
     return web3.utils.fromWei(gasPriceWei, 'ether');
@@ -81,6 +104,7 @@ const useBlockchain = () => {
     getHighestBid,
     getIpfsAssetUrl,
     getMaxGasFee,
+    getEstimatedMintFee,
     getRoyalties,
     isApprovedAuction,
     isApprovedMarketplace,
