@@ -1,4 +1,3 @@
-import { BackButton } from 'components/Buttons/BackButton';
 import { MusicianTypesForm } from 'components/forms/profile/MusicianTypesForm';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
@@ -7,7 +6,7 @@ import { useRouter } from 'next/router';
 import React, { useEffect } from 'react';
 
 const topNavBarProps: TopNavBarProps = {
-  leftButton: <BackButton />,
+
   title: 'Musician Type',
 };
 

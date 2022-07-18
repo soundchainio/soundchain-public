@@ -1,5 +1,4 @@
 import { Button } from 'components/Button';
-import { BackButton } from 'components/Buttons/BackButton';
 import { BuyNow } from 'components/details-NFT/BuyNow';
 import { InputField } from 'components/InputField';
 import { Matic } from 'components/Matic';
@@ -59,7 +58,7 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 });
 
 const topNavBarProps: TopNavBarProps = {
-  leftButton: <BackButton />,
+
   title: 'Confirm Purchase',
 };
 

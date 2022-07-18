@@ -1,5 +1,4 @@
 import { Button } from 'components/Button';
-import { BackButton } from 'components/Buttons/BackButton';
 import MaxGasFee from 'components/MaxGasFee';
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { TopNavBarProps } from 'components/TopNavBar';
@@ -71,7 +70,7 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 });
 
 const topNavBarProps: TopNavBarProps = {
-  leftButton: <BackButton />,
+
   title: 'Cancel Auction',
 };
 

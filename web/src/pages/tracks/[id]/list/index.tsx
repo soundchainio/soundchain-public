@@ -1,5 +1,4 @@
 import { Button } from 'components/Button';
-import { BackButton } from 'components/Buttons/BackButton';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useLayoutContext } from 'hooks/useLayoutContext';
@@ -11,7 +10,7 @@ import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 
 const topNavBarProps: TopNavBarProps = {
-  leftButton: <BackButton />,
+
   title: 'Select Listing Type',
 };
 

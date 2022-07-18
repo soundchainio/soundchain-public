@@ -1,4 +1,3 @@
-import { BackButton } from 'components/Buttons/BackButton';
 import { SecurityForm } from 'components/forms/profile/SecurityForm';
 import SEO from 'components/SEO';
 import { StepProgressBar } from 'components/StepProgressBar';
@@ -11,7 +10,7 @@ import { SkipButton, steps } from 'utils/createAccountUtils';
 
 const topNavBarProps: TopNavBarProps = {
   title: 'Two-factor Security',
-  leftButton: <BackButton />,
+
   rightButton: <SkipButton href={`${config.redirectUrlPostLogin}`} />,
   subtitle: <StepProgressBar steps={steps} currentStep={7} />,
 };

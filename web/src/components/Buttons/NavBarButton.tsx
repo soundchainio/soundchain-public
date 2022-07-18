@@ -1,5 +1,4 @@
 import classNames from 'classnames';
-import { config } from 'config';
 import { SVGGradientColor } from 'icons/gradients';
 import { IconProps } from 'icons/types/IconProps';
 import Image from 'next/image';
@@ -16,6 +15,8 @@ interface NavBarButtonProps {
   color?: SVGGradientColor;
   id?: string;
   nyanCat?: boolean;
+  className?: string;
+  alwaysShowLabel?: boolean;
 }
 
 export const NavBarButton = ({
@@ -27,6 +28,8 @@ export const NavBarButton = ({
   color,
   id,
   nyanCat,
+  className,
+  alwaysShowLabel,
 }: NavBarButtonProps) => {
   const [isActive, setActive] = useState(false);
   const router = useRouter();
@@ -56,16 +59,16 @@ export const NavBarButton = ({
           </div>
         )}
         {nyanCat && (
-          <div className="relative overflow-hidden scale-150">
+          <div className="relative scale-150 overflow-hidden">
             <Image height={20} width={40} src="/nyan-cat-cropped.gif" alt="Loading" priority />
           </div>
         )}
         <span
           className={classNames(
-            !path ? 'text-white' : 'text-gray-50',
-            'text-xs font-semibold',
-            !nyanCat && 'mt-2',
-            isActive && `${color}-gradient-text`,
+            !path ? 'text-white' : 'text-gray-80',
+            'text-xs font-black',
+            color && `${color}-gradient-text text-transparent`,
+            isActive || alwaysShowLabel ? `inline` : 'hidden',
           )}
         >
           {label}
@@ -73,12 +76,16 @@ export const NavBarButton = ({
       </>
     );
   };
-  const className = `flex flex-col flex-1 ${config.mobileBreakpoint}:flex-none items-center justify-center align-middle cursor-pointer`;
+  const baseClassName = classNames(
+    `flex flex-col md:flex-row flex-1 md:flex-none items-center justify-center align-middle cursor-pointer`,
+    !nyanCat && 'gap-2',
+    className,
+  );
 
   if (path) {
     return (
       <Link href={path} passHref>
-        <a className={className}>
+        <a className={baseClassName}>
           <MenuContentItem />
         </a>
       </Link>
@@ -86,7 +93,7 @@ export const NavBarButton = ({
   }
 
   return (
-    <button onClick={onButtonClick} className={className}>
+    <button onClick={onButtonClick} className={baseClassName}>
       <MenuContentItem />
     </button>
   );

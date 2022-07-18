@@ -1,13 +1,11 @@
 import { Avatar } from 'components/Avatar';
 import { Button } from 'components/Button';
-import { BackButton } from 'components/Buttons/BackButton';
 import { Delete as DeleteButton } from 'components/Buttons/Delete';
 import { CurrentRequestStatus } from 'components/CurrentRequestStatus';
 import { DenyReasonModal } from 'components/DenyReasonModal';
 import { DisplayName } from 'components/DisplayName';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
-import { config } from 'config';
 import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMe } from 'hooks/useMe';
 import { Bandcamp } from 'icons/Bandcamp';
@@ -60,7 +58,7 @@ export const getServerSideProps = protectPage<RequestPageProps, RequestPageParam
 });
 
 const topNavBarProps: TopNavBarProps = {
-  leftButton: <BackButton />,
+
   title: 'Verification Request',
 };
 
@@ -107,28 +105,28 @@ export default function RequestPage({ data }: RequestPageProps) {
   return (
     <>
       <SEO title="Manage Request | SoundChain" canonicalUrl={router.asPath} description="SoundChain Manage Request" />
-      <div className="flex flex-col justify-between h-full">
+      <div className="flex h-full flex-col justify-between">
         <div>
           <NextLink href={`/profiles/${data.profileId}`} passHref>
-            <a className="flex flex-col text-white cursor-pointer">
+            <a className="flex cursor-pointer flex-col text-white">
               <div className="relative flex items-center p-4">
-                <Avatar profile={profile.profile} pixels={40} className="rounded-full min-w-max flex items-center" />
+                <Avatar profile={profile.profile} pixels={40} className="flex min-w-max items-center rounded-full" />
                 <div className="mx-4">
                   <DisplayName
                     name={profile.profile.displayName}
                     verified={profile.profile.verified}
                     teamMember={profile.profile.teamMember}
                   />
-                  <p className="text-gray-80 text-sm">@{profile.profile.userHandle}</p>
+                  <p className="text-sm text-gray-80">@{profile.profile.userHandle}</p>
                 </div>
               </div>
             </a>
           </NextLink>
           <CurrentRequestStatus reason={data.reason || ''} status={data.status as ManageRequestTab} />
           {sourceList.map(src => (
-            <div key={src.name} className="flex items-center my-8 text-white">
-              <div className="flex flex-col items-center justify-center  text-xs px-2">
-                <div className="w-20 flex flex-col text-xs items-center">{src.icon}</div>
+            <div key={src.name} className="my-8 flex items-center text-white">
+              <div className="flex flex-col items-center justify-center  px-2 text-xs">
+                <div className="flex w-20 flex-col items-center text-xs">{src.icon}</div>
                 {src.name}
               </div>
               <a
@@ -142,9 +140,9 @@ export default function RequestPage({ data }: RequestPageProps) {
             </div>
           ))}
         </div>
-        <div className={`flex gap-4 px-4 ${config.mobileBreakpoint}:px-0 items-center my-5 mt-auto`}>
+        <div className="my-5 mt-auto flex items-center gap-4 px-4 md:px-0">
           {data.status !== ManageRequestTab.DENIED && (
-            <DeleteButton onClick={handleDeny} className="h-12 w-full text-white text-sm">
+            <DeleteButton onClick={handleDeny} className="h-12 w-full text-sm text-white">
               {data.status === ManageRequestTab.APPROVED ? 'REMOVE VERIFICATION' : 'DENY'}
             </DeleteButton>
           )}

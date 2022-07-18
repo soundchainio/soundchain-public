@@ -11,10 +11,8 @@ import { ExploreSearchBar } from './ExploreSearchBar';
 import { ExploreUsersGridView } from './ExploreUsersGridView';
 
 export const Explore = () => {
-  // TODO: Change this default state back to ExploreTab.ALL
-  const [selectedTab, setSelectedTab] = useState<ExploreTab>(ExploreTab.USERS);
+  const [selectedTab, setSelectedTab] = useState<ExploreTab>(ExploreTab.ALL);
   const [search, setSearch] = useState('');
-  // TODO: change this default state isGrid back to true
   const [isGrid, setIsGrid] = useState(true);
   const [sorting, setSorting] = useState<SortListingItem>(SortListingItem.CreatedAt);
 

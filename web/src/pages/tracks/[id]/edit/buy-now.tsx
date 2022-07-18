@@ -1,4 +1,3 @@
-import { BackButton } from 'components/Buttons/BackButton';
 import { ListNFTBuyNow, ListNFTBuyNowFormValues } from 'components/details-NFT/ListNFTBuyNow';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
@@ -91,7 +90,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
-      leftButton: <BackButton />,
+    
       title: 'Edit Listing',
       rightButton: (
         <button className="text-sm text-red-400 font-bold" onClick={handleRemove}>

@@ -1,4 +1,3 @@
-import { BackButton } from 'components/Buttons/BackButton';
 import { ListNFTAuction, ListNFTAuctionFormValues } from 'components/details-NFT/ListNFTAuction';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
@@ -28,7 +27,7 @@ interface TrackPageParams extends ParsedUrlQuery {
 }
 
 const topNavBarProps: TopNavBarProps = {
-  leftButton: <BackButton />,
+
   title: 'List for Auction',
 };
 
