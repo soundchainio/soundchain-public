@@ -36,6 +36,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 import { priceToShow } from 'utils/format';
 import { compareWallets } from 'utils/Wallet';
+import { UtilityInfo } from '../details-NFT/UtilityInfo';
 
 interface SingleTrackPageProps {
   track: TrackQuery['track'];
@@ -294,6 +295,7 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
         </div>
       )}
       <Description description={track.description || ''} className="p-4" />
+      <UtilityInfo content={track.utilityInfo || ''} className="px-4 py-2" />
       <TrackInfo
         trackTitle={track.title}
         albumTitle={track.album}

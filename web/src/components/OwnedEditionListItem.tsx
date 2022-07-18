@@ -1,6 +1,9 @@
 import { ListingItemViewComponentFieldsFragment } from 'lib/graphql';
 import NextLink from 'next/link';
 import { Button } from './Button';
+import { AuthorActionsType } from '../types/AuthorActionsType';
+import { Ellipsis } from '../icons/Ellipsis';
+import { useModalDispatch } from '../contexts/providers/modal';
 
 interface OwnedEditionListItemProps {
   canList: boolean;
@@ -34,6 +37,7 @@ interface ActionProps {
 
 function Action(props: ActionProps) {
   const { canList, isProcessing, listingItem, trackId } = props;
+  const {dispatchShowAuthorActionsModal} = useModalDispatch()
 
   if (canList) {
     if (isProcessing) {
@@ -46,14 +50,24 @@ function Action(props: ActionProps) {
   
     if (!listingItem) {
       return (
-        <NextLink href={`/tracks/${trackId}/list/buy-now`}>
-          <Button
-            variant="list-nft"
-            className="h-7"
+        <div className="flex justify-center items-center px-6">
+          <NextLink href={`/tracks/${trackId}/list/buy-now`}>
+            <Button
+              variant="list-nft"
+              className="h-7"
+            >
+              LIST
+            </Button>
+          </NextLink>
+          <button
+            type="button"
+            aria-label="More options"
+            className="flex h-10 w-10 items-center justify-center"
+            onClick={() => dispatchShowAuthorActionsModal(true, AuthorActionsType.NFT, trackId, true)}
           >
-            LIST
-          </Button>
-        </NextLink>
+            <Ellipsis fill="#808080" />
+          </button>
+        </div>
       )
     }
   }
