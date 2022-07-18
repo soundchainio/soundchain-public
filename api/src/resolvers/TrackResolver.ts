@@ -145,11 +145,13 @@ export class TrackResolver {
       batchSize: input.batchSize,
       track: input.track,
     });
-    await postService.createPost({
-      profileId,
-      trackId: track._id,
-      trackEditionId: track.trackEditionId,
-    });
+    if (input.createPost) {
+      await postService.createPost({
+        profileId,
+        trackId: track._id,
+        trackEditionId: track.trackEditionId,
+      });
+    }
     return {
       firstTrack: track,
       trackIds: [track._id, ...otherTracks.map(track => track._id)],

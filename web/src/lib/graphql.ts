@@ -236,6 +236,7 @@ export type CreateAuctionItemType = {
 export type CreateMultipleTracksInput = {
   batchSize: Scalars['Float'];
   track: CreateTrackInput;
+  createPost: Scalars['Boolean'];
 };
 
 export type CreateMultipleTracksPayload = {

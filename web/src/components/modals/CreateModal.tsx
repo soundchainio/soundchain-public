@@ -298,6 +298,7 @@ export const CreateModal = () => {
         const createAndMintTracks = (
           quantity: number,
           editionNumber: string,
+          createPost: boolean,
         ): Promise<TrackComponentFieldsFragment | undefined> => {
           return new Promise((resolve, reject) => {
             mintNftTokensToEdition(
@@ -314,6 +315,7 @@ export const CreateModal = () => {
                   variables: {
                     input: {
                       batchSize: quantity,
+                      createPost,
                       track: {
                         assetUrl,
                         title,
@@ -394,7 +396,7 @@ export const CreateModal = () => {
         for (let index = 0; index < values.editionQuantity; index += BATCH_SIZE) {
           nonce++;
           const quantity = quantityLeft <= BATCH_SIZE ? quantityLeft : BATCH_SIZE;
-          promises.push(createAndMintTracks(quantity, editionNumber));
+          promises.push(createAndMintTracks(quantity, editionNumber, index === 0));
           setMintingState('Minting NFT');
 
           quantityLeft = quantityLeft - BATCH_SIZE;

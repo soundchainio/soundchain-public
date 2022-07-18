@@ -8,4 +8,7 @@ export class CreateMultipleTracksInput {
 
   @Field()
   track: CreateTrackInput;
+
+  @Field()
+  createPost: boolean;
 }
