@@ -17,6 +17,8 @@ const auctionAddress = config.web3.contractsV1.auctionAddress as string;
 const createEditionGasCost = 130000
 const baseMintGasCost = 63538
 const mintUnitGasCost = 117000
+const listBatchUnitGasCost = 98900
+const cancelListBatchUnitGasCost = 30800
 
 export const gas = 1200000;
 export const applySoundchainFee = (price: number) => (price * (1 + config.soundchainFee)).toFixed();
@@ -94,6 +96,22 @@ const useBlockchain = () => {
     return web3.utils.fromWei(maxFeeWei.toLocaleString('fullwide', { useGrouping: false }), 'Gwei');
   }, []);
 
+  const getEstimatedListFee = useCallback(async (web3: Web3, quantity: number) => {
+    const gasPriceWei = await web3.eth.getGasPrice();
+    const gasPrice = parseInt(web3.utils.fromWei(gasPriceWei, 'Gwei'));
+
+    const maxFeeWei = (gasPrice * gasPriceMultiplier) * (listBatchUnitGasCost * quantity);
+    return web3.utils.fromWei(maxFeeWei.toLocaleString('fullwide', { useGrouping: false }), 'Gwei');
+  }, []);
+
+  const getEstimatedCancelListFee = useCallback(async (web3: Web3, quantity: number) => {
+    const gasPriceWei = await web3.eth.getGasPrice();
+    const gasPrice = parseInt(web3.utils.fromWei(gasPriceWei, 'Gwei'));
+
+    const maxFeeWei = (gasPrice * gasPriceMultiplier) * (cancelListBatchUnitGasCost * quantity);
+    return web3.utils.fromWei(maxFeeWei.toLocaleString('fullwide', { useGrouping: false }), 'Gwei');
+  }, []);
+
   const getCurrentGasPrice = useCallback(async (web3: Web3) => {
     const gasPriceWei = await web3.eth.getGasPrice();
     return web3.utils.fromWei(gasPriceWei, 'ether');
@@ -105,6 +123,8 @@ const useBlockchain = () => {
     getIpfsAssetUrl,
     getMaxGasFee,
     getEstimatedMintFee,
+    getEstimatedListFee,
+    getEstimatedCancelListFee,
     getRoyalties,
     isApprovedAuction,
     isApprovedMarketplace,

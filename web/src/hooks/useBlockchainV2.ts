@@ -555,12 +555,11 @@ export interface ListBatchParams extends DefaultParam {
   nonce?: number;
 }
 class ListBatch extends BlockchainFunction<ListBatchParams> {
-  execute = async (web3: Web3) => {
-    const { contractAddresses, tokenIds, from, price, startTime, nonce } = this.params;
+  prepare = (web3: Web3) => {
+    const { contractAddresses, tokenIds, price, startTime } = this.params;
     const totalPrice = Web3.utils.toBN(price).muln(1 + config.soundchainFee);
     this.web3 = web3;
-
-    const transactionObject = marketplaceEditionsContract(web3).methods.listBatch(
+    return marketplaceEditionsContract(web3).methods.listBatch(
       contractAddresses?.nft || nftAddress,
       tokenIds,
       totalPrice,
@@ -569,6 +568,17 @@ class ListBatch extends BlockchainFunction<ListBatchParams> {
       false,
       startTime
     );
+  }
+  estimateGas = async (web3: Web3) => {
+    const gas = await this.prepare(web3).estimateGas({ from: this.params.from });
+    console.log('Gas estimated: ' + gas, this.params.tokenIds.length);
+    return gas;
+  }
+  execute = async (web3: Web3) => {
+    const { from, nonce } = this.params;
+    this.web3 = web3;
+
+    const transactionObject = this.prepare(web3);
     const gas = await transactionObject.estimateGas({ from, nonce });
 
     await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice, nonce }));
@@ -582,14 +592,23 @@ export interface CancelListingBatchParams extends DefaultParam {
   nonce?: number;
 }
 class CancelListingBatch extends BlockchainFunction<CancelListingBatchParams> {
-  execute = async (web3: Web3) => {
-    const { contractAddresses, tokenIds, from, nonce } = this.params;
-    this.web3 = web3;
-
-    const transactionObject = marketplaceEditionsContract(web3).methods.cancelListingBatch(
+  prepare = (web3: Web3) => {
+    const { contractAddresses, tokenIds } = this.params;
+    return marketplaceEditionsContract(web3).methods.cancelListingBatch(
       contractAddresses?.nft || nftAddress,
       tokenIds,
     );
+  }
+  estimateGas = async (web3: Web3) => {
+    const gas = await this.prepare(web3).estimateGas({ from: this.params.from });
+    console.log('Gas estimated: ' + gas, this.params.tokenIds.length);
+    return gas;
+  }
+  execute = async (web3: Web3) => {
+    const { from, nonce } = this.params;
+    this.web3 = web3;
+
+    const transactionObject = this.prepare(web3);
     const gas = await transactionObject.estimateGas({ from, nonce });
 
     await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice, nonce }));
