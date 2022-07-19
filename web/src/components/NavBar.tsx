@@ -28,7 +28,7 @@ export const NavBar = () => {
       <div className="w-full flex justify-center gap-6">
         <Logo className="block h-8 w-auto" />
 
-        <NavBarButton label="Home" path="/" icon={Home} color="yellow" id="top" />
+        <NavBarButton label="Home" path="/home" icon={Home} color="yellow" id="top" />
         <NavBarButton id="top-explore-" label="Explore" path={me ? '/explore' : '/login'} icon={Search} color="green" />
         <NavBarButton
           id="top-library-"

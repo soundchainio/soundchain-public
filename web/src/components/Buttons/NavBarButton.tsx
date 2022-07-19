@@ -67,7 +67,7 @@ export const NavBarButton = ({
           className={classNames(
             !path ? 'text-white' : 'text-gray-80',
             'text-xs font-black',
-            color && `${color}-gradient-text text-transparent`,
+            isActive && color && `${color}-gradient-text text-transparent`,
             isActive || alwaysShowLabel ? `inline` : 'hidden',
           )}
         >
