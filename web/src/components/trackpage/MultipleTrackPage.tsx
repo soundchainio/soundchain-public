@@ -1,5 +1,4 @@
 import { ObservableQuery } from '@apollo/client';
-import { BackButton } from 'components/Buttons/BackButton';
 import { BuyNowEditionListItem } from 'components/BuyNowEditionListItem';
 import { Description } from 'components/details-NFT/Description';
 import { HandleMultipleEditionNFT } from 'components/details-NFT/HandleMultipleEditionNFT';
