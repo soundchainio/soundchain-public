@@ -78,7 +78,7 @@ export const NavBarButton = ({
   };
   const baseClassName = classNames(
     `flex flex-col md:flex-row flex-1 md:flex-none items-center justify-center align-middle cursor-pointer`,
-    !nyanCat && 'gap-2',
+    nyanCat ? 'gap-3' : 'gap-2',
     className,
   );
 
