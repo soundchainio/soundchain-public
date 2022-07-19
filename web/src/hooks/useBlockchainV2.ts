@@ -569,10 +569,8 @@ class ListBatch extends BlockchainFunction<ListBatchParams> {
       startTime
     );
   }
-  estimateGas = async (web3: Web3) => {
-    const gas = await this.prepare(web3).estimateGas({ from: this.params.from });
-    console.log('Gas estimated: ' + gas, this.params.tokenIds.length);
-    return gas;
+  estimateGas = (web3: Web3) => {
+    return this.prepare(web3).estimateGas({ from: this.params.from });
   }
   execute = async (web3: Web3) => {
     const { from, nonce } = this.params;
@@ -599,10 +597,8 @@ class CancelListingBatch extends BlockchainFunction<CancelListingBatchParams> {
       tokenIds,
     );
   }
-  estimateGas = async (web3: Web3) => {
-    const gas = await this.prepare(web3).estimateGas({ from: this.params.from });
-    console.log('Gas estimated: ' + gas, this.params.tokenIds.length);
-    return gas;
+  estimateGas = (web3: Web3) => {
+    return this.prepare(web3).estimateGas({ from: this.params.from });
   }
   execute = async (web3: Web3) => {
     const { from, nonce } = this.params;
