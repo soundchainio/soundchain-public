@@ -147,6 +147,7 @@ export const RemoveListingConfirmationModal = () => {
       .onReceipt(onSingleItemReceipt)
       .onError(cause => toast.error(cause.message))
       .finally(() => setLoading(false))
+      .execute(web3!);
   }
 
   const handleSubmit = () => {
