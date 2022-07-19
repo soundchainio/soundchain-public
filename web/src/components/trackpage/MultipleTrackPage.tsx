@@ -64,6 +64,13 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
   const { setTopNavBarProps } = useLayoutContext();
   const [royalties, setRoyalties] = useState<number>();
   const { getEditionRoyalties } = useBlockchainV2()
+  const [forceRefresh, setForceRefresh] = useState(false);
+
+  useEffect(() => {
+    if (!showRemoveListing) {
+      setForceRefresh(true);
+    }
+  }, [showRemoveListing, setForceRefresh])
 
   const [refetchTrack, { data: trackData }] = useTrackLazyQuery({
     fetchPolicy: 'network-only',
@@ -153,6 +160,8 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
         }
       },
     },
+    fetchPolicy: 'network-only',
+    nextFetchPolicy: 'network-only',
     skip: !track.trackEditionId,
     ssr: false,
   });
@@ -181,15 +190,16 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      if (isProcessing || !showRemoveListing) {
+      if (isProcessing || forceRefresh) {
         refetchTrack({ variables: { id: track.id } });
         refetchListingItem();
         ownedTracksRefetch();
+        setForceRefresh(false)
       }
     }, 10 * 1000);
 
     return () => clearInterval(interval);
-  }, [isProcessing, refetchTrack, refetchListingItem, ownedTracksRefetch, tokenId, track.id, showRemoveListing]);
+  }, [isProcessing, refetchTrack, refetchListingItem, ownedTracksRefetch, tokenId, track.id, forceRefresh, setForceRefresh]);
 
   return (
     <>

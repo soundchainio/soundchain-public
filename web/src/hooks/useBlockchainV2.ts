@@ -71,7 +71,7 @@ class BlockchainFunction<Type> {
       await magic.auth.loginWithMagicLink({ email: me.email });
     }
     const gasPriceString = await this.web3?.eth.getGasPrice();
-    const gasPrice = Math.floor(Number(gasPriceString) * 1.5) ?? fallbackGasPrice;
+    const gasPrice = Math.floor(Number(gasPriceString) * 2) ?? fallbackGasPrice;
     lambda(gasPrice)
       .on('transactionHash', transactionHash => {
         this.transactionHash = transactionHash;
@@ -532,6 +532,56 @@ class ListEdition extends BlockchainFunction<ListEditionParams> {
   };
 }
 
+export interface ListBatchParams extends DefaultParam {
+  tokenIds: number[];
+  price: string;
+  startTime: number;
+  nonce?: number;
+}
+class ListBatch extends BlockchainFunction<ListBatchParams> {
+  execute = async (web3: Web3) => {
+    const { contractAddresses, tokenIds, from, price, startTime, nonce } = this.params;
+    const totalPrice = Web3.utils.toBN(price).muln(1 + config.soundchainFee);
+    this.web3 = web3;
+
+    const transactionObject = marketplaceEditionsContract(web3).methods.listBatch(
+      contractAddresses?.nft || nftAddress,
+      tokenIds,
+      totalPrice,
+      0,
+      true,
+      false,
+      startTime
+    );
+    const gas = await transactionObject.estimateGas({ from, nonce });
+
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice, nonce }));
+
+    return this.receipt;
+  };
+}
+
+export interface CancelListingBatchParams extends DefaultParam {
+  tokenIds: number[];
+  nonce?: number;
+}
+class CancelListingBatch extends BlockchainFunction<CancelListingBatchParams> {
+  execute = async (web3: Web3) => {
+    const { contractAddresses, tokenIds, from, nonce } = this.params;
+    this.web3 = web3;
+
+    const transactionObject = marketplaceEditionsContract(web3).methods.cancelListingBatch(
+      contractAddresses?.nft || nftAddress,
+      tokenIds,
+    );
+    const gas = await transactionObject.estimateGas({ from, nonce });
+
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice, nonce }));
+
+    return this.receipt;
+  };
+}
+
 interface CancelEditionListingParams extends DefaultParam {
   editionNumber: number;
 }
@@ -688,6 +738,20 @@ const useBlockchainV2 = () => {
     [me],
   );
 
+  const listBatch = useCallback(
+    (payload: ListBatchParams) => {
+      return new ListBatch(me, payload);
+    },
+    [me],
+  );
+
+  const cancelListingBatch = useCallback(
+    (payload: CancelListingBatchParams) => {
+      return new CancelListingBatch(me, payload);
+    },
+    [me],
+  );
+
   const getEditionRoyalties = useCallback(
     async(web3: Web3, editionId: number) => {
       const royalties = await (await nftContractEditions(web3).methods.editions(editionId).call()).royaltyPercentage;
@@ -716,6 +780,8 @@ const useBlockchainV2 = () => {
     createEdition,
     listEdition,
     cancelEditionListing,
+    listBatch,
+    cancelListingBatch,
     getEditionRoyalties
   };
 };

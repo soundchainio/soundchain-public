@@ -24,10 +24,10 @@ type ReturnTypes =
   | AuctionResulted['returnValues']
   | BidPlaced['returnValues']
   | UpdateAuction['returnValues']
-  | ItemCanceled['returnValues']
+  | ItemCanceled
   | ItemListed
-  | ItemSold['returnValues']
-  | ItemUpdated['returnValues']
+  | ItemSold
+  | ItemUpdated
   | Transfer
   | EditionCreated
   | EditionListed
@@ -60,7 +60,7 @@ const processItemListed = async (event: ItemListed, context: Context): Promise<v
     context.trackService.setPendingNone(parseInt(tokenId), nft);
     return;
   }
-  await Promise.all([
+  const [_, track] = await Promise.all([
     context.buyNowItemService.createBuyNowItem({
       owner,
       nft,
@@ -72,32 +72,41 @@ const processItemListed = async (event: ItemListed, context: Context): Promise<v
     }),
     context.trackService.setPendingNone(parseInt(tokenId), nft),
   ]);
+  if (track.nftData.owner === track.nftData.minter) {
+    await context.trackEditionService.markEditionListedIfNeeded(track.trackEditionId, address);
+  }
   console.log('ItemListed');
 };
 
-const processItemSold = async (returnValues: ItemSold['returnValues'], context: Context): Promise<void> => {
+const processItemSold = async (event: ItemSold, context: Context): Promise<void> => {
+  const { returnValues, address } = event;
   const { tokenId, seller, buyer, pricePerItem, nft } = returnValues;
-  await context.buyNowItemService.finishListing(tokenId, seller, buyer, getPriceToShow(pricePerItem), nft);
+  await context.buyNowItemService.finishListing(tokenId, seller, buyer, getPriceToShow(pricePerItem), nft, address);
   console.log('ItemSold');
 };
 
-const processItemUpdated = async (returnValues: ItemUpdated['returnValues'], context: Context): Promise<void> => {
+const processItemUpdated = async (event: ItemUpdated, context: Context): Promise<void> => {
+  const { returnValues, address } = event;
   const { tokenId, newPrice, startingTime, nft } = returnValues;
   await Promise.all([
     context.buyNowItemService.updateBuyNowItem(parseInt(tokenId), {
       pricePerItem: newPrice,
       pricePerItemToShow: getPriceToShow(newPrice),
       startingTime: parseInt(startingTime),
-    }, nft),
+    }, nft, address),
     context.trackService.setPendingNone(parseInt(tokenId), nft),
   ]);
   console.log('ItemUpdated');
 };
 
-const processItemCanceled = async (returnValues: ItemCanceled['returnValues'], context: Context): Promise<void> => {
+const processItemCanceled = async (event: ItemCanceled, context: Context): Promise<void> => {
+  const { returnValues, address } = event;
   const { tokenId, nft } = returnValues;
-  await context.buyNowItemService.setNotValid(parseInt(tokenId), nft);
-  await context.trackService.setPendingNone(parseInt(tokenId), nft);
+  await context.buyNowItemService.setNotValid(parseInt(tokenId), nft, address);
+  const track = await context.trackService.setPendingNone(parseInt(tokenId), nft);
+  if (track.nftData.owner === track.nftData.minter) {
+    await context.trackEditionService.markEditionUnlistedIfNeeded(track.trackEditionId);
+  }
   console.log('ItemCanceled');
 };
 

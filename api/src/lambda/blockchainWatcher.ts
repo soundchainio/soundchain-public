@@ -97,17 +97,17 @@ const processMarketplaceEvents = async (events: EventData[], context: Context) =
         break;
       case 'ItemSold':
         {
-          await itemEvents.sold((event as unknown as ItemSold).returnValues, context);
+          await itemEvents.sold((event as unknown as ItemSold), context);
         }
         break;
       case 'ItemUpdated':
         {
-          await itemEvents.updated((event as unknown as ItemUpdated).returnValues, context);
+          await itemEvents.updated((event as unknown as ItemUpdated), context);
         }
         break;
       case 'ItemCanceled':
         {
-          await itemEvents.canceled((event as unknown as ItemCanceled).returnValues, context);
+          await itemEvents.canceled((event as unknown as ItemCanceled), context);
         }
         break;
       case 'EditionListed':

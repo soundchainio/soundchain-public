@@ -5,12 +5,12 @@ import { Track } from 'components/Track';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { FormikHelpers } from 'formik';
 import useBlockchain from 'hooks/useBlockchain';
-import useBlockchainV2 from 'hooks/useBlockchainV2';
+import useBlockchainV2, { ListBatchParams } from 'hooks/useBlockchainV2';
 import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { cacheFor } from 'lib/apollo';
-import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemLazyQuery, useUpdateAllOwnedTracksMutation, useUpdateTrackMutation } from 'lib/graphql';
+import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemLazyQuery, useOwnedTrackIdsLazyQuery, useUpdateAllOwnedTracksMutation, useUpdateTrackMutation } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
@@ -19,6 +19,7 @@ import { toast } from 'react-toastify';
 import { SaleType } from 'types/SaleType';
 import SEO from '../../../../components/SEO';
 
+const LIST_BATCH_SIZE = 120;
 export interface TrackPageProps {
   track: TrackQuery['track'];
 }
@@ -54,7 +55,7 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 
 export default function ListBuyNowPage({ track }: TrackPageProps) {
   const { isTokenOwner, isApprovedMarketplace: checkIsApproved } = useBlockchain();
-  const { listItem, listEdition } = useBlockchainV2();
+  const { listItem, listBatch } = useBlockchainV2();
   const router = useRouter();
   const me = useMe();
   const [trackUpdate] = useUpdateTrackMutation();
@@ -107,10 +108,11 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
   const isForSale = !!buyNowItem?.buyNowItem?.buyNowItem?.pricePerItem ?? false;
 
   const { edition } = router.query;
+  const [fetchOwnedTrackIds] = useOwnedTrackIdsLazyQuery()
   const isEditionListing = Boolean(edition);
   const listLabel = isEditionListing ? 'LIST EDITION' : 'LIST NFT';
 
-  const handleListEdition = (
+  const handleListEdition = async (
     { price, startTime }: ListNFTBuyNowFormValues,
     helper: FormikHelpers<ListNFTBuyNowFormValues>,
   ) => {
@@ -120,27 +122,68 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
     const weiPrice = web3?.utils.toWei(price.toString(), 'ether') || '0';
     const startTimestamp = Math.ceil(startTime.getTime() / 1000);
 
-    const onReceipt = async () => {
-      await ownedTracksUpdate({
-        variables: {
-          input: {
-            trackEditionId: track.trackEdition!.id,
-            owner: account,
-            nftData: {
-              pendingRequest: PendingRequest.List,
-              pendingTime: new Date().toISOString(),
+    const ownedTrackIds = await fetchOwnedTrackIds({
+      variables: {
+        filter: {
+          trackEditionId: track.trackEdition.id,
+          owner: account,
+        }
+      }
+    });
+
+    const allTracks = ownedTrackIds.data!.ownedTracks.nodes
+      .filter(track => track.nftData?.tokenId !== null && track.nftData?.tokenId !== undefined);
+
+    function listIds(trackIds: string[], params: ListBatchParams) {
+      return new Promise<void>((resolve, reject) => {
+        const onReceipt = async () => {
+          await ownedTracksUpdate({
+            variables: {
+              input: {
+                trackIds,
+                trackEditionId: track.trackEdition!.id,
+                owner: params.from,
+                nftData: {
+                  pendingRequest: PendingRequest.List,
+                  pendingTime: new Date().toISOString(),
+                },
+              },
             },
-          },
-        },
+          });
+          resolve();
+        }
+        listBatch(params)
+          .onReceipt(onReceipt)
+          .onError(cause => {
+            toast.error(cause.message)
+            reject(cause);
+          })
+          .execute(web3!);
       });
-      router.replace(router.asPath.replace('/list/buy-now?edition=true', ''));
-        
-    };
-    listEdition(track.trackEdition.editionId, account, weiPrice, startTimestamp, { nft: nftData.contract })
-      .onReceipt(onReceipt)
-      .onError(cause => toast.error(cause.message))
-      .finally(() => helper.setSubmitting(false))
-      .execute(web3);
+    }
+
+    let nonce = await web3?.eth.getTransactionCount(account);
+
+    const promises = []
+    while(allTracks.length > 0) {
+      const tracksToList = allTracks.splice(0, LIST_BATCH_SIZE);
+      console.log(`Listing ${tracksToList.length} tracks`);
+      promises.push(listIds(
+        tracksToList.map(track => track.id),
+        { 
+          tokenIds: tracksToList.map(t => Number(t.nftData!.tokenId)), 
+          from: account, 
+          price: weiPrice, 
+          startTime: startTimestamp, 
+          contractAddresses: { nft: nftData.contract },
+          nonce: nonce++,
+        }
+      ));
+    }
+
+    await Promise.all(promises);
+    helper.setSubmitting(false)
+    router.replace(router.asPath.replace('/list/buy-now?edition=true', ''));  
   };
 
   const handleListSingleNft = (
