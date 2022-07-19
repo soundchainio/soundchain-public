@@ -7,10 +7,11 @@ import { FormikHelpers } from 'formik';
 import useBlockchain from 'hooks/useBlockchain';
 import useBlockchainV2, { ListBatchParams } from 'hooks/useBlockchainV2';
 import { useLayoutContext } from 'hooks/useLayoutContext';
+import { useMaxBatchListGasFee } from 'hooks/useMaxBatchListGasFee';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { cacheFor } from 'lib/apollo';
-import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemLazyQuery, useOwnedTrackIdsLazyQuery, useUpdateAllOwnedTracksMutation, useUpdateTrackMutation } from 'lib/graphql';
+import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemLazyQuery, useOwnedTrackIdsQuery, useUpdateAllOwnedTracksMutation, useUpdateTrackMutation } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
@@ -108,7 +109,20 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
   const isForSale = !!buyNowItem?.buyNowItem?.buyNowItem?.pricePerItem ?? false;
 
   const { edition } = router.query;
-  const [fetchOwnedTrackIds] = useOwnedTrackIdsLazyQuery()
+  const { data: ownedTrackIds } = useOwnedTrackIdsQuery({
+    variables: {
+      filter: {
+        trackEditionId: track.trackEdition!.id,
+        owner: account!,
+      }
+    },
+    skip: !account || !track.trackEdition?.id,
+  })
+  const allTracks = ownedTrackIds?.ownedTracks.nodes
+    .filter(track => track.nftData?.tokenId !== null && track.nftData?.tokenId !== undefined);
+
+  const maxBatchListGasFee = useMaxBatchListGasFee(allTracks?.length ?? 0);
+
   const isEditionListing = Boolean(edition);
   const listLabel = isEditionListing ? 'LIST EDITION' : 'LIST NFT';
 
@@ -116,23 +130,11 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
     { price, startTime }: ListNFTBuyNowFormValues,
     helper: FormikHelpers<ListNFTBuyNowFormValues>,
   ) => {
-    if (nftData?.tokenId === null || nftData?.tokenId === undefined || !account || !web3 || !track.trackEdition) {
+    if (nftData?.tokenId === null || nftData?.tokenId === undefined || !account || !web3 || !track.trackEdition || !allTracks) {
       return;
     }
     const weiPrice = web3?.utils.toWei(price.toString(), 'ether') || '0';
     const startTimestamp = Math.ceil(startTime.getTime() / 1000);
-
-    const ownedTrackIds = await fetchOwnedTrackIds({
-      variables: {
-        filter: {
-          trackEditionId: track.trackEdition.id,
-          owner: account,
-        }
-      }
-    });
-
-    const allTracks = ownedTrackIds.data!.ownedTracks.nodes
-      .filter(track => track.nftData?.tokenId !== null && track.nftData?.tokenId !== undefined);
 
     function listIds(trackIds: string[], params: ListBatchParams) {
       return new Promise<void>((resolve, reject) => {
@@ -250,7 +252,11 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
       <div className="m-4">
         <Track track={track} />
       </div>
-      <ListNFTBuyNow handleSubmit={handleList} submitLabel={isApproved ? listLabel : 'APPROVE MARKETPLACE'} />
+      <ListNFTBuyNow 
+        handleSubmit={handleList} 
+        submitLabel={isApproved ? listLabel : 'APPROVE MARKETPLACE'}
+        maxGasFee={edition ? maxBatchListGasFee : undefined}
+      />
     </>
   );
 }

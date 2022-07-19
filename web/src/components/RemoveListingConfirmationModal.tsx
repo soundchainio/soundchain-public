@@ -1,10 +1,11 @@
 import { Modal } from 'components/Modal';
 import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import useBlockchainV2, { CancelListingBatchParams, ContractAddresses } from 'hooks/useBlockchainV2';
+import { useMaxCancelBatchListGasFee } from 'hooks/useMaxCancelBatchListGasFee';
 import { useMaxGasFee } from 'hooks/useMaxGasFee';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
-import { PendingRequest, useOwnedBuyNowTrackIdsLazyQuery, useUpdateAllOwnedTracksMutation, useUpdateTrackMutation } from 'lib/graphql';
+import { PendingRequest, useOwnedBuyNowTrackIdsQuery, useUpdateAllOwnedTracksMutation, useUpdateTrackMutation } from 'lib/graphql';
 import router from 'next/router';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
@@ -27,9 +28,24 @@ export const RemoveListingConfirmationModal = () => {
   const { dispatchShowRemoveListingModal } = useModalDispatch();
   const { cancelListing, cancelAuction, cancelListingBatch } = useBlockchainV2();
   const { web3, account, balance } = useWalletContext();
-  const maxGasFee = useMaxGasFee(showRemoveListing);
+  const defaultMaxGasFee = useMaxGasFee(showRemoveListing);
   const [loading, setLoading] = useState(false);
-  const [fetchOwnedTrackIds] = useOwnedBuyNowTrackIdsLazyQuery()
+  const { data: ownedTrackIds } = useOwnedBuyNowTrackIdsQuery({
+    variables: {
+      filter: {
+        trackEditionId: trackEditionId!,
+        owner: account!,
+      },
+    },
+    skip: !account || !trackEditionId,
+  })
+
+  const allTracks = ownedTrackIds?.ownedBuyNowListingItems.nodes
+    .filter(track => track.nftData?.tokenId !== null && track.nftData?.tokenId !== undefined);
+
+  const editionMaxGasFee = useMaxCancelBatchListGasFee(allTracks?.length ?? 0);
+
+  const maxGasFee = trackEditionId ? editionMaxGasFee : defaultMaxGasFee;
 
   const handleClose = () => {
     dispatchShowRemoveListingModal({show: false, tokenId: 0, trackId: '', saleType: SaleType.CLOSE, contractAddresses: {}});
@@ -48,6 +64,7 @@ export const RemoveListingConfirmationModal = () => {
 
   const getCancelationHandler = (account: string, tokenId?: number, contractAddresses?: ContractAddresses) => {
     if (trackEditionId) {
+      if(!allTracks) return;
       return () => handleCancelBatch(trackEditionId, account, contractAddresses);
     }
 
@@ -81,27 +98,17 @@ export const RemoveListingConfirmationModal = () => {
             toast.error(cause.message)
             reject(cause);
           })
-          .execute(web3!);
+          .estimateGas(web3!);
       });
     }
 
-    const ownedTrackIds = await fetchOwnedTrackIds({
-      variables: {
-        filter: {
-          trackEditionId,
-          owner: account,
-        },
-      }
-    });
-
-    const allTracks = ownedTrackIds.data!.ownedBuyNowListingItems.nodes
-      .filter(track => track.nftData?.tokenId !== null && track.nftData?.tokenId !== undefined);
+   
 
     let nonce = await web3!.eth.getTransactionCount(account);
 
     const promises = []
-    while(allTracks.length > 0) {
-      const tracksToList = allTracks.splice(0, CANCEL_BATCH_SIZE);
+    while(allTracks!.length > 0) {
+      const tracksToList = allTracks!.splice(0, CANCEL_BATCH_SIZE);
       promises.push(cancelIds(
         tracksToList.map(track => track.id),
         { 
@@ -209,7 +216,7 @@ export const RemoveListingConfirmationModal = () => {
             </div>
           </div>
           <div className="flex flex-col p-4 bg-gray-20">
-            <MaxGasFee />
+            <MaxGasFee maxGasFee={maxGasFee} />
           </div>
         </div>
         <div>
