@@ -59,7 +59,7 @@ export const NavBarButton = ({
           </div>
         )}
         {nyanCat && (
-          <div className="relative scale-150 overflow-hidden">
+          <div className="flex scale-150 overflow-hidden">
             <Image height={20} width={40} src="/nyan-cat-cropped.gif" alt="Loading" priority />
           </div>
         )}
