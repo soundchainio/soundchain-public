@@ -3305,7 +3305,7 @@ export type TrackEditionFieldsFragment = (
   & Pick<TrackEdition, 'id' | 'editionId' | 'transactionHash' | 'contract' | 'listed' | 'marketplace' | 'editionSize' | 'createdAt' | 'updatedAt'>
   & { editionData: Maybe<(
     { __typename?: 'EditionDataType' }
-    & Pick<EditionDataType, 'pendingRequest' | 'pendingTime' | 'transactionHash' | 'contract' | 'owner'>
+    & Pick<EditionDataType, 'pendingRequest' | 'pendingTime' | 'pendingTrackCount' | 'transactionHash' | 'contract' | 'owner'>
   )> }
 );
 
@@ -3842,6 +3842,7 @@ export const TrackEditionFieldsFragmentDoc = gql`
   editionData {
     pendingRequest
     pendingTime
+    pendingTrackCount
     transactionHash
     contract
     owner

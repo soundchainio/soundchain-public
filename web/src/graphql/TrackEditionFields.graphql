@@ -12,6 +12,7 @@ fragment TrackEditionFields on TrackEdition {
   editionData {
     pendingRequest
     pendingTime
+    pendingTrackCount
     transactionHash
     contract
     owner
