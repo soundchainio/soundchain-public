@@ -19,6 +19,8 @@ import soundchainContract from '../contract/Soundchain721.sol/Soundchain721.json
 import soundchainContractEditions from '../contract/Soundchain721Editions.sol/Soundchain721Editions.json';
 import soundchainMarketplaceEditions from '../contract/v2/SoundchainMarketplaceEditions.json';
 
+export const gasPriceMultiplier = 1.5
+
 const nftAddress = config.web3.contractsV2.contractAddress as string;
 const marketplaceAddress = config.web3.contractsV1.marketplaceAddress as string;
 const marketplaceEditionsAddress = config.web3.contractsV2.marketplaceAddress as string;
@@ -71,7 +73,7 @@ class BlockchainFunction<Type> {
       await magic.auth.loginWithMagicLink({ email: me.email });
     }
     const gasPriceString = await this.web3?.eth.getGasPrice();
-    const gasPrice = Math.floor(Number(gasPriceString) * 2) ?? fallbackGasPrice;
+    const gasPrice = Math.floor(Number(gasPriceString) * gasPriceMultiplier) ?? fallbackGasPrice;
     lambda(gasPrice)
       .on('transactionHash', transactionHash => {
         this.transactionHash = transactionHash;
@@ -452,17 +454,24 @@ interface MintNftTokensToEditionParams extends DefaultParam {
   nonce: number;
 }
 class MintNftTokensToEdition extends BlockchainFunction<MintNftTokensToEditionParams> {
-  execute = async (web3: Web3) => {
-    const { from, uri, toAddress, editionNumber, quantity, nonce } = this.params;
-
-    this.web3 = web3;
-
-    const transactionObject = nftContractEditions(web3).methods.safeMintToEditionQuantity(
+  prepare = (web3: Web3) => {
+    const { uri, toAddress, editionNumber, quantity } = this.params;
+    return nftContractEditions(web3).methods.safeMintToEditionQuantity(
       toAddress,
       uri,
       editionNumber,
       quantity,
     );
+  }
+  estimateGas = (web3: Web3) => {
+    return this.prepare(web3).estimateGas({ from: this.params.from });
+  }
+  execute = async (web3: Web3) => {
+    const { from, nonce } = this.params;
+
+    this.web3 = web3;
+
+    const transactionObject = this.prepare(web3);
 
     let gas = 0;
     while (!gas) {
@@ -487,15 +496,22 @@ interface CreateEditionParams extends DefaultParam {
   nonce: number;
 }
 class CreateEdition extends BlockchainFunction<CreateEditionParams> {
-  execute = async (web3: Web3) => {
-    const { from, editionQuantity, toAddress, royaltyPercentage, nonce } = this.params;
-    this.web3 = web3;
-
-    const transactionObject = nftContractEditions(web3).methods.createEdition(
+  prepare = (web3: Web3) => {
+    const { editionQuantity, toAddress, royaltyPercentage } = this.params;
+    return nftContractEditions(web3).methods.createEdition(
       editionQuantity,
       toAddress,
       royaltyPercentage,
     );
+  }
+  estimateGas = (web3: Web3) => {
+    return this.prepare(web3).estimateGas({ from: this.params.from });
+  }
+  execute = async (web3: Web3) => {
+    const { from, nonce } = this.params;
+    this.web3 = web3;
+
+    const transactionObject = this.prepare(web3);
     const gas = await transactionObject.estimateGas({ from });
 
     await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice, nonce }));
