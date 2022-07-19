@@ -44,7 +44,7 @@ export const NavBar = () => {
           color="purple-green"
           path={'/marketplace'}
         />
-        {!isMinting ? (
+        {isMinting ? (
           <NavBarButton label="Minting..." alwaysShowLabel nyanCat={true} onClick={handleCreateClick} />
         ) : (
           <NavBarButton label="Create" alwaysShowLabel icon={NewPost} onClick={handleCreateClick} />
