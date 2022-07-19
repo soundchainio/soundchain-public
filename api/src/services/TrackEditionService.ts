@@ -26,8 +26,30 @@ export class TrackEditionService extends ModelService<typeof TrackEdition> {
   async markEditionListed(editionId: number, nft: string, marketplace: string): Promise<void> {
     await this.model.updateOne(
       { editionId, contract: nft },
-      { listed: true, marketplace }
+      { 
+        listed: true, 
+        marketplace,
+        $set: {
+          'editionData.pendingRequest': PendingRequest.None,
+          'editionData.pendingTime': null,
+        }
+      }
     );
+  }
+
+  async markEditionListedIfNeeded(id: string, marketplace: string): Promise<void> {
+    const edition = await this.subtractPendingTrackCount(id);
+
+    if (edition.editionData.pendingTrackCount === 0) {
+      await TrackEditionModel.updateOne({ _id: edition._id }, {
+        listed: true, 
+        marketplace,
+        $set: {
+          "editionData.pendingRequest": PendingRequest.None,
+          "editionData.pendingTime": null,
+        }
+      });
+    }
   }
 
   async markEditionUnlisted(editionId: number, nft: string): Promise<void> {
@@ -44,13 +66,54 @@ export class TrackEditionService extends ModelService<typeof TrackEdition> {
     );
   }
 
+  async markEditionUnlistedIfNeeded(id: string): Promise<void> {
+    const edition = await this.subtractPendingTrackCount(id);
+
+    if (edition.editionData.pendingTrackCount === 0) {
+      await TrackEditionModel.updateOne({ _id: edition._id }, {
+        listed: false, 
+        marketplace: null,
+        $set: {
+          "editionData.pendingRequest": PendingRequest.None,
+          "editionData.pendingTime": null,
+        }
+      });
+    }
+  }
+
+  async subtractPendingTrackCount(id: string): Promise<TrackEdition> {
+    return await TrackEditionModel.findOneAndUpdate({ _id: id }, [
+      {
+        $set: {
+          "editionData.pendingTrackCount": {
+            $max: [
+              0,
+              {
+                $subtract: [
+                  "$editionData.pendingTrackCount",
+                  1
+                ]
+              }
+            ]
+          }
+        }
+      }
+    ],
+    {
+      new: true
+    });
+  }
+
   async resetPending(beforeTime: Date): Promise<void> {
     return this.model.updateMany(
       {
         'editionData.pendingRequest': { $ne: PendingRequest.None },
         'editionData.pendingTime': { $lte: beforeTime },
       },
-      { 'editionData.pendingRequest': PendingRequest.None },
+      { 
+        'editionData.pendingRequest': PendingRequest.None,
+        'editionData.pendingTrackCount': 0,
+      },
     );
   }
 

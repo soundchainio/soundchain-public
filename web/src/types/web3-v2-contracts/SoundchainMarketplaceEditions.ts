@@ -137,12 +137,27 @@ export interface SoundchainMarketplaceEditions extends BaseContract {
       _tokenId: number | string | BN
     ): NonPayableTransactionObject<void>;
 
+    cancelListingBatch(
+      _nftAddress: string,
+      tokenIds: (number | string | BN)[]
+    ): NonPayableTransactionObject<void>;
+
     editionListings(
       arg0: string,
       arg1: number | string | BN
     ): NonPayableTransactionObject<boolean>;
 
     feeRecipient(): NonPayableTransactionObject<string>;
+
+    listBatch(
+      _nftAddress: string,
+      tokenIds: (number | string | BN)[],
+      _pricePerItem: number | string | BN,
+      _OGUNPricePerItem: number | string | BN,
+      _acceptsMATIC: boolean,
+      _acceptsOGUN: boolean,
+      _startingTime: number | string | BN
+    ): NonPayableTransactionObject<void>;
 
     listEdition(
       _nftEditionAddress: string,

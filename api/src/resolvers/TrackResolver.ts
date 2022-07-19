@@ -10,9 +10,12 @@ import { FavoriteCount } from '../services/TrackService';
 import { Context } from '../types/Context';
 import { CreateMultipleTracksInput } from '../types/CreateMultipleTracksInput';
 import { CreateMultipleTracksPayload } from '../types/CreateMultipleTracksPayload';
+import { MAX_EDITION_SIZE } from '../types/CreateTrackEditionInput';
 import { DeleteTrackInput } from '../types/DeleteTrackInput';
 import { DeleteTrackPayload } from '../types/DeleteTrackPayload';
 import { FilterBuyNowItemInput } from '../types/FilterBuyNowItemInput';
+import { FilterOwnedBuyNowItemInput } from '../types/FilterOwnedBuyNowItemInput';
+import { FilterOwnedTracksInput } from '../types/FilterOwnedTracksInput';
 import { FilterTrackInput } from '../types/FilterTrackInput';
 import { FilterTrackMarketplace } from '../types/FilterTrackMarketplace';
 import { ListingItemConnection } from '../types/ListingItemConnection';
@@ -125,6 +128,24 @@ export class TrackResolver {
   }
 
   @Query(() => TrackConnection)
+  async ownedTracks(
+    @Ctx() { trackService }: Context,
+    @Arg('filter') filter?: FilterOwnedTracksInput,
+  ): Promise<TrackConnection> {
+    return trackService.getTracks({
+        trackEditionId: filter.trackEditionId,
+        nftData: {
+          owner: filter.owner,
+        }
+      }, 
+      undefined, 
+      {
+        first: MAX_EDITION_SIZE,
+      }
+    );
+  }
+
+  @Query(() => TrackConnection)
   groupedTracks(
     @Ctx() { trackService }: Context,
     @Arg('filter', { nullable: true }) filter?: FilterTrackInput,
@@ -172,9 +193,9 @@ export class TrackResolver {
   @Authorized()
   async updateEditionOwnedTracks(
     @Ctx() { trackService }: Context,
-    @Arg('input') { trackEditionId, owner, ...changes }: UpdateEditionOwnedTracksInput,
+    @Arg('input') { trackIds, trackEditionId, owner, ...changes }: UpdateEditionOwnedTracksInput,
   ): Promise<UpdateEditionOwnedTracksPayload> {
-    const tracks = await trackService.updateEditionOwnedTracks(trackEditionId, owner, changes);
+    const tracks = await trackService.updateEditionOwnedTracks(trackIds, trackEditionId, owner, changes);
     return { tracks };
   }
 
@@ -248,5 +269,18 @@ export class TrackResolver {
     @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<ListingItemConnection> {
     return trackService.getBuyNowlistingItems(filter, sort, page);
+  }
+
+  @Query(() => ListingItemConnection)
+  ownedBuyNowListingItems(
+    @Ctx() { trackService }: Context,
+    @Arg('filter', { nullable: true }) filter?: FilterOwnedBuyNowItemInput,
+  ): Promise<ListingItemConnection> {
+    return trackService.getBuyNowlistingItems({
+      trackEdition: filter.trackEditionId,
+      nftData: {
+        owner: filter.owner,
+      }
+    }, undefined, { first: MAX_EDITION_SIZE });
   }
 }

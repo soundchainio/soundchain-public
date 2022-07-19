@@ -187,7 +187,7 @@ export class TrackService extends ModelService<typeof Track> {
     return this.updateNftData(track, newNftData);
   }
 
-  async updateEditionOwnedTracks(trackEditionId: string, owner: string, changes: RecursivePartial<Track>): Promise<Track[]> {
+  async updateEditionOwnedTracks(trackIds: string[], trackEditionId: string, owner: string, changes: RecursivePartial<Track>): Promise<Track[]> {
     const { nftData: newNftData, ...data } = changes;
 
     await TrackEditionModel.updateOne({ _id: trackEditionId },
@@ -195,12 +195,15 @@ export class TrackService extends ModelService<typeof Track> {
         $set: {
           'editinoData.pendingRequest': newNftData.pendingRequest,
           'editionData.pendingTime': newNftData.pendingTime,
+        },
+        $inc: {
+          'editionData.pendingTrackCount': trackIds.length,
         }
       }
     );
 
     await this.model.updateMany(
-      { 'nftData.owner': owner, trackEditionId: trackEditionId },
+      { _id: trackIds, 'nftData.owner': owner, trackEditionId: trackEditionId },
       {
         ...data,
         $set: Object.keys(newNftData).reduce((acc, key) => {
@@ -648,9 +651,15 @@ export class TrackService extends ModelService<typeof Track> {
         },
       },
     ];
+
+    const queryFilter: any = { deleted: false, trackEditionId: new ObjectId(filter.trackEdition) }
+    const owner = filter?.nftData?.owner && {
+      'nftData.owner': { $regex: `^${filter.nftData.owner}$`, $options: 'i' },
+    };
+
     return this.paginatePipelineAggregated({
       aggregation,
-      filter: { deleted: false, trackEditionId: new ObjectId(filter.trackEdition) },
+      filter: {...queryFilter, ...owner},
       sort,
       page,
     });

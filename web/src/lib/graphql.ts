@@ -375,6 +375,7 @@ export type EditionDataInput = {
   transactionHash?: Maybe<Scalars['String']>;
   pendingRequest?: Maybe<PendingRequest>;
   pendingTime?: Maybe<Scalars['DateTime']>;
+  pendingTrackCount?: Maybe<Scalars['Float']>;
   contract?: Maybe<Scalars['String']>;
   owner?: Maybe<Scalars['String']>;
 };
@@ -384,6 +385,7 @@ export type EditionDataType = {
   transactionHash: Maybe<Scalars['String']>;
   pendingRequest: Maybe<PendingRequest>;
   pendingTime: Maybe<Scalars['DateTime']>;
+  pendingTrackCount: Maybe<Scalars['Float']>;
   contract: Maybe<Scalars['String']>;
   owner: Maybe<Scalars['String']>;
 };
@@ -418,11 +420,22 @@ export type FeedItem = {
 
 export type FilterBuyNowItemInput = {
   trackEdition: Scalars['String'];
+  nftData?: Maybe<NftDataInput>;
 };
 
 export type FilterListingItemInput = {
   tokenId: Scalars['Float'];
   contractAddress: Scalars['String'];
+};
+
+export type FilterOwnedBuyNowItemInput = {
+  trackEditionId: Scalars['String'];
+  owner: Scalars['String'];
+};
+
+export type FilterOwnedTracksInput = {
+  trackEditionId: Scalars['String'];
+  owner: Scalars['String'];
 };
 
 export type FilterPostInput = {
@@ -1167,10 +1180,12 @@ export type Query = {
   pendingRequestsBadgeNumber: Scalars['Float'];
   track: Track;
   tracks: TrackConnection;
+  ownedTracks: TrackConnection;
   groupedTracks: TrackConnection;
   favoriteTracks: TrackConnection;
   listingItems: ListingItemConnection;
   buyNowListingItems: ListingItemConnection;
+  ownedBuyNowListingItems: ListingItemConnection;
   uploadUrl: UploadUrl;
   mimeType: MimeType;
   me: Maybe<User>;
@@ -1374,6 +1389,11 @@ export type QueryTracksArgs = {
 };
 
 
+export type QueryOwnedTracksArgs = {
+  filter: FilterOwnedTracksInput;
+};
+
+
 export type QueryGroupedTracksArgs = {
   page?: Maybe<PageInput>;
   sort?: Maybe<SortTrackInput>;
@@ -1399,6 +1419,11 @@ export type QueryBuyNowListingItemsArgs = {
   page?: Maybe<PageInput>;
   sort?: Maybe<SortListingItemInput>;
   filter?: Maybe<FilterBuyNowItemInput>;
+};
+
+
+export type QueryOwnedBuyNowListingItemsArgs = {
+  filter?: Maybe<FilterOwnedBuyNowItemInput>;
 };
 
 
@@ -1719,6 +1744,7 @@ export type UpdateDefaultWalletPayload = {
 };
 
 export type UpdateEditionOwnedTracksInput = {
+  trackIds: Array<Scalars['String']>;
   trackEditionId: Scalars['String'];
   owner: Scalars['String'];
   nftData?: Maybe<NftDataInput>;
@@ -2821,6 +2847,46 @@ export type OutbidNotificationFieldsFragment = (
   & Pick<OutbidNotification, 'id' | 'type' | 'createdAt' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price'>
 );
 
+export type OwnedBuyNowTrackIdsQueryVariables = Exact<{
+  filter: FilterOwnedBuyNowItemInput;
+}>;
+
+
+export type OwnedBuyNowTrackIdsQuery = (
+  { __typename?: 'Query' }
+  & { ownedBuyNowListingItems: (
+    { __typename?: 'ListingItemConnection' }
+    & { nodes: Array<(
+      { __typename?: 'TrackWithListingItem' }
+      & Pick<TrackWithListingItem, 'id'>
+      & { nftData: Maybe<(
+        { __typename?: 'NFTDataType' }
+        & Pick<NftDataType, 'tokenId'>
+      )> }
+    )> }
+  ) }
+);
+
+export type OwnedTrackIdsQueryVariables = Exact<{
+  filter: FilterOwnedTracksInput;
+}>;
+
+
+export type OwnedTrackIdsQuery = (
+  { __typename?: 'Query' }
+  & { ownedTracks: (
+    { __typename?: 'TrackConnection' }
+    & { nodes: Array<(
+      { __typename?: 'Track' }
+      & Pick<Track, 'id'>
+      & { nftData: Maybe<(
+        { __typename?: 'NFTDataType' }
+        & Pick<NftDataType, 'tokenId'>
+      )> }
+    )> }
+  ) }
+);
+
 export type OwnedTracksQueryVariables = Exact<{
   filter?: Maybe<FilterTrackInput>;
   sort?: Maybe<SortTrackInput>;
@@ -3239,7 +3305,7 @@ export type TrackEditionFieldsFragment = (
   & Pick<TrackEdition, 'id' | 'editionId' | 'transactionHash' | 'contract' | 'listed' | 'marketplace' | 'editionSize' | 'createdAt' | 'updatedAt'>
   & { editionData: Maybe<(
     { __typename?: 'EditionDataType' }
-    & Pick<EditionDataType, 'pendingRequest' | 'pendingTime' | 'transactionHash' | 'contract' | 'owner'>
+    & Pick<EditionDataType, 'pendingRequest' | 'pendingTime' | 'pendingTrackCount' | 'transactionHash' | 'contract' | 'owner'>
   )> }
 );
 
@@ -3776,6 +3842,7 @@ export const TrackEditionFieldsFragmentDoc = gql`
   editionData {
     pendingRequest
     pendingTime
+    pendingTrackCount
     transactionHash
     contract
     owner
@@ -6033,6 +6100,86 @@ export function useNotificationsLazyQuery(baseOptions?: Apollo.LazyQueryHookOpti
 export type NotificationsQueryHookResult = ReturnType<typeof useNotificationsQuery>;
 export type NotificationsLazyQueryHookResult = ReturnType<typeof useNotificationsLazyQuery>;
 export type NotificationsQueryResult = Apollo.QueryResult<NotificationsQuery, NotificationsQueryVariables>;
+export const OwnedBuyNowTrackIdsDocument = gql`
+    query OwnedBuyNowTrackIds($filter: FilterOwnedBuyNowItemInput!) {
+  ownedBuyNowListingItems(filter: $filter) {
+    nodes {
+      id
+      nftData {
+        tokenId
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useOwnedBuyNowTrackIdsQuery__
+ *
+ * To run a query within a React component, call `useOwnedBuyNowTrackIdsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useOwnedBuyNowTrackIdsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useOwnedBuyNowTrackIdsQuery({
+ *   variables: {
+ *      filter: // value for 'filter'
+ *   },
+ * });
+ */
+export function useOwnedBuyNowTrackIdsQuery(baseOptions: Apollo.QueryHookOptions<OwnedBuyNowTrackIdsQuery, OwnedBuyNowTrackIdsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<OwnedBuyNowTrackIdsQuery, OwnedBuyNowTrackIdsQueryVariables>(OwnedBuyNowTrackIdsDocument, options);
+      }
+export function useOwnedBuyNowTrackIdsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<OwnedBuyNowTrackIdsQuery, OwnedBuyNowTrackIdsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<OwnedBuyNowTrackIdsQuery, OwnedBuyNowTrackIdsQueryVariables>(OwnedBuyNowTrackIdsDocument, options);
+        }
+export type OwnedBuyNowTrackIdsQueryHookResult = ReturnType<typeof useOwnedBuyNowTrackIdsQuery>;
+export type OwnedBuyNowTrackIdsLazyQueryHookResult = ReturnType<typeof useOwnedBuyNowTrackIdsLazyQuery>;
+export type OwnedBuyNowTrackIdsQueryResult = Apollo.QueryResult<OwnedBuyNowTrackIdsQuery, OwnedBuyNowTrackIdsQueryVariables>;
+export const OwnedTrackIdsDocument = gql`
+    query OwnedTrackIds($filter: FilterOwnedTracksInput!) {
+  ownedTracks(filter: $filter) {
+    nodes {
+      id
+      nftData {
+        tokenId
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useOwnedTrackIdsQuery__
+ *
+ * To run a query within a React component, call `useOwnedTrackIdsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useOwnedTrackIdsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useOwnedTrackIdsQuery({
+ *   variables: {
+ *      filter: // value for 'filter'
+ *   },
+ * });
+ */
+export function useOwnedTrackIdsQuery(baseOptions: Apollo.QueryHookOptions<OwnedTrackIdsQuery, OwnedTrackIdsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<OwnedTrackIdsQuery, OwnedTrackIdsQueryVariables>(OwnedTrackIdsDocument, options);
+      }
+export function useOwnedTrackIdsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<OwnedTrackIdsQuery, OwnedTrackIdsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<OwnedTrackIdsQuery, OwnedTrackIdsQueryVariables>(OwnedTrackIdsDocument, options);
+        }
+export type OwnedTrackIdsQueryHookResult = ReturnType<typeof useOwnedTrackIdsQuery>;
+export type OwnedTrackIdsLazyQueryHookResult = ReturnType<typeof useOwnedTrackIdsLazyQuery>;
+export type OwnedTrackIdsQueryResult = Apollo.QueryResult<OwnedTrackIdsQuery, OwnedTrackIdsQueryVariables>;
 export const OwnedTracksDocument = gql`
     query OwnedTracks($filter: FilterTrackInput, $sort: SortTrackInput, $page: PageInput) {
   tracks(filter: $filter, sort: $sort, page: $page) {

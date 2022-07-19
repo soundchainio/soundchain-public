@@ -20,6 +20,10 @@ export class EditionData {
 
   @Field({ nullable: true })
   @prop()
+  pendingTrackCount?: number;
+
+  @Field({ nullable: true })
+  @prop()
   contract: string;
 
   @Field({ nullable: true })
