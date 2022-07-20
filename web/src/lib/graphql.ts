@@ -652,6 +652,7 @@ export type Mutation = {
   updateProfileVerificationRequest: ProfileVerificationRequestPayload;
   removeProfileVerificationRequest: ProfileVerificationRequestPayload;
   createTrackEdition: CreateTrackEditionPayload;
+  deleteTrackEdition: Array<Track>;
   createMultipleTracks: CreateMultipleTracksPayload;
   updateTrack: UpdateTrackPayload;
   updateEditionOwnedTracks: UpdateEditionOwnedTracksPayload;
@@ -788,6 +789,11 @@ export type MutationRemoveProfileVerificationRequestArgs = {
 
 export type MutationCreateTrackEditionArgs = {
   input: CreateTrackEditionInput;
+};
+
+
+export type MutationDeleteTrackEditionArgs = {
+  trackEditionId: Scalars['String'];
 };
 
 
@@ -1178,6 +1184,7 @@ export type Query = {
   profileVerificationRequest: ProfileVerificationRequest;
   profileVerificationRequests: ProfileVerificationRequestConnection;
   pendingRequestsBadgeNumber: Scalars['Float'];
+  trackEdition: TrackEdition;
   track: Track;
   tracks: TrackConnection;
   ownedTracks: TrackConnection;
@@ -1374,6 +1381,11 @@ export type QueryProfileVerificationRequestArgs = {
 export type QueryProfileVerificationRequestsArgs = {
   page?: Maybe<PageInput>;
   status?: Maybe<Scalars['String']>;
+};
+
+
+export type QueryTrackEditionArgs = {
+  id: Scalars['String'];
 };
 
 
@@ -1669,6 +1681,7 @@ export type TrackEdition = {
   marketplace: Maybe<Scalars['String']>;
   editionData: Maybe<EditionDataType>;
   editionSize: Scalars['Float'];
+  deleted: Maybe<Scalars['Boolean']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
 };
@@ -2300,6 +2313,19 @@ export type DeleteTrackMutation = (
     { __typename?: 'Track' }
     & TrackComponentFieldsFragment
   ) }
+);
+
+export type DeleteTrackEditionMutationVariables = Exact<{
+  trackEditionId: Scalars['String'];
+}>;
+
+
+export type DeleteTrackEditionMutation = (
+  { __typename?: 'Mutation' }
+  & { deleteTrackEdition: Array<(
+    { __typename?: 'Track' }
+    & Pick<Track, 'id'>
+  )> }
 );
 
 export type DeleteTrackOnErrorMutationVariables = Exact<{
@@ -3300,9 +3326,22 @@ export type TrackComponentFieldsFragment = (
   )> }
 );
 
+export type TrackEditionQueryVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+export type TrackEditionQuery = (
+  { __typename?: 'Query' }
+  & { trackEdition: (
+    { __typename?: 'TrackEdition' }
+    & TrackEditionFieldsFragment
+  ) }
+);
+
 export type TrackEditionFieldsFragment = (
   { __typename?: 'TrackEdition' }
-  & Pick<TrackEdition, 'id' | 'editionId' | 'transactionHash' | 'contract' | 'listed' | 'marketplace' | 'editionSize' | 'createdAt' | 'updatedAt'>
+  & Pick<TrackEdition, 'id' | 'editionId' | 'transactionHash' | 'contract' | 'listed' | 'marketplace' | 'editionSize' | 'deleted' | 'createdAt' | 'updatedAt'>
   & { editionData: Maybe<(
     { __typename?: 'EditionDataType' }
     & Pick<EditionDataType, 'pendingRequest' | 'pendingTime' | 'pendingTrackCount' | 'transactionHash' | 'contract' | 'owner'>
@@ -3837,6 +3876,7 @@ export const TrackEditionFieldsFragmentDoc = gql`
   marketplace
   editionId
   editionSize
+  deleted
   createdAt
   updatedAt
   editionData {
@@ -5076,6 +5116,39 @@ export function useDeleteTrackMutation(baseOptions?: Apollo.MutationHookOptions<
 export type DeleteTrackMutationHookResult = ReturnType<typeof useDeleteTrackMutation>;
 export type DeleteTrackMutationResult = Apollo.MutationResult<DeleteTrackMutation>;
 export type DeleteTrackMutationOptions = Apollo.BaseMutationOptions<DeleteTrackMutation, DeleteTrackMutationVariables>;
+export const DeleteTrackEditionDocument = gql`
+    mutation deleteTrackEdition($trackEditionId: String!) {
+  deleteTrackEdition(trackEditionId: $trackEditionId) {
+    id
+  }
+}
+    `;
+export type DeleteTrackEditionMutationFn = Apollo.MutationFunction<DeleteTrackEditionMutation, DeleteTrackEditionMutationVariables>;
+
+/**
+ * __useDeleteTrackEditionMutation__
+ *
+ * To run a mutation, you first call `useDeleteTrackEditionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteTrackEditionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteTrackEditionMutation, { data, loading, error }] = useDeleteTrackEditionMutation({
+ *   variables: {
+ *      trackEditionId: // value for 'trackEditionId'
+ *   },
+ * });
+ */
+export function useDeleteTrackEditionMutation(baseOptions?: Apollo.MutationHookOptions<DeleteTrackEditionMutation, DeleteTrackEditionMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteTrackEditionMutation, DeleteTrackEditionMutationVariables>(DeleteTrackEditionDocument, options);
+      }
+export type DeleteTrackEditionMutationHookResult = ReturnType<typeof useDeleteTrackEditionMutation>;
+export type DeleteTrackEditionMutationResult = Apollo.MutationResult<DeleteTrackEditionMutation>;
+export type DeleteTrackEditionMutationOptions = Apollo.BaseMutationOptions<DeleteTrackEditionMutation, DeleteTrackEditionMutationVariables>;
 export const DeleteTrackOnErrorDocument = gql`
     mutation deleteTrackOnError($input: DeleteTrackInput!) {
   deleteTrackOnError(input: $input) {
@@ -7100,6 +7173,41 @@ export function useTrackLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Trac
 export type TrackQueryHookResult = ReturnType<typeof useTrackQuery>;
 export type TrackLazyQueryHookResult = ReturnType<typeof useTrackLazyQuery>;
 export type TrackQueryResult = Apollo.QueryResult<TrackQuery, TrackQueryVariables>;
+export const TrackEditionDocument = gql`
+    query TrackEdition($id: String!) {
+  trackEdition(id: $id) {
+    ...TrackEditionFields
+  }
+}
+    ${TrackEditionFieldsFragmentDoc}`;
+
+/**
+ * __useTrackEditionQuery__
+ *
+ * To run a query within a React component, call `useTrackEditionQuery` and pass it any options that fit your needs.
+ * When your component renders, `useTrackEditionQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useTrackEditionQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useTrackEditionQuery(baseOptions: Apollo.QueryHookOptions<TrackEditionQuery, TrackEditionQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<TrackEditionQuery, TrackEditionQueryVariables>(TrackEditionDocument, options);
+      }
+export function useTrackEditionLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TrackEditionQuery, TrackEditionQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<TrackEditionQuery, TrackEditionQueryVariables>(TrackEditionDocument, options);
+        }
+export type TrackEditionQueryHookResult = ReturnType<typeof useTrackEditionQuery>;
+export type TrackEditionLazyQueryHookResult = ReturnType<typeof useTrackEditionLazyQuery>;
+export type TrackEditionQueryResult = Apollo.QueryResult<TrackEditionQuery, TrackEditionQueryVariables>;
 export const TracksDocument = gql`
     query Tracks($filter: FilterTrackInput, $sort: SortTrackInput, $page: PageInput) {
   tracks(filter: $filter, sort: $sort, page: $page) {

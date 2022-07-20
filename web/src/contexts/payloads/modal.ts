@@ -103,6 +103,12 @@ export interface ShowConfirmDeleteNFT {
   burn: boolean;
 }
 
+export interface ShowConfirmDeleteEdition {
+  show: boolean;
+  trackEditionId: string;
+  trackId: string;
+}
+
 export interface ShowBidsHistory {
   show: boolean;
   auctionId: string;

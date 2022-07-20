@@ -36,6 +36,10 @@ export class TrackEdition extends Model {
   @prop()
   editionSize: number;
 
+  @Field({ nullable: true })
+  @prop({ default: false })
+  deleted?: boolean;
+
   @Field(() => Date)
   createdAt: Date;
 

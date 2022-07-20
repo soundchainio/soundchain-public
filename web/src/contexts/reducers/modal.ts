@@ -11,6 +11,7 @@ import {
   ShowAuthorActionsPayload,
   ShowBidsHistory,
   ShowCommentModalPayload,
+  ShowConfirmDeleteEdition,
   ShowConfirmDeleteNFT,
   ShowCreatePayload,
   ShowMarketplaceFilterPayload,
@@ -61,6 +62,7 @@ export interface ModalState {
   nftContractAddress?: string | null;
   contractAddresses?: ContractAddresses
   showConfirmDeleteNFT: boolean;
+  showConfirmDeleteEdition: boolean;
   burn?: boolean;
   showMarketplaceFilter: boolean;
   genres?: GenreLabel[];
@@ -100,6 +102,7 @@ export const initialModalState = {
   type: undefined,
   burn: false,
   showConfirmDeleteNFT: false,
+  showConfirmDeleteEdition: false,
   showMarketplaceFilter: false,
   genres: undefined,
   filterSaleType: undefined,
@@ -226,6 +229,14 @@ export const modalReducer = (state: ModalState, action: Action) => {
         anyModalOpened: (action.payload as ShowConfirmDeleteNFT).show,
         trackId: (action.payload as ShowConfirmDeleteNFT).trackId,
         burn: (action.payload as ShowConfirmDeleteNFT).burn,
+      };
+    case ModalActionTypes.SHOW_CONFIRM_DELETE_EDITION:
+      return {
+        ...state,
+        showConfirmDeleteEdition: (action.payload as ShowConfirmDeleteEdition).show,
+        anyModalOpened: (action.payload as ShowConfirmDeleteEdition).show,
+        trackId: (action.payload as ShowConfirmDeleteEdition).trackId,
+        trackEditionId: (action.payload as ShowConfirmDeleteEdition).trackEditionId,
       };
     case ModalActionTypes.SHOW_FILTER_MARKETPLACE:
       return {
