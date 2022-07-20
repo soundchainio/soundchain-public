@@ -55,7 +55,7 @@ function Action(props: ActionProps) {
         as="a"
         href={`/tracks/${trackId}/edit/buy-now`}
         variant="edit-listing"
-        className="h-7 w-12"
+        className="h-7"
       >
         EDIT
       </Button>

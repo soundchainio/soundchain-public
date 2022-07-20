@@ -22,6 +22,5 @@ export const config = {
   soundchainFee: parseFloat(process.env.NEXT_PUBLIC_SOUNDCHAIN_FEE || '0.0195'),
   tokenStakeContractAddress: process.env.NEXT_PUBLIC_TOKEN_STAKE_CONTRACT_ADDRESS,
   appVersion: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
-  mobileBreakpoint: 'xxl',
   airdropStatus: process.env.NEXT_PUBLIC_AIRDROP_STATUS === 'true'
 };

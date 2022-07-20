@@ -18,7 +18,6 @@ import { DefaultWallet, SortOrder, SortTrackField, TracksQuery, useTracksQuery }
 import Asset from '../Asset';
 import { Badge } from '../Badge';
 import { Button } from '../Button';
-import { BackButton } from '../Buttons/BackButton';
 import { RefreshButton } from '../Buttons/RefreshButton';
 import { InfiniteLoader } from '../InfiniteLoader';
 import { InputField } from '../InputField';
@@ -179,7 +178,6 @@ export function useTransferNftsControls() {
 
   useEffect(() => {
     setTopNavBarProps({
-      leftButton: <BackButton />,
       title: 'Transfer NFT',
       rightButton: (
         <RefreshButton onClick={() => refetch()} label="Refresh" className="text-center" refreshing={loading} />

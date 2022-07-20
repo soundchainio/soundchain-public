@@ -1,4 +1,3 @@
-import { BackButton } from 'components/Buttons/BackButton';
 import { MusicianTypesForm } from 'components/forms/profile/MusicianTypesForm';
 import SEO from 'components/SEO';
 import { StepProgressBar } from 'components/StepProgressBar';
@@ -10,7 +9,7 @@ import { SkipButton, steps } from 'utils/createAccountUtils';
 
 const topNavBarProps: TopNavBarProps = {
   title: 'Musician Type',
-  leftButton: <BackButton />,
+
   rightButton: <SkipButton href="/create-account/bio" />,
   subtitle: <StepProgressBar steps={steps} currentStep={4} />,
 };

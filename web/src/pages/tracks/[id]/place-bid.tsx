@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Button } from 'components/Button';
-import { BackButton } from 'components/Buttons/BackButton';
 import { InputField } from 'components/InputField';
 import { Matic } from 'components/Matic';
 import MaxGasFee from 'components/MaxGasFee';
@@ -57,7 +56,6 @@ interface FormValues {
 }
 
 const topNavBarProps: TopNavBarProps = {
-  leftButton: <BackButton />,
   title: 'Place Bid',
 };
 

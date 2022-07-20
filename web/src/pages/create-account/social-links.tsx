@@ -1,4 +1,3 @@
-import { BackButton } from 'components/Buttons/BackButton';
 import { SocialLinksForm } from 'components/forms/profile/SocialLinksForm';
 import SEO from 'components/SEO';
 import { StepProgressBar } from 'components/StepProgressBar';
@@ -10,7 +9,7 @@ import { SkipButton, steps } from 'utils/createAccountUtils';
 
 const topNavBarProps: TopNavBarProps = {
   title: 'Social Links',
-  leftButton: <BackButton />,
+
   rightButton: <SkipButton href="/create-account/security" />,
   subtitle: <StepProgressBar steps={steps} currentStep={6} />,
 };

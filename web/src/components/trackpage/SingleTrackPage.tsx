@@ -1,4 +1,3 @@
-import { BackButton } from 'components/Buttons/BackButton';
 import { Description } from 'components/details-NFT/Description';
 import { HandleNFT } from 'components/details-NFT/HandleNFT';
 import { MintingData } from 'components/details-NFT/MintingData';
@@ -119,7 +118,6 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
-      leftButton: <BackButton />,
       title: 'NFT Details',
       rightButton: (
         <div className="flex items-center gap-3">

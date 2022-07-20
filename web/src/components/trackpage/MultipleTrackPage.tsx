@@ -1,5 +1,4 @@
 import { ObservableQuery } from '@apollo/client';
-import { BackButton } from 'components/Buttons/BackButton';
 import { BuyNowEditionListItem } from 'components/BuyNowEditionListItem';
 import { Description } from 'components/details-NFT/Description';
 import { HandleMultipleEditionNFT } from 'components/details-NFT/HandleMultipleEditionNFT';
@@ -135,7 +134,6 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
-      leftButton: <BackButton />,
       title: 'NFT Details',
       rightButton: (
         <div className="flex items-center gap-3">

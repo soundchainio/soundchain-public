@@ -1,17 +1,14 @@
-import classNames from 'classnames';
-import { config } from 'config';
 import { Logo } from 'icons/Logo';
-import { Menu } from 'icons/Menu';
-import { Profile } from 'icons/Profile';
 import { getJwt } from 'lib/apollo';
 import { useMeQuery } from 'lib/graphql';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Button } from './Button';
 import { NavBar } from './NavBar';
 import { Title } from './Title';
 import { TopNavBarButton } from './TopNavBarButton';
+import { Avatar } from './Avatar';
 
 export interface TopNavBarProps {
   setSideMenuOpen?: (open: boolean) => void;
@@ -19,7 +16,6 @@ export interface TopNavBarProps {
   rightButton?: JSX.Element;
   title?: string;
   subtitle?: JSX.Element;
-  midRightButton?: JSX.Element;
   isLogin?: boolean;
 }
 
@@ -29,21 +25,21 @@ export const TopNavBar = ({
   leftButton: LeftButton,
   subtitle: Subtitle,
   setSideMenuOpen,
-  midRightButton,
   isLogin,
 }: TopNavBarProps) => {
   const router = useRouter();
-  const { data, loading: loadingMe, refetch } = useMeQuery()
+  const { data, loading: loadingMe, refetch } = useMeQuery();
   const me = data?.me;
 
   useEffect(() => {
     async function checkLogin() {
-      if (!me && !loadingMe && await getJwt()){
-        await refetch()
+      if (!me && !loadingMe && (await getJwt())) {
+        await refetch();
       }
     }
-    checkLogin()
-  }, [me, loadingMe, refetch])
+
+    checkLogin();
+  }, [me, loadingMe, refetch]);
 
   const onLogin = () => {
     router.push('/login');
@@ -55,83 +51,69 @@ export const TopNavBar = ({
   const isCreateAccount = router.pathname === '/create-account';
 
   return (
-    <div className={`relative z-10 flex-shrink-0 flex h-16 bg-black ${config.mobileBreakpoint}:bg-gray-30 shadow`}>
-      <div
-        className={classNames(
-          `text-gray-80 ${config.mobileBreakpoint}:hidden items-center h-full pl-4 flex-grow-basis-0`,
-          me && !RightButton && 'absolute left-0 justify-center',
-          (RightButton || midRightButton) && 'flex-1',
-        )}
-      >
-        <div className="h-full flex flex-1 items-center justify-start gap-2">
-          {LeftButton ? (
-            LeftButton
-          ) : (
-            <>
-              <TopNavBarButton icon={Menu} label="Menu" onClick={() => setSideMenuOpen && setSideMenuOpen(true)} />
-              {me && (
-                <TopNavBarButton icon={Profile} label="Profile" path={`/profiles/${me.handle}`} color="pink-blue" />
-              )}
-            </>
-          )}
-        </div>
-      </div>
-      {me && !midRightButton ? (
-        <>
-          <div
-            className={`${config.mobileBreakpoint}:hidden flex-2 flex-grow-basis flex items-center justify-center ${config.mobileBreakpoint}:items-stretch ${config.mobileBreakpoint}:justify-start truncate`}
-          >
-            <div className="flex-shrink-0 flex items-center w-full justify-center">
-              {title ? (
-                <div className="flex flex-col w-full">
-                  <Title navTitle className={`text-sm text-center ${config.mobileBreakpoint}:text-left truncate`}>
-                    {title}
-                  </Title>
-                  {Subtitle}
-                </div>
-              ) : (
-                <Link href="/" passHref>
-                  <a aria-label="Home">
-                    <Logo className="block h-8 w-auto" />
-                  </a>
-                </Link>
-              )}
-            </div>
-          </div>
-          <div
-            className={`hidden w-full ${config.mobileBreakpoint}:flex flex-2 items-center justify-center ${config.mobileBreakpoint}:items-stretch ${config.mobileBreakpoint}:justify-start`}
-          >
-            <div className="flex items-center w-full">
+    <header>
+      <div className="relative z-10 flex h-16 flex-shrink-0 bg-black shadow">
+        <Link href="/home">
+          <a className="flex-grow-basis flex items-center pl-4 md:hidden">
+            <Logo id="logo_mobile" className="block h-8 w-auto" />
+          </a>
+        </Link>
+        {me ? (
+          <div className="hidden w-full items-stretch justify-start pl-4 md:flex flex-1">
+            <div className="flex w-full items-center">
               <NavBar />
             </div>
           </div>
-        </>
-      ) : (
-        !isLoginPage &&
-        !isCreateAccount && 
-        !me &&
-        !midRightButton && (
-          <div className="flex-2 flex items-center justify-start ml-4 space-x-2 ">
-            <Button
-              variant="outline"
-              onClick={onLogin}
-              className="w-32 h-8 bg-opacity-70"
-              borderColor="bg-gray-40"
-              bgColor="bg-black"
-            >
-              Login / Sign up
-            </Button>
+        ) : (
+          !isLoginPage &&
+          !isCreateAccount &&
+          !me && (
+            <div className="ml-4 flex flex-2 items-center justify-start space-x-2 ">
+              <Button
+                variant="outline"
+                onClick={onLogin}
+                className="h-8 w-32 bg-opacity-70"
+                borderColor="bg-gray-40"
+                bgColor="bg-black"
+              >
+                Login / Sign up
+              </Button>
+            </div>
+          )
+        )}
+        <div className="items-center flex">
+          <div className="flex w-full flex-shrink-0 items-center justify-center">
+            {title && (
+              <div className="flex w-full flex-col">
+                <Title navTitle className="truncate text-center text-sm md:text-left">
+                  {title}
+                </Title>
+                {Subtitle}
+              </div>
+            )}
           </div>
-        )
-      )}
-      {RightButton && !midRightButton && (
-        <div className={`flex flex-1 ${config.mobileBreakpoint}:flex-none justify-end pr-4 items-center flex-shrink-0`}>
-          {RightButton}
         </div>
-      )}
-      {midRightButton && (
-        <div className="flex flex-1 justify-left pl-28 items-center flex-shrink-0">{midRightButton}</div>
-      )}
-    </div>
+        <div className="flex-grow-basis-0 h-full flex-1 items-center text-gray-80">
+          <div className="flex h-full items-center justify-end gap-2 pr-4 md:gap-4 md:pr-10">
+
+            <div className={`flex-grow-basis-0 flex items-center gap-2`}>
+              {(LeftButton || RightButton) && (
+                <>
+                  {LeftButton && <>{LeftButton}</>}
+                  {RightButton && <>{RightButton}</>}
+                </>
+              )}
+            </div>
+            {me && (
+              <TopNavBarButton
+                icon={({}) => <Avatar linkToProfile={false} profile={{ profilePicture: me?.profile.profilePicture }} />}
+                label=""
+                onClick={() => setSideMenuOpen && setSideMenuOpen(true)}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+    </header>
   );
 };
