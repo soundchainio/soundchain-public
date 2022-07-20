@@ -45,7 +45,7 @@ export const TrackGrid = ({ track }: TrackProps) => {
 
   let listingItem: Maybe<ListingItemWithPrice> = null;
 
-  if (track.__typename !== 'TrackWithListingItem') {
+  if (track.__typename === 'TrackWithListingItem') {
     listingItem = (track as TrackWithListingItem).listingItem;
   }
 
