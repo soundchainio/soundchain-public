@@ -98,7 +98,7 @@ export const RemoveListingConfirmationModal = () => {
             toast.error(cause.message)
             reject(cause);
           })
-          .estimateGas(web3!);
+          .execute(web3!);
       });
     }
 
