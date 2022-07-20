@@ -86,11 +86,11 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
             <NextLink href={`/tracks/${trackId}`}>
               <a className='w-full truncate'>
                 <div className='flex w-full cursor-pointer truncate items-start'>
-                  <div className='flex flex-col w-full max-w-[75%] sm:max-w-[80%] md:max-w-full'>
+                  <div className='flex flex-col w-full max-w-[70%] sm:max-w-[80%] md:max-w-full'>
                     <div className='truncate w-full'>
                       <div className='text-white flex justify-between font-black text-xs w-full truncate'>
                         <div className='truncate flex-1' title={title || ''}>
-                          {title ? title+title : 'Unknown Title'}
+                          {title ? title : 'Unknown Title'}
                         </div>
                       </div>
                       {artist && <div className='text-gray-80 text-xs font-black'>{artist}</div>}
