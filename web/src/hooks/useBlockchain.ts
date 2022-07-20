@@ -3,11 +3,13 @@ import { config } from 'config';
 import { useCallback } from 'react';
 import { Soundchain721 } from 'types/web3-v1-contracts/Soundchain721';
 import { SoundchainAuction } from 'types/web3-v1-contracts/SoundchainAuction';
+import { Soundchain721Editions } from 'types/web3-v2-contracts/Soundchain721Editions';
 import { compareWallets } from 'utils/Wallet';
 import Web3 from 'web3';
 import { AbiItem } from 'web3-utils';
 import soundchainAuction from '../contract/Auction.sol/SoundchainAuction.json';
 import soundchainContract from '../contract/Soundchain721.sol/Soundchain721.json';
+import soundchainContractEditions from '../contract/Soundchain721Editions.sol/Soundchain721Editions.json';
 import { ContractAddresses, gasPriceMultiplier } from './useBlockchainV2';
 
 const nftAddress = config.web3.contractsV2.contractAddress as string;
@@ -35,6 +37,15 @@ const useBlockchain = () => {
       contractAddresses.nft || nftAddress,
     ) as unknown as Soundchain721;
     const ownerOf = await nftContract.methods.ownerOf(tokenId).call();
+    return compareWallets(ownerOf, from);
+  }, []);
+
+  const isEditionOwner = useCallback(async (web3: Web3, editionNumber: number, from: string, contractAddresses: ContractAddresses) => {
+    const nftContract = new web3.eth.Contract(
+      soundchainContractEditions.abi as AbiItem[],
+      contractAddresses.nft || nftAddress,
+    ) as unknown as Soundchain721Editions;
+    const ownerOf = await (await nftContract.methods.editions(editionNumber).call()).owner;
     return compareWallets(ownerOf, from);
   }, []);
 
@@ -129,6 +140,7 @@ const useBlockchain = () => {
     isApprovedAuction,
     isApprovedMarketplace,
     isTokenOwner,
+    isEditionOwner,
   };
 };
 

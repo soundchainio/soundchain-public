@@ -160,8 +160,6 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
         }
       },
     },
-    fetchPolicy: 'network-only',
-    nextFetchPolicy: 'network-only',
     skip: !track.trackEditionId,
     ssr: false,
   });
@@ -353,6 +351,10 @@ function OwnedList(props: OwnedListProps) {
 
   const nodes = data?.tracks.nodes;
   const pageInfo = data?.tracks.pageInfo;
+
+  if (loading || !nodes?.length) {
+    return null;
+  }
 
   return (
     <section>

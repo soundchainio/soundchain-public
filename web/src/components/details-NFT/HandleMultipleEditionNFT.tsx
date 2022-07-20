@@ -74,7 +74,7 @@ export const HandleMultipleEditionNFT = ({
       );
     }
     return (
-      <ListingAction href={`${router.asPath}/list/buy-now?edition=true`} action="LIST EDITION">
+      <ListingAction href={`${router.asPath}/list/buy-now-edition`} action="LIST EDITION">
         <CheckmarkFilled />
         You own this NFT
       </ListingAction>
