@@ -30,6 +30,7 @@ export const Track = (props: TrackProps) => {
         favoriteCount: track.favoriteCount,
         saleType: track.saleType,
         price: track.price,
+        editionSize: track.editionSize
       }}
     />
   );

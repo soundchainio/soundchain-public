@@ -10,6 +10,7 @@ import NextLink from 'next/link';
 import { useEffect, useState } from 'react';
 import { currency } from 'utils/format';
 import Asset from './Asset';
+import { Cards } from '../icons/Cards';
 
 const WavesurferComponent = dynamic(() => import('./wavesurfer'), {
   ssr: false,
@@ -39,6 +40,7 @@ export const TrackGrid = ({ track }: TrackProps) => {
     playbackCount: track.playbackCountFormatted,
     favoriteCount: track.favoriteCount,
     url: track.assetUrl,
+    editionSize: track.editionSize || 0
   };
 
   let listingItem: Maybe<ListingItemWithPrice> = null;
@@ -49,7 +51,7 @@ export const TrackGrid = ({ track }: TrackProps) => {
 
   const saleType = getSaleType(listingItem);
   const price = listingItem?.priceToShow ?? 0;
-  const { art, artist, title, trackId, playbackCount, favoriteCount } = song;
+  const { art, artist, title, trackId, playbackCount, favoriteCount, editionSize } = song;
   const { play, isCurrentSong, isCurrentlyPlaying, setProgressStateFromSlider, progress } = useAudioPlayerContext();
 
   const [isPlaying, setIsPlaying] = useState(false);
@@ -96,17 +98,25 @@ export const TrackGrid = ({ track }: TrackProps) => {
       />
       <div>
         {saleType && (
-          <div className="mx-3 mt-3 flex items-center justify-between">
+          <div className="mx-3 mt-3 flex items-start justify-between">
             <div className="flex items-center">
               <div className="mr-1.5 font-semibold">{price}</div>
               <Matic height="20" width="23" className="" />
             </div>
-            <div
-              className={`${
-                saleType === 'auction' ? 'auction-gradient' : 'buy-now-gradient'
-              } sale-type-font-size text-xs font-bold`}
-            >
-              {saleType.toUpperCase()}
+            <div className='flex flex-col items-end'>
+              <div
+                className={`${
+                  saleType === 'auction' ? 'auction-gradient' : 'buy-now-gradient'
+                } sale-type-font-size text-sm font-bold`}
+              >
+                {saleType.toUpperCase()}
+              </div>
+              {editionSize > 0 && (
+                <div className="flex items-center justify-between gap-2 text-xs font-black text-gray-80">
+                  <Cards />
+                  {editionSize}
+                </div>
+              )}
             </div>
           </div>
         )}
