@@ -50,7 +50,7 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
   };
 
   const RenderTrackCounters = () => (
-    <div className='text-gray-80 text-xs flex gap-1 items-center px-2'>
+    <div className='text-gray-80 text-xs flex gap-1 items-center'>
       <Play fill='#808080' />
       <span>{playbackCount || 0}</span>
       <HeartFilled />
@@ -69,7 +69,7 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
           <Asset src={art} sizes='5rem' />
         </div>
         <div className='flex flex-col flex-1 truncate'>
-          <div className={`flex gap-2 ${hideBadgeAndPrice && 'mb-[10px]'}`}>
+          <div className={`flex items-start gap-2 ${hideBadgeAndPrice && 'mb-[10px]'}`}>
             <div className='flex items-center'>
               <button
                 className='bg-white rounded-full w-8 h-8 flex items-center'
@@ -95,21 +95,19 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
                       </div>
                       {artist && <div className='text-gray-80 text-xs font-black'>{artist}</div>}
                     </div>
-                    <RenderTrackCounters />
                   </div>
 
                   <div className='flex flex-1' />
-                  <div className='flex flex-col justify-end items-center gap-1'>
+                  <div className='flex flex-col justify-center items-end gap-1'>
                     {saleType && saleType !== '' && !hideBadgeAndPrice && (
                       <>
                         <BadgeTrack auction={saleType === 'auction'} label={saleType.toUpperCase()} />
                         {editionSize > 0 && (
                           <div className="flex items-center justify-between gap-2 text-xs font-black text-gray-80">
-                            <Cards />
+                            <Cards width={14} height={14} />
                             {editionSize}
                           </div>
                         )}
-                        <Matic className='ml-auto' value={price} variant='currency-inline' />
                       </>
                     )}
                   </div>
@@ -117,6 +115,13 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
               </a>
             </NextLink>
           </div>
+          <div className='flex justify-between mt-2'>
+            <RenderTrackCounters />
+            {saleType && saleType !== '' && !hideBadgeAndPrice && (
+              <Matic className='ml-auto text-xs' value={price} variant='currency-inline' />
+            )}
+          </div>
+
           <div className='text-white flex flex-col mt-2'>
             {isSameSong ? (
               <>
