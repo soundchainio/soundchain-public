@@ -7,7 +7,7 @@ import { SaleType } from 'types/SaleType';
 import { GenreLabel } from 'utils/Genres';
 import { SaleTypeLabel } from 'utils/SaleTypeLabel';
 import { store } from '..';
-import { ShowRemoveListing, ShowTransferNftConfirmationPayload } from '../payloads/modal';
+import { ShowConfirmDeleteEdition, ShowRemoveListing, ShowTransferNftConfirmationPayload } from '../payloads/modal';
 
 export const useModalState = (): ModalState => {
   const { state } = useContext(store);
@@ -64,6 +64,8 @@ export const useModalDispatch = () => {
       } }),
     dispatchShowConfirmDeleteNFTModal: (show: boolean, trackId: string, burn: boolean) =>
       dispatch({ type: ModalActionTypes.SHOW_CONFIRM_DELETE_NFT, payload: { show, trackId, burn } }),
+    dispatchShowConfirmDeleteEditionModal: (payload: ShowConfirmDeleteEdition) =>
+      dispatch({ type: ModalActionTypes.SHOW_CONFIRM_DELETE_EDITION, payload }),
     dispatchShowFilterMarketplaceModal: (
       show: boolean,
       genres: GenreLabel[] | undefined,

@@ -12,7 +12,7 @@ import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import { TrackShareButton } from 'components/TrackShareButton';
-import { useModalState } from 'contexts/providers/modal';
+import { useModalDispatch, useModalState } from 'contexts/providers/modal';
 import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
@@ -24,6 +24,7 @@ import {
   BuyNowListingItemsQueryVariables,
   OwnedTracksQuery,
   PendingRequest,
+  Role,
   TrackEdition,
   TrackQuery,
   useBuyNowListingItemsQuery,
@@ -37,6 +38,8 @@ import { Matic } from '../Matic';
 import { isPendingRequest } from 'utils/isPendingRequest';
 import { UtilityInfo } from '../details-NFT/UtilityInfo';
 import useBlockchainV2 from '../../hooks/useBlockchainV2';
+import { Ellipsis } from 'icons/Ellipsis';
+import { AuthorActionsType } from 'types/AuthorActionsType';
 
 interface MultipleTrackPageProps {
   track: TrackQuery['track'];
@@ -60,6 +63,7 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
   const [profile, { data: profileInfo }] = useProfileLazyQuery();
 
   const { showRemoveListing } = useModalState();
+  const { dispatchShowAuthorActionsModal } = useModalDispatch()
   const { setTopNavBarProps } = useLayoutContext();
   const [royalties, setRoyalties] = useState<number>();
   const { getEditionRoyalties } = useBlockchainV2()
@@ -131,10 +135,20 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
       rightButton: (
         <div className="flex items-center gap-3">
           <TrackShareButton trackId={track.id} artist={track.artist} title={track.title} />
+          {(me?.roles.includes(Role.Admin)) && (
+            <button
+              type="button"
+              aria-label="More options"
+              className="flex h-10 w-10 items-center justify-center"
+              onClick={() => dispatchShowAuthorActionsModal(true, AuthorActionsType.EDITION, track.id, true)}
+            >
+              <Ellipsis fill="#808080" />
+            </button>
+          )}
         </div>
       ),
     }),
-    [track.artist, track.id, track.title],
+    [me?.roles, track.artist, track.id, track.title],
   );
 
   const {

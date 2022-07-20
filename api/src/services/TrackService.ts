@@ -247,6 +247,12 @@ export class TrackService extends ModelService<typeof Track> {
     return await this.model.findOneAndUpdate({ _id: id }, { deleted: true });
   }
 
+  async deleteTrackEditionByAdmin(trackEditionId: string): Promise<Track[]> {
+    await TrackEditionModel.updateOne({ _id: trackEditionId }, { deleted: true });
+    await this.model.updateMany({ trackEditionId }, { deleted: true });
+    return this.model.find({ trackEditionId });
+  }
+
   async deleteTrackOnError(id: string): Promise<Track> {
     const posts = await PostModel.find({ trackId: id });
     const postsIds = posts.map(post => post.id);
