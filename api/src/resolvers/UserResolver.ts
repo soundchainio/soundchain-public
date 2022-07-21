@@ -65,7 +65,7 @@ export class UserResolver {
     const authMethod = magicUser.oauthProvider || AuthMethod.magicLink;
     const user = users.find(u => u.authMethod === authMethod);
 
-    if (!config.env.isProduction && magicUser.publicAddress !== user.magicWalletAddress) {
+    if (user && !config.env.isProduction && magicUser.publicAddress !== user.magicWalletAddress) {
       userService.updateMagicWallet(user._id, magicUser.publicAddress);
     }
 
