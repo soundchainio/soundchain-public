@@ -9,7 +9,9 @@ export function useEditionOwner(editionNumber?: number | null, nftContractAddres
   const { isEditionOwner } = useBlockchain();
 
   useEffect(() => {
+    setIsOwner(false);
     if (!account || !web3 || editionNumber === null || editionNumber === undefined) {
+      setLoading(false);
       return;
     }
     isEditionOwner(web3, editionNumber, account, { nft: nftContractAddress })

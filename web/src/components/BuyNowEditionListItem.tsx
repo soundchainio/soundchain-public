@@ -1,4 +1,5 @@
 import { useTokenOwner } from 'hooks/useTokenOwner';
+import { useWalletContext } from 'hooks/useWalletContext';
 import { Button } from './Button';
 import { NftOwner } from './details-NFT/NftOwner';
 import { Matic } from './Matic';
@@ -40,6 +41,7 @@ function Action(props: ActionProps) {
   const { isProcessing, tokenId, trackId, contractAddress } = props;
 
   const { loading, isOwner } = useTokenOwner(tokenId, contractAddress);
+  const { account } = useWalletContext();
 
   if (loading || isProcessing) {
     return (
@@ -62,16 +64,20 @@ function Action(props: ActionProps) {
     )
   }
 
-  return (
-    <Button
-      as="a"
-      href={`/tracks/${trackId}/buy-now`}
-      variant="outline"
-      borderColor="bg-green-gradient"
-      className="h-7 w-12"
-      bgColor="bg-gray-10 rounded-none"
-    >
-      BUY
-    </Button>
-  )
+  if (account) {
+    return (
+      <Button
+        as="a"
+        href={`/tracks/${trackId}/buy-now`}
+        variant="outline"
+        borderColor="bg-green-gradient"
+        className="h-7 w-12"
+        bgColor="bg-gray-10 rounded-none"
+      >
+        BUY
+      </Button>
+    )
+  }
+
+  return null;
 }
