@@ -14,7 +14,7 @@ export const UtilityInfo = ({ content, className }: UtilityInfoProps) => {
       <Subtitle className="font-bold text-gray-CC" size="xs">
         UTILITY
       </Subtitle>
-      <p className="py-2 text-xs font-medium text-gray-80"><pre>{content}</pre></p>
+      <p className="py-2 text-xs font-medium text-gray-80"><pre className="whitespace-pre-wrap">{content}</pre></p>
     </div>
   );
 };

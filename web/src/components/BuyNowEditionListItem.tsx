@@ -69,6 +69,7 @@ function Action(props: ActionProps) {
       variant="outline"
       borderColor="bg-green-gradient"
       className="h-7 w-12"
+      bgColor="bg-gray-10 rounded-none"
     >
       BUY
     </Button>
