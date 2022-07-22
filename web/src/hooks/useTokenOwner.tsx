@@ -9,7 +9,9 @@ export function useTokenOwner(tokenId?: number | null, nftContractAddress?: stri
   const { isTokenOwner } = useBlockchain();
 
   useEffect(() => {
+    setIsOwner(false);
     if (!account || !web3 || tokenId === null || tokenId === undefined) {
+      setLoading(false);
       return;
     }
     isTokenOwner(web3, tokenId, account, { nft: nftContractAddress })

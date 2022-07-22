@@ -128,6 +128,7 @@ export class TrackResolver {
   }
 
   @Query(() => TrackConnection)
+  @Authorized()
   async ownedTracks(
     @Ctx() { trackService }: Context,
     @Arg('filter') filter?: FilterOwnedTracksInput,

@@ -172,7 +172,7 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
         }
       },
     },
-    skip: !track.trackEditionId,
+    skip: !track.trackEditionId || !account,
     ssr: false,
   });
 
@@ -203,13 +203,15 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
       if (isProcessing || forceRefresh) {
         refetchTrack({ variables: { id: track.id } });
         refetchListingItem();
-        ownedTracksRefetch();
+        if (track.trackEditionId && account) {
+          ownedTracksRefetch();
+        }
         setForceRefresh(false)
       }
     }, 10 * 1000);
 
     return () => clearInterval(interval);
-  }, [isProcessing, refetchTrack, refetchListingItem, ownedTracksRefetch, tokenId, track.id, forceRefresh, setForceRefresh]);
+  }, [isProcessing, refetchTrack, refetchListingItem, ownedTracksRefetch, tokenId, track.id, account, track.trackEditionId, forceRefresh, setForceRefresh]);
 
   return (
     <>
@@ -388,6 +390,7 @@ function OwnedList(props: OwnedListProps) {
                   canList={canList}
                   trackId={item.id}
                   tokenId={item.nftData?.tokenId || 0}
+                  contractAddress={item.nftData?.contract || ''}
                   listingItem={item.listingItem}
                   isProcessing={
                     isPendingRequest(item.nftData?.pendingRequest) || isPendingRequest(item.trackEdition?.editionData?.pendingRequest)
