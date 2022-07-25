@@ -11,6 +11,8 @@ interface NewBuyNowItem {
   pricePerItemToShow: number;
   startingTime: number;
   contract: string;
+  trackEditionId?: string
+  trackId?: string
 }
 
 export class BuyNowService extends ModelService<typeof BuyNowItem> {

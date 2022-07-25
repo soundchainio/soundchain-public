@@ -60,6 +60,12 @@ export class TrackResolver {
   }
 
   @FieldResolver(() => Number)
+  listingCount(@Ctx() { listingCountByTrackEdition }: Context, @Root() { _id: trackId, trackEditionId }: Track): Promise<number> {
+    if(!trackEditionId) return Promise.resolve(0)
+    return listingCountByTrackEdition.load(trackEditionId);
+  }
+
+  @FieldResolver(() => Number)
   price(@Ctx() { trackService }: Context, @Root() { nftData }: Track): Promise<number> {
     return trackService.priceToShow(nftData.tokenId, nftData.contract);
   }

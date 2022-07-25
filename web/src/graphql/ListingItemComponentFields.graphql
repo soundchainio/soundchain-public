@@ -21,6 +21,7 @@ fragment ListingItemComponentFields on TrackWithListingItem {
   isFavorite
   favoriteCount
   playbackCount
+  listingCount
   saleType
   price
   trackEditionId

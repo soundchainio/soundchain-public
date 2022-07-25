@@ -29,6 +29,7 @@ import { TrackService } from '../services/TrackService';
 import { UploadService } from '../services/UploadService';
 import { UserService } from '../services/UserService';
 import { WhitelistEntryService } from '../services/WhitelistEntryService';
+import { ListingCountByTrackEdition } from '../loaders/ListingCountByTrackEdition';
 
 export class Context {
   auctionItemService = new AuctionItemService(this);
@@ -62,6 +63,7 @@ export class Context {
   whitelistEntryService = new WhitelistEntryService(this);
   audioHolderService = new AudioHolderService(this);
   trackEditionService = new TrackEditionService(this);
+  listingCountByTrackEdition = ListingCountByTrackEdition()
 
   constructor(jwtUser?: JwtUser) {
     this.user = jwtUser && this.userService.getUser(jwtUser.sub);

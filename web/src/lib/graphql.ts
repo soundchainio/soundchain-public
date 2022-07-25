@@ -125,6 +125,8 @@ export type BuyNowItem = {
   __typename?: 'BuyNowItem';
   id: Scalars['ID'];
   owner: Scalars['String'];
+  trackId: Scalars['String'];
+  trackEditionId: Scalars['String'];
   nft: Scalars['String'];
   tokenId: Scalars['Float'];
   contract: Scalars['String'];
@@ -1658,6 +1660,7 @@ export type Track = {
   playbackUrl: Scalars['String'];
   playbackCount: Scalars['Float'];
   favoriteCount: Scalars['Float'];
+  listingCount: Scalars['Float'];
   price: Scalars['Float'];
   saleType: Scalars['String'];
   isFavorite: Scalars['Boolean'];
@@ -1712,6 +1715,7 @@ export type TrackWithListingItem = {
   playbackUrl: Scalars['String'];
   playbackCount: Scalars['Float'];
   favoriteCount: Scalars['Float'];
+  listingCount: Scalars['Float'];
   price: Scalars['Float'];
   saleType: Scalars['String'];
   isFavorite: Scalars['Boolean'];
@@ -2616,7 +2620,7 @@ export type ListingItemQuery = (
 
 export type ListingItemComponentFieldsFragment = (
   { __typename?: 'TrackWithListingItem' }
-  & Pick<TrackWithListingItem, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'utilityInfo' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'playbackCount' | 'saleType' | 'price' | 'trackEditionId' | 'editionSize'>
+  & Pick<TrackWithListingItem, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'utilityInfo' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'playbackCount' | 'listingCount' | 'saleType' | 'price' | 'trackEditionId' | 'editionSize'>
   & { nftData: Maybe<(
     { __typename?: 'NFTDataType' }
     & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner' | 'pendingTime'>
@@ -3316,7 +3320,7 @@ export type TrackQuery = (
 
 export type TrackComponentFieldsFragment = (
   { __typename?: 'Track' }
-  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'utilityInfo' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'playbackCount' | 'saleType' | 'price' | 'trackEditionId' | 'editionSize'>
+  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'utilityInfo' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'listingCount' | 'playbackCount' | 'saleType' | 'price' | 'trackEditionId' | 'editionSize'>
   & { nftData: Maybe<(
     { __typename?: 'NFTDataType' }
     & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner' | 'pendingTime'>
@@ -3913,6 +3917,7 @@ export const ListingItemComponentFieldsFragmentDoc = gql`
   isFavorite
   favoriteCount
   playbackCount
+  listingCount
   saleType
   price
   trackEditionId
@@ -4077,6 +4082,7 @@ export const TrackComponentFieldsFragmentDoc = gql`
   playbackCountFormatted
   isFavorite
   favoriteCount
+  listingCount
   playbackCount
   saleType
   price
