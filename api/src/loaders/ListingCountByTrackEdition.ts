@@ -1,6 +1,6 @@
 import DataLoader from 'dataloader';
 import { BuyNowItemModel } from '../models/BuyNowItem';
-import { groupBy, keyBy, mapValues } from 'lodash';
+import { keyBy, mapValues } from 'lodash';
 
 export const ListingCountByTrackEdition = () => {
   return new DataLoader<string, number>(async (keys: readonly string[]) => {
