@@ -23,6 +23,7 @@ export const BuyNowEditionListItem = ({
 }: BuyNowEditionListItemProps) => {
   return (
     <li key={trackId} className="flex items-center p-2 odd:bg-gray-17 even:bg-gray-15">
+      <span className='px-2 text-xs font-bold'>#{tokenId}</span>
       <Matic value={price} className="min-w-[140px] text-xs" />
       <NftOwner owner={owner} className="flex-1" />
       <Action trackId={trackId} tokenId={tokenId} contractAddress={contractAddress} isProcessing={isProcessing} />
