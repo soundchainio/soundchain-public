@@ -20,6 +20,7 @@ fragment TrackComponentFields on Track {
   playbackCountFormatted
   isFavorite
   favoriteCount
+  listingCount
   playbackCount
   saleType
   price

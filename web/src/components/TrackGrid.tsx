@@ -40,7 +40,8 @@ export const TrackGrid = ({ track }: TrackProps) => {
     playbackCount: track.playbackCountFormatted,
     favoriteCount: track.favoriteCount,
     url: track.assetUrl,
-    editionSize: track.editionSize
+    editionSize: track.editionSize,
+    listingCount: track.listingCount
   };
 
   let listingItem: Maybe<ListingItemWithPrice> = null;
@@ -51,7 +52,7 @@ export const TrackGrid = ({ track }: TrackProps) => {
 
   const saleType = getSaleType(listingItem);
   const price = listingItem?.priceToShow ?? 0;
-  const { art, artist, title, trackId, playbackCount, favoriteCount, editionSize } = song;
+  const { art, artist, title, trackId, playbackCount, favoriteCount, editionSize, listingCount } = song;
   const { play, isCurrentSong, isCurrentlyPlaying, setProgressStateFromSlider, progress } = useAudioPlayerContext();
 
   const [isPlaying, setIsPlaying] = useState(false);
@@ -122,6 +123,12 @@ export const TrackGrid = ({ track }: TrackProps) => {
               {editionSize > 0 && (
                 <div className="flex items-center justify-between gap-2 text-xs font-black text-gray-80">
                   <Cards width={14} height={14} />
+                  {listingCount > 0 && (
+                    <>
+                      {listingCount}
+                      {' / '}
+                    </>
+                  )}
                   {editionSize}
                 </div>
               )}

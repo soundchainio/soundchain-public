@@ -12,6 +12,14 @@ export class BuyNowItem extends Model {
   owner: string;
 
   @Field()
+  @prop({ required: false })
+  trackId: string;
+
+  @Field()
+  @prop({ required: false })
+  trackEditionId: string;
+
+  @Field()
   @prop({ required: true })
   nft: string;
 
