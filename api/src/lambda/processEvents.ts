@@ -60,22 +60,18 @@ const processItemListed = async (event: ItemListed, context: Context): Promise<v
     context.trackService.setPendingNone(parseInt(tokenId), nft);
     return;
   }
-  const [_, track] = await Promise.all([
-    context.buyNowItemService.createBuyNowItem({
-      owner,
-      nft,
-      contract: address,
-      tokenId: parseInt(tokenId),
-      pricePerItem: pricePerItem,
-      pricePerItemToShow: getPriceToShow(pricePerItem),
-      startingTime: parseInt(startingTime),
-    }),
-    context.trackService.setPendingNone(parseInt(tokenId), nft),
-  ]);
-  await context.buyNowItemService.updateBuyNowItem(parseInt(tokenId), {
+  const track = await context.trackService.setPendingNone(parseInt(tokenId), nft);
+  await context.buyNowItemService.createBuyNowItem({
+    owner,
+    nft,
+    contract: address,
+    tokenId: parseInt(tokenId),
+    pricePerItem: pricePerItem,
+    pricePerItemToShow: getPriceToShow(pricePerItem),
+    startingTime: parseInt(startingTime),
     trackId: track._id,
     trackEditionId: track?.trackEditionId
-  }, nft, address)
+  })
   if (track.nftData.owner === track.nftData.minter) {
     await context.trackEditionService.markEditionListedIfNeeded(track.trackEditionId, address);
   }
