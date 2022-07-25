@@ -21,6 +21,7 @@ module.exports = {
   theme: {
     extend: {
       screens: {
+        'xs': '420px',
         ...defaultTheme.screens,
         '2k': { raw: '(min-width: 2000px)' },
         vsm: { raw: '(min-height: 600px)' },

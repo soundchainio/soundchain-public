@@ -2,14 +2,17 @@ import classNames from 'classnames';
 import { Matic as MaticIcon } from 'icons/Matic';
 import { useMaticUsdQuery } from 'lib/graphql';
 import { currency, fixedDecimals } from 'utils/format';
+import { twMerge } from 'tailwind-merge';
 
 interface Props {
   value?: string | number;
   className?: string;
-  variant?: 'currency' | 'currency-inline';
+  iconClassName?: string
+  textClassName?: string
+  variant?: 'currency' | 'currency-inline' | 'listing-inline' ;
 }
 
-export const Matic = ({ value = '', className, variant }: Props) => {
+export const Matic = ({ value = '', className, variant, iconClassName }: Props) => {
   const { data: maticUsd } = useMaticUsdQuery();
   const currencyValue = currency(parseFloat(value.toString()) * parseFloat(maticUsd?.maticUsd || ''));
 
@@ -18,7 +21,7 @@ export const Matic = ({ value = '', className, variant }: Props) => {
       return (
         <div className={classNames('font-bold', className)}>
           <p className="text-white">
-            <MaticIcon className="inline" /> {fixedDecimals(value)} <span className="text-xs text-gray-80">MATIC</span>
+            <MaticIcon className={twMerge("inline", iconClassName)} /> {fixedDecimals(value)} <span className="text-xs text-gray-80">MATIC</span>
           </p>
           <p className="text-sm text-gray-60">{`${currencyValue}`}</p>
         </div>
@@ -27,13 +30,19 @@ export const Matic = ({ value = '', className, variant }: Props) => {
       return (
         <p className={classNames('text-white font-bold inline-flex items-center gap-1', className)}>
           {value}
-          <MaticIcon className="inline" />
+          <MaticIcon className={twMerge("inline", iconClassName)} />
+        </p>
+      );
+    case 'listing-inline':
+      return (
+        <p className={classNames('font-bold text-white inline-flex items-center gap-1', className)}>
+          <MaticIcon className={twMerge("inline", iconClassName)} /> {fixedDecimals(value)} <span className="text-xs text-gray-80 hidden xs:inline">MATIC</span>
         </p>
       );
     default:
       return (
         <p className={classNames('font-bold text-white inline-flex items-center gap-1', className)}>
-          <MaticIcon className="inline" /> {fixedDecimals(value)} <span className="text-xs text-gray-80">MATIC</span>
+          <MaticIcon className={twMerge("inline", iconClassName)} /> {fixedDecimals(value)} <span className="text-xs text-gray-80">MATIC</span>
         </p>
       );
   }
