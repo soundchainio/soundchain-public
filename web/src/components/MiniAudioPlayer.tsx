@@ -20,6 +20,7 @@ interface Song {
   isFavorite: boolean | null;
   playbackCount: string;
   favoriteCount: number;
+  listingCount?: number;
   saleType: string;
   price: number;
   editionSize?: number
@@ -31,7 +32,7 @@ interface MiniAudioPlayerProps {
 }
 
 export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
-  const { art, artist, title, trackId, playbackCount, favoriteCount, saleType, price, editionSize = 0 } = props.song;
+  const { art, artist, title, trackId, playbackCount, favoriteCount, saleType, price, editionSize = 0, listingCount } = props.song;
   const { hideBadgeAndPrice, song } = props;
 
   const { duration, progress, play, isCurrentSong, isCurrentlyPlaying, setProgressStateFromSlider } =
@@ -105,6 +106,12 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
                         {editionSize > 0 && (
                           <div className="flex items-center justify-between gap-2 text-xs font-black text-gray-80">
                             <Cards width={14} height={14} />
+                            {listingCount && listingCount > 0 && (
+                              <>
+                                {listingCount}
+                                {' / '}
+                              </>
+                            )}
                             {editionSize}
                           </div>
                         )}
