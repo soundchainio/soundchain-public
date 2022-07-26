@@ -26,8 +26,8 @@ export class TrackEditionService extends ModelService<typeof TrackEdition> {
   async markEditionListed(editionId: number, nft: string, marketplace: string): Promise<void> {
     await this.model.updateOne(
       { editionId, contract: nft },
-      { 
-        listed: true, 
+      {
+        listed: true,
         marketplace,
         $set: {
           'editionData.pendingRequest': PendingRequest.None,
@@ -42,7 +42,7 @@ export class TrackEditionService extends ModelService<typeof TrackEdition> {
 
     if (edition.editionData.pendingTrackCount === 0) {
       await TrackEditionModel.updateOne({ _id: edition._id }, {
-        listed: true, 
+        listed: true,
         marketplace,
         $set: {
           "editionData.pendingRequest": PendingRequest.None,
@@ -71,7 +71,7 @@ export class TrackEditionService extends ModelService<typeof TrackEdition> {
 
     if (edition.editionData.pendingTrackCount === 0) {
       await TrackEditionModel.updateOne({ _id: edition._id }, {
-        listed: false, 
+        listed: false,
         marketplace: null,
         $set: {
           "editionData.pendingRequest": PendingRequest.None,
@@ -82,26 +82,16 @@ export class TrackEditionService extends ModelService<typeof TrackEdition> {
   }
 
   async subtractPendingTrackCount(id: string): Promise<TrackEdition> {
-    return await TrackEditionModel.findOneAndUpdate({ _id: id }, [
+    await TrackEditionModel.updateOne({
+      _id: id,
+      'editionData.pendingTrackCount': { $gt: 0 }
+    },
       {
-        $set: {
-          "editionData.pendingTrackCount": {
-            $max: [
-              0,
-              {
-                $subtract: [
-                  "$editionData.pendingTrackCount",
-                  1
-                ]
-              }
-            ]
-          }
-        }
+        $inc: { "editionData.pendingTrackCount": -1 }
       }
-    ],
-    {
-      new: true
-    });
+    );
+
+    return TrackEditionModel.findById(id);
   }
 
   async resetPending(beforeTime: Date): Promise<void> {
@@ -110,7 +100,7 @@ export class TrackEditionService extends ModelService<typeof TrackEdition> {
         'editionData.pendingRequest': { $ne: PendingRequest.None },
         'editionData.pendingTime': { $lte: beforeTime },
       },
-      { 
+      {
         'editionData.pendingRequest': PendingRequest.None,
         'editionData.pendingTrackCount': 0,
       },
