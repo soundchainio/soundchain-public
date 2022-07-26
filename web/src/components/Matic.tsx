@@ -2,7 +2,6 @@ import classNames from 'classnames';
 import { Matic as MaticIcon } from 'icons/Matic';
 import { useMaticUsdQuery } from 'lib/graphql';
 import { currency, fixedDecimals } from 'utils/format';
-import { twMerge } from 'tailwind-merge';
 
 interface Props {
   value?: string | number;
