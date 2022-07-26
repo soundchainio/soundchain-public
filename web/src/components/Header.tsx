@@ -72,7 +72,7 @@ export const Header = () => {
             <span className="hidden font-extrabold text-white md:block">SoundChain</span>
           </div>
           <nav className="flex items-center justify-evenly gap-3 text-white">
-            <NavItem text="Tokenomics" link="/ogun" />
+            <NavItem text="Tokenomics" link="https://soundchain.gitbook.io/soundchain/token/ogun" />
             <div className="scale-95">
               <Button
                 as={'a'}
