@@ -325,6 +325,7 @@ function Listings(props: ListingsProps) {
       {!loading && (
         <>
           <div className="flex h-8 items-center bg-gray-20 px-4 py-2 text-xs font-black text-white">
+            <p className="min-w-[40px]">ID</p>
             <p className="min-w-[140px]">Price</p>
             <p>From</p>
           </div>
