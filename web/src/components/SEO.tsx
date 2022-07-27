@@ -41,7 +41,7 @@ export default function SEO({
       )}
       <link rel="canonical" href={`${config.domainUrl}${canonicalUrl}`} />
       <meta property="og:type" content="website" />
-      <meta property="og:url" content={config.domainUrl} />
+      <meta property="og:url" content={`${config.domainUrl}${canonicalUrl}`} />
     </Head>
   );
 }
