@@ -27,7 +27,7 @@ functions:
     handler: src/db/migrate.handler
   watcher:
     handler: src/lambda/blockchainWatcher.blockchainWatcher
-    timeout: 20
+    timeout: 50
     events:
       - schedule: rate(1 minute)
   playbackCount:
