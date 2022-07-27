@@ -88,7 +88,8 @@ class BlockchainFunction<Type> {
           const error = Object.keys(cause).includes('receipt')
             ? new Error(
                 `Transaction reverted by the Blockchain.\r\n
-                Please check the transaction on your wallet activity page for more details.`,
+                Please check the transaction on your wallet activity page for more details.\r\n
+                ${cause}`,
               )
             : cause;
           this.onErrorFunction(error);
