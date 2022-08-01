@@ -112,7 +112,7 @@ function InnerForm(props: InnerFormProps) {
 
   useEffect(() => {
     if (balance && maxMintGasFee) {
-      setEnoughFunds(balance > maxMintGasFee);
+      setEnoughFunds(Number(balance) > Number(maxMintGasFee));
     }
   }, [maxMintGasFee, balance]);
 
