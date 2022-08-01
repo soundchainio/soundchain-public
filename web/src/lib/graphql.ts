@@ -1190,6 +1190,7 @@ export type Query = {
   track: Track;
   tracks: TrackConnection;
   ownedTracks: TrackConnection;
+  listableOwnedTracks: TrackConnection;
   groupedTracks: TrackConnection;
   favoriteTracks: TrackConnection;
   listingItems: ListingItemConnection;
@@ -1404,6 +1405,11 @@ export type QueryTracksArgs = {
 
 
 export type QueryOwnedTracksArgs = {
+  filter: FilterOwnedTracksInput;
+};
+
+
+export type QueryListableOwnedTracksArgs = {
   filter: FilterOwnedTracksInput;
 };
 
@@ -2602,6 +2608,26 @@ export type HaveBidedQuery = (
   & { haveBided: (
     { __typename?: 'Bided' }
     & Pick<Bided, 'bided'>
+  ) }
+);
+
+export type ListableOwnedTrackIdsQueryVariables = Exact<{
+  filter: FilterOwnedTracksInput;
+}>;
+
+
+export type ListableOwnedTrackIdsQuery = (
+  { __typename?: 'Query' }
+  & { listableOwnedTracks: (
+    { __typename?: 'TrackConnection' }
+    & { nodes: Array<(
+      { __typename?: 'Track' }
+      & Pick<Track, 'id'>
+      & { nftData: Maybe<(
+        { __typename?: 'NFTDataType' }
+        & Pick<NftDataType, 'tokenId'>
+      )> }
+    )> }
   ) }
 );
 
@@ -5705,6 +5731,46 @@ export function useHaveBidedLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
 export type HaveBidedQueryHookResult = ReturnType<typeof useHaveBidedQuery>;
 export type HaveBidedLazyQueryHookResult = ReturnType<typeof useHaveBidedLazyQuery>;
 export type HaveBidedQueryResult = Apollo.QueryResult<HaveBidedQuery, HaveBidedQueryVariables>;
+export const ListableOwnedTrackIdsDocument = gql`
+    query ListableOwnedTrackIds($filter: FilterOwnedTracksInput!) {
+  listableOwnedTracks(filter: $filter) {
+    nodes {
+      id
+      nftData {
+        tokenId
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useListableOwnedTrackIdsQuery__
+ *
+ * To run a query within a React component, call `useListableOwnedTrackIdsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useListableOwnedTrackIdsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useListableOwnedTrackIdsQuery({
+ *   variables: {
+ *      filter: // value for 'filter'
+ *   },
+ * });
+ */
+export function useListableOwnedTrackIdsQuery(baseOptions: Apollo.QueryHookOptions<ListableOwnedTrackIdsQuery, ListableOwnedTrackIdsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ListableOwnedTrackIdsQuery, ListableOwnedTrackIdsQueryVariables>(ListableOwnedTrackIdsDocument, options);
+      }
+export function useListableOwnedTrackIdsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ListableOwnedTrackIdsQuery, ListableOwnedTrackIdsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ListableOwnedTrackIdsQuery, ListableOwnedTrackIdsQueryVariables>(ListableOwnedTrackIdsDocument, options);
+        }
+export type ListableOwnedTrackIdsQueryHookResult = ReturnType<typeof useListableOwnedTrackIdsQuery>;
+export type ListableOwnedTrackIdsLazyQueryHookResult = ReturnType<typeof useListableOwnedTrackIdsLazyQuery>;
+export type ListableOwnedTrackIdsQueryResult = Apollo.QueryResult<ListableOwnedTrackIdsQuery, ListableOwnedTrackIdsQueryVariables>;
 export const ListingItemDocument = gql`
     query ListingItem($input: FilterListingItemInput!) {
   listingItem(input: $input) {
