@@ -12,7 +12,13 @@ import { useMaxBatchListGasFee } from 'hooks/useMaxBatchListGasFee';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { cacheFor } from 'lib/apollo';
-import { PendingRequest, TrackDocument, TrackQuery, useOwnedTrackIdsQuery, useUpdateAllOwnedTracksMutation } from 'lib/graphql';
+import {
+  PendingRequest,
+  TrackDocument,
+  TrackQuery,
+  useListableOwnedTrackIdsQuery,
+  useUpdateAllOwnedTracksMutation,
+} from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
@@ -88,7 +94,7 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
 
   const isForSale = track.trackEdition?.listed;
 
-  const { data: ownedTrackIds } = useOwnedTrackIdsQuery({
+  const { data: ownedTrackIds } = useListableOwnedTrackIdsQuery({
     variables: {
       filter: {
         trackEditionId: track.trackEdition!.id,
@@ -97,7 +103,7 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
     },
     skip: !account || !track.trackEdition?.id,
   })
-  const allTracks = ownedTrackIds?.ownedTracks.nodes
+  const allTracks = ownedTrackIds?.listableOwnedTracks?.nodes
     .filter(track => track.nftData?.tokenId !== null && track.nftData?.tokenId !== undefined);
 
   const maxBatchListGasFee = useMaxBatchListGasFee(allTracks?.length ?? 0);

@@ -153,6 +153,15 @@ export class TrackResolver {
   }
 
   @Query(() => TrackConnection)
+  @Authorized()
+  async listableOwnedTracks(
+    @Ctx() { trackService }: Context,
+    @Arg('filter') filter?: FilterOwnedTracksInput,
+  ): Promise<TrackConnection> {
+    return trackService.getListableOwnedTracks(filter);
+  }
+
+  @Query(() => TrackConnection)
   groupedTracks(
     @Ctx() { trackService }: Context,
     @Arg('filter', { nullable: true }) filter?: FilterTrackInput,

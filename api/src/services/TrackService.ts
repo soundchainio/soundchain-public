@@ -23,6 +23,8 @@ import { SortListingItemInput } from '../types/SortListingItemInput';
 import { SortTrackInput } from '../types/SortTrackInput';
 import { getNow } from '../utils/Time';
 import { ModelService } from './ModelService';
+import { FilterOwnedTracksInput } from '../types/FilterOwnedTracksInput';
+import { MAX_EDITION_SIZE } from '../types/CreateTrackEditionInput';
 
 export interface FavoriteCount {
   count: number;
@@ -58,6 +60,40 @@ export class TrackService extends ModelService<typeof Track> {
     };
 
     return this.paginate({ filter: { ...defaultFilter, ...dotNotationFilter, ...owner }, sort, page });
+  }
+
+  async getListableOwnedTracks(filter?: FilterOwnedTracksInput) {
+    const aggregation = [
+      {
+        $match: {
+          'trackEditionId': new ObjectId(filter.trackEditionId),
+          'nftData.owner': filter.owner
+        },
+      },
+      {
+        $lookup: {
+          from: 'buynowitems',
+          localField: 'nftData.tokenId',
+          foreignField: 'tokenId',
+          as: 'listingItem'
+        }
+      },
+      {
+        $match: {
+          listingItem: {
+            $eq: [] as unknown
+          }
+        }
+      }
+    ]
+
+    return this.paginatePipelineAggregated({
+      aggregation,
+      sort: undefined,
+      page: {
+        first: MAX_EDITION_SIZE
+      }
+    })
   }
 
   getGroupedTracks(filter?: FilterTrackInput, sort?: SortTrackInput, page?: PageInput): Promise<PaginateResult<Track>> {
