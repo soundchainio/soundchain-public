@@ -531,6 +531,7 @@ export enum Genre {
   Reggae = 'REGGAE',
   Reggaeton = 'REGGAETON',
   Salsa = 'SALSA',
+  Samples = 'SAMPLES',
   SoulFunk = 'SOUL_FUNK',
   Soundbath = 'SOUNDBATH',
   Soundtrack = 'SOUNDTRACK',
