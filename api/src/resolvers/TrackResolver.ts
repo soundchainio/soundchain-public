@@ -60,13 +60,16 @@ export class TrackResolver {
   }
 
   @FieldResolver(() => Number)
-  listingCount(@Ctx() { listingCountByTrackEdition }: Context, @Root() { _id: trackId, trackEditionId }: Track): Promise<number> {
+  listingCount(@Ctx() { listingCountByTrackEdition }: Context, @Root() { trackEditionId }: Track): Promise<number> {
     if(!trackEditionId) return Promise.resolve(0)
     return listingCountByTrackEdition.load(trackEditionId);
   }
 
   @FieldResolver(() => Number)
-  price(@Ctx() { trackService }: Context, @Root() { nftData }: Track): Promise<number> {
+  price(@Ctx() { trackService, listingItemService }: Context, @Root() { trackEditionId, nftData }: Track): Promise<number> {
+    if(trackEditionId) {
+      return listingItemService.getCheapestListingItem(trackEditionId)
+    }
     return trackService.priceToShow(nftData.tokenId, nftData.contract);
   }
 

@@ -5,11 +5,11 @@ import { HeartFilled } from 'icons/HeartFilled';
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
 import NextLink from 'next/link';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { remainingTime, timeFromSecs } from 'utils/calculateTime';
+import { Cards } from '../icons/Cards';
 import Asset from './Asset';
 import { BadgeTrack } from './BadgeTrack';
-import { Cards } from '../icons/Cards';
 
 interface Song {
   src: string;
@@ -61,7 +61,7 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
 
   return (
     <div
-      className={`bg-black m-4 rounded-lg p-4 items-center transparent-border-1px ${
+      className={`bg-black rounded-lg p-4 items-center transparent-border-1px ${
         isPlaying ? 'gradient-track-box' : 'bg-black'
       } hover:gradient-track-box`}
     >
@@ -124,7 +124,7 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
           </div>
           <div className='flex justify-between mt-2'>
             <RenderTrackCounters />
-            {saleType && saleType !== '' && !hideBadgeAndPrice && (
+            {saleType && saleType !== '' && !hideBadgeAndPrice && price && (
               <Matic className='ml-auto text-xs' value={price} variant='currency-inline' />
             )}
           </div>
