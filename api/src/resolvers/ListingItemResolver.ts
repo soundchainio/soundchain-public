@@ -25,7 +25,7 @@ export class ListingItemResolver {
   async cheapestListingItem(
     @Ctx() {listingItemService}: Context,
     @Arg('trackEditionId') trackEditionId: string
-  ): Promise<string | void> {
+  ): Promise<number | void> {
     return listingItemService.getCheapestListingItem(trackEditionId)
   }
 }

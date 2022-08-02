@@ -1,10 +1,10 @@
+import { ObjectId } from 'mongodb';
 import { AuctionItemModel } from '../models/AuctionItem';
 import { BuyNowItemModel } from '../models/BuyNowItem';
 import { ListingItem } from '../models/ListingItem';
+import { TrackModel } from '../models/Track';
 import { getNow } from '../utils/Time';
 import { Service } from './Service';
-import { TrackModel } from '../models/Track';
-import { ObjectId } from 'mongodb';
 
 export class ListingItemService extends Service {
   async getListingItem(tokenId: number, contractAddress: string): Promise<ListingItem | void> {
@@ -31,7 +31,7 @@ export class ListingItemService extends Service {
     return !!auctionItem || !!buyNowItem;
   }
 
-  async getCheapestListingItem(trackEditionId: string): Promise<string | null> {
+  async getCheapestListingItem(trackEditionId: string): Promise<number> {
     const transactionNfts = (await TrackModel.aggregate([
       {
         '$match': {
@@ -67,6 +67,11 @@ export class ListingItemService extends Service {
         },
       },
       {
+        $match: {
+          listingItem: { $ne: [] }
+        }
+      },
+      {
         '$sort': {
           'listingItem.pricePerItemToShow': 1,
         },
@@ -88,6 +93,6 @@ export class ListingItemService extends Service {
       }
     ]));
 
-    return transactionNfts.length ? String(transactionNfts[0]?.price) : null;
+    return transactionNfts.length ? transactionNfts[0]?.price : 0;
   }
 }
