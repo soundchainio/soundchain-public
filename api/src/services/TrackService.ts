@@ -13,18 +13,19 @@ import { Track, TrackModel } from '../models/Track';
 import { TrackEditionModel } from '../models/TrackEdition';
 import { TrackWithListingItem } from '../models/TrackWithListingItem';
 import { Context } from '../types/Context';
+import { MAX_EDITION_SIZE } from '../types/CreateTrackEditionInput';
 import { FilterBuyNowItemInput } from '../types/FilterBuyNowItemInput';
+import { FilterOwnedTracksInput } from '../types/FilterOwnedTracksInput';
 import { FilterTrackInput } from '../types/FilterTrackInput';
 import { FilterTrackMarketplace } from '../types/FilterTrackMarketplace';
 import { NFTData } from '../types/NFTData';
 import { PageInput } from '../types/PageInput';
 import { PendingRequest } from '../types/PendingRequest';
 import { SortListingItemInput } from '../types/SortListingItemInput';
+import { SortOrder } from '../types/SortOrder';
 import { SortTrackInput } from '../types/SortTrackInput';
 import { getNow } from '../utils/Time';
 import { ModelService } from './ModelService';
-import { FilterOwnedTracksInput } from '../types/FilterOwnedTracksInput';
-import { MAX_EDITION_SIZE } from '../types/CreateTrackEditionInput';
 
 export interface FavoriteCount {
   count: number;
@@ -132,7 +133,7 @@ export class TrackService extends ModelService<typeof Track> {
             newRoot: {
               $mergeObjects: [
                 '$first',
-                { 
+                {
                   playbackCount: '$sumPlaybackCount',
                   favoriteCount: '$sumFavoriteCount'
                 },
@@ -645,7 +646,6 @@ export class TrackService extends ModelService<typeof Track> {
 
   getBuyNowlistingItems(
     filter?: FilterBuyNowItemInput,
-    sort?: SortListingItemInput,
     page?: PageInput,
   ): Promise<PaginateResult<TrackWithListingItem>> {
     const aggregation = [
@@ -702,7 +702,7 @@ export class TrackService extends ModelService<typeof Track> {
     return this.paginatePipelineAggregated({
       aggregation,
       filter: {...queryFilter, ...owner},
-      sort,
+      sort: { field: "listingItem.pricePerItemToShow", order: SortOrder.ASC },
       page,
     });
   }

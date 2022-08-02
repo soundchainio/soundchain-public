@@ -144,8 +144,8 @@ export class TrackResolver {
         nftData: {
           owner: filter.owner,
         }
-      }, 
-      undefined, 
+      },
+      undefined,
       {
         first: MAX_EDITION_SIZE,
       }
@@ -281,10 +281,9 @@ export class TrackResolver {
   buyNowListingItems(
     @Ctx() { trackService }: Context,
     @Arg('filter', { nullable: true }) filter?: FilterBuyNowItemInput,
-    @Arg('sort', { nullable: true }) sort?: SortListingItemInput,
     @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<ListingItemConnection> {
-    return trackService.getBuyNowlistingItems(filter, sort, page);
+    return trackService.getBuyNowlistingItems(filter, page);
   }
 
   @Query(() => ListingItemConnection)
@@ -297,6 +296,6 @@ export class TrackResolver {
       nftData: {
         owner: filter.owner,
       }
-    }, undefined, { first: MAX_EDITION_SIZE });
+    }, { first: MAX_EDITION_SIZE });
   }
 }

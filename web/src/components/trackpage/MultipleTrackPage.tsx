@@ -17,8 +17,8 @@ import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMe } from 'hooks/useMe';
 import { useWalletContext } from 'hooks/useWalletContext';
 import { Cards } from 'icons/Cards';
+import { Ellipsis } from 'icons/Ellipsis';
 import { PriceTag } from 'icons/PriceTag';
-import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting';
 import {
   BuyNowListingItemsQuery,
   BuyNowListingItemsQueryVariables,
@@ -31,15 +31,14 @@ import {
   useCheapestListingItemLazyQuery,
   useOwnedTracksQuery,
   useProfileLazyQuery,
-  useTrackLazyQuery,
+  useTrackLazyQuery
 } from 'lib/graphql';
 import { useEffect, useMemo, useState } from 'react';
-import { Matic } from '../Matic';
-import { isPendingRequest } from 'utils/isPendingRequest';
-import { UtilityInfo } from '../details-NFT/UtilityInfo';
-import useBlockchainV2 from '../../hooks/useBlockchainV2';
-import { Ellipsis } from 'icons/Ellipsis';
 import { AuthorActionsType } from 'types/AuthorActionsType';
+import { isPendingRequest } from 'utils/isPendingRequest';
+import useBlockchainV2 from '../../hooks/useBlockchainV2';
+import { UtilityInfo } from '../details-NFT/UtilityInfo';
+import { Matic } from '../Matic';
 
 interface MultipleTrackPageProps {
   track: TrackQuery['track'];
@@ -108,7 +107,6 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
   } = useBuyNowListingItemsQuery({
     variables: {
       page: { first: 10 },
-      sort: SelectToApolloQuery[SortListingItem.CreatedAt],
       filter: { trackEdition: track.trackEditionId || '' },
     },
     ssr: false,
@@ -165,7 +163,7 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
   } = useOwnedTracksQuery({
     variables: {
       page: { first: 10 },
-      filter: { 
+      filter: {
         trackEditionId: track.trackEditionId,
         nftData: {
           owner: account,

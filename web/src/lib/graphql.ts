@@ -1437,7 +1437,6 @@ export type QueryListingItemsArgs = {
 
 export type QueryBuyNowListingItemsArgs = {
   page?: Maybe<PageInput>;
-  sort?: Maybe<SortListingItemInput>;
   filter?: Maybe<FilterBuyNowItemInput>;
 };
 
@@ -2021,7 +2020,6 @@ export type BuyNowItemQuery = (
 
 export type BuyNowListingItemsQueryVariables = Exact<{
   filter?: Maybe<FilterBuyNowItemInput>;
-  sort?: Maybe<SortListingItemInput>;
   page?: Maybe<PageInput>;
 }>;
 
@@ -4477,8 +4475,8 @@ export type BuyNowItemQueryHookResult = ReturnType<typeof useBuyNowItemQuery>;
 export type BuyNowItemLazyQueryHookResult = ReturnType<typeof useBuyNowItemLazyQuery>;
 export type BuyNowItemQueryResult = Apollo.QueryResult<BuyNowItemQuery, BuyNowItemQueryVariables>;
 export const BuyNowListingItemsDocument = gql`
-    query BuyNowListingItems($filter: FilterBuyNowItemInput, $sort: SortListingItemInput, $page: PageInput) {
-  buyNowListingItems(filter: $filter, sort: $sort, page: $page) {
+    query BuyNowListingItems($filter: FilterBuyNowItemInput, $page: PageInput) {
+  buyNowListingItems(filter: $filter, page: $page) {
     nodes {
       ...ListingItemComponentFields
     }
@@ -4504,7 +4502,6 @@ export const BuyNowListingItemsDocument = gql`
  * const { data, loading, error } = useBuyNowListingItemsQuery({
  *   variables: {
  *      filter: // value for 'filter'
- *      sort: // value for 'sort'
  *      page: // value for 'page'
  *   },
  * });
