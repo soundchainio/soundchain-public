@@ -1,13 +1,13 @@
 import Slider from '@reach/slider';
 import { Matic } from 'components/Matic';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
+import { Cards } from 'icons/Cards';
 import { HeartFilled } from 'icons/HeartFilled';
 import { Pause } from 'icons/Pause';
 import { Play } from 'icons/Play';
 import NextLink from 'next/link';
 import { useEffect, useState } from 'react';
 import { remainingTime, timeFromSecs } from 'utils/calculateTime';
-import { Cards } from '../icons/Cards';
 import Asset from './Asset';
 import { BadgeTrack } from './BadgeTrack';
 
@@ -85,39 +85,26 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
               </button>
             </div>
             <NextLink href={`/tracks/${trackId}`}>
-              <a className='w-full truncate'>
-                <div className='flex w-full cursor-pointer truncate items-start'>
-                  <div className='flex flex-col w-full max-w-[70%] sm:max-w-[80%] md:max-w-full'>
-                    <div className='truncate w-full'>
-                      <div className='text-white flex justify-between font-black text-xs w-full truncate'>
-                        <div className='truncate flex-1' title={title || ''}>
-                          {title ? title : 'Unknown Title'}
-                        </div>
-                      </div>
-                      {artist && <div className='text-gray-80 text-xs font-black'>{artist}</div>}
-                    </div>
-                  </div>
-
-                  <div className='flex flex-1' />
-                  <div className='flex flex-col justify-center items-end gap-1'>
+              <a className='w-full truncate flex gap-0.5 flex-col'>
+                <div className='flex w-full truncate items-start text-white font-black text-xs justify-between gap-0.5'>
+                  <p className='truncate' title={title || ''}>{title ? title : 'Unknown Title'}</p>
+                  <div className='flex flex-col justify-center items-end gap-1 shrink-0'>
                     {saleType && saleType !== '' && !hideBadgeAndPrice && (
-                      <>
                         <BadgeTrack auction={saleType === 'auction'} label={saleType.toUpperCase()} />
-                        {editionSize > 0 && (
-                          <div className="flex items-center justify-between gap-2 text-xs font-black text-gray-80">
-                            <Cards width={14} height={14} />
-                            {listingCount && listingCount > 0 && (
-                              <>
-                                {listingCount}
-                                {' / '}
-                              </>
-                            )}
-                            {editionSize}
-                          </div>
-                        )}
-                      </>
                     )}
                   </div>
+                </div>
+                <div className='flex w-full truncate items-start text-white font-black text-xs justify-between gap-0.5'>
+                  {artist && <p className='text-gray-80 text-xs font-black truncate' title={artist}>{artist}</p>}
+                  {saleType && saleType !== '' && !hideBadgeAndPrice && editionSize > 0 &&
+                    <p className="flex items-center justify-between gap-2 text-xs font-black text-gray-80 shrink-0">
+                      <Cards width={14} height={14} />
+                      {listingCount && listingCount > 0 && (
+                        `${listingCount} / `
+                        )}
+                      {editionSize}
+                    </p>
+                    }
                 </div>
               </a>
             </NextLink>
