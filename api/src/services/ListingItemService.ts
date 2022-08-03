@@ -80,15 +80,12 @@ export class ListingItemService extends Service {
         '$limit': 1,
       },
       {
-        '$replaceRoot': {
-          'newRoot': {
-            '$first': '$listingItem',
-          },
-        },
-      },
-      {
         '$project': {
-          'price': '$pricePerItemToShow'
+            'price': '$listingItem.pricePerItemToShow'
+        }
+      }, {
+        '$unwind': {
+            'path': '$price'
         }
       }
     ]));
