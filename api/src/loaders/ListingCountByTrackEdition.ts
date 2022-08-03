@@ -10,7 +10,8 @@ export const ListingCountByTrackEdition = () => {
         $match: {
           trackEditionId: {
             $in: keyStrings
-          }
+          },
+          valid: true
         }
       },
       {
