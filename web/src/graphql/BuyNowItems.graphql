@@ -1,0 +1,12 @@
+query BuyNowListingItems($filter: FilterBuyNowItemInput, $page: PageInput) {
+  buyNowListingItems(filter: $filter, page: $page) {
+    nodes {
+      ...ListingItemComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+      totalCount
+    }
+  }
+}

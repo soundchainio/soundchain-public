@@ -1,5 +1,4 @@
 import { Button } from 'components/Button';
-import { BackButton } from 'components/Buttons/BackButton';
 import { AuctionEnded } from 'components/details-NFT/AuctionEnded';
 import { Matic } from 'components/Matic';
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
@@ -57,7 +56,6 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 });
 
 const topNavBarProps: TopNavBarProps = {
-  leftButton: <BackButton />,
   title: 'Complete Auction',
 };
 
@@ -88,11 +86,11 @@ export default function CompleteAuctionPage({ track }: TrackPageProps) {
       if (!web3 || !tokenId || !getHighestBid || highestBid.bidder) {
         return;
       }
-      const { _bid, _bidder } = await getHighestBid(web3, tokenId);
+      const { _bid, _bidder } = await getHighestBid(web3, tokenId, { nft: track.nftData?.contract });
       setHighestBid({ bid: priceToShow(_bid), bidder: _bidder });
     };
     fetchHighestBid();
-  }, [tokenId, web3, getHighestBid, highestBid.bidder]);
+  }, [tokenId, web3, getHighestBid, highestBid.bidder, track]);
 
   if (!auctionItem) {
     return null;
@@ -120,7 +118,7 @@ export default function CompleteAuctionPage({ track }: TrackPageProps) {
       router.replace(router.asPath.replace('complete-auction', ''));
     };
     setLoading(true);
-    resultAuction(tokenId, account)
+    resultAuction(tokenId, account, { nft: track.nftData?.contract })
       .onReceipt(onReceipt)
       .onError(cause => toast.error(cause.message))
       .finally(() => setLoading(false))

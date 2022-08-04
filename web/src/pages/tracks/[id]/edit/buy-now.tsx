@@ -1,4 +1,3 @@
-import { BackButton } from 'components/Buttons/BackButton';
 import { ListNFTBuyNow, ListNFTBuyNowFormValues } from 'components/details-NFT/ListNFTBuyNow';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
@@ -14,7 +13,7 @@ import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemQuery, useUpdat
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { SaleType } from 'types/SaleType';
 import { compareWallets } from 'utils/Wallet';
@@ -60,9 +59,10 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
 
   const nftData = track.nftData;
   const tokenId = nftData?.tokenId ?? -1;
+  const contractAddress = nftData?.contract ?? "";
 
   const { data: listingPayload } = useBuyNowItemQuery({
-    variables: { tokenId },
+    variables: { input: { tokenId, contractAddress} },
     fetchPolicy: 'network-only',
   });
 
@@ -75,18 +75,22 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
     ) {
       return;
     }
-    dispatchShowRemoveListingModal(
-      true,
-      listingPayload?.buyNowItem?.buyNowItem?.tokenId,
-      track.id,
-      SaleType.MARKETPLACE,
-    );
+    dispatchShowRemoveListingModal({
+      show: true,
+      tokenId: listingPayload?.buyNowItem?.buyNowItem?.tokenId,
+      trackId: track.id,
+      saleType: SaleType.MARKETPLACE,
+      contractAddresses: {
+        nft: nftData.contract,
+        marketplace: listingPayload?.buyNowItem?.buyNowItem?.contract,
+      }
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account, listingPayload?.buyNowItem?.buyNowItem?.tokenId, nftData?.pendingRequest, track.id, web3]);
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
-      leftButton: <BackButton />,
+    
       title: 'Edit Listing',
       rightButton: (
         <button className="text-sm text-red-400 font-bold" onClick={handleRemove}>
@@ -137,7 +141,13 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       router.replace(router.asPath.replace('/edit/buy-now', ''));
     };
 
-    updateListing(listingPayload.buyNowItem?.buyNowItem?.tokenId, account, weiPrice, startTimestamp)
+    updateListing(
+      listingPayload.buyNowItem?.buyNowItem?.tokenId,
+      account,
+      weiPrice,
+      startTimestamp,
+      { nft: nftData?.contract, marketplace: listingPayload.buyNowItem?.buyNowItem.contract }
+    )
       .onReceipt(onReceipt)
       .onError(cause => toast.error(cause.message))
       .finally(() => helper.setSubmitting(false))

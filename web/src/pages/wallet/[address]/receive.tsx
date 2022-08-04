@@ -1,4 +1,3 @@
-import { BackButton } from 'components/Buttons/BackButton';
 import { Jazzicon } from 'components/Jazzicon';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
@@ -37,7 +36,6 @@ export const getServerSideProps = protectPage<ReceivePageProps, ReceivePageParam
   return cacheFor(ReceivePage, { address }, context, apolloClient);
 });
 const topNovBarProps: TopNavBarProps = {
-  leftButton: <BackButton />,
   title: 'Receive',
 };
 

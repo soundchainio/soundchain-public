@@ -26,12 +26,14 @@ export const TopNavBarButton = ({ onClick, icon: Icon, label, className, path, c
     }
   }, [router.asPath, path]);
 
+  const baseClassName = 'flex flex-col gap-1 md:flex-row items-center md:h-6';
+
   if (path) {
     return (
       <Link href={path} passHref>
-        <a className={classNames(className, 'flex flex-col items-center')}>
+        <a className={classNames(baseClassName, className)}>
           <Icon color={isActive ? color : undefined} />
-          <span className={`${isActive && `${color}-gradient-text`} pt-1 font-semibold text-gray-60 text-xs`}>
+          <span className={`${isActive && `${color}-gradient-text`} pt-1 text-xs font-semibold text-gray-60 md:pt-0`}>
             {label}
           </span>
         </a>
@@ -40,9 +42,9 @@ export const TopNavBarButton = ({ onClick, icon: Icon, label, className, path, c
   }
 
   return (
-    <button type="button" className={classNames(className, 'flex flex-col items-center')} onClick={onClick}>
+    <button type="button" className={classNames(baseClassName, className)} onClick={onClick}>
       <Icon />
-      <span className="text-gray-60 pt-1 font-semibold text-xs">{label}</span>
+      <span className="pt-1 text-xs font-semibold text-gray-60 md:pt-0">{label}</span>
     </button>
   );
 };

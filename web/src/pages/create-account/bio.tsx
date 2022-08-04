@@ -1,4 +1,3 @@
-import { BackButton } from 'components/Buttons/BackButton';
 import { BioForm } from 'components/forms/profile/BioForm';
 import SEO from 'components/SEO';
 import { StepProgressBar } from 'components/StepProgressBar';
@@ -14,7 +13,7 @@ export default function BioPage() {
   useEffect(() => {
     setTopNavBarProps({
       title: 'Bio',
-      leftButton: <BackButton />,
+    
       rightButton: <SkipButton href="/create-account/social-links" />,
       subtitle: <StepProgressBar steps={steps} currentStep={5} />,
     });

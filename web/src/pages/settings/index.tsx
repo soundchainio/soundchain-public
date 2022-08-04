@@ -1,5 +1,4 @@
 import { Avatar } from 'components/Avatar';
-import { BackButton } from 'components/Buttons/BackButton';
 import { Label } from 'components/Label';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
@@ -61,7 +60,6 @@ function FakeLink({ label, value }: LinkProps) {
 }
 
 const topNavBarProps: TopNavBarProps = {
-  leftButton: <BackButton />,
   title: 'Account Settings',
 };
 

@@ -27,10 +27,11 @@ const validationSchema: SchemaOf<ListNFTBuyNowFormValues> = object().shape({
 interface ListNFTProps {
   initialValues?: Partial<ListNFTBuyNowFormValues>;
   submitLabel: string;
+  maxGasFee?: string;
   handleSubmit: (values: ListNFTBuyNowFormValues, formikHelpers: FormikHelpers<ListNFTBuyNowFormValues>) => void;
 }
 
-export const ListNFTBuyNow = ({ initialValues, submitLabel, handleSubmit }: ListNFTProps) => {
+export const ListNFTBuyNow = ({ initialValues, maxGasFee, submitLabel, handleSubmit }: ListNFTProps) => {
   const defaultValues = {
     price: initialValues?.price || 0,
     royalty: initialValues?.royalty || 0,
@@ -85,7 +86,7 @@ export const ListNFTBuyNow = ({ initialValues, submitLabel, handleSubmit }: List
                 SoundChain transaction fee will be applied to the listing price.
               </p>
               <div className="bg-gray-15 py-3 px-5">
-                <MaxGasFee />
+                <MaxGasFee maxGasFee={maxGasFee}  />
               </div>
               <PlayerAwareBottomBar>
                 <Button
