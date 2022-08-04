@@ -21,12 +21,15 @@ import StakingRewards from '../contract/StakingRewards.sol/StakingRewards.json';
 import { GetServerSideProps } from 'next';
 
 // TODO: remove before enabling the ogun token stake
-export const getServerSideProps: GetServerSideProps = async ({ res }) => {
+export const getServerSideProps: GetServerSideProps = ({ res }) => {
   if (res) {
     res.statusCode = 404
     res.end('Not found')
-    return
   }
+
+  return Promise.resolve({
+    props: {}
+  })
 }
 
 interface FormValues {
