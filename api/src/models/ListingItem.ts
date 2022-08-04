@@ -16,9 +16,6 @@ export class ListingItem extends Model {
   @Field({ nullable: true })
   tokenId: number;
 
-  @Field()
-  contract: string;
-
   @Field({ nullable: true })
   startingTime: number;
 

@@ -1,3 +1,4 @@
+import { BackButton } from 'components/Buttons/BackButton';
 import { CoverPictureForm } from 'components/forms/profile/CoverPictureForm';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
@@ -7,7 +8,7 @@ import React, { useEffect } from 'react';
 
 const topNavBarProps: TopNavBarProps = {
   title: 'Cover Picture',
-
+  leftButton: <BackButton />,
 };
 
 export default function CoverPicturePage() {

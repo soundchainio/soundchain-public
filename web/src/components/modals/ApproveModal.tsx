@@ -8,19 +8,19 @@ import { ApproveBuyNow } from 'icons/ApproveBuyNow';
 import { ApproveMarketplace } from 'icons/ApproveMarketplace';
 import { Auction } from 'icons/Auction';
 import { CheckmarkFilled } from 'icons/CheckmarkFilled';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { SaleType } from 'types/SaleType';
 
 export const ApproveModal = () => {
   const { account, web3 } = useWalletContext();
-  const { showApprove, type, nftContractAddress } = useModalState();
+  const { showApprove, type } = useModalState();
   const { dispatchShowApproveModal } = useModalDispatch();
   const { approveMarketplace, approveAuction } = useBlockchainV2();
   const [loading, setLoading] = useState(false);
 
   const handleClose = () => {
-    dispatchShowApproveModal(false, SaleType.CLOSE, '');
+    dispatchShowApproveModal(false, SaleType.CLOSE);
   };
 
   const setApprove = () => {
@@ -29,16 +29,16 @@ export const ApproveModal = () => {
     }
     const onReceipt = () => {
       setLoading(false);
-      dispatchShowApproveModal(false, SaleType.CLOSE, '');
+      dispatchShowApproveModal(false, SaleType.CLOSE);
     };
 
     setLoading(true);
 
     const approve =
       type === SaleType.AUCTION
-        ? approveAuction(account, { nft: nftContractAddress })
+        ? approveAuction(account)
         : type === SaleType.MARKETPLACE
-        ? approveMarketplace(account, { nft: nftContractAddress })
+        ? approveMarketplace(account)
         : null;
 
     approve

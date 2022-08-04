@@ -1,3 +1,4 @@
+import { BackButton } from 'components/Buttons/BackButton';
 import { ConnectedNetwork } from 'components/ConnectedNetwork';
 import { CopyWalletAddress } from 'components/CopyWalletAddress';
 import { HistoryTabs } from 'components/HistoryTabs';
@@ -38,6 +39,7 @@ export const getServerSideProps = protectPage<HistoryPageProps, HistoryPageParam
 });
 
 const topNavBarProps: TopNavBarProps = {
+  leftButton: <BackButton />,
   title: 'History',
 };
 

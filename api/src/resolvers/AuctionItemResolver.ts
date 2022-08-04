@@ -36,6 +36,15 @@ export class AuctionItemResolver {
     return { auctionItem };
   }
 
+  @Mutation(() => CreateAuctionItemData)
+  @Authorized()
+  async setNotValid(
+    @Ctx() { auctionItemService }: Context,
+    @Arg('tokenId') tokenId: number,
+  ): Promise<CreateAuctionItemData> {
+    return auctionItemService.setNotValid(tokenId);
+  }
+
   @Query(() => CountBidsPayload)
   async countBids(@Ctx() { auctionItemService }: Context, @Arg('tokenId') tokenId: number): Promise<CountBidsPayload> {
     return auctionItemService.countBids(tokenId);

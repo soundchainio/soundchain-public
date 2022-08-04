@@ -1,3 +1,4 @@
+import { BackButton } from 'components/Buttons/BackButton';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { TopTracks } from 'components/TopTracks';
@@ -11,7 +12,7 @@ export const getServerSideProps = protectPage((context, apolloClient) => {
 });
 
 const topNavBarProps: TopNavBarProps = {
-
+  leftButton: <BackButton />,
 };
 
 export default function TopTracksPage() {

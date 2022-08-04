@@ -14,9 +14,6 @@ export class FavoriteProfileTrack extends Model {
   @Field()
   @prop({ required: true })
   trackId: string;
-
-  @prop({ required: false })
-  trackEditionId: string;
 }
 
 export const FavoriteProfileTrackModel = getModelForClass(FavoriteProfileTrack);

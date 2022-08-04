@@ -23,7 +23,6 @@ export const GridView = ({ tracks, loading, refetch, hasNextPage, loadMore }: Vi
           <GridSkeleton />
           <GridSkeleton />
           <GridSkeleton />
-          <GridSkeleton />
         </div>
       ) : !tracks ? (
         <NoResultFound type="items" />

@@ -35,5 +35,3 @@ yarn-error.log*
 #next-pwa
 **/public/workbox-*.js
 **/public/sw.js
-
-.copy

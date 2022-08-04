@@ -3,8 +3,6 @@ import { Arg, Authorized, Ctx, Query, Resolver } from 'type-graphql';
 import soundchainCollectible from '../contract/Soundchain721.json';
 import soundchainAuction from '../contract/SoundchainAuction.json';
 import soundchainMarketplace from '../contract/SoundchainMarketplace.json';
-import soundchainCollectibleV2 from '../contract/v2/Soundchain721Editions.json';
-import soundchainMarketplaceV2 from '../contract/v2/SoundchainMarketplaceEditions.json';
 import { Context } from '../types/Context';
 import { PageInput } from '../types/PageInput';
 import { PolygonscanResult, PolygonscanResultObj } from '../types/PolygonscanResult';
@@ -24,13 +22,7 @@ export class PolygonscanResolver {
     @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<PolygonscanResult> {
     const { nextPage, result: serviceResult } = await polygonscanService.getTransactionHistory(wallet, page);
-    abiDecoder.addABI([
-      ...soundchainMarketplace.abi,
-      ...soundchainCollectible.abi,
-      ...soundchainAuction.abi,
-      ...soundchainCollectibleV2.abi,
-      ...soundchainMarketplaceV2.abi,
-    ]);
+    abiDecoder.addABI([...soundchainMarketplace.abi, ...soundchainCollectible.abi, ...soundchainAuction.abi]);
 
     const result = serviceResult.map(trx => {
       let decoded = abiDecoder.decodeMethod(trx.input)?.name;

@@ -10,12 +10,5 @@ export const processPending: Handler = async () => {
   const user = await UserModel.findOne({ handle: '_system' });
   const context = new Context({ sub: user._id });
 
-  const nowMinusOneHour = new Date();
-  nowMinusOneHour.setHours(nowMinusOneHour.getHours() - 1);
-
-  await Promise.all([
-    context.trackService.resetPending(nowMinusOneHour), 
-    context.trackEditionService.resetPending(nowMinusOneHour), 
-    context.trackService.processPendingTrack()
-  ]);
+  await Promise.all([context.trackService.resetPending(), context.trackService.processPendingTrack()]);
 };

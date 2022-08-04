@@ -18,6 +18,7 @@ import { DefaultWallet, SortOrder, SortTrackField, TracksQuery, useTracksQuery }
 import Asset from '../Asset';
 import { Badge } from '../Badge';
 import { Button } from '../Button';
+import { BackButton } from '../Buttons/BackButton';
 import { RefreshButton } from '../Buttons/RefreshButton';
 import { InfiniteLoader } from '../InfiniteLoader';
 import { InputField } from '../InputField';
@@ -48,7 +49,6 @@ interface TransferNftContextData {
     artworkUrl: string;
     tokenId?: number;
     artist: string;
-    contractAddress: string
   };
   loadMore: () => void;
   refetch: () => void;
@@ -178,6 +178,7 @@ export function useTransferNftsControls() {
 
   useEffect(() => {
     setTopNavBarProps({
+      leftButton: <BackButton />,
       title: 'Transfer NFT',
       rightButton: (
         <RefreshButton onClick={() => refetch()} label="Refresh" className="text-center" refreshing={loading} />
@@ -208,7 +209,6 @@ export function useTransferNftsControls() {
         artist: track.artist,
         tokenId: track.nftData?.tokenId,
         title: track.title,
-        contractAddress: track.nftData?.contract
       } as TransferNftContextData['selectedNftTrack'];
     }
   }, [selectedNft, data]);
@@ -290,7 +290,6 @@ export function TransferNftsForm() {
             artworkUrl: selectedNftTrack.artworkUrl,
             title: selectedNftTrack.title,
             artist: selectedNftTrack.artist,
-            contractAddress: selectedNftTrack.contractAddress,
             refetch,
           });
         }}

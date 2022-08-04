@@ -1,3 +1,4 @@
+import { InboxButton } from 'components/Buttons/InboxButton';
 import { Feed } from 'components/Feed';
 import { Posts } from 'components/Posts';
 import SEO from 'components/SEO';
@@ -28,9 +29,9 @@ export default function HomePage({ me }: HomePageProps) {
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
-      title: undefined,
+      rightButton: me ? <InboxButton /> : undefined,
     }),
-    [],
+    [me],
   );
 
   useEffect(() => {
@@ -40,7 +41,7 @@ export default function HomePage({ me }: HomePageProps) {
   return (
     <>
       <SEO title="SoundChain" description="Connecting people to music" canonicalUrl="/" />
-      <div className="h-full pt-3">{me ? <Feed /> : <Posts />}</div>
+      <div className="pt-3 h-full">{me ? <Feed /> : <Posts />}</div>
     </>
   );
 }

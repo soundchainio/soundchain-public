@@ -1,3 +1,4 @@
+import { BackButton } from 'components/Buttons/BackButton';
 import { RefreshButton } from 'components/Buttons/RefreshButton';
 import { Chat } from 'components/Chat';
 import { ChatLayout } from 'components/ChatLayout';
@@ -90,6 +91,7 @@ export default function ChatPage({ recipientName, profileId }: PostPageProps) {
 
   const topNavBarProps: TopNavBarProps = {
     title: recipientName,
+    leftButton: <BackButton scroll={false} />,
     rightButton: <RefreshButton onClick={onRefresh} refreshing={loading} />,
   };
 

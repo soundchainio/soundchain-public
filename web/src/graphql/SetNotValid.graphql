@@ -1,0 +1,10 @@
+mutation SetNotValid($tokenId: Float!) {
+  setNotValid(tokenId: $tokenId) {
+    id
+    owner
+    nft
+    tokenId
+    pricePerItem
+    startingTime
+  }
+}

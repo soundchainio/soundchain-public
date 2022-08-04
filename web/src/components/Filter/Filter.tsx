@@ -3,13 +3,10 @@ import React, { Dispatch, SetStateAction, useState, Fragment, useEffect } from '
 import { SortListingItem } from 'lib/apollo/sorting';
 import { Listbox, Transition } from '@headlessui/react';
 import { MdKeyboardArrowDown } from 'react-icons/md';
-import classNames from 'classnames';
 interface Props {
   sorting: SortListingItem;
   setSorting: Dispatch<SetStateAction<SortListingItem>>;
-  options?: Option[],
-  mobile?: boolean;
-  noMarginRight?: boolean;
+  options?: Option[]
 }
 
 type Option = { value: string; name: string };
@@ -22,7 +19,7 @@ const defaultOptions = [
 ]
 
 export const FilterComponent = (props: Props) => {
-  const { mobile, noMarginRight, sorting, setSorting, options = defaultOptions } = props;
+  const { sorting, setSorting, options = defaultOptions } = props;
 
   const [selected, setSelected] = useState<Option | null>(null);
 
@@ -46,21 +43,9 @@ export const FilterComponent = (props: Props) => {
   }, [selected]);
 
   return (
-    <div className={classNames("flex items-center", { "mr-4": !noMarginRight})}>
-      <label 
-        className={classNames("text-white mr-4 font-bold text-xs", {
-          "hidden md:inline-block": !mobile,
-          "inline-block": mobile,
-        })}
-      >
-        Sort By:
-      </label>
-      <div 
-        className={classNames("z-10", {
-          "flex": mobile,
-          "hidden md:flex": !mobile,
-        })}
-      >
+    <div className="flex items-center mr-4">
+      <label className="text-white mr-4 font-bold hidden md:inline-block">Sort By:</label>
+      <div className="w-[180px]  z-10 hidden md:flex">
         <Listbox value={selected} onChange={setSelected}>
           <div className="relative">
             <Listbox.Button

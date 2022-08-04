@@ -1,3 +1,0 @@
-query CheapestListingItem($trackEditionId: String!) {
-  cheapestListingItem(trackEditionId: $trackEditionId)
-}

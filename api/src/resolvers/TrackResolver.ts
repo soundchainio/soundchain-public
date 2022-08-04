@@ -2,20 +2,14 @@ import { ObjectId } from 'mongodb';
 import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
 import { CurrentUser } from '../decorators/current-user';
 import { FavoriteProfileTrackModel } from '../models/FavoriteProfileTrack';
-import { ListingItem } from '../models/ListingItem';
 import { Track } from '../models/Track';
-import { TrackEdition } from '../models/TrackEdition';
 import { User } from '../models/User';
 import { FavoriteCount } from '../services/TrackService';
 import { Context } from '../types/Context';
-import { CreateMultipleTracksInput } from '../types/CreateMultipleTracksInput';
-import { CreateMultipleTracksPayload } from '../types/CreateMultipleTracksPayload';
-import { MAX_EDITION_SIZE } from '../types/CreateTrackEditionInput';
+import { CreateTrackInput as CreateTrackInput } from '../types/CreateTrackInput';
+import { CreateTrackPayload } from '../types/CreateTrackPayload';
 import { DeleteTrackInput } from '../types/DeleteTrackInput';
 import { DeleteTrackPayload } from '../types/DeleteTrackPayload';
-import { FilterBuyNowItemInput } from '../types/FilterBuyNowItemInput';
-import { FilterOwnedBuyNowItemInput } from '../types/FilterOwnedBuyNowItemInput';
-import { FilterOwnedTracksInput } from '../types/FilterOwnedTracksInput';
 import { FilterTrackInput } from '../types/FilterTrackInput';
 import { FilterTrackMarketplace } from '../types/FilterTrackMarketplace';
 import { ListingItemConnection } from '../types/ListingItemConnection';
@@ -25,8 +19,6 @@ import { SortListingItemInput } from '../types/SortListingItemInput';
 import { SortTrackInput } from '../types/SortTrackInput';
 import { ToggleFavoritePayload } from '../types/ToggleFavoritePayload';
 import { TrackConnection } from '../types/TrackConnection';
-import { UpdateEditionOwnedTracksInput } from '../types/UpdateEditionOwnedTracksInput';
-import { UpdateEditionOwnedTracksPayload } from '../types/UpdateEditionOwnedTracksPayload';
 import { UpdateTrackInput } from '../types/UpdateTrackInput';
 import { UpdateTrackPayload } from '../types/UpdateTrackPayload';
 
@@ -37,88 +29,36 @@ export class TrackResolver {
     return muxAsset ? `https://stream.mux.com/${muxAsset.playbackId}.m3u8` : '';
   }
 
-  @FieldResolver(() => Number)
-  playbackCount(@Ctx() { trackService }: Context, @Root() { _id: trackId, trackEditionId, playbackCount }: Track): Promise<number> {
-    if (trackEditionId) {
-      return trackService.playbackCount(trackId, trackEditionId);
-    }
-    return Promise.resolve(playbackCount)
-  }
-
   @FieldResolver(() => String)
-  async playbackCountFormatted(
-    @Ctx() { trackService }: Context,
-    @Root() { _id: trackId, trackEditionId, playbackCount }: Track,
-  ): Promise<string> {
-    const playbackCountToUse = trackEditionId ? await trackService.playbackCount(trackId, trackEditionId) : playbackCount;
-    return playbackCountToUse ? new Intl.NumberFormat('en-US').format(playbackCountToUse) : '';
+  playbackCountFormatted(@Root() { playbackCount }: Track): string {
+    return playbackCount ? new Intl.NumberFormat('en-US').format(playbackCount) : '';
   }
 
   @FieldResolver(() => Number)
-  favoriteCount(@Ctx() { trackService }: Context, @Root() { _id: trackId, trackEditionId }: Track): Promise<FavoriteCount> {
-    return trackService.favoriteCount(trackId, trackEditionId);
+  favoriteCount(@Ctx() { trackService }: Context, @Root() { _id: trackId }: Track): Promise<FavoriteCount> {
+    return trackService.favoriteCount(trackId);
   }
 
   @FieldResolver(() => Number)
-  listingCount(@Ctx() { listingCountByTrackEdition }: Context, @Root() { trackEditionId }: Track): Promise<number> {
-    if(!trackEditionId) return Promise.resolve(0)
-    return listingCountByTrackEdition.load(trackEditionId);
-  }
-
-  @FieldResolver(() => Number)
-  price(@Ctx() { trackService, listingItemService }: Context, @Root() { trackEditionId, nftData }: Track): Promise<number> {
-    if(trackEditionId) {
-      return listingItemService.getCheapestListingItem(trackEditionId)
-    }
-    return trackService.priceToShow(nftData.tokenId, nftData.contract);
+  price(@Ctx() { trackService }: Context, @Root() { nftData }: Track): Promise<number> {
+    return trackService.priceToShow(nftData.tokenId);
   }
 
   @FieldResolver(() => String)
   saleType(@Ctx() { trackService }: Context, @Root() { nftData }: Track): Promise<string> {
-    return trackService.saleType(nftData.tokenId, nftData.contract);
+    return trackService.saleType(nftData.tokenId);
   }
 
   @FieldResolver(() => Boolean)
   isFavorite(
     @Ctx() { trackService }: Context,
-    @Root() { _id: trackId, trackEditionId }: Track,
+    @Root() { _id: trackId }: Track,
     @CurrentUser() user?: User,
   ): Promise<boolean> {
     if (!user) {
       return Promise.resolve(false);
     }
-    return trackService.isFavorite(trackId, user.profileId, trackEditionId);
-  }
-
-  @FieldResolver(() => Number)
-  editionSize(
-    @Ctx() { trackEditionService }: Context,
-    @Root() { trackEditionId }: Track,
-  ): Promise<number> {
-    return trackEditionId
-      ? trackEditionService.getEditionSize(trackEditionId)
-      : Promise.resolve(0);
-  }
-
-  @FieldResolver(() => TrackEdition)
-  trackEdition(
-    @Ctx() { trackEditionService }: Context,
-    @Root() { trackEditionId }: Track,
-  ): Promise<TrackEdition> {
-    return trackEditionId
-      ? trackEditionService.findOrFail(trackEditionId)
-      : null;
-  }
-
-  @FieldResolver(() => ListingItem, { nullable: true })
-  async listingItem(
-    @Ctx() { listingItemService }: Context,
-    @Root() { nftData }: Track,
-  ): Promise<ListingItem | void> {
-    if (typeof nftData.tokenId !== 'number' || !nftData.contract) {
-      return;
-    }
-    return listingItemService.getListingItem(nftData.tokenId, nftData.contract);
+    return trackService.isFavorite(trackId, user.profileId);
   }
 
   @Query(() => Track)
@@ -136,66 +76,16 @@ export class TrackResolver {
     return trackService.getTracks(filter, sort, page);
   }
 
-  @Query(() => TrackConnection)
+  @Mutation(() => CreateTrackPayload)
   @Authorized()
-  async ownedTracks(
-    @Ctx() { trackService }: Context,
-    @Arg('filter') filter?: FilterOwnedTracksInput,
-  ): Promise<TrackConnection> {
-    return trackService.getTracks({
-        trackEditionId: filter.trackEditionId,
-        nftData: {
-          owner: filter.owner,
-        }
-      },
-      undefined,
-      {
-        first: MAX_EDITION_SIZE,
-      }
-    );
-  }
-
-  @Query(() => TrackConnection)
-  @Authorized()
-  async listableOwnedTracks(
-    @Ctx() { trackService }: Context,
-    @Arg('filter') filter?: FilterOwnedTracksInput,
-  ): Promise<TrackConnection> {
-    return trackService.getListableOwnedTracks(filter);
-  }
-
-  @Query(() => TrackConnection)
-  groupedTracks(
-    @Ctx() { trackService }: Context,
-    @Arg('filter', { nullable: true }) filter?: FilterTrackInput,
-    @Arg('sort', { nullable: true }) sort?: SortTrackInput,
-    @Arg('page', { nullable: true }) page?: PageInput,
-  ): Promise<TrackConnection> {
-    return trackService.getGroupedTracks(filter, sort, page);
-  }
-
-  @Mutation(() => CreateMultipleTracksPayload)
-  @Authorized()
-  async createMultipleTracks(
+  async createTrack(
     @Ctx() { trackService, postService }: Context,
     @CurrentUser() { profileId }: User,
-    @Arg('input') input: CreateMultipleTracksInput,
-  ): Promise<CreateMultipleTracksPayload> {
-    const [track, ...otherTracks] = await trackService.createMultipleTracks(profileId, {
-      batchSize: input.batchSize,
-      track: input.track,
-    });
-    if (input.createPost) {
-      await postService.createPost({
-        profileId,
-        trackId: track._id,
-        trackEditionId: track.trackEditionId,
-      });
-    }
-    return {
-      firstTrack: track,
-      trackIds: [track._id, ...otherTracks.map(track => track._id)],
-    };
+    @Arg('input') input: CreateTrackInput,
+  ): Promise<CreateTrackPayload> {
+    const track = await trackService.createTrack(profileId, input);
+    await postService.createPost({ profileId, trackId: track._id });
+    return { track };
   }
 
   @Mutation(() => UpdateTrackPayload)
@@ -206,16 +96,6 @@ export class TrackResolver {
   ): Promise<UpdateTrackPayload> {
     const track = await trackService.updateTrack(trackId, changes);
     return { track };
-  }
-
-  @Mutation(() => UpdateEditionOwnedTracksPayload)
-  @Authorized()
-  async updateEditionOwnedTracks(
-    @Ctx() { trackService }: Context,
-    @Arg('input') { trackIds, trackEditionId, owner, ...changes }: UpdateEditionOwnedTracksInput,
-  ): Promise<UpdateEditionOwnedTracksPayload> {
-    const tracks = await trackService.updateEditionOwnedTracks(trackIds, trackEditionId, owner, changes);
-    return { tracks };
   }
 
   @Mutation(() => UpdateTrackPayload)
@@ -278,27 +158,5 @@ export class TrackResolver {
     @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<ListingItemConnection> {
     return trackService.getListingItems(filter, sort, page);
-  }
-
-  @Query(() => ListingItemConnection)
-  buyNowListingItems(
-    @Ctx() { trackService }: Context,
-    @Arg('filter', { nullable: true }) filter?: FilterBuyNowItemInput,
-    @Arg('page', { nullable: true }) page?: PageInput,
-  ): Promise<ListingItemConnection> {
-    return trackService.getBuyNowlistingItems(filter, page);
-  }
-
-  @Query(() => ListingItemConnection)
-  ownedBuyNowListingItems(
-    @Ctx() { trackService }: Context,
-    @Arg('filter', { nullable: true }) filter?: FilterOwnedBuyNowItemInput,
-  ): Promise<ListingItemConnection> {
-    return trackService.getBuyNowlistingItems({
-      trackEdition: filter.trackEditionId,
-      nftData: {
-        owner: filter.owner,
-      }
-    }, { first: MAX_EDITION_SIZE });
   }
 }

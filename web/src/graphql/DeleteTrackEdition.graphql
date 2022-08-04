@@ -1,5 +1,0 @@
-mutation deleteTrackEdition($trackEditionId: String!) {
-  deleteTrackEdition(trackEditionId: $trackEditionId) {
-    id
-  }
-}

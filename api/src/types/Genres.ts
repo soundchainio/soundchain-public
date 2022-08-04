@@ -38,7 +38,6 @@ enum Genre {
   REGGAE = 'reggae',
   REGGAETON = 'reggaeton',
   SALSA = 'salsa',
-  SAMPLES = 'samples',
   SOUL_FUNK = 'soul_funk',
   SOUNDBATH = 'soundbath',
   SOUNDTRACK = 'soundtrack',

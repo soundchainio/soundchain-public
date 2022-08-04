@@ -1,15 +1,13 @@
 export interface Metadata {
   name: string;
   description: string;
-  animation_url: string;
   asset: string;
-  image?: string;
   art?: string;
   album?: string;
   artist?: string;
   genres?: string[];
   releaseYear?: number;
-  attributes?: { trait_type: string; value: string }[];
+  attributes?: { trait_type: string; trait_value: string }[];
 }
 
 export interface NftToken extends Metadata {

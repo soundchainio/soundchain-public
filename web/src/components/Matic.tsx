@@ -6,7 +6,7 @@ import { currency, fixedDecimals } from 'utils/format';
 interface Props {
   value?: string | number;
   className?: string;
-  variant?: 'currency' | 'currency-inline' | 'listing-inline' ;
+  variant?: 'currency' | 'currency-inline';
 }
 
 export const Matic = ({ value = '', className, variant }: Props) => {
@@ -28,12 +28,6 @@ export const Matic = ({ value = '', className, variant }: Props) => {
         <p className={classNames('text-white font-bold inline-flex items-center gap-1', className)}>
           {value}
           <MaticIcon className="inline" />
-        </p>
-      );
-    case 'listing-inline':
-      return (
-        <p className={classNames('font-bold text-white inline-flex items-center gap-1', className)}>
-          <MaticIcon className="inline" /> {fixedDecimals(value)} <span className="text-xs text-gray-80 hidden xs:inline">MATIC</span>
         </p>
       );
     default:

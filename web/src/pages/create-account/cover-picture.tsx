@@ -1,3 +1,4 @@
+import { BackButton } from 'components/Buttons/BackButton';
 import { CoverPictureForm } from 'components/forms/profile/CoverPictureForm';
 import SEO from 'components/SEO';
 import { StepProgressBar } from 'components/StepProgressBar';
@@ -9,7 +10,7 @@ import { SkipButton, steps } from 'utils/createAccountUtils';
 
 const topNavBarProps: TopNavBarProps = {
   title: 'Cover Photo',
-
+  leftButton: <BackButton />,
   rightButton: <SkipButton href="/create-account/favorite-genres" />,
   subtitle: <StepProgressBar steps={steps} currentStep={2} />,
 };

@@ -13,7 +13,6 @@ interface NewPostParams {
   body?: string;
   mediaLink?: string;
   trackId?: string;
-  trackEditionId?: string;
 }
 
 interface RepostParams {
@@ -144,17 +143,6 @@ export class PostService extends ModelService<typeof Post> {
   }
 
   async getOriginalFromTrack(trackId: string): Promise<Post> {
-    const track = await this.context.trackService.getTrack(trackId);
-
-    const ors: any[] = [{ trackId }]
-
-    if (track.trackEditionId) {
-      ors.push({ trackEditionId: track.trackEditionId });
-    }
-
-    return this.model
-      .findOne({ $or: ors })
-      .sort({ createdAt: 1 })
-      .exec();
+    return this.model.findOne({ trackId }).sort({ createdAt: 1 }).exec();
   }
 }

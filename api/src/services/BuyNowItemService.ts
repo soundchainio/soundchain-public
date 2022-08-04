@@ -10,9 +10,6 @@ interface NewBuyNowItem {
   pricePerItem: string;
   pricePerItemToShow: number;
   startingTime: number;
-  contract: string;
-  trackEditionId?: string
-  trackId?: string
 }
 
 export class BuyNowService extends ModelService<typeof BuyNowItem> {
@@ -26,46 +23,41 @@ export class BuyNowService extends ModelService<typeof BuyNowItem> {
     return buyNowItem;
   }
 
-  async findBuyNowItem(tokenId: number, contractAddress: string): Promise<BuyNowItem> {
-    const buyNowItem = await this.model.findOne({ tokenId, nft: contractAddress, valid: true }).sort({ createdAt: -1 }).exec();
+  async findBuyNowItem(tokenId: number): Promise<BuyNowItem> {
+    const buyNowItem = await this.model.findOne({ tokenId, valid: true }).sort({ createdAt: -1 }).exec();
     return buyNowItem;
   }
 
-  async updateBuyNowItem(tokenId: number, changes: Partial<BuyNowItem>, contractAddress: string, marketplaceAddress: string): Promise<BuyNowItem> {
+  async updateBuyNowItem(tokenId: number, changes: Partial<BuyNowItem>): Promise<BuyNowItem> {
     const buyNowItem = await this.model
-      .findOneAndUpdate({ tokenId, nft: contractAddress, contract: marketplaceAddress, valid: true }, changes, { new: true })
+      .findOneAndUpdate({ tokenId, valid: true }, changes, { new: true })
       .sort({ createdAt: -1 })
       .exec();
     return buyNowItem;
   }
 
-  async wasListedBefore(tokenId: number, contractAddress: string): Promise<boolean> {
-    const buyNowItem = await this.model.findOne({ tokenId, nft: contractAddress, }).exec();
+  async wasListedBefore(tokenId: number): Promise<boolean> {
+    const buyNowItem = await this.model.findOne({ tokenId }).exec();
     return !!buyNowItem;
   }
 
-  async setNotValid(tokenId: number, contractAddress: string, marketplaceAddress: string): Promise<BuyNowItem> {
-    const buyNowItem = await this.model.findOne({ 
-      tokenId, 
-      nft: contractAddress, 
-      contract: marketplaceAddress, 
-      valid: true 
-    }).sort({ createdAt: -1 }).exec();
+  async setNotValid(tokenId: number): Promise<BuyNowItem> {
+    const buyNowItem = await this.model.findOne({ tokenId }).sort({ createdAt: -1 }).exec();
     buyNowItem.valid = false;
     buyNowItem.save();
     return buyNowItem;
   }
 
-  async finishListing(tokenId: string, sellerWallet: string, buyerWaller: string, price: number, contractAddress: string, marketplaceAddress: string): Promise<void> {
+  async finishListing(tokenId: string, sellerWallet: string, buyerWaller: string, price: number): Promise<void> {
     const [sellerUser, buyerUser, track] = await Promise.all([
       this.context.userService.getUserByWallet(sellerWallet),
       this.context.userService.getUserByWallet(buyerWaller),
-      this.context.trackService.getTrackByTokenId(parseInt(tokenId), contractAddress),
+      this.context.trackService.getTrackByTokenId(parseInt(tokenId)),
     ]);
     if (!sellerUser) {
       await Promise.all([
-        this.context.buyNowItemService.setNotValid(parseInt(tokenId), contractAddress, marketplaceAddress),
-        this.context.trackService.setPendingNone(parseInt(tokenId), contractAddress),
+        this.context.buyNowItemService.setNotValid(parseInt(tokenId)),
+        this.context.trackService.setPendingNone(parseInt(tokenId)),
       ]);
       return;
     }
@@ -84,8 +76,8 @@ export class BuyNowService extends ModelService<typeof BuyNowItem> {
       }),
     ]);
     await Promise.all([
-      this.context.buyNowItemService.setNotValid(parseInt(tokenId), contractAddress, marketplaceAddress),
-      this.context.trackService.setPendingNone(parseInt(tokenId), contractAddress),
+      this.context.buyNowItemService.setNotValid(parseInt(tokenId)),
+      this.context.trackService.setPendingNone(parseInt(tokenId)),
     ]);
   }
 }

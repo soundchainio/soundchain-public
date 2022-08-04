@@ -1,3 +1,4 @@
+import { config } from 'config';
 import { useModalDispatch } from 'contexts/providers/modal';
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar';
 import { useMe } from 'hooks/useMe';
@@ -9,7 +10,6 @@ import { Search } from 'icons/Search';
 import { useRouter } from 'next/router';
 import React from 'react';
 import { NavBarButton } from './Buttons/NavBarButton';
-import { Logo } from '../icons/Logo';
 
 export const NavBar = () => {
   const { dispatchShowCreateModal } = useModalDispatch();
@@ -23,13 +23,16 @@ export const NavBar = () => {
 
   return (
     <nav
-      className="inset-x-0 flex h-16 items-center bg-black shadow-2xl"
+      className={`bg-black ${config.mobileBreakpoint}:bg-gray-30 h-16 flex items-center inset-x-0 shadow-2xl ${config.mobileBreakpoint}:w-full`}
     >
-      <div className="w-full flex justify-center gap-6">
-        <Logo className="block h-8 w-auto" />
-
-        <NavBarButton label="Home" path="/home" icon={Home} color="yellow" id="top" />
+      <div className="w-full flex justify-center gap-14">
+        <NavBarButton label="Home" path="/" icon={Home} color="yellow" id="top" />
         <NavBarButton id="top-explore-" label="Explore" path={me ? '/explore' : '/login'} icon={Search} color="green" />
+        {isMinting ? (
+          <NavBarButton label="Minting..." nyanCat={true} onClick={handleCreateClick} />
+        ) : (
+          <NavBarButton label="Create" icon={NewPost} onClick={handleCreateClick} />
+        )}
         <NavBarButton
           id="top-library-"
           label="Library"
@@ -44,11 +47,6 @@ export const NavBar = () => {
           color="purple-green"
           path={'/marketplace'}
         />
-        {isMinting ? (
-          <NavBarButton label="Minting..." alwaysShowLabel nyanCat={true} onClick={handleCreateClick} />
-        ) : (
-          <NavBarButton label="Create" alwaysShowLabel icon={NewPost} onClick={handleCreateClick} />
-        )}
       </div>
     </nav>
   );

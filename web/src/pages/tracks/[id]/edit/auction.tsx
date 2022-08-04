@@ -1,3 +1,4 @@
+import { BackButton } from 'components/Buttons/BackButton';
 import { ListNFTAuction, ListNFTAuctionFormValues } from 'components/details-NFT/ListNFTAuction';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
@@ -11,7 +12,7 @@ import { PendingRequest, TrackDocument, TrackQuery, useAuctionItemQuery, useUpda
 import { protectPage } from 'lib/protectPage';
 import { useRouter } from 'next/router';
 import { ParsedUrlQuery } from 'querystring';
-import { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { SaleType } from 'types/SaleType';
 import { compareWallets } from 'utils/Wallet';
@@ -70,13 +71,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
     ) {
       return;
     }
-    dispatchShowRemoveListingModal({
-      show: true, 
-      tokenId: listingPayload.auctionItem?.auctionItem?.tokenId, 
-      trackId: track.id, 
-      saleType: SaleType.AUCTION, 
-      contractAddresses: { nft: nftData.contract }
-    });
+    dispatchShowRemoveListingModal(true, listingPayload.auctionItem?.auctionItem?.tokenId, track.id, SaleType.AUCTION);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account, listingPayload?.auctionItem?.auctionItem?.tokenId, nftData?.pendingRequest, track.id, web3]);
 
@@ -91,7 +86,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
-    
+      leftButton: <BackButton />,
       title: 'Edit Listing',
       rightButton: RemoveListing,
     }),
@@ -138,14 +133,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       router.replace(router.asPath.replace('edit/auction', ''));
     };
 
-    updateAuction(
-      listingPayload.auctionItem?.auctionItem?.tokenId,
-      weiPrice,
-      startTimestamp,
-      endTimestamp,
-      account,
-      { nft: nftData?.contract }
-    )
+    updateAuction(listingPayload.auctionItem?.auctionItem?.tokenId, weiPrice, startTimestamp, endTimestamp, account)
       .onReceipt(onTransactionReceipt)
       .onError(cause => toast.error(cause.message))
       .execute(web3);

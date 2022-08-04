@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Button } from 'components/Button';
+import { BackButton } from 'components/Buttons/BackButton';
 import { InputField } from 'components/InputField';
 import { Matic } from 'components/Matic';
 import MaxGasFee from 'components/MaxGasFee';
@@ -8,7 +9,6 @@ import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { ProfileWithAvatar } from 'components/ProfileWithAvatar';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
-import { Timer } from 'components/trackpage/SingleTrackPage';
 import { WalletSelector } from 'components/WalletSelector';
 import { useModalDispatch } from 'contexts/providers/modal';
 import { Form, Formik } from 'formik';
@@ -28,7 +28,7 @@ import {
   useAuctionItemQuery,
   useCountBidsQuery,
   useHaveBidedLazyQuery,
-  useUserByWalletLazyQuery
+  useUserByWalletLazyQuery,
 } from 'lib/graphql';
 import { protectPage } from 'lib/protectPage';
 import { authenticator } from 'otplib';
@@ -40,6 +40,7 @@ import { compareWallets } from 'utils/Wallet';
 import Web3 from 'web3';
 import * as yup from 'yup';
 import SEO from '../../../components/SEO';
+import { Timer } from '../[id]';
 import { HighestBid } from './complete-auction';
 
 export interface TrackPageProps {
@@ -56,6 +57,7 @@ interface FormValues {
 }
 
 const topNavBarProps: TopNavBarProps = {
+  leftButton: <BackButton />,
   title: 'Place Bid',
 };
 
@@ -89,7 +91,6 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
   const { setTopNavBarProps } = useLayoutContext();
 
   const tokenId = track.nftData?.tokenId ?? -1;
-  const contractAddress = track.nftData?.contract ?? "";
 
   const { data: { auctionItem } = {} } = useAuctionItemQuery({
     variables: { tokenId },
@@ -116,7 +117,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
       return;
     }
     const fetchHighestBid = async () => {
-      const { _bid, _bidder } = await getHighestBid(web3, tokenId, { nft: track.nftData?.contract });
+      const { _bid, _bidder } = await getHighestBid(web3, tokenId);
       setHighestBid({ bid: priceToShow(_bid), bidder: _bidder });
       refetchCountBids();
     };
@@ -126,7 +127,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
     }, 6 * 1000);
 
     return () => clearInterval(interval);
-  }, [tokenId, track, web3, getHighestBid, account, refetchCountBids]);
+  }, [tokenId, track.id, web3, getHighestBid, account, refetchCountBids]);
 
   useEffect(() => {
     if (highestBid) {
@@ -190,7 +191,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
       return;
     }
 
-    placeBid(tokenId, account, amount, { nft: contractAddress })
+    placeBid(tokenId, account, amount)
       .onReceipt(() => {
         toast.success('Bid placed!');
         if (refetchHaveBided) refetchHaveBided();

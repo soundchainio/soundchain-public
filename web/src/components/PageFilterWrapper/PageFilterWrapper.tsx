@@ -13,24 +13,20 @@ function PageFilterWrapper(props: PageFilterProps) {
   const { sorting, setSorting, isGrid, setIsGrid, label } = props;
 
   return (
-    <div className="w-full">
-      <div className="flex w-full items-center justify-center gap-2 bg-gray-15 p-4">
-        {label && <h3 className="text-xl font-semibold text-slate-200">{label || ''}</h3>}
+    <div className='w-full'>
+      <div className='flex gap-2 w-full bg-gray-15 p-4 justify-center items-center'>
+        <h3 className='text-slate-200 font-semibold text-xl'>{label || ''}</h3>
 
-        <div className="flex-1" />
-        <FilterComponent
-          options={[
-            { value: SortListingItem.PlaybackCount, name: 'Most listened' },
-            { value: SortListingItem.CreatedAt, name: 'Newest' },
-          ]}
-          sorting={sorting}
-          setSorting={setSorting}
-        />
+        <div className='flex-1'/>
+        <FilterComponent options={[
+          { value: SortListingItem.PlaybackCount, name: 'Most listened' },
+          { value: SortListingItem.CreatedAt, name: 'Newest' },
+        ]} sorting={sorting} setSorting={setSorting} />
 
-        <button aria-label="List view">
+        <button aria-label='List view'>
           <ListViewIcon color={isGrid ? undefined : 'rainbow'} onClick={() => setIsGrid(false)} />
         </button>
-        <button aria-label="Grid view">
+        <button aria-label='Grid view'>
           <GridViewIcon color={isGrid ? 'rainbow' : undefined} onClick={() => setIsGrid(true)} />
         </button>
       </div>

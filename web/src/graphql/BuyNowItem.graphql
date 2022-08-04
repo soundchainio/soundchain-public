@@ -1,11 +1,10 @@
-query BuyNowItem($input: FilterListingItemInput!) {
-  buyNowItem(input: $input) {
+query BuyNowItem($tokenId: Float!) {
+  buyNowItem(tokenId: $tokenId) {
     buyNowItem {
       id
       owner
       nft
       tokenId
-      contract
       pricePerItem
       pricePerItemToShow
       startingTime

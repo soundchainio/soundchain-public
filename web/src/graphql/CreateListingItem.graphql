@@ -1,0 +1,10 @@
+mutation CreateBuyNowItem($input: CreateBuyNowItemInput!) {
+  createBuyNowItem(input: $input) {
+    id
+    owner
+    nft
+    tokenId
+    pricePerItem
+    startingTime
+  }
+}

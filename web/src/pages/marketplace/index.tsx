@@ -1,3 +1,4 @@
+import { InboxButton } from 'components/Buttons/InboxButton';
 import { Marketplace } from 'components/Marketplace';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
@@ -22,14 +23,15 @@ export const getServerSideProps: GetServerSideProps<HomePageProps> = async conte
   return cacheFor(HomePage, { me: data.me }, context, apolloClient);
 };
 
-export default function HomePage({}: HomePageProps) {
+export default function HomePage({ me }: HomePageProps) {
   const { setTopNavBarProps } = useLayoutContext();
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
       title: 'Marketplace',
+      rightButton: me ? <InboxButton /> : undefined,
     }),
-    [],
+    [me],
   );
 
   useEffect(() => {

@@ -1,4 +1,3 @@
-import { Asset } from '@mux/mux-node';
 import { DocumentType, mongoose } from '@typegoose/typegoose';
 import dot from 'dot-object';
 import { ObjectId } from 'mongodb';
@@ -10,19 +9,14 @@ import { NotificationModel } from '../models/Notification';
 import { PendingTrackModel } from '../models/PendingTrack';
 import { PostModel } from '../models/Post';
 import { Track, TrackModel } from '../models/Track';
-import { TrackEditionModel } from '../models/TrackEdition';
 import { TrackWithListingItem } from '../models/TrackWithListingItem';
 import { Context } from '../types/Context';
-import { MAX_EDITION_SIZE } from '../types/CreateTrackEditionInput';
-import { FilterBuyNowItemInput } from '../types/FilterBuyNowItemInput';
-import { FilterOwnedTracksInput } from '../types/FilterOwnedTracksInput';
 import { FilterTrackInput } from '../types/FilterTrackInput';
 import { FilterTrackMarketplace } from '../types/FilterTrackMarketplace';
 import { NFTData } from '../types/NFTData';
 import { PageInput } from '../types/PageInput';
 import { PendingRequest } from '../types/PendingRequest';
 import { SortListingItemInput } from '../types/SortListingItemInput';
-import { SortOrder } from '../types/SortOrder';
 import { SortTrackInput } from '../types/SortTrackInput';
 import { getNow } from '../utils/Time';
 import { ModelService } from './ModelService';
@@ -47,7 +41,6 @@ type bulkType = {
     };
   };
 };
-
 export class TrackService extends ModelService<typeof Track> {
   constructor(context: Context) {
     super(context, TrackModel);
@@ -63,154 +56,51 @@ export class TrackService extends ModelService<typeof Track> {
     return this.paginate({ filter: { ...defaultFilter, ...dotNotationFilter, ...owner }, sort, page });
   }
 
-  async getListableOwnedTracks(filter?: FilterOwnedTracksInput) {
-    const aggregation = [
-      {
-        $match: {
-          'trackEditionId': new ObjectId(filter.trackEditionId),
-          'nftData.owner': filter.owner
-        },
-      },
-      {
-        $lookup: {
-          from: 'buynowitems',
-          localField: 'nftData.tokenId',
-          foreignField: 'tokenId',
-          as: 'listingItem'
-        }
-      },
-      {
-        $match: {
-          listingItem: {
-            $eq: [] as unknown
-          }
-        }
-      }
-    ]
-
-    return this.paginatePipelineAggregated({
-      aggregation,
-      sort: undefined,
-      page: {
-        first: MAX_EDITION_SIZE
-      }
-    })
-  }
-
-  getGroupedTracks(filter?: FilterTrackInput, sort?: SortTrackInput, page?: PageInput): Promise<PaginateResult<Track>> {
-    const defaultFilter = { title: { $exists: true }, deleted: false };
-    const dotNotationFilter = filter && dot.dot(filter);
-    const owner = filter?.nftData?.owner && {
-      'nftData.owner': { $regex: `^${filter.nftData.owner}$`, $options: 'i' },
-    };
-
-    if (dotNotationFilter['trackEditionId']) {
-      dotNotationFilter['trackEditionId'] = new ObjectId(dotNotationFilter['trackEditionId']);
-    }
-
-    if (dotNotationFilter['profileId']) {
-      dotNotationFilter['profileId'] = new ObjectId(dotNotationFilter['profileId']);
-    }
-
-    return this.paginatePipelineAggregated({
-      aggregation: [
-        { $match: { ...defaultFilter, ...dotNotationFilter, ...owner } },
-        {
-          $group: {
-            _id: {
-              $ifNull: [
-                '$trackEditionId',
-                '$trackId',
-              ]
-            },
-            sumPlaybackCount: { $sum: '$playbackCount' },
-            sumFavoriteCount: { $sum: '$favoriteCount' },
-            first: { $first: '$$ROOT' }
-          },
-        },
-        {
-          $replaceRoot: {
-            newRoot: {
-              $mergeObjects: [
-                '$first',
-                {
-                  playbackCount: '$sumPlaybackCount',
-                  favoriteCount: '$sumFavoriteCount'
-                },
-              ]
-            }
-          }
-        }
-      ],
-      sort,
-      page,
-    })
-  }
-
   getTrack(id: string): Promise<Track> {
     return this.findOrFail(id);
   }
 
-  async getTrackFromEdition(id: string, trackEditionId?: string): Promise<Track> {
-    const ors: any[] = [{ _id: id }];
-    if (trackEditionId) {
-      ors.push({ trackEditionId: new ObjectId(trackEditionId) });
-    }
-
-    const entity = await this.model.findOne({ $or: ors });
-
-    if (!entity) {
-      throw new NotFoundError('Track', id);
-    }
-
-    return entity;
+  async searchTracks(search: string): Promise<{ list: Track[]; total: number }> {
+    const regex = new RegExp(search, 'i');
+    const list = await this.model
+      .find({ deleted: false, $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }] })
+      .sort({ createdAt: -1 })
+      .limit(5);
+    const total = await this.model
+      .find({ deleted: false, $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }] })
+      .countDocuments()
+      .exec();
+    return { list, total };
   }
 
-  async createTrack(profileId: string, data: Partial<Track>, asset: Asset): Promise<Track> {
+  async createTrack(profileId: string, data: Partial<Track>): Promise<Track> {
     const track = new this.model({ profileId, ...data });
+    const asset = await this.context.muxService.create(data.assetUrl, track._id);
     track.muxAsset = { id: asset.id, playbackId: asset.playback_ids[0].id };
     await track.save();
     return track;
   }
 
-  async createMultipleTracks(profileId: string, data: { track: Partial<Track>; batchSize: number }): Promise<Track[]> {
-    const asset = await this.context.muxService.create(data.track.assetUrl, data.track._id);
-    return await Promise.all(
-      Array(data.batchSize)
-        .fill(null)
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        .map(_ => {
-          return this.createTrack(profileId, data.track, asset);
-        }),
-    );
-  }
-
-  async updateTrackByTransactionHash(transactionHash: string, changes: RecursivePartial<Track>): Promise<void> {
+  async updateTrackByTransactionHash(transactionHash: string, changes: RecursivePartial<Track>): Promise<Track> {
     const { nftData: newNftData, ...data } = changes;
 
-    const track = await this.model.updateOne(
+    const track = await this.model.findOneAndUpdate(
       {
         'nftData.transactionHash': transactionHash,
-        'nftData.tokenId': { $exists: false },
       },
-      {
-        $set: {
-          ...data,
-          'nftData.tokenId': newNftData.tokenId,
-          'nftData.contract': newNftData.contract,
-          'nftData.pendingRequest': newNftData.pendingRequest,
-        },
-      },
+      data,
     );
 
-    if (track.nModified === 0) {
+    if (!track) {
       const trackPending = new PendingTrackModel({
         transactionHash,
         tokenId: newNftData.tokenId,
         contract: newNftData.contract,
       });
       await trackPending.save();
+      return;
     }
+    return this.updateNftData(track, newNftData);
   }
 
   async updateTrack(id: string, changes: RecursivePartial<Track>): Promise<Track> {
@@ -224,45 +114,12 @@ export class TrackService extends ModelService<typeof Track> {
     return this.updateNftData(track, newNftData);
   }
 
-  async updateEditionOwnedTracks(trackIds: string[], trackEditionId: string, owner: string, changes: RecursivePartial<Track>): Promise<Track[]> {
-    const { nftData: newNftData, ...data } = changes;
-
-    await TrackEditionModel.updateOne({ _id: trackEditionId },
-      {
-        $set: {
-          'editinoData.pendingRequest': newNftData.pendingRequest,
-          'editionData.pendingTime': newNftData.pendingTime,
-        },
-        $inc: {
-          'editionData.pendingTrackCount': trackIds.length,
-        }
-      }
-    );
-
-    await this.model.updateMany(
-      { _id: trackIds, 'nftData.owner': owner, trackEditionId: trackEditionId },
-      {
-        ...data,
-        $set: Object.keys(newNftData).reduce((acc, key) => {
-          acc[`nftData.${key}`] = (newNftData as any)[key];
-          return acc;
-        }, {} as any)
-      },
-      { new: true },
-    )
-
-    return await this.model.find({
-      'nftData.owner': owner,
-      trackEditionId: trackEditionId,
-    })
-  }
-
-  private async updateNftData(track: DocumentType<Track>, newNftData?: Partial<NFTData>) {
+  private updateNftData(track: DocumentType<Track>, newNftData?: Partial<NFTData>) {
     if (newNftData) {
       const trackAsData = track.toObject();
       const nftData = trackAsData.nftData;
       track.nftData = { ...nftData, ...newNftData };
-      await track.save();
+      track.save();
     }
 
     return track;
@@ -285,12 +142,6 @@ export class TrackService extends ModelService<typeof Track> {
 
   async deleteTrackByAdmin(id: string): Promise<Track> {
     return await this.model.findOneAndUpdate({ _id: id }, { deleted: true });
-  }
-
-  async deleteTrackEditionByAdmin(trackEditionId: string): Promise<Track[]> {
-    await TrackEditionModel.updateOne({ _id: trackEditionId }, { deleted: true });
-    await this.model.updateMany({ trackEditionId }, { deleted: true });
-    return this.model.find({ trackEditionId });
   }
 
   async deleteTrackOnError(id: string): Promise<Track> {
@@ -323,55 +174,33 @@ export class TrackService extends ModelService<typeof Track> {
     return result.modifiedCount;
   }
 
-  async setPendingNone(tokenId: number, contractAddress: string): Promise<Track> {
+  async setPendingNone(tokenId: number): Promise<Track> {
     return await this.model.findOneAndUpdate(
-      { 'nftData.tokenId': tokenId, 'nftData.contract': contractAddress },
+      { 'nftData.tokenId': tokenId },
       { 'nftData.pendingRequest': PendingRequest.None },
     );
   }
 
-  async getTrackByTokenId(tokenId: number, contractAddress: string): Promise<Track> {
-    return await this.model.findOne({ 'nftData.tokenId': tokenId, 'nftData.contract': contractAddress });
+  async getTrackByTokenId(tokenId: number): Promise<Track> {
+    return await this.model.findOne({ 'nftData.tokenId': tokenId });
   }
 
-  async updateOwnerByTokenId(tokenId: number, owner: string, contractAddress: string): Promise<Track> {
-    const { id } = await this.model.findOne({ 'nftData.tokenId': tokenId, 'nftData.contract': contractAddress });
+  async updateOwnerByTokenId(tokenId: number, owner: string): Promise<Track> {
+    const { id } = await this.model.findOne({ 'nftData.tokenId': tokenId });
     return await this.updateTrack(id, { nftData: { owner } });
   }
 
-  async isFavorite(trackId: string, profileId: string, trackEditionId: string): Promise<boolean> {
-    const ors: any[] =  [{ trackId }];
-    if (trackEditionId) {
-      ors.push({ trackEditionId });
-    }
-    return await FavoriteProfileTrackModel.exists({
-      $or: ors,
-      profileId,
-    });
+  async isFavorite(trackId: string, profileId: string): Promise<boolean> {
+    const hasRecord = await FavoriteProfileTrackModel.findOne({ trackId, profileId });
+    return hasRecord ? true : false;
   }
 
   async toggleFavorite(trackId: string, profileId: string): Promise<FavoriteProfileTrack> {
-    const track = await this.model.findOne({ _id: trackId });
-
-    const ors: any[] =  [{ trackId }];
-    if (track.trackEditionId) {
-      ors.push({ trackEditionId: track.trackEditionId });
-    }
-
-    const findParams = {
-      $or: ors,
-      profileId,
-    };
-
-    const favTrack = await FavoriteProfileTrackModel.findOne(findParams);
+    const favTrack = await FavoriteProfileTrackModel.findOne({ trackId, profileId });
     if (favTrack?.id) {
-      return await FavoriteProfileTrackModel.findOneAndDelete(findParams);
+      return await FavoriteProfileTrackModel.findOneAndDelete({ trackId, profileId });
     } else {
-      const favorite = new FavoriteProfileTrackModel({
-        profileId,
-        trackId,
-        trackEditionId: track.trackEditionId,
-      });
+      const favorite = new FavoriteProfileTrackModel({ profileId, trackId });
       await favorite.save();
       return favorite;
     }
@@ -396,16 +225,11 @@ export class TrackService extends ModelService<typeof Track> {
     });
   }
 
-  async favoriteCount(trackId: string, trackEditionId: string): Promise<FavoriteCount> {
-    const ors: any[] =  [{ trackId: trackId.toString() }];
-    if (trackEditionId) {
-      ors.push({ trackEditionId: trackEditionId.toString() });
-    }
-
+  async favoriteCount(trackId: string): Promise<FavoriteCount> {
     const favTrack = await FavoriteProfileTrackModel.aggregate([
       {
         $match: {
-          $or: ors,
+          trackId: trackId.toString(),
         },
       },
       {
@@ -420,43 +244,8 @@ export class TrackService extends ModelService<typeof Track> {
     return favTrack.length ? favTrack[0].count : 0;
   }
 
-  async playbackCount(trackId: string, trackEditionId: string): Promise<number> {
-    const ors: any[] =  [{ trackId: trackId.toString() }];
-    if (trackEditionId) {
-      ors.push({ trackEditionId: trackEditionId.toString() });
-    }
-
-    const trackQuery = await this.model.aggregate([
-      {
-        $match: {
-          $or: ors,
-        },
-      },
-      {
-        $group: {
-          _id: {
-            $ifNull: [
-              '$trackEditionId',
-              '$trackId',
-            ]
-          },
-          totalPlaybackCount: {
-            $sum: '$playbackCount',
-          },
-        },
-      },
-      {
-        $project: {
-          sum: '$totalPlaybackCount',
-        },
-      },
-    ]);
-
-    return trackQuery.length ? trackQuery[0].sum : 0;
-  }
-
-  async saleType(tokenId: number, contractAddress: string): Promise<string> {
-    const listing = await this.context.listingItemService.getActiveListingItem(tokenId, contractAddress);
+  async saleType(tokenId: number): Promise<string> {
+    const listing = await this.context.listingItemService.getActiveListingItem(tokenId);
     if (!listing) {
       return '';
     }
@@ -464,8 +253,8 @@ export class TrackService extends ModelService<typeof Track> {
     return (endingTime && 'auction') || (pricePerItem && 'buy now') || '';
   }
 
-  async priceToShow(tokenId: number, contractAddress: string): Promise<number> {
-    const listing = await this.context.listingItemService.getActiveListingItem(tokenId, contractAddress);
+  async priceToShow(tokenId: number): Promise<number> {
+    const listing = await this.context.listingItemService.getActiveListingItem(tokenId);
     if (!listing) {
       return 0;
     }
@@ -491,37 +280,11 @@ export class TrackService extends ModelService<typeof Track> {
         },
       },
       {
-        $addFields: {
-          buynowitem: {
-            $filter: {
-              input: '$buynowitem',
-              as: 'item',
-              cond: {
-                $eq: ['$$item.nft', '$nftData.contract'],
-              },
-            },
-          },
-        },
-      },
-      {
         $lookup: {
           from: 'auctionitems',
           localField: 'nftData.tokenId',
           foreignField: 'tokenId',
           as: 'auctionitem',
-        },
-      },
-      {
-        $addFields: {
-          auctionitem: {
-            $filter: {
-              input: '$auctionitem',
-              as: 'item',
-              cond: {
-                $eq: ['$$item.nft', '$nftData.contract'],
-              },
-            },
-          },
         },
       },
       {
@@ -601,34 +364,6 @@ export class TrackService extends ModelService<typeof Track> {
           },
         },
       },
-      {
-        $group: {
-          _id: {
-            $ifNull: [
-              '$trackEditionId',
-              '$trackId',
-            ]
-          },
-          lowestPrice: {
-            $min: '$listingItem.pricePerItem',
-          },
-          detail: {
-            $first: '$$ROOT',
-          },
-        },
-      },
-      {
-        $replaceRoot: {
-          newRoot: {
-            $mergeObjects: [
-              '$detail',
-              {
-                lowestPrice: '$lowestPrice',
-              },
-            ],
-          },
-        },
-      },
     ];
     let dotNotationFilter;
     if (filter) {
@@ -644,74 +379,14 @@ export class TrackService extends ModelService<typeof Track> {
     });
   }
 
-  getBuyNowlistingItems(
-    filter?: FilterBuyNowItemInput,
-    page?: PageInput,
-  ): Promise<PaginateResult<TrackWithListingItem>> {
-    const aggregation = [
-      {
-        $lookup: {
-          from: 'buynowitems',
-          localField: 'nftData.tokenId',
-          foreignField: 'tokenId',
-          as: 'listingItem',
-        },
-      },
-      {
-        $addFields: {
-          listingItem: {
-            $filter: {
-              input: '$listingItem',
-              as: 'item',
-              cond: {
-                $eq: ['$$item.nft', '$nftData.contract'],
-              },
-            },
-          },
-        },
-      },
-      {
-        $addFields: {
-          listingItem: {
-            $filter: {
-              input: '$listingItem',
-              as: 'item',
-              cond: {
-                $and: [
-                  {
-                    $eq: ['$$item.valid', true],
-                  },
-                ],
-              },
-            },
-          },
-        },
-      },
-      {
-        $unwind: {
-          path: '$listingItem',
-        },
-      },
-    ];
+  async resetPending(): Promise<void> {
+    const nowMinusOneHour = new Date();
+    nowMinusOneHour.setHours(nowMinusOneHour.getHours() - 1);
 
-    const queryFilter: any = { deleted: false, trackEditionId: new ObjectId(filter.trackEdition) }
-    const owner = filter?.nftData?.owner && {
-      'nftData.owner': { $regex: `^${filter.nftData.owner}$`, $options: 'i' },
-    };
-
-    return this.paginatePipelineAggregated({
-      aggregation,
-      filter: {...queryFilter, ...owner},
-      sort: { field: "listingItem.pricePerItemToShow", order: SortOrder.ASC },
-      page,
-    });
-  }
-
-  async resetPending(beforeTime: Date): Promise<void> {
     return this.model.updateMany(
       {
         'nftData.pendingRequest': { $ne: PendingRequest.None },
-        'nftData.pendingTime': { $lte: beforeTime },
+        'nftData.pendingTime': { $lte: nowMinusOneHour },
       },
       { 'nftData.pendingRequest': PendingRequest.None },
     );

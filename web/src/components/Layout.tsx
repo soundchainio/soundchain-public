@@ -8,7 +8,6 @@ import { useRouter } from 'next/router';
 import { ReactNode, useEffect, useState } from 'react';
 import { ToastContainer } from 'react-toastify';
 import { Header } from './Header';
-import ConfirmDeleteEditionModal from './modals/ConfirmDeleteEditionModal';
 import { TopNavBar, TopNavBarProps } from './TopNavBar';
 
 const SideMenu = dynamic(() => import('./SideMenu'));
@@ -93,7 +92,6 @@ export const Layout = ({ children, className }: LayoutProps) => {
             <ReactionsModal />
             <TransferConfirmationModal />
             <ConfirmDeleteNFTModal />
-            <ConfirmDeleteEditionModal />
             <ApproveModal />
             <RemoveListingConfirmationModal />
             <FilterModalMarketplace />

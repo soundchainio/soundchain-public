@@ -22,7 +22,6 @@ import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { remainingTime, timeFromSecs } from 'utils/calculateTime';
-import { checkIsMobile } from 'utils/IsMobile';
 
 export const AudioPlayerModal = () => {
   const router = useRouter();
@@ -49,7 +48,6 @@ export const AudioPlayerModal = () => {
   const [showTotalPlaybackDuration, setShowTotalPlaybackDuration] = useState(true);
   const [isFavorite, setIsFavorite] = useState(currentSong.isFavorite);
   const [isPlaylistOpen, setIsPlaylistOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(true);
   const me = useMe();
 
   const isOpen = modalState.showAudioPlayer;
@@ -83,30 +81,26 @@ export const AudioPlayerModal = () => {
     setIsFavorite(currentSong.isFavorite);
   }, [currentSong]);
 
-  useEffect(() => {
-    setIsMobile(checkIsMobile);
-  }, []);
-
   return (
     <Modal
       show={isOpen}
       title={'Now Playing'}
       leftButton={
-        <div className="ml-6 flex justify-start">
-          <button aria-label="Close" className="flex h-10 w-10 items-center justify-center" onClick={handleClose}>
+        <div className="flex justify-start ml-6">
+          <button aria-label="Close" className="w-10 h-10 flex justify-center items-center" onClick={handleClose}>
             <DownArrow />
           </button>
         </div>
       }
       rightButton={
-        <div className="mr-6 flex justify-end">
+        <div className="flex justify-end mr-6">
           <TrackShareButton trackId={currentSong.trackId} title={currentSong.title} artist={currentSong.artist} />
         </div>
       }
       onClose={handleClose}
     >
-      <div className="flex h-full flex-col items-center text-white">
-        <div className="h-full w-full px-8 sm:max-w-xs sm:px-0">
+      <div className="flex flex-col h-full items-center text-white">
+        <div className="w-full h-full sm:max-w-xs px-8 sm:px-0">
           <div style={{ display: 'grid', height: '80vh', gridTemplateRows: '75% 25%' }}>
             <div className={`flex flex-col truncate ${isPlaylistOpen ? 'justify-start' : 'justify-end'}`}>
               <div className={isPlaylistOpen ? 'flex items-center gap-4' : 'block'}>
@@ -114,19 +108,19 @@ export const AudioPlayerModal = () => {
                   <div
                     className={
                       isPlaylistOpen
-                        ? 'relative h-10 w-10 overflow-hidden rounded-lg'
-                        : 'relative flex max-h-80 w-3/4 overflow-hidden rounded-lg bg-gray-80 after:block after:pb-full sm:w-full'
+                        ? 'relative w-10 h-10 rounded-lg overflow-hidden'
+                        : 'relative w-3/4 max-h-80 sm:w-full after:block after:pb-full flex bg-gray-80 rounded-lg overflow-hidden'
                     }
                   >
                     <Asset src={currentSong.art} />
                   </div>
                 </div>
-                <div className="my-4 flex w-full min-w-0 justify-between">
+                <div className="flex justify-between my-4 w-full min-w-0">
                   <div className="flex w-full gap-4">
                     <NextLink href={`/tracks/${currentSong.trackId}`}>
-                      <a className="flex min-w-0 flex-1 flex-col">
-                        <div className="flex min-w-0 items-center gap-2">
-                          <h2 className="truncate font-black">{currentSong.title || 'Unknown title'}</h2>
+                      <a className="flex flex-col flex-1 min-w-0">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <h2 className="font-black truncate">{currentSong.title || 'Unknown title'}</h2>
                           <Info className="flex-shrink-0" />
                         </div>
                         <h3 className="font-medium">{currentSong.artist || 'Unknown artist'}</h3>
@@ -157,16 +151,16 @@ export const AudioPlayerModal = () => {
             </div>
             <div>
               <Slider className="audio-player" min={0} max={duration} value={progress} onChange={onSliderChange} />
-              <div className="mt-2 flex cursor-default justify-between text-xs text-gray-80">
+              <div className="flex justify-between mt-2 text-xs text-gray-80 cursor-default">
                 <div>{timeFromSecs(progress || 0)}</div>
                 <div onClick={onPlaybackDurationClick}>
                   {showTotalPlaybackDuration ? timeFromSecs(duration || 0) : remainingTime(progress, duration || 0)}
                 </div>
               </div>
-              <div className="mt-8 flex items-center justify-between">
+              <div className="flex justify-between items-center mt-8">
                 <button
                   aria-label={isShuffleOn ? 'Shuffle off' : 'Shuffle on'}
-                  className="flex h-10 w-10 items-center justify-center rounded-full "
+                  className="rounded-full w-10 h-10 flex justify-center items-center "
                   onClick={toggleShuffle}
                 >
                   <Shuffle
@@ -177,14 +171,14 @@ export const AudioPlayerModal = () => {
                 </button>
                 <div className="flex justify-center gap-4">
                   <button
-                    className={'flex h-12 w-12 items-center justify-center rounded-full'}
+                    className={'rounded-full w-12 h-12 flex justify-center items-center'}
                     aria-label="Previous track"
                     onClick={playPrevious}
                   >
                     <Rewind className={'hover:fill-current active:text-gray-80'} />
                   </button>
                   <button
-                    className="flex h-12 w-12 items-center justify-center rounded-full bg-white hover:scale-110 active:scale-100"
+                    className="bg-white rounded-full w-12 h-12 flex justify-center items-center hover:scale-110 active:scale-100"
                     aria-label={isPlaying ? 'Pause' : 'Play'}
                     onClick={togglePlay}
                   >
@@ -193,7 +187,7 @@ export const AudioPlayerModal = () => {
                   <button
                     className={`${
                       !hasNext && 'cursor-default'
-                    } flex h-12 w-12 items-center justify-center rounded-full`}
+                    } rounded-full w-12 h-12 flex justify-center items-center`}
                     aria-label="Next track"
                     onClick={playNext}
                     disabled={!hasNext}
@@ -203,28 +197,26 @@ export const AudioPlayerModal = () => {
                 </div>
                 <button
                   aria-label="Playlist"
-                  className="flex h-10 w-10 items-center justify-center rounded-full text-gray-80"
+                  className="rounded-full w-10 h-10 flex justify-center items-center text-gray-80"
                   onClick={() => setIsPlaylistOpen(isOpen => !isOpen)}
                 >
                   <Playlists fillColor="#808080" />
                 </button>
               </div>
-              {!isMobile && (
-                <div className="flex items-center gap-4 pt-8">
-                  <VolumeOffIcon width={16} viewBox="-8 0 20 20" />
-                  <div className="flex-1">
-                    <Slider
-                      className="volume-slider"
-                      min={0}
-                      max={1}
-                      value={volume}
-                      onChange={value => setVolume(value)}
-                      step={0.1}
-                    />
-                  </div>
-                  <VolumeUpIcon width={16} />
+              <div className="hidden md:flex items-center gap-4 pt-8">
+                <VolumeOffIcon width={16} viewBox="-8 0 20 20" />
+                <div className="flex-1">
+                  <Slider
+                    className="volume-slider"
+                    min={0}
+                    max={1}
+                    value={volume}
+                    onChange={value => setVolume(value)}
+                    step={0.1}
+                  />
                 </div>
-              )}
+                <VolumeUpIcon width={16} />
+              </div>
             </div>
           </div>
         </div>

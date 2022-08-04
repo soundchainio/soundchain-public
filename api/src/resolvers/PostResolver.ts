@@ -78,9 +78,9 @@ export class PostResolver {
   }
 
   @FieldResolver(() => Track, { nullable: true })
-  async track(@Ctx() { trackService }: Context, @Root() { trackId, trackEditionId }: Post): Promise<Track | null> {
+  async track(@Ctx() { trackService }: Context, @Root() { trackId }: Post): Promise<Track | null> {
     if (!trackId) return null;
-    return trackService.getTrackFromEdition(trackId, trackEditionId);
+    return trackService.getTrack(trackId);
   }
 
   @Query(() => Post)
@@ -102,10 +102,10 @@ export class PostResolver {
   @Authorized()
   async createPost(
     @Ctx() { postService }: Context,
-    @Arg('input') { body, mediaLink, trackId, trackEditionId }: CreatePostInput,
+    @Arg('input') { body, mediaLink, trackId }: CreatePostInput,
     @CurrentUser() { profileId }: User,
   ): Promise<CreatePostPayload> {
-    const post = await postService.createPost({ profileId, body, mediaLink, trackId, trackEditionId });
+    const post = await postService.createPost({ profileId, body, mediaLink, trackId });
     return { post };
   }
 
