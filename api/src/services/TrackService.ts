@@ -120,7 +120,7 @@ export class TrackService extends ModelService<typeof Track> {
             _id: {
               $ifNull: [
                 '$trackEditionId',
-                '$trackId',
+                '$_id',
               ]
             },
             sumPlaybackCount: { $sum: '$playbackCount' },
@@ -437,7 +437,7 @@ export class TrackService extends ModelService<typeof Track> {
           _id: {
             $ifNull: [
               '$trackEditionId',
-              '$trackId',
+              '$_id',
             ]
           },
           totalPlaybackCount: {
@@ -606,7 +606,7 @@ export class TrackService extends ModelService<typeof Track> {
           _id: {
             $ifNull: [
               '$trackEditionId',
-              '$trackId',
+              '$_id',
             ]
           },
           lowestPrice: {

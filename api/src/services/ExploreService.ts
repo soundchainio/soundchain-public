@@ -60,7 +60,7 @@ export class ExploreService extends Service {
             _id: {
               $ifNull: [
                 '$trackEditionId',
-                '$trackId',
+                '$_id',
               ]
             },
             sumPlaybackCount: { $sum: '$playbackCount' },
@@ -73,7 +73,7 @@ export class ExploreService extends Service {
             newRoot: {
               $mergeObjects: [
                 '$first',
-                { 
+                {
                   playbackCount: '$sumPlaybackCount',
                   favoriteCount: '$sumFavoriteCount'
                 },
