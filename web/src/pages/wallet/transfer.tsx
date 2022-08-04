@@ -1,4 +1,3 @@
-import { BackButton } from 'components/Buttons/BackButton';
 import { FormValues, TransferForm } from 'components/forms/transfer/TransferForm';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
@@ -20,7 +19,6 @@ export const getServerSideProps = protectPage(async (context, apolloClient) => {
 });
 
 const topNovBarProps: TopNavBarProps = {
-  leftButton: <BackButton />,
   title: 'Send Tokens',
 };
 

@@ -1,5 +1,4 @@
 import { Button } from 'components/Button';
-import { InboxButton } from 'components/Buttons/InboxButton';
 import { CopyLink } from 'components/CopyLink';
 import { FormValues, RequestVerificationForm } from 'components/RequestVerificationForm';
 import SEO from 'components/SEO';
@@ -25,7 +24,6 @@ export const getServerSideProps = protectPage((context, apolloClient) => {
 });
 
 const topNavBarProps: TopNavBarProps = {
-  rightButton: <InboxButton />,
   title: 'Get Verified',
 };
 
@@ -74,18 +72,18 @@ export default function GetVerified() {
         description="Request your profile verification"
         canonicalUrl="/get-verified/"
       />
-      <div className="text-white font-bold text-center w-full px-4 py-10 flex items-center justify-center">
+      <div className="flex w-full items-center justify-center px-4 py-10 text-center font-bold text-white">
         Receive a blue checkmark <Verified className="ml-4 scale-150" />
       </div>
       {!requested && (
         <>
-          <div className="text-gray-400 text-sm px-4 pb-10 text-center">
+          <div className="px-4 pb-10 text-center text-sm text-gray-400">
             In order to get verified on the SoundChain platform, please submit at least one of the following:
           </div>
-          <ol className="text-gray-300 text-sm space-y-4">
-            <li className="font-bold text-white px-4">1. Copy your SoundChain profile link:</li>
+          <ol className="space-y-4 text-sm text-gray-300">
+            <li className="px-4 font-bold text-white">1. Copy your SoundChain profile link:</li>
             <CopyLink link={myProfileLink} />
-            <li className="font-bold text-white px-4">
+            <li className="px-4 font-bold text-white">
               2. Add your SoundChain link to the socials on at least one of the following platforms:
               <RequestVerificationForm loading={loading} handleSubmit={handleSubmit} />
             </li>
@@ -93,7 +91,7 @@ export default function GetVerified() {
         </>
       )}
       {requested?.status === ManageRequestTab.PENDING && (
-        <div className="text-gray-400 text-sm px-4 pb-10 text-center">
+        <div className="px-4 pb-10 text-center text-sm text-gray-400">
           Your request has been sent!
           <div className="mt-6 mb-6">
             {formatTimestamp(new Date(requested.createdAt), 'MM-dd-yyyy')} at{' '}
@@ -105,18 +103,18 @@ export default function GetVerified() {
       )}
 
       {requested?.status === ManageRequestTab.APPROVED && (
-        <div className="text-gray-400 text-sm px-4 pb-10 text-center">Your account is legitimate!</div>
+        <div className="px-4 pb-10 text-center text-sm text-gray-400">Your account is legitimate!</div>
       )}
 
       {requested?.status === ManageRequestTab.DENIED && (
-        <div className="text-gray-400 text-sm px-4 pb-10 text-center">
+        <div className="px-4 pb-10 text-center text-sm text-gray-400">
           Your request was <span className="font-bold text-red-500">DENIED</span>.
           <div className="mt-5">Reason: {requested.reason}</div>
           <div className="mt-5 flex items-center">
             <Button
               variant="outline"
               borderColor="bg-green-gradient"
-              className="h-12 mx-6 mt-5 w-full"
+              className="mx-6 mt-5 h-12 w-full"
               onClick={handleResend}
             >
               RESEND THE FORM

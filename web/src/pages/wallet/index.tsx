@@ -1,4 +1,3 @@
-import { BackButton } from 'components/Buttons/BackButton';
 import { RefreshButton } from 'components/Buttons/RefreshButton';
 import { ConnectedNetwork } from 'components/ConnectedNetwork';
 import { CopyWalletAddress } from 'components/CopyWalletAddress';
@@ -94,7 +93,7 @@ export default function WalletPage() {
 
   useEffect(() => {
     setTopNavBarProps({
-      leftButton: <BackButton />,
+    
       title: 'Wallet',
       rightButton: (
         <RefreshButton onClick={refreshData} label="Refresh" className="text-center" refreshing={isRefetchingBalance} />

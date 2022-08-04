@@ -1,22 +1,25 @@
 import { ButtonVariantProps } from 'components/Button';
-import { config } from 'config';
 
-export const EditListingButton = ({ className, type = 'button', children, loading, ...rest }: ButtonVariantProps) => {
+export const EditListingButton = ({ 
+  className, type = 'button', 
+  Component,
+  children, loading, ...rest 
+}: ButtonVariantProps) => {
   return (
     <div className={className}>
-      <button
-        className={`${config.mobileBreakpoint}:px-4 p-2 font-bold text-white text-xs bg-opacity-60 bg-yellow-gradient border-yellow-300 border-2 w-full`}
+      <Component
+        className="bg-yellow-gradient w-full border-2 border-yellow-300 bg-opacity-60 p-2 text-xs font-bold text-white md:px-4"
         type={type}
         {...rest}
       >
         {loading ? (
-          <div className='flex justify-center items-center px-6'>
-            <div className='animate-spin rounded-full h-5 w-5 border-t-2 border-white'></div>
+          <div className="flex items-center justify-center px-6">
+            <div className="h-5 w-5 animate-spin rounded-full border-t-2 border-white"></div>
           </div>
         ) : (
           <span>{children}</span>
         )}
-      </button>
+      </Component>
     </div>
   );
 };

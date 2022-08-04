@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Button } from 'components/Button';
-import { BackButton } from 'components/Buttons/BackButton';
 import { InputField } from 'components/InputField';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
@@ -31,7 +30,7 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
 
 const topNavBarProps: TopNavBarProps = {
   title: 'Username',
-  leftButton: <BackButton />,
+
 };
 
 export default function SettingsUsernamePage() {

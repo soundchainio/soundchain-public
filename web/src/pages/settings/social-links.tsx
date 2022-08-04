@@ -1,4 +1,3 @@
-import { BackButton } from 'components/Buttons/BackButton';
 import { SocialLinksForm } from 'components/forms/profile/SocialLinksForm';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
@@ -8,7 +7,7 @@ import React, { useEffect } from 'react';
 
 const topNavBarProps: TopNavBarProps = {
   title: 'Social Links',
-  leftButton: <BackButton />,
+
 };
 
 export default function SocialLinksPage() {

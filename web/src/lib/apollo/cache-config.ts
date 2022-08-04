@@ -10,7 +10,7 @@ import {
   PolygonscanResult,
   Post,
   PostConnection,
-  TrackConnection,
+  TrackConnection
 } from 'lib/graphql';
 
 export const cacheConfig: InMemoryCacheConfig = {
@@ -189,6 +189,15 @@ export const cacheConfig: InMemoryCacheConfig = {
             };
           },
         },
+        groupedTracks: {
+          keyArgs: ['filter'],
+          merge(existing = { nodes: [] }, { nodes, pageInfo }): TrackConnection {
+            return {
+              nodes: [...existing.nodes, ...nodes],
+              pageInfo,
+            };
+          },
+        },
         exploreTracks: {
           keyArgs: ['search'],
           merge(existing = { nodes: [] }, { nodes, pageInfo }): TrackConnection {
@@ -236,6 +245,15 @@ export const cacheConfig: InMemoryCacheConfig = {
         },
         listingItems: {
           keyArgs: ['sort'],
+          merge(existing = { nodes: [] }, { nodes, pageInfo }): ListingItemConnection {
+            return {
+              nodes: [...existing.nodes, ...nodes],
+              pageInfo,
+            };
+          },
+        },
+        buyNowListingItems: {
+          keyArgs: ['filter'],
           merge(existing = { nodes: [] }, { nodes, pageInfo }): ListingItemConnection {
             return {
               nodes: [...existing.nodes, ...nodes],

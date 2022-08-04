@@ -1,4 +1,3 @@
-import { config } from 'config';
 import { store } from 'contexts';
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar';
 import { useMe } from 'hooks/useMe';
@@ -13,7 +12,7 @@ export const BottomNavBarWrapper = () => {
   return (
     <>
       <div id="bottom-sheet"></div>
-      <div className={`${config.mobileBreakpoint}:hidden`}>
+      <div className={`md:hidden`}>
         {!state?.modal.anyModalOpened && !hideBottomNavBar && me && <BottomNavBar />}
       </div>
     </>

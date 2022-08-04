@@ -1,0 +1,7 @@
+mutation CreateTrackEdition($input: CreateTrackEditionInput!) {
+  createTrackEdition(input: $input) {
+    trackEdition {
+      id
+    }
+  }
+}

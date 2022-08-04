@@ -5,6 +5,7 @@ fragment TrackComponentFields on Track {
   assetUrl
   artworkUrl
   description
+  utilityInfo
   artist
   artistId
   artistProfileId
@@ -19,8 +20,12 @@ fragment TrackComponentFields on Track {
   playbackCountFormatted
   isFavorite
   favoriteCount
+  listingCount
+  playbackCount
   saleType
   price
+  trackEditionId
+  editionSize
   nftData {
     transactionHash
     tokenId
@@ -29,5 +34,9 @@ fragment TrackComponentFields on Track {
     ipfsCid
     pendingRequest
     owner
+    pendingTime
+  }
+  trackEdition {
+    ...TrackEditionFields
   }
 }

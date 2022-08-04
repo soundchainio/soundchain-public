@@ -4,7 +4,7 @@ interface BadgeProps extends React.ComponentPropsWithoutRef<'span'> {
 }
 
 export const BadgeTrack = ({ label, ...rest }: BadgeProps) => (
-  <span className="buy-now-gradient text-[8px]" {...rest}>
+  <span className="buy-now-gradient text-[8px] sm:text-sm font-black" {...rest}>
     {label}
   </span>
 );

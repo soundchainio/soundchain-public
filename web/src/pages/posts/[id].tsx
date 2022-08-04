@@ -1,5 +1,4 @@
 import { BottomSheet } from 'components/BottomSheet';
-import { BackButton } from 'components/Buttons/BackButton';
 import { InboxButton } from 'components/Buttons/InboxButton';
 import { Comments } from 'components/Comments';
 import { NewCommentForm } from 'components/NewCommentForm';
@@ -54,7 +53,7 @@ export default function PostPage({ post }: PostPageProps) {
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
-      leftButton: <BackButton />,
+    
       rightButton: me ? <InboxButton /> : undefined,
     }),
     [me],

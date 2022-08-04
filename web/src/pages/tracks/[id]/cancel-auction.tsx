@@ -1,5 +1,4 @@
 import { Button } from 'components/Button';
-import { BackButton } from 'components/Buttons/BackButton';
 import MaxGasFee from 'components/MaxGasFee';
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { TopNavBarProps } from 'components/TopNavBar';
@@ -71,7 +70,6 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 });
 
 const topNavBarProps: TopNavBarProps = {
-  leftButton: <BackButton />,
   title: 'Cancel Auction',
 };
 
@@ -113,7 +111,7 @@ export default function CompleteAuctionPage({ track, auctionItem }: TrackPagePro
     };
     setLoading(true);
 
-    cancelAuction(auctionItem.tokenId, account)
+    cancelAuction(auctionItem.tokenId, account, { nft: track.nftData?.contract })
       .onReceipt(() => onReceipt)
       .onError(cause => toast.error(cause.message))
       .finally(() => setLoading(false))
