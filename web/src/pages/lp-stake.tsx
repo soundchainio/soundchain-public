@@ -20,6 +20,7 @@ import { CustomModal } from '../components/CustomModal';
 import LiquidityPoolRewards from '../contract/LiquidityPoolRewards.sol/LiquidityPoolRewards.json';
 import LPToken from '../contract/LPToken.sol/LPToken.json';
 import SoundchainOGUN20 from '../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json';
+import { GetServerSideProps } from 'next';
 
 interface FormValues {
   token: string;
@@ -37,6 +38,18 @@ const lpContract = (web3: Web3) =>
   new web3.eth.Contract(LPToken.abi as AbiItem[], lpTokenAddress) as unknown as Contract;
 const lpStakeContract = (web3: Web3) =>
   new web3.eth.Contract(LiquidityPoolRewards.abi as AbiItem[], lpStakeContractAddress)as unknown as Contract;
+
+// TODO: remove before enabling the ogun token stake
+export const getServerSideProps: GetServerSideProps = ({ res }) => {
+  if (res) {
+    res.statusCode = 404
+    res.end('Not found')
+  }
+
+  return Promise.resolve({
+    props: {}
+  })
+}
 
 export default function Stake() {
   const { 
