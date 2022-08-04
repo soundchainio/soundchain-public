@@ -6,7 +6,6 @@ query Tracks($filter: FilterTrackInput, $sort: SortTrackInput, $page: PageInput)
     pageInfo {
       hasNextPage
       endCursor
-      totalCount
     }
   }
 }

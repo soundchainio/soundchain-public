@@ -20,7 +20,6 @@ interface HandleNFTProps {
   startingDate?: Date;
   endingDate?: Date;
   auctionId: string;
-  multipleEdition?: boolean;
 }
 
 export const HandleNFT = ({
@@ -35,7 +34,6 @@ export const HandleNFT = ({
   startingDate,
   endingDate,
   auctionId,
-  multipleEdition = false
 }: HandleNFTProps) => {
   const router = useRouter();
   if (isOwner) {
@@ -82,7 +80,7 @@ export const HandleNFT = ({
     );
     // not the owner
   } else {
-    if (price && isBuyNow && !multipleEdition) {
+    if (price && isBuyNow) {
       return (
         <ListedAction
           href={`${router.asPath}/buy-now`}
@@ -121,12 +119,12 @@ interface ListingActionProps {
   action: string;
 }
 
-export const ListingAction = ({ href, action, children }: React.PropsWithChildren<ListingActionProps>) => {
+const ListingAction = ({ href, action, children }: React.PropsWithChildren<ListingActionProps>) => {
   return (
     <PlayerAwareBottomBar>
       <div className="flex items-center flex-1 gap-2 text-sm font-bold pl-4">{children}</div>
       <div className="flex-1 flex items-center justify-end">
-        <NextLink href={href}>
+        <NextLink href={href} replace>
           <Button variant="list-nft">
             <div className="px-4 font-bold">{action}</div>
           </Button>
@@ -137,7 +135,7 @@ export const ListingAction = ({ href, action, children }: React.PropsWithChildre
 };
 
 interface ListedActionProps {
-  href?: string;
+  href: string;
   price: number;
   action: string;
   variant: ButtonVariant;
@@ -145,10 +143,9 @@ interface ListedActionProps {
   startingDate?: Date;
   endingDate?: Date;
   auctionId?: string;
-  onClick?: () => void;
 }
 
-export const ListedAction = ({
+const ListedAction = ({
   href,
   price,
   action,
@@ -157,7 +154,6 @@ export const ListedAction = ({
   startingDate,
   endingDate,
   auctionId,
-  onClick,
 }: ListedActionProps) => {
   const futureSale = startingDate && startingDate.getTime() > new Date().getTime();
 
@@ -185,14 +181,9 @@ export const ListedAction = ({
         </div>
       )}
       <div className="flex-1 flex items-center justify-end">
-        {onClick && (
-          <Button variant={variant} onClick={onClick}>{action}</Button>
-        )}
-        {href && (
-          <NextLink href={href} replace>
-            <Button variant={variant}>{action}</Button>
-          </NextLink>
-        )}
+        <NextLink href={href} replace>
+          <Button variant={variant}>{action}</Button>
+        </NextLink>
       </div>
     </PlayerAwareBottomBar>
   );

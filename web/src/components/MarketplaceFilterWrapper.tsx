@@ -1,7 +1,6 @@
 /* eslint-disable react/display-name */
 
 import { useModalDispatch } from 'contexts/providers/modal';
-import { Filter } from 'icons/Filter';
 import { GridView as GridViewIcon } from 'icons/GridView';
 import { ListView as ListViewIcon } from 'icons/ListView';
 import { SortListingItem } from 'lib/apollo/sorting';
@@ -36,14 +35,6 @@ export const MarketplaceFilterWrapper = memo((props: FilterWrapperProps) => {
           <span className="text-gray-80 text-sm">Tracks</span>
         </div>
 
-        <button
-          className="items-center justify-center p-2 hidden md:flex"
-          onClick={() => dispatchShowFilterMarketplaceModal(true, genres, saleType)}
-        >
-          <Filter />
-          <span className="text-white text-xs font-bold pl-1">Filter</span>
-        </button>
-
         <FilterComponent sorting={sorting} setSorting={setSorting} />
 
         <button aria-label="List view">
@@ -52,17 +43,6 @@ export const MarketplaceFilterWrapper = memo((props: FilterWrapperProps) => {
         <button aria-label="Grid view">
           <GridViewIcon color={isGrid ? 'rainbow' : undefined} onClick={() => setIsGrid(true)} />
         </button>
-      </div>
-
-      <div className='bg-black flex gap-2 w-full p-2 justify-between items-center md:hidden'>
-        <button
-          className="flex items-center justify-center p-2"
-          onClick={() => dispatchShowFilterMarketplaceModal(true, genres, saleType)}
-        >
-          <Filter />
-          <span className="text-white text-xs font-bold pl-1">Filter</span>
-        </button>
-        <FilterComponent sorting={sorting} setSorting={setSorting} mobile noMarginRight />
       </div>
 
       {(saleType || Boolean(genres?.length)) && (

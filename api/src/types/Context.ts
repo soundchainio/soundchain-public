@@ -24,12 +24,10 @@ import { ProfileService } from '../services/ProfileService';
 import { ProfileVerificationRequestService } from '../services/ProfileVerificationRequestService';
 import { ReactionService } from '../services/ReactionService';
 import { SubscriptionService } from '../services/SubscriptionService';
-import { TrackEditionService } from '../services/TrackEditionService';
 import { TrackService } from '../services/TrackService';
 import { UploadService } from '../services/UploadService';
 import { UserService } from '../services/UserService';
 import { WhitelistEntryService } from '../services/WhitelistEntryService';
-import { ListingCountByTrackEdition } from '../loaders/ListingCountByTrackEdition';
 
 export class Context {
   auctionItemService = new AuctionItemService(this);
@@ -61,9 +59,7 @@ export class Context {
   listingItemService = new ListingItemService(this);
   user?: Promise<User>;
   whitelistEntryService = new WhitelistEntryService(this);
-  audioHolderService = new AudioHolderService(this);
-  trackEditionService = new TrackEditionService(this);
-  listingCountByTrackEdition = ListingCountByTrackEdition()
+  audioHolderService = new AudioHolderService(this)
 
   constructor(jwtUser?: JwtUser) {
     this.user = jwtUser && this.userService.getUser(jwtUser.sub);

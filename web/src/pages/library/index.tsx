@@ -1,3 +1,4 @@
+import { InboxButton } from 'components/Buttons/InboxButton';
 import { MenuLink } from 'components/MenuLink';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
@@ -22,14 +23,15 @@ export const getServerSideProps = protectPage(async (context, apolloClient) => {
   return cacheFor(LibraryPage, { me: data.me }, context, apolloClient);
 });
 
-export default function LibraryPage({}: HomePageProps) {
+export default function LibraryPage({ me }: HomePageProps) {
   const { setTopNavBarProps } = useLayoutContext();
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
       title: 'Library',
+      rightButton: me ? <InboxButton /> : undefined,
     }),
-    [],
+    [me],
   );
 
   useEffect(() => {

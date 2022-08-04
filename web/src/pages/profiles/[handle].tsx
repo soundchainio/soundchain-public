@@ -1,4 +1,5 @@
 import { Avatar } from 'components/Avatar';
+import { InboxButton } from 'components/Buttons/InboxButton';
 import { DisplayName } from 'components/DisplayName';
 import { FollowButton } from 'components/FollowButton';
 import { FollowModal } from 'components/FollowersModal';
@@ -65,7 +66,7 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
-      title: 'Profile',
+      rightButton: me ? <InboxButton /> : undefined,
     }),
     [me],
   );
@@ -111,7 +112,7 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
     verified,
     teamMember,
     profilePicture,
-    magicWalletAddress,
+    magicWalletAddress
   } = profile;
 
   return (
@@ -158,7 +159,7 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
               <p className="text-sm text-gray-80">@{userHandle}</p>
               <p className="py-2 text-sm text-gray-80">{bio}</p>
             </div>
-            <WalletAddressButton address={magicWalletAddress} />
+            <WalletAddressButton address={magicWalletAddress}/>
             <MessageButton profileId={profileId} />
           </div>
 

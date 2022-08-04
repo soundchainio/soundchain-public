@@ -1,3 +1,4 @@
+import { BackButton } from 'components/Buttons/BackButton';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useLayoutContext } from 'hooks/useLayoutContext';
@@ -27,6 +28,7 @@ export const getServerSideProps = protectPage(async (context, apolloClient) => {
 });
 
 const topNovBarProps: TopNavBarProps = {
+  leftButton: <BackButton />,
   title: 'Buy Matic',
 };
 

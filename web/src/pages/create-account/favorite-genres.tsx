@@ -1,3 +1,4 @@
+import { BackButton } from 'components/Buttons/BackButton';
 import { FavoriteGenresForm } from 'components/forms/profile/FavoriteGenresForm';
 import SEO from 'components/SEO';
 import { StepProgressBar } from 'components/StepProgressBar';
@@ -9,7 +10,7 @@ import { SkipButton, steps } from 'utils/createAccountUtils';
 
 const topNavBarProps: TopNavBarProps = {
   title: 'Favorite Genres',
-
+  leftButton: <BackButton />,
   rightButton: <SkipButton href="/create-account/musician-type" />,
   subtitle: <StepProgressBar steps={steps} currentStep={3} />,
 };

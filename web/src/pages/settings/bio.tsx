@@ -1,3 +1,4 @@
+import { BackButton } from 'components/Buttons/BackButton';
 import { BioForm } from 'components/forms/profile/BioForm';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
@@ -7,6 +8,7 @@ import React, { useEffect } from 'react';
 
 const topNavBarProps: TopNavBarProps = {
   title: 'Bio',
+  leftButton: <BackButton />,
 };
 
 export default function BioPage() {

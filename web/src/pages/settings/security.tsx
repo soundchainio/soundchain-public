@@ -1,3 +1,4 @@
+import { BackButton } from 'components/Buttons/BackButton';
 import { DisableRecoveryForm } from 'components/forms/profile/DisableSecurityForm';
 import { SecurityForm } from 'components/forms/profile/SecurityForm';
 import SEO from 'components/SEO';
@@ -9,7 +10,7 @@ import React, { useEffect } from 'react';
 
 const topNavBarProps: TopNavBarProps = {
   title: 'Two-factor Security',
-
+  leftButton: <BackButton />,
 };
 
 export default function SecurityPage() {

@@ -42,7 +42,6 @@ export const genres: GenreLabel[] = [
   { key: Genre.Reggaeton, label: 'Reggaeton' },
   { key: Genre.RAndB, label: 'R & B' },
   { key: Genre.Reggae, label: 'Reggae' },
-  { key: Genre.Samples, label: 'Samples' },
   { key: Genre.Salsa, label: 'Salsa' },
   { key: Genre.SoulFunk, label: 'Soul/Funk' },
   { key: Genre.Soundbath, label: 'SoundBath' },

@@ -18,9 +18,9 @@ export const mainNetwork: BlockchainNetwork = {
 
 export const testnetNetwork: BlockchainNetwork = {
   name: 'Mumbai Testnet',
-  // rpc: 'https://matic-mumbai.chainstacklabs.com',
+  rpc: 'https://matic-mumbai.chainstacklabs.com',
   // alternative testnet rpc
-  rpc: 'https://rpc-mumbai.maticvigil.com',
+  // rpc: 'https://rpc-mumbai.maticvigil.com',
   id: 80001,
   idHex: '0x13881',
   symbol: 'MATIC',

@@ -27,7 +27,6 @@ functions:
     handler: src/db/migrate.handler
   watcher:
     handler: src/lambda/blockchainWatcher.blockchainWatcher
-    timeout: 50
     events:
       - schedule: rate(1 minute)
   playbackCount:
@@ -113,8 +112,6 @@ provider:
     MUX_DATA_ID: ${env:MUX_DATA_ID}
     MUX_DATA_SECRET: ${env:MUX_DATA_SECRET}
     POLYGON_SCAN_API_KEY: ${env:POLYGON_SCAN_API_KEY}
-    NFT_MULTIPLE_EDITION_ADDRESS: ${env:NFT_MULTIPLE_EDITION_ADDRESS}
-    MARKETPLACE_MULTIPLE_EDITION_ADDRESS: ${env:MARKETPLACE_MULTIPLE_EDITION_ADDRESS}
 
   iam:
     role:

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Button } from 'components/Button';
+import { BackButton } from 'components/Buttons/BackButton';
 import { InputField } from 'components/InputField';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
@@ -21,7 +22,7 @@ interface FormValues {
 }
 
 const topNavBarProps: TopNavBarProps = {
-
+  leftButton: <BackButton />,
 };
 
 export const HANDLE_MAX_CHARS = 24;

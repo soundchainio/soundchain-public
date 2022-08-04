@@ -80,11 +80,11 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
     return AuctionItem;
   }
 
-  async finishListing(tokenId: string, sellerWallet: string, buyerWaller: string, price: number, contractAddress: string): Promise<void> {
+  async finishListing(tokenId: string, sellerWallet: string, buyerWaller: string, price: number): Promise<void> {
     const [sellerUser, buyerUser, track] = await Promise.all([
       this.context.userService.getUserByWallet(sellerWallet),
       this.context.userService.getUserByWallet(buyerWaller),
-      this.context.trackService.getTrackByTokenId(parseInt(tokenId), contractAddress),
+      this.context.trackService.getTrackByTokenId(parseInt(tokenId)),
     ]);
     if (!sellerUser || !buyerUser) {
       return;
@@ -104,7 +104,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
     ]);
     await Promise.all([
       this.context.auctionItemService.setNotValid(parseInt(tokenId)),
-      this.context.trackService.setPendingNone(parseInt(tokenId), contractAddress),
+      this.context.trackService.setPendingNone(parseInt(tokenId)),
     ]);
   }
 
@@ -170,11 +170,10 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
     reservePriceToShow,
     tokenId,
     owner,
-    nft
   }: AuctionItem): Promise<void> {
     const [highestBidModel, track] = await Promise.all([
       BidModel.findOne({ auctionId: _id, amount: highestBid }),
-      this.context.trackService.getTrackByTokenId(tokenId, nft),
+      this.context.trackService.getTrackByTokenId(tokenId),
     ]);
     const promises = [this.context.userService.getUserByWallet(owner)];
     if (highestBidModel?.bidder) {
@@ -190,10 +189,10 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
     });
   }
 
-  private async notifyAuctionIsEnding({ tokenId, bidder, amountToShow, nft }: Bid, auctionId: string): Promise<void> {
+  private async notifyAuctionIsEnding({ tokenId, bidder, amountToShow }: Bid, auctionId: string): Promise<void> {
     const [user, track] = await Promise.all([
       this.context.userService.getUserByWallet(bidder),
-      this.context.trackService.getTrackByTokenId(tokenId, nft),
+      this.context.trackService.getTrackByTokenId(tokenId),
     ]);
     await this.context.notificationService.notifyAuctionIsEnding({
       track,
