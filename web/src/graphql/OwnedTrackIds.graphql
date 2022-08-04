@@ -1,0 +1,10 @@
+query OwnedTrackIds($filter: FilterOwnedTracksInput!) {
+  ownedTracks(filter: $filter) {
+    nodes {
+      id
+      nftData {
+        tokenId
+      }
+    }
+  }
+}

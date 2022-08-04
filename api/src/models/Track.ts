@@ -5,6 +5,7 @@ import { Genre } from '../types/Genres';
 import { MuxAsset } from '../types/MuxAsset';
 import { NFTData } from '../types/NFTData';
 import { Model } from './Model';
+import { TrackEdition } from './TrackEdition';
 
 @ObjectType()
 export class Track extends Model {
@@ -22,6 +23,10 @@ export class Track extends Model {
   @Field({ nullable: true })
   @prop()
   description: string;
+
+  @Field({ nullable: true })
+  @prop()
+  utilityInfo?: string;
 
   @Field()
   @prop({ required: true })
@@ -77,6 +82,13 @@ export class Track extends Model {
 
   @Field()
   playbackCountFormatted: string;
+
+  @Field({ nullable: true })
+  @prop({ type: ObjectId })
+  trackEditionId: string;
+
+  @Field(() => TrackEdition, { nullable: true })
+  trackEdition: TrackEdition;
 
   @Field({ nullable: true })
   @prop({ default: false })

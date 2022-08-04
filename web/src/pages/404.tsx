@@ -1,4 +1,3 @@
-import { BackButton } from 'components/Buttons/BackButton';
 import { useLayoutContext } from 'hooks/useLayoutContext';
 import { Sad } from 'icons/emoji/Sad';
 import Head from 'next/head';
@@ -8,7 +7,7 @@ export default function Page404() {
   const { setTopNavBarProps } = useLayoutContext();
 
   useEffect(() => {
-    setTopNavBarProps({ leftButton: <BackButton />, title: '404 Error' });
+    setTopNavBarProps({ title: '404 Error' });
   }, [setTopNavBarProps]);
 
   return (

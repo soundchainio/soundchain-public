@@ -13,7 +13,7 @@ export const musicianTypes: MusicianTypeLabels[] = [
   { key: MusicianType.Engineer, label: 'Engineer' },
   { key: MusicianType.Guitarist, label: 'Guitarist' },
   { key: MusicianType.Instrumentalist, label: 'Instrumentalist' },
-  { key: MusicianType.NotAnArtist, label: 'Not an Artist' },
+  { key: MusicianType.NotAnArtist, label: 'Creator' },
   { key: MusicianType.Producer, label: 'Producer' },
   { key: MusicianType.Singer, label: 'Singer' },
 ];

@@ -6,7 +6,6 @@ import { useMagicContext } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
 import { Document } from 'icons/Document';
 import { Feedback } from 'icons/Feedback';
-import { Logo } from 'icons/Logo';
 import { Logout } from 'icons/Logout';
 import { Settings } from 'icons/Settings';
 import { Discord } from 'icons/social/Discord';
@@ -16,7 +15,7 @@ import { Verified } from 'icons/Verified';
 import { Wallet } from 'icons/Wallet';
 import { setJwt } from 'lib/apollo';
 import { Role, usePendingRequestsBadgeNumberQuery } from 'lib/graphql';
-import { default as Link, default as NextLink } from 'next/link';
+import { default as NextLink } from 'next/link';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
@@ -26,12 +25,13 @@ import { DisplayName } from './DisplayName';
 import { MenuItem } from './MenuItem';
 import { MenuLink } from './MenuLink';
 import { SocialTag } from './SocialTag';
+import { InboxButton } from './Buttons/InboxButton';
 
 interface SideMenuContentProps {
   isMobile?: boolean;
 }
 
-export const SideMenuContent = ({ isMobile }: SideMenuContentProps) => {
+export const SideMenuContent = ({}: SideMenuContentProps) => {
   const { data: pendingRequestsBadgeNumber } = usePendingRequestsBadgeNumberQuery();
   const me = useMe();
   const router = useRouter();
@@ -68,41 +68,38 @@ export const SideMenuContent = ({ isMobile }: SideMenuContentProps) => {
 
   return (
     <>
-      <div className="mt-5 flex-1 h-0 overflow-y-auto">
-        <div className="px-4">
-          <div className="flex justify-center">
-            <Link href="/" passHref>
-              <a aria-label="Home">
-                <Logo id={isMobile ? 'mobile-logo' : 'side-logo'} className="h-[50px]" />
-              </a>
-            </Link>
-          </div>
+      <div className="h-0 flex-1 overflow-y-auto">
+        <div className="px-6">
           {me && (
             <>
-              <div className="flex flex-row mt-6 relative">
-                <Avatar profile={me.profile} pixels={60} className="h-[68px] border-gray-10 border-4 rounded-full" />
-                <div className="px-2 flex flex-grow space-x-4 justify-center items-center">
+              <div className="relative mt-6 flex flex-row">
+                <Avatar profile={me.profile} pixels={60} className="h-[68px] rounded-full border-4 border-gray-10" />
+                <div className="flex flex-grow items-center justify-center space-x-4 px-2">
                   <button className="text-center text-lg" onClick={onFollowers}>
                     <p className="font-semibold text-white">
                       <Number value={me.profile.followerCount} />
                     </p>
-                    <p className="text-gray-80 text-xs">Followers</p>
+                    <p className="text-xs text-gray-80">Followers</p>
                   </button>
                   <button className="text-center text-lg" onClick={onFollowing}>
                     <p className="font-semibold text-white">
                       <Number value={me.profile.followingCount} />
                     </p>
-                    <p className="text-gray-80 text-xs">Following</p>
+                    <p className="text-xs text-gray-80">Following</p>
                   </button>
                 </div>
               </div>
-              <div className="flex flex-col mt-4">
+              <div className="mt-4 flex flex-col">
                 <DisplayName
                   name={me.profile.displayName}
                   verified={me.profile.verified}
                   teamMember={me.profile.teamMember}
                 />
-                <p className="text-gray-80 text-md">@{me.handle}</p>
+                <p className="text-md text-gray-80">@{me.handle}</p>
+
+                <div className="py-4">
+                  <InboxButton showLabel />
+                </div>
               </div>
             </>
           )}
@@ -134,13 +131,13 @@ export const SideMenuContent = ({ isMobile }: SideMenuContentProps) => {
           <MenuItem icon={Logout} label="Logout" onClick={onLogout} />
         </div>
       )}
-      <div className="flex-shrink-0 flex items-center justify-between h-10 my-4 mx-8 text-gray-CC">
+      <div className="my-4 mx-8 flex h-10 flex-shrink-0 items-center justify-between text-gray-CC">
         <NextLink href="/privacy-policy">
           <a>PRIVACY POLICY</a>
         </NextLink>
         <span>v {config.appVersion}</span>
       </div>
-      <div className="flex-shrink-0 flex flex-row justify-between items-center h-10 mx-8">
+      <div className="mx-8 flex h-10 flex-shrink-0 flex-row items-center justify-between">
         <SocialTag
           ariaLabel="SoundChain Twitter account"
           url="https://twitter.com/Soundchain_io"

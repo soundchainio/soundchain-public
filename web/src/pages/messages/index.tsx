@@ -1,4 +1,3 @@
-import { BackButton } from 'components/Buttons/BackButton';
 import { Inbox } from 'components/Inbox';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { useLayoutContext } from 'hooks/useLayoutContext';
@@ -12,7 +11,7 @@ export const getServerSideProps = protectPage((context, apolloClient) => {
 });
 
 const topNavBarProps: TopNavBarProps = {
-  leftButton: <BackButton />,
+
 };
 
 export default function MessagesPage() {

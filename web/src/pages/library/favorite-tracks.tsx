@@ -1,4 +1,3 @@
-import { BackButton } from 'components/Buttons/BackButton';
 import { FavoriteTracks } from 'components/FavoriteTracks';
 import { SearchLibrary } from 'components/SearchLibrary';
 import SEO from 'components/SEO';
@@ -10,7 +9,6 @@ import { SortListingItem } from '../../lib/apollo/sorting';
 
 const topNavBarProps: TopNavBarProps = {
   title: 'Favorite Tracks',
-  leftButton: <BackButton />,
 };
 
 export default function FavoriteTracksPage() {
@@ -33,7 +31,7 @@ export default function FavoriteTracksPage() {
         description="Your SoundChain favorite tracks"
       />
       <PageFilterWrapper
-        label='Favorite Tracks'
+        label=''
         sorting={sorting}
         setSorting={setSorting}
         setIsGrid={setIsGrid}

@@ -3,6 +3,7 @@ fragment ListingItemViewComponentFields on ListingItem {
   owner
   nft
   tokenId
+  contract
   pricePerItem
   pricePerItemToShow
   startingTime

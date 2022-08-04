@@ -1,5 +1,4 @@
 import { Artists } from 'components/Artists';
-import { BackButton } from 'components/Buttons/BackButton';
 import { SearchLibrary } from 'components/SearchLibrary';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
@@ -8,7 +7,6 @@ import React, { useEffect, useState } from 'react';
 
 const topNavBarProps: TopNavBarProps = {
   title: 'Artists',
-  leftButton: <BackButton />,
 };
 
 export default function ArtistsPage() {

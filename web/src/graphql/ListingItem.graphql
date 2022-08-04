@@ -1,5 +1,5 @@
-query ListingItem($tokenId: Float!) {
-  listingItem(tokenId: $tokenId) {
+query ListingItem($input: FilterListingItemInput!) {
+  listingItem(input: $input) {
     ...ListingItemViewComponentFields
   }
 }

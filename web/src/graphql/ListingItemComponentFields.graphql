@@ -5,6 +5,7 @@ fragment ListingItemComponentFields on TrackWithListingItem {
   assetUrl
   artworkUrl
   description
+  utilityInfo
   artist
   artistId
   artistProfileId
@@ -19,8 +20,12 @@ fragment ListingItemComponentFields on TrackWithListingItem {
   playbackCountFormatted
   isFavorite
   favoriteCount
+  playbackCount
+  listingCount
   saleType
   price
+  trackEditionId
+  editionSize
   nftData {
     transactionHash
     tokenId
@@ -31,11 +36,15 @@ fragment ListingItemComponentFields on TrackWithListingItem {
     owner
     pendingTime
   }
+  trackEdition {
+    ...TrackEditionFields
+  }
   listingItem {
     id
     owner
     nft
     tokenId
+    contract
     pricePerItem
     pricePerItemToShow
     startingTime

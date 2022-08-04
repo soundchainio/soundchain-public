@@ -10,6 +10,9 @@ export class CreateTrackInput {
   @Field({ nullable: true })
   description: string;
 
+  @Field({ nullable: true })
+  utilityInfo: string;
+
   @Field()
   assetUrl: string;
 
@@ -36,6 +39,9 @@ export class CreateTrackInput {
 
   @Field(() => [Genre], { nullable: true })
   genres: Genre[];
+
+  @Field()
+  trackEditionId: string;
 
   @Field(() => NFTData, { nullable: true })
   nftData: NFTData;
