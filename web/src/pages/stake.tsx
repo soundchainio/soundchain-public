@@ -18,6 +18,16 @@ import { AbiItem } from 'web3-utils';
 import { CustomModal } from '../components/CustomModal';
 import SoundchainOGUN20 from '../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json';
 import StakingRewards from '../contract/StakingRewards.sol/StakingRewards.json';
+import { GetServerSideProps } from 'next';
+
+// TODO: remove before enabling the ogun token stake
+export const getServerSideProps: GetServerSideProps = async ({ res }) => {
+  if (res) {
+    res.statusCode = 404
+    res.end('Not found')
+    return
+  }
+}
 
 interface FormValues {
   token: string;
