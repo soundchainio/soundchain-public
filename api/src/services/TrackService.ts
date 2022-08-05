@@ -287,6 +287,15 @@ export class TrackService extends ModelService<typeof Track> {
     return await this.model.findOneAndUpdate({ _id: id }, { deleted: true });
   }
 
+  async deleteEditionTrack(profileId: string, trackEditionId: string): Promise<Track[]> {
+    const res = await this.model.updateMany({ profileId, trackEditionId }, { deleted: true });
+    const trackEdition = await TrackEditionModel.findById(trackEditionId)
+    if(trackEdition.editionSize === res.nModified) {
+      await TrackEditionModel.updateOne({ _id: trackEditionId }, { deleted: true });
+    }
+    return this.model.find({ trackEditionId });
+  }
+
   async deleteTrackEditionByAdmin(trackEditionId: string): Promise<Track[]> {
     await TrackEditionModel.updateOne({ _id: trackEditionId }, { deleted: true });
     await this.model.updateMany({ trackEditionId }, { deleted: true });

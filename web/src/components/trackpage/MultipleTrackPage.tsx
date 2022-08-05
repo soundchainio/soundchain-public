@@ -112,6 +112,7 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
     ssr: false,
   });
 
+  const isMinter = nftData?.minter === account
   const title = `${track.title} - song by ${track.artist} | SoundChain`;
   const description = `Listen to ${track.title} on SoundChain. ${track.artist}. ${track.album || 'Song'}. ${
     track.releaseYear != null ? `${track.releaseYear}.` : ''
@@ -126,7 +127,7 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
 
   const mintingPending = nftData?.pendingRequest === PendingRequest.Mint;
   const isProcessing = isPendingRequest(nftData?.pendingRequest) || isPendingRequest(editionData?.pendingRequest);
-  const canList = (me?.profile.verified && nftData?.minter === account) || nftData?.minter != account;
+  const canList = (me?.profile.verified && isMinter) || nftData?.minter != account;
   const isBuyNow = Boolean(firstListingItem?.pricePerItem);
 
   const price = firstListingItem?.pricePerItemToShow || 0;
@@ -140,7 +141,7 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
       rightButton: (
         <div className="flex items-center gap-3">
           <TrackShareButton trackId={track.id} artist={track.artist} title={track.title} />
-          {(me?.roles.includes(Role.Admin)) && (
+          {(isMinter || me?.roles.includes(Role.Admin)) && (
             <button
               type="button"
               aria-label="More options"
@@ -153,7 +154,7 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
         </div>
       ),
     }),
-    [me?.roles, track.artist, track.id, track.title],
+    [track.id, track.artist, track.title, isMinter, me?.roles],
   );
 
   const {
@@ -274,7 +275,7 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
           <HandleMultipleEditionNFT
             canList={canList}
             price={price}
-            isMinter={track.nftData?.minter === account}
+            isMinter={isMinter}
             isBuyNow={isBuyNow}
             startingDate={startingDate}
             endingDate={endingDate}
