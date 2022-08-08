@@ -96,8 +96,24 @@ async function dropDb() {
 function FakeProfile(attrs = {}) {
   return new ProfileModel({
     displayName: Faker.name.findName(),
-    profilePicture: Faker.internet.avatar(),
-    coverPicture: Faker.image.abstract(),
+    profilePicture: sample([
+      '/default-pictures/profile/red.png',
+      '/default-pictures/profile/orange.png',
+      '/default-pictures/profile/yellow.png',
+      '/default-pictures/profile/green.png',
+      '/default-pictures/profile/teal.png',
+      '/default-pictures/profile/blue.png',
+      '/default-pictures/profile/purple.png',
+      '/default-pictures/profile/pink.png',
+    ]),
+    coverPicture: sample([
+      '/default-pictures/cover/birds.jpeg',
+      '/default-pictures/cover/cells.jpeg',
+      '/default-pictures/cover/fog.jpeg',
+      '/default-pictures/cover/net.jpeg',
+      '/default-pictures/cover/rings.jpeg',
+      '/default-pictures/cover/waves.jpeg',
+    ]),
     socialMedias: {
       twitter: Faker.internet.userName(),
       facebook: Faker.internet.userName(),
