@@ -33,15 +33,14 @@ export class TrackEditionResolver {
   @Authorized()
   async deleteTrackEdition(
     @Ctx() { trackService }: Context,
-    @CurrentUser() { roles }: User,
+    @CurrentUser() { roles, profileId }: User,
     @Arg('trackEditionId') trackEditionId: string,
   ): Promise<Track[]> {
     const isAdmin = roles.includes(Role.ADMIN) || roles.includes(Role.TEAM_MEMBER);
 
-    if (!isAdmin) {
-      throw new Error('You are not authorized to delete track editions');
+    if (isAdmin) {
+      return trackService.deleteTrackEditionByAdmin(trackEditionId);
     }
-
-    return trackService.deleteTrackEditionByAdmin(trackEditionId);
+    return trackService.deleteEditionTrack(profileId, trackEditionId);
   }
 }

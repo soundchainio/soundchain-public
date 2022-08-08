@@ -1168,7 +1168,7 @@ export type Query = {
   followers: FollowConnection;
   following: FollowConnection;
   listingItem: Maybe<ListingItem>;
-  cheapestListingItem: Maybe<Scalars['String']>;
+  cheapestListingItem: Maybe<Scalars['Float']>;
   message: Message;
   notifications: NotificationConnection;
   notification: Notification;
