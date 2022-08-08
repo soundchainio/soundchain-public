@@ -21,7 +21,7 @@ export class ListingItemResolver {
     return listingItemService.getListingItem(tokenId, contractAddress);
   }
 
-  @Query(() => String, {nullable: true})
+  @Query(() => Number, {nullable: true})
   async cheapestListingItem(
     @Ctx() {listingItemService}: Context,
     @Arg('trackEditionId') trackEditionId: string

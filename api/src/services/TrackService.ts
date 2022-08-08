@@ -280,11 +280,36 @@ export class TrackService extends ModelService<typeof Track> {
   }
 
   async deleteTrack(id: string, profileId: string): Promise<Track> {
-    return await this.model.findOneAndUpdate({ _id: id, profileId }, { deleted: true });
+    const track = await this.model.findOneAndUpdate({ _id: id, profileId }, { deleted: true });
+    if(track.trackEditionId) {
+      const trackEditionId = track.trackEditionId
+      const hasValidTracks = await this.model.find({ trackEditionId, deleted: false }).countDocuments();
+      if(!hasValidTracks) {
+        await TrackEditionModel.updateOne({ _id: trackEditionId }, { deleted: true });
+      }
+    }
+    return track
   }
 
   async deleteTrackByAdmin(id: string): Promise<Track> {
-    return await this.model.findOneAndUpdate({ _id: id }, { deleted: true });
+    const track = await this.model.findOneAndUpdate({ _id: id }, { deleted: true })
+    if(track.trackEditionId) {
+      const trackEditionId = track.trackEditionId
+      const hasValidTracks = await this.model.find({ trackEditionId, deleted: false }).countDocuments();
+      if(!hasValidTracks) {
+        await TrackEditionModel.updateOne({ _id: trackEditionId }, { deleted: true });
+      }
+    }
+    return track;
+  }
+
+  async deleteEditionTrack(profileId: string, trackEditionId: string): Promise<Track[]> {
+    const res = await this.model.updateMany({ profileId, trackEditionId }, { deleted: true });
+    const trackEdition = await TrackEditionModel.findById(trackEditionId)
+    if(trackEdition.editionSize === res.nModified) {
+      await TrackEditionModel.updateOne({ _id: trackEditionId }, { deleted: true });
+    }
+    return this.model.find({ trackEditionId });
   }
 
   async deleteTrackEditionByAdmin(trackEditionId: string): Promise<Track[]> {

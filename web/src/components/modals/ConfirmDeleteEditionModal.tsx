@@ -10,6 +10,7 @@ import {
 } from 'lib/graphql';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 
 export const ConfirmDeleteEditionModal = () => {
   const { showConfirmDeleteEdition, trackId, trackEditionId } = useModalState();
@@ -28,13 +29,13 @@ export const ConfirmDeleteEditionModal = () => {
         return;
       }
 
-      const deletedIds = data.deleteTrackEdition.map((deletedTrack) => { 
+      const deletedIds = data.deleteTrackEdition.map((deletedTrack) => {
         const identify = cache.identify(deletedTrack);
         cache.evict({ id: identify });
 
         return deletedTrack.id
       });
-      
+
       const cachedData = cache.readQuery<ExploreTracksQuery>({
         query: ExploreTracksDocument,
         variables: { search: '' },
@@ -99,7 +100,8 @@ export const ConfirmDeleteEditionModal = () => {
         variables: { trackEditionId },
       });
       handleClose();
-      router.push('/');
+      router.push('/home');
+      toast.success('Track successfully deleted');
     }
   };
 
