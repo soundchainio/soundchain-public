@@ -10,6 +10,7 @@ import {
 } from 'lib/graphql';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 
 export const ConfirmDeleteEditionModal = () => {
   const { showConfirmDeleteEdition, trackId, trackEditionId } = useModalState();
@@ -100,6 +101,7 @@ export const ConfirmDeleteEditionModal = () => {
       });
       handleClose();
       router.push('/home');
+      toast.success('Track successfully deleted');
     }
   };
 
