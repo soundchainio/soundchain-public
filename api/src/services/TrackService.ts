@@ -152,15 +152,15 @@ export class TrackService extends ModelService<typeof Track> {
   }
 
   async getTrackFromEdition(id: string, trackEditionId?: string): Promise<Track> {
-    const ors: any[] = [{ _id: id }];
+    const ors: any[] = [{ _id: id, deleted: false }];
     if (trackEditionId) {
-      ors.push({ trackEditionId: new ObjectId(trackEditionId) });
+      ors.push({ trackEditionId: new ObjectId(trackEditionId), deleted: false });
     }
 
     const entity = await this.model.findOne({ $or: ors });
 
     if (!entity) {
-      throw new NotFoundError('Track', id);
+      return this.getTrack(id);
     }
 
     return entity;
