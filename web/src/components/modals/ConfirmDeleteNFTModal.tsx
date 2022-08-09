@@ -107,7 +107,8 @@ export const ConfirmDeleteNFTModal = () => {
       deleteTrack({
         variables: { trackId: track.id },
       });
-      router.push('/home');
+      handleClose();
+      router.push('/wallet');
       toast.success('Track successfully deleted');
     }
   };
@@ -134,7 +135,7 @@ export const ConfirmDeleteNFTModal = () => {
         variables: { trackId: trackId },
       });
       handleClose();
-      router.push('/home');
+      router.push('/wallet');
       toast.success('Track successfully deleted');
     }
   };

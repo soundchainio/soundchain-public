@@ -100,8 +100,8 @@ export const ConfirmDeleteEditionModal = () => {
         variables: { trackEditionId },
       });
       handleClose();
-      router.push('/home');
-      toast.success('Track successfully deleted');
+      router.push('/wallet');
+      toast.success('Editions successfully deleted');
     }
   };
 
