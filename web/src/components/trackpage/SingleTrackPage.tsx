@@ -4,14 +4,17 @@ import { MintingData } from 'components/details-NFT/MintingData';
 import { TrackInfo } from 'components/details-NFT/TrackInfo';
 import { ViewPost } from 'components/details-NFT/ViewPost';
 import { Matic } from 'components/Matic';
+import { Ogun } from 'components/Ogun';
 import { ProfileWithAvatar } from 'components/ProfileWithAvatar';
 import SEO from 'components/SEO';
 import { TimeCounter } from 'components/TimeCounter';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { Track } from 'components/Track';
 import { TrackShareButton } from 'components/TrackShareButton';
+import { config } from 'config';
 import { useModalDispatch } from 'contexts/providers/modal';
 import useBlockchain from 'hooks/useBlockchain';
+import useBlockchainV2 from 'hooks/useBlockchainV2';
 import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMe } from 'hooks/useMe';
 import { useTokenOwner } from 'hooks/useTokenOwner';
@@ -57,6 +60,7 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
   const me = useMe();
   const { account, web3 } = useWalletContext();
   const { getRoyalties, getHighestBid } = useBlockchain();
+  const { getEditionRoyalties } = useBlockchainV2();
   const [royalties, setRoyalties] = useState<number>();
   const [highestBid, setHighestBid] = useState<HighestBid>({} as HighestBid);
   const { dispatchShowAuthorActionsModal, dispatchShowBidsHistory } = useModalDispatch();
@@ -91,14 +95,18 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
   const isProcessing = nftData?.pendingRequest != PendingRequest.None;
   const tokenId = nftData?.tokenId;
   const contractAddress = nftData?.contract;
+  const nftAddress = config.web3.contractsV2.contractAddress as string;
+  const isMarketplaceEditions = contractAddress === nftAddress
   const canList = (me?.profile.verified && nftData?.minter === account) || nftData?.minter != account;
   const isBuyNow = Boolean(listingPayload?.listingItem?.pricePerItem);
   const isAuction = Boolean(listingPayload?.listingItem?.reservePrice);
   const bidCount = countBids?.countBids.numberOfBids ?? 0;
+  const isPaymentOGUN = Boolean(listingPayload?.listingItem?.OGUNPricePerItemToShow != 0);
 
-  const { reservePriceToShow, pricePerItemToShow, id } = listingPayload?.listingItem ?? {};
+  const { reservePriceToShow, pricePerItemToShow, OGUNPricePerItemToShow, id } = listingPayload?.listingItem ?? {};
 
   let price = pricePerItemToShow || 0;
+  const OGUNprice = OGUNPricePerItemToShow || 0;
   if (isAuction || bidCount) {
     price = highestBid.bid || reservePriceToShow || 0;
   }
@@ -166,14 +174,22 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
 
   useEffect(() => {
     const fetchRoyalties = async () => {
-      if (!account || !web3 || tokenId === null || tokenId === undefined || royalties != undefined) {
+      if (!account || !web3 || tokenId === null || tokenId === undefined || royalties != undefined || track?.trackEdition?.editionId === undefined) {
         return;
       }
-      const royaltiesFromBlockchain = await getRoyalties(web3, tokenId, { nft: nftData?.contract });
-      setRoyalties(royaltiesFromBlockchain);
+
+      let royaltiesFromBlockchain;
+      if (isMarketplaceEditions) {
+        royaltiesFromBlockchain = await getEditionRoyalties(web3, track.trackEdition.editionId);
+      }
+      else {
+        royaltiesFromBlockchain = await getRoyalties(web3, tokenId, { nft: nftData?.contract });
+      }
+      setRoyalties(royaltiesFromBlockchain);  
+
     };
     fetchRoyalties();
-  }, [account, web3, tokenId, getRoyalties, royalties, nftData]);
+  }, [account, web3, tokenId, getRoyalties, getEditionRoyalties, royalties, nftData, track?.trackEdition?.editionId]);
 
   useEffect(() => {
     const fetchHighestBid = async () => {
@@ -235,12 +251,20 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
           isHighestBidder !== undefined &&
           !isHighestBidder && <div className="p-2 text-center font-bold text-red-500">You have been outbid!</div>}
       </div>
-      {isBuyNow && price && (
+      {isBuyNow &&  (
         <div className="bg-[#112011]">
+          {!!price &&
           <div className="flex items-center justify-between gap-3 px-4 py-3">
-            <div className="text-xs font-bold text-gray-80">BUY NOW PRICE</div>
+            <div className="text-xs font-bold text-gray-80">MATIC BUY NOW PRICE</div>
             <Matic value={price} variant="currency-inline" className="text-xs" />
           </div>
+          }
+          {!!OGUNprice &&
+          <div className="flex items-center justify-between gap-3 px-4 py-3">
+            <div className="text-xs font-bold text-gray-80">OGUN BUY NOW PRICE</div>
+            <Ogun value={OGUNprice} variant="currency-inline" className="text-xs" showBonus />
+          </div>
+          }
           {futureSale && (
             <div className="flex items-center justify-between gap-3 px-4 py-3">
               <div className="flex-shrink-0 text-xs font-bold text-gray-80">SALE STARTS</div>
@@ -272,7 +296,11 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
           <div className="flex items-center justify-between gap-3 px-4 py-3">
             <div className="text-xs font-bold text-gray-80 ">{auctionIsOver ? 'FINAL PRICE' : 'CURRENT PRICE'}</div>
             <div className="flex items-center gap-1 font-bold">
-              <Matic value={price} variant="currency-inline" className="text-xs" />
+              {isPaymentOGUN ? (
+                <Ogun value={price} variant="currency-inline" className="text-xs" />
+              ) : (
+                <Matic value={price} variant="currency-inline" className="text-xs" />
+              )}
               <button className="text-xxs text-[#22CAFF]" onClick={() => dispatchShowBidsHistory(true, id || '')}>
                 [{bidCount} bids]
               </button>
@@ -329,6 +357,7 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
           <HandleNFT
             canList={canList}
             price={price}
+            OGUNprice={OGUNprice}
             isOwner={isOwner}
             isBuyNow={isBuyNow}
             isAuction={isAuction}
@@ -338,6 +367,7 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
             startingDate={startingDate}
             endingDate={endingDate}
             auctionId={id || ''}
+            isPaymentOGUN={isPaymentOGUN || false}
           />
         ))}
     </>

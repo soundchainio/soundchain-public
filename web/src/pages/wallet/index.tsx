@@ -60,6 +60,7 @@ export default function WalletPage() {
   const {
     account,
     balance,
+    OGUNBalance,
     connect,
     chainId,
     addMumbaiTestnet,
@@ -69,6 +70,7 @@ export default function WalletPage() {
   const {
     account: magicAccount,
     balance: magicBalance,
+    ogunBalance: magicOgunBalance,
     refetchBalance: refetchMagicBalance,
     isRefetchingBalance: isRefetchingMagicBalance,
   } = useMagicContext();
@@ -85,10 +87,18 @@ export default function WalletPage() {
 
   const getAccount = isSoundChainSelected ? magicAccount : account;
   const getBalance = isSoundChainSelected ? magicBalance : balance;
+  const getOgunBalance = isSoundChainSelected ? magicOgunBalance : OGUNBalance;
   const getBalanceFormatted = parseFloat(getBalance ?? '0');
+  const getOgunBalanceFormatted = parseFloat(getOgunBalance ?? '0');
 
   const refreshData = async () => {
-    isSoundChainSelected ? await refetchMagicBalance() : await refetchMetamaskBalance();
+    if(isSoundChainSelected){
+      console.log('Fetching balance...')
+      await refetchMagicBalance();
+    } else {
+      console.log('Fetching metamask balance...')
+      await refetchMetamaskBalance();
+    }
   };
 
   useEffect(() => {
@@ -200,30 +210,57 @@ export default function WalletPage() {
                 {getAccount && <Jazzicon address={getAccount} size={54} />}
                 <ConnectedNetwork />
                 {getAccount && <CopyWalletAddress walletAddress={getAccount} />}
-                <div className="flex flex-col items-center gap-1 relative w-full">
-                  <Matic height="30" width="30" />
-                  {getBalance ? (
-                    <>
-                      <div className="text-blue-400 font-bold text-xs uppercase mt-2">
-                        <span className="text-white font-bold text-2xl">{getBalanceFormatted}</span>
-                        {` matic`}
-                      </div>
-                      {data?.maticUsd && (
-                        <span className="text-xs text-gray-50 font-bold">
-                          {`${currency(getBalanceFormatted * parseFloat(data?.maticUsd))} USD`}
-                        </span>
+
+                <div className="flex w-full justify-center items-center">
+                  <div className='pl-10 pr-10'>
+                    <div className="flex flex-col items-center gap-1 relative w-full">
+                      <Matic height="30" width="30" />
+                      {getBalance ? (
+                        <>
+                          <div className="text-blue-400 font-bold text-xs uppercase mt-2">
+                            <span className="text-white font-bold text-2xl">{getBalanceFormatted}</span>
+                            {` matic`}
+                          </div>
+                          {data?.maticUsd && (
+                            <span className="text-xs text-gray-50 font-bold">
+                              {`${currency(getBalanceFormatted * parseFloat(data?.maticUsd))} USD`}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <LoaderAnimation />
                       )}
-                    </>
-                  ) : (
-                    <LoaderAnimation />
-                  )}
+                    </div>
+                    <div className="flex gap-5 mt-4">
+                      <WalletButton title="Activity" icon={Activity} href={`/wallet/${getAccount}/history`} />
+                      <WalletButton title="Receive" icon={ArrowDown} href={`/wallet/${getAccount}/receive`} />
+                      <WalletButton title="Buy" icon={CreditCard} href="/wallet/buy" />
+                      {isSoundChainSelected && <WalletButton title="Send" icon={ArrowUpRight} href="/wallet/transfer" />}
+                    </div>
                 </div>
-                <div className="flex gap-5 mt-4">
-                  <WalletButton title="Activity" icon={Activity} href={`/wallet/${getAccount}/history`} />
-                  <WalletButton title="Receive" icon={ArrowDown} href={`/wallet/${getAccount}/receive`} />
-                  <WalletButton title="Buy" icon={CreditCard} href="/wallet/buy" />
-                  {isSoundChainSelected && <WalletButton title="Send" icon={ArrowUpRight} href="/wallet/transfer" />}
+                
+                <div className='pl-10 pr-10'>
+                  <div className="flex flex-col items-center gap-1 relative w-full">
+                    <Logo height="30" width="30" />
+                    {getBalance ? (
+                      <>
+                        <div className="text-amber-500 font-bold text-xs uppercase mt-2">
+                          <span className="text-white font-bold text-2xl">{getOgunBalanceFormatted}</span>
+                          {` OGUN`}
+                        </div>
+                      </>
+                    ) : (
+                      <LoaderAnimation />
+                    )}
+                  </div>
+                  <div className="flex gap-5 mt-4">
+                    <WalletButton title="Activity" icon={Activity} href={`/wallet/${getAccount}/history`} />
+                    <WalletButton title="Receive" icon={ArrowDown} href={`/wallet/${getAccount}/receive`} />
+                    <WalletButton title="Buy" icon={CreditCard} href="/wallet/buy" />
+                    {isSoundChainSelected && <WalletButton title="Send" icon={ArrowUpRight} href="/wallet/transferOgun" />}
+                  </div>
                 </div>
+              </div>
               </div>
               <div className="p-3 mt-3 flex justify-between items-center">
                 <span className="text-gray-80 font-bold">Owned NFT’s</span>

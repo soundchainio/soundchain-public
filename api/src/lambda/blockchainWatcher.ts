@@ -10,7 +10,7 @@ import {
   BidPlaced,
   UpdateAuction,
 } from '../../types/web3-v1-contracts/SoundchainAuction';
-import { ItemCanceled, ItemListed, ItemSold, ItemUpdated } from '../../types/web3-v1-contracts/SoundchainMarketplace';
+// import { ItemCanceled, ItemListed, ItemSold, ItemUpdated } from '../../types/web3-v1-contracts/SoundchainMarketplace';
 import { EditionCreated } from '../../types/web3-v2-contracts/Soundchain721Editions';
 import { config } from '../config';
 import SoundchainCollectible from '../contract/Soundchain721.json';
@@ -22,7 +22,7 @@ import { UserModel } from '../models/User';
 import { EventData } from '../types/BlockchainEvents';
 import { Context } from '../types/Context';
 import { auctionEvents, itemEvents, nftEvents } from './processEvents';
-import { EditionCanceled, EditionListed } from '../../types/web3-v2-contracts/SoundchainMarketplaceEditions';
+import { EditionCanceled, EditionListed, ItemCanceled, ItemListed, ItemSold, ItemUpdated } from '../../types/web3-v2-contracts/SoundchainMarketplaceEditions';
 
 export const blockchainWatcher: Handler = async () => {
   await mongoose.connect(config.db.url, config.db.options);

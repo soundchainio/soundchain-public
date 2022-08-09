@@ -100,16 +100,24 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
     fetchIsApproved();
   }, [account, web3, checkIsApproved, showApprove, nftData]);
 
-  const isForSale = !!buyNowItem?.buyNowItem?.buyNowItem?.pricePerItem ?? false;
+  const isForSale =
+    (!!buyNowItem?.buyNowItem?.buyNowItem?.pricePerItem || !!buyNowItem?.buyNowItem?.buyNowItem?.OGUNPricePerItem) ??
+    false;
 
   const handleListSingleNft = (
-    { price, startTime }: ListNFTBuyNowFormValues,
+    { salePrice, selectedCurrency, startTime }: ListNFTBuyNowFormValues,
     helper: FormikHelpers<ListNFTBuyNowFormValues>,
   ) => {
     if (nftData?.tokenId === null || nftData?.tokenId === undefined || !account || !web3) {
       return;
     }
-    const weiPrice = web3?.utils.toWei(price.toString(), 'ether') || '0';
+
+    if (salePrice <= 0) {
+      toast('NFT needs a price higher than 0 on OGUN or MATIC.');
+      return;
+    }
+    const weiPrice = selectedCurrency === 'MATIC' ? web3?.utils.toWei(salePrice.toString(), 'ether') : '0';
+    const weiPriceOGUN = selectedCurrency === 'OGUN' ? web3?.utils.toWei(salePrice.toString(), 'ether') : '0';
     const startTimestamp = Math.ceil(startTime.getTime() / 1000);
 
     const onReceipt = async () => {
@@ -126,7 +134,7 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
       });
       router.replace(router.asPath.replace('/list/buy-now', ''));
     };
-    listItem(nftData.tokenId, account, weiPrice, startTimestamp, { nft: nftData.contract })
+    listItem(nftData.tokenId, account, weiPrice, weiPriceOGUN, startTimestamp, { nft: nftData.contract })
       .onReceipt(onReceipt)
       .onError(cause => toast.error(cause.message))
       .finally(() => helper.setSubmitting(false))

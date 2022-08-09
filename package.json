@@ -4,7 +4,9 @@
   "license": "MIT",
   "scripts": {
     "bootstrap": "lerna bootstrap && husky install",
+    "genMerkleTree": "cd api/src/utils/airdrop && yarn && yarn start",
     "seed": "cd api && yarn seed",
+    "seedProof": "cd api && yarn seedProof",
     "dev": "lerna run --parallel dev",
     "dev:quick": "lerna run --parallel dev:quick",
     "codegen": "lerna run --parallel codegen",

@@ -1,9 +1,12 @@
 import { ButtonVariantProps } from 'components/Button';
 
 export const EditListingButton = ({ 
-  className, type = 'button', 
+  className,
+  type = 'button', 
   Component,
-  children, loading, ...rest 
+  children,
+  loading,
+  ...rest 
 }: ButtonVariantProps) => {
   return (
     <div className={className}>

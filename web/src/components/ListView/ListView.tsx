@@ -27,7 +27,7 @@ export const ListView = ({ tracks, loading, hasNextPage, loadMore, displaySaleBa
   return (
     <>
       {loading ? (
-        <div className='space-y-2'>
+        <div className="space-y-2">
           <PostSkeleton />
           <PostSkeleton />
           <PostSkeleton />

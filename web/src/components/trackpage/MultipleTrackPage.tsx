@@ -34,6 +34,7 @@ import {
   useTrackLazyQuery
 } from 'lib/graphql';
 import { useEffect, useMemo, useState } from 'react';
+import { Ogun } from 'components/Ogun';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 import { isPendingRequest } from 'utils/isPendingRequest';
 import useBlockchainV2 from '../../hooks/useBlockchainV2';
@@ -129,12 +130,14 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
   const isProcessing = isPendingRequest(nftData?.pendingRequest) || isPendingRequest(editionData?.pendingRequest);
   const canList = (me?.profile.verified && isMinter) || nftData?.minter != account;
   const isBuyNow = Boolean(firstListingItem?.pricePerItem);
+  const isPaymentOGUN = Boolean(firstListingItem?.OGUNPricePerItemToShow != 0);
 
   const price = firstListingItem?.pricePerItemToShow || 0;
+  const OGUNprice = firstListingItem?.OGUNPricePerItemToShow || 0;
   const startingDate = firstListingItem?.startingTime ? new Date(firstListingItem?.startingTime * 1000) : undefined;
   const endingDate = firstListingItem?.endingTime ? new Date(firstListingItem?.endingTime * 1000) : undefined;
   const loading = loadingListingItem;
-
+ 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
       title: 'NFT Details',
@@ -227,11 +230,19 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
             {track.editionSize}
           </dd>
         </dl>
-        {buyNowPrice && (
+        {!!buyNowPrice && (
           <div className="bg-[#112011]">
             <div className="flex items-center justify-between gap-3 px-4 py-3">
-              <div className="text-xs font-bold text-gray-80">BUY NOW PRICE</div>
+              <div className="text-xs font-bold text-gray-80">MATIC BUY NOW PRICE</div>
               <Matic value={buyNowPrice} variant="currency-inline" className="text-xs" />
+            </div>
+          </div>
+        )}
+        {!!OGUNprice && (
+          <div className="bg-[#112011]">
+            <div className="flex items-center justify-between gap-3 px-4 py-3">
+              <div className="text-xs font-bold text-gray-80">OGUN BUY NOW PRICE</div>
+              <Ogun value={OGUNprice} variant="currency-inline" className="text-xs" showBonus />
             </div>
           </div>
         )}
@@ -275,6 +286,8 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
           <HandleMultipleEditionNFT
             canList={canList}
             price={price}
+            OGUNprice={OGUNprice}
+            isPaymentOGUN={isPaymentOGUN}  
             isMinter={isMinter}
             isBuyNow={isBuyNow}
             startingDate={startingDate}
@@ -334,6 +347,8 @@ function Listings(props: ListingsProps) {
                 <BuyNowEditionListItem
                   key={item.id}
                   price={item.listingItem?.pricePerItemToShow || 0}
+                  priceOGUN={item.listingItem?.OGUNPricePerItemToShow || 0}
+                  isPaymentOGUN={Boolean(item.listingItem?.OGUNPricePerItemToShow != 0)}
                   owner={item.nftData?.owner || ''}
                   trackId={item.id}
                   tokenId={item.nftData?.tokenId || 0}

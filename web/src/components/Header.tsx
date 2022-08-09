@@ -22,11 +22,12 @@ export const NavItem = ({ text, link }: NavItemProps) => {
       <div className="bg-green-blue-gradient w-5/6 pb-1" />
     </div>
   ) : (
-    <a href={link ? link : '/' + text.toLowerCase()} className="hidden md:inline-block">
+    <a href={link ? link : '/' + text.toLowerCase()}>
       <div className="flex items-center justify-center p-2">{text}</div>
     </a>
   );
 };
+
 
 function HeaderDrawer({ open, close }: { open: boolean; close: () => void }) {
   return (
@@ -72,6 +73,8 @@ export const Header = () => {
             <span className="hidden font-extrabold text-white md:block">SoundChain</span>
           </div>
           <nav className="flex items-center justify-evenly gap-3 text-white">
+            <NavItem text="Airdrop" />
+            <NavItem text="Stake" />
             <NavItem text="Tokenomics" link="https://soundchain.gitbook.io/soundchain/token/ogun" />
             <div className="scale-95">
               <Button

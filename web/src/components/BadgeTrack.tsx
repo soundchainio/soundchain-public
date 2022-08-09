@@ -1,6 +1,6 @@
 interface BadgeProps extends React.ComponentPropsWithoutRef<'span'> {
+  auction: boolean;
   label: string;
-  auction?: boolean;
 }
 
 export const BadgeTrack = ({ label, ...rest }: BadgeProps) => (

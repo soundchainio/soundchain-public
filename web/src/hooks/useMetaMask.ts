@@ -4,6 +4,13 @@ import { useUpdateMetaMaskAddressesMutation } from 'lib/graphql';
 import { useEffect, useRef, useState } from 'react';
 import Web3 from 'web3';
 import { useMe } from './useMe';
+import { AbiItem } from 'web3-utils';
+import { Contract } from "web3-eth-contract";
+import { config } from 'config';
+import SoundchainOGUN20 from '../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json';
+
+const tokenContract = (web3: Web3) =>
+  new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], config.OGUNAddress as string) as unknown as Contract;
 
 export const useMetaMask = () => {
   const me = useMe();
@@ -12,6 +19,7 @@ export const useMetaMask = () => {
   const [loadingAccount, setLoadingAccount] = useState<boolean>(true);
   const [account, setAccount] = useState<string>();
   const [balance, setBalance] = useState<string>();
+  const [OGUNBalance, setOGUNBalance] = useState<string>();
   const [chainId, setChainId] = useState<number>();
   const [isRefetchingBalance, setIsRefetchingBalance] = useState<boolean>(false);
   const [loadingChain, setLoadingChain] = useState<boolean>(true);
@@ -54,6 +62,7 @@ export const useMetaMask = () => {
         web3.eth.getBalance(account).then(balance => {
           setBalance(web3.utils.fromWei(balance, 'ether'));
         });
+        getOGUNBalance(web3)
         window.ethereum.request({ method: 'eth_chainId' }).then((chainId: string) => {
           setChainId(parseInt(chainId, 16));
           setLoadingChain(false);
@@ -61,9 +70,16 @@ export const useMetaMask = () => {
       } else {
         setAccount(undefined);
         setBalance(undefined);
+        setOGUNBalance(undefined);
       }
     }
   }, [account, web3]);
+
+  const getOGUNBalance = async (web3: Web3) => {
+    const currentBalance = await tokenContract(web3).methods.balanceOf(account).call();
+    const formattedBalance = web3.utils.fromWei(currentBalance ?? '0');
+    setOGUNBalance(formattedBalance);
+  }
 
   const refetchBalance = async () => {
     if (web3 && account) {
@@ -72,6 +88,7 @@ export const useMetaMask = () => {
         setBalance(web3.utils.fromWei(balance, 'ether'));
         setIsRefetchingBalance(false);
       });
+      await getOGUNBalance(web3)
     }
   };
 
@@ -116,7 +133,7 @@ export const useMetaMask = () => {
 
   const loading = loadingAccount || loadingChain;
 
-  return { connect, addMumbaiTestnet, account, balance, chainId, web3, refetchBalance, isRefetchingBalance, loading };
+  return { connect, addMumbaiTestnet, account, balance, OGUNBalance, chainId, web3, refetchBalance, isRefetchingBalance, loading };
 };
 
 export default useMetaMask;

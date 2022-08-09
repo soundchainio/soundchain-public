@@ -8,9 +8,9 @@ import {
   BidPlaced,
   UpdateAuction
 } from '../../types/web3-v1-contracts/SoundchainAuction';
-import { ItemCanceled, ItemListed, ItemSold, ItemUpdated } from '../../types/web3-v1-contracts/SoundchainMarketplace';
+// import { ItemCanceled, ItemListed, ItemSold, ItemUpdated } from '../../types/web3-v1-contracts/SoundchainMarketplace';
 import { EditionCreated } from '../../types/web3-v2-contracts/Soundchain721Editions';
-import { EditionCanceled, EditionListed } from '../../types/web3-v2-contracts/SoundchainMarketplaceEditions';
+import { EditionCanceled, EditionListed, ItemCanceled, ItemListed, ItemSold, ItemUpdated } from '../../types/web3-v2-contracts/SoundchainMarketplaceEditions';
 import { FailedEventModel } from '../models/FailedEvent';
 import { Context } from '../types/Context';
 import { PendingRequest } from '../types/PendingRequest';
@@ -47,7 +47,7 @@ function _execute<T extends ReturnTypes>(f: (returnValues: T, context: Context) 
 
 const processItemListed = async (event: ItemListed, context: Context): Promise<void> => {
   const { returnValues, address } = event
-  const { owner, nft, tokenId, pricePerItem, startingTime } = returnValues;
+  const { owner, nft, tokenId, pricePerItem, OGUNPricePerItem, acceptsMATIC, acceptsOGUN, startingTime } = returnValues;
   const [user, listedBefore] = await Promise.all([
     context.userService.getUserByWallet(owner),
     context.listingItemService.wasListedBefore(parseInt(tokenId), nft),
@@ -68,6 +68,10 @@ const processItemListed = async (event: ItemListed, context: Context): Promise<v
     tokenId: parseInt(tokenId),
     pricePerItem: pricePerItem,
     pricePerItemToShow: getPriceToShow(pricePerItem),
+    OGUNPricePerItem: OGUNPricePerItem,
+    OGUNPricePerItemToShow: getPriceToShow(OGUNPricePerItem),
+    acceptsMATIC: acceptsMATIC,
+    acceptsOGUN: acceptsOGUN,
     startingTime: parseInt(startingTime),
     trackId: track._id,
     trackEditionId: track?.trackEditionId
@@ -87,11 +91,15 @@ const processItemSold = async (event: ItemSold, context: Context): Promise<void>
 
 const processItemUpdated = async (event: ItemUpdated, context: Context): Promise<void> => {
   const { returnValues, address } = event;
-  const { tokenId, newPrice, startingTime, nft } = returnValues;
+  const { tokenId, newPrice, newOGUNPrice, acceptsMATIC, acceptsOGUN, startingTime, nft } = returnValues;
   await Promise.all([
     context.buyNowItemService.updateBuyNowItem(parseInt(tokenId), {
       pricePerItem: newPrice,
       pricePerItemToShow: getPriceToShow(newPrice),
+      OGUNPricePerItem: newOGUNPrice,
+      OGUNPricePerItemToShow: getPriceToShow(newOGUNPrice),
+      acceptsMATIC,
+      acceptsOGUN,
       startingTime: parseInt(startingTime),
     }, nft, address),
     context.trackService.setPendingNone(parseInt(tokenId), nft),
