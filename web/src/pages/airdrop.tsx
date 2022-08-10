@@ -21,7 +21,6 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import Web3 from 'web3';
 import useBlockchainV2 from '../hooks/useBlockchainV2';
-import router from 'next/router';
 
 export default function AirdropPage() {
   const { setIsLandingLayout } = useLayoutContext();
