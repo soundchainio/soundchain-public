@@ -153,7 +153,7 @@ export default function AirdropPage() {
 
     if (!from || !to || !amount || !proof || !web3) return handleErrorClaimingOgun();
 
-    const contract = claimOgun(from, to, amount, proof);
+    const contract = await claimOgun(from, to, amount, proof);
 
     contract
       .onReceipt(() => handleClaimOnSuccess())

@@ -182,7 +182,7 @@ class HasClaimedOgun extends BlockchainFunction<HasClaimedOgunParams> {
 
     this.web3 = web3;
 
-    return claimOgunContract(web3).methods.hasClaimed(address).call();
+    return await claimOgunContract(web3).methods.hasClaimed(address).call();
   }
 }
 
