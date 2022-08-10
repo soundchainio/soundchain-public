@@ -144,7 +144,7 @@ export default function AirdropPage() {
     return hasClaimedContract || isWhitelistClaimedDatabase || isAudiusHolderClaimedDatabase ? true : false;
   };
 
-  const handleClaimOgun = async () => {
+  const handleClaimOgun = () => {
     setLoading(true);
     const from = proofBook?.getProofBookByWallet?.address;
     const to = proofBook?.getProofBookByWallet?.address;
