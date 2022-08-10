@@ -55,12 +55,6 @@ export default function AirdropPage() {
   }, [account, audioHolderByWallet, whitelistEntryByWallet, proofBookByWallet]);
 
   useEffect(() => {
-    if (isClaimed) {
-      router.push('/explore');
-    }
-  }, [isClaimed]);
-
-  useEffect(() => {
     setIsLandingLayout(true);
 
     return () => {
@@ -126,6 +120,7 @@ export default function AirdropPage() {
       setAccount(account);
       setWeb3(web3API);
     } catch (error) {
+      toast.error('An error has ocurred. Try again later.');
       console.error(error);
     } finally {
       setCloseModal(!closeModal);
@@ -159,13 +154,15 @@ export default function AirdropPage() {
       .onReceipt(() => handleClaimOnSuccess())
       .onError(() => handleErrorClaimingOgun())
       .finally(() => setLoading(false))
-      .execute(web3);
+      .execute(web3)
+      .catch(() => handleErrorClaimingOgun());
   };
 
   const handleClaimOnSuccess = async () => {
     toast.success(successfullyClaimedOguns);
     const whiteListEntryId = whitelistEntry?.whitelistEntryByWallet.id || '';
     const audiusHolderId = audioHolder?.audioHolderByWallet.id || '';
+    setIsClaimed(true);
 
     try {
       if (whiteListEntryId) {
@@ -285,11 +282,11 @@ export default function AirdropPage() {
         <h2 className="text-center text-2xl font-light md:text-4xl">
           You have already claimed your <span className="green-blue-gradient-text-break">OGUN</span>
         </h2>
-        <Button variant="rainbow" className="w-5/6">
-          <Link href="/explore" passHref>
+        <Link href="/explore" passHref>
+          <Button variant="rainbow" className="w-5/6">
             <span className="font-medium ">EXPLORE</span>
-          </Link>
-        </Button>
+          </Button>
+        </Link>
       </>
     );
   };
