@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { OAuthExtension } from '@magic-ext/oauth';
 import { InstanceWithExtensions, MagicSDKExtensionsOption, SDKBase } from '@magic-sdk/provider';
-import { Magic } from 'magic-sdk';
+import { setJwt } from 'lib/apollo';
+import { Magic, RPCErrorCode } from 'magic-sdk';
+import { useRouter } from 'next/router';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import Web3 from 'web3';
 import { network } from '../lib/blockchainNetworks';
@@ -62,6 +64,7 @@ export function MagicProvider({ children }: MagicProviderProps) {
   const [balance, setBalance] = useState<string>();
   const [ogunBalance, setOgunBalance] = useState<string>();
   const [isRefetchingBalance, setIsRefetchingBalance] = useState<boolean>(false);
+  const router = useRouter();
 
   const refetchBalance = async () => {
     if (account) {
@@ -94,9 +97,15 @@ export function MagicProvider({ children }: MagicProviderProps) {
         })
         .then(balance => {
           setBalance(Number(web3.utils.fromWei(balance, 'ether')).toFixed(6));
+        }).catch(async (e) => {
+          if (e.code === RPCErrorCode.InternalError) {
+            await magic.user.logout();
+            setJwt();
+            router.reload();
+          }
         });
     }
-  }, [me]);
+  }, [me, router]);
 
   return (
     <MagicContext.Provider value={{ magic, web3, account, balance, ogunBalance, refetchBalance, isRefetchingBalance }}>
