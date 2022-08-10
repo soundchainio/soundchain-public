@@ -14,7 +14,7 @@ export default function Page404() {
     <>
       <Head>
         <title>Not Found | SoundChain</title>
-        <meta name="description" content="This page  does not exist." />
+        <meta name="description" content="This page does not exist." />
         <link rel="icon" href="/favicons/favicon.ico" />
       </Head>
       <div className="h-full w-full flex flex-col items-center justify-center">
