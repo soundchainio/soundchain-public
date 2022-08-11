@@ -349,7 +349,7 @@ function Listings(props: ListingsProps) {
                   price={item.listingItem?.pricePerItemToShow || 0}
                   priceOGUN={item.listingItem?.OGUNPricePerItemToShow || 0}
                   isPaymentOGUN={Boolean(item.listingItem?.OGUNPricePerItemToShow != 0)}
-                  owner={item.nftData?.owner || ''}
+                  profileId={item.profileId || ''}
                   trackId={item.id}
                   tokenId={item.nftData?.tokenId || 0}
                   contractAddress={item.nftData?.contract || ''}
