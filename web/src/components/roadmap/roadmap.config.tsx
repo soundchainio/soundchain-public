@@ -9,7 +9,7 @@ export interface RoadmapStep {
 export const roadmapSteps: RoadmapStep[] = [
   {
     title: 'UI/UX updates',
-    status: 'In Progress',
+    status: 'Completed',
     description: `We’re improving the UI/UX of the whole platform, focusing on high traffic
     areas of the site as well as improvements to shared components. There’s also a conscious
     focus on improving the desktop experience as well. The changes include improvements to
@@ -18,7 +18,7 @@ export const roadmapSteps: RoadmapStep[] = [
   },
   {
     "title": "Multi-edition NFTs",
-    "status": "In Progress",
+    "status": "Completed",
     "description": "Giving you the ability to mint and sell multiple editions of your NFTs. Be able to sell multiple copies of your track"
   },
   {
