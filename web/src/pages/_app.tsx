@@ -4,6 +4,7 @@ import * as Sentry from '@sentry/react';
 import { Integrations } from '@sentry/tracing';
 import { CheckBodyScroll } from 'components/CheckBodyScroll';
 import { Layout } from 'components/Layout';
+import { config } from 'config';
 import { StateProvider } from 'contexts';
 import { AudioPlayerProvider } from 'hooks/useAudioPlayer';
 import { HideBottomNavBarProvider } from 'hooks/useHideBottomNavBar';
@@ -15,21 +16,21 @@ import Head from 'next/head';
 import Router from 'next/router';
 import Script from 'next/script';
 import NProgress from 'nprogress';
-import React, { ReactElement } from 'react';
+import { ReactElement } from 'react';
 import 'react-toastify/dist/ReactToastify.css';
 import 'styles/audio-player.css';
 import 'styles/bottom-audio-player.css';
 import 'styles/globals.css';
 import 'styles/loading-ring.css';
 import 'styles/nprogress.css';
-import 'styles/volume-slider.css';
 import 'styles/track-card.css';
+import 'styles/volume-slider.css';
 
 const WalletProvider = dynamic(import('hooks/useWalletContext'));
 const MagicProvider = dynamic(import('hooks/useMagicContext'));
 
 Sentry.init({
-  dsn: 'https://43ff4c65582f427a8bf2dc33efd1c2fa@o1011186.ingest.sentry.io/5977714',
+  dsn: config.sentryUrl,
   integrations: [new Integrations.BrowserTracing()],
   tracesSampleRate: 1.0,
   environment: `${process.env.NEXT_PUBLIC_VERCEL_ENV}`,
