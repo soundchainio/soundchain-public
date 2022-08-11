@@ -1,8 +1,8 @@
-import { User } from '@sentry/node';
 import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from 'type-graphql';
 import { CurrentUser } from '../decorators/current-user';
 import { Track } from '../models/Track';
 import { TrackEdition } from '../models/TrackEdition';
+import { User } from '../models/User';
 import { Context } from '../types/Context';
 import { CreateTrackEditionInput } from '../types/CreateTrackEditionInput';
 import { CreateTrackEditionPayload } from '../types/CreateTrackEditionPayload';
