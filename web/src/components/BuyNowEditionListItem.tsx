@@ -10,7 +10,7 @@ interface BuyNowEditionListItemProps {
   price: number;
   priceOGUN: number;
   isPaymentOGUN: boolean;
-  owner: string;
+  profileId: string;
   tokenId: number;
   isProcessing: boolean;
   contractAddress: string;
@@ -21,7 +21,7 @@ export const BuyNowEditionListItem = ({
   price,
   priceOGUN,
   isPaymentOGUN,
-  owner,
+  profileId,
   tokenId,
   isProcessing,
   contractAddress,
@@ -31,7 +31,7 @@ export const BuyNowEditionListItem = ({
       <span className='px-2 text-xs font-bold'>#{tokenId}</span>
       {!isPaymentOGUN && <Matic value={price} className="min-w-[140px] text-xs" variant="listing-inline" />}
       {isPaymentOGUN && <Ogun value={priceOGUN} className="min-w-[140px] text-xs" />}
-      <NftOwner owner={owner} className="flex-1" />
+      <NftOwner profileId={profileId} className="flex-1" />
       <Action trackId={trackId} isPaymentOGUN={isPaymentOGUN} tokenId={tokenId} contractAddress={contractAddress} isProcessing={isProcessing} />
     </li>
   );
