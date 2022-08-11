@@ -1,4 +1,4 @@
-import * as Sentry from '@sentry/node';
+import * as Sentry from '@sentry/serverless';
 import { ApolloError } from 'apollo-server-errors';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
 
@@ -24,7 +24,7 @@ export const SentryReportError: ApolloServerPlugin = {
               scope.addBreadcrumb({
                 category: 'query-path',
                 message: err.path.join(' > '),
-                level: Sentry.Severity.Debug,
+                level: 'debug',
               });
             }
             Sentry.captureException(err);
