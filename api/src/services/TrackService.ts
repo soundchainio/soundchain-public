@@ -361,7 +361,8 @@ export class TrackService extends ModelService<typeof Track> {
 
   async updateOwnerByTokenId(tokenId: number, owner: string, contractAddress: string): Promise<Track> {
     const { id } = await this.model.findOne({ 'nftData.tokenId': tokenId, 'nftData.contract': contractAddress });
-    return await this.updateTrack(id, { nftData: { owner } });
+    const { profileId } = await this.context.userService.getUserByWallet(owner)
+    return await this.updateTrack(id, { nftData: { owner }, profileId });
   }
 
   async isFavorite(trackId: string, profileId: string, trackEditionId: string): Promise<boolean> {
