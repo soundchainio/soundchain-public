@@ -8,13 +8,13 @@ interface NftOwnerProps {
 }
 
 export const NftOwner = ({ profileId, className }: NftOwnerProps) => {
-  const [userProfile, { data: result }] = useProfileLazyQuery();
+  const [userQueryProfile, { data: result }] = useProfileLazyQuery();
 
   useEffect(() => {
     if (profileId) {
-      userProfile({ variables: { id: profileId } });
+      userQueryProfile({ variables: { id: profileId } });
     }
-  }, [profileId, userProfile]);
+  }, [profileId, userQueryProfile]);
 
   return (
     <ProfileWithAvatar profile={result?.profile as Partial<Profile>} className={className} />
