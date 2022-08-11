@@ -138,7 +138,7 @@ export default function AirdropPage() {
     return hasClaimedContract || isWhitelistClaimedDatabase || isAudiusHolderClaimedDatabase ? true : false;
   };
 
-  const handleClaimOgun = async () => {
+  const handleClaimOgun = () => {
     setLoading(true);
     const from = proofBook?.getProofBookByWallet?.address;
     const to = proofBook?.getProofBookByWallet?.address;
@@ -147,7 +147,7 @@ export default function AirdropPage() {
 
     if (!from || !to || !amount || !proof || !web3) return handleErrorClaimingOgun();
 
-    const contract = await claimOgun(from, to, amount, proof);
+    const contract = claimOgun(from, to, amount, proof);
 
     contract
       .onReceipt(() => handleClaimOnSuccess())
