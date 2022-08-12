@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/serverless';
 import { ApolloError } from 'apollo-server-errors';
-import { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import { ApolloServerPlugin, GraphQLRequestExecutionListener } from 'apollo-server-plugin-base';
 import { Context } from '../types/Context';
 
 export const SentryReportError: ApolloServerPlugin<Context> = {
@@ -39,8 +39,8 @@ export const SentryReportError: ApolloServerPlugin<Context> = {
         }
       },
       async executionDidStart() {
-        return {
-          willResolveField({ context, info }) { // hook for each new resolver
+        return ({
+          willResolveField({ context, info }){ // hook for each new resolver
             const span = context.sentryTransaction.startChild({
               op: "resolver",
               description: `${info.parentType.name}.${info.fieldName}`,
@@ -49,7 +49,7 @@ export const SentryReportError: ApolloServerPlugin<Context> = {
               span.finish()
             }
           },
-        }
+        } as GraphQLRequestExecutionListener<Context>)
       },
     };
   },
