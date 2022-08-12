@@ -1,10 +1,17 @@
 import * as Sentry from '@sentry/serverless';
 import { ApolloError } from 'apollo-server-errors';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import { Context } from '../types/Context';
 
-export const SentryReportError: ApolloServerPlugin = {
-  async requestDidStart() {
+export const SentryReportError: ApolloServerPlugin<Context> = {
+  async requestDidStart({ request, context }) {
+    if (request.operationName) { // set the transaction Name if we have named queries
+      context.sentryTransaction.setName(request.operationName)
+    }
     return {
+      async willSendResponse({ context }) { // hook for transaction finished
+        context.sentryTransaction.finish()
+      },
       async didEncounterErrors(ctx) {
         if (!ctx.operation) {
           return;
@@ -29,6 +36,19 @@ export const SentryReportError: ApolloServerPlugin = {
             }
             Sentry.captureException(err);
           });
+        }
+      },
+      async executionDidStart() {
+        return {
+          willResolveField({ context, info }) { // hook for each new resolver
+            const span = context.sentryTransaction.startChild({
+              op: "resolver",
+              description: `${info.parentType.name}.${info.fieldName}`,
+            })
+            return () => { // this will execute once the resolver is finished
+              span.finish()
+            }
+          },
         }
       },
     };
