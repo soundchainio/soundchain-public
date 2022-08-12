@@ -1,4 +1,4 @@
-import * as Sentry from "@sentry/serverless";
+import * as Sentry from '@sentry/serverless';
 import { mongoose } from '@typegoose/typegoose';
 import { ApolloServer } from 'apollo-server-lambda';
 import type { Handler } from 'aws-lambda';
@@ -18,6 +18,7 @@ const graphqlHandler: Handler = async (...args) => {
   const apolloHandler = server.createHandler({
     expressAppFromMiddleware(middleware) {
       const app = express();
+      // app.locals.context = new Context();
       app.use(config.express.middlewares);
       app.use(middleware);
       return app;
@@ -27,4 +28,4 @@ const graphqlHandler: Handler = async (...args) => {
   return apolloHandler(...args);
 };
 
-export const handler = Sentry.AWSLambda.wrapHandler(graphqlHandler)
+export const handler = Sentry.AWSLambda.wrapHandler(graphqlHandler);
