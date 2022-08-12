@@ -4,15 +4,20 @@ import { ApolloServerPlugin, GraphQLRequestExecutionListener } from 'apollo-serv
 import { Context } from '../types/Context';
 
 export const SentryReportError: ApolloServerPlugin<Context> = {
-  async requestDidStart({ request, context }) {
+  async requestDidStart({ request }) {
+    const sentryTransaction = Sentry.startTransaction({
+      op: 'gql',
+      name: 'GraphQLTransaction', // this will be the default name, unless the gql query has a name
+    });
+
     if (request.operationName) {
       // set the transaction Name if we have named queries
-      context.sentryTransaction.setName(request.operationName);
+      sentryTransaction.setName(request.operationName);
     }
     return {
-      async willSendResponse({ context }) {
+      async willSendResponse() {
         // hook for transaction finished
-        context.sentryTransaction.finish();
+        sentryTransaction.finish();
       },
       async didEncounterErrors(ctx) {
         if (!ctx.operation) {
@@ -42,9 +47,9 @@ export const SentryReportError: ApolloServerPlugin<Context> = {
       },
       async executionDidStart() {
         return {
-          willResolveField({ context, info }) {
+          willResolveField({ info }) {
             // hook for each new resolver
-            const span = context.sentryTransaction.startChild({
+            const span = sentryTransaction.startChild({
               op: 'resolver',
               description: `${info.parentType.name}.${info.fieldName}`,
             });
