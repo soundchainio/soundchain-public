@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { ButtonVariantProps, commonClasses } from 'components/Button';
+import { ButtonProps, commonClasses } from 'components/Button';
 
 export const RainbowXSButton = ({
                                   className,
@@ -7,12 +7,11 @@ export const RainbowXSButton = ({
                                   icon: Icon,
                                   children,
                                   loading,
-                                  Component,
                                   ...rest
-                                }: ButtonVariantProps) => {
+                                }: ButtonProps) => {
   return (
     <div className={classNames(className, 'p-0.5 bg-rainbow-gradient h-8', rest.disabled ? 'cursor-not-allowed' : '')}>
-      <Component
+      <button
         className={`${commonClasses} sm:px-4 p-2 font-medium text-white text-xs bg-opacity-60 bg-black ${
           rest.disabled ? 'cursor-not-allowed' : ''
         }`}
@@ -27,7 +26,7 @@ export const RainbowXSButton = ({
         ) : (
           <span>{children}</span>
         )}
-      </Component>
+      </button>
     </div>
   );
 };

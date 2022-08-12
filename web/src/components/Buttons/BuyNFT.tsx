@@ -1,4 +1,4 @@
-import { ButtonVariantProps } from 'components/Button';
+import { ButtonProps } from 'components/Button';
 
 export const BuyNFTButton = ({
                                className,
@@ -6,12 +6,12 @@ export const BuyNFTButton = ({
                                children,
                                disabled,
                                loading,
-                               Component,
                                ...rest
-                             }: ButtonVariantProps) => {
+                             }: ButtonProps) => {
+
   return (
     <div className={className}>
-      <Component
+      <button
         disabled={disabled}
         className={`m:px-4 p-2 font-bold text-white text-xs bg-opacity-60 bg-green-900 border-green-600 border-2 px-6 w-full ${
           disabled && 'cursor-not-allowed'
@@ -26,7 +26,7 @@ export const BuyNFTButton = ({
         ) : (
           <span>{children}</span>
         )}
-      </Component>
+      </button>
     </div>
   );
 };
