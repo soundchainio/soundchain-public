@@ -146,13 +146,16 @@ export default function Stake() {
 
   const getStakeBalance = async (web3: Web3) => {
     try {
-      const currentBalance = await tokenStakeContract(web3).methods.getBalanceOf(account).call();
-      const formattedBalance = web3.utils.fromWei(currentBalance ?? '0');
-      setStakeBalance(formattedBalance);
+      const { 0: stakedBalance, 1: rewardBalance } = await tokenStakeContract(web3).methods.getBalanceOf(account).call();
+      const formattedStakedBalance = web3.utils.fromWei(stakedBalance ?? '0');
+      const formattedRewardBalance = web3.utils.fromWei(rewardBalance ?? '0');
+      setStakeBalance(formattedStakedBalance);
+      setOgunRewardBalance(formattedRewardBalance);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (cause: any) {
       if (cause.toString().includes("address hasn't stake any tokens yet")) {
         setStakeBalance('0');
+        setOgunRewardBalance('0');
         return;
       }
       console.log(cause);
@@ -171,21 +174,6 @@ export default function Stake() {
       if (cause.toString().includes("address hasn't stake any tokens yet")) {
         setLPStakeBalance('0');
         setOgunRewardLPBalance('0');
-        return;
-      }
-      console.log(cause);
-    }
-  };
-
-  const getStakingReward = async (web3: Web3) => {
-    try {
-      const currentReward = await tokenStakeContract(web3).methods.getReward(account).call();
-      const formattedBalance = web3.utils.fromWei(currentReward || '0');
-      setOgunRewardBalance(formattedBalance);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (cause: any) {
-      if (cause.toString().includes("address hasn't staked any tokens yet")) {
-        setOgunRewardBalance('0');
         return;
       }
       console.log(cause);
@@ -272,7 +260,6 @@ export default function Stake() {
   useEffect(() => {
     if (account && web3 && !transactionState) {
       getStakingLPReward(web3);
-      getStakingReward(web3);
       getOGUNBalance(web3);
       getLPBalance(web3);
       getStakeBalance(web3);
