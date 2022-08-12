@@ -31,6 +31,8 @@ import { UploadService } from '../services/UploadService';
 import { UserService } from '../services/UserService';
 import { WhitelistEntryService } from '../services/WhitelistEntryService';
 import { ListingCountByTrackEdition } from '../loaders/ListingCountByTrackEdition';
+import * as Sentry from '@sentry/node';  
+import { Transaction } from "@sentry/types";
 
 export class Context {
   auctionItemService = new AuctionItemService(this);
@@ -65,7 +67,11 @@ export class Context {
   whitelistEntryService = new WhitelistEntryService(this);
   audioHolderService = new AudioHolderService(this);
   trackEditionService = new TrackEditionService(this);
-  listingCountByTrackEdition = ListingCountByTrackEdition()
+  listingCountByTrackEdition = ListingCountByTrackEdition();
+  sentryTransaction: Transaction = Sentry.startTransaction({
+    op: "gql",
+    name: "GraphQLTransaction", // this will be the default name, unless the gql query has a name
+  });
 
   constructor(jwtUser?: JwtUser) {
     this.user = jwtUser && this.userService.getUser(jwtUser.sub);
