@@ -49,7 +49,7 @@ export default function Stake() {
     web3: wcWeb3,
   } = useWalletConnect();
 
-  const { web3: metamaskWeb3 } = useMetaMask();
+  const { web3: metamaskWeb3, connect: metamaskConnect, account: metamaskAccount } = useMetaMask();
   const { setIsLandingLayout } = useLayoutContext();
   const [account, setAccount] = useState<string>();
   const [OGUNBalance, setOGUNBalance] = useState<string>('0');
@@ -66,14 +66,17 @@ export default function Stake() {
   const [web3, setWeb3] = useState<Web3>();
 
   useEffect(() => {
-    const loadAccount = () => {
-      setAccount(walletconnectAccount);
-      setWeb3(wcWeb3);
+    const loadAccount = (type: string) => {
+      setAccount(type === 'wc' ? walletconnectAccount : metamaskAccount);
+      setWeb3(type === 'wc' ? wcWeb3 : metamaskWeb3);
     };
     if (walletconnectAccount && wcWeb3) {
-      loadAccount();
+      loadAccount('wc');
     }
-  }, [walletconnectAccount, wcWeb3]);
+    else if (metamaskAccount && metamaskWeb3) {
+      loadAccount('metamask');      
+    }
+  }, [walletconnectAccount, metamaskAccount, wcWeb3]);
 
   useEffect(() => {
     return () => {
