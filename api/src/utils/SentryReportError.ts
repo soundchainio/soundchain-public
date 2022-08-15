@@ -11,7 +11,14 @@ export const SentryReportError: ApolloServerPlugin<Context> = {
     if (request.operationName && context?.sentryTransaction) {
       console.log('Operation Name: ', request.operationName);
       // set the transaction Name if we have named queries
-      context.sentryTransaction.setName(request.operationName);
+      try {
+        // this is to log the sentry transaction on localhost
+        context.sentryTransaction.setName(request.operationName);
+        // this is to set the transaction name on the lambda environment
+        Sentry.configureScope(scope => scope.setTransactionName(request.operationName));
+      } catch (error) {
+        console.log(error);
+      }
     }
     return {
       async willSendResponse() {
