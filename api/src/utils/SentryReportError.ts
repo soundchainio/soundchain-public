@@ -1,4 +1,4 @@
-import * as Sentry from '@sentry/node';
+import * as Sentry from '@sentry/serverless';
 import { ApolloError } from 'apollo-server-errors';
 import { ApolloServerPlugin, GraphQLRequestExecutionListener } from 'apollo-server-plugin-base';
 import { Context } from '../types/Context';
@@ -15,8 +15,10 @@ export const SentryReportError: ApolloServerPlugin<Context> = {
     }
     return {
       async willSendResponse() {
-        // hook for transaction finished
-        context.sentryTransaction.finish();
+        if (context?.sentryTransaction) {
+          // hook for transaction finished
+          context.sentryTransaction.finish();
+        }
       },
       async didEncounterErrors(ctx) {
         if (!ctx.operation) {
@@ -47,15 +49,17 @@ export const SentryReportError: ApolloServerPlugin<Context> = {
       async executionDidStart() {
         return {
           willResolveField({ info }) {
-            // hook for each new resolver
-            const span = context.sentryTransaction.startChild({
-              op: 'resolver',
-              description: `${info.parentType.name}.${info.fieldName}`,
-            });
-            return () => {
-              // this will execute once the resolver is finished
-              span.finish();
-            };
+            if (context?.sentryTransaction) {
+              // hook for each new resolver
+              const span = context.sentryTransaction.startChild({
+                op: 'resolver',
+                description: `${info.parentType.name}.${info.fieldName}`,
+              });
+              return () => {
+                // this will execute once the resolver is finished
+                span.finish();
+              };
+            }
           },
         } as GraphQLRequestExecutionListener<Context>;
       },
