@@ -56,8 +56,7 @@ export default function ListPage() {
             </NextLink>
           </div>
         </div>
-        {
-          data?.track.editionSize === 1 && (
+        {!data?.track.editionSize && (
             <div>
               <div className="flex flex-col bg-black border-2 border-gray-700 rounded m-3 p-4 gap-4">
                 <div className="flex flex-row gap-2">
