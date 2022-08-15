@@ -49,7 +49,7 @@ export default function Stake() {
     web3: wcWeb3,
   } = useWalletConnect();
 
-  const { web3: metamaskWeb3, connect: metamaskConnect, account: metamaskAccount } = useMetaMask();
+  const { web3: metamaskWeb3, account: metamaskAccount } = useMetaMask();
   const { setIsLandingLayout } = useLayoutContext();
   const [account, setAccount] = useState<string>();
   const [OGUNBalance, setOGUNBalance] = useState<string>('0');
