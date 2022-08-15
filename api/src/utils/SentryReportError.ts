@@ -1,4 +1,4 @@
-import * as Sentry from '@sentry/serverless';
+import * as Sentry from '@sentry/node';
 import { ApolloError } from 'apollo-server-errors';
 import { ApolloServerPlugin, GraphQLRequestExecutionListener } from 'apollo-server-plugin-base';
 import { Context } from '../types/Context';
@@ -10,7 +10,10 @@ export const SentryReportError: ApolloServerPlugin<Context> = {
       name: 'GraphQLTransaction', // this will be the default name, unless the gql query has a name
     });
 
+    // Add query to the cloudwatch logs
+    console.log('Query: ', request.query);
     if (request.operationName) {
+      console.log('Operation Name: ', request.operationName);
       // set the transaction Name if we have named queries
       sentryTransaction.setName(request.operationName);
     }
