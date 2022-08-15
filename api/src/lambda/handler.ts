@@ -1,17 +1,17 @@
-import * as Sentry from '@sentry/node';
+import * as Sentry from '@sentry/serverless';
 import { mongoose } from '@typegoose/typegoose';
 import { ApolloServer } from 'apollo-server-lambda';
 import type { Handler } from 'aws-lambda';
 import express from 'express';
 import { config, NODE_ENV } from '../config';
 
-Sentry.init({
+Sentry.AWSLambda.init({
   dsn: config.sentry.url,
   tracesSampleRate: 1.0,
   environment: NODE_ENV,
 });
 
-export const handler: Handler = async (...args) => {
+const graphqlHandler: Handler = async (...args) => {
   await mongoose.connect(config.db.url, config.db.options);
 
   const server = new ApolloServer(config.apollo);
@@ -26,3 +26,5 @@ export const handler: Handler = async (...args) => {
 
   return apolloHandler(...args);
 };
+
+export const handler = Sentry.AWSLambda.wrapHandler(graphqlHandler);
