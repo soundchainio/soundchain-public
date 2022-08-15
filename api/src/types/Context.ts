@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/node';
 import { ListingCountByTrackEdition } from '../loaders/ListingCountByTrackEdition';
 import { User } from '../models/User';
 import { AuctionItemService } from '../services/AuctionItemService';
@@ -66,6 +67,10 @@ export class Context {
   audioHolderService = new AudioHolderService(this);
   trackEditionService = new TrackEditionService(this);
   listingCountByTrackEdition = ListingCountByTrackEdition();
+  sentryTransaction = Sentry.startTransaction({
+    op: 'gql',
+    name: 'GraphQLTransaction', // this will be the default name, unless the gql query has a name
+  });
 
   constructor(jwtUser?: JwtUser) {
     this.user = jwtUser && this.userService.getUser(jwtUser.sub);
