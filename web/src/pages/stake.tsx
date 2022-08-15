@@ -146,9 +146,14 @@ export default function Stake() {
 
   const getStakeBalance = async (web3: Web3) => {
     try {
-      const { 0: stakedBalance, 1: rewardBalance } = await tokenStakeContract(web3).methods.getBalanceOf(account).call();
+      const { 
+        0: stakedBalance,
+        // 1: rewardBalance,
+        // 2: newRewardBalance
+      } = await tokenStakeContract(web3).methods.getBalanceOf(account).call();
+      const reward = await tokenStakeContract(web3).methods.getReward(account).call();
       const formattedStakedBalance = web3.utils.fromWei(stakedBalance ?? '0');
-      const formattedRewardBalance = web3.utils.fromWei(rewardBalance ?? '0');
+      const formattedRewardBalance = web3.utils.fromWei(reward ?? '0');
       setStakeBalance(formattedStakedBalance);
       setOgunRewardBalance(formattedRewardBalance);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
