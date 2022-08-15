@@ -1,5 +1,4 @@
 import * as Sentry from '@sentry/node';
-import { ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
 import mongoose from 'mongoose';
@@ -22,7 +21,7 @@ async function bootstrap() {
   app.locals.context = new Context();
   app.use(config.express.middlewares);
 
-  const server = new ApolloServer({ ...config.apollo, plugins: [ApolloServerPluginLandingPageGraphQLPlayground()] });
+  const server = new ApolloServer({ ...config.apollo });
   await server.start();
   server.applyMiddleware({ app });
 

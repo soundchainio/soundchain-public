@@ -14,6 +14,11 @@ export const SentryReportError: ApolloServerPlugin<Context> = {
       try {
         // this is to log the sentry transaction on localhost
         context.sentryTransaction.setName(request.operationName);
+        // setup the current user into the sentry transaction
+        context.user.then(userProfile => {
+          Sentry.setUser({ id: userProfile._id });
+          Sentry.configureScope(scope => scope.setUser({ id: userProfile._id }));
+        });
         // this is to set the transaction name on the lambda environment
         Sentry.configureScope(scope => scope.setTransactionName(request.operationName));
       } catch (error) {
