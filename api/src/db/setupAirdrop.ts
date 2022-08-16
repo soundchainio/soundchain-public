@@ -21,7 +21,7 @@ const dbOpts = {
 };
 
 export const handler: Handler = async () => {
-  await seedAll()
+  return await seedAll();
 };
 
 interface CsvEntry {
@@ -31,13 +31,20 @@ interface CsvEntry {
 }
 
 async function seedAll() {
+
+  const response: string[] = [];
+
+  const log = (msg: string) => {
+    response.push(msg);
+  }
+
   try {
     await dropWhitelistCollection()
 
     await mongoose.connect(DATABASE_URL_PATH, dbOpts);
 
-    console.log('updating DB with proofBook...');
-    console.log('Seeding merkle proofs...');
+    log('updating DB with proofBook...');
+    log('Seeding merkle proofs...');
   
     const proofBookJson = JSON.parse(fs.readFileSync(proofBookPath, 'utf8'));
     const root: string = proofBookJson.root;
@@ -50,10 +57,10 @@ async function seedAll() {
       proofsBook.push(item);
     });
   
-    console.log('Seeding Proofbook')
+    log('Seeding Proofbook')
     await ProofBookItemModel.insertMany(proofsBook);
   
-    console.log('Successfully seeded Proofbook!');
+    log('Successfully seeded Proofbook!');
 
     const audiusHoldersJson = await CsvToJson.getAudiusHoldersJson();
     
@@ -64,10 +71,10 @@ async function seedAll() {
       })
     });
 
-    console.log('Seeding Audius holders');
+    log('Seeding Audius holders');
     await AudioHolderModel.insertMany(modelAudiusHoldersToFeedDatabase);
 
-    console.log('Successfully seeded Audius Holders!');
+    log('Successfully seeded Audius Holders!');
 
     const whilistCsvJson = await CsvToJson.getWhitelistJson();
 
@@ -78,16 +85,18 @@ async function seedAll() {
         })
     });
     
-    console.log('Seeding Whitelist users');
+    log('Seeding Whitelist users');
     await WhitelistEntryModel.insertMany(modelWhitelistEntryToFeedDatabase);
   
-    console.log('Successfully seeded Whitelist!');
+    log('Successfully seeded Whitelist!');
 
     await mongoose.connection.close();
   
   } catch (error) {
-    console.error(error)
+    log(error.toString())
   }
+
+  return response;
 }
 
 async function dropWhitelistCollection() {
@@ -106,5 +115,3 @@ async function dropWhitelistCollection() {
     return;
   }
 }
-
-  
