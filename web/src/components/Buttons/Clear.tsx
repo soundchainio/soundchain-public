@@ -1,7 +1,7 @@
 import classNames from 'classnames';
-import { ButtonVariantProps, commonClasses } from 'components/Button';
+import { ButtonProps, commonClasses } from 'components/Button';
 
-export const ClearButton = ({ className, type = 'button', icon: Icon, children, ...rest }: ButtonVariantProps) => {
+export const ClearButton = ({ className, type = 'button', icon: Icon, children, ...rest }: ButtonProps) => {
   return (
     <div className={classNames(className, 'p-0.5')}>
       <button className={`${commonClasses}  py-2 text-xs uppercase font-semibold`} type={type} {...rest}>

@@ -1,6 +1,6 @@
-import { Button } from '../Button';
 import { RoadmapStepList } from 'components/roadmap/roadmapStep';
 import { roadmapSteps } from '../roadmap/roadmap.config';
+import RainbowLink from '../Links/RainbowLink';
 
 export function RoadmapSection() {
   return (
@@ -18,14 +18,12 @@ export function RoadmapSection() {
               <RoadmapStepList steps={roadmapSteps.slice(0, 3)} />
             </div>
             <div className='mt-10 flex justify-center w-full'>
-              <Button
+              <RainbowLink
                   href='/roadmap'
-                  as='a'
-                  variant='rainbow'
-                  className='rounded-lg'
-                  buttonClassName='rounded-lg text-center'>
+                  containerClassName='rounded-lg'
+                  className='rounded-lg text-center'>
                 <span className='font-medium px-6 uppercase'>See full roadmap</span>
-              </Button>
+              </RainbowLink>
             </div>
           </div>
         </div>

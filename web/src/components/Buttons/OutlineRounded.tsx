@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { ButtonVariantProps, commonClasses } from 'components/Button';
+import { ButtonProps, commonClasses } from 'components/Button';
 
 export const OutlineRoundedButton = ({
                                        className,
@@ -10,7 +10,7 @@ export const OutlineRoundedButton = ({
                                        textColor,
                                        bgColor,
                                        ...rest
-                                     }: ButtonVariantProps) => {
+                                     }: ButtonProps) => {
   return (
     <div className={classNames('flex p-0.5 rounded-full h-auto', borderColor)}>
       <button
