@@ -31,7 +31,6 @@ interface CsvEntry {
 }
 
 async function seedAll() {
-
   const response: string[] = [];
 
   const log = (msg: string) => {
@@ -39,62 +38,63 @@ async function seedAll() {
   }
 
   try {
+    log('dropping existing airdrop related collections...')
     await dropWhitelistCollection()
 
-    await mongoose.connect(DATABASE_URL_PATH, dbOpts);
+    // await mongoose.connect(DATABASE_URL_PATH, dbOpts);
 
-    log('updating DB with proofBook...');
-    log('Seeding merkle proofs...');
+    // log('updating DB with proofBook...');
+    // log('Seeding merkle proofs...');
   
-    const proofBookJson = JSON.parse(fs.readFileSync(proofBookPath, 'utf8'));
-    const root: string = proofBookJson.root;
-    const proofs:ProofBookItem[] = proofBookJson.proofBook;
+    // const proofBookJson = JSON.parse(fs.readFileSync(proofBookPath, 'utf8'));
+    // const root: string = proofBookJson.root;
+    // const proofs:ProofBookItem[] = proofBookJson.proofBook;
   
-    const proofsBook:ProofBookItem[] = [];
+    // const proofsBook:ProofBookItem[] = [];
   
-    proofs.forEach(proof => {
-      const item = new ProofBookItemModel({root: root, address: proof.address, value: proof.value, merkleProof: proof.merkleProof});
-      proofsBook.push(item);
-    });
+    // proofs.forEach(proof => {
+    //   const item = new ProofBookItemModel({root: root, address: proof.address, value: proof.value, merkleProof: proof.merkleProof});
+    //   proofsBook.push(item);
+    // });
   
-    log('Seeding Proofbook')
-    await ProofBookItemModel.insertMany(proofsBook);
+    // log('Seeding Proofbook')
+    // await ProofBookItemModel.insertMany(proofsBook);
   
-    log('Successfully seeded Proofbook!');
+    // log('Successfully seeded Proofbook!');
 
-    const audiusHoldersJson = await CsvToJson.getAudiusHoldersJson();
+    // const audiusHoldersJson = await CsvToJson.getAudiusHoldersJson();
     
-    const modelAudiusHoldersToFeedDatabase = audiusHoldersJson.map((user: CsvEntry) => {
-      return new AudioHolderModel({
-        walletAddress: user.HolderAddress,
-        amount: user.Balance,
-      })
-    });
+    // const modelAudiusHoldersToFeedDatabase = audiusHoldersJson.map((user: CsvEntry) => {
+    //   return new AudioHolderModel({
+    //     walletAddress: user.HolderAddress,
+    //     amount: user.Balance,
+    //   })
+    // });
 
-    log('Seeding Audius holders');
-    await AudioHolderModel.insertMany(modelAudiusHoldersToFeedDatabase);
+    // log('Seeding Audius holders');
+    // await AudioHolderModel.insertMany(modelAudiusHoldersToFeedDatabase);
 
-    log('Successfully seeded Audius Holders!');
+    // log('Successfully seeded Audius Holders!');
 
-    const whilistCsvJson = await CsvToJson.getWhitelistJson();
+    // const whilistCsvJson = await CsvToJson.getWhitelistJson();
 
-    const modelWhitelistEntryToFeedDatabase = whilistCsvJson.map((user: CsvEntry) => {
-      return new WhitelistEntryModel({
-          walletAddress: user.HolderAddress,
-          emailAddress: 'whitelist@csv.com',
-        })
-    });
+    // const modelWhitelistEntryToFeedDatabase = whilistCsvJson.map((user: CsvEntry) => {
+    //   return new WhitelistEntryModel({
+    //       walletAddress: user.HolderAddress,
+    //       emailAddress: 'whitelist@csv.com',
+    //     })
+    // });
     
-    log('Seeding Whitelist users');
-    await WhitelistEntryModel.insertMany(modelWhitelistEntryToFeedDatabase);
+    // log('Seeding Whitelist users');
+    // await WhitelistEntryModel.insertMany(modelWhitelistEntryToFeedDatabase);
   
-    log('Successfully seeded Whitelist!');
-
-    await mongoose.connection.close();
+    // log('Successfully seeded Whitelist!');
   
   } catch (error) {
     log(error.toString())
   }
+
+  log('finished')
 
   return response;
 }
@@ -109,9 +109,10 @@ async function dropWhitelistCollection() {
     console.log('whitelistentries collection dropped');
     await connection.dropCollection("proofbookitems");
     console.log('proofbookitems collection dropped');
-    await connection.close();
   } catch (error) {
     console.log("Collection doesn't exist or an error has ocurred")
     return;
   }
 }
+
+  
