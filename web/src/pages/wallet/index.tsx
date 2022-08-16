@@ -211,7 +211,7 @@ export default function WalletPage() {
                 <ConnectedNetwork />
                 {getAccount && <CopyWalletAddress walletAddress={getAccount} />}
 
-                <div className="flex flex-col sm:flex-row w-full justify-center items-center">
+                <div className="flex w-full justify-center items-center">
                   <div className='pl-10 pr-10'>
                     <div className="flex flex-col items-center gap-1 relative w-full">
                       <Matic height="30" width="30" />
