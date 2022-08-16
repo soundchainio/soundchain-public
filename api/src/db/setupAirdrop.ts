@@ -38,56 +38,34 @@ async function seedAll() {
   }
 
   try {
-    log('dropping existing airdrop related collections...')
-    await dropWhitelistCollection()
+    const connection = await mongoose.createConnection(DATABASE_URL_PATH, dbOpts);
 
-    await mongoose.connect(DATABASE_URL_PATH, dbOpts);
+    log('Dropping audiusholders collection if it exists');
+    await connection.dropCollection("audioholders");
+    log('audiusholders collection dropped');
+    await connection.dropCollection("whitelistentries");
+    log('whitelistentries collection dropped');
+    await connection.dropCollection("proofbookitems");
+    log('proofbookitems collection dropped');
 
-    log('updating DB with proofBook...');
     log('Seeding merkle proofs...');
   
-    // const root: string = proofBookJson.root;
-    // const proofs:ProofBookItem[] = proofBookJson.proofBook;
-  
-    // const proofsBook:ProofBookItem[] = [];
-  
-    // proofs.forEach(proof => {
-    //   const item = new ProofBookItemModel({root: root, address: proof.address, value: proof.value, merkleProof: proof.merkleProof});
-    //   proofsBook.push(item);
-    // });
-  
-    // log('Seeding Proofbook')
-    // await ProofBookItemModel.insertMany(proofsBook);
-  
-    // log('Successfully seeded Proofbook!');
-
-    // const audiusHoldersJson = await CsvToJson.getAudiusHoldersJson();
+    const root: string = proofBookJson.root;
+    const proofs = proofBookJson.proofBook;
     
-    // const modelAudiusHoldersToFeedDatabase = audiusHoldersJson.map((user: CsvEntry) => {
-    //   return new AudioHolderModel({
-    //     walletAddress: user.HolderAddress,
-    //     amount: user.Balance,
-    //   })
-    // });
+    log('Seeding Proofbook')
+    await connection.collection('proofbookitems').insertMany(proofs.map((proof) => ({root: root, address: proof.address, value: proof.value, merkleProof: proof.merkleProof})))  
+    log('Successfully seeded Proofbook!');
 
-    // log('Seeding Audius holders');
-    // await AudioHolderModel.insertMany(modelAudiusHoldersToFeedDatabase);
+    log('Seeding Audius holders');
+    const audiusHoldersJson = await CsvToJson.getAudiusHoldersJson();    
+    await connection.collection('audioholders').insertMany(audiusHoldersJson.map((user: CsvEntry) => ({ walletAddress: user.HolderAddress, amount: user.Balance, ogunClaimed: false })));  
+    log('Successfully seeded Audius Holders!');
 
-    // log('Successfully seeded Audius Holders!');
-
-    // const whilistCsvJson = await CsvToJson.getWhitelistJson();
-
-    // const modelWhitelistEntryToFeedDatabase = whilistCsvJson.map((user: CsvEntry) => {
-    //   return new WhitelistEntryModel({
-    //       walletAddress: user.HolderAddress,
-    //       emailAddress: 'whitelist@csv.com',
-    //     })
-    // });
-    
-    // log('Seeding Whitelist users');
-    // await WhitelistEntryModel.insertMany(modelWhitelistEntryToFeedDatabase);
-  
-    // log('Successfully seeded Whitelist!');
+    log('Seeding Whitelist users');
+    const whitelistCsvJson = await CsvToJson.getWhitelistJson();
+    await connection.collection('whitelistentries').insertMany(whitelistCsvJson.map((user: CsvEntry) => ({ walletAddress: user.HolderAddress, emailAddress: 'whitelist@csv.com', ogunClaimed: false })));      
+    log('Successfully seeded Whitelist!');
   
   } catch (error) {
     log(error.toString())
@@ -96,22 +74,6 @@ async function seedAll() {
   log('finished')
 
   return response;
-}
-
-async function dropWhitelistCollection() {
-  try {
-    console.log('Dropping audiusholders collection if it exists');
-    const connection = await mongoose.createConnection(DATABASE_URL_PATH, dbOpts);
-    await connection.dropCollection("audioholders");
-    console.log('audiusholders collection dropped');
-    await connection.dropCollection("whitelistentries");
-    console.log('whitelistentries collection dropped');
-    await connection.dropCollection("proofbookitems");
-    console.log('proofbookitems collection dropped');
-  } catch (error) {
-    console.log("Collection doesn't exist or an error has ocurred")
-    return;
-  }
 }
 
   
