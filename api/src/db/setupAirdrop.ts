@@ -1,10 +1,10 @@
 import type { Handler } from 'aws-lambda';
 import path from 'path';
-import fs from "fs";
 import mongoose from 'mongoose';
 
 import { ProofBookItem, ProofBookItemModel } from '../models/ProofBookItem';
-const proofBookPath = path.join(__dirname, "../utils/airdrop/output/proofBook.json");
+import proofBookJson from '../utils/airdrop/output/proofBook.json';
+// const proofBookPath = path.join(__dirname, "../utils/airdrop/output/proofBook.json");
 
 import CsvToJson from "../utils/airdrop/utils/csvToJson";
 import { WhitelistEntryModel } from '../models/WhitelistEntry';
@@ -41,12 +41,11 @@ async function seedAll() {
     log('dropping existing airdrop related collections...')
     await dropWhitelistCollection()
 
-    // await mongoose.connect(DATABASE_URL_PATH, dbOpts);
+    await mongoose.connect(DATABASE_URL_PATH, dbOpts);
 
-    // log('updating DB with proofBook...');
-    // log('Seeding merkle proofs...');
+    log('updating DB with proofBook...');
+    log('Seeding merkle proofs...');
   
-    // const proofBookJson = JSON.parse(fs.readFileSync(proofBookPath, 'utf8'));
     // const root: string = proofBookJson.root;
     // const proofs:ProofBookItem[] = proofBookJson.proofBook;
   
