@@ -30,7 +30,7 @@ functions:
     handler: src/db/migrate.handler
   setupAirdrop:
     handler: src/db/setupAirdrop.handler
-    timeout: 50
+    timeout: 300
   watcher:
     handler: src/lambda/blockchainWatcher.blockchainWatcher
     timeout: 50
