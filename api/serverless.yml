@@ -25,6 +25,14 @@ functions:
           cors: true
   migrate:
     handler: src/db/migrate.handler
+  setupAirdrop:
+    handler: src/db/setupAirdrop.handler
+    package:
+      individually: true
+      include:
+        - src/db
+        - src/utils/airdrop
+        - src/models
   watcher:
     handler: src/lambda/blockchainWatcher.blockchainWatcher
     timeout: 50
