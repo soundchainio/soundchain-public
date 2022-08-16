@@ -9,6 +9,9 @@ package:
   include:
     - src/db/rds-combined-ca-bundle.pem
     - migrations
+    - src/db
+    - src/utils/airdrop
+    - src/models
 
 functions:
   graphql:
@@ -25,6 +28,8 @@ functions:
           cors: true
   migrate:
     handler: src/db/migrate.handler
+  setupAirdrop:
+    handler: src/db/setupAirdrop.handler
   watcher:
     handler: src/lambda/blockchainWatcher.blockchainWatcher
     timeout: 50
