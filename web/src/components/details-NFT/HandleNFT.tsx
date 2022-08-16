@@ -55,7 +55,7 @@ export const HandleNFT = ({
     }
     if (isBuyNow || (isAuction && !auctionIsOver && countBids === 0)) {
       return (
-        <ListedAction 
+        <ListedAction
           href={isBuyNow ? `${router.asPath}/edit/buy-now` : `${router.asPath}/edit/auction`}
           price={price}
           OGUNprice={OGUNprice}
@@ -246,25 +246,28 @@ export const ListedAction = ({
           <Timer date={endingDate} />
         </div>
       )}
-      <div className="flex-1 flex items-center justify-end">
-      {!!auctionId ? (
-        <NextLink href={{pathname:href, query: {isPaymentOGUN: !!isPaymentOGUN}}} replace>
-          <Button variant={variant}>{action}</Button>
-        </NextLink>
-      ):(
-        <>
-          <NextLink href={{pathname:href, query: {isPaymentOGUN:!!isPaymentOGUN}}} replace>
-            <Button variant={variant}>{action}</Button>
-          </NextLink>
-          {secondAction  && (
-            <NextLink href={{pathname:href, query: {isPaymentOGUN:!!isPaymentOGUN}}} replace>
-              <Button variant={variant}>{secondAction}</Button>
+      <div className="flex flex-1 items-center justify-end">
+        {href &&
+          (!!auctionId ? (
+            <NextLink href={{ pathname: href, query: { isPaymentOGUN: !!isPaymentOGUN } }} replace>
+              <Button variant={variant}>{action}</Button>
             </NextLink>
-          )}
-        </>
-      )}
+          ) : (
+            <>
+              <NextLink href={{ pathname: href, query: { isPaymentOGUN: !!isPaymentOGUN } }} replace>
+                <Button variant={variant}>{action}</Button>
+              </NextLink>
+              {secondAction && (
+                <NextLink href={{ pathname: href, query: { isPaymentOGUN: !!isPaymentOGUN } }} replace>
+                  <Button variant={variant}>{secondAction}</Button>
+                </NextLink>
+              )}
+            </>
+          ))}
         {onClick && (
-          <Button variant={variant} onClick={onClick}>{action}</Button>
+          <Button variant={variant} onClick={onClick}>
+            {action}
+          </Button>
         )}
       </div>
     </PlayerAwareBottomBar>
