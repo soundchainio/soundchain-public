@@ -23,7 +23,7 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
-      - run: npm i -g serverless csvtojson @types/csvtojson ethers keccak256 merkletreejs winston
+      - run: npm i -g serverless
       - run: yarn
       - run: serverless deploy -s ${GITHUB_REF#refs/heads/}
         env:
