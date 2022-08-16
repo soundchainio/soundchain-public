@@ -10,7 +10,7 @@ import CsvToJson from "../utils/airdrop/utils/csvToJson";
 import { WhitelistEntryModel } from '../models/WhitelistEntry';
 import { AudioHolderModel } from '../models/AudioHolder';
 
-const { DATABASE_URL_PATH = 'mongodb://localhost:27017', DATABASE_SSL_PATH } = process.env;
+const { DATABASE_URL, DATABASE_SSL_PATH } = process.env;
 
 const dbOpts = {
   useNewUrlParser: true,
@@ -38,7 +38,7 @@ async function seedAll() {
   }
 
   try {
-    const connection = await mongoose.createConnection(DATABASE_URL_PATH, dbOpts);
+    const connection = await mongoose.createConnection(DATABASE_URL, dbOpts);
 
     log('Dropping audiusholders collection if it exists');
     await connection.dropCollection("audioholders");
@@ -75,5 +75,3 @@ async function seedAll() {
 
   return response;
 }
-
-  
