@@ -16,7 +16,7 @@ const dbOpts = {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   ssl: Boolean(DATABASE_SSL_PATH),
-  sslCA: DATABASE_SSL_PATH && path.join(__dirname, 'src', DATABASE_SSL_PATH),
+  sslCA: DATABASE_SSL_PATH && path.join(__dirname, DATABASE_SSL_PATH),
   retryWrites: false,
 };
 
@@ -75,3 +75,5 @@ async function seedAll() {
 
   return response;
 }
+
+  
