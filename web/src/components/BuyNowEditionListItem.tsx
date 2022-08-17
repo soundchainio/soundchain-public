@@ -4,6 +4,7 @@ import { Button } from './Button';
 import { NftOwner } from './details-NFT/NftOwner';
 import { Matic } from './Matic';
 import { Ogun } from './Ogun';
+import OutlinedLink from './Links/OutlinedLink';
 
 interface BuyNowEditionListItemProps {
   trackId: string;
@@ -62,7 +63,6 @@ function Action(props: ActionProps) {
   if (isOwner) {
     return (
       <Button
-        as="a"
         href={`/tracks/${trackId}/edit/buy-now`}
         variant="edit-listing"
         className="h-7"
@@ -74,16 +74,14 @@ function Action(props: ActionProps) {
 
   if (account) {
     return (
-      <Button
-        as="a"
+      <OutlinedLink
         href={`/tracks/${trackId}/buy-now${isPaymentOGUN ? '?isPaymentOGUN=true' : ''}`}
-        variant="outline"
         borderColor="bg-green-gradient"
         className="h-7 w-12"
         bgColor="bg-gray-10 rounded-none"
       >
         BUY
-      </Button>
+      </OutlinedLink>
     )
   }
 

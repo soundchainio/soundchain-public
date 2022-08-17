@@ -1,5 +1,4 @@
 import Slider from '@reach/slider';
-import { Matic } from 'components/Matic';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { Cards } from 'icons/Cards';
 import { HeartFilled } from 'icons/HeartFilled';
@@ -10,8 +9,8 @@ import { useEffect, useState } from 'react';
 import { remainingTime, timeFromSecs } from 'utils/calculateTime';
 import Asset from './Asset';
 import { BadgeTrack } from './BadgeTrack';
-import { CurrencyType, TrackPrice } from '../lib/graphql';
-import { Ogun } from './Ogun';
+import { TrackPrice } from '../lib/graphql';
+import { PriceDisplay } from './PriceDisplay';
 
 interface Song {
   src: string;
@@ -42,7 +41,7 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
     playbackCount,
     favoriteCount,
     saleType,
-    price: { value: price, currency = CurrencyType.Matic },
+    price,
     editionSize = 0,
     listingCount,
   } = props.song;
@@ -69,15 +68,6 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
       <span>{playbackCount || 0}</span>
       <HeartFilled />
       <span>{favoriteCount || 0}</span>
-      {saleType && saleType !== '' && !hideBadgeAndPrice && !!price && (
-        <>
-          {currency === CurrencyType.Matic ? (
-            <Matic className='ml-auto' value={price} variant='currency-inline' />
-          ) : (
-            <Ogun className='ml-auto' value={price} variant='currency-inline' />
-          )}
-        </>
-      )}
     </div>
   );
 
@@ -110,20 +100,23 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
               <a className='w-full truncate flex gap-0.5 flex-col'>
                 <div className='flex w-full truncate items-start text-white font-black text-xs justify-between gap-0.5'>
                   <p className='truncate' title={title || ''}>{title ? title : 'Unknown Title'}</p>
-                  <div
-                    className='flex w-full truncate items-start text-white font-black text-xs justify-between gap-0.5'>
-                    {artist && <p className='text-gray-80 text-xs font-black truncate' title={artist}>{artist}</p>}
-                    <BadgeTrack auction={saleType === 'auction'} label={saleType.toUpperCase()} />
-                    {saleType && saleType !== '' && !hideBadgeAndPrice && editionSize > 0 &&
-                      <p className='flex items-center justify-between gap-2 text-xs font-black text-gray-80 shrink-0'>
-                        <Cards width={14} height={14} />
-                        {listingCount && listingCount > 0 && (
-                          `${listingCount} / `
-                        )}
-                        {editionSize}
-                      </p>
-                    }
+                  <div className='flex flex-col justify-center items-end gap-1 shrink-0'>
+                    {saleType && saleType !== '' && !hideBadgeAndPrice && (
+                      <BadgeTrack auction={saleType === 'auction'} label={saleType.toUpperCase()} />
+                    )}
                   </div>
+                </div>
+                <div className='flex w-full truncate items-start text-white font-black text-xs justify-between gap-0.5'>
+                  {artist && <p className='text-gray-80 text-xs font-black truncate' title={artist}>{artist}</p>}
+                  {saleType && saleType !== '' && !hideBadgeAndPrice && editionSize > 0 &&
+                    <p className="flex items-center justify-between gap-2 text-xs font-black text-gray-80 shrink-0">
+                      <Cards width={14} height={14} />
+                      {listingCount && listingCount > 0 && (
+                        `${listingCount} / `
+                      )}
+                      {editionSize}
+                    </p>
+                  }
                 </div>
               </a>
             </NextLink>
@@ -132,11 +125,7 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
             <RenderTrackCounters />
             {saleType && saleType !== '' && !hideBadgeAndPrice && price && (
               <>
-                {currency === CurrencyType.Matic ? (
-                  <Matic className='ml-auto text-xs' value={price} variant='currency-inline' />
-                ) : (
-                  <Ogun className='ml-auto text-xs' value={price} variant='currency-inline' />
-                )}
+                <PriceDisplay price={price} className='ml-auto text-xs' variant='currency-inline' showBonus/>
               </>
             )}
           </div>

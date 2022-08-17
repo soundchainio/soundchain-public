@@ -1,6 +1,6 @@
-import { ButtonVariantProps } from 'components/Button';
+import { ButtonProps } from 'components/Button';
 
-export const CancelButton = ({ className, type = 'button', children, loading, ...rest }: ButtonVariantProps) => {
+export const CancelButton = ({ className, type = 'button', children, loading, ...rest }: ButtonProps) => {
   return (
     <div className={className}>
       <button
@@ -13,7 +13,7 @@ export const CancelButton = ({ className, type = 'button', children, loading, ..
             <div className='animate-spin rounded-full h-5 w-5 border-t-2 border-white'></div>
           </div>
         ) : (
-          <span className="uppercase">{children}</span>
+          <span className='uppercase'>{children}</span>
         )}
       </button>
     </div>

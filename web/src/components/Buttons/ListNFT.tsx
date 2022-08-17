@@ -1,4 +1,4 @@
-import { ButtonVariantProps } from 'components/Button';
+import { ButtonProps } from 'components/Button';
 
 export const ListNFTButton = ({
                                 className,
@@ -7,7 +7,7 @@ export const ListNFTButton = ({
                                 loading,
                                 disabled,
                                 ...rest
-                              }: ButtonVariantProps) => {
+                              }: ButtonProps) => {
   return (
     <div className={className}>
       <button

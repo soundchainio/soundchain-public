@@ -4,7 +4,7 @@ import { Logo } from 'icons/Logo';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
-import { Button } from './Button';
+import RainbowLink from './Links/RainbowLink';
 
 interface NavItemProps {
   text: string;
@@ -77,14 +77,12 @@ export const Header = () => {
             <NavItem text="Stake" />
             <NavItem text="Tokenomics" link="https://soundchain.gitbook.io/soundchain/token/ogun" />
             <div className="scale-95">
-              <Button
-                as={'a'}
+              <RainbowLink
                 href="/marketplace"
-                variant="rainbow"
-                buttonClassName="font-medium text-sm px-2 uppercase text-center"
+                className="font-medium text-sm px-2 uppercase text-center"
               >
                 CONTINUE TO SOUNDCHAIN
-              </Button>
+              </RainbowLink>
             </div>
 
             <button onClick={() => setDrawerOpen(true)} className="px-2 outline-0 focus:outline-0 active:outline-0">
