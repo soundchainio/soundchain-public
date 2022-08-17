@@ -1,4 +1,4 @@
-name: Run Airdrop Setup on Staging
+name: Run Airdrop Setup on Develop
 
 on: workflow_dispatch
 
