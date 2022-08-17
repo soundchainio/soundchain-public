@@ -1,7 +1,7 @@
 import classNames from 'classnames';
-import { ButtonVariantProps, commonClasses } from 'components/Button';
+import { ButtonProps, commonClasses } from 'components/Button';
 
-export const RainbowRounded = ({ className, type = 'button', icon: Icon, children, ...rest }: ButtonVariantProps) => {
+export const RainbowRounded = ({ className, type = 'button', icon: Icon, children, ...rest }: ButtonProps) => {
   return (
     <div className={'p-0.5 rounded-3xl bg-rainbow-gradient'}>
       <button

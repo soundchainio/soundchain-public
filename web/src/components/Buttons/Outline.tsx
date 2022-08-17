@@ -1,20 +1,19 @@
 import classNames from 'classnames';
-import { ButtonVariantProps, commonClasses } from 'components/Button';
+import { ButtonProps, commonClasses } from 'components/Button';
 
 export const OutlineButton = ({
   className,
   type = 'button',
-  Component,
   icon: Icon,
   children,
   borderColor,
   bgColor,
   loading,
   ...rest
-}: ButtonVariantProps) => {
+}: ButtonProps) => {
   return (
     <div className={classNames(className, 'p-0.5', borderColor)}>
-      <Component
+      <button
         className={classNames(
           commonClasses,
           'h-full bg-opacity-75 text-xs font-semibold text-white',
@@ -31,7 +30,7 @@ export const OutlineButton = ({
         ) : (
           <span>{children}</span>
         )}
-      </Component>
+      </button>
     </div>
   );
 };

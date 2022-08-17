@@ -100,14 +100,11 @@ export class ListingItemService extends Service {
 
     if (!transactionNfts.length) {
       return {
-        value: 0, // TODO: revert this back to 0
+        value: 0,
         currency: CurrencyType.MATIC
       }
     }
     const nft = transactionNfts[0]
-
-    console.log('NFT HERE BRO===================')
-    console.log({nft})
 
     if (nft.OGUNPrice && nft.OGUNPrice > 0) {
       return {
@@ -117,7 +114,7 @@ export class ListingItemService extends Service {
     }
 
     return {
-      value: nft.price || 69, // TODO: revert this back to 0
+      value: nft.price || 0,
       currency: CurrencyType.MATIC
     };
   }
