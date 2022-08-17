@@ -8,10 +8,6 @@ export class TrackWithListingItem extends Track {
   @Field(() => ListingItemWithPrice, { nullable: true })
   @prop()
   listingItem: ListingItemWithPrice;
-
-  //@Field(() => Number)
-  //@prop()
-  //price: number;
 }
 
 export const TrackWithListingItemModel = getModelForClass(TrackWithListingItem);
