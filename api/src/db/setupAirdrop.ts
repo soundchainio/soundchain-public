@@ -34,13 +34,25 @@ async function seedAll() {
   try {
     const connection = await mongoose.createConnection(DATABASE_URL, dbOpts);
 
-    log('Dropping audiusholders collection if it exists');
-    await connection.dropCollection("audioholders");
-    log('audiusholders collection dropped');
-    await connection.dropCollection("whitelistentries");
-    log('whitelistentries collection dropped');
-    await connection.dropCollection("proofbookitems");
-    log('proofbookitems collection dropped');
+    log('Dropping collections if they exists');
+    try {
+      await connection.dropCollection("audioholders");
+      log('audiusholders collection dropped');       
+    } catch (error) {
+      log(error.toString())      
+    }
+    try {
+      await connection.dropCollection("whitelistentries");
+      log('whitelistentries collection dropped');       
+    } catch (error) {
+      log(error.toString())      
+    }
+    try {
+      await connection.dropCollection("proofbookitems");
+      log('proofbookitems collection dropped');       
+    } catch (error) {
+      log(error.toString())      
+    }
 
     log('Seeding merkle proofs...');
   
