@@ -172,16 +172,13 @@ export default function Stake() {
 
   const getLPStakeBalance = async (web3: Web3) => {
     try {
-      const { 0: stakedLP, 1: ogunReward } = await tokenStakeContractLP(web3).methods.getBalanceOf(account).call();
+      const { 0: stakedLP } = await tokenStakeContractLP(web3).methods.getBalanceOf(account).call();
       const formattedLPBalance = web3.utils.fromWei(stakedLP ?? '0');
-      const formattedRewardBalance = web3.utils.fromWei(ogunReward ?? '0');
       setLPStakeBalance(formattedLPBalance);
-      setOgunRewardLPBalance(formattedRewardBalance);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (cause: any) {
       if (cause.toString().includes("address hasn't stake any tokens yet")) {
         setLPStakeBalance('0');
-        setOgunRewardLPBalance('0');
         return;
       }
       console.log(cause);
@@ -191,8 +188,8 @@ export default function Stake() {
   const getStakingLPReward = async (web3: Web3) => {
     try {
       const currentLPReward = await tokenStakeContractLP(web3).methods.getReward(account).call();
-      const formattedLPBalance = web3.utils.fromWei(currentLPReward || '0');
-      setOgunRewardLPBalance(formattedLPBalance);
+      const formattedLPReward = web3.utils.fromWei(currentLPReward || '0');
+      setOgunRewardLPBalance(formattedLPReward);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (cause: any) {
       if (cause.toString().includes("address hasn't staked any tokens yet")) {
