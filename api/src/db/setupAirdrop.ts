@@ -1,14 +1,8 @@
 import type { Handler } from 'aws-lambda';
-import path from 'path';
+import fs from 'fs';
 import mongoose from 'mongoose';
-
-import { ProofBookItem, ProofBookItemModel } from '../models/ProofBookItem';
 import proofBookJson from '../utils/airdrop/output/proofBook.json';
-// const proofBookPath = path.join(__dirname, "../utils/airdrop/output/proofBook.json");
-
 import CsvToJson from "../utils/airdrop/utils/csvToJson";
-import { WhitelistEntryModel } from '../models/WhitelistEntry';
-import { AudioHolderModel } from '../models/AudioHolder';
 
 const { DATABASE_URL, DATABASE_SSL_PATH } = process.env;
 
@@ -16,7 +10,7 @@ const dbOpts = {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   ssl: Boolean(DATABASE_SSL_PATH),
-  sslCA: DATABASE_SSL_PATH && path.join(__dirname, DATABASE_SSL_PATH),
+  sslCA: DATABASE_SSL_PATH && fs.readFileSync(`${__dirname}/../${DATABASE_SSL_PATH}`).toString(),
   retryWrites: false,
 };
 
