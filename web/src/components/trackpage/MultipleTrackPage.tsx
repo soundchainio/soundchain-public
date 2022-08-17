@@ -88,7 +88,7 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
     nextFetchPolicy: 'network-only',
   })
 
-  const buyNowPrice = cheapestListingItem?.cheapestListingItem
+  const buyNowPrice = cheapestListingItem?.cheapestListingItem?.value
 
   useEffect(() => {
     if (track.trackEditionId) {

@@ -10,6 +10,8 @@ import { useEffect, useState } from 'react';
 import { remainingTime, timeFromSecs } from 'utils/calculateTime';
 import Asset from './Asset';
 import { BadgeTrack } from './BadgeTrack';
+import { CurrencyType, TrackPrice } from '../lib/graphql';
+import { Ogun } from './Ogun';
 
 interface Song {
   src: string;
@@ -22,8 +24,8 @@ interface Song {
   favoriteCount: number;
   listingCount?: number;
   saleType: string;
-  price: number;
-  editionSize?: number
+  price: TrackPrice;
+  editionSize?: number;
 }
 
 interface MiniAudioPlayerProps {
@@ -32,7 +34,18 @@ interface MiniAudioPlayerProps {
 }
 
 export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
-  const { art, artist, title, trackId, playbackCount, favoriteCount, saleType, price, editionSize = 0, listingCount } = props.song;
+  const {
+    art,
+    artist,
+    title,
+    trackId,
+    playbackCount,
+    favoriteCount,
+    saleType,
+    price: { value: price, currency = CurrencyType.Matic },
+    editionSize = 0,
+    listingCount,
+  } = props.song;
   const { hideBadgeAndPrice, song } = props;
 
   const { duration, progress, play, isCurrentSong, isCurrentlyPlaying, setProgressStateFromSlider } =
@@ -57,7 +70,13 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
       <HeartFilled />
       <span>{favoriteCount || 0}</span>
       {saleType && saleType !== '' && !hideBadgeAndPrice && !!price && (
-        <Matic className="ml-auto" value={price} variant="currency-inline" />
+        <>
+          {currency === CurrencyType.Matic ? (
+            <Matic className='ml-auto' value={price} variant='currency-inline' />
+          ) : (
+            <Ogun className='ml-auto' value={price} variant='currency-inline' />
+          )}
+        </>
       )}
     </div>
   );
@@ -91,27 +110,34 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
               <a className='w-full truncate flex gap-0.5 flex-col'>
                 <div className='flex w-full truncate items-start text-white font-black text-xs justify-between gap-0.5'>
                   <p className='truncate' title={title || ''}>{title ? title : 'Unknown Title'}</p>
-                  <div className='flex w-full truncate items-start text-white font-black text-xs justify-between gap-0.5'>
+                  <div
+                    className='flex w-full truncate items-start text-white font-black text-xs justify-between gap-0.5'>
                     {artist && <p className='text-gray-80 text-xs font-black truncate' title={artist}>{artist}</p>}
                     <BadgeTrack auction={saleType === 'auction'} label={saleType.toUpperCase()} />
                     {saleType && saleType !== '' && !hideBadgeAndPrice && editionSize > 0 &&
-                      <p className="flex items-center justify-between gap-2 text-xs font-black text-gray-80 shrink-0">
+                      <p className='flex items-center justify-between gap-2 text-xs font-black text-gray-80 shrink-0'>
                         <Cards width={14} height={14} />
                         {listingCount && listingCount > 0 && (
                           `${listingCount} / `
-                          )}
+                        )}
                         {editionSize}
                       </p>
-                      }
+                    }
                   </div>
-                </div>                
+                </div>
               </a>
             </NextLink>
           </div>
           <div className='flex justify-between mt-2'>
             <RenderTrackCounters />
             {saleType && saleType !== '' && !hideBadgeAndPrice && price && (
-              <Matic className='ml-auto text-xs' value={price} variant='currency-inline' />
+              <>
+                {currency === CurrencyType.Matic ? (
+                  <Matic className='ml-auto text-xs' value={price} variant='currency-inline' />
+                ) : (
+                  <Ogun className='ml-auto text-xs' value={price} variant='currency-inline' />
+                )}
+              </>
             )}
           </div>
 
