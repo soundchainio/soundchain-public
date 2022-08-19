@@ -23,7 +23,10 @@ fragment TrackComponentFields on Track {
   listingCount
   playbackCount
   saleType
-  price
+  price {
+    value
+    currency
+  }
   trackEditionId
   editionSize
   nftData {
