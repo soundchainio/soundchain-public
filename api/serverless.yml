@@ -3,7 +3,7 @@ variablesResolutionMode: 20210326
 useDotenv: true
 
 plugins:
-  - serverless-plugin-typescript
+  - serverless-esbuild
 
 package:
   include:
@@ -12,6 +12,9 @@ package:
     - src/db
     - src/utils/airdrop
     - src/models
+  exclude:
+    - src/utils/airdrop/token-holders.csv
+    - src/utils/airdrop/whitelist.csv
 
 functions:
   graphql:
@@ -49,6 +52,14 @@ functions:
       - schedule: rate(30 minutes)
 
 custom:
+  esbuild:
+    minify: true
+    external:
+      - aws-sdk
+      - nock
+      - mock-aws-s3
+      - electron
+      - csvtojson
   db:
     id: !GetAtt DBCluster.ClusterResourceId
     host: !GetAtt DBCluster.Endpoint
