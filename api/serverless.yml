@@ -3,7 +3,7 @@ variablesResolutionMode: 20210326
 useDotenv: true
 
 plugins:
-  - serverless-plugin-typescript
+  - serverless-esbuild
 
 package:
   include:
@@ -49,6 +49,14 @@ functions:
       - schedule: rate(30 minutes)
 
 custom:
+  esbuild:
+    minify: true
+    external:
+      - aws-sdk
+      - nock
+      - mock-aws-s3
+      - electron
+      - csvtojson
   db:
     id: !GetAtt DBCluster.ClusterResourceId
     host: !GetAtt DBCluster.Endpoint

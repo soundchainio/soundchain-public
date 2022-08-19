@@ -49,6 +49,7 @@
     "dataloader": "^2.0.0",
     "dot-object": "^2.1.4",
     "dotenv-flow": "^3.2.0",
+    "esbuild": "^0.15.5",
     "escape-string-regexp": "^4.0.0",
     "express": "^4.17.2",
     "express-jwt": "^6.0.0",
@@ -59,6 +60,7 @@
     "migrate-mongo": "^8.2.3",
     "mongoose": "5.10.18",
     "reflect-metadata": "^0.1.13",
+    "serverless-esbuild": "^1.32.7",
     "type-graphql": "^1.1.1",
     "uuid": "^8.3.2",
     "web3": "^1.6.1"
