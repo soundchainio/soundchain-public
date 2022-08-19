@@ -9,12 +9,13 @@ package:
   include:
     - src/db/rds-combined-ca-bundle.pem
     - migrations
-    - src/db
-    - src/utils/airdrop
-    - src/models
+#    - src/db
+#    - src/utils/airdrop
+#    - src/models
   exclude:
     - src/utils/airdrop/token-holders.csv
     - src/utils/airdrop/whitelist.csv
+    - node_modules/aws-sdk/**
 
 functions:
   graphql:
@@ -31,8 +32,8 @@ functions:
           cors: true
   migrate:
     handler: src/db/migrate.handler
-  setupAirdrop:
-    handler: src/db/setupAirdrop.handler
+#  setupAirdrop:
+#    handler: src/db/setupAirdrop.handler
   watcher:
     handler: src/lambda/blockchainWatcher.blockchainWatcher
     timeout: 50
