@@ -4,6 +4,7 @@ useDotenv: true
 
 plugins:
   - serverless-plugin-typescript
+  - serverless-prune-plugin
 
 package:
   include:
@@ -53,14 +54,9 @@ functions:
       - schedule: rate(30 minutes)
 
 custom:
-  esbuild:
-    minify: true
-    external:
-      - aws-sdk
-      - nock
-      - mock-aws-s3
-      - electron
-      - csvtojson
+  prune:
+    automatic: true
+    number: 20
   db:
     id: !GetAtt DBCluster.ClusterResourceId
     host: !GetAtt DBCluster.Endpoint
