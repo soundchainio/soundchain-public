@@ -7,7 +7,7 @@ export const handler: Handler = async () => {
   // casting because the migrate-mongo type is wrong
   config.set(migrationConfig as unknown as config.Config);
   const { db, client } = await database.connect();
-  const migrated = await up(db);
+  const migrated = await up(db, client);
   if (migrated.length) {
     migrated.forEach(fileName => console.log('Migrated:', fileName));
   } else {
