@@ -12,6 +12,9 @@ package:
     - src/db
     - src/utils/airdrop
     - src/models
+  exclude:
+    - src/utils/airdrop/token-holders.csv
+    - src/utils/airdrop/whitelist.csv
 
 functions:
   graphql:
