@@ -141,17 +141,14 @@ export class TrackResolver {
   async ownedTracks(
     @Ctx() { trackService }: Context,
     @Arg('filter') filter?: FilterOwnedTracksInput,
+    @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<TrackConnection> {
-    return trackService.getTracks({
+    return trackService.getOwnedTracks({
         trackEditionId: filter.trackEditionId,
-        nftData: {
-          owner: filter.owner,
-        }
+        owner: filter.owner,
       },
       undefined,
-      {
-        first: MAX_EDITION_SIZE,
-      }
+      page,
     );
   }
 
