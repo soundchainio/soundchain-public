@@ -90,7 +90,7 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
                   <p className='truncate' title={title || ''}>{title ? title : 'Unknown Title'}</p>
                   <div className='flex flex-col justify-center items-end gap-1 shrink-0'>
                     {saleType && saleType !== '' && !hideBadgeAndPrice && (
-                        <BadgeTrack auction={saleType === 'auction'} label={saleType.toUpperCase()} />
+                        <BadgeTrack label={saleType.toUpperCase()} />
                     )}
                   </div>
                 </div>
