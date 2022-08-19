@@ -3,7 +3,7 @@ variablesResolutionMode: 20210326
 useDotenv: true
 
 plugins:
-  - serverless-esbuild
+  - serverless-plugin-typescript
 
 package:
   include:
