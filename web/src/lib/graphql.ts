@@ -326,6 +326,11 @@ export type CreateWhitelistEntryPayload = {
   whitelistEntry: WhitelistEntry;
 };
 
+export enum CurrencyType {
+  Ogun = 'OGUN',
+  Matic = 'MATIC'
+}
+
 
 export enum DefaultWallet {
   Soundchain = 'Soundchain',
@@ -1197,7 +1202,7 @@ export type Query = {
   followers: FollowConnection;
   following: FollowConnection;
   listingItem: Maybe<ListingItem>;
-  cheapestListingItem: Maybe<Scalars['Float']>;
+  cheapestListingItem: Maybe<TrackPrice>;
   message: Message;
   notifications: NotificationConnection;
   notification: Notification;
@@ -1702,7 +1707,7 @@ export type Track = {
   playbackCount: Scalars['Float'];
   favoriteCount: Scalars['Float'];
   listingCount: Scalars['Float'];
-  price: Scalars['Float'];
+  price: TrackPrice;
   saleType: Scalars['String'];
   isFavorite: Scalars['Boolean'];
   editionSize: Scalars['Float'];
@@ -1728,6 +1733,12 @@ export type TrackEdition = {
   deleted: Maybe<Scalars['Boolean']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
+};
+
+export type TrackPrice = {
+  __typename?: 'TrackPrice';
+  value: Scalars['Float'];
+  currency: CurrencyType;
 };
 
 export type TrackWithListingItem = {
@@ -1757,7 +1768,7 @@ export type TrackWithListingItem = {
   playbackCount: Scalars['Float'];
   favoriteCount: Scalars['Float'];
   listingCount: Scalars['Float'];
-  price: Scalars['Float'];
+  price: TrackPrice;
   saleType: Scalars['String'];
   isFavorite: Scalars['Boolean'];
   editionSize: Scalars['Float'];
@@ -2140,7 +2151,10 @@ export type CheapestListingItemQueryVariables = Exact<{
 
 export type CheapestListingItemQuery = (
   { __typename?: 'Query' }
-  & Pick<Query, 'cheapestListingItem'>
+  & { cheapestListingItem: Maybe<(
+    { __typename?: 'TrackPrice' }
+    & Pick<TrackPrice, 'currency' | 'value'>
+  )> }
 );
 
 export type ClearNotificationsMutationVariables = Exact<{ [key: string]: never; }>;
@@ -2680,8 +2694,11 @@ export type ListingItemQuery = (
 
 export type ListingItemComponentFieldsFragment = (
   { __typename?: 'TrackWithListingItem' }
-  & Pick<TrackWithListingItem, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'utilityInfo' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'playbackCount' | 'listingCount' | 'saleType' | 'price' | 'trackEditionId' | 'editionSize'>
-  & { nftData: Maybe<(
+  & Pick<TrackWithListingItem, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'utilityInfo' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'playbackCount' | 'listingCount' | 'saleType' | 'trackEditionId' | 'editionSize'>
+  & { price: (
+    { __typename?: 'TrackPrice' }
+    & Pick<TrackPrice, 'value' | 'currency'>
+  ), nftData: Maybe<(
     { __typename?: 'NFTDataType' }
     & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner' | 'pendingTime'>
   )>, trackEdition: Maybe<(
@@ -2805,7 +2822,11 @@ export type NewPostNotificationFieldsFragment = (
   & Pick<NewPostNotification, 'id' | 'type' | 'authorName' | 'authorPicture' | 'body' | 'link' | 'previewBody' | 'previewLink' | 'createdAt'>
   & { track: Maybe<(
     { __typename?: 'Track' }
-    & Pick<Track, 'id' | 'title' | 'playbackUrl' | 'artworkUrl' | 'artist' | 'isFavorite' | 'playbackCountFormatted' | 'favoriteCount' | 'saleType' | 'price'>
+    & Pick<Track, 'id' | 'title' | 'playbackUrl' | 'artworkUrl' | 'artist' | 'isFavorite' | 'playbackCountFormatted' | 'favoriteCount' | 'saleType'>
+    & { price: (
+      { __typename?: 'TrackPrice' }
+      & Pick<TrackPrice, 'value' | 'currency'>
+    ) }
   )> }
 );
 
@@ -3393,8 +3414,11 @@ export type TrackQuery = (
 
 export type TrackComponentFieldsFragment = (
   { __typename?: 'Track' }
-  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'utilityInfo' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'listingCount' | 'playbackCount' | 'saleType' | 'price' | 'trackEditionId' | 'editionSize'>
-  & { nftData: Maybe<(
+  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'utilityInfo' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'listingCount' | 'playbackCount' | 'saleType' | 'trackEditionId' | 'editionSize'>
+  & { price: (
+    { __typename?: 'TrackPrice' }
+    & Pick<TrackPrice, 'value' | 'currency'>
+  ), nftData: Maybe<(
     { __typename?: 'NFTDataType' }
     & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner' | 'pendingTime'>
   )>, trackEdition: Maybe<(
@@ -3992,7 +4016,10 @@ export const ListingItemComponentFieldsFragmentDoc = gql`
   playbackCount
   listingCount
   saleType
-  price
+  price {
+    value
+    currency
+  }
   trackEditionId
   editionSize
   nftData {
@@ -4114,7 +4141,10 @@ export const NewPostNotificationFieldsFragmentDoc = gql`
     playbackCountFormatted
     favoriteCount
     saleType
-    price
+    price {
+      value
+      currency
+    }
   }
 }
     `;
@@ -4164,7 +4194,10 @@ export const TrackComponentFieldsFragmentDoc = gql`
   listingCount
   playbackCount
   saleType
-  price
+  price {
+    value
+    currency
+  }
   trackEditionId
   editionSize
   nftData {
@@ -4710,7 +4743,10 @@ export type ChatsLazyQueryHookResult = ReturnType<typeof useChatsLazyQuery>;
 export type ChatsQueryResult = Apollo.QueryResult<ChatsQuery, ChatsQueryVariables>;
 export const CheapestListingItemDocument = gql`
     query CheapestListingItem($trackEditionId: String!) {
-  cheapestListingItem(trackEditionId: $trackEditionId)
+  cheapestListingItem(trackEditionId: $trackEditionId) {
+    currency
+    value
+  }
 }
     `;
 
