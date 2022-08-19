@@ -22,13 +22,12 @@ export const Ogun = ({ value = '', className, variant, showBonus }: Props) => {
       return (
         <div className={classNames('font-bold', className)}>
           <p className="text-white">
-            <OgunIcon className="inline h-5 w-5" />{' '}
+            <OgunIcon id="ogun-token" className="inline h-5 w-5" />{' '}
             {showBonus ? (
-              <p className="text-sm text-gray-60">{`${fixedDecimals(moneyValue - tenPercent)}`}</p>
+              <span className="text-sm text-gray-60">{`${fixedDecimals(moneyValue - tenPercent)} OGUN`}</span>
             ) : (
-              <p className="text-sm text-gray-60">{`${moneyValue}`}</p>
-            )}{' '}
-            <span className="text-xs text-gray-80">OGUN</span>
+              <span className="text-sm text-gray-60">{`${moneyValue} OGUN`}</span>
+            )}
           </p>
         </div>
       );
@@ -41,7 +40,7 @@ export const Ogun = ({ value = '', className, variant, showBonus }: Props) => {
             ) : (
               <p className="text-sm ">{`${currency(moneyValue)}`}</p>
             )}{' '}
-            <OgunIcon className="inline h-5 w-5" />
+            <OgunIcon id="ogun-token" className="inline h-5 w-5" />
           </p>
           <p
             className="buy-now-gradient text-xxs font-bold"
@@ -65,7 +64,7 @@ export const Ogun = ({ value = '', className, variant, showBonus }: Props) => {
     default:
       return (
         <p className={classNames('inline-flex items-center gap-1 font-bold text-white', className)}>
-          <OgunIcon className="inline h-5 w-5" /> {fixedDecimals(value)}{' '}
+          <OgunIcon id="ogun-token" className="inline h-5 w-5" /> {fixedDecimals(value)}{' '}
           <span className="text-xs text-gray-80">OGUN</span>
         </p>
       );
