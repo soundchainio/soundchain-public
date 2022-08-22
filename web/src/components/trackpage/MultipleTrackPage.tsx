@@ -22,6 +22,7 @@ import { PriceTag } from 'icons/PriceTag';
 import {
   BuyNowListingItemsQuery,
   BuyNowListingItemsQueryVariables,
+  CurrencyType,
   OwnedTracksQuery,
   PendingRequest,
   Role,
@@ -31,7 +32,7 @@ import {
   useCheapestListingItemLazyQuery,
   useOwnedTracksQuery,
   useProfileLazyQuery,
-  useTrackLazyQuery
+  useTrackLazyQuery,
 } from 'lib/graphql';
 import { useEffect, useMemo, useState } from 'react';
 import { Ogun } from 'components/Ogun';
@@ -88,7 +89,8 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
     nextFetchPolicy: 'network-only',
   })
 
-  const buyNowPrice = cheapestListingItem?.cheapestListingItem
+  const buyNowPrice = cheapestListingItem?.cheapestListingItem?.value
+  const buyNowCurrency = cheapestListingItem?.cheapestListingItem?.currency
 
   useEffect(() => {
     if (track.trackEditionId) {
@@ -231,20 +233,23 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
           </dd>
         </dl>
         {!!buyNowPrice && (
-          <div className="bg-[#112011]">
-            <div className="flex items-center justify-between gap-3 px-4 py-3">
-              <div className="text-xs font-bold text-gray-80">MATIC BUY NOW PRICE</div>
-              <Matic value={buyNowPrice} variant="currency-inline" className="text-xs" />
-            </div>
-          </div>
-        )}
-        {!!OGUNprice && (
-          <div className="bg-[#112011]">
-            <div className="flex items-center justify-between gap-3 px-4 py-3">
-              <div className="text-xs font-bold text-gray-80">OGUN BUY NOW PRICE</div>
-              <Ogun value={OGUNprice} variant="currency-inline" className="text-xs" showBonus />
-            </div>
-          </div>
+          <>
+            {buyNowCurrency === CurrencyType.Matic ? (
+              <div className="bg-[#112011]">
+                <div className="flex items-center justify-between gap-3 px-4 py-3">
+                  <div className="text-xs font-bold text-gray-80">MATIC BUY NOW PRICE</div>
+                  <Matic value={buyNowPrice} variant="currency-inline" className="text-xs" />
+                </div>
+              </div>
+            ) : (
+              <div className="bg-[#112011]">
+                <div className="flex items-center justify-between gap-3 px-4 py-3">
+                  <div className="text-xs font-bold text-gray-80">OGUN BUY NOW PRICE</div>
+                  <Ogun value={OGUNprice} variant="currency-inline" className="text-xs" showBonus />
+                </div>
+              </div>
+            )}
+          </>
         )}
         <Description description={track.description || ''} className="p-4" />
         <UtilityInfo content={track.utilityInfo || ''} className="px-4 py-2" />

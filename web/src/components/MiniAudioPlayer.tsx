@@ -1,5 +1,4 @@
 import Slider from '@reach/slider';
-import { Matic } from 'components/Matic';
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import { Cards } from 'icons/Cards';
 import { HeartFilled } from 'icons/HeartFilled';
@@ -10,6 +9,8 @@ import { useEffect, useState } from 'react';
 import { remainingTime, timeFromSecs } from 'utils/calculateTime';
 import Asset from './Asset';
 import { BadgeTrack } from './BadgeTrack';
+import { TrackPrice } from '../lib/graphql';
+import { PriceDisplay } from './PriceDisplay';
 
 interface Song {
   src: string;
@@ -22,8 +23,8 @@ interface Song {
   favoriteCount: number;
   listingCount?: number;
   saleType: string;
-  price: number;
-  editionSize?: number
+  price: TrackPrice;
+  editionSize?: number;
 }
 
 interface MiniAudioPlayerProps {
@@ -32,7 +33,18 @@ interface MiniAudioPlayerProps {
 }
 
 export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
-  const { art, artist, title, trackId, playbackCount, favoriteCount, saleType, price, editionSize = 0, listingCount } = props.song;
+  const {
+    art,
+    artist,
+    title,
+    trackId,
+    playbackCount,
+    favoriteCount,
+    saleType,
+    price,
+    editionSize = 0,
+    listingCount,
+  } = props.song;
   const { hideBadgeAndPrice, song } = props;
 
   const { duration, progress, play, isCurrentSong, isCurrentlyPlaying, setProgressStateFromSlider } =
@@ -90,7 +102,7 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
                   <p className='truncate' title={title || ''}>{title ? title : 'Unknown Title'}</p>
                   <div className='flex flex-col justify-center items-end gap-1 shrink-0'>
                     {saleType && saleType !== '' && !hideBadgeAndPrice && (
-                        <BadgeTrack auction={saleType === 'auction'} label={saleType.toUpperCase()} />
+                      <BadgeTrack auction={saleType === 'auction'} label={saleType.toUpperCase()} />
                     )}
                   </div>
                 </div>
@@ -101,10 +113,10 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
                       <Cards width={14} height={14} />
                       {listingCount && listingCount > 0 && (
                         `${listingCount} / `
-                        )}
+                      )}
                       {editionSize}
                     </p>
-                    }
+                  }
                 </div>
               </a>
             </NextLink>
@@ -112,7 +124,9 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
           <div className='flex justify-between mt-2'>
             <RenderTrackCounters />
             {saleType && saleType !== '' && !hideBadgeAndPrice && price && (
-              <Matic className='ml-auto text-xs' value={price} variant='currency-inline' />
+              <>
+                <PriceDisplay price={price} className='ml-auto text-xs' variant='currency-inline' showBonus/>
+              </>
             )}
           </div>
 

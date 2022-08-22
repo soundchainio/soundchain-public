@@ -68,6 +68,7 @@ export const TrackGrid = ({ track }: TrackProps) => {
     setIsPlaying(isCurrentlyPlaying(trackId));
   }, [isCurrentSong, isCurrentlyPlaying, setIsPlaying, trackId]);
 
+  const trackPrice = track.price.value;
   return (
     <div
       className={`${
@@ -106,7 +107,7 @@ export const TrackGrid = ({ track }: TrackProps) => {
           <div className="mx-3 mt-3 flex items-start justify-between">
             <div className='flex flex-col items-start justify-start'>
               <div className="flex items-center">
-                <div className="mr-1.5 font-semibold">{selectedCurrency === 'MATIC' ? track.price : OGUNPrice}</div>
+                <div className="mr-1.5 font-semibold">{selectedCurrency === 'MATIC' ? trackPrice : OGUNPrice}</div>
                 {selectedCurrency === 'MATIC' ? (
                   <Matic height="20" width="23" className="" />
                 ) : (
@@ -114,10 +115,10 @@ export const TrackGrid = ({ track }: TrackProps) => {
                 )}
               </div>
 
-              {track.price > 0 && (
+              {trackPrice > 0 && (
                 <div className="mt-0.5 text-xs font-semibold text-gray-80">
                   {selectedCurrency === 'MATIC' ? (
-                    maticUsd && maticUsd.maticUsd && track.price && `${currency(track.price * parseFloat(maticUsd.maticUsd))}`
+                    maticUsd && maticUsd.maticUsd && trackPrice && `${currency(trackPrice * parseFloat(maticUsd.maticUsd))}`
                   ) : (
                     <></>
                   )}

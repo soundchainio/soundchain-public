@@ -18,6 +18,9 @@ fragment NewPostNotificationFields on NewPostNotification {
     playbackCountFormatted
     favoriteCount
     saleType
-    price
+    price {
+      value
+      currency
+    }
   }
 }

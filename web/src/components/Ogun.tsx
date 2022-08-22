@@ -21,7 +21,7 @@ export const Ogun = ({ value = '', className, variant, showBonus }: Props) => {
     case 'currency':
       return (
         <div className={classNames('font-bold', className)}>
-          <p className="text-white">
+          <div className="text-white">
             <OgunIcon className="inline h-5 w-5" />{' '}
             {showBonus ? (
               <p className="text-sm text-gray-60">{`${fixedDecimals(moneyValue - tenPercent)}`}</p>
@@ -29,20 +29,20 @@ export const Ogun = ({ value = '', className, variant, showBonus }: Props) => {
               <p className="text-sm text-gray-60">{`${moneyValue}`}</p>
             )}{' '}
             <span className="text-xs text-gray-80">OGUN</span>
-          </p>
+          </div>
         </div>
       );
     case 'currency-inline':
       return (
         <div className="align-center flex flex-col">
-          <p className={classNames('inline-flex items-center gap-1 font-bold text-white', className)}>
+          <div className={classNames('inline-flex items-center gap-1 font-bold text-white', className)}>
             {showBonus ? (
               <p className="text-sm ">{`${fixedDecimals(moneyValue - tenPercent)}`}</p>
             ) : (
               <p className="text-sm ">{`${currency(moneyValue)}`}</p>
             )}{' '}
             <OgunIcon className="inline h-5 w-5" />
-          </p>
+          </div>
           <p
             className="buy-now-gradient text-xxs font-bold"
             onMouseEnter={() => setShowTip(true)}
