@@ -7,9 +7,9 @@ import { Play } from 'icons/Play';
 import NextLink from 'next/link';
 import { useEffect, useState } from 'react';
 import { remainingTime, timeFromSecs } from 'utils/calculateTime';
+import { TrackPrice } from '../lib/graphql';
 import Asset from './Asset';
 import { BadgeTrack } from './BadgeTrack';
-import { TrackPrice } from '../lib/graphql';
 import { PriceDisplay } from './PriceDisplay';
 
 interface Song {
@@ -102,7 +102,7 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
                   <p className='truncate' title={title || ''}>{title ? title : 'Unknown Title'}</p>
                   <div className='flex flex-col justify-center items-end gap-1 shrink-0'>
                     {saleType && saleType !== '' && !hideBadgeAndPrice && (
-                      <BadgeTrack auction={saleType === 'auction'} label={saleType.toUpperCase()} />
+                      <BadgeTrack label={saleType.toUpperCase()} />
                     )}
                   </div>
                 </div>

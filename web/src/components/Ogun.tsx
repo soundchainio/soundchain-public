@@ -21,28 +21,27 @@ export const Ogun = ({ value = '', className, variant, showBonus }: Props) => {
     case 'currency':
       return (
         <div className={classNames('font-bold', className)}>
-          <div className="text-white">
-            <OgunIcon className="inline h-5 w-5" />{' '}
+          <p className="text-white">
+            <OgunIcon id="ogun-token" className="inline h-5 w-5" />{' '}
             {showBonus ? (
-              <p className="text-sm text-gray-60">{`${fixedDecimals(moneyValue - tenPercent)}`}</p>
+              <span className="text-sm text-gray-60">{`${fixedDecimals(moneyValue - tenPercent)} OGUN`}</span>
             ) : (
-              <p className="text-sm text-gray-60">{`${moneyValue}`}</p>
-            )}{' '}
-            <span className="text-xs text-gray-80">OGUN</span>
-          </div>
+              <span className="text-sm text-gray-60">{`${moneyValue} OGUN`}</span>
+            )}
+          </p>
         </div>
       );
     case 'currency-inline':
       return (
         <div className="align-center flex flex-col">
-          <div className={classNames('inline-flex items-center gap-1 font-bold text-white', className)}>
+          <p className={classNames('inline-flex items-center gap-1 font-bold text-white', className)}>
             {showBonus ? (
               <p className="text-sm ">{`${fixedDecimals(moneyValue - tenPercent)}`}</p>
             ) : (
               <p className="text-sm ">{`${currency(moneyValue)}`}</p>
             )}{' '}
-            <OgunIcon className="inline h-5 w-5" />
-          </div>
+            <OgunIcon id="ogun-token" className="inline h-5 w-5" />
+          </p>
           <p
             className="buy-now-gradient text-xxs font-bold"
             onMouseEnter={() => setShowTip(true)}
@@ -65,7 +64,7 @@ export const Ogun = ({ value = '', className, variant, showBonus }: Props) => {
     default:
       return (
         <p className={classNames('inline-flex items-center gap-1 font-bold text-white', className)}>
-          <OgunIcon className="inline h-5 w-5" /> {fixedDecimals(value)}{' '}
+          <OgunIcon id="ogun-token" className="inline h-5 w-5" /> {fixedDecimals(value)}{' '}
           <span className="text-xs text-gray-80">OGUN</span>
         </p>
       );

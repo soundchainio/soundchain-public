@@ -9,8 +9,8 @@ import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
 import { TotalPrice } from 'components/TotalPrice';
 import { Track } from 'components/Track';
-import { config } from 'config';
 import { Timer } from 'components/trackpage/SingleTrackPage';
+import { config } from 'config';
 import { Form, Formik } from 'formik';
 import useBlockchainV2 from 'hooks/useBlockchainV2';
 import { useLayoutContext } from 'hooks/useLayoutContext';
@@ -127,8 +127,8 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
   const isOwner = compareWallets(listingPayload.buyNowItem?.buyNowItem?.owner, account);
   const isForSale = (!!listingPayload.buyNowItem?.buyNowItem?.pricePerItem || !!listingPayload.buyNowItem?.buyNowItem?.OGUNPricePerItem) ?? false;
   const salePrice = (isPaymentOGUN ? listingPayload.buyNowItem?.buyNowItem?.OGUNPricePerItem : listingPayload.buyNowItem?.buyNowItem?.pricePerItem) ?? '0';
-  const priceToShow = isPaymentOGUN ? 
-    (listingPayload.buyNowItem.buyNowItem?.OGUNPricePerItemToShow ?? 0) : 
+  const priceToShow = isPaymentOGUN ?
+    (listingPayload.buyNowItem.buyNowItem?.OGUNPricePerItemToShow ?? 0) :
     (listingPayload.buyNowItem.buyNowItem?.pricePerItemToShow ?? 0);
   const startTime = listingPayload.buyNowItem?.buyNowItem?.startingTime ?? 0;
   const hasStarted = startTime <= new Date().getTime() / 1000;
@@ -151,11 +151,12 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
       return;
     }
 
-    const checkBalance = (balance:string) => {
+    const checkBalance = (balance: string) => {
       if (priceToShow >= parseFloat(balance || '0')) {
         toast.warn("Uh-oh, it seems you don't have enough funds for this transaction");
-        return;
+        return false;
       }
+      return true;
     }
 
     const approveOGUNTransferFrom = async (amount?: string) => {
@@ -167,7 +168,9 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
       }
     }
 
-    isPaymentOGUN ? checkBalance(OGUNBalance) : checkBalance(balance ?? '0');
+    if ((isPaymentOGUN && !checkBalance(OGUNBalance)) || !checkBalance(balance ?? '0')) {
+      return
+    }
 
     const onReceipt = async () => {
       await trackUpdate({
@@ -186,7 +189,7 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
 
     setLoading(true);
 
-    isPaymentOGUN && await approveOGUNTransferFrom(listingPayload.buyNowItem?.buyNowItem?.OGUNPricePerItem); 
+    isPaymentOGUN && await approveOGUNTransferFrom(listingPayload.buyNowItem?.buyNowItem?.OGUNPricePerItem);
 
     buyItem(
       listingPayload.buyNowItem?.buyNowItem?.tokenId,
