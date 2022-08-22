@@ -26,6 +26,8 @@ import { SortOrder } from '../types/SortOrder';
 import { SortTrackInput } from '../types/SortTrackInput';
 import { getNow } from '../utils/Time';
 import { ModelService } from './ModelService';
+import { TrackPrice } from '../types/TrackPrice';
+import { CurrencyType } from '../types/CurrencyType';
 
 export interface FavoriteCount {
   count: number;
@@ -490,15 +492,16 @@ export class TrackService extends ModelService<typeof Track> {
     return (endingTime && 'auction') || (pricePerItem && 'buy now') || '';
   }
 
-  async priceToShow(tokenId: number, contractAddress: string): Promise<number> {
+  async priceToShow(tokenId: number, contractAddress: string): Promise<TrackPrice> {
     const listing = await this.context.listingItemService.getActiveListingItem(tokenId, contractAddress);
     if (!listing) {
-      return 0;
+      return { value: 0, currency: CurrencyType.MATIC };
     }
     const { pricePerItemToShow, reservePriceToShow } = listing;
-    return reservePriceToShow
+    const value = reservePriceToShow
       ? (await this.context.auctionItemService.getHighestBid(listing._id)) || reservePriceToShow
       : pricePerItemToShow;
+    return { value, currency: CurrencyType.MATIC };
   }
 
   getListingItems(
