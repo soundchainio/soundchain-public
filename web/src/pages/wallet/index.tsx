@@ -103,7 +103,7 @@ export default function WalletPage() {
 
   useEffect(() => {
     setTopNavBarProps({
-    
+
       title: 'Wallet',
       rightButton: (
         <RefreshButton onClick={refreshData} label="Refresh" className="text-center" refreshing={isRefetchingBalance} />
@@ -211,7 +211,7 @@ export default function WalletPage() {
                 <ConnectedNetwork />
                 {getAccount && <CopyWalletAddress walletAddress={getAccount} />}
 
-                <div className="flex flex-col sm:flex-row w-full justify-center items-center">
+                <div className="flex flex-col sm:flex-row w-full justify-center items-center gap-8 sm:gap-0">
                   <div className='pl-10 pr-10'>
                     <div className="flex flex-col items-center gap-1 relative w-full">
                       <Matic height="30" width="30" />
@@ -231,17 +231,17 @@ export default function WalletPage() {
                         <LoaderAnimation />
                       )}
                     </div>
-                    <div className="flex gap-5 mt-4">
+                    <div className="flex gap-5 mt-4 justify-center">
                       <WalletButton title="Activity" icon={Activity} href={`/wallet/${getAccount}/history`} />
                       <WalletButton title="Receive" icon={ArrowDown} href={`/wallet/${getAccount}/receive`} />
                       <WalletButton title="Buy" icon={CreditCard} href="/wallet/buy" />
                       {isSoundChainSelected && <WalletButton title="Send" icon={ArrowUpRight} href="/wallet/transfer" />}
                     </div>
                 </div>
-                
+
                 <div className='pl-10 pr-10'>
                   <div className="flex flex-col items-center gap-1 relative w-full">
-                    <Logo height="30" width="30" />
+                    <Logo id="ogun-wallet" height="30" width="30" />
                     {getBalance ? (
                       <>
                         <div className="text-amber-500 font-bold text-xs uppercase mt-2">
@@ -253,7 +253,7 @@ export default function WalletPage() {
                       <LoaderAnimation />
                     )}
                   </div>
-                  <div className="flex gap-5 mt-4">
+                  <div className="flex gap-5 mt-4 justify-center">
                     <WalletButton title="Activity" icon={Activity} href={`/wallet/${getAccount}/history`} />
                     <WalletButton title="Receive" icon={ArrowDown} href={`/wallet/${getAccount}/receive`} />
                     <WalletButton title="Buy" icon={CreditCard} href="/wallet/buy" />
