@@ -170,10 +170,8 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
     variables: {
       page: { first: 10 },
       filter: {
-        trackEditionId: track.trackEditionId,
-        nftData: {
-          owner: account,
-        }
+        trackEditionId: track.trackEditionId as string,
+        owner: account as string,
       },
     },
     skip: !track.trackEditionId || !account,
@@ -383,8 +381,8 @@ interface OwnedListProps {
 function OwnedList(props: OwnedListProps) {
   const { data, canList, loading } = props;
 
-  const nodes = data?.tracks.nodes;
-  const pageInfo = data?.tracks.pageInfo;
+  const nodes = data?.ownedTracks.nodes;
+  const pageInfo = data?.ownedTracks.pageInfo;
 
   if (loading || !nodes?.length) {
     return null;
