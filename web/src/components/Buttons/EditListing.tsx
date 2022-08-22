@@ -1,15 +1,15 @@
 import { ButtonProps } from 'components/Button';
 import { LinkAnchor } from '../LinkAnchor';
 
-export const EditListingButton = ({ 
+export const EditListingButton = ({
   className,
   href,
   type = 'button',
   children,
   loading,
-  ...rest 
+  ...rest
 }: ButtonProps) => {
-  const Component = href ? 'button' : LinkAnchor
+  const Component = href ? LinkAnchor : 'button'
   return (
     <div className={className}>
       <Component
