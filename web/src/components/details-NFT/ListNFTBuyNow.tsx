@@ -4,12 +4,15 @@ import MaxGasFee from 'components/MaxGasFee';
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
 import { SoundchainFee } from 'components/SoundchainFee';
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
+import useBlockchainV2 from 'hooks/useBlockchainV2';
+import { useWalletContext } from 'hooks/useWalletContext';
 import { Logo } from 'icons/Logo';
 import { Matic } from 'icons/Matic';
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { date, string, number, object, SchemaOf } from 'yup';
+import Web3 from 'web3';
+import { date, number, object, SchemaOf, string } from 'yup';
 import { CurrencyType } from '../../types/CurrenctyType';
 
 export interface ListNFTBuyNowFormValues {
@@ -46,6 +49,18 @@ export const ListNFTBuyNow = ({ initialValues, maxGasFee, submitLabel, handleSub
   const [selectedCurrency, setSelectedCurrency] = useState<CurrencyType>('OGUN');
 
   const isMatic = selectedCurrency === 'MATIC';
+  const { web3 } = useWalletContext();
+  const { getRewardsRate } = useBlockchainV2();
+  const [rewardRatePercentage, setRewardsRatePercentage] = useState('');
+
+  useEffect(() => {
+    const fetchRewardRate = async () => {
+      const result1e4 = await getRewardsRate(web3 as Web3);
+      const calculatedPercentage = (parseInt(result1e4) / 10000) * 100;
+      setRewardsRatePercentage(calculatedPercentage.toString());
+    };
+    fetchRewardRate();
+  }, [setRewardsRatePercentage, getRewardsRate, web3]);
 
   return (
     <div className="mb-2">
@@ -81,7 +96,7 @@ export const ListNFTBuyNow = ({ initialValues, maxGasFee, submitLabel, handleSub
                       <span className="ml-1 inline-block font-bold text-white">OGUN</span>
                     </div>
                     <div>
-                      <p className="font-bold text-gray-80">+10% Reward</p>
+                      <p className="font-bold text-gray-80">+{rewardRatePercentage}% Reward</p>
                     </div>
                   </div>
                   <div
@@ -143,7 +158,7 @@ export const ListNFTBuyNow = ({ initialValues, maxGasFee, submitLabel, handleSub
                 SoundChain transaction fee will be applied to the listing price.
               </p>
               <div className="bg-gray-15 py-3 px-5">
-                <MaxGasFee maxGasFee={maxGasFee}  />
+                <MaxGasFee maxGasFee={maxGasFee} />
               </div>
               <PlayerAwareBottomBar>
                 <Button
