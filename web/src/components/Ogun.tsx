@@ -1,6 +1,6 @@
 import classNames from 'classnames';
+import { config } from 'config';
 import { Logo as OgunIcon } from 'icons/Logo';
-import { useState } from 'react';
 import { currency, fixedDecimals } from 'utils/format';
 
 interface Props {
@@ -8,14 +8,16 @@ interface Props {
   className?: string;
   variant?: 'currency' | 'currency-inline';
   showBonus?: boolean;
+  rewardRatePercentage?: string;
 }
 
-export const Ogun = ({ value = '', className, variant, showBonus }: Props) => {
+export const Ogun = ({ value = '', className, variant, showBonus, rewardRatePercentage }: Props) => {
   const moneyValue = fixedDecimals(value);
-
-  const tenPercent = Math.min(fixedDecimals(moneyValue * 0.1), 1000);
-
-  const [showTip, setShowTip] = useState(false);
+  if (!rewardRatePercentage) {
+    rewardRatePercentage = '0';
+  }
+  const fullNFTPrice = moneyValue / config.soundchainFee;
+  const ogunBonus = Math.min(fixedDecimals(fullNFTPrice * (parseFloat(rewardRatePercentage) / 100)), 1000);
 
   switch (variant) {
     case 'currency':
@@ -24,7 +26,7 @@ export const Ogun = ({ value = '', className, variant, showBonus }: Props) => {
           <p className="text-white">
             <OgunIcon id="ogun-token" className="inline h-5 w-5" />{' '}
             {showBonus ? (
-              <span className="text-sm text-gray-60">{`${fixedDecimals(moneyValue - tenPercent)} OGUN`}</span>
+              <span className="text-sm text-gray-60">{`${fixedDecimals(moneyValue - ogunBonus)} OGUN`}</span>
             ) : (
               <span className="text-sm text-gray-60">{`${moneyValue} OGUN`}</span>
             )}
@@ -34,30 +36,13 @@ export const Ogun = ({ value = '', className, variant, showBonus }: Props) => {
     case 'currency-inline':
       return (
         <div className="align-center flex flex-col">
-          <p className={classNames('inline-flex items-center gap-1 font-bold text-white', className)}>
+          <div className={classNames('inline-flex items-center gap-1 font-bold text-white', className)}>
             {showBonus ? (
-              <p className="text-sm ">{`${fixedDecimals(moneyValue - tenPercent)}`}</p>
+              <p className="text-sm ">{`${fixedDecimals(moneyValue - ogunBonus)}`}</p>
             ) : (
               <p className="text-sm ">{`${currency(moneyValue)}`}</p>
             )}{' '}
             <OgunIcon id="ogun-token" className="inline h-5 w-5" />
-          </p>
-          <p
-            className="buy-now-gradient text-xxs font-bold"
-            onMouseEnter={() => setShowTip(true)}
-            onMouseLeave={() => setShowTip(false)}
-          >
-            {`+${fixedDecimals(tenPercent)} BONUS`}
-          </p>
-          <div
-            className={
-              'absolute ml-[-40px] mt-10 w-32 rounded-md bg-gray-30 p-2 opacity-70' +
-              (showTip ? ' visible' : ' invisible')
-            }
-          >
-            <p className="m-2 text-xxs text-white opacity-100">
-              When you buy with OGUN, you get a 10% bonus per NFT, up to 1000
-            </p>
           </div>
         </div>
       );
