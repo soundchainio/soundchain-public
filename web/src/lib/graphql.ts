@@ -1441,6 +1441,7 @@ export type QueryTracksArgs = {
 
 
 export type QueryOwnedTracksArgs = {
+  page?: Maybe<PageInput>;
   filter: FilterOwnedTracksInput;
 };
 
@@ -2999,15 +3000,14 @@ export type OwnedTrackIdsQuery = (
 );
 
 export type OwnedTracksQueryVariables = Exact<{
-  filter?: Maybe<FilterTrackInput>;
-  sort?: Maybe<SortTrackInput>;
+  filter: FilterOwnedTracksInput;
   page?: Maybe<PageInput>;
 }>;
 
 
 export type OwnedTracksQuery = (
   { __typename?: 'Query' }
-  & { tracks: (
+  & { ownedTracks: (
     { __typename?: 'TrackConnection' }
     & { nodes: Array<(
       { __typename?: 'Track' }
@@ -6419,8 +6419,8 @@ export type OwnedTrackIdsQueryHookResult = ReturnType<typeof useOwnedTrackIdsQue
 export type OwnedTrackIdsLazyQueryHookResult = ReturnType<typeof useOwnedTrackIdsLazyQuery>;
 export type OwnedTrackIdsQueryResult = Apollo.QueryResult<OwnedTrackIdsQuery, OwnedTrackIdsQueryVariables>;
 export const OwnedTracksDocument = gql`
-    query OwnedTracks($filter: FilterTrackInput, $sort: SortTrackInput, $page: PageInput) {
-  tracks(filter: $filter, sort: $sort, page: $page) {
+    query OwnedTracks($filter: FilterOwnedTracksInput!, $page: PageInput) {
+  ownedTracks(filter: $filter, page: $page) {
     nodes {
       ...TrackComponentFields
       listingItem {
@@ -6450,12 +6450,11 @@ ${ListingItemViewComponentFieldsFragmentDoc}`;
  * const { data, loading, error } = useOwnedTracksQuery({
  *   variables: {
  *      filter: // value for 'filter'
- *      sort: // value for 'sort'
  *      page: // value for 'page'
  *   },
  * });
  */
-export function useOwnedTracksQuery(baseOptions?: Apollo.QueryHookOptions<OwnedTracksQuery, OwnedTracksQueryVariables>) {
+export function useOwnedTracksQuery(baseOptions: Apollo.QueryHookOptions<OwnedTracksQuery, OwnedTracksQueryVariables>) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<OwnedTracksQuery, OwnedTracksQueryVariables>(OwnedTracksDocument, options);
       }
