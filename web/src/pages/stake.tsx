@@ -10,16 +10,17 @@ import { Logo } from 'icons/Logo';
 import { MetaMask } from 'icons/MetaMask';
 import { WalletConnect } from 'icons/WalletConnect';
 import { testnetNetwork } from 'lib/blockchainNetworks';
+import { GetServerSideProps } from 'next';
 import { useEffect, useState } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
 import Web3 from 'web3';
 import { Contract } from 'web3-eth-contract';
 import { AbiItem } from 'web3-utils';
 import { CustomModal } from '../components/CustomModal';
+import LiquidityPoolRewards from '../contract/LiquidityPoolRewards.sol/LiquidityPoolRewards.json';
+import LPToken from '../contract/LPToken.sol/LPToken.json';
 import SoundchainOGUN20 from '../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json';
 import StakingRewards from '../contract/StakingRewards.sol/StakingRewards.json';
-import LPToken from '../contract/LPToken.sol/LPToken.json';
-import LiquidityPoolRewards from '../contract/LiquidityPoolRewards.sol/LiquidityPoolRewards.json';
 
 interface FormValues {
   token: string;
@@ -40,6 +41,18 @@ const tokenContractLP = (web3: Web3) =>
   new web3.eth.Contract(LPToken.abi as AbiItem[], LPAddress) as unknown as Contract;
 const tokenStakeContractLP = (web3: Web3) =>
   new web3.eth.Contract(LiquidityPoolRewards.abi as AbiItem[], LPtokenStakeContractAddress) as unknown as Contract;
+
+// TODO: remove before enabling the ogun token stake
+export const getServerSideProps: GetServerSideProps = ({ res }) => {
+  if (res) {
+    res.statusCode = 404;
+    res.end('Not found');
+  }
+
+  return Promise.resolve({
+    props: {},
+  });
+};
 
 export default function Stake() {
   const {
@@ -72,9 +85,8 @@ export default function Stake() {
     };
     if (walletconnectAccount && wcWeb3) {
       loadAccount('wc');
-    }
-    else if (metamaskAccount && metamaskWeb3) {
-      loadAccount('metamask');      
+    } else if (metamaskAccount && metamaskWeb3) {
+      loadAccount('metamask');
     }
   }, [walletconnectAccount, metamaskAccount, wcWeb3]);
 
@@ -149,7 +161,7 @@ export default function Stake() {
 
   const getStakeBalance = async (web3: Web3) => {
     try {
-      const { 
+      const {
         0: stakedBalance,
         // 1: rewardBalance,
         // 2: newRewardBalance
