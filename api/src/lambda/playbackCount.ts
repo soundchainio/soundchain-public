@@ -52,7 +52,7 @@ export const playbackCount: Handler = async () => {
     const pageSize = 10000;
 
     const inputValues = await fetch(pageSize, currentPage);
-    console.log('inputValues', inputValues)
+
     const totalCount = inputValues.totalCount;
     const totalPages = Math.ceil(totalCount / pageSize);
 
