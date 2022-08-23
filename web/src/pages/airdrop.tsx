@@ -1,26 +1,39 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import WalletConnectProvider from '@walletconnect/web3-provider';
-import SEO from 'components/SEO';
 import { Button } from 'components/Button';
-import { LoaderAnimation } from 'components/LoaderAnimation';
-import { config } from 'config';
 import { WalletButton } from 'components/Buttons/WalletButton';
+import { LoaderAnimation } from 'components/LoaderAnimation';
+import SEO from 'components/SEO';
+import { config } from 'config';
+import { useLayoutContext } from 'hooks/useLayoutContext';
 import { MetaMask } from 'icons/MetaMask';
 import { WalletConnect } from 'icons/WalletConnect';
-import { toast, ToastContainer } from 'react-toastify';
-import { useLayoutContext } from 'hooks/useLayoutContext';
-import { CustomModal } from '../components/CustomModal';
 import {
   useAudioHolderByWalletLazyQuery,
   useProofBookByWalletLazyQuery,
-  useWhitelistEntryByWalletLazyQuery,
-  useUpdateOgunClaimedWhitelistMutation,
   useUpdateOgunClaimedAudioHolderMutation,
+  useUpdateOgunClaimedWhitelistMutation,
+  useWhitelistEntryByWalletLazyQuery,
 } from 'lib/graphql';
+import { GetServerSideProps } from 'next';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { toast, ToastContainer } from 'react-toastify';
 import Web3 from 'web3';
+import { CustomModal } from '../components/CustomModal';
 import useBlockchainV2 from '../hooks/useBlockchainV2';
+
+// TODO: remove before enabling the ogun token stake
+export const getServerSideProps: GetServerSideProps = ({ res }) => {
+  if (res) {
+    res.statusCode = 404;
+    res.end('Not found');
+  }
+
+  return Promise.resolve({
+    props: {},
+  });
+};
 
 export default function AirdropPage() {
   const { setIsLandingLayout } = useLayoutContext();

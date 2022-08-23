@@ -22,12 +22,11 @@ export const NavItem = ({ text, link }: NavItemProps) => {
       <div className="bg-green-blue-gradient w-5/6 pb-1" />
     </div>
   ) : (
-    <a href={link ? link : '/' + text.toLowerCase()}>
+    <a className="hidden md:inline" href={link ? link : '/' + text.toLowerCase()}>
       <div className="flex items-center justify-center p-2">{text}</div>
     </a>
   );
 };
-
 
 function HeaderDrawer({ open, close }: { open: boolean; close: () => void }) {
   return (
@@ -73,14 +72,12 @@ export const Header = () => {
             <span className="hidden font-extrabold text-white md:block">SoundChain</span>
           </div>
           <nav className="flex items-center justify-evenly gap-3 text-white">
-            <NavItem text="Airdrop" />
-            <NavItem text="Stake" />
+            {/* TODO: disabling this for the soft launch */}
+            {/* <NavItem text="Airdrop" />
+            <NavItem text="Stake" /> */}
             <NavItem text="Tokenomics" link="https://soundchain.gitbook.io/soundchain/token/ogun" />
             <div className="scale-95">
-              <RainbowLink
-                href="/marketplace"
-                className="font-medium text-sm px-2 uppercase text-center"
-              >
+              <RainbowLink href="/marketplace" className="px-2 text-center text-sm font-medium uppercase">
                 CONTINUE TO SOUNDCHAIN
               </RainbowLink>
             </div>
