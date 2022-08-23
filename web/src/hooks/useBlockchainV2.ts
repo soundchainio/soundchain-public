@@ -317,7 +317,9 @@ interface CreateAuctionParams extends TokenParams {
 class CreateAuction extends BlockchainFunction<CreateAuctionParams> {
   execute = async (web3: Web3) => {
     const { contractAddresses, from, tokenId, reservePrice, startTime, endTime } = this.params;
-    const totalPrice = Web3.utils.toBN(reservePrice).muln(1 + config.soundchainFee);
+    // the price the user listed will be maintained and from the listed price the marketplace
+    // contract will take a x% fee from it during the buy process
+    const totalPrice = Web3.utils.toBN(reservePrice);
     this.web3 = web3;
 
     const transactionObject = auctionContract(web3).methods.createAuction(
@@ -337,7 +339,9 @@ class CreateAuction extends BlockchainFunction<CreateAuctionParams> {
 class UpdateAuction extends BlockchainFunction<CreateAuctionParams> {
   execute = async (web3: Web3) => {
     const { contractAddresses, from, tokenId, reservePrice, startTime, endTime } = this.params;
-    const totalPrice = Web3.utils.toBN(reservePrice).muln(1 + config.soundchainFee);
+    // the price the user listed will be maintained and from the listed price the marketplace
+    // contract will take a x% fee from it during the buy process
+    const totalPrice = Web3.utils.toBN(reservePrice);
     this.web3 = web3;
 
     const transactionObject = auctionContract(web3).methods.updateAuction(
@@ -378,8 +382,10 @@ interface ListItemParams extends TokenParams {
 class ListItem extends BlockchainFunction<ListItemParams> {
   execute = async (web3: Web3) => {
     const { contractAddresses, from, tokenId, price, priceOGUN, startTime } = this.params;
-    const totalPrice = Web3.utils.toBN(price).muln(1 + config.soundchainFee);
-    const totalOGUNPrice = Web3.utils.toBN(priceOGUN).muln(1 + config.soundchainFee);
+    // the price the user listed will be maintained and from the listed price the marketplace
+    // contract will take a x% fee from it during the buy process
+    const totalPrice = Web3.utils.toBN(price);
+    const totalOGUNPrice = Web3.utils.toBN(priceOGUN);
     this.web3 = web3;
     const acceptsMATIC = +price > 0;
     const acceptsOGUN = +priceOGUN > 0;
@@ -419,8 +425,10 @@ class ListItem extends BlockchainFunction<ListItemParams> {
 class UpdateListing extends BlockchainFunction<ListItemParams> {
   execute = async (web3: Web3) => {
     const { contractAddresses, from, tokenId, price, priceOGUN, startTime } = this.params;
-    const totalPrice = Web3.utils.toBN(price).muln(1 + config.soundchainFee);
-    const totalOGUNPrice = Web3.utils.toBN(priceOGUN).muln(1 + config.soundchainFee);
+    // the price the user listed will be maintained and from the listed price the marketplace
+    // contract will take a x% fee from it during the buy process
+    const totalPrice = Web3.utils.toBN(price);
+    const totalOGUNPrice = Web3.utils.toBN(priceOGUN);
     this.web3 = web3;
     const acceptsMATIC = +price > 0;
     const acceptsOGUN = +priceOGUN > 0;
@@ -603,8 +611,10 @@ interface ListEditionParams extends DefaultParam {
 class ListEdition extends BlockchainFunction<ListEditionParams> {
   execute = async (web3: Web3) => {
     const { contractAddresses, editionNumber, from, price, priceOGUN, startTime } = this.params;
-    const totalPrice = Web3.utils.toBN(price).muln(1 + config.soundchainFee);
-    const totalOGUNPrice = Web3.utils.toBN(priceOGUN).muln(1 + config.soundchainFee);
+    // the price the user listed will be maintained and from the listed price the marketplace
+    // contract will take a x% fee from it during the buy process
+    const totalPrice = Web3.utils.toBN(price);
+    const totalOGUNPrice = Web3.utils.toBN(priceOGUN);
     const acceptsMATIC = +price > 0;
     const acceptsOGUN = +priceOGUN > 0;
 
@@ -638,8 +648,10 @@ export interface ListBatchParams extends DefaultParam {
 class ListBatch extends BlockchainFunction<ListBatchParams> {
   prepare = (web3: Web3) => {
     const { contractAddresses, tokenIds, price, priceOGUN, startTime } = this.params;
-    const totalPrice = Web3.utils.toBN(price).muln(1 + config.soundchainFee);
-    const totalOGUNPrice = Web3.utils.toBN(priceOGUN).muln(1 + config.soundchainFee);
+    // the price the user listed will be maintained and from the listed price the marketplace
+    // contract will take a x% fee from it during the buy process
+    const totalPrice = Web3.utils.toBN(price);
+    const totalOGUNPrice = Web3.utils.toBN(priceOGUN);
     const acceptsMATIC = +price > 0;
     const acceptsOGUN = +priceOGUN > 0;
 
