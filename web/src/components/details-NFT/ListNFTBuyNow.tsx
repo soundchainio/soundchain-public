@@ -151,8 +151,12 @@ export const ListNFTBuyNow = ({ initialValues, maxGasFee, submitLabel, handleSub
                   {<div className="text-sm lowercase text-red-500">{errors.startTime}</div>}
                 </div>
               </div>
-              <div className="bg-gray-15 py-3 px-5">
-                <SoundchainFee isPaymentOGUN={!isMatic} price={values.salePrice ?? 0} />
+              <div className="flex flex-col gap-4 bg-gray-15 px-4 py-6">
+                <SoundchainFee
+                  isPaymentOGUN={!isMatic}
+                  price={values.salePrice ?? 0}
+                  rewardRatePercentage={rewardRatePercentage}
+                />
               </div>
               <p className="mx-6 py-4 text-center text-xs font-bold text-gray-80">
                 SoundChain transaction fee will be applied to the listing price.
