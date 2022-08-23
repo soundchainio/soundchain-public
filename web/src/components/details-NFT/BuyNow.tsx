@@ -9,7 +9,7 @@ import Web3 from 'web3';
 interface BuyNowProps {
   price: number;
   priceOGUN: number;
-  isPaymentOGUN?: boolean;
+  isPaymentOGUN: boolean;
   ownerAddressAccount: string;
   startTime: number;
 }
@@ -43,6 +43,7 @@ export const BuyNow = ({ price, priceOGUN, isPaymentOGUN, ownerAddressAccount, s
           price={isPaymentOGUN ? priceOGUN : price}
           isPaymentOGUN={isPaymentOGUN}
           rewardRatePercentage={rewardRatePercentage}
+          showSoundChainFee={false}
         />
         <MaxGasFee />
       </div>

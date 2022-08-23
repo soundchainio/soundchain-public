@@ -1,4 +1,3 @@
-
 import { Button } from 'components/Button';
 import { BuyNow } from 'components/details-NFT/BuyNow';
 import { InputField } from 'components/InputField';
@@ -27,7 +26,7 @@ import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { compareWallets } from 'utils/Wallet';
 import Web3 from 'web3';
-import { Contract } from "web3-eth-contract";
+import { Contract } from 'web3-eth-contract';
 import { AbiItem } from 'web3-utils';
 import * as yup from 'yup';
 import SoundchainOGUN20 from '../../../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json';
@@ -48,7 +47,6 @@ interface FormValues {
   token: string;
 }
 
-
 const marketplaceAddress = config.web3.contractsV2.marketplaceAddress as string;
 const OGUNAddress = config.OGUNAddress as string;
 const tokenContract = (web3: Web3) =>
@@ -56,7 +54,7 @@ const tokenContract = (web3: Web3) =>
 
 export const getServerSideProps = protectPage<BuyNowTrackProps, TrackPageParams>(async (context, apolloClient) => {
   const trackId = context.params?.id;
-  const isPaymentOGUN = context.query?.isPaymentOGUN;
+  const isPaymentOGUN = (context.query?.isPaymentOGUN as string | undefined) || 'false';
 
   if (!trackId) {
     return { notFound: true };
@@ -91,19 +89,18 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
 
   const nftData = track.nftData;
   const tokenId = nftData?.tokenId ?? -1;
-  const contractAddress = nftData?.contract ?? "";
+  const contractAddress = nftData?.contract ?? '';
 
   const [getBuyNowItem, { data: listingPayload }] = useBuyNowItemLazyQuery({
-    variables: { input: { tokenId, contractAddress} },
+    variables: { input: { tokenId, contractAddress } },
     fetchPolicy: 'network-only',
   });
-
 
   const getOGUNBalance = async (web3: Web3) => {
     const currentBalance = await tokenContract(web3).methods.balanceOf(account).call();
     const formattedBalance = web3.utils.fromWei(currentBalance ?? '0');
     setOGUNBalance(formattedBalance);
-  }
+  };
 
   useEffect(() => {
     setTopNavBarProps(topNavBarProps);
@@ -112,7 +109,6 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
   useEffect(() => {
     getBuyNowItem();
   }, [getBuyNowItem]);
-
 
   useEffect(() => {
     if (account && web3 && isPaymentOGUN) {
@@ -125,11 +121,17 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
   }
 
   const isOwner = compareWallets(listingPayload.buyNowItem?.buyNowItem?.owner, account);
-  const isForSale = (!!listingPayload.buyNowItem?.buyNowItem?.pricePerItem || !!listingPayload.buyNowItem?.buyNowItem?.OGUNPricePerItem) ?? false;
-  const salePrice = (isPaymentOGUN ? listingPayload.buyNowItem?.buyNowItem?.OGUNPricePerItem : listingPayload.buyNowItem?.buyNowItem?.pricePerItem) ?? '0';
-  const priceToShow = isPaymentOGUN ?
-    (listingPayload.buyNowItem.buyNowItem?.OGUNPricePerItemToShow ?? 0) :
-    (listingPayload.buyNowItem.buyNowItem?.pricePerItemToShow ?? 0);
+  const isForSale =
+    (!!listingPayload.buyNowItem?.buyNowItem?.pricePerItem ||
+      !!listingPayload.buyNowItem?.buyNowItem?.OGUNPricePerItem) ??
+    false;
+  const salePrice =
+    (isPaymentOGUN
+      ? listingPayload.buyNowItem?.buyNowItem?.OGUNPricePerItem
+      : listingPayload.buyNowItem?.buyNowItem?.pricePerItem) ?? '0';
+  const priceToShow = isPaymentOGUN
+    ? listingPayload.buyNowItem.buyNowItem?.OGUNPricePerItemToShow ?? 0
+    : listingPayload.buyNowItem.buyNowItem?.pricePerItemToShow ?? 0;
   const startTime = listingPayload.buyNowItem?.buyNowItem?.startingTime ?? 0;
   const hasStarted = startTime <= new Date().getTime() / 1000;
 
@@ -151,25 +153,36 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
       return;
     }
 
-    const checkBalance = (balance: string) => {
+    const checkBalance = (balance: string | undefined) => {
       if (priceToShow >= parseFloat(balance || '0')) {
         toast.warn("Uh-oh, it seems you don't have enough funds for this transaction");
         return false;
       }
       return true;
-    }
+    };
 
     const approveOGUNTransferFrom = async (amount?: string) => {
-      const existingAllowance = await tokenContract(web3).methods.allowance(account, marketplaceAddress).call().catch(console.log);
+      const existingAllowance = await tokenContract(web3)
+        .methods.allowance(account, marketplaceAddress)
+        .call()
+        .catch(console.log);
       if (amount && existingAllowance < parseFloat(amount)) {
-        const fixedAmount = Web3.utils.toWei(((+amount)*(10**-18)).toString())
-        const amountBN = Web3.utils.toBN(fixedAmount)
-        await tokenContract(web3).methods.approve(marketplaceAddress, amountBN).send({ from: account }).catch(console.log);
+        const fixedAmount = Web3.utils.toWei((+amount * 10 ** -18).toString());
+        const amountBN = Web3.utils.toBN(fixedAmount);
+        await tokenContract(web3)
+          .methods.approve(marketplaceAddress, amountBN)
+          .send({ from: account })
+          .catch(console.log);
       }
-    }
+    };
 
-    if ((isPaymentOGUN && !checkBalance(OGUNBalance)) || !checkBalance(balance ?? '0')) {
-      return
+    // If the payment is in OGUN and the user doesn't have enough balance we block the transaction
+    if (isPaymentOGUN && !checkBalance(OGUNBalance)) {
+      return;
+    }
+    // If the payment is in MATIC and the user doesn't have enough balance we block the transaction
+    if (!isPaymentOGUN && !checkBalance(balance)) {
+      return;
     }
 
     const onReceipt = async () => {
@@ -189,7 +202,7 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
 
     setLoading(true);
 
-    isPaymentOGUN && await approveOGUNTransferFrom(listingPayload.buyNowItem?.buyNowItem?.OGUNPricePerItem);
+    isPaymentOGUN && (await approveOGUNTransferFrom(listingPayload.buyNowItem?.buyNowItem?.OGUNPricePerItem));
 
     buyItem(
       listingPayload.buyNowItem?.buyNowItem?.tokenId,
@@ -197,7 +210,7 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
       listingPayload.buyNowItem?.buyNowItem?.owner,
       isPaymentOGUN,
       salePrice,
-      { nft: track.nftData?.contract, marketplace: listingPayload.buyNowItem.buyNowItem.contract }
+      { nft: track.nftData?.contract, marketplace: listingPayload.buyNowItem.buyNowItem.contract },
     )
       .onReceipt(onReceipt)
       .onError(cause => toast.error(cause.message))
@@ -225,7 +238,7 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
         canonicalUrl={`/tracks/${track.id}/buy-now/`}
         image={track.artworkUrl}
       />
-      <div className="min-h-full flex flex-col">
+      <div className="flex min-h-full flex-col">
         <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
           <Form autoComplete="off" className="flex flex-1 flex-col justify-between">
             <div>
@@ -233,19 +246,15 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
                 <Track track={track} />
               </div>
               <div className="bg-[#112011]">
-                <div className="flex justify-between items-center px-4 py-3">
+                <div className="flex items-center justify-between px-4 py-3">
                   <div className="text-sm font-bold text-white">BUY NOW PRICE</div>
-                  {isPaymentOGUN ? (
-                    <Ogun value={priceToShow} />
-                  ):(
-                    <Matic value={priceToShow} />
-                  )}
+                  {isPaymentOGUN ? <Ogun value={priceToShow} /> : <Matic value={priceToShow} />}
                 </div>
               </div>
               {!hasStarted && (
-                <div className="flex justify-between items-center px-4 py-3">
-                  <div className="text-sm font-bold text-white flex-shrink-0">SALE STARTS</div>
-                  <div className="text-md flex items-center text-right font-bold gap-1">
+                <div className="flex items-center justify-between px-4 py-3">
+                  <div className="flex-shrink-0 text-sm font-bold text-white">SALE STARTS</div>
+                  <div className="text-md flex items-center gap-1 text-right font-bold">
                     <Timer date={new Date(startTime * 1000)} reloadOnEnd />
                   </div>
                 </div>
@@ -253,9 +262,9 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
             </div>
 
             {me?.otpSecret && (
-              <div className="flex px-4 py-3 items-center uppercase bg-gray-20">
-                <p className="text-gray-80 w-full font-bold text-xs">
-                  <Locker className="h-4 w-4 inline mr-2" fill="#303030" /> Two-factor validation
+              <div className="flex items-center bg-gray-20 px-4 py-3 uppercase">
+                <p className="w-full text-xs font-bold text-gray-80">
+                  <Locker className="mr-2 inline h-4 w-4" fill="#303030" /> Two-factor validation
                 </p>
                 <div className="w-1/2">
                   <InputField name="token" type="text" maxLength={6} pattern="[0-9]*" inputMode="numeric" />
@@ -263,7 +272,13 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
               </div>
             )}
             {priceToShow && account && (
-              <BuyNow price={priceToShow} priceOGUN={priceToShow} isPaymentOGUN={isPaymentOGUN} ownerAddressAccount={account} startTime={startTime} />
+              <BuyNow
+                price={priceToShow}
+                priceOGUN={priceToShow}
+                isPaymentOGUN={isPaymentOGUN}
+                ownerAddressAccount={account}
+                startTime={startTime}
+              />
             )}
             {hasStarted && (
               <PlayerAwareBottomBar>
