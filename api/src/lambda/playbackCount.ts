@@ -21,14 +21,14 @@ export const playbackCount: Handler = async () => {
     try {
       url = `/metrics/unique_viewers/breakdown?group_by=video_id&limit=${pageSize}&page=${currentPage}&timeframe[]=${initialTimestampInSeconds}&timeframe[]=${nowTimestampInSeconds}&order_by=field&order_direction=asc`;
       const { data } = await muxDataApi.get<MuxServerData>(url);
-
+      console.log('data', data)
       const values = data.data.map(video => ({ trackId: video.field, amount: video.views }));
       return { totalCount: data.total_row_count, values };
     } catch (error) {
       console.error(error);
       context.logErrorService.createLogError(
         'Lambda function: playbackCount - Error fetching Mux Data',
-        `URL: ${url} Error: ${error}`,
+      `URL: ${url} Error: ${error}`,
       );
     }
   };
@@ -52,6 +52,7 @@ export const playbackCount: Handler = async () => {
     const pageSize = 10000;
 
     const inputValues = await fetch(pageSize, currentPage);
+    console.log('inputValues', inputValues)
     const totalCount = inputValues.totalCount;
     const totalPages = Math.ceil(totalCount / pageSize);
 

@@ -41,7 +41,7 @@ type bulkType = {
       _id: string;
     };
     update: {
-      $inc: {
+      $set: {
         playbackCount: number;
       };
     };
@@ -339,7 +339,7 @@ export class TrackService extends ModelService<typeof Track> {
       const element = values[index];
       if (mongoose.Types.ObjectId.isValid(element.trackId)) {
         bulkOps.push({
-          updateOne: { filter: { _id: element.trackId }, update: { $inc: { playbackCount: element.amount } } },
+          updateOne: { filter: { _id: element.trackId }, update: { $set: { playbackCount: element.amount } } },
         });
       }
     }
@@ -454,7 +454,9 @@ export class TrackService extends ModelService<typeof Track> {
     const trackQuery = await this.model.aggregate([
       {
         $match: {
-          $or: ors,
+          $expr: {
+            $or: ors,
+          }
         },
       },
       {
@@ -477,6 +479,7 @@ export class TrackService extends ModelService<typeof Track> {
       },
     ]);
 
+    console.log('trackQuery', trackQuery)
     return trackQuery.length ? trackQuery[0].sum : 0;
   }
 
