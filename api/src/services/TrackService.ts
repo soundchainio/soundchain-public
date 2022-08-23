@@ -483,7 +483,9 @@ export class TrackService extends ModelService<typeof Track> {
     const trackQuery = await this.model.aggregate([
       {
         $match: {
-          $or: ors,
+          $expr: {
+            $or: ors,
+          }
         },
       },
       {
@@ -503,6 +505,7 @@ export class TrackService extends ModelService<typeof Track> {
       },
     ]);
 
+    console.log('trackQuery', trackQuery)
     return trackQuery.length ? trackQuery[0].sum : 0;
   }
 
