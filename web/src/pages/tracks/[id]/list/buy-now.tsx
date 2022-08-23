@@ -64,7 +64,7 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
 
   const nftData = track.nftData;
   const tokenId = track.nftData?.tokenId ?? -1;
-  const contractAddress = track.nftData?.contract ?? "" ;
+  const contractAddress = track.nftData?.contract ?? '';
   const canList = (me?.profile.verified && nftData?.minter === account) || nftData?.minter != account;
 
   const [getBuyNowItem, { data: buyNowItem }] = useBuyNowItemLazyQuery({
@@ -141,10 +141,7 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
       .execute(web3);
   };
 
-  const handleList = (
-    values: ListNFTBuyNowFormValues,
-    helper: FormikHelpers<ListNFTBuyNowFormValues>,
-  ) => {
+  const handleList = (values: ListNFTBuyNowFormValues, helper: FormikHelpers<ListNFTBuyNowFormValues>) => {
     if (nftData?.tokenId === null || nftData?.tokenId === undefined || !account || !web3) {
       return;
     }
@@ -170,10 +167,7 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
       <div className="m-4">
         <Track track={track} />
       </div>
-      <ListNFTBuyNow 
-        handleSubmit={handleList} 
-        submitLabel={isApproved ? 'LIST NFT' : 'APPROVE MARKETPLACE'}
-      />
+      <ListNFTBuyNow handleSubmit={handleList} submitLabel={isApproved ? 'LIST NFT' : 'APPROVE MARKETPLACE'} />
     </>
   );
 }
