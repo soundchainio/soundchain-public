@@ -454,9 +454,7 @@ export class TrackService extends ModelService<typeof Track> {
     const trackQuery = await this.model.aggregate([
       {
         $match: {
-          $expr: {
-            $or: ors,
-          }
+          $or: ors,
         },
       },
       {
