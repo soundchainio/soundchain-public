@@ -24,6 +24,7 @@ import StakingRewards from '../contract/StakingRewards.sol/StakingRewards.json';
 import { useMagicContext } from 'hooks/useMagicContext';
 import useBlockchain from 'hooks/useBlockchain';
 import { SoundchainGoldLogo } from 'icons/SoundchainGoldLogo';
+import { useRouter } from 'next/router';
 
 interface FormValues {
   token: string;
@@ -58,6 +59,8 @@ export const getServerSideProps: GetServerSideProps = ({ res }) => {
 };
 
 export default function Stake() {
+  const router = useRouter();
+
   const {
     connect: wcConnect,
     disconnect: wcDisconnect,
@@ -163,6 +166,7 @@ export default function Stake() {
   };
 
   const connectSoundchain = () => {
+     if (!magicLinkWeb3 || !magicLinkAccount) return router.push(`/login?callbackUrl=${parent.location.href}`);
     setShowModal(false);
     setAccount(magicLinkAccount);
     setWeb3(magicLinkWeb3);
