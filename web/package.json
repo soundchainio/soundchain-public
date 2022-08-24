@@ -6,22 +6,18 @@
     "dev": "next dev",
     "dev:quick": "next dev",
     "codegen": "graphql-codegen --config codegen.yml",
-    "lint": "next lint",
-    "lint-staged": "lint-staged",
+    "lint-web": "next lint",
     "build": "next build",
     "postbuild": "next-sitemap",
     "start": "next start",
-    "test": "jest"
+    "test": "jest",
+    "prepare": "cd .. && husky install web/.husky"
   },
   "lint-staged": {
-    "*.{ts,tsx,json,md,css}": "prettier --write"
-  },
-  "prettier": {
-    "arrowParens": "avoid",
-    "printWidth": 120,
-    "singleQuote": true,
-    "trailingComma": "all",
-    "semi": true
+    "*.{js,ts,tsx, jsx}": [
+      "eslint --quiet --fix"
+    ],
+    "*.{ts,tsx, js, jsx}": "prettier --write"
   },
   "dependencies": {
     "@apollo/client": "^3.4.7",
