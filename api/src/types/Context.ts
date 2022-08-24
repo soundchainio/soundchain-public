@@ -1,3 +1,5 @@
+import * as Sentry from '@sentry/node';
+import { ListingCountByTrackEdition } from '../loaders/ListingCountByTrackEdition';
 import { User } from '../models/User';
 import { AuctionItemService } from '../services/AuctionItemService';
 import { AudioHolderService } from '../services/AudioHolderService';
@@ -22,6 +24,7 @@ import { PolygonscanService } from '../services/PolygonService';
 import { PostService } from '../services/PostService';
 import { ProfileService } from '../services/ProfileService';
 import { ProfileVerificationRequestService } from '../services/ProfileVerificationRequestService';
+import { ProofBookService } from '../services/ProofBookService';
 import { ReactionService } from '../services/ReactionService';
 import { SubscriptionService } from '../services/SubscriptionService';
 import { TrackEditionService } from '../services/TrackEditionService';
@@ -29,7 +32,6 @@ import { TrackService } from '../services/TrackService';
 import { UploadService } from '../services/UploadService';
 import { UserService } from '../services/UserService';
 import { WhitelistEntryService } from '../services/WhitelistEntryService';
-import { ListingCountByTrackEdition } from '../loaders/ListingCountByTrackEdition';
 
 export class Context {
   auctionItemService = new AuctionItemService(this);
@@ -51,6 +53,7 @@ export class Context {
   polygonscanService = new PolygonscanService(this);
   postService = new PostService(this);
   profileService = new ProfileService(this);
+  proofBookService = new ProofBookService(this);
   profileVerificationRequestService = new ProfileVerificationRequestService(this);
   reactionService = new ReactionService(this);
   subscriptionService = new SubscriptionService(this);
@@ -63,7 +66,11 @@ export class Context {
   whitelistEntryService = new WhitelistEntryService(this);
   audioHolderService = new AudioHolderService(this);
   trackEditionService = new TrackEditionService(this);
-  listingCountByTrackEdition = ListingCountByTrackEdition()
+  listingCountByTrackEdition = ListingCountByTrackEdition();
+  sentryTransaction = Sentry.startTransaction({
+    op: 'gql',
+    name: 'GraphQLTransaction', // this will be the default name, unless the gql query has a name
+  });
 
   constructor(jwtUser?: JwtUser) {
     this.user = jwtUser && this.userService.getUser(jwtUser.sub);

@@ -11,6 +11,7 @@ interface WalletContextData {
   web3?: Web3;
   account?: string;
   balance?: string;
+  OGUNBalance?: string;
   refetchBalance?: () => void;
 }
 
@@ -27,6 +28,7 @@ const WalletProvider = ({ children }: WalletProviderProps) => {
   const {
     account: magicAccount,
     balance: magicBalance,
+    ogunBalance: magicOgunBalance,
     web3: magicWeb3,
     refetchBalance: magicRefetchBalance,
   } = useMagicContext();
@@ -37,6 +39,7 @@ const WalletProvider = ({ children }: WalletProviderProps) => {
     context = {
       account: magicAccount,
       balance: magicBalance,
+      OGUNBalance: magicOgunBalance,
       web3: magicWeb3,
       refetchBalance: magicRefetchBalance,
     };

@@ -45,7 +45,7 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 
   if (error) {
     return { notFound: true };
-  }
+  } 
 
   return cacheFor(AuctionPage, { track: data.track }, context, apolloClient);
 });

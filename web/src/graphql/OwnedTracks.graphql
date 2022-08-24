@@ -1,5 +1,5 @@
-query OwnedTracks($filter: FilterTrackInput, $sort: SortTrackInput, $page: PageInput) {
-  tracks(filter: $filter, sort: $sort, page: $page) {
+query OwnedTracks($filter: FilterOwnedTracksInput!, $page: PageInput) {
+  ownedTracks(filter: $filter, page: $page) {
     nodes {
       ...TrackComponentFields
       listingItem {

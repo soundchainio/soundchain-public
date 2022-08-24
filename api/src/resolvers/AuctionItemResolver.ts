@@ -13,7 +13,7 @@ export class AuctionItemResolver {
   async createAuctionItem(
     @Ctx() { auctionItemService }: Context,
     @Arg('input')
-    { owner, nft, tokenId, startingTime, endingTime, reservePrice, reservePriceToShow }: CreateAuctionItemData,
+    { owner, nft, tokenId, startingTime, endingTime, reservePrice, reservePriceToShow, isPaymentOGUN}: CreateAuctionItemData,
   ): Promise<CreateAuctionItemData> {
     const auctionItem = await auctionItemService.createAuctionItem({
       owner,

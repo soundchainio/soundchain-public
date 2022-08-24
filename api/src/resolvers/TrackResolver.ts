@@ -29,6 +29,7 @@ import { UpdateEditionOwnedTracksInput } from '../types/UpdateEditionOwnedTracks
 import { UpdateEditionOwnedTracksPayload } from '../types/UpdateEditionOwnedTracksPayload';
 import { UpdateTrackInput } from '../types/UpdateTrackInput';
 import { UpdateTrackPayload } from '../types/UpdateTrackPayload';
+import { TrackPrice } from '../types/TrackPrice';
 
 @Resolver(Track)
 export class TrackResolver {
@@ -65,8 +66,8 @@ export class TrackResolver {
     return listingCountByTrackEdition.load(trackEditionId);
   }
 
-  @FieldResolver(() => Number)
-  price(@Ctx() { trackService, listingItemService }: Context, @Root() { trackEditionId, nftData }: Track): Promise<number> {
+  @FieldResolver(() => TrackPrice)
+  price(@Ctx() { trackService, listingItemService }: Context, @Root() { trackEditionId, nftData }: Track): Promise<TrackPrice> {
     if(trackEditionId) {
       return listingItemService.getCheapestListingItem(trackEditionId)
     }
@@ -141,17 +142,14 @@ export class TrackResolver {
   async ownedTracks(
     @Ctx() { trackService }: Context,
     @Arg('filter') filter?: FilterOwnedTracksInput,
+    @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<TrackConnection> {
-    return trackService.getTracks({
+    return trackService.getOwnedTracks({
         trackEditionId: filter.trackEditionId,
-        nftData: {
-          owner: filter.owner,
-        }
+        owner: filter.owner,
       },
       undefined,
-      {
-        first: MAX_EDITION_SIZE,
-      }
+      page,
     );
   }
 

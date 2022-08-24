@@ -16,3 +16,5 @@ yarn-error.log*
 web/public/robots.txt
 web/public/sitemap.xml
 web/public/sitemap-0.xml
+
+generator.log

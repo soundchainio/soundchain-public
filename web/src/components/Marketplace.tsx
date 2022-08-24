@@ -1,7 +1,7 @@
 /* eslint-disable react/display-name */
 import { useModalState } from 'contexts/providers/modal';
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting';
-import { useListingItemsQuery } from 'lib/graphql';
+import { Track, useListingItemsQuery } from 'lib/graphql';
 import React, { useEffect, useState } from 'react';
 import { GenreLabel } from 'utils/Genres';
 import { SaleTypeLabel } from 'utils/SaleTypeLabel';
@@ -77,7 +77,7 @@ export const Marketplace = () => {
           loading={loading}
           hasNextPage={data?.listingItems.pageInfo.hasNextPage}
           loadMore={loadMore}
-          tracks={data?.listingItems.nodes}
+          tracks={data?.listingItems.nodes as Track[]}
           refetch={refetch}
         />
       ) : (
@@ -85,7 +85,7 @@ export const Marketplace = () => {
           loading={loading}
           hasNextPage={data?.listingItems.pageInfo.hasNextPage}
           loadMore={loadMore}
-          tracks={data?.listingItems.nodes}
+          tracks={data?.listingItems.nodes as Track[]}
           refetch={refetch}
         />
       )}

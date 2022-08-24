@@ -145,6 +145,6 @@ export const config = {
     secretKey: MAGIC_PRIVATE_KEY,
   },
   env: {
-    isProduction: process.env.NODE_ENV === 'production'
-  }
+    isProduction: process.env.NODE_ENV === 'production',
+  },
 };

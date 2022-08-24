@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { ButtonVariantProps, commonClasses } from 'components/Button';
+import { ButtonProps, commonClasses } from 'components/Button';
 
 export const OrangeButton = ({
                                className,
@@ -8,7 +8,7 @@ export const OrangeButton = ({
                                children,
                                loading,
                                ...rest
-                             }: ButtonVariantProps) => {
+                             }: ButtonProps) => {
   return (
     <div className={classNames(className, 'p-0.5 bg-yellow-600 border-yellow-600')}>
       <button
