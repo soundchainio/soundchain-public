@@ -252,7 +252,7 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
               <div className="bg-[#112011]">
                 <div className="flex items-center justify-between gap-3 px-4 py-3">
                   <div className="text-xs font-bold text-gray-80">OGUN BUY NOW PRICE</div>
-                  <Ogun value={OGUNprice} variant="currency-inline" className="text-xs" showBonus />
+                  <Ogun value={OGUNprice} variant="currency" className="text-xs" showBonus />
                 </div>
               </div>
             )}
