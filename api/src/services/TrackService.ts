@@ -14,6 +14,7 @@ import { TrackEditionModel } from '../models/TrackEdition';
 import { TrackWithListingItem } from '../models/TrackWithListingItem';
 import { Context } from '../types/Context';
 import { MAX_EDITION_SIZE } from '../types/CreateTrackEditionInput';
+import { CurrencyType } from '../types/CurrencyType';
 import { FilterBuyNowItemInput } from '../types/FilterBuyNowItemInput';
 import { FilterOwnedTracksInput } from '../types/FilterOwnedTracksInput';
 import { FilterTrackInput } from '../types/FilterTrackInput';
@@ -24,10 +25,9 @@ import { PendingRequest } from '../types/PendingRequest';
 import { SortListingItemInput } from '../types/SortListingItemInput';
 import { SortOrder } from '../types/SortOrder';
 import { SortTrackInput } from '../types/SortTrackInput';
+import { TrackPrice } from '../types/TrackPrice';
 import { getNow } from '../utils/Time';
 import { ModelService } from './ModelService';
-import { TrackPrice } from '../types/TrackPrice';
-import { CurrencyType } from '../types/CurrencyType';
 
 export interface FavoriteCount {
   count: number;
@@ -65,9 +65,13 @@ export class TrackService extends ModelService<typeof Track> {
     return this.paginate({ filter: { ...defaultFilter, ...dotNotationFilter, ...owner }, sort, page });
   }
 
-  getOwnedTracks(filter?: FilterOwnedTracksInput, sort?: SortTrackInput, page?: PageInput): Promise<PaginateResult<Track>> {
+  getOwnedTracks(
+    filter?: FilterOwnedTracksInput,
+    sort?: SortTrackInput,
+    page?: PageInput,
+  ): Promise<PaginateResult<Track>> {
     const defaultFilter = { title: { $exists: true }, deleted: false };
-    const {owner: filterOwner, ...allFilters} = filter
+    const { owner: filterOwner, ...allFilters } = filter;
     const dotNotationFilter = allFilters && dot.dot(allFilters);
     const owner = filterOwner && {
       'nftData.owner': { $regex: `^${filterOwner}$`, $options: 'i' },
@@ -80,8 +84,8 @@ export class TrackService extends ModelService<typeof Track> {
     const aggregation = [
       {
         $match: {
-          'trackEditionId': new ObjectId(filter.trackEditionId),
-          'nftData.owner': filter.owner
+          trackEditionId: new ObjectId(filter.trackEditionId),
+          'nftData.owner': filter.owner,
         },
       },
       {
@@ -89,25 +93,25 @@ export class TrackService extends ModelService<typeof Track> {
           from: 'buynowitems',
           localField: 'nftData.tokenId',
           foreignField: 'tokenId',
-          as: 'listingItem'
-        }
+          as: 'listingItem',
+        },
       },
       {
         $match: {
           listingItem: {
-            $eq: [] as unknown
-          }
-        }
-      }
-    ]
+            $eq: [] as unknown,
+          },
+        },
+      },
+    ];
 
     return this.paginatePipelineAggregated({
       aggregation,
       sort: undefined,
       page: {
-        first: MAX_EDITION_SIZE
-      }
-    })
+        first: MAX_EDITION_SIZE,
+      },
+    });
   }
 
   getGroupedTracks(filter?: FilterTrackInput, sort?: SortTrackInput, page?: PageInput): Promise<PaginateResult<Track>> {
@@ -131,14 +135,11 @@ export class TrackService extends ModelService<typeof Track> {
         {
           $group: {
             _id: {
-              $ifNull: [
-                '$trackEditionId',
-                '$_id',
-              ]
+              $ifNull: ['$trackEditionId', '$_id'],
             },
             sumPlaybackCount: { $sum: '$playbackCount' },
             sumFavoriteCount: { $sum: '$favoriteCount' },
-            first: { $first: '$$ROOT' }
+            first: { $first: '$$ROOT' },
           },
         },
         {
@@ -148,16 +149,16 @@ export class TrackService extends ModelService<typeof Track> {
                 '$first',
                 {
                   playbackCount: '$sumPlaybackCount',
-                  favoriteCount: '$sumFavoriteCount'
+                  favoriteCount: '$sumFavoriteCount',
                 },
-              ]
-            }
-          }
-        }
+              ],
+            },
+          },
+        },
       ],
       sort,
       page,
-    })
+    });
   }
 
   getTrack(id: string): Promise<Track> {
@@ -237,10 +238,16 @@ export class TrackService extends ModelService<typeof Track> {
     return this.updateNftData(track, newNftData);
   }
 
-  async updateEditionOwnedTracks(trackIds: string[], trackEditionId: string, owner: string, changes: RecursivePartial<Track>): Promise<Track[]> {
+  async updateEditionOwnedTracks(
+    trackIds: string[],
+    trackEditionId: string,
+    owner: string,
+    changes: RecursivePartial<Track>,
+  ): Promise<Track[]> {
     const { nftData: newNftData, ...data } = changes;
 
-    await TrackEditionModel.updateOne({ _id: trackEditionId },
+    await TrackEditionModel.updateOne(
+      { _id: trackEditionId },
       {
         $set: {
           'editinoData.pendingRequest': newNftData.pendingRequest,
@@ -248,8 +255,8 @@ export class TrackService extends ModelService<typeof Track> {
         },
         $inc: {
           'editionData.pendingTrackCount': trackIds.length,
-        }
-      }
+        },
+      },
     );
 
     await this.model.updateMany(
@@ -259,15 +266,15 @@ export class TrackService extends ModelService<typeof Track> {
         $set: Object.keys(newNftData).reduce((acc, key) => {
           acc[`nftData.${key}`] = (newNftData as any)[key];
           return acc;
-        }, {} as any)
+        }, {} as any),
       },
       { new: true },
-    )
+    );
 
     return await this.model.find({
       'nftData.owner': owner,
       trackEditionId: trackEditionId,
-    })
+    });
   }
 
   private async updateNftData(track: DocumentType<Track>, newNftData?: Partial<NFTData>) {
@@ -294,22 +301,22 @@ export class TrackService extends ModelService<typeof Track> {
 
   async deleteTrack(id: string, profileId: string): Promise<Track> {
     const track = await this.model.findOneAndUpdate({ _id: id, profileId }, { deleted: true });
-    if(track.trackEditionId) {
-      const trackEditionId = track.trackEditionId
+    if (track.trackEditionId) {
+      const trackEditionId = track.trackEditionId;
       const hasValidTracks = await this.model.find({ trackEditionId, deleted: false }).countDocuments();
-      if(!hasValidTracks) {
+      if (!hasValidTracks) {
         await TrackEditionModel.updateOne({ _id: trackEditionId }, { deleted: true });
       }
     }
-    return track
+    return track;
   }
 
   async deleteTrackByAdmin(id: string): Promise<Track> {
-    const track = await this.model.findOneAndUpdate({ _id: id }, { deleted: true })
-    if(track.trackEditionId) {
-      const trackEditionId = track.trackEditionId
+    const track = await this.model.findOneAndUpdate({ _id: id }, { deleted: true });
+    if (track.trackEditionId) {
+      const trackEditionId = track.trackEditionId;
       const hasValidTracks = await this.model.find({ trackEditionId, deleted: false }).countDocuments();
-      if(!hasValidTracks) {
+      if (!hasValidTracks) {
         await TrackEditionModel.updateOne({ _id: trackEditionId }, { deleted: true });
       }
     }
@@ -318,8 +325,8 @@ export class TrackService extends ModelService<typeof Track> {
 
   async deleteEditionTrack(profileId: string, trackEditionId: string): Promise<Track[]> {
     const res = await this.model.updateMany({ profileId, trackEditionId }, { deleted: true });
-    const trackEdition = await TrackEditionModel.findById(trackEditionId)
-    if(trackEdition.editionSize === res.nModified) {
+    const trackEdition = await TrackEditionModel.findById(trackEditionId);
+    if (trackEdition.editionSize === res.nModified) {
       await TrackEditionModel.updateOne({ _id: trackEditionId }, { deleted: true });
     }
     return this.model.find({ trackEditionId });
@@ -374,12 +381,12 @@ export class TrackService extends ModelService<typeof Track> {
 
   async updateOwnerByTokenId(tokenId: number, owner: string, contractAddress: string): Promise<Track> {
     const { id } = await this.model.findOne({ 'nftData.tokenId': tokenId, 'nftData.contract': contractAddress });
-    const { profileId } = await this.context.userService.getUserByWallet(owner)
+    const { profileId } = await this.context.userService.getUserByWallet(owner);
     return await this.updateTrack(id, { nftData: { owner }, profileId });
   }
 
   async isFavorite(trackId: string, profileId: string, trackEditionId: string): Promise<boolean> {
-    const ors: any[] =  [{ trackId }];
+    const ors: any[] = [{ trackId }];
     if (trackEditionId) {
       ors.push({ trackEditionId });
     }
@@ -392,7 +399,7 @@ export class TrackService extends ModelService<typeof Track> {
   async toggleFavorite(trackId: string, profileId: string): Promise<FavoriteProfileTrack> {
     const track = await this.model.findOne({ _id: trackId });
 
-    const ors: any[] =  [{ trackId }];
+    const ors: any[] = [{ trackId }];
     if (track.trackEditionId) {
       ors.push({ trackEditionId: track.trackEditionId });
     }
@@ -436,7 +443,7 @@ export class TrackService extends ModelService<typeof Track> {
   }
 
   async favoriteCount(trackId: string, trackEditionId: string): Promise<FavoriteCount> {
-    const ors: any[] =  [{ trackId: trackId.toString() }];
+    const ors: any[] = [{ trackId: trackId.toString() }];
     if (trackEditionId) {
       ors.push({ trackEditionId: trackEditionId.toString() });
     }
@@ -460,7 +467,7 @@ export class TrackService extends ModelService<typeof Track> {
   }
 
   async playbackCount(trackId: string, trackEditionId: string): Promise<number> {
-    const ors: any[] =  [{ trackId: trackId.toString() }];
+    const ors: any[] = [{ trackId: trackId.toString() }];
     if (trackEditionId) {
       ors.push({ trackEditionId: trackEditionId.toString() });
     }
@@ -474,10 +481,7 @@ export class TrackService extends ModelService<typeof Track> {
       {
         $group: {
           _id: {
-            $ifNull: [
-              '$trackEditionId',
-              '$_id',
-            ]
+            $ifNull: ['$trackEditionId', '$_id'],
           },
           totalPlaybackCount: {
             $sum: '$playbackCount',
@@ -644,10 +648,7 @@ export class TrackService extends ModelService<typeof Track> {
       {
         $group: {
           _id: {
-            $ifNull: [
-              '$trackEditionId',
-              '$_id',
-            ]
+            $ifNull: ['$trackEditionId', '$_id'],
           },
           lowestPrice: {
             $min: '$listingItem.pricePerItem',
@@ -734,15 +735,15 @@ export class TrackService extends ModelService<typeof Track> {
       },
     ];
 
-    const queryFilter: any = { deleted: false, trackEditionId: new ObjectId(filter.trackEdition) }
+    const queryFilter: any = { deleted: false, trackEditionId: new ObjectId(filter.trackEdition) };
     const owner = filter?.nftData?.owner && {
       'nftData.owner': { $regex: `^${filter.nftData.owner}$`, $options: 'i' },
     };
 
     return this.paginatePipelineAggregated({
       aggregation,
-      filter: {...queryFilter, ...owner},
-      sort: { field: "listingItem.pricePerItemToShow", order: SortOrder.ASC },
+      filter: { ...queryFilter, ...owner },
+      sort: { field: 'listingItem.pricePerItemToShow', order: SortOrder.ASC },
       page,
     });
   }
