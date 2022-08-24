@@ -63,8 +63,8 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
   };
 
   const RenderTrackCounters = () => (
-    <div className='text-gray-80 text-xs flex gap-1 items-center'>
-      <Play fill='#808080' />
+    <div className="flex items-center gap-1 text-xs text-gray-80">
+      <Play fill="#808080" />
       <span>{playbackCount || 0}</span>
       <HeartFilled />
       <span>{favoriteCount || 0}</span>
@@ -73,84 +73,86 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
 
   return (
     <div
-      className={`bg-black rounded-lg p-4 items-center transparent-border-1px ${
+      className={`transparent-border-1px items-center rounded-lg bg-black p-4 ${
         isPlaying ? 'gradient-track-box' : 'bg-black'
       } hover:gradient-track-box`}
     >
-      <div className='flex items-center gap-3'>
-        <div className='h-20 w-20 relative flex items-center'>
-          <Asset src={art} sizes='5rem' />
+      <div className="flex items-center gap-3">
+        <div className="relative flex h-20 w-20 items-center">
+          <Asset src={art} sizes="5rem" />
         </div>
-        <div className='flex flex-col flex-1 truncate'>
+        <div className="flex flex-1 flex-col truncate">
           <div className={`flex items-start gap-2 ${hideBadgeAndPrice && 'mb-[10px]'}`}>
-            <div className='flex items-center'>
+            <div className="flex items-center">
               <button
-                className='bg-white rounded-full w-8 h-8 flex items-center'
+                className="flex h-8 w-8 items-center rounded-full bg-white"
                 onClick={() => play(song)}
                 aria-label={isPlaying ? 'Pause' : 'Play'}
               >
                 {isPlaying ? (
-                  <Pause className='text-white m-auto scale-125' />
+                  <Pause className="m-auto scale-125 text-white" />
                 ) : (
-                  <Play className='text-white m-auto scale-125' />
+                  <Play className="m-auto scale-125 text-white" />
                 )}
               </button>
             </div>
             <NextLink href={`/tracks/${trackId}`}>
-              <a className='w-full truncate flex gap-0.5 flex-col'>
-                <div className='flex w-full truncate items-start text-white font-black text-xs justify-between gap-0.5'>
-                  <p className='truncate' title={title || ''}>{title ? title : 'Unknown Title'}</p>
-                  <div className='flex flex-col justify-center items-end gap-1 shrink-0'>
-                    {saleType && saleType !== '' && !hideBadgeAndPrice && (
-                      <BadgeTrack label={saleType.toUpperCase()} />
-                    )}
+              <a className="flex w-full flex-col gap-0.5 truncate">
+                <div className="flex w-full items-start justify-between gap-0.5 truncate text-xs font-black text-white">
+                  <p className="truncate" title={title || ''}>
+                    {title ? title : 'Unknown Title'}
+                  </p>
+                  <div className="flex shrink-0 flex-col items-end justify-center gap-1">
+                    {saleType && saleType !== '' && !hideBadgeAndPrice && <BadgeTrack label={saleType.toUpperCase()} />}
                   </div>
                 </div>
-                <div className='flex w-full truncate items-start text-white font-black text-xs justify-between gap-0.5'>
-                  {artist && <p className='text-gray-80 text-xs font-black truncate' title={artist}>{artist}</p>}
-                  {saleType && saleType !== '' && !hideBadgeAndPrice && editionSize > 0 &&
-                    <p className="flex items-center justify-between gap-2 text-xs font-black text-gray-80 shrink-0">
+                <div className="flex w-full items-start justify-between gap-0.5 truncate text-xs font-black text-white">
+                  {artist && (
+                    <p className="truncate text-xs font-black text-gray-80" title={artist}>
+                      {artist}
+                    </p>
+                  )}
+                  {saleType && saleType !== '' && !hideBadgeAndPrice && editionSize > 0 && (
+                    <p className="flex shrink-0 items-center justify-between gap-2 text-xs font-black text-gray-80">
                       <Cards width={14} height={14} />
-                      {listingCount && listingCount > 0 && (
-                        `${listingCount} / `
-                      )}
+                      {listingCount && listingCount > 0 && `${listingCount} / `}
                       {editionSize}
                     </p>
-                  }
+                  )}
                 </div>
               </a>
             </NextLink>
           </div>
-          <div className='flex justify-between mt-2'>
+          <div className="mt-2 flex justify-between">
             <RenderTrackCounters />
             {saleType && saleType !== '' && !hideBadgeAndPrice && price && (
               <>
-                <PriceDisplay price={price} className='ml-auto text-xs' variant='currency-inline' showBonus/>
+                <PriceDisplay price={price} className="ml-auto text-xs" variant="currency" showBonus />
               </>
             )}
           </div>
 
-          <div className='text-white flex flex-col mt-2'>
+          <div className="mt-2 flex flex-col text-white">
             {isSameSong ? (
               <>
                 <Slider
-                  className='audio-player ml-1'
+                  className="audio-player ml-1"
                   min={0}
                   max={duration}
                   value={progress}
                   onChange={onSliderChange}
                 />
-                <div className='flex mt-2 text-xs text-gray-80'>
-                  <div className='flex-1'>{timeFromSecs(progress || 0)}</div>
-                  <div className='flex-1 text-right'>{remainingTime(progress, duration || 0)} </div>
+                <div className="mt-2 flex text-xs text-gray-80">
+                  <div className="flex-1">{timeFromSecs(progress || 0)}</div>
+                  <div className="flex-1 text-right">{remainingTime(progress, duration || 0)} </div>
                 </div>
               </>
             ) : (
               <>
-                <Slider className='audio-player ml-1' min={0} max={1} value={0} disabled />
-                <div className='flex mt-2 text-xs text-gray-80'>
-                  <div className='flex-1'>0:00</div>
-                  <div className='flex-1 text-right' />
+                <Slider className="audio-player ml-1" min={0} max={1} value={0} disabled />
+                <div className="mt-2 flex text-xs text-gray-80">
+                  <div className="flex-1">0:00</div>
+                  <div className="flex-1 text-right" />
                 </div>
               </>
             )}
