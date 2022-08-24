@@ -3,10 +3,10 @@ import { AuctionItemModel } from '../models/AuctionItem';
 import { BuyNowItemModel } from '../models/BuyNowItem';
 import { ListingItem } from '../models/ListingItem';
 import { TrackModel } from '../models/Track';
-import { getNow } from '../utils/Time';
-import { Service } from './Service';
 import { CurrencyType } from '../types/CurrencyType';
 import { TrackPrice } from '../types/TrackPrice';
+import { getNow } from '../utils/Time';
+import { Service } from './Service';
 
 export class ListingItemService extends Service {
   async getListingItem(tokenId: number, contractAddress: string): Promise<ListingItem | void> {
@@ -34,18 +34,18 @@ export class ListingItemService extends Service {
   }
 
   async getCheapestListingItem(trackEditionId: string): Promise<TrackPrice> {
-    const transactionNfts = (await TrackModel.aggregate([
+    const transactionNfts = await TrackModel.aggregate([
       {
-        '$match': {
-          'trackEditionId': new ObjectId(trackEditionId),
+        $match: {
+          trackEditionId: new ObjectId(trackEditionId),
         },
       },
       {
-        '$lookup': {
-          'from': 'buynowitems',
-          'localField': 'nftData.tokenId',
-          'foreignField': 'tokenId',
-          'as': 'listingItem',
+        $lookup: {
+          from: 'buynowitems',
+          localField: 'nftData.tokenId',
+          foreignField: 'tokenId',
+          as: 'listingItem',
         },
       },
       {
@@ -70,52 +70,56 @@ export class ListingItemService extends Service {
       },
       {
         $match: {
-          listingItem: { $ne: [] }
-        }
+          listingItem: { $ne: [] },
+        },
       },
       {
-        '$sort': {
+        $sort: {
           'listingItem.pricePerItemToShow': 1,
           'listingItem.OGUNPricePerItemToShow': 1,
         },
       },
       {
-        '$limit': 1,
+        $limit: 1,
       },
       {
-        '$project': {
-            'price': '$listingItem.pricePerItemToShow',
-            'OGUNPrice': '$listingItem.OGUNPricePerItemToShow',
-        }
-      }, {
-        '$unwind': {
-            'path': '$price'
+        $project: {
+          price: '$listingItem.pricePerItemToShow',
+          OGUNPrice: '$listingItem.OGUNPricePerItemToShow',
         },
-      }, {
-        '$unwind': {
-            'path': '$OGUNPrice'
+      },
+      {
+        $unwind: {
+          path: '$price',
+          preserveNullAndEmptyArrays: true,
         },
-      }
-    ]));
+      },
+      {
+        $unwind: {
+          path: '$OGUNPrice',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+    ]);
 
     if (!transactionNfts.length) {
       return {
         value: 0,
-        currency: CurrencyType.MATIC
-      }
+        currency: CurrencyType.MATIC,
+      };
     }
-    const nft = transactionNfts[0]
+    const nft = transactionNfts[0];
 
     if (nft.OGUNPrice && nft.OGUNPrice > 0) {
       return {
         value: nft.OGUNPrice,
-        currency: CurrencyType.OGUN
-      }
+        currency: CurrencyType.OGUN,
+      };
     }
 
     return {
       value: nft.price || 0,
-      currency: CurrencyType.MATIC
+      currency: CurrencyType.MATIC,
     };
   }
 }
