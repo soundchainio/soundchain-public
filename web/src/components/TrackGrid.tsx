@@ -43,7 +43,7 @@ export const TrackGrid = ({ track }: TrackProps) => {
     favoriteCount: track.favoriteCount,
     url: track.assetUrl,
     editionSize: track.editionSize,
-    listingCount: track.listingCount
+    listingCount: track.listingCount,
   };
 
   let listingItem: Maybe<ListingItemWithPrice> = null;
@@ -105,27 +105,30 @@ export const TrackGrid = ({ track }: TrackProps) => {
       <div>
         {saleType && (
           <div className="mx-3 mt-3 flex items-start justify-between">
-            <div className='flex flex-col items-start justify-start'>
+            <div className="flex flex-col items-start justify-start">
               <div className="flex items-center">
-                <div className="mr-1.5 font-semibold">{selectedCurrency === 'MATIC' ? trackPrice : OGUNPrice}</div>
+                <div className="mr-1.5 mt-1 font-semibold">{selectedCurrency === 'MATIC' ? trackPrice : OGUNPrice}</div>
                 {selectedCurrency === 'MATIC' ? (
                   <Matic height="20" width="23" className="" />
                 ) : (
-                    <Logo height="20" width="23" className="" />
+                  <Logo height="20" width="23" className="" />
                 )}
               </div>
 
               {trackPrice > 0 && (
                 <div className="mt-0.5 text-xs font-semibold text-gray-80">
                   {selectedCurrency === 'MATIC' ? (
-                    maticUsd && maticUsd.maticUsd && trackPrice && `${currency(trackPrice * parseFloat(maticUsd.maticUsd))}`
+                    maticUsd &&
+                    maticUsd.maticUsd &&
+                    trackPrice &&
+                    `${currency(trackPrice * parseFloat(maticUsd.maticUsd))}`
                   ) : (
                     <></>
                   )}
                 </div>
               )}
             </div>
-            <div className='flex flex-col items-end justify-start'>
+            <div className="flex flex-col items-end justify-start">
               <div
                 className={`${
                   saleType === 'auction' ? 'auction-gradient' : 'buy-now-gradient'
