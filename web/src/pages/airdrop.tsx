@@ -22,6 +22,8 @@ import { toast, ToastContainer } from 'react-toastify';
 import Web3 from 'web3';
 import { CustomModal } from '../components/CustomModal';
 import useBlockchainV2 from '../hooks/useBlockchainV2';
+import { useMagicContext } from 'hooks/useMagicContext';
+import { SoundchainGoldLogo } from 'icons/SoundchainGoldLogo';
 
 // TODO: remove before enabling the ogun token stake
 export const getServerSideProps: GetServerSideProps = ({ res }) => {
@@ -36,6 +38,7 @@ export const getServerSideProps: GetServerSideProps = ({ res }) => {
 };
 
 export default function AirdropPage() {
+  const { web3: magicLinkWeb3, account: magicLinkAccount } = useMagicContext();
   const { setIsLandingLayout } = useLayoutContext();
   const [proofBookByWallet, { data: proofBook, loading: loadingProof }] = useProofBookByWalletLazyQuery({
     fetchPolicy: 'network-only',
@@ -139,6 +142,13 @@ export default function AirdropPage() {
     }
   };
 
+  const connectSoundchain = () => {
+    if (!magicLinkWeb3 || !magicLinkAccount) return;
+    setShowModal(false);
+    setAccount(magicLinkAccount);
+    setWeb3(magicLinkWeb3);
+  };
+
   const handleIsClaimed = async (web3: Web3, address: string) => {
     const contract = hasClaimedOgun(address);
 
@@ -197,6 +207,7 @@ export default function AirdropPage() {
             <h1 className="text-2xl font-bold text-blue-500">CONNECT WALLET</h1>
             <p className="py-1 text-gray-500">Connect with one of our available wallet providers</p>
             <div className="my-4 space-y-3">
+              <WalletButton caption="Soundchain" icon={SoundchainGoldLogo} handleOnClick={connectSoundchain} />
               <WalletButton caption="Metamask" icon={MetaMask} handleOnClick={connectMetaMask} />
               <WalletButton caption="WalletConnect" icon={WalletConnect} handleOnClick={connectWC} />
             </div>
