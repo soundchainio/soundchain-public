@@ -96,7 +96,7 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
   const tokenId = nftData?.tokenId;
   const contractAddress = nftData?.contract;
   const nftAddress = config.web3.contractsV2.contractAddress as string;
-  const isMarketplaceEditions = contractAddress === nftAddress
+  const isMarketplaceEditions = contractAddress === nftAddress;
   const canList = (me?.profile.verified && nftData?.minter === account) || nftData?.minter != account;
   const isBuyNow = Boolean(listingPayload?.listingItem?.pricePerItem);
   const isAuction = Boolean(listingPayload?.listingItem?.reservePrice);
@@ -174,19 +174,24 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
 
   useEffect(() => {
     const fetchRoyalties = async () => {
-      if (!account || !web3 || tokenId === null || tokenId === undefined || royalties != undefined || track?.trackEdition?.editionId === undefined) {
+      if (
+        !account ||
+        !web3 ||
+        tokenId === null ||
+        tokenId === undefined ||
+        royalties != undefined ||
+        track?.trackEdition?.editionId === undefined
+      ) {
         return;
       }
 
       let royaltiesFromBlockchain;
       if (isMarketplaceEditions) {
         royaltiesFromBlockchain = await getEditionRoyalties(web3, track.trackEdition.editionId);
-      }
-      else {
+      } else {
         royaltiesFromBlockchain = await getRoyalties(web3, tokenId, { nft: nftData?.contract });
       }
-      setRoyalties(royaltiesFromBlockchain);  
-
+      setRoyalties(royaltiesFromBlockchain);
     };
     fetchRoyalties();
   }, [account, web3, tokenId, getRoyalties, getEditionRoyalties, royalties, nftData, track?.trackEdition?.editionId]);
@@ -251,20 +256,20 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
           isHighestBidder !== undefined &&
           !isHighestBidder && <div className="p-2 text-center font-bold text-red-500">You have been outbid!</div>}
       </div>
-      {isBuyNow &&  (
+      {isBuyNow && (
         <div className="bg-[#112011]">
-          {!!price &&
-          <div className="flex items-center justify-between gap-3 px-4 py-3">
-            <div className="text-xs font-bold text-gray-80">MATIC BUY NOW PRICE</div>
-            <Matic value={price} variant="currency-inline" className="text-xs" />
-          </div>
-          }
-          {!!OGUNprice &&
-          <div className="flex items-center justify-between gap-3 px-4 py-3">
-            <div className="text-xs font-bold text-gray-80">OGUN BUY NOW PRICE</div>
-            <Ogun value={OGUNprice} variant="currency-inline" className="text-xs" showBonus />
-          </div>
-          }
+          {!!price && (
+            <div className="flex items-center justify-between gap-3 px-4 py-3">
+              <div className="text-xs font-bold text-gray-80">MATIC BUY NOW PRICE</div>
+              <Matic value={price} variant="currency-inline" className="text-xs" />
+            </div>
+          )}
+          {!!OGUNprice && (
+            <div className="flex items-center justify-between gap-3 px-4 py-3">
+              <div className="text-xs font-bold text-gray-80">OGUN BUY NOW PRICE</div>
+              <Ogun value={OGUNprice} variant="currency" className="text-xs" showBonus />
+            </div>
+          )}
           {futureSale && (
             <div className="flex items-center justify-between gap-3 px-4 py-3">
               <div className="flex-shrink-0 text-xs font-bold text-gray-80">SALE STARTS</div>
@@ -297,7 +302,7 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
             <div className="text-xs font-bold text-gray-80 ">{auctionIsOver ? 'FINAL PRICE' : 'CURRENT PRICE'}</div>
             <div className="flex items-center gap-1 font-bold">
               {isPaymentOGUN ? (
-                <Ogun value={price} variant="currency-inline" className="text-xs" />
+                <Ogun value={price} variant="currency" className="text-xs" />
               ) : (
                 <Matic value={price} variant="currency-inline" className="text-xs" />
               )}
