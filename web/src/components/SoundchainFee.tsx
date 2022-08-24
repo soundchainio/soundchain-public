@@ -59,7 +59,7 @@ export const SoundchainFee = ({ price, isPaymentOGUN, rewardRatePercentage, show
               <div className="flex w-full justify-end">
                 <Ogun
                   value={fixedDecimals(price * config.soundchainFee)}
-                  variant="currency-inline"
+                  variant="currency"
                   rewardRatePercentage={rewardRatePercentage}
                 />
               </div>
