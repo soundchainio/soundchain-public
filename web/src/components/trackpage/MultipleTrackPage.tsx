@@ -7,6 +7,7 @@ import { TrackInfo } from 'components/details-NFT/TrackInfo';
 import { ViewPost } from 'components/details-NFT/ViewPost';
 import { InfiniteLoader } from 'components/InfiniteLoader';
 import { NoResultFound } from 'components/NoResultFound';
+import { Ogun } from 'components/Ogun';
 import { OwnedEditionListItem } from 'components/OwnedEditionListItem';
 import SEO from 'components/SEO';
 import { TopNavBarProps } from 'components/TopNavBar';
@@ -35,7 +36,6 @@ import {
   useTrackLazyQuery,
 } from 'lib/graphql';
 import { useEffect, useMemo, useState } from 'react';
-import { Ogun } from 'components/Ogun';
 import { AuthorActionsType } from 'types/AuthorActionsType';
 import { isPendingRequest } from 'utils/isPendingRequest';
 import useBlockchainV2 from '../../hooks/useBlockchainV2';
@@ -64,17 +64,17 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
   const [profile, { data: profileInfo }] = useProfileLazyQuery();
 
   const { showRemoveListing } = useModalState();
-  const { dispatchShowAuthorActionsModal } = useModalDispatch()
+  const { dispatchShowAuthorActionsModal } = useModalDispatch();
   const { setTopNavBarProps } = useLayoutContext();
   const [royalties, setRoyalties] = useState<number>();
-  const { getEditionRoyalties } = useBlockchainV2()
+  const { getEditionRoyalties } = useBlockchainV2();
   const [forceRefresh, setForceRefresh] = useState(false);
 
   useEffect(() => {
     if (!showRemoveListing) {
       setForceRefresh(true);
     }
-  }, [showRemoveListing, setForceRefresh])
+  }, [showRemoveListing, setForceRefresh]);
 
   const [refetchTrack, { data: trackData }] = useTrackLazyQuery({
     fetchPolicy: 'network-only',
@@ -83,24 +83,23 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
 
   const nftData = trackData?.track?.nftData || track.nftData;
 
-
-  const [fetchCheapestListingItem, {data: cheapestListingItem}] = useCheapestListingItemLazyQuery({
+  const [fetchCheapestListingItem, { data: cheapestListingItem }] = useCheapestListingItemLazyQuery({
     fetchPolicy: 'network-only',
     nextFetchPolicy: 'network-only',
-  })
+  });
 
-  const buyNowPrice = cheapestListingItem?.cheapestListingItem?.value
-  const buyNowCurrency = cheapestListingItem?.cheapestListingItem?.currency
+  const buyNowPrice = cheapestListingItem?.cheapestListingItem?.value;
+  const buyNowCurrency = cheapestListingItem?.cheapestListingItem?.currency;
 
   useEffect(() => {
     if (track.trackEditionId) {
       fetchCheapestListingItem({
         variables: {
           trackEditionId: track.trackEditionId,
-        }
-      })
+        },
+      });
     }
-  }, [fetchCheapestListingItem, track.trackEditionId])
+  }, [fetchCheapestListingItem, track.trackEditionId]);
 
   const {
     data,
@@ -115,16 +114,15 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
     ssr: false,
   });
 
-  const isMinter = nftData?.minter === account
+  const isMinter = nftData?.minter === account;
   const title = `${track.title} - song by ${track.artist} | SoundChain`;
   const description = `Listen to ${track.title} on SoundChain. ${track.artist}. ${track.album || 'Song'}. ${
     track.releaseYear != null ? `${track.releaseYear}.` : ''
   }`;
 
   const trackEdition = trackData?.track.trackEdition || track.trackEdition;
-  const editionData = trackEdition?.editionData
+  const editionData = trackEdition?.editionData;
   const tokenId = nftData?.tokenId;
-
 
   const firstListingItem = data?.buyNowListingItems?.nodes?.[0]?.listingItem;
 
@@ -139,7 +137,7 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
   const startingDate = firstListingItem?.startingTime ? new Date(firstListingItem?.startingTime * 1000) : undefined;
   const endingDate = firstListingItem?.endingTime ? new Date(firstListingItem?.endingTime * 1000) : undefined;
   const loading = loadingListingItem;
- 
+
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
       title: 'NFT Details',
@@ -182,7 +180,7 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
     setTopNavBarProps(topNavBarProps);
   }, [setTopNavBarProps, topNavBarProps]);
 
-  const {editionId} = track.trackEdition as TrackEdition
+  const { editionId } = track.trackEdition as TrackEdition;
   useEffect(() => {
     const fetchRoyalties = async () => {
       if (!account || !web3 || tokenId === null || editionId === undefined || royalties != undefined) {
@@ -208,12 +206,23 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
         if (track.trackEditionId && account) {
           ownedTracksRefetch();
         }
-        setForceRefresh(false)
+        setForceRefresh(false);
       }
     }, 10 * 1000);
 
     return () => clearInterval(interval);
-  }, [isProcessing, refetchTrack, refetchListingItem, ownedTracksRefetch, tokenId, track.id, account, track.trackEditionId, forceRefresh, setForceRefresh]);
+  }, [
+    isProcessing,
+    refetchTrack,
+    refetchListingItem,
+    ownedTracksRefetch,
+    tokenId,
+    track.id,
+    account,
+    track.trackEditionId,
+    forceRefresh,
+    setForceRefresh,
+  ]);
 
   return (
     <>
@@ -261,7 +270,11 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
           royalties={royalties}
           me={me}
         />
-        <div>{nftData && editionData && <MintingData transactionHash={editionData.transactionHash} ipfsCid={nftData.ipfsCid} />}</div>
+        <div>
+          {nftData && editionData && (
+            <MintingData transactionHash={editionData.transactionHash} ipfsCid={nftData.ipfsCid} />
+          )}
+        </div>
         <OwnedList data={ownedTracksData} loading={ownedTracksLoading} canList={canList} />
         <Listings data={data} loading={loadingListingItem} fetchMore={fetchMore} />
       </div>
@@ -290,7 +303,7 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
             canList={canList}
             price={price}
             OGUNprice={OGUNprice}
-            isPaymentOGUN={isPaymentOGUN}  
+            isPaymentOGUN={isPaymentOGUN}
             isMinter={isMinter}
             isBuyNow={isBuyNow}
             startingDate={startingDate}
@@ -351,13 +364,18 @@ function Listings(props: ListingsProps) {
                   key={item.id}
                   price={item.listingItem?.pricePerItemToShow || 0}
                   priceOGUN={item.listingItem?.OGUNPricePerItemToShow || 0}
-                  isPaymentOGUN={Boolean(item.listingItem?.OGUNPricePerItemToShow != 0)}
+                  isPaymentOGUN={
+                    item.listingItem?.OGUNPricePerItemToShow
+                      ? Boolean(item.listingItem?.OGUNPricePerItemToShow !== 0)
+                      : false
+                  }
                   profileId={item.profileId || ''}
                   trackId={item.id}
                   tokenId={item.nftData?.tokenId || 0}
                   contractAddress={item.nftData?.contract || ''}
                   isProcessing={
-                    isPendingRequest(item.nftData?.pendingRequest) || isPendingRequest(item.trackEdition?.editionData?.pendingRequest)
+                    isPendingRequest(item.nftData?.pendingRequest) ||
+                    isPendingRequest(item.trackEdition?.editionData?.pendingRequest)
                   }
                 />
               ))}
@@ -369,7 +387,7 @@ function Listings(props: ListingsProps) {
         </>
       )}
     </section>
-  )
+  );
 }
 
 interface OwnedListProps {
@@ -394,7 +412,7 @@ function OwnedList(props: OwnedListProps) {
         <PriceTag fill="#808080" />
         <p>Owned {pageInfo?.totalCount && <>(total: {pageInfo?.totalCount})</>}</p>
       </h3>
-      <div className='text-gray-80 text-xs pl-10 pr-4 pt-1 pb-4'>Showing first 10 tokens</div>
+      <div className="pl-10 pr-4 pt-1 pb-4 text-xs text-gray-80">Showing first 10 tokens</div>
       {!loading && (
         <>
           <div className="flex h-8 items-center bg-gray-20 px-4 py-2 text-xs font-black text-white">
@@ -411,7 +429,8 @@ function OwnedList(props: OwnedListProps) {
                   contractAddress={item.nftData?.contract || ''}
                   listingItem={item.listingItem}
                   isProcessing={
-                    isPendingRequest(item.nftData?.pendingRequest) || isPendingRequest(item.trackEdition?.editionData?.pendingRequest)
+                    isPendingRequest(item.nftData?.pendingRequest) ||
+                    isPendingRequest(item.trackEdition?.editionData?.pendingRequest)
                   }
                 />
               ))}
@@ -422,5 +441,5 @@ function OwnedList(props: OwnedListProps) {
         </>
       )}
     </section>
-  )
+  );
 }
