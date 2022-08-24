@@ -66,6 +66,7 @@ export type AuctionItem = {
   endingTime: Scalars['Float'];
   reservePrice: Scalars['String'];
   reservePriceToShow: Scalars['Float'];
+  isPaymentOGUN: Scalars['Boolean'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   valid: Scalars['Boolean'];
@@ -129,10 +130,15 @@ export type BuyNowItem = {
   trackEditionId: Scalars['String'];
   nft: Scalars['String'];
   tokenId: Scalars['Float'];
+  selectedCurrency: Maybe<Scalars['String']>;
   contract: Scalars['String'];
   startingTime: Scalars['Float'];
   pricePerItem: Scalars['String'];
   pricePerItemToShow: Scalars['Float'];
+  OGUNPricePerItem: Scalars['String'];
+  OGUNPricePerItemToShow: Scalars['Float'];
+  acceptsMATIC: Scalars['Boolean'];
+  acceptsOGUN: Scalars['Boolean'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   valid: Scalars['Boolean'];
@@ -221,6 +227,7 @@ export type CreateAuctionItemInput = {
   endingTime: Scalars['Float'];
   reservePrice: Scalars['String'];
   reservePriceToShow: Scalars['Float'];
+  isPaymentOGUN: Scalars['Boolean'];
 };
 
 export type CreateAuctionItemType = {
@@ -233,6 +240,7 @@ export type CreateAuctionItemType = {
   endingTime: Scalars['Float'];
   reservePrice: Scalars['String'];
   reservePriceToShow: Scalars['Float'];
+  isPaymentOGUN: Scalars['Boolean'];
 };
 
 export type CreateMultipleTracksInput = {
@@ -317,6 +325,11 @@ export type CreateWhitelistEntryPayload = {
   __typename?: 'CreateWhitelistEntryPayload';
   whitelistEntry: WhitelistEntry;
 };
+
+export enum CurrencyType {
+  Ogun = 'OGUN',
+  Matic = 'MATIC'
+}
 
 
 export enum DefaultWallet {
@@ -551,9 +564,15 @@ export type ListingItem = {
   startingTime: Maybe<Scalars['Float']>;
   endingTime: Maybe<Scalars['Float']>;
   reservePrice: Maybe<Scalars['String']>;
+  selectedCurrency: Maybe<Scalars['String']>;
   reservePriceToShow: Maybe<Scalars['Float']>;
   pricePerItem: Maybe<Scalars['String']>;
   pricePerItemToShow: Maybe<Scalars['Float']>;
+  OGUNPricePerItem: Maybe<Scalars['String']>;
+  OGUNPricePerItemToShow: Maybe<Scalars['Float']>;
+  acceptsMATIC: Maybe<Scalars['Boolean']>;
+  acceptsOGUN: Maybe<Scalars['Boolean']>;
+  isPaymentOGUN: Maybe<Scalars['Boolean']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
 };
@@ -578,9 +597,15 @@ export type ListingItemWithPrice = {
   startingTime: Maybe<Scalars['Float']>;
   endingTime: Maybe<Scalars['Float']>;
   reservePrice: Maybe<Scalars['String']>;
+  selectedCurrency: Maybe<Scalars['String']>;
   reservePriceToShow: Maybe<Scalars['Float']>;
   pricePerItem: Maybe<Scalars['String']>;
   pricePerItemToShow: Maybe<Scalars['Float']>;
+  OGUNPricePerItem: Maybe<Scalars['String']>;
+  OGUNPricePerItemToShow: Maybe<Scalars['Float']>;
+  acceptsMATIC: Maybe<Scalars['Boolean']>;
+  acceptsOGUN: Maybe<Scalars['Boolean']>;
+  isPaymentOGUN: Maybe<Scalars['Boolean']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   priceToShow: Maybe<Scalars['Float']>;
@@ -1149,6 +1174,15 @@ export type ProfileVerificationRequestPayload = {
   profileVerificationRequest: ProfileVerificationRequest;
 };
 
+export type ProofBookItem = {
+  __typename?: 'ProofBookItem';
+  id: Scalars['ID'];
+  root: Scalars['String'];
+  address: Scalars['String'];
+  value: Scalars['String'];
+  merkleProof: Array<Scalars['String']>;
+};
+
 export type Query = {
   __typename?: 'Query';
   auctionItem: AuctionItemPayload;
@@ -1168,7 +1202,7 @@ export type Query = {
   followers: FollowConnection;
   following: FollowConnection;
   listingItem: Maybe<ListingItem>;
-  cheapestListingItem: Maybe<Scalars['Float']>;
+  cheapestListingItem: Maybe<TrackPrice>;
   message: Message;
   notifications: NotificationConnection;
   notification: Notification;
@@ -1201,6 +1235,7 @@ export type Query = {
   mimeType: MimeType;
   me: Maybe<User>;
   getUserByWallet: Maybe<User>;
+  getProofBookByWallet: Maybe<ProofBookItem>;
   whitelistEntryByWallet: WhitelistEntry;
 };
 
@@ -1406,6 +1441,7 @@ export type QueryTracksArgs = {
 
 
 export type QueryOwnedTracksArgs = {
+  page?: Maybe<PageInput>;
   filter: FilterOwnedTracksInput;
 };
 
@@ -1458,6 +1494,11 @@ export type QueryMimeTypeArgs = {
 
 
 export type QueryGetUserByWalletArgs = {
+  walletAddress: Scalars['String'];
+};
+
+
+export type QueryGetProofBookByWalletArgs = {
   walletAddress: Scalars['String'];
 };
 
@@ -1667,7 +1708,7 @@ export type Track = {
   playbackCount: Scalars['Float'];
   favoriteCount: Scalars['Float'];
   listingCount: Scalars['Float'];
-  price: Scalars['Float'];
+  price: TrackPrice;
   saleType: Scalars['String'];
   isFavorite: Scalars['Boolean'];
   editionSize: Scalars['Float'];
@@ -1693,6 +1734,12 @@ export type TrackEdition = {
   deleted: Maybe<Scalars['Boolean']>;
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
+};
+
+export type TrackPrice = {
+  __typename?: 'TrackPrice';
+  value: Scalars['Float'];
+  currency: CurrencyType;
 };
 
 export type TrackWithListingItem = {
@@ -1722,7 +1769,7 @@ export type TrackWithListingItem = {
   playbackCount: Scalars['Float'];
   favoriteCount: Scalars['Float'];
   listingCount: Scalars['Float'];
-  price: Scalars['Float'];
+  price: TrackPrice;
   saleType: Scalars['String'];
   isFavorite: Scalars['Boolean'];
   editionSize: Scalars['Float'];
@@ -2014,7 +2061,7 @@ export type BuyNowItemQuery = (
     { __typename?: 'BuyNowPayload' }
     & { buyNowItem: Maybe<(
       { __typename?: 'BuyNowItem' }
-      & Pick<BuyNowItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'contract' | 'pricePerItem' | 'pricePerItemToShow' | 'startingTime'>
+      & Pick<BuyNowItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'contract' | 'pricePerItem' | 'selectedCurrency' | 'pricePerItemToShow' | 'OGUNPricePerItem' | 'OGUNPricePerItemToShow' | 'acceptsMATIC' | 'acceptsOGUN' | 'startingTime'>
     )> }
   ) }
 );
@@ -2105,7 +2152,10 @@ export type CheapestListingItemQueryVariables = Exact<{
 
 export type CheapestListingItemQuery = (
   { __typename?: 'Query' }
-  & Pick<Query, 'cheapestListingItem'>
+  & { cheapestListingItem: Maybe<(
+    { __typename?: 'TrackPrice' }
+    & Pick<TrackPrice, 'currency' | 'value'>
+  )> }
 );
 
 export type ClearNotificationsMutationVariables = Exact<{ [key: string]: never; }>;
@@ -2645,8 +2695,11 @@ export type ListingItemQuery = (
 
 export type ListingItemComponentFieldsFragment = (
   { __typename?: 'TrackWithListingItem' }
-  & Pick<TrackWithListingItem, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'utilityInfo' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'playbackCount' | 'listingCount' | 'saleType' | 'price' | 'trackEditionId' | 'editionSize'>
-  & { nftData: Maybe<(
+  & Pick<TrackWithListingItem, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'utilityInfo' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'playbackCount' | 'listingCount' | 'saleType' | 'trackEditionId' | 'editionSize'>
+  & { price: (
+    { __typename?: 'TrackPrice' }
+    & Pick<TrackPrice, 'value' | 'currency'>
+  ), nftData: Maybe<(
     { __typename?: 'NFTDataType' }
     & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner' | 'pendingTime'>
   )>, trackEdition: Maybe<(
@@ -2654,13 +2707,13 @@ export type ListingItemComponentFieldsFragment = (
     & TrackEditionFieldsFragment
   )>, listingItem: Maybe<(
     { __typename?: 'ListingItemWithPrice' }
-    & Pick<ListingItemWithPrice, 'id' | 'owner' | 'nft' | 'tokenId' | 'contract' | 'pricePerItem' | 'pricePerItemToShow' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow' | 'createdAt' | 'updatedAt' | 'priceToShow'>
+    & Pick<ListingItemWithPrice, 'id' | 'owner' | 'nft' | 'tokenId' | 'contract' | 'pricePerItem' | 'pricePerItemToShow' | 'OGUNPricePerItem' | 'OGUNPricePerItemToShow' | 'isPaymentOGUN' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow' | 'createdAt' | 'updatedAt' | 'priceToShow'>
   )> }
 );
 
 export type ListingItemViewComponentFieldsFragment = (
   { __typename?: 'ListingItem' }
-  & Pick<ListingItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'contract' | 'pricePerItem' | 'pricePerItemToShow' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow' | 'createdAt' | 'updatedAt'>
+  & Pick<ListingItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'contract' | 'pricePerItem' | 'pricePerItemToShow' | 'OGUNPricePerItem' | 'OGUNPricePerItemToShow' | 'isPaymentOGUN' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow' | 'createdAt' | 'updatedAt'>
 );
 
 export type ListingItemsQueryVariables = Exact<{
@@ -2770,7 +2823,11 @@ export type NewPostNotificationFieldsFragment = (
   & Pick<NewPostNotification, 'id' | 'type' | 'authorName' | 'authorPicture' | 'body' | 'link' | 'previewBody' | 'previewLink' | 'createdAt'>
   & { track: Maybe<(
     { __typename?: 'Track' }
-    & Pick<Track, 'id' | 'title' | 'playbackUrl' | 'artworkUrl' | 'artist' | 'isFavorite' | 'playbackCountFormatted' | 'favoriteCount' | 'saleType' | 'price'>
+    & Pick<Track, 'id' | 'title' | 'playbackUrl' | 'artworkUrl' | 'artist' | 'isFavorite' | 'playbackCountFormatted' | 'favoriteCount' | 'saleType'>
+    & { price: (
+      { __typename?: 'TrackPrice' }
+      & Pick<TrackPrice, 'value' | 'currency'>
+    ) }
   )> }
 );
 
@@ -2943,15 +3000,14 @@ export type OwnedTrackIdsQuery = (
 );
 
 export type OwnedTracksQueryVariables = Exact<{
-  filter?: Maybe<FilterTrackInput>;
-  sort?: Maybe<SortTrackInput>;
+  filter: FilterOwnedTracksInput;
   page?: Maybe<PageInput>;
 }>;
 
 
 export type OwnedTracksQuery = (
   { __typename?: 'Query' }
-  & { tracks: (
+  & { ownedTracks: (
     { __typename?: 'TrackConnection' }
     & { nodes: Array<(
       { __typename?: 'Track' }
@@ -3170,6 +3226,19 @@ export type ProfileVerificationRequestsQuery = (
   ) }
 );
 
+export type ProofBookByWalletQueryVariables = Exact<{
+  walletAddress: Scalars['String'];
+}>;
+
+
+export type ProofBookByWalletQuery = (
+  { __typename?: 'Query' }
+  & { getProofBookByWallet: Maybe<(
+    { __typename?: 'ProofBookItem' }
+    & Pick<ProofBookItem, 'root' | 'address' | 'value' | 'merkleProof'>
+  )> }
+);
+
 export type ReactToPostMutationVariables = Exact<{
   input: ReactToPostInput;
 }>;
@@ -3345,8 +3414,11 @@ export type TrackQuery = (
 
 export type TrackComponentFieldsFragment = (
   { __typename?: 'Track' }
-  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'utilityInfo' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'listingCount' | 'playbackCount' | 'saleType' | 'price' | 'trackEditionId' | 'editionSize'>
-  & { nftData: Maybe<(
+  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'utilityInfo' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'listingCount' | 'playbackCount' | 'saleType' | 'trackEditionId' | 'editionSize'>
+  & { price: (
+    { __typename?: 'TrackPrice' }
+    & Pick<TrackPrice, 'value' | 'currency'>
+  ), nftData: Maybe<(
     { __typename?: 'NFTDataType' }
     & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner' | 'pendingTime'>
   )>, trackEdition: Maybe<(
@@ -3944,7 +4016,10 @@ export const ListingItemComponentFieldsFragmentDoc = gql`
   playbackCount
   listingCount
   saleType
-  price
+  price {
+    value
+    currency
+  }
   trackEditionId
   editionSize
   nftData {
@@ -3968,6 +4043,9 @@ export const ListingItemComponentFieldsFragmentDoc = gql`
     contract
     pricePerItem
     pricePerItemToShow
+    OGUNPricePerItem
+    OGUNPricePerItemToShow
+    isPaymentOGUN
     startingTime
     endingTime
     reservePrice
@@ -3987,6 +4065,9 @@ export const ListingItemViewComponentFieldsFragmentDoc = gql`
   contract
   pricePerItem
   pricePerItemToShow
+  OGUNPricePerItem
+  OGUNPricePerItemToShow
+  isPaymentOGUN
   startingTime
   endingTime
   reservePrice
@@ -4060,7 +4141,10 @@ export const NewPostNotificationFieldsFragmentDoc = gql`
     playbackCountFormatted
     favoriteCount
     saleType
-    price
+    price {
+      value
+      currency
+    }
   }
 }
     `;
@@ -4110,7 +4194,10 @@ export const TrackComponentFieldsFragmentDoc = gql`
   listingCount
   playbackCount
   saleType
-  price
+  price {
+    value
+    currency
+  }
   trackEditionId
   editionSize
   nftData {
@@ -4441,7 +4528,12 @@ export const BuyNowItemDocument = gql`
       tokenId
       contract
       pricePerItem
+      selectedCurrency
       pricePerItemToShow
+      OGUNPricePerItem
+      OGUNPricePerItemToShow
+      acceptsMATIC
+      acceptsOGUN
       startingTime
     }
   }
@@ -4651,7 +4743,10 @@ export type ChatsLazyQueryHookResult = ReturnType<typeof useChatsLazyQuery>;
 export type ChatsQueryResult = Apollo.QueryResult<ChatsQuery, ChatsQueryVariables>;
 export const CheapestListingItemDocument = gql`
     query CheapestListingItem($trackEditionId: String!) {
-  cheapestListingItem(trackEditionId: $trackEditionId)
+  cheapestListingItem(trackEditionId: $trackEditionId) {
+    currency
+    value
+  }
 }
     `;
 
@@ -6324,8 +6419,8 @@ export type OwnedTrackIdsQueryHookResult = ReturnType<typeof useOwnedTrackIdsQue
 export type OwnedTrackIdsLazyQueryHookResult = ReturnType<typeof useOwnedTrackIdsLazyQuery>;
 export type OwnedTrackIdsQueryResult = Apollo.QueryResult<OwnedTrackIdsQuery, OwnedTrackIdsQueryVariables>;
 export const OwnedTracksDocument = gql`
-    query OwnedTracks($filter: FilterTrackInput, $sort: SortTrackInput, $page: PageInput) {
-  tracks(filter: $filter, sort: $sort, page: $page) {
+    query OwnedTracks($filter: FilterOwnedTracksInput!, $page: PageInput) {
+  ownedTracks(filter: $filter, page: $page) {
     nodes {
       ...TrackComponentFields
       listingItem {
@@ -6355,12 +6450,11 @@ ${ListingItemViewComponentFieldsFragmentDoc}`;
  * const { data, loading, error } = useOwnedTracksQuery({
  *   variables: {
  *      filter: // value for 'filter'
- *      sort: // value for 'sort'
  *      page: // value for 'page'
  *   },
  * });
  */
-export function useOwnedTracksQuery(baseOptions?: Apollo.QueryHookOptions<OwnedTracksQuery, OwnedTracksQueryVariables>) {
+export function useOwnedTracksQuery(baseOptions: Apollo.QueryHookOptions<OwnedTracksQuery, OwnedTracksQueryVariables>) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<OwnedTracksQuery, OwnedTracksQueryVariables>(OwnedTracksDocument, options);
       }
@@ -6839,6 +6933,44 @@ export function useProfileVerificationRequestsLazyQuery(baseOptions?: Apollo.Laz
 export type ProfileVerificationRequestsQueryHookResult = ReturnType<typeof useProfileVerificationRequestsQuery>;
 export type ProfileVerificationRequestsLazyQueryHookResult = ReturnType<typeof useProfileVerificationRequestsLazyQuery>;
 export type ProfileVerificationRequestsQueryResult = Apollo.QueryResult<ProfileVerificationRequestsQuery, ProfileVerificationRequestsQueryVariables>;
+export const ProofBookByWalletDocument = gql`
+    query ProofBookByWallet($walletAddress: String!) {
+  getProofBookByWallet(walletAddress: $walletAddress) {
+    root
+    address
+    value
+    merkleProof
+  }
+}
+    `;
+
+/**
+ * __useProofBookByWalletQuery__
+ *
+ * To run a query within a React component, call `useProofBookByWalletQuery` and pass it any options that fit your needs.
+ * When your component renders, `useProofBookByWalletQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useProofBookByWalletQuery({
+ *   variables: {
+ *      walletAddress: // value for 'walletAddress'
+ *   },
+ * });
+ */
+export function useProofBookByWalletQuery(baseOptions: Apollo.QueryHookOptions<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>(ProofBookByWalletDocument, options);
+      }
+export function useProofBookByWalletLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>(ProofBookByWalletDocument, options);
+        }
+export type ProofBookByWalletQueryHookResult = ReturnType<typeof useProofBookByWalletQuery>;
+export type ProofBookByWalletLazyQueryHookResult = ReturnType<typeof useProofBookByWalletLazyQuery>;
+export type ProofBookByWalletQueryResult = Apollo.QueryResult<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>;
 export const ReactToPostDocument = gql`
     mutation ReactToPost($input: ReactToPostInput!) {
   reactToPost(input: $input) {

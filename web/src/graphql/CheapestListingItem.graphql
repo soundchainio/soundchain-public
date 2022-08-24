@@ -1,3 +1,6 @@
 query CheapestListingItem($trackEditionId: String!) {
-  cheapestListingItem(trackEditionId: $trackEditionId)
+  cheapestListingItem(trackEditionId: $trackEditionId) {
+    currency
+    value
+  }
 }

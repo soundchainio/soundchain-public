@@ -7,7 +7,12 @@ query BuyNowItem($input: FilterListingItemInput!) {
       tokenId
       contract
       pricePerItem
+      selectedCurrency
       pricePerItemToShow
+      OGUNPricePerItem
+      OGUNPricePerItemToShow
+      acceptsMATIC
+      acceptsOGUN
       startingTime
     }
   }

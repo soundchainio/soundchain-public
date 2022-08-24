@@ -22,6 +22,7 @@ const ConfirmDeleteNFTModal = dynamic(import('./modals/ConfirmDeleteNFTModal'));
 const FilterModalMarketplace = dynamic(import('./modals/FilterMarketplaceModal'));
 const RemoveListingConfirmationModal = dynamic(import('./RemoveListingConfirmationModal'));
 const TransferConfirmationModal = dynamic(import('./TransferConfirmationModal'));
+const TransferOgunConfirmationModal = dynamic(import('./TransferOgunConfirmationModal'));
 const UnderDevelopmentModal = dynamic(import('./UnderDevelopmentModal'));
 const NftTransferConfirmationModal = dynamic(import('./modals/NftTransferConfirmationModal'));
 const BottomAudioPlayer = dynamic(import('components/BottomAudioPlayer'));
@@ -92,6 +93,7 @@ export const Layout = ({ children, className }: LayoutProps) => {
             <AuthorActionsModal />
             <ReactionsModal />
             <TransferConfirmationModal />
+            <TransferOgunConfirmationModal />
             <ConfirmDeleteNFTModal />
             <ConfirmDeleteEditionModal />
             <ApproveModal />

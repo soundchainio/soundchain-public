@@ -23,7 +23,10 @@ fragment ListingItemComponentFields on TrackWithListingItem {
   playbackCount
   listingCount
   saleType
-  price
+  price {
+    value
+    currency
+  }
   trackEditionId
   editionSize
   nftData {
@@ -47,6 +50,9 @@ fragment ListingItemComponentFields on TrackWithListingItem {
     contract
     pricePerItem
     pricePerItemToShow
+    OGUNPricePerItem
+    OGUNPricePerItemToShow
+    isPaymentOGUN
     startingTime
     endingTime
     reservePrice

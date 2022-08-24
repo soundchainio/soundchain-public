@@ -7,8 +7,13 @@ interface NewBuyNowItem {
   owner: string;
   nft: string;
   tokenId: number;
+  selectedCurrency?: string;
   pricePerItem: string;
   pricePerItemToShow: number;
+  OGUNPricePerItem: string;
+  OGUNPricePerItemToShow: number;
+  acceptsMATIC: boolean;
+  acceptsOGUN: boolean;
   startingTime: number;
   contract: string;
   trackEditionId?: string

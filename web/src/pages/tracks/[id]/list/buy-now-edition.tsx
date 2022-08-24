@@ -109,13 +109,13 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
   const maxBatchListGasFee = useMaxBatchListGasFee(allTracks?.length ?? 0);
 
   const handleListEdition = async (
-    { price, startTime }: ListNFTBuyNowFormValues,
+    { salePrice, selectedCurrency, startTime }: ListNFTBuyNowFormValues,
     helper: FormikHelpers<ListNFTBuyNowFormValues>,
   ) => {
     if (nftData?.tokenId === null || nftData?.tokenId === undefined || !account || !web3 || !track.trackEdition || !allTracks) {
       return;
     }
-    const weiPrice = web3?.utils.toWei(price.toString(), 'ether') || '0';
+    const weiPrice = web3?.utils.toWei(salePrice.toString(), 'ether') || '0';
     const startTimestamp = Math.ceil(startTime.getTime() / 1000);
 
     function listIds(trackIds: string[], params: ListBatchParams) {
@@ -157,7 +157,8 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
         { 
           tokenIds: tracksToList.map(t => Number(t.nftData!.tokenId)), 
           from: account, 
-          price: weiPrice, 
+          price: selectedCurrency === 'MATIC' && weiPrice || '0', 
+          priceOGUN: selectedCurrency === 'OGUN' && weiPrice || '0',
           startTime: startTimestamp, 
           contractAddresses: { nft: nftData.contract },
           nonce: nonce++,

@@ -9,6 +9,8 @@ import dynamic from 'next/dynamic';
 import NextLink from 'next/link';
 import { useEffect, useState } from 'react';
 import { currency } from 'utils/format';
+import { Logo } from '../icons/Logo';
+import { CurrencyType } from '../types/CurrenctyType';
 import { Cards } from '../icons/Cards';
 import Asset from './Asset';
 
@@ -51,6 +53,9 @@ export const TrackGrid = ({ track }: TrackProps) => {
   }
 
   const saleType = getSaleType(listingItem);
+  const price = listingItem?.priceToShow ?? 0;
+  const OGUNPrice = listingItem?.OGUNPricePerItemToShow ?? 0;
+  const selectedCurrency: CurrencyType = price ? 'MATIC' : 'OGUN';
   const { art, artist, title, trackId, playbackCount, favoriteCount, editionSize, listingCount } = song;
   const { play, isCurrentSong, isCurrentlyPlaying, setProgressStateFromSlider, progress } = useAudioPlayerContext();
 
@@ -63,6 +68,7 @@ export const TrackGrid = ({ track }: TrackProps) => {
     setIsPlaying(isCurrentlyPlaying(trackId));
   }, [isCurrentSong, isCurrentlyPlaying, setIsPlaying, trackId]);
 
+  const trackPrice = track.price.value;
   return (
     <div
       className={`${
@@ -101,13 +107,21 @@ export const TrackGrid = ({ track }: TrackProps) => {
           <div className="mx-3 mt-3 flex items-start justify-between">
             <div className='flex flex-col items-start justify-start'>
               <div className="flex items-center">
-                <div className="mr-1.5 font-semibold">{track.price}</div>
-                <Matic height="20" width="23" className="" />
+                <div className="mr-1.5 font-semibold">{selectedCurrency === 'MATIC' ? trackPrice : OGUNPrice}</div>
+                {selectedCurrency === 'MATIC' ? (
+                  <Matic height="20" width="23" className="" />
+                ) : (
+                    <Logo height="20" width="23" className="" />
+                )}
               </div>
 
-              {track.price > 0 && (
+              {trackPrice > 0 && (
                 <div className="mt-0.5 text-xs font-semibold text-gray-80">
-                  {maticUsd && maticUsd.maticUsd && track.price && `${currency(track.price * parseFloat(maticUsd.maticUsd))}`}
+                  {selectedCurrency === 'MATIC' ? (
+                    maticUsd && maticUsd.maticUsd && trackPrice && `${currency(trackPrice * parseFloat(maticUsd.maticUsd))}`
+                  ) : (
+                    <></>
+                  )}
                 </div>
               )}
             </div>

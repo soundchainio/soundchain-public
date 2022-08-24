@@ -1,49 +1,63 @@
-import fs from "fs/promises"; // Filesystem
-import path from "path"; // Path routing
-import Generator from "./generator"; // Generator
-import { logger } from "./logger"; // Logging
-import { parseUnits } from "ethers/lib/utils"; // Ethers utils
+import path from "path";
+import Generator from "./generator";
+import { parseUnits } from "ethers/lib/utils";
+import { tokenHoldersFileName, whitelistFileName, rewardAmount, decimalsPlaces } from "./config.json";
+import { ExtractDataFromCsvParams, GetAmountParams, Account } from "./types/app";
+import csv from 'csvtojson/v2';
 
-// Config file path
-const dataPath: string = path.join(__dirname, "./token-holders.csv");
+const tokenHoldersPath = path.join(__dirname, `./${tokenHoldersFileName}`);
+const whitelistPath = path.join(__dirname, `./${whitelistFileName}`);
 
-/**
- * Throws error and exists process
- * @param {string} erorr to log
- */
-function throwErrorAndExit(error: string): void {
-  logger.error(error);
-  process.exit(1);
+const decimals = Number(decimalsPlaces) || 18;
+
+const AUDIUS_HOLDERS = 'Audius Holders';
+const WHITELIST = 'Whitelist';
+
+const convertAmount = (params: GetAmountParams) => {
+  const { amount } = params;
+
+  const fixedAmount = Number(amount).toFixed(decimals).toString()
+
+  return parseUnits(fixedAmount, decimals).toString();
 }
 
-function extractFromCsv(data:string, decimals:number): Record<string, string> {
-  const rawList = data.split("\r\n");
-  rawList.shift();
+const calculateAudiusHoldersAmount = (balance: string) => {
+  const maxClaimableAmount = rewardAmount;
+  const _maxClaimableAmount = convertAmount({ amount: rewardAmount })
+  const _balance = convertAmount({ amount: balance })
+
+  return Number(_balance) < Number(_maxClaimableAmount) ?  balance : maxClaimableAmount;
+}
+
+const extractDataFromCsv = async (params: ExtractDataFromCsvParams): Promise<Record<string, string>> => {
+  const { filePath, fileName } = params;
+  
+  const accounts = await csv().fromFile(filePath)
   const airdropHolders: Record<string, string> = {};
+  
+  accounts.forEach((account: Account) => {
+    const { HolderAddress, Balance } = account;
+    
+    const amount = fileName === AUDIUS_HOLDERS ? calculateAudiusHoldersAmount(Balance) : rewardAmount;
+    
+    const parsedAmount = convertAmount({ amount })
 
-  rawList.forEach(function(row){
-      const holder = row.split(",");
 
-      const addr: string = String(holder[0]).replace("\"", "").replace("\"", "");
-      const wallet: string = addr as keyof typeof airdropHolders;
-
-      const rawAmount: string = String(holder[1]).replace("\"", "").replace("\"", ""); 
-      const amount = Number(rawAmount).toFixed(decimals).toString();
-      const totalTokens = parseUnits(amount, decimals).toString();
-
-      airdropHolders[wallet] = totalTokens;
+    airdropHolders[HolderAddress] = parsedAmount
   });
 
-  return airdropHolders;
+  return airdropHolders
 }
 
-(async () => {
+// Generate Merkle Tree and Proofs
+const build = async () => {
+  const whitelist = await extractDataFromCsv({ filePath: whitelistPath, fileName: WHITELIST })
+  const audiusHolders = await extractDataFromCsv({ filePath: tokenHoldersPath, fileName: AUDIUS_HOLDERS });
+  
+  // Generate ProoBook
+  const fullList = {...audiusHolders, ...whitelist};
+  const generator = new Generator(fullList);
+  await generator.process();
+}
 
-  const dirPath = dataPath;
-  const data = await fs.readFile(dirPath, 'utf8');
-  const airdrop : Record<string, string> = extractFromCsv(data?.toString(), 18); //Extract data from csv stored in dataPath
-
-  // Initialize and call generator
-  const generator = new Generator(airdrop); // Initialize generator
-  await generator.process(); //this calls the main function at generator.ts
-})();
+build();

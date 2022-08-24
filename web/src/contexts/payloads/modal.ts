@@ -79,6 +79,10 @@ export interface ShowAudioPlayerPayload {
   show: boolean;
 }
 
+export interface ShowOgunTransferConfirmationPayload {
+  show: boolean;
+}
+
 export interface ShowTransferConfirmationPayload {
   show: boolean;
 }

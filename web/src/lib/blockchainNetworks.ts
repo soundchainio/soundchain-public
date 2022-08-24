@@ -20,7 +20,11 @@ export const testnetNetwork: BlockchainNetwork = {
   name: 'Mumbai Testnet',
   // rpc: 'https://matic-mumbai.chainstacklabs.com',
   // alternative testnet rpc
-  rpc: 'https://rpc-mumbai.maticvigil.com',
+  // rpc: 'https://rpc-mumbai.maticvigil.com',
+  // rpc: 'https://rpc-mumbai.matic.today',
+  // rpc: 'https://matic-testnet-archive-rpc.bwarelabs.com',
+  rpc: 'https://polygon-mumbai.g.alchemy.com/v2/XmmFmbucl8MhC85TAsWgv6I4DcS2-VYL',
+  // rpc: 'https://rpc-mumbai.maticvigil.com',
   id: 80001,
   idHex: '0x13881',
   symbol: 'MATIC',

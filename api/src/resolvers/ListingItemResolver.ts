@@ -3,6 +3,7 @@ import { config } from '../config';
 import { ListingItem } from '../models/ListingItem';
 import { Context } from '../types/Context';
 import { FilterListingItemInput } from '../types/FilterListingItemInput';
+import { TrackPrice } from '../types/TrackPrice';
 
 @Resolver(ListingItem)
 export class ListingItemResolver {
@@ -21,11 +22,11 @@ export class ListingItemResolver {
     return listingItemService.getListingItem(tokenId, contractAddress);
   }
 
-  @Query(() => Number, {nullable: true})
+  @Query(() => TrackPrice, {nullable: true})
   async cheapestListingItem(
     @Ctx() {listingItemService}: Context,
     @Arg('trackEditionId') trackEditionId: string
-  ): Promise<number | void> {
+  ): Promise<TrackPrice> {
     return listingItemService.getCheapestListingItem(trackEditionId)
   }
 }

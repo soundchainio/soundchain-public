@@ -5,6 +5,8 @@ import { ListingItem } from '../models/ListingItem';
 import { TrackModel } from '../models/Track';
 import { getNow } from '../utils/Time';
 import { Service } from './Service';
+import { CurrencyType } from '../types/CurrencyType';
+import { TrackPrice } from '../types/TrackPrice';
 
 export class ListingItemService extends Service {
   async getListingItem(tokenId: number, contractAddress: string): Promise<ListingItem | void> {
@@ -31,7 +33,7 @@ export class ListingItemService extends Service {
     return !!auctionItem || !!buyNowItem;
   }
 
-  async getCheapestListingItem(trackEditionId: string): Promise<number> {
+  async getCheapestListingItem(trackEditionId: string): Promise<TrackPrice> {
     const transactionNfts = (await TrackModel.aggregate([
       {
         '$match': {
@@ -74,6 +76,7 @@ export class ListingItemService extends Service {
       {
         '$sort': {
           'listingItem.pricePerItemToShow': 1,
+          'listingItem.OGUNPricePerItemToShow': 1,
         },
       },
       {
@@ -81,15 +84,38 @@ export class ListingItemService extends Service {
       },
       {
         '$project': {
-            'price': '$listingItem.pricePerItemToShow'
+            'price': '$listingItem.pricePerItemToShow',
+            'OGUNPrice': '$listingItem.OGUNPricePerItemToShow',
         }
       }, {
         '$unwind': {
             'path': '$price'
-        }
+        },
+      }, {
+        '$unwind': {
+            'path': '$OGUNPrice'
+        },
       }
     ]));
 
-    return transactionNfts.length ? transactionNfts[0]?.price : 0;
+    if (!transactionNfts.length) {
+      return {
+        value: 0,
+        currency: CurrencyType.MATIC
+      }
+    }
+    const nft = transactionNfts[0]
+
+    if (nft.OGUNPrice && nft.OGUNPrice > 0) {
+      return {
+        value: nft.OGUNPrice,
+        currency: CurrencyType.OGUN
+      }
+    }
+
+    return {
+      value: nft.price || 0,
+      currency: CurrencyType.MATIC
+    };
   }
 }

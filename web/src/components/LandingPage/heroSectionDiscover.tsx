@@ -1,8 +1,9 @@
 import Image from 'next/image';
-import { Button } from '../Button';
 import { twd } from '../utils/twd';
 import LandingPageHeader from './header';
 import React from 'react';
+import RainbowLink from '../Links/RainbowLink';
+import OutlinedLink from '../Links/OutlinedLink';
 
 const AnimatedBar = twd(`absolute sm:ml-0 md:-left-4 transition-all h-5/10 sm:h-6/10
 w-full sm:w-2 sm:group-hover:w-full bg-gradient-to-r group-hover:rounded-r-lg z-0`).span;
@@ -88,23 +89,19 @@ export function HeroSectionDiscover() {
                     </div>
                     <div className='mt-10 w-full md:px-10 lg:px-0 sm:flex sm:justify-start'>
                       <div className='space-y-4 sm:space-y-0 sm:inline-grid sm:grid-cols-2 sm:gap-5'>
-                        <Button
-                          as={'a'}
+                        <RainbowLink
                           href='/login'
-                          variant='rainbow'
-                          className='rounded-lg'
-                          buttonClassName='rounded-lg font-medium uppercase text-center text-sm md:text-md'>
+                          containerClassName='rounded-lg'
+                          className='rounded-lg font-medium uppercase text-center text-sm md:text-md'>
                           Join community for free
-                        </Button>
+                        </RainbowLink>
 
-                        <Button
-                          as={'a'}
+                        <OutlinedLink
                           href='/ogun'
-                          variant='outline'
                           bgColor='bg-black/40 py-3 hover:bg-slate-900/70'
                           className='rounded-lg border-2 uppercase font-bold font-medium text-center'>
                           Learn about the token
-                        </Button>
+                        </OutlinedLink>
 
                       </div>
                     </div>

@@ -1,7 +1,7 @@
 import classNames from 'classnames';
-import { ButtonVariantProps, commonClasses } from 'components/Button';
+import { ButtonProps, commonClasses } from 'components/Button';
 
-export const GreenGradient = ({ className, type = 'button', icon: Icon, children, ...rest }: ButtonVariantProps) => {
+export const GreenGradient = ({ className, type = 'button', icon: Icon, children, ...rest }: ButtonProps) => {
   return (
     <div>
       <button

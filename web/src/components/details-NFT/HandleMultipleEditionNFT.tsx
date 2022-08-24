@@ -16,8 +16,10 @@ interface HandleMultipleEditionNFTProps {
   isMinter: boolean;
   isEditionListed?: boolean;
   price: number;
+  OGUNprice: number;
   startingDate?: Date;
   trackEditionId?: string;
+  isPaymentOGUN?: boolean;
 }
 
 export const HandleMultipleEditionNFT = ({
@@ -28,8 +30,10 @@ export const HandleMultipleEditionNFT = ({
   isEditionListed,
   isMinter,
   price,
+  OGUNprice,
   startingDate,
   trackEditionId,
+  isPaymentOGUN,
 }: HandleMultipleEditionNFTProps) => {
   const router = useRouter();
   const { account, web3 } = useWalletContext();
@@ -66,6 +70,8 @@ export const HandleMultipleEditionNFT = ({
         <ListedAction
           onClick={handleRemove}
           price={price}
+          OGUNprice={OGUNprice}
+          isPaymentOGUN={isPaymentOGUN}
           startingDate={startingDate}
           endingDate={endingDate}
           action="REMOVE EDITION LISTING"

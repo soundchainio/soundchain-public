@@ -4,7 +4,7 @@ import { Logo } from 'icons/Logo';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
-import { Button } from './Button';
+import RainbowLink from './Links/RainbowLink';
 
 interface NavItemProps {
   text: string;
@@ -22,7 +22,7 @@ export const NavItem = ({ text, link }: NavItemProps) => {
       <div className="bg-green-blue-gradient w-5/6 pb-1" />
     </div>
   ) : (
-    <a href={link ? link : '/' + text.toLowerCase()} className="hidden md:inline-block">
+    <a className="hidden md:inline" href={link ? link : '/' + text.toLowerCase()}>
       <div className="flex items-center justify-center p-2">{text}</div>
     </a>
   );
@@ -72,16 +72,14 @@ export const Header = () => {
             <span className="hidden font-extrabold text-white md:block">SoundChain</span>
           </div>
           <nav className="flex items-center justify-evenly gap-3 text-white">
+            {/* TODO: disabling this for the soft launch */}
+            {/* <NavItem text="Airdrop" />
+            <NavItem text="Stake" /> */}
             <NavItem text="Tokenomics" link="https://soundchain.gitbook.io/soundchain/token/ogun" />
             <div className="scale-95">
-              <Button
-                as={'a'}
-                href="/marketplace"
-                variant="rainbow"
-                buttonClassName="font-medium text-sm px-2 uppercase text-center"
-              >
+              <RainbowLink href="/marketplace" className="px-2 text-center text-sm font-medium uppercase">
                 CONTINUE TO SOUNDCHAIN
-              </Button>
+              </RainbowLink>
             </div>
 
             <button onClick={() => setDrawerOpen(true)} className="px-2 outline-0 focus:outline-0 active:outline-0">

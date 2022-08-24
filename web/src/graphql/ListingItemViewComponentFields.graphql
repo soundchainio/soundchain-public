@@ -6,6 +6,9 @@ fragment ListingItemViewComponentFields on ListingItem {
   contract
   pricePerItem
   pricePerItemToShow
+  OGUNPricePerItem
+  OGUNPricePerItemToShow
+  isPaymentOGUN
   startingTime
   endingTime
   reservePrice
