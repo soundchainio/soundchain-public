@@ -21,6 +21,9 @@ import LiquidityPoolRewards from '../contract/LiquidityPoolRewards.sol/Liquidity
 import LPToken from '../contract/LPToken.sol/LPToken.json';
 import SoundchainOGUN20 from '../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json';
 import StakingRewards from '../contract/StakingRewards.sol/StakingRewards.json';
+import { useMagicContext } from 'hooks/useMagicContext';
+import useBlockchain from 'hooks/useBlockchain';
+import { SoundchainGoldLogo } from 'icons/SoundchainGoldLogo';
 
 interface FormValues {
   token: string;
@@ -62,7 +65,9 @@ export default function Stake() {
     web3: wcWeb3,
   } = useWalletConnect();
 
+  const { web3: magicLinkWeb3, account: magicLinkAccount } = useMagicContext();
   const { web3: metamaskWeb3, account: metamaskAccount } = useMetaMask();
+  const { getCurrentGasPrice } = useBlockchain();
   const { setIsLandingLayout } = useLayoutContext();
   const [account, setAccount] = useState<string>();
   const [OGUNBalance, setOGUNBalance] = useState<string>('0');
@@ -78,21 +83,39 @@ export default function Stake() {
   const [showDescription, setShowDescription] = useState(false);
   const [web3, setWeb3] = useState<Web3>();
 
+  const saveWalletState = (wallet: string) => {
+    localStorage.setItem('soundchain_staking_connected_wallet', wallet);
+  }
+
+  const getWalletState = () => {
+    return localStorage.getItem('soundchain_staking_connected_wallet');
+  }
+
   useEffect(() => {
-    const loadAccount = (type: string) => {
-      setAccount(type === 'wc' ? walletconnectAccount : metamaskAccount);
-      setWeb3(type === 'wc' ? wcWeb3 : metamaskWeb3);
+    const connectedWallet = getWalletState();
+
+    const loadAccount = ({ account, web3 }: { account: string, web3: Web3 }) => {
+      setAccount(account);
+      setWeb3(web3);
     };
-    if (walletconnectAccount && wcWeb3) {
-      loadAccount('wc');
-    } else if (metamaskAccount && metamaskWeb3) {
-      loadAccount('metamask');
+
+    if (walletconnectAccount && wcWeb3 && connectedWallet === 'wc') {
+      console.log('loading WC...');
+      loadAccount({ account: walletconnectAccount, web3: wcWeb3 });
     }
-  }, [walletconnectAccount, metamaskAccount, wcWeb3]);
+    else if (metamaskAccount && metamaskWeb3 && connectedWallet === 'metamask') {
+      console.log('loading MetaMask...');
+      loadAccount({ account: metamaskAccount, web3: metamaskWeb3 });      
+    }
+    else if (magicLinkAccount && magicLinkWeb3 && connectedWallet === 'magiclink') {
+      console.log('loading Soundchain Wallet...');
+      loadAccount({ account: magicLinkAccount, web3: magicLinkWeb3 });
+    }
+  }, [walletconnectAccount, metamaskAccount, magicLinkAccount, wcWeb3, metamaskWeb3, magicLinkWeb3]);
 
   useEffect(() => {
     return () => {
-      wcDisconnect();
+      // wcDisconnect();
     };
   }, []);
 
@@ -125,16 +148,25 @@ export default function Stake() {
 
     setShowModal(false);
     setWeb3(metamaskWeb3);
+    saveWalletState('metamask')
   };
 
   const connectWC = async () => {
     try {
       await wcConnect();
+      saveWalletState('wc')
     } catch (error) {
       console.warn('warn: ', error);
     } finally {
       setCloseWcModal(!closeWcModal);
     }
+  };
+
+  const connectSoundchain = () => {
+    setShowModal(false);
+    setAccount(magicLinkAccount);
+    setWeb3(magicLinkWeb3);
+    saveWalletState('magiclink')
   };
 
   const addWallet = async () => {
@@ -230,13 +262,27 @@ export default function Stake() {
     }
     if (account && web3 && values.amount > 0 && values.amount <= +balance) {
       try {
+
+        const existingAllowance = await currentTokenContract(web3)
+        .methods.allowance(account, stakingContractAddress)
+        .call()
+        .catch(console.log);
+
         const weiAmount = web3.utils.toWei(values.amount.toString());
-        // setTransactionState('Approving transaction...');
+        const gasPrice = web3.utils.toWei(await getCurrentGasPrice(web3));
+
+        if (existingAllowance < parseFloat(weiAmount)) {
+        setTransactionState('Approving transaction...');
+          const approvalTxObj = currentTokenContract(web3).methods.approve(stakingContractAddress, weiAmount);    
+          const approvalTxGas = await approvalTxObj.estimateGas({ from: account });
+          await approvalTxObj.send({ from: account, gas: approvalTxGas, gasPrice })
+        }
+
         setTransactionState(`Staking ${tokenName}...`);
-        await Promise.all([
-          currentTokenContract(web3).methods.approve(stakingContractAddress, weiAmount).send({ from: account }),
-          currentTokenStakingContract(web3).methods.stake(weiAmount).send({ from: account }),
-        ]);
+        const stakeTxObj = currentTokenStakingContract(web3).methods.stake(weiAmount);    
+        const stakeTxGas = await stakeTxObj.estimateGas({ from: account });
+        await stakeTxObj.send({ from: account, gas: stakeTxGas, gasPrice })
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (cause: any) {
         console.log('Stake Error: ', cause);
@@ -256,7 +302,10 @@ export default function Stake() {
     if (account && web3) {
       try {
         setTransactionState(`Unstaking ${tokenName}...`);
-        await currentTokenStakingContract(web3).methods.withdraw().send({ from: account });
+        const gasPrice = web3.utils.toWei(await getCurrentGasPrice(web3));
+        const unstakeTxObj = currentTokenStakingContract(web3).methods.withdraw();    
+        const unstakeTxGas = await unstakeTxObj.estimateGas({ from: account });
+        await unstakeTxObj.send({ from: account, gas: unstakeTxGas, gasPrice })
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (cause: any) {
         console.log('Stake Error: ', cause);
@@ -503,6 +552,7 @@ export default function Stake() {
           <h1 className="text-2xl font-bold text-blue-500">CONNECT WALLET</h1>
           <p className="py-1 text-gray-500">Connect with one of our available wallet providers</p>
           <div className="my-4 space-y-3">
+            <WalletButton caption="Soundchain Wallet" icon={SoundchainGoldLogo} handleOnClick={connectSoundchain} />
             <WalletButton caption="Metamask" icon={MetaMask} handleOnClick={connectMetaMask} />
             <WalletButton caption="WalletConnect" icon={WalletConnect} handleOnClick={connectWC} />
           </div>
