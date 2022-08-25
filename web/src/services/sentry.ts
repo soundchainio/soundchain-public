@@ -4,7 +4,12 @@ import { config } from 'config';
 import { sentryErrorFilter } from 'utils/errorHandler';
 
 export const sentryInitializer = () => {
-  if (process.env.NODE_ENV !== 'production') return;
+  const env = process.env.NEXT_PUBLIC_VERCEL_ENV
+  
+  const isProduction = Boolean(env === 'production')
+  const isStaging = Boolean(env === 'preview')
+
+  if (!isProduction || !isStaging) return;
   
   init({
     dsn: config.sentryUrl,

@@ -67,28 +67,29 @@ export function MagicProvider({ children }: MagicProviderProps) {
   const [isRefetchingBalance, setIsRefetchingBalance] = useState(false);
 
   const router = useRouter();
+  const isLoginPage = router.pathname.includes('/login');
 
   const tokenAddress = config.OGUNAddress;
 
   const handleError = useCallback(
     async error => {
-      if (error.code === RPCErrorCode.InternalError) {
+      if (error.code === RPCErrorCode.InternalError && !isLoginPage) {
         await magic.user.logout();
         setJwt();
-        router.reload();
+        router.push('/login');
       }
 
       errorHandler(error);
     },
-    [router],
+    [isLoginPage, router],
   );
 
   const refetchBalance = async () => {
-    if (!account) return;
-
-    setIsRefetchingBalance(true);
-
     try {
+      if (!account) return;
+
+      setIsRefetchingBalance(true);
+
       await handleSetBalance();
       await handleSetOgunBalance();
     } catch (error) {
@@ -108,20 +109,20 @@ export function MagicProvider({ children }: MagicProviderProps) {
   }, [handleError]);
 
   const handleSetBalance = useCallback(async () => {
-    if (!account) await handleSetAccount();
-
     try {
+      if (!account) return;
+
       const balance = await web3.eth.getBalance(account);
 
       setBalance(Number(web3.utils.fromWei(balance, 'ether')).toFixed(6));
     } catch (error) {
       handleError(error);
     }
-  }, [account, handleError, handleSetAccount]);
+  }, [account, handleError]);
 
   const handleSetOgunBalance = useCallback(async () => {
     try {
-      if (!account) await handleSetAccount();
+      if (!account) return;
 
       const ogunContract = new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], tokenAddress);
       const tokenAmount = await ogunContract.methods.balanceOf(account).call();
@@ -131,14 +132,20 @@ export function MagicProvider({ children }: MagicProviderProps) {
     } catch (error) {
       handleError(error);
     }
-  }, [account, handleError, handleSetAccount, tokenAddress]);
+  }, [account, handleError, tokenAddress]);
+
+  const handleUseEffect = useCallback(async () => {
+    if (!account) await handleSetAccount();
+
+    await handleSetOgunBalance();
+    await handleSetBalance();
+  }, [account, handleSetAccount, handleSetBalance, handleSetOgunBalance]);
 
   useEffect(() => {
     if (!me && !web3) return;
 
-    handleSetOgunBalance();
-    handleSetBalance();
-  }, [me, router, handleSetOgunBalance, handleSetBalance]);
+    handleUseEffect();
+  }, [handleUseEffect, me]);
 
   return (
     <MagicContext.Provider value={{ magic, web3, account, balance, ogunBalance, refetchBalance, isRefetchingBalance }}>
