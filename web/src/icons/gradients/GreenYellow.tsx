@@ -14,5 +14,5 @@ export const GreenYellowGradient = () => {
         <stop offset="1" stopColor="#FFD604"></stop>
       </linearGradient>
     </defs>
-  );
-};
+  )
+}

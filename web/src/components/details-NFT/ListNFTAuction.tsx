@@ -1,21 +1,21 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { Button } from 'components/Button';
-import { InputField } from 'components/InputField';
-import MaxGasFee from 'components/MaxGasFee';
-import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
-import { SoundchainFee } from 'components/SoundchainFee';
-import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
-import { Logo } from 'icons/Logo';
-import { Matic } from 'icons/Matic';
-import { useState } from 'react';
-import ReactDatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
-import { boolean, date, number, object, ref, SchemaOf } from 'yup';
+import { Button } from 'components/Button'
+import { InputField } from 'components/InputField'
+import MaxGasFee from 'components/MaxGasFee'
+import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar'
+import { SoundchainFee } from 'components/SoundchainFee'
+import { Form, Formik, FormikHelpers, FormikProps } from 'formik'
+import { Logo } from 'icons/Logo'
+import { Matic } from 'icons/Matic'
+import { useState } from 'react'
+import ReactDatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
+import { boolean, date, number, object, ref, SchemaOf } from 'yup'
 
 export interface ListNFTAuctionFormValues {
-  price: number;
-  startTime: Date;
-  endTime: Date;
+  price: number
+  startTime: Date
+  endTime: Date
 }
 
 const validationSchema: SchemaOf<ListNFTAuctionFormValues> = object().shape({
@@ -25,21 +25,21 @@ const validationSchema: SchemaOf<ListNFTAuctionFormValues> = object().shape({
     .required(), // current  date + 5 minutes
   endTime: date().min(ref('startTime'), "End time can't be before start time").required(),
   isPaymentOGUN: boolean().required(),
-});
+})
 
 interface ListNFTProps {
-  submitLabel: string;
-  handleSubmit: (values: ListNFTAuctionFormValues, formikHelpers: FormikHelpers<ListNFTAuctionFormValues>) => void;
-  initialValues?: Partial<ListNFTAuctionFormValues>;
+  submitLabel: string
+  handleSubmit: (values: ListNFTAuctionFormValues, formikHelpers: FormikHelpers<ListNFTAuctionFormValues>) => void
+  initialValues?: Partial<ListNFTAuctionFormValues>
 }
 
 export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: ListNFTProps) => {
-  const [isPaymentOGUN, setIsPaymentOGUN] = useState(false);
+  const [isPaymentOGUN, setIsPaymentOGUN] = useState(false)
   const defaultValues: ListNFTAuctionFormValues = {
     price: initialValues?.price || 0,
     startTime: initialValues?.startTime || new Date(new Date().getTime() + 10 * 1000 * 60),
     endTime: initialValues?.endTime || new Date(new Date().getTime() + 20 * 1000 * 60),
-  };
+  }
 
   return (
     <div className="mb-2 pb-16">
@@ -47,10 +47,7 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: Lis
         initialValues={defaultValues}
         validationSchema={validationSchema}
         onSubmit={(values, helper) => {
-          handleSubmit(
-            { ...values, startTime: new Date(values.startTime), endTime: new Date(values.endTime) },
-            helper,
-          );
+          handleSubmit({ ...values, startTime: new Date(values.startTime), endTime: new Date(values.endTime) }, helper)
         }}
       >
         {({ values, errors, isSubmitting, setFieldValue }: FormikProps<ListNFTAuctionFormValues>) => (
@@ -117,10 +114,7 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: Lis
               </div>
             </div>
             <div className="flex items-center justify-between bg-gray-20 py-3 px-5">
-              <label
-                htmlFor="endTime"
-                className="flex items-center justify-start text-gray-80 font-bold text-xs"
-              >
+              <label htmlFor="endTime" className="flex items-center justify-start text-xs font-bold text-gray-80">
                 <div className="mr-3 flex flex-col">
                   <p className="uppercase">end time</p>
                   <p className="font-medium" style={{ fontSize: 10 }}>
@@ -164,5 +158,5 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: Lis
         )}
       </Formik>
     </div>
-  );
-};
+  )
+}

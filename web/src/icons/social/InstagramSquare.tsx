@@ -8,5 +8,5 @@ export const InstagramSquare = (props: React.SVGProps<SVGSVGElement>) => {
         clipRule="evenodd"
       ></path>
     </svg>
-  );
-};
+  )
+}

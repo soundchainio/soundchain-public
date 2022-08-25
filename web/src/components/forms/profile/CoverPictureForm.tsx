@@ -1,22 +1,22 @@
-import classNames from 'classnames';
-import { Button, ButtonProps } from 'components/Button';
-import { ImageUploadField } from 'components/ImageUploadField';
-import { Label } from 'components/Label';
-import { Form, Formik } from 'formik';
-import { useMe } from 'hooks/useMe';
-import { useUpdateCoverPictureMutation } from 'lib/graphql';
-import Image from 'next/image';
-import React, { useCallback, useEffect, useState } from 'react';
-import * as yup from 'yup';
+import classNames from 'classnames'
+import { Button, ButtonProps } from 'components/Button'
+import { ImageUploadField } from 'components/ImageUploadField'
+import { Label } from 'components/Label'
+import { Form, Formik } from 'formik'
+import { useMe } from 'hooks/useMe'
+import { useUpdateCoverPictureMutation } from 'lib/graphql'
+import Image from 'next/image'
+import React, { useCallback, useEffect, useState } from 'react'
+import * as yup from 'yup'
 
 interface CoverPictureFormProps {
-  afterSubmit: () => void;
-  submitProps?: ButtonProps;
-  submitText: string;
+  afterSubmit: () => void
+  submitProps?: ButtonProps
+  submitText: string
 }
 
 interface FormValues {
-  coverPicture?: string | undefined;
+  coverPicture?: string | undefined
 }
 
 const defaultCoverPictures = [
@@ -26,35 +26,35 @@ const defaultCoverPictures = [
   '/default-pictures/cover/net.jpeg',
   '/default-pictures/cover/rings.jpeg',
   '/default-pictures/cover/waves.jpeg',
-];
+]
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   coverPicture: yup.string(),
-});
+})
 
 export const CoverPictureForm = ({ afterSubmit, submitText, submitProps }: CoverPictureFormProps) => {
-  const me = useMe();
-  const [defaultPicture, setDefaultPicture] = useState<string | null>(null);
-  const [updateCoverPicture] = useUpdateCoverPictureMutation();
-  const [loading, setLoading] = useState(false);
+  const me = useMe()
+  const [defaultPicture, setDefaultPicture] = useState<string | null>(null)
+  const [updateCoverPicture] = useUpdateCoverPictureMutation()
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    const picture = me?.profile.coverPicture;
+    const picture = me?.profile.coverPicture
 
     if (picture && defaultCoverPictures.includes(picture)) {
-      setDefaultPicture(picture);
+      setDefaultPicture(picture)
     }
-  }, [me?.profile.coverPicture]);
+  }, [me?.profile.coverPicture])
 
   const onUpload = useCallback(uploading => {
-    setLoading(uploading);
-  }, []);
+    setLoading(uploading)
+  }, [])
 
-  if (!me) return null;
+  if (!me) return null
 
   const initialFormValues: FormValues = {
     coverPicture: '',
-  };
+  }
 
   const onSubmit = async ({ coverPicture }: FormValues) => {
     await updateCoverPicture({
@@ -63,10 +63,10 @@ export const CoverPictureForm = ({ afterSubmit, submitText, submitProps }: Cover
           coverPicture: coverPicture || defaultPicture,
         },
       },
-    });
+    })
 
-    afterSubmit();
-  };
+    afterSubmit()
+  }
 
   return (
     <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={onSubmit}>
@@ -83,7 +83,7 @@ export const CoverPictureForm = ({ afterSubmit, submitText, submitProps }: Cover
                 <ImageUploadField
                   name="coverPicture"
                   onUpload={onUpload}
-                  className={`${coverPicture ? 'h-[150px]' : ''} cursor-pointer mt-8`}
+                  className={`${coverPicture ? 'h-[150px]' : ''} mt-8 cursor-pointer`}
                 >
                   Upload Cover Photo
                 </ImageUploadField>
@@ -96,12 +96,12 @@ export const CoverPictureForm = ({ afterSubmit, submitText, submitProps }: Cover
                   <button
                     key={picture}
                     className={classNames(
-                      'relative flex justify-center justify-self-center w-full h-[150px] p-2',
+                      'relative flex h-[150px] w-full justify-center justify-self-center p-2',
                       defaultPicture === picture && 'rounded-xl border-2',
                     )}
                     onClick={() => setDefaultPicture(picture)}
                   >
-                    <div className="relative flex w-full h-full">
+                    <div className="relative flex h-full w-full">
                       <Image
                         alt="Default cover picture"
                         src={picture}
@@ -116,12 +116,12 @@ export const CoverPictureForm = ({ afterSubmit, submitText, submitProps }: Cover
             </div>
           </div>
           <div className="flex flex-col">
-            <Button type="submit" disabled={loading} variant="outline" className="h-12 mt-4" {...submitProps}>
+            <Button type="submit" disabled={loading} variant="outline" className="mt-4 h-12" {...submitProps}>
               {submitText}
             </Button>
           </div>
         </Form>
       )}
     </Formik>
-  );
-};
+  )
+}

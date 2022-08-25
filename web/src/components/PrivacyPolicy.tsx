@@ -1,6 +1,6 @@
 export const PrivacyPolicy = () => {
   return (
-    <div className="text-gray-400 p-6">
+    <div className="p-6 text-gray-400">
       <h1 className="mb-2 text-white">PRIVACY POLICY</h1>
       <p className="mb-2">
         SoundChain, Inc. (&ldquo;SoundChain&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;, or &ldquo;our&rdquo;) is
@@ -13,7 +13,7 @@ export const PrivacyPolicy = () => {
       </p>
       <ol>
         <li className="mb-2">
-          <span className="underline text-white">1. Types of Data We Collect</span>. &ldquo;Personal Data&rdquo; means
+          <span className="text-white underline">1. Types of Data We Collect</span>. &ldquo;Personal Data&rdquo; means
           data that allows someone to identify you individually, including, for example, your name, email address, as
           well as any other non-public information about you that is associated with or linked to any of the foregoing.
           &ldquo;Anonymous Data&rdquo; means data, including aggregated and de-identified data, that is not associated
@@ -21,7 +21,7 @@ export const PrivacyPolicy = () => {
           individual persons. We collect Personal Data and Anonymous Data as described below.
           <ol className="my-2 pl-4">
             <li className="mb-2">
-              <span className="underline text-white">a. Information You Provide Us</span>
+              <span className="text-white underline">a. Information You Provide Us</span>
               <ol className="my-2 pl-8">
                 <li className="mb-2">
                   <span className="text-white">i.</span> When you use our Service, update your account profile, or
@@ -45,18 +45,18 @@ export const PrivacyPolicy = () => {
               </ol>
             </li>
             <li className="mb-2">
-              <span className="underline text-white">b. Information Collected via Technology</span>. As you navigate
+              <span className="text-white underline">b. Information Collected via Technology</span>. As you navigate
               through and interact with our Service, we may use automatic data collection technologies to collect
               certain information about your equipment, browsing actions, and patterns, including:
               <ol className="my-2 pl-8">
                 <li className="mb-2">
-                  <span className="underline text-white">i. Information Collected by Our Servers</span>. To provide our
+                  <span className="text-white underline">i. Information Collected by Our Servers</span>. To provide our
                   Service and make it more useful to you, we (or a third party service provider) collect information
                   from you, including, but not limited to, your browser type, operating system, Internet Protocol
                   (&ldquo;IP&rdquo;) address, mobile device ID, blockchain address, wallet type, and date/time stamps.
                 </li>
                 <li className="mb-2">
-                  <span className="underline text-white">ii. Log Files</span>. As is true of most websites and
+                  <span className="text-white underline">ii. Log Files</span>. As is true of most websites and
                   applications, we gather certain information automatically and store it in log files. This information
                   includes IP addresses, browser type, Internet service provider (&ldquo;ISP&rdquo;), referring/exit
                   pages, operating system, date/time stamps, and clickstream data. We use this information to analyze
@@ -66,25 +66,25 @@ export const PrivacyPolicy = () => {
                   experience.
                 </li>
                 <li className="mb-2">
-                  <span className="underline text-white">iii. Cookies</span>. Like many online services, we use cookies
+                  <span className="text-white underline">iii. Cookies</span>. Like many online services, we use cookies
                   to collect information. We may use both session Cookies (which expire once you close your web browser)
                   and persistent Cookies (which stay on your computer until you delete them) to analyze how users
                   interact with our Service, make improvements to our product quality, and provide users with a more
                   personalized experience.
                 </li>
                 <li className="mb-2">
-                  <span className="underline text-white">iv. Pixel Tag</span>. In addition, we use &ldquo;Pixel
+                  <span className="text-white underline">iv. Pixel Tag</span>. In addition, we use &ldquo;Pixel
                   Tags&rdquo; (also referred to as clear Gifs, Web beacons, or Web bugs). Pixel Tags allow us to analyze
                   how users find our Service, make the Service more useful to you, and tailor your experience with us to
                   meet your particular interests and needs.
                 </li>
                 <li className="mb-2">
-                  <span className="underline text-white">v. How We Respond to Do Not Track Signals</span>. Our systems
+                  <span className="text-white underline">v. How We Respond to Do Not Track Signals</span>. Our systems
                   do not currently recognize &ldquo;do not track&rdquo; signals or other mechanisms that might enable
                   Users to opt out of tracking on our site.
                 </li>
                 <li className="mb-2">
-                  <span className="underline text-white">vi. Analytics Services</span>. In addition to the tracking
+                  <span className="text-white underline">vi. Analytics Services</span>. In addition to the tracking
                   technologies we place like Cookies and Pixel Tags, other companies may set their own cookies or
                   similar tools when you visit our Service. This includes third-party analytics services
                   (&ldquo;Analytics Services&rdquo;) that we engage to help analyze how users use the Service. The
@@ -101,7 +101,7 @@ export const PrivacyPolicy = () => {
               </ol>
             </li>
             <li className="mb-2">
-              <span className="underline text-white">c. Information Collected from Third-Party Companies</span>. We may
+              <span className="text-white underline">c. Information Collected from Third-Party Companies</span>. We may
               receive Personal and/or Anonymous Data about you from companies that offer their products and/or services
               for use in conjunction with our Service or whose products and/or services may be linked from our Service.
               For example, third-party wallet providers provide us with your blockchain address and certain other
@@ -109,7 +109,7 @@ export const PrivacyPolicy = () => {
               collected from or about you through our Service.
             </li>
             <li className="mb-2">
-              <span className="underline text-white">d. Public Information Observed from Blockchains</span>. We collect
+              <span className="text-white underline">d. Public Information Observed from Blockchains</span>. We collect
               data from activity that is publicly visible and/or accessible on blockchains. This may include blockchain
               addresses and information regarding purchases, sales, or transfers of NFTs, which may then be associated
               with other data you have provided to us.
@@ -117,7 +117,7 @@ export const PrivacyPolicy = () => {
           </ol>
         </li>
         <li className="mb-2">
-          <span className="underline text-white">2. Use of Your Personal Data</span>.
+          <span className="text-white underline">2. Use of Your Personal Data</span>.
           <ol className="my-2 pl-4">
             <li className="mb-2">
               <span className="text-white">a.</span> We process your Personal Data to run our business, provide the
@@ -196,23 +196,23 @@ export const PrivacyPolicy = () => {
           </ol>
         </li>
         <li className="mb-2">
-          <span className="underline text-white">3. Disclosure of Your Personal Data</span>. We disclose your Personal
+          <span className="text-white underline">3. Disclosure of Your Personal Data</span>. We disclose your Personal
           Data as described below and as described elsewhere in this Privacy Policy.
           <ol className="my-2 pl-4">
             <li className="mb-2">
-              <span className="underline text-white">a. Third Party Service Providers</span>. We may share your Personal
+              <span className="text-white underline">a. Third Party Service Providers</span>. We may share your Personal
               Data with third party service providers to: provide technical infrastructure services; conduct quality
               assurance testing; analyze how our Service is used; prevent, detect, and respond to unauthorized
               activities; provide technical and customer support; and/or to provide other support to us and to the
               Service.
             </li>
             <li className="mb-2">
-              <span className="underline text-white">b. Affiliates</span>. We may share some or all of your Personal
+              <span className="text-white underline">b. Affiliates</span>. We may share some or all of your Personal
               Data with any subsidiaries, joint ventures, or other companies under our common control
               (&ldquo;Affiliates&rdquo;) .
             </li>
             <li className="mb-2">
-              <span className="underline text-white">c. Corporate Restructuring</span>. We may share some or all of your
+              <span className="text-white underline">c. Corporate Restructuring</span>. We may share some or all of your
               Personal Data in connection with or during negotiation of any merger, financing, acquisition, or
               dissolution transaction or proceeding involving sale, transfer, divestiture, or disclosure of all or a
               portion of our business or assets. In the event of an insolvency, bankruptcy, or receivership, Personal
@@ -221,7 +221,7 @@ export const PrivacyPolicy = () => {
               obligations regarding your Personal Data as described in this Privacy Policy.
             </li>
             <li className="mb-2">
-              <span className="underline text-white">d. Legal Rights</span>. Regardless of any choices you make
+              <span className="text-white underline">d. Legal Rights</span>. Regardless of any choices you make
               regarding your Personal Data (as described below), SoundChain, Inc. may disclose Personal Data if it
               believes in good faith that such disclosure is necessary: (a) in connection with any legal investigation;
               (b) to comply with relevant laws or to respond to subpoenas, warrants, or other legal process served on
@@ -230,14 +230,14 @@ export const PrivacyPolicy = () => {
               law, this Privacy Policy, or our Terms of Service.
             </li>
             <li className="mb-2">
-              <span className="underline text-white">e. Other Disclosures</span>. We may also disclose your Personal
+              <span className="text-white underline">e. Other Disclosures</span>. We may also disclose your Personal
               Data: to fulfill the purpose for which you provide it; for any other purpose disclosed by us when you
               provide it; or with your consent.
             </li>
           </ol>
         </li>
         <li className="mb-2">
-          <span className="underline text-white">4. Third-Party Websites</span>. Our Service may contain links to
+          <span className="text-white underline">4. Third-Party Websites</span>. Our Service may contain links to
           third-party websites. When you click on a link to any other website or location, you will leave our Service
           and go to another site, and another entity may collect Personal Data from you. We have no control over, do not
           review, and cannot be responsible for these third-party websites or their content. Please be aware that the
@@ -247,17 +247,17 @@ export const PrivacyPolicy = () => {
           convenience and do not signify our endorsement of such third parties or their products, content, or websites.
         </li>
         <li className="mb-2">
-          <span className="underline text-white">5. Third-Party Wallets</span>. To use our Service, you must use a
+          <span className="text-white underline">5. Third-Party Wallets</span>. To use our Service, you must use a
           third-party wallet which allows you to engage in transactions on public blockchains. Your interactions with
           any third-party wallet provider are governed by the applicable terms of service and privacy policy of that
           third party.
         </li>
         <li className="mb-2">
-          <span className="underline text-white">6. Your Choices Regarding Information</span>. You have several choices
+          <span className="text-white underline">6. Your Choices Regarding Information</span>. You have several choices
           regarding the use of information on our Services:
           <ol className="my-2 pl-4">
             <li className="mb-2">
-              <span className="underline text-white">a. Email Communications</span>. We may periodically send you
+              <span className="text-white underline">a. Email Communications</span>. We may periodically send you
               newsletters and/or emails that directly promote the use of our Service or third parties&rsquo; goods and
               services. When you receive newsletters or promotional communications from us, you may indicate a
               preference to stop receiving these communications from us by following the unsubscribe instructions
@@ -274,7 +274,7 @@ export const PrivacyPolicy = () => {
           </ol>
         </li>
         <li className="mb-2">
-          <span className="underline text-white">7. Data Access and Control</span>. You can view, access, edit, or
+          <span className="text-white underline">7. Data Access and Control</span>. You can view, access, edit, or
           delete your Personal Data for certain aspects of the Service via your Settings page. You may also have certain
           additional rights:
           <ol className="my-2 pl-4">
@@ -310,7 +310,7 @@ export const PrivacyPolicy = () => {
           </ol>
         </li>
         <li className="mb-2">
-          <span className="underline text-white">8. Data Retention</span>. We may retain your Personal Data as long as
+          <span className="text-white underline">8. Data Retention</span>. We may retain your Personal Data as long as
           you continue to use the Service, have an account with us, or for as long as is necessary to fulfill the
           purposes outlined in this Privacy Policy. We may continue to retain your Personal Data even after you
           deactivate your account and/or cease to use the Service if such retention is reasonably necessary to comply
@@ -319,7 +319,7 @@ export const PrivacyPolicy = () => {
           purposes, we will delete it.
         </li>
         <li className="mb-2">
-          <span className="underline text-white">9. Data Protection</span>. We care about the security of your
+          <span className="text-white underline">9. Data Protection</span>. We care about the security of your
           information and use physical, administrative, and technological safeguards to preserve the integrity and
           security of information collected through our Service. However, no security system is impenetrable and we
           cannot guarantee the security of our systems. In the event that any information under our custody and control
@@ -335,7 +335,7 @@ export const PrivacyPolicy = () => {
           </ol>
         </li>
         <li className="mb-2">
-          <span className="underline text-white">10. Minors</span>. We do not intentionally gather Personal Data from
+          <span className="text-white underline">10. Minors</span>. We do not intentionally gather Personal Data from
           visitors who are under the age of 13. Our Terms of Service require all users to be at least 18 years old.
           Minors who are at least 13 years old but are under 18 years old may use a parent or guardian&rsquo;s
           SoundChain, Inc. account, but only with the involvement of the account holder. If a child under 13 submits
@@ -348,7 +348,7 @@ export const PrivacyPolicy = () => {
           .
         </li>
         <li className="mb-2">
-          <span className="underline text-white">11. Users Outside of the United States</span>. If you are a non-U.S.
+          <span className="text-white underline">11. Users Outside of the United States</span>. If you are a non-U.S.
           user of the Service, by visiting the Service and providing us with data, you acknowledge and agree that your
           Personal Data may be processed for the purposes identified in the Privacy Policy. In addition, your Personal
           Data may be processed in the country in which it was collected and in other countries, including the United
@@ -356,7 +356,7 @@ export const PrivacyPolicy = () => {
           By providing your Personal Data, you consent to such transfer.
         </li>
         <li className="mb-2">
-          <span className="underline text-white">12. Changes to This Privacy Policy</span>. This Privacy Policy may be
+          <span className="text-white underline">12. Changes to This Privacy Policy</span>. This Privacy Policy may be
           updated from time to time for any reason. We will notify you of any changes to our Privacy Policy by posting
           the new Privacy Policy at{' '}
           <a className="underline" href="https://soundchain.io/privacy-policy">
@@ -366,7 +366,7 @@ export const PrivacyPolicy = () => {
           responsible for periodically visiting our Service and this Privacy Policy to check for any changes.
         </li>
         <li className="mb-2">
-          <span className="underline text-white">13. Questions; Contacting SoundChain, Inc.; Reporting Violations</span>
+          <span className="text-white underline">13. Questions; Contacting SoundChain, Inc.; Reporting Violations</span>
           . If you have any questions or concerns or complaints about our Privacy Policy or our data collection or
           processing practices, or if you want to report any security violations to us, please contact us by emailing us
           at{' '}
@@ -377,5 +377,5 @@ export const PrivacyPolicy = () => {
         </li>
       </ol>
     </div>
-  );
-};
+  )
+}

@@ -1,35 +1,40 @@
-import { Modal } from 'components/Modal';
-import { useModalDispatch, useModalState } from 'contexts/providers/modal';
-import useBlockchainV2, { CancelListingBatchParams, ContractAddresses } from 'hooks/useBlockchainV2';
-import { useMaxCancelBatchListGasFee } from 'hooks/useMaxCancelBatchListGasFee';
-import { useMaxGasFee } from 'hooks/useMaxGasFee';
-import { useMe } from 'hooks/useMe';
-import { useWalletContext } from 'hooks/useWalletContext';
-import { PendingRequest, useOwnedBuyNowTrackIdsQuery, useUpdateAllOwnedTracksMutation, useUpdateTrackMutation } from 'lib/graphql';
-import router from 'next/router';
-import { useState } from 'react';
-import { toast } from 'react-toastify';
-import { SaleType } from 'types/SaleType';
-import { Button } from './Button';
-import { ConnectedNetwork } from './ConnectedNetwork';
-import { CopyWalletAddress } from './CopyWalletAddress';
-import { Label } from './Label';
-import MaxGasFee from './MaxGasFee';
-import { WalletSelected } from './WalletSelected';
+import { Modal } from 'components/Modal'
+import { useModalDispatch, useModalState } from 'contexts/providers/modal'
+import useBlockchainV2, { CancelListingBatchParams, ContractAddresses } from 'hooks/useBlockchainV2'
+import { useMaxCancelBatchListGasFee } from 'hooks/useMaxCancelBatchListGasFee'
+import { useMaxGasFee } from 'hooks/useMaxGasFee'
+import { useMe } from 'hooks/useMe'
+import { useWalletContext } from 'hooks/useWalletContext'
+import {
+  PendingRequest,
+  useOwnedBuyNowTrackIdsQuery,
+  useUpdateAllOwnedTracksMutation,
+  useUpdateTrackMutation,
+} from 'lib/graphql'
+import router from 'next/router'
+import { useState } from 'react'
+import { toast } from 'react-toastify'
+import { SaleType } from 'types/SaleType'
+import { Button } from './Button'
+import { ConnectedNetwork } from './ConnectedNetwork'
+import { CopyWalletAddress } from './CopyWalletAddress'
+import { Label } from './Label'
+import MaxGasFee from './MaxGasFee'
+import { WalletSelected } from './WalletSelected'
 
-const marketplaceAddress = process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS || '';
-const CANCEL_BATCH_SIZE = 120;
+const marketplaceAddress = process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS || ''
+const CANCEL_BATCH_SIZE = 120
 
 export const RemoveListingConfirmationModal = () => {
-  const me = useMe();
-  const { showRemoveListing, trackId, tokenId, trackEditionId, saleType, contractAddresses } = useModalState();
-  const [trackUpdate] = useUpdateTrackMutation();
-  const [ownedTracksUpdate] = useUpdateAllOwnedTracksMutation();
-  const { dispatchShowRemoveListingModal } = useModalDispatch();
-  const { cancelListing, cancelAuction, cancelListingBatch } = useBlockchainV2();
-  const { web3, account, balance } = useWalletContext();
-  const defaultMaxGasFee = useMaxGasFee(showRemoveListing);
-  const [loading, setLoading] = useState(false);
+  const me = useMe()
+  const { showRemoveListing, trackId, tokenId, trackEditionId, saleType, contractAddresses } = useModalState()
+  const [trackUpdate] = useUpdateTrackMutation()
+  const [ownedTracksUpdate] = useUpdateAllOwnedTracksMutation()
+  const { dispatchShowRemoveListingModal } = useModalDispatch()
+  const { cancelListing, cancelAuction, cancelListingBatch } = useBlockchainV2()
+  const { web3, account, balance } = useWalletContext()
+  const defaultMaxGasFee = useMaxGasFee(showRemoveListing)
+  const [loading, setLoading] = useState(false)
   const { data: ownedTrackIds } = useOwnedBuyNowTrackIdsQuery({
     variables: {
       filter: {
@@ -40,37 +45,44 @@ export const RemoveListingConfirmationModal = () => {
     skip: !account || !trackEditionId,
   })
 
-  const allTracks = ownedTrackIds?.ownedBuyNowListingItems.nodes
-    .filter(track => track.nftData?.tokenId !== null && track.nftData?.tokenId !== undefined);
+  const allTracks = ownedTrackIds?.ownedBuyNowListingItems.nodes.filter(
+    track => track.nftData?.tokenId !== null && track.nftData?.tokenId !== undefined,
+  )
 
-  const editionMaxGasFee = useMaxCancelBatchListGasFee(allTracks?.length ?? 0);
+  const editionMaxGasFee = useMaxCancelBatchListGasFee(allTracks?.length ?? 0)
 
-  const maxGasFee = trackEditionId ? editionMaxGasFee : defaultMaxGasFee;
+  const maxGasFee = trackEditionId ? editionMaxGasFee : defaultMaxGasFee
 
   const handleClose = () => {
-    dispatchShowRemoveListingModal({show: false, tokenId: 0, trackId: '', saleType: SaleType.CLOSE, contractAddresses: {}});
-  };
+    dispatchShowRemoveListingModal({
+      show: false,
+      tokenId: 0,
+      trackId: '',
+      saleType: SaleType.CLOSE,
+      contractAddresses: {},
+    })
+  }
 
   const handleCancel = () => {
-    handleClose();
-  };
+    handleClose()
+  }
 
   const hasEnoughFunds = () => {
     if (balance && maxGasFee) {
-      return +balance > +maxGasFee;
+      return +balance > +maxGasFee
     }
-    return false;
-  };
+    return false
+  }
 
   const getCancelationHandler = (account: string, tokenId?: number, contractAddresses?: ContractAddresses) => {
     if (trackEditionId) {
-      if(!allTracks) return;
-      return () => handleCancelBatch(trackEditionId, account, contractAddresses);
+      if (!allTracks) return
+      return () => handleCancelBatch(trackEditionId, account, contractAddresses)
     }
 
-    if (!tokenId || !trackId) return;
+    if (!tokenId || !trackId) return
 
-    return () => handleCancelItem(tokenId, account, contractAddresses);
+    return () => handleCancelItem(tokenId, account, contractAddresses)
   }
 
   const handleCancelBatch = async (trackEditionId: string, account: string, contractAddresses?: ContractAddresses) => {
@@ -89,46 +101,46 @@ export const RemoveListingConfirmationModal = () => {
                 },
               },
             },
-          });
-          resolve();
+          })
+          resolve()
         }
         cancelListingBatch(params)
           .onReceipt(onReceipt)
           .onError(cause => {
             toast.error(cause.message)
-            reject(cause);
+            reject(cause)
           })
-          .execute(web3!);
-      });
+          .execute(web3!)
+      })
     }
 
-   
-
-    let nonce = await web3!.eth.getTransactionCount(account);
+    let nonce = await web3!.eth.getTransactionCount(account)
 
     const promises = []
-    while(allTracks!.length > 0) {
-      const tracksToList = allTracks!.splice(0, CANCEL_BATCH_SIZE);
-      promises.push(cancelIds(
-        tracksToList.map(track => track.id),
-        { 
-          tokenIds: tracksToList.map(t => Number(t.nftData!.tokenId)), 
-          from: account, 
-          contractAddresses,
-          nonce: nonce++,
-        }
-      ));
+    while (allTracks!.length > 0) {
+      const tracksToList = allTracks!.splice(0, CANCEL_BATCH_SIZE)
+      promises.push(
+        cancelIds(
+          tracksToList.map(track => track.id),
+          {
+            tokenIds: tracksToList.map(t => Number(t.nftData!.tokenId)),
+            from: account,
+            contractAddresses,
+            nonce: nonce++,
+          },
+        ),
+      )
     }
 
-    await Promise.all(promises);
-    handleClose();
+    await Promise.all(promises)
+    handleClose()
   }
 
   const handleCancelItem = (tokenId: number, account: string, contractAddresses?: ContractAddresses) => {
     const cancel =
-      saleType === SaleType.MARKETPLACE ? 
-        cancelListing(tokenId, account, contractAddresses) : 
-        cancelAuction(tokenId, account, contractAddresses);
+      saleType === SaleType.MARKETPLACE
+        ? cancelListing(tokenId, account, contractAddresses)
+        : cancelAuction(tokenId, account, contractAddresses)
 
     const onSingleItemReceipt = async () => {
       await trackUpdate({
@@ -141,36 +153,36 @@ export const RemoveListingConfirmationModal = () => {
             },
           },
         },
-      });
-  
-      handleClose();
-  
+      })
+
+      handleClose()
+
       saleType === SaleType.MARKETPLACE
         ? router.replace(router.asPath.replace('edit/buy-now', ''))
-        : router.replace(router.asPath.replace('edit/auction', ''));
-    };
+        : router.replace(router.asPath.replace('edit/auction', ''))
+    }
 
     cancel
       .onReceipt(onSingleItemReceipt)
       .onError(cause => toast.error(cause.message))
       .finally(() => setLoading(false))
-      .execute(web3!);
+      .execute(web3!)
   }
 
   const handleSubmit = () => {
-    if (!account || !web3) return;
+    if (!account || !web3) return
     const cancelationHandler = getCancelationHandler(account, tokenId, contractAddresses)
-    if (!cancelationHandler) return;
+    if (!cancelationHandler) return
 
     if (!hasEnoughFunds()) {
-      alert("Uh-oh, it seems you don't have enough funds for this transaction. Please select an appropriate amount");
-      handleClose();
-      return;
+      alert("Uh-oh, it seems you don't have enough funds for this transaction. Please select an appropriate amount")
+      handleClose()
+      return
     }
 
-    setLoading(true);    
-    cancelationHandler();
-  };
+    setLoading(true)
+    cancelationHandler()
+  }
 
   return (
     <Modal
@@ -178,28 +190,28 @@ export const RemoveListingConfirmationModal = () => {
       title="Confirm Transaction"
       onClose={handleClose}
       leftButton={
-        <button className="p-2 text-gray-400 font-bold flex-1 text-center text-sm" onClick={handleCancel}>
+        <button className="flex-1 p-2 text-center text-sm font-bold text-gray-400" onClick={handleCancel}>
           Cancel
         </button>
       }
     >
-      <div className="flex flex-col w-full h-full justify-between">
-        <div className="flex flex-col mb-auto space-y-6 h-full justify-between">
-          <div className="flex flex-col h-full justify-around">
-            <div className="px-4 text-sm text-gray-80 font-bold text-center">
-              <p className="flex flex-wrap items-end justify-center text-center py-6">
+      <div className="flex h-full w-full flex-col justify-between">
+        <div className="mb-auto flex h-full flex-col justify-between space-y-6">
+          <div className="flex h-full flex-col justify-around">
+            <div className="px-4 text-center text-sm font-bold text-gray-80">
+              <p className="flex flex-wrap items-end justify-center py-6 text-center">
                 <span className="leading-tight">Are you sure you want to remove listing?</span>
               </p>
               <p>This transaction cannot be undone.</p>
             </div>
-            <div className="flex flex-col w-full space-y-6 py-6">
+            <div className="flex w-full flex-col space-y-6 py-6">
               <div className="space-y-2">
                 <div className="px-4">
-                  <Label className="uppercase font-bold" textSize="xs">
+                  <Label className="font-bold uppercase" textSize="xs">
                     FROM:
                   </Label>
                 </div>
-                <div className="flex flex-col items-center px-3 gap-2">
+                <div className="flex flex-col items-center gap-2 px-3">
                   <WalletSelected wallet={me?.defaultWallet} />
                   <ConnectedNetwork />
                 </div>
@@ -207,7 +219,7 @@ export const RemoveListingConfirmationModal = () => {
               </div>
               <div className="space-y-2">
                 <div className="px-4">
-                  <Label className="uppercase font-bold" textSize="xs">
+                  <Label className="font-bold uppercase" textSize="xs">
                     MARKETPLACE:
                   </Label>
                 </div>
@@ -215,7 +227,7 @@ export const RemoveListingConfirmationModal = () => {
               </div>
             </div>
           </div>
-          <div className="flex flex-col p-4 bg-gray-20">
+          <div className="flex flex-col bg-gray-20 p-4">
             <MaxGasFee maxGasFee={maxGasFee} />
           </div>
         </div>
@@ -226,7 +238,7 @@ export const RemoveListingConfirmationModal = () => {
         </div>
       </div>
     </Modal>
-  );
-};
+  )
+}
 
-export default RemoveListingConfirmationModal;
+export default RemoveListingConfirmationModal

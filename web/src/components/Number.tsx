@@ -1,8 +1,8 @@
 interface NumberProps {
-  value: number;
+  value: number
 }
 
 export const Number = ({ value }: NumberProps) => {
-  const formatted = Intl.NumberFormat().format(value);
-  return <>{formatted}</>;
-};
+  const formatted = Intl.NumberFormat().format(value)
+  return <>{formatted}</>
+}

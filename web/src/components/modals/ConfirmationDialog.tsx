@@ -1,13 +1,13 @@
-import { Button } from 'components/Button';
+import { Button } from 'components/Button'
 
 interface ConfirmationDialogProps {
-  onConfirm: () => void;
-  title: string;
-  description: string;
-  confirmText: string;
-  cancelText: string;
-  showDialog: boolean;
-  setShowDialog: (val: boolean) => void;
+  onConfirm: () => void
+  title: string
+  description: string
+  confirmText: string
+  cancelText: string
+  showDialog: boolean
+  setShowDialog: (val: boolean) => void
 }
 
 export const ConfirmationDialog = ({
@@ -19,15 +19,15 @@ export const ConfirmationDialog = ({
   showDialog,
   setShowDialog,
 }: ConfirmationDialogProps) => {
-  const close = () => setShowDialog(false);
+  const close = () => setShowDialog(false)
 
   return (
     <>
       {showDialog && (
-        <div className="fixed inset-0 p-4 bg-black z-50 bg-opacity-50 overflow-y-auto h-full w-full m-0">
-          <div className="relative top-20 mx-auto p-5 shadow-lg rounded-md bg-gray-30">
+        <div className="fixed inset-0 z-50 m-0 h-full w-full overflow-y-auto bg-black bg-opacity-50 p-4">
+          <div className="relative top-20 mx-auto rounded-md bg-gray-30 p-5 shadow-lg">
             <div className="mt-3 text-center">
-              <h3 className="text-lg leading-6 font-medium text-white">{title}</h3>
+              <h3 className="text-lg font-medium leading-6 text-white">{title}</h3>
               <div className="mt-2 px-7 py-3">
                 <p className="text-sm text-gray-300">{description}</p>
               </div>
@@ -46,5 +46,5 @@ export const ConfirmationDialog = ({
         </div>
       )}
     </>
-  );
-};
+  )
+}

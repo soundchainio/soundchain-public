@@ -10,5 +10,5 @@ export const ArrowUpRight = (props: React.SVGProps<SVGSVGElement>) => {
         fill="#808080"
       />
     </svg>
-  );
-};
+  )
+}

@@ -1,26 +1,26 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { Button } from 'components/Button';
-import { InputField } from 'components/InputField';
-import { Matic } from 'components/Matic';
-import MaxGasFee from 'components/MaxGasFee';
-import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
-import { ProfileWithAvatar } from 'components/ProfileWithAvatar';
-import { TopNavBarProps } from 'components/TopNavBar';
-import { Track } from 'components/Track';
-import { Timer } from 'components/trackpage/SingleTrackPage';
-import { WalletSelector } from 'components/WalletSelector';
-import { useModalDispatch } from 'contexts/providers/modal';
-import { Form, Formik } from 'formik';
-import useBlockchain from 'hooks/useBlockchain';
-import useBlockchainV2 from 'hooks/useBlockchainV2';
-import { useLayoutContext } from 'hooks/useLayoutContext';
-import { useMe } from 'hooks/useMe';
-import { useWalletContext } from 'hooks/useWalletContext';
-import { Auction } from 'icons/Auction';
-import { Locker } from 'icons/Locker';
-import { Matic as MaticIcon } from 'icons/Matic';
-import { cacheFor } from 'lib/apollo';
+import { Button } from 'components/Button'
+import { InputField } from 'components/InputField'
+import { Matic } from 'components/Matic'
+import MaxGasFee from 'components/MaxGasFee'
+import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar'
+import { ProfileWithAvatar } from 'components/ProfileWithAvatar'
+import { TopNavBarProps } from 'components/TopNavBar'
+import { Track } from 'components/Track'
+import { Timer } from 'components/trackpage/SingleTrackPage'
+import { WalletSelector } from 'components/WalletSelector'
+import { useModalDispatch } from 'contexts/providers/modal'
+import { Form, Formik } from 'formik'
+import useBlockchain from 'hooks/useBlockchain'
+import useBlockchainV2 from 'hooks/useBlockchainV2'
+import { useLayoutContext } from 'hooks/useLayoutContext'
+import { useMe } from 'hooks/useMe'
+import { useWalletContext } from 'hooks/useWalletContext'
+import { Auction } from 'icons/Auction'
+import { Locker } from 'icons/Locker'
+import { Matic as MaticIcon } from 'icons/Matic'
+import { cacheFor } from 'lib/apollo'
 import {
   PendingRequest,
   TrackDocument,
@@ -28,105 +28,105 @@ import {
   useAuctionItemQuery,
   useCountBidsQuery,
   useHaveBidedLazyQuery,
-  useUserByWalletLazyQuery
-} from 'lib/graphql';
-import { protectPage } from 'lib/protectPage';
-import { authenticator } from 'otplib';
-import { ParsedUrlQuery } from 'querystring';
-import { useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
-import { fixedDecimals, priceToShow } from 'utils/format';
-import { compareWallets } from 'utils/Wallet';
-import Web3 from 'web3';
-import * as yup from 'yup';
-import SEO from '../../../components/SEO';
-import { HighestBid } from './complete-auction';
+  useUserByWalletLazyQuery,
+} from 'lib/graphql'
+import { protectPage } from 'lib/protectPage'
+import { authenticator } from 'otplib'
+import { ParsedUrlQuery } from 'querystring'
+import { useEffect, useState } from 'react'
+import { toast } from 'react-toastify'
+import { fixedDecimals, priceToShow } from 'utils/format'
+import { compareWallets } from 'utils/Wallet'
+import Web3 from 'web3'
+import * as yup from 'yup'
+import SEO from '../../../components/SEO'
+import { HighestBid } from './complete-auction'
 
 export interface TrackPageProps {
-  track: TrackQuery['track'];
+  track: TrackQuery['track']
 }
 
 interface TrackPageParams extends ParsedUrlQuery {
-  id: string;
+  id: string
 }
 
 interface FormValues {
-  bidAmount: number;
-  token: string;
+  bidAmount: number
+  token: string
 }
 
 const topNavBarProps: TopNavBarProps = {
   title: 'Place Bid',
-};
+}
 
 export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(async (context, apolloClient) => {
-  const trackId = context.params?.id;
+  const trackId = context.params?.id
 
   if (!trackId) {
-    return { notFound: true };
+    return { notFound: true }
   }
 
   const { data, error } = await apolloClient.query({
     query: TrackDocument,
     variables: { id: trackId },
     context,
-  });
+  })
   if (error) {
-    return { notFound: true };
+    return { notFound: true }
   }
 
-  return cacheFor(PlaceBidPage, { track: data.track }, context, apolloClient);
-});
+  return cacheFor(PlaceBidPage, { track: data.track }, context, apolloClient)
+})
 
 export default function PlaceBidPage({ track }: TrackPageProps) {
-  const me = useMe();
-  const { getHighestBid } = useBlockchain();
-  const { placeBid } = useBlockchainV2();
-  const { account, web3, balance } = useWalletContext();
-  const { dispatchShowBidsHistory } = useModalDispatch();
-  const [loading, setLoading] = useState(false);
-  const [highestBid, setHighestBid] = useState<HighestBid>();
-  const { setTopNavBarProps } = useLayoutContext();
+  const me = useMe()
+  const { getHighestBid } = useBlockchain()
+  const { placeBid } = useBlockchainV2()
+  const { account, web3, balance } = useWalletContext()
+  const { dispatchShowBidsHistory } = useModalDispatch()
+  const [loading, setLoading] = useState(false)
+  const [highestBid, setHighestBid] = useState<HighestBid>()
+  const { setTopNavBarProps } = useLayoutContext()
 
-  const tokenId = track.nftData?.tokenId ?? -1;
-  const contractAddress = track.nftData?.contract ?? "";
+  const tokenId = track.nftData?.tokenId ?? -1
+  const contractAddress = track.nftData?.contract ?? ''
 
   const { data: { auctionItem } = {} } = useAuctionItemQuery({
     variables: { tokenId },
-  });
+  })
   const [fetchHaveBided, { data: haveBided, refetch: refetchHaveBided }] = useHaveBidedLazyQuery({
     fetchPolicy: 'network-only',
-  });
-  const { data: countBids, refetch: refetchCountBids } = useCountBidsQuery({ variables: { tokenId } });
-  const [fetchHighestBidder, { data: highestBidderData }] = useUserByWalletLazyQuery();
+  })
+  const { data: countBids, refetch: refetchCountBids } = useCountBidsQuery({ variables: { tokenId } })
+  const [fetchHighestBidder, { data: highestBidderData }] = useUserByWalletLazyQuery()
 
   useEffect(() => {
-    setTopNavBarProps(topNavBarProps);
+    setTopNavBarProps(topNavBarProps)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [])
 
   useEffect(() => {
     if (account && auctionItem?.auctionItem?.id) {
-      fetchHaveBided({ variables: { auctionId: auctionItem.auctionItem.id, bidder: account } });
+      fetchHaveBided({ variables: { auctionId: auctionItem.auctionItem.id, bidder: account } })
     }
-  }, [fetchHaveBided, auctionItem?.auctionItem?.id, account]);
+  }, [fetchHaveBided, auctionItem?.auctionItem?.id, account])
 
   useEffect(() => {
     if (!web3) {
-      return;
+      return
     }
     const fetchHighestBid = async () => {
-      const { _bid, _bidder } = await getHighestBid(web3, tokenId, { nft: track.nftData?.contract });
-      setHighestBid({ bid: priceToShow(_bid), bidder: _bidder });
-      refetchCountBids();
-    };
-    fetchHighestBid();
+      const { _bid, _bidder } = await getHighestBid(web3, tokenId, { nft: track.nftData?.contract })
+      setHighestBid({ bid: priceToShow(_bid), bidder: _bidder })
+      refetchCountBids()
+    }
+    fetchHighestBid()
     const interval = setInterval(() => {
-      fetchHighestBid();
-    }, 6 * 1000);
+      fetchHighestBid()
+    }, 6 * 1000)
 
-    return () => clearInterval(interval);
-  }, [tokenId, track, web3, getHighestBid, account, refetchCountBids]);
+    return () => clearInterval(interval)
+  }, [tokenId, track, web3, getHighestBid, account, refetchCountBids])
 
   useEffect(() => {
     if (highestBid) {
@@ -134,89 +134,89 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
         variables: {
           walletAddress: highestBid.bidder,
         },
-      });
+      })
     }
-  }, [highestBid, fetchHighestBidder]);
+  }, [highestBid, fetchHighestBidder])
 
   if (!auctionItem || !web3) {
-    return null;
+    return null
   }
 
-  const isOwner = compareWallets(auctionItem.auctionItem?.owner, account);
-  const isForSale = !!auctionItem.auctionItem?.reservePrice ?? false;
-  const hasStarted = (auctionItem.auctionItem?.startingTime ?? 0) <= new Date().getTime() / 1000;
-  const hasEnded = new Date().getTime() / 1000 > (auctionItem.auctionItem?.endingTime ?? 0);
+  const isOwner = compareWallets(auctionItem.auctionItem?.owner, account)
+  const isForSale = !!auctionItem.auctionItem?.reservePrice ?? false
+  const hasStarted = (auctionItem.auctionItem?.startingTime ?? 0) <= new Date().getTime() / 1000
+  const hasEnded = new Date().getTime() / 1000 > (auctionItem.auctionItem?.endingTime ?? 0)
   const startingDate = auctionItem.auctionItem?.startingTime
     ? new Date(auctionItem.auctionItem.startingTime * 1000)
-    : undefined;
+    : undefined
   const endingDate = auctionItem.auctionItem?.endingTime
     ? new Date(auctionItem.auctionItem.endingTime * 1000)
-    : undefined;
-  const futureSale = startingDate ? startingDate.getTime() > new Date().getTime() : false;
-  const isHighestBidder = highestBid ? compareWallets(highestBid.bidder, account) : undefined;
-  const auctionIsOver = (auctionItem.auctionItem?.endingTime || 0) < Math.floor(Date.now() / 1000);
-  const bidCount = countBids?.countBids.numberOfBids ?? 0;
-  let price: number;
+    : undefined
+  const futureSale = startingDate ? startingDate.getTime() > new Date().getTime() : false
+  const isHighestBidder = highestBid ? compareWallets(highestBid.bidder, account) : undefined
+  const auctionIsOver = (auctionItem.auctionItem?.endingTime || 0) < Math.floor(Date.now() / 1000)
+  const bidCount = countBids?.countBids.numberOfBids ?? 0
+  let price: number
   if (!highestBid || highestBid?.bid === 0) {
-    price = auctionItem.auctionItem?.reservePriceToShow ?? 0;
+    price = auctionItem.auctionItem?.reservePriceToShow ?? 0
   } else {
-    price = highestBid.bid;
+    price = highestBid.bid
   }
-  const minBid = fixedDecimals(price * 1.015);
+  const minBid = fixedDecimals(price * 1.015)
   const validate = ({ bidAmount }: FormValues) => {
-    const errors: any = {};
+    const errors: any = {}
     if (bidAmount < minBid) {
-      errors.bidAmount = `must be at least ${minBid}`;
+      errors.bidAmount = `must be at least ${minBid}`
     }
-    return errors;
-  };
+    return errors
+  }
 
   const handlePlaceBid = ({ bidAmount, token }: FormValues) => {
     if (token) {
-      const isValid = authenticator.verify({ token, secret: me?.otpSecret || '' });
+      const isValid = authenticator.verify({ token, secret: me?.otpSecret || '' })
       if (!isValid) {
-        toast.error('Invalid token code');
-        return;
+        toast.error('Invalid token code')
+        return
       }
     }
 
     if (!web3 || !auctionItem.auctionItem?.tokenId || !auctionItem.auctionItem?.owner || !account) {
-      return;
+      return
     }
-    const amount = Web3.utils.toWei(bidAmount.toString());
+    const amount = Web3.utils.toWei(bidAmount.toString())
 
     if (bidAmount >= parseFloat(balance || '0')) {
-      toast.warn("Uh-oh, it seems you don't have enough funds for this transaction");
-      return;
+      toast.warn("Uh-oh, it seems you don't have enough funds for this transaction")
+      return
     }
 
     placeBid(tokenId, account, amount, { nft: contractAddress })
       .onReceipt(() => {
-        toast.success('Bid placed!');
-        if (refetchHaveBided) refetchHaveBided();
-        refetchCountBids();
+        toast.success('Bid placed!')
+        if (refetchHaveBided) refetchHaveBided()
+        refetchCountBids()
       })
       .onError(() => {
-        toast.warn('You may have been outbid. Please try again');
+        toast.warn('You may have been outbid. Please try again')
       })
       .finally(() => setLoading(false))
-      .execute(web3);
+      .execute(web3)
 
-    setLoading(true);
-  };
+    setLoading(true)
+  }
 
   if (!isForSale || isOwner || !me || track.nftData?.pendingRequest != PendingRequest.None) {
-    return null;
+    return null
   }
 
   const initialValues = {
     bidAmount: minBid,
     token: '',
-  };
+  }
 
   const validationSchema = yup.object().shape({
     token: me?.otpSecret ? yup.string().required('Two-Factor token is required') : yup.string(),
-  });
+  })
 
   return (
     <>
@@ -226,41 +226,41 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
         canonicalUrl={`/tracks/${track.id}/place-bid/`}
         image={track.artworkUrl}
       />
-      <div className="min-h-full flex flex-col">
+      <div className="flex min-h-full flex-col">
         <div className="flex flex-1 flex-col justify-between">
           <div>
             <div className="m-4">
               <Track track={track} />
             </div>
             {isHighestBidder && (
-              <div className="text-green-500 font-bold p-4 text-center">You have the highest bid!</div>
+              <div className="p-4 text-center font-bold text-green-500">You have the highest bid!</div>
             )}
             {haveBided?.haveBided.bided && isHighestBidder !== undefined && !isHighestBidder && (
-              <div className="text-red-500 font-bold p-4 text-center">You have been outbid!</div>
+              <div className="p-4 text-center font-bold text-red-500">You have been outbid!</div>
             )}
             <div className="bg-[#111920]">
               {futureSale && (
-                <div className="flex justify-between items-center px-4 py-3 gap-3">
-                  <div className="text-xs font-bold text-gray-80 flex-shrink-0">SALE STARTS</div>
-                  <div className="text-xs flex items-center text-right font-bold gap-1">
+                <div className="flex items-center justify-between gap-3 px-4 py-3">
+                  <div className="flex-shrink-0 text-xs font-bold text-gray-80">SALE STARTS</div>
+                  <div className="flex items-center gap-1 text-right text-xs font-bold">
                     <Timer date={startingDate!} reloadOnEnd />
                   </div>
                 </div>
               )}
               {endingDate && !futureSale && (
-                <div className="flex justify-between items-center px-4 py-3 gap-3">
-                  <div className="text-xs font-bold text-gray-80  flex-shrink-0">TIME REMAINING</div>
-                  <div className="text-xs flex items-center text-right font-bold gap-1">
+                <div className="flex items-center justify-between gap-3 px-4 py-3">
+                  <div className="flex-shrink-0 text-xs font-bold  text-gray-80">TIME REMAINING</div>
+                  <div className="flex items-center gap-1 text-right text-xs font-bold">
                     <Timer date={endingDate} endedMessage="Auction Ended" reloadOnEnd />
                   </div>
                 </div>
               )}
-              <div className="flex justify-between items-center px-4 py-3 gap-3">
+              <div className="flex items-center justify-between gap-3 px-4 py-3">
                 <div className="text-xs font-bold text-gray-80 ">{auctionIsOver ? 'FINAL PRICE' : 'CURRENT PRICE'}</div>
-                <div className="flex items-center font-bold gap-1">
+                <div className="flex items-center gap-1 font-bold">
                   <Matic value={price} variant="currency-inline" className="text-xs" />
                   <button
-                    className="text-[#22CAFF] text-xxs cursor-pointer font-bold"
+                    className="cursor-pointer text-xxs font-bold text-[#22CAFF]"
                     onClick={() => dispatchShowBidsHistory(true, auctionItem?.auctionItem?.id || '')}
                   >
                     [{bidCount} bids]
@@ -268,17 +268,17 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
                 </div>
               </div>
               {highestBidderData?.getUserByWallet && (
-                <div className="text-white flex justify-between items-center px-4 py-3 gap-3">
-                  <div className="text-xs text-gray-80 font-bold">HIGHEST BIDDER</div>
-                  <div className="flex items-center gap-2 min-w-0 truncate">
+                <div className="flex items-center justify-between gap-3 px-4 py-3 text-white">
+                  <div className="text-xs font-bold text-gray-80">HIGHEST BIDDER</div>
+                  <div className="flex min-w-0 items-center gap-2 truncate">
                     <ProfileWithAvatar profile={highestBidderData?.getUserByWallet.profile} />
                   </div>
                 </div>
               )}
               {isOwner && bidCount === 0 && auctionIsOver && (
-                <div className="text-white flex justify-between items-center px-4 py-3">
+                <div className="flex items-center justify-between px-4 py-3 text-white">
                   <div className="text-sm font-bold">RESULT</div>
-                  <div className="text-md flex items-center font-bold gap-1">Auction ended with no bids</div>
+                  <div className="text-md flex items-center gap-1 font-bold">Auction ended with no bids</div>
                 </div>
               )}
             </div>
@@ -293,14 +293,14 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
             >
               {({ values: { bidAmount } }) => (
                 <Form className="mb-16 bg-gray-20">
-                  <div className="flex p-4 items-center uppercase">
-                    <label htmlFor="bidAmount" className="w-full text-gray-80 font-bold text-xs md-text-sm">
+                  <div className="flex items-center p-4 uppercase">
+                    <label htmlFor="bidAmount" className="md-text-sm w-full text-xs font-bold text-gray-80">
                       <p>
-                        <Auction className="h-4 w-4 inline mr-2" purple={false} /> bid amount
+                        <Auction className="mr-2 inline h-4 w-4" purple={false} /> bid amount
                       </p>
-                      <p className="font-medium mt-1 text-xxs">
+                      <p className="mt-1 text-xxs font-medium">
                         Must be at least 1% of current bid price. Enter{' '}
-                        <span className="text-white font-bold cursor-pointer">{minBid}</span> MATIC or more.
+                        <span className="cursor-pointer font-bold text-white">{minBid}</span> MATIC or more.
                       </p>
                     </label>
                     <div className="w-1/2">
@@ -308,9 +308,9 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
                     </div>
                   </div>
                   {me?.otpSecret && (
-                    <div className="flex p-4 items-center uppercase">
-                      <p className="text-gray-80 w-full font-bold text-xs">
-                        <Locker className="h-4 w-4 inline mr-2" fill="#303030" /> Two-factor validation
+                    <div className="flex items-center p-4 uppercase">
+                      <p className="w-full text-xs font-bold text-gray-80">
+                        <Locker className="mr-2 inline h-4 w-4" fill="#303030" /> Two-factor validation
                       </p>
                       <div className="w-1/2">
                         <InputField name="token" type="text" maxLength={6} pattern="[0-9]*" inputMode="numeric" />
@@ -335,5 +335,5 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
         </div>
       </div>
     </>
-  );
+  )
 }

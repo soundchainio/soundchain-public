@@ -1,5 +1,5 @@
-import { useModalState } from 'contexts/providers/modal';
-import { Form, Formik, FormikHelpers } from 'formik';
+import { useModalState } from 'contexts/providers/modal'
+import { Form, Formik, FormikHelpers } from 'formik'
 import {
   CreatePostInput,
   UpdatePostInput,
@@ -7,98 +7,98 @@ import {
   useCreateRepostMutation,
   useTrackLazyQuery,
   useUpdatePostMutation,
-} from 'lib/graphql';
-import { useEffect, useState } from 'react';
-import { PostFormType } from 'types/PostFormType';
-import * as yup from 'yup';
-import { Button } from './Button';
-import { MiniAudioPlayer } from './MiniAudioPlayer';
-import { PostBar } from './PostBar';
-import { PostBodyField } from './PostBodyField';
-import { setMaxInputLength } from './PostModal';
-import { RepostPreview } from './RepostPreview';
+} from 'lib/graphql'
+import { useEffect, useState } from 'react'
+import { PostFormType } from 'types/PostFormType'
+import * as yup from 'yup'
+import { Button } from './Button'
+import { MiniAudioPlayer } from './MiniAudioPlayer'
+import { PostBar } from './PostBar'
+import { PostBodyField } from './PostBodyField'
+import { setMaxInputLength } from './PostModal'
+import { RepostPreview } from './RepostPreview'
 
 interface InitialValues {
-  body: string;
+  body: string
 }
 
 interface PostFormProps {
-  type: PostFormType;
-  initialValues: InitialValues;
-  postLink?: string;
-  afterSubmit: () => void;
-  onCancel: (setFieldValue: (field: string, value: string) => void) => void;
-  showNewPost: boolean;
-  setOriginalLink: (val: string) => void;
-  setPostLink: (val: string) => void;
-  setBodyValue: (val: string) => void;
-  trackId?: string;
+  type: PostFormType
+  initialValues: InitialValues
+  postLink?: string
+  afterSubmit: () => void
+  onCancel: (setFieldValue: (field: string, value: string) => void) => void
+  showNewPost: boolean
+  setOriginalLink: (val: string) => void
+  setPostLink: (val: string) => void
+  setBodyValue: (val: string) => void
+  trackId?: string
 }
 
 export interface FormValues {
-  body: string;
-  mediaLink?: string;
+  body: string
+  mediaLink?: string
 }
 
 const postSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   body: yup.string().required(),
   mediaLink: yup.string(),
-});
+})
 
-const defaultInitialValues = { body: '' };
+const defaultInitialValues = { body: '' }
 
 export const PostForm = ({ ...props }: PostFormProps) => {
-  const [isEmojiPickerVisible, setEmojiPickerVisible] = useState(false);
-  const [createPost] = useCreatePostMutation({ refetchQueries: ['Posts', 'Feed'] });
-  const [createRepost] = useCreateRepostMutation({ refetchQueries: ['Posts', 'Feed'] });
-  const [editPost] = useUpdatePostMutation();
-  const [getTrack, { data: track }] = useTrackLazyQuery();
-  const { repostId, editPostId } = useModalState();
+  const [isEmojiPickerVisible, setEmojiPickerVisible] = useState(false)
+  const [createPost] = useCreatePostMutation({ refetchQueries: ['Posts', 'Feed'] })
+  const [createRepost] = useCreateRepostMutation({ refetchQueries: ['Posts', 'Feed'] })
+  const [editPost] = useUpdatePostMutation()
+  const [getTrack, { data: track }] = useTrackLazyQuery()
+  const { repostId, editPostId } = useModalState()
 
   useEffect(() => {
-    if (props.trackId) getTrack({ variables: { id: props.trackId } });
-  }, [props.trackId]);
+    if (props.trackId) getTrack({ variables: { id: props.trackId } })
+  }, [props.trackId])
 
   const onEmojiPickerClick = () => {
-    setEmojiPickerVisible(!isEmojiPickerVisible);
-  };
+    setEmojiPickerVisible(!isEmojiPickerVisible)
+  }
 
   const onSubmit = async (values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
     switch (props.type) {
       case PostFormType.REPOST:
-        await createRepost({ variables: { input: { body: values.body, repostId: repostId! } } });
-        break;
+        await createRepost({ variables: { input: { body: values.body, repostId: repostId! } } })
+        break
       case PostFormType.EDIT:
-        const updateParams: UpdatePostInput = { body: values.body, postId: editPostId! };
+        const updateParams: UpdatePostInput = { body: values.body, postId: editPostId! }
 
         if (props.postLink?.length) {
-          updateParams.mediaLink = props.postLink;
+          updateParams.mediaLink = props.postLink
         }
 
-        await editPost({ variables: { input: updateParams } });
-        break;
+        await editPost({ variables: { input: updateParams } })
+        break
       case PostFormType.NEW:
-        const newPostParams: CreatePostInput = { body: values.body };
+        const newPostParams: CreatePostInput = { body: values.body }
 
         if (props.postLink?.length) {
-          newPostParams.mediaLink = props.postLink;
+          newPostParams.mediaLink = props.postLink
         }
 
         if (props.trackId) {
-          newPostParams.trackId = props.trackId;
+          newPostParams.trackId = props.trackId
         }
 
-        await createPost({ variables: { input: newPostParams } });
+        await createPost({ variables: { input: newPostParams } })
     }
 
-    resetForm();
+    resetForm()
 
-    props.afterSubmit();
-  };
+    props.afterSubmit()
+  }
 
   const onTextAreaChange = (newVal: string) => {
-    props.setBodyValue(newVal);
-  };
+    props.setBodyValue(newVal)
+  }
 
   return (
     <Formik
@@ -108,20 +108,20 @@ export const PostForm = ({ ...props }: PostFormProps) => {
       onSubmit={onSubmit}
     >
       {({ values, setFieldValue }) => (
-        <Form className="flex flex-col h-full pb-safe">
+        <Form className="pb-safe flex h-full flex-col">
           <div className="flex items-center rounded-tl-3xl rounded-tr-3xl bg-gray-20">
             <button
-              className="p-2 text-gray-400 font-bold flex-1 text-center"
+              className="flex-1 p-2 text-center font-bold text-gray-400"
               onClick={() => props.onCancel(setFieldValue)}
             >
               Cancel
             </button>
-            <div className="flex-1 text-center text-white font-bold">
+            <div className="flex-1 text-center font-bold text-white">
               {props.type === PostFormType.REPOST && 'Repost'}
               {props.type === PostFormType.EDIT && 'Edit Post'}
               {props.type === PostFormType.NEW && 'New Post'}
             </div>
-            <div className="flex-1 text-center m-2">
+            <div className="m-2 flex-1 text-center">
               <div className="ml-6">
                 <Button className="bg-gray-30 text-sm " type="submit" variant="rainbow-rounded">
                   {props.type === PostFormType.EDIT && 'Save'}
@@ -137,7 +137,7 @@ export const PostForm = ({ ...props }: PostFormProps) => {
             updatedValue={onTextAreaChange}
           />
           {props.type === PostFormType.REPOST && (
-            <div className="p-4 bg-gray-20">
+            <div className="bg-gray-20 p-4">
               <RepostPreview postId={repostId as string} />
             </div>
           )}
@@ -180,5 +180,5 @@ export const PostForm = ({ ...props }: PostFormProps) => {
         </Form>
       )}
     </Formik>
-  );
-};
+  )
+}

@@ -1,6 +1,6 @@
 mutation UpdateOgunClaimedWhitelist($input: UpdateOgunClaimedInput!) {
   updateOgunClaimedWhitelist(input: $input) {
-    whitelistEntry{
+    whitelistEntry {
       id
     }
   }

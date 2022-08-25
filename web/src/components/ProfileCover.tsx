@@ -1,14 +1,14 @@
-import classNames from 'classnames';
-import Image from 'next/image';
-import { VantaEffectContainer } from './VantaEffectContainer';
+import classNames from 'classnames'
+import Image from 'next/image'
+import { VantaEffectContainer } from './VantaEffectContainer'
 
 interface ProfileCoverProps extends React.ComponentPropsWithoutRef<'div'> {
-  coverPicture: string;
+  coverPicture: string
 }
 
 export const ProfileCover = ({ coverPicture, className }: ProfileCoverProps) => {
-  const isDefault = coverPicture.startsWith('/');
-  const effectName = coverPicture.split('/').pop()?.split('.').shift();
+  const isDefault = coverPicture.startsWith('/')
+  const effectName = coverPicture.split('/').pop()?.split('.').shift()
 
   return (
     <div className={classNames('relative', className)}>
@@ -23,5 +23,5 @@ export const ProfileCover = ({ coverPicture, className }: ProfileCoverProps) => 
         />
       )}
     </div>
-  );
-};
+  )
+}

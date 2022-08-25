@@ -1,5 +1,5 @@
-import { SVGGradient } from './gradients';
-import { IconProps } from './types/IconProps';
+import { SVGGradient } from './gradients'
+import { IconProps } from './types/IconProps'
 
 export const Bell = ({ color, ...props }: IconProps) => {
   return (
@@ -11,5 +11,5 @@ export const Bell = ({ color, ...props }: IconProps) => {
 
       {color && <SVGGradient color={color} />}
     </svg>
-  );
-};
+  )
+}

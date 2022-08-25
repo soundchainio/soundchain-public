@@ -12,5 +12,5 @@ export const OkCoin = (props: React.SVGProps<SVGSVGElement>) => {
         </clipPath>
       </defs>
     </svg>
-  );
-};
+  )
+}

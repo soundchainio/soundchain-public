@@ -1,17 +1,17 @@
-import { ReactNode } from 'react';
-import { HeroSectionDiscover } from './heroSectionDiscover';
-import { MintSongsSection } from './mintSongsSection';
-import { DiscoverTracksSection } from './discoverTracksSection';
-import { CollectMusicNFTSection } from './collectMusicNFTSection';
-import { RoadmapSection } from './roadmapSection';
+import { ReactNode } from 'react'
+import { HeroSectionDiscover } from './heroSectionDiscover'
+import { MintSongsSection } from './mintSongsSection'
+import { DiscoverTracksSection } from './discoverTracksSection'
+import { CollectMusicNFTSection } from './collectMusicNFTSection'
+import { RoadmapSection } from './roadmapSection'
 
 export interface LayoutProps {
-  children: ReactNode | undefined;
+  children: ReactNode | undefined
 }
 
 export default function LandingPageLayout({ children }: LayoutProps) {
   return (
-    <div className='relative h-full flex bg-black flex-col text-white overflow-x-hidden font-rubik'>
+    <div className="relative flex h-full flex-col overflow-x-hidden bg-black font-rubik text-white">
       <HeroSectionDiscover />
       <MintSongsSection />
       <DiscoverTracksSection />
@@ -21,5 +21,5 @@ export default function LandingPageLayout({ children }: LayoutProps) {
 
       {children}
     </div>
-  );
+  )
 }

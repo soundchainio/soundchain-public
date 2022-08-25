@@ -16,9 +16,6 @@
     "prepare": "cd .. && husky install web/.husky"
   },
   "lint-staged": {
-    "*.{js,ts,tsx, jsx}": [
-      "eslint --fix"
-    ],
     "*.{ts,tsx, js, jsx}": "prettier --write"
   },
   "dependencies": {

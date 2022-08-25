@@ -71,5 +71,5 @@ export const Sad = (props: React.SVGProps<SVGSVGElement>) => {
         </radialGradient>
       </defs>
     </svg>
-  );
-};
+  )
+}

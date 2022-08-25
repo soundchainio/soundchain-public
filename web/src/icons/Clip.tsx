@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'
 
 function Clip({ color = '#505050', ...props }: React.SVGProps<SVGSVGElement>) {
   return (
@@ -10,7 +10,7 @@ function Clip({ color = '#505050', ...props }: React.SVGProps<SVGSVGElement>) {
         strokeLinejoin="round"
       />
     </svg>
-  );
+  )
 }
 
-export default Clip;
+export default Clip

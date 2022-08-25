@@ -1,10 +1,10 @@
-import MaxGasFee from 'components/MaxGasFee';
-import { SoundchainFee } from 'components/SoundchainFee';
+import MaxGasFee from 'components/MaxGasFee'
+import { SoundchainFee } from 'components/SoundchainFee'
 
-import { HighestBid } from 'pages/tracks/[id]/complete-auction';
+import { HighestBid } from 'pages/tracks/[id]/complete-auction'
 
 interface AuctionEndedProps {
-  highestBid: HighestBid;
+  highestBid: HighestBid
 }
 
 export const AuctionEnded = ({ highestBid }: AuctionEndedProps) => (
@@ -12,4 +12,4 @@ export const AuctionEnded = ({ highestBid }: AuctionEndedProps) => (
     <SoundchainFee price={highestBid.bid} isPaymentOGUN={false} />
     <MaxGasFee />
   </div>
-);
+)

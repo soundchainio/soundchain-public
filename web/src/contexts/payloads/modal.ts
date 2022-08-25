@@ -1,13 +1,13 @@
-import { ContractAddresses } from 'hooks/useBlockchainV2';
-import { ReactionType } from 'lib/graphql';
-import { AuthorActionsType } from 'types/AuthorActionsType';
-import { SaleType } from 'types/SaleType';
-import { GenreLabel } from 'utils/Genres';
-import { SaleTypeLabel } from 'utils/SaleTypeLabel';
+import { ContractAddresses } from 'hooks/useBlockchainV2'
+import { ReactionType } from 'lib/graphql'
+import { AuthorActionsType } from 'types/AuthorActionsType'
+import { SaleType } from 'types/SaleType'
+import { GenreLabel } from 'utils/Genres'
+import { SaleTypeLabel } from 'utils/SaleTypeLabel'
 
 export interface ShowNewPostPayload {
-  show: boolean;
-  trackId?: string;
+  show: boolean
+  trackId?: string
 }
 
 export interface ShowTransferNftConfirmationPayload {
@@ -23,99 +23,99 @@ export interface ShowTransferNftConfirmationPayload {
 }
 
 export interface ShowCommentModalPayload {
-  show: boolean;
+  show: boolean
 }
 
 export interface ShowUnderDevelopmentPayload {
-  show: boolean;
+  show: boolean
 }
 
 export interface SetRepostIdPayload {
-  repostId?: string;
+  repostId?: string
 }
 
 export interface SetEditPostIdPayload {
-  editPostId?: string;
+  editPostId?: string
 }
 
 export interface SetEditCommentIdPayload {
-  editCommentId?: string;
+  editCommentId?: string
 }
 
 export interface ShowAuthorActionsPayload {
-  showAuthorActions: boolean;
-  authorActionsType: AuthorActionsType;
-  authorActionsId: string;
-  showOnlyDeleteOption?: boolean;
+  showAuthorActions: boolean
+  authorActionsType: AuthorActionsType
+  authorActionsId: string
+  showOnlyDeleteOption?: boolean
 }
 
 export interface ShowReactionsPayload {
-  postId?: string;
-  top?: ReactionType[];
-  total?: number;
+  postId?: string
+  top?: ReactionType[]
+  total?: number
 }
 
 export interface ShowCreatePayload {
-  show: boolean;
+  show: boolean
 }
 
 export interface ShowApprove {
-  show: boolean;
-  type: SaleType;
+  show: boolean
+  type: SaleType
   nftContractAddress?: string | null
 }
 
 export interface ShowRemoveListing {
-  show: boolean;
-  tokenId?: number;
-  trackId?: string;
-  editionId?: number;
-  saleType: SaleType;
+  show: boolean
+  tokenId?: number
+  trackId?: string
+  editionId?: number
+  saleType: SaleType
   contractAddresses?: ContractAddresses
-  trackEditionId?: string;
+  trackEditionId?: string
 }
 
 export interface ShowAudioPlayerPayload {
-  show: boolean;
+  show: boolean
 }
 
 export interface ShowOgunTransferConfirmationPayload {
-  show: boolean;
+  show: boolean
 }
 
 export interface ShowTransferConfirmationPayload {
-  show: boolean;
+  show: boolean
 }
 
 export interface ShowMarketplaceFilterPayload {
-  show: boolean;
-  genres: GenreLabel[];
-  filterSaleType: SaleTypeLabel;
+  show: boolean
+  genres: GenreLabel[]
+  filterSaleType: SaleTypeLabel
 }
 
 export interface SetRecipientWalletAddress {
-  address: string;
+  address: string
 }
 
 export interface SetAmountToTransfer {
-  amount: string;
+  amount: string
 }
 
 export interface ShowConfirmDeleteNFT {
-  show: boolean;
-  trackId?: string;
-  burn: boolean;
+  show: boolean
+  trackId?: string
+  burn: boolean
 }
 
 export interface ShowConfirmDeleteEdition {
-  show: boolean;
-  trackEditionId: string;
-  trackId: string;
+  show: boolean
+  trackEditionId: string
+  trackId: string
 }
 
 export interface ShowBidsHistory {
-  show: boolean;
-  auctionId: string;
+  show: boolean
+  auctionId: string
 }
 
 export type ModalPayload =
@@ -137,4 +137,4 @@ export type ModalPayload =
   | ShowConfirmDeleteNFT
   | ShowMarketplaceFilterPayload
   | ShowBidsHistory
-  | ShowTransferNftConfirmationPayload;
+  | ShowTransferNftConfirmationPayload

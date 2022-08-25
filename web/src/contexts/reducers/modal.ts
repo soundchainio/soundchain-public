@@ -1,5 +1,5 @@
-import { Action } from 'contexts/actions';
-import { ModalActionTypes } from 'contexts/actions/modal';
+import { Action } from 'contexts/actions'
+import { ModalActionTypes } from 'contexts/actions/modal'
 import {
   SetAmountToTransfer,
   SetEditCommentIdPayload,
@@ -22,56 +22,56 @@ import {
   ShowOgunTransferConfirmationPayload,
   ShowUnderDevelopmentPayload,
   ShowTransferNftConfirmationPayload,
-} from 'contexts/payloads/modal';
-import { ContractAddresses } from 'hooks/useBlockchainV2';
-import { ReactionType, TracksQuery } from 'lib/graphql';
-import { AuthorActionsType } from 'types/AuthorActionsType';
-import { SaleType } from 'types/SaleType';
-import { GenreLabel } from 'utils/Genres';
-import { SaleTypeLabel } from 'utils/SaleTypeLabel';
+} from 'contexts/payloads/modal'
+import { ContractAddresses } from 'hooks/useBlockchainV2'
+import { ReactionType, TracksQuery } from 'lib/graphql'
+import { AuthorActionsType } from 'types/AuthorActionsType'
+import { SaleType } from 'types/SaleType'
+import { GenreLabel } from 'utils/Genres'
+import { SaleTypeLabel } from 'utils/SaleTypeLabel'
 
 export interface ModalState {
-  showNewPost: boolean;
-  showCommentModal: boolean;
-  anyModalOpened: boolean;
-  repostId?: string;
-  editPostId?: string;
-  editCommentId?: string;
-  editionId?: number;
-  showAuthorActions: boolean;
-  authorActionsType?: AuthorActionsType;
-  authorActionsId: string;
-  showOnlyDeleteOption?: boolean;
-  showUnderDevelopment: boolean;
-  showCreate: boolean;
-  showAudioPlayer: boolean;
-  showApprove: boolean;
-  showRemoveListing: boolean;
-  showBidsHistory: boolean;
-  tokenId?: number;
-  trackId?: string;
-  trackEditionId?: string;
+  showNewPost: boolean
+  showCommentModal: boolean
+  anyModalOpened: boolean
+  repostId?: string
+  editPostId?: string
+  editCommentId?: string
+  editionId?: number
+  showAuthorActions: boolean
+  authorActionsType?: AuthorActionsType
+  authorActionsId: string
+  showOnlyDeleteOption?: boolean
+  showUnderDevelopment: boolean
+  showCreate: boolean
+  showAudioPlayer: boolean
+  showApprove: boolean
+  showRemoveListing: boolean
+  showBidsHistory: boolean
+  tokenId?: number
+  trackId?: string
+  trackEditionId?: string
   reactions: {
-    show: boolean;
-    postId?: string;
-    total?: number;
-    top?: ReactionType[];
-  };
-  showTransferConfirmation: boolean;
-  showOgunTransferConfirmation: boolean,
-  walletRecipient?: string;
-  amountToTransfer?: string;
-  type?: SaleType;
-  saleType?: SaleType;
-  nftContractAddress?: string | null;
+    show: boolean
+    postId?: string
+    total?: number
+    top?: ReactionType[]
+  }
+  showTransferConfirmation: boolean
+  showOgunTransferConfirmation: boolean
+  walletRecipient?: string
+  amountToTransfer?: string
+  type?: SaleType
+  saleType?: SaleType
+  nftContractAddress?: string | null
   contractAddresses?: ContractAddresses
-  showConfirmDeleteNFT: boolean;
-  showConfirmDeleteEdition: boolean;
-  burn?: boolean;
-  showMarketplaceFilter: boolean;
-  genres?: GenreLabel[];
-  filterSaleType?: SaleTypeLabel;
-  auctionId?: string;
+  showConfirmDeleteNFT: boolean
+  showConfirmDeleteEdition: boolean
+  burn?: boolean
+  showMarketplaceFilter: boolean
+  genres?: GenreLabel[]
+  filterSaleType?: SaleTypeLabel
+  auctionId?: string
   showTransferNftConfirmation: boolean
   track?: TracksQuery['tracks']
   refetch?: () => void
@@ -112,8 +112,8 @@ export const initialModalState = {
   genres: undefined,
   filterSaleType: undefined,
   auctionId: undefined,
-  showTransferNftConfirmation: false
-};
+  showTransferNftConfirmation: false,
+}
 
 export const modalReducer = (state: ModalState, action: Action) => {
   switch (action.type) {
@@ -123,29 +123,29 @@ export const modalReducer = (state: ModalState, action: Action) => {
         showNewPost: (action.payload as ShowNewPostPayload).show,
         anyModalOpened: (action.payload as ShowNewPostPayload).show,
         trackId: (action.payload as ShowNewPostPayload).trackId,
-      };
+      }
     case ModalActionTypes.SHOW_COMMENT_MODAL:
       return {
         ...state,
         showCommentModal: (action.payload as ShowCommentModalPayload).show,
         anyModalOpened: (action.payload as ShowCommentModalPayload).show,
-      };
+      }
     case ModalActionTypes.SET_REPOST_ID:
       return {
         ...state,
         repostId: (action.payload as SetRepostIdPayload).repostId,
-      };
+      }
     case ModalActionTypes.SET_EDIT_POST_ID:
       return {
         ...state,
         editPostId: (action.payload as SetEditPostIdPayload).editPostId,
-      };
+      }
     case ModalActionTypes.SET_EDIT_COMMENT_ID:
       return {
         ...state,
         authorActionsType: AuthorActionsType.COMMENT,
         editCommentId: (action.payload as SetEditCommentIdPayload).editCommentId,
-      };
+      }
     case ModalActionTypes.SHOW_CONTEXT_MENU:
       return {
         ...state,
@@ -154,13 +154,13 @@ export const modalReducer = (state: ModalState, action: Action) => {
         authorActionsType: (action.payload as ShowAuthorActionsPayload).authorActionsType,
         authorActionsId: (action.payload as ShowAuthorActionsPayload).authorActionsId,
         showOnlyDeleteOption: (action.payload as ShowAuthorActionsPayload).showOnlyDeleteOption,
-      };
+      }
     case ModalActionTypes.SHOW_UNDER_DEVELOPMENT:
       return {
         ...state,
         showUnderDevelopment: (action.payload as ShowUnderDevelopmentPayload).show,
         anyModalOpened: (action.payload as ShowUnderDevelopmentPayload).show,
-      };
+      }
     case ModalActionTypes.SHOW_REACTIONS:
       return {
         ...state,
@@ -170,7 +170,7 @@ export const modalReducer = (state: ModalState, action: Action) => {
           top: (action.payload as ShowReactionsPayload).top,
           total: (action.payload as ShowReactionsPayload).total,
         },
-      };
+      }
     case ModalActionTypes.HIDE_REACTIONS:
       return {
         ...state,
@@ -178,13 +178,13 @@ export const modalReducer = (state: ModalState, action: Action) => {
           ...state.reactions,
           show: false,
         },
-      };
+      }
     case ModalActionTypes.SHOW_CREATE:
       return {
         ...state,
         showCreate: (action.payload as ShowCreatePayload).show,
         anyModalOpened: (action.payload as ShowCreatePayload).show,
-      };
+      }
     case ModalActionTypes.SHOW_APPROVE:
       return {
         ...state,
@@ -192,7 +192,7 @@ export const modalReducer = (state: ModalState, action: Action) => {
         type: (action.payload as ShowApprove).type,
         nftContractAddress: (action.payload as ShowApprove).nftContractAddress,
         anyModalOpened: (action.payload as ShowApprove).show,
-      };
+      }
     case ModalActionTypes.SHOW_REMOVE_LISTING:
       return {
         ...state,
@@ -204,35 +204,35 @@ export const modalReducer = (state: ModalState, action: Action) => {
         editionId: (action.payload as ShowRemoveListing).editionId,
         contractAddresses: (action.payload as ShowRemoveListing).contractAddresses,
         trackEditionId: (action.payload as ShowRemoveListing).trackEditionId,
-      };
+      }
     case ModalActionTypes.SHOW_AUDIO_PLAYER:
       return {
         ...state,
         showAudioPlayer: (action.payload as ShowAudioPlayerPayload).show,
         anyModalOpened: (action.payload as ShowAudioPlayerPayload).show,
-      };
+      }
     case ModalActionTypes.SHOW_TRANSFER_CONFIRMATION:
       return {
         ...state,
         showTransferConfirmation: (action.payload as ShowTransferConfirmationPayload).show,
         anyModalOpened: (action.payload as ShowTransferConfirmationPayload).show,
-      };
+      }
     case ModalActionTypes.SHOW_OGUN_TRANSFER_CONFIRMATION:
       return {
         ...state,
         showOgunTransferConfirmation: (action.payload as ShowOgunTransferConfirmationPayload).show,
         anyModalOpened: (action.payload as ShowOgunTransferConfirmationPayload).show,
-      };
+      }
     case ModalActionTypes.SET_AMOUNT_TO_TRANSFER:
       return {
         ...state,
         amountToTransfer: (action.payload as SetAmountToTransfer).amount,
-      };
+      }
     case ModalActionTypes.SET_RECIPIENT_WALLET_ADDRESS:
       return {
         ...state,
         walletRecipient: (action.payload as SetRecipientWalletAddress).address,
-      };
+      }
     case ModalActionTypes.SHOW_CONFIRM_DELETE_NFT:
       return {
         ...state,
@@ -240,7 +240,7 @@ export const modalReducer = (state: ModalState, action: Action) => {
         anyModalOpened: (action.payload as ShowConfirmDeleteNFT).show,
         trackId: (action.payload as ShowConfirmDeleteNFT).trackId,
         burn: (action.payload as ShowConfirmDeleteNFT).burn,
-      };
+      }
     case ModalActionTypes.SHOW_CONFIRM_DELETE_EDITION:
       return {
         ...state,
@@ -248,29 +248,29 @@ export const modalReducer = (state: ModalState, action: Action) => {
         anyModalOpened: (action.payload as ShowConfirmDeleteEdition).show,
         trackId: (action.payload as ShowConfirmDeleteEdition).trackId,
         trackEditionId: (action.payload as ShowConfirmDeleteEdition).trackEditionId,
-      };
+      }
     case ModalActionTypes.SHOW_FILTER_MARKETPLACE:
       return {
         ...state,
         showMarketplaceFilter: (action.payload as ShowMarketplaceFilterPayload).show,
         genres: (action.payload as ShowMarketplaceFilterPayload).genres,
         filterSaleType: (action.payload as ShowMarketplaceFilterPayload).filterSaleType,
-      };
+      }
     case ModalActionTypes.SHOW_BIDS_HISTORY:
       return {
         ...state,
         showBidsHistory: (action.payload as ShowBidsHistory).show,
         auctionId: (action.payload as ShowBidsHistory).auctionId,
-      };
+      }
     case ModalActionTypes.SHOW_TRANSFER_NFT_CONFIRMATION:
-      const payload =  (action.payload as ShowTransferNftConfirmationPayload)
-      const { show, ...rest} = payload
+      const payload = action.payload as ShowTransferNftConfirmationPayload
+      const { show, ...rest } = payload
       return {
         ...state,
         showTransferNftConfirmation: show,
-        ...rest
-      };
+        ...rest,
+      }
     default:
-      return state;
+      return state
   }
-};
+}

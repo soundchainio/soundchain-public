@@ -1,22 +1,22 @@
-import { useMimeTypeQuery } from 'lib/graphql';
-import Image from 'next/image';
-import React from 'react';
+import { useMimeTypeQuery } from 'lib/graphql'
+import Image from 'next/image'
+import React from 'react'
 
 interface AssetProps {
-  src?: string | null;
-  sizes?: string;
+  src?: string | null
+  sizes?: string
 }
 
 const Asset = ({ src, sizes }: AssetProps) => {
-  const isLocalFile = src?.startsWith('blob:');
+  const isLocalFile = src?.startsWith('blob:')
   const { data } = useMimeTypeQuery({
     variables: { url: src as string },
     skip: !src || isLocalFile,
-  });
+  })
 
-  const mimeType = data?.mimeType.value;
+  const mimeType = data?.mimeType.value
 
-  if (src && !mimeType && !isLocalFile) return null;
+  if (src && !mimeType && !isLocalFile) return null
 
   if (src && mimeType?.startsWith('video')) {
     return (
@@ -32,11 +32,11 @@ const Asset = ({ src, sizes }: AssetProps) => {
         className="w-full object-cover"
         style={{ height: 'inherit' }}
       />
-    );
+    )
   }
 
   return (
-    <div className="relative h-full w-full animate-wave bg-wave-size bg-gradient-to-r from-black to-gray-70 via-gray-40 bg-opacity-80">
+    <div className="to-gray-70 relative h-full w-full animate-wave bg-opacity-80 bg-gradient-to-r from-black via-gray-40 bg-wave-size">
       <Image
         src={src || '/default-pictures/album-artwork.png'}
         alt=""
@@ -46,7 +46,7 @@ const Asset = ({ src, sizes }: AssetProps) => {
         sizes={sizes}
       />
     </div>
-  );
-};
+  )
+}
 
-export default Asset;
+export default Asset

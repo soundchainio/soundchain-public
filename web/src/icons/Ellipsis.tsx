@@ -5,5 +5,5 @@ export const Ellipsis = (props: React.SVGProps<SVGSVGElement>) => {
       <circle cx={8} cy={2} r={2} fill={props.fill || '#505050'} />
       <circle cx={14} cy={2} r={2} fill={props.fill || '#505050'} />
     </svg>
-  );
-};
+  )
+}

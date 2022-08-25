@@ -1,4 +1,4 @@
-import { IconProps } from './types/IconProps';
+import { IconProps } from './types/IconProps'
 
 export const Locker = (props: IconProps) => {
   return (
@@ -8,5 +8,5 @@ export const Locker = (props: IconProps) => {
         fill={props.fill || 'gray'}
       />
     </svg>
-  );
-};
+  )
+}

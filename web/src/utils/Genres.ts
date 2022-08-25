@@ -1,9 +1,9 @@
-import { Genre } from 'lib/graphql';
+import { Genre } from 'lib/graphql'
 
 export type GenreLabel = {
-  key: Genre;
-  label: string;
-};
+  key: Genre
+  label: string
+}
 
 export const genres: GenreLabel[] = [
   { key: Genre.Acoustic, label: 'Acoustic' },
@@ -50,8 +50,8 @@ export const genres: GenreLabel[] = [
   { key: Genre.Spoken, label: 'Spoken' },
   { key: Genre.UrbanLatino, label: 'Urban Latino' },
   { key: Genre.World, label: 'World' },
-];
+]
 
 export function getGenreLabelByKey(key: Genre): string | undefined {
-  return genres.find(g => g.key === key)?.label;
+  return genres.find(g => g.key === key)?.label
 }
