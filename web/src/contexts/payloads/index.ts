@@ -1,3 +1,3 @@
-import { ModalPayload } from './modal';
+import { ModalPayload } from './modal'
 
-export type Payloads = ModalPayload;
+export type Payloads = ModalPayload

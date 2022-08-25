@@ -10,5 +10,5 @@ export const Heart = (props: React.SVGProps<SVGSVGElement>) => {
         fill="#F1A5B1"
       />
     </svg>
-  );
-};
+  )
+}

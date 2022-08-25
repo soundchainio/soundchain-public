@@ -1,28 +1,28 @@
-import classNames from 'classnames';
-import { InfiniteLoader } from 'components/InfiniteLoader';
-import { NoResultFound } from 'components/NoResultFound';
-import { TrackListItem } from 'components/TrackListItem';
-import { TrackListItemSkeleton } from 'components/TrackListItemSkeleton';
-import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
-import { SortOrder, SortTrackField, useGroupedTracksQuery } from 'lib/graphql';
-import React from 'react';
-import PullToRefresh from 'react-simple-pull-to-refresh';
+import classNames from 'classnames'
+import { InfiniteLoader } from 'components/InfiniteLoader'
+import { NoResultFound } from 'components/NoResultFound'
+import { TrackListItem } from 'components/TrackListItem'
+import { TrackListItemSkeleton } from 'components/TrackListItemSkeleton'
+import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
+import { SortOrder, SortTrackField, useGroupedTracksQuery } from 'lib/graphql'
+import React from 'react'
+import PullToRefresh from 'react-simple-pull-to-refresh'
 
 type Song = {
-  src: string;
-  title?: string | null;
-  trackId: string;
-  artist?: string | null;
-  art?: string | null;
-};
+  src: string
+  title?: string | null
+  trackId: string
+  artist?: string | null
+  art?: string | null
+}
 
 interface TracksProps extends React.ComponentPropsWithoutRef<'div'> {
-  profileId?: string;
-  pageSize?: number;
+  profileId?: string
+  pageSize?: number
 }
 
 export const Tracks = ({ className, profileId, pageSize = 10 }: TracksProps) => {
-  const { playlistState } = useAudioPlayerContext();
+  const { playlistState } = useAudioPlayerContext()
 
   const { data, loading, fetchMore, refetch } = useGroupedTracksQuery({
     variables: {
@@ -30,7 +30,7 @@ export const Tracks = ({ className, profileId, pageSize = 10 }: TracksProps) => 
       sort: { field: SortTrackField.CreatedAt, order: SortOrder.Desc },
       page: { first: pageSize },
     },
-  });
+  })
 
   if (loading) {
     return (
@@ -39,14 +39,14 @@ export const Tracks = ({ className, profileId, pageSize = 10 }: TracksProps) => 
         <TrackListItemSkeleton />
         <TrackListItemSkeleton />
       </div>
-    );
+    )
   }
 
   if (!data?.groupedTracks.nodes.length) {
-    return <NoResultFound type="tracks" />;
+    return <NoResultFound type="tracks" />
   }
 
-  const { nodes, pageInfo } = data.groupedTracks;
+  const { nodes, pageInfo } = data.groupedTracks
 
   const loadMore = () => {
     fetchMore({
@@ -56,8 +56,8 @@ export const Tracks = ({ className, profileId, pageSize = 10 }: TracksProps) => 
           after: pageInfo.endCursor,
         },
       },
-    });
-  };
+    })
+  }
 
   const handleOnPlayClicked = (song: Song, index: number) => {
     const list = nodes.map(
@@ -70,9 +70,9 @@ export const Tracks = ({ className, profileId, pageSize = 10 }: TracksProps) => 
           artist: node.artist,
           isFavorite: node.isFavorite,
         } as Song),
-    );
-    playlistState(list, index);
-  };
+    )
+    playlistState(list, index)
+  }
 
   return (
     <PullToRefresh onRefresh={refetch} className="h-auto">
@@ -96,5 +96,5 @@ export const Tracks = ({ className, profileId, pageSize = 10 }: TracksProps) => 
         {pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading Tracks" />}
       </ol>
     </PullToRefresh>
-  );
-};
+  )
+}

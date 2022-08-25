@@ -13,7 +13,7 @@ export const config = {
     contractsV2: {
       contractAddress: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,
       marketplaceAddress: process.env.NEXT_PUBLIC_MARKETPLACE_MUTIPLE_EDITION_ADDRESS,
-    }
+    },
   },
   muxData: process.env.NEXT_PUBLIC_MUX_DATA,
   claimOgunAddress: process.env.NEXT_PUBLIC_AIRDROP_CONTRACT_ADDRESS,
@@ -24,5 +24,5 @@ export const config = {
   tokenStakeContractAddress: process.env.NEXT_PUBLIC_TOKEN_STAKE_CONTRACT_ADDRESS,
   appVersion: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
   airdropStatus: process.env.NEXT_PUBLIC_AIRDROP_STATUS === 'true',
-  sentryUrl: process.env.NEXT_PUBLIC_SENTRY_URL
-};
+  sentryUrl: process.env.NEXT_PUBLIC_SENTRY_URL,
+}

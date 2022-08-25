@@ -6,5 +6,5 @@ export const Share = (props: React.SVGProps<SVGSVGElement>) => {
         fill="#808080"
       />
     </svg>
-  );
-};
+  )
+}

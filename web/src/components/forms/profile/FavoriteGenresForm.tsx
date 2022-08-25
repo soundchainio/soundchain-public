@@ -1,15 +1,15 @@
-import { Badge } from 'components/Badge';
-import { Button, ButtonProps } from 'components/Button';
-import { Label } from 'components/Label';
-import { Genre, useUpdateFavoriteGenresMutation } from 'lib/graphql';
-import React, { useEffect, useState } from 'react';
-import { GenreLabel, genres } from 'utils/Genres';
+import { Badge } from 'components/Badge'
+import { Button, ButtonProps } from 'components/Button'
+import { Label } from 'components/Label'
+import { Genre, useUpdateFavoriteGenresMutation } from 'lib/graphql'
+import React, { useEffect, useState } from 'react'
+import { GenreLabel, genres } from 'utils/Genres'
 
 interface FavoriteGenreFormProps {
-  afterSubmit: () => void;
-  initialGenres?: Genre[];
-  submitProps?: ButtonProps;
-  submitText: string;
+  afterSubmit: () => void
+  initialGenres?: Genre[]
+  submitProps?: ButtonProps
+  submitText: string
 }
 
 export const FavoriteGenresForm = ({
@@ -18,38 +18,38 @@ export const FavoriteGenresForm = ({
   submitText,
   initialGenres = [],
 }: FavoriteGenreFormProps) => {
-  const [favoriteGenres, setFavoriteGenres] = useState<Genre[]>([]);
-  const [updateFavoriteGenres, { loading }] = useUpdateFavoriteGenresMutation();
+  const [favoriteGenres, setFavoriteGenres] = useState<Genre[]>([])
+  const [updateFavoriteGenres, { loading }] = useUpdateFavoriteGenresMutation()
 
   useEffect(() => {
     if (initialGenres.length) {
-      setFavoriteGenres(initialGenres);
+      setFavoriteGenres(initialGenres)
     }
-  }, [initialGenres]);
+  }, [initialGenres])
 
   const handleSubmit = async () => {
-    await updateFavoriteGenres({ variables: { input: { favoriteGenres } } });
-    afterSubmit();
-  };
+    await updateFavoriteGenres({ variables: { input: { favoriteGenres } } })
+    afterSubmit()
+  }
 
   const handleGenreClick = (genre: Genre) => {
     if (favoriteGenres.includes(genre)) {
-      const nextGenres = favoriteGenres.filter(g => g !== genre);
-      setFavoriteGenres(nextGenres);
-      return;
+      const nextGenres = favoriteGenres.filter(g => g !== genre)
+      setFavoriteGenres(nextGenres)
+      return
     }
 
-    setFavoriteGenres([...favoriteGenres, genre]);
-  };
+    setFavoriteGenres([...favoriteGenres, genre])
+  }
 
   return (
     <>
-      <div className="flex-grow flex">
+      <div className="flex flex-grow">
         <div className="flex flex-col">
           <Label grayScale="80">
             What are your favorite genres? {favoriteGenres.length ? `(${favoriteGenres.length} Selected)` : ''}
           </Label>
-          <div className="pb-6 space-y-2">
+          <div className="space-y-2 pb-6">
             {genres.map(({ label, key }: GenreLabel) => (
               <Badge
                 key={key}
@@ -68,12 +68,12 @@ export const FavoriteGenresForm = ({
           type="submit"
           disabled={loading}
           variant="outline"
-          className="h-12 mt-4"
+          className="mt-4 h-12"
           {...submitProps}
         >
           {submitText}
         </Button>
       </div>
     </>
-  );
-};
+  )
+}

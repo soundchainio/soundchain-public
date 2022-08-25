@@ -1,50 +1,50 @@
-import React from 'react';
-import { Form, Formik } from 'formik';
-import * as yup from 'yup';
-import { toast } from 'react-toastify';
-import { useUpdateOtpMutation, useValidateOtpRecoveryPhraseMutation } from 'lib/graphql';
-import { Button } from 'components/Button';
-import { InputField } from 'components/InputField';
-import { updateOTPCache } from 'lib/apollo/cache/updateOTPCache';
+import React from 'react'
+import { Form, Formik } from 'formik'
+import * as yup from 'yup'
+import { toast } from 'react-toastify'
+import { useUpdateOtpMutation, useValidateOtpRecoveryPhraseMutation } from 'lib/graphql'
+import { Button } from 'components/Button'
+import { InputField } from 'components/InputField'
+import { updateOTPCache } from 'lib/apollo/cache/updateOTPCache'
 
 interface Props {
-  afterSubmit: () => void;
+  afterSubmit: () => void
 }
 
 interface FormValues {
-  recoveryPhrase: string;
+  recoveryPhrase: string
 }
 
 const initialValues: FormValues = {
   recoveryPhrase: '',
-};
+}
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   recoveryPhrase: yup.string().required('Recovery Phrase is required'),
-});
+})
 
 export const DisableRecoveryForm = ({ afterSubmit }: Props) => {
-  const [updateOTP, { loading }] = useUpdateOtpMutation();
-  const [validateOtpRecoveryPhrase] = useValidateOtpRecoveryPhraseMutation();
+  const [updateOTP, { loading }] = useUpdateOtpMutation()
+  const [validateOtpRecoveryPhrase] = useValidateOtpRecoveryPhraseMutation()
 
   const handleSubmit = async (values: FormValues) => {
-    const { recoveryPhrase } = values;
+    const { recoveryPhrase } = values
     const isRecoveryPhraseValid = await validateOtpRecoveryPhrase({
       variables: { input: { otpRecoveryPhrase: recoveryPhrase } },
-    });
+    })
 
     if (!isRecoveryPhraseValid.data?.validateOTPRecoveryPhrase) {
-      toast.error('Invalid recovery phrase');
-      return;
+      toast.error('Invalid recovery phrase')
+      return
     }
 
     await updateOTP({
       variables: { input: { otpSecret: '', otpRecoveryPhrase: '' } },
       update: updateOTPCache,
-    });
+    })
 
-    afterSubmit();
-  };
+    afterSubmit()
+  }
 
   return (
     <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
@@ -58,12 +58,12 @@ export const DisableRecoveryForm = ({ afterSubmit }: Props) => {
           type="submit"
           disabled={loading}
           variant="outline"
-          className="w-full h-12 mt-4"
+          className="mt-4 h-12 w-full"
           borderColor="bg-pink-gradient"
         >
           DISABLE
         </Button>
       </Form>
     </Formik>
-  );
-};
+  )
+}

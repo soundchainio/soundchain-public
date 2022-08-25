@@ -1,12 +1,12 @@
-import classNames from 'classnames';
-import React, { useState, useEffect, useRef } from 'react';
-import * as THREE from 'three';
-import RINGS from 'vanta/dist/vanta.rings.min';
-import { VantaEffect } from './DefaultCover';
+import classNames from 'classnames'
+import React, { useState, useEffect, useRef } from 'react'
+import * as THREE from 'three'
+import RINGS from 'vanta/dist/vanta.rings.min'
+import { VantaEffect } from './DefaultCover'
 
 export const Rings = () => {
-  const [vantaEffect, setVantaEffect] = useState();
-  const myRef = useRef(null);
+  const [vantaEffect, setVantaEffect] = useState()
+  const myRef = useRef(null)
   useEffect(() => {
     if (!vantaEffect) {
       setVantaEffect(
@@ -21,15 +21,15 @@ export const Rings = () => {
           scaleMobile: 2.0,
           THREE: THREE,
         }),
-      );
+      )
     }
     return () => {
-      if (vantaEffect) (vantaEffect as unknown as VantaEffect).destroy();
-    };
-  }, [vantaEffect]);
+      if (vantaEffect) (vantaEffect as unknown as VantaEffect).destroy()
+    }
+  }, [vantaEffect])
   return (
-    <div className={classNames('flex w-full h-[130px]')}>
-      <div ref={myRef} className="flex w-full h-full"></div>
+    <div className={classNames('flex h-[130px] w-full')}>
+      <div ref={myRef} className="flex h-full w-full"></div>
     </div>
-  );
-};
+  )
+}

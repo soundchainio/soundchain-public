@@ -1,7 +1,7 @@
-import { useContext } from 'react';
-import { store } from '..';
+import { useContext } from 'react'
+import { store } from '..'
 
 export const useDispatch = () => {
-  const { dispatch } = useContext(store);
-  return dispatch;
-};
+  const { dispatch } = useContext(store)
+  return dispatch
+}

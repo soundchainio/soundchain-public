@@ -12,5 +12,5 @@ export const ListCanceled = (props: React.SVGProps<SVGSVGElement>) => {
         fill="#FF4242"
       />
     </svg>
-  );
-};
+  )
+}

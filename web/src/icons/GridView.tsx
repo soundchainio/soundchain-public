@@ -1,5 +1,5 @@
-import { SVGGradient } from './gradients';
-import { IconProps } from './types/IconProps';
+import { SVGGradient } from './gradients'
+import { IconProps } from './types/IconProps'
 
 export const GridView = ({ color, ...props }: IconProps) => {
   return (
@@ -33,5 +33,5 @@ export const GridView = ({ color, ...props }: IconProps) => {
 
       {color && <SVGGradient color={color} />}
     </svg>
-  );
-};
+  )
+}

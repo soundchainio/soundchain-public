@@ -1,46 +1,46 @@
-import { Modal } from 'components/Modal';
-import { useModalDispatch, useModalState } from 'contexts/providers/modal';
-import useBlockchainV2 from 'hooks/useBlockchainV2';
-import { useMagicContext } from 'hooks/useMagicContext';
-import { useMe } from 'hooks/useMe';
-import useMetaMask from 'hooks/useMetaMask';
-import Image from 'next/image';
-import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
-import { ShowTransferNftConfirmationPayload } from '../../contexts/payloads/modal';
-import { useMaxGasFee } from '../../hooks/useMaxGasFee';
-import { DefaultWallet } from '../../lib/graphql';
-import Asset from '../Asset';
-import { Button } from '../Button';
-import { ConnectedNetwork } from '../ConnectedNetwork';
-import { CopyWalletAddress } from '../CopyWalletAddress';
-import { Label } from '../Label';
-import { Matic } from '../Matic';
-import MaxGasFee from '../MaxGasFee';
-import { WalletSelected } from '../WalletSelected';
+import { Modal } from 'components/Modal'
+import { useModalDispatch, useModalState } from 'contexts/providers/modal'
+import useBlockchainV2 from 'hooks/useBlockchainV2'
+import { useMagicContext } from 'hooks/useMagicContext'
+import { useMe } from 'hooks/useMe'
+import useMetaMask from 'hooks/useMetaMask'
+import Image from 'next/image'
+import { useRouter } from 'next/router'
+import { useEffect, useState } from 'react'
+import { toast } from 'react-toastify'
+import { ShowTransferNftConfirmationPayload } from '../../contexts/payloads/modal'
+import { useMaxGasFee } from '../../hooks/useMaxGasFee'
+import { DefaultWallet } from '../../lib/graphql'
+import Asset from '../Asset'
+import { Button } from '../Button'
+import { ConnectedNetwork } from '../ConnectedNetwork'
+import { CopyWalletAddress } from '../CopyWalletAddress'
+import { Label } from '../Label'
+import { Matic } from '../Matic'
+import MaxGasFee from '../MaxGasFee'
+import { WalletSelected } from '../WalletSelected'
 
 export const NftTransferConfirmationModal = () => {
-  const modalState = useModalState();
-  const { asPath, query, push } = useRouter();
-  const { address: account } = query;
-  const { dispatchShowNftTransferConfirmationModal } = useModalDispatch();
-  const me = useMe();
-  const { web3: web3Magic, balance: balanceMagic, refetchBalance: refetchBalanceMagic } = useMagicContext();
-  const { web3: web3Metamask, balance: balanceMetamask, refetchBalance: refetchBalanceMetamask } = useMetaMask();
-  const { transferNftToken } = useBlockchainV2();
-  const [loading, setLoading] = useState<boolean>(false);
-  const isSoundchain = account === me?.magicWalletAddress;
-  const web3 = isSoundchain ? web3Magic : web3Metamask;
-  const balance = isSoundchain ? balanceMagic : balanceMetamask;
-  const refetchBalance = isSoundchain ? refetchBalanceMagic : refetchBalanceMetamask;
+  const modalState = useModalState()
+  const { asPath, query, push } = useRouter()
+  const { address: account } = query
+  const { dispatchShowNftTransferConfirmationModal } = useModalDispatch()
+  const me = useMe()
+  const { web3: web3Magic, balance: balanceMagic, refetchBalance: refetchBalanceMagic } = useMagicContext()
+  const { web3: web3Metamask, balance: balanceMetamask, refetchBalance: refetchBalanceMetamask } = useMetaMask()
+  const { transferNftToken } = useBlockchainV2()
+  const [loading, setLoading] = useState<boolean>(false)
+  const isSoundchain = account === me?.magicWalletAddress
+  const web3 = isSoundchain ? web3Magic : web3Metamask
+  const balance = isSoundchain ? balanceMagic : balanceMetamask
+  const refetchBalance = isSoundchain ? refetchBalanceMagic : refetchBalanceMetamask
 
   useEffect(() => {
-    handleClose();
+    handleClose()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [asPath]);
+  }, [asPath])
 
-  const isOpen = modalState.showTransferNftConfirmation;
+  const isOpen = modalState.showTransferNftConfirmation
   const {
     walletRecipient,
     artist = '',
@@ -48,48 +48,48 @@ export const NftTransferConfirmationModal = () => {
     tokenId,
     artworkUrl,
     contractAddress,
-  } = modalState as unknown as ShowTransferNftConfirmationPayload;
+  } = modalState as unknown as ShowTransferNftConfirmationPayload
 
-  const maxGasFee = useMaxGasFee(isOpen);
+  const maxGasFee = useMaxGasFee(isOpen)
 
   const handleClose = () => {
     dispatchShowNftTransferConfirmationModal({
       show: false,
-    });
-  };
+    })
+  }
 
   const hasEnoughFunds = () => {
     if (balance && maxGasFee) {
-      return +balance > +maxGasFee;
+      return +balance > +maxGasFee
     }
-    return false;
-  };
+    return false
+  }
 
   const onTransfer = () => {
     if (!web3 || !tokenId || !walletRecipient || !account) {
-      console.error({ web3, tokenId, walletRecipient, account });
-      toast.error('Unexpected error!');
-      return;
+      console.error({ web3, tokenId, walletRecipient, account })
+      toast.error('Unexpected error!')
+      return
     }
 
     if (hasEnoughFunds() && refetchBalance) {
-      setLoading(true);
+      setLoading(true)
       const onReceipt = () => {
-        toast.success('Your track has been transferred successfully!');
-        setLoading(false);
-        refetchBalance();
-        push('/wallet');
-      };
+        toast.success('Your track has been transferred successfully!')
+        setLoading(false)
+        refetchBalance()
+        push('/wallet')
+      }
       transferNftToken(tokenId, account as string, walletRecipient, { nft: contractAddress })
         .onReceipt(onReceipt)
         .onError(cause => toast.error(cause.message))
         .finally(() => setLoading(false))
-        .execute(web3);
+        .execute(web3)
     } else {
-      toast.warn("Uh-oh, it seems you don't have enough funds to pay for the gas fee of this operation");
-      push('/wallet');
+      toast.warn("Uh-oh, it seems you don't have enough funds to pay for the gas fee of this operation")
+      push('/wallet')
     }
-  };
+  }
 
   return (
     <Modal
@@ -170,7 +170,7 @@ export const NftTransferConfirmationModal = () => {
         </div>
       )}
     </Modal>
-  );
-};
+  )
+}
 
-export default NftTransferConfirmationModal;
+export default NftTransferConfirmationModal

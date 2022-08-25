@@ -13,5 +13,5 @@ export const BlueGradient = () => {
         <stop offset="1" stopColor="#6FA1FF" />
       </linearGradient>
     </defs>
-  );
-};
+  )
+}

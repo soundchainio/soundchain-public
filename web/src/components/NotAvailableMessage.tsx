@@ -1,14 +1,13 @@
-import React from 'react';
+import React from 'react'
 
 interface NotAvailableMessageProps {
-  type: string;
+  type: string
 }
 
 export const NotAvailableMessage = ({ type }: NotAvailableMessageProps) => {
-
   return (
-    <div className=" justify-items-stretch w-full text-gray-80 p-4 text-center">
+    <div className=" w-full justify-items-stretch p-4 text-center text-gray-80">
       This {type} is not available anymore
     </div>
-  );
-};
+  )
+}

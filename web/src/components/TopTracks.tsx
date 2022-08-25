@@ -1,23 +1,23 @@
-import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
-import { SortOrder, SortTrackField, useTracksQuery } from 'lib/graphql';
-import React from 'react';
-import { InfiniteLoader } from './InfiniteLoader';
-import { NoResultFound } from './NoResultFound';
-import { Song, TrackListItem } from './TrackListItem';
-import { TrackListItemSkeleton } from './TrackListItemSkeleton';
+import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
+import { SortOrder, SortTrackField, useTracksQuery } from 'lib/graphql'
+import React from 'react'
+import { InfiniteLoader } from './InfiniteLoader'
+import { NoResultFound } from './NoResultFound'
+import { Song, TrackListItem } from './TrackListItem'
+import { TrackListItemSkeleton } from './TrackListItemSkeleton'
 
 export const TopTracks = () => {
-  const { playlistState } = useAudioPlayerContext();
+  const { playlistState } = useAudioPlayerContext()
 
-  const pageSize = 10;
-  const maxSizeTopTracks = 100;
+  const pageSize = 10
+  const maxSizeTopTracks = 100
 
   const { data, loading, fetchMore } = useTracksQuery({
     variables: {
       sort: { field: SortTrackField.PlaybackCount, order: SortOrder.Desc },
       page: { first: pageSize },
     },
-  });
+  })
 
   if (loading) {
     return (
@@ -26,14 +26,14 @@ export const TopTracks = () => {
         <TrackListItemSkeleton />
         <TrackListItemSkeleton />
       </div>
-    );
+    )
   }
 
   if (!data) {
-    return <NoResultFound type="tracks" />;
+    return <NoResultFound type="tracks" />
   }
 
-  const { nodes, pageInfo } = data.tracks;
+  const { nodes, pageInfo } = data.tracks
 
   const loadMore = () => {
     fetchMore({
@@ -43,8 +43,8 @@ export const TopTracks = () => {
           after: pageInfo.endCursor,
         },
       },
-    });
-  };
+    })
+  }
 
   const handleOnPlayClicked = (index: number) => {
     const list = nodes.map(
@@ -57,9 +57,9 @@ export const TopTracks = () => {
           artist: node.artist,
           isFavorite: node.isFavorite,
         } as Song),
-    );
-    playlistState(list, index);
-  };
+    )
+    playlistState(list, index)
+  }
 
   return (
     <ol className={'space-y-1'}>
@@ -83,5 +83,5 @@ export const TopTracks = () => {
         <InfiniteLoader loadMore={loadMore} loadingMessage="Loading Tracks" />
       )}
     </ol>
-  );
-};
+  )
+}

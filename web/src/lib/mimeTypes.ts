@@ -174,7 +174,7 @@ export const audioMimeTypes = [
   'audio/wav',
   'audio/x-matroska',
   'audio/matroska',
-];
+]
 
 export const videoMimeTypes = [
   'video/x-ms-asf',
@@ -302,7 +302,7 @@ export const videoMimeTypes = [
   'video/x-matroska',
   'video/matroska',
   'video/webm',
-];
+]
 
 export const imageMimeTypes = [
   'image/x-wmf',
@@ -458,4 +458,4 @@ export const imageMimeTypes = [
   'image/xwindowdump',
   'image/x-jp2-container',
   'image/jp2-container',
-];
+]

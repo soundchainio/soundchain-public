@@ -1,13 +1,13 @@
-import * as THREE from 'three';
-import BIRDS from 'vanta/dist/vanta.birds.min';
-import CELLS from 'vanta/dist/vanta.cells.min';
-import FOG from 'vanta/dist/vanta.fog.min';
-import NET from 'vanta/dist/vanta.net.min';
-import RINGS from 'vanta/dist/vanta.rings.min';
-import WAVES from 'vanta/dist/vanta.waves.min';
+import * as THREE from 'three'
+import BIRDS from 'vanta/dist/vanta.birds.min'
+import CELLS from 'vanta/dist/vanta.cells.min'
+import FOG from 'vanta/dist/vanta.fog.min'
+import NET from 'vanta/dist/vanta.net.min'
+import RINGS from 'vanta/dist/vanta.rings.min'
+import WAVES from 'vanta/dist/vanta.waves.min'
 
 export interface VantaEffect {
-  destroy: () => void;
+  destroy: () => void
 }
 
 const defaultEffectConfig = {
@@ -19,7 +19,7 @@ const defaultEffectConfig = {
   THREE,
   scale: 1.0,
   scaleMobile: 1.0,
-};
+}
 
 export const customEffects = {
   waves: {
@@ -65,4 +65,4 @@ export const customEffects = {
       ...defaultEffectConfig,
     },
   },
-};
+}

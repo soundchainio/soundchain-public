@@ -36,5 +36,5 @@ export const AuctionResult = (props: React.SVGProps<SVGSVGElement>) => {
         </linearGradient>
       </defs>
     </svg>
-  );
-};
+  )
+}

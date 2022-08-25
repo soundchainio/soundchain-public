@@ -16,5 +16,5 @@ export const RainbowGradient = () => {
         <stop offset="1" stopColor="#FE5540" />
       </linearGradient>
     </defs>
-  );
-};
+  )
+}

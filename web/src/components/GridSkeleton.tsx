@@ -1,14 +1,14 @@
 export const GridSkeleton = () => (
-  <div className="p-8 m-2 bg-gray-20 space-y-6 h-60">
-    <div className="flex items-center space-x-6 animate-pulse justify-center">
-      <div className=" bg-gray-40 w-16 h-16"></div>
+  <div className="m-2 h-60 space-y-6 bg-gray-20 p-8">
+    <div className="flex animate-pulse items-center justify-center space-x-6">
+      <div className=" h-16 w-16 bg-gray-40"></div>
     </div>
-    <div className="h-3 bg-gray-40 animate-pulse"></div>
-    <div className="h-3 bg-gray-40 animate-pulse"></div>
-    <div className="flex space-x-3 animate-pulse">
-      <div className="h-3 bg-gray-40 w-20"></div>
-      <div className="h-3 bg-gray-40 w-20"></div>
-      <div className="h-3 bg-gray-40 w-20"></div>
+    <div className="h-3 animate-pulse bg-gray-40"></div>
+    <div className="h-3 animate-pulse bg-gray-40"></div>
+    <div className="flex animate-pulse space-x-3">
+      <div className="h-3 w-20 bg-gray-40"></div>
+      <div className="h-3 w-20 bg-gray-40"></div>
+      <div className="h-3 w-20 bg-gray-40"></div>
     </div>
   </div>
-);
+)

@@ -1,5 +1,5 @@
-import { PrivacyPolicy } from 'components/PrivacyPolicy';
-import SEO from 'components/SEO';
+import { PrivacyPolicy } from 'components/PrivacyPolicy'
+import SEO from 'components/SEO'
 
 export default function PrivacyPolicyPage() {
   return (
@@ -11,5 +11,5 @@ export default function PrivacyPolicyPage() {
       />
       <PrivacyPolicy />
     </>
-  );
+  )
 }

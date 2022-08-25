@@ -1,70 +1,70 @@
-import { FollowModal } from 'components/FollowersModal';
-import { Number } from 'components/Number';
-import { config } from 'config';
-import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar';
-import { useMagicContext } from 'hooks/useMagicContext';
-import { useMe } from 'hooks/useMe';
-import { Document } from 'icons/Document';
-import { Feedback } from 'icons/Feedback';
-import { Logout } from 'icons/Logout';
-import { Settings } from 'icons/Settings';
-import { Discord } from 'icons/social/Discord';
-import { InstagramSquare } from 'icons/social/InstagramSquare';
-import { TwitterSquare } from 'icons/social/TwitterSquare';
-import { Verified } from 'icons/Verified';
-import { Wallet } from 'icons/Wallet';
-import { setJwt } from 'lib/apollo';
-import { Role, usePendingRequestsBadgeNumberQuery } from 'lib/graphql';
-import { default as NextLink } from 'next/link';
-import { useRouter } from 'next/router';
-import { useState } from 'react';
-import { toast } from 'react-toastify';
-import { FollowModalType } from 'types/FollowModalType';
-import { Avatar } from './Avatar';
-import { DisplayName } from './DisplayName';
-import { MenuItem } from './MenuItem';
-import { MenuLink } from './MenuLink';
-import { SocialTag } from './SocialTag';
-import { InboxButton } from './Buttons/InboxButton';
+import { FollowModal } from 'components/FollowersModal'
+import { Number } from 'components/Number'
+import { config } from 'config'
+import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar'
+import { useMagicContext } from 'hooks/useMagicContext'
+import { useMe } from 'hooks/useMe'
+import { Document } from 'icons/Document'
+import { Feedback } from 'icons/Feedback'
+import { Logout } from 'icons/Logout'
+import { Settings } from 'icons/Settings'
+import { Discord } from 'icons/social/Discord'
+import { InstagramSquare } from 'icons/social/InstagramSquare'
+import { TwitterSquare } from 'icons/social/TwitterSquare'
+import { Verified } from 'icons/Verified'
+import { Wallet } from 'icons/Wallet'
+import { setJwt } from 'lib/apollo'
+import { Role, usePendingRequestsBadgeNumberQuery } from 'lib/graphql'
+import { default as NextLink } from 'next/link'
+import { useRouter } from 'next/router'
+import { useState } from 'react'
+import { toast } from 'react-toastify'
+import { FollowModalType } from 'types/FollowModalType'
+import { Avatar } from './Avatar'
+import { DisplayName } from './DisplayName'
+import { MenuItem } from './MenuItem'
+import { MenuLink } from './MenuLink'
+import { SocialTag } from './SocialTag'
+import { InboxButton } from './Buttons/InboxButton'
 
 interface SideMenuContentProps {
-  isMobile?: boolean;
+  isMobile?: boolean
 }
 
 export const SideMenuContent = ({}: SideMenuContentProps) => {
-  const { data: pendingRequestsBadgeNumber } = usePendingRequestsBadgeNumberQuery();
-  const me = useMe();
-  const router = useRouter();
-  const { magic } = useMagicContext();
-  const { isMinting } = useHideBottomNavBar();
+  const { data: pendingRequestsBadgeNumber } = usePendingRequestsBadgeNumberQuery()
+  const me = useMe()
+  const router = useRouter()
+  const { magic } = useMagicContext()
+  const { isMinting } = useHideBottomNavBar()
 
-  const [showModal, setShowModal] = useState(false);
-  const [followModalType, setFollowModalType] = useState<FollowModalType>();
+  const [showModal, setShowModal] = useState(false)
+  const [followModalType, setFollowModalType] = useState<FollowModalType>()
 
   const onLogout = async () => {
     if (isMinting) {
-      toast.error(`You can't logout while minting an NFT.`);
-      return false;
+      toast.error(`You can't logout while minting an NFT.`)
+      return false
     }
 
-    await magic.user.logout();
-    setJwt();
-    router.reload();
-  };
+    await magic.user.logout()
+    setJwt()
+    router.reload()
+  }
 
   const onFollowers = () => {
-    setFollowModalType(FollowModalType.FOLLOWERS);
-    setShowModal(true);
-  };
+    setFollowModalType(FollowModalType.FOLLOWERS)
+    setShowModal(true)
+  }
 
   const onFollowing = () => {
-    setFollowModalType(FollowModalType.FOLLOWING);
-    setShowModal(true);
-  };
+    setFollowModalType(FollowModalType.FOLLOWING)
+    setShowModal(true)
+  }
 
   const onCloseModal = () => {
-    setShowModal(false);
-  };
+    setShowModal(false)
+  }
 
   return (
     <>
@@ -159,5 +159,5 @@ export const SideMenuContent = ({}: SideMenuContentProps) => {
         />
       )}
     </>
-  );
-};
+  )
+}
