@@ -7,6 +7,7 @@ import { TrackInfo } from 'components/details-NFT/TrackInfo'
 import { ViewPost } from 'components/details-NFT/ViewPost'
 import { InfiniteLoader } from 'components/InfiniteLoader'
 import { NoResultFound } from 'components/NoResultFound'
+import { Ogun } from 'components/Ogun'
 import { OwnedEditionListItem } from 'components/OwnedEditionListItem'
 import SEO from 'components/SEO'
 import { TopNavBarProps } from 'components/TopNavBar'
@@ -35,7 +36,6 @@ import {
   useTrackLazyQuery,
 } from 'lib/graphql'
 import { useEffect, useMemo, useState } from 'react'
-import { Ogun } from 'components/Ogun'
 import { AuthorActionsType } from 'types/AuthorActionsType'
 import { isPendingRequest } from 'utils/isPendingRequest'
 import useBlockchainV2 from '../../hooks/useBlockchainV2'
@@ -364,7 +364,11 @@ function Listings(props: ListingsProps) {
                   key={item.id}
                   price={item.listingItem?.pricePerItemToShow || 0}
                   priceOGUN={item.listingItem?.OGUNPricePerItemToShow || 0}
-                  isPaymentOGUN={Boolean(item.listingItem?.OGUNPricePerItemToShow != 0)}
+                  isPaymentOGUN={
+                    item.listingItem?.OGUNPricePerItemToShow
+                      ? Boolean(item.listingItem?.OGUNPricePerItemToShow !== 0)
+                      : false
+                  }
                   profileId={item.profileId || ''}
                   trackId={item.id}
                   tokenId={item.nftData?.tokenId || 0}

@@ -64,7 +64,9 @@ export class ModelService<T extends typeof Model, KeyComponents = string> extend
     return Boolean(entity);
   }
 
-  async paginate<S extends PaginateSortParams<T> = PaginateSortParams<T>>(params: PaginateParams<T, S> = {}): Promise<PaginateResult<InstanceType<T>>> {
+  async paginate<S extends PaginateSortParams<T> = PaginateSortParams<T>>(
+    params: PaginateParams<T, S> = {},
+  ): Promise<PaginateResult<InstanceType<T>>> {
     return paginate(this.model, params);
   }
 
