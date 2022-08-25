@@ -4,7 +4,7 @@ import { InstanceWithExtensions, MagicSDKExtensionsOption, SDKBase } from '@magi
 import { setJwt } from 'lib/apollo';
 import { Magic, RPCErrorCode } from 'magic-sdk';
 import { useRouter } from 'next/router';
-import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
+import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import Web3 from 'web3';
 import { network } from '../lib/blockchainNetworks';
 import { useMe } from './useMe';
@@ -69,7 +69,6 @@ export function MagicProvider({ children }: MagicProviderProps) {
   const router = useRouter();
 
   const tokenAddress = config.OGUNAddress;
-  const ogunContract = new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], tokenAddress);
 
   const handleError = useCallback(
     async error => {
@@ -124,6 +123,7 @@ export function MagicProvider({ children }: MagicProviderProps) {
     try {
       if (!account) await handleSetAccount();
 
+      const ogunContract = new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], tokenAddress);
       const tokenAmount = await ogunContract.methods.balanceOf(account).call();
       const tokenAmountInEther = Number(web3.utils.fromWei(tokenAmount, 'ether')).toFixed(6);
 
@@ -131,10 +131,10 @@ export function MagicProvider({ children }: MagicProviderProps) {
     } catch (error) {
       handleError(error);
     }
-  }, [account, handleError, handleSetAccount, ogunContract.methods]);
+  }, [account, handleError, handleSetAccount, tokenAddress]);
 
   useEffect(() => {
-    if (!me || !web3) return;
+    if (!me && !web3) return;
 
     handleSetOgunBalance();
     handleSetBalance();
