@@ -4,13 +4,14 @@ import { InstanceWithExtensions, MagicSDKExtensionsOption, SDKBase } from '@magi
 import { setJwt } from 'lib/apollo';
 import { Magic, RPCErrorCode } from 'magic-sdk';
 import { useRouter } from 'next/router';
-import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 import Web3 from 'web3';
 import { network } from '../lib/blockchainNetworks';
 import { useMe } from './useMe';
+import { errorHandler } from 'utils/errorHandler';
 import SoundchainOGUN20 from '../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json';
 import { config } from 'config';
-import { AbiItem } from 'web3-utils'
+import { AbiItem } from 'web3-utils';
 
 const magicPublicKey = process.env.NEXT_PUBLIC_MAGIC_KEY || '';
 
@@ -60,52 +61,84 @@ const web3: Web3 = createWeb3(magic)!;
 
 export function MagicProvider({ children }: MagicProviderProps) {
   const me = useMe();
-  const [account, setAccount] = useState<string>();
-  const [balance, setBalance] = useState<string>();
-  const [ogunBalance, setOgunBalance] = useState<string>();
-  const [isRefetchingBalance, setIsRefetchingBalance] = useState<boolean>(false);
+  const [account, setAccount] = useState('');
+  const [balance, setBalance] = useState('');
+  const [ogunBalance, setOgunBalance] = useState('');
+  const [isRefetchingBalance, setIsRefetchingBalance] = useState(false);
+
   const router = useRouter();
 
+  const tokenAddress = config.OGUNAddress;
+  const ogunContract = new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], tokenAddress);
+
+  const handleError = useCallback(
+    async error => {
+      if (error.code === RPCErrorCode.InternalError) {
+        await magic.user.logout();
+        setJwt();
+        router.reload();
+      }
+
+      errorHandler(error);
+    },
+    [router],
+  );
+
   const refetchBalance = async () => {
-    if (account) {
-      setIsRefetchingBalance(true);
+    if (!account) return;
 
-      const tokenAddress = config.OGUNAddress;
-      const contract = new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], tokenAddress);
-      const tokenAmount = await contract.methods.balanceOf(account).call();
+    setIsRefetchingBalance(true);
 
-      await web3.eth.getBalance(account).then(balance => {
-        setBalance(Number(web3.utils.fromWei(balance, 'ether')).toFixed(6));
-        setOgunBalance(Number(web3.utils.fromWei(tokenAmount, 'ether')).toFixed(6));
-        setIsRefetchingBalance(false)
-      });
+    try {
+      await handleSetBalance();
+      await handleSetOgunBalance();
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setIsRefetchingBalance(false);
     }
   };
 
-  useEffect(() => {
-    if (me && web3) {
-      web3.eth
-        .getAccounts()
-        .then(async ([account]) => {
-          setAccount(account);
-          const tokenAddress = config.OGUNAddress;
-          const contract = new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], tokenAddress);
-          const tokenAmount = await contract.methods.balanceOf(account).call();
-          setOgunBalance(Number(web3.utils.fromWei(tokenAmount, 'ether')).toFixed(6));
-
-          return web3.eth.getBalance(account);
-        })
-        .then(balance => {
-          setBalance(Number(web3.utils.fromWei(balance, 'ether')).toFixed(6));
-        }).catch(async (e) => {
-          if (e.code === RPCErrorCode.InternalError) {
-            await magic.user.logout();
-            setJwt();
-            router.reload();
-          }
-        });
+  const handleSetAccount = useCallback(async () => {
+    try {
+      const [account] = await web3.eth.getAccounts();
+      setAccount(account);
+    } catch (error) {
+      handleError(error);
     }
-  }, [me, router]);
+  }, [handleError]);
+
+  const handleSetBalance = useCallback(async () => {
+    if (!account) await handleSetAccount();
+
+    try {
+      const balance = await web3.eth.getBalance(account);
+
+      setBalance(Number(web3.utils.fromWei(balance, 'ether')).toFixed(6));
+    } catch (error) {
+      handleError(error);
+    }
+  }, [account, handleError, handleSetAccount]);
+
+  const handleSetOgunBalance = useCallback(async () => {
+    try {
+      if (!account) await handleSetAccount();
+
+      const tokenAmount = await ogunContract.methods.balanceOf(account).call();
+      const tokenAmountInEther = Number(web3.utils.fromWei(tokenAmount, 'ether')).toFixed(6);
+
+      setOgunBalance(tokenAmountInEther);
+    } catch (error) {
+      handleError(error);
+    }
+  }, [account, handleError, handleSetAccount, ogunContract.methods]);
+
+  useEffect(() => {
+    if (!me || !web3) return;
+
+    handleSetOgunBalance();
+    handleSetBalance();
+  }, [me, router, handleSetOgunBalance, handleSetBalance]);
 
   return (
     <MagicContext.Provider value={{ magic, web3, account, balance, ogunBalance, refetchBalance, isRefetchingBalance }}>
