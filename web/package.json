@@ -6,16 +6,18 @@
     "dev": "next dev",
     "dev:quick": "next dev",
     "codegen": "graphql-codegen --config codegen.yml",
-    "lint-web": "next lint",
+    "lint": "next lint",
     "build": "next build",
     "postbuild": "next-sitemap",
     "start": "next start",
     "test": "jest",
+    "prettier": "prettier --write ./src",
+    "lint-web": "lint-staged",
     "prepare": "cd .. && husky install web/.husky"
   },
   "lint-staged": {
     "*.{js,ts,tsx, jsx}": [
-      "eslint --quiet --fix"
+      "eslint --fix"
     ],
     "*.{ts,tsx, js, jsx}": "prettier --write"
   },
