@@ -9,5 +9,5 @@ export const DownArrow = (props: React.SVGProps<SVGSVGElement>) => {
         strokeLinejoin="round"
       />
     </svg>
-  );
-};
+  )
+}

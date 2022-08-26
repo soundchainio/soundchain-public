@@ -1,4 +1,4 @@
-import { IconProps } from './types/IconProps';
+import { IconProps } from './types/IconProps'
 
 export const Shuffle = ({ ...props }: IconProps) => {
   return (
@@ -20,5 +20,5 @@ export const Shuffle = ({ ...props }: IconProps) => {
       <line x1="15" y1="15" x2="21" y2="21" />
       <line x1="4" y1="4" x2="9" y2="9" />
     </svg>
-  );
-};
+  )
+}

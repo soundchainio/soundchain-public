@@ -1,55 +1,55 @@
-import { Button } from 'components/Button';
-import { WalletButton } from 'components/Buttons/WalletButton';
-import { config } from 'config';
-import { Form, Formik } from 'formik';
-import { useLayoutContext } from 'hooks/useLayoutContext';
-import useMetaMask from 'hooks/useMetaMask';
-import { useWalletConnect } from 'hooks/useWalletConnect';
-import { CirclePlusFilled } from 'icons/CirclePlusFilled';
-import { Logo } from 'icons/Logo';
-import { Matic } from 'icons/Matic';
-import { MetaMask } from 'icons/MetaMask';
-import { WalletConnect } from 'icons/WalletConnect';
-import { testnetNetwork } from 'lib/blockchainNetworks';
-import { GetServerSideProps } from 'next';
-import { useEffect, useState } from 'react';
-import { toast, ToastContainer } from 'react-toastify';
-import Web3 from 'web3';
-import { Contract } from 'web3-eth-contract';
-import { AbiItem } from 'web3-utils';
-import { CustomModal } from '../components/CustomModal';
-import LiquidityPoolRewards from '../contract/LiquidityPoolRewards.sol/LiquidityPoolRewards.json';
-import LPToken from '../contract/LPToken.sol/LPToken.json';
-import SoundchainOGUN20 from '../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json';
+import { Button } from 'components/Button'
+import { WalletButton } from 'components/Buttons/WalletButton'
+import { config } from 'config'
+import { Form, Formik } from 'formik'
+import { useLayoutContext } from 'hooks/useLayoutContext'
+import useMetaMask from 'hooks/useMetaMask'
+import { useWalletConnect } from 'hooks/useWalletConnect'
+import { CirclePlusFilled } from 'icons/CirclePlusFilled'
+import { Logo } from 'icons/Logo'
+import { Matic } from 'icons/Matic'
+import { MetaMask } from 'icons/MetaMask'
+import { WalletConnect } from 'icons/WalletConnect'
+import { testnetNetwork } from 'lib/blockchainNetworks'
+import { GetServerSideProps } from 'next'
+import { useEffect, useState } from 'react'
+import { toast, ToastContainer } from 'react-toastify'
+import Web3 from 'web3'
+import { Contract } from 'web3-eth-contract'
+import { AbiItem } from 'web3-utils'
+import { CustomModal } from '../components/CustomModal'
+import LiquidityPoolRewards from '../contract/LiquidityPoolRewards.sol/LiquidityPoolRewards.json'
+import LPToken from '../contract/LPToken.sol/LPToken.json'
+import SoundchainOGUN20 from '../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json'
 
 interface FormValues {
-  token: string;
-  amount: number;
+  token: string
+  amount: number
 }
 
-type Selected = 'Stake' | 'Unstake';
+type Selected = 'Stake' | 'Unstake'
 
-const OGUNAddress = config.ogunTokenAddress as string;
-const lpTokenAddress = config.lpTokenAddress as string;
-const lpStakeContractAddress = config.lpStakeContractAddress as string;
+const OGUNAddress = config.OGUNAddress as string
+const lpTokenAddress = config.lpTokenAddress as string
+const lpStakeContractAddress = config.lpStakeContractAddress as string
 const tokenContract = (web3: Web3) =>
-  new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], OGUNAddress) as unknown as Contract;
+  new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], OGUNAddress) as unknown as Contract
 const lpContract = (web3: Web3) =>
-  new web3.eth.Contract(LPToken.abi as AbiItem[], lpTokenAddress) as unknown as Contract;
+  new web3.eth.Contract(LPToken.abi as AbiItem[], lpTokenAddress) as unknown as Contract
 const lpStakeContract = (web3: Web3) =>
-  new web3.eth.Contract(LiquidityPoolRewards.abi as AbiItem[], lpStakeContractAddress) as unknown as Contract;
+  new web3.eth.Contract(LiquidityPoolRewards.abi as AbiItem[], lpStakeContractAddress) as unknown as Contract
 
 // TODO: remove before enabling the ogun token stake
 export const getServerSideProps: GetServerSideProps = ({ res }) => {
   if (res) {
-    res.statusCode = 404;
-    res.end('Not found');
+    res.statusCode = 404
+    res.end('Not found')
   }
 
   return Promise.resolve({
     props: {},
-  });
-};
+  })
+}
 
 export default function Stake() {
   const {
@@ -57,182 +57,182 @@ export default function Stake() {
     disconnect: wcDisconnect,
     account: walletconnectAccount,
     web3: wcWeb3,
-  } = useWalletConnect();
-  const { web3: metamaskWeb3 } = useMetaMask();
-  const { setIsLandingLayout } = useLayoutContext();
-  const [account, setAccount] = useState<string>();
-  const [OGUNBalance, setOGUNBalance] = useState<string>('0');
-  const [lpSelected, setLpSelected] = useState<Selected>('Stake');
-  const [lpTransactionState, setLpTransactionState] = useState<string>();
-  const [rewardsBalance, setRewardsBalance] = useState<string>('0');
-  const [lpBalance, setLpBalance] = useState<string>('0');
-  const [lpStakeBalance, setLpStakeBalance] = useState<string>('0');
-  const [showModal, setShowModal] = useState(false);
-  const [closeWcModal, setCloseWcModal] = useState(false);
-  const [web3, setWeb3] = useState<Web3>();
-  const [showDescription, setShowDescription] = useState(false);
+  } = useWalletConnect()
+  const { web3: metamaskWeb3 } = useMetaMask()
+  const { setIsLandingLayout } = useLayoutContext()
+  const [account, setAccount] = useState<string>()
+  const [OGUNBalance, setOGUNBalance] = useState<string>('0')
+  const [lpSelected, setLpSelected] = useState<Selected>('Stake')
+  const [lpTransactionState, setLpTransactionState] = useState<string>()
+  const [rewardsBalance, setRewardsBalance] = useState<string>('0')
+  const [lpBalance, setLpBalance] = useState<string>('0')
+  const [lpStakeBalance, setLpStakeBalance] = useState<string>('0')
+  const [showModal, setShowModal] = useState(false)
+  const [closeWcModal, setCloseWcModal] = useState(false)
+  const [web3, setWeb3] = useState<Web3>()
+  const [showDescription, setShowDescription] = useState(false)
 
   useEffect(() => {
     const loadAccount = () => {
-      setAccount(walletconnectAccount);
-      setWeb3(wcWeb3);
-    };
-    if (walletconnectAccount && wcWeb3) {
-      loadAccount();
+      setAccount(walletconnectAccount)
+      setWeb3(wcWeb3)
     }
-  }, [walletconnectAccount, wcWeb3]);
+    if (walletconnectAccount && wcWeb3) {
+      loadAccount()
+    }
+  }, [walletconnectAccount, wcWeb3])
 
   useEffect(() => {
     return () => {
       try {
-        wcDisconnect();
+        wcDisconnect()
       } catch (error) {
-        console.warn('warn: ', error);
+        console.warn('warn: ', error)
       } finally {
-        setCloseWcModal(!closeWcModal);
+        setCloseWcModal(!closeWcModal)
       }
-    };
-  }, []);
+    }
+  }, [])
 
   const connectMetaMask = () => {
     // Metamask Wallet;
     const loadProvider = async () => {
-      let provider = null;
+      let provider = null
 
       if (window.ethereum) {
-        provider = window.ethereum;
+        provider = window.ethereum
         try {
-          await provider.request({ method: 'eth_requestAccounts' });
+          await provider.request({ method: 'eth_requestAccounts' })
         } catch (error) {
-          console.warn(error);
+          console.warn(error)
         }
       } else if (!process.env.production) {
-        provider = new Web3.providers.HttpProvider(testnetNetwork.rpc);
+        provider = new Web3.providers.HttpProvider(testnetNetwork.rpc)
       }
-      const web3API = new Web3(provider);
-      const accounts = await web3API.eth.getAccounts();
-      setAccount(accounts[0]);
-    };
+      const web3API = new Web3(provider)
+      const accounts = await web3API.eth.getAccounts()
+      setAccount(accounts[0])
+    }
 
     const loadMetaMaskProvider = async (web3: Web3) => {
-      const accounts = await web3.eth.getAccounts();
-      setAccount(accounts[0]);
-    };
+      const accounts = await web3.eth.getAccounts()
+      setAccount(accounts[0])
+    }
 
-    !web3 ? loadProvider() : loadMetaMaskProvider(web3);
+    !web3 ? loadProvider() : loadMetaMaskProvider(web3)
 
-    setShowModal(false);
-    setWeb3(metamaskWeb3);
-  };
+    setShowModal(false)
+    setWeb3(metamaskWeb3)
+  }
 
   const connectWC = async () => {
     try {
-      await wcConnect();
+      await wcConnect()
     } catch (error) {
-      console.warn('warn: ', error);
+      console.warn('warn: ', error)
     } finally {
-      setCloseWcModal(!closeWcModal);
+      setCloseWcModal(!closeWcModal)
     }
-  };
+  }
 
   const addWallet = async () => {
     try {
-      await wcDisconnect();
+      await wcDisconnect()
     } catch (error) {
-      console.warn('warn: ', error);
+      console.warn('warn: ', error)
     } finally {
-      setShowModal(true);
+      setShowModal(true)
     }
-  };
+  }
 
   const getOGUNBalance = async (web3: Web3) => {
-    const currentBalance = await tokenContract(web3).methods.balanceOf(account).call();
-    const formattedBalance = web3.utils.fromWei(currentBalance ?? '0');
-    setOGUNBalance(formattedBalance);
-  };
+    const currentBalance = await tokenContract(web3).methods.balanceOf(account).call()
+    const formattedBalance = web3.utils.fromWei(currentBalance ?? '0')
+    setOGUNBalance(formattedBalance)
+  }
 
   const getLPBalance = async (web3: Web3) => {
-    const currentBalance = await lpContract(web3).methods.balanceOf(account).call();
-    const formattedBalance = web3.utils.fromWei(currentBalance ?? '0');
-    setLpBalance(formattedBalance);
-  };
+    const currentBalance = await lpContract(web3).methods.balanceOf(account).call()
+    const formattedBalance = web3.utils.fromWei(currentBalance ?? '0')
+    setLpBalance(formattedBalance)
+  }
 
   const getLpStakeBalance = async (web3: Web3) => {
     try {
-      const currentBalance = await lpStakeContract(web3).methods.getBalanceOf(account).call();
-      const formattedLPBalance = web3.utils.fromWei(currentBalance[0] ?? '0');
-      const formattedRewardsBalance = web3.utils.fromWei(currentBalance[1] ?? '0');
-      setLpStakeBalance(formattedLPBalance);
-      setRewardsBalance(formattedRewardsBalance);
+      const currentBalance = await lpStakeContract(web3).methods.getBalanceOf(account).call()
+      const formattedLPBalance = web3.utils.fromWei(currentBalance[0] ?? '0')
+      const formattedRewardsBalance = web3.utils.fromWei(currentBalance[1] ?? '0')
+      setLpStakeBalance(formattedLPBalance)
+      setRewardsBalance(formattedRewardsBalance)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (cause: any) {
       if (cause.toString().includes("address hasn't stake any tokens yet")) {
-        setLpStakeBalance('0');
-        setRewardsBalance('0');
-        return;
+        setLpStakeBalance('0')
+        setRewardsBalance('0')
+        return
       }
-      console.log(cause);
+      console.log(cause)
     }
-  };
+  }
 
   const lpStake = async (values: FormValues) => {
     if (values.amount <= 0) {
-      toast('The amount to stake has to be higher than 0.');
-      return;
+      toast('The amount to stake has to be higher than 0.')
+      return
     }
     if (values.amount > +lpBalance) {
-      toast("You can't stake an mount higher than your current LP balance.");
-      return;
+      toast("You can't stake an mount higher than your current LP balance.")
+      return
     }
     if (account && web3) {
       try {
-        const weiAmount = web3.utils.toWei(values.amount.toString());
-        setLpTransactionState('Approving transaction...');
-        await lpContract(web3).methods.approve(lpStakeContractAddress, weiAmount).send({ from: account });
-        setLpTransactionState('Staking OGUN/MATIC...');
-        await lpStakeContract(web3).methods.stake(weiAmount).send({ from: account });
+        const weiAmount = web3.utils.toWei(values.amount.toString())
+        setLpTransactionState('Approving transaction...')
+        await lpContract(web3).methods.approve(lpStakeContractAddress, weiAmount).send({ from: account })
+        setLpTransactionState('Staking OGUN/MATIC...')
+        await lpStakeContract(web3).methods.stake(weiAmount).send({ from: account })
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (cause: any) {
-        console.log('Stake Error: ', cause);
+        console.log('Stake Error: ', cause)
       } finally {
-        setLpTransactionState(undefined);
+        setLpTransactionState(undefined)
       }
     }
-  };
+  }
 
   const lpUnstake = async () => {
     if (lpStakeBalance === '0') {
-      toast('Your stake LP balance is 0.');
-      return;
+      toast('Your stake LP balance is 0.')
+      return
     }
     if (account && web3) {
       try {
-        setLpTransactionState('Unstaking OGUN/MATIC...');
-        await lpStakeContract(web3).methods.withdraw().send({ from: account });
+        setLpTransactionState('Unstaking OGUN/MATIC...')
+        await lpStakeContract(web3).methods.withdraw().send({ from: account })
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (cause: any) {
-        console.log('Unstake Error: ', cause);
+        console.log('Unstake Error: ', cause)
       } finally {
-        setLpTransactionState(undefined);
+        setLpTransactionState(undefined)
       }
     }
-  };
+  }
 
   useEffect(() => {
-    setIsLandingLayout(true);
+    setIsLandingLayout(true)
 
     return () => {
-      setIsLandingLayout(false);
-    };
-  }, [setIsLandingLayout]);
+      setIsLandingLayout(false)
+    }
+  }, [setIsLandingLayout])
 
   useEffect(() => {
     if (account && web3 && !lpTransactionState) {
-      getLPBalance(web3);
-      getLpStakeBalance(web3);
-      getOGUNBalance(web3);
+      getLPBalance(web3)
+      getLpStakeBalance(web3)
+      getOGUNBalance(web3)
     }
-  }, [account, lpTransactionState]);
+  }, [account, lpTransactionState])
 
   const ConnectAccountState = () => {
     return (
@@ -256,8 +256,8 @@ export default function Stake() {
           </div>
         </div>
       </>
-    );
-  };
+    )
+  }
   const StakeDescription = () => {
     return (
       <div className="flex w-full flex-col items-center justify-center md:justify-between">
@@ -302,8 +302,8 @@ export default function Stake() {
           <span className="green-blue-diagonal-gradient-text-break">1,000,000 OGUN</span>
         </p>
       </div>
-    );
-  };
+    )
+  }
 
   const StakeTitle = () => {
     return (
@@ -314,8 +314,8 @@ export default function Stake() {
           &nbsp;today
         </h1>
       </>
-    );
-  };
+    )
+  }
 
   const StakeState = () => {
     return (
@@ -433,8 +433,8 @@ export default function Stake() {
           </div>
         </div>
       </>
-    );
-  };
+    )
+  }
 
   return (
     <main className="flex h-full flex-col items-center gap-y-20 pt-32 font-rubik text-white md:gap-y-32">
@@ -460,5 +460,5 @@ export default function Stake() {
         </div>
       </CustomModal>
     </main>
-  );
+  )
 }

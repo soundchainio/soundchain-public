@@ -1,202 +1,202 @@
-import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
+import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react'
 
 type Song = {
-  src: string;
-  title?: string | null;
-  trackId: string;
-  artist?: string | null;
-  art?: string | null;
-  isFavorite?: boolean | null;
-};
-
-interface AudioPlayerContextData {
-  isPlaying: boolean;
-  isShuffleOn: boolean;
-  currentSong: Song;
-  duration: number;
-  progress: number;
-  progressFromSlider: number | null;
-  hasNext: boolean;
-  hasPrevious: boolean;
-  playlist: Song[];
-  volume: number;
-  play: (song: Song) => void;
-  isCurrentSong: (trackId: string) => boolean;
-  isCurrentlyPlaying: (trackId: string) => boolean;
-  togglePlay: () => void;
-  setPlayingState: (state: boolean) => void;
-  setProgressState: (value: number) => void;
-  setDurationState: (value: number) => void;
-  setProgressStateFromSlider: (value: number | null) => void;
-  setVolume: (value: number) => void;
-  playlistState: (list: Song[], index: number) => void;
-  playPrevious: () => void;
-  playNext: () => void;
-  jumpTo: (index: number) => void;
-  toggleShuffle: () => void;
+  src: string
+  title?: string | null
+  trackId: string
+  artist?: string | null
+  art?: string | null
+  isFavorite?: boolean | null
 }
 
-const localStorageVolumeKey = 'SOUNDCHAIN_VOLUME';
+interface AudioPlayerContextData {
+  isPlaying: boolean
+  isShuffleOn: boolean
+  currentSong: Song
+  duration: number
+  progress: number
+  progressFromSlider: number | null
+  hasNext: boolean
+  hasPrevious: boolean
+  playlist: Song[]
+  volume: number
+  play: (song: Song) => void
+  isCurrentSong: (trackId: string) => boolean
+  isCurrentlyPlaying: (trackId: string) => boolean
+  togglePlay: () => void
+  setPlayingState: (state: boolean) => void
+  setProgressState: (value: number) => void
+  setDurationState: (value: number) => void
+  setProgressStateFromSlider: (value: number | null) => void
+  setVolume: (value: number) => void
+  playlistState: (list: Song[], index: number) => void
+  playPrevious: () => void
+  playNext: () => void
+  jumpTo: (index: number) => void
+  toggleShuffle: () => void
+}
 
-const AudioPlayerContext = createContext<AudioPlayerContextData>({} as AudioPlayerContextData);
+const localStorageVolumeKey = 'SOUNDCHAIN_VOLUME'
+
+const AudioPlayerContext = createContext<AudioPlayerContextData>({} as AudioPlayerContextData)
 
 interface AudioPlayerProviderProps {
-  children: ReactNode;
+  children: ReactNode
 }
 
 export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
-  const [progress, setProgress] = useState<number>(0);
-  const [progressFromSlider, setProgressFromSlider] = useState<number | null>(null);
-  const [duration, setDuration] = useState<number>(0);
-  const [volume, setVolume] = useState(0.5); // goes from 0 to 1
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isShuffleOn, setIsShuffleOn] = useState(false);
-  const [currentSong, setCurrentSong] = useState<Song>({} as Song);
-  const [originalPlaylist, setOriginalPlaylist] = useState<Song[]>([]);
-  const [playlist, setPlaylist] = useState<Song[]>([]);
-  const [currentPlaylistIndex, setCurrentPlaylistIndex] = useState(0);
+  const [progress, setProgress] = useState<number>(0)
+  const [progressFromSlider, setProgressFromSlider] = useState<number | null>(null)
+  const [duration, setDuration] = useState<number>(0)
+  const [volume, setVolume] = useState(0.5) // goes from 0 to 1
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [isShuffleOn, setIsShuffleOn] = useState(false)
+  const [currentSong, setCurrentSong] = useState<Song>({} as Song)
+  const [originalPlaylist, setOriginalPlaylist] = useState<Song[]>([])
+  const [playlist, setPlaylist] = useState<Song[]>([])
+  const [currentPlaylistIndex, setCurrentPlaylistIndex] = useState(0)
 
-  const RESTART_TOLERANCE_TIME = 2; //2 seconds
+  const RESTART_TOLERANCE_TIME = 2 //2 seconds
 
   useEffect(() => {
-    const volume = localStorage.getItem(localStorageVolumeKey);
+    const volume = localStorage.getItem(localStorageVolumeKey)
     if (volume != null) {
-      setVolume(parseFloat(volume));
+      setVolume(parseFloat(volume))
     }
-  }, []);
+  }, [])
 
   useEffect(() => {
-    localStorage.setItem(localStorageVolumeKey, volume.toString());
-  }, [volume]);
+    localStorage.setItem(localStorageVolumeKey, volume.toString())
+  }, [volume])
 
   useEffect(() => {
-    isShuffleOn ? shuffle() : unShuffle();
-  }, [isShuffleOn]);
+    isShuffleOn ? shuffle() : unShuffle()
+  }, [isShuffleOn])
 
   const togglePlay = useCallback(() => {
-    setIsPlaying(isPlaying => !isPlaying);
-  }, []);
+    setIsPlaying(isPlaying => !isPlaying)
+  }, [])
 
   const setProgressState = useCallback((value: number) => {
-    setProgress(value);
-  }, []);
+    setProgress(value)
+  }, [])
 
   const setProgressStateFromSlider = useCallback((value: number | null) => {
-    setProgressFromSlider(value);
+    setProgressFromSlider(value)
     if (value || value === 0) {
-      setProgress(value);
+      setProgress(value)
     }
-  }, []);
+  }, [])
 
   const setPlayingState = useCallback((state: boolean) => {
-    setIsPlaying(state);
-  }, []);
+    setIsPlaying(state)
+  }, [])
 
   const setDurationState = useCallback((value: number) => {
-    setDuration(value);
-  }, []);
+    setDuration(value)
+  }, [])
 
   const play = useCallback(
     (song: Song) => {
       if (currentSong.trackId !== song.trackId) {
-        setProgressStateFromSlider(0);
-        setIsPlaying(true);
-        setCurrentSong(song);
+        setProgressStateFromSlider(0)
+        setIsPlaying(true)
+        setCurrentSong(song)
       } else {
-        togglePlay();
+        togglePlay()
       }
     },
     [currentSong, togglePlay, setProgressStateFromSlider],
-  );
+  )
 
   const isCurrentSong = useCallback(
     (trackId: string) => {
-      return trackId === currentSong?.trackId;
+      return trackId === currentSong?.trackId
     },
     [currentSong],
-  );
+  )
 
   const isCurrentlyPlaying = useCallback(
     (trackId: string) => {
-      return isPlaying && isCurrentSong(trackId);
+      return isPlaying && isCurrentSong(trackId)
     },
     [isCurrentSong, isPlaying],
-  );
+  )
 
   const playlistState = useCallback(
     (list: Song[], index: number) => {
-      setIsShuffleOn(false);
-      setPlaylist(list);
-      setCurrentPlaylistIndex(index);
-      play(list[index]);
+      setIsShuffleOn(false)
+      setPlaylist(list)
+      setCurrentPlaylistIndex(index)
+      play(list[index])
     },
     [play],
-  );
+  )
 
-  const hasPrevious = currentPlaylistIndex > 0;
-  const hasNext = currentPlaylistIndex + 1 < playlist.length;
+  const hasPrevious = currentPlaylistIndex > 0
+  const hasNext = currentPlaylistIndex + 1 < playlist.length
 
   const playPrevious = useCallback(() => {
     if (hasPrevious && progress < RESTART_TOLERANCE_TIME) {
-      const previousIndex = currentPlaylistIndex - 1;
-      setCurrentPlaylistIndex(previousIndex);
-      play(playlist[previousIndex]);
+      const previousIndex = currentPlaylistIndex - 1
+      setCurrentPlaylistIndex(previousIndex)
+      play(playlist[previousIndex])
     } else {
-      setProgressStateFromSlider(0);
+      setProgressStateFromSlider(0)
     }
-  }, [currentPlaylistIndex, hasPrevious, play, playlist, progress, setProgressStateFromSlider]);
+  }, [currentPlaylistIndex, hasPrevious, play, playlist, progress, setProgressStateFromSlider])
 
   const playNext = useCallback(() => {
     if (hasNext) {
-      const nextIndex = currentPlaylistIndex + 1;
-      setCurrentPlaylistIndex(nextIndex);
-      play(playlist[nextIndex]);
+      const nextIndex = currentPlaylistIndex + 1
+      setCurrentPlaylistIndex(nextIndex)
+      play(playlist[nextIndex])
     }
-  }, [currentPlaylistIndex, hasNext, play, playlist]);
+  }, [currentPlaylistIndex, hasNext, play, playlist])
 
   const jumpTo = useCallback(
     (index: number) => {
       if (playlist.length > index + 1) {
-        setCurrentPlaylistIndex(index);
-        play(playlist[index]);
+        setCurrentPlaylistIndex(index)
+        play(playlist[index])
       }
     },
     [play, playlist],
-  );
+  )
 
   const toggleShuffle = useCallback(() => {
-    setIsShuffleOn(prev => !prev);
-  }, []);
+    setIsShuffleOn(prev => !prev)
+  }, [])
 
   const shuffle = useCallback(() => {
     /* Copy the current state of the queue before shuffling */
-    setOriginalPlaylist([...playlist]);
+    setOriginalPlaylist([...playlist])
 
-    const shuffledPlaylist = [...playlist];
+    const shuffledPlaylist = [...playlist]
 
     /* Remove the current song of the upcoming shuffled playlist. */
-    const currentSongInPlaylist = shuffledPlaylist.splice(currentPlaylistIndex, 1);
+    const currentSongInPlaylist = shuffledPlaylist.splice(currentPlaylistIndex, 1)
 
     /* Randomize array in-place using Durstenfeld shuffle algorithm */
     for (let i = shuffledPlaylist.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffledPlaylist[i], shuffledPlaylist[j]] = [shuffledPlaylist[j], shuffledPlaylist[i]];
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[shuffledPlaylist[i], shuffledPlaylist[j]] = [shuffledPlaylist[j], shuffledPlaylist[i]]
     }
 
     /* Set current song as first on the queue -> index = 0 */
-    setCurrentPlaylistIndex(0);
+    setCurrentPlaylistIndex(0)
 
     /* Add current song as first element and then add the rest of the shuffled songs */
-    setPlaylist([...currentSongInPlaylist, ...shuffledPlaylist]);
-  }, [currentPlaylistIndex, playlist]);
+    setPlaylist([...currentSongInPlaylist, ...shuffledPlaylist])
+  }, [currentPlaylistIndex, playlist])
 
   const unShuffle = useCallback(() => {
     /* Give back the current song its index on the original playlist */
-    setCurrentPlaylistIndex(originalPlaylist.findIndex(song => song.trackId === currentSong.trackId));
+    setCurrentPlaylistIndex(originalPlaylist.findIndex(song => song.trackId === currentSong.trackId))
 
     /* Unshuffle the queue using the original playlist value */
-    setPlaylist(originalPlaylist);
-  }, [currentSong.trackId, originalPlaylist]);
+    setPlaylist(originalPlaylist)
+  }, [currentSong.trackId, originalPlaylist])
 
   return (
     <AudioPlayerContext.Provider
@@ -229,7 +229,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
     >
       {children}
     </AudioPlayerContext.Provider>
-  );
+  )
 }
 
-export const useAudioPlayerContext = () => useContext(AudioPlayerContext);
+export const useAudioPlayerContext = () => useContext(AudioPlayerContext)

@@ -1,41 +1,41 @@
-import * as UpChunk from '@mux/upchunk';
-import { useMountedState } from './useMountedState';
+import * as UpChunk from '@mux/upchunk'
+import { useMountedState } from './useMountedState'
 
 export const useUpChunk = () => {
-  const [uploading, setUploading] = useMountedState(false);
-  const [upload, setUpload] = useMountedState<UpChunk.UpChunk | null>(null);
-  const [error, setError] = useMountedState<Error | null>(null);
-  const [progress, setProgress] = useMountedState<number | null>(null);
+  const [uploading, setUploading] = useMountedState(false)
+  const [upload, setUpload] = useMountedState<UpChunk.UpChunk | null>(null)
+  const [error, setError] = useMountedState<Error | null>(null)
+  const [progress, setProgress] = useMountedState<number | null>(null)
 
   const startUpload = (endpoint: string, file: File) => {
-    setUploading(true);
+    setUploading(true)
 
     const upload = UpChunk.createUpload({
       endpoint,
       file,
-    });
-    setUpload(upload);
+    })
+    setUpload(upload)
 
     upload.on('error', err => {
-      setError(new Error(err.detail));
-    });
+      setError(new Error(err.detail))
+    })
 
     upload.on('progress', progress => {
-      setProgress(Math.floor(progress.detail));
-    });
+      setProgress(Math.floor(progress.detail))
+    })
 
     upload.on('success', () => {
-      setUploading(false);
-    });
-  };
+      setUploading(false)
+    })
+  }
 
   const cancelUpload = () => {
-    if (!upload) return;
-    upload.abort();
-    setUpload(null);
-    setUploading(false);
-    setProgress(null);
-  };
+    if (!upload) return
+    upload.abort()
+    setUpload(null)
+    setUploading(false)
+    setProgress(null)
+  }
 
-  return [startUpload, { uploading, error, progress, cancelUpload }] as const;
-};
+  return [startUpload, { uploading, error, progress, cancelUpload }] as const
+}

@@ -1,4 +1,4 @@
-import { IconProps } from './types/IconProps';
+import { IconProps } from './types/IconProps'
 
 export const Soundchain = ({ ...props }: IconProps) => {
   return (
@@ -20,5 +20,5 @@ export const Soundchain = ({ ...props }: IconProps) => {
         fill="#404040"
       />
     </svg>
-  );
-};
+  )
+}

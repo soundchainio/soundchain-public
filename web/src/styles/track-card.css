@@ -1,77 +1,75 @@
 @tailwind utilities;
 
 @layer utilities {
-    .transparent-border-1px {
-        border: solid 1px transparent;
-    }
-    
-    .gradient-track-box {
-        min-width: 250px;
-        position: relative;
-        color: #FFF;
-        background: #000;
-        background-clip: padding-box;
-        border: solid 1px transparent;
-        border-radius: 8px;
-    }
+  .transparent-border-1px {
+    border: solid 1px transparent;
+  }
 
-    .gradient-track-box:after {
-        content: '';
-        position: absolute;
-        top: 0; 
-        right: 0; 
-        bottom: 0; 
-        left: 0;
-        z-index: -1;
-        margin: -1px;
-        border-radius: inherit;
-        opacity: 60%;
-        background: linear-gradient(87.71deg, #26D1A8 0%, #AC4EFD 25%, #F1419E 49.48%, #FED503 72.4%, #FE5540 100%);
-    }
+  .gradient-track-box {
+    min-width: 250px;
+    position: relative;
+    color: #fff;
+    background: #000;
+    background-clip: padding-box;
+    border: solid 1px transparent;
+    border-radius: 8px;
+  }
 
-    .gradient-select-hover {
-        position: relative;
-        color: #FFF;
-        background-clip: padding-box;
-        border: solid 1px transparent;
-        border-radius: 8px;
-    }
+  .gradient-track-box:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: -1;
+    margin: -1px;
+    border-radius: inherit;
+    opacity: 60%;
+    background: linear-gradient(87.71deg, #26d1a8 0%, #ac4efd 25%, #f1419e 49.48%, #fed503 72.4%, #fe5540 100%);
+  }
 
-    .gradient-select-hover:after {
-        content: '';
-        position: absolute;
-        top: 0; 
-        right: 0; 
-        bottom: 0; 
-        left: 0;
-        z-index: -1;
-        margin: -1px;
-        border-radius: inherit;
-        opacity: 60%;
-        background: linear-gradient(87.71deg, #26D1A8 0%, #AC4EFD 25%, #F1419E 49.48%, #FED503 72.4%, #FE5540 100%);
-    }
+  .gradient-select-hover {
+    position: relative;
+    color: #fff;
+    background-clip: padding-box;
+    border: solid 1px transparent;
+    border-radius: 8px;
+  }
 
-    .black-track-box {
-        min-width: 250px;
-        color: #FFF;
-        background: #000;
-        border: solid 1px transparent;
-    }
+  .gradient-select-hover:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: -1;
+    margin: -1px;
+    border-radius: inherit;
+    opacity: 60%;
+    background: linear-gradient(87.71deg, #26d1a8 0%, #ac4efd 25%, #f1419e 49.48%, #fed503 72.4%, #fe5540 100%);
+  }
 
-    .sale-type-font-size {
-        font-size: 0.625rem;
-    }
+  .black-track-box {
+    min-width: 250px;
+    color: #fff;
+    background: #000;
+    border: solid 1px transparent;
+  }
 
-    .marketplace-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, 250px);
-        justify-items: center;
-        justify-content: center;
-        grid-auto-flow: row;
-        align-items: center;
-        grid-row-gap: 20px;
-        grid-column-gap: 20px;
-    }
+  .sale-type-font-size {
+    font-size: 0.625rem;
+  }
 
+  .marketplace-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, 250px);
+    justify-items: center;
+    justify-content: center;
+    grid-auto-flow: row;
+    align-items: center;
+    grid-row-gap: 20px;
+    grid-column-gap: 20px;
+  }
 }
-

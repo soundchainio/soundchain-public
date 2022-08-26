@@ -1,12 +1,12 @@
-import classNames from 'classnames';
-import React, { useState, useEffect, useRef } from 'react';
-import * as THREE from 'three';
-import CELLS from 'vanta/dist/vanta.cells.min';
-import { VantaEffect } from './DefaultCover';
+import classNames from 'classnames'
+import React, { useState, useEffect, useRef } from 'react'
+import * as THREE from 'three'
+import CELLS from 'vanta/dist/vanta.cells.min'
+import { VantaEffect } from './DefaultCover'
 
 export const Cells = () => {
-  const [vantaEffect, setVantaEffect] = useState();
-  const myRef = useRef(null);
+  const [vantaEffect, setVantaEffect] = useState()
+  const myRef = useRef(null)
   useEffect(() => {
     if (!vantaEffect) {
       setVantaEffect(
@@ -23,15 +23,15 @@ export const Cells = () => {
           color2: 0xc3b351,
           THREE: THREE,
         }),
-      );
+      )
     }
     return () => {
-      if (vantaEffect) (vantaEffect as unknown as VantaEffect).destroy();
-    };
-  }, [vantaEffect]);
+      if (vantaEffect) (vantaEffect as unknown as VantaEffect).destroy()
+    }
+  }, [vantaEffect])
   return (
-    <div className={classNames('flex w-full h-[130px]')}>
-      <div ref={myRef} className="flex w-full h-full"></div>
+    <div className={classNames('flex h-[130px] w-full')}>
+      <div ref={myRef} className="flex h-full w-full"></div>
     </div>
-  );
-};
+  )
+}

@@ -44,5 +44,5 @@ export const MexcGlobal = (props: React.SVGProps<SVGSVGElement>) => {
         </clipPath>
       </defs>
     </svg>
-  );
-};
+  )
+}

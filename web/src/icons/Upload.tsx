@@ -1,5 +1,5 @@
-import { SVGGradient } from './gradients';
-import { IconProps } from './types/IconProps';
+import { SVGGradient } from './gradients'
+import { IconProps } from './types/IconProps'
 
 export const Upload = ({ color, id, ...props }: IconProps) => {
   return (
@@ -10,5 +10,5 @@ export const Upload = ({ color, id, ...props }: IconProps) => {
       ></path>
       {color && <SVGGradient color={color} id={id ? id : ''} />}
     </svg>
-  );
-};
+  )
+}

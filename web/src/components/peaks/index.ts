@@ -1,1 +1,1 @@
-export { getRandomPeakFileData } from './getRandomPeakFileData';
+export { getRandomPeakFileData } from './getRandomPeakFileData'

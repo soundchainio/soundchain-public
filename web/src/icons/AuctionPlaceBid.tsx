@@ -31,5 +31,5 @@ export const AuctionPlaceBid = (props: React.SVGProps<SVGSVGElement>) => {
         </linearGradient>
       </defs>
     </svg>
-  );
-};
+  )
+}

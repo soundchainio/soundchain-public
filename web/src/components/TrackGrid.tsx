@@ -1,35 +1,35 @@
-import { LoaderAnimation } from 'components/LoaderAnimation';
-import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
-import { HeartFilled } from 'icons/HeartFilled';
-import { Matic } from 'icons/Matic';
-import { Pause } from 'icons/Pause';
-import { Play } from 'icons/Play';
-import { ListingItemWithPrice, Maybe, Track, TrackWithListingItem, useMaticUsdQuery } from 'lib/graphql';
-import dynamic from 'next/dynamic';
-import NextLink from 'next/link';
-import { useEffect, useState } from 'react';
-import { currency } from 'utils/format';
-import { Logo } from '../icons/Logo';
-import { CurrencyType } from '../types/CurrenctyType';
-import { Cards } from '../icons/Cards';
-import Asset from './Asset';
+import { LoaderAnimation } from 'components/LoaderAnimation'
+import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
+import { HeartFilled } from 'icons/HeartFilled'
+import { Matic } from 'icons/Matic'
+import { Pause } from 'icons/Pause'
+import { Play } from 'icons/Play'
+import { ListingItemWithPrice, Maybe, Track, TrackWithListingItem, useMaticUsdQuery } from 'lib/graphql'
+import dynamic from 'next/dynamic'
+import NextLink from 'next/link'
+import { useEffect, useState } from 'react'
+import { currency } from 'utils/format'
+import { Logo } from '../icons/Logo'
+import { CurrencyType } from '../types/CurrenctyType'
+import { Cards } from '../icons/Cards'
+import Asset from './Asset'
 
 const WavesurferComponent = dynamic(() => import('./wavesurfer'), {
   ssr: false,
-});
+})
 interface TrackProps {
-  track: TrackWithListingItem | Track;
-  coverPhotoUrl?: string;
+  track: TrackWithListingItem | Track
+  coverPhotoUrl?: string
 }
 
 const getSaleType = (res: Maybe<ListingItemWithPrice>): string => {
   if (res?.endingTime) {
-    return 'auction';
+    return 'auction'
   } else if (res?.pricePerItem) {
-    return 'buy now';
+    return 'buy now'
   }
-  return '';
-};
+  return ''
+}
 
 export const TrackGrid = ({ track }: TrackProps) => {
   const song = {
@@ -44,31 +44,31 @@ export const TrackGrid = ({ track }: TrackProps) => {
     url: track.assetUrl,
     editionSize: track.editionSize,
     listingCount: track.listingCount,
-  };
-
-  let listingItem: Maybe<ListingItemWithPrice> = null;
-
-  if (track.__typename === 'TrackWithListingItem') {
-    listingItem = (track as TrackWithListingItem).listingItem;
   }
 
-  const saleType = getSaleType(listingItem);
-  const price = listingItem?.priceToShow ?? 0;
-  const OGUNPrice = listingItem?.OGUNPricePerItemToShow ?? 0;
-  const selectedCurrency: CurrencyType = price ? 'MATIC' : 'OGUN';
-  const { art, artist, title, trackId, playbackCount, favoriteCount, editionSize, listingCount } = song;
-  const { play, isCurrentSong, isCurrentlyPlaying, setProgressStateFromSlider, progress } = useAudioPlayerContext();
+  let listingItem: Maybe<ListingItemWithPrice> = null
 
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isReady, setIsReady] = useState(false);
+  if (track.__typename === 'TrackWithListingItem') {
+    listingItem = (track as TrackWithListingItem).listingItem
+  }
 
-  const { data: maticUsd } = useMaticUsdQuery();
+  const saleType = getSaleType(listingItem)
+  const price = listingItem?.priceToShow ?? 0
+  const OGUNPrice = listingItem?.OGUNPricePerItemToShow ?? 0
+  const selectedCurrency: CurrencyType = price ? 'MATIC' : 'OGUN'
+  const { art, artist, title, trackId, playbackCount, favoriteCount, editionSize, listingCount } = song
+  const { play, isCurrentSong, isCurrentlyPlaying, setProgressStateFromSlider, progress } = useAudioPlayerContext()
+
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [isReady, setIsReady] = useState(false)
+
+  const { data: maticUsd } = useMaticUsdQuery()
 
   useEffect(() => {
-    setIsPlaying(isCurrentlyPlaying(trackId));
-  }, [isCurrentSong, isCurrentlyPlaying, setIsPlaying, trackId]);
+    setIsPlaying(isCurrentlyPlaying(trackId))
+  }, [isCurrentSong, isCurrentlyPlaying, setIsPlaying, trackId])
 
-  const trackPrice = track.price.value;
+  const trackPrice = track.price.value
   return (
     <div
       className={`${
@@ -169,5 +169,5 @@ export const TrackGrid = ({ track }: TrackProps) => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}

@@ -1,5 +1,5 @@
-import { SVGGradient } from './gradients';
-import { IconProps } from './types/IconProps';
+import { SVGGradient } from './gradients'
+import { IconProps } from './types/IconProps'
 
 export const LeftArrow = ({ color }: IconProps) => {
   return (
@@ -15,5 +15,5 @@ export const LeftArrow = ({ color }: IconProps) => {
         {color && <SVGGradient color={color} />}
       </svg>
     </>
-  );
-};
+  )
+}

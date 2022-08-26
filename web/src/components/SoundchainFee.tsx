@@ -1,23 +1,23 @@
-import { Matic } from 'components/Matic';
-import { Ogun } from 'components/Ogun';
-import { config } from 'config';
-import { Logo as OgunIcon } from 'icons/Logo';
-import { Soundchain } from 'icons/Soundchain';
-import { useState } from 'react';
-import { fixedDecimals } from 'utils/format';
+import { Matic } from 'components/Matic'
+import { Ogun } from 'components/Ogun'
+import { config } from 'config'
+import { Logo as OgunIcon } from 'icons/Logo'
+import { Soundchain } from 'icons/Soundchain'
+import { useState } from 'react'
+import { fixedDecimals } from 'utils/format'
 
 interface Props {
-  price: number;
-  isPaymentOGUN: boolean;
-  rewardRatePercentage?: string;
-  showSoundChainFee?: boolean;
+  price: number
+  isPaymentOGUN: boolean
+  rewardRatePercentage?: string
+  showSoundChainFee?: boolean
 }
 
 export const SoundchainFee = ({ price, isPaymentOGUN, rewardRatePercentage, showSoundChainFee = true }: Props) => {
-  const [showOgunTip, setShowOgunTip] = useState(false);
-  let ogunBonus = null;
+  const [showOgunTip, setShowOgunTip] = useState(false)
+  let ogunBonus = null
   if (isPaymentOGUN && rewardRatePercentage) {
-    ogunBonus = Math.min(fixedDecimals(price * (parseFloat(rewardRatePercentage) / 100)), 1000);
+    ogunBonus = Math.min(fixedDecimals(price * (parseFloat(rewardRatePercentage) / 100)), 1000)
   }
 
   return (
@@ -81,5 +81,5 @@ export const SoundchainFee = ({ price, isPaymentOGUN, rewardRatePercentage, show
         </>
       )}
     </>
-  );
-};
+  )
+}

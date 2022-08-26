@@ -1,70 +1,70 @@
-import { ListNFTBuyNow, ListNFTBuyNowFormValues } from 'components/details-NFT/ListNFTBuyNow';
-import SEO from 'components/SEO';
-import { TopNavBarProps } from 'components/TopNavBar';
-import { Track } from 'components/Track';
-import { useModalDispatch } from 'contexts/providers/modal';
-import { FormikHelpers } from 'formik';
-import useBlockchainV2 from 'hooks/useBlockchainV2';
-import { useLayoutContext } from 'hooks/useLayoutContext';
-import { useMe } from 'hooks/useMe';
-import { useWalletContext } from 'hooks/useWalletContext';
-import { cacheFor } from 'lib/apollo';
-import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemQuery, useUpdateTrackMutation } from 'lib/graphql';
-import { protectPage } from 'lib/protectPage';
-import { useRouter } from 'next/router';
-import { ParsedUrlQuery } from 'querystring';
-import { useCallback, useEffect, useMemo } from 'react';
-import { toast } from 'react-toastify';
-import { SaleType } from 'types/SaleType';
-import { compareWallets } from 'utils/Wallet';
-import Web3 from 'web3';
+import { ListNFTBuyNow, ListNFTBuyNowFormValues } from 'components/details-NFT/ListNFTBuyNow'
+import SEO from 'components/SEO'
+import { TopNavBarProps } from 'components/TopNavBar'
+import { Track } from 'components/Track'
+import { useModalDispatch } from 'contexts/providers/modal'
+import { FormikHelpers } from 'formik'
+import useBlockchainV2 from 'hooks/useBlockchainV2'
+import { useLayoutContext } from 'hooks/useLayoutContext'
+import { useMe } from 'hooks/useMe'
+import { useWalletContext } from 'hooks/useWalletContext'
+import { cacheFor } from 'lib/apollo'
+import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemQuery, useUpdateTrackMutation } from 'lib/graphql'
+import { protectPage } from 'lib/protectPage'
+import { useRouter } from 'next/router'
+import { ParsedUrlQuery } from 'querystring'
+import { useCallback, useEffect, useMemo } from 'react'
+import { toast } from 'react-toastify'
+import { SaleType } from 'types/SaleType'
+import { compareWallets } from 'utils/Wallet'
+import Web3 from 'web3'
 
 export interface TrackPageProps {
-  track: TrackQuery['track'];
+  track: TrackQuery['track']
 }
 
 interface TrackPageParams extends ParsedUrlQuery {
-  id: string;
+  id: string
 }
 
 export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(async (context, apolloClient) => {
-  const trackId = context.params?.id;
+  const trackId = context.params?.id
 
   if (!trackId) {
-    return { notFound: true };
+    return { notFound: true }
   }
 
   const { data, error } = await apolloClient.query({
     query: TrackDocument,
     variables: { id: trackId },
     context,
-  });
+  })
 
   if (error) {
-    return { notFound: true };
+    return { notFound: true }
   }
 
-  return cacheFor(EditBuyNowPage, { track: data.track }, context, apolloClient);
-});
+  return cacheFor(EditBuyNowPage, { track: data.track }, context, apolloClient)
+})
 
 export default function EditBuyNowPage({ track }: TrackPageProps) {
-  const router = useRouter();
-  const { updateListing } = useBlockchainV2();
-  const { dispatchShowRemoveListingModal } = useModalDispatch();
-  const [trackUpdate] = useUpdateTrackMutation();
-  const { account, web3 } = useWalletContext();
-  const { setTopNavBarProps } = useLayoutContext();
+  const router = useRouter()
+  const { updateListing } = useBlockchainV2()
+  const { dispatchShowRemoveListingModal } = useModalDispatch()
+  const [trackUpdate] = useUpdateTrackMutation()
+  const { account, web3 } = useWalletContext()
+  const { setTopNavBarProps } = useLayoutContext()
 
-  const me = useMe();
+  const me = useMe()
 
-  const nftData = track.nftData;
-  const tokenId = nftData?.tokenId ?? -1;
-  const contractAddress = nftData?.contract ?? "";
+  const nftData = track.nftData
+  const tokenId = nftData?.tokenId ?? -1
+  const contractAddress = nftData?.contract ?? ''
 
   const { data: listingPayload } = useBuyNowItemQuery({
-    variables: { input: { tokenId, contractAddress} },
+    variables: { input: { tokenId, contractAddress } },
     fetchPolicy: 'network-only',
-  });
+  })
 
   const handleRemove = useCallback(() => {
     if (
@@ -73,7 +73,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       !account ||
       nftData?.pendingRequest != PendingRequest.None
     ) {
-      return;
+      return
     }
     dispatchShowRemoveListingModal({
       show: true,
@@ -83,14 +83,13 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       contractAddresses: {
         nft: nftData.contract,
         marketplace: listingPayload?.buyNowItem?.buyNowItem?.contract,
-      }
-    });
+      },
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [account, listingPayload?.buyNowItem?.buyNowItem?.tokenId, nftData?.pendingRequest, track.id, web3]);
+  }, [account, listingPayload?.buyNowItem?.buyNowItem?.tokenId, nftData?.pendingRequest, track.id, web3])
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
-    
       title: 'Edit Listing',
       rightButton: (
         <button className="text-sm font-bold text-red-400" onClick={handleRemove}>
@@ -99,35 +98,35 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       ),
     }),
     [handleRemove],
-  );
+  )
 
   useEffect(() => {
-    setTopNavBarProps(topNavBarProps);
-  }, [setTopNavBarProps, topNavBarProps]);
+    setTopNavBarProps(topNavBarProps)
+  }, [setTopNavBarProps, topNavBarProps])
 
   if (!listingPayload) {
-    return null;
+    return null
   }
 
-  const isOwner = compareWallets(listingPayload.buyNowItem?.buyNowItem?.owner, account);
-  const isForSale = !!listingPayload.buyNowItem?.buyNowItem?.pricePerItem ?? false;
-  const price = listingPayload.buyNowItem?.buyNowItem?.pricePerItemToShow;
-  const OGUNprice = listingPayload.buyNowItem?.buyNowItem?.OGUNPricePerItemToShow;
+  const isOwner = compareWallets(listingPayload.buyNowItem?.buyNowItem?.owner, account)
+  const isForSale = !!listingPayload.buyNowItem?.buyNowItem?.pricePerItem ?? false
+  const price = listingPayload.buyNowItem?.buyNowItem?.pricePerItemToShow
+  const OGUNprice = listingPayload.buyNowItem?.buyNowItem?.OGUNPricePerItemToShow
 
   const startingDate = listingPayload.buyNowItem?.buyNowItem?.startingTime
     ? new Date(listingPayload.buyNowItem.buyNowItem.startingTime * 1000)
-    : undefined;
+    : undefined
 
   const handleUpdate = (
     { salePrice, selectedCurrency, startTime }: ListNFTBuyNowFormValues,
     helper: FormikHelpers<ListNFTBuyNowFormValues>,
   ) => {
     if (!web3 || !listingPayload.buyNowItem?.buyNowItem?.tokenId || !salePrice || !account) {
-      return;
+      return
     }
-    const weiPrice = selectedCurrency === 'MATIC' ? Web3.utils.toWei(salePrice.toString(), 'ether') : '0';
-    const weiPriceOGUN = selectedCurrency === 'OGUN' ? web3?.utils.toWei(salePrice.toString(), 'ether') : '0';
-    const startTimestamp = startTime.getTime() / 1000;
+    const weiPrice = selectedCurrency === 'MATIC' ? Web3.utils.toWei(salePrice.toString(), 'ether') : '0'
+    const weiPriceOGUN = selectedCurrency === 'OGUN' ? web3?.utils.toWei(salePrice.toString(), 'ether') : '0'
+    const startTimestamp = startTime.getTime() / 1000
 
     const onReceipt = () => {
       trackUpdate({
@@ -139,26 +138,22 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
             },
           },
         },
-      });
-      router.replace(router.asPath.replace('/edit/buy-now', ''));
-    };
+      })
+      router.replace(router.asPath.replace('/edit/buy-now', ''))
+    }
 
-    updateListing(
-      listingPayload.buyNowItem?.buyNowItem?.tokenId,
-      account,
-      weiPrice,
-      weiPriceOGUN,
-      startTimestamp,
-      { nft: nftData?.contract, marketplace: listingPayload.buyNowItem?.buyNowItem.contract }
-    )
+    updateListing(listingPayload.buyNowItem?.buyNowItem?.tokenId, account, weiPrice, weiPriceOGUN, startTimestamp, {
+      nft: nftData?.contract,
+      marketplace: listingPayload.buyNowItem?.buyNowItem.contract,
+    })
       .onReceipt(onReceipt)
       .onError(cause => toast.error(cause.message))
       .finally(() => helper.setSubmitting(false))
-      .execute(web3);
-  };
+      .execute(web3)
+  }
 
   if (!isForSale || !isOwner || !me || !track || nftData?.pendingRequest != PendingRequest.None) {
-    return null;
+    return null
   }
 
   return (
@@ -177,5 +172,5 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
         }}
       />
     </>
-  );
+  )
 }

@@ -2,10 +2,10 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import BN from "bn.js";
-import { ContractOptions } from "web3-eth-contract";
-import { EventLog } from "web3-core";
-import { EventEmitter } from "events";
+import BN from 'bn.js'
+import { ContractOptions } from 'web3-eth-contract'
+import { EventLog } from 'web3-core'
+import { EventEmitter } from 'events'
 import {
   Callback,
   PayableTransactionObject,
@@ -13,80 +13,62 @@ import {
   BlockType,
   ContractEventLog,
   BaseContract,
-} from "./types";
+} from './types'
 
 export interface EventOptions {
-  filter?: object;
-  fromBlock?: BlockType;
-  topics?: string[];
+  filter?: object
+  fromBlock?: BlockType
+  topics?: string[]
 }
 
 export type Claim = ContractEventLog<{
-  to: string;
-  amount: string;
-  0: string;
-  1: string;
-}>;
+  to: string
+  amount: string
+  0: string
+  1: string
+}>
 export type OwnershipTransferred = ContractEventLog<{
-  previousOwner: string;
-  newOwner: string;
-  0: string;
-  1: string;
-}>;
+  previousOwner: string
+  newOwner: string
+  0: string
+  1: string
+}>
 
 export interface MerkleClaimERC20 extends BaseContract {
-  constructor(
-    jsonInterface: any[],
-    address?: string,
-    options?: ContractOptions
-  ): MerkleClaimERC20;
-  clone(): MerkleClaimERC20;
+  constructor(jsonInterface: any[], address?: string, options?: ContractOptions): MerkleClaimERC20
+  clone(): MerkleClaimERC20
   methods: {
-    claim(
-      to: string,
-      amount: number | string | BN,
-      proof: (string | number[])[]
-    ): NonPayableTransactionObject<void>;
+    claim(to: string, amount: number | string | BN, proof: (string | number[])[]): NonPayableTransactionObject<void>
 
-    getLeafValue(
-      to: string,
-      value: number | string | BN
-    ): NonPayableTransactionObject<string>;
+    getLeafValue(to: string, value: number | string | BN): NonPayableTransactionObject<string>
 
-    hasClaimed(arg0: string): NonPayableTransactionObject<boolean>;
+    hasClaimed(arg0: string): NonPayableTransactionObject<boolean>
 
-    merkleRoot(): NonPayableTransactionObject<string>;
+    merkleRoot(): NonPayableTransactionObject<string>
 
-    ogunToken(): NonPayableTransactionObject<string>;
+    ogunToken(): NonPayableTransactionObject<string>
 
-    owner(): NonPayableTransactionObject<string>;
+    owner(): NonPayableTransactionObject<string>
 
-    renounceOwnership(): NonPayableTransactionObject<void>;
+    renounceOwnership(): NonPayableTransactionObject<void>
 
-    transferOwnership(newOwner: string): NonPayableTransactionObject<void>;
+    transferOwnership(newOwner: string): NonPayableTransactionObject<void>
 
-    withdraw(destination: string): NonPayableTransactionObject<void>;
-  };
+    withdraw(destination: string): NonPayableTransactionObject<void>
+  }
   events: {
-    Claim(cb?: Callback<Claim>): EventEmitter;
-    Claim(options?: EventOptions, cb?: Callback<Claim>): EventEmitter;
+    Claim(cb?: Callback<Claim>): EventEmitter
+    Claim(options?: EventOptions, cb?: Callback<Claim>): EventEmitter
 
-    OwnershipTransferred(cb?: Callback<OwnershipTransferred>): EventEmitter;
-    OwnershipTransferred(
-      options?: EventOptions,
-      cb?: Callback<OwnershipTransferred>
-    ): EventEmitter;
+    OwnershipTransferred(cb?: Callback<OwnershipTransferred>): EventEmitter
+    OwnershipTransferred(options?: EventOptions, cb?: Callback<OwnershipTransferred>): EventEmitter
 
-    allEvents(options?: EventOptions, cb?: Callback<EventLog>): EventEmitter;
-  };
+    allEvents(options?: EventOptions, cb?: Callback<EventLog>): EventEmitter
+  }
 
-  once(event: "Claim", cb: Callback<Claim>): void;
-  once(event: "Claim", options: EventOptions, cb: Callback<Claim>): void;
+  once(event: 'Claim', cb: Callback<Claim>): void
+  once(event: 'Claim', options: EventOptions, cb: Callback<Claim>): void
 
-  once(event: "OwnershipTransferred", cb: Callback<OwnershipTransferred>): void;
-  once(
-    event: "OwnershipTransferred",
-    options: EventOptions,
-    cb: Callback<OwnershipTransferred>
-  ): void;
+  once(event: 'OwnershipTransferred', cb: Callback<OwnershipTransferred>): void
+  once(event: 'OwnershipTransferred', options: EventOptions, cb: Callback<OwnershipTransferred>): void
 }

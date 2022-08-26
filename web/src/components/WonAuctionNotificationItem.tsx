@@ -1,9 +1,9 @@
-import { WonAuctionNotification } from 'lib/graphql';
-import { TrackNotification } from './TrackNotification';
+import { WonAuctionNotification } from 'lib/graphql'
+import { TrackNotification } from './TrackNotification'
 
 interface NotificationProps {
-  notification: WonAuctionNotification;
-  index: number;
+  notification: WonAuctionNotification
+  index: number
 }
 
 export const WonAuctionNotificationItem = ({
@@ -14,7 +14,7 @@ export const WonAuctionNotificationItem = ({
     <div>
       <span className="font-semibold">You</span> won the auction! Please complete the auction to get your NFT!
     </div>
-  );
+  )
   return (
     <TrackNotification
       createdAt={createdAt}
@@ -26,5 +26,5 @@ export const WonAuctionNotificationItem = ({
       index={index}
       title={title}
     />
-  );
-};
+  )
+}
