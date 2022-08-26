@@ -29,7 +29,7 @@ interface FormValues {
 
 type Selected = 'Stake' | 'Unstake'
 
-const OGUNAddress = config.OGUNAddress as string
+const OGUNAddress = config.ogunTokenAddress as string
 const lpTokenAddress = config.lpTokenAddress as string
 const lpStakeContractAddress = config.lpStakeContractAddress as string
 const tokenContract = (web3: Web3) =>

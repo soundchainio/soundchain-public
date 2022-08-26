@@ -513,7 +513,7 @@ class SendOgun extends BlockchainFunction<SendOgunParams> {
     const { from, to, amount } = this.params
     const amountWei = web3.utils.toWei(amount)
     this.web3 = web3
-    const tokenAddress = config.OGUNAddress
+    const tokenAddress = config.ogunTokenAddress
     const contract = new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], tokenAddress)
 
     const data = await contract.methods.transfer(to, amountWei).encodeABI()
