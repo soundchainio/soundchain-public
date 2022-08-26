@@ -3,10 +3,10 @@ import { Integrations } from '@sentry/tracing';
 import { config } from 'config';
 
 export const sentryInitializer = () => {
-  const env = process.env.NEXT_PUBLIC_VERCEL_ENV
+  const env = process.env.NEXT_PUBLIC_VERCEL_ENV;
   
-  const isProduction = Boolean(env === 'production')
-  const isStaging = Boolean(env === 'preview')
+  const isProduction = Boolean(env === 'production');
+  const isStaging = Boolean(env === 'preview');
 
   if (!isProduction || !isStaging) return;
   
@@ -14,6 +14,6 @@ export const sentryInitializer = () => {
     dsn: config.sentryUrl,
     integrations: [new Integrations.BrowserTracing()],
     tracesSampleRate: 1.0,
-    environment: `${process.env.NEXT_PUBLIC_VERCEL_ENV}`,
+    environment: env,
   });
 };

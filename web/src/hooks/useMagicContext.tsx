@@ -12,6 +12,7 @@ import { errorHandler } from 'utils/errorHandler';
 import SoundchainOGUN20 from '../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json';
 import { config } from 'config';
 import { AbiItem } from 'web3-utils';
+import { toast } from 'react-toastify';
 
 const magicPublicKey = process.env.NEXT_PUBLIC_MAGIC_KEY || '';
 
@@ -85,8 +86,6 @@ export function MagicProvider({ children }: MagicProviderProps) {
 
   const refetchBalance = async () => {
     try {
-      if (!account) return;
-
       setIsRefetchingBalance(true);
 
       await handleSetBalance();
@@ -109,7 +108,7 @@ export function MagicProvider({ children }: MagicProviderProps) {
 
   const handleSetBalance = useCallback(async () => {
     try {
-      if (!account) return;
+      if (!account) return toast.error('Not logged in.');
 
       const maticBalance = await web3.eth.getBalance(account);
 
@@ -121,7 +120,8 @@ export function MagicProvider({ children }: MagicProviderProps) {
 
   const handleSetOgunBalance = useCallback(async () => {
     try {
-      if (!account) return;
+      if (!account) return toast.error('Not logged in.');
+
       if (!tokenAddress) throw Error('No token contract address found when setting Ogun balance');
 
       const ogunContract = new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], tokenAddress);
