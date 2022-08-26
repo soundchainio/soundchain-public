@@ -43,7 +43,7 @@ type bulkType = {
       _id: string;
     };
     update: {
-      $inc: {
+      $set: {
         playbackCount: number;
       };
     };
@@ -359,7 +359,7 @@ export class TrackService extends ModelService<typeof Track> {
       const element = values[index];
       if (mongoose.Types.ObjectId.isValid(element.trackId)) {
         bulkOps.push({
-          updateOne: { filter: { _id: element.trackId }, update: { $inc: { playbackCount: element.amount } } },
+          updateOne: { filter: { _id: element.trackId }, update: { $set: { playbackCount: element.amount } } },
         });
       }
     }
@@ -390,6 +390,7 @@ export class TrackService extends ModelService<typeof Track> {
     if (trackEditionId) {
       ors.push({ trackEditionId });
     }
+    
     return await FavoriteProfileTrackModel.exists({
       $or: ors,
       profileId,
@@ -400,6 +401,7 @@ export class TrackService extends ModelService<typeof Track> {
     const track = await this.model.findOne({ _id: trackId });
 
     const ors: any[] = [{ trackId }];
+    
     if (track.trackEditionId) {
       ors.push({ trackEditionId: track.trackEditionId });
     }
@@ -444,8 +446,9 @@ export class TrackService extends ModelService<typeof Track> {
 
   async favoriteCount(trackId: string, trackEditionId: string): Promise<FavoriteCount> {
     const ors: any[] = [{ trackId: trackId.toString() }];
+    
     if (trackEditionId) {
-      ors.push({ trackEditionId: trackEditionId.toString() });
+      ors.push({ trackEditionId: trackEditionId.toString()})
     }
 
     const favTrack = await FavoriteProfileTrackModel.aggregate([
@@ -467,9 +470,10 @@ export class TrackService extends ModelService<typeof Track> {
   }
 
   async playbackCount(trackId: string, trackEditionId: string): Promise<number> {
-    const ors: any[] = [{ trackId: trackId.toString() }];
+    const ors: any[] = [{ _id: new ObjectId(trackId) }];
+
     if (trackEditionId) {
-      ors.push({ trackEditionId: trackEditionId.toString() });
+      ors.push({ trackEditionId: new ObjectId(trackEditionId) });
     }
 
     const trackQuery = await this.model.aggregate([
