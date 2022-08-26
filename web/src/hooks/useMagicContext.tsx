@@ -58,7 +58,7 @@ const createWeb3 = (
 };
 
 const web3: Web3 = createWeb3(magic)!;
-const tokenAddress = config.OGUNAddress;
+const tokenAddress = config.ogunTokenAddress;
 
 export function MagicProvider({ children }: MagicProviderProps) {
   const me = useMe();

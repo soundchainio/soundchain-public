@@ -10,7 +10,7 @@ import { config } from 'config';
 import SoundchainOGUN20 from '../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json';
 
 const tokenContract = (web3: Web3) =>
-  new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], config.OGUNAddress as string) as unknown as Contract;
+  new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], config.ogunTokenAddress as string) as unknown as Contract;
 
 export const useMetaMask = () => {
   const me = useMe();
