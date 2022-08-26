@@ -16,6 +16,7 @@ import {
   useWhitelistEntryByWalletLazyQuery,
 } from 'lib/graphql';
 import { GetServerSideProps } from 'next';
+import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
@@ -38,6 +39,7 @@ export const getServerSideProps: GetServerSideProps = ({ res }) => {
 };
 
 export default function AirdropPage() {
+  const router = useRouter();
   const { web3: magicLinkWeb3, account: magicLinkAccount } = useMagicContext();
   const { setIsLandingLayout } = useLayoutContext();
   const [proofBookByWallet, { data: proofBook, loading: loadingProof }] = useProofBookByWalletLazyQuery({
@@ -143,7 +145,7 @@ export default function AirdropPage() {
   };
 
   const connectSoundchain = () => {
-    if (!magicLinkWeb3 || !magicLinkAccount) return;
+    if (!magicLinkWeb3 || !magicLinkAccount) return router.push(`/login?callbackUrl=${parent.location.href}`);
     setShowModal(false);
     setAccount(magicLinkAccount);
     setWeb3(magicLinkWeb3);
