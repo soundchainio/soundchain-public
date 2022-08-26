@@ -9,8 +9,12 @@
     "seedProof": "cd api && yarn seedProof",
     "dev": "lerna run --parallel dev",
     "dev:quick": "lerna run --parallel dev:quick",
-    "codegen": "lerna run --parallel codegen",
-    "lint-staged": "lerna run --parallel lint-staged"
+    "codegen": "lerna run --parallel codegen"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
   },
   "devDependencies": {
     "husky": "^7.0.1",

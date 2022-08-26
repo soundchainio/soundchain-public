@@ -1,25 +1,25 @@
-import classNames from 'classnames';
-import { useModalDispatch, useModalState } from 'contexts/providers/modal';
-import { useMe } from 'hooks/useMe';
+import classNames from 'classnames'
+import { useModalDispatch, useModalState } from 'contexts/providers/modal'
+import { useMe } from 'hooks/useMe'
 import {
   CommentsDocument,
   PostsDocument,
   useDeleteCommentMutation,
   useDeletePostMutation,
-  useTrackLazyQuery
-} from 'lib/graphql';
-import { useRouter } from 'next/router';
-import { AuthorActionsType } from 'types/AuthorActionsType';
-import { Delete as DeleteButton } from './Buttons/Delete';
-import { Edit as EditButton } from './Buttons/Edit';
-import { ModalsPortal } from './ModalsPortal';
+  useTrackLazyQuery,
+} from 'lib/graphql'
+import { useRouter } from 'next/router'
+import { AuthorActionsType } from 'types/AuthorActionsType'
+import { Delete as DeleteButton } from './Buttons/Delete'
+import { Edit as EditButton } from './Buttons/Edit'
+import { ModalsPortal } from './ModalsPortal'
 
 const baseClasses =
-  'fixed w-screen h-full bottom-0 duration-500 bg-opacity-75 ease-in-out bg-black transform-gpu transform';
+  'fixed w-screen h-full bottom-0 duration-500 bg-opacity-75 ease-in-out bg-black transform-gpu transform'
 
 export const AuthorActionsModal = () => {
-  const me = useMe();
-  const { showAuthorActions, authorActionsId, authorActionsType, showOnlyDeleteOption } = useModalState();
+  const me = useMe()
+  const { showAuthorActions, authorActionsId, authorActionsType, showOnlyDeleteOption } = useModalState()
   const {
     dispatchShowAuthorActionsModal,
     dispatchShowPostModal,
@@ -28,82 +28,82 @@ export const AuthorActionsModal = () => {
     dispatchShowCommentModal,
     dispatchShowConfirmDeleteNFTModal,
     dispatchShowConfirmDeleteEditionModal,
-  } = useModalDispatch();
-  const router = useRouter();
+  } = useModalDispatch()
+  const router = useRouter()
 
-  const [getTrack] = useTrackLazyQuery();
+  const [getTrack] = useTrackLazyQuery()
 
   const [deleteComment] = useDeleteCommentMutation({
     refetchQueries: [CommentsDocument],
     update: (cache, data) => {
-      cache.evict({ id: cache.identify(data.data!.deleteComment.comment!) });
+      cache.evict({ id: cache.identify(data.data!.deleteComment.comment!) })
     },
-  });
+  })
 
   const [deletePost] = useDeletePostMutation({
     refetchQueries: [PostsDocument],
     update: (cache, data) => {
-      cache.evict({ id: cache.identify(data.data!.deletePost.post!) });
+      cache.evict({ id: cache.identify(data.data!.deletePost.post!) })
     },
-  });
+  })
 
   const onOutsideClick = () => {
-    dispatchShowAuthorActionsModal(false, AuthorActionsType.POST, '');
-  };
+    dispatchShowAuthorActionsModal(false, AuthorActionsType.POST, '')
+  }
 
   const onEdit = () => {
-    onOutsideClick();
+    onOutsideClick()
     switch (authorActionsType) {
       case AuthorActionsType.POST:
-        dispatchSetEditPostId(authorActionsId);
-        dispatchShowPostModal(true);
-        break;
+        dispatchSetEditPostId(authorActionsId)
+        dispatchShowPostModal(true)
+        break
       case AuthorActionsType.COMMENT:
-        dispatchSetEditCommentId(authorActionsId);
-        dispatchShowCommentModal(true);
-        break;
+        dispatchSetEditCommentId(authorActionsId)
+        dispatchShowCommentModal(true)
+        break
     }
-  };
+  }
 
   const onDeleteNFT = async () => {
-    const { data: track } =  await getTrack({ variables: { id: authorActionsId } });
+    const { data: track } = await getTrack({ variables: { id: authorActionsId } })
     if (track) {
-      const shouldBurn = me?.profile.id === track?.track.profileId;
-      dispatchShowConfirmDeleteNFTModal(true, track.track.id, shouldBurn);
+      const shouldBurn = me?.profile.id === track?.track.profileId
+      dispatchShowConfirmDeleteNFTModal(true, track.track.id, shouldBurn)
     }
-  };
+  }
 
   const onDeleteEdition = async () => {
-    const { data: track } =  await getTrack({ variables: { id: authorActionsId } });
+    const { data: track } = await getTrack({ variables: { id: authorActionsId } })
     if (track) {
       dispatchShowConfirmDeleteEditionModal({
         show: true,
         trackEditionId: track.track.trackEditionId!,
         trackId: track.track.id,
-      });
+      })
     }
-  };
+  }
 
   const onDelete = async () => {
     switch (authorActionsType) {
       case AuthorActionsType.POST:
-        await deletePost({ variables: { input: { postId: authorActionsId } } });
+        await deletePost({ variables: { input: { postId: authorActionsId } } })
         if (router.asPath.includes('/posts/')) {
-          router.back();
+          router.back()
         }
-        break;
+        break
       case AuthorActionsType.COMMENT:
-        await deleteComment({ variables: { input: { commentId: authorActionsId } } });
-        break;
+        await deleteComment({ variables: { input: { commentId: authorActionsId } } })
+        break
       case AuthorActionsType.NFT:
-        onDeleteNFT();
-        break;
+        onDeleteNFT()
+        break
       case AuthorActionsType.EDITION:
-        onDeleteEdition();
-        break;
+        onDeleteEdition()
+        break
     }
-    onOutsideClick();
-  };
+    onOutsideClick()
+  }
 
   return (
     <ModalsPortal>
@@ -113,11 +113,11 @@ export const AuthorActionsModal = () => {
           'translate-y-full opacity-0': !showAuthorActions,
         })}
       >
-        <div className="flex flex-col h-full">
+        <div className="flex h-full flex-col">
           <div className="flex-1" onClick={onOutsideClick}></div>
-          <div className="text-white p-4">
+          <div className="p-4 text-white">
             {!showOnlyDeleteOption && (
-              <EditButton className="p-4 mb-4" onClick={onEdit}>
+              <EditButton className="mb-4 p-4" onClick={onEdit}>
                 Edit {authorActionsType}
               </EditButton>
             )}
@@ -128,7 +128,7 @@ export const AuthorActionsModal = () => {
         </div>
       </div>
     </ModalsPortal>
-  );
-};
+  )
+}
 
-export default AuthorActionsModal;
+export default AuthorActionsModal

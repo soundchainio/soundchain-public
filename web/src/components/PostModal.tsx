@@ -1,126 +1,126 @@
-import classNames from 'classnames';
-import { useModalDispatch, useModalState } from 'contexts/providers/modal';
-import 'emoji-mart/css/emoji-mart.css';
-import GraphemeSplitter from 'grapheme-splitter';
-import { usePostLazyQuery } from 'lib/graphql';
-import { default as React, useCallback, useEffect, useState } from 'react';
-import { PostFormType } from 'types/PostFormType';
-import { getNormalizedLink, hasLink } from '../utils/NormalizeEmbedLinks';
-import { ModalsPortal } from './ModalsPortal';
-import { PostForm } from './PostForm';
+import classNames from 'classnames'
+import { useModalDispatch, useModalState } from 'contexts/providers/modal'
+import 'emoji-mart/css/emoji-mart.css'
+import GraphemeSplitter from 'grapheme-splitter'
+import { usePostLazyQuery } from 'lib/graphql'
+import { default as React, useCallback, useEffect, useState } from 'react'
+import { PostFormType } from 'types/PostFormType'
+import { getNormalizedLink, hasLink } from '../utils/NormalizeEmbedLinks'
+import { ModalsPortal } from './ModalsPortal'
+import { PostForm } from './PostForm'
 
 const baseClasses =
-  'fixed top-0 w-screen bottom-0 duration-500 bg-opacity-75 ease-in-out bg-black transform-gpu transform';
+  'fixed top-0 w-screen bottom-0 duration-500 bg-opacity-75 ease-in-out bg-black transform-gpu transform'
 
-export const maxLength = 160;
+export const maxLength = 160
 
-const splitter = new GraphemeSplitter();
+const splitter = new GraphemeSplitter()
 
 export const getBodyCharacterCount = (body?: string) => {
-  return splitter.splitGraphemes(body || '').length;
-};
+  return splitter.splitGraphemes(body || '').length
+}
 
 // When we get string.length, emojis are counted as 2 characters
 // This functions fixes the input maxLength and adjust to count an emoji as 1 char
 export const setMaxInputLength = (input: string) => {
-  const rawValue = input.length;
+  const rawValue = input.length
 
-  return maxLength + (rawValue - getBodyCharacterCount(input));
-};
+  return maxLength + (rawValue - getBodyCharacterCount(input))
+}
 
 export const PostModal = () => {
-  const [postType, setPostType] = useState<PostFormType>(PostFormType.NEW);
-  const [originalLink, setOriginalLink] = useState('');
-  const [postLink, setPostLink] = useState('');
-  const [bodyValue, setBodyValue] = useState('');
+  const [postType, setPostType] = useState<PostFormType>(PostFormType.NEW)
+  const [originalLink, setOriginalLink] = useState('')
+  const [postLink, setPostLink] = useState('')
+  const [bodyValue, setBodyValue] = useState('')
 
-  const { showNewPost, repostId, editPostId, trackId } = useModalState();
-  const { dispatchShowPostModal, dispatchSetRepostId, dispatchSetEditPostId } = useModalDispatch();
+  const { showNewPost, repostId, editPostId, trackId } = useModalState()
+  const { dispatchShowPostModal, dispatchSetRepostId, dispatchSetEditPostId } = useModalDispatch()
 
   const [getPost, { data: editingPost }] = usePostLazyQuery({
     variables: { id: editPostId as string },
-  });
+  })
 
-  const initialValues = { body: editingPost?.post.body || '' };
+  const initialValues = { body: editingPost?.post.body || '' }
 
   const clearState = () => {
-    dispatchShowPostModal(false, undefined);
-    setPostLink('');
-    dispatchSetRepostId(undefined);
-    dispatchSetEditPostId(undefined);
-  };
+    dispatchShowPostModal(false, undefined)
+    setPostLink('')
+    dispatchSetRepostId(undefined)
+    dispatchSetEditPostId(undefined)
+  }
 
   const cancel = (setFieldValue: (val: string, newVal: string) => void) => {
-    setFieldValue('body', '');
-    clearState();
-  };
+    setFieldValue('body', '')
+    clearState()
+  }
 
   const normalizeOriginalLink = useCallback(async () => {
     if (originalLink.length && hasLink(originalLink)) {
-      const link = await getNormalizedLink(originalLink);
-      setPostLink(link);
+      const link = await getNormalizedLink(originalLink)
+      setPostLink(link)
     } else {
-      setPostLink('');
+      setPostLink('')
     }
-  }, [originalLink]);
+  }, [originalLink])
 
   useEffect(() => {
     if (editPostId) {
-      getPost();
+      getPost()
     }
-  }, [editPostId]);
+  }, [editPostId])
 
   useEffect(() => {
     const delayDebounce = setTimeout(async () => {
       if (bodyValue.length) {
-        const link = await getNormalizedLink(bodyValue);
+        const link = await getNormalizedLink(bodyValue)
         if (link) {
-          setPostLink(link);
+          setPostLink(link)
         } else if (!originalLink && postType !== PostFormType.EDIT) {
-          setPostLink('');
+          setPostLink('')
         }
       } else if (!originalLink && postType !== PostFormType.EDIT) {
-        setPostLink('');
+        setPostLink('')
       }
-    }, 1000);
+    }, 1000)
 
-    return () => clearTimeout(delayDebounce);
-  }, [bodyValue]);
+    return () => clearTimeout(delayDebounce)
+  }, [bodyValue])
 
   useEffect(() => {
     if (originalLink) {
-      normalizeOriginalLink();
+      normalizeOriginalLink()
     } else if (postType !== PostFormType.EDIT) {
-      setPostLink('');
+      setPostLink('')
     }
-  }, [normalizeOriginalLink, originalLink]);
+  }, [normalizeOriginalLink, originalLink])
 
   useEffect(() => {
     if (showNewPost) {
-      setOriginalLink('');
+      setOriginalLink('')
     }
-  }, [showNewPost]);
+  }, [showNewPost])
 
   useEffect(() => {
     if (repostId) {
-      setPostType(PostFormType.REPOST);
+      setPostType(PostFormType.REPOST)
     }
 
     if (editPostId) {
-      setPostType(PostFormType.EDIT);
+      setPostType(PostFormType.EDIT)
     }
 
     if (!editPostId && !repostId) {
-      setPostType(PostFormType.NEW);
+      setPostType(PostFormType.NEW)
     }
-  }, [repostId, editPostId]);
+  }, [repostId, editPostId])
 
   useEffect(() => {
     if (editingPost) {
-      setPostLink(editingPost.post.mediaLink || '');
-      setBodyValue(editingPost.post.body || '');
+      setPostLink(editingPost.post.mediaLink || '')
+      setBodyValue(editingPost.post.body || '')
     }
-  }, [editingPost]);
+  }, [editingPost])
 
   return (
     <ModalsPortal>
@@ -144,7 +144,7 @@ export const PostModal = () => {
         />
       </div>
     </ModalsPortal>
-  );
-};
+  )
+}
 
-export default PostModal;
+export default PostModal

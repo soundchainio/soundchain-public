@@ -1,20 +1,20 @@
 /* eslint-disable react/display-name */
-import { Post } from 'components/Post';
-import { SortOrder, SortPostField, usePostsQuery, Post as PostType } from 'lib/graphql';
-import React, { memo, useCallback, useEffect, useMemo, useRef } from 'react';
-import PullToRefresh from 'react-simple-pull-to-refresh';
-import { areEqual, VariableSizeList as List } from 'react-window';
-import AutoSizer from 'react-virtualized-auto-sizer';
-import InfiniteLoader from 'react-window-infinite-loader';
-import { NoResultFound } from './NoResultFound';
-import { PostSkeleton } from './PostSkeleton';
-import { LoaderAnimation } from './LoaderAnimation';
+import { Post } from 'components/Post'
+import { SortOrder, SortPostField, usePostsQuery, Post as PostType } from 'lib/graphql'
+import React, { memo, useCallback, useEffect, useMemo, useRef } from 'react'
+import PullToRefresh from 'react-simple-pull-to-refresh'
+import { areEqual, VariableSizeList as List } from 'react-window'
+import AutoSizer from 'react-virtualized-auto-sizer'
+import InfiniteLoader from 'react-window-infinite-loader'
+import { NoResultFound } from './NoResultFound'
+import { PostSkeleton } from './PostSkeleton'
+import { LoaderAnimation } from './LoaderAnimation'
 interface PostsProps extends React.ComponentPropsWithoutRef<'div'> {
-  profileId?: string;
+  profileId?: string
 }
 
-const pageSize = 10;
-const GAP = 8;
+const pageSize = 10
+const GAP = 8
 
 export const Posts = ({ profileId }: PostsProps) => {
   const { data, loading, refetch, fetchMore } = usePostsQuery({
@@ -24,18 +24,18 @@ export const Posts = ({ profileId }: PostsProps) => {
       sort: { field: SortPostField.CreatedAt, order: SortOrder.Desc },
     },
     ssr: false,
-  });
+  })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const listRef = useRef<any>(null);
-  const getSize = (index: number) => sizeMap[index] || 289;
-  const sizeMap = useMemo<{ [key: number]: number }>(() => ({}), []);
+  const listRef = useRef<any>(null)
+  const getSize = (index: number) => sizeMap[index] || 289
+  const sizeMap = useMemo<{ [key: number]: number }>(() => ({}), [])
   const setSize = useCallback(
     (index, size) => {
-      sizeMap[index] = size + GAP;
-      listRef?.current.resetAfterIndex(index);
+      sizeMap[index] = size + GAP
+      listRef?.current.resetAfterIndex(index)
     },
     [sizeMap],
-  );
+  )
 
   if (loading) {
     return (
@@ -44,14 +44,14 @@ export const Posts = ({ profileId }: PostsProps) => {
         <PostSkeleton />
         <PostSkeleton />
       </div>
-    );
+    )
   }
 
   if (!data) {
-    return <NoResultFound type="posts" />;
+    return <NoResultFound type="posts" />
   }
 
-  const { nodes, pageInfo } = data.posts;
+  const { nodes, pageInfo } = data.posts
 
   const loadMore = () => {
     fetchMore({
@@ -61,12 +61,12 @@ export const Posts = ({ profileId }: PostsProps) => {
           after: pageInfo.endCursor,
         },
       },
-    });
-  };
+    })
+  }
 
-  const loadMoreItems = loading ? () => null : loadMore;
-  const isItemLoaded = (index: number) => !pageInfo.hasNextPage || index < nodes.length;
-  const postsCount = pageInfo.hasNextPage ? nodes.length + 1 : nodes.length;
+  const loadMoreItems = loading ? () => null : loadMore
+  const isItemLoaded = (index: number) => !pageInfo.hasNextPage || index < nodes.length
+  const postsCount = pageInfo.hasNextPage ? nodes.length + 1 : nodes.length
 
   return (
     <PullToRefresh onRefresh={refetch}>
@@ -79,8 +79,8 @@ export const Posts = ({ profileId }: PostsProps) => {
                 width={width}
                 onItemsRendered={onItemsRendered}
                 ref={list => {
-                  typeof ref === 'function' && ref(list);
-                  listRef.current = list;
+                  typeof ref === 'function' && ref(list)
+                  listRef.current = list
                 }}
                 itemCount={postsCount}
                 itemSize={getSize}
@@ -104,27 +104,27 @@ export const Posts = ({ profileId }: PostsProps) => {
         )}
       </AutoSizer>
     </PullToRefresh>
-  );
-};
+  )
+}
 
 interface RowProps {
-  data: PostType[];
-  index: number;
-  setSize: (index: number, height?: number) => void;
+  data: PostType[]
+  index: number
+  setSize: (index: number, height?: number) => void
 }
 
 const Row = ({ data, index, setSize }: RowProps) => {
-  const rowRef = useRef<HTMLDivElement>(null);
+  const rowRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => setSize(index, rowRef?.current?.getBoundingClientRect().height), [setSize, index]);
+  useEffect(() => setSize(index, rowRef?.current?.getBoundingClientRect().height), [setSize, index])
 
   if (!data[index]) {
-    return null;
+    return null
   }
 
   return (
     <div ref={rowRef}>
       <Post key={data[index].id} post={data[index]} />
     </div>
-  );
-};
+  )
+}

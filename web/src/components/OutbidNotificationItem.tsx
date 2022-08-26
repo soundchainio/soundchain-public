@@ -1,16 +1,16 @@
-import { OutbidNotification } from 'lib/graphql';
-import { TrackNotification } from './TrackNotification';
+import { OutbidNotification } from 'lib/graphql'
+import { TrackNotification } from './TrackNotification'
 
 interface NotificationProps {
-  notification: OutbidNotification;
-  index: number;
+  notification: OutbidNotification
+  index: number
 }
 
 export const OutbidNotificationItem = ({
   notification: { createdAt, price, trackId, trackName, artist, artworkUrl },
   index,
 }: NotificationProps) => {
-  const title = 'You have been outbid! You have to bid higher!';
+  const title = 'You have been outbid! You have to bid higher!'
   return (
     <TrackNotification
       createdAt={createdAt}
@@ -22,5 +22,5 @@ export const OutbidNotificationItem = ({
       index={index}
       title={title}
     />
-  );
-};
+  )
+}

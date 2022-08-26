@@ -1,22 +1,22 @@
-import { ModalActionTypes } from 'contexts/actions/modal';
-import { initialModalState, ModalState } from 'contexts/reducers/modal';
-import { ReactionType } from 'lib/graphql';
-import { useContext } from 'react';
-import { AuthorActionsType } from 'types/AuthorActionsType';
-import { SaleType } from 'types/SaleType';
-import { GenreLabel } from 'utils/Genres';
-import { SaleTypeLabel } from 'utils/SaleTypeLabel';
-import { store } from '..';
-import { ShowConfirmDeleteEdition, ShowRemoveListing, ShowTransferNftConfirmationPayload } from '../payloads/modal';
+import { ModalActionTypes } from 'contexts/actions/modal'
+import { initialModalState, ModalState } from 'contexts/reducers/modal'
+import { ReactionType } from 'lib/graphql'
+import { useContext } from 'react'
+import { AuthorActionsType } from 'types/AuthorActionsType'
+import { SaleType } from 'types/SaleType'
+import { GenreLabel } from 'utils/Genres'
+import { SaleTypeLabel } from 'utils/SaleTypeLabel'
+import { store } from '..'
+import { ShowConfirmDeleteEdition, ShowRemoveListing, ShowTransferNftConfirmationPayload } from '../payloads/modal'
 
 export const useModalState = (): ModalState => {
-  const { state } = useContext(store);
-  if (!state) return initialModalState;
-  return state.modal;
-};
+  const { state } = useContext(store)
+  if (!state) return initialModalState
+  return state.modal
+}
 
 export const useModalDispatch = () => {
-  const { dispatch } = useContext(store);
+  const { dispatch } = useContext(store)
   return {
     dispatchSetRepostId: (repostId?: string) =>
       dispatch({ type: ModalActionTypes.SET_REPOST_ID, payload: { repostId } }),
@@ -59,11 +59,14 @@ export const useModalDispatch = () => {
     dispatchShowApproveModal: (show: boolean, type: SaleType, nftContractAddress?: string | null) =>
       dispatch({ type: ModalActionTypes.SHOW_APPROVE, payload: { show, type, nftContractAddress } }),
     dispatchShowRemoveListingModal: (payload: ShowRemoveListing) =>
-      dispatch({ type: ModalActionTypes.SHOW_REMOVE_LISTING, payload: {
-        ...payload,
-        contractAddresses: payload.contractAddresses || {},
-        editionId: payload.editionId || undefined,
-      } }),
+      dispatch({
+        type: ModalActionTypes.SHOW_REMOVE_LISTING,
+        payload: {
+          ...payload,
+          contractAddresses: payload.contractAddresses || {},
+          editionId: payload.editionId || undefined,
+        },
+      }),
     dispatchShowConfirmDeleteNFTModal: (show: boolean, trackId: string, burn: boolean) =>
       dispatch({ type: ModalActionTypes.SHOW_CONFIRM_DELETE_NFT, payload: { show, trackId, burn } }),
     dispatchShowConfirmDeleteEditionModal: (payload: ShowConfirmDeleteEdition) =>
@@ -80,5 +83,5 @@ export const useModalDispatch = () => {
         type: ModalActionTypes.SHOW_TRANSFER_NFT_CONFIRMATION,
         payload,
       }),
-  };
-};
+  }
+}

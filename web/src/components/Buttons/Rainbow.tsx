@@ -1,6 +1,6 @@
-import classNames from 'classnames';
-import { ButtonProps, commonClasses } from 'components/Button';
-import React from 'react';
+import classNames from 'classnames'
+import { ButtonProps, commonClasses } from 'components/Button'
+import React from 'react'
 
 export const RainbowButton = ({
   className,
@@ -16,7 +16,9 @@ export const RainbowButton = ({
   return (
     <div className={classNames(className, 'bg-rainbow-gradient p-0.5 hover:bg-rainbow-gradient-dark')}>
       <button
-        className={`${commonClasses} ${buttonClassName || ''} bg-black bg-opacity-60 py-3 font-extrabold uppercase text-white sm:px-4 ${
+        className={`${commonClasses} ${
+          buttonClassName || ''
+        } bg-black bg-opacity-60 py-3 font-extrabold uppercase text-white sm:px-4 ${
           rest.disabled ? 'cursor-not-allowed' : ''
         }`}
         type={type}
@@ -32,5 +34,5 @@ export const RainbowButton = ({
         )}
       </button>
     </div>
-  );
-};
+  )
+}

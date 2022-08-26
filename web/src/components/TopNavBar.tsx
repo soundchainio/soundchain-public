@@ -1,22 +1,22 @@
-import { Logo } from 'icons/Logo';
-import { getJwt } from 'lib/apollo';
-import { useMeQuery } from 'lib/graphql';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
-import React, { useEffect } from 'react';
-import { Button } from './Button';
-import { NavBar } from './NavBar';
-import { Title } from './Title';
-import { TopNavBarButton } from './TopNavBarButton';
-import { Avatar } from './Avatar';
+import { Logo } from 'icons/Logo'
+import { getJwt } from 'lib/apollo'
+import { useMeQuery } from 'lib/graphql'
+import Link from 'next/link'
+import { useRouter } from 'next/router'
+import React, { useEffect } from 'react'
+import { Button } from './Button'
+import { NavBar } from './NavBar'
+import { Title } from './Title'
+import { TopNavBarButton } from './TopNavBarButton'
+import { Avatar } from './Avatar'
 
 export interface TopNavBarProps {
-  setSideMenuOpen?: (open: boolean) => void;
-  leftButton?: JSX.Element;
-  rightButton?: JSX.Element;
-  title?: string;
-  subtitle?: JSX.Element;
-  isLogin?: boolean;
+  setSideMenuOpen?: (open: boolean) => void
+  leftButton?: JSX.Element
+  rightButton?: JSX.Element
+  title?: string
+  subtitle?: JSX.Element
+  isLogin?: boolean
 }
 
 export const TopNavBar = ({
@@ -27,28 +27,28 @@ export const TopNavBar = ({
   setSideMenuOpen,
   isLogin,
 }: TopNavBarProps) => {
-  const router = useRouter();
-  const { data, loading: loadingMe, refetch } = useMeQuery();
-  const me = data?.me;
+  const router = useRouter()
+  const { data, loading: loadingMe, refetch } = useMeQuery()
+  const me = data?.me
 
   useEffect(() => {
     async function checkLogin() {
       if (!me && !loadingMe && (await getJwt())) {
-        await refetch();
+        await refetch()
       }
     }
 
-    checkLogin();
-  }, [me, loadingMe, refetch]);
+    checkLogin()
+  }, [me, loadingMe, refetch])
 
   const onLogin = () => {
-    router.push('/login');
-  };
+    router.push('/login')
+  }
 
-  if (isLogin) return null;
+  if (isLogin) return null
 
-  const isLoginPage = router.pathname === '/login';
-  const isCreateAccount = router.pathname === '/create-account';
+  const isLoginPage = router.pathname === '/login'
+  const isCreateAccount = router.pathname === '/create-account'
 
   return (
     <header>
@@ -59,7 +59,7 @@ export const TopNavBar = ({
           </a>
         </Link>
         {me ? (
-          <div className="hidden w-full items-stretch justify-start pl-4 md:flex flex-1">
+          <div className="hidden w-full flex-1 items-stretch justify-start pl-4 md:flex">
             <div className="flex w-full items-center">
               <NavBar />
             </div>
@@ -81,7 +81,7 @@ export const TopNavBar = ({
             </div>
           )
         )}
-        <div className="items-center flex">
+        <div className="flex items-center">
           <div className="flex w-full flex-shrink-0 items-center justify-center">
             {title && (
               <div className="flex w-full flex-col">
@@ -95,7 +95,6 @@ export const TopNavBar = ({
         </div>
         <div className="flex-grow-basis-0 h-full flex-1 items-center text-gray-80">
           <div className="flex h-full items-center justify-end gap-2 pr-4 md:gap-4 md:pr-10">
-
             <div className={`flex-grow-basis-0 flex items-center gap-2`}>
               {(LeftButton || RightButton) && (
                 <>
@@ -115,5 +114,5 @@ export const TopNavBar = ({
         </div>
       </div>
     </header>
-  );
-};
+  )
+}

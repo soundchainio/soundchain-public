@@ -1,7 +1,7 @@
-import { InboxBadge } from 'components/InboxBadge';
-import { Inbox } from 'icons/Inbox';
-import React from 'react';
-import { NavBarButton } from './NavBarButton';
+import { InboxBadge } from 'components/InboxBadge'
+import { Inbox } from 'icons/Inbox'
+import React from 'react'
+import { NavBarButton } from './NavBarButton'
 
 export const InboxButton = () => {
   return (
@@ -9,5 +9,5 @@ export const InboxButton = () => {
       <InboxBadge />
       <NavBarButton label="Inbox" path="/messages" icon={Inbox} color="yellow" />
     </div>
-  );
-};
+  )
+}

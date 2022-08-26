@@ -1,21 +1,21 @@
-import { Menu, Transition } from '@headlessui/react';
-import { ShareIcon } from '@heroicons/react/outline';
-import { useModalDispatch } from 'contexts/providers/modal';
-import { Fragment } from 'react';
-import { toast } from 'react-toastify';
+import { Menu, Transition } from '@headlessui/react'
+import { ShareIcon } from '@heroicons/react/outline'
+import { useModalDispatch } from 'contexts/providers/modal'
+import { Fragment } from 'react'
+import { toast } from 'react-toastify'
 
 type Props = {
-  trackId: string;
-  title?: string | null;
-  artist?: string | null;
-  position?: 'top-right';
-};
+  trackId: string
+  title?: string | null
+  artist?: string | null
+  position?: 'top-right'
+}
 
 export const TrackShareButton = ({ trackId, title, artist, position }: Props) => {
-  const { dispatchShowPostModal, dispatchShowAudioPlayerModal } = useModalDispatch();
+  const { dispatchShowPostModal, dispatchShowAudioPlayerModal } = useModalDispatch()
 
   const handleSharing = async () => {
-    const url = `${window.location.origin}/tracks/${trackId}`;
+    const url = `${window.location.origin}/tracks/${trackId}`
 
     try {
       await navigator
@@ -26,24 +26,24 @@ export const TrackShareButton = ({ trackId, title, artist, position }: Props) =>
         })
         .catch(error => {
           if (!error.toString().includes('AbortError')) {
-            toast('URL copied to clipboard');
+            toast('URL copied to clipboard')
           }
-        });
+        })
     } catch {
-      await navigator.clipboard.writeText(url);
-      toast('URL copied to clipboard');
+      await navigator.clipboard.writeText(url)
+      toast('URL copied to clipboard')
     }
-  };
+  }
 
   const handlePost = () => {
-    dispatchShowAudioPlayerModal(false);
-    dispatchShowPostModal(true, trackId);
-  };
+    dispatchShowAudioPlayerModal(false)
+    dispatchShowPostModal(true, trackId)
+  }
 
   return (
     <div className="relative flex items-center">
       <Menu>
-        <Menu.Button aria-label="Share" className="w-10 h-10 flex items-center justify-center text-gray-80">
+        <Menu.Button aria-label="Share" className="flex h-10 w-10 items-center justify-center text-gray-80">
           <ShareIcon width={18} height={18} />
         </Menu.Button>
         <Transition
@@ -58,12 +58,12 @@ export const TrackShareButton = ({ trackId, title, artist, position }: Props) =>
           <Menu.Items
             className={`absolute ${getPosition(
               position,
-            )} z-40 bg-gray-20 text-white w-32 flex flex-col rounded-lg shadow-lg`}
+            )} z-40 flex w-32 flex-col rounded-lg bg-gray-20 text-white shadow-lg`}
           >
             <Menu.Item>
               {({ active }) => (
                 <button
-                  className={`w-full text-left font-semibold text-xs px-5 py-4 ${active && 'bg-gray-40 rounded-md'}`}
+                  className={`w-full px-5 py-4 text-left text-xs font-semibold ${active && 'rounded-md bg-gray-40'}`}
                   onClick={handleSharing}
                 >
                   Share URL
@@ -73,7 +73,7 @@ export const TrackShareButton = ({ trackId, title, artist, position }: Props) =>
             <Menu.Item>
               {({ active }) => (
                 <button
-                  className={`w-full text-left font-semibold text-xs px-5 py-4 ${active && 'bg-gray-40 rounded-md'}`}
+                  className={`w-full px-5 py-4 text-left text-xs font-semibold ${active && 'rounded-md bg-gray-40'}`}
                   onClick={handlePost}
                 >
                   Share as Post
@@ -84,14 +84,14 @@ export const TrackShareButton = ({ trackId, title, artist, position }: Props) =>
         </Transition>
       </Menu>
     </div>
-  );
-};
+  )
+}
 
 const getPosition = (position: Props['position']) => {
   switch (position) {
     case 'top-right':
-      return 'bottom-5 left-5';
+      return 'bottom-5 left-5'
     default:
-      return 'top-8 right-0';
+      return 'top-8 right-0'
   }
-};
+}

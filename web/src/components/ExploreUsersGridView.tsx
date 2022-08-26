@@ -1,22 +1,22 @@
 /* eslint-disable react/display-name */
-import { PageInput, useExploreUsersQuery } from 'lib/graphql';
-import React from 'react';
-import { NoResultFound } from './NoResultFound';
-import { ProfileListItemSkeleton } from './ProfileListItemSkeleton';
-import { ExploreUsersProps } from './ExploreUsersListView';
-import { ProfileGridItem } from './ProfileGridItem';
-import { GridSkeleton } from './GridSkeleton';
-import PullToRefresh from 'react-simple-pull-to-refresh';
-import { InfiniteLoader as InfiniteLoaderLegacy } from './InfiniteLoader';
+import { PageInput, useExploreUsersQuery } from 'lib/graphql'
+import React from 'react'
+import { NoResultFound } from './NoResultFound'
+import { ProfileListItemSkeleton } from './ProfileListItemSkeleton'
+import { ExploreUsersProps } from './ExploreUsersListView'
+import { ProfileGridItem } from './ProfileGridItem'
+import { GridSkeleton } from './GridSkeleton'
+import PullToRefresh from 'react-simple-pull-to-refresh'
+import { InfiniteLoader as InfiniteLoaderLegacy } from './InfiniteLoader'
 
-const pageSize = 15;
+const pageSize = 15
 
 export const ExploreUsersGridView = ({ searchTerm }: ExploreUsersProps) => {
-  const firstPage: PageInput = { first: pageSize };
+  const firstPage: PageInput = { first: pageSize }
 
   const { data, loading, fetchMore, refetch } = useExploreUsersQuery({
     variables: { search: searchTerm, page: firstPage },
-  });
+  })
 
   if (!data || loading)
     return (
@@ -25,7 +25,7 @@ export const ExploreUsersGridView = ({ searchTerm }: ExploreUsersProps) => {
         <ProfileListItemSkeleton />
         <ProfileListItemSkeleton />
       </>
-    );
+    )
 
   const loadMore = () => {
     fetchMore({
@@ -37,36 +37,36 @@ export const ExploreUsersGridView = ({ searchTerm }: ExploreUsersProps) => {
           inclusive: false,
         },
       },
-    });
-  };
+    })
+  }
 
-  const { nodes: profiles, pageInfo } = data?.exploreUsers;
+  const { nodes: profiles, pageInfo } = data?.exploreUsers
 
-  const loadMoreItems = loading ? () => null : loadMore;
+  const loadMoreItems = loading ? () => null : loadMore
 
   return (
-    <div className='bg-gray-10 px-1 md:p-4 h-[calc(100%-96px)]'>
+    <div className="h-[calc(100%-96px)] bg-gray-10 px-1 md:p-4">
       {loading ? (
-        <div className='grid grid-cols-2 justify-center gap-2 p-4 sm:grid-cols-3 lg:grid-cols-4'>
+        <div className="grid grid-cols-2 justify-center gap-2 p-4 sm:grid-cols-3 lg:grid-cols-4">
           <GridSkeleton />
           <GridSkeleton />
           <GridSkeleton />
           <GridSkeleton />
         </div>
       ) : !profiles ? (
-        <NoResultFound type='items' />
+        <NoResultFound type="items" />
       ) : (
-        <PullToRefresh onRefresh={refetch} className='h-auto'>
-          <div className='grid grid-cols-12 grid-flow-row gap-3 mx-auto my-4 px-2'>
+        <PullToRefresh onRefresh={refetch} className="h-auto">
+          <div className="mx-auto my-4 grid grid-flow-row grid-cols-12 gap-3 px-2">
             {profiles.map(profile => (
               <ProfileGridItem key={profile.id} profile={profile} />
             ))}
           </div>
         </PullToRefresh>
       )}
-      <div className='flex justify-center'>
-        {pageInfo.hasNextPage && <InfiniteLoaderLegacy loadMore={loadMoreItems} loadingMessage='Loading Users' />}
+      <div className="flex justify-center">
+        {pageInfo.hasNextPage && <InfiniteLoaderLegacy loadMore={loadMoreItems} loadingMessage="Loading Users" />}
       </div>
     </div>
-  );
-};
+  )
+}

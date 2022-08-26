@@ -1,24 +1,24 @@
-import { ExploreTracksQuery, PageInput, TrackQuery, useExploreTracksQuery } from 'lib/graphql';
-import React, { memo, useState } from 'react';
-import { areEqual, FixedSizeList as List, ListChildComponentProps } from 'react-window';
-import AutoSizer from 'react-virtualized-auto-sizer';
-import InfiniteLoader from 'react-window-infinite-loader';
-import { NoResultFound } from './NoResultFound';
-import { TrackListItemSkeleton } from './TrackListItemSkeleton';
-import { LoaderAnimation } from './LoaderAnimation';
-import { Track } from './Track';
-import { ExploreSearchBar } from './ExploreSearchBar';
+import { ExploreTracksQuery, PageInput, TrackQuery, useExploreTracksQuery } from 'lib/graphql'
+import React, { memo, useState } from 'react'
+import { areEqual, FixedSizeList as List, ListChildComponentProps } from 'react-window'
+import AutoSizer from 'react-virtualized-auto-sizer'
+import InfiniteLoader from 'react-window-infinite-loader'
+import { NoResultFound } from './NoResultFound'
+import { TrackListItemSkeleton } from './TrackListItemSkeleton'
+import { LoaderAnimation } from './LoaderAnimation'
+import { Track } from './Track'
+import { ExploreSearchBar } from './ExploreSearchBar'
 
-const pageSize = 15;
+const pageSize = 15
 
 export const ExploreTracks = () => {
-  const firstPage: PageInput = { first: pageSize };
+  const firstPage: PageInput = { first: pageSize }
 
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState('')
 
   const { data, loading, fetchMore } = useExploreTracksQuery({
     variables: { search: searchTerm, page: firstPage },
-  });
+  })
 
   if (loading) {
     return (
@@ -27,14 +27,14 @@ export const ExploreTracks = () => {
         <TrackListItemSkeleton />
         <TrackListItemSkeleton />
       </>
-    );
+    )
   }
 
   if (!data) {
-    return <NoResultFound type="tracks" />;
+    return <NoResultFound type="tracks" />
   }
 
-  const { nodes: tracks, pageInfo } = data?.exploreTracks;
+  const { nodes: tracks, pageInfo } = data?.exploreTracks
 
   const loadMore = () => {
     fetchMore({
@@ -46,15 +46,15 @@ export const ExploreTracks = () => {
           inclusive: false,
         },
       },
-    });
-  };
+    })
+  }
 
-  const loadMoreItems = loading ? () => null : loadMore;
-  const isItemLoaded = (index: number) => !pageInfo.hasNextPage || index < tracks.length;
-  const tracksCount = pageInfo.hasNextPage ? tracks.length + 1 : tracks.length;
+  const loadMoreItems = loading ? () => null : loadMore
+  const isItemLoaded = (index: number) => !pageInfo.hasNextPage || index < tracks.length
+  const tracksCount = pageInfo.hasNextPage ? tracks.length + 1 : tracks.length
 
   return (
-    <div className="bg-gray-10 h-[calc(100%-106px)]">
+    <div className="h-[calc(100%-106px)] bg-gray-10">
       <ExploreSearchBar setSearchTerm={setSearchTerm} />
       {tracks.length ? (
         <AutoSizer>
@@ -80,16 +80,16 @@ export const ExploreTracks = () => {
         <NoResultFound type="Tracks" />
       )}
     </div>
-  );
-};
+  )
+}
 
 interface DataProps extends ListChildComponentProps<ExploreTracksQuery['exploreTracks']['nodes']> {
-  currentResult: ExploreTracksQuery['exploreTracks'];
+  currentResult: ExploreTracksQuery['exploreTracks']
 }
 
 const Data = memo(function Data({ data, index, style, currentResult }: DataProps) {
-  const { nodes: tracks, pageInfo } = currentResult;
-  const isItemLoaded = (index: number) => !pageInfo.hasNextPage || index < tracks.length;
+  const { nodes: tracks, pageInfo } = currentResult
+  const isItemLoaded = (index: number) => !pageInfo.hasNextPage || index < tracks.length
 
   return (
     <div style={style}>
@@ -99,5 +99,5 @@ const Data = memo(function Data({ data, index, style, currentResult }: DataProps
         <Track key={data[index].id} track={data[index] as TrackQuery['track']} hideBadgeAndPrice />
       )}
     </div>
-  );
-}, areEqual);
+  )
+}, areEqual)

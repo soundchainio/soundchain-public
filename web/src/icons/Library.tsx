@@ -1,8 +1,8 @@
-import { SVGGradient } from './gradients';
-import { IconProps } from './types/IconProps';
+import { SVGGradient } from './gradients'
+import { IconProps } from './types/IconProps'
 
 export const Library = ({ color, id, ...props }: IconProps) => {
-  const url = `#${id ? id : ''}${color}-gradient`;
+  const url = `#${id ? id : ''}${color}-gradient`
   return (
     <svg width={20} height={20} fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
       <rect x={1} y={5} width={18} height={14} rx={3} stroke={color ? `url(${url})` : '#505050'} strokeWidth={2} />
@@ -14,5 +14,5 @@ export const Library = ({ color, id, ...props }: IconProps) => {
       <rect x={4} y={2} width={12} height={1.5} rx={0.75} fill={color ? `url(${url})` : '#505050'} />
       <rect x={6} width={8} height={1.5} rx={0.75} fill={color ? `url(${url})` : '#505050'} />
     </svg>
-  );
-};
+  )
+}

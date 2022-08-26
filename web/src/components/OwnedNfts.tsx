@@ -1,33 +1,33 @@
-import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
-import { SortOrder, SortTrackField, useGroupedTracksQuery } from 'lib/graphql';
-import React, { useEffect } from 'react';
-import { InfiniteLoader } from './InfiniteLoader';
-import { NoResultFound } from './NoResultFound';
-import { Song, TrackListItem } from './TrackListItem';
-import { TrackListItemSkeleton } from './TrackListItemSkeleton';
+import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
+import { SortOrder, SortTrackField, useGroupedTracksQuery } from 'lib/graphql'
+import React, { useEffect } from 'react'
+import { InfiniteLoader } from './InfiniteLoader'
+import { NoResultFound } from './NoResultFound'
+import { Song, TrackListItem } from './TrackListItem'
+import { TrackListItemSkeleton } from './TrackListItemSkeleton'
 
 interface OwnedNftsProps {
-  owner: string;
-  refreshing?: boolean;
+  owner: string
+  refreshing?: boolean
 }
 
 export const OwnedNfts = ({ owner, refreshing }: OwnedNftsProps) => {
-  const { playlistState } = useAudioPlayerContext();
+  const { playlistState } = useAudioPlayerContext()
 
-  const pageSize = 10;
+  const pageSize = 10
   const { data, loading, fetchMore, refetch } = useGroupedTracksQuery({
     variables: {
       filter: { nftData: { owner } },
       sort: { field: SortTrackField.CreatedAt, order: SortOrder.Desc },
       page: { first: pageSize },
     },
-  });
+  })
 
   useEffect(() => {
     if (refreshing) {
-      refetch();
+      refetch()
     }
-  }, [refreshing, refetch]);
+  }, [refreshing, refetch])
 
   if (loading) {
     return (
@@ -36,13 +36,13 @@ export const OwnedNfts = ({ owner, refreshing }: OwnedNftsProps) => {
         <TrackListItemSkeleton />
         <TrackListItemSkeleton />
       </div>
-    );
+    )
   }
   if (!data) {
-    return <NoResultFound type="NFTs" />;
+    return <NoResultFound type="NFTs" />
   }
 
-  const { nodes, pageInfo } = data.groupedTracks;
+  const { nodes, pageInfo } = data.groupedTracks
 
   const loadMore = () => {
     fetchMore({
@@ -52,8 +52,8 @@ export const OwnedNfts = ({ owner, refreshing }: OwnedNftsProps) => {
           after: pageInfo.endCursor,
         },
       },
-    });
-  };
+    })
+  }
 
   const handleOnPlayClicked = (song: Song, index: number) => {
     const list = nodes.map(
@@ -66,9 +66,9 @@ export const OwnedNfts = ({ owner, refreshing }: OwnedNftsProps) => {
           artist: node.artist,
           isFavorite: node.isFavorite,
         } as Song),
-    );
-    playlistState(list, index);
-  };
+    )
+    playlistState(list, index)
+  }
 
   return (
     <ol className={'space-y-1'}>
@@ -89,5 +89,5 @@ export const OwnedNfts = ({ owner, refreshing }: OwnedNftsProps) => {
       ))}
       {pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading Tracks" />}
     </ol>
-  );
-};
+  )
+}

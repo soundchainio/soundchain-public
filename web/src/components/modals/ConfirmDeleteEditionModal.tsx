@@ -1,48 +1,49 @@
-import { Button } from 'components/Button';
-import { Modal } from 'components/Modal';
-import { Track as TrackComponent } from 'components/Track';
-import { TrackListItemSkeleton } from 'components/TrackListItemSkeleton';
-import { useModalDispatch, useModalState } from 'contexts/providers/modal';
+import { Button } from 'components/Button'
+import { Modal } from 'components/Modal'
+import { Track as TrackComponent } from 'components/Track'
+import { TrackListItemSkeleton } from 'components/TrackListItemSkeleton'
+import { useModalDispatch, useModalState } from 'contexts/providers/modal'
 import {
   ExploreTracksDocument,
-  ExploreTracksQuery, useDeleteTrackEditionMutation, useTrackEditionLazyQuery,
-  useTrackLazyQuery
-} from 'lib/graphql';
-import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
+  ExploreTracksQuery,
+  useDeleteTrackEditionMutation,
+  useTrackEditionLazyQuery,
+  useTrackLazyQuery,
+} from 'lib/graphql'
+import { useRouter } from 'next/router'
+import { useEffect, useState } from 'react'
+import { toast } from 'react-toastify'
 
 export const ConfirmDeleteEditionModal = () => {
-  const { showConfirmDeleteEdition, trackId, trackEditionId } = useModalState();
-  const { dispatchShowConfirmDeleteEditionModal } = useModalDispatch();
-  const [loading, setLoading] = useState(false);
-  const [getTrack, { data: trackData }] = useTrackLazyQuery();
-  const [getTrackEdition, { data, error }] = useTrackEditionLazyQuery();
+  const { showConfirmDeleteEdition, trackId, trackEditionId } = useModalState()
+  const { dispatchShowConfirmDeleteEditionModal } = useModalDispatch()
+  const [loading, setLoading] = useState(false)
+  const [getTrack, { data: trackData }] = useTrackLazyQuery()
+  const [getTrackEdition, { data, error }] = useTrackEditionLazyQuery()
 
-
-  const trackEdition = data?.trackEdition;
-  const track = trackData?.track;
+  const trackEdition = data?.trackEdition
+  const track = trackData?.track
 
   const [deleteTrackEdition] = useDeleteTrackEditionMutation({
     update: (cache, { data }) => {
       if (!data?.deleteTrackEdition) {
-        return;
+        return
       }
 
-      const deletedIds = data.deleteTrackEdition.map((deletedTrack) => {
-        const identify = cache.identify(deletedTrack);
-        cache.evict({ id: identify });
+      const deletedIds = data.deleteTrackEdition.map(deletedTrack => {
+        const identify = cache.identify(deletedTrack)
+        cache.evict({ id: identify })
 
         return deletedTrack.id
-      });
+      })
 
       const cachedData = cache.readQuery<ExploreTracksQuery>({
         query: ExploreTracksDocument,
         variables: { search: '' },
-      });
+      })
 
       if (!cachedData) {
-        return;
+        return
       }
 
       cache.writeQuery({
@@ -55,59 +56,59 @@ export const ConfirmDeleteEditionModal = () => {
             nodes: cachedData.exploreTracks.nodes.filter(({ id }) => !deletedIds.includes(id)),
           },
         },
-      });
+      })
     },
-  });
-  const [disabled, setDisabled] = useState(true);
-  const router = useRouter();
+  })
+  const [disabled, setDisabled] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
     if (showConfirmDeleteEdition && trackEditionId) {
-      getTrackEdition({ variables: { id: trackEditionId } });
+      getTrackEdition({ variables: { id: trackEditionId } })
     }
-  }, [showConfirmDeleteEdition, trackEditionId, getTrackEdition]);
+  }, [showConfirmDeleteEdition, trackEditionId, getTrackEdition])
 
   useEffect(() => {
     if (showConfirmDeleteEdition && trackId) {
-      getTrack({ variables: { id: trackId } });
+      getTrack({ variables: { id: trackId } })
     }
-  }, [showConfirmDeleteEdition, trackId, getTrack]);
+  }, [showConfirmDeleteEdition, trackId, getTrack])
 
   useEffect(() => {
     if (error) {
-      setDisabled(true);
-    } else setDisabled(false);
-  }, [error]);
+      setDisabled(true)
+    } else setDisabled(false)
+  }, [error])
 
   useEffect(() => {
     if (trackEdition?.editionId != null && trackEdition?.editionId != undefined) {
-      setDisabled(false);
+      setDisabled(false)
     }
-  }, [trackEdition]);
+  }, [trackEdition])
 
   const handleClose = () => {
-    dispatchShowConfirmDeleteEditionModal({ show: false, trackEditionId: '', trackId: '' });
-  };
+    dispatchShowConfirmDeleteEditionModal({ show: false, trackEditionId: '', trackId: '' })
+  }
 
   const handleCancel = () => {
-    handleClose();
-  };
+    handleClose()
+  }
 
   const handleDeleteOnly = () => {
     if (trackEditionId) {
-      setLoading(true);
+      setLoading(true)
       deleteTrackEdition({
         variables: { trackEditionId },
-      });
-      handleClose();
-      router.push('/wallet');
-      toast.success('Editions successfully deleted');
+      })
+      handleClose()
+      router.push('/wallet')
+      toast.success('Editions successfully deleted')
     }
-  };
+  }
 
   const handleSubmit = () => {
-    handleDeleteOnly();
-  };
+    handleDeleteOnly()
+  }
 
   return (
     <Modal
@@ -115,21 +116,21 @@ export const ConfirmDeleteEditionModal = () => {
       title="Confirm Transaction"
       onClose={handleClose}
       leftButton={
-        <button className="p-2 text-gray-400 font-bold flex-1 text-center text-sm" onClick={handleCancel}>
+        <button className="flex-1 p-2 text-center text-sm font-bold text-gray-400" onClick={handleCancel}>
           Cancel
         </button>
       }
     >
-      <div className="flex flex-col w-full h-full justify-between">
-        <div className="flex flex-col mb-auto space-y-6 h-full justify-between">
-          <div className="flex flex-col h-full justify-around">
-            <div className="px-4 text-sm text-gray-80 font-bold text-center">
-              <p className="flex flex-wrap items-end justify-center text-center py-6">
+      <div className="flex h-full w-full flex-col justify-between">
+        <div className="mb-auto flex h-full flex-col justify-between space-y-6">
+          <div className="flex h-full flex-col justify-around">
+            <div className="px-4 text-center text-sm font-bold text-gray-80">
+              <p className="flex flex-wrap items-end justify-center py-6 text-center">
                 <span className="leading-tight">Are you sure you want to delete this Edition?</span>
               </p>
               <p>This action cannot be undone.</p>
             </div>
-            <div className="flex flex-col w-full space-y-6 py-6">
+            <div className="flex w-full flex-col space-y-6 py-6">
               {track && <TrackComponent track={track} />}
               {!track && <TrackListItemSkeleton />}
             </div>
@@ -140,6 +141,6 @@ export const ConfirmDeleteEditionModal = () => {
         </Button>
       </div>
     </Modal>
-  );
-};
-export default ConfirmDeleteEditionModal;
+  )
+}
+export default ConfirmDeleteEditionModal

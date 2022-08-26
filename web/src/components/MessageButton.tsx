@@ -1,23 +1,23 @@
-import { Button } from 'components/Button';
-import { useMe } from 'hooks/useMe';
-import { Mail } from 'icons/Mail';
-import { useRouter } from 'next/router';
+import { Button } from 'components/Button'
+import { useMe } from 'hooks/useMe'
+import { Mail } from 'icons/Mail'
+import { useRouter } from 'next/router'
 
 interface MessageButtonProps {
-  profileId: string;
+  profileId: string
 }
 
 export const MessageButton = ({ profileId }: MessageButtonProps) => {
-  const router = useRouter();
-  const me = useMe();
+  const router = useRouter()
+  const me = useMe()
 
   if (!me || me?.profile.id === profileId) {
-    return null;
+    return null
   }
 
   const handleClick = () => {
-    return router.push(`/messages/${profileId}`);
-  };
+    return router.push(`/messages/${profileId}`)
+  }
 
   return (
     <div className="h-8">
@@ -32,5 +32,5 @@ export const MessageButton = ({ profileId }: MessageButtonProps) => {
         Message
       </Button>
     </div>
-  );
-};
+  )
+}

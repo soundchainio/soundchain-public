@@ -10,5 +10,5 @@ export const Binance = (props: React.SVGProps<SVGSVGElement>) => {
         ></path>
       </g>
     </svg>
-  );
-};
+  )
+}

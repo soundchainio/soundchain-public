@@ -1,8 +1,8 @@
-import { Subtitle } from 'components/Subtitle';
+import { Subtitle } from 'components/Subtitle'
 
 interface DescriptionProps {
-  description: string;
-  className?: string;
+  description: string
+  className?: string
 }
 
 export const Description = ({ description, className }: DescriptionProps) => {
@@ -13,5 +13,5 @@ export const Description = ({ description, className }: DescriptionProps) => {
       </Subtitle>
       <p className="py-2 text-xs font-medium text-gray-80">{description}</p>
     </div>
-  );
-};
+  )
+}

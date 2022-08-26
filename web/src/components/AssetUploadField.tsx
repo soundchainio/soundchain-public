@@ -1,8 +1,8 @@
-import { Field, FieldProps } from 'formik';
-import { AssetUpload, AssetUploadProps } from './AssetUpload';
+import { Field, FieldProps } from 'formik'
+import { AssetUpload, AssetUploadProps } from './AssetUpload'
 
 export interface AssetUploadFieldProps extends Omit<AssetUploadProps, 'value' | 'onChange'> {
-  name: string;
+  name: string
 }
 
 export function AssetUploadField({ name, ...rest }: AssetUploadFieldProps) {
@@ -13,5 +13,5 @@ export function AssetUploadField({ name, ...rest }: AssetUploadFieldProps) {
         <AssetUpload value={value} onChange={onChange(name)} {...rest} />
       )}
     />
-  );
+  )
 }

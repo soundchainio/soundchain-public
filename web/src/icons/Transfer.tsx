@@ -19,5 +19,5 @@ export const Transfer = (props: React.SVGProps<SVGSVGElement>) => {
         </linearGradient>
       </defs>
     </svg>
-  );
-};
+  )
+}

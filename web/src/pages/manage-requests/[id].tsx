@@ -1,17 +1,17 @@
-import { Avatar } from 'components/Avatar';
-import { Button } from 'components/Button';
-import { Delete as DeleteButton } from 'components/Buttons/Delete';
-import { CurrentRequestStatus } from 'components/CurrentRequestStatus';
-import { DenyReasonModal } from 'components/DenyReasonModal';
-import { DisplayName } from 'components/DisplayName';
-import SEO from 'components/SEO';
-import { TopNavBarProps } from 'components/TopNavBar';
-import { useLayoutContext } from 'hooks/useLayoutContext';
-import { useMe } from 'hooks/useMe';
-import { Bandcamp } from 'icons/Bandcamp';
-import { Soundcloud } from 'icons/Soundcloud';
-import { Youtube } from 'icons/Youtube';
-import { cacheFor } from 'lib/apollo';
+import { Avatar } from 'components/Avatar'
+import { Button } from 'components/Button'
+import { Delete as DeleteButton } from 'components/Buttons/Delete'
+import { CurrentRequestStatus } from 'components/CurrentRequestStatus'
+import { DenyReasonModal } from 'components/DenyReasonModal'
+import { DisplayName } from 'components/DisplayName'
+import SEO from 'components/SEO'
+import { TopNavBarProps } from 'components/TopNavBar'
+import { useLayoutContext } from 'hooks/useLayoutContext'
+import { useMe } from 'hooks/useMe'
+import { Bandcamp } from 'icons/Bandcamp'
+import { Soundcloud } from 'icons/Soundcloud'
+import { Youtube } from 'icons/Youtube'
+import { cacheFor } from 'lib/apollo'
 import {
   ProfileVerificationRequest,
   ProfileVerificationRequestDocument,
@@ -19,70 +19,70 @@ import {
   Role,
   useProfileQuery,
   useUpdateProfileVerificationRequestMutation,
-} from 'lib/graphql';
-import { protectPage } from 'lib/protectPage';
-import NextLink from 'next/link';
-import { useRouter } from 'next/router';
-import { ParsedUrlQuery } from 'querystring';
-import { useEffect, useState } from 'react';
-import { ManageRequestTab } from 'types/ManageRequestTabType';
+} from 'lib/graphql'
+import { protectPage } from 'lib/protectPage'
+import NextLink from 'next/link'
+import { useRouter } from 'next/router'
+import { ParsedUrlQuery } from 'querystring'
+import { useEffect, useState } from 'react'
+import { ManageRequestTab } from 'types/ManageRequestTabType'
 
 export interface RequestPageProps {
-  data: ProfileVerificationRequest;
+  data: ProfileVerificationRequest
 }
 
 interface RequestPageParams extends ParsedUrlQuery {
-  id: string;
+  id: string
 }
 
 export const getServerSideProps = protectPage<RequestPageProps, RequestPageParams>(async (context, apolloClient) => {
-  const requestId = context.params?.id;
+  const requestId = context.params?.id
 
   if (!requestId) {
-    return { notFound: true };
+    return { notFound: true }
   }
 
   const { data, error } = await apolloClient.query({
     query: ProfileVerificationRequestDocument,
     variables: { id: requestId },
     context,
-  });
+  })
 
-  if (!context.user?.roles.includes(Role.Admin)) return { notFound: true };
+  if (!context.user?.roles.includes(Role.Admin)) return { notFound: true }
 
   if (error) {
-    return { notFound: true };
+    return { notFound: true }
   }
 
-  return cacheFor(RequestPage, { data: data.profileVerificationRequest }, context, apolloClient);
-});
+  return cacheFor(RequestPage, { data: data.profileVerificationRequest }, context, apolloClient)
+})
 
 const topNavBarProps: TopNavBarProps = {
   title: 'Verification Request',
-};
+}
 
 export default function RequestPage({ data }: RequestPageProps) {
-  const [showReason, setShowReason] = useState<boolean>(false);
-  const { data: profile } = useProfileQuery({ variables: { id: data.profileId } });
+  const [showReason, setShowReason] = useState<boolean>(false)
+  const { data: profile } = useProfileQuery({ variables: { id: data.profileId } })
   const [updateRequestVerification] = useUpdateProfileVerificationRequestMutation({
     fetchPolicy: 'network-only',
     refetchQueries: [ProfileVerificationRequestsDocument],
-  });
-  const me = useMe();
-  const router = useRouter();
-  const { setTopNavBarProps } = useLayoutContext();
+  })
+  const me = useMe()
+  const router = useRouter()
+  const { setTopNavBarProps } = useLayoutContext()
 
   useEffect(() => {
-    setTopNavBarProps(topNavBarProps);
-  }, [setTopNavBarProps]);
+    setTopNavBarProps(topNavBarProps)
+  }, [setTopNavBarProps])
 
-  if (!profile) return null;
+  if (!profile) return null
 
   const sourceList = [
     { name: 'SoundCloud', fieldName: 'soundcloud', icon: <Soundcloud className="h-7 w-7" />, link: data.soundcloud },
     { name: 'YouTube', fieldName: 'youtube', icon: <Youtube className="h-7 w-7" />, link: data.youtube },
     { name: 'BandCamp', fieldName: 'bandcamp', icon: <Bandcamp className="h-6 scale-50" />, link: data.bandcamp },
-  ];
+  ]
 
   const handleApprove = async () => {
     await updateRequestVerification({
@@ -93,13 +93,13 @@ export default function RequestPage({ data }: RequestPageProps) {
           status: ManageRequestTab.APPROVED,
         },
       },
-    });
-    router.push('/manage-requests');
-  };
+    })
+    router.push('/manage-requests')
+  }
 
   const handleDeny = () => {
-    setShowReason(true);
-  };
+    setShowReason(true)
+  }
 
   return (
     <>
@@ -154,17 +154,17 @@ export default function RequestPage({ data }: RequestPageProps) {
       </div>
       <DenyReasonModal showReason={showReason} setShowReason={setShowReason} requestId={data.id} />
     </>
-  );
+  )
 }
 
 const normalizeURL = (url: string | undefined | null) => {
   if (!url) {
-    return '';
+    return ''
   }
 
   if (url.startsWith('http://') || url.startsWith('https://')) {
-    return url;
+    return url
   }
 
-  return `https://${url}`;
-};
+  return `https://${url}`
+}

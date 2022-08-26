@@ -1,41 +1,39 @@
-import classNames from 'classnames';
-import { InfiniteLoader } from 'components/InfiniteLoader';
-import { SortTrackInput, Track, TrackQuery, useFavoriteTracksQuery } from 'lib/graphql';
-import React, { useEffect } from 'react';
-import PullToRefresh from 'react-simple-pull-to-refresh';
-import { NoResultFound } from './NoResultFound';
-import { TrackListItemSkeleton } from './TrackListItemSkeleton';
-import { GridView } from './GridView';
-import { SelectToApolloQuery, SortListingItem } from '../lib/apollo/sorting';
-import { Track as TrackItem } from 'components/Track';
-
+import classNames from 'classnames'
+import { InfiniteLoader } from 'components/InfiniteLoader'
+import { SortTrackInput, Track, TrackQuery, useFavoriteTracksQuery } from 'lib/graphql'
+import React, { useEffect } from 'react'
+import PullToRefresh from 'react-simple-pull-to-refresh'
+import { NoResultFound } from './NoResultFound'
+import { TrackListItemSkeleton } from './TrackListItemSkeleton'
+import { GridView } from './GridView'
+import { SelectToApolloQuery, SortListingItem } from '../lib/apollo/sorting'
+import { Track as TrackItem } from 'components/Track'
 
 interface FavoriteTracksProps {
-  searchTerm?: string;
-  isGrid?: boolean;
-  sorting: SortListingItem;
+  searchTerm?: string
+  isGrid?: boolean
+  sorting: SortListingItem
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 type Song = {
-  src: string;
-  title?: string | null;
-  trackId: string;
-  artist?: string | null;
-  art?: string | null;
-};
+  src: string
+  title?: string | null
+  trackId: string
+  artist?: string | null
+  art?: string | null
+}
 
-const pageSize = 15;
+const pageSize = 15
 
 export const FavoriteTracks = ({ searchTerm, isGrid, sorting }: FavoriteTracksProps) => {
-
   const { data, loading, fetchMore, refetch } = useFavoriteTracksQuery({
     variables: {
       search: searchTerm,
       sort: SelectToApolloQuery[sorting] as unknown as SortTrackInput,
       page: { first: pageSize },
     },
-  });
+  })
 
   useEffect(() => {
     refetch({
@@ -43,9 +41,8 @@ export const FavoriteTracks = ({ searchTerm, isGrid, sorting }: FavoriteTracksPr
         first: pageSize,
       },
       sort: SelectToApolloQuery[sorting] as unknown as SortTrackInput,
-    });
-  }, [ refetch, pageSize, sorting]);
-
+    })
+  }, [refetch, pageSize, sorting])
 
   const loadMore = () => {
     fetchMore({
@@ -57,8 +54,8 @@ export const FavoriteTracks = ({ searchTerm, isGrid, sorting }: FavoriteTracksPr
           after: pageInfo.endCursor,
         },
       },
-    });
-  };
+    })
+  }
 
   if (loading || !data) {
     return (
@@ -67,10 +64,10 @@ export const FavoriteTracks = ({ searchTerm, isGrid, sorting }: FavoriteTracksPr
         <TrackListItemSkeleton />
         <TrackListItemSkeleton />
       </div>
-    );
+    )
   }
 
-  const { nodes, pageInfo } = data.favoriteTracks;
+  const { nodes, pageInfo } = data.favoriteTracks
 
   return (
     <>
@@ -83,15 +80,10 @@ export const FavoriteTracks = ({ searchTerm, isGrid, sorting }: FavoriteTracksPr
           refetch={refetch}
         />
       ) : (
-        <PullToRefresh onRefresh={refetch} className='h-auto'>
-
+        <PullToRefresh onRefresh={refetch} className="h-auto">
           <ol className={classNames('space-y-1')}>
-            {nodes.map((song) => (
-              <TrackItem
-                hideBadgeAndPrice={true}
-                key={song.id}
-                track={song as TrackQuery['track']}
-              />
+            {nodes.map(song => (
+              <TrackItem hideBadgeAndPrice={true} key={song.id} track={song as TrackQuery['track']} />
             ))}
             {/*{nodes.map((song, index) => (
               <TrackListItem
@@ -109,11 +101,11 @@ export const FavoriteTracks = ({ searchTerm, isGrid, sorting }: FavoriteTracksPr
                 handleOnPlayClicked={song => handleOnPlayClicked(song, index)}
               />
             ))}*/}
-            {nodes.length === 0 && !loading && <NoResultFound type='Favorite Tracks' />}
-            {pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage='Loading favorite tracks' />}
+            {nodes.length === 0 && !loading && <NoResultFound type="Favorite Tracks" />}
+            {pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading favorite tracks" />}
           </ol>
         </PullToRefresh>
       )}
     </>
-  );
-};
+  )
+}

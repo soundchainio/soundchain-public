@@ -1,26 +1,26 @@
 /* eslint-disable react/display-name */
-import { ProfileListItem } from 'components/ProfileListItem';
-import { PageInput, useExploreUsersQuery } from 'lib/graphql';
-import { memo } from 'react';
-import AutoSizer from 'react-virtualized-auto-sizer';
-import { areEqual, FixedSizeList as List } from 'react-window';
-import InfiniteLoader from 'react-window-infinite-loader';
-import { LoaderAnimation } from './LoaderAnimation';
-import { NoResultFound } from './NoResultFound';
-import { ProfileListItemSkeleton } from './ProfileListItemSkeleton';
+import { ProfileListItem } from 'components/ProfileListItem'
+import { PageInput, useExploreUsersQuery } from 'lib/graphql'
+import { memo } from 'react'
+import AutoSizer from 'react-virtualized-auto-sizer'
+import { areEqual, FixedSizeList as List } from 'react-window'
+import InfiniteLoader from 'react-window-infinite-loader'
+import { LoaderAnimation } from './LoaderAnimation'
+import { NoResultFound } from './NoResultFound'
+import { ProfileListItemSkeleton } from './ProfileListItemSkeleton'
 
-const pageSize = 15;
+const pageSize = 15
 
 export interface ExploreUsersProps {
-  searchTerm: string;
+  searchTerm: string
 }
 
 export const ExploreUsersListView = ({ searchTerm }: ExploreUsersProps) => {
-  const firstPage: PageInput = { first: pageSize };
+  const firstPage: PageInput = { first: pageSize }
 
   const { data, loading, fetchMore } = useExploreUsersQuery({
     variables: { search: searchTerm, page: firstPage },
-  });
+  })
 
   if (!data || loading)
     return (
@@ -29,7 +29,7 @@ export const ExploreUsersListView = ({ searchTerm }: ExploreUsersProps) => {
         <ProfileListItemSkeleton />
         <ProfileListItemSkeleton />
       </>
-    );
+    )
 
   const loadMore = () => {
     fetchMore({
@@ -41,14 +41,14 @@ export const ExploreUsersListView = ({ searchTerm }: ExploreUsersProps) => {
           inclusive: false,
         },
       },
-    });
-  };
+    })
+  }
 
-  const { nodes: profiles, pageInfo } = data?.exploreUsers;
+  const { nodes: profiles, pageInfo } = data?.exploreUsers
 
-  const loadMoreItems = loading ? () => null : loadMore;
-  const isItemLoaded = (index: number) => !pageInfo.hasNextPage || index < profiles.length;
-  const usersCount = pageInfo.hasNextPage ? profiles.length + 1 : profiles.length;
+  const loadMoreItems = loading ? () => null : loadMore
+  const isItemLoaded = (index: number) => !pageInfo.hasNextPage || index < profiles.length
+  const usersCount = pageInfo.hasNextPage ? profiles.length + 1 : profiles.length
 
   return (
     <div className="h-[calc(100%-96px)] bg-gray-10 px-1 md:p-4">
@@ -88,5 +88,5 @@ export const ExploreUsersListView = ({ searchTerm }: ExploreUsersProps) => {
         <NoResultFound type="Users" />
       )}
     </div>
-  );
-};
+  )
+}

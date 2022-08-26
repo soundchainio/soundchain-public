@@ -1,6 +1,6 @@
 export const Google = (props: React.SVGProps<SVGSVGElement>) => {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 48 48" {...props} >
+    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 48 48" {...props}>
       <defs>
         <path
           id="a"
@@ -15,5 +15,5 @@ export const Google = (props: React.SVGProps<SVGSVGElement>) => {
       <path clipPath="url(#b)" fill="#34A853" d="M0 37l30-23 7.9 1L48 0v48H0z" />
       <path clipPath="url(#b)" fill="#4285F4" d="M48 48L17 24l-4-3 35-10z" />
     </svg>
-  );
-};
+  )
+}

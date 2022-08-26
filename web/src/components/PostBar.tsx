@@ -1,21 +1,21 @@
-import { MusicNoteIcon, VideoCameraIcon } from '@heroicons/react/outline';
-import { BaseEmoji, Picker } from 'emoji-mart';
-import { useState } from 'react';
-import { PostLinkType } from 'types/PostLinkType';
-import { LinksModal } from './LinksModal';
-import { FormValues } from './PostForm';
-import { getBodyCharacterCount, maxLength } from './PostModal';
+import { MusicNoteIcon, VideoCameraIcon } from '@heroicons/react/outline'
+import { BaseEmoji, Picker } from 'emoji-mart'
+import { useState } from 'react'
+import { PostLinkType } from 'types/PostLinkType'
+import { LinksModal } from './LinksModal'
+import { FormValues } from './PostForm'
+import { getBodyCharacterCount, maxLength } from './PostModal'
 
 interface PostBarProps {
-  onEmojiPickerClick: () => void;
-  isEmojiPickerVisible: boolean;
-  isRepost: boolean;
-  showNewPost: boolean;
-  setOriginalLink: (val: string) => void;
-  setFieldValue: (field: string, value: string) => void;
-  values: FormValues;
-  postLink: string;
-  setPostLink: (val: string) => void;
+  onEmojiPickerClick: () => void
+  isEmojiPickerVisible: boolean
+  isRepost: boolean
+  showNewPost: boolean
+  setOriginalLink: (val: string) => void
+  setFieldValue: (field: string, value: string) => void
+  values: FormValues
+  postLink: string
+  setPostLink: (val: string) => void
 }
 
 export const PostBar = ({
@@ -29,9 +29,9 @@ export const PostBar = ({
   postLink,
   setPostLink,
 }: PostBarProps) => {
-  const [showAddMusicLink, setShowAddMusicLink] = useState(false);
-  const [showAddVideoLink, setShowAddVideoLink] = useState(false);
-  const charCounter = `${getBodyCharacterCount(values.body)} / ${maxLength}`;
+  const [showAddMusicLink, setShowAddMusicLink] = useState(false)
+  const [showAddVideoLink, setShowAddVideoLink] = useState(false)
+  const charCounter = `${getBodyCharacterCount(values.body)} / ${maxLength}`
 
   const handleSelectEmoji = (
     emoji: BaseEmoji,
@@ -39,38 +39,38 @@ export const PostBar = ({
     setFieldValue: (val: string, newVal: string) => void,
   ) => {
     if (getBodyCharacterCount(values.body) < maxLength) {
-      setFieldValue('body', `${values.body}${emoji.native}`);
+      setFieldValue('body', `${values.body}${emoji.native}`)
     }
-  };
+  }
 
   const onAddMusicClick = () => {
-    setShowAddMusicLink(!showAddMusicLink);
-  };
+    setShowAddMusicLink(!showAddMusicLink)
+  }
 
   const onAddVideoClick = () => {
-    setShowAddVideoLink(!showAddVideoLink);
-  };
+    setShowAddVideoLink(!showAddVideoLink)
+  }
 
   return (
-    <div className="p-4 flex items-center bg-gray-15">
-      <div className="text-center w-16 cursor-pointer" onClick={onEmojiPickerClick}>
+    <div className="flex items-center bg-gray-15 p-4">
+      <div className="w-16 cursor-pointer text-center" onClick={onEmojiPickerClick}>
         {isEmojiPickerVisible ? '❌' : '😃'}
       </div>
       {!isRepost && (
         <>
           <button
-            className="text-center w-16 cursor-pointer"
+            className="w-16 cursor-pointer text-center"
             aria-label="Embed a song to your post"
             onClick={onAddMusicClick}
           >
-            <MusicNoteIcon className="text-gray-400 w-5 m-auto" />
+            <MusicNoteIcon className="m-auto w-5 text-gray-400" />
           </button>
           <button
-            className="text-center w-16 cursor-pointer"
+            className="w-16 cursor-pointer text-center"
             aria-label="Embed a video to your post"
             onClick={onAddVideoClick}
           >
-            <VideoCameraIcon className="text-gray-400 w-5 m-auto" />
+            <VideoCameraIcon className="m-auto w-5 text-gray-400" />
           </button>
         </>
       )}
@@ -96,12 +96,12 @@ export const PostBar = ({
           />
         </>
       )}
-      <div className="justify-self-end flex-1 text-right text-gray-400">{charCounter}</div>
+      <div className="flex-1 justify-self-end text-right text-gray-400">{charCounter}</div>
       {isEmojiPickerVisible && (
         <div className="fixed left-16 bottom-0">
           <Picker theme="dark" perLine={8} onSelect={(e: BaseEmoji) => handleSelectEmoji(e, values, setFieldValue)} />
         </div>
       )}
     </div>
-  );
-};
+  )
+}

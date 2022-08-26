@@ -1,34 +1,34 @@
-import { VolumeOffIcon, VolumeUpIcon } from '@heroicons/react/solid';
-import Slider from '@reach/slider';
-import Asset from 'components/Asset';
-import { Modal } from 'components/Modal';
-import { TrackListItem } from 'components/TrackListItem';
-import { TrackShareButton } from 'components/TrackShareButton';
-import { useModalDispatch, useModalState } from 'contexts/providers/modal';
-import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
-import { useMe } from 'hooks/useMe';
-import { DownArrow } from 'icons/DownArrow';
-import { Forward } from 'icons/ForwardButton';
-import { HeartBorder } from 'icons/HeartBorder';
-import { HeartFull } from 'icons/HeartFull';
-import { Info } from 'icons/Info';
-import { Pause } from 'icons/PauseBottomAudioPlayer';
-import { Play } from 'icons/PlayBottomAudioPlayer';
-import { Playlists } from 'icons/Playlists';
-import { Rewind } from 'icons/RewindButton';
-import { Shuffle } from 'icons/Shuffle';
-import { TrackDocument, useToggleFavoriteMutation } from 'lib/graphql';
-import NextLink from 'next/link';
-import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
-import { remainingTime, timeFromSecs } from 'utils/calculateTime';
-import { checkIsMobile } from 'utils/IsMobile';
+import { VolumeOffIcon, VolumeUpIcon } from '@heroicons/react/solid'
+import Slider from '@reach/slider'
+import Asset from 'components/Asset'
+import { Modal } from 'components/Modal'
+import { TrackListItem } from 'components/TrackListItem'
+import { TrackShareButton } from 'components/TrackShareButton'
+import { useModalDispatch, useModalState } from 'contexts/providers/modal'
+import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
+import { useMe } from 'hooks/useMe'
+import { DownArrow } from 'icons/DownArrow'
+import { Forward } from 'icons/ForwardButton'
+import { HeartBorder } from 'icons/HeartBorder'
+import { HeartFull } from 'icons/HeartFull'
+import { Info } from 'icons/Info'
+import { Pause } from 'icons/PauseBottomAudioPlayer'
+import { Play } from 'icons/PlayBottomAudioPlayer'
+import { Playlists } from 'icons/Playlists'
+import { Rewind } from 'icons/RewindButton'
+import { Shuffle } from 'icons/Shuffle'
+import { TrackDocument, useToggleFavoriteMutation } from 'lib/graphql'
+import NextLink from 'next/link'
+import { useRouter } from 'next/router'
+import { useEffect, useState } from 'react'
+import { remainingTime, timeFromSecs } from 'utils/calculateTime'
+import { checkIsMobile } from 'utils/IsMobile'
 
 export const AudioPlayerModal = () => {
-  const router = useRouter();
-  const modalState = useModalState();
-  const [toggleFavorite] = useToggleFavoriteMutation();
-  const { dispatchShowAudioPlayerModal } = useModalDispatch();
+  const router = useRouter()
+  const modalState = useModalState()
+  const [toggleFavorite] = useToggleFavoriteMutation()
+  const { dispatchShowAudioPlayerModal } = useModalDispatch()
   const {
     currentSong,
     isPlaying,
@@ -45,47 +45,47 @@ export const AudioPlayerModal = () => {
     playNext,
     jumpTo,
     toggleShuffle,
-  } = useAudioPlayerContext();
-  const [showTotalPlaybackDuration, setShowTotalPlaybackDuration] = useState(true);
-  const [isFavorite, setIsFavorite] = useState(currentSong.isFavorite);
-  const [isPlaylistOpen, setIsPlaylistOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(true);
-  const me = useMe();
+  } = useAudioPlayerContext()
+  const [showTotalPlaybackDuration, setShowTotalPlaybackDuration] = useState(true)
+  const [isFavorite, setIsFavorite] = useState(currentSong.isFavorite)
+  const [isPlaylistOpen, setIsPlaylistOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(true)
+  const me = useMe()
 
-  const isOpen = modalState.showAudioPlayer;
+  const isOpen = modalState.showAudioPlayer
 
   const handleClose = () => {
-    dispatchShowAudioPlayerModal(false);
-  };
+    dispatchShowAudioPlayerModal(false)
+  }
 
   const onSliderChange = (value: number) => {
-    setProgressStateFromSlider(value);
-  };
+    setProgressStateFromSlider(value)
+  }
 
   const onPlaybackDurationClick = () => {
-    setShowTotalPlaybackDuration(!showTotalPlaybackDuration);
-  };
+    setShowTotalPlaybackDuration(!showTotalPlaybackDuration)
+  }
 
   const handleFavorite = async () => {
     if (me?.profile.id) {
-      await toggleFavorite({ variables: { trackId: currentSong.trackId }, refetchQueries: [TrackDocument] });
-      setIsFavorite(!isFavorite);
+      await toggleFavorite({ variables: { trackId: currentSong.trackId }, refetchQueries: [TrackDocument] })
+      setIsFavorite(!isFavorite)
     } else {
-      router.push('/login');
+      router.push('/login')
     }
-  };
+  }
 
   useEffect(() => {
-    handleClose();
-  }, [router.asPath]);
+    handleClose()
+  }, [router.asPath])
 
   useEffect(() => {
-    setIsFavorite(currentSong.isFavorite);
-  }, [currentSong]);
+    setIsFavorite(currentSong.isFavorite)
+  }, [currentSong])
 
   useEffect(() => {
-    setIsMobile(checkIsMobile);
-  }, []);
+    setIsMobile(checkIsMobile)
+  }, [])
 
   return (
     <Modal
@@ -230,7 +230,7 @@ export const AudioPlayerModal = () => {
         </div>
       </div>
     </Modal>
-  );
-};
+  )
+}
 
-export default AudioPlayerModal;
+export default AudioPlayerModal

@@ -6,5 +6,5 @@ export const Moonpay = (props: React.SVGProps<SVGSVGElement>) => {
         fill="#fff"
       />
     </svg>
-  );
-};
+  )
+}

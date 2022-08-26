@@ -1,26 +1,26 @@
-import classNames from 'classnames';
-import { ImageUploadField } from 'components/ImageUploadField';
-import { Form, Formik } from 'formik';
-import { useMe } from 'hooks/useMe';
-import { useUpdateProfilePictureMutation } from 'lib/graphql';
-import Image from 'next/image';
-import { useCallback, useEffect, useState } from 'react';
-import * as yup from 'yup';
-import { Button, ButtonProps } from '../../Button';
-import { Label } from '../../Label';
+import classNames from 'classnames'
+import { ImageUploadField } from 'components/ImageUploadField'
+import { Form, Formik } from 'formik'
+import { useMe } from 'hooks/useMe'
+import { useUpdateProfilePictureMutation } from 'lib/graphql'
+import Image from 'next/image'
+import { useCallback, useEffect, useState } from 'react'
+import * as yup from 'yup'
+import { Button, ButtonProps } from '../../Button'
+import { Label } from '../../Label'
 
 interface FormValues {
-  profilePicture?: string | undefined;
+  profilePicture?: string | undefined
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   profilePicture: yup.string(),
-});
+})
 
 interface ProfilePictureFormProps {
-  afterSubmit: () => void;
-  submitProps?: ButtonProps;
-  submitText: string;
+  afterSubmit: () => void
+  submitProps?: ButtonProps
+  submitText: string
 }
 
 const defaultProfilePictures = [
@@ -32,31 +32,31 @@ const defaultProfilePictures = [
   '/default-pictures/profile/blue.png',
   '/default-pictures/profile/purple.png',
   '/default-pictures/profile/pink.png',
-];
+]
 
 export const ProfilePictureForm = ({ afterSubmit, submitText, submitProps }: ProfilePictureFormProps) => {
-  const me = useMe();
-  const [defaultPicture, setDefaultPicture] = useState<string | null>(null);
-  const [updateProfilePicture] = useUpdateProfilePictureMutation();
-  const [loading, setLoading] = useState(false);
+  const me = useMe()
+  const [defaultPicture, setDefaultPicture] = useState<string | null>(null)
+  const [updateProfilePicture] = useUpdateProfilePictureMutation()
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    const picture = me?.profile.profilePicture;
+    const picture = me?.profile.profilePicture
 
     if (picture && defaultProfilePictures.includes(picture)) {
-      setDefaultPicture(picture);
+      setDefaultPicture(picture)
     }
-  }, [me?.profile.profilePicture]);
+  }, [me?.profile.profilePicture])
 
   const onUpload = useCallback(uploading => {
-    setLoading(uploading);
-  }, []);
+    setLoading(uploading)
+  }, [])
 
-  if (!me) return null;
+  if (!me) return null
 
   const initialFormValues: FormValues = {
     profilePicture: '',
-  };
+  }
 
   const onSubmit = async ({ profilePicture }: FormValues) => {
     await updateProfilePicture({
@@ -65,10 +65,10 @@ export const ProfilePictureForm = ({ afterSubmit, submitText, submitProps }: Pro
           profilePicture: profilePicture || defaultPicture,
         },
       },
-    });
+    })
 
-    afterSubmit();
-  };
+    afterSubmit()
+  }
 
   return (
     <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={onSubmit}>
@@ -84,7 +84,7 @@ export const ProfilePictureForm = ({ afterSubmit, submitText, submitProps }: Pro
               ) : (
                 <ImageUploadField
                   name="profilePicture"
-                  className={`${loading || profilePicture ? 'self-center w-24 h-24' : ''} cursor-pointer mt-8`}
+                  className={`${loading || profilePicture ? 'h-24 w-24 self-center' : ''} mt-8 cursor-pointer`}
                   onUpload={onUpload}
                   rounded="rounded-full"
                 >
@@ -99,7 +99,7 @@ export const ProfilePictureForm = ({ afterSubmit, submitText, submitProps }: Pro
                   <button
                     key={picture}
                     className={classNames(
-                      'flex justify-center justify-self-center rounded-full w-[60px] h-[60px]',
+                      'flex h-[60px] w-[60px] justify-center justify-self-center rounded-full',
                       defaultPicture === picture && 'ring-4 ring-white',
                     )}
                     onClick={() => setDefaultPicture(picture)}
@@ -118,5 +118,5 @@ export const ProfilePictureForm = ({ afterSubmit, submitText, submitProps }: Pro
         </Form>
       )}
     </Formik>
-  );
-};
+  )
+}
