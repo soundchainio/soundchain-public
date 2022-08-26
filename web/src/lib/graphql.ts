@@ -1,510 +1,509 @@
-import { gql } from '@apollo/client';
-import * as Apollo from '@apollo/client';
-export type Maybe<T> = T | null;
-export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
-const defaultOptions =  {}
+import { gql } from '@apollo/client'
+import * as Apollo from '@apollo/client'
+export type Maybe<T> = T | null
+export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] }
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> }
+export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> }
+const defaultOptions = {}
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: string;
-  String: string;
-  Boolean: boolean;
-  Int: number;
-  Float: number;
+  ID: string
+  String: string
+  Boolean: boolean
+  Int: number
+  Float: number
   /** The javascript `Date` as string. Type represents date and time as the ISO Date string. */
-  DateTime: string;
+  DateTime: string
   /** The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf). */
-  JSON: unknown;
-};
+  JSON: unknown
+}
 
 export type AddCommentInput = {
-  postId: Scalars['String'];
-  body: Scalars['String'];
-};
+  postId: Scalars['String']
+  body: Scalars['String']
+}
 
 export type AddCommentPayload = {
-  __typename?: 'AddCommentPayload';
-  comment: Comment;
-};
+  __typename?: 'AddCommentPayload'
+  comment: Comment
+}
 
 export type AuctionEndedNotification = {
-  __typename?: 'AuctionEndedNotification';
-  type: NotificationType;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  id: Scalars['String'];
-  trackId: Scalars['String'];
-  trackName: Scalars['String'];
-  artist: Scalars['String'];
-  artworkUrl: Scalars['String'];
-  price: Scalars['Float'];
-  auctionId: Scalars['String'];
-};
+  __typename?: 'AuctionEndedNotification'
+  type: NotificationType
+  createdAt: Scalars['DateTime']
+  updatedAt: Scalars['DateTime']
+  id: Scalars['String']
+  trackId: Scalars['String']
+  trackName: Scalars['String']
+  artist: Scalars['String']
+  artworkUrl: Scalars['String']
+  price: Scalars['Float']
+  auctionId: Scalars['String']
+}
 
 export type AuctionIsEndingNotification = {
-  __typename?: 'AuctionIsEndingNotification';
-  type: NotificationType;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  id: Scalars['String'];
-  trackId: Scalars['String'];
-  trackName: Scalars['String'];
-  artist: Scalars['String'];
-  artworkUrl: Scalars['String'];
-  price: Scalars['Float'];
-  auctionId: Scalars['String'];
-};
+  __typename?: 'AuctionIsEndingNotification'
+  type: NotificationType
+  createdAt: Scalars['DateTime']
+  updatedAt: Scalars['DateTime']
+  id: Scalars['String']
+  trackId: Scalars['String']
+  trackName: Scalars['String']
+  artist: Scalars['String']
+  artworkUrl: Scalars['String']
+  price: Scalars['Float']
+  auctionId: Scalars['String']
+}
 
 export type AuctionItem = {
-  __typename?: 'AuctionItem';
-  id: Scalars['ID'];
-  owner: Scalars['String'];
-  nft: Scalars['String'];
-  tokenId: Scalars['Float'];
-  startingTime: Scalars['Float'];
-  endingTime: Scalars['Float'];
-  reservePrice: Scalars['String'];
-  reservePriceToShow: Scalars['Float'];
-  isPaymentOGUN: Scalars['Boolean'];
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  valid: Scalars['Boolean'];
-  highestBid: Scalars['String'];
-  highestBidToShow: Scalars['Float'];
-};
+  __typename?: 'AuctionItem'
+  id: Scalars['ID']
+  owner: Scalars['String']
+  nft: Scalars['String']
+  tokenId: Scalars['Float']
+  startingTime: Scalars['Float']
+  endingTime: Scalars['Float']
+  reservePrice: Scalars['String']
+  reservePriceToShow: Scalars['Float']
+  isPaymentOGUN: Scalars['Boolean']
+  createdAt: Scalars['DateTime']
+  updatedAt: Scalars['DateTime']
+  valid: Scalars['Boolean']
+  highestBid: Scalars['String']
+  highestBidToShow: Scalars['Float']
+}
 
 export type AuctionItemPayload = {
-  __typename?: 'AuctionItemPayload';
-  auctionItem: Maybe<AuctionItem>;
-};
+  __typename?: 'AuctionItemPayload'
+  auctionItem: Maybe<AuctionItem>
+}
 
 export type AudioHolder = {
-  __typename?: 'AudioHolder';
-  id: Scalars['ID'];
-  walletAddress: Scalars['String'];
-  amount: Scalars['String'];
-  ogunClaimed: Maybe<Scalars['Boolean']>;
-};
+  __typename?: 'AudioHolder'
+  id: Scalars['ID']
+  walletAddress: Scalars['String']
+  amount: Scalars['String']
+  ogunClaimed: Maybe<Scalars['Boolean']>
+}
 
 export enum AuthMethod {
   MagicLink = 'magicLink',
-  Google = 'google'
+  Google = 'google',
 }
 
 export type AuthPayload = {
-  __typename?: 'AuthPayload';
-  jwt: Scalars['String'];
-};
+  __typename?: 'AuthPayload'
+  jwt: Scalars['String']
+}
 
 export type Bided = {
-  __typename?: 'Bided';
-  bided: Maybe<Scalars['Boolean']>;
-};
+  __typename?: 'Bided'
+  bided: Maybe<Scalars['Boolean']>
+}
 
 export type BidsWithInfo = {
-  __typename?: 'BidsWithInfo';
-  id: Scalars['ID'];
-  nft: Scalars['String'];
-  tokenId: Scalars['Float'];
-  bidder: Scalars['String'];
-  amount: Scalars['String'];
-  amountToShow: Scalars['Float'];
-  auctionId: Scalars['String'];
-  profileId: Scalars['String'];
-  userId: Scalars['String'];
-  createdAt: Scalars['DateTime'];
-  profile: Profile;
-};
+  __typename?: 'BidsWithInfo'
+  id: Scalars['ID']
+  nft: Scalars['String']
+  tokenId: Scalars['Float']
+  bidder: Scalars['String']
+  amount: Scalars['String']
+  amountToShow: Scalars['Float']
+  auctionId: Scalars['String']
+  profileId: Scalars['String']
+  userId: Scalars['String']
+  createdAt: Scalars['DateTime']
+  profile: Profile
+}
 
 export type BidsWithInfoPayload = {
-  __typename?: 'BidsWithInfoPayload';
-  bids: Maybe<Array<BidsWithInfo>>;
-};
+  __typename?: 'BidsWithInfoPayload'
+  bids: Maybe<Array<BidsWithInfo>>
+}
 
 export type BuyNowItem = {
-  __typename?: 'BuyNowItem';
-  id: Scalars['ID'];
-  owner: Scalars['String'];
-  trackId: Scalars['String'];
-  trackEditionId: Scalars['String'];
-  nft: Scalars['String'];
-  tokenId: Scalars['Float'];
-  selectedCurrency: Maybe<Scalars['String']>;
-  contract: Scalars['String'];
-  startingTime: Scalars['Float'];
-  pricePerItem: Scalars['String'];
-  pricePerItemToShow: Scalars['Float'];
-  OGUNPricePerItem: Scalars['String'];
-  OGUNPricePerItemToShow: Scalars['Float'];
-  acceptsMATIC: Scalars['Boolean'];
-  acceptsOGUN: Scalars['Boolean'];
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  valid: Scalars['Boolean'];
-};
+  __typename?: 'BuyNowItem'
+  id: Scalars['ID']
+  owner: Scalars['String']
+  trackId: Scalars['String']
+  trackEditionId: Scalars['String']
+  nft: Scalars['String']
+  tokenId: Scalars['Float']
+  selectedCurrency: Maybe<Scalars['String']>
+  contract: Scalars['String']
+  startingTime: Scalars['Float']
+  pricePerItem: Scalars['String']
+  pricePerItemToShow: Scalars['Float']
+  OGUNPricePerItem: Scalars['String']
+  OGUNPricePerItemToShow: Scalars['Float']
+  acceptsMATIC: Scalars['Boolean']
+  acceptsOGUN: Scalars['Boolean']
+  createdAt: Scalars['DateTime']
+  updatedAt: Scalars['DateTime']
+  valid: Scalars['Boolean']
+}
 
 export type BuyNowPayload = {
-  __typename?: 'BuyNowPayload';
-  buyNowItem: Maybe<BuyNowItem>;
-};
+  __typename?: 'BuyNowPayload'
+  buyNowItem: Maybe<BuyNowItem>
+}
 
 export type ChangeReactionInput = {
-  postId: Scalars['String'];
-  type: ReactionType;
-};
+  postId: Scalars['String']
+  type: ReactionType
+}
 
 export type ChangeReactionPayload = {
-  __typename?: 'ChangeReactionPayload';
-  post: Post;
-};
+  __typename?: 'ChangeReactionPayload'
+  post: Post
+}
 
 export type Chat = {
-  __typename?: 'Chat';
-  id: Scalars['ID'];
-  message: Scalars['String'];
-  fromId: Scalars['String'];
-  readAt: Scalars['DateTime'];
-  createdAt: Scalars['DateTime'];
-  profile: Profile;
-  unread: Scalars['Boolean'];
-};
+  __typename?: 'Chat'
+  id: Scalars['ID']
+  message: Scalars['String']
+  fromId: Scalars['String']
+  readAt: Scalars['DateTime']
+  createdAt: Scalars['DateTime']
+  profile: Profile
+  unread: Scalars['Boolean']
+}
 
 export type ChatConnection = {
-  __typename?: 'ChatConnection';
-  pageInfo: PageInfo;
-  nodes: Array<Chat>;
-};
+  __typename?: 'ChatConnection'
+  pageInfo: PageInfo
+  nodes: Array<Chat>
+}
 
 export type ClearNotificationsPayload = {
-  __typename?: 'ClearNotificationsPayload';
-  ok: Scalars['Boolean'];
-};
+  __typename?: 'ClearNotificationsPayload'
+  ok: Scalars['Boolean']
+}
 
 export type Comment = {
-  __typename?: 'Comment';
-  id: Scalars['ID'];
-  body: Scalars['String'];
-  postId: Scalars['String'];
-  profileId: Scalars['String'];
-  deleted: Maybe<Scalars['Boolean']>;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  post: Post;
-  profile: Profile;
-};
+  __typename?: 'Comment'
+  id: Scalars['ID']
+  body: Scalars['String']
+  postId: Scalars['String']
+  profileId: Scalars['String']
+  deleted: Maybe<Scalars['Boolean']>
+  createdAt: Scalars['DateTime']
+  updatedAt: Scalars['DateTime']
+  post: Post
+  profile: Profile
+}
 
 export type CommentConnection = {
-  __typename?: 'CommentConnection';
-  pageInfo: PageInfo;
-  nodes: Array<Comment>;
-};
+  __typename?: 'CommentConnection'
+  pageInfo: PageInfo
+  nodes: Array<Comment>
+}
 
 export type CommentNotification = {
-  __typename?: 'CommentNotification';
-  type: NotificationType;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  id: Scalars['String'];
-  authorName: Scalars['String'];
-  authorPicture: Maybe<Scalars['String']>;
-  body: Scalars['String'];
-  previewBody: Scalars['String'];
-  link: Scalars['String'];
-};
+  __typename?: 'CommentNotification'
+  type: NotificationType
+  createdAt: Scalars['DateTime']
+  updatedAt: Scalars['DateTime']
+  id: Scalars['String']
+  authorName: Scalars['String']
+  authorPicture: Maybe<Scalars['String']>
+  body: Scalars['String']
+  previewBody: Scalars['String']
+  link: Scalars['String']
+}
 
 export type CountBidsPayload = {
-  __typename?: 'CountBidsPayload';
-  numberOfBids: Maybe<Scalars['Float']>;
-};
+  __typename?: 'CountBidsPayload'
+  numberOfBids: Maybe<Scalars['Float']>
+}
 
 export type CreateAuctionItemInput = {
-  id?: Maybe<Scalars['String']>;
-  owner: Scalars['String'];
-  nft: Scalars['String'];
-  tokenId: Scalars['Float'];
-  startingTime: Scalars['Float'];
-  endingTime: Scalars['Float'];
-  reservePrice: Scalars['String'];
-  reservePriceToShow: Scalars['Float'];
-  isPaymentOGUN: Scalars['Boolean'];
-};
+  id?: Maybe<Scalars['String']>
+  owner: Scalars['String']
+  nft: Scalars['String']
+  tokenId: Scalars['Float']
+  startingTime: Scalars['Float']
+  endingTime: Scalars['Float']
+  reservePrice: Scalars['String']
+  reservePriceToShow: Scalars['Float']
+  isPaymentOGUN: Scalars['Boolean']
+}
 
 export type CreateAuctionItemType = {
-  __typename?: 'CreateAuctionItemType';
-  id: Maybe<Scalars['String']>;
-  owner: Scalars['String'];
-  nft: Scalars['String'];
-  tokenId: Scalars['Float'];
-  startingTime: Scalars['Float'];
-  endingTime: Scalars['Float'];
-  reservePrice: Scalars['String'];
-  reservePriceToShow: Scalars['Float'];
-  isPaymentOGUN: Scalars['Boolean'];
-};
+  __typename?: 'CreateAuctionItemType'
+  id: Maybe<Scalars['String']>
+  owner: Scalars['String']
+  nft: Scalars['String']
+  tokenId: Scalars['Float']
+  startingTime: Scalars['Float']
+  endingTime: Scalars['Float']
+  reservePrice: Scalars['String']
+  reservePriceToShow: Scalars['Float']
+  isPaymentOGUN: Scalars['Boolean']
+}
 
 export type CreateMultipleTracksInput = {
-  batchSize: Scalars['Float'];
-  track: CreateTrackInput;
-  createPost: Scalars['Boolean'];
-};
+  batchSize: Scalars['Float']
+  track: CreateTrackInput
+  createPost: Scalars['Boolean']
+}
 
 export type CreateMultipleTracksPayload = {
-  __typename?: 'CreateMultipleTracksPayload';
-  firstTrack: Track;
-  trackIds: Array<Scalars['String']>;
-};
+  __typename?: 'CreateMultipleTracksPayload'
+  firstTrack: Track
+  trackIds: Array<Scalars['String']>
+}
 
 export type CreatePostInput = {
-  body: Scalars['String'];
-  mediaLink?: Maybe<Scalars['String']>;
-  trackId?: Maybe<Scalars['String']>;
-  trackEditionId?: Maybe<Scalars['String']>;
-};
+  body: Scalars['String']
+  mediaLink?: Maybe<Scalars['String']>
+  trackId?: Maybe<Scalars['String']>
+  trackEditionId?: Maybe<Scalars['String']>
+}
 
 export type CreatePostPayload = {
-  __typename?: 'CreatePostPayload';
-  post: Post;
-};
+  __typename?: 'CreatePostPayload'
+  post: Post
+}
 
 export type CreateProfileVerificationRequestInput = {
-  soundcloud?: Maybe<Scalars['String']>;
-  youtube?: Maybe<Scalars['String']>;
-  bandcamp?: Maybe<Scalars['String']>;
-  status?: Maybe<Scalars['String']>;
-  reason?: Maybe<Scalars['String']>;
-  reviewerProfileId?: Maybe<Scalars['String']>;
-};
+  soundcloud?: Maybe<Scalars['String']>
+  youtube?: Maybe<Scalars['String']>
+  bandcamp?: Maybe<Scalars['String']>
+  status?: Maybe<Scalars['String']>
+  reason?: Maybe<Scalars['String']>
+  reviewerProfileId?: Maybe<Scalars['String']>
+}
 
 export type CreateRepostInput = {
-  body: Scalars['String'];
-  repostId: Scalars['String'];
-};
+  body: Scalars['String']
+  repostId: Scalars['String']
+}
 
 export type CreateRepostPayload = {
-  __typename?: 'CreateRepostPayload';
-  post: Post;
-  originalPost: Post;
-};
+  __typename?: 'CreateRepostPayload'
+  post: Post
+  originalPost: Post
+}
 
 export type CreateTrackEditionInput = {
-  transactionHash: Scalars['String'];
-  editionId: Scalars['Float'];
-  editionSize: Scalars['Int'];
-  editionData?: Maybe<EditionDataInput>;
-};
+  transactionHash: Scalars['String']
+  editionId: Scalars['Float']
+  editionSize: Scalars['Int']
+  editionData?: Maybe<EditionDataInput>
+}
 
 export type CreateTrackEditionPayload = {
-  __typename?: 'CreateTrackEditionPayload';
-  trackEdition: TrackEdition;
-};
+  __typename?: 'CreateTrackEditionPayload'
+  trackEdition: TrackEdition
+}
 
 export type CreateTrackInput = {
-  title: Scalars['String'];
-  description?: Maybe<Scalars['String']>;
-  utilityInfo?: Maybe<Scalars['String']>;
-  assetUrl: Scalars['String'];
-  artworkUrl?: Maybe<Scalars['String']>;
-  artist?: Maybe<Scalars['String']>;
-  artistId?: Maybe<Scalars['String']>;
-  artistProfileId?: Maybe<Scalars['String']>;
-  album?: Maybe<Scalars['String']>;
-  releaseYear?: Maybe<Scalars['Float']>;
-  copyright?: Maybe<Scalars['String']>;
-  genres?: Maybe<Array<Genre>>;
-  trackEditionId: Scalars['String'];
-  nftData?: Maybe<NftDataInput>;
-};
+  title: Scalars['String']
+  description?: Maybe<Scalars['String']>
+  utilityInfo?: Maybe<Scalars['String']>
+  assetUrl: Scalars['String']
+  artworkUrl?: Maybe<Scalars['String']>
+  artist?: Maybe<Scalars['String']>
+  artistId?: Maybe<Scalars['String']>
+  artistProfileId?: Maybe<Scalars['String']>
+  album?: Maybe<Scalars['String']>
+  releaseYear?: Maybe<Scalars['Float']>
+  copyright?: Maybe<Scalars['String']>
+  genres?: Maybe<Array<Genre>>
+  trackEditionId: Scalars['String']
+  nftData?: Maybe<NftDataInput>
+}
 
 export type CreateWhitelistEntryInput = {
-  walletAddress: Scalars['String'];
-  emailAddress: Scalars['String'];
-};
+  walletAddress: Scalars['String']
+  emailAddress: Scalars['String']
+}
 
 export type CreateWhitelistEntryPayload = {
-  __typename?: 'CreateWhitelistEntryPayload';
-  whitelistEntry: WhitelistEntry;
-};
+  __typename?: 'CreateWhitelistEntryPayload'
+  whitelistEntry: WhitelistEntry
+}
 
 export enum CurrencyType {
   Ogun = 'OGUN',
-  Matic = 'MATIC'
+  Matic = 'MATIC',
 }
-
 
 export enum DefaultWallet {
   Soundchain = 'Soundchain',
-  MetaMask = 'MetaMask'
+  MetaMask = 'MetaMask',
 }
 
 export type DeleteCommentInput = {
-  commentId: Scalars['String'];
-};
+  commentId: Scalars['String']
+}
 
 export type DeleteCommentPayload = {
-  __typename?: 'DeleteCommentPayload';
-  comment: Comment;
-};
+  __typename?: 'DeleteCommentPayload'
+  comment: Comment
+}
 
 export type DeletePostInput = {
-  postId: Scalars['String'];
-};
+  postId: Scalars['String']
+}
 
 export type DeletePostPayload = {
-  __typename?: 'DeletePostPayload';
-  post: Post;
-};
+  __typename?: 'DeletePostPayload'
+  post: Post
+}
 
 export type DeleteTrackInput = {
-  trackId: Scalars['String'];
-};
+  trackId: Scalars['String']
+}
 
 export type DeletedCommentNotification = {
-  __typename?: 'DeletedCommentNotification';
-  type: NotificationType;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  id: Scalars['String'];
-  authorName: Scalars['String'];
-  authorPicture: Maybe<Scalars['String']>;
-  body: Scalars['String'];
-  previewBody: Scalars['String'];
-  link: Scalars['String'];
-};
+  __typename?: 'DeletedCommentNotification'
+  type: NotificationType
+  createdAt: Scalars['DateTime']
+  updatedAt: Scalars['DateTime']
+  id: Scalars['String']
+  authorName: Scalars['String']
+  authorPicture: Maybe<Scalars['String']>
+  body: Scalars['String']
+  previewBody: Scalars['String']
+  link: Scalars['String']
+}
 
 export type DeletedPostNotification = {
-  __typename?: 'DeletedPostNotification';
-  type: NotificationType;
-  createdAt: Scalars['DateTime'];
-  id: Scalars['String'];
-  authorName: Scalars['String'];
-  authorPicture: Maybe<Scalars['String']>;
-  body: Scalars['String'];
-  previewBody: Scalars['String'];
-  previewLink: Maybe<Scalars['String']>;
-  link: Scalars['String'];
-  track: Maybe<Track>;
-};
+  __typename?: 'DeletedPostNotification'
+  type: NotificationType
+  createdAt: Scalars['DateTime']
+  id: Scalars['String']
+  authorName: Scalars['String']
+  authorPicture: Maybe<Scalars['String']>
+  body: Scalars['String']
+  previewBody: Scalars['String']
+  previewLink: Maybe<Scalars['String']>
+  link: Scalars['String']
+  track: Maybe<Track>
+}
 
 export type EditionDataInput = {
-  transactionHash?: Maybe<Scalars['String']>;
-  pendingRequest?: Maybe<PendingRequest>;
-  pendingTime?: Maybe<Scalars['DateTime']>;
-  pendingTrackCount?: Maybe<Scalars['Float']>;
-  contract?: Maybe<Scalars['String']>;
-  owner?: Maybe<Scalars['String']>;
-};
+  transactionHash?: Maybe<Scalars['String']>
+  pendingRequest?: Maybe<PendingRequest>
+  pendingTime?: Maybe<Scalars['DateTime']>
+  pendingTrackCount?: Maybe<Scalars['Float']>
+  contract?: Maybe<Scalars['String']>
+  owner?: Maybe<Scalars['String']>
+}
 
 export type EditionDataType = {
-  __typename?: 'EditionDataType';
-  transactionHash: Maybe<Scalars['String']>;
-  pendingRequest: Maybe<PendingRequest>;
-  pendingTime: Maybe<Scalars['DateTime']>;
-  pendingTrackCount: Maybe<Scalars['Float']>;
-  contract: Maybe<Scalars['String']>;
-  owner: Maybe<Scalars['String']>;
-};
+  __typename?: 'EditionDataType'
+  transactionHash: Maybe<Scalars['String']>
+  pendingRequest: Maybe<PendingRequest>
+  pendingTime: Maybe<Scalars['DateTime']>
+  pendingTrackCount: Maybe<Scalars['Float']>
+  contract: Maybe<Scalars['String']>
+  owner: Maybe<Scalars['String']>
+}
 
 export type ExplorePayload = {
-  __typename?: 'ExplorePayload';
-  profiles: Array<Profile>;
-  tracks: Array<Track>;
-  totalProfiles: Scalars['Float'];
-  totalTracks: Scalars['Float'];
-};
+  __typename?: 'ExplorePayload'
+  profiles: Array<Profile>
+  tracks: Array<Track>
+  totalProfiles: Scalars['Float']
+  totalTracks: Scalars['Float']
+}
 
 export type FavoriteProfileTrack = {
-  __typename?: 'FavoriteProfileTrack';
-  id: Scalars['ID'];
-  profileId: Scalars['String'];
-  trackId: Scalars['String'];
-};
+  __typename?: 'FavoriteProfileTrack'
+  id: Scalars['ID']
+  profileId: Scalars['String']
+  trackId: Scalars['String']
+}
 
 export type FeedConnection = {
-  __typename?: 'FeedConnection';
-  pageInfo: PageInfo;
-  nodes: Array<FeedItem>;
-};
+  __typename?: 'FeedConnection'
+  pageInfo: PageInfo
+  nodes: Array<FeedItem>
+}
 
 export type FeedItem = {
-  __typename?: 'FeedItem';
-  id: Scalars['ID'];
-  postedAt: Scalars['DateTime'];
-  post: Post;
-};
+  __typename?: 'FeedItem'
+  id: Scalars['ID']
+  postedAt: Scalars['DateTime']
+  post: Post
+}
 
 export type FilterBuyNowItemInput = {
-  trackEdition: Scalars['String'];
-  nftData?: Maybe<NftDataInput>;
-};
+  trackEdition: Scalars['String']
+  nftData?: Maybe<NftDataInput>
+}
 
 export type FilterListingItemInput = {
-  tokenId: Scalars['Float'];
-  contractAddress: Scalars['String'];
-};
+  tokenId: Scalars['Float']
+  contractAddress: Scalars['String']
+}
 
 export type FilterOwnedBuyNowItemInput = {
-  trackEditionId: Scalars['String'];
-  owner: Scalars['String'];
-};
+  trackEditionId: Scalars['String']
+  owner: Scalars['String']
+}
 
 export type FilterOwnedTracksInput = {
-  trackEditionId: Scalars['String'];
-  owner: Scalars['String'];
-};
+  trackEditionId: Scalars['String']
+  owner: Scalars['String']
+}
 
 export type FilterPostInput = {
-  profileId?: Maybe<Scalars['String']>;
-};
+  profileId?: Maybe<Scalars['String']>
+}
 
 export type FilterTrackInput = {
-  profileId?: Maybe<Scalars['String']>;
-  trackEditionId?: Maybe<Scalars['String']>;
-  nftData?: Maybe<NftDataInput>;
-};
+  profileId?: Maybe<Scalars['String']>
+  trackEditionId?: Maybe<Scalars['String']>
+  nftData?: Maybe<NftDataInput>
+}
 
 export type FilterTrackMarketplace = {
-  genres?: Maybe<Array<Genre>>;
-  listingItem?: Maybe<ListingItemInput>;
-};
+  genres?: Maybe<Array<Genre>>
+  listingItem?: Maybe<ListingItemInput>
+}
 
 export type Follow = {
-  __typename?: 'Follow';
-  id: Scalars['ID'];
-  followedProfile: Profile;
-  followerProfile: Profile;
-};
+  __typename?: 'Follow'
+  id: Scalars['ID']
+  followedProfile: Profile
+  followerProfile: Profile
+}
 
 export type FollowConnection = {
-  __typename?: 'FollowConnection';
-  pageInfo: PageInfo;
-  nodes: Array<Follow>;
-};
+  __typename?: 'FollowConnection'
+  pageInfo: PageInfo
+  nodes: Array<Follow>
+}
 
 export type FollowProfileInput = {
-  followedId: Scalars['String'];
-};
+  followedId: Scalars['String']
+}
 
 export type FollowProfilePayload = {
-  __typename?: 'FollowProfilePayload';
-  followedProfile: Profile;
-};
+  __typename?: 'FollowProfilePayload'
+  followedProfile: Profile
+}
 
 export type FollowedArtistsConnection = {
-  __typename?: 'FollowedArtistsConnection';
-  pageInfo: PageInfo;
-  nodes: Array<Profile>;
-};
+  __typename?: 'FollowedArtistsConnection'
+  pageInfo: PageInfo
+  nodes: Array<Profile>
+}
 
 export type FollowerNotification = {
-  __typename?: 'FollowerNotification';
-  type: NotificationType;
-  createdAt: Scalars['DateTime'];
-  id: Scalars['String'];
-  followerName: Scalars['String'];
-  followerPicture: Maybe<Scalars['String']>;
-  link: Scalars['String'];
-};
+  __typename?: 'FollowerNotification'
+  type: NotificationType
+  createdAt: Scalars['DateTime']
+  id: Scalars['String']
+  followerName: Scalars['String']
+  followerPicture: Maybe<Scalars['String']>
+  link: Scalars['String']
+}
 
 export enum Genre {
   Acoustic = 'ACOUSTIC',
@@ -550,93 +549,92 @@ export enum Genre {
   Soundtrack = 'SOUNDTRACK',
   Spoken = 'SPOKEN',
   UrbanLatino = 'URBAN_LATINO',
-  World = 'WORLD'
+  World = 'WORLD',
 }
 
-
 export type ListingItem = {
-  __typename?: 'ListingItem';
-  id: Scalars['ID'];
-  owner: Maybe<Scalars['String']>;
-  nft: Maybe<Scalars['String']>;
-  tokenId: Maybe<Scalars['Float']>;
-  contract: Scalars['String'];
-  startingTime: Maybe<Scalars['Float']>;
-  endingTime: Maybe<Scalars['Float']>;
-  reservePrice: Maybe<Scalars['String']>;
-  selectedCurrency: Maybe<Scalars['String']>;
-  reservePriceToShow: Maybe<Scalars['Float']>;
-  pricePerItem: Maybe<Scalars['String']>;
-  pricePerItemToShow: Maybe<Scalars['Float']>;
-  OGUNPricePerItem: Maybe<Scalars['String']>;
-  OGUNPricePerItemToShow: Maybe<Scalars['Float']>;
-  acceptsMATIC: Maybe<Scalars['Boolean']>;
-  acceptsOGUN: Maybe<Scalars['Boolean']>;
-  isPaymentOGUN: Maybe<Scalars['Boolean']>;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-};
+  __typename?: 'ListingItem'
+  id: Scalars['ID']
+  owner: Maybe<Scalars['String']>
+  nft: Maybe<Scalars['String']>
+  tokenId: Maybe<Scalars['Float']>
+  contract: Scalars['String']
+  startingTime: Maybe<Scalars['Float']>
+  endingTime: Maybe<Scalars['Float']>
+  reservePrice: Maybe<Scalars['String']>
+  selectedCurrency: Maybe<Scalars['String']>
+  reservePriceToShow: Maybe<Scalars['Float']>
+  pricePerItem: Maybe<Scalars['String']>
+  pricePerItemToShow: Maybe<Scalars['Float']>
+  OGUNPricePerItem: Maybe<Scalars['String']>
+  OGUNPricePerItemToShow: Maybe<Scalars['Float']>
+  acceptsMATIC: Maybe<Scalars['Boolean']>
+  acceptsOGUN: Maybe<Scalars['Boolean']>
+  isPaymentOGUN: Maybe<Scalars['Boolean']>
+  createdAt: Scalars['DateTime']
+  updatedAt: Scalars['DateTime']
+}
 
 export type ListingItemConnection = {
-  __typename?: 'ListingItemConnection';
-  pageInfo: PageInfo;
-  nodes: Array<TrackWithListingItem>;
-};
+  __typename?: 'ListingItemConnection'
+  pageInfo: PageInfo
+  nodes: Array<TrackWithListingItem>
+}
 
 export type ListingItemInput = {
-  saleType?: Maybe<SaleType>;
-};
+  saleType?: Maybe<SaleType>
+}
 
 export type ListingItemWithPrice = {
-  __typename?: 'ListingItemWithPrice';
-  id: Scalars['ID'];
-  owner: Maybe<Scalars['String']>;
-  nft: Maybe<Scalars['String']>;
-  tokenId: Maybe<Scalars['Float']>;
-  contract: Scalars['String'];
-  startingTime: Maybe<Scalars['Float']>;
-  endingTime: Maybe<Scalars['Float']>;
-  reservePrice: Maybe<Scalars['String']>;
-  selectedCurrency: Maybe<Scalars['String']>;
-  reservePriceToShow: Maybe<Scalars['Float']>;
-  pricePerItem: Maybe<Scalars['String']>;
-  pricePerItemToShow: Maybe<Scalars['Float']>;
-  OGUNPricePerItem: Maybe<Scalars['String']>;
-  OGUNPricePerItemToShow: Maybe<Scalars['Float']>;
-  acceptsMATIC: Maybe<Scalars['Boolean']>;
-  acceptsOGUN: Maybe<Scalars['Boolean']>;
-  isPaymentOGUN: Maybe<Scalars['Boolean']>;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  priceToShow: Maybe<Scalars['Float']>;
-};
+  __typename?: 'ListingItemWithPrice'
+  id: Scalars['ID']
+  owner: Maybe<Scalars['String']>
+  nft: Maybe<Scalars['String']>
+  tokenId: Maybe<Scalars['Float']>
+  contract: Scalars['String']
+  startingTime: Maybe<Scalars['Float']>
+  endingTime: Maybe<Scalars['Float']>
+  reservePrice: Maybe<Scalars['String']>
+  selectedCurrency: Maybe<Scalars['String']>
+  reservePriceToShow: Maybe<Scalars['Float']>
+  pricePerItem: Maybe<Scalars['String']>
+  pricePerItemToShow: Maybe<Scalars['Float']>
+  OGUNPricePerItem: Maybe<Scalars['String']>
+  OGUNPricePerItemToShow: Maybe<Scalars['Float']>
+  acceptsMATIC: Maybe<Scalars['Boolean']>
+  acceptsOGUN: Maybe<Scalars['Boolean']>
+  isPaymentOGUN: Maybe<Scalars['Boolean']>
+  createdAt: Scalars['DateTime']
+  updatedAt: Scalars['DateTime']
+  priceToShow: Maybe<Scalars['Float']>
+}
 
 export type LoginInput = {
-  token: Scalars['String'];
-};
+  token: Scalars['String']
+}
 
 export type Message = {
-  __typename?: 'Message';
-  id: Scalars['ID'];
-  fromId: Scalars['String'];
-  toId: Scalars['String'];
-  message: Scalars['String'];
-  readAt: Maybe<Scalars['DateTime']>;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  fromProfile: Profile;
-};
+  __typename?: 'Message'
+  id: Scalars['ID']
+  fromId: Scalars['String']
+  toId: Scalars['String']
+  message: Scalars['String']
+  readAt: Maybe<Scalars['DateTime']>
+  createdAt: Scalars['DateTime']
+  updatedAt: Scalars['DateTime']
+  fromProfile: Profile
+}
 
 export type MessageConnection = {
-  __typename?: 'MessageConnection';
-  pageInfo: PageInfo;
-  nodes: Array<Message>;
-};
+  __typename?: 'MessageConnection'
+  pageInfo: PageInfo
+  nodes: Array<Message>
+}
 
 export type MimeType = {
-  __typename?: 'MimeType';
-  value: Scalars['String'];
-};
+  __typename?: 'MimeType'
+  value: Scalars['String']
+}
 
 export enum MusicianType {
   Singer = 'SINGER',
@@ -648,341 +646,315 @@ export enum MusicianType {
   Dj = 'DJ',
   Engineer = 'ENGINEER',
   Instrumentalist = 'INSTRUMENTALIST',
-  NotAnArtist = 'NOT_AN_ARTIST'
+  NotAnArtist = 'NOT_AN_ARTIST',
 }
 
 export type Mutation = {
-  __typename?: 'Mutation';
-  createAuctionItem: CreateAuctionItemType;
-  updateOgunClaimedAudioHolder: UpdateOgunClaimedAudioHolderPayload;
-  addComment: AddCommentPayload;
-  updateComment: UpdateCommentPayload;
-  deleteComment: DeleteCommentPayload;
-  sendMessage: SendMessagePayload;
-  resetUnreadMessageCount: Profile;
-  resetNotificationCount: Profile;
-  clearNotifications: ClearNotificationsPayload;
-  pinToIPFS: PinningPayload;
-  pinJsonToIPFS: PinningPayload;
-  createPost: CreatePostPayload;
-  updatePost: UpdatePostPayload;
-  reactToPost: ReactToPostPayload;
-  retractReaction: RetractReactionPayload;
-  changeReaction: ChangeReactionPayload;
-  createRepost: CreateRepostPayload;
-  deletePost: DeletePostPayload;
-  updateProfile: UpdateProfilePayload;
-  followProfile: FollowProfilePayload;
-  unfollowProfile: UnfollowProfilePayload;
-  subscribeToProfile: SubscribeToProfilePayload;
-  unsubscribeFromProfile: UnsubscribeFromProfilePayload;
-  createProfileVerificationRequest: ProfileVerificationRequestPayload;
-  updateProfileVerificationRequest: ProfileVerificationRequestPayload;
-  removeProfileVerificationRequest: ProfileVerificationRequestPayload;
-  createTrackEdition: CreateTrackEditionPayload;
-  deleteTrackEdition: Array<Track>;
-  createMultipleTracks: CreateMultipleTracksPayload;
-  updateTrack: UpdateTrackPayload;
-  updateEditionOwnedTracks: UpdateEditionOwnedTracksPayload;
-  deleteTrackOnError: UpdateTrackPayload;
-  deleteTrack: Track;
-  toggleFavorite: ToggleFavoritePayload;
-  register: AuthPayload;
-  login: AuthPayload;
-  updateHandle: UpdateHandlePayload;
-  updateDefaultWallet: UpdateDefaultWalletPayload;
-  updateMetaMaskAddresses: UpdateDefaultWalletPayload;
-  updateOTP: UpdateOtpPayload;
-  validateOTPRecoveryPhrase: Scalars['Boolean'];
-  createWhitelistEntry: CreateWhitelistEntryPayload;
-  updateOgunClaimedWhitelist: UpdateWhitelistEntryPayload;
-};
-
+  __typename?: 'Mutation'
+  createAuctionItem: CreateAuctionItemType
+  updateOgunClaimedAudioHolder: UpdateOgunClaimedAudioHolderPayload
+  addComment: AddCommentPayload
+  updateComment: UpdateCommentPayload
+  deleteComment: DeleteCommentPayload
+  sendMessage: SendMessagePayload
+  resetUnreadMessageCount: Profile
+  resetNotificationCount: Profile
+  clearNotifications: ClearNotificationsPayload
+  pinToIPFS: PinningPayload
+  pinJsonToIPFS: PinningPayload
+  createPost: CreatePostPayload
+  updatePost: UpdatePostPayload
+  reactToPost: ReactToPostPayload
+  retractReaction: RetractReactionPayload
+  changeReaction: ChangeReactionPayload
+  createRepost: CreateRepostPayload
+  deletePost: DeletePostPayload
+  updateProfile: UpdateProfilePayload
+  followProfile: FollowProfilePayload
+  unfollowProfile: UnfollowProfilePayload
+  subscribeToProfile: SubscribeToProfilePayload
+  unsubscribeFromProfile: UnsubscribeFromProfilePayload
+  createProfileVerificationRequest: ProfileVerificationRequestPayload
+  updateProfileVerificationRequest: ProfileVerificationRequestPayload
+  removeProfileVerificationRequest: ProfileVerificationRequestPayload
+  createTrackEdition: CreateTrackEditionPayload
+  deleteTrackEdition: Array<Track>
+  createMultipleTracks: CreateMultipleTracksPayload
+  updateTrack: UpdateTrackPayload
+  updateEditionOwnedTracks: UpdateEditionOwnedTracksPayload
+  deleteTrackOnError: UpdateTrackPayload
+  deleteTrack: Track
+  toggleFavorite: ToggleFavoritePayload
+  register: AuthPayload
+  login: AuthPayload
+  updateHandle: UpdateHandlePayload
+  updateDefaultWallet: UpdateDefaultWalletPayload
+  updateMetaMaskAddresses: UpdateDefaultWalletPayload
+  updateOTP: UpdateOtpPayload
+  validateOTPRecoveryPhrase: Scalars['Boolean']
+  createWhitelistEntry: CreateWhitelistEntryPayload
+  updateOgunClaimedWhitelist: UpdateWhitelistEntryPayload
+}
 
 export type MutationCreateAuctionItemArgs = {
-  input: CreateAuctionItemInput;
-};
-
+  input: CreateAuctionItemInput
+}
 
 export type MutationUpdateOgunClaimedAudioHolderArgs = {
-  input: UpdateOgunClaimedInput;
-};
-
+  input: UpdateOgunClaimedInput
+}
 
 export type MutationAddCommentArgs = {
-  input: AddCommentInput;
-};
-
+  input: AddCommentInput
+}
 
 export type MutationUpdateCommentArgs = {
-  input: UpdateCommentInput;
-};
-
+  input: UpdateCommentInput
+}
 
 export type MutationDeleteCommentArgs = {
-  input: DeleteCommentInput;
-};
-
+  input: DeleteCommentInput
+}
 
 export type MutationSendMessageArgs = {
-  input: SendMessageInput;
-};
-
+  input: SendMessageInput
+}
 
 export type MutationPinToIpfsArgs = {
-  input: PinToIpfsInput;
-};
-
+  input: PinToIpfsInput
+}
 
 export type MutationPinJsonToIpfsArgs = {
-  input: PinJsonToIpfsInput;
-};
-
+  input: PinJsonToIpfsInput
+}
 
 export type MutationCreatePostArgs = {
-  input: CreatePostInput;
-};
-
+  input: CreatePostInput
+}
 
 export type MutationUpdatePostArgs = {
-  input: UpdatePostInput;
-};
-
+  input: UpdatePostInput
+}
 
 export type MutationReactToPostArgs = {
-  input: ReactToPostInput;
-};
-
+  input: ReactToPostInput
+}
 
 export type MutationRetractReactionArgs = {
-  input: RetractReactionInput;
-};
-
+  input: RetractReactionInput
+}
 
 export type MutationChangeReactionArgs = {
-  input: ChangeReactionInput;
-};
-
+  input: ChangeReactionInput
+}
 
 export type MutationCreateRepostArgs = {
-  input: CreateRepostInput;
-};
-
+  input: CreateRepostInput
+}
 
 export type MutationDeletePostArgs = {
-  input: DeletePostInput;
-};
-
+  input: DeletePostInput
+}
 
 export type MutationUpdateProfileArgs = {
-  input: UpdateProfileInput;
-};
-
+  input: UpdateProfileInput
+}
 
 export type MutationFollowProfileArgs = {
-  input: FollowProfileInput;
-};
-
+  input: FollowProfileInput
+}
 
 export type MutationUnfollowProfileArgs = {
-  input: UnfollowProfileInput;
-};
-
+  input: UnfollowProfileInput
+}
 
 export type MutationSubscribeToProfileArgs = {
-  input: SubscribeToProfileInput;
-};
-
+  input: SubscribeToProfileInput
+}
 
 export type MutationUnsubscribeFromProfileArgs = {
-  input: UnsubscribeFromProfileInput;
-};
-
+  input: UnsubscribeFromProfileInput
+}
 
 export type MutationCreateProfileVerificationRequestArgs = {
-  input: CreateProfileVerificationRequestInput;
-};
-
+  input: CreateProfileVerificationRequestInput
+}
 
 export type MutationUpdateProfileVerificationRequestArgs = {
-  input: CreateProfileVerificationRequestInput;
-  id: Scalars['String'];
-};
-
+  input: CreateProfileVerificationRequestInput
+  id: Scalars['String']
+}
 
 export type MutationRemoveProfileVerificationRequestArgs = {
-  id: Scalars['String'];
-};
-
+  id: Scalars['String']
+}
 
 export type MutationCreateTrackEditionArgs = {
-  input: CreateTrackEditionInput;
-};
-
+  input: CreateTrackEditionInput
+}
 
 export type MutationDeleteTrackEditionArgs = {
-  trackEditionId: Scalars['String'];
-};
-
+  trackEditionId: Scalars['String']
+}
 
 export type MutationCreateMultipleTracksArgs = {
-  input: CreateMultipleTracksInput;
-};
-
+  input: CreateMultipleTracksInput
+}
 
 export type MutationUpdateTrackArgs = {
-  input: UpdateTrackInput;
-};
-
+  input: UpdateTrackInput
+}
 
 export type MutationUpdateEditionOwnedTracksArgs = {
-  input: UpdateEditionOwnedTracksInput;
-};
-
+  input: UpdateEditionOwnedTracksInput
+}
 
 export type MutationDeleteTrackOnErrorArgs = {
-  input: DeleteTrackInput;
-};
-
+  input: DeleteTrackInput
+}
 
 export type MutationDeleteTrackArgs = {
-  trackId: Scalars['String'];
-};
-
+  trackId: Scalars['String']
+}
 
 export type MutationToggleFavoriteArgs = {
-  trackId: Scalars['String'];
-};
-
+  trackId: Scalars['String']
+}
 
 export type MutationRegisterArgs = {
-  input: RegisterInput;
-};
-
+  input: RegisterInput
+}
 
 export type MutationLoginArgs = {
-  input: LoginInput;
-};
-
+  input: LoginInput
+}
 
 export type MutationUpdateHandleArgs = {
-  input: UpdateHandleInput;
-};
-
+  input: UpdateHandleInput
+}
 
 export type MutationUpdateDefaultWalletArgs = {
-  input: UpdateDefaultWalletInput;
-};
-
+  input: UpdateDefaultWalletInput
+}
 
 export type MutationUpdateMetaMaskAddressesArgs = {
-  input: UpdateWalletInput;
-};
-
+  input: UpdateWalletInput
+}
 
 export type MutationUpdateOtpArgs = {
-  input: UpdateOtpInput;
-};
-
+  input: UpdateOtpInput
+}
 
 export type MutationValidateOtpRecoveryPhraseArgs = {
-  input: ValidateOtpRecoveryPhraseInput;
-};
-
+  input: ValidateOtpRecoveryPhraseInput
+}
 
 export type MutationCreateWhitelistEntryArgs = {
-  input: CreateWhitelistEntryInput;
-};
-
+  input: CreateWhitelistEntryInput
+}
 
 export type MutationUpdateOgunClaimedWhitelistArgs = {
-  input: UpdateOgunClaimedInput;
-};
+  input: UpdateOgunClaimedInput
+}
 
 export type NftDataInput = {
-  transactionHash?: Maybe<Scalars['String']>;
-  pendingRequest?: Maybe<PendingRequest>;
-  pendingTime?: Maybe<Scalars['DateTime']>;
-  ipfsCid?: Maybe<Scalars['String']>;
-  tokenId?: Maybe<Scalars['Float']>;
-  contract?: Maybe<Scalars['String']>;
-  minter?: Maybe<Scalars['String']>;
-  owner?: Maybe<Scalars['String']>;
-};
+  transactionHash?: Maybe<Scalars['String']>
+  pendingRequest?: Maybe<PendingRequest>
+  pendingTime?: Maybe<Scalars['DateTime']>
+  ipfsCid?: Maybe<Scalars['String']>
+  tokenId?: Maybe<Scalars['Float']>
+  contract?: Maybe<Scalars['String']>
+  minter?: Maybe<Scalars['String']>
+  owner?: Maybe<Scalars['String']>
+}
 
 export type NftDataType = {
-  __typename?: 'NFTDataType';
-  transactionHash: Maybe<Scalars['String']>;
-  pendingRequest: Maybe<PendingRequest>;
-  pendingTime: Maybe<Scalars['DateTime']>;
-  ipfsCid: Maybe<Scalars['String']>;
-  tokenId: Maybe<Scalars['Float']>;
-  contract: Maybe<Scalars['String']>;
-  minter: Maybe<Scalars['String']>;
-  owner: Maybe<Scalars['String']>;
-};
+  __typename?: 'NFTDataType'
+  transactionHash: Maybe<Scalars['String']>
+  pendingRequest: Maybe<PendingRequest>
+  pendingTime: Maybe<Scalars['DateTime']>
+  ipfsCid: Maybe<Scalars['String']>
+  tokenId: Maybe<Scalars['Float']>
+  contract: Maybe<Scalars['String']>
+  minter: Maybe<Scalars['String']>
+  owner: Maybe<Scalars['String']>
+}
 
 export type NftSoldNotification = {
-  __typename?: 'NFTSoldNotification';
-  type: NotificationType;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  id: Scalars['String'];
-  buyerName: Scalars['String'];
-  buyerPicture: Scalars['String'];
-  buyerProfileId: Scalars['String'];
-  trackId: Scalars['String'];
-  price: Scalars['Float'];
-  trackName: Scalars['String'];
-  artist: Scalars['String'];
-  artworkUrl: Scalars['String'];
-  sellType: SellType;
-};
+  __typename?: 'NFTSoldNotification'
+  type: NotificationType
+  createdAt: Scalars['DateTime']
+  updatedAt: Scalars['DateTime']
+  id: Scalars['String']
+  buyerName: Scalars['String']
+  buyerPicture: Scalars['String']
+  buyerProfileId: Scalars['String']
+  trackId: Scalars['String']
+  price: Scalars['Float']
+  trackName: Scalars['String']
+  artist: Scalars['String']
+  artworkUrl: Scalars['String']
+  sellType: SellType
+}
 
 export type NewBidNotification = {
-  __typename?: 'NewBidNotification';
-  type: NotificationType;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  id: Scalars['String'];
-  trackId: Scalars['String'];
-  trackName: Scalars['String'];
-  artist: Scalars['String'];
-  artworkUrl: Scalars['String'];
-  price: Scalars['Float'];
-  auctionId: Scalars['String'];
-};
+  __typename?: 'NewBidNotification'
+  type: NotificationType
+  createdAt: Scalars['DateTime']
+  updatedAt: Scalars['DateTime']
+  id: Scalars['String']
+  trackId: Scalars['String']
+  trackName: Scalars['String']
+  artist: Scalars['String']
+  artworkUrl: Scalars['String']
+  price: Scalars['Float']
+  auctionId: Scalars['String']
+}
 
 export type NewPostNotification = {
-  __typename?: 'NewPostNotification';
-  type: NotificationType;
-  createdAt: Scalars['DateTime'];
-  id: Scalars['String'];
-  authorName: Scalars['String'];
-  authorPicture: Maybe<Scalars['String']>;
-  body: Scalars['String'];
-  previewBody: Scalars['String'];
-  previewLink: Maybe<Scalars['String']>;
-  link: Scalars['String'];
-  track: Maybe<Track>;
-};
+  __typename?: 'NewPostNotification'
+  type: NotificationType
+  createdAt: Scalars['DateTime']
+  id: Scalars['String']
+  authorName: Scalars['String']
+  authorPicture: Maybe<Scalars['String']>
+  body: Scalars['String']
+  previewBody: Scalars['String']
+  previewLink: Maybe<Scalars['String']>
+  link: Scalars['String']
+  track: Maybe<Track>
+}
 
 export type NewVerificationRequestNotification = {
-  __typename?: 'NewVerificationRequestNotification';
-  type: NotificationType;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  id: Scalars['String'];
-  verificationRequestId: Scalars['String'];
-};
+  __typename?: 'NewVerificationRequestNotification'
+  type: NotificationType
+  createdAt: Scalars['DateTime']
+  updatedAt: Scalars['DateTime']
+  id: Scalars['String']
+  verificationRequestId: Scalars['String']
+}
 
-export type Notification = AuctionIsEndingNotification | AuctionEndedNotification | CommentNotification | DeletedCommentNotification | DeletedPostNotification | FollowerNotification | NewBidNotification | NewPostNotification | NewVerificationRequestNotification | NftSoldNotification | OutbidNotification | ReactionNotification | VerificationRequestNotification | WonAuctionNotification;
+export type Notification =
+  | AuctionIsEndingNotification
+  | AuctionEndedNotification
+  | CommentNotification
+  | DeletedCommentNotification
+  | DeletedPostNotification
+  | FollowerNotification
+  | NewBidNotification
+  | NewPostNotification
+  | NewVerificationRequestNotification
+  | NftSoldNotification
+  | OutbidNotification
+  | ReactionNotification
+  | VerificationRequestNotification
+  | WonAuctionNotification
 
 export type NotificationConnection = {
-  __typename?: 'NotificationConnection';
-  pageInfo: PageInfo;
-  nodes: Array<Notification>;
-};
+  __typename?: 'NotificationConnection'
+  pageInfo: PageInfo
+  nodes: Array<Notification>
+}
 
 export enum NotificationType {
   AuctionIsEnding = 'AuctionIsEnding',
@@ -998,39 +970,39 @@ export enum NotificationType {
   Outbid = 'Outbid',
   Reaction = 'Reaction',
   VerificationRequestUpdate = 'VerificationRequestUpdate',
-  WonAuction = 'WonAuction'
+  WonAuction = 'WonAuction',
 }
 
 export type OutbidNotification = {
-  __typename?: 'OutbidNotification';
-  type: NotificationType;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  id: Scalars['String'];
-  trackId: Scalars['String'];
-  trackName: Scalars['String'];
-  artist: Scalars['String'];
-  artworkUrl: Scalars['String'];
-  price: Scalars['Float'];
-  auctionId: Scalars['String'];
-};
+  __typename?: 'OutbidNotification'
+  type: NotificationType
+  createdAt: Scalars['DateTime']
+  updatedAt: Scalars['DateTime']
+  id: Scalars['String']
+  trackId: Scalars['String']
+  trackName: Scalars['String']
+  artist: Scalars['String']
+  artworkUrl: Scalars['String']
+  price: Scalars['Float']
+  auctionId: Scalars['String']
+}
 
 export type PageInfo = {
-  __typename?: 'PageInfo';
-  totalCount: Scalars['Float'];
-  hasPreviousPage: Scalars['Boolean'];
-  hasNextPage: Scalars['Boolean'];
-  startCursor: Maybe<Scalars['String']>;
-  endCursor: Maybe<Scalars['String']>;
-};
+  __typename?: 'PageInfo'
+  totalCount: Scalars['Float']
+  hasPreviousPage: Scalars['Boolean']
+  hasNextPage: Scalars['Boolean']
+  startCursor: Maybe<Scalars['String']>
+  endCursor: Maybe<Scalars['String']>
+}
 
 export type PageInput = {
-  first?: Maybe<Scalars['Int']>;
-  after?: Maybe<Scalars['String']>;
-  last?: Maybe<Scalars['Int']>;
-  before?: Maybe<Scalars['String']>;
-  inclusive?: Maybe<Scalars['Boolean']>;
-};
+  first?: Maybe<Scalars['Int']>
+  after?: Maybe<Scalars['String']>
+  last?: Maybe<Scalars['Int']>
+  before?: Maybe<Scalars['String']>
+  inclusive?: Maybe<Scalars['Boolean']>
+}
 
 export enum PendingRequest {
   Mint = 'Mint',
@@ -1041,3001 +1013,2554 @@ export enum PendingRequest {
   PlaceBid = 'PlaceBid',
   CompleteAuction = 'CompleteAuction',
   CancelAuction = 'CancelAuction',
-  None = 'None'
+  None = 'None',
 }
 
 export type PinJsonToIpfsInput = {
-  fileName: Scalars['String'];
-  json: Scalars['JSON'];
-};
+  fileName: Scalars['String']
+  json: Scalars['JSON']
+}
 
 export type PinToIpfsInput = {
-  fileName: Scalars['String'];
-  fileKey: Scalars['String'];
-};
+  fileName: Scalars['String']
+  fileKey: Scalars['String']
+}
 
 export type PinningPayload = {
-  __typename?: 'PinningPayload';
-  cid: Scalars['String'];
-};
+  __typename?: 'PinningPayload'
+  cid: Scalars['String']
+}
 
 export type PolygonscanResult = {
-  __typename?: 'PolygonscanResult';
-  result: Array<PolygonscanResultObj>;
-  nextPage: Maybe<Scalars['String']>;
-};
+  __typename?: 'PolygonscanResult'
+  result: Array<PolygonscanResultObj>
+  nextPage: Maybe<Scalars['String']>
+}
 
 export type PolygonscanResultObj = {
-  __typename?: 'PolygonscanResultObj';
-  blockNumber: Scalars['String'];
-  timeStamp: Scalars['String'];
-  hash: Scalars['String'];
-  nonce: Scalars['String'];
-  blockHash: Scalars['String'];
-  transactionIndex: Scalars['String'];
-  from: Scalars['String'];
-  to: Scalars['String'];
-  value: Scalars['String'];
-  gas: Scalars['String'];
-  gasPrice: Scalars['String'];
-  isError: Scalars['String'];
-  txreceipt_status: Scalars['String'];
-  input: Scalars['String'];
-  contractAddress: Scalars['String'];
-  cumulativeGasUsed: Scalars['String'];
-  gasUsed: Scalars['String'];
-  confirmations: Scalars['String'];
-  method: Maybe<Scalars['String']>;
-  date: Scalars['String'];
-};
+  __typename?: 'PolygonscanResultObj'
+  blockNumber: Scalars['String']
+  timeStamp: Scalars['String']
+  hash: Scalars['String']
+  nonce: Scalars['String']
+  blockHash: Scalars['String']
+  transactionIndex: Scalars['String']
+  from: Scalars['String']
+  to: Scalars['String']
+  value: Scalars['String']
+  gas: Scalars['String']
+  gasPrice: Scalars['String']
+  isError: Scalars['String']
+  txreceipt_status: Scalars['String']
+  input: Scalars['String']
+  contractAddress: Scalars['String']
+  cumulativeGasUsed: Scalars['String']
+  gasUsed: Scalars['String']
+  confirmations: Scalars['String']
+  method: Maybe<Scalars['String']>
+  date: Scalars['String']
+}
 
 export type Post = {
-  __typename?: 'Post';
-  id: Scalars['ID'];
-  body: Maybe<Scalars['String']>;
-  mediaLink: Maybe<Scalars['String']>;
-  repostId: Maybe<Scalars['String']>;
-  deleted: Maybe<Scalars['Boolean']>;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  profile: Profile;
-  comments: Array<Comment>;
-  commentCount: Scalars['Float'];
-  repostCount: Scalars['Float'];
-  totalReactions: Scalars['Float'];
-  topReactions: Array<ReactionType>;
-  myReaction: Maybe<ReactionType>;
-  track: Maybe<Track>;
-};
-
+  __typename?: 'Post'
+  id: Scalars['ID']
+  body: Maybe<Scalars['String']>
+  mediaLink: Maybe<Scalars['String']>
+  repostId: Maybe<Scalars['String']>
+  deleted: Maybe<Scalars['Boolean']>
+  createdAt: Scalars['DateTime']
+  updatedAt: Scalars['DateTime']
+  profile: Profile
+  comments: Array<Comment>
+  commentCount: Scalars['Float']
+  repostCount: Scalars['Float']
+  totalReactions: Scalars['Float']
+  topReactions: Array<ReactionType>
+  myReaction: Maybe<ReactionType>
+  track: Maybe<Track>
+}
 
 export type PostTopReactionsArgs = {
-  top: Scalars['Float'];
-};
+  top: Scalars['Float']
+}
 
 export type PostConnection = {
-  __typename?: 'PostConnection';
-  pageInfo: PageInfo;
-  nodes: Array<Post>;
-};
+  __typename?: 'PostConnection'
+  pageInfo: PageInfo
+  nodes: Array<Post>
+}
 
 export type Profile = {
-  __typename?: 'Profile';
-  id: Scalars['ID'];
-  displayName: Scalars['String'];
-  profilePicture: Maybe<Scalars['String']>;
-  coverPicture: Maybe<Scalars['String']>;
-  socialMedias: SocialMedias;
-  favoriteGenres: Maybe<Array<Genre>>;
-  musicianTypes: Maybe<Array<MusicianType>>;
-  bio: Maybe<Scalars['String']>;
-  followerCount: Scalars['Float'];
-  followingCount: Scalars['Float'];
-  unreadNotificationCount: Scalars['Float'];
-  unreadMessageCount: Scalars['Float'];
-  verified: Maybe<Scalars['Boolean']>;
-  magicWalletAddress: Maybe<Scalars['String']>;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  userHandle: Scalars['String'];
-  teamMember: Scalars['Boolean'];
-  isFollowed: Scalars['Boolean'];
-  isSubscriber: Scalars['Boolean'];
-};
+  __typename?: 'Profile'
+  id: Scalars['ID']
+  displayName: Scalars['String']
+  profilePicture: Maybe<Scalars['String']>
+  coverPicture: Maybe<Scalars['String']>
+  socialMedias: SocialMedias
+  favoriteGenres: Maybe<Array<Genre>>
+  musicianTypes: Maybe<Array<MusicianType>>
+  bio: Maybe<Scalars['String']>
+  followerCount: Scalars['Float']
+  followingCount: Scalars['Float']
+  unreadNotificationCount: Scalars['Float']
+  unreadMessageCount: Scalars['Float']
+  verified: Maybe<Scalars['Boolean']>
+  magicWalletAddress: Maybe<Scalars['String']>
+  createdAt: Scalars['DateTime']
+  updatedAt: Scalars['DateTime']
+  userHandle: Scalars['String']
+  teamMember: Scalars['Boolean']
+  isFollowed: Scalars['Boolean']
+  isSubscriber: Scalars['Boolean']
+}
 
 export type ProfileConnection = {
-  __typename?: 'ProfileConnection';
-  pageInfo: PageInfo;
-  nodes: Array<Profile>;
-};
+  __typename?: 'ProfileConnection'
+  pageInfo: PageInfo
+  nodes: Array<Profile>
+}
 
 export type ProfileVerificationRequest = {
-  __typename?: 'ProfileVerificationRequest';
-  id: Scalars['ID'];
-  profileId: Scalars['String'];
-  soundcloud: Maybe<Scalars['String']>;
-  youtube: Maybe<Scalars['String']>;
-  bandcamp: Maybe<Scalars['String']>;
-  status: Maybe<Scalars['String']>;
-  reason: Maybe<Scalars['String']>;
-  reviewerProfileId: Maybe<Scalars['String']>;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-};
+  __typename?: 'ProfileVerificationRequest'
+  id: Scalars['ID']
+  profileId: Scalars['String']
+  soundcloud: Maybe<Scalars['String']>
+  youtube: Maybe<Scalars['String']>
+  bandcamp: Maybe<Scalars['String']>
+  status: Maybe<Scalars['String']>
+  reason: Maybe<Scalars['String']>
+  reviewerProfileId: Maybe<Scalars['String']>
+  createdAt: Scalars['DateTime']
+  updatedAt: Scalars['DateTime']
+}
 
 export type ProfileVerificationRequestConnection = {
-  __typename?: 'ProfileVerificationRequestConnection';
-  pageInfo: PageInfo;
-  nodes: Array<ProfileVerificationRequest>;
-};
+  __typename?: 'ProfileVerificationRequestConnection'
+  pageInfo: PageInfo
+  nodes: Array<ProfileVerificationRequest>
+}
 
 export type ProfileVerificationRequestPayload = {
-  __typename?: 'ProfileVerificationRequestPayload';
-  profileVerificationRequest: ProfileVerificationRequest;
-};
+  __typename?: 'ProfileVerificationRequestPayload'
+  profileVerificationRequest: ProfileVerificationRequest
+}
 
 export type ProofBookItem = {
-  __typename?: 'ProofBookItem';
-  id: Scalars['ID'];
-  root: Scalars['String'];
-  address: Scalars['String'];
-  value: Scalars['String'];
-  merkleProof: Array<Scalars['String']>;
-};
+  __typename?: 'ProofBookItem'
+  id: Scalars['ID']
+  root: Scalars['String']
+  address: Scalars['String']
+  value: Scalars['String']
+  merkleProof: Array<Scalars['String']>
+}
 
 export type Query = {
-  __typename?: 'Query';
-  auctionItem: AuctionItemPayload;
-  countBids: CountBidsPayload;
-  haveBided: Bided;
-  audioHolderByWallet: AudioHolder;
-  bidsWithInfo: BidsWithInfoPayload;
-  buyNowItem: BuyNowPayload;
-  chats: ChatConnection;
-  chatHistory: MessageConnection;
-  comment: Comment;
-  comments: CommentConnection;
-  explore: ExplorePayload;
-  exploreTracks: TrackConnection;
-  exploreUsers: ProfileConnection;
-  feed: FeedConnection;
-  followers: FollowConnection;
-  following: FollowConnection;
-  listingItem: Maybe<ListingItem>;
-  cheapestListingItem: Maybe<TrackPrice>;
-  message: Message;
-  notifications: NotificationConnection;
-  notification: Notification;
-  maticUsd: Scalars['String'];
-  getTransactionHistory: PolygonscanResult;
-  getInternalTransactionHistory: PolygonscanResult;
-  post: Post;
-  posts: PostConnection;
-  reactions: ReactionConnection;
-  bandcampLink: Scalars['String'];
-  getOriginalPostFromTrack: Post;
-  myProfile: Profile;
-  profile: Profile;
-  profileByHandle: Profile;
-  followedArtists: FollowedArtistsConnection;
-  profileVerificationRequest: ProfileVerificationRequest;
-  profileVerificationRequests: ProfileVerificationRequestConnection;
-  pendingRequestsBadgeNumber: Scalars['Float'];
-  trackEdition: TrackEdition;
-  track: Track;
-  tracks: TrackConnection;
-  ownedTracks: TrackConnection;
-  listableOwnedTracks: TrackConnection;
-  groupedTracks: TrackConnection;
-  favoriteTracks: TrackConnection;
-  listingItems: ListingItemConnection;
-  buyNowListingItems: ListingItemConnection;
-  ownedBuyNowListingItems: ListingItemConnection;
-  uploadUrl: UploadUrl;
-  mimeType: MimeType;
-  me: Maybe<User>;
-  getUserByWallet: Maybe<User>;
-  getProofBookByWallet: Maybe<ProofBookItem>;
-  whitelistEntryByWallet: WhitelistEntry;
-};
-
+  __typename?: 'Query'
+  auctionItem: AuctionItemPayload
+  countBids: CountBidsPayload
+  haveBided: Bided
+  audioHolderByWallet: AudioHolder
+  bidsWithInfo: BidsWithInfoPayload
+  buyNowItem: BuyNowPayload
+  chats: ChatConnection
+  chatHistory: MessageConnection
+  comment: Comment
+  comments: CommentConnection
+  explore: ExplorePayload
+  exploreTracks: TrackConnection
+  exploreUsers: ProfileConnection
+  feed: FeedConnection
+  followers: FollowConnection
+  following: FollowConnection
+  listingItem: Maybe<ListingItem>
+  cheapestListingItem: Maybe<TrackPrice>
+  message: Message
+  notifications: NotificationConnection
+  notification: Notification
+  maticUsd: Scalars['String']
+  getTransactionHistory: PolygonscanResult
+  getInternalTransactionHistory: PolygonscanResult
+  post: Post
+  posts: PostConnection
+  reactions: ReactionConnection
+  bandcampLink: Scalars['String']
+  getOriginalPostFromTrack: Post
+  myProfile: Profile
+  profile: Profile
+  profileByHandle: Profile
+  followedArtists: FollowedArtistsConnection
+  profileVerificationRequest: ProfileVerificationRequest
+  profileVerificationRequests: ProfileVerificationRequestConnection
+  pendingRequestsBadgeNumber: Scalars['Float']
+  trackEdition: TrackEdition
+  track: Track
+  tracks: TrackConnection
+  ownedTracks: TrackConnection
+  listableOwnedTracks: TrackConnection
+  groupedTracks: TrackConnection
+  favoriteTracks: TrackConnection
+  listingItems: ListingItemConnection
+  buyNowListingItems: ListingItemConnection
+  ownedBuyNowListingItems: ListingItemConnection
+  uploadUrl: UploadUrl
+  mimeType: MimeType
+  me: Maybe<User>
+  getUserByWallet: Maybe<User>
+  getProofBookByWallet: Maybe<ProofBookItem>
+  whitelistEntryByWallet: WhitelistEntry
+}
 
 export type QueryAuctionItemArgs = {
-  tokenId: Scalars['Float'];
-};
-
+  tokenId: Scalars['Float']
+}
 
 export type QueryCountBidsArgs = {
-  tokenId: Scalars['Float'];
-};
-
+  tokenId: Scalars['Float']
+}
 
 export type QueryHaveBidedArgs = {
-  bidder: Scalars['String'];
-  auctionId: Scalars['String'];
-};
-
+  bidder: Scalars['String']
+  auctionId: Scalars['String']
+}
 
 export type QueryAudioHolderByWalletArgs = {
-  walletAdress: Scalars['String'];
-};
-
+  walletAdress: Scalars['String']
+}
 
 export type QueryBidsWithInfoArgs = {
-  auctionId: Scalars['String'];
-};
-
+  auctionId: Scalars['String']
+}
 
 export type QueryBuyNowItemArgs = {
-  input: FilterListingItemInput;
-};
-
+  input: FilterListingItemInput
+}
 
 export type QueryChatsArgs = {
-  page?: Maybe<PageInput>;
-};
-
+  page?: Maybe<PageInput>
+}
 
 export type QueryChatHistoryArgs = {
-  page?: Maybe<PageInput>;
-  profileId: Scalars['String'];
-};
-
+  page?: Maybe<PageInput>
+  profileId: Scalars['String']
+}
 
 export type QueryCommentArgs = {
-  id: Scalars['String'];
-};
-
+  id: Scalars['String']
+}
 
 export type QueryCommentsArgs = {
-  postId?: Maybe<Scalars['String']>;
-  page?: Maybe<PageInput>;
-};
-
+  postId?: Maybe<Scalars['String']>
+  page?: Maybe<PageInput>
+}
 
 export type QueryExploreArgs = {
-  search?: Maybe<Scalars['String']>;
-};
-
+  search?: Maybe<Scalars['String']>
+}
 
 export type QueryExploreTracksArgs = {
-  sort?: Maybe<SortExploreTracks>;
-  page?: Maybe<PageInput>;
-  search?: Maybe<Scalars['String']>;
-};
-
+  sort?: Maybe<SortExploreTracks>
+  page?: Maybe<PageInput>
+  search?: Maybe<Scalars['String']>
+}
 
 export type QueryExploreUsersArgs = {
-  page?: Maybe<PageInput>;
-  search?: Maybe<Scalars['String']>;
-};
-
+  page?: Maybe<PageInput>
+  search?: Maybe<Scalars['String']>
+}
 
 export type QueryFeedArgs = {
-  page?: Maybe<PageInput>;
-};
-
+  page?: Maybe<PageInput>
+}
 
 export type QueryFollowersArgs = {
-  page?: Maybe<PageInput>;
-  id: Scalars['String'];
-};
-
+  page?: Maybe<PageInput>
+  id: Scalars['String']
+}
 
 export type QueryFollowingArgs = {
-  page?: Maybe<PageInput>;
-  id: Scalars['String'];
-};
-
+  page?: Maybe<PageInput>
+  id: Scalars['String']
+}
 
 export type QueryListingItemArgs = {
-  input: FilterListingItemInput;
-};
-
+  input: FilterListingItemInput
+}
 
 export type QueryCheapestListingItemArgs = {
-  trackEditionId: Scalars['String'];
-};
-
+  trackEditionId: Scalars['String']
+}
 
 export type QueryMessageArgs = {
-  id: Scalars['String'];
-};
-
+  id: Scalars['String']
+}
 
 export type QueryNotificationsArgs = {
-  page?: Maybe<PageInput>;
-  sort?: Maybe<SortNotificationInput>;
-};
-
+  page?: Maybe<PageInput>
+  sort?: Maybe<SortNotificationInput>
+}
 
 export type QueryNotificationArgs = {
-  id: Scalars['String'];
-};
-
+  id: Scalars['String']
+}
 
 export type QueryGetTransactionHistoryArgs = {
-  page?: Maybe<PageInput>;
-  wallet: Scalars['String'];
-};
-
+  page?: Maybe<PageInput>
+  wallet: Scalars['String']
+}
 
 export type QueryGetInternalTransactionHistoryArgs = {
-  page?: Maybe<PageInput>;
-  wallet: Scalars['String'];
-};
-
+  page?: Maybe<PageInput>
+  wallet: Scalars['String']
+}
 
 export type QueryPostArgs = {
-  id: Scalars['String'];
-};
-
+  id: Scalars['String']
+}
 
 export type QueryPostsArgs = {
-  page?: Maybe<PageInput>;
-  sort?: Maybe<SortPostInput>;
-  filter?: Maybe<FilterPostInput>;
-};
-
+  page?: Maybe<PageInput>
+  sort?: Maybe<SortPostInput>
+  filter?: Maybe<FilterPostInput>
+}
 
 export type QueryReactionsArgs = {
-  page?: Maybe<PageInput>;
-  postId: Scalars['String'];
-};
-
+  page?: Maybe<PageInput>
+  postId: Scalars['String']
+}
 
 export type QueryBandcampLinkArgs = {
-  url: Scalars['String'];
-};
-
+  url: Scalars['String']
+}
 
 export type QueryGetOriginalPostFromTrackArgs = {
-  trackId: Scalars['String'];
-};
-
+  trackId: Scalars['String']
+}
 
 export type QueryProfileArgs = {
-  id: Scalars['String'];
-};
-
+  id: Scalars['String']
+}
 
 export type QueryProfileByHandleArgs = {
-  handle: Scalars['String'];
-};
-
+  handle: Scalars['String']
+}
 
 export type QueryFollowedArtistsArgs = {
-  page?: Maybe<PageInput>;
-  search?: Maybe<Scalars['String']>;
-  profileId: Scalars['String'];
-};
-
+  page?: Maybe<PageInput>
+  search?: Maybe<Scalars['String']>
+  profileId: Scalars['String']
+}
 
 export type QueryProfileVerificationRequestArgs = {
-  id?: Maybe<Scalars['String']>;
-  profileId?: Maybe<Scalars['String']>;
-};
-
+  id?: Maybe<Scalars['String']>
+  profileId?: Maybe<Scalars['String']>
+}
 
 export type QueryProfileVerificationRequestsArgs = {
-  page?: Maybe<PageInput>;
-  status?: Maybe<Scalars['String']>;
-};
-
+  page?: Maybe<PageInput>
+  status?: Maybe<Scalars['String']>
+}
 
 export type QueryTrackEditionArgs = {
-  id: Scalars['String'];
-};
-
+  id: Scalars['String']
+}
 
 export type QueryTrackArgs = {
-  id: Scalars['String'];
-};
-
+  id: Scalars['String']
+}
 
 export type QueryTracksArgs = {
-  page?: Maybe<PageInput>;
-  sort?: Maybe<SortTrackInput>;
-  filter?: Maybe<FilterTrackInput>;
-};
-
+  page?: Maybe<PageInput>
+  sort?: Maybe<SortTrackInput>
+  filter?: Maybe<FilterTrackInput>
+}
 
 export type QueryOwnedTracksArgs = {
-  page?: Maybe<PageInput>;
-  filter: FilterOwnedTracksInput;
-};
-
+  page?: Maybe<PageInput>
+  filter: FilterOwnedTracksInput
+}
 
 export type QueryListableOwnedTracksArgs = {
-  filter: FilterOwnedTracksInput;
-};
-
+  filter: FilterOwnedTracksInput
+}
 
 export type QueryGroupedTracksArgs = {
-  page?: Maybe<PageInput>;
-  sort?: Maybe<SortTrackInput>;
-  filter?: Maybe<FilterTrackInput>;
-};
-
+  page?: Maybe<PageInput>
+  sort?: Maybe<SortTrackInput>
+  filter?: Maybe<FilterTrackInput>
+}
 
 export type QueryFavoriteTracksArgs = {
-  page?: Maybe<PageInput>;
-  sort?: Maybe<SortTrackInput>;
-  search?: Maybe<Scalars['String']>;
-};
-
+  page?: Maybe<PageInput>
+  sort?: Maybe<SortTrackInput>
+  search?: Maybe<Scalars['String']>
+}
 
 export type QueryListingItemsArgs = {
-  page?: Maybe<PageInput>;
-  sort?: Maybe<SortListingItemInput>;
-  filter?: Maybe<FilterTrackMarketplace>;
-};
-
+  page?: Maybe<PageInput>
+  sort?: Maybe<SortListingItemInput>
+  filter?: Maybe<FilterTrackMarketplace>
+}
 
 export type QueryBuyNowListingItemsArgs = {
-  page?: Maybe<PageInput>;
-  filter?: Maybe<FilterBuyNowItemInput>;
-};
-
+  page?: Maybe<PageInput>
+  filter?: Maybe<FilterBuyNowItemInput>
+}
 
 export type QueryOwnedBuyNowListingItemsArgs = {
-  filter?: Maybe<FilterOwnedBuyNowItemInput>;
-};
-
+  filter?: Maybe<FilterOwnedBuyNowItemInput>
+}
 
 export type QueryUploadUrlArgs = {
-  fileType: Scalars['String'];
-};
-
+  fileType: Scalars['String']
+}
 
 export type QueryMimeTypeArgs = {
-  url: Scalars['String'];
-};
-
+  url: Scalars['String']
+}
 
 export type QueryGetUserByWalletArgs = {
-  walletAddress: Scalars['String'];
-};
-
+  walletAddress: Scalars['String']
+}
 
 export type QueryGetProofBookByWalletArgs = {
-  walletAddress: Scalars['String'];
-};
-
+  walletAddress: Scalars['String']
+}
 
 export type QueryWhitelistEntryByWalletArgs = {
-  walletAdress: Scalars['String'];
-};
+  walletAdress: Scalars['String']
+}
 
 export type ReactToPostInput = {
-  postId: Scalars['String'];
-  type: ReactionType;
-};
+  postId: Scalars['String']
+  type: ReactionType
+}
 
 export type ReactToPostPayload = {
-  __typename?: 'ReactToPostPayload';
-  post: Post;
-};
+  __typename?: 'ReactToPostPayload'
+  post: Post
+}
 
 export type Reaction = {
-  __typename?: 'Reaction';
-  id: Scalars['ID'];
-  profileId: Scalars['String'];
-  postId: Scalars['String'];
-  type: Scalars['String'];
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  profile: Profile;
-};
+  __typename?: 'Reaction'
+  id: Scalars['ID']
+  profileId: Scalars['String']
+  postId: Scalars['String']
+  type: Scalars['String']
+  createdAt: Scalars['DateTime']
+  updatedAt: Scalars['DateTime']
+  profile: Profile
+}
 
 export type ReactionConnection = {
-  __typename?: 'ReactionConnection';
-  pageInfo: PageInfo;
-  nodes: Array<Reaction>;
-};
+  __typename?: 'ReactionConnection'
+  pageInfo: PageInfo
+  nodes: Array<Reaction>
+}
 
 export type ReactionNotification = {
-  __typename?: 'ReactionNotification';
-  type: NotificationType;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  id: Scalars['String'];
-  authorName: Scalars['String'];
-  authorPicture: Maybe<Scalars['String']>;
-  postId: Scalars['String'];
-  reactionType: ReactionType;
-  link: Scalars['String'];
-};
+  __typename?: 'ReactionNotification'
+  type: NotificationType
+  createdAt: Scalars['DateTime']
+  updatedAt: Scalars['DateTime']
+  id: Scalars['String']
+  authorName: Scalars['String']
+  authorPicture: Maybe<Scalars['String']>
+  postId: Scalars['String']
+  reactionType: ReactionType
+  link: Scalars['String']
+}
 
 export enum ReactionType {
   Happy = 'HAPPY',
   Heart = 'HEART',
   Horns = 'HORNS',
   Sad = 'SAD',
-  Sunglasses = 'SUNGLASSES'
+  Sunglasses = 'SUNGLASSES',
 }
 
 export type RegisterInput = {
-  token: Scalars['String'];
-  displayName: Scalars['String'];
-  handle: Scalars['String'];
-};
+  token: Scalars['String']
+  displayName: Scalars['String']
+  handle: Scalars['String']
+}
 
 export type RetractReactionInput = {
-  postId: Scalars['String'];
-};
+  postId: Scalars['String']
+}
 
 export type RetractReactionPayload = {
-  __typename?: 'RetractReactionPayload';
-  post: Post;
-};
+  __typename?: 'RetractReactionPayload'
+  post: Post
+}
 
 export enum Role {
   System = 'SYSTEM',
   Admin = 'ADMIN',
   User = 'USER',
   TeamMember = 'TEAM_MEMBER',
-  SoundchainAccount = 'SOUNDCHAIN_ACCOUNT'
+  SoundchainAccount = 'SOUNDCHAIN_ACCOUNT',
 }
 
 export enum SaleType {
   Auction = 'AUCTION',
-  BuyNow = 'BUY_NOW'
+  BuyNow = 'BUY_NOW',
 }
 
 export enum SellType {
   BuyNow = 'BuyNow',
-  Auction = 'Auction'
+  Auction = 'Auction',
 }
 
 export type SendMessageInput = {
-  message: Scalars['String'];
-  toId: Scalars['String'];
-};
+  message: Scalars['String']
+  toId: Scalars['String']
+}
 
 export type SendMessagePayload = {
-  __typename?: 'SendMessagePayload';
-  message: Message;
-};
+  __typename?: 'SendMessagePayload'
+  message: Message
+}
 
 export type SocialMedias = {
-  __typename?: 'SocialMedias';
-  facebook: Maybe<Scalars['String']>;
-  instagram: Maybe<Scalars['String']>;
-  soundcloud: Maybe<Scalars['String']>;
-  twitter: Maybe<Scalars['String']>;
-};
+  __typename?: 'SocialMedias'
+  facebook: Maybe<Scalars['String']>
+  instagram: Maybe<Scalars['String']>
+  soundcloud: Maybe<Scalars['String']>
+  twitter: Maybe<Scalars['String']>
+}
 
 export type SocialMediasInput = {
-  facebook?: Maybe<Scalars['String']>;
-  instagram?: Maybe<Scalars['String']>;
-  soundcloud?: Maybe<Scalars['String']>;
-  twitter?: Maybe<Scalars['String']>;
-};
+  facebook?: Maybe<Scalars['String']>
+  instagram?: Maybe<Scalars['String']>
+  soundcloud?: Maybe<Scalars['String']>
+  twitter?: Maybe<Scalars['String']>
+}
 
 export type SortExploreTracks = {
-  field: SortExploreTracksField;
-  order?: Maybe<SortOrder>;
-};
+  field: SortExploreTracksField
+  order?: Maybe<SortOrder>
+}
 
 export enum SortExploreTracksField {
   CreatedAt = 'CREATED_AT',
-  PlaybackCount = 'PLAYBACK_COUNT'
+  PlaybackCount = 'PLAYBACK_COUNT',
 }
 
 export enum SortListingItemField {
   PlaybackCount = 'PLAYBACK_COUNT',
   CreatedAt = 'CREATED_AT',
-  Price = 'PRICE'
+  Price = 'PRICE',
 }
 
 export type SortListingItemInput = {
-  field: SortListingItemField;
-  order?: Maybe<SortOrder>;
-};
+  field: SortListingItemField
+  order?: Maybe<SortOrder>
+}
 
 export enum SortNotificationField {
-  CreatedAt = 'CREATED_AT'
+  CreatedAt = 'CREATED_AT',
 }
 
 export type SortNotificationInput = {
-  field: SortNotificationField;
-  order?: Maybe<SortOrder>;
-};
+  field: SortNotificationField
+  order?: Maybe<SortOrder>
+}
 
 export enum SortOrder {
   Asc = 'ASC',
-  Desc = 'DESC'
+  Desc = 'DESC',
 }
 
 export enum SortPostField {
-  CreatedAt = 'CREATED_AT'
+  CreatedAt = 'CREATED_AT',
 }
 
 export type SortPostInput = {
-  field: SortPostField;
-  order?: Maybe<SortOrder>;
-};
+  field: SortPostField
+  order?: Maybe<SortOrder>
+}
 
 export enum SortTrackField {
   PlaybackCount = 'PLAYBACK_COUNT',
-  CreatedAt = 'CREATED_AT'
+  CreatedAt = 'CREATED_AT',
 }
 
 export type SortTrackInput = {
-  field: SortTrackField;
-  order?: Maybe<SortOrder>;
-};
+  field: SortTrackField
+  order?: Maybe<SortOrder>
+}
 
 export type SubscribeToProfileInput = {
-  profileId: Scalars['String'];
-};
+  profileId: Scalars['String']
+}
 
 export type SubscribeToProfilePayload = {
-  __typename?: 'SubscribeToProfilePayload';
-  profile: Profile;
-};
+  __typename?: 'SubscribeToProfilePayload'
+  profile: Profile
+}
 
 export type ToggleFavoritePayload = {
-  __typename?: 'ToggleFavoritePayload';
-  favoriteProfileTrack: FavoriteProfileTrack;
-};
+  __typename?: 'ToggleFavoritePayload'
+  favoriteProfileTrack: FavoriteProfileTrack
+}
 
 export type Track = {
-  __typename?: 'Track';
-  id: Scalars['ID'];
-  profileId: Scalars['String'];
-  title: Maybe<Scalars['String']>;
-  description: Maybe<Scalars['String']>;
-  utilityInfo: Maybe<Scalars['String']>;
-  assetUrl: Scalars['String'];
-  artworkUrl: Maybe<Scalars['String']>;
-  artist: Maybe<Scalars['String']>;
-  artistId: Maybe<Scalars['String']>;
-  artistProfileId: Maybe<Scalars['String']>;
-  album: Maybe<Scalars['String']>;
-  copyright: Maybe<Scalars['String']>;
-  releaseYear: Maybe<Scalars['Float']>;
-  genres: Maybe<Array<Genre>>;
-  nftData: Maybe<NftDataType>;
-  playbackCountFormatted: Scalars['String'];
-  trackEditionId: Maybe<Scalars['String']>;
-  trackEdition: Maybe<TrackEdition>;
-  deleted: Maybe<Scalars['Boolean']>;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  playbackUrl: Scalars['String'];
-  playbackCount: Scalars['Float'];
-  favoriteCount: Scalars['Float'];
-  listingCount: Scalars['Float'];
-  price: TrackPrice;
-  saleType: Scalars['String'];
-  isFavorite: Scalars['Boolean'];
-  editionSize: Scalars['Float'];
-  listingItem: Maybe<ListingItem>;
-};
+  __typename?: 'Track'
+  id: Scalars['ID']
+  profileId: Scalars['String']
+  title: Maybe<Scalars['String']>
+  description: Maybe<Scalars['String']>
+  utilityInfo: Maybe<Scalars['String']>
+  assetUrl: Scalars['String']
+  artworkUrl: Maybe<Scalars['String']>
+  artist: Maybe<Scalars['String']>
+  artistId: Maybe<Scalars['String']>
+  artistProfileId: Maybe<Scalars['String']>
+  album: Maybe<Scalars['String']>
+  copyright: Maybe<Scalars['String']>
+  releaseYear: Maybe<Scalars['Float']>
+  genres: Maybe<Array<Genre>>
+  nftData: Maybe<NftDataType>
+  playbackCountFormatted: Scalars['String']
+  trackEditionId: Maybe<Scalars['String']>
+  trackEdition: Maybe<TrackEdition>
+  deleted: Maybe<Scalars['Boolean']>
+  createdAt: Scalars['DateTime']
+  updatedAt: Scalars['DateTime']
+  playbackUrl: Scalars['String']
+  playbackCount: Scalars['Float']
+  favoriteCount: Scalars['Float']
+  listingCount: Scalars['Float']
+  price: TrackPrice
+  saleType: Scalars['String']
+  isFavorite: Scalars['Boolean']
+  editionSize: Scalars['Float']
+  listingItem: Maybe<ListingItem>
+}
 
 export type TrackConnection = {
-  __typename?: 'TrackConnection';
-  pageInfo: PageInfo;
-  nodes: Array<Track>;
-};
+  __typename?: 'TrackConnection'
+  pageInfo: PageInfo
+  nodes: Array<Track>
+}
 
 export type TrackEdition = {
-  __typename?: 'TrackEdition';
-  id: Scalars['ID'];
-  transactionHash: Scalars['String'];
-  editionId: Scalars['Float'];
-  listed: Scalars['Boolean'];
-  contract: Maybe<Scalars['String']>;
-  marketplace: Maybe<Scalars['String']>;
-  editionData: Maybe<EditionDataType>;
-  editionSize: Scalars['Float'];
-  deleted: Maybe<Scalars['Boolean']>;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-};
+  __typename?: 'TrackEdition'
+  id: Scalars['ID']
+  transactionHash: Scalars['String']
+  editionId: Scalars['Float']
+  listed: Scalars['Boolean']
+  contract: Maybe<Scalars['String']>
+  marketplace: Maybe<Scalars['String']>
+  editionData: Maybe<EditionDataType>
+  editionSize: Scalars['Float']
+  deleted: Maybe<Scalars['Boolean']>
+  createdAt: Scalars['DateTime']
+  updatedAt: Scalars['DateTime']
+}
 
 export type TrackPrice = {
-  __typename?: 'TrackPrice';
-  value: Scalars['Float'];
-  currency: CurrencyType;
-};
+  __typename?: 'TrackPrice'
+  value: Scalars['Float']
+  currency: CurrencyType
+}
 
 export type TrackWithListingItem = {
-  __typename?: 'TrackWithListingItem';
-  id: Scalars['ID'];
-  profileId: Scalars['String'];
-  title: Maybe<Scalars['String']>;
-  description: Maybe<Scalars['String']>;
-  utilityInfo: Maybe<Scalars['String']>;
-  assetUrl: Scalars['String'];
-  artworkUrl: Maybe<Scalars['String']>;
-  artist: Maybe<Scalars['String']>;
-  artistId: Maybe<Scalars['String']>;
-  artistProfileId: Maybe<Scalars['String']>;
-  album: Maybe<Scalars['String']>;
-  copyright: Maybe<Scalars['String']>;
-  releaseYear: Maybe<Scalars['Float']>;
-  genres: Maybe<Array<Genre>>;
-  nftData: Maybe<NftDataType>;
-  playbackCountFormatted: Scalars['String'];
-  trackEditionId: Maybe<Scalars['String']>;
-  trackEdition: Maybe<TrackEdition>;
-  deleted: Maybe<Scalars['Boolean']>;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  playbackUrl: Scalars['String'];
-  playbackCount: Scalars['Float'];
-  favoriteCount: Scalars['Float'];
-  listingCount: Scalars['Float'];
-  price: TrackPrice;
-  saleType: Scalars['String'];
-  isFavorite: Scalars['Boolean'];
-  editionSize: Scalars['Float'];
-  listingItem: Maybe<ListingItemWithPrice>;
-};
+  __typename?: 'TrackWithListingItem'
+  id: Scalars['ID']
+  profileId: Scalars['String']
+  title: Maybe<Scalars['String']>
+  description: Maybe<Scalars['String']>
+  utilityInfo: Maybe<Scalars['String']>
+  assetUrl: Scalars['String']
+  artworkUrl: Maybe<Scalars['String']>
+  artist: Maybe<Scalars['String']>
+  artistId: Maybe<Scalars['String']>
+  artistProfileId: Maybe<Scalars['String']>
+  album: Maybe<Scalars['String']>
+  copyright: Maybe<Scalars['String']>
+  releaseYear: Maybe<Scalars['Float']>
+  genres: Maybe<Array<Genre>>
+  nftData: Maybe<NftDataType>
+  playbackCountFormatted: Scalars['String']
+  trackEditionId: Maybe<Scalars['String']>
+  trackEdition: Maybe<TrackEdition>
+  deleted: Maybe<Scalars['Boolean']>
+  createdAt: Scalars['DateTime']
+  updatedAt: Scalars['DateTime']
+  playbackUrl: Scalars['String']
+  playbackCount: Scalars['Float']
+  favoriteCount: Scalars['Float']
+  listingCount: Scalars['Float']
+  price: TrackPrice
+  saleType: Scalars['String']
+  isFavorite: Scalars['Boolean']
+  editionSize: Scalars['Float']
+  listingItem: Maybe<ListingItemWithPrice>
+}
 
 export type UnfollowProfileInput = {
-  followedId: Scalars['String'];
-};
+  followedId: Scalars['String']
+}
 
 export type UnfollowProfilePayload = {
-  __typename?: 'UnfollowProfilePayload';
-  unfollowedProfile: Profile;
-};
+  __typename?: 'UnfollowProfilePayload'
+  unfollowedProfile: Profile
+}
 
 export type UnsubscribeFromProfileInput = {
-  profileId: Scalars['String'];
-};
+  profileId: Scalars['String']
+}
 
 export type UnsubscribeFromProfilePayload = {
-  __typename?: 'UnsubscribeFromProfilePayload';
-  profile: Profile;
-};
+  __typename?: 'UnsubscribeFromProfilePayload'
+  profile: Profile
+}
 
 export type UpdateCommentInput = {
-  commentId: Scalars['String'];
-  body: Scalars['String'];
-};
+  commentId: Scalars['String']
+  body: Scalars['String']
+}
 
 export type UpdateCommentPayload = {
-  __typename?: 'UpdateCommentPayload';
-  comment: Comment;
-};
+  __typename?: 'UpdateCommentPayload'
+  comment: Comment
+}
 
 export type UpdateDefaultWalletInput = {
-  defaultWallet: Scalars['String'];
-};
+  defaultWallet: Scalars['String']
+}
 
 export type UpdateDefaultWalletPayload = {
-  __typename?: 'UpdateDefaultWalletPayload';
-  user: User;
-};
+  __typename?: 'UpdateDefaultWalletPayload'
+  user: User
+}
 
 export type UpdateEditionOwnedTracksInput = {
-  trackIds: Array<Scalars['String']>;
-  trackEditionId: Scalars['String'];
-  owner: Scalars['String'];
-  nftData?: Maybe<NftDataInput>;
-};
+  trackIds: Array<Scalars['String']>
+  trackEditionId: Scalars['String']
+  owner: Scalars['String']
+  nftData?: Maybe<NftDataInput>
+}
 
 export type UpdateEditionOwnedTracksPayload = {
-  __typename?: 'UpdateEditionOwnedTracksPayload';
-  tracks: Array<Track>;
-};
+  __typename?: 'UpdateEditionOwnedTracksPayload'
+  tracks: Array<Track>
+}
 
 export type UpdateHandleInput = {
-  handle: Scalars['String'];
-};
+  handle: Scalars['String']
+}
 
 export type UpdateHandlePayload = {
-  __typename?: 'UpdateHandlePayload';
-  user: User;
-};
+  __typename?: 'UpdateHandlePayload'
+  user: User
+}
 
 export type UpdateOtpInput = {
-  otpSecret: Scalars['String'];
-  otpRecoveryPhrase: Scalars['String'];
-};
+  otpSecret: Scalars['String']
+  otpRecoveryPhrase: Scalars['String']
+}
 
 export type UpdateOtpPayload = {
-  __typename?: 'UpdateOTPPayload';
-  user: User;
-};
+  __typename?: 'UpdateOTPPayload'
+  user: User
+}
 
 export type UpdateOgunClaimedAudioHolderPayload = {
-  __typename?: 'UpdateOgunClaimedAudioHolderPayload';
-  audioHolder: AudioHolder;
-};
+  __typename?: 'UpdateOgunClaimedAudioHolderPayload'
+  audioHolder: AudioHolder
+}
 
 export type UpdateOgunClaimedInput = {
-  id: Scalars['String'];
-  ogunClaimed: Scalars['Boolean'];
-};
+  id: Scalars['String']
+  ogunClaimed: Scalars['Boolean']
+}
 
 export type UpdatePostInput = {
-  postId: Scalars['String'];
-  body: Scalars['String'];
-  mediaLink?: Maybe<Scalars['String']>;
-};
+  postId: Scalars['String']
+  body: Scalars['String']
+  mediaLink?: Maybe<Scalars['String']>
+}
 
 export type UpdatePostPayload = {
-  __typename?: 'UpdatePostPayload';
-  post: Post;
-};
+  __typename?: 'UpdatePostPayload'
+  post: Post
+}
 
 export type UpdateProfileInput = {
-  displayName?: Maybe<Scalars['String']>;
-  bio?: Maybe<Scalars['String']>;
-  profilePicture?: Maybe<Scalars['String']>;
-  coverPicture?: Maybe<Scalars['String']>;
-  favoriteGenres?: Maybe<Array<Genre>>;
-  musicianTypes?: Maybe<Array<MusicianType>>;
-  socialMedias?: Maybe<SocialMediasInput>;
-};
+  displayName?: Maybe<Scalars['String']>
+  bio?: Maybe<Scalars['String']>
+  profilePicture?: Maybe<Scalars['String']>
+  coverPicture?: Maybe<Scalars['String']>
+  favoriteGenres?: Maybe<Array<Genre>>
+  musicianTypes?: Maybe<Array<MusicianType>>
+  socialMedias?: Maybe<SocialMediasInput>
+}
 
 export type UpdateProfilePayload = {
-  __typename?: 'UpdateProfilePayload';
-  profile: Profile;
-};
+  __typename?: 'UpdateProfilePayload'
+  profile: Profile
+}
 
 export type UpdateTrackInput = {
-  trackId: Scalars['String'];
-  profileId?: Maybe<Scalars['String']>;
-  nftData?: Maybe<NftDataInput>;
-  playbackCount?: Maybe<Scalars['Float']>;
-};
+  trackId: Scalars['String']
+  profileId?: Maybe<Scalars['String']>
+  nftData?: Maybe<NftDataInput>
+  playbackCount?: Maybe<Scalars['Float']>
+}
 
 export type UpdateTrackPayload = {
-  __typename?: 'UpdateTrackPayload';
-  track: Track;
-};
+  __typename?: 'UpdateTrackPayload'
+  track: Track
+}
 
 export type UpdateWalletInput = {
-  wallet: Scalars['String'];
-};
+  wallet: Scalars['String']
+}
 
 export type UpdateWhitelistEntryPayload = {
-  __typename?: 'UpdateWhitelistEntryPayload';
-  whitelistEntry: WhitelistEntry;
-};
+  __typename?: 'UpdateWhitelistEntryPayload'
+  whitelistEntry: WhitelistEntry
+}
 
 export type UploadUrl = {
-  __typename?: 'UploadUrl';
-  uploadUrl: Scalars['String'];
-  fileName: Scalars['String'];
-  readUrl: Scalars['String'];
-};
+  __typename?: 'UploadUrl'
+  uploadUrl: Scalars['String']
+  fileName: Scalars['String']
+  readUrl: Scalars['String']
+}
 
 export type User = {
-  __typename?: 'User';
-  id: Scalars['ID'];
-  email: Scalars['String'];
-  handle: Scalars['String'];
-  magicWalletAddress: Maybe<Scalars['String']>;
-  metaMaskWalletAddressees: Maybe<Array<Scalars['String']>>;
-  defaultWallet: DefaultWallet;
-  authMethod: AuthMethod;
-  isApprovedOnMarketplace: Scalars['Boolean'];
-  roles: Array<Role>;
-  otpSecret: Maybe<Scalars['String']>;
-  otpRecoveryPhrase: Maybe<Scalars['String']>;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  profile: Profile;
-};
+  __typename?: 'User'
+  id: Scalars['ID']
+  email: Scalars['String']
+  handle: Scalars['String']
+  magicWalletAddress: Maybe<Scalars['String']>
+  metaMaskWalletAddressees: Maybe<Array<Scalars['String']>>
+  defaultWallet: DefaultWallet
+  authMethod: AuthMethod
+  isApprovedOnMarketplace: Scalars['Boolean']
+  roles: Array<Role>
+  otpSecret: Maybe<Scalars['String']>
+  otpRecoveryPhrase: Maybe<Scalars['String']>
+  createdAt: Scalars['DateTime']
+  updatedAt: Scalars['DateTime']
+  profile: Profile
+}
 
 export type ValidateOtpRecoveryPhraseInput = {
-  otpRecoveryPhrase: Scalars['String'];
-};
+  otpRecoveryPhrase: Scalars['String']
+}
 
 export type VerificationRequestNotification = {
-  __typename?: 'VerificationRequestNotification';
-  type: NotificationType;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  id: Scalars['String'];
-  body: Scalars['String'];
-};
+  __typename?: 'VerificationRequestNotification'
+  type: NotificationType
+  createdAt: Scalars['DateTime']
+  updatedAt: Scalars['DateTime']
+  id: Scalars['String']
+  body: Scalars['String']
+}
 
 export type WhitelistEntry = {
-  __typename?: 'WhitelistEntry';
-  id: Scalars['ID'];
-  walletAddress: Scalars['String'];
-  emailAddress: Scalars['String'];
-  ogunClaimed: Maybe<Scalars['Boolean']>;
-};
+  __typename?: 'WhitelistEntry'
+  id: Scalars['ID']
+  walletAddress: Scalars['String']
+  emailAddress: Scalars['String']
+  ogunClaimed: Maybe<Scalars['Boolean']>
+}
 
 export type WonAuctionNotification = {
-  __typename?: 'WonAuctionNotification';
-  type: NotificationType;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  id: Scalars['String'];
-  trackId: Scalars['String'];
-  trackName: Scalars['String'];
-  artist: Scalars['String'];
-  artworkUrl: Scalars['String'];
-  price: Scalars['Float'];
-  auctionId: Scalars['String'];
-};
+  __typename?: 'WonAuctionNotification'
+  type: NotificationType
+  createdAt: Scalars['DateTime']
+  updatedAt: Scalars['DateTime']
+  id: Scalars['String']
+  trackId: Scalars['String']
+  trackName: Scalars['String']
+  artist: Scalars['String']
+  artworkUrl: Scalars['String']
+  price: Scalars['Float']
+  auctionId: Scalars['String']
+}
 
 export type AddCommentMutationVariables = Exact<{
-  input: AddCommentInput;
-}>;
+  input: AddCommentInput
+}>
 
+export type AddCommentMutation = { __typename?: 'Mutation' } & {
+  addComment: { __typename?: 'AddCommentPayload' } & {
+    comment: { __typename?: 'Comment' } & {
+      post: { __typename?: 'Post' } & Pick<Post, 'id' | 'commentCount'>
+    } & CommentComponentFieldsFragment
+  }
+}
 
-export type AddCommentMutation = (
-  { __typename?: 'Mutation' }
-  & { addComment: (
-    { __typename?: 'AddCommentPayload' }
-    & { comment: (
-      { __typename?: 'Comment' }
-      & { post: (
-        { __typename?: 'Post' }
-        & Pick<Post, 'id' | 'commentCount'>
-      ) }
-      & CommentComponentFieldsFragment
-    ) }
-  ) }
-);
+export type AuctionEndedNotificationFieldsFragment = { __typename?: 'AuctionEndedNotification' } & Pick<
+  AuctionEndedNotification,
+  'id' | 'type' | 'createdAt' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price'
+>
 
-export type AuctionEndedNotificationFieldsFragment = (
-  { __typename?: 'AuctionEndedNotification' }
-  & Pick<AuctionEndedNotification, 'id' | 'type' | 'createdAt' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price'>
-);
-
-export type AuctionIsEndingNotificationFieldsFragment = (
-  { __typename?: 'AuctionIsEndingNotification' }
-  & Pick<AuctionIsEndingNotification, 'id' | 'type' | 'createdAt' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price'>
-);
+export type AuctionIsEndingNotificationFieldsFragment = { __typename?: 'AuctionIsEndingNotification' } & Pick<
+  AuctionIsEndingNotification,
+  'id' | 'type' | 'createdAt' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price'
+>
 
 export type AuctionItemQueryVariables = Exact<{
-  tokenId: Scalars['Float'];
-}>;
+  tokenId: Scalars['Float']
+}>
 
-
-export type AuctionItemQuery = (
-  { __typename?: 'Query' }
-  & { auctionItem: (
-    { __typename?: 'AuctionItemPayload' }
-    & { auctionItem: Maybe<(
-      { __typename?: 'AuctionItem' }
-      & Pick<AuctionItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow'>
-    )> }
-  ) }
-);
+export type AuctionItemQuery = { __typename?: 'Query' } & {
+  auctionItem: { __typename?: 'AuctionItemPayload' } & {
+    auctionItem: Maybe<
+      { __typename?: 'AuctionItem' } & Pick<
+        AuctionItem,
+        'id' | 'owner' | 'nft' | 'tokenId' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow'
+      >
+    >
+  }
+}
 
 export type AudioHolderByWalletQueryVariables = Exact<{
-  walletAdress: Scalars['String'];
-}>;
+  walletAdress: Scalars['String']
+}>
 
-
-export type AudioHolderByWalletQuery = (
-  { __typename?: 'Query' }
-  & { audioHolderByWallet: (
-    { __typename?: 'AudioHolder' }
-    & Pick<AudioHolder, 'id' | 'amount' | 'ogunClaimed'>
-  ) }
-);
+export type AudioHolderByWalletQuery = { __typename?: 'Query' } & {
+  audioHolderByWallet: { __typename?: 'AudioHolder' } & Pick<AudioHolder, 'id' | 'amount' | 'ogunClaimed'>
+}
 
 export type BandcampLinkQueryVariables = Exact<{
-  url: Scalars['String'];
-}>;
+  url: Scalars['String']
+}>
 
-
-export type BandcampLinkQuery = (
-  { __typename?: 'Query' }
-  & Pick<Query, 'bandcampLink'>
-);
+export type BandcampLinkQuery = { __typename?: 'Query' } & Pick<Query, 'bandcampLink'>
 
 export type BidsWithInfoQueryVariables = Exact<{
-  auctionId: Scalars['String'];
-}>;
+  auctionId: Scalars['String']
+}>
 
-
-export type BidsWithInfoQuery = (
-  { __typename?: 'Query' }
-  & { bidsWithInfo: (
-    { __typename?: 'BidsWithInfoPayload' }
-    & { bids: Maybe<Array<(
-      { __typename?: 'BidsWithInfo' }
-      & Pick<BidsWithInfo, 'amount' | 'amountToShow' | 'userId' | 'profileId' | 'createdAt'>
-      & { profile: (
-        { __typename?: 'Profile' }
-        & Pick<Profile, 'profilePicture' | 'displayName' | 'userHandle' | 'verified' | 'teamMember'>
-      ) }
-    )>> }
-  ) }
-);
+export type BidsWithInfoQuery = { __typename?: 'Query' } & {
+  bidsWithInfo: { __typename?: 'BidsWithInfoPayload' } & {
+    bids: Maybe<
+      Array<
+        { __typename?: 'BidsWithInfo' } & Pick<
+          BidsWithInfo,
+          'amount' | 'amountToShow' | 'userId' | 'profileId' | 'createdAt'
+        > & {
+            profile: { __typename?: 'Profile' } & Pick<
+              Profile,
+              'profilePicture' | 'displayName' | 'userHandle' | 'verified' | 'teamMember'
+            >
+          }
+      >
+    >
+  }
+}
 
 export type BuyNowItemQueryVariables = Exact<{
-  input: FilterListingItemInput;
-}>;
+  input: FilterListingItemInput
+}>
 
-
-export type BuyNowItemQuery = (
-  { __typename?: 'Query' }
-  & { buyNowItem: (
-    { __typename?: 'BuyNowPayload' }
-    & { buyNowItem: Maybe<(
-      { __typename?: 'BuyNowItem' }
-      & Pick<BuyNowItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'contract' | 'pricePerItem' | 'selectedCurrency' | 'pricePerItemToShow' | 'OGUNPricePerItem' | 'OGUNPricePerItemToShow' | 'acceptsMATIC' | 'acceptsOGUN' | 'startingTime'>
-    )> }
-  ) }
-);
+export type BuyNowItemQuery = { __typename?: 'Query' } & {
+  buyNowItem: { __typename?: 'BuyNowPayload' } & {
+    buyNowItem: Maybe<
+      { __typename?: 'BuyNowItem' } & Pick<
+        BuyNowItem,
+        | 'id'
+        | 'owner'
+        | 'nft'
+        | 'tokenId'
+        | 'contract'
+        | 'pricePerItem'
+        | 'selectedCurrency'
+        | 'pricePerItemToShow'
+        | 'OGUNPricePerItem'
+        | 'OGUNPricePerItemToShow'
+        | 'acceptsMATIC'
+        | 'acceptsOGUN'
+        | 'startingTime'
+      >
+    >
+  }
+}
 
 export type BuyNowListingItemsQueryVariables = Exact<{
-  filter?: Maybe<FilterBuyNowItemInput>;
-  page?: Maybe<PageInput>;
-}>;
+  filter?: Maybe<FilterBuyNowItemInput>
+  page?: Maybe<PageInput>
+}>
 
-
-export type BuyNowListingItemsQuery = (
-  { __typename?: 'Query' }
-  & { buyNowListingItems: (
-    { __typename?: 'ListingItemConnection' }
-    & { nodes: Array<(
-      { __typename?: 'TrackWithListingItem' }
-      & ListingItemComponentFieldsFragment
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
-    ) }
-  ) }
-);
+export type BuyNowListingItemsQuery = { __typename?: 'Query' } & {
+  buyNowListingItems: { __typename?: 'ListingItemConnection' } & {
+    nodes: Array<{ __typename?: 'TrackWithListingItem' } & ListingItemComponentFieldsFragment>
+    pageInfo: { __typename?: 'PageInfo' } & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
+  }
+}
 
 export type ChangeReactionMutationVariables = Exact<{
-  input: ChangeReactionInput;
-}>;
+  input: ChangeReactionInput
+}>
 
-
-export type ChangeReactionMutation = (
-  { __typename?: 'Mutation' }
-  & { changeReaction: (
-    { __typename?: 'ChangeReactionPayload' }
-    & { post: (
-      { __typename?: 'Post' }
-      & Pick<Post, 'id' | 'totalReactions' | 'topReactions' | 'myReaction'>
-    ) }
-  ) }
-);
+export type ChangeReactionMutation = { __typename?: 'Mutation' } & {
+  changeReaction: { __typename?: 'ChangeReactionPayload' } & {
+    post: { __typename?: 'Post' } & Pick<Post, 'id' | 'totalReactions' | 'topReactions' | 'myReaction'>
+  }
+}
 
 export type ChatHistoryQueryVariables = Exact<{
-  profileId: Scalars['String'];
-  page?: Maybe<PageInput>;
-}>;
+  profileId: Scalars['String']
+  page?: Maybe<PageInput>
+}>
 
-
-export type ChatHistoryQuery = (
-  { __typename?: 'Query' }
-  & { chatHistory: (
-    { __typename?: 'MessageConnection' }
-    & { pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'startCursor'>
-    ), nodes: Array<(
-      { __typename?: 'Message' }
-      & MessageComponentFieldsFragment
-    )> }
-  ) }
-);
+export type ChatHistoryQuery = { __typename?: 'Query' } & {
+  chatHistory: { __typename?: 'MessageConnection' } & {
+    pageInfo: { __typename?: 'PageInfo' } & Pick<PageInfo, 'hasNextPage' | 'startCursor'>
+    nodes: Array<{ __typename?: 'Message' } & MessageComponentFieldsFragment>
+  }
+}
 
 export type ChatsQueryVariables = Exact<{
-  page?: Maybe<PageInput>;
-}>;
+  page?: Maybe<PageInput>
+}>
 
-
-export type ChatsQuery = (
-  { __typename?: 'Query' }
-  & { chats: (
-    { __typename?: 'ChatConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Chat' }
-      & Pick<Chat, 'id' | 'message' | 'unread' | 'createdAt'>
-      & { profile: (
-        { __typename?: 'Profile' }
-        & Pick<Profile, 'displayName' | 'profilePicture' | 'verified' | 'teamMember' | 'userHandle'>
-      ) }
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
-    ) }
-  ) }
-);
+export type ChatsQuery = { __typename?: 'Query' } & {
+  chats: { __typename?: 'ChatConnection' } & {
+    nodes: Array<
+      { __typename?: 'Chat' } & Pick<Chat, 'id' | 'message' | 'unread' | 'createdAt'> & {
+          profile: { __typename?: 'Profile' } & Pick<
+            Profile,
+            'displayName' | 'profilePicture' | 'verified' | 'teamMember' | 'userHandle'
+          >
+        }
+    >
+    pageInfo: { __typename?: 'PageInfo' } & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
+  }
+}
 
 export type CheapestListingItemQueryVariables = Exact<{
-  trackEditionId: Scalars['String'];
-}>;
+  trackEditionId: Scalars['String']
+}>
 
+export type CheapestListingItemQuery = { __typename?: 'Query' } & {
+  cheapestListingItem: Maybe<{ __typename?: 'TrackPrice' } & Pick<TrackPrice, 'currency' | 'value'>>
+}
 
-export type CheapestListingItemQuery = (
-  { __typename?: 'Query' }
-  & { cheapestListingItem: Maybe<(
-    { __typename?: 'TrackPrice' }
-    & Pick<TrackPrice, 'currency' | 'value'>
-  )> }
-);
+export type ClearNotificationsMutationVariables = Exact<{ [key: string]: never }>
 
-export type ClearNotificationsMutationVariables = Exact<{ [key: string]: never; }>;
-
-
-export type ClearNotificationsMutation = (
-  { __typename?: 'Mutation' }
-  & { clearNotifications: (
-    { __typename?: 'ClearNotificationsPayload' }
-    & Pick<ClearNotificationsPayload, 'ok'>
-  ) }
-);
+export type ClearNotificationsMutation = { __typename?: 'Mutation' } & {
+  clearNotifications: { __typename?: 'ClearNotificationsPayload' } & Pick<ClearNotificationsPayload, 'ok'>
+}
 
 export type CommentQueryVariables = Exact<{
-  id: Scalars['String'];
-}>;
+  id: Scalars['String']
+}>
 
+export type CommentQuery = { __typename?: 'Query' } & {
+  comment: { __typename?: 'Comment' } & CommentComponentFieldsFragment
+}
 
-export type CommentQuery = (
-  { __typename?: 'Query' }
-  & { comment: (
-    { __typename?: 'Comment' }
-    & CommentComponentFieldsFragment
-  ) }
-);
+export type CommentComponentFieldsFragment = { __typename?: 'Comment' } & Pick<
+  Comment,
+  'id' | 'body' | 'createdAt' | 'deleted'
+> & {
+    profile: { __typename?: 'Profile' } & Pick<
+      Profile,
+      'id' | 'displayName' | 'profilePicture' | 'verified' | 'teamMember' | 'userHandle'
+    >
+  }
 
-export type CommentComponentFieldsFragment = (
-  { __typename?: 'Comment' }
-  & Pick<Comment, 'id' | 'body' | 'createdAt' | 'deleted'>
-  & { profile: (
-    { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'teamMember' | 'userHandle'>
-  ) }
-);
-
-export type CommentNotificationFieldsFragment = (
-  { __typename?: 'CommentNotification' }
-  & Pick<CommentNotification, 'id' | 'type' | 'body' | 'previewBody' | 'link' | 'createdAt' | 'authorName' | 'authorPicture'>
-);
+export type CommentNotificationFieldsFragment = { __typename?: 'CommentNotification' } & Pick<
+  CommentNotification,
+  'id' | 'type' | 'body' | 'previewBody' | 'link' | 'createdAt' | 'authorName' | 'authorPicture'
+>
 
 export type CommentsQueryVariables = Exact<{
-  postId: Scalars['String'];
-  page?: Maybe<PageInput>;
-}>;
+  postId: Scalars['String']
+  page?: Maybe<PageInput>
+}>
 
-
-export type CommentsQuery = (
-  { __typename?: 'Query' }
-  & { comments: (
-    { __typename?: 'CommentConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Comment' }
-      & CommentComponentFieldsFragment
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasPreviousPage' | 'hasNextPage' | 'startCursor' | 'endCursor'>
-    ) }
-  ) }
-);
+export type CommentsQuery = { __typename?: 'Query' } & {
+  comments: { __typename?: 'CommentConnection' } & {
+    nodes: Array<{ __typename?: 'Comment' } & CommentComponentFieldsFragment>
+    pageInfo: { __typename?: 'PageInfo' } & Pick<
+      PageInfo,
+      'hasPreviousPage' | 'hasNextPage' | 'startCursor' | 'endCursor'
+    >
+  }
+}
 
 export type CountBidsQueryVariables = Exact<{
-  tokenId: Scalars['Float'];
-}>;
+  tokenId: Scalars['Float']
+}>
 
-
-export type CountBidsQuery = (
-  { __typename?: 'Query' }
-  & { countBids: (
-    { __typename?: 'CountBidsPayload' }
-    & Pick<CountBidsPayload, 'numberOfBids'>
-  ) }
-);
+export type CountBidsQuery = { __typename?: 'Query' } & {
+  countBids: { __typename?: 'CountBidsPayload' } & Pick<CountBidsPayload, 'numberOfBids'>
+}
 
 export type CreateMultipleTracksMutationVariables = Exact<{
-  input: CreateMultipleTracksInput;
-}>;
+  input: CreateMultipleTracksInput
+}>
 
-
-export type CreateMultipleTracksMutation = (
-  { __typename?: 'Mutation' }
-  & { createMultipleTracks: (
-    { __typename?: 'CreateMultipleTracksPayload' }
-    & Pick<CreateMultipleTracksPayload, 'trackIds'>
-    & { firstTrack: (
-      { __typename?: 'Track' }
-      & TrackComponentFieldsFragment
-    ) }
-  ) }
-);
+export type CreateMultipleTracksMutation = { __typename?: 'Mutation' } & {
+  createMultipleTracks: { __typename?: 'CreateMultipleTracksPayload' } & Pick<
+    CreateMultipleTracksPayload,
+    'trackIds'
+  > & { firstTrack: { __typename?: 'Track' } & TrackComponentFieldsFragment }
+}
 
 export type CreatePostMutationVariables = Exact<{
-  input: CreatePostInput;
-}>;
+  input: CreatePostInput
+}>
 
-
-export type CreatePostMutation = (
-  { __typename?: 'Mutation' }
-  & { createPost: (
-    { __typename?: 'CreatePostPayload' }
-    & { post: (
-      { __typename?: 'Post' }
-      & Pick<Post, 'id'>
-    ) }
-  ) }
-);
+export type CreatePostMutation = { __typename?: 'Mutation' } & {
+  createPost: { __typename?: 'CreatePostPayload' } & { post: { __typename?: 'Post' } & Pick<Post, 'id'> }
+}
 
 export type CreateProfileVerificationRequestMutationVariables = Exact<{
-  input: CreateProfileVerificationRequestInput;
-}>;
+  input: CreateProfileVerificationRequestInput
+}>
 
-
-export type CreateProfileVerificationRequestMutation = (
-  { __typename?: 'Mutation' }
-  & { createProfileVerificationRequest: (
-    { __typename?: 'ProfileVerificationRequestPayload' }
-    & { profileVerificationRequest: (
-      { __typename?: 'ProfileVerificationRequest' }
-      & ProfileVerificationRequestComponentFieldsFragment
-    ) }
-  ) }
-);
+export type CreateProfileVerificationRequestMutation = { __typename?: 'Mutation' } & {
+  createProfileVerificationRequest: { __typename?: 'ProfileVerificationRequestPayload' } & {
+    profileVerificationRequest: {
+      __typename?: 'ProfileVerificationRequest'
+    } & ProfileVerificationRequestComponentFieldsFragment
+  }
+}
 
 export type CreateRepostMutationVariables = Exact<{
-  input: CreateRepostInput;
-}>;
+  input: CreateRepostInput
+}>
 
-
-export type CreateRepostMutation = (
-  { __typename?: 'Mutation' }
-  & { createRepost: (
-    { __typename?: 'CreateRepostPayload' }
-    & { post: (
-      { __typename?: 'Post' }
-      & Pick<Post, 'id'>
-    ), originalPost: (
-      { __typename?: 'Post' }
-      & Pick<Post, 'id' | 'repostCount'>
-    ) }
-  ) }
-);
+export type CreateRepostMutation = { __typename?: 'Mutation' } & {
+  createRepost: { __typename?: 'CreateRepostPayload' } & {
+    post: { __typename?: 'Post' } & Pick<Post, 'id'>
+    originalPost: { __typename?: 'Post' } & Pick<Post, 'id' | 'repostCount'>
+  }
+}
 
 export type CreateTrackEditionMutationVariables = Exact<{
-  input: CreateTrackEditionInput;
-}>;
+  input: CreateTrackEditionInput
+}>
 
-
-export type CreateTrackEditionMutation = (
-  { __typename?: 'Mutation' }
-  & { createTrackEdition: (
-    { __typename?: 'CreateTrackEditionPayload' }
-    & { trackEdition: (
-      { __typename?: 'TrackEdition' }
-      & Pick<TrackEdition, 'id'>
-    ) }
-  ) }
-);
+export type CreateTrackEditionMutation = { __typename?: 'Mutation' } & {
+  createTrackEdition: { __typename?: 'CreateTrackEditionPayload' } & {
+    trackEdition: { __typename?: 'TrackEdition' } & Pick<TrackEdition, 'id'>
+  }
+}
 
 export type CreateWhitelistEntryMutationVariables = Exact<{
-  input: CreateWhitelistEntryInput;
-}>;
+  input: CreateWhitelistEntryInput
+}>
 
-
-export type CreateWhitelistEntryMutation = (
-  { __typename?: 'Mutation' }
-  & { createWhitelistEntry: (
-    { __typename?: 'CreateWhitelistEntryPayload' }
-    & { whitelistEntry: (
-      { __typename?: 'WhitelistEntry' }
-      & Pick<WhitelistEntry, 'id'>
-    ) }
-  ) }
-);
+export type CreateWhitelistEntryMutation = { __typename?: 'Mutation' } & {
+  createWhitelistEntry: { __typename?: 'CreateWhitelistEntryPayload' } & {
+    whitelistEntry: { __typename?: 'WhitelistEntry' } & Pick<WhitelistEntry, 'id'>
+  }
+}
 
 export type DeleteCommentMutationVariables = Exact<{
-  input: DeleteCommentInput;
-}>;
+  input: DeleteCommentInput
+}>
 
-
-export type DeleteCommentMutation = (
-  { __typename?: 'Mutation' }
-  & { deleteComment: (
-    { __typename?: 'DeleteCommentPayload' }
-    & { comment: (
-      { __typename?: 'Comment' }
-      & CommentComponentFieldsFragment
-    ) }
-  ) }
-);
+export type DeleteCommentMutation = { __typename?: 'Mutation' } & {
+  deleteComment: { __typename?: 'DeleteCommentPayload' } & {
+    comment: { __typename?: 'Comment' } & CommentComponentFieldsFragment
+  }
+}
 
 export type DeletePostMutationVariables = Exact<{
-  input: DeletePostInput;
-}>;
+  input: DeletePostInput
+}>
 
-
-export type DeletePostMutation = (
-  { __typename?: 'Mutation' }
-  & { deletePost: (
-    { __typename?: 'DeletePostPayload' }
-    & { post: (
-      { __typename?: 'Post' }
-      & PostComponentFieldsFragment
-    ) }
-  ) }
-);
+export type DeletePostMutation = { __typename?: 'Mutation' } & {
+  deletePost: { __typename?: 'DeletePostPayload' } & { post: { __typename?: 'Post' } & PostComponentFieldsFragment }
+}
 
 export type DeleteTrackMutationVariables = Exact<{
-  trackId: Scalars['String'];
-}>;
+  trackId: Scalars['String']
+}>
 
-
-export type DeleteTrackMutation = (
-  { __typename?: 'Mutation' }
-  & { deleteTrack: (
-    { __typename?: 'Track' }
-    & TrackComponentFieldsFragment
-  ) }
-);
+export type DeleteTrackMutation = { __typename?: 'Mutation' } & {
+  deleteTrack: { __typename?: 'Track' } & TrackComponentFieldsFragment
+}
 
 export type DeleteTrackEditionMutationVariables = Exact<{
-  trackEditionId: Scalars['String'];
-}>;
+  trackEditionId: Scalars['String']
+}>
 
-
-export type DeleteTrackEditionMutation = (
-  { __typename?: 'Mutation' }
-  & { deleteTrackEdition: Array<(
-    { __typename?: 'Track' }
-    & Pick<Track, 'id'>
-  )> }
-);
+export type DeleteTrackEditionMutation = { __typename?: 'Mutation' } & {
+  deleteTrackEdition: Array<{ __typename?: 'Track' } & Pick<Track, 'id'>>
+}
 
 export type DeleteTrackOnErrorMutationVariables = Exact<{
-  input: DeleteTrackInput;
-}>;
+  input: DeleteTrackInput
+}>
 
+export type DeleteTrackOnErrorMutation = { __typename?: 'Mutation' } & {
+  deleteTrackOnError: { __typename?: 'UpdateTrackPayload' } & {
+    track: { __typename?: 'Track' } & TrackComponentFieldsFragment
+  }
+}
 
-export type DeleteTrackOnErrorMutation = (
-  { __typename?: 'Mutation' }
-  & { deleteTrackOnError: (
-    { __typename?: 'UpdateTrackPayload' }
-    & { track: (
-      { __typename?: 'Track' }
-      & TrackComponentFieldsFragment
-    ) }
-  ) }
-);
+export type DeletedCommentNotificationFieldsFragment = { __typename?: 'DeletedCommentNotification' } & Pick<
+  DeletedCommentNotification,
+  'id' | 'type' | 'body' | 'previewBody' | 'link' | 'createdAt' | 'authorName' | 'authorPicture'
+>
 
-export type DeletedCommentNotificationFieldsFragment = (
-  { __typename?: 'DeletedCommentNotification' }
-  & Pick<DeletedCommentNotification, 'id' | 'type' | 'body' | 'previewBody' | 'link' | 'createdAt' | 'authorName' | 'authorPicture'>
-);
-
-export type DeletedPostNotificationFieldsFragment = (
-  { __typename?: 'DeletedPostNotification' }
-  & Pick<DeletedPostNotification, 'id' | 'type' | 'authorName' | 'authorPicture' | 'body' | 'link' | 'previewBody' | 'previewLink' | 'createdAt'>
-  & { track: Maybe<(
-    { __typename?: 'Track' }
-    & Pick<Track, 'title' | 'playbackUrl'>
-  )> }
-);
+export type DeletedPostNotificationFieldsFragment = { __typename?: 'DeletedPostNotification' } & Pick<
+  DeletedPostNotification,
+  'id' | 'type' | 'authorName' | 'authorPicture' | 'body' | 'link' | 'previewBody' | 'previewLink' | 'createdAt'
+> & { track: Maybe<{ __typename?: 'Track' } & Pick<Track, 'title' | 'playbackUrl'>> }
 
 export type ExploreQueryVariables = Exact<{
-  search?: Maybe<Scalars['String']>;
-}>;
+  search?: Maybe<Scalars['String']>
+}>
 
-
-export type ExploreQuery = (
-  { __typename?: 'Query' }
-  & { explore: (
-    { __typename?: 'ExplorePayload' }
-    & Pick<ExplorePayload, 'totalTracks' | 'totalProfiles'>
-    & { tracks: Array<(
-      { __typename?: 'Track' }
-      & TrackComponentFieldsFragment
-    )>, profiles: Array<(
-      { __typename?: 'Profile' }
-      & ProfileComponentFieldsFragment
-    )> }
-  ) }
-);
+export type ExploreQuery = { __typename?: 'Query' } & {
+  explore: { __typename?: 'ExplorePayload' } & Pick<ExplorePayload, 'totalTracks' | 'totalProfiles'> & {
+      tracks: Array<{ __typename?: 'Track' } & TrackComponentFieldsFragment>
+      profiles: Array<{ __typename?: 'Profile' } & ProfileComponentFieldsFragment>
+    }
+}
 
 export type ExploreTracksQueryVariables = Exact<{
-  sort?: Maybe<SortExploreTracks>;
-  search?: Maybe<Scalars['String']>;
-  page?: Maybe<PageInput>;
-}>;
+  sort?: Maybe<SortExploreTracks>
+  search?: Maybe<Scalars['String']>
+  page?: Maybe<PageInput>
+}>
 
-
-export type ExploreTracksQuery = (
-  { __typename?: 'Query' }
-  & { exploreTracks: (
-    { __typename?: 'TrackConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Track' }
-      & TrackComponentFieldsFragment
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
-    ) }
-  ) }
-);
+export type ExploreTracksQuery = { __typename?: 'Query' } & {
+  exploreTracks: { __typename?: 'TrackConnection' } & {
+    nodes: Array<{ __typename?: 'Track' } & TrackComponentFieldsFragment>
+    pageInfo: { __typename?: 'PageInfo' } & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
+  }
+}
 
 export type ExploreUsersQueryVariables = Exact<{
-  search?: Maybe<Scalars['String']>;
-  page?: Maybe<PageInput>;
-}>;
+  search?: Maybe<Scalars['String']>
+  page?: Maybe<PageInput>
+}>
 
-
-export type ExploreUsersQuery = (
-  { __typename?: 'Query' }
-  & { exploreUsers: (
-    { __typename?: 'ProfileConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Profile' }
-      & ProfileComponentFieldsFragment
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
-    ) }
-  ) }
-);
+export type ExploreUsersQuery = { __typename?: 'Query' } & {
+  exploreUsers: { __typename?: 'ProfileConnection' } & {
+    nodes: Array<{ __typename?: 'Profile' } & ProfileComponentFieldsFragment>
+    pageInfo: { __typename?: 'PageInfo' } & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
+  }
+}
 
 export type FavoriteTracksQueryVariables = Exact<{
-  sort?: Maybe<SortTrackInput>;
-  search?: Maybe<Scalars['String']>;
-  page?: Maybe<PageInput>;
-}>;
+  sort?: Maybe<SortTrackInput>
+  search?: Maybe<Scalars['String']>
+  page?: Maybe<PageInput>
+}>
 
-
-export type FavoriteTracksQuery = (
-  { __typename?: 'Query' }
-  & { favoriteTracks: (
-    { __typename?: 'TrackConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Track' }
-      & TrackComponentFieldsFragment
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
-    ) }
-  ) }
-);
+export type FavoriteTracksQuery = { __typename?: 'Query' } & {
+  favoriteTracks: { __typename?: 'TrackConnection' } & {
+    nodes: Array<{ __typename?: 'Track' } & TrackComponentFieldsFragment>
+    pageInfo: { __typename?: 'PageInfo' } & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
+  }
+}
 
 export type FeedQueryVariables = Exact<{
-  page?: Maybe<PageInput>;
-}>;
+  page?: Maybe<PageInput>
+}>
 
-
-export type FeedQuery = (
-  { __typename?: 'Query' }
-  & { feed: (
-    { __typename?: 'FeedConnection' }
-    & { nodes: Array<(
-      { __typename?: 'FeedItem' }
-      & Pick<FeedItem, 'id'>
-      & { post: (
-        { __typename?: 'Post' }
-        & PostComponentFieldsFragment
-      ) }
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
-    ) }
-  ) }
-);
+export type FeedQuery = { __typename?: 'Query' } & {
+  feed: { __typename?: 'FeedConnection' } & {
+    nodes: Array<
+      { __typename?: 'FeedItem' } & Pick<FeedItem, 'id'> & {
+          post: { __typename?: 'Post' } & PostComponentFieldsFragment
+        }
+    >
+    pageInfo: { __typename?: 'PageInfo' } & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
+  }
+}
 
 export type FollowProfileMutationVariables = Exact<{
-  input: FollowProfileInput;
-}>;
+  input: FollowProfileInput
+}>
 
-
-export type FollowProfileMutation = (
-  { __typename?: 'Mutation' }
-  & { followProfile: (
-    { __typename?: 'FollowProfilePayload' }
-    & { followedProfile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'followerCount' | 'isFollowed'>
-    ) }
-  ) }
-);
+export type FollowProfileMutation = { __typename?: 'Mutation' } & {
+  followProfile: { __typename?: 'FollowProfilePayload' } & {
+    followedProfile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'followerCount' | 'isFollowed'>
+  }
+}
 
 export type FollowedArtistsQueryVariables = Exact<{
-  profileId: Scalars['String'];
-  search?: Maybe<Scalars['String']>;
-  page?: Maybe<PageInput>;
-}>;
+  profileId: Scalars['String']
+  search?: Maybe<Scalars['String']>
+  page?: Maybe<PageInput>
+}>
 
+export type FollowedArtistsQuery = { __typename?: 'Query' } & {
+  followedArtists: { __typename?: 'FollowedArtistsConnection' } & {
+    nodes: Array<{ __typename?: 'Profile' } & ProfileComponentFieldsFragment>
+    pageInfo: { __typename?: 'PageInfo' } & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
+  }
+}
 
-export type FollowedArtistsQuery = (
-  { __typename?: 'Query' }
-  & { followedArtists: (
-    { __typename?: 'FollowedArtistsConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Profile' }
-      & ProfileComponentFieldsFragment
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
-    ) }
-  ) }
-);
-
-export type FollowerNotificationFieldsFragment = (
-  { __typename?: 'FollowerNotification' }
-  & Pick<FollowerNotification, 'id' | 'type' | 'link' | 'createdAt' | 'followerName' | 'followerPicture'>
-);
+export type FollowerNotificationFieldsFragment = { __typename?: 'FollowerNotification' } & Pick<
+  FollowerNotification,
+  'id' | 'type' | 'link' | 'createdAt' | 'followerName' | 'followerPicture'
+>
 
 export type FollowersQueryVariables = Exact<{
-  profileId: Scalars['String'];
-  page?: Maybe<PageInput>;
-}>;
+  profileId: Scalars['String']
+  page?: Maybe<PageInput>
+}>
 
-
-export type FollowersQuery = (
-  { __typename?: 'Query' }
-  & { followers: (
-    { __typename?: 'FollowConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Follow' }
-      & Pick<Follow, 'id'>
-      & { followerProfile: (
-        { __typename?: 'Profile' }
-        & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle' | 'teamMember'>
-      ) }
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
-    ) }
-  ) }
-);
+export type FollowersQuery = { __typename?: 'Query' } & {
+  followers: { __typename?: 'FollowConnection' } & {
+    nodes: Array<
+      { __typename?: 'Follow' } & Pick<Follow, 'id'> & {
+          followerProfile: { __typename?: 'Profile' } & Pick<
+            Profile,
+            'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle' | 'teamMember'
+          >
+        }
+    >
+    pageInfo: { __typename?: 'PageInfo' } & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
+  }
+}
 
 export type FollowingQueryVariables = Exact<{
-  profileId: Scalars['String'];
-  page?: Maybe<PageInput>;
-}>;
+  profileId: Scalars['String']
+  page?: Maybe<PageInput>
+}>
 
-
-export type FollowingQuery = (
-  { __typename?: 'Query' }
-  & { following: (
-    { __typename?: 'FollowConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Follow' }
-      & Pick<Follow, 'id'>
-      & { followedProfile: (
-        { __typename?: 'Profile' }
-        & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle' | 'teamMember'>
-      ) }
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
-    ) }
-  ) }
-);
+export type FollowingQuery = { __typename?: 'Query' } & {
+  following: { __typename?: 'FollowConnection' } & {
+    nodes: Array<
+      { __typename?: 'Follow' } & Pick<Follow, 'id'> & {
+          followedProfile: { __typename?: 'Profile' } & Pick<
+            Profile,
+            'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle' | 'teamMember'
+          >
+        }
+    >
+    pageInfo: { __typename?: 'PageInfo' } & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
+  }
+}
 
 export type GetOriginalPostFromTrackQueryVariables = Exact<{
-  trackId: Scalars['String'];
-}>;
+  trackId: Scalars['String']
+}>
 
-
-export type GetOriginalPostFromTrackQuery = (
-  { __typename?: 'Query' }
-  & { getOriginalPostFromTrack: (
-    { __typename?: 'Post' }
-    & PostComponentFieldsFragment
-  ) }
-);
+export type GetOriginalPostFromTrackQuery = { __typename?: 'Query' } & {
+  getOriginalPostFromTrack: { __typename?: 'Post' } & PostComponentFieldsFragment
+}
 
 export type GroupedTracksQueryVariables = Exact<{
-  filter?: Maybe<FilterTrackInput>;
-  sort?: Maybe<SortTrackInput>;
-  page?: Maybe<PageInput>;
-}>;
+  filter?: Maybe<FilterTrackInput>
+  sort?: Maybe<SortTrackInput>
+  page?: Maybe<PageInput>
+}>
 
-
-export type GroupedTracksQuery = (
-  { __typename?: 'Query' }
-  & { groupedTracks: (
-    { __typename?: 'TrackConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Track' }
-      & TrackComponentFieldsFragment
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
-    ) }
-  ) }
-);
+export type GroupedTracksQuery = { __typename?: 'Query' } & {
+  groupedTracks: { __typename?: 'TrackConnection' } & {
+    nodes: Array<{ __typename?: 'Track' } & TrackComponentFieldsFragment>
+    pageInfo: { __typename?: 'PageInfo' } & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
+  }
+}
 
 export type HaveBidedQueryVariables = Exact<{
-  auctionId: Scalars['String'];
-  bidder: Scalars['String'];
-}>;
+  auctionId: Scalars['String']
+  bidder: Scalars['String']
+}>
 
-
-export type HaveBidedQuery = (
-  { __typename?: 'Query' }
-  & { haveBided: (
-    { __typename?: 'Bided' }
-    & Pick<Bided, 'bided'>
-  ) }
-);
+export type HaveBidedQuery = { __typename?: 'Query' } & { haveBided: { __typename?: 'Bided' } & Pick<Bided, 'bided'> }
 
 export type ListableOwnedTrackIdsQueryVariables = Exact<{
-  filter: FilterOwnedTracksInput;
-}>;
+  filter: FilterOwnedTracksInput
+}>
 
-
-export type ListableOwnedTrackIdsQuery = (
-  { __typename?: 'Query' }
-  & { listableOwnedTracks: (
-    { __typename?: 'TrackConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Track' }
-      & Pick<Track, 'id'>
-      & { nftData: Maybe<(
-        { __typename?: 'NFTDataType' }
-        & Pick<NftDataType, 'tokenId'>
-      )> }
-    )> }
-  ) }
-);
+export type ListableOwnedTrackIdsQuery = { __typename?: 'Query' } & {
+  listableOwnedTracks: { __typename?: 'TrackConnection' } & {
+    nodes: Array<
+      { __typename?: 'Track' } & Pick<Track, 'id'> & {
+          nftData: Maybe<{ __typename?: 'NFTDataType' } & Pick<NftDataType, 'tokenId'>>
+        }
+    >
+  }
+}
 
 export type ListingItemQueryVariables = Exact<{
-  input: FilterListingItemInput;
-}>;
+  input: FilterListingItemInput
+}>
 
+export type ListingItemQuery = { __typename?: 'Query' } & {
+  listingItem: Maybe<{ __typename?: 'ListingItem' } & ListingItemViewComponentFieldsFragment>
+}
 
-export type ListingItemQuery = (
-  { __typename?: 'Query' }
-  & { listingItem: Maybe<(
-    { __typename?: 'ListingItem' }
-    & ListingItemViewComponentFieldsFragment
-  )> }
-);
+export type ListingItemComponentFieldsFragment = { __typename?: 'TrackWithListingItem' } & Pick<
+  TrackWithListingItem,
+  | 'id'
+  | 'profileId'
+  | 'title'
+  | 'assetUrl'
+  | 'artworkUrl'
+  | 'description'
+  | 'utilityInfo'
+  | 'artist'
+  | 'artistId'
+  | 'artistProfileId'
+  | 'album'
+  | 'releaseYear'
+  | 'copyright'
+  | 'genres'
+  | 'playbackUrl'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'deleted'
+  | 'playbackCountFormatted'
+  | 'isFavorite'
+  | 'favoriteCount'
+  | 'playbackCount'
+  | 'listingCount'
+  | 'saleType'
+  | 'trackEditionId'
+  | 'editionSize'
+> & {
+    price: { __typename?: 'TrackPrice' } & Pick<TrackPrice, 'value' | 'currency'>
+    nftData: Maybe<
+      { __typename?: 'NFTDataType' } & Pick<
+        NftDataType,
+        'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner' | 'pendingTime'
+      >
+    >
+    trackEdition: Maybe<{ __typename?: 'TrackEdition' } & TrackEditionFieldsFragment>
+    listingItem: Maybe<
+      { __typename?: 'ListingItemWithPrice' } & Pick<
+        ListingItemWithPrice,
+        | 'id'
+        | 'owner'
+        | 'nft'
+        | 'tokenId'
+        | 'contract'
+        | 'pricePerItem'
+        | 'pricePerItemToShow'
+        | 'OGUNPricePerItem'
+        | 'OGUNPricePerItemToShow'
+        | 'isPaymentOGUN'
+        | 'startingTime'
+        | 'endingTime'
+        | 'reservePrice'
+        | 'reservePriceToShow'
+        | 'createdAt'
+        | 'updatedAt'
+        | 'priceToShow'
+      >
+    >
+  }
 
-export type ListingItemComponentFieldsFragment = (
-  { __typename?: 'TrackWithListingItem' }
-  & Pick<TrackWithListingItem, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'utilityInfo' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'playbackCount' | 'listingCount' | 'saleType' | 'trackEditionId' | 'editionSize'>
-  & { price: (
-    { __typename?: 'TrackPrice' }
-    & Pick<TrackPrice, 'value' | 'currency'>
-  ), nftData: Maybe<(
-    { __typename?: 'NFTDataType' }
-    & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner' | 'pendingTime'>
-  )>, trackEdition: Maybe<(
-    { __typename?: 'TrackEdition' }
-    & TrackEditionFieldsFragment
-  )>, listingItem: Maybe<(
-    { __typename?: 'ListingItemWithPrice' }
-    & Pick<ListingItemWithPrice, 'id' | 'owner' | 'nft' | 'tokenId' | 'contract' | 'pricePerItem' | 'pricePerItemToShow' | 'OGUNPricePerItem' | 'OGUNPricePerItemToShow' | 'isPaymentOGUN' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow' | 'createdAt' | 'updatedAt' | 'priceToShow'>
-  )> }
-);
-
-export type ListingItemViewComponentFieldsFragment = (
-  { __typename?: 'ListingItem' }
-  & Pick<ListingItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'contract' | 'pricePerItem' | 'pricePerItemToShow' | 'OGUNPricePerItem' | 'OGUNPricePerItemToShow' | 'isPaymentOGUN' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow' | 'createdAt' | 'updatedAt'>
-);
+export type ListingItemViewComponentFieldsFragment = { __typename?: 'ListingItem' } & Pick<
+  ListingItem,
+  | 'id'
+  | 'owner'
+  | 'nft'
+  | 'tokenId'
+  | 'contract'
+  | 'pricePerItem'
+  | 'pricePerItemToShow'
+  | 'OGUNPricePerItem'
+  | 'OGUNPricePerItemToShow'
+  | 'isPaymentOGUN'
+  | 'startingTime'
+  | 'endingTime'
+  | 'reservePrice'
+  | 'reservePriceToShow'
+  | 'createdAt'
+  | 'updatedAt'
+>
 
 export type ListingItemsQueryVariables = Exact<{
-  filter?: Maybe<FilterTrackMarketplace>;
-  sort?: Maybe<SortListingItemInput>;
-  page?: Maybe<PageInput>;
-}>;
+  filter?: Maybe<FilterTrackMarketplace>
+  sort?: Maybe<SortListingItemInput>
+  page?: Maybe<PageInput>
+}>
 
-
-export type ListingItemsQuery = (
-  { __typename?: 'Query' }
-  & { listingItems: (
-    { __typename?: 'ListingItemConnection' }
-    & { nodes: Array<(
-      { __typename?: 'TrackWithListingItem' }
-      & ListingItemComponentFieldsFragment
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
-    ) }
-  ) }
-);
+export type ListingItemsQuery = { __typename?: 'Query' } & {
+  listingItems: { __typename?: 'ListingItemConnection' } & {
+    nodes: Array<{ __typename?: 'TrackWithListingItem' } & ListingItemComponentFieldsFragment>
+    pageInfo: { __typename?: 'PageInfo' } & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
+  }
+}
 
 export type LoginMutationVariables = Exact<{
-  input: LoginInput;
-}>;
+  input: LoginInput
+}>
 
+export type LoginMutation = { __typename?: 'Mutation' } & {
+  login: { __typename?: 'AuthPayload' } & Pick<AuthPayload, 'jwt'>
+}
 
-export type LoginMutation = (
-  { __typename?: 'Mutation' }
-  & { login: (
-    { __typename?: 'AuthPayload' }
-    & Pick<AuthPayload, 'jwt'>
-  ) }
-);
+export type MaticUsdQueryVariables = Exact<{ [key: string]: never }>
 
-export type MaticUsdQueryVariables = Exact<{ [key: string]: never; }>;
+export type MaticUsdQuery = { __typename?: 'Query' } & Pick<Query, 'maticUsd'>
 
+export type MeQueryVariables = Exact<{ [key: string]: never }>
 
-export type MaticUsdQuery = (
-  { __typename?: 'Query' }
-  & Pick<Query, 'maticUsd'>
-);
-
-export type MeQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type MeQuery = (
-  { __typename?: 'Query' }
-  & { me: Maybe<(
-    { __typename?: 'User' }
-    & Pick<User, 'id' | 'handle' | 'email' | 'magicWalletAddress' | 'metaMaskWalletAddressees' | 'defaultWallet' | 'isApprovedOnMarketplace' | 'roles' | 'otpSecret'>
-    & { profile: (
-      { __typename?: 'Profile' }
-      & ProfileComponentFieldsFragment
-    ) }
-  )> }
-);
+export type MeQuery = { __typename?: 'Query' } & {
+  me: Maybe<
+    { __typename?: 'User' } & Pick<
+      User,
+      | 'id'
+      | 'handle'
+      | 'email'
+      | 'magicWalletAddress'
+      | 'metaMaskWalletAddressees'
+      | 'defaultWallet'
+      | 'isApprovedOnMarketplace'
+      | 'roles'
+      | 'otpSecret'
+    > & { profile: { __typename?: 'Profile' } & ProfileComponentFieldsFragment }
+  >
+}
 
 export type MessageQueryVariables = Exact<{
-  id: Scalars['String'];
-}>;
+  id: Scalars['String']
+}>
 
+export type MessageQuery = { __typename?: 'Query' } & {
+  message: { __typename?: 'Message' } & MessageComponentFieldsFragment
+}
 
-export type MessageQuery = (
-  { __typename?: 'Query' }
-  & { message: (
-    { __typename?: 'Message' }
-    & MessageComponentFieldsFragment
-  ) }
-);
-
-export type MessageComponentFieldsFragment = (
-  { __typename?: 'Message' }
-  & Pick<Message, 'id' | 'message' | 'fromId' | 'toId' | 'createdAt'>
-  & { fromProfile: (
-    { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle'>
-  ) }
-);
+export type MessageComponentFieldsFragment = { __typename?: 'Message' } & Pick<
+  Message,
+  'id' | 'message' | 'fromId' | 'toId' | 'createdAt'
+> & {
+    fromProfile: { __typename?: 'Profile' } & Pick<
+      Profile,
+      'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle'
+    >
+  }
 
 export type MimeTypeQueryVariables = Exact<{
-  url: Scalars['String'];
-}>;
+  url: Scalars['String']
+}>
 
+export type MimeTypeQuery = { __typename?: 'Query' } & {
+  mimeType: { __typename?: 'MimeType' } & Pick<MimeType, 'value'>
+}
 
-export type MimeTypeQuery = (
-  { __typename?: 'Query' }
-  & { mimeType: (
-    { __typename?: 'MimeType' }
-    & Pick<MimeType, 'value'>
-  ) }
-);
+export type NftSoldNotificationFieldsFragment = { __typename?: 'NFTSoldNotification' } & Pick<
+  NftSoldNotification,
+  | 'id'
+  | 'type'
+  | 'createdAt'
+  | 'buyerName'
+  | 'buyerPicture'
+  | 'buyerProfileId'
+  | 'trackId'
+  | 'trackName'
+  | 'artist'
+  | 'artworkUrl'
+  | 'price'
+  | 'sellType'
+>
 
-export type NftSoldNotificationFieldsFragment = (
-  { __typename?: 'NFTSoldNotification' }
-  & Pick<NftSoldNotification, 'id' | 'type' | 'createdAt' | 'buyerName' | 'buyerPicture' | 'buyerProfileId' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price' | 'sellType'>
-);
+export type NewBidNotificationFieldsFragment = { __typename?: 'NewBidNotification' } & Pick<
+  NewBidNotification,
+  'id' | 'type' | 'createdAt' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price'
+>
 
-export type NewBidNotificationFieldsFragment = (
-  { __typename?: 'NewBidNotification' }
-  & Pick<NewBidNotification, 'id' | 'type' | 'createdAt' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price'>
-);
+export type NewPostNotificationFieldsFragment = { __typename?: 'NewPostNotification' } & Pick<
+  NewPostNotification,
+  'id' | 'type' | 'authorName' | 'authorPicture' | 'body' | 'link' | 'previewBody' | 'previewLink' | 'createdAt'
+> & {
+    track: Maybe<
+      { __typename?: 'Track' } & Pick<
+        Track,
+        | 'id'
+        | 'title'
+        | 'playbackUrl'
+        | 'artworkUrl'
+        | 'artist'
+        | 'isFavorite'
+        | 'playbackCountFormatted'
+        | 'favoriteCount'
+        | 'saleType'
+      > & { price: { __typename?: 'TrackPrice' } & Pick<TrackPrice, 'value' | 'currency'> }
+    >
+  }
 
-export type NewPostNotificationFieldsFragment = (
-  { __typename?: 'NewPostNotification' }
-  & Pick<NewPostNotification, 'id' | 'type' | 'authorName' | 'authorPicture' | 'body' | 'link' | 'previewBody' | 'previewLink' | 'createdAt'>
-  & { track: Maybe<(
-    { __typename?: 'Track' }
-    & Pick<Track, 'id' | 'title' | 'playbackUrl' | 'artworkUrl' | 'artist' | 'isFavorite' | 'playbackCountFormatted' | 'favoriteCount' | 'saleType'>
-    & { price: (
-      { __typename?: 'TrackPrice' }
-      & Pick<TrackPrice, 'value' | 'currency'>
-    ) }
-  )> }
-);
-
-export type NewVerificationRequestNotificationFieldsFragment = (
-  { __typename?: 'NewVerificationRequestNotification' }
-  & Pick<NewVerificationRequestNotification, 'id' | 'type' | 'verificationRequestId' | 'createdAt'>
-);
+export type NewVerificationRequestNotificationFieldsFragment = {
+  __typename?: 'NewVerificationRequestNotification'
+} & Pick<NewVerificationRequestNotification, 'id' | 'type' | 'verificationRequestId' | 'createdAt'>
 
 export type NotificationQueryVariables = Exact<{
-  id: Scalars['String'];
-}>;
+  id: Scalars['String']
+}>
 
+export type NotificationQuery = { __typename?: 'Query' } & {
+  notification:
+    | ({ __typename?: 'AuctionIsEndingNotification' } & AuctionIsEndingNotificationFieldsFragment)
+    | ({ __typename?: 'AuctionEndedNotification' } & AuctionEndedNotificationFieldsFragment)
+    | ({ __typename?: 'CommentNotification' } & CommentNotificationFieldsFragment)
+    | ({ __typename?: 'DeletedCommentNotification' } & DeletedCommentNotificationFieldsFragment)
+    | ({ __typename?: 'DeletedPostNotification' } & DeletedPostNotificationFieldsFragment)
+    | ({ __typename?: 'FollowerNotification' } & FollowerNotificationFieldsFragment)
+    | ({ __typename?: 'NewBidNotification' } & NewBidNotificationFieldsFragment)
+    | ({ __typename?: 'NewPostNotification' } & NewPostNotificationFieldsFragment)
+    | ({ __typename?: 'NewVerificationRequestNotification' } & NewVerificationRequestNotificationFieldsFragment)
+    | ({ __typename?: 'NFTSoldNotification' } & NftSoldNotificationFieldsFragment)
+    | ({ __typename?: 'OutbidNotification' } & OutbidNotificationFieldsFragment)
+    | ({ __typename?: 'ReactionNotification' } & ReactionNotificationFieldsFragment)
+    | ({ __typename?: 'VerificationRequestNotification' } & VerificationRequestNotificationFieldsFragment)
+    | ({ __typename?: 'WonAuctionNotification' } & WonAuctionNotificationFieldsFragment)
+}
 
-export type NotificationQuery = (
-  { __typename?: 'Query' }
-  & { notification: (
-    { __typename?: 'AuctionIsEndingNotification' }
-    & AuctionIsEndingNotificationFieldsFragment
-  ) | (
-    { __typename?: 'AuctionEndedNotification' }
-    & AuctionEndedNotificationFieldsFragment
-  ) | (
-    { __typename?: 'CommentNotification' }
-    & CommentNotificationFieldsFragment
-  ) | (
-    { __typename?: 'DeletedCommentNotification' }
-    & DeletedCommentNotificationFieldsFragment
-  ) | (
-    { __typename?: 'DeletedPostNotification' }
-    & DeletedPostNotificationFieldsFragment
-  ) | (
-    { __typename?: 'FollowerNotification' }
-    & FollowerNotificationFieldsFragment
-  ) | (
-    { __typename?: 'NewBidNotification' }
-    & NewBidNotificationFieldsFragment
-  ) | (
-    { __typename?: 'NewPostNotification' }
-    & NewPostNotificationFieldsFragment
-  ) | (
-    { __typename?: 'NewVerificationRequestNotification' }
-    & NewVerificationRequestNotificationFieldsFragment
-  ) | (
-    { __typename?: 'NFTSoldNotification' }
-    & NftSoldNotificationFieldsFragment
-  ) | (
-    { __typename?: 'OutbidNotification' }
-    & OutbidNotificationFieldsFragment
-  ) | (
-    { __typename?: 'ReactionNotification' }
-    & ReactionNotificationFieldsFragment
-  ) | (
-    { __typename?: 'VerificationRequestNotification' }
-    & VerificationRequestNotificationFieldsFragment
-  ) | (
-    { __typename?: 'WonAuctionNotification' }
-    & WonAuctionNotificationFieldsFragment
-  ) }
-);
+export type NotificationCountQueryVariables = Exact<{ [key: string]: never }>
 
-export type NotificationCountQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type NotificationCountQuery = (
-  { __typename?: 'Query' }
-  & { myProfile: (
-    { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'unreadNotificationCount'>
-  ) }
-);
+export type NotificationCountQuery = { __typename?: 'Query' } & {
+  myProfile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'unreadNotificationCount'>
+}
 
 export type NotificationsQueryVariables = Exact<{
-  sort?: Maybe<SortNotificationInput>;
-}>;
+  sort?: Maybe<SortNotificationInput>
+}>
 
+export type NotificationsQuery = { __typename?: 'Query' } & {
+  notifications: { __typename?: 'NotificationConnection' } & {
+    nodes: Array<
+      | ({ __typename?: 'AuctionIsEndingNotification' } & AuctionIsEndingNotificationFieldsFragment)
+      | ({ __typename?: 'AuctionEndedNotification' } & AuctionEndedNotificationFieldsFragment)
+      | ({ __typename?: 'CommentNotification' } & CommentNotificationFieldsFragment)
+      | ({ __typename?: 'DeletedCommentNotification' } & DeletedCommentNotificationFieldsFragment)
+      | ({ __typename?: 'DeletedPostNotification' } & DeletedPostNotificationFieldsFragment)
+      | ({ __typename?: 'FollowerNotification' } & FollowerNotificationFieldsFragment)
+      | ({ __typename?: 'NewBidNotification' } & NewBidNotificationFieldsFragment)
+      | ({ __typename?: 'NewPostNotification' } & NewPostNotificationFieldsFragment)
+      | ({ __typename?: 'NewVerificationRequestNotification' } & NewVerificationRequestNotificationFieldsFragment)
+      | ({ __typename?: 'NFTSoldNotification' } & NftSoldNotificationFieldsFragment)
+      | ({ __typename?: 'OutbidNotification' } & OutbidNotificationFieldsFragment)
+      | ({ __typename?: 'ReactionNotification' } & ReactionNotificationFieldsFragment)
+      | ({ __typename?: 'VerificationRequestNotification' } & VerificationRequestNotificationFieldsFragment)
+      | ({ __typename?: 'WonAuctionNotification' } & WonAuctionNotificationFieldsFragment)
+    >
+  }
+}
 
-export type NotificationsQuery = (
-  { __typename?: 'Query' }
-  & { notifications: (
-    { __typename?: 'NotificationConnection' }
-    & { nodes: Array<(
-      { __typename?: 'AuctionIsEndingNotification' }
-      & AuctionIsEndingNotificationFieldsFragment
-    ) | (
-      { __typename?: 'AuctionEndedNotification' }
-      & AuctionEndedNotificationFieldsFragment
-    ) | (
-      { __typename?: 'CommentNotification' }
-      & CommentNotificationFieldsFragment
-    ) | (
-      { __typename?: 'DeletedCommentNotification' }
-      & DeletedCommentNotificationFieldsFragment
-    ) | (
-      { __typename?: 'DeletedPostNotification' }
-      & DeletedPostNotificationFieldsFragment
-    ) | (
-      { __typename?: 'FollowerNotification' }
-      & FollowerNotificationFieldsFragment
-    ) | (
-      { __typename?: 'NewBidNotification' }
-      & NewBidNotificationFieldsFragment
-    ) | (
-      { __typename?: 'NewPostNotification' }
-      & NewPostNotificationFieldsFragment
-    ) | (
-      { __typename?: 'NewVerificationRequestNotification' }
-      & NewVerificationRequestNotificationFieldsFragment
-    ) | (
-      { __typename?: 'NFTSoldNotification' }
-      & NftSoldNotificationFieldsFragment
-    ) | (
-      { __typename?: 'OutbidNotification' }
-      & OutbidNotificationFieldsFragment
-    ) | (
-      { __typename?: 'ReactionNotification' }
-      & ReactionNotificationFieldsFragment
-    ) | (
-      { __typename?: 'VerificationRequestNotification' }
-      & VerificationRequestNotificationFieldsFragment
-    ) | (
-      { __typename?: 'WonAuctionNotification' }
-      & WonAuctionNotificationFieldsFragment
-    )> }
-  ) }
-);
-
-export type OutbidNotificationFieldsFragment = (
-  { __typename?: 'OutbidNotification' }
-  & Pick<OutbidNotification, 'id' | 'type' | 'createdAt' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price'>
-);
+export type OutbidNotificationFieldsFragment = { __typename?: 'OutbidNotification' } & Pick<
+  OutbidNotification,
+  'id' | 'type' | 'createdAt' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price'
+>
 
 export type OwnedBuyNowTrackIdsQueryVariables = Exact<{
-  filter: FilterOwnedBuyNowItemInput;
-}>;
+  filter: FilterOwnedBuyNowItemInput
+}>
 
-
-export type OwnedBuyNowTrackIdsQuery = (
-  { __typename?: 'Query' }
-  & { ownedBuyNowListingItems: (
-    { __typename?: 'ListingItemConnection' }
-    & { nodes: Array<(
-      { __typename?: 'TrackWithListingItem' }
-      & Pick<TrackWithListingItem, 'id'>
-      & { nftData: Maybe<(
-        { __typename?: 'NFTDataType' }
-        & Pick<NftDataType, 'tokenId'>
-      )> }
-    )> }
-  ) }
-);
+export type OwnedBuyNowTrackIdsQuery = { __typename?: 'Query' } & {
+  ownedBuyNowListingItems: { __typename?: 'ListingItemConnection' } & {
+    nodes: Array<
+      { __typename?: 'TrackWithListingItem' } & Pick<TrackWithListingItem, 'id'> & {
+          nftData: Maybe<{ __typename?: 'NFTDataType' } & Pick<NftDataType, 'tokenId'>>
+        }
+    >
+  }
+}
 
 export type OwnedTrackIdsQueryVariables = Exact<{
-  filter: FilterOwnedTracksInput;
-}>;
+  filter: FilterOwnedTracksInput
+}>
 
-
-export type OwnedTrackIdsQuery = (
-  { __typename?: 'Query' }
-  & { ownedTracks: (
-    { __typename?: 'TrackConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Track' }
-      & Pick<Track, 'id'>
-      & { nftData: Maybe<(
-        { __typename?: 'NFTDataType' }
-        & Pick<NftDataType, 'tokenId'>
-      )> }
-    )> }
-  ) }
-);
+export type OwnedTrackIdsQuery = { __typename?: 'Query' } & {
+  ownedTracks: { __typename?: 'TrackConnection' } & {
+    nodes: Array<
+      { __typename?: 'Track' } & Pick<Track, 'id'> & {
+          nftData: Maybe<{ __typename?: 'NFTDataType' } & Pick<NftDataType, 'tokenId'>>
+        }
+    >
+  }
+}
 
 export type OwnedTracksQueryVariables = Exact<{
-  filter: FilterOwnedTracksInput;
-  page?: Maybe<PageInput>;
-}>;
+  filter: FilterOwnedTracksInput
+  page?: Maybe<PageInput>
+}>
 
+export type OwnedTracksQuery = { __typename?: 'Query' } & {
+  ownedTracks: { __typename?: 'TrackConnection' } & {
+    nodes: Array<
+      { __typename?: 'Track' } & {
+        listingItem: Maybe<{ __typename?: 'ListingItem' } & ListingItemViewComponentFieldsFragment>
+      } & TrackComponentFieldsFragment
+    >
+    pageInfo: { __typename?: 'PageInfo' } & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
+  }
+}
 
-export type OwnedTracksQuery = (
-  { __typename?: 'Query' }
-  & { ownedTracks: (
-    { __typename?: 'TrackConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Track' }
-      & { listingItem: Maybe<(
-        { __typename?: 'ListingItem' }
-        & ListingItemViewComponentFieldsFragment
-      )> }
-      & TrackComponentFieldsFragment
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
-    ) }
-  ) }
-);
+export type PendingRequestsBadgeNumberQueryVariables = Exact<{ [key: string]: never }>
 
-export type PendingRequestsBadgeNumberQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type PendingRequestsBadgeNumberQuery = (
-  { __typename?: 'Query' }
-  & Pick<Query, 'pendingRequestsBadgeNumber'>
-);
+export type PendingRequestsBadgeNumberQuery = { __typename?: 'Query' } & Pick<Query, 'pendingRequestsBadgeNumber'>
 
 export type PinJsonToIpfsMutationVariables = Exact<{
-  input: PinJsonToIpfsInput;
-}>;
+  input: PinJsonToIpfsInput
+}>
 
-
-export type PinJsonToIpfsMutation = (
-  { __typename?: 'Mutation' }
-  & { pinJsonToIPFS: (
-    { __typename?: 'PinningPayload' }
-    & Pick<PinningPayload, 'cid'>
-  ) }
-);
+export type PinJsonToIpfsMutation = { __typename?: 'Mutation' } & {
+  pinJsonToIPFS: { __typename?: 'PinningPayload' } & Pick<PinningPayload, 'cid'>
+}
 
 export type PinToIpfsMutationVariables = Exact<{
-  input: PinToIpfsInput;
-}>;
+  input: PinToIpfsInput
+}>
 
-
-export type PinToIpfsMutation = (
-  { __typename?: 'Mutation' }
-  & { pinToIPFS: (
-    { __typename?: 'PinningPayload' }
-    & Pick<PinningPayload, 'cid'>
-  ) }
-);
+export type PinToIpfsMutation = { __typename?: 'Mutation' } & {
+  pinToIPFS: { __typename?: 'PinningPayload' } & Pick<PinningPayload, 'cid'>
+}
 
 export type PolygonscanQueryVariables = Exact<{
-  wallet: Scalars['String'];
-  page?: Maybe<PageInput>;
-}>;
+  wallet: Scalars['String']
+  page?: Maybe<PageInput>
+}>
 
-
-export type PolygonscanQuery = (
-  { __typename?: 'Query' }
-  & { getTransactionHistory: (
-    { __typename?: 'PolygonscanResult' }
-    & Pick<PolygonscanResult, 'nextPage'>
-    & { result: Array<(
-      { __typename?: 'PolygonscanResultObj' }
-      & Pick<PolygonscanResultObj, 'blockNumber' | 'timeStamp' | 'hash' | 'nonce' | 'blockHash' | 'transactionIndex' | 'from' | 'to' | 'value' | 'gas' | 'gasPrice' | 'isError' | 'txreceipt_status' | 'input' | 'contractAddress' | 'cumulativeGasUsed' | 'gasUsed' | 'confirmations' | 'method' | 'date'>
-    )> }
-  ) }
-);
+export type PolygonscanQuery = { __typename?: 'Query' } & {
+  getTransactionHistory: { __typename?: 'PolygonscanResult' } & Pick<PolygonscanResult, 'nextPage'> & {
+      result: Array<
+        { __typename?: 'PolygonscanResultObj' } & Pick<
+          PolygonscanResultObj,
+          | 'blockNumber'
+          | 'timeStamp'
+          | 'hash'
+          | 'nonce'
+          | 'blockHash'
+          | 'transactionIndex'
+          | 'from'
+          | 'to'
+          | 'value'
+          | 'gas'
+          | 'gasPrice'
+          | 'isError'
+          | 'txreceipt_status'
+          | 'input'
+          | 'contractAddress'
+          | 'cumulativeGasUsed'
+          | 'gasUsed'
+          | 'confirmations'
+          | 'method'
+          | 'date'
+        >
+      >
+    }
+}
 
 export type PolygonscanInternalTrxQueryVariables = Exact<{
-  wallet: Scalars['String'];
-  page?: Maybe<PageInput>;
-}>;
+  wallet: Scalars['String']
+  page?: Maybe<PageInput>
+}>
 
-
-export type PolygonscanInternalTrxQuery = (
-  { __typename?: 'Query' }
-  & { getInternalTransactionHistory: (
-    { __typename?: 'PolygonscanResult' }
-    & Pick<PolygonscanResult, 'nextPage'>
-    & { result: Array<(
-      { __typename?: 'PolygonscanResultObj' }
-      & Pick<PolygonscanResultObj, 'blockNumber' | 'timeStamp' | 'hash' | 'from' | 'to' | 'value' | 'gas' | 'isError' | 'input' | 'contractAddress' | 'gasUsed' | 'date'>
-    )> }
-  ) }
-);
+export type PolygonscanInternalTrxQuery = { __typename?: 'Query' } & {
+  getInternalTransactionHistory: { __typename?: 'PolygonscanResult' } & Pick<PolygonscanResult, 'nextPage'> & {
+      result: Array<
+        { __typename?: 'PolygonscanResultObj' } & Pick<
+          PolygonscanResultObj,
+          | 'blockNumber'
+          | 'timeStamp'
+          | 'hash'
+          | 'from'
+          | 'to'
+          | 'value'
+          | 'gas'
+          | 'isError'
+          | 'input'
+          | 'contractAddress'
+          | 'gasUsed'
+          | 'date'
+        >
+      >
+    }
+}
 
 export type PostQueryVariables = Exact<{
-  id: Scalars['String'];
-}>;
+  id: Scalars['String']
+}>
 
+export type PostQuery = { __typename?: 'Query' } & { post: { __typename?: 'Post' } & PostComponentFieldsFragment }
 
-export type PostQuery = (
-  { __typename?: 'Query' }
-  & { post: (
-    { __typename?: 'Post' }
-    & PostComponentFieldsFragment
-  ) }
-);
-
-export type PostComponentFieldsFragment = (
-  { __typename?: 'Post' }
-  & Pick<Post, 'id' | 'body' | 'mediaLink' | 'repostId' | 'createdAt' | 'updatedAt' | 'commentCount' | 'repostCount' | 'totalReactions' | 'topReactions' | 'myReaction' | 'deleted'>
-  & { profile: (
-    { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'teamMember' | 'userHandle'>
-  ), track: Maybe<(
-    { __typename?: 'Track' }
-    & TrackComponentFieldsFragment
-  )> }
-);
+export type PostComponentFieldsFragment = { __typename?: 'Post' } & Pick<
+  Post,
+  | 'id'
+  | 'body'
+  | 'mediaLink'
+  | 'repostId'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'commentCount'
+  | 'repostCount'
+  | 'totalReactions'
+  | 'topReactions'
+  | 'myReaction'
+  | 'deleted'
+> & {
+    profile: { __typename?: 'Profile' } & Pick<
+      Profile,
+      'id' | 'displayName' | 'profilePicture' | 'verified' | 'teamMember' | 'userHandle'
+    >
+    track: Maybe<{ __typename?: 'Track' } & TrackComponentFieldsFragment>
+  }
 
 export type PostsQueryVariables = Exact<{
-  filter?: Maybe<FilterPostInput>;
-  sort?: Maybe<SortPostInput>;
-  page?: Maybe<PageInput>;
-}>;
+  filter?: Maybe<FilterPostInput>
+  sort?: Maybe<SortPostInput>
+  page?: Maybe<PageInput>
+}>
 
-
-export type PostsQuery = (
-  { __typename?: 'Query' }
-  & { posts: (
-    { __typename?: 'PostConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Post' }
-      & PostComponentFieldsFragment
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
-    ) }
-  ) }
-);
+export type PostsQuery = { __typename?: 'Query' } & {
+  posts: { __typename?: 'PostConnection' } & {
+    nodes: Array<{ __typename?: 'Post' } & PostComponentFieldsFragment>
+    pageInfo: { __typename?: 'PageInfo' } & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
+  }
+}
 
 export type ProfileQueryVariables = Exact<{
-  id: Scalars['String'];
-}>;
+  id: Scalars['String']
+}>
 
-
-export type ProfileQuery = (
-  { __typename?: 'Query' }
-  & { profile: (
-    { __typename?: 'Profile' }
-    & ProfileComponentFieldsFragment
-  ) }
-);
+export type ProfileQuery = { __typename?: 'Query' } & {
+  profile: { __typename?: 'Profile' } & ProfileComponentFieldsFragment
+}
 
 export type ProfileByHandleQueryVariables = Exact<{
-  handle: Scalars['String'];
-}>;
+  handle: Scalars['String']
+}>
 
+export type ProfileByHandleQuery = { __typename?: 'Query' } & {
+  profileByHandle: { __typename?: 'Profile' } & ProfileComponentFieldsFragment
+}
 
-export type ProfileByHandleQuery = (
-  { __typename?: 'Query' }
-  & { profileByHandle: (
-    { __typename?: 'Profile' }
-    & ProfileComponentFieldsFragment
-  ) }
-);
-
-export type ProfileComponentFieldsFragment = (
-  { __typename?: 'Profile' }
-  & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'favoriteGenres' | 'musicianTypes' | 'bio' | 'followerCount' | 'followingCount' | 'userHandle' | 'isFollowed' | 'isSubscriber' | 'unreadNotificationCount' | 'unreadMessageCount' | 'verified' | 'teamMember' | 'magicWalletAddress' | 'createdAt' | 'updatedAt'>
-  & { socialMedias: (
-    { __typename?: 'SocialMedias' }
-    & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
-  ) }
-);
+export type ProfileComponentFieldsFragment = { __typename?: 'Profile' } & Pick<
+  Profile,
+  | 'id'
+  | 'displayName'
+  | 'profilePicture'
+  | 'coverPicture'
+  | 'favoriteGenres'
+  | 'musicianTypes'
+  | 'bio'
+  | 'followerCount'
+  | 'followingCount'
+  | 'userHandle'
+  | 'isFollowed'
+  | 'isSubscriber'
+  | 'unreadNotificationCount'
+  | 'unreadMessageCount'
+  | 'verified'
+  | 'teamMember'
+  | 'magicWalletAddress'
+  | 'createdAt'
+  | 'updatedAt'
+> & {
+    socialMedias: { __typename?: 'SocialMedias' } & Pick<
+      SocialMedias,
+      'facebook' | 'instagram' | 'soundcloud' | 'twitter'
+    >
+  }
 
 export type ProfileDisplayNameQueryVariables = Exact<{
-  id: Scalars['String'];
-}>;
+  id: Scalars['String']
+}>
 
-
-export type ProfileDisplayNameQuery = (
-  { __typename?: 'Query' }
-  & { profile: (
-    { __typename?: 'Profile' }
-    & Pick<Profile, 'displayName' | 'verified'>
-  ) }
-);
+export type ProfileDisplayNameQuery = { __typename?: 'Query' } & {
+  profile: { __typename?: 'Profile' } & Pick<Profile, 'displayName' | 'verified'>
+}
 
 export type ProfileVerificationRequestQueryVariables = Exact<{
-  id?: Maybe<Scalars['String']>;
-  profileId?: Maybe<Scalars['String']>;
-}>;
+  id?: Maybe<Scalars['String']>
+  profileId?: Maybe<Scalars['String']>
+}>
 
+export type ProfileVerificationRequestQuery = { __typename?: 'Query' } & {
+  profileVerificationRequest: {
+    __typename?: 'ProfileVerificationRequest'
+  } & ProfileVerificationRequestComponentFieldsFragment
+}
 
-export type ProfileVerificationRequestQuery = (
-  { __typename?: 'Query' }
-  & { profileVerificationRequest: (
-    { __typename?: 'ProfileVerificationRequest' }
-    & ProfileVerificationRequestComponentFieldsFragment
-  ) }
-);
-
-export type ProfileVerificationRequestComponentFieldsFragment = (
-  { __typename?: 'ProfileVerificationRequest' }
-  & Pick<ProfileVerificationRequest, 'id' | 'profileId' | 'soundcloud' | 'youtube' | 'bandcamp' | 'status' | 'reason' | 'reviewerProfileId' | 'createdAt' | 'updatedAt'>
-);
+export type ProfileVerificationRequestComponentFieldsFragment = { __typename?: 'ProfileVerificationRequest' } & Pick<
+  ProfileVerificationRequest,
+  | 'id'
+  | 'profileId'
+  | 'soundcloud'
+  | 'youtube'
+  | 'bandcamp'
+  | 'status'
+  | 'reason'
+  | 'reviewerProfileId'
+  | 'createdAt'
+  | 'updatedAt'
+>
 
 export type ProfileVerificationRequestsQueryVariables = Exact<{
-  status?: Maybe<Scalars['String']>;
-  page?: Maybe<PageInput>;
-}>;
+  status?: Maybe<Scalars['String']>
+  page?: Maybe<PageInput>
+}>
 
-
-export type ProfileVerificationRequestsQuery = (
-  { __typename?: 'Query' }
-  & { profileVerificationRequests: (
-    { __typename?: 'ProfileVerificationRequestConnection' }
-    & { nodes: Array<(
-      { __typename?: 'ProfileVerificationRequest' }
-      & ProfileVerificationRequestComponentFieldsFragment
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
-    ) }
-  ) }
-);
+export type ProfileVerificationRequestsQuery = { __typename?: 'Query' } & {
+  profileVerificationRequests: { __typename?: 'ProfileVerificationRequestConnection' } & {
+    nodes: Array<{ __typename?: 'ProfileVerificationRequest' } & ProfileVerificationRequestComponentFieldsFragment>
+    pageInfo: { __typename?: 'PageInfo' } & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
+  }
+}
 
 export type ProofBookByWalletQueryVariables = Exact<{
-  walletAddress: Scalars['String'];
-}>;
+  walletAddress: Scalars['String']
+}>
 
-
-export type ProofBookByWalletQuery = (
-  { __typename?: 'Query' }
-  & { getProofBookByWallet: Maybe<(
-    { __typename?: 'ProofBookItem' }
-    & Pick<ProofBookItem, 'root' | 'address' | 'value' | 'merkleProof'>
-  )> }
-);
+export type ProofBookByWalletQuery = { __typename?: 'Query' } & {
+  getProofBookByWallet: Maybe<
+    { __typename?: 'ProofBookItem' } & Pick<ProofBookItem, 'root' | 'address' | 'value' | 'merkleProof'>
+  >
+}
 
 export type ReactToPostMutationVariables = Exact<{
-  input: ReactToPostInput;
-}>;
+  input: ReactToPostInput
+}>
 
+export type ReactToPostMutation = { __typename?: 'Mutation' } & {
+  reactToPost: { __typename?: 'ReactToPostPayload' } & {
+    post: { __typename?: 'Post' } & Pick<Post, 'id' | 'totalReactions' | 'topReactions' | 'myReaction'>
+  }
+}
 
-export type ReactToPostMutation = (
-  { __typename?: 'Mutation' }
-  & { reactToPost: (
-    { __typename?: 'ReactToPostPayload' }
-    & { post: (
-      { __typename?: 'Post' }
-      & Pick<Post, 'id' | 'totalReactions' | 'topReactions' | 'myReaction'>
-    ) }
-  ) }
-);
-
-export type ReactionNotificationFieldsFragment = (
-  { __typename?: 'ReactionNotification' }
-  & Pick<ReactionNotification, 'id' | 'type' | 'reactionType' | 'link' | 'authorName' | 'authorPicture' | 'createdAt' | 'postId'>
-);
+export type ReactionNotificationFieldsFragment = { __typename?: 'ReactionNotification' } & Pick<
+  ReactionNotification,
+  'id' | 'type' | 'reactionType' | 'link' | 'authorName' | 'authorPicture' | 'createdAt' | 'postId'
+>
 
 export type ReactionsQueryVariables = Exact<{
-  postId: Scalars['String'];
-  page?: Maybe<PageInput>;
-}>;
+  postId: Scalars['String']
+  page?: Maybe<PageInput>
+}>
 
-
-export type ReactionsQuery = (
-  { __typename?: 'Query' }
-  & { reactions: (
-    { __typename?: 'ReactionConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Reaction' }
-      & Pick<Reaction, 'id' | 'type'>
-      & { profile: (
-        { __typename?: 'Profile' }
-        & Pick<Profile, 'id' | 'userHandle' | 'displayName' | 'profilePicture' | 'verified'>
-      ) }
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
-    ) }
-  ) }
-);
+export type ReactionsQuery = { __typename?: 'Query' } & {
+  reactions: { __typename?: 'ReactionConnection' } & {
+    nodes: Array<
+      { __typename?: 'Reaction' } & Pick<Reaction, 'id' | 'type'> & {
+          profile: { __typename?: 'Profile' } & Pick<
+            Profile,
+            'id' | 'userHandle' | 'displayName' | 'profilePicture' | 'verified'
+          >
+        }
+    >
+    pageInfo: { __typename?: 'PageInfo' } & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
+  }
+}
 
 export type RegisterMutationVariables = Exact<{
-  input: RegisterInput;
-}>;
+  input: RegisterInput
+}>
 
-
-export type RegisterMutation = (
-  { __typename?: 'Mutation' }
-  & { register: (
-    { __typename?: 'AuthPayload' }
-    & Pick<AuthPayload, 'jwt'>
-  ) }
-);
+export type RegisterMutation = { __typename?: 'Mutation' } & {
+  register: { __typename?: 'AuthPayload' } & Pick<AuthPayload, 'jwt'>
+}
 
 export type RemoveProfileVerificationRequestMutationVariables = Exact<{
-  id: Scalars['String'];
-}>;
+  id: Scalars['String']
+}>
 
+export type RemoveProfileVerificationRequestMutation = { __typename?: 'Mutation' } & {
+  removeProfileVerificationRequest: { __typename?: 'ProfileVerificationRequestPayload' } & {
+    profileVerificationRequest: { __typename?: 'ProfileVerificationRequest' } & Pick<ProfileVerificationRequest, 'id'>
+  }
+}
 
-export type RemoveProfileVerificationRequestMutation = (
-  { __typename?: 'Mutation' }
-  & { removeProfileVerificationRequest: (
-    { __typename?: 'ProfileVerificationRequestPayload' }
-    & { profileVerificationRequest: (
-      { __typename?: 'ProfileVerificationRequest' }
-      & Pick<ProfileVerificationRequest, 'id'>
-    ) }
-  ) }
-);
+export type ResetNotificationCountMutationVariables = Exact<{ [key: string]: never }>
 
-export type ResetNotificationCountMutationVariables = Exact<{ [key: string]: never; }>;
+export type ResetNotificationCountMutation = { __typename?: 'Mutation' } & {
+  resetNotificationCount: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'unreadNotificationCount'>
+}
 
+export type ResetUnreadMessageCountMutationVariables = Exact<{ [key: string]: never }>
 
-export type ResetNotificationCountMutation = (
-  { __typename?: 'Mutation' }
-  & { resetNotificationCount: (
-    { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'unreadNotificationCount'>
-  ) }
-);
-
-export type ResetUnreadMessageCountMutationVariables = Exact<{ [key: string]: never; }>;
-
-
-export type ResetUnreadMessageCountMutation = (
-  { __typename?: 'Mutation' }
-  & { resetUnreadMessageCount: (
-    { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'unreadMessageCount'>
-  ) }
-);
+export type ResetUnreadMessageCountMutation = { __typename?: 'Mutation' } & {
+  resetUnreadMessageCount: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'unreadMessageCount'>
+}
 
 export type RetractReactionMutationVariables = Exact<{
-  input: RetractReactionInput;
-}>;
+  input: RetractReactionInput
+}>
 
-
-export type RetractReactionMutation = (
-  { __typename?: 'Mutation' }
-  & { retractReaction: (
-    { __typename?: 'RetractReactionPayload' }
-    & { post: (
-      { __typename?: 'Post' }
-      & Pick<Post, 'id' | 'totalReactions' | 'topReactions' | 'myReaction'>
-    ) }
-  ) }
-);
+export type RetractReactionMutation = { __typename?: 'Mutation' } & {
+  retractReaction: { __typename?: 'RetractReactionPayload' } & {
+    post: { __typename?: 'Post' } & Pick<Post, 'id' | 'totalReactions' | 'topReactions' | 'myReaction'>
+  }
+}
 
 export type SendMessageMutationVariables = Exact<{
-  input: SendMessageInput;
-}>;
+  input: SendMessageInput
+}>
 
-
-export type SendMessageMutation = (
-  { __typename?: 'Mutation' }
-  & { sendMessage: (
-    { __typename?: 'SendMessagePayload' }
-    & { message: (
-      { __typename?: 'Message' }
-      & MessageComponentFieldsFragment
-    ) }
-  ) }
-);
+export type SendMessageMutation = { __typename?: 'Mutation' } & {
+  sendMessage: { __typename?: 'SendMessagePayload' } & {
+    message: { __typename?: 'Message' } & MessageComponentFieldsFragment
+  }
+}
 
 export type SubscribeToProfileMutationVariables = Exact<{
-  input: SubscribeToProfileInput;
-}>;
+  input: SubscribeToProfileInput
+}>
 
-
-export type SubscribeToProfileMutation = (
-  { __typename?: 'Mutation' }
-  & { subscribeToProfile: (
-    { __typename?: 'SubscribeToProfilePayload' }
-    & { profile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'isSubscriber'>
-    ) }
-  ) }
-);
+export type SubscribeToProfileMutation = { __typename?: 'Mutation' } & {
+  subscribeToProfile: { __typename?: 'SubscribeToProfilePayload' } & {
+    profile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'isSubscriber'>
+  }
+}
 
 export type ToggleFavoriteMutationVariables = Exact<{
-  trackId: Scalars['String'];
-}>;
+  trackId: Scalars['String']
+}>
 
-
-export type ToggleFavoriteMutation = (
-  { __typename?: 'Mutation' }
-  & { toggleFavorite: (
-    { __typename?: 'ToggleFavoritePayload' }
-    & { favoriteProfileTrack: (
-      { __typename?: 'FavoriteProfileTrack' }
-      & Pick<FavoriteProfileTrack, 'id' | 'trackId' | 'profileId'>
-    ) }
-  ) }
-);
+export type ToggleFavoriteMutation = { __typename?: 'Mutation' } & {
+  toggleFavorite: { __typename?: 'ToggleFavoritePayload' } & {
+    favoriteProfileTrack: { __typename?: 'FavoriteProfileTrack' } & Pick<
+      FavoriteProfileTrack,
+      'id' | 'trackId' | 'profileId'
+    >
+  }
+}
 
 export type TrackQueryVariables = Exact<{
-  id: Scalars['String'];
-}>;
+  id: Scalars['String']
+}>
 
+export type TrackQuery = { __typename?: 'Query' } & { track: { __typename?: 'Track' } & TrackComponentFieldsFragment }
 
-export type TrackQuery = (
-  { __typename?: 'Query' }
-  & { track: (
-    { __typename?: 'Track' }
-    & TrackComponentFieldsFragment
-  ) }
-);
-
-export type TrackComponentFieldsFragment = (
-  { __typename?: 'Track' }
-  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'utilityInfo' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'listingCount' | 'playbackCount' | 'saleType' | 'trackEditionId' | 'editionSize'>
-  & { price: (
-    { __typename?: 'TrackPrice' }
-    & Pick<TrackPrice, 'value' | 'currency'>
-  ), nftData: Maybe<(
-    { __typename?: 'NFTDataType' }
-    & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner' | 'pendingTime'>
-  )>, trackEdition: Maybe<(
-    { __typename?: 'TrackEdition' }
-    & TrackEditionFieldsFragment
-  )> }
-);
+export type TrackComponentFieldsFragment = { __typename?: 'Track' } & Pick<
+  Track,
+  | 'id'
+  | 'profileId'
+  | 'title'
+  | 'assetUrl'
+  | 'artworkUrl'
+  | 'description'
+  | 'utilityInfo'
+  | 'artist'
+  | 'artistId'
+  | 'artistProfileId'
+  | 'album'
+  | 'releaseYear'
+  | 'copyright'
+  | 'genres'
+  | 'playbackUrl'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'deleted'
+  | 'playbackCountFormatted'
+  | 'isFavorite'
+  | 'favoriteCount'
+  | 'listingCount'
+  | 'playbackCount'
+  | 'saleType'
+  | 'trackEditionId'
+  | 'editionSize'
+> & {
+    price: { __typename?: 'TrackPrice' } & Pick<TrackPrice, 'value' | 'currency'>
+    nftData: Maybe<
+      { __typename?: 'NFTDataType' } & Pick<
+        NftDataType,
+        'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner' | 'pendingTime'
+      >
+    >
+    trackEdition: Maybe<{ __typename?: 'TrackEdition' } & TrackEditionFieldsFragment>
+  }
 
 export type TrackEditionQueryVariables = Exact<{
-  id: Scalars['String'];
-}>;
+  id: Scalars['String']
+}>
 
+export type TrackEditionQuery = { __typename?: 'Query' } & {
+  trackEdition: { __typename?: 'TrackEdition' } & TrackEditionFieldsFragment
+}
 
-export type TrackEditionQuery = (
-  { __typename?: 'Query' }
-  & { trackEdition: (
-    { __typename?: 'TrackEdition' }
-    & TrackEditionFieldsFragment
-  ) }
-);
-
-export type TrackEditionFieldsFragment = (
-  { __typename?: 'TrackEdition' }
-  & Pick<TrackEdition, 'id' | 'editionId' | 'transactionHash' | 'contract' | 'listed' | 'marketplace' | 'editionSize' | 'deleted' | 'createdAt' | 'updatedAt'>
-  & { editionData: Maybe<(
-    { __typename?: 'EditionDataType' }
-    & Pick<EditionDataType, 'pendingRequest' | 'pendingTime' | 'pendingTrackCount' | 'transactionHash' | 'contract' | 'owner'>
-  )> }
-);
+export type TrackEditionFieldsFragment = { __typename?: 'TrackEdition' } & Pick<
+  TrackEdition,
+  | 'id'
+  | 'editionId'
+  | 'transactionHash'
+  | 'contract'
+  | 'listed'
+  | 'marketplace'
+  | 'editionSize'
+  | 'deleted'
+  | 'createdAt'
+  | 'updatedAt'
+> & {
+    editionData: Maybe<
+      { __typename?: 'EditionDataType' } & Pick<
+        EditionDataType,
+        'pendingRequest' | 'pendingTime' | 'pendingTrackCount' | 'transactionHash' | 'contract' | 'owner'
+      >
+    >
+  }
 
 export type TracksQueryVariables = Exact<{
-  filter?: Maybe<FilterTrackInput>;
-  sort?: Maybe<SortTrackInput>;
-  page?: Maybe<PageInput>;
-}>;
+  filter?: Maybe<FilterTrackInput>
+  sort?: Maybe<SortTrackInput>
+  page?: Maybe<PageInput>
+}>
 
-
-export type TracksQuery = (
-  { __typename?: 'Query' }
-  & { tracks: (
-    { __typename?: 'TrackConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Track' }
-      & TrackComponentFieldsFragment
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
-    ) }
-  ) }
-);
+export type TracksQuery = { __typename?: 'Query' } & {
+  tracks: { __typename?: 'TrackConnection' } & {
+    nodes: Array<{ __typename?: 'Track' } & TrackComponentFieldsFragment>
+    pageInfo: { __typename?: 'PageInfo' } & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
+  }
+}
 
 export type UnfollowProfileMutationVariables = Exact<{
-  input: UnfollowProfileInput;
-}>;
+  input: UnfollowProfileInput
+}>
 
+export type UnfollowProfileMutation = { __typename?: 'Mutation' } & {
+  unfollowProfile: { __typename?: 'UnfollowProfilePayload' } & {
+    unfollowedProfile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'followerCount' | 'isFollowed'>
+  }
+}
 
-export type UnfollowProfileMutation = (
-  { __typename?: 'Mutation' }
-  & { unfollowProfile: (
-    { __typename?: 'UnfollowProfilePayload' }
-    & { unfollowedProfile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'followerCount' | 'isFollowed'>
-    ) }
-  ) }
-);
+export type UnreadMessageCountQueryVariables = Exact<{ [key: string]: never }>
 
-export type UnreadMessageCountQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type UnreadMessageCountQuery = (
-  { __typename?: 'Query' }
-  & { myProfile: (
-    { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'unreadMessageCount'>
-  ) }
-);
+export type UnreadMessageCountQuery = { __typename?: 'Query' } & {
+  myProfile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'unreadMessageCount'>
+}
 
 export type UnsubscribeFromProfileMutationVariables = Exact<{
-  input: UnsubscribeFromProfileInput;
-}>;
+  input: UnsubscribeFromProfileInput
+}>
 
-
-export type UnsubscribeFromProfileMutation = (
-  { __typename?: 'Mutation' }
-  & { unsubscribeFromProfile: (
-    { __typename?: 'UnsubscribeFromProfilePayload' }
-    & { profile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'isSubscriber'>
-    ) }
-  ) }
-);
+export type UnsubscribeFromProfileMutation = { __typename?: 'Mutation' } & {
+  unsubscribeFromProfile: { __typename?: 'UnsubscribeFromProfilePayload' } & {
+    profile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'isSubscriber'>
+  }
+}
 
 export type UpdateAllOwnedTracksMutationVariables = Exact<{
-  input: UpdateEditionOwnedTracksInput;
-}>;
+  input: UpdateEditionOwnedTracksInput
+}>
 
-
-export type UpdateAllOwnedTracksMutation = (
-  { __typename?: 'Mutation' }
-  & { updateEditionOwnedTracks: (
-    { __typename?: 'UpdateEditionOwnedTracksPayload' }
-    & { tracks: Array<(
-      { __typename?: 'Track' }
-      & Pick<Track, 'id'>
-      & { nftData: Maybe<(
-        { __typename?: 'NFTDataType' }
-        & Pick<NftDataType, 'pendingRequest'>
-      )>, trackEdition: Maybe<(
-        { __typename?: 'TrackEdition' }
-        & TrackEditionFieldsFragment
-      )> }
-    )> }
-  ) }
-);
+export type UpdateAllOwnedTracksMutation = { __typename?: 'Mutation' } & {
+  updateEditionOwnedTracks: { __typename?: 'UpdateEditionOwnedTracksPayload' } & {
+    tracks: Array<
+      { __typename?: 'Track' } & Pick<Track, 'id'> & {
+          nftData: Maybe<{ __typename?: 'NFTDataType' } & Pick<NftDataType, 'pendingRequest'>>
+          trackEdition: Maybe<{ __typename?: 'TrackEdition' } & TrackEditionFieldsFragment>
+        }
+    >
+  }
+}
 
 export type UpdateCommentMutationVariables = Exact<{
-  input: UpdateCommentInput;
-}>;
+  input: UpdateCommentInput
+}>
 
-
-export type UpdateCommentMutation = (
-  { __typename?: 'Mutation' }
-  & { updateComment: (
-    { __typename?: 'UpdateCommentPayload' }
-    & { comment: (
-      { __typename?: 'Comment' }
-      & CommentComponentFieldsFragment
-    ) }
-  ) }
-);
+export type UpdateCommentMutation = { __typename?: 'Mutation' } & {
+  updateComment: { __typename?: 'UpdateCommentPayload' } & {
+    comment: { __typename?: 'Comment' } & CommentComponentFieldsFragment
+  }
+}
 
 export type UpdateCoverPictureMutationVariables = Exact<{
-  input: UpdateProfileInput;
-}>;
+  input: UpdateProfileInput
+}>
 
-
-export type UpdateCoverPictureMutation = (
-  { __typename?: 'Mutation' }
-  & { updateProfile: (
-    { __typename?: 'UpdateProfilePayload' }
-    & { profile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'coverPicture'>
-    ) }
-  ) }
-);
+export type UpdateCoverPictureMutation = { __typename?: 'Mutation' } & {
+  updateProfile: { __typename?: 'UpdateProfilePayload' } & {
+    profile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'coverPicture'>
+  }
+}
 
 export type UpdateDefaultWalletMutationVariables = Exact<{
-  input: UpdateDefaultWalletInput;
-}>;
+  input: UpdateDefaultWalletInput
+}>
 
-
-export type UpdateDefaultWalletMutation = (
-  { __typename?: 'Mutation' }
-  & { updateDefaultWallet: (
-    { __typename?: 'UpdateDefaultWalletPayload' }
-    & { user: (
-      { __typename?: 'User' }
-      & Pick<User, 'id' | 'defaultWallet'>
-    ) }
-  ) }
-);
+export type UpdateDefaultWalletMutation = { __typename?: 'Mutation' } & {
+  updateDefaultWallet: { __typename?: 'UpdateDefaultWalletPayload' } & {
+    user: { __typename?: 'User' } & Pick<User, 'id' | 'defaultWallet'>
+  }
+}
 
 export type UpdateFavoriteGenresMutationVariables = Exact<{
-  input: UpdateProfileInput;
-}>;
+  input: UpdateProfileInput
+}>
 
-
-export type UpdateFavoriteGenresMutation = (
-  { __typename?: 'Mutation' }
-  & { updateProfile: (
-    { __typename?: 'UpdateProfilePayload' }
-    & { profile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'favoriteGenres'>
-    ) }
-  ) }
-);
+export type UpdateFavoriteGenresMutation = { __typename?: 'Mutation' } & {
+  updateProfile: { __typename?: 'UpdateProfilePayload' } & {
+    profile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'favoriteGenres'>
+  }
+}
 
 export type UpdateHandleMutationVariables = Exact<{
-  input: UpdateHandleInput;
-}>;
+  input: UpdateHandleInput
+}>
 
-
-export type UpdateHandleMutation = (
-  { __typename?: 'Mutation' }
-  & { updateHandle: (
-    { __typename?: 'UpdateHandlePayload' }
-    & { user: (
-      { __typename?: 'User' }
-      & Pick<User, 'id' | 'handle'>
-    ) }
-  ) }
-);
+export type UpdateHandleMutation = { __typename?: 'Mutation' } & {
+  updateHandle: { __typename?: 'UpdateHandlePayload' } & { user: { __typename?: 'User' } & Pick<User, 'id' | 'handle'> }
+}
 
 export type UpdateMusicianTypeMutationVariables = Exact<{
-  input: UpdateProfileInput;
-}>;
+  input: UpdateProfileInput
+}>
 
-
-export type UpdateMusicianTypeMutation = (
-  { __typename?: 'Mutation' }
-  & { updateProfile: (
-    { __typename?: 'UpdateProfilePayload' }
-    & { profile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'musicianTypes'>
-    ) }
-  ) }
-);
+export type UpdateMusicianTypeMutation = { __typename?: 'Mutation' } & {
+  updateProfile: { __typename?: 'UpdateProfilePayload' } & {
+    profile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'musicianTypes'>
+  }
+}
 
 export type UpdateOtpMutationVariables = Exact<{
-  input: UpdateOtpInput;
-}>;
+  input: UpdateOtpInput
+}>
 
-
-export type UpdateOtpMutation = (
-  { __typename?: 'Mutation' }
-  & { updateOTP: (
-    { __typename?: 'UpdateOTPPayload' }
-    & { user: (
-      { __typename?: 'User' }
-      & Pick<User, 'id' | 'otpSecret' | 'otpRecoveryPhrase'>
-    ) }
-  ) }
-);
+export type UpdateOtpMutation = { __typename?: 'Mutation' } & {
+  updateOTP: { __typename?: 'UpdateOTPPayload' } & {
+    user: { __typename?: 'User' } & Pick<User, 'id' | 'otpSecret' | 'otpRecoveryPhrase'>
+  }
+}
 
 export type UpdateOgunClaimedAudioHolderMutationVariables = Exact<{
-  input: UpdateOgunClaimedInput;
-}>;
+  input: UpdateOgunClaimedInput
+}>
 
-
-export type UpdateOgunClaimedAudioHolderMutation = (
-  { __typename?: 'Mutation' }
-  & { updateOgunClaimedAudioHolder: (
-    { __typename?: 'UpdateOgunClaimedAudioHolderPayload' }
-    & { audioHolder: (
-      { __typename?: 'AudioHolder' }
-      & Pick<AudioHolder, 'id'>
-    ) }
-  ) }
-);
+export type UpdateOgunClaimedAudioHolderMutation = { __typename?: 'Mutation' } & {
+  updateOgunClaimedAudioHolder: { __typename?: 'UpdateOgunClaimedAudioHolderPayload' } & {
+    audioHolder: { __typename?: 'AudioHolder' } & Pick<AudioHolder, 'id'>
+  }
+}
 
 export type UpdateOgunClaimedWhitelistMutationVariables = Exact<{
-  input: UpdateOgunClaimedInput;
-}>;
+  input: UpdateOgunClaimedInput
+}>
 
-
-export type UpdateOgunClaimedWhitelistMutation = (
-  { __typename?: 'Mutation' }
-  & { updateOgunClaimedWhitelist: (
-    { __typename?: 'UpdateWhitelistEntryPayload' }
-    & { whitelistEntry: (
-      { __typename?: 'WhitelistEntry' }
-      & Pick<WhitelistEntry, 'id'>
-    ) }
-  ) }
-);
+export type UpdateOgunClaimedWhitelistMutation = { __typename?: 'Mutation' } & {
+  updateOgunClaimedWhitelist: { __typename?: 'UpdateWhitelistEntryPayload' } & {
+    whitelistEntry: { __typename?: 'WhitelistEntry' } & Pick<WhitelistEntry, 'id'>
+  }
+}
 
 export type UpdatePostMutationVariables = Exact<{
-  input: UpdatePostInput;
-}>;
+  input: UpdatePostInput
+}>
 
-
-export type UpdatePostMutation = (
-  { __typename?: 'Mutation' }
-  & { updatePost: (
-    { __typename?: 'UpdatePostPayload' }
-    & { post: (
-      { __typename?: 'Post' }
-      & Pick<Post, 'id' | 'body'>
-    ) }
-  ) }
-);
+export type UpdatePostMutation = { __typename?: 'Mutation' } & {
+  updatePost: { __typename?: 'UpdatePostPayload' } & { post: { __typename?: 'Post' } & Pick<Post, 'id' | 'body'> }
+}
 
 export type UpdateProfileBioMutationVariables = Exact<{
-  input: UpdateProfileInput;
-}>;
+  input: UpdateProfileInput
+}>
 
-
-export type UpdateProfileBioMutation = (
-  { __typename?: 'Mutation' }
-  & { updateProfile: (
-    { __typename?: 'UpdateProfilePayload' }
-    & { profile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'bio'>
-    ) }
-  ) }
-);
+export type UpdateProfileBioMutation = { __typename?: 'Mutation' } & {
+  updateProfile: { __typename?: 'UpdateProfilePayload' } & {
+    profile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'bio'>
+  }
+}
 
 export type UpdateProfileDisplayNameMutationVariables = Exact<{
-  input: UpdateProfileInput;
-}>;
+  input: UpdateProfileInput
+}>
 
-
-export type UpdateProfileDisplayNameMutation = (
-  { __typename?: 'Mutation' }
-  & { updateProfile: (
-    { __typename?: 'UpdateProfilePayload' }
-    & { profile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'displayName'>
-    ) }
-  ) }
-);
+export type UpdateProfileDisplayNameMutation = { __typename?: 'Mutation' } & {
+  updateProfile: { __typename?: 'UpdateProfilePayload' } & {
+    profile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'displayName'>
+  }
+}
 
 export type UpdateProfilePictureMutationVariables = Exact<{
-  input: UpdateProfileInput;
-}>;
+  input: UpdateProfileInput
+}>
 
-
-export type UpdateProfilePictureMutation = (
-  { __typename?: 'Mutation' }
-  & { updateProfile: (
-    { __typename?: 'UpdateProfilePayload' }
-    & { profile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'profilePicture'>
-    ) }
-  ) }
-);
+export type UpdateProfilePictureMutation = { __typename?: 'Mutation' } & {
+  updateProfile: { __typename?: 'UpdateProfilePayload' } & {
+    profile: { __typename?: 'Profile' } & Pick<Profile, 'id' | 'profilePicture'>
+  }
+}
 
 export type UpdateSocialMediasMutationVariables = Exact<{
-  input: UpdateProfileInput;
-}>;
+  input: UpdateProfileInput
+}>
 
-
-export type UpdateSocialMediasMutation = (
-  { __typename?: 'Mutation' }
-  & { updateProfile: (
-    { __typename?: 'UpdateProfilePayload' }
-    & { profile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'id'>
-      & { socialMedias: (
-        { __typename?: 'SocialMedias' }
-        & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
-      ) }
-    ) }
-  ) }
-);
+export type UpdateSocialMediasMutation = { __typename?: 'Mutation' } & {
+  updateProfile: { __typename?: 'UpdateProfilePayload' } & {
+    profile: { __typename?: 'Profile' } & Pick<Profile, 'id'> & {
+        socialMedias: { __typename?: 'SocialMedias' } & Pick<
+          SocialMedias,
+          'facebook' | 'instagram' | 'soundcloud' | 'twitter'
+        >
+      }
+  }
+}
 
 export type UpdateProfileVerificationRequestMutationVariables = Exact<{
-  id: Scalars['String'];
-  input: CreateProfileVerificationRequestInput;
-}>;
+  id: Scalars['String']
+  input: CreateProfileVerificationRequestInput
+}>
 
-
-export type UpdateProfileVerificationRequestMutation = (
-  { __typename?: 'Mutation' }
-  & { updateProfileVerificationRequest: (
-    { __typename?: 'ProfileVerificationRequestPayload' }
-    & { profileVerificationRequest: (
-      { __typename?: 'ProfileVerificationRequest' }
-      & ProfileVerificationRequestComponentFieldsFragment
-    ) }
-  ) }
-);
+export type UpdateProfileVerificationRequestMutation = { __typename?: 'Mutation' } & {
+  updateProfileVerificationRequest: { __typename?: 'ProfileVerificationRequestPayload' } & {
+    profileVerificationRequest: {
+      __typename?: 'ProfileVerificationRequest'
+    } & ProfileVerificationRequestComponentFieldsFragment
+  }
+}
 
 export type UpdateTrackMutationVariables = Exact<{
-  input: UpdateTrackInput;
-}>;
+  input: UpdateTrackInput
+}>
 
-
-export type UpdateTrackMutation = (
-  { __typename?: 'Mutation' }
-  & { updateTrack: (
-    { __typename?: 'UpdateTrackPayload' }
-    & { track: (
-      { __typename?: 'Track' }
-      & TrackComponentFieldsFragment
-    ) }
-  ) }
-);
+export type UpdateTrackMutation = { __typename?: 'Mutation' } & {
+  updateTrack: { __typename?: 'UpdateTrackPayload' } & {
+    track: { __typename?: 'Track' } & TrackComponentFieldsFragment
+  }
+}
 
 export type UpdateMetaMaskAddressesMutationVariables = Exact<{
-  input: UpdateWalletInput;
-}>;
+  input: UpdateWalletInput
+}>
 
-
-export type UpdateMetaMaskAddressesMutation = (
-  { __typename?: 'Mutation' }
-  & { updateMetaMaskAddresses: (
-    { __typename?: 'UpdateDefaultWalletPayload' }
-    & { user: (
-      { __typename?: 'User' }
-      & Pick<User, 'id' | 'metaMaskWalletAddressees'>
-    ) }
-  ) }
-);
+export type UpdateMetaMaskAddressesMutation = { __typename?: 'Mutation' } & {
+  updateMetaMaskAddresses: { __typename?: 'UpdateDefaultWalletPayload' } & {
+    user: { __typename?: 'User' } & Pick<User, 'id' | 'metaMaskWalletAddressees'>
+  }
+}
 
 export type UploadUrlQueryVariables = Exact<{
-  fileType: Scalars['String'];
-}>;
+  fileType: Scalars['String']
+}>
 
-
-export type UploadUrlQuery = (
-  { __typename?: 'Query' }
-  & { uploadUrl: (
-    { __typename?: 'UploadUrl' }
-    & Pick<UploadUrl, 'uploadUrl' | 'fileName' | 'readUrl'>
-  ) }
-);
+export type UploadUrlQuery = { __typename?: 'Query' } & {
+  uploadUrl: { __typename?: 'UploadUrl' } & Pick<UploadUrl, 'uploadUrl' | 'fileName' | 'readUrl'>
+}
 
 export type UserByWalletQueryVariables = Exact<{
-  walletAddress: Scalars['String'];
-}>;
+  walletAddress: Scalars['String']
+}>
 
-
-export type UserByWalletQuery = (
-  { __typename?: 'Query' }
-  & { getUserByWallet: Maybe<(
-    { __typename?: 'User' }
-    & Pick<User, 'id'>
-    & { profile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'userHandle' | 'followerCount' | 'followingCount' | 'verified' | 'teamMember'>
-    ) }
-  )> }
-);
+export type UserByWalletQuery = { __typename?: 'Query' } & {
+  getUserByWallet: Maybe<
+    { __typename?: 'User' } & Pick<User, 'id'> & {
+        profile: { __typename?: 'Profile' } & Pick<
+          Profile,
+          | 'id'
+          | 'displayName'
+          | 'profilePicture'
+          | 'userHandle'
+          | 'followerCount'
+          | 'followingCount'
+          | 'verified'
+          | 'teamMember'
+        >
+      }
+  >
+}
 
 export type ValidateOtpRecoveryPhraseMutationVariables = Exact<{
-  input: ValidateOtpRecoveryPhraseInput;
-}>;
+  input: ValidateOtpRecoveryPhraseInput
+}>
 
+export type ValidateOtpRecoveryPhraseMutation = { __typename?: 'Mutation' } & Pick<
+  Mutation,
+  'validateOTPRecoveryPhrase'
+>
 
-export type ValidateOtpRecoveryPhraseMutation = (
-  { __typename?: 'Mutation' }
-  & Pick<Mutation, 'validateOTPRecoveryPhrase'>
-);
-
-export type VerificationRequestNotificationFieldsFragment = (
-  { __typename?: 'VerificationRequestNotification' }
-  & Pick<VerificationRequestNotification, 'id' | 'type' | 'body' | 'createdAt'>
-);
+export type VerificationRequestNotificationFieldsFragment = { __typename?: 'VerificationRequestNotification' } & Pick<
+  VerificationRequestNotification,
+  'id' | 'type' | 'body' | 'createdAt'
+>
 
 export type WhitelistEntryByWalletQueryVariables = Exact<{
-  walletAdress: Scalars['String'];
-}>;
+  walletAdress: Scalars['String']
+}>
 
+export type WhitelistEntryByWalletQuery = { __typename?: 'Query' } & {
+  whitelistEntryByWallet: { __typename?: 'WhitelistEntry' } & Pick<WhitelistEntry, 'id' | 'ogunClaimed'>
+}
 
-export type WhitelistEntryByWalletQuery = (
-  { __typename?: 'Query' }
-  & { whitelistEntryByWallet: (
-    { __typename?: 'WhitelistEntry' }
-    & Pick<WhitelistEntry, 'id' | 'ogunClaimed'>
-  ) }
-);
-
-export type WonAuctionNotificationFieldsFragment = (
-  { __typename?: 'WonAuctionNotification' }
-  & Pick<WonAuctionNotification, 'id' | 'type' | 'createdAt' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price'>
-);
+export type WonAuctionNotificationFieldsFragment = { __typename?: 'WonAuctionNotification' } & Pick<
+  WonAuctionNotification,
+  'id' | 'type' | 'createdAt' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price'
+>
 
 export const AuctionEndedNotificationFieldsFragmentDoc = gql`
-    fragment AuctionEndedNotificationFields on AuctionEndedNotification {
-  id
-  type
-  createdAt
-  trackId
-  trackName
-  artist
-  artworkUrl
-  price
-}
-    `;
-export const AuctionIsEndingNotificationFieldsFragmentDoc = gql`
-    fragment AuctionIsEndingNotificationFields on AuctionIsEndingNotification {
-  id
-  type
-  createdAt
-  trackId
-  trackName
-  artist
-  artworkUrl
-  price
-}
-    `;
-export const CommentComponentFieldsFragmentDoc = gql`
-    fragment CommentComponentFields on Comment {
-  id
-  body
-  createdAt
-  deleted
-  profile {
+  fragment AuctionEndedNotificationFields on AuctionEndedNotification {
     id
-    displayName
-    profilePicture
-    verified
-    teamMember
-    userHandle
+    type
+    createdAt
+    trackId
+    trackName
+    artist
+    artworkUrl
+    price
   }
-}
-    `;
+`
+export const AuctionIsEndingNotificationFieldsFragmentDoc = gql`
+  fragment AuctionIsEndingNotificationFields on AuctionIsEndingNotification {
+    id
+    type
+    createdAt
+    trackId
+    trackName
+    artist
+    artworkUrl
+    price
+  }
+`
+export const CommentComponentFieldsFragmentDoc = gql`
+  fragment CommentComponentFields on Comment {
+    id
+    body
+    createdAt
+    deleted
+    profile {
+      id
+      displayName
+      profilePicture
+      verified
+      teamMember
+      userHandle
+    }
+  }
+`
 export const CommentNotificationFieldsFragmentDoc = gql`
-    fragment CommentNotificationFields on CommentNotification {
-  id
-  type
-  body
-  previewBody
-  link
-  createdAt
-  authorName
-  authorPicture
-}
-    `;
+  fragment CommentNotificationFields on CommentNotification {
+    id
+    type
+    body
+    previewBody
+    link
+    createdAt
+    authorName
+    authorPicture
+  }
+`
 export const DeletedCommentNotificationFieldsFragmentDoc = gql`
-    fragment DeletedCommentNotificationFields on DeletedCommentNotification {
-  id
-  type
-  body
-  previewBody
-  link
-  createdAt
-  authorName
-  authorPicture
-}
-    `;
+  fragment DeletedCommentNotificationFields on DeletedCommentNotification {
+    id
+    type
+    body
+    previewBody
+    link
+    createdAt
+    authorName
+    authorPicture
+  }
+`
 export const DeletedPostNotificationFieldsFragmentDoc = gql`
-    fragment DeletedPostNotificationFields on DeletedPostNotification {
-  id
-  type
-  authorName
-  authorPicture
-  body
-  link
-  previewBody
-  previewLink
-  createdAt
-  track {
-    title
-    playbackUrl
+  fragment DeletedPostNotificationFields on DeletedPostNotification {
+    id
+    type
+    authorName
+    authorPicture
+    body
+    link
+    previewBody
+    previewLink
+    createdAt
+    track {
+      title
+      playbackUrl
+    }
   }
-}
-    `;
+`
 export const FollowerNotificationFieldsFragmentDoc = gql`
-    fragment FollowerNotificationFields on FollowerNotification {
-  id
-  type
-  link
-  createdAt
-  followerName
-  followerPicture
-}
-    `;
+  fragment FollowerNotificationFields on FollowerNotification {
+    id
+    type
+    link
+    createdAt
+    followerName
+    followerPicture
+  }
+`
 export const TrackEditionFieldsFragmentDoc = gql`
-    fragment TrackEditionFields on TrackEdition {
-  id
-  editionId
-  transactionHash
-  contract
-  listed
-  marketplace
-  editionId
-  editionSize
-  deleted
-  createdAt
-  updatedAt
-  editionData {
-    pendingRequest
-    pendingTime
-    pendingTrackCount
+  fragment TrackEditionFields on TrackEdition {
+    id
+    editionId
     transactionHash
     contract
-    owner
+    listed
+    marketplace
+    editionId
+    editionSize
+    deleted
+    createdAt
+    updatedAt
+    editionData {
+      pendingRequest
+      pendingTime
+      pendingTrackCount
+      transactionHash
+      contract
+      owner
+    }
   }
-}
-    `;
+`
 export const ListingItemComponentFieldsFragmentDoc = gql`
-    fragment ListingItemComponentFields on TrackWithListingItem {
-  id
-  profileId
-  title
-  assetUrl
-  artworkUrl
-  description
-  utilityInfo
-  artist
-  artistId
-  artistProfileId
-  album
-  releaseYear
-  copyright
-  genres
-  playbackUrl
-  createdAt
-  updatedAt
-  deleted
-  playbackCountFormatted
-  isFavorite
-  favoriteCount
-  playbackCount
-  listingCount
-  saleType
-  price {
-    value
-    currency
+  fragment ListingItemComponentFields on TrackWithListingItem {
+    id
+    profileId
+    title
+    assetUrl
+    artworkUrl
+    description
+    utilityInfo
+    artist
+    artistId
+    artistProfileId
+    album
+    releaseYear
+    copyright
+    genres
+    playbackUrl
+    createdAt
+    updatedAt
+    deleted
+    playbackCountFormatted
+    isFavorite
+    favoriteCount
+    playbackCount
+    listingCount
+    saleType
+    price {
+      value
+      currency
+    }
+    trackEditionId
+    editionSize
+    nftData {
+      transactionHash
+      tokenId
+      contract
+      minter
+      ipfsCid
+      pendingRequest
+      owner
+      pendingTime
+    }
+    trackEdition {
+      ...TrackEditionFields
+    }
+    listingItem {
+      id
+      owner
+      nft
+      tokenId
+      contract
+      pricePerItem
+      pricePerItemToShow
+      OGUNPricePerItem
+      OGUNPricePerItemToShow
+      isPaymentOGUN
+      startingTime
+      endingTime
+      reservePrice
+      reservePriceToShow
+      createdAt
+      updatedAt
+      priceToShow
+    }
   }
-  trackEditionId
-  editionSize
-  nftData {
-    transactionHash
-    tokenId
-    contract
-    minter
-    ipfsCid
-    pendingRequest
-    owner
-    pendingTime
-  }
-  trackEdition {
-    ...TrackEditionFields
-  }
-  listingItem {
+  ${TrackEditionFieldsFragmentDoc}
+`
+export const ListingItemViewComponentFieldsFragmentDoc = gql`
+  fragment ListingItemViewComponentFields on ListingItem {
     id
     owner
     nft
@@ -4052,285 +3577,266 @@ export const ListingItemComponentFieldsFragmentDoc = gql`
     reservePriceToShow
     createdAt
     updatedAt
-    priceToShow
   }
-}
-    ${TrackEditionFieldsFragmentDoc}`;
-export const ListingItemViewComponentFieldsFragmentDoc = gql`
-    fragment ListingItemViewComponentFields on ListingItem {
-  id
-  owner
-  nft
-  tokenId
-  contract
-  pricePerItem
-  pricePerItemToShow
-  OGUNPricePerItem
-  OGUNPricePerItemToShow
-  isPaymentOGUN
-  startingTime
-  endingTime
-  reservePrice
-  reservePriceToShow
-  createdAt
-  updatedAt
-}
-    `;
+`
 export const MessageComponentFieldsFragmentDoc = gql`
-    fragment MessageComponentFields on Message {
-  id
-  message
-  fromId
-  toId
-  createdAt
-  fromProfile {
+  fragment MessageComponentFields on Message {
     id
-    displayName
-    profilePicture
-    verified
-    userHandle
+    message
+    fromId
+    toId
+    createdAt
+    fromProfile {
+      id
+      displayName
+      profilePicture
+      verified
+      userHandle
+    }
   }
-}
-    `;
+`
 export const NftSoldNotificationFieldsFragmentDoc = gql`
-    fragment NFTSoldNotificationFields on NFTSoldNotification {
-  id
-  type
-  createdAt
-  buyerName
-  buyerPicture
-  buyerProfileId
-  trackId
-  trackName
-  artist
-  artworkUrl
-  price
-  sellType
-}
-    `;
-export const NewBidNotificationFieldsFragmentDoc = gql`
-    fragment NewBidNotificationFields on NewBidNotification {
-  id
-  type
-  createdAt
-  trackId
-  trackName
-  artist
-  artworkUrl
-  price
-}
-    `;
-export const NewPostNotificationFieldsFragmentDoc = gql`
-    fragment NewPostNotificationFields on NewPostNotification {
-  id
-  type
-  authorName
-  authorPicture
-  body
-  link
-  previewBody
-  previewLink
-  createdAt
-  track {
+  fragment NFTSoldNotificationFields on NFTSoldNotification {
     id
-    title
-    playbackUrl
-    artworkUrl
+    type
+    createdAt
+    buyerName
+    buyerPicture
+    buyerProfileId
+    trackId
+    trackName
     artist
-    isFavorite
+    artworkUrl
+    price
+    sellType
+  }
+`
+export const NewBidNotificationFieldsFragmentDoc = gql`
+  fragment NewBidNotificationFields on NewBidNotification {
+    id
+    type
+    createdAt
+    trackId
+    trackName
+    artist
+    artworkUrl
+    price
+  }
+`
+export const NewPostNotificationFieldsFragmentDoc = gql`
+  fragment NewPostNotificationFields on NewPostNotification {
+    id
+    type
+    authorName
+    authorPicture
+    body
+    link
+    previewBody
+    previewLink
+    createdAt
+    track {
+      id
+      title
+      playbackUrl
+      artworkUrl
+      artist
+      isFavorite
+      playbackCountFormatted
+      favoriteCount
+      saleType
+      price {
+        value
+        currency
+      }
+    }
+  }
+`
+export const NewVerificationRequestNotificationFieldsFragmentDoc = gql`
+  fragment NewVerificationRequestNotificationFields on NewVerificationRequestNotification {
+    id
+    type
+    verificationRequestId
+    createdAt
+  }
+`
+export const OutbidNotificationFieldsFragmentDoc = gql`
+  fragment OutbidNotificationFields on OutbidNotification {
+    id
+    type
+    createdAt
+    trackId
+    trackName
+    artist
+    artworkUrl
+    price
+  }
+`
+export const TrackComponentFieldsFragmentDoc = gql`
+  fragment TrackComponentFields on Track {
+    id
+    profileId
+    title
+    assetUrl
+    artworkUrl
+    description
+    utilityInfo
+    artist
+    artistId
+    artistProfileId
+    album
+    releaseYear
+    copyright
+    genres
+    playbackUrl
+    createdAt
+    updatedAt
+    deleted
     playbackCountFormatted
+    isFavorite
     favoriteCount
+    listingCount
+    playbackCount
     saleType
     price {
       value
       currency
     }
+    trackEditionId
+    editionSize
+    nftData {
+      transactionHash
+      tokenId
+      contract
+      minter
+      ipfsCid
+      pendingRequest
+      owner
+      pendingTime
+    }
+    trackEdition {
+      ...TrackEditionFields
+    }
   }
-}
-    `;
-export const NewVerificationRequestNotificationFieldsFragmentDoc = gql`
-    fragment NewVerificationRequestNotificationFields on NewVerificationRequestNotification {
-  id
-  type
-  verificationRequestId
-  createdAt
-}
-    `;
-export const OutbidNotificationFieldsFragmentDoc = gql`
-    fragment OutbidNotificationFields on OutbidNotification {
-  id
-  type
-  createdAt
-  trackId
-  trackName
-  artist
-  artworkUrl
-  price
-}
-    `;
-export const TrackComponentFieldsFragmentDoc = gql`
-    fragment TrackComponentFields on Track {
-  id
-  profileId
-  title
-  assetUrl
-  artworkUrl
-  description
-  utilityInfo
-  artist
-  artistId
-  artistProfileId
-  album
-  releaseYear
-  copyright
-  genres
-  playbackUrl
-  createdAt
-  updatedAt
-  deleted
-  playbackCountFormatted
-  isFavorite
-  favoriteCount
-  listingCount
-  playbackCount
-  saleType
-  price {
-    value
-    currency
-  }
-  trackEditionId
-  editionSize
-  nftData {
-    transactionHash
-    tokenId
-    contract
-    minter
-    ipfsCid
-    pendingRequest
-    owner
-    pendingTime
-  }
-  trackEdition {
-    ...TrackEditionFields
-  }
-}
-    ${TrackEditionFieldsFragmentDoc}`;
+  ${TrackEditionFieldsFragmentDoc}
+`
 export const PostComponentFieldsFragmentDoc = gql`
-    fragment PostComponentFields on Post {
-  id
-  body
-  mediaLink
-  repostId
-  createdAt
-  updatedAt
-  commentCount
-  repostCount
-  totalReactions
-  topReactions(top: 2)
-  myReaction
-  deleted
-  profile {
+  fragment PostComponentFields on Post {
+    id
+    body
+    mediaLink
+    repostId
+    createdAt
+    updatedAt
+    commentCount
+    repostCount
+    totalReactions
+    topReactions(top: 2)
+    myReaction
+    deleted
+    profile {
+      id
+      displayName
+      profilePicture
+      verified
+      teamMember
+      userHandle
+    }
+    track {
+      ...TrackComponentFields
+    }
+  }
+  ${TrackComponentFieldsFragmentDoc}
+`
+export const ProfileComponentFieldsFragmentDoc = gql`
+  fragment ProfileComponentFields on Profile {
     id
     displayName
     profilePicture
+    coverPicture
+    socialMedias {
+      facebook
+      instagram
+      soundcloud
+      twitter
+    }
+    favoriteGenres
+    musicianTypes
+    bio
+    followerCount
+    followingCount
+    userHandle
+    isFollowed
+    isSubscriber
+    unreadNotificationCount
+    unreadMessageCount
     verified
     teamMember
-    userHandle
+    magicWalletAddress
+    createdAt
+    updatedAt
   }
-  track {
-    ...TrackComponentFields
-  }
-}
-    ${TrackComponentFieldsFragmentDoc}`;
-export const ProfileComponentFieldsFragmentDoc = gql`
-    fragment ProfileComponentFields on Profile {
-  id
-  displayName
-  profilePicture
-  coverPicture
-  socialMedias {
-    facebook
-    instagram
-    soundcloud
-    twitter
-  }
-  favoriteGenres
-  musicianTypes
-  bio
-  followerCount
-  followingCount
-  userHandle
-  isFollowed
-  isSubscriber
-  unreadNotificationCount
-  unreadMessageCount
-  verified
-  teamMember
-  magicWalletAddress
-  createdAt
-  updatedAt
-}
-    `;
+`
 export const ProfileVerificationRequestComponentFieldsFragmentDoc = gql`
-    fragment ProfileVerificationRequestComponentFields on ProfileVerificationRequest {
-  id
-  profileId
-  soundcloud
-  youtube
-  bandcamp
-  status
-  reason
-  reviewerProfileId
-  createdAt
-  updatedAt
-}
-    `;
+  fragment ProfileVerificationRequestComponentFields on ProfileVerificationRequest {
+    id
+    profileId
+    soundcloud
+    youtube
+    bandcamp
+    status
+    reason
+    reviewerProfileId
+    createdAt
+    updatedAt
+  }
+`
 export const ReactionNotificationFieldsFragmentDoc = gql`
-    fragment ReactionNotificationFields on ReactionNotification {
-  id
-  type
-  reactionType
-  link
-  authorName
-  authorPicture
-  createdAt
-  postId
-}
-    `;
+  fragment ReactionNotificationFields on ReactionNotification {
+    id
+    type
+    reactionType
+    link
+    authorName
+    authorPicture
+    createdAt
+    postId
+  }
+`
 export const VerificationRequestNotificationFieldsFragmentDoc = gql`
-    fragment VerificationRequestNotificationFields on VerificationRequestNotification {
-  id
-  type
-  body
-  createdAt
-}
-    `;
+  fragment VerificationRequestNotificationFields on VerificationRequestNotification {
+    id
+    type
+    body
+    createdAt
+  }
+`
 export const WonAuctionNotificationFieldsFragmentDoc = gql`
-    fragment WonAuctionNotificationFields on WonAuctionNotification {
-  id
-  type
-  createdAt
-  trackId
-  trackName
-  artist
-  artworkUrl
-  price
-}
-    `;
+  fragment WonAuctionNotificationFields on WonAuctionNotification {
+    id
+    type
+    createdAt
+    trackId
+    trackName
+    artist
+    artworkUrl
+    price
+  }
+`
 export const AddCommentDocument = gql`
-    mutation AddComment($input: AddCommentInput!) {
-  addComment(input: $input) {
-    comment {
-      ...CommentComponentFields
-      post {
-        id
-        commentCount
+  mutation AddComment($input: AddCommentInput!) {
+    addComment(input: $input) {
+      comment {
+        ...CommentComponentFields
+        post {
+          id
+          commentCount
+        }
       }
     }
   }
-}
-    ${CommentComponentFieldsFragmentDoc}`;
-export type AddCommentMutationFn = Apollo.MutationFunction<AddCommentMutation, AddCommentMutationVariables>;
+  ${CommentComponentFieldsFragmentDoc}
+`
+export type AddCommentMutationFn = Apollo.MutationFunction<AddCommentMutation, AddCommentMutationVariables>
 
 /**
  * __useAddCommentMutation__
@@ -4349,29 +3855,31 @@ export type AddCommentMutationFn = Apollo.MutationFunction<AddCommentMutation, A
  *   },
  * });
  */
-export function useAddCommentMutation(baseOptions?: Apollo.MutationHookOptions<AddCommentMutation, AddCommentMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<AddCommentMutation, AddCommentMutationVariables>(AddCommentDocument, options);
-      }
-export type AddCommentMutationHookResult = ReturnType<typeof useAddCommentMutation>;
-export type AddCommentMutationResult = Apollo.MutationResult<AddCommentMutation>;
-export type AddCommentMutationOptions = Apollo.BaseMutationOptions<AddCommentMutation, AddCommentMutationVariables>;
+export function useAddCommentMutation(
+  baseOptions?: Apollo.MutationHookOptions<AddCommentMutation, AddCommentMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<AddCommentMutation, AddCommentMutationVariables>(AddCommentDocument, options)
+}
+export type AddCommentMutationHookResult = ReturnType<typeof useAddCommentMutation>
+export type AddCommentMutationResult = Apollo.MutationResult<AddCommentMutation>
+export type AddCommentMutationOptions = Apollo.BaseMutationOptions<AddCommentMutation, AddCommentMutationVariables>
 export const AuctionItemDocument = gql`
-    query AuctionItem($tokenId: Float!) {
-  auctionItem(tokenId: $tokenId) {
-    auctionItem {
-      id
-      owner
-      nft
-      tokenId
-      startingTime
-      endingTime
-      reservePrice
-      reservePriceToShow
+  query AuctionItem($tokenId: Float!) {
+    auctionItem(tokenId: $tokenId) {
+      auctionItem {
+        id
+        owner
+        nft
+        tokenId
+        startingTime
+        endingTime
+        reservePrice
+        reservePriceToShow
+      }
     }
   }
-}
-    `;
+`
 
 /**
  * __useAuctionItemQuery__
@@ -4390,25 +3898,27 @@ export const AuctionItemDocument = gql`
  * });
  */
 export function useAuctionItemQuery(baseOptions: Apollo.QueryHookOptions<AuctionItemQuery, AuctionItemQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<AuctionItemQuery, AuctionItemQueryVariables>(AuctionItemDocument, options);
-      }
-export function useAuctionItemLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<AuctionItemQuery, AuctionItemQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<AuctionItemQuery, AuctionItemQueryVariables>(AuctionItemDocument, options);
-        }
-export type AuctionItemQueryHookResult = ReturnType<typeof useAuctionItemQuery>;
-export type AuctionItemLazyQueryHookResult = ReturnType<typeof useAuctionItemLazyQuery>;
-export type AuctionItemQueryResult = Apollo.QueryResult<AuctionItemQuery, AuctionItemQueryVariables>;
-export const AudioHolderByWalletDocument = gql`
-    query AudioHolderByWallet($walletAdress: String!) {
-  audioHolderByWallet(walletAdress: $walletAdress) {
-    id
-    amount
-    ogunClaimed
-  }
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<AuctionItemQuery, AuctionItemQueryVariables>(AuctionItemDocument, options)
 }
-    `;
+export function useAuctionItemLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<AuctionItemQuery, AuctionItemQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<AuctionItemQuery, AuctionItemQueryVariables>(AuctionItemDocument, options)
+}
+export type AuctionItemQueryHookResult = ReturnType<typeof useAuctionItemQuery>
+export type AuctionItemLazyQueryHookResult = ReturnType<typeof useAuctionItemLazyQuery>
+export type AuctionItemQueryResult = Apollo.QueryResult<AuctionItemQuery, AuctionItemQueryVariables>
+export const AudioHolderByWalletDocument = gql`
+  query AudioHolderByWallet($walletAdress: String!) {
+    audioHolderByWallet(walletAdress: $walletAdress) {
+      id
+      amount
+      ogunClaimed
+    }
+  }
+`
 
 /**
  * __useAudioHolderByWalletQuery__
@@ -4426,22 +3936,35 @@ export const AudioHolderByWalletDocument = gql`
  *   },
  * });
  */
-export function useAudioHolderByWalletQuery(baseOptions: Apollo.QueryHookOptions<AudioHolderByWalletQuery, AudioHolderByWalletQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<AudioHolderByWalletQuery, AudioHolderByWalletQueryVariables>(AudioHolderByWalletDocument, options);
-      }
-export function useAudioHolderByWalletLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<AudioHolderByWalletQuery, AudioHolderByWalletQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<AudioHolderByWalletQuery, AudioHolderByWalletQueryVariables>(AudioHolderByWalletDocument, options);
-        }
-export type AudioHolderByWalletQueryHookResult = ReturnType<typeof useAudioHolderByWalletQuery>;
-export type AudioHolderByWalletLazyQueryHookResult = ReturnType<typeof useAudioHolderByWalletLazyQuery>;
-export type AudioHolderByWalletQueryResult = Apollo.QueryResult<AudioHolderByWalletQuery, AudioHolderByWalletQueryVariables>;
-export const BandcampLinkDocument = gql`
-    query BandcampLink($url: String!) {
-  bandcampLink(url: $url)
+export function useAudioHolderByWalletQuery(
+  baseOptions: Apollo.QueryHookOptions<AudioHolderByWalletQuery, AudioHolderByWalletQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<AudioHolderByWalletQuery, AudioHolderByWalletQueryVariables>(
+    AudioHolderByWalletDocument,
+    options,
+  )
 }
-    `;
+export function useAudioHolderByWalletLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<AudioHolderByWalletQuery, AudioHolderByWalletQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<AudioHolderByWalletQuery, AudioHolderByWalletQueryVariables>(
+    AudioHolderByWalletDocument,
+    options,
+  )
+}
+export type AudioHolderByWalletQueryHookResult = ReturnType<typeof useAudioHolderByWalletQuery>
+export type AudioHolderByWalletLazyQueryHookResult = ReturnType<typeof useAudioHolderByWalletLazyQuery>
+export type AudioHolderByWalletQueryResult = Apollo.QueryResult<
+  AudioHolderByWalletQuery,
+  AudioHolderByWalletQueryVariables
+>
+export const BandcampLinkDocument = gql`
+  query BandcampLink($url: String!) {
+    bandcampLink(url: $url)
+  }
+`
 
 /**
  * __useBandcampLinkQuery__
@@ -4459,37 +3982,41 @@ export const BandcampLinkDocument = gql`
  *   },
  * });
  */
-export function useBandcampLinkQuery(baseOptions: Apollo.QueryHookOptions<BandcampLinkQuery, BandcampLinkQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<BandcampLinkQuery, BandcampLinkQueryVariables>(BandcampLinkDocument, options);
-      }
-export function useBandcampLinkLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<BandcampLinkQuery, BandcampLinkQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<BandcampLinkQuery, BandcampLinkQueryVariables>(BandcampLinkDocument, options);
-        }
-export type BandcampLinkQueryHookResult = ReturnType<typeof useBandcampLinkQuery>;
-export type BandcampLinkLazyQueryHookResult = ReturnType<typeof useBandcampLinkLazyQuery>;
-export type BandcampLinkQueryResult = Apollo.QueryResult<BandcampLinkQuery, BandcampLinkQueryVariables>;
+export function useBandcampLinkQuery(
+  baseOptions: Apollo.QueryHookOptions<BandcampLinkQuery, BandcampLinkQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<BandcampLinkQuery, BandcampLinkQueryVariables>(BandcampLinkDocument, options)
+}
+export function useBandcampLinkLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<BandcampLinkQuery, BandcampLinkQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<BandcampLinkQuery, BandcampLinkQueryVariables>(BandcampLinkDocument, options)
+}
+export type BandcampLinkQueryHookResult = ReturnType<typeof useBandcampLinkQuery>
+export type BandcampLinkLazyQueryHookResult = ReturnType<typeof useBandcampLinkLazyQuery>
+export type BandcampLinkQueryResult = Apollo.QueryResult<BandcampLinkQuery, BandcampLinkQueryVariables>
 export const BidsWithInfoDocument = gql`
-    query BidsWithInfo($auctionId: String!) {
-  bidsWithInfo(auctionId: $auctionId) {
-    bids {
-      amount
-      amountToShow
-      userId
-      profileId
-      createdAt
-      profile {
-        profilePicture
-        displayName
-        userHandle
-        verified
-        teamMember
+  query BidsWithInfo($auctionId: String!) {
+    bidsWithInfo(auctionId: $auctionId) {
+      bids {
+        amount
+        amountToShow
+        userId
+        profileId
+        createdAt
+        profile {
+          profilePicture
+          displayName
+          userHandle
+          verified
+          teamMember
+        }
       }
     }
   }
-}
-    `;
+`
 
 /**
  * __useBidsWithInfoQuery__
@@ -4507,38 +4034,42 @@ export const BidsWithInfoDocument = gql`
  *   },
  * });
  */
-export function useBidsWithInfoQuery(baseOptions: Apollo.QueryHookOptions<BidsWithInfoQuery, BidsWithInfoQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<BidsWithInfoQuery, BidsWithInfoQueryVariables>(BidsWithInfoDocument, options);
-      }
-export function useBidsWithInfoLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<BidsWithInfoQuery, BidsWithInfoQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<BidsWithInfoQuery, BidsWithInfoQueryVariables>(BidsWithInfoDocument, options);
-        }
-export type BidsWithInfoQueryHookResult = ReturnType<typeof useBidsWithInfoQuery>;
-export type BidsWithInfoLazyQueryHookResult = ReturnType<typeof useBidsWithInfoLazyQuery>;
-export type BidsWithInfoQueryResult = Apollo.QueryResult<BidsWithInfoQuery, BidsWithInfoQueryVariables>;
+export function useBidsWithInfoQuery(
+  baseOptions: Apollo.QueryHookOptions<BidsWithInfoQuery, BidsWithInfoQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<BidsWithInfoQuery, BidsWithInfoQueryVariables>(BidsWithInfoDocument, options)
+}
+export function useBidsWithInfoLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<BidsWithInfoQuery, BidsWithInfoQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<BidsWithInfoQuery, BidsWithInfoQueryVariables>(BidsWithInfoDocument, options)
+}
+export type BidsWithInfoQueryHookResult = ReturnType<typeof useBidsWithInfoQuery>
+export type BidsWithInfoLazyQueryHookResult = ReturnType<typeof useBidsWithInfoLazyQuery>
+export type BidsWithInfoQueryResult = Apollo.QueryResult<BidsWithInfoQuery, BidsWithInfoQueryVariables>
 export const BuyNowItemDocument = gql`
-    query BuyNowItem($input: FilterListingItemInput!) {
-  buyNowItem(input: $input) {
-    buyNowItem {
-      id
-      owner
-      nft
-      tokenId
-      contract
-      pricePerItem
-      selectedCurrency
-      pricePerItemToShow
-      OGUNPricePerItem
-      OGUNPricePerItemToShow
-      acceptsMATIC
-      acceptsOGUN
-      startingTime
+  query BuyNowItem($input: FilterListingItemInput!) {
+    buyNowItem(input: $input) {
+      buyNowItem {
+        id
+        owner
+        nft
+        tokenId
+        contract
+        pricePerItem
+        selectedCurrency
+        pricePerItemToShow
+        OGUNPricePerItem
+        OGUNPricePerItemToShow
+        acceptsMATIC
+        acceptsOGUN
+        startingTime
+      }
     }
   }
-}
-    `;
+`
 
 /**
  * __useBuyNowItemQuery__
@@ -4557,30 +4088,33 @@ export const BuyNowItemDocument = gql`
  * });
  */
 export function useBuyNowItemQuery(baseOptions: Apollo.QueryHookOptions<BuyNowItemQuery, BuyNowItemQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<BuyNowItemQuery, BuyNowItemQueryVariables>(BuyNowItemDocument, options);
-      }
-export function useBuyNowItemLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<BuyNowItemQuery, BuyNowItemQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<BuyNowItemQuery, BuyNowItemQueryVariables>(BuyNowItemDocument, options);
-        }
-export type BuyNowItemQueryHookResult = ReturnType<typeof useBuyNowItemQuery>;
-export type BuyNowItemLazyQueryHookResult = ReturnType<typeof useBuyNowItemLazyQuery>;
-export type BuyNowItemQueryResult = Apollo.QueryResult<BuyNowItemQuery, BuyNowItemQueryVariables>;
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<BuyNowItemQuery, BuyNowItemQueryVariables>(BuyNowItemDocument, options)
+}
+export function useBuyNowItemLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<BuyNowItemQuery, BuyNowItemQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<BuyNowItemQuery, BuyNowItemQueryVariables>(BuyNowItemDocument, options)
+}
+export type BuyNowItemQueryHookResult = ReturnType<typeof useBuyNowItemQuery>
+export type BuyNowItemLazyQueryHookResult = ReturnType<typeof useBuyNowItemLazyQuery>
+export type BuyNowItemQueryResult = Apollo.QueryResult<BuyNowItemQuery, BuyNowItemQueryVariables>
 export const BuyNowListingItemsDocument = gql`
-    query BuyNowListingItems($filter: FilterBuyNowItemInput, $page: PageInput) {
-  buyNowListingItems(filter: $filter, page: $page) {
-    nodes {
-      ...ListingItemComponentFields
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
-      totalCount
+  query BuyNowListingItems($filter: FilterBuyNowItemInput, $page: PageInput) {
+    buyNowListingItems(filter: $filter, page: $page) {
+      nodes {
+        ...ListingItemComponentFields
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+        totalCount
+      }
     }
   }
-}
-    ${ListingItemComponentFieldsFragmentDoc}`;
+  ${ListingItemComponentFieldsFragmentDoc}
+`
 
 /**
  * __useBuyNowListingItemsQuery__
@@ -4599,30 +4133,40 @@ export const BuyNowListingItemsDocument = gql`
  *   },
  * });
  */
-export function useBuyNowListingItemsQuery(baseOptions?: Apollo.QueryHookOptions<BuyNowListingItemsQuery, BuyNowListingItemsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<BuyNowListingItemsQuery, BuyNowListingItemsQueryVariables>(BuyNowListingItemsDocument, options);
-      }
-export function useBuyNowListingItemsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<BuyNowListingItemsQuery, BuyNowListingItemsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<BuyNowListingItemsQuery, BuyNowListingItemsQueryVariables>(BuyNowListingItemsDocument, options);
-        }
-export type BuyNowListingItemsQueryHookResult = ReturnType<typeof useBuyNowListingItemsQuery>;
-export type BuyNowListingItemsLazyQueryHookResult = ReturnType<typeof useBuyNowListingItemsLazyQuery>;
-export type BuyNowListingItemsQueryResult = Apollo.QueryResult<BuyNowListingItemsQuery, BuyNowListingItemsQueryVariables>;
+export function useBuyNowListingItemsQuery(
+  baseOptions?: Apollo.QueryHookOptions<BuyNowListingItemsQuery, BuyNowListingItemsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<BuyNowListingItemsQuery, BuyNowListingItemsQueryVariables>(BuyNowListingItemsDocument, options)
+}
+export function useBuyNowListingItemsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<BuyNowListingItemsQuery, BuyNowListingItemsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<BuyNowListingItemsQuery, BuyNowListingItemsQueryVariables>(
+    BuyNowListingItemsDocument,
+    options,
+  )
+}
+export type BuyNowListingItemsQueryHookResult = ReturnType<typeof useBuyNowListingItemsQuery>
+export type BuyNowListingItemsLazyQueryHookResult = ReturnType<typeof useBuyNowListingItemsLazyQuery>
+export type BuyNowListingItemsQueryResult = Apollo.QueryResult<
+  BuyNowListingItemsQuery,
+  BuyNowListingItemsQueryVariables
+>
 export const ChangeReactionDocument = gql`
-    mutation ChangeReaction($input: ChangeReactionInput!) {
-  changeReaction(input: $input) {
-    post {
-      id
-      totalReactions
-      topReactions(top: 2)
-      myReaction
+  mutation ChangeReaction($input: ChangeReactionInput!) {
+    changeReaction(input: $input) {
+      post {
+        id
+        totalReactions
+        topReactions(top: 2)
+        myReaction
+      }
     }
   }
-}
-    `;
-export type ChangeReactionMutationFn = Apollo.MutationFunction<ChangeReactionMutation, ChangeReactionMutationVariables>;
+`
+export type ChangeReactionMutationFn = Apollo.MutationFunction<ChangeReactionMutation, ChangeReactionMutationVariables>
 
 /**
  * __useChangeReactionMutation__
@@ -4641,26 +4185,32 @@ export type ChangeReactionMutationFn = Apollo.MutationFunction<ChangeReactionMut
  *   },
  * });
  */
-export function useChangeReactionMutation(baseOptions?: Apollo.MutationHookOptions<ChangeReactionMutation, ChangeReactionMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<ChangeReactionMutation, ChangeReactionMutationVariables>(ChangeReactionDocument, options);
-      }
-export type ChangeReactionMutationHookResult = ReturnType<typeof useChangeReactionMutation>;
-export type ChangeReactionMutationResult = Apollo.MutationResult<ChangeReactionMutation>;
-export type ChangeReactionMutationOptions = Apollo.BaseMutationOptions<ChangeReactionMutation, ChangeReactionMutationVariables>;
+export function useChangeReactionMutation(
+  baseOptions?: Apollo.MutationHookOptions<ChangeReactionMutation, ChangeReactionMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<ChangeReactionMutation, ChangeReactionMutationVariables>(ChangeReactionDocument, options)
+}
+export type ChangeReactionMutationHookResult = ReturnType<typeof useChangeReactionMutation>
+export type ChangeReactionMutationResult = Apollo.MutationResult<ChangeReactionMutation>
+export type ChangeReactionMutationOptions = Apollo.BaseMutationOptions<
+  ChangeReactionMutation,
+  ChangeReactionMutationVariables
+>
 export const ChatHistoryDocument = gql`
-    query ChatHistory($profileId: String!, $page: PageInput) {
-  chatHistory(profileId: $profileId, page: $page) {
-    pageInfo {
-      hasNextPage
-      startCursor
-    }
-    nodes {
-      ...MessageComponentFields
+  query ChatHistory($profileId: String!, $page: PageInput) {
+    chatHistory(profileId: $profileId, page: $page) {
+      pageInfo {
+        hasNextPage
+        startCursor
+      }
+      nodes {
+        ...MessageComponentFields
+      }
     }
   }
-}
-    ${MessageComponentFieldsFragmentDoc}`;
+  ${MessageComponentFieldsFragmentDoc}
+`
 
 /**
  * __useChatHistoryQuery__
@@ -4680,39 +4230,41 @@ export const ChatHistoryDocument = gql`
  * });
  */
 export function useChatHistoryQuery(baseOptions: Apollo.QueryHookOptions<ChatHistoryQuery, ChatHistoryQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<ChatHistoryQuery, ChatHistoryQueryVariables>(ChatHistoryDocument, options);
-      }
-export function useChatHistoryLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ChatHistoryQuery, ChatHistoryQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<ChatHistoryQuery, ChatHistoryQueryVariables>(ChatHistoryDocument, options);
-        }
-export type ChatHistoryQueryHookResult = ReturnType<typeof useChatHistoryQuery>;
-export type ChatHistoryLazyQueryHookResult = ReturnType<typeof useChatHistoryLazyQuery>;
-export type ChatHistoryQueryResult = Apollo.QueryResult<ChatHistoryQuery, ChatHistoryQueryVariables>;
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<ChatHistoryQuery, ChatHistoryQueryVariables>(ChatHistoryDocument, options)
+}
+export function useChatHistoryLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<ChatHistoryQuery, ChatHistoryQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<ChatHistoryQuery, ChatHistoryQueryVariables>(ChatHistoryDocument, options)
+}
+export type ChatHistoryQueryHookResult = ReturnType<typeof useChatHistoryQuery>
+export type ChatHistoryLazyQueryHookResult = ReturnType<typeof useChatHistoryLazyQuery>
+export type ChatHistoryQueryResult = Apollo.QueryResult<ChatHistoryQuery, ChatHistoryQueryVariables>
 export const ChatsDocument = gql`
-    query Chats($page: PageInput) {
-  chats(page: $page) {
-    nodes {
-      id
-      profile {
-        displayName
-        profilePicture
-        verified
-        teamMember
-        userHandle
+  query Chats($page: PageInput) {
+    chats(page: $page) {
+      nodes {
+        id
+        profile {
+          displayName
+          profilePicture
+          verified
+          teamMember
+          userHandle
+        }
+        message
+        unread
+        createdAt
       }
-      message
-      unread
-      createdAt
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
     }
   }
-}
-    `;
+`
 
 /**
  * __useChatsQuery__
@@ -4731,24 +4283,24 @@ export const ChatsDocument = gql`
  * });
  */
 export function useChatsQuery(baseOptions?: Apollo.QueryHookOptions<ChatsQuery, ChatsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<ChatsQuery, ChatsQueryVariables>(ChatsDocument, options);
-      }
-export function useChatsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ChatsQuery, ChatsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<ChatsQuery, ChatsQueryVariables>(ChatsDocument, options);
-        }
-export type ChatsQueryHookResult = ReturnType<typeof useChatsQuery>;
-export type ChatsLazyQueryHookResult = ReturnType<typeof useChatsLazyQuery>;
-export type ChatsQueryResult = Apollo.QueryResult<ChatsQuery, ChatsQueryVariables>;
-export const CheapestListingItemDocument = gql`
-    query CheapestListingItem($trackEditionId: String!) {
-  cheapestListingItem(trackEditionId: $trackEditionId) {
-    currency
-    value
-  }
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<ChatsQuery, ChatsQueryVariables>(ChatsDocument, options)
 }
-    `;
+export function useChatsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ChatsQuery, ChatsQueryVariables>) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<ChatsQuery, ChatsQueryVariables>(ChatsDocument, options)
+}
+export type ChatsQueryHookResult = ReturnType<typeof useChatsQuery>
+export type ChatsLazyQueryHookResult = ReturnType<typeof useChatsLazyQuery>
+export type ChatsQueryResult = Apollo.QueryResult<ChatsQuery, ChatsQueryVariables>
+export const CheapestListingItemDocument = gql`
+  query CheapestListingItem($trackEditionId: String!) {
+    cheapestListingItem(trackEditionId: $trackEditionId) {
+      currency
+      value
+    }
+  }
+`
 
 /**
  * __useCheapestListingItemQuery__
@@ -4766,25 +4318,41 @@ export const CheapestListingItemDocument = gql`
  *   },
  * });
  */
-export function useCheapestListingItemQuery(baseOptions: Apollo.QueryHookOptions<CheapestListingItemQuery, CheapestListingItemQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<CheapestListingItemQuery, CheapestListingItemQueryVariables>(CheapestListingItemDocument, options);
-      }
-export function useCheapestListingItemLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<CheapestListingItemQuery, CheapestListingItemQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<CheapestListingItemQuery, CheapestListingItemQueryVariables>(CheapestListingItemDocument, options);
-        }
-export type CheapestListingItemQueryHookResult = ReturnType<typeof useCheapestListingItemQuery>;
-export type CheapestListingItemLazyQueryHookResult = ReturnType<typeof useCheapestListingItemLazyQuery>;
-export type CheapestListingItemQueryResult = Apollo.QueryResult<CheapestListingItemQuery, CheapestListingItemQueryVariables>;
-export const ClearNotificationsDocument = gql`
-    mutation ClearNotifications {
-  clearNotifications {
-    ok
-  }
+export function useCheapestListingItemQuery(
+  baseOptions: Apollo.QueryHookOptions<CheapestListingItemQuery, CheapestListingItemQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<CheapestListingItemQuery, CheapestListingItemQueryVariables>(
+    CheapestListingItemDocument,
+    options,
+  )
 }
-    `;
-export type ClearNotificationsMutationFn = Apollo.MutationFunction<ClearNotificationsMutation, ClearNotificationsMutationVariables>;
+export function useCheapestListingItemLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<CheapestListingItemQuery, CheapestListingItemQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<CheapestListingItemQuery, CheapestListingItemQueryVariables>(
+    CheapestListingItemDocument,
+    options,
+  )
+}
+export type CheapestListingItemQueryHookResult = ReturnType<typeof useCheapestListingItemQuery>
+export type CheapestListingItemLazyQueryHookResult = ReturnType<typeof useCheapestListingItemLazyQuery>
+export type CheapestListingItemQueryResult = Apollo.QueryResult<
+  CheapestListingItemQuery,
+  CheapestListingItemQueryVariables
+>
+export const ClearNotificationsDocument = gql`
+  mutation ClearNotifications {
+    clearNotifications {
+      ok
+    }
+  }
+`
+export type ClearNotificationsMutationFn = Apollo.MutationFunction<
+  ClearNotificationsMutation,
+  ClearNotificationsMutationVariables
+>
 
 /**
  * __useClearNotificationsMutation__
@@ -4802,20 +4370,29 @@ export type ClearNotificationsMutationFn = Apollo.MutationFunction<ClearNotifica
  *   },
  * });
  */
-export function useClearNotificationsMutation(baseOptions?: Apollo.MutationHookOptions<ClearNotificationsMutation, ClearNotificationsMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<ClearNotificationsMutation, ClearNotificationsMutationVariables>(ClearNotificationsDocument, options);
-      }
-export type ClearNotificationsMutationHookResult = ReturnType<typeof useClearNotificationsMutation>;
-export type ClearNotificationsMutationResult = Apollo.MutationResult<ClearNotificationsMutation>;
-export type ClearNotificationsMutationOptions = Apollo.BaseMutationOptions<ClearNotificationsMutation, ClearNotificationsMutationVariables>;
-export const CommentDocument = gql`
-    query Comment($id: String!) {
-  comment(id: $id) {
-    ...CommentComponentFields
-  }
+export function useClearNotificationsMutation(
+  baseOptions?: Apollo.MutationHookOptions<ClearNotificationsMutation, ClearNotificationsMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<ClearNotificationsMutation, ClearNotificationsMutationVariables>(
+    ClearNotificationsDocument,
+    options,
+  )
 }
-    ${CommentComponentFieldsFragmentDoc}`;
+export type ClearNotificationsMutationHookResult = ReturnType<typeof useClearNotificationsMutation>
+export type ClearNotificationsMutationResult = Apollo.MutationResult<ClearNotificationsMutation>
+export type ClearNotificationsMutationOptions = Apollo.BaseMutationOptions<
+  ClearNotificationsMutation,
+  ClearNotificationsMutationVariables
+>
+export const CommentDocument = gql`
+  query Comment($id: String!) {
+    comment(id: $id) {
+      ...CommentComponentFields
+    }
+  }
+  ${CommentComponentFieldsFragmentDoc}
+`
 
 /**
  * __useCommentQuery__
@@ -4834,31 +4411,32 @@ export const CommentDocument = gql`
  * });
  */
 export function useCommentQuery(baseOptions: Apollo.QueryHookOptions<CommentQuery, CommentQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<CommentQuery, CommentQueryVariables>(CommentDocument, options);
-      }
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<CommentQuery, CommentQueryVariables>(CommentDocument, options)
+}
 export function useCommentLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<CommentQuery, CommentQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<CommentQuery, CommentQueryVariables>(CommentDocument, options);
-        }
-export type CommentQueryHookResult = ReturnType<typeof useCommentQuery>;
-export type CommentLazyQueryHookResult = ReturnType<typeof useCommentLazyQuery>;
-export type CommentQueryResult = Apollo.QueryResult<CommentQuery, CommentQueryVariables>;
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<CommentQuery, CommentQueryVariables>(CommentDocument, options)
+}
+export type CommentQueryHookResult = ReturnType<typeof useCommentQuery>
+export type CommentLazyQueryHookResult = ReturnType<typeof useCommentLazyQuery>
+export type CommentQueryResult = Apollo.QueryResult<CommentQuery, CommentQueryVariables>
 export const CommentsDocument = gql`
-    query Comments($postId: String!, $page: PageInput) {
-  comments(postId: $postId, page: $page) {
-    nodes {
-      ...CommentComponentFields
-    }
-    pageInfo {
-      hasPreviousPage
-      hasNextPage
-      startCursor
-      endCursor
+  query Comments($postId: String!, $page: PageInput) {
+    comments(postId: $postId, page: $page) {
+      nodes {
+        ...CommentComponentFields
+      }
+      pageInfo {
+        hasPreviousPage
+        hasNextPage
+        startCursor
+        endCursor
+      }
     }
   }
-}
-    ${CommentComponentFieldsFragmentDoc}`;
+  ${CommentComponentFieldsFragmentDoc}
+`
 
 /**
  * __useCommentsQuery__
@@ -4878,23 +4456,23 @@ export const CommentsDocument = gql`
  * });
  */
 export function useCommentsQuery(baseOptions: Apollo.QueryHookOptions<CommentsQuery, CommentsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<CommentsQuery, CommentsQueryVariables>(CommentsDocument, options);
-      }
-export function useCommentsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<CommentsQuery, CommentsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<CommentsQuery, CommentsQueryVariables>(CommentsDocument, options);
-        }
-export type CommentsQueryHookResult = ReturnType<typeof useCommentsQuery>;
-export type CommentsLazyQueryHookResult = ReturnType<typeof useCommentsLazyQuery>;
-export type CommentsQueryResult = Apollo.QueryResult<CommentsQuery, CommentsQueryVariables>;
-export const CountBidsDocument = gql`
-    query CountBids($tokenId: Float!) {
-  countBids(tokenId: $tokenId) {
-    numberOfBids
-  }
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<CommentsQuery, CommentsQueryVariables>(CommentsDocument, options)
 }
-    `;
+export function useCommentsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<CommentsQuery, CommentsQueryVariables>) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<CommentsQuery, CommentsQueryVariables>(CommentsDocument, options)
+}
+export type CommentsQueryHookResult = ReturnType<typeof useCommentsQuery>
+export type CommentsLazyQueryHookResult = ReturnType<typeof useCommentsLazyQuery>
+export type CommentsQueryResult = Apollo.QueryResult<CommentsQuery, CommentsQueryVariables>
+export const CountBidsDocument = gql`
+  query CountBids($tokenId: Float!) {
+    countBids(tokenId: $tokenId) {
+      numberOfBids
+    }
+  }
+`
 
 /**
  * __useCountBidsQuery__
@@ -4913,27 +4491,33 @@ export const CountBidsDocument = gql`
  * });
  */
 export function useCountBidsQuery(baseOptions: Apollo.QueryHookOptions<CountBidsQuery, CountBidsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<CountBidsQuery, CountBidsQueryVariables>(CountBidsDocument, options);
-      }
-export function useCountBidsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<CountBidsQuery, CountBidsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<CountBidsQuery, CountBidsQueryVariables>(CountBidsDocument, options);
-        }
-export type CountBidsQueryHookResult = ReturnType<typeof useCountBidsQuery>;
-export type CountBidsLazyQueryHookResult = ReturnType<typeof useCountBidsLazyQuery>;
-export type CountBidsQueryResult = Apollo.QueryResult<CountBidsQuery, CountBidsQueryVariables>;
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<CountBidsQuery, CountBidsQueryVariables>(CountBidsDocument, options)
+}
+export function useCountBidsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<CountBidsQuery, CountBidsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<CountBidsQuery, CountBidsQueryVariables>(CountBidsDocument, options)
+}
+export type CountBidsQueryHookResult = ReturnType<typeof useCountBidsQuery>
+export type CountBidsLazyQueryHookResult = ReturnType<typeof useCountBidsLazyQuery>
+export type CountBidsQueryResult = Apollo.QueryResult<CountBidsQuery, CountBidsQueryVariables>
 export const CreateMultipleTracksDocument = gql`
-    mutation CreateMultipleTracks($input: CreateMultipleTracksInput!) {
-  createMultipleTracks(input: $input) {
-    trackIds
-    firstTrack {
-      ...TrackComponentFields
+  mutation CreateMultipleTracks($input: CreateMultipleTracksInput!) {
+    createMultipleTracks(input: $input) {
+      trackIds
+      firstTrack {
+        ...TrackComponentFields
+      }
     }
   }
-}
-    ${TrackComponentFieldsFragmentDoc}`;
-export type CreateMultipleTracksMutationFn = Apollo.MutationFunction<CreateMultipleTracksMutation, CreateMultipleTracksMutationVariables>;
+  ${TrackComponentFieldsFragmentDoc}
+`
+export type CreateMultipleTracksMutationFn = Apollo.MutationFunction<
+  CreateMultipleTracksMutation,
+  CreateMultipleTracksMutationVariables
+>
 
 /**
  * __useCreateMultipleTracksMutation__
@@ -4952,23 +4536,31 @@ export type CreateMultipleTracksMutationFn = Apollo.MutationFunction<CreateMulti
  *   },
  * });
  */
-export function useCreateMultipleTracksMutation(baseOptions?: Apollo.MutationHookOptions<CreateMultipleTracksMutation, CreateMultipleTracksMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateMultipleTracksMutation, CreateMultipleTracksMutationVariables>(CreateMultipleTracksDocument, options);
-      }
-export type CreateMultipleTracksMutationHookResult = ReturnType<typeof useCreateMultipleTracksMutation>;
-export type CreateMultipleTracksMutationResult = Apollo.MutationResult<CreateMultipleTracksMutation>;
-export type CreateMultipleTracksMutationOptions = Apollo.BaseMutationOptions<CreateMultipleTracksMutation, CreateMultipleTracksMutationVariables>;
+export function useCreateMultipleTracksMutation(
+  baseOptions?: Apollo.MutationHookOptions<CreateMultipleTracksMutation, CreateMultipleTracksMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<CreateMultipleTracksMutation, CreateMultipleTracksMutationVariables>(
+    CreateMultipleTracksDocument,
+    options,
+  )
+}
+export type CreateMultipleTracksMutationHookResult = ReturnType<typeof useCreateMultipleTracksMutation>
+export type CreateMultipleTracksMutationResult = Apollo.MutationResult<CreateMultipleTracksMutation>
+export type CreateMultipleTracksMutationOptions = Apollo.BaseMutationOptions<
+  CreateMultipleTracksMutation,
+  CreateMultipleTracksMutationVariables
+>
 export const CreatePostDocument = gql`
-    mutation CreatePost($input: CreatePostInput!) {
-  createPost(input: $input) {
-    post {
-      id
+  mutation CreatePost($input: CreatePostInput!) {
+    createPost(input: $input) {
+      post {
+        id
+      }
     }
   }
-}
-    `;
-export type CreatePostMutationFn = Apollo.MutationFunction<CreatePostMutation, CreatePostMutationVariables>;
+`
+export type CreatePostMutationFn = Apollo.MutationFunction<CreatePostMutation, CreatePostMutationVariables>
 
 /**
  * __useCreatePostMutation__
@@ -4987,23 +4579,29 @@ export type CreatePostMutationFn = Apollo.MutationFunction<CreatePostMutation, C
  *   },
  * });
  */
-export function useCreatePostMutation(baseOptions?: Apollo.MutationHookOptions<CreatePostMutation, CreatePostMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreatePostMutation, CreatePostMutationVariables>(CreatePostDocument, options);
-      }
-export type CreatePostMutationHookResult = ReturnType<typeof useCreatePostMutation>;
-export type CreatePostMutationResult = Apollo.MutationResult<CreatePostMutation>;
-export type CreatePostMutationOptions = Apollo.BaseMutationOptions<CreatePostMutation, CreatePostMutationVariables>;
+export function useCreatePostMutation(
+  baseOptions?: Apollo.MutationHookOptions<CreatePostMutation, CreatePostMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<CreatePostMutation, CreatePostMutationVariables>(CreatePostDocument, options)
+}
+export type CreatePostMutationHookResult = ReturnType<typeof useCreatePostMutation>
+export type CreatePostMutationResult = Apollo.MutationResult<CreatePostMutation>
+export type CreatePostMutationOptions = Apollo.BaseMutationOptions<CreatePostMutation, CreatePostMutationVariables>
 export const CreateProfileVerificationRequestDocument = gql`
-    mutation CreateProfileVerificationRequest($input: CreateProfileVerificationRequestInput!) {
-  createProfileVerificationRequest(input: $input) {
-    profileVerificationRequest {
-      ...ProfileVerificationRequestComponentFields
+  mutation CreateProfileVerificationRequest($input: CreateProfileVerificationRequestInput!) {
+    createProfileVerificationRequest(input: $input) {
+      profileVerificationRequest {
+        ...ProfileVerificationRequestComponentFields
+      }
     }
   }
-}
-    ${ProfileVerificationRequestComponentFieldsFragmentDoc}`;
-export type CreateProfileVerificationRequestMutationFn = Apollo.MutationFunction<CreateProfileVerificationRequestMutation, CreateProfileVerificationRequestMutationVariables>;
+  ${ProfileVerificationRequestComponentFieldsFragmentDoc}
+`
+export type CreateProfileVerificationRequestMutationFn = Apollo.MutationFunction<
+  CreateProfileVerificationRequestMutation,
+  CreateProfileVerificationRequestMutationVariables
+>
 
 /**
  * __useCreateProfileVerificationRequestMutation__
@@ -5022,27 +4620,41 @@ export type CreateProfileVerificationRequestMutationFn = Apollo.MutationFunction
  *   },
  * });
  */
-export function useCreateProfileVerificationRequestMutation(baseOptions?: Apollo.MutationHookOptions<CreateProfileVerificationRequestMutation, CreateProfileVerificationRequestMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateProfileVerificationRequestMutation, CreateProfileVerificationRequestMutationVariables>(CreateProfileVerificationRequestDocument, options);
-      }
-export type CreateProfileVerificationRequestMutationHookResult = ReturnType<typeof useCreateProfileVerificationRequestMutation>;
-export type CreateProfileVerificationRequestMutationResult = Apollo.MutationResult<CreateProfileVerificationRequestMutation>;
-export type CreateProfileVerificationRequestMutationOptions = Apollo.BaseMutationOptions<CreateProfileVerificationRequestMutation, CreateProfileVerificationRequestMutationVariables>;
+export function useCreateProfileVerificationRequestMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    CreateProfileVerificationRequestMutation,
+    CreateProfileVerificationRequestMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<
+    CreateProfileVerificationRequestMutation,
+    CreateProfileVerificationRequestMutationVariables
+  >(CreateProfileVerificationRequestDocument, options)
+}
+export type CreateProfileVerificationRequestMutationHookResult = ReturnType<
+  typeof useCreateProfileVerificationRequestMutation
+>
+export type CreateProfileVerificationRequestMutationResult =
+  Apollo.MutationResult<CreateProfileVerificationRequestMutation>
+export type CreateProfileVerificationRequestMutationOptions = Apollo.BaseMutationOptions<
+  CreateProfileVerificationRequestMutation,
+  CreateProfileVerificationRequestMutationVariables
+>
 export const CreateRepostDocument = gql`
-    mutation CreateRepost($input: CreateRepostInput!) {
-  createRepost(input: $input) {
-    post {
-      id
-    }
-    originalPost {
-      id
-      repostCount
+  mutation CreateRepost($input: CreateRepostInput!) {
+    createRepost(input: $input) {
+      post {
+        id
+      }
+      originalPost {
+        id
+        repostCount
+      }
     }
   }
-}
-    `;
-export type CreateRepostMutationFn = Apollo.MutationFunction<CreateRepostMutation, CreateRepostMutationVariables>;
+`
+export type CreateRepostMutationFn = Apollo.MutationFunction<CreateRepostMutation, CreateRepostMutationVariables>
 
 /**
  * __useCreateRepostMutation__
@@ -5061,23 +4673,31 @@ export type CreateRepostMutationFn = Apollo.MutationFunction<CreateRepostMutatio
  *   },
  * });
  */
-export function useCreateRepostMutation(baseOptions?: Apollo.MutationHookOptions<CreateRepostMutation, CreateRepostMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateRepostMutation, CreateRepostMutationVariables>(CreateRepostDocument, options);
-      }
-export type CreateRepostMutationHookResult = ReturnType<typeof useCreateRepostMutation>;
-export type CreateRepostMutationResult = Apollo.MutationResult<CreateRepostMutation>;
-export type CreateRepostMutationOptions = Apollo.BaseMutationOptions<CreateRepostMutation, CreateRepostMutationVariables>;
+export function useCreateRepostMutation(
+  baseOptions?: Apollo.MutationHookOptions<CreateRepostMutation, CreateRepostMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<CreateRepostMutation, CreateRepostMutationVariables>(CreateRepostDocument, options)
+}
+export type CreateRepostMutationHookResult = ReturnType<typeof useCreateRepostMutation>
+export type CreateRepostMutationResult = Apollo.MutationResult<CreateRepostMutation>
+export type CreateRepostMutationOptions = Apollo.BaseMutationOptions<
+  CreateRepostMutation,
+  CreateRepostMutationVariables
+>
 export const CreateTrackEditionDocument = gql`
-    mutation CreateTrackEdition($input: CreateTrackEditionInput!) {
-  createTrackEdition(input: $input) {
-    trackEdition {
-      id
+  mutation CreateTrackEdition($input: CreateTrackEditionInput!) {
+    createTrackEdition(input: $input) {
+      trackEdition {
+        id
+      }
     }
   }
-}
-    `;
-export type CreateTrackEditionMutationFn = Apollo.MutationFunction<CreateTrackEditionMutation, CreateTrackEditionMutationVariables>;
+`
+export type CreateTrackEditionMutationFn = Apollo.MutationFunction<
+  CreateTrackEditionMutation,
+  CreateTrackEditionMutationVariables
+>
 
 /**
  * __useCreateTrackEditionMutation__
@@ -5096,23 +4716,34 @@ export type CreateTrackEditionMutationFn = Apollo.MutationFunction<CreateTrackEd
  *   },
  * });
  */
-export function useCreateTrackEditionMutation(baseOptions?: Apollo.MutationHookOptions<CreateTrackEditionMutation, CreateTrackEditionMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateTrackEditionMutation, CreateTrackEditionMutationVariables>(CreateTrackEditionDocument, options);
-      }
-export type CreateTrackEditionMutationHookResult = ReturnType<typeof useCreateTrackEditionMutation>;
-export type CreateTrackEditionMutationResult = Apollo.MutationResult<CreateTrackEditionMutation>;
-export type CreateTrackEditionMutationOptions = Apollo.BaseMutationOptions<CreateTrackEditionMutation, CreateTrackEditionMutationVariables>;
+export function useCreateTrackEditionMutation(
+  baseOptions?: Apollo.MutationHookOptions<CreateTrackEditionMutation, CreateTrackEditionMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<CreateTrackEditionMutation, CreateTrackEditionMutationVariables>(
+    CreateTrackEditionDocument,
+    options,
+  )
+}
+export type CreateTrackEditionMutationHookResult = ReturnType<typeof useCreateTrackEditionMutation>
+export type CreateTrackEditionMutationResult = Apollo.MutationResult<CreateTrackEditionMutation>
+export type CreateTrackEditionMutationOptions = Apollo.BaseMutationOptions<
+  CreateTrackEditionMutation,
+  CreateTrackEditionMutationVariables
+>
 export const CreateWhitelistEntryDocument = gql`
-    mutation CreateWhitelistEntry($input: CreateWhitelistEntryInput!) {
-  createWhitelistEntry(input: $input) {
-    whitelistEntry {
-      id
+  mutation CreateWhitelistEntry($input: CreateWhitelistEntryInput!) {
+    createWhitelistEntry(input: $input) {
+      whitelistEntry {
+        id
+      }
     }
   }
-}
-    `;
-export type CreateWhitelistEntryMutationFn = Apollo.MutationFunction<CreateWhitelistEntryMutation, CreateWhitelistEntryMutationVariables>;
+`
+export type CreateWhitelistEntryMutationFn = Apollo.MutationFunction<
+  CreateWhitelistEntryMutation,
+  CreateWhitelistEntryMutationVariables
+>
 
 /**
  * __useCreateWhitelistEntryMutation__
@@ -5131,23 +4762,32 @@ export type CreateWhitelistEntryMutationFn = Apollo.MutationFunction<CreateWhite
  *   },
  * });
  */
-export function useCreateWhitelistEntryMutation(baseOptions?: Apollo.MutationHookOptions<CreateWhitelistEntryMutation, CreateWhitelistEntryMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateWhitelistEntryMutation, CreateWhitelistEntryMutationVariables>(CreateWhitelistEntryDocument, options);
-      }
-export type CreateWhitelistEntryMutationHookResult = ReturnType<typeof useCreateWhitelistEntryMutation>;
-export type CreateWhitelistEntryMutationResult = Apollo.MutationResult<CreateWhitelistEntryMutation>;
-export type CreateWhitelistEntryMutationOptions = Apollo.BaseMutationOptions<CreateWhitelistEntryMutation, CreateWhitelistEntryMutationVariables>;
+export function useCreateWhitelistEntryMutation(
+  baseOptions?: Apollo.MutationHookOptions<CreateWhitelistEntryMutation, CreateWhitelistEntryMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<CreateWhitelistEntryMutation, CreateWhitelistEntryMutationVariables>(
+    CreateWhitelistEntryDocument,
+    options,
+  )
+}
+export type CreateWhitelistEntryMutationHookResult = ReturnType<typeof useCreateWhitelistEntryMutation>
+export type CreateWhitelistEntryMutationResult = Apollo.MutationResult<CreateWhitelistEntryMutation>
+export type CreateWhitelistEntryMutationOptions = Apollo.BaseMutationOptions<
+  CreateWhitelistEntryMutation,
+  CreateWhitelistEntryMutationVariables
+>
 export const DeleteCommentDocument = gql`
-    mutation DeleteComment($input: DeleteCommentInput!) {
-  deleteComment(input: $input) {
-    comment {
-      ...CommentComponentFields
+  mutation DeleteComment($input: DeleteCommentInput!) {
+    deleteComment(input: $input) {
+      comment {
+        ...CommentComponentFields
+      }
     }
   }
-}
-    ${CommentComponentFieldsFragmentDoc}`;
-export type DeleteCommentMutationFn = Apollo.MutationFunction<DeleteCommentMutation, DeleteCommentMutationVariables>;
+  ${CommentComponentFieldsFragmentDoc}
+`
+export type DeleteCommentMutationFn = Apollo.MutationFunction<DeleteCommentMutation, DeleteCommentMutationVariables>
 
 /**
  * __useDeleteCommentMutation__
@@ -5166,23 +4806,29 @@ export type DeleteCommentMutationFn = Apollo.MutationFunction<DeleteCommentMutat
  *   },
  * });
  */
-export function useDeleteCommentMutation(baseOptions?: Apollo.MutationHookOptions<DeleteCommentMutation, DeleteCommentMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteCommentMutation, DeleteCommentMutationVariables>(DeleteCommentDocument, options);
-      }
-export type DeleteCommentMutationHookResult = ReturnType<typeof useDeleteCommentMutation>;
-export type DeleteCommentMutationResult = Apollo.MutationResult<DeleteCommentMutation>;
-export type DeleteCommentMutationOptions = Apollo.BaseMutationOptions<DeleteCommentMutation, DeleteCommentMutationVariables>;
+export function useDeleteCommentMutation(
+  baseOptions?: Apollo.MutationHookOptions<DeleteCommentMutation, DeleteCommentMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<DeleteCommentMutation, DeleteCommentMutationVariables>(DeleteCommentDocument, options)
+}
+export type DeleteCommentMutationHookResult = ReturnType<typeof useDeleteCommentMutation>
+export type DeleteCommentMutationResult = Apollo.MutationResult<DeleteCommentMutation>
+export type DeleteCommentMutationOptions = Apollo.BaseMutationOptions<
+  DeleteCommentMutation,
+  DeleteCommentMutationVariables
+>
 export const DeletePostDocument = gql`
-    mutation DeletePost($input: DeletePostInput!) {
-  deletePost(input: $input) {
-    post {
-      ...PostComponentFields
+  mutation DeletePost($input: DeletePostInput!) {
+    deletePost(input: $input) {
+      post {
+        ...PostComponentFields
+      }
     }
   }
-}
-    ${PostComponentFieldsFragmentDoc}`;
-export type DeletePostMutationFn = Apollo.MutationFunction<DeletePostMutation, DeletePostMutationVariables>;
+  ${PostComponentFieldsFragmentDoc}
+`
+export type DeletePostMutationFn = Apollo.MutationFunction<DeletePostMutation, DeletePostMutationVariables>
 
 /**
  * __useDeletePostMutation__
@@ -5201,21 +4847,24 @@ export type DeletePostMutationFn = Apollo.MutationFunction<DeletePostMutation, D
  *   },
  * });
  */
-export function useDeletePostMutation(baseOptions?: Apollo.MutationHookOptions<DeletePostMutation, DeletePostMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeletePostMutation, DeletePostMutationVariables>(DeletePostDocument, options);
-      }
-export type DeletePostMutationHookResult = ReturnType<typeof useDeletePostMutation>;
-export type DeletePostMutationResult = Apollo.MutationResult<DeletePostMutation>;
-export type DeletePostMutationOptions = Apollo.BaseMutationOptions<DeletePostMutation, DeletePostMutationVariables>;
-export const DeleteTrackDocument = gql`
-    mutation deleteTrack($trackId: String!) {
-  deleteTrack(trackId: $trackId) {
-    ...TrackComponentFields
-  }
+export function useDeletePostMutation(
+  baseOptions?: Apollo.MutationHookOptions<DeletePostMutation, DeletePostMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<DeletePostMutation, DeletePostMutationVariables>(DeletePostDocument, options)
 }
-    ${TrackComponentFieldsFragmentDoc}`;
-export type DeleteTrackMutationFn = Apollo.MutationFunction<DeleteTrackMutation, DeleteTrackMutationVariables>;
+export type DeletePostMutationHookResult = ReturnType<typeof useDeletePostMutation>
+export type DeletePostMutationResult = Apollo.MutationResult<DeletePostMutation>
+export type DeletePostMutationOptions = Apollo.BaseMutationOptions<DeletePostMutation, DeletePostMutationVariables>
+export const DeleteTrackDocument = gql`
+  mutation deleteTrack($trackId: String!) {
+    deleteTrack(trackId: $trackId) {
+      ...TrackComponentFields
+    }
+  }
+  ${TrackComponentFieldsFragmentDoc}
+`
+export type DeleteTrackMutationFn = Apollo.MutationFunction<DeleteTrackMutation, DeleteTrackMutationVariables>
 
 /**
  * __useDeleteTrackMutation__
@@ -5234,21 +4883,26 @@ export type DeleteTrackMutationFn = Apollo.MutationFunction<DeleteTrackMutation,
  *   },
  * });
  */
-export function useDeleteTrackMutation(baseOptions?: Apollo.MutationHookOptions<DeleteTrackMutation, DeleteTrackMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteTrackMutation, DeleteTrackMutationVariables>(DeleteTrackDocument, options);
-      }
-export type DeleteTrackMutationHookResult = ReturnType<typeof useDeleteTrackMutation>;
-export type DeleteTrackMutationResult = Apollo.MutationResult<DeleteTrackMutation>;
-export type DeleteTrackMutationOptions = Apollo.BaseMutationOptions<DeleteTrackMutation, DeleteTrackMutationVariables>;
-export const DeleteTrackEditionDocument = gql`
-    mutation deleteTrackEdition($trackEditionId: String!) {
-  deleteTrackEdition(trackEditionId: $trackEditionId) {
-    id
-  }
+export function useDeleteTrackMutation(
+  baseOptions?: Apollo.MutationHookOptions<DeleteTrackMutation, DeleteTrackMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<DeleteTrackMutation, DeleteTrackMutationVariables>(DeleteTrackDocument, options)
 }
-    `;
-export type DeleteTrackEditionMutationFn = Apollo.MutationFunction<DeleteTrackEditionMutation, DeleteTrackEditionMutationVariables>;
+export type DeleteTrackMutationHookResult = ReturnType<typeof useDeleteTrackMutation>
+export type DeleteTrackMutationResult = Apollo.MutationResult<DeleteTrackMutation>
+export type DeleteTrackMutationOptions = Apollo.BaseMutationOptions<DeleteTrackMutation, DeleteTrackMutationVariables>
+export const DeleteTrackEditionDocument = gql`
+  mutation deleteTrackEdition($trackEditionId: String!) {
+    deleteTrackEdition(trackEditionId: $trackEditionId) {
+      id
+    }
+  }
+`
+export type DeleteTrackEditionMutationFn = Apollo.MutationFunction<
+  DeleteTrackEditionMutation,
+  DeleteTrackEditionMutationVariables
+>
 
 /**
  * __useDeleteTrackEditionMutation__
@@ -5267,23 +4921,35 @@ export type DeleteTrackEditionMutationFn = Apollo.MutationFunction<DeleteTrackEd
  *   },
  * });
  */
-export function useDeleteTrackEditionMutation(baseOptions?: Apollo.MutationHookOptions<DeleteTrackEditionMutation, DeleteTrackEditionMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteTrackEditionMutation, DeleteTrackEditionMutationVariables>(DeleteTrackEditionDocument, options);
-      }
-export type DeleteTrackEditionMutationHookResult = ReturnType<typeof useDeleteTrackEditionMutation>;
-export type DeleteTrackEditionMutationResult = Apollo.MutationResult<DeleteTrackEditionMutation>;
-export type DeleteTrackEditionMutationOptions = Apollo.BaseMutationOptions<DeleteTrackEditionMutation, DeleteTrackEditionMutationVariables>;
+export function useDeleteTrackEditionMutation(
+  baseOptions?: Apollo.MutationHookOptions<DeleteTrackEditionMutation, DeleteTrackEditionMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<DeleteTrackEditionMutation, DeleteTrackEditionMutationVariables>(
+    DeleteTrackEditionDocument,
+    options,
+  )
+}
+export type DeleteTrackEditionMutationHookResult = ReturnType<typeof useDeleteTrackEditionMutation>
+export type DeleteTrackEditionMutationResult = Apollo.MutationResult<DeleteTrackEditionMutation>
+export type DeleteTrackEditionMutationOptions = Apollo.BaseMutationOptions<
+  DeleteTrackEditionMutation,
+  DeleteTrackEditionMutationVariables
+>
 export const DeleteTrackOnErrorDocument = gql`
-    mutation deleteTrackOnError($input: DeleteTrackInput!) {
-  deleteTrackOnError(input: $input) {
-    track {
-      ...TrackComponentFields
+  mutation deleteTrackOnError($input: DeleteTrackInput!) {
+    deleteTrackOnError(input: $input) {
+      track {
+        ...TrackComponentFields
+      }
     }
   }
-}
-    ${TrackComponentFieldsFragmentDoc}`;
-export type DeleteTrackOnErrorMutationFn = Apollo.MutationFunction<DeleteTrackOnErrorMutation, DeleteTrackOnErrorMutationVariables>;
+  ${TrackComponentFieldsFragmentDoc}
+`
+export type DeleteTrackOnErrorMutationFn = Apollo.MutationFunction<
+  DeleteTrackOnErrorMutation,
+  DeleteTrackOnErrorMutationVariables
+>
 
 /**
  * __useDeleteTrackOnErrorMutation__
@@ -5302,28 +4968,37 @@ export type DeleteTrackOnErrorMutationFn = Apollo.MutationFunction<DeleteTrackOn
  *   },
  * });
  */
-export function useDeleteTrackOnErrorMutation(baseOptions?: Apollo.MutationHookOptions<DeleteTrackOnErrorMutation, DeleteTrackOnErrorMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteTrackOnErrorMutation, DeleteTrackOnErrorMutationVariables>(DeleteTrackOnErrorDocument, options);
-      }
-export type DeleteTrackOnErrorMutationHookResult = ReturnType<typeof useDeleteTrackOnErrorMutation>;
-export type DeleteTrackOnErrorMutationResult = Apollo.MutationResult<DeleteTrackOnErrorMutation>;
-export type DeleteTrackOnErrorMutationOptions = Apollo.BaseMutationOptions<DeleteTrackOnErrorMutation, DeleteTrackOnErrorMutationVariables>;
-export const ExploreDocument = gql`
-    query Explore($search: String) {
-  explore(search: $search) {
-    tracks {
-      ...TrackComponentFields
-    }
-    profiles {
-      ...ProfileComponentFields
-    }
-    totalTracks
-    totalProfiles
-  }
+export function useDeleteTrackOnErrorMutation(
+  baseOptions?: Apollo.MutationHookOptions<DeleteTrackOnErrorMutation, DeleteTrackOnErrorMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<DeleteTrackOnErrorMutation, DeleteTrackOnErrorMutationVariables>(
+    DeleteTrackOnErrorDocument,
+    options,
+  )
 }
-    ${TrackComponentFieldsFragmentDoc}
-${ProfileComponentFieldsFragmentDoc}`;
+export type DeleteTrackOnErrorMutationHookResult = ReturnType<typeof useDeleteTrackOnErrorMutation>
+export type DeleteTrackOnErrorMutationResult = Apollo.MutationResult<DeleteTrackOnErrorMutation>
+export type DeleteTrackOnErrorMutationOptions = Apollo.BaseMutationOptions<
+  DeleteTrackOnErrorMutation,
+  DeleteTrackOnErrorMutationVariables
+>
+export const ExploreDocument = gql`
+  query Explore($search: String) {
+    explore(search: $search) {
+      tracks {
+        ...TrackComponentFields
+      }
+      profiles {
+        ...ProfileComponentFields
+      }
+      totalTracks
+      totalProfiles
+    }
+  }
+  ${TrackComponentFieldsFragmentDoc}
+  ${ProfileComponentFieldsFragmentDoc}
+`
 
 /**
  * __useExploreQuery__
@@ -5342,30 +5017,31 @@ ${ProfileComponentFieldsFragmentDoc}`;
  * });
  */
 export function useExploreQuery(baseOptions?: Apollo.QueryHookOptions<ExploreQuery, ExploreQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<ExploreQuery, ExploreQueryVariables>(ExploreDocument, options);
-      }
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<ExploreQuery, ExploreQueryVariables>(ExploreDocument, options)
+}
 export function useExploreLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ExploreQuery, ExploreQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<ExploreQuery, ExploreQueryVariables>(ExploreDocument, options);
-        }
-export type ExploreQueryHookResult = ReturnType<typeof useExploreQuery>;
-export type ExploreLazyQueryHookResult = ReturnType<typeof useExploreLazyQuery>;
-export type ExploreQueryResult = Apollo.QueryResult<ExploreQuery, ExploreQueryVariables>;
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<ExploreQuery, ExploreQueryVariables>(ExploreDocument, options)
+}
+export type ExploreQueryHookResult = ReturnType<typeof useExploreQuery>
+export type ExploreLazyQueryHookResult = ReturnType<typeof useExploreLazyQuery>
+export type ExploreQueryResult = Apollo.QueryResult<ExploreQuery, ExploreQueryVariables>
 export const ExploreTracksDocument = gql`
-    query ExploreTracks($sort: SortExploreTracks, $search: String, $page: PageInput) {
-  exploreTracks(sort: $sort, search: $search, page: $page) {
-    nodes {
-      ...TrackComponentFields
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
-      totalCount
+  query ExploreTracks($sort: SortExploreTracks, $search: String, $page: PageInput) {
+    exploreTracks(sort: $sort, search: $search, page: $page) {
+      nodes {
+        ...TrackComponentFields
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+        totalCount
+      }
     }
   }
-}
-    ${TrackComponentFieldsFragmentDoc}`;
+  ${TrackComponentFieldsFragmentDoc}
+`
 
 /**
  * __useExploreTracksQuery__
@@ -5385,30 +5061,35 @@ export const ExploreTracksDocument = gql`
  *   },
  * });
  */
-export function useExploreTracksQuery(baseOptions?: Apollo.QueryHookOptions<ExploreTracksQuery, ExploreTracksQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<ExploreTracksQuery, ExploreTracksQueryVariables>(ExploreTracksDocument, options);
-      }
-export function useExploreTracksLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ExploreTracksQuery, ExploreTracksQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<ExploreTracksQuery, ExploreTracksQueryVariables>(ExploreTracksDocument, options);
-        }
-export type ExploreTracksQueryHookResult = ReturnType<typeof useExploreTracksQuery>;
-export type ExploreTracksLazyQueryHookResult = ReturnType<typeof useExploreTracksLazyQuery>;
-export type ExploreTracksQueryResult = Apollo.QueryResult<ExploreTracksQuery, ExploreTracksQueryVariables>;
+export function useExploreTracksQuery(
+  baseOptions?: Apollo.QueryHookOptions<ExploreTracksQuery, ExploreTracksQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<ExploreTracksQuery, ExploreTracksQueryVariables>(ExploreTracksDocument, options)
+}
+export function useExploreTracksLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<ExploreTracksQuery, ExploreTracksQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<ExploreTracksQuery, ExploreTracksQueryVariables>(ExploreTracksDocument, options)
+}
+export type ExploreTracksQueryHookResult = ReturnType<typeof useExploreTracksQuery>
+export type ExploreTracksLazyQueryHookResult = ReturnType<typeof useExploreTracksLazyQuery>
+export type ExploreTracksQueryResult = Apollo.QueryResult<ExploreTracksQuery, ExploreTracksQueryVariables>
 export const ExploreUsersDocument = gql`
-    query ExploreUsers($search: String, $page: PageInput) {
-  exploreUsers(search: $search, page: $page) {
-    nodes {
-      ...ProfileComponentFields
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
+  query ExploreUsers($search: String, $page: PageInput) {
+    exploreUsers(search: $search, page: $page) {
+      nodes {
+        ...ProfileComponentFields
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
     }
   }
-}
-    ${ProfileComponentFieldsFragmentDoc}`;
+  ${ProfileComponentFieldsFragmentDoc}
+`
 
 /**
  * __useExploreUsersQuery__
@@ -5427,31 +5108,36 @@ export const ExploreUsersDocument = gql`
  *   },
  * });
  */
-export function useExploreUsersQuery(baseOptions?: Apollo.QueryHookOptions<ExploreUsersQuery, ExploreUsersQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<ExploreUsersQuery, ExploreUsersQueryVariables>(ExploreUsersDocument, options);
-      }
-export function useExploreUsersLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ExploreUsersQuery, ExploreUsersQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<ExploreUsersQuery, ExploreUsersQueryVariables>(ExploreUsersDocument, options);
-        }
-export type ExploreUsersQueryHookResult = ReturnType<typeof useExploreUsersQuery>;
-export type ExploreUsersLazyQueryHookResult = ReturnType<typeof useExploreUsersLazyQuery>;
-export type ExploreUsersQueryResult = Apollo.QueryResult<ExploreUsersQuery, ExploreUsersQueryVariables>;
+export function useExploreUsersQuery(
+  baseOptions?: Apollo.QueryHookOptions<ExploreUsersQuery, ExploreUsersQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<ExploreUsersQuery, ExploreUsersQueryVariables>(ExploreUsersDocument, options)
+}
+export function useExploreUsersLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<ExploreUsersQuery, ExploreUsersQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<ExploreUsersQuery, ExploreUsersQueryVariables>(ExploreUsersDocument, options)
+}
+export type ExploreUsersQueryHookResult = ReturnType<typeof useExploreUsersQuery>
+export type ExploreUsersLazyQueryHookResult = ReturnType<typeof useExploreUsersLazyQuery>
+export type ExploreUsersQueryResult = Apollo.QueryResult<ExploreUsersQuery, ExploreUsersQueryVariables>
 export const FavoriteTracksDocument = gql`
-    query FavoriteTracks($sort: SortTrackInput, $search: String, $page: PageInput) {
-  favoriteTracks(sort: $sort, search: $search, page: $page) {
-    nodes {
-      ...TrackComponentFields
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
-      totalCount
+  query FavoriteTracks($sort: SortTrackInput, $search: String, $page: PageInput) {
+    favoriteTracks(sort: $sort, search: $search, page: $page) {
+      nodes {
+        ...TrackComponentFields
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+        totalCount
+      }
     }
   }
-}
-    ${TrackComponentFieldsFragmentDoc}`;
+  ${TrackComponentFieldsFragmentDoc}
+`
 
 /**
  * __useFavoriteTracksQuery__
@@ -5471,33 +5157,38 @@ export const FavoriteTracksDocument = gql`
  *   },
  * });
  */
-export function useFavoriteTracksQuery(baseOptions?: Apollo.QueryHookOptions<FavoriteTracksQuery, FavoriteTracksQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<FavoriteTracksQuery, FavoriteTracksQueryVariables>(FavoriteTracksDocument, options);
-      }
-export function useFavoriteTracksLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<FavoriteTracksQuery, FavoriteTracksQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<FavoriteTracksQuery, FavoriteTracksQueryVariables>(FavoriteTracksDocument, options);
-        }
-export type FavoriteTracksQueryHookResult = ReturnType<typeof useFavoriteTracksQuery>;
-export type FavoriteTracksLazyQueryHookResult = ReturnType<typeof useFavoriteTracksLazyQuery>;
-export type FavoriteTracksQueryResult = Apollo.QueryResult<FavoriteTracksQuery, FavoriteTracksQueryVariables>;
+export function useFavoriteTracksQuery(
+  baseOptions?: Apollo.QueryHookOptions<FavoriteTracksQuery, FavoriteTracksQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<FavoriteTracksQuery, FavoriteTracksQueryVariables>(FavoriteTracksDocument, options)
+}
+export function useFavoriteTracksLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<FavoriteTracksQuery, FavoriteTracksQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<FavoriteTracksQuery, FavoriteTracksQueryVariables>(FavoriteTracksDocument, options)
+}
+export type FavoriteTracksQueryHookResult = ReturnType<typeof useFavoriteTracksQuery>
+export type FavoriteTracksLazyQueryHookResult = ReturnType<typeof useFavoriteTracksLazyQuery>
+export type FavoriteTracksQueryResult = Apollo.QueryResult<FavoriteTracksQuery, FavoriteTracksQueryVariables>
 export const FeedDocument = gql`
-    query Feed($page: PageInput) {
-  feed(page: $page) {
-    nodes {
-      id
-      post {
-        ...PostComponentFields
+  query Feed($page: PageInput) {
+    feed(page: $page) {
+      nodes {
+        id
+        post {
+          ...PostComponentFields
+        }
       }
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
     }
   }
-}
-    ${PostComponentFieldsFragmentDoc}`;
+  ${PostComponentFieldsFragmentDoc}
+`
 
 /**
  * __useFeedQuery__
@@ -5516,28 +5207,28 @@ export const FeedDocument = gql`
  * });
  */
 export function useFeedQuery(baseOptions?: Apollo.QueryHookOptions<FeedQuery, FeedQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<FeedQuery, FeedQueryVariables>(FeedDocument, options);
-      }
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<FeedQuery, FeedQueryVariables>(FeedDocument, options)
+}
 export function useFeedLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<FeedQuery, FeedQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<FeedQuery, FeedQueryVariables>(FeedDocument, options);
-        }
-export type FeedQueryHookResult = ReturnType<typeof useFeedQuery>;
-export type FeedLazyQueryHookResult = ReturnType<typeof useFeedLazyQuery>;
-export type FeedQueryResult = Apollo.QueryResult<FeedQuery, FeedQueryVariables>;
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<FeedQuery, FeedQueryVariables>(FeedDocument, options)
+}
+export type FeedQueryHookResult = ReturnType<typeof useFeedQuery>
+export type FeedLazyQueryHookResult = ReturnType<typeof useFeedLazyQuery>
+export type FeedQueryResult = Apollo.QueryResult<FeedQuery, FeedQueryVariables>
 export const FollowProfileDocument = gql`
-    mutation FollowProfile($input: FollowProfileInput!) {
-  followProfile(input: $input) {
-    followedProfile {
-      id
-      followerCount
-      isFollowed
+  mutation FollowProfile($input: FollowProfileInput!) {
+    followProfile(input: $input) {
+      followedProfile {
+        id
+        followerCount
+        isFollowed
+      }
     }
   }
-}
-    `;
-export type FollowProfileMutationFn = Apollo.MutationFunction<FollowProfileMutation, FollowProfileMutationVariables>;
+`
+export type FollowProfileMutationFn = Apollo.MutationFunction<FollowProfileMutation, FollowProfileMutationVariables>
 
 /**
  * __useFollowProfileMutation__
@@ -5556,27 +5247,33 @@ export type FollowProfileMutationFn = Apollo.MutationFunction<FollowProfileMutat
  *   },
  * });
  */
-export function useFollowProfileMutation(baseOptions?: Apollo.MutationHookOptions<FollowProfileMutation, FollowProfileMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<FollowProfileMutation, FollowProfileMutationVariables>(FollowProfileDocument, options);
-      }
-export type FollowProfileMutationHookResult = ReturnType<typeof useFollowProfileMutation>;
-export type FollowProfileMutationResult = Apollo.MutationResult<FollowProfileMutation>;
-export type FollowProfileMutationOptions = Apollo.BaseMutationOptions<FollowProfileMutation, FollowProfileMutationVariables>;
+export function useFollowProfileMutation(
+  baseOptions?: Apollo.MutationHookOptions<FollowProfileMutation, FollowProfileMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<FollowProfileMutation, FollowProfileMutationVariables>(FollowProfileDocument, options)
+}
+export type FollowProfileMutationHookResult = ReturnType<typeof useFollowProfileMutation>
+export type FollowProfileMutationResult = Apollo.MutationResult<FollowProfileMutation>
+export type FollowProfileMutationOptions = Apollo.BaseMutationOptions<
+  FollowProfileMutation,
+  FollowProfileMutationVariables
+>
 export const FollowedArtistsDocument = gql`
-    query FollowedArtists($profileId: String!, $search: String, $page: PageInput) {
-  followedArtists(profileId: $profileId, search: $search, page: $page) {
-    nodes {
-      ...ProfileComponentFields
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
-      totalCount
+  query FollowedArtists($profileId: String!, $search: String, $page: PageInput) {
+    followedArtists(profileId: $profileId, search: $search, page: $page) {
+      nodes {
+        ...ProfileComponentFields
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+        totalCount
+      }
     }
   }
-}
-    ${ProfileComponentFieldsFragmentDoc}`;
+  ${ProfileComponentFieldsFragmentDoc}
+`
 
 /**
  * __useFollowedArtistsQuery__
@@ -5596,39 +5293,43 @@ export const FollowedArtistsDocument = gql`
  *   },
  * });
  */
-export function useFollowedArtistsQuery(baseOptions: Apollo.QueryHookOptions<FollowedArtistsQuery, FollowedArtistsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<FollowedArtistsQuery, FollowedArtistsQueryVariables>(FollowedArtistsDocument, options);
-      }
-export function useFollowedArtistsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<FollowedArtistsQuery, FollowedArtistsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<FollowedArtistsQuery, FollowedArtistsQueryVariables>(FollowedArtistsDocument, options);
-        }
-export type FollowedArtistsQueryHookResult = ReturnType<typeof useFollowedArtistsQuery>;
-export type FollowedArtistsLazyQueryHookResult = ReturnType<typeof useFollowedArtistsLazyQuery>;
-export type FollowedArtistsQueryResult = Apollo.QueryResult<FollowedArtistsQuery, FollowedArtistsQueryVariables>;
+export function useFollowedArtistsQuery(
+  baseOptions: Apollo.QueryHookOptions<FollowedArtistsQuery, FollowedArtistsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<FollowedArtistsQuery, FollowedArtistsQueryVariables>(FollowedArtistsDocument, options)
+}
+export function useFollowedArtistsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<FollowedArtistsQuery, FollowedArtistsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<FollowedArtistsQuery, FollowedArtistsQueryVariables>(FollowedArtistsDocument, options)
+}
+export type FollowedArtistsQueryHookResult = ReturnType<typeof useFollowedArtistsQuery>
+export type FollowedArtistsLazyQueryHookResult = ReturnType<typeof useFollowedArtistsLazyQuery>
+export type FollowedArtistsQueryResult = Apollo.QueryResult<FollowedArtistsQuery, FollowedArtistsQueryVariables>
 export const FollowersDocument = gql`
-    query Followers($profileId: String!, $page: PageInput) {
-  followers(id: $profileId, page: $page) {
-    nodes {
-      id
-      followerProfile {
+  query Followers($profileId: String!, $page: PageInput) {
+    followers(id: $profileId, page: $page) {
+      nodes {
         id
-        displayName
-        profilePicture
-        verified
-        userHandle
-        teamMember
+        followerProfile {
+          id
+          displayName
+          profilePicture
+          verified
+          userHandle
+          teamMember
+        }
       }
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
-      totalCount
+      pageInfo {
+        hasNextPage
+        endCursor
+        totalCount
+      }
     }
   }
-}
-    `;
+`
 
 /**
  * __useFollowersQuery__
@@ -5648,38 +5349,40 @@ export const FollowersDocument = gql`
  * });
  */
 export function useFollowersQuery(baseOptions: Apollo.QueryHookOptions<FollowersQuery, FollowersQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<FollowersQuery, FollowersQueryVariables>(FollowersDocument, options);
-      }
-export function useFollowersLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<FollowersQuery, FollowersQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<FollowersQuery, FollowersQueryVariables>(FollowersDocument, options);
-        }
-export type FollowersQueryHookResult = ReturnType<typeof useFollowersQuery>;
-export type FollowersLazyQueryHookResult = ReturnType<typeof useFollowersLazyQuery>;
-export type FollowersQueryResult = Apollo.QueryResult<FollowersQuery, FollowersQueryVariables>;
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<FollowersQuery, FollowersQueryVariables>(FollowersDocument, options)
+}
+export function useFollowersLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<FollowersQuery, FollowersQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<FollowersQuery, FollowersQueryVariables>(FollowersDocument, options)
+}
+export type FollowersQueryHookResult = ReturnType<typeof useFollowersQuery>
+export type FollowersLazyQueryHookResult = ReturnType<typeof useFollowersLazyQuery>
+export type FollowersQueryResult = Apollo.QueryResult<FollowersQuery, FollowersQueryVariables>
 export const FollowingDocument = gql`
-    query Following($profileId: String!, $page: PageInput) {
-  following(id: $profileId, page: $page) {
-    nodes {
-      id
-      followedProfile {
+  query Following($profileId: String!, $page: PageInput) {
+    following(id: $profileId, page: $page) {
+      nodes {
         id
-        displayName
-        profilePicture
-        verified
-        userHandle
-        teamMember
+        followedProfile {
+          id
+          displayName
+          profilePicture
+          verified
+          userHandle
+          teamMember
+        }
       }
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
-      totalCount
+      pageInfo {
+        hasNextPage
+        endCursor
+        totalCount
+      }
     }
   }
-}
-    `;
+`
 
 /**
  * __useFollowingQuery__
@@ -5699,23 +5402,26 @@ export const FollowingDocument = gql`
  * });
  */
 export function useFollowingQuery(baseOptions: Apollo.QueryHookOptions<FollowingQuery, FollowingQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<FollowingQuery, FollowingQueryVariables>(FollowingDocument, options);
-      }
-export function useFollowingLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<FollowingQuery, FollowingQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<FollowingQuery, FollowingQueryVariables>(FollowingDocument, options);
-        }
-export type FollowingQueryHookResult = ReturnType<typeof useFollowingQuery>;
-export type FollowingLazyQueryHookResult = ReturnType<typeof useFollowingLazyQuery>;
-export type FollowingQueryResult = Apollo.QueryResult<FollowingQuery, FollowingQueryVariables>;
-export const GetOriginalPostFromTrackDocument = gql`
-    query GetOriginalPostFromTrack($trackId: String!) {
-  getOriginalPostFromTrack(trackId: $trackId) {
-    ...PostComponentFields
-  }
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<FollowingQuery, FollowingQueryVariables>(FollowingDocument, options)
 }
-    ${PostComponentFieldsFragmentDoc}`;
+export function useFollowingLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<FollowingQuery, FollowingQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<FollowingQuery, FollowingQueryVariables>(FollowingDocument, options)
+}
+export type FollowingQueryHookResult = ReturnType<typeof useFollowingQuery>
+export type FollowingLazyQueryHookResult = ReturnType<typeof useFollowingLazyQuery>
+export type FollowingQueryResult = Apollo.QueryResult<FollowingQuery, FollowingQueryVariables>
+export const GetOriginalPostFromTrackDocument = gql`
+  query GetOriginalPostFromTrack($trackId: String!) {
+    getOriginalPostFromTrack(trackId: $trackId) {
+      ...PostComponentFields
+    }
+  }
+  ${PostComponentFieldsFragmentDoc}
+`
 
 /**
  * __useGetOriginalPostFromTrackQuery__
@@ -5733,31 +5439,45 @@ export const GetOriginalPostFromTrackDocument = gql`
  *   },
  * });
  */
-export function useGetOriginalPostFromTrackQuery(baseOptions: Apollo.QueryHookOptions<GetOriginalPostFromTrackQuery, GetOriginalPostFromTrackQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetOriginalPostFromTrackQuery, GetOriginalPostFromTrackQueryVariables>(GetOriginalPostFromTrackDocument, options);
-      }
-export function useGetOriginalPostFromTrackLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetOriginalPostFromTrackQuery, GetOriginalPostFromTrackQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetOriginalPostFromTrackQuery, GetOriginalPostFromTrackQueryVariables>(GetOriginalPostFromTrackDocument, options);
-        }
-export type GetOriginalPostFromTrackQueryHookResult = ReturnType<typeof useGetOriginalPostFromTrackQuery>;
-export type GetOriginalPostFromTrackLazyQueryHookResult = ReturnType<typeof useGetOriginalPostFromTrackLazyQuery>;
-export type GetOriginalPostFromTrackQueryResult = Apollo.QueryResult<GetOriginalPostFromTrackQuery, GetOriginalPostFromTrackQueryVariables>;
+export function useGetOriginalPostFromTrackQuery(
+  baseOptions: Apollo.QueryHookOptions<GetOriginalPostFromTrackQuery, GetOriginalPostFromTrackQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<GetOriginalPostFromTrackQuery, GetOriginalPostFromTrackQueryVariables>(
+    GetOriginalPostFromTrackDocument,
+    options,
+  )
+}
+export function useGetOriginalPostFromTrackLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<GetOriginalPostFromTrackQuery, GetOriginalPostFromTrackQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<GetOriginalPostFromTrackQuery, GetOriginalPostFromTrackQueryVariables>(
+    GetOriginalPostFromTrackDocument,
+    options,
+  )
+}
+export type GetOriginalPostFromTrackQueryHookResult = ReturnType<typeof useGetOriginalPostFromTrackQuery>
+export type GetOriginalPostFromTrackLazyQueryHookResult = ReturnType<typeof useGetOriginalPostFromTrackLazyQuery>
+export type GetOriginalPostFromTrackQueryResult = Apollo.QueryResult<
+  GetOriginalPostFromTrackQuery,
+  GetOriginalPostFromTrackQueryVariables
+>
 export const GroupedTracksDocument = gql`
-    query GroupedTracks($filter: FilterTrackInput, $sort: SortTrackInput, $page: PageInput) {
-  groupedTracks(filter: $filter, sort: $sort, page: $page) {
-    nodes {
-      ...TrackComponentFields
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
-      totalCount
+  query GroupedTracks($filter: FilterTrackInput, $sort: SortTrackInput, $page: PageInput) {
+    groupedTracks(filter: $filter, sort: $sort, page: $page) {
+      nodes {
+        ...TrackComponentFields
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+        totalCount
+      }
     }
   }
-}
-    ${TrackComponentFieldsFragmentDoc}`;
+  ${TrackComponentFieldsFragmentDoc}
+`
 
 /**
  * __useGroupedTracksQuery__
@@ -5777,24 +5497,28 @@ export const GroupedTracksDocument = gql`
  *   },
  * });
  */
-export function useGroupedTracksQuery(baseOptions?: Apollo.QueryHookOptions<GroupedTracksQuery, GroupedTracksQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GroupedTracksQuery, GroupedTracksQueryVariables>(GroupedTracksDocument, options);
-      }
-export function useGroupedTracksLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GroupedTracksQuery, GroupedTracksQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GroupedTracksQuery, GroupedTracksQueryVariables>(GroupedTracksDocument, options);
-        }
-export type GroupedTracksQueryHookResult = ReturnType<typeof useGroupedTracksQuery>;
-export type GroupedTracksLazyQueryHookResult = ReturnType<typeof useGroupedTracksLazyQuery>;
-export type GroupedTracksQueryResult = Apollo.QueryResult<GroupedTracksQuery, GroupedTracksQueryVariables>;
-export const HaveBidedDocument = gql`
-    query HaveBided($auctionId: String!, $bidder: String!) {
-  haveBided(auctionId: $auctionId, bidder: $bidder) {
-    bided
-  }
+export function useGroupedTracksQuery(
+  baseOptions?: Apollo.QueryHookOptions<GroupedTracksQuery, GroupedTracksQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<GroupedTracksQuery, GroupedTracksQueryVariables>(GroupedTracksDocument, options)
 }
-    `;
+export function useGroupedTracksLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<GroupedTracksQuery, GroupedTracksQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<GroupedTracksQuery, GroupedTracksQueryVariables>(GroupedTracksDocument, options)
+}
+export type GroupedTracksQueryHookResult = ReturnType<typeof useGroupedTracksQuery>
+export type GroupedTracksLazyQueryHookResult = ReturnType<typeof useGroupedTracksLazyQuery>
+export type GroupedTracksQueryResult = Apollo.QueryResult<GroupedTracksQuery, GroupedTracksQueryVariables>
+export const HaveBidedDocument = gql`
+  query HaveBided($auctionId: String!, $bidder: String!) {
+    haveBided(auctionId: $auctionId, bidder: $bidder) {
+      bided
+    }
+  }
+`
 
 /**
  * __useHaveBidedQuery__
@@ -5814,28 +5538,30 @@ export const HaveBidedDocument = gql`
  * });
  */
 export function useHaveBidedQuery(baseOptions: Apollo.QueryHookOptions<HaveBidedQuery, HaveBidedQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<HaveBidedQuery, HaveBidedQueryVariables>(HaveBidedDocument, options);
-      }
-export function useHaveBidedLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<HaveBidedQuery, HaveBidedQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<HaveBidedQuery, HaveBidedQueryVariables>(HaveBidedDocument, options);
-        }
-export type HaveBidedQueryHookResult = ReturnType<typeof useHaveBidedQuery>;
-export type HaveBidedLazyQueryHookResult = ReturnType<typeof useHaveBidedLazyQuery>;
-export type HaveBidedQueryResult = Apollo.QueryResult<HaveBidedQuery, HaveBidedQueryVariables>;
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<HaveBidedQuery, HaveBidedQueryVariables>(HaveBidedDocument, options)
+}
+export function useHaveBidedLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<HaveBidedQuery, HaveBidedQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<HaveBidedQuery, HaveBidedQueryVariables>(HaveBidedDocument, options)
+}
+export type HaveBidedQueryHookResult = ReturnType<typeof useHaveBidedQuery>
+export type HaveBidedLazyQueryHookResult = ReturnType<typeof useHaveBidedLazyQuery>
+export type HaveBidedQueryResult = Apollo.QueryResult<HaveBidedQuery, HaveBidedQueryVariables>
 export const ListableOwnedTrackIdsDocument = gql`
-    query ListableOwnedTrackIds($filter: FilterOwnedTracksInput!) {
-  listableOwnedTracks(filter: $filter) {
-    nodes {
-      id
-      nftData {
-        tokenId
+  query ListableOwnedTrackIds($filter: FilterOwnedTracksInput!) {
+    listableOwnedTracks(filter: $filter) {
+      nodes {
+        id
+        nftData {
+          tokenId
+        }
       }
     }
   }
-}
-    `;
+`
 
 /**
  * __useListableOwnedTrackIdsQuery__
@@ -5853,24 +5579,38 @@ export const ListableOwnedTrackIdsDocument = gql`
  *   },
  * });
  */
-export function useListableOwnedTrackIdsQuery(baseOptions: Apollo.QueryHookOptions<ListableOwnedTrackIdsQuery, ListableOwnedTrackIdsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<ListableOwnedTrackIdsQuery, ListableOwnedTrackIdsQueryVariables>(ListableOwnedTrackIdsDocument, options);
-      }
-export function useListableOwnedTrackIdsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ListableOwnedTrackIdsQuery, ListableOwnedTrackIdsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<ListableOwnedTrackIdsQuery, ListableOwnedTrackIdsQueryVariables>(ListableOwnedTrackIdsDocument, options);
-        }
-export type ListableOwnedTrackIdsQueryHookResult = ReturnType<typeof useListableOwnedTrackIdsQuery>;
-export type ListableOwnedTrackIdsLazyQueryHookResult = ReturnType<typeof useListableOwnedTrackIdsLazyQuery>;
-export type ListableOwnedTrackIdsQueryResult = Apollo.QueryResult<ListableOwnedTrackIdsQuery, ListableOwnedTrackIdsQueryVariables>;
-export const ListingItemDocument = gql`
-    query ListingItem($input: FilterListingItemInput!) {
-  listingItem(input: $input) {
-    ...ListingItemViewComponentFields
-  }
+export function useListableOwnedTrackIdsQuery(
+  baseOptions: Apollo.QueryHookOptions<ListableOwnedTrackIdsQuery, ListableOwnedTrackIdsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<ListableOwnedTrackIdsQuery, ListableOwnedTrackIdsQueryVariables>(
+    ListableOwnedTrackIdsDocument,
+    options,
+  )
 }
-    ${ListingItemViewComponentFieldsFragmentDoc}`;
+export function useListableOwnedTrackIdsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<ListableOwnedTrackIdsQuery, ListableOwnedTrackIdsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<ListableOwnedTrackIdsQuery, ListableOwnedTrackIdsQueryVariables>(
+    ListableOwnedTrackIdsDocument,
+    options,
+  )
+}
+export type ListableOwnedTrackIdsQueryHookResult = ReturnType<typeof useListableOwnedTrackIdsQuery>
+export type ListableOwnedTrackIdsLazyQueryHookResult = ReturnType<typeof useListableOwnedTrackIdsLazyQuery>
+export type ListableOwnedTrackIdsQueryResult = Apollo.QueryResult<
+  ListableOwnedTrackIdsQuery,
+  ListableOwnedTrackIdsQueryVariables
+>
+export const ListingItemDocument = gql`
+  query ListingItem($input: FilterListingItemInput!) {
+    listingItem(input: $input) {
+      ...ListingItemViewComponentFields
+    }
+  }
+  ${ListingItemViewComponentFieldsFragmentDoc}
+`
 
 /**
  * __useListingItemQuery__
@@ -5889,30 +5629,33 @@ export const ListingItemDocument = gql`
  * });
  */
 export function useListingItemQuery(baseOptions: Apollo.QueryHookOptions<ListingItemQuery, ListingItemQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<ListingItemQuery, ListingItemQueryVariables>(ListingItemDocument, options);
-      }
-export function useListingItemLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ListingItemQuery, ListingItemQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<ListingItemQuery, ListingItemQueryVariables>(ListingItemDocument, options);
-        }
-export type ListingItemQueryHookResult = ReturnType<typeof useListingItemQuery>;
-export type ListingItemLazyQueryHookResult = ReturnType<typeof useListingItemLazyQuery>;
-export type ListingItemQueryResult = Apollo.QueryResult<ListingItemQuery, ListingItemQueryVariables>;
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<ListingItemQuery, ListingItemQueryVariables>(ListingItemDocument, options)
+}
+export function useListingItemLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<ListingItemQuery, ListingItemQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<ListingItemQuery, ListingItemQueryVariables>(ListingItemDocument, options)
+}
+export type ListingItemQueryHookResult = ReturnType<typeof useListingItemQuery>
+export type ListingItemLazyQueryHookResult = ReturnType<typeof useListingItemLazyQuery>
+export type ListingItemQueryResult = Apollo.QueryResult<ListingItemQuery, ListingItemQueryVariables>
 export const ListingItemsDocument = gql`
-    query ListingItems($filter: FilterTrackMarketplace, $sort: SortListingItemInput, $page: PageInput) {
-  listingItems(filter: $filter, sort: $sort, page: $page) {
-    nodes {
-      ...ListingItemComponentFields
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
-      totalCount
+  query ListingItems($filter: FilterTrackMarketplace, $sort: SortListingItemInput, $page: PageInput) {
+    listingItems(filter: $filter, sort: $sort, page: $page) {
+      nodes {
+        ...ListingItemComponentFields
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+        totalCount
+      }
     }
   }
-}
-    ${ListingItemComponentFieldsFragmentDoc}`;
+  ${ListingItemComponentFieldsFragmentDoc}
+`
 
 /**
  * __useListingItemsQuery__
@@ -5932,25 +5675,29 @@ export const ListingItemsDocument = gql`
  *   },
  * });
  */
-export function useListingItemsQuery(baseOptions?: Apollo.QueryHookOptions<ListingItemsQuery, ListingItemsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<ListingItemsQuery, ListingItemsQueryVariables>(ListingItemsDocument, options);
-      }
-export function useListingItemsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ListingItemsQuery, ListingItemsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<ListingItemsQuery, ListingItemsQueryVariables>(ListingItemsDocument, options);
-        }
-export type ListingItemsQueryHookResult = ReturnType<typeof useListingItemsQuery>;
-export type ListingItemsLazyQueryHookResult = ReturnType<typeof useListingItemsLazyQuery>;
-export type ListingItemsQueryResult = Apollo.QueryResult<ListingItemsQuery, ListingItemsQueryVariables>;
-export const LoginDocument = gql`
-    mutation Login($input: LoginInput!) {
-  login(input: $input) {
-    jwt
-  }
+export function useListingItemsQuery(
+  baseOptions?: Apollo.QueryHookOptions<ListingItemsQuery, ListingItemsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<ListingItemsQuery, ListingItemsQueryVariables>(ListingItemsDocument, options)
 }
-    `;
-export type LoginMutationFn = Apollo.MutationFunction<LoginMutation, LoginMutationVariables>;
+export function useListingItemsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<ListingItemsQuery, ListingItemsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<ListingItemsQuery, ListingItemsQueryVariables>(ListingItemsDocument, options)
+}
+export type ListingItemsQueryHookResult = ReturnType<typeof useListingItemsQuery>
+export type ListingItemsLazyQueryHookResult = ReturnType<typeof useListingItemsLazyQuery>
+export type ListingItemsQueryResult = Apollo.QueryResult<ListingItemsQuery, ListingItemsQueryVariables>
+export const LoginDocument = gql`
+  mutation Login($input: LoginInput!) {
+    login(input: $input) {
+      jwt
+    }
+  }
+`
+export type LoginMutationFn = Apollo.MutationFunction<LoginMutation, LoginMutationVariables>
 
 /**
  * __useLoginMutation__
@@ -5970,17 +5717,17 @@ export type LoginMutationFn = Apollo.MutationFunction<LoginMutation, LoginMutati
  * });
  */
 export function useLoginMutation(baseOptions?: Apollo.MutationHookOptions<LoginMutation, LoginMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<LoginMutation, LoginMutationVariables>(LoginDocument, options);
-      }
-export type LoginMutationHookResult = ReturnType<typeof useLoginMutation>;
-export type LoginMutationResult = Apollo.MutationResult<LoginMutation>;
-export type LoginMutationOptions = Apollo.BaseMutationOptions<LoginMutation, LoginMutationVariables>;
-export const MaticUsdDocument = gql`
-    query MaticUsd {
-  maticUsd
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<LoginMutation, LoginMutationVariables>(LoginDocument, options)
 }
-    `;
+export type LoginMutationHookResult = ReturnType<typeof useLoginMutation>
+export type LoginMutationResult = Apollo.MutationResult<LoginMutation>
+export type LoginMutationOptions = Apollo.BaseMutationOptions<LoginMutation, LoginMutationVariables>
+export const MaticUsdDocument = gql`
+  query MaticUsd {
+    maticUsd
+  }
+`
 
 /**
  * __useMaticUsdQuery__
@@ -5998,34 +5745,35 @@ export const MaticUsdDocument = gql`
  * });
  */
 export function useMaticUsdQuery(baseOptions?: Apollo.QueryHookOptions<MaticUsdQuery, MaticUsdQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<MaticUsdQuery, MaticUsdQueryVariables>(MaticUsdDocument, options);
-      }
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<MaticUsdQuery, MaticUsdQueryVariables>(MaticUsdDocument, options)
+}
 export function useMaticUsdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<MaticUsdQuery, MaticUsdQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<MaticUsdQuery, MaticUsdQueryVariables>(MaticUsdDocument, options);
-        }
-export type MaticUsdQueryHookResult = ReturnType<typeof useMaticUsdQuery>;
-export type MaticUsdLazyQueryHookResult = ReturnType<typeof useMaticUsdLazyQuery>;
-export type MaticUsdQueryResult = Apollo.QueryResult<MaticUsdQuery, MaticUsdQueryVariables>;
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<MaticUsdQuery, MaticUsdQueryVariables>(MaticUsdDocument, options)
+}
+export type MaticUsdQueryHookResult = ReturnType<typeof useMaticUsdQuery>
+export type MaticUsdLazyQueryHookResult = ReturnType<typeof useMaticUsdLazyQuery>
+export type MaticUsdQueryResult = Apollo.QueryResult<MaticUsdQuery, MaticUsdQueryVariables>
 export const MeDocument = gql`
-    query Me {
-  me {
-    id
-    handle
-    email
-    magicWalletAddress
-    metaMaskWalletAddressees
-    defaultWallet
-    isApprovedOnMarketplace
-    roles
-    otpSecret
-    profile {
-      ...ProfileComponentFields
+  query Me {
+    me {
+      id
+      handle
+      email
+      magicWalletAddress
+      metaMaskWalletAddressees
+      defaultWallet
+      isApprovedOnMarketplace
+      roles
+      otpSecret
+      profile {
+        ...ProfileComponentFields
+      }
     }
   }
-}
-    ${ProfileComponentFieldsFragmentDoc}`;
+  ${ProfileComponentFieldsFragmentDoc}
+`
 
 /**
  * __useMeQuery__
@@ -6043,23 +5791,24 @@ export const MeDocument = gql`
  * });
  */
 export function useMeQuery(baseOptions?: Apollo.QueryHookOptions<MeQuery, MeQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<MeQuery, MeQueryVariables>(MeDocument, options);
-      }
-export function useMeLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<MeQuery, MeQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<MeQuery, MeQueryVariables>(MeDocument, options);
-        }
-export type MeQueryHookResult = ReturnType<typeof useMeQuery>;
-export type MeLazyQueryHookResult = ReturnType<typeof useMeLazyQuery>;
-export type MeQueryResult = Apollo.QueryResult<MeQuery, MeQueryVariables>;
-export const MessageDocument = gql`
-    query Message($id: String!) {
-  message(id: $id) {
-    ...MessageComponentFields
-  }
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<MeQuery, MeQueryVariables>(MeDocument, options)
 }
-    ${MessageComponentFieldsFragmentDoc}`;
+export function useMeLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<MeQuery, MeQueryVariables>) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<MeQuery, MeQueryVariables>(MeDocument, options)
+}
+export type MeQueryHookResult = ReturnType<typeof useMeQuery>
+export type MeLazyQueryHookResult = ReturnType<typeof useMeLazyQuery>
+export type MeQueryResult = Apollo.QueryResult<MeQuery, MeQueryVariables>
+export const MessageDocument = gql`
+  query Message($id: String!) {
+    message(id: $id) {
+      ...MessageComponentFields
+    }
+  }
+  ${MessageComponentFieldsFragmentDoc}
+`
 
 /**
  * __useMessageQuery__
@@ -6078,23 +5827,23 @@ export const MessageDocument = gql`
  * });
  */
 export function useMessageQuery(baseOptions: Apollo.QueryHookOptions<MessageQuery, MessageQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<MessageQuery, MessageQueryVariables>(MessageDocument, options);
-      }
-export function useMessageLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<MessageQuery, MessageQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<MessageQuery, MessageQueryVariables>(MessageDocument, options);
-        }
-export type MessageQueryHookResult = ReturnType<typeof useMessageQuery>;
-export type MessageLazyQueryHookResult = ReturnType<typeof useMessageLazyQuery>;
-export type MessageQueryResult = Apollo.QueryResult<MessageQuery, MessageQueryVariables>;
-export const MimeTypeDocument = gql`
-    query MimeType($url: String!) {
-  mimeType(url: $url) {
-    value
-  }
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<MessageQuery, MessageQueryVariables>(MessageDocument, options)
 }
-    `;
+export function useMessageLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<MessageQuery, MessageQueryVariables>) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<MessageQuery, MessageQueryVariables>(MessageDocument, options)
+}
+export type MessageQueryHookResult = ReturnType<typeof useMessageQuery>
+export type MessageLazyQueryHookResult = ReturnType<typeof useMessageLazyQuery>
+export type MessageQueryResult = Apollo.QueryResult<MessageQuery, MessageQueryVariables>
+export const MimeTypeDocument = gql`
+  query MimeType($url: String!) {
+    mimeType(url: $url) {
+      value
+    }
+  }
+`
 
 /**
  * __useMimeTypeQuery__
@@ -6113,144 +5862,19 @@ export const MimeTypeDocument = gql`
  * });
  */
 export function useMimeTypeQuery(baseOptions: Apollo.QueryHookOptions<MimeTypeQuery, MimeTypeQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<MimeTypeQuery, MimeTypeQueryVariables>(MimeTypeDocument, options);
-      }
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<MimeTypeQuery, MimeTypeQueryVariables>(MimeTypeDocument, options)
+}
 export function useMimeTypeLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<MimeTypeQuery, MimeTypeQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<MimeTypeQuery, MimeTypeQueryVariables>(MimeTypeDocument, options);
-        }
-export type MimeTypeQueryHookResult = ReturnType<typeof useMimeTypeQuery>;
-export type MimeTypeLazyQueryHookResult = ReturnType<typeof useMimeTypeLazyQuery>;
-export type MimeTypeQueryResult = Apollo.QueryResult<MimeTypeQuery, MimeTypeQueryVariables>;
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<MimeTypeQuery, MimeTypeQueryVariables>(MimeTypeDocument, options)
+}
+export type MimeTypeQueryHookResult = ReturnType<typeof useMimeTypeQuery>
+export type MimeTypeLazyQueryHookResult = ReturnType<typeof useMimeTypeLazyQuery>
+export type MimeTypeQueryResult = Apollo.QueryResult<MimeTypeQuery, MimeTypeQueryVariables>
 export const NotificationDocument = gql`
-    query Notification($id: String!) {
-  notification(id: $id) {
-    ... on CommentNotification {
-      ...CommentNotificationFields
-    }
-    ... on ReactionNotification {
-      ...ReactionNotificationFields
-    }
-    ... on FollowerNotification {
-      ...FollowerNotificationFields
-    }
-    ... on NewPostNotification {
-      ...NewPostNotificationFields
-    }
-    ... on NFTSoldNotification {
-      ...NFTSoldNotificationFields
-    }
-    ... on VerificationRequestNotification {
-      ...VerificationRequestNotificationFields
-    }
-    ... on NewVerificationRequestNotification {
-      ...NewVerificationRequestNotificationFields
-    }
-    ... on DeletedPostNotification {
-      ...DeletedPostNotificationFields
-    }
-    ... on DeletedCommentNotification {
-      ...DeletedCommentNotificationFields
-    }
-    ... on WonAuctionNotification {
-      ...WonAuctionNotificationFields
-    }
-    ... on AuctionIsEndingNotification {
-      ...AuctionIsEndingNotificationFields
-    }
-    ... on OutbidNotification {
-      ...OutbidNotificationFields
-    }
-    ... on NewBidNotification {
-      ...NewBidNotificationFields
-    }
-    ... on AuctionEndedNotification {
-      ...AuctionEndedNotificationFields
-    }
-  }
-}
-    ${CommentNotificationFieldsFragmentDoc}
-${ReactionNotificationFieldsFragmentDoc}
-${FollowerNotificationFieldsFragmentDoc}
-${NewPostNotificationFieldsFragmentDoc}
-${NftSoldNotificationFieldsFragmentDoc}
-${VerificationRequestNotificationFieldsFragmentDoc}
-${NewVerificationRequestNotificationFieldsFragmentDoc}
-${DeletedPostNotificationFieldsFragmentDoc}
-${DeletedCommentNotificationFieldsFragmentDoc}
-${WonAuctionNotificationFieldsFragmentDoc}
-${AuctionIsEndingNotificationFieldsFragmentDoc}
-${OutbidNotificationFieldsFragmentDoc}
-${NewBidNotificationFieldsFragmentDoc}
-${AuctionEndedNotificationFieldsFragmentDoc}`;
-
-/**
- * __useNotificationQuery__
- *
- * To run a query within a React component, call `useNotificationQuery` and pass it any options that fit your needs.
- * When your component renders, `useNotificationQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useNotificationQuery({
- *   variables: {
- *      id: // value for 'id'
- *   },
- * });
- */
-export function useNotificationQuery(baseOptions: Apollo.QueryHookOptions<NotificationQuery, NotificationQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<NotificationQuery, NotificationQueryVariables>(NotificationDocument, options);
-      }
-export function useNotificationLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<NotificationQuery, NotificationQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<NotificationQuery, NotificationQueryVariables>(NotificationDocument, options);
-        }
-export type NotificationQueryHookResult = ReturnType<typeof useNotificationQuery>;
-export type NotificationLazyQueryHookResult = ReturnType<typeof useNotificationLazyQuery>;
-export type NotificationQueryResult = Apollo.QueryResult<NotificationQuery, NotificationQueryVariables>;
-export const NotificationCountDocument = gql`
-    query NotificationCount {
-  myProfile {
-    id
-    unreadNotificationCount
-  }
-}
-    `;
-
-/**
- * __useNotificationCountQuery__
- *
- * To run a query within a React component, call `useNotificationCountQuery` and pass it any options that fit your needs.
- * When your component renders, `useNotificationCountQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useNotificationCountQuery({
- *   variables: {
- *   },
- * });
- */
-export function useNotificationCountQuery(baseOptions?: Apollo.QueryHookOptions<NotificationCountQuery, NotificationCountQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<NotificationCountQuery, NotificationCountQueryVariables>(NotificationCountDocument, options);
-      }
-export function useNotificationCountLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<NotificationCountQuery, NotificationCountQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<NotificationCountQuery, NotificationCountQueryVariables>(NotificationCountDocument, options);
-        }
-export type NotificationCountQueryHookResult = ReturnType<typeof useNotificationCountQuery>;
-export type NotificationCountLazyQueryHookResult = ReturnType<typeof useNotificationCountLazyQuery>;
-export type NotificationCountQueryResult = Apollo.QueryResult<NotificationCountQuery, NotificationCountQueryVariables>;
-export const NotificationsDocument = gql`
-    query Notifications($sort: SortNotificationInput) {
-  notifications(sort: $sort) {
-    nodes {
+  query Notification($id: String!) {
+    notification(id: $id) {
       ... on CommentNotification {
         ...CommentNotificationFields
       }
@@ -6295,21 +5919,159 @@ export const NotificationsDocument = gql`
       }
     }
   }
+  ${CommentNotificationFieldsFragmentDoc}
+  ${ReactionNotificationFieldsFragmentDoc}
+  ${FollowerNotificationFieldsFragmentDoc}
+  ${NewPostNotificationFieldsFragmentDoc}
+  ${NftSoldNotificationFieldsFragmentDoc}
+  ${VerificationRequestNotificationFieldsFragmentDoc}
+  ${NewVerificationRequestNotificationFieldsFragmentDoc}
+  ${DeletedPostNotificationFieldsFragmentDoc}
+  ${DeletedCommentNotificationFieldsFragmentDoc}
+  ${WonAuctionNotificationFieldsFragmentDoc}
+  ${AuctionIsEndingNotificationFieldsFragmentDoc}
+  ${OutbidNotificationFieldsFragmentDoc}
+  ${NewBidNotificationFieldsFragmentDoc}
+  ${AuctionEndedNotificationFieldsFragmentDoc}
+`
+
+/**
+ * __useNotificationQuery__
+ *
+ * To run a query within a React component, call `useNotificationQuery` and pass it any options that fit your needs.
+ * When your component renders, `useNotificationQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useNotificationQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useNotificationQuery(
+  baseOptions: Apollo.QueryHookOptions<NotificationQuery, NotificationQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<NotificationQuery, NotificationQueryVariables>(NotificationDocument, options)
 }
-    ${CommentNotificationFieldsFragmentDoc}
-${ReactionNotificationFieldsFragmentDoc}
-${FollowerNotificationFieldsFragmentDoc}
-${NewPostNotificationFieldsFragmentDoc}
-${NftSoldNotificationFieldsFragmentDoc}
-${VerificationRequestNotificationFieldsFragmentDoc}
-${NewVerificationRequestNotificationFieldsFragmentDoc}
-${DeletedPostNotificationFieldsFragmentDoc}
-${DeletedCommentNotificationFieldsFragmentDoc}
-${WonAuctionNotificationFieldsFragmentDoc}
-${AuctionIsEndingNotificationFieldsFragmentDoc}
-${OutbidNotificationFieldsFragmentDoc}
-${NewBidNotificationFieldsFragmentDoc}
-${AuctionEndedNotificationFieldsFragmentDoc}`;
+export function useNotificationLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<NotificationQuery, NotificationQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<NotificationQuery, NotificationQueryVariables>(NotificationDocument, options)
+}
+export type NotificationQueryHookResult = ReturnType<typeof useNotificationQuery>
+export type NotificationLazyQueryHookResult = ReturnType<typeof useNotificationLazyQuery>
+export type NotificationQueryResult = Apollo.QueryResult<NotificationQuery, NotificationQueryVariables>
+export const NotificationCountDocument = gql`
+  query NotificationCount {
+    myProfile {
+      id
+      unreadNotificationCount
+    }
+  }
+`
+
+/**
+ * __useNotificationCountQuery__
+ *
+ * To run a query within a React component, call `useNotificationCountQuery` and pass it any options that fit your needs.
+ * When your component renders, `useNotificationCountQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useNotificationCountQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useNotificationCountQuery(
+  baseOptions?: Apollo.QueryHookOptions<NotificationCountQuery, NotificationCountQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<NotificationCountQuery, NotificationCountQueryVariables>(NotificationCountDocument, options)
+}
+export function useNotificationCountLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<NotificationCountQuery, NotificationCountQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<NotificationCountQuery, NotificationCountQueryVariables>(
+    NotificationCountDocument,
+    options,
+  )
+}
+export type NotificationCountQueryHookResult = ReturnType<typeof useNotificationCountQuery>
+export type NotificationCountLazyQueryHookResult = ReturnType<typeof useNotificationCountLazyQuery>
+export type NotificationCountQueryResult = Apollo.QueryResult<NotificationCountQuery, NotificationCountQueryVariables>
+export const NotificationsDocument = gql`
+  query Notifications($sort: SortNotificationInput) {
+    notifications(sort: $sort) {
+      nodes {
+        ... on CommentNotification {
+          ...CommentNotificationFields
+        }
+        ... on ReactionNotification {
+          ...ReactionNotificationFields
+        }
+        ... on FollowerNotification {
+          ...FollowerNotificationFields
+        }
+        ... on NewPostNotification {
+          ...NewPostNotificationFields
+        }
+        ... on NFTSoldNotification {
+          ...NFTSoldNotificationFields
+        }
+        ... on VerificationRequestNotification {
+          ...VerificationRequestNotificationFields
+        }
+        ... on NewVerificationRequestNotification {
+          ...NewVerificationRequestNotificationFields
+        }
+        ... on DeletedPostNotification {
+          ...DeletedPostNotificationFields
+        }
+        ... on DeletedCommentNotification {
+          ...DeletedCommentNotificationFields
+        }
+        ... on WonAuctionNotification {
+          ...WonAuctionNotificationFields
+        }
+        ... on AuctionIsEndingNotification {
+          ...AuctionIsEndingNotificationFields
+        }
+        ... on OutbidNotification {
+          ...OutbidNotificationFields
+        }
+        ... on NewBidNotification {
+          ...NewBidNotificationFields
+        }
+        ... on AuctionEndedNotification {
+          ...AuctionEndedNotificationFields
+        }
+      }
+    }
+  }
+  ${CommentNotificationFieldsFragmentDoc}
+  ${ReactionNotificationFieldsFragmentDoc}
+  ${FollowerNotificationFieldsFragmentDoc}
+  ${NewPostNotificationFieldsFragmentDoc}
+  ${NftSoldNotificationFieldsFragmentDoc}
+  ${VerificationRequestNotificationFieldsFragmentDoc}
+  ${NewVerificationRequestNotificationFieldsFragmentDoc}
+  ${DeletedPostNotificationFieldsFragmentDoc}
+  ${DeletedCommentNotificationFieldsFragmentDoc}
+  ${WonAuctionNotificationFieldsFragmentDoc}
+  ${AuctionIsEndingNotificationFieldsFragmentDoc}
+  ${OutbidNotificationFieldsFragmentDoc}
+  ${NewBidNotificationFieldsFragmentDoc}
+  ${AuctionEndedNotificationFieldsFragmentDoc}
+`
 
 /**
  * __useNotificationsQuery__
@@ -6327,29 +6089,33 @@ ${AuctionEndedNotificationFieldsFragmentDoc}`;
  *   },
  * });
  */
-export function useNotificationsQuery(baseOptions?: Apollo.QueryHookOptions<NotificationsQuery, NotificationsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<NotificationsQuery, NotificationsQueryVariables>(NotificationsDocument, options);
-      }
-export function useNotificationsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<NotificationsQuery, NotificationsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<NotificationsQuery, NotificationsQueryVariables>(NotificationsDocument, options);
-        }
-export type NotificationsQueryHookResult = ReturnType<typeof useNotificationsQuery>;
-export type NotificationsLazyQueryHookResult = ReturnType<typeof useNotificationsLazyQuery>;
-export type NotificationsQueryResult = Apollo.QueryResult<NotificationsQuery, NotificationsQueryVariables>;
+export function useNotificationsQuery(
+  baseOptions?: Apollo.QueryHookOptions<NotificationsQuery, NotificationsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<NotificationsQuery, NotificationsQueryVariables>(NotificationsDocument, options)
+}
+export function useNotificationsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<NotificationsQuery, NotificationsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<NotificationsQuery, NotificationsQueryVariables>(NotificationsDocument, options)
+}
+export type NotificationsQueryHookResult = ReturnType<typeof useNotificationsQuery>
+export type NotificationsLazyQueryHookResult = ReturnType<typeof useNotificationsLazyQuery>
+export type NotificationsQueryResult = Apollo.QueryResult<NotificationsQuery, NotificationsQueryVariables>
 export const OwnedBuyNowTrackIdsDocument = gql`
-    query OwnedBuyNowTrackIds($filter: FilterOwnedBuyNowItemInput!) {
-  ownedBuyNowListingItems(filter: $filter) {
-    nodes {
-      id
-      nftData {
-        tokenId
+  query OwnedBuyNowTrackIds($filter: FilterOwnedBuyNowItemInput!) {
+    ownedBuyNowListingItems(filter: $filter) {
+      nodes {
+        id
+        nftData {
+          tokenId
+        }
       }
     }
   }
-}
-    `;
+`
 
 /**
  * __useOwnedBuyNowTrackIdsQuery__
@@ -6367,29 +6133,42 @@ export const OwnedBuyNowTrackIdsDocument = gql`
  *   },
  * });
  */
-export function useOwnedBuyNowTrackIdsQuery(baseOptions: Apollo.QueryHookOptions<OwnedBuyNowTrackIdsQuery, OwnedBuyNowTrackIdsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<OwnedBuyNowTrackIdsQuery, OwnedBuyNowTrackIdsQueryVariables>(OwnedBuyNowTrackIdsDocument, options);
-      }
-export function useOwnedBuyNowTrackIdsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<OwnedBuyNowTrackIdsQuery, OwnedBuyNowTrackIdsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<OwnedBuyNowTrackIdsQuery, OwnedBuyNowTrackIdsQueryVariables>(OwnedBuyNowTrackIdsDocument, options);
-        }
-export type OwnedBuyNowTrackIdsQueryHookResult = ReturnType<typeof useOwnedBuyNowTrackIdsQuery>;
-export type OwnedBuyNowTrackIdsLazyQueryHookResult = ReturnType<typeof useOwnedBuyNowTrackIdsLazyQuery>;
-export type OwnedBuyNowTrackIdsQueryResult = Apollo.QueryResult<OwnedBuyNowTrackIdsQuery, OwnedBuyNowTrackIdsQueryVariables>;
+export function useOwnedBuyNowTrackIdsQuery(
+  baseOptions: Apollo.QueryHookOptions<OwnedBuyNowTrackIdsQuery, OwnedBuyNowTrackIdsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<OwnedBuyNowTrackIdsQuery, OwnedBuyNowTrackIdsQueryVariables>(
+    OwnedBuyNowTrackIdsDocument,
+    options,
+  )
+}
+export function useOwnedBuyNowTrackIdsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<OwnedBuyNowTrackIdsQuery, OwnedBuyNowTrackIdsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<OwnedBuyNowTrackIdsQuery, OwnedBuyNowTrackIdsQueryVariables>(
+    OwnedBuyNowTrackIdsDocument,
+    options,
+  )
+}
+export type OwnedBuyNowTrackIdsQueryHookResult = ReturnType<typeof useOwnedBuyNowTrackIdsQuery>
+export type OwnedBuyNowTrackIdsLazyQueryHookResult = ReturnType<typeof useOwnedBuyNowTrackIdsLazyQuery>
+export type OwnedBuyNowTrackIdsQueryResult = Apollo.QueryResult<
+  OwnedBuyNowTrackIdsQuery,
+  OwnedBuyNowTrackIdsQueryVariables
+>
 export const OwnedTrackIdsDocument = gql`
-    query OwnedTrackIds($filter: FilterOwnedTracksInput!) {
-  ownedTracks(filter: $filter) {
-    nodes {
-      id
-      nftData {
-        tokenId
+  query OwnedTrackIds($filter: FilterOwnedTracksInput!) {
+    ownedTracks(filter: $filter) {
+      nodes {
+        id
+        nftData {
+          tokenId
+        }
       }
     }
   }
-}
-    `;
+`
 
 /**
  * __useOwnedTrackIdsQuery__
@@ -6407,35 +6186,40 @@ export const OwnedTrackIdsDocument = gql`
  *   },
  * });
  */
-export function useOwnedTrackIdsQuery(baseOptions: Apollo.QueryHookOptions<OwnedTrackIdsQuery, OwnedTrackIdsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<OwnedTrackIdsQuery, OwnedTrackIdsQueryVariables>(OwnedTrackIdsDocument, options);
-      }
-export function useOwnedTrackIdsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<OwnedTrackIdsQuery, OwnedTrackIdsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<OwnedTrackIdsQuery, OwnedTrackIdsQueryVariables>(OwnedTrackIdsDocument, options);
-        }
-export type OwnedTrackIdsQueryHookResult = ReturnType<typeof useOwnedTrackIdsQuery>;
-export type OwnedTrackIdsLazyQueryHookResult = ReturnType<typeof useOwnedTrackIdsLazyQuery>;
-export type OwnedTrackIdsQueryResult = Apollo.QueryResult<OwnedTrackIdsQuery, OwnedTrackIdsQueryVariables>;
+export function useOwnedTrackIdsQuery(
+  baseOptions: Apollo.QueryHookOptions<OwnedTrackIdsQuery, OwnedTrackIdsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<OwnedTrackIdsQuery, OwnedTrackIdsQueryVariables>(OwnedTrackIdsDocument, options)
+}
+export function useOwnedTrackIdsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<OwnedTrackIdsQuery, OwnedTrackIdsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<OwnedTrackIdsQuery, OwnedTrackIdsQueryVariables>(OwnedTrackIdsDocument, options)
+}
+export type OwnedTrackIdsQueryHookResult = ReturnType<typeof useOwnedTrackIdsQuery>
+export type OwnedTrackIdsLazyQueryHookResult = ReturnType<typeof useOwnedTrackIdsLazyQuery>
+export type OwnedTrackIdsQueryResult = Apollo.QueryResult<OwnedTrackIdsQuery, OwnedTrackIdsQueryVariables>
 export const OwnedTracksDocument = gql`
-    query OwnedTracks($filter: FilterOwnedTracksInput!, $page: PageInput) {
-  ownedTracks(filter: $filter, page: $page) {
-    nodes {
-      ...TrackComponentFields
-      listingItem {
-        ...ListingItemViewComponentFields
+  query OwnedTracks($filter: FilterOwnedTracksInput!, $page: PageInput) {
+    ownedTracks(filter: $filter, page: $page) {
+      nodes {
+        ...TrackComponentFields
+        listingItem {
+          ...ListingItemViewComponentFields
+        }
       }
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
-      totalCount
+      pageInfo {
+        hasNextPage
+        endCursor
+        totalCount
+      }
     }
   }
-}
-    ${TrackComponentFieldsFragmentDoc}
-${ListingItemViewComponentFieldsFragmentDoc}`;
+  ${TrackComponentFieldsFragmentDoc}
+  ${ListingItemViewComponentFieldsFragmentDoc}
+`
 
 /**
  * __useOwnedTracksQuery__
@@ -6455,21 +6239,23 @@ ${ListingItemViewComponentFieldsFragmentDoc}`;
  * });
  */
 export function useOwnedTracksQuery(baseOptions: Apollo.QueryHookOptions<OwnedTracksQuery, OwnedTracksQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<OwnedTracksQuery, OwnedTracksQueryVariables>(OwnedTracksDocument, options);
-      }
-export function useOwnedTracksLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<OwnedTracksQuery, OwnedTracksQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<OwnedTracksQuery, OwnedTracksQueryVariables>(OwnedTracksDocument, options);
-        }
-export type OwnedTracksQueryHookResult = ReturnType<typeof useOwnedTracksQuery>;
-export type OwnedTracksLazyQueryHookResult = ReturnType<typeof useOwnedTracksLazyQuery>;
-export type OwnedTracksQueryResult = Apollo.QueryResult<OwnedTracksQuery, OwnedTracksQueryVariables>;
-export const PendingRequestsBadgeNumberDocument = gql`
-    query PendingRequestsBadgeNumber {
-  pendingRequestsBadgeNumber
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<OwnedTracksQuery, OwnedTracksQueryVariables>(OwnedTracksDocument, options)
 }
-    `;
+export function useOwnedTracksLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<OwnedTracksQuery, OwnedTracksQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<OwnedTracksQuery, OwnedTracksQueryVariables>(OwnedTracksDocument, options)
+}
+export type OwnedTracksQueryHookResult = ReturnType<typeof useOwnedTracksQuery>
+export type OwnedTracksLazyQueryHookResult = ReturnType<typeof useOwnedTracksLazyQuery>
+export type OwnedTracksQueryResult = Apollo.QueryResult<OwnedTracksQuery, OwnedTracksQueryVariables>
+export const PendingRequestsBadgeNumberDocument = gql`
+  query PendingRequestsBadgeNumber {
+    pendingRequestsBadgeNumber
+  }
+`
 
 /**
  * __usePendingRequestsBadgeNumberQuery__
@@ -6486,25 +6272,38 @@ export const PendingRequestsBadgeNumberDocument = gql`
  *   },
  * });
  */
-export function usePendingRequestsBadgeNumberQuery(baseOptions?: Apollo.QueryHookOptions<PendingRequestsBadgeNumberQuery, PendingRequestsBadgeNumberQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<PendingRequestsBadgeNumberQuery, PendingRequestsBadgeNumberQueryVariables>(PendingRequestsBadgeNumberDocument, options);
-      }
-export function usePendingRequestsBadgeNumberLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<PendingRequestsBadgeNumberQuery, PendingRequestsBadgeNumberQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<PendingRequestsBadgeNumberQuery, PendingRequestsBadgeNumberQueryVariables>(PendingRequestsBadgeNumberDocument, options);
-        }
-export type PendingRequestsBadgeNumberQueryHookResult = ReturnType<typeof usePendingRequestsBadgeNumberQuery>;
-export type PendingRequestsBadgeNumberLazyQueryHookResult = ReturnType<typeof usePendingRequestsBadgeNumberLazyQuery>;
-export type PendingRequestsBadgeNumberQueryResult = Apollo.QueryResult<PendingRequestsBadgeNumberQuery, PendingRequestsBadgeNumberQueryVariables>;
-export const PinJsonToIpfsDocument = gql`
-    mutation pinJsonToIPFS($input: PinJsonToIPFSInput!) {
-  pinJsonToIPFS(input: $input) {
-    cid
-  }
+export function usePendingRequestsBadgeNumberQuery(
+  baseOptions?: Apollo.QueryHookOptions<PendingRequestsBadgeNumberQuery, PendingRequestsBadgeNumberQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<PendingRequestsBadgeNumberQuery, PendingRequestsBadgeNumberQueryVariables>(
+    PendingRequestsBadgeNumberDocument,
+    options,
+  )
 }
-    `;
-export type PinJsonToIpfsMutationFn = Apollo.MutationFunction<PinJsonToIpfsMutation, PinJsonToIpfsMutationVariables>;
+export function usePendingRequestsBadgeNumberLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<PendingRequestsBadgeNumberQuery, PendingRequestsBadgeNumberQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<PendingRequestsBadgeNumberQuery, PendingRequestsBadgeNumberQueryVariables>(
+    PendingRequestsBadgeNumberDocument,
+    options,
+  )
+}
+export type PendingRequestsBadgeNumberQueryHookResult = ReturnType<typeof usePendingRequestsBadgeNumberQuery>
+export type PendingRequestsBadgeNumberLazyQueryHookResult = ReturnType<typeof usePendingRequestsBadgeNumberLazyQuery>
+export type PendingRequestsBadgeNumberQueryResult = Apollo.QueryResult<
+  PendingRequestsBadgeNumberQuery,
+  PendingRequestsBadgeNumberQueryVariables
+>
+export const PinJsonToIpfsDocument = gql`
+  mutation pinJsonToIPFS($input: PinJsonToIPFSInput!) {
+    pinJsonToIPFS(input: $input) {
+      cid
+    }
+  }
+`
+export type PinJsonToIpfsMutationFn = Apollo.MutationFunction<PinJsonToIpfsMutation, PinJsonToIpfsMutationVariables>
 
 /**
  * __usePinJsonToIpfsMutation__
@@ -6523,21 +6322,26 @@ export type PinJsonToIpfsMutationFn = Apollo.MutationFunction<PinJsonToIpfsMutat
  *   },
  * });
  */
-export function usePinJsonToIpfsMutation(baseOptions?: Apollo.MutationHookOptions<PinJsonToIpfsMutation, PinJsonToIpfsMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<PinJsonToIpfsMutation, PinJsonToIpfsMutationVariables>(PinJsonToIpfsDocument, options);
-      }
-export type PinJsonToIpfsMutationHookResult = ReturnType<typeof usePinJsonToIpfsMutation>;
-export type PinJsonToIpfsMutationResult = Apollo.MutationResult<PinJsonToIpfsMutation>;
-export type PinJsonToIpfsMutationOptions = Apollo.BaseMutationOptions<PinJsonToIpfsMutation, PinJsonToIpfsMutationVariables>;
-export const PinToIpfsDocument = gql`
-    mutation pinToIPFS($input: PinToIPFSInput!) {
-  pinToIPFS(input: $input) {
-    cid
-  }
+export function usePinJsonToIpfsMutation(
+  baseOptions?: Apollo.MutationHookOptions<PinJsonToIpfsMutation, PinJsonToIpfsMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<PinJsonToIpfsMutation, PinJsonToIpfsMutationVariables>(PinJsonToIpfsDocument, options)
 }
-    `;
-export type PinToIpfsMutationFn = Apollo.MutationFunction<PinToIpfsMutation, PinToIpfsMutationVariables>;
+export type PinJsonToIpfsMutationHookResult = ReturnType<typeof usePinJsonToIpfsMutation>
+export type PinJsonToIpfsMutationResult = Apollo.MutationResult<PinJsonToIpfsMutation>
+export type PinJsonToIpfsMutationOptions = Apollo.BaseMutationOptions<
+  PinJsonToIpfsMutation,
+  PinJsonToIpfsMutationVariables
+>
+export const PinToIpfsDocument = gql`
+  mutation pinToIPFS($input: PinToIPFSInput!) {
+    pinToIPFS(input: $input) {
+      cid
+    }
+  }
+`
+export type PinToIpfsMutationFn = Apollo.MutationFunction<PinToIpfsMutation, PinToIpfsMutationVariables>
 
 /**
  * __usePinToIpfsMutation__
@@ -6556,42 +6360,44 @@ export type PinToIpfsMutationFn = Apollo.MutationFunction<PinToIpfsMutation, Pin
  *   },
  * });
  */
-export function usePinToIpfsMutation(baseOptions?: Apollo.MutationHookOptions<PinToIpfsMutation, PinToIpfsMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<PinToIpfsMutation, PinToIpfsMutationVariables>(PinToIpfsDocument, options);
-      }
-export type PinToIpfsMutationHookResult = ReturnType<typeof usePinToIpfsMutation>;
-export type PinToIpfsMutationResult = Apollo.MutationResult<PinToIpfsMutation>;
-export type PinToIpfsMutationOptions = Apollo.BaseMutationOptions<PinToIpfsMutation, PinToIpfsMutationVariables>;
+export function usePinToIpfsMutation(
+  baseOptions?: Apollo.MutationHookOptions<PinToIpfsMutation, PinToIpfsMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<PinToIpfsMutation, PinToIpfsMutationVariables>(PinToIpfsDocument, options)
+}
+export type PinToIpfsMutationHookResult = ReturnType<typeof usePinToIpfsMutation>
+export type PinToIpfsMutationResult = Apollo.MutationResult<PinToIpfsMutation>
+export type PinToIpfsMutationOptions = Apollo.BaseMutationOptions<PinToIpfsMutation, PinToIpfsMutationVariables>
 export const PolygonscanDocument = gql`
-    query Polygonscan($wallet: String!, $page: PageInput) {
-  getTransactionHistory(wallet: $wallet, page: $page) {
-    nextPage
-    result {
-      blockNumber
-      timeStamp
-      hash
-      nonce
-      blockHash
-      transactionIndex
-      from
-      to
-      value
-      gas
-      gasPrice
-      isError
-      txreceipt_status
-      input
-      contractAddress
-      cumulativeGasUsed
-      gasUsed
-      confirmations
-      method
-      date
+  query Polygonscan($wallet: String!, $page: PageInput) {
+    getTransactionHistory(wallet: $wallet, page: $page) {
+      nextPage
+      result {
+        blockNumber
+        timeStamp
+        hash
+        nonce
+        blockHash
+        transactionIndex
+        from
+        to
+        value
+        gas
+        gasPrice
+        isError
+        txreceipt_status
+        input
+        contractAddress
+        cumulativeGasUsed
+        gasUsed
+        confirmations
+        method
+        date
+      }
     }
   }
-}
-    `;
+`
 
 /**
  * __usePolygonscanQuery__
@@ -6611,37 +6417,39 @@ export const PolygonscanDocument = gql`
  * });
  */
 export function usePolygonscanQuery(baseOptions: Apollo.QueryHookOptions<PolygonscanQuery, PolygonscanQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<PolygonscanQuery, PolygonscanQueryVariables>(PolygonscanDocument, options);
-      }
-export function usePolygonscanLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<PolygonscanQuery, PolygonscanQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<PolygonscanQuery, PolygonscanQueryVariables>(PolygonscanDocument, options);
-        }
-export type PolygonscanQueryHookResult = ReturnType<typeof usePolygonscanQuery>;
-export type PolygonscanLazyQueryHookResult = ReturnType<typeof usePolygonscanLazyQuery>;
-export type PolygonscanQueryResult = Apollo.QueryResult<PolygonscanQuery, PolygonscanQueryVariables>;
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<PolygonscanQuery, PolygonscanQueryVariables>(PolygonscanDocument, options)
+}
+export function usePolygonscanLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<PolygonscanQuery, PolygonscanQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<PolygonscanQuery, PolygonscanQueryVariables>(PolygonscanDocument, options)
+}
+export type PolygonscanQueryHookResult = ReturnType<typeof usePolygonscanQuery>
+export type PolygonscanLazyQueryHookResult = ReturnType<typeof usePolygonscanLazyQuery>
+export type PolygonscanQueryResult = Apollo.QueryResult<PolygonscanQuery, PolygonscanQueryVariables>
 export const PolygonscanInternalTrxDocument = gql`
-    query PolygonscanInternalTrx($wallet: String!, $page: PageInput) {
-  getInternalTransactionHistory(wallet: $wallet, page: $page) {
-    nextPage
-    result {
-      blockNumber
-      timeStamp
-      hash
-      from
-      to
-      value
-      gas
-      isError
-      input
-      contractAddress
-      gasUsed
-      date
+  query PolygonscanInternalTrx($wallet: String!, $page: PageInput) {
+    getInternalTransactionHistory(wallet: $wallet, page: $page) {
+      nextPage
+      result {
+        blockNumber
+        timeStamp
+        hash
+        from
+        to
+        value
+        gas
+        isError
+        input
+        contractAddress
+        gasUsed
+        date
+      }
     }
   }
-}
-    `;
+`
 
 /**
  * __usePolygonscanInternalTrxQuery__
@@ -6660,24 +6468,38 @@ export const PolygonscanInternalTrxDocument = gql`
  *   },
  * });
  */
-export function usePolygonscanInternalTrxQuery(baseOptions: Apollo.QueryHookOptions<PolygonscanInternalTrxQuery, PolygonscanInternalTrxQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<PolygonscanInternalTrxQuery, PolygonscanInternalTrxQueryVariables>(PolygonscanInternalTrxDocument, options);
-      }
-export function usePolygonscanInternalTrxLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<PolygonscanInternalTrxQuery, PolygonscanInternalTrxQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<PolygonscanInternalTrxQuery, PolygonscanInternalTrxQueryVariables>(PolygonscanInternalTrxDocument, options);
-        }
-export type PolygonscanInternalTrxQueryHookResult = ReturnType<typeof usePolygonscanInternalTrxQuery>;
-export type PolygonscanInternalTrxLazyQueryHookResult = ReturnType<typeof usePolygonscanInternalTrxLazyQuery>;
-export type PolygonscanInternalTrxQueryResult = Apollo.QueryResult<PolygonscanInternalTrxQuery, PolygonscanInternalTrxQueryVariables>;
-export const PostDocument = gql`
-    query Post($id: String!) {
-  post(id: $id) {
-    ...PostComponentFields
-  }
+export function usePolygonscanInternalTrxQuery(
+  baseOptions: Apollo.QueryHookOptions<PolygonscanInternalTrxQuery, PolygonscanInternalTrxQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<PolygonscanInternalTrxQuery, PolygonscanInternalTrxQueryVariables>(
+    PolygonscanInternalTrxDocument,
+    options,
+  )
 }
-    ${PostComponentFieldsFragmentDoc}`;
+export function usePolygonscanInternalTrxLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<PolygonscanInternalTrxQuery, PolygonscanInternalTrxQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<PolygonscanInternalTrxQuery, PolygonscanInternalTrxQueryVariables>(
+    PolygonscanInternalTrxDocument,
+    options,
+  )
+}
+export type PolygonscanInternalTrxQueryHookResult = ReturnType<typeof usePolygonscanInternalTrxQuery>
+export type PolygonscanInternalTrxLazyQueryHookResult = ReturnType<typeof usePolygonscanInternalTrxLazyQuery>
+export type PolygonscanInternalTrxQueryResult = Apollo.QueryResult<
+  PolygonscanInternalTrxQuery,
+  PolygonscanInternalTrxQueryVariables
+>
+export const PostDocument = gql`
+  query Post($id: String!) {
+    post(id: $id) {
+      ...PostComponentFields
+    }
+  }
+  ${PostComponentFieldsFragmentDoc}
+`
 
 /**
  * __usePostQuery__
@@ -6696,29 +6518,30 @@ export const PostDocument = gql`
  * });
  */
 export function usePostQuery(baseOptions: Apollo.QueryHookOptions<PostQuery, PostQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<PostQuery, PostQueryVariables>(PostDocument, options);
-      }
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<PostQuery, PostQueryVariables>(PostDocument, options)
+}
 export function usePostLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<PostQuery, PostQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<PostQuery, PostQueryVariables>(PostDocument, options);
-        }
-export type PostQueryHookResult = ReturnType<typeof usePostQuery>;
-export type PostLazyQueryHookResult = ReturnType<typeof usePostLazyQuery>;
-export type PostQueryResult = Apollo.QueryResult<PostQuery, PostQueryVariables>;
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<PostQuery, PostQueryVariables>(PostDocument, options)
+}
+export type PostQueryHookResult = ReturnType<typeof usePostQuery>
+export type PostLazyQueryHookResult = ReturnType<typeof usePostLazyQuery>
+export type PostQueryResult = Apollo.QueryResult<PostQuery, PostQueryVariables>
 export const PostsDocument = gql`
-    query Posts($filter: FilterPostInput, $sort: SortPostInput, $page: PageInput) {
-  posts(filter: $filter, sort: $sort, page: $page) {
-    nodes {
-      ...PostComponentFields
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
+  query Posts($filter: FilterPostInput, $sort: SortPostInput, $page: PageInput) {
+    posts(filter: $filter, sort: $sort, page: $page) {
+      nodes {
+        ...PostComponentFields
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
     }
   }
-}
-    ${PostComponentFieldsFragmentDoc}`;
+  ${PostComponentFieldsFragmentDoc}
+`
 
 /**
  * __usePostsQuery__
@@ -6739,23 +6562,24 @@ export const PostsDocument = gql`
  * });
  */
 export function usePostsQuery(baseOptions?: Apollo.QueryHookOptions<PostsQuery, PostsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<PostsQuery, PostsQueryVariables>(PostsDocument, options);
-      }
-export function usePostsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<PostsQuery, PostsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<PostsQuery, PostsQueryVariables>(PostsDocument, options);
-        }
-export type PostsQueryHookResult = ReturnType<typeof usePostsQuery>;
-export type PostsLazyQueryHookResult = ReturnType<typeof usePostsLazyQuery>;
-export type PostsQueryResult = Apollo.QueryResult<PostsQuery, PostsQueryVariables>;
-export const ProfileDocument = gql`
-    query Profile($id: String!) {
-  profile(id: $id) {
-    ...ProfileComponentFields
-  }
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<PostsQuery, PostsQueryVariables>(PostsDocument, options)
 }
-    ${ProfileComponentFieldsFragmentDoc}`;
+export function usePostsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<PostsQuery, PostsQueryVariables>) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<PostsQuery, PostsQueryVariables>(PostsDocument, options)
+}
+export type PostsQueryHookResult = ReturnType<typeof usePostsQuery>
+export type PostsLazyQueryHookResult = ReturnType<typeof usePostsLazyQuery>
+export type PostsQueryResult = Apollo.QueryResult<PostsQuery, PostsQueryVariables>
+export const ProfileDocument = gql`
+  query Profile($id: String!) {
+    profile(id: $id) {
+      ...ProfileComponentFields
+    }
+  }
+  ${ProfileComponentFieldsFragmentDoc}
+`
 
 /**
  * __useProfileQuery__
@@ -6774,23 +6598,24 @@ export const ProfileDocument = gql`
  * });
  */
 export function useProfileQuery(baseOptions: Apollo.QueryHookOptions<ProfileQuery, ProfileQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<ProfileQuery, ProfileQueryVariables>(ProfileDocument, options);
-      }
-export function useProfileLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ProfileQuery, ProfileQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<ProfileQuery, ProfileQueryVariables>(ProfileDocument, options);
-        }
-export type ProfileQueryHookResult = ReturnType<typeof useProfileQuery>;
-export type ProfileLazyQueryHookResult = ReturnType<typeof useProfileLazyQuery>;
-export type ProfileQueryResult = Apollo.QueryResult<ProfileQuery, ProfileQueryVariables>;
-export const ProfileByHandleDocument = gql`
-    query ProfileByHandle($handle: String!) {
-  profileByHandle(handle: $handle) {
-    ...ProfileComponentFields
-  }
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<ProfileQuery, ProfileQueryVariables>(ProfileDocument, options)
 }
-    ${ProfileComponentFieldsFragmentDoc}`;
+export function useProfileLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ProfileQuery, ProfileQueryVariables>) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<ProfileQuery, ProfileQueryVariables>(ProfileDocument, options)
+}
+export type ProfileQueryHookResult = ReturnType<typeof useProfileQuery>
+export type ProfileLazyQueryHookResult = ReturnType<typeof useProfileLazyQuery>
+export type ProfileQueryResult = Apollo.QueryResult<ProfileQuery, ProfileQueryVariables>
+export const ProfileByHandleDocument = gql`
+  query ProfileByHandle($handle: String!) {
+    profileByHandle(handle: $handle) {
+      ...ProfileComponentFields
+    }
+  }
+  ${ProfileComponentFieldsFragmentDoc}
+`
 
 /**
  * __useProfileByHandleQuery__
@@ -6808,25 +6633,29 @@ export const ProfileByHandleDocument = gql`
  *   },
  * });
  */
-export function useProfileByHandleQuery(baseOptions: Apollo.QueryHookOptions<ProfileByHandleQuery, ProfileByHandleQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<ProfileByHandleQuery, ProfileByHandleQueryVariables>(ProfileByHandleDocument, options);
-      }
-export function useProfileByHandleLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ProfileByHandleQuery, ProfileByHandleQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<ProfileByHandleQuery, ProfileByHandleQueryVariables>(ProfileByHandleDocument, options);
-        }
-export type ProfileByHandleQueryHookResult = ReturnType<typeof useProfileByHandleQuery>;
-export type ProfileByHandleLazyQueryHookResult = ReturnType<typeof useProfileByHandleLazyQuery>;
-export type ProfileByHandleQueryResult = Apollo.QueryResult<ProfileByHandleQuery, ProfileByHandleQueryVariables>;
-export const ProfileDisplayNameDocument = gql`
-    query ProfileDisplayName($id: String!) {
-  profile(id: $id) {
-    displayName
-    verified
-  }
+export function useProfileByHandleQuery(
+  baseOptions: Apollo.QueryHookOptions<ProfileByHandleQuery, ProfileByHandleQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<ProfileByHandleQuery, ProfileByHandleQueryVariables>(ProfileByHandleDocument, options)
 }
-    `;
+export function useProfileByHandleLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<ProfileByHandleQuery, ProfileByHandleQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<ProfileByHandleQuery, ProfileByHandleQueryVariables>(ProfileByHandleDocument, options)
+}
+export type ProfileByHandleQueryHookResult = ReturnType<typeof useProfileByHandleQuery>
+export type ProfileByHandleLazyQueryHookResult = ReturnType<typeof useProfileByHandleLazyQuery>
+export type ProfileByHandleQueryResult = Apollo.QueryResult<ProfileByHandleQuery, ProfileByHandleQueryVariables>
+export const ProfileDisplayNameDocument = gql`
+  query ProfileDisplayName($id: String!) {
+    profile(id: $id) {
+      displayName
+      verified
+    }
+  }
+`
 
 /**
  * __useProfileDisplayNameQuery__
@@ -6844,24 +6673,35 @@ export const ProfileDisplayNameDocument = gql`
  *   },
  * });
  */
-export function useProfileDisplayNameQuery(baseOptions: Apollo.QueryHookOptions<ProfileDisplayNameQuery, ProfileDisplayNameQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<ProfileDisplayNameQuery, ProfileDisplayNameQueryVariables>(ProfileDisplayNameDocument, options);
-      }
-export function useProfileDisplayNameLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ProfileDisplayNameQuery, ProfileDisplayNameQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<ProfileDisplayNameQuery, ProfileDisplayNameQueryVariables>(ProfileDisplayNameDocument, options);
-        }
-export type ProfileDisplayNameQueryHookResult = ReturnType<typeof useProfileDisplayNameQuery>;
-export type ProfileDisplayNameLazyQueryHookResult = ReturnType<typeof useProfileDisplayNameLazyQuery>;
-export type ProfileDisplayNameQueryResult = Apollo.QueryResult<ProfileDisplayNameQuery, ProfileDisplayNameQueryVariables>;
-export const ProfileVerificationRequestDocument = gql`
-    query ProfileVerificationRequest($id: String, $profileId: String) {
-  profileVerificationRequest(id: $id, profileId: $profileId) {
-    ...ProfileVerificationRequestComponentFields
-  }
+export function useProfileDisplayNameQuery(
+  baseOptions: Apollo.QueryHookOptions<ProfileDisplayNameQuery, ProfileDisplayNameQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<ProfileDisplayNameQuery, ProfileDisplayNameQueryVariables>(ProfileDisplayNameDocument, options)
 }
-    ${ProfileVerificationRequestComponentFieldsFragmentDoc}`;
+export function useProfileDisplayNameLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<ProfileDisplayNameQuery, ProfileDisplayNameQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<ProfileDisplayNameQuery, ProfileDisplayNameQueryVariables>(
+    ProfileDisplayNameDocument,
+    options,
+  )
+}
+export type ProfileDisplayNameQueryHookResult = ReturnType<typeof useProfileDisplayNameQuery>
+export type ProfileDisplayNameLazyQueryHookResult = ReturnType<typeof useProfileDisplayNameLazyQuery>
+export type ProfileDisplayNameQueryResult = Apollo.QueryResult<
+  ProfileDisplayNameQuery,
+  ProfileDisplayNameQueryVariables
+>
+export const ProfileVerificationRequestDocument = gql`
+  query ProfileVerificationRequest($id: String, $profileId: String) {
+    profileVerificationRequest(id: $id, profileId: $profileId) {
+      ...ProfileVerificationRequestComponentFields
+    }
+  }
+  ${ProfileVerificationRequestComponentFieldsFragmentDoc}
+`
 
 /**
  * __useProfileVerificationRequestQuery__
@@ -6880,30 +6720,44 @@ export const ProfileVerificationRequestDocument = gql`
  *   },
  * });
  */
-export function useProfileVerificationRequestQuery(baseOptions?: Apollo.QueryHookOptions<ProfileVerificationRequestQuery, ProfileVerificationRequestQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<ProfileVerificationRequestQuery, ProfileVerificationRequestQueryVariables>(ProfileVerificationRequestDocument, options);
-      }
-export function useProfileVerificationRequestLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ProfileVerificationRequestQuery, ProfileVerificationRequestQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<ProfileVerificationRequestQuery, ProfileVerificationRequestQueryVariables>(ProfileVerificationRequestDocument, options);
-        }
-export type ProfileVerificationRequestQueryHookResult = ReturnType<typeof useProfileVerificationRequestQuery>;
-export type ProfileVerificationRequestLazyQueryHookResult = ReturnType<typeof useProfileVerificationRequestLazyQuery>;
-export type ProfileVerificationRequestQueryResult = Apollo.QueryResult<ProfileVerificationRequestQuery, ProfileVerificationRequestQueryVariables>;
+export function useProfileVerificationRequestQuery(
+  baseOptions?: Apollo.QueryHookOptions<ProfileVerificationRequestQuery, ProfileVerificationRequestQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<ProfileVerificationRequestQuery, ProfileVerificationRequestQueryVariables>(
+    ProfileVerificationRequestDocument,
+    options,
+  )
+}
+export function useProfileVerificationRequestLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<ProfileVerificationRequestQuery, ProfileVerificationRequestQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<ProfileVerificationRequestQuery, ProfileVerificationRequestQueryVariables>(
+    ProfileVerificationRequestDocument,
+    options,
+  )
+}
+export type ProfileVerificationRequestQueryHookResult = ReturnType<typeof useProfileVerificationRequestQuery>
+export type ProfileVerificationRequestLazyQueryHookResult = ReturnType<typeof useProfileVerificationRequestLazyQuery>
+export type ProfileVerificationRequestQueryResult = Apollo.QueryResult<
+  ProfileVerificationRequestQuery,
+  ProfileVerificationRequestQueryVariables
+>
 export const ProfileVerificationRequestsDocument = gql`
-    query ProfileVerificationRequests($status: String, $page: PageInput) {
-  profileVerificationRequests(status: $status, page: $page) {
-    nodes {
-      ...ProfileVerificationRequestComponentFields
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
+  query ProfileVerificationRequests($status: String, $page: PageInput) {
+    profileVerificationRequests(status: $status, page: $page) {
+      nodes {
+        ...ProfileVerificationRequestComponentFields
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
     }
   }
-}
-    ${ProfileVerificationRequestComponentFieldsFragmentDoc}`;
+  ${ProfileVerificationRequestComponentFieldsFragmentDoc}
+`
 
 /**
  * __useProfileVerificationRequestsQuery__
@@ -6922,27 +6776,43 @@ export const ProfileVerificationRequestsDocument = gql`
  *   },
  * });
  */
-export function useProfileVerificationRequestsQuery(baseOptions?: Apollo.QueryHookOptions<ProfileVerificationRequestsQuery, ProfileVerificationRequestsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<ProfileVerificationRequestsQuery, ProfileVerificationRequestsQueryVariables>(ProfileVerificationRequestsDocument, options);
-      }
-export function useProfileVerificationRequestsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ProfileVerificationRequestsQuery, ProfileVerificationRequestsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<ProfileVerificationRequestsQuery, ProfileVerificationRequestsQueryVariables>(ProfileVerificationRequestsDocument, options);
-        }
-export type ProfileVerificationRequestsQueryHookResult = ReturnType<typeof useProfileVerificationRequestsQuery>;
-export type ProfileVerificationRequestsLazyQueryHookResult = ReturnType<typeof useProfileVerificationRequestsLazyQuery>;
-export type ProfileVerificationRequestsQueryResult = Apollo.QueryResult<ProfileVerificationRequestsQuery, ProfileVerificationRequestsQueryVariables>;
-export const ProofBookByWalletDocument = gql`
-    query ProofBookByWallet($walletAddress: String!) {
-  getProofBookByWallet(walletAddress: $walletAddress) {
-    root
-    address
-    value
-    merkleProof
-  }
+export function useProfileVerificationRequestsQuery(
+  baseOptions?: Apollo.QueryHookOptions<ProfileVerificationRequestsQuery, ProfileVerificationRequestsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<ProfileVerificationRequestsQuery, ProfileVerificationRequestsQueryVariables>(
+    ProfileVerificationRequestsDocument,
+    options,
+  )
 }
-    `;
+export function useProfileVerificationRequestsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    ProfileVerificationRequestsQuery,
+    ProfileVerificationRequestsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<ProfileVerificationRequestsQuery, ProfileVerificationRequestsQueryVariables>(
+    ProfileVerificationRequestsDocument,
+    options,
+  )
+}
+export type ProfileVerificationRequestsQueryHookResult = ReturnType<typeof useProfileVerificationRequestsQuery>
+export type ProfileVerificationRequestsLazyQueryHookResult = ReturnType<typeof useProfileVerificationRequestsLazyQuery>
+export type ProfileVerificationRequestsQueryResult = Apollo.QueryResult<
+  ProfileVerificationRequestsQuery,
+  ProfileVerificationRequestsQueryVariables
+>
+export const ProofBookByWalletDocument = gql`
+  query ProofBookByWallet($walletAddress: String!) {
+    getProofBookByWallet(walletAddress: $walletAddress) {
+      root
+      address
+      value
+      merkleProof
+    }
+  }
+`
 
 /**
  * __useProofBookByWalletQuery__
@@ -6960,30 +6830,37 @@ export const ProofBookByWalletDocument = gql`
  *   },
  * });
  */
-export function useProofBookByWalletQuery(baseOptions: Apollo.QueryHookOptions<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>(ProofBookByWalletDocument, options);
-      }
-export function useProofBookByWalletLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>(ProofBookByWalletDocument, options);
-        }
-export type ProofBookByWalletQueryHookResult = ReturnType<typeof useProofBookByWalletQuery>;
-export type ProofBookByWalletLazyQueryHookResult = ReturnType<typeof useProofBookByWalletLazyQuery>;
-export type ProofBookByWalletQueryResult = Apollo.QueryResult<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>;
+export function useProofBookByWalletQuery(
+  baseOptions: Apollo.QueryHookOptions<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>(ProofBookByWalletDocument, options)
+}
+export function useProofBookByWalletLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>(
+    ProofBookByWalletDocument,
+    options,
+  )
+}
+export type ProofBookByWalletQueryHookResult = ReturnType<typeof useProofBookByWalletQuery>
+export type ProofBookByWalletLazyQueryHookResult = ReturnType<typeof useProofBookByWalletLazyQuery>
+export type ProofBookByWalletQueryResult = Apollo.QueryResult<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>
 export const ReactToPostDocument = gql`
-    mutation ReactToPost($input: ReactToPostInput!) {
-  reactToPost(input: $input) {
-    post {
-      id
-      totalReactions
-      topReactions(top: 2)
-      myReaction
+  mutation ReactToPost($input: ReactToPostInput!) {
+    reactToPost(input: $input) {
+      post {
+        id
+        totalReactions
+        topReactions(top: 2)
+        myReaction
+      }
     }
   }
-}
-    `;
-export type ReactToPostMutationFn = Apollo.MutationFunction<ReactToPostMutation, ReactToPostMutationVariables>;
+`
+export type ReactToPostMutationFn = Apollo.MutationFunction<ReactToPostMutation, ReactToPostMutationVariables>
 
 /**
  * __useReactToPostMutation__
@@ -7002,35 +6879,37 @@ export type ReactToPostMutationFn = Apollo.MutationFunction<ReactToPostMutation,
  *   },
  * });
  */
-export function useReactToPostMutation(baseOptions?: Apollo.MutationHookOptions<ReactToPostMutation, ReactToPostMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<ReactToPostMutation, ReactToPostMutationVariables>(ReactToPostDocument, options);
-      }
-export type ReactToPostMutationHookResult = ReturnType<typeof useReactToPostMutation>;
-export type ReactToPostMutationResult = Apollo.MutationResult<ReactToPostMutation>;
-export type ReactToPostMutationOptions = Apollo.BaseMutationOptions<ReactToPostMutation, ReactToPostMutationVariables>;
+export function useReactToPostMutation(
+  baseOptions?: Apollo.MutationHookOptions<ReactToPostMutation, ReactToPostMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<ReactToPostMutation, ReactToPostMutationVariables>(ReactToPostDocument, options)
+}
+export type ReactToPostMutationHookResult = ReturnType<typeof useReactToPostMutation>
+export type ReactToPostMutationResult = Apollo.MutationResult<ReactToPostMutation>
+export type ReactToPostMutationOptions = Apollo.BaseMutationOptions<ReactToPostMutation, ReactToPostMutationVariables>
 export const ReactionsDocument = gql`
-    query Reactions($postId: String!, $page: PageInput) {
-  reactions(postId: $postId, page: $page) {
-    nodes {
-      id
-      type
-      profile {
+  query Reactions($postId: String!, $page: PageInput) {
+    reactions(postId: $postId, page: $page) {
+      nodes {
         id
-        userHandle
-        displayName
-        profilePicture
-        verified
+        type
+        profile {
+          id
+          userHandle
+          displayName
+          profilePicture
+          verified
+        }
       }
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
-      totalCount
+      pageInfo {
+        hasNextPage
+        endCursor
+        totalCount
+      }
     }
   }
-}
-    `;
+`
 
 /**
  * __useReactionsQuery__
@@ -7050,24 +6929,26 @@ export const ReactionsDocument = gql`
  * });
  */
 export function useReactionsQuery(baseOptions: Apollo.QueryHookOptions<ReactionsQuery, ReactionsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<ReactionsQuery, ReactionsQueryVariables>(ReactionsDocument, options);
-      }
-export function useReactionsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ReactionsQuery, ReactionsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<ReactionsQuery, ReactionsQueryVariables>(ReactionsDocument, options);
-        }
-export type ReactionsQueryHookResult = ReturnType<typeof useReactionsQuery>;
-export type ReactionsLazyQueryHookResult = ReturnType<typeof useReactionsLazyQuery>;
-export type ReactionsQueryResult = Apollo.QueryResult<ReactionsQuery, ReactionsQueryVariables>;
-export const RegisterDocument = gql`
-    mutation Register($input: RegisterInput!) {
-  register(input: $input) {
-    jwt
-  }
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<ReactionsQuery, ReactionsQueryVariables>(ReactionsDocument, options)
 }
-    `;
-export type RegisterMutationFn = Apollo.MutationFunction<RegisterMutation, RegisterMutationVariables>;
+export function useReactionsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<ReactionsQuery, ReactionsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<ReactionsQuery, ReactionsQueryVariables>(ReactionsDocument, options)
+}
+export type ReactionsQueryHookResult = ReturnType<typeof useReactionsQuery>
+export type ReactionsLazyQueryHookResult = ReturnType<typeof useReactionsLazyQuery>
+export type ReactionsQueryResult = Apollo.QueryResult<ReactionsQuery, ReactionsQueryVariables>
+export const RegisterDocument = gql`
+  mutation Register($input: RegisterInput!) {
+    register(input: $input) {
+      jwt
+    }
+  }
+`
+export type RegisterMutationFn = Apollo.MutationFunction<RegisterMutation, RegisterMutationVariables>
 
 /**
  * __useRegisterMutation__
@@ -7086,23 +6967,28 @@ export type RegisterMutationFn = Apollo.MutationFunction<RegisterMutation, Regis
  *   },
  * });
  */
-export function useRegisterMutation(baseOptions?: Apollo.MutationHookOptions<RegisterMutation, RegisterMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<RegisterMutation, RegisterMutationVariables>(RegisterDocument, options);
-      }
-export type RegisterMutationHookResult = ReturnType<typeof useRegisterMutation>;
-export type RegisterMutationResult = Apollo.MutationResult<RegisterMutation>;
-export type RegisterMutationOptions = Apollo.BaseMutationOptions<RegisterMutation, RegisterMutationVariables>;
+export function useRegisterMutation(
+  baseOptions?: Apollo.MutationHookOptions<RegisterMutation, RegisterMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<RegisterMutation, RegisterMutationVariables>(RegisterDocument, options)
+}
+export type RegisterMutationHookResult = ReturnType<typeof useRegisterMutation>
+export type RegisterMutationResult = Apollo.MutationResult<RegisterMutation>
+export type RegisterMutationOptions = Apollo.BaseMutationOptions<RegisterMutation, RegisterMutationVariables>
 export const RemoveProfileVerificationRequestDocument = gql`
-    mutation RemoveProfileVerificationRequest($id: String!) {
-  removeProfileVerificationRequest(id: $id) {
-    profileVerificationRequest {
-      id
+  mutation RemoveProfileVerificationRequest($id: String!) {
+    removeProfileVerificationRequest(id: $id) {
+      profileVerificationRequest {
+        id
+      }
     }
   }
-}
-    `;
-export type RemoveProfileVerificationRequestMutationFn = Apollo.MutationFunction<RemoveProfileVerificationRequestMutation, RemoveProfileVerificationRequestMutationVariables>;
+`
+export type RemoveProfileVerificationRequestMutationFn = Apollo.MutationFunction<
+  RemoveProfileVerificationRequestMutation,
+  RemoveProfileVerificationRequestMutationVariables
+>
 
 /**
  * __useRemoveProfileVerificationRequestMutation__
@@ -7121,22 +7007,39 @@ export type RemoveProfileVerificationRequestMutationFn = Apollo.MutationFunction
  *   },
  * });
  */
-export function useRemoveProfileVerificationRequestMutation(baseOptions?: Apollo.MutationHookOptions<RemoveProfileVerificationRequestMutation, RemoveProfileVerificationRequestMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<RemoveProfileVerificationRequestMutation, RemoveProfileVerificationRequestMutationVariables>(RemoveProfileVerificationRequestDocument, options);
-      }
-export type RemoveProfileVerificationRequestMutationHookResult = ReturnType<typeof useRemoveProfileVerificationRequestMutation>;
-export type RemoveProfileVerificationRequestMutationResult = Apollo.MutationResult<RemoveProfileVerificationRequestMutation>;
-export type RemoveProfileVerificationRequestMutationOptions = Apollo.BaseMutationOptions<RemoveProfileVerificationRequestMutation, RemoveProfileVerificationRequestMutationVariables>;
-export const ResetNotificationCountDocument = gql`
-    mutation ResetNotificationCount {
-  resetNotificationCount {
-    id
-    unreadNotificationCount
-  }
+export function useRemoveProfileVerificationRequestMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    RemoveProfileVerificationRequestMutation,
+    RemoveProfileVerificationRequestMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<
+    RemoveProfileVerificationRequestMutation,
+    RemoveProfileVerificationRequestMutationVariables
+  >(RemoveProfileVerificationRequestDocument, options)
 }
-    `;
-export type ResetNotificationCountMutationFn = Apollo.MutationFunction<ResetNotificationCountMutation, ResetNotificationCountMutationVariables>;
+export type RemoveProfileVerificationRequestMutationHookResult = ReturnType<
+  typeof useRemoveProfileVerificationRequestMutation
+>
+export type RemoveProfileVerificationRequestMutationResult =
+  Apollo.MutationResult<RemoveProfileVerificationRequestMutation>
+export type RemoveProfileVerificationRequestMutationOptions = Apollo.BaseMutationOptions<
+  RemoveProfileVerificationRequestMutation,
+  RemoveProfileVerificationRequestMutationVariables
+>
+export const ResetNotificationCountDocument = gql`
+  mutation ResetNotificationCount {
+    resetNotificationCount {
+      id
+      unreadNotificationCount
+    }
+  }
+`
+export type ResetNotificationCountMutationFn = Apollo.MutationFunction<
+  ResetNotificationCountMutation,
+  ResetNotificationCountMutationVariables
+>
 
 /**
  * __useResetNotificationCountMutation__
@@ -7154,22 +7057,33 @@ export type ResetNotificationCountMutationFn = Apollo.MutationFunction<ResetNoti
  *   },
  * });
  */
-export function useResetNotificationCountMutation(baseOptions?: Apollo.MutationHookOptions<ResetNotificationCountMutation, ResetNotificationCountMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<ResetNotificationCountMutation, ResetNotificationCountMutationVariables>(ResetNotificationCountDocument, options);
-      }
-export type ResetNotificationCountMutationHookResult = ReturnType<typeof useResetNotificationCountMutation>;
-export type ResetNotificationCountMutationResult = Apollo.MutationResult<ResetNotificationCountMutation>;
-export type ResetNotificationCountMutationOptions = Apollo.BaseMutationOptions<ResetNotificationCountMutation, ResetNotificationCountMutationVariables>;
-export const ResetUnreadMessageCountDocument = gql`
-    mutation ResetUnreadMessageCount {
-  resetUnreadMessageCount {
-    id
-    unreadMessageCount
-  }
+export function useResetNotificationCountMutation(
+  baseOptions?: Apollo.MutationHookOptions<ResetNotificationCountMutation, ResetNotificationCountMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<ResetNotificationCountMutation, ResetNotificationCountMutationVariables>(
+    ResetNotificationCountDocument,
+    options,
+  )
 }
-    `;
-export type ResetUnreadMessageCountMutationFn = Apollo.MutationFunction<ResetUnreadMessageCountMutation, ResetUnreadMessageCountMutationVariables>;
+export type ResetNotificationCountMutationHookResult = ReturnType<typeof useResetNotificationCountMutation>
+export type ResetNotificationCountMutationResult = Apollo.MutationResult<ResetNotificationCountMutation>
+export type ResetNotificationCountMutationOptions = Apollo.BaseMutationOptions<
+  ResetNotificationCountMutation,
+  ResetNotificationCountMutationVariables
+>
+export const ResetUnreadMessageCountDocument = gql`
+  mutation ResetUnreadMessageCount {
+    resetUnreadMessageCount {
+      id
+      unreadMessageCount
+    }
+  }
+`
+export type ResetUnreadMessageCountMutationFn = Apollo.MutationFunction<
+  ResetUnreadMessageCountMutation,
+  ResetUnreadMessageCountMutationVariables
+>
 
 /**
  * __useResetUnreadMessageCountMutation__
@@ -7187,26 +7101,37 @@ export type ResetUnreadMessageCountMutationFn = Apollo.MutationFunction<ResetUnr
  *   },
  * });
  */
-export function useResetUnreadMessageCountMutation(baseOptions?: Apollo.MutationHookOptions<ResetUnreadMessageCountMutation, ResetUnreadMessageCountMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<ResetUnreadMessageCountMutation, ResetUnreadMessageCountMutationVariables>(ResetUnreadMessageCountDocument, options);
-      }
-export type ResetUnreadMessageCountMutationHookResult = ReturnType<typeof useResetUnreadMessageCountMutation>;
-export type ResetUnreadMessageCountMutationResult = Apollo.MutationResult<ResetUnreadMessageCountMutation>;
-export type ResetUnreadMessageCountMutationOptions = Apollo.BaseMutationOptions<ResetUnreadMessageCountMutation, ResetUnreadMessageCountMutationVariables>;
+export function useResetUnreadMessageCountMutation(
+  baseOptions?: Apollo.MutationHookOptions<ResetUnreadMessageCountMutation, ResetUnreadMessageCountMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<ResetUnreadMessageCountMutation, ResetUnreadMessageCountMutationVariables>(
+    ResetUnreadMessageCountDocument,
+    options,
+  )
+}
+export type ResetUnreadMessageCountMutationHookResult = ReturnType<typeof useResetUnreadMessageCountMutation>
+export type ResetUnreadMessageCountMutationResult = Apollo.MutationResult<ResetUnreadMessageCountMutation>
+export type ResetUnreadMessageCountMutationOptions = Apollo.BaseMutationOptions<
+  ResetUnreadMessageCountMutation,
+  ResetUnreadMessageCountMutationVariables
+>
 export const RetractReactionDocument = gql`
-    mutation RetractReaction($input: RetractReactionInput!) {
-  retractReaction(input: $input) {
-    post {
-      id
-      totalReactions
-      topReactions(top: 2)
-      myReaction
+  mutation RetractReaction($input: RetractReactionInput!) {
+    retractReaction(input: $input) {
+      post {
+        id
+        totalReactions
+        topReactions(top: 2)
+        myReaction
+      }
     }
   }
-}
-    `;
-export type RetractReactionMutationFn = Apollo.MutationFunction<RetractReactionMutation, RetractReactionMutationVariables>;
+`
+export type RetractReactionMutationFn = Apollo.MutationFunction<
+  RetractReactionMutation,
+  RetractReactionMutationVariables
+>
 
 /**
  * __useRetractReactionMutation__
@@ -7225,23 +7150,29 @@ export type RetractReactionMutationFn = Apollo.MutationFunction<RetractReactionM
  *   },
  * });
  */
-export function useRetractReactionMutation(baseOptions?: Apollo.MutationHookOptions<RetractReactionMutation, RetractReactionMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<RetractReactionMutation, RetractReactionMutationVariables>(RetractReactionDocument, options);
-      }
-export type RetractReactionMutationHookResult = ReturnType<typeof useRetractReactionMutation>;
-export type RetractReactionMutationResult = Apollo.MutationResult<RetractReactionMutation>;
-export type RetractReactionMutationOptions = Apollo.BaseMutationOptions<RetractReactionMutation, RetractReactionMutationVariables>;
+export function useRetractReactionMutation(
+  baseOptions?: Apollo.MutationHookOptions<RetractReactionMutation, RetractReactionMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<RetractReactionMutation, RetractReactionMutationVariables>(RetractReactionDocument, options)
+}
+export type RetractReactionMutationHookResult = ReturnType<typeof useRetractReactionMutation>
+export type RetractReactionMutationResult = Apollo.MutationResult<RetractReactionMutation>
+export type RetractReactionMutationOptions = Apollo.BaseMutationOptions<
+  RetractReactionMutation,
+  RetractReactionMutationVariables
+>
 export const SendMessageDocument = gql`
-    mutation SendMessage($input: SendMessageInput!) {
-  sendMessage(input: $input) {
-    message {
-      ...MessageComponentFields
+  mutation SendMessage($input: SendMessageInput!) {
+    sendMessage(input: $input) {
+      message {
+        ...MessageComponentFields
+      }
     }
   }
-}
-    ${MessageComponentFieldsFragmentDoc}`;
-export type SendMessageMutationFn = Apollo.MutationFunction<SendMessageMutation, SendMessageMutationVariables>;
+  ${MessageComponentFieldsFragmentDoc}
+`
+export type SendMessageMutationFn = Apollo.MutationFunction<SendMessageMutation, SendMessageMutationVariables>
 
 /**
  * __useSendMessageMutation__
@@ -7260,24 +7191,29 @@ export type SendMessageMutationFn = Apollo.MutationFunction<SendMessageMutation,
  *   },
  * });
  */
-export function useSendMessageMutation(baseOptions?: Apollo.MutationHookOptions<SendMessageMutation, SendMessageMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<SendMessageMutation, SendMessageMutationVariables>(SendMessageDocument, options);
-      }
-export type SendMessageMutationHookResult = ReturnType<typeof useSendMessageMutation>;
-export type SendMessageMutationResult = Apollo.MutationResult<SendMessageMutation>;
-export type SendMessageMutationOptions = Apollo.BaseMutationOptions<SendMessageMutation, SendMessageMutationVariables>;
+export function useSendMessageMutation(
+  baseOptions?: Apollo.MutationHookOptions<SendMessageMutation, SendMessageMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<SendMessageMutation, SendMessageMutationVariables>(SendMessageDocument, options)
+}
+export type SendMessageMutationHookResult = ReturnType<typeof useSendMessageMutation>
+export type SendMessageMutationResult = Apollo.MutationResult<SendMessageMutation>
+export type SendMessageMutationOptions = Apollo.BaseMutationOptions<SendMessageMutation, SendMessageMutationVariables>
 export const SubscribeToProfileDocument = gql`
-    mutation SubscribeToProfile($input: SubscribeToProfileInput!) {
-  subscribeToProfile(input: $input) {
-    profile {
-      id
-      isSubscriber
+  mutation SubscribeToProfile($input: SubscribeToProfileInput!) {
+    subscribeToProfile(input: $input) {
+      profile {
+        id
+        isSubscriber
+      }
     }
   }
-}
-    `;
-export type SubscribeToProfileMutationFn = Apollo.MutationFunction<SubscribeToProfileMutation, SubscribeToProfileMutationVariables>;
+`
+export type SubscribeToProfileMutationFn = Apollo.MutationFunction<
+  SubscribeToProfileMutation,
+  SubscribeToProfileMutationVariables
+>
 
 /**
  * __useSubscribeToProfileMutation__
@@ -7296,25 +7232,33 @@ export type SubscribeToProfileMutationFn = Apollo.MutationFunction<SubscribeToPr
  *   },
  * });
  */
-export function useSubscribeToProfileMutation(baseOptions?: Apollo.MutationHookOptions<SubscribeToProfileMutation, SubscribeToProfileMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<SubscribeToProfileMutation, SubscribeToProfileMutationVariables>(SubscribeToProfileDocument, options);
-      }
-export type SubscribeToProfileMutationHookResult = ReturnType<typeof useSubscribeToProfileMutation>;
-export type SubscribeToProfileMutationResult = Apollo.MutationResult<SubscribeToProfileMutation>;
-export type SubscribeToProfileMutationOptions = Apollo.BaseMutationOptions<SubscribeToProfileMutation, SubscribeToProfileMutationVariables>;
+export function useSubscribeToProfileMutation(
+  baseOptions?: Apollo.MutationHookOptions<SubscribeToProfileMutation, SubscribeToProfileMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<SubscribeToProfileMutation, SubscribeToProfileMutationVariables>(
+    SubscribeToProfileDocument,
+    options,
+  )
+}
+export type SubscribeToProfileMutationHookResult = ReturnType<typeof useSubscribeToProfileMutation>
+export type SubscribeToProfileMutationResult = Apollo.MutationResult<SubscribeToProfileMutation>
+export type SubscribeToProfileMutationOptions = Apollo.BaseMutationOptions<
+  SubscribeToProfileMutation,
+  SubscribeToProfileMutationVariables
+>
 export const ToggleFavoriteDocument = gql`
-    mutation ToggleFavorite($trackId: String!) {
-  toggleFavorite(trackId: $trackId) {
-    favoriteProfileTrack {
-      id
-      trackId
-      profileId
+  mutation ToggleFavorite($trackId: String!) {
+    toggleFavorite(trackId: $trackId) {
+      favoriteProfileTrack {
+        id
+        trackId
+        profileId
+      }
     }
   }
-}
-    `;
-export type ToggleFavoriteMutationFn = Apollo.MutationFunction<ToggleFavoriteMutation, ToggleFavoriteMutationVariables>;
+`
+export type ToggleFavoriteMutationFn = Apollo.MutationFunction<ToggleFavoriteMutation, ToggleFavoriteMutationVariables>
 
 /**
  * __useToggleFavoriteMutation__
@@ -7333,20 +7277,26 @@ export type ToggleFavoriteMutationFn = Apollo.MutationFunction<ToggleFavoriteMut
  *   },
  * });
  */
-export function useToggleFavoriteMutation(baseOptions?: Apollo.MutationHookOptions<ToggleFavoriteMutation, ToggleFavoriteMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<ToggleFavoriteMutation, ToggleFavoriteMutationVariables>(ToggleFavoriteDocument, options);
-      }
-export type ToggleFavoriteMutationHookResult = ReturnType<typeof useToggleFavoriteMutation>;
-export type ToggleFavoriteMutationResult = Apollo.MutationResult<ToggleFavoriteMutation>;
-export type ToggleFavoriteMutationOptions = Apollo.BaseMutationOptions<ToggleFavoriteMutation, ToggleFavoriteMutationVariables>;
-export const TrackDocument = gql`
-    query Track($id: String!) {
-  track(id: $id) {
-    ...TrackComponentFields
-  }
+export function useToggleFavoriteMutation(
+  baseOptions?: Apollo.MutationHookOptions<ToggleFavoriteMutation, ToggleFavoriteMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<ToggleFavoriteMutation, ToggleFavoriteMutationVariables>(ToggleFavoriteDocument, options)
 }
-    ${TrackComponentFieldsFragmentDoc}`;
+export type ToggleFavoriteMutationHookResult = ReturnType<typeof useToggleFavoriteMutation>
+export type ToggleFavoriteMutationResult = Apollo.MutationResult<ToggleFavoriteMutation>
+export type ToggleFavoriteMutationOptions = Apollo.BaseMutationOptions<
+  ToggleFavoriteMutation,
+  ToggleFavoriteMutationVariables
+>
+export const TrackDocument = gql`
+  query Track($id: String!) {
+    track(id: $id) {
+      ...TrackComponentFields
+    }
+  }
+  ${TrackComponentFieldsFragmentDoc}
+`
 
 /**
  * __useTrackQuery__
@@ -7365,23 +7315,24 @@ export const TrackDocument = gql`
  * });
  */
 export function useTrackQuery(baseOptions: Apollo.QueryHookOptions<TrackQuery, TrackQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<TrackQuery, TrackQueryVariables>(TrackDocument, options);
-      }
-export function useTrackLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TrackQuery, TrackQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<TrackQuery, TrackQueryVariables>(TrackDocument, options);
-        }
-export type TrackQueryHookResult = ReturnType<typeof useTrackQuery>;
-export type TrackLazyQueryHookResult = ReturnType<typeof useTrackLazyQuery>;
-export type TrackQueryResult = Apollo.QueryResult<TrackQuery, TrackQueryVariables>;
-export const TrackEditionDocument = gql`
-    query TrackEdition($id: String!) {
-  trackEdition(id: $id) {
-    ...TrackEditionFields
-  }
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<TrackQuery, TrackQueryVariables>(TrackDocument, options)
 }
-    ${TrackEditionFieldsFragmentDoc}`;
+export function useTrackLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TrackQuery, TrackQueryVariables>) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<TrackQuery, TrackQueryVariables>(TrackDocument, options)
+}
+export type TrackQueryHookResult = ReturnType<typeof useTrackQuery>
+export type TrackLazyQueryHookResult = ReturnType<typeof useTrackLazyQuery>
+export type TrackQueryResult = Apollo.QueryResult<TrackQuery, TrackQueryVariables>
+export const TrackEditionDocument = gql`
+  query TrackEdition($id: String!) {
+    trackEdition(id: $id) {
+      ...TrackEditionFields
+    }
+  }
+  ${TrackEditionFieldsFragmentDoc}
+`
 
 /**
  * __useTrackEditionQuery__
@@ -7399,31 +7350,36 @@ export const TrackEditionDocument = gql`
  *   },
  * });
  */
-export function useTrackEditionQuery(baseOptions: Apollo.QueryHookOptions<TrackEditionQuery, TrackEditionQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<TrackEditionQuery, TrackEditionQueryVariables>(TrackEditionDocument, options);
-      }
-export function useTrackEditionLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TrackEditionQuery, TrackEditionQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<TrackEditionQuery, TrackEditionQueryVariables>(TrackEditionDocument, options);
-        }
-export type TrackEditionQueryHookResult = ReturnType<typeof useTrackEditionQuery>;
-export type TrackEditionLazyQueryHookResult = ReturnType<typeof useTrackEditionLazyQuery>;
-export type TrackEditionQueryResult = Apollo.QueryResult<TrackEditionQuery, TrackEditionQueryVariables>;
+export function useTrackEditionQuery(
+  baseOptions: Apollo.QueryHookOptions<TrackEditionQuery, TrackEditionQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<TrackEditionQuery, TrackEditionQueryVariables>(TrackEditionDocument, options)
+}
+export function useTrackEditionLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<TrackEditionQuery, TrackEditionQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<TrackEditionQuery, TrackEditionQueryVariables>(TrackEditionDocument, options)
+}
+export type TrackEditionQueryHookResult = ReturnType<typeof useTrackEditionQuery>
+export type TrackEditionLazyQueryHookResult = ReturnType<typeof useTrackEditionLazyQuery>
+export type TrackEditionQueryResult = Apollo.QueryResult<TrackEditionQuery, TrackEditionQueryVariables>
 export const TracksDocument = gql`
-    query Tracks($filter: FilterTrackInput, $sort: SortTrackInput, $page: PageInput) {
-  tracks(filter: $filter, sort: $sort, page: $page) {
-    nodes {
-      ...TrackComponentFields
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
-      totalCount
+  query Tracks($filter: FilterTrackInput, $sort: SortTrackInput, $page: PageInput) {
+    tracks(filter: $filter, sort: $sort, page: $page) {
+      nodes {
+        ...TrackComponentFields
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+        totalCount
+      }
     }
   }
-}
-    ${TrackComponentFieldsFragmentDoc}`;
+  ${TrackComponentFieldsFragmentDoc}
+`
 
 /**
  * __useTracksQuery__
@@ -7444,28 +7400,31 @@ export const TracksDocument = gql`
  * });
  */
 export function useTracksQuery(baseOptions?: Apollo.QueryHookOptions<TracksQuery, TracksQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<TracksQuery, TracksQueryVariables>(TracksDocument, options);
-      }
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<TracksQuery, TracksQueryVariables>(TracksDocument, options)
+}
 export function useTracksLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TracksQuery, TracksQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<TracksQuery, TracksQueryVariables>(TracksDocument, options);
-        }
-export type TracksQueryHookResult = ReturnType<typeof useTracksQuery>;
-export type TracksLazyQueryHookResult = ReturnType<typeof useTracksLazyQuery>;
-export type TracksQueryResult = Apollo.QueryResult<TracksQuery, TracksQueryVariables>;
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<TracksQuery, TracksQueryVariables>(TracksDocument, options)
+}
+export type TracksQueryHookResult = ReturnType<typeof useTracksQuery>
+export type TracksLazyQueryHookResult = ReturnType<typeof useTracksLazyQuery>
+export type TracksQueryResult = Apollo.QueryResult<TracksQuery, TracksQueryVariables>
 export const UnfollowProfileDocument = gql`
-    mutation UnfollowProfile($input: UnfollowProfileInput!) {
-  unfollowProfile(input: $input) {
-    unfollowedProfile {
-      id
-      followerCount
-      isFollowed
+  mutation UnfollowProfile($input: UnfollowProfileInput!) {
+    unfollowProfile(input: $input) {
+      unfollowedProfile {
+        id
+        followerCount
+        isFollowed
+      }
     }
   }
-}
-    `;
-export type UnfollowProfileMutationFn = Apollo.MutationFunction<UnfollowProfileMutation, UnfollowProfileMutationVariables>;
+`
+export type UnfollowProfileMutationFn = Apollo.MutationFunction<
+  UnfollowProfileMutation,
+  UnfollowProfileMutationVariables
+>
 
 /**
  * __useUnfollowProfileMutation__
@@ -7484,21 +7443,26 @@ export type UnfollowProfileMutationFn = Apollo.MutationFunction<UnfollowProfileM
  *   },
  * });
  */
-export function useUnfollowProfileMutation(baseOptions?: Apollo.MutationHookOptions<UnfollowProfileMutation, UnfollowProfileMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UnfollowProfileMutation, UnfollowProfileMutationVariables>(UnfollowProfileDocument, options);
-      }
-export type UnfollowProfileMutationHookResult = ReturnType<typeof useUnfollowProfileMutation>;
-export type UnfollowProfileMutationResult = Apollo.MutationResult<UnfollowProfileMutation>;
-export type UnfollowProfileMutationOptions = Apollo.BaseMutationOptions<UnfollowProfileMutation, UnfollowProfileMutationVariables>;
-export const UnreadMessageCountDocument = gql`
-    query UnreadMessageCount {
-  myProfile {
-    id
-    unreadMessageCount
-  }
+export function useUnfollowProfileMutation(
+  baseOptions?: Apollo.MutationHookOptions<UnfollowProfileMutation, UnfollowProfileMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<UnfollowProfileMutation, UnfollowProfileMutationVariables>(UnfollowProfileDocument, options)
 }
-    `;
+export type UnfollowProfileMutationHookResult = ReturnType<typeof useUnfollowProfileMutation>
+export type UnfollowProfileMutationResult = Apollo.MutationResult<UnfollowProfileMutation>
+export type UnfollowProfileMutationOptions = Apollo.BaseMutationOptions<
+  UnfollowProfileMutation,
+  UnfollowProfileMutationVariables
+>
+export const UnreadMessageCountDocument = gql`
+  query UnreadMessageCount {
+    myProfile {
+      id
+      unreadMessageCount
+    }
+  }
+`
 
 /**
  * __useUnreadMessageCountQuery__
@@ -7515,28 +7479,41 @@ export const UnreadMessageCountDocument = gql`
  *   },
  * });
  */
-export function useUnreadMessageCountQuery(baseOptions?: Apollo.QueryHookOptions<UnreadMessageCountQuery, UnreadMessageCountQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<UnreadMessageCountQuery, UnreadMessageCountQueryVariables>(UnreadMessageCountDocument, options);
-      }
-export function useUnreadMessageCountLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UnreadMessageCountQuery, UnreadMessageCountQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<UnreadMessageCountQuery, UnreadMessageCountQueryVariables>(UnreadMessageCountDocument, options);
-        }
-export type UnreadMessageCountQueryHookResult = ReturnType<typeof useUnreadMessageCountQuery>;
-export type UnreadMessageCountLazyQueryHookResult = ReturnType<typeof useUnreadMessageCountLazyQuery>;
-export type UnreadMessageCountQueryResult = Apollo.QueryResult<UnreadMessageCountQuery, UnreadMessageCountQueryVariables>;
+export function useUnreadMessageCountQuery(
+  baseOptions?: Apollo.QueryHookOptions<UnreadMessageCountQuery, UnreadMessageCountQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<UnreadMessageCountQuery, UnreadMessageCountQueryVariables>(UnreadMessageCountDocument, options)
+}
+export function useUnreadMessageCountLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<UnreadMessageCountQuery, UnreadMessageCountQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<UnreadMessageCountQuery, UnreadMessageCountQueryVariables>(
+    UnreadMessageCountDocument,
+    options,
+  )
+}
+export type UnreadMessageCountQueryHookResult = ReturnType<typeof useUnreadMessageCountQuery>
+export type UnreadMessageCountLazyQueryHookResult = ReturnType<typeof useUnreadMessageCountLazyQuery>
+export type UnreadMessageCountQueryResult = Apollo.QueryResult<
+  UnreadMessageCountQuery,
+  UnreadMessageCountQueryVariables
+>
 export const UnsubscribeFromProfileDocument = gql`
-    mutation UnsubscribeFromProfile($input: UnsubscribeFromProfileInput!) {
-  unsubscribeFromProfile(input: $input) {
-    profile {
-      id
-      isSubscriber
+  mutation UnsubscribeFromProfile($input: UnsubscribeFromProfileInput!) {
+    unsubscribeFromProfile(input: $input) {
+      profile {
+        id
+        isSubscriber
+      }
     }
   }
-}
-    `;
-export type UnsubscribeFromProfileMutationFn = Apollo.MutationFunction<UnsubscribeFromProfileMutation, UnsubscribeFromProfileMutationVariables>;
+`
+export type UnsubscribeFromProfileMutationFn = Apollo.MutationFunction<
+  UnsubscribeFromProfileMutation,
+  UnsubscribeFromProfileMutationVariables
+>
 
 /**
  * __useUnsubscribeFromProfileMutation__
@@ -7555,29 +7532,41 @@ export type UnsubscribeFromProfileMutationFn = Apollo.MutationFunction<Unsubscri
  *   },
  * });
  */
-export function useUnsubscribeFromProfileMutation(baseOptions?: Apollo.MutationHookOptions<UnsubscribeFromProfileMutation, UnsubscribeFromProfileMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UnsubscribeFromProfileMutation, UnsubscribeFromProfileMutationVariables>(UnsubscribeFromProfileDocument, options);
-      }
-export type UnsubscribeFromProfileMutationHookResult = ReturnType<typeof useUnsubscribeFromProfileMutation>;
-export type UnsubscribeFromProfileMutationResult = Apollo.MutationResult<UnsubscribeFromProfileMutation>;
-export type UnsubscribeFromProfileMutationOptions = Apollo.BaseMutationOptions<UnsubscribeFromProfileMutation, UnsubscribeFromProfileMutationVariables>;
+export function useUnsubscribeFromProfileMutation(
+  baseOptions?: Apollo.MutationHookOptions<UnsubscribeFromProfileMutation, UnsubscribeFromProfileMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<UnsubscribeFromProfileMutation, UnsubscribeFromProfileMutationVariables>(
+    UnsubscribeFromProfileDocument,
+    options,
+  )
+}
+export type UnsubscribeFromProfileMutationHookResult = ReturnType<typeof useUnsubscribeFromProfileMutation>
+export type UnsubscribeFromProfileMutationResult = Apollo.MutationResult<UnsubscribeFromProfileMutation>
+export type UnsubscribeFromProfileMutationOptions = Apollo.BaseMutationOptions<
+  UnsubscribeFromProfileMutation,
+  UnsubscribeFromProfileMutationVariables
+>
 export const UpdateAllOwnedTracksDocument = gql`
-    mutation updateAllOwnedTracks($input: UpdateEditionOwnedTracksInput!) {
-  updateEditionOwnedTracks(input: $input) {
-    tracks {
-      id
-      nftData {
-        pendingRequest
-      }
-      trackEdition {
-        ...TrackEditionFields
+  mutation updateAllOwnedTracks($input: UpdateEditionOwnedTracksInput!) {
+    updateEditionOwnedTracks(input: $input) {
+      tracks {
+        id
+        nftData {
+          pendingRequest
+        }
+        trackEdition {
+          ...TrackEditionFields
+        }
       }
     }
   }
-}
-    ${TrackEditionFieldsFragmentDoc}`;
-export type UpdateAllOwnedTracksMutationFn = Apollo.MutationFunction<UpdateAllOwnedTracksMutation, UpdateAllOwnedTracksMutationVariables>;
+  ${TrackEditionFieldsFragmentDoc}
+`
+export type UpdateAllOwnedTracksMutationFn = Apollo.MutationFunction<
+  UpdateAllOwnedTracksMutation,
+  UpdateAllOwnedTracksMutationVariables
+>
 
 /**
  * __useUpdateAllOwnedTracksMutation__
@@ -7596,23 +7585,32 @@ export type UpdateAllOwnedTracksMutationFn = Apollo.MutationFunction<UpdateAllOw
  *   },
  * });
  */
-export function useUpdateAllOwnedTracksMutation(baseOptions?: Apollo.MutationHookOptions<UpdateAllOwnedTracksMutation, UpdateAllOwnedTracksMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateAllOwnedTracksMutation, UpdateAllOwnedTracksMutationVariables>(UpdateAllOwnedTracksDocument, options);
-      }
-export type UpdateAllOwnedTracksMutationHookResult = ReturnType<typeof useUpdateAllOwnedTracksMutation>;
-export type UpdateAllOwnedTracksMutationResult = Apollo.MutationResult<UpdateAllOwnedTracksMutation>;
-export type UpdateAllOwnedTracksMutationOptions = Apollo.BaseMutationOptions<UpdateAllOwnedTracksMutation, UpdateAllOwnedTracksMutationVariables>;
+export function useUpdateAllOwnedTracksMutation(
+  baseOptions?: Apollo.MutationHookOptions<UpdateAllOwnedTracksMutation, UpdateAllOwnedTracksMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<UpdateAllOwnedTracksMutation, UpdateAllOwnedTracksMutationVariables>(
+    UpdateAllOwnedTracksDocument,
+    options,
+  )
+}
+export type UpdateAllOwnedTracksMutationHookResult = ReturnType<typeof useUpdateAllOwnedTracksMutation>
+export type UpdateAllOwnedTracksMutationResult = Apollo.MutationResult<UpdateAllOwnedTracksMutation>
+export type UpdateAllOwnedTracksMutationOptions = Apollo.BaseMutationOptions<
+  UpdateAllOwnedTracksMutation,
+  UpdateAllOwnedTracksMutationVariables
+>
 export const UpdateCommentDocument = gql`
-    mutation UpdateComment($input: UpdateCommentInput!) {
-  updateComment(input: $input) {
-    comment {
-      ...CommentComponentFields
+  mutation UpdateComment($input: UpdateCommentInput!) {
+    updateComment(input: $input) {
+      comment {
+        ...CommentComponentFields
+      }
     }
   }
-}
-    ${CommentComponentFieldsFragmentDoc}`;
-export type UpdateCommentMutationFn = Apollo.MutationFunction<UpdateCommentMutation, UpdateCommentMutationVariables>;
+  ${CommentComponentFieldsFragmentDoc}
+`
+export type UpdateCommentMutationFn = Apollo.MutationFunction<UpdateCommentMutation, UpdateCommentMutationVariables>
 
 /**
  * __useUpdateCommentMutation__
@@ -7631,24 +7629,32 @@ export type UpdateCommentMutationFn = Apollo.MutationFunction<UpdateCommentMutat
  *   },
  * });
  */
-export function useUpdateCommentMutation(baseOptions?: Apollo.MutationHookOptions<UpdateCommentMutation, UpdateCommentMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateCommentMutation, UpdateCommentMutationVariables>(UpdateCommentDocument, options);
-      }
-export type UpdateCommentMutationHookResult = ReturnType<typeof useUpdateCommentMutation>;
-export type UpdateCommentMutationResult = Apollo.MutationResult<UpdateCommentMutation>;
-export type UpdateCommentMutationOptions = Apollo.BaseMutationOptions<UpdateCommentMutation, UpdateCommentMutationVariables>;
+export function useUpdateCommentMutation(
+  baseOptions?: Apollo.MutationHookOptions<UpdateCommentMutation, UpdateCommentMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<UpdateCommentMutation, UpdateCommentMutationVariables>(UpdateCommentDocument, options)
+}
+export type UpdateCommentMutationHookResult = ReturnType<typeof useUpdateCommentMutation>
+export type UpdateCommentMutationResult = Apollo.MutationResult<UpdateCommentMutation>
+export type UpdateCommentMutationOptions = Apollo.BaseMutationOptions<
+  UpdateCommentMutation,
+  UpdateCommentMutationVariables
+>
 export const UpdateCoverPictureDocument = gql`
-    mutation UpdateCoverPicture($input: UpdateProfileInput!) {
-  updateProfile(input: $input) {
-    profile {
-      id
-      coverPicture
+  mutation UpdateCoverPicture($input: UpdateProfileInput!) {
+    updateProfile(input: $input) {
+      profile {
+        id
+        coverPicture
+      }
     }
   }
-}
-    `;
-export type UpdateCoverPictureMutationFn = Apollo.MutationFunction<UpdateCoverPictureMutation, UpdateCoverPictureMutationVariables>;
+`
+export type UpdateCoverPictureMutationFn = Apollo.MutationFunction<
+  UpdateCoverPictureMutation,
+  UpdateCoverPictureMutationVariables
+>
 
 /**
  * __useUpdateCoverPictureMutation__
@@ -7667,24 +7673,35 @@ export type UpdateCoverPictureMutationFn = Apollo.MutationFunction<UpdateCoverPi
  *   },
  * });
  */
-export function useUpdateCoverPictureMutation(baseOptions?: Apollo.MutationHookOptions<UpdateCoverPictureMutation, UpdateCoverPictureMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateCoverPictureMutation, UpdateCoverPictureMutationVariables>(UpdateCoverPictureDocument, options);
-      }
-export type UpdateCoverPictureMutationHookResult = ReturnType<typeof useUpdateCoverPictureMutation>;
-export type UpdateCoverPictureMutationResult = Apollo.MutationResult<UpdateCoverPictureMutation>;
-export type UpdateCoverPictureMutationOptions = Apollo.BaseMutationOptions<UpdateCoverPictureMutation, UpdateCoverPictureMutationVariables>;
+export function useUpdateCoverPictureMutation(
+  baseOptions?: Apollo.MutationHookOptions<UpdateCoverPictureMutation, UpdateCoverPictureMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<UpdateCoverPictureMutation, UpdateCoverPictureMutationVariables>(
+    UpdateCoverPictureDocument,
+    options,
+  )
+}
+export type UpdateCoverPictureMutationHookResult = ReturnType<typeof useUpdateCoverPictureMutation>
+export type UpdateCoverPictureMutationResult = Apollo.MutationResult<UpdateCoverPictureMutation>
+export type UpdateCoverPictureMutationOptions = Apollo.BaseMutationOptions<
+  UpdateCoverPictureMutation,
+  UpdateCoverPictureMutationVariables
+>
 export const UpdateDefaultWalletDocument = gql`
-    mutation UpdateDefaultWallet($input: UpdateDefaultWalletInput!) {
-  updateDefaultWallet(input: $input) {
-    user {
-      id
-      defaultWallet
+  mutation UpdateDefaultWallet($input: UpdateDefaultWalletInput!) {
+    updateDefaultWallet(input: $input) {
+      user {
+        id
+        defaultWallet
+      }
     }
   }
-}
-    `;
-export type UpdateDefaultWalletMutationFn = Apollo.MutationFunction<UpdateDefaultWalletMutation, UpdateDefaultWalletMutationVariables>;
+`
+export type UpdateDefaultWalletMutationFn = Apollo.MutationFunction<
+  UpdateDefaultWalletMutation,
+  UpdateDefaultWalletMutationVariables
+>
 
 /**
  * __useUpdateDefaultWalletMutation__
@@ -7703,24 +7720,35 @@ export type UpdateDefaultWalletMutationFn = Apollo.MutationFunction<UpdateDefaul
  *   },
  * });
  */
-export function useUpdateDefaultWalletMutation(baseOptions?: Apollo.MutationHookOptions<UpdateDefaultWalletMutation, UpdateDefaultWalletMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateDefaultWalletMutation, UpdateDefaultWalletMutationVariables>(UpdateDefaultWalletDocument, options);
-      }
-export type UpdateDefaultWalletMutationHookResult = ReturnType<typeof useUpdateDefaultWalletMutation>;
-export type UpdateDefaultWalletMutationResult = Apollo.MutationResult<UpdateDefaultWalletMutation>;
-export type UpdateDefaultWalletMutationOptions = Apollo.BaseMutationOptions<UpdateDefaultWalletMutation, UpdateDefaultWalletMutationVariables>;
+export function useUpdateDefaultWalletMutation(
+  baseOptions?: Apollo.MutationHookOptions<UpdateDefaultWalletMutation, UpdateDefaultWalletMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<UpdateDefaultWalletMutation, UpdateDefaultWalletMutationVariables>(
+    UpdateDefaultWalletDocument,
+    options,
+  )
+}
+export type UpdateDefaultWalletMutationHookResult = ReturnType<typeof useUpdateDefaultWalletMutation>
+export type UpdateDefaultWalletMutationResult = Apollo.MutationResult<UpdateDefaultWalletMutation>
+export type UpdateDefaultWalletMutationOptions = Apollo.BaseMutationOptions<
+  UpdateDefaultWalletMutation,
+  UpdateDefaultWalletMutationVariables
+>
 export const UpdateFavoriteGenresDocument = gql`
-    mutation UpdateFavoriteGenres($input: UpdateProfileInput!) {
-  updateProfile(input: $input) {
-    profile {
-      id
-      favoriteGenres
+  mutation UpdateFavoriteGenres($input: UpdateProfileInput!) {
+    updateProfile(input: $input) {
+      profile {
+        id
+        favoriteGenres
+      }
     }
   }
-}
-    `;
-export type UpdateFavoriteGenresMutationFn = Apollo.MutationFunction<UpdateFavoriteGenresMutation, UpdateFavoriteGenresMutationVariables>;
+`
+export type UpdateFavoriteGenresMutationFn = Apollo.MutationFunction<
+  UpdateFavoriteGenresMutation,
+  UpdateFavoriteGenresMutationVariables
+>
 
 /**
  * __useUpdateFavoriteGenresMutation__
@@ -7739,24 +7767,32 @@ export type UpdateFavoriteGenresMutationFn = Apollo.MutationFunction<UpdateFavor
  *   },
  * });
  */
-export function useUpdateFavoriteGenresMutation(baseOptions?: Apollo.MutationHookOptions<UpdateFavoriteGenresMutation, UpdateFavoriteGenresMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateFavoriteGenresMutation, UpdateFavoriteGenresMutationVariables>(UpdateFavoriteGenresDocument, options);
-      }
-export type UpdateFavoriteGenresMutationHookResult = ReturnType<typeof useUpdateFavoriteGenresMutation>;
-export type UpdateFavoriteGenresMutationResult = Apollo.MutationResult<UpdateFavoriteGenresMutation>;
-export type UpdateFavoriteGenresMutationOptions = Apollo.BaseMutationOptions<UpdateFavoriteGenresMutation, UpdateFavoriteGenresMutationVariables>;
+export function useUpdateFavoriteGenresMutation(
+  baseOptions?: Apollo.MutationHookOptions<UpdateFavoriteGenresMutation, UpdateFavoriteGenresMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<UpdateFavoriteGenresMutation, UpdateFavoriteGenresMutationVariables>(
+    UpdateFavoriteGenresDocument,
+    options,
+  )
+}
+export type UpdateFavoriteGenresMutationHookResult = ReturnType<typeof useUpdateFavoriteGenresMutation>
+export type UpdateFavoriteGenresMutationResult = Apollo.MutationResult<UpdateFavoriteGenresMutation>
+export type UpdateFavoriteGenresMutationOptions = Apollo.BaseMutationOptions<
+  UpdateFavoriteGenresMutation,
+  UpdateFavoriteGenresMutationVariables
+>
 export const UpdateHandleDocument = gql`
-    mutation UpdateHandle($input: UpdateHandleInput!) {
-  updateHandle(input: $input) {
-    user {
-      id
-      handle
+  mutation UpdateHandle($input: UpdateHandleInput!) {
+    updateHandle(input: $input) {
+      user {
+        id
+        handle
+      }
     }
   }
-}
-    `;
-export type UpdateHandleMutationFn = Apollo.MutationFunction<UpdateHandleMutation, UpdateHandleMutationVariables>;
+`
+export type UpdateHandleMutationFn = Apollo.MutationFunction<UpdateHandleMutation, UpdateHandleMutationVariables>
 
 /**
  * __useUpdateHandleMutation__
@@ -7775,24 +7811,32 @@ export type UpdateHandleMutationFn = Apollo.MutationFunction<UpdateHandleMutatio
  *   },
  * });
  */
-export function useUpdateHandleMutation(baseOptions?: Apollo.MutationHookOptions<UpdateHandleMutation, UpdateHandleMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateHandleMutation, UpdateHandleMutationVariables>(UpdateHandleDocument, options);
-      }
-export type UpdateHandleMutationHookResult = ReturnType<typeof useUpdateHandleMutation>;
-export type UpdateHandleMutationResult = Apollo.MutationResult<UpdateHandleMutation>;
-export type UpdateHandleMutationOptions = Apollo.BaseMutationOptions<UpdateHandleMutation, UpdateHandleMutationVariables>;
+export function useUpdateHandleMutation(
+  baseOptions?: Apollo.MutationHookOptions<UpdateHandleMutation, UpdateHandleMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<UpdateHandleMutation, UpdateHandleMutationVariables>(UpdateHandleDocument, options)
+}
+export type UpdateHandleMutationHookResult = ReturnType<typeof useUpdateHandleMutation>
+export type UpdateHandleMutationResult = Apollo.MutationResult<UpdateHandleMutation>
+export type UpdateHandleMutationOptions = Apollo.BaseMutationOptions<
+  UpdateHandleMutation,
+  UpdateHandleMutationVariables
+>
 export const UpdateMusicianTypeDocument = gql`
-    mutation UpdateMusicianType($input: UpdateProfileInput!) {
-  updateProfile(input: $input) {
-    profile {
-      id
-      musicianTypes
+  mutation UpdateMusicianType($input: UpdateProfileInput!) {
+    updateProfile(input: $input) {
+      profile {
+        id
+        musicianTypes
+      }
     }
   }
-}
-    `;
-export type UpdateMusicianTypeMutationFn = Apollo.MutationFunction<UpdateMusicianTypeMutation, UpdateMusicianTypeMutationVariables>;
+`
+export type UpdateMusicianTypeMutationFn = Apollo.MutationFunction<
+  UpdateMusicianTypeMutation,
+  UpdateMusicianTypeMutationVariables
+>
 
 /**
  * __useUpdateMusicianTypeMutation__
@@ -7811,25 +7855,33 @@ export type UpdateMusicianTypeMutationFn = Apollo.MutationFunction<UpdateMusicia
  *   },
  * });
  */
-export function useUpdateMusicianTypeMutation(baseOptions?: Apollo.MutationHookOptions<UpdateMusicianTypeMutation, UpdateMusicianTypeMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateMusicianTypeMutation, UpdateMusicianTypeMutationVariables>(UpdateMusicianTypeDocument, options);
-      }
-export type UpdateMusicianTypeMutationHookResult = ReturnType<typeof useUpdateMusicianTypeMutation>;
-export type UpdateMusicianTypeMutationResult = Apollo.MutationResult<UpdateMusicianTypeMutation>;
-export type UpdateMusicianTypeMutationOptions = Apollo.BaseMutationOptions<UpdateMusicianTypeMutation, UpdateMusicianTypeMutationVariables>;
+export function useUpdateMusicianTypeMutation(
+  baseOptions?: Apollo.MutationHookOptions<UpdateMusicianTypeMutation, UpdateMusicianTypeMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<UpdateMusicianTypeMutation, UpdateMusicianTypeMutationVariables>(
+    UpdateMusicianTypeDocument,
+    options,
+  )
+}
+export type UpdateMusicianTypeMutationHookResult = ReturnType<typeof useUpdateMusicianTypeMutation>
+export type UpdateMusicianTypeMutationResult = Apollo.MutationResult<UpdateMusicianTypeMutation>
+export type UpdateMusicianTypeMutationOptions = Apollo.BaseMutationOptions<
+  UpdateMusicianTypeMutation,
+  UpdateMusicianTypeMutationVariables
+>
 export const UpdateOtpDocument = gql`
-    mutation UpdateOTP($input: UpdateOTPInput!) {
-  updateOTP(input: $input) {
-    user {
-      id
-      otpSecret
-      otpRecoveryPhrase
+  mutation UpdateOTP($input: UpdateOTPInput!) {
+    updateOTP(input: $input) {
+      user {
+        id
+        otpSecret
+        otpRecoveryPhrase
+      }
     }
   }
-}
-    `;
-export type UpdateOtpMutationFn = Apollo.MutationFunction<UpdateOtpMutation, UpdateOtpMutationVariables>;
+`
+export type UpdateOtpMutationFn = Apollo.MutationFunction<UpdateOtpMutation, UpdateOtpMutationVariables>
 
 /**
  * __useUpdateOtpMutation__
@@ -7848,23 +7900,28 @@ export type UpdateOtpMutationFn = Apollo.MutationFunction<UpdateOtpMutation, Upd
  *   },
  * });
  */
-export function useUpdateOtpMutation(baseOptions?: Apollo.MutationHookOptions<UpdateOtpMutation, UpdateOtpMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateOtpMutation, UpdateOtpMutationVariables>(UpdateOtpDocument, options);
-      }
-export type UpdateOtpMutationHookResult = ReturnType<typeof useUpdateOtpMutation>;
-export type UpdateOtpMutationResult = Apollo.MutationResult<UpdateOtpMutation>;
-export type UpdateOtpMutationOptions = Apollo.BaseMutationOptions<UpdateOtpMutation, UpdateOtpMutationVariables>;
+export function useUpdateOtpMutation(
+  baseOptions?: Apollo.MutationHookOptions<UpdateOtpMutation, UpdateOtpMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<UpdateOtpMutation, UpdateOtpMutationVariables>(UpdateOtpDocument, options)
+}
+export type UpdateOtpMutationHookResult = ReturnType<typeof useUpdateOtpMutation>
+export type UpdateOtpMutationResult = Apollo.MutationResult<UpdateOtpMutation>
+export type UpdateOtpMutationOptions = Apollo.BaseMutationOptions<UpdateOtpMutation, UpdateOtpMutationVariables>
 export const UpdateOgunClaimedAudioHolderDocument = gql`
-    mutation UpdateOgunClaimedAudioHolder($input: UpdateOgunClaimedInput!) {
-  updateOgunClaimedAudioHolder(input: $input) {
-    audioHolder {
-      id
+  mutation UpdateOgunClaimedAudioHolder($input: UpdateOgunClaimedInput!) {
+    updateOgunClaimedAudioHolder(input: $input) {
+      audioHolder {
+        id
+      }
     }
   }
-}
-    `;
-export type UpdateOgunClaimedAudioHolderMutationFn = Apollo.MutationFunction<UpdateOgunClaimedAudioHolderMutation, UpdateOgunClaimedAudioHolderMutationVariables>;
+`
+export type UpdateOgunClaimedAudioHolderMutationFn = Apollo.MutationFunction<
+  UpdateOgunClaimedAudioHolderMutation,
+  UpdateOgunClaimedAudioHolderMutationVariables
+>
 
 /**
  * __useUpdateOgunClaimedAudioHolderMutation__
@@ -7883,23 +7940,37 @@ export type UpdateOgunClaimedAudioHolderMutationFn = Apollo.MutationFunction<Upd
  *   },
  * });
  */
-export function useUpdateOgunClaimedAudioHolderMutation(baseOptions?: Apollo.MutationHookOptions<UpdateOgunClaimedAudioHolderMutation, UpdateOgunClaimedAudioHolderMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateOgunClaimedAudioHolderMutation, UpdateOgunClaimedAudioHolderMutationVariables>(UpdateOgunClaimedAudioHolderDocument, options);
-      }
-export type UpdateOgunClaimedAudioHolderMutationHookResult = ReturnType<typeof useUpdateOgunClaimedAudioHolderMutation>;
-export type UpdateOgunClaimedAudioHolderMutationResult = Apollo.MutationResult<UpdateOgunClaimedAudioHolderMutation>;
-export type UpdateOgunClaimedAudioHolderMutationOptions = Apollo.BaseMutationOptions<UpdateOgunClaimedAudioHolderMutation, UpdateOgunClaimedAudioHolderMutationVariables>;
+export function useUpdateOgunClaimedAudioHolderMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    UpdateOgunClaimedAudioHolderMutation,
+    UpdateOgunClaimedAudioHolderMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<UpdateOgunClaimedAudioHolderMutation, UpdateOgunClaimedAudioHolderMutationVariables>(
+    UpdateOgunClaimedAudioHolderDocument,
+    options,
+  )
+}
+export type UpdateOgunClaimedAudioHolderMutationHookResult = ReturnType<typeof useUpdateOgunClaimedAudioHolderMutation>
+export type UpdateOgunClaimedAudioHolderMutationResult = Apollo.MutationResult<UpdateOgunClaimedAudioHolderMutation>
+export type UpdateOgunClaimedAudioHolderMutationOptions = Apollo.BaseMutationOptions<
+  UpdateOgunClaimedAudioHolderMutation,
+  UpdateOgunClaimedAudioHolderMutationVariables
+>
 export const UpdateOgunClaimedWhitelistDocument = gql`
-    mutation UpdateOgunClaimedWhitelist($input: UpdateOgunClaimedInput!) {
-  updateOgunClaimedWhitelist(input: $input) {
-    whitelistEntry {
-      id
+  mutation UpdateOgunClaimedWhitelist($input: UpdateOgunClaimedInput!) {
+    updateOgunClaimedWhitelist(input: $input) {
+      whitelistEntry {
+        id
+      }
     }
   }
-}
-    `;
-export type UpdateOgunClaimedWhitelistMutationFn = Apollo.MutationFunction<UpdateOgunClaimedWhitelistMutation, UpdateOgunClaimedWhitelistMutationVariables>;
+`
+export type UpdateOgunClaimedWhitelistMutationFn = Apollo.MutationFunction<
+  UpdateOgunClaimedWhitelistMutation,
+  UpdateOgunClaimedWhitelistMutationVariables
+>
 
 /**
  * __useUpdateOgunClaimedWhitelistMutation__
@@ -7918,24 +7989,35 @@ export type UpdateOgunClaimedWhitelistMutationFn = Apollo.MutationFunction<Updat
  *   },
  * });
  */
-export function useUpdateOgunClaimedWhitelistMutation(baseOptions?: Apollo.MutationHookOptions<UpdateOgunClaimedWhitelistMutation, UpdateOgunClaimedWhitelistMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateOgunClaimedWhitelistMutation, UpdateOgunClaimedWhitelistMutationVariables>(UpdateOgunClaimedWhitelistDocument, options);
-      }
-export type UpdateOgunClaimedWhitelistMutationHookResult = ReturnType<typeof useUpdateOgunClaimedWhitelistMutation>;
-export type UpdateOgunClaimedWhitelistMutationResult = Apollo.MutationResult<UpdateOgunClaimedWhitelistMutation>;
-export type UpdateOgunClaimedWhitelistMutationOptions = Apollo.BaseMutationOptions<UpdateOgunClaimedWhitelistMutation, UpdateOgunClaimedWhitelistMutationVariables>;
+export function useUpdateOgunClaimedWhitelistMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    UpdateOgunClaimedWhitelistMutation,
+    UpdateOgunClaimedWhitelistMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<UpdateOgunClaimedWhitelistMutation, UpdateOgunClaimedWhitelistMutationVariables>(
+    UpdateOgunClaimedWhitelistDocument,
+    options,
+  )
+}
+export type UpdateOgunClaimedWhitelistMutationHookResult = ReturnType<typeof useUpdateOgunClaimedWhitelistMutation>
+export type UpdateOgunClaimedWhitelistMutationResult = Apollo.MutationResult<UpdateOgunClaimedWhitelistMutation>
+export type UpdateOgunClaimedWhitelistMutationOptions = Apollo.BaseMutationOptions<
+  UpdateOgunClaimedWhitelistMutation,
+  UpdateOgunClaimedWhitelistMutationVariables
+>
 export const UpdatePostDocument = gql`
-    mutation UpdatePost($input: UpdatePostInput!) {
-  updatePost(input: $input) {
-    post {
-      id
-      body
+  mutation UpdatePost($input: UpdatePostInput!) {
+    updatePost(input: $input) {
+      post {
+        id
+        body
+      }
     }
   }
-}
-    `;
-export type UpdatePostMutationFn = Apollo.MutationFunction<UpdatePostMutation, UpdatePostMutationVariables>;
+`
+export type UpdatePostMutationFn = Apollo.MutationFunction<UpdatePostMutation, UpdatePostMutationVariables>
 
 /**
  * __useUpdatePostMutation__
@@ -7954,24 +8036,29 @@ export type UpdatePostMutationFn = Apollo.MutationFunction<UpdatePostMutation, U
  *   },
  * });
  */
-export function useUpdatePostMutation(baseOptions?: Apollo.MutationHookOptions<UpdatePostMutation, UpdatePostMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdatePostMutation, UpdatePostMutationVariables>(UpdatePostDocument, options);
-      }
-export type UpdatePostMutationHookResult = ReturnType<typeof useUpdatePostMutation>;
-export type UpdatePostMutationResult = Apollo.MutationResult<UpdatePostMutation>;
-export type UpdatePostMutationOptions = Apollo.BaseMutationOptions<UpdatePostMutation, UpdatePostMutationVariables>;
+export function useUpdatePostMutation(
+  baseOptions?: Apollo.MutationHookOptions<UpdatePostMutation, UpdatePostMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<UpdatePostMutation, UpdatePostMutationVariables>(UpdatePostDocument, options)
+}
+export type UpdatePostMutationHookResult = ReturnType<typeof useUpdatePostMutation>
+export type UpdatePostMutationResult = Apollo.MutationResult<UpdatePostMutation>
+export type UpdatePostMutationOptions = Apollo.BaseMutationOptions<UpdatePostMutation, UpdatePostMutationVariables>
 export const UpdateProfileBioDocument = gql`
-    mutation updateProfileBio($input: UpdateProfileInput!) {
-  updateProfile(input: $input) {
-    profile {
-      id
-      bio
+  mutation updateProfileBio($input: UpdateProfileInput!) {
+    updateProfile(input: $input) {
+      profile {
+        id
+        bio
+      }
     }
   }
-}
-    `;
-export type UpdateProfileBioMutationFn = Apollo.MutationFunction<UpdateProfileBioMutation, UpdateProfileBioMutationVariables>;
+`
+export type UpdateProfileBioMutationFn = Apollo.MutationFunction<
+  UpdateProfileBioMutation,
+  UpdateProfileBioMutationVariables
+>
 
 /**
  * __useUpdateProfileBioMutation__
@@ -7990,24 +8077,35 @@ export type UpdateProfileBioMutationFn = Apollo.MutationFunction<UpdateProfileBi
  *   },
  * });
  */
-export function useUpdateProfileBioMutation(baseOptions?: Apollo.MutationHookOptions<UpdateProfileBioMutation, UpdateProfileBioMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateProfileBioMutation, UpdateProfileBioMutationVariables>(UpdateProfileBioDocument, options);
-      }
-export type UpdateProfileBioMutationHookResult = ReturnType<typeof useUpdateProfileBioMutation>;
-export type UpdateProfileBioMutationResult = Apollo.MutationResult<UpdateProfileBioMutation>;
-export type UpdateProfileBioMutationOptions = Apollo.BaseMutationOptions<UpdateProfileBioMutation, UpdateProfileBioMutationVariables>;
+export function useUpdateProfileBioMutation(
+  baseOptions?: Apollo.MutationHookOptions<UpdateProfileBioMutation, UpdateProfileBioMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<UpdateProfileBioMutation, UpdateProfileBioMutationVariables>(
+    UpdateProfileBioDocument,
+    options,
+  )
+}
+export type UpdateProfileBioMutationHookResult = ReturnType<typeof useUpdateProfileBioMutation>
+export type UpdateProfileBioMutationResult = Apollo.MutationResult<UpdateProfileBioMutation>
+export type UpdateProfileBioMutationOptions = Apollo.BaseMutationOptions<
+  UpdateProfileBioMutation,
+  UpdateProfileBioMutationVariables
+>
 export const UpdateProfileDisplayNameDocument = gql`
-    mutation updateProfileDisplayName($input: UpdateProfileInput!) {
-  updateProfile(input: $input) {
-    profile {
-      id
-      displayName
+  mutation updateProfileDisplayName($input: UpdateProfileInput!) {
+    updateProfile(input: $input) {
+      profile {
+        id
+        displayName
+      }
     }
   }
-}
-    `;
-export type UpdateProfileDisplayNameMutationFn = Apollo.MutationFunction<UpdateProfileDisplayNameMutation, UpdateProfileDisplayNameMutationVariables>;
+`
+export type UpdateProfileDisplayNameMutationFn = Apollo.MutationFunction<
+  UpdateProfileDisplayNameMutation,
+  UpdateProfileDisplayNameMutationVariables
+>
 
 /**
  * __useUpdateProfileDisplayNameMutation__
@@ -8026,24 +8124,35 @@ export type UpdateProfileDisplayNameMutationFn = Apollo.MutationFunction<UpdateP
  *   },
  * });
  */
-export function useUpdateProfileDisplayNameMutation(baseOptions?: Apollo.MutationHookOptions<UpdateProfileDisplayNameMutation, UpdateProfileDisplayNameMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateProfileDisplayNameMutation, UpdateProfileDisplayNameMutationVariables>(UpdateProfileDisplayNameDocument, options);
-      }
-export type UpdateProfileDisplayNameMutationHookResult = ReturnType<typeof useUpdateProfileDisplayNameMutation>;
-export type UpdateProfileDisplayNameMutationResult = Apollo.MutationResult<UpdateProfileDisplayNameMutation>;
-export type UpdateProfileDisplayNameMutationOptions = Apollo.BaseMutationOptions<UpdateProfileDisplayNameMutation, UpdateProfileDisplayNameMutationVariables>;
+export function useUpdateProfileDisplayNameMutation(
+  baseOptions?: Apollo.MutationHookOptions<UpdateProfileDisplayNameMutation, UpdateProfileDisplayNameMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<UpdateProfileDisplayNameMutation, UpdateProfileDisplayNameMutationVariables>(
+    UpdateProfileDisplayNameDocument,
+    options,
+  )
+}
+export type UpdateProfileDisplayNameMutationHookResult = ReturnType<typeof useUpdateProfileDisplayNameMutation>
+export type UpdateProfileDisplayNameMutationResult = Apollo.MutationResult<UpdateProfileDisplayNameMutation>
+export type UpdateProfileDisplayNameMutationOptions = Apollo.BaseMutationOptions<
+  UpdateProfileDisplayNameMutation,
+  UpdateProfileDisplayNameMutationVariables
+>
 export const UpdateProfilePictureDocument = gql`
-    mutation UpdateProfilePicture($input: UpdateProfileInput!) {
-  updateProfile(input: $input) {
-    profile {
-      id
-      profilePicture
+  mutation UpdateProfilePicture($input: UpdateProfileInput!) {
+    updateProfile(input: $input) {
+      profile {
+        id
+        profilePicture
+      }
     }
   }
-}
-    `;
-export type UpdateProfilePictureMutationFn = Apollo.MutationFunction<UpdateProfilePictureMutation, UpdateProfilePictureMutationVariables>;
+`
+export type UpdateProfilePictureMutationFn = Apollo.MutationFunction<
+  UpdateProfilePictureMutation,
+  UpdateProfilePictureMutationVariables
+>
 
 /**
  * __useUpdateProfilePictureMutation__
@@ -8062,29 +8171,40 @@ export type UpdateProfilePictureMutationFn = Apollo.MutationFunction<UpdateProfi
  *   },
  * });
  */
-export function useUpdateProfilePictureMutation(baseOptions?: Apollo.MutationHookOptions<UpdateProfilePictureMutation, UpdateProfilePictureMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateProfilePictureMutation, UpdateProfilePictureMutationVariables>(UpdateProfilePictureDocument, options);
-      }
-export type UpdateProfilePictureMutationHookResult = ReturnType<typeof useUpdateProfilePictureMutation>;
-export type UpdateProfilePictureMutationResult = Apollo.MutationResult<UpdateProfilePictureMutation>;
-export type UpdateProfilePictureMutationOptions = Apollo.BaseMutationOptions<UpdateProfilePictureMutation, UpdateProfilePictureMutationVariables>;
+export function useUpdateProfilePictureMutation(
+  baseOptions?: Apollo.MutationHookOptions<UpdateProfilePictureMutation, UpdateProfilePictureMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<UpdateProfilePictureMutation, UpdateProfilePictureMutationVariables>(
+    UpdateProfilePictureDocument,
+    options,
+  )
+}
+export type UpdateProfilePictureMutationHookResult = ReturnType<typeof useUpdateProfilePictureMutation>
+export type UpdateProfilePictureMutationResult = Apollo.MutationResult<UpdateProfilePictureMutation>
+export type UpdateProfilePictureMutationOptions = Apollo.BaseMutationOptions<
+  UpdateProfilePictureMutation,
+  UpdateProfilePictureMutationVariables
+>
 export const UpdateSocialMediasDocument = gql`
-    mutation updateSocialMedias($input: UpdateProfileInput!) {
-  updateProfile(input: $input) {
-    profile {
-      id
-      socialMedias {
-        facebook
-        instagram
-        soundcloud
-        twitter
+  mutation updateSocialMedias($input: UpdateProfileInput!) {
+    updateProfile(input: $input) {
+      profile {
+        id
+        socialMedias {
+          facebook
+          instagram
+          soundcloud
+          twitter
+        }
       }
     }
   }
-}
-    `;
-export type UpdateSocialMediasMutationFn = Apollo.MutationFunction<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>;
+`
+export type UpdateSocialMediasMutationFn = Apollo.MutationFunction<
+  UpdateSocialMediasMutation,
+  UpdateSocialMediasMutationVariables
+>
 
 /**
  * __useUpdateSocialMediasMutation__
@@ -8103,23 +8223,35 @@ export type UpdateSocialMediasMutationFn = Apollo.MutationFunction<UpdateSocialM
  *   },
  * });
  */
-export function useUpdateSocialMediasMutation(baseOptions?: Apollo.MutationHookOptions<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>(UpdateSocialMediasDocument, options);
-      }
-export type UpdateSocialMediasMutationHookResult = ReturnType<typeof useUpdateSocialMediasMutation>;
-export type UpdateSocialMediasMutationResult = Apollo.MutationResult<UpdateSocialMediasMutation>;
-export type UpdateSocialMediasMutationOptions = Apollo.BaseMutationOptions<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>;
+export function useUpdateSocialMediasMutation(
+  baseOptions?: Apollo.MutationHookOptions<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<UpdateSocialMediasMutation, UpdateSocialMediasMutationVariables>(
+    UpdateSocialMediasDocument,
+    options,
+  )
+}
+export type UpdateSocialMediasMutationHookResult = ReturnType<typeof useUpdateSocialMediasMutation>
+export type UpdateSocialMediasMutationResult = Apollo.MutationResult<UpdateSocialMediasMutation>
+export type UpdateSocialMediasMutationOptions = Apollo.BaseMutationOptions<
+  UpdateSocialMediasMutation,
+  UpdateSocialMediasMutationVariables
+>
 export const UpdateProfileVerificationRequestDocument = gql`
-    mutation UpdateProfileVerificationRequest($id: String!, $input: CreateProfileVerificationRequestInput!) {
-  updateProfileVerificationRequest(id: $id, input: $input) {
-    profileVerificationRequest {
-      ...ProfileVerificationRequestComponentFields
+  mutation UpdateProfileVerificationRequest($id: String!, $input: CreateProfileVerificationRequestInput!) {
+    updateProfileVerificationRequest(id: $id, input: $input) {
+      profileVerificationRequest {
+        ...ProfileVerificationRequestComponentFields
+      }
     }
   }
-}
-    ${ProfileVerificationRequestComponentFieldsFragmentDoc}`;
-export type UpdateProfileVerificationRequestMutationFn = Apollo.MutationFunction<UpdateProfileVerificationRequestMutation, UpdateProfileVerificationRequestMutationVariables>;
+  ${ProfileVerificationRequestComponentFieldsFragmentDoc}
+`
+export type UpdateProfileVerificationRequestMutationFn = Apollo.MutationFunction<
+  UpdateProfileVerificationRequestMutation,
+  UpdateProfileVerificationRequestMutationVariables
+>
 
 /**
  * __useUpdateProfileVerificationRequestMutation__
@@ -8139,23 +8271,38 @@ export type UpdateProfileVerificationRequestMutationFn = Apollo.MutationFunction
  *   },
  * });
  */
-export function useUpdateProfileVerificationRequestMutation(baseOptions?: Apollo.MutationHookOptions<UpdateProfileVerificationRequestMutation, UpdateProfileVerificationRequestMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateProfileVerificationRequestMutation, UpdateProfileVerificationRequestMutationVariables>(UpdateProfileVerificationRequestDocument, options);
-      }
-export type UpdateProfileVerificationRequestMutationHookResult = ReturnType<typeof useUpdateProfileVerificationRequestMutation>;
-export type UpdateProfileVerificationRequestMutationResult = Apollo.MutationResult<UpdateProfileVerificationRequestMutation>;
-export type UpdateProfileVerificationRequestMutationOptions = Apollo.BaseMutationOptions<UpdateProfileVerificationRequestMutation, UpdateProfileVerificationRequestMutationVariables>;
+export function useUpdateProfileVerificationRequestMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    UpdateProfileVerificationRequestMutation,
+    UpdateProfileVerificationRequestMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<
+    UpdateProfileVerificationRequestMutation,
+    UpdateProfileVerificationRequestMutationVariables
+  >(UpdateProfileVerificationRequestDocument, options)
+}
+export type UpdateProfileVerificationRequestMutationHookResult = ReturnType<
+  typeof useUpdateProfileVerificationRequestMutation
+>
+export type UpdateProfileVerificationRequestMutationResult =
+  Apollo.MutationResult<UpdateProfileVerificationRequestMutation>
+export type UpdateProfileVerificationRequestMutationOptions = Apollo.BaseMutationOptions<
+  UpdateProfileVerificationRequestMutation,
+  UpdateProfileVerificationRequestMutationVariables
+>
 export const UpdateTrackDocument = gql`
-    mutation updateTrack($input: UpdateTrackInput!) {
-  updateTrack(input: $input) {
-    track {
-      ...TrackComponentFields
+  mutation updateTrack($input: UpdateTrackInput!) {
+    updateTrack(input: $input) {
+      track {
+        ...TrackComponentFields
+      }
     }
   }
-}
-    ${TrackComponentFieldsFragmentDoc}`;
-export type UpdateTrackMutationFn = Apollo.MutationFunction<UpdateTrackMutation, UpdateTrackMutationVariables>;
+  ${TrackComponentFieldsFragmentDoc}
+`
+export type UpdateTrackMutationFn = Apollo.MutationFunction<UpdateTrackMutation, UpdateTrackMutationVariables>
 
 /**
  * __useUpdateTrackMutation__
@@ -8174,24 +8321,29 @@ export type UpdateTrackMutationFn = Apollo.MutationFunction<UpdateTrackMutation,
  *   },
  * });
  */
-export function useUpdateTrackMutation(baseOptions?: Apollo.MutationHookOptions<UpdateTrackMutation, UpdateTrackMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateTrackMutation, UpdateTrackMutationVariables>(UpdateTrackDocument, options);
-      }
-export type UpdateTrackMutationHookResult = ReturnType<typeof useUpdateTrackMutation>;
-export type UpdateTrackMutationResult = Apollo.MutationResult<UpdateTrackMutation>;
-export type UpdateTrackMutationOptions = Apollo.BaseMutationOptions<UpdateTrackMutation, UpdateTrackMutationVariables>;
+export function useUpdateTrackMutation(
+  baseOptions?: Apollo.MutationHookOptions<UpdateTrackMutation, UpdateTrackMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<UpdateTrackMutation, UpdateTrackMutationVariables>(UpdateTrackDocument, options)
+}
+export type UpdateTrackMutationHookResult = ReturnType<typeof useUpdateTrackMutation>
+export type UpdateTrackMutationResult = Apollo.MutationResult<UpdateTrackMutation>
+export type UpdateTrackMutationOptions = Apollo.BaseMutationOptions<UpdateTrackMutation, UpdateTrackMutationVariables>
 export const UpdateMetaMaskAddressesDocument = gql`
-    mutation UpdateMetaMaskAddresses($input: UpdateWalletInput!) {
-  updateMetaMaskAddresses(input: $input) {
-    user {
-      id
-      metaMaskWalletAddressees
+  mutation UpdateMetaMaskAddresses($input: UpdateWalletInput!) {
+    updateMetaMaskAddresses(input: $input) {
+      user {
+        id
+        metaMaskWalletAddressees
+      }
     }
   }
-}
-    `;
-export type UpdateMetaMaskAddressesMutationFn = Apollo.MutationFunction<UpdateMetaMaskAddressesMutation, UpdateMetaMaskAddressesMutationVariables>;
+`
+export type UpdateMetaMaskAddressesMutationFn = Apollo.MutationFunction<
+  UpdateMetaMaskAddressesMutation,
+  UpdateMetaMaskAddressesMutationVariables
+>
 
 /**
  * __useUpdateMetaMaskAddressesMutation__
@@ -8210,22 +8362,30 @@ export type UpdateMetaMaskAddressesMutationFn = Apollo.MutationFunction<UpdateMe
  *   },
  * });
  */
-export function useUpdateMetaMaskAddressesMutation(baseOptions?: Apollo.MutationHookOptions<UpdateMetaMaskAddressesMutation, UpdateMetaMaskAddressesMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateMetaMaskAddressesMutation, UpdateMetaMaskAddressesMutationVariables>(UpdateMetaMaskAddressesDocument, options);
-      }
-export type UpdateMetaMaskAddressesMutationHookResult = ReturnType<typeof useUpdateMetaMaskAddressesMutation>;
-export type UpdateMetaMaskAddressesMutationResult = Apollo.MutationResult<UpdateMetaMaskAddressesMutation>;
-export type UpdateMetaMaskAddressesMutationOptions = Apollo.BaseMutationOptions<UpdateMetaMaskAddressesMutation, UpdateMetaMaskAddressesMutationVariables>;
-export const UploadUrlDocument = gql`
-    query UploadUrl($fileType: String!) {
-  uploadUrl(fileType: $fileType) {
-    uploadUrl
-    fileName
-    readUrl
-  }
+export function useUpdateMetaMaskAddressesMutation(
+  baseOptions?: Apollo.MutationHookOptions<UpdateMetaMaskAddressesMutation, UpdateMetaMaskAddressesMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<UpdateMetaMaskAddressesMutation, UpdateMetaMaskAddressesMutationVariables>(
+    UpdateMetaMaskAddressesDocument,
+    options,
+  )
 }
-    `;
+export type UpdateMetaMaskAddressesMutationHookResult = ReturnType<typeof useUpdateMetaMaskAddressesMutation>
+export type UpdateMetaMaskAddressesMutationResult = Apollo.MutationResult<UpdateMetaMaskAddressesMutation>
+export type UpdateMetaMaskAddressesMutationOptions = Apollo.BaseMutationOptions<
+  UpdateMetaMaskAddressesMutation,
+  UpdateMetaMaskAddressesMutationVariables
+>
+export const UploadUrlDocument = gql`
+  query UploadUrl($fileType: String!) {
+    uploadUrl(fileType: $fileType) {
+      uploadUrl
+      fileName
+      readUrl
+    }
+  }
+`
 
 /**
  * __useUploadUrlQuery__
@@ -8244,33 +8404,35 @@ export const UploadUrlDocument = gql`
  * });
  */
 export function useUploadUrlQuery(baseOptions: Apollo.QueryHookOptions<UploadUrlQuery, UploadUrlQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<UploadUrlQuery, UploadUrlQueryVariables>(UploadUrlDocument, options);
-      }
-export function useUploadUrlLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UploadUrlQuery, UploadUrlQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<UploadUrlQuery, UploadUrlQueryVariables>(UploadUrlDocument, options);
-        }
-export type UploadUrlQueryHookResult = ReturnType<typeof useUploadUrlQuery>;
-export type UploadUrlLazyQueryHookResult = ReturnType<typeof useUploadUrlLazyQuery>;
-export type UploadUrlQueryResult = Apollo.QueryResult<UploadUrlQuery, UploadUrlQueryVariables>;
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<UploadUrlQuery, UploadUrlQueryVariables>(UploadUrlDocument, options)
+}
+export function useUploadUrlLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<UploadUrlQuery, UploadUrlQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<UploadUrlQuery, UploadUrlQueryVariables>(UploadUrlDocument, options)
+}
+export type UploadUrlQueryHookResult = ReturnType<typeof useUploadUrlQuery>
+export type UploadUrlLazyQueryHookResult = ReturnType<typeof useUploadUrlLazyQuery>
+export type UploadUrlQueryResult = Apollo.QueryResult<UploadUrlQuery, UploadUrlQueryVariables>
 export const UserByWalletDocument = gql`
-    query UserByWallet($walletAddress: String!) {
-  getUserByWallet(walletAddress: $walletAddress) {
-    id
-    profile {
+  query UserByWallet($walletAddress: String!) {
+    getUserByWallet(walletAddress: $walletAddress) {
       id
-      displayName
-      profilePicture
-      userHandle
-      followerCount
-      followingCount
-      verified
-      teamMember
+      profile {
+        id
+        displayName
+        profilePicture
+        userHandle
+        followerCount
+        followingCount
+        verified
+        teamMember
+      }
     }
   }
-}
-    `;
+`
 
 /**
  * __useUserByWalletQuery__
@@ -8288,23 +8450,30 @@ export const UserByWalletDocument = gql`
  *   },
  * });
  */
-export function useUserByWalletQuery(baseOptions: Apollo.QueryHookOptions<UserByWalletQuery, UserByWalletQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<UserByWalletQuery, UserByWalletQueryVariables>(UserByWalletDocument, options);
-      }
-export function useUserByWalletLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UserByWalletQuery, UserByWalletQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<UserByWalletQuery, UserByWalletQueryVariables>(UserByWalletDocument, options);
-        }
-export type UserByWalletQueryHookResult = ReturnType<typeof useUserByWalletQuery>;
-export type UserByWalletLazyQueryHookResult = ReturnType<typeof useUserByWalletLazyQuery>;
-export type UserByWalletQueryResult = Apollo.QueryResult<UserByWalletQuery, UserByWalletQueryVariables>;
-export const ValidateOtpRecoveryPhraseDocument = gql`
-    mutation ValidateOTPRecoveryPhrase($input: ValidateOTPRecoveryPhraseInput!) {
-  validateOTPRecoveryPhrase(input: $input)
+export function useUserByWalletQuery(
+  baseOptions: Apollo.QueryHookOptions<UserByWalletQuery, UserByWalletQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<UserByWalletQuery, UserByWalletQueryVariables>(UserByWalletDocument, options)
 }
-    `;
-export type ValidateOtpRecoveryPhraseMutationFn = Apollo.MutationFunction<ValidateOtpRecoveryPhraseMutation, ValidateOtpRecoveryPhraseMutationVariables>;
+export function useUserByWalletLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<UserByWalletQuery, UserByWalletQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<UserByWalletQuery, UserByWalletQueryVariables>(UserByWalletDocument, options)
+}
+export type UserByWalletQueryHookResult = ReturnType<typeof useUserByWalletQuery>
+export type UserByWalletLazyQueryHookResult = ReturnType<typeof useUserByWalletLazyQuery>
+export type UserByWalletQueryResult = Apollo.QueryResult<UserByWalletQuery, UserByWalletQueryVariables>
+export const ValidateOtpRecoveryPhraseDocument = gql`
+  mutation ValidateOTPRecoveryPhrase($input: ValidateOTPRecoveryPhraseInput!) {
+    validateOTPRecoveryPhrase(input: $input)
+  }
+`
+export type ValidateOtpRecoveryPhraseMutationFn = Apollo.MutationFunction<
+  ValidateOtpRecoveryPhraseMutation,
+  ValidateOtpRecoveryPhraseMutationVariables
+>
 
 /**
  * __useValidateOtpRecoveryPhraseMutation__
@@ -8323,21 +8492,32 @@ export type ValidateOtpRecoveryPhraseMutationFn = Apollo.MutationFunction<Valida
  *   },
  * });
  */
-export function useValidateOtpRecoveryPhraseMutation(baseOptions?: Apollo.MutationHookOptions<ValidateOtpRecoveryPhraseMutation, ValidateOtpRecoveryPhraseMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<ValidateOtpRecoveryPhraseMutation, ValidateOtpRecoveryPhraseMutationVariables>(ValidateOtpRecoveryPhraseDocument, options);
-      }
-export type ValidateOtpRecoveryPhraseMutationHookResult = ReturnType<typeof useValidateOtpRecoveryPhraseMutation>;
-export type ValidateOtpRecoveryPhraseMutationResult = Apollo.MutationResult<ValidateOtpRecoveryPhraseMutation>;
-export type ValidateOtpRecoveryPhraseMutationOptions = Apollo.BaseMutationOptions<ValidateOtpRecoveryPhraseMutation, ValidateOtpRecoveryPhraseMutationVariables>;
-export const WhitelistEntryByWalletDocument = gql`
-    query WhitelistEntryByWallet($walletAdress: String!) {
-  whitelistEntryByWallet(walletAdress: $walletAdress) {
-    id
-    ogunClaimed
-  }
+export function useValidateOtpRecoveryPhraseMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    ValidateOtpRecoveryPhraseMutation,
+    ValidateOtpRecoveryPhraseMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<ValidateOtpRecoveryPhraseMutation, ValidateOtpRecoveryPhraseMutationVariables>(
+    ValidateOtpRecoveryPhraseDocument,
+    options,
+  )
 }
-    `;
+export type ValidateOtpRecoveryPhraseMutationHookResult = ReturnType<typeof useValidateOtpRecoveryPhraseMutation>
+export type ValidateOtpRecoveryPhraseMutationResult = Apollo.MutationResult<ValidateOtpRecoveryPhraseMutation>
+export type ValidateOtpRecoveryPhraseMutationOptions = Apollo.BaseMutationOptions<
+  ValidateOtpRecoveryPhraseMutation,
+  ValidateOtpRecoveryPhraseMutationVariables
+>
+export const WhitelistEntryByWalletDocument = gql`
+  query WhitelistEntryByWallet($walletAdress: String!) {
+    whitelistEntryByWallet(walletAdress: $walletAdress) {
+      id
+      ogunClaimed
+    }
+  }
+`
 
 /**
  * __useWhitelistEntryByWalletQuery__
@@ -8355,14 +8535,27 @@ export const WhitelistEntryByWalletDocument = gql`
  *   },
  * });
  */
-export function useWhitelistEntryByWalletQuery(baseOptions: Apollo.QueryHookOptions<WhitelistEntryByWalletQuery, WhitelistEntryByWalletQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<WhitelistEntryByWalletQuery, WhitelistEntryByWalletQueryVariables>(WhitelistEntryByWalletDocument, options);
-      }
-export function useWhitelistEntryByWalletLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<WhitelistEntryByWalletQuery, WhitelistEntryByWalletQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<WhitelistEntryByWalletQuery, WhitelistEntryByWalletQueryVariables>(WhitelistEntryByWalletDocument, options);
-        }
-export type WhitelistEntryByWalletQueryHookResult = ReturnType<typeof useWhitelistEntryByWalletQuery>;
-export type WhitelistEntryByWalletLazyQueryHookResult = ReturnType<typeof useWhitelistEntryByWalletLazyQuery>;
-export type WhitelistEntryByWalletQueryResult = Apollo.QueryResult<WhitelistEntryByWalletQuery, WhitelistEntryByWalletQueryVariables>;
+export function useWhitelistEntryByWalletQuery(
+  baseOptions: Apollo.QueryHookOptions<WhitelistEntryByWalletQuery, WhitelistEntryByWalletQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useQuery<WhitelistEntryByWalletQuery, WhitelistEntryByWalletQueryVariables>(
+    WhitelistEntryByWalletDocument,
+    options,
+  )
+}
+export function useWhitelistEntryByWalletLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<WhitelistEntryByWalletQuery, WhitelistEntryByWalletQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useLazyQuery<WhitelistEntryByWalletQuery, WhitelistEntryByWalletQueryVariables>(
+    WhitelistEntryByWalletDocument,
+    options,
+  )
+}
+export type WhitelistEntryByWalletQueryHookResult = ReturnType<typeof useWhitelistEntryByWalletQuery>
+export type WhitelistEntryByWalletLazyQueryHookResult = ReturnType<typeof useWhitelistEntryByWalletLazyQuery>
+export type WhitelistEntryByWalletQueryResult = Apollo.QueryResult<
+  WhitelistEntryByWalletQuery,
+  WhitelistEntryByWalletQueryVariables
+>

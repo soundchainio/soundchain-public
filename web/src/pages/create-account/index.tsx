@@ -1,77 +1,75 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Button } from 'components/Button';
-import { InputField } from 'components/InputField';
-import SEO from 'components/SEO';
-import { TopNavBarProps } from 'components/TopNavBar';
-import { Form, Formik, FormikHelpers } from 'formik';
-import { useLayoutContext } from 'hooks/useLayoutContext';
-import { useMagicContext } from 'hooks/useMagicContext';
-import { setJwt } from 'lib/apollo';
-import { useRegisterMutation } from 'lib/graphql';
-import { useRouter } from 'next/dist/client/router';
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { formatValidationErrors } from 'utils/errorHelpers';
-import { handleRegex } from 'utils/Validation';
-import * as yup from 'yup';
+import { Button } from 'components/Button'
+import { InputField } from 'components/InputField'
+import SEO from 'components/SEO'
+import { TopNavBarProps } from 'components/TopNavBar'
+import { Form, Formik, FormikHelpers } from 'formik'
+import { useLayoutContext } from 'hooks/useLayoutContext'
+import { useMagicContext } from 'hooks/useMagicContext'
+import { setJwt } from 'lib/apollo'
+import { useRegisterMutation } from 'lib/graphql'
+import { useRouter } from 'next/dist/client/router'
+import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import { formatValidationErrors } from 'utils/errorHelpers'
+import { handleRegex } from 'utils/Validation'
+import * as yup from 'yup'
 
 interface FormValues {
-  displayName: string;
-  handle: string;
+  displayName: string
+  handle: string
 }
 
-const topNavBarProps: TopNavBarProps = {
+const topNavBarProps: TopNavBarProps = {}
 
-};
-
-export const HANDLE_MAX_CHARS = 24;
+export const HANDLE_MAX_CHARS = 24
 
 export default function CreateAccountPage() {
-  const router = useRouter();
-  const { magic } = useMagicContext();
-  const [register, { loading }] = useRegisterMutation();
-  const [email, setEmail] = useState<string>('');
-  const [token, setToken] = useState<string>('');
-  const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
-  const { setTopNavBarProps, setIsAuthLayout } = useLayoutContext();
+  const router = useRouter()
+  const { magic } = useMagicContext()
+  const [register, { loading }] = useRegisterMutation()
+  const [email, setEmail] = useState<string>('')
+  const [token, setToken] = useState<string>('')
+  const [termsAccepted, setTermsAccepted] = useState<boolean>(false)
+  const { setTopNavBarProps, setIsAuthLayout } = useLayoutContext()
 
   useEffect(() => {
-    setTopNavBarProps(topNavBarProps);
-    setIsAuthLayout(true);
-  }, [setTopNavBarProps, setIsAuthLayout]);
+    setTopNavBarProps(topNavBarProps)
+    setIsAuthLayout(true)
+  }, [setTopNavBarProps, setIsAuthLayout])
 
   useEffect(() => {
     async function isLoggedInMagic() {
-      const user = magic.user;
-      const isLoggedIn = await user?.isLoggedIn();
+      const user = magic.user
+      const isLoggedIn = await user?.isLoggedIn()
 
       if (user && isLoggedIn) {
-        const token = await user.getIdToken();
-        const metaData = await user.getMetadata();
-        const email = metaData?.email;
-        setToken(token);
-        email && setEmail(email);
+        const token = await user.getIdToken()
+        const metaData = await user.getMetadata()
+        const email = metaData?.email
+        setToken(token)
+        email && setEmail(email)
       } else {
-        router.push('/login');
+        router.push('/login')
       }
     }
-    isLoggedInMagic();
-  }, []);
+    isLoggedInMagic()
+  }, [])
 
   const toggleTerms = () => {
-    setTermsAccepted(!termsAccepted);
-  };
+    setTermsAccepted(!termsAccepted)
+  }
 
   const handleSubmit = async (values: FormValues, { setErrors }: FormikHelpers<FormValues>) => {
     try {
-      const { data } = await register({ variables: { input: { token, ...values } } });
-      setJwt(data?.register.jwt);
-      router.push(router.query.callbackUrl?.toString() ?? '/create-account/profile-picture');
+      const { data } = await register({ variables: { input: { token, ...values } } })
+      setJwt(data?.register.jwt)
+      router.push(router.query.callbackUrl?.toString() ?? '/create-account/profile-picture')
     } catch (error: any) {
-      const formatted = formatValidationErrors<FormValues>(error.graphQLErrors[0]);
-      setErrors(formatted);
+      const formatted = formatValidationErrors<FormValues>(error.graphQLErrors[0])
+      setErrors(formatted)
     }
-  };
+  }
 
   const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
     displayName: yup.string().min(3).max(255).required().label('Name'),
@@ -82,15 +80,15 @@ export default function CreateAccountPage() {
       .matches(handleRegex, 'Invalid characters. Only letters and numbers are accepted.')
       .required()
       .label('Username'),
-  });
+  })
 
   const initialValues = {
     displayName: '',
     handle: '',
-  };
+  }
 
   if (!email || !token) {
-    return null;
+    return null
   }
 
   return (
@@ -101,8 +99,8 @@ export default function CreateAccountPage() {
         description="Create your account on SoundChain"
       />
       <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
-        <Form className="flex flex-col flex-1" autoComplete="off">
-          <div className="flex flex-col mb-auto space-y-6">
+        <Form className="flex flex-1 flex-col" autoComplete="off">
+          <div className="mb-auto flex flex-col space-y-6">
             <div className="space-y-3">
               <InputField label="Name" type="text" name="displayName" />
             </div>
@@ -115,23 +113,23 @@ export default function CreateAccountPage() {
               />
             </div>
           </div>
-          <div className="text-center text-xs text-white font-thin flex gap-4 items-start sm:items-center mb-6">
+          <div className="mb-6 flex items-start gap-4 text-center text-xs font-thin text-white sm:items-center">
             <input
               type="checkbox"
               id="termsCheckbox"
-              className="h-5 w-5 focus:ring-0 border-2 border-green-500 bg-black text-green-500 rounded"
+              className="h-5 w-5 rounded border-2 border-green-500 bg-black text-green-500 focus:ring-0"
               onChange={toggleTerms}
             />
             <div className="relative">
               <label htmlFor="termsCheckbox">I agree to the SoundChain’s</label>
               <Link href={`/terms-and-conditions`} passHref>
-                <a className="text-white underline px-2 relative">
+                <a className="relative px-2 text-white underline">
                   <span className="after:absolute after:-inset-1">Terms &amp; Conditions</span>
                 </a>
               </Link>
               and
               <Link href={`/privacy-policy`} passHref>
-                <a className="text-white underline px-2 relative">
+                <a className="relative px-2 text-white underline">
                   <span className="after:absolute after:-inset-1">Privacy Policy.</span>
                 </a>
               </Link>
@@ -149,5 +147,5 @@ export default function CreateAccountPage() {
         </Form>
       </Formik>
     </>
-  );
+  )
 }

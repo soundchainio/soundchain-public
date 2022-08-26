@@ -1,17 +1,17 @@
-import classNames from 'classnames';
-import { Matic as MaticIcon } from 'icons/Matic';
-import { useMaticUsdQuery } from 'lib/graphql';
-import { currency, fixedDecimals } from 'utils/format';
+import classNames from 'classnames'
+import { Matic as MaticIcon } from 'icons/Matic'
+import { useMaticUsdQuery } from 'lib/graphql'
+import { currency, fixedDecimals } from 'utils/format'
 
 interface Props {
-  value?: string | number;
-  className?: string;
-  variant?: 'currency' | 'currency-inline' | 'listing-inline' ;
+  value?: string | number
+  className?: string
+  variant?: 'currency' | 'currency-inline' | 'listing-inline'
 }
 
 export const Matic = ({ value = '', className, variant }: Props) => {
-  const { data: maticUsd } = useMaticUsdQuery();
-  const currencyValue = currency(parseFloat(value.toString()) * parseFloat(maticUsd?.maticUsd || ''));
+  const { data: maticUsd } = useMaticUsdQuery()
+  const currencyValue = currency(parseFloat(value.toString()) * parseFloat(maticUsd?.maticUsd || ''))
 
   switch (variant) {
     case 'currency':
@@ -22,25 +22,26 @@ export const Matic = ({ value = '', className, variant }: Props) => {
           </p>
           <p className="text-sm text-gray-60">{`${currencyValue}`}</p>
         </div>
-      );
+      )
     case 'currency-inline':
       return (
-        <p className={classNames('text-white font-bold inline-flex items-center gap-1', className)}>
+        <p className={classNames('inline-flex items-center gap-1 font-bold text-white', className)}>
           {value}
           <MaticIcon className="inline" />
         </p>
-      );
+      )
     case 'listing-inline':
       return (
-        <p className={classNames('font-bold text-white inline-flex items-center gap-1', className)}>
-          <MaticIcon className="inline" /> {fixedDecimals(value)} <span className="text-xs text-gray-80 hidden xs:inline">MATIC</span>
+        <p className={classNames('inline-flex items-center gap-1 font-bold text-white', className)}>
+          <MaticIcon className="inline" /> {fixedDecimals(value)}{' '}
+          <span className="hidden text-xs text-gray-80 xs:inline">MATIC</span>
         </p>
-      );
+      )
     default:
       return (
-        <p className={classNames('font-bold text-white inline-flex items-center gap-1', className)}>
+        <p className={classNames('inline-flex items-center gap-1 font-bold text-white', className)}>
           <MaticIcon className="inline" /> {fixedDecimals(value)} <span className="text-xs text-gray-80">MATIC</span>
         </p>
-      );
+      )
   }
-};
+}

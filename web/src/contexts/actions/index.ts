@@ -1,9 +1,9 @@
-import { Payloads } from 'contexts/payloads';
-import { ModalActionTypes } from './modal';
+import { Payloads } from 'contexts/payloads'
+import { ModalActionTypes } from './modal'
 
-export type ActionTypes = ModalActionTypes;
+export type ActionTypes = ModalActionTypes
 
 export interface Action {
-  type: ActionTypes;
-  payload: Payloads;
+  type: ActionTypes
+  payload: Payloads
 }

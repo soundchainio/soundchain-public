@@ -1,5 +1,5 @@
-import { SVGGradient } from './gradients';
-import { IconProps } from './types/IconProps';
+import { SVGGradient } from './gradients'
+import { IconProps } from './types/IconProps'
 
 export const Refresh = ({ color }: IconProps) => {
   return (
@@ -12,5 +12,5 @@ export const Refresh = ({ color }: IconProps) => {
         {color && <SVGGradient color={color} />}
       </svg>
     </>
-  );
-};
+  )
+}

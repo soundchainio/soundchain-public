@@ -1,45 +1,45 @@
-import { RefreshButton } from 'components/Buttons/RefreshButton';
-import { ConnectedNetwork } from 'components/ConnectedNetwork';
-import { CopyWalletAddress } from 'components/CopyWalletAddress';
-import { Jazzicon } from 'components/Jazzicon';
-import { LoaderAnimation } from 'components/LoaderAnimation';
-import { OwnedNfts } from 'components/OwnedNfts';
-import { useLayoutContext } from 'hooks/useLayoutContext';
-import { useMagicContext } from 'hooks/useMagicContext';
-import { useMe } from 'hooks/useMe';
-import useMetaMask from 'hooks/useMetaMask';
-import { Activity } from 'icons/Activity';
-import { ArrowDown } from 'icons/ArrowDown';
-import { ArrowUpRight } from 'icons/ArrowUpRight';
-import { CreditCard } from 'icons/CreditCard';
-import { Logo } from 'icons/Logo';
-import { Matic } from 'icons/Matic';
-import { MetaMask } from 'icons/MetaMask';
-import { cacheFor } from 'lib/apollo';
-import { network } from 'lib/blockchainNetworks';
-import { DefaultWallet, useMaticUsdQuery, useUpdateDefaultWalletMutation } from 'lib/graphql';
-import { protectPage } from 'lib/protectPage';
-import Link from 'next/link';
-import React, { useEffect, useState } from 'react';
-import PullToRefresh from 'react-simple-pull-to-refresh';
-import { currency } from 'utils/format';
-import SEO from '../../components/SEO';
+import { RefreshButton } from 'components/Buttons/RefreshButton'
+import { ConnectedNetwork } from 'components/ConnectedNetwork'
+import { CopyWalletAddress } from 'components/CopyWalletAddress'
+import { Jazzicon } from 'components/Jazzicon'
+import { LoaderAnimation } from 'components/LoaderAnimation'
+import { OwnedNfts } from 'components/OwnedNfts'
+import { useLayoutContext } from 'hooks/useLayoutContext'
+import { useMagicContext } from 'hooks/useMagicContext'
+import { useMe } from 'hooks/useMe'
+import useMetaMask from 'hooks/useMetaMask'
+import { Activity } from 'icons/Activity'
+import { ArrowDown } from 'icons/ArrowDown'
+import { ArrowUpRight } from 'icons/ArrowUpRight'
+import { CreditCard } from 'icons/CreditCard'
+import { Logo } from 'icons/Logo'
+import { Matic } from 'icons/Matic'
+import { MetaMask } from 'icons/MetaMask'
+import { cacheFor } from 'lib/apollo'
+import { network } from 'lib/blockchainNetworks'
+import { DefaultWallet, useMaticUsdQuery, useUpdateDefaultWalletMutation } from 'lib/graphql'
+import { protectPage } from 'lib/protectPage'
+import Link from 'next/link'
+import React, { useEffect, useState } from 'react'
+import PullToRefresh from 'react-simple-pull-to-refresh'
+import { currency } from 'utils/format'
+import SEO from '../../components/SEO'
 
 interface WalletButtonProps {
-  href: string;
-  title: string;
-  icon: (props: React.SVGProps<SVGSVGElement>) => JSX.Element;
-  handleOnClick?: () => void;
+  href: string
+  title: string
+  icon: (props: React.SVGProps<SVGSVGElement>) => JSX.Element
+  handleOnClick?: () => void
 }
 
 export const getServerSideProps = protectPage(async (context, apolloClient) => {
   try {
-    if (!context.user) return { notFound: true };
-    return await cacheFor(WalletPage, {}, context, apolloClient);
+    if (!context.user) return { notFound: true }
+    return await cacheFor(WalletPage, {}, context, apolloClient)
   } catch (error) {
-    return { notFound: true };
+    return { notFound: true }
   }
-});
+})
 
 const WalletButton = ({ href, title, icon: Icon }: WalletButtonProps) => {
   return (
@@ -51,12 +51,12 @@ const WalletButton = ({ href, title, icon: Icon }: WalletButtonProps) => {
         {title}
       </a>
     </Link>
-  );
-};
+  )
+}
 
 export default function WalletPage() {
-  const me = useMe();
-  const { data } = useMaticUsdQuery();
+  const me = useMe()
+  const { data } = useMaticUsdQuery()
   const {
     account,
     balance,
@@ -66,40 +66,40 @@ export default function WalletPage() {
     addMumbaiTestnet,
     refetchBalance: refetchMetamaskBalance,
     isRefetchingBalance: isRefetchingMetamaskBalance,
-  } = useMetaMask();
+  } = useMetaMask()
   const {
     account: magicAccount,
     balance: magicBalance,
     ogunBalance: magicOgunBalance,
     refetchBalance: refetchMagicBalance,
     isRefetchingBalance: isRefetchingMagicBalance,
-  } = useMagicContext();
-  const { setTopNavBarProps, setHideBottomNavBar } = useLayoutContext();
-  const [updateDefaultWallet] = useUpdateDefaultWalletMutation();
+  } = useMagicContext()
+  const { setTopNavBarProps, setHideBottomNavBar } = useLayoutContext()
+  const [updateDefaultWallet] = useUpdateDefaultWalletMutation()
 
-  const [selectedWallet, setSelectedWallet] = useState(DefaultWallet.Soundchain);
-  const [connectedToMetaMask, setConnectedToMetaMask] = useState(false);
-  const [correctNetwork, setCorrectNetwork] = useState(true);
+  const [selectedWallet, setSelectedWallet] = useState(DefaultWallet.Soundchain)
+  const [connectedToMetaMask, setConnectedToMetaMask] = useState(false)
+  const [correctNetwork, setCorrectNetwork] = useState(true)
 
-  const isSoundChainSelected = selectedWallet === DefaultWallet.Soundchain;
-  const isMetamaskSelected = selectedWallet === DefaultWallet.MetaMask;
-  const isRefetchingBalance = isRefetchingMagicBalance || isRefetchingMetamaskBalance;
+  const isSoundChainSelected = selectedWallet === DefaultWallet.Soundchain
+  const isMetamaskSelected = selectedWallet === DefaultWallet.MetaMask
+  const isRefetchingBalance = isRefetchingMagicBalance || isRefetchingMetamaskBalance
 
-  const getAccount = isSoundChainSelected ? magicAccount : account;
-  const getBalance = isSoundChainSelected ? magicBalance : balance;
-  const getOgunBalance = isSoundChainSelected ? magicOgunBalance : OGUNBalance;
-  const getBalanceFormatted = parseFloat(getBalance ?? '0');
-  const getOgunBalanceFormatted = parseFloat(getOgunBalance ?? '0');
+  const getAccount = isSoundChainSelected ? magicAccount : account
+  const getBalance = isSoundChainSelected ? magicBalance : balance
+  const getOgunBalance = isSoundChainSelected ? magicOgunBalance : OGUNBalance
+  const getBalanceFormatted = parseFloat(getBalance ?? '0')
+  const getOgunBalanceFormatted = parseFloat(getOgunBalance ?? '0')
 
   const refreshData = async () => {
     if (isSoundChainSelected) {
-      console.log('Fetching balance...');
-      await refetchMagicBalance();
+      console.log('Fetching balance...')
+      await refetchMagicBalance()
     } else {
-      console.log('Fetching metamask balance...');
-      await refetchMetamaskBalance();
+      console.log('Fetching metamask balance...')
+      await refetchMetamaskBalance()
     }
-  };
+  }
 
   useEffect(() => {
     setTopNavBarProps({
@@ -107,24 +107,24 @@ export default function WalletPage() {
       rightButton: (
         <RefreshButton onClick={refreshData} label="Refresh" className="text-center" refreshing={isRefetchingBalance} />
       ),
-    });
-  }, [setHideBottomNavBar, setTopNavBarProps, isRefetchingBalance]);
+    })
+  }, [setHideBottomNavBar, setTopNavBarProps, isRefetchingBalance])
 
   useEffect(() => {
     if (!account) {
-      setConnectedToMetaMask(false);
-      return;
+      setConnectedToMetaMask(false)
+      return
     }
-    setConnectedToMetaMask(true);
-  }, [account]);
+    setConnectedToMetaMask(true)
+  }, [account])
 
   useEffect(() => {
     if (chainId !== network.id) {
-      setCorrectNetwork(false);
+      setCorrectNetwork(false)
     } else {
-      setCorrectNetwork(true);
+      setCorrectNetwork(true)
     }
-  }, [chainId]);
+  }, [chainId])
 
   const WalletHeader = () => {
     return (
@@ -164,12 +164,12 @@ export default function WalletPage() {
           </label>
         )}
       </div>
-    );
-  };
+    )
+  }
 
   interface MetaMaskButtonProps {
-    caption: string;
-    handleOnClick: () => void;
+    caption: string
+    handleOnClick: () => void
   }
 
   const MetaMaskButton = ({ caption, handleOnClick }: MetaMaskButtonProps) => {
@@ -181,8 +181,8 @@ export default function WalletPage() {
         <MetaMask height="30" width="30" />
         {caption}
       </button>
-    );
-  };
+    )
+  }
 
   return (
     <>
@@ -280,5 +280,5 @@ export default function WalletPage() {
         </div>
       </PullToRefresh>
     </>
-  );
+  )
 }

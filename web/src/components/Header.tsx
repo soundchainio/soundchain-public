@@ -1,20 +1,20 @@
-import { Dialog, Transition } from '@headlessui/react';
-import { MenuIcon } from '@heroicons/react/solid';
-import { Logo } from 'icons/Logo';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
-import React, { useState } from 'react';
-import RainbowLink from './Links/RainbowLink';
+import { Dialog, Transition } from '@headlessui/react'
+import { MenuIcon } from '@heroicons/react/solid'
+import { Logo } from 'icons/Logo'
+import Link from 'next/link'
+import { useRouter } from 'next/router'
+import React, { useState } from 'react'
+import RainbowLink from './Links/RainbowLink'
 
 interface NavItemProps {
-  text: string;
-  link?: string;
+  text: string
+  link?: string
 }
 
 export const NavItem = ({ text, link }: NavItemProps) => {
-  const router = useRouter();
-  const currentPage = router.pathname.replace('/', '');
-  const underline = currentPage.toLowerCase() === text.toLowerCase();
+  const router = useRouter()
+  const currentPage = router.pathname.replace('/', '')
+  const underline = currentPage.toLowerCase() === text.toLowerCase()
 
   return underline ? (
     <div className="flex flex-col items-center">
@@ -25,8 +25,8 @@ export const NavItem = ({ text, link }: NavItemProps) => {
     <a className="hidden md:inline" href={link ? link : '/' + text.toLowerCase()}>
       <div className="flex items-center justify-center p-2">{text}</div>
     </a>
-  );
-};
+  )
+}
 
 function HeaderDrawer({ open, close }: { open: boolean; close: () => void }) {
   return (
@@ -57,11 +57,11 @@ function HeaderDrawer({ open, close }: { open: boolean; close: () => void }) {
         </div>
       </Dialog>
     </Transition>
-  );
+  )
 }
 
 export const Header = () => {
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
   return (
     <>
@@ -91,5 +91,5 @@ export const Header = () => {
 
       <HeaderDrawer open={drawerOpen} close={() => setDrawerOpen(false)} />
     </>
-  );
-};
+  )
+}

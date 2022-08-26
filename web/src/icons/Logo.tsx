@@ -1,4 +1,4 @@
-import * as React from 'react';
+import * as React from 'react'
 
 export const Logo = ({ id = 'logo', width, height, ...props }: React.SVGProps<SVGSVGElement>) => {
   return (
@@ -76,5 +76,5 @@ export const Logo = ({ id = 'logo', width, height, ...props }: React.SVGProps<SV
         </linearGradient>
       </defs>
     </svg>
-  );
-};
+  )
+}

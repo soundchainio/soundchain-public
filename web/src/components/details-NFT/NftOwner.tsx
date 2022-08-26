@@ -1,22 +1,20 @@
-import { ProfileWithAvatar } from 'components/ProfileWithAvatar';
-import { Profile, useProfileLazyQuery } from 'lib/graphql';
-import { useEffect } from 'react';
+import { ProfileWithAvatar } from 'components/ProfileWithAvatar'
+import { Profile, useProfileLazyQuery } from 'lib/graphql'
+import { useEffect } from 'react'
 
 interface NftOwnerProps {
-  profileId: string;
-  className?: string;
+  profileId: string
+  className?: string
 }
 
 export const NftOwner = ({ profileId, className }: NftOwnerProps) => {
-  const [userQueryProfile, { data: result }] = useProfileLazyQuery();
+  const [userQueryProfile, { data: result }] = useProfileLazyQuery()
 
   useEffect(() => {
     if (profileId) {
-      userQueryProfile({ variables: { id: profileId } });
+      userQueryProfile({ variables: { id: profileId } })
     }
-  }, [profileId, userQueryProfile]);
+  }, [profileId, userQueryProfile])
 
-  return (
-    <ProfileWithAvatar profile={result?.profile as Partial<Profile>} className={className} />
-  );
-};
+  return <ProfileWithAvatar profile={result?.profile as Partial<Profile>} className={className} />
+}

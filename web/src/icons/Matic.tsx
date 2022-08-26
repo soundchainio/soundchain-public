@@ -12,5 +12,5 @@ export const Matic = (props: React.SVGProps<SVGSVGElement>) => {
       <path d="M3.333 2.2L0 4.092 10 9.77l1.51-.856 1.824-1.036L3.333 2.2z" fill="#2B6DEF" />
       <path d="M3.333 9.77v7.983l3.334-1.895v-4.195L3.333 9.77z" fill="#2BBDF7" />
     </svg>
-  );
-};
+  )
+}

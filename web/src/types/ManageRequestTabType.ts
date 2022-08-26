@@ -1,5 +1,5 @@
 export enum ManageRequestTab {
-    PENDING = 'pending',
-    APPROVED = 'approved',
-    DENIED = 'denied',
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  DENIED = 'denied',
 }

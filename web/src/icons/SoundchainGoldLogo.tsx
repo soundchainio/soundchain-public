@@ -1,4 +1,4 @@
-import { IconProps } from './types/IconProps';
+import { IconProps } from './types/IconProps'
 
 export const SoundchainGoldLogo = ({ ...props }: IconProps) => {
   return (
@@ -66,5 +66,5 @@ export const SoundchainGoldLogo = ({ ...props }: IconProps) => {
         </linearGradient>
       </defs>
     </svg>
-  );
-};
+  )
+}

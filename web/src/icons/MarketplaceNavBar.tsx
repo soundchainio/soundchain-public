@@ -1,6 +1,6 @@
-import React from 'react';
-import { SVGGradient } from './gradients';
-import { IconProps } from './types/IconProps';
+import React from 'react'
+import { SVGGradient } from './gradients'
+import { IconProps } from './types/IconProps'
 
 export const MarketplaceNavBar = ({ color, id, ...props }: IconProps) => {
   return (
@@ -11,5 +11,5 @@ export const MarketplaceNavBar = ({ color, id, ...props }: IconProps) => {
       />
       {color && <SVGGradient color={color} id={id} />}
     </svg>
-  );
-};
+  )
+}

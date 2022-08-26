@@ -1,32 +1,32 @@
-import { Listbox } from '@headlessui/react';
-import { Form, Formik } from 'formik';
-import { useMagicContext } from 'hooks/useMagicContext';
-import { useMetaMask } from 'hooks/useMetaMask';
-import { Checkbox } from 'icons/Checkbox';
-import { useRouter } from 'next/dist/client/router';
-import { createContext, Fragment, useContext, useEffect, useMemo, useState } from 'react';
-import { toast } from 'react-toastify';
-import * as yup from 'yup';
-import { useModalDispatch } from '../../contexts/providers/modal';
-import useBlockchain, { gas } from '../../hooks/useBlockchain';
-import { useLayoutContext } from '../../hooks/useLayoutContext';
-import { useMe } from '../../hooks/useMe';
-import { CheckboxFilled } from '../../icons/CheckboxFilled';
-import { HeartFilled } from '../../icons/HeartFilled';
-import { Play } from '../../icons/Play';
-import { DefaultWallet, SortOrder, SortTrackField, TracksQuery, useTracksQuery } from '../../lib/graphql';
-import Asset from '../Asset';
-import { Badge } from '../Badge';
-import { Button } from '../Button';
-import { RefreshButton } from '../Buttons/RefreshButton';
-import { InfiniteLoader } from '../InfiniteLoader';
-import { InputField } from '../InputField';
+import { Listbox } from '@headlessui/react'
+import { Form, Formik } from 'formik'
+import { useMagicContext } from 'hooks/useMagicContext'
+import { useMetaMask } from 'hooks/useMetaMask'
+import { Checkbox } from 'icons/Checkbox'
+import { useRouter } from 'next/dist/client/router'
+import { createContext, Fragment, useContext, useEffect, useMemo, useState } from 'react'
+import { toast } from 'react-toastify'
+import * as yup from 'yup'
+import { useModalDispatch } from '../../contexts/providers/modal'
+import useBlockchain, { gas } from '../../hooks/useBlockchain'
+import { useLayoutContext } from '../../hooks/useLayoutContext'
+import { useMe } from '../../hooks/useMe'
+import { CheckboxFilled } from '../../icons/CheckboxFilled'
+import { HeartFilled } from '../../icons/HeartFilled'
+import { Play } from '../../icons/Play'
+import { DefaultWallet, SortOrder, SortTrackField, TracksQuery, useTracksQuery } from '../../lib/graphql'
+import Asset from '../Asset'
+import { Badge } from '../Badge'
+import { Button } from '../Button'
+import { RefreshButton } from '../Buttons/RefreshButton'
+import { InfiniteLoader } from '../InfiniteLoader'
+import { InputField } from '../InputField'
 
 export interface FormValues {
-  recipient: string;
-  gasPrice?: string;
-  gasLimit?: number;
-  totalGasFee?: string;
+  recipient: string
+  gasPrice?: string
+  gasLimit?: number
+  totalGasFee?: string
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
@@ -34,34 +34,34 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   gasPrice: yup.string().default(''),
   gasLimit: yup.number().default(gas),
   totalGasFee: yup.string().default('0'),
-});
+})
 
-export type InitialValues = Partial<FormValues>;
+export type InitialValues = Partial<FormValues>
 
 interface TransferNftContextData {
-  selectedWallet: DefaultWallet;
-  setSelectedWallet: (wallet: DefaultWallet) => void;
-  tracks?: TracksQuery['tracks'];
+  selectedWallet: DefaultWallet
+  setSelectedWallet: (wallet: DefaultWallet) => void
+  tracks?: TracksQuery['tracks']
   selectedNftTrack?: {
-    id: string;
-    title: string;
-    artworkUrl: string;
-    tokenId?: number;
-    artist: string;
+    id: string
+    title: string
+    artworkUrl: string
+    tokenId?: number
+    artist: string
     contractAddress: string
-  };
-  loadMore: () => void;
-  refetch: () => void;
-  setSelectedNft: (newSelectedNft: string) => void;
-  selectedNft: string;
-  balance?: string;
-  gasPrice?: string;
+  }
+  loadMore: () => void
+  refetch: () => void
+  setSelectedNft: (newSelectedNft: string) => void
+  selectedNft: string
+  balance?: string
+  gasPrice?: string
 }
 
-const TransferNftContext = createContext<TransferNftContextData>({} as TransferNftContextData);
+const TransferNftContext = createContext<TransferNftContextData>({} as TransferNftContextData)
 
 function useTransferNftCtx() {
-  return useContext(TransferNftContext);
+  return useContext(TransferNftContext)
 }
 
 function WalletAddressField() {
@@ -75,16 +75,16 @@ function WalletAddressField() {
         placeholder="0xDbaF8fB344D9E57fff48659A4Eb718c480A1Fd62"
       />
     </div>
-  );
+  )
 }
 
 function NftItemCheckbox({ active }: { active: boolean }) {
-  return active ? <CheckboxFilled /> : <Checkbox />;
+  return active ? <CheckboxFilled /> : <Checkbox />
 }
 
 function SelectNFTsField() {
-  const { tracks, selectedNft, setSelectedNft, loadMore } = useTransferNftCtx();
-  const pageInfo = tracks?.pageInfo;
+  const { tracks, selectedNft, setSelectedNft, loadMore } = useTransferNftCtx()
+  const pageInfo = tracks?.pageInfo
 
   return (
     <div className="flex flex-col">
@@ -121,11 +121,7 @@ function SelectNFTsField() {
 
                   <div className="flex-1" />
 
-                  {track.nftData?.tokenId ? (
-                    <NftItemCheckbox active={selected} />
-                  ) : (
-                    <Badge label="Pending"/>
-                  )}
+                  {track.nftData?.tokenId ? <NftItemCheckbox active={selected} /> : <Badge label="Pending" />}
                 </li>
               )}
             </Listbox.Option>
@@ -135,46 +131,46 @@ function SelectNFTsField() {
 
       {pageInfo && pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading Tracks" />}
     </div>
-  );
+  )
 }
 
 export function useTransferNftsControls() {
-  const [selectedWallet, setSelectedWallet] = useState(DefaultWallet.Soundchain);
-  const [selectedNft, setSelectedNft] = useState('');
-  const router = useRouter();
-  const { address } = router.query;
-  const me = useMe();
-  const { web3: web3Magic, balance: balanceMagic } = useMagicContext();
-  const { web3: web3Metamask, balance: balanceMetamask } = useMetaMask();
-  const isSoundchain = address === me?.magicWalletAddress;
-  const web3 = isSoundchain ? web3Magic : web3Metamask;
-  const balance = isSoundchain ? balanceMagic : balanceMetamask;
-  const { getCurrentGasPrice } = useBlockchain();
-  const [gasPrice, setGasPrice] = useState<string>('');
+  const [selectedWallet, setSelectedWallet] = useState(DefaultWallet.Soundchain)
+  const [selectedNft, setSelectedNft] = useState('')
+  const router = useRouter()
+  const { address } = router.query
+  const me = useMe()
+  const { web3: web3Magic, balance: balanceMagic } = useMagicContext()
+  const { web3: web3Metamask, balance: balanceMetamask } = useMetaMask()
+  const isSoundchain = address === me?.magicWalletAddress
+  const web3 = isSoundchain ? web3Magic : web3Metamask
+  const balance = isSoundchain ? balanceMagic : balanceMetamask
+  const { getCurrentGasPrice } = useBlockchain()
+  const [gasPrice, setGasPrice] = useState<string>('')
 
   useEffect(() => {
     const gasCheck = () => {
       if (web3) {
-        getCurrentGasPrice(web3).then(price => setGasPrice(price));
+        getCurrentGasPrice(web3).then(price => setGasPrice(price))
       }
-    };
-    gasCheck();
-  }, [web3, getCurrentGasPrice]);
+    }
+    gasCheck()
+  }, [web3, getCurrentGasPrice])
 
-  const pageSize = 10;
+  const pageSize = 10
   const { data, loading, fetchMore, refetch } = useTracksQuery({
     variables: {
       filter: {
         nftData: {
-          owner: address as string
+          owner: address as string,
         },
       },
       sort: { field: SortTrackField.CreatedAt, order: SortOrder.Desc },
       page: { first: pageSize },
     },
-  });
+  })
 
-  const { setTopNavBarProps } = useLayoutContext();
+  const { setTopNavBarProps } = useLayoutContext()
 
   useEffect(() => {
     setTopNavBarProps({
@@ -193,13 +189,13 @@ export function useTransferNftsControls() {
           after: data?.tracks.pageInfo.endCursor,
         },
       },
-    });
-  };
+    })
+  }
 
   const selectedNftTrack = useMemo(() => {
-    if (!selectedNft) return undefined;
+    if (!selectedNft) return undefined
 
-    const track = data?.tracks?.nodes.find(track => track.id === selectedNft);
+    const track = data?.tracks?.nodes.find(track => track.id === selectedNft)
 
     if (track) {
       return {
@@ -208,10 +204,10 @@ export function useTransferNftsControls() {
         artist: track.artist,
         tokenId: track.nftData?.tokenId,
         title: track.title,
-        contractAddress: track.nftData?.contract
-      } as TransferNftContextData['selectedNftTrack'];
+        contractAddress: track.nftData?.contract,
+      } as TransferNftContextData['selectedNftTrack']
     }
-  }, [selectedNft, data]);
+  }, [selectedNft, data])
 
   return {
     selectedWallet,
@@ -226,11 +222,11 @@ export function useTransferNftsControls() {
     balance,
     gasPrice,
     web3,
-  };
+  }
 }
 
 function SelectedNftPreview() {
-  const { selectedNftTrack } = useTransferNftCtx();
+  const { selectedNftTrack } = useTransferNftCtx()
   return (
     <div className={'flex items-center space-x-2'}>
       {selectedNftTrack && (
@@ -245,22 +241,22 @@ function SelectedNftPreview() {
         </>
       )}
     </div>
-  );
+  )
 }
 
 export function TransferNftsForm() {
-  const Controls = useTransferNftsControls();
-  const me = useMe();
-  const { gasPrice, selectedNft, selectedNftTrack, refetch, web3 } = Controls;
-  const { dispatchShowNftTransferConfirmationModal } = useModalDispatch();
+  const Controls = useTransferNftsControls()
+  const me = useMe()
+  const { gasPrice, selectedNft, selectedNftTrack, refetch, web3 } = Controls
+  const { dispatchShowNftTransferConfirmationModal } = useModalDispatch()
 
-  if (!me) return null;
+  if (!me) return null
 
   const defaultValues: InitialValues = {
     recipient: '',
     gasPrice: gasPrice,
     gasLimit: gas,
-  };
+  }
 
   return (
     <TransferNftContext.Provider
@@ -273,13 +269,13 @@ export function TransferNftsForm() {
         validationSchema={validationSchema}
         onSubmit={params => {
           if (!web3 || !params.recipient || !web3.utils.isAddress(params.recipient.trim())) {
-            toast.warn('Invalid address');
-            return;
+            toast.warn('Invalid address')
+            return
           }
 
           if (!selectedNft || !selectedNftTrack) {
-            toast.warn('Please select the track you want to transfer');
-            return;
+            toast.warn('Please select the track you want to transfer')
+            return
           }
 
           dispatchShowNftTransferConfirmationModal({
@@ -292,7 +288,7 @@ export function TransferNftsForm() {
             artist: selectedNftTrack.artist,
             contractAddress: selectedNftTrack.contractAddress,
             refetch,
-          });
+          })
         }}
       >
         <Form className="container mx-auto flex h-full flex-col gap-3 py-6 px-2 text-gray-80">
@@ -310,5 +306,5 @@ export function TransferNftsForm() {
         </Form>
       </Formik>
     </TransferNftContext.Provider>
-  );
+  )
 }

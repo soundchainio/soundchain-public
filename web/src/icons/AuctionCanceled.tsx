@@ -10,5 +10,5 @@ export const AuctionCanceled = (props: React.SVGProps<SVGSVGElement>) => {
         fill="#D13636"
       />
     </svg>
-  );
-};
+  )
+}

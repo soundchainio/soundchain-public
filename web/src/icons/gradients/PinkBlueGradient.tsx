@@ -6,5 +6,5 @@ export const PinkBlueGradient = () => {
         <stop offset="1" stopColor="#3F91DD"></stop>
       </linearGradient>
     </defs>
-  );
-};
+  )
+}

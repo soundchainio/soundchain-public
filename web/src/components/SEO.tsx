@@ -1,12 +1,12 @@
-import { config } from 'config';
-import Head from 'next/head';
-import React from 'react';
+import { config } from 'config'
+import Head from 'next/head'
+import React from 'react'
 
 export interface SEOProps {
-  title: string;
-  description: string;
-  image?: string | null;
-  canonicalUrl: string;
+  title: string
+  description: string
+  image?: string | null
+  canonicalUrl: string
 }
 
 export default function SEO({
@@ -15,7 +15,7 @@ export default function SEO({
   image = `${config.domainUrl}/soundchain-meta-logo.png`,
   canonicalUrl,
 }: SEOProps) {
-  const metaImage = image?.startsWith('/') ? `${config.domainUrl}${image}` : image;
+  const metaImage = image?.startsWith('/') ? `${config.domainUrl}${image}` : image
   return (
     <Head>
       {title && (
@@ -43,5 +43,5 @@ export default function SEO({
       <meta property="og:type" content="website" />
       <meta property="og:url" content={`${config.domainUrl}${canonicalUrl}`} />
     </Head>
-  );
+  )
 }

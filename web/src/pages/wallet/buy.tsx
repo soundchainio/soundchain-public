@@ -1,56 +1,56 @@
-import SEO from 'components/SEO';
-import { TopNavBarProps } from 'components/TopNavBar';
-import { useLayoutContext } from 'hooks/useLayoutContext';
-import { useMe } from 'hooks/useMe';
-import { Matic } from 'icons/Matic';
-import { MexcGlobal } from 'icons/MexcGlobal';
-import { Moonpay } from 'icons/Moonpay';
-import { Navigate } from 'icons/Navigate';
-import { Binance } from 'icons/Binance';
-import { CryptoDotCom } from 'icons/CryptoDotCom';
-import { OkCoin } from 'icons/OkCoin';
-import { Polygon } from 'icons/Polygon';
-import { Ramp } from 'icons/Ramp';
-import { cacheFor } from 'lib/apollo';
-import { isMainNetwork } from 'lib/blockchainNetworks';
-import { protectPage } from 'lib/protectPage';
-import Image from 'next/image';
-import React, { useEffect } from 'react';
+import SEO from 'components/SEO'
+import { TopNavBarProps } from 'components/TopNavBar'
+import { useLayoutContext } from 'hooks/useLayoutContext'
+import { useMe } from 'hooks/useMe'
+import { Matic } from 'icons/Matic'
+import { MexcGlobal } from 'icons/MexcGlobal'
+import { Moonpay } from 'icons/Moonpay'
+import { Navigate } from 'icons/Navigate'
+import { Binance } from 'icons/Binance'
+import { CryptoDotCom } from 'icons/CryptoDotCom'
+import { OkCoin } from 'icons/OkCoin'
+import { Polygon } from 'icons/Polygon'
+import { Ramp } from 'icons/Ramp'
+import { cacheFor } from 'lib/apollo'
+import { isMainNetwork } from 'lib/blockchainNetworks'
+import { protectPage } from 'lib/protectPage'
+import Image from 'next/image'
+import React, { useEffect } from 'react'
 
 export const getServerSideProps = protectPage(async (context, apolloClient) => {
   try {
-    if (!context.user) return { notFound: true };
-    return await cacheFor(BuyMaticPage, {}, context, apolloClient);
+    if (!context.user) return { notFound: true }
+    return await cacheFor(BuyMaticPage, {}, context, apolloClient)
   } catch (error) {
-    return { notFound: true };
+    return { notFound: true }
   }
-});
+})
 
 const topNovBarProps: TopNavBarProps = {
   title: 'Buy Matic',
-};
+}
 
 const MaticSign = (
-  <span className="flex items-center text-blue-400 mx-2 font-semibold">
+  <span className="mx-2 flex items-center font-semibold text-blue-400">
     <Matic className="mr-2" /> MATIC
   </span>
-);
+)
 
 const PolygonSign = (
-  <span className="flex items-center text-purple-500 mx-2 font-semibold">
+  <span className="mx-2 flex items-center font-semibold text-purple-500">
     <Polygon className="mr-2" /> Polygon
   </span>
-);
+)
 
 export default function BuyMaticPage() {
-  const me = useMe();
-  const { setTopNavBarProps } = useLayoutContext();
+  const me = useMe()
+  const { setTopNavBarProps } = useLayoutContext()
 
   useEffect(() => {
-    setTopNavBarProps(topNovBarProps);
-  }, [setTopNavBarProps]);
+    setTopNavBarProps(topNovBarProps)
+  }, [setTopNavBarProps])
 
-  if (!me) return null;
+  if (!me) return null
 
   return (
     <>
@@ -59,18 +59,18 @@ export default function BuyMaticPage() {
         description="Buy funds on your SoundChain wallet"
         canonicalUrl="/wallet/buy/"
       />
-      <div className="px-8 py-4 text-gray-80 text-xs">
-        <p className="text-center m-4 font-bold">
+      <div className="px-8 py-4 text-xs text-gray-80">
+        <p className="m-4 text-center font-bold">
           In order to mint or purchase {"NFT's"} on SoundChain, you must have:
         </p>
         <p className="flex items-center justify-center">
           {MaticSign} on the {PolygonSign} chain.
         </p>
         {isMainNetwork ? <MainnetLinks /> : <PolygonFaucetLink />}
-        <p className="text-center my-10 font-bold">
+        <p className="my-10 text-center font-bold">
           If you live in the United States, the following exchanges support buying Matic.
         </p>
-        <div className="flex items-center justify-center space-x-4 my-10">
+        <div className="my-10 flex items-center justify-center space-x-4">
           <a href="https://www.binance.us/" rel="noreferrer" target="_blank">
             <Binance />
           </a>
@@ -88,10 +88,10 @@ export default function BuyMaticPage() {
           href="https://wallet.polygon.technology/"
           rel="noreferrer"
           target="_blank"
-          className="flex flex-col gap-3 rounded-lg p-4 bg-black border-2 border-gray-40 my-4"
+          className="my-4 flex flex-col gap-3 rounded-lg border-2 border-gray-40 bg-black p-4"
         >
-          <div className="flex space-beetween text-gray-200 justify-between">
-            <div className="flex items-center gap-2 text-white text-xs font-bold">
+          <div className="space-beetween flex justify-between text-gray-200">
+            <div className="flex items-center gap-2 text-xs font-bold text-white">
               <Image height="28" width="26" src="/polygon-bridge.png" alt="" priority />
               <span>Polygon Bridge</span>
             </div>
@@ -103,18 +103,18 @@ export default function BuyMaticPage() {
         </a>
       </div>
     </>
-  );
+  )
 }
 
 interface MainnetLinkProps {
-  text: string;
-  url: string;
-  icon: (props: React.ComponentProps<'svg'>) => JSX.Element;
+  text: string
+  url: string
+  icon: (props: React.ComponentProps<'svg'>) => JSX.Element
 }
 
 const MainnetLink = ({ text, url, icon: Icon }: MainnetLinkProps) => (
   <a
-    className="rounded-lg border-2 border-gray-50 bg-black h-24 flex flex-col flex-1 gap-2 justify-center items-center p-6 relative"
+    className="relative flex h-24 flex-1 flex-col items-center justify-center gap-2 rounded-lg border-2 border-gray-50 bg-black p-6"
     href={url}
     target="_blank"
     rel="noreferrer"
@@ -123,14 +123,14 @@ const MainnetLink = ({ text, url, icon: Icon }: MainnetLinkProps) => (
     <Icon />
     <span>{text}</span>
   </a>
-);
+)
 
 const MainnetLinks = () => (
-  <div className="flex items-center justify-center gap-7 text-white my-4">
+  <div className="my-4 flex items-center justify-center gap-7 text-white">
     <MainnetLink text="ramp.network" url="https://ramp.network/" icon={Ramp} />
     <MainnetLink text="moonpay.com" url="https://www.moonpay.com/" icon={Moonpay} />
   </div>
-);
+)
 
 export const PolygonFaucetLink = () => (
   <a
@@ -139,11 +139,11 @@ export const PolygonFaucetLink = () => (
     rel="noreferrer"
     aria-label={`Claim free 0.1 Matic on Polygon Faucet`}
   >
-    <div className="flex flex-col space-y-2 items-center rounded-lg p-6 bg-black border-2 border-gray-40 text-center my-4">
+    <div className="my-4 flex flex-col items-center space-y-2 rounded-lg border-2 border-gray-40 bg-black p-6 text-center">
       <div className="flex items-center text-gray-200">{PolygonSign} Faucet</div>
       <div className="flex items-center font-bold">
-        Claim <span className="text-white mx-2">FREE</span> 0.1 {MaticSign}
+        Claim <span className="mx-2 text-white">FREE</span> 0.1 {MaticSign}
       </div>
     </div>
   </a>
-);
+)

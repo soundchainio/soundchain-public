@@ -1,10 +1,10 @@
 query ListableOwnedTrackIds($filter: FilterOwnedTracksInput!) {
-    listableOwnedTracks(filter: $filter) {
-        nodes {
-            id
-            nftData {
-                tokenId
-            }
-        }
+  listableOwnedTracks(filter: $filter) {
+    nodes {
+      id
+      nftData {
+        tokenId
+      }
     }
+  }
 }

@@ -9,5 +9,5 @@ export const NewFollowerBadge = (props: React.SVGProps<SVGSVGElement>) => {
         clipRule="evenodd"
       ></path>
     </svg>
-  );
-};
+  )
+}

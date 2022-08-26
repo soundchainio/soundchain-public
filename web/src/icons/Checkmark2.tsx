@@ -38,5 +38,5 @@ export const Checkmark2 = (props: React.SVGProps<SVGSVGElement>) => {
         </linearGradient>
       </defs>
     </svg>
-  );
-};
+  )
+}

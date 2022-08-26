@@ -1,39 +1,39 @@
-import { useMe } from 'hooks/useMe';
-import { HeartBorder } from 'icons/HeartBorder';
-import { HeartFull } from 'icons/HeartFull';
-import { ReactionEmoji } from 'icons/ReactionEmoji';
-import { useGetOriginalPostFromTrackQuery, useToggleFavoriteMutation } from 'lib/graphql';
-import NextLink from 'next/link';
-import { useRouter } from 'next/router';
-import { useState } from 'react';
+import { useMe } from 'hooks/useMe'
+import { HeartBorder } from 'icons/HeartBorder'
+import { HeartFull } from 'icons/HeartFull'
+import { ReactionEmoji } from 'icons/ReactionEmoji'
+import { useGetOriginalPostFromTrackQuery, useToggleFavoriteMutation } from 'lib/graphql'
+import NextLink from 'next/link'
+import { useRouter } from 'next/router'
+import { useState } from 'react'
 
 interface ViewPostProps {
-  trackId: string;
-  isFavorited: boolean;
+  trackId: string
+  isFavorited: boolean
 }
 
 export const ViewPost = ({ trackId, isFavorited }: ViewPostProps) => {
-  const me = useMe();
-  const router = useRouter();
-  const [toggleFavorite] = useToggleFavoriteMutation();
-  const [isFavorite, setIsFavorite] = useState(isFavorited);
+  const me = useMe()
+  const router = useRouter()
+  const [toggleFavorite] = useToggleFavoriteMutation()
+  const [isFavorite, setIsFavorite] = useState(isFavorited)
 
   const { data: originalPostData } = useGetOriginalPostFromTrackQuery({
     variables: {
       trackId: trackId,
     },
     skip: !trackId,
-  });
-  const post = originalPostData?.getOriginalPostFromTrack;
+  })
+  const post = originalPostData?.getOriginalPostFromTrack
 
   const handleFavorite = async () => {
     if (me?.profile.id) {
-      await toggleFavorite({ variables: { trackId }, refetchQueries: ['FavoriteTracks'] });
-      setIsFavorite(!isFavorite);
+      await toggleFavorite({ variables: { trackId }, refetchQueries: ['FavoriteTracks'] })
+      setIsFavorite(!isFavorite)
     } else {
-      router.push('/login');
+      router.push('/login')
     }
-  };
+  }
 
   return (
     <div className="flex justify-between gap-2">
@@ -65,5 +65,5 @@ export const ViewPost = ({ trackId, isFavorited }: ViewPostProps) => {
         {!isFavorite && <HeartBorder />}
       </button>
     </div>
-  );
-};
+  )
+}

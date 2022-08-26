@@ -1,66 +1,66 @@
-import { DownArrow } from 'icons/DownArrow';
-import { Profile, useFollowersLazyQuery, useFollowingLazyQuery } from 'lib/graphql';
-import { useEffect } from 'react';
-import { FollowModalType } from 'types/FollowModalType';
-import { FollowItem } from './FollowItem';
-import { InfiniteLoader } from './InfiniteLoader';
-import { LoaderAnimation } from './LoaderAnimation';
-import { Modal } from './Modal';
+import { DownArrow } from 'icons/DownArrow'
+import { Profile, useFollowersLazyQuery, useFollowingLazyQuery } from 'lib/graphql'
+import { useEffect } from 'react'
+import { FollowModalType } from 'types/FollowModalType'
+import { FollowItem } from './FollowItem'
+import { InfiniteLoader } from './InfiniteLoader'
+import { LoaderAnimation } from './LoaderAnimation'
+import { Modal } from './Modal'
 
 interface FollowersModal {
-  show: boolean;
-  profileId: string;
-  modalType: FollowModalType;
-  onClose: () => void;
+  show: boolean
+  profileId: string
+  modalType: FollowModalType
+  onClose: () => void
 }
 
 export const FollowModal = ({ show, profileId, modalType, onClose }: FollowersModal) => {
   const [followers, { data: followersData, fetchMore: fetchMoreFollowers }] = useFollowersLazyQuery({
     variables: { profileId },
-  });
+  })
   const [following, { data: followingData, fetchMore: fetchMoreFollowing }] = useFollowingLazyQuery({
     variables: { profileId },
-  });
+  })
 
   useEffect(() => {
     if (show) {
       if (modalType === FollowModalType.FOLLOWERS) {
-        followers();
+        followers()
       } else {
-        following();
+        following()
       }
     }
-  }, [show]);
+  }, [show])
 
   const onLoadMore = () => {
     if (modalType === FollowModalType.FOLLOWERS && fetchMoreFollowers) {
-      fetchMoreFollowers({ variables: { profileId, page: { after: followersData?.followers.pageInfo.endCursor } } });
+      fetchMoreFollowers({ variables: { profileId, page: { after: followersData?.followers.pageInfo.endCursor } } })
     } else if (fetchMoreFollowing) {
-      fetchMoreFollowing({ variables: { profileId, page: { after: followingData?.following.pageInfo.endCursor } } });
+      fetchMoreFollowing({ variables: { profileId, page: { after: followingData?.following.pageInfo.endCursor } } })
     }
-  };
+  }
 
   const getTitle = () => {
     if (modalType === FollowModalType.FOLLOWERS) {
-      return followersData ? `Followers (${followersData.followers.pageInfo.totalCount})` : `Followers`;
+      return followersData ? `Followers (${followersData.followers.pageInfo.totalCount})` : `Followers`
     }
-    return followingData ? `Following (${followingData.following.pageInfo.totalCount})` : `Following`;
-  };
+    return followingData ? `Following (${followingData.following.pageInfo.totalCount})` : `Following`
+  }
 
   return (
     <Modal
       show={show}
       title={getTitle()}
       leftButton={
-        <div className="flex justify-start ml-6">
-          <button aria-label="Close" className="w-10 h-10 flex justify-center items-center" onClick={onClose}>
+        <div className="ml-6 flex justify-start">
+          <button aria-label="Close" className="flex h-10 w-10 items-center justify-center" onClick={onClose}>
             <DownArrow />
           </button>
         </div>
       }
       onClose={onClose}
     >
-      <div className="bg-gray-25 h-full">
+      <div className="h-full bg-gray-25">
         {modalType === FollowModalType.FOLLOWERS && (
           <>
             {!followersData && (
@@ -97,5 +97,5 @@ export const FollowModal = ({ show, profileId, modalType, onClose }: FollowersMo
         )}
       </div>
     </Modal>
-  );
-};
+  )
+}

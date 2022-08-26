@@ -1,16 +1,16 @@
-import React from 'react';
-import { FilterComponent } from '../Filter/Filter';
-import { ListView as ListViewIcon } from '../../icons/ListView';
-import { GridView as GridViewIcon } from '../../icons/GridView';
-import { FilterWrapperProps } from '../ExplorePageFilterWrapper/ExplorePageFilterWrapper';
-import { SortListingItem } from '../../lib/apollo/sorting';
+import React from 'react'
+import { FilterComponent } from '../Filter/Filter'
+import { ListView as ListViewIcon } from '../../icons/ListView'
+import { GridView as GridViewIcon } from '../../icons/GridView'
+import { FilterWrapperProps } from '../ExplorePageFilterWrapper/ExplorePageFilterWrapper'
+import { SortListingItem } from '../../lib/apollo/sorting'
 
 interface PageFilterProps extends Omit<FilterWrapperProps, 'selectedTab' | 'setSelectedTab' | 'totalCount'> {
-  label?: string;
+  label?: string
 }
 
 function PageFilterWrapper(props: PageFilterProps) {
-  const { sorting, setSorting, isGrid, setIsGrid, label } = props;
+  const { sorting, setSorting, isGrid, setIsGrid, label } = props
 
   return (
     <div className="w-full">
@@ -35,7 +35,7 @@ function PageFilterWrapper(props: PageFilterProps) {
         </button>
       </div>
     </div>
-  );
+  )
 }
 
-export default PageFilterWrapper;
+export default PageFilterWrapper

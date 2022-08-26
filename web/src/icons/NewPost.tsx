@@ -8,5 +8,5 @@ export const NewPost = () => {
         clipRule="evenodd"
       ></path>
     </svg>
-  );
-};
+  )
+}

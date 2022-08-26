@@ -1,83 +1,83 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import WalletConnectProvider from '@walletconnect/web3-provider';
-import { Button } from 'components/Button';
-import { WalletButton } from 'components/Buttons/WalletButton';
-import { LoaderAnimation } from 'components/LoaderAnimation';
-import SEO from 'components/SEO';
-import { config } from 'config';
-import { useLayoutContext } from 'hooks/useLayoutContext';
-import { MetaMask } from 'icons/MetaMask';
-import { WalletConnect } from 'icons/WalletConnect';
+import WalletConnectProvider from '@walletconnect/web3-provider'
+import { Button } from 'components/Button'
+import { WalletButton } from 'components/Buttons/WalletButton'
+import { LoaderAnimation } from 'components/LoaderAnimation'
+import SEO from 'components/SEO'
+import { config } from 'config'
+import { useLayoutContext } from 'hooks/useLayoutContext'
+import { MetaMask } from 'icons/MetaMask'
+import { WalletConnect } from 'icons/WalletConnect'
 import {
   useAudioHolderByWalletLazyQuery,
   useProofBookByWalletLazyQuery,
   useUpdateOgunClaimedAudioHolderMutation,
   useUpdateOgunClaimedWhitelistMutation,
   useWhitelistEntryByWalletLazyQuery,
-} from 'lib/graphql';
-import { GetServerSideProps } from 'next';
-import { useRouter } from 'next/router';
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { toast, ToastContainer } from 'react-toastify';
-import Web3 from 'web3';
-import { CustomModal } from '../components/CustomModal';
-import useBlockchainV2 from '../hooks/useBlockchainV2';
-import { useMagicContext } from 'hooks/useMagicContext';
-import { SoundchainGoldLogo } from 'icons/SoundchainGoldLogo';
+} from 'lib/graphql'
+import { GetServerSideProps } from 'next'
+import { useRouter } from 'next/router'
+import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import { toast, ToastContainer } from 'react-toastify'
+import Web3 from 'web3'
+import { CustomModal } from '../components/CustomModal'
+import useBlockchainV2 from '../hooks/useBlockchainV2'
+import { useMagicContext } from 'hooks/useMagicContext'
+import { SoundchainGoldLogo } from 'icons/SoundchainGoldLogo'
 
 // TODO: remove before enabling the ogun token stake
 export const getServerSideProps: GetServerSideProps = ({ res }) => {
   if (res) {
-    res.statusCode = 404;
-    res.end('Not found');
+    res.statusCode = 404
+    res.end('Not found')
   }
 
   return Promise.resolve({
     props: {},
-  });
-};
+  })
+}
 
 export default function AirdropPage() {
-  const router = useRouter();
-  const { web3: magicLinkWeb3, account: magicLinkAccount } = useMagicContext();
-  const { setIsLandingLayout } = useLayoutContext();
+  const router = useRouter()
+  const { web3: magicLinkWeb3, account: magicLinkAccount } = useMagicContext()
+  const { setIsLandingLayout } = useLayoutContext()
   const [proofBookByWallet, { data: proofBook, loading: loadingProof }] = useProofBookByWalletLazyQuery({
     fetchPolicy: 'network-only',
     nextFetchPolicy: 'network-only',
-  });
-  const [whitelistEntryByWallet, { data: whitelistEntry }] = useWhitelistEntryByWalletLazyQuery();
-  const [audioHolderByWallet, { data: audioHolder }] = useAudioHolderByWalletLazyQuery();
-  const [updateOgunClaimedWhitelist] = useUpdateOgunClaimedWhitelistMutation();
-  const [UpdateOgunClaimedAudioHolder] = useUpdateOgunClaimedAudioHolderMutation();
-  const [account, setAccount] = useState('');
-  const [showModal, setShowModal] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [closeModal, setCloseModal] = useState(true);
-  const [isClaimed, setIsClaimed] = useState(false);
-  const [web3, setWeb3] = useState<Web3>();
+  })
+  const [whitelistEntryByWallet, { data: whitelistEntry }] = useWhitelistEntryByWalletLazyQuery()
+  const [audioHolderByWallet, { data: audioHolder }] = useAudioHolderByWalletLazyQuery()
+  const [updateOgunClaimedWhitelist] = useUpdateOgunClaimedWhitelistMutation()
+  const [UpdateOgunClaimedAudioHolder] = useUpdateOgunClaimedAudioHolderMutation()
+  const [account, setAccount] = useState('')
+  const [showModal, setShowModal] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [closeModal, setCloseModal] = useState(true)
+  const [isClaimed, setIsClaimed] = useState(false)
+  const [web3, setWeb3] = useState<Web3>()
 
-  const { claimOgun, hasClaimedOgun } = useBlockchainV2();
+  const { claimOgun, hasClaimedOgun } = useBlockchainV2()
 
-  const isAudiusHolder = Boolean(audioHolder);
-  const isWhitelistUser = Boolean(whitelistEntry);
-  const isAddressInProofBook = Boolean(proofBook?.getProofBookByWallet?.address);
+  const isAudiusHolder = Boolean(audioHolder)
+  const isWhitelistUser = Boolean(whitelistEntry)
+  const isAddressInProofBook = Boolean(proofBook?.getProofBookByWallet?.address)
 
   useEffect(() => {
     if (account) {
-      whitelistEntryByWallet({ variables: { walletAdress: account } });
-      audioHolderByWallet({ variables: { walletAdress: account } });
-      proofBookByWallet({ variables: { walletAddress: account } });
+      whitelistEntryByWallet({ variables: { walletAdress: account } })
+      audioHolderByWallet({ variables: { walletAdress: account } })
+      proofBookByWallet({ variables: { walletAddress: account } })
     }
-  }, [account, audioHolderByWallet, whitelistEntryByWallet, proofBookByWallet]);
+  }, [account, audioHolderByWallet, whitelistEntryByWallet, proofBookByWallet])
 
   useEffect(() => {
-    setIsLandingLayout(true);
+    setIsLandingLayout(true)
 
     return () => {
-      setIsLandingLayout(false);
-    };
-  }, [setIsLandingLayout]);
+      setIsLandingLayout(false)
+    }
+  }, [setIsLandingLayout])
 
   const provider: any = new WalletConnectProvider({
     rpc: {
@@ -85,121 +85,121 @@ export default function AirdropPage() {
       137: 'https://polygon-rpc.com/', // https://docs.polygon.technology/docs/develop/network-details/network/
       // ...
     },
-  });
+  })
 
   const connectWC = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
-      await provider.enable();
-      const web3 = new Web3(provider);
+      await provider.enable()
+      const web3 = new Web3(provider)
 
-      const accounts = await web3.eth?.getAccounts();
+      const accounts = await web3.eth?.getAccounts()
 
-      if (accounts) setAccount(accounts[0]);
+      if (accounts) setAccount(accounts[0])
 
-      const isClaimed = await handleIsClaimed(web3, accounts[0]);
+      const isClaimed = await handleIsClaimed(web3, accounts[0])
 
-      if (isClaimed) setIsClaimed(true);
+      if (isClaimed) setIsClaimed(true)
 
-      setWeb3(web3);
+      setWeb3(web3)
     } catch (error) {
-      setCloseModal(!closeModal);
-      console.warn('warn: ', error);
+      setCloseModal(!closeModal)
+      console.warn('warn: ', error)
     }
-    setLoading(false);
-  };
+    setLoading(false)
+  }
 
-  const successfullyClaimedOguns = 'OGUNs claimed successfully!';
+  const successfullyClaimedOguns = 'OGUNs claimed successfully!'
 
   const handleErrorClaimingOgun = () => {
-    const message = 'Unfortunately, we could not claim your OGUNs at this moment, please try again later.';
+    const message = 'Unfortunately, we could not claim your OGUNs at this moment, please try again later.'
 
-    setLoading(false);
-    return toast.error(message);
-  };
+    setLoading(false)
+    return toast.error(message)
+  }
 
   const connectMetaMask = async () => {
     try {
-      const { ethereum } = window;
-      const metamaskRequired = 'Please, install the Metamask extension in your browser';
+      const { ethereum } = window
+      const metamaskRequired = 'Please, install the Metamask extension in your browser'
 
-      if (!ethereum) return toast.error(metamaskRequired);
+      if (!ethereum) return toast.error(metamaskRequired)
 
-      const provider = ethereum;
-      await provider.request({ method: 'eth_requestAccounts' });
-      const web3API = new Web3(provider);
-      const [account] = await web3API.eth.getAccounts();
+      const provider = ethereum
+      await provider.request({ method: 'eth_requestAccounts' })
+      const web3API = new Web3(provider)
+      const [account] = await web3API.eth.getAccounts()
 
-      const isClaimed = await handleIsClaimed(web3API, account);
+      const isClaimed = await handleIsClaimed(web3API, account)
 
-      if (isClaimed) setIsClaimed(true);
+      if (isClaimed) setIsClaimed(true)
 
-      setAccount(account);
-      setWeb3(web3API);
+      setAccount(account)
+      setWeb3(web3API)
     } catch (error) {
-      toast.error('An error has ocurred. Try again later.');
-      console.error(error);
+      toast.error('An error has ocurred. Try again later.')
+      console.error(error)
     } finally {
-      setCloseModal(!closeModal);
+      setCloseModal(!closeModal)
     }
-  };
+  }
 
   const connectSoundchain = () => {
-    if (!magicLinkWeb3 || !magicLinkAccount) return router.push(`/login?callbackUrl=${parent.location.href}`);
-    setShowModal(false);
-    setAccount(magicLinkAccount);
-    setWeb3(magicLinkWeb3);
-  };
+    if (!magicLinkWeb3 || !magicLinkAccount) return router.push(`/login?callbackUrl=${parent.location.href}`)
+    setShowModal(false)
+    setAccount(magicLinkAccount)
+    setWeb3(magicLinkWeb3)
+  }
 
   const handleIsClaimed = async (web3: Web3, address: string) => {
-    const contract = hasClaimedOgun(address);
+    const contract = hasClaimedOgun(address)
 
-    const hasClaimedContract = await contract.execute(web3);
+    const hasClaimedContract = await contract.execute(web3)
 
-    const isWhitelistClaimedDatabase = whitelistEntry?.whitelistEntryByWallet.ogunClaimed;
+    const isWhitelistClaimedDatabase = whitelistEntry?.whitelistEntryByWallet.ogunClaimed
 
-    const isAudiusHolderClaimedDatabase = audioHolder?.audioHolderByWallet.ogunClaimed;
+    const isAudiusHolderClaimedDatabase = audioHolder?.audioHolderByWallet.ogunClaimed
 
-    return hasClaimedContract || isWhitelistClaimedDatabase || isAudiusHolderClaimedDatabase ? true : false;
-  };
+    return hasClaimedContract || isWhitelistClaimedDatabase || isAudiusHolderClaimedDatabase ? true : false
+  }
 
   const handleClaimOgun = () => {
-    setLoading(true);
-    const from = proofBook?.getProofBookByWallet?.address;
-    const to = proofBook?.getProofBookByWallet?.address;
-    const amount = proofBook?.getProofBookByWallet?.value;
-    const proof = proofBook?.getProofBookByWallet?.merkleProof;
+    setLoading(true)
+    const from = proofBook?.getProofBookByWallet?.address
+    const to = proofBook?.getProofBookByWallet?.address
+    const amount = proofBook?.getProofBookByWallet?.value
+    const proof = proofBook?.getProofBookByWallet?.merkleProof
 
-    if (!from || !to || !amount || !proof || !web3) return handleErrorClaimingOgun();
+    if (!from || !to || !amount || !proof || !web3) return handleErrorClaimingOgun()
 
-    const contract = claimOgun(from, to, amount, proof);
+    const contract = claimOgun(from, to, amount, proof)
 
     contract
       .onReceipt(() => handleClaimOnSuccess())
       .onError(() => handleErrorClaimingOgun())
       .finally(() => setLoading(false))
       .execute(web3)
-      .catch(() => handleErrorClaimingOgun());
-  };
+      .catch(() => handleErrorClaimingOgun())
+  }
 
   const handleClaimOnSuccess = async () => {
-    toast.success(successfullyClaimedOguns);
-    const whiteListEntryId = whitelistEntry?.whitelistEntryByWallet.id || '';
-    const audiusHolderId = audioHolder?.audioHolderByWallet.id || '';
-    setIsClaimed(true);
+    toast.success(successfullyClaimedOguns)
+    const whiteListEntryId = whitelistEntry?.whitelistEntryByWallet.id || ''
+    const audiusHolderId = audioHolder?.audioHolderByWallet.id || ''
+    setIsClaimed(true)
 
     try {
       if (whiteListEntryId) {
-        await updateOgunClaimedWhitelist({ variables: { input: { id: whiteListEntryId, ogunClaimed: true } } });
+        await updateOgunClaimedWhitelist({ variables: { input: { id: whiteListEntryId, ogunClaimed: true } } })
       }
 
       if (audiusHolderId) {
-        await UpdateOgunClaimedAudioHolder({ variables: { input: { id: audiusHolderId, ogunClaimed: true } } });
+        await UpdateOgunClaimedAudioHolder({ variables: { input: { id: audiusHolderId, ogunClaimed: true } } })
       }
     } catch (error) {
-      console.error(error);
+      console.error(error)
     }
-  };
+  }
 
   const ConnectAccountState = () => {
     return (
@@ -233,8 +233,8 @@ export default function AirdropPage() {
           <span className="font-medium ">CONNECT</span>
         </Button>
       </>
-    );
-  };
+    )
+  }
 
   const WhitelistState = () => {
     return (
@@ -257,17 +257,17 @@ export default function AirdropPage() {
           <span className="font-medium ">CLAIM</span>
         </Button>
       </>
-    );
-  };
+    )
+  }
 
   const getClaimableAmount = () => {
-    const amount = proofBook?.getProofBookByWallet?.value;
-    if (!amount) return;
+    const amount = proofBook?.getProofBookByWallet?.value
+    if (!amount) return
 
-    const convertedAmount = Web3.utils.fromWei(amount, 'ether');
+    const convertedAmount = Web3.utils.fromWei(amount, 'ether')
 
-    return Number(convertedAmount).toFixed(2);
-  };
+    return Number(convertedAmount).toFixed(2)
+  }
 
   const AudioHolderState = () => {
     return (
@@ -286,8 +286,8 @@ export default function AirdropPage() {
           <span className="font-medium ">CLAIM</span>
         </Button>
       </>
-    );
-  };
+    )
+  }
 
   const WithoutAudioState = () => {
     return (
@@ -298,8 +298,8 @@ export default function AirdropPage() {
           <a className="green-blue-gradient-text-break font-medium">Learn more here.</a>
         </Link>
       </h2>
-    );
-  };
+    )
+  }
 
   const ClaimedState = () => {
     return (
@@ -313,8 +313,8 @@ export default function AirdropPage() {
           </Button>
         </Link>
       </>
-    );
-  };
+    )
+  }
 
   const ClosedState = () => {
     return (
@@ -326,8 +326,8 @@ export default function AirdropPage() {
           </Link>
         </h2>
       </>
-    );
-  };
+    )
+  }
 
   return (
     <>
@@ -362,5 +362,5 @@ export default function AirdropPage() {
         </div>
       </main>
     </>
-  );
+  )
 }

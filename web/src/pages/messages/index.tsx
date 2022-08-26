@@ -1,30 +1,28 @@
-import { Inbox } from 'components/Inbox';
-import { TopNavBarProps } from 'components/TopNavBar';
-import { useLayoutContext } from 'hooks/useLayoutContext';
-import { cacheFor } from 'lib/apollo';
-import { protectPage } from 'lib/protectPage';
-import { useEffect } from 'react';
-import SEO from '../../components/SEO';
+import { Inbox } from 'components/Inbox'
+import { TopNavBarProps } from 'components/TopNavBar'
+import { useLayoutContext } from 'hooks/useLayoutContext'
+import { cacheFor } from 'lib/apollo'
+import { protectPage } from 'lib/protectPage'
+import { useEffect } from 'react'
+import SEO from '../../components/SEO'
 
 export const getServerSideProps = protectPage((context, apolloClient) => {
-  return cacheFor(MessagesPage, {}, context, apolloClient);
-});
+  return cacheFor(MessagesPage, {}, context, apolloClient)
+})
 
-const topNavBarProps: TopNavBarProps = {
-
-};
+const topNavBarProps: TopNavBarProps = {}
 
 export default function MessagesPage() {
-  const { setTopNavBarProps } = useLayoutContext();
+  const { setTopNavBarProps } = useLayoutContext()
 
   useEffect(() => {
-    setTopNavBarProps(topNavBarProps);
-  }, [setTopNavBarProps]);
+    setTopNavBarProps(topNavBarProps)
+  }, [setTopNavBarProps])
 
   return (
     <>
       <SEO title="Inbox | SoundChain" canonicalUrl="/messages" description="SoundChain Inbox" />
       <Inbox />
     </>
-  );
+  )
 }
