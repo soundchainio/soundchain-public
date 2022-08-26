@@ -63,7 +63,7 @@ const tokenAddress = config.ogunTokenAddress;
 export function MagicProvider({ children }: MagicProviderProps) {
   const me = useMe();
   const [account, setAccount] = useState('');
-  const [balance, setBalance] = useState('');
+  const [maticBalance, setMaticBalance] = useState('');
   const [ogunBalance, setOgunBalance] = useState('');
   const [isRefetchingBalance, setIsRefetchingBalance] = useState(false);
 
@@ -111,9 +111,9 @@ export function MagicProvider({ children }: MagicProviderProps) {
     try {
       if (!account) return;
 
-      const balance = await web3.eth.getBalance(account);
+      const maticBalance = await web3.eth.getBalance(account);
 
-      setBalance(Number(web3.utils.fromWei(balance, 'ether')).toFixed(6));
+      setMaticBalance(Number(web3.utils.fromWei(maticBalance, 'ether')).toFixed(6));
     } catch (error) {
       handleError(error);
     }
@@ -148,7 +148,9 @@ export function MagicProvider({ children }: MagicProviderProps) {
   }, [handleUseEffect, me]);
 
   return (
-    <MagicContext.Provider value={{ magic, web3, account, balance, ogunBalance, refetchBalance, isRefetchingBalance }}>
+    <MagicContext.Provider
+      value={{ magic, web3, account, balance: maticBalance, ogunBalance, refetchBalance, isRefetchingBalance }}
+    >
       {children}
     </MagicContext.Provider>
   );
