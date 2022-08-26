@@ -5,6 +5,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import { config, NODE_ENV } from './config';
 import { blockchainWatcher } from './lambda/blockchainWatcher';
+import { playbackCount } from './lambda/playbackCount';
 import { processAuctions } from './lambda/processAuctions';
 import { processPending } from './lambda/processPending';
 import { Context } from './types/Context';
@@ -30,7 +31,7 @@ async function bootstrap() {
   setInterval(() => blockchainWatcher({}, undefined, null), 10 * 1000);
   setInterval(() => processAuctions({}, undefined, null), 10 * 1000);
   setInterval(() => processPending({}, undefined, null), 10 * 1000);
-  // setInterval(() => playbackCount({}, undefined, null), 60 * 1000);
+  // setInterval(() => playbackCount({}, undefined, null), 10 * 1000);
 
   console.log(`🚀 Server ready at http://localhost:${config.express.port}${server.graphqlPath}`);
 }

@@ -21,7 +21,7 @@ export const playbackCount: Handler = async () => {
     try {
       url = `/metrics/unique_viewers/breakdown?group_by=video_id&limit=${pageSize}&page=${currentPage}&timeframe[]=${initialTimestampInSeconds}&timeframe[]=${nowTimestampInSeconds}&order_by=field&order_direction=asc`;
       const { data } = await muxDataApi.get<MuxServerData>(url);
-
+      console.log('data', data)
       const values = data.data.map(video => ({ trackId: video.field, amount: video.views }));
       return { totalCount: data.total_row_count, values };
     } catch (error) {
