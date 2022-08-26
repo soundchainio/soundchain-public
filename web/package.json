@@ -12,8 +12,7 @@
     "start": "next start",
     "test": "jest",
     "prettier": "prettier --write ./src",
-    "lint-web": "lint-staged",
-    "prepare": "cd .. && husky install web/.husky"
+    "lint-web": "lint-staged"
   },
   "lint-staged": {
     "*.{js,ts,tsx, jsx}": [
