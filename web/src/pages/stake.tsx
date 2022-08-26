@@ -32,7 +32,7 @@ interface FormValues {
 
 type Selected = 'Stake' | 'Unstake';
 
-const OGUNAddress = config.OGUNAddress as string;
+const OGUNAddress = config.ogunTokenAddress as string;
 const tokenStakeContractAddress = config.tokenStakeContractAddress as string;
 const tokenContract = (web3: Web3) =>
   new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], OGUNAddress) as unknown as Contract;
@@ -85,16 +85,16 @@ export default function Stake() {
 
   const saveWalletState = (wallet: string) => {
     localStorage.setItem('soundchain_staking_connected_wallet', wallet);
-  }
+  };
 
   const getWalletState = () => {
     return localStorage.getItem('soundchain_staking_connected_wallet');
-  }
+  };
 
   useEffect(() => {
     const connectedWallet = getWalletState();
 
-    const loadAccount = ({ account, web3 }: { account: string, web3: Web3 }) => {
+    const loadAccount = ({ account, web3 }: { account: string; web3: Web3 }) => {
       setAccount(account);
       setWeb3(web3);
     };
@@ -102,12 +102,10 @@ export default function Stake() {
     if (walletconnectAccount && wcWeb3 && connectedWallet === 'wc') {
       console.log('loading WC...');
       loadAccount({ account: walletconnectAccount, web3: wcWeb3 });
-    }
-    else if (metamaskAccount && metamaskWeb3 && connectedWallet === 'metamask') {
+    } else if (metamaskAccount && metamaskWeb3 && connectedWallet === 'metamask') {
       console.log('loading MetaMask...');
-      loadAccount({ account: metamaskAccount, web3: metamaskWeb3 });      
-    }
-    else if (magicLinkAccount && magicLinkWeb3 && connectedWallet === 'magiclink') {
+      loadAccount({ account: metamaskAccount, web3: metamaskWeb3 });
+    } else if (magicLinkAccount && magicLinkWeb3 && connectedWallet === 'magiclink') {
       console.log('loading Soundchain Wallet...');
       loadAccount({ account: magicLinkAccount, web3: magicLinkWeb3 });
     }
@@ -148,13 +146,13 @@ export default function Stake() {
 
     setShowModal(false);
     setWeb3(metamaskWeb3);
-    saveWalletState('metamask')
+    saveWalletState('metamask');
   };
 
   const connectWC = async () => {
     try {
       await wcConnect();
-      saveWalletState('wc')
+      saveWalletState('wc');
     } catch (error) {
       console.warn('warn: ', error);
     } finally {
@@ -166,7 +164,7 @@ export default function Stake() {
     setShowModal(false);
     setAccount(magicLinkAccount);
     setWeb3(magicLinkWeb3);
-    saveWalletState('magiclink')
+    saveWalletState('magiclink');
   };
 
   const addWallet = async () => {
@@ -262,26 +260,25 @@ export default function Stake() {
     }
     if (account && web3 && values.amount > 0 && values.amount <= +balance) {
       try {
-
         const existingAllowance = await currentTokenContract(web3)
-        .methods.allowance(account, stakingContractAddress)
-        .call()
-        .catch(console.log);
+          .methods.allowance(account, stakingContractAddress)
+          .call()
+          .catch(console.log);
 
         const weiAmount = web3.utils.toWei(values.amount.toString());
         const gasPrice = web3.utils.toWei(await getCurrentGasPrice(web3));
 
         if (existingAllowance < parseFloat(weiAmount)) {
-        setTransactionState('Approving transaction...');
-          const approvalTxObj = currentTokenContract(web3).methods.approve(stakingContractAddress, weiAmount);    
+          setTransactionState('Approving transaction...');
+          const approvalTxObj = currentTokenContract(web3).methods.approve(stakingContractAddress, weiAmount);
           const approvalTxGas = await approvalTxObj.estimateGas({ from: account });
-          await approvalTxObj.send({ from: account, gas: approvalTxGas, gasPrice })
+          await approvalTxObj.send({ from: account, gas: approvalTxGas, gasPrice });
         }
 
         setTransactionState(`Staking ${tokenName}...`);
-        const stakeTxObj = currentTokenStakingContract(web3).methods.stake(weiAmount);    
+        const stakeTxObj = currentTokenStakingContract(web3).methods.stake(weiAmount);
         const stakeTxGas = await stakeTxObj.estimateGas({ from: account });
-        await stakeTxObj.send({ from: account, gas: stakeTxGas, gasPrice })
+        await stakeTxObj.send({ from: account, gas: stakeTxGas, gasPrice });
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (cause: any) {
@@ -303,9 +300,9 @@ export default function Stake() {
       try {
         setTransactionState(`Unstaking ${tokenName}...`);
         const gasPrice = web3.utils.toWei(await getCurrentGasPrice(web3));
-        const unstakeTxObj = currentTokenStakingContract(web3).methods.withdraw();    
+        const unstakeTxObj = currentTokenStakingContract(web3).methods.withdraw();
         const unstakeTxGas = await unstakeTxObj.estimateGas({ from: account });
-        await unstakeTxObj.send({ from: account, gas: unstakeTxGas, gasPrice })
+        await unstakeTxObj.send({ from: account, gas: unstakeTxGas, gasPrice });
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (cause: any) {
         console.log('Stake Error: ', cause);
