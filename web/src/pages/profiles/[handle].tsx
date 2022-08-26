@@ -1,102 +1,102 @@
-import { Avatar } from 'components/Avatar';
-import { DisplayName } from 'components/DisplayName';
-import { FollowButton } from 'components/FollowButton';
-import { FollowModal } from 'components/FollowersModal';
-import { MessageButton } from 'components/MessageButton';
-import { Number } from 'components/Number';
-import { Posts } from 'components/Posts';
-import { Tracks } from 'components/profile/Tracks';
-import { ProfileCover } from 'components/ProfileCover';
-import { ProfileTabs } from 'components/ProfileTabs';
-import SEO from 'components/SEO';
-import { SocialMediaLink } from 'components/SocialMediaLink';
-import { SubscribeButton } from 'components/SubscribeButton';
-import { TopNavBarProps } from 'components/TopNavBar';
-import { useLayoutContext } from 'hooks/useLayoutContext';
-import { useMe } from 'hooks/useMe';
-import { cacheFor, createApolloClient } from 'lib/apollo';
-import { ProfileByHandleDocument, ProfileByHandleQuery } from 'lib/graphql';
-import { GetServerSideProps } from 'next';
-import { useRouter } from 'next/router';
-import { ParsedUrlQuery } from 'querystring';
-import { useEffect, useMemo, useState } from 'react';
-import { FollowModalType } from 'types/FollowModalType';
-import { ProfileTab } from 'types/ProfileTabType';
-import { WalletAddressButton } from '../../components/WalletAddressButton';
+import { Avatar } from 'components/Avatar'
+import { DisplayName } from 'components/DisplayName'
+import { FollowButton } from 'components/FollowButton'
+import { FollowModal } from 'components/FollowersModal'
+import { MessageButton } from 'components/MessageButton'
+import { Number } from 'components/Number'
+import { Posts } from 'components/Posts'
+import { Tracks } from 'components/profile/Tracks'
+import { ProfileCover } from 'components/ProfileCover'
+import { ProfileTabs } from 'components/ProfileTabs'
+import SEO from 'components/SEO'
+import { SocialMediaLink } from 'components/SocialMediaLink'
+import { SubscribeButton } from 'components/SubscribeButton'
+import { TopNavBarProps } from 'components/TopNavBar'
+import { useLayoutContext } from 'hooks/useLayoutContext'
+import { useMe } from 'hooks/useMe'
+import { cacheFor, createApolloClient } from 'lib/apollo'
+import { ProfileByHandleDocument, ProfileByHandleQuery } from 'lib/graphql'
+import { GetServerSideProps } from 'next'
+import { useRouter } from 'next/router'
+import { ParsedUrlQuery } from 'querystring'
+import { useEffect, useMemo, useState } from 'react'
+import { FollowModalType } from 'types/FollowModalType'
+import { ProfileTab } from 'types/ProfileTabType'
+import { WalletAddressButton } from '../../components/WalletAddressButton'
 
 export interface ProfilePageProps {
-  profile: ProfileByHandleQuery['profileByHandle'];
+  profile: ProfileByHandleQuery['profileByHandle']
 }
 
 interface ProfilePageParams extends ParsedUrlQuery {
-  handle: string;
+  handle: string
 }
 
 export const getServerSideProps: GetServerSideProps<ProfilePageProps, ProfilePageParams> = async context => {
-  const handle = context.params?.handle;
+  const handle = context.params?.handle
 
   if (!handle) {
-    return { notFound: true };
+    return { notFound: true }
   }
 
-  const apolloClient = createApolloClient(context);
+  const apolloClient = createApolloClient(context)
 
   const { data, error } = await apolloClient.query({
     query: ProfileByHandleDocument,
     variables: { handle },
     context,
-  });
+  })
 
   if (!data || error) {
-    return { notFound: true };
+    return { notFound: true }
   }
 
-  return cacheFor(ProfilePage, { profile: data.profileByHandle }, context, apolloClient);
-};
+  return cacheFor(ProfilePage, { profile: data.profileByHandle }, context, apolloClient)
+}
 
 export default function ProfilePage({ profile }: ProfilePageProps) {
-  const router = useRouter();
-  const me = useMe();
-  const { setTopNavBarProps } = useLayoutContext();
+  const router = useRouter()
+  const me = useMe()
+  const { setTopNavBarProps } = useLayoutContext()
 
-  const [showModal, setShowModal] = useState(false);
-  const [followModalType, setFollowModalType] = useState<FollowModalType>();
-  const [selectedTab, setSelectedTab] = useState<ProfileTab>(ProfileTab.POSTS);
+  const [showModal, setShowModal] = useState(false)
+  const [followModalType, setFollowModalType] = useState<FollowModalType>()
+  const [selectedTab, setSelectedTab] = useState<ProfileTab>(ProfileTab.POSTS)
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
       title: 'Profile',
     }),
     [me],
-  );
+  )
 
   useEffect(() => {
-    setTopNavBarProps(topNavBarProps);
-  }, [setTopNavBarProps, topNavBarProps]);
+    setTopNavBarProps(topNavBarProps)
+  }, [setTopNavBarProps, topNavBarProps])
 
   useEffect(() => {
-    setShowModal(false);
-  }, [router.asPath]);
+    setShowModal(false)
+  }, [router.asPath])
 
   const onFollowers = () => {
-    setFollowModalType(FollowModalType.FOLLOWERS);
-    setShowModal(true);
-  };
-
-  const onFollowing = () => {
-    setFollowModalType(FollowModalType.FOLLOWING);
-    setShowModal(true);
-  };
-
-  const onCloseModal = () => {
-    setShowModal(false);
-  };
-
-  if (!profile) {
-    return null;
+    setFollowModalType(FollowModalType.FOLLOWERS)
+    setShowModal(true)
   }
 
-  const profileId = profile.id;
+  const onFollowing = () => {
+    setFollowModalType(FollowModalType.FOLLOWING)
+    setShowModal(true)
+  }
+
+  const onCloseModal = () => {
+    setShowModal(false)
+  }
+
+  if (!profile) {
+    return null
+  }
+
+  const profileId = profile.id
 
   const {
     coverPicture,
@@ -112,7 +112,7 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
     teamMember,
     profilePicture,
     magicWalletAddress,
-  } = profile;
+  } = profile
 
   return (
     <>
@@ -184,5 +184,5 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
         />
       </>
     </>
-  );
+  )
 }

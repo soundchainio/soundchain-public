@@ -6,5 +6,5 @@ export const HeartFilled = (props: React.SVGProps<SVGSVGElement>) => {
         fill="#808080"
       />
     </svg>
-  );
-};
+  )
+}

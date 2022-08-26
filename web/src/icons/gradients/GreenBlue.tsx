@@ -6,5 +6,5 @@ export const GreenBlue = () => {
         <stop offset="1" stopColor="#4870FF" />
       </linearGradient>
     </defs>
-  );
-};
+  )
+}

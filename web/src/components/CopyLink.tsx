@@ -1,34 +1,34 @@
-import { ChainLink } from 'icons/ChainLink';
-import { Copy } from 'icons/Copy';
-import { useState } from 'react';
+import { ChainLink } from 'icons/ChainLink'
+import { Copy } from 'icons/Copy'
+import { useState } from 'react'
 
 interface CopyLinkProps {
-  link: string;
+  link: string
 }
 
 export const CopyLink = ({ link }: CopyLinkProps) => {
-  const [copyText, setCopyText] = useState('Copy');
+  const [copyText, setCopyText] = useState('Copy')
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(link);
-    setCopyText('Copied!');
+    navigator.clipboard.writeText(link)
+    setCopyText('Copied!')
     setTimeout(() => {
-      setCopyText('Copy');
-    }, 3000);
-  };
+      setCopyText('Copy')
+    }, 3000)
+  }
 
   return (
-    <div className="flex flex-row space-x-2 px-4 items-center cursor-pointer py-2 bg-gray-20">
-      <ChainLink className="scale-150 flex-shrink-0" />
+    <div className="flex cursor-pointer flex-row items-center space-x-2 bg-gray-20 px-4 py-2">
+      <ChainLink className="flex-shrink-0 scale-150" />
       <input
-        className="w-full py-1 ml-4 mr-4 text-xs text-gray-80 bg-gray-20 focus:border-transparent border-transparent focus:outline-none no-bg-selection truncate"
+        className="no-bg-selection ml-4 mr-4 w-full truncate border-transparent bg-gray-20 py-1 text-xs text-gray-80 focus:border-transparent focus:outline-none"
         id={link}
         value={link}
         readOnly
       />
-      <button className="text-gray-80 font-bold flex items-center justify-center pr-4 pl-4 w-30" onClick={handleCopy}>
+      <button className="w-30 flex items-center justify-center pr-4 pl-4 font-bold text-gray-80" onClick={handleCopy}>
         <Copy className="mr-1 h-3 w-3" /> {copyText}
       </button>
     </div>
-  );
-};
+  )
+}

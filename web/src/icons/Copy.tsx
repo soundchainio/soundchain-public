@@ -1,4 +1,4 @@
-import { IconProps } from './types/IconProps';
+import { IconProps } from './types/IconProps'
 
 export const Copy = ({ color, ...props }: IconProps) => {
   return (
@@ -9,5 +9,5 @@ export const Copy = ({ color, ...props }: IconProps) => {
         fill="#fff"
       />
     </svg>
-  );
-};
+  )
+}

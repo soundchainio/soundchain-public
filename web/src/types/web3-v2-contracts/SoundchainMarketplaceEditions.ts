@@ -2,10 +2,10 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import BN from "bn.js";
-import { ContractOptions } from "web3-eth-contract";
-import { EventLog } from "web3-core";
-import { EventEmitter } from "events";
+import BN from 'bn.js'
+import { ContractOptions } from 'web3-eth-contract'
+import { EventLog } from 'web3-core'
+import { EventEmitter } from 'events'
 import {
   Callback,
   PayableTransactionObject,
@@ -13,141 +13,125 @@ import {
   BlockType,
   ContractEventLog,
   BaseContract,
-} from "./types";
+} from './types'
 
 export interface EventOptions {
-  filter?: object;
-  fromBlock?: BlockType;
-  topics?: string[];
+  filter?: object
+  fromBlock?: BlockType
+  topics?: string[]
 }
 
 export type EditionCanceled = ContractEventLog<{
-  nft: string;
-  editionId: string;
-  0: string;
-  1: string;
-}>;
+  nft: string
+  editionId: string
+  0: string
+  1: string
+}>
 export type EditionListed = ContractEventLog<{
-  nft: string;
-  editionId: string;
-  0: string;
-  1: string;
-}>;
+  nft: string
+  editionId: string
+  0: string
+  1: string
+}>
 export type ItemCanceled = ContractEventLog<{
-  owner: string;
-  nft: string;
-  tokenId: string;
-  0: string;
-  1: string;
-  2: string;
-}>;
+  owner: string
+  nft: string
+  tokenId: string
+  0: string
+  1: string
+  2: string
+}>
 export type ItemListed = ContractEventLog<{
-  owner: string;
-  nft: string;
-  tokenId: string;
-  quantity: string;
-  pricePerItem: string;
-  OGUNPricePerItem: string;
-  acceptsMATIC: boolean;
-  acceptsOGUN: boolean;
-  startingTime: string;
-  0: string;
-  1: string;
-  2: string;
-  3: string;
-  4: string;
-  5: string;
-  6: boolean;
-  7: boolean;
-  8: string;
-}>;
+  owner: string
+  nft: string
+  tokenId: string
+  quantity: string
+  pricePerItem: string
+  OGUNPricePerItem: string
+  acceptsMATIC: boolean
+  acceptsOGUN: boolean
+  startingTime: string
+  0: string
+  1: string
+  2: string
+  3: string
+  4: string
+  5: string
+  6: boolean
+  7: boolean
+  8: string
+}>
 export type ItemSold = ContractEventLog<{
-  seller: string;
-  buyer: string;
-  nft: string;
-  tokenId: string;
-  quantity: string;
-  pricePerItem: string;
-  isPaymentOGUN: boolean;
-  0: string;
-  1: string;
-  2: string;
-  3: string;
-  4: string;
-  5: string;
-  6: boolean;
-}>;
+  seller: string
+  buyer: string
+  nft: string
+  tokenId: string
+  quantity: string
+  pricePerItem: string
+  isPaymentOGUN: boolean
+  0: string
+  1: string
+  2: string
+  3: string
+  4: string
+  5: string
+  6: boolean
+}>
 export type ItemUpdated = ContractEventLog<{
-  owner: string;
-  nft: string;
-  tokenId: string;
-  newPrice: string;
-  newOGUNPrice: string;
-  acceptsMATIC: boolean;
-  acceptsOGUN: boolean;
-  startingTime: string;
-  0: string;
-  1: string;
-  2: string;
-  3: string;
-  4: string;
-  5: boolean;
-  6: boolean;
-  7: string;
-}>;
+  owner: string
+  nft: string
+  tokenId: string
+  newPrice: string
+  newOGUNPrice: string
+  acceptsMATIC: boolean
+  acceptsOGUN: boolean
+  startingTime: string
+  0: string
+  1: string
+  2: string
+  3: string
+  4: string
+  5: boolean
+  6: boolean
+  7: string
+}>
 export type OwnershipTransferred = ContractEventLog<{
-  previousOwner: string;
-  newOwner: string;
-  0: string;
-  1: string;
-}>;
+  previousOwner: string
+  newOwner: string
+  0: string
+  1: string
+}>
 export type UpdatePlatformFee = ContractEventLog<{
-  platformFee: string;
-  0: string;
-}>;
+  platformFee: string
+  0: string
+}>
 export type UpdatePlatformFeeRecipient = ContractEventLog<{
-  platformFeeRecipient: string;
-  0: string;
-}>;
+  platformFeeRecipient: string
+  0: string
+}>
 
 export interface SoundchainMarketplaceEditions extends BaseContract {
-  constructor(
-    jsonInterface: any[],
-    address?: string,
-    options?: ContractOptions
-  ): SoundchainMarketplaceEditions;
-  clone(): SoundchainMarketplaceEditions;
+  constructor(jsonInterface: any[], address?: string, options?: ContractOptions): SoundchainMarketplaceEditions
+  clone(): SoundchainMarketplaceEditions
   methods: {
-    OGUNToken(): NonPayableTransactionObject<string>;
+    OGUNToken(): NonPayableTransactionObject<string>
 
     buyItem(
       _nftAddress: string,
       _tokenId: number | string | BN,
       _owner: string,
-      _isPaymentOGUN: boolean
-    ): PayableTransactionObject<void>;
+      _isPaymentOGUN: boolean,
+    ): PayableTransactionObject<void>
 
-    cancelEditionListing(
-      _nftAddress: string,
-      _editionNumber: number | string | BN
-    ): NonPayableTransactionObject<void>;
+    cancelEditionListing(_nftAddress: string, _editionNumber: number | string | BN): NonPayableTransactionObject<void>
 
-    cancelListing(
-      _nftAddress: string,
-      _tokenId: number | string | BN
-    ): NonPayableTransactionObject<void>;
+    cancelListing(_nftAddress: string, _tokenId: number | string | BN): NonPayableTransactionObject<void>
 
-    cancelListingBatch(
-      _nftAddress: string,
-      tokenIds: (number | string | BN)[]
-    ): NonPayableTransactionObject<void>;
+    cancelListingBatch(_nftAddress: string, tokenIds: (number | string | BN)[]): NonPayableTransactionObject<void>
 
-    editionListings(
-      arg0: string,
-      arg1: number | string | BN
-    ): NonPayableTransactionObject<boolean>;
+    editionListings(arg0: string, arg1: number | string | BN): NonPayableTransactionObject<boolean>
 
-    feeRecipient(): NonPayableTransactionObject<string>;
+    feeRecipient(): NonPayableTransactionObject<string>
 
     listBatch(
       _nftAddress: string,
@@ -156,8 +140,8 @@ export interface SoundchainMarketplaceEditions extends BaseContract {
       _OGUNPricePerItem: number | string | BN,
       _acceptsMATIC: boolean,
       _acceptsOGUN: boolean,
-      _startingTime: number | string | BN
-    ): NonPayableTransactionObject<void>;
+      _startingTime: number | string | BN,
+    ): NonPayableTransactionObject<void>
 
     listEdition(
       _nftEditionAddress: string,
@@ -166,8 +150,8 @@ export interface SoundchainMarketplaceEditions extends BaseContract {
       _OGUNPricePerItem: number | string | BN,
       _acceptsMATIC: boolean,
       _acceptsOGUN: boolean,
-      _startingTime: number | string | BN
-    ): NonPayableTransactionObject<void>;
+      _startingTime: number | string | BN,
+    ): NonPayableTransactionObject<void>
 
     listItem(
       _nftAddress: string,
@@ -177,47 +161,43 @@ export interface SoundchainMarketplaceEditions extends BaseContract {
       _OGUNPricePerItem: number | string | BN,
       _acceptsMATIC: boolean,
       _acceptsOGUN: boolean,
-      _startingTime: number | string | BN
-    ): NonPayableTransactionObject<void>;
+      _startingTime: number | string | BN,
+    ): NonPayableTransactionObject<void>
 
     listings(
       arg0: string,
       arg1: number | string | BN,
-      arg2: string
+      arg2: string,
     ): NonPayableTransactionObject<{
-      quantity: string;
-      pricePerItem: string;
-      OGUNPricePerItem: string;
-      acceptsMATIC: boolean;
-      acceptsOGUN: boolean;
-      startingTime: string;
-      0: string;
-      1: string;
-      2: string;
-      3: boolean;
-      4: boolean;
-      5: string;
-    }>;
+      quantity: string
+      pricePerItem: string
+      OGUNPricePerItem: string
+      acceptsMATIC: boolean
+      acceptsOGUN: boolean
+      startingTime: string
+      0: string
+      1: string
+      2: string
+      3: boolean
+      4: boolean
+      5: string
+    }>
 
-    owner(): NonPayableTransactionObject<string>;
+    owner(): NonPayableTransactionObject<string>
 
-    platformFee(): NonPayableTransactionObject<string>;
+    platformFee(): NonPayableTransactionObject<string>
 
-    renounceOwnership(): NonPayableTransactionObject<void>;
+    renounceOwnership(): NonPayableTransactionObject<void>
 
-    rewardsLimit(): NonPayableTransactionObject<string>;
+    rewardsLimit(): NonPayableTransactionObject<string>
 
-    rewardsRate(): NonPayableTransactionObject<string>;
+    rewardsRate(): NonPayableTransactionObject<string>
 
-    setRewardsLimit(
-      newLimit: number | string | BN
-    ): NonPayableTransactionObject<void>;
+    setRewardsLimit(newLimit: number | string | BN): NonPayableTransactionObject<void>
 
-    setRewardsRate(
-      _rewardsRate: number | string | BN
-    ): NonPayableTransactionObject<void>;
+    setRewardsRate(_rewardsRate: number | string | BN): NonPayableTransactionObject<void>
 
-    transferOwnership(newOwner: string): NonPayableTransactionObject<void>;
+    transferOwnership(newOwner: string): NonPayableTransactionObject<void>
 
     updateListing(
       _nftAddress: string,
@@ -226,132 +206,70 @@ export interface SoundchainMarketplaceEditions extends BaseContract {
       _newOGUNPrice: number | string | BN,
       _acceptsMATIC: boolean,
       _acceptsOGUN: boolean,
-      _startingTime: number | string | BN
-    ): NonPayableTransactionObject<void>;
+      _startingTime: number | string | BN,
+    ): NonPayableTransactionObject<void>
 
-    updatePlatformFee(
-      _platformFee: number | string | BN
-    ): NonPayableTransactionObject<void>;
+    updatePlatformFee(_platformFee: number | string | BN): NonPayableTransactionObject<void>
 
-    updatePlatformFeeRecipient(
-      _platformFeeRecipient: string
-    ): NonPayableTransactionObject<void>;
+    updatePlatformFeeRecipient(_platformFeeRecipient: string): NonPayableTransactionObject<void>
 
-    withdraw(destination: string): NonPayableTransactionObject<void>;
-  };
+    withdraw(destination: string): NonPayableTransactionObject<void>
+  }
   events: {
-    EditionCanceled(cb?: Callback<EditionCanceled>): EventEmitter;
-    EditionCanceled(
-      options?: EventOptions,
-      cb?: Callback<EditionCanceled>
-    ): EventEmitter;
+    EditionCanceled(cb?: Callback<EditionCanceled>): EventEmitter
+    EditionCanceled(options?: EventOptions, cb?: Callback<EditionCanceled>): EventEmitter
 
-    EditionListed(cb?: Callback<EditionListed>): EventEmitter;
-    EditionListed(
-      options?: EventOptions,
-      cb?: Callback<EditionListed>
-    ): EventEmitter;
+    EditionListed(cb?: Callback<EditionListed>): EventEmitter
+    EditionListed(options?: EventOptions, cb?: Callback<EditionListed>): EventEmitter
 
-    ItemCanceled(cb?: Callback<ItemCanceled>): EventEmitter;
-    ItemCanceled(
-      options?: EventOptions,
-      cb?: Callback<ItemCanceled>
-    ): EventEmitter;
+    ItemCanceled(cb?: Callback<ItemCanceled>): EventEmitter
+    ItemCanceled(options?: EventOptions, cb?: Callback<ItemCanceled>): EventEmitter
 
-    ItemListed(cb?: Callback<ItemListed>): EventEmitter;
-    ItemListed(options?: EventOptions, cb?: Callback<ItemListed>): EventEmitter;
+    ItemListed(cb?: Callback<ItemListed>): EventEmitter
+    ItemListed(options?: EventOptions, cb?: Callback<ItemListed>): EventEmitter
 
-    ItemSold(cb?: Callback<ItemSold>): EventEmitter;
-    ItemSold(options?: EventOptions, cb?: Callback<ItemSold>): EventEmitter;
+    ItemSold(cb?: Callback<ItemSold>): EventEmitter
+    ItemSold(options?: EventOptions, cb?: Callback<ItemSold>): EventEmitter
 
-    ItemUpdated(cb?: Callback<ItemUpdated>): EventEmitter;
-    ItemUpdated(
-      options?: EventOptions,
-      cb?: Callback<ItemUpdated>
-    ): EventEmitter;
+    ItemUpdated(cb?: Callback<ItemUpdated>): EventEmitter
+    ItemUpdated(options?: EventOptions, cb?: Callback<ItemUpdated>): EventEmitter
 
-    OwnershipTransferred(cb?: Callback<OwnershipTransferred>): EventEmitter;
-    OwnershipTransferred(
-      options?: EventOptions,
-      cb?: Callback<OwnershipTransferred>
-    ): EventEmitter;
+    OwnershipTransferred(cb?: Callback<OwnershipTransferred>): EventEmitter
+    OwnershipTransferred(options?: EventOptions, cb?: Callback<OwnershipTransferred>): EventEmitter
 
-    UpdatePlatformFee(cb?: Callback<UpdatePlatformFee>): EventEmitter;
-    UpdatePlatformFee(
-      options?: EventOptions,
-      cb?: Callback<UpdatePlatformFee>
-    ): EventEmitter;
+    UpdatePlatformFee(cb?: Callback<UpdatePlatformFee>): EventEmitter
+    UpdatePlatformFee(options?: EventOptions, cb?: Callback<UpdatePlatformFee>): EventEmitter
 
-    UpdatePlatformFeeRecipient(
-      cb?: Callback<UpdatePlatformFeeRecipient>
-    ): EventEmitter;
-    UpdatePlatformFeeRecipient(
-      options?: EventOptions,
-      cb?: Callback<UpdatePlatformFeeRecipient>
-    ): EventEmitter;
+    UpdatePlatformFeeRecipient(cb?: Callback<UpdatePlatformFeeRecipient>): EventEmitter
+    UpdatePlatformFeeRecipient(options?: EventOptions, cb?: Callback<UpdatePlatformFeeRecipient>): EventEmitter
 
-    allEvents(options?: EventOptions, cb?: Callback<EventLog>): EventEmitter;
-  };
+    allEvents(options?: EventOptions, cb?: Callback<EventLog>): EventEmitter
+  }
 
-  once(event: "EditionCanceled", cb: Callback<EditionCanceled>): void;
-  once(
-    event: "EditionCanceled",
-    options: EventOptions,
-    cb: Callback<EditionCanceled>
-  ): void;
+  once(event: 'EditionCanceled', cb: Callback<EditionCanceled>): void
+  once(event: 'EditionCanceled', options: EventOptions, cb: Callback<EditionCanceled>): void
 
-  once(event: "EditionListed", cb: Callback<EditionListed>): void;
-  once(
-    event: "EditionListed",
-    options: EventOptions,
-    cb: Callback<EditionListed>
-  ): void;
+  once(event: 'EditionListed', cb: Callback<EditionListed>): void
+  once(event: 'EditionListed', options: EventOptions, cb: Callback<EditionListed>): void
 
-  once(event: "ItemCanceled", cb: Callback<ItemCanceled>): void;
-  once(
-    event: "ItemCanceled",
-    options: EventOptions,
-    cb: Callback<ItemCanceled>
-  ): void;
+  once(event: 'ItemCanceled', cb: Callback<ItemCanceled>): void
+  once(event: 'ItemCanceled', options: EventOptions, cb: Callback<ItemCanceled>): void
 
-  once(event: "ItemListed", cb: Callback<ItemListed>): void;
-  once(
-    event: "ItemListed",
-    options: EventOptions,
-    cb: Callback<ItemListed>
-  ): void;
+  once(event: 'ItemListed', cb: Callback<ItemListed>): void
+  once(event: 'ItemListed', options: EventOptions, cb: Callback<ItemListed>): void
 
-  once(event: "ItemSold", cb: Callback<ItemSold>): void;
-  once(event: "ItemSold", options: EventOptions, cb: Callback<ItemSold>): void;
+  once(event: 'ItemSold', cb: Callback<ItemSold>): void
+  once(event: 'ItemSold', options: EventOptions, cb: Callback<ItemSold>): void
 
-  once(event: "ItemUpdated", cb: Callback<ItemUpdated>): void;
-  once(
-    event: "ItemUpdated",
-    options: EventOptions,
-    cb: Callback<ItemUpdated>
-  ): void;
+  once(event: 'ItemUpdated', cb: Callback<ItemUpdated>): void
+  once(event: 'ItemUpdated', options: EventOptions, cb: Callback<ItemUpdated>): void
 
-  once(event: "OwnershipTransferred", cb: Callback<OwnershipTransferred>): void;
-  once(
-    event: "OwnershipTransferred",
-    options: EventOptions,
-    cb: Callback<OwnershipTransferred>
-  ): void;
+  once(event: 'OwnershipTransferred', cb: Callback<OwnershipTransferred>): void
+  once(event: 'OwnershipTransferred', options: EventOptions, cb: Callback<OwnershipTransferred>): void
 
-  once(event: "UpdatePlatformFee", cb: Callback<UpdatePlatformFee>): void;
-  once(
-    event: "UpdatePlatformFee",
-    options: EventOptions,
-    cb: Callback<UpdatePlatformFee>
-  ): void;
+  once(event: 'UpdatePlatformFee', cb: Callback<UpdatePlatformFee>): void
+  once(event: 'UpdatePlatformFee', options: EventOptions, cb: Callback<UpdatePlatformFee>): void
 
-  once(
-    event: "UpdatePlatformFeeRecipient",
-    cb: Callback<UpdatePlatformFeeRecipient>
-  ): void;
-  once(
-    event: "UpdatePlatformFeeRecipient",
-    options: EventOptions,
-    cb: Callback<UpdatePlatformFeeRecipient>
-  ): void;
+  once(event: 'UpdatePlatformFeeRecipient', cb: Callback<UpdatePlatformFeeRecipient>): void
+  once(event: 'UpdatePlatformFeeRecipient', options: EventOptions, cb: Callback<UpdatePlatformFeeRecipient>): void
 }

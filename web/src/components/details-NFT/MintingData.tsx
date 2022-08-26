@@ -1,14 +1,14 @@
-import { ProfileWithAvatar } from 'components/ProfileWithAvatar';
-import { config } from 'config';
-import { ChainLink } from 'icons/ChainLink';
-import { Pinata } from 'icons/Pinata';
-import { Token } from 'icons/Token';
-import { Profile } from 'lib/graphql';
+import { ProfileWithAvatar } from 'components/ProfileWithAvatar'
+import { config } from 'config'
+import { ChainLink } from 'icons/ChainLink'
+import { Pinata } from 'icons/Pinata'
+import { Token } from 'icons/Token'
+import { Profile } from 'lib/graphql'
 
 interface MintingDataProps {
-  ipfsCid?: string | null;
-  transactionHash?: string | null;
-  ownerProfile?: Partial<Profile>;
+  ipfsCid?: string | null
+  transactionHash?: string | null
+  ownerProfile?: Partial<Profile>
 }
 
 export const MintingData = ({ ipfsCid, transactionHash, ownerProfile }: MintingDataProps) => {
@@ -69,5 +69,5 @@ export const MintingData = ({ ipfsCid, transactionHash, ownerProfile }: MintingD
         </div>
       )}
     </>
-  );
-};
+  )
+}

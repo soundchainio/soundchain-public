@@ -1,26 +1,26 @@
-import Web3 from 'web3';
+import Web3 from 'web3'
 
 export const currency = (value: number) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     ...(value < 0.01 && { maximumSignificantDigits: 3 }),
-  }).format(value);
-};
+  }).format(value)
+}
 
 export const fixedDecimals = (value: number | string) => {
-  const s = value.toString();
+  const s = value.toString()
   if (!s || isNaN(parseFloat(s))) {
-    return 0;
+    return 0
   }
-  const [integerPart, decimals] = s.split('.');
-  const n = parseFloat(s);
+  const [integerPart, decimals] = s.split('.')
+  const n = parseFloat(s)
 
   if (decimals?.length > 6) {
-    return parseFloat(n.toPrecision(Math.min(integerPart.length + 3, 21)));
+    return parseFloat(n.toPrecision(Math.min(integerPart.length + 3, 21)))
   }
 
-  return n;
-};
+  return n
+}
 
-export const priceToShow = (wei: string) => fixedDecimals(Web3.utils.fromWei(wei, 'ether'));
+export const priceToShow = (wei: string) => fixedDecimals(Web3.utils.fromWei(wei, 'ether'))

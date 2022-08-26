@@ -1,39 +1,39 @@
-import { Button } from 'components/Button';
-import { network } from 'lib/blockchainNetworks';
-import { DefaultWallet, useUpdateDefaultWalletMutation } from 'lib/graphql';
-import React, { createContext, ReactNode, useContext } from 'react';
-import Web3 from 'web3';
-import { useMagicContext } from './useMagicContext';
-import { useMe } from './useMe';
-import useMetaMask from './useMetaMask';
+import { Button } from 'components/Button'
+import { network } from 'lib/blockchainNetworks'
+import { DefaultWallet, useUpdateDefaultWalletMutation } from 'lib/graphql'
+import React, { createContext, ReactNode, useContext } from 'react'
+import Web3 from 'web3'
+import { useMagicContext } from './useMagicContext'
+import { useMe } from './useMe'
+import useMetaMask from './useMetaMask'
 
 interface WalletContextData {
-  web3?: Web3;
-  account?: string;
-  balance?: string;
-  OGUNBalance?: string;
-  refetchBalance?: () => void;
+  web3?: Web3
+  account?: string
+  balance?: string
+  OGUNBalance?: string
+  refetchBalance?: () => void
 }
 
-const WalletContext = createContext<WalletContextData>({});
+const WalletContext = createContext<WalletContextData>({})
 
 interface WalletProviderProps {
-  children?: ReactNode | undefined;
+  children?: ReactNode | undefined
 }
 
 const WalletProvider = ({ children }: WalletProviderProps) => {
-  const me = useMe();
-  const [updateDefaultWallet] = useUpdateDefaultWalletMutation();
-  const { account, balance, chainId, addMumbaiTestnet, connect, web3, refetchBalance, loading } = useMetaMask();
+  const me = useMe()
+  const [updateDefaultWallet] = useUpdateDefaultWalletMutation()
+  const { account, balance, chainId, addMumbaiTestnet, connect, web3, refetchBalance, loading } = useMetaMask()
   const {
     account: magicAccount,
     balance: magicBalance,
     ogunBalance: magicOgunBalance,
     web3: magicWeb3,
     refetchBalance: magicRefetchBalance,
-  } = useMagicContext();
+  } = useMagicContext()
 
-  let context: WalletContextData = {};
+  let context: WalletContextData = {}
 
   if (me?.defaultWallet === DefaultWallet.Soundchain) {
     context = {
@@ -42,10 +42,10 @@ const WalletProvider = ({ children }: WalletProviderProps) => {
       OGUNBalance: magicOgunBalance,
       web3: magicWeb3,
       refetchBalance: magicRefetchBalance,
-    };
+    }
   }
 
-  let Content;
+  let Content
 
   if (!loading && me?.defaultWallet === DefaultWallet.MetaMask) {
     if (!account) {
@@ -56,7 +56,7 @@ const WalletProvider = ({ children }: WalletProviderProps) => {
             Connect to MetaMask Wallet
           </Button>
         </>
-      );
+      )
     } else if (chainId !== network.id) {
       Content = (
         <>
@@ -65,7 +65,7 @@ const WalletProvider = ({ children }: WalletProviderProps) => {
             Connect to Mumbai Testnet
           </Button>
         </>
-      );
+      )
     }
 
     context = {
@@ -73,14 +73,14 @@ const WalletProvider = ({ children }: WalletProviderProps) => {
       balance,
       web3,
       refetchBalance,
-    };
+    }
   }
 
   return (
     <WalletContext.Provider value={context}>
       {children}
       {Content && (
-        <div className="fixed top-0 left-0 h-full w-full flex flex-col items-center gap-4 justify-center z-50 bg-gray-30 bg-opacity-95 text-center text-white font-bold">
+        <div className="fixed top-0 left-0 z-50 flex h-full w-full flex-col items-center justify-center gap-4 bg-gray-30 bg-opacity-95 text-center font-bold text-white">
           {Content}
           <div>or you can select your SoundChain Wallet</div>
           <Button
@@ -100,9 +100,9 @@ const WalletProvider = ({ children }: WalletProviderProps) => {
         </div>
       )}
     </WalletContext.Provider>
-  );
-};
+  )
+}
 
-export const useWalletContext = () => useContext(WalletContext);
+export const useWalletContext = () => useContext(WalletContext)
 
-export default WalletProvider;
+export default WalletProvider

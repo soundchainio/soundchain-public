@@ -11,5 +11,5 @@ export const RightArrow = (props: React.SVGProps<SVGSVGElement>) => {
     >
       <path d="M1 11L6 6L1 0.999999" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
-  );
-};
+  )
+}

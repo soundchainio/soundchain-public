@@ -1,58 +1,58 @@
-import classNames from 'classnames';
-import { Button } from 'components/Button';
-import 'emoji-mart/css/emoji-mart.css';
-import { default as React, useEffect, useState } from 'react';
-import { MediaProvider } from 'types/MediaProvider';
-import { PostLinkType } from 'types/PostLinkType';
-import { IdentifySource } from 'utils/NormalizeEmbedLinks';
-import { ModalsPortal } from './ModalsPortal';
-import { MediaLink, PostLinkInput } from './PostLinkInput';
+import classNames from 'classnames'
+import { Button } from 'components/Button'
+import 'emoji-mart/css/emoji-mart.css'
+import { default as React, useEffect, useState } from 'react'
+import { MediaProvider } from 'types/MediaProvider'
+import { PostLinkType } from 'types/PostLinkType'
+import { IdentifySource } from 'utils/NormalizeEmbedLinks'
+import { ModalsPortal } from './ModalsPortal'
+import { MediaLink, PostLinkInput } from './PostLinkInput'
 
 interface AddLinkProps {
-  onClose: () => void;
-  setOriginalLink: (val: string) => void;
-  setShow: (val: boolean) => void;
-  show: boolean;
-  type: PostLinkType;
-  postLink: string;
-  setPostLink: (val: string) => void;
+  onClose: () => void
+  setOriginalLink: (val: string) => void
+  setShow: (val: boolean) => void
+  show: boolean
+  type: PostLinkType
+  postLink: string
+  setPostLink: (val: string) => void
 }
 
 const baseClasses =
-  'fixed left-0 w-screen top-0 h-full bottom-0 duration-500 bg-opacity-75 ease-in-out bg-black transform-gpu transform';
+  'fixed left-0 w-screen top-0 h-full bottom-0 duration-500 bg-opacity-75 ease-in-out bg-black transform-gpu transform'
 
 export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type, postLink, setPostLink }: AddLinkProps) => {
-  const [link, setLink] = useState<MediaLink>();
+  const [link, setLink] = useState<MediaLink>()
 
   const handleSubmit = () => {
     if (link) {
-      setOriginalLink(link.value);
-      setShow(false);
+      setOriginalLink(link.value)
+      setShow(false)
     } else {
-      setOriginalLink('');
-      setShow(false);
+      setOriginalLink('')
+      setShow(false)
     }
-  };
+  }
 
   useEffect(() => {
     if (postLink) {
-      const identifiedSource = IdentifySource(postLink);
+      const identifiedSource = IdentifySource(postLink)
       if (identifiedSource.type && identifiedSource.value != link?.value) {
-        setLink(identifiedSource);
+        setLink(identifiedSource)
       }
     }
-  }, [postLink]);
+  }, [postLink])
 
   return (
     <ModalsPortal>
       <div className={classNames(baseClasses, show ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0')}>
-        <div className="flex flex-col h-full bg-gray-20">
+        <div className="flex h-full flex-col bg-gray-20">
           <div className="flex items-center rounded-tl-3xl rounded-tr-3xl bg-gray-30">
-            <button className="p-2 text-gray-400 font-bold flex-1 text-center" onClick={onClose}>
+            <button className="flex-1 p-2 text-center font-bold text-gray-400" onClick={onClose}>
               Cancel
             </button>
-            <div className="flex-1 text-center text-white font-bold">Embed</div>
-            <div className="flex-1 text-center m-2">
+            <div className="flex-1 text-center font-bold text-white">Embed</div>
+            <div className="m-2 flex-1 text-center">
               <Button
                 className="bg-gray-30 text-sm"
                 type="button"
@@ -65,7 +65,7 @@ export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type, post
           </div>
           {type === PostLinkType.MUSIC && (
             <>
-              <div className="text-gray-400 mt-4 mb-4 w-9/12 ml-auto mr-auto text-sm">
+              <div className="mt-4 mb-4 ml-auto mr-auto w-9/12 text-sm text-gray-400">
                 Paste a music link from Soundcloud, Spotify or Bandcamp to embed the music to your post.
               </div>
               <div>
@@ -82,7 +82,7 @@ export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type, post
           )}
           {type === PostLinkType.VIDEO && (
             <>
-              <div className="text-gray-400 mt-4 mb-4 w-9/12 ml-auto mr-auto text-sm">
+              <div className="mt-4 mb-4 ml-auto mr-auto w-9/12 text-sm text-gray-400">
                 Paste a video link from Youtube or Vimeo to embed the video to your post.
               </div>
               <div>
@@ -94,5 +94,5 @@ export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type, post
         </div>
       </div>
     </ModalsPortal>
-  );
-};
+  )
+}

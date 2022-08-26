@@ -14,5 +14,5 @@ export const Camera = (props: React.SVGProps<SVGSVGElement>) => {
         </linearGradient>
       </defs>
     </svg>
-  );
-};
+  )
+}

@@ -1,4 +1,4 @@
-import { IconProps } from './types/IconProps';
+import { IconProps } from './types/IconProps'
 
 export const CircleRightArrow = (props: IconProps) => {
   return (
@@ -12,5 +12,5 @@ export const CircleRightArrow = (props: IconProps) => {
         d="M16.087 10.05l-4.756-4.756a.625.625 0 10-.881.88l3.187 3.2H4.262a.625.625 0 100 1.25h9.488l-3.3 3.3a.626.626 0 10.881.882l4.756-4.756z"
       ></path>
     </svg>
-  );
-};
+  )
+}

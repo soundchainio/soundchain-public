@@ -1,5 +1,5 @@
-import classNames from 'classnames';
-import { ButtonProps, commonClasses } from 'components/Button';
+import classNames from 'classnames'
+import { ButtonProps, commonClasses } from 'components/Button'
 
 export const OutlineButton = ({
   className,
@@ -32,5 +32,5 @@ export const OutlineButton = ({
         )}
       </button>
     </div>
-  );
-};
+  )
+}

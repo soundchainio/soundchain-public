@@ -1,77 +1,76 @@
-import { BottomSheet } from 'components/BottomSheet';
-import { InboxButton } from 'components/Buttons/InboxButton';
-import { Comments } from 'components/Comments';
-import { NewCommentForm } from 'components/NewCommentForm';
-import { NotAvailableMessage } from 'components/NotAvailableMessage';
-import { Post } from 'components/Post';
-import SEO from 'components/SEO';
-import { TopNavBarProps } from 'components/TopNavBar';
-import { useLayoutContext } from 'hooks/useLayoutContext';
-import { useMe } from 'hooks/useMe';
-import { cacheFor, createApolloClient } from 'lib/apollo';
-import { PostDocument, PostQuery, usePostQuery } from 'lib/graphql';
-import { GetServerSideProps } from 'next';
-import { ParsedUrlQuery } from 'querystring';
-import { useEffect, useMemo } from 'react';
+import { BottomSheet } from 'components/BottomSheet'
+import { InboxButton } from 'components/Buttons/InboxButton'
+import { Comments } from 'components/Comments'
+import { NewCommentForm } from 'components/NewCommentForm'
+import { NotAvailableMessage } from 'components/NotAvailableMessage'
+import { Post } from 'components/Post'
+import SEO from 'components/SEO'
+import { TopNavBarProps } from 'components/TopNavBar'
+import { useLayoutContext } from 'hooks/useLayoutContext'
+import { useMe } from 'hooks/useMe'
+import { cacheFor, createApolloClient } from 'lib/apollo'
+import { PostDocument, PostQuery, usePostQuery } from 'lib/graphql'
+import { GetServerSideProps } from 'next'
+import { ParsedUrlQuery } from 'querystring'
+import { useEffect, useMemo } from 'react'
 
 export interface PostPageProps {
-  post: PostQuery['post'];
+  post: PostQuery['post']
 }
 
 interface PostPageParams extends ParsedUrlQuery {
-  id: string;
+  id: string
 }
 
 export const getServerSideProps: GetServerSideProps<PostPageProps, PostPageParams> = async context => {
-  const postId = context.params?.id;
+  const postId = context.params?.id
 
   if (!postId) {
-    return { notFound: true };
+    return { notFound: true }
   }
 
-  const apolloClient = createApolloClient(context);
+  const apolloClient = createApolloClient(context)
 
   const { error, data } = await apolloClient.query({
     query: PostDocument,
     variables: { id: postId },
     context,
-  });
+  })
 
   if (error) {
-    return { notFound: true };
+    return { notFound: true }
   }
 
-  return cacheFor(PostPage, { post: data.post }, context, apolloClient);
-};
+  return cacheFor(PostPage, { post: data.post }, context, apolloClient)
+}
 
 export default function PostPage({ post }: PostPageProps) {
-  const { data: repostData } = usePostQuery({ variables: { id: post.repostId || '' }, skip: !post.repostId });
-  const { setTopNavBarProps } = useLayoutContext();
-  const me = useMe();
+  const { data: repostData } = usePostQuery({ variables: { id: post.repostId || '' }, skip: !post.repostId })
+  const { setTopNavBarProps } = useLayoutContext()
+  const me = useMe()
 
-  const deleted = post.deleted;
+  const deleted = post.deleted
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
-    
       rightButton: me ? <InboxButton /> : undefined,
     }),
     [me],
-  );
+  )
 
-  const repost = repostData?.post;
-  const track = post.track || repost?.track;
+  const repost = repostData?.post
+  const track = post.track || repost?.track
 
-  const title = track ? `${track.title} - song by ${track.artist} | SoundChain` : 'Post | SoundChain';
+  const title = track ? `${track.title} - song by ${track.artist} | SoundChain` : 'Post | SoundChain'
   const description = track
     ? `${!post.body ? '' : `${post.body} - `}Listen to ${track.title} on SoundChain. ${track.artist}. ${
         track.album || 'Song'
       }. ${!track.releaseYear ? '' : `${track.releaseYear}.`}`
-    : post.body || 'Check this post on SoundChain';
+    : post.body || 'Check this post on SoundChain'
 
   useEffect(() => {
-    setTopNavBarProps(topNavBarProps);
-  }, [setTopNavBarProps, topNavBarProps]);
+    setTopNavBarProps(topNavBarProps)
+  }, [setTopNavBarProps, topNavBarProps])
 
   return (
     <>
@@ -90,5 +89,5 @@ export default function PostPage({ post }: PostPageProps) {
         </div>
       )}
     </>
-  );
+  )
 }

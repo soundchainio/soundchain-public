@@ -1,18 +1,18 @@
-import { Avatar } from 'components/Avatar';
-import { FollowButton } from 'components/FollowButton';
-import { MessageButton } from 'components/MessageButton';
-import { ProfileListItemSkeleton } from 'components/ProfileListItemSkeleton';
-import { Profile } from 'lib/graphql';
-import NextLink from 'next/link';
-import { DisplayName } from './DisplayName';
-import { SubscribeButton } from './SubscribeButton';
+import { Avatar } from 'components/Avatar'
+import { FollowButton } from 'components/FollowButton'
+import { MessageButton } from 'components/MessageButton'
+import { ProfileListItemSkeleton } from 'components/ProfileListItemSkeleton'
+import { Profile } from 'lib/graphql'
+import NextLink from 'next/link'
+import { DisplayName } from './DisplayName'
+import { SubscribeButton } from './SubscribeButton'
 
 interface ProfileListItemProps {
-  profile: Profile;
+  profile: Profile
 }
 
 export const ProfileListItem = ({ profile }: ProfileListItemProps) => {
-  if (!profile) return <ProfileListItemSkeleton />;
+  if (!profile) return <ProfileListItemSkeleton />
 
   return (
     <div className="relative rounded-lg bg-black p-0.5 hover:bg-rainbow-gradient">
@@ -62,5 +62,5 @@ export const ProfileListItem = ({ profile }: ProfileListItemProps) => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}

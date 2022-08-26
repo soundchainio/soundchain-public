@@ -1,17 +1,17 @@
-import { ApolloQueryResult } from '@apollo/client';
-import { GridSkeleton } from 'components/GridSkeleton';
-import { NoResultFound } from 'components/NoResultFound';
-import { TrackGrid } from 'components/TrackGrid';
-import { ListingItemsQuery, TrackWithListingItem, ExploreTracksQuery, Track, FavoriteTracksQuery } from 'lib/graphql';
-import PullToRefresh from 'react-simple-pull-to-refresh';
-import { InfiniteLoader as InfiniteLoaderLegacy } from '../InfiniteLoader';
+import { ApolloQueryResult } from '@apollo/client'
+import { GridSkeleton } from 'components/GridSkeleton'
+import { NoResultFound } from 'components/NoResultFound'
+import { TrackGrid } from 'components/TrackGrid'
+import { ListingItemsQuery, TrackWithListingItem, ExploreTracksQuery, Track, FavoriteTracksQuery } from 'lib/graphql'
+import PullToRefresh from 'react-simple-pull-to-refresh'
+import { InfiniteLoader as InfiniteLoaderLegacy } from '../InfiniteLoader'
 
 interface ViewProps {
-  loading: boolean;
-  loadMore: () => void;
-  refetch: () => Promise<ApolloQueryResult<ListingItemsQuery | ExploreTracksQuery | FavoriteTracksQuery>>;
-  hasNextPage?: boolean;
-  tracks?: TrackWithListingItem[] | Track[];
+  loading: boolean
+  loadMore: () => void
+  refetch: () => Promise<ApolloQueryResult<ListingItemsQuery | ExploreTracksQuery | FavoriteTracksQuery>>
+  hasNextPage?: boolean
+  tracks?: TrackWithListingItem[] | Track[]
 }
 
 export const GridView = ({ tracks, loading, refetch, hasNextPage, loadMore }: ViewProps) => {
@@ -38,5 +38,5 @@ export const GridView = ({ tracks, loading, refetch, hasNextPage, loadMore }: Vi
       )}
       {hasNextPage && <InfiniteLoaderLegacy loadMore={loadMore} loadingMessage="Loading Marketplace" />}
     </>
-  );
-};
+  )
+}

@@ -1,43 +1,40 @@
-import { useModalDispatch } from 'contexts/providers/modal';
-import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar';
-import { useMe } from 'hooks/useMe';
-import { Home } from 'icons/Home';
-import { Library } from 'icons/Library';
-import { MarketplaceNavBar } from 'icons/MarketplaceNavBar';
-import { NewPost } from 'icons/NewPost';
-import { Search } from 'icons/Search';
-import { useRouter } from 'next/router';
-import { useEffect } from 'react';
-import { NavBarButton } from './Buttons/NavBarButton';
+import { useModalDispatch } from 'contexts/providers/modal'
+import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar'
+import { useMe } from 'hooks/useMe'
+import { Home } from 'icons/Home'
+import { Library } from 'icons/Library'
+import { MarketplaceNavBar } from 'icons/MarketplaceNavBar'
+import { NewPost } from 'icons/NewPost'
+import { Search } from 'icons/Search'
+import { useRouter } from 'next/router'
+import { useEffect } from 'react'
+import { NavBarButton } from './Buttons/NavBarButton'
 
 export const BottomNavBar = () => {
-  const { dispatchShowCreateModal } = useModalDispatch();
-  const router = useRouter();
-  const me = useMe();
-  const { isMinting } = useHideBottomNavBar();
+  const { dispatchShowCreateModal } = useModalDispatch()
+  const router = useRouter()
+  const me = useMe()
+  const { isMinting } = useHideBottomNavBar()
 
   const handleCreateClick = () => {
-    me ? dispatchShowCreateModal(true) : router.push('/login');
-  };
+    me ? dispatchShowCreateModal(true) : router.push('/login')
+  }
 
   useEffect(() => {
     if (process.browser) {
       window.onbeforeunload = e => {
         if (isMinting) {
-          return 'You are minting an NFT. You should not leave SoundChain!';
+          return 'You are minting an NFT. You should not leave SoundChain!'
         }
-        e.preventDefault();
-      };
+        e.preventDefault()
+      }
     }
-  }, [isMinting]);
+  }, [isMinting])
 
   return (
-    <nav
-      id="bottom-nav-bar"
-      className="bg-black md:hidden py-3 flex items-center inset-x-0 shadow-2xl"
-    >
+    <nav id="bottom-nav-bar" className="inset-x-0 flex items-center bg-black py-3 shadow-2xl md:hidden">
       <div className="w-full">
-        <div className="w-full flex items-end">
+        <div className="flex w-full items-end">
           <NavBarButton label="Home" path="/home" icon={Home} color="yellow" alwaysShowLabel />
           <NavBarButton
             id="nav-explore-"
@@ -71,5 +68,5 @@ export const BottomNavBar = () => {
         </div>
       </div>
     </nav>
-  );
-};
+  )
+}

@@ -1,22 +1,22 @@
-import { ExploreAll } from 'components/ExploreAll';
-import { ExploreUsersListView } from 'components/ExploreUsersListView';
-import React, { useEffect, useState } from 'react';
-import { ExploreTab } from 'types/ExploreTabType';
-import { ExplorePageFilterWrapper } from 'components/ExplorePageFilterWrapper';
-import { SelectToApolloQuery, SortListingItem, SortListingParam } from 'lib/apollo/sorting';
-import { SortExploreTracksField, Track, useExploreTracksQuery } from 'lib/graphql';
-import { ListView } from 'components/ListView';
-import { GridView } from 'components/GridView';
-import { ExploreSearchBar } from './ExploreSearchBar';
-import { ExploreUsersGridView } from './ExploreUsersGridView';
+import { ExploreAll } from 'components/ExploreAll'
+import { ExploreUsersListView } from 'components/ExploreUsersListView'
+import React, { useEffect, useState } from 'react'
+import { ExploreTab } from 'types/ExploreTabType'
+import { ExplorePageFilterWrapper } from 'components/ExplorePageFilterWrapper'
+import { SelectToApolloQuery, SortListingItem, SortListingParam } from 'lib/apollo/sorting'
+import { SortExploreTracksField, Track, useExploreTracksQuery } from 'lib/graphql'
+import { ListView } from 'components/ListView'
+import { GridView } from 'components/GridView'
+import { ExploreSearchBar } from './ExploreSearchBar'
+import { ExploreUsersGridView } from './ExploreUsersGridView'
 
 export const Explore = () => {
-  const [selectedTab, setSelectedTab] = useState<ExploreTab>(ExploreTab.ALL);
-  const [search, setSearch] = useState('');
-  const [isGrid, setIsGrid] = useState(true);
-  const [sorting, setSorting] = useState<SortListingItem>(SortListingItem.CreatedAt);
+  const [selectedTab, setSelectedTab] = useState<ExploreTab>(ExploreTab.ALL)
+  const [search, setSearch] = useState('')
+  const [isGrid, setIsGrid] = useState(true)
+  const [sorting, setSorting] = useState<SortListingItem>(SortListingItem.CreatedAt)
 
-  const pageSize = 15;
+  const pageSize = 15
 
   const { data, refetch, fetchMore, loading } = useExploreTracksQuery({
     variables: {
@@ -25,7 +25,7 @@ export const Explore = () => {
       sort: SelectToApolloQuery[sorting] as unknown as SortListingParam<SortExploreTracksField>,
     },
     ssr: false,
-  });
+  })
 
   useEffect(() => {
     refetch({
@@ -34,8 +34,8 @@ export const Explore = () => {
         first: pageSize,
       },
       sort: SelectToApolloQuery[sorting] as unknown as SortListingParam<SortExploreTracksField>,
-    });
-  }, [refetch, sorting, search]);
+    })
+  }, [refetch, sorting, search])
 
   const loadMore = () => {
     fetchMore({
@@ -47,12 +47,11 @@ export const Explore = () => {
         },
         sort: SelectToApolloQuery[sorting],
       },
-    });
-  };
-
+    })
+  }
 
   return (
-    <div className="bg-gray-10 h-full overflow-x-hidden md:px-2">
+    <div className="h-full overflow-x-hidden bg-gray-10 md:px-2">
       <ExplorePageFilterWrapper
         totalCount={data?.exploreTracks.pageInfo.totalCount}
         isGrid={isGrid}
@@ -95,5 +94,5 @@ export const Explore = () => {
         </>
       )}
     </div>
-  );
-};
+  )
+}

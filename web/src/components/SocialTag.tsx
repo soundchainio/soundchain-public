@@ -1,7 +1,7 @@
 interface SocialTagProps {
-  icon: (props: React.SVGProps<SVGSVGElement>) => JSX.Element;
-  url: string;
-  ariaLabel: string;
+  icon: (props: React.SVGProps<SVGSVGElement>) => JSX.Element
+  url: string
+  ariaLabel: string
 }
 export const SocialTag = ({ ariaLabel, icon: Icon, url }: SocialTagProps) => {
   return (
@@ -10,9 +10,9 @@ export const SocialTag = ({ ariaLabel, icon: Icon, url }: SocialTagProps) => {
       href={url}
       target="_blank"
       rel="noreferrer"
-      className="flex justify-center items-center h-8 w-8"
+      className="flex h-8 w-8 items-center justify-center"
     >
       <Icon />
     </a>
-  );
-};
+  )
+}

@@ -1,20 +1,20 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react'
 
 export function useMountedState<T>(value: T) {
-  const [state, setState] = useState(value);
-  const isMounted = useRef(true);
+  const [state, setState] = useState(value)
+  const isMounted = useRef(true)
 
   useEffect(() => {
     return () => {
-      isMounted.current = false;
-    };
-  }, []);
+      isMounted.current = false
+    }
+  }, [])
 
   function setStateIfMounted(newValue: T) {
     if (isMounted.current) {
-      setState(newValue);
+      setState(newValue)
     }
   }
 
-  return [state, setStateIfMounted] as const;
+  return [state, setStateIfMounted] as const
 }

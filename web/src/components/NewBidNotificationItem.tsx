@@ -1,16 +1,16 @@
-import { NewBidNotification } from 'lib/graphql';
-import { TrackNotification } from './TrackNotification';
+import { NewBidNotification } from 'lib/graphql'
+import { TrackNotification } from './TrackNotification'
 
 interface NotificationProps {
-  notification: NewBidNotification;
-  index: number;
+  notification: NewBidNotification
+  index: number
 }
 
 export const NewBidNotificationItem = ({
   notification: { createdAt, price, trackId, trackName, artist, artworkUrl },
   index,
 }: NotificationProps) => {
-  const title = 'Your auction got a new bid! Check it out!';
+  const title = 'Your auction got a new bid! Check it out!'
   return (
     <TrackNotification
       createdAt={createdAt}
@@ -22,5 +22,5 @@ export const NewBidNotificationItem = ({
       index={index}
       title={title}
     />
-  );
-};
+  )
+}

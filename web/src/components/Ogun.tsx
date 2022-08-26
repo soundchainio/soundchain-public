@@ -1,23 +1,23 @@
-import classNames from 'classnames';
-import { config } from 'config';
-import { Logo as OgunIcon } from 'icons/Logo';
-import { currency, fixedDecimals } from 'utils/format';
+import classNames from 'classnames'
+import { config } from 'config'
+import { Logo as OgunIcon } from 'icons/Logo'
+import { currency, fixedDecimals } from 'utils/format'
 
 interface Props {
-  value?: string | number;
-  className?: string;
-  variant?: 'currency' | 'currency-inline';
-  showBonus?: boolean;
-  rewardRatePercentage?: string;
+  value?: string | number
+  className?: string
+  variant?: 'currency' | 'currency-inline'
+  showBonus?: boolean
+  rewardRatePercentage?: string
 }
 
 export const Ogun = ({ value = '', className, variant, showBonus, rewardRatePercentage }: Props) => {
-  const moneyValue = fixedDecimals(value);
+  const moneyValue = fixedDecimals(value)
   if (!rewardRatePercentage) {
-    rewardRatePercentage = '0';
+    rewardRatePercentage = '0'
   }
-  const fullNFTPrice = moneyValue / config.soundchainFee;
-  const ogunBonus = Math.min(fixedDecimals(fullNFTPrice * (parseFloat(rewardRatePercentage) / 100)), 1000);
+  const fullNFTPrice = moneyValue / config.soundchainFee
+  const ogunBonus = Math.min(fixedDecimals(fullNFTPrice * (parseFloat(rewardRatePercentage) / 100)), 1000)
 
   switch (variant) {
     case 'currency':
@@ -32,7 +32,7 @@ export const Ogun = ({ value = '', className, variant, showBonus, rewardRatePerc
             )}
           </p>
         </div>
-      );
+      )
     case 'currency-inline':
       return (
         <div className="align-center flex flex-col">
@@ -45,13 +45,13 @@ export const Ogun = ({ value = '', className, variant, showBonus, rewardRatePerc
             <OgunIcon id="ogun-token" className="inline h-5 w-5" />
           </div>
         </div>
-      );
+      )
     default:
       return (
         <p className={classNames('inline-flex items-center gap-1 font-bold text-white', className)}>
           <OgunIcon id="ogun-token" className="inline h-5 w-5" /> {fixedDecimals(value)}{' '}
           <span className="text-xs text-gray-80">OGUN</span>
         </p>
-      );
+      )
   }
-};
+}

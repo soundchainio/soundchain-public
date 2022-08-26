@@ -1,22 +1,22 @@
-import classNames from 'classnames';
-import { ButtonProps } from 'components/Button';
+import classNames from 'classnames'
+import { ButtonProps } from 'components/Button'
 
 export const ApproveButton = ({ className, type = 'button', children, loading, ...rest }: ButtonProps) => {
   return (
-    <div className={classNames(className, 'bg-green-gradient border-green-27 border-2')}>
+    <div className={classNames(className, 'bg-green-gradient border-2 border-green-27')}>
       <button
-        className='sm:px-4 p-2 font-bold text-white text-xs bg-opacity-75 bg-black  px-6 w-full'
+        className="w-full bg-black bg-opacity-75 p-2 px-6 text-xs font-bold  text-white sm:px-4"
         type={type}
         {...rest}
       >
         {loading ? (
-          <div className='flex justify-center items-center px-6'>
-            <div className='animate-spin rounded-full h-5 w-5 border-t-2 border-white'></div>
+          <div className="flex items-center justify-center px-6">
+            <div className="h-5 w-5 animate-spin rounded-full border-t-2 border-white"></div>
           </div>
         ) : (
-          <span className='uppercase'>{children}</span>
+          <span className="uppercase">{children}</span>
         )}
       </button>
     </div>
-  );
-};
+  )
+}
