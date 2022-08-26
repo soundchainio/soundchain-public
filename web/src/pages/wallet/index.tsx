@@ -249,6 +249,7 @@ export default function WalletPage() {
                             <span className="text-2xl font-bold text-white">{getOgunBalanceFormatted}</span>
                             {` OGUN`}
                           </div>
+                          <span className="invisible text-xs font-bold text-gray-50">invisible gap for price</span>
                         </>
                       ) : (
                         <LoaderAnimation />
