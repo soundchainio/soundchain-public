@@ -1,15 +1,15 @@
-import { Logo } from 'icons/Logo';
-import { MetaMask } from 'icons/MetaMask';
-import { DefaultWallet } from 'lib/graphql';
+import { Logo } from 'icons/Logo'
+import { MetaMask } from 'icons/MetaMask'
+import { DefaultWallet } from 'lib/graphql'
 
 export const WalletSelected = ({ wallet }: { wallet?: DefaultWallet }) => {
-  const isSoundChainWallet = wallet === DefaultWallet.Soundchain;
+  const isSoundChainWallet = wallet === DefaultWallet.Soundchain
 
-  if (!wallet) return null;
+  if (!wallet) return null
 
   return (
     <div className="text-white">
-      <div className="flex items-center gap-1 font-bold text-sm">
+      <div className="flex items-center gap-1 text-sm font-bold">
         {isSoundChainWallet ? (
           <Logo id="soundchain-wallet" height="16" width="16" />
         ) : (
@@ -18,5 +18,5 @@ export const WalletSelected = ({ wallet }: { wallet?: DefaultWallet }) => {
         <span>{`${wallet} wallet`}</span>
       </div>
     </div>
-  );
-};
+  )
+}

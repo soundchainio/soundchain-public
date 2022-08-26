@@ -1,5 +1,5 @@
 export enum ExploreTab {
-    ALL = 'ALL',
-    USERS = 'USERS',
-    TRACKS = 'TRACKS',
+  ALL = 'ALL',
+  USERS = 'USERS',
+  TRACKS = 'TRACKS',
 }

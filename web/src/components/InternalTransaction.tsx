@@ -1,11 +1,11 @@
-import { Matic } from 'icons/Matic';
-import { network } from 'lib/blockchainNetworks';
-import { PolygonscanResultObj } from 'lib/graphql';
-import { currency, priceToShow } from 'utils/format';
+import { Matic } from 'icons/Matic'
+import { network } from 'lib/blockchainNetworks'
+import { PolygonscanResultObj } from 'lib/graphql'
+import { currency, priceToShow } from 'utils/format'
 
 interface InternalTransactionProps {
-  transaction: Partial<PolygonscanResultObj>;
-  maticUsdValue?: string;
+  transaction: Partial<PolygonscanResultObj>
+  maticUsdValue?: string
 }
 
 export const InternalTransaction = ({ transaction, maticUsdValue }: InternalTransactionProps) => {
@@ -14,24 +14,24 @@ export const InternalTransaction = ({ transaction, maticUsdValue }: InternalTran
       href={`${network.blockExplorer}/tx/${transaction.hash}`}
       target="_blank"
       rel="noreferrer"
-      className="flex items-center p-4 gap-2"
+      className="flex items-center gap-2 p-4"
     >
       <div className="min-w-0">
-        <p className="text-white text-xs font-bold truncate">{transaction.hash}</p>
-        <p className="text-gray-80 text-xxs font-medium">{transaction.date}</p>
+        <p className="truncate text-xs font-bold text-white">{transaction.hash}</p>
+        <p className="text-xxs font-medium text-gray-80">{transaction.date}</p>
       </div>
       <div className="ml-auto">
-        <p className="text-white text-sm font-bold flex items-center gap-1">
+        <p className="flex items-center gap-1 text-sm font-bold text-white">
           {transaction.value && priceToShow(transaction.value)}
           <Matic height="10" width="10" />
-          <span className="text-gray-80 text-xxs font-bold uppercase"> Matic</span>
+          <span className="text-xxs font-bold uppercase text-gray-80"> Matic</span>
         </p>
         {maticUsdValue && transaction.value && (
-          <p className="text-gray-50 text-xxs font-bold text-right">
+          <p className="text-right text-xxs font-bold text-gray-50">
             {`${currency(priceToShow(transaction.value) * parseFloat(maticUsdValue))} USD`}
           </p>
         )}
       </div>
     </a>
-  );
-};
+  )
+}

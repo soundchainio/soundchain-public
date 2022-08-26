@@ -1,16 +1,16 @@
-import NextLink from 'next/link';
-import React from 'react';
+import NextLink from 'next/link'
+import React from 'react'
 
-export const steps = 7;
+export const steps = 7
 
 type Props = {
-  href: string;
-};
+  href: string
+}
 
 export const SkipButton = ({ href }: Props) => {
   return (
     <NextLink href={href}>
-      <a className="bg-gray-30 text-white px-4 py-1 rounded-full text-xs">Skip</a>
+      <a className="rounded-full bg-gray-30 px-4 py-1 text-xs text-white">Skip</a>
     </NextLink>
-  );
-};
+  )
+}

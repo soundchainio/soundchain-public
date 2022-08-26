@@ -56,5 +56,5 @@ export const Happy = (props: React.SVGProps<SVGSVGElement>) => {
         </radialGradient>
       </defs>
     </svg>
-  );
-};
+  )
+}

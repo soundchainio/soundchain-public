@@ -24,5 +24,5 @@ export const Activity = (props: React.SVGProps<SVGSVGElement>) => {
         strokeLinejoin="round"
       />
     </svg>
-  );
-};
+  )
+}

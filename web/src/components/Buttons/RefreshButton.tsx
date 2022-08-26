@@ -1,10 +1,10 @@
-import { Refresh } from 'icons/Refresh';
+import { Refresh } from 'icons/Refresh'
 
 interface RefreshButtonProps {
-  onClick: () => void;
-  label?: string;
-  className?: string;
-  refreshing?: boolean;
+  onClick: () => void
+  label?: string
+  className?: string
+  refreshing?: boolean
 }
 
 export const RefreshButton = ({ onClick, label, className, refreshing }: RefreshButtonProps) => {
@@ -13,7 +13,7 @@ export const RefreshButton = ({ onClick, label, className, refreshing }: Refresh
       <span className={refreshing ? 'animate-spin' : ''}>
         <Refresh />
       </span>
-      <span className="text-gray-60 pt-1 font-semibold text-xs">{label || 'Refresh'}</span>
+      <span className="pt-1 text-xs font-semibold text-gray-60">{label || 'Refresh'}</span>
     </button>
-  );
-};
+  )
+}

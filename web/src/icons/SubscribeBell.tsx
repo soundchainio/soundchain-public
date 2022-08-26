@@ -1,5 +1,5 @@
 interface SubscribeBellProps {
-  isSubscriber: boolean;
+  isSubscriber: boolean
 }
 
 export const SubscribeBell = ({ isSubscriber }: SubscribeBellProps) => {
@@ -60,5 +60,5 @@ export const SubscribeBell = ({ isSubscriber }: SubscribeBellProps) => {
         </svg>
       )}
     </>
-  );
-};
+  )
+}

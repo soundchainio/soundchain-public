@@ -1,5 +1,5 @@
-import { SVGGradient } from './gradients';
-import { IconProps } from './types/IconProps';
+import { SVGGradient } from './gradients'
+import { IconProps } from './types/IconProps'
 
 export const Menu = ({ color }: IconProps) => {
   return (
@@ -12,5 +12,5 @@ export const Menu = ({ color }: IconProps) => {
       ></path>
       {color && <SVGGradient color={color} />}
     </svg>
-  );
-};
+  )
+}

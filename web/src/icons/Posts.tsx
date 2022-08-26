@@ -2,15 +2,9 @@ interface Props extends React.SVGProps<SVGSVGElement> {
   fillColor?: string
 }
 
-export const Posts = ({ fillColor = "#505050", ...props }: Props) => {
+export const Posts = ({ fillColor = '#505050', ...props }: Props) => {
   return (
-    <svg
-      width={13}
-      height={14}
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      {...props}
-    >
+    <svg width={13} height={14} fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
       <path
         fillRule="evenodd"
         clipRule="evenodd"
@@ -22,5 +16,5 @@ export const Posts = ({ fillColor = "#505050", ...props }: Props) => {
         fill={fillColor}
       />
     </svg>
-  );
-};
+  )
+}

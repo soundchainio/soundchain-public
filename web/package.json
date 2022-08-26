@@ -7,21 +7,18 @@
     "dev:quick": "next dev",
     "codegen": "graphql-codegen --config codegen.yml",
     "lint": "next lint",
-    "lint-staged": "lint-staged",
     "build": "next build",
     "postbuild": "next-sitemap",
     "start": "next start",
-    "test": "jest"
+    "test": "jest",
+    "prettier": "prettier --write ./src",
+    "lint-web": "lint-staged"
   },
   "lint-staged": {
-    "*.{ts,tsx,json,md,css}": "prettier --write"
-  },
-  "prettier": {
-    "arrowParens": "avoid",
-    "printWidth": 120,
-    "singleQuote": true,
-    "trailingComma": "all",
-    "semi": true
+    "*.{js,ts,tsx, jsx}": [
+      "eslint --fix"
+    ],
+    "*.{ts,tsx, js, jsx}": "prettier --write"
   },
   "dependencies": {
     "@apollo/client": "^3.4.7",

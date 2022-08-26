@@ -19,5 +19,5 @@ export const AuctionCreated = (props: React.SVGProps<SVGSVGElement>) => {
         </linearGradient>
       </defs>
     </svg>
-  );
-};
+  )
+}

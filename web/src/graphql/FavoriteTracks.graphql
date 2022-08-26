@@ -1,4 +1,4 @@
-query FavoriteTracks($sort: SortTrackInput,$search: String, $page: PageInput) {
+query FavoriteTracks($sort: SortTrackInput, $search: String, $page: PageInput) {
   favoriteTracks(sort: $sort, search: $search, page: $page) {
     nodes {
       ...TrackComponentFields

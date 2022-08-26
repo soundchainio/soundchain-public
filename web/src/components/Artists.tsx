@@ -1,24 +1,24 @@
-import { Avatar } from 'components/Avatar';
-import { DisplayName } from 'components/DisplayName';
-import { InfiniteLoader } from 'components/InfiniteLoader';
-import { useMe } from 'hooks/useMe';
-import { RightArrow } from 'icons/RightArrow';
-import { useFollowedArtistsLazyQuery } from 'lib/graphql';
-import Link from 'next/link';
-import { useCallback, useEffect } from 'react';
-import PullToRefresh from 'react-simple-pull-to-refresh';
-import { NoResultFound } from './NoResultFound';
-import { ProfileListItemSkeleton } from './ProfileListItemSkeleton';
+import { Avatar } from 'components/Avatar'
+import { DisplayName } from 'components/DisplayName'
+import { InfiniteLoader } from 'components/InfiniteLoader'
+import { useMe } from 'hooks/useMe'
+import { RightArrow } from 'icons/RightArrow'
+import { useFollowedArtistsLazyQuery } from 'lib/graphql'
+import Link from 'next/link'
+import { useCallback, useEffect } from 'react'
+import PullToRefresh from 'react-simple-pull-to-refresh'
+import { NoResultFound } from './NoResultFound'
+import { ProfileListItemSkeleton } from './ProfileListItemSkeleton'
 
 interface ArtistsPageProps {
-  searchTerm?: string;
+  searchTerm?: string
 }
 
 export const Artists = ({ searchTerm }: ArtistsPageProps) => {
-  const me = useMe();
-  const [artists, { data, loading, fetchMore: fetchMoreArtists, refetch }] = useFollowedArtistsLazyQuery();
+  const me = useMe()
+  const [artists, { data, loading, fetchMore: fetchMoreArtists, refetch }] = useFollowedArtistsLazyQuery()
 
-  const onRefresh = useCallback(async () => refetch && (await refetch()), [refetch]);
+  const onRefresh = useCallback(async () => refetch && (await refetch()), [refetch])
 
   const onLoadMore = () => {
     if (fetchMoreArtists)
@@ -28,12 +28,12 @@ export const Artists = ({ searchTerm }: ArtistsPageProps) => {
           search: searchTerm,
           page: { after: data?.followedArtists.pageInfo.endCursor },
         },
-      });
-  };
+      })
+  }
 
   useEffect(() => {
-    if (me?.profile.id) artists({ variables: { profileId: me.profile.id, search: searchTerm } });
-  }, [me, searchTerm]);
+    if (me?.profile.id) artists({ variables: { profileId: me.profile.id, search: searchTerm } })
+  }, [me, searchTerm])
 
   if (loading) {
     return (
@@ -42,7 +42,7 @@ export const Artists = ({ searchTerm }: ArtistsPageProps) => {
         <ProfileListItemSkeleton />
         <ProfileListItemSkeleton />
       </div>
-    );
+    )
   }
 
   return (
@@ -51,10 +51,10 @@ export const Artists = ({ searchTerm }: ArtistsPageProps) => {
         {data?.followedArtists.nodes.map(followedArtists => (
           <div key={followedArtists.id} className="space-y-6 px-4 py-3">
             <Link href={`/profiles/${followedArtists.userHandle}`} passHref>
-              <div className="flex flex-row space-x-2 items-center cursor-pointer text-sm">
+              <div className="flex cursor-pointer flex-row items-center space-x-2 text-sm">
                 <Avatar pixels={40} className="flex" profile={followedArtists} />
                 <DisplayName name={followedArtists.displayName} verified={followedArtists.verified} />
-                <div className="flex-1 justify-end flex">
+                <div className="flex flex-1 justify-end">
                   <RightArrow />
                 </div>
               </div>
@@ -67,5 +67,5 @@ export const Artists = ({ searchTerm }: ArtistsPageProps) => {
         )}
       </div>
     </PullToRefresh>
-  );
-};
+  )
+}

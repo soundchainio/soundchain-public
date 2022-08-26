@@ -6,5 +6,5 @@ export const Document = (props: React.SVGProps<SVGSVGElement>) => {
         fill="#fff"
       />
     </svg>
-  );
-};
+  )
+}

@@ -1,4 +1,4 @@
-import { IconProps } from './types/IconProps';
+import { IconProps } from './types/IconProps'
 
 export const CloseNegative = ({ color, ...props }: IconProps) => {
   return (
@@ -14,5 +14,5 @@ export const CloseNegative = ({ color, ...props }: IconProps) => {
         fill="#303030"
       />
     </svg>
-  );
-};
+  )
+}

@@ -1,9 +1,9 @@
-import { Subtitle } from 'components/Subtitle';
+import { Subtitle } from 'components/Subtitle'
 
 interface UtilityInfoProps {
-  content: string;
-  className?: string;
-  label?: string;
+  content: string
+  className?: string
+  label?: string
 }
 
 export const UtilityInfo = ({ content, className }: UtilityInfoProps) => {
@@ -14,7 +14,9 @@ export const UtilityInfo = ({ content, className }: UtilityInfoProps) => {
       <Subtitle className="font-bold text-gray-CC" size="xs">
         UTILITY
       </Subtitle>
-      <p className="py-2 text-xs font-medium text-gray-80"><pre className="whitespace-pre-wrap">{content}</pre></p>
+      <p className="py-2 text-xs font-medium text-gray-80">
+        <pre className="whitespace-pre-wrap">{content}</pre>
+      </p>
     </div>
-  );
-};
+  )
+}

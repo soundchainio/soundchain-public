@@ -1,21 +1,21 @@
-import classNames from 'classnames';
-import { SoundchainGoldLogo } from 'icons/SoundchainGoldLogo';
-import { Verified } from 'icons/Verified';
-import { forwardRef } from 'react';
+import classNames from 'classnames'
+import { SoundchainGoldLogo } from 'icons/SoundchainGoldLogo'
+import { Verified } from 'icons/Verified'
+import { forwardRef } from 'react'
 
 interface DisplayNameProps {
-  name: string;
-  verified?: boolean | null;
-  teamMember?: boolean | null;
-  className?: string;
+  name: string
+  verified?: boolean | null
+  teamMember?: boolean | null
+  className?: string
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const DisplayName = forwardRef<any, DisplayNameProps>(
   ({ name, verified, teamMember, className, ...props }, ref) => {
     return (
-      <div className={classNames('flex gap-1 items-baseline min-w-0', className)} ref={ref}>
-        <span {...props} className="text-white font-semibold truncate">
+      <div className={classNames('flex min-w-0 items-baseline gap-1', className)} ref={ref}>
+        <span {...props} className="truncate font-semibold text-white">
           {name}
         </span>
         {teamMember ? (
@@ -24,8 +24,8 @@ export const DisplayName = forwardRef<any, DisplayNameProps>(
           verified && <Verified aria-label="Verified user" className="flex-shrink-0" />
         )}
       </div>
-    );
+    )
   },
-);
+)
 
-DisplayName.displayName = 'DisplayName';
+DisplayName.displayName = 'DisplayName'

@@ -1,5 +1,5 @@
-import React from 'react';
-import { IconProps } from './types/IconProps';
+import React from 'react'
+import { IconProps } from './types/IconProps'
 
 export const CheckmarkFilled = ({ ...props }: IconProps) => {
   return (
@@ -22,5 +22,5 @@ export const CheckmarkFilled = ({ ...props }: IconProps) => {
         </linearGradient>
       </defs>
     </svg>
-  );
-};
+  )
+}

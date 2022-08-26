@@ -1,4 +1,4 @@
-import { IconProps } from './types/IconProps';
+import { IconProps } from './types/IconProps'
 
 export const Info = (props: IconProps) => {
   return (
@@ -10,5 +10,5 @@ export const Info = (props: IconProps) => {
         fill={props.fill || '#808080'}
       />
     </svg>
-  );
-};
+  )
+}
