@@ -2,15 +2,18 @@ import { Button } from 'components/Button'
 import { WalletButton } from 'components/Buttons/WalletButton'
 import { config } from 'config'
 import { Form, Formik } from 'formik'
+import useBlockchain from 'hooks/useBlockchain'
 import { useLayoutContext } from 'hooks/useLayoutContext'
+import { useMagicContext } from 'hooks/useMagicContext'
 import useMetaMask from 'hooks/useMetaMask'
 import { useWalletConnect } from 'hooks/useWalletConnect'
 import { CirclePlusFilled } from 'icons/CirclePlusFilled'
 import { Logo } from 'icons/Logo'
 import { MetaMask } from 'icons/MetaMask'
+import { SoundchainGoldLogo } from 'icons/SoundchainGoldLogo'
 import { WalletConnect } from 'icons/WalletConnect'
 import { testnetNetwork } from 'lib/blockchainNetworks'
-import { GetServerSideProps } from 'next'
+import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { toast, ToastContainer } from 'react-toastify'
 import Web3 from 'web3'
@@ -21,10 +24,6 @@ import LiquidityPoolRewards from '../contract/LiquidityPoolRewards.sol/Liquidity
 import LPToken from '../contract/LPToken.sol/LPToken.json'
 import SoundchainOGUN20 from '../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json'
 import StakingRewards from '../contract/StakingRewards.sol/StakingRewards.json'
-import { useMagicContext } from 'hooks/useMagicContext'
-import useBlockchain from 'hooks/useBlockchain'
-import { SoundchainGoldLogo } from 'icons/SoundchainGoldLogo'
-import { useRouter } from 'next/router'
 
 interface FormValues {
   token: string
@@ -47,16 +46,16 @@ const tokenStakeContractLP = (web3: Web3) =>
   new web3.eth.Contract(LiquidityPoolRewards.abi as AbiItem[], LPtokenStakeContractAddress) as unknown as Contract
 
 // TODO: remove before enabling the ogun token stake
-export const getServerSideProps: GetServerSideProps = ({ res }) => {
-  if (res) {
-    res.statusCode = 404
-    res.end('Not found')
-  }
+// export const getServerSideProps: GetServerSideProps = ({ res }) => {
+//   if (res) {
+//     res.statusCode = 404
+//     res.end('Not found')
+//   }
 
-  return Promise.resolve({
-    props: {},
-  })
-}
+//   return Promise.resolve({
+//     props: {},
+//   })
+// }
 
 export default function Stake() {
   const router = useRouter()
