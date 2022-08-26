@@ -32,7 +32,6 @@ const getSaleType = (res: Maybe<ListingItemWithPrice>): string => {
 };
 
 export const TrackGrid = ({ track }: TrackProps) => {
-  console.log('track', track);
   const song = {
     src: track.playbackUrl,
     trackId: track.id,
