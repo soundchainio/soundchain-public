@@ -58,6 +58,7 @@ const createWeb3 = (
 };
 
 const web3: Web3 = createWeb3(magic)!;
+const tokenAddress = config.OGUNAddress;
 
 export function MagicProvider({ children }: MagicProviderProps) {
   const me = useMe();
@@ -68,8 +69,6 @@ export function MagicProvider({ children }: MagicProviderProps) {
 
   const router = useRouter();
   const isLoginPage = router.pathname.includes('/login');
-
-  const tokenAddress = config.OGUNAddress;
 
   const handleError = useCallback(
     async error => {
@@ -123,6 +122,7 @@ export function MagicProvider({ children }: MagicProviderProps) {
   const handleSetOgunBalance = useCallback(async () => {
     try {
       if (!account) return;
+      if (!tokenAddress) throw Error('No token contract address found when setting Ogun balance');
 
       const ogunContract = new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], tokenAddress);
       const tokenAmount = await ogunContract.methods.balanceOf(account).call();
@@ -132,7 +132,7 @@ export function MagicProvider({ children }: MagicProviderProps) {
     } catch (error) {
       handleError(error);
     }
-  }, [account, handleError, tokenAddress]);
+  }, [account, handleError]);
 
   const handleUseEffect = useCallback(async () => {
     if (!account) await handleSetAccount();

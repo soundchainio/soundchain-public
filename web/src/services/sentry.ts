@@ -1,7 +1,6 @@
 import { init } from '@sentry/react';
 import { Integrations } from '@sentry/tracing';
 import { config } from 'config';
-import { sentryErrorFilter } from 'utils/errorHandler';
 
 export const sentryInitializer = () => {
   const env = process.env.NEXT_PUBLIC_VERCEL_ENV
@@ -16,6 +15,5 @@ export const sentryInitializer = () => {
     integrations: [new Integrations.BrowserTracing()],
     tracesSampleRate: 1.0,
     environment: `${process.env.NEXT_PUBLIC_VERCEL_ENV}`,
-    beforeSend: sentryErrorFilter,
   });
 };
