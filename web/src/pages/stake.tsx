@@ -33,7 +33,7 @@ interface FormValues {
 
 type Selected = 'Stake' | 'Unstake'
 
-const OGUNAddress = config.OGUNAddress as string
+const OGUNAddress = config.ogunTokenAddress as string
 const tokenStakeContractAddress = config.tokenStakeContractAddress as string
 const tokenContract = (web3: Web3) =>
   new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], OGUNAddress) as unknown as Contract
