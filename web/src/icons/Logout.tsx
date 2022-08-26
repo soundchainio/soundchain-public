@@ -8,5 +8,5 @@ export const Logout = (props: React.SVGProps<SVGSVGElement>) => {
         clipRule="evenodd"
       ></path>
     </svg>
-  );
-};
+  )
+}

@@ -1,16 +1,16 @@
-import classNames from 'classnames';
-import { ReactionEmoji } from 'icons/ReactionEmoji';
-import { ThumbsUpNotification } from 'icons/ThumbsUpNotification';
-import { ReactionNotification } from 'lib/graphql';
-import NextLink from 'next/link';
-import React from 'react';
-import { Avatar } from './Avatar';
-import { PreviewPostNotification } from './PreviewPostNotification';
-import { Timestamp } from './Timestamp';
+import classNames from 'classnames'
+import { ReactionEmoji } from 'icons/ReactionEmoji'
+import { ThumbsUpNotification } from 'icons/ThumbsUpNotification'
+import { ReactionNotification } from 'lib/graphql'
+import NextLink from 'next/link'
+import React from 'react'
+import { Avatar } from './Avatar'
+import { PreviewPostNotification } from './PreviewPostNotification'
+import { Timestamp } from './Timestamp'
 
 interface ReactionNotificationProps {
-  notification: ReactionNotification;
-  index: number;
+  notification: ReactionNotification
+  index: number
 }
 
 export const ReactionNotificationItem = ({
@@ -19,20 +19,20 @@ export const ReactionNotificationItem = ({
 }: ReactionNotificationProps) => {
   return (
     <NextLink href={link}>
-      <div className={classNames('cursor-pointer flex flex-col p-4', index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20')}>
-        <div className="break-words flex">
-          <div className="flex items-center pr-4 min-w-[50px]">
+      <div className={classNames('flex cursor-pointer flex-col p-4', index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20')}>
+        <div className="flex break-words">
+          <div className="flex min-w-[50px] items-center pr-4">
             <Avatar profile={{ profilePicture: authorPicture }} linkToProfile={false} pixels={40} />
             <div className="relative">
               <ThumbsUpNotification className="absolute -right-1" />
             </div>
           </div>
           <div>
-            <div className="text-gray-100 text-sm items-center w-full inline-block">
+            <div className="inline-block w-full items-center text-sm text-gray-100">
               <span className="flex flex-wrap">
                 <div className="font-semibold">{authorName}</div>
                 &nbsp;reacted
-                <ReactionEmoji key={reactionType} name={reactionType} className="w-6 h-6 ml-2 mr-2" />
+                <ReactionEmoji key={reactionType} name={reactionType} className="ml-2 mr-2 h-6 w-6" />
                 to your post.
               </span>
             </div>
@@ -42,5 +42,5 @@ export const ReactionNotificationItem = ({
         <PreviewPostNotification postId={postId} />
       </div>
     </NextLink>
-  );
-};
+  )
+}

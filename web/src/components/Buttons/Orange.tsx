@@ -1,32 +1,24 @@
-import classNames from 'classnames';
-import { ButtonProps, commonClasses } from 'components/Button';
+import classNames from 'classnames'
+import { ButtonProps, commonClasses } from 'components/Button'
 
-export const OrangeButton = ({
-                               className,
-                               type = 'button',
-                               icon: Icon,
-                               children,
-                               loading,
-                               ...rest
-                             }: ButtonProps) => {
+export const OrangeButton = ({ className, type = 'button', icon: Icon, children, loading, ...rest }: ButtonProps) => {
   return (
-    <div className={classNames(className, 'p-0.5 bg-yellow-600 border-yellow-600')}>
+    <div className={classNames(className, 'border-yellow-600 bg-yellow-600 p-0.5')}>
       <button
-        className={`${commonClasses} sm:px-4 py-3 font-extrabold text-white uppercase bg-opacity-75 bg-black
-          ${rest.disabled ? 'cursor-not-allowed' : ''
-        }`}
+        className={`${commonClasses} bg-black bg-opacity-75 py-3 font-extrabold uppercase text-white sm:px-4
+          ${rest.disabled ? 'cursor-not-allowed' : ''}`}
         type={type}
         {...rest}
       >
-        {Icon && <Icon className='mr-1 h-5 w-5' />}
+        {Icon && <Icon className="mr-1 h-5 w-5" />}
         {loading ? (
-          <div className=" flex justify-center items-center">
-            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-white"></div>
+          <div className=" flex items-center justify-center">
+            <div className="h-5 w-5 animate-spin rounded-full border-t-2 border-white"></div>
           </div>
         ) : (
           <span>{children}</span>
         )}
       </button>
     </div>
-  );
-};
+  )
+}

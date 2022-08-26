@@ -1,5 +1,5 @@
-import SEO from 'components/SEO';
-import { TermsAndConditions } from 'components/TermsAndConditions';
+import SEO from 'components/SEO'
+import { TermsAndConditions } from 'components/TermsAndConditions'
 
 export default function TermsAndConditionsPage() {
   return (
@@ -11,5 +11,5 @@ export default function TermsAndConditionsPage() {
       />
       <TermsAndConditions />
     </>
-  );
+  )
 }

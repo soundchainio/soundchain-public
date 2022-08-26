@@ -1,11 +1,11 @@
-import classNames from 'classnames';
-import React from 'react';
+import classNames from 'classnames'
+import React from 'react'
 
-type Flavor = 'blueberry' | 'raspberry' | 'lime' | 'greenapple' | 'grape' | 'dragonfruit';
+type Flavor = 'blueberry' | 'raspberry' | 'lime' | 'greenapple' | 'grape' | 'dragonfruit'
 
 interface Props extends React.ComponentPropsWithoutRef<'button'> {
-  flavor: Flavor;
-  icon?: JSX.Element;
+  flavor: Flavor
+  icon?: JSX.Element
 }
 
 const flavorGradients: Record<Flavor, string> = {
@@ -15,20 +15,20 @@ const flavorGradients: Record<Flavor, string> = {
   greenapple: 'linear-gradient(76.4deg, #98DD9F 8.28%, #AFE2A3 83.02%)',
   grape: 'linear-gradient(76.4deg, #7A278E 8.28%, #AC6AFF 83.02%)',
   dragonfruit: 'linear-gradient(76.4deg, #AB4EFF 8.28%, #F1419E 83.02%)',
-};
+}
 
-const commonClasses = `p-[2px] rounded-full h-auto`;
+const commonClasses = `p-[2px] rounded-full h-auto`
 
 export const JellyButton = ({ flavor, icon, className, children, ...props }: Props) => {
-  const gradient = flavorGradients[flavor];
+  const gradient = flavorGradients[flavor]
   return (
     <div className={classNames(commonClasses, className)} style={{ background: gradient }}>
-      <button className="flex items-center space-x-1 rounded-full p-1 h-auto w-full bg-gray-10 font-black" {...props}>
+      <button className="flex h-auto w-full items-center space-x-1 rounded-full bg-gray-10 p-1 font-black" {...props}>
         <span>{icon}</span>
         <span className="bg-clip-text text-transparent" style={{ backgroundImage: gradient }}>
           {children}
         </span>
       </button>
     </div>
-  );
-};
+  )
+}

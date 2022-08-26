@@ -19,5 +19,5 @@ export const Stars = (props: React.SVGProps<SVGSVGElement>) => {
         </linearGradient>
       </defs>
     </svg>
-  );
-};
+  )
+}

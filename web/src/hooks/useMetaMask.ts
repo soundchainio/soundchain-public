@@ -1,96 +1,96 @@
-import MetaMaskOnboarding from '@metamask/onboarding';
-import { network } from 'lib/blockchainNetworks';
-import { useUpdateMetaMaskAddressesMutation } from 'lib/graphql';
-import { useEffect, useRef, useState } from 'react';
-import Web3 from 'web3';
-import { useMe } from './useMe';
-import { AbiItem } from 'web3-utils';
-import { Contract } from "web3-eth-contract";
-import { config } from 'config';
-import SoundchainOGUN20 from '../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json';
+import MetaMaskOnboarding from '@metamask/onboarding'
+import { network } from 'lib/blockchainNetworks'
+import { useUpdateMetaMaskAddressesMutation } from 'lib/graphql'
+import { useEffect, useRef, useState } from 'react'
+import Web3 from 'web3'
+import { useMe } from './useMe'
+import { AbiItem } from 'web3-utils'
+import { Contract } from 'web3-eth-contract'
+import { config } from 'config'
+import SoundchainOGUN20 from '../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json'
 
 const tokenContract = (web3: Web3) =>
-  new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], config.ogunTokenAddress as string) as unknown as Contract;
+  new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], config.ogunTokenAddress as string) as unknown as Contract
 
 export const useMetaMask = () => {
-  const me = useMe();
-  const [updateWallet] = useUpdateMetaMaskAddressesMutation();
-  const [web3, setWeb3] = useState<Web3>();
-  const [loadingAccount, setLoadingAccount] = useState<boolean>(true);
-  const [account, setAccount] = useState<string>();
-  const [balance, setBalance] = useState<string>();
-  const [OGUNBalance, setOGUNBalance] = useState<string>();
-  const [chainId, setChainId] = useState<number>();
-  const [isRefetchingBalance, setIsRefetchingBalance] = useState<boolean>(false);
-  const [loadingChain, setLoadingChain] = useState<boolean>(true);
-  const onboarding = useRef<MetaMaskOnboarding>();
+  const me = useMe()
+  const [updateWallet] = useUpdateMetaMaskAddressesMutation()
+  const [web3, setWeb3] = useState<Web3>()
+  const [loadingAccount, setLoadingAccount] = useState<boolean>(true)
+  const [account, setAccount] = useState<string>()
+  const [balance, setBalance] = useState<string>()
+  const [OGUNBalance, setOGUNBalance] = useState<string>()
+  const [chainId, setChainId] = useState<number>()
+  const [isRefetchingBalance, setIsRefetchingBalance] = useState<boolean>(false)
+  const [loadingChain, setLoadingChain] = useState<boolean>(true)
+  const onboarding = useRef<MetaMaskOnboarding>()
 
   useEffect(() => {
     if (!onboarding.current) {
-      onboarding.current = new MetaMaskOnboarding();
+      onboarding.current = new MetaMaskOnboarding()
     }
 
     if (MetaMaskOnboarding.isMetaMaskInstalled()) {
-      setWeb3(new Web3(window.ethereum));
+      setWeb3(new Web3(window.ethereum))
     }
-  }, []);
+  }, [])
 
   useEffect(() => {
     const onSetAccount = async (newAccount: string) => {
       if (newAccount && me) {
-        await updateWallet({ variables: { input: { wallet: newAccount } } });
+        await updateWallet({ variables: { input: { wallet: newAccount } } })
       }
-      setAccount(newAccount);
-      setLoadingAccount(false);
-    };
+      setAccount(newAccount)
+      setLoadingAccount(false)
+    }
 
     if (MetaMaskOnboarding.isMetaMaskInstalled()) {
       if (window.ethereum.selectedAddress) {
         window.ethereum
           .request({ method: 'eth_requestAccounts' })
-          .then(([newAccount]: string[]) => onSetAccount(newAccount));
+          .then(([newAccount]: string[]) => onSetAccount(newAccount))
       }
-      window.ethereum.on('accountsChanged', ([newAccount]: string[]) => onSetAccount(newAccount));
-      window.ethereum.on('chainChanged', () => window.location.reload());
+      window.ethereum.on('accountsChanged', ([newAccount]: string[]) => onSetAccount(newAccount))
+      window.ethereum.on('chainChanged', () => window.location.reload())
     }
-  }, [me, updateWallet]);
+  }, [me, updateWallet])
 
   useEffect(() => {
     if (MetaMaskOnboarding.isMetaMaskInstalled()) {
       if (account && web3) {
-        onboarding?.current?.stopOnboarding();
+        onboarding?.current?.stopOnboarding()
         web3.eth.getBalance(account).then(balance => {
-          setBalance(web3.utils.fromWei(balance, 'ether'));
-        });
+          setBalance(web3.utils.fromWei(balance, 'ether'))
+        })
         getOGUNBalance(web3)
         window.ethereum.request({ method: 'eth_chainId' }).then((chainId: string) => {
-          setChainId(parseInt(chainId, 16));
-          setLoadingChain(false);
-        });
+          setChainId(parseInt(chainId, 16))
+          setLoadingChain(false)
+        })
       } else {
-        setAccount(undefined);
-        setBalance(undefined);
-        setOGUNBalance(undefined);
+        setAccount(undefined)
+        setBalance(undefined)
+        setOGUNBalance(undefined)
       }
     }
-  }, [account, web3]);
+  }, [account, web3])
 
   const getOGUNBalance = async (web3: Web3) => {
-    const currentBalance = await tokenContract(web3).methods.balanceOf(account).call();
-    const formattedBalance = web3.utils.fromWei(currentBalance ?? '0');
-    setOGUNBalance(formattedBalance);
+    const currentBalance = await tokenContract(web3).methods.balanceOf(account).call()
+    const formattedBalance = web3.utils.fromWei(currentBalance ?? '0')
+    setOGUNBalance(formattedBalance)
   }
 
   const refetchBalance = async () => {
     if (web3 && account) {
-      setIsRefetchingBalance(true);
+      setIsRefetchingBalance(true)
       await web3.eth.getBalance(account).then(balance => {
-        setBalance(web3.utils.fromWei(balance, 'ether'));
-        setIsRefetchingBalance(false);
-      });
+        setBalance(web3.utils.fromWei(balance, 'ether'))
+        setIsRefetchingBalance(false)
+      })
       await getOGUNBalance(web3)
     }
-  };
+  }
 
   const addMumbaiTestnet = () => {
     if (MetaMaskOnboarding.isMetaMaskInstalled()) {
@@ -109,31 +109,42 @@ export const useMetaMask = () => {
             blockExplorerUrls: [network.blockExplorer],
           },
         ],
-      });
+      })
     } else {
-      onboarding?.current?.startOnboarding();
+      onboarding?.current?.startOnboarding()
     }
-  };
+  }
 
   const onSetAccount = async (newAccount: string) => {
-    await updateWallet({ variables: { input: { wallet: newAccount } } });
-    setAccount(newAccount);
-    setLoadingAccount(false);
-  };
+    await updateWallet({ variables: { input: { wallet: newAccount } } })
+    setAccount(newAccount)
+    setLoadingAccount(false)
+  }
 
   const connect = () => {
     if (MetaMaskOnboarding.isMetaMaskInstalled()) {
       window.ethereum
         .request({ method: 'eth_requestAccounts' })
-        .then(([newAccount]: string[]) => onSetAccount(newAccount));
+        .then(([newAccount]: string[]) => onSetAccount(newAccount))
     } else {
-      onboarding?.current?.startOnboarding();
+      onboarding?.current?.startOnboarding()
     }
-  };
+  }
 
-  const loading = loadingAccount || loadingChain;
+  const loading = loadingAccount || loadingChain
 
-  return { connect, addMumbaiTestnet, account, balance, OGUNBalance, chainId, web3, refetchBalance, isRefetchingBalance, loading };
-};
+  return {
+    connect,
+    addMumbaiTestnet,
+    account,
+    balance,
+    OGUNBalance,
+    chainId,
+    web3,
+    refetchBalance,
+    isRefetchingBalance,
+    loading,
+  }
+}
 
-export default useMetaMask;
+export default useMetaMask

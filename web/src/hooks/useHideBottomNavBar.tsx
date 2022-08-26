@@ -1,32 +1,32 @@
-import { createContext, ReactNode, useContext, useState } from 'react';
+import { createContext, ReactNode, useContext, useState } from 'react'
 
 interface HideBottomNavBarContextData {
-  hideBottomNavBar: boolean;
-  setHideBottomNavBarState: (value: boolean) => void;
-  isMinting: boolean;
-  setIsMintingState: (value: boolean) => void;
+  hideBottomNavBar: boolean
+  setHideBottomNavBarState: (value: boolean) => void
+  isMinting: boolean
+  setIsMintingState: (value: boolean) => void
 }
 
 const HideBottomNavBarContext = createContext<HideBottomNavBarContextData>({
   hideBottomNavBar: false,
   isMinting: false,
-} as HideBottomNavBarContextData);
+} as HideBottomNavBarContextData)
 
 interface HideBottomNavBarProviderProps {
-  children: ReactNode;
+  children: ReactNode
 }
 
 export function HideBottomNavBarProvider({ children }: HideBottomNavBarProviderProps) {
-  const [hideBottomNavBar, setHideBottomNavBar] = useState(false);
-  const [isMinting, setIsMinting] = useState(false);
+  const [hideBottomNavBar, setHideBottomNavBar] = useState(false)
+  const [isMinting, setIsMinting] = useState(false)
 
   const setHideBottomNavBarState = (value: boolean) => {
-    setHideBottomNavBar(value);
-  };
+    setHideBottomNavBar(value)
+  }
 
   const setIsMintingState = (value: boolean) => {
-    setIsMinting(value);
-  };
+    setIsMinting(value)
+  }
 
   return (
     <HideBottomNavBarContext.Provider
@@ -34,12 +34,12 @@ export function HideBottomNavBarProvider({ children }: HideBottomNavBarProviderP
         hideBottomNavBar,
         setHideBottomNavBarState,
         isMinting,
-        setIsMintingState
+        setIsMintingState,
       }}
     >
       {children}
     </HideBottomNavBarContext.Provider>
-  );
+  )
 }
 
-export const useHideBottomNavBar = () => useContext(HideBottomNavBarContext);
+export const useHideBottomNavBar = () => useContext(HideBottomNavBarContext)

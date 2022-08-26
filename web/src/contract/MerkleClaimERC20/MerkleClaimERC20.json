@@ -3760,21 +3760,11 @@
   "ast": {
     "absolutePath": "project:/contracts/MerkleClaimERC20.sol",
     "exportedSymbols": {
-      "Context": [
-        204
-      ],
-      "IERC20": [
-        182
-      ],
-      "MerkleClaimERC20": [
-        456
-      ],
-      "MerkleProof": [
-        297
-      ],
-      "Ownable": [
-        104
-      ]
+      "Context": [204],
+      "IERC20": [182],
+      "MerkleClaimERC20": [456],
+      "MerkleProof": [297],
+      "Ownable": [104]
     },
     "id": 457,
     "license": "AGPL-3.0-only",
@@ -3782,12 +3772,7 @@
     "nodes": [
       {
         "id": 299,
-        "literals": [
-          "solidity",
-          "^",
-          "0.8",
-          ".10"
-        ],
+        "literals": ["solidity", "^", "0.8", ".10"],
         "nodeType": "PragmaDirective",
         "src": "42:24:4"
       },
@@ -3866,11 +3851,7 @@
         },
         "fullyImplemented": true,
         "id": 456,
-        "linearizedBaseContracts": [
-          456,
-          104,
-          204
-        ],
+        "linearizedBaseContracts": [456, 104, 204],
         "name": "MerkleClaimERC20",
         "nameLocation": "420:16:4",
         "nodeType": "ContractDefinition",
@@ -4372,9 +4353,7 @@
                   }
                 },
                 {
-                  "assignments": [
-                    365
-                  ],
+                  "assignments": [365],
                   "declarations": [
                     {
                       "constant": false,
@@ -4523,9 +4502,7 @@
                   "src": "2047:54:4"
                 },
                 {
-                  "assignments": [
-                    375
-                  ],
+                  "assignments": [375],
                   "declarations": [
                     {
                       "constant": false,
@@ -5353,9 +5330,7 @@
               "src": "2607:129:4",
               "statements": [
                 {
-                  "assignments": [
-                    435
-                  ],
+                  "assignments": [435],
                   "declarations": [
                     {
                       "constant": false,
@@ -5726,10 +5701,7 @@
         ],
         "scope": 457,
         "src": "411:2327:4",
-        "usedErrors": [
-          319,
-          322
-        ]
+        "usedErrors": [319, 322]
       }
     ],
     "src": "42:2696:4"

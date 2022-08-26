@@ -1,22 +1,17 @@
-import { Dialog, Transition } from '@headlessui/react';
-import { Fragment, useRef } from 'react';
-import { SideMenuContent } from './SideMenuContent';
+import { Dialog, Transition } from '@headlessui/react'
+import { Fragment, useRef } from 'react'
+import { SideMenuContent } from './SideMenuContent'
 
 export interface SideMenuMobileProps {
-  isOpen: boolean;
-  setOpen: (open: boolean) => void;
+  isOpen: boolean
+  setOpen: (open: boolean) => void
 }
 
 export const SideMenuMobile = ({ setOpen, isOpen }: SideMenuMobileProps) => {
-  const ref = useRef(null);
+  const ref = useRef(null)
   return (
     <Transition.Root show={isOpen} as={Fragment}>
-      <Dialog
-        as="div"
-        className="fixed inset-0 flex flex-row-reverse z-40"
-        onClose={setOpen}
-        initialFocus={ref}
-      >
+      <Dialog as="div" className="fixed inset-0 z-40 flex flex-row-reverse" onClose={setOpen} initialFocus={ref}>
         <Transition.Child
           as={Fragment}
           enter="transition-opacity ease-linear duration-300"
@@ -37,13 +32,13 @@ export const SideMenuMobile = ({ setOpen, isOpen }: SideMenuMobileProps) => {
           leaveFrom="translate-x-0"
           leaveTo="translate-x-full"
         >
-          <div className="relative flex-1 flex flex-col max-w-xs w-full pt-5 pb-4 bg-gray-15">
-            <div className="flex-shrink-0 flex items-center"></div>
+          <div className="relative flex w-full max-w-xs flex-1 flex-col bg-gray-15 pt-5 pb-4">
+            <div className="flex flex-shrink-0 items-center"></div>
             <SideMenuContent isMobile />
           </div>
         </Transition.Child>
-        <div className="flex-shrink-0 w-14" aria-hidden="true" ref={ref}></div>
+        <div className="w-14 flex-shrink-0" aria-hidden="true" ref={ref}></div>
       </Dialog>
     </Transition.Root>
-  );
-};
+  )
+}

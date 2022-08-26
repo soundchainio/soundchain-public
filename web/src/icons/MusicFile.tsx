@@ -1,4 +1,4 @@
-import { IconProps } from './types/IconProps';
+import { IconProps } from './types/IconProps'
 
 export const MusicFile = (props: IconProps) => {
   return (
@@ -21,5 +21,5 @@ export const MusicFile = (props: IconProps) => {
         fill="#808080"
       />
     </svg>
-  );
-};
+  )
+}

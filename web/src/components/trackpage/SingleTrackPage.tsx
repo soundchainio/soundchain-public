@@ -1,25 +1,25 @@
-import { Description } from 'components/details-NFT/Description';
-import { HandleNFT } from 'components/details-NFT/HandleNFT';
-import { MintingData } from 'components/details-NFT/MintingData';
-import { TrackInfo } from 'components/details-NFT/TrackInfo';
-import { ViewPost } from 'components/details-NFT/ViewPost';
-import { Matic } from 'components/Matic';
-import { Ogun } from 'components/Ogun';
-import { ProfileWithAvatar } from 'components/ProfileWithAvatar';
-import SEO from 'components/SEO';
-import { TimeCounter } from 'components/TimeCounter';
-import { TopNavBarProps } from 'components/TopNavBar';
-import { Track } from 'components/Track';
-import { TrackShareButton } from 'components/TrackShareButton';
-import { config } from 'config';
-import { useModalDispatch } from 'contexts/providers/modal';
-import useBlockchain from 'hooks/useBlockchain';
-import useBlockchainV2 from 'hooks/useBlockchainV2';
-import { useLayoutContext } from 'hooks/useLayoutContext';
-import { useMe } from 'hooks/useMe';
-import { useTokenOwner } from 'hooks/useTokenOwner';
-import { useWalletContext } from 'hooks/useWalletContext';
-import { Ellipsis } from 'icons/Ellipsis';
+import { Description } from 'components/details-NFT/Description'
+import { HandleNFT } from 'components/details-NFT/HandleNFT'
+import { MintingData } from 'components/details-NFT/MintingData'
+import { TrackInfo } from 'components/details-NFT/TrackInfo'
+import { ViewPost } from 'components/details-NFT/ViewPost'
+import { Matic } from 'components/Matic'
+import { Ogun } from 'components/Ogun'
+import { ProfileWithAvatar } from 'components/ProfileWithAvatar'
+import SEO from 'components/SEO'
+import { TimeCounter } from 'components/TimeCounter'
+import { TopNavBarProps } from 'components/TopNavBar'
+import { Track } from 'components/Track'
+import { TrackShareButton } from 'components/TrackShareButton'
+import { config } from 'config'
+import { useModalDispatch } from 'contexts/providers/modal'
+import useBlockchain from 'hooks/useBlockchain'
+import useBlockchainV2 from 'hooks/useBlockchainV2'
+import { useLayoutContext } from 'hooks/useLayoutContext'
+import { useMe } from 'hooks/useMe'
+import { useTokenOwner } from 'hooks/useTokenOwner'
+import { useWalletContext } from 'hooks/useWalletContext'
+import { Ellipsis } from 'icons/Ellipsis'
 import {
   PendingRequest,
   Profile,
@@ -31,17 +31,17 @@ import {
   useProfileLazyQuery,
   useTrackLazyQuery,
   useUserByWalletLazyQuery,
-} from 'lib/graphql';
-import { useRouter } from 'next/router';
-import { HighestBid } from 'pages/tracks/[id]/complete-auction';
-import { useEffect, useMemo, useState } from 'react';
-import { AuthorActionsType } from 'types/AuthorActionsType';
-import { priceToShow } from 'utils/format';
-import { compareWallets } from 'utils/Wallet';
-import { UtilityInfo } from '../details-NFT/UtilityInfo';
+} from 'lib/graphql'
+import { useRouter } from 'next/router'
+import { HighestBid } from 'pages/tracks/[id]/complete-auction'
+import { useEffect, useMemo, useState } from 'react'
+import { AuthorActionsType } from 'types/AuthorActionsType'
+import { priceToShow } from 'utils/format'
+import { compareWallets } from 'utils/Wallet'
+import { UtilityInfo } from '../details-NFT/UtilityInfo'
 
 interface SingleTrackPageProps {
-  track: TrackQuery['track'];
+  track: TrackQuery['track']
 }
 
 const pendingRequestMapping: Record<PendingRequest, string> = {
@@ -54,75 +54,75 @@ const pendingRequestMapping: Record<PendingRequest, string> = {
   PlaceBid: 'place bid',
   CompleteAuction: 'complete auction',
   CancelAuction: 'cancel auction',
-};
+}
 
 export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
-  const me = useMe();
-  const { account, web3 } = useWalletContext();
-  const { getRoyalties, getHighestBid } = useBlockchain();
-  const { getEditionRoyalties } = useBlockchainV2();
-  const [royalties, setRoyalties] = useState<number>();
-  const [highestBid, setHighestBid] = useState<HighestBid>({} as HighestBid);
-  const { dispatchShowAuthorActionsModal, dispatchShowBidsHistory } = useModalDispatch();
-  const { loading: isLoadingOwner, isOwner } = useTokenOwner(track.nftData?.tokenId, track.nftData?.contract);
+  const me = useMe()
+  const { account, web3 } = useWalletContext()
+  const { getRoyalties, getHighestBid } = useBlockchain()
+  const { getEditionRoyalties } = useBlockchainV2()
+  const [royalties, setRoyalties] = useState<number>()
+  const [highestBid, setHighestBid] = useState<HighestBid>({} as HighestBid)
+  const { dispatchShowAuthorActionsModal, dispatchShowBidsHistory } = useModalDispatch()
+  const { loading: isLoadingOwner, isOwner } = useTokenOwner(track.nftData?.tokenId, track.nftData?.contract)
 
   const [refetchTrack, { data: trackData }] = useTrackLazyQuery({
     fetchPolicy: 'network-only',
     nextFetchPolicy: 'network-only',
-  });
+  })
   const [fetchCountBids, { data: countBids }] = useCountBidsLazyQuery({
     fetchPolicy: 'network-only',
     nextFetchPolicy: 'network-only',
-  });
+  })
   const [fetchHaveBided, { data: haveBided }] = useHaveBidedLazyQuery({
     fetchPolicy: 'network-only',
     nextFetchPolicy: 'network-only',
-  });
+  })
   const [fetchListingItem, { data: listingPayload, loading: loadingListingItem }] = useListingItemLazyQuery({
     fetchPolicy: 'network-only',
     nextFetchPolicy: 'network-only',
-  });
+  })
   const [fetchHighestBidder, { data: highestBidderData }] = useUserByWalletLazyQuery({
     fetchPolicy: 'network-only',
     nextFetchPolicy: 'network-only',
-  });
-  const [profile, { data: profileInfo }] = useProfileLazyQuery();
-  const [userByWallet, { data: ownerProfile }] = useUserByWalletLazyQuery();
-  const { setTopNavBarProps } = useLayoutContext();
+  })
+  const [profile, { data: profileInfo }] = useProfileLazyQuery()
+  const [userByWallet, { data: ownerProfile }] = useUserByWalletLazyQuery()
+  const { setTopNavBarProps } = useLayoutContext()
 
-  const nftData = trackData?.track.nftData || track.nftData;
-  const mintingPending = nftData?.pendingRequest === PendingRequest.Mint;
-  const isProcessing = nftData?.pendingRequest != PendingRequest.None;
-  const tokenId = nftData?.tokenId;
-  const contractAddress = nftData?.contract;
-  const nftAddress = config.web3.contractsV2.contractAddress as string;
-  const isMarketplaceEditions = contractAddress === nftAddress;
-  const canList = (me?.profile.verified && nftData?.minter === account) || nftData?.minter != account;
-  const isBuyNow = Boolean(listingPayload?.listingItem?.pricePerItem);
-  const isAuction = Boolean(listingPayload?.listingItem?.reservePrice);
-  const bidCount = countBids?.countBids.numberOfBids ?? 0;
-  const isPaymentOGUN = Boolean(listingPayload?.listingItem?.OGUNPricePerItemToShow != 0);
+  const nftData = trackData?.track.nftData || track.nftData
+  const mintingPending = nftData?.pendingRequest === PendingRequest.Mint
+  const isProcessing = nftData?.pendingRequest != PendingRequest.None
+  const tokenId = nftData?.tokenId
+  const contractAddress = nftData?.contract
+  const nftAddress = config.web3.contractsV2.contractAddress as string
+  const isMarketplaceEditions = contractAddress === nftAddress
+  const canList = (me?.profile.verified && nftData?.minter === account) || nftData?.minter != account
+  const isBuyNow = Boolean(listingPayload?.listingItem?.pricePerItem)
+  const isAuction = Boolean(listingPayload?.listingItem?.reservePrice)
+  const bidCount = countBids?.countBids.numberOfBids ?? 0
+  const isPaymentOGUN = Boolean(listingPayload?.listingItem?.OGUNPricePerItemToShow != 0)
 
-  const { reservePriceToShow, pricePerItemToShow, OGUNPricePerItemToShow, id } = listingPayload?.listingItem ?? {};
+  const { reservePriceToShow, pricePerItemToShow, OGUNPricePerItemToShow, id } = listingPayload?.listingItem ?? {}
 
-  let price = pricePerItemToShow || 0;
-  const OGUNprice = OGUNPricePerItemToShow || 0;
+  let price = pricePerItemToShow || 0
+  const OGUNprice = OGUNPricePerItemToShow || 0
   if (isAuction || bidCount) {
-    price = highestBid.bid || reservePriceToShow || 0;
+    price = highestBid.bid || reservePriceToShow || 0
   }
-  const auctionIsOver = (listingPayload?.listingItem?.endingTime || 0) < Math.floor(Date.now() / 1000);
+  const auctionIsOver = (listingPayload?.listingItem?.endingTime || 0) < Math.floor(Date.now() / 1000)
   const canComplete =
     auctionIsOver &&
-    (compareWallets(highestBid.bidder, account) || compareWallets(account, listingPayload?.listingItem?.owner));
-  const isHighestBidder = highestBid.bidder ? compareWallets(highestBid.bidder, account) : undefined;
+    (compareWallets(highestBid.bidder, account) || compareWallets(account, listingPayload?.listingItem?.owner))
+  const isHighestBidder = highestBid.bidder ? compareWallets(highestBid.bidder, account) : undefined
   const startingDate = listingPayload?.listingItem?.startingTime
     ? new Date(listingPayload.listingItem.startingTime * 1000)
-    : undefined;
+    : undefined
   const endingDate = listingPayload?.listingItem?.endingTime
     ? new Date(listingPayload.listingItem.endingTime * 1000)
-    : undefined;
-  const futureSale = startingDate ? startingDate.getTime() > new Date().getTime() : false;
-  const loading = loadingListingItem || isLoadingOwner;
+    : undefined
+  const futureSale = startingDate ? startingDate.getTime() > new Date().getTime() : false
+  const loading = loadingListingItem || isLoadingOwner
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
@@ -145,32 +145,32 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [isOwner, me?.roles, track.artist, track.id, track.title],
-  );
+  )
 
   useEffect(() => {
-    setTopNavBarProps(topNavBarProps);
-  }, [setTopNavBarProps, topNavBarProps]);
+    setTopNavBarProps(topNavBarProps)
+  }, [setTopNavBarProps, topNavBarProps])
 
   useEffect(() => {
     if (tokenId && contractAddress) {
-      fetchCountBids({ variables: { tokenId } });
+      fetchCountBids({ variables: { tokenId } })
       fetchListingItem({
         variables: { input: { tokenId, contractAddress } },
-      });
+      })
     }
-  }, [track, fetchCountBids, fetchListingItem, tokenId, contractAddress]);
+  }, [track, fetchCountBids, fetchListingItem, tokenId, contractAddress])
 
   useEffect(() => {
     if (track.artistProfileId) {
-      profile({ variables: { id: track.artistProfileId } });
+      profile({ variables: { id: track.artistProfileId } })
     }
-  }, [track.artistProfileId, profile]);
+  }, [track.artistProfileId, profile])
 
   useEffect(() => {
     if (nftData?.owner) {
-      userByWallet({ variables: { walletAddress: nftData.owner } });
+      userByWallet({ variables: { walletAddress: nftData.owner } })
     }
-  }, [nftData?.owner, userByWallet]);
+  }, [nftData?.owner, userByWallet])
 
   useEffect(() => {
     const fetchRoyalties = async () => {
@@ -182,30 +182,30 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
         royalties != undefined ||
         track?.trackEdition?.editionId === undefined
       ) {
-        return;
+        return
       }
 
-      let royaltiesFromBlockchain;
+      let royaltiesFromBlockchain
       if (isMarketplaceEditions) {
-        royaltiesFromBlockchain = await getEditionRoyalties(web3, track.trackEdition.editionId);
+        royaltiesFromBlockchain = await getEditionRoyalties(web3, track.trackEdition.editionId)
       } else {
-        royaltiesFromBlockchain = await getRoyalties(web3, tokenId, { nft: nftData?.contract });
+        royaltiesFromBlockchain = await getRoyalties(web3, tokenId, { nft: nftData?.contract })
       }
-      setRoyalties(royaltiesFromBlockchain);
-    };
-    fetchRoyalties();
-  }, [account, web3, tokenId, getRoyalties, getEditionRoyalties, royalties, nftData, track?.trackEdition?.editionId]);
+      setRoyalties(royaltiesFromBlockchain)
+    }
+    fetchRoyalties()
+  }, [account, web3, tokenId, getRoyalties, getEditionRoyalties, royalties, nftData, track?.trackEdition?.editionId])
 
   useEffect(() => {
     const fetchHighestBid = async () => {
       if (!web3 || !tokenId || !getHighestBid || highestBid.bidder != undefined) {
-        return;
+        return
       }
-      const { _bid, _bidder } = await getHighestBid(web3, tokenId, { nft: nftData?.contract });
-      setHighestBid({ bid: priceToShow(_bid || '0'), bidder: _bidder });
-    };
-    fetchHighestBid();
-  }, [tokenId, web3, getHighestBid, highestBid.bidder, nftData]);
+      const { _bid, _bidder } = await getHighestBid(web3, tokenId, { nft: nftData?.contract })
+      setHighestBid({ bid: priceToShow(_bid || '0'), bidder: _bidder })
+    }
+    fetchHighestBid()
+  }, [tokenId, web3, getHighestBid, highestBid.bidder, nftData])
 
   useEffect(() => {
     if (highestBid.bidder) {
@@ -213,33 +213,33 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
         variables: {
           walletAddress: highestBid.bidder,
         },
-      });
+      })
     }
-  }, [highestBid.bidder, fetchHighestBidder]);
+  }, [highestBid.bidder, fetchHighestBidder])
 
   useEffect(() => {
     if (isAuction && account && listingPayload?.listingItem?.id) {
-      fetchHaveBided({ variables: { auctionId: listingPayload.listingItem.id, bidder: account } });
+      fetchHaveBided({ variables: { auctionId: listingPayload.listingItem.id, bidder: account } })
     }
-  }, [fetchHaveBided, isAuction, listingPayload?.listingItem?.id, account]);
+  }, [fetchHaveBided, isAuction, listingPayload?.listingItem?.id, account])
 
   useEffect(() => {
     const interval = setInterval(() => {
       if (isProcessing) {
-        refetchTrack({ variables: { id: track.id } });
+        refetchTrack({ variables: { id: track.id } })
         if (tokenId && contractAddress) {
-          fetchListingItem({ variables: { input: { tokenId, contractAddress } } });
+          fetchListingItem({ variables: { input: { tokenId, contractAddress } } })
         }
       }
-    }, 10 * 1000);
+    }, 10 * 1000)
 
-    return () => clearInterval(interval);
-  }, [isProcessing, refetchTrack, fetchListingItem, tokenId, track.id, contractAddress]);
+    return () => clearInterval(interval)
+  }, [isProcessing, refetchTrack, fetchListingItem, tokenId, track.id, contractAddress])
 
-  const title = `${track.title} - song by ${track.artist} | SoundChain`;
+  const title = `${track.title} - song by ${track.artist} | SoundChain`
   const description = `Listen to ${track.title} on SoundChain. ${track.artist}. ${track.album || 'Song'}. ${
     track.releaseYear != null ? `${track.releaseYear}.` : ''
-  }`;
+  }`
 
   return (
     <>
@@ -376,29 +376,29 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
           />
         ))}
     </>
-  );
-};
+  )
+}
 
 export const Timer = ({
   date,
   endedMessage,
   reloadOnEnd,
 }: {
-  date: Date;
-  endedMessage?: string;
-  reloadOnEnd?: boolean;
+  date: Date
+  endedMessage?: string
+  reloadOnEnd?: boolean
 }) => {
-  const router = useRouter();
+  const router = useRouter()
 
   if (endedMessage && new Date().getTime() > date.getTime()) {
-    return <div className="text-[#FF4D4D]">{endedMessage}</div>;
+    return <div className="text-[#FF4D4D]">{endedMessage}</div>
   }
   return (
     <TimeCounter
       date={date}
       onEndTimer={() => {
         if (reloadOnEnd) {
-          router.reload();
+          router.reload()
         }
       }}
     >
@@ -427,5 +427,5 @@ export const Timer = ({
         </div>
       )}
     </TimeCounter>
-  );
-};
+  )
+}

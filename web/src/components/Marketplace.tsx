@@ -1,28 +1,28 @@
 /* eslint-disable react/display-name */
-import { useModalState } from 'contexts/providers/modal';
-import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting';
-import { Track, useListingItemsQuery } from 'lib/graphql';
-import React, { useEffect, useState } from 'react';
-import { GenreLabel } from 'utils/Genres';
-import { SaleTypeLabel } from 'utils/SaleTypeLabel';
-import { MarketplaceFilterWrapper } from './MarketplaceFilterWrapper';
-import { ListView } from 'components/ListView';
-import { GridView } from 'components/GridView';
+import { useModalState } from 'contexts/providers/modal'
+import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting'
+import { Track, useListingItemsQuery } from 'lib/graphql'
+import React, { useEffect, useState } from 'react'
+import { GenreLabel } from 'utils/Genres'
+import { SaleTypeLabel } from 'utils/SaleTypeLabel'
+import { MarketplaceFilterWrapper } from './MarketplaceFilterWrapper'
+import { ListView } from 'components/ListView'
+import { GridView } from 'components/GridView'
 
 const buildMarketplaceFilter = (genres: GenreLabel[] | undefined, saleType: SaleTypeLabel | undefined) => {
   return {
     ...(genres?.length && { genres: genres.map(genre => genre.key) }),
     ...(saleType && { listingItem: { saleType: saleType.key } }),
-  };
-};
+  }
+}
 
 export const Marketplace = () => {
-  const pageSize = 15;
-  const { genres: genresFromModal, filterSaleType } = useModalState();
-  const [isGrid, setIsGrid] = useState(true);
-  const [genres, setGenres] = useState<GenreLabel[] | undefined>(undefined);
-  const [saleType, setSaleType] = useState<SaleTypeLabel | undefined>(undefined);
-  const [sorting, setSorting] = useState<SortListingItem>(SortListingItem.CreatedAt);
+  const pageSize = 15
+  const { genres: genresFromModal, filterSaleType } = useModalState()
+  const [isGrid, setIsGrid] = useState(true)
+  const [genres, setGenres] = useState<GenreLabel[] | undefined>(undefined)
+  const [saleType, setSaleType] = useState<SaleTypeLabel | undefined>(undefined)
+  const [sorting, setSorting] = useState<SortListingItem>(SortListingItem.CreatedAt)
 
   const { data, refetch, fetchMore, loading } = useListingItemsQuery({
     variables: {
@@ -31,10 +31,10 @@ export const Marketplace = () => {
       filter: {},
     },
     ssr: false,
-  });
+  })
 
-  useEffect(() => genresFromModal && setGenres(genresFromModal), [genresFromModal]);
-  useEffect(() => filterSaleType && setSaleType(filterSaleType), [filterSaleType]);
+  useEffect(() => genresFromModal && setGenres(genresFromModal), [genresFromModal])
+  useEffect(() => filterSaleType && setSaleType(filterSaleType), [filterSaleType])
 
   useEffect(() => {
     refetch({
@@ -43,8 +43,8 @@ export const Marketplace = () => {
       },
       sort: SelectToApolloQuery[sorting],
       filter: buildMarketplaceFilter(genres, saleType),
-    });
-  }, [genres, saleType, refetch, sorting]);
+    })
+  }, [genres, saleType, refetch, sorting])
 
   const loadMore = () => {
     fetchMore({
@@ -56,8 +56,8 @@ export const Marketplace = () => {
         sort: SelectToApolloQuery[sorting],
         filter: buildMarketplaceFilter(genres, saleType),
       },
-    });
-  };
+    })
+  }
 
   return (
     <>
@@ -90,5 +90,5 @@ export const Marketplace = () => {
         />
       )}
     </>
-  );
-};
+  )
+}

@@ -1,35 +1,35 @@
-import Slider from '@reach/slider';
-import { useAudioPlayerContext } from 'hooks/useAudioPlayer';
-import { Cards } from 'icons/Cards';
-import { HeartFilled } from 'icons/HeartFilled';
-import { Pause } from 'icons/Pause';
-import { Play } from 'icons/Play';
-import NextLink from 'next/link';
-import { useEffect, useState } from 'react';
-import { remainingTime, timeFromSecs } from 'utils/calculateTime';
-import { TrackPrice } from '../lib/graphql';
-import Asset from './Asset';
-import { BadgeTrack } from './BadgeTrack';
-import { PriceDisplay } from './PriceDisplay';
+import Slider from '@reach/slider'
+import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
+import { Cards } from 'icons/Cards'
+import { HeartFilled } from 'icons/HeartFilled'
+import { Pause } from 'icons/Pause'
+import { Play } from 'icons/Play'
+import NextLink from 'next/link'
+import { useEffect, useState } from 'react'
+import { remainingTime, timeFromSecs } from 'utils/calculateTime'
+import { TrackPrice } from '../lib/graphql'
+import Asset from './Asset'
+import { BadgeTrack } from './BadgeTrack'
+import { PriceDisplay } from './PriceDisplay'
 
 interface Song {
-  src: string;
-  title?: string | null;
-  trackId: string;
-  artist?: string | null;
-  art?: string | null;
-  isFavorite: boolean | null;
-  playbackCount: string;
-  favoriteCount: number;
-  listingCount?: number;
-  saleType: string;
-  price: TrackPrice;
-  editionSize?: number;
+  src: string
+  title?: string | null
+  trackId: string
+  artist?: string | null
+  art?: string | null
+  isFavorite: boolean | null
+  playbackCount: string
+  favoriteCount: number
+  listingCount?: number
+  saleType: string
+  price: TrackPrice
+  editionSize?: number
 }
 
 interface MiniAudioPlayerProps {
-  song: Song;
-  hideBadgeAndPrice?: boolean;
+  song: Song
+  hideBadgeAndPrice?: boolean
 }
 
 export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
@@ -44,23 +44,23 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
     price,
     editionSize = 0,
     listingCount,
-  } = props.song;
-  const { hideBadgeAndPrice, song } = props;
+  } = props.song
+  const { hideBadgeAndPrice, song } = props
 
   const { duration, progress, play, isCurrentSong, isCurrentlyPlaying, setProgressStateFromSlider } =
-    useAudioPlayerContext();
+    useAudioPlayerContext()
 
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isSameSong, setIsSameSong] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [isSameSong, setIsSameSong] = useState(false)
 
   useEffect(() => {
-    setIsPlaying(isCurrentlyPlaying(trackId));
-    setIsSameSong(isCurrentSong(trackId));
-  }, [isCurrentSong, isCurrentlyPlaying, setIsPlaying, setIsSameSong, trackId]);
+    setIsPlaying(isCurrentlyPlaying(trackId))
+    setIsSameSong(isCurrentSong(trackId))
+  }, [isCurrentSong, isCurrentlyPlaying, setIsPlaying, setIsSameSong, trackId])
 
   const onSliderChange = (value: number) => {
-    setProgressStateFromSlider(value);
-  };
+    setProgressStateFromSlider(value)
+  }
 
   const RenderTrackCounters = () => (
     <div className="flex items-center gap-1 text-xs text-gray-80">
@@ -69,7 +69,7 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
       <HeartFilled />
       <span>{favoriteCount || 0}</span>
     </div>
-  );
+  )
 
   return (
     <div
@@ -160,5 +160,5 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}

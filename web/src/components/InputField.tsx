@@ -1,24 +1,24 @@
-import { useField } from 'formik';
-import { createRef } from 'react';
-import { Label } from './Label';
+import { useField } from 'formik'
+import { createRef } from 'react'
+import { Label } from './Label'
 
 interface InputFieldProps extends React.ComponentPropsWithoutRef<'input'> {
-  name: string;
-  type: 'text' | 'email' | 'password' | 'number';
-  label?: string;
-  placeholder?: string;
-  icon?: (props: React.ComponentProps<'svg'>) => JSX.Element;
-  symbol?: string;
-  alignTextCenter?: boolean;
+  name: string
+  type: 'text' | 'email' | 'password' | 'number'
+  label?: string
+  placeholder?: string
+  icon?: (props: React.ComponentProps<'svg'>) => JSX.Element
+  symbol?: string
+  alignTextCenter?: boolean
 }
 
-const commonInputClasses = `relative appearance-none block w-full p-3 rounded border bg-gray-1A border-gray-30 text-gray-200 cursor-text`;
-const validInputClasses = `${commonInputClasses} border-gray-30`;
-const errorInputClasses = `${commonInputClasses} border-red-500`;
+const commonInputClasses = `relative appearance-none block w-full p-3 rounded border bg-gray-1A border-gray-30 text-gray-200 cursor-text`
+const validInputClasses = `${commonInputClasses} border-gray-30`
+const errorInputClasses = `${commonInputClasses} border-red-500`
 
 export const InputField = ({ label, icon: Icon, alignTextCenter, ...props }: InputFieldProps) => {
-  const [field, meta] = useField(props);
-  const inputRef = createRef<HTMLInputElement>();
+  const [field, meta] = useField(props)
+  const inputRef = createRef<HTMLInputElement>()
   return (
     <>
       <div
@@ -26,12 +26,12 @@ export const InputField = ({ label, icon: Icon, alignTextCenter, ...props }: Inp
         onClick={() => inputRef.current?.focus()}
       >
         {label && (
-          <Label className="block font-bold uppercase cursor-auto rounded" textSize="xxs" htmlFor={props.name}>
+          <Label className="block cursor-auto rounded font-bold uppercase" textSize="xxs" htmlFor={props.name}>
             {label}
           </Label>
         )}
         <input
-          className={`text-xs leading-3 font-bold bg-gray-1A w-full p-0 text-gray-200 border-none focus:outline-none focus:ring-transparent placeholder-gray-50 placeholder-semibold ${
+          className={`placeholder-semibold w-full border-none bg-gray-1A p-0 text-xs font-bold leading-3 text-gray-200 placeholder-gray-50 focus:outline-none focus:ring-transparent ${
             alignTextCenter && 'text-center'
           }`}
           id={props.name}
@@ -40,15 +40,15 @@ export const InputField = ({ label, icon: Icon, alignTextCenter, ...props }: Inp
           ref={inputRef}
         />
         {Icon && (
-          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
             <Icon className="h-5 w-5 text-gray-400" aria-hidden="true" />
           </div>
         )}
         {props.symbol && (
-          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">{props.symbol}</div>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">{props.symbol}</div>
         )}
       </div>
-      {meta.touched && meta.error ? <div className="text-red-500 text-sm">{meta.error}</div> : null}
+      {meta.touched && meta.error ? <div className="text-sm text-red-500">{meta.error}</div> : null}
     </>
-  );
-};
+  )
+}

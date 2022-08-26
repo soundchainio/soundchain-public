@@ -1,44 +1,44 @@
-import { useField } from 'formik';
-import { Label } from './Label';
+import { useField } from 'formik'
+import { Label } from './Label'
 
 interface TextareaFieldProps {
-  name: string;
-  label?: string;
-  placeholder?: string;
-  icon?: (props: React.ComponentProps<'svg'>) => JSX.Element;
-  maxLength?: number;
-  rows?: number;
+  name: string
+  label?: string
+  placeholder?: string
+  icon?: (props: React.ComponentProps<'svg'>) => JSX.Element
+  maxLength?: number
+  rows?: number
 }
 
-const commonInputClasses = `appearance-none block w-full p-3 rounded-md border border-gray-30 bg-gray-1A text-gray-200 cursor-text`;
-const validInputClasses = `${commonInputClasses} border-gray-30`;
-const errorInputClasses = `${commonInputClasses} border-red-500`;
+const commonInputClasses = `appearance-none block w-full p-3 rounded-md border border-gray-30 bg-gray-1A text-gray-200 cursor-text`
+const validInputClasses = `${commonInputClasses} border-gray-30`
+const errorInputClasses = `${commonInputClasses} border-red-500`
 
 export const TextareaField = ({ label, icon: Icon, maxLength, rows = 4, ...props }: TextareaFieldProps) => {
-  const [field, meta] = useField(props);
+  const [field, meta] = useField(props)
   return (
     <div className="flex flex-col gap-2">
       <div className={meta.touched && meta.error ? errorInputClasses : validInputClasses}>
         {label && (
-          <Label className="font-bold block cursor-text uppercase" htmlFor={props.name} textSize="xxs">
+          <Label className="block cursor-text font-bold uppercase" htmlFor={props.name} textSize="xxs">
             {label}
           </Label>
         )}
         <textarea
           maxLength={maxLength}
-          className="font-bold text-xs bg-gray-1A w-full p-0 text-gray-200 border-none focus:outline-none focus:ring-transparent placeholder-gray-50 placeholder-semibold resize-none"
+          className="placeholder-semibold w-full resize-none border-none bg-gray-1A p-0 text-xs font-bold text-gray-200 placeholder-gray-50 focus:outline-none focus:ring-transparent"
           id={props.name}
           {...field}
           {...props}
           rows={rows}
         ></textarea>
         {Icon && (
-          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
             <Icon className="h-5 w-5 text-gray-400" aria-hidden="true" />
           </div>
         )}
       </div>
-      {meta.touched && meta.error ? <div className="text-red-500 pl-1 text-sm">{meta.error}</div> : null}
+      {meta.touched && meta.error ? <div className="pl-1 text-sm text-red-500">{meta.error}</div> : null}
     </div>
-  );
-};
+  )
+}

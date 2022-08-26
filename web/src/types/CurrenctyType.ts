@@ -1,1 +1,1 @@
-export type CurrencyType = "MATIC" | "OGUN";
+export type CurrencyType = 'MATIC' | 'OGUN'

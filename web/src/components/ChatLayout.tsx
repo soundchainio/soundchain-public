@@ -1,20 +1,20 @@
-import { ReactNode } from 'react';
-import { TopNavBar, TopNavBarProps } from './TopNavBar';
+import { ReactNode } from 'react'
+import { TopNavBar, TopNavBarProps } from './TopNavBar'
 
 interface LayoutMenuProps {
-  children: ReactNode;
-  topNavBarProps?: TopNavBarProps;
+  children: ReactNode
+  topNavBarProps?: TopNavBarProps
 }
 
 export const ChatLayout = ({ children, topNavBarProps }: LayoutMenuProps) => {
   return (
-    <div className="h-full flex">
-      <div className="flex flex-col w-0 flex-1 ">
-        <div className="fixed top-0 w-full z-10">
+    <div className="flex h-full">
+      <div className="flex w-0 flex-1 flex-col ">
+        <div className="fixed top-0 z-10 w-full">
           <TopNavBar {...topNavBarProps} />
         </div>
-        <main className="flex-1 relative focus:outline-none bg-gray-10">
-          <div id="main" className="max-w-7xl mx-auto pt-8 pb-14">
+        <main className="relative flex-1 bg-gray-10 focus:outline-none">
+          <div id="main" className="mx-auto max-w-7xl pt-8 pb-14">
             {children}
           </div>
         </main>
@@ -23,5 +23,5 @@ export const ChatLayout = ({ children, topNavBarProps }: LayoutMenuProps) => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}

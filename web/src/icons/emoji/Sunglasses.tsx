@@ -40,5 +40,5 @@ export const Sunglasses = (props: React.SVGProps<SVGSVGElement>) => {
         </radialGradient>
       </defs>
     </svg>
-  );
-};
+  )
+}

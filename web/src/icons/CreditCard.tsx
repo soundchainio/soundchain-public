@@ -7,5 +7,5 @@ export const CreditCard = (props: React.SVGProps<SVGSVGElement>) => {
       />
       <path d="M3.19995 8H7.99995V9.6H3.19995V8Z" fill="#808080" />
     </svg>
-  );
-};
+  )
+}

@@ -1,48 +1,55 @@
-import '@reach/dialog/styles.css';
-import '@reach/slider/styles.css';
-import { CheckBodyScroll } from 'components/CheckBodyScroll';
-import { Layout } from 'components/Layout';
-import { StateProvider } from 'contexts';
-import { AudioPlayerProvider } from 'hooks/useAudioPlayer';
-import { HideBottomNavBarProvider } from 'hooks/useHideBottomNavBar';
-import { LayoutContextProvider } from 'hooks/useLayoutContext';
-import { ApolloProvider } from 'lib/apollo';
-import type { AppProps } from 'next/app';
-import dynamic from 'next/dynamic';
-import Head from 'next/head';
-import Router from 'next/router';
-import Script from 'next/script';
-import NProgress from 'nprogress';
-import { ReactElement } from 'react';
-import 'react-toastify/dist/ReactToastify.css';
-import { sentryInitializer } from 'services/sentry';
-import 'styles/audio-player.css';
-import 'styles/bottom-audio-player.css';
-import 'styles/globals.css';
-import 'styles/loading-ring.css';
-import 'styles/nprogress.css';
-import 'styles/track-card.css';
-import 'styles/volume-slider.css';
+import '@reach/dialog/styles.css'
+import '@reach/slider/styles.css'
+import * as Sentry from '@sentry/react'
+import { Integrations } from '@sentry/tracing'
+import { CheckBodyScroll } from 'components/CheckBodyScroll'
+import { Layout } from 'components/Layout'
+import { config } from 'config'
+import { StateProvider } from 'contexts'
+import { AudioPlayerProvider } from 'hooks/useAudioPlayer'
+import { HideBottomNavBarProvider } from 'hooks/useHideBottomNavBar'
+import { LayoutContextProvider } from 'hooks/useLayoutContext'
+import { ApolloProvider } from 'lib/apollo'
+import type { AppProps } from 'next/app'
+import dynamic from 'next/dynamic'
+import Head from 'next/head'
+import Router from 'next/router'
+import Script from 'next/script'
+import NProgress from 'nprogress'
+import { ReactElement } from 'react'
+import 'react-toastify/dist/ReactToastify.css'
+import 'styles/audio-player.css'
+import 'styles/bottom-audio-player.css'
+import 'styles/globals.css'
+import 'styles/loading-ring.css'
+import 'styles/nprogress.css'
+import 'styles/track-card.css'
+import 'styles/volume-slider.css'
 
-const WalletProvider = dynamic(import('hooks/useWalletContext'));
-const MagicProvider = dynamic(import('hooks/useMagicContext'));
+const WalletProvider = dynamic(import('hooks/useWalletContext'))
+const MagicProvider = dynamic(import('hooks/useMagicContext'))
 
-sentryInitializer();
+Sentry.init({
+  dsn: config.sentryUrl,
+  integrations: [new Integrations.BrowserTracing()],
+  tracesSampleRate: 1.0,
+  environment: `${process.env.NEXT_PUBLIC_VERCEL_ENV}`,
+})
 
 NProgress.configure({
   showSpinner: false,
-});
+})
 
-Router.events.on('routeChangeStart', NProgress.start);
-Router.events.on('routeChangeComplete', NProgress.done);
-Router.events.on('routeChangeError', NProgress.done);
+Router.events.on('routeChangeStart', NProgress.start)
+Router.events.on('routeChangeComplete', NProgress.done)
+Router.events.on('routeChangeError', NProgress.done)
 
-export type CustomLayout = (page: ReactElement) => ReactElement;
+export type CustomLayout = (page: ReactElement) => ReactElement
 
 interface CustomAppProps extends Pick<AppProps, 'Component' | 'pageProps'> {
   Component: AppProps['Component'] & {
-    getLayout?: CustomLayout;
-  };
+    getLayout?: CustomLayout
+  }
 }
 
 function SoundchainMainLayout({ Component, pageProps }: CustomAppProps) {
@@ -65,13 +72,13 @@ function SoundchainMainLayout({ Component, pageProps }: CustomAppProps) {
         </MagicProvider>
       </StateProvider>
     </ApolloProvider>
-  );
+  )
 }
 
 function SoundchainPageLayout({ Component, pageProps }: CustomAppProps) {
-  if (!Component.getLayout) return <></>;
+  if (!Component.getLayout) return <></>
 
-  return Component.getLayout(<Component {...pageProps} />);
+  return Component.getLayout(<Component {...pageProps} />)
 }
 
 function SoundchainApp({ Component, pageProps }: CustomAppProps) {
@@ -111,6 +118,6 @@ function SoundchainApp({ Component, pageProps }: CustomAppProps) {
         <SoundchainMainLayout Component={Component} pageProps={pageProps} />
       )}
     </>
-  );
+  )
 }
-export default SoundchainApp;
+export default SoundchainApp

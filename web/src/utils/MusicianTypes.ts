@@ -1,9 +1,9 @@
-import { MusicianType } from 'lib/graphql';
+import { MusicianType } from 'lib/graphql'
 
 type MusicianTypeLabels = {
-  key: MusicianType;
-  label: string;
-};
+  key: MusicianType
+  label: string
+}
 
 export const musicianTypes: MusicianTypeLabels[] = [
   { key: MusicianType.BeatMaker, label: 'Beat Maker' },
@@ -16,8 +16,8 @@ export const musicianTypes: MusicianTypeLabels[] = [
   { key: MusicianType.NotAnArtist, label: 'Creator' },
   { key: MusicianType.Producer, label: 'Producer' },
   { key: MusicianType.Singer, label: 'Singer' },
-];
+]
 
 export function getMusicianTypeLabelByKey(key: MusicianType): string | undefined {
-  return musicianTypes.find(g => g.key === key)?.label;
+  return musicianTypes.find(g => g.key === key)?.label
 }

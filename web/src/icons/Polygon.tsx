@@ -6,5 +6,5 @@ export const Polygon = (props: React.SVGProps<SVGSVGElement>) => {
         fill="#8247E5"
       />
     </svg>
-  );
-};
+  )
+}

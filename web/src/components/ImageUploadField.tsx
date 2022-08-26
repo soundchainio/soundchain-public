@@ -1,8 +1,8 @@
-import { Field, FieldProps } from 'formik';
-import { ImageUpload, ImageUploadProps } from './ImageUpload';
+import { Field, FieldProps } from 'formik'
+import { ImageUpload, ImageUploadProps } from './ImageUpload'
 
 export interface ImageUploadFieldProps extends Omit<ImageUploadProps, 'value' | 'onChange'> {
-  name: string;
+  name: string
 }
 
 export const ImageUploadField = ({ name, ...rest }: ImageUploadFieldProps) => {
@@ -13,5 +13,5 @@ export const ImageUploadField = ({ name, ...rest }: ImageUploadFieldProps) => {
         <ImageUpload value={value} onChange={onChange(name)} {...rest} />
       )}
     />
-  );
-};
+  )
+}

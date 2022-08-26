@@ -1,24 +1,24 @@
-import { usePostQuery } from 'lib/graphql';
-import NextLink from 'next/link';
-import React from 'react';
+import { usePostQuery } from 'lib/graphql'
+import NextLink from 'next/link'
+import React from 'react'
 
 interface PreviewPostNotificationProps {
-  postId: string;
+  postId: string
 }
 
 export const PreviewPostNotification = ({ postId }: PreviewPostNotificationProps) => {
-  const { data } = usePostQuery({ variables: { id: postId } });
-  const post = data?.post;
+  const { data } = usePostQuery({ variables: { id: postId } })
+  const post = data?.post
 
   if (!post || !post.body) {
-    return null;
+    return null
   }
 
   return (
-    <div className="flex mt-4 w-full p-4 bg-gray-30 rounded-xl">
+    <div className="mt-4 flex w-full rounded-xl bg-gray-30 p-4">
       <NextLink href={`/posts/${post.id}`}>
         <div>
-          <pre className="text-gray-100 text-sm whitespace-pre-wrap">{post.body}</pre>
+          <pre className="whitespace-pre-wrap text-sm text-gray-100">{post.body}</pre>
         </div>
       </NextLink>
       {post.mediaLink && (
@@ -31,5 +31,5 @@ export const PreviewPostNotification = ({ postId }: PreviewPostNotificationProps
         />
       )}
     </div>
-  );
-};
+  )
+}

@@ -1,12 +1,12 @@
-import classNames from 'classnames';
-import { DeletedPostNotification } from 'lib/graphql';
-import React from 'react';
-import { MiniAudioPlayer } from './MiniAudioPlayer';
-import { Timestamp } from './Timestamp';
+import classNames from 'classnames'
+import { DeletedPostNotification } from 'lib/graphql'
+import React from 'react'
+import { MiniAudioPlayer } from './MiniAudioPlayer'
+import { Timestamp } from './Timestamp'
 
 interface DeletedPostNotificationProps {
-  notification: DeletedPostNotification;
-  index: number;
+  notification: DeletedPostNotification
+  index: number
 }
 
 export const DeletedPostNotificationItem = ({
@@ -15,16 +15,16 @@ export const DeletedPostNotificationItem = ({
 }: DeletedPostNotificationProps) => {
   return (
     <div className={classNames('flex flex-col p-4', index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20')}>
-      <div className="break-words flex">
+      <div className="flex break-words">
         <div>
-          <div className="text-gray-100 text-sm items-center w-full inline-block">
+          <div className="inline-block w-full items-center text-sm text-gray-100">
             <span className="flex flex-wrap">The following post was removed by an admin from our platform</span>
           </div>
           <Timestamp small datetime={createdAt} className="text-sm" />
         </div>
       </div>
-      <div className="flex mt-4">
-        <div className="p-4 bg-gray-30 w-full break-words text-gray-100 rounded-xl text-sm">
+      <div className="mt-4 flex">
+        <div className="w-full break-words rounded-xl bg-gray-30 p-4 text-sm text-gray-100">
           {track ? (
             <MiniAudioPlayer
               song={{
@@ -46,5 +46,5 @@ export const DeletedPostNotificationItem = ({
         </div>
       </div>
     </div>
-  );
-};
+  )
+}

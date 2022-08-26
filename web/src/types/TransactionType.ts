@@ -1,15 +1,15 @@
-import { AuctionCanceled } from 'icons/AuctionCanceled';
-import { AuctionCreated } from 'icons/AuctionCreated';
-import { AuctionPlaceBid } from 'icons/AuctionPlaceBid';
-import { AuctionResult } from 'icons/AuctionResult';
-import { Checkmark2 } from 'icons/Checkmark2';
-import { Fire } from 'icons/Fire';
-import { ListCanceled } from 'icons/ListCanceled';
-import { ListUpdated } from 'icons/ListUpdated';
-import { Marketplace } from 'icons/Marketplace';
-import { PriceTag } from 'icons/PriceTag';
-import { Stars } from 'icons/Stars';
-import { Transfer } from 'icons/Transfer';
+import { AuctionCanceled } from 'icons/AuctionCanceled'
+import { AuctionCreated } from 'icons/AuctionCreated'
+import { AuctionPlaceBid } from 'icons/AuctionPlaceBid'
+import { AuctionResult } from 'icons/AuctionResult'
+import { Checkmark2 } from 'icons/Checkmark2'
+import { Fire } from 'icons/Fire'
+import { ListCanceled } from 'icons/ListCanceled'
+import { ListUpdated } from 'icons/ListUpdated'
+import { Marketplace } from 'icons/Marketplace'
+import { PriceTag } from 'icons/PriceTag'
+import { Stars } from 'icons/Stars'
+import { Transfer } from 'icons/Transfer'
 
 export const transactionDataMap: Record<
   string,
@@ -35,4 +35,4 @@ export const transactionDataMap: Record<
   transfer: { methodName: 'Transfer', icon: Transfer },
   updateListing: { methodName: 'Update NFT listing', icon: ListUpdated },
   resultAuction: { methodName: 'Result auction', icon: AuctionResult },
-};
+}

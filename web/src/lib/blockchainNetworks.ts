@@ -1,10 +1,10 @@
 interface BlockchainNetwork {
-  name: string;
-  rpc: string;
-  id: number;
-  idHex: string;
-  symbol: string;
-  blockExplorer: string;
+  name: string
+  rpc: string
+  id: number
+  idHex: string
+  symbol: string
+  blockExplorer: string
 }
 
 export const mainNetwork: BlockchainNetwork = {
@@ -14,7 +14,7 @@ export const mainNetwork: BlockchainNetwork = {
   idHex: '0x89',
   symbol: 'MATIC',
   blockExplorer: 'https://polygonscan.com/',
-};
+}
 
 export const testnetNetwork: BlockchainNetwork = {
   name: 'Mumbai Testnet',
@@ -29,9 +29,9 @@ export const testnetNetwork: BlockchainNetwork = {
   idHex: '0x13881',
   symbol: 'MATIC',
   blockExplorer: 'https://mumbai.polygonscan.com',
-};
+}
 
 export const network: BlockchainNetwork =
-  process.env.NEXT_PUBLIC_VERCEL_ENV !== 'production' ? testnetNetwork : mainNetwork;
+  process.env.NEXT_PUBLIC_VERCEL_ENV !== 'production' ? testnetNetwork : mainNetwork
 
-export const isMainNetwork = network.id === mainNetwork.id;
+export const isMainNetwork = network.id === mainNetwork.id
