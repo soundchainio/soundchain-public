@@ -51,7 +51,7 @@ const WalletProvider = ({ children }: WalletProviderProps) => {
     if (!account) {
       Content = (
         <>
-          <div>Ops! It seems you may not be connected to MetaMask</div>
+          <div>Oops! It seems you may not be connected to MetaMask</div>
           <Button variant="rainbow-xs" className="max-w-xs" onClick={() => connect()}>
             Connect to MetaMask Wallet
           </Button>
@@ -60,7 +60,7 @@ const WalletProvider = ({ children }: WalletProviderProps) => {
     } else if (chainId !== network.id) {
       Content = (
         <>
-          <div>Ops! It seems you may be connected to another network</div>
+          <div>Oops! It seems you may be connected to another network</div>
           <Button variant="rainbow-xs" onClick={() => addMumbaiTestnet()}>
             Connect to Mumbai Testnet
           </Button>

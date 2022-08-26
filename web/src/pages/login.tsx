@@ -13,7 +13,7 @@ import { LogoAndText } from 'icons/LogoAndText'
 import { UserWarning } from 'icons/UserWarning'
 import { setJwt } from 'lib/apollo'
 import { AuthMethod, useLoginMutation, useMeQuery } from 'lib/graphql'
-import { useRouter } from 'next/dist/client/router'
+import { useRouter } from 'next/router'
 import NextLink from 'next/link'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -66,7 +66,9 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     await magic.oauth.loginWithRedirect({
       provider: 'google',
-      redirectURI: `${config.domainUrl}/login`,
+      redirectURI: `${config.domainUrl}/login${
+        router.query?.callbackUrl ? `?callbackUrl=${router.query.callbackUrl.toString()}` : ''
+      }`,
       scope: ['openid', 'https://www.googleapis.com/auth/userinfo.email'],
     })
   }
