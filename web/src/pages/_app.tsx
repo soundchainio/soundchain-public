@@ -27,11 +27,12 @@ import 'styles/volume-slider.css';
 const WalletProvider = dynamic(import('hooks/useWalletContext'));
 const MagicProvider = dynamic(import('hooks/useMagicContext'));
 
+sentryInitializer();
+
 NProgress.configure({
   showSpinner: false,
 });
 
-sentryInitializer();
 Router.events.on('routeChangeStart', NProgress.start);
 Router.events.on('routeChangeComplete', NProgress.done);
 Router.events.on('routeChangeError', NProgress.done);
