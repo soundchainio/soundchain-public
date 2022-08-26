@@ -386,11 +386,11 @@ export class TrackService extends ModelService<typeof Track> {
   }
 
   async isFavorite(trackId: string, profileId: string, trackEditionId: string): Promise<boolean> {
-    const ors: any[] = [{ _id: new ObjectId(trackId) }];
-
+    const ors: any[] = [{ trackId }];
     if (trackEditionId) {
-      ors.push({ trackEditionId: new ObjectId(trackEditionId) });
+      ors.push({ trackEditionId });
     }
+    
     return await FavoriteProfileTrackModel.exists({
       $or: ors,
       profileId,
@@ -401,8 +401,9 @@ export class TrackService extends ModelService<typeof Track> {
     const track = await this.model.findOne({ _id: trackId });
 
     const ors: any[] = [{ trackId }];
+    
     if (track.trackEditionId) {
-      ors.push({ trackEditionId: new ObjectId(track.trackEditionId) });
+      ors.push({ trackEditionId: track.trackEditionId });
     }
 
     const findParams = {
@@ -444,10 +445,10 @@ export class TrackService extends ModelService<typeof Track> {
   }
 
   async favoriteCount(trackId: string, trackEditionId: string): Promise<FavoriteCount> {
-    const ors: any[] = [{ _id: new ObjectId(trackId) }];
-
+    const ors: any[] = [{ trackId: trackId.toString() }];
+    
     if (trackEditionId) {
-      ors.push({ trackEditionId: new ObjectId(trackEditionId) });
+      ors.push({ trackEditionId: trackEditionId.toString()})
     }
 
     const favTrack = await FavoriteProfileTrackModel.aggregate([

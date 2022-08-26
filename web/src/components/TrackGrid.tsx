@@ -163,7 +163,6 @@ export const TrackGrid = ({ track }: TrackProps) => {
 
         <div className="flex items-center gap-1 pt-1 text-xs font-medium text-gray-80">
           <Play fill="#808080" />
-          {console.log('playbackCount', playbackCount)}
           <span>{playbackCount || 0}</span>
           <HeartFilled />
           <span className="flex-1">{favoriteCount || 0}</span>
