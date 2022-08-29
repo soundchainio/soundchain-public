@@ -6,7 +6,9 @@ import { LoaderAnimation } from 'components/LoaderAnimation'
 import SEO from 'components/SEO'
 import { config } from 'config'
 import { useLayoutContext } from 'hooks/useLayoutContext'
+import { useMagicContext } from 'hooks/useMagicContext'
 import { MetaMask } from 'icons/MetaMask'
+import { SoundchainGoldLogo } from 'icons/SoundchainGoldLogo'
 import { WalletConnect } from 'icons/WalletConnect'
 import {
   useAudioHolderByWalletLazyQuery,
@@ -15,28 +17,25 @@ import {
   useUpdateOgunClaimedWhitelistMutation,
   useWhitelistEntryByWalletLazyQuery,
 } from 'lib/graphql'
-import { GetServerSideProps } from 'next'
-import { useRouter } from 'next/router'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { toast, ToastContainer } from 'react-toastify'
 import Web3 from 'web3'
 import { CustomModal } from '../components/CustomModal'
 import useBlockchainV2 from '../hooks/useBlockchainV2'
-import { useMagicContext } from 'hooks/useMagicContext'
-import { SoundchainGoldLogo } from 'icons/SoundchainGoldLogo'
 
 // TODO: remove before enabling the ogun token stake
-export const getServerSideProps: GetServerSideProps = ({ res }) => {
-  if (res) {
-    res.statusCode = 404
-    res.end('Not found')
-  }
+// export const getServerSideProps: GetServerSideProps = ({ res }) => {
+//   if (res) {
+//     res.statusCode = 404
+//     res.end('Not found')
+//   }
 
-  return Promise.resolve({
-    props: {},
-  })
-}
+//   return Promise.resolve({
+//     props: {},
+//   })
+// }
 
 export default function AirdropPage() {
   const router = useRouter()
