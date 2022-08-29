@@ -48,7 +48,7 @@ interface FormValues {
 }
 
 const marketplaceAddress = config.web3.contractsV2.marketplaceAddress as string
-const OGUNAddress = config.OGUNAddress as string
+const OGUNAddress = config.ogunTokenAddress as string
 const tokenContract = (web3: Web3) =>
   new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], OGUNAddress) as unknown as Contract
 
