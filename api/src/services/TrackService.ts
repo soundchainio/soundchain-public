@@ -97,10 +97,14 @@ export class TrackService extends ModelService<typeof Track> {
         },
       },
       {
+        $project: {
+          nftData: '$nftData',
+          allListingItemsStatuses: '$listingItem.valid',
+        },
+      },
+      {
         $match: {
-          listingItem: {
-            $eq: [] as unknown,
-          },
+          allListingItemsStatuses: { $ne: true },
         },
       },
     ];
