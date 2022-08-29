@@ -4,7 +4,7 @@ import { InstanceWithExtensions, MagicSDKExtensionsOption, SDKBase } from '@magi
 import { setJwt } from 'lib/apollo'
 import { Magic, RPCErrorCode } from 'magic-sdk'
 import { useRouter } from 'next/router'
-import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react'
 import Web3 from 'web3'
 import { network } from '../lib/blockchainNetworks'
 import { useMe } from './useMe'
@@ -12,7 +12,6 @@ import { errorHandler } from 'utils/errorHandler'
 import SoundchainOGUN20 from '../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json'
 import { config } from 'config'
 import { AbiItem } from 'web3-utils'
-import { toast } from 'react-toastify'
 
 const magicPublicKey = process.env.NEXT_PUBLIC_MAGIC_KEY || ''
 
@@ -108,8 +107,6 @@ export function MagicProvider({ children }: MagicProviderProps) {
 
   const handleSetBalance = useCallback(async () => {
     try {
-      if (!account) return toast.error('Not logged in.')
-
       const maticBalance = await web3.eth.getBalance(account)
 
       setMaticBalance(Number(web3.utils.fromWei(maticBalance, 'ether')).toFixed(6))
@@ -120,8 +117,6 @@ export function MagicProvider({ children }: MagicProviderProps) {
 
   const handleSetOgunBalance = useCallback(async () => {
     try {
-      if (!account) return toast.error('Not logged in.')
-
       if (!tokenAddress) throw Error('No token contract address found when setting Ogun balance')
 
       const ogunContract = new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], tokenAddress)
@@ -137,8 +132,10 @@ export function MagicProvider({ children }: MagicProviderProps) {
   const handleUseEffect = useCallback(async () => {
     if (!account) await handleSetAccount()
 
-    await handleSetOgunBalance()
-    await handleSetBalance()
+    if (account) {
+      await handleSetOgunBalance()
+      await handleSetBalance()
+    }
   }, [account, handleSetAccount, handleSetBalance, handleSetOgunBalance])
 
   useEffect(() => {
