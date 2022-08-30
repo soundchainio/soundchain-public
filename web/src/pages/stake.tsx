@@ -13,6 +13,7 @@ import { MetaMask } from 'icons/MetaMask'
 import { SoundchainGoldLogo } from 'icons/SoundchainGoldLogo'
 import { WalletConnect } from 'icons/WalletConnect'
 import { testnetNetwork } from 'lib/blockchainNetworks'
+import { GetServerSideProps } from 'next'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { toast, ToastContainer } from 'react-toastify'
@@ -46,16 +47,16 @@ const tokenStakeContractLP = (web3: Web3) =>
   new web3.eth.Contract(LiquidityPoolRewards.abi as AbiItem[], LPtokenStakeContractAddress) as unknown as Contract
 
 // TODO: remove before enabling the ogun token stake
-// export const getServerSideProps: GetServerSideProps = ({ res }) => {
-//   if (res) {
-//     res.statusCode = 404
-//     res.end('Not found')
-//   }
+export const getServerSideProps: GetServerSideProps = ({ res }) => {
+  if (res) {
+    res.statusCode = 404
+    res.end('Not found')
+  }
 
-//   return Promise.resolve({
-//     props: {},
-//   })
-// }
+  return Promise.resolve({
+    props: {},
+  })
+}
 
 export default function Stake() {
   const router = useRouter()
