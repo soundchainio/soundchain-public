@@ -1,22 +1,22 @@
-import classNames from 'classnames';
-import { SVGGradientColor } from 'icons/gradients';
-import { IconProps } from 'icons/types/IconProps';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import classNames from 'classnames'
+import { SVGGradientColor } from 'icons/gradients'
+import { IconProps } from 'icons/types/IconProps'
+import Image from 'next/image'
+import Link from 'next/link'
+import { useRouter } from 'next/router'
+import { useEffect, useState } from 'react'
 
 interface NavBarButtonProps {
-  badge?: () => JSX.Element;
-  label: string;
-  path?: string;
-  onClick?: () => void;
-  icon?: (props: IconProps) => JSX.Element;
-  color?: SVGGradientColor;
-  id?: string;
-  nyanCat?: boolean;
-  className?: string;
-  alwaysShowLabel?: boolean;
+  badge?: () => JSX.Element
+  label: string
+  path?: string
+  onClick?: () => void
+  icon?: (props: IconProps) => JSX.Element
+  color?: SVGGradientColor
+  id?: string
+  nyanCat?: boolean
+  className?: string
+  alwaysShowLabel?: boolean
 }
 
 export const NavBarButton = ({
@@ -31,23 +31,23 @@ export const NavBarButton = ({
   className,
   alwaysShowLabel,
 }: NavBarButtonProps) => {
-  const [isActive, setActive] = useState(false);
-  const router = useRouter();
+  const [isActive, setActive] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     if (router.asPath === path) {
-      setActive(true);
+      setActive(true)
     } else {
-      setActive(false);
+      setActive(false)
     }
-  }, [router.asPath, path]);
+  }, [router.asPath, path])
 
   const onButtonClick = () => {
-    setActive(true);
+    setActive(true)
     if (onClick) {
-      onClick();
+      onClick()
     }
-  };
+  }
 
   const MenuContentItem = () => {
     return (
@@ -74,13 +74,13 @@ export const NavBarButton = ({
           {label}
         </span>
       </>
-    );
-  };
+    )
+  }
   const baseClassName = classNames(
     `flex flex-col md:flex-row flex-1 md:flex-none items-center justify-center align-middle cursor-pointer`,
     nyanCat ? 'gap-3' : 'gap-2',
     className,
-  );
+  )
 
   if (path) {
     return (
@@ -89,12 +89,12 @@ export const NavBarButton = ({
           <MenuContentItem />
         </a>
       </Link>
-    );
+    )
   }
 
   return (
     <button onClick={onButtonClick} className={baseClassName}>
       <MenuContentItem />
     </button>
-  );
-};
+  )
+}

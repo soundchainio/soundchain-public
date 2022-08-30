@@ -1,5 +1,5 @@
 interface IconProps extends React.SVGProps<SVGSVGElement> {
-  purple?: boolean;
+  purple?: boolean
 }
 
 export const Auction = ({ purple, ...props }: IconProps) => {
@@ -31,5 +31,5 @@ export const Auction = ({ purple, ...props }: IconProps) => {
         </linearGradient>
       </defs>
     </svg>
-  );
-};
+  )
+}

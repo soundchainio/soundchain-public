@@ -1,23 +1,23 @@
-import { Button } from 'components/Button';
-import { useMe } from 'hooks/useMe';
-import Clip from '../icons/Clip';
-import { toast } from 'react-toastify';
+import { Button } from 'components/Button'
+import { useMe } from 'hooks/useMe'
+import Clip from '../icons/Clip'
+import { toast } from 'react-toastify'
 
 interface WalletAddressButtonProps {
-  address: string | null;
+  address: string | null
 }
 
 export const WalletAddressButton = ({ address }: WalletAddressButtonProps) => {
-  const me = useMe();
+  const me = useMe()
 
   if (!me || !address) {
-    return null;
+    return null
   }
 
   const handleClick = () => {
-    navigator.clipboard.writeText(address + '');
-    toast('Copied address to clipboard');
-  };
+    navigator.clipboard.writeText(address + '')
+    toast('Copied address to clipboard')
+  }
 
   return (
     <div className="h-8">
@@ -34,5 +34,5 @@ export const WalletAddressButton = ({ address }: WalletAddressButtonProps) => {
         {address.slice(0, 5)}...{address.slice(address.length - 3)}
       </Button>
     </div>
-  );
-};
+  )
+}

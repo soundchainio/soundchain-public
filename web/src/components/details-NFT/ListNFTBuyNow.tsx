@@ -1,25 +1,25 @@
-import { Button } from 'components/Button';
-import { InputField } from 'components/InputField';
-import MaxGasFee from 'components/MaxGasFee';
-import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar';
-import { SoundchainFee } from 'components/SoundchainFee';
-import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
-import useBlockchainV2 from 'hooks/useBlockchainV2';
-import { useWalletContext } from 'hooks/useWalletContext';
-import { Logo } from 'icons/Logo';
-import { Matic } from 'icons/Matic';
-import { useEffect, useState } from 'react';
-import ReactDatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
-import Web3 from 'web3';
-import { date, number, object, SchemaOf, string } from 'yup';
-import { CurrencyType } from '../../types/CurrenctyType';
+import { Button } from 'components/Button'
+import { InputField } from 'components/InputField'
+import MaxGasFee from 'components/MaxGasFee'
+import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar'
+import { SoundchainFee } from 'components/SoundchainFee'
+import { Form, Formik, FormikHelpers, FormikProps } from 'formik'
+import useBlockchainV2 from 'hooks/useBlockchainV2'
+import { useWalletContext } from 'hooks/useWalletContext'
+import { Logo } from 'icons/Logo'
+import { Matic } from 'icons/Matic'
+import { useEffect, useState } from 'react'
+import ReactDatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
+import Web3 from 'web3'
+import { date, number, object, SchemaOf, string } from 'yup'
+import { CurrencyType } from '../../types/CurrenctyType'
 
 export interface ListNFTBuyNowFormValues {
-  salePrice: number;
-  selectedCurrency: string;
-  royalty: number;
-  startTime: Date;
+  salePrice: number
+  selectedCurrency: string
+  royalty: number
+  startTime: Date
 }
 
 const validationSchema: SchemaOf<ListNFTBuyNowFormValues> = object().shape({
@@ -30,13 +30,13 @@ const validationSchema: SchemaOf<ListNFTBuyNowFormValues> = object().shape({
     // .min(new Date(new Date().getTime() + 10 * 1000 * 60), 'The start time should be at least ten minutes from now')
     .min(1, 'The start time should be at least ten minutes from now')
     .required(),
-});
+})
 
 interface ListNFTProps {
-  initialValues?: Partial<ListNFTBuyNowFormValues>;
-  submitLabel: string;
-  maxGasFee?: string;
-  handleSubmit: (values: ListNFTBuyNowFormValues, formikHelpers: FormikHelpers<ListNFTBuyNowFormValues>) => void;
+  initialValues?: Partial<ListNFTBuyNowFormValues>
+  submitLabel: string
+  maxGasFee?: string
+  handleSubmit: (values: ListNFTBuyNowFormValues, formikHelpers: FormikHelpers<ListNFTBuyNowFormValues>) => void
 }
 
 export const ListNFTBuyNow = ({ initialValues, maxGasFee, submitLabel, handleSubmit }: ListNFTProps) => {
@@ -45,22 +45,22 @@ export const ListNFTBuyNow = ({ initialValues, maxGasFee, submitLabel, handleSub
     royalty: initialValues?.royalty || 0,
     selectedCurrency: 'OGUN',
     startTime: initialValues?.startTime || new Date(new Date().getTime() + 10 * 1000 * 60),
-  };
-  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyType>('OGUN');
+  }
+  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyType>('OGUN')
 
-  const isMatic = selectedCurrency === 'MATIC';
-  const { web3 } = useWalletContext();
-  const { getRewardsRate } = useBlockchainV2();
-  const [rewardRatePercentage, setRewardsRatePercentage] = useState('');
+  const isMatic = selectedCurrency === 'MATIC'
+  const { web3 } = useWalletContext()
+  const { getRewardsRate } = useBlockchainV2()
+  const [rewardRatePercentage, setRewardsRatePercentage] = useState('')
 
   useEffect(() => {
     const fetchRewardRate = async () => {
-      const result1e4 = await getRewardsRate(web3 as Web3);
-      const calculatedPercentage = (parseInt(result1e4) / 10000) * 100;
-      setRewardsRatePercentage(calculatedPercentage.toString());
-    };
-    fetchRewardRate();
-  }, [setRewardsRatePercentage, getRewardsRate, web3]);
+      const result1e4 = await getRewardsRate(web3 as Web3)
+      const calculatedPercentage = (parseInt(result1e4) / 10000) * 100
+      setRewardsRatePercentage(calculatedPercentage.toString())
+    }
+    fetchRewardRate()
+  }, [setRewardsRatePercentage, getRewardsRate, web3])
 
   return (
     <div className="mb-2">
@@ -68,7 +68,7 @@ export const ListNFTBuyNow = ({ initialValues, maxGasFee, submitLabel, handleSub
         initialValues={defaultValues}
         validationSchema={validationSchema}
         onSubmit={(values, helper: FormikHelpers<ListNFTBuyNowFormValues>) => {
-          handleSubmit({ ...values, selectedCurrency, startTime: new Date(values.startTime) }, helper);
+          handleSubmit({ ...values, selectedCurrency, startTime: new Date(values.startTime) }, helper)
         }}
       >
         {({ values, errors, isSubmitting, setFieldValue }: FormikProps<ListNFTBuyNowFormValues>) => {
@@ -88,7 +88,7 @@ export const ListNFTBuyNow = ({ initialValues, maxGasFee, submitLabel, handleSub
                       (isMatic ? 'border-gray-30' : 'border-[#FDEE6E]')
                     }
                     onClick={() => {
-                      setSelectedCurrency('OGUN');
+                      setSelectedCurrency('OGUN')
                     }}
                   >
                     <div>
@@ -106,7 +106,7 @@ export const ListNFTBuyNow = ({ initialValues, maxGasFee, submitLabel, handleSub
                       (isMatic ? 'border-[#2BBDF7]' : 'border-gray-30')
                     }
                     onClick={() => {
-                      setSelectedCurrency('MATIC');
+                      setSelectedCurrency('MATIC')
                     }}
                   >
                     <div>
@@ -176,9 +176,9 @@ export const ListNFTBuyNow = ({ initialValues, maxGasFee, submitLabel, handleSub
                 </Button>
               </PlayerAwareBottomBar>
             </Form>
-          );
+          )
         }}
       </Formik>
     </div>
-  );
-};
+  )
+}

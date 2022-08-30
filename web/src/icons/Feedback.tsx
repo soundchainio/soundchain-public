@@ -6,5 +6,5 @@ export const Feedback = (props: React.SVGProps<SVGSVGElement>) => {
         fill="#fff"
       />
     </svg>
-  );
-};
+  )
+}

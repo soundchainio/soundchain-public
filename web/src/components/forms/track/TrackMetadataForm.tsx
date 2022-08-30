@@ -1,29 +1,29 @@
-import { Badge } from 'components/Badge';
-import { Button } from 'components/Button';
-import { InputField } from 'components/InputField';
-import { Matic } from 'components/Matic';
-import { TextareaField } from 'components/TextareaField';
-import { WalletSelector } from 'components/WalletSelector';
-import { Form, Formik, FormikErrors } from 'formik';
-import { useMaxMintGasFee } from 'hooks/useMaxMintGasFee';
-import { useWalletContext } from 'hooks/useWalletContext';
-import { Genre } from 'lib/graphql';
-import { useEffect, useState } from 'react';
-import { GenreLabel, genres } from 'utils/Genres';
-import * as yup from 'yup';
-import { ArtworkUploader } from './ArtworkUploader';
+import { Badge } from 'components/Badge'
+import { Button } from 'components/Button'
+import { InputField } from 'components/InputField'
+import { Matic } from 'components/Matic'
+import { TextareaField } from 'components/TextareaField'
+import { WalletSelector } from 'components/WalletSelector'
+import { Form, Formik, FormikErrors } from 'formik'
+import { useMaxMintGasFee } from 'hooks/useMaxMintGasFee'
+import { useWalletContext } from 'hooks/useWalletContext'
+import { Genre } from 'lib/graphql'
+import { useEffect, useState } from 'react'
+import { GenreLabel, genres } from 'utils/Genres'
+import * as yup from 'yup'
+import { ArtworkUploader } from './ArtworkUploader'
 
 export interface FormValues {
-  editionQuantity: number;
-  title: string;
-  description: string;
-  utilityInfo?: string;
-  album?: string;
-  copyright?: string;
-  releaseYear?: number;
-  genres?: Genre[];
-  artworkFile?: File | null;
-  royalty: number;
+  editionQuantity: number
+  title: string
+  description: string
+  utilityInfo?: string
+  album?: string
+  copyright?: string
+  releaseYear?: number
+  genres?: Genre[]
+  artworkFile?: File | null
+  royalty: number
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
@@ -38,15 +38,15 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   genres: yup.array(),
   artworkFile: yup.mixed().required('Artwork is required'),
   royalty: yup.number().integer().min(0).max(100).required('Royalty is a required field'),
-});
+})
 
 export interface InitialValues extends Omit<Partial<FormValues>, 'artworkUrl'> {
-  artworkFile?: File;
+  artworkFile?: File
 }
 
 interface Props {
-  initialValues?: InitialValues;
-  handleSubmit: (values: FormValues) => void;
+  initialValues?: InitialValues
+  handleSubmit: (values: FormValues) => void
 }
 
 export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
@@ -61,7 +61,7 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
     genres: initialValues?.genres || [],
     artworkFile: initialValues?.artworkFile || null,
     royalty: 0,
-  };
+  }
 
   return (
     <Formik<FormValues>
@@ -71,28 +71,25 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
       onSubmit={handleSubmit}
     >
       {({ setFieldValue, values, errors }) => {
-        return (
-          <InnerForm setFieldValue={setFieldValue} values={values} errors={errors} initialValues={initialValues} />
-        );
+        return <InnerForm setFieldValue={setFieldValue} values={values} errors={errors} initialValues={initialValues} />
       }}
     </Formik>
-  );
-};
+  )
+}
 
 interface InnerFormProps {
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-  setFieldValue: (field: string, value: any) => void;
+  setFieldValue: (field: string, value: any) => void
   errors: FormikErrors<FormValues>
-  values: FormValues;
-  initialValues?: InitialValues;
-
+  values: FormValues
+  initialValues?: InitialValues
 }
 
 function InnerForm(props: InnerFormProps) {
-  const { setFieldValue, errors, values, initialValues } = props;
-  const maxMintGasFee = useMaxMintGasFee(values.editionQuantity);
-  const [enoughFunds, setEnoughFunds] = useState<boolean>();
-  const { balance } = useWalletContext();
+  const { setFieldValue, errors, values, initialValues } = props
+  const maxMintGasFee = useMaxMintGasFee(values.editionQuantity)
+  const [enoughFunds, setEnoughFunds] = useState<boolean>()
+  const { balance } = useWalletContext()
 
   const handleGenreClick = (
     setFieldValue: (field: string, value: Genre[]) => void,
@@ -100,21 +97,21 @@ function InnerForm(props: InnerFormProps) {
     currentValues?: Genre[],
   ) => {
     if (!currentValues) {
-      setFieldValue('genres', [newValue]);
+      setFieldValue('genres', [newValue])
     } else if (currentValues.includes(newValue)) {
-      const nextGenres = currentValues.filter(g => g !== newValue);
-      setFieldValue('genres', nextGenres);
-      return;
+      const nextGenres = currentValues.filter(g => g !== newValue)
+      setFieldValue('genres', nextGenres)
+      return
     } else {
-      setFieldValue('genres', [...currentValues, newValue]);
+      setFieldValue('genres', [...currentValues, newValue])
     }
-  };
+  }
 
   useEffect(() => {
     if (balance && maxMintGasFee) {
-      setEnoughFunds(Number(balance) > Number(maxMintGasFee));
+      setEnoughFunds(Number(balance) > Number(maxMintGasFee))
     }
-  }, [maxMintGasFee, balance]);
+  }, [maxMintGasFee, balance])
 
   return (
     <Form className="flex h-full flex-col gap-4">
@@ -145,7 +142,7 @@ function InnerForm(props: InnerFormProps) {
         <InputField name="releaseYear" type="number" label="RELEASE YEAR" />
         <InputField name="copyright" type="text" label="COPYRIGHT" maxLength={100} />
       </div>
-      <div className='px-4'>
+      <div className="px-4">
         <TextareaField rows={3} name="utilityInfo" label="UTILITY" maxLength={500} />
       </div>
       <div className="px-4 font-bold text-gray-80">
@@ -165,9 +162,7 @@ function InnerForm(props: InnerFormProps) {
         <div className="flex justify-between gap-2 bg-gray-20 p-4 text-gray-80">
           <label htmlFor="royalty">
             <div className="text-[11px] font-bold uppercase">Royalty %</div>
-            <div className="text-[9px]">
-              Setting a royalty % will allow you to earn a cut on all secondary sales.
-            </div>
+            <div className="text-[9px]">Setting a royalty % will allow you to earn a cut on all secondary sales.</div>
           </label>
           <div>
             <InputField name="royalty" type="number" symbol="%" alignTextCenter step={1} />
@@ -195,5 +190,5 @@ function InnerForm(props: InnerFormProps) {
         </div>
       </div>
     </Form>
-  );
+  )
 }

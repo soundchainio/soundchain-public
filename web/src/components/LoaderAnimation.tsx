@@ -1,23 +1,27 @@
-import { Player } from '@lottiefiles/react-lottie-player';
-import React from 'react';
+import { Player } from '@lottiefiles/react-lottie-player'
+import React from 'react'
 
 interface LoaderProps {
-  loadingMessage?: string;
-  ring?: boolean;
+  loadingMessage?: string
+  ring?: boolean
 }
 
 export const LoaderAnimation = ({ loadingMessage, ring }: LoaderProps) => {
   return (
     <>
-      {
-        ring ?
-          <div className="lds-ring "><div></div><div></div><div></div><div></div></div>
-          :
-          <div className="flex items-center">
-            <Player autoplay loop src="/animations/loading-dots.json" className="w-12 h-12" />
-            <span className="text-gray-80 text-xs font-bold">{loadingMessage}</span>
-          </div>
-      }
+      {ring ? (
+        <div className="lds-ring ">
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+      ) : (
+        <div className="flex items-center">
+          <Player autoplay loop src="/animations/loading-dots.json" className="h-12 w-12" />
+          <span className="text-xs font-bold text-gray-80">{loadingMessage}</span>
+        </div>
+      )}
     </>
-  );
-};
+  )
+}

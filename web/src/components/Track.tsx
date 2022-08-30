@@ -1,19 +1,19 @@
-import { NotAvailableMessage } from 'components/NotAvailableMessage';
-import { TrackQuery, Track as TheTrack } from 'lib/graphql';
-import React from 'react';
-import { MiniAudioPlayer } from './MiniAudioPlayer';
+import { NotAvailableMessage } from 'components/NotAvailableMessage'
+import { TrackQuery, Track as TheTrack } from 'lib/graphql'
+import React from 'react'
+import { MiniAudioPlayer } from './MiniAudioPlayer'
 
 interface TrackProps {
-  track: TrackQuery['track'] | TheTrack;
-  coverPhotoUrl?: string;
-  hideBadgeAndPrice?: boolean;
+  track: TrackQuery['track'] | TheTrack
+  coverPhotoUrl?: string
+  hideBadgeAndPrice?: boolean
 }
 
 export const Track = (props: TrackProps) => {
-  const { track, coverPhotoUrl, hideBadgeAndPrice } = props;
+  const { track, coverPhotoUrl, hideBadgeAndPrice } = props
 
   if (track.deleted) {
-    return <NotAvailableMessage type="track" />;
+    return <NotAvailableMessage type="track" />
   }
 
   return (
@@ -34,5 +34,5 @@ export const Track = (props: TrackProps) => {
         listingCount: track.listingCount,
       }}
     />
-  );
-};
+  )
+}

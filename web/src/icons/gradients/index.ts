@@ -1,14 +1,14 @@
-import { IconProps } from 'icons/types/IconProps';
-import { BlueGradient } from './BlueGradient';
-import { GreenBlue } from './GreenBlue';
-import { GreenGradient } from './GreenGradient';
-import { GreenYellowGradient } from './GreenYellow';
-import { PinkBlueGradient } from './PinkBlueGradient';
-import { PurpleGradient } from './Purple';
-import { PurpleGreenGradient } from './PurpleGreen';
-import { RainbowGradient } from './RainbowGradient';
-import { RedGradient } from './RedGradient';
-import { YellowGradient } from './Yellow';
+import { IconProps } from 'icons/types/IconProps'
+import { BlueGradient } from './BlueGradient'
+import { GreenBlue } from './GreenBlue'
+import { GreenGradient } from './GreenGradient'
+import { GreenYellowGradient } from './GreenYellow'
+import { PinkBlueGradient } from './PinkBlueGradient'
+import { PurpleGradient } from './Purple'
+import { PurpleGreenGradient } from './PurpleGreen'
+import { RainbowGradient } from './RainbowGradient'
+import { RedGradient } from './RedGradient'
+import { YellowGradient } from './Yellow'
 
 export type SVGGradientColor =
   | 'yellow'
@@ -20,7 +20,7 @@ export type SVGGradientColor =
   | 'blue'
   | 'red'
   | 'rainbow'
-  | 'pink-blue';
+  | 'pink-blue'
 
 const SVGGradients: Record<SVGGradientColor, (props: IconProps) => JSX.Element> = {
   green: GreenGradient,
@@ -33,13 +33,13 @@ const SVGGradients: Record<SVGGradientColor, (props: IconProps) => JSX.Element> 
   red: RedGradient,
   rainbow: RainbowGradient,
   'pink-blue': PinkBlueGradient,
-};
+}
 
 interface SVGGradientProps {
-  color: SVGGradientColor;
-  id?: string;
+  color: SVGGradientColor
+  id?: string
 }
 
 export const SVGGradient = ({ color, ...props }: SVGGradientProps) => {
-  return SVGGradients[color](props);
-};
+  return SVGGradients[color](props)
+}

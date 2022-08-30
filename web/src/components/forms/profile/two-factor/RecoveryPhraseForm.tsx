@@ -1,33 +1,33 @@
-import { useFormikContext } from 'formik';
-import { toast } from 'react-toastify';
-import { Label } from 'components/Label';
-import { Info } from 'icons/Info';
-import { Copy } from 'icons/Copy';
+import { useFormikContext } from 'formik'
+import { toast } from 'react-toastify'
+import { Label } from 'components/Label'
+import { Info } from 'icons/Info'
+import { Copy } from 'icons/Copy'
 
 type FormValues = {
-  recoveryPhrase: string;
-};
+  recoveryPhrase: string
+}
 
 export const RecoveryPhraseForm = () => {
   const {
     values: { recoveryPhrase },
-  } = useFormikContext<FormValues>();
+  } = useFormikContext<FormValues>()
 
   return (
-    <div className="flex flex-col flex-grow">
-      <div className="flex flex-col flex-grow">
+    <div className="flex flex-grow flex-col">
+      <div className="flex flex-grow flex-col">
         <Label textSize="base" className="mb-2">
           RECOVERY PHRASE
         </Label>
 
-        <p className="text-gray-60 mb-4">
+        <p className="mb-4 text-gray-60">
           Write down or copy these words in the right order and save them somewhere safe.
         </p>
 
         <div className="bg-gray-1A p-3">
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
             {recoveryPhrase.split(' ').map((word, index) => (
-              <span key={word} className="text-gray-80 text-sm border border-gray-80 rounded px-2 py-1">
+              <span key={word} className="rounded border border-gray-80 px-2 py-1 text-sm text-gray-80">
                 {index + 1} {word}
               </span>
             ))}
@@ -36,15 +36,15 @@ export const RecoveryPhraseForm = () => {
 
         <div className="flex justify-center">
           <button
-            className="w-24 h-8 mt-2 flex gap-1 items-center justify-center border-2 border-gray-30 border-opacity-75 rounded p-1 text-xxs"
+            className="mt-2 flex h-8 w-24 items-center justify-center gap-1 rounded border-2 border-gray-30 border-opacity-75 p-1 text-xxs"
             onClick={() => {
-              navigator.clipboard.writeText(recoveryPhrase);
-              toast('Copied to clipboard');
+              navigator.clipboard.writeText(recoveryPhrase)
+              toast('Copied to clipboard')
             }}
             type="button"
           >
             <Copy />
-            <span className="text-gray-80 uppercase leading-none">copy</span>
+            <span className="uppercase leading-none text-gray-80">copy</span>
           </button>
         </div>
       </div>
@@ -63,5 +63,5 @@ export const RecoveryPhraseForm = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}

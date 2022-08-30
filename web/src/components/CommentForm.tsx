@@ -1,48 +1,48 @@
-import { useModalState } from 'contexts/providers/modal';
-import { Form, Formik, FormikHelpers } from 'formik';
-import { UpdateCommentInput, useUpdateCommentMutation } from 'lib/graphql';
-import * as yup from 'yup';
-import { Button } from './Button';
-import { PostBodyField } from './PostBodyField';
+import { useModalState } from 'contexts/providers/modal'
+import { Form, Formik, FormikHelpers } from 'formik'
+import { UpdateCommentInput, useUpdateCommentMutation } from 'lib/graphql'
+import * as yup from 'yup'
+import { Button } from './Button'
+import { PostBodyField } from './PostBodyField'
 
 interface InitialValues {
-  body: UpdateCommentInput['body'];
+  body: UpdateCommentInput['body']
 }
 
 interface CommentFormProps {
-  initialValues: InitialValues;
-  afterSubmit: () => void;
-  onCancel: (setFieldValue: (field: string, value: string) => void) => void;
+  initialValues: InitialValues
+  afterSubmit: () => void
+  onCancel: (setFieldValue: (field: string, value: string) => void) => void
 }
 
 export interface FormValues {
-  body: UpdateCommentInput['body'];
+  body: UpdateCommentInput['body']
 }
 
 const postSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   body: yup.string().required().max(160),
-});
+})
 
-const defaultInitialValues = { body: '' };
+const defaultInitialValues = { body: '' }
 
 export const CommentForm = ({ afterSubmit, initialValues, onCancel }: CommentFormProps) => {
-  const { editCommentId } = useModalState();
-  const [updateComment] = useUpdateCommentMutation();
+  const { editCommentId } = useModalState()
+  const [updateComment] = useUpdateCommentMutation()
 
   const onSubmit = async (values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
     if (!editCommentId) {
-      resetForm();
-      afterSubmit();
-      return;
+      resetForm()
+      afterSubmit()
+      return
     }
 
     await updateComment({
       variables: { input: { body: values.body, commentId: editCommentId } },
-    });
+    })
 
-    resetForm();
-    afterSubmit();
-  };
+    resetForm()
+    afterSubmit()
+  }
 
   return (
     <Formik
@@ -52,13 +52,13 @@ export const CommentForm = ({ afterSubmit, initialValues, onCancel }: CommentFor
       onSubmit={onSubmit}
     >
       {({ setFieldValue, isValid }) => (
-        <Form className="flex flex-col h-full">
+        <Form className="flex h-full flex-col">
           <div className="flex items-center rounded-tl-3xl rounded-tr-3xl bg-gray-20">
-            <div className="p-2 text-gray-400 font-bold flex-1 text-center" onClick={() => onCancel(setFieldValue)}>
+            <div className="flex-1 p-2 text-center font-bold text-gray-400" onClick={() => onCancel(setFieldValue)}>
               Cancel
             </div>
-            <div className="flex-1 text-center text-white font-bold">Edit Comment</div>
-            <div className="flex-1 text-center m-2">
+            <div className="flex-1 text-center font-bold text-white">Edit Comment</div>
+            <div className="m-2 flex-1 text-center">
               <div className="ml-6">
                 <Button className="bg-gray-30 text-sm " type="submit" disabled={!isValid} variant="rainbow-rounded">
                   Save
@@ -70,5 +70,5 @@ export const CommentForm = ({ afterSubmit, initialValues, onCancel }: CommentFor
         </Form>
       )}
     </Formik>
-  );
-};
+  )
+}

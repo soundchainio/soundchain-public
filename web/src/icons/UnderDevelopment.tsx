@@ -1,5 +1,5 @@
-import * as React from 'react';
-import { IconProps } from './types/IconProps';
+import * as React from 'react'
+import { IconProps } from './types/IconProps'
 
 export const UnderDevelopment = ({ id = 'logo', ...props }: IconProps) => {
   return (
@@ -147,5 +147,5 @@ export const UnderDevelopment = ({ id = 'logo', ...props }: IconProps) => {
         fill="#F06B5F"
       />
     </svg>
-  );
-};
+  )
+}

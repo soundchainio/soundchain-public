@@ -1,17 +1,17 @@
-import { Explore } from 'components/Explore';
-import SEO from 'components/SEO';
-import { TopNavBarProps } from 'components/TopNavBar';
-import { useLayoutContext } from 'hooks/useLayoutContext';
-import { cacheFor } from 'lib/apollo';
-import { protectPage } from 'lib/protectPage';
-import { useEffect, useMemo } from 'react';
+import { Explore } from 'components/Explore'
+import SEO from 'components/SEO'
+import { TopNavBarProps } from 'components/TopNavBar'
+import { useLayoutContext } from 'hooks/useLayoutContext'
+import { cacheFor } from 'lib/apollo'
+import { protectPage } from 'lib/protectPage'
+import { useEffect, useMemo } from 'react'
 
 export const getServerSideProps = protectPage((context, apolloClient) => {
-  return cacheFor(ExplorePage, {}, context, apolloClient);
-});
+  return cacheFor(ExplorePage, {}, context, apolloClient)
+})
 
 export default function ExplorePage() {
-  const { setTopNavBarProps } = useLayoutContext();
+  const { setTopNavBarProps } = useLayoutContext()
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
@@ -20,11 +20,11 @@ export default function ExplorePage() {
       leftButton: undefined,
     }),
     [],
-  );
+  )
 
   useEffect(() => {
-    setTopNavBarProps(topNavBarProps);
-  }, [setTopNavBarProps, topNavBarProps]);
+    setTopNavBarProps(topNavBarProps)
+  }, [setTopNavBarProps, topNavBarProps])
 
   return (
     <>
@@ -35,5 +35,5 @@ export default function ExplorePage() {
       />
       <Explore />
     </>
-  );
+  )
 }

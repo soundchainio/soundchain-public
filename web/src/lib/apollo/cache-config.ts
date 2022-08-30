@@ -1,4 +1,4 @@
-import { InMemoryCacheConfig } from '@apollo/client';
+import { InMemoryCacheConfig } from '@apollo/client'
 import {
   ChatConnection,
   FeedConnection,
@@ -10,8 +10,8 @@ import {
   PolygonscanResult,
   Post,
   PostConnection,
-  TrackConnection
-} from 'lib/graphql';
+  TrackConnection,
+} from 'lib/graphql'
 
 export const cacheConfig: InMemoryCacheConfig = {
   typePolicies: {
@@ -21,19 +21,19 @@ export const cacheConfig: InMemoryCacheConfig = {
           return toReference({
             __typename: 'Post',
             id: args?.id,
-          });
+          })
         },
         comment(_, { args, toReference }) {
           return toReference({
             __typename: 'Comment',
             id: args?.id,
-          });
+          })
         },
         message(_, { args, toReference }) {
           return toReference({
             __typename: 'Message',
             id: args?.id,
-          });
+          })
         },
         comments: {
           keyArgs: ['postId'],
@@ -42,7 +42,7 @@ export const cacheConfig: InMemoryCacheConfig = {
               return {
                 nodes,
                 pageInfo,
-              };
+              }
             }
 
             if (args?.page.before) {
@@ -53,7 +53,7 @@ export const cacheConfig: InMemoryCacheConfig = {
                   startCursor: pageInfo.startCursor,
                   hasPreviousPage: pageInfo.hasPreviousPage,
                 },
-              };
+              }
             }
 
             return {
@@ -63,25 +63,25 @@ export const cacheConfig: InMemoryCacheConfig = {
                 endCursor: pageInfo.endCursor,
                 hasNextPage: pageInfo.hasNextPage,
               },
-            };
+            }
           },
         },
         feed: {
           keyArgs: false,
           merge(existing, incoming, { readField }): FeedConnection {
-            const nodes = existing ? { ...existing.nodes } : {};
+            const nodes = existing ? { ...existing.nodes } : {}
 
             incoming.nodes.forEach((node: FeedItem) => {
-              const key = readField('id', node);
-              nodes[key as string] = node;
-            });
+              const key = readField('id', node)
+              nodes[key as string] = node
+            })
 
             return {
               pageInfo: {
                 ...incoming.pageInfo,
               },
               nodes,
-            };
+            }
           },
 
           read(existing): FeedConnection | void {
@@ -89,85 +89,85 @@ export const cacheConfig: InMemoryCacheConfig = {
               return {
                 pageInfo: { ...existing.pageInfo },
                 nodes: Object.values(existing.nodes),
-              };
+              }
             }
           },
         },
         posts: {
           keyArgs: ['filter'],
           merge(existing, incoming, { readField }): PostConnection {
-            const nodes = existing ? { ...existing.nodes } : {};
+            const nodes = existing ? { ...existing.nodes } : {}
 
             incoming.nodes.forEach((node: Post) => {
-              const key = readField('id', node);
-              nodes[key as string] = node;
-            });
+              const key = readField('id', node)
+              nodes[key as string] = node
+            })
 
             return {
               pageInfo: {
                 ...incoming.pageInfo,
               },
               nodes,
-            };
+            }
           },
           read(existing): PostConnection | void {
             if (existing) {
               return {
                 pageInfo: { ...existing.pageInfo },
                 nodes: Object.values(existing.nodes),
-              };
+              }
             }
           },
         },
         followers: {
           keyArgs: ['id'],
           merge(existing, incoming, { readField }): FollowConnection {
-            const nodes = existing ? { ...existing.nodes } : {};
+            const nodes = existing ? { ...existing.nodes } : {}
 
             incoming.nodes.forEach((node: Follow) => {
-              const key = readField('id', node);
-              nodes[key as string] = node;
-            });
+              const key = readField('id', node)
+              nodes[key as string] = node
+            })
 
             return {
               pageInfo: {
                 ...incoming.pageInfo,
               },
               nodes,
-            };
+            }
           },
           read(existing): FollowConnection | void {
             if (existing) {
               return {
                 pageInfo: { ...existing.pageInfo },
                 nodes: Object.values(existing.nodes),
-              };
+              }
             }
           },
         },
         following: {
           keyArgs: ['id'],
           merge(existing, incoming, { readField }): FollowConnection {
-            const nodes = existing ? { ...existing.nodes } : {};
+            const nodes = existing ? { ...existing.nodes } : {}
 
             incoming.nodes.forEach((node: Follow) => {
-              const key = readField('id', node);
-              nodes[key as string] = node;
-            });
+              const key = readField('id', node)
+              nodes[key as string] = node
+            })
 
             return {
               pageInfo: {
                 ...incoming.pageInfo,
               },
               nodes,
-            };
+            }
           },
           read(existing): FollowConnection | void {
             if (existing) {
               return {
                 pageInfo: { ...existing.pageInfo },
                 nodes: Object.values(existing.nodes),
-              };
+              }
             }
           },
         },
@@ -177,7 +177,7 @@ export const cacheConfig: InMemoryCacheConfig = {
             return {
               nodes: [...existing.nodes, ...nodes],
               pageInfo,
-            };
+            }
           },
         },
         tracks: {
@@ -186,7 +186,7 @@ export const cacheConfig: InMemoryCacheConfig = {
             return {
               nodes: [...existing.nodes, ...nodes],
               pageInfo,
-            };
+            }
           },
         },
         groupedTracks: {
@@ -195,7 +195,7 @@ export const cacheConfig: InMemoryCacheConfig = {
             return {
               nodes: [...existing.nodes, ...nodes],
               pageInfo,
-            };
+            }
           },
         },
         exploreTracks: {
@@ -204,7 +204,7 @@ export const cacheConfig: InMemoryCacheConfig = {
             return {
               nodes: [...existing.nodes, ...nodes],
               pageInfo,
-            };
+            }
           },
         },
         exploreUsers: {
@@ -213,7 +213,7 @@ export const cacheConfig: InMemoryCacheConfig = {
             return {
               nodes: [...existing.nodes, ...nodes],
               pageInfo,
-            };
+            }
           },
         },
         favoriteTracks: {
@@ -222,7 +222,7 @@ export const cacheConfig: InMemoryCacheConfig = {
             return {
               nodes: [...existing.nodes, ...nodes],
               pageInfo,
-            };
+            }
           },
         },
         followedArtists: {
@@ -231,7 +231,7 @@ export const cacheConfig: InMemoryCacheConfig = {
             return {
               nodes: [...existing.nodes, ...nodes],
               pageInfo,
-            };
+            }
           },
         },
         getTransactionHistory: {
@@ -240,7 +240,7 @@ export const cacheConfig: InMemoryCacheConfig = {
             return {
               result: [...existing.result, ...result],
               nextPage,
-            };
+            }
           },
         },
         listingItems: {
@@ -249,7 +249,7 @@ export const cacheConfig: InMemoryCacheConfig = {
             return {
               nodes: [...existing.nodes, ...nodes],
               pageInfo,
-            };
+            }
           },
         },
         buyNowListingItems: {
@@ -258,10 +258,10 @@ export const cacheConfig: InMemoryCacheConfig = {
             return {
               nodes: [...existing.nodes, ...nodes],
               pageInfo,
-            };
+            }
           },
         },
       },
     },
   },
-};
+}
