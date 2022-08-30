@@ -1,6 +1,6 @@
-import React, { ReactNode } from 'react';
-import classNames from 'classnames';
-import { LinkAnchor } from '../LinkAnchor';
+import React, { ReactNode } from 'react'
+import classNames from 'classnames'
+import { LinkAnchor } from '../LinkAnchor'
 
 type Props = {
   children: ReactNode
@@ -14,7 +14,7 @@ function OutlinedLink({ bgColor, borderColor, className, children, ...rest }: Pr
     <div className={classNames('p-0.5', borderColor)}>
       <LinkAnchor
         className={classNames(
-          'flex items-center justify-center w-full h-full font-bold h-full bg-opacity-75 text-xs font-semibold text-white',
+          'flex h-full h-full w-full items-center justify-center bg-opacity-75 text-xs font-bold font-semibold text-white',
           className,
           bgColor ? bgColor : 'bg-gray-10',
         )}
@@ -23,7 +23,7 @@ function OutlinedLink({ bgColor, borderColor, className, children, ...rest }: Pr
         <span>{children}</span>
       </LinkAnchor>
     </div>
-  );
+  )
 }
 
-export default OutlinedLink;
+export default OutlinedLink

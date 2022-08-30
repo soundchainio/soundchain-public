@@ -1,6 +1,6 @@
-import React from 'react';
-import { SVGGradient } from './gradients';
-import { IconProps } from './types/IconProps';
+import React from 'react'
+import { SVGGradient } from './gradients'
+import { IconProps } from './types/IconProps'
 
 export const Checkmark = ({ color, id = '', ...props }: IconProps) => {
   return (
@@ -11,5 +11,5 @@ export const Checkmark = ({ color, id = '', ...props }: IconProps) => {
       ></path>
       {color && <SVGGradient id={id} color={color} />}
     </svg>
-  );
-};
+  )
+}

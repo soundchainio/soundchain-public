@@ -1,40 +1,40 @@
-import { Marketplace } from 'components/Marketplace';
-import SEO from 'components/SEO';
-import { TopNavBarProps } from 'components/TopNavBar';
-import { useLayoutContext } from 'hooks/useLayoutContext';
-import { cacheFor, createApolloClient } from 'lib/apollo';
-import { MeDocument, MeQuery } from 'lib/graphql';
-import { GetServerSideProps } from 'next';
-import { useEffect, useMemo } from 'react';
+import { Marketplace } from 'components/Marketplace'
+import SEO from 'components/SEO'
+import { TopNavBarProps } from 'components/TopNavBar'
+import { useLayoutContext } from 'hooks/useLayoutContext'
+import { cacheFor, createApolloClient } from 'lib/apollo'
+import { MeDocument, MeQuery } from 'lib/graphql'
+import { GetServerSideProps } from 'next'
+import { useEffect, useMemo } from 'react'
 
 interface HomePageProps {
-  me?: MeQuery['me'];
+  me?: MeQuery['me']
 }
 
 export const getServerSideProps: GetServerSideProps<HomePageProps> = async context => {
-  const apolloClient = createApolloClient(context);
+  const apolloClient = createApolloClient(context)
 
   const { data } = await apolloClient.query({
     query: MeDocument,
     context,
-  });
+  })
 
-  return cacheFor(HomePage, { me: data.me }, context, apolloClient);
-};
+  return cacheFor(HomePage, { me: data.me }, context, apolloClient)
+}
 
 export default function HomePage({}: HomePageProps) {
-  const { setTopNavBarProps } = useLayoutContext();
+  const { setTopNavBarProps } = useLayoutContext()
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
       title: 'Marketplace',
     }),
     [],
-  );
+  )
 
   useEffect(() => {
-    setTopNavBarProps(topNavBarProps);
-  }, [setTopNavBarProps, topNavBarProps]);
+    setTopNavBarProps(topNavBarProps)
+  }, [setTopNavBarProps, topNavBarProps])
 
   return (
     <>
@@ -45,5 +45,5 @@ export default function HomePage({}: HomePageProps) {
       />
       <Marketplace />
     </>
-  );
+  )
 }

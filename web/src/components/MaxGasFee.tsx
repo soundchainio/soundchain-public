@@ -1,15 +1,15 @@
-import { Matic } from 'components/Matic';
-import { useMaxGasFee } from 'hooks/useMaxGasFee';
-import Image from 'next/image';
+import { Matic } from 'components/Matic'
+import { useMaxGasFee } from 'hooks/useMaxGasFee'
+import Image from 'next/image'
 
 interface MaxGasFeeProps {
-  maxGasFee?: string;
-  text?: string;
+  maxGasFee?: string
+  text?: string
 }
 
 export default function MaxGasFee(props: MaxGasFeeProps) {
-  const {text = 'Max gas fee', maxGasFee} = props;
-  const defaultMaxGasFee = useMaxGasFee();
+  const { text = 'Max gas fee', maxGasFee } = props
+  const defaultMaxGasFee = useMaxGasFee()
   return (
     <div className="flex justify-between text-gray-80">
       <p className="flex items-center gap-2 text-xs font-bold uppercase">
@@ -17,5 +17,5 @@ export default function MaxGasFee(props: MaxGasFeeProps) {
       </p>
       <Matic value={maxGasFee || defaultMaxGasFee} variant="currency-inline" />
     </div>
-  );
+  )
 }

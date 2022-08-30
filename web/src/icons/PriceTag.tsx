@@ -21,5 +21,5 @@ export const PriceTag = (props: React.SVGProps<SVGSVGElement>) => {
         </defs>
       )}
     </svg>
-  );
-};
+  )
+}

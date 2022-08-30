@@ -1,7 +1,7 @@
 export interface DefaultCoverProps {
-  selected: boolean;
+  selected: boolean
 }
 
 export interface VantaEffect {
-  destroy: () => void;
+  destroy: () => void
 }

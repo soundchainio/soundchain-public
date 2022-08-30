@@ -6,5 +6,5 @@ export const Anchor = (props: React.SVGProps<SVGSVGElement>) => {
         fill="#505050"
       />
     </svg>
-  );
-};
+  )
+}

@@ -1,4 +1,4 @@
-import { IconProps } from 'icons/types/IconProps';
+import { IconProps } from 'icons/types/IconProps'
 
 export const GreenGradient = ({ id }: IconProps) => {
   return (
@@ -15,5 +15,5 @@ export const GreenGradient = ({ id }: IconProps) => {
         <stop offset="1" stopColor="#52B33B"></stop>
       </linearGradient>
     </defs>
-  );
-};
+  )
+}

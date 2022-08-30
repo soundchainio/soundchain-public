@@ -1,21 +1,21 @@
-import { RefreshIcon } from '@heroicons/react/solid';
+import { RefreshIcon } from '@heroicons/react/solid'
 
 export const RepostPreviewSkeleton = () => (
-  <div className=" bg-gray-20 my-4">
-    <div className="flex items-center font-bold bg-gray-20 text-gray-400 text-sm">
-      <RefreshIcon className="h-4 w-4 mr-1" /> Repost
+  <div className=" my-4 bg-gray-20">
+    <div className="flex items-center bg-gray-20 text-sm font-bold text-gray-400">
+      <RefreshIcon className="mr-1 h-4 w-4" /> Repost
     </div>
-    <div className="space-y-6 p-4 bg-gray-30 rounded-lg mb-2">
-      <div className="flex items-center space-x-6 animate-pulse ">
-        <div className="rounded-full bg-gray-40 w-8 h-8"></div>
-        <div className="w-20 h-4 bg-gray-40"></div>
+    <div className="mb-2 space-y-6 rounded-lg bg-gray-30 p-4">
+      <div className="flex animate-pulse items-center space-x-6 ">
+        <div className="h-8 w-8 rounded-full bg-gray-40"></div>
+        <div className="h-4 w-20 bg-gray-40"></div>
       </div>
-      <div className="h-3 bg-gray-40 animate-pulse"></div>
-      <div className="flex space-x-3 animate-pulse">
-        <div className="h-3 bg-gray-40 w-20"></div>
-        <div className="h-3 bg-gray-40 w-20"></div>
-        <div className="h-3 bg-gray-40 w-20"></div>
+      <div className="h-3 animate-pulse bg-gray-40"></div>
+      <div className="flex animate-pulse space-x-3">
+        <div className="h-3 w-20 bg-gray-40"></div>
+        <div className="h-3 w-20 bg-gray-40"></div>
+        <div className="h-3 w-20 bg-gray-40"></div>
       </div>
     </div>
   </div>
-);
+)

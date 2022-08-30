@@ -234,5 +234,5 @@ export const MetaMask = (props: React.SVGProps<SVGSVGElement>) => {
         strokeLinejoin="round"
       />
     </svg>
-  );
-};
+  )
+}

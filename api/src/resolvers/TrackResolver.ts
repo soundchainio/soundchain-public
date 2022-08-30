@@ -52,6 +52,7 @@ export class TrackResolver {
     @Root() { _id: trackId, trackEditionId, playbackCount }: Track,
   ): Promise<string> {
     const playbackCountToUse = trackEditionId ? await trackService.playbackCount(trackId, trackEditionId) : playbackCount;
+
     return playbackCountToUse ? new Intl.NumberFormat('en-US').format(playbackCountToUse) : '';
   }
 

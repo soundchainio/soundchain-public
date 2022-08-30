@@ -1,20 +1,20 @@
-import { Button } from 'components/Button';
-import { InputField } from 'components/InputField';
-import { Ogun } from 'components/Ogun';
-import { Form, Formik } from 'formik';
-import useBlockchain, { gas } from 'hooks/useBlockchain';
-import { useMe } from 'hooks/useMe';
-import { useWalletContext } from 'hooks/useWalletContext';
-import { Logo } from 'icons/Logo';
-import React, { useEffect, useState } from 'react';
-import * as yup from 'yup';
+import { Button } from 'components/Button'
+import { InputField } from 'components/InputField'
+import { Ogun } from 'components/Ogun'
+import { Form, Formik } from 'formik'
+import useBlockchain, { gas } from 'hooks/useBlockchain'
+import { useMe } from 'hooks/useMe'
+import { useWalletContext } from 'hooks/useWalletContext'
+import { Logo } from 'icons/Logo'
+import React, { useEffect, useState } from 'react'
+import * as yup from 'yup'
 
 export interface FormValues {
-  recipient: string;
-  amount: string;
-  gasPrice?: string;
-  gasLimit?: number;
-  totalGasFee?: string;
+  recipient: string
+  amount: string
+  gasPrice?: string
+  gasLimit?: number
+  totalGasFee?: string
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
@@ -23,38 +23,38 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   gasPrice: yup.string().default(''),
   gasLimit: yup.number().default(gas),
   totalGasFee: yup.string().default('0'),
-});
+})
 
-export type InitialValues = Partial<FormValues>;
+export type InitialValues = Partial<FormValues>
 
 interface Props {
-  initialValues?: InitialValues;
-  handleSubmit: (values: FormValues) => void;
+  initialValues?: InitialValues
+  handleSubmit: (values: FormValues) => void
 }
 
 export const TransferOgunForm = ({ handleSubmit }: Props) => {
-  const me = useMe();
-  const { web3, OGUNBalance } = useWalletContext();
-  const { getCurrentGasPrice } = useBlockchain();
-  const [gasPrice, setGasPrice] = useState<string>('');
+  const me = useMe()
+  const { web3, OGUNBalance } = useWalletContext()
+  const { getCurrentGasPrice } = useBlockchain()
+  const [gasPrice, setGasPrice] = useState<string>('')
 
   useEffect(() => {
     const gasCheck = () => {
       if (web3) {
-        getCurrentGasPrice(web3).then(price => setGasPrice(price));
+        getCurrentGasPrice(web3).then(price => setGasPrice(price))
       }
-    };
-    gasCheck();
-  }, [web3, getCurrentGasPrice]);
+    }
+    gasCheck()
+  }, [web3, getCurrentGasPrice])
 
-  if (!me) return null;
+  if (!me) return null
 
   const defaultValues: FormValues = {
     recipient: '',
     amount: '',
     gasPrice: gasPrice,
     gasLimit: gas,
-  };
+  }
 
   return (
     <Formik<FormValues>
@@ -63,11 +63,11 @@ export const TransferOgunForm = ({ handleSubmit }: Props) => {
       validationSchema={validationSchema}
       onSubmit={handleSubmit}
     >
-      <Form className="flex flex-col w-full h-full justify-between" autoComplete="off">
-        <div className="flex flex-col mb-auto space-y-6 p-5 h-full justify-between">
+      <Form className="flex h-full w-full flex-col justify-between" autoComplete="off">
+        <div className="mb-auto flex h-full flex-col justify-between space-y-6 p-5">
           <div className="flex flex-col justify-between space-y-8">
             <div className="space-y-2">
-              <span className="text-gray-80 text-sm font-bold">Please enter recipient wallet address:</span>
+              <span className="text-sm font-bold text-gray-80">Please enter recipient wallet address:</span>
               <InputField
                 type="text"
                 label="wallet address"
@@ -76,7 +76,7 @@ export const TransferOgunForm = ({ handleSubmit }: Props) => {
               />
             </div>
             <div className="space-y-2">
-              <span className="text-gray-80 text-sm uppercase font-bold">Amount to send:</span>
+              <span className="text-sm font-bold uppercase text-gray-80">Amount to send:</span>
               <InputField
                 type="number"
                 name="amount"
@@ -88,7 +88,7 @@ export const TransferOgunForm = ({ handleSubmit }: Props) => {
             </div>
             <div>
               <div className="space-y-3">
-                <span className="text-gray-80 text-sm uppercase font-bold">Estimated Gas Fee: </span>
+                <span className="text-sm font-bold uppercase text-gray-80">Estimated Gas Fee: </span>
                 <div className="flex space-x-4">
                   <div className="space-y-1">
                     <InputField type="text" label="gas price" name="gasPrice" value={gasPrice} disabled />
@@ -98,8 +98,8 @@ export const TransferOgunForm = ({ handleSubmit }: Props) => {
                   </div>
                 </div>
               </div>
-              <div className="space-y-3 flex self-end items-end content-end">
-                <p className="py-6 text-xs text-gray-80 text-left">
+              <div className="flex content-end items-end space-y-3 self-end">
+                <p className="py-6 text-left text-xs text-gray-80">
                   Gas fees are paid to crypto miners who process transactions on the Polygon network. SoundChain does
                   not profit from gas fees. <br />
                   <br />
@@ -109,7 +109,7 @@ export const TransferOgunForm = ({ handleSubmit }: Props) => {
             </div>
           </div>
         </div>
-        <div className="flex bg-black justify-between p-5">
+        <div className="flex justify-between bg-black p-5">
           <Ogun value={OGUNBalance} />
           <div className="w-6/12">
             <Button className="p-1" type="submit" variant="orange">
@@ -119,5 +119,5 @@ export const TransferOgunForm = ({ handleSubmit }: Props) => {
         </div>
       </Form>
     </Formik>
-  );
-};
+  )
+}

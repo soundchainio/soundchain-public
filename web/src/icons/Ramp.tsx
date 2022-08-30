@@ -18,5 +18,5 @@ export const Ramp = (props: React.SVGProps<SVGSVGElement>) => {
         fill="white"
       />
     </svg>
-  );
-};
+  )
+}

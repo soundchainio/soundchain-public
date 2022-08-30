@@ -1,3 +1,3 @@
-import isBrowser from './isBrowser';
+import isBrowser from './isBrowser'
 
-export const isSafari = isBrowser && navigator.userAgent.indexOf('Safari') !== -1;
+export const isSafari = isBrowser && navigator.userAgent.indexOf('Safari') !== -1

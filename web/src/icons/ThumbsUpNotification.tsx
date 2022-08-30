@@ -7,5 +7,5 @@ export const ThumbsUpNotification = (props: React.SVGProps<SVGSVGElement>) => {
         fill="#202020"
       />
     </svg>
-  );
-};
+  )
+}

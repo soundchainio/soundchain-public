@@ -1,8 +1,8 @@
 query ProofBookByWallet($walletAddress: String!) {
   getProofBookByWallet(walletAddress: $walletAddress) {
-      root,
-      address,
-      value,
-      merkleProof
+    root
+    address
+    value
+    merkleProof
   }
 }

@@ -2,10 +2,7 @@ export const CryptoDotCom = (props: React.SVGProps<SVGSVGElement>) => {
   return (
     <svg width={85} height={24} viewBox="0 0 274 52.06" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
       <g>
-        <path
-          fill="#fff"
-          d="M22.79.03L0 13.03v26l22.79 13 22.79-13v-26zm0 0L0 13.03v26l22.79 13 22.79-13v-26z"
-        ></path>
+        <path fill="#fff" d="M22.79.03L0 13.03v26l22.79 13 22.79-13v-26zm0 0L0 13.03v26l22.79 13 22.79-13v-26z"></path>
         <path
           fill="#03316c"
           d="M31.78 41.89h-3.24l-3.88-3.53v-1.81l4-3.8v-6l5.25-3.39 6 4.47zM18.35 32.4l.59-5.65-2-5.06h11.6l-1.92 5.06.55 5.65h-8.86zm2.65 6l-3.88 3.57h-3.29l-8.17-14.1 6-4.43 5.3 3.34v6l4 3.8zm-7.22-27.12h17.95l2.15 9H11.69zm9-11.25L0 13.03v26l22.79 13 22.79-13v-26z"
@@ -32,5 +29,5 @@ export const CryptoDotCom = (props: React.SVGProps<SVGSVGElement>) => {
         ></path>
       </g>
     </svg>
-  );
-};
+  )
+}
