@@ -3,7 +3,6 @@ import { OAuthExtension } from '@magic-ext/oauth'
 import { InstanceWithExtensions, MagicSDKExtensionsOption, SDKBase } from '@magic-sdk/provider'
 import { setJwt } from 'lib/apollo'
 import { Magic, RPCErrorCode } from 'magic-sdk'
-import { useRouter } from 'next/router'
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react'
 import Web3 from 'web3'
 import { network } from '../lib/blockchainNetworks'
@@ -67,21 +66,14 @@ export function MagicProvider({ children }: MagicProviderProps) {
   const [ogunBalance, setOgunBalance] = useState('')
   const [isRefetchingBalance, setIsRefetchingBalance] = useState(false)
 
-  const router = useRouter()
-  const isLoginPage = router.pathname.includes('/login')
+  const handleError = useCallback(async error => {
+    if (error.code === RPCErrorCode.InternalError) {
+      await magic.user.logout()
+      return setJwt()
+    }
 
-  const handleError = useCallback(
-    async error => {
-      if (error.code === RPCErrorCode.InternalError && !isLoginPage) {
-        await magic.user.logout()
-        setJwt()
-        router.push('/login')
-      }
-
-      errorHandler(error)
-    },
-    [isLoginPage, router],
-  )
+    errorHandler(error)
+  }, [])
 
   const refetchBalance = async () => {
     try {
