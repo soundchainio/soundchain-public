@@ -32,6 +32,7 @@ async function bootstrap() {
   setInterval(() => processAuctions({}, undefined, null), 10 * 1000);
   setInterval(() => processPending({}, undefined, null), 10 * 1000);
   // setInterval(() => playbackCount({}, undefined, null), 10 * 1000);
+  // setInterval(() => playbackCount({}, undefined, null), 10 * 1000);
 
   console.log(`🚀 Server ready at http://localhost:${config.express.port}${server.graphqlPath}`);
 }
