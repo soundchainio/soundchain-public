@@ -56,6 +56,18 @@ export class AuctionItem extends Model {
   @Field()
   @prop({ type: Number })
   highestBidToShow: number;
+
+  @Field({ nullable: true })
+  @prop({ required: false })
+  contract?: string;
+
+  @Field({ nullable: true })
+  @prop({ required: false })
+  trackId?: string;
+
+  @Field({ nullable: true })
+  @prop({ required: false })
+  trackEditionId?: string;
 }
 
 export const AuctionItemModel = getModelForClass(AuctionItem);

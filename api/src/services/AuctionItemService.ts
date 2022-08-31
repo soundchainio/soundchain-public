@@ -15,6 +15,9 @@ interface NewAuctionItem {
   reservePriceToShow: number;
   startingTime: number;
   endingTime: number;
+  contract: string;
+  trackEditionId?: string;
+  trackId?: string;
 }
 
 interface CountBids {

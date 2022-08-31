@@ -6,6 +6,7 @@ import { MeQuery } from 'lib/graphql'
 import { useCallback } from 'react'
 import { Soundchain721 } from 'types/web3-v1-contracts/Soundchain721'
 import { SoundchainAuction } from 'types/web3-v1-contracts/SoundchainAuction'
+import { SoundchainAuction as SoundchainAuctionV2 } from 'types/web3-v2-contracts/SoundchainAuction'
 import { SoundchainMarketplace } from 'types/web3-v1-contracts/SoundchainMarketplace'
 import { PayableTransactionObject } from 'types/web3-v1-contracts/types'
 import { MerkleClaimERC20 } from 'types/web3-v2-contracts/MerkleClaimERC20'
@@ -15,6 +16,7 @@ import Web3 from 'web3'
 import { PromiEvent, TransactionReceipt } from 'web3-core/types'
 import { AbiItem } from 'web3-utils'
 import soundchainAuction from '../contract/Auction.sol/SoundchainAuction.json'
+import soundchainAuctionV2 from '../contract/v2/SoundchainAuction.json'
 import soundchainMarketplace from '../contract/Marketplace.sol/SoundchainMarketplace.json'
 import soundchainContract from '../contract/Soundchain721.sol/Soundchain721.json'
 import soundchainContractEditions from '../contract/Soundchain721Editions.sol/Soundchain721Editions.json'
@@ -30,10 +32,20 @@ const nftAddress = config.web3.contractsV2.contractAddress as string
 const marketplaceAddress = config.web3.contractsV1.marketplaceAddress as string
 const marketplaceEditionsAddress = config.web3.contractsV2.marketplaceAddress as string
 const auctionAddress = config.web3.contractsV1.auctionAddress as string
+const auctionV2Address = config.web3.contractsV2.auctionAddress as string
 const fallbackGasPrice = '300000000000'
 
-const auctionContract = (web3: Web3) =>
-  new web3.eth.Contract(soundchainAuction.abi as AbiItem[], auctionAddress) as unknown as SoundchainAuction
+const auctionContract = (web3: Web3, contractAddress?: string) =>
+  new web3.eth.Contract(
+    soundchainAuction.abi as AbiItem[],
+    contractAddress || auctionAddress,
+  ) as unknown as SoundchainAuction
+
+const auctionV2Contract = (web3: Web3, contractAddress?: string) =>
+  new web3.eth.Contract(
+    soundchainAuctionV2.abi as AbiItem[],
+    contractAddress || auctionV2Address,
+  ) as unknown as SoundchainAuctionV2
 
 const claimOgunContract = (web3: Web3) =>
   new web3.eth.Contract(merkleClaimERC20.abi as AbiItem[], claimOgunAddress) as unknown as MerkleClaimERC20
@@ -59,6 +71,7 @@ const nftContractEditions = (web3: Web3) =>
 export interface ContractAddresses {
   nft?: string | null
   marketplace?: string | null
+  auction?: string | null
 }
 
 interface DefaultParam {
@@ -141,7 +154,23 @@ class PlaceBid extends BlockchainFunction<PlaceBidParams> {
     const { contractAddresses, from, value, tokenId } = this.params
     this.web3 = web3
 
-    const transactionObject = auctionContract(web3).methods.placeBid(contractAddresses?.nft || nftAddress, tokenId)
+    const auctionContractAddress = contractAddresses?.auction || auctionV2Address
+
+    let transactionObject: PayableTransactionObject<void>
+
+    if (auctionContractAddress === auctionV2Address) {
+      transactionObject = auctionV2Contract(web3, auctionContractAddress).methods.placeBid(
+        contractAddresses?.nft || nftAddress,
+        tokenId,
+        false, // isPaymentOGUN
+        value, // bid amount
+      )
+    } else {
+      transactionObject = auctionContract(web3, auctionContractAddress).methods.placeBid(
+        contractAddresses?.nft || nftAddress,
+        tokenId,
+      )
+    }
 
     const gas = await transactionObject.estimateGas({ from, value })
     await this._execute(gasPrice => transactionObject.send({ from, gas, value, gasPrice }))
@@ -271,7 +300,22 @@ class CancelAuction extends BlockchainFunction<TokenParams> {
     const { contractAddresses, from, tokenId } = this.params
     this.web3 = web3
 
-    const transactionObject = auctionContract(web3).methods.cancelAuction(contractAddresses?.nft || nftAddress, tokenId)
+    const auctionContractAddress = contractAddresses?.auction || auctionV2Address
+
+    let transactionObject: PayableTransactionObject<void>
+
+    if (auctionContractAddress === auctionV2Address) {
+      transactionObject = auctionV2Contract(web3, auctionContractAddress).methods.cancelAuction(
+        contractAddresses?.nft || nftAddress,
+        tokenId,
+      )
+    } else {
+      transactionObject = auctionContract(web3, auctionContractAddress).methods.cancelAuction(
+        contractAddresses?.nft || nftAddress,
+        tokenId,
+      )
+    }
+
     const gas = await transactionObject.estimateGas({ from })
 
     await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }))
@@ -319,13 +363,29 @@ class CreateAuction extends BlockchainFunction<CreateAuctionParams> {
     const totalPrice = Web3.utils.toBN(reservePrice)
     this.web3 = web3
 
-    const transactionObject = auctionContract(web3).methods.createAuction(
-      contractAddresses?.nft || nftAddress,
-      tokenId,
-      totalPrice,
-      startTime,
-      endTime,
-    )
+    const auctionContractAddress = contractAddresses?.auction || auctionV2Address
+
+    let transactionObject: PayableTransactionObject<void>
+
+    if (auctionContractAddress === auctionV2Address) {
+      transactionObject = auctionV2Contract(web3).methods.createAuction(
+        contractAddresses?.nft || nftAddress,
+        tokenId,
+        totalPrice,
+        false, // isPaymentOGUN
+        startTime,
+        endTime,
+      )
+    } else {
+      transactionObject = auctionContract(web3).methods.createAuction(
+        contractAddresses?.nft || nftAddress,
+        tokenId,
+        totalPrice,
+        startTime,
+        endTime,
+      )
+    }
+
     const gas = await transactionObject.estimateGas({ from })
 
     await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }))
@@ -341,13 +401,29 @@ class UpdateAuction extends BlockchainFunction<CreateAuctionParams> {
     const totalPrice = Web3.utils.toBN(reservePrice)
     this.web3 = web3
 
-    const transactionObject = auctionContract(web3).methods.updateAuction(
-      contractAddresses?.nft || nftAddress,
-      tokenId,
-      totalPrice,
-      startTime,
-      endTime,
-    )
+    const auctionContractAddress = contractAddresses?.auction || auctionV2Address
+
+    let transactionObject: PayableTransactionObject<void>
+
+    if (auctionContractAddress === auctionV2Address) {
+      transactionObject = auctionV2Contract(web3).methods.updateAuction(
+        contractAddresses?.nft || nftAddress,
+        tokenId,
+        totalPrice,
+        false, // isPaymentOGUN
+        startTime,
+        endTime,
+      )
+    } else {
+      transactionObject = auctionContract(web3).methods.updateAuction(
+        contractAddresses?.nft || nftAddress,
+        tokenId,
+        totalPrice,
+        startTime,
+        endTime,
+      )
+    }
+
     const gas = await transactionObject.estimateGas({ from })
 
     await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }))
@@ -360,7 +436,16 @@ class ResultAuction extends BlockchainFunction<TokenParams> {
     const { contractAddresses, from, tokenId } = this.params
     this.web3 = web3
 
-    const transactionObject = auctionContract(web3).methods.resultAuction(contractAddresses?.nft || nftAddress, tokenId)
+    const auctionContractAddress = contractAddresses?.auction || auctionV2Address
+
+    let transactionObject: PayableTransactionObject<void>
+
+    if (auctionContractAddress === auctionV2Address) {
+      transactionObject = auctionV2Contract(web3).methods.resultAuction(contractAddresses?.nft || nftAddress, tokenId)
+    } else {
+      transactionObject = auctionContract(web3).methods.resultAuction(contractAddresses?.nft || nftAddress, tokenId)
+    }
+
     const gas = await transactionObject.estimateGas({ from })
 
     await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }))
