@@ -80,7 +80,13 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
     return AuctionItem;
   }
 
-  async finishListing(tokenId: string, sellerWallet: string, buyerWaller: string, price: number, contractAddress: string): Promise<void> {
+  async finishListing(
+    tokenId: string,
+    sellerWallet: string,
+    buyerWaller: string,
+    price: number,
+    contractAddress: string,
+  ): Promise<void> {
     const [sellerUser, buyerUser, track] = await Promise.all([
       this.context.userService.getUserByWallet(sellerWallet),
       this.context.userService.getUserByWallet(buyerWaller),
@@ -170,7 +176,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
     reservePriceToShow,
     tokenId,
     owner,
-    nft
+    nft,
   }: AuctionItem): Promise<void> {
     const [highestBidModel, track] = await Promise.all([
       BidModel.findOne({ auctionId: _id, amount: highestBid }),

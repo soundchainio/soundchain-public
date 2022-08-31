@@ -101,7 +101,9 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
   const isBuyNow = Boolean(listingPayload?.listingItem?.pricePerItem)
   const isAuction = Boolean(listingPayload?.listingItem?.reservePrice)
   const bidCount = countBids?.countBids.numberOfBids ?? 0
-  const isPaymentOGUN = Boolean(listingPayload?.listingItem?.OGUNPricePerItemToShow != 0)
+  const isPaymentOGUN = Boolean(
+    listingPayload?.listingItem?.OGUNPricePerItemToShow && listingPayload?.listingItem?.OGUNPricePerItemToShow != 0,
+  )
 
   const { reservePriceToShow, pricePerItemToShow, OGUNPricePerItemToShow, id } = listingPayload?.listingItem ?? {}
 

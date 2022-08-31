@@ -36,7 +36,7 @@ export class AuctionItem extends Model {
   reservePriceToShow: number;
 
   @Field()
-  @prop({ type: Boolean, required: true })
+  @prop({ type: Boolean, required: true, default: false })
   isPaymentOGUN: boolean;
 
   @Field(() => Date)

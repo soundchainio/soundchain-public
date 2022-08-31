@@ -190,19 +190,21 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
       return
     }
 
+    console.log('Amount bided: ', amount)
+    setLoading(true)
     placeBid(tokenId, account, amount, { nft: contractAddress })
-      .onReceipt(() => {
+      .onReceipt(receipt => {
+        console.log('Your transaction receipt: ', receipt)
         toast.success('Bid placed!')
         if (refetchHaveBided) refetchHaveBided()
         refetchCountBids()
       })
-      .onError(() => {
+      .onError(error => {
+        console.log('Error on your transaction: ', error)
         toast.warn('You may have been outbid. Please try again')
       })
       .finally(() => setLoading(false))
       .execute(web3)
-
-    setLoading(true)
   }
 
   if (!isForSale || isOwner || !me || track.nftData?.pendingRequest != PendingRequest.None) {

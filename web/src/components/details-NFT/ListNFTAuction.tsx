@@ -10,7 +10,7 @@ import { Matic } from 'icons/Matic'
 import { useState } from 'react'
 import ReactDatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
-import { boolean, date, number, object, ref, SchemaOf } from 'yup'
+import { date, number, object, ref, SchemaOf } from 'yup'
 
 export interface ListNFTAuctionFormValues {
   price: number
@@ -24,7 +24,7 @@ const validationSchema: SchemaOf<ListNFTAuctionFormValues> = object().shape({
     .min(new Date(new Date().getTime() + 10 * 1000 * 60), 'The start time should be at least ten minutes from now')
     .required(), // current  date + 5 minutes
   endTime: date().min(ref('startTime'), "End time can't be before start time").required(),
-  isPaymentOGUN: boolean().required(),
+  // isPaymentOGUN: boolean().required(),
 })
 
 interface ListNFTProps {
@@ -79,7 +79,7 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: Lis
                     onChange={e => setIsPaymentOGUN(e.target.value === 'OGUN')}
                     value={isPaymentOGUN ? 'OGUN' : 'MATIC'}
                   >
-                    <option value="OGUN">OGUN</option>
+                    {/* <option value="OGUN">OGUN</option> */}
                     <option value="MATIC">MATIC</option>
                   </select>
                   <span className="pointer-events-none absolute top-2 left-2">

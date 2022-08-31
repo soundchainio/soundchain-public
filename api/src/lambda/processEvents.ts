@@ -6,11 +6,18 @@ import {
   AuctionCreated,
   AuctionResulted,
   BidPlaced,
-  UpdateAuction
+  UpdateAuction,
 } from '../../types/web3-v1-contracts/SoundchainAuction';
 // import { ItemCanceled, ItemListed, ItemSold, ItemUpdated } from '../../types/web3-v1-contracts/SoundchainMarketplace';
 import { EditionCreated } from '../../types/web3-v2-contracts/Soundchain721Editions';
-import { EditionCanceled, EditionListed, ItemCanceled, ItemListed, ItemSold, ItemUpdated } from '../../types/web3-v2-contracts/SoundchainMarketplaceEditions';
+import {
+  EditionCanceled,
+  EditionListed,
+  ItemCanceled,
+  ItemListed,
+  ItemSold,
+  ItemUpdated,
+} from '../../types/web3-v2-contracts/SoundchainMarketplaceEditions';
 import { FailedEventModel } from '../models/FailedEvent';
 import { Context } from '../types/Context';
 import { PendingRequest } from '../types/PendingRequest';
@@ -46,7 +53,7 @@ function _execute<T extends ReturnTypes>(f: (returnValues: T, context: Context) 
 }
 
 const processItemListed = async (event: ItemListed, context: Context): Promise<void> => {
-  const { returnValues, address } = event
+  const { returnValues, address } = event;
   const { owner, nft, tokenId, pricePerItem, OGUNPricePerItem, acceptsMATIC, acceptsOGUN, startingTime } = returnValues;
   const [user, listedBefore] = await Promise.all([
     context.userService.getUserByWallet(owner),
@@ -74,8 +81,8 @@ const processItemListed = async (event: ItemListed, context: Context): Promise<v
     acceptsOGUN: acceptsOGUN,
     startingTime: parseInt(startingTime),
     trackId: track._id,
-    trackEditionId: track?.trackEditionId
-  })
+    trackEditionId: track?.trackEditionId,
+  });
   if (track.nftData.owner === track.nftData.minter) {
     await context.trackEditionService.markEditionListedIfNeeded(track.trackEditionId, address);
   }
@@ -93,15 +100,20 @@ const processItemUpdated = async (event: ItemUpdated, context: Context): Promise
   const { returnValues, address } = event;
   const { tokenId, newPrice, newOGUNPrice, acceptsMATIC, acceptsOGUN, startingTime, nft } = returnValues;
   await Promise.all([
-    context.buyNowItemService.updateBuyNowItem(parseInt(tokenId), {
-      pricePerItem: newPrice,
-      pricePerItemToShow: getPriceToShow(newPrice),
-      OGUNPricePerItem: newOGUNPrice,
-      OGUNPricePerItemToShow: getPriceToShow(newOGUNPrice),
-      acceptsMATIC,
-      acceptsOGUN,
-      startingTime: parseInt(startingTime),
-    }, nft, address),
+    context.buyNowItemService.updateBuyNowItem(
+      parseInt(tokenId),
+      {
+        pricePerItem: newPrice,
+        pricePerItemToShow: getPriceToShow(newPrice),
+        OGUNPricePerItem: newOGUNPrice,
+        OGUNPricePerItemToShow: getPriceToShow(newOGUNPrice),
+        acceptsMATIC,
+        acceptsOGUN,
+        startingTime: parseInt(startingTime),
+      },
+      nft,
+      address,
+    ),
     context.trackService.setPendingNone(parseInt(tokenId), nft),
   ]);
   console.log('ItemUpdated');
