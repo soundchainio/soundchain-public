@@ -33,8 +33,8 @@ functions:
           cors: true
   migrate:
     handler: src/db/migrate.handler
-  #  setupAirdrop:
-  #    handler: src/db/setupAirdrop.handler
+  setupAirdrop:
+    handler: src/db/setupAirdrop.handler
   watcher:
     handler: src/lambda/blockchainWatcher.blockchainWatcher
     timeout: 50
