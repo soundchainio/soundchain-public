@@ -6,6 +6,24 @@ import CsvToJson from "../utils/airdrop/utils/csvToJson";
 
 const { DATABASE_URL, DATABASE_SSL_PATH } = process.env;
 
+interface ProofBook {
+  address: string;
+  value: string;
+  merkleProof: string[]
+}
+
+export interface AudiusHoldersCsv {
+  HolderAddress: string;
+  Balance: string;
+  PendingBalanceUpdate: string;
+}
+
+export interface WhitelistsCsv {
+  _id: string;
+  email: string;
+  magicWalletAddress: string;
+}
+
 const dbOpts = {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -14,23 +32,13 @@ const dbOpts = {
   retryWrites: false,
 };
 
-export const handler: Handler = async () => {
-  return await seedAll();
-};
-
-interface CsvEntry {
-  HolderAddress: string;
-  Balance: string;
-  PendingBalanceUpdate: string;
-}
-
-async function seedAll() {
+export const setupAirdrop: Handler = async () => {
   const response: string[] = [];
 
   const log = (msg: string) => {
     response.push(msg);
   }
-
+  
   try {
     const connection = await mongoose.createConnection(DATABASE_URL, dbOpts);
 
@@ -57,7 +65,7 @@ async function seedAll() {
     log('Seeding merkle proofs...');
   
     const root: string = proofBookJson.root;
-    const proofs = proofBookJson.proofBook;
+    const proofs: ProofBook[] = proofBookJson.proofBook;
     
     log('Seeding Proofbook')
     await connection.collection('proofbookitems').insertMany(proofs.map((proof) => ({root: root, address: proof.address, value: proof.value, merkleProof: proof.merkleProof})))  
@@ -65,12 +73,12 @@ async function seedAll() {
 
     log('Seeding Audius holders');
     const audiusHoldersJson = await CsvToJson.getAudiusHoldersJson();    
-    await connection.collection('audioholders').insertMany(audiusHoldersJson.map((user: CsvEntry) => ({ walletAddress: user.HolderAddress, amount: user.Balance, ogunClaimed: false })));  
+    await connection.collection('audioholders').insertMany(audiusHoldersJson.map((user: AudiusHoldersCsv) => ({ walletAddress: user.HolderAddress, amount: user.Balance, ogunClaimed: false })));  
     log('Successfully seeded Audius Holders!');
 
     log('Seeding Whitelist users');
     const whitelistCsvJson = await CsvToJson.getWhitelistJson();
-    await connection.collection('whitelistentries').insertMany(whitelistCsvJson.map((user: CsvEntry) => ({ walletAddress: user.HolderAddress, emailAddress: 'whitelist@csv.com', ogunClaimed: false })));      
+    await connection.collection('whitelistentries').insertMany(whitelistCsvJson.map((user: WhitelistsCsv) => ({ walletAddress: user.magicWalletAddress, emailAddress: user.email, ogunClaimed: false })));      
     log('Successfully seeded Whitelist!');
   
   } catch (error) {
@@ -80,4 +88,4 @@ async function seedAll() {
   log('finished')
 
   return response;
-}
+};
