@@ -17,6 +17,7 @@ import {
   useUpdateOgunClaimedWhitelistMutation,
   useWhitelistEntryByWalletLazyQuery,
 } from 'lib/graphql'
+import { GetServerSideProps } from 'next'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
@@ -26,16 +27,16 @@ import { CustomModal } from '../components/CustomModal'
 import useBlockchainV2 from '../hooks/useBlockchainV2'
 
 // TODO: remove before enabling the ogun token stake
-// export const getServerSideProps: GetServerSideProps = ({ res }) => {
-//   if (res) {
-//     res.statusCode = 404
-//     res.end('Not found')
-//   }
+export const getServerSideProps: GetServerSideProps = ({ res }) => {
+  if (res) {
+    res.statusCode = 404
+    res.end('Not found')
+  }
 
-//   return Promise.resolve({
-//     props: {},
-//   })
-// }
+  return Promise.resolve({
+    props: {},
+  })
+}
 
 export default function AirdropPage() {
   const router = useRouter()
