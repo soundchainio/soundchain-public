@@ -6,22 +6,22 @@ import { MeQuery } from 'lib/graphql'
 import { useCallback } from 'react'
 import { Soundchain721 } from 'types/web3-v1-contracts/Soundchain721'
 import { SoundchainAuction } from 'types/web3-v1-contracts/SoundchainAuction'
-import { SoundchainAuction as SoundchainAuctionV2 } from 'types/web3-v2-contracts/SoundchainAuction'
 import { SoundchainMarketplace } from 'types/web3-v1-contracts/SoundchainMarketplace'
 import { PayableTransactionObject } from 'types/web3-v1-contracts/types'
 import { MerkleClaimERC20 } from 'types/web3-v2-contracts/MerkleClaimERC20'
 import { Soundchain721Editions } from 'types/web3-v2-contracts/Soundchain721Editions'
+import { SoundchainAuction as SoundchainAuctionV2 } from 'types/web3-v2-contracts/SoundchainAuction'
 import { SoundchainMarketplaceEditions } from 'types/web3-v2-contracts/SoundchainMarketplaceEditions'
 import Web3 from 'web3'
 import { PromiEvent, TransactionReceipt } from 'web3-core/types'
 import { AbiItem } from 'web3-utils'
 import soundchainAuction from '../contract/Auction.sol/SoundchainAuction.json'
-import soundchainAuctionV2 from '../contract/v2/SoundchainAuction.json'
 import soundchainMarketplace from '../contract/Marketplace.sol/SoundchainMarketplace.json'
 import soundchainContract from '../contract/Soundchain721.sol/Soundchain721.json'
 import soundchainContractEditions from '../contract/Soundchain721Editions.sol/Soundchain721Editions.json'
 import SoundchainOGUN20 from '../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json'
 import merkleClaimERC20 from '../contract/v2/MerkleClaimERC20.sol/MerkleClaimERC20.json'
+import soundchainAuctionV2 from '../contract/v2/SoundchainAuction.json'
 import soundchainMarketplaceEditions from '../contract/v2/SoundchainMarketplaceEditions.json'
 export const gas = 1200000
 
@@ -271,7 +271,10 @@ class ApproveAuction extends BlockchainFunction<DefaultParam> {
     const { contractAddresses, from } = this.params
     this.web3 = web3
 
-    const transactionObject = nftContract(web3, contractAddresses?.nft).methods.setApprovalForAll(auctionAddress, true)
+    const transactionObject = nftContract(web3, contractAddresses?.nft).methods.setApprovalForAll(
+      auctionV2Address,
+      true,
+    )
     const gas = await transactionObject.estimateGas({ from })
 
     await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }))
@@ -364,7 +367,8 @@ class CreateAuction extends BlockchainFunction<CreateAuctionParams> {
     this.web3 = web3
 
     const auctionContractAddress = contractAddresses?.auction || auctionV2Address
-
+    console.log(auctionContractAddress)
+    console.log(auctionV2Address)
     let transactionObject: PayableTransactionObject<void>
 
     if (auctionContractAddress === auctionV2Address) {
