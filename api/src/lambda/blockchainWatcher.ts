@@ -76,7 +76,7 @@ const getAllEvents = async (web3: Web3, fromBlock: number, toBlock: number) => {
   );
   const auctionV2Contract = new web3.eth.Contract(
     SoundchainV2Auction.abi as AbiItem[],
-    config.minting.contractsV1.auctionAddress,
+    config.minting.contractsV2.auctionAddress,
   );
   const nftContract = new web3.eth.Contract(
     SoundchainCollectible.abi as AbiItem[],
@@ -166,7 +166,7 @@ const processAuctionEvents = async (events: EventData[], context: Context) => {
     switch (event.event) {
       case 'AuctionCreated':
         {
-          await auctionEvents.created((event as unknown as AuctionCreated).returnValues, context);
+          await auctionEvents.created((event as unknown as AuctionCreated), context);
         }
         break;
       case 'BidPlaced':

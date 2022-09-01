@@ -192,7 +192,10 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
 
     console.log('Amount bided: ', amount)
     setLoading(true)
-    placeBid(tokenId, account, amount, { nft: contractAddress })
+    placeBid(tokenId, account, amount, {
+      nft: contractAddress,
+      auction: auctionItem.auctionItem.contract,
+    })
       .onReceipt(receipt => {
         console.log('Your transaction receipt: ', receipt)
         toast.success('Bid placed!')

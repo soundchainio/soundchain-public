@@ -1,30 +1,17 @@
-import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from 'type-graphql';
+import { Arg, Ctx, FieldResolver, Query, Resolver, Root } from 'type-graphql';
+import { config } from '../config';
 import { AuctionItem } from '../models/AuctionItem';
 import { AuctionItemPayload } from '../types/AuctionItemPayload';
 import { Bided } from '../types/Bided.ts';
 import { Context } from '../types/Context';
 import { CountBidsPayload } from '../types/CountBids';
-import { CreateAuctionItemData } from '../types/CreateAuctionItemData';
 
 @Resolver(AuctionItem)
 export class AuctionItemResolver {
-  @Mutation(() => CreateAuctionItemData)
-  @Authorized()
-  async createAuctionItem(
-    @Ctx() { auctionItemService }: Context,
-    @Arg('input')
-    { owner, nft, tokenId, startingTime, endingTime, reservePrice, reservePriceToShow, isPaymentOGUN}: CreateAuctionItemData,
-  ): Promise<CreateAuctionItemData> {
-    const auctionItem = await auctionItemService.createAuctionItem({
-      owner,
-      nft,
-      tokenId,
-      startingTime,
-      endingTime,
-      reservePrice,
-      reservePriceToShow,
-    });
-    return auctionItem;
+  @FieldResolver(() => String)
+  contract(@Root() auctionItem: AuctionItem): string {
+    // Fallback for the old nft that didn't have this set
+    return auctionItem.contract || config.minting.contractsV1.auctionAddress as string;
   }
 
   @Query(() => AuctionItemPayload)
