@@ -86,5 +86,6 @@ export const setupAirdrop: Handler = async () => {
 
   log('finished')
 
+  console.log(response)
   return response;
 };
