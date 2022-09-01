@@ -23,6 +23,7 @@ export default function RoadmapLayout(props: RoadmapLayoutProps) {
             height={952}
             layout="fill"
             className="object-cover "
+            alt="roadmap background"
           />
 
           <div className="absolute inset-0 flex h-full w-full items-center justify-center">

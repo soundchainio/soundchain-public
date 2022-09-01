@@ -30,24 +30,24 @@ export const roadmapSteps: RoadmapStep[] = [
   },
   {
     title: 'Ethereum',
-    status: 'July/August',
+    status: 'Late Winter',
     description: 'Adding the ability to mint and sell your tracks on the Ethereum blockchain',
   },
   {
     title: 'Ogun Styling',
-    status: 'Late Summer',
+    status: 'Late Summer 2023',
     description:
       "Adding some spice to the platform, we'll be creating a variety of ways to spiff up your profile. Badges, special profile picture frames, and other visual flair will be available to be obtained with OGUN, and we'll be putting it right back into the economy of the token to recharge rewards or benefit holders",
   },
   {
     title: 'Art NFTs',
-    status: 'Fall',
+    status: 'Fall 2023',
     description:
       "Music has always been tied closely to visual art, and we want to support the whole system. We'll be adding the ability to mint and sell your art as NFTs, and to make it really fit into the SoundChain ways, we'll focus on the ties between a track and its album art. Holders of your art NFTs will be able to automatically select it as their album art when uploading their own tracks, and each NFT minted this way will point right back to you, the artist",
   },
   {
     title: 'Governance',
-    status: 'Late Fall',
+    status: 'Late Fall 2023',
     description:
       "At SoundChain, we want to give you, the fan, the power to help decide the future of our platform. We'll be creating our own form of governance and creating a process that will let you vote on what comes next. We built this platform for you and we want to hear what you have to say. From here on out, you will be able to vote on what to prioritize next",
   },
