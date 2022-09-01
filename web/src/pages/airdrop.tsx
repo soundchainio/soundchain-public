@@ -21,6 +21,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { toast, ToastContainer } from 'react-toastify'
+import { errorHandler } from 'utils/errorHandler'
 import Web3 from 'web3'
 import { CustomModal } from '../components/CustomModal'
 import useBlockchainV2 from '../hooks/useBlockchainV2'
@@ -98,11 +99,15 @@ export default function AirdropPage() {
 
   const successfullyClaimedOguns = 'OGUNs claimed successfully!'
 
-  const handleErrorClaimingOgun = () => {
+  const handleErrorClaimingOgun = (error?: unknown) => {
     const message = 'Unfortunately, we could not claim your OGUNs at this moment, please try again later.'
 
-    setLoading(false)
-    return toast.error(message)
+    toast.error(message)
+
+    if (!error) return
+
+    errorHandler(error)
+    return setLoading(false)
   }
 
   const connectMetaMask = async () => {
@@ -163,10 +168,10 @@ export default function AirdropPage() {
 
     contract
       .onReceipt(() => handleClaimOnSuccess())
-      .onError(() => handleErrorClaimingOgun())
+      .onError(error => handleErrorClaimingOgun(error))
       .finally(() => setLoading(false))
       .execute(web3)
-      .catch(() => handleErrorClaimingOgun())
+      .catch(error => handleErrorClaimingOgun(error))
   }
 
   const handleClaimOnSuccess = async () => {
