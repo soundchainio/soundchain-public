@@ -4,10 +4,10 @@ import { WhitelistEntryModel } from '../models/WhitelistEntry';
 
 const { DATABASE_URL = 'mongodb://localhost:27017' } = process.env;
 
-interface WhitelistUser {
-  HolderAddress: string;
-  Balance: string;
-  PendingBalanceUpdate: string;
+export interface WhitelistsCsv {
+  _id: string;
+  email: string;
+  magicWalletAddress: string;
 }
 
 const dbOpts = {
@@ -22,10 +22,10 @@ async function seedWhitelistCsv() {
 
   const whilistCsvJson = await CsvToJson.getWhitelistJson();
 
-  const modelWhitelistEntryToFeedDatabase = whilistCsvJson.map((user: WhitelistUser) => {
+  const modelWhitelistEntryToFeedDatabase = whilistCsvJson.map((user: WhitelistsCsv) => {
     return new WhitelistEntryModel({
-        walletAddress: user.HolderAddress,
-        emailAddress: 'whitelist@csv.com',
+        walletAddress: user.magicWalletAddress,
+        emailAddress: user.email,
       })
   });
   

@@ -2,7 +2,7 @@ import path from "path";
 import Generator from "./generator";
 import { parseUnits } from "ethers/lib/utils";
 import { tokenHoldersFileName, whitelistFileName, rewardAmount, decimalsPlaces } from "./config.json";
-import { ExtractDataFromCsvParams, GetAmountParams, Account } from "./types/app";
+import { ExtractDataFromCsvParams, GetAmountParams, AudiusHoldersCsv, WhitelistsCsv } from "./types/app";
 import csv from 'csvtojson/v2';
 
 const tokenHoldersPath = path.join(__dirname, `./${tokenHoldersFileName}`);
@@ -35,16 +35,26 @@ const extractDataFromCsv = async (params: ExtractDataFromCsvParams): Promise<Rec
   const accounts = await csv().fromFile(filePath)
   const airdropHolders: Record<string, string> = {};
   
-  accounts.forEach((account: Account) => {
-    const { HolderAddress, Balance } = account;
-    
-    const amount = fileName === AUDIUS_HOLDERS ? calculateAudiusHoldersAmount(Balance) : rewardAmount;
-    
-    const parsedAmount = convertAmount({ amount })
+  if (fileName === AUDIUS_HOLDERS) {
+    accounts.forEach((account: AudiusHoldersCsv) => {
+      const { HolderAddress, Balance } = account;
+      
+      const amount = calculateAudiusHoldersAmount(Balance);
+      
+      const parsedAmount = convertAmount({ amount })
+  
+  
+      airdropHolders[HolderAddress] = parsedAmount
+    });
+  }
 
-
-    airdropHolders[HolderAddress] = parsedAmount
-  });
+  if (fileName === WHITELIST) {
+    accounts.forEach((account: WhitelistsCsv) => {
+      const { magicWalletAddress } = account;
+  
+      airdropHolders[magicWalletAddress] = rewardAmount
+    });
+  }
 
   return airdropHolders
 }
