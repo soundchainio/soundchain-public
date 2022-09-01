@@ -1,0 +1,6 @@
+{
+  "tokenHoldersFileName": "audius-holders.csv",
+  "whitelistFileName": "whitelist.csv",
+  "rewardAmount": "5000",
+  "decimalsPlaces": "18"
+}
