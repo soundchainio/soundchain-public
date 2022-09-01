@@ -52,7 +52,7 @@ const extractDataFromCsv = async (params: ExtractDataFromCsvParams): Promise<Rec
     accounts.forEach((account: WhitelistsCsv) => {
       const { magicWalletAddress } = account;
   
-      airdropHolders[magicWalletAddress] = rewardAmount
+      airdropHolders[magicWalletAddress] = convertAmount({ amount: rewardAmount })
     });
   }
 
