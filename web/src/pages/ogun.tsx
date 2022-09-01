@@ -103,7 +103,7 @@ export default function OgunPage() {
             part in shaping the platform&#39;s future. <br className="hidden md:block" />
             We’re working on some exciting features to launch alongside the token.
             <br className="hidden md:block" />
-            We expect to launch these new features and OGUN the end of July.
+            We launched the Ogun token in August of 2022 and we expect to launch more features soon.
             <br className="hidden md:block" />
             Look out for updates on progress and launch dates these coming weeks.
             <br className="hidden md:block" />
@@ -141,7 +141,6 @@ export default function OgunPage() {
               <Button variant="rainbow" onClick={connectWC}>
                 <span className="px-6 font-medium">CONNECT YOUR WALLET</span>
               </Button>
-              <span className="text-sm font-thin md:text-base">Join the airdrop whitelist</span>
             </div>
           )}
         </section>

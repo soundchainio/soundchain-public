@@ -99,7 +99,14 @@ export default function AirdropPage() {
 
   const successfullyClaimedOguns = 'OGUNs claimed successfully!'
 
-  const handleErrorClaimingOgun = (error?: unknown) => {
+  const handleErrorClaimingOgun = (error?: Error) => {
+    if (error && error.message.toLowerCase() === 'insufficient funds for gas * price + value') {
+      const issuficientFundsMesasge =
+        'Insufficient funds in your wallet to claim Ogun tokens. Please, fund your wallet and try again.'
+
+      return toast.error(issuficientFundsMesasge)
+    }
+
     const message = 'Unfortunately, we could not claim your OGUNs at this moment, please try again later.'
 
     toast.error(message)
