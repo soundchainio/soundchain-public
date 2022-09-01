@@ -2,8 +2,8 @@ import path from "path";
 import { tokenHoldersFileName, whitelistFileName } from "./config.json";
 import csv from 'csvtojson/v2';
 
-const whitelistCsvPath = path.join(__dirname, `../${whitelistFileName}`);
-const audiusHoldersCsvPath = path.join(__dirname, `../${tokenHoldersFileName}`);
+const whitelistCsvPath = path.join(__dirname, `/${whitelistFileName}`);
+const audiusHoldersCsvPath = path.join(__dirname, `/${tokenHoldersFileName}`);
 
 class CsvToJson {
     private whitelistCsvPath: string;
