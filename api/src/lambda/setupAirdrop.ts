@@ -34,58 +34,49 @@ const dbOpts = {
 };
 
 export const setupAirdrop: Handler = async () => {
-  const response: string[] = [];
-
-  const log = (msg: string) => {
-    response.push(msg);
-  }
-  
   try {
     const connection = await mongoose.createConnection(DATABASE_URL, dbOpts);
 
-    log('Dropping collections if they exists');
+    console.log('Dropping collections if they exists');
     try {
       await connection.dropCollection("audioholders");
-      log('audiusholders collection dropped');       
+      console.log('audiusholders collection dropped');       
     } catch (error) {
-      log(error.toString())      
+      console.log(error.toString())      
     }
     try {
       await connection.dropCollection("whitelistentries");
-      log('whitelistentries collection dropped');       
+      console.log('whitelistentries collection dropped');       
     } catch (error) {
-      log(error.toString())      
+      console.log(error.toString())      
     }
     try {
       await connection.dropCollection("proofbookitems");
-      log('proofbookitems collection dropped');       
+      console.log('proofbookitems collection dropped');       
     } catch (error) {
-      log(error.toString())      
+      console.log(error.toString())      
     }
 
-    log('Seeding merkle proofs...');
+    console.log('Seeding merkle proofs...');
   
     const root: string = proofBookJson.root;
     const proofs: ProofBook[] = proofBookJson.proofBook;
     
-    log('Seeding Proofbook')
+    console.log('Seeding Proofbook')
     await connection.collection('proofbookitems').insertMany(proofs.map((proof) => ({root: root, address: proof.address, value: proof.value, merkleProof: proof.merkleProof})))  
-    log('Successfully seeded Proofbook!');
+    console.log('Successfully seeded Proofbook!');
 
-    log('Seeding Audius holders');  
+    console.log('Seeding Audius holders');  
     await connection.collection('audioholders').insertMany(audiusHoldersJson.map((user: AudiusHoldersCsv) => ({ walletAddress: user.HolderAddress, amount: user.Balance, ogunClaimed: false })));  
-    log('Successfully seeded Audius Holders!');
+    console.log('Successfully seeded Audius Holders!');
 
-    log('Seeding Whitelist users');
+    console.log('Seeding Whitelist users');
     await connection.collection('whitelistentries').insertMany(whitelistJson.map((user: WhitelistsCsv) => ({ walletAddress: user.magicWalletAddress, emailAddress: user.email, ogunClaimed: false })));      
-    log('Successfully seeded Whitelist!');
+    console.log('Successfully seeded Whitelist!');
   
   } catch (error) {
-    log(error.toString())
+    console.log(error.toString())
   }
 
-  log('finished')
-
-  console.log(response)
-  return response;
+  console.log('finished')
 };
