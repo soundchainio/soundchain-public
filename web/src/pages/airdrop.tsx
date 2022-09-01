@@ -99,12 +99,15 @@ export default function AirdropPage() {
 
   const successfullyClaimedOguns = 'OGUNs claimed successfully!'
 
-  const handleErrorClaimingOgun = (error: unknown) => {
+  const handleErrorClaimingOgun = (error?: unknown) => {
     const message = 'Unfortunately, we could not claim your OGUNs at this moment, please try again later.'
 
+    toast.error(message)
+
+    if (!error) return
+
     errorHandler(error)
-    setLoading(false)
-    return toast.error(message)
+    return setLoading(false)
   }
 
   const connectMetaMask = async () => {
