@@ -17,7 +17,6 @@ import {
   useUpdateOgunClaimedWhitelistMutation,
   useWhitelistEntryByWalletLazyQuery,
 } from 'lib/graphql'
-import { GetServerSideProps } from 'next'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
@@ -25,18 +24,6 @@ import { toast, ToastContainer } from 'react-toastify'
 import Web3 from 'web3'
 import { CustomModal } from '../components/CustomModal'
 import useBlockchainV2 from '../hooks/useBlockchainV2'
-
-// TODO: remove before enabling the ogun token stake
-export const getServerSideProps: GetServerSideProps = ({ res }) => {
-  if (res) {
-    res.statusCode = 404
-    res.end('Not found')
-  }
-
-  return Promise.resolve({
-    props: {},
-  })
-}
 
 export default function AirdropPage() {
   const router = useRouter()
@@ -220,11 +207,11 @@ export default function AirdropPage() {
             Connect your <span className="green-blue-gradient-text-break">wallet</span>
           </h1>
           <h2 className="pt-6 text-center text-xl font-light md:text-4xl">
-            If you are an existing SoundChain user,
+            If you were an existing SoundChain user,
             <br />
             joined the whitelist, or had any AUDIO when
             <br />
-            we took a snapshot on June 20, connect
+            we took a snapshot on August 30th, connect
             <br />
             your wallet to claim up to <span className="yellow-gradient-text font-bold">5,000 OGUN</span>
           </h2>
@@ -248,7 +235,7 @@ export default function AirdropPage() {
             <br />
             joined the whitelist, or had any AUDIO when
             <br />
-            we took a snapshot on June 20, connect
+            we took a snapshot on August 30th, connect
             <br />
             your wallet to claim up to <span className="yellow-gradient-text font-bold">5,000 OGUN</span>
           </h2>
@@ -316,12 +303,15 @@ export default function AirdropPage() {
     )
   }
 
+  const quickSwapLink =
+    'https://legacy.quickswap.exchange/#/swap?inputCurrency=0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270&outputCurrency=0x45f1af89486aeec2da0b06340cd9cd3bd741a15c'
+
   const ClosedState = () => {
     return (
       <>
         <h2 className="pt-6 text-center text-2xl font-light md:text-4xl">
           Sorry, the Airdrop is closed. You can{' '}
-          <Link href="/">
+          <Link href={quickSwapLink}>
             <a className="green-blue-gradient-text-break font-medium">get OGUN here.</a>
           </Link>
         </h2>

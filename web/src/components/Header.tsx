@@ -73,8 +73,8 @@ export const Header = () => {
           </div>
           <nav className="flex items-center justify-evenly gap-3 text-white">
             {/* TODO: disabling this for the soft launch */}
-            {/* <NavItem text="Airdrop" />
-            <NavItem text="Stake" /> */}
+            {/* <NavItem text="Stake" /> */}
+            <NavItem text="Airdrop" />
             <NavItem text="Tokenomics" link="https://soundchain.gitbook.io/soundchain/token/ogun" />
             <div className="scale-95">
               <RainbowLink href="/marketplace" className="px-2 text-center text-sm font-medium uppercase">
