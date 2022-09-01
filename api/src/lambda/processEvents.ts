@@ -27,7 +27,7 @@ const zeroAddress = '0x0000000000000000000000000000000000000000';
 
 type ReturnTypes =
   | AuctionCancelled['returnValues']
-  | AuctionCreated['returnValues']
+  | AuctionCreated
   | AuctionResulted['returnValues']
   | BidPlaced['returnValues']
   | UpdateAuction['returnValues']
@@ -180,7 +180,8 @@ const processEditionCreated = async (event: EditionCreated, context: Context): P
   console.log('EditionCreated');
 };
 
-const processAuctionCreated = async (returnValues: AuctionCreated['returnValues'], context: Context): Promise<void> => {
+const processAuctionCreated = async (event: AuctionCreated, context: Context): Promise<void> => {
+  const { returnValues, address } = event;
   const { nftAddress, tokenId, owner, reservePrice, startTimestamp, endTimestamp } = returnValues;
   const [user, listedBefore] = await Promise.all([
     context.userService.getUserByWallet(owner),
@@ -194,18 +195,22 @@ const processAuctionCreated = async (returnValues: AuctionCreated['returnValues'
     context.trackService.setPendingNone(parseInt(tokenId), nftAddress);
     return;
   }
-  await Promise.all([
-    context.auctionItemService.createAuctionItem({
-      owner,
-      nft: nftAddress,
-      tokenId: parseInt(tokenId),
-      startingTime: parseInt(startTimestamp),
-      endingTime: parseInt(endTimestamp),
-      reservePrice: reservePrice,
-      reservePriceToShow: getPriceToShow(reservePrice),
-    }),
-    context.trackService.setPendingNone(parseInt(tokenId), nftAddress),
-  ]);
+
+  const track = await context.trackService.setPendingNone(parseInt(tokenId), nftAddress);
+
+  await context.auctionItemService.createAuctionItem({
+    owner,
+    nft: nftAddress,
+    tokenId: parseInt(tokenId),
+    startingTime: parseInt(startTimestamp),
+    endingTime: parseInt(endTimestamp),
+    reservePrice: reservePrice,
+    reservePriceToShow: getPriceToShow(reservePrice),
+    contract: address,
+    trackId: track._id,
+    trackEditionId: track?.trackEditionId,
+  });
+
   console.log('AuctionCreated');
 };
 

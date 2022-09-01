@@ -11,6 +11,7 @@ export const config = {
       auctionAddress: process.env.NEXT_PUBLIC_AUCTION_ADDRESS,
     },
     contractsV2: {
+      auctionAddress: process.env.NEXT_PUBLIC_AUCTION_V2_ADDRESS,
       contractAddress: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS,
       marketplaceAddress: process.env.NEXT_PUBLIC_MARKETPLACE_MUTIPLE_EDITION_ADDRESS,
     },
