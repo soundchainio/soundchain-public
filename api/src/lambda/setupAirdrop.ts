@@ -1,8 +1,8 @@
 import type { Handler } from 'aws-lambda';
 import fs from 'fs';
 import mongoose from 'mongoose';
-import proofBookJson from '../utils/airdrop/output/proofBook.json';
-import CsvToJson from "../utils/airdrop/utils/csvToJson";
+import proofBookJson from '../utils/airdropLambda/proofBook.json';
+import CsvToJson from "../utils/airdropLambda/csvToJson";
 
 const { DATABASE_URL, DATABASE_SSL_PATH } = process.env;
 
