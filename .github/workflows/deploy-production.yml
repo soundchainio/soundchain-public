@@ -5,7 +5,7 @@ on:
     branches:
       - production
     paths:
-      - 'api/**'
+      - "api/**"
 
 jobs:
   deploy-api:
@@ -24,6 +24,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - run: npm i -g serverless
       - run: yarn
+      - run: cd src/utils/airdrop && yarn && cd ../../../
       - run: serverless deploy -s ${GITHUB_REF#refs/heads/}
         env:
           NODE_ENV: production
