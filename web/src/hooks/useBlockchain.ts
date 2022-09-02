@@ -2,19 +2,19 @@ import { BATCH_SIZE } from 'components/modals/CreateModal'
 import { config } from 'config'
 import { useCallback } from 'react'
 import { Soundchain721 } from 'types/web3-v1-contracts/Soundchain721'
-import { SoundchainAuction } from 'types/web3-v1-contracts/SoundchainAuction'
 import { Soundchain721Editions } from 'types/web3-v2-contracts/Soundchain721Editions'
+import { SoundchainAuction as SoundchainAuctionV2 } from 'types/web3-v2-contracts/SoundchainAuction'
 import { compareWallets } from 'utils/Wallet'
 import Web3 from 'web3'
 import { AbiItem } from 'web3-utils'
-import soundchainAuction from '../contract/Auction.sol/SoundchainAuction.json'
 import soundchainContract from '../contract/Soundchain721.sol/Soundchain721.json'
 import soundchainContractEditions from '../contract/Soundchain721Editions.sol/Soundchain721Editions.json'
+import soundchainAuctionV2 from '../contract/v2/SoundchainAuction.json'
 import { ContractAddresses, gasPriceMultiplier } from './useBlockchainV2'
 
 const nftAddress = config.web3.contractsV2.contractAddress as string
 const marketplaceEditionsAddress = config.web3.contractsV2.marketplaceAddress as string
-const auctionAddress = config.web3.contractsV1.auctionAddress as string
+const auctionV2Address = config.web3.contractsV2.auctionAddress as string
 
 const createEditionGasCost = 130000
 const baseMintGasCost = 63538
@@ -77,14 +77,14 @@ const useBlockchain = () => {
       soundchainContract.abi as AbiItem[],
       contractAddresses.nft || nftAddress,
     ) as unknown as Soundchain721
-    return await nftContract.methods.isApprovedForAll(from, auctionAddress).call()
+    return await nftContract.methods.isApprovedForAll(from, auctionV2Address).call()
   }, [])
 
   const getHighestBid = useCallback(async (web3: Web3, tokenId: number, contractAddresses: ContractAddresses) => {
     const auctionContract = new web3.eth.Contract(
-      soundchainAuction.abi as AbiItem[],
-      auctionAddress,
-    ) as unknown as SoundchainAuction
+      soundchainAuctionV2.abi as AbiItem[],
+      auctionV2Address,
+    ) as unknown as SoundchainAuctionV2
     return await auctionContract.methods.getHighestBidder(contractAddresses.nft || nftAddress, tokenId).call()
   }, [])
 

@@ -25,6 +25,7 @@ import { errorHandler } from 'utils/errorHandler'
 import Web3 from 'web3'
 import { CustomModal } from '../components/CustomModal'
 import useBlockchainV2 from '../hooks/useBlockchainV2'
+import { RPCErrorCode } from 'magic-sdk'
 
 export default function AirdropPage() {
   const router = useRouter()
@@ -99,18 +100,18 @@ export default function AirdropPage() {
 
   const successfullyClaimedOguns = 'OGUNs claimed successfully!'
 
-  const handleErrorClaimingOgun = (error?: Error) => {
-    if (error && error.message === '[-32603] Error forwarded from node: insufficient funds for gas * price + value') {
-      return toast.error(
-        'Insufficient funds in your wallet to claim Ogun tokens. Please, fund your wallet and try again.',
-      )
+  const handleErrorClaimingOgun = (error?: any) => {
+    if (!error) return
+
+    if (error.code === RPCErrorCode.InternalError) {
+      toast.error('An error has ocurred. Please, make sure you have enough Matic to complete the transaction.')
+
+      return setLoading(false)
     }
 
-    const message = 'Unfortunately, we could not claim your OGUNs at this moment, please try again later.'
+    const genericErrorMessage = 'Unfortunately, we could not claim your OGUNs at this moment. Try again later.'
 
-    toast.error(message)
-
-    if (!error) return
+    toast.error(genericErrorMessage)
 
     errorHandler(error)
     return setLoading(false)
