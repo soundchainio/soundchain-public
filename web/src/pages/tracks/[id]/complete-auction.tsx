@@ -118,7 +118,10 @@ export default function CompleteAuctionPage({ track }: TrackPageProps) {
       router.replace(router.asPath.replace('complete-auction', ''))
     }
     setLoading(true)
-    resultAuction(tokenId, account, { nft: track.nftData?.contract })
+    resultAuction(tokenId, account, {
+      nft: track.nftData?.contract,
+      auction: auctionItem.auctionItem.auctionItem.contract,
+    })
       .onReceipt(onReceipt)
       .onError(cause => toast.error(cause.message))
       .finally(() => setLoading(false))

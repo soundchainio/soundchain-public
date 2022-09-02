@@ -72,6 +72,9 @@ export type AuctionItem = {
   valid: Scalars['Boolean']
   highestBid: Scalars['String']
   highestBidToShow: Scalars['Float']
+  contract: Maybe<Scalars['String']>
+  trackId: Maybe<Scalars['String']>
+  trackEditionId: Maybe<Scalars['String']>
 }
 
 export type AuctionItemPayload = {
@@ -126,12 +129,12 @@ export type BuyNowItem = {
   __typename?: 'BuyNowItem'
   id: Scalars['ID']
   owner: Scalars['String']
-  trackId: Scalars['String']
-  trackEditionId: Scalars['String']
+  trackId: Maybe<Scalars['String']>
+  trackEditionId: Maybe<Scalars['String']>
   nft: Scalars['String']
   tokenId: Scalars['Float']
   selectedCurrency: Maybe<Scalars['String']>
-  contract: Scalars['String']
+  contract: Maybe<Scalars['String']>
   startingTime: Scalars['Float']
   pricePerItem: Scalars['String']
   pricePerItemToShow: Scalars['Float']
@@ -216,31 +219,6 @@ export type CommentNotification = {
 export type CountBidsPayload = {
   __typename?: 'CountBidsPayload'
   numberOfBids: Maybe<Scalars['Float']>
-}
-
-export type CreateAuctionItemInput = {
-  id?: Maybe<Scalars['String']>
-  owner: Scalars['String']
-  nft: Scalars['String']
-  tokenId: Scalars['Float']
-  startingTime: Scalars['Float']
-  endingTime: Scalars['Float']
-  reservePrice: Scalars['String']
-  reservePriceToShow: Scalars['Float']
-  isPaymentOGUN: Scalars['Boolean']
-}
-
-export type CreateAuctionItemType = {
-  __typename?: 'CreateAuctionItemType'
-  id: Maybe<Scalars['String']>
-  owner: Scalars['String']
-  nft: Scalars['String']
-  tokenId: Scalars['Float']
-  startingTime: Scalars['Float']
-  endingTime: Scalars['Float']
-  reservePrice: Scalars['String']
-  reservePriceToShow: Scalars['Float']
-  isPaymentOGUN: Scalars['Boolean']
 }
 
 export type CreateMultipleTracksInput = {
@@ -651,7 +629,6 @@ export enum MusicianType {
 
 export type Mutation = {
   __typename?: 'Mutation'
-  createAuctionItem: CreateAuctionItemType
   updateOgunClaimedAudioHolder: UpdateOgunClaimedAudioHolderPayload
   addComment: AddCommentPayload
   updateComment: UpdateCommentPayload
@@ -694,10 +671,6 @@ export type Mutation = {
   validateOTPRecoveryPhrase: Scalars['Boolean']
   createWhitelistEntry: CreateWhitelistEntryPayload
   updateOgunClaimedWhitelist: UpdateWhitelistEntryPayload
-}
-
-export type MutationCreateAuctionItemArgs = {
-  input: CreateAuctionItemInput
 }
 
 export type MutationUpdateOgunClaimedAudioHolderArgs = {
@@ -1915,7 +1888,15 @@ export type AuctionItemQuery = { __typename?: 'Query' } & {
     auctionItem: Maybe<
       { __typename?: 'AuctionItem' } & Pick<
         AuctionItem,
-        'id' | 'owner' | 'nft' | 'tokenId' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow'
+        | 'id'
+        | 'owner'
+        | 'nft'
+        | 'tokenId'
+        | 'contract'
+        | 'startingTime'
+        | 'endingTime'
+        | 'reservePrice'
+        | 'reservePriceToShow'
       >
     >
   }
@@ -3872,6 +3853,7 @@ export const AuctionItemDocument = gql`
         owner
         nft
         tokenId
+        contract
         startingTime
         endingTime
         reservePrice
