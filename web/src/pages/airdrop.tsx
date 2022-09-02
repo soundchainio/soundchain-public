@@ -104,12 +104,12 @@ export default function AirdropPage() {
     if (!error) return
 
     if (error.code === RPCErrorCode.InternalError) {
-      toast.error('Insufficient funds. Please, add funds to your wallet and try again.')
+      toast.error('An error has ocurred. Please, make sure you have enough Matic to complete the transaction.')
 
       return setLoading(false)
     }
 
-    const genericErrorMessage = 'Unfortunately, we could not claim your OGUNs at this moment, please try again later.'
+    const genericErrorMessage = 'Unfortunately, we could not claim your OGUNs at this moment. Try again later.'
 
     toast.error(genericErrorMessage)
 
