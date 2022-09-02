@@ -67,10 +67,14 @@ export const Header = () => {
     <>
       <header className="h-20">
         <div className="my-0 flex h-20 w-full items-center justify-between px-6 pt-4 lg:px-10">
-          <div className="flex items-center">
-            <Logo className="h-[50px]" />
-            <span className="hidden font-extrabold text-white md:block">SoundChain</span>
-          </div>
+          <Link href="/">
+            <a>
+              <div className="flex items-center">
+                <Logo className="h-[50px]" />
+                <span className="hidden font-extrabold text-white md:block">SoundChain</span>
+              </div>
+            </a>
+          </Link>
           <nav className="flex items-center justify-evenly gap-3 text-white">
             {/* TODO: disabling this for the soft launch */}
             {/* <NavItem text="Stake" /> */}
