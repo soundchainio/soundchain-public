@@ -100,7 +100,7 @@ export default function AirdropPage() {
 
   const successfullyClaimedOguns = 'OGUNs claimed successfully!'
 
-  const handleErrorClaimingOgun = (error?: Error | RPCErrorCode) => {
+  const handleErrorClaimingOgun = (error?: any) => {
     if (!error) return
 
     if (error.code === RPCErrorCode.InternalError) {
