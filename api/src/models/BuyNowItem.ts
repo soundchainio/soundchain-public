@@ -11,13 +11,13 @@ export class BuyNowItem extends Model {
   @prop({ required: true })
   owner: string;
 
-  @Field()
+  @Field({ nullable: true })
   @prop({ required: false })
-  trackId: string;
+  trackId?: string;
 
-  @Field()
+  @Field({ nullable: true })
   @prop({ required: false })
-  trackEditionId: string;
+  trackEditionId?: string;
 
   @Field()
   @prop({ required: true })
@@ -31,9 +31,9 @@ export class BuyNowItem extends Model {
   @prop({ type: String })
   selectedCurrency: string;
 
-  @Field()
+  @Field({ nullable: true })
   @prop({ required: false })
-  contract: string;
+  contract?: string;
 
   @Field()
   @prop({ required: true })

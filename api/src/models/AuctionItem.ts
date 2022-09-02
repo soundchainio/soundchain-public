@@ -36,7 +36,7 @@ export class AuctionItem extends Model {
   reservePriceToShow: number;
 
   @Field()
-  @prop({ type: Boolean, required: true })
+  @prop({ type: Boolean, required: true, default: false })
   isPaymentOGUN: boolean;
 
   @Field(() => Date)
@@ -56,6 +56,18 @@ export class AuctionItem extends Model {
   @Field()
   @prop({ type: Number })
   highestBidToShow: number;
+
+  @Field({ nullable: true })
+  @prop({ required: false })
+  contract?: string;
+
+  @Field({ nullable: true })
+  @prop({ required: false })
+  trackId?: string;
+
+  @Field({ nullable: true })
+  @prop({ required: false })
+  trackEditionId?: string;
 }
 
 export const AuctionItemModel = getModelForClass(AuctionItem);

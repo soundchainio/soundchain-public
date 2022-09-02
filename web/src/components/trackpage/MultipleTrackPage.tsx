@@ -130,7 +130,9 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
   const isProcessing = isPendingRequest(nftData?.pendingRequest) || isPendingRequest(editionData?.pendingRequest)
   const canList = (me?.profile.verified && isMinter) || nftData?.minter != account
   const isBuyNow = Boolean(firstListingItem?.pricePerItem)
-  const isPaymentOGUN = Boolean(firstListingItem?.OGUNPricePerItemToShow != 0)
+  const isPaymentOGUN = Boolean(
+    firstListingItem?.OGUNPricePerItemToShow && firstListingItem?.OGUNPricePerItemToShow != 0,
+  )
 
   const price = firstListingItem?.pricePerItemToShow || 0
   const OGUNprice = firstListingItem?.OGUNPricePerItemToShow || 0
@@ -157,7 +159,7 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
         </div>
       ),
     }),
-    [track.id, track.artist, track.title, isMinter, me?.roles],
+    [track.id, track.artist, track.title, isMinter, me?.roles, dispatchShowAuthorActionsModal],
   )
 
   const {
@@ -190,7 +192,7 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
       setRoyalties(royaltiesFromBlockchain)
     }
     fetchRoyalties()
-  }, [account, web3, editionId, getEditionRoyalties, royalties, nftData?.contract])
+  }, [account, web3, editionId, getEditionRoyalties, royalties, nftData?.contract, tokenId])
 
   useEffect(() => {
     if (track.artistProfileId) {
