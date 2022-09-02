@@ -116,10 +116,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
       return
     }
     const fetchHighestBid = async () => {
-      console.log(track.nftData?.contract)
       const { _bid, _bidder } = await getHighestBid(web3, tokenId, { nft: track.nftData?.contract })
-      console.log(_bid)
-      console.log(_bidder)
       setHighestBid({ bid: priceToShow(_bid), bidder: _bidder })
       refetchCountBids()
     }
