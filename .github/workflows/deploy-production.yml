@@ -5,7 +5,7 @@ on:
     branches:
       - production
     paths:
-      - 'api/**'
+      - "api/**"
 
 jobs:
   deploy-api:
@@ -46,6 +46,7 @@ jobs:
           MARKETPLACE_ADDRESS: ${{ secrets.MARKETPLACE_ADDRESS_PRODUCTION }}
           NFT_ADDRESS: ${{ secrets.NFT_ADDRESS_PRODUCTION }}
           AUCTION_ADDRESS: ${{ secrets.AUCTION_ADDRESS_PRODUCTION }}
+          AUCTION_V2_ADDRESS: ${{ secrets.AUCTION_V2_ADDRESS_PRODUCTION }}
           NFT_MULTIPLE_EDITION_ADDRESS: ${{ secrets.NFT_MULTIPLE_EDITION_ADDRESS_PRODUCTION }}
           MARKETPLACE_MULTIPLE_EDITION_ADDRESS: ${{ secrets.MARKETPLACE_MULTIPLE_EDITION_ADDRESS_PRODUCTION }}
           PINATA_API_KEY: ${{ secrets.PINATA_API_KEY_PRODUCTION }}
