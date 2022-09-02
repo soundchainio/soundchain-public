@@ -26,7 +26,7 @@ interface ListNFTProps {
 
 export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: ListNFTProps) => {
   const [isPaymentOGUN, setIsPaymentOGUN] = useState(false)
-  const minStartMinutes = 10
+  const minStartMinutes = 1
   const endTimeMinutes = 20
   const bufferTime = 2
   const getMinutesToDate = (minutes: number): Date => {
