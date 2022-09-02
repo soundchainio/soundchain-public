@@ -22,15 +22,6 @@ export interface ListNFTBuyNowFormValues {
   startTime: Date
 }
 
-const validationSchema: SchemaOf<ListNFTBuyNowFormValues> = object().shape({
-  salePrice: number().required('Price is a required field'),
-  royalty: number().max(100).min(0).required(),
-  selectedCurrency: string().required(),
-  startTime: date()
-    .min(new Date(new Date().getTime() + 10 * 1000 * 60), 'The start time should be at least ten minutes from now')
-    .required(),
-})
-
 interface ListNFTProps {
   initialValues?: Partial<ListNFTBuyNowFormValues>
   submitLabel: string
@@ -39,11 +30,25 @@ interface ListNFTProps {
 }
 
 export const ListNFTBuyNow = ({ initialValues, maxGasFee, submitLabel, handleSubmit }: ListNFTProps) => {
+  const minStartMinutes = 10
+  const bufferTime = 2
+  const getMinutesToDate = (minutes: number): Date => {
+    return new Date(new Date().getTime() + minutes * 1000 * 60)
+  }
+  const validationSchema: SchemaOf<ListNFTBuyNowFormValues> = object().shape({
+    salePrice: number().required('Price is a required field'),
+    royalty: number().max(100).min(0).required(),
+    selectedCurrency: string().required(),
+    startTime: date()
+      .min(getMinutesToDate(minStartMinutes), 'The start time should be at least ten minutes from now')
+      .required(),
+  })
+
   const defaultValues = {
     salePrice: initialValues?.salePrice || 0,
     royalty: initialValues?.royalty || 0,
     selectedCurrency: 'OGUN',
-    startTime: initialValues?.startTime || new Date(new Date().getTime() + 1 * 1000 * 60),
+    startTime: initialValues?.startTime || getMinutesToDate(minStartMinutes + bufferTime),
   }
   const [selectedCurrency, setSelectedCurrency] = useState<CurrencyType>('OGUN')
 

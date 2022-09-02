@@ -367,8 +367,6 @@ class CreateAuction extends BlockchainFunction<CreateAuctionParams> {
     this.web3 = web3
 
     const auctionContractAddress = contractAddresses?.auction || auctionV2Address
-    console.log(auctionContractAddress)
-    console.log(auctionV2Address)
     let transactionObject: PayableTransactionObject<void>
 
     if (auctionContractAddress === auctionV2Address) {
