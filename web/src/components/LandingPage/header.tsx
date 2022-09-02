@@ -50,12 +50,12 @@ export default function LandingPageHeader() {
     <>
       <header className="h-14">
         <nav className="container mx-auto flex h-full items-center px-4 text-white md:px-0">
-          <div className="flex items-center gap-4">
-            <Logo className="block h-8 w-auto" />
-            <Link href="/">
-              <a className="text-lg font-semibold text-slate-50">SoundChain</a>
-            </Link>
-          </div>
+          <Link href="/">
+            <a className="flex items-center gap-4">
+              <Logo className="block h-8 w-auto" />
+              <span className="text-lg font-semibold text-slate-50">SoundChain</span>
+            </a>
+          </Link>
           <div className="flex-1" />
           <ul className="hidden gap-4 md:flex">
             <li className="text-md cursor-pointer font-semibold text-slate-400 hover:text-slate-200">
