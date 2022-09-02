@@ -52,8 +52,6 @@ export default function AirdropPage() {
   const isWhitelistUser = Boolean(whitelistEntry)
   const isAddressInProofBook = Boolean(proofBook?.getProofBookByWallet?.address)
 
-  console.log('isAddressInProofBook', isAddressInProofBook)
-
   useEffect(() => {
     if (account) {
       whitelistEntryByWallet({ variables: { walletAdress: account } })
