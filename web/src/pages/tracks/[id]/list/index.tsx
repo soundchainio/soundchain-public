@@ -49,33 +49,34 @@ export default function ListPage() {
               With a fixed-price Buy It Now listing, a buyer knows the exact price they need to pay for your NFT and can
               complete their purchase immediately. There is no bidding on fixed-price listings.
             </p>
-            <NextLink href={`${router.asPath}/buy-now`} replace>
+            <NextLink href={{ pathname: `${router.pathname}/buy-now`, query: router.query }} replace>
               <Button variant="outline" borderColor="bg-green-gradient" className="h-10 w-1/2">
                 BUY NOW LISTING
               </Button>
             </NextLink>
           </div>
         </div>
-        {!data?.track.editionSize && (
-          <div>
-            <div className="m-3 flex flex-col gap-4 rounded border-2 border-gray-700 bg-black p-4">
-              <div className="flex flex-row gap-2">
-                <Auction className="h-6 w-6" purple />
-                <p className="text-sm font-bold text-white">Auction</p>
+        {!data?.track.editionSize ||
+          (data?.track.editionSize < 2 && (
+            <div>
+              <div className="m-3 flex flex-col gap-4 rounded border-2 border-gray-700 bg-black p-4">
+                <div className="flex flex-row gap-2">
+                  <Auction className="h-6 w-6" purple />
+                  <p className="text-sm font-bold text-white">Auction</p>
+                </div>
+                <p className="text-xs text-white">
+                  When you list an NFT for sale in an auction, you choose a starting price, time limit, and a reserve
+                  price. Interested buyers will place bids and when the auction ends, your NFT is sold to the highest
+                  bidder as long as it meets the reserve price.
+                </p>
+                <NextLink href={{ pathname: `${router.pathname}/auction`, query: router.query }} replace>
+                  <Button variant="outline" borderColor="bg-purple-gradient" className="h-10 w-1/2">
+                    AUCTION LISTING
+                  </Button>
+                </NextLink>
               </div>
-              <p className="text-xs text-white">
-                When you list an NFT for sale in an auction, you choose a starting price, time limit, and a reserve
-                price. Interested buyers will place bids and when the auction ends, your NFT is sold to the highest
-                bidder as long as it meets the reserve price.
-              </p>
-              <NextLink href={`${router.asPath}/auction`} replace>
-                <Button variant="outline" borderColor="bg-purple-gradient" className="h-10 w-1/2">
-                  AUCTION LISTING
-                </Button>
-              </NextLink>
             </div>
-          </div>
-        )}
+          ))}
       </div>
     </>
   )
