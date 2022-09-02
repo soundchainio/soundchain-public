@@ -15,6 +15,7 @@ import { ContractAddresses, gasPriceMultiplier } from './useBlockchainV2'
 const nftAddress = config.web3.contractsV2.contractAddress as string
 const marketplaceEditionsAddress = config.web3.contractsV2.marketplaceAddress as string
 const auctionAddress = config.web3.contractsV1.auctionAddress as string
+const auctionV2Address = config.web3.contractsV2.auctionAddress as string
 
 const createEditionGasCost = 130000
 const baseMintGasCost = 63538
@@ -77,7 +78,7 @@ const useBlockchain = () => {
       soundchainContract.abi as AbiItem[],
       contractAddresses.nft || nftAddress,
     ) as unknown as Soundchain721
-    return await nftContract.methods.isApprovedForAll(from, auctionAddress).call()
+    return await nftContract.methods.isApprovedForAll(from, auctionV2Address).call()
   }, [])
 
   const getHighestBid = useCallback(async (web3: Web3, tokenId: number, contractAddresses: ContractAddresses) => {

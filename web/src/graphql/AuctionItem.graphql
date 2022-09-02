@@ -5,6 +5,7 @@ query AuctionItem($tokenId: Float!) {
       owner
       nft
       tokenId
+      contract
       startingTime
       endingTime
       reservePrice
