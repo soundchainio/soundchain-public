@@ -18,15 +18,6 @@ export interface ListNFTAuctionFormValues {
   endTime: Date
 }
 
-const validationSchema: SchemaOf<ListNFTAuctionFormValues> = object().shape({
-  price: number().min(0.000001).required(),
-  startTime: date()
-    .min(new Date(new Date().getTime() + 10 * 1000 * 60), 'The start time should be at least ten minutes from now')
-    .required(), // current  date + 5 minutes
-  endTime: date().min(ref('startTime'), "End time can't be before start time").required(),
-  // isPaymentOGUN: boolean().required(),
-})
-
 interface ListNFTProps {
   submitLabel: string
   handleSubmit: (values: ListNFTAuctionFormValues, formikHelpers: FormikHelpers<ListNFTAuctionFormValues>) => void
@@ -35,10 +26,24 @@ interface ListNFTProps {
 
 export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: ListNFTProps) => {
   const [isPaymentOGUN, setIsPaymentOGUN] = useState(false)
+  const minStartMinutes = 10
+  const endTimeMinutes = 20
+  const bufferTime = 2
+  const getMinutesToDate = (minutes: number): Date => {
+    return new Date(new Date().getTime() + minutes * 1000 * 60)
+  }
+  const validationSchema: SchemaOf<ListNFTAuctionFormValues> = object().shape({
+    price: number().min(0.000001).required(),
+    startTime: date()
+      .min(getMinutesToDate(minStartMinutes), 'The start time should be at least ten minutes from now')
+      .required(),
+    endTime: date().min(ref('startTime'), "End time can't be before start time").required(),
+    // isPaymentOGUN: boolean().required(),
+  })
   const defaultValues: ListNFTAuctionFormValues = {
     price: initialValues?.price || 0,
-    startTime: initialValues?.startTime || new Date(new Date().getTime() + 10 * 1000 * 60),
-    endTime: initialValues?.endTime || new Date(new Date().getTime() + 20 * 1000 * 60),
+    startTime: initialValues?.startTime || getMinutesToDate(minStartMinutes + bufferTime),
+    endTime: initialValues?.endTime || getMinutesToDate(endTimeMinutes + bufferTime),
   }
 
   return (
