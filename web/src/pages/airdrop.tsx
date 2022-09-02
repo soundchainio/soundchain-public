@@ -25,6 +25,7 @@ import { errorHandler } from 'utils/errorHandler'
 import Web3 from 'web3'
 import { CustomModal } from '../components/CustomModal'
 import useBlockchainV2 from '../hooks/useBlockchainV2'
+import { RPCErrorCode } from 'magic-sdk'
 
 export default function AirdropPage() {
   const router = useRouter()
@@ -50,6 +51,8 @@ export default function AirdropPage() {
   const isAudiusHolder = Boolean(audioHolder)
   const isWhitelistUser = Boolean(whitelistEntry)
   const isAddressInProofBook = Boolean(proofBook?.getProofBookByWallet?.address)
+
+  console.log('isAddressInProofBook', isAddressInProofBook)
 
   useEffect(() => {
     if (account) {
@@ -99,18 +102,18 @@ export default function AirdropPage() {
 
   const successfullyClaimedOguns = 'OGUNs claimed successfully!'
 
-  const handleErrorClaimingOgun = (error?: Error) => {
-    if (error && error.message === '[-32603] Error forwarded from node: insufficient funds for gas * price + value') {
-      return toast.error(
-        'Insufficient funds in your wallet to claim Ogun tokens. Please, fund your wallet and try again.',
-      )
+  const handleErrorClaimingOgun = (error?: Error | RPCErrorCode) => {
+    if (!error) return
+
+    if (error.code === RPCErrorCode.InternalError) {
+      toast.error('Insufficient funds. Please, add funds to your wallet and try again.')
+
+      return setLoading(false)
     }
 
-    const message = 'Unfortunately, we could not claim your OGUNs at this moment, please try again later.'
+    const genericErrorMessage = 'Unfortunately, we could not claim your OGUNs at this moment, please try again later.'
 
-    toast.error(message)
-
-    if (!error) return
+    toast.error(genericErrorMessage)
 
     errorHandler(error)
     return setLoading(false)
