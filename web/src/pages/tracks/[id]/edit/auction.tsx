@@ -139,6 +139,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
 
     updateAuction(listingPayload.auctionItem?.auctionItem?.tokenId, weiPrice, startTimestamp, endTimestamp, account, {
       nft: nftData?.contract,
+      auction: listingPayload.auctionItem?.auctionItem?.contract,
     })
       .onReceipt(onTransactionReceipt)
       .onError(cause => toast.error(cause.message))
