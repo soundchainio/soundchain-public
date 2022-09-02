@@ -5,7 +5,7 @@ import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar'
 import { TimeCounter } from 'components/TimeCounter'
 import { useModalDispatch } from 'contexts/providers/modal'
 import { CheckmarkFilled } from 'icons/CheckmarkFilled'
-import NextLink from 'next/link'
+import NextLink, { LinkProps } from 'next/link'
 import { useRouter } from 'next/router'
 import React from 'react'
 
@@ -85,7 +85,7 @@ export const HandleNFT = ({
       )
     }
     return (
-      <ListingAction href={`${router.asPath}/list`} action="LIST NFT">
+      <ListingAction href={{ pathname: `${router.pathname}/list`, query: router.query }} action="LIST NFT">
         <CheckmarkFilled />
         You own this NFT
       </ListingAction>
@@ -165,7 +165,7 @@ export const HandleNFT = ({
 }
 
 interface ListingActionProps {
-  href: string
+  href: LinkProps['href']
   action: string
 }
 

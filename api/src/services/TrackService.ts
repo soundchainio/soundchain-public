@@ -394,7 +394,7 @@ export class TrackService extends ModelService<typeof Track> {
     if (trackEditionId) {
       ors.push({ trackEditionId });
     }
-    
+
     return await FavoriteProfileTrackModel.exists({
       $or: ors,
       profileId,
@@ -405,7 +405,7 @@ export class TrackService extends ModelService<typeof Track> {
     const track = await this.model.findOne({ _id: trackId });
 
     const ors: any[] = [{ trackId }];
-    
+
     if (track.trackEditionId) {
       ors.push({ trackEditionId: track.trackEditionId });
     }
@@ -450,9 +450,9 @@ export class TrackService extends ModelService<typeof Track> {
 
   async favoriteCount(trackId: string, trackEditionId: string): Promise<FavoriteCount> {
     const ors: any[] = [{ trackId: trackId.toString() }];
-    
+
     if (trackEditionId) {
-      ors.push({ trackEditionId: trackEditionId.toString()})
+      ors.push({ trackEditionId: trackEditionId.toString() });
     }
 
     const favTrack = await FavoriteProfileTrackModel.aggregate([

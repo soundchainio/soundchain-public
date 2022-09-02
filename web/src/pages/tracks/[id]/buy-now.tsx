@@ -53,7 +53,7 @@ const tokenContract = (web3: Web3) =>
   new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], OGUNAddress) as unknown as Contract
 
 export const getServerSideProps = protectPage<BuyNowTrackProps, TrackPageParams>(async (context, apolloClient) => {
-  const trackId = context.params?.id
+  const trackId: string = context.params?.id || ''
   const isPaymentOGUN = (context.query?.isPaymentOGUN as string | undefined) || 'false'
 
   if (!trackId) {

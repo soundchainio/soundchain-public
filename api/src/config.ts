@@ -49,6 +49,7 @@ export const {
   MUX_DATA_SECRET,
   POLYGON_SCAN_API_KEY,
   AUCTION_ADDRESS,
+  AUCTION_V2_ADDRESS,
 } = process.env;
 
 function assertEnvVar(name: string, value: string | undefined): asserts value {
@@ -126,6 +127,7 @@ export const config = {
     contractsV2: {
       marketplaceMultipleEditionAddress: MARKETPLACE_MULTIPLE_EDITION_ADDRESS,
       nftMultipleEditionAddress: NFT_MULTIPLE_EDITION_ADDRESS,
+      auctionAddress: AUCTION_V2_ADDRESS,
     },
     alchemyKey: ALCHEMY_API_KEY,
     polygonScan: POLYGON_SCAN_API_KEY,
