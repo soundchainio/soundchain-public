@@ -125,6 +125,7 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
     : undefined
   const futureSale = startingDate ? startingDate.getTime() > new Date().getTime() : false
   const loading = loadingListingItem || isLoadingOwner
+  const typeOfAuthorActionsModal = track?.trackEditionId ? AuthorActionsType.EDITION : AuthorActionsType.NFT
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
@@ -137,7 +138,7 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
               type="button"
               aria-label="More options"
               className="flex h-10 w-10 items-center justify-center"
-              onClick={() => dispatchShowAuthorActionsModal(true, AuthorActionsType.NFT, track.id, true)}
+              onClick={() => dispatchShowAuthorActionsModal(true, typeOfAuthorActionsModal, track.id, true)}
             >
               <Ellipsis fill="#808080" />
             </button>
@@ -149,9 +150,11 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
     [isOwner, me?.roles, track.artist, track.id, track.title],
   )
 
+  // This useEffect should remain without the dep. array because topNavBarProps is
+  // being changed by the layout context thus causing infinite loops here
   useEffect(() => {
     setTopNavBarProps(topNavBarProps)
-  }, [setTopNavBarProps, topNavBarProps])
+  }, [])
 
   useEffect(() => {
     if (tokenId && contractAddress) {
