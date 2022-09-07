@@ -56,7 +56,11 @@ export const HandleNFT = ({
     if (isBuyNow || (isAuction && !auctionIsOver && countBids === 0)) {
       return (
         <ListedAction
-          href={isBuyNow ? `${router.asPath}/edit/buy-now` : `${router.asPath}/edit/auction`}
+          href={
+            isBuyNow
+              ? { pathname: `${router.pathname}/edit/buy-now`, query: { ...router.query, isPaymentOGUN } }
+              : { pathname: `${router.pathname}/edit/auction`, query: { ...router.query, isPaymentOGUN } }
+          }
           price={price}
           OGUNprice={OGUNprice}
           isPaymentOGUN={isPaymentOGUN}
@@ -77,8 +81,8 @@ export const HandleNFT = ({
           countBids={countBids}
           endingDate={endingDate}
           price={price}
-          cancelHref={`${router.asPath}/cancel-auction`}
-          completeHref={`${router.asPath}/complete-auction`}
+          cancelHref={{ pathname: `${router.pathname}/cancel-auction`, query: router.query }}
+          completeHref={{ pathname: `${router.pathname}/complete-auction`, query: router.query }}
           auctionId={auctionId}
           canComplete={canComplete}
         />
@@ -96,7 +100,7 @@ export const HandleNFT = ({
       return (
         <>
           <ListedAction
-            href={`${router.asPath}/buy-now`}
+            href={{ pathname: `${router.pathname}/buy-now`, query: { ...router.query, isPaymentOGUN } }}
             price={price}
             OGUNprice={OGUNprice}
             isPaymentOGUN={isPaymentOGUN}
@@ -110,21 +114,23 @@ export const HandleNFT = ({
     }
     if (OGUNprice && isBuyNow) {
       return (
-        <ListedAction
-          href={`${router.asPath}/buy-now`}
-          price={price}
-          OGUNprice={OGUNprice}
-          isPaymentOGUN={isPaymentOGUN}
-          action="BUY NFT WITH OGUN"
-          variant="buy-nft"
-          startingDate={startingDate}
-        />
+        <>
+          <ListedAction
+            href={{ pathname: `${router.pathname}/buy-now`, query: { ...router.query, isPaymentOGUN } }}
+            price={price}
+            OGUNprice={OGUNprice}
+            isPaymentOGUN={isPaymentOGUN}
+            action="BUY NFT WITH OGUN"
+            variant="buy-nft"
+            startingDate={startingDate}
+          />
+        </>
       )
     }
     if (price && isBuyNow && !multipleEdition) {
       return (
         <ListedAction
-          href={`${router.asPath}/buy-now`}
+          href={{ pathname: `${router.pathname}/buy-now`, query: router.query }}
           price={price}
           OGUNprice={OGUNprice}
           action="BUY NFT"
@@ -136,7 +142,7 @@ export const HandleNFT = ({
     if (price && isAuction && !auctionIsOver) {
       return (
         <ListedAction
-          href={`${router.asPath}/place-bid`}
+          href={{ pathname: `${router.pathname}/place-bid`, query: { ...router.query, isPaymentOGUN } }}
           countBids={countBids}
           startingDate={startingDate}
           endingDate={endingDate}
@@ -152,7 +158,7 @@ export const HandleNFT = ({
     if (canComplete && isAuction) {
       return (
         <ListedAction
-          href={`${router.asPath}/complete-auction`}
+          href={{ pathname: `${router.pathname}/complete-auction`, query: router.query }}
           price={price}
           OGUNprice={OGUNprice}
           action="COMPLETE"
@@ -186,7 +192,7 @@ export const ListingAction = ({ href, action, children }: React.PropsWithChildre
 
 interface ListedActionProps {
   isOwner?: boolean
-  href?: string
+  href?: LinkProps['href']
   price: number
   OGUNprice: number
   action: string
@@ -255,16 +261,16 @@ export const ListedAction = ({
       <div className="flex flex-1 items-center justify-end">
         {href &&
           (!!auctionId ? (
-            <NextLink href={{ pathname: href, query: { isPaymentOGUN: !!isPaymentOGUN } }} replace>
+            <NextLink href={href} replace>
               <Button variant={variant}>{action}</Button>
             </NextLink>
           ) : (
             <>
-              <NextLink href={{ pathname: href, query: { isPaymentOGUN: !!isPaymentOGUN } }} replace>
+              <NextLink href={href} replace>
                 <Button variant={variant}>{action}</Button>
               </NextLink>
               {secondAction && (
-                <NextLink href={{ pathname: href, query: { isPaymentOGUN: !!isPaymentOGUN } }} replace>
+                <NextLink href={href} replace>
                   <Button variant={variant}>{secondAction}</Button>
                 </NextLink>
               )}
@@ -281,12 +287,12 @@ export const ListedAction = ({
 }
 
 interface AuctionDetailsProps {
-  cancelHref: string
+  cancelHref: LinkProps['href']
   auctionIsOver: boolean
   price: number
   countBids?: number
   endingDate?: Date
-  completeHref: string
+  completeHref: LinkProps['href']
   auctionId: string
   canComplete: boolean
   isPaymentOGUN?: boolean
