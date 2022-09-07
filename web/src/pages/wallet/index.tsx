@@ -231,8 +231,13 @@ export default function WalletPage() {
                       )}
                     </div>
                     <div className="mt-4 flex justify-center gap-5">
-                      <WalletButton title="Activity" icon={Activity} href={`/wallet/${getAccount}/history`} />
-                      <WalletButton title="Receive" icon={ArrowDown} href={`/wallet/${getAccount}/receive`} />
+                      {getAccount && (
+                        <>
+                          <WalletButton title="Activity" icon={Activity} href={`/wallet/${getAccount}/history`} />
+                          <WalletButton title="Receive" icon={ArrowDown} href={`/wallet/${getAccount}/receive`} />
+                        </>
+                      )}
+
                       <WalletButton title="Buy" icon={CreditCard} href="/wallet/buy" />
                       {isSoundChainSelected && (
                         <WalletButton title="Send" icon={ArrowUpRight} href="/wallet/transfer" />
@@ -256,8 +261,12 @@ export default function WalletPage() {
                       )}
                     </div>
                     <div className="mt-4 flex justify-center gap-5">
-                      <WalletButton title="Activity" icon={Activity} href={`/wallet/${getAccount}/history`} />
-                      <WalletButton title="Receive" icon={ArrowDown} href={`/wallet/${getAccount}/receive`} />
+                      {getAccount && (
+                        <>
+                          <WalletButton title="Activity" icon={Activity} href={`/wallet/${getAccount}/history`} />
+                          <WalletButton title="Receive" icon={ArrowDown} href={`/wallet/${getAccount}/receive`} />
+                        </>
+                      )}
                       <WalletButton title="Buy" icon={CreditCard} href="/wallet/buy" />
                       {isSoundChainSelected && (
                         <WalletButton title="Send" icon={ArrowUpRight} href="/wallet/transferOgun" />
@@ -268,11 +277,15 @@ export default function WalletPage() {
               </div>
               <div className="mt-3 flex items-center justify-between p-3">
                 <span className="font-bold text-gray-80">Owned NFT’s</span>
-                <Link href={`/wallet/${getAccount}/transfer`}>
-                  <a className="rounded-lg border border-neutral-500 bg-black px-3 py-2 font-semibold text-neutral-500">
-                    Transfer NFT’s
-                  </a>
-                </Link>
+                {getAccount && (
+                  <>
+                    <Link href={`/wallet/${getAccount}/transfer`}>
+                      <a className="rounded-lg border border-neutral-500 bg-black px-3 py-2 font-semibold text-neutral-500">
+                        Transfer NFT’s
+                      </a>
+                    </Link>
+                  </>
+                )}
               </div>
               {getAccount && <OwnedNfts refreshing={isRefetchingBalance} owner={getAccount} />}
             </>
