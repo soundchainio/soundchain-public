@@ -68,6 +68,7 @@ export const AuthorActionsModal = () => {
   const onDeleteNFT = async () => {
     const { data: track } = await getTrack({ variables: { id: authorActionsId } })
     if (track) {
+      // only the NFT owner should have the right to burn the NFT
       const shouldBurn = me?.profile.id === track?.track.profileId
       dispatchShowConfirmDeleteNFTModal(true, track.track.id, shouldBurn)
     }

@@ -178,9 +178,11 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
     ssr: false,
   })
 
+  // This useEffect should remain without the dep. array because topNavBarProps is
+  // being changed by the layout context thus causing infinite loops here
   useEffect(() => {
     setTopNavBarProps(topNavBarProps)
-  }, [setTopNavBarProps, topNavBarProps])
+  }, [])
 
   const { editionId } = track.trackEdition as TrackEdition
   useEffect(() => {
