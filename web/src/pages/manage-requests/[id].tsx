@@ -36,7 +36,7 @@ interface RequestPageParams extends ParsedUrlQuery {
 }
 
 export const getServerSideProps = protectPage<RequestPageProps, RequestPageParams>(async (context, apolloClient) => {
-  const requestId = context.params?.id
+  const requestId: string | undefined = context.params?.id
 
   if (!requestId) {
     return { notFound: true }

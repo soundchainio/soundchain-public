@@ -10,7 +10,7 @@ import { Matic } from 'icons/Matic'
 import { useState } from 'react'
 import ReactDatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
-import { date, number, object, ref, SchemaOf } from 'yup'
+import { date, number, object, SchemaOf } from 'yup'
 
 export interface ListNFTAuctionFormValues {
   price: number
@@ -27,7 +27,7 @@ interface ListNFTProps {
 export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: ListNFTProps) => {
   const [isPaymentOGUN, setIsPaymentOGUN] = useState(false)
   const minStartMinutes = 10
-  const endTimeMinutes = 20
+  const minEndMinutes = 20
   const bufferTime = 2
   const getMinutesToDate = (minutes: number): Date => {
     return new Date(new Date().getTime() + minutes * 1000 * 60)
@@ -37,13 +37,15 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: Lis
     startTime: date()
       .min(getMinutesToDate(minStartMinutes), 'The start time should be at least ten minutes from now')
       .required(),
-    endTime: date().min(ref('startTime'), "End time can't be before start time").required(),
+    endTime: date()
+      .min(getMinutesToDate(minEndMinutes), 'End time needs to be at least 5 minutes after start time')
+      .required(),
     // isPaymentOGUN: boolean().required(),
   })
   const defaultValues: ListNFTAuctionFormValues = {
     price: initialValues?.price || 0,
     startTime: initialValues?.startTime || getMinutesToDate(minStartMinutes + bufferTime),
-    endTime: initialValues?.endTime || getMinutesToDate(endTimeMinutes + bufferTime),
+    endTime: initialValues?.endTime || getMinutesToDate(minEndMinutes + bufferTime),
   }
 
   return (

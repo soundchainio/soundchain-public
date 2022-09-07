@@ -14,13 +14,14 @@ import {
   PendingRequest,
   TrackDocument,
   TrackQuery,
-  useUpdateTrackMutation,
+  useUpdateTrackMutation
 } from 'lib/graphql'
 import { protectPage } from 'lib/protectPage'
 import { useRouter } from 'next/router'
 import { ParsedUrlQuery } from 'querystring'
 import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
+import { TransactionReceipt } from 'web3-core'
 import SEO from '../../../components/SEO'
 
 export interface TrackPageProps {
@@ -57,7 +58,7 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
     context,
   })
 
-  if (auctionError || !auction.auctionItem) {
+  if (auctionError || !auction.auctionItem.auctionItem) {
     return { notFound: true }
   }
 
@@ -87,6 +88,7 @@ export default function CompleteAuctionPage({ track, auctionItem }: TrackPagePro
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // if there's no valid auction at the moment user should be redirect to the track page
   if (!auctionItem) {
     return null
   }
@@ -95,7 +97,8 @@ export default function CompleteAuctionPage({ track, auctionItem }: TrackPagePro
     if (!web3 || !account) {
       return
     }
-    const onReceipt = async () => {
+    const onReceipt = async (receipt: TransactionReceipt) => {
+      console.log('Your transaction receipt: ', receipt)
       await trackUpdate({
         variables: {
           input: {
@@ -115,8 +118,12 @@ export default function CompleteAuctionPage({ track, auctionItem }: TrackPagePro
       nft: track.nftData?.contract,
       auction: auctionItem.contract,
     })
-      .onReceipt(() => onReceipt)
-      .onError(cause => toast.error(cause.message))
+      .onReceipt((receipt) => onReceipt(receipt))
+      .onError(cause => {
+        toast.error(cause.message)
+        console.log('Error during cancelling the auction: ', cause)
+        setLoading(false)
+      })
       .finally(() => setLoading(false))
       .execute(web3)
   }
