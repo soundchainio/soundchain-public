@@ -25,7 +25,9 @@ export const NavBar = () => {
     <nav className="inset-x-0 flex h-16 items-center bg-black shadow-2xl">
       <div className="flex w-full justify-center gap-6">
         <Link href="/" passHref>
-          <Logo className="block h-8 w-auto hover:cursor-pointer" />
+          <a>
+            <Logo className="block h-8 w-auto hover:cursor-pointer" />
+          </a>
         </Link>
 
         <NavBarButton label="Home" path="/home" icon={Home} color="yellow" id="top" />
