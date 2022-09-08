@@ -57,7 +57,7 @@ export const PostForm = ({ ...props }: PostFormProps) => {
 
   useEffect(() => {
     if (props.trackId) getTrack({ variables: { id: props.trackId } })
-  }, [props.trackId])
+  }, [getTrack, props.trackId])
 
   const onEmojiPickerClick = () => {
     setEmojiPickerVisible(!isEmojiPickerVisible)
@@ -159,7 +159,7 @@ export const PostForm = ({ ...props }: PostFormProps) => {
           )}
           {props.postLink && props.type !== PostFormType.REPOST && (
             <iframe
-              className="w-full bg-gray-20"
+              className="min-h-[600px] w-full bg-gray-20"
               frameBorder="0"
               allowFullScreen
               src={props.postLink}
