@@ -24,3 +24,11 @@ export const fixedDecimals = (value: number | string) => {
 }
 
 export const priceToShow = (wei: string) => fixedDecimals(Web3.utils.fromWei(wei, 'ether'))
+
+export const formatToCompactNumber = (number: number) => {
+  const formatter = Intl.NumberFormat('en', { notation: 'compact', minimumFractionDigits: 1 })
+
+  const n = formatter.format(number)
+
+  return n
+}
