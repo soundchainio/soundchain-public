@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import axios from 'axios'
 import { MediaLink } from 'components/PostLinkInput'
 import { apolloClient } from 'lib/apollo'
@@ -12,13 +13,14 @@ const soundcloudRegex = /soundcloud.com/
 const soundcloudLinkRegex = /(src=")(.*)(")/g
 
 const spotifyRegex = /spotify.com/
-const spotifyLinkRegex = /(?=track\/).*(?=\?)/g
+const spotifyLinkRegex =
+  /^(?:spotify:|(?:https?:\/\/(?:open|play)\.spotify\.com\/))(?:embed)?\/?(album|track)(?::|\/)((?:[0-9a-zA-Z]){22})/
 
 const vimeoRegex = /(vimeo.com\/)/
 const vimeoLinkRegex = /(vimeo.com\/)(.*)/g
 
 const bandcampRegex = /(bandcamp.com\/)/
-const bandcampLinkRegex = /(bandcamp.com\/)(.*)/g
+// const bandcampLinkRegex = /(bandcamp.com\/)(.*)/g
 
 const normalizeYoutube = (str: string) => {
   let videoId = ''
@@ -53,9 +55,11 @@ const normalizeSoundcloud = async (str: string) => {
 }
 
 const normalizeSpotify = (str: string) => {
-  const songId = (str.match(spotifyLinkRegex) || [])[0]
-  if (songId[0]) {
-    const spotifyUrl = `https://open.spotify.com/embed/${songId}`
+  const spotifyUrlData = str.match(spotifyLinkRegex) || []
+  const trackId = spotifyUrlData[2].trim()
+
+  if (trackId) {
+    const spotifyUrl = `https://open.spotify.com/embed/track/${trackId}`
     return spotifyUrl
   }
 
