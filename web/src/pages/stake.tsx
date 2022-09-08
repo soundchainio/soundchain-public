@@ -13,10 +13,10 @@ import { MetaMask } from 'icons/MetaMask'
 import { SoundchainGoldLogo } from 'icons/SoundchainGoldLogo'
 import { WalletConnect } from 'icons/WalletConnect'
 import { testnetNetwork } from 'lib/blockchainNetworks'
-import { GetServerSideProps } from 'next'
 import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast, ToastContainer } from 'react-toastify'
+import { formatToCompactNumber } from 'utils/format'
 import Web3 from 'web3'
 import { Contract } from 'web3-eth-contract'
 import { AbiItem } from 'web3-utils'
@@ -46,18 +46,6 @@ const tokenContractLP = (web3: Web3) =>
 const tokenStakeContractLP = (web3: Web3) =>
   new web3.eth.Contract(LiquidityPoolRewards.abi as AbiItem[], LPtokenStakeContractAddress) as unknown as Contract
 
-// TODO: remove before enabling the ogun token stake
-export const getServerSideProps: GetServerSideProps = ({ res }) => {
-  if (res) {
-    res.statusCode = 404
-    res.end('Not found')
-  }
-
-  return Promise.resolve({
-    props: {},
-  })
-}
-
 export default function Stake() {
   const router = useRouter()
 
@@ -72,19 +60,24 @@ export default function Stake() {
   const { web3: metamaskWeb3, account: metamaskAccount } = useMetaMask()
   const { getCurrentGasPrice } = useBlockchain()
   const { setIsLandingLayout } = useLayoutContext()
-  const [account, setAccount] = useState<string>()
-  const [OGUNBalance, setOGUNBalance] = useState<string>('0')
-  const [stakeBalance, setStakeBalance] = useState<string>('0')
-  const [ogunRewardBalance, setOgunRewardBalance] = useState<string>('0')
-  const [LPBalance, setLPBalance] = useState<string>('0')
-  const [LPStakeBalance, setLPStakeBalance] = useState<string>('0')
-  const [ogunRewardLPBalance, setOgunRewardLPBalance] = useState<string>('0')
+  const [account, setAccount] = useState('')
+  const [OGUNBalance, setOGUNBalance] = useState('0')
+  const [stakeBalance, setStakeBalance] = useState('0')
+  const [ogunRewardBalance, setOgunRewardBalance] = useState('0')
+  const [LPBalance, setLPBalance] = useState('0')
+  const [LPStakeBalance, setLPStakeBalance] = useState('0')
+  const [ogunRewardLPBalance, setOgunRewardLPBalance] = useState('0')
   const [selected, setSelected] = useState<Selected>('Stake')
-  const [transactionState, setTransactionState] = useState<string>()
+  const [transactionState, setTransactionState] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [closeWcModal, setCloseWcModal] = useState(false)
   const [showDescription, setShowDescription] = useState(false)
-  const [web3, setWeb3] = useState<Web3>()
+  const [web3, setWeb3] = useState<Web3 | null>(null)
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const formRef = useRef<any>(null)
+  const hasOgunRewardBalance = Number(ogunRewardBalance) > 0
+  const hasOgunRewardLPBalance = Number(ogunRewardLPBalance) > 0
 
   const saveWalletState = (wallet: string) => {
     localStorage.setItem('soundchain_staking_connected_wallet', wallet)
@@ -148,7 +141,7 @@ export default function Stake() {
     !web3 ? loadProvider() : loadMetaMaskProvider(web3)
 
     setShowModal(false)
-    setWeb3(metamaskWeb3)
+    setWeb3(metamaskWeb3 || null)
     saveWalletState('metamask')
   }
 
@@ -191,6 +184,18 @@ export default function Stake() {
     const currentBalanceLP = await tokenContractLP(web3).methods.balanceOf(account).call()
     const formattedBalanceLP = web3.utils.fromWei(currentBalanceLP ?? '0')
     setLPBalance(formattedBalanceLP)
+  }
+
+  const getRewardBalance = () => {
+    const { token } = formRef.current.values
+
+    if (token === 'lp') {
+      return formatToCompactNumber(Number(ogunRewardLPBalance))
+    }
+
+    if (token === 'ogun') {
+      return formatToCompactNumber(Number(ogunRewardBalance))
+    }
   }
 
   const getStakeBalance = async (web3: Web3) => {
@@ -255,11 +260,11 @@ export default function Stake() {
     const tokenName = isLPToken ? 'OGUN LP' : 'OGUN'
 
     if (values.amount <= 0) {
-      toast('The amount to stake has to be higher than 0.')
+      toast('The amount to stake has to be greater than 0.')
       return
     }
     if (values.amount > +balance) {
-      toast(`You can't stake an amount higher than your current ${tokenName} balance.`)
+      toast(`You can't stake an amount greater than your current ${tokenName} balance.`)
       return
     }
     if (account && web3 && values.amount > 0 && values.amount <= +balance) {
@@ -267,7 +272,6 @@ export default function Stake() {
         const existingAllowance = await currentTokenContract(web3)
           .methods.allowance(account, stakingContractAddress)
           .call()
-          .catch(console.log)
 
         const weiAmount = web3.utils.toWei(values.amount.toString())
         const gasPrice = web3.utils.toWei(await getCurrentGasPrice(web3))
@@ -283,18 +287,20 @@ export default function Stake() {
         const stakeTxObj = currentTokenStakingContract(web3).methods.stake(weiAmount)
         const stakeTxGas = await stakeTxObj.estimateGas({ from: account })
         await stakeTxObj.send({ from: account, gas: stakeTxGas, gasPrice })
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (cause: any) {
-        console.log('Stake Error: ', cause)
+      } catch (error: unknown) {
+        console.log('Stake Error: ', error)
       } finally {
-        setTransactionState(undefined)
+        setTransactionState('')
       }
     }
   }
 
   const unstake = async (values: FormValues) => {
-    const isLPToken = values.token === 'lp'
+    const { token, amount } = values
+
+    if (!token || !amount) return
+
+    const isLPToken = token === 'lp'
     const currentStakeBalance = isLPToken ? +LPStakeBalance : +stakeBalance
     const currentTokenStakingContract = isLPToken ? tokenStakeContractLP : tokenStakeContract
     const tokenName = isLPToken ? 'OGUN LP' : 'OGUN'
@@ -304,15 +310,41 @@ export default function Stake() {
       try {
         setTransactionState(`Unstaking ${tokenName}...`)
         const gasPrice = web3.utils.toWei(await getCurrentGasPrice(web3))
-        const unstakeTxObj = currentTokenStakingContract(web3).methods.withdraw()
+
+        const amountWei = web3.utils.toWei(String(amount))
+
+        const unstakeTxObj = currentTokenStakingContract(web3).methods.withdrawStake(amountWei)
         const unstakeTxGas = await unstakeTxObj.estimateGas({ from: account })
+
         await unstakeTxObj.send({ from: account, gas: unstakeTxGas, gasPrice })
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (cause: any) {
-        console.log('Stake Error: ', cause)
+      } catch (error: unknown) {
+        console.log('Stake Error: ', error)
       } finally {
-        setTransactionState(undefined)
+        setTransactionState('')
       }
+    }
+  }
+
+  const handleClaimRewards = async (token: string) => {
+    try {
+      if (!account || !web3) return
+
+      const isLPToken = token === 'lp'
+      const tokenName = isLPToken ? 'OGUN LP' : 'OGUN'
+
+      setTransactionState(`Claiming ${tokenName} rewards...`)
+      const gasPrice = web3.utils.toWei(await getCurrentGasPrice(web3))
+      const currentTokenStakingContract = isLPToken ? tokenStakeContractLP : tokenStakeContract
+
+      const rewardsTxObj = currentTokenStakingContract(web3).methods.withdrawRewards()
+      const rewardsTxGas = await rewardsTxObj.estimateGas({ from: account })
+
+      const receipt = await rewardsTxObj.send({ from: account, gas: rewardsTxGas, gasPrice })
+      console.log('receipt', receipt)
+    } catch (error) {
+      console.log('Claim rewards Error: ', error)
+    } finally {
+      setTransactionState('')
     }
   }
 
@@ -339,9 +371,15 @@ export default function Stake() {
       <>
         <div className="flex max-w-3xl flex-col items-center justify-center gap-y-6">
           <StakeTitle />
-          <Button variant="rainbow" className="w-5/6">
-            <span className="font-medium ">BUY OGUNS</span>
-          </Button>
+          <a
+            href="https://legacy.quickswap.exchange/#/swap?inputCurrency=0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270&outputCurrency=0x45f1af89486aeec2da0b06340cd9cd3bd741a15c"
+            target="_blank"
+            rel="noreferrer"
+          >
+            <Button variant="rainbow" className="w-5/6">
+              <text className="font-medium ">BUY OGUNS</text>
+            </Button>
+          </a>
         </div>
 
         <div className="w-full px-6">
@@ -406,9 +444,15 @@ export default function Stake() {
         <div className="flex max-w-3xl flex-col items-center justify-center gap-y-6">
           <StakeTitle />
           <div className="flex gap-x-3">
-            <Button variant="rainbow" className="w-5/6">
-              <span className="font-medium ">BUY OGUNS</span>
-            </Button>
+            <a
+              href="https://legacy.quickswap.exchange/#/swap?inputCurrency=0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270&outputCurrency=0x45f1af89486aeec2da0b06340cd9cd3bd741a15c"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <Button variant="rainbow" className="w-5/6" buttonClassName="p-2">
+                <span className="font-medium">BUY OGUN</span>
+              </Button>
+            </a>
             <button
               className="flex items-center justify-center gap-x-2 whitespace-nowrap border-transparent bg-transparent"
               onClick={addWallet}
@@ -419,7 +463,7 @@ export default function Stake() {
           </div>
         </div>
 
-        <div className=" flex w-full flex-grow flex-col md:md:w-[30rem]">
+        <div className=" flex w-full flex-grow flex-col md:md:w-[40rem]">
           {transactionState && (
             <div className="flex items-center bg-blue-500 px-4 py-3 text-sm font-bold text-white" role="alert">
               <svg className="mr-2 h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
@@ -449,81 +493,109 @@ export default function Stake() {
               </button>
             </header>
             <Formik<FormValues>
-              initialValues={{ amount: selected === 'Stake' ? 0 : +stakeBalance, token: 'ogun' }}
+              initialValues={{ amount: 0, token: 'ogun' }}
               onSubmit={values => (selected === 'Stake' ? stake(values) : unstake(values))}
+              innerRef={formRef}
             >
               {({ values, handleChange }) => {
-                let { amount } = values
-                if (selected === 'Unstake' && values.token === 'lp') amount = +LPStakeBalance
+                const { amount, token } = values
 
                 return (
-                  <Form className="h-full w-full">
-                    <div className="flex flex-col items-center justify-start gap-y-2 md:flex-row md:gap-y-0">
-                      <div className="relative h-10 w-full md:w-6/12">
-                        <select
-                          className="h-10 w-full border-0 bg-gray-25 pl-8 text-xs font-bold text-gray-80"
-                          name="token"
-                          id="token"
-                          onChange={handleChange}
-                        >
-                          <option value="ogun">OGUN</option>
-                          <option value="lp">OGUN-LP</option>
-                        </select>
-                        <span className="pointer-events-none absolute top-3 left-2">
-                          <Logo id="soundchain-wallet" height="16" width="16" />
+                  <>
+                    <Form className="h-full w-full">
+                      <div className="flex flex-col">
+                        <div className="flex flex-col items-center justify-start gap-y-2 md:flex-row md:gap-y-0">
+                          <div className="relative h-10 w-full md:w-6/12">
+                            <select
+                              className="h-10 w-full border-0 bg-gray-25 pl-8 text-xs font-bold text-gray-80"
+                              name="token"
+                              id="token"
+                              value={token}
+                              onChange={handleChange}
+                            >
+                              <option selected value="ogun">
+                                OGUN
+                              </option>
+                              <option value="lp">OGUN-LP</option>
+                            </select>
+                            <span className="pointer-events-none absolute top-3 left-2">
+                              <Logo id="soundchain-wallet" height="16" width="16" />
+                            </span>
+                          </div>
+                          <input
+                            name="amount"
+                            id="amount"
+                            type="number"
+                            placeholder="Amount"
+                            value={amount || ''}
+                            className="h-10 w-full border-transparent bg-gray-40 md:ml-2 md:w-9/12"
+                            onChange={handleChange}
+                          />
+                          <button
+                            className="h-10 w-full border-transparent bg-white py-2 px-3 font-normal text-black md:w-3/12"
+                            type="submit"
+                            disabled={Boolean(transactionState)}
+                          >
+                            {selected.toUpperCase()}
+                          </button>
+                        </div>
+                      </div>
+                    </Form>
+
+                    {selected === 'Unstake' && (hasOgunRewardBalance || hasOgunRewardLPBalance) && (
+                      <div className="flex w-full flex-col bg-gray-25 p-4 sm:flex-row sm:items-center sm:justify-between">
+                        <text className="mt-2 mb-6 self-center bg-rainbow-gradient bg-clip-text text-sm font-semibold text-transparent brightness-200 sm:mb-0">
+                          You have {getRewardBalance()} OGUN reward
+                        </text>
+                        <Button variant="rainbow" buttonClassName="sm:px-2 py-1.5" disabled={Boolean(transactionState)}>
+                          <text
+                            className="text-xs font-semibold drop-shadow-sm"
+                            onClick={() => handleClaimRewards(token)}
+                          >
+                            Claim Rewards
+                          </text>
+                        </Button>
+                      </div>
+                    )}
+                    {token === 'ogun' && (
+                      <div className="flex w-full flex-col gap-y-1 text-sm text-white text-opacity-60">
+                        <span className="flex justify-between">
+                          <text>OGUN in wallet:</text>
+                          <text>{OGUNBalance}</text>
+                        </span>
+                        <span className="flex justify-between">
+                          <text>Your staked OGUN:</text>
+                          <text>{stakeBalance}</text>
+                        </span>
+                        <span className="flex justify-between">
+                          <text>Your OGUN staking rewards:</text>
+                          <span>
+                            <text>{ogunRewardBalance}</text>
+                          </span>
                         </span>
                       </div>
-                      <input
-                        name="amount"
-                        id="amount"
-                        type="number"
-                        placeholder="Amount"
-                        className="h-10 w-full border-transparent bg-gray-40 md:ml-2 md:w-8/12"
-                        value={amount}
-                        onChange={handleChange}
-                        readOnly={selected === 'Unstake'}
-                      />
-                      <button
-                        className="h-10 w-full border-transparent bg-white py-2 px-3 font-normal text-black md:w-3/12"
-                        type="submit"
-                      >
-                        {selected.toUpperCase()}
-                      </button>
-                    </div>
-                  </Form>
+                    )}
+                    {token === 'lp' && (
+                      <div className="flex w-full flex-col gap-y-1 text-sm text-white text-opacity-60">
+                        <span className="flex justify-between">
+                          <text>OGUN-LP in wallet:</text>
+                          <text>{LPBalance}</text>
+                        </span>
+                        <span className="flex justify-between">
+                          <text>Your staked OGUN-LP:</text>
+                          <text>{LPStakeBalance}</text>
+                        </span>
+                        <span className="flex justify-between">
+                          <text>Your OGUN LP rewards:</text>
+                          <text>{ogunRewardLPBalance}</text>
+                        </span>
+                      </div>
+                    )}
+                  </>
                 )
               }}
             </Formik>
-            <div className="flex w-full flex-col gap-y-1 text-xs text-white text-opacity-60">
-              <span className="flex justify-between">
-                <text>OGUN in wallet:</text>
-                <text>{OGUNBalance}</text>
-              </span>
-              <span className="flex justify-between">
-                <text>Your staked OGUN:</text>
-                <text>{stakeBalance}</text>
-              </span>
-              <span className="flex justify-between">
-                <text>Your OGUN staking rewards:</text>
-                <text>{ogunRewardBalance}</text>
-              </span>
-            </div>
-            <div className="flex w-full flex-col gap-y-1 text-xs text-white text-opacity-60">
-              <span className="flex justify-between">
-                <text>OGUN-LP in wallet:</text>
-                <text>{LPBalance}</text>
-              </span>
-              <span className="flex justify-between">
-                <text>Your staked OGUN-LP:</text>
-                <text>{LPStakeBalance}</text>
-              </span>
-              <span className="flex justify-between">
-                <text>Your OGUN LP rewards:</text>
-                <text>{ogunRewardLPBalance}</text>
-              </span>
-            </div>
           </div>
-
           <div className="flex w-full flex-col items-center justify-center gap-y-8 py-3 md:justify-between md:py-9">
             <button className="border-b-2 border-white" onClick={() => setShowDescription(!showDescription)}>
               Find out how it works
