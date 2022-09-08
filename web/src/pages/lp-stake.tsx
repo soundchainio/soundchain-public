@@ -232,6 +232,7 @@ export default function Stake() {
       getLpStakeBalance(web3)
       getOGUNBalance(web3)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account, lpTransactionState])
 
   const ConnectAccountState = () => {
@@ -239,9 +240,15 @@ export default function Stake() {
       <>
         <div className="flex max-w-3xl flex-col items-center justify-center gap-y-6">
           <StakeTitle />
-          <Button variant="rainbow" className="w-5/6">
-            <span className="font-medium ">BUY OGUNS</span>
-          </Button>
+          <a
+            href="https://legacy.quickswap.exchange/#/swap?inputCurrency=0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270&outputCurrency=0x45f1af89486aeec2da0b06340cd9cd3bd741a15c"
+            target="_blank"
+            rel="noreferrer"
+          >
+            <Button variant="rainbow" className="w-5/6">
+              <span className="font-medium ">BUY OGUNS</span>
+            </Button>
+          </a>
         </div>
 
         <div className="w-full px-6">
