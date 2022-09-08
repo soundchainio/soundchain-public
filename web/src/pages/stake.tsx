@@ -534,6 +534,7 @@ export default function Stake() {
                           <button
                             className="h-10 w-full border-transparent bg-white py-2 px-3 font-normal text-black md:w-3/12"
                             type="submit"
+                            disabled={Boolean(transactionState)}
                           >
                             {selected.toUpperCase()}
                           </button>
@@ -546,7 +547,7 @@ export default function Stake() {
                         <text className="mt-2 mb-6 self-center bg-rainbow-gradient bg-clip-text text-sm font-semibold text-transparent brightness-200 sm:mb-0">
                           You have {getRewardBalance()} OGUN reward
                         </text>
-                        <Button variant="rainbow" buttonClassName="sm:px-2 py-1.5">
+                        <Button variant="rainbow" buttonClassName="sm:px-2 py-1.5" disabled={Boolean(transactionState)}>
                           <text
                             className="text-xs font-semibold drop-shadow-sm"
                             onClick={() => handleClaimRewards(token)}
