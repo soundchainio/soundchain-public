@@ -30,6 +30,7 @@ interface Song {
 interface MiniAudioPlayerProps {
   song: Song
   hideBadgeAndPrice?: boolean
+  handleOnPlayClicked?: () => void
 }
 
 export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
@@ -45,7 +46,7 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
     editionSize = 0,
     listingCount,
   } = props.song
-  const { hideBadgeAndPrice, song } = props
+  const { hideBadgeAndPrice, song, handleOnPlayClicked } = props
 
   const { duration, progress, play, isCurrentSong, isCurrentlyPlaying, setProgressStateFromSlider } =
     useAudioPlayerContext()
@@ -71,6 +72,11 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
     </div>
   )
 
+  const onClickPlayPause = () => {
+    play(song)
+    if (handleOnPlayClicked) handleOnPlayClicked()
+  }
+
   return (
     <div
       className={`transparent-border-1px items-center rounded-lg bg-black p-4 ${
@@ -86,7 +92,7 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
             <div className="flex items-center">
               <button
                 className="flex h-8 w-8 items-center rounded-full bg-white"
-                onClick={() => play(song)}
+                onClick={onClickPlayPause}
                 aria-label={isPlaying ? 'Pause' : 'Play'}
               >
                 {isPlaying ? (
