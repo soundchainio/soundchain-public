@@ -1,16 +1,16 @@
 import { NotAvailableMessage } from 'components/NotAvailableMessage'
-import { TrackQuery, Track as TheTrack } from 'lib/graphql'
-import React from 'react'
+import { Track as TheTrack, TrackQuery } from 'lib/graphql'
 import { MiniAudioPlayer } from './MiniAudioPlayer'
 
 interface TrackProps {
   track: TrackQuery['track'] | TheTrack
   coverPhotoUrl?: string
   hideBadgeAndPrice?: boolean
+  handleOnPlayClicked?: () => void
 }
 
 export const Track = (props: TrackProps) => {
-  const { track, coverPhotoUrl, hideBadgeAndPrice } = props
+  const { track, coverPhotoUrl, hideBadgeAndPrice, handleOnPlayClicked } = props
 
   if (track.deleted) {
     return <NotAvailableMessage type="track" />
@@ -33,6 +33,7 @@ export const Track = (props: TrackProps) => {
         editionSize: track.editionSize,
         listingCount: track.listingCount,
       }}
+      handleOnPlayClicked={handleOnPlayClicked}
     />
   )
 }
