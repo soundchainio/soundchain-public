@@ -1,11 +1,10 @@
 import { NoResultFound } from 'components/NoResultFound'
 import { ProfileListItem } from 'components/ProfileListItem'
 import { Subtitle } from 'components/Subtitle'
-import { Song, TrackListItem } from 'components/TrackListItem'
-import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
+import { TrackListItem } from 'components/TrackListItem'
+import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { RightArrow } from 'icons/RightArrow'
 import { useExploreQuery } from 'lib/graphql'
-import React from 'react'
 import { ExploreTab } from 'types/ExploreTabType'
 import { ExploreTopTracksBanner } from './ExploreTopTracksBanner'
 import { ProfileListItemSkeleton } from './ProfileListItemSkeleton'
@@ -22,7 +21,7 @@ export const ExploreAll = ({ searchTerm, setSelectedTab }: ExplorePageProps) => 
   const tracks = data?.explore.tracks
   const { playlistState } = useAudioPlayerContext()
 
-  const handleOnPlayClicked = (song: Song, index: number) => {
+  const handleOnPlayClicked = (index: number) => {
     if (tracks) {
       const list = tracks.map(
         track =>
@@ -111,7 +110,7 @@ export const ExploreAll = ({ searchTerm, setSelectedTab }: ExplorePageProps) => 
                 isFavorite: track.isFavorite,
               }}
               index={index + 1}
-              handleOnPlayClicked={song => handleOnPlayClicked(song, index)}
+              handleOnPlayClicked={() => handleOnPlayClicked(index)}
             />
           ))}
         </div>
