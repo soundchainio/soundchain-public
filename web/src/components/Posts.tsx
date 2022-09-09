@@ -116,7 +116,11 @@ interface RowProps {
 const Row = ({ data, index, setSize }: RowProps) => {
   const rowRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => setSize(index, rowRef?.current?.getBoundingClientRect().height), [setSize, index])
+  useEffect(() => {
+    const gapHeight = rowRef?.current?.getBoundingClientRect().height
+
+    setSize(index, gapHeight)
+  }, [setSize, index])
 
   if (!data[index]) {
     return null

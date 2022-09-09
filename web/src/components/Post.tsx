@@ -84,7 +84,7 @@ export const Post = ({ post }: PostProps) => {
           (hasLazyLoadWithThumbnailSupport(post.mediaLink) ? (
             <ReactPlayer
               width="100%"
-              height="150px"
+              height="600px"
               style={{ marginTop: '1rem' }}
               url={post.mediaLink}
               playsinline
