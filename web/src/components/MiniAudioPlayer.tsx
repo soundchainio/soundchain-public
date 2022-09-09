@@ -46,10 +46,9 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
     editionSize = 0,
     listingCount,
   } = props.song
-  const { hideBadgeAndPrice, song, handleOnPlayClicked } = props
+  const { hideBadgeAndPrice, handleOnPlayClicked } = props
 
-  const { duration, progress, play, isCurrentSong, isCurrentlyPlaying, setProgressStateFromSlider } =
-    useAudioPlayerContext()
+  const { duration, progress, isCurrentSong, isCurrentlyPlaying, setProgressStateFromSlider } = useAudioPlayerContext()
 
   const [isPlaying, setIsPlaying] = useState(false)
   const [isSameSong, setIsSameSong] = useState(false)
@@ -73,7 +72,6 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
   )
 
   const onClickPlayPause = () => {
-    play(song)
     if (handleOnPlayClicked) handleOnPlayClicked()
   }
 
