@@ -20,7 +20,6 @@ const vimeoRegex = /(vimeo.com\/)/
 const vimeoLinkRegex = /(vimeo.com\/)(.*)/g
 
 const bandcampRegex = /(bandcamp.com\/)/
-// const bandcampLinkRegex = /(bandcamp.com\/)(.*)/g
 
 const normalizeYoutube = (str: string) => {
   let videoId = ''

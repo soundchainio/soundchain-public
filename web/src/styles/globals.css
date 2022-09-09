@@ -166,10 +166,6 @@ html {
   }
 }
 
-#player {
-  max-width: 100% !important;
-}
-
 .bg-yellow-gradient {
   background: linear-gradient(76.4deg, rgba(177, 159, 59, 0.2) 8.28%, rgba(255, 241, 111, 0.2) 83.02%);
 }
