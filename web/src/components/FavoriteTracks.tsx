@@ -1,13 +1,14 @@
 import classNames from 'classnames'
 import { InfiniteLoader } from 'components/InfiniteLoader'
+import { Track as TrackItem } from 'components/Track'
+import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { SortTrackInput, Track, TrackQuery, useFavoriteTracksQuery } from 'lib/graphql'
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import PullToRefresh from 'react-simple-pull-to-refresh'
+import { SelectToApolloQuery, SortListingItem } from '../lib/apollo/sorting'
+import { GridView } from './GridView'
 import { NoResultFound } from './NoResultFound'
 import { TrackListItemSkeleton } from './TrackListItemSkeleton'
-import { GridView } from './GridView'
-import { SelectToApolloQuery, SortListingItem } from '../lib/apollo/sorting'
-import { Track as TrackItem } from 'components/Track'
 
 interface FavoriteTracksProps {
   searchTerm?: string
@@ -15,18 +16,10 @@ interface FavoriteTracksProps {
   sorting: SortListingItem
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-type Song = {
-  src: string
-  title?: string | null
-  trackId: string
-  artist?: string | null
-  art?: string | null
-}
-
 const pageSize = 15
 
 export const FavoriteTracks = ({ searchTerm, isGrid, sorting }: FavoriteTracksProps) => {
+  const { playlistState } = useAudioPlayerContext()
   const { data, loading, fetchMore, refetch } = useFavoriteTracksQuery({
     variables: {
       search: searchTerm,
@@ -69,6 +62,21 @@ export const FavoriteTracks = ({ searchTerm, isGrid, sorting }: FavoriteTracksPr
 
   const { nodes, pageInfo } = data.favoriteTracks
 
+  const handleOnPlayClicked = (index: number) => {
+    const list = nodes.map(
+      node =>
+        ({
+          trackId: node.id,
+          src: node.playbackUrl,
+          art: node.artworkUrl,
+          title: node.title,
+          artist: node.artist,
+          isFavorite: node.isFavorite,
+        } as Song),
+    )
+    playlistState(list, index)
+  }
+
   return (
     <>
       {isGrid ? (
@@ -82,8 +90,13 @@ export const FavoriteTracks = ({ searchTerm, isGrid, sorting }: FavoriteTracksPr
       ) : (
         <PullToRefresh onRefresh={refetch} className="h-auto">
           <ol className={classNames('space-y-1')}>
-            {nodes.map(song => (
-              <TrackItem hideBadgeAndPrice={true} key={song.id} track={song as TrackQuery['track']} />
+            {nodes.map((song, index) => (
+              <TrackItem
+                hideBadgeAndPrice={true}
+                key={song.id}
+                track={song as TrackQuery['track']}
+                handleOnPlayClicked={() => handleOnPlayClicked(index)}
+              />
             ))}
             {/*{nodes.map((song, index) => (
               <TrackListItem

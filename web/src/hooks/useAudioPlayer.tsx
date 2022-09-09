@@ -1,6 +1,6 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react'
 
-type Song = {
+export type Song = {
   src: string
   title?: string | null
   trackId: string
