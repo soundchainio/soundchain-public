@@ -66,10 +66,10 @@ export const PostForm = ({ ...props }: PostFormProps) => {
   const onSubmit = async (values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
     switch (props.type) {
       case PostFormType.REPOST:
-        await createRepost({ variables: { input: { body: values.body, repostId: repostId! } } })
+        await createRepost({ variables: { input: { body: values.body, repostId: repostId as string } } })
         break
       case PostFormType.EDIT:
-        const updateParams: UpdatePostInput = { body: values.body, postId: editPostId! }
+        const updateParams: UpdatePostInput = { body: values.body, postId: editPostId as string }
 
         if (props.postLink?.length) {
           updateParams.mediaLink = props.postLink
@@ -159,7 +159,7 @@ export const PostForm = ({ ...props }: PostFormProps) => {
           )}
           {props.postLink && props.type !== PostFormType.REPOST && (
             <iframe
-              className="min-h-[600px] w-full bg-gray-20"
+              className="min-h-[500px] w-full bg-gray-20"
               frameBorder="0"
               allowFullScreen
               src={props.postLink}
