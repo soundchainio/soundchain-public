@@ -9,9 +9,9 @@ import dynamic from 'next/dynamic'
 import NextLink from 'next/link'
 import { useEffect, useState } from 'react'
 import { currency } from 'utils/format'
+import { Cards } from '../icons/Cards'
 import { Logo } from '../icons/Logo'
 import { CurrencyType } from '../types/CurrenctyType'
-import { Cards } from '../icons/Cards'
 import Asset from './Asset'
 
 const WavesurferComponent = dynamic(() => import('./wavesurfer'), {
@@ -20,6 +20,7 @@ const WavesurferComponent = dynamic(() => import('./wavesurfer'), {
 interface TrackProps {
   track: TrackWithListingItem | Track
   coverPhotoUrl?: string
+  handleOnPlayClicked?: () => void
 }
 
 const getSaleType = (res: Maybe<ListingItemWithPrice>): string => {
@@ -31,7 +32,7 @@ const getSaleType = (res: Maybe<ListingItemWithPrice>): string => {
   return ''
 }
 
-export const TrackGrid = ({ track }: TrackProps) => {
+export const TrackGrid = ({ track, handleOnPlayClicked }: TrackProps) => {
   const song = {
     src: track.playbackUrl,
     trackId: track.id,
@@ -57,7 +58,7 @@ export const TrackGrid = ({ track }: TrackProps) => {
   const OGUNPrice = listingItem?.OGUNPricePerItemToShow ?? 0
   const selectedCurrency: CurrencyType = price ? 'MATIC' : 'OGUN'
   const { art, artist, title, trackId, playbackCount, favoriteCount, editionSize, listingCount } = song
-  const { play, isCurrentSong, isCurrentlyPlaying, setProgressStateFromSlider, progress } = useAudioPlayerContext()
+  const { isCurrentSong, isCurrentlyPlaying, setProgressStateFromSlider, progress } = useAudioPlayerContext()
 
   const [isPlaying, setIsPlaying] = useState(false)
   const [isReady, setIsReady] = useState(false)
@@ -69,6 +70,10 @@ export const TrackGrid = ({ track }: TrackProps) => {
   }, [isCurrentSong, isCurrentlyPlaying, setIsPlaying, trackId])
 
   const trackPrice = track.price.value
+
+  const onTrackClick = () => {
+    if (handleOnPlayClicked) handleOnPlayClicked()
+  }
   return (
     <div
       className={`${
@@ -156,7 +161,7 @@ export const TrackGrid = ({ track }: TrackProps) => {
         {!isReady ? (
           <LoaderAnimation ring />
         ) : (
-          <button className="flex h-6 w-6 items-center rounded-full bg-white" onClick={() => play(song)}>
+          <button className="flex h-6 w-6 items-center rounded-full bg-white" onClick={onTrackClick}>
             {isPlaying ? <Pause className="m-auto scale-125 text-white" /> : <Play className="m-auto text-white" />}
           </button>
         )}

@@ -22,7 +22,7 @@ export const config = {
   polygonscan: process.env.NEXT_PUBLIC_POLYGONSCAN,
   redirectUrlPostLogin: process.env.NEXT_PUBLIC_REDIRECT_URL_POST_LOGIN || '/marketplace',
   soundchainFee: parseFloat(process.env.NEXT_PUBLIC_SOUNDCHAIN_FEE || '0.02'),
-  tokenStakeContractAddress: process.env.NEXT_PUBLIC_TOKEN_STAKE_CONTRACT_ADDRESS,
+  tokenStakeContractAddress: process.env.NEXT_PUBLIC_OGUN_STAKE_CONTRACT_ADDRESS,
   appVersion: process.env.NEXT_PUBLIC_APP_VERSION || '2.0.0',
   airdropStatus: process.env.NEXT_PUBLIC_AIRDROP_STATUS === 'true',
   sentryUrl: process.env.NEXT_PUBLIC_SENTRY_URL,

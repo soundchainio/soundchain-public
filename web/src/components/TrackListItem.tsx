@@ -1,18 +1,8 @@
-import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
+import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { Pause } from 'icons/PauseBottomAudioPlayer'
 import { Play } from 'icons/PlayBottomAudioPlayer'
 import NextLink from 'next/link'
-import React from 'react'
 import Asset from './Asset'
-
-export type Song = {
-  src: string
-  title?: string | null
-  trackId: string
-  artist?: string | null
-  art?: string | null
-  isFavorite?: boolean | null
-}
 
 interface TrackProps {
   index: number

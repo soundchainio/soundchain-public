@@ -2,7 +2,8 @@ import { ApolloQueryResult } from '@apollo/client'
 import { GridSkeleton } from 'components/GridSkeleton'
 import { NoResultFound } from 'components/NoResultFound'
 import { TrackGrid } from 'components/TrackGrid'
-import { ListingItemsQuery, TrackWithListingItem, ExploreTracksQuery, Track, FavoriteTracksQuery } from 'lib/graphql'
+import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
+import { ExploreTracksQuery, FavoriteTracksQuery, ListingItemsQuery, Track, TrackWithListingItem } from 'lib/graphql'
 import PullToRefresh from 'react-simple-pull-to-refresh'
 import { InfiniteLoader as InfiniteLoaderLegacy } from '../InfiniteLoader'
 
@@ -15,6 +16,26 @@ interface ViewProps {
 }
 
 export const GridView = ({ tracks, loading, refetch, hasNextPage, loadMore }: ViewProps) => {
+  const { playlistState } = useAudioPlayerContext()
+  const onClickTrackGrid = (index: number) => {
+    if (handleOnPlayClicked) handleOnPlayClicked(index)
+  }
+  const handleOnPlayClicked = (index: number) => {
+    if (tracks) {
+      const list = tracks.map(
+        track =>
+          ({
+            trackId: track.id,
+            src: track.playbackUrl,
+            art: track.artworkUrl,
+            title: track.title,
+            artist: track.artist,
+            isFavorite: track.isFavorite,
+          } as Song),
+      )
+      playlistState(list, index)
+    }
+  }
   return (
     <>
       {loading ? (
@@ -30,8 +51,8 @@ export const GridView = ({ tracks, loading, refetch, hasNextPage, loadMore }: Vi
       ) : (
         <PullToRefresh onRefresh={refetch} className="h-auto">
           <div className="marketplace-grid my-4">
-            {tracks.map(track => (
-              <TrackGrid key={track.id} track={track} />
+            {tracks.map((track, index) => (
+              <TrackGrid key={track.id} track={track} handleOnPlayClicked={() => onClickTrackGrid(index)} />
             ))}
           </div>
         </PullToRefresh>
