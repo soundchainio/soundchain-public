@@ -58,7 +58,7 @@ export const TrackGrid = ({ track, handleOnPlayClicked }: TrackProps) => {
   const OGUNPrice = listingItem?.OGUNPricePerItemToShow ?? 0
   const selectedCurrency: CurrencyType = price ? 'MATIC' : 'OGUN'
   const { art, artist, title, trackId, playbackCount, favoriteCount, editionSize, listingCount } = song
-  const { play, isCurrentSong, isCurrentlyPlaying, setProgressStateFromSlider, progress } = useAudioPlayerContext()
+  const { isCurrentSong, isCurrentlyPlaying, setProgressStateFromSlider, progress } = useAudioPlayerContext()
 
   const [isPlaying, setIsPlaying] = useState(false)
   const [isReady, setIsReady] = useState(false)
@@ -70,8 +70,8 @@ export const TrackGrid = ({ track, handleOnPlayClicked }: TrackProps) => {
   }, [isCurrentSong, isCurrentlyPlaying, setIsPlaying, trackId])
 
   const trackPrice = track.price.value
+
   const onTrackClick = () => {
-    play(song)
     if (handleOnPlayClicked) handleOnPlayClicked()
   }
   return (
