@@ -1,9 +1,9 @@
-import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
+import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { SortOrder, SortTrackField, useGroupedTracksQuery } from 'lib/graphql'
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { InfiniteLoader } from './InfiniteLoader'
 import { NoResultFound } from './NoResultFound'
-import { Song, TrackListItem } from './TrackListItem'
+import { TrackListItem } from './TrackListItem'
 import { TrackListItemSkeleton } from './TrackListItemSkeleton'
 
 interface OwnedNftsProps {
