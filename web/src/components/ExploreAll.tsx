@@ -21,7 +21,7 @@ export const ExploreAll = ({ searchTerm, setSelectedTab }: ExplorePageProps) => 
   const tracks = data?.explore.tracks
   const { playlistState } = useAudioPlayerContext()
 
-  const handleOnPlayClicked = (song: Song, index: number) => {
+  const handleOnPlayClicked = (index: number) => {
     if (tracks) {
       const list = tracks.map(
         track =>
@@ -110,7 +110,7 @@ export const ExploreAll = ({ searchTerm, setSelectedTab }: ExplorePageProps) => 
                 isFavorite: track.isFavorite,
               }}
               index={index + 1}
-              handleOnPlayClicked={song => handleOnPlayClicked(song, index)}
+              handleOnPlayClicked={() => handleOnPlayClicked(index)}
             />
           ))}
         </div>
