@@ -1,9 +1,8 @@
-import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
+import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { SortOrder, SortTrackField, useTracksQuery } from 'lib/graphql'
-import React from 'react'
 import { InfiniteLoader } from './InfiniteLoader'
 import { NoResultFound } from './NoResultFound'
-import { Song, TrackListItem } from './TrackListItem'
+import { TrackListItem } from './TrackListItem'
 import { TrackListItemSkeleton } from './TrackListItemSkeleton'
 
 export const TopTracks = () => {
