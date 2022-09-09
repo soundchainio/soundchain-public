@@ -8,7 +8,7 @@ import {
   useTrackLazyQuery,
   useUpdatePostMutation,
 } from 'lib/graphql'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { PostFormType } from 'types/PostFormType'
 import * as yup from 'yup'
 import { Button } from './Button'
@@ -99,12 +99,6 @@ export const PostForm = ({ ...props }: PostFormProps) => {
   const onTextAreaChange = (newVal: string) => {
     props.setBodyValue(newVal)
   }
-
-  const iframeRef = useRef(null)
-
-  useEffect(() => {
-    console.log(iframeRef)
-  }, [iframeRef])
 
   return (
     <Formik
