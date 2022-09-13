@@ -81,7 +81,7 @@ export const FollowButton = ({ followedId, isFollowed, showIcon, followedHandle 
       variant="outline-rounded"
       borderColor="bg-green-gradient"
       bgColor={isFollowed ? 'bg-green-gradient' : undefined}
-      className="w-[85px] bg-gray-10 py-1 text-sm"
+      className={`text-md w-[100px] bg-gray-10 py-1 ${isFollowed ? 'brightness-100' : 'brightness-150'}`}
       textColor={isFollowed ? 'text-white' : 'green-gradient-text'}
       icon={icon}
     >
