@@ -32,3 +32,9 @@ export const formatToCompactNumber = (number: number) => {
 
   return n
 }
+
+export const limitTextToNumberOfCharacters = (text: string, number: number) => {
+  if (text.length <= number) return text
+
+  return `${text.split('').splice(0, number).join('')}...`
+}

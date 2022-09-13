@@ -3,7 +3,6 @@ import { useMe } from 'hooks/useMe'
 import { Ellipsis } from 'icons/Ellipsis'
 import { PostQuery, Role } from 'lib/graphql'
 import NextLink from 'next/link'
-import React from 'react'
 import { AddLinks } from 'react-link-text'
 import ReactPlayer from 'react-player'
 import { AuthorActionsType } from 'types/AuthorActionsType'
@@ -20,9 +19,10 @@ import { Timestamp } from './Timestamp'
 
 interface PostProps {
   post: PostQuery['post']
+  handleOnPlayClicked?: () => void
 }
 
-export const Post = ({ post }: PostProps) => {
+export const Post = ({ post, handleOnPlayClicked }: PostProps) => {
   const me = useMe()
   const { dispatchShowAuthorActionsModal } = useModalDispatch()
 
@@ -116,6 +116,7 @@ export const Post = ({ post }: PostProps) => {
                 saleType: post.track.saleType,
                 price: post.track.price,
               }}
+              handleOnPlayClicked={handleOnPlayClicked}
             />
           </div>
         )}

@@ -40,7 +40,12 @@ export const SubscribeButton = ({ profileId, isSubscriber, small = false }: Subs
   }
 
   return (
-    <button onClick={handleClick} className={`flex-shrink-0 ${small === false ? 'h-9 w-9' : 'h-5 w-5'}`}>
+    <button
+      onClick={handleClick}
+      className={`flex-shrink-0 ${small === false ? 'h-9 w-9' : 'h-5 w-5'} ${
+        isSubscriber ? 'brightness-100' : 'brightness-125'
+      }`}
+    >
       <SubscribeBell isSubscriber={isSubscriber} />
     </button>
   )

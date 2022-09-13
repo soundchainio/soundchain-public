@@ -26,4 +26,5 @@ export const config = {
   appVersion: process.env.NEXT_PUBLIC_APP_VERSION || '2.0.0',
   airdropStatus: process.env.NEXT_PUBLIC_AIRDROP_STATUS === 'true',
   sentryUrl: process.env.NEXT_PUBLIC_SENTRY_URL,
+  gtmId: process.env.NEXT_PUBLIC_GTM_ID,
 }
