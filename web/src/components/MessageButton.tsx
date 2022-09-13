@@ -24,7 +24,7 @@ export const MessageButton = ({ profileId }: MessageButtonProps) => {
       <Button
         variant="outline-rounded"
         icon={Mail}
-        className="p-1 font-bold"
+        className="text-md w-[100px] bg-gray-10 py-[5px] brightness-150"
         borderColor="bg-blue-gradient"
         textColor="blue-gradient-text"
         onClick={handleClick}
