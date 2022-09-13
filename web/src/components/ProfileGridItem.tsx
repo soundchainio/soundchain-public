@@ -6,6 +6,8 @@ import NextLink from 'next/link'
 import { FollowButton } from './FollowButton'
 import { SubscribeButton } from './SubscribeButton'
 import { MessageButton } from './MessageButton'
+import ReactTooltip from 'react-tooltip'
+import { limitTextToNumberOfCharacters } from 'utils/format'
 
 interface ProfileListItemProps {
   profile: Profile
@@ -45,9 +47,12 @@ export const ProfileGridItem = ({ profile }: ProfileListItemProps) => {
               <span className="xl:text-md text-sm font-bold text-white">{profile.followingCount || 0}</span>
               <span className="xl:text-md text-sm font-semibold text-gray-80">Following</span>
             </span>
-            <div className="mt-2 mr-2">
+            <a data-tip data-for="subscribeButton" className="mt-2 mr-2">
               <SubscribeButton profileId={profile.id} isSubscriber={profile.isSubscriber} />
-            </div>
+            </a>
+            <ReactTooltip id="subscribeButton" type="dark" effect="solid">
+              <span>{profile.isSubscriber ? 'unsubscribe' : 'subscribe'}</span>
+            </ReactTooltip>
           </div>
         </div>
         <div className="mx-4 mt-8 mb-2 flex items-start justify-between">
@@ -80,11 +85,7 @@ export const ProfileGridItem = ({ profile }: ProfileListItemProps) => {
 
         <p className="text-wrap text-md max-h- mx-4 max-w-[245px] break-words pt-8 pb-6 text-justify text-gray-80">
           {profile.bio ? (
-            profile.bio.length > 50 ? (
-              `${profile.bio.split('').splice(0, 50).join('')}...`
-            ) : (
-              profile.bio
-            )
+            limitTextToNumberOfCharacters(profile.bio, 45)
           ) : (
             <span className="text-black">Transparent bio</span>
           )}
