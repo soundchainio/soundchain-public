@@ -1,14 +1,15 @@
 /* eslint-disable react/display-name */
 import { Post } from 'components/Post'
-import { SortOrder, SortPostField, usePostsQuery, Post as PostType } from 'lib/graphql'
+import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
+import { Post as PostType, SortOrder, SortPostField, usePostsQuery } from 'lib/graphql'
 import React, { memo, useCallback, useEffect, useMemo, useRef } from 'react'
 import PullToRefresh from 'react-simple-pull-to-refresh'
-import { areEqual, VariableSizeList as List } from 'react-window'
 import AutoSizer from 'react-virtualized-auto-sizer'
+import { areEqual, VariableSizeList as List } from 'react-window'
 import InfiniteLoader from 'react-window-infinite-loader'
+import { LoaderAnimation } from './LoaderAnimation'
 import { NoResultFound } from './NoResultFound'
 import { PostSkeleton } from './PostSkeleton'
-import { LoaderAnimation } from './LoaderAnimation'
 interface PostsProps extends React.ComponentPropsWithoutRef<'div'> {
   profileId?: string
 }
@@ -17,6 +18,7 @@ const pageSize = 10
 const GAP = 8
 
 export const Posts = ({ profileId }: PostsProps) => {
+  const { playlistState } = useAudioPlayerContext()
   const { data, loading, refetch, fetchMore } = usePostsQuery({
     variables: {
       filter: profileId ? { profileId } : undefined,
@@ -68,6 +70,26 @@ export const Posts = ({ profileId }: PostsProps) => {
   const isItemLoaded = (index: number) => !pageInfo.hasNextPage || index < nodes.length
   const postsCount = pageInfo.hasNextPage ? nodes.length + 1 : nodes.length
 
+  const handleOnPlayClicked = (index: number) => {
+    if (nodes) {
+      const listOfTracks = (nodes as PostType[])
+        .filter(post => post.track)
+        .map(post => {
+          if (post.track) {
+            return {
+              src: post.track.playbackUrl,
+              trackId: post.track.id,
+              art: post.track.artworkUrl,
+              title: post.track.title,
+              artist: post.track.artist,
+              isFavorite: post.track.isFavorite,
+            }
+          }
+        }) as Song[]
+      playlistState(listOfTracks, index)
+    }
+  }
+
   return (
     <PullToRefresh onRefresh={refetch}>
       <AutoSizer>
@@ -92,7 +114,12 @@ export const Posts = ({ profileId }: PostsProps) => {
                       {!isItemLoaded(index) ? (
                         <LoaderAnimation loadingMessage="Loading..." />
                       ) : (
-                        <Row data={data as PostType[]} index={index} setSize={setSize} />
+                        <Row
+                          data={data as PostType[]}
+                          index={index}
+                          setSize={setSize}
+                          handleOnPlayClicked={handleOnPlayClicked}
+                        />
                       )}
                     </div>
                   ),
@@ -111,9 +138,10 @@ interface RowProps {
   data: PostType[]
   index: number
   setSize: (index: number, height?: number) => void
+  handleOnPlayClicked: (index: number) => void
 }
 
-const Row = ({ data, index, setSize }: RowProps) => {
+const Row = ({ data, index, setSize, handleOnPlayClicked }: RowProps) => {
   const rowRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -128,7 +156,7 @@ const Row = ({ data, index, setSize }: RowProps) => {
 
   return (
     <div ref={rowRef}>
-      <Post key={data[index].id} post={data[index]} />
+      <Post key={data[index].id} post={data[index]} handleOnPlayClicked={() => handleOnPlayClicked(index)} />
     </div>
   )
 }
