@@ -43,11 +43,11 @@ export const Layout = ({ children, className }: LayoutProps) => {
   const { showCommentModal } = useModalState()
   const { hideBottomNavBar, isAuthLayout, topNavBarProps, isLandingLayout } = useLayoutContext()
   const { asPath } = useRouter()
-  //const [canInsertScript, setCanInsertScript] = useState(false)
+  const [canInsertScript, setCanInsertScript] = useState(false)
 
   useEffect(() => {
     setSideMenuOpen(false)
-    //setCanInsertScript(true)
+    setCanInsertScript(true)
   }, [asPath])
 
   useEffect(() => {
@@ -57,7 +57,7 @@ export const Layout = ({ children, className }: LayoutProps) => {
   if (isAuthLayout) {
     return (
       <div className="flex h-full flex-col bg-gray-20 pb-6">
-        <TagManager />
+        {canInsertScript && <TagManager />}
         <TopNavBar {...topNavBarProps} />
         <div className="flex flex-1 flex-col bg-gray-20 px-6 pt-6 sm:mx-auto sm:w-full sm:max-w-lg lg:px-8">
           {children}
@@ -69,7 +69,7 @@ export const Layout = ({ children, className }: LayoutProps) => {
   if (isLandingLayout) {
     return (
       <div className="flex h-full flex-col bg-black">
-        <TagManager />
+        {canInsertScript && <TagManager />}
         <Header />
         <div className="flex-auto bg-black px-6 lg:px-8">{children}</div>
         <footer className="flex w-full items-center justify-center bg-rainbow-gradient py-2 text-center md:text-lg">
@@ -81,7 +81,7 @@ export const Layout = ({ children, className }: LayoutProps) => {
 
   return (
     <div className="flex h-full flex-col">
-      <TagManager />
+      {canInsertScript && <TagManager />}
       <div className="max-h-full flex-1 overflow-y-auto">
         <div className="flex h-full flex-1 overflow-hidden">
           <SideMenu isOpen={sideMenuOpen} setOpen={setSideMenuOpen} />
