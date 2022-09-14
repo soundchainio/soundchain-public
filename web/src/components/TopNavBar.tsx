@@ -81,7 +81,7 @@ export const TopNavBar = ({
             </div>
           )
         )}
-        <div className="flex items-center">
+        <div className="ml-4 flex items-center">
           <div className="flex w-full flex-shrink-0 items-center justify-center">
             {title && (
               <div className="flex w-full flex-col">

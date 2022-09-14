@@ -30,14 +30,22 @@ export const NavBar = () => {
           </a>
         </Link>
 
-        <NavBarButton label="Home" path="/home" icon={Home} color="yellow" id="top" />
-        <NavBarButton id="top-explore-" label="Explore" path={me ? '/explore' : '/login'} icon={Search} color="green" />
+        <NavBarButton label="Home" path="/home" icon={Home} color="yellow" id="top" alwaysShowLabel />
+        <NavBarButton
+          id="top-explore-"
+          label="Explore"
+          path={me ? '/explore' : '/login'}
+          icon={Search}
+          color="green"
+          alwaysShowLabel
+        />
         <NavBarButton
           id="top-library-"
           label="Library"
           path={me ? '/library' : '/login'}
           icon={Library}
           color="purple"
+          alwaysShowLabel
         />
         <NavBarButton
           id="top-marketplace-"
@@ -45,6 +53,7 @@ export const NavBar = () => {
           icon={MarketplaceNavBar}
           color="purple-green"
           path={'/marketplace'}
+          alwaysShowLabel
         />
         {isMinting ? (
           <NavBarButton label="Minting..." alwaysShowLabel nyanCat={true} onClick={handleCreateClick} />
