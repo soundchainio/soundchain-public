@@ -187,14 +187,14 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
   const { editionId } = track.trackEdition as TrackEdition
   useEffect(() => {
     const fetchRoyalties = async () => {
-      if (!account || !web3 || tokenId === null || editionId === undefined || royalties != undefined) {
+      if (!account || !web3 || tokenId === null || editionId === undefined || royalties != undefined || isProcessing) {
         return
       }
       const royaltiesFromBlockchain = await getEditionRoyalties(web3, editionId)
       setRoyalties(royaltiesFromBlockchain)
     }
     fetchRoyalties()
-  }, [account, web3, editionId, getEditionRoyalties, royalties, nftData?.contract, tokenId])
+  }, [account, web3, editionId, getEditionRoyalties, royalties, nftData?.contract, tokenId, isProcessing])
 
   useEffect(() => {
     if (track.artistProfileId) {
