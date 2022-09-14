@@ -1,7 +1,7 @@
 import { Logo } from '../../icons/Logo'
 import Link from 'next/link'
 import { Dialog, Transition } from '@headlessui/react'
-import { MenuIcon } from '@heroicons/react/solid'
+// import { MenuIcon } from '@heroicons/react/solid'
 import React, { useState } from 'react'
 
 function HeaderDrawer({ open, close }: { open: boolean; close: () => void }) {
@@ -46,9 +46,12 @@ function HeaderDrawer({ open, close }: { open: boolean; close: () => void }) {
 export default function LandingPageHeader() {
   const [drawerOpen, setDrawerOpen] = useState(false)
 
+  const handleDropdown = (event: unknown) => {
+    console.log(event)
+  }
   return (
     <>
-      <header className="h-14">
+      {/* <header className="h-14">
         <nav className="container mx-auto flex h-full items-center px-4 text-white md:px-0">
           <Link href="/">
             <a className="flex items-center gap-4">
@@ -73,6 +76,53 @@ export default function LandingPageHeader() {
             <MenuIcon className="h-6 w-6 text-white md:hidden" />
           </button>
         </nav>
+      </header> */}
+      <header className="mx-8 mt-6 flex justify-between">
+        <Link href="/">
+          <a className="flex items-center gap-4">
+            <Logo className="block h-8 w-auto" />
+            <span className="text-lg font-semibold text-slate-50">SoundChain</span>
+          </a>
+        </Link>
+        <nav>
+          <ul className="flex">
+            <li>
+              <Link href="/marketplace">
+                <a className="text-md mr-6 font-semibold text-slate-50 hover:text-slate-200">Marketplace</a>
+              </Link>
+            </li>
+            <li>
+              <Link href="/explore">
+                <a className="text-md mr-6 font-semibold text-slate-50 hover:text-slate-200">Explore</a>
+              </Link>
+            </li>
+            <li>
+              <button
+                className="text-md mr-6 font-semibold text-slate-50 hover:cursor-default hover:text-slate-200"
+                onMouseEnter={handleDropdown}
+                name="tokenomics"
+              >
+                Tokenomics
+              </button>
+            </li>
+            <li>
+              <Link href="/roadmap">
+                <a className="text-md mr-6 font-semibold text-slate-50 hover:text-slate-200">Roadmap</a>
+              </Link>
+            </li>
+          </ul>
+          {/*
+          <Link href="/">
+            <a className="text-md font-semibold text-slate-50">Ogun</a>
+          </Link>
+          <Link href="/">
+            <a className="text-md font-semibold text-slate-50">Airdrop</a>
+          </Link>
+          <Link href="/">
+            <a className="text-md font-semibold text-slate-50">Whitepaper</a>
+          </Link> */}
+        </nav>
+        <button className="text-md font-semibold text-slate-50">Sign in</button>
       </header>
 
       <HeaderDrawer open={drawerOpen} close={() => setDrawerOpen(false)} />
