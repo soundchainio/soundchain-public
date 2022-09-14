@@ -13,6 +13,7 @@ import { Track } from 'components/Track'
 import { TrackShareButton } from 'components/TrackShareButton'
 import { config } from 'config'
 import { useModalDispatch } from 'contexts/providers/modal'
+import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import useBlockchain from 'hooks/useBlockchain'
 import useBlockchainV2 from 'hooks/useBlockchainV2'
 import { useLayoutContext } from 'hooks/useLayoutContext'
@@ -58,6 +59,7 @@ const pendingRequestMapping: Record<PendingRequest, string> = {
 
 export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
   const me = useMe()
+  const { playlistState } = useAudioPlayerContext()
   const { account, web3 } = useWalletContext()
   const { getRoyalties, getHighestBid } = useBlockchain()
   const { getEditionRoyalties } = useBlockchainV2()
@@ -258,11 +260,26 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
     track.releaseYear != null ? `${track.releaseYear}.` : ''
   }`
 
+  const handleOnPlayClicked = () => {
+    if (track) {
+      const list = [
+        {
+          trackId: track.id,
+          src: track.playbackUrl,
+          art: track.artworkUrl,
+          title: track.title,
+          artist: track.artist,
+        } as Song,
+      ]
+      playlistState(list, 0)
+    }
+  }
+
   return (
     <>
       <SEO title={title} description={description} canonicalUrl={`/tracks/${track.id}`} image={track.artworkUrl} />
       <div className="flex flex-col gap-5 p-3">
-        <Track track={track} />
+        <Track track={track} handleOnPlayClicked={handleOnPlayClicked} />
         <ViewPost trackId={track.id} isFavorited={track.isFavorite} />
         {isAuction && !auctionIsOver && isHighestBidder && (
           <div className="p-2 text-center font-bold text-green-500">You have the highest bid!</div>
