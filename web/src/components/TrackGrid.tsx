@@ -77,7 +77,7 @@ export const TrackGrid = ({ track, handleOnPlayClicked }: TrackProps) => {
 
   return (
     <div className={`rounded-lg bg-transparent p-0.5 hover:bg-rainbow-gradient ${isPlaying && 'bg-rainbow-gradient'}`}>
-      <div className="flex w-full flex-col rounded-lg bg-black text-white">
+      <div className="flex w-[300px] flex-col rounded-lg bg-black text-white sm:w-full">
         <NextLink href={`/tracks/${trackId}`}>
           <a>
             <div className="h-[200px] overflow-hidden rounded-t-xl">
