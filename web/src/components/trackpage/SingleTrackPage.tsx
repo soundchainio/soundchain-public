@@ -61,7 +61,7 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
   const { account, web3 } = useWalletContext()
   const { getRoyalties, getHighestBid } = useBlockchain()
   const { getEditionRoyalties } = useBlockchainV2()
-  const [royalties, setRoyalties] = useState(0)
+  const [royalties, setRoyalties] = useState<number | null>(null)
   const [highestBid, setHighestBid] = useState<HighestBid>({} as HighestBid)
   const { dispatchShowAuthorActionsModal, dispatchShowBidsHistory } = useModalDispatch()
   const { loading: isLoadingOwner, isOwner } = useTokenOwner(track.nftData?.tokenId, track.nftData?.contract)
@@ -185,7 +185,8 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
         tokenId === null ||
         tokenId === undefined ||
         royalties != undefined ||
-        track?.trackEdition?.editionId === undefined
+        track?.trackEdition?.editionId === undefined ||
+        isProcessing
       ) {
         return
       }
@@ -199,7 +200,18 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
       setRoyalties(royaltiesFromBlockchain)
     }
     fetchRoyalties()
-  }, [account, web3, tokenId, getRoyalties, getEditionRoyalties, royalties, nftData, track?.trackEdition?.editionId])
+  }, [
+    account,
+    web3,
+    tokenId,
+    getRoyalties,
+    getEditionRoyalties,
+    royalties,
+    nftData,
+    track?.trackEdition?.editionId,
+    isMarketplaceEditions,
+    isProcessing,
+  ])
 
   useEffect(() => {
     const fetchHighestBid = async () => {
