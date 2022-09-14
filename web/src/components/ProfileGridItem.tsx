@@ -47,12 +47,26 @@ export const ProfileGridItem = ({ profile }: ProfileListItemProps) => {
               <span className="xl:text-md text-sm font-bold text-white">{profile.followingCount || 0}</span>
               <span className="xl:text-md text-sm font-semibold text-gray-80">Following</span>
             </span>
-            <a data-tip data-for="subscribeButton" className="mt-2 mr-2">
-              <SubscribeButton profileId={profile.id} isSubscriber={profile.isSubscriber} />
-            </a>
-            <ReactTooltip id="subscribeButton" type="dark" effect="solid">
-              <span>{profile.isSubscriber ? 'unsubscribe' : 'subscribe'}</span>
-            </ReactTooltip>
+
+            {profile.isSubscriber ? (
+              <>
+                <ReactTooltip id="unsubscribeButton" type="dark" effect="solid">
+                  <span>Unsubscribe</span>
+                </ReactTooltip>
+                <a data-tip data-for="unsubscribeButton" className="mt-2 mr-2">
+                  <SubscribeButton profileId={profile.id} isSubscriber={profile.isSubscriber} />
+                </a>
+              </>
+            ) : (
+              <>
+                <ReactTooltip id="subscribeButton" type="dark" effect="solid">
+                  <span>Subscribe</span>
+                </ReactTooltip>
+                <a data-tip data-for="subscribeButton" className="mt-2 mr-2">
+                  <SubscribeButton profileId={profile.id} isSubscriber={profile.isSubscriber} />
+                </a>
+              </>
+            )}
           </div>
         </div>
         <div className="mx-4 mt-8 mb-2 flex items-start justify-between">
