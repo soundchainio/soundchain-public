@@ -183,6 +183,17 @@ html {
   background: linear-gradient(76.4deg, #ab4eff 8.28%, #f1419e 83.02%);
 }
 
+.user-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 300px);
+  justify-items: center;
+  justify-content: center;
+  grid-auto-flow: row;
+  align-items: center;
+  grid-row-gap: 20px;
+  grid-column-gap: 10px;
+}
+
 /** TODO: tip
 * I've moved this styles to tailwind.config.js
 * Since it may or may not work or conflict with existing styles, I've commented the code

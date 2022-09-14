@@ -57,7 +57,7 @@ export const ExploreUsersGridView = ({ searchTerm }: ExploreUsersProps) => {
         <NoResultFound type="items" />
       ) : (
         <PullToRefresh onRefresh={refetch} className="h-auto">
-          <div className="flex flex-wrap justify-center gap-5">
+          <div className="user-profile-grid">
             {profiles.map(profile => (
               <ProfileGridItem key={profile.id} profile={profile} />
             ))}
