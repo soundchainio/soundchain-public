@@ -61,7 +61,7 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
   const { account, web3 } = useWalletContext()
   const { getRoyalties, getHighestBid } = useBlockchain()
   const { getEditionRoyalties } = useBlockchainV2()
-  const [royalties, setRoyalties] = useState<number>()
+  const [royalties, setRoyalties] = useState<number | null>(null)
   const [highestBid, setHighestBid] = useState<HighestBid>({} as HighestBid)
   const { dispatchShowAuthorActionsModal, dispatchShowBidsHistory } = useModalDispatch()
   const { loading: isLoadingOwner, isOwner } = useTokenOwner(track.nftData?.tokenId, track.nftData?.contract)

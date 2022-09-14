@@ -66,7 +66,7 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
   const { showRemoveListing } = useModalState()
   const { dispatchShowAuthorActionsModal } = useModalDispatch()
   const { setTopNavBarProps } = useLayoutContext()
-  const [royalties, setRoyalties] = useState<number>()
+  const [royalties, setRoyalties] = useState<number | null>(null)
   const { getEditionRoyalties } = useBlockchainV2()
   const [forceRefresh, setForceRefresh] = useState(false)
 
