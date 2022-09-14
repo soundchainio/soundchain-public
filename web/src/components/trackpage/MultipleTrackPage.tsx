@@ -14,6 +14,7 @@ import { TopNavBarProps } from 'components/TopNavBar'
 import { Track } from 'components/Track'
 import { TrackShareButton } from 'components/TrackShareButton'
 import { useModalDispatch, useModalState } from 'contexts/providers/modal'
+import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { useLayoutContext } from 'hooks/useLayoutContext'
 import { useMe } from 'hooks/useMe'
 import { useWalletContext } from 'hooks/useWalletContext'
@@ -60,6 +61,7 @@ const pendingRequestMapping: Record<PendingRequest, string> = {
 
 export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
   const me = useMe()
+  const { playlistState } = useAudioPlayerContext()
   const { account, web3 } = useWalletContext()
   const [profile, { data: profileInfo }] = useProfileLazyQuery()
 
@@ -228,12 +230,27 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
     setForceRefresh,
   ])
 
+  const handleOnPlayClicked = () => {
+    if (track) {
+      const list = [
+        {
+          trackId: track.id,
+          src: track.playbackUrl,
+          art: track.artworkUrl,
+          title: track.title,
+          artist: track.artist,
+        } as Song,
+      ]
+      playlistState(list, 0)
+    }
+  }
+
   return (
     <>
       <SEO title={title} description={description} canonicalUrl={`/tracks/${track.id}`} image={track.artworkUrl} />
       <div className="pb-20">
         <div className="flex flex-col gap-5 p-3">
-          <Track track={track} />
+          <Track track={track} handleOnPlayClicked={handleOnPlayClicked} />
           <ViewPost trackId={track.id} isFavorited={track.isFavorite} />
         </div>
         <dl className="flex items-center justify-between gap-3 px-4 py-3">
