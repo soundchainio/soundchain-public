@@ -1,14 +1,15 @@
 /* eslint-disable react/display-name */
 import { Post } from 'components/Post'
+import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { FeedItem, useFeedQuery } from 'lib/graphql'
+import { memo, useCallback, useEffect, useMemo, useRef } from 'react'
 import PullToRefresh from 'react-simple-pull-to-refresh'
-import { areEqual, VariableSizeList as List } from 'react-window'
 import AutoSizer from 'react-virtualized-auto-sizer'
+import { areEqual, VariableSizeList as List } from 'react-window'
 import InfiniteLoader from 'react-window-infinite-loader'
+import { LoaderAnimation } from './LoaderAnimation'
 import { NoResultFound } from './NoResultFound'
 import { PostSkeleton } from './PostSkeleton'
-import { memo, useCallback, useEffect, useMemo, useRef } from 'react'
-import { LoaderAnimation } from './LoaderAnimation'
 
 interface FeedProps {
   pageSize?: number
@@ -17,6 +18,7 @@ interface FeedProps {
 const GAP = 8
 
 export const Feed = ({ pageSize }: FeedProps) => {
+  const { playlistState } = useAudioPlayerContext()
   pageSize = pageSize ?? 10
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const listRef = useRef<any>(null)
@@ -62,6 +64,27 @@ export const Feed = ({ pageSize }: FeedProps) => {
   const isItemLoaded = (index: number) => !pageInfo.hasNextPage || index < nodes.length
   const feedCount = pageInfo.hasNextPage ? nodes.length + 1 : nodes.length
 
+  const handleOnPlayClicked = (index: number) => {
+    if (nodes) {
+      const listOfTracks = (nodes as FeedItem[])
+        .filter(feedItem => feedItem?.post?.track)
+        .map(feedItem => {
+          const trackFeedItem = feedItem?.post?.track
+          if (trackFeedItem) {
+            return {
+              src: trackFeedItem.playbackUrl,
+              trackId: trackFeedItem.id,
+              art: trackFeedItem.artworkUrl,
+              title: trackFeedItem.title,
+              artist: trackFeedItem.artist,
+              isFavorite: trackFeedItem.isFavorite,
+            }
+          }
+        }) as Song[]
+      playlistState(listOfTracks, index)
+    }
+  }
+
   return (
     <PullToRefresh onRefresh={refetch}>
       <AutoSizer>
@@ -86,7 +109,12 @@ export const Feed = ({ pageSize }: FeedProps) => {
                       {!isItemLoaded(index) ? (
                         <LoaderAnimation loadingMessage="Loading..." />
                       ) : (
-                        <Row data={data as FeedItem[]} index={index} setSize={setSize} />
+                        <Row
+                          data={data as FeedItem[]}
+                          index={index}
+                          setSize={setSize}
+                          handleOnPlayClicked={handleOnPlayClicked}
+                        />
                       )}
                     </div>
                   ),
@@ -105,9 +133,10 @@ interface RowProps {
   data: FeedItem[]
   index: number
   setSize: (index: number, height?: number) => void
+  handleOnPlayClicked: (index: number) => void
 }
 
-const Row = ({ data, index, setSize }: RowProps) => {
+const Row = ({ data, index, setSize, handleOnPlayClicked }: RowProps) => {
   const rowRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => setSize(index, rowRef?.current?.getBoundingClientRect().height), [setSize, index])
@@ -118,7 +147,7 @@ const Row = ({ data, index, setSize }: RowProps) => {
 
   return (
     <div ref={rowRef}>
-      <Post key={data[index].post.id} post={data[index].post} />
+      <Post key={data[index].post.id} post={data[index].post} handleOnPlayClicked={() => handleOnPlayClicked(index)} />
     </div>
   )
 }
