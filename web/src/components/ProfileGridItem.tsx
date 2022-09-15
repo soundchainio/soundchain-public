@@ -78,6 +78,7 @@ export const ProfileGridItem = ({ profile }: ProfileListItemProps) => {
                   verified={profile.verified}
                   teamMember={profile.teamMember}
                   className="text-md lg:text-base"
+                  maxNumberOfCharacters={13}
                 />
               </a>
             </NextLink>

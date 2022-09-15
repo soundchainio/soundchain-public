@@ -80,7 +80,7 @@ export const TrackGrid = ({ track, handleOnPlayClicked }: TrackProps) => {
       <div className="flex w-[300px] flex-col rounded-lg bg-black text-white sm:w-full">
         <NextLink href={`/tracks/${trackId}`}>
           <a>
-            <div className="h-[200px] overflow-hidden rounded-t-xl">
+            <div className="h-[300px] overflow-hidden rounded-t-xl sm:h-[225px]">
               <Asset src={art} />
             </div>
           </a>
