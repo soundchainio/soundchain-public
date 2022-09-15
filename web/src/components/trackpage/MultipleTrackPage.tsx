@@ -189,7 +189,8 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
   const { editionId } = track.trackEdition as TrackEdition
   useEffect(() => {
     const fetchRoyalties = async () => {
-      if (!account || !web3 || tokenId === null || editionId === undefined || royalties != undefined || isProcessing) {
+      if (!account || !web3 || tokenId === null || tokenId === undefined || editionId === undefined || isProcessing) {
+        setRoyalties(null)
         return
       }
       const royaltiesFromBlockchain = await getEditionRoyalties(web3, editionId)
