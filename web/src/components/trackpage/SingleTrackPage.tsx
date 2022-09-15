@@ -186,13 +186,12 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
         !web3 ||
         tokenId === null ||
         tokenId === undefined ||
-        royalties != undefined ||
         track?.trackEdition?.editionId === undefined ||
         isProcessing
       ) {
+        setRoyalties(null)
         return
       }
-
       let royaltiesFromBlockchain
       if (isMarketplaceEditions) {
         royaltiesFromBlockchain = await getEditionRoyalties(web3, track.trackEdition.editionId)
