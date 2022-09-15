@@ -1,14 +1,15 @@
 /* eslint-disable react/display-name */
 import { ApolloQueryResult } from '@apollo/client'
-import { ExploreTracksQuery, ListingItemsQuery, Track, TrackQuery, TrackWithListingItem } from 'lib/graphql'
-import React, { memo } from 'react'
-import { areEqual, FixedSizeList as List } from 'react-window'
-import AutoSizer from 'react-virtualized-auto-sizer'
-import InfiniteLoader from 'react-window-infinite-loader'
-import { PostSkeleton } from 'components/PostSkeleton'
-import { NoResultFound } from 'components/NoResultFound'
 import { LoaderAnimation } from 'components/LoaderAnimation'
+import { NoResultFound } from 'components/NoResultFound'
+import { PostSkeleton } from 'components/PostSkeleton'
 import { Track as TrackItem } from 'components/Track'
+import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
+import { ExploreTracksQuery, ListingItemsQuery, Track, TrackQuery, TrackWithListingItem } from 'lib/graphql'
+import { memo } from 'react'
+import AutoSizer from 'react-virtualized-auto-sizer'
+import { areEqual, FixedSizeList as List } from 'react-window'
+import InfiniteLoader from 'react-window-infinite-loader'
 
 interface ViewProps {
   loading: boolean
@@ -20,9 +21,27 @@ interface ViewProps {
 }
 
 export const ListView = ({ tracks, loading, hasNextPage, loadMore, displaySaleBadge }: ViewProps) => {
+  const { playlistState } = useAudioPlayerContext()
   const loadMoreItems = loading ? () => null : loadMore
   const isItemLoaded = (index: number) => !hasNextPage || index < (tracks?.length || 0)
   const tracksCount = hasNextPage ? (tracks?.length || 0) + 1 : tracks?.length || 0
+
+  const handleOnPlayClicked = (index: number) => {
+    if (tracks) {
+      const list = tracks.map(
+        track =>
+          ({
+            trackId: track.id,
+            src: track.playbackUrl,
+            art: track.artworkUrl,
+            title: track.title,
+            artist: track.artist,
+            isFavorite: track.isFavorite,
+          } as Song),
+      )
+      playlistState(list, index)
+    }
+  }
 
   return (
     <>
@@ -60,6 +79,7 @@ export const ListView = ({ tracks, loading, hasNextPage, loadMore, displaySaleBa
                             hideBadgeAndPrice={displaySaleBadge}
                             key={data[index].id}
                             track={data[index] as TrackQuery['track']}
+                            handleOnPlayClicked={() => handleOnPlayClicked(index)}
                           />
                         )}
                       </div>
