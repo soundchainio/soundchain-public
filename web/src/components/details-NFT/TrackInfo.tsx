@@ -44,7 +44,7 @@ export const TrackInfo = ({
         <div className="flex items-center font-bold">
           <div className="w-2/4 bg-gray-20 py-3 pl-4 text-xs uppercase text-gray-CC">Artist Royalty %</div>
           <div className="flex w-2/4 justify-center bg-gray-30 py-3 pr-4 pl-1 text-center text-xs">
-            {royalties ? (
+            {royalties !== null ? (
               `${royalties}%`
             ) : (
               <div className="h-4 w-4 animate-spin rounded-full border-t-2 border-white" />
