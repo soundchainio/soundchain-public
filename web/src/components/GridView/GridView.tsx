@@ -17,9 +17,6 @@ interface ViewProps {
 
 export const GridView = ({ tracks, loading, refetch, hasNextPage, loadMore }: ViewProps) => {
   const { playlistState } = useAudioPlayerContext()
-  const onClickTrackGrid = (index: number) => {
-    if (handleOnPlayClicked) handleOnPlayClicked(index)
-  }
   const handleOnPlayClicked = (index: number) => {
     if (tracks) {
       const list = tracks.map(
@@ -52,7 +49,7 @@ export const GridView = ({ tracks, loading, refetch, hasNextPage, loadMore }: Vi
         <PullToRefresh onRefresh={refetch} className="h-auto">
           <div className="marketplace-grid my-4">
             {tracks.map((track, index) => (
-              <TrackGrid key={track.id} track={track} handleOnPlayClicked={() => onClickTrackGrid(index)} />
+              <TrackGrid key={track.id} track={track} handleOnPlayClicked={() => handleOnPlayClicked(index)} />
             ))}
           </div>
         </PullToRefresh>
