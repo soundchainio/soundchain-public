@@ -6,7 +6,7 @@ import useBlockchain, { gas } from 'hooks/useBlockchain'
 import { useMe } from 'hooks/useMe'
 import { useWalletContext } from 'hooks/useWalletContext'
 import { Logo } from 'icons/Logo'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import * as yup from 'yup'
 
 export interface FormValues {
@@ -19,7 +19,7 @@ export interface FormValues {
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   recipient: yup.string().required('Please enter a valid wallet address'),
-  amount: yup.string().required('Please enter a matic amount'),
+  amount: yup.string().required('Please enter an OGUN amount'),
   gasPrice: yup.string().default(''),
   gasLimit: yup.number().default(gas),
   totalGasFee: yup.string().default('0'),
