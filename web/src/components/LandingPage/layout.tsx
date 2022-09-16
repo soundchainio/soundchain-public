@@ -4,7 +4,7 @@ import { MintSongsSection } from './mintSongsSection'
 import { DiscoverTracksSection } from './discoverTracksSection'
 import { CollectMusicNFTSection } from './collectMusicNFTSection'
 import { RoadmapSection } from './roadmapSection'
-import LandingPageHeader from './header'
+import LandingPageHeader from './Header/header'
 
 export interface LayoutProps {
   children: ReactNode | undefined
