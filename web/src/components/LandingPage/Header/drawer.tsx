@@ -1,6 +1,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { Dialog, Transition } from '@headlessui/react'
+import { Logo } from '../../../icons/Logo'
 
 export const HeaderDrawer = ({ open, close }: { open: boolean; close: () => void }) => {
   return (
@@ -16,18 +17,38 @@ export const HeaderDrawer = ({ open, close }: { open: boolean; close: () => void
             leaveFrom="transform translate-x-0 opacity-100"
             leaveTo="transform translate-x-[100%]"
           >
-            <Dialog.Panel className="h-screen w-full max-w-[300px] rounded bg-[#131313]">
-              <Dialog.Description className="p-4">
-                <div className="p-4">
-                  <ul className="flex flex-col gap-4">
-                    <li className="text-md cursor-pointer font-semibold text-slate-400 hover:text-slate-200">
+            <Dialog.Panel className="h-screen w-full max-w-[300px] rounded bg-black">
+              <Dialog.Description>
+                <div className="mt-6 flex flex-col">
+                  <div className="flex w-full items-center justify-center border-b-[1px] border-gray-30 pb-6">
+                    <Logo className="block h-8 w-auto" />
+                  </div>
+                  <ul className="mt-4 flex flex-col">
+                    <li className="text-md mb-4 cursor-pointer border-b-[1px] border-gray-30 bg-gradient-to-r from-[#ab4eff] to-[#84ff82] bg-clip-text pl-6 pb-4 font-normal text-gray-80 transition duration-150 ease-in-out hover:text-transparent">
+                      <Link href="/marketplace">
+                        <a>Marketplace</a>
+                      </Link>
+                    </li>
+                    <li className="text-md mb-4 cursor-pointer border-b-[1px] border-gray-30 bg-gradient-to-r from-[#ab4eff] to-[#84ff82] bg-clip-text pl-6 pb-4 font-normal text-gray-80 transition duration-150 ease-in-out hover:text-transparent">
+                      <Link href="/airdrop">
+                        <a>Airdrop</a>
+                      </Link>
+                    </li>
+                    <li className="text-md mb-4 cursor-pointer border-b-[1px] border-gray-30 bg-gradient-to-r from-[#ab4eff] to-[#84ff82] bg-clip-text pl-6 pb-4 font-normal text-gray-80 transition duration-150 ease-in-out hover:text-transparent">
+                      <Link href="/ogun">
+                        <a>Ogun Token</a>
+                      </Link>
+                    </li>
+                    <li className="text-md mb-4 cursor-pointer border-b-[1px] border-gray-30 bg-gradient-to-r from-[#ab4eff] to-[#84ff82] bg-clip-text pl-6 pb-4 font-normal text-gray-80 transition duration-150 ease-in-out hover:text-transparent">
                       <Link href="/roadmap">
                         <a>Roadmap</a>
                       </Link>
                     </li>
-                    <li className="text-md cursor-pointer font-semibold text-slate-400 hover:text-slate-200">
-                      <Link href="/ogun">
-                        <a>OGUN Token</a>
+                    <li className="text-md mb-4 cursor-pointer border-b-[1px] border-gray-30 bg-gradient-to-r from-[#ab4eff] to-[#84ff82] bg-clip-text pl-6 pb-4 font-normal text-gray-80 transition duration-150 ease-in-out hover:text-transparent">
+                      <Link href="https://soundchain.gitbook.io/">
+                        <a target="_blank" rel="noreferrer">
+                          Whitepaper
+                        </a>
                       </Link>
                     </li>
                   </ul>

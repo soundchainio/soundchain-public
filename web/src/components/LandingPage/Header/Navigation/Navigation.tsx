@@ -1,10 +1,16 @@
 import { Popover } from '@headlessui/react'
-import { Tokenomics } from './components/Tokenomics'
+import { MarketplaceButton, Whitepaper, AirdropButton, OgunButton, RoadmapButton } from './components'
 
 export const Navigation = () => {
   return (
     <Popover as="nav" className="hidden md:block">
-      <Tokenomics />
+      <div className="flex items-center">
+        <MarketplaceButton />
+        <AirdropButton />
+        <OgunButton />
+        <RoadmapButton />
+        <Whitepaper />
+      </div>
     </Popover>
   )
 }
