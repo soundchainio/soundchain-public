@@ -1,6 +1,6 @@
 import { InputField } from 'components/InputField'
-import { Ogun } from 'components/Ogun'
 import { Modal } from 'components/Modal'
+import { Ogun } from 'components/Ogun'
 import { useModalDispatch, useModalState } from 'contexts/providers/modal'
 import { Form, Formik } from 'formik'
 import useBlockchainV2 from 'hooks/useBlockchainV2'
@@ -10,7 +10,7 @@ import { useWalletContext } from 'hooks/useWalletContext'
 import { DefaultWallet } from 'lib/graphql'
 import router from 'next/router'
 import { authenticator } from 'otplib'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { toast } from 'react-toastify'
 import * as yup from 'yup'
 import { Button } from './Button'
@@ -53,7 +53,7 @@ export const TransferOgunConfirmationModal = () => {
   const hasEnoughFunds = () => {
     console.log(balance, OGUNBalance, maxGasFee, amountToTransfer)
     if (balance && maxGasFee && amountToTransfer && OGUNBalance) {
-      return +balance > +maxGasFee && +OGUNBalance > +amountToTransfer
+      return +balance > +maxGasFee && +OGUNBalance >= +amountToTransfer
     }
     return false
   }
