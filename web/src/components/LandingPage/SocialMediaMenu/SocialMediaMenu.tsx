@@ -16,7 +16,7 @@ export const SocialMediaMenu = () => {
 
         <Link href="https://www.instagram.com/soundchain.io/">
           <a target="_blank" rel="noreferrer">
-            <span className="flex h-12 w-12 items-center justify-center bg-gradient-to-tr from-[#f09433] via-[#e6683c]  via-[#dc2743] via-[#cc2366]  to-[#bc1888] transition-transform hover:scale-[1.5]">
+            <span className="pointer-events-none flex h-12 w-12 items-center justify-center bg-gradient-to-tr from-[#f09433] via-[#e6683c] via-[#dc2743]  via-[#cc2366] to-[#bc1888]  transition-transform hover:scale-[1.5] md:pointer-events-auto">
               <AiFillInstagram size={25} />
             </span>
           </a>
@@ -24,7 +24,7 @@ export const SocialMediaMenu = () => {
 
         <Link href="https://twitter.com/soundchain_io">
           <a target="_blank" rel="noreferrer">
-            <span className="flex h-12 w-12 items-center justify-center bg-[#1da1f3] transition-transform hover:scale-[1.5]">
+            <span className="pointer-events-none flex h-12 w-12 items-center justify-center bg-[#1da1f3] transition-transform hover:scale-[1.5] md:pointer-events-auto">
               <FaTwitter size={25} />
             </span>
           </a>
@@ -32,7 +32,7 @@ export const SocialMediaMenu = () => {
 
         <Link href="https://www.youtube.com/channel/UC-TJ1KIYWCYLtngwaELgyLQ">
           <a target="_blank" rel="noreferrer">
-            <span className="flex h-12 w-12 items-center justify-center bg-[#fe0000] transition-transform hover:scale-[1.5]">
+            <span className="md:pointer-events-autoflex pointer-events-none h-12 w-12 items-center justify-center bg-[#fe0000] transition-transform hover:scale-[1.5]">
               <FaYoutube size={25} />
             </span>
           </a>
