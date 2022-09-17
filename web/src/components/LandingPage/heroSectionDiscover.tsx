@@ -1,6 +1,5 @@
 import Image from 'next/image'
 import { twd } from '../utils/twd'
-import LandingPageHeader from './header'
 import React from 'react'
 import RainbowLink from '../Links/RainbowLink'
 import OutlinedLink from '../Links/OutlinedLink'
@@ -17,8 +16,6 @@ const SectionWrapper = twd(`max-w-7xl lg:max-w-full mx-auto max-h-screen flex fl
 export function HeroSectionDiscover() {
   return (
     <div className="relative flex flex-col bg-[#131313]">
-      <LandingPageHeader />
-
       <main>
         <div>
           {/* Hero card */}

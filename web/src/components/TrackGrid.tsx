@@ -134,7 +134,9 @@ export const TrackGrid = ({ track, handleOnPlayClicked }: TrackProps) => {
                       trackPrice &&
                       `${currency(trackPrice * parseFloat(maticUsd.maticUsd))}`
                     ) : (
-                      <></>
+                      <>
+                        <br />
+                      </>
                     )}
                   </div>
                 )}
