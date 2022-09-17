@@ -32,7 +32,7 @@ export const SocialMediaMenu = () => {
 
         <Link href="https://www.youtube.com/channel/UC-TJ1KIYWCYLtngwaELgyLQ">
           <a target="_blank" rel="noreferrer">
-            <span className="md:pointer-events-autoflex pointer-events-none h-12 w-12 items-center justify-center bg-[#fe0000] transition-transform hover:scale-[1.5]">
+            <span className=" pointer-events-none flex h-12 w-12 items-center justify-center bg-[#fe0000] transition-transform hover:scale-[1.5] md:pointer-events-auto">
               <FaYoutube size={25} />
             </span>
           </a>
