@@ -1,3 +1,4 @@
+import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { useMe } from 'hooks/useMe'
 import { HeartBorder } from 'icons/HeartBorder'
 import { HeartFull } from 'icons/HeartFull'
@@ -5,7 +6,7 @@ import { ReactionEmoji } from 'icons/ReactionEmoji'
 import { useGetOriginalPostFromTrackQuery, useToggleFavoriteMutation } from 'lib/graphql'
 import NextLink from 'next/link'
 import { useRouter } from 'next/router'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 interface ViewPostProps {
   trackId: string
@@ -14,6 +15,7 @@ interface ViewPostProps {
 
 export const ViewPost = ({ trackId, isFavorited }: ViewPostProps) => {
   const me = useMe()
+  const { currentSong, isFavorite: isSongOnPlayerFavorite, setPlayerFavorite } = useAudioPlayerContext()
   const router = useRouter()
   const [toggleFavorite] = useToggleFavoriteMutation()
   const [isFavorite, setIsFavorite] = useState(isFavorited)
@@ -30,10 +32,17 @@ export const ViewPost = ({ trackId, isFavorited }: ViewPostProps) => {
     if (me?.profile.id) {
       await toggleFavorite({ variables: { trackId }, refetchQueries: ['FavoriteTracks'] })
       setIsFavorite(!isFavorite)
+      if (currentSong?.trackId) setPlayerFavorite(!isFavorite)
     } else {
       router.push('/login')
     }
   }
+
+  useEffect(() => {
+    if (currentSong?.trackId && isSongOnPlayerFavorite !== isFavorite) {
+      setIsFavorite(isSongOnPlayerFavorite as boolean)
+    }
+  }, [currentSong, isSongOnPlayerFavorite, isFavorite])
 
   return (
     <div className="flex justify-between gap-2">
