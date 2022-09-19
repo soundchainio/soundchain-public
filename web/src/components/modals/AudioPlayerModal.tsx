@@ -38,6 +38,7 @@ export const AudioPlayerModal = () => {
     hasNext,
     volume,
     playlist,
+    isFavorite,
     togglePlay,
     setProgressStateFromSlider,
     setVolume,
@@ -45,9 +46,9 @@ export const AudioPlayerModal = () => {
     playNext,
     jumpTo,
     toggleShuffle,
+    setPlayerFavorite,
   } = useAudioPlayerContext()
   const [showTotalPlaybackDuration, setShowTotalPlaybackDuration] = useState(true)
-  const [isFavorite, setIsFavorite] = useState(currentSong.isFavorite)
   const [isPlaylistOpen, setIsPlaylistOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(true)
   const me = useMe()
@@ -69,7 +70,7 @@ export const AudioPlayerModal = () => {
   const handleFavorite = async () => {
     if (me?.profile.id) {
       await toggleFavorite({ variables: { trackId: currentSong.trackId }, refetchQueries: [TrackDocument] })
-      setIsFavorite(!isFavorite)
+      setPlayerFavorite(!isFavorite)
     } else {
       router.push('/login')
     }
@@ -78,10 +79,6 @@ export const AudioPlayerModal = () => {
   useEffect(() => {
     handleClose()
   }, [router.asPath])
-
-  useEffect(() => {
-    setIsFavorite(currentSong.isFavorite)
-  }, [currentSong])
 
   useEffect(() => {
     setIsMobile(checkIsMobile)
