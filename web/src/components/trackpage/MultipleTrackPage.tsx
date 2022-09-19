@@ -240,6 +240,7 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
           art: track.artworkUrl,
           title: track.title,
           artist: track.artist,
+          isFavorite: track.isFavorite,
         } as Song,
       ]
       playlistState(list, 0)
