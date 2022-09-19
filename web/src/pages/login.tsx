@@ -13,8 +13,8 @@ import { LogoAndText } from 'icons/LogoAndText'
 import { UserWarning } from 'icons/UserWarning'
 import { setJwt } from 'lib/apollo'
 import { AuthMethod, useLoginMutation, useMeQuery } from 'lib/graphql'
-import { useRouter } from 'next/router'
 import NextLink from 'next/link'
+import { useRouter } from 'next/router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 export default function LoginPage() {
@@ -118,18 +118,24 @@ export default function LoginPage() {
 
   if (loadingMe || me) {
     return (
-      <div className="flex h-full w-full items-center justify-center py-3 text-center font-bold sm:px-4">
-        <LoaderAnimation ring />
-      </div>
+      <>
+        <SEO title="Login | SoundChain" description="Login warning" canonicalUrl="/login/" />
+        <div className="flex h-full w-full items-center justify-center py-3 text-center font-bold sm:px-4">
+          <LoaderAnimation ring />
+        </div>
+      </>
     )
   }
 
   if (loggingIn) {
     return (
-      <div className="flex h-full w-full items-center justify-center py-3 text-center font-bold sm:px-4">
-        <LoaderAnimation ring />
-        <span className="text-white">Logging in</span>
-      </div>
+      <>
+        <SEO title="Login | SoundChain" description="Login warning" canonicalUrl="/login/" />
+        <div className="flex h-full w-full items-center justify-center py-3 text-center font-bold sm:px-4">
+          <LoaderAnimation ring />
+          <span className="text-white">Logging in</span>
+        </div>
+      </>
     )
   }
 
