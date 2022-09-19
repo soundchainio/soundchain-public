@@ -1,4 +1,3 @@
-import { MenuLink } from 'components/MenuLink'
 import SEO from 'components/SEO'
 import { TopNavBarProps } from 'components/TopNavBar'
 import { useLayoutContext } from 'hooks/useLayoutContext'
@@ -7,8 +6,8 @@ import { Heart } from 'icons/Heart'
 import { cacheFor } from 'lib/apollo'
 import { MeDocument, MeQuery } from 'lib/graphql'
 import { protectPage } from 'lib/protectPage'
-import React, { useEffect, useMemo } from 'react'
-
+import React, { useEffect, useMemo, useState } from 'react'
+import { ArtistsPage, FavoriteTracksPage, Favoritebar } from 'components/Library'
 interface HomePageProps {
   me?: MeQuery['me']
 }
@@ -25,6 +24,9 @@ export const getServerSideProps = protectPage(async (context, apolloClient) => {
 export default function LibraryPage({}: HomePageProps) {
   const { setTopNavBarProps } = useLayoutContext()
 
+  const [isFavoriteTracksOpen, setIsFavoriteTracksOpen] = useState(true)
+  const [isFavoriteArtistsOpen, setIsFavoriteArtistsOpen] = useState(true)
+
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
       title: 'Library',
@@ -39,8 +41,23 @@ export default function LibraryPage({}: HomePageProps) {
   return (
     <>
       <SEO title="Library | SoundChain" canonicalUrl="/library/" description="SoundChain Library" />
-      <MenuLink icon={Heart} label="Favorite Tracks" href="/library/favorite-tracks" />
-      <MenuLink icon={Artist} label="Artists" href="/library/artists" />
+      <Favoritebar
+        title="Favorite Tracks"
+        setState={setIsFavoriteTracksOpen}
+        stateValue={isFavoriteTracksOpen}
+        icon={<Heart fill="gray" className="mr-2" />}
+      >
+        <FavoriteTracksPage isFavoriteTracksOpen={isFavoriteTracksOpen} />
+      </Favoritebar>
+
+      <Favoritebar
+        title="Favorite Artists"
+        setState={setIsFavoriteArtistsOpen}
+        stateValue={isFavoriteArtistsOpen}
+        icon={<Artist fill="gray" className="mr-2" />}
+      >
+        <ArtistsPage isFavoriteArtistsOpen={isFavoriteArtistsOpen} />
+      </Favoritebar>
     </>
   )
 }

@@ -14,12 +14,14 @@ interface FavoriteTracksProps {
   searchTerm?: string
   isGrid?: boolean
   sorting: SortListingItem
+  isFavoriteTracksOpen?: boolean
 }
 
 const pageSize = 15
 
-export const FavoriteTracks = ({ searchTerm, isGrid, sorting }: FavoriteTracksProps) => {
+export const FavoriteTracks = ({ searchTerm, isGrid, sorting, isFavoriteTracksOpen }: FavoriteTracksProps) => {
   const { playlistState } = useAudioPlayerContext()
+
   const { data, loading, fetchMore, refetch } = useFavoriteTracksQuery({
     variables: {
       search: searchTerm,
@@ -35,7 +37,7 @@ export const FavoriteTracks = ({ searchTerm, isGrid, sorting }: FavoriteTracksPr
       },
       sort: SelectToApolloQuery[sorting] as unknown as SortTrackInput,
     })
-  }, [refetch, pageSize, sorting])
+  }, [refetch, sorting])
 
   const loadMore = () => {
     fetchMore({
@@ -79,45 +81,35 @@ export const FavoriteTracks = ({ searchTerm, isGrid, sorting }: FavoriteTracksPr
 
   return (
     <>
-      {isGrid ? (
-        <GridView
-          loading={loading}
-          hasNextPage={data?.favoriteTracks.pageInfo.hasNextPage}
-          loadMore={loadMore}
-          tracks={data?.favoriteTracks.nodes as Track[]}
-          refetch={refetch}
-        />
-      ) : (
-        <PullToRefresh onRefresh={refetch} className="h-auto">
-          <ol className={classNames('space-y-1')}>
-            {nodes.map((song, index) => (
-              <TrackItem
-                hideBadgeAndPrice={true}
-                key={song.id}
-                track={song as TrackQuery['track']}
-                handleOnPlayClicked={() => handleOnPlayClicked(index)}
-              />
-            ))}
-            {/*{nodes.map((song, index) => (
-              <TrackListItem
-                key={song.id}
-                index={index + 1}
-                song={{
-                  trackId: song.id,
-                  src: song.playbackUrl,
-                  art: song.artworkUrl,
-                  title: song.title,
-                  artist: song.artist,
-                  playbackCount: song.playbackCountFormatted,
-                  isFavorite: song.isFavorite,
-                }}
-                handleOnPlayClicked={song => handleOnPlayClicked(song, index)}
-              />
-            ))}*/}
-            {nodes.length === 0 && !loading && <NoResultFound type="Favorite Tracks" />}
-            {pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading favorite tracks" />}
-          </ol>
-        </PullToRefresh>
+      {isFavoriteTracksOpen && (
+        <>
+          {isGrid ? (
+            <GridView
+              loading={loading}
+              hasNextPage={data?.favoriteTracks.pageInfo.hasNextPage}
+              loadMore={loadMore}
+              tracks={data?.favoriteTracks.nodes as Track[]}
+              refetch={refetch}
+            />
+          ) : (
+            <PullToRefresh onRefresh={refetch} className="h-auto">
+              <ol className={classNames('space-y-1')}>
+                {nodes.map((song, index) => (
+                  <TrackItem
+                    hideBadgeAndPrice={true}
+                    key={song.id}
+                    track={song as TrackQuery['track']}
+                    handleOnPlayClicked={() => handleOnPlayClicked(index)}
+                  />
+                ))}
+                {nodes.length === 0 && !loading && <NoResultFound type="Favorite Tracks" />}
+                {pageInfo.hasNextPage && (
+                  <InfiniteLoader loadMore={loadMore} loadingMessage="Loading favorite tracks" />
+                )}
+              </ol>
+            </PullToRefresh>
+          )}
+        </>
       )}
     </>
   )

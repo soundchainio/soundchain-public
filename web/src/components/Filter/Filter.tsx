@@ -10,6 +10,7 @@ interface Props {
   options?: Option[]
   mobile?: boolean
   noMarginRight?: boolean
+  label?: boolean
 }
 
 type Option = { value: string; name: string }
@@ -22,7 +23,7 @@ const defaultOptions = [
 ]
 
 export const FilterComponent = (props: Props) => {
-  const { mobile, noMarginRight, sorting, setSorting, options = defaultOptions } = props
+  const { mobile, noMarginRight, sorting, setSorting, options = defaultOptions, label = true } = props
 
   const [selected, setSelected] = useState<Option | null>(null)
 
@@ -47,14 +48,16 @@ export const FilterComponent = (props: Props) => {
 
   return (
     <div className={classNames('flex items-center', { 'mr-4': !noMarginRight })}>
-      <label
-        className={classNames('mr-4 text-xs font-bold text-white', {
-          'hidden md:inline-block': !mobile,
-          'inline-block': mobile,
-        })}
-      >
-        Sort By:
-      </label>
+      {label && (
+        <label
+          className={classNames('text-xs font-bold text-white', {
+            'hidden md:inline-block': !mobile,
+            'inline-block': mobile,
+          })}
+        >
+          Sort By:
+        </label>
+      )}
       <div
         className={classNames('z-10', {
           flex: mobile,

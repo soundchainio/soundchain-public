@@ -18,14 +18,6 @@ function PageFilterWrapper(props: PageFilterProps) {
         {label && <h3 className="text-xl font-semibold text-slate-200">{label || ''}</h3>}
 
         <div className="flex-1" />
-        <FilterComponent
-          options={[
-            { value: SortListingItem.PlaybackCount, name: 'Most listened' },
-            { value: SortListingItem.CreatedAt, name: 'Newest' },
-          ]}
-          sorting={sorting}
-          setSorting={setSorting}
-        />
 
         <button aria-label="List view">
           <ListViewIcon color={isGrid ? undefined : 'rainbow'} onClick={() => setIsGrid(false)} />
@@ -33,6 +25,18 @@ function PageFilterWrapper(props: PageFilterProps) {
         <button aria-label="Grid view">
           <GridViewIcon color={isGrid ? 'rainbow' : undefined} onClick={() => setIsGrid(true)} />
         </button>
+
+        <FilterComponent
+          options={[
+            { value: SortListingItem.PlaybackCount, name: 'Most listened' },
+            { value: SortListingItem.CreatedAt, name: 'Newest' },
+          ]}
+          sorting={sorting}
+          setSorting={setSorting}
+          mobile
+          noMarginRight
+          label={false}
+        />
       </div>
     </div>
   )
