@@ -31,6 +31,7 @@ export const ExploreAll = ({ searchTerm, setSelectedTab }: ExplorePageProps) => 
             art: track.artworkUrl,
             title: track.title,
             artist: track.artist,
+            isFavorite: track.isFavorite,
           } as Song),
       )
       playlistState(list, index)
