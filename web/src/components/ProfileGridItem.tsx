@@ -78,11 +78,14 @@ export const ProfileGridItem = ({ profile }: ProfileListItemProps) => {
                   verified={profile.verified}
                   teamMember={profile.teamMember}
                   className="text-md lg:text-base"
-                  maxNumberOfCharacters={13}
+                  maxNumberOfCharacters={10}
                 />
               </a>
             </NextLink>
-            <p className="text-sm font-semibold text-gray-80 lg:text-sm">{`@${profile.userHandle}`}</p>
+            <p className="text-sm font-semibold text-gray-80 lg:text-sm">{`@${limitTextToNumberOfCharacters(
+              profile.userHandle,
+              10,
+            )}`}</p>
           </span>
 
           <div className="flex flex-col items-center">
@@ -102,7 +105,10 @@ export const ProfileGridItem = ({ profile }: ProfileListItemProps) => {
           {profile.bio ? (
             limitTextToNumberOfCharacters(profile.bio, 45)
           ) : (
-            <span className="text-black">Transparent bio</span>
+            <>
+              <br />
+              <br />
+            </>
           )}
         </p>
       </div>

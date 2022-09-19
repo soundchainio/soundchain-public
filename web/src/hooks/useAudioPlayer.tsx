@@ -20,6 +20,7 @@ interface AudioPlayerContextData {
   hasPrevious: boolean
   playlist: Song[]
   volume: number
+  isFavorite: boolean
   play: (song: Song) => void
   isCurrentSong: (trackId: string) => boolean
   isCurrentlyPlaying: (trackId: string) => boolean
@@ -34,6 +35,7 @@ interface AudioPlayerContextData {
   playNext: () => void
   jumpTo: (index: number) => void
   toggleShuffle: () => void
+  setPlayerFavorite: (isFavorite: boolean) => void
 }
 
 const localStorageVolumeKey = 'SOUNDCHAIN_VOLUME'
@@ -55,6 +57,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
   const [originalPlaylist, setOriginalPlaylist] = useState<Song[]>([])
   const [playlist, setPlaylist] = useState<Song[]>([])
   const [currentPlaylistIndex, setCurrentPlaylistIndex] = useState(0)
+  const [isFavorite, setIsFavorite] = useState<boolean>(false)
 
   const RESTART_TOLERANCE_TIME = 2 //2 seconds
 
@@ -102,6 +105,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
         setProgressStateFromSlider(0)
         setIsPlaying(true)
         setCurrentSong(song)
+        setIsFavorite(song.isFavorite as boolean)
       } else {
         togglePlay()
       }
@@ -198,6 +202,13 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
     setPlaylist(originalPlaylist)
   }, [currentSong.trackId, originalPlaylist])
 
+  const setPlayerFavorite = useCallback(
+    (isFavorite: boolean): void => {
+      setIsFavorite(isFavorite)
+    },
+    [setIsFavorite],
+  )
+
   return (
     <AudioPlayerContext.Provider
       value={{
@@ -211,6 +222,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
         hasPrevious,
         playlist,
         volume,
+        isFavorite,
         play,
         isCurrentSong,
         isCurrentlyPlaying,
@@ -225,6 +237,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
         playNext,
         jumpTo,
         toggleShuffle,
+        setPlayerFavorite,
       }}
     >
       {children}
