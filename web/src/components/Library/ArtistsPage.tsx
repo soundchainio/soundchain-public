@@ -40,7 +40,7 @@ export const ArtistsPage = (props: Props) => {
             isGrid={isGrid}
           />
 
-          <div className="mt-8">
+          <div className="h-full">
             {isGrid ? (
               <ExploreUsersGridView searchTerm={searchTerm} />
             ) : (

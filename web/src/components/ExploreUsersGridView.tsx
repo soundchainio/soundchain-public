@@ -61,7 +61,9 @@ export const ExploreUsersGridView = ({ searchTerm }: ExploreUsersProps) => {
         <PullToRefresh onRefresh={refetch} className="h-auto">
           <div className="user-profile-grid">
             {profiles.map(profile => (
-              <>{profile.id !== me?.profile.id && <ProfileGridItem key={profile.id} profile={profile} />}</>
+              <span key={profile.id}>
+                {profile.id !== me?.profile.id && <ProfileGridItem key={profile.id} profile={profile} />}
+              </span>
             ))}
           </div>
         </PullToRefresh>
