@@ -40,12 +40,14 @@ export const FavoriteTracksPage = (props: Props) => {
         />
       )}
 
-      <FavoriteTracks
-        sorting={sorting}
-        isGrid={isGrid}
-        searchTerm={searchTerm}
-        isFavoriteTracksOpen={isFavoriteTracksOpen}
-      />
+      <div className={`${isFavoriteTracksOpen && 'mb-12'}`}>
+        <FavoriteTracks
+          sorting={sorting}
+          isGrid={isGrid}
+          searchTerm={searchTerm}
+          isFavoriteTracksOpen={isFavoriteTracksOpen}
+        />
+      </div>
     </>
   )
 }

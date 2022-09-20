@@ -8,10 +8,12 @@ import { ProfileGridItem } from './ProfileGridItem'
 import { GridSkeleton } from './GridSkeleton'
 import PullToRefresh from 'react-simple-pull-to-refresh'
 import { InfiniteLoader as InfiniteLoaderLegacy } from './InfiniteLoader'
+import { useMe } from 'hooks/useMe'
 
 const pageSize = 15
 
 export const ExploreUsersGridView = ({ searchTerm }: ExploreUsersProps) => {
+  const me = useMe()
   const firstPage: PageInput = { first: pageSize }
 
   const { data, loading, fetchMore, refetch } = useExploreUsersQuery({
@@ -59,7 +61,7 @@ export const ExploreUsersGridView = ({ searchTerm }: ExploreUsersProps) => {
         <PullToRefresh onRefresh={refetch} className="h-auto">
           <div className="user-profile-grid">
             {profiles.map(profile => (
-              <ProfileGridItem key={profile.id} profile={profile} />
+              <>{profile.id !== me?.profile.id && <ProfileGridItem key={profile.id} profile={profile} />}</>
             ))}
           </div>
         </PullToRefresh>
