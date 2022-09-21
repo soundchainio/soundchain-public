@@ -1,0 +1,31 @@
+import { Track } from 'lib/graphql'
+import { TrackGrid } from './TrackGrid'
+
+interface GridItemProps<T> {
+  variant: 'track' | 'profile'
+  handleOnPlayClicked?: (index: number) => void
+  index?: number
+  item: T
+}
+
+export const GridItem = <T extends unknown>(props: GridItemProps<T>) => {
+  const { variant, item, handleOnPlayClicked, index } = props
+
+  if (!item) return null
+
+  if (variant === 'track') {
+    if (!handleOnPlayClicked) return null
+
+    const _item = item as unknown as Track
+
+    return (
+      <TrackGrid
+        track={_item}
+        coverPhotoUrl={_item.artworkUrl || ''}
+        handleOnPlayClicked={() => handleOnPlayClicked(index)}
+      />
+    )
+  }
+
+  return null
+}

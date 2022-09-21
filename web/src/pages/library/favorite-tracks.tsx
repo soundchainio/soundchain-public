@@ -1,4 +1,4 @@
-import { FavoriteTracks } from 'components/FavoriteTracks'
+import { FavoriteTracks } from 'components/LibraryPage/FavoriteTracks'
 import { SearchLibrary } from 'components/SearchLibrary'
 import SEO from 'components/SEO'
 import { TopNavBarProps } from 'components/TopNavBar'

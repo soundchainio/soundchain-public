@@ -1,25 +1,21 @@
-import classNames from 'classnames'
-import { InfiniteLoader } from 'components/InfiniteLoader'
-import { Track as TrackItem } from 'components/Track'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
-import { SortTrackInput, Track, TrackQuery, useFavoriteTracksQuery } from 'lib/graphql'
+import { SortTrackInput, Track, useFavoriteTracksQuery } from 'lib/graphql'
 import { useEffect } from 'react'
-import PullToRefresh from 'react-simple-pull-to-refresh'
-import { SelectToApolloQuery, SortListingItem } from '../lib/apollo/sorting'
-import { GridView } from './GridView'
-import { NoResultFound } from './NoResultFound'
-import { TrackListItemSkeleton } from './TrackListItemSkeleton'
+import { SelectToApolloQuery, SortListingItem } from '../../lib/apollo/sorting'
+import { GridView } from 'components/common'
+import { TrackListItemSkeleton } from '../TrackListItemSkeleton'
 
 interface FavoriteTracksProps {
-  searchTerm?: string
+  searchTerm: string
   isGrid?: boolean
   sorting: SortListingItem
 }
 
 const pageSize = 15
 
-export const FavoriteTracks = ({ searchTerm, isGrid, sorting }: FavoriteTracksProps) => {
+export const FavoriteTracks = ({ searchTerm, sorting }: FavoriteTracksProps) => {
   const { playlistState } = useAudioPlayerContext()
+
   const { data, loading, fetchMore, refetch } = useFavoriteTracksQuery({
     variables: {
       search: searchTerm,
@@ -35,7 +31,7 @@ export const FavoriteTracks = ({ searchTerm, isGrid, sorting }: FavoriteTracksPr
       },
       sort: SelectToApolloQuery[sorting] as unknown as SortTrackInput,
     })
-  }, [refetch, pageSize, sorting])
+  }, [refetch, sorting])
 
   const loadMore = () => {
     fetchMore({
@@ -79,12 +75,22 @@ export const FavoriteTracks = ({ searchTerm, isGrid, sorting }: FavoriteTracksPr
 
   return (
     <>
-      {isGrid ? (
+      <GridView
+        isLoading={loading}
+        hasNextPage={data?.favoriteTracks.pageInfo.hasNextPage}
+        loadMore={loadMore}
+        list={data?.favoriteTracks.nodes as Track[]}
+        variant="track"
+        searchTerm={searchTerm}
+        refetch={refetch}
+        handleOnPlayClicked={handleOnPlayClicked}
+      />
+      {/* {isGrid ? (
         <GridView
-          loading={loading}
+          isLoading={loading}
           hasNextPage={data?.favoriteTracks.pageInfo.hasNextPage}
           loadMore={loadMore}
-          tracks={data?.favoriteTracks.nodes as Track[]}
+          list={data?.favoriteTracks.nodes as Track[]}
           refetch={refetch}
         />
       ) : (
@@ -98,27 +104,11 @@ export const FavoriteTracks = ({ searchTerm, isGrid, sorting }: FavoriteTracksPr
                 handleOnPlayClicked={() => handleOnPlayClicked(index)}
               />
             ))}
-            {/*{nodes.map((song, index) => (
-              <TrackListItem
-                key={song.id}
-                index={index + 1}
-                song={{
-                  trackId: song.id,
-                  src: song.playbackUrl,
-                  art: song.artworkUrl,
-                  title: song.title,
-                  artist: song.artist,
-                  playbackCount: song.playbackCountFormatted,
-                  isFavorite: song.isFavorite,
-                }}
-                handleOnPlayClicked={song => handleOnPlayClicked(song, index)}
-              />
-            ))}*/}
             {nodes.length === 0 && !loading && <NoResultFound type="Favorite Tracks" />}
             {pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading favorite tracks" />}
           </ol>
         </PullToRefresh>
-      )}
+      )} */}
     </>
   )
 }
