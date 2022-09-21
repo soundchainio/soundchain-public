@@ -1,11 +1,11 @@
 import { ApolloQueryResult } from '@apollo/client'
 import { GridSkeleton } from 'components/GridSkeleton'
 import { NoResultFound } from 'components/NoResultFound'
-import { TrackGrid } from 'components/TrackGrid'
+import { TrackGrid } from 'components/common/GridView/GridItem/TrackGrid'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { ExploreTracksQuery, FavoriteTracksQuery, ListingItemsQuery, Track, TrackWithListingItem } from 'lib/graphql'
 import PullToRefresh from 'react-simple-pull-to-refresh'
-import { InfiniteLoader as InfiniteLoaderLegacy } from '../InfiniteLoader'
+import { InfiniteLoader } from 'components/InfiniteLoader'
 
 interface ViewProps {
   loading: boolean
@@ -54,7 +54,7 @@ export const GridView = ({ tracks, loading, refetch, hasNextPage, loadMore }: Vi
           </div>
         </PullToRefresh>
       )}
-      {hasNextPage && <InfiniteLoaderLegacy loadMore={loadMore} loadingMessage="Loading Marketplace" />}
+      {hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading Marketplace" />}
     </>
   )
 }

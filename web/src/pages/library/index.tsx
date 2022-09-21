@@ -1,14 +1,13 @@
-import { MenuLink } from 'components/MenuLink'
 import SEO from 'components/SEO'
 import { TopNavBarProps } from 'components/TopNavBar'
 import { useLayoutContext } from 'hooks/useLayoutContext'
-import { Artist } from 'icons/Artist'
-import { Heart } from 'icons/Heart'
 import { cacheFor } from 'lib/apollo'
 import { MeDocument, MeQuery } from 'lib/graphql'
 import { protectPage } from 'lib/protectPage'
-import React, { useEffect, useMemo } from 'react'
-
+import React, { useEffect, useMemo, useState } from 'react'
+import { SortListingItem } from 'lib/apollo/sorting'
+import { SearchBar, TabsMenu } from 'components/common'
+import { FavoriteTracks } from 'components/LibraryPage/FavoriteTracks'
 interface HomePageProps {
   me?: MeQuery['me']
 }
@@ -22,7 +21,17 @@ export const getServerSideProps = protectPage(async (context, apolloClient) => {
   return cacheFor(LibraryPage, { me: data.me }, context, apolloClient)
 })
 
+enum LibraryTab {
+  FAVORITE_TRACKS = 'Favorite Tracks',
+  FAVORITE_ARTISTS = 'Favorite Artists',
+}
+
 export default function LibraryPage({}: HomePageProps) {
+  const [selectedTab, setSelectedTab] = useState<LibraryTab>(LibraryTab.FAVORITE_TRACKS)
+  const [searchTerm, setSearchterm] = useState('')
+  const [isGrid, setIsGrid] = useState(true)
+  const [sorting, setSorting] = useState<SortListingItem>(SortListingItem.CreatedAt)
+
   const { setTopNavBarProps } = useLayoutContext()
 
   const topNavBarProps: TopNavBarProps = useMemo(
@@ -32,6 +41,8 @@ export default function LibraryPage({}: HomePageProps) {
     [],
   )
 
+  const libraryTabList = [LibraryTab.FAVORITE_TRACKS, LibraryTab.FAVORITE_ARTISTS]
+
   useEffect(() => {
     setTopNavBarProps(topNavBarProps)
   }, [setTopNavBarProps, topNavBarProps])
@@ -39,8 +50,24 @@ export default function LibraryPage({}: HomePageProps) {
   return (
     <>
       <SEO title="Library | SoundChain" canonicalUrl="/library/" description="SoundChain Library" />
-      <MenuLink icon={Heart} label="Favorite Tracks" href="/library/favorite-tracks" />
-      <MenuLink icon={Artist} label="Artists" href="/library/artists" />
+      <TabsMenu
+        isGrid={isGrid}
+        setIsGrid={setIsGrid}
+        sorting={sorting}
+        setSorting={setSorting}
+        tabList={libraryTabList}
+        selectedTab={selectedTab}
+        setSelectedTab={setSelectedTab}
+      />
+
+      {selectedTab === LibraryTab.FAVORITE_TRACKS && (
+        <>
+          <SearchBar setSearchTerm={setSearchterm} />
+          <FavoriteTracks searchTerm={searchTerm} isGrid={isGrid} sorting={sorting} />
+        </>
+      )}
+
+      {selectedTab === LibraryTab.FAVORITE_ARTISTS && <h1>Artists</h1>}
     </>
   )
 }
