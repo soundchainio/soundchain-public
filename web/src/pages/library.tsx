@@ -1,34 +1,18 @@
 import SEO from 'components/SEO'
 import { TopNavBarProps } from 'components/TopNavBar'
 import { useLayoutContext } from 'hooks/useLayoutContext'
-import { cacheFor } from 'lib/apollo'
-import { MeDocument, MeQuery } from 'lib/graphql'
-import { protectPage } from 'lib/protectPage'
 import React, { useEffect, useMemo, useState } from 'react'
 import { SortListingItem } from 'lib/apollo/sorting'
 import { SearchBar, TabsMenu } from 'components/common'
 import { FavoriteTracks } from 'components/LibraryPage/FavoriteTracks'
 import { FavoriteArtists } from 'components/LibraryPage/FavoriteArtists'
 
-interface HomePageProps {
-  me?: MeQuery['me']
-}
-
-export const getServerSideProps = protectPage(async (context, apolloClient) => {
-  const { data } = await apolloClient.query({
-    query: MeDocument,
-    context,
-  })
-
-  return cacheFor(LibraryPage, { me: data.me }, context, apolloClient)
-})
-
 enum LibraryTab {
   FAVORITE_TRACKS = 'Favorite Tracks',
   FAVORITE_ARTISTS = 'Favorite Artists',
 }
 
-export default function LibraryPage({}: HomePageProps) {
+export default function LibraryPage() {
   const [selectedTab, setSelectedTab] = useState<LibraryTab>(LibraryTab.FAVORITE_TRACKS)
   const [searchTerm, setSearchterm] = useState('')
   const [isGrid, setIsGrid] = useState(true)
@@ -64,19 +48,13 @@ export default function LibraryPage({}: HomePageProps) {
         hideSortBy={!Boolean(selectedTab === LibraryTab.FAVORITE_ARTISTS)}
       />
 
+      <SearchBar setSearchTerm={setSearchterm} />
+
       {selectedTab === LibraryTab.FAVORITE_TRACKS && (
-        <>
-          <SearchBar setSearchTerm={setSearchterm} />
-          <FavoriteTracks searchTerm={searchTerm} isGrid={isGrid} sorting={sorting} />
-        </>
+        <FavoriteTracks searchTerm={searchTerm} isGrid={isGrid} sorting={sorting} />
       )}
 
-      {selectedTab === LibraryTab.FAVORITE_ARTISTS && (
-        <>
-          <SearchBar setSearchTerm={setSearchterm} />
-          <FavoriteArtists searchTerm={searchTerm} isGrid={isGrid} />
-        </>
-      )}
+      {selectedTab === LibraryTab.FAVORITE_ARTISTS && <FavoriteArtists searchTerm={searchTerm} isGrid={isGrid} />}
     </>
   )
 }

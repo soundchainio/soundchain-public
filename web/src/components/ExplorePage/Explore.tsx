@@ -83,7 +83,6 @@ export const Explore = () => {
 
   const exploreTabList = [ExploreTab.ALL, ExploreTab.TRACKS, ExploreTab.USERS]
 
-  console.log(data)
   return (
     <div className="h-full overflow-x-hidden bg-gray-10 md:px-2">
       <TabsMenu
