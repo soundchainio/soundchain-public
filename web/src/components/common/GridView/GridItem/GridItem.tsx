@@ -23,7 +23,7 @@ export const GridItem = <T extends unknown>(props: GridItemProps<T>) => {
       <TrackGrid
         track={_item}
         coverPhotoUrl={_item.artworkUrl || ''}
-        handleOnPlayClicked={() => handleOnPlayClicked(index)}
+        handleOnPlayClicked={() => handleOnPlayClicked(index || 0)}
       />
     )
   }
