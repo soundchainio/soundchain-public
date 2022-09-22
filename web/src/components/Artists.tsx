@@ -33,7 +33,7 @@ export const Artists = ({ searchTerm }: ArtistsPageProps) => {
 
   useEffect(() => {
     if (me?.profile.id) artists({ variables: { profileId: me.profile.id, search: searchTerm } })
-  }, [me, searchTerm])
+  }, [artists, me, searchTerm])
 
   if (loading) {
     return (

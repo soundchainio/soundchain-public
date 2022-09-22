@@ -8,6 +8,8 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { SortListingItem } from 'lib/apollo/sorting'
 import { SearchBar, TabsMenu } from 'components/common'
 import { FavoriteTracks } from 'components/LibraryPage/FavoriteTracks'
+import { FavoriteArtists } from 'components/LibraryPage/FavoriteArtists'
+
 interface HomePageProps {
   me?: MeQuery['me']
 }
@@ -50,6 +52,7 @@ export default function LibraryPage({}: HomePageProps) {
   return (
     <>
       <SEO title="Library | SoundChain" canonicalUrl="/library/" description="SoundChain Library" />
+
       <TabsMenu
         isGrid={isGrid}
         setIsGrid={setIsGrid}
@@ -58,6 +61,7 @@ export default function LibraryPage({}: HomePageProps) {
         tabList={libraryTabList}
         selectedTab={selectedTab}
         setSelectedTab={setSelectedTab}
+        hideSortBy={!Boolean(selectedTab === LibraryTab.FAVORITE_ARTISTS)}
       />
 
       {selectedTab === LibraryTab.FAVORITE_TRACKS && (
@@ -67,7 +71,12 @@ export default function LibraryPage({}: HomePageProps) {
         </>
       )}
 
-      {selectedTab === LibraryTab.FAVORITE_ARTISTS && <h1>Artists</h1>}
+      {selectedTab === LibraryTab.FAVORITE_ARTISTS && (
+        <>
+          <SearchBar setSearchTerm={setSearchterm} />
+          <FavoriteArtists searchTerm={searchTerm} isGrid={isGrid} />
+        </>
+      )}
     </>
   )
 }

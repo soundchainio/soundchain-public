@@ -1,19 +1,19 @@
-/* eslint-disable react/display-name */
 import React from 'react'
 import { NoResultFound } from '../../NoResultFound'
 import { GridSkeleton } from '../../GridSkeleton'
 import PullToRefresh from 'react-simple-pull-to-refresh'
 import { InfiniteLoader as InfiniteLoaderLegacy } from '../../InfiniteLoader'
 import { ApolloQueryResult } from '@apollo/client'
-import { ExploreTracksQuery, FavoriteTracksQuery, ListingItemsQuery } from 'lib/graphql'
+import { ExploreTracksQuery, FavoriteTracksQuery, FollowedArtistsQuery, ListingItemsQuery } from 'lib/graphql'
 import { GridItem } from './GridItem/GridItem'
 
 interface Props<T> {
-  searchTerm: string
   isLoading?: boolean
   handleOnPlayClicked?: (index: number) => void
   loadMore: () => void
-  refetch: () => Promise<ApolloQueryResult<ListingItemsQuery | ExploreTracksQuery | FavoriteTracksQuery>>
+  refetch: () => Promise<
+    ApolloQueryResult<ListingItemsQuery | ExploreTracksQuery | FavoriteTracksQuery | FollowedArtistsQuery>
+  >
   hasNextPage?: boolean
   list: T[]
   variant: 'track' | 'profile'

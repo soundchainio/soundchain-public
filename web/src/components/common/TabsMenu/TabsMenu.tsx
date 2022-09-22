@@ -16,10 +16,11 @@ export type Props = {
   selectedTab: any
   setSelectedTab: Dispatch<SetStateAction<any>>
   tabList: string[]
+  hideSortBy?: boolean
 }
 
 export const TabsMenu = memo((props: Props) => {
-  const { sorting, setSorting, isGrid, setIsGrid, tabList, selectedTab, setSelectedTab } = props
+  const { sorting, setSorting, isGrid, setIsGrid, tabList, selectedTab, setSelectedTab, hideSortBy = false } = props
 
   return (
     <div className="w-full">
@@ -30,14 +31,16 @@ export const TabsMenu = memo((props: Props) => {
           </div>
         </div>
 
-        <FilterComponent
-          options={[
-            { value: SortListingItem.PlaybackCount, name: 'Most listened' },
-            { value: SortListingItem.CreatedAt, name: 'Newest' },
-          ]}
-          sorting={sorting}
-          setSorting={setSorting}
-        />
+        {hideSortBy && (
+          <FilterComponent
+            options={[
+              { value: SortListingItem.PlaybackCount, name: 'Most listened' },
+              { value: SortListingItem.CreatedAt, name: 'Newest' },
+            ]}
+            sorting={sorting}
+            setSorting={setSorting}
+          />
+        )}
 
         <div className="z-10 flex gap-2">
           <button aria-label="List view">
