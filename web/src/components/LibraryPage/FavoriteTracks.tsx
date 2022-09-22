@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { SelectToApolloQuery, SortListingItem } from '../../lib/apollo/sorting'
 import { GridView } from 'components/common'
 import { TrackListItemSkeleton } from '../TrackListItemSkeleton'
+import { ListView } from 'components/ListView/ListView'
 
 interface FavoriteTracksProps {
   searchTerm: string
@@ -13,7 +14,9 @@ interface FavoriteTracksProps {
 
 const pageSize = 15
 
-export const FavoriteTracks = ({ searchTerm, sorting }: FavoriteTracksProps) => {
+export const FavoriteTracks = (props: FavoriteTracksProps) => {
+  const { searchTerm, sorting, isGrid } = props
+
   const { playlistState } = useAudioPlayerContext()
 
   const { data, loading, fetchMore, refetch } = useFavoriteTracksQuery({
@@ -26,12 +29,13 @@ export const FavoriteTracks = ({ searchTerm, sorting }: FavoriteTracksProps) => 
 
   useEffect(() => {
     refetch({
+      search: searchTerm,
       page: {
         first: pageSize,
       },
       sort: SelectToApolloQuery[sorting] as unknown as SortTrackInput,
     })
-  }, [refetch, sorting])
+  }, [refetch, sorting, searchTerm])
 
   const loadMore = () => {
     fetchMore({
@@ -75,40 +79,25 @@ export const FavoriteTracks = ({ searchTerm, sorting }: FavoriteTracksProps) => 
 
   return (
     <>
-      <GridView
-        isLoading={loading}
-        hasNextPage={data?.favoriteTracks.pageInfo.hasNextPage}
-        loadMore={loadMore}
-        list={data?.favoriteTracks.nodes as Track[]}
-        variant="track"
-        searchTerm={searchTerm}
-        refetch={refetch}
-        handleOnPlayClicked={handleOnPlayClicked}
-      />
-      {/* {isGrid ? (
+      {isGrid ? (
         <GridView
           isLoading={loading}
-          hasNextPage={data?.favoriteTracks.pageInfo.hasNextPage}
+          hasNextPage={pageInfo.hasNextPage}
           loadMore={loadMore}
-          list={data?.favoriteTracks.nodes as Track[]}
+          list={nodes as Track[]}
+          variant="track"
           refetch={refetch}
+          handleOnPlayClicked={handleOnPlayClicked}
         />
       ) : (
-        <PullToRefresh onRefresh={refetch} className="h-auto">
-          <ol className={classNames('space-y-1')}>
-            {nodes.map((song, index) => (
-              <TrackItem
-                hideBadgeAndPrice={true}
-                key={song.id}
-                track={song as TrackQuery['track']}
-                handleOnPlayClicked={() => handleOnPlayClicked(index)}
-              />
-            ))}
-            {nodes.length === 0 && !loading && <NoResultFound type="Favorite Tracks" />}
-            {pageInfo.hasNextPage && <InfiniteLoader loadMore={loadMore} loadingMessage="Loading favorite tracks" />}
-          </ol>
-        </PullToRefresh>
-      )} */}
+        <ListView
+          loading={loading}
+          hasNextPage={pageInfo.hasNextPage}
+          loadMore={loadMore}
+          tracks={nodes as Track[]}
+          refetch={refetch}
+        />
+      )}
     </>
   )
 }

@@ -1,5 +1,6 @@
-import { Track } from 'lib/graphql'
+import { Profile, Track } from 'lib/graphql'
 import { TrackGrid } from './TrackGrid'
+import { ProfileGridItem } from './ProfileGridItem'
 
 interface GridItemProps<T> {
   variant: 'track' | 'profile'
@@ -25,6 +26,12 @@ export const GridItem = <T extends unknown>(props: GridItemProps<T>) => {
         handleOnPlayClicked={() => handleOnPlayClicked(index)}
       />
     )
+  }
+
+  if (variant === 'profile') {
+    const _item = item as unknown as Profile
+
+    return <ProfileGridItem profile={_item} />
   }
 
   return null
