@@ -2,19 +2,23 @@ import { ExploreAll } from 'components/ExploreAll'
 import { ExploreUsersListView } from 'components/ExploreUsersListView'
 import React, { useEffect, useState } from 'react'
 import { ExploreTab } from 'types/ExploreTabType'
-import { ExplorePageFilterWrapper } from 'components/ExplorePageFilterWrapper'
 import { SelectToApolloQuery, SortListingItem, SortListingParam } from 'lib/apollo/sorting'
 import { SortExploreTracksField, Track, useExploreTracksQuery } from 'lib/graphql'
 import { ListView } from 'components/ListView'
-import { GridView } from 'components/GridView'
-import { ExploreSearchBar } from './ExploreSearchBar'
-import { ExploreUsersGridView } from './ExploreUsersGridView'
+import { GridView } from 'components/common'
+import { ExploreSearchBar } from '../ExploreSearchBar'
+import { ExploreUsersGridView } from '../ExploreUsersGridView'
+import { TabsMenu } from 'components/common'
+import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
+import { TrackListItemSkeleton } from 'components/TrackListItemSkeleton'
 
 export const Explore = () => {
   const [selectedTab, setSelectedTab] = useState<ExploreTab>(ExploreTab.ALL)
   const [search, setSearch] = useState('')
   const [isGrid, setIsGrid] = useState(true)
   const [sorting, setSorting] = useState<SortListingItem>(SortListingItem.CreatedAt)
+
+  const { playlistState } = useAudioPlayerContext()
 
   const pageSize = 15
 
@@ -50,14 +54,43 @@ export const Explore = () => {
     })
   }
 
+  if (loading || !data) {
+    return (
+      <div>
+        <TrackListItemSkeleton />
+        <TrackListItemSkeleton />
+        <TrackListItemSkeleton />
+      </div>
+    )
+  }
+
+  const { nodes, pageInfo } = data.exploreTracks
+
+  const handleOnPlayClicked = (index: number) => {
+    const list = nodes.map(
+      node =>
+        ({
+          trackId: node.id,
+          src: node.playbackUrl,
+          art: node.artworkUrl,
+          title: node.title,
+          artist: node.artist,
+          isFavorite: node.isFavorite,
+        } as Song),
+    )
+    playlistState(list, index)
+  }
+
+  const exploreTabList = [ExploreTab.ALL, ExploreTab.TRACKS, ExploreTab.USERS]
+
   return (
     <div className="h-full overflow-x-hidden bg-gray-10 md:px-2">
-      <ExplorePageFilterWrapper
-        totalCount={data?.exploreTracks.pageInfo.totalCount}
+      <TabsMenu
         isGrid={isGrid}
         setIsGrid={setIsGrid}
         sorting={sorting}
         setSorting={setSorting}
+        tabList={exploreTabList}
         selectedTab={selectedTab}
         setSelectedTab={setSelectedTab}
       />
@@ -75,18 +108,20 @@ export const Explore = () => {
           <ExploreSearchBar setSearchTerm={searchTerm => setSearch(searchTerm)} />
           {isGrid ? (
             <GridView
-              loading={loading}
-              hasNextPage={data?.exploreTracks.pageInfo.hasNextPage}
+              isLoading={loading}
+              variant="track"
+              hasNextPage={pageInfo.hasNextPage}
               loadMore={loadMore}
-              tracks={data?.exploreTracks.nodes as Track[]}
+              list={nodes as Track[]}
               refetch={refetch}
+              handleOnPlayClicked={handleOnPlayClicked}
             />
           ) : (
             <ListView
               loading={loading}
-              hasNextPage={data?.exploreTracks.pageInfo.hasNextPage}
+              hasNextPage={pageInfo.hasNextPage}
               loadMore={loadMore}
-              tracks={data?.exploreTracks.nodes as Track[]}
+              tracks={nodes as Track[]}
               displaySaleBadge={true}
               refetch={refetch}
             />
