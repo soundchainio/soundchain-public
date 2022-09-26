@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Description } from 'components/details-NFT/Description'
 import { HandleNFT } from 'components/details-NFT/HandleNFT'
 import { MintingData } from 'components/details-NFT/MintingData'
@@ -40,6 +41,7 @@ import { AuthorActionsType } from 'types/AuthorActionsType'
 import { priceToShow } from 'utils/format'
 import { compareWallets } from 'utils/Wallet'
 import { UtilityInfo } from '../details-NFT/UtilityInfo'
+import { PriceCard, TrackCard } from './components'
 
 interface SingleTrackPageProps {
   track: TrackQuery['track']
@@ -215,24 +217,28 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
   ])
 
   useEffect(() => {
+    if (!web3 || !tokenId || !getHighestBid || highestBid.bidder != undefined || !nftData?.contract) {
+      return
+    }
+
+    console.log(nftData?.contract)
+
     const fetchHighestBid = async () => {
-      if (!web3 || !tokenId || !getHighestBid || highestBid.bidder != undefined) {
-        return
-      }
-      const { _bid, _bidder } = await getHighestBid(web3, tokenId, { nft: nftData?.contract })
+      const { _bid, _bidder } = await getHighestBid(web3, tokenId, { nft: nftData.contract })
       setHighestBid({ bid: priceToShow(_bid || '0'), bidder: _bidder })
     }
+
     fetchHighestBid()
   }, [tokenId, web3, getHighestBid, highestBid.bidder, nftData])
 
   useEffect(() => {
-    if (highestBid.bidder) {
-      fetchHighestBidder({
-        variables: {
-          walletAddress: highestBid.bidder,
-        },
-      })
-    }
+    if (!highestBid.bidder) return
+
+    fetchHighestBidder({
+      variables: {
+        walletAddress: highestBid.bidder,
+      },
+    })
   }, [highestBid.bidder, fetchHighestBidder])
 
   useEffect(() => {
@@ -278,6 +284,8 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
   return (
     <>
       <SEO title={title} description={description} canonicalUrl={`/tracks/${track.id}`} image={track.artworkUrl} />
+      <TrackCard me={me} track={track} />
+      <PriceCard />
       <div className="flex flex-col gap-5 p-3">
         <Track track={track} handleOnPlayClicked={handleOnPlayClicked} />
         <ViewPost trackId={track.id} isFavorited={track.isFavorite} />
@@ -314,6 +322,7 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
           )}
         </div>
       )}
+
       {isAuction && (
         <div className="bg-[#111920]">
           {futureSale && (

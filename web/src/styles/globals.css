@@ -198,6 +198,17 @@ html {
   grid-column-gap: 10px;
 }
 
+.mobile-image-black-bottom-gradient {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 0.01%, rgba(0, 0, 0, 0) 45.31%, rgba(0, 0, 0, 0.9) 100%);
+}
+
+.absolute-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, 50%)
+}
+
 /** TODO: tip
 * I've moved this styles to tailwind.config.js
 * Since it may or may not work or conflict with existing styles, I've commented the code
