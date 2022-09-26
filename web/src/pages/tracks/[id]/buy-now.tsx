@@ -11,7 +11,6 @@ import { Track } from 'components/Track'
 import { Timer } from 'components/trackpage/SingleTrackPage'
 import { config } from 'config'
 import { Form, Formik } from 'formik'
-import useBlockchain from 'hooks/useBlockchain'
 import useBlockchainV2 from 'hooks/useBlockchainV2'
 import { useLayoutContext } from 'hooks/useLayoutContext'
 import { useMe } from 'hooks/useMe'
@@ -80,7 +79,6 @@ const topNavBarProps: TopNavBarProps = {
 
 export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
   const { buyItem } = useBlockchainV2()
-  const { getCurrentGasPrice } = useBlockchain()
   const { account, web3, balance } = useWalletContext()
   const [trackUpdate] = useUpdateTrackMutation()
   const [loading, setLoading] = useState(false)
@@ -88,7 +86,6 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
   const router = useRouter()
   const me = useMe()
   const { setTopNavBarProps } = useLayoutContext()
-  const [gasPrice, setGasPrice] = useState<string>('')
 
   const nftData = track.nftData
   const tokenId = nftData?.tokenId ?? -1
@@ -106,15 +103,6 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
   }
 
   useEffect(() => {
-    const gasCheck = () => {
-      if (web3) {
-        getCurrentGasPrice(web3).then(price => setGasPrice(price))
-      }
-    }
-    gasCheck()
-  }, [web3, getCurrentGasPrice])
-
-  useEffect(() => {
     setTopNavBarProps(topNavBarProps)
   }, [setTopNavBarProps])
 
@@ -126,7 +114,7 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
     if (account && web3 && isPaymentOGUN) {
       getOGUNBalance(web3)
     }
-  }, [account, web3, isPaymentOGUN, getOGUNBalance])
+  }, [account, web3, isPaymentOGUN])
 
   if (!listingPayload) {
     return null
@@ -186,10 +174,11 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
       if (amount && existingAllowance < parseFloat(amount)) {
         const fixedAmount = Web3.utils.toWei((+amount * 10 ** -18).toString())
         const amountBN = Web3.utils.toBN(fixedAmount)
-        console.log(`Approving new allowance of ${amountBN} using a gas price: ${gasPrice}`)
+        const gasPriceWei = await web3.eth.getGasPrice()
+        console.log(`Approving new allowance of ${amountBN} using a gas price: ${gasPriceWei}`)
         await tokenContract(web3)
           .methods.approve(marketplaceAddress, amountBN)
-          .send({ from: account, gasPrice: gasPrice })
+          .send({ from: account, gasPrice: gasPriceWei })
           .catch(console.log)
       }
     }
