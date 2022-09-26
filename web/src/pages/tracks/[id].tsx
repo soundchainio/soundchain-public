@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-
-import { MultipleTrackPage } from 'components/trackpage/MultipleTrackPage'
 import { SingleTrackPage } from 'components/trackpage/SingleTrackPage'
 import { cacheFor, createApolloClient } from 'lib/apollo'
 import { TrackDocument, TrackQuery } from 'lib/graphql'
@@ -38,8 +35,8 @@ export const getServerSideProps: GetServerSideProps<TrackPageProps, TrackPagePar
 }
 
 export default function TrackPage({ track }: TrackPageProps) {
-  if (track.editionSize > 1) {
-    return <MultipleTrackPage track={track} />
-  }
+  // if (track.editionSize > 1) {
+  //   return <MultipleTrackPage track={track} />
+  // }
   return <SingleTrackPage track={track} />
 }
