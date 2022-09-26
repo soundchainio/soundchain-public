@@ -1,4 +1,4 @@
-import { Explore } from 'components/Explore'
+import { Explore } from 'components/ExplorePage/Explore'
 import SEO from 'components/SEO'
 import { TopNavBarProps } from 'components/TopNavBar'
 import { useLayoutContext } from 'hooks/useLayoutContext'

@@ -5,7 +5,15 @@ import { NoResultFound } from 'components/NoResultFound'
 import { PostSkeleton } from 'components/PostSkeleton'
 import { Track as TrackItem } from 'components/Track'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
-import { ExploreTracksQuery, ListingItemsQuery, Track, TrackQuery, TrackWithListingItem } from 'lib/graphql'
+import {
+  ExploreTracksQuery,
+  FavoriteTracksQuery,
+  FollowedArtistsQuery,
+  ListingItemsQuery,
+  Track,
+  TrackQuery,
+  TrackWithListingItem,
+} from 'lib/graphql'
 import { memo } from 'react'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import { areEqual, FixedSizeList as List } from 'react-window'
@@ -14,7 +22,9 @@ import InfiniteLoader from 'react-window-infinite-loader'
 interface ViewProps {
   loading: boolean
   loadMore: () => void
-  refetch: () => Promise<ApolloQueryResult<ListingItemsQuery | ExploreTracksQuery>>
+  refetch: () => Promise<
+    ApolloQueryResult<ListingItemsQuery | ExploreTracksQuery | FavoriteTracksQuery | FollowedArtistsQuery>
+  >
   hasNextPage?: boolean
   tracks?: TrackWithListingItem[] | Track[]
   displaySaleBadge?: boolean
