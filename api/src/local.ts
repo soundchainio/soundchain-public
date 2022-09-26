@@ -1,21 +1,14 @@
-import * as Sentry from '@sentry/node';
 import { ApolloServerPluginLandingPageGraphQLPlayground } from 'apollo-server-core';
 import { ApolloServer } from 'apollo-server-express';
 import express from 'express';
 import mongoose from 'mongoose';
-import { config, NODE_ENV } from './config';
+import { config } from './config';
 import { blockchainWatcher } from './lambda/blockchainWatcher';
 import { processAuctions } from './lambda/processAuctions';
 import { processPending } from './lambda/processPending';
 import { Context } from './types/Context';
 
 async function bootstrap() {
-  Sentry.init({
-    dsn: config.sentry.url,
-    tracesSampleRate: 1.0,
-    environment: NODE_ENV,
-  });
-
   await mongoose.connect(config.db.url, config.db.options);
 
   const app = express();

@@ -166,6 +166,11 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
         .methods.allowance(account, marketplaceAddress)
         .call()
         .catch(console.log)
+
+      console.log(
+        `Your existing allowance for contract: ${marketplaceAddress} is ${existingAllowance} validating an amount of ${amount}`,
+      )
+
       if (amount && existingAllowance < parseFloat(amount)) {
         const fixedAmount = Web3.utils.toWei((+amount * 10 ** -18).toString())
         const amountBN = Web3.utils.toBN(fixedAmount)
