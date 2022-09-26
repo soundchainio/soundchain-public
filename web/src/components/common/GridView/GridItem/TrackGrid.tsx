@@ -9,15 +9,16 @@ import dynamic from 'next/dynamic'
 import NextLink from 'next/link'
 import { useEffect, useState } from 'react'
 import { currency, limitTextToNumberOfCharacters } from 'utils/format'
-import { Cards } from '../icons/Cards'
-import { Logo } from '../icons/Logo'
-import { CurrencyType } from '../types/CurrenctyType'
-import Asset from './Asset'
+import { Cards } from '../../../../icons/Cards'
+import { Logo } from '../../../../icons/Logo'
+import { CurrencyType } from '../../../../types/CurrenctyType'
+import Asset from '../../../Asset'
 
-const WavesurferComponent = dynamic(() => import('./wavesurfer'), {
+const WavesurferComponent = dynamic(() => import('../../../wavesurfer'), {
   ssr: false,
 })
-interface TrackProps {
+
+export interface TrackProps {
   track: TrackWithListingItem | Track
   coverPhotoUrl?: string
   handleOnPlayClicked?: () => void
@@ -49,7 +50,7 @@ export const TrackGrid = ({ track, handleOnPlayClicked }: TrackProps) => {
 
   let listingItem: Maybe<ListingItemWithPrice> = null
 
-  if (track.__typename === 'TrackWithListingItem') {
+  if (track?.__typename === 'TrackWithListingItem') {
     listingItem = (track as TrackWithListingItem).listingItem
   }
 
@@ -66,10 +67,10 @@ export const TrackGrid = ({ track, handleOnPlayClicked }: TrackProps) => {
   const { data: maticUsd } = useMaticUsdQuery()
 
   useEffect(() => {
-    setIsPlaying(isCurrentlyPlaying(trackId))
+    setIsPlaying(isCurrentlyPlaying(trackId || ''))
   }, [isCurrentSong, isCurrentlyPlaying, setIsPlaying, trackId])
 
-  const trackPrice = track.price.value
+  const trackPrice = track?.price.value
 
   const onTrackClick = () => {
     if (handleOnPlayClicked) handleOnPlayClicked()
@@ -126,7 +127,7 @@ export const TrackGrid = ({ track, handleOnPlayClicked }: TrackProps) => {
                   )}
                 </div>
 
-                {trackPrice > 0 && (
+                {trackPrice && trackPrice > 0 && (
                   <div className="mt-0.5 text-xs font-semibold text-gray-80">
                     {selectedCurrency === 'MATIC' ? (
                       maticUsd &&
@@ -149,10 +150,10 @@ export const TrackGrid = ({ track, handleOnPlayClicked }: TrackProps) => {
                 >
                   {saleType.toUpperCase()}
                 </div>
-                {editionSize > 0 && (
+                {editionSize && editionSize > 0 && (
                   <div className="flex items-center justify-between gap-2 text-xs font-black text-gray-80">
                     <Cards width={14} height={14} />
-                    {listingCount > 0 && (
+                    {listingCount && listingCount > 0 && (
                       <>
                         {listingCount}
                         {' / '}
