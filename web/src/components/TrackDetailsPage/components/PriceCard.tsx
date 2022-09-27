@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react'
 import { Timer } from './Timer'
 import { Button } from 'components/OldButtons/Button'
 import { Social } from './Social'
+import { RainbowButton } from 'components/Buttons'
 
 interface Props {
   track: TrackQuery['track']
@@ -70,9 +71,8 @@ export const PriceCard = (props: Props) => {
             {Boolean(OGUNprice) && <Ogun value={OGUNprice} variant="currency" className="text-xs" showBonus />}
             {isFutureSale && <Timer date={startingDate} reloadOnEnd />}
           </span>
-          <Button className="rounded-lg" variant="rainbow">
-            <span className="p-4">BUY NOW</span>
-          </Button>
+
+          <RainbowButton text="BUY NOW" />
         </div>
       )}
 

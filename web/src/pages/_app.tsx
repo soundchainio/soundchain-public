@@ -17,6 +17,9 @@ import Router from 'next/router'
 import Script from 'next/script'
 import NProgress from 'nprogress'
 import { ReactElement } from 'react'
+import { ThemeProvider } from 'styled-components'
+import { theme } from 'theme'
+
 import 'react-toastify/dist/ReactToastify.css'
 import 'styles/audio-player.css'
 import 'styles/bottom-audio-player.css'
@@ -60,12 +63,14 @@ function SoundchainMainLayout({ Component, pageProps }: CustomAppProps) {
           <WalletProvider>
             <AudioPlayerProvider>
               <HideBottomNavBarProvider>
-                <LayoutContextProvider>
-                  <CheckBodyScroll />
-                  <Layout>
-                    <Component {...pageProps} />
-                  </Layout>
-                </LayoutContextProvider>
+                <ThemeProvider theme={theme}>
+                  <LayoutContextProvider>
+                    <CheckBodyScroll />
+                    <Layout>
+                      <Component {...pageProps} />
+                    </Layout>
+                  </LayoutContextProvider>
+                </ThemeProvider>
               </HideBottomNavBarProvider>
             </AudioPlayerProvider>
           </WalletProvider>

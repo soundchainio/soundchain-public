@@ -1,3 +1,5 @@
+import 'services/i18n'
+
 import SEO from 'components/SEO'
 import { Discord } from 'icons/social/Discord'
 import { Instagram } from 'icons/social/Instagram'
