@@ -1,18 +1,10 @@
 import classNames from 'classnames'
-import { ButtonProps, commonClasses } from 'components/Button'
+import { ButtonProps, commonClasses } from 'components/Buttons/Button'
 import React from 'react'
 
-export const RainbowButton = ({
-  className,
-  buttonClassName,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  borderColor,
-  type = 'button',
-  icon: Icon,
-  children,
-  loading,
-  ...rest
-}: ButtonProps) => {
+export const OldRainbowButton = (props: ButtonProps) => {
+  const { className, buttonClassName, type = 'button', icon: Icon, children, loading, ...rest } = props
+
   return (
     <div className={classNames(className, 'bg-rainbow-gradient p-0.5 hover:bg-rainbow-gradient-dark')}>
       <button

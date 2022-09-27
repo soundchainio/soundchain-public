@@ -4,7 +4,7 @@ import { Description } from 'components/details-NFT/Description'
 import { HandleMultipleEditionNFT } from 'components/details-NFT/HandleMultipleEditionNFT'
 import { MintingData } from 'components/details-NFT/MintingData'
 import { TrackInfo } from 'components/details-NFT/TrackInfo'
-import { ViewPost } from 'components/details-NFT/ViewPost'
+import { Social } from 'components/TrackDetailsPage/components'
 import { InfiniteLoader } from 'components/InfiniteLoader'
 import { NoResultFound } from 'components/NoResultFound'
 import { Ogun } from 'components/Ogun'
@@ -253,7 +253,7 @@ export const MultipleTrackPage = ({ track }: MultipleTrackPageProps) => {
       <div className="pb-20">
         <div className="flex flex-col gap-5 p-3">
           <Track track={track} handleOnPlayClicked={handleOnPlayClicked} />
-          <ViewPost trackId={track.id} isFavorited={track.isFavorite} />
+          <Social trackId={track.id} isFavorited={track.isFavorite} />
         </div>
         <dl className="flex items-center justify-between gap-3 px-4 py-3">
           <dt className="text-xs font-bold uppercase text-white"># of Editions</dt>

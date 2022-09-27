@@ -1,5 +1,5 @@
 import { Avatar } from 'components/Avatar'
-import { Button } from 'components/Button'
+import { Button } from 'components/Buttons/Button'
 import { Delete as DeleteButton } from 'components/Buttons/Delete'
 import { CurrentRequestStatus } from 'components/CurrentRequestStatus'
 import { DenyReasonModal } from 'components/DenyReasonModal'

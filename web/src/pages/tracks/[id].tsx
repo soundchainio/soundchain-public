@@ -1,4 +1,4 @@
-import { SingleTrackPage } from 'components/trackpage/SingleTrackPage'
+import { SingleTrackPage } from 'components/TrackDetailsPage/SingleTrackPage'
 import { cacheFor, createApolloClient } from 'lib/apollo'
 import { TrackDocument, TrackQuery } from 'lib/graphql'
 import { GetServerSideProps } from 'next'

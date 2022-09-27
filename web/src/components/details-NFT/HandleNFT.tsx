@@ -1,4 +1,4 @@
-import { Button, ButtonVariant } from 'components/Button'
+import { Button, ButtonVariant } from 'components/Buttons/Button'
 import { Matic } from 'components/Matic'
 import { Ogun } from 'components/Ogun'
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar'
