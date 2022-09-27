@@ -1,4 +1,4 @@
-import { BackButton } from 'components/Buttons/BackButton'
+import { BackButton } from 'components/OldButtons/BackButton'
 import { ListNFTBuyNow, ListNFTBuyNowFormValues } from 'components/details-NFT/ListNFTBuyNow'
 import { TopNavBarProps } from 'components/TopNavBar'
 import { Track } from 'components/Track'

@@ -4,7 +4,7 @@ import { TrackQuery, useListingItemLazyQuery, useTrackLazyQuery } from 'lib/grap
 import { HighestBid } from 'pages/tracks/[id]/complete-auction'
 import React, { useEffect, useState } from 'react'
 import { Timer } from './Timer'
-import { Button } from 'components/Buttons/Button'
+import { Button } from 'components/OldButtons/Button'
 import { Social } from './Social'
 
 interface Props {

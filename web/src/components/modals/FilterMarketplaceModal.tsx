@@ -1,5 +1,5 @@
 import { Badge } from 'components/Badge'
-import { Button } from 'components/Buttons/Button'
+import { Button } from 'components/OldButtons/Button'
 import { Modal } from 'components/Modal'
 import { useModalDispatch, useModalState } from 'contexts/providers/modal'
 import { Form, Formik } from 'formik'

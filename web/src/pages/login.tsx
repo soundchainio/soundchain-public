@@ -1,5 +1,5 @@
 import { isApolloError } from '@apollo/client'
-import { Button } from 'components/Buttons/Button'
+import { Button } from 'components/OldButtons/Button'
 import { LoaderAnimation } from 'components/LoaderAnimation'
 import { FormValues, LoginForm } from 'components/LoginForm'
 import SEO from 'components/SEO'
