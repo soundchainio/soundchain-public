@@ -1,5 +1,6 @@
 import { IconComponent } from 'icons/types/IconComponent'
 import React, { forwardRef } from 'react'
+import { ApproveAllowanceButton } from './Buttons/ApproveAllowanceButton'
 import { ApproveButton } from './Buttons/ApproveButton'
 import { BuyNFTButton } from './Buttons/BuyNFT'
 import { CancelButton } from './Buttons/CancelButton'
@@ -28,6 +29,7 @@ export type ButtonVariant =
   | 'edit-listing'
   | 'approve'
   | 'cancel'
+  | 'approve-allowance'
 
 export interface ButtonProps extends React.ComponentPropsWithRef<'button'> {
   variant?: ButtonVariant
@@ -56,6 +58,7 @@ export const buttonByVariant: Record<ButtonVariant, (props: ButtonProps) => JSX.
   'edit-listing': EditListingButton,
   approve: ApproveButton,
   cancel: CancelButton,
+  'approve-allowance': ApproveAllowanceButton,
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({ variant = 'rainbow', ...props }, ref) => {
