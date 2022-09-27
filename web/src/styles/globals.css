@@ -229,6 +229,10 @@ html {
   color: transparent;
 }
 
+.bg-rainbow-gradient {
+  background: linear-gradient(87.71deg, rgba(38, 209, 168, 0.4) 0%, rgba(172, 78, 253, 0.4) 25%, rgba(241, 65, 158, 0.4) 49.48%, rgba(254, 213, 3, 0.4) 72.4%, rgba(254, 85, 64, 0.4) 100%);;
+}
+
 .green-yellow-gradient-text {
   background: linear-gradient(90deg, #68d18d 0%, #42f07f 25%, #9eee1d 75%, #ffd604 100%);
   background-clip: text;
