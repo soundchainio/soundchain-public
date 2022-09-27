@@ -26,6 +26,7 @@ import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import { compareWallets } from 'utils/Wallet'
 import Web3 from 'web3'
+import { TransactionReceipt } from 'web3-core/types'
 import { Contract } from 'web3-eth-contract'
 import { AbiItem } from 'web3-utils'
 import * as yup from 'yup'
@@ -81,7 +82,7 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
   const { buyItem } = useBlockchainV2()
   const { account, web3, balance } = useWalletContext()
   const [trackUpdate] = useUpdateTrackMutation()
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [OGUNBalance, setOGUNBalance] = useState<string>('0')
   const router = useRouter()
   const me = useMe()
@@ -90,6 +91,7 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
   const nftData = track.nftData
   const tokenId = nftData?.tokenId ?? -1
   const contractAddress = nftData?.contract ?? ''
+  const [hasAllowance, setHasAllowance] = useState<boolean>(false)
 
   const [getBuyNowItem, { data: listingPayload }] = useBuyNowItemLazyQuery({
     variables: { input: { tokenId, contractAddress } },
@@ -111,10 +113,28 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
   }, [getBuyNowItem])
 
   useEffect(() => {
+    if (listingPayload && !isPaymentOGUN) setLoading(false)
     if (account && web3 && isPaymentOGUN) {
       getOGUNBalance(web3)
+
+      const validateAllowance = async () => {
+        const existingAllowance = await tokenContract(web3)
+          .methods.allowance(account, marketplaceAddress)
+          .call()
+          .catch(console.log)
+        if (listingPayload) {
+          const OGUNPrice = listingPayload.buyNowItem?.buyNowItem?.OGUNPricePerItem
+          const hasEnoughAllowance = existingAllowance >= parseFloat(OGUNPrice as string)
+          console.log(
+            `Your existing allowance for contract: ${marketplaceAddress} is ${existingAllowance} validating an amount of ${OGUNPrice}`,
+          )
+          setHasAllowance(hasEnoughAllowance)
+          setLoading(false)
+        }
+      }
+      validateAllowance()
     }
-  }, [account, web3, isPaymentOGUN])
+  }, [account, web3, isPaymentOGUN, listingPayload])
 
   if (!listingPayload) {
     return null
@@ -135,7 +155,39 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
   const startTime = listingPayload.buyNowItem?.buyNowItem?.startingTime ?? 0
   const hasStarted = startTime <= new Date().getTime() / 1000
 
-  const handleSubmit = async ({ token }: FormValues) => {
+  const handleApproveAllowance = async () => {
+    if (listingPayload && web3) {
+      const OGUNItemPrice = listingPayload.buyNowItem?.buyNowItem?.OGUNPricePerItem as string
+      const fixedAmount = Web3.utils.toWei((+OGUNItemPrice * 10 ** -18).toString())
+      const amountBN = Web3.utils.toBN(fixedAmount)
+      const gasPriceWei = await web3.eth.getGasPrice()
+      console.log(`Approving new allowance of ${amountBN} using a gas price: ${gasPriceWei}`)
+      setLoading(true)
+      await tokenContract(web3)
+        .methods.approve(marketplaceAddress, amountBN)
+        .send({ from: account, gasPrice: gasPriceWei })
+        .on('receipt', (receipt: TransactionReceipt) => {
+          toast.success('Successfully increased your allowance for the marketplace.')
+          setHasAllowance(true)
+          setLoading(false)
+          console.log('Your transaction receipt: ', receipt)
+        })
+        .on('error', (error: Error) => {
+          setHasAllowance(false)
+          setLoading(false)
+          toast.error('We were unable to process the new allowance transaction at this moment.')
+          console.log(error)
+        })
+        .catch((error: Error) => {
+          setHasAllowance(false)
+          setLoading(false)
+          toast.error('We were unable to process the new allowance at this moment.')
+          console.log(error)
+        })
+    }
+  }
+
+  const handleSubmit = ({ token }: FormValues) => {
     if (token) {
       const isValid = authenticator.verify({ token, secret: me?.otpSecret || '' })
       if (!isValid) {
@@ -159,28 +211,6 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
         return false
       }
       return true
-    }
-
-    const approveOGUNTransferFrom = async (amount?: string) => {
-      const existingAllowance = await tokenContract(web3)
-        .methods.allowance(account, marketplaceAddress)
-        .call()
-        .catch(console.log)
-
-      console.log(
-        `Your existing allowance for contract: ${marketplaceAddress} is ${existingAllowance} validating an amount of ${amount}`,
-      )
-
-      if (amount && existingAllowance < parseFloat(amount)) {
-        const fixedAmount = Web3.utils.toWei((+amount * 10 ** -18).toString())
-        const amountBN = Web3.utils.toBN(fixedAmount)
-        const gasPriceWei = await web3.eth.getGasPrice()
-        console.log(`Approving new allowance of ${amountBN} using a gas price: ${gasPriceWei}`)
-        await tokenContract(web3)
-          .methods.approve(marketplaceAddress, amountBN)
-          .send({ from: account, gasPrice: gasPriceWei })
-          .catch(console.log)
-      }
     }
 
     // If the payment is in OGUN and the user doesn't have enough balance we block the transaction
@@ -208,8 +238,6 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
     }
 
     setLoading(true)
-
-    isPaymentOGUN && (await approveOGUNTransferFrom(listingPayload.buyNowItem?.buyNowItem?.OGUNPricePerItem))
 
     buyItem(
       listingPayload.buyNowItem?.buyNowItem?.tokenId,
@@ -246,7 +274,11 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
         image={track.artworkUrl}
       />
       <div className="flex min-h-full flex-col">
-        <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
+        <Formik
+          initialValues={initialValues}
+          validationSchema={validationSchema}
+          onSubmit={isPaymentOGUN && !hasAllowance ? handleApproveAllowance : handleSubmit}
+        >
           <Form autoComplete="off" className="flex flex-1 flex-col justify-between">
             <div>
               <div className="m-4">
@@ -290,9 +322,16 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
             {hasStarted && (
               <PlayerAwareBottomBar>
                 <TotalPrice price={priceToShow} isPaymentOGUN={isPaymentOGUN} />
-                <Button type="submit" className="ml-auto" variant="buy-nft" loading={loading}>
-                  <div className="px-4">CONFIRM</div>
-                </Button>
+                {(!isPaymentOGUN || hasAllowance) && (
+                  <Button type="submit" className="ml-auto" variant="buy-nft" loading={loading}>
+                    <div className="px-4">CONFIRM</div>
+                  </Button>
+                )}
+                {isPaymentOGUN && !hasAllowance && (
+                  <Button type="submit" className="ml-auto" variant="approve-allowance" loading={loading}>
+                    <div className="p-1 md:px-6">Approve Allowance for Marketplace</div>
+                  </Button>
+                )}
               </PlayerAwareBottomBar>
             )}
           </Form>
