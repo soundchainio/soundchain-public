@@ -1,4 +1,4 @@
-import { ButtonProps } from 'components/Button'
+import { ButtonProps } from 'components/Buttons/Button'
 
 export const CancelButton = ({ className, type = 'button', children, loading, ...rest }: ButtonProps) => {
   return (

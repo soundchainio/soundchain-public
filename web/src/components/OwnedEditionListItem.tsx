@@ -1,6 +1,6 @@
 import { ListingItemViewComponentFieldsFragment } from 'lib/graphql'
 import NextLink from 'next/link'
-import { Button } from './Button'
+import { Button } from './Buttons/Button'
 import { AuthorActionsType } from '../types/AuthorActionsType'
 import { Ellipsis } from '../icons/Ellipsis'
 import { useModalDispatch } from '../contexts/providers/modal'
