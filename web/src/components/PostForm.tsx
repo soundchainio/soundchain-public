@@ -11,7 +11,7 @@ import {
 import { useEffect, useState } from 'react'
 import { PostFormType } from 'types/PostFormType'
 import * as yup from 'yup'
-import { Button } from './Buttons/Button'
+import { Button } from './OldButtons/Button'
 import { MiniAudioPlayer } from './MiniAudioPlayer'
 import { PostBar } from './PostBar'
 import { PostBodyField } from './PostBodyField'

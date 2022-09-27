@@ -1,4 +1,4 @@
-import { BackButton } from 'components/Buttons/BackButton'
+import { BackButton } from 'components/OldButtons/BackButton'
 import { FormValues, TransferOgunForm } from 'components/forms/transfer/TransferOgunForm'
 import SEO from 'components/SEO'
 import { TopNavBarProps } from 'components/TopNavBar'

@@ -1,5 +1,5 @@
 import { useClearNotificationsMutation } from 'lib/graphql'
-import { Button } from './Buttons/Button'
+import { Button } from './OldButtons/Button'
 
 export const ClearAllNotificationsButton = () => {
   const [clearNotification, { loading }] = useClearNotificationsMutation({ refetchQueries: ['Notifications'] })

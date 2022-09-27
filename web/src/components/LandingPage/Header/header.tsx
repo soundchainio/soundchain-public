@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { Navigation } from './Navigation'
 import { HeaderDrawer } from './drawer'
 import Link from 'next/link'
-import { Button } from 'components/Buttons/Button'
+import { Button } from 'components/OldButtons/Button'
 
 export default function LandingPageHeader() {
   const [drawerOpen, setDrawerOpen] = useState(false)

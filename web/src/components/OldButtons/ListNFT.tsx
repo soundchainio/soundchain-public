@@ -1,4 +1,4 @@
-import { ButtonProps } from 'components/Buttons/Button'
+import { ButtonProps } from 'components/OldButtons/Button'
 
 export const ListNFTButton = ({ className, type = 'button', children, loading, disabled, ...rest }: ButtonProps) => {
   return (

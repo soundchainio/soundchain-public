@@ -8,7 +8,7 @@ import { NewPost } from 'icons/NewPost'
 import { Search } from 'icons/Search'
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'
-import { NavBarButton } from './Buttons/NavBarButton'
+import { NavBarButton } from './OldButtons/NavBarButton'
 
 export const BottomNavBar = () => {
   const { dispatchShowCreateModal } = useModalDispatch()

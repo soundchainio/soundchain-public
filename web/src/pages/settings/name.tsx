@@ -1,4 +1,4 @@
-import { Button } from 'components/Buttons/Button'
+import { Button } from 'components/OldButtons/Button'
 import { InputField } from 'components/InputField'
 import SEO from 'components/SEO'
 import { TopNavBarProps } from 'components/TopNavBar'

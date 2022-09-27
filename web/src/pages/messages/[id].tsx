@@ -1,4 +1,4 @@
-import { RefreshButton } from 'components/Buttons/RefreshButton'
+import { RefreshButton } from 'components/OldButtons/RefreshButton'
 import { Chat } from 'components/Chat'
 import { ChatLayout } from 'components/ChatLayout'
 import { NewMessageForm } from 'components/NewMessageForm'

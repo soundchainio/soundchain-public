@@ -6,7 +6,7 @@ import { useUpdateProfilePictureMutation } from 'lib/graphql'
 import Image from 'next/image'
 import { useCallback, useEffect, useState } from 'react'
 import * as yup from 'yup'
-import { Button, ButtonProps } from '../../Buttons/Button'
+import { Button, ButtonProps } from '../../OldButtons/Button'
 import { Label } from '../../Label'
 
 interface FormValues {

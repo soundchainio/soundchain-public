@@ -1,4 +1,4 @@
-import { Button } from 'components/Buttons/Button'
+import { Button } from 'components/OldButtons/Button'
 import { BuyNow } from 'components/details-NFT/BuyNow'
 import { InputField } from 'components/InputField'
 import { Matic } from 'components/Matic'

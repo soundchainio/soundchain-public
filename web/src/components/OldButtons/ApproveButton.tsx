@@ -1,5 +1,5 @@
 import classNames from 'classnames'
-import { ButtonProps } from 'components/Buttons/Button'
+import { ButtonProps } from 'components/OldButtons/Button'
 
 export const ApproveButton = ({ className, type = 'button', children, loading, ...rest }: ButtonProps) => {
   return (
