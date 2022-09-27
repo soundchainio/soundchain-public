@@ -27,10 +27,12 @@ export const TotalPrice = ({ price, isPaymentOGUN }: TotalPriceProps) => {
 
   return (
     <div className="font-bold">
-      {isPaymentOGUN ? <Ogun value={totalPrice(price)} /> : <Matic value={totalPrice(price)} />}
-      <p className="text-sm font-normal text-gray-60">{`${currency(
-        totalPrice(price * parseFloat(maticUsd.maticUsd)),
-      )}`}</p>
+      {isPaymentOGUN ? <Ogun value={fixedDecimals(price)} /> : <Matic value={totalPrice(price)} />}
+      {!isPaymentOGUN && (
+        <p className="text-sm font-normal text-gray-60">{`${currency(
+          totalPrice(price * parseFloat(maticUsd.maticUsd)),
+        )}`}</p>
+      )}
     </div>
   )
 }
