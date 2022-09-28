@@ -13,6 +13,7 @@ import { OutlineRoundedButton } from './OutlineRounded'
 import { OldRainbowButton } from './OldRainbowButton'
 import { RainbowRounded } from './RainbowRounded'
 import { RainbowXSButton } from './RainbowXS'
+import { ApproveAllowanceButton } from './ApproveAllowanceButton'
 
 export type ButtonVariant =
   | 'rainbow'
