@@ -1,24 +1,28 @@
 import classNames from 'classnames'
-import { ButtonProps, commonClasses } from 'components/OldButtons/Button'
+import { ButtonProps, commonClasses } from 'components/Buttons/Button'
 
-export const RainbowXSButton = ({
+export const OutlineButton = ({
   className,
   type = 'button',
   icon: Icon,
   children,
+  borderColor,
+  bgColor,
   loading,
   ...rest
 }: ButtonProps) => {
   return (
-    <div className={classNames(className, 'h-8 bg-rainbow-gradient p-0.5', rest.disabled ? 'cursor-not-allowed' : '')}>
+    <div className={classNames(className, 'p-0.5', borderColor)}>
       <button
-        className={`${commonClasses} bg-black bg-opacity-60 p-2 text-xs font-medium text-white sm:px-4 ${
-          rest.disabled ? 'cursor-not-allowed' : ''
-        }`}
+        className={classNames(
+          commonClasses,
+          'h-full bg-opacity-75 text-xs font-semibold text-white',
+          bgColor ? bgColor : 'bg-gray-10',
+        )}
         type={type}
         {...rest}
       >
-        {Icon && <Icon className="mr-1 h-4 w-4" />}
+        {Icon && <Icon className="mr-1 h-5 w-5" />}
         {loading ? (
           <div className=" flex items-center justify-center">
             <div className="h-5 w-5 animate-spin rounded-full border-t-2 border-white"></div>

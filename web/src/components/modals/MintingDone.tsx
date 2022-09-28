@@ -1,4 +1,4 @@
-import { Button } from 'components/OldButtons/Button'
+import { Button } from 'components/Buttons/Button'
 import { MiniAudioPlayer } from 'components/MiniAudioPlayer'
 import { Anchor } from 'icons/Anchor'
 import { Polygon } from 'icons/Polygon'

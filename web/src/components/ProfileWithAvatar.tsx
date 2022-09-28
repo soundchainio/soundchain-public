@@ -19,11 +19,11 @@ export const ProfileWithAvatar = ({ profile, className }: Props) => {
 
   return (
     <div className={classNames('flex items-center gap-2 truncate font-bold', className)}>
-      <Avatar profile={profile} pixels={30} />
+      <Avatar profile={profile} pixels={45} />
       <NextLink href={`/profiles/${userHandle}`} passHref>
         <a className="truncate" aria-label={displayName}>
-          <DisplayName className="text-sm" name={displayName || ''} verified={verified} teamMember={teamMember} />
-          <p className="text-xxs text-gray-CC">@{userHandle}</p>
+          <DisplayName className="text-lg" name={displayName || ''} verified={verified} teamMember={teamMember} />
+          <p className="text-xs text-[#7D7F80]">@{userHandle}</p>
         </a>
       </NextLink>
     </div>

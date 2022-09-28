@@ -10,7 +10,7 @@ import { ListNFTButton } from './ListNFT'
 import { OrangeButton } from './Orange'
 import { OutlineButton } from './Outline'
 import { OutlineRoundedButton } from './OutlineRounded'
-import { OldRainbowButton } from './OldRainbowButton'
+import { RainbowButton } from './RainbowButton'
 import { RainbowRounded } from './RainbowRounded'
 import { RainbowXSButton } from './RainbowXS'
 import { ApproveAllowanceButton } from './ApproveAllowanceButton'
@@ -45,7 +45,7 @@ export interface ButtonProps extends React.ComponentPropsWithRef<'button'> {
 export const commonClasses = 'flex items-center justify-center w-full h-full font-bold'
 
 export const buttonByVariant: Record<ButtonVariant, (props: ButtonProps) => JSX.Element> = {
-  rainbow: OldRainbowButton,
+  rainbow: RainbowButton,
   outline: OutlineButton,
   'rainbow-rounded': RainbowRounded,
   'rainbow-xs': RainbowXSButton,

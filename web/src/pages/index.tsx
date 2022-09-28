@@ -1,4 +1,4 @@
-import 'services/i18n'
+// import 'services/i18n'
 
 import SEO from 'components/SEO'
 import { Discord } from 'icons/social/Discord'

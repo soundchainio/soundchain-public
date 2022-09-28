@@ -1,5 +1,5 @@
 import WalletConnectProvider from '@walletconnect/web3-provider'
-import { Button } from 'components/OldButtons/Button'
+import { Button } from 'components/Buttons/Button'
 import { InputField } from 'components/InputField'
 import SEO from 'components/SEO'
 import { Form, Formik } from 'formik'

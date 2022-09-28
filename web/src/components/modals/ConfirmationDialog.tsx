@@ -1,4 +1,4 @@
-import { Button } from 'components/OldButtons/Button'
+import { Button } from 'components/Buttons/Button'
 
 interface ConfirmationDialogProps {
   onConfirm: () => void

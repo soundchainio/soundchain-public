@@ -1,6 +1,6 @@
 import ID3Writer from 'browser-id3-writer'
 import classNames from 'classnames'
-import { Button } from 'components/OldButtons/Button'
+import { Button } from 'components/Buttons/Button'
 import { FormValues, InitialValues, TrackMetadataForm } from 'components/forms/track/TrackMetadataForm'
 import { TrackUploader } from 'components/forms/track/TrackUploader'
 import { Modal } from 'components/Modal'

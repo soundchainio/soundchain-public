@@ -1,5 +1,5 @@
 import classNames from 'classnames'
-import { ButtonProps, commonClasses } from 'components/OldButtons/Button'
+import { ButtonProps, commonClasses } from 'components/Buttons/Button'
 
 export const RainbowRounded = ({ className, type = 'button', icon: Icon, children, ...rest }: ButtonProps) => {
   return (

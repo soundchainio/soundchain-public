@@ -1,5 +1,5 @@
 import { Badge } from 'components/Badge'
-import { Button, ButtonProps } from 'components/OldButtons/Button'
+import { Button, ButtonProps } from 'components/Buttons/Button'
 import { Label } from 'components/Label'
 import { useMe } from 'hooks/useMe'
 import { MusicianType, useUpdateMusicianTypeMutation } from 'lib/graphql'

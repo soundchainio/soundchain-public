@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { Button } from 'components/OldButtons/Button'
+import { Button } from 'components/Buttons/Button'
 import { InputField } from 'components/InputField'
 import { Matic } from 'components/Matic'
 import MaxGasFee from 'components/MaxGasFee'

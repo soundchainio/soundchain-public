@@ -1,4 +1,4 @@
-import { Button } from 'components/OldButtons/Button'
+import { Button } from 'components/Buttons/Button'
 import { InputField } from 'components/InputField'
 import { Ogun } from 'components/Ogun'
 import { Form, Formik } from 'formik'

@@ -1,5 +1,5 @@
 import { BottomSheet } from 'components/BottomSheet'
-import { InboxButton } from 'components/OldButtons/InboxButton'
+import { InboxButton } from 'components/Buttons/InboxButton'
 import { Comments } from 'components/Comments'
 import { NewCommentForm } from 'components/NewCommentForm'
 import { NotAvailableMessage } from 'components/NotAvailableMessage'

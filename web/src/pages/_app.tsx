@@ -1,5 +1,6 @@
 import '@reach/dialog/styles.css'
 import '@reach/slider/styles.css'
+
 import * as Sentry from '@sentry/react'
 import { Integrations } from '@sentry/tracing'
 import { CheckBodyScroll } from 'components/CheckBodyScroll'
@@ -17,8 +18,6 @@ import Router from 'next/router'
 import Script from 'next/script'
 import NProgress from 'nprogress'
 import { ReactElement } from 'react'
-import { ThemeProvider } from 'styled-components'
-import { theme } from 'theme'
 
 import 'react-toastify/dist/ReactToastify.css'
 import 'styles/audio-player.css'
@@ -63,14 +62,12 @@ function SoundchainMainLayout({ Component, pageProps }: CustomAppProps) {
           <WalletProvider>
             <AudioPlayerProvider>
               <HideBottomNavBarProvider>
-                <ThemeProvider theme={theme}>
-                  <LayoutContextProvider>
-                    <CheckBodyScroll />
-                    <Layout>
-                      <Component {...pageProps} />
-                    </Layout>
-                  </LayoutContextProvider>
-                </ThemeProvider>
+                <LayoutContextProvider>
+                  <CheckBodyScroll />
+                  <Layout>
+                    <Component {...pageProps} />
+                  </Layout>
+                </LayoutContextProvider>
               </HideBottomNavBarProvider>
             </AudioPlayerProvider>
           </WalletProvider>
