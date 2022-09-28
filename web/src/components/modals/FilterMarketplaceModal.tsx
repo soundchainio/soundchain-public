@@ -1,4 +1,4 @@
-import { Badge } from 'components/Badge'
+import { Badge } from 'components/common/Badges/Badge'
 import { Button } from 'components/Buttons/Button'
 import { Modal } from 'components/Modal'
 import { useModalDispatch, useModalState } from 'contexts/providers/modal'
