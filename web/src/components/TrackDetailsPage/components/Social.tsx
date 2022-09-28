@@ -1,6 +1,8 @@
+import { BlueButton } from 'components/common/Buttons/BlueButton'
 import { ReactionEmoji } from 'icons/ReactionEmoji'
 import { useGetOriginalPostFromTrackQuery } from 'lib/graphql'
 import NextLink from 'next/link'
+import styled from 'styled-components'
 
 interface Props {
   trackId: string
@@ -17,21 +19,15 @@ export const Social = (props: Props) => {
   const post = originalPostData?.getOriginalPostFromTrack
 
   return (
-    <div className="flex items-center justify-between">
-      <h3 className="text-xl font-bold text-white">Social</h3>
+    <Container>
+      <Title>Social</Title>
+
       {post && !post.deleted ? (
-        <div className="flex flex-col items-center">
+        <PostContainer>
           <NextLink href={`/posts/${post.id}`}>
-            <a className="mb-2 flex w-full items-center">
-              <div className="bg-blue-gradient w-full rounded-lg p-[2px]">
-                <button
-                  type="button"
-                  className="w-full rounded-lg bg-[#19191A] px-4 py-1 text-sm font-bold text-slate-50 hover:bg-transparent "
-                >
-                  View Post
-                </button>
-              </div>
-            </a>
+            <Anchor>
+              <BlueButton text="VIEW POST" />
+            </Anchor>
           </NextLink>
           <div className="flex items-center gap-2">
             <p className="flex items-center gap-1 text-sm text-slate-50">
@@ -47,10 +43,34 @@ export const Social = (props: Props) => {
               <span className="font-bold text-white">{post.commentCount}</span> comments
             </p>
           </div>
-        </div>
+        </PostContainer>
       ) : (
         <p className="text-grey-60">Social deleted</p>
       )}
-    </div>
+    </Container>
   )
 }
+
+const Container = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`
+
+const Title = styled.h3`
+  color: white;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 700;
+`
+const PostContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
+const Anchor = styled.a`
+  display: flex;
+  margin-bottom: 0.5rem;
+  align-items: center;
+  width: 100%;
+`

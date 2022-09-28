@@ -4,9 +4,9 @@ import { TrackQuery, useListingItemLazyQuery, useTrackLazyQuery } from 'lib/grap
 import { HighestBid } from 'pages/tracks/[id]/complete-auction'
 import React, { useEffect, useState } from 'react'
 import { Timer } from './Timer'
-import { Button } from 'components/OldButtons/Button'
 import { Social } from './Social'
-import { RainbowButton } from 'components/Buttons'
+import { RainbowButton } from 'components/common/Buttons'
+import styled from 'styled-components'
 
 interface Props {
   track: TrackQuery['track']
@@ -63,9 +63,9 @@ export const PriceCard = (props: Props) => {
   }, [OGUNPricePerItemToShow])
 
   return (
-    <div className="gap-white grid w-[359px] gap-6 rounded-xl bg-[#19191A] p-6">
+    <Container>
       {isBuyNow && (
-        <div className="flex items-start justify-between">
+        <Price>
           <span>
             {Boolean(maticPrice) && <Matic value={maticPrice} variant="currency-inline" className="text-xs" />}
             {Boolean(OGUNprice) && <Ogun value={OGUNprice} variant="currency" className="text-xs" showBonus />}
@@ -73,12 +73,31 @@ export const PriceCard = (props: Props) => {
           </span>
 
           <RainbowButton text="BUY NOW" />
-        </div>
+        </Price>
       )}
 
-      <div className="h-[2px] w-full bg-[#323333]" />
+      <SeparationLine />
 
       <Social trackId={track.id} />
-    </div>
+    </Container>
   )
 }
+
+const Container = styled.div`
+  display: grid;
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  gap: 1.5rem;
+  width: 359px;
+  background: #19191a;
+`
+const SeparationLine = styled.div`
+  width: 100%;
+  height: 2px;
+  background: #323333;
+`
+const Price = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+`

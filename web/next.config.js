@@ -6,7 +6,7 @@ module.exports = withPWA({
     locales: ['en'],
     defaultLocale: 'en',
   },
-  compiler: {
+  mode: {
     styledComponents: true,
   },
   pwa: {
