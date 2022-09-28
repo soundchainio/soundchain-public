@@ -39,7 +39,7 @@ import { AuthorActionsType } from 'types/AuthorActionsType'
 import { priceToShow } from 'utils/format'
 import { compareWallets } from 'utils/Wallet'
 import { UtilityInfo } from '../details-NFT/UtilityInfo'
-import { PriceCard, TrackCard, Timer } from './components'
+import { PriceCard, TrackCard, Timer, DescriptionCard, TrackDetailsCard } from './components'
 
 interface SingleTrackPageProps {
   track: TrackQuery['track']
@@ -282,9 +282,11 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
   return (
     <>
       <SEO title={title} description={description} canonicalUrl={`/tracks/${track.id}`} image={track.artworkUrl} />
-      <div className="flex flex-col items-center gap-8">
+      <div className="m-4 flex flex-col items-center gap-8">
         <TrackCard me={me} track={track} />
         <PriceCard track={track} />
+        <DescriptionCard track={track} />
+        <TrackDetailsCard track={track} />
       </div>
 
       {/* <div className="flex flex-col gap-5 p-3">

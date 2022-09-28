@@ -25,7 +25,7 @@ import { DisplayName } from './DisplayName'
 import { MenuItem } from './MenuItem'
 import { MenuLink } from './MenuLink'
 import { SocialTag } from './SocialTag'
-import { InboxButton } from './OldButtons/InboxButton'
+import { InboxButton } from './Buttons/InboxButton'
 
 interface SideMenuContentProps {
   isMobile?: boolean

@@ -1,4 +1,4 @@
-import { Button } from 'components/OldButtons/Button'
+import { Button } from 'components/Buttons/Button'
 import MaxGasFee from 'components/MaxGasFee'
 import { Modal } from 'components/Modal'
 import { useModalDispatch, useModalState } from 'contexts/providers/modal'

@@ -1,5 +1,5 @@
 import { AudioPlayer } from 'components/AudioPlayer'
-import { JellyButton } from 'components/OldButtons/JellyButton'
+import { JellyButton } from 'components/Buttons/JellyButton'
 import { MusicFile } from 'icons/MusicFile'
 import { Upload as UploadIcon } from 'icons/Upload'
 import { audioMimeTypes } from 'lib/mimeTypes'

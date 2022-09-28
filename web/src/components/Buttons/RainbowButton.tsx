@@ -1,16 +1,16 @@
 import classNames from 'classnames'
-import { ButtonProps, commonClasses } from 'components/OldButtons/Button'
+import { ButtonProps, commonClasses } from 'components/Buttons/Button'
 import React from 'react'
 
-export const OldRainbowButton = (props: ButtonProps) => {
+export const RainbowButton = (props: ButtonProps) => {
   const { className, buttonClassName, type = 'button', icon: Icon, children, loading, ...rest } = props
 
   return (
-    <div className={classNames(className, 'bg-rainbow-gradient p-0.5 hover:bg-rainbow-gradient-dark')}>
+    <div className={classNames(className, 'rounded-lg bg-rainbow-gradient p-[2px] hover:bg-rainbow-gradient-dark')}>
       <button
         className={`${commonClasses} ${
           buttonClassName || ''
-        } bg-black bg-opacity-60 py-3 font-extrabold uppercase text-white sm:px-4 ${
+        } rounded-lg bg-black bg-opacity-60 py-2 font-extrabold uppercase text-white sm:px-4 ${
           rest.disabled ? 'cursor-not-allowed' : ''
         }`}
         type={type}

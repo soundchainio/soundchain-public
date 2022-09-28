@@ -1,4 +1,4 @@
-import { Button } from 'components/OldButtons/Button'
+import { Button } from 'components/Buttons/Button'
 import { CopyLink } from 'components/CopyLink'
 import { FormValues, RequestVerificationForm } from 'components/RequestVerificationForm'
 import SEO from 'components/SEO'

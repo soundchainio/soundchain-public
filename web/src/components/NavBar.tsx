@@ -9,7 +9,7 @@ import { Search } from 'icons/Search'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { Logo } from '../icons/Logo'
-import { NavBarButton } from './OldButtons/NavBarButton'
+import { NavBarButton } from './Buttons/NavBarButton'
 
 export const NavBar = () => {
   const { dispatchShowCreateModal } = useModalDispatch()

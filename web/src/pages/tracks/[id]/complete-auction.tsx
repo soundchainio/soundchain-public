@@ -1,4 +1,4 @@
-import { Button } from 'components/OldButtons/Button'
+import { Button } from 'components/Buttons/Button'
 import { AuctionEnded } from 'components/details-NFT/AuctionEnded'
 import { Matic } from 'components/Matic'
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar'

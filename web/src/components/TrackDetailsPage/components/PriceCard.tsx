@@ -4,9 +4,9 @@ import { TrackQuery, useListingItemLazyQuery, useTrackLazyQuery } from 'lib/grap
 import { HighestBid } from 'pages/tracks/[id]/complete-auction'
 import React, { useEffect, useState } from 'react'
 import { Timer } from './Timer'
+import { RainbowButton } from 'components/Buttons/RainbowButton'
 import { Social } from './Social'
-import { RainbowButton } from 'components/common/Buttons'
-import styled from 'styled-components'
+import tw from 'tailwind-styled-components'
 
 interface Props {
   track: TrackQuery['track']
@@ -71,8 +71,9 @@ export const PriceCard = (props: Props) => {
             {Boolean(OGUNprice) && <Ogun value={OGUNprice} variant="currency" className="text-xs" showBonus />}
             {isFutureSale && <Timer date={startingDate} reloadOnEnd />}
           </span>
-
-          <RainbowButton text="BUY NOW" />
+          <RainbowButton className="rounded-lg" variant="rainbow">
+            <span className="p-4">BUY NOW</span>
+          </RainbowButton>
         </Price>
       )}
 
@@ -83,21 +84,27 @@ export const PriceCard = (props: Props) => {
   )
 }
 
-const Container = styled.div`
-  display: grid;
-  padding: 1.5rem;
-  border-radius: 0.75rem;
-  gap: 1.5rem;
-  width: 359px;
-  background: #19191a;
+const Container = tw.div`
+  flex 
+  min-w-[320px] 
+  max-w-[350px] 
+  flex-1
+  flex-col 
+  items-center 
+  justify-center 
+  gap-8 
+  rounded-xl 
+  bg-[#19191A] 
+  p-6 
+  sm:hidden
 `
-const SeparationLine = styled.div`
-  width: 100%;
-  height: 2px;
-  background: #323333;
+const Price = tw.div`
+  flex 
+  items-start 
+  justify-between
 `
-const Price = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+const SeparationLine = tw.div`
+  h-[2px] 
+  w-full 
+  bg-[#323333]
 `

@@ -9,6 +9,7 @@ import { Play } from 'icons/Play'
 import { HeartFull } from 'icons/HeartFull'
 import { HeartBorder } from 'icons/HeartBorder'
 import Link from 'next/link'
+import tw from 'tailwind-styled-components'
 
 interface Props {
   me?: MeQuery['me']
@@ -59,51 +60,97 @@ export const TrackCard = (props: Props) => {
   }, [isCurrentlyPlaying, setIsPlaying, track.id])
 
   return (
-    <div className="mt-4 flex items-center justify-center">
-      <div className="flex items-center justify-center rounded-xl bg-[#19191A] p-4">
-        <div className="relative flex items-center justify-center">
-          <div className="h-[400px] w-[327px]">
-            <Image
-              src={track.artworkUrl || ''}
-              height="100%"
-              width="100%"
-              layout="fill"
-              objectFit="fill"
-              alt="art image of the current track "
-              className="rounded-xl"
-            />
-          </div>
-          <div className="mobile-image-black-bottom-gradient absolute top-0 left-0 flex h-[400px] w-[327px] flex-col justify-end rounded-xl p-4 text-white">
-            <div className="flex items-center justify-between">
-              <span>
-                <button
-                  className="mb-4 flex h-8 w-8 items-center rounded-full bg-white"
-                  onClick={handleOnPlayClicked}
-                  aria-label={isPlaying ? 'Pause' : 'Play'}
-                >
-                  {isPlaying ? (
-                    <Pause className="m-auto scale-125 text-white" />
-                  ) : (
-                    <Play className="m-auto scale-125 text-white" />
-                  )}
-                </button>
-                <h1 className="mb-2 text-xl font-bold leading-5">{track.title}</h1>
-                <Link href={`/profiles/${track.artist}` || ''}>
-                  <a>
-                    <h2 className="text-base font-bold leading-5 text-[#969899]">{track.artist}</h2>
-                  </a>
-                </Link>
-              </span>
+    <Container>
+      <InnerContainer>
+        <ImageContainer>
+          <Image
+            src={track.artworkUrl || ''}
+            layout="fill"
+            objectFit="fill"
+            alt="art image of the current track "
+            className="rounded-xl"
+          />
+        </ImageContainer>
+        <MobilePlayer>
+          <div className="flex items-center justify-between">
+            <span>
+              <button
+                className="mb-4 flex h-8 w-8 items-center rounded-full bg-white"
+                onClick={handleOnPlayClicked}
+                aria-label={isPlaying ? 'Pause' : 'Play'}
+              >
+                {isPlaying ? (
+                  <Pause className="m-auto scale-125 text-white" />
+                ) : (
+                  <Play className="m-auto scale-125 text-white" />
+                )}
+              </button>
+              <TrackTitle>{track.title}</TrackTitle>
+              <Link href={`/profiles/${track.artist}` || ''}>
+                <a>
+                  <ArtistName>{track.artist}</ArtistName>
+                </a>
+              </Link>
+            </span>
 
-              {isFavorite ? (
-                <HeartFull onClick={handleSetFavorite} className="hover:cursor-pointer" />
-              ) : (
-                <HeartBorder onClick={handleSetFavorite} className="hover:cursor-pointer" />
-              )}
-            </div>
+            {isFavorite ? (
+              <HeartFull onClick={handleSetFavorite} className="mb-1 self-end hover:cursor-pointer" />
+            ) : (
+              <HeartBorder onClick={handleSetFavorite} className="mb-1 self-end hover:cursor-pointer" />
+            )}
           </div>
-        </div>
-      </div>
-    </div>
+        </MobilePlayer>
+      </InnerContainer>
+    </Container>
   )
 }
+
+const Container = tw.div`
+  flex 
+  w-full 
+  min-w-[320px] 
+  max-w-[350px] 
+  items-center 
+  justify-center 
+  rounded-xl 
+  bg-[#19191A] 
+  p-4 
+  sm:hidden
+`
+const InnerContainer = tw.div`
+  relative 
+  flex w-full 
+  items-center 
+  justify-center
+`
+
+const ImageContainer = tw.div`
+  h-[400px]
+  w-full
+`
+const MobilePlayer = tw.div`
+  mobile-image-black-bottom-gradient 
+  absolute 
+  top-0 
+  left-0 
+  flex 
+  h-[400px] 
+  w-full 
+  flex-col 
+  justify-end 
+  rounded-xl 
+  p-4 
+text-white
+`
+const TrackTitle = tw.h1`
+  mb-2 
+  text-xl 
+  font-bold 
+  leading-5
+`
+const ArtistName = tw.h2`
+  text-base 
+  font-bold 
+  leading-5 
+text-[#969899]
+`

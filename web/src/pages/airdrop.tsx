@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import WalletConnectProvider from '@walletconnect/web3-provider'
-import { Button } from 'components/OldButtons/Button'
-import { WalletButton } from 'components/OldButtons/WalletButton'
+import { Button } from 'components/Buttons/Button'
+import { WalletButton } from 'components/Buttons/WalletButton'
 import { LoaderAnimation } from 'components/LoaderAnimation'
 import SEO from 'components/SEO'
 import { config } from 'config'

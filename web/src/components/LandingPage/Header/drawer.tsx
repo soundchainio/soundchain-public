@@ -2,7 +2,7 @@ import React from 'react'
 import Link from 'next/link'
 import { Dialog, Transition } from '@headlessui/react'
 import { Logo } from '../../../icons/Logo'
-import { Button } from 'components/OldButtons/Button'
+import { Button } from 'components/Buttons/Button'
 
 export const HeaderDrawer = ({ open, close }: { open: boolean; close: () => void }) => {
   return (

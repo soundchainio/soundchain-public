@@ -1,4 +1,4 @@
-import { RefreshButton } from 'components/OldButtons/RefreshButton'
+import { RefreshButton } from 'components/Buttons/RefreshButton'
 import { ConnectedNetwork } from 'components/ConnectedNetwork'
 import { CopyWalletAddress } from 'components/CopyWalletAddress'
 import { Jazzicon } from 'components/Jazzicon'

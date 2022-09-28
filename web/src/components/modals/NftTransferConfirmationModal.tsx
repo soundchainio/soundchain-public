@@ -12,7 +12,7 @@ import { ShowTransferNftConfirmationPayload } from '../../contexts/payloads/moda
 import { useMaxGasFee } from '../../hooks/useMaxGasFee'
 import { DefaultWallet } from '../../lib/graphql'
 import Asset from '../Asset'
-import { Button } from '../OldButtons/Button'
+import { Button } from '../Buttons/Button'
 import { ConnectedNetwork } from '../ConnectedNetwork'
 import { CopyWalletAddress } from '../CopyWalletAddress'
 import { Label } from '../Label'
