@@ -60,4 +60,5 @@ const Container = tw.div`
   flex 
   items-center 
   justify-between
+  w-full
 `
