@@ -8,7 +8,7 @@ import { Pinata } from 'icons/Pinata'
 import { Token } from 'icons/Token'
 import tw from 'tailwind-styled-components'
 import { ChainLink } from 'icons/ChainLink'
-import { Badge } from 'components/Badge'
+import { Badges } from 'components/common'
 import { getGenreLabelByKey } from 'utils/Genres'
 interface Props {
   track: TrackQuery['track']
@@ -77,7 +77,7 @@ export const TrackDetailsCard = (props: Props) => {
           <Td>
             {isEmptyGenre
               ? 'No Genre Selected'
-              : genres.map(genre => <Badge key={genre} label={getGenreLabelByKey(genre) || genre} />)}
+              : genres.map(genre => <Badges.Badge key={genre} label={getGenreLabelByKey(genre) || genre} />)}
           </Td>
         </Row>
         <Row>
