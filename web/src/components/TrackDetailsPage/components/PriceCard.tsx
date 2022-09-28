@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Ogun } from 'components/Ogun'
 import { Matic } from 'components/Matic'
 import { TrackQuery, useListingItemLazyQuery, useTrackLazyQuery } from 'lib/graphql'
@@ -65,7 +66,7 @@ export const PriceCard = (props: Props) => {
   return (
     <Container>
       {isBuyNow && (
-        <Price>
+        <PriceContainer>
           <span>
             {Boolean(maticPrice) && <Matic value={maticPrice} variant="currency-inline" className="text-xs" />}
             {Boolean(OGUNprice) && <Ogun value={OGUNprice} variant="currency" className="text-xs" showBonus />}
@@ -74,7 +75,7 @@ export const PriceCard = (props: Props) => {
           <RainbowButton className="rounded-lg" variant="rainbow">
             <span className="p-4">BUY NOW</span>
           </RainbowButton>
-        </Price>
+        </PriceContainer>
       )}
 
       <SeparationLine />
@@ -88,7 +89,6 @@ const Container = tw.div`
   flex 
   min-w-[320px] 
   max-w-[350px] 
-  flex-1
   flex-col 
   items-center 
   justify-center 
@@ -97,14 +97,15 @@ const Container = tw.div`
   bg-[#19191A] 
   p-6 
   sm:hidden
+  w-full
 `
-const Price = tw.div`
+const PriceContainer = tw.div`
   flex 
   items-start 
   justify-between
+  w-full
 `
 const SeparationLine = tw.div`
   h-[2px] 
-  w-full 
   bg-[#323333]
 `
