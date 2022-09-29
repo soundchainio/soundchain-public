@@ -64,10 +64,10 @@ export const Feed = ({ pageSize }: FeedProps) => {
   const isItemLoaded = (index: number) => !pageInfo.hasNextPage || index < nodes.length
   const feedCount = pageInfo.hasNextPage ? nodes.length + 1 : nodes.length
 
-  const handleOnPlayClicked = (index: number) => {
+  const handleOnPlayClicked = (trackId: string) => {
     if (nodes) {
       const listOfTracks = (nodes as FeedItem[])
-        .filter(feedItem => feedItem?.post?.track)
+        .filter(feedItem => feedItem?.post?.track && feedItem?.post?.track.deleted === false)
         .map(feedItem => {
           const trackFeedItem = feedItem?.post?.track
           if (trackFeedItem) {
@@ -81,7 +81,8 @@ export const Feed = ({ pageSize }: FeedProps) => {
             }
           }
         }) as Song[]
-      playlistState(listOfTracks, index)
+      const trackIndex = listOfTracks.findIndex(track => track.trackId === trackId)
+      playlistState(listOfTracks, trackIndex)
     }
   }
 
@@ -133,7 +134,7 @@ interface RowProps {
   data: FeedItem[]
   index: number
   setSize: (index: number, height?: number) => void
-  handleOnPlayClicked: (index: number) => void
+  handleOnPlayClicked: (trackId: string) => void
 }
 
 const Row = ({ data, index, setSize, handleOnPlayClicked }: RowProps) => {
@@ -147,7 +148,7 @@ const Row = ({ data, index, setSize, handleOnPlayClicked }: RowProps) => {
 
   return (
     <div ref={rowRef}>
-      <Post key={data[index].post.id} post={data[index].post} handleOnPlayClicked={() => handleOnPlayClicked(index)} />
+      <Post key={data[index].post.id} post={data[index].post} handleOnPlayClicked={handleOnPlayClicked} />
     </div>
   )
 }
