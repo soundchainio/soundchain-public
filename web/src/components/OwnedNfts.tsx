@@ -16,6 +16,7 @@ export const OwnedNfts = ({ owner, refreshing }: OwnedNftsProps) => {
 
   const pageSize = 10
   const { data, loading, fetchMore, refetch } = useGroupedTracksQuery({
+    fetchPolicy: 'no-cache',
     variables: {
       filter: { nftData: { owner } },
       sort: { field: SortTrackField.CreatedAt, order: SortOrder.Desc },
