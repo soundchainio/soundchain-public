@@ -3,6 +3,7 @@ import { TrackQuery, useProfileLazyQuery } from 'lib/graphql'
 import { MdKeyboardArrowUp } from 'react-icons/md'
 import { useEffect } from 'react'
 import tw from 'tailwind-styled-components'
+import { Divider } from 'components/common'
 
 interface Props {
   track: TrackQuery['track']
@@ -27,6 +28,8 @@ export const DescriptionCard = (props: Props) => {
         <Title>Description</Title>
         <MdKeyboardArrowUp size={45} color="white" />
       </TitleContainer>
+
+      <Divider />
 
       <ProfileWithAvatar profile={profileInfo.profile} className="my-6" />
 
@@ -64,8 +67,8 @@ const Container = tw.div`
   rounded-xl 
   bg-[#19191A] 
   p-6 
-  sm:hidden
   w-full
+  sm:hidden
 `
 
 const TitleContainer = tw.div`
@@ -111,11 +114,6 @@ const FollowParagraph = tw.p`
   font-sm 
   font-normal 
   text-[#808080]
-`
-const Divider = tw.div`
-  h-[2px] 
-  w-full 
-  bg-[#323333]
 `
 
 const Paragraph = tw.p`

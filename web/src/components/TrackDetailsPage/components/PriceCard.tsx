@@ -8,6 +8,7 @@ import { Timer } from './Timer'
 import { RainbowButton } from 'components/Buttons/RainbowButton'
 import { Social } from './Social'
 import tw from 'tailwind-styled-components'
+import { Divider } from 'components/common'
 
 interface Props {
   track: TrackQuery['track']
@@ -78,7 +79,7 @@ export const PriceCard = (props: Props) => {
         </PriceContainer>
       )}
 
-      <SeparationLine />
+      <Divider />
 
       <Social trackId={track.id} />
     </Container>
@@ -88,15 +89,15 @@ export const PriceCard = (props: Props) => {
 const Container = tw.div`
   flex 
   min-w-[320px] 
-  max-w-[350px] 
+  max-w-[350px]
+  sm:max-w-[800px]
   flex-col 
   items-center 
   justify-center 
   gap-8 
   rounded-xl 
   bg-[#19191A] 
-  p-6 
-  sm:hidden
+  p-6
   w-full
 `
 const PriceContainer = tw.div`
@@ -104,8 +105,4 @@ const PriceContainer = tw.div`
   items-start 
   justify-between
   w-full
-`
-const SeparationLine = tw.div`
-  h-[2px] 
-  bg-[#323333]
 `
