@@ -1,23 +1,25 @@
 import classNames from 'classnames'
+import { Matic } from 'components/Matic'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { useMe } from 'hooks/useMe'
 import useMetaMask from 'hooks/useMetaMask'
 import { Logo } from 'icons/Logo'
-import { Matic } from 'components/Matic'
 import { MetaMask } from 'icons/MetaMask'
 import { DefaultWallet, useUpdateDefaultWalletMutation } from 'lib/graphql'
-import React, { useCallback, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { compareWallets } from 'utils/Wallet'
+import { Ogun } from './Ogun'
 
 interface WalletSelectorProps {
   className?: string | undefined
   ownerAddressAccount?: string
+  showOgun?: boolean
 }
 
-export const WalletSelector = ({ className, ownerAddressAccount }: WalletSelectorProps) => {
+export const WalletSelector = ({ className, ownerAddressAccount, showOgun = false }: WalletSelectorProps) => {
   const me = useMe()
-  const { account: metamaskAccount, balance: metamaskBalance } = useMetaMask()
-  const { account: magicAccount, balance: magicBalance } = useMagicContext()
+  const { account: metamaskAccount, balance: metamaskBalance, OGUNBalance } = useMetaMask()
+  const { account: magicAccount, balance: magicBalance, ogunBalance: magicOgunBalance } = useMagicContext()
   const [updateDefaultWallet] = useUpdateDefaultWalletMutation()
   const [selectedWallet, setSelectedWallet] = useState<DefaultWallet>(me?.defaultWallet || DefaultWallet.Soundchain)
 
@@ -31,6 +33,7 @@ export const WalletSelector = ({ className, ownerAddressAccount }: WalletSelecto
 
   const isSoundChainSelected = selectedWallet === DefaultWallet.Soundchain
   const balance = (isSoundChainSelected ? magicBalance : metamaskBalance) || 0
+  const ogunBalance = isSoundChainSelected ? magicOgunBalance : OGUNBalance
 
   if (compareWallets(magicAccount, ownerAddressAccount) && compareWallets(metamaskAccount, ownerAddressAccount)) {
     return null
@@ -43,7 +46,10 @@ export const WalletSelector = ({ className, ownerAddressAccount }: WalletSelecto
           <div className="flex items-center gap-2 text-xs font-bold text-white">WALLET</div>
           <div className="flex flex-row items-center gap-1 text-xxs font-black text-gray-80">
             <span>Balance:</span>
-            <Matic value={balance} />
+            <div>
+              <Matic value={balance} />
+              {showOgun && <Ogun value={ogunBalance} className="sm:ml-2" />}
+            </div>
           </div>
         </div>
 
