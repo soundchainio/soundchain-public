@@ -100,7 +100,7 @@ export const Post = ({ post, handleOnPlayClicked }: PostProps) => {
               title="Media"
             />
           ))}
-        {post.repostId && <RepostPreview postId={post.repostId} />}
+        {post.repostId && <RepostPreview postId={post.repostId} handleOnPlayClicked={handleOnPlayClicked} />}
         {post.track && !post.track.deleted && (
           <div className="mt-4 w-full">
             <MiniAudioPlayer
