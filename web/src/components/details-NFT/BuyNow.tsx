@@ -36,7 +36,7 @@ export const BuyNow = ({ price, priceOGUN, isPaymentOGUN, ownerAddressAccount, s
 
   return (
     <div className="mb-16">
-      <WalletSelector className="bg-gray-10 py-2" ownerAddressAccount={ownerAddressAccount} />
+      <WalletSelector className="bg-gray-10 py-2" ownerAddressAccount={ownerAddressAccount} showOgun={isPaymentOGUN} />
 
       <div className="flex flex-col gap-4 bg-gray-20 px-4 py-6">
         <SoundchainFee
