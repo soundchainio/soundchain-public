@@ -62,7 +62,6 @@ export const MobileTrackCard = (props: Props) => {
           <Image
             src={track.artworkUrl || ''}
             layout="fill"
-            objectFit="fill"
             alt="art image of the current track "
             className="rounded-xl"
           />
@@ -93,7 +92,8 @@ const Container = tw.div`
 `
 const InnerContainer = tw.div`
   relative 
-  flex w-full 
+  flex 
+  w-full 
   items-center 
   justify-center
 `
@@ -101,4 +101,5 @@ const InnerContainer = tw.div`
 const ImageContainer = tw.div`
   h-[400px]
   w-full
+  relative
 `
