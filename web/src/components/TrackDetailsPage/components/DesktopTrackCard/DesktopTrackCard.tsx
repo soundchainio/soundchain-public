@@ -6,10 +6,9 @@ import { useEffect, useState } from 'react'
 import tw from 'tailwind-styled-components'
 import { Divider } from 'components/common'
 import { ProfileWithAvatar } from 'components/ProfileWithAvatar'
-import { HeartBorder } from 'icons/HeartBorder'
-import { HeartFull } from 'icons/HeartFull'
 import Link from 'next/link'
-
+import { AiOutlineHeart, AiFillHeart } from 'react-icons/ai'
+import { TrackShareButton } from 'components/TrackShareButton'
 interface Props {
   me?: MeQuery['me']
   track: TrackQuery['track']
@@ -48,88 +47,121 @@ export const DesktopTrackCard = (props: Props) => {
 
   return (
     <Container>
-      <InnerContainer>
+      <ArtistContainer>
         <ImageContainer>
           <Image
             src={track.artworkUrl || ''}
             layout="fill"
-            objectFit="fill"
             alt="art image of the current track "
             className="rounded-xl"
           />
         </ImageContainer>
-      </InnerContainer>
+        <ArtistNameContainer>
+          <span>
+            <TrackTitle>{track.title}</TrackTitle>
+            <Link href={`/profiles/${track.artist}` || ''}>
+              <a>
+                <ArtistName>{track.artist}</ArtistName>
+              </a>
+            </Link>
+          </span>
 
-      <span className="my-6 flex items-center justify-between">
-        <span>
-          <TrackTitle>{track.title}</TrackTitle>
-          <Link href={`/profiles/${track.artist}` || ''}>
-            <a>
-              <ArtistName>{track.artist}</ArtistName>
-            </a>
-          </Link>
-        </span>
+          <div className="flex items-center gap-2">
+            <TrackShareButton trackId={track.id} artist={track.artist} title={track.title} height={30} width={30} />
+            {isFavorite ? (
+              <AiFillHeart
+                onClick={handleSetFavorite}
+                className="mb-1 self-start opacity-90 hover:cursor-pointer"
+                color="white"
+                size={35}
+              />
+            ) : (
+              <AiOutlineHeart
+                onClick={handleSetFavorite}
+                className="mb-1 self-start hover:cursor-pointer"
+                color="#505050"
+                stroke="green"
+                size={35}
+              />
+            )}
+          </div>
+        </ArtistNameContainer>
+      </ArtistContainer>
 
-        {isFavorite ? (
-          <HeartFull onClick={handleSetFavorite} className="mb-1 hover:cursor-pointer" />
-        ) : (
-          <HeartBorder onClick={handleSetFavorite} className="mb-1 hover:cursor-pointer" />
-        )}
-      </span>
+      <DescriptionContainer>
+        <ProfileWithAvatar profile={profileInfo.profile} />
 
-      <Divider />
+        <FollowContainer>
+          <Follow>
+            <FollowTitle>{profileInfo.profile.followingCount}</FollowTitle>
+            <FollowParagraph>Following</FollowParagraph>
+          </Follow>
+          <Follow>
+            <FollowTitle>{profileInfo.profile.followerCount}</FollowTitle>
+            <FollowParagraph>Followers</FollowParagraph>
+          </Follow>
+        </FollowContainer>
 
-      <ProfileWithAvatar profile={profileInfo.profile} className="my-6" />
+        <Divider />
 
-      <FollowContainer>
-        <Follow>
-          <FollowTitle>{profileInfo.profile.followingCount}</FollowTitle>
-          <FollowParagraph>Following</FollowParagraph>
-        </Follow>
-        <Follow>
-          <FollowTitle>{profileInfo.profile.followerCount}</FollowTitle>
-          <FollowParagraph>Followers</FollowParagraph>
-        </Follow>
-      </FollowContainer>
+        <div className="my-6">
+          <SubTitle>Description</SubTitle>
+          <Paragraph>{track.description || 'No track description.'}</Paragraph>
+        </div>
 
-      <Divider />
+        <Divider />
 
-      <div className="my-6">
-        <SubTitle>Description</SubTitle>
-        <Paragraph>{track.description || 'No track description.'}</Paragraph>
-      </div>
-
-      <Divider />
-
-      <div className="my-6">
-        <SubTitle>Utility</SubTitle>
-        <Paragraph>{track.utilityInfo || 'No utility information.'}</Paragraph>
-      </div>
+        <div className="my-6">
+          <SubTitle>Utility</SubTitle>
+          <Paragraph>{track.utilityInfo || 'No utility information.'}</Paragraph>
+        </div>
+      </DescriptionContainer>
     </Container>
   )
 }
 
 const Container = tw.div`
-  hidden
-  w-full 
-  min-w-[320px] 
-  max-w-[350px] 
-  items-center 
-  justify-center 
+  w-full
+  flex
+  flex-col
+  max-w-[350px]
   rounded-xl 
   bg-[#19191A] 
   p-4
-  sm:block
-`
-const InnerContainer = tw.div`
-  relative 
-  flex 
-  w-full 
-  items-center 
-  justify-center
-  mb-6
+  sm:max-w-[800px]
+  sm:flex-row
+  sm:items-start
+  sm:justify-between
+
+  md:flex-col
+  md:row-span-2
 `
 
+const ArtistContainer = tw.div`
+  flex
+  flex-col
+`
+
+const ImageContainer = tw.div`
+  mb-4
+  mr-6
+  h-[250px]
+  w-[350px]
+  relative
+
+  md:w-[280px]
+`
+const DescriptionContainer = tw.div`
+  w-full
+`
+
+const ArtistNameContainer = tw.span`
+  flex 
+  items-center 
+  justify-between
+  mr-6
+  ml-2
+`
 const TrackTitle = tw.h1`
   font-bold 
   text-base 
@@ -144,12 +176,6 @@ const ArtistName = tw.h2`
   text-[#969899]
 `
 
-const ImageContainer = tw.div`
-  h-[400px]
-  w-full
-  sm:max-h-[272px]
-  sm:max-w-[272px]
-`
 const SubTitle = tw.h2`
   mb-4 
   text-lg 

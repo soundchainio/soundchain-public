@@ -4,14 +4,14 @@ import { TrackQuery } from 'lib/graphql'
 import { PriceCard, MobileTrackCard, DescriptionCard, TrackDetailsCard } from './components'
 import tw from 'tailwind-styled-components'
 import { DesktopTrackCard } from './components/DesktopTrackCard/DesktopTrackCard'
-import styled from 'styled-components'
-
+import { useIsMobile } from 'hooks/useIsMobile'
 interface SingleTrackPageProps {
   track: TrackQuery['track']
 }
 
 export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
   const me = useMe()
+  const isMobile = useIsMobile(639)
 
   const title = `${track.title} - song by ${track.artist} | SoundChain`
   const description = `Listen to ${track.title} on SoundChain. ${track.artist}. ${track.album || 'Song'}. ${
@@ -22,8 +22,7 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
     <>
       <SEO title={title} description={description} canonicalUrl={`/tracks/${track.id}`} image={track.artworkUrl} />
       <Container>
-        <MobileTrackCard me={me} track={track} />
-        <DesktopTrackCard me={me} track={track} />
+        {isMobile ? <MobileTrackCard me={me} track={track} /> : <DesktopTrackCard me={me} track={track} />}
         <PriceCard track={track} />
         <DescriptionCard track={track} />
         <TrackDetailsCard track={track} />
@@ -32,24 +31,15 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
   )
 }
 
-const Grid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: 1fr;
-  justify-items: center;
-  grid-gap: 20px;
-
-  @media (min-width: 1024px) {
-    grid-template-columns: 320px 1fr;
-
-    div:nth-child(2) {
-      grid-row: 1 / span 3;
-    }
-  }
-`
-
-const Container = tw(Grid)`
+const Container = tw.div`
   m-4
-  grid
-  
+  grid 
+  justify-center
+  grid-col-1
+  grid-rows-1
+  items-center
+  gap-6
+  content-center
+
+  md:grid-cols-2
 `
