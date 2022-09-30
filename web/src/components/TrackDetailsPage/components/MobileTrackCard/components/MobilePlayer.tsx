@@ -5,40 +5,67 @@ import { HeartFull } from 'icons/HeartFull'
 import { HeartBorder } from 'icons/HeartBorder'
 import Link from 'next/link'
 import { TrackQuery } from 'lib/graphql'
-
 interface MobilePlayerProps {
   handleOnPlayClicked: () => void
   isPlaying: boolean
   handleSetFavorite: () => Promise<void>
   track: TrackQuery['track']
   isFavorite: boolean | null
+  classNames?: string
+  hideTrackName?: boolean
+  hideArtistName?: boolean
+  hideLikeButton?: boolean
+  playButtonStyle?: string
 }
+
 export const MobilePlayer = (props: MobilePlayerProps) => {
-  const { handleOnPlayClicked, isPlaying, handleSetFavorite, track, isFavorite } = props
+  const {
+    classNames,
+    handleOnPlayClicked,
+    isPlaying,
+    handleSetFavorite,
+    track,
+    isFavorite,
+    hideArtistName,
+    hideLikeButton,
+    hideTrackName,
+    playButtonStyle,
+  } = props
 
   return (
-    <Container>
+    <Container className={classNames}>
       <MobilePlayerInnerFlex>
         <span>
-          <PlayButton onClick={handleOnPlayClicked} aria-label={isPlaying ? 'Pause' : 'Play'}>
+          <PlayButton
+            className={playButtonStyle}
+            onClick={handleOnPlayClicked}
+            aria-label={isPlaying ? 'Pause' : 'Play'}
+          >
             {isPlaying ? (
               <Pause className="m-auto scale-125 text-white" />
             ) : (
               <Play className="m-auto scale-125 text-white" />
             )}
           </PlayButton>
-          <TrackTitle>{track.title}</TrackTitle>
-          <Link href={`/profiles/${track.artist}` || ''}>
-            <a>
-              <ArtistName>{track.artist}</ArtistName>
-            </a>
-          </Link>
+          {!hideTrackName && <TrackTitle>{track.title}</TrackTitle>}
+
+          {!hideArtistName && (
+            <Link href={`/profiles/${track.artist}` || ''}>
+              <a>
+                <ArtistName>{track.artist}</ArtistName>
+              </a>
+            </Link>
+          )}
         </span>
 
-        {isFavorite ? (
-          <HeartFull onClick={handleSetFavorite} className="mb-1 self-end hover:cursor-pointer" />
-        ) : (
-          <HeartBorder onClick={handleSetFavorite} className="mb-1 self-end hover:cursor-pointer" />
+        {!hideLikeButton && (
+          <>
+            {isFavorite ? (
+              <HeartFull onClick={handleSetFavorite} className="mb-1 self-end hover:cursor-pointer" />
+            ) : (
+              <HeartBorder onClick={handleSetFavorite} className="mb-1 self-end hover:cursor-pointer" />
+            )}
+          </>
         )}
       </MobilePlayerInnerFlex>
     </Container>
@@ -58,7 +85,6 @@ const Container = tw.div`
   rounded-xl 
   p-4 
 text-white
-  sm:hidden
 `
 const MobilePlayerInnerFlex = tw.div`
   flex 

@@ -30,19 +30,19 @@ export const MobileTrackCard = (props: Props) => {
   }
 
   const handleOnPlayClicked = () => {
-    if (track) {
-      const list = [
-        {
-          trackId: track.id,
-          src: track.playbackUrl,
-          art: track.artworkUrl,
-          title: track.title,
-          artist: track.artist,
-          isFavorite: track.isFavorite,
-        } as Song,
-      ]
-      playlistState(list, 0)
-    }
+    if (!track) return
+
+    const list = [
+      {
+        trackId: track.id,
+        src: track.playbackUrl,
+        art: track.artworkUrl,
+        title: track.title,
+        artist: track.artist,
+        isFavorite: track.isFavorite,
+      } as Song,
+    ]
+    playlistState(list, 0)
   }
 
   useEffect(() => {

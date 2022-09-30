@@ -9,7 +9,8 @@ import { RainbowButton } from 'components/Buttons/RainbowButton'
 import { Social } from './Social'
 import tw from 'tailwind-styled-components'
 import { Divider } from 'components/common'
-
+import { TrackSlider } from './TrackSlider'
+import { Song } from 'hooks/useAudioPlayer'
 interface Props {
   track: TrackQuery['track']
 }
@@ -64,8 +65,19 @@ export const PriceCard = (props: Props) => {
     setOgunPrice(OGUNPricePerItemToShow)
   }, [OGUNPricePerItemToShow])
 
+  const song: Song = {
+    trackId: track.id,
+    src: track.playbackUrl,
+    art: track.artworkUrl,
+    title: track.title,
+    artist: track.artist,
+    isFavorite: track.isFavorite,
+  }
+
   return (
     <Container>
+      <TrackSlider song={song} />
+
       {isBuyNow && (
         <PriceContainer>
           <span>
@@ -100,6 +112,7 @@ const Container = tw.div`
   p-6
   w-full
 `
+
 const PriceContainer = tw.div`
   flex 
   items-start 
