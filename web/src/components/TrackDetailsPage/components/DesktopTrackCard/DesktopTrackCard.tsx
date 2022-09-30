@@ -9,6 +9,8 @@ import { ProfileWithAvatar } from 'components/ProfileWithAvatar'
 import Link from 'next/link'
 import { AiOutlineHeart, AiFillHeart } from 'react-icons/ai'
 import { TrackShareButton } from 'components/TrackShareButton'
+import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
+import { MobilePlayer } from '../MobileTrackCard/components'
 interface Props {
   me?: MeQuery['me']
   track: TrackQuery['track']
@@ -17,10 +19,12 @@ interface Props {
 export const DesktopTrackCard = (props: Props) => {
   const [toggleFavorite] = useToggleFavoriteMutation()
   const [isFavorite, setIsFavorite] = useState<boolean | null>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
 
   const { me, track } = props
 
   const [profile, { data: profileInfo }] = useProfileLazyQuery()
+  const { playlistState, isCurrentlyPlaying } = useAudioPlayerContext()
 
   const handleSetFavorite = async () => {
     if (me?.profile.id) {
@@ -28,6 +32,22 @@ export const DesktopTrackCard = (props: Props) => {
       await toggleFavorite({ variables: { trackId: track.id }, refetchQueries: ['FavoriteTracks'] })
     } else {
       router.push('/login')
+    }
+  }
+
+  const handleOnPlayClicked = () => {
+    if (track) {
+      const list = [
+        {
+          trackId: track.id,
+          src: track.playbackUrl,
+          art: track.artworkUrl,
+          title: track.title,
+          artist: track.artist,
+          isFavorite: track.isFavorite,
+        } as Song,
+      ]
+      playlistState(list, 0)
     }
   }
 
@@ -43,6 +63,10 @@ export const DesktopTrackCard = (props: Props) => {
     }
   }, [track.artistProfileId, profile])
 
+  useEffect(() => {
+    setIsPlaying(isCurrentlyPlaying(track.id))
+  }, [isCurrentlyPlaying, setIsPlaying, track.id])
+
   if (!track || !profileInfo) return null
 
   return (
@@ -54,6 +78,18 @@ export const DesktopTrackCard = (props: Props) => {
             layout="fill"
             alt="art image of the current track "
             className="rounded-xl"
+          />
+          <MobilePlayer
+            handleOnPlayClicked={handleOnPlayClicked}
+            isPlaying={isPlaying}
+            handleSetFavorite={handleSetFavorite}
+            track={track}
+            isFavorite={isFavorite}
+            classNames="h-[250px] xl:hidden"
+            hideArtistName
+            hideLikeButton
+            hideTrackName
+            playButtonStyle="scale-150 ml-2 mb-2"
           />
         </ImageContainer>
         <ArtistNameContainer>
@@ -156,6 +192,7 @@ const ImageContainer = tw.div`
 
   xl:mr-0
 `
+
 const DescriptionContainer = tw.div`
   w-full
 `

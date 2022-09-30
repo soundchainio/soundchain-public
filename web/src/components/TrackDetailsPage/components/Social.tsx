@@ -9,12 +9,14 @@ interface Props {
 
 export const Social = (props: Props) => {
   const { trackId } = props
+
   const { data: originalPostData } = useGetOriginalPostFromTrackQuery({
     variables: {
       trackId: trackId,
     },
     skip: !trackId,
   })
+
   const post = originalPostData?.getOriginalPostFromTrack
 
   return (
@@ -34,6 +36,7 @@ export const Social = (props: Props) => {
               </div>
             </a>
           </NextLink>
+
           <div className="flex items-center gap-2">
             <p className="flex items-center gap-1 text-sm text-slate-50">
               <span className="flex items-center gap-1 font-bold text-slate-50">
