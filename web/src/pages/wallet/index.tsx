@@ -77,7 +77,7 @@ export default function WalletPage() {
   const { setTopNavBarProps, setHideBottomNavBar } = useLayoutContext()
   const [updateDefaultWallet] = useUpdateDefaultWalletMutation()
 
-  const [selectedWallet, setSelectedWallet] = useState(DefaultWallet.Soundchain)
+  const [selectedWallet, setSelectedWallet] = useState(me ? me?.defaultWallet : DefaultWallet.Soundchain)
   const [connectedToMetaMask, setConnectedToMetaMask] = useState(false)
   const [correctNetwork, setCorrectNetwork] = useState(true)
 
