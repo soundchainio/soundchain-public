@@ -152,11 +152,9 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
     [isOwner, me?.roles, track.artist, track.id, track.title],
   )
 
-  // This useEffect should remain without the dep. array because topNavBarProps is
-  // being changed by the layout context thus causing infinite loops here
   useEffect(() => {
     setTopNavBarProps(topNavBarProps)
-  }, [])
+  }, [topNavBarProps, setTopNavBarProps])
 
   useEffect(() => {
     if (tokenId && contractAddress) {
