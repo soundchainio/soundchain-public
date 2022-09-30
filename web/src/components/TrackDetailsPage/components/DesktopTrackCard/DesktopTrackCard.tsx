@@ -89,7 +89,7 @@ export const DesktopTrackCard = (props: Props) => {
       </ArtistContainer>
 
       <DescriptionContainer>
-        <ProfileWithAvatar profile={profileInfo.profile} />
+        <ProfileWithAvatar profile={profileInfo.profile} className="ml-2" />
 
         <FollowContainer>
           <Follow>
@@ -121,35 +121,40 @@ export const DesktopTrackCard = (props: Props) => {
 }
 
 const Container = tw.div`
-  w-full
   flex
   flex-col
-  max-w-[350px]
+  w-full
   rounded-xl 
   bg-[#19191A] 
   p-4
-  sm:max-w-[800px]
-  sm:flex-row
-  sm:items-start
-  sm:justify-between
 
-  md:flex-col
-  md:row-span-2
+  md:flex-row
+  md:items-start
+  md:justify-between
+
+  xl:flex-col
+  xl:row-span-2
+  xl:self-start
 `
 
 const ArtistContainer = tw.div`
   flex
   flex-col
+  w-full
+  mb-6
 `
 
 const ImageContainer = tw.div`
   mb-4
-  mr-6
   h-[250px]
-  w-[350px]
+  w-[380px]
   relative
+  self-center
 
-  md:w-[280px]
+  md:w-[320px]
+  md:mr-6
+
+  xl:mr-0
 `
 const DescriptionContainer = tw.div`
   w-full
@@ -159,8 +164,11 @@ const ArtistNameContainer = tw.span`
   flex 
   items-center 
   justify-between
-  mr-6
+  mr-2
   ml-2
+
+  md:mr-6
+  xl:mr-0
 `
 const TrackTitle = tw.h1`
   font-bold 

@@ -41,5 +41,6 @@ const Container = tw.div`
   gap-6
   content-center
 
-  md:grid-cols-2
+  xl:grid-cols-[350px_800px]
+  xl:items-start
 `
