@@ -2,6 +2,7 @@ import { useMe } from 'hooks/useMe'
 import { SubscribeBell } from 'icons/SubscribeBell'
 import { useSubscribeToProfileMutation, useUnsubscribeFromProfileMutation } from 'lib/graphql'
 import { useRouter } from 'next/router'
+import React from 'react'
 
 interface SubscribeButtonProps {
   profileId: string
@@ -15,7 +16,8 @@ export const SubscribeButton = ({ profileId, isSubscriber, small = false }: Subs
   const router = useRouter()
   const me = useMe()
 
-  const handleClick = async () => {
+  const handleClick = async (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault()
     if (subscribeLoading || unsubscribeLoading) {
       return
     }
@@ -32,7 +34,6 @@ export const SubscribeButton = ({ profileId, isSubscriber, small = false }: Subs
     } else {
       await unsubscribeProfile(opts)
     }
-    router.replace(router.asPath)
   }
 
   if (me?.profile.id === profileId) {
@@ -40,13 +41,19 @@ export const SubscribeButton = ({ profileId, isSubscriber, small = false }: Subs
   }
 
   return (
-    <button
-      onClick={handleClick}
-      className={`flex-shrink-0 ${small === false ? 'h-9 w-9' : 'h-5 w-5'} ${
-        isSubscriber ? 'brightness-100' : 'brightness-125'
-      }`}
+    <div
+      className="-mt-2 -ml-2 p-2"
+      onClick={e => {
+        handleClick(e)
+      }}
     >
-      <SubscribeBell isSubscriber={isSubscriber} />
-    </button>
+      <button
+        className={`flex-shrink-0 ${small === false ? 'h-9 w-9' : 'h-5 w-5'} ${
+          isSubscriber ? 'brightness-100' : 'brightness-125'
+        }`}
+      >
+        <SubscribeBell isSubscriber={isSubscriber} />
+      </button>
+    </div>
   )
 }
