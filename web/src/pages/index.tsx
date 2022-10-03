@@ -3,8 +3,26 @@ import { Discord } from 'icons/social/Discord'
 import { Instagram } from 'icons/social/Instagram'
 import { Twitter } from 'icons/social/Twitter'
 import { YoutubeBW } from 'icons/social/YoutubeBW'
+import { cacheFor, createApolloClient } from 'lib/apollo'
+import { MeDocument, MeQuery } from 'lib/graphql'
+import { GetServerSideProps } from 'next'
 import type { ReactElement } from 'react'
 import LandingPageLayout from '../components/LandingPage/layout'
+
+interface HomePageProps {
+  me?: MeQuery['me']
+}
+
+export const getServerSideProps: GetServerSideProps<HomePageProps> = async context => {
+  const apolloClient = createApolloClient(context)
+
+  const { data } = await apolloClient.query({
+    query: MeDocument,
+    context,
+  })
+
+  return cacheFor(Index, { me: data.me }, context, apolloClient)
+}
 
 export default function Index() {
   return (
