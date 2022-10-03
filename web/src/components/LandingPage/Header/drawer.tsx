@@ -1,10 +1,15 @@
-import React from 'react'
-import Link from 'next/link'
 import { Dialog, Transition } from '@headlessui/react'
-import { Logo } from '../../../icons/Logo'
 import { Button } from 'components/Button'
+import { useMeQuery } from 'lib/graphql'
+import Link from 'next/link'
+import React from 'react'
+import { BsArrowRightShort } from 'react-icons/bs'
+import { Logo } from '../../../icons/Logo'
 
 export const HeaderDrawer = ({ open, close }: { open: boolean; close: () => void }) => {
+  const { data } = useMeQuery()
+  const me = data?.me
+
   return (
     <Transition show={open} as={React.Fragment}>
       <Dialog onClose={close} className="relative z-50">
@@ -50,19 +55,33 @@ export const HeaderDrawer = ({ open, close }: { open: boolean; close: () => void
                         <a target="blank">Whitepaper</a>
                       </Link>
                     </li>
-                    <li className="mt-4 flex w-full items-center justify-center">
-                      <Link href="/login">
-                        <a>
-                          <Button
-                            variant="outline"
-                            className="h-8 w-64 bg-opacity-70"
-                            borderColor="bg-gray-40"
-                            bgColor="bg-black"
-                          >
-                            Login / Sign up
-                          </Button>
-                        </a>
-                      </Link>
+                    <li className="text-md mb-4 mt-1 flex w-full cursor-pointer items-center justify-center border-b-[1px] border-gray-30 pb-4">
+                      {!me ? (
+                        <Link href="/login">
+                          <a>
+                            <Button
+                              variant="outline"
+                              className="h-8 w-64 bg-opacity-70"
+                              borderColor="bg-gray-40"
+                              bgColor="bg-black"
+                            >
+                              Login / Sign up
+                            </Button>
+                          </a>
+                        </Link>
+                      ) : (
+                        <Link href={`/profiles/${me.handle}`}>
+                          <a className="group mr-10 flex items-center">
+                            <span className="text-md bg-gradient-to-r from-[#ab4eff] to-[#84ff82] bg-clip-text text-gray-80 group-hover:text-transparent">
+                              @{me.handle}
+                            </span>
+                            <BsArrowRightShort
+                              size={25}
+                              className="text-gray-80 group-hover:fill-[url(#blue-gradient)]"
+                            />
+                          </a>
+                        </Link>
+                      )}
                     </li>
                   </ul>
                 </div>
