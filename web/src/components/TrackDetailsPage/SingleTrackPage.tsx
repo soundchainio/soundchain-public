@@ -1,10 +1,10 @@
 import SEO from 'components/SEO'
+import tw from 'tailwind-styled-components'
 import { useMe } from 'hooks/useMe'
 import { TrackQuery } from 'lib/graphql'
-import { PriceCard, MobileTrackCard, DescriptionCard, TrackDetailsCard } from './components'
-import tw from 'tailwind-styled-components'
-import { DesktopTrackCard } from './components/DesktopTrackCard/DesktopTrackCard'
+import { DesktopTrackCard } from './components/TrackCard/DesktopTrackCard/DesktopTrackCard'
 import { useIsMobile } from 'hooks/useIsMobile'
+import { PriceCard, MobileTrackCard, DescriptionCard, TrackDetailsCard } from './components'
 interface SingleTrackPageProps {
   track: TrackQuery['track']
 }
@@ -26,6 +26,7 @@ export const SingleTrackPage = ({ track }: SingleTrackPageProps) => {
         <PriceCard track={track} />
         <DescriptionCard track={track} />
         <TrackDetailsCard track={track} />
+        {/* {track.editionSize > 1 && <ListingsCard track={track} />} */}
       </Container>
     </>
   )
