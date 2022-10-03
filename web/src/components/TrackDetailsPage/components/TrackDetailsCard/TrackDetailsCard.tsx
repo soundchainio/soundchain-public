@@ -10,11 +10,13 @@ import tw from 'tailwind-styled-components'
 import { ChainLink } from 'icons/ChainLink'
 import { Badges } from 'components/common'
 import { getGenreLabelByKey } from 'utils/Genres'
-interface Props {
+import { Table, Row, Cell } from 'components/common/Table'
+
+interface TrackDetailsCardProps {
   track: TrackQuery['track']
 }
 
-export const TrackDetailsCard = (props: Props) => {
+export const TrackDetailsCard = (props: TrackDetailsCardProps) => {
   const {
     track: { trackEdition, nftData },
   } = props
@@ -55,43 +57,43 @@ export const TrackDetailsCard = (props: Props) => {
 
       <Table>
         <Row>
-          <Td $bgDark $roundedTopLeft>
+          <Cell $bgDark $roundedTopLeft>
             ARTIST ROYALTY %
-          </Td>
-          <Td $roundedTopRight>{royalties}</Td>
+          </Cell>
+          <Cell $roundedTopRight>{royalties}</Cell>
         </Row>
         <Row>
-          <Td $bgDark>TRACK TITLE</Td>
-          <Td>{props.track.title}</Td>
+          <Cell $bgDark>TRACK TITLE</Cell>
+          <Cell>{props.track.title}</Cell>
         </Row>
         <Row>
-          <Td $bgDark>ALBUM TITLE</Td>
-          <Td>{props.track.album || 'No album title'}</Td>
+          <Cell $bgDark>ALBUM TITLE</Cell>
+          <Cell>{props.track.album || 'No album title'}</Cell>
         </Row>
         <Row>
-          <Td $bgDark>RELEASE YEAR</Td>
-          <Td>{props.track.releaseYear}</Td>
+          <Cell $bgDark>RELEASE YEAR</Cell>
+          <Cell>{props.track.releaseYear}</Cell>
         </Row>
         <Row>
-          <Td $bgDark>GENRES</Td>
-          <Td>
+          <Cell $bgDark>GENRES</Cell>
+          <Cell>
             {isEmptyGenre
               ? 'No Genre Selected'
               : genres.map(genre => <Badges.Badge key={genre} label={getGenreLabelByKey(genre) || genre} />)}
-          </Td>
+          </Cell>
         </Row>
         <Row>
-          <Td $bgDark>MINING STATUS</Td>
-          <Td>{mintingPending || 'No status found'}</Td>
+          <Cell $bgDark>MINING STATUS</Cell>
+          <Cell>{mintingPending || 'No status found'}</Cell>
         </Row>
         <Row>
-          <Td $bgDark>
+          <Cell $bgDark>
             <Flex>
               <Pinata className="mr-2" />
               <span>Pinata IPFS</span>
             </Flex>
-          </Td>
-          <Td>
+          </Cell>
+          <Cell>
             <Overflow>
               <div>
                 <ChainLink className="mr-2 scale-150" />
@@ -100,16 +102,16 @@ export const TrackDetailsCard = (props: Props) => {
                 {nftData?.ipfsCid || 'No Pinata IPFS Found'}
               </AnchorTag>
             </Overflow>
-          </Td>
+          </Cell>
         </Row>
         <Row>
-          <Td $bgDark>
+          <Cell $bgDark>
             <Flex>
               <Token className="mr-2" />
               <span>Token ID</span>
             </Flex>
-          </Td>
-          <Td>
+          </Cell>
+          <Cell>
             <Overflow>
               <div>
                 <ChainLink className="mr-2 scale-150" />
@@ -118,19 +120,11 @@ export const TrackDetailsCard = (props: Props) => {
                 {nftData?.transactionHash || 'No Transaction Found'}
               </AnchorTag>
             </Overflow>
-          </Td>
+          </Cell>
         </Row>
       </Table>
     </Container>
   )
-}
-
-interface TableCellProps {
-  $bgDark?: boolean
-  $roundedTopRight?: boolean
-  $roundedTopLeft?: boolean
-  $roundedBottomRight?: boolean
-  $roundedBottomLeft?: boolean
 }
 
 const Container = tw.div`
@@ -155,34 +149,6 @@ const Title = tw.h3`
   text-white
 `
 
-const Table = tw.table`
-  text-white
-  mt-6
-  w-full
-  border-collapse
-`
-
-const Row = tw.tr`
-  w-full
-  text-sm
-  border-b-[1px]
-  border-black
-`
-
-const Td = tw.td<TableCellProps>`
-  ${({ $bgDark }) => ($bgDark ? 'bg-[#101010]' : 'bg-[#202020]')}
-
-  ${({ $roundedTopRight }) => $roundedTopRight && 'rounded-tr-lg'}
-  ${({ $roundedTopLeft }) => $roundedTopLeft && 'rounded-tl-lg'}
-  ${({ $roundedBottomRight }) => $roundedBottomRight && 'rounded-br-lg'}
-  ${({ $roundedBottomLeft }) => $roundedBottomLeft && 'rounded-bl-lg'}
-
-  py-3
-  px-6
-  text-center
-  w-1/2
-  overflow-y-hidden
-`
 const Overflow = tw.div`
   flex
   items-center
