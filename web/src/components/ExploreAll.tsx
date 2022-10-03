@@ -17,6 +17,7 @@ interface ExplorePageProps {
 
 export const ExploreAll = ({ searchTerm, setSelectedTab }: ExplorePageProps) => {
   const { data, loading } = useExploreQuery({ variables: { search: searchTerm }, fetchPolicy: 'network-only' })
+  console.log(data)
   const profiles = data?.explore.profiles
   const tracks = data?.explore.tracks
   const { playlistState } = useAudioPlayerContext()
