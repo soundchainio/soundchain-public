@@ -9,11 +9,11 @@ import { GetServerSideProps } from 'next'
 import type { ReactElement } from 'react'
 import LandingPageLayout from '../components/LandingPage/layout'
 
-interface HomePageProps {
+interface RootLandingPageProps {
   me?: MeQuery['me']
 }
 
-export const getServerSideProps: GetServerSideProps<HomePageProps> = async context => {
+export const getServerSideProps: GetServerSideProps<RootLandingPageProps> = async context => {
   const apolloClient = createApolloClient(context)
 
   const { data } = await apolloClient.query({
