@@ -1,5 +1,5 @@
 import { Popover } from '@headlessui/react'
-import { MarketplaceButton, Whitepaper, AirdropButton, OgunButton, RoadmapButton } from './components'
+import { AirdropButton, MarketplaceButton, OgunButton, RoadmapButton, Whitepaper } from './components'
 
 export const Navigation = () => {
   return (
