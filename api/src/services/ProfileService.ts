@@ -5,6 +5,7 @@ import { NotFoundError } from '../errors/NotFoundError';
 import { FollowModel } from '../models/Follow';
 import { Profile, ProfileModel } from '../models/Profile';
 import { UserModel } from '../models/User';
+import { Badge } from '../types/Badge';
 import { Context } from '../types/Context';
 import { PageInput } from '../types/PageInput';
 import { SortOrder } from '../types/SortOrder';
@@ -42,7 +43,7 @@ export class ProfileService extends ModelService<typeof Profile> {
       {
         $replaceRoot: {
           newRoot: {
-            $mergeObjects: ['$profile', { magicWalletAddress: '$$ROOT.magicWalletAddress' }],
+            $mergeObjects: ['$profile', { magicWalletAddress: '$$ROOT.magicWalletAddress', badges: '$$ROOT.badges' }],
           },
         },
       },
@@ -70,6 +71,20 @@ export class ProfileService extends ModelService<typeof Profile> {
     }
 
     return updatedProfile;
+  }
+
+  async claimBadgeProfile(userId: string): Promise<Profile> {
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      userId,
+      { badges: [Badge.SUPPORTER_FIRST_EVENT_AE_SC] },
+      { new: true },
+    );
+
+    if (!updatedUser) {
+      throw new Error(`Could not update the user with id: ${userId}`);
+    }
+
+    return await this.getProfileByHandle(updatedUser.handle);
   }
 
   async getUserHandle(profileId: string): Promise<string> {
