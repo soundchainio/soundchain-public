@@ -27,7 +27,11 @@ export default function ClaimBadgeProfilePage({}: ClaimBadgeProfileProps) {
   const [claimBadgeProfileMutation, { data, loading, error }] = useClaimBadgeProfileMutation()
 
   useEffect(() => {
-    if (!me) router.push('/login')
+    if (!me)
+      router.push({
+        pathname: '/login',
+        query: { callbackUrl: router.pathname },
+      })
 
     const claimBadge = async () => {
       await claimBadgeProfileMutation()
