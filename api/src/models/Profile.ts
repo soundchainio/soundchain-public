@@ -1,6 +1,7 @@
 import { getModelForClass, modelOptions, prop, Severity } from '@typegoose/typegoose';
 import { sample } from 'lodash';
 import { Field, ID, ObjectType } from 'type-graphql';
+import { Badge } from '../types/Badge';
 import { Genre } from '../types/Genres';
 import { MusicianType } from '../types/MusicianTypes';
 import { SocialMedias } from '../types/SocialMedias';
@@ -62,6 +63,9 @@ export class Profile extends Model {
 
   @Field({ nullable: true })
   magicWalletAddress?: string;
+
+  @Field(() => [Badge], { nullable: true })
+  badges?: string[];
 
   @Field(() => Date)
   createdAt: Date;
