@@ -79,10 +79,12 @@ function SoundchainMainLayout({ Component, pageProps }: CustomAppProps) {
 function SoundchainPageLayout({ Component, pageProps }: CustomAppProps) {
   if (!Component.getLayout) return <></>
 
-  return Component.getLayout(<Component {...pageProps} />)
+  return <ApolloProvider pageProps={pageProps}>{Component.getLayout(<Component {...pageProps} />)}</ApolloProvider>
 }
 
 function SoundchainApp({ Component, pageProps }: CustomAppProps) {
+  console.log(Component)
+  console.log(pageProps)
   return (
     <>
       <Head>
