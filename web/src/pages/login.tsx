@@ -59,7 +59,6 @@ export default function LoginPage() {
   useEffect(() => {
     if (me) {
       setIsAuthLayout(false)
-      console.log('redirect url through query: ', router.query.callbackUrl?.toString())
       router.push(router.query.callbackUrl?.toString() ?? `${config.redirectUrlPostLogin}`)
     }
   }, [me, router, setIsAuthLayout])
