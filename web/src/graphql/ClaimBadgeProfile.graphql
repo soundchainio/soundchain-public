@@ -1,0 +1,7 @@
+mutation claimBadgeProfile {
+  claimBadgeProfile {
+    profile {
+      ...ProfileComponentFields
+    }
+  }
+}
