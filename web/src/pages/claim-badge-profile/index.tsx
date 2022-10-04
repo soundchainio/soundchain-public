@@ -56,7 +56,7 @@ export default function ClaimBadgeProfilePage({}: ClaimBadgeProfileProps) {
       )}
       {error && (
         <div className=" flex items-center justify-center">
-          <div className="pl-3 text-sm font-bold text-white">Sorry we couldn`&apos;`t claim your badge now</div>
+          <div className="pl-3 text-sm font-bold text-white">Sorry we couldn&apos;t claim your badge now</div>
         </div>
       )}
     </>
