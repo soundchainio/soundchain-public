@@ -34,6 +34,7 @@ export const RepostPreview = ({ postId, handleOnPlayClicked = () => null }: Repo
                 name={post.profile.displayName}
                 verified={post.profile.verified}
                 teamMember={post.profile.teamMember}
+                badges={post.profile.badges}
               />
               <Timestamp datetime={post.createdAt} className="flex-1 text-right text-gray-60" />
             </div>

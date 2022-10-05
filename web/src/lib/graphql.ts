@@ -1897,7 +1897,6 @@ export type User = {
   authMethod: AuthMethod;
   isApprovedOnMarketplace: Scalars['Boolean'];
   roles: Array<Role>;
-  badges: Array<Badge>;
   otpSecret: Maybe<Scalars['String']>;
   otpRecoveryPhrase: Maybe<Scalars['String']>;
   createdAt: Scalars['DateTime'];
@@ -2023,7 +2022,7 @@ export type BidsWithInfoQuery = (
       & Pick<BidsWithInfo, 'amount' | 'amountToShow' | 'userId' | 'profileId' | 'createdAt'>
       & { profile: (
         { __typename?: 'Profile' }
-        & Pick<Profile, 'profilePicture' | 'displayName' | 'userHandle' | 'verified' | 'teamMember'>
+        & Pick<Profile, 'profilePicture' | 'displayName' | 'userHandle' | 'verified' | 'teamMember' | 'badges'>
       ) }
     )>> }
   ) }
@@ -2115,7 +2114,7 @@ export type ChatsQuery = (
       & Pick<Chat, 'id' | 'message' | 'unread' | 'createdAt'>
       & { profile: (
         { __typename?: 'Profile' }
-        & Pick<Profile, 'displayName' | 'profilePicture' | 'verified' | 'teamMember' | 'userHandle'>
+        & Pick<Profile, 'displayName' | 'profilePicture' | 'verified' | 'teamMember' | 'userHandle' | 'badges'>
       ) }
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
@@ -2180,7 +2179,7 @@ export type CommentComponentFieldsFragment = (
   & Pick<Comment, 'id' | 'body' | 'createdAt' | 'deleted'>
   & { profile: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'teamMember' | 'userHandle'>
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'teamMember' | 'userHandle' | 'badges'>
   ) }
 );
 
@@ -2572,7 +2571,7 @@ export type FollowersQuery = (
       & Pick<Follow, 'id'>
       & { followerProfile: (
         { __typename?: 'Profile' }
-        & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle' | 'teamMember'>
+        & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle' | 'teamMember' | 'badges'>
       ) }
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
@@ -2596,7 +2595,7 @@ export type FollowingQuery = (
       & Pick<Follow, 'id'>
       & { followedProfile: (
         { __typename?: 'Profile' }
-        & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle' | 'teamMember'>
+        & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle' | 'teamMember' | 'badges'>
       ) }
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
@@ -2784,7 +2783,7 @@ export type MessageComponentFieldsFragment = (
   & Pick<Message, 'id' | 'message' | 'fromId' | 'toId' | 'createdAt'>
   & { fromProfile: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle'>
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle' | 'badges'>
   ) }
 );
 
@@ -3104,7 +3103,7 @@ export type PostComponentFieldsFragment = (
   & Pick<Post, 'id' | 'body' | 'mediaLink' | 'repostId' | 'createdAt' | 'updatedAt' | 'commentCount' | 'repostCount' | 'totalReactions' | 'topReactions' | 'myReaction' | 'deleted'>
   & { profile: (
     { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'teamMember' | 'userHandle'>
+    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'teamMember' | 'userHandle' | 'badges'>
   ), track: Maybe<(
     { __typename?: 'Track' }
     & TrackComponentFieldsFragment
@@ -3268,7 +3267,7 @@ export type ReactionsQuery = (
       & Pick<Reaction, 'id' | 'type'>
       & { profile: (
         { __typename?: 'Profile' }
-        & Pick<Profile, 'id' | 'userHandle' | 'displayName' | 'profilePicture' | 'verified'>
+        & Pick<Profile, 'id' | 'userHandle' | 'displayName' | 'profilePicture' | 'verified' | 'badges'>
       ) }
     )>, pageInfo: (
       { __typename?: 'PageInfo' }
@@ -3831,7 +3830,7 @@ export type UserByWalletQuery = (
     & Pick<User, 'id'>
     & { profile: (
       { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'userHandle' | 'followerCount' | 'followingCount' | 'verified' | 'teamMember'>
+      & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'userHandle' | 'followerCount' | 'followingCount' | 'verified' | 'teamMember' | 'badges'>
     ) }
   )> }
 );
@@ -3906,6 +3905,7 @@ export const CommentComponentFieldsFragmentDoc = gql`
     verified
     teamMember
     userHandle
+    badges
   }
 }
     `;
@@ -4082,6 +4082,7 @@ export const MessageComponentFieldsFragmentDoc = gql`
     profilePicture
     verified
     userHandle
+    badges
   }
 }
     `;
@@ -4229,6 +4230,7 @@ export const PostComponentFieldsFragmentDoc = gql`
     verified
     teamMember
     userHandle
+    badges
   }
   track {
     ...TrackComponentFields
@@ -4480,6 +4482,7 @@ export const BidsWithInfoDocument = gql`
         userHandle
         verified
         teamMember
+        badges
       }
     }
   }
@@ -4696,6 +4699,7 @@ export const ChatsDocument = gql`
         verified
         teamMember
         userHandle
+        badges
       }
       message
       unread
@@ -5648,6 +5652,7 @@ export const FollowersDocument = gql`
         verified
         userHandle
         teamMember
+        badges
       }
     }
     pageInfo {
@@ -5699,6 +5704,7 @@ export const FollowingDocument = gql`
         verified
         userHandle
         teamMember
+        badges
       }
     }
     pageInfo {
@@ -7050,6 +7056,7 @@ export const ReactionsDocument = gql`
         displayName
         profilePicture
         verified
+        badges
       }
     }
     pageInfo {
@@ -8296,6 +8303,7 @@ export const UserByWalletDocument = gql`
       followingCount
       verified
       teamMember
+      badges
     }
   }
 }

@@ -65,7 +65,8 @@ export class Profile extends Model {
   magicWalletAddress?: string;
 
   @Field(() => [Badge], { nullable: true })
-  badges?: string[];
+  @prop({ type: [String], enum: Badge, default: [] })
+  badges: string[];
 
   @Field(() => Date)
   createdAt: Date;
