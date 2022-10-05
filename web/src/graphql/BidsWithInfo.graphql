@@ -12,6 +12,7 @@ query BidsWithInfo($auctionId: String!) {
         userHandle
         verified
         teamMember
+        badges
       }
     }
   }
