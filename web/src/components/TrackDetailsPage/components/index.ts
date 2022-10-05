@@ -5,5 +5,15 @@ import { Social } from './PriceCard/Social'
 import { DescriptionCard } from './DescriptionCard/DescriptionCard'
 import { TrackDetailsCard } from './TrackDetailsCard/TrackDetailsCard'
 import { ListingsCard } from './ListingsCard/ListingsCard'
+import { OwnedEditionListCard } from './OwnedEditionListCard/OwnedEditionListCard'
 
-export { MobileTrackCard, PriceCard, Timer, Social, DescriptionCard, TrackDetailsCard, ListingsCard }
+export {
+  MobileTrackCard,
+  PriceCard,
+  Timer,
+  Social,
+  DescriptionCard,
+  TrackDetailsCard,
+  ListingsCard,
+  OwnedEditionListCard,
+}

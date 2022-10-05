@@ -40,6 +40,7 @@ export interface ButtonProps extends React.ComponentPropsWithRef<'button'> {
   bgColor?: string
   borderColor?: string
   textColor?: string
+  outlined?: boolean
 }
 
 export const commonClasses = 'flex items-center justify-center w-full h-full font-bold'

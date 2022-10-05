@@ -79,19 +79,20 @@ export const PriceCard = (props: Props) => {
       <TrackSlider song={song} />
 
       {isBuyNow && (
-        <PriceContainer>
-          <span>
-            {Boolean(maticPrice) && <Matic value={maticPrice} variant="currency-inline" className="text-xs" />}
-            {Boolean(OGUNprice) && <Ogun value={OGUNprice} variant="currency" className="text-xs" showBonus />}
-            {isFutureSale && <Timer date={startingDate} reloadOnEnd />}
-          </span>
-          <RainbowButton className="rounded-lg" variant="rainbow">
-            <span className="p-4">BUY NOW</span>
-          </RainbowButton>
-        </PriceContainer>
+        <>
+          <PriceContainer>
+            <span>
+              {Boolean(maticPrice) && <Matic value={maticPrice} variant="currency-inline" className="text-xs" />}
+              {Boolean(OGUNprice) && <Ogun value={OGUNprice} variant="currency" className="text-xs" showBonus />}
+              {isFutureSale && <Timer date={startingDate} reloadOnEnd />}
+            </span>
+            <RainbowButton className="rounded-lg" variant="rainbow">
+              <span className="p-4">BUY NOW</span>
+            </RainbowButton>
+          </PriceContainer>
+          <Divider />
+        </>
       )}
-
-      <Divider />
 
       <Social trackId={track.id} />
     </Container>

@@ -163,6 +163,7 @@ const Container = tw.div`
   rounded-xl 
   bg-[#19191A] 
   p-4
+  max-w-[800px]
 
   md:flex-row
   md:items-start
