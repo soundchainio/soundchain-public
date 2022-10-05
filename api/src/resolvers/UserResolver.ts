@@ -52,7 +52,10 @@ export class UserResolver {
   }
 
   @Mutation(() => AuthPayload)
-  async login(@Ctx() { authService, jwtService, userService }: Context, @Arg('input') { token }: LoginInput): Promise<AuthPayload> {
+  async login(
+    @Ctx() { authService, jwtService, userService }: Context,
+    @Arg('input') { token }: LoginInput,
+  ): Promise<AuthPayload> {
     const magic = new Magic(config.magicLink.secretKey);
     const did = magic.utils.parseAuthorizationHeader(`Bearer ${token}`);
     const magicUser = await magic.users.getMetadataByToken(did);
@@ -139,9 +142,11 @@ export class UserResolver {
   }
 
   @Query(() => ProofBookItem, { nullable: true })
-  async getProofBookByWallet(@Ctx() { proofBookService }: Context, @Arg('walletAddress') walletAddress: string): Promise<ProofBookItem> {
+  async getProofBookByWallet(
+    @Ctx() { proofBookService }: Context,
+    @Arg('walletAddress') walletAddress: string,
+  ): Promise<ProofBookItem> {
     const proofBook = await proofBookService.getUserProofBook(walletAddress);
     return proofBook;
   }
-
 }

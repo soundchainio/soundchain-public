@@ -1,6 +1,7 @@
 import { Avatar } from 'components/Avatar'
 import { GridView } from 'components/common'
 import { DisplayName } from 'components/DisplayName'
+import { InfiniteLoader } from 'components/InfiniteLoader'
 import { NoResultFound } from 'components/NoResultFound'
 import { ProfileListItemSkeleton } from 'components/ProfileListItemSkeleton'
 import { useMe } from 'hooks/useMe'
@@ -9,7 +10,6 @@ import { Profile, useFollowedArtistsLazyQuery } from 'lib/graphql'
 import Link from 'next/link'
 import { useCallback, useEffect } from 'react'
 import PullToRefresh from 'react-simple-pull-to-refresh'
-import { InfiniteLoader } from 'components/InfiniteLoader'
 
 interface FavoriteArtistsProps {
   searchTerm: string
@@ -66,12 +66,16 @@ export const FavoriteArtists = (props: FavoriteArtistsProps) => {
       ) : (
         <PullToRefresh onRefresh={onRefresh} className="h-auto">
           <div className="bg-gray-25">
-            {data?.followedArtists.nodes.map(followedArtists => (
-              <div key={followedArtists.id} className="space-y-6 px-4 py-3">
-                <Link href={`/profiles/${followedArtists.userHandle}`} passHref>
+            {data?.followedArtists.nodes.map(followedArtist => (
+              <div key={followedArtist.id} className="space-y-6 px-4 py-3">
+                <Link href={`/profiles/${followedArtist.userHandle}`} passHref>
                   <div className="flex cursor-pointer flex-row items-center space-x-2 text-sm">
-                    <Avatar pixels={40} className="flex" profile={followedArtists} />
-                    <DisplayName name={followedArtists.displayName} verified={followedArtists.verified} />
+                    <Avatar pixels={40} className="flex" profile={followedArtist} />
+                    <DisplayName
+                      name={followedArtist.displayName}
+                      verified={followedArtist.verified}
+                      badges={followedArtist.badges}
+                    />
                     <div className="flex flex-1 justify-end">
                       <RightArrow />
                     </div>

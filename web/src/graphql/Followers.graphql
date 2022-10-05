@@ -9,6 +9,7 @@ query Followers($profileId: String!, $page: PageInput) {
         verified
         userHandle
         teamMember
+        badges
       }
     }
     pageInfo {

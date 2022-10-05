@@ -83,8 +83,6 @@ function SoundchainPageLayout({ Component, pageProps }: CustomAppProps) {
 }
 
 function SoundchainApp({ Component, pageProps }: CustomAppProps) {
-  console.log(Component)
-  console.log(pageProps)
   return (
     <>
       <Head>
