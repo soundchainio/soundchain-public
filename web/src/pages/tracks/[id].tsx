@@ -1,9 +1,10 @@
-import { SingleTrackPage } from 'components/TrackDetailsPage/SingleTrackPage'
+import { TemporaryTrackPage } from 'components/TrackDetailsPage/TrackPage'
 import { cacheFor, createApolloClient } from 'lib/apollo'
 import { TrackDocument, TrackQuery } from 'lib/graphql'
 import { GetServerSideProps } from 'next'
 import { ParsedUrlQuery } from 'querystring'
-
+import { MultipleTrackPage } from 'components/TrackDetailsPage/Multiple'
+import { SingleTrackPage } from 'components/TrackDetailsPage/SingleTrackPage'
 export interface TrackPageProps {
   track: TrackQuery['track']
 }
@@ -38,5 +39,7 @@ export default function TrackPage({ track }: TrackPageProps) {
   // if (track.editionSize > 1) {
   //   return <MultipleTrackPage track={track} />
   // }
-  return <SingleTrackPage track={track} />
+  // return <SingleTrackPage track={track} />
+
+  return <TemporaryTrackPage track={track} />
 }

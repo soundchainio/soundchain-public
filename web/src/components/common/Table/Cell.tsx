@@ -25,7 +25,6 @@ const TableCellContainer = tw.td<CellProps>`
 
   py-3
   px-6
+  overflow-auto
   text-center
-  w-1/2
-  overflow-y-hidden
 `

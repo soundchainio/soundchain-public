@@ -77,14 +77,20 @@ export const TrackDetailsCard = (props: TrackDetailsCardProps) => {
         <Row>
           <Cell $bgDark>GENRES</Cell>
           <Cell>
-            {isEmptyGenre
-              ? 'No Genre Selected'
-              : genres.map(genre => <Badges.Badge key={genre} label={getGenreLabelByKey(genre) || genre} />)}
+            {isEmptyGenre ? (
+              <div>No Genre Selected</div>
+            ) : (
+              <Overflow>
+                {genres.map(genre => (
+                  <Badges.Badge key={genre} label={getGenreLabelByKey(genre) || genre} className="mr-4" />
+                ))}
+              </Overflow>
+            )}
           </Cell>
         </Row>
         <Row>
           <Cell $bgDark>MINING STATUS</Cell>
-          <Cell>{mintingPending || 'No status found'}</Cell>
+          <Cell>{mintingPending ? nftData?.pendingRequest : 'No minting status found'}</Cell>
         </Row>
         <Row>
           <Cell $bgDark>
