@@ -10,6 +10,7 @@ query UserByWallet($walletAddress: String!) {
       followingCount
       verified
       teamMember
+      badges
     }
   }
 }

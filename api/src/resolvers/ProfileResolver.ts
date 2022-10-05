@@ -97,9 +97,9 @@ export class ProfileResolver {
   @Authorized()
   async claimBadgeProfile(
     @Ctx() { profileService }: Context,
-    @CurrentUser() { _id }: User,
+    @CurrentUser() { profileId }: User,
   ): Promise<UpdateProfilePayload> {
-    const profile = await profileService.claimBadgeProfile(_id);
+    const profile = await profileService.claimBadgeProfile(profileId);
     return { profile: profile };
   }
 
