@@ -22,7 +22,12 @@ export const ReactionItem = ({ reaction: { type, profile }, onClick }: FollowIte
       <Link href={`/profiles/${profile.userHandle}`} passHref>
         <a className="flex flex-row items-center gap-2 truncate text-sm">
           <Avatar linkToProfile={false} pixels={40} className="flex" profile={profile} />
-          <DisplayName name={profile.displayName} verified={profile.verified} teamMember={profile.teamMember} />
+          <DisplayName
+            name={profile.displayName}
+            verified={profile.verified}
+            teamMember={profile.teamMember}
+            badges={profile.badges}
+          />
         </a>
       </Link>
       <div className="flex items-center justify-center">
