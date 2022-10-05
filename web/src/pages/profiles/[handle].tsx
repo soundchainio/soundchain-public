@@ -112,6 +112,7 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
     teamMember,
     profilePicture,
     magicWalletAddress,
+    badges,
   } = profile
 
   return (
@@ -154,7 +155,7 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
           </div>
           <div className="mt-4 flex flex-row gap-2">
             <div className="min-w-0">
-              <DisplayName name={displayName} verified={verified} teamMember={teamMember} />
+              <DisplayName name={displayName} verified={verified} teamMember={teamMember} badges={badges} />
               <p className="text-sm text-gray-80">@{userHandle}</p>
               <p className="py-2 text-sm text-gray-80">{bio}</p>
             </div>

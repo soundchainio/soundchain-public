@@ -8,6 +8,7 @@ query Chats($page: PageInput) {
         verified
         teamMember
         userHandle
+        badges
       }
       message
       unread
