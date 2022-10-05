@@ -34,7 +34,6 @@ interface SideMenuContentProps {
 export const SideMenuContent = ({}: SideMenuContentProps) => {
   const { data: pendingRequestsBadgeNumber } = usePendingRequestsBadgeNumberQuery()
   const me = useMe()
-  console.log('me: ', me)
   const router = useRouter()
   const { magic } = useMagicContext()
   const { isMinting } = useHideBottomNavBar()
