@@ -43,7 +43,7 @@ export class ProfileService extends ModelService<typeof Profile> {
       {
         $replaceRoot: {
           newRoot: {
-            $mergeObjects: ['$profile', { magicWalletAddress: '$$ROOT.magicWalletAddress', badges: '$$ROOT.badges' }],
+            $mergeObjects: ['$profile', { magicWalletAddress: '$$ROOT.magicWalletAddress' }],
           },
         },
       },
@@ -73,18 +73,18 @@ export class ProfileService extends ModelService<typeof Profile> {
     return updatedProfile;
   }
 
-  async claimBadgeProfile(userId: string): Promise<Profile> {
-    const updatedUser = await UserModel.findByIdAndUpdate(
-      userId,
+  async claimBadgeProfile(profileId: string): Promise<Profile> {
+    const updatedProfile = await ProfileModel.findByIdAndUpdate(
+      profileId,
       { badges: [Badge.SUPPORTER_FIRST_EVENT_AE_SC] },
       { new: true },
     );
 
-    if (!updatedUser) {
-      throw new Error(`Could not update the user with id: ${userId}`);
+    if (!updatedProfile) {
+      throw new Error(`Could not update the profile with id: ${profileId}`);
     }
 
-    return await this.getProfileByHandle(updatedUser.handle);
+    return updatedProfile;
   }
 
   async getUserHandle(profileId: string): Promise<string> {

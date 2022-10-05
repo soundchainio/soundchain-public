@@ -56,6 +56,7 @@ export const Post = ({ post, handleOnPlayClicked }: PostProps) => {
                     name={post.profile.displayName}
                     verified={post.profile.verified}
                     teamMember={post.profile.teamMember}
+                    badges={post.profile.badges}
                   />
                 </a>
               </NextLink>

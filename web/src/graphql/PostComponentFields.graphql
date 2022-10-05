@@ -18,6 +18,7 @@ fragment PostComponentFields on Post {
     verified
     teamMember
     userHandle
+    badges
   }
   track {
     ...TrackComponentFields

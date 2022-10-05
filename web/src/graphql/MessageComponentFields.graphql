@@ -10,5 +10,6 @@ fragment MessageComponentFields on Message {
     profilePicture
     verified
     userHandle
+    badges
   }
 }

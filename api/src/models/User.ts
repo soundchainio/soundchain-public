@@ -2,7 +2,6 @@ import { getModelForClass, prop } from '@typegoose/typegoose';
 import { ObjectId } from 'mongodb';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { AuthMethod } from '../types/AuthMethod';
-import { Badge } from '../types/Badge';
 import { DefaultWallet } from '../types/DefaultWallet';
 import { Role } from '../types/Role';
 import { Model } from './Model';
@@ -48,10 +47,6 @@ export class User extends Model {
   @Field(() => [Role])
   @prop({ type: [String], enum: Role, default: [Role.USER] })
   roles: string[];
-
-  @Field(() => [Badge])
-  @prop({ type: [String], enum: Badge, default: [] })
-  badges: string[];
 
   @Field({ nullable: true })
   @prop({ required: false })
