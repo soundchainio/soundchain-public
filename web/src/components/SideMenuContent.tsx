@@ -21,11 +21,11 @@ import { useState } from 'react'
 import { toast } from 'react-toastify'
 import { FollowModalType } from 'types/FollowModalType'
 import { Avatar } from './Avatar'
+import { InboxButton } from './Buttons/InboxButton'
 import { DisplayName } from './DisplayName'
 import { MenuItem } from './MenuItem'
 import { MenuLink } from './MenuLink'
 import { SocialTag } from './SocialTag'
-import { InboxButton } from './Buttons/InboxButton'
 
 interface SideMenuContentProps {
   isMobile?: boolean
@@ -34,6 +34,7 @@ interface SideMenuContentProps {
 export const SideMenuContent = ({}: SideMenuContentProps) => {
   const { data: pendingRequestsBadgeNumber } = usePendingRequestsBadgeNumberQuery()
   const me = useMe()
+  console.log('me: ', me)
   const router = useRouter()
   const { magic } = useMagicContext()
   const { isMinting } = useHideBottomNavBar()
@@ -94,6 +95,7 @@ export const SideMenuContent = ({}: SideMenuContentProps) => {
                   name={me.profile.displayName}
                   verified={me.profile.verified}
                   teamMember={me.profile.teamMember}
+                  badges={me.profile.badges}
                 />
                 <p className="text-md text-gray-80">@{me.handle}</p>
 
