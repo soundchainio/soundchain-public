@@ -4,7 +4,7 @@ import SEO from 'components/SEO'
 import { TopNavBarProps } from 'components/TopNavBar'
 import { useLayoutContext } from 'hooks/useLayoutContext'
 import { cacheFor } from 'lib/apollo'
-import { useResetNotificationCountMutation } from 'lib/graphql'
+import { NotificationCountDocument, useResetNotificationCountMutation } from 'lib/graphql'
 import { protectPage } from 'lib/protectPage'
 import { useEffect } from 'react'
 
@@ -25,7 +25,7 @@ export default function UserNotifications() {
   }, [setTopNavBarProps])
 
   useEffect(() => {
-    resetNotificationCount()
+    resetNotificationCount({ refetchQueries: [NotificationCountDocument] })
   }, [resetNotificationCount])
 
   return (
