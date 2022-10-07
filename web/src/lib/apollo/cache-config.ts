@@ -254,9 +254,19 @@ export const cacheConfig: InMemoryCacheConfig = {
         },
         buyNowListingItems: {
           keyArgs: ['filter'],
-          merge(existing = { nodes: [] }, { nodes, pageInfo }): ListingItemConnection {
+          // merge(existing = { nodes: [] }, { nodes, pageInfo }): ListingItemConnection {
+          //   return {
+          //     nodes: [...existing.nodes, ...nodes],
+          //     pageInfo,
+          //   }
+          // },
+          merge(existing = { nodes: [] }, { nodes, pageInfo }, { readField }): ListingItemConnection {
+            const merged = { ...existing.nodes }
+            merged.nodes.forEach(item => {
+              merged[readField('id', item)] = item
+            })
             return {
-              nodes: [...existing.nodes, ...nodes],
+              nodes: merged,
               pageInfo,
             }
           },

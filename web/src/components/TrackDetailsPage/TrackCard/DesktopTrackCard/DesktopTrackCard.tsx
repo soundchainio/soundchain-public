@@ -170,7 +170,7 @@ const Container = tw.div`
   md:justify-between
 
   xl:flex-col
-  xl:row-span-2
+  xl:row-span-3
   xl:self-start
 `
 

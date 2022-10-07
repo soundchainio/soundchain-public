@@ -1,6 +1,12 @@
 /* eslint-disable @next/next/link-passhref */
 import { useTokenOwner } from 'hooks/useTokenOwner'
-import { ListingItemViewComponentFieldsFragment, Role } from 'lib/graphql'
+import {
+  ListingItemViewComponentFieldsFragment,
+  OwnedTracksQuery,
+  Role,
+  TrackQuery,
+  TrackWithListingItem,
+} from 'lib/graphql'
 import { SpinAnimation } from 'components/common/SpinAnimation'
 import { BsQuestionCircleFill } from 'react-icons/bs'
 import ReactTooltip from 'react-tooltip'
@@ -11,20 +17,29 @@ import { MdDelete } from 'react-icons/md'
 import { useMe } from 'hooks/useMe'
 import { useModalDispatch } from 'contexts/providers/modal'
 import { AuthorActionsType } from 'types/AuthorActionsType'
+import { isPendingRequest } from 'utils/isPendingRequest'
+import { Dispatch, SetStateAction, useEffect } from 'react'
 interface OwnedEditionItemProps {
-  isProcessing: boolean
-  isListed?: ListingItemViewComponentFieldsFragment | null
-  trackId: string
-  tokenId: number
-  contractAddress: string
+  ownedTrack: TrackWithListingItem
+  setShouldRefresh: Dispatch<SetStateAction<boolean>>
 }
 
 export const OwnedEditionItem = (props: OwnedEditionItemProps) => {
-  const { isProcessing, isListed, trackId, tokenId, contractAddress } = props
+  const { id, nftData, listingItem: isListed, trackEdition } = props.ownedTrack
+  const { setShouldRefresh } = props
 
   const me = useMe()
   const { dispatchShowAuthorActionsModal } = useModalDispatch()
-  const { isOwner } = useTokenOwner(tokenId, contractAddress)
+  const { isOwner } = useTokenOwner(nftData?.tokenId, nftData?.contract)
+
+  const isProcessing =
+    isPendingRequest(nftData?.pendingRequest) || isPendingRequest(trackEdition?.editionData?.pendingRequest)
+
+  useEffect(() => {
+    if (!isProcessing) return
+
+    setShouldRefresh(true)
+  }, [isProcessing, setShouldRefresh])
 
   return (
     <>
@@ -49,7 +64,7 @@ export const OwnedEditionItem = (props: OwnedEditionItemProps) => {
         )}
 
         {!isListed && isOwner && !isProcessing && (
-          <Link href={`/tracks/${trackId}/list/buy-now`}>
+          <Link href={`/tracks/${id}/list/buy-now`}>
             <Anchor>
               <BsTagFill size={22} className="mb-2" />
               <ButtonTitle>List</ButtonTitle>
@@ -58,7 +73,7 @@ export const OwnedEditionItem = (props: OwnedEditionItemProps) => {
         )}
 
         {(isOwner || me?.roles.includes(Role.Admin)) && (
-          <DeleteButton onClick={() => dispatchShowAuthorActionsModal(true, AuthorActionsType.EDITION, trackId, true)}>
+          <DeleteButton onClick={() => dispatchShowAuthorActionsModal(true, AuthorActionsType.EDITION, id, true)}>
             <MdDelete size={22} className="mb-2" />
             <ButtonTitle>Delete</ButtonTitle>
           </DeleteButton>

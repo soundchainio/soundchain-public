@@ -19,10 +19,11 @@ interface ListingItemProps {
   tokenId: number
   isProcessing: boolean
   contractAddress: string
+  isMobile: boolean
 }
 
 export const ListingItem = (props: ListingItemProps) => {
-  const { trackId, price, priceOGUN, isPaymentOGUN, profileId, tokenId, isProcessing, contractAddress } = props
+  const { trackId, price, priceOGUN, isPaymentOGUN, profileId, tokenId, contractAddress, isMobile } = props
 
   const { isOwner } = useTokenOwner(tokenId, contractAddress)
 
@@ -36,16 +37,20 @@ export const ListingItem = (props: ListingItemProps) => {
 
   return (
     <>
-      <Cell>
-        <Flex>#{tokenId}</Flex>
-      </Cell>
+      {!isMobile && (
+        <Cell>
+          <Flex>#{tokenId}</Flex>
+        </Cell>
+      )}
+
       <Cell>
         <Flex>
           {!isPaymentOGUN && <Matic value={price} variant="listing-inline" />}
           {isPaymentOGUN && <Ogun value={priceOGUN} />}
         </Flex>
       </Cell>
-      {profileData && (
+
+      {profileData && !isMobile && (
         <Cell>
           <Flex>
             <ProfileWithAvatar profile={profileData.profile as Partial<Profile>} avatarSize={30} showAvatar={true} />
