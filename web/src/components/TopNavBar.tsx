@@ -107,7 +107,9 @@ export const TopNavBar = ({
             </div>
             {me && (
               <>
-                <TopNavBarButton path={'/notifications'} icon={Bell} label="Alerts" badge={NotificationBadge} />
+                <div className="pr-1 pt-2">
+                  <TopNavBarButton path={'/notifications'} icon={Bell} label="" badge={NotificationBadge} />
+                </div>
                 <TopNavBarButton
                   icon={({}) => (
                     <Avatar linkToProfile={false} profile={{ profilePicture: me?.profile.profilePicture }} />
