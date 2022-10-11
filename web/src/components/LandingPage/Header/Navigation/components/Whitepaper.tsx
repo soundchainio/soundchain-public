@@ -1,7 +1,7 @@
-import { Dropdown } from '../Dropdown'
-import { BsBookFill, BsArrowRightShort } from 'react-icons/bs'
-import { svgGradientFromPurpleToGreen } from 'styles/svgGradientFromPurpleToGreen'
 import Link from 'next/link'
+import { BsArrowRightShort, BsBookFill } from 'react-icons/bs'
+import { svgGradientFromPurpleToGreen } from 'styles/svgGradientFromPurpleToGreen'
+import { Dropdown } from '../Dropdown'
 
 export const Whitepaper = () => {
   return (

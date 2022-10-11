@@ -100,6 +100,10 @@ export type AuthPayload = {
   jwt: Scalars['String']
 }
 
+export enum Badge {
+  SupporterFirstEventAeSc = 'SUPPORTER_FIRST_EVENT_AE_SC',
+}
+
 export type Bided = {
   __typename?: 'Bided'
   bided: Maybe<Scalars['Boolean']>
@@ -647,6 +651,7 @@ export type Mutation = {
   createRepost: CreateRepostPayload
   deletePost: DeletePostPayload
   updateProfile: UpdateProfilePayload
+  claimBadgeProfile: UpdateProfilePayload
   followProfile: FollowProfilePayload
   unfollowProfile: UnfollowProfilePayload
   subscribeToProfile: SubscribeToProfilePayload
@@ -1079,6 +1084,7 @@ export type Profile = {
   unreadMessageCount: Scalars['Float']
   verified: Maybe<Scalars['Boolean']>
   magicWalletAddress: Maybe<Scalars['String']>
+  badges: Maybe<Array<Badge>>
   createdAt: Scalars['DateTime']
   updatedAt: Scalars['DateTime']
   userHandle: Scalars['String']
@@ -1930,7 +1936,7 @@ export type BidsWithInfoQuery = { __typename?: 'Query' } & {
         > & {
             profile: { __typename?: 'Profile' } & Pick<
               Profile,
-              'profilePicture' | 'displayName' | 'userHandle' | 'verified' | 'teamMember'
+              'profilePicture' | 'displayName' | 'userHandle' | 'verified' | 'teamMember' | 'badges'
             >
           }
       >
@@ -2009,7 +2015,7 @@ export type ChatsQuery = { __typename?: 'Query' } & {
       { __typename?: 'Chat' } & Pick<Chat, 'id' | 'message' | 'unread' | 'createdAt'> & {
           profile: { __typename?: 'Profile' } & Pick<
             Profile,
-            'displayName' | 'profilePicture' | 'verified' | 'teamMember' | 'userHandle'
+            'displayName' | 'profilePicture' | 'verified' | 'teamMember' | 'userHandle' | 'badges'
           >
         }
     >
@@ -2023,6 +2029,14 @@ export type CheapestListingItemQueryVariables = Exact<{
 
 export type CheapestListingItemQuery = { __typename?: 'Query' } & {
   cheapestListingItem: Maybe<{ __typename?: 'TrackPrice' } & Pick<TrackPrice, 'currency' | 'value'>>
+}
+
+export type ClaimBadgeProfileMutationVariables = Exact<{ [key: string]: never }>
+
+export type ClaimBadgeProfileMutation = { __typename?: 'Mutation' } & {
+  claimBadgeProfile: { __typename?: 'UpdateProfilePayload' } & {
+    profile: { __typename?: 'Profile' } & ProfileComponentFieldsFragment
+  }
 }
 
 export type ClearNotificationsMutationVariables = Exact<{ [key: string]: never }>
@@ -2045,7 +2059,7 @@ export type CommentComponentFieldsFragment = { __typename?: 'Comment' } & Pick<
 > & {
     profile: { __typename?: 'Profile' } & Pick<
       Profile,
-      'id' | 'displayName' | 'profilePicture' | 'verified' | 'teamMember' | 'userHandle'
+      'id' | 'displayName' | 'profilePicture' | 'verified' | 'teamMember' | 'userHandle' | 'badges'
     >
   }
 
@@ -2296,7 +2310,7 @@ export type FollowersQuery = { __typename?: 'Query' } & {
       { __typename?: 'Follow' } & Pick<Follow, 'id'> & {
           followerProfile: { __typename?: 'Profile' } & Pick<
             Profile,
-            'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle' | 'teamMember'
+            'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle' | 'teamMember' | 'badges'
           >
         }
     >
@@ -2315,7 +2329,7 @@ export type FollowingQuery = { __typename?: 'Query' } & {
       { __typename?: 'Follow' } & Pick<Follow, 'id'> & {
           followedProfile: { __typename?: 'Profile' } & Pick<
             Profile,
-            'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle' | 'teamMember'
+            'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle' | 'teamMember' | 'badges'
           >
         }
     >
@@ -2512,7 +2526,7 @@ export type MessageComponentFieldsFragment = { __typename?: 'Message' } & Pick<
 > & {
     fromProfile: { __typename?: 'Profile' } & Pick<
       Profile,
-      'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle'
+      'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle' | 'badges'
     >
   }
 
@@ -2776,7 +2790,7 @@ export type PostComponentFieldsFragment = { __typename?: 'Post' } & Pick<
 > & {
     profile: { __typename?: 'Profile' } & Pick<
       Profile,
-      'id' | 'displayName' | 'profilePicture' | 'verified' | 'teamMember' | 'userHandle'
+      'id' | 'displayName' | 'profilePicture' | 'verified' | 'teamMember' | 'userHandle' | 'badges'
     >
     track: Maybe<{ __typename?: 'Track' } & TrackComponentFieldsFragment>
   }
@@ -2829,6 +2843,7 @@ export type ProfileComponentFieldsFragment = { __typename?: 'Profile' } & Pick<
   | 'verified'
   | 'teamMember'
   | 'magicWalletAddress'
+  | 'badges'
   | 'createdAt'
   | 'updatedAt'
 > & {
@@ -2919,7 +2934,7 @@ export type ReactionsQuery = { __typename?: 'Query' } & {
       { __typename?: 'Reaction' } & Pick<Reaction, 'id' | 'type'> & {
           profile: { __typename?: 'Profile' } & Pick<
             Profile,
-            'id' | 'userHandle' | 'displayName' | 'profilePicture' | 'verified'
+            'id' | 'userHandle' | 'displayName' | 'profilePicture' | 'verified' | 'badges'
           >
         }
     >
@@ -3327,6 +3342,7 @@ export type UserByWalletQuery = { __typename?: 'Query' } & {
           | 'followingCount'
           | 'verified'
           | 'teamMember'
+          | 'badges'
         >
       }
   >
@@ -3396,6 +3412,7 @@ export const CommentComponentFieldsFragmentDoc = gql`
       verified
       teamMember
       userHandle
+      badges
     }
   }
 `
@@ -3573,6 +3590,7 @@ export const MessageComponentFieldsFragmentDoc = gql`
       profilePicture
       verified
       userHandle
+      badges
     }
   }
 `
@@ -3721,6 +3739,7 @@ export const PostComponentFieldsFragmentDoc = gql`
       verified
       teamMember
       userHandle
+      badges
     }
     track {
       ...TrackComponentFields
@@ -3753,6 +3772,7 @@ export const ProfileComponentFieldsFragmentDoc = gql`
     verified
     teamMember
     magicWalletAddress
+    badges
     createdAt
     updatedAt
   }
@@ -3994,6 +4014,7 @@ export const BidsWithInfoDocument = gql`
           userHandle
           verified
           teamMember
+          badges
         }
       }
     }
@@ -4235,6 +4256,7 @@ export const ChatsDocument = gql`
           verified
           teamMember
           userHandle
+          badges
         }
         message
         unread
@@ -4323,6 +4345,52 @@ export type CheapestListingItemLazyQueryHookResult = ReturnType<typeof useCheape
 export type CheapestListingItemQueryResult = Apollo.QueryResult<
   CheapestListingItemQuery,
   CheapestListingItemQueryVariables
+>
+export const ClaimBadgeProfileDocument = gql`
+  mutation claimBadgeProfile {
+    claimBadgeProfile {
+      profile {
+        ...ProfileComponentFields
+      }
+    }
+  }
+  ${ProfileComponentFieldsFragmentDoc}
+`
+export type ClaimBadgeProfileMutationFn = Apollo.MutationFunction<
+  ClaimBadgeProfileMutation,
+  ClaimBadgeProfileMutationVariables
+>
+
+/**
+ * __useClaimBadgeProfileMutation__
+ *
+ * To run a mutation, you first call `useClaimBadgeProfileMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useClaimBadgeProfileMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [claimBadgeProfileMutation, { data, loading, error }] = useClaimBadgeProfileMutation({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useClaimBadgeProfileMutation(
+  baseOptions?: Apollo.MutationHookOptions<ClaimBadgeProfileMutation, ClaimBadgeProfileMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions }
+  return Apollo.useMutation<ClaimBadgeProfileMutation, ClaimBadgeProfileMutationVariables>(
+    ClaimBadgeProfileDocument,
+    options,
+  )
+}
+export type ClaimBadgeProfileMutationHookResult = ReturnType<typeof useClaimBadgeProfileMutation>
+export type ClaimBadgeProfileMutationResult = Apollo.MutationResult<ClaimBadgeProfileMutation>
+export type ClaimBadgeProfileMutationOptions = Apollo.BaseMutationOptions<
+  ClaimBadgeProfileMutation,
+  ClaimBadgeProfileMutationVariables
 >
 export const ClearNotificationsDocument = gql`
   mutation ClearNotifications {
@@ -5302,6 +5370,7 @@ export const FollowersDocument = gql`
           verified
           userHandle
           teamMember
+          badges
         }
       }
       pageInfo {
@@ -5355,6 +5424,7 @@ export const FollowingDocument = gql`
           verified
           userHandle
           teamMember
+          badges
         }
       }
       pageInfo {
@@ -6882,6 +6952,7 @@ export const ReactionsDocument = gql`
           displayName
           profilePicture
           verified
+          badges
         }
       }
       pageInfo {
@@ -8411,6 +8482,7 @@ export const UserByWalletDocument = gql`
         followingCount
         verified
         teamMember
+        badges
       }
     }
   }

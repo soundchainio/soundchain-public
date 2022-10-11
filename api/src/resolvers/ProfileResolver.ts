@@ -93,6 +93,16 @@ export class ProfileResolver {
     return { profile };
   }
 
+  @Mutation(() => UpdateProfilePayload)
+  @Authorized()
+  async claimBadgeProfile(
+    @Ctx() { profileService }: Context,
+    @CurrentUser() { profileId }: User,
+  ): Promise<UpdateProfilePayload> {
+    const profile = await profileService.claimBadgeProfile(profileId);
+    return { profile: profile };
+  }
+
   @Mutation(() => FollowProfilePayload)
   @Authorized()
   async followProfile(

@@ -5,6 +5,7 @@ import { NotFoundError } from '../errors/NotFoundError';
 import { FollowModel } from '../models/Follow';
 import { Profile, ProfileModel } from '../models/Profile';
 import { UserModel } from '../models/User';
+import { Badge } from '../types/Badge';
 import { Context } from '../types/Context';
 import { PageInput } from '../types/PageInput';
 import { SortOrder } from '../types/SortOrder';
@@ -67,6 +68,20 @@ export class ProfileService extends ModelService<typeof Profile> {
 
     if (!updatedProfile) {
       throw new Error(`Could not update the profile with id: ${id}`);
+    }
+
+    return updatedProfile;
+  }
+
+  async claimBadgeProfile(profileId: string): Promise<Profile> {
+    const updatedProfile = await ProfileModel.findByIdAndUpdate(
+      profileId,
+      { badges: [Badge.SUPPORTER_FIRST_EVENT_AE_SC] },
+      { new: true },
+    );
+
+    if (!updatedProfile) {
+      throw new Error(`Could not update the profile with id: ${profileId}`);
     }
 
     return updatedProfile;

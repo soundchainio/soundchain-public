@@ -10,5 +10,6 @@ fragment CommentComponentFields on Comment {
     verified
     teamMember
     userHandle
+    badges
   }
 }

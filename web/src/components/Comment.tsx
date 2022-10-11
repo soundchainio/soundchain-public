@@ -43,6 +43,7 @@ export const Comment = ({ commentId }: CommentProps) => {
                 name={comment.profile.displayName}
                 verified={comment.profile.verified}
                 teamMember={comment.profile.teamMember}
+                badges={comment.profile.badges}
               />
             </NextLink>
             <Timestamp className="flex-1" datetime={comment.createdAt} />

@@ -70,10 +70,10 @@ export const Posts = ({ profileId }: PostsProps) => {
   const isItemLoaded = (index: number) => !pageInfo.hasNextPage || index < nodes.length
   const postsCount = pageInfo.hasNextPage ? nodes.length + 1 : nodes.length
 
-  const handleOnPlayClicked = (index: number) => {
+  const handleOnPlayClicked = (trackId: string) => {
     if (nodes) {
       const listOfTracks = (nodes as PostType[])
-        .filter(post => post.track)
+        .filter(post => post.track && post.track.deleted === false)
         .map(post => {
           if (post.track) {
             return {
@@ -86,7 +86,8 @@ export const Posts = ({ profileId }: PostsProps) => {
             }
           }
         }) as Song[]
-      playlistState(listOfTracks, index)
+      const trackIndex = listOfTracks.findIndex(track => track.trackId === trackId)
+      playlistState(listOfTracks, trackIndex)
     }
   }
 
@@ -138,7 +139,7 @@ interface RowProps {
   data: PostType[]
   index: number
   setSize: (index: number, height?: number) => void
-  handleOnPlayClicked: (index: number) => void
+  handleOnPlayClicked: (trackId: string) => void
 }
 
 const Row = ({ data, index, setSize, handleOnPlayClicked }: RowProps) => {
@@ -156,7 +157,7 @@ const Row = ({ data, index, setSize, handleOnPlayClicked }: RowProps) => {
 
   return (
     <div ref={rowRef}>
-      <Post key={data[index].id} post={data[index]} handleOnPlayClicked={() => handleOnPlayClicked(index)} />
+      <Post key={data[index].id} post={data[index]} handleOnPlayClicked={handleOnPlayClicked} />
     </div>
   )
 }

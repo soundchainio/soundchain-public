@@ -31,12 +31,13 @@ import 'styles/volume-slider.css'
 const WalletProvider = dynamic(import('hooks/useWalletContext'))
 const MagicProvider = dynamic(import('hooks/useMagicContext'))
 
-Sentry.init({
-  dsn: config.sentryUrl,
-  integrations: [new Integrations.BrowserTracing()],
-  tracesSampleRate: 1.0,
-  environment: `${process.env.NEXT_PUBLIC_VERCEL_ENV}`,
-})
+if (process.env.NEXT_PUBLIC_VERCEL_ENV !== 'development')
+  Sentry.init({
+    dsn: config.sentryUrl,
+    integrations: [new Integrations.BrowserTracing()],
+    tracesSampleRate: 1.0,
+    environment: `${process.env.NEXT_PUBLIC_VERCEL_ENV}`,
+  })
 
 NProgress.configure({
   showSpinner: false,
@@ -80,7 +81,7 @@ function SoundchainMainLayout({ Component, pageProps }: CustomAppProps) {
 function SoundchainPageLayout({ Component, pageProps }: CustomAppProps) {
   if (!Component.getLayout) return <></>
 
-  return Component.getLayout(<Component {...pageProps} />)
+  return <ApolloProvider pageProps={pageProps}>{Component.getLayout(<Component {...pageProps} />)}</ApolloProvider>
 }
 
 function SoundchainApp({ Component, pageProps }: CustomAppProps) {

@@ -1,6 +1,5 @@
 import { RefreshIcon } from '@heroicons/react/solid'
-import { usePostQuery } from 'lib/graphql'
-import React from 'react'
+import { Track, usePostQuery } from 'lib/graphql'
 import { Avatar } from './Avatar'
 import { DisplayName } from './DisplayName'
 import { MiniAudioPlayer } from './MiniAudioPlayer'
@@ -10,9 +9,10 @@ import { Timestamp } from './Timestamp'
 
 interface RepostPreviewProps {
   postId: string
+  handleOnPlayClicked?: (trackId: string) => void
 }
 
-export const RepostPreview = ({ postId }: RepostPreviewProps) => {
+export const RepostPreview = ({ postId, handleOnPlayClicked = () => null }: RepostPreviewProps) => {
   const { data } = usePostQuery({ variables: { id: postId } })
   const post = data?.post
 
@@ -34,6 +34,7 @@ export const RepostPreview = ({ postId }: RepostPreviewProps) => {
                 name={post.profile.displayName}
                 verified={post.profile.verified}
                 teamMember={post.profile.teamMember}
+                badges={post.profile.badges}
               />
               <Timestamp datetime={post.createdAt} className="flex-1 text-right text-gray-60" />
             </div>
@@ -61,6 +62,7 @@ export const RepostPreview = ({ postId }: RepostPreviewProps) => {
                   saleType: post.track.saleType,
                   price: post.track.price,
                 }}
+                handleOnPlayClicked={() => handleOnPlayClicked((post.track as Track).id)}
               />
             )}
             {post.track?.deleted && <NotAvailableMessage type="track" />}
