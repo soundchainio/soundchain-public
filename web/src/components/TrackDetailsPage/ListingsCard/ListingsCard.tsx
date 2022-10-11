@@ -1,13 +1,13 @@
 import { Table, Row, Header } from 'components/common/Table'
 import { TrackQuery, useBuyNowListingItemsQuery } from 'lib/graphql'
 import { SaleType } from 'types/SaleType'
-import { MdKeyboardArrowUp } from 'react-icons/md'
 import tw from 'tailwind-styled-components'
 import { isPendingRequest } from 'utils/isPendingRequest'
 import { ListingItem } from './ListingsItem'
 import { useEffect, useState } from 'react'
 import { useModalDispatch } from 'contexts/providers/modal'
 import { useIsMobile } from 'hooks/useIsMobile'
+import { Accordion } from 'components/common'
 interface ListingsCardProps {
   track: TrackQuery['track']
 }
@@ -58,12 +58,7 @@ export const ListingsCard = (props: ListingsCardProps) => {
   if (loading) return null
 
   return (
-    <Container>
-      <TitleContainer>
-        <Title>Listed Tracks</Title>
-        <MdKeyboardArrowUp size={45} color="white" />
-      </TitleContainer>
-
+    <Accordion title="Listed Tracks">
       {nodes && nodes.length > 0 ? (
         <Table>
           <Row>
@@ -104,32 +99,10 @@ export const ListingsCard = (props: ListingsCardProps) => {
       {!shouldDisableButton && <Button onClick={loadMore}>LOAD MORE</Button>}
 
       {nodes && nodes.length > 0 && <Button onClick={handleUnlistAll}>Unlist All</Button>}
-    </Container>
+    </Accordion>
   )
 }
 
-const Container = tw.div`
-  min-w-[320px] 
-  max-w-[350px]
-  rounded-xl 
-  bg-[#19191A] 
-  p-6
-  w-full
-  sm:max-w-[800px]
-  mb-10
-`
-const TitleContainer = tw.div`
-  flex 
-  items-center 
-  justify-between
-  w-full
-`
-
-const Title = tw.h3`
-  text-xl 
-  font-bold 
-  text-white
-`
 const Paragraph = tw.p`
   text-lg
   text-neutral-400

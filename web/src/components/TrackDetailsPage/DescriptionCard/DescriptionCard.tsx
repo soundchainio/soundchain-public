@@ -1,6 +1,5 @@
 import { ProfileWithAvatar } from 'components/ProfileWithAvatar'
 import { TrackQuery, useProfileLazyQuery } from 'lib/graphql'
-import { MdKeyboardArrowUp } from 'react-icons/md'
 import { useEffect } from 'react'
 import tw from 'tailwind-styled-components'
 import { Divider } from 'components/common'
@@ -26,7 +25,6 @@ export const DescriptionCard = (props: Props) => {
     <Container>
       <TitleContainer>
         <Title>Description</Title>
-        <MdKeyboardArrowUp size={45} color="white" />
       </TitleContainer>
 
       <Divider />

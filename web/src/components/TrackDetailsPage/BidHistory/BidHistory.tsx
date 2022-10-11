@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import { Matic as MaticIcon } from 'icons/Matic'
 import tw from 'tailwind-styled-components'
 import { ProfileWithAvatar } from 'components/ProfileWithAvatar'
+import { Accordion } from 'components/common'
 
 interface BidHistoryProps {
   track: TrackQuery['track']
@@ -29,7 +30,7 @@ export const BidHistory = (props: BidHistoryProps) => {
   if (!bids) return null
 
   return (
-    <Container>
+    <Accordion title="Bids">
       <TitleContainer>
         <H3>Bidder</H3>
         <H3>Amount</H3>
@@ -43,19 +44,9 @@ export const BidHistory = (props: BidHistoryProps) => {
           </div>
         </div>
       ))}
-    </Container>
+    </Accordion>
   )
 }
-
-const Container = tw.div`
-  min-w-[320px] 
-  max-w-[350px]
-  rounded-xl 
-  bg-[#19191A] 
-  p-6
-  w-full
-  sm:max-w-[800px]
-`
 
 const TitleContainer = tw.div`
   flex
