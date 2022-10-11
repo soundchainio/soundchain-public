@@ -247,26 +247,20 @@ export const cacheConfig: InMemoryCacheConfig = {
           keyArgs: ['sort'],
           merge(existing = { nodes: [] }, { nodes, pageInfo }): ListingItemConnection {
             return {
-              nodes: [...existing.nodes, ...nodes],
+              nodes: existing.nodes.concat(
+                nodes.filter(incomingNode => !existing.nodes.find(existingNode => existingNode.id == incomingNode.id)),
+              ),
               pageInfo,
             }
           },
         },
         buyNowListingItems: {
           keyArgs: ['filter'],
-          // merge(existing = { nodes: [] }, { nodes, pageInfo }): ListingItemConnection {
-          //   return {
-          //     nodes: [...existing.nodes, ...nodes],
-          //     pageInfo,
-          //   }
-          // },
-          merge(existing = { nodes: [] }, { nodes, pageInfo }, { readField }): ListingItemConnection {
-            const merged = { ...existing.nodes }
-            merged.nodes.forEach(item => {
-              merged[readField('id', item)] = item
-            })
+          merge(existing = { nodes: [] }, { nodes, pageInfo }): ListingItemConnection {
             return {
-              nodes: merged,
+              nodes: existing.nodes.concat(
+                nodes.filter(incomingNode => !existing.nodes.find(existingNode => existingNode.id == incomingNode.id)),
+              ),
               pageInfo,
             }
           },

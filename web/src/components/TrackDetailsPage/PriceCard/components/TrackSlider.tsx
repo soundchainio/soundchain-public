@@ -44,6 +44,7 @@ const Container = tw.div`
   w-full
   items-center
   hidden
+  mb-6
 
   xl:flex
 `

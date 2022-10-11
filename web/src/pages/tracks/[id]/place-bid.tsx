@@ -94,6 +94,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
   const { data: { auctionItem } = {} } = useAuctionItemQuery({
     variables: { tokenId },
   })
+
   const [fetchHaveBided, { data: haveBided, refetch: refetchHaveBided }] = useHaveBidedLazyQuery({
     fetchPolicy: 'network-only',
   })

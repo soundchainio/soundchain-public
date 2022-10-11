@@ -36,6 +36,7 @@ export const PriceCard = (props: Props) => {
   const isOgunPrice = track.price.currency === CurrencyType.Ogun
   const isMaticPrice = track.price.currency === CurrencyType.Matic
   const isUnlisted = !track.saleType
+  const isMultipleEdition = track.editionSize > 1
 
   const song: Song = {
     trackId: track.id,
@@ -69,7 +70,7 @@ export const PriceCard = (props: Props) => {
 
       {isAuction && <Auction track={track} />}
 
-      {isUnlisted && (
+      {isUnlisted && !isMultipleEdition && (
         <>
           <PriceContainer>
             <Link href={`${track.id}/list`}>
@@ -97,7 +98,7 @@ const Container = tw.div`
   flex-col 
   items-center 
   justify-center 
-  gap-8 
+  gap-2
   rounded-xl 
   bg-[#19191A] 
   p-6

@@ -16,7 +16,6 @@ import {
   OwnedEditionListCard,
   DesktopTrackCard,
 } from 'components/TrackDetailsPage'
-import { useState } from 'react'
 export interface TrackPageProps {
   track: TrackQuery['track']
 }
@@ -30,8 +29,6 @@ export default function TrackPage({ track }: TrackPageProps) {
     track.releaseYear != null ? `${track.releaseYear}.` : ''
   }`
 
-  const [shouldRefresh, setShouldRefresh] = useState(false)
-
   return (
     <>
       <SEO title={title} description={description} canonicalUrl={`/tracks/${track.id}`} image={track.artworkUrl} />
@@ -40,12 +37,8 @@ export default function TrackPage({ track }: TrackPageProps) {
         <PriceCard track={track} />
         <DescriptionCard track={track} />
         <TrackDetailsCard track={track} />
-        {track.editionSize > 1 && (
-          <OwnedEditionListCard track={track} shouldRefresh={shouldRefresh} setShouldRefresh={setShouldRefresh} />
-        )}
-        {track.editionSize > 1 && (
-          <ListingsCard track={track} shouldRefresh={shouldRefresh} setShouldRefresh={setShouldRefresh} />
-        )}
+        {track.editionSize > 1 && <OwnedEditionListCard track={track} />}
+        {track.editionSize > 1 && <ListingsCard track={track} />}
       </Container>
     </>
   )

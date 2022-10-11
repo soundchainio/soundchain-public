@@ -18,15 +18,12 @@ import { useMe } from 'hooks/useMe'
 import { useModalDispatch } from 'contexts/providers/modal'
 import { AuthorActionsType } from 'types/AuthorActionsType'
 import { isPendingRequest } from 'utils/isPendingRequest'
-import { Dispatch, SetStateAction, useEffect } from 'react'
 interface OwnedEditionItemProps {
   ownedTrack: TrackWithListingItem
-  setShouldRefresh: Dispatch<SetStateAction<boolean>>
 }
 
 export const OwnedEditionItem = (props: OwnedEditionItemProps) => {
   const { id, nftData, listingItem: isListed, trackEdition } = props.ownedTrack
-  const { setShouldRefresh } = props
 
   const me = useMe()
   const { dispatchShowAuthorActionsModal } = useModalDispatch()
@@ -34,12 +31,6 @@ export const OwnedEditionItem = (props: OwnedEditionItemProps) => {
 
   const isProcessing =
     isPendingRequest(nftData?.pendingRequest) || isPendingRequest(trackEdition?.editionData?.pendingRequest)
-
-  useEffect(() => {
-    if (!isProcessing) return
-
-    setShouldRefresh(true)
-  }, [isProcessing, setShouldRefresh])
 
   return (
     <>
