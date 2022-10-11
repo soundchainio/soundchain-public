@@ -9,6 +9,7 @@ query Reactions($postId: String!, $page: PageInput) {
         displayName
         profilePicture
         verified
+        badges
       }
     }
     pageInfo {

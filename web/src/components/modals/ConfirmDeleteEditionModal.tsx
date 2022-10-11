@@ -103,11 +103,8 @@ export const ConfirmDeleteEditionModal = () => {
       handleClose()
       router.push('/wallet')
       toast.success('Editions successfully deleted')
+      setLoading(false)
     }
-  }
-
-  const handleSubmit = () => {
-    handleDeleteOnly()
   }
 
   return (
@@ -136,7 +133,7 @@ export const ConfirmDeleteEditionModal = () => {
             </div>
           </div>
         </div>
-        <Button variant="approve" type="button" loading={loading} onClick={handleSubmit} disabled={disabled}>
+        <Button variant="approve" type="button" loading={loading} onClick={handleDeleteOnly} disabled={disabled}>
           Delete Edition
         </Button>
       </div>

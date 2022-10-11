@@ -115,6 +115,7 @@ export default function RequestPage({ data }: RequestPageProps) {
                     name={profile.profile.displayName}
                     verified={profile.profile.verified}
                     teamMember={profile.profile.teamMember}
+                    badges={profile.profile.badges}
                   />
                   <p className="text-sm text-gray-80">@{profile.profile.userHandle}</p>
                 </div>

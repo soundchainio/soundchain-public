@@ -6,6 +6,7 @@ import { NotAvailableMessage } from 'components/NotAvailableMessage'
 import { Post } from 'components/Post'
 import SEO from 'components/SEO'
 import { TopNavBarProps } from 'components/TopNavBar'
+import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { useLayoutContext } from 'hooks/useLayoutContext'
 import { useMe } from 'hooks/useMe'
 import { cacheFor, createApolloClient } from 'lib/apollo'
@@ -47,6 +48,7 @@ export const getServerSideProps: GetServerSideProps<PostPageProps, PostPageParam
 export default function PostPage({ post }: PostPageProps) {
   const { data: repostData } = usePostQuery({ variables: { id: post.repostId || '' }, skip: !post.repostId })
   const { setTopNavBarProps } = useLayoutContext()
+  const { playlistState } = useAudioPlayerContext()
   const me = useMe()
 
   const deleted = post.deleted
@@ -72,6 +74,24 @@ export default function PostPage({ post }: PostPageProps) {
     setTopNavBarProps(topNavBarProps)
   }, [setTopNavBarProps, topNavBarProps])
 
+  const handleOnPlayClicked = () => {
+    if (track) {
+      playlistState(
+        [
+          {
+            src: track.playbackUrl,
+            trackId: track.id,
+            art: track.artworkUrl,
+            title: track.title,
+            artist: track.artist,
+            isFavorite: track.isFavorite,
+          },
+        ] as Song[],
+        0,
+      )
+    }
+  }
+
   return (
     <>
       <SEO title={title} canonicalUrl={`/posts/${post.id}/`} description={description} image={track?.artworkUrl} />
@@ -79,7 +99,7 @@ export default function PostPage({ post }: PostPageProps) {
         <NotAvailableMessage type="post" />
       ) : (
         <div>
-          <Post post={post} />
+          <Post post={post} handleOnPlayClicked={handleOnPlayClicked} />
           <div className="pb-12">
             <Comments postId={post.id} />
           </div>

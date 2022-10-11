@@ -1,13 +1,13 @@
 import { ProfileListItemSkeleton } from 'components/ProfileListItemSkeleton'
 import { Profile } from 'lib/graphql'
-import { Avatar } from '../../../Avatar'
-import { DisplayName } from '../../../DisplayName'
 import NextLink from 'next/link'
-import { FollowButton } from '../../../FollowButton'
-import { SubscribeButton } from '../../../SubscribeButton'
-import { MessageButton } from '../../../MessageButton'
 import ReactTooltip from 'react-tooltip'
 import { limitTextToNumberOfCharacters } from 'utils/format'
+import { Avatar } from '../../../Avatar'
+import { DisplayName } from '../../../DisplayName'
+import { FollowButton } from '../../../FollowButton'
+import { MessageButton } from '../../../MessageButton'
+import { SubscribeButton } from '../../../SubscribeButton'
 
 interface ProfileListItemProps {
   profile: Profile
@@ -79,6 +79,7 @@ export const ProfileGridItem = ({ profile }: ProfileListItemProps) => {
                   teamMember={profile.teamMember}
                   className="text-md lg:text-base"
                   maxNumberOfCharacters={10}
+                  badges={profile.badges}
                 />
               </a>
             </NextLink>

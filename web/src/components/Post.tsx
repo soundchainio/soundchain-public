@@ -1,7 +1,7 @@
 import { useModalDispatch } from 'contexts/providers/modal'
 import { useMe } from 'hooks/useMe'
 import { Ellipsis } from 'icons/Ellipsis'
-import { PostQuery, Role } from 'lib/graphql'
+import { PostQuery, Role, Track } from 'lib/graphql'
 import NextLink from 'next/link'
 import { AddLinks } from 'react-link-text'
 import ReactPlayer from 'react-player'
@@ -19,7 +19,7 @@ import { Timestamp } from './Timestamp'
 
 interface PostProps {
   post: PostQuery['post']
-  handleOnPlayClicked?: () => void
+  handleOnPlayClicked: (trackId: string) => void
 }
 
 export const Post = ({ post, handleOnPlayClicked }: PostProps) => {
@@ -56,6 +56,7 @@ export const Post = ({ post, handleOnPlayClicked }: PostProps) => {
                     name={post.profile.displayName}
                     verified={post.profile.verified}
                     teamMember={post.profile.teamMember}
+                    badges={post.profile.badges}
                   />
                 </a>
               </NextLink>
@@ -100,7 +101,7 @@ export const Post = ({ post, handleOnPlayClicked }: PostProps) => {
               title="Media"
             />
           ))}
-        {post.repostId && <RepostPreview postId={post.repostId} />}
+        {post.repostId && <RepostPreview postId={post.repostId} handleOnPlayClicked={handleOnPlayClicked} />}
         {post.track && !post.track.deleted && (
           <div className="mt-4 w-full">
             <MiniAudioPlayer
@@ -116,7 +117,7 @@ export const Post = ({ post, handleOnPlayClicked }: PostProps) => {
                 saleType: post.track.saleType,
                 price: post.track.price,
               }}
-              handleOnPlayClicked={handleOnPlayClicked}
+              handleOnPlayClicked={() => handleOnPlayClicked((post.track as Track).id)}
             />
           </div>
         )}
