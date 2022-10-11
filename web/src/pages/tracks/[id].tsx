@@ -15,6 +15,7 @@ import {
   ListingsCard,
   OwnedEditionListCard,
   DesktopTrackCard,
+  BidHistory,
 } from 'components/TrackDetailsPage'
 export interface TrackPageProps {
   track: TrackQuery['track']
@@ -35,6 +36,7 @@ export default function TrackPage({ track }: TrackPageProps) {
       <Container>
         {isMobile ? <MobileTrackCard me={me} track={track} /> : <DesktopTrackCard me={me} track={track} />}
         <PriceCard track={track} />
+        <BidHistory track={track} />
         <DescriptionCard track={track} />
         <TrackDetailsCard track={track} />
         {track.editionSize > 1 && <OwnedEditionListCard track={track} />}

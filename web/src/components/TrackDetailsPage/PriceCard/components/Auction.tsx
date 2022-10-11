@@ -56,6 +56,7 @@ export const Auction = (props: AuctionProps) => {
   const futureSale = startingDate ? startingDate.getTime() > new Date().getTime() : false
   const bidCount = countBids?.countBids.numberOfBids ?? 0
   const canEditAuction = isOwner && !isAuctionOver && bidCount === 0
+  const canCancel = isOwner && bidCount === 0
 
   useEffect(() => {
     if (!web3 || !tokenId || !getHighestBid || highestBid.bidder != undefined || !track.trackEdition) {
@@ -95,6 +96,8 @@ export const Auction = (props: AuctionProps) => {
       },
     })
   }, [highestBid.bidder, fetchHighestBidder])
+
+  if (!isOwner || !auctionItem || !countBids || !highestBidderData) return null
 
   return (
     <>
@@ -177,7 +180,7 @@ export const Auction = (props: AuctionProps) => {
             </Link>
           )}
 
-          {isOwner && (
+          {canCancel && (
             <Link href={`/tracks/${track.id}/cancel-auction`}>
               <a className="mt-2 w-full">
                 <Button variant="rainbow">
@@ -192,7 +195,7 @@ export const Auction = (props: AuctionProps) => {
           <Divider />
 
           {!isAuctionOver && (
-            <div className="my-2 flex flex-wrap items-center justify-between md:gap-6">
+            <AuctionPricingContainer>
               <PriceContainer>
                 <span className="flex items-center">
                   <Price>{startPrice}</Price>
@@ -216,7 +219,7 @@ export const Auction = (props: AuctionProps) => {
                 </Price>
                 <PriceTitle>Royalties</PriceTitle>
               </PriceContainer>
-            </div>
+            </AuctionPricingContainer>
           )}
         </div>
       </Container>
@@ -273,6 +276,17 @@ const HighestBid = tw.span`
   text-sm 
   text-neutral-400
 `
+
+const AuctionPricingContainer = tw.div`
+  my-2 
+  flex 
+  flex-wrap 
+  items-center 
+  justify-between 
+
+  md:gap-6
+`
+
 const PriceContainer = tw.div`
   flex 
   items-center
