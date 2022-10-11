@@ -8,16 +8,14 @@ import { MdKeyboardArrowUp } from 'react-icons/md'
 import { Button } from 'components/Buttons/Button'
 import { OwnedEditionItem } from './OwnedEditionItem'
 import { useRouter } from 'next/router'
-import { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 interface OwnedEditionListCardProps {
   track: TrackQuery['track']
-  setShouldRefresh: Dispatch<SetStateAction<boolean>>
-  shouldRefresh: boolean
 }
 
 export const OwnedEditionListCard = (props: OwnedEditionListCardProps) => {
-  const { track, setShouldRefresh, shouldRefresh } = props
+  const { track } = props
 
   const [numberOfPages, setNumberOfPages] = useState(5)
 
@@ -60,18 +58,6 @@ export const OwnedEditionListCard = (props: OwnedEditionListCardProps) => {
     setNumberOfPages(prevState => prevState + 5)
   }
 
-  // useEffect(() => {
-  //   if (!shouldRefresh) return
-
-  //   const interval = setInterval(() => {
-  //     console.log('refech')
-  //     refetch()
-  //     setShouldRefresh(true)
-  //   }, 10 * 1000)
-
-  //   return () => clearInterval(interval)
-  // }, [refetch, setShouldRefresh, shouldRefresh])
-
   useEffect(() => {
     refetch()
   }, [numberOfPages, refetch])
@@ -110,7 +96,7 @@ export const OwnedEditionListCard = (props: OwnedEditionListCardProps) => {
               <Row key={ownedTrack.id}>
                 <Cell>#{ownedTrack.trackEdition?.editionId}</Cell>
                 <Cell>
-                  <OwnedEditionItem key={ownedTrack.id} ownedTrack={ownedTrack} setShouldRefresh={setShouldRefresh} />
+                  <OwnedEditionItem key={ownedTrack.id} ownedTrack={ownedTrack} />
                 </Cell>
               </Row>
             )

@@ -5,17 +5,15 @@ import { MdKeyboardArrowUp } from 'react-icons/md'
 import tw from 'tailwind-styled-components'
 import { isPendingRequest } from 'utils/isPendingRequest'
 import { ListingItem } from './ListingsItem'
-import { Dispatch, SetStateAction, useEffect, useState } from 'react'
-import { useModalDispatch, useModalState } from 'contexts/providers/modal'
+import { useEffect, useState } from 'react'
+import { useModalDispatch } from 'contexts/providers/modal'
 import { useIsMobile } from 'hooks/useIsMobile'
 interface ListingsCardProps {
   track: TrackQuery['track']
-  setShouldRefresh: Dispatch<SetStateAction<boolean>>
-  shouldRefresh: boolean
 }
 
 export const ListingsCard = (props: ListingsCardProps) => {
-  const { track, setShouldRefresh, shouldRefresh } = props
+  const { track } = props
 
   const isMobile = useIsMobile(639)
 
@@ -39,14 +37,6 @@ export const ListingsCard = (props: ListingsCardProps) => {
   const loadMore = () => {
     setNumberOfPages(prevState => prevState + 5)
   }
-
-  // useEffect(() => {
-  //   if (!shouldRefresh) return
-
-  //   console.log('refresh listed cards')
-  //   refetch()
-  //   setShouldRefresh(false)
-  // }, [refetch, setShouldRefresh, shouldRefresh])
 
   useEffect(() => {
     refetch()
