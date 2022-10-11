@@ -7,6 +7,7 @@ import { DescriptionCard } from './DescriptionCard/DescriptionCard'
 import { TrackDetailsCard } from './TrackDetailsCard/TrackDetailsCard'
 import { ListingsCard } from './ListingsCard/ListingsCard'
 import { OwnedEditionListCard } from './OwnedEditionListCard/OwnedEditionListCard'
+import { BidHistory } from './BidHistory/BidHistory'
 
 export {
   MobileTrackCard,
@@ -18,4 +19,5 @@ export {
   ListingsCard,
   OwnedEditionListCard,
   DesktopTrackCard,
+  BidHistory,
 }
