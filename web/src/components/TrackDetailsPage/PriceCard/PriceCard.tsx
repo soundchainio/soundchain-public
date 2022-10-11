@@ -12,7 +12,7 @@ import { TrackSlider } from './components/TrackSlider'
 import { Song } from 'hooks/useAudioPlayer'
 import { Button } from 'components/Buttons/Button'
 import { Auction } from './components/Auction'
-
+import { useTokenOwner } from 'hooks/useTokenOwner'
 interface Props {
   track: TrackQuery['track']
 }
@@ -30,6 +30,7 @@ enum CurrencyType {
 export const PriceCard = (props: Props) => {
   const { track } = props
 
+  const { isOwner } = useTokenOwner(track?.nftData?.tokenId, track?.nftData?.contract)
   const isBuyNow = track.saleType === SaleType.BuyNow
   const isAuction = track.saleType === SaleType.Auction
   const price = track.price.value
@@ -58,11 +59,23 @@ export const PriceCard = (props: Props) => {
               {isMaticPrice && <Matic value={price} variant="currency-inline" className="text-xs" />}
               {isOgunPrice && <Ogun value={price} variant="currency" className="text-xs" showBonus />}
             </span>
-            <Link href={`${track.id}/buy-now`}>
-              <Button variant="rainbow">
-                <span className="p-4">BUY NOW</span>
-              </Button>
-            </Link>
+            {isOwner ? (
+              <Link href={`${track.id}/edit/buy-now`}>
+                <a>
+                  <Button variant="list-nft" className="w-[170px]">
+                    <span className="py-4">EDIT</span>
+                  </Button>
+                </a>
+              </Link>
+            ) : (
+              <Link href={`${track.id}/buy-now`}>
+                <a>
+                  <Button variant="rainbow">
+                    <span className="p-4">BUY NOW</span>
+                  </Button>
+                </a>
+              </Link>
+            )}
           </PriceContainer>
           <Divider />
         </>
@@ -91,16 +104,16 @@ export const PriceCard = (props: Props) => {
 }
 
 const Container = tw.div`
-  flex 
-  min-w-[320px] 
+  flex
+  min-w-[320px]
   max-w-[350px]
   sm:max-w-[800px]
-  flex-col 
-  items-center 
-  justify-center 
+  flex-col
+  items-center
+  justify-center
   gap-2
-  rounded-xl 
-  bg-[#19191A] 
+  rounded-xl
+  bg-[#19191A]
   p-6
   w-full
 `
@@ -110,6 +123,8 @@ const PriceContainer = tw.div`
   items-start 
   justify-between
   w-full
+  mt-2
+  mb-6
 `
 const ButtonTitle = tw.span`
   text-sm 

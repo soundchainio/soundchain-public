@@ -1,7 +1,6 @@
 import useBlockchain from 'hooks/useBlockchain'
 import { useWalletContext } from 'hooks/useWalletContext'
 import { TrackQuery, PendingRequest } from 'lib/graphql'
-import { MdKeyboardArrowUp } from 'react-icons/md'
 import { useState, useEffect } from 'react'
 import { config } from 'config'
 import { Pinata } from 'icons/Pinata'
@@ -10,7 +9,7 @@ import tw from 'tailwind-styled-components'
 import { ChainLink } from 'icons/ChainLink'
 import { Badges } from 'components/common'
 import { getGenreLabelByKey } from 'utils/Genres'
-import { Table, Row, Cell } from 'components/common/Table'
+import { Table, Row, Cell, Accordion } from 'components/common'
 
 interface TrackDetailsCardProps {
   track: TrackQuery['track']
@@ -49,12 +48,7 @@ export const TrackDetailsCard = (props: TrackDetailsCardProps) => {
   if (!props.track) return null
 
   return (
-    <Container>
-      <TitleContainer>
-        <Title>Track Details</Title>
-        <MdKeyboardArrowUp size={45} color="white" />
-      </TitleContainer>
-
+    <Accordion title="Track Details">
       <Table>
         <Row>
           <Cell $bgDark $roundedTopLeft>
@@ -129,31 +123,9 @@ export const TrackDetailsCard = (props: TrackDetailsCardProps) => {
           </Cell>
         </Row>
       </Table>
-    </Container>
+    </Accordion>
   )
 }
-
-const Container = tw.div`
-  min-w-[320px] 
-  max-w-[350px]
-  rounded-xl 
-  bg-[#19191A] 
-  p-6
-  w-full
-  sm:max-w-[800px]
-`
-const TitleContainer = tw.div`
-  flex 
-  items-center 
-  justify-between
-  w-full
-`
-
-const Title = tw.h3`
-  text-xl 
-  font-bold 
-  text-white
-`
 
 const Overflow = tw.div`
   flex

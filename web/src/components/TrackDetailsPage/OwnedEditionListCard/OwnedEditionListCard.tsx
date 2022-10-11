@@ -1,10 +1,9 @@
 import tw from 'tailwind-styled-components'
 import Link from 'next/link'
-import { Table, Row, Cell, Header } from 'components/common/Table'
+import { Table, Row, Cell, Header, Accordion } from 'components/common'
 import { useMe } from 'hooks/useMe'
 import { useWalletContext } from 'hooks/useWalletContext'
 import { TrackQuery, TrackWithListingItem, useOwnedTracksQuery } from 'lib/graphql'
-import { MdKeyboardArrowUp } from 'react-icons/md'
 import { Button } from 'components/Buttons/Button'
 import { OwnedEditionItem } from './OwnedEditionItem'
 import { useRouter } from 'next/router'
@@ -65,15 +64,14 @@ export const OwnedEditionListCard = (props: OwnedEditionListCardProps) => {
   if (loading || !ownedTracks || ownedTracks.length <= 0) return null
 
   return (
-    <Container>
-      <TitleContainer>
-        <Title>
+    <Accordion
+      title={
+        <>
           Unlisted Tracks
           <span className="text-md font-thin text-neutral-400 ">{ownedTracks && ` (${ownedTracks.length})`}</span>
-        </Title>
-        <MdKeyboardArrowUp size={45} color="white" />
-      </TitleContainer>
-
+        </>
+      }
+    >
       {!account && (
         <Paragraph>
           Log in to your Metamask or Soundchain
@@ -118,43 +116,22 @@ export const OwnedEditionListCard = (props: OwnedEditionListCardProps) => {
       )}
 
       {canList && (
-        <div className="mt-6 flex w-full items-center justify-center">
+        <CanListContainer>
           <Link href={`${router.query.id}/list/buy-now-edition`}>
             <a>
               <ButtonTitle>LIST ALL</ButtonTitle>
             </a>
           </Link>
-        </div>
+        </CanListContainer>
       )}
 
       <LoadMoreButton onClick={loadMore} disabled={shouldDisableButton}>
         LOAD MORE
       </LoadMoreButton>
-    </Container>
+    </Accordion>
   )
 }
 
-const Container = tw.div`
-  min-w-[320px] 
-  max-w-[350px]
-  rounded-xl 
-  bg-[#19191A] 
-  p-6
-  w-full
-  sm:max-w-[800px]
-`
-const TitleContainer = tw.div`
-  flex 
-  items-center 
-  justify-between
-  w-full
-`
-
-const Title = tw.h3`
-  text-xl 
-  font-bold 
-  text-white
-`
 const Paragraph = tw.p`
   text-lg
   text-neutral-400
@@ -184,4 +161,11 @@ const LoadMoreButton = tw.button`
   mt-6
 
   hover:text-blue-300
+`
+const CanListContainer = tw.div`
+  mt-6 
+  flex
+  w-full 
+  items-center 
+  justify-center
 `
