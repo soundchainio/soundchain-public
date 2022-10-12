@@ -1,14 +1,16 @@
+import { Bell } from 'icons/Bell'
 import { Logo } from 'icons/Logo'
 import { getJwt } from 'lib/apollo'
 import { useMeQuery } from 'lib/graphql'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
+import { Avatar } from './Avatar'
 import { Button } from './Button'
 import { NavBar } from './NavBar'
+import { NotificationBadge } from './NotificationBadge'
 import { Title } from './Title'
 import { TopNavBarButton } from './TopNavBarButton'
-import { Avatar } from './Avatar'
 
 export interface TopNavBarProps {
   setSideMenuOpen?: (open: boolean) => void
@@ -104,11 +106,18 @@ export const TopNavBar = ({
               )}
             </div>
             {me && (
-              <TopNavBarButton
-                icon={({}) => <Avatar linkToProfile={false} profile={{ profilePicture: me?.profile.profilePicture }} />}
-                label=""
-                onClick={() => setSideMenuOpen && setSideMenuOpen(true)}
-              />
+              <>
+                <div className="pr-1 pt-2">
+                  <TopNavBarButton path={'/notifications'} icon={Bell} label="" badge={NotificationBadge} />
+                </div>
+                <TopNavBarButton
+                  icon={({}) => (
+                    <Avatar linkToProfile={false} profile={{ profilePicture: me?.profile.profilePicture }} />
+                  )}
+                  label=""
+                  onClick={() => setSideMenuOpen && setSideMenuOpen(true)}
+                />
+              </>
             )}
           </div>
         </div>
