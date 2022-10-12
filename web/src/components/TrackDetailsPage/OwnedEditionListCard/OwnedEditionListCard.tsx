@@ -16,7 +16,7 @@ interface OwnedEditionListCardProps {
 export const OwnedEditionListCard = (props: OwnedEditionListCardProps) => {
   const { track } = props
 
-  const [numberOfPages, setNumberOfPages] = useState(5)
+  const [numberOfPages, setNumberOfPages] = useState(10)
 
   const router = useRouter()
   const me = useMe()
@@ -31,7 +31,7 @@ export const OwnedEditionListCard = (props: OwnedEditionListCardProps) => {
       },
     },
     skip: !track.trackEditionId || !account,
-    pollInterval: 10000,
+    pollInterval: 500,
     ssr: false,
   })
 
@@ -64,14 +64,7 @@ export const OwnedEditionListCard = (props: OwnedEditionListCardProps) => {
   if (loading || !ownedTracks || ownedTracks.length <= 0) return null
 
   return (
-    <Accordion
-      title={
-        <>
-          Unlisted Tracks
-          <span className="text-md font-thin text-neutral-400 ">{ownedTracks && ` (${ownedTracks.length})`}</span>
-        </>
-      }
-    >
+    <Accordion title="Unlisted Tracks">
       {!account && (
         <Paragraph>
           Log in to your Metamask or Soundchain

@@ -13,6 +13,7 @@ import { Song } from 'hooks/useAudioPlayer'
 import { Button } from 'components/Buttons/Button'
 import { Auction } from './components/Auction'
 import { useTokenOwner } from 'hooks/useTokenOwner'
+import { isPendingRequest } from 'utils/isPendingRequest'
 interface Props {
   track: TrackQuery['track']
 }
@@ -38,6 +39,8 @@ export const PriceCard = (props: Props) => {
   const isMaticPrice = track.price.currency === CurrencyType.Matic
   const isUnlisted = !track.saleType
   const isMultipleEdition = track.editionSize > 1
+  const isProcessing =
+    isPendingRequest(track.nftData?.pendingRequest) || isPendingRequest(track.trackEdition?.editionData?.pendingRequest)
 
   const song: Song = {
     trackId: track.id,
@@ -62,7 +65,7 @@ export const PriceCard = (props: Props) => {
             {isOwner ? (
               <Link href={`${track.id}/edit/buy-now`}>
                 <a>
-                  <Button variant="list-nft" className="w-[170px]">
+                  <Button variant="list-nft" className="w-[170px]" loading={isProcessing}>
                     <span className="py-4">EDIT</span>
                   </Button>
                 </a>
@@ -70,7 +73,7 @@ export const PriceCard = (props: Props) => {
             ) : (
               <Link href={`${track.id}/buy-now`}>
                 <a>
-                  <Button variant="rainbow">
+                  <Button variant="rainbow" loading={isProcessing}>
                     <span className="p-4">BUY NOW</span>
                   </Button>
                 </a>
@@ -88,7 +91,7 @@ export const PriceCard = (props: Props) => {
           <PriceContainer>
             <Link href={`${track.id}/list`}>
               <a className="my-4 w-full">
-                <Button variant="list-nft">
+                <Button variant="list-nft" loading={isProcessing}>
                   <ButtonTitle>LIST</ButtonTitle>
                 </Button>
               </a>
