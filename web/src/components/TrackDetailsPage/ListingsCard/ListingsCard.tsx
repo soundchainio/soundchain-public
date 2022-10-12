@@ -2,7 +2,6 @@ import { Table, Row, Header } from 'components/common/Table'
 import { TrackQuery, useBuyNowListingItemsQuery } from 'lib/graphql'
 import { SaleType } from 'types/SaleType'
 import tw from 'tailwind-styled-components'
-import { isPendingRequest } from 'utils/isPendingRequest'
 import { ListingItem } from './ListingsItem'
 import { useEffect, useState } from 'react'
 import { useModalDispatch } from 'contexts/providers/modal'
@@ -17,15 +16,15 @@ export const ListingsCard = (props: ListingsCardProps) => {
 
   const isMobile = useIsMobile(639)
 
-  const [numberOfPages, setNumberOfPages] = useState(5)
+  const [numberOfPages, setNumberOfPages] = useState(10)
 
   const { data, loading, refetch } = useBuyNowListingItemsQuery({
     variables: {
       page: { first: numberOfPages },
-      filter: { trackEdition: track.trackEditionId || '' },
+      filter: { trackEdition: track.trackEditionId as string },
     },
-    pollInterval: 10000,
-    fetchPolicy: 'no-cache',
+    skip: !track.trackEditionId,
+    pollInterval: 500,
     ssr: false,
   })
 
@@ -55,7 +54,7 @@ export const ListingsCard = (props: ListingsCardProps) => {
     })
   }
 
-  if (loading) return null
+  if (loading || !nodes || nodes.length <= 0) return null
 
   return (
     <Accordion title="Listed Tracks">
@@ -70,25 +69,7 @@ export const ListingsCard = (props: ListingsCardProps) => {
 
           {nodes?.map((listedTrack, index) => (
             <Row key={index}>
-              <ListingItem
-                key={listedTrack.id}
-                price={listedTrack.listingItem?.pricePerItemToShow || 0}
-                priceOGUN={listedTrack.listingItem?.OGUNPricePerItemToShow || 0}
-                isPaymentOGUN={
-                  listedTrack.listingItem?.OGUNPricePerItemToShow
-                    ? Boolean(listedTrack.listingItem?.OGUNPricePerItemToShow !== 0)
-                    : false
-                }
-                profileId={listedTrack.profileId || ''}
-                trackId={listedTrack.id}
-                tokenId={listedTrack.nftData?.tokenId || 0}
-                contractAddress={listedTrack.nftData?.contract || ''}
-                isProcessing={
-                  isPendingRequest(listedTrack.nftData?.pendingRequest) ||
-                  isPendingRequest(listedTrack.trackEdition?.editionData?.pendingRequest)
-                }
-                isMobile={isMobile}
-              />
+              <ListingItem listedTrack={listedTrack} key={listedTrack.id} isMobile={isMobile} />
             </Row>
           ))}
         </Table>

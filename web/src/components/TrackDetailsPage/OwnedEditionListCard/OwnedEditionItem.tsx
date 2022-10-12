@@ -1,12 +1,6 @@
 /* eslint-disable @next/next/link-passhref */
 import { useTokenOwner } from 'hooks/useTokenOwner'
-import {
-  ListingItemViewComponentFieldsFragment,
-  OwnedTracksQuery,
-  Role,
-  TrackQuery,
-  TrackWithListingItem,
-} from 'lib/graphql'
+import { Role, TrackWithListingItem } from 'lib/graphql'
 import { SpinAnimation } from 'components/common/SpinAnimation'
 import { BsQuestionCircleFill } from 'react-icons/bs'
 import ReactTooltip from 'react-tooltip'
