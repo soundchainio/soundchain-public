@@ -16,7 +16,7 @@ export const ListingsCard = (props: ListingsCardProps) => {
 
   const isMobile = useIsMobile(639)
 
-  const [numberOfPages, setNumberOfPages] = useState(10)
+  const [numberOfPages, setNumberOfPages] = useState(5)
 
   const { data, loading, refetch } = useBuyNowListingItemsQuery({
     variables: {

@@ -29,7 +29,6 @@ export const TrackDetailsCard = (props: TrackDetailsCardProps) => {
 
   const isProcessing = nftData?.pendingRequest != PendingRequest.None
   const tokenId = nftData?.tokenId
-  const mintingPending = nftData?.pendingRequest === PendingRequest.Mint
   const genres = props?.track?.genres || []
   const isEmptyGenre = genres.length <= 0
 
@@ -97,7 +96,7 @@ export const TrackDetailsCard = (props: TrackDetailsCardProps) => {
         </Row>
         <Row>
           <Cell $bgDark>MINING STATUS</Cell>
-          <Cell>{mintingPending ? nftData?.pendingRequest : 'No minting status found'}</Cell>
+          <Cell>{nftData?.pendingRequest || 'No minting status found'}</Cell>
         </Row>
         <Row>
           <Cell $bgDark>

@@ -32,7 +32,8 @@ export const PriceCard = (props: Props) => {
   const { track } = props
 
   const { data: { auctionItem } = {} } = useAuctionItemQuery({
-    variables: { tokenId: track.nftData?.tokenId || 0 },
+    variables: { tokenId: track.nftData?.tokenId as number },
+    skip: !track?.nftData?.tokenId,
   })
 
   const isBuyNow = track.saleType === SaleType.BuyNow
@@ -65,7 +66,7 @@ export const PriceCard = (props: Props) => {
     <Container>
       <TrackSlider song={song} />
 
-      {isBuyNow && !isDeleted && (
+      {isBuyNow && !isDeleted && !isMultipleEdition && (
         <>
           <PriceContainer>
             <span>

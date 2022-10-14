@@ -23,7 +23,7 @@ export const ProfileWithAvatar = (props: Props) => {
       {showAvatar && <Avatar profile={profile} pixels={avatarSize} />}
 
       <NextLink href={`/profiles/${userHandle}`} passHref>
-        <a className="truncate" aria-label={displayName}>
+        <a className="flex flex-col items-start truncate" aria-label={displayName}>
           <DisplayName
             className="text-sm"
             name={displayName || ''}

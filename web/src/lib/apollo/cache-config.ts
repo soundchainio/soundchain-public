@@ -13,6 +13,18 @@ import {
   TrackConnection,
 } from 'lib/graphql'
 
+const filterNodeDuplicates = (existingNodes, incomingNodes, pageInfo) => {
+  return {
+    nodes: [
+      ...existingNodes,
+      ...incomingNodes.filter(
+        incomingNode => existingNodes.filter(existingNode => existingNode.__ref === incomingNode.__ref).length === 0,
+      ),
+    ],
+    pageInfo,
+  }
+}
+
 export const cacheConfig: InMemoryCacheConfig = {
   typePolicies: {
     Query: {
@@ -246,23 +258,19 @@ export const cacheConfig: InMemoryCacheConfig = {
         listingItems: {
           keyArgs: ['sort'],
           merge(existing = { nodes: [] }, { nodes, pageInfo }): ListingItemConnection {
-            return {
-              nodes: existing.nodes.concat(
-                nodes.filter(incomingNode => !existing.nodes.find(existingNode => existingNode.id == incomingNode.id)),
-              ),
-              pageInfo,
-            }
+            return filterNodeDuplicates(existing.nodes, nodes, pageInfo)
           },
         },
         buyNowListingItems: {
           keyArgs: ['filter'],
           merge(existing = { nodes: [] }, { nodes, pageInfo }): ListingItemConnection {
-            return {
-              nodes: existing.nodes.concat(
-                nodes.filter(incomingNode => !existing.nodes.find(existingNode => existingNode.id == incomingNode.id)),
-              ),
-              pageInfo,
-            }
+            return filterNodeDuplicates(existing.nodes, nodes, pageInfo)
+          },
+        },
+        ownedTracks: {
+          keyArgs: ['filter'],
+          merge(existing = { nodes: [] }, { nodes, pageInfo }): ListingItemConnection {
+            return filterNodeDuplicates(existing.nodes, nodes, pageInfo)
           },
         },
       },
