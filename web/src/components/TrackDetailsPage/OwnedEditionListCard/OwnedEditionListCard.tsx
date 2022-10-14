@@ -7,9 +7,10 @@ import { TrackQuery, TrackWithListingItem, useOwnedTracksQuery } from 'lib/graph
 import { Button } from 'components/Buttons/Button'
 import { OwnedEditionItem } from './OwnedEditionItem'
 import { useRouter } from 'next/router'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import useMetaMask from 'hooks/useMetaMask'
-
+import { SpinAnimation } from 'components/common/SpinAnimation'
+import { config } from 'config'
 interface OwnedEditionListCardProps {
   track: TrackQuery['track']
 }
@@ -17,14 +18,13 @@ interface OwnedEditionListCardProps {
 export const OwnedEditionListCard = (props: OwnedEditionListCardProps) => {
   const { track } = props
 
-  const [numberOfPages, setNumberOfPages] = useState(10)
-
+  const numberOfPages = 5
   const router = useRouter()
   const me = useMe()
   const { account } = useWalletContext()
   const { connect } = useMetaMask()
 
-  const { data, loading, refetch } = useOwnedTracksQuery({
+  const { data, loading, fetchMore } = useOwnedTracksQuery({
     variables: {
       page: { first: numberOfPages },
       filter: {
@@ -41,7 +41,7 @@ export const OwnedEditionListCard = (props: OwnedEditionListCardProps) => {
   const canList = (me?.profile.verified && isMinter) || track.nftData?.minter != account
   const nodes = data?.ownedTracks.nodes as TrackWithListingItem[]
   const pageInfo = data?.ownedTracks.pageInfo
-  const shouldDisableButton = pageInfo ? numberOfPages >= pageInfo?.totalCount : false
+  const shouldShowLoadMoreButton = pageInfo ? data?.ownedTracks?.nodes?.length >= pageInfo?.totalCount : false
 
   const ownedTracks = useMemo(() => {
     if (!nodes) return
@@ -56,14 +56,22 @@ export const OwnedEditionListCard = (props: OwnedEditionListCardProps) => {
   }, [nodes])
 
   const loadMore = () => {
-    setNumberOfPages(prevState => prevState + 5)
+    fetchMore({
+      variables: {
+        page: {
+          first: 5,
+          after: pageInfo?.endCursor,
+        },
+        filter: {
+          trackEditionId: track.trackEditionId as string,
+          owner: account as string,
+        },
+      },
+    })
   }
 
-  useEffect(() => {
-    refetch()
-  }, [numberOfPages, refetch])
-
-  if (loading || !ownedTracks || ownedTracks.length <= 0) return null
+  if (loading) return <SpinAnimation />
+  if (!ownedTracks || ownedTracks.length <= 0) return null
 
   const SoundchainLoginLink = () => (
     <Link href="/login">
@@ -90,7 +98,7 @@ export const OwnedEditionListCard = (props: OwnedEditionListCardProps) => {
       {canList && (
         <Table>
           <Row>
-            <Header $roundedTopLeft>ID</Header>
+            <Header $roundedTopLeft>Token ID</Header>
             <Header $roundedTopRight>Actions</Header>
           </Row>
 
@@ -99,7 +107,15 @@ export const OwnedEditionListCard = (props: OwnedEditionListCardProps) => {
 
             return (
               <Row key={ownedTrack.id}>
-                <Cell>#{ownedTrack.nftData?.tokenId}</Cell>
+                <Cell>
+                  <AnchorTag
+                    href={`${config.polygonscan}address/${ownedTrack.nftData?.contract}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    #{ownedTrack.nftData?.tokenId}
+                  </AnchorTag>
+                </Cell>
                 <Cell>
                   <OwnedEditionItem key={ownedTrack.id} ownedTrack={ownedTrack} />
                 </Cell>
@@ -132,9 +148,7 @@ export const OwnedEditionListCard = (props: OwnedEditionListCardProps) => {
         </CanListContainer>
       )}
 
-      <LoadMoreButton onClick={loadMore} disabled={shouldDisableButton}>
-        LOAD MORE
-      </LoadMoreButton>
+      {!shouldShowLoadMoreButton && <LoadMoreButton onClick={loadMore}>LOAD MORE</LoadMoreButton>}
     </Accordion>
   )
 }
@@ -175,4 +189,13 @@ const CanListContainer = tw.div`
   w-full 
   items-center 
   justify-center
+`
+
+const AnchorTag = tw.a`
+  text-sm
+  text-blue-300
+  break-words
+  font-medium
+  
+  hover:text-white
 `

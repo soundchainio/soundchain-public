@@ -61,7 +61,7 @@ export const ListingItem = (props: ListingItemProps) => {
       {profileData && !isMobile && (
         <Cell>
           <Flex>
-            <ProfileWithAvatar profile={profileData.profile as Partial<Profile>} avatarSize={30} showAvatar={true} />
+            <ProfileWithAvatar profile={profileData.profile as Partial<Profile>} avatarSize={35} showAvatar={true} />
           </Flex>
         </Cell>
       )}

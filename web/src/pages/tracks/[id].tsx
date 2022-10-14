@@ -17,6 +17,7 @@ import {
 } from 'components/TrackDetailsPage'
 import { useEffect } from 'react'
 import { useRouter } from 'next/router'
+import { useTokenOwner } from 'hooks/useTokenOwner'
 export interface TrackPageProps {
   track: TrackQuery['track']
 }
@@ -33,6 +34,8 @@ export default function TrackPage() {
     track?.releaseYear != null ? `${track?.releaseYear}.` : ''
   }`
 
+  const { isOwner } = useTokenOwner(track?.nftData?.tokenId, track?.nftData?.contract)
+
   const { data, loading } = useTrackQuery({
     variables: {
       id: router.query.id as string,
@@ -46,11 +49,13 @@ export default function TrackPage() {
     setTrack(data.track)
   }, [data, track])
 
-  if (loading || !track) return null
+  useEffect(() => {
+    if (!track?.deleted) return
 
-  if (track.deleted) {
     router.push('/marketplace')
-  }
+  }, [router, track?.deleted])
+
+  if (loading || !track) return null
 
   return (
     <>
@@ -61,8 +66,21 @@ export default function TrackPage() {
         <BidHistory track={track} />
         <DescriptionCard track={track} />
         <TrackDetailsCard track={track} />
-        {track.editionSize > 1 && <OwnedEditionListCard track={track} />}
-        {track.editionSize > 1 && <ListingsCard track={track} />}
+        {track.editionSize > 1 && (
+          <>
+            {isOwner ? (
+              <>
+                <OwnedEditionListCard track={track} />
+                <ListingsCard track={track} />
+              </>
+            ) : (
+              <>
+                <ListingsCard track={track} />
+                <OwnedEditionListCard track={track} />
+              </>
+            )}
+          </>
+        )}
       </Container>
     </>
   )

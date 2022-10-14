@@ -184,7 +184,7 @@ const ArtistContainer = tw.div`
 const ImageContainer = tw.div`
   mb-4
   h-[250px]
-  w-[380px]
+  w-[440px]
   relative
   self-center
 
