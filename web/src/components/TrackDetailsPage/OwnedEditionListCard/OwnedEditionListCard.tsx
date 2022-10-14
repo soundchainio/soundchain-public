@@ -15,10 +15,11 @@ interface OwnedEditionListCardProps {
   track: TrackQuery['track']
 }
 
+const pageSize = 5
+
 export const OwnedEditionListCard = (props: OwnedEditionListCardProps) => {
   const { track } = props
 
-  const numberOfPages = 5
   const router = useRouter()
   const me = useMe()
   const { account } = useWalletContext()
@@ -26,7 +27,7 @@ export const OwnedEditionListCard = (props: OwnedEditionListCardProps) => {
 
   const { data, loading, fetchMore } = useOwnedTracksQuery({
     variables: {
-      page: { first: numberOfPages },
+      page: { first: pageSize },
       filter: {
         trackEditionId: track.trackEditionId as string,
         owner: account as string,
@@ -59,7 +60,7 @@ export const OwnedEditionListCard = (props: OwnedEditionListCardProps) => {
     fetchMore({
       variables: {
         page: {
-          first: 5,
+          first: pageSize,
           after: pageInfo?.endCursor,
         },
         filter: {

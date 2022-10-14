@@ -76,6 +76,7 @@ export const DesktopTrackCard = (props: Props) => {
           <Image
             src={track.artworkUrl || ''}
             layout="fill"
+            objectFit="contain"
             alt="art image of the current track "
             className="rounded-xl"
           />
@@ -187,7 +188,9 @@ const ImageContainer = tw.div`
   w-[440px]
   relative
   self-center
-
+  bg-black
+  rounded-lg
+  
   md:w-[320px]
   md:mr-6
 
