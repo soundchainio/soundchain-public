@@ -1,5 +1,4 @@
-import { TrackQuery, useAuctionItemQuery, useBidsWithInfoLazyQuery } from 'lib/graphql'
-import { useEffect } from 'react'
+import { TrackQuery, useAuctionItemQuery, useBidsWithInfoQuery } from 'lib/graphql'
 import { Matic as MaticIcon } from 'icons/Matic'
 import tw from 'tailwind-styled-components'
 import { ProfileWithAvatar } from 'components/ProfileWithAvatar'
@@ -12,22 +11,24 @@ interface BidHistoryProps {
 export const BidHistory = (props: BidHistoryProps) => {
   const { track } = props
 
-  const [fetch, { data }] = useBidsWithInfoLazyQuery({ fetchPolicy: 'no-cache' })
-
   const { data: { auctionItem } = {} } = useAuctionItemQuery({
     variables: { tokenId: track.nftData?.tokenId || 0 },
+    skip: !track.nftData?.tokenId,
   })
 
   const auctionId = auctionItem?.auctionItem?.id
-  const bids = data?.bidsWithInfo.bids
 
-  useEffect(() => {
-    if (!auctionId) return
+  const { data, loading } = useBidsWithInfoQuery({
+    variables: {
+      auctionId: auctionId || '',
+    },
+    pollInterval: 10000,
+    skip: !auctionId,
+  })
 
-    fetch({ variables: { auctionId } })
-  }, [auctionId, fetch])
+  if (!data) return null
 
-  if (!bids) return null
+  if (!data || (data?.bidsWithInfo?.bids && data?.bidsWithInfo?.bids?.length <= 0) || loading) return null
 
   return (
     <Accordion title="Bids">
@@ -35,15 +36,16 @@ export const BidHistory = (props: BidHistoryProps) => {
         <H3>Bidder</H3>
         <H3>Amount</H3>
       </TitleContainer>
-      {bids.map((bid, index) => (
-        <div key={index} className="flex items-center justify-between">
-          <ProfileWithAvatar profile={bid.profile} />
-          <div className="flex items-center">
-            <BidAmount>{bid.amountToShow}</BidAmount>
-            <MaticIcon className="ml-[5px]" width={15} height={15} />
+      {data &&
+        data?.bidsWithInfo?.bids?.map((bid, index) => (
+          <div key={index} className="mb-6 flex items-center justify-between">
+            <ProfileWithAvatar profile={bid.profile} />
+            <div className="flex items-center">
+              <BidAmount>{bid.amountToShow}</BidAmount>
+              <MaticIcon className="ml-[5px]" width={15} height={15} />
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
     </Accordion>
   )
 }

@@ -31,6 +31,7 @@ import {
   useUserByWalletLazyQuery,
 } from 'lib/graphql'
 import { protectPage } from 'lib/protectPage'
+import { useRouter } from 'next/router'
 import { authenticator } from 'otplib'
 import { ParsedUrlQuery } from 'querystring'
 import { useEffect, useState } from 'react'
@@ -88,6 +89,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
   const [highestBid, setHighestBid] = useState<HighestBid>()
   const { setTopNavBarProps } = useLayoutContext()
 
+  const router = useRouter()
   const tokenId = track.nftData?.tokenId ?? -1
   const contractAddress = track.nftData?.contract ?? ''
 
@@ -191,7 +193,6 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
       return
     }
 
-    console.log('Amount bided: ', amount)
     setLoading(true)
     placeBid(tokenId, account, amount, {
       nft: contractAddress,
@@ -207,7 +208,10 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
         console.log('Error on your transaction: ', error)
         toast.warn('You may have been outbid. Please try again')
       })
-      .finally(() => setLoading(false))
+      .finally(() => {
+        setLoading(false)
+        router.push(`/tracks/${router.query.id}`)
+      })
       .execute(web3)
   }
 

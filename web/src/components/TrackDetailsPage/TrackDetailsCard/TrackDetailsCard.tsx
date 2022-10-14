@@ -10,6 +10,7 @@ import { ChainLink } from 'icons/ChainLink'
 import { Badges } from 'components/common'
 import { getGenreLabelByKey } from 'utils/Genres'
 import { Table, Row, Cell, Accordion } from 'components/common'
+import useBlockchainV2 from 'hooks/useBlockchainV2'
 
 interface TrackDetailsCardProps {
   track: TrackQuery['track']
@@ -21,6 +22,7 @@ export const TrackDetailsCard = (props: TrackDetailsCardProps) => {
   } = props
 
   const { getRoyalties } = useBlockchain()
+  const { getEditionRoyalties } = useBlockchainV2()
   const { account, web3 } = useWalletContext()
 
   const [royalties, setRoyalties] = useState<number | string>('No Royalties found')
@@ -38,12 +40,23 @@ export const TrackDetailsCard = (props: TrackDetailsCardProps) => {
         return
       }
 
-      const royaltiesFromBlockchain = await getRoyalties(web3, tokenId, { nft: nftData?.contract })
+      const editionRoyalties = await getEditionRoyalties(web3, trackEdition.editionId)
+      const trackRoyalties = await getRoyalties(web3, tokenId, { nft: nftData?.contract })
 
-      setRoyalties(royaltiesFromBlockchain)
+      setRoyalties(editionRoyalties || trackRoyalties)
     }
     fetchRoyalties()
-  }, [account, web3, tokenId, getRoyalties, royalties, trackEdition?.editionId, isProcessing, nftData?.contract])
+  }, [
+    account,
+    web3,
+    tokenId,
+    getRoyalties,
+    royalties,
+    trackEdition?.editionId,
+    isProcessing,
+    nftData?.contract,
+    getEditionRoyalties,
+  ])
 
   if (!props.track) return null
 
@@ -54,7 +67,7 @@ export const TrackDetailsCard = (props: TrackDetailsCardProps) => {
           <Cell $bgDark $roundedTopLeft>
             ARTIST ROYALTY %
           </Cell>
-          <Cell $roundedTopRight>{royalties}</Cell>
+          <Cell $roundedTopRight>{royalties}%</Cell>
         </Row>
         <Row>
           <Cell $bgDark>TRACK TITLE</Cell>

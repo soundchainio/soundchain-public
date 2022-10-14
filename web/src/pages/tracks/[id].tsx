@@ -37,7 +37,7 @@ export default function TrackPage() {
     variables: {
       id: router.query.id as string,
     },
-    pollInterval: 500,
+    pollInterval: 10000,
   })
 
   useEffect(() => {
@@ -47,6 +47,10 @@ export default function TrackPage() {
   }, [data, track])
 
   if (loading || !track) return null
+
+  if (track.deleted) {
+    router.push('/marketplace')
+  }
 
   return (
     <>

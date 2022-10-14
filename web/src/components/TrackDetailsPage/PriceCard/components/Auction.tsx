@@ -2,7 +2,13 @@ import { Button } from 'components/Buttons/Button'
 import { Divider } from 'components/common'
 import useBlockchain from 'hooks/useBlockchain'
 import { useWalletContext } from 'hooks/useWalletContext'
-import { TrackQuery, useAuctionItemQuery, useCountBidsLazyQuery, useUserByWalletLazyQuery } from 'lib/graphql'
+import {
+  PendingRequest,
+  TrackQuery,
+  useAuctionItemQuery,
+  useCountBidsLazyQuery,
+  useUserByWalletLazyQuery,
+} from 'lib/graphql'
 import { HighestBid } from 'pages/tracks/[id]/complete-auction'
 import { useEffect, useState } from 'react'
 import { priceToShow } from 'utils/format'
@@ -11,9 +17,11 @@ import { Timer } from '../../../common/Timer/Timer'
 import Link from 'next/link'
 import { DisplayName } from 'components/DisplayName'
 import { Avatar } from 'components/Avatar'
-import { compareWallets } from 'utils/Wallet'
 import { Matic as MaticIcon } from 'icons/Matic'
 import useBlockchainV2 from 'hooks/useBlockchainV2'
+import useMetaMask from 'hooks/useMetaMask'
+import { useTokenOwner } from 'hooks/useTokenOwner'
+import { compareWallets } from 'utils/Wallet'
 interface AuctionProps {
   track: TrackQuery['track']
 }
@@ -27,6 +35,7 @@ export const Auction = (props: AuctionProps) => {
   const { getRoyalties, getHighestBid } = useBlockchain()
   const { account, web3 } = useWalletContext()
   const { getEditionRoyalties } = useBlockchainV2()
+  const { connect } = useMetaMask()
 
   const [fetchHighestBidder, { data: highestBidderData }] = useUserByWalletLazyQuery({
     fetchPolicy: 'network-only',
@@ -43,20 +52,26 @@ export const Auction = (props: AuctionProps) => {
   })
 
   const tokenId = track.nftData?.tokenId
-  const isOwner = compareWallets(auctionItem?.auctionItem?.owner, account)
+
+  const { isOwner } = useTokenOwner(tokenId, track.nftData?.contract)
+
+  const isProcessing = track.nftData?.pendingRequest != PendingRequest.None
 
   const startingTime = auctionItem?.auctionItem?.startingTime || 0
   const endingTime = auctionItem?.auctionItem?.endingTime || 0
   const isAuctionOver = (auctionItem?.auctionItem?.endingTime || 0) < Math.floor(Date.now() / 1000)
-  const canComplete = isAuctionOver && isOwner
   const startPrice = auctionItem?.auctionItem?.reservePriceToShow
 
   const startingDate = new Date(startingTime * 1000)
   const endingDate = new Date(endingTime * 1000)
-  const futureSale = startingDate ? startingDate.getTime() > new Date().getTime() : false
+  const isFutureSale = startingDate ? startingDate.getTime() > new Date().getTime() : false
   const bidCount = countBids?.countBids.numberOfBids ?? 0
   const canEditAuction = isOwner && !isAuctionOver && bidCount === 0
-  const canCancel = isOwner && bidCount === 0
+  const canCancel = isOwner && bidCount === 0 && !isAuctionOver
+
+  const canComplete =
+    isAuctionOver &&
+    (compareWallets(highestBid.bidder, account) || compareWallets(account, auctionItem?.auctionItem?.owner))
 
   useEffect(() => {
     if (!web3 || !tokenId || !getHighestBid || highestBid.bidder != undefined || !track.trackEdition) {
@@ -97,7 +112,34 @@ export const Auction = (props: AuctionProps) => {
     })
   }, [highestBid.bidder, fetchHighestBidder])
 
-  if (!isOwner || !auctionItem || !countBids || !highestBidderData) return null
+  if (!auctionItem) return null
+
+  if (!account) {
+    const MetaMaskLink = () => (
+      <strong onClick={connect} className="mx-[2px] hover:cursor-pointer hover:text-white">
+        MetaMask
+      </strong>
+    )
+
+    const SoundchainLoginLink = () => (
+      <Link href="/login">
+        <a className="mx-[2px] hover:text-white">
+          <strong>Soundchain</strong>
+        </a>
+      </Link>
+    )
+
+    return (
+      <>
+        <span className="my-6 text-lg text-neutral-400">
+          Create a <SoundchainLoginLink /> account or connect your <MetaMaskLink /> wallet.
+        </span>
+        <Divider />
+      </>
+    )
+  }
+
+  if (isAuctionOver) return null
 
   return (
     <>
@@ -136,34 +178,37 @@ export const Auction = (props: AuctionProps) => {
         </BidsContainer>
 
         <div className="mt-4 mb-2 flex  w-full flex-col items-center">
-          {futureSale && !isAuctionOver && (
+          {isFutureSale && !isAuctionOver && (
             <>
               <Title>Auction Starting in</Title>
               <Timer date={startingDate} reloadOnEnd />
             </>
           )}
 
-          {endingDate && !futureSale && !isAuctionOver && (
+          {endingDate && !isFutureSale && !isAuctionOver && (
             <>
               <Title>Auction Ending in</Title>
               <Timer date={endingDate} endedMessage="Auction Ended" />
             </>
           )}
 
-          {!isOwner && !isAuctionOver && (
-            <Link href={`/tracks/${track.id}/place-bid?isPaymentOGUN=false`}>
-              <a className="mt-2 w-full">
-                <Button variant="rainbow">
-                  <span className="p-4">PLACE BID</span>
-                </Button>
-              </a>
-            </Link>
+          {!isOwner && !isAuctionOver && !isFutureSale && (
+            <>
+              <Link href={`/tracks/${track.id}/place-bid?isPaymentOGUN=false`}>
+                <a className="mt-2 w-full">
+                  <Button variant="rainbow" loading={isProcessing}>
+                    <span className="p-4">PLACE BID</span>
+                  </Button>
+                </a>
+              </Link>
+              <SmallParagraph>it may take several seconds for prices to update</SmallParagraph>
+            </>
           )}
 
           {canEditAuction && !isAuctionOver && (
             <Link href={`/tracks/${track.id}/edit/auction`}>
               <a className="mt-2 w-full">
-                <Button variant="rainbow">
+                <Button variant="rainbow" loading={isProcessing}>
                   <span className="p-4">EDIT AUCTION</span>
                 </Button>
               </a>
@@ -173,7 +218,7 @@ export const Auction = (props: AuctionProps) => {
           {canComplete && isAuctionOver && (
             <Link href={`/tracks/${track.id}/complete-auction`}>
               <a className="mt-2 w-full">
-                <Button variant="rainbow">
+                <Button variant="rainbow" loading={isProcessing}>
                   <span className="p-4">COMPLETE AUCTION</span>
                 </Button>
               </a>
@@ -183,7 +228,7 @@ export const Auction = (props: AuctionProps) => {
           {canCancel && (
             <Link href={`/tracks/${track.id}/cancel-auction`}>
               <a className="mt-2 w-full">
-                <Button variant="rainbow">
+                <Button variant="rainbow" loading={isProcessing}>
                   <span className="p-4">CANCEL AUCTION</span>
                 </Button>
               </a>
@@ -193,7 +238,6 @@ export const Auction = (props: AuctionProps) => {
 
         <div className="mt-6 w-full">
           <Divider />
-
           {!isAuctionOver && (
             <AuctionPricingContainer>
               <PriceContainer>
@@ -221,9 +265,9 @@ export const Auction = (props: AuctionProps) => {
               </PriceContainer>
             </AuctionPricingContainer>
           )}
+          <Divider />
         </div>
       </Container>
-      <Divider />
     </>
   )
 }
@@ -239,6 +283,13 @@ const Paragraph = tw.p`
   text-lg
   text-neutral-400
 `
+
+const SmallParagraph = tw.p`
+  text-sm
+  text-neutral-500
+  mt-2
+`
+
 const Title = tw.h3`
   text-lg
   text-slate-50

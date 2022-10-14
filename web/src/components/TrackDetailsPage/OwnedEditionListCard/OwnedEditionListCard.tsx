@@ -8,6 +8,7 @@ import { Button } from 'components/Buttons/Button'
 import { OwnedEditionItem } from './OwnedEditionItem'
 import { useRouter } from 'next/router'
 import { useEffect, useMemo, useState } from 'react'
+import useMetaMask from 'hooks/useMetaMask'
 
 interface OwnedEditionListCardProps {
   track: TrackQuery['track']
@@ -21,6 +22,7 @@ export const OwnedEditionListCard = (props: OwnedEditionListCardProps) => {
   const router = useRouter()
   const me = useMe()
   const { account } = useWalletContext()
+  const { connect } = useMetaMask()
 
   const { data, loading, refetch } = useOwnedTracksQuery({
     variables: {
@@ -31,7 +33,7 @@ export const OwnedEditionListCard = (props: OwnedEditionListCardProps) => {
       },
     },
     skip: !track.trackEditionId || !account,
-    pollInterval: 500,
+    pollInterval: 10000,
     ssr: false,
   })
 
@@ -63,13 +65,25 @@ export const OwnedEditionListCard = (props: OwnedEditionListCardProps) => {
 
   if (loading || !ownedTracks || ownedTracks.length <= 0) return null
 
+  const SoundchainLoginLink = () => (
+    <Link href="/login">
+      <a className="mx-[2px] hover:text-white">
+        <strong>Soundchain</strong>
+      </a>
+    </Link>
+  )
+
+  const MetaMaskLink = () => (
+    <strong onClick={connect} className="mx-[2px] hover:cursor-pointer hover:text-white">
+      MetaMask
+    </strong>
+  )
+
   return (
     <Accordion title="Unlisted Tracks">
       {!account && (
         <Paragraph>
-          Log in to your Metamask or Soundchain
-          <br />
-          account to see your editions.
+          Create a <SoundchainLoginLink /> account or connect your <MetaMaskLink /> wallet.
         </Paragraph>
       )}
 
@@ -85,7 +99,7 @@ export const OwnedEditionListCard = (props: OwnedEditionListCardProps) => {
 
             return (
               <Row key={ownedTrack.id}>
-                <Cell>#{ownedTrack.trackEdition?.editionId}</Cell>
+                <Cell>#{ownedTrack.nftData?.tokenId}</Cell>
                 <Cell>
                   <OwnedEditionItem key={ownedTrack.id} ownedTrack={ownedTrack} />
                 </Cell>
