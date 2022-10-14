@@ -3,7 +3,6 @@ import { TrackQuery, useBuyNowListingItemsQuery } from 'lib/graphql'
 import { SaleType } from 'types/SaleType'
 import tw from 'tailwind-styled-components'
 import { ListingItem } from './ListingsItem'
-import { useEffect, useState } from 'react'
 import { useModalDispatch } from 'contexts/providers/modal'
 import { useIsMobile } from 'hooks/useIsMobile'
 import { Accordion } from 'components/common'
@@ -11,16 +10,16 @@ interface ListingsCardProps {
   track: TrackQuery['track']
 }
 
+const pageSize = 5
+
 export const ListingsCard = (props: ListingsCardProps) => {
   const { track } = props
 
   const isMobile = useIsMobile(639)
 
-  const [numberOfPages, setNumberOfPages] = useState(5)
-
-  const { data, loading, refetch } = useBuyNowListingItemsQuery({
+  const { data, loading, fetchMore } = useBuyNowListingItemsQuery({
     variables: {
-      page: { first: numberOfPages },
+      page: { first: pageSize },
       filter: { trackEdition: track.trackEditionId as string },
     },
     skip: !track.trackEditionId,
@@ -30,16 +29,23 @@ export const ListingsCard = (props: ListingsCardProps) => {
 
   const nodes = data?.buyNowListingItems.nodes
   const pageInfo = data?.buyNowListingItems.pageInfo
-  const shouldDisableButton = pageInfo ? numberOfPages >= pageInfo?.totalCount : false
+  const shouldShowLoadMoreButton = pageInfo ? data?.buyNowListingItems.nodes.length >= pageInfo?.totalCount : false
+
   const { dispatchShowRemoveListingModal } = useModalDispatch()
 
   const loadMore = () => {
-    setNumberOfPages(prevState => prevState + 5)
+    fetchMore({
+      variables: {
+        page: {
+          first: pageSize,
+          after: pageInfo?.endCursor,
+        },
+        filter: {
+          trackEdition: track.trackEditionId as string,
+        },
+      },
+    })
   }
-
-  useEffect(() => {
-    refetch()
-  }, [numberOfPages, refetch])
 
   const handleUnlistAll = () => {
     return dispatchShowRemoveListingModal({
@@ -77,7 +83,7 @@ export const ListingsCard = (props: ListingsCardProps) => {
         <Paragraph>No track listed yet</Paragraph>
       )}
 
-      {!shouldDisableButton && <Button onClick={loadMore}>LOAD MORE</Button>}
+      {!shouldShowLoadMoreButton && <Button onClick={loadMore}>LOAD MORE</Button>}
 
       {nodes && nodes.length > 0 && <Button onClick={handleUnlistAll}>Unlist All</Button>}
     </Accordion>
