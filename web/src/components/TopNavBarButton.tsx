@@ -8,13 +8,22 @@ import { useEffect, useState } from 'react'
 interface RefreshButtonProps {
   onClick?: () => void
   icon: (props: IconProps) => JSX.Element
+  badge?: () => JSX.Element
   label: string
   className?: string
   path?: string
   color?: SVGGradientColor
 }
 
-export const TopNavBarButton = ({ onClick, icon: Icon, label, className, path, color }: RefreshButtonProps) => {
+export const TopNavBarButton = ({
+  onClick,
+  icon: Icon,
+  badge: Badge,
+  label,
+  className,
+  path,
+  color,
+}: RefreshButtonProps) => {
   const [isActive, setActive] = useState(false)
   const router = useRouter()
 
@@ -32,7 +41,10 @@ export const TopNavBarButton = ({ onClick, icon: Icon, label, className, path, c
     return (
       <Link href={path} passHref>
         <a className={classNames(baseClassName, className)}>
-          <Icon color={isActive ? color : undefined} />
+          <div className="relative mr-1">
+            {Badge && <Badge />}
+            <Icon color={isActive ? color : undefined} />
+          </div>
           <span className={`${isActive && `${color}-gradient-text`} pt-1 text-xs font-semibold text-gray-60 md:pt-0`}>
             {label}
           </span>

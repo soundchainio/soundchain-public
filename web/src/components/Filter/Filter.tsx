@@ -1,9 +1,9 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { Dispatch, SetStateAction, useState, Fragment, useEffect } from 'react'
-import { SortListingItem } from 'lib/apollo/sorting'
 import { Listbox, Transition } from '@headlessui/react'
-import { MdKeyboardArrowDown } from 'react-icons/md'
 import classNames from 'classnames'
+import { SortListingItem } from 'lib/apollo/sorting'
+import { Dispatch, Fragment, SetStateAction, useEffect, useState } from 'react'
+import { MdKeyboardArrowDown } from 'react-icons/md'
 interface Props {
   sorting: SortListingItem
   setSorting: Dispatch<SetStateAction<SortListingItem>>
@@ -65,7 +65,7 @@ export const FilterComponent = (props: Props) => {
           <div className="relative">
             <Listbox.Button
               className={({ open }) =>
-                `hover:gradient-select-hover transparent-border-1px darkGreyBackgroundColor relative w-full cursor-default rounded-lg py-2 pl-3 pr-10 text-left  font-medium text-white shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm ${
+                `hover:gradient-select-hover transparent-border-1px darkGreyBackgroundColor relative w-[160px] cursor-default rounded-lg py-2 pl-3 pr-10 text-left font-medium  text-white shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:w-[140px] sm:text-sm ${
                   open ? 'gradient-select-hover' : ''
                 }`
               }
