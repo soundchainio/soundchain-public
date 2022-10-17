@@ -140,14 +140,13 @@ export default function AuctionPage({ track }: TrackPageProps) {
     }
   }
 
-
-
   useEffect(() => {
     if (isVerified) return
 
-    router.push('/get-verified')
+    if (!isVerified) router.push('/get-verified')
   }, [isVerified, router])
 
+  // TODO: We are returning null in various places in the application without correct user feedback
   if (!isOwner || isForSale || nftData?.pendingRequest != PendingRequest.None || !canList) {
     return null
   }

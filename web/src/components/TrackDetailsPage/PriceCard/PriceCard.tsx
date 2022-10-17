@@ -45,14 +45,14 @@ export const PriceCard = (props: Props) => {
   const isOgunPrice = track.price.currency === CurrencyType.Ogun
   const isMaticPrice = track.price.currency === CurrencyType.Matic
   const isDeleted = track.deleted
-  const isUnlisted = !track.saleType
+  const isUnlisted = track.saleType ? false : true
   const isMultipleEdition = track.editionSize > 1
   const isProcessing =
     isPendingRequest(track.nftData?.pendingRequest) || isPendingRequest(track.trackEdition?.editionData?.pendingRequest)
 
   const shouldShowAuction = (isAuction && !isDeleted) || (isAuctionOver && !isDeleted)
 
-  const { isOwner } = useTokenOwner(track.nftData?.tokenId, track.nftData?.contract)
+  const { isOwner, loading: useOwnerIsLoading } = useTokenOwner(track.nftData?.tokenId, track.nftData?.contract)
 
   const song: Song = {
     trackId: track.id,
@@ -113,7 +113,7 @@ export const PriceCard = (props: Props) => {
         </>
       )}
 
-      {isUnlisted && !isOwner && !shouldShowAuction && (
+      {isUnlisted && !isOwner && !shouldShowAuction && !useOwnerIsLoading && (
         <>
           <Paragraph>This track has not been listed</Paragraph>
           <Divider />
