@@ -1,5 +1,5 @@
-import { Badge } from 'components/Badge'
-import { Button } from 'components/Button'
+import { Badge } from 'components/common/Badges/Badge'
+import { Button } from 'components/Buttons/Button'
 import { InputField } from 'components/InputField'
 import { Matic } from 'components/Matic'
 import { TextareaField } from 'components/TextareaField'

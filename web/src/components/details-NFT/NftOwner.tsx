@@ -16,5 +16,5 @@ export const NftOwner = ({ profileId, className }: NftOwnerProps) => {
     }
   }, [profileId, userQueryProfile])
 
-  return <ProfileWithAvatar profile={result?.profile as Partial<Profile>} className={className} />
+  return <ProfileWithAvatar profile={result?.profile as Partial<Profile>} avatarSize={25} className={className} />
 }

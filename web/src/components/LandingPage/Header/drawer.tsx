@@ -1,5 +1,5 @@
 import { Dialog, Transition } from '@headlessui/react'
-import { Button } from 'components/Button'
+import { Button } from 'components/Buttons/Button'
 import { useMeQuery } from 'lib/graphql'
 import Link from 'next/link'
 import React from 'react'

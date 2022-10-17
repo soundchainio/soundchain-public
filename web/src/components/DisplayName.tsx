@@ -25,9 +25,9 @@ export const DisplayName = forwardRef<any, DisplayNameProps>(
           {maxNumberOfCharacters ? limitTextToNumberOfCharacters(name, maxNumberOfCharacters) : name}
         </span>
         {teamMember ? (
-          <SoundchainGoldLogo aria-label="SoundChain Team Member" className="flex-shrink-0" />
+          <SoundchainGoldLogo aria-label="SoundChain Team Member" className="ml-1 flex-shrink-0" />
         ) : (
-          verified && <Verified aria-label="Verified user" className="flex-shrink-0" />
+          verified && <Verified aria-label="Verified user" className="ml-1 flex-shrink-0" />
         )}
         {badges && badges.includes(Badge.SupporterFirstEventAeSc) && (
           <Image alt="badge" src={'/badges/badge-01.svg'} width={badgeDimension} height={badgeDimension} />

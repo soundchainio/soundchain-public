@@ -1,4 +1,4 @@
-import { BadgeGeneral } from 'components/BadgeGeneral'
+import { BadgeGeneral } from 'components/common/Badges/BadgeGeneral'
 import { IconProps } from 'icons/types/IconProps'
 import Link from 'next/link'
 
