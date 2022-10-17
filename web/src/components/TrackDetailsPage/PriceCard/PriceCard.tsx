@@ -14,6 +14,7 @@ import { Button } from 'components/Buttons/Button'
 import { Auction } from './components/Auction'
 import { useTokenOwner } from 'hooks/useTokenOwner'
 import { isPendingRequest } from 'utils/isPendingRequest'
+import { SpinAnimation } from 'components/common/SpinAnimation'
 interface Props {
   track: TrackQuery['track']
 }
