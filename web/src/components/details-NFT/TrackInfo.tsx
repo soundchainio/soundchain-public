@@ -1,4 +1,4 @@
-import { Badge } from 'components/Badge'
+import { Badge } from 'components/common/Badges/Badge'
 import { ProfileWithAvatar } from 'components/ProfileWithAvatar'
 import { Genre, MeQuery, Profile } from 'lib/graphql'
 import { getGenreLabelByKey } from 'utils/Genres'

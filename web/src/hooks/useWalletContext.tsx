@@ -1,4 +1,4 @@
-import { Button } from 'components/Button'
+import { Button } from 'components/Buttons/Button'
 import { network } from 'lib/blockchainNetworks'
 import { DefaultWallet, useUpdateDefaultWalletMutation } from 'lib/graphql'
 import React, { createContext, ReactNode, useContext } from 'react'

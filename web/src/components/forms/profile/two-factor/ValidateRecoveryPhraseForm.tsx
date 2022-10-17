@@ -1,7 +1,7 @@
 import { useFormikContext } from 'formik'
 import { InputField } from 'components/InputField'
 import React, { useState } from 'react'
-import { Badge } from 'components/Badge'
+import { Badge } from 'components/common/Badges/Badge'
 
 type FormValues = {
   recoveryPhrase: string

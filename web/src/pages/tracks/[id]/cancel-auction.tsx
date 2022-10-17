@@ -1,4 +1,4 @@
-import { Button } from 'components/Button'
+import { Button } from 'components/Buttons/Button'
 import MaxGasFee from 'components/MaxGasFee'
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar'
 import { TopNavBarProps } from 'components/TopNavBar'
@@ -14,7 +14,7 @@ import {
   PendingRequest,
   TrackDocument,
   TrackQuery,
-  useUpdateTrackMutation
+  useUpdateTrackMutation,
 } from 'lib/graphql'
 import { protectPage } from 'lib/protectPage'
 import { useRouter } from 'next/router'
@@ -118,7 +118,7 @@ export default function CompleteAuctionPage({ track, auctionItem }: TrackPagePro
       nft: track.nftData?.contract,
       auction: auctionItem.contract,
     })
-      .onReceipt((receipt) => onReceipt(receipt))
+      .onReceipt(receipt => onReceipt(receipt))
       .onError(cause => {
         toast.error(cause.message)
         console.log('Error during cancelling the auction: ', cause)
