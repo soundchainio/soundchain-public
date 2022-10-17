@@ -66,7 +66,8 @@ export default function AuctionPage({ track }: TrackPageProps) {
   const nftData = track.nftData
   const tokenId = nftData?.tokenId ?? -1
   const contractAddress = nftData?.contract ?? ''
-  const canList = (me?.profile.verified && nftData?.minter === account) || nftData?.minter != account
+  const isVerified = me?.profile.verified
+  const canList = (isVerified && nftData?.minter === account) || nftData?.minter != account
 
   const [getBuyNowItem, { data: buyNowItem }] = useBuyNowItemLazyQuery({
     variables: { input: { tokenId, contractAddress } },
@@ -82,6 +83,7 @@ export default function AuctionPage({ track }: TrackPageProps) {
         return
       }
       const isTokenOwnerRes = await isTokenOwner(web3, nftData.tokenId, account, { nft: nftData.contract })
+
       setIsOwner(isTokenOwnerRes)
     }
     fetchIsOwner()
@@ -137,6 +139,14 @@ export default function AuctionPage({ track }: TrackPageProps) {
       helper.setSubmitting(false)
     }
   }
+
+
+
+  useEffect(() => {
+    if (isVerified) return
+
+    router.push('/get-verified')
+  }, [isVerified, router])
 
   if (!isOwner || isForSale || nftData?.pendingRequest != PendingRequest.None || !canList) {
     return null
