@@ -166,7 +166,7 @@ const processAuctionEvents = async (events: EventData[], context: Context) => {
     switch (event.event) {
       case 'AuctionCreated':
         {
-          await auctionEvents.created((event as unknown as AuctionCreated), context);
+          await auctionEvents.created(event as unknown as AuctionCreated, context);
         }
         break;
       case 'BidPlaced':
