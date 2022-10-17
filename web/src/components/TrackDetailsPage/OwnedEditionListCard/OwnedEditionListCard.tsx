@@ -90,7 +90,7 @@ export const OwnedEditionListCard = (props: OwnedEditionListCardProps) => {
 
   return (
     <Accordion title="Unlisted Tracks">
-      {!account && (
+      {!account && !loading && (
         <Paragraph>
           Create a <SoundchainLoginLink /> account or connect your <MetaMaskLink /> wallet.
         </Paragraph>

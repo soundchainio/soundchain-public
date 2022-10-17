@@ -31,6 +31,7 @@ export const Auction = (props: AuctionProps) => {
 
   const [highestBid, setHighestBid] = useState<HighestBid>({} as HighestBid)
   const [royalties, setRoyalties] = useState<number | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
 
   const { getRoyalties, getHighestBid } = useBlockchain()
   const { account, web3 } = useWalletContext()
@@ -78,8 +79,10 @@ export const Auction = (props: AuctionProps) => {
     if (!web3 || !tokenId || !getHighestBid || highestBid.bidder != undefined || !track.trackEdition) {
       return
     }
-
+    
     const fetchData = async () => {
+      try {
+        setIsLoading(true)
       const { _bid, _bidder } = await getHighestBid(web3, tokenId, { nft: track.nftData?.contract })
       setHighestBid({ bid: priceToShow(_bid || '0'), bidder: _bidder })
 
@@ -88,6 +91,9 @@ export const Auction = (props: AuctionProps) => {
       setRoyalties(royaltiesFromBlockchain)
 
       fetchCountBids({ variables: { tokenId } })
+      } finally {
+        setIsLoading(false)
+      }
     }
 
     fetchData()
@@ -115,7 +121,7 @@ export const Auction = (props: AuctionProps) => {
 
   if (!auctionItem) return null
 
-  if (!account) {
+  if (!account && !isLoading) {
     const MetaMaskLink = () => (
       <strong onClick={connect} className="mx-[2px] hover:cursor-pointer hover:text-white">
         MetaMask
