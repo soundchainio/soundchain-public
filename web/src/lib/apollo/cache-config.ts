@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { InMemoryCacheConfig } from '@apollo/client'
 import {
   ChatConnection,
@@ -13,12 +14,12 @@ import {
   TrackConnection,
 } from 'lib/graphql'
 
-const filterNodeDuplicates = (existingNodes, incomingNodes, pageInfo) => {
+const filterNodeDuplicates = (existingNodes: any, incomingNodes: any, pageInfo: any) => {
   return {
     nodes: [
       ...existingNodes,
       ...incomingNodes.filter(
-        incomingNode => existingNodes.filter(existingNode => existingNode.__ref === incomingNode.__ref).length === 0,
+        (incomingNode: any) => existingNodes.filter((existingNode: any) => existingNode.__ref === incomingNode.__ref).length === 0,
       ),
     ],
     pageInfo,

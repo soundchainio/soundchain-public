@@ -9,7 +9,6 @@ import { useEffect, useState } from 'react'
 import { remainingTime, timeFromSecs } from 'utils/calculateTime'
 import { TrackPrice } from '../lib/graphql'
 import Asset from './Asset'
-import { BadgeTrack } from './common/Badges/BadgeGeneral'
 import { PriceDisplay } from './PriceDisplay'
 
 interface Song {
