@@ -8,6 +8,27 @@ interface UtilityInfoProps {
 
 export const UtilityInfo = ({ content, className }: UtilityInfoProps) => {
   if (!content) return null
+  const urlRegex = /(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-&?=%.]+/g
+  const urls = content.match(urlRegex)
+  const contentSplit = content.split(urlRegex)
+
+  const wrapTags = () => {
+    return contentSplit.map((partialContent, idx) => {
+      if (urls && urls.length > idx) {
+        const normalizedUrl =
+          !urls[idx].startsWith('http://') && !urls[idx].startsWith('https://') ? 'https://' + urls[idx] : urls[idx]
+        return (
+          <>
+            {partialContent}
+            <a href={normalizedUrl} target="_blank" rel="noreferrer">
+              {urls[idx]}
+            </a>
+          </>
+        )
+      }
+      return partialContent
+    })
+  }
 
   return (
     <div className={className}>
@@ -15,7 +36,7 @@ export const UtilityInfo = ({ content, className }: UtilityInfoProps) => {
         UTILITY
       </Subtitle>
       <p className="py-2 text-xs font-medium text-gray-80">
-        <pre className="whitespace-pre-wrap">{content}</pre>
+        <pre className="whitespace-pre-wrap">{wrapTags()}</pre>
       </p>
     </div>
   )
