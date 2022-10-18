@@ -1,5 +1,5 @@
 .audio-player[data-reach-slider-input][data-orientation='horizontal'] {
-  height: 4px;
+  height: 8px;
   cursor: pointer;
 }
 
@@ -12,7 +12,7 @@
 }
 
 .audio-player [data-reach-slider-track] {
-  background: #202020;
+  background: #414141;
 }
 
 .audio-player [data-reach-slider-handle] {

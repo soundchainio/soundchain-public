@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { IconProps } from './types/IconProps'
 
-export const UnderDevelopment = ({ id = 'logo', ...props }: IconProps) => {
+export const UnderDevelopment = ({ ...props }: IconProps) => {
   return (
     <svg width={100} height={100} fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
       <path

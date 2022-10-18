@@ -1,6 +1,6 @@
 import { IconProps } from './types/IconProps'
 
-export const CloseNegative = ({ color, ...props }: IconProps) => {
+export const CloseNegative = ({...props }: IconProps) => {
   return (
     <svg width={22} height={22} fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
       <path
