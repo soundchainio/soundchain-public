@@ -1,5 +1,6 @@
 import '@reach/dialog/styles.css'
 import '@reach/slider/styles.css'
+
 import * as Sentry from '@sentry/react'
 import { Integrations } from '@sentry/tracing'
 import { CheckBodyScroll } from 'components/CheckBodyScroll'
@@ -17,6 +18,7 @@ import Router from 'next/router'
 import Script from 'next/script'
 import NProgress from 'nprogress'
 import { ReactElement } from 'react'
+
 import 'react-toastify/dist/ReactToastify.css'
 import 'styles/audio-player.css'
 import 'styles/bottom-audio-player.css'

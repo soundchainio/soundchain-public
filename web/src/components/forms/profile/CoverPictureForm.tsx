@@ -1,5 +1,5 @@
 import classNames from 'classnames'
-import { Button, ButtonProps } from 'components/Button'
+import { Button, ButtonProps } from 'components/Buttons/Button'
 import { ImageUploadField } from 'components/ImageUploadField'
 import { Label } from 'components/Label'
 import { Form, Formik } from 'formik'

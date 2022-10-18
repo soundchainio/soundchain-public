@@ -9,9 +9,13 @@ type Props = {
   title?: string | null
   artist?: string | null
   position?: 'top-right'
+  height?: number
+  width?: number
 }
 
-export const TrackShareButton = ({ trackId, title, artist, position }: Props) => {
+export const TrackShareButton = (props: Props) => {
+  const { trackId, title, artist, position, height = 18, width = 18 } = props
+
   const { dispatchShowPostModal, dispatchShowAudioPlayerModal } = useModalDispatch()
 
   const handleSharing = async () => {
@@ -44,7 +48,7 @@ export const TrackShareButton = ({ trackId, title, artist, position }: Props) =>
     <div className="relative flex items-center">
       <Menu>
         <Menu.Button aria-label="Share" className="flex h-10 w-10 items-center justify-center text-gray-80">
-          <ShareIcon width={18} height={18} />
+          <ShareIcon width={width} height={height} />
         </Menu.Button>
         <Transition
           as={Fragment}

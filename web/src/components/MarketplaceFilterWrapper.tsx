@@ -8,7 +8,7 @@ import { SortListingItem } from 'lib/apollo/sorting'
 import { Dispatch, memo, SetStateAction } from 'react'
 import { GenreLabel } from 'utils/Genres'
 import { SaleTypeLabel } from 'utils/SaleTypeLabel'
-import { Badge } from './Badge'
+import { Badge } from './common/Badges/Badge'
 import { FilterComponent } from './Filter/Filter'
 
 type FilterWrapperProps = {
