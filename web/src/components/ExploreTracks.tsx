@@ -55,7 +55,7 @@ export const ExploreTracks = () => {
 
   return (
     <div className="h-[calc(100%-106px)] bg-gray-10">
-      <ExploreSearchBar setSearchTerm={setSearchTerm} />
+      <ExploreSearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
       {tracks.length ? (
         <AutoSizer>
           {({ height, width }) => (
