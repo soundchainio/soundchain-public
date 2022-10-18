@@ -1,4 +1,5 @@
-import { ReactNode } from 'react'
+import { ReactNode, useState } from 'react'
+import SideMenu from './SideMenu'
 import { TopNavBar, TopNavBarProps } from './TopNavBar'
 
 interface LayoutMenuProps {
@@ -7,11 +8,13 @@ interface LayoutMenuProps {
 }
 
 export const ChatLayout = ({ children, topNavBarProps }: LayoutMenuProps) => {
+  const [sideMenuOpen, setSideMenuOpen] = useState(false)
   return (
     <div className="flex h-full">
       <div className="flex w-0 flex-1 flex-col ">
+        <SideMenu isOpen={sideMenuOpen} setOpen={setSideMenuOpen} />
         <div className="fixed top-0 z-10 w-full">
-          <TopNavBar {...topNavBarProps} />
+          <TopNavBar setSideMenuOpen={setSideMenuOpen} {...topNavBarProps} />
         </div>
         <main className="relative flex-1 bg-gray-10 focus:outline-none">
           <div id="main" className="mx-auto max-w-7xl pt-8 pb-14">
