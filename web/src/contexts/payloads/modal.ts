@@ -91,6 +91,8 @@ export interface ShowMarketplaceFilterPayload {
   show: boolean
   genres: GenreLabel[]
   filterSaleType: SaleTypeLabel
+  acceptsMATIC: boolean | undefined
+  acceptsOGUN: boolean | undefined
 }
 
 export interface SetRecipientWalletAddress {
