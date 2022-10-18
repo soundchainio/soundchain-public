@@ -2,10 +2,10 @@
 import { Post } from 'components/Post'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { FeedItem, useFeedQuery } from 'lib/graphql'
-import { memo, useCallback, useEffect, useMemo, useRef } from 'react'
+import { createContext, memo, useCallback, useContext, useEffect, useMemo, useRef } from 'react'
 import PullToRefresh from 'react-simple-pull-to-refresh'
 import AutoSizer from 'react-virtualized-auto-sizer'
-import { areEqual, VariableSizeList as List } from 'react-window'
+import { areEqual, ListChildComponentProps, VariableSizeList as List } from 'react-window'
 import InfiniteLoader from 'react-window-infinite-loader'
 import { LoaderAnimation } from './LoaderAnimation'
 import { NoResultFound } from './NoResultFound'
@@ -16,6 +16,14 @@ interface FeedProps {
 }
 
 const GAP = 8
+
+interface FeedContextData {
+  setSize: (index: number, height?: number | undefined) => void
+  isItemLoaded: (index: number) => boolean
+  handleOnPlayClicked: (trackId: string) => void
+}
+
+const FeedContext = createContext({} as FeedContextData)
 
 export const Feed = ({ pageSize }: FeedProps) => {
   const { playlistState } = useAudioPlayerContext()
@@ -87,48 +95,54 @@ export const Feed = ({ pageSize }: FeedProps) => {
   }
 
   return (
-    <PullToRefresh onRefresh={refetch}>
-      <AutoSizer>
-        {({ height, width }) => (
-          <InfiniteLoader isItemLoaded={isItemLoaded} itemCount={feedCount} loadMoreItems={loadMoreItems}>
-            {({ onItemsRendered, ref }) => (
-              <List
-                height={height}
-                width={width}
-                onItemsRendered={onItemsRendered}
-                ref={list => {
-                  typeof ref === 'function' && ref(list)
-                  listRef.current = list
-                }}
-                itemCount={feedCount}
-                itemSize={getSize}
-                itemData={nodes}
-              >
-                {memo(
-                  ({ data, index, style }) => (
-                    <div style={style}>
-                      {!isItemLoaded(index) ? (
-                        <LoaderAnimation loadingMessage="Loading..." />
-                      ) : (
-                        <Row
-                          data={data as FeedItem[]}
-                          index={index}
-                          setSize={setSize}
-                          handleOnPlayClicked={handleOnPlayClicked}
-                        />
-                      )}
-                    </div>
-                  ),
-                  areEqual,
-                )}
-              </List>
-            )}
-          </InfiniteLoader>
-        )}
-      </AutoSizer>
-    </PullToRefresh>
+    <FeedContext.Provider
+      value={{
+        setSize,
+        handleOnPlayClicked,
+        isItemLoaded,
+      }}
+    >
+      <PullToRefresh onRefresh={refetch}>
+        <AutoSizer>
+          {({ height, width }) => (
+            <InfiniteLoader isItemLoaded={isItemLoaded} itemCount={feedCount} loadMoreItems={loadMoreItems}>
+              {({ onItemsRendered, ref }) => (
+                <List
+                  height={height}
+                  width={width}
+                  onItemsRendered={onItemsRendered}
+                  ref={list => {
+                    typeof ref === 'function' && ref(list)
+                    listRef.current = list
+                  }}
+                  itemCount={feedCount}
+                  itemSize={getSize}
+                  itemData={nodes}
+                >
+                  {ListItem}
+                </List>
+              )}
+            </InfiniteLoader>
+          )}
+        </AutoSizer>
+      </PullToRefresh>
+    </FeedContext.Provider>
   )
 }
+
+const ListItem = memo(({ index, data, style }: ListChildComponentProps) => {
+  const { isItemLoaded, setSize, handleOnPlayClicked } = useContext(FeedContext)
+
+  return (
+    <div style={style}>
+      {!isItemLoaded(index) ? (
+        <LoaderAnimation loadingMessage="Loading..." />
+      ) : (
+        <Row data={data as FeedItem[]} index={index} setSize={setSize} handleOnPlayClicked={handleOnPlayClicked} />
+      )}
+    </div>
+  )
+}, areEqual)
 
 interface RowProps {
   data: FeedItem[]

@@ -8,7 +8,9 @@ export type TimeCounterProps = {
   children: (days: number, hours: number, minutes: number, seconds: number) => React.ReactNode
 }
 
-export const TimeCounter = ({ date, children, onEndTimer }: TimeCounterProps) => {
+export const TimeCounter = (props: TimeCounterProps) => {
+  const { date, children, onEndTimer } = props
+
   const { time, finished } = useTimer(date)
 
   useEffect(() => {

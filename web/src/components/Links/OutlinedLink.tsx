@@ -14,7 +14,7 @@ function OutlinedLink({ bgColor, borderColor, className, children, ...rest }: Pr
     <div className={classNames('p-0.5', borderColor)}>
       <LinkAnchor
         className={classNames(
-          'flex h-full h-full w-full items-center justify-center bg-opacity-75 text-xs font-bold font-semibold text-white',
+          'flex h-full w-full items-center justify-center bg-opacity-75 text-xs font-bold text-white',
           className,
           bgColor ? bgColor : 'bg-gray-10',
         )}

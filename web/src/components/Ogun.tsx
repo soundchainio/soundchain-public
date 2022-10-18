@@ -22,15 +22,16 @@ export const Ogun = ({ value = '', className, variant, showBonus, rewardRatePerc
   switch (variant) {
     case 'currency':
       return (
-        <div className={classNames('font-bold', className)}>
-          <p className="text-white">
-            <OgunIcon id="ogun-token" className="inline h-5 w-5" />{' '}
-            {showBonus ? (
-              <span className="text-sm text-gray-60">{`${fixedDecimals(moneyValue - ogunBonus)} OGUN`}</span>
-            ) : (
-              <span className="text-sm text-gray-60">{`${moneyValue} OGUN`}</span>
-            )}
-          </p>
+        <div className={classNames('flex items-center font-bold', className)}>
+          <OgunIcon id="ogun-token" className="mr-[10px] inline h-6 w-6" />
+          {showBonus ? (
+            <span className="flex items-center text-xl text-slate-50">
+              {`${fixedDecimals(moneyValue - ogunBonus)}`}
+              <span className="ml-[4px] mt-[4px] text-sm font-semibold text-gray-60">OGUN</span>
+            </span>
+          ) : (
+            <span className="text-sm text-slate-50">{`${moneyValue} OGUN`}</span>
+          )}
         </div>
       )
     case 'currency-inline':
