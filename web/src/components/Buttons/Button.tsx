@@ -1,19 +1,19 @@
 import { IconComponent } from 'icons/types/IconComponent'
 import React, { forwardRef } from 'react'
-import { ApproveAllowanceButton } from './Buttons/ApproveAllowanceButton'
-import { ApproveButton } from './Buttons/ApproveButton'
-import { BuyNFTButton } from './Buttons/BuyNFT'
-import { CancelButton } from './Buttons/CancelButton'
-import { ClearButton } from './Buttons/Clear'
-import { EditListingButton } from './Buttons/EditListing'
-import { GreenGradient } from './Buttons/GreenGradient'
-import { ListNFTButton } from './Buttons/ListNFT'
-import { OrangeButton } from './Buttons/Orange'
-import { OutlineButton } from './Buttons/Outline'
-import { OutlineRoundedButton } from './Buttons/OutlineRounded'
-import { RainbowButton } from './Buttons/Rainbow'
-import { RainbowRounded } from './Buttons/RainbowRounded'
-import { RainbowXSButton } from './Buttons/RainbowXS'
+import { ApproveButton } from './ApproveButton'
+import { BuyNFTButton } from './BuyNFT'
+import { CancelButton } from './CancelButton'
+import { ClearButton } from './Clear'
+import { EditListingButton } from './EditListing'
+import { GreenGradient } from './GreenGradient'
+import { ListNFTButton } from './ListNFT'
+import { OrangeButton } from './Orange'
+import { OutlineButton } from './Outline'
+import { OutlineRoundedButton } from './OutlineRounded'
+import { RainbowButton } from './RainbowButton'
+import { RainbowRounded } from './RainbowRounded'
+import { RainbowXSButton } from './RainbowXS'
+import { ApproveAllowanceButton } from './ApproveAllowanceButton'
 
 export type ButtonVariant =
   | 'rainbow'
@@ -40,6 +40,7 @@ export interface ButtonProps extends React.ComponentPropsWithRef<'button'> {
   bgColor?: string
   borderColor?: string
   textColor?: string
+  outlined?: boolean
 }
 
 export const commonClasses = 'flex items-center justify-center w-full h-full font-bold'

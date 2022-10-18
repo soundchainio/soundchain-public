@@ -1,24 +1,44 @@
-import { ButtonProps } from 'components/Button'
+import { ButtonProps } from 'components/Buttons/Button'
+import { SpinAnimation } from 'components/common/SpinAnimation'
+import tw from 'tailwind-styled-components'
 
-export const ListNFTButton = ({ className, type = 'button', children, loading, disabled, ...rest }: ButtonProps) => {
+export const ListNFTButton = (props: ButtonProps) => {
+  const { className, type = 'button', children, loading, ...rest } = props
+
   return (
     <div className={className}>
-      <button
-        className={`w-full border-2 border-blue-600 bg-blue-900 bg-opacity-60 p-2 px-6 text-xs font-medium text-white md:px-4 ${
-          disabled ? 'cursor-not-allowed' : ''
-        }`}
-        type={type}
-        disabled={disabled}
-        {...rest}
-      >
+      <Button type={type} {...rest}>
         {loading ? (
-          <div className="flex items-center justify-center px-6">
-            <div className="h-5 w-5 animate-spin rounded-full border-t-2 border-white"></div>
-          </div>
+          <Loading>
+            <SpinAnimation />
+          </Loading>
         ) : (
           <span>{children}</span>
         )}
-      </button>
+      </Button>
     </div>
   )
 }
+
+const Button = tw.button<ButtonProps>`
+  ${({ disabled }) => disabled && 'cursor-not-allowed'}
+  ${({ outlined }) => (outlined ? 'bg-transparent hover:bg-blue-900' : 'bg-blue-900')}
+
+  w-full
+  border-2 
+  border-blue-600 
+  bg-opacity-60 
+  p-2 
+  px-6 
+  text-xs 
+  font-medium 
+  text-white 
+
+  md:px-4
+`
+const Loading = tw.div`
+  flex 
+  items-center 
+  justify-center 
+  px-6
+`

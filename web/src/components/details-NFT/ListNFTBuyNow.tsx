@@ -1,4 +1,4 @@
-import { Button } from 'components/Button'
+import { Button } from 'components/Buttons/Button'
 import { InputField } from 'components/InputField'
 import MaxGasFee from 'components/MaxGasFee'
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar'
