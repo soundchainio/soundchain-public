@@ -567,6 +567,8 @@ export type ListingItemConnection = {
 
 export type ListingItemInput = {
   saleType?: Maybe<SaleType>;
+  acceptsMATIC?: Maybe<Scalars['Boolean']>;
+  acceptsOGUN?: Maybe<Scalars['Boolean']>;
 };
 
 export type ListingItemWithPrice = {
