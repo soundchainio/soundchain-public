@@ -17,7 +17,6 @@ export const Explore = () => {
   const [search, setSearch] = useState('')
   const [isGrid, setIsGrid] = useState(true)
   const [sorting, setSorting] = useState<SortListingItem>(SortListingItem.CreatedAt)
-
   const { playlistState } = useAudioPlayerContext()
 
   const pageSize = 15
@@ -30,6 +29,10 @@ export const Explore = () => {
     },
     ssr: false,
   })
+
+  useEffect(() => {
+    setSearch('')
+  }, [selectedTab])
 
   useEffect(() => {
     refetch({
@@ -98,14 +101,14 @@ export const Explore = () => {
       {selectedTab === ExploreTab.ALL && <ExploreAll setSelectedTab={setSelectedTab} />}
       {selectedTab === ExploreTab.USERS && (
         <>
-          <ExploreSearchBar setSearchTerm={searchTerm => setSearch(searchTerm)} />
+          <ExploreSearchBar searchTerm={search} setSearchTerm={searchTerm => setSearch(searchTerm)} />
 
           {isGrid ? <ExploreUsersGridView searchTerm={search} /> : <ExploreUsersListView searchTerm={search} />}
         </>
       )}
       {selectedTab === ExploreTab.TRACKS && (
         <>
-          <ExploreSearchBar setSearchTerm={searchTerm => setSearch(searchTerm)} />
+          <ExploreSearchBar searchTerm={search} setSearchTerm={searchTerm => setSearch(searchTerm)} />
           {isGrid ? (
             <GridView
               isLoading={loading}
