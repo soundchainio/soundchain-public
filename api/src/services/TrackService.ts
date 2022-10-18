@@ -680,10 +680,14 @@ export class TrackService extends ModelService<typeof Track> {
       },
     ];
     let dotNotationFilter;
+    console.log('filter: ', filter);
     if (filter) {
       const filterClone = JSON.parse(JSON.stringify(filter));
+      console.log('filterClone: ', filterClone);
       delete filterClone.genres;
+      console.log('filterClone after delete: ', filterClone);
       dotNotationFilter = filter.listingItem && dot.dot(filterClone);
+      console.log('dotNotationFilter: ', dotNotationFilter);
     }
     return this.paginatePipelineAggregated({
       aggregation,

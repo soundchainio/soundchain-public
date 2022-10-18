@@ -15,4 +15,10 @@ export class FilterTrackMarketplace {
 export class ListingItem {
   @Field(() => SaleType, { nullable: true })
   saleType?: SaleType;
+
+  @Field(() => Boolean, { nullable: true })
+  acceptsMATIC?: boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  acceptsOGUN?: boolean;
 }
