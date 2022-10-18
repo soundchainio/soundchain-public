@@ -18,7 +18,6 @@ import {
 } from 'lib/graphql'
 import { protectPage } from 'lib/protectPage'
 import { useEffect } from 'react'
-import { animateScroll as scroll } from 'react-scroll'
 
 export interface PostPageProps {
   recipientName: string
@@ -72,10 +71,6 @@ export default function ChatPage({ recipientName, profileId }: PostPageProps) {
     setMessages([])
     const { data } = await fetchMore({ variables: { profileId } })
     setNewMessages(data, true)
-    setTimeout(() => {
-      scroll.scrollToBottom({ duration: 500 })
-      setLoading(false)
-    }, 100)
   }
 
   const onFetchMore = async () => {
