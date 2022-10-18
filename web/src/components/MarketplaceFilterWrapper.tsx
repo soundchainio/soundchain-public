@@ -89,7 +89,7 @@ export const MarketplaceFilterWrapper = memo((props: FilterWrapperProps) => {
             <Badge
               label={saleType.label}
               onDelete={() => {
-                dispatchShowFilterMarketplaceModal(false, genres, undefined, undefined, undefined)
+                dispatchShowFilterMarketplaceModal(false, genres, undefined, acceptsMATIC, acceptsOGUN)
                 setSaleType(undefined)
               }}
             />
@@ -100,7 +100,7 @@ export const MarketplaceFilterWrapper = memo((props: FilterWrapperProps) => {
               label={genre.label}
               onDelete={() => {
                 const newGenres = genres.filter(it => it !== genre)
-                dispatchShowFilterMarketplaceModal(false, newGenres, saleType, undefined, undefined)
+                dispatchShowFilterMarketplaceModal(false, newGenres, saleType, acceptsMATIC, acceptsOGUN)
                 setGenres(newGenres)
               }}
             />

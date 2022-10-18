@@ -680,7 +680,6 @@ export class TrackService extends ModelService<typeof Track> {
       },
     ];
     let dotNotationFilter;
-    console.log('filter: ', filter);
     if (filter) {
       const filterClone = JSON.parse(JSON.stringify(filter));
       console.log('filterClone: ', filterClone);
