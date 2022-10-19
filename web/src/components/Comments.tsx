@@ -2,7 +2,6 @@ import { useApolloClient } from '@apollo/client'
 import { PageInput, useCommentsQuery } from 'lib/graphql'
 import { useRouter } from 'next/router'
 import React, { useEffect, useRef, useState } from 'react'
-import * as Scroll from 'react-scroll'
 import { Comment } from './Comment'
 import { CommentSkeleton } from './CommentSkeleton'
 import { InfiniteLoader } from './InfiniteLoader'
@@ -14,6 +13,7 @@ interface CommentsProps {
 }
 
 export const Comments = ({ postId, pageSize = 10 }: CommentsProps) => {
+  console.log({ pageSize })
   const router = useRouter()
   const { cache } = useApolloClient()
   const [scrollToCommentId, setScrollToCommentId] = useState<string | null>(null)
@@ -100,7 +100,6 @@ export const Comments = ({ postId, pageSize = 10 }: CommentsProps) => {
           return (
             <div key={id} ref={scrollToCommentRef}>
               <Comment commentId={id} />
-              <Scroll.Element name="scrollToComment"></Scroll.Element>
             </div>
           )
         }
@@ -112,8 +111,8 @@ export const Comments = ({ postId, pageSize = 10 }: CommentsProps) => {
 }
 
 function scrollToComment(el: HTMLElement) {
-  const main = document.querySelector('#main') as HTMLElement
-  const bottomSheet = document.querySelector('#bottom-sheet') as HTMLElement
-  const offset = el.clientHeight - main.clientHeight + bottomSheet.clientHeight
-  Scroll.scroller.scrollTo('scrollToComment', { containerId: 'main', duration: 0, offset })
+  el.scrollIntoView({
+    behavior: 'smooth',
+    block: 'start',
+  })
 }
