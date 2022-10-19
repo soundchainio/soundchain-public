@@ -57,17 +57,7 @@ export const Explore = () => {
     })
   }
 
-  if (loading || !data) {
-    return (
-      <div>
-        <TrackListItemSkeleton />
-        <TrackListItemSkeleton />
-        <TrackListItemSkeleton />
-      </div>
-    )
-  }
-
-  const { nodes, pageInfo } = data.exploreTracks
+  const { nodes = [], pageInfo = {} } = data?.exploreTracks ?? { nodes: [], pageInfo: { hasNextPage: true } }
 
   const handleOnPlayClicked = (index: number) => {
     const list = nodes.map(
@@ -97,37 +87,46 @@ export const Explore = () => {
         selectedTab={selectedTab}
         setSelectedTab={setSelectedTab}
       />
-
-      {selectedTab === ExploreTab.ALL && <ExploreAll setSelectedTab={setSelectedTab} />}
-      {selectedTab === ExploreTab.USERS && (
-        <>
-          <ExploreSearchBar searchTerm={search} setSearchTerm={searchTerm => setSearch(searchTerm)} />
-
-          {isGrid ? <ExploreUsersGridView searchTerm={search} /> : <ExploreUsersListView searchTerm={search} />}
-        </>
+      {[ExploreTab.USERS, ExploreTab.TRACKS].includes(selectedTab) && (
+        <ExploreSearchBar searchTerm={search} setSearchTerm={searchTerm => setSearch(searchTerm)} />
       )}
-      {selectedTab === ExploreTab.TRACKS && (
+
+      {loading || !data ? (
+        <div>
+          <TrackListItemSkeleton />
+          <TrackListItemSkeleton />
+          <TrackListItemSkeleton />
+        </div>
+      ) : (
         <>
-          <ExploreSearchBar searchTerm={search} setSearchTerm={searchTerm => setSearch(searchTerm)} />
-          {isGrid ? (
-            <GridView
-              isLoading={loading}
-              variant="track"
-              hasNextPage={pageInfo.hasNextPage}
-              loadMore={loadMore}
-              list={nodes as Track[]}
-              refetch={refetch}
-              handleOnPlayClicked={handleOnPlayClicked}
-            />
-          ) : (
-            <ListView
-              loading={loading}
-              hasNextPage={pageInfo.hasNextPage}
-              loadMore={loadMore}
-              tracks={nodes as Track[]}
-              displaySaleBadge={true}
-              refetch={refetch}
-            />
+          {selectedTab === ExploreTab.ALL && <ExploreAll setSelectedTab={setSelectedTab} />}
+
+          {selectedTab === ExploreTab.USERS && (
+            <>{isGrid ? <ExploreUsersGridView searchTerm={search} /> : <ExploreUsersListView searchTerm={search} />}</>
+          )}
+          {selectedTab === ExploreTab.TRACKS && (
+            <>
+              {isGrid ? (
+                <GridView
+                  isLoading={loading}
+                  variant="track"
+                  hasNextPage={pageInfo.hasNextPage}
+                  loadMore={loadMore}
+                  list={nodes as Track[]}
+                  refetch={refetch}
+                  handleOnPlayClicked={handleOnPlayClicked}
+                />
+              ) : (
+                <ListView
+                  loading={loading}
+                  hasNextPage={pageInfo.hasNextPage}
+                  loadMore={loadMore}
+                  tracks={nodes as Track[]}
+                  displaySaleBadge={true}
+                  refetch={refetch}
+                />
+              )}
+            </>
           )}
         </>
       )}
