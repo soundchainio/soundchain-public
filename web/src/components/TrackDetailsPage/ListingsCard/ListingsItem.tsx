@@ -1,17 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @next/next/link-passhref */
-import { useTokenOwner } from 'hooks/useTokenOwner'
-import tw from 'tailwind-styled-components'
+import { Button } from 'components/Buttons/Button'
+import { SpinAnimation } from 'components/common/SpinAnimation'
+import { Cell } from 'components/common/Table'
 import { Matic } from 'components/Matic'
 import { Ogun } from 'components/Ogun'
-import { Cell } from 'components/common/Table'
 import { ProfileWithAvatar } from 'components/ProfileWithAvatar'
+import { useTokenOwner } from 'hooks/useTokenOwner'
 import { Profile, useProfileLazyQuery } from 'lib/graphql'
+import NextLink from 'next/link'
+import { useRouter } from 'next/router'
 import { useEffect } from 'react'
-import Link from 'next/link'
-import { Button } from 'components/Buttons/Button'
 import { FaEdit } from 'react-icons/fa'
-import { SpinAnimation } from 'components/common/SpinAnimation'
+import tw from 'tailwind-styled-components'
 import { isPendingRequest } from 'utils/isPendingRequest'
 interface ListingItemProps {
   listedTrack: any
@@ -19,6 +20,7 @@ interface ListingItemProps {
 }
 
 export const ListingItem = (props: ListingItemProps) => {
+  const router = useRouter()
   const { listedTrack, isMobile } = props
 
   const price = listedTrack.listingItem?.pricePerItemToShow || 0
@@ -71,12 +73,17 @@ export const ListingItem = (props: ListingItemProps) => {
           {isProcessing ? (
             <SpinAnimation />
           ) : (
-            <Link href={`${trackId}/edit/buy-now`}>
+            <NextLink
+              href={{
+                pathname: `${router.pathname}/edit/buy-now`,
+                query: { ...router.query, isPaymentOGUN },
+              }}
+            >
               <Anchor>
                 <FaEdit size={22} className="mb-[4px] ml-[4px]" />
                 <ButtonTitle>Edit</ButtonTitle>
               </Anchor>
-            </Link>
+            </NextLink>
           )}
         </Cell>
       ) : (
@@ -84,13 +91,18 @@ export const ListingItem = (props: ListingItemProps) => {
           {isProcessing ? (
             <SpinAnimation />
           ) : (
-            <Link href={`${trackId}/buy-now`}>
+            <NextLink
+              href={{
+                pathname: `${router.pathname}/buy-now`,
+                query: { ...router.query, isPaymentOGUN },
+              }}
+            >
               <a>
                 <Button variant="list-nft">
                   <ButtonTitle>BUY</ButtonTitle>
                 </Button>
               </a>
-            </Link>
+            </NextLink>
           )}
         </Cell>
       )}
@@ -104,19 +116,19 @@ const Flex = tw.div`
   justify-center
 `
 const Anchor = tw.a`
-  flex 
-  flex-col 
-  items-center 
+  flex
+  flex-col
+  items-center
   justify-center
   text-neutral-400
-  
+
   hover:cursor-pointer
   hover:text-white
 `
 
 const ButtonTitle = tw.span`
-  text-sm 
-  font-medium 
-  leading-6 
+  text-sm
+  font-medium
+  leading-6
   tracking-wide
 `
