@@ -1,20 +1,19 @@
 /* eslint-disable @next/next/link-passhref */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React from 'react'
-import tw from 'tailwind-styled-components'
-import Link from 'next/link'
-import { Ogun } from 'components/Ogun'
-import { Matic } from 'components/Matic'
-import { TrackQuery, useAuctionItemQuery } from 'lib/graphql'
-import { Social } from './components/Social'
-import { Divider } from 'components/common'
-import { TrackSlider } from './components/TrackSlider'
-import { Song } from 'hooks/useAudioPlayer'
 import { Button } from 'components/Buttons/Button'
-import { Auction } from './components/Auction'
+import { Divider } from 'components/common'
+import { Matic } from 'components/Matic'
+import { Ogun } from 'components/Ogun'
+import { Song } from 'hooks/useAudioPlayer'
 import { useTokenOwner } from 'hooks/useTokenOwner'
+import { TrackQuery, useAuctionItemQuery } from 'lib/graphql'
+import { default as Link, default as NextLink } from 'next/link'
+import { useRouter } from 'next/router'
+import tw from 'tailwind-styled-components'
 import { isPendingRequest } from 'utils/isPendingRequest'
-import { SpinAnimation } from 'components/common/SpinAnimation'
+import { Auction } from './components/Auction'
+import { Social } from './components/Social'
+import { TrackSlider } from './components/TrackSlider'
 interface Props {
   track: TrackQuery['track']
 }
@@ -30,6 +29,7 @@ enum CurrencyType {
 }
 
 export const PriceCard = (props: Props) => {
+  const router = useRouter()
   const { track } = props
 
   const { data: { auctionItem } = {} } = useAuctionItemQuery({
@@ -75,21 +75,31 @@ export const PriceCard = (props: Props) => {
               {isOgunPrice && <Ogun value={price} variant="currency" className="text-xs" showBonus />}
             </span>
             {isOwner ? (
-              <Link href={`${track.id}/edit/buy-now`}>
+              <NextLink
+                href={{
+                  pathname: `${router.pathname}/edit/buy-now`,
+                  query: { ...router.query, isPaymentOGUN: isOgunPrice },
+                }}
+              >
                 <a>
                   <Button variant="list-nft" className="w-[170px]" loading={isProcessing}>
                     <span className="py-4">EDIT</span>
                   </Button>
                 </a>
-              </Link>
+              </NextLink>
             ) : (
-              <Link href={`${track.id}/buy-now`}>
+              <NextLink
+                href={{
+                  pathname: `${router.pathname}/buy-now`,
+                  query: { ...router.query, isPaymentOGUN: isOgunPrice },
+                }}
+              >
                 <a>
                   <Button variant="rainbow" loading={isProcessing}>
                     <span className="p-4">BUY NOW</span>
                   </Button>
                 </a>
-              </Link>
+              </NextLink>
             )}
           </PriceContainer>
           <Divider />
@@ -141,17 +151,17 @@ const Container = tw.div`
 `
 
 const PriceContainer = tw.div`
-  flex 
-  items-start 
+  flex
+  items-start
   justify-between
   w-full
   mt-2
   mb-6
 `
 const ButtonTitle = tw.span`
-  text-sm 
-  font-bold 
-  leading-6 
+  text-sm
+  font-bold
+  leading-6
   tracking-wide
   text-white
 
