@@ -1,17 +1,18 @@
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik'
 import { useMe } from 'hooks/useMe'
 import { Send } from 'icons/Send'
-import { animateScroll as scroll } from 'react-scroll'
 import * as yup from 'yup'
 import { SendMessageMutation, useSendMessageMutation } from '../lib/graphql'
 import { Avatar } from './Avatar'
 import { FlexareaField } from './FlexareaField'
+import { MutableRefObject } from 'react'
 
 const messageMaxLength = 160
 
 export interface NewMessageFormProps {
   profileId: string
   onNewMessage: (message: SendMessageMutation) => void
+  bottomRef: MutableRefObject<HTMLDivElement>
 }
 
 interface FormValues {
@@ -24,7 +25,7 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
 
 const initialValues: FormValues = { body: '' }
 
-export const NewMessageForm = ({ profileId, onNewMessage }: NewMessageFormProps) => {
+export const NewMessageForm = ({ profileId, onNewMessage, bottomRef }: NewMessageFormProps) => {
   const [sendMessage] = useSendMessageMutation({
     onCompleted: data => onNewMessage(data),
   })
@@ -33,7 +34,10 @@ export const NewMessageForm = ({ profileId, onNewMessage }: NewMessageFormProps)
   const handleSubmit = async ({ body }: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
     await sendMessage({ variables: { input: { message: body, toId: profileId } } })
     resetForm()
-    scroll.scrollToBottom({ duration: 500, smooth: 'easeInOutCubic' })
+    bottomRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    })
   }
 
   return (

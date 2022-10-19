@@ -17,7 +17,7 @@ import {
   useChatHistoryQuery,
 } from 'lib/graphql'
 import { protectPage } from 'lib/protectPage'
-import { useEffect } from 'react'
+import { MutableRefObject, useEffect, useRef } from 'react'
 
 export interface PostPageProps {
   recipientName: string
@@ -49,6 +49,7 @@ export default function ChatPage({ recipientName, profileId }: PostPageProps) {
     hasPreviousPage: false,
     totalCount: 0,
   })
+  const bottomRef = useRef<HTMLDivElement>()
 
   useEffect(() => {
     delayFocus('#newMessageInput')
@@ -92,8 +93,18 @@ export default function ChatPage({ recipientName, profileId }: PostPageProps) {
     <>
       <SEO title="Message | SoundChain" canonicalUrl={`/messages/${profileId}`} description="SoundChain Message" />
       <ChatLayout topNavBarProps={topNavBarProps}>
-        <Chat messages={messages} pageInfo={pageInfo} onFetchMore={onFetchMore} loading={loading} />
-        <NewMessageForm profileId={profileId} onNewMessage={onNewMessage} />
+        <Chat
+          messages={messages}
+          pageInfo={pageInfo}
+          onFetchMore={onFetchMore}
+          loading={loading}
+          bottomRef={bottomRef as MutableRefObject<HTMLDivElement>}
+        />
+        <NewMessageForm
+          profileId={profileId}
+          onNewMessage={onNewMessage}
+          bottomRef={bottomRef as MutableRefObject<HTMLDivElement>}
+        />
       </ChatLayout>
     </>
   )

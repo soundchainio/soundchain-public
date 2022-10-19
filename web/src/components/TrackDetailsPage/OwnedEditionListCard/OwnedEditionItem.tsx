@@ -1,15 +1,14 @@
 /* eslint-disable @next/next/link-passhref */
+import { SpinAnimation } from 'components/common/SpinAnimation'
+import { useModalDispatch } from 'contexts/providers/modal'
+import { useMe } from 'hooks/useMe'
 import { useTokenOwner } from 'hooks/useTokenOwner'
 import { Role, TrackWithListingItem } from 'lib/graphql'
-import { SpinAnimation } from 'components/common/SpinAnimation'
-import { BsQuestionCircleFill } from 'react-icons/bs'
-import ReactTooltip from 'react-tooltip'
 import Link from 'next/link'
-import tw from 'tailwind-styled-components'
-import { BsTagFill } from 'react-icons/bs'
+import { BsQuestionCircleFill, BsTagFill } from 'react-icons/bs'
 import { MdDelete } from 'react-icons/md'
-import { useMe } from 'hooks/useMe'
-import { useModalDispatch } from 'contexts/providers/modal'
+import ReactTooltip from 'react-tooltip'
+import tw from 'tailwind-styled-components'
 import { AuthorActionsType } from 'types/AuthorActionsType'
 import { isPendingRequest } from 'utils/isPendingRequest'
 interface OwnedEditionItemProps {
@@ -71,39 +70,39 @@ export const OwnedEditionItem = (props: OwnedEditionItemProps) => {
 const ProcessingContainer = tw.div`
   flex
   flex-col
-  items-center 
-  justify-center 
+  items-center
+  justify-center
   gap-4
   text-neutral-400
 `
 const ButtonTitle = tw.span`
-  text-sm 
-  font-medium 
-  leading-6 
+  text-sm
+  font-medium
+  leading-6
   tracking-wide
 `
 const Anchor = tw.a`
-  flex 
-  flex-col 
-  items-center 
+  flex
+  flex-col
+  items-center
   justify-center
   text-neutral-400
-  
+
   hover:cursor-pointer
   hover:text-white
 `
 
 const DisabledAnchor = tw.div`
-  flex 
-  flex-col 
-  items-center 
+  flex
+  flex-col
+  items-center
   justify-center
   text-neutral-400
 `
 const DeleteButton = tw.button`
-  flex 
-  flex-col 
-  items-center 
+  flex
+  flex-col
+  items-center
   justify-center
   text-neutral-400
 

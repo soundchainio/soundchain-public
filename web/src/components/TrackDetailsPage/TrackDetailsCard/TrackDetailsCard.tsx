@@ -1,16 +1,17 @@
-import useBlockchain from 'hooks/useBlockchain'
-import { useWalletContext } from 'hooks/useWalletContext'
-import { TrackQuery, PendingRequest } from 'lib/graphql'
-import { useState, useEffect } from 'react'
+import { Accordion, Badges, Cell, Row, Table } from 'components/common'
 import { config } from 'config'
+import useBlockchain from 'hooks/useBlockchain'
+import useBlockchainV2 from 'hooks/useBlockchainV2'
+import { useWalletContext } from 'hooks/useWalletContext'
+import { ChainLink } from 'icons/ChainLink'
 import { Pinata } from 'icons/Pinata'
 import { Token } from 'icons/Token'
+import { PendingRequest, TrackQuery } from 'lib/graphql'
+import { useEffect, useState } from 'react'
+import { BsQuestionCircleFill } from 'react-icons/bs'
+import ReactTooltip from 'react-tooltip'
 import tw from 'tailwind-styled-components'
-import { ChainLink } from 'icons/ChainLink'
-import { Badges } from 'components/common'
 import { getGenreLabelByKey } from 'utils/Genres'
-import { Table, Row, Cell, Accordion } from 'components/common'
-import useBlockchainV2 from 'hooks/useBlockchainV2'
 
 interface TrackDetailsCardProps {
   track: TrackQuery['track']
@@ -96,7 +97,19 @@ export const TrackDetailsCard = (props: TrackDetailsCardProps) => {
         </Row>
         <Row>
           <Cell $bgDark>MINING STATUS</Cell>
-          <Cell>{nftData?.pendingRequest || 'No minting status found'}</Cell>
+          <Cell $displayFlex>
+            {nftData?.pendingRequest || 'No minting status found'}
+            {nftData?.pendingRequest !== PendingRequest.None && (
+              <>
+                <ProcessingContainer>
+                  <ReactTooltip id="processingEdition" type="dark" effect="solid">
+                    <span>Your NFT is being processed. This can take several minutes.</span>
+                  </ReactTooltip>
+                  <BsQuestionCircleFill data-tip data-for="processingEdition" size={18} />
+                </ProcessingContainer>
+              </>
+            )}
+          </Cell>
         </Row>
         <Row>
           <Cell $bgDark>
@@ -157,4 +170,13 @@ const Flex = tw.div`
   flex
   items-center
   justify-center
+`
+
+const ProcessingContainer = tw.div`
+  flex
+  items-center
+  justify-center
+  gap-4
+  text-neutral-400
+  ml-2
 `
