@@ -2,7 +2,7 @@ import tw from 'tailwind-styled-components'
 import { Pause } from 'icons/Pause'
 import { Play } from 'icons/Play'
 import Link from 'next/link'
-import { MeQuery, TrackQuery } from 'lib/graphql'
+import { TrackQuery } from 'lib/graphql'
 import { FavoriteTrack } from 'components/Buttons/FavoriteTrack/FavoriteTrack'
 interface MobilePlayerProps {
   handleOnPlayClicked: () => void
@@ -13,8 +13,6 @@ interface MobilePlayerProps {
   hideArtistName?: boolean
   hideLikeButton?: boolean
   playButtonStyle?: string
-  isLoading: boolean
-  me?: MeQuery['me']
 }
 
 export const MobilePlayer = (props: MobilePlayerProps) => {
@@ -22,9 +20,7 @@ export const MobilePlayer = (props: MobilePlayerProps) => {
     classNames,
     handleOnPlayClicked,
     isPlaying,
-    isLoading,
     track,
-    me,
     hideArtistName,
     hideLikeButton,
     hideTrackName,
@@ -58,7 +54,7 @@ export const MobilePlayer = (props: MobilePlayerProps) => {
         </span>
 
         {!hideLikeButton && (
-          <FavoriteTrack track={track} isLoading={isLoading} me={me} />
+          <FavoriteTrack />
         )}
       </MobilePlayerInnerFlex>
     </Container>
@@ -77,7 +73,7 @@ const Container = tw.div`
   justify-end 
   rounded-xl 
   p-4 
-text-white
+  text-white
 `
 const MobilePlayerInnerFlex = tw.div`
   flex 
@@ -105,5 +101,5 @@ const ArtistName = tw.h2`
   text-base 
   font-bold 
   leading-5 
-text-[#969899]
+  text-[#969899]
 `
