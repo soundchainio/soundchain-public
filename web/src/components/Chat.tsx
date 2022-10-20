@@ -20,7 +20,7 @@ export const Chat = ({ messages, pageInfo, onFetchMore, loading, bottomRef }: Ch
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!renderLoader && messages) initialScrollToBottom()
+    if (!renderLoader && messages.length > 0) initialScrollToBottom()
   }, [messages, renderLoader])
 
   useEffect(() => {
@@ -50,8 +50,8 @@ export const Chat = ({ messages, pageInfo, onFetchMore, loading, bottomRef }: Ch
           behavior: 'smooth',
           block: 'start',
         })
-      }, 200)
-      setTimeout(() => setRenderLoader(true), 1000)
+      }, 1000)
+      setTimeout(() => setRenderLoader(true), 1500)
     })
   }
 
