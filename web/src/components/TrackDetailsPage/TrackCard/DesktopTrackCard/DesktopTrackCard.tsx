@@ -66,8 +66,6 @@ export const DesktopTrackCard = (props: Props) => {
           <MobilePlayer
             handleOnPlayClicked={handleOnPlayClicked}
             isPlaying={isPlaying}
-            me={me}
-            isLoading={isLoading}
             track={track}
             classNames="h-[250px] xl:hidden"
             hideArtistName
