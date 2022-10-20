@@ -12,7 +12,7 @@ import { BsQuestionCircleFill } from 'react-icons/bs'
 import ReactTooltip from 'react-tooltip'
 import tw from 'tailwind-styled-components'
 import { getGenreLabelByKey } from 'utils/Genres'
-
+import { BiLinkExternal } from 'react-icons/bi'
 interface TrackDetailsCardProps {
   track: TrackQuery['track']
 }
@@ -84,31 +84,17 @@ export const TrackDetailsCard = (props: TrackDetailsCardProps) => {
         <Row>
           <Cell $bgDark>GENRES</Cell>
           <Cell>
-            {isEmptyGenre ? (
-              <div>No Genre Selected</div>
-            ) : (
-              <Overflow>
-                {genres.map(genre => (
-                  <Badges.Badge key={genre} label={getGenreLabelByKey(genre) || genre} className="mr-4" />
-                ))}
-              </Overflow>
-            )}
-          </Cell>
-        </Row>
-        <Row>
-          <Cell $bgDark>MINING STATUS</Cell>
-          <Cell $displayFlex>
-            {nftData?.pendingRequest || 'No minting status found'}
-            {nftData?.pendingRequest !== PendingRequest.None && (
-              <>
-                <ProcessingContainer>
-                  <ReactTooltip id="processingEdition" type="dark" effect="solid">
-                    <span>Your NFT is being processed. This can take several minutes.</span>
-                  </ReactTooltip>
-                  <BsQuestionCircleFill data-tip data-for="processingEdition" size={18} />
-                </ProcessingContainer>
-              </>
-            )}
+            <Overflow>
+              {isEmptyGenre ? (
+                <div>No Genre Selected</div>
+                ) : (
+                <>
+                  {genres.map(genre => (
+                    <Badges.Badge key={genre} label={getGenreLabelByKey(genre) || genre} className="mr-4" />
+                  ))}
+                </>
+              )}
+            </Overflow>
           </Cell>
         </Row>
         <Row>
@@ -119,14 +105,14 @@ export const TrackDetailsCard = (props: TrackDetailsCardProps) => {
             </Flex>
           </Cell>
           <Cell>
-            <Overflow>
-              <div>
-                <ChainLink className="mr-2 scale-150" />
-              </div>
-              <AnchorTag href={`${config.ipfsGateway}${nftData?.ipfsCid}`} target="_blank" rel="noreferrer">
-                {nftData?.ipfsCid || 'No Pinata IPFS Found'}
-              </AnchorTag>
-            </Overflow>
+              {nftData?.ipfsCid ? (
+                <AnchorTag href={`${config.ipfsGateway}${nftData?.ipfsCid}`} target="_blank" rel="noreferrer"> 
+                  <span>Pinata Link</span>
+                  <BiLinkExternal size={25} color="#7D7F80"/>   
+                </AnchorTag>
+              ) : (
+                'No Pinata IPFS Found'
+              )}
           </Cell>
         </Row>
         <Row>
@@ -137,14 +123,15 @@ export const TrackDetailsCard = (props: TrackDetailsCardProps) => {
             </Flex>
           </Cell>
           <Cell>
-            <Overflow>
-              <div>
-                <ChainLink className="mr-2 scale-150" />
-              </div>
+            {nftData?.transactionHash ? (
               <AnchorTag href={`${config.polygonscan}tx/${nftData?.transactionHash}`} target="_blank" rel="noreferrer">
-                {nftData?.transactionHash || 'No Transaction Found'}
+                <span>Blockchain Link</span>
+                <BiLinkExternal size={25} color="#7D7F80"/>
               </AnchorTag>
-            </Overflow>
+
+            ):(
+              'No Transaction Found'
+            )}
           </Cell>
         </Row>
       </Table>
@@ -156,27 +143,25 @@ const Overflow = tw.div`
   flex
   items-center
   w-[100px]
-  break-words
 `
 
 const AnchorTag = tw.a`
   text-sm
-  text-gray-80
+  text-white
   break-words
-  hover:text-white
+  flex
+  items-center
+  justify-center
+  gap-1
+  w-full
+
+  sm:gap-2
+  
+  hover:text-gray-80
 `
 
 const Flex = tw.div`
   flex
   items-center
   justify-center
-`
-
-const ProcessingContainer = tw.div`
-  flex
-  items-center
-  justify-center
-  gap-4
-  text-neutral-400
-  ml-2
 `
