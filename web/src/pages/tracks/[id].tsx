@@ -61,7 +61,7 @@ export default function TrackPage() {
     <>
       <SEO title={title} description={description} canonicalUrl={`/tracks/${track.id}`} image={track.artworkUrl} />
       <Container>
-        {isMobile ? <MobileTrackCard me={me} track={track} /> : <DesktopTrackCard me={me} track={track} />}
+        {isMobile ? <MobileTrackCard me={me} track={track} /> : <DesktopTrackCard me={me} track={track} isLoading={loading} />}
         <PriceCard track={track} />
         <BidHistory track={track} />
         <DescriptionCard track={track} />

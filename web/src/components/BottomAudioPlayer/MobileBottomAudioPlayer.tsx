@@ -8,7 +8,7 @@ import { Pause } from 'icons/PauseBottomAudioPlayer'
 import { Play } from 'icons/PlayBottomAudioPlayer'
 import mux from 'mux-embed'
 import { useEffect, useRef } from 'react'
-import Asset from './Asset'
+import Asset from 'components/Asset'
 
 export const BottomAudioPlayer = () => {
   const me = useMe()
@@ -114,7 +114,7 @@ export const BottomAudioPlayer = () => {
   }
 
   return (
-    <div className="flex flex-col gap-2 bg-black py-2">
+    <div className="flex flex-col gap-2 bg-neutral-900 py-2">
       <div className="flex justify-between px-2">
         <button
           className="flex min-w-0 flex-1 items-center gap-2"
