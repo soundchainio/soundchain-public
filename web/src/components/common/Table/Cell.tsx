@@ -7,7 +7,6 @@ interface CellProps {
   $roundedTopLeft?: boolean
   $roundedBottomRight?: boolean
   $roundedBottomLeft?: boolean
-  $displayFlex?: boolean
 }
 
 export const Cell = (props: CellProps) => {
@@ -23,7 +22,6 @@ const TableCellContainer = tw.td<CellProps>`
   ${({ $roundedTopLeft }) => $roundedTopLeft && 'rounded-tl-lg'}
   ${({ $roundedBottomRight }) => $roundedBottomRight && 'rounded-br-lg'}
   ${({ $roundedBottomLeft }) => $roundedBottomLeft && 'rounded-bl-lg'}
-  ${({ $displayFlex }) => $displayFlex && 'flex justify-center'}
 
   py-3
   px-6
