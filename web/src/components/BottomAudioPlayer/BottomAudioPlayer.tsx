@@ -4,7 +4,7 @@ import mux from 'mux-embed'
 import Hls from 'hls.js'
 import { Slider } from '@reach/slider'
 import { config } from 'config'
-import { useModalDispatch, useModalState } from 'contexts/providers/modal'
+import { useModalDispatch } from 'contexts/providers/modal'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { useMe } from 'hooks/useMe'
 import { useEffect, useRef } from 'react'
@@ -30,12 +30,10 @@ export const BottomAudioPlayer = () => {
     setDurationState,
     setProgressState,
     setProgressStateFromSlider,
+    setIsPlaylistOpen,
   } = useAudioPlayerContext()
 
   const { dispatchShowAudioPlayerModal } = useModalDispatch()
-
-  const modalState = useModalState()
-  const isOpen = modalState.showAudioPlayer
 
 
   useEffect(() => {
@@ -115,9 +113,9 @@ export const BottomAudioPlayer = () => {
   }
 
 
-  const showPlayList = (isOpen) => {
+  const showPlayList = () => {
     dispatchShowAudioPlayerModal(true)
-    isOpen = !isOpen
+    setIsPlaylistOpen(true)
   }
 
   if (!currentSong.src) {
@@ -152,7 +150,7 @@ export const BottomAudioPlayer = () => {
         <button
           aria-label="Playlist"
           className="h-10 w-10 flex items-center justify-end"
-          onClick={(isOpen) => showPlayList(isOpen)}
+          onClick={showPlayList}
         >
           <Playlists fillColor="white" />
         </button>
