@@ -8,6 +8,7 @@ import { Layout } from 'components/Layout'
 import { config } from 'config'
 import { StateProvider } from 'contexts'
 import { AudioPlayerProvider } from 'hooks/useAudioPlayer'
+import { TrackProvider } from 'hooks/useTrack'
 import { HideBottomNavBarProvider } from 'hooks/useHideBottomNavBar'
 import { LayoutContextProvider } from 'hooks/useLayoutContext'
 import { ApolloProvider } from 'lib/apollo'
@@ -62,14 +63,16 @@ function SoundchainMainLayout({ Component, pageProps }: CustomAppProps) {
         <MagicProvider>
           <WalletProvider>
             <AudioPlayerProvider>
-              <HideBottomNavBarProvider>
-                <LayoutContextProvider>
-                  <CheckBodyScroll />
-                  <Layout>
-                    <Component {...pageProps} />
-                  </Layout>
-                </LayoutContextProvider>
-              </HideBottomNavBarProvider>
+              <TrackProvider>
+                <HideBottomNavBarProvider>
+                  <LayoutContextProvider>
+                    <CheckBodyScroll />
+                    <Layout>
+                      <Component {...pageProps} />
+                    </Layout>
+                  </LayoutContextProvider>
+                </HideBottomNavBarProvider>
+              </TrackProvider>
             </AudioPlayerProvider>
           </WalletProvider>
         </MagicProvider>

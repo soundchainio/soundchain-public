@@ -1,16 +1,13 @@
 import tw from 'tailwind-styled-components'
 import { Pause } from 'icons/Pause'
 import { Play } from 'icons/Play'
-import { HeartFull } from 'icons/HeartFull'
-import { HeartBorder } from 'icons/HeartBorder'
 import Link from 'next/link'
 import { TrackQuery } from 'lib/graphql'
+import { FavoriteTrack } from 'components/Buttons/FavoriteTrack/FavoriteTrack'
 interface MobilePlayerProps {
   handleOnPlayClicked: () => void
   isPlaying: boolean
-  handleSetFavorite: () => Promise<void>
   track: TrackQuery['track']
-  isFavorite: boolean | null
   classNames?: string
   hideTrackName?: boolean
   hideArtistName?: boolean
@@ -23,9 +20,7 @@ export const MobilePlayer = (props: MobilePlayerProps) => {
     classNames,
     handleOnPlayClicked,
     isPlaying,
-    handleSetFavorite,
     track,
-    isFavorite,
     hideArtistName,
     hideLikeButton,
     hideTrackName,
@@ -59,13 +54,7 @@ export const MobilePlayer = (props: MobilePlayerProps) => {
         </span>
 
         {!hideLikeButton && (
-          <>
-            {isFavorite ? (
-              <HeartFull onClick={handleSetFavorite} className="mb-1 self-end hover:cursor-pointer" />
-            ) : (
-              <HeartBorder onClick={handleSetFavorite} className="mb-1 self-end hover:cursor-pointer" />
-            )}
-          </>
+          <FavoriteTrack />
         )}
       </MobilePlayerInnerFlex>
     </Container>
@@ -84,7 +73,7 @@ const Container = tw.div`
   justify-end 
   rounded-xl 
   p-4 
-text-white
+  text-white
 `
 const MobilePlayerInnerFlex = tw.div`
   flex 
@@ -112,5 +101,5 @@ const ArtistName = tw.h2`
   text-base 
   font-bold 
   leading-5 
-text-[#969899]
+  text-[#969899]
 `
