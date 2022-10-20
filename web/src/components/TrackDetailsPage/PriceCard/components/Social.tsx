@@ -62,5 +62,6 @@ const Container = tw.div`
   items-center 
   justify-between
   w-full
-  my-2
+  mt-6
+  mb-2
 `
