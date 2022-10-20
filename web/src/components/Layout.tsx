@@ -2,11 +2,13 @@ import classNames from 'classnames'
 import { BottomNavBarWrapper } from 'components/BottomNavBarWrapper'
 import { useModalState } from 'contexts/providers/modal'
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar'
+import { useIsMobile } from 'hooks/useIsMobile'
 import { useLayoutContext } from 'hooks/useLayoutContext'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
 import { ReactNode, useEffect, useState } from 'react'
 import { ToastContainer } from 'react-toastify'
+import { breakpointsNumber } from 'utils/breakpoints'
 import { Header } from './Header'
 import ConfirmDeleteEditionModal from './modals/ConfirmDeleteEditionModal'
 import { TagManager } from './TagManager'
@@ -26,7 +28,8 @@ const TransferConfirmationModal = dynamic(import('./TransferConfirmationModal'))
 const TransferOgunConfirmationModal = dynamic(import('./TransferOgunConfirmationModal'))
 const UnderDevelopmentModal = dynamic(import('./UnderDevelopmentModal'))
 const NftTransferConfirmationModal = dynamic(import('./modals/NftTransferConfirmationModal'))
-const BottomAudioPlayer = dynamic(import('components/BottomAudioPlayer/BottomAudioPlayer'))
+const MobileBottomAudioPlayer = dynamic(import('components/BottomAudioPlayer/MobileBottomAudioPlayer'))
+const DesktopBottomAudioPlayer = dynamic(import('components/BottomAudioPlayer/DesktopBottomAudioPlayer'))
 const AudioPlayerModal = dynamic(import('components/modals/AudioPlayerModal'))
 const CreateModal = dynamic(import('components/modals/CreateModal'))
 
@@ -44,6 +47,8 @@ export const Layout = ({ children, className }: LayoutProps) => {
   const { hideBottomNavBar, isAuthLayout, topNavBarProps, isLandingLayout } = useLayoutContext()
   const { asPath } = useRouter()
   const [canInsertScript, setCanInsertScript] = useState(false)
+
+  const isMobileOrTablet = useIsMobile(breakpointsNumber.tablet)
 
   useEffect(() => {
     setSideMenuOpen(false)
@@ -112,7 +117,7 @@ export const Layout = ({ children, className }: LayoutProps) => {
           </div>
         </div>
       </div>
-      <BottomAudioPlayer />
+      {isMobileOrTablet ? <MobileBottomAudioPlayer /> : <DesktopBottomAudioPlayer />}
       <BottomNavBarWrapper />
       <ToastContainer
         position="top-center"
