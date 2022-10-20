@@ -26,7 +26,7 @@ const TransferConfirmationModal = dynamic(import('./TransferConfirmationModal'))
 const TransferOgunConfirmationModal = dynamic(import('./TransferOgunConfirmationModal'))
 const UnderDevelopmentModal = dynamic(import('./UnderDevelopmentModal'))
 const NftTransferConfirmationModal = dynamic(import('./modals/NftTransferConfirmationModal'))
-const BottomAudioPlayer = dynamic(import('components/BottomAudioPlayer'))
+const BottomAudioPlayer = dynamic(import('components/BottomAudioPlayer/BottomAudioPlayer'))
 const AudioPlayerModal = dynamic(import('components/modals/AudioPlayerModal'))
 const CreateModal = dynamic(import('components/modals/CreateModal'))
 

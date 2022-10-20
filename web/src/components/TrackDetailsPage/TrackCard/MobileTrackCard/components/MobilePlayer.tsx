@@ -1,21 +1,20 @@
 import tw from 'tailwind-styled-components'
 import { Pause } from 'icons/Pause'
 import { Play } from 'icons/Play'
-import { HeartFull } from 'icons/HeartFull'
-import { HeartBorder } from 'icons/HeartBorder'
 import Link from 'next/link'
-import { TrackQuery } from 'lib/graphql'
+import { MeQuery, TrackQuery } from 'lib/graphql'
+import { FavoriteTrack } from 'components/Buttons/FavoriteTrack/FavoriteTrack'
 interface MobilePlayerProps {
   handleOnPlayClicked: () => void
   isPlaying: boolean
-  handleSetFavorite: () => Promise<void>
   track: TrackQuery['track']
-  isFavorite: boolean | null
   classNames?: string
   hideTrackName?: boolean
   hideArtistName?: boolean
   hideLikeButton?: boolean
   playButtonStyle?: string
+  isLoading: boolean
+  me?: MeQuery['me']
 }
 
 export const MobilePlayer = (props: MobilePlayerProps) => {
@@ -23,9 +22,9 @@ export const MobilePlayer = (props: MobilePlayerProps) => {
     classNames,
     handleOnPlayClicked,
     isPlaying,
-    handleSetFavorite,
+    isLoading,
     track,
-    isFavorite,
+    me,
     hideArtistName,
     hideLikeButton,
     hideTrackName,
@@ -59,13 +58,7 @@ export const MobilePlayer = (props: MobilePlayerProps) => {
         </span>
 
         {!hideLikeButton && (
-          <>
-            {isFavorite ? (
-              <HeartFull onClick={handleSetFavorite} className="mb-1 self-end hover:cursor-pointer" />
-            ) : (
-              <HeartBorder onClick={handleSetFavorite} className="mb-1 self-end hover:cursor-pointer" />
-            )}
-          </>
+          <FavoriteTrack track={track} isLoading={isLoading} me={me} />
         )}
       </MobilePlayerInnerFlex>
     </Container>
