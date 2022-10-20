@@ -47,9 +47,11 @@ export const AudioPlayerModal = () => {
     jumpTo,
     toggleShuffle,
     setPlayerFavorite,
+    isPlaylistOpen,
+    setIsPlaylistOpen
   } = useAudioPlayerContext()
+  
   const [showTotalPlaybackDuration, setShowTotalPlaybackDuration] = useState(true)
-  const [isPlaylistOpen, setIsPlaylistOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(true)
   const me = useMe()
 
@@ -201,7 +203,7 @@ export const AudioPlayerModal = () => {
                 <button
                   aria-label="Playlist"
                   className="flex h-10 w-10 items-center justify-center rounded-full text-gray-80"
-                  onClick={() => setIsPlaylistOpen(isOpen => !isOpen)}
+                  onClick={() => setIsPlaylistOpen(!isOpen)}
                 >
                   <Playlists fillColor="#808080" />
                 </button>

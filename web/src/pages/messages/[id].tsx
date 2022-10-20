@@ -56,8 +56,15 @@ export default function ChatPage({ recipientName, profileId }: PostPageProps) {
   }, [])
 
   const setNewMessages = (data: ChatHistoryQuery, refetch: boolean) => {
-    if (refetch) setMessages([...data.chatHistory.nodes] as Message[])
-    else setMessages([...data.chatHistory.nodes, ...messages] as Message[])
+    if (refetch) {
+      setMessages([...data.chatHistory.nodes] as Message[])
+      setTimeout(() => {
+        bottomRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        })
+      }, 1200)
+    } else setMessages([...data.chatHistory.nodes, ...messages] as Message[])
     setPageInfo(data.chatHistory.pageInfo as PageInfo)
     setTimeout(() => setLoading(false), 1000)
   }

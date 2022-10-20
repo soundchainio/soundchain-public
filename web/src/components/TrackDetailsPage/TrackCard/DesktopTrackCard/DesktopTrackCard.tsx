@@ -1,39 +1,28 @@
 import React from 'react'
 import Image from 'next/image'
-import { useToggleFavoriteMutation, MeQuery, TrackQuery, useProfileLazyQuery } from 'lib/graphql'
-import router from 'next/router'
+import { MeQuery, TrackQuery, useProfileLazyQuery } from 'lib/graphql'
 import { useEffect, useState } from 'react'
 import tw from 'tailwind-styled-components'
 import { Divider } from 'components/common'
 import { ProfileWithAvatar } from 'components/ProfileWithAvatar'
 import Link from 'next/link'
-import { AiOutlineHeart, AiFillHeart } from 'react-icons/ai'
 import { TrackShareButton } from 'components/TrackShareButton'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { MobilePlayer } from '../MobileTrackCard/components'
+import { FavoriteTrack } from 'components/Buttons/FavoriteTrack/FavoriteTrack'
 interface Props {
   me?: MeQuery['me']
   track: TrackQuery['track']
+  isLoading: boolean
 }
 
 export const DesktopTrackCard = (props: Props) => {
-  const [toggleFavorite] = useToggleFavoriteMutation()
-  const [isFavorite, setIsFavorite] = useState<boolean | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
 
-  const { me, track } = props
+  const { track } = props
 
   const [profile, { data: profileInfo }] = useProfileLazyQuery()
   const { playlistState, isCurrentlyPlaying } = useAudioPlayerContext()
-
-  const handleSetFavorite = async () => {
-    if (me?.profile.id) {
-      setIsFavorite(!isFavorite)
-      await toggleFavorite({ variables: { trackId: track.id }, refetchQueries: ['FavoriteTracks'] })
-    } else {
-      router.push('/login')
-    }
-  }
 
   const handleOnPlayClicked = () => {
     if (track) {
@@ -50,12 +39,6 @@ export const DesktopTrackCard = (props: Props) => {
       playlistState(list, 0)
     }
   }
-
-  useEffect(() => {
-    if (!track.isFavorite) return
-
-    setIsFavorite(track.isFavorite)
-  }, [track.isFavorite])
 
   useEffect(() => {
     if (track.artistProfileId) {
@@ -83,9 +66,7 @@ export const DesktopTrackCard = (props: Props) => {
           <MobilePlayer
             handleOnPlayClicked={handleOnPlayClicked}
             isPlaying={isPlaying}
-            handleSetFavorite={handleSetFavorite}
             track={track}
-            isFavorite={isFavorite}
             classNames="h-[250px] xl:hidden"
             hideArtistName
             hideLikeButton
@@ -105,22 +86,7 @@ export const DesktopTrackCard = (props: Props) => {
 
           <div className="flex items-center gap-2">
             <TrackShareButton trackId={track.id} artist={track.artist} title={track.title} height={30} width={30} />
-            {isFavorite ? (
-              <AiFillHeart
-                onClick={handleSetFavorite}
-                className="mb-1 self-start opacity-90 hover:cursor-pointer"
-                color="white"
-                size={35}
-              />
-            ) : (
-              <AiOutlineHeart
-                onClick={handleSetFavorite}
-                className="mb-1 self-start hover:cursor-pointer"
-                color="#505050"
-                stroke="green"
-                size={35}
-              />
-            )}
+            <FavoriteTrack />
           </div>
         </ArtistNameContainer>
       </ArtistContainer>
@@ -264,4 +230,6 @@ const Paragraph = tw.p`
   font-normal 
   leading-4 
   text-[#7D7F80]
+  break-words
+  w-[250px]
 `

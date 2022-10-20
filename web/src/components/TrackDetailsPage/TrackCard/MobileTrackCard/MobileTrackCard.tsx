@@ -1,8 +1,7 @@
 import React from 'react'
 import Image from 'next/image'
-import { useToggleFavoriteMutation, MeQuery, TrackQuery } from 'lib/graphql'
+import { MeQuery, TrackQuery } from 'lib/graphql'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
-import router from 'next/router'
 import { useEffect, useState } from 'react'
 import tw from 'tailwind-styled-components'
 import { MobilePlayer } from './components'
@@ -13,21 +12,11 @@ interface Props {
 }
 
 export const MobileTrackCard = (props: Props) => {
-  const [toggleFavorite] = useToggleFavoriteMutation()
-  const [isFavorite, setIsFavorite] = useState<boolean | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
 
-  const { me, track } = props
+  const { track } = props
   const { playlistState, isCurrentlyPlaying } = useAudioPlayerContext()
 
-  const handleSetFavorite = async () => {
-    if (me?.profile.id) {
-      setIsFavorite(!isFavorite)
-      await toggleFavorite({ variables: { trackId: track.id }, refetchQueries: ['FavoriteTracks'] })
-    } else {
-      router.push('/login')
-    }
-  }
 
   const handleOnPlayClicked = () => {
     if (!track) return
@@ -44,13 +33,7 @@ export const MobileTrackCard = (props: Props) => {
     ]
     playlistState(list, 0)
   }
-
-  useEffect(() => {
-    if (!track.isFavorite) return
-
-    setIsFavorite(track.isFavorite)
-  }, [track.isFavorite])
-
+  
   useEffect(() => {
     setIsPlaying(isCurrentlyPlaying(track.id))
   }, [isCurrentlyPlaying, setIsPlaying, track.id])
@@ -64,14 +47,13 @@ export const MobileTrackCard = (props: Props) => {
             layout="fill"
             alt="art image of the current track "
             className="rounded-xl"
+            objectFit="contain"
           />
         </ImageContainer>
         <MobilePlayer
           handleOnPlayClicked={handleOnPlayClicked}
           isPlaying={isPlaying}
-          handleSetFavorite={handleSetFavorite}
           track={track}
-          isFavorite={isFavorite}
         />
       </InnerContainer>
     </Container>
@@ -94,8 +76,11 @@ const InnerContainer = tw.div`
   relative 
   flex 
   w-full 
+  h-full
   items-center 
   justify-center
+  bg-black
+  rounded-lg
 `
 
 const ImageContainer = tw.div`
