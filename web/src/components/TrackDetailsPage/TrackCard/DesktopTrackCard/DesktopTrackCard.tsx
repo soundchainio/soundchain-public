@@ -19,7 +19,7 @@ interface Props {
 export const DesktopTrackCard = (props: Props) => {
   const [isPlaying, setIsPlaying] = useState(false)
 
-  const { me, track, isLoading } = props
+  const { track } = props
 
   const [profile, { data: profileInfo }] = useProfileLazyQuery()
   const { playlistState, isCurrentlyPlaying } = useAudioPlayerContext()
