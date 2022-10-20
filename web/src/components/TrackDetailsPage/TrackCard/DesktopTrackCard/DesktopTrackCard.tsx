@@ -88,7 +88,7 @@ export const DesktopTrackCard = (props: Props) => {
 
           <div className="flex items-center gap-2">
             <TrackShareButton trackId={track.id} artist={track.artist} title={track.title} height={30} width={30} />
-            <FavoriteTrack track={track} me={me} isLoading={isLoading}/>
+            <FavoriteTrack />
           </div>
         </ArtistNameContainer>
       </ArtistContainer>

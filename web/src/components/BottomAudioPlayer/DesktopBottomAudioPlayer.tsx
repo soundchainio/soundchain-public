@@ -172,15 +172,15 @@ export const BottomAudioPlayer = () => {
 
         <IoIosArrowUp size={25} color="white" className='hover:cursor-pointer ml-2' onClick={() => dispatchShowAudioPlayerModal(true)}/>
       </TrackControls>
-    <audio
-      ref={audioRef}
-      onPlay={() => setPlayingState(true)}
-      onPause={() => setPlayingState(false)}
-      onTimeUpdate={handleTimeUpdate}
-      onDurationChange={handleDurationChange}
-      onEnded={handleEndedSong}
-      className="h-0 w-0 opacity-0"
-    />
+      <audio
+        ref={audioRef}
+        onPlay={() => setPlayingState(true)}
+        onPause={() => setPlayingState(false)}
+        onTimeUpdate={handleTimeUpdate}
+        onDurationChange={handleDurationChange}
+        onEnded={handleEndedSong}
+        className="h-0 w-0 opacity-0"
+      />
     </Container>
   )
 }
