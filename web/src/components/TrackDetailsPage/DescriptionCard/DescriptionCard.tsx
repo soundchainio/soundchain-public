@@ -86,6 +86,7 @@ const SubTitle = tw.h2`
   font-bold 
   leading-4 
   text-[#CCCCCC]
+  w-[250px]
 `
 
 const FollowContainer = tw.div`
@@ -119,4 +120,5 @@ const Paragraph = tw.p`
   font-normal 
   leading-4 
   text-[#7D7F80]
+  break-words
 `
