@@ -84,31 +84,17 @@ export const TrackDetailsCard = (props: TrackDetailsCardProps) => {
         <Row>
           <Cell $bgDark>GENRES</Cell>
           <Cell>
-            {isEmptyGenre ? (
-              <div>No Genre Selected</div>
-            ) : (
-              <Overflow>
-                {genres.map(genre => (
-                  <Badges.Badge key={genre} label={getGenreLabelByKey(genre) || genre} className="mr-4" />
-                ))}
-              </Overflow>
-            )}
-          </Cell>
-        </Row>
-        <Row>
-          <Cell $bgDark>MINING STATUS</Cell>
-          <Cell>
-            {nftData?.pendingRequest || 'No minting status found'}
-            {nftData?.pendingRequest !== PendingRequest.None && (
-              <>
-                <ProcessingContainer>
-                  <ReactTooltip id="processingEdition" type="dark" effect="solid">
-                    <span>Your NFT is being processed. This can take several minutes.</span>
-                  </ReactTooltip>
-                  <BsQuestionCircleFill data-tip data-for="processingEdition" size={18} />
-                </ProcessingContainer>
-              </>
-            )}
+            <Overflow>
+              {isEmptyGenre ? (
+                <div>No Genre Selected</div>
+                ) : (
+                <>
+                  {genres.map(genre => (
+                    <Badges.Badge key={genre} label={getGenreLabelByKey(genre) || genre} className="mr-4" />
+                  ))}
+                </>
+              )}
+            </Overflow>
           </Cell>
         </Row>
         <Row>
@@ -157,7 +143,6 @@ const Overflow = tw.div`
   flex
   items-center
   w-[100px]
-  break-words
 `
 
 const AnchorTag = tw.a`
@@ -179,13 +164,4 @@ const Flex = tw.div`
   flex
   items-center
   justify-center
-`
-
-const ProcessingContainer = tw.div`
-  flex
-  items-center
-  justify-center
-  gap-4
-  text-neutral-400
-  ml-2
 `
