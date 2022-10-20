@@ -152,11 +152,19 @@ const Container = tw.div`
 
 const PriceContainer = tw.div`
   flex
-  items-start
-  justify-between
+  flex-col
+  items-center
+  justify-center
   w-full
-  mt-2
   mb-6
+  gap-8
+  mt-2
+
+  md:flex-row
+  md:justify-between
+  md:items-start
+  md:mb-8
+  md:mt-2
 `
 const ButtonTitle = tw.span`
   text-sm
