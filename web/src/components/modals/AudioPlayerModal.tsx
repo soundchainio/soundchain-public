@@ -47,9 +47,11 @@ export const AudioPlayerModal = () => {
     jumpTo,
     toggleShuffle,
     setPlayerFavorite,
+    isPlaylistOpen,
+    setIsPlaylistOpen
   } = useAudioPlayerContext()
+  
   const [showTotalPlaybackDuration, setShowTotalPlaybackDuration] = useState(true)
-  const [isPlaylistOpen, setIsPlaylistOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(true)
   const me = useMe()
 
