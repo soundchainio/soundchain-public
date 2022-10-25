@@ -12,8 +12,12 @@ import NextLink from 'next/link'
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'
 import { FaEdit } from 'react-icons/fa'
+import { Logo as OgunIcon } from 'icons/Logo'
 import tw from 'tailwind-styled-components'
 import { isPendingRequest } from 'utils/isPendingRequest'
+import { DisplayName } from 'components/DisplayName'
+import Link from 'next/link'
+import { fixedDecimals } from 'utils/format'
 interface ListingItemProps {
   listedTrack: any
   isMobile: boolean
@@ -27,7 +31,6 @@ export const ListingItem = (props: ListingItemProps) => {
   const priceOGUN = listedTrack.listingItem?.OGUNPricePerItemToShow || 0
   const isPaymentOGUN = Boolean(listedTrack.listingItem?.OGUNPricePerItemToShow !== 0) || false
   const profileId = listedTrack.profileId || ''
-  const trackId = listedTrack.id
   const tokenId = listedTrack.nftData?.tokenId || 0
   const contractAddress = listedTrack.nftData?.contract || ''
 
@@ -47,18 +50,43 @@ export const ListingItem = (props: ListingItemProps) => {
 
   return (
     <>
-      {!isMobile && (
+      <Cell>
+        <Flex>#{tokenId}</Flex>
+      </Cell>
+
+      {isMobile ? (
         <Cell>
-          <Flex>#{tokenId}</Flex>
+          <div className="flex items-center gap-2">
+            <div className=" flex items-center gap-1">
+              <OgunIcon id="ogun-token" className="mr-[2px] inline h-6 w-6" />
+              <div className="flex flex-col items-start">
+                <Link href={`/profiles/${profileData?.profile.userHandle}`}>
+                  <a>
+                    <DisplayName
+                      className="text-sm"
+                      name={profileData?.profile.displayName || ''}
+                      verified={profileData?.profile.verified}
+                      teamMember={profileData?.profile.teamMember}
+                      badges={profileData?.profile.badges}
+                    />
+                  </a>
+                </Link>
+                <div className="flex items-center gap-1">
+                  <span className="mt-[1px]">{fixedDecimals(priceOGUN)}</span>
+                  <span className="mt-[1px] text-xs font-semibold text-gray-80">OGUN</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Cell>
+      ) : (
+        <Cell>
+          <Flex>
+            {!isPaymentOGUN && <Matic value={price} variant="listing-inline" />}
+            {isPaymentOGUN && <Ogun value={priceOGUN} />}
+          </Flex>
         </Cell>
       )}
-
-      <Cell>
-        <Flex>
-          {!isPaymentOGUN && <Matic value={price} variant="listing-inline" />}
-          {isPaymentOGUN && <Ogun value={priceOGUN} />}
-        </Flex>
-      </Cell>
 
       {profileData && !isMobile && (
         <Cell>
@@ -98,7 +126,7 @@ export const ListingItem = (props: ListingItemProps) => {
               }}
             >
               <a>
-                <Button variant="list-nft">
+                <Button variant="list-nft" className="p-[5px]">
                   <ButtonTitle>BUY</ButtonTitle>
                 </Button>
               </a>

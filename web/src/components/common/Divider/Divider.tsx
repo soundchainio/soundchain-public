@@ -1,7 +1,12 @@
 import tw from 'tailwind-styled-components'
 
-export const Divider = () => {
-  return <StyledDivider />
+interface Props {
+  classnames?: string
+}
+
+export const Divider = (props: Props) => {
+  const { classnames } = props
+  return <StyledDivider className={classnames} />
 }
 
 const StyledDivider = tw.div`

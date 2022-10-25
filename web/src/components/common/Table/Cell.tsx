@@ -23,8 +23,7 @@ const TableCellContainer = tw.td<CellProps>`
   ${({ $roundedBottomRight }) => $roundedBottomRight && 'rounded-br-lg'}
   ${({ $roundedBottomLeft }) => $roundedBottomLeft && 'rounded-bl-lg'}
 
-  py-3
-  px-6
+  p-4
   overflow-auto
   text-center
 `

@@ -37,7 +37,7 @@ const Container = tw.div`
   max-w-[350px]
   bg-[#19191A] 
   rounded-xl 
-  p-6
+  p-4
   w-full
 
   sm:max-w-[800px]
