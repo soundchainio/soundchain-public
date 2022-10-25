@@ -67,7 +67,7 @@ export const PriceCard = (props: Props) => {
     <Container>
       <TrackSlider song={song} />
 
-      {isBuyNow && !isDeleted && !isMultipleEdition && (
+      {isBuyNow && !isDeleted && (
         <>
           <PriceContainer>
             <span>
@@ -152,12 +152,10 @@ const Container = tw.div`
 
 const PriceContainer = tw.div`
   flex
-  flex-col
   items-center
-  justify-center
+  justify-between
   w-full
   mb-6
-  gap-8
   mt-2
 
   md:flex-row

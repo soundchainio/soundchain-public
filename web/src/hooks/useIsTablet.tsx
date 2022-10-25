@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { breakpointsNumber } from 'utils/breakpoints'
 
-export const useIsTablet = () => {
+export const useIsTablet = (min?: number, max?: number) => {
   const [width, setWidth] = useState(0)
 
   const handleWindowSizeChange = () => {
@@ -17,6 +17,10 @@ export const useIsTablet = () => {
       }
     }
   }, [])
+
+  if (min && max) {
+    return Boolean(width >= min && width <= max)
+  }
 
   return Boolean(width > breakpointsNumber.mobileLarge && width <= breakpointsNumber.tablet)
 }
