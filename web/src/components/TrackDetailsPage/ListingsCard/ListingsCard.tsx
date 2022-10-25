@@ -67,8 +67,8 @@ export const ListingsCard = (props: ListingsCardProps) => {
       {nodes && nodes.length > 0 ? (
         <Table>
           <Row>
-            {!isMobile && <Header $roundedTopLeft>ID</Header>}
-            <Header $roundedTopLeft={isMobile}>PRICE</Header>
+            <Header $roundedTopLeft>ID</Header>
+            <Header>PRICE</Header>
             {!isMobile && <Header>FROM</Header>}
             <Header $roundedTopRight>Action</Header>
           </Row>
