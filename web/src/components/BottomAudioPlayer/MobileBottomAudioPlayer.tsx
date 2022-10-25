@@ -2,13 +2,19 @@ import { Slider } from '@reach/slider'
 import { config } from 'config'
 import { useModalDispatch } from 'contexts/providers/modal'
 import Hls from 'hls.js'
-import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
+import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { useMe } from 'hooks/useMe'
 import { Pause } from 'icons/PauseBottomAudioPlayer'
 import { Play } from 'icons/PlayBottomAudioPlayer'
 import mux from 'mux-embed'
 import { useEffect, useRef } from 'react'
 import Asset from 'components/Asset'
+import tw from 'tailwind-styled-components'
+import { VolumeOffIcon, VolumeUpIcon } from '@heroicons/react/solid'
+import { IoIosArrowUp } from 'react-icons/io'
+import { Playlists } from 'icons/Playlists'
+import { BotttomPlayerTrackSlider } from './components/BotttomPlayerTrackSlider'
+import { Ellipsis } from 'icons/Ellipsis'
 
 export const BottomAudioPlayer = () => {
   const me = useMe()
@@ -18,6 +24,7 @@ export const BottomAudioPlayer = () => {
     isPlaying,
     duration,
     progress,
+    setVolume,
     progressFromSlider,
     hasNext,
     volume,
@@ -109,35 +116,55 @@ export const BottomAudioPlayer = () => {
     }
   }
 
+  const onSliderChange = (value: number) => {
+    setProgressStateFromSlider(value)
+  }
+
   if (!currentSong.src) {
     return null
+  }
+
+  const song: Song = {
+    trackId: currentSong.trackId,
+    src: currentSong.src,
+    art: currentSong.art,
+    title: currentSong.title,
+    artist: currentSong.artist,
+    isFavorite: currentSong.isFavorite,
   }
 
   return (
     <div className="flex flex-col gap-2 bg-neutral-900 py-2">
       <div className="flex justify-between px-2">
-        <button
-          className="flex min-w-0 flex-1 items-center gap-2"
-          aria-label="Open audio player controls"
-          onClick={() => dispatchShowAudioPlayerModal(true)}
-        >
-          <div className="relative flex h-10 w-10 flex-shrink-0 items-center bg-gray-80">
+        <button className="flex min-w-0 flex-1 items-center gap-2" aria-label="Open audio player controls">
+          <div className="relative flex h-12 w-12 flex-shrink-0 items-center bg-gray-80">
             <Asset src={currentSong.art} sizes="2.5rem" />
           </div>
-          <div className="flex min-w-0 flex-col items-start text-xs text-white">
-            <h2 className="w-full truncate font-black">{currentSong.title || 'Unknown title'}</h2>
-            <p className="truncate font-medium">{currentSong.artist || 'Unknown artist'}</p>
+          <div className="flex flex-col items-start text-xs text-white">
+            <h3 className="w-[50px] truncate font-black">{currentSong.title || 'Unknown title'}</h3>
+            <p className="ml-1 w-[50px] truncate font-medium">{currentSong.artist || 'Unknown artist'}</p>
           </div>
         </button>
-        <button
-          aria-label={isPlaying ? 'Pause' : 'Play'}
-          className="flex h-10 w-11 flex-shrink-0 items-center justify-center duration-75 hover:scale-125"
-          onClick={togglePlay}
-        >
-          {isPlaying ? <Pause /> : <Play />}
-        </button>
+        <div className="flex items-center gap-4">
+          <Ellipsis className="mr-2 h-[5px] cursor-pointer" fill="#808080" />
+          <BotttomPlayerTrackSlider song={song} hideShuffle hideSlider />
+
+          <IoIosArrowUp
+            size={25}
+            color="white"
+            className="mr-2 hover:cursor-pointer"
+            onClick={() => dispatchShowAudioPlayerModal(true)}
+          />
+        </div>
       </div>
-      <Slider className="bottom-audio-player" min={0} max={duration} value={progress} disabled />
+
+      <Slider
+        className="audio-player mx-4 my-2 w-[200px]"
+        min={0}
+        max={duration}
+        value={progress}
+        onChange={onSliderChange}
+      />
       <audio
         ref={audioRef}
         onPlay={() => setPlayingState(true)}
