@@ -50,8 +50,9 @@ export const Ogun = ({ value = '', className, variant, showBonus, rewardRatePerc
     default:
       return (
         <p className={classNames('inline-flex items-center gap-1 font-bold text-white', className)}>
-          <OgunIcon id="ogun-token" className="inline h-5 w-5" /> {fixedDecimals(value)}{' '}
-          <span className="text-xs text-gray-80">OGUN</span>
+          <OgunIcon id="ogun-token" className="mr-[2px] inline h-4 w-4" />
+          <span className="mt-[1px]">{fixedDecimals(value)}</span>
+          <span className="mt-[1px] text-xs text-gray-80">OGUN</span>
         </p>
       )
   }

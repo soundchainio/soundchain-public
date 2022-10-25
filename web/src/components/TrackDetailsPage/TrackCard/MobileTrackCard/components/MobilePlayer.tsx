@@ -4,6 +4,7 @@ import { Play } from 'icons/Play'
 import Link from 'next/link'
 import { TrackQuery } from 'lib/graphql'
 import { FavoriteTrack } from 'components/Buttons/FavoriteTrack/FavoriteTrack'
+import { TrackShareButton } from 'components/TrackShareButton'
 interface MobilePlayerProps {
   handleOnPlayClicked: () => void
   isPlaying: boolean
@@ -54,7 +55,17 @@ export const MobilePlayer = (props: MobilePlayerProps) => {
         </span>
 
         {!hideLikeButton && (
-          <FavoriteTrack />
+          <div className="flex items-center gap-1">
+            <TrackShareButton
+              trackId={track.id}
+              artist={track.artist}
+              title={track.title}
+              height={25}
+              width={25}
+              color="white"
+            />
+            <FavoriteTrack />
+          </div>
         )}
       </MobilePlayerInnerFlex>
     </Container>
