@@ -27,7 +27,7 @@ export const DescriptionCard = (props: Props) => {
         <Title>Description</Title>
       </TitleContainer>
 
-      <Divider />
+      <Divider classnames="mt-2" />
 
       <ProfileWithAvatar profile={profileInfo.profile} className="my-6" />
 

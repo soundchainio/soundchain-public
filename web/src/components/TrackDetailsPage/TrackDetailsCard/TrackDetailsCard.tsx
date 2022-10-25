@@ -26,7 +26,7 @@ export const TrackDetailsCard = (props: TrackDetailsCardProps) => {
   const { getEditionRoyalties } = useBlockchainV2()
   const { account, web3 } = useWalletContext()
 
-  const [royalties, setRoyalties] = useState<number | string>('No Royalties found')
+  const [royalties, setRoyalties] = useState(0)
 
   const isProcessing = nftData?.pendingRequest != PendingRequest.None
   const tokenId = nftData?.tokenId
@@ -36,7 +36,6 @@ export const TrackDetailsCard = (props: TrackDetailsCardProps) => {
   useEffect(() => {
     const fetchRoyalties = async () => {
       if (!account || !web3 || !tokenId || !trackEdition?.editionId || isProcessing) {
-        setRoyalties('No Royalties found')
         return
       }
 
@@ -67,7 +66,7 @@ export const TrackDetailsCard = (props: TrackDetailsCardProps) => {
           <Cell $bgDark $roundedTopLeft>
             ARTIST ROYALTY %
           </Cell>
-          <Cell $roundedTopRight>{royalties}%</Cell>
+          <Cell $roundedTopRight>{royalties ? `${royalties}%` : 'No Royalties found'}</Cell>
         </Row>
         <Row>
           <Cell $bgDark>TRACK TITLE</Cell>
@@ -82,12 +81,16 @@ export const TrackDetailsCard = (props: TrackDetailsCardProps) => {
           <Cell>{props.track.releaseYear}</Cell>
         </Row>
         <Row>
+          <Cell $bgDark>COPYRIGHT</Cell>
+          <Cell>{props.track.copyright || 'No Copyright'}</Cell>
+        </Row>
+        <Row>
           <Cell $bgDark>GENRES</Cell>
           <Cell>
             <Overflow>
               {isEmptyGenre ? (
                 <div>No Genre Selected</div>
-                ) : (
+              ) : (
                 <>
                   {genres.map(genre => (
                     <Badges.Badge key={genre} label={getGenreLabelByKey(genre) || genre} className="mr-4" />
@@ -105,14 +108,14 @@ export const TrackDetailsCard = (props: TrackDetailsCardProps) => {
             </Flex>
           </Cell>
           <Cell>
-              {nftData?.ipfsCid ? (
-                <AnchorTag href={`${config.ipfsGateway}${nftData?.ipfsCid}`} target="_blank" rel="noreferrer"> 
-                  <span>Pinata Link</span>
-                  <BiLinkExternal size={25} color="#7D7F80"/>   
-                </AnchorTag>
-              ) : (
-                'No Pinata IPFS Found'
-              )}
+            {nftData?.ipfsCid ? (
+              <AnchorTag href={`${config.ipfsGateway}${nftData?.ipfsCid}`} target="_blank" rel="noreferrer">
+                <span>Pinata</span>
+                <BiLinkExternal size={20} color="#7D7F80" />
+              </AnchorTag>
+            ) : (
+              'No Pinata IPFS Found'
+            )}
           </Cell>
         </Row>
         <Row>
@@ -125,11 +128,10 @@ export const TrackDetailsCard = (props: TrackDetailsCardProps) => {
           <Cell>
             {nftData?.transactionHash ? (
               <AnchorTag href={`${config.polygonscan}tx/${nftData?.transactionHash}`} target="_blank" rel="noreferrer">
-                <span>Blockchain Link</span>
-                <BiLinkExternal size={25} color="#7D7F80"/>
+                <span>Blockchain</span>
+                <BiLinkExternal size={20} color="#7D7F80" />
               </AnchorTag>
-
-            ):(
+            ) : (
               'No Transaction Found'
             )}
           </Cell>

@@ -54,71 +54,74 @@ export const DesktopTrackCard = (props: Props) => {
 
   return (
     <Container>
-      <ArtistContainer>
-        <ImageContainer>
-          <Image
-            src={track.artworkUrl || ''}
-            layout="fill"
-            objectFit="contain"
-            alt="art image of the current track "
-            className="rounded-xl"
-          />
-          <MobilePlayer
-            handleOnPlayClicked={handleOnPlayClicked}
-            isPlaying={isPlaying}
-            track={track}
-            classNames="h-[250px] xl:hidden"
-            hideArtistName
-            hideLikeButton
-            hideTrackName
-            playButtonStyle="scale-150 ml-2 mb-2"
-          />
-        </ImageContainer>
-        <ArtistNameContainer>
-          <span>
-            <TrackTitle>{track.title}</TrackTitle>
-            <Link href={`/profiles/${track.artist}` || ''}>
-              <a>
-                <ArtistName>{track.artist}</ArtistName>
-              </a>
-            </Link>
-          </span>
+      <div className="flex items-start xl:flex-col">
+        <ArtistContainer>
+          <ImageContainer>
+            <Image
+              src={track.artworkUrl || ''}
+              layout="fill"
+              objectFit="contain"
+              alt="art image of the current track "
+              className="rounded-xl"
+            />
+            <MobilePlayer
+              handleOnPlayClicked={handleOnPlayClicked}
+              isPlaying={isPlaying}
+              track={track}
+              classNames="h-[250px] xl:hidden"
+              hideArtistName
+              hideLikeButton
+              hideTrackName
+              playButtonStyle="scale-150 ml-2 mb-2"
+            />
+          </ImageContainer>
 
-          <div className="flex items-center gap-2">
-            <TrackShareButton trackId={track.id} artist={track.artist} title={track.title} height={30} width={30} />
-            <FavoriteTrack />
-          </div>
-        </ArtistNameContainer>
-      </ArtistContainer>
+          <ArtistNameContainer>
+            <span>
+              <TrackTitle>{track.title}</TrackTitle>
+              <Link href={`/profiles/${track.artist}` || ''}>
+                <a>
+                  <ArtistName>{track.artist}</ArtistName>
+                </a>
+              </Link>
+            </span>
 
-      <DescriptionContainer>
-        <ProfileWithAvatar profile={profileInfo.profile} className="ml-2" />
+            <div className="mr-3 flex items-center gap-2 md:mr-0">
+              <TrackShareButton trackId={track.id} artist={track.artist} title={track.title} height={30} width={30} />
+              <FavoriteTrack />
+            </div>
+          </ArtistNameContainer>
+        </ArtistContainer>
 
-        <FollowContainer>
-          <Follow>
-            <FollowTitle>{profileInfo.profile.followingCount}</FollowTitle>
-            <FollowParagraph>Following</FollowParagraph>
-          </Follow>
-          <Follow>
-            <FollowTitle>{profileInfo.profile.followerCount}</FollowTitle>
-            <FollowParagraph>Followers</FollowParagraph>
-          </Follow>
-        </FollowContainer>
+        <DescriptionContainer>
+          <ProfileWithAvatar profile={profileInfo.profile} className="ml-2" />
+
+          <FollowContainer>
+            <Follow>
+              <FollowTitle>{profileInfo.profile.followingCount}</FollowTitle>
+              <FollowParagraph>Following</FollowParagraph>
+            </Follow>
+            <Follow>
+              <FollowTitle>{profileInfo.profile.followerCount}</FollowTitle>
+              <FollowParagraph>Followers</FollowParagraph>
+            </Follow>
+          </FollowContainer>
+        </DescriptionContainer>
 
         <Divider />
+      </div>
 
+      <div className="mx-2 flex w-full items-center xl:flex-col xl:items-start">
         <div className="my-6">
           <SubTitle>Description</SubTitle>
           <Paragraph>{track.description || 'No track description.'}</Paragraph>
         </div>
-
-        <Divider />
-
+        <Divider classnames="hidden xl:block" />
         <div className="my-6">
           <SubTitle>Utility</SubTitle>
           <Paragraph>{track.utilityInfo || 'No utility information.'}</Paragraph>
         </div>
-      </DescriptionContainer>
+      </div>
     </Container>
   )
 }
@@ -131,10 +134,6 @@ const Container = tw.div`
   bg-[#19191A] 
   p-4
   max-w-[800px]
-
-  md:flex-row
-  md:items-start
-  md:justify-between
 
   xl:flex-col
   xl:row-span-4
@@ -157,8 +156,8 @@ const ImageContainer = tw.div`
   bg-black
   rounded-lg
   
-  md:w-[320px]
-  md:mr-6
+  sm:w-[320px]
+  sm:mr-6
 
   xl:mr-0
 `
