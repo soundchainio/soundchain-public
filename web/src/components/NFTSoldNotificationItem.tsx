@@ -29,7 +29,6 @@ export const NFTSoldNotificationItem = ({
   },
   index,
 }: NFTSoldNotificationProps) => {
-  console.log(isPaymentOgun)
   return (
     <div className={classNames('flex cursor-pointer flex-col p-4', index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20')}>
       <div className="flex break-words">
