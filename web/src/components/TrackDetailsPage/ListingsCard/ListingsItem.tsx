@@ -61,7 +61,6 @@ export const ListingItem = (props: ListingItemProps) => {
             <div className=" flex items-center gap-1">
               {isPaymentOGUN && <OgunIcon id="ogun-token" className="mr-[3px] inline h-6 w-6" />}
               {!isPaymentOGUN && <MaticIcon className="mr-[3px] inline h-6 w-6" />}
-
               <div className="flex flex-col items-start">
                 <Link href={`/profiles/${profileData?.profile.userHandle}`}>
                   <a>
