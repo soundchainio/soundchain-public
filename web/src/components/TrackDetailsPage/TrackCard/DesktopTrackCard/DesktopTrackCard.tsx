@@ -10,7 +10,6 @@ import { TrackShareButton } from 'components/TrackShareButton'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { MobilePlayer } from '../MobileTrackCard/components'
 import { FavoriteTrack } from 'components/Buttons/FavoriteTrack/FavoriteTrack'
-import { UtilityInfo } from 'components/details-NFT/UtilityInfo'
 import { LinkItUrl } from 'react-linkify-it'
 interface Props {
   me?: MeQuery['me']
