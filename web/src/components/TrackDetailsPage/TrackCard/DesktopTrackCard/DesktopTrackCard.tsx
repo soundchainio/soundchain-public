@@ -10,6 +10,8 @@ import { TrackShareButton } from 'components/TrackShareButton'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { MobilePlayer } from '../MobileTrackCard/components'
 import { FavoriteTrack } from 'components/Buttons/FavoriteTrack/FavoriteTrack'
+import { UtilityInfo } from 'components/details-NFT/UtilityInfo'
+import { LinkItUrl } from 'react-linkify-it'
 interface Props {
   me?: MeQuery['me']
   track: TrackQuery['track']
@@ -111,15 +113,19 @@ export const DesktopTrackCard = (props: Props) => {
         <Divider />
       </div>
 
-      <div className="mx-2 flex w-full items-center xl:flex-col xl:items-start">
-        <div className="my-6">
+      <div className="mx-2 flex w-full items-center  xl:flex-col xl:items-start">
+        <div className="my-6 w-full">
           <SubTitle>Description</SubTitle>
-          <Paragraph>{track.description || 'No track description.'}</Paragraph>
+          <LinkItUrl>
+            <Paragraph>{track.description || 'No track description.'}</Paragraph>
+          </LinkItUrl>
         </div>
         <Divider classnames="hidden xl:block" />
-        <div className="my-6">
+        <div className="my-6 w-full">
           <SubTitle>Utility</SubTitle>
-          <Paragraph>{track.utilityInfo || 'No utility information.'}</Paragraph>
+          <LinkItUrl>
+            <Paragraph>{track.utilityInfo || 'No utility information.'}</Paragraph>
+          </LinkItUrl>
         </div>
       </div>
     </Container>
@@ -231,4 +237,7 @@ const Paragraph = tw.p`
   text-[#7D7F80]
   break-words
   w-[250px]
+
+  [&>a]:text-indigo-200
+  [&>a]:hover:text-indigo-100
 `
