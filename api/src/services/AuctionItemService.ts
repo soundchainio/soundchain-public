@@ -90,10 +90,11 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
     price: number,
     contractAddress: string,
   ): Promise<void> {
-    const [sellerUser, buyerUser, track] = await Promise.all([
+    const [sellerUser, buyerUser, track, auctionItem] = await Promise.all([
       this.context.userService.getUserByWallet(sellerWallet),
       this.context.userService.getUserByWallet(buyerWaller),
       this.context.trackService.getTrackByTokenId(parseInt(tokenId), contractAddress),
+      this.context.auctionItemService.findAuctionItem(parseInt(tokenId)),
     ]);
     if (!sellerUser || !buyerUser) {
       return;
@@ -109,6 +110,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
         artist: track.artist,
         artworkUrl: track.artworkUrl,
         sellType: SellType.Auction,
+        isPaymentOgun: auctionItem.isPaymentOGUN,
       }),
     ]);
     await Promise.all([

@@ -29,4 +29,7 @@ export class FinishBuyNowItemInput {
 
   @Field()
   sellType: SellType;
+
+  @Field()
+  isPaymentOgun: boolean;
 }

@@ -114,6 +114,7 @@ export class NotificationService extends ModelService<typeof Notification> {
     artworkUrl,
     trackName,
     sellType,
+    isPaymentOgun,
   }: Omit<FinishBuyNowItemInput, 'tokenId'>): Promise<void> {
     let buyerName,
       buyerPicture = '';
@@ -135,6 +136,7 @@ export class NotificationService extends ModelService<typeof Notification> {
         artworkUrl,
         trackName,
         sellType,
+        isPaymentOgun,
       },
     });
     await notification.save();
