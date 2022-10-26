@@ -1,11 +1,12 @@
 import classNames from 'classnames'
 import { Matic } from 'components/Matic'
+import { Logo as OgunIcon } from 'icons/Logo'
 import { Matic as MaticIcon } from 'icons/Matic'
 import { NftSoldNotification, SellType } from 'lib/graphql'
 import NextLink from 'next/link'
-import React from 'react'
 import Asset from './Asset'
 import { Avatar } from './Avatar'
+import { Ogun } from './Ogun'
 import { Timestamp } from './Timestamp'
 
 interface NFTSoldNotificationProps {
@@ -14,7 +15,18 @@ interface NFTSoldNotificationProps {
 }
 
 export const NFTSoldNotificationItem = ({
-  notification: { buyerName, createdAt, buyerPicture, price, trackId, trackName, artist, artworkUrl, sellType },
+  notification: {
+    buyerName,
+    createdAt,
+    buyerPicture,
+    price,
+    trackId,
+    trackName,
+    artist,
+    artworkUrl,
+    sellType,
+    isPaymentOgun,
+  },
   index,
 }: NFTSoldNotificationProps) => {
   return (
@@ -23,7 +35,11 @@ export const NFTSoldNotificationItem = ({
         <div className="flex min-w-[50px] items-center pr-4">
           <Avatar profile={{ profilePicture: buyerPicture }} linkToProfile={false} pixels={40} />
           <div className="relative">
-            <MaticIcon className="absolute -right-1" />
+            {isPaymentOgun ? (
+              <OgunIcon className="absolute -right-1 h-[20px] w-[20px]" />
+            ) : (
+              <MaticIcon className="absolute -right-1" />
+            )}
           </div>
         </div>
         <div>
@@ -49,7 +65,7 @@ export const NFTSoldNotificationItem = ({
             <div className="text-xs font-bold text-white">{trackName}</div>
             <div className="text-xs font-bold text-gray-80">{artist}</div>
           </div>
-          <Matic className="ml-auto" value={price} />
+          {isPaymentOgun ? <Ogun value={price} className="ml-auto" /> : <Matic className="ml-auto" value={price} />}
         </div>
       </NextLink>
     </div>
