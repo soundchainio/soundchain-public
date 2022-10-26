@@ -6,6 +6,7 @@ export interface NFTSoldNotificationMetadata extends TrackWithPriceMetadata {
   buyerPicture: string | undefined;
   buyerProfileId: string;
   sellType: SellType;
+  isPaymentOgun: boolean;
 }
 
 export enum SellType {

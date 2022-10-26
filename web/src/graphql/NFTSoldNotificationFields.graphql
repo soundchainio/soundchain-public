@@ -11,4 +11,5 @@ fragment NFTSoldNotificationFields on NFTSoldNotification {
   artworkUrl
   price
   sellType
+  isPaymentOgun
 }

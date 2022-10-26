@@ -3,6 +3,7 @@ import { TrackQuery, useProfileLazyQuery } from 'lib/graphql'
 import { useEffect } from 'react'
 import tw from 'tailwind-styled-components'
 import { Divider } from 'components/common'
+import { LinkItUrl } from 'react-linkify-it'
 
 interface Props {
   track: TrackQuery['track']
@@ -46,14 +47,18 @@ export const DescriptionCard = (props: Props) => {
 
       <div className="my-6">
         <SubTitle>Description</SubTitle>
-        <Paragraph>{track.description || 'No track description.'}</Paragraph>
+        <LinkItUrl>
+          <Paragraph>{track.description || 'No track description.'}</Paragraph>
+        </LinkItUrl>
       </div>
 
       <Divider />
 
       <div className="my-6">
         <SubTitle>Utility</SubTitle>
-        <Paragraph>{track.utilityInfo || 'No utility information.'}</Paragraph>
+        <LinkItUrl>
+          <Paragraph>{track.utilityInfo || 'No utility information.'}</Paragraph>
+        </LinkItUrl>
       </div>
     </Container>
   )

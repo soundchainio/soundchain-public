@@ -82,10 +82,11 @@ export class BuyNowService extends ModelService<typeof BuyNowItem> {
     contractAddress: string,
     marketplaceAddress: string,
   ): Promise<void> {
-    const [sellerUser, buyerUser, track] = await Promise.all([
+    const [sellerUser, buyerUser, track, buyNowItem] = await Promise.all([
       this.context.userService.getUserByWallet(sellerWallet),
       this.context.userService.getUserByWallet(buyerWaller),
       this.context.trackService.getTrackByTokenId(parseInt(tokenId), contractAddress),
+      this.context.buyNowItemService.findBuyNowItem(parseInt(tokenId), contractAddress),
     ]);
     if (!sellerUser) {
       await Promise.all([
@@ -106,6 +107,7 @@ export class BuyNowService extends ModelService<typeof BuyNowItem> {
         artist: track.artist,
         artworkUrl: track.artworkUrl,
         sellType: SellType.BuyNow,
+        isPaymentOgun: buyNowItem.acceptsOGUN,
       }),
     ]);
     await Promise.all([

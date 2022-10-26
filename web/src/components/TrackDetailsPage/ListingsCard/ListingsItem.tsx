@@ -8,6 +8,7 @@ import { Ogun } from 'components/Ogun'
 import { ProfileWithAvatar } from 'components/ProfileWithAvatar'
 import { useTokenOwner } from 'hooks/useTokenOwner'
 import { Profile, useProfileLazyQuery } from 'lib/graphql'
+import { Matic as MaticIcon } from 'icons/Matic'
 import NextLink from 'next/link'
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'
@@ -58,7 +59,9 @@ export const ListingItem = (props: ListingItemProps) => {
         <Cell>
           <div className="flex items-center gap-2">
             <div className=" flex items-center gap-1">
-              <OgunIcon id="ogun-token" className="mr-[2px] inline h-6 w-6" />
+              {isPaymentOGUN && <OgunIcon id="ogun-token" className="mr-[3px] inline h-6 w-6" />}
+              {!isPaymentOGUN && <MaticIcon className="mr-[3px] inline h-6 w-6" />}
+
               <div className="flex flex-col items-start">
                 <Link href={`/profiles/${profileData?.profile.userHandle}`}>
                   <a>
@@ -71,10 +74,20 @@ export const ListingItem = (props: ListingItemProps) => {
                     />
                   </a>
                 </Link>
-                <div className="flex items-center gap-1">
-                  <span className="mt-[1px]">{fixedDecimals(priceOGUN)}</span>
-                  <span className="mt-[1px] text-xs font-semibold text-gray-80">OGUN</span>
-                </div>
+
+                {isPaymentOGUN && (
+                  <div className="flex items-center gap-1">
+                    <span className="mt-[1px]">{fixedDecimals(priceOGUN)}</span>
+                    <span className="mt-[1px] text-xs font-semibold text-gray-80">OGUN</span>
+                  </div>
+                )}
+
+                {!isPaymentOGUN && (
+                  <div className="flex items-center gap-1">
+                    <span className="mt-[1px]">{fixedDecimals(price)}</span>
+                    <span className="mt-[1px] text-xs font-semibold text-gray-80 ">MATIC</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
