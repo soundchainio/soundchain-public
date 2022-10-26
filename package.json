@@ -21,6 +21,7 @@
     "lerna": "^4.0.0"
   },
   "dependencies": {
-    "@sentry/serverless": "^7.10.0"
+    "@sentry/serverless": "^7.10.0",
+    "react-linkify-it": "^1.0.7"
   }
 }
