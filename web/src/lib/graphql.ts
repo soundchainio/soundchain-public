@@ -916,6 +916,7 @@ export type NftSoldNotification = {
   artist: Scalars['String'];
   artworkUrl: Scalars['String'];
   sellType: SellType;
+  isPaymentOgun: Maybe<Scalars['Boolean']>;
 };
 
 export type NewBidNotification = {
@@ -2804,7 +2805,7 @@ export type MimeTypeQuery = (
 
 export type NftSoldNotificationFieldsFragment = (
   { __typename?: 'NFTSoldNotification' }
-  & Pick<NftSoldNotification, 'id' | 'type' | 'createdAt' | 'buyerName' | 'buyerPicture' | 'buyerProfileId' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price' | 'sellType'>
+  & Pick<NftSoldNotification, 'id' | 'type' | 'createdAt' | 'buyerName' | 'buyerPicture' | 'buyerProfileId' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price' | 'sellType' | 'isPaymentOgun'>
 );
 
 export type NewBidNotificationFieldsFragment = (
@@ -4102,6 +4103,7 @@ export const NftSoldNotificationFieldsFragmentDoc = gql`
   artworkUrl
   price
   sellType
+  isPaymentOgun
 }
     `;
 export const NewBidNotificationFieldsFragmentDoc = gql`
