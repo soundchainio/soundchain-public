@@ -46,11 +46,12 @@ export const PriceCard = (props: Props) => {
   const isOgunPrice = track.price.currency === CurrencyType.Ogun
   const isMaticPrice = track.price.currency === CurrencyType.Matic
   const isDeleted = track.deleted
-  const isUnlisted = track.saleType ? false : true
+  const isUnlisted = !Boolean(auctionItem?.auctionItem)
   const isMultipleEdition = track.editionSize > 1
   const isProcessing =
     isPendingRequest(track.nftData?.pendingRequest) || isPendingRequest(track.trackEdition?.editionData?.pendingRequest)
 
+  console.log(auctionItem)
   const shouldShowAuction = (isAuction && !isDeleted) || (isAuctionOver && !isDeleted)
 
   const { isOwner, loading: useOwnerIsLoading } = useTokenOwner(track.nftData?.tokenId, track.nftData?.contract)
