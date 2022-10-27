@@ -10,11 +10,26 @@ import { remainingTime, timeFromSecs } from 'utils/calculateTime'
 
 interface BotttomPlayerTrackSliderProps {
   song: Song
+  hideSlider?: boolean
+  hideShuffle?: boolean
+  playerClassNames?: string
 }
 
 export const BotttomPlayerTrackSlider = (props: BotttomPlayerTrackSliderProps) => {
-  const { song } = props
-  const { duration, progress, play, isPlaying, setProgressStateFromSlider, playPrevious, hasNext, hasPrevious, playNext, isShuffleOn, toggleShuffle} = useAudioPlayerContext()
+  const { song, hideSlider, hideShuffle, playerClassNames } = props
+  const {
+    duration,
+    progress,
+    play,
+    isPlaying,
+    setProgressStateFromSlider,
+    playPrevious,
+    hasNext,
+    hasPrevious,
+    playNext,
+    isShuffleOn,
+    toggleShuffle,
+  } = useAudioPlayerContext()
 
   const onSliderChange = (value: number) => {
     setProgressStateFromSlider(value)
@@ -28,48 +43,46 @@ export const BotttomPlayerTrackSlider = (props: BotttomPlayerTrackSliderProps) =
 
   return (
     <Container>
-      <PlaySectionContainer>
-        <button
-          aria-label={isShuffleOn ? 'Shuffle off' : 'Shuffle on'}
-          className="flex h-10 w-10 items-center justify-center"
-          onClick={toggleShuffle}
-        >
-          <Shuffle
-            width={18}
-            stroke={isShuffleOn ? 'white' : '#808080'}
-            className='hover:stroke-white'
-          />
-        </button>
-        <RewindButton
-          aria-label="Previous track"
-          onClick={playPrevious}
-          disabled={!hasPrevious}
-        >
-          <Rewind className='hover:fill-white active:text-gray-80 hover:cursor-pointer' height="100%" width="100%"/>
+      <PlaySectionContainer className={playerClassNames}>
+        {!hideShuffle && (
+          <button
+            aria-label={isShuffleOn ? 'Shuffle off' : 'Shuffle on'}
+            className="flex h-10 w-10 items-center justify-center"
+            onClick={toggleShuffle}
+          >
+            <Shuffle width={18} stroke={isShuffleOn ? 'white' : '#808080'} className="hover:stroke-white" />
+          </button>
+        )}
+        <RewindButton aria-label="Previous track" onClick={playPrevious} disabled={!hasPrevious}>
+          <Rewind className="hover:cursor-pointer hover:fill-white active:text-gray-80" height="100%" width="100%" />
         </RewindButton>
 
-        <PlayButton onClick={onClickPlayPause} aria-label={isPlaying ? 'Pause' : 'Play'} className="flex items-center justify-center">
-          {isPlaying ? (
-            <Pause className="scale-150 text-white" />
-          ) : (
-            <Play className="ml-[2px] scale-150 text-white" />
-          )}
-        </PlayButton>
-        
-        <ForwardButton
-          aria-label="Next track"
-          onClick={playNext}
-          disabled={!hasNext}
+        <PlayButton
+          onClick={onClickPlayPause}
+          aria-label={isPlaying ? 'Pause' : 'Play'}
+          className="flex items-center justify-center"
         >
-          <Forward className='hover:fill-white active:text-gray-80 hover:cursor-pointer' height="100" width="100"/>
+          {isPlaying ? <Pause className="scale-150 text-white" /> : <Play className="ml-[2px] scale-150 text-white" />}
+        </PlayButton>
+
+        <ForwardButton aria-label="Next track" onClick={playNext} disabled={!hasNext}>
+          <Forward className="hover:cursor-pointer hover:fill-white active:text-gray-80" height="100" width="100" />
         </ForwardButton>
       </PlaySectionContainer>
 
-      <div className='flex items-center'>
-        <div className="text-neutral-400">{timeFromSecs(progress || 0)}</div>
-        <Slider className="audio-player mx-4 w-[300px]" min={0} max={duration} value={progress} onChange={onSliderChange} />
-        <div className="text-neutral-400">{remainingTime(progress, duration || 0)}</div>
-      </div>
+      {!hideSlider && (
+        <div className="flex items-center">
+          <div className="text-neutral-400">{timeFromSecs(progress || 0)}</div>
+          <Slider
+            className="audio-player mx-4 w-[300px]"
+            min={0}
+            max={duration}
+            value={progress}
+            onChange={onSliderChange}
+          />
+          <div className="text-neutral-400">{remainingTime(progress, duration || 0)}</div>
+        </div>
+      )}
     </Container>
   )
 }
@@ -85,7 +98,6 @@ const PlaySectionContainer = tw.div`
   items-center
   gap-3
   justify-center
-  mr-12
 `
 
 const PlayButton = tw.button`
@@ -101,7 +113,7 @@ const ForwardButton = tw.button`
   flex
   items-center
   justify-start
-` 
+`
 const RewindButton = tw.button`
   h-12
   w-[16px]
