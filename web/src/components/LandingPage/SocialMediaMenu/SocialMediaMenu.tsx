@@ -6,7 +6,7 @@ export const SocialMediaMenu = () => {
   return (
     <>
       <div className="fixed top-[30%] left-0 z-50 flex h-full flex-col">
-        <Link href="https://discord.com/invite/rDxev3QSGg">
+        <Link href="https://discord.gg/5yZG6BTTHV">
           <a target="_blank" rel="noreferrer">
             <span className="pointer-events-none flex h-12 w-12 items-center justify-center bg-[#5865f2] transition-transform  hover:scale-[1.5] md:pointer-events-auto">
               <FaDiscord size={25} />
