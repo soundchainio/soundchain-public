@@ -1,22 +1,21 @@
 import { ButtonProps } from 'components/Buttons/Button'
 import { SpinAnimation } from 'components/common/SpinAnimation'
+
 import tw from 'tailwind-styled-components'
 
 export const ListNFTButton = (props: ButtonProps) => {
   const { className, type = 'button', children, loading, ...rest } = props
 
   return (
-    <div className={className}>
-      <Button type={type} {...rest}>
-        {loading ? (
-          <Loading>
-            <SpinAnimation />
-          </Loading>
-        ) : (
-          <span>{children}</span>
-        )}
-      </Button>
-    </div>
+    <Button type={type} {...rest} className={className}>
+      {loading ? (
+        <Loading>
+          <SpinAnimation />
+        </Loading>
+      ) : (
+        <span>{children}</span>
+      )}
+    </Button>
   )
 }
 
@@ -27,9 +26,9 @@ const Button = tw.button<ButtonProps>`
   w-full
   border-2 
   border-blue-600 
-  bg-opacity-60 
+  bg-opacity-60
   p-2 
-  px-6 
+  px-6
   text-xs 
   font-medium 
   text-white 
@@ -39,6 +38,6 @@ const Button = tw.button<ButtonProps>`
 const Loading = tw.div`
   flex 
   items-center 
-  justify-center 
+  justify-center
   px-6
 `

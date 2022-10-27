@@ -6,7 +6,9 @@ import { Pause } from 'icons/Pause'
 import { Play } from 'icons/Play'
 import { ListingItemWithPrice, Maybe, Track, TrackWithListingItem, useMaticUsdQuery } from 'lib/graphql'
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 import NextLink from 'next/link'
+import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { currency, limitTextToNumberOfCharacters } from 'utils/format'
 import { Cards } from '../../../../icons/Cards'
@@ -54,10 +56,13 @@ export const TrackGrid = ({ track, handleOnPlayClicked }: TrackProps) => {
     listingItem = (track as TrackWithListingItem).listingItem
   }
 
+  const router = useRouter()
+
   const saleType = getSaleType(listingItem)
   const price = listingItem?.priceToShow ?? 0
   const OGUNPrice = listingItem?.OGUNPricePerItemToShow ?? 0
   const selectedCurrency: CurrencyType = price ? 'MATIC' : 'OGUN'
+  const isOgunPrice = track.price.currency === 'OGUN'
   const { art, artist, title, trackId, playbackCount, favoriteCount, editionSize, listingCount } = song
   const { isCurrentSong, isCurrentlyPlaying, setProgressStateFromSlider, progress } = useAudioPlayerContext()
 
@@ -143,13 +148,33 @@ export const TrackGrid = ({ track, handleOnPlayClicked }: TrackProps) => {
                 )}
               </div>
               <div className="flex flex-col items-end justify-start">
-                <div
-                  className={`${
-                    saleType === 'auction' ? 'auction-gradient' : 'buy-now-gradient'
-                  } sale-type-font-size text-sm font-bold`}
-                >
-                  {saleType.toUpperCase()}
-                </div>
+                {saleType === 'auction' ? (
+                  <Link
+                    href={{
+                      pathname: `tracks/${track.id}/place-bid`,
+                      query: { ...router.query, isPaymentOGUN: isOgunPrice },
+                    }}
+                  >
+                    <a>
+                      <div className="auction-gradient sale-type-font-size text-sm font-bold">
+                        {saleType.toUpperCase()}
+                      </div>
+                    </a>
+                  </Link>
+                ) : (
+                  <Link
+                    href={{
+                      pathname: `tracks/${track.id}/buy-now`,
+                      query: { ...router.query, isPaymentOGUN: isOgunPrice },
+                    }}
+                  >
+                    <a>
+                      <div className="buy-now-gradient sale-type-font-size text-sm font-bold">
+                        {saleType.toUpperCase()}
+                      </div>
+                    </a>
+                  </Link>
+                )}
                 {editionSize && editionSize > 0 && (
                   <div className="flex items-center justify-between gap-2 text-xs font-black text-gray-80">
                     <Cards width={14} height={14} />

@@ -242,7 +242,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
         toggleShuffle,
         setPlayerFavorite,
         setIsPlaylistOpen,
-        isPlaylistOpen
+        isPlaylistOpen,
       }}
     >
       {children}

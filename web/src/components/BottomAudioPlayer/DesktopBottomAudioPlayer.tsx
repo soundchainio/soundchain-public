@@ -12,11 +12,11 @@ import { FavoriteTrack } from '../Buttons/FavoriteTrack/FavoriteTrack'
 import { BotttomPlayerTrackSlider } from './components/BotttomPlayerTrackSlider'
 import { Playlists } from 'icons/Playlists'
 import { VolumeOffIcon, VolumeUpIcon } from '@heroicons/react/solid'
-import { IoIosArrowUp} from 'react-icons/io'
+import { IoIosArrowUp } from 'react-icons/io'
 
 export const BottomAudioPlayer = () => {
   const me = useMe()
-  
+
   const audioRef = useRef<HTMLAudioElement>(null)
   const {
     currentSong,
@@ -34,7 +34,6 @@ export const BottomAudioPlayer = () => {
   } = useAudioPlayerContext()
 
   const { dispatchShowAudioPlayerModal } = useModalDispatch()
-
 
   useEffect(() => {
     if (!audioRef.current || !currentSong.src) {
@@ -76,7 +75,6 @@ export const BottomAudioPlayer = () => {
 
     if (isPlaying) audioRef.current.play()
     if (!isPlaying) audioRef.current.pause()
-    
   }, [isPlaying, currentSong])
 
   useEffect(() => {
@@ -112,7 +110,6 @@ export const BottomAudioPlayer = () => {
     }
   }
 
-
   const showPlayList = () => {
     dispatchShowAudioPlayerModal(true)
     setIsPlaylistOpen(true)
@@ -138,25 +135,21 @@ export const BottomAudioPlayer = () => {
           <Asset src={currentSong.art} />
         </ImageContainer>
         <Title>
-          <h2 className='text-white font-medium'>{currentSong.title || 'Unkown Title'}</h2>
-          <p className="text-neutral-400 font-normal">{currentSong.artist || 'Unknown artist'}</p>
+          <h2 className="w-[100px] truncate font-medium text-white">{currentSong.title || 'Unkown Title'}</h2>
+          <p className="w-[100px] truncate font-normal text-neutral-400">{currentSong.artist || 'Unknown artist'}</p>
         </Title>
         <FavoriteTrack />
       </TrackDetails>
 
-      <BotttomPlayerTrackSlider song={song} />
+      <BotttomPlayerTrackSlider song={song} playerClassNames="mr-12" />
 
       <TrackControls>
-        <button
-          aria-label="Playlist"
-          className="h-10 w-10 flex items-center justify-end"
-          onClick={showPlayList}
-        >
+        <button aria-label="Playlist" className="flex h-10 w-10 items-center justify-end " onClick={showPlayList}>
           <Playlists fillColor="white" />
         </button>
 
         <div className="flex items-center gap-2">
-          <VolumeOffIcon width={16} viewBox="-8 0 20 20" color='white'/>
+          <VolumeOffIcon width={16} viewBox="-8 0 20 20" color="white" />
           <div className="">
             <Slider
               className="volume-slider w-[50px]"
@@ -167,10 +160,15 @@ export const BottomAudioPlayer = () => {
               step={0.1}
             />
           </div>
-          <VolumeUpIcon width={16} color='white' className='ml-1'/>
+          <VolumeUpIcon width={16} color="white" className="ml-1" />
         </div>
 
-        <IoIosArrowUp size={25} color="white" className='hover:cursor-pointer ml-2' onClick={() => dispatchShowAudioPlayerModal(true)}/>
+        <IoIosArrowUp
+          size={25}
+          color="white"
+          className="ml-2 hover:cursor-pointer"
+          onClick={() => dispatchShowAudioPlayerModal(true)}
+        />
       </TrackControls>
       <audio
         ref={audioRef}
@@ -193,6 +191,7 @@ const Container = tw.div`
   items-center
   bg-neutral-900 
   h-[90px]
+  mt-4
 `
 
 const TrackDetails = tw.div`
