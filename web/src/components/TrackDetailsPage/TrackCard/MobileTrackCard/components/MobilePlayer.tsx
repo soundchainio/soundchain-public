@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { TrackQuery } from 'lib/graphql'
 import { FavoriteTrack } from 'components/Buttons/FavoriteTrack/FavoriteTrack'
 import { TrackShareButton } from 'components/TrackShareButton'
+import ReactTooltip from 'react-tooltip'
 interface MobilePlayerProps {
   handleOnPlayClicked: () => void
   isPlaying: boolean
@@ -43,7 +44,16 @@ export const MobilePlayer = (props: MobilePlayerProps) => {
               <Play className="m-auto scale-125 text-white" />
             )}
           </PlayButton>
-          {!hideTrackName && <TrackTitle>{track.title}</TrackTitle>}
+          {!hideTrackName && (
+            <>
+              <ReactTooltip id="track-title-mobile" type="dark" effect="solid">
+                <span>{track.title}</span>
+              </ReactTooltip>
+              <a data-tip data-for="track-title-mobile">
+                <TrackTitle>{track.title}</TrackTitle>
+              </a>
+            </>
+          )}
 
           {!hideArtistName && (
             <Link href={`/profiles/${track.artist}` || ''}>
@@ -107,10 +117,14 @@ const TrackTitle = tw.h1`
   text-xl 
   font-bold 
   leading-5
+  max-w-[100px]
+  truncate
 `
 const ArtistName = tw.h2`
   text-base 
   font-bold 
   leading-5 
   text-[#969899]
+  max-w-[100px]
+  truncate
 `
