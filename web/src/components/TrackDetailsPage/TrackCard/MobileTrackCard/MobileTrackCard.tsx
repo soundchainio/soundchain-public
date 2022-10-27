@@ -5,6 +5,7 @@ import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { useEffect, useState } from 'react'
 import tw from 'tailwind-styled-components'
 import { MobilePlayer } from './components'
+import Asset from 'components/Asset'
 
 interface Props {
   me?: MeQuery['me']
@@ -16,7 +17,6 @@ export const MobileTrackCard = (props: Props) => {
 
   const { track } = props
   const { playlistState, isCurrentlyPlaying } = useAudioPlayerContext()
-
 
   const handleOnPlayClicked = () => {
     if (!track) return
@@ -33,7 +33,7 @@ export const MobileTrackCard = (props: Props) => {
     ]
     playlistState(list, 0)
   }
-  
+
   useEffect(() => {
     setIsPlaying(isCurrentlyPlaying(track.id))
   }, [isCurrentlyPlaying, setIsPlaying, track.id])
@@ -42,19 +42,9 @@ export const MobileTrackCard = (props: Props) => {
     <Container>
       <InnerContainer>
         <ImageContainer>
-          <Image
-            src={track.artworkUrl || ''}
-            layout="fill"
-            alt="art image of the current track "
-            className="rounded-xl"
-            objectFit="contain"
-          />
+          <Asset src={track.artworkUrl} objectFit="contain" disableImageWave />
         </ImageContainer>
-        <MobilePlayer
-          handleOnPlayClicked={handleOnPlayClicked}
-          isPlaying={isPlaying}
-          track={track}
-        />
+        <MobilePlayer handleOnPlayClicked={handleOnPlayClicked} isPlaying={isPlaying} track={track} />
       </InnerContainer>
     </Container>
   )

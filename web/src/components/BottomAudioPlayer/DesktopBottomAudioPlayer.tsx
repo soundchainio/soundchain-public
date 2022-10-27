@@ -191,6 +191,7 @@ const Container = tw.div`
   items-center
   bg-neutral-900 
   h-[90px]
+  mt-4
 `
 
 const TrackDetails = tw.div`

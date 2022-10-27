@@ -17,6 +17,7 @@ interface ViewProps {
 
 export const GridView = ({ tracks, loading, refetch, hasNextPage, loadMore }: ViewProps) => {
   const { playlistState } = useAudioPlayerContext()
+
   const handleOnPlayClicked = (index: number) => {
     if (tracks) {
       const list = tracks.map(

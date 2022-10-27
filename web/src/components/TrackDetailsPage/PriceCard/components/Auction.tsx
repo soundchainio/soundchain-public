@@ -71,26 +71,26 @@ export const Auction = (props: AuctionProps) => {
   const canEditAuction = isOwner && !isAuctionOver && bidCount === 0
   const canCancel = isOwner && bidCount === 0 && !isAuctionOver
 
-  const canComplete =
-    isAuctionOver &&
-    (compareWallets(highestBid.bidder, account) || compareWallets(account, auctionItem?.auctionItem?.owner))
+  const canHighestBidderComplete = isAuctionOver && compareWallets(highestBid.bidder, account)
+  const canHighestOwnerComplete = isAuctionOver && compareWallets(account, auctionItem?.auctionItem?.owner)
+  const canComplete = canHighestBidderComplete || canHighestOwnerComplete
 
   useEffect(() => {
     if (!web3 || !tokenId || !getHighestBid || highestBid.bidder != undefined || !track.trackEdition) {
       return
     }
-    
+
     const fetchData = async () => {
       try {
         setIsLoading(true)
-      const { _bid, _bidder } = await getHighestBid(web3, tokenId, { nft: track.nftData?.contract })
-      setHighestBid({ bid: priceToShow(_bid || '0'), bidder: _bidder })
+        const { _bid, _bidder } = await getHighestBid(web3, tokenId, { nft: track.nftData?.contract })
+        setHighestBid({ bid: priceToShow(_bid || '0'), bidder: _bidder })
 
-      const royaltiesFromBlockchain = await getEditionRoyalties(web3, track?.trackEdition?.editionId || 0)
+        const royaltiesFromBlockchain = await getEditionRoyalties(web3, track?.trackEdition?.editionId || 0)
 
-      setRoyalties(royaltiesFromBlockchain)
+        setRoyalties(royaltiesFromBlockchain)
 
-      fetchCountBids({ variables: { tokenId } })
+        fetchCountBids({ variables: { tokenId } })
       } finally {
         setIsLoading(false)
       }
@@ -146,13 +146,11 @@ export const Auction = (props: AuctionProps) => {
     )
   }
 
-  if (isAuctionOver) return null
-
   return (
     <>
       <Container>
         <BidsContainer>
-          {highestBidderData?.getUserByWallet ? (
+          {highestBidderData?.getUserByWallet && (
             <AvatarContainer>
               <Avatar profile={highestBidderData.getUserByWallet.profile} pixels={40} className="mr-2" />
 
@@ -174,14 +172,16 @@ export const Auction = (props: AuctionProps) => {
                 </div>
               </div>
             </AvatarContainer>
-          ) : (
-            <Paragraph>No bidder</Paragraph>
           )}
 
-          <span>
-            <NumberOfBids>{bidCount}</NumberOfBids>
-            <BidText>bids</BidText>
-          </span>
+          {!highestBidderData?.getUserByWallet && <Paragraph>No bidder</Paragraph>}
+
+          {!highestBidderData?.getUserByWallet && (
+            <span>
+              <NumberOfBids>{bidCount}</NumberOfBids>
+              <BidText>bids</BidText>
+            </span>
+          )}
         </BidsContainer>
 
         <div className="mt-4 mb-2 flex  w-full flex-col items-center">
