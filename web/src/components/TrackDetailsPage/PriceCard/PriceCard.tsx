@@ -51,7 +51,6 @@ export const PriceCard = (props: Props) => {
   const isProcessing =
     isPendingRequest(track.nftData?.pendingRequest) || isPendingRequest(track.trackEdition?.editionData?.pendingRequest)
 
-  console.log(auctionItem)
   const shouldShowAuction = (isAuction && !isDeleted) || (isAuctionOver && !isDeleted)
 
   const { isOwner, loading: useOwnerIsLoading } = useTokenOwner(track.nftData?.tokenId, track.nftData?.contract)
